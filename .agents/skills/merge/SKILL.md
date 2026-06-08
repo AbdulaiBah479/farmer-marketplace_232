@@ -1,94 +1,46 @@
 ---
-name: "merge"
-description: "Merge the winning agent's branch into base, archive losers, and clean up worktrees."
-command: /hub:merge
+name: merge
+description: Merge the current feature branch into main and (optionally) clean up the branch and worktree. Prefers fast-forward (--ff-only) for linear history; falls back to a merge commit (--no-ff) when the branch has diverged or the user wants the merge commit preserved. Interactive cleanup at the end. USE WHEN asked to "merge to main", "merge and cleanup", "integrate the feature branch", or "finish this branch" — i.e. a direct local merge with no review gate. For PR-based delivery (push → open a PR → link a work item → clean up after merge), use the `ship` skill instead.
 ---
 
-# /hub:merge — Merge Winner
+# Merge
 
-Merge the best agent's branch into the base branch, archive losing branches via git tags, and clean up worktrees.
+Combine `merge-and-cleanup` and `merge-to-main` into one flow. Default to fast-forward; preserve a merge commit when fast-forward isn't possible or the user asks for one. Always interactive about deleting branches and worktrees.
 
-## Usage
+## Flow
 
-```
-/hub:merge                                       # Merge winner of latest session
-/hub:merge 20260317-143022                       # Merge winner of specific session
-/hub:merge 20260317-143022 --agent agent-2       # Explicitly choose winner
-```
+1. **Refuse if already on main.** If `git rev-parse --abbrev-ref HEAD` returns `main` (or `master`), stop and report — there's nothing to merge.
+2. **Working tree must be clean.** If there are uncommitted changes, ask the user whether to commit, stash, or abort. Do not silently stash.
+3. **Capture the feature branch name** — `FEATURE=$(git rev-parse --abbrev-ref HEAD)`.
+4. **Sync main.**
+   - `git checkout main`
+   - `git pull --ff-only origin main`
+5. **Try fast-forward merge first.**
+   - `git merge --ff-only "$FEATURE"`
+   - If it succeeds, history is linear — done with the merge step.
+   - If it fails (branch diverged), proceed to step 6.
+6. **Fall back to merge commit** — `git merge --no-ff "$FEATURE"`.
+   - If there are conflicts, stop and report. Do not auto-resolve.
+   - Write a meaningful merge-commit message; do not accept the default if it's just "Merge branch …".
+7. **Push** — `git push origin main`.
+8. **Interactive cleanup.** Ask the user: "Delete `$FEATURE` (local + remote) and any associated worktree?"
+   - On **yes**:
+     - If a worktree exists for `$FEATURE` (`git worktree list | grep -F "$FEATURE"`), **`cd` to the main repo dir first**, then `git worktree remove <path>`.
+     - `git branch -d "$FEATURE"` (use `-D` only if user explicitly confirms — `-d` refuses if branch isn't merged, which is the safety we want).
+     - `git push origin --delete "$FEATURE"` (ignore failure if branch was never pushed).
+   - On **no**: leave everything in place.
+9. **Report final status** — commit hash on main, whether branch was deleted, whether a worktree was removed.
 
-## What It Does
+## Notes
 
-### 1. Identify Winner
+- **Prefer ff-only.** Linear history is easier to reason about. Only fall back to a merge commit when the branch genuinely diverged.
+- **Never `--no-verify`.** If a pre-push hook fails, fix the underlying issue; don't bypass.
+- **Worktree-first cleanup.** If the feature branch was developed in a worktree, you cannot delete the branch from inside the worktree. Always `cd` to the main repo working directory first.
+- **Conflict policy.** This skill does not auto-resolve conflicts. If `git merge` reports a conflict, stop and surface it to the user — they decide.
 
-If `--agent` specified, use that. Otherwise, use the #1 ranked agent from the most recent `/hub:eval`.
+## Gotchas
 
-### 2. Merge Winner
-
-```bash
-git checkout {base_branch}
-git merge --no-ff hub/{session-id}/{winner}/attempt-1 \
-  -m "hub: merge {winner} from session {session-id}
-
-Task: {task}
-Winner: {winner}
-Session: {session-id}"
-```
-
-### 3. Archive Losers
-
-For each non-winning agent:
-
-```bash
-# Create archive tag (preserves commits forever)
-git tag hub/archive/{session-id}/{agent-id} hub/{session-id}/{agent-id}/attempt-1
-
-# Delete branch ref (commits preserved via tag)
-git branch -D hub/{session-id}/{agent-id}/attempt-1
-```
-
-### 4. Clean Up Worktrees
-
-```bash
-python {skill_path}/scripts/session_manager.py --cleanup {session-id}
-```
-
-### 5. Post Merge Summary
-
-Write `.agenthub/board/results/merge-summary.md`:
-
-```markdown
----
-author: coordinator
-timestamp: {now}
-channel: results
----
-
-## Merge Summary
-
-- **Session**: {session-id}
-- **Winner**: {winner}
-- **Merged into**: {base_branch}
-- **Archived**: {loser-1}, {loser-2}, ...
-- **Worktrees cleaned**: {count}
-```
-
-### 6. Update State
-
-```bash
-python {skill_path}/scripts/session_manager.py --update {session-id} --state merged
-```
-
-## Safety
-
-- **Confirm with user** before merging — show the diff summary first
-- **Never force-push** — merge is always `--no-ff` for clear history
-- **Archive, don't delete** — losing agents' commits are preserved via tags
-- **Clean worktrees** — don't leave orphan directories on disk
-
-## After Merge
-
-Tell the user:
-- Winner merged into `{base_branch}`
-- Losers archived with tags `hub/archive/{session-id}/agent-{N}`
-- Worktrees cleaned up
-- Session state: `merged`
+- `git pull --ff-only` on main fails if main has diverged locally (e.g., you committed directly to main). That's a different problem — surface it; don't paper over with `--rebase`.
+- `git branch -d` refuses on unmerged branches. That refusal is your safety net — never automatically promote to `-D`.
+- `git push origin --delete` exits non-zero if the remote branch doesn't exist. That's fine in this flow (branch was local-only) — log and continue.
+- macOS case-insensitive filesystems can mask case-only conflicts; if the feature branch differs only in case from another branch, `git checkout` will surprise you.

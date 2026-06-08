@@ -1,219 +1,170 @@
 ---
-name: Browser
-description: "Headless browser automation via agent-browser — Rust CLI daemon with persistent auth profiles for fast, scriptable, parallel browser work. Supports batch commands, network interception, device emulation, per-site profile auth (one-time headed login, headless forever after), and parallel isolated sessions via --session. Workflows: ReviewStories (fan out YAML user stories to parallel UIReviewers), Automate (load/run parameterized recipe templates), Update. Delegates to general-purpose agents with agent-browser instructions for background parallel scraping. Falls back to Interceptor if site has bot detection. USE WHEN headless browser, batch scrape, fast screenshot, dev server test, parallel browser, background automation, extract data, review stories, automate recipe, batch screenshots, scrape multiple pages in parallel. NOT FOR deploy verification or UI confirmation with real Chrome (use Interceptor). NOT FOR simple single-URL fetching (use WebFetch). NOT FOR CAPTCHA or bot-detection bypass (use BrightData or Interceptor)."
-version: 10.0.0
-effort: medium
+name: browser
+description: Automate web browser interactions using natural language via CLI commands. Use when the user asks to browse websites, navigate web pages, extract data from websites, take screenshots, fill forms, click buttons, or interact with web applications. Supports remote Browserbase sessions with Browserbase Identity, Verified browsers, automatic CAPTCHA solving, and residential proxies — ideal for protected websites and JavaScript-heavy pages.
+compatibility: "Requires the browse CLI (`npm install -g browse`). Remote Browserbase sessions need `BROWSERBASE_API_KEY`. Local mode uses Chrome/Chromium on your machine."
+license: MIT
+allowed-tools: Bash
+metadata:
+  openclaw:
+    requires:
+      bins:
+        - browse
+    install:
+      - kind: node
+        package: "browse"
+        bins: [browse]
+    homepage: https://github.com/browserbase/skills
 ---
 
-## Customization
+# Browser Automation
 
-**Before executing, check for user customizations at:**
-`~/.claude/PAI/USER/SKILLCUSTOMIZATIONS/Browser/`
+Automate browser interactions using the browse CLI with Claude.
 
-If this directory exists, load and apply any PREFERENCES.md, configurations, or resources found there. These override default behavior. If the directory does not exist, proceed with skill defaults.
+## Setup check
 
-
-## MANDATORY: Voice Notification (REQUIRED BEFORE ANY ACTION)
-
-**You MUST send this notification BEFORE doing anything else when this skill is invoked.**
-
-1. **Send voice notification**:
-   ```bash
-   curl -s -X POST http://localhost:31337/notify \
-     -H "Content-Type: application/json" \
-     -d '{"message": "Running the WORKFLOWNAME workflow in the Browser skill to ACTION"}' \
-     > /dev/null 2>&1 &
-   ```
-
-2. **Output text notification**:
-   ```
-   Running the **WorkflowName** workflow in the **Browser** skill to ACTION...
-   ```
-
-**This is not optional. Execute this curl command immediately upon skill invocation.**
-
-# Browser v10.0.0 — Browser Automation
-
-**Tool:** `agent-browser` — headless Rust CLI daemon with persistent auth profiles.
-
-**If agent-browser isn't working or a site has bot detection, use the Interceptor skill instead.** Interceptor is a Chrome extension with zero CDP fingerprint — passes all major bot detection checks.
-
-### Does the site need auth?
-
-Use `--profile ~/.agent-browser/profiles/<site>`. If profile exists, auth is automatic. If not, run `--headed` once for login, then headless forever.
-
----
-
-## agent-browser
-
-Native Rust daemon. Persistent profiles for auth. Headless by default.
-
-### Quick One-Shot Commands
+Before running any browser commands, verify the CLI is available:
 
 ```bash
-agent-browser open https://example.com && agent-browser screenshot /tmp/shot.png
-agent-browser open https://example.com && agent-browser screenshot --full /tmp/full.png
-agent-browser open https://example.com && agent-browser pdf /tmp/page.pdf
+which browse || npm install -g browse
 ```
 
-### Session-Based Interaction
+## Environment Selection (Local vs Remote)
+
+The CLI supports explicit per-command environment flags. If you do nothing, the next session defaults to Browserbase when `BROWSERBASE_API_KEY` is set and to local otherwise.
+
+### Local mode
+- `browse open <url> --local` starts a clean isolated local browser
+- `browse open <url> --auto-connect` attaches to an already-running debuggable Chrome; use `--local` when no debuggable Chrome is available
+- `browse open <url> --cdp <port|url>` attaches to a specific CDP target
+- Best for: development, localhost, trusted sites, and reproducible runs
+
+### Remote mode (Browserbase)
+- `browse open <url> --remote` starts a Browserbase session
+- Without a local flag, Browserbase is also the default when `BROWSERBASE_API_KEY` is set
+- Provides: Browserbase Identity, Verified browsers, automatic CAPTCHA solving, residential proxies, session persistence
+- **Use remote mode when:** the target site has bot detection, CAPTCHAs, IP rate limiting, Cloudflare protection, or requires geo-specific access
+- Get credentials at https://browserbase.com/settings
+
+### When to choose which
+- **Repeatable local testing / clean state**: `browse open <url> --local`
+- **Reuse your local login/cookies**: `browse open <url> --auto-connect`
+- **Simple browsing** (docs, wikis, public APIs): local mode is fine
+- **Protected sites** (login walls, CAPTCHAs, anti-scraping): use remote mode
+- **If local mode fails** with bot detection or access denied: switch to remote mode
+
+## Commands
+
+Most driver commands work across local, remote, and CDP sessions after the daemon starts.
+
+### Navigation
+```bash
+browse open <url>                        # Go to URL
+browse open <url> --local                # Go to URL in a clean local browser
+browse open <url> --remote               # Go to URL in a Browserbase session
+browse reload                            # Reload current page
+browse back                              # Go back in history
+browse forward                           # Go forward in history
+```
+
+### Page state (prefer snapshot over screenshot)
+```bash
+browse snapshot                          # Get accessibility tree with element refs (fast, structured)
+browse screenshot --path <path>          # Take visual screenshot (slow, uses vision tokens)
+browse get url                           # Get current URL
+browse get title                         # Get page title
+browse get text <selector>               # Get text content (use "body" for all text)
+browse get html <selector>               # Get HTML content of element
+browse get value <selector>              # Get form field value
+```
+
+Use `browse snapshot` as your default for understanding page state — it returns the accessibility tree with element refs you can use to interact. Only use `browse screenshot` when you need visual context (layout, images, debugging).
+
+### Interaction
+```bash
+browse click <ref>                       # Click element by ref from snapshot (e.g., @0-5)
+browse type <text>                       # Type text into focused element
+browse fill <selector> <value>           # Fill input; add --press-enter if Enter is needed
+browse select <selector> <values...>     # Select dropdown option(s)
+browse press <key>                       # Press key (Enter, Tab, Escape, Cmd+A, etc.)
+browse mouse drag <fromX> <fromY> <toX> <toY>  # Drag from one point to another
+browse mouse scroll <x> <y> <deltaX> <deltaY>  # Scroll at coordinates
+browse highlight <selector>              # Highlight element on page
+browse is visible <selector>             # Check if element is visible
+browse is checked <selector>             # Check if element is checked
+browse wait <type> [arg]                 # Wait for: load, selector, timeout
+```
+
+### Session management
+```bash
+browse stop                              # Stop the browser daemon
+browse status                            # Check daemon status and resolved mode
+browse tab list                          # List all open tabs
+browse tab switch <index-or-target-id>   # Switch to tab by index or target ID
+browse tab close [index-or-target-id]    # Close tab
+```
+
+### Typical workflow
+If the environment matters, put `--local`, `--remote`, `--auto-connect`, or `--cdp <port|url>` on the first browser command.
+
+1. `browse open <url> --local` or `browse open <url> --remote` — navigate to the page
+2. `browse snapshot` — read the accessibility tree to understand page structure and get element refs
+3. `browse click <ref>` / `browse type <text>` / `browse fill <selector> <value>` — interact using refs from snapshot
+4. `browse snapshot` — confirm the action worked
+5. Repeat 3-4 as needed
+6. `browse stop` — close the browser when done
+
+## Quick Example
 
 ```bash
-# 1. OPEN
-agent-browser open https://example.com
-
-# 2. WORK
-agent-browser snapshot                    # a11y tree with @eN refs (for AI)
-agent-browser click @e12                  # click by ref
-agent-browser fill @e15 "hello"           # fill input by ref
-agent-browser screenshot /tmp/shot.png    # screenshot
-agent-browser eval "document.title"       # run JS
-
-# 3. CLOSE — when done
-agent-browser close
+browse open https://example.com
+browse snapshot                          # see page structure + element refs
+browse click @0-5                        # click element with ref 0-5
+browse get title
+browse stop
 ```
 
-### Authenticated Browsing (Per-Site Profiles)
+## Mode Comparison
 
-**First-time setup (headed, one-time):**
-```bash
-# Close any running daemon first
-agent-browser close --all
+| Feature | Local | Browserbase |
+|---------|-------|-------------|
+| Speed | Faster | Slightly slower |
+| Setup | Chrome required | API key required |
+| Reuse existing local cookies | With `browse open <url> --auto-connect` | N/A |
+| Verified browser | No | Yes (Browserbase Verified browser via Identity) |
+| CAPTCHA solving | No | Yes (automatic reCAPTCHA/hCaptcha) |
+| Residential proxies | No | Yes (201 countries, geo-targeting) |
+| Session persistence | No | Yes (cookies/auth persist via contexts) |
+| Best for | Development/simple pages | Protected sites, Browserbase Identity + Verified access, production scraping |
 
-# Launch headed with persistent profile — log in manually
-agent-browser --headed --profile ~/.agent-browser/profiles/<site> open https://example.com
+## Best Practices
 
-# After login completes, all future runs reuse the profile headlessly
-```
+1. **Choose the local strategy deliberately**: use `browse open <url> --local` for clean state, `browse open <url> --auto-connect` for existing local credentials, and `browse open <url> --remote` for protected sites
+2. **Always `browse open` first** before interacting
+3. **Use `browse snapshot`** to check page state — it's fast and gives you element refs
+4. **Only screenshot when visual context is needed** (layout checks, images, debugging)
+5. **Use refs from snapshot** to click/interact — e.g., `browse click @0-5`
+6. **`browse stop`** when done to clean up the browser session and clear the env override
 
-**Subsequent runs (headless, automatic):**
-```bash
-agent-browser --profile ~/.agent-browser/profiles/<site> open https://example.com
-# Auth is automatic — cookies, IndexedDB, cache all persist
-```
+## Troubleshooting
 
-**To add a new site:** Close daemon, run `--headed --profile ~/.agent-browser/profiles/<name>` once, log in, done.
+- **"No active page"**: Run `browse stop`, then check `browse status`. If it still says running, kill the zombie daemon with `pkill -f "browse.*daemon"`, then retry `browse open`
+- **Chrome not found**: Install Chrome, use `browse open <url> --auto-connect` if you already have a debuggable Chrome running, or switch to `browse open <url> --remote`
+- **Action fails**: Run `browse snapshot` to see available elements and their refs
+- **Browserbase fails**: Verify API key is set
 
-### Auth Vault (Alternative)
+## Switching to Remote Mode
 
-```bash
-agent-browser auth save mysite --url https://example.com --username user --password-stdin
-agent-browser auth login mysite    # auto-fills login form
-agent-browser auth list            # show saved profiles
-```
+Switch to remote when you detect: CAPTCHAs (reCAPTCHA, hCaptcha, Turnstile), bot detection pages ("Checking your browser..."), HTTP 403/429, empty pages on sites that should have content, or the user asks for it.
 
-### Batch Execution
+Don't switch for simple sites (docs, wikis, public APIs, localhost).
 
 ```bash
-# Send multiple commands in one shot (fewer tool calls = fewer tokens)
-echo '[["open","https://example.com"],["snapshot"],["click","@e12"]]' | agent-browser batch
+browse open <url> --local          # clean isolated local browser
+browse open <url> --auto-connect   # attach to existing debuggable Chrome
+browse open <url> --remote         # Browserbase session
 ```
 
-### Advanced Features
+Mode flags are applied when a session starts. After `browse stop`, the next start falls back to env-var-based auto detection. Use `browse status` to inspect the resolved mode and target while the daemon is running.
 
-```bash
-# Connect to already-running Chrome
-agent-browser --auto-connect snapshot
-
-# Network interception
-agent-browser route "**/*.{png,jpg}" abort     # block images
-agent-browser route "https://api.com/*" mock '{"data":"test"}'
-
-# Device emulation
-agent-browser --device "iPhone 15" open https://example.com
-
-# Session persistence (cookies + localStorage by name)
-agent-browser --session-name myapp open https://example.com
-```
-
-### agent-browser Rules
-
-- **Daemon model** — first command starts daemon, subsequent commands connect instantly.
-- **Refs use @eN syntax** — `@e12` not `e12`.
-- **Profiles persist everything** — cookies, IndexedDB, cache, localStorage.
-- **Close with `agent-browser close`** or `close --all` to kill daemon.
-
----
-
-### Delegating Browser Work to Agents
-
-When you need parallel or background browser work (scraping multiple pages, monitoring), spawn **general-purpose agents** with browser instructions. No dedicated browser agent type needed — this skill IS the expertise.
-
-```
-Agent(subagent_type="general-purpose", prompt="
-  Use agent-browser CLI for all browser work.
-  Commands: open <url>, snapshot, click @eN, fill @eN 'text', screenshot /path.
-  For authenticated sites: --profile ~/.agent-browser/profiles/<site>
-  Refs use @eN syntax from snapshots.
-  [your specific task instructions here]
-")
-```
-
-For parallel isolation, each agent uses `--session <name>`:
-```
-Agent 1: agent-browser --session scrape1 open https://site-a.com
-Agent 2: agent-browser --session scrape2 open https://site-b.com
-```
-
-**Fallback:** If agent-browser fails or the site has bot detection, use the **Interceptor** skill instead.
-
-**Legacy built-in agents — DEPRECATED, do not invoke.** BrowserAgent and UIReviewer are Claude Code built-ins whose internals cannot be modified; they run browser automation that PAI no longer uses. Route all browser work through the **Interceptor** skill (verification, authenticated flows) or **agent-browser** (headless scraping).
-
----
-
-## Workflow Routing
-
-| Trigger Words | Workflow | What It Does |
-|--------------|----------|-------------|
-| "review stories", "run stories", "ui review", "validate stories" | `Workflows/ReviewStories.md` | Fan out YAML stories to parallel UIReviewers |
-| "automate", "recipe", "template", or a recipe name | `Workflows/Automate.md` | Load and execute a parameterized recipe template |
-| "update", "check version" | `Workflows/Update.md` | Verify browser tools are current and working |
-
----
-
-## Stories — YAML User Story Validation
-
-Define user stories in YAML and validate them in parallel with UIReviewer agents.
-
-**Directory:** `skills/Browser/Stories/`
-
-```yaml
-name: App Name
-url: https://example.com
-stories:
-  - name: Story name
-    steps:
-      - action: click
-        target: "LLM-readable description"
-    assertions:
-      - type: snapshot_contains
-        text: "expected text"
-```
-
-Run with: `"review stories"` or `"run stories in HackerNews.yaml"`
-
----
-
-## Recipes — Parameterized Templates
-
-Reusable Markdown templates with `{PROMPT}` injection.
-
-**Directory:** `skills/Browser/Recipes/`
-
-| Recipe | Description | Tool |
-|--------|-------------|------|
-| `SummarizePage.md` | Extract content summary | BrowserAgent |
-| `ScreenshotCompare.md` | Before/after comparison | agent-browser |
-| `FormFill.md` | Fill form fields | agent-browser |
-
-Run with: `"automate SummarizePage for https://example.com"`
-
----
-
-## Execution Log
-
-After completing any workflow, append a single JSONL entry:
-
-```bash
-echo '{"ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","skill":"Browser","workflow":"WORKFLOW_USED","input":"8_WORD_SUMMARY","status":"ok|error","duration_s":SECONDS}' >> ~/.claude/PAI/MEMORY/SKILLS/execution.jsonl
-```
+For detailed examples, see [EXAMPLES.md](EXAMPLES.md).
+For API reference, see [REFERENCE.md](REFERENCE.md).

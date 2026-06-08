@@ -2,6 +2,7 @@
 name: postgres-pro
 description: Use when optimizing PostgreSQL queries, configuring replication, or implementing advanced database features. Invoke for EXPLAIN analysis, JSONB operations, extension usage, VACUUM tuning, performance monitoring.
 license: MIT
+compatibility: opencode
 metadata:
   author: https://github.com/Jeffallan
   version: "1.1.0"
@@ -150,5 +151,3 @@ When implementing PostgreSQL solutions, provide:
 ## Knowledge Reference
 
 PostgreSQL 12-16, EXPLAIN ANALYZE, B-tree/GIN/GiST/BRIN indexes, JSONB operators, streaming replication, logical replication, VACUUM/ANALYZE, pg_stat views, PostGIS, pgvector, pg_trgm, WAL archiving, PITR
-
-[Documentation](https://jeffallan.github.io/claude-skills/skills/infrastructure/postgres-pro/)

@@ -2,6 +2,7 @@
 name: rails-expert
 description: Rails 7+ specialist that optimizes Active Record queries with includes/eager_load, implements Turbo Frames and Turbo Streams for partial page updates, configures Action Cable for WebSocket connections, sets up Sidekiq workers for background job processing, and writes comprehensive RSpec test suites. Use when building Rails 7+ web applications with Hotwire, real-time features, or background job processing. Invoke for Active Record optimization, Turbo Frames/Streams, Action Cable, Sidekiq, RSpec Rails.
 license: MIT
+compatibility: opencode
 metadata:
   author: https://github.com/Jeffallan
   version: "1.1.0"
@@ -152,5 +153,3 @@ When implementing Rails features, provide:
 4. View files or Hotwire setup
 5. Spec files for models and requests
 6. Brief explanation of architectural decisions
-
-[Documentation](https://jeffallan.github.io/claude-skills/skills/backend/rails-expert/)

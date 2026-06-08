@@ -2,6 +2,7 @@
 name: dotnet-core-expert
 description: Use when building .NET 8 applications with minimal APIs, clean architecture, or cloud-native microservices. Invoke for Entity Framework Core, CQRS with MediatR, JWT authentication, AOT compilation.
 license: MIT
+compatibility: opencode
 metadata:
   author: https://github.com/Jeffallan
   version: "1.1.0"
@@ -136,5 +137,3 @@ When implementing .NET features, provide:
 3. API endpoints or service implementations
 4. Database context and migrations if applicable
 5. Brief explanation of architectural decisions
-
-[Documentation](https://jeffallan.github.io/claude-skills/skills/backend/dotnet-core-expert/)

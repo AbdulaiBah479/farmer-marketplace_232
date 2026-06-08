@@ -1,264 +1,651 @@
 ---
 name: loki
-license: Apache-2.0
-description: >
-  Grafana Loki log aggregation and LogQL query language. Covers LogQL syntax (log queries, metric queries,
-  label matchers, line filters, parsers: json/logfmt/pattern/regexp/unpack, label filters, line_format),
-  Loki architecture, log ingestion via Alloy/Promtail/Fluent Bit, structured metadata, and Logs Drilldown.
-  Use when writing LogQL queries, configuring Loki, troubleshooting log pipelines, or analyzing logs.
+description: Guide for implementing Grafana Loki - a horizontally scalable, highly available log aggregation system. Use when configuring Loki deployments, setting up storage backends (S3, Azure Blob, GCS), writing LogQL queries, configuring retention and compaction, deploying via Helm, integrating with OpenTelemetry, or troubleshooting Loki issues on Kubernetes.
 ---
 
-# Grafana Loki - Log Aggregation
+# Grafana Loki Skill
 
-> **Docs**: https://grafana.com/docs/loki/latest/
+Comprehensive guide for Grafana Loki - the cost-effective, horizontally-scalable log aggregation system inspired by Prometheus.
 
-Indexes only metadata (labels), not full log content — dramatically cheaper than full-text search systems.
+## What is Loki?
 
-## LogQL Quick Reference
+Loki is a **horizontally-scalable, highly-available, multi-tenant log aggregation system** that:
 
-### Log Stream Selector (required in every query)
+- **Indexes only metadata (labels)** - Not full log content like traditional systems
+- **Stores compressed chunks** in affordable object storage (S3, GCS, Azure Blob)
+- **Uses Prometheus-style labels** for organizing log streams
+- **Multi-tenant by default** with built-in tenant isolation
+- **Cost-efficient** - Dramatically smaller index and lower operational costs
+
+## Architecture Overview
+
+### Core Components
+
+| Component | Purpose |
+|-----------|---------|
+| **Distributor** | Validates requests, preprocesses labels, routes to ingesters |
+| **Ingester** | Buffers logs in memory, compresses into chunks, writes to storage |
+| **Querier** | Executes LogQL queries from ingesters and storage |
+| **Query Frontend** | Accelerates queries via splitting, caching, scheduling |
+| **Query Scheduler** | Manages per-tenant query queues for fairness |
+| **Index Gateway** | Serves index queries for TSDB stores |
+| **Compactor** | Merges index files, manages retention, handles deletion |
+| **Ruler** | Evaluates alerting and recording rules |
+
+### Data Flow
+
+**Write Path:**
+
+```
+Log Source → Distributor → Ingester → Object Storage
+                                    ↓
+                              Chunks + Indexes
+```
+
+**Read Path:**
+
+```
+Query → Query Frontend → Query Scheduler → Querier
+                                             ↓
+                                    Ingesters + Storage
+```
+
+## Deployment Modes
+
+### 1. Monolithic Mode (`-target=all`)
+
+- All components in single process
+- Best for: Initial experimentation, small-scale (~20GB logs/day)
+- Simplest approach
+
+### 2. Simple Scalable Deployment (SSD) - Recommended Default
+
+```yaml
+deploymentMode: SimpleScalable
+
+write:
+  replicas: 3   # Distributor + Ingester
+
+read:
+  replicas: 2   # Query Frontend + Querier
+
+backend:
+  replicas: 2   # Compactor + Index Gateway + Query Scheduler + Ruler
+```
+
+### 3. Microservices Mode (Distributed)
+
+```yaml
+deploymentMode: Distributed
+
+ingester:
+  replicas: 3
+  zoneAwareReplication:
+    enabled: true
+
+distributor:
+  replicas: 3
+
+querier:
+  replicas: 3
+
+queryFrontend:
+  replicas: 2
+
+queryScheduler:
+  replicas: 2
+
+compactor:
+  replicas: 1
+
+indexGateway:
+  replicas: 2
+```
+
+## Schema Configuration
+
+**Recommended: TSDB with Schema v13**
+
+```yaml
+loki:
+  schemaConfig:
+    configs:
+      - from: "2024-04-01"
+        store: tsdb
+        object_store: azure  # or s3, gcs
+        schema: v13
+        index:
+          prefix: loki_index_
+          period: 24h
+```
+
+## Storage Configuration
+
+### Azure Blob Storage (Recommended for Azure)
+
+```yaml
+loki:
+  storage:
+    type: azure
+    bucketNames:
+      chunks: loki-chunks
+      ruler: loki-ruler
+      admin: loki-admin
+    azure:
+      accountName: <storage-account-name>
+      # Option 1: User-Assigned Managed Identity (Recommended)
+      useManagedIdentity: true
+      useFederatedToken: false
+      userAssignedId: <identity-client-id>
+      # Option 2: Account Key (Dev only)
+      # accountKey: <account-key>
+      requestTimeout: 30s
+```
+
+### AWS S3
+
+```yaml
+loki:
+  storage:
+    type: s3
+    bucketNames:
+      chunks: my-loki-chunks-2024
+      ruler: my-loki-ruler-2024
+      admin: my-loki-admin-2024
+    s3:
+      endpoint: s3.us-east-1.amazonaws.com
+      region: us-east-1
+      # Use IAM roles or access keys
+      accessKeyId: <access-key>
+      secretAccessKey: <secret-key>
+      s3ForcePathStyle: false
+```
+
+### Google Cloud Storage
+
+```yaml
+loki:
+  storage:
+    type: gcs
+    bucketNames:
+      chunks: my-loki-gcs-bucket
+    gcs:
+      bucketName: my-loki-gcs-bucket
+      # Uses Workload Identity or service account
+```
+
+## Chunk Configuration Best Practices
+
+```yaml
+loki:
+  ingester:
+    chunk_encoding: snappy        # Recommended (fast + efficient)
+    chunk_target_size: 1572864    # ~1.5MB compressed
+    max_chunk_age: 2h             # Max time before flush
+    chunk_idle_period: 30m        # Flush idle chunks
+    flush_check_period: 30s
+    flush_op_timeout: 10m
+```
+
+| Setting | Recommended | Purpose |
+|---------|-------------|---------|
+| `chunk_encoding` | snappy | Best speed-to-compression balance |
+| `chunk_target_size` | 1.5MB | Target compressed chunk size |
+| `max_chunk_age` | 2h | Limits memory and data loss exposure |
+| `chunk_idle_period` | 30m | Flushes inactive streams |
+
+## Limits Configuration
+
+```yaml
+loki:
+  limits_config:
+    # Retention
+    retention_period: 744h              # 31 days
+
+    # Ingestion limits
+    ingestion_rate_mb: 50
+    ingestion_burst_size_mb: 100
+    per_stream_rate_limit: 3MB
+    per_stream_rate_limit_burst: 15MB
+
+    # Query limits
+    max_query_series: 10000
+    max_query_lookback: 720h
+    max_entries_limit_per_query: 10000
+
+    # Required for OTLP
+    allow_structured_metadata: true
+    volume_enabled: true
+
+    # Sample rejection
+    reject_old_samples: true
+    reject_old_samples_max_age: 168h    # 7 days
+    max_label_names_per_series: 25
+```
+
+## Compactor Configuration
+
+```yaml
+loki:
+  compactor:
+    retention_enabled: true
+    retention_delete_delay: 2h
+    retention_delete_worker_count: 50
+    compaction_interval: 10m
+    delete_request_store: azure         # Match your storage type
+```
+
+## Caching Configuration
+
+**Recommended: Separate Memcached instances**
+
+```yaml
+# Helm values for Loki caching
+memcached:
+  # Results cache
+  frontend:
+    replicas: 3
+    memcached:
+      maxItemMemory: 1024               # 1GB
+      maxItemSize: 5m
+      connectionLimit: 1024
+
+  # Chunks cache
+  chunks:
+    replicas: 3
+    memcached:
+      maxItemMemory: 4096               # 4GB
+      maxItemSize: 2m
+      connectionLimit: 1024
+
+# Enable caching in Loki config
+loki:
+  chunk_store_config:
+    chunk_cache_config:
+      memcached_client:
+        host: loki-memcached-chunks.monitoring.svc
+        service: memcached-client
+```
+
+## LogQL Query Language
+
+### Basic Queries
 
 ```logql
-{app="nginx"}                        # exact match
-{app!="nginx"}                       # not equal
-{app=~"nginx|apache"}               # regex match
-{app!~"debug.*"}                     # regex not match
-{app="nginx", env="prod"}           # AND (multiple labels)
+# Stream selector
+{job="api-server"}
+
+# Multiple labels
+{job="api-server", env="prod"}
+
+# Label matchers
+{namespace=~".*-prod"}           # Regex match
+{level!="debug"}                  # Not equal
+
+# Filter expressions
+{job="api-server"} |= "error"     # Contains
+{job="api-server"} != "debug"     # Not contains
+{job="api-server"} |~ "err.*"     # Regex match
+{job="api-server"} !~ "debug.*"   # Regex not match
 ```
 
-### Line Filters (pipeline stage 1 - put first for performance)
+### Pipeline Stages
 
 ```logql
-{app="nginx"} |= "error"            # contains string
-{app="nginx"} != "info"             # does not contain
-{app="nginx"} |~ "error|warn"       # regex match
-{app="nginx"} !~ "health.*check"    # regex not match
-{app="nginx"} |= `"status":5`       # backtick avoids escaping
+# JSON parsing
+{job="api-server"} | json
+
+# Extract specific fields
+{job="api-server"} | json | line_format "{{.message}}"
+
+# Label extraction
+{job="api-server"} | logfmt | level="error"
+
+# Pattern matching
+{job="api-server"} | pattern "<ip> - - [<_>] \"<method> <path>\"" | method="POST"
 ```
 
-### Parsers
+### Metric Queries
 
 ```logql
-# JSON
-{app="api"} | json
-{app="api"} | json status="http_status", path="request.path"
+# Count logs per minute
+count_over_time({job="api-server"}[1m])
 
-# Logfmt
-{app="api"} | logfmt
-{app="api"} | logfmt --strict
-{app="api"} | logfmt --keep-empty
+# Rate of errors
+rate({job="api-server"} |= "error" [5m])
 
-# Pattern (positional, _ discards)
-{app="nginx"} | pattern `<ip> - - <_> "<method> <uri> <_>" <status> <bytes>`
+# Bytes rate
+bytes_rate({job="api-server"}[5m])
 
-# Regexp (named capture groups)
-{app="nginx"} | regexp `(?P<method>\w+) (?P<path>\S+) HTTP/(?P<version>\S+)`
+# Sum by label
+sum by (namespace) (rate({job="api-server"}[5m]))
 
-# Unpack (unwrap Promtail packed labels)
-{app="api"} | unpack
+# Top 10 by volume
+topk(10, sum by (namespace) (bytes_rate({}[5m])))
 ```
 
-### Label Filters (after parsers)
+## OpenTelemetry Integration
 
-```logql
-{app="api"} | json | status >= 500
-{app="api"} | json | status == 200 and method != "OPTIONS"
-{app="api"} | logfmt | duration > 1s
-{app="api"} | json | level =~ "error|warn"
-{app="api"} | json | bytes > 20MB
-{app="api"} | json | path != "/healthz"
+### Native OTLP (Recommended - Loki 3.0+)
+
+**OpenTelemetry Collector Config:**
+
+```yaml
+exporters:
+  otlphttp:
+    endpoint: http://loki-gateway:3100/otlp
+    headers:
+      X-Scope-OrgID: "my-tenant"
+
+service:
+  pipelines:
+    logs:
+      receivers: [otlp]
+      exporters: [otlphttp]
 ```
 
-### Line Format
+**Loki Config:**
 
-```logql
-{app="api"} | json | line_format "{{.method}} {{.path}} -> {{.status}} ({{.duration}})"
-{app="api"} | logfmt | line_format `{{.level | upper}}: {{.msg}}`
+```yaml
+loki:
+  limits_config:
+    allow_structured_metadata: true    # Required for OTLP
 ```
 
-### Label Format
+**Key Benefits:**
 
-```logql
-{app="api"} | logfmt | label_format new_name=old_name
-{app="api"} | logfmt | label_format severity=level, svc=app
-{app="api"} | logfmt | label_format msg=`{{.level}}: {{.message}}`
-```
+- Log body stored as plain text (not JSON encoded)
+- 17 default resource attributes auto-indexed
+- Simpler queries without JSON parsing
+- Better storage efficiency
 
-### Drop/Keep Labels
+### Resource Attribute Mapping
 
-```logql
-{app="api"} | json | drop filename, level="debug"
-{app="api"} | json | keep level, status, method
-```
+| OTLP Attribute | Loki Label |
+|----------------|------------|
+| `service.name` | `service_name` |
+| `service.namespace` | `service_namespace` |
+| `k8s.pod.name` | `k8s_pod_name` |
+| `k8s.namespace.name` | `k8s_namespace_name` |
+| `cloud.region` | `cloud_region` |
 
-### Decolorize
+## Kubernetes Helm Deployment
 
-```logql
-{app="cli-tool"} | decolorize
-```
-
-## Metric Queries
-
-### Log Range Aggregations
-
-```logql
-# Requests per second
-rate({app="nginx"}[5m])
-
-# Total log lines in window
-count_over_time({app="nginx"}[1h])
-
-# Bytes per second
-bytes_rate({app="nginx"}[5m])
-
-# Total bytes
-bytes_over_time({app="nginx"}[1h])
-
-# Returns 1 if no logs in range (for absence alerting)
-absent_over_time({app="nginx"}[5m])
-```
-
-### Aggregation
-
-```logql
-# Error rate by service
-sum(rate({env="prod"} |= "error" [5m])) by (app)
-
-# Top 5 most active services
-topk(5, sum(rate({env="prod"}[5m])) by (app))
-
-# Total errors across all services
-sum(count_over_time({env="prod"} |= "error" [5m]))
-```
-
-### Unwrapped Range Aggregations (numeric values from logs)
-
-```logql
-# Average request duration from logfmt
-avg_over_time({app="api"} | logfmt | unwrap duration [5m])
-
-# 95th percentile latency
-quantile_over_time(0.95, {app="api"} | logfmt | unwrap duration [5m]) by (app)
-
-# Sum of bytes from JSON logs
-sum_over_time({app="api"} | json | unwrap bytes [5m])
-
-# With conversion (duration string → seconds)
-avg_over_time({app="api"} | logfmt | unwrap duration | duration_seconds [5m])
-```
-
-### Offset Modifier
-
-```logql
-# Compare current rate vs 1 hour ago
-rate({app="nginx"}[5m]) / rate({app="nginx"}[5m] offset 1h)
-```
-
-## Practical Examples
-
-### Error rate alert query
-```logql
-sum(rate({env="prod"} |= "error" [5m])) by (service)
-/
-sum(rate({env="prod"}[5m])) by (service)
-> 0.05
-```
-
-### Slow requests
-```logql
-{app="api"} | logfmt | duration > 1s | line_format "SLOW: {{.method}} {{.path}} {{.duration}}"
-```
-
-### HTTP 5xx errors with details
-```logql
-{app="nginx"} | pattern `<ip> - - <_> "<method> <uri> <_>" <status> <bytes>` | status >= 500
-```
-
-### Credential leak detection
-```logql
-{namespace="prod"} |~ `https?://\w+:\w+@`
-```
-
-## Sending Logs to Loki
-
-### Via Grafana Alloy
-
-```alloy
-loki.source.file "app" {
-  targets    = [{__path__ = "/var/log/app/*.log", job = "app"}]
-  forward_to = [loki.process.parse.receiver]
-}
-
-loki.process "parse" {
-  forward_to = [loki.write.cloud.receiver]
-  stage.json {
-    expressions = { level = "level", msg = "message" }
-  }
-  stage.labels {
-    values = { level = "" }
-  }
-  stage.drop {
-    expression = ".*healthcheck.*"
-  }
-}
-
-loki.write "cloud" {
-  endpoint {
-    url = "https://logs-xxx.grafana.net/loki/api/v1/push"
-    basic_auth {
-      username = sys.env("LOKI_USER")
-      password = sys.env("GRAFANA_API_KEY")
-    }
-  }
-  external_labels = { cluster = "prod" }
-}
-```
-
-### Via Kubernetes (Alloy DaemonSet)
-
-```alloy
-discovery.kubernetes "pods" {
-  role = "pod"
-}
-
-loki.source.kubernetes "pods" {
-  targets    = discovery.kubernetes.pods.targets
-  forward_to = [loki.write.cloud.receiver]
-}
-```
-
-### Loki HTTP Push API
+### Add Repository
 
 ```bash
-curl -X POST https://logs-xxx.grafana.net/loki/api/v1/push \
-  -u "user:apikey" \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "streams": [{
-      "stream": { "app": "myapp", "env": "prod" },
-      "values": [
-        ["1609459200000000000", "log line here"]
-      ]
-    }]
-  }'
+helm repo add grafana https://grafana.github.io/helm-charts
+helm repo update
 ```
 
-## Architecture
+### Install with Values
 
+```bash
+helm install loki grafana/loki \
+  --namespace monitoring \
+  --values values.yaml
 ```
-Push path:  Client → Distributor → Ingester (WAL) → Object Storage (chunks)
-Read path:  Query → Query Frontend → Querier → Ingester + Store (chunks)
+
+### Production Values Example
+
+```yaml
+deploymentMode: Distributed
+
+loki:
+  auth_enabled: true
+
+  schemaConfig:
+    configs:
+      - from: "2024-04-01"
+        store: tsdb
+        object_store: azure
+        schema: v13
+        index:
+          prefix: loki_index_
+          period: 24h
+
+  storage:
+    type: azure
+    azure:
+      accountName: mystorageaccount
+      useManagedIdentity: true
+      userAssignedId: <client-id>
+    bucketNames:
+      chunks: loki-chunks
+      ruler: loki-ruler
+      admin: loki-admin
+
+  limits_config:
+    retention_period: 2160h             # 90 days
+    allow_structured_metadata: true
+
+ingester:
+  replicas: 3
+  zoneAwareReplication:
+    enabled: true
+  resources:
+    requests:
+      cpu: 2
+      memory: 8Gi
+    limits:
+      cpu: 4
+      memory: 16Gi
+
+querier:
+  replicas: 3
+  maxUnavailable: 2
+
+queryFrontend:
+  replicas: 2
+
+distributor:
+  replicas: 3
+
+compactor:
+  replicas: 1
+
+indexGateway:
+  replicas: 2
+  maxUnavailable: 1
+
+# Gateway for external access
+gateway:
+  service:
+    type: LoadBalancer
+
+# Monitoring
+monitoring:
+  serviceMonitor:
+    enabled: true
 ```
 
-**Components:**
-- **Distributor**: Validates and hashes incoming log streams
-- **Ingester**: Buffers chunks in memory, flushes to object storage
-- **Querier**: Executes LogQL queries
-- **Query Frontend**: Caches, splits, and parallelizes queries
-- **Compactor**: Manages retention and deduplication
+## Azure Identity Configuration
 
-## References
+### User-Assigned Managed Identity (Recommended)
 
-- [LogQL Reference](references/logql.md)
-- [Configuration](references/configuration.md)
-- [Sending Data](references/send-data.md)
+**1. Create Identity:**
+
+```bash
+az identity create \
+  --name loki-identity \
+  --resource-group <rg>
+
+IDENTITY_CLIENT_ID=$(az identity show --name loki-identity --resource-group <rg> --query clientId -o tsv)
+IDENTITY_PRINCIPAL_ID=$(az identity show --name loki-identity --resource-group <rg> --query principalId -o tsv)
+```
+
+**2. Assign to Node Pool:**
+
+```bash
+az vmss identity assign \
+  --resource-group <aks-node-rg> \
+  --name <vmss-name> \
+  --identities /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.ManagedIdentity/userAssignedIdentities/loki-identity
+```
+
+**3. Grant Storage Permission:**
+
+```bash
+az role assignment create \
+  --role "Storage Blob Data Contributor" \
+  --assignee-object-id $IDENTITY_PRINCIPAL_ID \
+  --scope /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Storage/storageAccounts/<storage>
+```
+
+**4. Configure Loki:**
+
+```yaml
+loki:
+  storage:
+    azure:
+      useManagedIdentity: true
+      userAssignedId: <IDENTITY_CLIENT_ID>
+```
+
+## Multi-Tenancy
+
+```yaml
+loki:
+  auth_enabled: true
+
+# Query with tenant header
+curl -H "X-Scope-OrgID: tenant-a" \
+  "http://loki:3100/loki/api/v1/query?query={job=\"app\"}"
+
+# Multi-tenant queries (if enabled)
+# X-Scope-OrgID: tenant-a|tenant-b
+```
+
+## Troubleshooting
+
+### Common Issues
+
+**1. Container Not Found (Azure)**
+
+```bash
+# Create required containers
+az storage container create --name loki-chunks --account-name <storage>
+az storage container create --name loki-ruler --account-name <storage>
+az storage container create --name loki-admin --account-name <storage>
+```
+
+**2. Authorization Failure (Azure)**
+
+```bash
+# Verify RBAC assignment
+az role assignment list --scope /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Storage/storageAccounts/<storage>
+
+# Assign if missing
+az role assignment create \
+  --role "Storage Blob Data Contributor" \
+  --assignee-object-id <principal-id> \
+  --scope <storage-scope>
+
+# Restart pod to refresh token
+kubectl delete pod -n monitoring <ingester-pod>
+```
+
+**3. Ingester OOM**
+
+```yaml
+# Increase memory limits
+ingester:
+  resources:
+    limits:
+      memory: 16Gi
+```
+
+**4. Query Timeout**
+
+```yaml
+loki:
+  querier:
+    query_timeout: 5m
+    max_concurrent: 8
+  query_scheduler:
+    max_outstanding_requests_per_tenant: 2048
+```
+
+### Diagnostic Commands
+
+```bash
+# Check pod status
+kubectl get pods -n monitoring -l app.kubernetes.io/name=loki
+
+# Check ingester logs
+kubectl logs -n monitoring -l app.kubernetes.io/component=ingester --tail=100
+
+# Check compactor logs
+kubectl logs -n monitoring -l app.kubernetes.io/component=compactor --tail=100
+
+# Verify readiness
+kubectl exec -it <loki-pod> -n monitoring -- wget -qO- http://localhost:3100/ready
+
+# Check configuration
+kubectl exec -it <loki-pod> -n monitoring -- cat /etc/loki/config/config.yaml
+```
+
+## API Reference
+
+### Ingestion
+
+```bash
+# Push logs
+POST /loki/api/v1/push
+
+# OTLP logs
+POST /otlp/v1/logs
+```
+
+### Query
+
+```bash
+# Instant query
+GET /loki/api/v1/query?query={job="app"}&time=<timestamp>
+
+# Range query
+GET /loki/api/v1/query_range?query={job="app"}&start=<start>&end=<end>
+
+# Labels
+GET /loki/api/v1/labels
+GET /loki/api/v1/label/<name>/values
+
+# Series
+GET /loki/api/v1/series
+
+# Tail (WebSocket)
+GET /loki/api/v1/tail?query={job="app"}
+```
+
+### Health
+
+```bash
+GET /ready
+GET /metrics
+```
+
+## Reference Documentation
+
+For detailed configuration by topic:
+
+- **[Storage Configuration](references/storage.md)**: Object stores, retention, WAL
+- **[LogQL Reference](references/logql.md)**: Query syntax and examples
+- **[OpenTelemetry Integration](references/opentelemetry.md)**: OTLP configuration
+
+## External Resources
+
+- [Official Loki Documentation](https://grafana.com/docs/loki/latest/)
+- [Loki Helm Chart](https://github.com/grafana/loki/tree/main/production/helm/loki)
+- [LogQL Documentation](https://grafana.com/docs/loki/latest/query/)
+- [Loki GitHub Repository](https://github.com/grafana/loki)
+
+---
+
+## Gotchas
+
+- **Ingester rejects labels that change cardinality mid-stream** — a label switched from low to high cardinality silently splits the stream into a ghost gap.
+- **LogQL `|=` (line filter) is faster than label filter** — query plan optimizes only line filters; label filters fire after parsing.
+- **Tenant separation via `X-Scope-OrgID`**: missing header writes to tenant "fake" silently — your logs aren't lost, they're in the wrong tenant.
+- **Retention is per-tenant**; global retention env var is fallback only — a misconfigured tenant silently overrides global.
+- **Compactor not running = orphan chunks pile up** — storage grows without bounds; the compactor's failure is in a separate component's log.
+- **Promtail vs Alloy migration**: label normalization differs in subtle ways (e.g., `__path__` semantics); migrating during high traffic loses logs.

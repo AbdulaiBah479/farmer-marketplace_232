@@ -1,15 +1,21 @@
 ---
 name: handoff
-description: Compact the current conversation into a handoff document for another agent to pick up.
-argument-hint: "What will the next session be used for?"
+description: Write or update a HANDOFF.md so a fresh agent can continue this work. Use when the user says "handoff", "compact this", "context is full", or "/clear and continue".
+argument-hint: "What will the next session focus on?"
 ---
 
-Write a handoff document summarising the current conversation so a fresh agent can continue the work. Save to the temporary directory of the user's OS - not the current workspace.
+Write or update a handoff document so the next agent with fresh context can continue.
 
-Include a "suggested skills" section in the document, which suggests skills that the agent should invoke.
+## Steps
 
-Do not duplicate content already captured in other artifacts (PRDs, plans, ADRs, issues, commits, diffs). Reference them by path or URL instead.
-
-Redact any sensitive information, such as API keys, passwords, or personally identifiable information.
-
-If the user passed arguments, treat them as a description of what the next session will focus on and tailor the doc accordingly.
+1. If `HANDOFF.md` exists in the project root, read it first.
+2. Do not duplicate content already in PRDs, plans, ADRs, issues, commits, or diffs — reference them by path or URL.
+3. Write or update `HANDOFF.md` in the project root with:
+   - **Goal** — what we're trying to accomplish
+   - **Current Progress** — what's done (link commits/PRs)
+   - **What Worked** — approaches that succeeded
+   - **What Didn't Work** — dead ends, so they aren't retried
+   - **Next Steps** — concrete action items
+   - **Suggested skills** — which skills the next session should load, if any
+4. If the user passed arguments, tailor the doc to that focus.
+5. Tell the user the path so they can start a fresh conversation with it.

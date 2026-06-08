@@ -2,6 +2,7 @@
 name: pandas-pro
 description: Performs pandas DataFrame operations for data analysis, manipulation, and transformation. Use when working with pandas DataFrames, data cleaning, aggregation, merging, or time series analysis. Invoke for data manipulation tasks such as joining DataFrames on multiple keys, pivoting tables, resampling time series, handling NaN values with interpolation or forward-fill, groupby aggregations, type conversion, or performance optimization of large datasets.
 license: MIT
+compatibility: opencode
 metadata:
   author: https://github.com/Jeffallan
   version: "1.1.0"
@@ -176,5 +177,3 @@ When implementing pandas solutions, provide:
 2. Comments explaining complex transformations
 3. Memory/performance considerations if dataset is large
 4. Data validation checks (dtypes, nulls, shapes)
-
-[Documentation](https://jeffallan.github.io/claude-skills/skills/data-ml/pandas-pro/)

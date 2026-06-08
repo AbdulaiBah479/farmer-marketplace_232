@@ -2,6 +2,7 @@
 name: vue-expert
 description: Builds Vue 3 components with Composition API patterns, configures Nuxt 3 SSR/SSG projects, sets up Pinia stores, scaffolds Quasar/Capacitor mobile apps, implements PWA features, and optimises Vite builds. Use when creating Vue 3 applications with Composition API, writing reusable composables, managing state with Pinia, building hybrid mobile apps with Quasar or Capacitor, configuring service workers, or tuning Vite configuration and TypeScript integration.
 license: MIT
+compatibility: opencode
 metadata:
   author: https://github.com/Jeffallan
   version: "1.1.0"
@@ -10,7 +11,7 @@ metadata:
   role: specialist
   scope: implementation
   output-format: code
-  related-skills: typescript-pro, fullstack-guardian
+  related-skills: fullstack-guardian, typescript-pro, vue-expert-js
 ---
 
 # Vue Expert
@@ -96,5 +97,3 @@ When implementing Vue features, provide:
 ## Knowledge Reference
 
 Vue 3 Composition API, Pinia, Nuxt 3, Vue Router 4, Vite, VueUse, TypeScript, Vitest, Vue Test Utils, SSR/SSG, reactive programming, performance optimization
-
-[Documentation](https://jeffallan.github.io/claude-skills/skills/frontend/vue-expert/)

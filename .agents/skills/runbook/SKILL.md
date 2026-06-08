@@ -1,87 +1,47 @@
 ---
 name: runbook
-description: Create or update an operational runbook for a recurring task or procedure. Use when documenting a task that on-call or ops needs to run repeatably, turning tribal knowledge into exact step-by-step commands, adding troubleshooting and rollback steps to an existing procedure, or writing escalation paths for when things go wrong.
-argument-hint: "<process or task name>"
+description: Create or load an operational runbook for a given topic. Searches `runbooks/` for an existing match; if none, scaffolds a new one from the standard template (Purpose / Prerequisites / Steps / Verification / Troubleshooting / Last Tested). Use when asked to "create a runbook", "load runbook for X", document a procedure, or look up an SOP.
 ---
 
-# /runbook
+# Runbook — Create or load an operational runbook
 
-> If you see unfamiliar placeholders or need to check which tools are connected, see [CONNECTORS.md](../../CONNECTORS.md).
-
-Create a step-by-step operational runbook for a recurring task or procedure.
-
-## Usage
-
-```
-/runbook $ARGUMENTS
-```
-
-## Output
+When invoked with a topic (e.g., `/runbook ARI management group`):
+1. Search `runbooks/` for existing runbooks matching the topic
+2. If found, load and display the runbook
+3. If not found, create a new one using this template:
 
 ```markdown
-## Runbook: [Task Name]
-**Owner:** [Team/Person] | **Frequency:** [Daily/Weekly/Monthly/As Needed]
-**Last Updated:** [Date] | **Last Run:** [Date]
+# Runbook: {{title}}
 
-### Purpose
-[What this runbook accomplishes and when to use it]
+## Purpose
+[One sentence — when and why to use this]
 
-### Prerequisites
-- [ ] [Access or permission needed]
-- [ ] [Tool or system required]
-- [ ] [Data or input needed]
+## Prerequisites
+-
 
-### Procedure
+## Steps
+1.
 
-#### Step 1: [Name]
-```
-[Exact command, action, or instruction]
-```
-**Expected result:** [What should happen]
-**If it fails:** [What to do]
+## Verification
+- [ ]
 
-#### Step 2: [Name]
-```
-[Exact command, action, or instruction]
-```
-**Expected result:** [What should happen]
-**If it fails:** [What to do]
+## Troubleshooting
+| Symptom | Cause | Fix |
+|---------|-------|-----|
 
-### Verification
-- [ ] [How to confirm the task completed successfully]
-- [ ] [What to check]
-
-### Troubleshooting
-| Symptom | Likely Cause | Fix |
-|---------|-------------|-----|
-| [What you see] | [Why] | [What to do] |
-
-### Rollback
-[How to undo this if something goes wrong]
-
-### Escalation
-| Situation | Contact | Method |
-|-----------|---------|--------|
-| [When to escalate] | [Who] | [How to reach them] |
-
-### History
-| Date | Run By | Notes |
-|------|--------|-------|
-| [Date] | [Person] | [Any issues or observations] |
+## Last Tested
+{{date}}
 ```
 
-## If Connectors Available
+Save to `runbooks/` with a kebab-case filename.
 
-If **~~knowledge base** is connected:
-- Search for existing runbooks to update rather than create from scratch
-- Publish the completed runbook to your ops wiki
+---
 
-If **~~ITSM** is connected:
-- Link the runbook to related incident types and change requests
-- Auto-populate escalation contacts from on-call schedules
+## Gotchas
 
-## Tips
-
-1. **Be painfully specific** — "Run the script" is not a step. "Run `python sync.py --prod --dry-run` from the ops server" is.
-2. **Include failure modes** — What can go wrong at each step and what to do about it.
-3. **Test the runbook** — Have someone unfamiliar with the process follow it. Fix where they get stuck.
+- **Stale runbooks are worse than no runbook:** A runbook last tested 18 months ago lies confidently about command flags, dashboard URLs, and rollback paths. Treat anything past `Last Tested` of 90 days as suspect and re-validate before trusting it under incident pressure.
+- **Untested rollback steps are decorative:** "Run `terraform destroy`" without ever having executed it from this state means you don't know if it works. Rollback steps must have been rehearsed at least once on a non-prod replica, not just written down.
+- **Missing prerequisites cause runbooks to fail at 2am:** "Just run the script" assumes kubectl context, VPN, sudo on the bastion, and an active token. List every prerequisite with the exact verification command — the on-call engineer is not you with your terminal open.
+- **Copy-pasted steps that worked once are not procedure:** A `kubectl patch` command captured from a working session may hardcode a pod name, timestamp, or specific resource version. Parameterize anything that varies between executions or it will fail the second time.
+- **Verification checkboxes without commands are aspirational:** "Verify the service is healthy" is not a step — `curl -fsS https://x/healthz | jq .status` is. Every verification line should be a copy-pasteable command with the expected output noted.
+- **Runbooks rot silently when systems change:** Renaming a deployment, rotating a key vault name, or changing an ingress host invalidates the runbook with no signal. Link each runbook from the system's IaC repo so changes to infrastructure trigger a runbook review.

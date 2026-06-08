@@ -2,17 +2,10 @@
 name: requesting-code-review
 description: Use when completing tasks, implementing major features, or before merging to verify work meets requirements
 ---
-<!--
-Adapted from obra/superpowers requesting-code-review skill (v5.0.7),
-MIT-licensed, copyright 2025 Jesse Vincent. Modifications copyright 2026 Joe Amditis. v0.4.0 ports as a consumer category — no research
-phase per the v0.2.0 architecture, since dispatch mechanic; reviewer
-preferences live in CLAUDE.md and memory rather than a research phase.
-See CREDITS.md.
--->
 
 # Requesting Code Review
 
-Dispatch pr-review-toolkit:code-reviewer subagent to catch issues before they cascade. The reviewer gets precisely crafted context for evaluation — never your session's history. This keeps the reviewer focused on the work product, not your thought process, and preserves your own context for continued work.
+Dispatch devops-skills:code-reviewer subagent to catch issues before they cascade.
 
 **Core principle:** Review early, review often.
 
@@ -38,7 +31,7 @@ HEAD_SHA=$(git rev-parse HEAD)
 
 **2. Dispatch code-reviewer subagent:**
 
-Use Task tool with pr-review-toolkit:code-reviewer type, fill template at `code-reviewer.md`
+Use Task tool with devops-skills:code-reviewer type, fill template at `code-reviewer.md`
 
 **Placeholders:**
 - `{WHAT_WAS_IMPLEMENTED}` - What you just built
@@ -63,9 +56,9 @@ You: Let me request code review before proceeding.
 BASE_SHA=$(git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
 HEAD_SHA=$(git rev-parse HEAD)
 
-[Dispatch pr-review-toolkit:code-reviewer subagent]
+[Dispatch devops-skills:code-reviewer subagent]
   WHAT_WAS_IMPLEMENTED: Verification and repair functions for conversation index
-  PLAN_OR_REQUIREMENTS: Task 2 from docs/superpowers/plans/deployment-plan.md
+  PLAN_OR_REQUIREMENTS: Task 2 from docs/plans/deployment-plan.md
   BASE_SHA: a7981ec
   HEAD_SHA: 3df7661
   DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types

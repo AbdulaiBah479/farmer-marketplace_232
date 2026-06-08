@@ -1,228 +1,96 @@
 ---
 name: data-analyst
-description: >
-  Expert data analysis covering SQL querying, data visualization, statistical
-  analysis, business reporting, and data storytelling. Use when writing SQL
-  queries, building dashboards, performing cohort or funnel analysis, running
-  hypothesis tests, or presenting data-driven recommendations to stakeholders.
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: borghei
-  category: data-analytics
-  updated: 2026-03-31
-  tags: [analytics, sql, visualization, statistics, reporting]
+description: Act as an interactive data analyst for ClickHouse-backed analytics. Use when the user asks questions about internal data, metrics, dashboards, telemetry, active users, revenue, funnels, trends, distributions, or wants an analyst-style conversation, ad hoc SQL, charts, or a data export against ClickHouse (local or ClickHouse Cloud).
 ---
+
 # Data Analyst
 
-The agent operates as a senior data analyst, writing production SQL, designing visualizations, running statistical tests, and translating findings into actionable business recommendations.
+Act as an interactive data analyst over ClickHouse. The job is not to run the first query you can think of; it is to figure out the question the user actually has, answer it with a correct and bounded query, and report the definitions and caveats behind the number.
 
-## Workflow
+CRITICAL: this skill never uses ClickHouse MCP tools. All database connections, queries, schema discovery, and data access go through the `clickhousectl` CLI (`skills/clickhouse/`). If ClickHouse MCP tools (`mcp-clickhouse__*`) are available in the environment, ignore them completely. Always run queries via `clickhousectl local client` or `clickhousectl cloud service query`.
 
-1. **Frame the business question** -- Restate the stakeholder's question as a testable hypothesis with a clear metric (e.g., "Did campaign X increase 7-day retention by >= 5%?"). Identify required data sources.
-2. **Write and validate SQL** -- Use CTEs for readability. Filter early, aggregate late. Run `EXPLAIN ANALYZE` on complex queries to verify index usage and scan cost.
-3. **Explore and profile data** -- Compute descriptive statistics (count, mean, median, std, quartiles, skewness). Check for nulls, duplicates, and outliers before drawing conclusions.
-4. **Analyze** -- Apply the appropriate method: cohort analysis for retention, funnel analysis for conversion, hypothesis testing (t-test, chi-square) for group comparisons, regression for relationships.
-5. **Visualize** -- Select chart type from the matrix below. Follow the design rules (Y-axis at zero for bars, <=7 colors, labels on axes, context via benchmarks/targets).
-6. **Deliver the insight** -- Structure findings as What / So What / Now What. Lead with the headline, support with a chart, close with a concrete recommendation and expected impact.
+Sub-skills live in `skills/`. Load only the sub-skill directory needed for the current step, then follow that directory's `SKILL.md`. Referenced paths are relative to this skill directory (`<skill-path>/skills/data-analyst/`), not the user's workspace. For example, read plotting guidance at `<skill-path>/skills/data-analyst/skills/plotting/SKILL.md`.
 
-## SQL Patterns
+## Sub-skills
 
-**Monthly aggregation with growth:**
-```sql
-WITH monthly AS (
-    SELECT
-        date_trunc('month', created_at) AS month,
-        COUNT(*)                        AS total_orders,
-        COUNT(DISTINCT customer_id)     AS unique_customers,
-        SUM(amount)                     AS revenue
-    FROM orders
-    WHERE created_at >= '2024-01-01'
-    GROUP BY 1
-),
-growth AS (
-    SELECT month, revenue,
-        LAG(revenue) OVER (ORDER BY month) AS prev_revenue
-    FROM monthly
-)
-SELECT month, revenue,
-    ROUND((revenue - prev_revenue) / prev_revenue * 100, 1) AS growth_pct
-FROM growth
-ORDER BY month;
+Authored for this analyst workflow:
+
+- `skills/clickhouse/` — connect to ClickHouse (local or ClickHouse Cloud) via the `clickhousectl` CLI and run safe, bounded queries. Load before executing any SQL.
+- `skills/reading-data-dict/` — resolve business and product terms to concrete models, columns, and metric definitions when the project documents its data (dbt repo, data dictionary, model docs).
+- `skills/steering-user-elicitation/` — fill the Intent block well, phrase good pushback, and handle metrics that are missing or commonly misunderstood.
+- `skills/analyzer/` — turn query results into trends, comparisons, distributions, funnels, sanity checks, and report-ready findings.
+- `skills/plotting/` — create chart or visual artifacts from query results.
+- `skills/artifact-management/` — save CSVs, charts, and report assets to a stable location and report their paths.
+
+Bundled official ClickHouse skills (from [ClickHouse/agent-skills](https://github.com/ClickHouse/agent-skills), Apache-2.0, vendored via a git submodule). Load these when the corresponding need arises:
+
+- `skills/clickhouse-best-practices/` — schema, query, and ingestion rules plus an agent schema-discovery and query-safety workflow. Consult when writing or optimizing non-trivial SQL.
+- `skills/chdb-sql/` — run ClickHouse SQL on local files (parquet/csv/json), S3, and remote databases in Python with no server. Use for ad-hoc analysis over files or cross-source data.
+- `skills/chdb-datastore/` — pandas-style API on a ClickHouse engine and cross-source DataFrames. Use when the user has DataFrames/files and wants fast, SQL-grade aggregation that feeds plotting.
+- `skills/clickhousectl-local-dev/` — install ClickHouse and run a local server. Use when the user needs a local instance to load and analyze data.
+- `skills/clickhousectl-cloud-deploy/`, `skills/clickhouse-architecture-advisor/`, `skills/clickhouse-js-node-coding/`, `skills/clickhouse-js-node-troubleshooting/` — also bundled; less central to ad-hoc analysis (deployment, production architecture, and JS client work).
+
+See `examples.md` for realistic example prompts that show the elicitation-first style.
+
+## Intent block (first output for any data request)
+
+Assume the first request is underspecified. It almost always is. A one-line data request rarely pins down the metric definition, population, time window, grain, and filters precisely enough to answer the question the user actually has. Your default expectation should be that you need to ask at least one clarifying question before querying.
+
+Begin every response to a data request with this block, before querying or exploring the actual data. You may consult the data dictionary first (`skills/reading-data-dict/`) to help fill it in accurately. Fill in each field:
+
+```md
+Intent:
+- Metric:      [Confirmed: ... | Assumed: ... | NEED FROM USER | LOOK UP: <term>]
+- Population:  [...]
+- Time window: [...]
+- Grain:       [...]
+- Filters:     [...]
+- Output:      [...]
 ```
 
-**Cohort retention:**
-```sql
-WITH first_orders AS (
-    SELECT customer_id,
-        date_trunc('month', MIN(created_at)) AS cohort_month
-    FROM orders GROUP BY 1
-),
-cohort_data AS (
-    SELECT f.cohort_month,
-        date_trunc('month', o.created_at) AS order_month,
-        COUNT(DISTINCT o.customer_id)     AS customers
-    FROM orders o
-    JOIN first_orders f ON o.customer_id = f.customer_id
-    GROUP BY 1, 2
-)
-SELECT cohort_month, order_month,
-    EXTRACT(MONTH FROM AGE(order_month, cohort_month)) AS months_since,
-    customers
-FROM cohort_data ORDER BY 1, 2;
+Field markers:
+
+- Confirmed: the user stated it explicitly, in words, in this conversation.
+- Assumed: a default you are choosing. Use sparingly and only for genuinely low-stakes fields. An assumption is only acceptable when getting it wrong would not change the answer's shape or the user's decision. If a wrong assumption would mislead the user, it is NEED FROM USER, not Assumed.
+- NEED FROM USER: the field materially affects the result and the user did not specify it. This is the normal state of most fields on a first request. Stop and ask before querying data.
+- LOOK UP: `<term>`: the term has a documented definition you should resolve via the data dictionary (e.g. "revenue", a funnel stage). Resolve it before querying; do not assume its meaning.
+
+After filling the block, look at it critically. If every field is Confirmed or Assumed and you have nothing to ask, that is a red flag: re-check whether you quietly assumed away a real choice (which metric definition? unique users or events? which window? include the current partial day? which population?). On a typical first request you should end up with at least one NEED FROM USER or a confirm-back question. If you genuinely have none, say so and state every assumption you made so the user can correct you before you query.
+
+Anti-pattern: noting ambiguity and then exploring the data anyway. Noting ambiguity is not a substitute for resolving it. Filling every field as Assumed so you can proceed is the same failure in disguise. If a field is NEED FROM USER, stop and ask. If it is LOOK UP, resolve it from the dictionary before querying.
+
+This is a strong default, not an absolute rule. Skip the question only in the narrow mechanical case described in `skills/steering-user-elicitation/` (fully-qualified table or metric, explicit window, explicit aggregate). Otherwise, ask.
+
+Load `skills/steering-user-elicitation/` for how to fill this block well, phrase good pushback, and handle metrics that are missing or commonly misunderstood.
+
+## Default workflow
+
+1. State the Intent block (pass 1). Restate the request as the Intent block using only the user's words plus obvious defaults. Mark ambiguous-with-no-default fields NEED FROM USER and stop to ask. Mark documented-but-undefined terms LOOK UP. You may consult the data dictionary (step 3) to resolve LOOK UP terms, but do not query or explore the actual data while a NEED FROM USER field remains.
+2. Verify connection. Load `skills/clickhouse/` to confirm you can reach the right ClickHouse (local server or Cloud service). Skip only if already verified this session.
+3. Resolve definitions (targeted). Load `skills/reading-data-dict/` to resolve the specific LOOK UP terms from step 1, not a full data exploration. Then confirm the resolved definitions back to the user (pass 2), surfacing any options the dictionary revealed. Update the Intent block.
+4. Draft and run safe SQL. Load `skills/clickhouse/` before executing queries against a ClickHouse server, or `skills/chdb-sql/` when the data is local files or remote sources you can query without a server. Consult `skills/clickhouse-best-practices/` when the SQL is non-trivial or needs optimizing. Apply the confirmed Intent block.
+5. Analyze results. Load `skills/analyzer/` for trends, comparisons, distributions, summaries, sanity checks, or report-ready findings.
+6. Create and save artifacts. Load `skills/plotting/` when the user asks for charts or when visualization materially improves understanding, and `skills/artifact-management/` to save CSVs, charts, and report assets to a stable location and report their paths.
+
+Elicitation is an invariant, not just step 1. At any step, if a new ambiguity surfaces, or the user draws conclusions, makes decisions, or asks for a report from incomplete or ambiguous data, return to the Intent block and re-confirm before continuing.
+
+## Core rules
+
+- Never use ClickHouse MCP tools. All SQL execution goes through the `clickhousectl` CLI as described in `skills/clickhouse/`. Do not call `mcp-clickhouse__run_query`, `mcp-clickhouse__list_databases`, `mcp-clickhouse__list_tables`, or any other ClickHouse MCP function, even if they are available in the environment.
+- Prefer curated, documented models and metrics over raw event or log tables.
+- State the definitions, filters, time window, and assumptions used.
+- Start with schema discovery, previews, or aggregates before broad result dumps.
+- Ask before running expensive, unbounded, long-running, or high-cardinality queries.
+- Do not imply data is complete without checking caveats such as coverage, rollout dates, freshness, and opt-in.
+- Keep clarification proportional: ask the one or two questions that most change the answer rather than an exhaustive questionnaire. Asking too little is the more common failure than asking too much.
+- Never echo credentials or secrets into the conversation. See `skills/clickhouse/` for auth handling.
+
+## Standard answer shape
+
+```md
+Answer: ...
+How I measured it: metric definition, grain, time window, filters, and model/table.
+SQL/source: the query, table/model, or artifact path.
+Caveats: coverage, ambiguity, sample size, freshness, or assumptions.
+Next checks: 1-3 useful follow-ups when warranted.
 ```
-
-**Window functions (running total + previous order):**
-```sql
-SELECT customer_id, order_date, amount,
-    SUM(amount) OVER (PARTITION BY customer_id ORDER BY order_date) AS running_total,
-    LAG(amount) OVER (PARTITION BY customer_id ORDER BY order_date) AS prev_amount
-FROM orders;
-```
-
-## Chart Selection Matrix
-
-| Data question | Best chart | Alternative |
-|---------------|-----------|-------------|
-| Trend over time | Line | Area |
-| Part of whole | Donut | Stacked bar |
-| Comparison | Bar | Column |
-| Distribution | Histogram | Box plot |
-| Correlation | Scatter | Heatmap |
-| Geographic | Choropleth | Bubble map |
-
-**Design rules:** Start Y-axis at zero for bar charts. Use <= 7 colors. Label axes. Include benchmarks or targets for context. Avoid 3D charts and pie charts with > 5 slices.
-
-## Dashboard Layout
-
-```
-+------------------------------------------------------------+
-| KPI CARDS: Revenue | Customers | Conversion | NPS           |
-+------------------------------------------------------------+
-| TREND (line chart)            | BREAKDOWN (bar chart)       |
-+-------------------------------+-----------------------------+
-| COMPARISON vs target/LY      | DETAIL TABLE (top N)        |
-+-------------------------------+-----------------------------+
-```
-
-## Statistical Methods
-
-**Hypothesis testing (t-test):**
-```python
-from scipy import stats
-import numpy as np
-
-def compare_groups(a: np.ndarray, b: np.ndarray, alpha: float = 0.05) -> dict:
-    """Compare two groups; return t-stat, p-value, Cohen's d, and significance."""
-    stat, p = stats.ttest_ind(a, b)
-    d = (a.mean() - b.mean()) / np.sqrt((a.std()**2 + b.std()**2) / 2)
-    return {"t_statistic": stat, "p_value": p, "cohens_d": d, "significant": p < alpha}
-```
-
-**Chi-square test for independence:**
-```python
-def test_independence(table, alpha=0.05):
-    chi2, p, dof, _ = stats.chi2_contingency(table)
-    return {"chi2": chi2, "p_value": p, "dof": dof, "significant": p < alpha}
-```
-
-## Key Business Metrics
-
-| Category | Metric | Formula |
-|----------|--------|---------|
-| Acquisition | CAC | Total S&M spend / New customers |
-| Acquisition | Conversion rate | Conversions / Visitors |
-| Engagement | DAU/MAU ratio | Daily active / Monthly active |
-| Retention | Churn rate | Lost customers / Total at period start |
-| Revenue | MRR | SUM(active subscription amounts) |
-| Revenue | LTV | ARPU x Gross margin x Avg lifetime |
-
-## Insight Delivery Template
-
-```markdown
-## [Headline: action-oriented finding]
-
-**What:** One-sentence description of the observation.
-**So What:** Why this matters to the business (revenue, retention, cost).
-**Now What:** Recommended action with expected impact.
-**Evidence:** [Chart or table supporting the finding]
-**Confidence:** High / Medium / Low
-```
-
-## Analysis Framework
-
-```markdown
-# Analysis: [Topic]
-## Business Question -- What are we trying to answer?
-## Hypothesis -- What do we expect to find?
-## Data Sources -- [Source]: [Description]
-## Methodology -- Numbered steps
-## Findings -- Finding 1, Finding 2 (with supporting data)
-## Recommendations -- [Action]: [Expected impact]
-## Limitations -- Known caveats
-## Next Steps -- Follow-up actions
-```
-
-## Reference Materials
-
-- `references/sql_patterns.md` -- Advanced SQL queries
-- `references/visualization.md` -- Chart selection guide
-- `references/statistics.md` -- Statistical methods
-- `references/storytelling.md` -- Presentation best practices
-
-## Scripts
-
-```bash
-python scripts/query_optimizer.py --file query.sql
-python scripts/query_optimizer.py --sql "SELECT * FROM orders" --json
-python scripts/data_profiler.py --file sales.csv
-python scripts/data_profiler.py --file data.json --top 10 --json
-python scripts/report_generator.py --file sales.csv --title "Monthly Sales Report"
-python scripts/report_generator.py --file data.csv --group-by region --format markdown --json
-```
-
-## Tool Reference
-
-| Tool | Purpose | Key Flags |
-|------|---------|-----------|
-| `query_optimizer.py` | Analyze SQL for anti-patterns: SELECT *, missing WHERE, cartesian joins, deep nesting, function-on-column in WHERE | `--file <sql>` or `--sql "<query>"`, `--json` |
-| `data_profiler.py` | Profile CSV/JSON datasets with per-column stats, null rates, outlier detection (IQR), and quality flags | `--file <csv/json>`, `--top <n>`, `--json` |
-| `report_generator.py` | Generate summary reports with numeric aggregations, group-by breakdowns, and highlights | `--file <csv/json>`, `--title`, `--group-by <col>`, `--format text/markdown`, `--json` |
-
-## Troubleshooting
-
-| Problem | Likely Cause | Resolution |
-|---------|-------------|------------|
-| SQL query runs for minutes on a table with indexes | Query uses functions on indexed columns in WHERE clause (e.g., `WHERE UPPER(name) = ...`) | Apply the function to the comparison value instead, or create an expression index; run `query_optimizer.py` to detect this pattern |
-| `data_profiler.py` flags HIGH_NULL_RATE on expected optional fields | The tool flags any column with > 50% nulls regardless of business intent | Review flagged columns; suppress false positives by filtering the output or documenting expected null rates |
-| Cohort retention query returns duplicate customers | JOIN logic counts the same customer multiple times across order items | Ensure `COUNT(DISTINCT customer_id)` is used and the cohort grain is correct |
-| Bar chart Y-axis exaggerates differences | Y-axis does not start at zero | Always start bar-chart Y-axis at zero; use line charts when the baseline is not meaningful |
-| Stakeholders challenge statistical significance | Sample size is too small or alpha threshold is unclear | Pre-register the hypothesis, calculate required sample size before analysis, and report confidence intervals alongside p-values |
-| `report_generator.py` shows unexpected column as numeric | Column contains mostly numbers but includes some text codes | Clean the data upstream or pre-filter; the tool treats a column as numeric when > 80% of values parse as floats |
-| EXPLAIN ANALYZE shows sequential scan despite index existence | Query predicates do not match the index columns or the table is too small for the planner to prefer an index | Verify index column order matches query predicates; for small tables, sequential scan may actually be faster |
-
-## Success Criteria
-
-- Every analysis follows the Frame-Query-Explore-Analyze-Visualize-Deliver workflow before presenting findings.
-- SQL queries pass `query_optimizer.py` with zero critical issues before deployment to production dashboards.
-- Data profiles are generated for every new dataset before analysis begins, documenting null rates and outliers.
-- Statistical tests include effect size (Cohen's d or Cramer's V) and confidence intervals, not just p-values.
-- Insights are delivered in the What / So What / Now What format with quantified business impact.
-- Visualizations follow the chart selection matrix and design rules (Y-axis at zero for bars, <= 7 colors, labeled axes).
-- Reports generated by `report_generator.py` are reviewed for accuracy against source queries before distribution.
-
-## Scope & Limitations
-
-**In scope:** SQL query writing and optimization, data profiling and exploration, statistical hypothesis testing (t-test, chi-square, proportions), cohort and funnel analysis, data visualization design, and business insight delivery.
-
-**Out of scope:** Data pipeline engineering, machine learning model training, dashboard platform administration, data warehouse infrastructure, and real-time streaming analytics.
-
-**Limitations:** The Python tools use only the Python standard library -- statistical tests use approximations (Abramowitz-Stegun for normal CDF) rather than exact distributions. For production-grade statistics, use scipy or statsmodels. `query_optimizer.py` performs static analysis on SQL text and does not connect to a database or inspect actual query plans. `data_profiler.py` loads data into memory, so very large files (> 1 GB) may require chunked processing.
-
-## Integration Points
-
-- **Analytics Engineer** (`data-analytics/analytics-engineer`): Provides the clean mart models that analysts query; data quality issues found during analysis feed back to the analytics engineer.
-- **Business Intelligence** (`data-analytics/business-intelligence`): Ad-hoc analyses that prove valuable often graduate into repeatable BI dashboards.
-- **Data Scientist** (`data-analytics/data-scientist`): Complex findings requiring predictive modeling or causal inference are handed off to data science.
-- **Product Team** (`product-team/`): Product managers consume funnel and cohort analyses for feature prioritization.
-- **Business Growth** (`business-growth/`): Revenue and customer health analyses inform growth strategy.

@@ -1,272 +1,290 @@
 ---
 name: notebooklm
-description: "Use this skill to query your Google NotebookLM notebooks directly from Claude Code for source-grounded, citation-backed answers from Gemini. Browser automation, library management, persistent auth...."
-risk: unknown
-source: community
-date_added: "2026-02-27"
+description: |
+  Programmatic access to Google NotebookLM via the notebooklm-py CLI and Python API. Use this skill whenever the user wants to create notebooks, add sources (URLs, YouTube, PDFs, files), generate audio overviews/podcasts, videos, slide decks, quizzes, flashcards, infographics, reports, mind maps, or data tables from their research materials. Also use when the user mentions NotebookLM, wants to turn documents into podcasts, generate study materials, or automate any NotebookLM workflow — even if they don't explicitly say "NotebookLM". Triggers on: podcast from documents, audio overview, NotebookLM, notebook research, generate quiz from PDF, flashcards from notes, study materials, deep dive audio.
 ---
 
-# NotebookLM Research Assistant Skill
+# NotebookLM Automation
 
-Interact with Google NotebookLM to query documentation with Gemini's source-grounded answers. Each question opens a fresh browser session, retrieves the answer exclusively from your uploaded documents, and closes.
+Unofficial Python CLI and API for Google NotebookLM (`notebooklm-py`). Provides full programmatic access including capabilities the web UI doesn't expose.
 
-## When to Use This Skill
+## Prerequisites
 
-Trigger when user:
-- Mentions NotebookLM explicitly
-- Shares NotebookLM URL (`https://notebooklm.google.com/notebook/...`)
-- Asks to query their notebooks/documentation
-- Wants to add documentation to NotebookLM library
-- Uses phrases like "ask my NotebookLM", "check my docs", "query my notebook"
+- Python 3.10+
+- Google account with NotebookLM access
+- One-time browser login via Playwright
 
-## ⚠️ CRITICAL: Add Command - Smart Discovery
-
-When user wants to add a notebook without providing details:
-
-**SMART ADD (Recommended)**: Query the notebook first to discover its content:
-```bash
-# Step 1: Query the notebook about its content
-python scripts/run.py ask_question.py --question "What is the content of this notebook? What topics are covered? Provide a complete overview briefly and concisely" --notebook-url "[URL]"
-
-# Step 2: Use the discovered information to add it
-python scripts/run.py notebook_manager.py add --url "[URL]" --name "[Based on content]" --description "[Based on content]" --topics "[Based on content]"
-```
-
-**MANUAL ADD**: If user provides all details:
-- `--url` - The NotebookLM URL
-- `--name` - A descriptive name
-- `--description` - What the notebook contains (REQUIRED!)
-- `--topics` - Comma-separated topics (REQUIRED!)
-
-NEVER guess or use generic descriptions! If details missing, use Smart Add to discover them.
-
-## Critical: Always Use run.py Wrapper
-
-**NEVER call scripts directly. ALWAYS use `python scripts/run.py [script]`:**
+## Installation
 
 ```bash
-# ✅ CORRECT - Always use run.py:
-python scripts/run.py auth_manager.py status
-python scripts/run.py notebook_manager.py list
-python scripts/run.py ask_question.py --question "..."
+# Install with browser login support
+pip install "notebooklm-py[browser]"
+playwright install chromium
 
-# ❌ WRONG - Never call directly:
-python scripts/auth_manager.py status  # Fails without venv!
+# Linux only: also run
+playwright install-deps chromium
 ```
 
-The `run.py` wrapper automatically:
-1. Creates `.venv` if needed
-2. Installs all dependencies
-3. Activates environment
-4. Executes script properly
+## Authentication
+
+First-time setup requires browser login:
+
+```bash
+notebooklm login
+# Opens Chromium → sign into Google → press Enter when done
+# Session saved to ~/.notebooklm/storage_state.json
+```
+
+Check auth status: `notebooklm auth check --test`
+
+For headless/CI environments, copy `storage_state.json` from a local machine or set `NOTEBOOKLM_AUTH_JSON` env var.
+
+## Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `NOTEBOOKLM_HOME` | Config directory | `~/.notebooklm` |
+| `NOTEBOOKLM_AUTH_JSON` | Inline auth JSON (CI/CD) | — |
+| `NOTEBOOKLM_LOG_LEVEL` | `DEBUG`/`INFO`/`WARNING`/`ERROR` | `WARNING` |
+| `NOTEBOOKLM_DEBUG_RPC` | Enable RPC debug (`1`) | `false` |
 
 ## Core Workflow
 
-### Step 1: Check Authentication Status
-```bash
-python scripts/run.py auth_manager.py status
-```
+The typical workflow is: **create notebook → add sources → generate content → download**.
 
-If not authenticated, proceed to setup.
-
-### Step 2: Authenticate (One-Time Setup)
-```bash
-# Browser MUST be visible for manual Google login
-python scripts/run.py auth_manager.py setup
-```
-
-**Important:**
-- Browser is VISIBLE for authentication
-- Browser window opens automatically
-- User must manually log in to Google
-- Tell user: "A browser window will open for Google login"
-
-### Step 3: Manage Notebook Library
+### 1. Notebook Management
 
 ```bash
-# List all notebooks
-python scripts/run.py notebook_manager.py list
-
-# BEFORE ADDING: Ask user for metadata if unknown!
-# "What does this notebook contain?"
-# "What topics should I tag it with?"
-
-# Add notebook to library (ALL parameters are REQUIRED!)
-python scripts/run.py notebook_manager.py add \
-  --url "https://notebooklm.google.com/notebook/..." \
-  --name "Descriptive Name" \
-  --description "What this notebook contains" \  # REQUIRED - ASK USER IF UNKNOWN!
-  --topics "topic1,topic2,topic3"  # REQUIRED - ASK USER IF UNKNOWN!
-
-# Search notebooks by topic
-python scripts/run.py notebook_manager.py search --query "keyword"
-
-# Set active notebook
-python scripts/run.py notebook_manager.py activate --id notebook-id
-
-# Remove notebook
-python scripts/run.py notebook_manager.py remove --id notebook-id
+notebooklm create "My Research"       # Create notebook
+notebooklm list                        # List all notebooks
+notebooklm use <id>                    # Set active notebook (supports partial ID)
+notebooklm summary                     # AI summary of current notebook
+notebooklm rename "New Title"          # Rename
+notebooklm delete <id>                 # Delete
 ```
 
-### Quick Workflow
-1. Check library: `python scripts/run.py notebook_manager.py list`
-2. Ask question: `python scripts/run.py ask_question.py --question "..." --notebook-id ID`
+### 2. Adding Sources
 
-### Step 4: Ask Questions
+Sources are auto-detected by type:
 
 ```bash
-# Basic query (uses active notebook if set)
-python scripts/run.py ask_question.py --question "Your question here"
-
-# Query specific notebook
-python scripts/run.py ask_question.py --question "..." --notebook-id notebook-id
-
-# Query with notebook URL directly
-python scripts/run.py ask_question.py --question "..." --notebook-url "https://..."
-
-# Show browser for debugging
-python scripts/run.py ask_question.py --question "..." --show-browser
+notebooklm source add "https://example.com/article"          # URL
+notebooklm source add "https://youtube.com/watch?v=..."       # YouTube
+notebooklm source add ./document.pdf                           # File (PDF, MD, DOCX, TXT, audio, video, images)
+notebooklm source add-drive <drive-file-id> "Title"           # Google Drive
+notebooklm source add-research "climate policy" --mode deep --import-all  # Research agent
 ```
 
-## Follow-Up Mechanism (CRITICAL)
+Other source commands:
 
-Every NotebookLM answer ends with: **"EXTREMELY IMPORTANT: Is that ALL you need to know?"**
-
-**Required Claude Behavior:**
-1. **STOP** - Do not immediately respond to user
-2. **ANALYZE** - Compare answer to user's original request
-3. **IDENTIFY GAPS** - Determine if more information needed
-4. **ASK FOLLOW-UP** - If gaps exist, immediately ask:
-   ```bash
-   python scripts/run.py ask_question.py --question "Follow-up with context..."
-   ```
-5. **REPEAT** - Continue until information is complete
-6. **SYNTHESIZE** - Combine all answers before responding to user
-
-## Script Reference
-
-### Authentication Management (`auth_manager.py`)
 ```bash
-python scripts/run.py auth_manager.py setup    # Initial setup (browser visible)
-python scripts/run.py auth_manager.py status   # Check authentication
-python scripts/run.py auth_manager.py reauth   # Re-authenticate (browser visible)
-python scripts/run.py auth_manager.py clear    # Clear authentication
+notebooklm source list                # List sources
+notebooklm source fulltext <id>       # Get source full text
+notebooklm source guide <id>          # AI-generated source guide
+notebooklm source rename <id> "New"   # Rename
+notebooklm source refresh <id>        # Re-fetch URL source
+notebooklm source delete <id>         # Delete
 ```
 
-### Notebook Management (`notebook_manager.py`)
+### 3. Chat / Q&A
+
 ```bash
-python scripts/run.py notebook_manager.py add --url URL --name NAME --description DESC --topics TOPICS
-python scripts/run.py notebook_manager.py list
-python scripts/run.py notebook_manager.py search --query QUERY
-python scripts/run.py notebook_manager.py activate --id ID
-python scripts/run.py notebook_manager.py remove --id ID
-python scripts/run.py notebook_manager.py stats
+notebooklm ask "What are the key findings?" -s <source_id>
+notebooklm ask "Compare sources" --json --save-as-note --note-title "Comparison"
+notebooklm history                     # View chat history
+notebooklm history --save              # Save history as note
 ```
 
-### Question Interface (`ask_question.py`)
+### 4. Content Generation
+
+All generate commands support: `-s/--source` (repeatable, limit to specific sources), `--json`, `--language`, `--retry N`.
+
+Most are async — use `--wait` to block until complete.
+
+#### Audio Overviews (Podcasts)
+
 ```bash
-python scripts/run.py ask_question.py --question "..." [--notebook-id ID] [--notebook-url URL] [--show-browser]
+notebooklm generate audio "Focus on practical applications" \
+  --format deep-dive \    # deep-dive | brief | critique | debate
+  --length long \         # short | default | long
+  --wait
 ```
 
-### Data Cleanup (`cleanup_manager.py`)
+#### Video Overviews
+
 ```bash
-python scripts/run.py cleanup_manager.py                    # Preview cleanup
-python scripts/run.py cleanup_manager.py --confirm          # Execute cleanup
-python scripts/run.py cleanup_manager.py --preserve-library # Keep notebooks
+notebooklm generate video "Explain the architecture" \
+  --format explainer \    # explainer | brief
+  --style whiteboard \    # auto | classic | whiteboard | kawaii | anime | watercolor | retro-print | heritage | paper-craft
+  --wait
 ```
 
-## Environment Management
+#### Slide Decks
 
-The virtual environment is automatically managed:
-- First run creates `.venv` automatically
-- Dependencies install automatically
-- Chromium browser installs automatically
-- Everything isolated in skill directory
-
-Manual setup (only if automatic fails):
 ```bash
-python -m venv .venv
-source .venv/bin/activate  # Linux/Mac
-pip install -r requirements.txt
-python -m patchright install chromium
+notebooklm generate slide-deck "Executive summary" \
+  --format detailed \     # detailed | presenter
+  --length default \      # default | short
+  --wait
+
+# Revise a specific slide
+notebooklm generate revise-slide "Add more data points" \
+  -a <artifact_id> --slide 2 --wait    # slide is zero-based
 ```
 
-## Data Storage
+#### Study Materials
 
-All data stored in `~/.claude/skills/notebooklm/data/`:
-- `library.json` - Notebook metadata
-- `auth_info.json` - Authentication status
-- `browser_state/` - Browser cookies and session
+```bash
+# Quizzes
+notebooklm generate quiz --difficulty hard --quantity more --wait
 
-**Security:** Protected by `.gitignore`, never commit to git.
-
-## Configuration
-
-Optional `.env` file in skill directory:
-```env
-HEADLESS=false           # Browser visibility
-SHOW_BROWSER=false       # Default browser display
-STEALTH_ENABLED=true     # Human-like behavior
-TYPING_WPM_MIN=160       # Typing speed
-TYPING_WPM_MAX=240
-DEFAULT_NOTEBOOK_ID=     # Default notebook
+# Flashcards
+notebooklm generate flashcards --difficulty medium --wait
 ```
 
-## Decision Flow
+#### Visual & Data
 
+```bash
+# Infographic
+notebooklm generate infographic \
+  --orientation landscape \   # landscape | portrait | square
+  --detail detailed \         # concise | standard | detailed
+  --wait
+
+# Mind map (synchronous, no --wait needed)
+notebooklm generate mind-map
+
+# Data table
+notebooklm generate data-table "Compare metrics across studies" --wait
 ```
-User mentions NotebookLM
-    ↓
-Check auth → python scripts/run.py auth_manager.py status
-    ↓
-If not authenticated → python scripts/run.py auth_manager.py setup
-    ↓
-Check/Add notebook → python scripts/run.py notebook_manager.py list/add (with --description)
-    ↓
-Activate notebook → python scripts/run.py notebook_manager.py activate --id ID
-    ↓
-Ask question → python scripts/run.py ask_question.py --question "..."
-    ↓
-See "Is that ALL you need?" → Ask follow-ups until complete
-    ↓
-Synthesize and respond to user
+
+#### Reports
+
+```bash
+notebooklm generate report "Security analysis" \
+  --format briefing-doc \     # briefing-doc | study-guide | blog-post | custom
+  --append "Include threat modeling" \
+  --wait
+```
+
+### 5. Downloading Content
+
+All download commands support: `-a/--artifact`, `--all`, `--latest`, `--earliest`, `--name`, `--force`, `--no-clobber`, `--dry-run`, `--json`.
+
+```bash
+notebooklm download audio ./podcast.mp3
+notebooklm download video ./overview.mp4
+notebooklm download slide-deck ./slides.pptx --format pptx   # or pdf (default)
+notebooklm download infographic ./info.png
+notebooklm download report ./report.md
+notebooklm download mind-map ./map.json
+notebooklm download data-table ./data.csv
+notebooklm download quiz --format json ./quiz.json       # json | markdown | html
+notebooklm download flashcards --format markdown ./cards.md
+```
+
+### 6. Sharing
+
+```bash
+notebooklm share status
+notebooklm share public --enable           # Create public link
+notebooklm share view-level full           # full | chat
+notebooklm share add user@email.com --permission editor -m "Check this out"
+notebooklm share remove user@email.com
+```
+
+### 7. Language
+
+```bash
+notebooklm language list                   # 80+ languages
+notebooklm language get
+notebooklm language set ja                 # Set to Japanese
+```
+
+## Python API
+
+Fully async API for programmatic workflows:
+
+```python
+import asyncio
+from notebooklm import NotebookLMClient
+
+async def main():
+    async with await NotebookLMClient.from_storage() as client:
+        # Create notebook and add sources
+        nb = await client.notebooks.create("Research")
+        await client.sources.add_url(nb.id, "https://example.com")
+
+        # Generate audio overview
+        artifact = await client.artifacts.generate_audio(
+            nb.id, description="Deep dive on findings",
+            format=AudioFormat.DEEP_DIVE, length=AudioLength.LONG
+        )
+
+        # Wait and download
+        await client.artifacts.wait(nb.id, artifact.id)
+        await client.artifacts.download_audio(nb.id, artifact.id, "output.mp3")
+
+        # Chat with sources
+        result = await client.chat.ask(nb.id, "Summarize key points")
+        print(result.answer)
+
+asyncio.run(main())
+```
+
+**API modules:** `client.notebooks`, `client.sources`, `client.artifacts`, `client.chat`, `client.research`, `client.notes`, `client.settings`, `client.sharing`
+
+## Common Recipes
+
+### Research-to-Podcast Pipeline
+
+```bash
+notebooklm create "Climate Research"
+notebooklm use <id>
+notebooklm source add "https://en.wikipedia.org/wiki/Climate_change"
+notebooklm source add-research "climate change solutions 2025" --mode deep --import-all
+notebooklm generate audio "Focus on actionable solutions" --format debate --length long --wait
+notebooklm download audio ./climate-debate.mp3
+```
+
+### Document Analysis to Study Materials
+
+```bash
+notebooklm create "Exam Prep"
+notebooklm use <id>
+notebooklm source add ./textbook.pdf
+notebooklm generate quiz --difficulty hard --quantity more --wait
+notebooklm generate flashcards --wait
+notebooklm download quiz --format markdown ./quiz.md
+notebooklm download flashcards --format json ./cards.json
+```
+
+### Batch Import + Full Report
+
+```bash
+notebooklm create "Literature Review"
+notebooklm use <id>
+for f in ./papers/*.pdf; do notebooklm source add "$f"; done
+notebooklm generate report "Systematic review" --format briefing-doc --wait
+notebooklm download report ./review.md
 ```
 
 ## Troubleshooting
 
-| Problem | Solution |
-|---------|----------|
-| ModuleNotFoundError | Use `run.py` wrapper |
-| Authentication fails | Browser must be visible for setup! --show-browser |
-| Rate limit (50/day) | Wait or switch Google account |
-| Browser crashes | `python scripts/run.py cleanup_manager.py --preserve-library` |
-| Notebook not found | Check with `notebook_manager.py list` |
+| Issue | Fix |
+|-------|-----|
+| Auth expired | Run `notebooklm login` again |
+| `playwright` not found | `pip install "notebooklm-py[browser]"` then `playwright install chromium` |
+| Generation stuck | Use `notebooklm source wait <id>` for pending sources, check `--retry` flag |
+| Partial ID not matching | Use more characters of the notebook ID |
+| Debug API calls | Set `NOTEBOOKLM_LOG_LEVEL=DEBUG` or `NOTEBOOKLM_DEBUG_RPC=1` |
 
-## Best Practices
+---
 
-1. **Always use run.py** - Handles environment automatically
-2. **Check auth first** - Before any operations
-3. **Follow-up questions** - Don't stop at first answer
-4. **Browser visible for auth** - Required for manual login
-5. **Include context** - Each question is independent
-6. **Synthesize answers** - Combine multiple responses
+## Gotchas
 
-## Limitations
-
-- No session persistence (each question = new browser)
-- Rate limits on free Google accounts (50 queries/day)
-- Manual upload required (user must add docs to NotebookLM)
-- Browser overhead (few seconds per question)
-
-## Resources (Skill Structure)
-
-**Important directories and files:**
-
-- `scripts/` - All automation scripts (ask_question.py, notebook_manager.py, etc.)
-- `data/` - Local storage for authentication and notebook library
-- `references/` - Extended documentation:
-  - `api_reference.md` - Detailed API documentation for all scripts
-  - `troubleshooting.md` - Common issues and solutions
-  - `usage_patterns.md` - Best practices and workflow examples
-- `.venv/` - Isolated Python environment (auto-created on first run)
-- `.gitignore` - Protects sensitive data from being committed
+- **Source upload >200MB silently fails after the request returns 200** — downstream shows "processing" forever. Pre-check file size before upload.
+- **Concurrent audio/video generation per project is rate-limited** — second concurrent gen fails with a generic "try again later". Serialize generation jobs.
+- **gcloud auth vs notebooklm-account differ** — a user logged into gcloud may not have notebooklm access; pass `--account` explicitly when they diverge.
+- **Source ordering at upload affects citation precedence in generated content** — re-uploading to fix order changes the output style.
+- **Studio types have different timeout windows** — audio ~5min, video ~15min, slides ~3min. CLI default of 60s drops mid-generation for the longer types.

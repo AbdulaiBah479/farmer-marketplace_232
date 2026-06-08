@@ -2,6 +2,7 @@
 name: ml-pipeline
 description: "Designs and implements production-grade ML pipeline infrastructure: configures experiment tracking with MLflow or Weights & Biases, creates Kubeflow or Airflow DAGs for training orchestration, builds feature store schemas with Feast, deploys model registries, and automates retraining and validation workflows. Use when building ML pipelines, orchestrating training workflows, automating model lifecycle, implementing feature stores, managing experiment tracking systems, setting up DVC for data versioning, tuning hyperparameters, or configuring MLOps tooling like Kubeflow, Airflow, MLflow, or Prefect."
 license: MIT
+compatibility: opencode
 metadata:
   author: https://github.com/Jeffallan
   version: "1.1.0"
@@ -104,6 +105,7 @@ def train_model(
 
     metrics_output.log_metric("train_samples", len(df))
 
+
 @dsl.pipeline(name="training-pipeline")
 def training_pipeline(data_path: str, n_estimators: int = 100):
     train_step = train_model(n_estimators=n_estimators)
@@ -156,5 +158,3 @@ When implementing a pipeline, provide:
 ## Knowledge Reference
 
 MLflow, Kubeflow Pipelines, Apache Airflow, Prefect, Feast, Weights & Biases, Neptune, DVC, Great Expectations, Ray, Horovod, Kubernetes, Docker, S3/GCS/Azure Blob, model registry patterns, feature store architecture, distributed training, hyperparameter optimization
-
-[Documentation](https://jeffallan.github.io/claude-skills/skills/data-ml/ml-pipeline/)

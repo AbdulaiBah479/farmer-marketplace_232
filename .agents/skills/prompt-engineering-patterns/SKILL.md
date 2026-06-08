@@ -1,28 +1,13 @@
 ---
 name: prompt-engineering-patterns
-description: "Master advanced prompt engineering techniques to maximize LLM performance, reliability, and controllability in production. Use when optimizing prompts, improving LLM outputs, or designing productio..."
-risk: unknown
-source: community
-date_added: "2026-02-27"
+description: Master advanced prompt engineering techniques to maximize LLM performance, reliability, and controllability in production. Use when optimizing prompts, improving LLM outputs, or designing production prompt templates.
 ---
 
 # Prompt Engineering Patterns
 
 Master advanced prompt engineering techniques to maximize LLM performance, reliability, and controllability.
 
-## Do not use this skill when
-
-- The task is unrelated to prompt engineering patterns
-- You need a different domain or tool outside this scope
-
-## Instructions
-
-- Clarify goals, constraints, and required inputs.
-- Apply relevant best practices and validate outcomes.
-- Provide actionable steps and verification.
-- If detailed examples are required, open `resources/implementation-playbook.md`.
-
-## Use this skill when
+## When to Use This Skill
 
 - Designing complex prompts for production LLM applications
 - Optimizing prompt performance and consistency
@@ -31,10 +16,12 @@ Master advanced prompt engineering techniques to maximize LLM performance, relia
 - Creating reusable prompt templates with variable interpolation
 - Debugging and refining prompts that produce inconsistent outputs
 - Implementing system prompts for specialized AI assistants
+- Using structured outputs (JSON mode) for reliable parsing
 
 ## Core Capabilities
 
 ### 1. Few-Shot Learning
+
 - Example selection strategies (semantic similarity, diversity sampling)
 - Balancing example count with context window constraints
 - Constructing effective demonstrations with input-output pairs
@@ -42,27 +29,38 @@ Master advanced prompt engineering techniques to maximize LLM performance, relia
 - Handling edge cases through strategic example selection
 
 ### 2. Chain-of-Thought Prompting
+
 - Step-by-step reasoning elicitation
 - Zero-shot CoT with "Let's think step by step"
 - Few-shot CoT with reasoning traces
 - Self-consistency techniques (sampling multiple reasoning paths)
 - Verification and validation steps
 
-### 3. Prompt Optimization
+### 3. Structured Outputs
+
+- JSON mode for reliable parsing
+- Pydantic schema enforcement
+- Type-safe response handling
+- Error handling for malformed outputs
+
+### 4. Prompt Optimization
+
 - Iterative refinement workflows
 - A/B testing prompt variations
 - Measuring prompt performance metrics (accuracy, consistency, latency)
 - Reducing token usage while maintaining quality
 - Handling edge cases and failure modes
 
-### 4. Template Systems
+### 5. Template Systems
+
 - Variable interpolation and formatting
 - Conditional prompt sections
 - Multi-turn conversation templates
 - Role-based prompt composition
 - Modular prompt components
 
-### 5. System Prompt Design
+### 6. System Prompt Design
+
 - Setting model behavior and constraints
 - Defining output formats and structure
 - Establishing role and expertise
@@ -72,68 +70,53 @@ Master advanced prompt engineering techniques to maximize LLM performance, relia
 ## Quick Start
 
 ```python
-from prompt_optimizer import PromptTemplate, FewShotSelector
+from langchain_anthropic import ChatAnthropic
+from langchain_core.prompts import ChatPromptTemplate
+from pydantic import BaseModel, Field
 
-# Define a structured prompt template
-template = PromptTemplate(
-    system="You are an expert SQL developer. Generate efficient, secure SQL queries.",
-    instruction="Convert the following natural language query to SQL:\n{query}",
-    few_shot_examples=True,
-    output_format="SQL code block with explanatory comments"
-)
+# Define structured output schema
+class SQLQuery(BaseModel):
+    query: str = Field(description="The SQL query")
+    explanation: str = Field(description="Brief explanation of what the query does")
+    tables_used: list[str] = Field(description="List of tables referenced")
 
-# Configure few-shot learning
-selector = FewShotSelector(
-    examples_db="sql_examples.jsonl",
-    selection_strategy="semantic_similarity",
-    max_examples=3
-)
+# Initialize model with structured output
+llm = ChatAnthropic(model="claude-sonnet-4-6")
+structured_llm = llm.with_structured_output(SQLQuery)
 
-# Generate optimized prompt
-prompt = template.render(
-    query="Find all users who registered in the last 30 days",
-    examples=selector.select(query="user registration date filter")
-)
+# Create prompt template
+prompt = ChatPromptTemplate.from_messages([
+    ("system", """You are an expert SQL developer. Generate efficient, secure SQL queries.
+    Always use parameterized queries to prevent SQL injection.
+    Explain your reasoning briefly."""),
+    ("user", "Convert this to SQL: {query}")
+])
+
+# Create chain
+chain = prompt | structured_llm
+
+# Use
+result = await chain.ainvoke({
+    "query": "Find all users who registered in the last 30 days"
+})
+print(result.query)
+print(result.explanation)
 ```
 
-## Key Patterns
+## Detailed patterns and worked examples
 
-### Progressive Disclosure
-Start with simple prompts, add complexity only when needed:
-
-1. **Level 1**: Direct instruction
-   - "Summarize this article"
-
-2. **Level 2**: Add constraints
-   - "Summarize this article in 3 bullet points, focusing on key findings"
-
-3. **Level 3**: Add reasoning
-   - "Read this article, identify the main findings, then summarize in 3 bullet points"
-
-4. **Level 4**: Add examples
-   - Include 2-3 example summaries with input-output pairs
-
-### Instruction Hierarchy
-```
-[System Context] → [Task Instruction] → [Examples] → [Input Data] → [Output Format]
-```
-
-### Error Recovery
-Build prompts that gracefully handle failures:
-- Include fallback instructions
-- Request confidence scores
-- Ask for alternative interpretations when uncertain
-- Specify how to indicate missing information
+Detailed pattern documentation lives in `references/details.md`. Read that file when the navigation tier above is insufficient.
 
 ## Best Practices
 
 1. **Be Specific**: Vague prompts produce inconsistent results
 2. **Show, Don't Tell**: Examples are more effective than descriptions
-3. **Test Extensively**: Evaluate on diverse, representative inputs
-4. **Iterate Rapidly**: Small changes can have large impacts
-5. **Monitor Performance**: Track metrics in production
-6. **Version Control**: Treat prompts as code with proper versioning
-7. **Document Intent**: Explain why prompts are structured as they are
+3. **Use Structured Outputs**: Enforce schemas with Pydantic for reliability
+4. **Test Extensively**: Evaluate on diverse, representative inputs
+5. **Iterate Rapidly**: Small changes can have large impacts
+6. **Monitor Performance**: Track metrics in production
+7. **Version Control**: Treat prompts as code with proper versioning
+8. **Document Intent**: Explain why prompts are structured as they are
 
 ## Common Pitfalls
 
@@ -142,75 +125,16 @@ Build prompts that gracefully handle failures:
 - **Context overflow**: Exceeding token limits with excessive examples
 - **Ambiguous instructions**: Leaving room for multiple interpretations
 - **Ignoring edge cases**: Not testing on unusual or boundary inputs
-
-## Integration Patterns
-
-### With RAG Systems
-```python
-# Combine retrieved context with prompt engineering
-prompt = f"""Given the following context:
-{retrieved_context}
-
-{few_shot_examples}
-
-Question: {user_question}
-
-Provide a detailed answer based solely on the context above. If the context doesn't contain enough information, explicitly state what's missing."""
-```
-
-### With Validation
-```python
-# Add self-verification step
-prompt = f"""{main_task_prompt}
-
-After generating your response, verify it meets these criteria:
-1. Answers the question directly
-2. Uses only information from provided context
-3. Cites specific sources
-4. Acknowledges any uncertainty
-
-If verification fails, revise your response."""
-```
-
-## Performance Optimization
-
-### Token Efficiency
-- Remove redundant words and phrases
-- Use abbreviations consistently after first definition
-- Consolidate similar instructions
-- Move stable content to system prompts
-
-### Latency Reduction
-- Minimize prompt length without sacrificing quality
-- Use streaming for long-form outputs
-- Cache common prompt prefixes
-- Batch similar requests when possible
-
-## Resources
-
-- **references/few-shot-learning.md**: Deep dive on example selection and construction
-- **references/chain-of-thought.md**: Advanced reasoning elicitation techniques
-- **references/prompt-optimization.md**: Systematic refinement workflows
-- **references/prompt-templates.md**: Reusable template patterns
-- **references/system-prompts.md**: System-level prompt design
-- **assets/prompt-template-library.md**: Battle-tested prompt templates
-- **assets/few-shot-examples.json**: Curated example datasets
-- **scripts/optimize-prompt.py**: Automated prompt optimization tool
+- **No error handling**: Assuming outputs will always be well-formed
+- **Hardcoded values**: Not parameterizing prompts for reuse
 
 ## Success Metrics
 
 Track these KPIs for your prompts:
+
 - **Accuracy**: Correctness of outputs
 - **Consistency**: Reproducibility across similar inputs
 - **Latency**: Response time (P50, P95, P99)
 - **Token Usage**: Average tokens per request
-- **Success Rate**: Percentage of valid outputs
+- **Success Rate**: Percentage of valid, parseable outputs
 - **User Satisfaction**: Ratings and feedback
-
-## Next Steps
-
-1. Review the prompt template library for common patterns
-2. Experiment with few-shot learning for your specific use case
-3. Implement prompt versioning and A/B testing
-4. Set up automated evaluation pipelines
-5. Document your prompt engineering decisions and learnings

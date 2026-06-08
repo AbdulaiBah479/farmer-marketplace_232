@@ -1,375 +1,222 @@
 ---
 name: tmux
-description: "Expert tmux session, window, and pane management for terminal multiplexing, persistent remote workflows, and shell scripting automation."
-category: development
-risk: safe
-source: community
-date_added: "2026-03-28"
-author: kostakost2
-tags: [tmux, terminal, multiplexer, sessions, shell, remote, automation]
-tools: [claude, cursor, gemini]
+description: "tmux and tmuxp session configuration, management, and troubleshooting. Use when creating, editing, debugging, or optimizing tmuxp YAML configs, designing tmux workspace layouts, fixing tmux session errors, managing multi-environment terminal setups, or working with tmux panes, windows, and sessions. Also use when the user mentions tmuxp, .tmuxp, tmux layouts, session_name, or terminal workspace organization."
+allowed-tools: Read, Write, Edit, Bash, Grep, Glob
 ---
 
-# tmux — Terminal Multiplexer
+# tmux & tmuxp Skill
 
-## Overview
+Create, edit, debug, and optimize tmux sessions via tmuxp YAML configurations.
 
-`tmux` keeps terminal sessions alive across SSH disconnects, splits work across multiple panes, and enables fully scriptable terminal automation. This skill covers session management, window/pane layout, keybinding patterns, and using `tmux` non-interactively from shell scripts — essential for remote servers, long-running jobs, and automated workflows.
+## Quick Decisions
 
-## When to Use This Skill
+| Task | Approach |
+|------|----------|
+| **New project workspace** | Create tmuxp YAML from template |
+| **Fix session load error** | Check session_name, YAML syntax, tool availability |
+| **Multi-environment K8s** | Use environment vars + per-env windows with safety guards |
+| **Simple dev setup** | 2-3 windows: editor, server, terminal |
+| **Complex infra** | before_script validation + helper scripts + monitoring windows |
+| **Capture existing layout** | `tmuxp freeze` then clean up the output |
 
-- Use when setting up or managing persistent terminal sessions on remote servers
-- Use when the user needs to run long-running processes that survive SSH disconnects
-- Use when scripting multi-pane terminal layouts (e.g., logs + shell + editor)
-- Use when automating `tmux` commands from bash scripts without user interaction
+## Session Name Rules
 
-## How It Works
+tmux session names **cannot contain periods (`.`) or colons (`:`)**.
 
-`tmux` has three hierarchy levels: **sessions** (top level, survives disconnects), **windows** (tabs within a session), and **panes** (splits within a window). Everything is controllable from outside via `tmux <command>` or from inside via the prefix key (`Ctrl-b` by default).
+Common pitfall: using `${USER}` in session_name when the username contains periods (e.g., `first.last`). Always use a static name or sanitize:
 
-### Session Management
+```yaml
+# BAD - breaks if USER contains periods
+session_name: ${USER}-project
 
-```bash
-# Create a new named session
-tmux new-session -s work
+# GOOD - static name
+session_name: project-dev
 
-# Create detached (background) session
-tmux new-session -d -s work
-
-# Create detached session and start a command
-tmux new-session -d -s build -x 220 -y 50 "make all"
-
-# Attach to a session
-tmux attach -t work
-tmux attach          # attaches to most recent session
-
-# List all sessions
-tmux list-sessions
-tmux ls
-
-# Detach from inside tmux
-# Prefix + d   (Ctrl-b d)
-
-# Kill a session
-tmux kill-session -t work
-
-# Kill all sessions except the current one
-tmux kill-session -a
-
-# Rename a session from outside
-tmux rename-session -t old-name new-name
-
-# Switch to another session from outside
-tmux switch-client -t other-session
-
-# Check if a session exists (useful in scripts)
-tmux has-session -t work 2>/dev/null && echo "exists"
+# GOOD - sanitized
+session_name: project-${USER//\./-}
 ```
 
-### Window Management
+## Configuration Structure
 
-```bash
-# Create a new window in the current session
-tmux new-window -t work -n "logs"
+```yaml
+session_name: project-name          # Required. No periods or colons.
+start_directory: ~/Projects/foo     # Default working dir for all windows
+environment:                        # Session-wide env vars
+  PROJECT_ROOT: ~/Projects/foo
+suppress_history: false             # Whether to hide commands from shell history
 
-# Create a window running a specific command
-tmux new-window -t work:3 -n "server" "python -m http.server 8080"
+before_script: |                    # Runs before session creation. Exit 1 = abort.
+  echo "Validating..."
 
-# List windows
-tmux list-windows -t work
+after_script: |                     # Runs after session is destroyed
+  echo "Cleaning up..."
 
-# Select (switch to) a window
-tmux select-window -t work:logs
-tmux select-window -t work:2       # by index
-
-# Rename a window
-tmux rename-window -t work:2 "editor"
-
-# Kill a window
-tmux kill-window -t work:logs
-
-# Move window to a new index
-tmux move-window -s work:3 -t work:1
-
-# From inside tmux:
-# Prefix + c     — new window
-# Prefix + ,     — rename window
-# Prefix + &     — kill window
-# Prefix + n/p   — next/previous window
-# Prefix + 0-9   — switch to window by number
+windows:
+  - window_name: editor             # Window identifier
+    focus: true                     # Make this the active window on load
+    layout: main-vertical           # Pane layout
+    start_directory: ~/Projects/foo/src
+    options:
+      main-pane-width: 70%          # Layout-specific options
+    shell_command_before:            # Runs in ALL panes before pane commands
+      - source ~/.zshrc
+    panes:
+      - focus: true                 # Active pane within window
+        shell_command:
+          - vim .
+      - shell_command:
+          - npm test -- --watch
 ```
 
-### Pane Management
+## Layouts
 
-```bash
-# Split pane vertically (left/right)
-tmux split-window -h -t work:1
+| Layout | Use For | Pane Arrangement |
+|--------|---------|------------------|
+| `main-vertical` | Editor + sidebars | Large left, stacked right |
+| `main-horizontal` | Logs + status | Large top, split bottom |
+| `even-horizontal` | Equal side-by-side | Equal horizontal splits |
+| `even-vertical` | Equal stacked | Equal vertical splits |
+| `tiled` | Monitoring dashboards | Grid of equal panes |
 
-# Split pane horizontally (top/bottom)
-tmux split-window -v -t work:1
-
-# Split and run a command
-tmux split-window -h -t work:1 "tail -f /var/log/syslog"
-
-# Select a pane by index
-tmux select-pane -t work:1.0
-
-# Resize panes
-tmux resize-pane -t work:1.0 -R 20   # expand right by 20 cols
-tmux resize-pane -t work:1.0 -D 10   # shrink down by 10 rows
-tmux resize-pane -Z                   # toggle zoom (fullscreen)
-
-# Swap panes
-tmux swap-pane -s work:1.0 -t work:1.1
-
-# Kill a pane
-tmux kill-pane -t work:1.1
-
-# From inside tmux:
-# Prefix + %     — split vertical
-# Prefix + "     — split horizontal
-# Prefix + arrow — navigate panes
-# Prefix + z     — zoom/unzoom current pane
-# Prefix + x     — kill pane
-# Prefix + {/}   — swap pane with previous/next
+Control main pane size via options:
+```yaml
+options:
+  main-pane-width: 70%    # For main-vertical
+  main-pane-height: 65%   # For main-horizontal
 ```
 
-### Sending Commands to Panes Without Being Attached
-
+Capture a custom layout from a running session:
 ```bash
-# Send a command to a specific pane and press Enter
-tmux send-keys -t work:1.0 "ls -la" Enter
-
-# Run a command in a background pane without attaching
-tmux send-keys -t work:editor "vim src/main.py" Enter
-
-# Send Ctrl+C to stop a running process
-tmux send-keys -t work:1.0 C-c
-
-# Send text without pressing Enter (useful for pre-filling prompts)
-tmux send-keys -t work:1.0 "git commit -m '"
-
-# Clear a pane
-tmux send-keys -t work:1.0 "clear" Enter
-
-# Check what's in a pane (capture its output)
-tmux capture-pane -t work:1.0 -p
-tmux capture-pane -t work:1.0 -p | grep "ERROR"
+tmux display-message -p '#{window_layout}'
+# Returns: "bb62,159x48,0,0{79x48,0,0,79x48,80,0}"
 ```
 
-### Scripting a Full Workspace Layout
+## Pane Definitions
 
-This is the most powerful pattern: create a fully configured multi-pane workspace from a single script.
+```yaml
+panes:
+  # Simple command
+  - vim README.md
 
-```bash
-#!/usr/bin/env bash
-set -euo pipefail
+  # Multiple commands
+  - shell_command:
+      - cd ~/project
+      - source .venv/bin/activate
+      - python app.py
 
-SESSION="dev"
+  # Empty pane
+  - null     # or: blank, pane
 
-# Bail if session already exists
-tmux has-session -t "$SESSION" 2>/dev/null && {
-  echo "Session $SESSION already exists. Attaching..."
-  tmux attach -t "$SESSION"
-  exit 0
-}
-
-# Create session with first window
-tmux new-session -d -s "$SESSION" -n "editor" -x 220 -y 50
-
-# Window 1: editor + test runner side by side
-tmux send-keys -t "$SESSION:editor" "vim ." Enter
-tmux split-window -h -t "$SESSION:editor"
-tmux send-keys -t "$SESSION:editor.1" "npm test -- --watch" Enter
-tmux select-pane -t "$SESSION:editor.0"
-
-# Window 2: server logs
-tmux new-window -t "$SESSION" -n "server"
-tmux send-keys -t "$SESSION:server" "docker compose up" Enter
-tmux split-window -v -t "$SESSION:server"
-tmux send-keys -t "$SESSION:server.1" "tail -f logs/app.log" Enter
-
-# Window 3: general shell
-tmux new-window -t "$SESSION" -n "shell"
-
-# Focus first window
-tmux select-window -t "$SESSION:editor"
-
-# Attach
-tmux attach -t "$SESSION"
+  # With focus
+  - focus: true
+    shell_command:
+      - k9s
 ```
 
-### Configuration (`~/.tmux.conf`)
+## Environment Variables
 
-```bash
-# Change prefix to Ctrl-a (screen-style)
-unbind C-b
-set -g prefix C-a
-bind C-a send-prefix
+```yaml
+environment:
+  # Static values
+  PROJECT_NAME: my-app
 
-# Enable mouse support
-set -g mouse on
+  # Reference existing vars (expanded at load time)
+  HOME_DIR: ${HOME}
 
-# Start window/pane numbering at 1
-set -g base-index 1
-setw -g pane-base-index 1
+  # Multi-environment pattern
+  K8S_CTX_DEV: aks-myapp-dev
+  K8S_CTX_STG: aks-myapp-stg
+  K8S_CTX_PRD: aks-myapp-prd
 
-# Renumber windows when one is closed
-set -g renumber-windows on
-
-# Increase scrollback buffer
-set -g history-limit 50000
-
-# Use vi keys in copy mode
-setw -g mode-keys vi
-
-# Faster key repetition
-set -s escape-time 0
-
-# Reload config without restarting
-bind r source-file ~/.tmux.conf \; display "Config reloaded"
-
-# Intuitive splits: | and -
-bind | split-window -h -c "#{pane_current_path}"
-bind - split-window -v -c "#{pane_current_path}"
-
-# New windows open in current directory
-bind c new-window -c "#{pane_current_path}"
-
-# Status bar
-set -g status-right "#{session_name} | %H:%M %d-%b"
-set -g status-interval 5
+  # Defaults
+  EDITOR: ${EDITOR:-vim}
 ```
 
-### Copy Mode and Scrollback
+Never hardcode secrets. Reference env vars from the shell: `${AZURE_SUBSCRIPTION_ID}`.
 
-```bash
-# Enter copy mode (scroll up through output)
-# Prefix + [
+## before_script Validation
 
-# In vi mode:
-# / to search forward, ? to search backward
-# Space to start selection, Enter to copy
-# q to exit copy mode
+Use before_script to validate prerequisites. Exit 1 aborts session creation:
 
-# Paste the most recent buffer
-# Prefix + ]
+```yaml
+before_script: |
+  # Check project exists
+  [ -d "$PROJECT_ROOT" ] || { echo "Project not found"; exit 1; }
 
-# List paste buffers
-tmux list-buffers
-
-# Show the most recent buffer
-tmux show-buffer
-
-# Save buffer to a file
-tmux save-buffer /tmp/tmux-output.txt
-
-# Load a file into a buffer
-tmux load-buffer /tmp/data.txt
-
-# Pipe pane output to a command
-tmux pipe-pane -t work:1.0 "cat >> ~/session.log"
-```
-
-### Practical Automation Patterns
-
-```bash
-# Idempotent session: create or attach
-ensure_session() {
-  local name="$1"
-  tmux has-session -t "$name" 2>/dev/null \
-    || tmux new-session -d -s "$name"
-  tmux attach -t "$name"
-}
-
-# Run a command in a new background window and tail its output
-run_bg() {
-  local session="${1:-main}" cmd="${*:2}"
-  tmux new-window -t "$session" -n "bg-$$"
-  tmux send-keys -t "$session:bg-$$" "$cmd" Enter
-}
-
-# Wait for a pane to produce specific output (polling)
-wait_for_output() {
-  local target="$1" pattern="$2" timeout="${3:-30}"
-  local elapsed=0
-  while (( elapsed < timeout )); do
-    tmux capture-pane -t "$target" -p | grep -q "$pattern" && return 0
-    sleep 1
-    (( elapsed++ ))
+  # Check required tools
+  for tool in kubectl terraform docker; do
+    command -v $tool >/dev/null || echo "Warning: $tool not found"
   done
-  return 1
-}
 
-# Kill all background windows matching a name prefix
-kill_bg_windows() {
-  local session="$1" prefix="${2:-bg-}"
-  tmux list-windows -t "$session" -F "#W" \
-    | grep "^${prefix}" \
-    | while read -r win; do
-        tmux kill-window -t "${session}:${win}"
-      done
-}
+  # Check connectivity
+  kubectl cluster-info >/dev/null 2>&1 || echo "Warning: Cannot reach cluster"
 ```
 
-### Remote and SSH Workflows
+## Production Safety Patterns
+
+Protect production environments with read-only access and warnings:
+
+```yaml
+- window_name: k8s-prod
+  panes:
+    - shell_command:
+        - echo "PRODUCTION - READ-ONLY ACCESS"
+        - echo "DO NOT use: apply, delete, edit, patch"
+        - kubectl config use-context $K8S_CTX_PRD
+        - k9s --readonly
+```
+
+## CLI Commands
 
 ```bash
-# SSH and immediately attach to an existing session
-ssh user@host -t "tmux attach -t work || tmux new-session -s work"
-
-# Run a command on remote host inside a tmux session (fire and forget)
-ssh user@host "tmux new-session -d -s deploy 'bash /opt/deploy.sh'"
-
-# Watch the remote session output from another terminal
-ssh user@host -t "tmux attach -t deploy -r"  # read-only attach
-
-# Pair programming: share a session (both users attach to the same session)
-# User 1:
-tmux new-session -s shared
-# User 2 (same server):
-tmux attach -t shared
+tmuxp load config-name          # Load from ~/.tmuxp/
+tmuxp load ./path/to/file.yaml  # Load from path
+tmuxp load -y config-name       # Skip confirmation prompt
+tmuxp load -d config-name       # Load detached (background)
+tmuxp ls                        # List available configs
+tmuxp freeze session-name       # Capture running session to YAML
+tmuxp convert file.json         # Convert JSON config to YAML
+tmuxp edit config-name          # Edit config in $EDITOR
+tmuxp debug-info                # Show environment info
 ```
 
-## Best Practices
+## Troubleshooting
 
-- Always name sessions (`-s name`) in scripts — unnamed sessions are hard to target reliably
-- Use `tmux has-session -t name 2>/dev/null` before creating to make scripts idempotent
-- Set `-x` and `-y` when creating detached sessions to give panes a proper size for commands that check terminal dimensions
-- Use `send-keys ... Enter` for automation rather than piping stdin — it works even when the target pane is running an interactive program
-- Keep `~/.tmux.conf` in version control for reproducibility across machines
-- Prefer `bind -n` for bindings that don't need the prefix, but only for keys that don't conflict with application shortcuts
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `BadSessionName: contains periods` | `session_name` has `.` (often from `${USER}`) | Remove `${USER}` prefix or sanitize |
+| `BadSessionName: contains colons` | `session_name` has `:` | Remove colons from name |
+| Session already exists | Duplicate session_name | Kill old: `tmux kill-session -t name` |
+| Commands not executing | Shell compatibility | Test commands manually first |
+| Layout broken | Terminal too small for layout | Use predefined layouts or test with `tmuxp load -d` |
+| Env vars not expanding | Wrong syntax | Use `${VAR}` not `$VAR` in YAML values |
 
-## Security & Safety Notes
+Debug: `tmuxp -v load config.yaml` for verbose output.
 
-- `send-keys` executes commands in a pane without confirmation — verify the target (`-t session:window.pane`) before use in scripts to avoid sending keystrokes to the wrong pane
-- Read-only attach (`-r`) is appropriate when sharing sessions with others to prevent accidental input
-- Avoid storing secrets in tmux window/pane titles or environment variables exported into sessions on shared machines
+## References
 
-## Common Pitfalls
+- [WORKFLOWS.md](references/WORKFLOWS.md) - Common workflow patterns (dev, infra, monitoring)
+- [BEST-PRACTICES.md](references/BEST-PRACTICES.md) - Production patterns, safety, organization
+- [templates/](templates/) - Ready-to-use config templates
 
-- **Problem:** `tmux` commands from a script fail with "no server running"
-  **Solution:** Start the server first with `tmux start-server`, or create a detached session before running other commands.
+## Workflow: Create New Config
 
-- **Problem:** Pane size is 0x0 when creating a detached session
-  **Solution:** Pass explicit dimensions: `tmux new-session -d -s name -x 200 -y 50`.
+1. Identify the project type (dev, infra, monitoring, mixed)
+2. Choose a template from `templates/`
+3. Set session_name (no periods/colons), start_directory, environment vars
+4. Design windows by function (editor, server, logs, k8s, etc.)
+5. Pick layouts matching each window's purpose
+6. Add before_script validation if the project has external dependencies
+7. Add production safety guards for any prod-access windows
+8. Test: `tmuxp load -d config.yaml` then `tmux attach -t session-name`
 
-- **Problem:** `send-keys` types the text but doesn't run the command
-  **Solution:** Ensure you pass `Enter` (capital E) as a second argument: `tmux send-keys -t target "cmd" Enter`.
+---
 
-- **Problem:** Script creates a duplicate session each run
-  **Solution:** Guard with `tmux has-session -t name 2>/dev/null || tmux new-session -d -s name`.
+## Gotchas
 
-- **Problem:** Copy-mode selection doesn't work as expected
-  **Solution:** Confirm `mode-keys vi` or `mode-keys emacs` is set to match your preference in `~/.tmux.conf`.
-
-## Related Skills
-
-- `@bash-pro` — Writing the shell scripts that orchestrate tmux sessions
-- `@bash-linux` — General Linux terminal patterns used inside tmux panes
-- `@ssh` — Combining tmux with SSH for persistent remote workflows
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
+- **Session names with periods break the unix-socket path:** `${USER}` containing `.` (e.g. `first.last`) produces `BadSessionName` because tmux uses the name in `/tmp/tmux-UID/` socket path. Use a static name or `${USER//\./-}` sanitization.
+- **`before_script` runs in a fresh shell, not your interactive zsh:** Aliases, functions, and `.zshrc`-sourced env vars are absent. `command -v` works but `myalias` does not. Source `~/.zshrc` explicitly if you depend on it.
+- **`shell_command_before` runs in EVERY pane of the window:** Heavy commands (sourcing 500ms+ of zsh config, activating venvs) multiply latency — a 4-pane window adds ~2s to session load. Use per-pane `shell_command` instead when only one pane needs it.
+- **`tmuxp freeze` captures live state, not intent:** Output includes the random working directories, history-expanded commands, and the literal pane sizes — review and clean before committing. Frozen YAML is a starting point, not a finished config.
+- **Env var expansion happens at YAML load, not pane start:** `environment: FOO: ${BAR}` resolves `$BAR` from the shell that invoked `tmuxp load`. If `$BAR` is unset there, it stays empty even if a later pane defines it.
+- **`focus: true` on multiple panes silently picks the last one:** No error, no warning — the file just looks misconfigured at runtime. Validate with `grep -c "focus: true"` per window before debugging.

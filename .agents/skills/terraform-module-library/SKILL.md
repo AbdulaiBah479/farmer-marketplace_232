@@ -1,32 +1,17 @@
 ---
 name: terraform-module-library
-description: "Build reusable Terraform modules for AWS, Azure, and GCP infrastructure following infrastructure-as-code best practices. Use when creating infrastructure modules, standardizing cloud provisioning, ..."
-risk: unknown
-source: community
-date_added: "2026-02-27"
+description: Build reusable Terraform modules for AWS, Azure, GCP, and OCI infrastructure following infrastructure-as-code best practices. Use when creating infrastructure modules, standardizing cloud provisioning, or implementing reusable IaC components.
 ---
 
 # Terraform Module Library
 
-Production-ready Terraform module patterns for AWS, Azure, and GCP infrastructure.
-
-## Do not use this skill when
-
-- The task is unrelated to terraform module library
-- You need a different domain or tool outside this scope
-
-## Instructions
-
-- Clarify goals, constraints, and required inputs.
-- Apply relevant best practices and validate outcomes.
-- Provide actionable steps and verification.
-- If detailed examples are required, open `resources/implementation-playbook.md`.
+Production-ready Terraform module patterns for AWS, Azure, GCP, and OCI infrastructure.
 
 ## Purpose
 
 Create reusable, well-tested Terraform modules for common cloud infrastructure patterns across multiple cloud providers.
 
-## Use this skill when
+## When to Use
 
 - Build reusable infrastructure components
 - Standardize cloud resource provisioning
@@ -47,10 +32,14 @@ terraform-modules/
 │   ├── vnet/
 │   ├── aks/
 │   └── storage/
-└── gcp/
-    ├── vpc/
-    ├── gke/
-    └── cloud-sql/
+├── gcp/
+│   ├── vpc/
+│   ├── gke/
+│   └── cloud-sql/
+└── oci/
+    ├── vcn/
+    ├── oke/
+    └── object-storage/
 ```
 
 ## Standard Module Pattern
@@ -73,6 +62,7 @@ module-name/
 ## AWS VPC Module Example
 
 **main.tf:**
+
 ```hcl
 resource "aws_vpc" "main" {
   cidr_block           = var.cidr_block
@@ -116,6 +106,7 @@ resource "aws_internet_gateway" "main" {
 ```
 
 **variables.tf:**
+
 ```hcl
 variable "name" {
   description = "Name of the VPC"
@@ -156,6 +147,7 @@ variable "tags" {
 ```
 
 **outputs.tf:**
+
 ```hcl
 output "vpc_id" {
   description = "ID of the VPC"
@@ -185,6 +177,8 @@ output "vpc_cidr_block" {
 8. **Implement conditional resources** with count/for_each
 9. **Test modules** with Terratest
 10. **Tag all resources** consistently
+
+**Reference:** See `references/aws-modules.md` and `references/oci-modules.md`
 
 ## Module Composition
 
@@ -225,13 +219,6 @@ module "rds" {
 }
 ```
 
-## Reference Files
-
-- `assets/vpc-module/` - Complete VPC module example
-- `assets/rds-module/` - RDS module example
-- `references/aws-modules.md` - AWS module patterns
-- `references/azure-modules.md` - Azure module patterns
-- `references/gcp-modules.md` - GCP module patterns
 
 ## Testing
 

@@ -1,183 +1,175 @@
 ---
 name: simplify-code
-description: "Review a diff for clarity and safe simplifications, then optionally apply low-risk fixes."
-risk: safe
-source: "Dimillian/Skills (MIT)"
-date_added: "2026-03-25"
+description: "Parallel 3-agent cleanup of recent code changes."
+version: 1.0.0
+author: Hermes Agent (inspired by Claude Code /simplify)
+license: MIT
+platforms: [linux, macos, windows]
+metadata:
+  hermes:
+    tags: [code-review, cleanup, refactor, delegation, subagent, parallel, simplify]
+    related_skills: [requesting-code-review, test-driven-development, plan]
 ---
 
-# Simplify Code
+# Simplify Code — Parallel Review & Cleanup
 
-Review changed code for reuse, quality, efficiency, and clarity issues. Use Codex sub-agents to review in parallel, then optionally apply only high-confidence, behavior-preserving fixes.
+Review your recent code changes with three focused reviewers running in
+parallel, aggregate their findings, and apply the fixes worth applying.
+
+**Core principle:** Three narrow reviewers beat one broad reviewer. Each one
+deeply searches the codebase for a single class of problem — reuse, quality,
+efficiency — without diluting its attention across all three. They run
+concurrently, so you pay the latency of one review, not three.
 
 ## When to Use
-- When the user asks to simplify, clean up, refactor, or review changed code.
-- When you want high-confidence, behavior-preserving improvements on a scoped diff.
 
-## Modes
+Trigger this skill when the user says any of:
 
-Choose the mode from the user's request:
+- "simplify" / "simplify my changes" / "simplify these changes"
+- "review my code" / "review my recent changes" / "clean up my changes"
+- "/simplify" (if they're carrying the Claude Code habit over)
 
-- `review-only`: user asks to review, audit, or check the changes
-- `safe-fixes`: user asks to simplify, clean up, or refactor the changes
-- `fix-and-validate`: same as `safe-fixes`, but also run the smallest relevant validation after edits
+Optional modifiers the user may add — honor them:
 
-If the user does not specify, default to:
+- **Focus:** "simplify focus on efficiency" → run only the efficiency reviewer
+  (or weight the aggregation toward it). Recognized focuses: `reuse`,
+  `quality`, `efficiency`.
+- **Dry run:** "simplify but don't change anything" / "just report" → run the
+  three reviewers, present findings, apply NOTHING. Ask before applying.
+- **Scope:** "simplify the last commit" / "simplify staged" / "simplify
+  src/foo.py" → narrow the diff source accordingly (see Phase 1).
 
-- `review-only` for "review", "audit", or "check"
-- `safe-fixes` for "simplify", "clean up", or "refactor"
+Do NOT auto-run this after every edit. It costs three subagents' worth of
+tokens — invoke it only when the user explicitly asks.
 
-## Step 1: Determine the Scope and Diff Command
+## The Process
 
-Prefer this scope order:
+### Phase 1 — Identify the changes
 
-1. Files or paths explicitly named by the user
-2. Current git changes
-3. Files edited earlier in the current Codex turn
-4. Most recently modified tracked files, only if the user asked for a review but there is no diff
+Capture the diff to review. Pick the source by what the user asked for, in
+this default order:
 
-If there is no clear scope, stop and say so briefly.
+```bash
+# 1. Default: uncommitted working-tree changes (tracked files)
+git diff
 
-When using git changes, determine the smallest correct diff command based on the repo state:
+# 2. If that's empty, include staged changes
+git diff HEAD
 
-- unstaged work: `git diff`
-- staged work: `git diff --cached`
-- branch or commit comparison explicitly requested by the user: use that exact diff target
-- mixed staged and unstaged work: review both
+# 3. Scoped variants the user may request:
+git diff --staged                 # "staged changes"
+git diff HEAD~1                    # "the last commit"
+git diff main...HEAD              # "this branch" / "my PR"
+git diff -- src/foo.py            # specific file(s)
+```
 
-Do not assume `git diff HEAD` is the right default when a smaller diff is available.
+If `git diff` and `git diff HEAD` are both empty and there's no git repo or no
+changes, fall back to the files the user explicitly named or that were
+recently created/edited in this session. If you genuinely can't find any
+changed code, say so and stop — there's nothing to simplify.
 
-Before reviewing standards or applying fixes, read the repo's local instruction files and relevant project docs for the touched area. Prefer the closest applicable guidance, such as:
+Capture the full diff text. Note its size: if it's very large (say >2000
+changed lines), warn the user that three subagents each carrying the full diff
+will be token-heavy, and offer to scope it down (per-directory, per-commit)
+before proceeding.
 
-- `AGENTS.md`
-- repo workflow docs
-- architecture or style docs for the touched module
+### Phase 2 — Launch three reviewers in parallel
 
-Use those instructions to distinguish real issues from intentional local patterns.
+Use `delegate_task` **batch mode** — pass all three tasks in one `tasks`
+array so they run concurrently. Three is the right fan-out for this pattern;
+it's well within the `delegation.max_concurrent_children` budget on any
+default install.
 
-## Step 2: Launch Four Review Sub-Agents in Parallel
+Give **every** reviewer the **complete diff** (not fragments — cross-file
+issues hide in the gaps) plus the absolute repo path so they can search the
+wider codebase. Each reviewer gets `terminal`, `file`, and `search`
+toolsets (so they can `git`, `read_file`, and `search_files`/grep).
 
-Use Codex sub-agents when the scope is large enough for parallel review to help. For a tiny diff or one very small file, it is acceptable to review locally instead.
+Tell each reviewer to:
+- Search the existing codebase for evidence (don't reason from the diff alone).
+- Report findings as a concrete list: `file:line → problem → suggested fix`.
+- Rank each finding `high` / `medium` / `low` confidence.
+- Skip nits and style-only churn. Only flag things that materially improve
+  the code.
 
-When spawning sub-agents:
+Pass these three goals (drop any the user's focus excludes):
 
-- give each sub-agent the same scope
-- tell each sub-agent to inspect only its assigned review role
-- ask for concise, structured findings only
-- ask each sub-agent to report file, line or symbol, problem, recommended fix, and confidence
+**Reviewer 1 — Code Reuse**
+> Review this diff for code that duplicates functionality already in the
+> codebase. Search utility modules, shared helpers, and adjacent files
+> (use search_files / grep) for existing functions, constants, or patterns
+> the new code could call instead of reimplementing. Flag: new functions
+> that duplicate existing ones; hand-rolled logic that an existing utility
+> already does (manual string/path manipulation, custom env checks, ad-hoc
+> type guards, re-implemented parsing). For each, name the existing thing to
+> use and where it lives.
 
-Use four review roles.
+**Reviewer 2 — Code Quality**
+> Review this diff for quality problems. Look for: redundant state (values
+> that duplicate or could be derived from existing state; caches that don't
+> need to exist); parameter sprawl (new params bolted on where the function
+> should have been restructured); copy-paste-with-variation (near-duplicate
+> blocks that should share an abstraction); leaky abstractions (exposing
+> internals, breaking an existing encapsulation boundary); stringly-typed
+> code (raw strings where a constant/enum/registry already exists — check the
+> canonical registries before flagging). For each, give the concrete refactor.
 
-### Sub-Agent 1: Code Reuse Review
+**Reviewer 3 — Efficiency**
+> Review this diff for efficiency problems. Look for: unnecessary work
+> (redundant computation, repeated file reads, duplicate API calls, N+1
+> access patterns); missed concurrency (independent ops run sequentially);
+> hot-path bloat (heavy/blocking work on startup or per-request paths);
+> TOCTOU anti-patterns (existence pre-checks before an op instead of doing
+> the op and handling the error); memory issues (unbounded growth, missing
+> cleanup, listener/handle leaks); overly broad reads (loading whole files
+> when a slice would do). For each, give the concrete fix and why it's faster
+> or lighter.
 
-Review the changes for reuse opportunities:
+### Phase 3 — Aggregate and apply
 
-1. Search for existing helpers, utilities, or shared abstractions that already solve the same problem.
-2. Flag duplicated functions or near-duplicate logic introduced in the change.
-3. Flag inline logic that should call an existing helper instead of re-implementing it.
+Wait for all three to return (batch mode returns them together).
 
-Recommended sub-agent role: `explorer` for broad codebase lookup, or `reviewer` if a stronger review pass is more useful than wide search.
+1. **Merge** the findings into one list, deduping where reviewers overlap.
+2. **Discard false positives** — you have the most context; you don't have to
+   argue with a reviewer, just drop weak or wrong suggestions silently.
+3. **Resolve conflicts.** Reviewers can disagree (Reviewer 1: "use existing
+   util X"; Reviewer 3: "X is slow, inline it"). Default resolution order:
+   **correctness > the user's stated focus > readability/reuse > micro-perf.**
+   Don't apply a perf "fix" that hurts clarity unless the path is genuinely
+   hot. When two suggestions are mutually exclusive and both defensible, pick
+   the one that touches less code and note the alternative.
+4. **Apply** the surviving fixes directly with `patch` / `write_file` — unless
+   the user asked for a dry run, in which case present the list and ask first.
+5. **Verify** you didn't break anything: run the project's targeted tests for
+   the touched files (not the full suite), and re-run any linter/type check the
+   repo uses. If a fix breaks a test, revert that one fix and report it.
+6. **Summarize** what you changed: a short list of applied fixes grouped by
+   reviewer category, plus any findings you deliberately skipped and why.
 
-### Sub-Agent 2: Code Quality Review
+## Pitfalls
 
-Review the same changes for code quality issues:
+- **Don't fan out wider than ~3.** More reviewers means more cost and more
+  conflicting suggestions to reconcile, not better coverage. Three categories
+  cover the space.
+- **Give the WHOLE diff to each reviewer.** Splitting the diff across reviewers
+  defeats the design — cross-file duplication and N+1s only show up with the
+  full picture.
+- **Reviewers search, they don't guess.** A reuse finding with no pointer to
+  the existing utility ("there's probably a helper for this") is noise. Require
+  `file:line` evidence; drop findings that lack it.
+- **Apply ≠ rewrite.** This is cleanup of the user's recent changes, not a
+  license to refactor the whole module. Keep edits scoped to what the diff
+  touched plus the minimal surrounding change a fix requires.
+- **Respect project conventions.** If the repo has AGENTS.md / CLAUDE.md /
+  HERMES.md or a linter config, fold those rules into the reviewer prompts so
+  suggestions match house style instead of fighting it.
+- **Large diffs blow context.** If the diff is huge, scope it down before
+  delegating — three subagents each carrying a 5000-line diff is expensive and
+  may truncate.
 
-1. Redundant state, cached values, or derived values stored unnecessarily
-2. Parameter sprawl caused by threading new arguments through existing call chains
-3. Copy-paste with slight variation that should become a shared abstraction
-4. Leaky abstractions or ownership violations across module boundaries
-5. Stringly-typed values where existing typed contracts, enums, or constants already exist
+## Related
 
-Recommended sub-agent role: `reviewer`
-
-### Sub-Agent 3: Efficiency Review
-
-Review the same changes for efficiency issues:
-
-1. Repeated work, duplicate reads, duplicate API calls, or unnecessary recomputation
-2. Sequential work that could safely run concurrently
-3. New work added to startup, render, request, or other hot paths without clear need
-4. Pre-checks for existence when the operation itself can be attempted directly and errors handled
-5. Memory growth, missing cleanup, or listener/subscription leaks
-6. Overly broad reads or scans when the code only needs a subset
-
-Recommended sub-agent role: `reviewer`
-
-### Sub-Agent 4: Clarity and Standards Review
-
-Review the same changes for clarity, local standards, and balance:
-
-1. Violations of local project conventions or module patterns
-2. Unnecessary complexity, deep nesting, weak names, or redundant comments
-3. Overly compact or clever code that reduces readability
-4. Over-simplification that collapses separate concerns into one unclear unit
-5. Dead code, dead abstractions, or indirection without value
-
-Recommended sub-agent role: `reviewer`
-
-Only report issues that materially improve maintainability, correctness, or cost. Do not churn code just to make it look different.
-
-## Step 3: Aggregate Findings
-
-Wait for all review sub-agents to complete, then merge their findings.
-
-Normalize findings into this shape:
-
-1. File and line or nearest symbol
-2. Category: reuse, quality, efficiency, or clarity
-3. Why it is a problem
-4. Recommended fix
-5. Confidence: high, medium, or low
-
-Discard weak, duplicative, or instruction-conflicting findings before editing.
-
-## Step 4: Fix Issues Carefully
-
-In `review-only` mode, stop after reporting findings.
-
-In `safe-fixes` or `fix-and-validate` mode:
-
-- Apply only high-confidence, behavior-preserving fixes
-- Skip subjective refactors that need product or architectural judgment
-- Preserve local patterns when they are intentional or instruction-backed
-- Keep edits scoped to the reviewed files unless a small adjacent change is required to complete the fix correctly
-
-Prefer fixes like:
-
-- replacing duplicated code with an existing helper
-- removing redundant state or dead code
-- simplifying control flow without changing behavior
-- narrowing overly broad operations
-- renaming unclear locals when the scope is contained
-
-Do not stage, commit, or push changes as part of this skill.
-
-## Step 5: Validate When Required
-
-In `fix-and-validate` mode, run the smallest relevant validation for the touched scope after edits.
-
-Examples:
-
-- targeted tests for the touched module
-- typecheck or compile for the touched target
-- formatter or lint check if that is the project's real safety gate
-
-Prefer fast, scoped validation over full-suite runs unless the change breadth justifies more.
-
-If validation is skipped because the user asked not to run it, say so explicitly.
-
-## Step 6: Summarize Outcome
-
-Close with a brief result:
-
-- what was reviewed
-- what was fixed, if anything
-- what was intentionally left alone
-- whether validation ran
-
-If the code is already clean for this rubric, say that directly instead of manufacturing edits.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
+If your install has the `subagent-driven-development` skill (optional), it
+covers the complementary case: parallel review *during* implementation, per
+task. This skill is the standalone *after-the-fact* cleanup pass. Use
+`requesting-code-review` for the pre-commit security/quality gate.

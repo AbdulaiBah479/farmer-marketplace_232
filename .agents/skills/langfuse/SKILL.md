@@ -1,243 +1,142 @@
 ---
 name: langfuse
-description: "Expert in Langfuse - the open-source LLM observability platform. Covers tracing, prompt management, evaluation, datasets, and integration with LangChain, LlamaIndex, and OpenAI. Essential for debug..."
-risk: unknown
-source: "vibeship-spawner-skills (Apache 2.0)"
-date_added: "2026-02-27"
+description: Interact with Langfuse and access its documentation. Use when needing to (1) query or modify Langfuse data programmatically via the CLI — traces, prompts, datasets, scores, sessions, and any other API resource, (2) look up Langfuse documentation, concepts, integration guides, or SDK usage, or (3) understand how any Langfuse feature works. This skill covers CLI-based API access (via npx) and multiple documentation retrieval methods.
+allowed-tools:
+  - WebFetch(domain:langfuse.com)
+  - Bash(curl *langfuse.com/*)
+  - Bash(npx langfuse-cli api __schema *)
+  - Bash(npx langfuse-cli api * --help *)
+  - Bash(npx langfuse-cli api * list *)
+  - Bash(npx langfuse-cli api * get *)
+  - Bash(bunx langfuse-cli api __schema *)
+  - Bash(bunx langfuse-cli api * --help *)
+  - Bash(bunx langfuse-cli api * list *)
+  - Bash(bunx langfuse-cli api * get *)
 ---
 
 # Langfuse
 
-**Role**: LLM Observability Architect
+This skill helps you use Langfuse effectively across all common workflows: instrumenting applications, migrating prompts, debugging traces, and accessing data programmatically.
 
-You are an expert in LLM observability and evaluation. You think in terms of
-traces, spans, and metrics. You know that LLM applications need monitoring
-just like traditional software - but with different dimensions (cost, quality,
-latency). You use data to drive prompt improvements and catch regressions.
+## Core Principles
 
-## Capabilities
+Follow these principles for ALL Langfuse work:
 
-- LLM tracing and observability
-- Prompt management and versioning
-- Evaluation and scoring
-- Dataset management
-- Cost tracking
-- Performance monitoring
-- A/B testing prompts
+1. **Documentation First**: NEVER implement based on memory. Always fetch current docs before writing code (Langfuse updates frequently) See the section below on how to access documentation.
+2. **CLI for Data Access**: Use `langfuse-cli` when querying/modifying Langfuse data. See the section below on how to use the CLI. 
+3. **Best Practices by Use Case**: Check the relevant reference file below for use-case-specific guidelines before implementing
+4. **Use latest Langfuse versions**: Unless the user specified otherwise or there's a good reason, always use the latest version of Langfuse SDKs/APIs.
 
-## Requirements
 
-- Python or TypeScript/JavaScript
-- Langfuse account (cloud or self-hosted)
-- LLM API keys
+## Use case specific references
 
-## Patterns
+- instrumenting an existing function/application: references/instrumentation.md
+- migrating prompts from a codebase into Langfuse: references/prompt-migration.md
+- capturing user feedback (thumbs, ratings, implicit signals) as scores on traces: references/user-feedback.md
+- further tips on using the Langfuse CLI: references/cli.md
+- upgrading or migrating Langfuse SDKs to the latest version: references/sdk-upgrade.md
+- judge calibration (LLM-as-a-Judge reliability, simple accuracy checks, advanced split-based validation, confusion matrices, and metric ingestion): references/judge-calibration.md
+- systematic error analysis — reading traces, building failure taxonomy, deciding what to fix: references/error-analysis.md
+- submitting feedback about this skill: references/skill-feedback.md
 
-### Basic Tracing Setup
 
-Instrument LLM calls with Langfuse
+## 1. Langfuse API via CLI
 
-**When to use**: Any LLM application
+Use the `langfuse-cli` to interact with the full Langfuse REST API from the command line. Run via npx (no install required):
 
-```python
-from langfuse import Langfuse
+Start by discovering the schema and available arguments:
 
-# Initialize client
-langfuse = Langfuse(
-    public_key="pk-...",
-    secret_key="sk-...",
-    host="https://cloud.langfuse.com"  # or self-hosted URL
-)
+```bash
+# Discover all available resources
+npx langfuse-cli api __schema
 
-# Create a trace for a user request
-trace = langfuse.trace(
-    name="chat-completion",
-    user_id="user-123",
-    session_id="session-456",  # Groups related traces
-    metadata={"feature": "customer-support"},
-    tags=["production", "v2"]
-)
+# List actions for a resource
+npx langfuse-cli api <resource> --help
 
-# Log a generation (LLM call)
-generation = trace.generation(
-    name="gpt-4o-response",
-    model="gpt-4o",
-    model_parameters={"temperature": 0.7},
-    input={"messages": [{"role": "user", "content": "Hello"}]},
-    metadata={"attempt": 1}
-)
-
-# Make actual LLM call
-response = openai.chat.completions.create(
-    model="gpt-4o",
-    messages=[{"role": "user", "content": "Hello"}]
-)
-
-# Complete the generation with output
-generation.end(
-    output=response.choices[0].message.content,
-    usage={
-        "input": response.usage.prompt_tokens,
-        "output": response.usage.completion_tokens
-    }
-)
-
-# Score the trace
-trace.score(
-    name="user-feedback",
-    value=1,  # 1 = positive, 0 = negative
-    comment="User clicked helpful"
-)
-
-# Flush before exit (important in serverless)
-langfuse.flush()
+# Show args/options for a specific action
+npx langfuse-cli api <resource> <action> --help
 ```
 
-### OpenAI Integration
+### Credentials
 
-Automatic tracing with OpenAI SDK
+Set environment variables before making calls:
 
-**When to use**: OpenAI-based applications
-
-```python
-from langfuse.openai import openai
-
-# Drop-in replacement for OpenAI client
-# All calls automatically traced
-
-response = openai.chat.completions.create(
-    model="gpt-4o",
-    messages=[{"role": "user", "content": "Hello"}],
-    # Langfuse-specific parameters
-    name="greeting",  # Trace name
-    session_id="session-123",
-    user_id="user-456",
-    tags=["test"],
-    metadata={"feature": "chat"}
-)
-
-# Works with streaming
-stream = openai.chat.completions.create(
-    model="gpt-4o",
-    messages=[{"role": "user", "content": "Tell me a story"}],
-    stream=True,
-    name="story-generation"
-)
-
-for chunk in stream:
-    print(chunk.choices[0].delta.content, end="")
-
-# Works with async
-import asyncio
-from langfuse.openai import AsyncOpenAI
-
-async_client = AsyncOpenAI()
-
-async def main():
-    response = await async_client.chat.completions.create(
-        model="gpt-4o",
-        messages=[{"role": "user", "content": "Hello"}],
-        name="async-greeting"
-    )
+```bash
+export LANGFUSE_PUBLIC_KEY=pk-lf-...
+export LANGFUSE_SECRET_KEY=sk-lf-...
+export LANGFUSE_BASE_URL=https://cloud.langfuse.com # example for EU cloud. For US cloud it's us.cloud.langfuse.com, and can also be a self-hosted URL. The server must always be specified in order to access Langfuse.
 ```
 
-### LangChain Integration
+If not set, ask the user to set them in their shell or a `.env` file (do not ask them to paste keys into chat for security reasons). Keys are found in Langfuse UI → Settings → API Keys.
 
-Trace LangChain applications
+### Detailed CLI Reference
 
-**When to use**: LangChain-based applications
+For common workflows, tips, and full usage patterns, see [references/cli.md](references/cli.md).
 
-```python
-from langchain_openai import ChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate
-from langfuse.callback import CallbackHandler
+## 2. Langfuse Documentation
 
-# Create Langfuse callback handler
-langfuse_handler = CallbackHandler(
-    public_key="pk-...",
-    secret_key="sk-...",
-    host="https://cloud.langfuse.com",
-    session_id="session-123",
-    user_id="user-456"
-)
+Three methods to access Langfuse docs, in order of preference. **Always prefer your application's native web fetch and search tools** (e.g., `WebFetch`, `WebSearch`, `mcp_fetch`, etc.) over `curl` when available. The URLs and patterns below work with any fetching method — the `curl` examples are just illustrative.
 
-# Use with any LangChain component
-llm = ChatOpenAI(model="gpt-4o")
+### 2a. Documentation Index (llms.txt)
 
-prompt = ChatPromptTemplate.from_messages([
-    ("system", "You are a helpful assistant."),
-    ("user", "{input}")
-])
+Fetch the full index of all documentation pages:
 
-chain = prompt | llm
-
-# Pass handler to invoke
-response = chain.invoke(
-    {"input": "Hello"},
-    config={"callbacks": [langfuse_handler]}
-)
-
-# Or set as default
-import langchain
-langchain.callbacks.manager.set_handler(langfuse_handler)
-
-# Then all calls are traced
-response = chain.invoke({"input": "Hello"})
-
-# Works with agents, retrievers, etc.
-from langchain.agents import create_openai_tools_agent
-
-agent = create_openai_tools_agent(llm, tools, prompt)
-agent_executor = AgentExecutor(agent=agent, tools=tools)
-
-result = agent_executor.invoke(
-    {"input": "What's the weather?"},
-    config={"callbacks": [langfuse_handler]}
-)
+```bash
+curl -s https://langfuse.com/llms.txt
 ```
 
-## Anti-Patterns
+Returns a structured list of every doc page with titles and URLs. Use this to discover the right page for a topic, then fetch that page directly.
 
-### ❌ Not Flushing in Serverless
+Alternatively, you can start on `https://langfuse.com/docs` and explore the site to find the page you need.
 
-**Why bad**: Traces are batched.
-Serverless may exit before flush.
-Data is lost.
+### 2b. Fetch Individual Pages as Markdown
 
-**Instead**: Always call langfuse.flush() at end.
-Use context managers where available.
-Consider sync mode for critical traces.
+Any page listed in llms.txt can be fetched as markdown by appending `.md` to its path or by using `Accept: text/markdown` in the request headers. Use this when you know which page contains the information needed. Returns clean markdown with code examples and configuration details.
 
-### ❌ Tracing Everything
+```bash
+curl -s "https://langfuse.com/docs/observability/overview.md"
+curl -s "https://langfuse.com/docs/observability/overview" -H "Accept: text/markdown"
+```
 
-**Why bad**: Noisy traces.
-Performance overhead.
-Hard to find important info.
+### 2c. Search Documentation
 
-**Instead**: Focus on: LLM calls, key logic, user actions.
-Group related operations.
-Use meaningful span names.
+When you need to find information across all docs and github issues/discussions without knowing the specific page:
 
-### ❌ No User/Session IDs
+```bash
+curl -s "https://langfuse.com/api/search-docs?query=<url-encoded-query>"
+```
 
-**Why bad**: Can't debug specific users.
-Can't track sessions.
-Analytics limited.
+Example:
 
-**Instead**: Always pass user_id and session_id.
-Use consistent identifiers.
-Add relevant metadata.
+```bash
+curl -s "https://langfuse.com/api/search-docs?query=How+do+I+trace+LangGraph+agents"
+```
 
-## Limitations
+Returns a JSON response with:
 
-- Self-hosted requires infrastructure
-- High-volume may need optimization
-- Real-time dashboard has latency
-- Evaluation requires setup
+- `query`: the original query
+- `answer`: a JSON string containing an array of matching documents, each with:
+  - `url`: link to the doc page
+  - `title`: page title
+  - `source.content`: array of relevant text excerpts from the page
 
-## Related Skills
+Search is a great fallback if you cannot find the relevant pages or need more context. Especially useful when debugging issues as all GitHub Issues and Discussions are also indexed. Responses can be large — extract only the relevant portions.
 
-Works well with: `langgraph`, `crewai`, `structured-output`, `autonomous-agents`
+### Documentation Workflow
 
-## When to Use
-This skill is applicable to execute the workflow or actions described in the overview.
+1. Start with **llms.txt** to orient — scan for relevant page titles
+2. **Fetch specific pages** when you identify the right one
+3. Fall back to **search** when the topic is unclear and you want more context
+
+## Skill Feedback
+
+When the user expresses that something about this skill is not working as expected, gives incorrect guidance, is missing information, or could be improved — offer to submit feedback to the Langfuse skill maintainers. This includes when:
+
+- The skill gave wrong or outdated instructions
+- A workflow didn't produce the expected result
+- The user wishes the skill covered something it doesn't
+- The user explicitly says something like "this should work differently" or "this is wrong"
+
+**Do NOT trigger this** for issues with Langfuse itself (the product) — only for issues with this skill's instructions and behavior.
+
+When triggered, follow the process in [references/skill-feedback.md](references/skill-feedback.md).

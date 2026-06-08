@@ -2,6 +2,7 @@
 name: api-designer
 description: Use when designing REST or GraphQL APIs, creating OpenAPI specifications, or planning API architecture. Invoke for resource modeling, versioning strategies, pagination patterns, error handling standards.
 license: MIT
+compatibility: opencode
 metadata:
   author: https://github.com/Jeffallan
   version: "1.1.0"
@@ -10,7 +11,7 @@ metadata:
   role: architect
   scope: design
   output-format: specification
-  related-skills: graphql-architect, fastapi-expert, nestjs-expert, spring-boot-engineer, security-reviewer
+  related-skills: atlassian-mcp, csharp-developer, fastapi-expert, graphql-architect, java-architect, nestjs-expert, rag-architect, salesforce-developer, security-reviewer, shopify-expert, spring-boot-engineer, typescript-pro
 ---
 
 # API Designer
@@ -215,5 +216,3 @@ When delivering an API design, provide:
 ## Knowledge Reference
 
 REST architecture, OpenAPI 3.1, GraphQL, HTTP semantics, JSON:API, HATEOAS, OAuth 2.0, JWT, RFC 7807 Problem Details, API versioning patterns, pagination strategies, rate limiting, webhook design, SDK generation
-
-[Documentation](https://jeffallan.github.io/claude-skills/skills/api-architecture/api-designer/)

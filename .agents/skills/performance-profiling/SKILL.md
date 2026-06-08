@@ -1,148 +1,181 @@
 ---
 name: performance-profiling
-description: "Performance profiling principles. Measurement, analysis, and optimization techniques."
-risk: unknown
-source: community
-date_added: "2026-02-27"
+description: Guide performance profiling with Instruments, diagnose hangs, memory issues, slow launches, and energy drain. Use when reviewing app performance or investigating specific bottlenecks.
+allowed-tools: [Read, Glob, Grep, Bash]
 ---
 
 # Performance Profiling
 
-> Measure, analyze, optimize - in that order.
+Systematic guide for profiling Apple platform apps using Instruments, Xcode diagnostics, and MetricKit. Covers CPU, memory, launch time, and energy analysis with actionable fix patterns.
 
-## 🔧 Runtime Scripts
+## When This Skill Activates
 
-**Execute these for automated profiling:**
+Use this skill when the user:
+- Reports app hangs, stutters, or dropped frames
+- Needs to profile CPU usage or find hot code paths
+- Has memory leaks, high memory usage, or OOM crashes
+- Wants to optimize app launch time
+- Needs to reduce battery/energy impact
+- Asks about Instruments, Time Profiler, Allocations, or Leaks
+- Wants to add `os_signpost` or performance measurement to code
+- Is preparing for App Store review and needs performance validation
 
-| Script | Purpose | Usage |
-|--------|---------|-------|
-| `scripts/lighthouse_audit.py` | Lighthouse performance audit | `python scripts/lighthouse_audit.py https://example.com` |
-
----
-
-## 1. Core Web Vitals
-
-### Targets
-
-| Metric | Good | Poor | Measures |
-|--------|------|------|----------|
-| **LCP** | < 2.5s | > 4.0s | Loading |
-| **INP** | < 200ms | > 500ms | Interactivity |
-| **CLS** | < 0.1 | > 0.25 | Stability |
-
-### When to Measure
-
-| Stage | Tool |
-|-------|------|
-| Development | Local Lighthouse |
-| CI/CD | Lighthouse CI |
-| Production | RUM (Real User Monitoring) |
-
----
-
-## 2. Profiling Workflow
-
-### The 4-Step Process
+## Decision Tree
 
 ```
-1. BASELINE → Measure current state
-2. IDENTIFY → Find the bottleneck
-3. FIX → Make targeted change
-4. VALIDATE → Confirm improvement
+What performance problem are you investigating?
+│
+├─ App hangs / stutters / dropped frames / slow UI
+│  └─ Read time-profiler.md
+│
+├─ High memory / leaks / OOM crashes / growing footprint
+│  └─ Read memory-profiling.md
+│
+├─ Slow app launch / time to first frame
+│  └─ Read launch-optimization.md
+│
+├─ Battery drain / thermal throttling / background energy
+│  └─ Read energy-diagnostics.md
+│
+├─ General "app feels slow" (unknown cause)
+│  └─ Start with time-profiler.md, then memory-profiling.md
+│
+└─ Pre-release performance audit
+   └─ Read ALL reference files, use Review Checklist below
 ```
 
-### Profiling Tool Selection
+## Quick Reference
 
-| Problem | Tool |
-|---------|------|
-| Page load | Lighthouse |
-| Bundle size | Bundle analyzer |
-| Runtime | DevTools Performance |
-| Memory | DevTools Memory |
-| Network | DevTools Network |
+| Problem | Instrument / Tool | Key Metric | Reference |
+|---------|-------------------|------------|-----------|
+| UI hangs > 250ms | Time Profiler + Hangs | Hang duration, main thread stack | time-profiler.md |
+| High CPU usage | Time Profiler | CPU % by function, call tree weight | time-profiler.md |
+| Memory leak | Leaks + Memory Graph | Leaked bytes, retain cycle paths | memory-profiling.md |
+| Memory growth | Allocations | Live bytes, generation analysis | memory-profiling.md |
+| Slow launch | App Launch | Time to first frame (pre-main + post-main) | launch-optimization.md |
+| Battery drain | Energy Log | Energy Impact score, CPU/GPU/network | energy-diagnostics.md |
+| Thermal issues | Activity Monitor | Thermal state transitions | energy-diagnostics.md |
+| Network waste | Network profiler | Redundant fetches, large payloads | energy-diagnostics.md |
 
----
+## Process
 
-## 3. Bundle Analysis
+### 1. Identify the Problem Category
 
-### What to Look For
+Ask the user or inspect their description to classify the issue:
+- **Responsiveness**: Hangs, stutters, animation drops
+- **Memory**: Leaks, growth, OOM crashes
+- **Launch**: Slow cold/warm start
+- **Energy**: Battery drain, thermal throttling
 
-| Issue | Indicator |
-|-------|-----------|
-| Large dependencies | Top of bundle |
-| Duplicate code | Multiple chunks |
-| Unused code | Low coverage |
-| Missing splits | Single large chunk |
+### 2. Read the Appropriate Reference File
 
-### Optimization Actions
+Each file contains:
+- Which Instruments template to use
+- Step-by-step profiling workflow
+- How to interpret results
+- Common fix patterns with code examples
 
-| Finding | Action |
-|---------|--------|
-| Big library | Import specific modules |
-| Duplicate deps | Dedupe, update versions |
-| Route in main | Code split |
-| Unused exports | Tree shake |
+### 3. Profile on Real Hardware
 
----
+Always remind users:
+- **Profile on device**, not Simulator (Simulator uses host CPU/memory)
+- Use **Release** build configuration (optimizations change behavior)
+- Profile with **representative data** (empty databases hide real perf)
+- Close other apps to reduce noise
 
-## 4. Runtime Profiling
+### 4. Apply Fixes and Verify
 
-### Performance Tab Analysis
+After identifying bottlenecks:
+- Apply targeted fix from the reference file
+- Re-profile to confirm improvement
+- Add `os_signpost` markers for ongoing monitoring
 
-| Pattern | Meaning |
-|---------|---------|
-| Long tasks (>50ms) | UI blocking |
-| Many small tasks | Possible batching opportunity |
-| Layout/paint | Rendering bottleneck |
-| Script | JavaScript execution |
+## Xcode Diagnostic Settings
 
-### Memory Tab Analysis
+Recommend enabling these in **Scheme > Run > Diagnostics**:
 
-| Pattern | Meaning |
-|---------|---------|
-| Growing heap | Possible leak |
-| Large retained | Check references |
-| Detached DOM | Not cleaned up |
+| Setting | What It Catches |
+|---------|-----------------|
+| Main Thread Checker | UI work off main thread |
+| Thread Sanitizer | Data races |
+| Address Sanitizer | Buffer overflows, use-after-free |
+| Malloc Stack Logging | Memory allocation call stacks |
+| Zombie Objects | Messages to deallocated objects |
 
----
+## MetricKit Integration
 
-## 5. Common Bottlenecks
+For production monitoring, recommend MetricKit:
 
-### By Symptom
+```swift
+import MetricKit
 
-| Symptom | Likely Cause |
-|---------|--------------|
-| Slow initial load | Large JS, render blocking |
-| Slow interactions | Heavy event handlers |
-| Jank during scroll | Layout thrashing |
-| Growing memory | Leaks, retained refs |
+final class PerformanceReporter: NSObject, MXMetricManagerSubscriber {
+    func startCollecting() {
+        MXMetricManager.shared.add(self)
+    }
 
----
+    func didReceive(_ payloads: [MXMetricPayload]) {
+        for payload in payloads {
+            // Launch time
+            if let launch = payload.applicationLaunchMetrics {
+                log("Resume time: \(launch.histogrammedResumeTime)")
+            }
+            // Hang rate
+            if let responsiveness = payload.applicationResponsivenessMetrics {
+                log("Hang time: \(responsiveness.histogrammedApplicationHangTime)")
+            }
+            // Memory
+            if let memory = payload.memoryMetrics {
+                log("Peak memory: \(memory.peakMemoryUsage)")
+            }
+        }
+    }
 
-## 6. Quick Win Priorities
+    func didReceive(_ payloads: [MXDiagnosticPayload]) {
+        for payload in payloads {
+            if let hangs = payload.hangDiagnostics {
+                for hang in hangs {
+                    log("Hang: \(hang.callStackTree)")
+                }
+            }
+        }
+    }
+}
+```
 
-| Priority | Action | Impact |
-|----------|--------|--------|
-| 1 | Enable compression | High |
-| 2 | Lazy load images | High |
-| 3 | Code split routes | High |
-| 4 | Cache static assets | Medium |
-| 5 | Optimize images | Medium |
+## Review Checklist
 
----
+### Responsiveness
+- [ ] No synchronous work on main thread > 100ms
+- [ ] No file I/O or network calls on main thread
+- [ ] Core Data / SwiftData fetches use background contexts for large queries
+- [ ] Images decoded off main thread (use `.preparingThumbnail` or async decoding)
+- [ ] `@MainActor` only on code that truly needs UI access
 
-## 7. Anti-Patterns
+### Memory
+- [ ] No retain cycles (check delegate patterns, closures with `self`)
+- [ ] Large resources freed when not visible (images, caches)
+- [ ] Collections don't grow unbounded (capped caches, pagination)
+- [ ] `autoreleasepool` used in tight loops creating ObjC objects
 
-| ❌ Don't | ✅ Do |
-|----------|-------|
-| Guess at problems | Profile first |
-| Micro-optimize | Fix biggest issue |
-| Optimize early | Optimize when needed |
-| Ignore real users | Use RUM data |
+### Launch Time
+- [ ] No heavy work in `init()` of `@main App` struct
+- [ ] Deferred non-essential initialization (analytics, prefetch)
+- [ ] Minimal dynamic frameworks (prefer static linking)
+- [ ] No synchronous network calls at launch
 
----
+### Energy
+- [ ] Background tasks use `BGProcessingTaskRequest` appropriately
+- [ ] Location accuracy matches actual need (not always `.best`)
+- [ ] Timers use `tolerance` to allow coalescing
+- [ ] Network requests batched where possible
 
-> **Remember:** The fastest code is code that doesn't run. Remove before optimizing.
+## References
 
-## When to Use
-This skill is applicable to execute the workflow or actions described in the overview.
+- **time-profiler.md** — CPU profiling, hang detection, signpost API
+- **memory-profiling.md** — Allocations, Leaks, memory graph debugger
+- **launch-optimization.md** — App launch phases, cold/warm start optimization
+- **energy-diagnostics.md** — Battery, thermal state, network efficiency
+- [WWDC: Ultimate Application Performance Survival Guide](https://developer.apple.com/videos/play/wwdc2021/10181/)
+- [WWDC: Analyze Hangs with Instruments](https://developer.apple.com/videos/play/wwdc2023/10248/)
+- [WWDC: Detect and Diagnose Memory Issues](https://developer.apple.com/videos/play/wwdc2021/10180/)

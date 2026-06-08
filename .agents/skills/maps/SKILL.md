@@ -1,314 +1,195 @@
 ---
 name: maps
-description: >
-  Load this skill whenever the project contains static or interactive maps,
-  embedded map widgets (Google Maps, Leaflet, Mapbox, OpenStreetMap), or any
-  geographic visualizations. Under no circumstances embed a map without a
-  text-based alternative conveying the same information. Absolutely always
-  ensure map controls are keyboard-accessible and that all meaningful map
-  content is available without the visual map.
+description: "Geocode, POIs, routes, timezones via OpenStreetMap/OSRM."
+version: 1.2.0
+author: Mibayy
+license: MIT
+platforms: [linux, macos, windows]
+metadata:
+  hermes:
+    tags: [maps, geocoding, places, routing, distance, directions, nearby, location, openstreetmap, nominatim, overpass, osrm]
+    category: productivity
+    requires_toolsets: [terminal]
+    supersedes: [find-nearby]
 ---
 
-# Maps Accessibility Skill
+# Maps Skill
 
-> **Canonical source**: `examples/MAPS_ACCESSIBILITY_BEST_PRACTICES.md` in `mgifford/ACCESSIBILITY.md`
-> This skill is derived from that file. When in doubt, the example is authoritative.
+Location intelligence using free, open data sources. 8 commands, 44 POI
+categories, zero dependencies (Python stdlib only), no API key required.
 
-Apply these rules when implementing or reviewing any static or interactive map.
-**Only load this skill if the project contains maps.**
+Data sources: OpenStreetMap/Nominatim, Overpass API, OSRM, TimeAPI.io.
 
----
+This skill supersedes the old `find-nearby` skill — all of find-nearby's
+functionality is covered by the `nearby` command below, with the same
+`--near "<place>"` shortcut and multi-category support.
 
-## Core Mandate
+## When to Use
 
-All users must access the essential information conveyed by a map through
-accessible alternatives, keyboard-operable controls, and clear structured content.
+- User sends a Telegram location pin (latitude/longitude in the message) → `nearby`
+- User wants coordinates for a place name → `search`
+- User has coordinates and wants the address → `reverse`
+- User asks for nearby restaurants, hospitals, pharmacies, hotels, etc. → `nearby`
+- User wants driving/walking/cycling distance or travel time → `distance`
+- User wants turn-by-turn directions between two places → `directions`
+- User wants timezone information for a location → `timezone`
+- User wants to search for POIs within a geographic area → `area` + `bbox`
 
----
+## Prerequisites
 
-## Severity Scale (this skill)
+Python 3.8+ (stdlib only — no pip installs needed).
 
-| Level | Meaning |
-|---|---|
-| **Critical** | Essential location data has no accessible alternative |
-| **Serious** | Interactive map unreachable by keyboard; `role="application"` misused |
-| **Moderate** | Skip link missing; colour independence gap; popup focus not managed |
-| **Minor** | Missing `prefers-reduced-motion` for animations; legend incomplete |
+Script path: `~/.hermes/skills/maps/scripts/maps_client.py`
 
----
+## Commands
 
-## Critical: Text Alternatives for Static Maps
-
-A meaningful map with no text alternative is **Critical** — blind users receive
-no location information at all.
-
-```html
-<!-- Simple map -->
-<img src="campus-map.png"
-     alt="Campus map: main entrance on Elm Street,
-          library to the north, parking to the east.">
-
-<!-- Complex map with extended description -->
-<figure>
-  <img src="regional-map.png"
-       alt="Regional accessibility map — detailed description below."
-       aria-describedby="map-desc">
-  <figcaption id="map-desc">
-    <p>Three accessible transit routes through the downtown core.
-    Route A runs north–south on Main Street with level boarding at all stops.
-    Route B runs east–west on King Street. Route C is a loop serving the
-    waterfront. All stops marked with a wheelchair symbol.</p>
-  </figcaption>
-</figure>
+```bash
+MAPS=~/.hermes/skills/maps/scripts/maps_client.py
 ```
 
-Always include: purpose, key features/routes, directional relationships,
-meaning of colour coding or symbols.
+### search — Geocode a place name
 
----
-
-## Serious: Skip Link Before Every Interactive Map
-
-Every interactive map must be preceded by a skip link. Users who cannot or
-do not wish to interact with the map must be able to bypass it.
-**Missing skip link on an interactive map is Serious.**
-
-```html
-<a href="#map-skip-target" class="skip-link">Skip map</a>
-
-<div id="map-container" aria-label="Interactive campus map">
-  <!-- map renders here -->
-</div>
-
-<div id="map-skip-target" tabindex="-1">
-  <h2>Map information as structured text</h2>
-  <!-- table or list of locations -->
-</div>
+```bash
+python3 $MAPS search "Eiffel Tower"
+python3 $MAPS search "1600 Pennsylvania Ave, Washington DC"
 ```
 
----
+Returns: lat, lon, display name, type, bounding box, importance score.
 
-## Serious: Third-Party Map Embeds
+### reverse — Coordinates to address
 
-Google Maps, Leaflet, and Mapbox iframes are the most common real-world case.
-An `<iframe>` with no `title` is **Serious** — screen reader users cannot
-identify what the frame contains.
-
-```html
-<!-- Always add a descriptive title to map iframes -->
-<iframe
-  src="https://maps.google.com/maps?q=…&output=embed"
-  title="Interactive map showing our office location at 123 Main Street"
-  width="600" height="450"
-  loading="lazy">
-</iframe>
-
-<!-- Always provide a skip link before the iframe -->
-<a href="#after-map" class="skip-link">Skip to location details</a>
-<iframe …></iframe>
-<div id="after-map">
-  <p>Our office: 123 Main Street. <a href="https://maps.google.com/…">
-  Open in Google Maps</a></p>
-</div>
+```bash
+python3 $MAPS reverse 48.8584 2.2945
 ```
 
-For Leaflet and Mapbox: these libraries render into a `<div>` with canvas/SVG.
-Check the library's accessibility documentation for keyboard support options
-before assuming the map is operable. Leaflet has basic keyboard support;
-Mapbox GL JS requires additional configuration.
+Returns: full address breakdown (street, city, state, country, postcode).
 
----
+### nearby — Find places by category
 
-## Serious: Keyboard Controls
+```bash
+# By coordinates (from a Telegram location pin, for example)
+python3 $MAPS nearby 48.8584 2.2945 restaurant --limit 10
+python3 $MAPS nearby 40.7128 -74.0060 hospital --radius 2000
 
-All mouse/touch map interactions must be keyboard-operable. **An interactive
-map with no keyboard support is Serious.**
+# By address / city / zip / landmark — --near auto-geocodes
+python3 $MAPS nearby --near "Times Square, New York" --category cafe
+python3 $MAPS nearby --near "90210" --category pharmacy
 
-* Pan: arrow keys
-* Zoom in/out: `+`/`-` keys or accessible buttons
-* Marker activation: `Enter` or `Space` on focused marker
-* Close popups: `Escape`
-
-```html
-<div role="group" aria-label="Map zoom controls">
-  <button type="button" aria-label="Zoom in">+</button>
-  <button type="button" aria-label="Zoom out">−</button>
-  <button type="button" aria-label="Reset to default view">⟳</button>
-</div>
+# Multiple categories merged into one query
+python3 $MAPS nearby --near "downtown austin" --category restaurant --category bar --limit 10
 ```
 
----
+46 categories: restaurant, cafe, bar, hospital, pharmacy, hotel, guest_house,
+camp_site, supermarket, atm, gas_station, parking, museum, park, school,
+university, bank, police, fire_station, library, airport, train_station,
+bus_stop, church, mosque, synagogue, dentist, doctor, cinema, theatre, gym,
+swimming_pool, post_office, convenience_store, bakery, bookshop, laundry,
+car_wash, car_rental, bicycle_rental, taxi, veterinary, zoo, playground,
+stadium, nightclub.
 
-## Serious: `role="application"` — Use with Extreme Caution
+Each result includes: `name`, `address`, `lat`/`lon`, `distance_m`,
+`maps_url` (clickable Google Maps link), `directions_url` (Google Maps
+directions from the search point), and promoted tags when available —
+`cuisine`, `hours` (opening_hours), `phone`, `website`.
 
-`role="application"` removes the screen reader's virtual cursor (reading mode),
-meaning keyboard users lose the ability to navigate by headings, links, and
-other landmarks within the map region. All keyboard interactions must then be
-custom-implemented.
+### distance — Travel distance and time
 
-**Only use `role="application"` when:**
-- Every user action within the region is fully keyboard-operable via custom handlers
-- You have tested comprehensively with NVDA, JAWS, and VoiceOver
-- There is a genuine interactive application — not just a static or embedded map
-
-**Misusing `role="application"` is Serious** — it can strand screen reader users
-with no way to interact with content they could previously navigate.
-
-```html
-<section aria-labelledby="map-heading">
-  <h2 id="map-heading">Service Area Map</h2>
-  <!-- Omit role="application" unless all interactions are fully custom-handled -->
-  <div aria-label="Interactive service area map">
-    <!-- map -->
-  </div>
-</section>
+```bash
+python3 $MAPS distance "Paris" --to "Lyon"
+python3 $MAPS distance "New York" --to "Boston" --mode driving
+python3 $MAPS distance "Big Ben" --to "Tower Bridge" --mode walking
 ```
 
----
+Modes: driving (default), walking, cycling. Returns road distance, duration,
+and straight-line distance for comparison.
 
-## Moderate: Accessible Markers & Popup Focus Management
+### directions — Turn-by-turn navigation
 
-```html
-<!-- Marker as accessible button -->
-<button type="button"
-        aria-label="City Hall — open weekdays 9am to 5pm">
-  <svg aria-hidden="true" focusable="false"><!-- pin icon --></svg>
-</button>
-
-<!-- Popup as dialog with focus management -->
-<div role="dialog"
-     aria-labelledby="popup-title"
-     aria-modal="true"
-     tabindex="-1"
-     id="city-hall-popup">
-  <h3 id="popup-title">City Hall</h3>
-  <p>123 Main Street. Open Monday–Friday, 9am–5pm.</p>
-  <a href="/city-hall">More information</a>
-  <button type="button" aria-label="Close City Hall popup">✕</button>
-</div>
+```bash
+python3 $MAPS directions "Eiffel Tower" --to "Louvre Museum" --mode walking
+python3 $MAPS directions "JFK Airport" --to "Times Square" --mode driving
 ```
 
-Move focus into the popup on open. On close or `Escape`, return focus to the
-triggering marker. Apply `inert` to the rest of the map while the popup is open.
+Returns numbered steps with instruction, distance, duration, road name, and
+maneuver type (turn, depart, arrive, etc.).
 
----
+### timezone — Timezone for coordinates
 
-## Moderate: Colour Independence
-
-Never rely on colour alone for route or zone differentiation.
-**Colour-only encoding is Moderate** (Serious if the colour is the only
-distinction between route types with different safety or access implications).
-
-* Provide a legend with text labels for all colour-coded elements
-* Use pattern fills, line dashes, or icons as secondary indicators
-* Test in forced-colours / Windows High Contrast mode — map tile backgrounds
-  may be overridden
-* Map text labels: 4.5:1 contrast; UI controls: 3:1
-
----
-
-## Moderate: Layer Toggles
-
-```html
-<fieldset>
-  <legend>Map layers</legend>
-  <label>
-    <input type="checkbox" name="layer-transit" checked>
-    Transit routes
-  </label>
-  <label>
-    <input type="checkbox" name="layer-a11y">
-    Accessibility features
-  </label>
-</fieldset>
+```bash
+python3 $MAPS timezone 48.8584 2.2945
+python3 $MAPS timezone 35.6762 139.6503
 ```
 
-Announce layer changes to screen readers via `aria-live="polite"`.
+Returns timezone name, UTC offset, and current local time.
 
----
+### area — Bounding box and area for a place
 
-## Minor: `prefers-reduced-motion` for Map Animations
-
-Map panning, zooming flyovers, and animated tile loading should respect the
-user preference:
-
-```js
-const prefersReduced = window.matchMedia(
-  '(prefers-reduced-motion: reduce)'
-).matches;
-
-// Leaflet example
-map.flyTo(latlng, zoom, {
-  animate: !prefersReduced,
-  duration: prefersReduced ? 0 : 1.5
-});
+```bash
+python3 $MAPS area "Manhattan, New York"
+python3 $MAPS area "London"
 ```
 
----
+Returns bounding box coordinates, width/height in km, and approximate area.
+Useful as input for the bbox command.
 
-## Required: Structured Text Alternative
+### bbox — Search within a bounding box
 
-For maps showing a list of locations, always provide an adjacent accessible table:
-
-```html
-<table>
-  <caption>Accessible library branches</caption>
-  <thead>
-    <tr>
-      <th scope="col">Branch</th>
-      <th scope="col">Address</th>
-      <th scope="col">Accessibility features</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>Central Library</td>
-      <td>100 Main St</td>
-      <td>Ramp, elevator, braille signage</td>
-    </tr>
-  </tbody>
-</table>
+```bash
+python3 $MAPS bbox 40.75 -74.00 40.77 -73.98 restaurant --limit 20
 ```
 
----
+Finds POIs within a geographic rectangle. Use `area` first to get the
+bounding box coordinates for a named place.
 
-## Definition of Done Checklist
+## Working With Telegram Location Pins
 
-* [ ] Static maps have meaningful text alternative (inline or `<figcaption>`)
-* [ ] Skip link present before every interactive map
-* [ ] `<iframe>` maps have descriptive `title` attribute
-* [ ] Third-party embed: skip link + text alternative provided
-* [ ] All map interactions keyboard-operable
-* [ ] Zoom/pan controls have accessible labels
-* [ ] Markers are keyboard-focusable buttons with accessible names
-* [ ] Popup dialogs: focus moves in on open, returns to trigger on close
-* [ ] `role="application"` used only if all interactions are fully custom-handled
-* [ ] Layer toggles use semantic checkboxes
-* [ ] Colour not used as sole differentiator; legend provided
-* [ ] Structured text alternative or table adjacent to complex map
-* [ ] Map animations respect `prefers-reduced-motion`
-* [ ] Tested in forced-colours mode
+When a user sends a location pin, the message contains `latitude:` and
+`longitude:` fields. Extract those and pass them straight to `nearby`:
 
----
+```bash
+# User sent a pin at 36.17, -115.14 and asked "find cafes nearby"
+python3 $MAPS nearby 36.17 -115.14 cafe --radius 1500
+```
 
-## Key WCAG Criteria
+Present results as a numbered list with names, distances, and the
+`maps_url` field so the user gets a tap-to-open link in chat. For "open
+now?" questions, check the `hours` field; if missing or unclear, verify
+with `web_search` since OSM hours are community-maintained and not always
+current.
 
-* 1.1.1 Non-text Content (A) — **Critical if no text alternative**
-* 1.4.1 Use of Color (A) — **Moderate if colour-only encoding**
-* 1.4.3 Contrast Minimum (AA)
-* 2.1.1 Keyboard (A) — **Serious if map controls not keyboard operable**
-* 2.4.3 Focus Order (A)
-* 2.4.12 Focus Not Obscured (AA, WCAG 2.2)
-* 4.1.2 Name, Role, Value (A)
+## Workflow Examples
 
----
+**"Find Italian restaurants near the Colosseum":**
+1. `nearby --near "Colosseum Rome" --category restaurant --radius 500`
+   — one command, auto-geocoded
 
-## References
+**"What's near this location pin they sent?":**
+1. Extract lat/lon from the Telegram message
+2. `nearby LAT LON cafe --radius 1500`
 
-* [Full best practices guide](https://github.com/mgifford/ACCESSIBILITY.md/blob/main/examples/MAPS_ACCESSIBILITY_BEST_PRACTICES.md)
-* [Leaflet accessibility notes](https://leafletjs.com/examples/accessibility/)
-* [Mapbox GL JS accessibility](https://docs.mapbox.com/mapbox-gl-js/guides/accessibility/)
-* [WAI: Maps Tutorial](https://www.w3.org/WAI/tutorials/images/complex/#maps)
+**"How do I walk from hotel to conference center?":**
+1. `directions "Hotel Name" --to "Conference Center" --mode walking`
 
-> **Standards horizon:** These rules target WCAG 2.2 AA.
-> Monitor: <https://www.w3.org/TR/wcag-3.0/>
+**"What restaurants are in downtown Seattle?":**
+1. `area "Downtown Seattle"` → get bounding box
+2. `bbox S W N E restaurant --limit 30`
+
+## Pitfalls
+
+- Nominatim ToS: max 1 req/s (handled automatically by the script)
+- `nearby` requires lat/lon OR `--near "<address>"` — one of the two is needed
+- OSRM routing coverage is best for Europe and North America
+- Overpass API can be slow during peak hours; the script automatically
+  falls back between mirrors (overpass-api.de → overpass.kumi.systems)
+- `distance` and `directions` use `--to` flag for the destination (not positional)
+- If a zip code alone gives ambiguous results globally, include country/state
+
+## Verification
+
+```bash
+python3 ~/.hermes/skills/maps/scripts/maps_client.py search "Statue of Liberty"
+# Should return lat ~40.689, lon ~-74.044
+
+python3 ~/.hermes/skills/maps/scripts/maps_client.py nearby --near "Times Square" --category restaurant --limit 3
+# Should return a list of restaurants within ~500m of Times Square
+```

@@ -2,6 +2,7 @@
 name: the-fool
 description: Use when challenging ideas, plans, decisions, or proposals using structured critical reasoning. Invoke to play devil's advocate, run a pre-mortem, red team, or audit evidence and assumptions.
 license: MIT
+compatibility: opencode
 metadata:
   author: https://github.com/Jeffallan
   version: "1.0.0"
@@ -118,5 +119,3 @@ After any mode, the final output must include:
 ## Knowledge Reference
 
 Socratic method, Hegelian dialectic, steel manning, pre-mortem analysis, red teaming, falsificationism, abductive reasoning, second-order thinking, cognitive biases, inversion technique
-
-[Documentation](https://jeffallan.github.io/claude-skills/skills/workflow/the-fool/)

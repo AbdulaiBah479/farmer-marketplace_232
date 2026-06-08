@@ -35,54 +35,11 @@ If uncertain about safety: **DON'T DELETE**.
 
 Ask user to verify instead.
 
-### Rule 4: High-Risk Paths Are Hard Blocks
-
-`safe_delete.py` must refuse dangerous system and credential paths before confirmation and inside the delete function. A warning is not enough for:
-- `/`, `/System`, `/usr`, `/bin`, `/etc`
-- `~/.ssh`, `~/.aws`, `~/.gnupg`
-- `~/Library/Keychains`
-
-These paths and their descendants are blocked even when the user selects `all` in batch mode.
-
-### Rule 5: Suggest Backups for Large Deletions
+### Rule 4: Suggest Backups for Large Deletions
 
 Before deleting >10 GB, recommend Time Machine backup.
 
-### Rule 6: Docker Prune Prohibition
-
-**NEVER use any Docker prune command.** This includes:
-- `docker image prune` / `docker image prune -a`
-- `docker container prune`
-- `docker volume prune` / `docker volume prune -f`
-- `docker system prune` / `docker system prune -a --volumes`
-
-**Why**: Prune commands operate on categories, not specific objects. They can silently destroy database volumes, user uploads, and container state that the user intended to keep. A user who loses their MySQL data because of a prune command will never trust this tool again.
-
-**Correct approach**: Always specify exact object IDs or names:
-```bash
-# Images: delete by specific ID
-docker rmi a02c40cc28df 555434521374
-
-# Containers: delete by specific name
-docker rm container-name-1 container-name-2
-
-# Volumes: delete by specific name
-docker volume rm project-mysql-data project-redis-data
-```
-
-### Rule 7: Double-Check Verification Protocol
-
-Before deleting ANY Docker object, perform independent cross-verification. This applies to images, volumes, and containers.
-
-**Key requirements**:
-- For images: verify no container (running or stopped) references the image
-- For volumes: verify no container mounts the volume
-- For database volumes (name contains mysql, postgres, redis, mongo, mariadb): MANDATORY content inspection with a temporary container
-- Even if Docker reports a volume as "dangling", the data inside may be valuable
-
-See **SKILL.md Step 4** for the complete verification commands and database volume inspection workflow.
-
-### Rule 8: Use Trash When Possible
+### Rule 5: Use Trash When Possible
 
 Prefer moving to Trash over permanent deletion:
 
@@ -102,7 +59,7 @@ rm -rf /path/to/file
 |------|-----|-------------------|
 | `/System` | macOS core | System unbootable |
 | `/Library/Apple` | Apple frameworks | Apps won't launch |
-| `/etc`, `/private/etc` | System config | System unstable |
+| `/private/etc` | System config | System unstable |
 | `/private/var/db` | System databases | System unstable |
 | `/usr` | Unix utilities | Commands won't work |
 | `/bin`, `/sbin` | System binaries | System unusable |
@@ -123,8 +80,6 @@ rm -rf /path/to/file
 | Path | Why | Impact if Deleted |
 |------|-----|-------------------|
 | `~/.ssh` | SSH keys | Cannot access servers |
-| `~/.aws` | Cloud credentials | Cannot access cloud resources |
-| `~/.gnupg` | GPG keys | Cannot decrypt or sign data |
 | `~/Library/Keychains` | Passwords, certificates | Cannot access accounts/services |
 | Any file with "credential", "password", "key" in name | Security data | Cannot authenticate |
 
@@ -188,30 +143,23 @@ Please run this command manually:
 - User should be aware of system-wide impact
 - Audit trail (user types password)
 
-### Docker Objects (Images, Containers, Volumes)
+### Docker Volumes
 
-**Action**: List every object individually. Use precision deletion only (see Rule 6 and Rule 7).
+**Action**: Always list volumes before cleanup
 
-**NEVER use prune commands.** Always specify exact IDs/names.
-
-**Example for volumes**:
+**Example**:
 ```
-Docker volumes found:
-  postgres_data    (1.2 GB)  - Contains PostgreSQL database
-  redis_data       (500 MB)  - Contains Redis cache data
-  app_uploads      (3 GB)    - Contains user-uploaded files
+⚠️ Docker cleanup may remove important data.
 
-Database volumes inspected with temporary container:
-  postgres_data: 8 databases, 45 tables, last modified 2 days ago
-  redis_data: 12 MB dump.rdb
+Current volumes:
+  postgres_data    (1.2 GB)  - May contain database
+  redis_data       (500 MB)  - May contain cache
+  app_uploads      (3 GB)    - May contain user files
 
-Confirm EACH volume individually:
-  Delete postgres_data? [y/N]:
-  Delete redis_data? [y/N]:
-  Delete app_uploads? [y/N]:
+Review each volume:
+  docker volume inspect <volume_name>
 
-Deletion commands (after confirmation):
-  docker volume rm postgres_data redis_data
+Proceed with cleanup? [y/N]:
 ```
 
 ### Application Preferences
@@ -246,24 +194,17 @@ if not os.path.exists(path):
     return False
 ```
 
-### Check 2: Not a Blocked Path
+### Check 2: Not a System Path
 
 ```python
-blocked_paths = [
-    '/System', '/Library/Apple', '/etc', '/private/etc',
-    '/usr', '/bin', '/sbin', '/private/var/db',
-    '~/.ssh', '~/.aws', '~/.gnupg', '~/Library/Keychains',
+system_paths = [
+    '/System', '/Library/Apple', '/private/etc',
+    '/usr', '/bin', '/sbin', '/private/var/db'
 ]
 
-expanded_path = os.path.realpath(os.path.expanduser(path))
-if expanded_path == '/':
-    print("❌ Cannot delete root path")
-    return False
-
-for blocked_path in blocked_paths:
-    expanded_blocked = os.path.realpath(os.path.expanduser(blocked_path))
-    if expanded_path == expanded_blocked or expanded_path.startswith(expanded_blocked + os.sep):
-        print(f"❌ Cannot delete blocked path: {path}")
+for sys_path in system_paths:
+    if path.startswith(sys_path):
+        print(f"❌ Cannot delete system path: {path}")
         return False
 ```
 
@@ -272,7 +213,7 @@ for blocked_path in blocked_paths:
 ```python
 user_data_paths = [
     '~/Documents', '~/Desktop', '~/Pictures',
-    '~/Movies', '~/Music'
+    '~/Movies', '~/Music', '~/.ssh'
 ]
 
 expanded_path = os.path.expanduser(path)

@@ -2,6 +2,7 @@
 name: typescript-pro
 description: Implements advanced TypeScript type systems, creates custom type guards, utility types, and branded types, and configures tRPC for end-to-end type safety. Use when building TypeScript applications requiring advanced generics, conditional or mapped types, discriminated unions, monorepo setup, or full-stack type safety with tRPC.
 license: MIT
+compatibility: opencode
 metadata:
   author: https://github.com/Jeffallan
   version: "1.1.0"
@@ -10,7 +11,7 @@ metadata:
   role: specialist
   scope: implementation
   output-format: code
-  related-skills: fullstack-guardian, api-designer
+  related-skills: angular-architect, api-designer, fullstack-guardian, game-developer, mcp-developer, nextjs-developer, vue-expert
 ---
 
 # TypeScript Pro
@@ -143,5 +144,3 @@ When implementing TypeScript features, provide:
 ## Knowledge Reference
 
 TypeScript 5.0+, generics, conditional types, mapped types, template literal types, discriminated unions, type guards, branded types, tRPC, project references, incremental compilation, declaration files, const assertions, satisfies operator
-
-[Documentation](https://jeffallan.github.io/claude-skills/skills/language/typescript-pro/)

@@ -2,15 +2,16 @@
 name: fullstack-guardian
 description: Builds security-focused full-stack web applications by implementing integrated frontend and backend components with layered security at every level. Covers the complete stack from database to UI, enforcing auth, input validation, output encoding, and parameterized queries across all layers. Use when implementing features across frontend and backend, building REST APIs with corresponding UI, connecting frontend components to backend endpoints, creating end-to-end data flows from database to UI, or implementing CRUD operations with UI forms. Distinct from frontend-only, backend-only, or API-only skills in that it simultaneously addresses all three perspectives—Frontend, Backend, and Security—within a single implementation workflow. Invoke for full-stack feature work, web app development, authenticated API routes with views, microservices, real-time features, monorepo architecture, or technology selection decisions.
 license: MIT
+compatibility: opencode
 metadata:
   author: https://github.com/Jeffallan
-  version: "1.1.1"
+  version: "1.1.0"
   domain: security
   triggers: fullstack, implement feature, build feature, create API, frontend and backend, full stack, new feature, implement, microservices, websocket, real-time, deployment pipeline, monorepo, architecture decision, technology selection, end-to-end
   role: expert
   scope: implementation
   output-format: code
-  related-skills: feature-forge, test-master, devops-engineer, secure-code-guardian, architecture-designer, react-expert, typescript-pro
+  related-skills: architecture-designer, code-documenter, debugging-wizard, devops-engineer, django-expert, dotnet-core-expert, fastapi-expert, feature-forge, flutter-expert, java-architect, javascript-pro, laravel-specialist, nestjs-expert, php-pro, rails-expert, react-expert, secure-code-guardian, spec-miner, test-master, typescript-pro, vue-expert, wordpress-pro
 ---
 
 # Fullstack Guardian
@@ -103,5 +104,3 @@ When implementing features, provide:
 2. Backend code (models, schemas, endpoints)
 3. Frontend code (components, hooks, API calls)
 4. Brief security notes
-
-[Documentation](https://jeffallan.github.io/claude-skills/skills/security/fullstack-guardian/)

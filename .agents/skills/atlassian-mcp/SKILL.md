@@ -2,6 +2,7 @@
 name: atlassian-mcp
 description: Integrates with Atlassian products to manage project tracking and documentation via MCP protocol. Use when querying Jira issues with JQL filters, creating and updating tickets with custom fields, searching or editing Confluence pages with CQL, managing sprints and backlogs, setting up MCP server authentication, syncing documentation, or debugging Atlassian API integrations.
 license: MIT
+compatibility: opencode
 metadata:
   author: https://github.com/Jeffallan
   version: "1.1.0"
@@ -122,5 +123,3 @@ When implementing Atlassian MCP features, provide:
 3. Tool call implementation with error handling
 4. Authentication setup instructions
 5. Brief explanation of permission requirements
-
-[Documentation](https://jeffallan.github.io/claude-skills/skills/platform/atlassian-mcp/)

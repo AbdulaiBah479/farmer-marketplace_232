@@ -1,217 +1,245 @@
 ---
 name: security-audit
-description: "Comprehensive security auditing workflow covering web application testing, API security, penetration testing, vulnerability scanning, and security hardening."
-category: workflow-bundle
-risk: safe
-source: personal
-date_added: "2026-02-27"
+description: "Audit the game for security vulnerabilities: save tampering, cheat vectors, network exploits, data exposure, and input validation gaps. Produces a prioritised security report with remediation guidance. Run before any public release or multiplayer launch."
+argument-hint: "[full | network | save | input | quick]"
+user-invocable: true
+allowed-tools: Read, Glob, Grep, Bash, Write, Task
+model: sonnet
+agent: security-engineer
 ---
 
-# Security Auditing Workflow Bundle
+# Security Audit
 
-## Overview
+Security is not optional for any shipped game. Even single-player games have
+save tampering vectors. Multiplayer games have cheat surfaces, data exposure
+risks, and denial-of-service potential. This skill systematically audits the
+codebase for the most common game security failures and produces a prioritised
+remediation plan.
 
-Comprehensive security auditing workflow for web applications, APIs, and infrastructure. This bundle orchestrates skills for penetration testing, vulnerability assessment, security scanning, and remediation.
+**Run this skill:**
+- Before any public release (required for the Polish → Release gate)
+- Before enabling any online/multiplayer feature
+- After implementing any system that reads from disk or network
+- When a security-related bug is reported
 
-## When to Use This Workflow
+**Output:** `production/security/security-audit-[date].md`
 
-Use this workflow when:
-- Performing security audits on web applications
-- Testing API security
-- Conducting penetration tests
-- Scanning for vulnerabilities
-- Hardening application security
-- Compliance security assessments
+---
 
-## Workflow Phases
+## Phase 1: Parse Arguments and Scope
 
-### Phase 1: Reconnaissance
+**Modes:**
+- `full` — all categories (recommended before release)
+- `network` — network/multiplayer only
+- `save` — save file and serialization only
+- `input` — input validation and injection only
+- `quick` — high-severity checks only (fastest, for iterative use)
+- No argument — run `full`
 
-#### Skills to Invoke
-- `scanning-tools` - Security scanning
-- `shodan-reconnaissance` - Shodan searches
-- `top-web-vulnerabilities` - OWASP Top 10
+Read `.claude/docs/technical-preferences.md` to determine:
+- Engine and language (affects which patterns to search for)
+- Target platforms (affects which attack surfaces apply)
+- Whether multiplayer/networking is in scope
 
-#### Actions
-1. Identify target scope
-2. Gather intelligence
-3. Map attack surface
-4. Identify technologies
-5. Document findings
+---
 
-#### Copy-Paste Prompts
+## Phase 2: Spawn Security Engineer
+
+Spawn `security-engineer` via Task. Pass:
+- The audit scope/mode
+- Engine and language from technical preferences
+- A manifest of all source directories: `src/`, `assets/data/`, any config files
+
+The security-engineer runs the audit across 6 categories (see Phase 3). Collect their full findings before proceeding.
+
+---
+
+## Phase 3: Audit Categories
+
+The security-engineer evaluates each of the following. Skip categories not applicable to the project scope.
+
+### Category 1: Save File and Serialization Security
+- Are save files validated before loading? (no blind deserialization)
+- Are save file paths constructed from user input? (path traversal risk)
+- Are save files checksummed or signed? (tamper detection)
+- Does the game trust numeric values from save files without bounds checking?
+- Are there any eval() or dynamic code execution calls near save loading?
+
+Grep patterns: `File.open`, `load`, `deserialize`, `JSON.parse`, `from_json`, `read_file` — check each for validation.
+
+### Category 2: Network and Multiplayer Security (skip if single-player only)
+- Is game state authoritative on the server, or does the client dictate outcomes?
+- Are incoming network packets validated for size, type, and value range?
+- Are player positions and state changes validated server-side?
+- Is there rate limiting on any network calls?
+- Are authentication tokens handled correctly (never sent in plaintext)?
+- Does the game expose any debug endpoints in release builds?
+
+Grep for: `recv`, `receive`, `PacketPeer`, `socket`, `NetworkedMultiplayerPeer`, `rpc`, `rpc_id` — check each call site for validation.
+
+### Category 3: Input Validation
+- Are any player-supplied strings used in file paths? (path traversal)
+- Are any player-supplied strings logged without sanitization? (log injection)
+- Are numeric inputs (e.g., item quantities, character stats) bounds-checked before use?
+- Are achievement/stat values checked before being written to any backend?
+
+Grep for: `get_input`, `Input.get_`, `input_map`, user-facing text fields — check validation.
+
+### Category 4: Data Exposure
+- Are any API keys, credentials, or secrets hardcoded in `src/` or `assets/`?
+- Are debug symbols or verbose error messages included in release builds?
+- Does the game log sensitive player data to disk or console?
+- Are any internal file paths or system information exposed to players?
+
+Grep for: `api_key`, `secret`, `password`, `token`, `private_key`, `DEBUG`, `print(` in release-facing code.
+
+### Category 5: Cheat and Anti-Tamper Vectors
+- Are gameplay-critical values stored only in memory, not in easily-editable files?
+- Are any critical game progression flags (e.g., "has paid for DLC") validated server-side?
+- Is there any protection against memory editing tools (Cheat Engine, etc.) for multiplayer?
+- Are leaderboard/score submissions validated before acceptance?
+
+Note: Client-side anti-cheat is largely unenforceable. Focus on server-side validation for anything competitive or monetised.
+
+### Category 6: Dependency and Supply Chain
+- Are any third-party plugins or libraries used? List them.
+- Do any plugins have known CVEs in the version being used?
+- Are plugin sources verified (official marketplace, reviewed repository)?
+
+Glob for: `addons/`, `plugins/`, `third_party/`, `vendor/` — list all external dependencies.
+
+---
+
+## Phase 4: Classify Findings
+
+For each finding, assign:
+
+**Severity:**
+| Level | Definition |
+|-------|-----------|
+| **CRITICAL** | Remote code execution, data breach, or trivially-exploitable cheat that breaks multiplayer integrity |
+| **HIGH** | Save tampering that bypasses progression, credential exposure, or server-side authority bypass |
+| **MEDIUM** | Client-side cheat enablement, information disclosure, or input validation gap with limited impact |
+| **LOW** | Defence-in-depth improvement — hardening that reduces attack surface but no direct exploit exists |
+
+**Status:** Open / Accepted Risk / Out of Scope
+
+---
+
+## Phase 5: Generate Report
+
+```markdown
+# Security Audit Report
+
+**Date**: [date]
+**Scope**: [full | network | save | input | quick]
+**Engine**: [engine + version]
+**Audited by**: security-engineer via /security-audit
+**Files scanned**: [N source files, N config files]
+
+---
+
+## Executive Summary
+
+| Severity | Count | Must Fix Before Release |
+|----------|-------|------------------------|
+| CRITICAL | [N] | Yes — all |
+| HIGH | [N] | Yes — all |
+| MEDIUM | [N] | Recommended |
+| LOW | [N] | Optional |
+
+**Release recommendation**: [CLEAR TO SHIP / FIX CRITICALS FIRST / DO NOT SHIP]
+
+---
+
+## CRITICAL Findings
+
+### SEC-001: [Title]
+**Category**: [Save / Network / Input / Data / Cheat / Dependency]
+**File**: `[path]` line [N]
+**Description**: [What the vulnerability is]
+**Attack scenario**: [How a malicious user would exploit it]
+**Remediation**: [Specific code change or pattern to apply]
+**Effort**: [Low / Medium / High]
+
+[repeat per finding]
+
+---
+
+## HIGH Findings
+
+[same format]
+
+---
+
+## MEDIUM Findings
+
+[same format]
+
+---
+
+## LOW Findings
+
+[same format]
+
+---
+
+## Accepted Risk
+
+[Any findings explicitly accepted by the team with rationale]
+
+---
+
+## Dependency Inventory
+
+| Plugin / Library | Version | Source | Known CVEs |
+|-----------------|---------|--------|------------|
+| [name] | [version] | [source] | [none / CVE-XXXX-NNNN] |
+
+---
+
+## Remediation Priority Order
+
+1. [SEC-NNN] — [1-line description] — Est. effort: [Low/Medium/High]
+2. ...
+
+---
+
+## Re-Audit Trigger
+
+Run `/security-audit` again after remediating any CRITICAL or HIGH findings.
+The Polish → Release gate requires this report with no open CRITICAL or HIGH items.
 ```
-Use @scanning-tools to perform initial reconnaissance
-```
 
-```
-Use @shodan-reconnaissance to find exposed services
-```
+---
 
-### Phase 2: Vulnerability Scanning
+## Phase 6: Write Report
 
-#### Skills to Invoke
-- `vulnerability-scanner` - Vulnerability analysis
-- `security-scanning-security-sast` - Static analysis
-- `security-scanning-security-dependencies` - Dependency scanning
+Present the report summary (executive summary + CRITICAL/HIGH findings only) in conversation.
 
-#### Actions
-1. Run automated scanners
-2. Perform static analysis
-3. Scan dependencies
-4. Identify misconfigurations
-5. Document vulnerabilities
+Ask: "May I write the full security audit report to `production/security/security-audit-[date].md`?"
 
-#### Copy-Paste Prompts
-```
-Use @vulnerability-scanner to scan for OWASP Top 10 vulnerabilities
-```
+Write only after approval.
 
-```
-Use @security-scanning-security-dependencies to audit dependencies
-```
+---
 
-### Phase 3: Web Application Testing
+## Phase 7: Gate Integration
 
-#### Skills to Invoke
-- `top-web-vulnerabilities` - OWASP vulnerabilities
-- `sql-injection-testing` - SQL injection
-- `xss-html-injection` - XSS testing
-- `broken-authentication` - Authentication testing
-- `idor-testing` - IDOR testing
-- `file-path-traversal` - Path traversal
-- `burp-suite-testing` - Burp Suite testing
+This report is a required artifact for the **Polish → Release gate**.
 
-#### Actions
-1. Test for injection flaws
-2. Test authentication mechanisms
-3. Test session management
-4. Test access controls
-5. Test input validation
-6. Test security headers
+After remediating findings, re-run: `/security-audit quick` to confirm CRITICAL/HIGH items are resolved before running `/gate-check release`.
 
-#### Copy-Paste Prompts
-```
-Use @sql-injection-testing to test for SQL injection vulnerabilities
-```
+If CRITICAL findings exist:
+> "⛔ CRITICAL security findings must be resolved before any public release. Do not proceed to `/launch-checklist` until these are addressed."
 
-```
-Use @xss-html-injection to test for cross-site scripting
-```
+If no CRITICAL/HIGH findings:
+> "✅ No blocking security findings. Report written to `production/security/`. Include this path when running `/gate-check release`."
 
-```
-Use @broken-authentication to test authentication security
-```
+---
 
-### Phase 4: API Security Testing
+## Collaborative Protocol
 
-#### Skills to Invoke
-- `api-fuzzing-bug-bounty` - API fuzzing
-- `api-security-best-practices` - API security
-
-#### Actions
-1. Enumerate API endpoints
-2. Test authentication/authorization
-3. Test rate limiting
-4. Test input validation
-5. Test error handling
-6. Document API vulnerabilities
-
-#### Copy-Paste Prompts
-```
-Use @api-fuzzing-bug-bounty to fuzz API endpoints
-```
-
-### Phase 5: Penetration Testing
-
-#### Skills to Invoke
-- `pentest-commands` - Penetration testing commands
-- `pentest-checklist` - Pentest planning
-- `ethical-hacking-methodology` - Ethical hacking
-- `metasploit-framework` - Metasploit
-
-#### Actions
-1. Plan penetration test
-2. Execute attack scenarios
-3. Exploit vulnerabilities
-4. Document proof of concept
-5. Assess impact
-
-#### Copy-Paste Prompts
-```
-Use @pentest-checklist to plan penetration test
-```
-
-```
-Use @pentest-commands to execute penetration testing
-```
-
-### Phase 6: Security Hardening
-
-#### Skills to Invoke
-- `security-scanning-security-hardening` - Security hardening
-- `auth-implementation-patterns` - Authentication
-- `api-security-best-practices` - API security
-
-#### Actions
-1. Implement security controls
-2. Configure security headers
-3. Set up authentication
-4. Implement authorization
-5. Configure logging
-6. Apply patches
-
-#### Copy-Paste Prompts
-```
-Use @security-scanning-security-hardening to harden application security
-```
-
-### Phase 7: Reporting
-
-#### Skills to Invoke
-- `reporting-standards` - Security reporting
-
-#### Actions
-1. Document findings
-2. Assess risk levels
-3. Provide remediation steps
-4. Create executive summary
-5. Generate technical report
-
-## Security Testing Checklist
-
-### OWASP Top 10
-- [ ] Injection (SQL, NoSQL, OS, LDAP)
-- [ ] Broken Authentication
-- [ ] Sensitive Data Exposure
-- [ ] XML External Entities (XXE)
-- [ ] Broken Access Control
-- [ ] Security Misconfiguration
-- [ ] Cross-Site Scripting (XSS)
-- [ ] Insecure Deserialization
-- [ ] Using Components with Known Vulnerabilities
-- [ ] Insufficient Logging & Monitoring
-
-### API Security
-- [ ] Authentication mechanisms
-- [ ] Authorization checks
-- [ ] Rate limiting
-- [ ] Input validation
-- [ ] Error handling
-- [ ] Security headers
-
-## Quality Gates
-
-- [ ] All planned tests executed
-- [ ] Vulnerabilities documented
-- [ ] Proof of concepts captured
-- [ ] Risk assessments completed
-- [ ] Remediation steps provided
-- [ ] Report generated
-
-## Related Workflow Bundles
-
-- `development` - Secure development practices
-- `wordpress` - WordPress security
-- `cloud-devops` - Cloud security
-- `testing-qa` - Security testing
+- **Never assume a pattern is safe** — flag it and let the user decide
+- **Accepted risk is a valid outcome** — some LOW findings are acceptable trade-offs for a solo team; document the decision
+- **Multiplayer games have a higher bar** — any HIGH finding in a multiplayer context should be treated as CRITICAL
+- **This is not a penetration test** — this audit covers common patterns; a real pentest by a human security professional is recommended before any competitive or monetised multiplayer launch

@@ -1,9 +1,6 @@
 ---
 name: render-deploy
-description: Deploy applications to Render by analyzing codebases, generating render.yaml Blueprints, and providing Dashboard deeplinks. Use when the user wants to deploy, host, publish, or set up their application on Render's cloud platform. Do NOT use for deploying to Vercel, Netlify, or Cloudflare (use their respective skills).
-metadata:
-  author: github.com/openai/skills
-  version: '1.0.0'
+description: Deploy applications to Render by analyzing codebases, generating render.yaml Blueprints, and providing Dashboard deeplinks. Use when the user wants to deploy, host, publish, or set up their application on Render's cloud platform.
 ---
 
 # Deploy to Render
@@ -11,14 +8,12 @@ metadata:
 Render supports **Git-backed** services and **prebuilt Docker image** services.
 
 This skill covers **Git-backed** flows:
-
 1. **Blueprint Method** - Generate render.yaml for Infrastructure-as-Code deployments
 2. **Direct Creation** - Create services instantly via MCP tools
 
 Blueprints can also run a **prebuilt Docker image** by using `runtime: image`, but the `render.yaml` still must live in a Git repo.
 
 If there is no Git remote, stop and ask the user to either:
-
 - Create/push a Git remote (can be minimal if only the Blueprint is needed), or
 - Use the Render Dashboard/API to deploy a prebuilt Docker image (MCP cannot create image-backed services).
 
@@ -27,44 +22,9 @@ If there is no Git remote, stop and ask the user to either:
 - When sandboxing blocks the deployment network calls, rerun with `sandbox_permissions=require_escalated`.
 - The deployment might take a few minutes. Use appropriate timeout values.
 
-## Security Requirements for API Keys and Secrets
-
-**CRITICAL - You must protect user credentials:**
-
-When handling Render API keys or any secrets:
-
-1. **NEVER ask users to paste API keys directly in chat** - Instead, instruct them to set environment variables:
-
-   ```bash
-   export RENDER_API_KEY="rnd_xxxxx"
-   ```
-
-2. **NEVER include actual API keys in examples** - Always use placeholders like `<YOUR_API_KEY>` or `rnd_xxxxx`
-
-3. **Guide users to secure storage** - Direct them to:
-   - Set environment variables for CLI authentication
-   - Use Render Dashboard for service secrets (env vars marked `sync: false`)
-   - Never commit secrets to Git
-
-4. **When users need an API key**, provide this guidance:
-   - "Get your API key from: https://dashboard.render.com/u/*/settings#api-keys"
-   - "Set it as an environment variable: `export RENDER_API_KEY='your-key-here'`"
-   - "Never share or commit this key"
-
-5. **For MCP configuration**, show the structure but emphasize:
-   - Replace `<YOUR_API_KEY>` with their actual key
-   - This file should not be committed to version control
-   - The key should be kept private
-
-6. **If a user accidentally shares a secret in chat**, immediately:
-   - Warn them the key may be compromised
-   - Instruct them to revoke it in Render Dashboard
-   - Guide them to create a new key
-
 ## When to Use This Skill
 
 Activate this skill when users want to:
-
 - Deploy an application to Render
 - Create a render.yaml Blueprint file
 - Set up Render deployment for their project
@@ -74,7 +34,6 @@ Activate this skill when users want to:
 ## Happy Path (New Users)
 
 Use this short prompt sequence before deep analysis to reduce friction:
-
 1. Ask whether they want to deploy from a Git repo or a prebuilt Docker image.
 2. Ask whether Render should provision everything the app needs (based on what seems likely from the user's description) or only the app while they bring their own infra. If dependencies are unclear, ask a short follow-up to confirm whether they need a database, workers, cron, or other services.
 
@@ -85,7 +44,6 @@ Then proceed with the appropriate method below.
 **Git Repo Path:** Required for both Blueprint and Direct Creation. The repo must be pushed to GitHub, GitLab, or Bitbucket.
 
 **Prebuilt Docker Image Path:** Supported by Render via image-backed services. This is **not** supported by MCP; use the Dashboard/API. Ask for:
-
 - Image URL (registry + tag)
 - Registry auth (if private)
 - Service type (web/worker) and port
@@ -96,25 +54,23 @@ If the user chooses a Docker image, guide them to the Render Dashboard image dep
 
 Both methods require a Git repository pushed to GitHub, GitLab, or Bitbucket. (If using `runtime: image`, the repo can be minimal and only contain `render.yaml`.)
 
-| Method              | Best For                           | Pros                                                      |
-| ------------------- | ---------------------------------- | --------------------------------------------------------- |
-| **Blueprint**       | Multi-service apps, IaC workflows  | Version controlled, reproducible, supports complex setups |
-| **Direct Creation** | Single services, quick deployments | Instant creation, no render.yaml file needed              |
+| Method | Best For | Pros |
+|--------|----------|------|
+| **Blueprint** | Multi-service apps, IaC workflows | Version controlled, reproducible, supports complex setups |
+| **Direct Creation** | Single services, quick deployments | Instant creation, no render.yaml file needed |
 
 ### Method Selection Heuristic
 
 Use this decision rule by default unless the user requests a specific method. Analyze the codebase first; only ask if deployment intent is unclear (e.g., DB, workers, cron).
 
 **Use Direct Creation (MCP) when ALL are true:**
-
 - Single service (one web app or one static site)
 - No separate worker/cron services
 - No attached databases or Key Value
 - Simple env vars only (no shared env groups)
-  If this path fits and MCP isn't configured yet, stop and guide MCP setup before proceeding.
+If this path fits and MCP isn't configured yet, stop and guide MCP setup before proceeding.
 
 **Use Blueprint when ANY are true:**
-
 - Multiple services (web + worker, API + frontend, etc.)
 - Databases, Redis/Key Value, or other datastores are required
 - Cron jobs, background workers, or private services
@@ -140,7 +96,6 @@ git remote -v
 **2. Check MCP Tools Availability (Preferred for Single-Service)**
 
 MCP tools provide the best experience. Check if available by attempting:
-
 ```
 list_services()
 ```
@@ -148,13 +103,10 @@ list_services()
 If MCP tools are available, you can skip CLI installation for most operations.
 
 **3. Check Render CLI Installation (for Blueprint validation)**
-
 ```bash
 render --version
 ```
-
 If not installed, offer to install:
-
 - macOS: `brew install render`
 - Linux/macOS: `curl -fsSL https://raw.githubusercontent.com/render-oss/cli/main/bin/install.sh | sh`
 
@@ -166,14 +118,12 @@ If `list_services()` fails because MCP isn't configured, ask whether they want t
 
 Walk the user through these steps:
 
-1. Get a Render API key:
-
+1) Get a Render API key:
 ```
 https://dashboard.render.com/u/*/settings#api-keys
 ```
 
-2. Add this to `~/.cursor/mcp.json` (replace `<YOUR_API_KEY>`):
-
+2) Add this to `~/.cursor/mcp.json` (replace `<YOUR_API_KEY>`):
 ```json
 {
   "mcpServers": {
@@ -187,25 +137,44 @@ https://dashboard.render.com/u/*/settings#api-keys
 }
 ```
 
-3. Restart Cursor, then retry `list_services()`.
+3) Restart Cursor, then retry `list_services()`.
 
 ### Claude Code
 
 Walk the user through these steps:
 
-1. Get a Render API key:
-
+1) Get a Render API key:
 ```
 https://dashboard.render.com/u/*/settings#api-keys
 ```
 
-2. Add the MCP server with Claude Code (replace `<YOUR_API_KEY>`):
-
+2) Add the MCP server with Claude Code (replace `<YOUR_API_KEY>`):
 ```bash
 claude mcp add --transport http render https://mcp.render.com/mcp --header "Authorization: Bearer <YOUR_API_KEY>"
 ```
 
-3. Restart Claude Code, then retry `list_services()`.
+3) Restart Claude Code, then retry `list_services()`.
+
+### Codex
+
+Walk the user through these steps:
+
+1) Get a Render API key:
+```
+https://dashboard.render.com/u/*/settings#api-keys
+```
+
+2) Set it in their shell:
+```bash
+export RENDER_API_KEY="<YOUR_API_KEY>"
+```
+
+3) Add the MCP server with the Codex CLI:
+```bash
+codex mcp add render --url https://mcp.render.com/mcp --bearer-token-env-var RENDER_API_KEY
+```
+
+4) Restart Codex, then retry `list_services()`.
 
 ### Other Tools
 
@@ -222,7 +191,6 @@ Set my Render workspace to [WORKSPACE_NAME]
 **5. Check Authentication (CLI fallback only)**
 
 If MCP isn't available, use the CLI instead and verify you can access your account:
-
 ```bash
 # Check if user is logged in (use -o json for non-interactive mode)
 render whoami -o json
@@ -231,26 +199,22 @@ render whoami -o json
 If `render whoami` fails or returns empty data, the CLI is not authenticated. The CLI won't always prompt automatically, so explicitly prompt the user to authenticate:
 
 If neither is configured, ask user which method they prefer:
-
 - **API Key (CLI)**: `export RENDER_API_KEY="rnd_xxxxx"` (Get from https://dashboard.render.com/u/*/settings#api-keys)
 - **Login**: `render login` (Opens browser for OAuth)
 
 **6. Check Workspace Context**
 
 Verify the active workspace:
-
 ```
 get_selected_workspace()
 ```
 
 Or via CLI:
-
 ```bash
 render workspace current -o json
 ```
 
 To list available workspaces:
-
 ```
 list_workspaces()
 ```
@@ -276,7 +240,6 @@ Create a `render.yaml` Blueprint file following the Blueprint specification.
 Complete specification: [references/blueprint-spec.md](references/blueprint-spec.md)
 
 **Key Points:**
-
 - Always use `plan: free` unless user specifies otherwise
 - Include ALL environment variables the app needs
 - Mark secrets with `sync: false` (user fills these in Dashboard)
@@ -284,7 +247,6 @@ Complete specification: [references/blueprint-spec.md](references/blueprint-spec
 - Use appropriate runtime: [references/runtimes.md](references/runtimes.md)
 
 **Basic Structure:**
-
 ```yaml
 services:
   - type: web
@@ -299,7 +261,7 @@ services:
           name: postgres
           property: connectionString
       - key: JWT_SECRET
-        sync: false # User fills in Dashboard
+        sync: false  # User fills in Dashboard
 
 databases:
   - name: postgres
@@ -308,7 +270,6 @@ databases:
 ```
 
 **Service Types:**
-
 - `web`: HTTP services, APIs, web applications (publicly accessible)
 - `worker`: Background job processors (not publicly accessible)
 - `cron`: Scheduled tasks that run on a cron schedule
@@ -322,7 +283,6 @@ Template examples: [assets/](assets/)
 ### Step 2.5: Immediate Next Steps (Always Provide)
 
 After creating `render.yaml`, always give the user a short, explicit checklist and run validation immediately when the CLI is available:
-
 1. **Authenticate (CLI)**: run `render whoami -o json` (if not logged in, run `render login` or set `RENDER_API_KEY`)
 2. **Validate (recommended)**: run `render blueprints validate`
    - If the CLI isn't installed, offer to install it and provide the command.
@@ -341,7 +301,6 @@ render blueprints validate
 ```
 
 Fix any validation errors before proceeding. Common issues:
-
 - Missing required fields (`name`, `type`, `runtime`)
 - Invalid runtime values
 - Incorrect YAML syntax
@@ -377,22 +336,20 @@ git remote get-url origin
 
 This will return a URL from your Git provider. **If the URL is SSH format, convert it to HTTPS:**
 
-| SSH Format                        | HTTPS Format                      |
-| --------------------------------- | --------------------------------- |
-| `git@github.com:user/repo.git`    | `https://github.com/user/repo`    |
-| `git@gitlab.com:user/repo.git`    | `https://gitlab.com/user/repo`    |
+| SSH Format | HTTPS Format |
+|------------|--------------|
+| `git@github.com:user/repo.git` | `https://github.com/user/repo` |
+| `git@gitlab.com:user/repo.git` | `https://gitlab.com/user/repo` |
 | `git@bitbucket.org:user/repo.git` | `https://bitbucket.org/user/repo` |
 
 **Conversion pattern:** Replace `git@<host>:` with `https://<host>/` and remove `.git` suffix.
 
 Format the Dashboard deeplink using the HTTPS repository URL:
-
 ```
 https://dashboard.render.com/blueprint/new?repo=<REPOSITORY_URL>
 ```
 
 Example:
-
 ```
 https://dashboard.render.com/blueprint/new?repo=https://github.com/username/repo-name
 ```
@@ -418,21 +375,17 @@ The deployment will begin automatically. Users can monitor progress in the Rende
 After the user deploys via Dashboard, verify everything is working.
 
 **Check deployment status via MCP:**
-
 ```
 list_deploys(serviceId: "<service-id>", limit: 1)
 ```
-
 Look for `status: "live"` to confirm successful deployment.
 
 **Check for runtime errors (wait 2-3 minutes after deploy):**
-
 ```
 list_logs(resource: ["<service-id>"], level: ["error"], limit: 20)
 ```
 
 **Check service health metrics:**
-
 ```
 get_metrics(
   resourceId: "<service-id>",
@@ -475,23 +428,19 @@ If no remote exists, stop and ask the user to create/push a remote or switch to 
 Use the concise steps below, and refer to [references/direct-creation.md](references/direct-creation.md) for full MCP command examples and follow-on configuration.
 
 ### Step 1: Analyze Codebase
-
 Use [references/codebase-analysis.md](references/codebase-analysis.md) to determine runtime, build/start commands, env vars, and datastores.
 
 ### Step 2: Create Resources via MCP
-
 Create the service (web or static) and any required databases or key-value stores. See [references/direct-creation.md](references/direct-creation.md).
 
 If MCP returns an error about missing Git credentials or repo access, stop and guide the user to connect their Git provider in the Render Dashboard, then retry.
 
 ### Step 3: Configure Environment Variables
-
 Add required env vars via MCP after creation. See [references/direct-creation.md](references/direct-creation.md).
 
 Remind the user that secrets can be set in the Dashboard if they prefer not to pass them via MCP.
 
 ### Step 4: Verify Deployment
-
 Check deploy status, logs, and metrics. See [references/direct-creation.md](references/direct-creation.md).
 
 ---

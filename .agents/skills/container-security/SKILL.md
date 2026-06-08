@@ -1,782 +1,240 @@
 ---
 name: container-security
-description: "Container and Kubernetes security assessment skill for Docker, Kubernetes, and container orchestration platforms. This skill should be used when scanning container images for vulnerabilities, auditing Kubernetes cluster security, testing container escape scenarios, reviewing Docker configurations, or performing container runtime security analysis. Triggers on requests to scan Docker images, audit Kubernetes security, test container configurations, or assess container orchestration security."
+description: Container image security scanning, Dockerfile hardening, and ACR image management. Use when scanning container images for vulnerabilities with Trivy, hardening Dockerfiles (pinning versions, non-root runtime, SSH config), importing images to Azure Container Registry to avoid Docker Hub rate limits, or analyzing CVE findings. Also trigger when the user mentions image security, vulnerability scanning, CVE remediation, container hardening, Trivy scan, Docker security, or ACR image import — even if they don't explicitly say "container security".
+allowed-tools: Read, Bash, Grep, Glob, Edit, Write, Agent, WebSearch
 ---
 
-# Container Security Assessment
+# Container Image Security
 
-This skill enables comprehensive security testing of containerized environments including Docker image scanning, Kubernetes cluster security auditing, container runtime analysis, and orchestration security assessment using tools like Trivy, Grype, Kubescape, kube-bench, and Falco.
+Complete workflow for securing container images: scan, analyze, harden, verify.
 
-## When to Use This Skill
+## Workflow Overview
 
-This skill should be invoked when:
-- Scanning Docker/OCI images for vulnerabilities
-- Auditing Kubernetes cluster security posture
-- Testing container runtime configurations
-- Reviewing Dockerfile security practices
-- Checking CIS benchmarks for Docker/Kubernetes
-- Analyzing container escape possibilities
-- Implementing container security monitoring
+```
+Import base image to ACR → Build → Scan with Trivy → Analyze CVEs → Harden Dockerfile → Rebuild → Re-scan → Verify
+```
 
-### Trigger Phrases
-- "scan this Docker image for vulnerabilities"
-- "audit Kubernetes cluster security"
-- "check container configuration"
-- "test container escape"
-- "review Dockerfile security"
-- "run kube-bench"
+## 1. Import Base Images to ACR
 
----
-
-## Prerequisites
-
-### Required Tools
-
-| Tool | Purpose | Installation |
-|------|---------|--------------|
-| Trivy | Image/IaC vulnerability scanner | `brew install trivy` |
-| Grype | Image vulnerability scanner | `brew install grype` |
-| Syft | SBOM generator | `brew install syft` |
-| Kubescape | K8s security platform | `curl -s https://raw.githubusercontent.com/kubescape/kubescape/master/install.sh \| /bin/bash` |
-| kube-bench | CIS K8s benchmark | `brew install kube-bench` |
-| kube-hunter | K8s penetration testing | `pip install kube-hunter` |
-| Falco | Runtime security | Helm chart or binary |
-| Docker Bench | Docker CIS benchmark | `git clone https://github.com/docker/docker-bench-security.git` |
-
----
-
-## Container Image Security
-
-### Trivy Image Scanning
+Avoid Docker Hub rate limits by importing base images into your private ACR. Azure's infrastructure pulls on your behalf — no Docker Hub auth needed.
 
 ```bash
-# Scan image from registry
-trivy image nginx:latest
+# Import a public image into ACR
+az acr import --name <registry> \
+  --source docker.io/<image>:<tag> \
+  --image <local-path>/<image>:<tag>
 
-# Scan local image
-trivy image --input ./image.tar
+# Example: import code-server
+az acr import --name cafehyna \
+  --source docker.io/codercom/code-server:4.107.1 \
+  --image addons/code-server:4.107.1
 
-# Filter by severity
-trivy image --severity HIGH,CRITICAL nginx:latest
-
-# Output formats
-trivy image -f json -o results.json nginx:latest
-trivy image -f sarif -o results.sarif nginx:latest
-trivy image -f table nginx:latest
-
-# Ignore unfixed vulnerabilities
-trivy image --ignore-unfixed nginx:latest
-
-# Scan specific vulnerability types
-trivy image --vuln-type os,library nginx:latest
-
-# With SBOM
-trivy image --format cyclonedx nginx:latest > sbom.json
-
-# Exit code on findings
-trivy image --exit-code 1 --severity CRITICAL nginx:latest
-
-# Scan filesystem (for built images)
-trivy fs --security-checks vuln,secret,config /path/to/project
+# Verify
+az acr repository show --name <registry> --repository <local-path>/<image>
 ```
 
-### Grype Scanning
+Then update the Dockerfile `FROM` to reference the ACR copy:
+```dockerfile
+# Before (hits Docker Hub rate limits in ACR cloud builds)
+FROM codercom/code-server:latest
+
+# After (pulls from local ACR — no rate limit)
+FROM cafehyna.azurecr.io/addons/code-server:4.107.1
+```
+
+**Important**: ACR cloud builds (`az acr build`) are unauthenticated against Docker Hub. Any `FROM` referencing Docker Hub will eventually hit rate limits. Always import first.
+
+## 2. Build with ACR
 
 ```bash
-# Scan image
-grype nginx:latest
-
-# Output formats
-grype nginx:latest -o json > grype.json
-grype nginx:latest -o table
-grype nginx:latest -o cyclonedx > sbom.xml
-
-# Fail on severity
-grype nginx:latest --fail-on high
-
-# Scan SBOM
-syft nginx:latest -o json > sbom.json
-grype sbom:./sbom.json
-
-# Scan local directory
-grype dir:/path/to/project
-
-# Scan tarball
-grype docker-archive:./image.tar
+az acr build --registry <registry> --image <repo>:<tag> -f Dockerfile .
 ```
 
-### SBOM Generation with Syft
+**ACR builder limitations** — these Docker features are NOT supported:
+- `COPY <<'EOF'` heredoc syntax (BuildKit-only) — use `RUN printf` or `RUN cat` instead
+- Multi-platform builds require `--platform` flag
+- BuildKit-specific `RUN --mount` directives
+
+## 3. Scan with Trivy
+
+### Option A: Trivy via ACR Task (recommended for CI)
+
+First, import Trivy itself into ACR (once):
+```bash
+az acr import --name <registry> \
+  --source docker.io/aquasec/trivy:latest \
+  --image tools/trivy:latest
+```
+
+Then scan:
+```bash
+# Table format for human review
+az acr run --registry <registry> \
+  --cmd "<registry>.azurecr.io/tools/trivy:latest image \
+    --severity HIGH,CRITICAL \
+    <registry>.azurecr.io/<image>:<tag>" /dev/null
+
+# JSON format for programmatic analysis
+az acr run --registry <registry> \
+  --cmd "<registry>.azurecr.io/tools/trivy:latest image \
+    --severity HIGH,CRITICAL --format json \
+    <registry>.azurecr.io/<image>:<tag>" /dev/null
+```
+
+### Option B: Trivy locally (requires Docker daemon)
 
 ```bash
-# Generate SBOM
-syft nginx:latest
-
-# Output formats
-syft nginx:latest -o json > sbom.json
-syft nginx:latest -o cyclonedx-json > sbom-cyclonedx.json
-syft nginx:latest -o spdx-json > sbom-spdx.json
-
-# Scan filesystem
-syft dir:/app
-
-# Include file metadata
-syft nginx:latest -o json --file-metadata
+az acr login --name <registry>
+trivy image --severity HIGH,CRITICAL <registry>.azurecr.io/<image>:<tag>
 ```
 
-### Image Analysis Checklist
+### Option C: Trivy on local Dockerfile (no build needed)
 
-```markdown
-### Base Image
-- [ ] Official/verified base image
-- [ ] Minimal base (alpine, distroless, scratch)
-- [ ] Pinned version (no :latest)
-- [ ] Recently updated
-- [ ] Known CVE status
-
-### Vulnerabilities
-- [ ] No CRITICAL vulnerabilities
-- [ ] HIGH vulnerabilities remediated or accepted
-- [ ] OS packages updated
-- [ ] Application dependencies current
-
-### Secrets
-- [ ] No hardcoded credentials
-- [ ] No API keys in layers
-- [ ] No private keys
-- [ ] Environment variables reviewed
-
-### Configuration
-- [ ] Non-root user defined
-- [ ] Read-only filesystem where possible
-- [ ] Minimal capabilities
-- [ ] No unnecessary packages
+```bash
+trivy config --severity HIGH,CRITICAL,MEDIUM Dockerfile
 ```
 
----
+## 4. Analyze CVE Findings
 
-## Dockerfile Security
+Categorize every CRITICAL and HIGH finding:
 
-### Dockerfile Best Practices
+| Category | Action | Example |
+|----------|--------|---------|
+| **Fixable by us** | Pin newer version in Dockerfile | Tool binary built with old Go stdlib |
+| **Fixable upstream** | Track, document, revisit | Base image ships vulnerable internal dep |
+| **OS-level, patch pending** | Document, monitor Debian/Ubuntu tracker | libsqlite3, openssl |
+| **will_not_fix** | Accept risk or find alternative package | zlib1g in Debian |
+
+For JSON output, extract CRITICAL summary:
+```python
+import json
+data = json.load(open('trivy-results.json'))
+for result in data.get('Results', []):
+    for v in result.get('Vulnerabilities', []):
+        if v.get('Severity') == 'CRITICAL':
+            print(f"{v['VulnerabilityID']} | {v['PkgName']} {v.get('InstalledVersion','')} | fix: {v.get('FixedVersion','')} | {v.get('Status','')}")
+```
+
+## 5. Dockerfile Hardening Checklist
+
+### Version Pinning (eliminates reproducibility CVEs)
 
 ```dockerfile
-# Use specific version, not latest
-FROM python:3.11-slim-bookworm
+# Bad — unpinned, non-reproducible, may pull vulnerable versions
+FROM image:latest
+RUN curl .../releases/latest/download/tool | bash
 
-# Set labels for tracking
-LABEL maintainer="security@company.com" \
-      version="1.0" \
-      description="Secure application container"
+# Good — pinned, reproducible, auditable
+FROM registry.azurecr.io/addons/image:4.107.1
 
-# Create non-root user early
-RUN groupadd -r appgroup && useradd -r -g appgroup appuser
-
-# Set working directory
-WORKDIR /app
-
-# Copy dependency files first (layer caching)
-COPY requirements.txt .
-
-# Install dependencies with no cache, minimal packages
-RUN pip install --no-cache-dir -r requirements.txt && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends \
-        package1 \
-        package2 && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
-# Copy application code
-COPY --chown=appuser:appgroup . .
-
-# Remove unnecessary files
-RUN rm -rf tests/ docs/ *.md
-
-# Switch to non-root user
-USER appuser
-
-# Set read-only where possible
-# Use HEALTHCHECK
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8080/health || exit 1
-
-# Expose only necessary ports
-EXPOSE 8080
-
-# Use exec form for signals
-ENTRYPOINT ["python", "app.py"]
+ARG TOOL_VERSION=v1.2.3
+RUN curl -fsSL "https://github.com/org/tool/releases/download/${TOOL_VERSION}/tool_linux_amd64.tar.gz" \
+    | tar xz -C /usr/local/bin tool
 ```
 
-### Dockerfile Linting with Hadolint
+Use `ARG` for version variables — makes updates a single-line change and is visible in `docker history`.
+
+### SSH Hardening
+
+```dockerfile
+# Disable password auth, enable key-based only
+RUN mkdir -p /run/sshd && \
+    sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config && \
+    sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config && \
+    echo "AllowUsers <user>" >> /etc/ssh/sshd_config && \
+    ssh-keygen -A && \
+    mkdir -p /home/<user>/.ssh && \
+    chmod 700 /home/<user>/.ssh && \
+    chown <user>:<user> /home/<user>/.ssh
+```
+
+### Non-root Runtime
+
+```dockerfile
+# Start privileged services as root, then drop privileges
+RUN printf '#!/bin/bash\nset -e\n/usr/sbin/sshd\nexec su - <user> -c "<main-process>"\n' \
+    > /usr/local/bin/entrypoint.sh && \
+    chmod +x /usr/local/bin/entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+```
+
+If no privileged services are needed, simply:
+```dockerfile
+USER <non-root-user>
+ENTRYPOINT ["<main-process>"]
+```
+
+### Additional Hardening
+
+- **Minimize layers**: combine related `RUN` commands
+- **Clean apt caches**: always end with `&& rm -rf /var/lib/apt/lists/*`
+- **No secrets in image**: use runtime injection (env vars, mounted secrets)
+- **Verify downloads**: checksum or GPG verify binaries when possible
+- **Read-only filesystem**: add `--read-only` at runtime where possible
+
+## 6. Rebuild and Re-scan
+
+After hardening, always rebuild and re-scan to verify fixes:
 
 ```bash
-# Install
-brew install hadolint
+# Rebuild with new tag
+az acr build --registry <registry> --image <repo>:<new-tag> -f Dockerfile .
 
-# Lint Dockerfile
-hadolint Dockerfile
+# Re-scan
+az acr run --registry <registry> \
+  --cmd "<registry>.azurecr.io/tools/trivy:latest image \
+    --severity HIGH,CRITICAL \
+    <registry>.azurecr.io/<repo>:<new-tag>" /dev/null
 
-# Ignore specific rules
-hadolint --ignore DL3008 --ignore DL3009 Dockerfile
-
-# Output formats
-hadolint -f json Dockerfile > hadolint.json
-hadolint -f sarif Dockerfile > hadolint.sarif
-
-# Strict mode
-hadolint --strict Dockerfile
+# Compare CRITICAL counts: before vs after
 ```
 
-### Dockerfile Security Checklist
+## 7. Verification Checklist
 
-```markdown
-### User & Permissions
-- [ ] USER instruction present (non-root)
-- [ ] Files owned by non-root user (COPY --chown)
-- [ ] No sudo/su usage
-- [ ] Minimal file permissions
+After completing the security cycle, verify:
 
-### Base Image
-- [ ] Official/trusted base image
-- [ ] Pinned digest or specific version
-- [ ] Minimal base (alpine, slim, distroless)
-- [ ] Multi-stage build for smaller image
+- [ ] `az acr repository show` — base image exists in ACR
+- [ ] `az acr build` — completes without rate limit errors
+- [ ] Trivy scan — CRITICAL count reduced (document remaining upstream CVEs)
+- [ ] `az acr repository show` — final image exists in ACR
+- [ ] Dockerfile uses pinned versions (no `:latest` for tools)
+- [ ] SSH configured for key-only auth (if applicable)
+- [ ] Container runs as non-root user
+- [ ] No secrets baked into image layers
 
-### Package Management
-- [ ] Package versions pinned
-- [ ] Package cache cleaned (rm -rf /var/lib/apt/lists/*)
-- [ ] --no-install-recommends used
-- [ ] pip --no-cache-dir used
+## Common Patterns
 
-### Secrets
-- [ ] No secrets in build args
-- [ ] No secrets COPY'd into image
-- [ ] .dockerignore excludes secrets
-- [ ] Multi-stage build hides build secrets
+### Rate limit recovery
+When `az acr import` also hits rate limits (happens with burst imports), wait 15 minutes or use an authenticated Docker Hub account:
+```bash
+az acr import --name <registry> \
+  --source docker.io/<image>:<tag> \
+  --image <local-path>/<image>:<tag> \
+  --username <dockerhub-user> --password <dockerhub-token>
+```
 
-### Network
-- [ ] Only required ports EXPOSE'd
-- [ ] No SSH server installed
-- [ ] No unnecessary network tools
+### Multi-tool Dockerfile with pinned versions
+```dockerfile
+ARG K9S_VERSION=v0.50.18
+ARG ARGOCD_VERSION=v3.3.3
+ARG YQ_VERSION=v4.52.4
+ARG KUSTOMIZE_VERSION=v5.8.0
 
-### Runtime
-- [ ] HEALTHCHECK defined
-- [ ] Exec form for ENTRYPOINT/CMD
-- [ ] Signal handling correct
-- [ ] Logging to stdout/stderr
+RUN curl -fsSL "https://github.com/derailed/k9s/releases/download/${K9S_VERSION}/k9s_Linux_amd64.tar.gz" | tar xz -C /usr/local/bin k9s
+RUN curl -sSL -o /usr/local/bin/argocd "https://github.com/argoproj/argo-cd/releases/download/${ARGOCD_VERSION}/argocd-linux-amd64" && chmod +x /usr/local/bin/argocd
+RUN curl -fsSL "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64" -o /usr/local/bin/yq && chmod +x /usr/local/bin/yq
+RUN curl -fsSL "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F${KUSTOMIZE_VERSION}/kustomize_${KUSTOMIZE_VERSION}_linux_amd64.tar.gz" | tar xz -C /usr/local/bin kustomize
 ```
 
 ---
 
-## Kubernetes Cluster Security
-
-### Kubescape Assessment
-
-```bash
-# Full cluster scan
-kubescape scan
-
-# Scan with specific framework
-kubescape scan framework nsa
-kubescape scan framework mitre
-kubescape scan framework cis-v1.23-t1.0.1
-
-# Scan specific namespace
-kubescape scan --include-namespaces production
-
-# Scan manifest files
-kubescape scan *.yaml
-
-# Output formats
-kubescape scan -f json -o results.json
-kubescape scan -f sarif -o results.sarif
-
-# Compliance score threshold
-kubescape scan --compliance-threshold 80
-
-# Exception handling
-kubescape scan --exceptions exceptions.json
-
-# List available frameworks
-kubescape list frameworks
-```
-
-### kube-bench CIS Benchmark
-
-```bash
-# Run all checks (run inside cluster)
-kube-bench run
-
-# Target specific component
-kube-bench run --targets master
-kube-bench run --targets node
-kube-bench run --targets etcd
-kube-bench run --targets policies
-
-# Output formats
-kube-bench run --json > kube-bench.json
-kube-bench run --junit > kube-bench.xml
-
-# Specific version
-kube-bench run --version 1.27
-
-# As Kubernetes job
-kubectl apply -f https://raw.githubusercontent.com/aquasecurity/kube-bench/main/job.yaml
-kubectl logs -l app=kube-bench
-```
-
-### kube-hunter Penetration Testing
-
-```bash
-# Remote scanning
-kube-hunter --remote <cluster-ip>
-
-# Pod scanning (run as pod in cluster)
-kube-hunter --pod
-
-# Active hunting (exploitation attempts)
-kube-hunter --active
-
-# Report formats
-kube-hunter --report json > kube-hunter.json
-kube-hunter --report yaml > kube-hunter.yaml
-
-# Interface mode
-kube-hunter --interface
-
-# Specific CIDR
-kube-hunter --cidr 10.0.0.0/8
-```
-
-### Kubernetes Security Checklist
-
-```markdown
-### Control Plane
-- [ ] API server authentication enabled
-- [ ] RBAC enabled (no ABAC)
-- [ ] Admission controllers configured
-- [ ] Audit logging enabled
-- [ ] etcd encrypted and authenticated
-- [ ] API server TLS configured
-
-### Node Security
-- [ ] Nodes hardened (CIS benchmark)
-- [ ] kubelet authentication enabled
-- [ ] kubelet authorization not AlwaysAllow
-- [ ] Read-only port disabled (10255)
-- [ ] Container runtime hardened
-
-### Network
-- [ ] Network policies enforced
-- [ ] Pod-to-pod encryption (service mesh)
-- [ ] Ingress TLS configured
-- [ ] External access restricted
-- [ ] Egress policies defined
-
-### Workload Security
-- [ ] Pod Security Standards enforced
-- [ ] No privileged containers
-- [ ] Read-only root filesystem
-- [ ] Resource limits set
-- [ ] Service account tokens managed
-
-### RBAC
-- [ ] Least privilege roles
-- [ ] No cluster-admin for workloads
-- [ ] Service accounts per workload
-- [ ] Regular access review
-```
-
----
-
-## Docker Host Security
-
-### Docker Bench for Security
-
-```bash
-# Clone and run
-git clone https://github.com/docker/docker-bench-security.git
-cd docker-bench-security
-sudo sh docker-bench-security.sh
-
-# With specific checks
-sudo sh docker-bench-security.sh -c container_images
-
-# Output to file
-sudo sh docker-bench-security.sh -l /tmp/docker-bench.log
-
-# JSON output
-sudo sh docker-bench-security.sh -j > docker-bench.json
-```
-
-### Docker Daemon Configuration
-
-```json
-// /etc/docker/daemon.json
-{
-  "icc": false,
-  "userns-remap": "default",
-  "no-new-privileges": true,
-  "seccomp-profile": "/etc/docker/seccomp-profile.json",
-  "storage-driver": "overlay2",
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "10m",
-    "max-file": "3"
-  },
-  "live-restore": true,
-  "userland-proxy": false,
-  "tls": true,
-  "tlscacert": "/etc/docker/ca.pem",
-  "tlscert": "/etc/docker/server-cert.pem",
-  "tlskey": "/etc/docker/server-key.pem",
-  "tlsverify": true
-}
-```
-
-### Docker Security Checklist
-
-```markdown
-### Daemon
-- [ ] TLS enabled for remote access
-- [ ] User namespaces enabled
-- [ ] Live restore enabled
-- [ ] Default ulimits configured
-- [ ] Inter-container communication disabled
-- [ ] Content trust enabled (DOCKER_CONTENT_TRUST=1)
-
-### Images
-- [ ] Base images from trusted registries
-- [ ] Image signing verified
-- [ ] Vulnerability scanning in place
-- [ ] No secrets in image layers
-
-### Containers
-- [ ] Non-root user
-- [ ] Read-only root filesystem
-- [ ] No privileged containers
-- [ ] Capabilities dropped
-- [ ] Seccomp profile applied
-- [ ] AppArmor/SELinux enabled
-- [ ] Resource limits set
-- [ ] Health checks defined
-
-### Network
-- [ ] User-defined networks (not default bridge)
-- [ ] No --network=host
-- [ ] Port mapping minimal
-- [ ] Sensitive ports protected
-
-### Storage
-- [ ] No sensitive host mounts
-- [ ] Read-only mounts where possible
-- [ ] No /var/run/docker.sock mount
-- [ ] Volume driver security reviewed
-```
-
----
-
-## Container Runtime Security
-
-### Falco Runtime Monitoring
-
-```bash
-# Install via Helm
-helm repo add falcosecurity https://falcosecurity.github.io/charts
-helm install falco falcosecurity/falco \
-  --set driver.kind=modern_ebpf \
-  --set tty=true
-
-# View alerts
-kubectl logs -l app.kubernetes.io/name=falco -f
-
-# Custom rules
-# /etc/falco/rules.d/custom_rules.yaml
-```
-
-### Falco Custom Rules
-
-```yaml
-# custom_rules.yaml
-- rule: Shell Spawned in Container
-  desc: Detect shell spawned in container
-  condition: >
-    spawned_process and
-    container and
-    proc.name in (bash, sh, zsh, ksh, csh)
-  output: >
-    Shell spawned in container
-    (user=%user.name command=%proc.cmdline container=%container.name
-     image=%container.image.repository)
-  priority: WARNING
-  tags: [container, shell]
-
-- rule: Sensitive File Access
-  desc: Detect access to sensitive files
-  condition: >
-    open_read and
-    container and
-    fd.name pmatch (/etc/shadow, /etc/passwd, /etc/kubernetes/*)
-  output: >
-    Sensitive file accessed
-    (user=%user.name file=%fd.name container=%container.name)
-  priority: CRITICAL
-  tags: [container, filesystem]
-
-- rule: Unexpected Outbound Connection
-  desc: Detect outbound connections from container
-  condition: >
-    outbound and
-    container and
-    not (fd.sip.name in (allowed.destinations))
-  output: >
-    Unexpected outbound connection
-    (container=%container.name dest=%fd.sip.name port=%fd.sport)
-  priority: WARNING
-  tags: [container, network]
-
-- rule: Container Escape Attempt
-  desc: Detect potential container escape
-  condition: >
-    container and
-    (evt.type in (ptrace, process_vm_readv, process_vm_writev) or
-     fd.name startswith /proc/1/ or
-     fd.name = /proc/sys/kernel/core_pattern)
-  output: >
-    Potential container escape attempt
-    (user=%user.name command=%proc.cmdline container=%container.name)
-  priority: CRITICAL
-  tags: [container, escape]
-```
-
-### Seccomp Profiles
-
-```json
-// seccomp-profile.json
-{
-  "defaultAction": "SCMP_ACT_ERRNO",
-  "architectures": ["SCMP_ARCH_X86_64"],
-  "syscalls": [
-    {
-      "names": [
-        "read", "write", "open", "close", "stat", "fstat",
-        "mmap", "mprotect", "munmap", "brk", "ioctl",
-        "access", "pipe", "select", "sched_yield",
-        "dup", "dup2", "clone", "fork", "vfork",
-        "execve", "exit", "wait4", "kill", "uname",
-        "getcwd", "chdir", "getpid", "getuid", "getgid",
-        "socket", "connect", "accept", "bind", "listen",
-        "sendto", "recvfrom", "shutdown",
-        "openat", "readlinkat", "newfstatat"
-      ],
-      "action": "SCMP_ACT_ALLOW"
-    }
-  ]
-}
-```
-
----
-
-## Container Escape Testing
-
-### Common Escape Vectors
-
-```markdown
-### Privileged Container
-```bash
-# Check if privileged
-cat /proc/self/status | grep CapEff
-# CapEff: 0000003fffffffff = privileged
-
-# Mount host filesystem
-mkdir /mnt/host
-mount /dev/sda1 /mnt/host
-chroot /mnt/host
-```
-
-### Docker Socket Mount
-```bash
-# If /var/run/docker.sock is mounted
-docker -H unix:///var/run/docker.sock run -v /:/host -it alpine chroot /host
-```
-
-### Kernel Exploits
-- Check kernel version: uname -a
-- Search for container escape CVEs
-- CVE-2022-0185 (fsconfig)
-- CVE-2022-0847 (Dirty Pipe)
-- CVE-2020-15257 (containerd)
-
-### Capabilities Abuse
-```bash
-# Check capabilities
-capsh --print
-
-# CAP_SYS_ADMIN - mount filesystems
-# CAP_NET_ADMIN - network manipulation
-# CAP_DAC_OVERRIDE - file permission bypass
-```
-```
-
-### Escape Prevention Checklist
-
-```markdown
-- [ ] No privileged containers
-- [ ] Capabilities dropped (--cap-drop=ALL)
-- [ ] Only necessary capabilities added
-- [ ] No Docker socket mount
-- [ ] No host PID/network namespace
-- [ ] Seccomp profile enabled
-- [ ] AppArmor/SELinux enforcing
-- [ ] User namespaces enabled
-- [ ] Kernel patched and updated
-- [ ] read-only root filesystem
-```
-
----
-
-## CI/CD Integration
-
-### GitHub Actions
-
-```yaml
-name: Container Security
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-
-jobs:
-  trivy-scan:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Build image
-        run: docker build -t myapp:${{ github.sha }} .
-
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: myapp:${{ github.sha }}
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'
-          exit-code: '1'
-
-      - name: Upload Trivy scan results
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: 'trivy-results.sarif'
-
-  grype-scan:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Build image
-        run: docker build -t myapp:${{ github.sha }} .
-
-      - name: Scan image with Grype
-        uses: anchore/scan-action@v3
-        with:
-          image: myapp:${{ github.sha }}
-          fail-build: true
-          severity-cutoff: high
-
-  hadolint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Lint Dockerfile
-        uses: hadolint/hadolint-action@v3.1.0
-        with:
-          dockerfile: Dockerfile
-          failure-threshold: error
-```
-
-### Kubernetes Admission Control
-
-```yaml
-# Gatekeeper constraint for image scanning
-apiVersion: constraints.gatekeeper.sh/v1beta1
-kind: K8sImageDigests
-metadata:
-  name: require-image-digests
-spec:
-  match:
-    kinds:
-      - apiGroups: [""]
-        kinds: ["Pod"]
-    namespaces: ["production"]
-  parameters:
-    exemptImages:
-      - "gcr.io/distroless/*"
-```
-
----
-
-## Reporting Template
-
-```markdown
-# Container Security Assessment Report
-
-## Executive Summary
-- Assessment date: YYYY-MM-DD
-- Scope: X images, Y clusters
-- Critical vulnerabilities: X
-- High vulnerabilities: Y
-- Compliance score: Z%
-
-## Image Scan Results
-
-### Image: nginx:1.25
-| CVE ID | Severity | Package | Fixed Version |
-|--------|----------|---------|---------------|
-| CVE-2023-XXXX | CRITICAL | openssl | 3.0.12 |
-
-### Image: app:latest
-| CVE ID | Severity | Package | Fixed Version |
-|--------|----------|---------|---------------|
-| CVE-2023-YYYY | HIGH | python | 3.11.6 |
-
-## Kubernetes Findings
-
-### CIS Benchmark Results
-| Section | Pass | Fail | Score |
-|---------|------|------|-------|
-| Control Plane | 10 | 2 | 83% |
-| Worker Nodes | 8 | 1 | 89% |
-| Policies | 5 | 3 | 62% |
-
-### Critical Findings
-1. [CRITICAL] Privileged containers in production namespace
-2. [HIGH] Missing network policies
-3. [HIGH] Default service account used
-
-## Recommendations
-1. Update base images to patched versions
-2. Implement Pod Security Standards
-3. Enable network policies
-4. Configure runtime monitoring with Falco
-```
-
----
-
-## Bundled Resources
-
-### scripts/
-- `scan_images.sh` - Batch image scanning automation
-- `k8s_audit.sh` - Kubernetes security audit script
-- `docker_bench_parser.py` - Parse Docker Bench results
-
-### references/
-- `escape_techniques.md` - Container escape methodology
-- `cis_docker.md` - CIS Docker benchmark summary
-- `cis_kubernetes.md` - CIS Kubernetes benchmark summary
-
-### checklists/
-- `image_security.md` - Image security checklist
-- `k8s_hardening.md` - Kubernetes hardening checklist
-- `docker_hardening.md` - Docker daemon hardening checklist
+## Gotchas
+
+- **`RUN apt-get upgrade` doesn't update Trivy's CVE database, only installed packages:** Image shows red after rebuild because Trivy compares package versions against its own DB. Use `--db-repository` to pin scanner DB version and rebuild from a freshly imported base.
+- **ACR cloud builds are unauthenticated against Docker Hub:** Any `FROM docker.io/...` works for a few builds, then hits the anonymous rate limit (100 pulls/6hr per IP, shared with Azure's outbound NAT). Always `az acr import` first — symptoms are intermittent `toomanyrequests` errors that "work in retry".
+- **`COPY <<'EOF'` heredoc fails in ACR builder, works locally:** ACR uses classic Docker build, not BuildKit. Heredoc syntax that builds fine on a laptop dies in CI with `unexpected EOF`. Use `RUN printf` or stage files via `COPY` from context.
+- **Trivy `--severity HIGH,CRITICAL` hides MEDIUM findings that ARE fixable:** Filtering loses signal on package-level patches that are easier wins than the visible CRITICALs. Run unfiltered once per release to capture the full picture, then filter for triage.
+- **Non-root `USER` directive doesn't apply to multi-stage `COPY --from`:** Files copied between stages retain UID/GID from the source stage. A non-root final stage with copied root-owned binaries breaks `exec` at runtime. Use `COPY --chown=<user>` explicitly.
+- **`will_not_fix` CVEs from Debian aren't fixed by upgrading the image either:** zlib1g, libssl, etc. marked `will_not_fix` ship in every Debian release. Switching base tags doesn't help — only switching distro (distroless, alpine, ubi) does. Document the accepted risk, don't chase.

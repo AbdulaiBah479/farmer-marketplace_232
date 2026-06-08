@@ -1,119 +1,64 @@
 ---
 name: design
-description: Design Thinking process—Empathize, Define, Ideate, Prototype, Test. Use for product design, solving ambiguous problems, or when you don't know what users really need.
-user-invocable: true
+description: Design system skills for modern Apple platform UI including Liquid Glass, animations, and visual design patterns. Use when implementing new design language features.
+allowed-tools: [Read, Write, Edit, Glob, Grep, AskUserQuestion]
 ---
 
-# Design Thinking Process
+# Design Skills
 
-Work through the full design thinking process—Empathize, Define, Ideate, Prototype, Test.
+Skills for implementing Apple's modern design systems across platforms.
 
-## Instructions
+## When This Skill Activates
 
-Move through each phase, building on insights from the previous one. The process is iterative—expect to loop back based on what you learn.
+Use this skill when the user:
+- Asks about Liquid Glass design
+- Wants to implement modern Apple UI effects
+- Needs guidance on visual design patterns
+- Asks about materials, transparency, or blur effects
+- Wants to create fluid animations
+- Asks about **spring**, **bounce**, or **snappy** animations
+- Wants **PhaseAnimator** or **KeyframeAnimator** help
+- Needs **view transitions**, **matched geometry**, or **hero transitions**
+- Wants **SF Symbol effects** (bounce, pulse, wiggle, breathe)
+- Asks about **animation completions** or **withAnimation**
 
-### Output Format
+## Available Skills
 
-**Challenge**: [What we're trying to solve]
-**Users**: [Who we're designing for]
+### liquid-glass/
+Comprehensive Liquid Glass implementation for iOS 26+, macOS 26+.
+- SwiftUI `.glassEffect()` API
+- AppKit `NSGlassEffectView`
+- GlassEffectContainer patterns
+- Morphing transitions
+- Interactive effects
+- Button styles
 
----
+### animation-patterns/
+SwiftUI animation patterns for iOS 13–18+.
+- Spring configurations (3 API generations)
+- PhaseAnimator and KeyframeAnimator (iOS 17+)
+- View transitions, matched geometry, navigation transitions
+- SF Symbol effects
+- Animation completions, transactions, timing curves
 
-## 1. EMPATHIZE
-*Understand the user and their context*
+## Key Principles
 
-### User Profile
-| Attribute | Description |
-|-----------|-------------|
-| Who are they? | [Demographics, role] |
-| What's their context? | [Environment, circumstances] |
-| What are they trying to do? | [Goals, tasks] |
+### 1. Platform Consistency
+- Follow Apple Human Interface Guidelines
+- Use system-provided APIs
+- Respect user appearance preferences
 
-### User Pain Points
-| Pain Point | Severity | Current Workaround |
-|------------|----------|-------------------|
-| [pain] | High/Med/Low | [how they cope] |
+### 2. Performance
+- Use GlassEffectContainer for multiple effects
+- Limit number of glass effects per view
+- Consider GPU resources
 
-### Empathy Map
-| Quadrant | Observations |
-|----------|--------------|
-| **Say** | [Quotes, statements] |
-| **Think** | [Beliefs, concerns] |
-| **Do** | [Actions, behaviors] |
-| **Feel** | [Emotions, reactions] |
+### 3. Visual Hierarchy
+- Glass effects create depth and layering
+- Use tints to indicate prominence
+- Combine with appropriate shadows
 
----
+## Reference Documentation
 
-## 2. DEFINE
-*Frame the problem worth solving*
-
-### Point of View Statement
-**[User]** needs **[need]** because **[insight]**.
-
-### How Might We Questions
-- How might we [opportunity 1]?
-- How might we [opportunity 2]?
-
-### Problem Statement
-> **The Challenge**: [Specific, actionable problem to solve]
-
----
-
-## 3. IDEATE
-*Generate many possible solutions*
-
-### Ideas Generated
-| # | Idea | Type |
-|---|------|------|
-| 1 | [idea] | Safe / Moderate / Wild |
-| 2 | [idea] | Safe / Moderate / Wild |
-| 3 | [idea] | Safe / Moderate / Wild |
-
-### Top Ideas to Prototype
-| Idea | Why This One? | Feasibility |
-|------|---------------|-------------|
-| [idea] | [rationale] | High/Med/Low |
-
----
-
-## 4. PROTOTYPE
-*Make ideas tangible quickly*
-
-**Idea to prototype**: [Which idea]
-
-**Prototype type**: Paper mockup / Wireframe / Physical model / Storyboard
-
-**What we're testing**:
-- [Assumption/question 1]
-- [Assumption/question 2]
-
----
-
-## 5. TEST
-*Learn from real users*
-
-**Who to test with**: [User profile]
-
-**Questions to answer**:
-1. [Question]?
-2. [Question]?
-
-**Success indicators**: [What would indicate this works]
-
-**Failure indicators**: [What would indicate this fails]
-
----
-
-## Next Iteration
-
-Based on what we learn, we'll likely need to revisit:
-- [ ] Empathize / [ ] Define / [ ] Ideate / [ ] Prototype / [ ] Test
-
-## Guidelines
-
-- Empathy is research, not assumption—talk to real users
-- "How might we" keeps problems open and generative
-- Prototype to think, not just to test
-- Test early, test often, test cheaply
-
-$ARGUMENTS
+- `/Users/ravishankar/Downloads/docs/SwiftUI-Implementing-Liquid-Glass-Design.md`
+- `/Users/ravishankar/Downloads/docs/AppKit-Implementing-Liquid-Glass-Design.md`

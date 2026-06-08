@@ -1,221 +1,281 @@
 ---
 name: sprint-plan
-description: >
-  Plan a sprint that ships — capacity, commitment vs stretch, dependencies,
-  risk-identification, and the pre-sprint discipline that prevents
-  mid-sprint surprises. Distinct from scrum-master (process facilitation)
-  by focusing on the planning artifact itself.
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: borghei
-  category: project-management
-  domain: execution
-  updated: 2026-05-27
-  python-tools: sprint_planner.py
-  tech-stack: sprint-planning, capacity, agile, story-points
+description: "Generates a new sprint plan or updates an existing one based on the current milestone, completed work, and available capacity. Pulls context from production documents and design backlogs."
+argument-hint: "[new|update|status] [--review full|lean|solo]"
+user-invocable: true
+allowed-tools: Read, Glob, Grep, Write, Edit, Task, AskUserQuestion
+model: sonnet
+context: |
+  !ls production/sprints/ 2>/dev/null
 ---
 
-# Sprint Planning
+## Phase 0: Parse Arguments
 
-A sprint plan that survives contact with reality. Covers capacity math,
-commit vs stretch separation, dependency identification, and the
-pre-sprint review that prevents mid-sprint surprises.
+Extract the mode argument (`new`, `update`, or `status`) and resolve the review mode (once, store for all gate spawns this run):
+1. If `--review [full|lean|solo]` was passed → use that
+2. Else read `production/review-mode.txt` → use that value
+3. Else → default to `lean`
 
-## When to use this skill
+See `.claude/docs/director-gates.md` for the full check pattern.
 
-- **Sprint kickoff** (every 1-3 weeks)
-- **Sprint-plan template** for new teams
-- **Sprint-plan audit** when sprints consistently miss
-- **Quarter-start planning** (rolled up across sprints)
-- **Post-mortem** on a missed sprint (gap analysis)
+**Review mode check** (before gates run):
+- Read `production/review-mode.txt` if it exists. Use that mode.
+- If the file doesn't exist and this is a `new` sprint: use `AskUserQuestion`:
+  - Prompt: "No review mode is set. Which review depth would you like for this sprint?"
+  - Options:
+    - `[A] full — spawn all director and lead gates`
+    - `[B] lean — skip non-phase-gate director reviews (recommended for most sprints)`
+    - `[C] solo — skip all gate spawning`
+  - After selection: write `production/review-mode.txt` with the chosen mode. Say: "Review mode set to [mode] and saved to production/review-mode.txt."
+- If the file doesn't exist and this is NOT a `new` sprint (e.g., updating an existing sprint): default to `lean` silently.
 
-## The 7 sprint-plan elements
+---
 
-1. **Sprint goal** — one sentence: what this sprint exists to achieve
-2. **Team capacity** — actual hours / story points after PTO, on-call, etc.
-3. **Commits** — items the team confidently ships
-4. **Stretch** — items if everything goes well; nothing depends on
-5. **Dependencies** — what must happen by when (external + internal)
-6. **Risks** — what could derail; mitigation per risk
-7. **Definition of done** — when is each item "done"?
+## Phase 1: Gather Context
 
-## Workflow
+1. **Read the current milestone** from `production/milestones/`.
 
-### Step 1 — Define the sprint goal
-A good goal:
-- One sentence
-- States outcome, not output ("ship 3 features" → "complete checkout flow MVP enabling first paid customers")
-- Inspires the team
-- Lets you say "no" to off-goal asks
+2. **Read the previous sprint** (if any) from `production/sprints/` to
+   understand velocity and carryover.
 
-### Step 2 — Calculate capacity
-Per team member:
-- Working days = sprint days - holidays - approved PTO
-- Effective hours = days × hours/day × focus factor (typically 0.6-0.75)
-- Subtract on-call rotation hours
-- Subtract meeting overhead
-- Subtract support / interrupt tax
+3. **Scan design documents** in `design/gdd/` for features tagged as ready
+   for implementation.
 
-Aggregate across team. This is your real capacity.
+4. **Check the risk register** at `production/risk-register/`.
 
-### Step 3 — Pull from backlog
-Backlog items must be:
-- Refined (acceptance criteria clear)
-- Estimated (story points or hours)
-- No major unknowns
+---
 
-Items that fail this are NOT eligible for the sprint. Send back to refinement.
+## Phase 2: Generate Output
 
-### Step 4 — Commit vs stretch
-- **Commits:** 75-85% of capacity (leaves room for unknowns)
-- **Stretch:** 10-15% of capacity (only if commits done)
+For `new`:
 
-Stuffing 100% of capacity = guaranteed miss. Reality always intrudes.
+**Generate a sprint plan** following this format and present it to the user. Do NOT ask to write yet — the producer feasibility gate (Phase 4) runs first and may require revisions before the file is written.
 
-### Step 5 — Identify dependencies
-For each item:
-- Cross-team dependencies (what they need from others)
-- External dependencies (vendors, customers)
-- Sequencing dependencies (A blocks B)
+```markdown
+# Sprint [N] — [Start Date] to [End Date]
 
-Each dependency needs:
-- Owner
-- Date needed by
-- Confirmation it's planned
+## Sprint Goal
+[One sentence describing what this sprint achieves toward the milestone]
 
-### Step 6 — Identify risks
-For each item, list likely risks:
-- Technical risk
-- Dependency risk (external owner slips)
-- Estimate risk (unknowns might double effort)
-- Capacity risk (key person may be pulled)
+## Capacity
+- Total days: [X]
+- Buffer (20%): [Y days reserved for unplanned work]
+- Available: [Z days]
 
-Per risk: likelihood, severity, mitigation, owner.
+## Tasks
 
-### Step 7 — Definition of done
-Per item:
-- Code merged + reviewed
-- Tests added
-- Telemetry firing
-- Docs updated
-- Accessibility checked
-- Feature flag configured (if applicable)
-- QA passed
+### Must Have (Critical Path)
+| ID | Task | Agent/Owner | Est. Days | Dependencies | Acceptance Criteria |
+|----|------|-------------|-----------|-------------|-------------------|
 
-### Step 8 — Run `sprint_planner.py`
-Audit capacity utilization, commit/stretch split, dependency clarity,
-DoD coverage.
+### Should Have
+| ID | Task | Agent/Owner | Est. Days | Dependencies | Acceptance Criteria |
+|----|------|-------------|-----------|-------------|-------------------|
 
-```bash
-python3 project-management/execution/sprint-plan/scripts/sprint_planner.py \
-  --input sprint_plan.json --format markdown
+### Nice to Have
+| ID | Task | Agent/Owner | Est. Days | Dependencies | Acceptance Criteria |
+|----|------|-------------|-----------|-------------|-------------------|
+
+## Carryover from Previous Sprint
+| Task | Reason | New Estimate |
+|------|--------|-------------|
+
+## Risks
+| Risk | Probability | Impact | Mitigation |
+|------|------------|--------|------------|
+
+## Dependencies on External Factors
+- [List any external dependencies]
+
+## Definition of Done for this Sprint
+- [ ] All Must Have tasks completed
+- [ ] All tasks pass acceptance criteria
+- [ ] QA plan exists (`production/qa/qa-plan-sprint-[N].md`)
+- [ ] All Logic/Integration stories have passing unit/integration tests
+- [ ] Smoke check passed (`/smoke-check sprint`)
+- [ ] QA sign-off report: APPROVED or APPROVED WITH CONDITIONS (`/team-qa sprint`)
+- [ ] No S1 or S2 bugs in delivered features
+- [ ] Design documents updated for any deviations
+- [ ] Code reviewed and merged
 ```
 
-## Decision frameworks
+For `update`:
 
-### Capacity math (per 2-week sprint, 8-person team)
+**Update an existing sprint plan**:
 
+1. Read the most recent sprint plan from `production/sprints/`.
+2. Present the current story list with their current statuses from `production/sprint-status.yaml`.
+3. Ask the user what to change: stories to add, remove, reprioritize, or re-estimate. Use `AskUserQuestion` to gather changes.
+4. Apply the changes and re-present the full revised plan for review.
+5. Re-run the producer feasibility gate (Phase 4) on the revised plan.
+6. Write the updated markdown plan and yaml together (same approval as `new` mode).
+
+Note: `update` mode does not reset story statuses. Stories already marked `in-progress` or `done` keep their status. Only `backlog` and `ready-for-dev` stories can be removed or reprioritized freely.
+
+For `status`:
+
+**Generate a status report**:
+
+```markdown
+# Sprint [N] Status -- [Date]
+
+## Progress: [X/Y tasks complete] ([Z%])
+
+### Completed
+| Task | Completed By | Notes |
+|------|-------------|-------|
+
+### In Progress
+| Task | Owner | % Done | Blockers |
+|------|-------|--------|----------|
+
+### Not Started
+| Task | Owner | At Risk? | Notes |
+|------|-------|----------|-------|
+
+### Blocked
+| Task | Blocker | Owner of Blocker | ETA |
+|------|---------|-----------------|-----|
+
+## Burndown Assessment
+[On track / Behind / Ahead]
+[If behind: What is being cut or deferred]
+
+## Emerging Risks
+- [Any new risks identified this sprint]
 ```
-2 weeks = 10 working days
-Per person:
-  - 10 days × 8 hours = 80 hours raw
-  - Minus PTO/holidays (e.g., 1 day) = 72 hours
-  - Minus meetings (~10 hrs) = 62 hours
-  - Minus on-call (~4 hrs avg) = 58 hours
-  - Minus interrupts/support (~6 hrs) = 52 hours
-  - Focus factor 0.7 = ~36 hours of "real" work
 
-Team of 8 × 36 hours = 288 effective hours
-                     = ~28 person-days of real engineering work
+---
+
+## Phase 3: Prepare Sprint Status File
+
+After generating a new sprint plan, also prepare the `production/sprint-status.yaml` content.
+This is the machine-readable source of truth for story status — read by
+`/sprint-status`, `/story-done`, and `/help` without markdown parsing.
+
+**Do not write the yaml yet** — hold it in context. The producer feasibility gate (Phase 4) may revise the story list. Both files will be written together after Phase 4 in a single write approval.
+
+Format:
+
+```yaml
+# Auto-generated by /sprint-plan. Updated by /story-done and /dev-story.
+# DO NOT edit manually — use /story-done to update story status.
+#
+# Status value mapping (yaml ↔ story file Status field):
+#   backlog        ↔  Not Started
+#   ready-for-dev  ↔  Ready
+#   in-progress    ↔  In Progress
+#   review         ↔  In Review
+#   done           ↔  Complete
+#   blocked        ↔  Blocked
+
+sprint: [N]
+goal: "[sprint goal]"
+start: "[YYYY-MM-DD]"
+end: "[YYYY-MM-DD]"
+generated: "[YYYY-MM-DD]"
+updated: "[YYYY-MM-DD]"
+
+stories:
+  - id: "[epic-story, e.g. 1-1]"
+    name: "[story name]"
+    file: "[production/stories/path.md]"
+    priority: must-have        # must-have | should-have | nice-to-have
+    status: ready-for-dev      # backlog | ready-for-dev | in-progress | review | done | blocked
+    owner: ""
+    estimate_days: 0
+    blocker: ""
+    completed: ""
 ```
 
-Most teams over-estimate capacity by 30-50%. Track actuals to calibrate.
+Initialize each story from the sprint plan's task tables:
+- Must Have tasks → `priority: must-have`, `status: ready-for-dev`
+- Should Have tasks → `priority: should-have`, `status: backlog`
+- Nice to Have tasks → `priority: nice-to-have`, `status: backlog`
 
-### Commitment discipline
+For `update`: read the existing `sprint-status.yaml`, carry over statuses for
+stories that haven't changed, add new stories, remove dropped ones.
 
-| Filled at | Outcome |
-|-----------|---------|
-| 100%+ | Always miss |
-| 90-100% | Usually miss; no room for unknowns |
-| 80-90% | Often achievable; healthy |
-| 70-80% | Conservative; safer commits |
-| < 70% | Under-committing; team disengaged |
+---
 
-Target: 80% commits + 15% stretch.
+## Phase 4: Producer Feasibility Gate
 
-### Sprint goal vs feature list
+**Review mode check** — apply before spawning PR-SPRINT:
+- `solo` → skip. Note: "PR-SPRINT skipped — Solo mode." Proceed to Phase 5 (QA plan gate).
+- `lean` → skip (not a PHASE-GATE). Note: "PR-SPRINT skipped — Lean mode." Proceed to Phase 5 (QA plan gate).
+- `full` → spawn as normal.
 
-| Sprint goal | Why better |
-|-------------|------------|
-| "Complete checkout MVP" | Outcome-aligned; defines what "done" looks like |
-| "Ship feature X + Y + Z" | Feature list; what if one slips? |
-| "Improve performance" | Vague; no done state |
+Before finalising the sprint plan, spawn `producer` via Task using gate **PR-SPRINT** (`.claude/docs/director-gates.md`).
 
-A good sprint goal lets you say "we did it" or "we didn't" clearly.
+Pass: proposed story list (titles, estimates, dependencies), total team capacity in hours/days, any carryover from the previous sprint, milestone constraints and deadline.
 
-### Item sizing
+Present the producer's assessment.
 
-Stories should be 1-5 days each. Stories > 5 days:
-- Split into smaller stories
-- Add a planning task to break them down
-- Don't commit until refined
+If UNREALISTIC: revise the story selection (defer stories to Should Have or Nice to Have) and re-present the updated plan before asking for write approval.
 
-### When to descope vs add capacity
+If CONCERNS, use `AskUserQuestion`:
+- Prompt: "Producer flagged concerns with this sprint plan. How do you want to proceed?"
+- Options:
+  - `[A] Proceed as planned — I accept the risk`
+  - `[B] Adjust scope — defer some Should Have stories`
+  - `[C] Extend the sprint timeline`
 
-Mid-sprint, when you realize commit is too much:
-- **Descope:** drop a stretch item; cleanly remove from sprint
-- **Add capacity:** rare; usually means borrowing from next sprint
-- **Push:** absolute last resort; deal carefully with stakeholders
+If [A]: proceed to write approval.
+If [B]: revise the story list, re-present the updated plan, then proceed to write approval.
+If [C]: adjust sprint dates and capacity, re-present the updated plan, then proceed to write approval.
 
-Discipline: descope early. Heroic late nights = burnout + bugs.
+After handling the producer's verdict, ask: "May I write the sprint plan to `production/sprints/sprint-[N].md` and `production/sprint-status.yaml`?" If yes, write both files (creating directories as needed). Verdict: **COMPLETE** — sprint plan and status file created. If no: Verdict: **BLOCKED** — user declined write.
 
-## Common engagements
+After writing, add:
 
-### "Plan our next sprint"
-1. Pull team's velocity history (last 3-5 sprints).
-2. Calculate this sprint's capacity.
-3. Choose sprint goal aligned with quarter OKRs.
-4. Pull from backlog; verify items refined.
-5. Commit to 80%; stretch 15%.
-6. Identify dependencies + risks.
-7. Define done per item.
+> **Scope check:** If this sprint includes stories added beyond the original epic scope, run `/scope-check [epic]` to detect scope creep before implementation begins.
 
-### "Why are we missing every sprint?"
-1. Audit last 3 sprint plans + actuals.
-2. Diagnose: over-commit? estimation? unrefined items? interrupts?
-3. Tighten capacity math.
-4. Increase refinement discipline.
-5. Track interrupts; reduce them.
+---
 
-### "Quarter planning rolled up from sprints"
-1. Define quarter goal (themes).
-2. Identify ~6 sprints of capacity.
-3. Allocate to: themes, tech debt, support, OKRs.
-4. Draft per-sprint goals.
-5. Refresh per sprint planning meeting.
+## Phase 5: QA Plan Gate
 
-## Anti-patterns to avoid
+Before closing the sprint plan, check whether a QA plan exists for this sprint.
 
-- **100% capacity commit.** Always miss.
-- **Mid-sprint scope add without descope.** Burnout + bugs.
-- **No sprint goal.** Random feature list.
-- **Unrefined items committed.** Discovered complexity blows estimates.
-- **Dependency assumption without owner confirmation.** Slips.
-- **No risk identification.** Risks surface as crises.
-- **No DoD.** "Done" varies by person.
-- **Velocity ignored.** Repeat estimation mistakes.
+Use `Glob` to look for `production/qa/qa-plan-sprint-[N].md` or any file in `production/qa/` referencing this sprint number.
 
-## References
+**If a QA plan is found**: note it in the sprint plan output — "QA Plan: `[path]`" — and proceed.
 
-- `references/capacity-math.md` — deep on per-person capacity, focus factor, interrupt tax
-- `references/sprint-anti-patterns.md` — common failures + fixes
+**If no QA plan exists**: do not silently proceed. Surface this explicitly:
 
-## Related skills
+> "This sprint has no QA plan. A sprint plan without a QA plan means test requirements are undefined — developers won't know what 'done' looks like from a QA perspective, and the sprint cannot pass the Production → Polish gate without one.
+>
+> Run `/qa-plan sprint` now, before starting any implementation. It takes one session and produces the test case requirements each story needs."
 
-- `project-management/scrum-master` — process facilitation
-- `project-management/execution/backlog-refinement` — pre-sprint item prep
-- `project-management/execution/story-splitting` — sizing large stories
-- `project-management/execution/cycle-time-analyzer` — velocity tracking
-- `project-management/sprint-retrospective` — post-sprint learning
-- `c-level-advisor/vpe-advisor` — capacity planning at scale
+Use `AskUserQuestion`:
+- Prompt: "No QA plan found for this sprint. How do you want to proceed?"
+- Options:
+  - `[A] Run /qa-plan sprint now — I'll do that before starting implementation (Recommended)`
+  - `[B] Skip for now — I understand QA sign-off will be blocked at the Production → Polish gate`
+
+If [A]: close with "Sprint plan written. Run `/qa-plan sprint` next — then begin implementation."
+If [B]: add a warning block to the sprint plan document:
+
+```markdown
+> ⚠️ **No QA Plan**: This sprint was started without a QA plan. Run `/qa-plan sprint`
+> before the last story is implemented. The Production → Polish gate requires a QA
+> sign-off report, which requires a QA plan.
+```
+
+---
+
+## Phase 6: Next Steps
+
+After the sprint plan is written and QA plan status is resolved:
+
+- `/qa-plan sprint` — **required before implementation begins** — defines test cases per story so developers implement against QA specs, not a blank slate
+- `/story-readiness [story-file]` — validate a story is ready before starting it
+- `/dev-story [story-file]` — begin implementing the first story
+- `/sprint-status` — check progress mid-sprint
+- `/scope-check [epic]` — verify no scope creep before implementation begins
+
+**Review mode configuration:** All director gates (producer feasibility, QA review, code review) respect the project review mode. The review mode is set in Phase 0 when the file does not exist (for `new` sprints), or can be overridden per-run with `--review full|lean|solo` as an argument. The file `production/review-mode.txt` contains one of:
+- `lean` — skip automated director gates (default if file is absent — fastest for solo dev)
+- `full` — run all director gates as spawned sub-agents
+- `solo` — skip all gates unconditionally (single-developer, no review)
+
+This file is read by `/sprint-plan`, `/story-readiness`, `/story-done`, and other skills at startup.

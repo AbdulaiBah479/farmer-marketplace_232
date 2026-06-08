@@ -2,6 +2,7 @@
 name: flutter-expert
 description: Use when building cross-platform applications with Flutter 3+ and Dart. Invoke for widget development, Riverpod/Bloc state management, GoRouter navigation, platform-specific implementations, performance optimization.
 license: MIT
+compatibility: opencode
 metadata:
   author: https://github.com/Jeffallan
   version: "1.1.0"
@@ -10,7 +11,7 @@ metadata:
   role: specialist
   scope: implementation
   output-format: code
-  related-skills: react-native-expert, test-master, fullstack-guardian
+  related-skills: fullstack-guardian, react-native-expert, swift-expert, test-master
 ---
 
 # Flutter Expert
@@ -136,5 +137,3 @@ When implementing Flutter features, provide:
 2. Provider/Bloc definitions
 3. Route configuration if needed
 4. Test file structure
-
-[Documentation](https://jeffallan.github.io/claude-skills/skills/frontend/flutter-expert/)

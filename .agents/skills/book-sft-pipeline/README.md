@@ -1,40 +1,23 @@
 # Book SFT Pipeline
 
-A standalone skill for training language models to write in any author's style. This is a **separate plugin** from the main Context Engineering collection.
+A skill for training small language models to write in any author's style using supervised fine-tuning.
 
-## Installation
+## Overview
 
-### Claude Code
+This skill teaches AI agents how to:
+- Extract and segment text from books (ePub format)
+- Generate diverse synthetic instructions for SFT
+- Train LoRA adapters on Tinker
+- Validate style transfer with modern scenarios
 
-```bash
-# Add the marketplace first
-/plugin marketplace add muratcankoylan/Agent-Skills-for-Context-Engineering
-
-# Install the book-sft-pipeline plugin
-/plugin install book-sft-pipeline@context-engineering-marketplace
-```
-
-### Cursor / Codex / IDE
-
-Copy `SKILL.md` to your `.rules` or project skills folder.
-
-### Manual
-
-Reference the `SKILL.md` file directly in your agent's context.
-
-## What's Included
+## Structure
 
 ```
 book-sft-pipeline/
 ├── README.md                 # This file
-├── SKILL.md                  # Complete skill documentation (standalone)
+├── SKILL.md                  # Main skill documentation
 ├── examples/
-│   └── gertrude-stein/       # Complete case study with real outputs
-│       ├── README.md         # Results and analysis
-│       ├── sample_outputs.md # Raw model outputs
-│       ├── training_config.json
-│       ├── dataset_sample.jsonl
-│       └── pangram/          # AI detector screenshots
+│   └── gertrude-stein/       # Real training example with outputs
 ├── scripts/
 │   └── pipeline_example.py   # Conceptual implementation
 └── references/
@@ -43,36 +26,22 @@ book-sft-pipeline/
     └── tinker.txt
 ```
 
+## Quick Start
+
+1. Read `SKILL.md` for the complete methodology
+2. Review `examples/gertrude-stein/` for a real implementation
+3. Adapt `scripts/pipeline_example.py` for your use case
+
 ## Key Results
 
 Trained Qwen3-8B-Base on Gertrude Stein's "Three Lives" (1909):
-
-| Metric | Value |
-|--------|-------|
-| Training examples | 592 |
-| Loss reduction | 97% |
-| Pangram AI detector | 70% Human |
-| Training time | 15 minutes |
-| Total cost | $2 |
-
-## Related Context Engineering Skills
-
-This skill applies patterns from the [Agent Skills for Context Engineering](../../README.md) collection:
-
-| Skill | Application |
-|-------|-------------|
-| [project-development](../../skills/project-development/) | Staged pipeline architecture |
-| [context-compression](../../skills/context-compression/) | Segmentation strategy |
-| [multi-agent-patterns](../../skills/multi-agent-patterns/) | Orchestrator pattern |
-| [evaluation](../../skills/evaluation/) | Modern scenario testing |
-| [context-fundamentals](../../skills/context-fundamentals/) | Prompt diversity |
-
-## Resources
-
-- [Dataset on Hugging Face](https://huggingface.co/datasets/MuratcanKoylan/gertrude-stein-style-sft)
-- [Research Paper](https://arxiv.org/pdf/2510.13939) (Chakrabarty et al. 2025)
+- 592 training examples from one 86,000-word book
+- 100% Human score on Pangram AI detector
+- Verified original content generation
+- Total cost: $2
 
 ## License
 
 MIT
+
 

@@ -1,124 +1,96 @@
 ---
-name: "onboard"
-description: "/cs:onboard — Founder interview that populates ~/.claude/company-context.md. The first command to run when starting with c-level-agents."
+name: onboard
+description: "Generates a contextual onboarding document for a new contributor or agent joining the project. Summarizes project state, architecture, conventions, and current priorities relevant to the specified role or area."
+argument-hint: "[role|area]"
+user-invocable: true
+allowed-tools: Read, Glob, Grep, Write
+model: haiku
 ---
 
-# /cs:onboard — Founder Interview
+## Phase 1: Load Project Context
 
-**Command:** `/cs:onboard`
+Read CLAUDE.md for project overview and standards.
 
-The first command to run when adopting c-level-agents. A structured founder interview that produces `~/.claude/company-context.md` — the file every cs-* advisor reads before responding. Without this, the advisors are guessing.
+Read the relevant agent definition from `.claude/agents/` if a specific role is specified.
 
-## What This Produces
+---
 
-`~/.claude/company-context.md` — a single file with the durable facts about the company. Read by:
-- `cs-chief-of-staff` (routing decisions)
-- Every cs-* advisor (context for any question)
-- `/cs:brief` (assumptions in any new decision)
+## Phase 2: Scan Relevant Area
 
-## The Interview (12 Questions)
+- For programmers: scan `src/` for architecture, patterns, key files
+- For designers: scan `design/` for existing design documents
+- For narrative: scan `design/narrative/` for world-building and story docs
+- For QA: scan `tests/` for existing test coverage
+- For production: scan `production/` for current sprint and milestone
 
-### Company Basics
-1. **Company name and one-sentence pitch.**
-2. **Stage:** pre-seed / seed / Series A / Series B / Series C+ / public
-3. **Headcount:** total, by function (eng / product / GTM / ops / G&A)
-4. **Geographic distribution:** HQ + remote split, key countries
+Read recent changes (git log if available) to understand current momentum.
 
-### Business Model
-5. **Revenue model:** SaaS subscription / usage / transaction / marketplace / hardware / services
-6. **ICP:** name one real customer and describe what they have in common with others
-7. **ACV:** median and range; deal count last 12 months
-8. **Growth rate:** ARR YoY; if pre-revenue, leading metric (users, MAU, etc.)
+---
 
-### Financial Posture
-9. **Runway:** months of cash at current burn; bear-case months
-10. **Last raise:** amount, valuation, lead investor, date
-
-### Strategic Context
-11. **Top 3 priorities for the current quarter** (in plain language)
-12. **Top 3 risks the founder loses sleep over** (be specific)
-
-## Output Format
-
-Saved to `~/.claude/company-context.md`:
+## Phase 3: Generate Onboarding Document
 
 ```markdown
-# Company Context
-**Generated:** YYYY-MM-DD
-**Last updated:** YYYY-MM-DD
+# Onboarding: [Role/Area]
 
-## Identity
-- **Company:** <name>
-- **Pitch:** <one sentence>
-- **Stage:** <stage>
-- **HQ + remote:** <distribution>
+## Project Summary
+[2-3 sentence summary of what this game is and its current state]
 
-## Business
-- **Model:** <type>
-- **ICP:** <description + named customer>
-- **ACV:** $<median> (range $<low> - $<high>)
-- **Deal count (LTM):** N
-- **ARR growth (YoY):** X%
+## Your Role
+[What this role does on this project, key responsibilities, who you report to]
 
-## Financial
-- **Cash on hand:** $<amount>
-- **Net burn (monthly):** $<amount>
-- **Runway base:** N months
-- **Runway bear:** N months
-- **Last raise:** $<amount> at $<post> in <month YYYY>, led by <investor>
+## Project Architecture
+[Relevant architectural overview for this role]
 
-## Team
-- **Total headcount:** N
-- **Eng:** N | Product: N | GTM: N | Ops: N | G&A: N
+### Key Directories
+| Directory | Contents | Your Interaction |
+|-----------|----------|-----------------|
 
-## Quarter
-- **Top priorities (Q<X> YYYY):**
-  1. <priority>
-  2. <priority>
-  3. <priority>
+### Key Files
+| File | Purpose | Read Priority |
+|------|---------|--------------|
 
-- **Top risks:**
-  1. <risk>
-  2. <risk>
-  3. <risk>
+## Current Standards and Conventions
+[Summary of conventions relevant to this role from CLAUDE.md and agent definition]
 
-## Routing Hints
-[Optional: any role the founder wants to use sparingly or rely on heavily]
+## Current State of Your Area
+[What has been built, what is in progress, what is planned next]
+
+## Current Sprint Context
+[What the team is working on now and what is expected of this role]
+
+## Key Dependencies
+[What other roles/systems this role interacts with most]
+
+## Common Pitfalls
+[Things that trip up new contributors in this area]
+
+## First Tasks
+[Suggested first tasks to get oriented and productive]
+
+1. [Read these documents first]
+2. [Review this code/content]
+3. [Start with this small task]
+
+## Questions to Ask
+[Questions the new contributor should ask to get fully oriented]
 ```
-
-## Workflow
-
-1. Walk the founder through all 12 questions
-2. Quote founder's own words wherever possible (don't paraphrase the ICP)
-3. Save to `~/.claude/company-context.md`
-4. (Optional) If llm-wiki bridge is configured: symlink to vault
-   ```bash
-   ln -sf ~/company-vault/00-meta/company-context.md ~/.claude/company-context.md
-   ```
-5. Confirm with founder: read the file back, ask "anything missing?"
-
-## When to Re-Run
-
-- After a fundraise (numbers change)
-- After a major pivot or product launch
-- After 6+ months (most facts have drifted)
-- After a major hire (team distribution changes)
-- Always before a `/cs:boardroom` for a high-stakes decision
-
-## Persistence
-
-By default, `~/.claude/company-context.md` is local to the founder's machine. To make it persistent across machines / shareable:
-
-- **Markdown vault (recommended):** see [`../../references/llm-wiki-bridge.md`](../../references/llm-wiki-bridge.md)
-- **Encrypted dotfile sync:** age + git
-- **Shared team:** keep in a private repo, symlink from `~/.claude/`
-
-## Related
-
-- Skill: [`cs-onboard`](../../../skills/cs-onboard/SKILL.md) — the underlying interview protocol
-- Skill: [`context-engine`](../../../skills/context-engine/SKILL.md) — reads this file
-- Reference: [`../../references/llm-wiki-bridge.md`](../../references/llm-wiki-bridge.md)
 
 ---
 
-**Version:** 1.0.0
+## Phase 4: Save Document
+
+Present the onboarding document to the user.
+
+Ask: "May I write this to `production/onboarding/onboard-[role]-[date].md`?"
+
+If yes, write the file, creating the directory if needed.
+
+---
+
+## Phase 5: Next Steps
+
+Verdict: **COMPLETE** — onboarding document generated.
+
+- Share the onboarding doc with the new contributor before their first session.
+- Run `/sprint-status` to show the new contributor current progress.
+- Run `/help` if the contributor needs guidance on what to work on next.

@@ -1,23 +1,43 @@
 ---
 name: fal-image-edit
-description: "AI-powered image editing with style transfer and object removal"
-risk: safe
-source: "https://github.com/fal-ai-community/skills/blob/main/skills/claude.ai/fal-image-edit/SKILL.md"
-date_added: "2026-02-27"
+description: |
+  AI-powered image editing with style transfer, background removal, object removal, and inpainting via fal.ai hosted models.
+triggers:
+  - "fal image edit"
+  - "inpaint"
+  - "style transfer"
+  - "background removal"
+  - "object removal"
+od:
+  mode: image
+  category: image-generation
+  upstream: "https://github.com/fal-ai-community/skills"
 ---
 
-# Fal Image Edit
+# fal-image-edit
 
-## Overview
+> Curated from the fal.ai community team.
 
-AI-powered image editing with style transfer and object removal
+## What it does
 
-## When to Use This Skill
+AI-powered image editing with style transfer, background removal, object removal, and inpainting via fal.ai hosted models.
 
-Use this skill when you need to work with ai-powered image editing with style transfer and object removal.
+## Source
 
-## Instructions
+- Upstream: https://github.com/fal-ai-community/skills
+- Category: `image-generation`
 
-This skill provides guidance and patterns for ai-powered image editing with style transfer and object removal.
+## How to use
 
-For more information, see the [source repository](https://github.com/fal-ai-community/skills/blob/main/skills/claude.ai/fal-image-edit/SKILL.md).
+This catalogue entry advertises the skill in Open Design so the agent
+discovers it during planning. To run the full upstream workflow with
+its original assets, scripts, and references, install the upstream
+bundle into your active agent's skills directory:
+
+```bash
+# Inspect the upstream README for exact paths
+open https://github.com/fal-ai-community/skills
+```
+
+Then ask the agent to invoke this skill by name (`fal-image-edit`) or with
+one of the trigger phrases listed in this skill's frontmatter.

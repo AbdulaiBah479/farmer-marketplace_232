@@ -1,105 +1,105 @@
 ---
 name: lessons-learned
-description: Mandatory pre-flight-search reference. Contains the Seats.aero workflow (pull ALL programs first), source accuracy hierarchy, Southwest/Companion Pass specifics, small-market caveats, and Duffel limitations.
-category: reference
-summary: Hard-won knowledge from real searches. The mandatory Seats.aero workflow, Southwest specifics, Companion Pass math, source accuracy, small-market caveats, Duffel limitations. Load before any award flight search.
+description: "Analyze recent code changes via git history and extract software engineering lessons. Use when the user asks 'what is the lesson here?', 'what can I learn from this?', 'engineering takeaway', 'what did I just learn?', 'reflect on this code', or wants to extract principles from recent work."
 ---
 
 # Lessons Learned
 
-Hard-won knowledge from actual searches. Reference these before making the same mistakes.
+Extract specific, grounded software engineering lessons from actual code changes. Not a lecture -- a mirror. Show the user what their code already demonstrates.
 
-## Seats.aero: Search ALL Sources, Show ALL Results
+## Before You Begin
 
-When searching Seats.aero, **NEVER filter by source on the initial search.** Always pull ALL programs first.
+**Load the principles reference first.**
 
-### The Mandatory Workflow
+1. Read `references/se-principles.md` to have the principle catalog available
+2. Optionally read `references/anti-patterns.md` if you suspect the changes include areas for improvement
+3. Determine the scope of analysis (see Phase 1)
 
-For any route:
+**Do not proceed until you've loaded at least `se-principles.md`.**
 
-1. **Search Seats.aero with NO source filter.** Pull ALL programs. Show full results sorted by cheapest.
-2. **For EVERY program in results, trace the full reachability chain:**
-   a. Direct balance? (Check AwardWallet if connected)
-   b. Transfer path? (Check `data/transfer-partners.json` for EVERY currency: Amex MR, Chase UR, Bilt, Capital One)
-   c. Alliance chain? Identify the operating airline's alliance (`data/alliances.json`), then find ALL programs in that alliance or with bilateral partnerships (`data/partner-awards.json`), then check which of THOSE programs are reachable via transfer.
-   d. Cross-alliance? Check `data/partner-awards.json` `cross_alliance_highlights` and bilateral partners.
-3. **For reachable programs with NO cached Seats.aero data,** check the program's website directly (airfrance.com, united.com, etc.)
-4. **Present the COMPLETE picture:** every option, reachable or not, with the transfer chain spelled out.
-5. **Only THEN compare award vs cash.**
+## Phase 1: Determine Scope
 
-### Common Failure Mode
+Ask the user or infer from context what to analyze.
 
-Seeing an airline in results, checking one or two obvious programs, declaring awards "unreachable" or "bad value," and recommending cash. You MUST trace every possible chain through alliances and bilateral partnerships. If the operating airline is in an alliance, EVERY program that books that alliance is a potential path.
+| Scope | Git Commands | When to Use |
+|-------|-------------|-------------|
+| Feature branch | `git log main..HEAD --oneline` + `git diff main...HEAD` | User is on a non-main branch (default) |
+| Last N commits | `git log --oneline -N` + `git diff HEAD~N..HEAD` | User specifies a range, or on main (default N=5) |
+| Specific commit | `git show <sha>` | User references a specific commit |
+| Working changes | `git diff` + `git diff --cached` | User says "what about these changes?" before committing |
 
-### "No Cached Availability" Is Not the Final Word
+**Default behavior:**
+- If on a feature branch: analyze branch commits vs main
+- If on main: analyze the last 5 commits
+- If the user provides a different scope, use that
 
-It means Seats.aero hasn't scraped it recently. When a reachable program shows no cached results, search the airline's website directly before declaring awards dead.
+## Phase 2: Gather Changes
 
-## Never Trust Data Files Over Reality
+1. Run `git log` with the determined scope to get the commit list and messages
+2. Run `git diff` for the full diff of the scope
+3. If the diff is large (>500 lines), use `git diff --stat` first, then selectively read the top 3-5 most-changed files
+4. **Read commit messages carefully** -- they contain intent that raw diffs miss
+5. Only read changed files. Do not read the entire repo.
 
-Data files are reference material, not gospel. Airline partnerships change constantly. When a user says a booking path works that your data doesn't show, verify on the actual booking website FIRST before pushing back. The website is the source of truth. Your files are a cache. If the data file disagrees with reality, update the data file.
+## Phase 3: Analyze
 
-## Source Accuracy Hierarchy
+Identify the **dominant pattern** -- the single most instructive thing about these changes.
 
-**Duffel > Airline website > SerpAPI > Skiplagged/Kiwi**
+Look for:
+- **Structural decisions** -- How was the code organized? Why those boundaries?
+- **Trade-offs made** -- What was gained vs. sacrificed? (readability vs. performance, DRY vs. clarity, speed vs. correctness)
+- **Problems solved** -- What was the before/after? What made the "after" better?
+- **Missed opportunities** -- Where could the code improve? (present gently as "next time, consider...")
 
-1. **Duffel returns real GDS prices per fare class.** These are bookable. Tested: Duffel showed $271 basic / $325 main. SerpAPI showed $541 for the same flight. The gap was consistent across multiple itineraries.
-2. **SerpAPI (Google Flights) inflates prices.** Google Flights often shows "main cabin" or bundled fares, not the cheapest bookable fare class. Useful for Google Hotels and destination discovery, but do not trust it as the sole source for flight cash prices.
-3. **Kiwi returns garbage on small markets.** Filter hard or skip Kiwi for domestic routes to small airports.
+Map findings to specific principles from `references/se-principles.md`. Be specific -- quote actual code, reference actual file names and line changes.
 
-## Southwest Is Special
+## Phase 4: Present the Lesson
 
-1. **Southwest is NOT in any GDS.** Duffel, Skiplagged, Kiwi, and Seats.aero will never return SW flights. The only sources are: the Southwest website directly or user-provided screenshots.
-2. **SerpAPI does return SW prices** but they're often inflated like all SerpAPI flight prices. Treat as directional only.
-3. **SW Companion Pass math is different from everything else.** With CP, you buy ONE ticket and the companion flies free. The cash comparison is the Choice fare for one ticket (not two Basic fares). Points comparison: total points covers both travelers. This changes cpp calculations significantly.
-4. **Cash SW flights require Choice fare (or higher) for the companion to fly free.** Wanna Get Away (Basic) does NOT qualify. Critical detail.
-5. **SW points pricing must come from southwest.com.** No third-party source has it.
+Use this template:
 
-## Companion Pass CPP Math
+```markdown
+## Lesson: [Principle Name]
 
-The correct formula when Companion Pass is in play:
+**What happened in the code:**
+[2-3 sentences describing the specific change, referencing files and commits]
 
+**The principle at work:**
+[1-2 sentences explaining the SE principle]
+
+**Why it matters:**
+[1-2 sentences on the practical consequence -- what would go wrong without this, or what goes right because of it]
+
+**Takeaway for next time:**
+[One concrete, actionable sentence the user can apply to future work]
 ```
-Total cash value = choice_fare_cash × 2 passengers
-CPP = total_cash_value / total_points × 100
+
+If there is a second lesson worth noting (maximum 2 additional):
+
+```markdown
+---
+
+### Also worth noting: [Principle Name]
+
+**In the code:** [1 sentence]
+**The principle:** [1 sentence]
+**Takeaway:** [1 sentence]
 ```
 
-One ticket's worth of points buys travel for two people. Always frame it as "points bought $X of travel for 2 people."
+## What NOT to Do
 
-## Small Market Airports
+| Avoid | Why | Instead |
+|-------|-----|---------|
+| Listing every principle that vaguely applies | Overwhelming and generic | Pick the 1-2 most relevant |
+| Analyzing files that were not changed | Scope creep | Stick to the diff |
+| Ignoring commit messages | They contain intent that diffs miss | Read them as primary context |
+| Abstract advice disconnected from the code | Not actionable | Always reference specific files/lines |
+| Negative-only feedback | Demoralizing | Lead with what works, then suggest improvements |
+| More than 3 lessons | Dilutes the insight | One well-grounded lesson beats seven vague ones |
 
-Small airports have limited award availability. Seats.aero cached data will be sparse. When searching small markets:
+## Conversation Style
 
-1. **Duffel for cash prices** (works fine, GDS has the inventory)
-2. **Don't bother with Seats.aero cached search** (data too sparse)
-3. **Check airline-specific award pricing** via the program's website if needed
-4. **SW Companion Pass often wins** on small domestic markets because the points cost is low and CP doubles the value
-
-## Layover and Time Preferences
-
-Ask the user for their preferences on the first search. Key questions:
-
-- Minimum and maximum layover time
-- Earliest acceptable departure time
-- Red-eye tolerance
-- Lounge access (changes how long layovers feel)
-
-Store their answers and apply to all subsequent searches in the session.
-
-## Duffel Limitations
-
-- **No Southwest.** SW is not in any GDS. Period.
-- **No award pricing.** Duffel shows cash fares only. Use Seats.aero for award availability.
-- **Offers expire in 15-30 minutes.** Don't cache Duffel results across sessions.
-- **60 requests per 60 seconds rate limit.** Parallel searches are fine but don't go crazy.
-- **Returns multiple fare classes for the same flight.** This is a feature. You'll see basic economy at one price and main cabin at another for the same routing. Use the cheapest bookable class for cpp comparison unless the user specifies a fare preference.
-
-## Related Reference Skills (Load When Relevant)
-
-These are not required for every search but should be loaded when the conversation context suggests them:
-
-- **`transfer-bonuses`** — Load before recommending any credit card → loyalty program transfer. Live weekly data on currently active bonuses (e.g., Amex MR → Hilton 20%, Chase UR → Aeroplan 20% with stackable cardholder bonus). A 30% bonus changes which currency is cheapest in the transfer-partners optimization.
-- **`stopovers`** — Load when the trip has a layover near 24h, or when the user wants to "stop in X on the way." 17 programs documented with primary citations: Aeroplan (1 stopover, 5K surcharge), TAP (1 on partner awards), Turkish (free Istanbul stopover), Etihad (Abu Dhabi), Icelandair (Reykjavík free up to 7 days, the legendary one), Alaska (free, phone only), Flying Blue (free, possibly unlimited), JAL multi-carrier (up to 3), Singapore Saver/Advantage tiers, AF/KLM, Cathay (2+2). Also documents which programs DO NOT allow stopovers (BA Avios, AA AAdvantage, Delta SkyMiles, JetBlue, Virgin Atlantic, Iberia Avios) — that's a critical negative finding.
-- **`award-holds`** — Load before any "transfer points first" recommendation. Hold landscape per current data: AA allows 24h self-service hold online (the only program with online holds; the previous 5-day version was discontinued in late 2024). Virgin Atlantic Flying Club holds 1-2 days by phone, free. Flying Blue holds up to 3 days by phone with a $25 phone-booking fee at ticketing. Lufthansa M&M up to 5 days. Cathay ~2 days. Singapore agent-discretionary. The major Western programs that DO NOT allow holds: United, Alaska, Delta, BA, Aeroplan. Always check the data file rather than relying on this one-line summary.
-- **`round-the-world`** — Load when the trip implies 3+ stops or multiple regions. 13 active + 4 discontinued products documented. The RTW universe is collapsing (4 killed in last 18 months), but Star Alliance + oneworld + Lufthansa M&M + Qantas remain solid. Special Business RTW at 26,000 miles is the steal. Includes Iberia Plus intra-Europe sweet spots and Aeroplan distance-based regional awards.
-- **`status-match`** — Load when the user asks about elite status shortcuts, status match, status challenge, "switching loyalty programs," or mentions a once-in-a-while opportunity (Hyatt Globalist Challenge, Marriott Platinum Challenge). Critical lifetime/once-per-N-years warnings: Alaska Atmos = once per lifetime, AA = once every 2 years, Delta/United = once every 3 years, Hyatt Globalist Challenge = once per lifetime. The skill distinguishes free direct matches from paid concierge (statusmatch.com is real but charges fees) from card-granted renewable status (Amex Platinum = Hilton Gold + Marriott Gold automatic).
+- **Reflective, not prescriptive.** Use the user's own code as primary evidence.
+- **Never say "you should have..."** -- instead use "the approach here shows..." or "next time you face this, consider..."
+- **If the code is good, say so.** Not every lesson is about what went wrong. Recognizing good patterns reinforces them.
+- **If the changes are trivial** (a single config tweak, a typo fix), say so honestly rather than forcing a lesson. "These changes are straightforward -- no deep lesson here, just good housekeeping."
+- **Be specific.** Generic advice is worthless. Every claim must point to a concrete code change.

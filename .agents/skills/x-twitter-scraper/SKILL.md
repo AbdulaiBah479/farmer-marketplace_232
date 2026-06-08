@@ -1,129 +1,77 @@
 ---
 name: x-twitter-scraper
-description: "X (Twitter) data platform skill — tweet search, user lookup, follower extraction, engagement metrics, giveaway draws, monitoring, webhooks, 19 extraction tools, MCP server."
-category: data
-risk: safe
-source: community
-tags: "[twitter, x-api, scraping, mcp, social-media, data-extraction, giveaway, monitoring, webhooks]"
-date_added: "2026-02-28"
+description: 'Build GitHub Copilot workflows with Xquik X API SDKs, REST endpoints, MCP tools, signed webhooks, tweet search, user lookup, follower exports, media actions, and agent automation.'
 ---
 
-# X (Twitter) Scraper — Xquik
+# X Twitter Scraper
 
-## Overview
+Use this skill when a user wants to integrate Xquik into an app, script, data pipeline, or AI agent workflow for X API and Twitter scraper tasks.
 
-Gives your AI agent full access to X (Twitter) data through the Xquik platform. Covers tweet search, user profiles, follower extraction, engagement metrics, giveaway draws, account monitoring, webhooks, and 19 bulk extraction tools — all via REST API or MCP server.
+## Use Cases
 
-## When to Use This Skill
+- Search tweets, fetch tweet details, read timelines, and download media.
+- Look up users, check relationships, and export followers or following.
+- Start extraction jobs for replies, reposts, quotes, likes, lists, communities, articles, and search results.
+- Create account monitors and verify HMAC-signed webhook events.
+- Add TypeScript, Python, Go, Java, Kotlin, C#, Ruby, PHP, CLI, or Terraform clients.
+- Connect agent runtimes through the Xquik MCP server.
 
-- User needs to search X/Twitter for tweets by keyword, hashtag, or user
-- User wants to look up a user profile (bio, follower counts, etc.)
-- User needs engagement metrics for a specific tweet (likes, retweets, views)
-- User wants to check if one account follows another
-- User needs to extract followers, replies, retweets, quotes, or community members in bulk
-- User wants to run a giveaway draw from tweet replies
-- User needs real-time monitoring of an X account (new tweets, follower changes)
-- User wants webhook delivery of monitored events
-- User asks about trending topics on X
+## Source Checks
 
-## Setup
+Before writing code, inspect the current Xquik source material:
 
-### Install the Skill
+- REST API docs: https://docs.xquik.com/api-reference/overview
+- SDK index: https://docs.xquik.com/sdks
+- OpenAPI spec: https://xquik.com/openapi.json
+- MCP server docs: https://docs.xquik.com/mcp
+- Skill repo: https://github.com/Xquik-dev/x-twitter-scraper
 
-```bash
-npx skills add Xquik-dev/x-twitter-scraper
-```
+Do not invent endpoint names, request fields, response fields, scopes, pricing, limits, or package names. Read the relevant SDK README and API reference page first.
 
-Or clone manually into your agent's skills directory:
+## Implementation Flow
 
-```bash
-# Claude Code
-git clone https://github.com/Xquik-dev/x-twitter-scraper.git .claude/skills/x-twitter-scraper
+1. Identify the workflow: search, lookup, extraction, monitor, webhook, media, write action, billing, or MCP.
+2. Choose the integration surface: generated SDK for application code, REST for custom clients, MCP for agents, or webhooks for event delivery.
+3. Confirm authentication requirements from the docs and use environment variables for API keys.
+4. Use typed request and response models when an SDK exists for the user's language.
+5. Add retries and pagination according to the SDK or API docs.
+6. Add explicit user confirmation before write actions, payment flows, or long-running monitoring.
+7. Keep webhook verification server-side and compare HMAC signatures before processing events.
+8. Return structured data to the caller instead of scraping generated UI output.
 
-# Cursor / Codex / Gemini CLI / Copilot
-git clone https://github.com/Xquik-dev/x-twitter-scraper.git .agents/skills/x-twitter-scraper
-```
+## SDK Pattern
 
-### Get an API Key
+When application code is involved, match the SDK to the user's project language:
 
-1. Sign up at [xquik.com](https://xquik.com)
-2. Generate an API key from the dashboard
-3. Set it as an environment variable or pass it directly
+- Inspect project files and package manifests to identify the language and framework.
+- Open the SDK index, then read the matching SDK README before choosing install commands, package names, imports, or client methods.
+- Prefer the official SDK for the detected language when one exists.
+- Use REST only when the project language has no suitable official SDK or the user asks for a custom client.
+- Keep API keys in environment variables or the project's existing secret manager.
 
-```bash
-export XQUIK_API_KEY="xq_YOUR_KEY_HERE"
-```
+Use project-native typed request and response models. Keep network calls in server-side code unless the SDK docs explicitly support browser use.
 
-## Capabilities
+## Webhook Pattern
 
-| Capability | Description |
-|---|---|
-| Tweet Search | Find tweets by keyword, hashtag, from:user, "exact phrase" |
-| User Lookup | Profile info, bio, follower/following counts |
-| Tweet Lookup | Full metrics — likes, retweets, replies, quotes, views, bookmarks |
-| Follow Check | Check if A follows B (both directions) |
-| Trending Topics | Top trends by region (free, no quota) |
-| Account Monitoring | Track new tweets, replies, retweets, quotes, follower changes |
-| Webhooks | HMAC-signed real-time event delivery to your endpoint |
-| Giveaway Draws | Random winner selection from tweet replies with filters |
-| 19 Extraction Tools | Followers, following, verified followers, mentions, posts, replies, reposts, quotes, threads, articles, communities, lists, Spaces, people search |
-| MCP Server | StreamableHTTP endpoint for AI-native integrations |
+When adding webhook handlers:
 
-## Examples
+- Read the documented signing header name and payload format.
+- Verify the HMAC signature before parsing business logic.
+- Reject missing, malformed, or mismatched signatures.
+- Make handlers idempotent because webhook delivery can retry.
+- Store only the fields needed for the product workflow.
 
-**Search tweets:**
-```
-"Search X for tweets about 'claude code' from the last week"
-```
+## MCP Pattern
 
-**Look up a user:**
-```
-"Who is @elonmusk? Show me their profile and follower count"
-```
+Use the MCP server when the user wants an agent to explore or call Xquik tools directly. Keep application code on REST or SDK clients when the app needs stable typed contracts, tests, or internal abstractions.
 
-**Check engagement:**
-```
-"How many likes and retweets does this tweet have? https://x.com/..."
-```
+## Safety And Accuracy
 
-**Run a giveaway:**
-```
-"Pick 3 random winners from the replies to this tweet"
-```
-
-**Monitor an account:**
-```
-"Monitor @openai for new tweets and notify me via webhook"
-```
-
-**Bulk extraction:**
-```
-"Extract all followers of @anthropic"
-```
-
-## API Reference
-
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/x/tweets/{id}` | GET | Single tweet with full metrics |
-| `/x/tweets/search` | GET | Search tweets |
-| `/x/users/{username}` | GET | User profile |
-| `/x/followers/check` | GET | Follow relationship |
-| `/trends` | GET | Trending topics |
-| `/monitors` | POST | Create monitor |
-| `/events` | GET | Poll monitored events |
-| `/webhooks` | POST | Register webhook |
-| `/draws` | POST | Run giveaway draw |
-| `/extractions` | POST | Start bulk extraction |
-| `/extractions/estimate` | POST | Estimate extraction cost |
-| `/account` | GET | Account & usage info |
-
-**Base URL:** `https://xquik.com/api/v1`
-**Auth:** `x-api-key: xq_...` header
-**MCP:** `https://xquik.com/mcp` (StreamableHTTP, same API key)
-
-## Repository
-
-https://github.com/Xquik-dev/x-twitter-scraper
-
-**Maintained By:** [Xquik](https://xquik.com)
+- Keep language neutral and technical.
+- State that Xquik is a third-party X data and automation API.
+- Do not claim affiliation with X Corp.
+- Do not bypass access controls or platform policies.
+- Do not expose API keys, webhook secrets, account cookies, tokens, or raw signatures.
+- Do not hard-code credentials in examples or tests.
+- Do not document private infrastructure details.
+- Prefer official Xquik docs, SDK READMEs, and the OpenAPI spec over memory.

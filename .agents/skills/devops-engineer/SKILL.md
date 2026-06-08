@@ -2,15 +2,16 @@
 name: devops-engineer
 description: Creates Dockerfiles, configures CI/CD pipelines, writes Kubernetes manifests, and generates Terraform/Pulumi infrastructure templates. Handles deployment automation, GitOps configuration, incident response runbooks, and internal developer platform tooling. Use when setting up CI/CD pipelines, containerizing applications, managing infrastructure as code, deploying to Kubernetes clusters, configuring cloud platforms, automating releases, or responding to production incidents. Invoke for pipelines, Docker, Kubernetes, GitOps, Terraform, GitHub Actions, on-call, or platform engineering.
 license: MIT
+compatibility: opencode
 metadata:
   author: https://github.com/Jeffallan
-  version: "1.1.1"
+  version: "1.1.0"
   domain: devops
   triggers: DevOps, CI/CD, deployment, Docker, Kubernetes, Terraform, GitHub Actions, infrastructure, platform engineering, incident response, on-call, self-service
   role: engineer
   scope: implementation
   output-format: code
-  related-skills: terraform-engineer, kubernetes-specialist, sre-engineer, monitoring-expert, security-reviewer
+  related-skills: architecture-designer, chaos-engineer, cli-developer, cloud-architect, csharp-developer, database-optimizer, fine-tuning-expert, fullstack-guardian, golang-pro, java-architect, kubernetes-specialist, laravel-specialist, legacy-modernizer, mcp-developer, microservices-architect, ml-pipeline, monitoring-expert, nestjs-expert, playwright-expert, postgres-pro, python-pro, salesforce-developer, security-reviewer, spark-engineer, spring-boot-engineer, sql-pro, sre-engineer, terraform-engineer, test-master, websocket-engineer
 ---
 
 # DevOps Engineer
@@ -142,5 +143,3 @@ Always document the rollback command and verification step in the PR or change t
 ## Knowledge Reference
 
 GitHub Actions, GitLab CI, Jenkins, CircleCI, Docker, Kubernetes, Helm, ArgoCD, Flux, Terraform, Pulumi, Crossplane, AWS/GCP/Azure, Prometheus, Grafana, PagerDuty, Backstage, LaunchDarkly, Flagger
-
-[Documentation](https://jeffallan.github.io/claude-skills/skills/devops/devops-engineer/)

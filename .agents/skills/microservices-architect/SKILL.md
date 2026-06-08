@@ -2,6 +2,7 @@
 name: microservices-architect
 description: Designs distributed system architectures, decomposes monoliths into bounded-context services, recommends communication patterns, and produces service boundary diagrams and resilience strategies. Use when designing distributed systems, decomposing monoliths, or implementing microservices patterns — including service boundaries, DDD, saga patterns, event sourcing, CQRS, service mesh, or distributed tracing.
 license: MIT
+compatibility: opencode
 metadata:
   author: https://github.com/Jeffallan
   version: "1.1.0"
@@ -10,7 +11,7 @@ metadata:
   role: architect
   scope: system-design
   output-format: architecture
-  related-skills: devops-engineer, kubernetes-specialist, graphql-architect, architecture-designer, monitoring-expert
+  related-skills: architecture-designer, cloud-architect, devops-engineer, dotnet-core-expert, golang-pro, graphql-architect, kubernetes-specialist, monitoring-expert, spring-boot-engineer
 ---
 
 # Microservices Architect
@@ -162,5 +163,3 @@ When designing microservices architecture, provide:
 ## Knowledge Reference
 
 Domain-driven design, bounded contexts, event storming, REST/gRPC, message queues (Kafka, RabbitMQ), service mesh (Istio, Linkerd), Kubernetes, circuit breakers, saga patterns, event sourcing, CQRS, distributed tracing (Jaeger, Zipkin), API gateways, eventual consistency, CAP theorem
-
-[Documentation](https://jeffallan.github.io/claude-skills/skills/api-architecture/microservices-architect/)

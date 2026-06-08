@@ -1,227 +1,187 @@
 ---
 name: using-git-worktrees
-description: Use when starting feature work that needs isolation from current workspace or before executing implementation plans - creates isolated git worktrees with smart directory selection and safety verification
+description: Git worktree management with tmux integration and task dispatch. Use when creating isolated dev environments, launching parallel feature work, running multiple Claude instances, managing worktrees, dispatching tasks to worktree terminals, or cleaning up after merge. Covers worktree creation in .claude/worktrees/, tmux window management in the current session, and command dispatch. Also use when someone says "create a worktree", "launch in a worktree", "worktree for story X", or "parallel development".
 ---
-<!--
-Adapted from obra/superpowers using-git-worktrees skill (v5.0.7),
-MIT-licensed, copyright 2025 Jesse Vincent. Modifications copyright 2026 Joe Amditis.
-v0.5.0 ports as a consumer category — no research phase per the v0.2.0
-architecture, since git worktree setup is a mechanical workspace utility, not
-a strategic decision; the strategic decisions belong to the skill that
-invokes this one.
-See CREDITS.md.
--->
 
-# Using Git Worktrees
+# Git Worktrees with tmux Integration
 
-## Overview
+Create isolated workspaces, open them in tmux windows within your current session, and dispatch tasks — all in one flow.
 
-Git worktrees create isolated workspaces sharing the same repository, allowing work on multiple branches simultaneously without switching.
+## Core Flow
 
-**Core principle:** Systematic directory selection + safety verification = reliable isolation.
+```
+1. Create worktree     → git worktree add .claude/worktrees/{name} -b {branch}
+2. Create tmux window  → new window in CURRENT session named {session}-{name}
+3. cd into worktree    → send-keys to the new window
+4. Dispatch task       → send-keys with the command to execute
+```
 
-**Announce at start:** "I'm using the using-git-worktrees skill to set up an isolated workspace."
+## Workflow Routing
 
-## Directory Selection Process
+| Intent | Action |
+|--------|--------|
+| "create worktree for X" | Create → steps 1-3 only |
+| "create worktree and run Y" | Create + Dispatch → steps 1-4 |
+| "clean up worktree X" | Cleanup → remove worktree + tmux window + optionally delete branch |
+| "list worktrees" | Show `git worktree list` |
+| "analyze for parallelization" | Read `references/bmad-orchestration.md` for BMAD-specific dependency analysis |
+| "merge worktree branches" | Read `references/bmad-orchestration.md` for merge workflow |
 
-Follow this priority order:
+## Step 1: Create Worktree
 
-### 1. Check Existing Directories
+### Safety Check
+
+Before creating, verify `.claude/worktrees/` is git-ignored:
 
 ```bash
-# Check in priority order
-ls -d .worktrees 2>/dev/null     # Preferred (hidden)
-ls -d worktrees 2>/dev/null      # Alternative
+# Check if ignored (test with a hypothetical file)
+git check-ignore .claude/worktrees/test 2>/dev/null
 ```
 
-**If found:** Use that directory. If both exist, `.worktrees` wins.
-
-### 2. Check CLAUDE.md
+If NOT ignored, add to `.gitignore` immediately:
 
 ```bash
-grep -i "worktree.*director" CLAUDE.md 2>/dev/null
+echo ".claude/worktrees/" >> .gitignore
+# Stage and commit the gitignore change
 ```
 
-**If preference specified:** Use it without asking.
-
-### 3. Ask User
-
-If no directory exists and no CLAUDE.md preference:
-
-```
-No worktree directory found. Where should I create worktrees?
-
-1. .worktrees/ (project-local, hidden)
-2. ~/.config/superpowers/worktrees/<project-name>/ (global location)
-
-Which would you prefer?
-```
-
-## Safety Verification
-
-### For Project-Local Directories (.worktrees or worktrees)
-
-**MUST verify directory is ignored before creating worktree:**
+### Create
 
 ```bash
-# Check if directory is ignored (respects local, global, and system gitignore)
-git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/dev/null
+REPO_ROOT=$(git rev-parse --show-toplevel)
+WORKTREE_NAME="the-feature-name"
+BRANCH_NAME="feature/the-feature-name"  # or bmad/story-1-3 etc.
+BASE_BRANCH="main"  # or current branch
+
+mkdir -p "$REPO_ROOT/.claude/worktrees"
+git worktree add "$REPO_ROOT/.claude/worktrees/$WORKTREE_NAME" -b "$BRANCH_NAME" "$BASE_BRANCH"
 ```
 
-**If NOT ignored:**
-
-Per Jesse's rule "Fix broken things immediately":
-1. Add appropriate line to .gitignore
-2. Commit the change
-3. Proceed with worktree creation
-
-**Why critical:** Prevents accidentally committing worktree contents to repository.
-
-### For Global Directory (~/.config/superpowers/worktrees)
-
-No .gitignore verification needed - outside project entirely.
-
-## Creation Steps
-
-### 1. Detect Project Name
+### Verify
 
 ```bash
-project=$(basename "$(git rev-parse --show-toplevel)")
+git worktree list
 ```
 
-### 2. Create Worktree
+## Step 2: Create tmux Window
+
+Create a new window in the **current tmux session** (not a new session). The window name follows the pattern `{current-session-name}-{worktree-name}` so it's easy to identify.
 
 ```bash
-# Determine full path
-case $LOCATION in
-  .worktrees|worktrees)
-    path="$LOCATION/$BRANCH_NAME"
-    ;;
-  ~/.config/superpowers/worktrees/*)
-    path="~/.config/superpowers/worktrees/$project/$BRANCH_NAME"
-    ;;
-esac
+# Get current tmux session name
+SESSION=$(tmux display-message -p '#S')
+WINDOW_NAME="${SESSION}-${WORKTREE_NAME}"
+WORKTREE_PATH="$REPO_ROOT/.claude/worktrees/$WORKTREE_NAME"
 
-# Create worktree with new branch
-git worktree add "$path" -b "$BRANCH_NAME"
-cd "$path"
+# Create window in current session, starting in worktree directory
+tmux new-window -t "$SESSION" -n "$WINDOW_NAME" -c "$WORKTREE_PATH"
 ```
 
-### 3. Run Project Setup
+## Step 3: Ensure Working Directory
 
-Auto-detect and run appropriate setup:
+The `-c` flag in step 2 already sets the initial directory, but if you need to explicitly cd (e.g., shell profile overrides it):
 
 ```bash
-# Node.js
-if [ -f package.json ]; then npm install; fi
-
-# Rust
-if [ -f Cargo.toml ]; then cargo build; fi
-
-# Python
-if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-if [ -f pyproject.toml ]; then poetry install; fi
-
-# Go
-if [ -f go.mod ]; then go mod download; fi
+tmux send-keys -t "${SESSION}:${WINDOW_NAME}" "cd '$WORKTREE_PATH'" Enter
 ```
 
-### 4. Verify Clean Baseline
+## Step 4: Dispatch Task (Optional)
 
-Run tests to ensure worktree starts clean:
+Send a command to the new tmux window:
 
 ```bash
-# Examples - use project-appropriate command
-npm test
-cargo test
-pytest
-go test ./...
+# Example: launch Claude Code with a task
+tmux send-keys -t "${SESSION}:${WINDOW_NAME}" "claude 'your task here'" Enter
+
+# Example: run a BMAD skill
+tmux send-keys -t "${SESSION}:${WINDOW_NAME}" "claude '/bmad-create-story story 1-3'" Enter
+
+# Example: run any shell command
+tmux send-keys -t "${SESSION}:${WINDOW_NAME}" "make test" Enter
 ```
 
-**If tests fail:** Report failures, ask whether to proceed or investigate.
-
-**If tests pass:** Report ready.
-
-### 5. Report Location
-
+For unattended execution (no permission prompts):
+```bash
+tmux send-keys -t "${SESSION}:${WINDOW_NAME}" "claude --dangerously-skip-permissions 'your task'" Enter
 ```
-Worktree ready at <full-path>
-Tests passing (<N> tests, 0 failures)
-Ready to implement <feature-name>
+
+**Important:** Only use `--dangerously-skip-permissions` if the user explicitly requests it.
+
+## Cleanup Workflow
+
+After work is complete and merged:
+
+```bash
+WORKTREE_NAME="the-feature-name"
+REPO_ROOT=$(git rev-parse --show-toplevel)
+SESSION=$(tmux display-message -p '#S')
+
+# 1. Kill the tmux window
+tmux kill-window -t "${SESSION}:${SESSION}-${WORKTREE_NAME}" 2>/dev/null
+
+# 2. Remove the git worktree
+git worktree remove "$REPO_ROOT/.claude/worktrees/$WORKTREE_NAME"
+
+# 3. Optionally delete the branch (only if merged)
+git branch -d "$BRANCH_NAME" 2>/dev/null
+
+# 4. Prune stale worktree references
+git worktree prune
 ```
 
 ## Quick Reference
 
 | Situation | Action |
 |-----------|--------|
-| `.worktrees/` exists | Use it (verify ignored) |
-| `worktrees/` exists | Use it (verify ignored) |
-| Both exist | Use `.worktrees/` |
-| Neither exists | Check CLAUDE.md → Ask user |
-| Directory not ignored | Add to .gitignore + commit |
-| Tests fail during baseline | Report failures + ask |
-| No package.json/Cargo.toml | Skip dependency install |
+| `.claude/worktrees/` exists | Use it (verify ignored) |
+| Not in `.gitignore` | Add `.claude/worktrees/` and commit |
+| Not in tmux | Skip tmux steps, just create worktree and report path |
+| Branch already exists | Use `git worktree add <path> <existing-branch>` (no `-b`) |
+| Worktree path exists | Report error, ask user to remove or pick different name |
 
-## Common Mistakes
+## Naming Conventions
 
-### Skipping ignore verification
+| Element | Pattern | Example |
+|---------|---------|---------|
+| Worktree directory | `.claude/worktrees/{name}` | `.claude/worktrees/story-1-3` |
+| Branch | `{convention}/{name}` | `bmad/story-1-3-deploy-nat-gateway` |
+| tmux window | `{session}-{name}` | `hypera-golden-image-story-1-3` |
 
-- **Problem:** Worktree contents get tracked, pollute git status
-- **Fix:** Always use `git check-ignore` before creating project-local worktree
+The branch naming convention depends on the project. Check CLAUDE.md for project-specific patterns (e.g., `bmad/story-{id}` for BMAD projects).
 
-### Assuming directory location
+## Troubleshooting
 
-- **Problem:** Creates inconsistency, violates project conventions
-- **Fix:** Follow priority: existing > CLAUDE.md > ask
-
-### Proceeding with failing tests
-
-- **Problem:** Can't distinguish new bugs from pre-existing issues
-- **Fix:** Report failures, get explicit permission to proceed
-
-### Hardcoding setup commands
-
-- **Problem:** Breaks on projects using different tools
-- **Fix:** Auto-detect from project files (package.json, etc.)
-
-## Example Workflow
-
-```
-You: I'm using the using-git-worktrees skill to set up an isolated workspace.
-
-[Check .worktrees/ - exists]
-[Verify ignored - git check-ignore confirms .worktrees/ is ignored]
-[Create worktree: git worktree add .worktrees/auth -b feature/auth]
-[Run npm install]
-[Run npm test - 47 passing]
-
-Worktree ready at /Users/jesse/myproject/.worktrees/auth
-Tests passing (47 tests, 0 failures)
-Ready to implement auth feature
+**Branch already checked out:**
+```bash
+# Another worktree has this branch — remove it first or use a different name
+git worktree list  # find which worktree has the branch
 ```
 
-## Red Flags
+**tmux window name conflict:**
+```bash
+# Rename or kill the conflicting window
+tmux kill-window -t "session:conflicting-name" 2>/dev/null
+```
 
-**Never:**
-- Create worktree without verifying it's ignored (project-local)
-- Skip baseline test verification
-- Proceed with failing tests without asking
-- Assume directory location when ambiguous
-- Skip CLAUDE.md check
+**Worktree not in .gitignore after adding:**
+```bash
+# .gitignore uses directory patterns — ensure trailing slash
+# Check with: git check-ignore .claude/worktrees/testfile
+```
 
-**Always:**
-- Follow directory priority: existing > CLAUDE.md > ask
-- Verify directory is ignored for project-local
-- Auto-detect and run project setup
-- Verify clean test baseline
+## References
 
-## Integration
+- [WORKFLOW.md](WORKFLOW.md) — Detailed step-by-step workflow with edge cases
+- [references/bmad-orchestration.md](references/bmad-orchestration.md) — BMAD sprint parallelization, dependency analysis, and merge workflows
+- [references/tmux-integration.md](references/tmux-integration.md) — Advanced tmux configuration for worktrees
+- [scripts/setup-worktree.sh](scripts/setup-worktree.sh) — Shell script for automated worktree setup
 
-**Called by:**
-- **brainstorming** (Phase 4) - REQUIRED when design is approved and implementation follows
-- **subagent-driven-development** - REQUIRED before executing any tasks
-- **executing-plans** - REQUIRED before executing any tasks
-- Any skill needing isolated workspace
+---
 
-**Pairs with:**
-- **finishing-a-development-branch** - REQUIRED for cleanup after work complete
+## Gotchas
+
+- **`.claude/worktrees/` conflicts with `.gitignore` defaults** — must explicitly ignore it or the parent repo sees worktree files as untracked.
+- **tmux session names with worktree paths hit filename length limits** — use short branch-based names or the socket path errors.
+- **Concurrent `git status` across worktrees can fail with index.lock errors** — git locks the index per-repo, not per-worktree.
+- **BMAD-specific parallel work assumes disjoint files**: overlapping edits across stories cause merge headaches at integration.
+- **Shell prompts that read git branch via the worktree path can be slow** — disable expensive prompt parts in worktrees.

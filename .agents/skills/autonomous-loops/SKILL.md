@@ -235,7 +235,9 @@ Don't rely on agents to self-differentiate. The orchestrator **assigns** each ag
 
 ### Installation
 
-> **Warning:** Install continuous-claude from its repository after reviewing the code. Do not pipe external scripts directly to bash.
+```bash
+curl -fsSL https://raw.githubusercontent.com/AnandChowdhary/continuous-claude/HEAD/install.sh | bash
+```
 
 ### Usage
 

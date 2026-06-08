@@ -1,271 +1,531 @@
 ---
 name: pyroscope
-license: Apache-2.0
-description: >
-  Grafana Pyroscope continuous profiling platform. Covers instrumentation of Go/Java/Python/Ruby/Node.js/
-  .NET/Rust apps via SDKs or eBPF (Alloy), flame graph analysis, ProfileQL queries, server configuration
-  and architecture, Grafana Cloud Profiles integration, and trace-profile linking (Span Profiles).
-  Use when working with profiling data, instrumenting apps for Pyroscope, analyzing performance profiles,
-  or deploying Pyroscope server.
+description: >-
+  Guide for Grafana Pyroscope continuous profiling. Use for Kubernetes Helm
+  deployment, Go/Java/Python/.NET/Ruby/Node.js profiling, storage backends,
+  trace-to-profile linking, and troubleshooting.
 ---
 
-# Grafana Pyroscope - Continuous Profiling
+# Grafana Pyroscope Skill
 
-> **Docs**: https://grafana.com/docs/pyroscope/latest/
+Comprehensive guide for Grafana Pyroscope - the open-source continuous
+profiling platform for analyzing application performance at the code level.
 
-Continuous profiling aggregation system — understand resource usage down to source code line numbers.
+## What is Pyroscope?
 
-## Instrumentation Methods
+Pyroscope is a **horizontally-scalable, highly-available, multi-tenant
+continuous profiling system** that:
 
-Three ways to send profiles to Pyroscope:
+- **Collects profiling data continuously** with minimal overhead (~2-5% CPU)
+- **Provides code-level visibility** with source-line granularity
+- **Stores compressed profiles** in object storage (S3, GCS, Azure Blob)
+- **Integrates with Grafana** for correlating profiles with metrics, logs, and traces
+- **Supports multiple languages** - Go, Java, Python, .NET, Ruby, Node.js, Rust
 
-1. **Grafana Alloy (preferred)**: eBPF auto-instrumentation, no code changes
-2. **SDK**: Push profiles directly from your application
-3. **SDK → Alloy**: SDK sends to Alloy's `pyroscope.receive_http`, Alloy forwards to Pyroscope
+## Architecture Overview
 
-## SDK Examples
+### Core Components
 
-### Python
+| Component | Purpose |
+|-----------|---------|
+| **Distributor** | Validates and routes incoming profiles to ingesters |
+| **Ingester** | Buffers profiles in memory, compresses and writes to storage |
+| **Querier** | Retrieves and processes profile data for analysis |
+| **Query Frontend** | Handles query requests, caching, and scheduling |
+| **Query Scheduler** | Manages per-tenant query queues |
+| **Store Gateway** | Provides access to long-term profile storage |
+| **Compactor** | Merges blocks, manages retention, handles deletion |
+
+### Data Flow
+
+**Write Path:**
+
+```text
+SDK/Alloy → Distributor → Ingester → Object Storage
+                                   ↓
+                             Blocks + Indexes
+```
+
+**Read Path:**
+
+```text
+Query → Query Frontend → Query Scheduler → Querier
+                                             ↓
+                                    Ingesters + Store Gateway
+```
+
+## Deployment Modes
+
+### 1. Monolithic Mode (`-target=all`)
+
+- All components in single process
+- Best for: Development, small-scale deployments
+- Query URL: `http://pyroscope:4040/`
+
+### 2. Microservices Mode (Production)
+
+- Each component runs independently
+- Horizontally scalable
+- Query URL: `http://pyroscope-querier:4040/`
+
+```yaml
+# Microservices deployment
+architecture:
+  microservices:
+    enabled: true
+
+querier:
+  replicas: 3
+distributor:
+  replicas: 2
+ingester:
+  replicas: 3
+compactor:
+  replicas: 3
+storeGateway:
+  replicas: 3
+```
+
+## Quick Start - Kubernetes Helm
+
+### Add Repository
 
 ```bash
-pip install pyroscope-io==1.0.11
+helm repo add grafana https://grafana.github.io/helm-charts
+helm repo update
 ```
 
-```python
-import pyroscope, os
+### Install Single Binary
 
-pyroscope.configure(
-    application_name = "my.python.app",
-    server_address   = "http://pyroscope:4040",
-    sample_rate      = 100,
-    oncpu            = True,
-    tags             = {"region": os.getenv("REGION"), "env": "prod"},
-)
-
-# Dynamic labels for specific code sections
-with pyroscope.tag_wrapper({"controller": "slow_controller"}):
-    slow_code()
+```bash
+kubectl create namespace pyroscope
+helm install pyroscope grafana/pyroscope -n pyroscope
 ```
 
-**Grafana Cloud:**
-```python
-pyroscope.configure(
-    application_name   = "my.python.app",
-    server_address     = "https://profiles-prod-xxx.grafana.net",
-    basic_auth_username = "123456",
-    basic_auth_password = os.getenv("GRAFANA_API_KEY"),
-)
+### Install Microservices Mode
+
+```bash
+curl -Lo values-micro-services.yaml \
+  https://raw.githubusercontent.com/grafana/pyroscope/main/operations/pyroscope/helm/pyroscope/values-micro-services.yaml
+
+helm install pyroscope grafana/pyroscope \
+  -n pyroscope \
+  --values values-micro-services.yaml
 ```
 
-### Java
+## Profile Types
 
-```xml
-<!-- Maven -->
-<dependency>
-  <groupId>io.pyroscope</groupId>
-  <artifactId>agent</artifactId>
-  <version>2.1.2</version>
-</dependency>
+| Type | Description | Languages |
+|------|-------------|-----------|
+| **CPU** | Wall/CPU time consumption | All |
+| **Memory** | Allocation objects/space, heap | Go, Java, .NET |
+| **Goroutine** | Concurrent goroutines | Go |
+| **Mutex** | Lock contention (count/duration) | Go, Java, .NET |
+| **Block** | Thread blocking/delays | Go |
+| **Exceptions** | Exception tracking | Python |
+
+## Client Configuration Methods
+
+### Method 1: SDK Instrumentation (Push Mode)
+
+**Go SDK:**
+
+```go
+import "github.com/grafana/pyroscope-go"
+
+pyroscope.Start(pyroscope.Config{
+    ApplicationName: "my-app",
+    ServerAddress:   "http://pyroscope:4040",
+    ProfileTypes: []pyroscope.ProfileType{
+        pyroscope.ProfileCPU,
+        pyroscope.ProfileAllocObjects,
+        pyroscope.ProfileAllocSpace,
+        pyroscope.ProfileInuseObjects,
+        pyroscope.ProfileInuseSpace,
+        pyroscope.ProfileGoroutines,
+        pyroscope.ProfileMutexCount,
+        pyroscope.ProfileMutexDuration,
+        pyroscope.ProfileBlockCount,
+        pyroscope.ProfileBlockDuration,
+    },
+    Tags: map[string]string{
+        "env": "production",
+    },
+})
 ```
+
+**Java SDK:**
 
 ```java
-// Method 1: Application code
 PyroscopeAgent.start(
     new Config.Builder()
-        .setApplicationName("my-java-app")
-        .setProfilingEvent(EventType.ITIMER)
-        .setFormat(Format.JFR)           // required for multiple events
+        .setApplicationName("my-app")
         .setServerAddress("http://pyroscope:4040")
+        .setProfilingEvent(EventType.ITIMER)
+        .setFormat(Format.JFR)
         .build()
 );
-
-// Dynamic labels
-Pyroscope.LabelsWrapper.run(new LabelsSet("controller", "slow_controller"), () -> {
-    slowCode();
-});
 ```
 
-```bash
-# Method 2: Java Agent (no code changes)
-export PYROSCOPE_APPLICATION_NAME=my.java.app
-export PYROSCOPE_SERVER_ADDRESS=http://pyroscope:4040
-java -javaagent:pyroscope.jar -jar app.jar
+**Python SDK:**
+
+```python
+import pyroscope
+
+pyroscope.configure(
+    application_name="my-app",
+    server_address="http://pyroscope:4040",
+    tags={"env": "production"},
+)
 ```
 
-**Key Java config:**
+### Method 2: Grafana Alloy (Pull Mode)
 
-| Env Var | Description | Default |
-|---------|-------------|---------|
-| `PYROSCOPE_FORMAT` | `jfr` for multiple events | `collapsed` |
-| `PYROSCOPE_PROFILER_EVENT` | `itimer`, `cpu`, `wall` | `itimer` |
-| `PYROSCOPE_PROFILER_ALLOC` | Allocation bytes threshold; `0` = all | disabled |
-| `PYROSCOPE_PROFILER_LOCK` | Lock contention threshold (ns) | disabled |
-| `PYROSCOPE_UPLOAD_INTERVAL` | Upload frequency | `10s` |
+**Auto-instrumentation via Annotations:**
 
-### Node.js
-
-```bash
-npm install @pyroscope/nodejs
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+spec:
+  template:
+    metadata:
+      annotations:
+        profiles.grafana.com/cpu.scrape: "true"
+        profiles.grafana.com/cpu.port: "8080"
+        profiles.grafana.com/memory.scrape: "true"
+        profiles.grafana.com/memory.port: "8080"
+        profiles.grafana.com/goroutine.scrape: "true"
+        profiles.grafana.com/goroutine.port: "8080"
 ```
 
-```javascript
-const Pyroscope = require('@pyroscope/nodejs');
+**Alloy Configuration:**
 
-Pyroscope.init({
-    serverAddress: 'http://pyroscope:4040',
-    appName: 'my-node-service',
-    tags: { region: process.env.REGION },
-    basicAuthUser: process.env.PYROSCOPE_USER,
-    basicAuthPassword: process.env.PYROSCOPE_PASSWORD,
-    flushIntervalMs: 60000,
-});
-Pyroscope.start();
+```river
+pyroscope.scrape "default" {
+  targets = discovery.kubernetes.pods.targets
+  forward_to = [pyroscope.write.default.receiver]
 
-// Dynamic labels
-Pyroscope.wrapWithLabels({ vehicle: 'bike' }, () => slowCode());
-```
-
-### Ruby
-
-```bash
-bundle add pyroscope
-```
-
-```ruby
-require 'pyroscope'
-
-Pyroscope.configure do |config|
-  config.application_name = "my.ruby.app"
-  config.server_address   = "http://pyroscope:4040"
-  config.tags = { hostname: ENV["HOSTNAME"] }
-end
-
-# Dynamic tags
-Pyroscope.tag_wrapper({ controller: "slow_controller" }) do
-  slow_code
-end
-```
-
-### .NET
-
-```bash
-# System requirements: Linux amd64, .NET 6+
-export PYROSCOPE_APPLICATION_NAME=my.dotnet.app
-export PYROSCOPE_SERVER_ADDRESS=http://pyroscope:4040
-export PYROSCOPE_PROFILING_ENABLED=1
-export CORECLR_ENABLE_PROFILING=1
-export CORECLR_PROFILER={BD1A650D-AC5D-4896-B64F-D6FA25D6B26A}
-export CORECLR_PROFILER_PATH=/dotnet/Pyroscope.Profiler.Native.so
-export LD_PRELOAD=/dotnet/Pyroscope.Linux.ApiWrapper.x64.so
-```
-
-```csharp
-// Dynamic labels
-var labels = Pyroscope.LabelSet.Empty.BuildUpon()
-    .Add("controller", "slow")
-    .Build();
-Pyroscope.LabelsWrapper.Do(labels, () => SlowCode());
-```
-
-### Rust
-
-```bash
-cargo add pyroscope pyroscope_pprofrs
-```
-
-```rust
-let pprof_config = PprofConfig::new().sample_rate(100);
-let agent = PyroscopeAgent::builder("http://pyroscope:4040", "my-rust-app")
-    .backend(pprof_backend(pprof_config))
-    .tags([("env", "prod"), ("region", "us-east")].to_vec())
-    .basic_auth(user, password)
-    .build()?;
-let agent_running = agent.start().unwrap();
-// ... app runs ...
-let agent_ready = agent_running.stop().unwrap();
-agent_ready.shutdown();
-```
-
-## eBPF Auto-Instrumentation via Alloy
-
-No code changes needed. Supports: C/C++, Go, Rust, Java (Hotspot JVM), Python, Ruby, Node.js, PHP, .NET, V8.
-
-```alloy
-discovery.kubernetes "all_pods" {
-  role = "pod"
-  selectors {
-    field = "spec.nodeName=" + sys.env("HOSTNAME")
+  profiling_config {
+    profile.process_cpu { enabled = true }
+    profile.memory { enabled = true }
+    profile.goroutine { enabled = true }
   }
 }
 
-discovery.relabel "local_pods" {
-  targets = discovery.kubernetes.all_pods.targets
-  rule {
-    source_labels = ["__meta_kubernetes_namespace"]
-    target_label  = "namespace"
-  }
-}
-
-pyroscope.ebpf "local_pods" {
-  forward_to     = [pyroscope.write.cloud.receiver]
-  targets        = discovery.relabel.local_pods.output
-  sample_rate    = 97          // samples per second
-  collect_interval = "15s"
-}
-
-pyroscope.write "cloud" {
+pyroscope.write "default" {
   endpoint {
-    url = "https://profiles-prod-xxx.grafana.net"
-    basic_auth {
-      username = sys.env("PYROSCOPE_USER")
-      password = sys.env("GRAFANA_API_KEY")
-    }
+    url = "http://pyroscope:4040"
   }
 }
 ```
 
-Requirements for eBPF:
-- Run Alloy as root, in host PID namespace
-- Linux 5.8+ with BTF enabled (or RHEL 4.18+)
+### Method 3: eBPF Profiling (Linux)
 
-## ProfileQL Queries
+**For compiled languages (C/C++, Go, Rust):**
 
-```
-# All CPU profiles for a service
-{service_name="myapp", __profile_type__="process_cpu:cpu:nanoseconds:cpu:nanoseconds"}
-
-# Filter by label
-{service_name="myapp", env="prod"}
-
-# Profile types format: <type>:<value_type>:<value_unit>:<span_name>:<span_unit>
+```river
+pyroscope.ebpf "default" {
+  forward_to = [pyroscope.write.default.receiver]
+  targets = discovery.kubernetes.pods.targets
+}
 ```
 
-**Common profile types:**
-- `process_cpu:cpu:nanoseconds:cpu:nanoseconds` - CPU time
-- `memory:inuse_space:bytes:space:bytes` - Heap in use
-- `memory:alloc_space:bytes:space:bytes` - Heap allocations
-- `goroutine:goroutine:count::` - Goroutine count (Go)
-- `mutex:contentions:count::` - Mutex contentions
+## Storage Configuration
 
-## Profile Types by Language
+### Azure Blob Storage
 
-| Language | CPU | Memory | Goroutines | Allocations |
-|----------|-----|--------|------------|-------------|
-| Go | ✓ | ✓ | ✓ | ✓ |
-| Java | ✓ | ✓ | ✓ | ✓ |
-| Python | ✓ | - | - | - |
-| Node.js | ✓ | ✓ | - | ✓ |
-| Ruby | ✓ | ✓ | - | - |
-| .NET | ✓ | ✓ | - | ✓ |
-| Rust | ✓ | - | - | - |
-| eBPF | ✓ | - | - | - |
+```yaml
+pyroscope:
+  config:
+    storage:
+      backend: azure
+      azure:
+        container_name: pyroscope-data
+        account_name: mystorageaccount
+        account_key: ${AZURE_ACCOUNT_KEY}
+```
 
-## Tag Rules
+### AWS S3
 
-Valid tags: `[a-zA-Z_][a-zA-Z0-9_]*` — periods NOT allowed.
+```yaml
+pyroscope:
+  config:
+    storage:
+      backend: s3
+      s3:
+        bucket_name: pyroscope-data
+        region: us-east-1
+        endpoint: s3.us-east-1.amazonaws.com
+        access_key_id: ${AWS_ACCESS_KEY_ID}
+        secret_access_key: ${AWS_SECRET_ACCESS_KEY}
+```
 
-## References
+### Google Cloud Storage
 
-- [SDKs Reference](references/sdks.md)
-- [ProfileQL](references/profileql.md)
-- [Server Config](references/server-config.md)
+```yaml
+pyroscope:
+  config:
+    storage:
+      backend: gcs
+      gcs:
+        bucket_name: pyroscope-data
+        # Uses GOOGLE_APPLICATION_CREDENTIALS
+```
+
+## Grafana Integration
+
+### Data Source Configuration
+
+```yaml
+apiVersion: 1
+datasources:
+  - name: Pyroscope
+    type: grafana-pyroscope-datasource
+    access: proxy
+    url: http://pyroscope-querier:4040
+    isDefault: false
+    editable: true
+```
+
+### Trace-to-Profile Linking
+
+Enable span profiles to correlate traces with profiles:
+
+**Go with OpenTelemetry:**
+
+```go
+import (
+    "github.com/grafana/pyroscope-go"
+    otelpyroscope "github.com/grafana/otel-profiling-go"
+)
+
+tp := trace.NewTracerProvider(
+    trace.WithSpanProcessor(otelpyroscope.NewSpanProcessor()),
+)
+```
+
+**Requirements:**
+
+- Minimum span duration: 20ms
+- Supported: Go, Java, .NET, Python, Ruby
+
+## Resource Requirements
+
+### Single Binary (Development)
+
+```yaml
+resources:
+  requests:
+    cpu: 500m
+    memory: 512Mi
+  limits:
+    cpu: 1
+    memory: 2Gi
+```
+
+### Microservices (Production)
+
+| Component | CPU Request | Memory Request | Memory Limit |
+|-----------|-------------|----------------|--------------|
+| Distributor | 500m | 256Mi | 1Gi |
+| Ingester | 1 | 8Gi | 16Gi |
+| Querier | 100m | 256Mi | 1Gi |
+| Query Frontend | 100m | 256Mi | 1Gi |
+| Compactor | 1 | 8Gi | 16Gi |
+| Store Gateway | 1 | 8Gi | 16Gi |
+
+## Common Helm Values
+
+```yaml
+# Production values
+architecture:
+  microservices:
+    enabled: true
+
+pyroscope:
+  persistence:
+    enabled: true
+    size: 50Gi
+
+  config:
+    storage:
+      backend: s3
+      s3:
+        bucket_name: pyroscope-prod
+        region: us-east-1
+
+# High availability
+ingester:
+  replicas: 3
+  terminationGracePeriodSeconds: 600
+
+querier:
+  replicas: 3
+
+distributor:
+  replicas: 2
+
+compactor:
+  replicas: 3
+  terminationGracePeriodSeconds: 1200
+
+storeGateway:
+  replicas: 3
+
+# Pod disruption budget
+podDisruptionBudget:
+  enabled: true
+  maxUnavailable: 1
+
+# Topology spread
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: kubernetes.io/hostname
+    whenUnsatisfiable: DoNotSchedule
+
+# Monitoring
+serviceMonitor:
+  enabled: true
+
+# Alloy for profile collection
+alloy:
+  enabled: true
+```
+
+## API Endpoints
+
+### Ingestion
+
+```bash
+# Push profiles (Connect API)
+POST /push.v1.PusherService/Push
+
+# Legacy HTTP (pprof, JFR formats)
+POST /ingest
+```
+
+### Query
+
+```bash
+# Merged profile
+POST /querier.v1.QuerierService/SelectMergeProfile
+
+# Flame graph data
+POST /querier.v1.QuerierService/SelectMergeStacktraces
+
+# Available labels
+POST /querier.v1.QuerierService/LabelNames
+
+# Profile types
+POST /querier.v1.QuerierService/ProfileTypes
+
+# Legacy render
+GET /pyroscope/render?query={}&from=now-1h&until=now
+```
+
+### System
+
+```bash
+# Readiness
+GET /ready
+
+# Configuration
+GET /config
+
+# Metrics
+GET /metrics
+```
+
+## Troubleshooting
+
+### Diagnostic Commands
+
+```bash
+# Check pod status
+kubectl get pods -n pyroscope -l app.kubernetes.io/name=pyroscope
+
+# View ingester logs
+kubectl logs -n pyroscope -l app.kubernetes.io/component=ingester --tail=100
+
+# Check ring status
+kubectl exec -it pyroscope-0 -n pyroscope -- \
+  curl http://localhost:4040/ingester/ring
+
+# Verify readiness
+kubectl exec -it pyroscope-0 -n pyroscope -- \
+  curl http://localhost:4040/ready
+
+# Check configuration
+kubectl exec -it pyroscope-0 -n pyroscope -- \
+  curl http://localhost:4040/config
+```
+
+### Common Issues
+
+**1. Ingester OOM:**
+
+```yaml
+ingester:
+  resources:
+    limits:
+      memory: 16Gi
+```
+
+**2. Storage Authentication Failed:**
+
+```bash
+# Azure - verify RBAC
+az role assignment create \
+  --role "Storage Blob Data Contributor" \
+  --assignee-object-id <principal-id> \
+  --scope <storage-scope>
+```
+
+**3. High Cardinality Labels:**
+
+```yaml
+# Limit label cardinality
+pyroscope:
+  config:
+    validation:
+      max_label_names_per_series: 25
+```
+
+**4. Query Timeout:**
+
+```yaml
+pyroscope:
+  config:
+    querier:
+      query_timeout: 5m
+      max_concurrent: 8
+```
+
+## Reference Documentation
+
+For detailed configuration by topic:
+
+- **[Helm Deployment](references/helm-deployment.md)**: Complete Helm values reference
+- **[Architecture](references/architecture.md)**: Component details and scaling
+- **[SDK Instrumentation](references/sdk-instrumentation.md)**: Language SDK guides
+- **[Troubleshooting](references/troubleshooting.md)**: Common issues and diagnostics
+
+## External Resources
+
+- [Official Pyroscope Documentation](https://grafana.com/docs/pyroscope/latest/)
+- [Pyroscope Helm Chart](https://github.com/grafana/pyroscope/tree/main/operations/pyroscope/helm/pyroscope)
+- [Pyroscope GitHub Repository](https://github.com/grafana/pyroscope)
+- [Grafana Profiles Drilldown](https://grafana.com/docs/grafana/latest/explore/simplified-exploration/profiles/)
+
+---
+
+## Gotchas
+
+- **Profile sampling rate per-application**: 100Hz on a busy service adds non-trivial overhead — profile in canary first.
+- **Storage compaction blocks new writes during merge** — large compactions cause write stalls; chunk size and compaction window need tuning.
+- **Tag cardinality explosion**: per-request tags balloon storage; cap tag values explicitly or storage doubles weekly.
+- **Trace integration**: span → profile linking requires matching `traceparent` header propagation end-to-end; one un-instrumented hop loses linkage silently.
+- **eBPF profiler vs SDK profiler**: different attribution, sometimes conflicting. Don't run both for the same service.
+- **gRPC vs HTTP push**: same data, different rate limits at the ingester; HTTP push is throttled harder under load.

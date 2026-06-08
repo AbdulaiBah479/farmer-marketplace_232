@@ -11,7 +11,6 @@ Use [codebase-analysis.md](codebase-analysis.md) to determine runtime, build/sta
 ### Step 2: Create Resources via MCP
 
 **Create a Web Service:**
-
 ```
 create_web_service(
   name: "my-api",
@@ -29,7 +28,6 @@ create_web_service(
 ```
 
 **Create a Static Site:**
-
 ```
 create_static_site(
   name: "my-frontend",
@@ -44,7 +42,6 @@ create_static_site(
 ```
 
 **Create a Cron Job:**
-
 ```
 create_cron_job(
   name: "daily-cleanup",
@@ -58,7 +55,6 @@ create_cron_job(
 ```
 
 **Create a PostgreSQL Database:**
-
 ```
 create_postgres(
   name: "myapp-db",
@@ -68,7 +64,6 @@ create_postgres(
 ```
 
 **Create a Key-Value Store (Redis):**
-
 ```
 create_key_value(
   name: "myapp-cache",
@@ -100,19 +95,16 @@ update_environment_variables(
 Services with `autoDeploy: "yes"` (default) will deploy automatically when created.
 
 **Check deployment status:**
-
 ```
 list_deploys(serviceId: "<service-id>", limit: 1)
 ```
 
 **Monitor logs for errors:**
-
 ```
 list_logs(resource: ["<service-id>"], level: ["error"], limit: 50)
 ```
 
 **Check health metrics:**
-
 ```
 get_metrics(
   resourceId: "<service-id>",

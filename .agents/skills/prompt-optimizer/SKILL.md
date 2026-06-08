@@ -1,398 +1,306 @@
 ---
-name: prompt-optimizer
-description: >-
-  Analyze raw prompts, identify intent and gaps, match ECC components
-  (skills/commands/agents/hooks), and output a ready-to-paste optimized
-  prompt. Advisory role only — never executes the task itself.
-  TRIGGER when: user says "optimize prompt", "improve my prompt",
-  "how to write a prompt for", "help me prompt", "rewrite this prompt",
-  or explicitly asks to enhance prompt quality. Also triggers on Chinese
-  equivalents: "优化prompt", "改进prompt", "怎么写prompt", "帮我优化这个指令".
-  DO NOT TRIGGER when: user wants the task executed directly, or says
-  "just do it" / "直接做". DO NOT TRIGGER when user says "优化代码",
-  "优化性能", "optimize performance", "optimize this code" — those are
-  refactoring/performance tasks, not prompt optimization.
-origin: community
-metadata:
-  author: YannJY02
-  version: "1.0.0"
+name: "prompt-optimizer"
+description: Turn any rough prompt, half-formed idea, or task description into a finished, ready-to-send prompt optimized for any LLM model inside a chat interface — NOT the API. Use this skill whenever the user wants to write, rewrite, optimize, improve, sharpen, or polish a prompt for chat. Trigger phrases include "rewrite this prompt", "make this a better prompt", "optimize this prompt", "turn this into a prompt", "help me prompt this", "draft a prompt that...", "I want to ask...", or whenever the user pastes a draft prompt and asks for improvements. Also trigger when the user describes a task they plan to send to an LLM model and clearly wants a reusable, well-structured prompt rather than a direct answer. The output is always a single, copy-pasteable prompt in a code block that the user sends as-is — never a template with placeholders.
 ---
 
 # Prompt Optimizer
 
-Analyze a draft prompt, critique it, match it to ECC ecosystem components,
-and output a complete optimized prompt the user can paste and run.
+You turn whatever the user gives you — a rough draft, a vague idea, a task description, a paragraph of context — into a single high-quality prompt designed to run inside any chat interface with an LLM model.
 
-## When to Use
+This is for **chat interfaces** (Claude, Codex, Copilot, or any other tool/LLM model), not the API. The user is going to paste a single message into chat. There is no system prompt, no `effort` parameter, no tool config to tune. The prompt itself has to do all the work.
 
-- User says "optimize this prompt", "improve my prompt", "rewrite this prompt"
-- User says "help me write a better prompt for..."
-- User says "what's the best way to ask Claude Code to..."
-- User says "优化prompt", "改进prompt", "怎么写prompt", "帮我优化这个指令"
-- User pastes a draft prompt and asks for feedback or enhancement
-- User says "I don't know how to prompt for this"
-- User says "how should I use ECC for..."
-- User explicitly invokes `/prompt-optimize`
+## Two hard rules
 
-### Do Not Use When
+These two rules override everything else in this skill. Read them, then re-read them.
 
-- User wants the task done directly (just execute it)
-- User says "优化代码", "优化性能", "optimize this code", "optimize performance" — these are refactoring tasks, not prompt optimization
-- User is asking about ECC configuration (use `configure-ecc` instead)
-- User wants a skill inventory (use `skill-stocktake` instead)
-- User says "just do it" or "直接做"
+### Rule 1 — No placeholders. Ever.
 
-## How It Works
+Never produce a prompt that contains `[paste X here]`, `[your content]`, `{topic}`, `<your_input_here>`, `[INSERT Y]`, `___`, or any other template variable the user is expected to fill in. The user must be able to copy your output, paste it into chat, hit send, and have a working interaction. If the prompt requires content the user hasn't provided yet, the prompt itself must handle that — see Rule 2.
 
-**Advisory only — do not execute the user's task.**
+If you catch yourself typing square brackets around a noun, stop. That's a placeholder. Rewrite.
 
-Do NOT write code, create files, run commands, or take any implementation
-action. Your ONLY output is an analysis plus an optimized prompt.
+### Rule 2 — Ship a finished prompt no matter what the user gave you.
 
-If the user says "just do it", "直接做", or "don't optimize, just execute",
-do not switch into implementation mode inside this skill. Tell the user this
-skill only produces optimized prompts, and instruct them to make a normal
-task request if they want execution instead.
+Two cases:
 
-Run this 6-phase pipeline sequentially. Present results using the Output Format below.
+**Case A — the user gave you real content** (a draft they wrote, code, a document, a list of items, a specific question, an actual product description). Bake that content directly into the optimized prompt. The whole thing — content and instructions — goes inside the code block. The user copies, pastes, sends. Done.
 
-### Analysis Pipeline
+**Case B — the user only described a class of task** ("I want a prompt to triage my emails", "help me prompt an LLM model to review my code", "give me a prompt for writing LinkedIn posts about my launches"). Write the prompt as a complete, self-contained instruction that works on its own. End the instruction by either:
+- Asking the LLM model to ask the user for the specific inputs it needs ("Before drafting, ask me to share the product name, audience, and a link."), or
+- Phrasing the task so the user will naturally provide the input in their next chat turn ("I'm going to paste a batch of emails next. For each one, do the following...").
 
-### Phase 0: Project Detection
+Either way: no brackets, no fill-in-the-blank, no template syntax. The prompt is final.
 
-Before analyzing the prompt, detect the current project context:
+## What you output
 
-1. Check if a `CLAUDE.md` exists in the working directory — read it for project conventions
-2. Detect tech stack from project files:
-   - `package.json` → Node.js / TypeScript / React / Next.js
-   - `go.mod` → Go
-   - `pyproject.toml` / `requirements.txt` → Python
-   - `Cargo.toml` → Rust
-   - `build.gradle` / `pom.xml` → Java / Kotlin (then check for `quarkus` in build file → Quarkus, or `spring-boot` → Spring Boot)
-   - `Package.swift` → Swift
-   - `Gemfile` → Ruby
-   - `composer.json` → PHP
-   - `*.csproj` / `*.sln` → .NET
-   - `Makefile` / `CMakeLists.txt` → C / C++
-   - `cpanfile` / `Makefile.PL` → Perl
-3. Note detected tech stack for use in Phase 3 and Phase 4
+A single fenced code block containing the optimized prompt. Nothing else. No preamble like "Here's your prompt:". No trailing explanation of what you changed.
 
-If no project files are found (e.g., the prompt is abstract or for a new project),
-skip detection and flag "tech stack unknown" in Phase 4.
+The prompt should end with a closing instruction that signals depth of reasoning. Choose one that matches your target model:
 
-### Phase 1: Intent Detection
-
-Classify the user's task into one or more categories:
-
-| Category | Signal Words | Example |
-|----------|-------------|---------|
-| New Feature | build, create, add, implement, 创建, 实现, 添加 | "Build a login page" |
-| Bug Fix | fix, broken, not working, error, 修复, 报错 | "Fix the auth flow" |
-| Refactor | refactor, clean up, restructure, 重构, 整理 | "Refactor the API layer" |
-| Research | how to, what is, explore, investigate, 怎么, 如何 | "How to add SSO" |
-| Testing | test, coverage, verify, 测试, 覆盖率 | "Add tests for the cart" |
-| Review | review, audit, check, 审查, 检查 | "Review my PR" |
-| Documentation | document, update docs, 文档 | "Update the API docs" |
-| Infrastructure | deploy, CI, docker, database, 部署, 数据库 | "Set up CI/CD pipeline" |
-| Design | design, architecture, plan, 设计, 架构 | "Design the data model" |
-
-### Phase 2: Scope Assessment
-
-If Phase 0 detected a project, use codebase size as a signal. Otherwise, estimate
-from the prompt description alone and mark the estimate as uncertain.
-
-| Scope | Heuristic | Orchestration |
-|-------|-----------|---------------|
-| TRIVIAL | Single file, < 50 lines | Direct execution |
-| LOW | Single component or module | Single command or skill |
-| MEDIUM | Multiple components, same domain | Command chain + /verify |
-| HIGH | Cross-domain, 5+ files | /plan first, then phased execution |
-| EPIC | Multi-session, multi-PR, architectural shift | Use blueprint skill for multi-session plan |
-
-### Phase 3: ECC Component Matching
-
-Map intent + scope + tech stack (from Phase 0) to specific ECC components.
-
-#### By Intent Type
-
-| Intent | Commands | Skills | Agents |
-|--------|----------|--------|--------|
-| New Feature | /plan, /tdd, /code-review, /verify | tdd-workflow, verification-loop | planner, tdd-guide, code-reviewer |
-| Bug Fix | /tdd, /build-fix, /verify | tdd-workflow | tdd-guide, build-error-resolver |
-| Refactor | /refactor-clean, /code-review, /verify | verification-loop | refactor-cleaner, code-reviewer |
-| Research | /plan | search-first, iterative-retrieval | — |
-| Testing | /tdd, /e2e, /test-coverage | tdd-workflow, e2e-testing | tdd-guide, e2e-runner |
-| Review | /code-review | security-review | code-reviewer, security-reviewer |
-| Documentation | /update-docs, /update-codemaps | — | doc-updater |
-| Infrastructure | /plan, /verify | docker-patterns, deployment-patterns, database-migrations | architect |
-| Design (MEDIUM-HIGH) | /plan | — | planner, architect |
-| Design (EPIC) | — | blueprint (invoke as skill) | planner, architect |
-
-#### By Tech Stack
-
-| Tech Stack | Skills to Add | Agent |
-|------------|--------------|-------|
-| Python / Django | django-patterns, django-tdd, django-security, django-verification, python-patterns, python-testing | python-reviewer |
-| Go | golang-patterns, golang-testing | go-reviewer, go-build-resolver |
-| Spring Boot / Java | springboot-patterns, springboot-tdd, springboot-security, springboot-verification, java-coding-standards, jpa-patterns | java-reviewer |
-| Quarkus / Java | quarkus-patterns, quarkus-tdd, quarkus-security, quarkus-verification, java-coding-standards, jpa-patterns | java-reviewer |
-| Kotlin / Android | kotlin-coroutines-flows, compose-multiplatform-patterns, android-clean-architecture | kotlin-reviewer |
-| TypeScript / React | frontend-patterns, backend-patterns, coding-standards | code-reviewer |
-| Swift / iOS | swiftui-patterns, swift-concurrency-6-2, swift-actor-persistence, swift-protocol-di-testing | code-reviewer |
-| PostgreSQL | postgres-patterns, database-migrations | database-reviewer |
-| Perl | perl-patterns, perl-testing, perl-security | code-reviewer |
-| C++ | cpp-coding-standards, cpp-testing | code-reviewer |
-| Other / Unlisted | coding-standards (universal) | code-reviewer |
-
-### Phase 4: Missing Context Detection
-
-Scan the prompt for missing critical information. Check each item and mark
-whether Phase 0 auto-detected it or the user must supply it:
-
-- [ ] **Tech stack** — Detected in Phase 0, or must user specify?
-- [ ] **Target scope** — Files, directories, or modules mentioned?
-- [ ] **Acceptance criteria** — How to know the task is done?
-- [ ] **Error handling** — Edge cases and failure modes addressed?
-- [ ] **Security requirements** — Auth, input validation, secrets?
-- [ ] **Testing expectations** — Unit, integration, E2E?
-- [ ] **Performance constraints** — Load, latency, resource limits?
-- [ ] **UI/UX requirements** — Design specs, responsive, a11y? (if frontend)
-- [ ] **Database changes** — Schema, migrations, indexes? (if data layer)
-- [ ] **Existing patterns** — Reference files or conventions to follow?
-- [ ] **Scope boundaries** — What NOT to do?
-
-**If 3+ critical items are missing**, ask the user up to 3 clarification
-questions before generating the optimized prompt. Then incorporate the
-answers into the optimized prompt.
-
-### Phase 5: Workflow & Model Recommendation
-
-Determine where this prompt sits in the development lifecycle:
-
+For models with reasoning capabilities (like Claude with extended thinking):
 ```
-Research → Plan → Implement (TDD) → Review → Verify → Commit
+Think before answering (maximum reasoning)
 ```
 
-For MEDIUM+ tasks, always start with /plan. For EPIC tasks, use blueprint skill.
+For general-purpose LLM models:
+```
+Take time to think through this carefully before responding.
+```
 
-**Model recommendation** (include in output):
+This signals to the LLM model that a thorough, reasoned approach is needed. The exact wording can be adapted to fit your model's strengths.
 
-| Scope | Recommended Model | Rationale |
-|-------|------------------|-----------|
-| TRIVIAL-LOW | Sonnet 4.6 | Fast, cost-efficient for simple tasks |
-| MEDIUM | Sonnet 4.6 | Best coding model for standard work |
-| HIGH | Sonnet 4.6 (main) + Opus 4.6 (planning) | Opus for architecture, Sonnet for implementation |
-| EPIC | Opus 4.6 (blueprint) + Sonnet 4.6 (execution) | Deep reasoning for multi-session planning |
+## Why these principles work
 
-**Multi-prompt splitting** (for HIGH/EPIC scope):
+Modern LLM models read prompts more literally, calibrate their thinking and length to perceived complexity, and reward prompts that are specific, structured, and motivated. The cookbook below is distilled from best practices in LLM prompting across multiple model families. Each rule has a reason. Treat the reasons as the point — apply them with judgment, don't paste them mechanically.
 
-For tasks that exceed a single session, split into sequential prompts:
-- Prompt 1: Research + Plan (use search-first skill, then /plan)
-- Prompt 2-N: Implement one phase per prompt (each ends with /verify)
-- Final Prompt: Integration test + /code-review across all phases
-- Use /save-session and /resume-session to preserve context between sessions
+## The rewrite workflow
 
----
+Work through these in your head before writing the prompt. You don't need to surface them.
 
-## Output Format
+1. **Identify the goal.** What does the user actually want produced? A document? A decision? Code? A list? An analysis? Name it concretely.
+2. **Identify the audience and use.** Who reads the output, and what will they do with it? This drives tone and format.
+3. **Decide: Case A or Case B.** Did the user provide the actual content, or just describe a class of task? This decides whether you bake content in or write a self-contained instruction (see Rule 2).
+4. **Spot the gaps.** Audience, format, length, constraints, examples, edge cases — note which are missing.
+5. **Handle the gaps correctly.** If a missing detail is non-essential, make the most useful, most defensible assumption and keep it grounded in what they wrote. If the prompt depends on user-specific inputs they have not provided, follow Rule 2: in Case B, instruct the LLM model to ask for what it needs or phrase the task so the user will provide those inputs in the next turn.
+6. **Pick a structure.** Single-paragraph instruction for simple tasks. XML tags for anything with multiple sections.
+7. **Write the prompt.** Apply the principles below.
+8. **End with the closing line.**
+9. **Scan for brackets.** Before you finalize, re-read your output looking for `[`, `{`, or `<...your...>`-style placeholders. Kill any you find.
 
-Present your analysis in this exact structure. Respond in the same language
-as the user's input.
+## Core principles to apply
 
-### Section 1: Prompt Diagnosis
+### Be clear and direct
+State the task explicitly. Specify the desired output format and any hard constraints up front. If you want above-and-beyond effort, say so — LLM models won't infer it from a vague brief. "Create an analytics dashboard" is weaker than "Create an analytics dashboard with as many relevant features and interactions as possible — go beyond the basics for a fully-featured implementation."
 
-**Strengths:** List what the original prompt does well.
+### Explain the why
+When you give an instruction, briefly explain the reason. "Avoid ellipses, because the output will be read aloud by a TTS engine that mispronounces them" lands far better than "Never use ellipses." LLM models generalize well from explanations and follow reasoned instructions more faithfully.
 
-**Issues:**
+### Tell the LLM model what to do, not what to avoid
+Positive framing outperforms negative framing. "Write in flowing prose paragraphs" beats "don't use bullet points."
 
-| Issue | Impact | Suggested Fix |
-|-------|--------|---------------|
-| (problem) | (consequence) | (how to fix) |
+### Match prompt style to desired output style
+If you want prose, write the prompt in prose. If you want minimal markdown in the output, use minimal markdown in the prompt. Style leaks through.
 
-**Needs Clarification:** Numbered list of questions the user should answer.
-If Phase 0 auto-detected the answer, state it instead of asking.
+### Use XML tags when sections multiply
+When the prompt mixes instructions, context, examples, and input, wrap each in its own descriptive tag — `<instructions>`, `<context>`, `<examples>`, `<input>`. Nest naturally where there's hierarchy. This is the single highest-leverage structuring move for complex prompts. For simple one-shot prompts, skip it; XML on a haiku request is overkill.
 
-### Section 2: Recommended ECC Components
+### Give the LLM model a role when it sharpens behavior
+A one-line role assignment ("You are a senior product strategist at a B2B SaaS company") tightens tone and frame. Don't force a role onto every prompt — only when it meaningfully steers the output.
 
-| Type | Component | Purpose |
-|------|-----------|---------|
-| Command | /plan | Plan architecture before coding |
-| Skill | tdd-workflow | TDD methodology guidance |
-| Agent | code-reviewer | Post-implementation review |
-| Model | Sonnet 4.6 | Recommended for this scope |
+### Use examples for format, tone, or structure
+If the user has any preference about *how* the output should look, include 2–4 examples in `<example>` tags (or wrap multiple in `<examples>`). Examples beat description for steering format. Make them relevant, diverse, and structured. Skip examples when the task is so generic that examples would over-constrain.
 
-### Section 3: Optimized Prompt — Full Version
+### Put long inputs on top, the question on the bottom
+If the prompt includes a long document, transcript, or data dump that the user provided, place it at the top. Research in LLM prompt optimization shows up to ~30% quality lift from this ordering on long-context tasks.
 
-Present the complete optimized prompt inside a single fenced code block.
-The prompt must be self-contained and ready to copy-paste. Include:
-- Clear task description with context
-- Tech stack (detected or specified)
-- /command invocations at the right workflow stages
-- Acceptance criteria
-- Verification steps
-- Scope boundaries (what NOT to do)
+### Ask for grounding in long-document tasks
+For analysis or Q&A over long inputs, instruct the LLM model to first pull relevant quotes into `<quotes>` tags, then answer based on those quotes. This dramatically reduces drift and hallucination.
 
-For items that reference blueprint, write: "Use the blueprint skill to..."
-(not `/blueprint`, since blueprint is a skill, not a command).
+### Be literal about scope
+LLM models don't always silently generalize. If you want an instruction applied broadly, say "apply this to every section, not just the first one." If you want the LLM model to take action rather than suggest, use imperative verbs ("Edit the function to..." not "Could you suggest improvements to..."). Suggestion-flavored phrasing produces suggestions.
 
-### Section 4: Optimized Prompt — Quick Version
+### Trigger deeper reasoning deliberately
+LLM models decide when to allocate reasoning depth. Closing-line instructions nudge them toward deeper engagement with complex problems. Don't add competing thinking instructions earlier in the prompt; they create noise. Let the closing line do its job.
 
-A compact version for experienced ECC users. Vary by intent type:
+### Self-check for high-stakes outputs
+For code, math, claims, or anything where errors matter, append a verification instruction near the end: "Before you finish, re-read your answer and check it against the criteria above." This catches errors reliably.
 
-| Intent | Quick Pattern |
-|--------|--------------|
-| New Feature | `/plan [feature]. /tdd to implement. /code-review. /verify.` |
-| Bug Fix | `/tdd — write failing test for [bug]. Fix to green. /verify.` |
-| Refactor | `/refactor-clean [scope]. /code-review. /verify.` |
-| Research | `Use search-first skill for [topic]. /plan based on findings.` |
-| Testing | `/tdd [module]. /e2e for critical flows. /test-coverage.` |
-| Review | `/code-review. Then use security-reviewer agent.` |
-| Docs | `/update-docs. /update-codemaps.` |
-| EPIC | `Use blueprint skill for "[objective]". Execute phases with /verify gates.` |
+## Domain-specific moves
 
-### Section 5: Enhancement Rationale
+These are sharp tools for specific task types. Apply only when relevant.
 
-| Enhancement | Reason |
-|-------------|--------|
-| (what was added) | (why it matters) |
+**Frontend / design.** LLM models may have ingrained stylistic defaults. If the user is asking for a design, either (a) specify a concrete alternative palette, type system, and structure in detail, or (b) instruct the model to propose 3–4 distinct visual directions before building, so the user picks one. Generic instructions like "make it clean and minimal" often need reinforcement with concrete examples.
 
-### Footer
+**Code review.** Tell the model its job at the finding stage is coverage, not filtering: "Report every issue you find, including ones you're uncertain about or consider low-severity. Include confidence and severity for each finding so a downstream filter can rank them." Avoid soft language like "only flag important issues" — LLM models tend to over-filter without explicit permission.
 
-> Not what you need? Tell me what to adjust, or make a normal task request
-> if you want execution instead of prompt optimization.
+**Research / analysis.** Encourage hypothesis-tracking: "Develop several competing hypotheses as you gather information. Track confidence levels in your notes. Self-critique your approach periodically." This produces more rigorous synthesis than a flat "research X" prompt.
 
----
+**Creative writing.** Specify voice, audience, length, constraints, and provide one or two example sentences in the target voice if the user has them. Generic "write a blog post" yields generic prose.
+
+**Document creation (slides, reports).** Ask for design intentionality: "Include thoughtful visual hierarchy, considered typography, and engaging structure." LLM models produce stronger first-pass designs when explicitly invited to prioritize structure and aesthetic intention.
+
+## Output format
+
+Always exactly this:
+
+````
+```
+You are helping with the user's request. If the request is missing essential information, ask a concise clarifying question first. Otherwise, complete the task directly and clearly.
+
+Think before answering (take time to reason through this carefully).
+```
+````
+
+No text before the code block. No text after. No "here you go." No "I added X and Y." Just the prompt.
+
+If the user explicitly asks "what did you change?" *after* they have the prompt, then explain in a follow-up turn. Until they ask, stay silent.
 
 ## Examples
 
-### Trigger Examples
+These show the no-placeholder rule in action. Notice none of them contain `[paste X here]` or any other template variable.
 
-- "Optimize this prompt for ECC"
-- "Rewrite this prompt so Claude Code uses the right commands"
-- "帮我优化这个指令"
-- "How should I prompt ECC for this task?"
-
-### Example 1: Vague Chinese Prompt (Project Detected)
+### Example 1 — Case B (user described a task class, no content given)
 
 **User input:**
+> I want a prompt to summarize my emails
+
+**Your output:**
+
+````
 ```
-帮我写一个用户登录页面
+You are an executive assistant helping me triage email. I'm about to share a batch of emails with you in my next message.
+
+For each email, produce:
+- **Sender + subject** in one line
+- **Summary** — 1-2 sentences, neutral tone, no fluff
+- **Action required** — one of: reply needed, FYI only, schedule, delegate, ignore
+- **Priority** — high / medium / low, based on sender importance and urgency cues
+
+Group the output into three sections in this order: high priority, medium priority, low priority. Within each section, sort by action-required first (reply needed → schedule → delegate → FYI → ignore).
+
+Skip any email that's clearly automated marketing or notification spam — list its sender and subject under a final "Filtered out" section so I can verify.
+
+When you're ready, ask me to paste the emails.
+
+Think before answering (take time to reason through this carefully).
 ```
+````
 
-**Phase 0 detects:** `package.json` with Next.js 15, TypeScript, Tailwind CSS
+The prompt ends by inviting the user to paste content in the next turn. No `[paste emails here]` block. The user sends this as-is and the LLM responds with "Ready when you are — paste the batch."
 
-**Optimized Prompt (Full):**
-```
-使用项目现有技术栈（Next.js 15 + TypeScript + Tailwind CSS）实现用户登录页面。
-
-技术要求：
-- 沿用项目现有的组件结构和路由约定
-- 表单验证使用项目中已有的验证方案（检查是否已用 Zod/Yup/其他）
-- 认证方式：沿用项目现有认证方案（如无，默认 JWT）
-- 包含：邮箱/密码登录表单、表单验证、错误提示、加载状态、响应式布局
-
-工作流：
-1. /plan 先规划组件结构和认证流程，参考现有页面的模式
-2. /tdd 测试先行：编写登录表单的单元测试和认证流程的集成测试
-3. 实现登录页面和认证逻辑
-4. /code-review 审查实现
-5. /verify 验证所有测试通过且页面正常渲染
-
-安全要求：
-- 密码不明文传输
-- 防止暴力破解（rate limiting）
-- XSS 防护
-- CSRF token
-
-验收标准：
-- 所有测试通过，覆盖率 80%+
-- 页面在移动端和桌面端正常渲染
-- 登录成功跳转到 dashboard，失败显示错误信息
-
-不要做：
-- 不要实现注册页面
-- 不要实现忘记密码功能
-- 不要修改现有的路由结构
-```
-
-### Example 2: Moderate English Prompt
+### Example 2 — Case B (rough draft prompt, no product details given)
 
 **User input:**
+> can you fix this prompt: "write a linkedin post about my new product launch, make it engaging and not too salesy"
+
+**Your output:**
+
+````
 ```
-Add a REST API endpoint for user profile updates with validation
+You are writing a LinkedIn post for me announcing a product launch. The audience is mid-to-senior B2B operators on LinkedIn — they've seen every launch post template and are skeptical of marketing language.
+
+Before you draft, ask me for:
+- The product's name
+- What it does, in plain language
+- Who it's for
+- The 1-2 reasons I built it that aren't obvious from the description
+- A link or destination for the call to action
+
+Once I've answered, write one post that:
+- Opens with a concrete hook in the first 2 lines (a tension, a number, or an unexpected observation — not "I'm excited to announce").
+- Tells a short story or shares a specific insight that led to the product, before naming it.
+- Names what the product does in one plain sentence. No adjectives like "revolutionary", "game-changing", or "powerful".
+- Closes with one clear next step (link, DM, comment) — not a generic "let me know what you think".
+- Sits between 150 and 220 words. Short paragraphs, one idea per line break. No emojis. No hashtags except up to two at the very end if they're genuinely relevant.
+
+Match the voice of someone who's built the thing themselves and is talking to peers, not pitching to strangers.
+
+Think before answering (take time to reason through this carefully).
 ```
+````
 
-**Phase 0 detects:** `go.mod` with Go 1.22, Chi router
+Instead of a `<product_details>` block with `[paste details here]`, the prompt explicitly tells the LLM model to gather the details by asking. Self-contained, ready to send.
 
-**Optimized Prompt (Full):**
-```
-Add a REST API endpoint for user profile updates (PATCH /api/users/:id).
-
-Tech stack: Go 1.22 + Chi router (detected from project)
-
-Requirements:
-- PATCH /api/users/:id — partial update of user profile
-- Input validation for fields: name, email, avatar_url, bio
-- Auth: require valid token, users can only update own profile
-- Return 200 with updated user on success
-- Return 400 with validation errors on invalid input
-- Return 401/403 for auth failures
-- Follow existing API patterns in the codebase
-
-Workflow:
-1. /plan the endpoint structure, middleware chain, and validation logic
-2. /tdd — write table-driven tests for success, validation failure, auth failure, not-found
-3. Implement following existing handler patterns
-4. /go-review
-5. /verify — run full test suite, confirm no regressions
-
-Do not:
-- Modify existing endpoints
-- Change the database schema (use existing user table)
-- Add new dependencies without checking existing ones first (use search-first skill)
-```
-
-### Example 3: EPIC Project
+### Example 3 — Case B (technical task, no code given)
 
 **User input:**
+> I need an LLM model to review my python code for bugs
+
+**Your output:**
+
+````
 ```
-Migrate our monolith to microservices
+You're going to review Python code I share with you. Your job at the finding stage is coverage, not filtering — assume a separate pass will rank findings later.
+
+When I paste the code, report every issue you find, including ones you're uncertain about or consider low-severity. For each finding, include:
+- **Location** — file and line number(s)
+- **Issue** — what's wrong, in one sentence
+- **Why it matters** — the concrete failure mode (incorrect output, crash, security risk, race condition, etc.)
+- **Confidence** — high / medium / low
+- **Severity** — high / medium / low
+- **Suggested fix** — a minimal change that addresses the issue
+
+Cover at minimum: logic errors, off-by-one and boundary issues, mutable default arguments, exception handling gaps, race conditions and concurrency issues, resource leaks (files, connections, locks), input validation at trust boundaries, and any deviation from the code's apparent intent.
+
+Do not filter for importance at this stage. It's better to surface a finding that gets filtered out later than to silently drop a real bug.
+
+After listing findings, end with a single-paragraph overall assessment of code quality and the top 3 highest-severity issues to fix first.
+
+Ask me to paste the code when you're ready.
+
+Think before answering (take time to reason through this carefully).
 ```
+````
 
-**Optimized Prompt (Full):**
+### Example 4 — Case A (real content provided, no follow-up needed)
+
+**User input:**
+> rewrite this so it's clearer: "Hey can you help me figure out whether to take the offer from Stripe vs the one from Anthropic. Stripe is paying 280k base + 60k bonus + 100k stock per year vesting over 4. Anthropic is 250k base + 0 bonus but 800k stock vesting over 4 with 1yr cliff. I care most about long term equity upside, work I'd be excited about, and not having to relocate. Stripe wants me in SF 3 days a week, Anthropic is fully remote."
+
+**Your output:**
+
+````
 ```
-Use the blueprint skill to plan: "Migrate monolith to microservices architecture"
+I'm deciding between two job offers and want your help thinking it through carefully.
 
-Before executing, answer these questions in the blueprint:
-1. Which domain boundaries exist in the current monolith?
-2. Which service should be extracted first (lowest coupling)?
-3. Communication pattern: REST APIs, gRPC, or event-driven (Kafka/RabbitMQ)?
-4. Database strategy: shared DB initially or database-per-service from start?
-5. Deployment target: Kubernetes, Docker Compose, or serverless?
+**My priorities, in order:**
+1. Long-term equity upside
+2. Work I'd be excited about
+3. Avoiding relocation
 
-The blueprint should produce phases like:
-- Phase 1: Identify service boundaries and create domain map
-- Phase 2: Set up infrastructure (API gateway, service mesh, CI/CD per service)
-- Phase 3: Extract first service (strangler fig pattern)
-- Phase 4: Verify with integration tests, then extract next service
-- Phase N: Decommission monolith
+**Offer A — Stripe**
+- $280k base
+- $60k annual bonus
+- $100k/year stock, vesting over 4 years
+- Hybrid: in SF 3 days a week
 
-Each phase = 1 PR, with /verify gates between phases.
-Use /save-session between phases. Use /resume-session to continue.
-Use git worktrees for parallel service extraction when dependencies allow.
+**Offer B — Anthropic**
+- $250k base
+- No annual bonus
+- $800k stock, vesting over 4 years with a 1-year cliff
+- Fully remote
 
-Recommended: Opus 4.6 for blueprint planning, Sonnet 4.6 for phase execution.
+Walk me through:
+1. The total expected compensation under each, year-by-year over 4 years, including a sensitivity range on equity outcomes (say: bear / base / bull cases for each company).
+2. How each offer scores against my three priorities, ranked.
+3. The non-obvious risks of each (what each offer's structure says about the company's confidence, how cliffs and vesting interact with my optionality, what the relocation requirement implies about future flexibility).
+4. Your overall recommendation and the single biggest reason it could be wrong.
+
+Be direct. Don't hedge with "it depends on what you value" — I told you what I value.
+
+Think before answering (take time to reason through this carefully).
 ```
+````
 
----
+The user gave the actual numbers and constraints. They're baked in. No `[insert offer details]` block. The prompt is done.
 
-## Related Components
+### Example 5 — simple task
 
-| Component | When to Reference |
-|-----------|------------------|
-| `configure-ecc` | User hasn't set up ECC yet |
-| `skill-stocktake` | Audit which components are installed (use instead of hardcoded catalog) |
-| `search-first` | Research phase in optimized prompts |
-| `blueprint` | EPIC-scope optimized prompts (invoke as skill, not command) |
-| `strategic-compact` | Long session context management |
-| `cost-aware-llm-pipeline` | Token optimization recommendations |
+**User input:**
+> write me a haiku about coffee
+
+**Your output:**
+
+````
+```
+Write a haiku about coffee. Follow the traditional 5-7-5 syllable structure. Aim for a single concrete image rather than a general statement about coffee — something a reader could picture. Avoid clichés like "morning steam" and "liquid gold".
+
+Think before answering (take time to reason through this carefully).
+```
+````
+
+Notice the simple task doesn't get XML tags, a role, or a sectioning — and there's nothing to bake in. Apply structure proportional to the task; over-engineering a haiku prompt is its own failure mode.
+
+## Edge cases
+
+**The user pastes a prompt and asks "is this good?"** They want it rewritten regardless. Treat it as a rewrite request and return the optimized version in a code block. No commentary.
+
+**The user gives you a system prompt or API-style prompt with parameters.** Strip out API-only mechanics (effort levels, thinking config, tool definitions), translate the intent into a single user-message prompt for a chat app, and end with the closing line.
+
+**The user wants the prompt to ask the LLM model to do many small things.** Combine into a single coherent prompt with clear sections rather than a numbered list of micro-tasks. LLM models handle long, well-structured asks well.
+
+**The user's input is already excellent.** Tighten where you can, add the closing line, return it. Don't add ceremony for its own sake.
+
+**The user input is in a language other than English.** Write the optimized prompt in the same language. The closing line can be adapted to the target language while preserving the instruction to reason carefully.
+
+**You're tempted to write a `<context>` or `<input>` block expecting the user to fill it.** Don't. That's Rule 1. Either bake the actual content in (Case A) or tell the LLM model to ask the user for it (Case B).

@@ -1,276 +1,435 @@
 #!/usr/bin/env python3
 """
-Azure DevOps build/pipeline operations.
+Azure DevOps Pipelines - Python Examples
+
+This script demonstrates common pipeline operations using the Azure DevOps REST API.
+
+Prerequisites:
+    pip install requests
+
+Environment Variables:
+    AZURE_DEVOPS_ORG: Organization name
+    AZURE_DEVOPS_PAT: Personal Access Token
+    AZURE_DEVOPS_PROJECT: Project name
 """
 
-import argparse
+import os
+import base64
 import json
-import sys
+import time
+import requests
+from typing import Optional, List, Dict, Any
 
-from api_client import api_request
+# Configuration
+ORG = os.getenv("AZURE_DEVOPS_ORG", "your-org")
+PAT = os.getenv("AZURE_DEVOPS_PAT", "your-pat")
+PROJECT = os.getenv("AZURE_DEVOPS_PROJECT", "your-project")
+API_VERSION = "7.2-preview.1"
+
+# Base URL
+BASE_URL = f"https://dev.azure.com/{ORG}"
 
 
-def create_pipeline(project, name, repo_id, yaml_path, folder=None):
-    """Create a new pipeline."""
-    data = {
-        "name": name,
-        "configuration": {
-            "type": "yaml",
-            "path": yaml_path,
-            "repository": {
-                "id": repo_id,
-                "type": "azureReposGit",
-            },
-        },
+def get_auth_header() -> Dict[str, str]:
+    """Generate authorization header from PAT."""
+    auth_string = base64.b64encode(f":{PAT}".encode()).decode()
+    return {
+        "Authorization": f"Basic {auth_string}",
+        "Content-Type": "application/json"
     }
-    if folder:
-        data["folder"] = folder
-    return api_request("POST", f"{project}/_apis/pipelines", data=data)
 
 
-def list_builds(project, top=None, status=None, definition_id=None, branch=None):
-    """List builds."""
-    params = {}
-    if top:
-        params["$top"] = str(top)
-    if status:
-        params["statusFilter"] = status
-    if definition_id:
-        params["definitions"] = str(definition_id)
+def list_pipelines(
+    name_filter: Optional[str] = None,
+    top: int = 100
+) -> List[Dict[str, Any]]:
+    """
+    List pipeline definitions.
+
+    Args:
+        name_filter: Optional name filter
+        top: Maximum results
+
+    Returns:
+        List of pipeline definitions
+    """
+    url = f"{BASE_URL}/{PROJECT}/_apis/pipelines"
+    params = {
+        "api-version": API_VERSION,
+        "$top": top
+    }
+
+    if name_filter:
+        params["name"] = name_filter
+
+    response = requests.get(url, headers=get_auth_header(), params=params)
+    response.raise_for_status()
+    return response.json().get("value", [])
+
+
+def get_pipeline(pipeline_id: int) -> Dict[str, Any]:
+    """
+    Get pipeline definition details.
+
+    Args:
+        pipeline_id: Pipeline ID
+
+    Returns:
+        Pipeline definition
+    """
+    url = f"{BASE_URL}/{PROJECT}/_apis/pipelines/{pipeline_id}"
+    params = {"api-version": API_VERSION}
+
+    response = requests.get(url, headers=get_auth_header(), params=params)
+    response.raise_for_status()
+    return response.json()
+
+
+def run_pipeline(
+    pipeline_id: int,
+    branch: Optional[str] = None,
+    variables: Optional[Dict[str, str]] = None,
+    template_parameters: Optional[Dict[str, str]] = None,
+    stages_to_skip: Optional[List[str]] = None
+) -> Dict[str, Any]:
+    """
+    Trigger a pipeline run.
+
+    Args:
+        pipeline_id: Pipeline ID
+        branch: Branch to run (refs/heads/main)
+        variables: Pipeline variables
+        template_parameters: Template parameters
+        stages_to_skip: List of stage names to skip
+
+    Returns:
+        Pipeline run details
+    """
+    url = f"{BASE_URL}/{PROJECT}/_apis/pipelines/{pipeline_id}/runs"
+    params = {"api-version": API_VERSION}
+
+    body: Dict[str, Any] = {}
+
     if branch:
-        params["branchName"] = f"refs/heads/{branch}" if not branch.startswith("refs/") else branch
-    return api_request("GET", f"{project}/_apis/build/builds", params=params)
+        body["resources"] = {
+            "repositories": {
+                "self": {
+                    "refName": branch if branch.startswith("refs/") else f"refs/heads/{branch}"
+                }
+            }
+        }
 
-
-def get_build(project, build_id):
-    """Get build details."""
-    return api_request("GET", f"{project}/_apis/build/builds/{build_id}")
-
-
-def build_logs(project, build_id, log_id=None):
-    """Get build logs."""
-    path = f"{project}/_apis/build/builds/{build_id}/logs"
-    if log_id:
-        path += f"/{log_id}"
-    return api_request("GET", path)
-
-
-def build_changes(project, build_id):
-    """Get changes associated with a build."""
-    return api_request("GET", f"{project}/_apis/build/builds/{build_id}/changes")
-
-
-def list_definitions(project, top=None, name=None):
-    """List build/pipeline definitions."""
-    params = {}
-    if top:
-        params["$top"] = str(top)
-    if name:
-        params["name"] = name
-    return api_request("GET", f"{project}/_apis/build/definitions", params=params)
-
-
-def run_pipeline(project, pipeline_id, branch=None, variables=None):
-    """Run a pipeline."""
-    data = {}
-    if branch:
-        ref = f"refs/heads/{branch}" if not branch.startswith("refs/") else branch
-        data["resources"] = {"repositories": {"self": {"refName": ref}}}
     if variables:
-        data["variables"] = {k: {"value": v} for k, v in variables.items()}
-    return api_request("POST", f"{project}/_apis/pipelines/{pipeline_id}/runs", data=data)
+        body["variables"] = {
+            name: {"value": value, "isSecret": False}
+            for name, value in variables.items()
+        }
+
+    if template_parameters:
+        body["templateParameters"] = template_parameters
+
+    if stages_to_skip:
+        body["stagesToSkip"] = stages_to_skip
+
+    response = requests.post(url, headers=get_auth_header(), params=params, json=body)
+    response.raise_for_status()
+    return response.json()
 
 
-def get_run(project, pipeline_id, run_id):
-    """Get a pipeline run."""
-    return api_request("GET", f"{project}/_apis/pipelines/{pipeline_id}/runs/{run_id}")
+def get_run(pipeline_id: int, run_id: int) -> Dict[str, Any]:
+    """
+    Get pipeline run details.
+
+    Args:
+        pipeline_id: Pipeline ID
+        run_id: Run ID
+
+    Returns:
+        Run details
+    """
+    url = f"{BASE_URL}/{PROJECT}/_apis/pipelines/{pipeline_id}/runs/{run_id}"
+    params = {"api-version": API_VERSION}
+
+    response = requests.get(url, headers=get_auth_header(), params=params)
+    response.raise_for_status()
+    return response.json()
 
 
-def list_runs(project, pipeline_id, top=None):
-    """List pipeline runs."""
-    params = {}
-    if top:
-        params["$top"] = str(top)
-    return api_request("GET", f"{project}/_apis/pipelines/{pipeline_id}/runs", params=params)
+def list_runs(
+    pipeline_id: int,
+    top: int = 50
+) -> List[Dict[str, Any]]:
+    """
+    List pipeline runs.
+
+    Args:
+        pipeline_id: Pipeline ID
+        top: Maximum results
+
+    Returns:
+        List of runs
+    """
+    url = f"{BASE_URL}/{PROJECT}/_apis/pipelines/{pipeline_id}/runs"
+    params = {
+        "api-version": API_VERSION,
+        "$top": top
+    }
+
+    response = requests.get(url, headers=get_auth_header(), params=params)
+    response.raise_for_status()
+    return response.json().get("value", [])
 
 
-def update_stage(project, build_id, stage_ref_name, state, force_retry=False):
-    """Update a build stage (approve/retry)."""
-    data = {"state": state, "forceRetryAllJobs": force_retry}
-    return api_request(
-        "PATCH",
-        f"{project}/_apis/build/builds/{build_id}/stages/{stage_ref_name}",
-        data=data,
-    )
+def get_build(build_id: int) -> Dict[str, Any]:
+    """
+    Get build details using Build API.
+
+    Args:
+        build_id: Build ID
+
+    Returns:
+        Build details
+    """
+    url = f"{BASE_URL}/{PROJECT}/_apis/build/builds/{build_id}"
+    params = {"api-version": "7.2-preview.7"}
+
+    response = requests.get(url, headers=get_auth_header(), params=params)
+    response.raise_for_status()
+    return response.json()
 
 
-def get_artifacts(project, build_id):
-    """Get build artifacts."""
-    return api_request("GET", f"{project}/_apis/build/builds/{build_id}/artifacts")
+def list_builds(
+    definition_ids: Optional[List[int]] = None,
+    branch_name: Optional[str] = None,
+    status_filter: Optional[str] = None,
+    result_filter: Optional[str] = None,
+    top: int = 50
+) -> List[Dict[str, Any]]:
+    """
+    List builds.
+
+    Args:
+        definition_ids: Filter by definition IDs
+        branch_name: Filter by branch
+        status_filter: Filter by status (inProgress, completed, etc.)
+        result_filter: Filter by result (succeeded, failed, etc.)
+        top: Maximum results
+
+    Returns:
+        List of builds
+    """
+    url = f"{BASE_URL}/{PROJECT}/_apis/build/builds"
+    params: Dict[str, Any] = {
+        "api-version": "7.2-preview.7",
+        "$top": top,
+        "queryOrder": "queueTimeDescending"
+    }
+
+    if definition_ids:
+        params["definitions"] = ",".join(map(str, definition_ids))
+
+    if branch_name:
+        params["branchName"] = branch_name
+
+    if status_filter:
+        params["statusFilter"] = status_filter
+
+    if result_filter:
+        params["resultFilter"] = result_filter
+
+    response = requests.get(url, headers=get_auth_header(), params=params)
+    response.raise_for_status()
+    return response.json().get("value", [])
 
 
-def queue_build(project, definition_id, branch=None, parameters=None):
-    """Queue a build."""
-    data = {"definition": {"id": definition_id}}
-    if branch:
-        data["sourceBranch"] = f"refs/heads/{branch}" if not branch.startswith("refs/") else branch
-    if parameters:
-        data["parameters"] = json.dumps(parameters)
-    return api_request("POST", f"{project}/_apis/build/builds", data=data)
+def get_build_logs(build_id: int) -> List[Dict[str, Any]]:
+    """
+    Get list of logs for a build.
+
+    Args:
+        build_id: Build ID
+
+    Returns:
+        List of log references
+    """
+    url = f"{BASE_URL}/{PROJECT}/_apis/build/builds/{build_id}/logs"
+    params = {"api-version": "7.2-preview.2"}
+
+    response = requests.get(url, headers=get_auth_header(), params=params)
+    response.raise_for_status()
+    return response.json().get("value", [])
 
 
-def cancel_build(project, build_id):
-    """Cancel a running build."""
-    return api_request(
-        "PATCH",
-        f"{project}/_apis/build/builds/{build_id}",
-        data={"status": "cancelling"},
-    )
+def get_build_log_content(
+    build_id: int,
+    log_id: int,
+    start_line: int = 0,
+    end_line: Optional[int] = None
+) -> str:
+    """
+    Get log content.
+
+    Args:
+        build_id: Build ID
+        log_id: Log ID
+        start_line: Start line (0-based)
+        end_line: End line
+
+    Returns:
+        Log content as text
+    """
+    url = f"{BASE_URL}/{PROJECT}/_apis/build/builds/{build_id}/logs/{log_id}"
+    params: Dict[str, Any] = {
+        "api-version": "7.2-preview.2",
+        "startLine": start_line
+    }
+
+    if end_line:
+        params["endLine"] = end_line
+
+    headers = get_auth_header()
+    headers["Accept"] = "text/plain"
+
+    response = requests.get(url, headers=headers, params=params)
+    response.raise_for_status()
+    return response.text
 
 
-def build_status(project, definition_id=None, branch=None):
-    """Get the latest build status."""
-    params = {"$top": "1", "queryOrder": "finishTimeDescending"}
-    if definition_id:
-        params["definitions"] = str(definition_id)
-    if branch:
-        params["branchName"] = f"refs/heads/{branch}" if not branch.startswith("refs/") else branch
-    return api_request("GET", f"{project}/_apis/build/builds", params=params)
+def retry_build_stage(
+    build_id: int,
+    stage_name: str,
+    force_retry_all_jobs: bool = False
+) -> Dict[str, Any]:
+    """
+    Retry a failed stage.
+
+    Args:
+        build_id: Build ID
+        stage_name: Stage name to retry
+        force_retry_all_jobs: Retry all jobs in stage
+
+    Returns:
+        Updated build timeline
+    """
+    url = f"{BASE_URL}/{PROJECT}/_apis/build/builds/{build_id}/stages/{stage_name}"
+    params = {"api-version": "7.2-preview.1"}
+
+    body = {
+        "forceRetryAllJobs": force_retry_all_jobs,
+        "state": "retry"
+    }
+
+    response = requests.patch(url, headers=get_auth_header(), params=params, json=body)
+    response.raise_for_status()
+    return response.json()
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Azure DevOps pipeline/build operations")
-    subparsers = parser.add_subparsers(dest="command", required=True)
+def wait_for_build(
+    build_id: int,
+    poll_interval: int = 30,
+    timeout: int = 3600
+) -> Dict[str, Any]:
+    """
+    Wait for a build to complete.
 
-    # create
-    p = subparsers.add_parser("create", help="Create a pipeline")
-    p.add_argument("--project", required=True)
-    p.add_argument("--name", required=True)
-    p.add_argument("--repo-id", required=True)
-    p.add_argument("--yaml-path", required=True, help="Path to YAML file in repo")
-    p.add_argument("--folder")
+    Args:
+        build_id: Build ID
+        poll_interval: Seconds between polls
+        timeout: Maximum wait time in seconds
 
-    # list-builds
-    p = subparsers.add_parser("list-builds", help="List builds")
-    p.add_argument("--project", required=True)
-    p.add_argument("--top", type=int)
-    p.add_argument("--status", choices=["all", "cancelling", "completed", "inProgress", "none", "notStarted", "postponed"])
-    p.add_argument("--definition-id", type=int)
-    p.add_argument("--branch")
+    Returns:
+        Final build state
 
-    # get-build
-    p = subparsers.add_parser("get-build", help="Get build details")
-    p.add_argument("--project", required=True)
-    p.add_argument("--build-id", required=True, type=int)
+    Raises:
+        TimeoutError: If build doesn't complete within timeout
+    """
+    start_time = time.time()
 
-    # build-logs
-    p = subparsers.add_parser("build-logs", help="Get build logs")
-    p.add_argument("--project", required=True)
-    p.add_argument("--build-id", required=True, type=int)
-    p.add_argument("--log-id", type=int, help="Specific log ID")
+    while True:
+        build = get_build(build_id)
+        status = build.get("status")
 
-    # build-changes
-    p = subparsers.add_parser("build-changes", help="Get build changes")
-    p.add_argument("--project", required=True)
-    p.add_argument("--build-id", required=True, type=int)
+        if status == "completed":
+            return build
 
-    # list-definitions
-    p = subparsers.add_parser("list-definitions", help="List pipeline definitions")
-    p.add_argument("--project", required=True)
-    p.add_argument("--top", type=int)
-    p.add_argument("--name", help="Filter by name")
+        elapsed = time.time() - start_time
+        if elapsed >= timeout:
+            raise TimeoutError(f"Build {build_id} did not complete within {timeout} seconds")
 
-    # run
-    p = subparsers.add_parser("run", help="Run a pipeline")
-    p.add_argument("--project", required=True)
-    p.add_argument("--pipeline-id", required=True, type=int)
-    p.add_argument("--branch")
-    p.add_argument("--variable", action="append", nargs=2, metavar=("KEY", "VALUE"))
-
-    # get-run
-    p = subparsers.add_parser("get-run", help="Get pipeline run details")
-    p.add_argument("--project", required=True)
-    p.add_argument("--pipeline-id", required=True, type=int)
-    p.add_argument("--run-id", required=True, type=int)
-
-    # list-runs
-    p = subparsers.add_parser("list-runs", help="List pipeline runs")
-    p.add_argument("--project", required=True)
-    p.add_argument("--pipeline-id", required=True, type=int)
-    p.add_argument("--top", type=int)
-
-    # update-stage
-    p = subparsers.add_parser("update-stage", help="Update a build stage")
-    p.add_argument("--project", required=True)
-    p.add_argument("--build-id", required=True, type=int)
-    p.add_argument("--stage", required=True, help="Stage reference name")
-    p.add_argument("--state", required=True, choices=["cancel", "retry"])
-    p.add_argument("--force-retry", action="store_true")
-
-    # get-artifacts
-    p = subparsers.add_parser("get-artifacts", help="Get build artifacts")
-    p.add_argument("--project", required=True)
-    p.add_argument("--build-id", required=True, type=int)
-
-    # queue-build
-    p = subparsers.add_parser("queue-build", help="Queue a build")
-    p.add_argument("--project", required=True)
-    p.add_argument("--definition-id", required=True, type=int)
-    p.add_argument("--branch")
-    p.add_argument("--parameter", action="append", nargs=2, metavar=("KEY", "VALUE"))
-
-    # cancel-build
-    p = subparsers.add_parser("cancel-build", help="Cancel a build")
-    p.add_argument("--project", required=True)
-    p.add_argument("--build-id", required=True, type=int)
-
-    # build-status
-    p = subparsers.add_parser("build-status", help="Get latest build status")
-    p.add_argument("--project", required=True)
-    p.add_argument("--definition-id", type=int)
-    p.add_argument("--branch")
-
-    args = parser.parse_args()
-    result = _dispatch(args)
-
-    print(json.dumps(result, indent=2))
-    if isinstance(result, dict) and "error" in result:
-        sys.exit(1)
+        print(f"Build {build_id} status: {status}, elapsed: {int(elapsed)}s")
+        time.sleep(poll_interval)
 
 
-def _dispatch(args):
-    if args.command == "create":
-        return create_pipeline(args.project, args.name, args.repo_id, args.yaml_path, args.folder)
-    elif args.command == "list-builds":
-        return list_builds(args.project, args.top, args.status, args.definition_id, args.branch)
-    elif args.command == "get-build":
-        return get_build(args.project, args.build_id)
-    elif args.command == "build-logs":
-        return build_logs(args.project, args.build_id, args.log_id)
-    elif args.command == "build-changes":
-        return build_changes(args.project, args.build_id)
-    elif args.command == "list-definitions":
-        return list_definitions(args.project, args.top, args.name)
-    elif args.command == "run":
-        variables = dict(args.variable) if args.variable else None
-        return run_pipeline(args.project, args.pipeline_id, args.branch, variables)
-    elif args.command == "get-run":
-        return get_run(args.project, args.pipeline_id, args.run_id)
-    elif args.command == "list-runs":
-        return list_runs(args.project, args.pipeline_id, args.top)
-    elif args.command == "update-stage":
-        return update_stage(args.project, args.build_id, args.stage, args.state, args.force_retry)
-    elif args.command == "get-artifacts":
-        return get_artifacts(args.project, args.build_id)
-    elif args.command == "queue-build":
-        parameters = dict(args.parameter) if args.parameter else None
-        return queue_build(args.project, args.definition_id, args.branch, parameters)
-    elif args.command == "cancel-build":
-        return cancel_build(args.project, args.build_id)
-    elif args.command == "build-status":
-        return build_status(args.project, args.definition_id, args.branch)
-    return {"error": f"Unknown command: {args.command}"}
+def get_build_changes(build_id: int, top: int = 100) -> List[Dict[str, Any]]:
+    """
+    Get commits associated with a build.
+
+    Args:
+        build_id: Build ID
+        top: Maximum results
+
+    Returns:
+        List of associated changes
+    """
+    url = f"{BASE_URL}/{PROJECT}/_apis/build/builds/{build_id}/changes"
+    params = {
+        "api-version": "7.2-preview.2",
+        "$top": top
+    }
+
+    response = requests.get(url, headers=get_auth_header(), params=params)
+    response.raise_for_status()
+    return response.json().get("value", [])
 
 
+# Example usage
 if __name__ == "__main__":
-    main()
+    # List pipelines
+    print("Listing pipelines...")
+    try:
+        pipelines = list_pipelines(top=10)
+        for p in pipelines:
+            print(f"  {p['id']}: {p['name']}")
+    except Exception as e:
+        print(f"Error: {e}")
+
+    # Get recent builds
+    print("\nRecent builds...")
+    try:
+        builds = list_builds(top=5)
+        for b in builds:
+            print(f"  #{b['id']}: {b['definition']['name']} - {b.get('status')} / {b.get('result', 'N/A')}")
+    except Exception as e:
+        print(f"Error: {e}")
+
+    # Run a pipeline
+    print("\nRunning pipeline...")
+    try:
+        pipeline_id = 1  # Replace with actual ID
+        run = run_pipeline(
+            pipeline_id=pipeline_id,
+            branch="main",
+            variables={"environment": "dev"},
+            template_parameters={"runTests": "true"}
+        )
+        print(f"Started run #{run['id']}, state: {run['state']}")
+
+        # Optionally wait for completion
+        # result = wait_for_build(run['id'], poll_interval=30, timeout=1800)
+        # print(f"Final result: {result.get('result')}")
+    except Exception as e:
+        print(f"Error: {e}")
+
+    # Get build logs
+    print("\nBuild logs...")
+    try:
+        build_id = 1  # Replace with actual ID
+        logs = get_build_logs(build_id)
+        print(f"Found {len(logs)} log files")
+
+        # Get content of first log
+        if logs:
+            content = get_build_log_content(build_id, logs[0]['id'], end_line=20)
+            print(f"First 20 lines of log {logs[0]['id']}:\n{content}")
+    except Exception as e:
+        print(f"Error: {e}")

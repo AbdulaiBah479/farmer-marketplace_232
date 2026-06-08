@@ -1,81 +1,149 @@
 ---
-name: "codex"
-description: "A radically minimal, blank-canvas interface built as a pure edge-to-edge surface, with almost no color and typography carrying the visual weight. Black serves as the only filled color, the only divider, and the sole surface tone cards."
+name: codex
+description: "Delegate coding to OpenAI Codex CLI (features, PRs)."
+version: 1.0.0
+author: Hermes Agent
+license: MIT
+platforms: [linux, macos, windows]
 metadata:
-  author: typeui.sh
+  hermes:
+    tags: [Coding-Agent, Codex, OpenAI, Code-Review, Refactoring]
+    related_skills: [claude-code, hermes-agent]
 ---
 
-<!-- TYPEUI_SH_MANAGED_START -->
-# Open Design System Skill (Universal)
+# Codex CLI
 
-## Mission
-You are an expert design-system guideline author for Codex.
-Create practical, implementation-ready guidance that can be directly used by engineers and designers.
+Delegate coding tasks to [Codex](https://github.com/openai/codex) via the Hermes terminal. Codex is OpenAI's autonomous coding agent CLI.
 
-## Brand
-A radically minimal, blank-canvas interface built as a pure edge-to-edge surface, with almost no color and typography carrying the visual weight. Black serves as the only filled color, the only divider, and the sole surface tone for cards layered above the page. All interactive elements use pill-shaped geometry to create a soft, conversational feel, while image-based cards apply a precise radius that adds a subtle, near-flat contrast. There are no shadows, no gradients in the UI, and no decorative illustrations—color appears only through editorial photography.
+## When to use
 
-## Style Foundations
-- Visual style: modern, minimal, clean
-- Typography scale: 12/14/16/20/24/32 | Fonts: primary=Open Sans, display=Open Sans, mono=JetBrains Mono | weights=100, 200, 300, 400, 500, 600, 700, 800, 900
-- Color palette: primary, secondary, neutral, success, warning, danger | Tokens: primary=#000000, secondary=#ffffff, success=#16A34A, warning=#D97706, danger=#DC2626, surface=#FFFFFF, text=#111827
-- Spacing scale: 4/8/12/16/24/32
+- Building features
+- Refactoring
+- PR reviews
+- Batch issue fixing
 
-## Accessibility
-WCAG 2.2 AA, keyboard-first interactions, visible focus states
+Requires the codex CLI and a git repository.
 
-## Writing Tone
-concise, confident, helpful
+## Prerequisites
 
-## Rules: Do
-- prefer semantic tokens over raw values
-- preserve visual hierarchy
-- keep interaction states explicit
+- Codex installed: `npm install -g @openai/codex`
+- OpenAI auth configured: either `OPENAI_API_KEY` or Codex OAuth credentials
+  from the Codex CLI login flow
+- **Must run inside a git repository** — Codex refuses to run outside one
+- Use `pty=true` in terminal calls — Codex is an interactive terminal app
 
-## Rules: Don't
-- avoid low contrast text
-- avoid inconsistent spacing rhythm
-- avoid ambiguous labels
+For Hermes itself, `model.provider: openai-codex` uses Hermes-managed Codex
+OAuth from `~/.hermes/auth.json` after `hermes auth add openai-codex`. For the
+standalone Codex CLI, a valid CLI OAuth session may live under
+`~/.codex/auth.json`; do not treat a missing `OPENAI_API_KEY` alone as proof
+that Codex auth is missing.
 
-## Expected Behavior
-- Follow the foundations first, then component consistency.
-- When uncertain, prioritize accessibility and clarity over novelty.
-- Provide concrete defaults and explain trade-offs when alternatives are possible.
-- Keep guidance opinionated, concise, and implementation-focused.
+## One-Shot Tasks
 
-## Guideline Authoring Workflow
-1. Restate the design intent in one sentence before proposing rules.
-2. Define tokens and foundational constraints before component-level guidance.
-3. Specify component anatomy, states, variants, and interaction behavior.
-4. Include accessibility acceptance criteria and content-writing expectations.
-5. Add anti-patterns and migration notes for existing inconsistent UI.
-6. End with a QA checklist that can be executed in code review.
+```
+terminal(command="codex exec 'Add dark mode toggle to settings'", workdir="~/project", pty=true)
+```
 
-## Required Output Structure
-When generating design-system guidance, use this structure:
-- Context and goals
-- Design tokens and foundations
-- Component-level rules (anatomy, variants, states, responsive behavior)
-- Accessibility requirements and testable acceptance criteria
-- Content and tone standards with examples
-- Anti-patterns and prohibited implementations
-- QA checklist
+For scratch work (Codex needs a git repo):
+```
+terminal(command="cd $(mktemp -d) && git init && codex exec 'Build a snake game in Python'", pty=true)
+```
 
-## Component Rule Expectations
-- Define required states: default, hover, focus-visible, active, disabled, loading, error (as relevant).
-- Describe interaction behavior for keyboard, pointer, and touch.
-- State spacing, typography, and color-token usage explicitly.
-- Include responsive behavior and edge cases (long labels, empty states, overflow).
+## Background Mode (Long Tasks)
 
-## Quality Gates
-- No rule should depend on ambiguous adjectives alone; anchor each rule to a token, threshold, or example.
-- Every accessibility statement must be testable in implementation.
-- Prefer system consistency over one-off local optimizations.
-- Flag conflicts between aesthetics and accessibility, then prioritize accessibility.
+```
+# Start in background with PTY
+terminal(command="codex exec --full-auto 'Refactor the auth module'", workdir="~/project", background=true, pty=true)
+# Returns session_id
 
-## Example Constraint Language
-- Use "must" for non-negotiable rules and "should" for recommendations.
-- Pair every do-rule with at least one concrete don't-example.
-- If introducing a new pattern, include migration guidance for existing components.
+# Monitor progress
+process(action="poll", session_id="<id>")
+process(action="log", session_id="<id>")
 
-<!-- TYPEUI_SH_MANAGED_END -->
+# Send input if Codex asks a question
+process(action="submit", session_id="<id>", data="yes")
+
+# Kill if needed
+process(action="kill", session_id="<id>")
+```
+
+## Key Flags
+
+| Flag | Effect |
+|------|--------|
+| `exec "prompt"` | One-shot execution, exits when done |
+| `--full-auto` | Sandboxed but auto-approves file changes in workspace |
+| `--yolo` | No sandbox, no approvals (fastest, most dangerous) |
+| `--sandbox danger-full-access` | No Codex sandbox; useful when the host service context breaks bubblewrap |
+
+## Hermes Gateway Caveat
+
+When invoking the Codex CLI from a Hermes gateway/service context (for example,
+Telegram-driven agent sessions), Codex `workspace-write` sandboxing may fail even
+when the same command works in the user's interactive shell. A typical symptom is
+bubblewrap/user-namespace errors such as `setting up uid map: Permission denied`
+or `loopback: Failed RTM_NEWADDR: Operation not permitted`.
+
+In that context, prefer:
+
+```
+codex exec --sandbox danger-full-access "<task>"
+```
+
+Use process boundaries as the safety layer instead: explicit `workdir`, clean git
+status before launch, narrow task prompts, `git diff` review, targeted tests, and
+human/agent confirmation before committing broad changes.
+
+## PR Reviews
+
+Clone to a temp directory for safe review:
+
+```
+terminal(command="REVIEW=$(mktemp -d) && git clone https://github.com/user/repo.git $REVIEW && cd $REVIEW && gh pr checkout 42 && codex review --base origin/main", pty=true)
+```
+
+## Parallel Issue Fixing with Worktrees
+
+```
+# Create worktrees
+terminal(command="git worktree add -b fix/issue-78 /tmp/issue-78 main", workdir="~/project")
+terminal(command="git worktree add -b fix/issue-99 /tmp/issue-99 main", workdir="~/project")
+
+# Launch Codex in each
+terminal(command="codex --yolo exec 'Fix issue #78: <description>. Commit when done.'", workdir="/tmp/issue-78", background=true, pty=true)
+terminal(command="codex --yolo exec 'Fix issue #99: <description>. Commit when done.'", workdir="/tmp/issue-99", background=true, pty=true)
+
+# Monitor
+process(action="list")
+
+# After completion, push and create PRs
+terminal(command="cd /tmp/issue-78 && git push -u origin fix/issue-78")
+terminal(command="gh pr create --repo user/repo --head fix/issue-78 --title 'fix: ...' --body '...'")
+
+# Cleanup
+terminal(command="git worktree remove /tmp/issue-78", workdir="~/project")
+```
+
+## Batch PR Reviews
+
+```
+# Fetch all PR refs
+terminal(command="git fetch origin '+refs/pull/*/head:refs/remotes/origin/pr/*'", workdir="~/project")
+
+# Review multiple PRs in parallel
+terminal(command="codex exec 'Review PR #86. git diff origin/main...origin/pr/86'", workdir="~/project", background=true, pty=true)
+terminal(command="codex exec 'Review PR #87. git diff origin/main...origin/pr/87'", workdir="~/project", background=true, pty=true)
+
+# Post results
+terminal(command="gh pr comment 86 --body '<review>'", workdir="~/project")
+```
+
+## Rules
+
+1. **Always use `pty=true`** — Codex is an interactive terminal app and hangs without a PTY
+2. **Git repo required** — Codex won't run outside a git directory. Use `mktemp -d && git init` for scratch
+3. **Use `exec` for one-shots** — `codex exec "prompt"` runs and exits cleanly
+4. **`--full-auto` for building** — auto-approves changes within the sandbox
+5. **Background for long tasks** — use `background=true` and monitor with `process` tool
+6. **Don't interfere** — monitor with `poll`/`log`, be patient with long-running tasks
+7. **Parallel is fine** — run multiple Codex processes at once for batch work

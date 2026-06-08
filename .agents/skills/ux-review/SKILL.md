@@ -1,155 +1,263 @@
 ---
 name: ux-review
-description: Multi-perspective UX review combining usability heuristics, WCAG accessibility checks, and interaction design analysis. Use when reviewing UI components before release, evaluating user flows for usability issues, conducting design critiques, or auditing accessibility compliance.
-tags:
-  - ux
-  - usability
-  - accessibility
-  - design-review
-  - heuristics
-triggers:
-  - ux review
-  - usability review
-  - design critique
-  - user experience analysis
-  - heuristic evaluation
-keywords:
-  - UX review
-  - usability review
-  - accessibility audit
-  - review
+description: "Validates a UX spec, HUD design, or interaction pattern library for completeness, accessibility compliance, GDD alignment, and implementation readiness. Produces APPROVED / NEEDS REVISION / MAJOR REVISION NEEDED verdict with specific gaps."
+argument-hint: "[file-path or 'all' or 'hud' or 'patterns']"
+user-invocable: true
+allowed-tools: Read, Glob, Grep
+model: sonnet
+agent: ux-designer
 ---
 
-# UX Review
+## Overview
 
-Comprehensive user experience review that coordinates usability, accessibility, and interaction design perspectives for thorough analysis of components, flows, or features.
+Validates UX design documents before they enter the implementation pipeline.
+Acts as the quality gate between UX Design and Visual Design/Implementation in
+the `/team-ui` pipeline.
 
-## When to Use This Skill
+**Run this skill:**
+- After completing a UX spec with `/ux-design`
+- Before handing off to `ui-programmer` or `art-director`
+- Before the Pre-Production to Production gate check (which requires key screens
+  to have reviewed UX specs)
+- After major revisions to a UX spec
 
-- Reviewing new components or features before release
-- Evaluating existing flows for usability issues
-- PR reviews that touch UI/UX code
-- Design system component reviews
-- Onboarding flow or checkout flow optimization
-- Avoid using for purely visual/aesthetic reviews — use `ui-design-aesthetics` instead
+**Verdict levels:**
+- **APPROVED** — spec is complete, consistent, and implementation-ready
+- **NEEDS REVISION** — specific gaps found; fix before handoff but not a full redesign
+- **MAJOR REVISION NEEDED** — fundamental issues with scope, player need, or
+  completeness; needs significant rework
 
-## Workflow
+---
 
-### Step 1: Gather Context
+## Phase 1: Parse Arguments
 
-Answer these questions before reviewing:
+- **Specific file path** (e.g., `/ux-review design/ux/inventory.md`): validate
+  that one document
+- **`all`**: find all files in `design/ux/` and validate each
+- **`hud`**: validate `design/ux/hud.md` specifically
+- **`patterns`**: validate `design/ux/interaction-patterns.md` specifically
+- **No argument**: ask the user which spec to validate
 
-1. What is the user trying to accomplish?
-2. What is this component's role in the larger flow?
-3. Who are the target users (personas, skill level)?
-4. What are the success criteria?
+For `all`, output a summary table first (file | verdict | primary issue) then
+full detail for each.
 
-### Step 2: Run Heuristic Scan (Nielsen's 10)
+---
 
-Evaluate the interface against each heuristic:
+## Phase 2: Load Cross-Reference Context
 
-| Heuristic | Check |
-|-----------|-------|
-| Visibility of system status | Does the user always know what's happening? |
-| Match with real world | Does it use familiar language and concepts? |
-| User control and freedom | Can users undo, go back, escape? |
-| Consistency and standards | Does it follow platform conventions? |
-| Error prevention | Are mistakes prevented before they happen? |
-| Recognition over recall | Is information visible rather than memorized? |
-| Flexibility and efficiency | Are there shortcuts for expert users? |
-| Aesthetic and minimalist design | Is every element necessary? |
-| Error recovery | Are error messages helpful and actionable? |
-| Help and documentation | Is guidance available when needed? |
+Before validating any spec, load:
 
-### Step 3: Multi-Perspective Analysis
+1. **Input & Platform config**: Read `.claude/docs/technical-preferences.md` and
+   extract `## Input & Platform`. This is the authoritative source for which input
+   methods the game supports — use it to drive the Input Method Coverage checks in
+   Phase 3A, not the spec's own header. If unconfigured, fall back to the spec header.
+2. The accessibility tier committed to in `design/accessibility-requirements.md`
+   (if it exists)
+3. The interaction pattern library at `design/ux/interaction-patterns.md` (if
+   it exists)
+4. The GDDs referenced in the spec's header (read their UI Requirements sections)
+5. The player journey map at `design/player-journey.md` (if it exists) for
+   context-arrival validation
 
-#### Usability Perspective
+---
 
-- **User flow**: Is the path to completion clear and efficient?
-- **Information architecture**: Is content organized logically?
-- **Cognitive load**: Is the interface overwhelming?
-- **Mental models**: Does it work like users expect?
+## Phase 3A: UX Spec Validation Checklist
 
-#### Accessibility Perspective (WCAG 2.1 AA)
+Run all checks against a `ux-spec.md`-based document.
 
-- **Keyboard navigation**: Can everything be done without a mouse?
-- **Screen reader**: Is the experience equivalent for assistive tech users?
-- **Color contrast**: Do all text/UI elements meet 4.5:1 ratio?
-- **Focus management**: Is focus order logical, visible, and never trapped?
+### Completeness (required sections)
 
-```html
-<!-- Example: Accessible button with proper ARIA -->
-<button aria-label="Close dialog" aria-describedby="close-hint">
-  <svg aria-hidden="true"><!-- icon --></svg>
-</button>
-<span id="close-hint" class="sr-only">Press Escape to close</span>
-```
+- [ ] Document header present with Status, Author, Platform Target
+- [ ] Purpose & Player Need — has a player-perspective need statement (not
+  developer-perspective)
+- [ ] Player Context on Arrival — describes player's state and prior activity
+- [ ] Navigation Position — shows where screen sits in hierarchy
+- [ ] Entry & Exit Points — all entry sources and exit destinations documented
+- [ ] Layout Specification — zones defined, component inventory table present
+- [ ] States & Variants — at minimum: loading, empty/populated, and error states
+  documented
+- [ ] Interaction Map — covers all target input methods (check platform target
+  in header)
+- [ ] Data Requirements — every displayed data element has a source system and owner
+- [ ] Events Fired — every player action has a corresponding event or null
+  explanation
+- [ ] Transitions & Animations — at least enter/exit transitions specified
+- [ ] Accessibility Requirements — screen-level requirements present
+- [ ] Localization Considerations — max character counts for text elements
+- [ ] Acceptance Criteria — at least 5 specific testable criteria
 
-#### Interaction Design Perspective
+### Quality Checks
 
-- **State coverage**: Are all states handled (loading, empty, error, success)?
-- **Feedback**: Does the user know their action worked?
-- **Transitions**: Are animations purposeful and under 300ms?
-- **Progressive disclosure**: Is complexity revealed appropriately?
+**Player Need Clarity**
+- [ ] Purpose is written from player perspective, not system/developer perspective
+- [ ] Player goal on arrival is unambiguous ("The player arrives wanting to ___")
+- [ ] The player context on arrival is specific (not just "they opened the
+  inventory")
 
-### Step 4: Prioritize Findings
+**Completeness of States**
+- [ ] Error state is documented (not just happy path)
+- [ ] Empty state is documented (no data scenario)
+- [ ] Loading state is documented if the screen fetches async data
+- [ ] Any state with a timer or auto-dismiss is documented with duration
 
-Categorize every finding:
+**Input Method Coverage**
+- [ ] If platform includes PC: keyboard-only navigation is fully specified
+- [ ] If platform includes console/gamepad: d-pad navigation and face button
+  mapping documented
+- [ ] No interaction requires mouse-like precision on gamepad
+- [ ] Focus order is defined (Tab order for keyboard, d-pad order for gamepad)
 
-| Priority | Criteria | Action |
-|----------|----------|--------|
-| **Critical** | Blocks usability or fails WCAG AA | Must fix before release |
-| **High** | Significantly degrades experience | Fix in current sprint |
-| **Enhancement** | Improves delight and efficiency | Backlog for next iteration |
-| **Future** | Long-term improvements | Track in roadmap |
+**Data Architecture**
+- [ ] No data element has "UI" listed as the owner (UI must not own game state)
+- [ ] Update frequency is specified for all real-time data (not just "realtime" —
+  what triggers update?)
+- [ ] Null handling is specified for all data elements (what shows when data is
+  unavailable?)
 
-### Step 5: Produce Review Report
+**Accessibility**
+- [ ] Accessibility tier from `accessibility-requirements.md` is matched or exceeded
+- [ ] If Basic tier: no color-only information indicators
+- [ ] If Standard tier+: focus order documented, text contrast ratios specified
+- [ ] If Comprehensive tier+: screen reader announcements for key state changes
+- [ ] Colorblind check: any color-coded elements have non-color alternatives
+
+**GDD Alignment**
+- [ ] Every GDD UI Requirement referenced in the header is addressed in this spec
+- [ ] No UI element displays or modifies game state without a corresponding GDD
+  requirement
+- [ ] No GDD UI Requirement is missing from this spec (cross-check the referenced
+  GDD sections)
+
+**Pattern Library Consistency**
+- [ ] All interactive components reference the pattern library (or note they are
+  new patterns)
+- [ ] No pattern behavior is re-specified from scratch if it already exists in
+  the pattern library
+- [ ] Any new patterns invented in this spec are flagged for addition to the
+  pattern library
+
+**Localization**
+- [ ] Character limit warnings present for all text-heavy elements
+- [ ] Any layout-critical text has been flagged for 40% expansion accommodation
+
+**Acceptance Criteria Quality**
+- [ ] Criteria are specific enough for a QA tester who hasn't seen the design docs
+- [ ] Performance criterion present (screen opens within Xms)
+- [ ] Resolution criterion present
+- [ ] No criterion requires reading another document to evaluate
+
+---
+
+## Phase 3B: HUD Validation Checklist
+
+Run all checks against a `hud-design.md`-based document.
+
+### Completeness
+
+- [ ] HUD Philosophy defined
+- [ ] Information Architecture table covers ALL systems with UI Requirements in GDDs
+- [ ] Layout Zones defined with safe zone margins for all target platforms
+- [ ] Every HUD element has a full specification (zone, visibility trigger, data
+  source, priority)
+- [ ] HUD States by Gameplay Context covers at minimum: exploration, combat,
+  dialogue/cutscene, paused
+- [ ] Visual Budget defined (max simultaneous elements, max screen %)
+- [ ] Platform Adaptation covers all target platforms
+- [ ] Tuning Knobs present for player-adjustable elements
+
+### Quality Checks
+
+- [ ] No HUD element covers the center play area without a visibility rule to
+  hide it
+- [ ] Every information item that exists in any GDD is either in the HUD or
+  explicitly categorized as "hidden/demand"
+- [ ] All color-coded HUD elements have colorblind variants
+- [ ] HUD elements in the Feedback & Notification section have queue/priority
+  behavior defined
+- [ ] Visual Budget compliance: total simultaneous elements is within budget
+
+### GDD Alignment
+
+- [ ] All systems in `design/gdd/systems-index.md` with UI category have
+  representation in HUD (or justified absence)
+
+---
+
+## Phase 3C: Pattern Library Validation Checklist
+
+- [ ] Pattern catalog index is current (matches actual patterns in document)
+- [ ] All standard control patterns are specified: button variants, toggle,
+  slider, dropdown, list, grid, modal, dialog, toast, tooltip, progress bar,
+  input field, tab bar, scroll
+- [ ] All game-specific patterns needed by current UX specs are present
+- [ ] Each pattern has: When to Use, When NOT to Use, full state specification,
+  accessibility spec, implementation notes
+- [ ] Animation Standards table present
+- [ ] Sound Standards table present
+- [ ] No conflicting behaviors between patterns (e.g., "Back" behavior consistent
+  across all navigation patterns)
+
+---
+
+## Phase 4: Output the Verdict
 
 ```markdown
-## UX Review: [Component/Flow Name]
+## UX Review: [Document Name]
+**Date**: [date]
+**Reviewer**: ux-review skill
+**Document**: [file path]
+**Platform Target**: [from header]
+**Accessibility Tier**: [from header or accessibility-requirements.md]
 
-### Summary
-[2-3 sentence executive summary]
+### Completeness: [X/Y sections present]
+- [x] Purpose & Player Need
+- [ ] States & Variants — MISSING: error state not documented
 
-### Critical Issues
-- [ ] Issue 1: [Description, impact, WCAG criterion if applicable]
-- [ ] Issue 2: [Description, impact]
+### Quality Issues: [N found]
+1. **[Issue title]** [BLOCKING / ADVISORY]
+   - What's wrong: [specific description]
+   - Where: [section name]
+   - Fix: [specific action to take]
 
-### Recommendations by Category
+### GDD Alignment: [ALIGNED / GAPS FOUND]
+- GDD [name] UI Requirements — [X/Y requirements covered]
+- Missing: [list any uncovered GDD requirements]
 
-#### Usability
-| Finding | Impact | Recommendation |
-|---------|--------|----------------|
-| [Issue] | High/Med/Low | [Fix] |
+### Accessibility: [COMPLIANT / GAPS / NON-COMPLIANT]
+- Target tier: [tier]
+- [list specific accessibility findings]
 
-#### Accessibility
-| Finding | WCAG Criterion | Recommendation |
-|---------|----------------|----------------|
-| [Issue] | [2.x.x Level] | [Fix] |
+### Pattern Library: [CONSISTENT / INCONSISTENCIES FOUND]
+- [findings]
 
-#### Interaction Design
-| Finding | Impact | Recommendation |
-|---------|--------|----------------|
-| [Issue] | High/Med/Low | [Fix] |
+### Verdict: APPROVED / NEEDS REVISION / MAJOR REVISION NEEDED
+**Blocking issues**: [N] — must be resolved before implementation
+**Advisory issues**: [N] — recommended but not blocking
 
-### Next Steps
-1. Create issues for critical findings
-2. Add accessibility requirements to acceptance criteria
-3. Schedule follow-up review after fixes
+[For APPROVED]: This spec is ready for handoff to `/team-ui` Phase 2
+(Visual Design).
+
+[For NEEDS REVISION]: Address the [N] blocking issues above, then re-run
+`/ux-review`.
+
+[For MAJOR REVISION NEEDED]: The spec has fundamental gaps in [areas].
+Recommend returning to `/ux-design` to rework [sections].
 ```
 
-## Focus Area Deep Dives
+---
 
-Use `--focus` to narrow the review scope:
+## Phase 5: Collaborative Protocol
 
-- **`--focus=ux`**: User flow mapping, task efficiency, error recovery, learnability
-- **`--focus=a11y`**: WCAG 2.1 AA audit, keyboard nav, screen reader, contrast, focus management
-- **`--focus=interaction`**: State coverage, feedback timing, micro-interactions, animation review
+This skill is READ-ONLY — it never edits or writes files. It reports findings only.
 
-## Best Practices
+After delivering the verdict:
+- For **APPROVED**: suggest running `/team-ui` to begin implementation coordination
+- For **NEEDS REVISION**: offer to help fix specific gaps ("Would you like me to
+  help draft the missing error state?") — but do not auto-fix; wait for user
+  instruction
+- For **MAJOR REVISION NEEDED**: suggest returning to `/ux-design` with the
+  specific sections to rework
 
-- **Test with real content** — Lorem ipsum hides information architecture problems
-- **Check all states** — Empty, loading, error, success, and edge-case states
-- **Verify keyboard flow** — Tab through the entire component without a mouse
-- **Use browser dev tools** — Lighthouse accessibility audit catches low-hanging fruit
-- **Prioritize ruthlessly** — A focused list of critical fixes beats a wall of suggestions
+Never block the user from proceeding — the verdict is advisory. Document risks,
+present findings, let the user decide whether to proceed despite concerns. A user
+who chooses to proceed with a NEEDS REVISION spec takes on the documented risk.

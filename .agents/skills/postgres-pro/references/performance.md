@@ -120,7 +120,7 @@ ANALYZE users;
 ANALYZE;  -- All tables
 
 -- Check statistics freshness
-SELECT schemaname, relname, last_analyze, last_autoanalyze
+SELECT schemaname, tablename, last_analyze, last_autoanalyze
 FROM pg_stat_user_tables
 WHERE schemaname = 'public';
 
@@ -254,8 +254,8 @@ FROM pg_stat_database;
 -- Index usage
 SELECT
   schemaname,
-  relname,
-  indexrelname,
+  tablename,
+  indexname,
   idx_scan,
   idx_tup_read,
   idx_tup_fetch

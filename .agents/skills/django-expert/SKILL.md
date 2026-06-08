@@ -2,6 +2,7 @@
 name: django-expert
 description: "Use when building Django web applications or REST APIs with Django REST Framework. Invoke when working with settings.py, models.py, manage.py, or any Django project file. Creates Django models with proper indexes, optimizes ORM queries using select_related/prefetch_related, builds DRF serializers and viewsets, and configures JWT authentication. Trigger terms: Django, DRF, Django REST Framework, Django ORM, Django model, serializer, viewset, Python web."
 license: MIT
+compatibility: opencode
 metadata:
   author: https://github.com/Jeffallan
   version: "1.1.0"
@@ -69,6 +70,7 @@ class Article(models.Model):
     def __str__(self):
         return self.title
 
+
 # serializers.py
 from rest_framework import serializers
 from .models import Article
@@ -84,6 +86,7 @@ class ArticleSerializer(serializers.ModelSerializer):
         if len(value.strip()) < 3:
             raise serializers.ValidationError("Title must be at least 3 characters.")
         return value.strip()
+
 
 # views.py
 from rest_framework import viewsets, permissions
@@ -158,5 +161,3 @@ When implementing Django features, provide:
 ## Knowledge Reference
 
 Django 5.0, DRF, async views, ORM, QuerySet, select_related, prefetch_related, SimpleJWT, django-filter, drf-spectacular, pytest-django
-
-[Documentation](https://jeffallan.github.io/claude-skills/skills/backend/django-expert/)

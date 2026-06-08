@@ -1,341 +1,282 @@
 ---
 name: react-patterns
-description: React 18/19 patterns including hooks discipline, server/client component boundaries, Suspense + error boundaries, form actions, data fetching, state management decision trees, and accessibility-first composition. Use when writing or reviewing React components.
-origin: ECC
+description: React 19 patterns including Server Components, Actions, Suspense, hooks, and component composition
 ---
 
 # React Patterns
 
-Idiomatic React 18/19 patterns for building robust, accessible, performant component trees.
+## use() Hook (React 19)
 
-## When to Activate
-
-- Writing or modifying React function components, custom hooks, or component trees
-- Reviewing JSX/TSX files
-- Designing state shape or component composition
-- Migrating class components or older `forwardRef`/`useEffect`-heavy code
-- Choosing between local state, lifted state, context, and external stores
-- Working with Server Components / Client Components (Next.js App Router, RSC)
-- Implementing forms with React 19 actions or controlled inputs
-- Wiring data fetching with TanStack Query / SWR / RSC
-
-## Core Principles
-
-### 1. Render is a Pure Function of Props and State
+`use()` reads values from Promises and Context directly in render. Unlike other hooks, it can be called inside conditionals and loops.
 
 ```tsx
-// Good: derive during render
-function Cart({ items }: { items: CartItem[] }) {
-  const total = items.reduce((sum, i) => sum + i.price * i.qty, 0);
-  return <span>{formatMoney(total)}</span>;
+import { use } from 'react';
+
+function UserProfile({ userPromise }: { userPromise: Promise<User> }) {
+  const user = use(userPromise);
+  return <h1>{user.name}</h1>;
 }
 
-// Bad: derived state stored separately
-function Cart({ items }: { items: CartItem[] }) {
-  const [total, setTotal] = useState(0);
-  useEffect(() => {
-    setTotal(items.reduce((sum, i) => sum + i.price * i.qty, 0));
-  }, [items]);
-  return <span>{formatMoney(total)}</span>;
+function ThemeButton() {
+  const theme = use(ThemeContext);
+  return <button style={{ background: theme.primary }}>Click</button>;
 }
 ```
 
-Derived state in `useEffect` adds a render cycle, can desync, and obscures the data flow.
+Wrap components that use `use()` with a Promise in a `<Suspense>` boundary.
 
-### 2. Side Effects Outside Render
-
-Effects, mutations, network calls, and subscriptions live in event handlers or `useEffect` — never in the render body.
-
-### 3. Composition Over Inheritance
-
-React has no inheritance model for components. Compose with `children`, render props, or component props.
-
-## Hooks Discipline
-
-See [rules/react/hooks.md](../../rules/react/hooks.md) for the full ruleset. Highlights:
-
-- Top-level only, never conditional
-- Cleanup every subscription, interval, listener
-- Functional updater (`setX(prev => prev + 1)`) when new state depends on old
-- Default position: do not memoize — add `useMemo`/`useCallback` only when a profiler or a dependency chain proves it matters
-- Extract a custom hook only when the same hook sequence appears in 2+ components
-
-## State Location Decision Tree
-
-```
-Used by one component?
-  -> useState inside it
-
-Used by parent + a few descendants?
-  -> lift to nearest common ancestor
-
-Used across distant branches AND low-frequency reads (theme, auth, locale)?
-  -> React Context
-
-High-frequency updates shared across the tree?
-  -> external store (Zustand, Jotai, Redux Toolkit)
-
-Derived from a server?
-  -> server-state library (TanStack Query, SWR, RSC fetch)
-```
-
-Most pages do not need context or a global store. Resist abstraction until duplicated lifting becomes painful.
-
-## Server / Client Components (RSC)
+## Server Components
 
 ```tsx
-// Server Component - default, async, never ships JS for itself
-export default async function ProductPage({ params }: { params: { id: string } }) {
-  const product = await db.product.findUnique({ where: { id: params.id } });
-  if (!product) notFound();
-  return <ProductView product={product} />;
+// app/users/page.tsx - Server Component (default, no directive needed)
+import { UserList } from './UserList';
+
+export default async function UsersPage() {
+  const users = await fetch('https://api.example.com/users', {
+    next: { revalidate: 60 },
+  }).then(r => r.json());
+
+  return <UserList users={users} />;
 }
 
-// Client Component - opt in with "use client"
-"use client";
-export function AddToCartButton({ productId }: { productId: string }) {
-  const [pending, startTransition] = useTransition();
+// app/users/UserList.tsx - Still a Server Component
+export function UserList({ users }: { users: User[] }) {
   return (
-    <button
-      disabled={pending}
-      onClick={() => startTransition(() => addToCart(productId))}
-    >
-      {pending ? "Adding..." : "Add to cart"}
-    </button>
+    <ul>
+      {users.map(u => (
+        <li key={u.id}>
+          {u.name}
+          <DeleteButton userId={u.id} />
+        </li>
+      ))}
+    </ul>
   );
 }
 ```
 
-Boundaries:
+Push `'use client'` as deep as possible. Only leaves that need interactivity should be Client Components.
 
-- Server -> Client: pass serializable props or `children`
-- Client -> Server: invoke Server Actions via `<form action={...}>` or imperatively from event handlers
-- Never `import` a Server Component from a Client Component file — compose them via `children` instead
-
-## Suspense + Error Boundaries
+## Server Actions
 
 ```tsx
-<ErrorBoundary fallback={<ErrorView />}>
-  <Suspense fallback={<UserSkeleton />}>
-    <UserDetail id={id} />
-  </Suspense>
-</ErrorBoundary>
+// app/actions.ts
+'use server';
+
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
+
+export async function createPost(formData: FormData) {
+  const title = formData.get('title') as string;
+  const body = formData.get('body') as string;
+
+  await db.insert(posts).values({ title, body });
+
+  revalidatePath('/posts');
+  redirect('/posts');
+}
 ```
 
-- Place Suspense boundaries close to the data, not at the route root — progressively reveal content
-- Error Boundary remains a class API; use `react-error-boundary` for a hook-friendly wrapper
-- A boundary catches errors thrown during render, lifecycle, and constructors of its children — NOT in event handlers or async code
-
-## Forms
-
-### React 19 form actions (preferred for new code)
-
 ```tsx
-"use client";
-import { useActionState } from "react";
+// app/posts/new/page.tsx
+import { createPost } from '../actions';
 
-const initial = { error: null as string | null };
-
-async function updateUserAction(_prev: typeof initial, formData: FormData) {
-  "use server";
-  const parsed = UserSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return { error: "Invalid input" };
-  await db.user.update({ where: { id: parsed.data.id }, data: parsed.data });
-  return { error: null };
-}
-
-export function UserForm() {
-  const [state, formAction, pending] = useActionState(updateUserAction, initial);
+export default function NewPostPage() {
   return (
-    <form action={formAction}>
-      <input name="name" required />
-      <button type="submit" disabled={pending}>Save</button>
-      {state.error && <p role="alert">{state.error}</p>}
+    <form action={createPost}>
+      <input name="title" required />
+      <textarea name="body" required />
+      <button type="submit">Create</button>
     </form>
   );
 }
 ```
 
-### Controlled inputs
-
-Use controlled when the value drives other UI, formats on every keystroke, or implements real-time validation.
-
-### Complex forms
-
-For multi-step forms, dynamic field arrays, or cross-field validation: use a library (React Hook Form, TanStack Form). Roll-your-own state management for forms past trivial complexity is a maintenance trap.
-
-## Data Fetching Decision Matrix
-
-| Need | Tool |
-|---|---|
-| Per-request data in Next.js App Router | RSC `await fetch()` |
-| Client-side cache + mutations + invalidation | TanStack Query |
-| Lightweight client cache + revalidation | SWR |
-| Real-time subscriptions | Server-Sent Events, WebSockets, or the lib's subscription API |
-| One-off fire-and-forget | `fetch()` in an event handler |
-
-Avoid `useEffect` + `fetch` for application data — race conditions, no cache, no retry, no Suspense integration.
-
-## Composition Recipes
-
-### Slot via `children`
+## useActionState (React 19)
 
 ```tsx
-<Layout>
-  <Header />
-  <Main>{content}</Main>
-</Layout>
-```
+'use client';
 
-### Named slots
+import { useActionState } from 'react';
+import { createUser } from './actions';
 
-```tsx
-<Page header={<Nav />} sidebar={<Filters />}>
-  <Results />
-</Page>
-```
-
-### Compound components (shared state via Context)
-
-```tsx
-<Tabs defaultValue="profile">
-  <Tabs.List>
-    <Tabs.Trigger value="profile">Profile</Tabs.Trigger>
-    <Tabs.Trigger value="settings">Settings</Tabs.Trigger>
-  </Tabs.List>
-  <Tabs.Panel value="profile"><Profile /></Tabs.Panel>
-  <Tabs.Panel value="settings"><Settings /></Tabs.Panel>
-</Tabs>
-```
-
-### Render prop / function-as-child
-
-Useful when the parent needs to pass parameters to the rendered output:
-
-```tsx
-<DataLoader id={id}>
-  {({ data, isLoading }) => isLoading ? <Spinner /> : <UserCard user={data} />}
-</DataLoader>
-```
-
-Modern alternative: a hook (`useData(id)`) returning the same shape — usually cleaner.
-
-## Performance
-
-### When `React.memo` Actually Helps
-
-Wrap a component in `React.memo` only when:
-
-1. It re-renders frequently
-2. Its props are usually the same between renders
-3. Its render is measurably expensive
-
-`React.memo` adds an equality check on every render. If props differ on most renders, the check is pure overhead.
-
-### Avoiding Render Cascades
-
-- Lift state down rather than up where possible
-- Split context: one context per concern, so a change to `themeContext` does not re-render auth consumers
-- Use `useSyncExternalStore` for external state libraries — required for safe concurrent rendering
-
-### Lists
-
-- Provide stable `key` props (database id, not array index)
-- Virtualize long lists with `@tanstack/react-virtual` or `react-window` once visible item count exceeds ~50 with non-trivial rows
-
-## Accessibility-First Composition
-
-- Always render semantic HTML (`<button>`, `<a>`, `<nav>`, `<main>`) before reaching for `role` attributes
-- Every interactive element must be reachable by keyboard
-- Form inputs need labels — `<label htmlFor>` or `aria-label` if visually labeled by an icon
-- Manage focus on route changes and modal open/close
-- Run `axe` in component tests (see [skills/react-testing](../react-testing/SKILL.md))
-- Cross-link: [skills/accessibility/SKILL.md](../accessibility/SKILL.md) covers WCAG criteria and pattern libraries
-
-## Routing
-
-This skill is router-agnostic. The patterns above work with React Router, TanStack Router, Next.js App Router, Remix Router. Router-specific patterns (loaders, actions, nested layouts) follow the router's documentation — those are framework concerns layered on top of React core.
-
-## Out of Scope (Pointer Sections)
-
-- **Next.js specifics**: App Router data loading, Route Handlers, Middleware, Parallel Routes — separate concern, use Next.js docs
-- **React Native**: Platform-specific patterns differ enough to warrant a separate `react-native-patterns` skill (not present yet)
-- **Remix**: Loader/action conventions overlap with RSC but follow Remix docs
-
-## Related
-
-- Rules: [rules/react/](../../rules/react/) — coding-style, hooks, patterns, security, testing
-- Skills: [react-performance](../react-performance/SKILL.md) for the Vercel-derived performance ruleset, [frontend-patterns](../frontend-patterns/SKILL.md) for cross-framework UI concerns, [accessibility](../accessibility/SKILL.md), [angular-developer](../angular-developer/SKILL.md) for framework comparison
-- Agents: `react-reviewer` for code review, `react-build-resolver` for build/bundler errors
-- Commands: `/react-review`, `/react-build`, `/react-test`
-
-## Examples
-
-### Custom hook for debounced search
-
-```tsx
-function useDebounce<T>(value: T, delay = 300): T {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const id = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(id);
-  }, [value, delay]);
-  return debounced;
-}
-
-function SearchBox() {
-  const [query, setQuery] = useState("");
-  const debounced = useDebounce(query, 300);
-  const { data } = useQuery({
-    queryKey: ["search", debounced],
-    queryFn: () => searchApi(debounced),
-    enabled: debounced.length > 0,
+function SignupForm() {
+  const [state, formAction, isPending] = useActionState(createUser, {
+    errors: {},
+    message: '',
   });
+
   return (
-    <>
-      <input value={query} onChange={(e) => setQuery(e.target.value)} />
-      <Results items={data ?? []} />
-    </>
+    <form action={formAction}>
+      <input name="email" />
+      {state.errors.email && <p>{state.errors.email}</p>}
+      <button disabled={isPending}>
+        {isPending ? 'Creating...' : 'Sign Up'}
+      </button>
+      {state.message && <p>{state.message}</p>}
+    </form>
   );
 }
 ```
 
-### Optimistic UI with React 19 `useOptimistic`
+## useOptimistic (React 19)
 
 ```tsx
-"use client";
-import { useOptimistic } from "react";
+'use client';
 
-export function MessageList({ messages }: { messages: Message[] }) {
-  const [optimistic, addOptimistic] = useOptimistic(
-    messages,
-    (state, newMessage: Message) => [...state, newMessage],
-  );
+import { useOptimistic } from 'react';
+import { likePost } from './actions';
 
-  async function send(formData: FormData) {
-    const text = String(formData.get("text"));
-    addOptimistic({ id: "pending", text, sender: "me" });
-    await saveMessage(text);
+function LikeButton({ count, postId }: { count: number; postId: string }) {
+  const [optimisticCount, addOptimistic] = useOptimistic(count);
+
+  async function handleLike() {
+    addOptimistic(prev => prev + 1);
+    await likePost(postId);
   }
 
   return (
-    <>
-      <ul>{optimistic.map((m) => <li key={m.id}>{m.text}</li>)}</ul>
-      <form action={send}>
-        <input name="text" />
-        <button type="submit">Send</button>
-      </form>
-    </>
+    <form action={handleLike}>
+      <button type="submit">{optimisticCount} Likes</button>
+    </form>
   );
 }
 ```
 
-### Splitting context to avoid render cascades
+## Suspense Boundaries
 
 ```tsx
-// Two contexts: one rarely changes, one frequently
-const ThemeContext = createContext<Theme>("light");
-const NotificationsContext = createContext<Notification[]>([]);
+import { Suspense } from 'react';
 
-// A component that only consumes ThemeContext does NOT re-render when notifications change
+function Dashboard() {
+  return (
+    <div>
+      <Suspense fallback={<StatsSkeleton />}>
+        <StatsPanel />
+      </Suspense>
+      <div className="grid grid-cols-2">
+        <Suspense fallback={<ChartSkeleton />}>
+          <RevenueChart />
+        </Suspense>
+        <Suspense fallback={<ListSkeleton />}>
+          <RecentActivity />
+        </Suspense>
+      </div>
+    </div>
+  );
+}
 ```
+
+Place Suspense boundaries around independent data-fetching units. Avoid wrapping the entire page in a single boundary (defeats the purpose of streaming).
+
+## Error Boundaries
+
+```tsx
+'use client';
+
+import { Component, type ReactNode } from 'react';
+
+class ErrorBoundary extends Component<
+  { fallback: ReactNode; children: ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    reportError(error, info.componentStack);
+  }
+
+  render() {
+    if (this.state.hasError) return this.props.fallback;
+    return this.props.children;
+  }
+}
+```
+
+Or use Next.js `error.tsx` convention for route-level error handling.
+
+## Custom Hooks
+
+```tsx
+function useDebounce<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+
+  return debounced;
+}
+
+function useLocalStorage<T>(key: string, initial: T) {
+  const [value, setValue] = useState<T>(() => {
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : initial;
+  });
+
+  useEffect(() => {
+    localStorage.setItem(key, JSON.stringify(value));
+  }, [key, value]);
+
+  return [value, setValue] as const;
+}
+```
+
+Rules for custom hooks:
+- Prefix with `use`
+- Extract when logic is shared between 2+ components
+- Keep hooks focused on a single concern
+- Return tuples `[value, setter]` or objects `{ data, error, loading }`
+
+## Compound Components
+
+```tsx
+function Tabs({ children }: { children: ReactNode }) {
+  const [active, setActive] = useState(0);
+  return (
+    <TabsContext value={{ active, setActive }}>
+      <div role="tablist">{children}</div>
+    </TabsContext>
+  );
+}
+
+Tabs.Tab = function Tab({ index, children }: { index: number; children: ReactNode }) {
+  const { active, setActive } = use(TabsContext);
+  return (
+    <button
+      role="tab"
+      aria-selected={active === index}
+      onClick={() => setActive(index)}
+    >
+      {children}
+    </button>
+  );
+};
+
+Tabs.Panel = function Panel({ index, children }: { index: number; children: ReactNode }) {
+  const { active } = use(TabsContext);
+  if (active !== index) return null;
+  return <div role="tabpanel">{children}</div>;
+};
+
+// Usage
+<Tabs>
+  <Tabs.Tab index={0}>Profile</Tabs.Tab>
+  <Tabs.Tab index={1}>Settings</Tabs.Tab>
+  <Tabs.Panel index={0}><ProfileForm /></Tabs.Panel>
+  <Tabs.Panel index={1}><SettingsForm /></Tabs.Panel>
+</Tabs>
+```
+
+## Performance Rules
+
+- Avoid creating objects/arrays in JSX props (causes re-renders)
+- Use `React.memo` only after profiling confirms unnecessary re-renders
+- Prefer `useMemo`/`useCallback` for expensive computations or stable references passed to memoized children
+- Use `key` to reset component state intentionally
+- Colocate state: keep state as close to where it is used as possible
+- Avoid prop drilling beyond 2 levels; use Context or composition instead

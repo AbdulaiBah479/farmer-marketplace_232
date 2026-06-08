@@ -165,85 +165,72 @@ rm -rf ~/Library/Logs/*
 
 ### Docker
 
-**ABSOLUTE RULE**: NEVER use any `prune` command (`docker image prune`, `docker volume prune`, `docker system prune`, `docker container prune`). Always delete by specifying exact object IDs or names.
-
 #### Images
 
 **What it is**: Container images (base OS + application layers)
 
-**Safety**: 🟡 **Requires per-image verification**
+**Safety**: 🟢 **Safe to delete unused images**
 
-**Analysis**:
+**Check first**:
 ```bash
-# List all images sorted by size
-docker images --format "table {{.ID}}\t{{.Repository}}:{{.Tag}}\t{{.Size}}\t{{.CreatedSince}}" | sort -k3 -h -r
-
-# Identify dangling images
-docker images -f "dangling=true" --format "{{.ID}}\t{{.Size}}\t{{.CreatedSince}}"
-
-# For EACH image, verify no container references it
-docker ps -a --filter "ancestor=<IMAGE_ID>" --format "{{.Names}}\t{{.Status}}"
+docker images
 ```
 
-**Cleanup** (only after per-image verification):
+**Cleanup**:
 ```bash
-# Remove specific images by ID
-docker rmi a02c40cc28df 555434521374 f471137cd508
+docker image prune -a  # Remove all unused images
 ```
 
 #### Containers
 
 **What it is**: Running or stopped container instances
 
-**Safety**: 🟡 **Stopped containers may be restarted -- verify with user**
+**Safety**: 🟢 **Safe to delete stopped containers**
 
-**Analysis**:
+**Check first**:
 ```bash
-docker ps -a --format "table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Size}}"
+docker ps -a
 ```
 
-**Cleanup** (only after user confirms each container/project):
+**Cleanup**:
 ```bash
-# Remove specific containers by name
-docker rm container-name-1 container-name-2
+docker container prune  # Remove stopped containers
 ```
 
 #### Volumes
 
 **What it is**: Persistent data storage for containers
 
-**Safety**: 🔴 **CAUTION - May contain databases, user uploads, and irreplaceable data**
+**Safety**: 🔴 **CAUTION - May contain important data**
 
-**Analysis**:
+**Check first**:
 ```bash
-# List all volumes
 docker volume ls
-
-# Check which container uses each volume
-docker ps -a --filter "volume=<VOLUME_NAME>" --format "{{.Names}}\t{{.Status}}"
-
-# CRITICAL: For database volumes (mysql, postgres, redis in name), inspect contents
-docker run --rm -v <VOLUME_NAME>:/data alpine ls -la /data
-docker run --rm -v <VOLUME_NAME>:/data alpine du -sh /data/*
+docker volume inspect <volume_name>
 ```
 
-**Cleanup** (only after per-volume confirmation, database volumes require content inspection):
+**Cleanup** (only if certain):
 ```bash
-# Remove specific volumes by name
-docker volume rm project-mysql-data project-redis-data
+docker volume prune  # Remove unused volumes
 ```
 
 #### Build Cache
 
 **What it is**: Intermediate build layers
 
-**Safety**: 🟢 **Safe to delete** (rebuilds just take longer)
-
-**Note**: `docker builder prune` is the ONE exception to the prune prohibition -- build cache contains only intermediate layers, never user data.
+**Safety**: 🟢 **Safe to delete**
 
 **Cleanup**:
 ```bash
 docker builder prune -a
+```
+
+#### All-in-one cleanup
+
+⚠️ **WARNING**: This removes ALL unused Docker resources including volumes!
+
+```bash
+docker system prune -a --volumes
 ```
 
 ### node_modules

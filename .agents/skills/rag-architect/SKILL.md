@@ -2,6 +2,7 @@
 name: rag-architect
 description: Designs and implements production-grade RAG systems by chunking documents, generating embeddings, configuring vector stores, building hybrid search pipelines, applying reranking, and evaluating retrieval quality. Use when building RAG systems, vector databases, or knowledge-grounded AI applications requiring semantic search, document retrieval, context augmentation, similarity search, or embedding-based indexing.
 license: MIT
+compatibility: opencode
 metadata:
   author: https://github.com/Jeffallan
   version: "1.1.0"
@@ -192,5 +193,3 @@ When designing RAG architecture, deliver:
 3. Chunking strategy with examples and rationale
 4. Retrieval pipeline design (query → results flow)
 5. Evaluation plan with metrics, benchmarks, and pass/fail thresholds
-
-[Documentation](https://jeffallan.github.io/claude-skills/skills/data-ml/rag-architect/)

@@ -1,9 +1,6 @@
 ---
 name: figma-implement-design
-description: Translate Figma nodes into production-ready code with 1:1 visual fidelity using the Figma MCP workflow (design context, screenshots, assets, and project-convention translation). Use when the user provides Figma URLs or node IDs and asks to implement designs or components that must match Figma specs. Requires a working Figma MCP server connection. Do NOT use for general Figma data fetching, variable exploration, or MCP troubleshooting (use figma instead).
-metadata:
-  author: github.com/openai/skills
-  version: '1.0.0'
+description: Translates Figma designs into production-ready application code with 1:1 visual fidelity. Use when implementing UI code from Figma files, when user mentions "implement design", "generate code", "implement component", provides Figma URLs, or asks to build components matching Figma specs. For Figma canvas writes via `use_figma`, use `figma-use`.
 ---
 
 # Implement Design
@@ -11,6 +8,14 @@ metadata:
 ## Overview
 
 This skill provides a structured workflow for translating Figma designs into production-ready code with pixel-perfect accuracy. It ensures consistent integration with the Figma MCP server, proper use of design tokens, and 1:1 visual parity with designs.
+
+## Skill Boundaries
+
+- Use this skill when the deliverable is code in the user's repository.
+- If the user asks to create/edit/delete nodes inside Figma itself, switch to [figma-use](../figma-use/SKILL.md).
+- If the user asks to build or update a full-page screen in Figma from code or a description, switch to [figma-generate-design](../figma-generate-design/SKILL.md).
+- If the user asks only for Code Connect mappings, switch to [figma-code-connect-components](../figma-code-connect-components/SKILL.md).
+- If the user asks to author reusable agent rules (`CLAUDE.md`/`AGENTS.md`), switch to [figma-create-design-system-rules](../figma-create-design-system-rules/SKILL.md).
 
 ## Prerequisites
 
@@ -24,17 +29,6 @@ This skill provides a structured workflow for translating Figma designs into pro
 ## Required Workflow
 
 **Follow these steps in order. Do not skip steps.**
-
-### Step 0: Set up Figma MCP (if not already configured)
-
-If any MCP call fails because Figma MCP is not connected, pause and set it up:
-
-1. Add the Figma MCP server to your agent's MCP configuration:
-   - URL: `https://mcp.figma.com/mcp`
-2. Enable remote MCP client if required by your agent.
-3. Log in with OAuth following your agent's authentication flow.
-
-After successful login, the user will have to restart their agent. You should finish your answer and tell them so when they try again they can continue with Step 1.
 
 ### Step 1: Get Node ID
 

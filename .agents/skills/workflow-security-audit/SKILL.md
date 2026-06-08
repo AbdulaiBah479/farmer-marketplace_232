@@ -1,12 +1,6 @@
 ---
 name: workflow-security-audit
 description: Comprehensive security assessment and remediation. Use for security reviews, compliance checks, vulnerability assessments.
-keywords:
-  - security audit
-  - vulnerability scan
-  - security
-  - audit
-  - workflow security audit
 ---
 
 # Security Audit Workflow

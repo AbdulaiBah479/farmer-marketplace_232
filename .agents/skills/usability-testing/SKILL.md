@@ -1,238 +1,71 @@
 ---
 name: usability-testing
-description: "Plan and run usability tests on existing or prototype designs including test design, task scripts, moderation, observation, and findings synthesis. Use this skill whenever the user wants to test usability, run a moderated test, run an unmoderated test, validate a design, find usability issues, or improve task completion. Triggers on usability test, usability testing, moderated test, unmoderated test, task script, think aloud, prototype testing, user testing, design validation, task completion. Also triggers when the user has built something and wants to know if real users can use it before shipping."
-category: research
-catalog_summary: "Test design, moderation, findings reports"
-display_order: 2
+description: Help users conduct effective usability testing. Use when someone is planning user tests, designing prototype validation, preparing usability studies, or trying to understand why users struggle with their product.
 ---
 
 # Usability Testing
 
-Plan and run tests that find usability problems before users hit them in production. Stack-agnostic. Tool-agnostic.
+Help the user conduct effective usability testing using frameworks and insights from 11 product leaders.
 
-This skill is for testing existing designs or prototypes. For broader discovery research, use `ux-research`. For conversion testing in production, use `cro-optimization`.
+## How to Help
 
----
+When the user asks for help with usability testing:
 
-## When to use
+1. **Clarify the goal** - Determine if they're validating a concept, finding friction points, or optimizing conversion
+2. **Choose the right fidelity** - Help them select between Wizard of Oz tests, fake doors, prototypes, or production testing
+3. **Design the test** - Guide them on recruiting users, creating scenarios, and what to observe
+4. **Plan for iteration** - Discuss how findings will flow back into the product development process
 
-- Before launching a new flow or major redesign
-- After a redesign to verify it doesn't introduce new problems
-- When analytics show drop-off but you don't know why
-- When customer support tickets pattern around specific UI areas
-- Pre-launch user validation
-- Comparing two design directions
+## Core Principles
 
-## When NOT to use
+### Fake it before you build it
+Itamar Gilad: "Initially you fake it - fake door test, smoke test, Wizard of Oz tests. We showed the tabbed inbox working to people, but it wasn't really Gmail, it was just a facade." Validate core value propositions before writing production code using faked versions where humans perform the automated task behind the scenes.
 
-- Discovery / generative research (use `ux-research`)
-- Live conversion optimization (use `cro-optimization`)
-- Mapping the broader experience (use `journey-mapping`)
-- Pure quantitative measurement (use `analytics-strategy`)
+### Small samples reveal big friction
+Melanie Perkins: "It's amazing how you can find 10 random people on the internet and they can give such astute feedback that's so representative for such a large number of people." Run tests with as few as 10 random people to identify core product issues.
 
----
+### Watch users, don't just ask them
+Uri Levine: "Simply watch users and see what they're doing. If they're not doing what you expect, then ask them why." Direct observation reveals behaviors and needs that surveys miss. Ask 'why' when users deviate from the expected path.
 
-## Required inputs
+### Test multiple options, not one
+Kristen Berman: "We never do a UX study where we're just showing people one thing. We always present multiple options and relatively look for which one drives the intended behavior." Single-design testing is ineffective for predicting behavior.
 
-- The design or prototype to test (functional or near-functional)
-- Specific tasks users would do
-- The audience (who should be tested)
-- Testing infrastructure (moderated tool, unmoderated tool, in-person setup)
+### Overcome creator bias
+Guillermo Rauch: "You tend to overrate how well your products work. It's very important to give your product to another person and watch them interact with it." Directly observing users helps overcome the tendency to think your product is more intuitive than it is.
 
----
+### Micro-level testing drives millions
+Judd Antin: "We changed seven characters and made Airbnb millions of dollars because we found out the button felt scary." Don't dismiss usability testing as junior work; finding scary or confusing CTAs can massively impact conversion.
 
-## The framework: 5 phases
+### Progress through testing stages
+Itamar Gilad: "Mid-level tests are about building a rough version - early adopter programs, alphas, longitudinal user studies, and fish food (testing on your own team)." Use a progression from fish fooding to dogfooding to alphas to increase confidence iteratively.
 
-### 1. Define what to test
+### Make testing a team sport
+Noah Weiss: "We had PMs, engineers, designers, and the user researcher all in one Slack thread live, responding and reacting to the usability session." Increase engagement by having cross-functional teams live-react to sessions in shared chat threads.
 
-Don't test the whole product. Test specific tasks.
+## Questions to Help Users
 
-**Task selection criteria:**
+- "What specific behavior are you trying to observe or validate?"
+- "Do you need to validate the concept (use fake doors) or optimize the execution (use the real product)?"
+- "How will you recruit users who have 'zero skin in the game' for honest feedback?"
+- "Are you testing one option or multiple options to compare?"
+- "What will you do with the findings - how will they flow back into development?"
+- "Who else on the team should observe these sessions?"
 
-- The task represents a real user goal (not "click around and explore")
-- The task has a clear start and end
-- The task is achievable in 2 to 10 minutes
-- The task is one of: most common, most strategic, most problematic
+## Common Mistakes to Flag
 
-**Examples of testable tasks:**
+- **Testing only one design** - Present multiple options to measure relative performance
+- **Building before validating** - Use Wizard of Oz or fake door tests before writing production code
+- **Relying on internal intuition** - Employees are too familiar with the product to spot real user friction
+- **Ignoring micro-level issues** - Small copy changes and button labels can have massive business impact
+- **Testing in isolation** - Bring engineers and designers into sessions to build shared understanding
 
-> "You want to find a contractor near you who can install a fence. Show me how you'd do that on this site."
+## Deep Dive
 
-> "You're a first-time visitor. You want to understand if this product fits your needs. Walk me through how you'd evaluate it."
+For all 14 insights from 11 guests, see `references/guest-insights.md`
 
-> "Your team needs a new tool to manage projects. Use this site to figure out which plan is right for a 12-person team."
+## Related Skills
 
-**Task framing rules:**
-
-- State the user goal, not the system action ("find a place to stay" not "click the search button")
-- Provide context (why are you doing this?)
-- Don't reveal the path
-- Don't use product terminology in the task framing
-
-### 2. Choose moderated or unmoderated
-
-**Moderated** (live, with researcher):
-
-- Researcher observes and probes in real time
-- Best for early-stage prototypes, complex tasks, novel concepts
-- Higher cost, smaller sample (5 to 8 participants typical)
-- Catches surprises and probe deeper
-
-**Unmoderated** (recorded, asynchronous):
-
-- Participant completes alone, often via tool (UserTesting, Maze, Lookback)
-- Best for stable designs, simple tasks, larger sample
-- Lower cost, larger sample (15 to 30 participants typical)
-- Catches patterns at scale, less depth per session
-
-For most teams: moderated for early/critical decisions, unmoderated for ongoing validation.
-
-### 3. Recruit
-
-Target audience - not just convenience.
-
-**Recruit criteria:**
-
-- Match real users (target audience, not just "anyone")
-- Mix of experience levels with the product (new and existing if applicable)
-- Mix of relevant device types (mobile, desktop, tablet if relevant)
-- Exclude friends, family, employees
-
-**Sample size:**
-
-- Moderated: 5 to 8 participants (Nielsen's "5 users find 85% of usability issues" for the most common segment)
-- Unmoderated: 15 to 30 participants (more participants compensate for less probing)
-- Multi-segment testing: 5 to 8 per segment
-
-### 4. Run the test
-
-**Pre-task setup:**
-
-- Confirm recording works
-- Brief participant (purpose, anonymity, recording, "no wrong answers")
-- Get verbal consent
-- Have participant share screen if remote
-
-**Moderated session structure:**
-
-1. **Warm-up** (2 to 3 min). Easy questions to put participant at ease.
-2. **Pre-test questions** (3 to 5 min). Background context, current behavior with similar products.
-3. **Task 1** (5 to 10 min). Describe task. Have participant attempt while thinking aloud.
-4. **Post-task questions** (1 to 2 min). What was easy/hard? Anything confusing?
-5. **Repeat for tasks 2, 3, 4** (typically 3 to 5 tasks per 60-minute session).
-6. **Overall debrief** (5 to 10 min). General reactions, comparisons to alternatives, anything else.
-7. **Close** (2 min).
-
-**Moderation principles:**
-
-- Encourage think-aloud ("What's going through your mind?")
-- Don't help unless they're truly stuck (and even then, only after a long pause)
-- Don't lead ("Are you looking for the menu?" - bad)
-- Note where they hesitate, scroll, or backtrack
-- Note their language vs the product's language
-- Note emotional reactions
-
-**Anti-patterns:**
-
-- Talking too much (researcher should talk maybe 20% of the time)
-- Defending the design when participants struggle
-- Helping prematurely
-- Asking participants to predict their future behavior
-- Treating participant suggestions as features ("Users want X" - test demand for X separately)
-
-### 5. Synthesize and report
-
-Patterns across participants are signal. Single-participant complaints are weaker (but worth investigating).
-
-**Synthesis steps:**
-
-1. **Issue inventory.** Every issue observed, with which participant, which task, severity.
-2. **Cluster.** Issues that are the same root problem.
-3. **Severity.**
-   - **Critical:** Blocks task completion. Most users hit this.
-   - **Major:** Significantly slows task. Many users hit this.
-   - **Minor:** Friction. Some users hit this. Workaround exists.
-   - **Cosmetic:** Polish. Doesn't affect task.
-4. **Recommendations.** For each issue, propose specific fixes.
-5. **Prioritize.** By severity and effort.
-
-**Report structure:**
-
-```markdown
-# Usability Test: [Design / flow]
-
-## Summary
-[2 to 3 paragraphs covering: what was tested, headline findings, top 3 priorities]
-
-## Method
-[Moderated/unmoderated, sample size, audience, dates, tasks]
-
-## Critical findings
-[Each with description, frequency, supporting evidence (quotes/clips), recommendation]
-
-## Major findings
-[Same structure]
-
-## Minor findings
-[Brief]
-
-## Cosmetic findings
-[Briefest]
-
-## What worked well
-[Calibration: capture successes too]
-
-## Recommendations
-[Prioritized list with effort estimates]
-
-## Next steps
-[Test re-run schedule, design iteration plan]
-```
-
----
-
-## Workflow
-
-1. **Define the goals.** What decisions hinge on this? What tasks matter most?
-2. **Design tasks.** 3 to 5 specific, realistic, goal-framed tasks.
-3. **Choose moderated vs unmoderated.** Match to stage and depth needed.
-4. **Recruit.** Specific to audience.
-5. **Pilot.** 1 to 2 sessions before main batch. Refine tasks if needed.
-6. **Run.** Follow the protocol. Stay disciplined.
-7. **Synthesize during, not just after.** Patterns emerge by session 4 or 5.
-8. **Report.** Multiple formats - written report + highlight clips.
-9. **Track fixes.** Every critical issue should have an owner and date.
-10. **Re-test after fixes.** Verify the fix worked, didn't introduce new issues.
-
----
-
-## Failure patterns
-
-- **Testing the whole product instead of specific tasks.** Vague results.
-- **Tasks that reveal the path.** ("Click the menu and find...")
-- **Friends and family as participants.** Biased, not representative.
-- **Researcher leading the participant.** Findings reflect the researcher.
-- **Defending the design when participants struggle.** Misses real issues.
-- **Helping too quickly.** Participant doesn't experience the friction.
-- **Treating participant suggestions as features.** Users solve their problem; product team designs the solution.
-- **One participant = data point.** A single strong opinion isn't a finding.
-- **Skipping severity scoring.** All findings treated equally; team can't prioritize.
-- **Reports no one reads.** Highlight clips and live walkthroughs work better than 80-page decks.
-- **Testing once, never re-testing.** Fixes that introduce new problems go undetected.
-
----
-
-## Output format
-
-Default outputs:
-
-1. **Test plan** (before testing) - `usability-test-plan-[topic].md`
-2. **Task script** (per session) - `usability-tasks-[topic].md`
-3. **Findings report** (after synthesis) - `usability-findings-[topic].md`
-4. **Highlight clips** (separately produced)
-
----
-
-## Reference files
-
-- [`references/task-script-patterns.md`](references/task-script-patterns.md) - Task framing patterns by common product type, with good and bad examples.
+- Customer Research
+- Writing PRDs
+- Shipping Products
+- Designing Growth Loops

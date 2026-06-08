@@ -1,119 +1,114 @@
 ---
-name: vibe-coding
-description: Methodology for effective AI-assisted software development. Use when helping users build software with AI coding assistants, debugging AI-generated code, planning features for AI implementation, managing version control in AI workflows, or when users mention "vibe coding," Claude Code, Cursor, GitHub Copilot, Aider, Continue, Cline, Codex, Windsurf, or similar AI coding tools. Provides strategies for planning, testing, debugging, and iterating on code written with LLM assistance.
+name: "vibe-coding"
+description: "Turn an idea into a functional, demo-ready prototype using AI-assisted “vibe coding” (timeboxed build loop, prompt pack, build plan, demo script, and safety checks). Use for rapid prototyping and proving concepts in AI & Technology."
 ---
 
-# Vibe coding methodology
+# Vibe Coding
 
-Practical strategies for building software effectively with AI coding assistants.
+## Scope
 
-> **Tool landscape moves fast.** This skill was last swept 2026-05-08. The methodology (planning, version control, testing, bug-fixing) is stable; the specific tool names, instruction-file conventions, and pricing details drift quarterly. Treat the named tools as representative, not exhaustive.
+**Covers**
+- Timeboxed, AI-assisted rapid prototyping (“vibe coding”) to produce a functional demo (not slides)
+- Turning a rough idea into a buildable prototype spec + task board + prompt pack
+- A tight iteration loop: generate → run → verify → adjust → log decisions
+- “Build tools to build the thing” when it meaningfully speeds up the demo (timeboxed)
+- Safe use of coding agents: least privilege, no secrets, small diffs, validation, rollback
 
-## Planning process
+**When to use**
+- “Vibe code a working prototype we can demo in 30–90 minutes.”
+- “Replace this Figma concept with a clickable prototype.”
+- “I’m not an engineer—help me build a small app/tool with AI and ship a demo.”
+- “Turn this AI feature idea into a proof-of-concept with a clear build loop and demo script.”
 
-Start by working with the AI to write a detailed implementation plan in a markdown file.
+**When NOT to use**
+- You need a production-grade system, hardening, scaling, or security review (use `building-with-llms` + engineering process).
+- You need upstream problem framing, strategy, or PRD-level alignment (use `problem-definition`, `writing-prds`).
+- The work is high-stakes/irreversible (payments, auth, medical, legal, safety-critical) without human owners and reviews.
+- The request is “build anything” with no demo target; do intake first and narrow to one scenario.
 
-**Scope management**: Review and refine the plan—delete unnecessary items, mark complex features as "won't do," and keep a separate section for ideas to implement later. This prevents scope creep and maintains focus.
+## Inputs
 
-**Incremental implementation**: Work section by section rather than building everything at once. Have the AI mark sections complete after successful implementation, and commit each working section to git before moving to the next.
+**Minimum required**
+- Prototype goal: what should a user be able to do in the demo (1–3 “happy path” tasks)
+- Target user + context (who uses it, where it fits)
+- Timebox (e.g., 30/60/90 minutes) + demo audience (internal, customer, exec)
+- Platform preference (web app, mobile, CLI, spreadsheet, etc.) and constraints (privacy, data sensitivity)
+- Data/integrations: mock data ok? any APIs needed? (default to mock)
 
-**Track progress visibly**: Use todo lists, markdown checklists, or inline status markers so both you and the AI can see what's done and what remains. This prevents re-implementing completed work and keeps sessions focused.
+**Missing-info strategy**
+- Ask up to 5 questions from [references/INTAKE.md](references/INTAKE.md) (3–5 at a time).
+- If details remain missing, proceed with explicit assumptions and offer 2–3 options (e.g., mock vs real data; simple UI vs polished).
+- If asked to run commands or write/modify files, request confirmation, keep changes in a dedicated folder, and include rollback guidance.
 
-## Version control strategies
+## Outputs (deliverables)
 
-Git is your safety net — don't rely solely on the AI tool's revert functionality.
+Produce a **Vibe Coding Prototype Pack** (in chat; or as files if requested), in this order:
 
-**Branch per attempt**: Begin each new feature on a fresh feature branch (`git switch -c feature/xyz`) and commit small chunks as the AI makes progress. The branch boundary is your "if this goes off the rails, throw it away" boundary — you discard the branch, not your working tree.
+1) **Vibe Coding Brief** (goal, demo scenario, non-goals, constraints, timebox)
+2) **Prototype Spec** (user flow, screens/components, data model, acceptance criteria, “fake vs real” decisions)
+3) **Prompt Pack** (copy/paste prompts to drive the coding agent safely and efficiently)
+4) **Build Plan + Task Board** (vertical slices with checks/tests per slice)
+5) **Demo Script + Runbook** (how to run, how to demo, what to say, what to avoid)
+6) **Risks / Open questions / Next steps** (always included)
 
-**When the AI goes down a bad path**: Prefer reversible commands. `git restore .` discards uncommitted changes; `git stash` parks them; `git switch -` jumps back to your previous branch. Reach for `git reset --hard HEAD` only when you've confirmed there's nothing in the working tree worth keeping — destructive commands skip the reflog niceties and can swallow uncommitted experiments. (If the agent has been creating new files, a separate `git clean -fd` is also part of "really, throw it all away" — same caveats.)
+Templates: [references/TEMPLATES.md](references/TEMPLATES.md)
 
-**Clean re-implementation**: When you finally find a working solution after several attempts, branch from main, implement it fresh, and discard the throwaway branch. Multiple failed AI attempts leave layers of dead code that compound future confusion — a clean re-implementation of a known-good solution is faster and more maintainable than untangling the spaghetti.
+## Workflow (7 steps)
 
-## Testing framework
+### 1) Pick a single demo outcome (kill ambiguity fast)
+- **Inputs:** Initial idea, timebox, target audience.
+- **Actions:** Write a one-sentence demo promise (“In 60 minutes we will demo…”) + 3–5 non-goals. Choose one “hero” scenario and what can be faked.
+- **Outputs:** Draft **Vibe Coding Brief**.
+- **Checks:** The demo promise is specific, observable, and fits the timebox.
 
-Prioritize end-to-end integration tests over unit tests. Focus on simulating user behavior—testing features by simulating someone clicking through the site or app.
+### 2) Define the prototype’s contract (what exists, what’s mocked)
+- **Inputs:** Demo scenario, platform preference, constraints.
+- **Actions:** Specify the minimum user flow, screens/components, and data shape. Decide: mock data vs real data; stub integrations vs live.
+- **Outputs:** Draft **Prototype Spec**.
+- **Checks:** Acceptance criteria exist for each user-visible step; “fake vs real” is explicit.
 
-**Regression prevention**: LLMs often make unnecessary changes to unrelated logic. Tests catch these regressions before they compound.
+### 3) Set the build loop + guardrails (how we’ll vibe code safely)
+- **Inputs:** Repo/app context (if any), constraints, desired stack.
+- **Actions:** Create a **Prompt Pack** that forces: small diffs, clear file list, run instructions, and “ask before risky actions.” Create a task board of 3–8 vertical slices.
+- **Outputs:** **Prompt Pack** + **Build Plan + Task Board**.
+- **Checks:** Every slice has a Definition of Done and a quick validation method (manual steps or tests).
 
-**Tests as guardrails**: Consider starting with test cases to provide clear boundaries for what the AI should and shouldn't change. Ensure tests pass before moving to the next feature.
+### 4) Scaffold the thinnest runnable slice (end-to-end)
+- **Inputs:** Prompt pack, chosen platform/stack, prototype spec.
+- **Actions:** Generate a minimal skeleton that runs. Implement the hero path with mock data. Capture run commands and known limitations.
+- **Outputs:** Runnable prototype + run notes (for the runbook).
+- **Checks:** A fresh user can run it in ≤ 5 minutes; the hero path is demonstrable.
 
-## Effective bug fixing
+### 5) Iterate in vertical slices (generate → run → verify → log)
+- **Inputs:** Task board, working prototype.
+- **Actions:** For each slice: request a plan + diff, apply changes, run, verify against acceptance criteria, and record decisions/bugs. Avoid broad refactors; prefer incremental improvements.
+- **Outputs:** Updated prototype + iteration notes.
+- **Checks:** Each slice ends with a user-visible improvement and a validated run.
 
-**Error messages**: Simply copy-pasting error messages is often enough context for the AI to identify and fix issues.
+### 6) Optional: build a tool to build the thing (timeboxed)
+- **Inputs:** Repeated friction (editing, generating, transforming content).
+- **Actions:** If it reduces time-to-demo, vibe code a tiny helper tool (editor, generator, script) and immediately use it to advance the prototype.
+- **Outputs:** Helper tool + note on how it accelerates the workflow.
+- **Checks:** The helper tool saves time within the current timebox; otherwise cut it.
 
-**Analyze before coding**: Ask the AI to consider multiple possible causes before jumping to implementation. This prevents chasing the wrong problem.
+### 7) Package the demo + quality gate + handoff
+- **Inputs:** Prototype + all draft artifacts.
+- **Actions:** Write the demo script + runbook. Run [references/CHECKLISTS.md](references/CHECKLISTS.md) and score with [references/RUBRIC.md](references/RUBRIC.md). Finalize **Risks / Open questions / Next steps**.
+- **Outputs:** Final **Vibe Coding Prototype Pack**.
+- **Checks:** A stakeholder can demo it without you; risks and next steps are explicit and owned.
 
-**Reset after failures**: Start with a clean slate after each unsuccessful fix attempt rather than layering fixes on top of broken code.
+## Quality gate (required)
+- Use [references/CHECKLISTS.md](references/CHECKLISTS.md) and [references/RUBRIC.md](references/RUBRIC.md).
+- Always include: **Risks**, **Open questions**, **Next steps**.
 
-**Strategic logging**: Add logging statements to better understand what's happening when bugs are opaque.
+## Examples
 
-**Switch models**: Try different AI models when one gets stuck on a problem.
+**Example 1 (30–60 min prototype):** “Use `vibe-coding` to build a demo-ready web prototype of an ‘AI meeting notes → action items’ tool. Mock the LLM output. Output the full Vibe Coding Prototype Pack.”  
+Expected: brief + spec + prompt pack + task board + demo script; prototype plan defaults to mock data and a single hero flow.
 
-## AI tool landscape (as of 2026-05)
+**Example 2 (non-engineer builder):** “I’m a PM. Use `vibe-coding` to help me create a clickable prototype of an onboarding checklist app in 45 minutes. I need a demo script for my team.”  
+Expected: tight scope, fake data, vertical slices, and a runbook optimized for demo reliability.
 
-The current tools cluster into four shapes. Pick by where you work, not by hype.
+**Boundary example:** “Vibe code a production payments backend and deploy it.”  
+Response: out of scope; propose a prototype-only approach (mock payments), identify required security/engineering owners, and recommend a separate production plan.
 
-| Shape | Examples | When |
-|---|---|---|
-| CLI agents | Claude Code, Aider, Codex CLI, Gemini CLI, GitHub Copilot CLI, opencode, Goose | Repo-wide changes, multi-file refactors, automation, headless / cron use |
-| Standalone IDEs | Cursor, Windsurf, Zed, Kiro | Day-to-day editing with chat + autocomplete tightly integrated |
-| IDE extensions | GitHub Copilot, Continue, Cline, Roo Code, Amazon Q | Stay in your existing editor (VS Code, JetBrains, Neovim) |
-| Cloud agents | Devin, OpenHands, Jules, GitHub Copilot Coding Agent | Async / background work via PR, no local terminal needed |
-
-A common stack many developers converge on: **Cursor or Copilot for daily editing + Claude Code (or Codex CLI) for repo-wide / agentic tasks**. They're complementary — fast inline edits in the IDE, longer agentic loops at the terminal.
-
-## AI tool optimization
-
-**Instruction files**: Write project-specific context for your AI assistants. Conventions have splintered, but several tools converge on `AGENTS.md` as a shared format. Current naming as of 2026-05:
-
-| Tool | File(s) | Notes |
-|---|---|---|
-| Claude Code | `CLAUDE.md` (per-directory, nested) | Loaded automatically; see [docs.anthropic.com/en/docs/claude-code/memory](https://docs.anthropic.com/en/docs/claude-code/memory) |
-| Cursor | `.cursor/rules/*.mdc` (modern) — Markdown + YAML frontmatter (`description`, `globs`, `alwaysApply`) | Legacy `.cursorrules` single-file still works but Cursor recommends migrating |
-| Windsurf | `.windsurfrules` or `.windsurf/rules/*.md` | Same dual pattern as Cursor |
-| GitHub Copilot | `.github/copilot-instructions.md` | Single repo-level file, ~4k char practical cap |
-| Cline | `.clinerules` | Single file |
-| Aider | `.aider.conf.yml` (config) + chat history files | Git-native; reads `CONVENTIONS.md` if you point it there |
-| Continue | `.continue/config.json` | JSON config; per-repo |
-| Codex CLI / Gemini CLI / Aider / Continue | `AGENTS.md` (vendor-neutral fallback) | Becoming the cross-tool common denominator |
-
-When working across multiple tools, keep the canonical guidance in `AGENTS.md` and reference it from tool-specific files (`CLAUDE.md`: "Also read AGENTS.md."). That avoids drift between siblings.
-
-**Local documentation**: Download API documentation to your project folder. AI tools work more accurately against local docs than against recalled training data — especially for libraries that release breaking changes faster than training cutoffs (e.g., Sentry SDK, Google GenAI SDK, Selenium).
-
-**Run multiple tools**: There's no penalty for running Cursor for inline edits while a Claude Code or Codex CLI session works in another terminal on a separate task. Different shapes for different work.
-
-**Compare outputs**: For high-stakes decisions, generate solutions from two different model families (e.g., Claude + GPT-5) and pick the better one. They make different mistakes.
-
-## Complex feature development
-
-**Standalone prototypes**: Build complex features in a clean codebase first, then integrate once working. This isolates problems and makes debugging easier.
-
-**Reference implementations**: Point the AI to working examples to follow. Existing code patterns provide concrete guidance.
-
-**Clear boundaries**: Maintain consistent external APIs while allowing internal changes. Service-based architectures with clear boundaries work better than monorepos for AI-assisted development.
-
-## Tech stack considerations
-
-**Established frameworks**: Ruby on Rails and similar mature frameworks work well due to 20+ years of consistent conventions in training data.
-
-**Training data matters**: Newer languages like Rust or Elixir may have less training data, leading to more errors or outdated patterns.
-
-**Modularity**: Small, modular files are easier for both humans and AIs to work with. Avoid files with thousands of lines—they exceed context windows and create confusion.
-
-## Beyond coding
-
-AI assistants help with more than writing code:
-
-- **DevOps**: Configuring servers, DNS, and hosting
-- **Design**: Generating favicons and other design elements
-- **Documentation**: Drafting docs and marketing materials
-- **Education**: Explaining implementations line by line
-- **Visual input**: Share screenshots for UI bugs or design inspiration. Most modern assistants (Claude Code via paste, Cursor, Copilot Chat) accept image input directly.
-- **Voice input**: Whisper-based transcription tools (Whispr Flow, Superwhisper, MacWhisper, Aqua) reach 130-180 wpm with current OpenAI / Whisper.cpp models. Useful for long-form prompting and rubber-ducking.
-
-## Continuous improvement
-
-**Regular refactoring**: Once tests are in place, refactor frequently. Ask the AI to identify refactoring candidates.
-
-**Stay current**: Try every new model release. Different models excel at different tasks—experiment to find which works best for your use case.

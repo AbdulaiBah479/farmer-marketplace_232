@@ -1,355 +1,84 @@
 ---
-name: watchOS
-description: watchOS development guidance including SwiftUI for Watch, Watch Connectivity, complications, and watch-specific UI patterns. Use for watchOS code review, best practices, or Watch app development.
-allowed-tools: [Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion]
+name: watchos
+description: watchOS platform-specific development with complications, workouts, HealthKit, and Watch Connectivity. Use when building Apple Watch apps, health features, or iPhone-Watch communication.
+versions:
+  watchos: 26
+user-invocable: false
+references: references/complications.md, references/workouts.md, references/watch-connectivity.md
+related-skills: swift-core, swiftui-core, ios, mcp-tools
 ---
 
-# watchOS Development
+# watchOS Platform
 
-Comprehensive guidance for watchOS app development with SwiftUI, Watch Connectivity, and complications.
+watchOS-specific development for Apple Watch experiences.
 
-## When This Skill Activates
+## Agent Workflow (MANDATORY)
 
-Use this skill when the user:
-- Is building a watchOS app or Watch extension
-- Asks about Watch Connectivity (iPhone ↔ Watch sync)
-- Needs help with complications or ClockKit
-- Wants to implement watch-specific UI patterns
-- Asks about **WidgetKit complications** or migrating from ClockKit to WidgetKit
-- Wants to build **watch face complications** (accessoryCircular, accessoryRectangular, accessoryCorner, accessoryInline)
-- Asks about **HealthKit on watchOS**, workout sessions, heart rate, or fitness tracking
-- Needs **Extended Runtime sessions** for background workout tracking
-- Wants to build **watchOS widgets** or Smart Stack widgets
-- Asks about **widget relevance**, Smart Stack ordering, or widget suggestions
-- Needs to share widgets **cross-platform** between iOS and watchOS
+Before ANY implementation, launch in parallel:
 
-## Key Principles
+1. **fuse-ai-pilot:explore-codebase** - Analyze existing watchOS patterns
+2. **fuse-ai-pilot:research-expert** - Verify latest watchOS 26 docs via Context7/Exa
+3. **mcp__apple-docs__search_apple_docs** - Check watchOS patterns
 
-### 1. Watch-First Design
-- Glanceable content - users look for seconds, not minutes
-- Quick interactions - 2 seconds or less
-- Essential information only - no scrolling walls of text
-- Large touch targets - minimum 38pt height
+After implementation, run **fuse-ai-pilot:sniper** for validation.
 
-### 2. Independent vs Companion
-- Prefer independent Watch apps when possible
-- Use Watch Connectivity for data sync, not as dependency
-- Cache data locally for offline access
-- Handle connectivity failures gracefully
+---
 
-### 3. Performance
-- Minimize background work (battery)
-- Use complication updates sparingly
-- Prefer timeline-based content over live updates
-- Keep views lightweight
+## Overview
 
-## Architecture Patterns
+### When to Use
 
-### App Structure
+- Building Apple Watch apps
+- Creating watch face complications
+- Workout and fitness tracking
+- Health data access (HealthKit)
+- iPhone-Watch communication
 
-```swift
-@main
-struct MyWatchApp: App {
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
-        }
-    }
-}
-```
+### Why watchOS Skill
 
-### Navigation
+| Feature | Benefit |
+|---------|---------|
+| Complications | Glanceable data on watch face |
+| Workouts | Fitness and health tracking |
+| HealthKit | Access health metrics |
+| Connectivity | Sync with iPhone |
 
-```swift
-// Use NavigationStack (watchOS 9+)
-NavigationStack {
-    List {
-        NavigationLink("Item 1", value: Item.one)
-        NavigationLink("Item 2", value: Item.two)
-    }
-    .navigationDestination(for: Item.self) { item in
-        ItemDetailView(item: item)
-    }
-}
+---
 
-// TabView for main sections
-TabView {
-    HomeView()
-    ActivityView()
-    SettingsView()
-}
-.tabViewStyle(.verticalPage)
-```
+## Reference Guide
 
-### List Design
+| Need | Reference |
+|------|-----------|
+| Watch face complications | [complications.md](references/complications.md) |
+| Workout sessions, HealthKit | [workouts.md](references/workouts.md) |
+| iPhone ↔ Watch sync | [watch-connectivity.md](references/watch-connectivity.md) |
 
-```swift
-List {
-    ForEach(items) { item in
-        ItemRow(item: item)
-    }
-    .onDelete(perform: delete)
-}
-.listStyle(.carousel)  // For focused content
-.listStyle(.elliptical)  // For browsing
-```
+---
 
-## Watch Connectivity
+## Design Considerations
 
-### Session Setup
+### Screen Size
+- Small display, large touch targets
+- Glanceable information
+- Minimal text, clear icons
 
-```swift
-import WatchConnectivity
+### Interactions
+- Digital Crown for scrolling/input
+- Force Touch (older watches)
+- Gestures: swipe, tap
 
-@Observable
-final class WatchConnectivityManager: NSObject, WCSessionDelegate {
-    static let shared = WatchConnectivityManager()
+### Battery
+- Minimize background work
+- Use complications for updates
+- Efficient data transfer
 
-    private(set) var isReachable = false
-
-    override init() {
-        super.init()
-        if WCSession.isSupported() {
-            WCSession.default.delegate = self
-            WCSession.default.activate()
-        }
-    }
-
-    // Required delegate methods
-    func session(_ session: WCSession, activationDidCompleteWith state: WCSessionActivationState, error: Error?) {
-        isReachable = session.isReachable
-    }
-
-    #if os(iOS)
-    func sessionDidBecomeInactive(_ session: WCSession) {}
-    func sessionDidDeactivate(_ session: WCSession) {
-        WCSession.default.activate()
-    }
-    #endif
-}
-```
-
-### Data Transfer Methods
-
-| Method | Use Case | Delivery |
-|--------|----------|----------|
-| `updateApplicationContext` | Latest state (settings) | Overwrites previous |
-| `sendMessage` | Real-time, both apps active | Immediate |
-| `transferUserInfo` | Queued data | Guaranteed, in order |
-| `transferFile` | Large data | Background transfer |
-
-```swift
-// Application Context (most common)
-func updateContext(_ data: [String: Any]) throws {
-    try WCSession.default.updateApplicationContext(data)
-}
-
-// Real-time messaging
-func sendMessage(_ message: [String: Any]) {
-    guard WCSession.default.isReachable else { return }
-    WCSession.default.sendMessage(message, replyHandler: nil)
-}
-
-// Receiving data
-func session(_ session: WCSession, didReceiveApplicationContext context: [String: Any]) {
-    Task { @MainActor in
-        // Update UI with received data
-    }
-}
-```
-
-## Complications
-
-### Timeline Provider
-
-```swift
-import ClockKit
-
-struct ComplicationController: CLKComplicationDataSource {
-
-    func getComplicationDescriptors(handler: @escaping ([CLKComplicationDescriptor]) -> Void) {
-        let descriptor = CLKComplicationDescriptor(
-            identifier: "myComplication",
-            displayName: "My App",
-            supportedFamilies: [.circularSmall, .modularSmall, .graphicCircular]
-        )
-        handler([descriptor])
-    }
-
-    func getCurrentTimelineEntry(
-        for complication: CLKComplication,
-        withHandler handler: @escaping (CLKComplicationTimelineEntry?) -> Void
-    ) {
-        let template = makeTemplate(for: complication.family)
-        let entry = CLKComplicationTimelineEntry(date: .now, complicationTemplate: template)
-        handler(entry)
-    }
-}
-```
-
-### WidgetKit Complications (watchOS 9+)
-
-```swift
-import WidgetKit
-import SwiftUI
-
-struct MyComplication: Widget {
-    var body: some WidgetConfiguration {
-        StaticConfiguration(
-            kind: "MyComplication",
-            provider: ComplicationProvider()
-        ) { entry in
-            ComplicationView(entry: entry)
-        }
-        .configurationDisplayName("My Complication")
-        .supportedFamilies([
-            .accessoryCircular,
-            .accessoryRectangular,
-            .accessoryCorner,
-            .accessoryInline
-        ])
-    }
-}
-```
-
-## UI Components
-
-### Digital Crown
-
-```swift
-@State private var crownValue = 0.0
-
-ScrollView {
-    // Content
-}
-.focusable()
-.digitalCrownRotation($crownValue)
-```
-
-### Haptic Feedback
-
-```swift
-WKInterfaceDevice.current().play(.click)
-WKInterfaceDevice.current().play(.success)
-WKInterfaceDevice.current().play(.failure)
-```
-
-### Now Playing
-
-```swift
-import WatchKit
-
-NowPlayingView()  // Built-in now playing controls
-```
-
-## Workout Apps
-
-```swift
-import HealthKit
-
-@Observable
-class WorkoutManager {
-    let healthStore = HKHealthStore()
-    var session: HKWorkoutSession?
-    var builder: HKLiveWorkoutBuilder?
-
-    func startWorkout(type: HKWorkoutActivityType) async throws {
-        let config = HKWorkoutConfiguration()
-        config.activityType = type
-        config.locationType = .outdoor
-
-        session = try HKWorkoutSession(healthStore: healthStore, configuration: config)
-        builder = session?.associatedWorkoutBuilder()
-
-        session?.startActivity(with: .now)
-        try await builder?.beginCollection(at: .now)
-    }
-}
-```
+---
 
 ## Best Practices
 
-### Performance
-- Use `@Observable` over `ObservableObject` (watchOS 10+)
-- Limit background refreshes
-- Cache images locally
-- Use lazy loading for lists
-
-### Battery
-- Minimize location updates
-- Use scheduled background tasks
-- Prefer complications over frequent refreshes
-- Batch network requests
-
-### User Experience
-- Always show loading states
-- Provide haptic feedback
-- Support keyboard input
-- Use clear iconography
-
-## Testing
-
-### Simulator
-- Test with different watch sizes
-- Verify complications in all families
-- Test Watch Connectivity with paired iPhone simulator
-
-### On Device
-- Test battery impact
-- Verify haptics feel appropriate
-- Test in different lighting conditions
-
-## Decision Tree
-
-Choose the right reference file based on what the user needs:
-
-```
-What are you building?
-|
-+- iPhone <-> Watch data sync
-|  -> watch-connectivity.md
-|     +- Session management, application context, real-time messaging
-|     +- File transfers, offline caching, complication push updates
-|
-+- Watch face complications
-|  -> complications.md
-|     +- ClockKit (legacy) vs WidgetKit (modern) complications
-|     +- Migration from ClockKit to WidgetKit
-|     +- Complication families (circular, rectangular, corner, inline)
-|     +- Timeline providers, reload strategies, gauges
-|
-+- Health / fitness / workout tracking
-|  -> health-fitness.md
-|     +- HealthKit authorization and data types
-|     +- HKWorkoutSession and HKLiveWorkoutBuilder
-|     +- Real-time heart rate, calories, distance
-|     +- Extended Runtime sessions, route tracking
-|
-+- watchOS widgets / Smart Stack
-|  -> widgets-for-watch.md
-|     +- Smart Stack configuration and relevance
-|     +- Cross-platform widget sharing (iOS + watchOS)
-|     +- watchOS-specific design (dark background, small screen)
-|
-+- General watchOS app development
-   -> This file (SKILL.md)
-      +- App structure, navigation, lists
-      +- Digital Crown, haptics, Now Playing
-```
-
-## Reference Files
-
-| File | Content |
-|------|---------|
-| [watch-connectivity.md](watch-connectivity.md) | iPhone <-> Watch sync, session management, data transfer, offline caching |
-| [complications.md](complications.md) | ClockKit to WidgetKit migration, complication families, timeline providers, gauges |
-| [health-fitness.md](health-fitness.md) | HealthKit, workout sessions, heart rate, Extended Runtime, route tracking, privacy |
-| [widgets-for-watch.md](widgets-for-watch.md) | Smart Stack widgets, relevance, cross-platform sharing, watchOS design |
-
-## External References
-
-- [watchOS Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines/designing-for-watchos)
-- [Watch Connectivity](https://developer.apple.com/documentation/watchconnectivity)
-- [ClockKit](https://developer.apple.com/documentation/clockkit)
-- [WidgetKit](https://developer.apple.com/documentation/widgetkit)
-- [HealthKit Workouts](https://developer.apple.com/documentation/healthkit/workouts_and_activity_rings)
+1. **Glanceable** - Quick information access
+2. **Large targets** - Easy tapping
+3. **Minimal input** - Reduce typing
+4. **Complications** - Update watch face data
+5. **Background refresh** - Efficient updates
+6. **Test on device** - Simulator differs from hardware

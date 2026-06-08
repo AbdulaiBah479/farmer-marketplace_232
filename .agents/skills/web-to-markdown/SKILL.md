@@ -1,124 +1,77 @@
 ---
 name: web-to-markdown
-version: 1.1.0
-description: |
-  Convert URLs or local files (PDF/DOCX/PPTX/HTML) to Markdown, with optional
-  summarization. Single or batch processing. Uses markitdown for intelligent
-  extraction, falls back to curl+pandoc. Use when fetching web pages as
-  markdown, converting documents for analysis, or producing quick summaries.
+description: "Use ONLY when the user explicitly says: 'use the skill web-to-markdown ...' (or 'use a skill web-to-markdown ...'). Converts webpage URLs to clean Markdown by calling the local web2md CLI (Puppeteer + Readability), suitable for JS-rendered pages."
+metadata:
+  version: 0.1.0
 ---
 
-# Web to Markdown
+# web-to-markdown
 
-Convert URLs and local files to Markdown for analysis, quoting, or processing.
-Optionally summarize long documents before deeper work.
+Convert web pages to clean Markdown by driving a locally installed browser (via `web2md`).
 
-## When to use
+## Hard trigger gate (must enforce)
 
-Use this skill when you need to:
-- pull down a web page as a document-like Markdown representation
-- convert binary docs (PDF/DOCX/PPTX) into Markdown for analysis
-- quickly produce a short summary of a long document before deeper work
+This skill MUST NOT be used unless the user explicitly wrote **exactly** a phrase like:
+- `use the skill web-to-markdown ...`
+- `use a skill web-to-markdown ...`
 
-## Quick Usage
+If the user did not explicitly request this skill by name, stop and ask them to re-issue the request including: `use the skill web-to-markdown`.
 
-### Convert a URL or file
+## What this skill does
 
-```bash
-uvx --from 'markitdown[pdf]' markitdown <url-or-path>
-```
+- Handles JS-rendered pages (Puppeteer → user Chrome).
+- Works best with Chromium-family browsers (Chrome/Chromium/Brave/Edge) via `puppeteer-core`.
+- Extracts main content (Readability).
+- Converts to Markdown (Turndown) with cleaned links and optional YAML frontmatter.
 
-Save to a specific file:
+## Non-goals
 
-```bash
-uvx --from 'markitdown[pdf]' markitdown <url-or-path> > /tmp/doc.md
-```
+- Do not use Playwright or other browser automation stacks; the mechanism is `web2md`.
 
-### Convert + summarize
+## Inputs you should collect (ask only if missing)
 
-Use the wrapper script for summarization with context:
+- `url` (or a list of URLs)
+- Output preference:
+  - Print to stdout (`--print`), OR
+  - Save to a file (`--out ./file.md`), OR
+  - Save to a directory (`--out ./some-dir/` to auto-name by page title)
+- Optional rendering controls for tricky pages:
+  - `--chrome-path <path>` (if Chrome auto-detection fails)
+  - `--interactive` (show Chrome and pause so the user can complete human checks/login, then press Enter)
+  - `--wait-until load|domcontentloaded|networkidle0|networkidle2`
+  - `--wait-for '<css selector>'`
+  - `--wait-ms <milliseconds>`
+  - `--headful` (debug)
+  - `--no-sandbox` (sometimes required in containers/CI)
+  - `--user-data-dir <dir>` (login/session; use a dedicated profile directory)
 
-```bash
-node scripts/to-markdown.mjs <url-or-path> --summary --prompt "Focus on security implications"
-node scripts/to-markdown.mjs <url-or-path> --tmp     # write to temp file, print path
-node scripts/to-markdown.mjs <url-or-path> --out notes.md
-```
+## Workflow
 
-The summarizer:
-1. Converts to Markdown via `markitdown`
-2. Saves full Markdown to a temp file (prints path as hint so you can inspect the full content)
-3. Runs `pi --model claude-haiku-4-5` to summarize with your prompt
+1) Confirm the user explicitly invoked the skill (`use the skill web-to-markdown`).
+2) Validate URL(s) start with `http://` or `https://`.
+3) Ensure `web2md` is installed:
+   - Run: `command -v web2md`
+   - If missing, instruct the user to install it (assume the project exists at `~/workspace/softaworks/projects/web2md`):
+     - `cd ~/workspace/softaworks/projects/web2md && npm install && npm run build && npm link`
+     - Or: `cd ~/workspace/softaworks/projects/web2md && npm install && npm run build && npm install -g .`
+4) Convert:
+   - Single URL → file:
+     - `web2md '<url>' --out ./page.md`
+   - Single URL → auto-named file in directory:
+     - `mkdir -p ./out && web2md '<url>' --out ./out/`
+   - Human verification / login walls (interactive):
+     - `mkdir -p ./out && web2md '<url>' --interactive --user-data-dir ./tmp/web2md-profile --out ./out/`
+     - Then: complete the check in the browser window and press Enter in the terminal to continue.
+   - Print to stdout:
+     - `web2md '<url>' --print`
+   - Multiple URLs (batch):
+     - Create output dir (e.g. `./out/`) then run one `web2md` command per URL using `--out ./out/`
+5) Validate output:
+   - If writing files, verify they exist and are non-empty (e.g. `ls -la <path>` and `wc -c <path>`).
+6) Return:
+   - The saved file path(s), or the Markdown (stdout mode).
 
-**Always provide context** — summaries are only useful when you provide **what you want extracted** and the **audience/purpose**. Without a focus prompt, summaries become generic and unhelpful.
+## Defaults (recommended)
 
-### Batch processing (shell function)
-
-Add to `.bashrc` / `.zshrc`:
-
-```bash
-web-to-markdown() {
-  local url output_dir format batch_file output_file
-  output_dir="." format="markdown"
-
-  while [[ $# -gt 0 ]]; do
-    case $1 in
-      --batch) batch_file="$2"; shift 2 ;;
-      --output-dir) output_dir="$2"; shift 2 ;;
-      --format) format="$2"; shift 2 ;;
-      --output) output_file="$2"; shift 2 ;;
-      *) url="$1"; shift ;;
-    esac
-  done
-
-  _fetch() {
-    local u=$1 fmt=$2
-    local content
-    content=$(uvx --from 'markitdown[pdf]' markitdown "$u" 2>/dev/null) \
-      || content=$(curl -sL "$u" | pandoc -f html -t markdown)
-    [[ -z "$content" ]] && return 1
-    [[ "$fmt" == "plain" ]] && echo "$content" | pandoc -f markdown -t plain || echo "$content"
-  }
-
-  if [[ -n "${batch_file-}" ]]; then
-    [[ ! -f "$batch_file" ]] && { echo "ERROR: $batch_file not found" >&2; return 1; }
-    mkdir -p "$output_dir"
-    local ok=0 fail=0
-    while IFS= read -r u || [[ -n "$u" ]]; do
-      [[ -z "$u" || "$u" =~ ^# ]] && continue
-      local name ext out
-      name=$(echo "$u" | sed 's|https\?://||;s|/|-|g' | cut -c1-100)
-      ext=$([[ "$format" == "plain" ]] && echo txt || echo md)
-      out="$output_dir/${name}.${ext}"
-      if _fetch "$u" "$format" > "$out" 2>/dev/null; then
-        echo "✓ $(basename "$out")" >&2; (( ++ok ))
-      else
-        echo "✗ $u" >&2; rm -f "$out"; (( ++fail ))
-      fi
-    done < "$batch_file"
-    echo "Done: $ok ok, $fail failed" >&2
-    return $(( fail > 0 ? 1 : 0 ))
-  fi
-
-  [[ -z "${url-}" ]] && { echo "Usage: web-to-markdown <URL> [--output FILE] [--format markdown|plain]" >&2; return 1; }
-  [[ -z "${output_file-}" ]] && {
-    local name ext
-    name=$(echo "$url" | sed 's|https\?://||;s|/|-|g' | cut -c1-100)
-    ext=$([[ "$format" == "plain" ]] && echo txt || echo md)
-    output_file="${name}.${ext}"
-  }
-  _fetch "$url" "$format" > "$output_file" && echo "✓ Saved: $output_file" || { rm -f "$output_file"; return 1; }
-}
-```
-
-**Examples:**
-```bash
-web-to-markdown "https://example.com/article" --output article.md
-web-to-markdown --batch urls.txt --output-dir ./docs --format markdown
-web-to-markdown "https://example.com" --format plain
-```
-
-## Dependencies
-
-- `markitdown` (auto-installed via `uvx`) — smart content extraction
-- `curl` + `pandoc` — fallback for when markitdown fails
-- `pi` — only needed for `--summary` mode
+- For most pages: `--wait-until networkidle2`
+- For heavy apps: start with `--wait-until domcontentloaded --wait-ms 2000`, then add `--wait-for 'main'` (or another stable selector) if needed.

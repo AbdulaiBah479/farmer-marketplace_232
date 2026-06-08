@@ -1,13 +1,12 @@
 ---
 name: terraform-skill
-description: "Terraform infrastructure as code best practices"
+description: Use when working with Terraform or OpenTofu - creating modules, writing tests (native test framework, Terratest), setting up CI/CD pipelines, reviewing configurations, choosing between testing approaches, debugging state issues, implementing security scanning (trivy, checkov), or making infrastructure-as-code architecture decisions
 license: Apache-2.0
-metadata: 
-author: "Anton Babenko"
-version: 1.5.0
-source: "https://github.com/antonbabenko/terraform-skill"
-risk: safe
+metadata:
+  author: Anton Babenko
+  version: 1.6.0
 ---
+
 # Terraform Skill for Claude
 
 Comprehensive Terraform and OpenTofu guidance covering testing, modules, CI/CD, and production patterns. Based on terraform-best-practices.com and enterprise experience.

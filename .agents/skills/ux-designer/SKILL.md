@@ -1,325 +1,682 @@
 ---
 name: ux-designer
-description: Applies modern UX/UI best practices to interface design and review. Use for UI design and critique; accessibility audits (WCAG, EAA); microcopy; forms, navigation, and onboarding; internationalization and RTL; voice, multimodal, and AI interfaces; design systems; and frontend code review.
+description: Perfect UX/UI designer that eliminates bugs, improves usability, and ensures flawless user experience. Use when user mentions "perfect the UI", "fix UX bugs", "improve demo", or "make it flawless".
+version: 1.0.0
+agents: [codex-deep-research, gemini-research-analyst]
 ---
 
-# UX Designer Skill
+# UX Designer - Perfection-Focused UI/UX Skill
 
-You are a UX design expert with comprehensive knowledge of modern user experience best practices (2026). Apply these principles when designing or reviewing interfaces.
+**Goal: Zero bugs, perfect usability, flawless user experience.**
 
-## When to Apply This Skill
+## When to Use
 
-Use this skill when:
-- Designing new user interfaces or components
-- Reviewing existing UI/UX for improvements
-- Implementing accessibility features
-- Creating forms, navigation, or interactive elements
-- Advising on mobile-first design
-- Writing UI copy and microcopy
-- Planning user research activities
-- Building or maintaining design systems
-- Designing collaborative/multiplayer features (real-time editing, presence)
-- Building canvas-based or whiteboard applications
-- Implementing sharing, permissions, or version control UX
-- Designing AI-powered interfaces (chat, copilots, agents, generative UI)
-- Evaluating designs for dark patterns and ethical compliance
-- Creating onboarding flows, activation funnels, and first-run experiences
-- Designing notification systems and attention management
-- Building dashboards, data visualizations, and analytics interfaces
-- Implementing search interfaces with autocomplete and filtering
-- Applying emotional design principles and building user trust
-- Internationalizing/localizing UI or adding right-to-left (RTL) language support
-- Designing voice, multimodal, or cross-device input experiences
+Invoke this skill when:
+- User mentions: "perfect the demo", "fix UX bugs", "make it flawless"
+- UI has inconsistencies or bugs
+- User experience is confusing or broken
+- Demo has visual issues
+- Interactive elements don't work properly
 
-## Core Design Philosophy
+## UX Perfection Methodology
 
-### User-Centered Design
-1. **Understand users first** - Research before designing
-2. **Reduce cognitive load** - Keep interfaces simple and intuitive
-3. **Provide feedback** - Every action should have a visible response
-4. **Maintain consistency** - Follow established patterns users expect
-5. **Design for accessibility** - Include all users from the start
+### Phase 1: Comprehensive UX Audit
 
-### Calm & Clarity Over Complexity (2026)
-- **Cognitive clarity over sensory richness** - Calm, legible interfaces beat busy,
-  flashy ones. Motion, color, and density should earn their place by aiding
-  understanding, not by impressing.
-- **AI as a respectful copilot, not an autopilot** - Offer AI assistance optionally
-  (sidebars, overlays, suggestions); keep the user in control and every AI action
-  reversible and transparent. See [references/14-ai-ux-patterns.md](references/14-ai-ux-patterns.md).
-- **Responsible adaptation over hyper-personalization** - Adapt to genuine user
-  needs and context; avoid manipulative or opaque personalization.
-- **Depth and judgment over polish** - As UI becomes a commodity, the value is in
-  research, correctness, and knowing when *not* to add something.
+**1A. Visual Inspection**
+```bash
+# Check all HTML files for common issues
+find public -name "*.html" -type f
 
-### The UX Hierarchy of Needs
-1. **Functional** - Does it work?
-2. **Reliable** - Is it dependable?
-3. **Usable** - Is it easy to use?
-4. **Convenient** - Is it frictionless?
-5. **Pleasurable** - Is it delightful?
+# For each file, check:
+- Broken links (404s)
+- Missing images
+- JavaScript errors in console
+- CSS rendering issues
+- Responsive design breakpoints
+- Color contrast (accessibility)
+- Typography consistency
+```
 
-## Quick Reference Checklist
+**1B. Interaction Testing**
+```markdown
+Test every interactive element:
+- [ ] Buttons: Click response, hover states, disabled states
+- [ ] Forms: Validation, error messages, success states
+- [ ] Navigation: All links work, breadcrumbs accurate
+- [ ] Modals: Open/close, backdrop click, ESC key
+- [ ] Dropdowns: Open/close, keyboard navigation
+- [ ] Tables: Sorting, filtering, pagination
+- [ ] Real-time updates: WebSocket connection, live data
+- [ ] Loading states: Spinners, skeletons, placeholders
+```
 
-### Before Designing
-- [ ] Understand user goals and pain points
-- [ ] Review existing patterns in the codebase
-- [ ] Consider accessibility requirements (WCAG 2.2 AA)
-- [ ] Define success metrics
+**1C. User Flow Analysis**
+```markdown
+Map critical user journeys:
+1. New user onboarding → Should be intuitive, max 3 steps
+2. Core feature usage → Should be discoverable, max 2 clicks
+3. Error recovery → Clear error messages, obvious next steps
+4. Success confirmation → Visible feedback, celebratory if appropriate
+```
 
-### Visual Design
-- [ ] Clear visual hierarchy (size, color, spacing)
-- [ ] Consistent typography (16px+ body, 1.3-1.6x heading scale)
-- [ ] Sufficient color contrast (4.5:1 for text)
-- [ ] Adequate whitespace and breathing room
+### Phase 2: Research Best Practices
 
-### Interaction Design
-- [ ] Touch targets minimum 44×44px (iOS) / 48×48dp (Android)
-- [ ] Important actions in thumb-friendly zones (bottom/center on mobile)
-- [ ] Clear feedback for all interactions (< 100ms response)
-- [ ] Smooth animations (300-500ms duration)
-- [ ] Support `prefers-reduced-motion`
+**Launch codex-deep-research agent**:
+```markdown
+Invoke Task tool with subagent_type="codex-deep-research"
 
-### Forms
-- [ ] Inline validation (on blur, not during typing)
-- [ ] Clear error messages near the field
-- [ ] Required fields marked with asterisk (*)
-- [ ] Logical field order and grouping
+Prompt:
+"Research the best UX/UI practices for interactive demos and dashboards.
 
-### Navigation
-- [ ] Limited top-level items (7±2 rule)
-- [ ] Current location always visible
-- [ ] Mobile: bottom navigation preferred
-- [ ] Consistent navigation across pages
+Context:
+- Project Conductor is a workflow orchestration platform
+- Demo showcases 7-module workflow (Onboarding → Implementation)
+- Tech: HTML, CSS, JavaScript (vanilla), Socket.io
+- Users: Product managers, engineers, stakeholders
 
-### Accessibility
-- [ ] Keyboard navigable
+Provide best practices for:
+1. **Demo UX Patterns**
+   - Interactive tutorials vs guided tours
+   - Progress indicators
+   - Contextual help
+   - Error handling in demos
+
+2. **Dashboard Design**
+   - Card layouts
+   - Data visualization
+   - Real-time updates (WebSocket)
+   - Empty states
+   - Loading states
+
+3. **Navigation**
+   - Module-to-module flow
+   - Breadcrumbs
+   - Back button behavior
+   - Deep linking
+
+4. **Accessibility**
+   - Keyboard navigation
+   - Screen reader support
+   - Focus management
+   - ARIA labels
+
+5. **Performance**
+   - Perceived performance
+   - Lazy loading
+   - Animation frame rate
+   - Memory leaks
+
+6. **Error Handling**
+   - User-friendly error messages
+   - Recovery actions
+   - Fallback UI
+   - Offline behavior
+
+Provide specific code examples and visual patterns."
+```
+
+**Check for AI-powered UX tools**:
+```markdown
+Invoke Task tool with subagent_type="gemini-research-analyst"
+
+Prompt:
+"Research if Google's Gemini AI provides any UX design, usability testing, or UI generation tools.
+
+Investigate:
+1. Gemini-powered UX analysis tools
+2. Automated accessibility testing
+3. UI component generation
+4. User flow optimization
+5. A/B testing recommendations
+6. Heatmap analysis tools
+
+If available, explain how to integrate with HTML/JS demos."
+```
+
+### Phase 3: Bug Hunting (Zero Tolerance)
+
+**3A. Console Error Check**
+```javascript
+// Check browser console for errors
+// Common issues:
+- Uncaught ReferenceError (missing variables)
+- Uncaught TypeError (null/undefined access)
+- Failed to fetch (broken API calls)
+- WebSocket connection failed
+- CORS errors
+- 404 for assets (images, CSS, JS)
+```
+
+**3B. Network Tab Analysis**
+```markdown
+Check Network tab for:
+- [ ] All resources load successfully (no 404s)
+- [ ] API endpoints respond <200ms
+- [ ] WebSocket connection established
+- [ ] No unnecessary requests (optimize)
+- [ ] Proper caching headers
+- [ ] Compressed assets (gzip)
+```
+
+**3C. Responsive Design Testing**
+```bash
+# Test breakpoints
+- Mobile: 320px, 375px, 414px
+- Tablet: 768px, 1024px
+- Desktop: 1280px, 1440px, 1920px
+
+# Check for:
+- Horizontal scroll (should be none)
+- Text overflow
+- Image scaling
+- Button touch targets (min 44x44px)
+- Readable font sizes (min 16px)
+```
+
+**3D. Cross-Browser Testing**
+```markdown
+Test in:
+- [ ] Chrome (latest)
+- [ ] Firefox (latest)
+- [ ] Safari (latest)
+- [ ] Edge (latest)
+
+Check for:
+- CSS compatibility (flexbox, grid)
+- JavaScript APIs (fetch, WebSocket)
+- Event handlers (click, keyboard)
+- CSS animations
+```
+
+### Phase 4: Usability Improvements
+
+**4A. First-Time User Experience**
+```markdown
+Checklist:
+- [ ] Clear value proposition (what is this?)
+- [ ] Obvious starting point (where do I begin?)
+- [ ] Contextual help (tooltips, hints)
+- [ ] Progress indicators (how far have I gone?)
+- [ ] Success feedback (I completed something!)
+- [ ] Error prevention (guard rails)
+- [ ] Easy recovery (undo, reset)
+```
+
+**4B. Visual Hierarchy**
+```css
+/* Apply visual hierarchy principles */
+- Primary actions: Bold, high contrast, larger
+- Secondary actions: Less prominent
+- Tertiary actions: Text links, subtle
+- Destructive actions: Red, confirmation required
+- Disabled states: Greyed out, not clickable
+
+/* Example */
+.btn-primary {
+  background: #007bff;
+  color: white;
+  font-weight: 600;
+  padding: 12px 24px;
+  font-size: 16px;
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid #6c757d;
+  color: #6c757d;
+  padding: 10px 20px;
+  font-size: 14px;
+}
+```
+
+**4C. Feedback & Confirmation**
+```javascript
+// Every user action needs feedback
+function handleAction(action) {
+  // 1. Immediate feedback (button state)
+  button.disabled = true;
+  button.textContent = 'Processing...';
+
+  // 2. Action execution
+  await performAction(action);
+
+  // 3. Success feedback
+  showToast('✅ Action completed successfully!', 'success');
+  button.disabled = false;
+  button.textContent = 'Done';
+
+  // 4. Update UI to reflect change
+  refreshData();
+}
+
+// Toast notification system
+function showToast(message, type = 'info', duration = 3000) {
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add('fade-out');
+    setTimeout(() => toast.remove(), 300);
+  }, duration);
+}
+```
+
+**4D. Error Handling (User-Friendly)**
+```javascript
+// Bad: Generic error
+catch (error) {
+  alert('Error');
+}
+
+// Good: Helpful error with action
+catch (error) {
+  showError({
+    title: 'Unable to Load Projects',
+    message: 'We couldn\'t connect to the server. Please check your internet connection and try again.',
+    actions: [
+      { label: 'Retry', onClick: () => retryLoad() },
+      { label: 'Go Back', onClick: () => history.back() }
+    ],
+    icon: '🔌'
+  });
+
+  // Log detailed error for debugging
+  console.error('Project load failed:', error);
+}
+```
+
+### Phase 5: Accessibility Perfection
+
+**5A. Keyboard Navigation**
+```javascript
+// Ensure all interactive elements are keyboard accessible
+document.querySelectorAll('button, a, input, select, textarea').forEach(el => {
+  // Add focus visible styles
+  el.addEventListener('focus', (e) => {
+    e.target.classList.add('focus-visible');
+  });
+
+  // Support Enter/Space on custom buttons
+  if (el.getAttribute('role') === 'button') {
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        el.click();
+      }
+    });
+  }
+});
+
+// Trap focus in modals
+function trapFocus(modal) {
+  const focusableElements = modal.querySelectorAll(
+    'a[href], button, textarea, input, select, [tabindex]:not([tabindex="-1"])'
+  );
+  const firstElement = focusableElements[0];
+  const lastElement = focusableElements[focusableElements.length - 1];
+
+  modal.addEventListener('keydown', (e) => {
+    if (e.key === 'Tab') {
+      if (e.shiftKey && document.activeElement === firstElement) {
+        e.preventDefault();
+        lastElement.focus();
+      } else if (!e.shiftKey && document.activeElement === lastElement) {
+        e.preventDefault();
+        firstElement.focus();
+      }
+    } else if (e.key === 'Escape') {
+      closeModal();
+    }
+  });
+}
+```
+
+**5B. ARIA Labels**
+```html
+<!-- Bad: No context for screen readers -->
+<button onclick="save()">
+  <svg>...</svg>
+</button>
+
+<!-- Good: Descriptive label -->
+<button onclick="save()" aria-label="Save project changes">
+  <svg aria-hidden="true">...</svg>
+</button>
+
+<!-- Dynamic content -->
+<div role="status" aria-live="polite" aria-atomic="true">
+  <span id="status-message">Loading projects...</span>
+</div>
+
+<!-- Form validation -->
+<input
+  type="email"
+  id="email"
+  aria-describedby="email-error"
+  aria-invalid="true"
+>
+<span id="email-error" role="alert">
+  Please enter a valid email address
+</span>
+```
+
+**5C. Color Contrast Check**
+```javascript
+// Ensure WCAG AA compliance (4.5:1 for normal text, 3:1 for large)
+// Use tools: Chrome DevTools Lighthouse, axe DevTools
+
+// Example: Check programmatically
+function checkContrast(foreground, background) {
+  const ratio = getContrastRatio(foreground, background);
+  return {
+    passAA: ratio >= 4.5,
+    passAAA: ratio >= 7,
+    ratio: ratio.toFixed(2)
+  };
+}
+
+// Fix: Increase contrast
+/* Before */
+.text-muted { color: #999; } /* 2.8:1 - FAILS */
+
+/* After */
+.text-muted { color: #6c757d; } /* 4.5:1 - PASSES */
+```
+
+### Phase 6: Performance Optimization
+
+**6A. Perceived Performance**
+```javascript
+// Instant feedback, lazy load heavy content
+async function loadDashboard() {
+  // 1. Show skeleton immediately (0ms)
+  showSkeleton();
+
+  // 2. Load critical data first (100ms)
+  const criticalData = await fetchCritical();
+  renderCritical(criticalData);
+  hideSkeleton();
+
+  // 3. Load secondary data (background)
+  fetchSecondary().then(renderSecondary);
+
+  // 4. Prefetch likely next page
+  prefetchNextPage();
+}
+
+// Skeleton UI
+function showSkeleton() {
+  const skeleton = `
+    <div class="skeleton-card">
+      <div class="skeleton-line skeleton-title"></div>
+      <div class="skeleton-line"></div>
+      <div class="skeleton-line"></div>
+    </div>
+  `;
+  container.innerHTML = skeleton.repeat(6);
+}
+```
+
+**6B. Animation Performance**
+```css
+/* Bad: Causes layout thrashing */
+.animate-bad {
+  animation: slide-in 0.3s ease;
+}
+@keyframes slide-in {
+  from { margin-left: -100px; }
+  to { margin-left: 0; }
+}
+
+/* Good: GPU-accelerated */
+.animate-good {
+  animation: slide-in 0.3s ease;
+}
+@keyframes slide-in {
+  from { transform: translateX(-100px); }
+  to { transform: translateX(0); }
+}
+
+/* Use will-change for complex animations */
+.will-animate {
+  will-change: transform, opacity;
+}
+```
+
+**6C. Memory Leak Prevention**
+```javascript
+// Bad: Event listeners not cleaned up
+socket.on('update', handleUpdate);
+
+// Good: Clean up on unmount
+const listeners = [];
+
+function addListener(event, handler) {
+  socket.on(event, handler);
+  listeners.push({ event, handler });
+}
+
+function cleanup() {
+  listeners.forEach(({ event, handler }) => {
+    socket.off(event, handler);
+  });
+  listeners.length = 0;
+}
+
+// Call cleanup when leaving page
+window.addEventListener('beforeunload', cleanup);
+```
+
+### Phase 7: Final Polish
+
+**7A. Micro-interactions**
+```css
+/* Smooth button interactions */
+button {
+  transition: all 0.2s ease;
+  transform: scale(1);
+}
+
+button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+/* Loading spinner */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+```
+
+**7B. Empty States**
+```html
+<!-- Instead of blank screen -->
+<div class="empty-state">
+  <svg class="empty-icon"><!-- Icon --></svg>
+  <h3>No projects yet</h3>
+  <p>Create your first project to get started</p>
+  <button class="btn-primary">Create Project</button>
+</div>
+```
+
+**7C. Consistency Check**
+```markdown
+Ensure consistency across:
+- [ ] Button styles (primary, secondary, danger)
+- [ ] Spacing (use 8px grid: 8, 16, 24, 32, 48, 64)
+- [ ] Typography (max 3 font sizes, consistent weights)
+- [ ] Colors (stick to design system palette)
+- [ ] Icons (same style, size, stroke width)
+- [ ] Shadows (consistent elevation levels)
+- [ ] Border radius (consistent rounding)
+- [ ] Animations (consistent timing, easing)
+```
+
+## Validation Checklist
+
+Before marking UX as "perfect":
+
+### Functionality
+- [ ] All buttons work (no broken onClick handlers)
+- [ ] All links go to correct destinations
+- [ ] Forms validate properly
+- [ ] API calls succeed
+- [ ] WebSocket connects and receives updates
+- [ ] Error states display correctly
+- [ ] Success states display correctly
+- [ ] Loading states show during async operations
+
+### Visual
+- [ ] No layout shift (CLS score <0.1)
+- [ ] No horizontal scroll
+- [ ] Consistent spacing
+- [ ] Consistent typography
+- [ ] High color contrast (WCAG AA)
+- [ ] Icons are clear and consistent
+- [ ] Images load correctly
+- [ ] No visual bugs (overlapping, cutoff text)
+
+### Usability
+- [ ] Clear navigation
+- [ ] Obvious primary actions
+- [ ] Helpful error messages
+- [ ] Success confirmation
+- [ ] Undo/cancel available
+- [ ] Keyboard accessible
 - [ ] Screen reader compatible
-- [ ] Color not sole conveyor of information
-- [ ] Focus states visible
-- [ ] Alt text for images
+- [ ] Mobile responsive (320px - 1920px)
 
-### Collaborative Features
-- [ ] Presence indicators (cursors, avatars, typing)
-- [ ] Clear conflict prevention/resolution
-- [ ] Offline state communication
-- [ ] Client-specific undo/redo
-- [ ] Permission levels clearly communicated
+### Performance
+- [ ] Page load <2s
+- [ ] API calls <200ms
+- [ ] Smooth animations (60fps)
+- [ ] No memory leaks
+- [ ] Efficient rendering (no jank)
 
-### Canvas/Spatial Apps
-- [ ] Cursor-centered zoom (not screen center)
-- [ ] Smart guides and snapping with toggle
-- [ ] Minimap for large canvases
-- [ ] Full keyboard navigation support
-- [ ] Viewport culling for performance
+### Browser Compatibility
+- [ ] Chrome (latest)
+- [ ] Firefox (latest)
+- [ ] Safari (latest)
+- [ ] Edge (latest)
 
-### AI Interfaces
-- [ ] AI-generated content clearly labeled
-- [ ] Source attribution for AI claims
-- [ ] User feedback mechanism (thumbs up/down)
-- [ ] Stop/cancel generation control
-- [ ] Human override always available
+## Demo-Specific Checks
 
-### Onboarding
-- [ ] First-run experience guides users to "aha moment"
-- [ ] Empty states provide clear next actions
-- [ ] Onboarding is skippable and won't re-show
-- [ ] Sign-up collects only essential fields
+For Project Conductor demo:
 
-### Notifications
-- [ ] Notification severity matches visual treatment
-- [ ] Push permission requested in context (not on first visit)
-- [ ] Users can control notification preferences per channel
-- [ ] Toasts auto-dismiss (4-8s) with action button option
+### Module Navigation
+```bash
+# Test all module transitions
+Module 0 (Onboarding) → Module 1 (Dashboard)
+Module 1 (Dashboard) → Module 2 (BRD)
+Module 2 (BRD) → Module 3 (PRD)
+Module 3 (PRD) → Module 4 (Engineering Design)
+Module 4 (Engineering Design) → Module 5 (Conflicts)
+Module 5 (Conflicts) → Module 6 (Implementation)
+Module 6 (Implementation) → Module 1 (Dashboard)
 
-### Ethical Design
-- [ ] Accept/reject buttons have equal visual prominence
-- [ ] No pre-checked optional consent boxes
-- [ ] Cancellation is as easy as subscription
-- [ ] No confirmshaming in decline copy
-
-### Internationalization
-- [ ] RTL-ready (logical CSS properties, layout verified in `dir="rtl"`)
-- [ ] Tolerant of ~30-40% text expansion (no fixed-width labels/buttons)
-- [ ] No text baked into images; all strings externalized
-- [ ] Locale-aware date/number/currency formatting (`Intl`); ICU plurals
-- [ ] Language switcher uses endonyms, not flags
-
-## Decision Trees
-
-### Modal vs. Side Panel vs. Full Page
-
-```
-What is the user doing?
-├── Quick confirmation or simple input (1-3 fields)?
-│   └── → Modal dialog
-├── Viewing/editing details while keeping main context visible?
-│   ├── Content is narrow (form, properties, chat)?
-│   │   └── → Side panel
-│   └── Content needs significant width?
-│       └── → Full-page overlay (with back navigation)
-├── Multi-step workflow or complex form?
-│   ├── Steps are short (2-3 fields each)?
-│   │   └── → Modal with stepper
-│   └── Steps are long or need reference to other content?
-│       └── → Full page with stepper
-└── Creating a new complex entity (document, project)?
-    └── → Full page (dedicated creation flow)
+# Check:
+- [ ] All links work
+- [ ] Navigation breadcrumbs update
+- [ ] Back button works
+- [ ] State persists (if applicable)
 ```
 
-### Notification Type Selection
-
-```
-What needs the user's attention?
-├── Immediate action required?
-│   ├── Blocking (must resolve before continuing)?
-│   │   └── → Modal dialog (confirmation, error recovery)
-│   └── Non-blocking but urgent?
-│       └── → Banner (top of page, persistent until dismissed)
-├── Feedback on a completed action?
-│   ├── Success or low-importance info?
-│   │   └── → Toast (auto-dismiss 4-8s)
-│   └── Warning or error?
-│       └── → Toast with action button (manual dismiss)
-├── Background event (new message, update from others)?
-│   ├── User is in the same context?
-│   │   └── → Badge + subtle inline indicator
-│   └── User is elsewhere in the app?
-│       └── → Badge on nav item + optional push notification
-└── System status (maintenance, connectivity)?
-    └── → Persistent banner (top or bottom of viewport)
+### Real-Time Features
+```javascript
+// Test WebSocket functionality
+- [ ] Connection establishes on page load
+- [ ] Live updates appear without refresh
+- [ ] Multiple tabs stay in sync
+- [ ] Reconnects after disconnect
+- [ ] Shows offline indicator if disconnected
+- [ ] No duplicate updates
 ```
 
-## Detailed Documentation
+### Data Display
+```markdown
+- [ ] Projects list loads correctly
+- [ ] Requirements display properly
+- [ ] Status badges show correct colors
+- [ ] Progress bars update in real-time
+- [ ] Filters work correctly
+- [ ] Sorting works correctly
+- [ ] Pagination works correctly
+- [ ] Search works correctly
+```
 
-- For core UX principles and heuristics, see [references/01-core-principles.md](references/01-core-principles.md)
-- For Laws of UX quick reference, see [references/02-laws-of-ux.md](references/02-laws-of-ux.md)
-- For WCAG 2.2 accessibility compliance, see [references/03-accessibility.md](references/03-accessibility.md)
-- For visual design patterns, see [references/04-visual-design.md](references/04-visual-design.md)
-- For information architecture, see [references/05-information-architecture.md](references/05-information-architecture.md)
-- For interaction design patterns, see [references/06-interaction-design.md](references/06-interaction-design.md)
-- For form and input design, see [references/07-forms-and-inputs.md](references/07-forms-and-inputs.md)
-- For mobile UX best practices, see [references/08-mobile-ux.md](references/08-mobile-ux.md)
-- For UX writing and microcopy, see [references/09-ux-writing.md](references/09-ux-writing.md)
-- For user research methods, see [references/10-user-research.md](references/10-user-research.md)
-- For design system creation, see [references/11-design-systems.md](references/11-design-systems.md)
-- For collaborative presence, live cursors, and awareness indicators, see [references/12a-presence-awareness.md](references/12a-presence-awareness.md)
-- For conflict resolution, sync, sharing, and offline UX, see [references/12b-conflict-resolution-sync.md](references/12b-conflict-resolution-sync.md)
-- For canvas navigation, zoom, pan, and object manipulation, see [references/13a-canvas-navigation.md](references/13a-canvas-navigation.md)
-- For canvas elements, layers, performance, and whiteboard patterns, see [references/13b-canvas-objects-performance.md](references/13b-canvas-objects-performance.md)
-- For AI and LLM interface design (chat, copilots, agents), see [references/14-ai-ux-patterns.md](references/14-ai-ux-patterns.md)
-- For ethical design and dark pattern avoidance, see [references/15-ethical-design.md](references/15-ethical-design.md)
-- For onboarding flows and user activation, see [references/16-onboarding.md](references/16-onboarding.md)
-- For notification systems and attention management, see [references/17-notifications.md](references/17-notifications.md)
-- For data visualization and dashboard design, see [references/18-data-visualization.md](references/18-data-visualization.md)
-- For search interface design and autocomplete, see [references/19-search-ux.md](references/19-search-ux.md)
-- For emotional design and trust-building patterns, see [references/20-emotional-design.md](references/20-emotional-design.md)
-- For data tables, sortable lists, pagination, and bulk actions, see [references/21-data-tables.md](references/21-data-tables.md)
-- For loading states, skeleton screens, optimistic updates, and perceived performance, see [references/22-performance-ux.md](references/22-performance-ux.md)
-- For internationalization, localization, and RTL design, see [references/23-internationalization.md](references/23-internationalization.md)
-- For voice, multimodal, and cross-device input patterns, see [references/24-voice-and-multimodal.md](references/24-voice-and-multimodal.md)
+## Output Format
 
-## Key Numbers to Remember
+After UX audit, provide:
 
-### Layout & Typography
+```markdown
+## UX Audit Report
 
-| Metric | Value | Context |
-|--------|-------|---------|
-| Touch target | 44-48px | Minimum tappable area |
-| Body text | 16px+ | Minimum readable size |
-| Line height | 1.2-1.45 | Optimal readability |
-| Line length | 50-75 chars | Ideal for reading |
-| Contrast ratio | 4.5:1 | WCAG AA for normal text |
-| Contrast ratio | 3:1 | WCAG AA for large text |
-| Working memory | 7±2 items | Miller's Law |
-| Text expansion | ~30-40% | Translation growth (DE/FI/RU) |
+**Status**: [PERFECT ✅ / NEEDS FIXES ⚠️ / CRITICAL ISSUES ❌]
 
-### Interaction & Animation
+### Issues Found
 
-| Metric | Value | Context |
-|--------|-------|---------|
-| Animation | 300-500ms | Natural feeling duration |
-| Touch feedback | < 100ms | Perceived instant response |
-| Form abandonment | 81% | Users who start but don't finish |
-| Canvas zoom range | 10%-4000% | Typical design tool range |
-| Smart guide snap | 2-8px | Distance before snapping |
-| Canvas render | 60fps | Target during pan/zoom |
+#### Critical (Must Fix) 🔴
+1. [Issue description]
+   - Impact: [How this affects users]
+   - Fix: [Specific code changes needed]
+   - File: [path/to/file.html]
+   - Line: [line number]
 
-### Collaboration
+#### Important (Should Fix) 🟡
+1. [Issue description]
+   - Impact: [How this affects users]
+   - Fix: [Specific code changes needed]
 
-| Metric | Value | Context |
-|--------|-------|---------|
-| Cursor update rate | 50-100ms | Smooth live cursor movement |
-| Cursor label max | 12 chars | Truncate longer usernames |
-| Avatar stack | 3-5 visible | Use "+N" for overflow |
+#### Nice to Have (Polish) 🟢
+1. [Issue description]
+   - Enhancement: [How this improves UX]
+   - Suggestion: [Code example]
 
-### AI Interfaces
+### UX Score
 
-| Metric | Value | Context |
-|--------|-------|---------|
-| AI first token | < 1s | Perceived responsiveness |
-| AI streaming | 30-80 tok/s | Natural reading pace |
-| Copilot accept rate | 25-35% | Suggestion usefulness |
+- Functionality: [X/10]
+- Visual Design: [X/10]
+- Usability: [X/10]
+- Accessibility: [X/10]
+- Performance: [X/10]
 
-### Engagement Metrics
+**Overall**: [X/50] - [Grade: A+ to F]
 
-| Metric | Value | Context |
-|--------|-------|---------|
-| Onboarding completion | > 65% | Checklist finish rate |
-| Time to first value | < 5 min | Sign-up to activation |
-| Toast duration | 4-8s | Auto-dismiss timing |
-| Search success | > 70% | Users finding results |
-| NPS | > 50 | User sentiment |
+### Next Steps
 
-## Anti-Patterns to Avoid
+1. Fix critical issues first
+2. Implement important fixes
+3. Add polish enhancements
+4. Re-test all flows
+5. Final validation
 
-1. **Dark patterns** - Deceptive UI that tricks users → see [15-ethical-design.md](references/15-ethical-design.md)
-2. **Infinite scroll without context** - No sense of progress → see [21-data-tables.md](references/21-data-tables.md)
-3. **Hidden navigation** - Hamburger menus on desktop → see [05-information-architecture.md](references/05-information-architecture.md)
-4. **Autoplaying media** - Unexpected sound/video → see [03-accessibility.md](references/03-accessibility.md)
-5. **Disabled buttons without explanation** - Confusing blocked states → see [06-interaction-design.md](references/06-interaction-design.md)
-6. **Walls of text** - No visual hierarchy or chunking → see [04-visual-design.md](references/04-visual-design.md)
-7. **Color-only feedback** - Excludes colorblind users → see [03-accessibility.md](references/03-accessibility.md)
-8. **Tiny touch targets** - Frustrating on mobile → see [08-mobile-ux.md](references/08-mobile-ux.md)
-9. **No loading states** - Users think system is broken → see [22-performance-ux.md](references/22-performance-ux.md)
-10. **Popup/modal overuse** - Interrupts user flow → see [06-interaction-design.md](references/06-interaction-design.md)
-11. **No presence indicators** - Users don't know who else is working → see [12a-presence-awareness.md](references/12a-presence-awareness.md)
-12. **Silent sync failures** - Data loss without warning → see [12b-conflict-resolution-sync.md](references/12b-conflict-resolution-sync.md)
-13. **Cursor overload** - Too many live cursors create visual noise → see [12a-presence-awareness.md](references/12a-presence-awareness.md)
-14. **Screen-center zoom** - Disorienting; zoom at cursor instead → see [13a-canvas-navigation.md](references/13a-canvas-navigation.md)
-15. **No offline indication** - Users think they're connected when not → see [12b-conflict-resolution-sync.md](references/12b-conflict-resolution-sync.md)
-16. **Hidden AI** - Users should always know when interacting with AI → see [14-ai-ux-patterns.md](references/14-ai-ux-patterns.md)
-17. **Over-automation** - AI changes applied without user awareness or consent → see [14-ai-ux-patterns.md](references/14-ai-ux-patterns.md)
-18. **No AI undo** - AI-applied changes must be reversible → see [14-ai-ux-patterns.md](references/14-ai-ux-patterns.md)
-19. **Confirmshaming** - Guilt-laden language on decline buttons → see [15-ethical-design.md](references/15-ethical-design.md)
-20. **Asymmetric consent** - Big "Accept" button, tiny "Reject" link → see [15-ethical-design.md](references/15-ethical-design.md)
-21. **Mandatory lengthy tours** - Forcing users through 10+ onboarding steps → see [16-onboarding.md](references/16-onboarding.md)
-22. **Notification carpet bombing** - Every event as a push notification → see [17-notifications.md](references/17-notifications.md)
-23. **Permission on first visit** - Asking for push permission before user sees value → see [17-notifications.md](references/17-notifications.md)
-24. **Hardcoded/untranslatable strings** - Text baked into code/images, fixed-width containers, LTR-only layout → see [23-internationalization.md](references/23-internationalization.md)
-25. **Voice-only flows / hidden mic** - No fallback modality, no recognition feedback, buried voice entry → see [24-voice-and-multimodal.md](references/24-voice-and-multimodal.md)
+### Code Fixes
 
-## Sources
+[Provide specific code changes with file paths and line numbers]
+```
 
-This skill synthesizes best practices from:
-- [Laws of UX](https://lawsofux.com/) - Jon Yablonski
-- [Nielsen Norman Group](https://www.nngroup.com/) - Usability research
-- [WCAG 2.2](https://www.w3.org/TR/WCAG22/) - Accessibility guidelines
-- [Material Design](https://m3.material.io/) - Google's design system
-- [Human Interface Guidelines](https://developer.apple.com/design/) - Apple
-- [Interaction Design Foundation](https://www.interaction-design.org/)
-- [Liveblocks](https://liveblocks.io/) - Real-time collaboration patterns
-- [Figma Engineering Blog](https://www.figma.com/blog/category/engineering/) - Multiplayer & canvas
-- [Ably](https://ably.com/blog/collaborative-ux-best-practices) - Collaborative UX
-- [Google PAIR Guidebook](https://pair.withgoogle.com/guidebook) - AI design patterns
-- [Microsoft HAX Toolkit](https://www.microsoft.com/en-us/haxtoolkit/) - Human-AI interaction
-- [Deceptive Design](https://www.deceptive.design/) - Dark pattern catalog
-- [EU Digital Services Act](https://digital-strategy.ec.europa.eu/en/policies/digital-services-act-package) - Platform regulation
-- [EU Accessibility Act](https://ec.europa.eu/social/main.jsp?catId=1202) - EN 301 549 / WCAG 2.1 AA mandate
-- [W3C Internationalization (i18n) Activity](https://www.w3.org/International/) - i18n/l10n standards
-- [Baymard Institute](https://baymard.com/) - E-commerce UX research
-- [Edward Tufte](https://www.edwardtufte.com/) - Data visualization
-- [ColorBrewer](https://colorbrewer2.org/) - Colorblind-safe palettes
-- [The A11y Project](https://www.a11yproject.com/) - Accessibility community resource
-- [web.dev](https://web.dev/) - Core Web Vitals and performance UX
-- [Smashing Magazine](https://www.smashingmagazine.com/) - Practical UX/UI patterns
+## Example Usage
+
+User: "Make sure the demo is perfect"
+
+This skill will:
+1. Audit all demo HTML files
+2. Test every interactive element
+3. Research best UX practices
+4. Find and document all bugs
+5. Provide specific fixes with code
+6. Validate accessibility
+7. Check performance
+8. Test across browsers
+9. Generate comprehensive report
+10. Implement fixes if requested

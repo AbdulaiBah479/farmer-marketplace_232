@@ -1,101 +1,201 @@
 ---
 name: weekly-review
-description: >
-  Synthesize a week of inputs (calendar, tasks, journal, OKR check-ins) into
-  a structured weekly review with wins, learnings, blockers, and next-week
-  priorities. Use every Friday or Sunday, or when the user mentions weekly
-  review, GTD review, OKR check-in, or end-of-week reflection.
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: borghei
-  category: personal-productivity
-  domain: personal-effectiveness
-  updated: 2026-05-04
-  python-tools: weekly_review_synthesizer.py
-  tech-stack: GTD, OKRs, productivity
+description: Summarize the past week's daily journal entries. Use when asked to "weekly review", "review the week", "summarize this week", or "week summary".
+allowed-tools: Read, Write, Edit, Glob, Grep, AskUserQuestion
 ---
 
 # Weekly Review
 
-Synthesize a week into a structured review covering wins, learnings, blockers, and next-week priorities.
+Summarize the past week's daily entries into a weekly review note.
+
+## Location
+
+All private notes live in `content/private/` with flat structure (no subfolders).
+
+## Date Format
+
+- Weekly reviews: `YYYY-Www.md` (ISO week number)
+- Example: `2024-W02.md` for week 2 of 2024
 
 ---
 
-## Keywords
+## Phase 1: Determine Week Boundaries
 
-weekly review, GTD, getting things done, OKR check-in, retrospective, weekly retro, journal, reflection, end of week, EOW
+Calculate the current ISO week:
+- Week starts Monday, ends Sunday
+- Use ISO 8601 week numbering
 
----
-
-## Quick Start
-
-1. Fill in `assets/weekly_review_input.json` with the past week's wins, learnings, blockers, OKR progress
-2. Run: `python scripts/weekly_review_synthesizer.py weekly_review_input.json`
-3. Save the output as your week's review
+Find date range for the week being reviewed (default: current week).
 
 ---
 
-## Core Workflows
+## Phase 2: Gather Daily Notes
 
-### Workflow 1: Standard Friday Review (30 min)
-1. Capture 3-5 wins from the past week
-2. Capture 1-3 learnings (what surprised you, what you got wrong)
-3. Capture top 1-3 blockers / risks for next week
-4. Update OKR / goal progress
-5. List top 3 priorities for next week
-6. Run synthesizer
+### 2.1 Find Daily Notes
 
-**Time Estimate:** 30-45 minutes weekly.
+Search for all daily notes in the week's date range:
 
-### Workflow 2: Bootstrap (First Time)
-1. Read `references/weekly_review_methodology.md`
-2. Decide cadence (Friday afternoon vs Sunday evening — both work)
-3. Block 30-45 min recurring on calendar
-4. Use input template; tune over 4 weeks until format works for you
+```text
+Glob: content/private/YYYY-MM-DD.md
+```
 
-**Time Estimate:** 1 hour to set up; 30-45 min weekly thereafter.
+Filter to notes where date falls within the week.
 
-### Workflow 3: Quarterly Pattern Review
-1. Save weekly reviews in a single folder
-2. Quarterly: read all 12-13 weeks
-3. Look for patterns: recurring blockers, energy patterns, OKR drift
-4. Adjust cadence, cadence, or commitments based on patterns
+### 2.2 Load Content
 
-**Time Estimate:** 1-2 hours quarterly.
+Read each daily note found and extract:
+- Morning Thoughts
+- Done Today items
+- Learnings
+- Links Captured
+
+### 2.3 Present Summary
+
+Display to user:
+- Number of daily entries found (e.g., "Found 5 of 7 days")
+- Key themes identified
+- Most linked public notes
 
 ---
 
-## Tools
+## Phase 3: Generate Weekly Summary
 
-### weekly_review_synthesizer.py
+### 3.1 Ask for User Input
 
-Reads structured weekly input JSON and produces a markdown weekly review.
+```yaml
+question: "What were the main themes this week?"
+header: "Themes"
+options:
+  - label: "Auto-generate"
+    description: "Identify themes from daily entries"
+  - label: "Manual"
+    description: "I'll describe the themes"
+```
 
-```bash
-python scripts/weekly_review_synthesizer.py input.json
-python scripts/weekly_review_synthesizer.py input.json --json
+If user chooses manual, gather their input.
+
+### 3.2 Create Weekly Note
+
+**Frontmatter:**
+```yaml
+---
+title: "Week {N}, {YYYY}"
+type: weekly
+week: YYYY-Www
+date: {week end date YYYY-MM-DD}
+dailies:
+  - "[[YYYY-MM-DD]]"
+  - "[[YYYY-MM-DD]]"
+private: true
+---
+```
+
+**Body structure:**
+```markdown
+## Week Summary
+
+{user themes or auto-generated summary}
+
+## Key Events
+
+- {aggregated from Done Today sections}
+
+## Learnings
+
+- {consolidated from daily Learnings sections}
+
+## Public Notes Created
+
+- [[note-1]] - {brief context}
+- [[note-2]] - {brief context}
+```
+
+### 3.3 Review with User
+
+Present the generated weekly review:
+
+```yaml
+question: "Does this weekly summary look good?"
+header: "Review"
+options:
+  - label: "Save"
+    description: "Create the weekly review file"
+  - label: "Edit"
+    description: "Make changes before saving"
 ```
 
 ---
 
-## Reference Guides
+## Phase 4: Save Weekly Review
 
-- **`references/weekly_review_methodology.md`** — GTD weekly review, OKR check-in patterns, common pitfalls
+Save to `content/private/{YYYY-Www}.md`.
+
+Confirm with:
+- File path
+- Number of days covered
+- Key themes captured
 
 ---
 
-## Templates
+## Template Reference
 
-- **`assets/weekly_review_input.json`** — Input template
+Full weekly review template:
+
+```markdown
+---
+title: "Week N, YYYY"
+type: weekly
+week: YYYY-Www
+date: YYYY-MM-DD
+dailies:
+  - "[[2024-01-08]]"
+  - "[[2024-01-09]]"
+  - "[[2024-01-10]]"
+  - "[[2024-01-11]]"
+  - "[[2024-01-12]]"
+private: true
+---
+
+## Week Summary
+
+High-level themes and patterns from the week.
+
+## Key Events
+
+- Monday: ...
+- Tuesday: ...
+- Notable accomplishment
+
+## Learnings
+
+- Insight 1 from [[2024-01-08]]
+- Insight 2 from [[2024-01-10]]
+
+## Public Notes Created
+
+- [[book-title]] - Finished reading and captured notes
+- [[podcast-episode]] - Great episode on X topic
+```
 
 ---
 
-## Best Practices
+## Quality Checklist
 
-- **Block the time.** 30 min recurring; defend against rescheduling.
-- **Same time each week.** Habits stick when the trigger is consistent.
-- **Capture the pattern, not the noise.** Weekly review is a layer above the moment-to-moment task list.
-- **OKR check-in over chase.** Weekly OKR progress is signal; quarterly is the action moment.
-- **Compound across weeks.** Reviews are most useful when read in batches.
-- **Don't over-format.** A messy review you actually do beats a perfect one you skip.
+Before saving:
+- [ ] Filename matches `YYYY-Www.md` format (w lowercase)
+- [ ] Frontmatter has `type: weekly` and `private: true`
+- [ ] Week number in title and frontmatter match
+- [ ] `dailies` array lists all daily notes included
+- [ ] Summary synthesizes themes, not just lists
+- [ ] Wiki-links use correct `[[slug]]` format
+
+---
+
+## Edge Cases
+
+| Situation | Handling |
+|-----------|----------|
+| No daily notes found | Warn user, offer to create anyway |
+| Partial week (< 7 days) | Proceed with available entries |
+| Weekly review already exists | Offer to update or skip |
+| User wants different week | Allow specifying week number |

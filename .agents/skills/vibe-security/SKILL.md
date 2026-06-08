@@ -1,64 +1,13 @@
 ---
 name: vibe-security
-description: Comprehensive secure coding guide covering OWASP web vulnerabilities with prevention patterns and checklists. Use when writing or reviewing web application code to prevent XSS, CSRF, SSRF, SQL injection, access control flaws, and other common security vulnerabilities.
-tags:
-  - security
-  - web-development
-  - owasp
-  - secure-coding
-  - vulnerability-prevention
-keywords:
-  - secure coding
-  - OWASP
-  - XSS CSRF
-  - vulnerability
-  - vibe
-  - security
-  - vibe security
+description: This skill helps Claude write secure web applications. Use when working on any web application to ensure security best practices are followed.
 ---
 
 # Secure Coding Guide for Web Applications
 
-Comprehensive secure coding practices for web applications. Approach code from a **bug hunter's perspective** and make applications **as secure as possible** without breaking functionality.
+## Overview
 
-## When to Use This Skill
-
-- Writing new web application endpoints or API routes
-- Reviewing PRs that handle user input, authentication, or file uploads
-- Implementing authentication, authorization, or session management
-- Working with file uploads, redirects, or URL-based features
-- Adding security headers or CSP policies
-- Avoid using for infrastructure/network security — use `defense-in-depth` instead
-
-## Workflow
-
-### Step 1: Identify Attack Surface
-
-Determine which security domains apply to the code under review:
-
-| Domain | Trigger |
-|--------|---------|
-| Access Control | Any authenticated endpoint, multi-tenant data |
-| XSS | User input rendered in HTML, JavaScript, or CSS |
-| CSRF | State-changing endpoints (POST, PUT, DELETE) |
-| SSRF | Server makes requests to user-provided URLs |
-| SQL Injection | Dynamic database queries |
-| File Upload | Any file upload functionality |
-| Path Traversal | User input in file paths |
-
-### Step 2: Apply Domain-Specific Checks
-
-Use the relevant sections below as checklists for each identified domain.
-
-### Step 3: Verify Security Headers
-
-Ensure all responses include the required headers (see Security Headers Checklist).
-
-### Step 4: Review and Test
-
-- Verify fixes don't break functionality
-- Test with bypass techniques listed in each section
-- Run automated security scanning if available
+This guide provides comprehensive secure coding practices for web applications. As an AI assistant, your role is to approach code from a **bug hunter's perspective** and make applications **as secure as possible** without breaking functionality.
 
 **Key Principles:**
 - Defense in depth: Never rely on a single security control
@@ -113,14 +62,14 @@ For **every data point and action** that requires authentication:
 # Pseudocode for secure resource access
 function getResource(resourceId, currentUser):
     resource = database.find(resourceId)
-    
+
     if resource is null:
         return 404  # Don't reveal if resource exists
-    
+
     if resource.ownerId != currentUser.id:
         if not currentUser.hasOrgAccess(resource.orgId):
             return 404  # Return 404, not 403, to prevent enumeration
-    
+
     return resource
 ```
 
@@ -169,7 +118,7 @@ Every input controllable by the user—whether directly or indirectly—must be 
 
 2. **Content Security Policy (CSP)**
    ```
-   Content-Security-Policy: 
+   Content-Security-Policy:
      default-src 'self';
      script-src 'self';
      style-src 'self' 'unsafe-inline';
@@ -316,7 +265,7 @@ Any endpoint accepting a URL for redirection must be protected against open redi
 1. **Allowlist Validation**
    ```
    allowed_domains = ['yourdomain.com', 'app.yourdomain.com']
-   
+
    function isValidRedirect(url):
        parsed = parseUrl(url)
        return parsed.hostname in allowed_domains
@@ -651,14 +600,14 @@ import os
 def safe_join(base_directory, user_path):
     # Ensure base is absolute and normalized
     base = os.path.abspath(os.path.realpath(base_directory))
-    
+
     # Join and then resolve the result
     target = os.path.abspath(os.path.realpath(os.path.join(base, user_path)))
-    
+
     # Ensure the commonpath is the base directory
     if os.path.commonpath([base, target]) != base:
         raise ValueError("Error!")
-    
+
     return target
 ```
 
@@ -689,106 +638,6 @@ X-Content-Type-Options: nosniff
 X-Frame-Options: DENY
 Referrer-Policy: strict-origin-when-cross-origin
 Cache-Control: no-store (for sensitive pages)
-```
-
----
-
-## JWT Security
-
-JWT misconfigurations can lead to full authentication bypass and token forgery.
-
-### Vulnerabilities
-
-| Vulnerability | Prevention |
-|---------------|------------|
-| `alg: none` attack | Always verify algorithm server-side, reject `none` |
-| Algorithm confusion | Explicitly specify expected algorithm, never derive from token |
-| Weak HMAC secrets | Use 256+ bit cryptographically random secrets |
-| Missing expiration | Always set `exp` claim |
-| Token in localStorage | Store in httpOnly, Secure, SameSite=Strict cookies, never localStorage |
-
-
-### Secure Implementation
-
-```javascript
-// 1. SIGNING
-// Always use environment variables for secrets
-const secret = process.env.JWT_SECRET; 
-
-const token = jwt.sign({
-  sub: userId,
-  iat: Math.floor(Date.now() / 1000),
-  exp: Math.floor(Date.now() / 1000) + (15 * 60), // 15 mins (Short-lived)
-  jti: crypto.randomUUID() // Unique ID for revocation/blacklisting
-}, secret, { 
-  algorithm: 'HS256' 
-});
-
-// 2. SENDING (Cookie Best Practices)
-// Protect against XSS and CSRF
-res.cookie('token', token, {
-  httpOnly: true, 
-  secure: true,    
-  sameSite: 'strict'
-});
-
-// 3. VERIFYING
-// CRITICAL: Whitelist the allowed algorithm
-jwt.verify(token, secret, { algorithms: ['HS256'] }, (err, decoded) => {
-  if (err) {
-    // Handle invalid token
-  }
-  // Trust the payload
-});
-```
-
-### JWT Checklist
-
-- [ ] Algorithm explicitly specified on verification (never trust token header)
-- [ ] `alg: none` rejected
-- [ ] Secret is 256+ bits of random data (not a password or phrase)
-- [ ] `exp` claim always set and validated
-- [ ] Tokens stored in httpOnly cookies (not localStorage/sessionStorage)
-- [ ] Refresh token rotation implemented (old refresh token invalidated on use)
-
----
-
-## API Security
-
-### Mass Assignment
-
-Accepting unfiltered request bodies can lead to privilege escalation.
-
-```javascript
-// VULNERABLE — user can set { role: "admin" } in request body
-User.update(req.body)
-
-// SECURE — whitelist allowed fields
-const allowed = ['name', 'email', 'avatar']
-const updates = pick(req.body, allowed)
-User.update(updates)
-```
-
-This applies to any ORM/framework — always explicitly define which fields a request can modify.
-
-### GraphQL
-
-| Vulnerability | Prevention |
-| :--- | :--- |
-| Introspection in production | Disable introspection in production environments. |
-| Query depth attack | Implement query depth limiting (e.g., maximum of 10 levels). |
-| Query complexity attack | Calculate and enforce strict query cost limits. |
-| Batching attack | Limit the number of operations allowed per single request. |
-
-
-```javascript
-const server = new ApolloServer({
-  introspection: process.env.NODE_ENV !== 'production',
-  validationRules: [
-    depthLimit(10),
-    costAnalysis({ maximumCost: 1000 })
-  ]
-})
 ```
 
 ---

@@ -1,170 +1,460 @@
 ---
 name: vendor-management
-description: Use when reviewing, scoring, or auditing third-party SaaS / vendor relationships — running a vendor scorecard, tracking SLA compliance, classifying third-party risk, preparing a tier-1 vendor review, or auditing the SaaS portfolio. Triggers on "vendor SLA", "vendor scorecard", "third-party risk", "TPRM", "vendor review", "SaaS audit", "supplier performance", "vendor health check", "renewal review". Forks context so large vendor catalogs (50-500 line items) and SLA logs don't pollute the parent thread. Ships 3 stdlib-only Python tools (vendor scorer with industry tuning, SLA compliance tracker with credit-claim flags, vendor risk classifier across 4 risk vectors), 3 reference docs each citing 7+ authoritative sources (Gartner / Shared Assessments / NIST / ISO 27036 / breach post-mortems), and a 5-vendor catalog template. Distinct from c-level-advisor/general-counsel-advisor (contract law, not operational management), business-growth/contract-and-proposal-writer (outbound proposals, not inbound vendor scoring), and sibling procurement-optimizer (spend categorization, not vendor performance).
-context: fork
-version: 2.8.0
-author: claude-code-skills
-license: MIT
-tags: [bizops, vendor, sla, third-party-risk, vendor-management, saas-management, tprm]
-compatible_tools: [claude-code, codex-cli, cursor, antigravity, opencode, gemini-cli]
+description: Manage wedding vendors including registration, profiles, services, and communication. Use when working with vendors, vendor data, vendor services, vendor onboarding, vendor listings, or vendor-related database operations.
 ---
 
-# Vendor Management — Operational Third-Party Performance
+# Vendor Management Skill
 
-You are a BizOps / IT / Vendor Management Office (VMO) operator. Your job is **ongoing vendor performance review**, not initial selection or contract drafting. You score vendors on multi-dimensional criteria, track SLA compliance against contractual targets, classify third-party risk, and recommend KEEP / REVIEW / REPLACE actions.
+This skill helps manage wedding vendors in TheFesta Events platform, including vendor registration, profile management, service listings, and communication.
 
-## Purpose
+## Core Vendor Operations
 
-A typical mid-stage company carries 80-200 SaaS subscriptions and dozens of operational vendors. Most of them are reviewed only at renewal — which is too late. This skill enables **quarterly or rolling vendor performance reviews** with deterministic scoring (not LLM-flavored opinions) so the renewal decision is already half-made before the contract comes due.
+### 1. Vendor Registration & Onboarding
 
-## When to use
+When adding a new vendor to the platform:
 
-- The VMO or IT director needs to prepare a quarterly vendor scorecard for the leadership team
-- A tier-1 vendor (e.g., your identity provider, your data warehouse) has had recurring incidents and you need to quantify the SLA gap
-- The CISO needs a third-party risk classification of the SaaS portfolio for the next audit
-- A renewal is 60-90 days out and you need a defensible KEEP / REVIEW / REPLACE recommendation
-- Post-acquisition, you need to deduplicate vendor coverage across two organizations
+**Required Information:**
+- Business name and legal entity
+- Contact details (email, phone, address)
+- Vendor category (venue, catering, photography, etc.)
+- Business registration/license numbers
+- Tax information (if applicable)
+- Service areas/locations covered
+- Years in business
+- Portfolio/previous work samples
 
-## When NOT to use
+**Database Fields to Consider:**
+```typescript
+{
+  name: string;
+  email: string;
+  phone: string;
+  category: VendorCategory;
+  description: string;
+  services: Service[];
+  location: Location;
+  pricing: PricingInfo;
+  availability: Availability;
+  portfolio: Media[];
+  reviews: Review[];
+  status: 'pending' | 'active' | 'suspended';
+}
+```
 
-- Negotiating new contract terms → `c-level-advisor/general-counsel-advisor`
-- Writing an outbound proposal or RFP response → `business-growth/contract-and-proposal-writer`
-- Categorizing software spend or finding duplicate SaaS → sibling `procurement-optimizer`
-- Designing internal system SLOs/error budgets → `engineering/slo-architect`
+### 2. Vendor Profile Management
 
-## Workflow
+**Profile Components:**
+- Business overview and description
+- Service offerings and packages
+- Pricing tiers and packages
+- Availability calendar
+- Portfolio/gallery (images, videos)
+- Reviews and ratings
+- Certifications and awards
+- Social media links
+- Terms and conditions
 
-### Step 1 — Intake the vendor catalog
+**Best Practices:**
+- Validate all contact information
+- Ensure high-quality portfolio images
+- Verify business credentials
+- Set clear service descriptions
+- Include transparent pricing
 
-The user provides a JSON catalog (see `assets/vendor_catalog_template.md` for the schema and a 5-vendor sample). Required fields per vendor:
+### 3. Service & Package Management
 
-- `name`, `category`, `annual_spend` (USD)
-- `contract_end_date` (ISO 8601)
-- `criticality`: one of `tier-1` (business-stops-if-down), `tier-2` (important-but-workaround-exists), `tier-3` (nice-to-have)
-- `uptime_pct` (last 12 months, e.g., 99.92)
-- `support_response_hours_p90` (P90 ticket response time in hours)
-- `incident_count_last_12m`
-- `security_certs`: list of strings from {SOC2, SOC2-Type-II, ISO27001, HIPAA, PCI-DSS, FedRAMP, GDPR-DPA, CCPA}
-- `renewal_terms`: one of `auto-renew`, `manual-renew`, `evergreen`, `fixed-term`
+**Service Listing Structure:**
+```typescript
+{
+  serviceName: string;
+  description: string;
+  category: string;
+  basePrice: number;
+  pricingType: 'fixed' | 'hourly' | 'package' | 'custom';
+  features: string[];
+  addOns?: AddOn[];
+  maxCapacity?: number;
+  duration?: string;
+  customizable: boolean;
+}
+```
 
-### Step 2 — Score each vendor 0-100
+**Package Types:**
+- Basic/Standard/Premium tiers
+- Custom packages
+- Seasonal offers
+- Bundle deals
+- Add-on services
 
-Run `scripts/vendor_scorer.py --input catalog.json --profile <industry> --output scorecard.md`.
+### 4. Vendor Categories
 
-The scorer weights 5 dimensions per industry profile:
+Common vendor categories for wedding events:
 
-| Dimension | SaaS | Fintech | Healthcare | Enterprise |
-|---|---|---|---|---|
-| Reliability (uptime + incidents) | 30% | 25% | 25% | 25% |
-| Support (response P90) | 15% | 15% | 15% | 20% |
-| Security (certs) | 25% | 30% | 35% | 25% |
-| Commercial (renewal flexibility) | 15% | 15% | 10% | 15% |
-| Strategic fit (criticality vs spend) | 15% | 15% | 15% | 15% |
+**Venues:**
+- Wedding venues
+- Reception halls
+- Outdoor spaces
+- Destination venues
 
-Output: ranked markdown scorecard with per-dimension breakdown and a verdict per vendor:
+**Catering:**
+- Full-service catering
+- Dessert/cake specialists
+- Bar services
+- Food trucks
 
-- **KEEP** (≥ 75) — vendor is performing; routine renewal
-- **REVIEW** (50-74) — schedule a quarterly business review with the vendor before renewing
-- **REPLACE** (< 50) — start an alternatives search now; do not auto-renew
+**Photography & Videography:**
+- Wedding photographers
+- Videographers
+- Drone operators
+- Photo booth services
 
-### Step 3 — Measure SLA compliance
+**Decor & Flowers:**
+- Florists
+- Event decorators
+- Lighting specialists
+- Rental companies
 
-Run `scripts/sla_compliance_tracker.py --input sla_records.json --output sla_report.md`.
+**Entertainment:**
+- DJs
+- Bands/musicians
+- MCs/hosts
+- Dancers/performers
 
-For each SLA record `{vendor, sla_metric, target, actual_last_month, actual_last_quarter, breach_count_12m}`, the tracker computes:
+**Planning & Coordination:**
+- Wedding planners
+- Day-of coordinators
+- Event designers
 
-- Compliance % vs target (last month, last quarter)
-- Trend classification (improving / stable / degrading) based on month-vs-quarter delta
-- **Credit-claim eligibility flag** — if breach_count_12m ≥ 2 OR actual_last_quarter < target by > 0.5pp, flag the SLA credit as claimable
+**Beauty & Fashion:**
+- Hair stylists
+- Makeup artists
+- Bridal boutiques
+- Tuxedo rentals
 
-### Step 4 — Classify third-party risk
+**Other Services:**
+- Transportation
+- Invitations/stationery
+- Favors/gifts
+- Honeymoon planning
 
-Run `scripts/vendor_risk_classifier.py --input catalog.json --profile <industry> --output risk_matrix.md`.
+## Vendor Communication
 
-Classifies each vendor as **Critical / High / Medium / Low** across 4 risk vectors (Shared Assessments SIG-Lite-ish):
+### Email Templates
 
-1. **Data sensitivity** — PII / PHI / cardholder / source code access
-2. **Financial exposure** — annual spend × tier multiplier
-3. **Operational dependency** — tier-1 + no break-glass = Critical
-4. **Regulatory exposure** — industry profile drives weighting (e.g., healthcare: HIPAA-without-BAA = Critical)
+**Welcome Email:**
+```
+Subject: Welcome to TheFesta Events - Vendor Partnership
 
-Output: risk matrix markdown + per-vendor mitigation recommendations (e.g., "Tier-1 with no SOC2 → require SOC2 attestation before next renewal").
+Dear [Vendor Name],
 
-### Step 5 — Synthesize recommendations
+Welcome to TheFesta Events! We're excited to have you join our platform
+connecting couples with exceptional wedding vendors.
 
-Combine the 3 artifacts into a final BizOps / VMO digest:
+Your vendor profile is now live at: [Profile URL]
 
-- Top 3 KEEP wins (vendors over-performing — consider deepening)
-- Top 3 REVIEW conversations (schedule QBR with vendor)
-- Top 3 REPLACE candidates (start alternatives search now)
-- All SLA credits eligible to claim (with dollar estimate where possible)
-- All Critical-risk vendors with no current mitigation
+Next steps:
+1. Complete your profile with portfolio images
+2. Set up your service packages and pricing
+3. Configure your availability calendar
+4. Review and respond to inquiries promptly
 
-## Scripts
+Our team is here to support you. Contact us at vendor-support@thefestaevents.com
 
-| Script | Purpose |
-|---|---|
-| `scripts/vendor_scorer.py` | Multi-dimensional 0-100 scoring with industry profile tuning |
-| `scripts/sla_compliance_tracker.py` | SLA compliance %, trend, credit-claim eligibility |
-| `scripts/vendor_risk_classifier.py` | 4-vector risk classification with mitigation recommendations |
+Best regards,
+The TheFesta Team
+```
 
-All three accept `--input` (JSON), `--output` (markdown path), `--sample` (run with built-in sample data), and `--help`. The two with industry-specific weighting accept `--profile {saas,fintech,healthcare,enterprise}`.
+**Inquiry Response Template:**
+```
+Subject: New Event Inquiry - [Event Date]
 
-## References
+Dear [Vendor Name],
 
-- `references/vendor_management_canon.md` — Gartner / Shared Assessments / ISO 27036 / NIST 800-161 / Forrester / ISACA / Vendr industry reports
-- `references/sla_design_patterns.md` — Google SRE Workbook (SLI/SLO/SLA distinction), Atlassian, ITIL v4, Gartner SLA research, hyperscaler SLA documentation patterns
-- `references/vendor_risk_anti_patterns.md` — Real breach post-mortems: SolarWinds, Target/HVAC, NotPetya/M.E.Doc, Capital One, Verkada, Okta 2022, log4j
+You have a new inquiry for:
+- Event Type: [Wedding/Reception]
+- Date: [Event Date]
+- Location: [Location]
+- Guest Count: [Number]
+- Budget: [Budget Range]
 
-## Assumptions
+Client Message:
+[Message]
 
-1. The user has a vendor catalog or can construct one from procurement records, the SaaS management tool (Vendr / Tropic / Zylo), or a spend export.
-2. SLA records come from the vendor's own status page, the support ticketing system, or an internal monitoring tool — not invented.
-3. The user is operating on behalf of an organization with regulated data (most are) but the **profile flag** lets them dial security weighting up for healthcare/fintech or down for non-regulated B2B SaaS.
-4. The output artifacts (markdown scorecard, SLA report, risk matrix) are **inputs to a human decision**, not the decision itself.
+Please respond within 24 hours to maintain good response metrics.
 
-## Anti-patterns
+[Respond to Inquiry Button]
+```
 
-- **Treat all vendors at the same tier.** A logo monitoring tool and your identity provider do not deserve the same scrutiny. Use the tier field.
-- **Annual review is enough.** Tier-1 vendors should be reviewed quarterly. Tier-2 semi-annually. Tier-3 at renewal.
-- **Trust the security questionnaire without verification.** Ask for the SOC2 report, not a SIG checkbox. See `references/vendor_risk_anti_patterns.md`.
-- **No break-glass plan for a tier-1 vendor.** If the vendor disappears tomorrow, what is the 72-hour plan?
-- **Forget offboarding.** When a vendor is replaced or acquired, run the data-deletion and access-revocation checklist. SolarWinds and Okta both demonstrate why.
-- **Score by gut feel.** Use the deterministic tools. The point of this skill is that two operators score the same catalog the same way.
+### Communication Best Practices
 
-## Distinct from
+- Respond to inquiries within 24 hours
+- Maintain professional tone
+- Provide clear pricing and availability
+- Ask relevant questions to understand needs
+- Send follow-up communications
+- Request reviews after completed events
 
-- **`business-growth/contract-and-proposal-writer`** — that's writing outbound proposals to win customers. This is scoring inbound vendors you already pay.
-- **`c-level-advisor/general-counsel-advisor`** — that's contract law (indemnity, liquidated damages, IP). This is operational performance against an existing contract.
-- **Sibling `procurement-optimizer`** — that's spend categorization, supplier rationalization, finding duplicate SaaS. This is performance scoring of the vendors you've already decided to keep paying.
-- **`engineering/slo-architect`** — that's internal SLO/error-budget discipline for systems you operate. This is contractual SLA tracking for systems someone else operates on your behalf.
+## Data Validation
 
-## Forcing-question library (Matt Pocock grill discipline)
+### Required Validations
 
-Walked one at a time by `/cs:grill-bizops` or the BizOps orchestrator. Recommended answer + canon citation per question. Never bundled.
+**Email Validation:**
+- Valid email format
+- Domain verification
+- Unique email per vendor
 
-1. **"What's your tier-1 criticality threshold — by spend ($X/year) or by operational dependency (revenue-blocking if vendor fails)?"**
-   Recommended: operational dependency.
-   Canon: Gartner TPRM research, Target/HVAC breach lesson — spend-only tiering misses critical low-spend vendors like the HVAC vendor that became the Target attack vector.
+**Phone Validation:**
+- Valid phone format
+- Country code verification
+- SMS verification (optional)
 
-2. **"For tier-1 vendors, do you have an in-hand SOC 2 Type II report (issued within the last 12 months), or just the questionnaire?"**
-   Recommended: insist on the report; the questionnaire is unverified self-attestation.
-   Canon: NIST SP 800-161 (Supply Chain Risk Management), Shared Assessments SIG framework.
+**Business Validation:**
+- Business license verification
+- Tax ID validation
+- Insurance verification
+- Background checks (if applicable)
 
-3. **"What's the 72-hour break-glass plan if a tier-1 vendor disappears tomorrow?"**
-   Recommended: documented contingency per vendor, tested annually.
-   Canon: NotPetya / M.E.Doc supply chain attack, log4j response patterns.
+**Content Validation:**
+- Portfolio images: max size, proper format
+- Descriptions: minimum/maximum length
+- Pricing: valid ranges
+- Availability: valid date ranges
 
-4. **"When was the last time the SLA was actually invoked (credit claim filed)?"**
-   Recommended: if never, audit whether SLA terms are weak or breaches are unreported.
-   Canon: Atlassian SLA best practices, ITIL v4 service level management.
+## Database Operations
 
-5. **"Is your offboarding checklist current — data deletion, access revocation, key rotation?"**
-   Recommended: rehearse it on one vendor per quarter.
-   Canon: SolarWinds + Okta 2022 breach lessons.
+### Common Queries
 
-6. **"What's the regulatory blast-radius — HIPAA / GDPR / SOX / PCI?"**
-   Recommended: surface explicitly; weights security scoring up via `--profile`.
-   Canon: ISO/IEC 27036 (supplier relationships security).
+**Find vendors by category:**
+```sql
+SELECT * FROM vendors
+WHERE category = ?
+AND status = 'active'
+AND location IN (?)
+ORDER BY rating DESC;
+```
 
-Walk depth-first. Lock 1-3 before opening 4-6. After all are answered, invoke `vendor_scorer.py` → `sla_compliance_tracker.py` → `vendor_risk_classifier.py` in sequence.
+**Find available vendors:**
+```sql
+SELECT v.* FROM vendors v
+LEFT JOIN bookings b ON v.id = b.vendor_id
+WHERE b.event_date != ?
+OR b.id IS NULL
+AND v.category = ?;
+```
+
+**Get vendor statistics:**
+```sql
+SELECT
+  COUNT(*) as total_bookings,
+  AVG(rating) as avg_rating,
+  SUM(revenue) as total_revenue
+FROM vendor_metrics
+WHERE vendor_id = ?;
+```
+
+### Prisma Schema Examples
+
+```prisma
+model Vendor {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  name        String
+  category    VendorCategory
+  description String?
+  phone       String?
+  location    Location?
+  services    Service[]
+  bookings    Booking[]
+  reviews     Review[]
+  portfolio   Media[]
+  status      VendorStatus @default(PENDING)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  vendorId    String
+  vendor      Vendor   @relation(fields: [vendorId], references: [id])
+  name        String
+  description String
+  basePrice   Float
+  category    String
+  features    String[]
+  bookings    Booking[]
+}
+```
+
+## Vendor Metrics & Analytics
+
+### Key Performance Indicators (KPIs)
+
+**Response Metrics:**
+- Average response time
+- Response rate
+- Conversion rate (inquiries to bookings)
+
+**Performance Metrics:**
+- Total bookings
+- Revenue generated
+- Average booking value
+- Repeat customer rate
+
+**Quality Metrics:**
+- Average rating
+- Number of reviews
+- Customer satisfaction score
+- Complaint rate
+
+**Engagement Metrics:**
+- Profile views
+- Inquiry volume
+- Portfolio engagement
+- Social media following
+
+### Reports to Generate
+
+1. **Monthly Performance Report**
+   - Total bookings and revenue
+   - New vs. returning customers
+   - Top-performing services
+   - Rating trends
+
+2. **Vendor Comparison Report**
+   - Performance vs. category average
+   - Pricing competitiveness
+   - Response time benchmarks
+
+3. **Availability Report**
+   - Upcoming availability
+   - Peak booking periods
+   - Capacity utilization
+
+## Vendor Portal Features
+
+### Dashboard Components
+
+**Overview Section:**
+- Total inquiries (pending/active)
+- Upcoming bookings
+- Recent reviews
+- Revenue summary
+
+**Calendar Section:**
+- Availability calendar
+- Booked dates
+- Pending bookings
+- Blocked dates
+
+**Messages Section:**
+- Inbox (client inquiries)
+- Sent messages
+- Automated notifications
+
+**Analytics Section:**
+- Performance metrics
+- Booking trends
+- Revenue analytics
+- Rating history
+
+## File Structure for Vendor Data
+
+```
+vendors/
+├── {vendorId}/
+│   ├── profile.json
+│   ├── services.json
+│   ├── portfolio/
+│   │   ├── image1.jpg
+│   │   ├── image2.jpg
+│   │   └── videos/
+│   ├── contracts/
+│   │   └── agreement.pdf
+│   └── documents/
+│       ├── license.pdf
+│       └── insurance.pdf
+```
+
+## Error Handling
+
+**Common Error Scenarios:**
+
+1. **Duplicate Vendor Registration**
+   - Check: Email already exists
+   - Action: Prompt to log in or recover account
+
+2. **Invalid Business Information**
+   - Check: Business license validation
+   - Action: Request manual verification
+
+3. **Portfolio Upload Issues**
+   - Check: File size, format, content
+   - Action: Provide clear error messages and guidelines
+
+4. **Availability Conflicts**
+   - Check: Double bookings
+   - Action: Alert vendor and suggest alternatives
+
+5. **Payment/Pricing Errors**
+   - Check: Valid pricing ranges
+   - Action: Validate before saving
+
+## Security Considerations
+
+**Authentication:**
+- Secure password requirements
+- Two-factor authentication (optional)
+- Session management
+
+**Authorization:**
+- Role-based access control
+- Vendor can only access own data
+- Admin override capabilities
+
+**Data Protection:**
+- Encrypt sensitive information
+- Secure file uploads
+- Audit logs for data changes
+- GDPR compliance for personal data
+
+## Integration Points
+
+**Payment Processing:**
+- Vendor commission calculation
+- Payout schedules
+- Transaction history
+
+**Calendar Integration:**
+- Google Calendar sync
+- iCal export
+- Availability sync
+
+**Communication:**
+- Email notifications
+- SMS alerts
+- In-app messaging
+
+**Analytics:**
+- Google Analytics integration
+- Custom tracking events
+- Performance dashboards
+
+## Quick Reference Commands
+
+**Add new vendor:**
+Check for required fields, validate business info, create vendor record
+
+**Update vendor profile:**
+Validate changes, update database, notify vendor of changes
+
+**List vendors by category:**
+Query database with filters, apply sorting, return paginated results
+
+**Generate vendor report:**
+Aggregate metrics, calculate KPIs, format report, export as PDF/Excel
+
+**Send vendor notification:**
+Select template, personalize content, queue for delivery, track status
+
+**Manage vendor availability:**
+Update calendar, check conflicts, send confirmations, sync with external calendars

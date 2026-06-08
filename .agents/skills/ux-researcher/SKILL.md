@@ -1,311 +1,311 @@
 ---
 name: ux-researcher
-description: 'Use this skill when planning or conducting user research, writing interview guides, designing surveys for UX insights, synthesizing qualitative findings, creating personas, or writing research reports. Trigger phrases: ''write a user interview guide'', ''how do I conduct usability testing'', ''synthesize research findings'', ''create a user persona'', ''design a UX survey''. Not for quantitative market sizing (use market-researcher), writing business requirements (use business-analyst), or product analytics.'
-version: 1.0.0
-author: community
-tags:
-  - business
-  - ux
-  - research
-  - user-interviews
-license: MIT
-keywords:
-  - user research
-  - user interview
-  - usability testing
-  - researcher
-  - ux researcher
+description: Expert in understanding user behaviors, needs, and motivations through qualitative and quantitative research methods to drive user-centered design.
 ---
 
 # UX Researcher
 
-## Overview
-This skill provides a complete framework for planning and executing user research—from choosing the right method through writing interview guides, running usability tests, synthesizing findings with affinity mapping, building personas, and writing a research report that drives product decisions. Good UX research replaces assumptions with evidence, ensuring product teams build things users actually need and can use.
+## Purpose
+
+Provides user experience research expertise specializing in qualitative and quantitative research methods to drive user-centered design. Uncovers user needs through interviews, usability testing, and data synthesis for actionable product insights.
 
 ## When to Use
-- You need to understand why users behave a certain way (not just what they do)
-- You want to validate or invalidate a product assumption before building
-- You're writing a user interview guide for a research sprint
-- You need to synthesize observations from multiple user sessions into insights
-- You're creating user personas from research data
-- You want to run a usability test on a prototype or existing product
 
-## When NOT to Use
-- Sizing a market or analyzing competitors (use market-researcher skill)
-- Writing product requirements from research findings (use product-manager skill)
-- Analyzing behavioral analytics data (use data-analyst skill)
-- Writing a survey to validate market demand, not UX (use market-researcher skill)
-
-## Quick Reference
-| Research Method | Best For | Participants | Time |
-|----------------|----------|-------------|------|
-| In-depth interviews | Understanding motivations, mental models | 8–15 | 45–60 min each |
-| Usability testing (moderated) | Finding interaction problems | 5–8 | 30–60 min each |
-| Usability testing (unmoderated) | Broad task success rate | 30–100 | 15–20 min each |
-| Card sorting | Information architecture, navigation | 20–30 | 20–30 min each |
-| Tree testing | Validating navigation structure | 50–100 | 10–15 min each |
-| Diary study | Longitudinal behavior tracking | 10–20 | 1–4 weeks |
-| Surveys | Quantifying preferences, attitudes | 200–1,000 | 5–15 min |
-| Field observation | Real-world context, workarounds | 5–10 | 1–3 hours each |
-| First-click test | Discoverability of UI elements | 50–100 | 5–10 min |
-| 5-second test | First impressions, clarity | 20–50 | 5 seconds |
-
-## Instructions
-
-### Step 1: Define the Research Goal
-A research plan starts with a clear question. Write it in one sentence:
-- "Why do new users drop off during the account setup flow?"
-- "How do customer success managers currently track customer health?"
-- "Can users successfully complete a payment using our redesigned checkout?"
-
-Then list 3–5 specific learning objectives:
-1. What does the current mental model look like for [task]?
-2. What are the biggest pain points with the current experience?
-3. What terminology do users use to describe [concept]?
-4. Where in the flow do users get confused or stuck?
-5. What workarounds have users developed?
-
-### Step 2: Choose the Right Research Method
-**Discovery research** (you don't know what the problems are yet):
-→ In-depth interviews, field observation, diary studies
-
-**Generative research** (generating ideas, understanding context):
-→ Interviews, focus groups, co-design workshops
-
-**Evaluative research** (testing a specific design or prototype):
-→ Moderated usability testing, unmoderated usability testing, first-click tests
-
-**Validation research** (confirming a hypothesis or measuring change):
-→ A/B testing, surveys, benchmarking studies
-
-### Step 3: Write a User Interview Guide
-An interview guide structures the conversation without scripting it rigidly.
-
-**Interview guide structure:**
-```
-1. Welcome and consent (5 min)
-2. Warm-up: background questions (5 min)
-3. Current behavior: how they do the task today (15 min)
-4. Pain points and workarounds (10 min)
-5. Concept exploration (if applicable) (10 min)
-6. Wrap-up: anything else? (5 min)
-```
-
-**Sample interview guide — Understanding how project managers track work:**
+- Planning and conducting user interviews or contextual inquiries
+- Running usability tests (moderated or unmoderated)
+- Analyzing qualitative data (thematic analysis, affinity mapping)
+- Creating artifacts like Personas, User Journey Maps, or Empathy Maps
+- Validating product market fit or feature demand
+- Designing surveys and analyzing quantitative responses
 
 ---
-**Research Goal:** Understand how engineering project managers track work and surface blockers.
-**Participant criteria:** Engineering PMs at companies with 20–200 engineers; 2+ years in role.
-**Duration:** 45–60 minutes.
-
-**Welcome script:**
-> "Thank you for making time today. I'm going to ask you questions about how you currently manage projects—there are no right or wrong answers. I'm here to learn from your experience, not to test you. I may take notes or have a colleague take notes. Is it okay if I record this session? The recording is only used internally."
-
-**Warm-up (5 min):**
-- Tell me a bit about your current role and team.
-- How many engineers are on your team?
-- What does your day-to-day look like?
-
-**Current behavior (15 min):**
-- Walk me through how you tracked last week's work, from Monday to Friday. (Probe: what tools did you use? What did that look like?)
-- How do you know if a project is on track?
-- How do you find out about blockers? How does that information reach you?
-- Can you show me what your current project tracking setup looks like? (If screen share available)
-
-**Pain points (10 min):**
-- What's the most frustrating part of tracking work right now?
-- When does the current process break down?
-- Tell me about a time a project went off track. How did you find out?
-- What workarounds do you use?
-
-**Concept exploration (10 min, if showing a prototype):**
-> "I'd like to show you something we're working on and get your honest reaction. This is early—nothing is built yet."
-- Talk me through your first impression.
-- How would you use this in your current workflow?
-- What's missing? What would make this more useful?
-
-**Wrap-up (5 min):**
-- Is there anything important I didn't ask about?
-- Who else do you think I should speak with?
-
 ---
 
-**Probing techniques:**
-- "Tell me more about that."
-- "What do you mean by X?"
-- "What happened next?"
-- "Why is that?"
-- "Can you give me a specific example?"
-- "How often does that happen?"
+## 2. Decision Framework
 
-### Step 4: Run a Usability Test
-**Task writing principles:**
-- Write tasks as scenarios, not instructions: "Imagine you need to add a new team member to your project" — not "Click on Settings → Team → Add Member"
-- Tasks should have a clear, verifiable completion point
-- Avoid jargon or product terminology in tasks (use the user's language)
-- Provide realistic context: "You just hired a contractor, Sarah Chen..."
+### Research Method Selection
 
-**Sample 30-minute usability test script:**
-
-**Task 1 (Onboarding):** "You just signed up for this product. Please set up your account as you normally would."
-- Success: User reaches the main dashboard
-- Failure: User abandons or asks for help
-
-**Task 2 (Core feature):** "You need to create a new project for the Q4 product launch. Please do that now."
-- Success: Project created with a name and at least one team member
-- Watch for: Discovery of "New Project" button, confusion around required fields
-
-**Task 3 (Error recovery):** "Try to invite a colleague using the email address: not-an-email"
-- Success: User sees error message and corrects it
-- Watch for: Error message clarity, ability to recover without reload
-
-**What to observe and note:**
-- Where does the user hesitate (> 3 seconds without action)?
-- Where do they go first? (reveals mental model)
-- What do they say out loud? ("I'd expect this to be in Settings")
-- Where do they make errors?
-- What do they say about the language/labels?
-
-### Step 5: Affinity Mapping — Synthesizing Research
-After 8+ interviews, you'll have hundreds of individual observations. Affinity mapping organizes them into themes.
-
-**Process:**
-1. **Write each observation on a sticky note** (digital: Miro/FigJam): one idea per note
-   - Good: "User said she checks email first thing every morning for project updates"
-   - Bad: "User has communication problems" (too interpreted)
-2. **Cluster similar notes** — move stickies that feel related near each other
-3. **Name each cluster** with a theme label (the insight, not the description):
-   - Not: "Email usage"
-   - Yes: "Email is the default status update channel even when better tools exist"
-4. **Identify patterns** across clusters: which themes appeared in 6/8 interviews?
-5. **Generate insights**: "Users rely on email for status updates because [existing tools] don't surface the right level of summary information for their role"
-
-### Step 6: Create a User Persona
-A persona is a composite character built from research patterns—not a made-up stereotype.
-
-**Persona template:**
 ```
-Name: Marcus, the Overwhelmed Engineering Manager
-Photo: [Stock photo of a 35-year-old in a casual office]
-
-Quote: "I spend more time in status meetings than actually helping my team."
-
-Background:
-- Engineering Manager at a 150-person SaaS company
-- 12 engineers across 3 squads, reporting to VP Engineering
-- 5 years as a manager, 8 years as an engineer before that
-
-Goals:
-- Know the status of all projects without attending every standup
-- Surface blockers before they cause delays
-- Spend less time in meetings, more time on 1:1 coaching
-
-Frustrations:
-- Information is scattered across Jira, Slack, and email
-- Has to interrupt engineers to get status updates
-- Reports take 2 hours/week to compile manually
-
-Behaviors:
-- Checks Slack first thing; treats it as a status board
-- Reviews Jira weekly but finds it too detailed for his needs
-- Relies on his tech lead to aggregate information from the team
-
-Tools used: Jira, Confluence, Slack, Google Sheets, Zoom
-
-Technology comfort: High — was an engineer, comfortable with complex tools
+What do you need to know?
+│
+├─ **Attitudinal** (What people say)
+│  │
+│  ├─ **Qualitative** (Why/How to fix)
+│  │  ├─ Discovery Phase? → **User Interviews / Diary Studies**
+│  │  ├─ Concept Phase? → **Focus Groups**
+│  │  └─ Information Arch? → **Card Sorting**
+│  │
+│  └─ **Quantitative** (How many/How much)
+│     ├─ General opinion? → **Surveys**
+│     └─ Feature prioritization? → **Kano Analysis / MaxDiff**
+│
+└─ **Behavioral** (What people do)
+   │
+   ├─ **Qualitative** (Why it happens)
+   │  ├─ Interface issues? → **Usability Testing (Moderated)**
+   │  ├─ Context of use? → **Field Studies / Contextual Inquiry**
+   │  └─ Navigation? → **Tree Testing**
+   │
+   └─ **Quantitative** (What happens)
+      ├─ Performance? → **A/B Testing / Analytics**
+      ├─ Ease of use? → **Unmoderated Usability Testing**
+      └─ Attention? → **Eye Tracking / Heatmaps**
 ```
 
-### Step 7: Write a Research Report
-A UX research report communicates findings and recommendations to decision makers.
+### Sample Size Guidelines (Nielsen Norman Group)
 
-**Report structure:**
-1. **Research Goal and Questions** (1 paragraph)
-2. **Methods and Participants** (brief: 8 interviews, 5 usability tests, etc.)
-3. **Key Findings** (top 3–5 themes, with evidence quotes and observation counts)
-4. **Recommendations** (prioritized list tied to product decisions)
-5. **Appendix** (full interview notes, video clips, raw data)
+| Method | Goal | Recommended N | Rationale |
+|--------|------|---------------|-----------|
+| **Qualitative Usability** | Find 85% of usability problems | **5 users** | Diminishing returns after 5 users per persona. |
+| **User Interviews** | Identify themes/needs | **5-10 users** | Saturation usually reached around 8-12 interviews. |
+| **Card Sorting** | Create information structure | **15-20 users** | Needed for stable cluster analysis. |
+| **Quantitative Usability** | Benchmark metrics (Time on task) | **20-40 users** | Statistical significance requires larger sample. |
+| **Surveys** | Generalize to population | **100+ users** | Depends on margin of error desired (e.g., N=385 for +/- 5%). |
 
-**Finding format:**
-> **Finding 3: Users don't discover the notification center until they miss an important event.**
->
-> Evidence: 6 of 8 participants did not scroll to the notification bell icon during the first session. 3 participants mentioned they only discovered it after receiving a follow-up email saying they had missed a notification.
->
-> Quote (Participant 4): "I didn't even know that was there. I just assumed the app didn't have notifications."
->
-> Recommendation: Move notification bell to the primary navigation bar with an unread count badge. Trigger a tooltip on first login pointing to it.
+### Recruiting Strategy Matrix
 
-## Examples
+| Audience | Difficulty | Strategy |
+|----------|------------|----------|
+| **B2C (General Public)** | Low | **Testing Platforms** (UserTesting, Maze) - Fast, cheap. |
+| **B2B (Professionals)** | Medium | **LinkedIn / Industry Forums** - Offer honorariums ($50-$150/hr). |
+| **Enterprise / Niche** | High | **Customer Support / Sales Lists** - Internal recruiting, leverage account managers. |
+| **Internal Users** | Low | **Slack / Email** - "Dogfooding" or employee beta testers. |
 
-### Example 1: Create a User Interview Guide for a B2B SaaS Product
-**Input:** "We're a project management tool. We want to understand why users abandon our product during the first 30 days."
-
-**Key learning objectives:**
-1. What did users expect the product to do before signing up?
-2. What specific tasks did they try to accomplish in the first week?
-3. Where did they get stuck or confused?
-4. What alternatives did they try or switch to?
-5. What would have kept them engaged?
-
-**Interview guide excerpt (Current behavior section):**
-> "Think back to your first week using [Product]. What was the first thing you tried to do?"
-> - Probe: "What happened when you tried that?"
-> - Probe: "How did that compare to what you expected?"
->
-> "Can you walk me through a specific project you tried to set up?"
-> - Probe: "Where did you get stuck?"
-> - Probe: "What did you do when that happened?"
->
-> "What made you decide to stop using it?" (for churned users)
-> - Probe: "What would have changed your decision?"
-> - Probe: "What did you switch to?"
-
-**Output from 10 interviews — top findings:**
-1. 7/10 users expected to import tasks from another tool on Day 1 — no import wizard existed
-2. 8/10 users couldn't figure out the difference between "Projects" and "Workspaces"
-3. 6/10 users gave up on inviting teammates because the invite flow was buried in Settings
+**Red Flags → Escalate to `product-manager`:**
+- Research requested *after* code is fully written ("Validation theater").
+- No clear research questions defined ("Just go talk to users").
+- No budget for participant incentives (Ethical concern).
+- Lack of access to actual end-users (Proxy users are risky).
 
 ---
+---
 
-### Example 2: Synthesize Research Findings into a Report
-**Input:** 8 usability test sessions on a checkout redesign.
+## 3. Core Workflows
 
-**Finding 1: The "Review Order" step causes confusion about what's next.**
-> 7 of 8 participants paused for 4+ seconds on the Review Order screen. 5 said they weren't sure if they had already placed the order. Quote: "I thought I was done when I saw this page—I didn't realize I still had to confirm."
-> **Recommendation:** Replace "Review Order" button label with "Place Order – $49.99" and add visual cue that this is the final step.
+### Workflow 1: Moderated Usability Testing
 
-**Finding 2: Promo code field causes drop-off for users without a code.**
-> 4 of 8 participants clicked the promo code field even though they didn't have a code, then abandoned checkout. This matches our analytics (23% of users who open promo field don't complete checkout).
-> **Recommendation:** Hide the promo code field behind a small text link ("Have a promo code?") instead of displaying an open input field.
+**Goal:** Identify friction points in a new checkout flow prototype.
 
-**Finding 3: Shipping option selection is the most confusing step.**
-> All 8 participants tried to change shipping after selecting it, expecting a dropdown not a radio button. 3 participants couldn't figure out how to change it.
-> **Recommendation:** Switch from radio buttons to a clickable card selection component with a clear "Change" affordance.
+**Steps:**
 
-## Best Practices
-- Recruit real users from your target segment, not internal employees (they know too much)
-- Test with 5 users to find 80% of usability issues (Nielsen's law)—you don't need 50
-- Always pilot test your interview guide with a colleague before running it with real participants
-- Record sessions (with consent)—you will miss things while facilitating
-- Share raw findings (video clips, quotes) alongside your report—stakeholders trust evidence they can see
-- Present findings as insights ("users don't trust the security badge") not observations ("2 people looked at the badge")
-- Deliver findings within 2 weeks of research completion; insights go stale
+1.  **Test Plan Creation**
+    -   **Objective:** Can users complete a purchase as a guest?
+    -   **Participants:** 5 users who bought shoes online in last 6 months.
+    -   **Scenarios:**
+        1.  "Find running shoes size 10."
+        2.  "Add to cart and proceed to checkout."
+        3.  "Complete purchase without creating an account."
 
-## Common Mistakes
-- Leading questions: "Did you find it confusing that the button is small?" → biases the answer
-- Testing with the wrong audience: testing a CRM with students, not sales reps
-- Showing the design before understanding current behavior
-- Asking hypothetical questions: "Would you use this feature?" (users say yes, then don't)
-- Reporting observations as insights without analyzing patterns across sessions
-- Writing a report no one reads — present key findings in a 10-minute meeting, keep the document as a reference
+2.  **Script Development**
+    -   *Intro:* "We are testing the site, not you. Think aloud."
+    -   *Tasks:* Read scenario, observe behavior.
+    -   *Probes:* "I noticed you paused there, what were you thinking?" (Avoid "Did you like it?")
 
-## Tips & Tricks
-- "Concurrent think-aloud" — ask users to narrate their thoughts as they go, it reveals mental models in real time
-- Recruiting: offer $50–100 gift cards for 45-minute sessions; response rate improves 3×
-- Share a 3-minute video highlight reel of the most impactful moments — stakeholders remember video, not text
-- The best question to end any interview: "Is there anything you wish I had asked?"
-- Use the "Jobs to be Done" framing in interview analysis: "When [situation], I want to [motivation], so I can [outcome]"
+3.  **Execution (Zoom/Meet)**
+    -   Record session (with consent).
+    -   Take notes on: Errors, Success/Fail, Quotes, Emotional response.
 
-## Related Skills
-- [product-manager](../../business/product-manager/SKILL.md)
-- [market-researcher](../../business/market-researcher/SKILL.md)
-- [business-analyst](../../business/business-analyst/SKILL.md)
+4.  **Synthesis**
+    -   Log issues in a matrix: Issue | Frequency (N/5) | Severity (1-4).
+    -   Example: "3/5 users missed the 'Guest Checkout' button because it looked like a secondary link."
+
+5.  **Reporting**
+    -   Create slide deck: "Top 3 Critical Issues" + Video Clips + Recommendations.
+
+---
+---
+
+### Workflow 3: Card Sorting (Information Architecture)
+
+**Goal:** Organize a messy help center into logical categories.
+
+**Steps:**
+
+1.  **Content Audit**
+    -   List top 30-50 help articles (e.g., "Reset Password", "Pricing Plans", "API Key").
+    -   Write each on a card.
+
+2.  **Study Setup (Optimal Workshop / Miro)**
+    -   **Open Sort:** Users group cards and name the groups. (Best for discovery).
+    -   **Closed Sort:** Users sort cards into pre-defined groups. (Best for validation).
+
+3.  **Execution**
+    -   Recruit 15 participants.
+    -   Instruction: "Group these topics in a way that makes sense to you."
+
+4.  **Analysis**
+    -   Look for standardization grid / dendrogram.
+    -   Identify strong pairings (80%+ agreement).
+    -   Identify "orphans" (items everyone struggles to place).
+
+5.  **Recommendation**
+    -   Propose new Navigation Structure (Sitemap).
+
+### Workflow 4: Diary Study (Longitudinal Research)
+
+**Goal:** Understand habits and context over 2 weeks.
+
+**Steps:**
+
+1.  **Setup**
+    -   Platform: dscout or WhatsApp/Email.
+    -   Instructions: "Log every time you order food."
+
+2.  **Prompts (Daily)**
+    -   "What triggered you to order today?"
+    -   "Who did you eat with?"
+    -   "Photo of your meal."
+
+3.  **Analysis**
+    -   Look for patterns over time (e.g., "Always orders pizza on Fridays").
+    -   Identify "tipping points" for behavior change.
+
+---
+---
+
+### Workflow 6: AI-Assisted User Research
+
+**Goal:** Use AI to accelerate synthesis (NOT to replace empathy).
+
+**Steps:**
+
+1.  **Transcription**
+    -   Use Otter.ai / Dovetail to transcribe interviews.
+
+2.  **Thematic Analysis (with LLM)**
+    -   Prompt: *"Here are 5 transcripts. Extract top 3 distinct pain points regarding 'Onboarding'. Quote the users."*
+    -   **Human Review:** Verify quotes match context. (LLMs hallucinate insights).
+
+3.  **Synthetic User Testing (Experimental)**
+    -   Use LLM personas to stress-test copy.
+    -   Prompt: *"You are a busy executive who skims emails. Critique this landing page headline."*
+    -   *Note: Use only for first-pass critique, never replace real users.*
+
+---
+---
+
+## 5. Anti-Patterns & Gotchas
+
+### ❌ Anti-Pattern 1: Asking Leading Questions
+
+**What it looks like:**
+-   "Do you like this feature?"
+-   "Would you use this if it were free?"
+-   "Is this easy to use?"
+-   "Don't you think this button is too small?"
+
+**Why it fails:**
+-   Participants want to please the researcher (Social Desirability Bias).
+-   Future behavior doesn't match stated intent.
+-   Implies a "correct" answer.
+
+**Correct approach:**
+-   "Walk me through how you would use this."
+-   "What are your thoughts on this page?"
+-   "On a scale of 1-5, how difficult was that task?"
+-   "What did you expect to happen when you clicked that?"
+
+### ❌ Anti-Pattern 2: The "Focus Group" Trap
+
+**What it looks like:**
+-   Putting 10 people in a room to ask about a UI design.
+-   Asking "Raise your hand if you would buy this."
+
+**Why it fails:**
+-   Groupthink: One loud voice dominates.
+-   People don't use software in groups.
+-   You get opinions, not behaviors.
+-   Shy participants are silenced.
+
+**Correct approach:**
+-   **1:1 Interviews** for deep understanding.
+-   **1:1 Usability Tests** for interaction feedback.
+-   Use groups only for ideation or understanding social dynamics.
+
+### ❌ Anti-Pattern 3: "Users Don't Know What They Want" (The Henry Ford Fallacy)
+
+**What it looks like:**
+-   Taking feature requests literally.
+-   User: "I want a button here to print PDF."
+-   Designer: "Okay, I'll add a print button."
+
+**Why it fails:**
+-   The user is proposing a solution to a hidden problem.
+-   The actual problem might be "I need to share this data with my boss."
+-   A print button might be the wrong solution for a mobile app.
+
+**Correct approach:**
+-   Ask "Why?" repeatedly.
+-   Uncover the underlying **Job To Be Done** (Sharing data).
+-   Design a better solution (e.g., Auto-email report, Live dashboard link) that might solve it better than a PDF button.
+
+### ❌ Anti-Pattern 4: Validation Theater
+
+**What it looks like:**
+-   Testing only with employees or friends.
+-   Testing after the code is shipped just to "check the box."
+-   Ignoring negative feedback because "users didn't get it."
+
+**Why it fails:**
+-   Confirmation bias.
+-   Wasted resources building the wrong thing.
+
+**Correct approach:**
+-   Test early with low-fidelity prototypes.
+-   Recruit external participants who don't know the product.
+-   Treat negative feedback as gold—it saves engineering time.
+
+---
+---
+
+## 7. Quality Checklist
+
+**Research Rigor:**
+-   [ ] **Recruiting:** Participants match the target persona (not just friends/colleagues).
+-   [ ] **Consent:** NDA/Consent forms signed by all participants.
+-   [ ] **Bias Check:** Questions are neutral and open-ended.
+-   [ ] **Sample Size:** Adequate N for the method used (e.g., 5 for Qual, 20+ for Quant).
+-   [ ] **Pilot:** Protocol tested with 1 pilot participant before full study.
+
+**Analysis & Reporting:**
+-   [ ] **Data-Backed:** Every insight linked to evidence (quote, observation, video clip).
+-   [ ] **Actionable:** Recommendations are clear, specific, and prioritized.
+-   [ ] **Anonymity:** PII removed from shared reports.
+-   [ ] **Triangulation:** Mixed methods used where possible to validate findings.
+-   [ ] **Video Clips:** Highlight reel created for stakeholders.
+
+**Impact:**
+-   [ ] **Stakeholder Review:** Findings presented to PM/Design/Eng.
+-   [ ] **Tracking:** Research recommendations added to Jira backlog.
+-   [ ] **Follow-up:** Check if implemented changes actually solved the user problem.
+-   [ ] **Storage:** Insights stored in a searchable repository (e.g., Dovetail, Notion).
+
+## Anti-Patterns
+
+### Research Design Anti-Patterns
+
+- **Leading Questions**: Questions that suggest answers - use neutral, open-ended questions
+- **Convenience Sampling**: Using readily available participants - match target persona
+- **Small Sample Claims**: Generalizing from small samples - acknowledge limitations
+- **Confirmation Bias**: Seeking only supporting evidence - actively seek disconfirming data
+
+### Analysis Anti-Patterns
+
+- **Anecdotal Evidence**: Over-relying on single quotes - triangulate across participants
+- **Insight Overload**: Too many insights without prioritization - focus on key findings
+- **Analysis Paralysis**: Over-analyzing without conclusions - iterate to insight
+- **No Synthesis**: Reporting without themes - synthesize into coherent narrative
+
+### Communication Anti-Patterns
+
+- **Jargon Overload**: Using academic terms - communicate in stakeholder language
+- **Death by PowerPoint**: Overwhelming presentations - focus on key insights
+- **Insight Hoarding**: Not sharing findings widely - democratize insights
+- **No Action Link**: Insights without recommendations - tie to product decisions
+
+### Process Anti-Patterns
+
+- **Research in Vacuum**: Not aligning with product goals - connect research to strategy
+- **One-Shot Studies**: No follow-up on recommendations - track impact
+- **Siloed Research**: Not building on previous research - maintain research repository
+- **Timing Mismatch**: Research too late to influence - integrate into product process

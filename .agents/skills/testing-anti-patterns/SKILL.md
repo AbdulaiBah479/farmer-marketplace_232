@@ -1,272 +1,302 @@
 ---
-name: Testing Anti-Patterns
-description: Common testing mistakes to avoid for reliable, maintainable tests
-version: 1.0.0
-triggers:
-  - test anti-patterns
-  - testing mistakes
-  - bad tests
-  - flaky tests
-  - test smells
-tags:
-  - testing
-  - anti-patterns
-  - quality
-  - code-smells
-difficulty: intermediate
-estimatedTime: 10
-relatedSkills:
-  - testing/red-green-refactor
-  - testing/test-patterns
+name: testing-anti-patterns
+description: Use when writing or changing tests, adding mocks, or tempted to add test-only methods to production code - prevents testing mock behavior, production pollution with test-only methods, and mocking without understanding dependencies
 ---
 
 # Testing Anti-Patterns
 
-You are identifying and avoiding common testing anti-patterns. These patterns lead to unreliable tests, false confidence, and maintenance burden.
+## Overview
 
-## Critical Anti-Patterns
+Tests must verify real behavior, not mock behavior. Mocks are a means to isolate, not the thing being tested.
 
-### 1. The Liar - Tests That Always Pass
+**Core principle:** Test what the code does, not what the mocks do.
 
-**Problem:** Test passes even when the code is broken.
+**Following strict TDD prevents these anti-patterns.**
 
+## The Iron Laws
+
+```
+1. NEVER test mock behavior
+2. NEVER add test-only methods to production classes
+3. NEVER mock without understanding dependencies
+```
+
+## Anti-Pattern 1: Testing Mock Behavior
+
+**The violation:**
 ```typescript
-// BAD - Always passes because it tests nothing meaningful
-it('should process data', () => {
-  const result = processData(input);
-  expect(result).toBeDefined(); // Too weak
-});
-
-// GOOD - Actually verifies behavior
-it('should transform input to uppercase', () => {
-  const result = processData({ text: 'hello' });
-  expect(result.text).toBe('HELLO');
+// ❌ BAD: Testing that the mock exists
+test('renders sidebar', () => {
+  render(<Page />);
+  expect(screen.getByTestId('sidebar-mock')).toBeInTheDocument();
 });
 ```
 
-**Detection:** Remove or break the implementation - test should fail.
+**Why this is wrong:**
+- You're verifying the mock works, not that the component works
+- Test passes when mock is present, fails when it's not
+- Tells you nothing about real behavior
 
-### 2. The Giant - Tests Too Large
+**your human partner's correction:** "Are we testing the behavior of a mock?"
 
-**Problem:** Single test covers too many behaviors.
-
+**The fix:**
 ```typescript
-// BAD - Tests multiple things
-it('should handle user registration', async () => {
-  const user = await register(userData);
-  expect(user.id).toBeDefined();
-  expect(user.email).toBe(userData.email);
-  expect(user.password).toBeUndefined();
-  expect(sendEmail).toHaveBeenCalled();
-  expect(createProfile).toHaveBeenCalled();
-  // ... 20 more assertions
+// ✅ GOOD: Test real component or don't mock it
+test('renders sidebar', () => {
+  render(<Page />);  // Don't mock sidebar
+  expect(screen.getByRole('navigation')).toBeInTheDocument();
 });
 
-// GOOD - Focused tests
-it('should create user with provided email', async () => {
-  const user = await register(userData);
-  expect(user.email).toBe(userData.email);
-});
-
-it('should send welcome email on registration', async () => {
-  await register(userData);
-  expect(sendEmail).toHaveBeenCalledWith(
-    expect.objectContaining({ type: 'welcome' })
-  );
-});
+// OR if sidebar must be mocked for isolation:
+// Don't assert on the mock - test Page's behavior with sidebar present
 ```
 
-**Fix:** One test, one logical assertion concept.
+### Gate Function
 
-### 3. The Inspector - Testing Implementation Details
+```
+BEFORE asserting on any mock element:
+  Ask: "Am I testing real component behavior or just mock existence?"
 
-**Problem:** Test breaks when implementation changes, even if behavior is correct.
+  IF testing mock existence:
+    STOP - Delete the assertion or unmock the component
 
-```typescript
-// BAD - Tests internal implementation
-it('should use QuickSort for sorting', () => {
-  const sorter = new Sorter();
-  const spy = jest.spyOn(sorter, '_quickSort');
-  sorter.sort([3, 1, 2]);
-  expect(spy).toHaveBeenCalled();
-});
-
-// GOOD - Tests behavior/output
-it('should return sorted array', () => {
-  const sorter = new Sorter();
-  expect(sorter.sort([3, 1, 2])).toEqual([1, 2, 3]);
-});
+  Test real behavior instead
 ```
 
-**Fix:** Test what the code does, not how it does it.
+## Anti-Pattern 2: Test-Only Methods in Production
 
-### 4. The Mockery - Over-Mocking
-
-**Problem:** Too many mocks make tests meaningless.
-
+**The violation:**
 ```typescript
-// BAD - Everything is mocked, test proves nothing
-it('should calculate price', () => {
-  const mockProduct = { getPrice: jest.fn().mockReturnValue(100) };
-  const mockDiscount = { apply: jest.fn().mockReturnValue(80) };
-  const mockTax = { calculate: jest.fn().mockReturnValue(8) };
-
-  const total = calculateTotal(mockProduct, mockDiscount, mockTax);
-  expect(total).toBe(88); // Just testing mock arithmetic
-});
-
-// GOOD - Use real objects where feasible
-it('should apply 20% discount to price', () => {
-  const product = new Product({ price: 100 });
-  const discount = new PercentageDiscount(20);
-
-  const total = calculateTotal(product, discount);
-  expect(total).toBe(80);
-});
-```
-
-**Fix:** Only mock external dependencies and side effects.
-
-### 5. The Flaky Test - Random Failures
-
-**Problem:** Test sometimes passes, sometimes fails.
-
-Common causes:
-- **Time-dependent logic**
-- **Race conditions in async code**
-- **Shared mutable state**
-- **External dependencies**
-
-```typescript
-// BAD - Depends on current time
-it('should show recent items', () => {
-  const item = { createdAt: new Date() };
-  expect(isRecent(item)).toBe(true);
-});
-
-// GOOD - Control the time
-it('should show items from last 24 hours', () => {
-  const now = new Date('2024-01-15T12:00:00Z');
-  jest.setSystemTime(now);
-
-  const recent = { createdAt: new Date('2024-01-15T00:00:00Z') };
-  const old = { createdAt: new Date('2024-01-13T00:00:00Z') };
-
-  expect(isRecent(recent)).toBe(true);
-  expect(isRecent(old)).toBe(false);
-});
-```
-
-### 6. The Slow Poke - Unnecessarily Slow Tests
-
-**Problem:** Tests take too long to run.
-
-```typescript
-// BAD - Real network call
-it('should fetch user data', async () => {
-  const response = await fetch('https://api.example.com/users/1');
-  const user = await response.json();
-  expect(user.name).toBeDefined();
-});
-
-// GOOD - Mocked network
-it('should parse user response', async () => {
-  mockFetch.mockResolvedValue({
-    json: () => Promise.resolve({ id: 1, name: 'Test User' })
-  });
-
-  const user = await fetchUser(1);
-  expect(user.name).toBe('Test User');
-});
-```
-
-**Target:** Unit tests < 100ms, Integration tests < 1s.
-
-### 7. The Chain Gang - Test Dependency
-
-**Problem:** Tests depend on other tests running first.
-
-```typescript
-// BAD - Tests must run in order
-describe('User operations', () => {
-  let userId;
-
-  it('should create user', () => {
-    userId = createUser(); // Sets state for next test
-    expect(userId).toBeDefined();
-  });
-
-  it('should update user', () => {
-    updateUser(userId, newData); // Depends on previous test
-    expect(getUser(userId).name).toBe(newData.name);
-  });
-});
-
-// GOOD - Each test is independent
-describe('User operations', () => {
-  it('should create user', () => {
-    const userId = createUser();
-    expect(userId).toBeDefined();
-  });
-
-  it('should update user', () => {
-    const userId = createUser(); // Creates its own user
-    updateUser(userId, newData);
-    expect(getUser(userId).name).toBe(newData.name);
-  });
-});
-```
-
-### 8. The Secret Catcher - Hidden Test Logic
-
-**Problem:** Test logic is hidden in helpers or setup.
-
-```typescript
-// BAD - Assertions hidden in helper
-function assertValidUser(user) {
-  expect(user.id).toBeDefined();
-  expect(user.email).toMatch(/@/);
-  expect(user.createdAt).toBeInstanceOf(Date);
-  // Many more hidden assertions
+// ❌ BAD: destroy() only used in tests
+class Session {
+  async destroy() {  // Looks like production API!
+    await this._workspaceManager?.destroyWorkspace(this.id);
+    // ... cleanup
+  }
 }
 
-it('should create valid user', () => {
-  const user = createUser(data);
-  assertValidUser(user); // What is actually being tested?
-});
+// In tests
+afterEach(() => session.destroy());
+```
 
-// GOOD - Explicit assertions
-it('should create user with email', () => {
-  const user = createUser(data);
-  expect(user.email).toBe(data.email);
+**Why this is wrong:**
+- Production class polluted with test-only code
+- Dangerous if accidentally called in production
+- Violates YAGNI and separation of concerns
+- Confuses object lifecycle with entity lifecycle
+
+**The fix:**
+```typescript
+// ✅ GOOD: Test utilities handle test cleanup
+// Session has no destroy() - it's stateless in production
+
+// In test-utils/
+export async function cleanupSession(session: Session) {
+  const workspace = session.getWorkspaceInfo();
+  if (workspace) {
+    await workspaceManager.destroyWorkspace(workspace.id);
+  }
+}
+
+// In tests
+afterEach(() => cleanupSession(session));
+```
+
+### Gate Function
+
+```
+BEFORE adding any method to production class:
+  Ask: "Is this only used by tests?"
+
+  IF yes:
+    STOP - Don't add it
+    Put it in test utilities instead
+
+  Ask: "Does this class own this resource's lifecycle?"
+
+  IF no:
+    STOP - Wrong class for this method
+```
+
+## Anti-Pattern 3: Mocking Without Understanding
+
+**The violation:**
+```typescript
+// ❌ BAD: Mock breaks test logic
+test('detects duplicate server', () => {
+  // Mock prevents config write that test depends on!
+  vi.mock('ToolCatalog', () => ({
+    discoverAndCacheTools: vi.fn().mockResolvedValue(undefined)
+  }));
+
+  await addServer(config);
+  await addServer(config);  // Should throw - but won't!
 });
 ```
 
-## Anti-Pattern Detection Checklist
+**Why this is wrong:**
+- Mocked method had side effect test depended on (writing config)
+- Over-mocking to "be safe" breaks actual behavior
+- Test passes for wrong reason or fails mysteriously
 
-When reviewing tests, watch for:
+**The fix:**
+```typescript
+// ✅ GOOD: Mock at correct level
+test('detects duplicate server', () => {
+  // Mock the slow part, preserve behavior test needs
+  vi.mock('MCPServerManager'); // Just mock slow server startup
 
-- [ ] Tests without meaningful assertions
-- [ ] Tests with more than 5-7 assertions
-- [ ] Tests that mock everything
-- [ ] Tests that access private methods/properties
-- [ ] Tests with sleep/wait calls
-- [ ] Tests that depend on test execution order
-- [ ] Tests with complex setup that obscures intent
+  await addServer(config);  // Config written
+  await addServer(config);  // Duplicate detected ✓
+});
+```
 
-## Refactoring Strategies
+### Gate Function
 
-1. **Too many assertions** → Split into multiple tests
-2. **Over-mocking** → Use real implementations or fakes
-3. **Flaky tests** → Control time, mock external calls
-4. **Slow tests** → Mock I/O, parallelize independent tests
-5. **Hidden logic** → Inline or clearly name helpers
+```
+BEFORE mocking any method:
+  STOP - Don't mock yet
 
-## When to Delete Tests
+  1. Ask: "What side effects does the real method have?"
+  2. Ask: "Does this test depend on any of those side effects?"
+  3. Ask: "Do I fully understand what this test needs?"
 
-Tests that:
-- Always pass regardless of implementation
-- Test third-party library behavior
-- Are permanently flaky without fix
-- Duplicate other tests exactly
-- Test deprecated code
+  IF depends on side effects:
+    Mock at lower level (the actual slow/external operation)
+    OR use test doubles that preserve necessary behavior
+    NOT the high-level method the test depends on
+
+  IF unsure what test depends on:
+    Run test with real implementation FIRST
+    Observe what actually needs to happen
+    THEN add minimal mocking at the right level
+
+  Red flags:
+    - "I'll mock this to be safe"
+    - "This might be slow, better mock it"
+    - Mocking without understanding the dependency chain
+```
+
+## Anti-Pattern 4: Incomplete Mocks
+
+**The violation:**
+```typescript
+// ❌ BAD: Partial mock - only fields you think you need
+const mockResponse = {
+  status: 'success',
+  data: { userId: '123', name: 'Alice' }
+  // Missing: metadata that downstream code uses
+};
+
+// Later: breaks when code accesses response.metadata.requestId
+```
+
+**Why this is wrong:**
+- **Partial mocks hide structural assumptions** - You only mocked fields you know about
+- **Downstream code may depend on fields you didn't include** - Silent failures
+- **Tests pass but integration fails** - Mock incomplete, real API complete
+- **False confidence** - Test proves nothing about real behavior
+
+**The Iron Rule:** Mock the COMPLETE data structure as it exists in reality, not just fields your immediate test uses.
+
+**The fix:**
+```typescript
+// ✅ GOOD: Mirror real API completeness
+const mockResponse = {
+  status: 'success',
+  data: { userId: '123', name: 'Alice' },
+  metadata: { requestId: 'req-789', timestamp: 1234567890 }
+  // All fields real API returns
+};
+```
+
+### Gate Function
+
+```
+BEFORE creating mock responses:
+  Check: "What fields does the real API response contain?"
+
+  Actions:
+    1. Examine actual API response from docs/examples
+    2. Include ALL fields system might consume downstream
+    3. Verify mock matches real response schema completely
+
+  Critical:
+    If you're creating a mock, you must understand the ENTIRE structure
+    Partial mocks fail silently when code depends on omitted fields
+
+  If uncertain: Include all documented fields
+```
+
+## Anti-Pattern 5: Integration Tests as Afterthought
+
+**The violation:**
+```
+✅ Implementation complete
+❌ No tests written
+"Ready for testing"
+```
+
+**Why this is wrong:**
+- Testing is part of implementation, not optional follow-up
+- TDD would have caught this
+- Can't claim complete without tests
+
+**The fix:**
+```
+TDD cycle:
+1. Write failing test
+2. Implement to pass
+3. Refactor
+4. THEN claim complete
+```
+
+## When Mocks Become Too Complex
+
+**Warning signs:**
+- Mock setup longer than test logic
+- Mocking everything to make test pass
+- Mocks missing methods real components have
+- Test breaks when mock changes
+
+**your human partner's question:** "Do we need to be using a mock here?"
+
+**Consider:** Integration tests with real components often simpler than complex mocks
+
+## TDD Prevents These Anti-Patterns
+
+**Why TDD helps:**
+1. **Write test first** → Forces you to think about what you're actually testing
+2. **Watch it fail** → Confirms test tests real behavior, not mocks
+3. **Minimal implementation** → No test-only methods creep in
+4. **Real dependencies** → You see what the test actually needs before mocking
+
+**If you're testing mock behavior, you violated TDD** - you added mocks without watching test fail against real code first.
+
+## Quick Reference
+
+| Anti-Pattern | Fix |
+|--------------|-----|
+| Assert on mock elements | Test real component or unmock it |
+| Test-only methods in production | Move to test utilities |
+| Mock without understanding | Understand dependencies first, mock minimally |
+| Incomplete mocks | Mirror real API completely |
+| Tests as afterthought | TDD - tests first |
+| Over-complex mocks | Consider integration tests |
+
+## Red Flags
+
+- Assertion checks for `*-mock` test IDs
+- Methods only called in test files
+- Mock setup is >50% of test
+- Test fails when you remove mock
+- Can't explain why mock is needed
+- Mocking "just to be safe"
+
+## The Bottom Line
+
+**Mocks are tools to isolate, not things to test.**
+
+If TDD reveals you're testing mock behavior, you've gone wrong.
+
+Fix: Test real behavior or question why you're mocking at all.

@@ -1,78 +1,119 @@
 ---
-name: vault
-description: >-
-  Set up and verify the CONFIDE THREE LOCKS for storing RED (real, identifiable) session
-  data at rest — device FileVault, a dedicated encrypted store, and per-file sops/age
-  encryption. Use when the user says "set up confide vault", "encrypt my session data",
-  "three locks", "secure store for transcripts", "sops/age for RED data", or asks how to
-  store real therapy/coaching transcripts safely. NON-DESTRUCTIVE: it CHECKS each lock's
-  status and prints the EXACT command to fix any gap; it never moves, deletes, or encrypts
-  data, and never runs `fdesetup enable`/`hdiutil`/`age-keygen` without an explicit flag
-  and your confirmation. Probes are read-only (`fdesetup status`, which sops/age, key path).
+name: Vault
+description: Read and write notes in the Obsidian vault. Use for task logs, knowledge capture, and building context.
 ---
 
-# confide:vault — the THREE LOCKS for storing RED data
+# Vault (Obsidian Notes)
 
-Operationalizes the defense-in-depth storage posture in
-`confide/docs/THREE-LOCKS.md`: real (RED) transcripts rest behind **three independent
-locks**, so compromising one does not expose a client. To read a real transcript an
-attacker needs the **device password** AND the **encrypted-store password** AND the
-**age key** — three separate secrets, ideally held in different places.
+Location: `~/Documents/Notes/`
 
-| Lock | What | Protects against |
-|---|---|---|
-| **1 — Device** | FileVault full-disk encryption + strong login password + short auto-lock | a lost/stolen/USB-booted machine |
-| **2 — Store** | RED in a dedicated ENCRYPTED store (encrypted APFS volume / AES-256 `.dmg`), NOT in Documents and NEVER in iCloud/Dropbox | other apps, other users, silent cloud sync |
-| **3 — Per-file** | each RED file `sops`/`age`-encrypted at rest, age key stored SEPARATELY; processing in a no-network VM/container | files individually sealed; key not beside the data |
+## Principles
 
-## NON-DESTRUCTIVE — read before running
-- `--check` (the default) runs **only read-only probes**: `fdesetup status`,
-  `shutil.which(sops/age)`, and `os.path.exists(...)`. It **never** moves, deletes, or
-  encrypts data and **never** runs `fdesetup enable`, `hdiutil`, `age-keygen`, or `rm`.
-- It reports each lock ✓/✗ and prints the **exact command** to fix every ✗ — for the user
-  to review and run themselves.
-- `--init-age` generates an age key **only** with that explicit flag, and **never**
-  overwrites an existing key.
-- `--init-store PATH` only **prints** the encrypted-store creation command; it does not
-  execute disk-image creation. Refuses cloud-synced paths.
-- Never move, encrypt, or delete the user's RED data on their behalf without explicit
-  confirmation. There is no destructive default.
+1. **Obsidian vault for documents** - Detailed notes, task logs, project context
+2. **Unix tools for fast search** - ripgrep (rg), fd, or mdfind for finding content efficiently
+3. **WikiLinks for connections** - Build traversable knowledge graph
+4. **ALWAYS**: New tasks should be in an `open` state
 
-## Run it
+## Templates
+
+Templates are in the skill directory, not the notes directory:
+
+- `.claude/skills/vault/templates/knowledge-note.md` - For knowledge notes
+- `.claude/skills/vault/templates/task.md` - For new tasks
+
+## Bash Commands
 
 ```bash
-# default = read-only status check + checklist with fix commands
-python3 skills/vault/scripts/vault.py --check
-python3 skills/vault/scripts/vault.py --json            # structured status dict
+# List in-progress tasks
+rg --type md -l "^status:\s*in-progress" ~/Documents/Notes/Projects/*/Tasks
 
-# point at your own RED store to verify it's not cloud-synced
-python3 skills/vault/scripts/vault.py --store-path ~/CONFIDE-RED.dmg
+# Find project directory (handles YYYY[-MM] prefix)
+fd -t d -d 1 -i "<project>" ~/Documents/Notes/Projects
 
-# optional, GUARDED helpers (explicit flags only)
-python3 skills/vault/scripts/vault.py --init-age        # make an age key (never overwrites)
-python3 skills/vault/scripts/vault.py --init-store ~/CONFIDE-RED.dmg   # prints the hdiutil command
+# List project task files
+fd -e md . ~/Documents/Notes/Projects/*<project>*/Tasks
+
+# Find files by name
+fd -e md -i "<name>" ~/Documents/Notes
+
+# Recently modified (last 7 days)
+fd -e md --changed-within 7d ~/Documents/Notes
+
+# Find with Spotlight index
+mdfind -interpret -onlyin ~/Documents/Notes "<concept>"
 ```
 
-`lock_status()` is importable and returns:
+## Timestamps
 
+Always use real timestamps, never placeholders:
+
+```bash
+# For task filename: YYYY-MM-DD HHMMSS
+date +"%Y-%m-%d %H%M%S"
+
+# For log entry header: YYYY-MM-DD HH:MM
+date +"%Y-%m-%d %H:%M"
+
+# For frontmatter (ISO-8601)
+date -Iseconds
 ```
-{
-  "device":  {"filevault": bool},
-  "store":   {"present": bool, "path": str|None, "cloud_synced": bool, "safe": bool},
-  "perfile": {"sops": bool, "age": bool, "key": bool, "key_path": str|None}
-}
-```
 
-## How to help the user
+## Task File Path
 
-1. Run `--check` and read back the ✓/✗ checklist.
-2. For each ✗, show the printed fix command (e.g. `sudo fdesetup enable`,
-   `age-keygen -o ~/.config/confide/age.key`,
-   `hdiutil create -encryption AES-256 … ~/CONFIDE-RED.dmg`) and let the user run it.
-3. Confirm the RED store is **not** inside iCloud/Dropbox (`store.safe`).
-4. Show the sops/age encrypt+decrypt recipe (printed in the checklist) so RED stays
-   ciphertext at rest and is decrypted only in-memory inside the isolated pipeline
-   (`confide/docs/ISOLATION.md`). Only GREEN (redacted) output ever leaves the machine.
+`~/Documents/Notes/Projects/<YYYY[-MM] Project>/Tasks/<YYYY-MM-DD HHMMSS> <Title>.md`
 
-See `confide/docs/THREE-LOCKS.md` (the model + checklist) and `confide/docs/ISOLATION.md`
-(red/green flow, no-network VM/container).
+## Linking Strategy
+
+> Link if it improves the note, not just because it matches a term.
+
+### What to search for
+
+| Search for | Example (if writing about "Unison abilities") |
+|------------|-----------------------------------------------|
+| Direct terms | "abilities", "Unison abilities" |
+| Parent concepts | "effect handlers", "functional programming" |
+| Sibling techniques | "monads", "algebraic effects" |
+| Tools/tech used | "UCM", "Jit" |
+
+### Linking workflow
+
+1. **Semantic discovery** — `mdfind -interpret` for related concepts
+2. **Backlinks** — `rg "\[\[<concept>"` to find what links to your topics
+3. **Tags overlap** — `rg "^  - <tag>$"` for notes sharing tags
+4. Add discovered notes as WikiLinks using breadcrumb pattern: `[[Parent]] | [[Related]]`
+
+## Capture Heuristics
+
+**Worth capturing when:**
+
+| Marker | Trigger |
+|--------|---------|
+| 📋 | Principle applies across multiple contexts |
+| 🤔 | Caused debugging time or surprised me |
+| ⚙️ | Method that could save time later |
+| 📎 | Link to documentation or source |
+| ☝️ | Non-obvious choice with reasoning worth preserving |
+
+**Where to capture:**
+
+| Destination | When |
+|-------------|------|
+| **Existing note** | Discovery extends/refines an existing topic (search firs ) |
+| **New note** | Substantial, standalone, referenceable by other notes |
+| **Task log only** | One-off detail that won't generalise |
+
+## Note Locations
+
+| Folder | Purpose | Examples |
+|--------|---------|----------|
+| `Development/` | Conceptual, non-project, topics, paradigms, architectural patterns | "Functional Programming", "Test Driven Development", "Unison Web Application Patterns" |
+| `HowTo/` | Procedural guides, specific techniques, step-by-step instructions, unrelated to projects | "Unison Testing with Effect Handlers", "TDD with Functional Programming" |
+| `Tools/` | Software tools and their usage | "Claude", "Git", "HTMX", "Obsidian" |
+| `Projects/<project>/` | Project level knowledge  in an appropriate note in the project folder | |
+| `Projects/<project>/Tasks/` | Task logs only — never knowledge notes | |
+| `Projects/<project>/Glossary` | Glossary entries | |
+
+
+## What NOT to include
+
+- **DO NOT** include changed files

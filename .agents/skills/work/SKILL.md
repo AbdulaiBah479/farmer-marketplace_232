@@ -1,89 +1,68 @@
 ---
-name: Work
-description: "Navigate office work with professional communication, meeting prep, workplace dynamics, and visibility tactics."
+name: work
+description: Find and start the next highest-priority expedition from the kanban board
+disable-model-invocation: true
+allowed-tools: Bash(yurtle-kanban *), Bash(git *), Read
+argument-hint: "[EXP-XXX]"
 ---
 
-## Core Focus
+# Pick Up Work
 
-Day-to-day effectiveness in corporate/office environments. Not career strategy (that's `career`), not personal productivity (that's `productivity`).
+Find and start work on an expedition. If an expedition ID is provided ($ARGUMENTS), start that one. Otherwise, find the next highest-priority ready item.
 
----
+## Steps
 
-## Situation Detection
+### 1. Check Current Work
 
-| Signal | Context | Load |
-|--------|---------|------|
-| First 90 days, onboarding, new hire | New role adaptation | `situations/new-hire.md` |
-| Credit-taking, undermining, politics | Workplace dynamics | `situations/politics.md` |
-| Email drafts, meeting prep, status updates | Communication tasks | `situations/comms.md` |
-| Visibility, recognition, being overlooked | Perception management | `situations/visibility.md` |
-| Vague assignments, unclear priorities | Task clarity | `situations/clarity.md` |
+First, check if already working on something:
 
----
-
-## Professional Communication
-
-**Email drafts:** Match tone to recipient and urgency. Executive summary first, details below.
-
-**Meeting prep:**
-1. Review context (previous threads, decisions)
-2. Define your contribution (questions, updates, blockers)
-3. Prepare one-liner if asked "any updates?"
-
-**Status updates formula:**
-```
-DONE: [completed items with impact]
-IN PROGRESS: [current focus + ETA]
-BLOCKED: [what needs input/decision]
+```bash
+yurtle-kanban list --status in_progress
 ```
 
-**Difficult conversations:** See `scripts.md` for templates.
+If items are in progress, show them and ask if the user wants to continue or pick up new work.
 
----
+### 2. Find Ready Work
 
-## Workplace Dynamics
+If no specific expedition requested:
 
-**When someone takes credit:** Document contributions in writing before meetings. Follow up with "as I mentioned in my email about X..."
+```bash
+yurtle-kanban list --status ready --limit 5
+```
 
-**When undermined publicly:** Don't react in the moment. Address privately first: "I noticed X happened. Can we talk about how we work together?"
+Show the top 5 ready items with their priorities.
 
-**Building alliances:** Visibility comes from being useful to the right people. Find where your work overlaps with influential stakeholders.
+### 3. Start Work
 
-**Reading the room:** Watch who speaks, who gets interrupted, who makes final calls. That's the real org chart.
+Once an expedition is selected (either from $ARGUMENTS or user choice):
 
----
+```bash
+# Move to in_progress
+yurtle-kanban move EXP-XXX in_progress
 
-## First 90 Days
+# Create expedition branch from main
+git checkout main
+git pull origin main
+git checkout -b expedition/exp-XXX-short-description
+```
 
-**Week 1-4:** Listen more than contribute. Map relationships. Understand what "good" looks like here.
+**IMPORTANT**: Expedition branches use the `expedition/exp-XXX-name` prefix and are never deleted (permanent memory).
 
-**Week 5-8:** Start delivering small wins. Ask for feedback explicitly.
+### 4. Load Context
 
-**Week 9-12:** Own something end-to-end. Have the "how am I doing?" conversation.
+Read the expedition file to understand the work:
 
-Key questions for manager:
-- "What does success look like in 90 days?"
-- "Who should I build relationships with?"
-- "What should I definitely avoid?"
+```bash
+# Find and read the expedition file
+cat kanban-work/expeditions/EXP-XXX*.md
+```
 
----
+Summarize:
+- What needs to be done (Build Steps)
+- Success criteria
+- Dependencies
+- Current status from Ship's Log
 
-## Work Profile
+### 5. Ready to Work
 
-*Build over time. Confirm before storing.*
-
-### Environment
-<!-- "Open office, no private space" "Remote 3 days/week" -->
-
-### Key Relationships
-<!-- "Manager: supportive but busy" "Skip-level: accessible" -->
-
-### Culture Signals
-<!-- "Meetings start late (pattern)" "Email expected same-day (confirmed)" -->
-
-### Challenges
-<!-- "Credit issues with peer X" "Unclear priorities from above" -->
-
----
-
-*Empty = nothing learned yet. Every work question reveals more context.*
+Confirm the expedition is loaded and ready to begin implementation.

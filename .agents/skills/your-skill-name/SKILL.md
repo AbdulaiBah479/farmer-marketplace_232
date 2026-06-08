@@ -1,58 +1,43 @@
 ---
-name: your-skill-name
-description: Brief description of what this Skill does and when to use it. This field is critical for Claude to discover when to invoke your skill.
-version: 1.0.0
+# TEMPLATE: Copy this directory and replace all <placeholders>
+name: <your-skill-name>
+description: <Brief description of what this skill does and when to use it. Include trigger keywords for agent discovery.>
+license: MIT
+metadata:
+  author: <your-name>
+  version: "1.0.0"
 ---
 
-# Your Skill Name
+# Skill Name
 
 ## Overview
 
-Describe what this skill does and the problem it solves.
+Describe what this skill enables the agent to do.
+
+## When to Use
+
+This skill should be triggered when:
+- User asks about [topic]
+- User wants to [action]
+- Keywords: [relevant keywords for discovery]
 
 ## Instructions
 
-Provide clear, step-by-step guidance for Claude:
+Step-by-step instructions for the agent:
 
-1. First step
-2. Second step
-3. Third step
+1. First, do this
+2. Then, do that
+3. Finally, complete with this
 
 ## Examples
 
-### Example 1: Basic Usage
+### Example 1: [Scenario]
 
-**Input:**
-```
-User request example
-```
+**User request:** "..."
 
-**Output:**
-```
-Expected output example
-```
+**Expected behavior:** ...
 
-### Example 2: Advanced Usage
+## References
 
-**Input:**
-```
-More complex user request
-```
-
-**Output:**
-```
-Expected output for complex case
-```
-
-## Guidelines
-
-- Best practice 1
-- Best practice 2
-- Constraint or limitation to be aware of
-
-## Additional Resources
-
-Reference additional files in your skill directory:
-- `reference.md` - Detailed documentation
-- `scripts/` - Executable helpers
-- `templates/` - Template files
+- See [reference documentation](references/REFERENCE.md) for detailed information
+- Run scripts from `scripts/` directory when needed

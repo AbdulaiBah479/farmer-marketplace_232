@@ -1,18 +1,14 @@
 ---
 name: validate-album
-description: Validates album directory structure, file locations, and content integrity. Use before release or whenever the user wants to check an album's structural health.
+description: "Validate album structure, file locations, and content integrity"
 argument-hint: <album-name>
-model: haiku
-context: fork
+model: claude-haiku-4-5-20251001
 allowed-tools:
   - Read
   - Bash
   - Glob
   - Grep
-  - bitwize-music-mcp
 ---
-
-# Album Validator Agent
 
 ## Your Task
 
@@ -22,24 +18,39 @@ Validate that an album has all required files in the correct locations, catching
 
 ---
 
-## Step 1: Load Config & Find Album
+## Step 1: Read Config (REQUIRED)
 
-1. Call `get_config()` — returns paths (`content_root`, `audio_root`, `documents_root`) and `artist.name`
-   - If config missing, STOP and report:
-     ```
-     [FAIL] Config file missing: ~/.bitwize-music/config.yaml
-            Run /configure to set up the plugin.
-     ```
+```bash
+cat ~/.bitwize-music/config.yaml
+```
 
-2. Call `find_album(album_name)` — fuzzy match by name, slug, or partial
-   - If not found, STOP and report (MCP returns available albums):
-     ```
-     [FAIL] Album not found: {album-name}
-     ```
+Extract:
+- `paths.content_root` → `{content_root}`
+- `paths.audio_root` → `{audio_root}`
+- `paths.documents_root` → `{documents_root}`
+- `artist.name` → `{artist}`
 
-3. Optionally call `validate_album_structure(album_slug)` — runs structural validation checks and returns `{passed, failed, warnings, skipped, issues[], checks[]}`. This MCP tool handles directory structure, required files, audio placement, and track content checks in one call.
+If config missing, STOP and report:
+```
+[FAIL] Config file missing: ~/.bitwize-music/config.yaml
+       Run /configure to set up the plugin.
+```
 
-**Note**: The MCP `validate_album_structure` tool performs many of the checks below automatically. You can use its results directly or run the manual checks for more detailed reporting.
+---
+
+## Step 2: Find Album
+
+```bash
+find {content_root}/artists/{artist}/albums -type d -name "{album-name}" 2>/dev/null
+```
+
+Extract genre from path: `{content_root}/artists/{artist}/albums/{genre}/{album}/`
+
+If album not found, STOP and report:
+```
+[FAIL] Album not found: {album-name}
+       Searched: {content_root}/artists/{artist}/albums/*/
+```
 
 ---
 
@@ -101,18 +112,18 @@ AUDIO FILES
 ───────────
 ```
 
-Expected path: `{audio_root}/artists/{artist}/albums/{genre}/{album}/`
+Expected path: `{audio_root}/{artist}/{album}/`
 
 | Check | How | Pass | Fail |
 |-------|-----|------|------|
-| Audio dir exists (correct path) | `test -d {audio_root}/artists/{artist}/albums/{genre}/{album}` | `[PASS] Audio directory: {path}` | See below |
+| Audio dir exists (correct path) | `test -d {audio_root}/{artist}/{album}` | `[PASS] Audio directory: {path}` | See below |
 | Audio dir in wrong location | `test -d {audio_root}/{album}` | N/A | `[FAIL] Audio in wrong location (missing artist folder)` |
 
 **If audio in wrong location**, add to issues:
 ```
-→ Expected: {audio_root}/artists/{artist}/albums/{genre}/{album}/
+→ Expected: {audio_root}/{artist}/{album}/
 → Found at: {audio_root}/{album}/ (WRONG - missing artist folder)
-→ Fix: mv {audio_root}/{album}/ {audio_root}/artists/{artist}/albums/{genre}/{album}/
+→ Fix: mv {audio_root}/{album}/ {audio_root}/{artist}/{album}/
 ```
 
 | Check | How | Pass | Skip |
@@ -146,11 +157,6 @@ For each track file in `{album_path}/tracks/*.md`:
    - Suno Lyrics Box exists
    - If Status is `Generated` or `Final`: Suno Link present
    - If documentary: Sources Verified status
-3. Check instrumental field sync:
-   - Read frontmatter `instrumental` field (true/false/missing)
-   - Read Track Details table `**Instrumental**` row (Yes/No/missing)
-   - If both present and they disagree → `[WARN] {filename} - Instrumental field mismatch: frontmatter={value}, table={value}`
-   - If only one is set → `[WARN] {filename} - Instrumental field missing from {frontmatter|table} (set in {other})`
 
 Output per track:
 - `[PASS] {filename} - Status: {status}, Suno Link: {present/missing}`
@@ -201,9 +207,9 @@ ALBUM STRUCTURE
 AUDIO FILES
 ───────────
 [FAIL] Audio directory in wrong location
-       → Expected: ~/bitwize-music/audio/artists/bitwize/albums/electronic/sample-album/
+       → Expected: ~/bitwize-music/audio/bitwize/sample-album/
        → Found at: ~/bitwize-music/audio/sample-album/
-       → Fix: mv ~/bitwize-music/audio/sample-album/ ~/bitwize-music/audio/artists/bitwize/albums/electronic/sample-album/
+       → Fix: mv ~/bitwize-music/audio/sample-album/ ~/bitwize-music/audio/bitwize/sample-album/
 
 ALBUM ART
 ─────────
@@ -221,14 +227,14 @@ SUMMARY: 8 passed, 1 failed, 1 warning, 1 skipped
 
 ISSUES TO FIX:
 1. Move audio folder to include artist:
-   mv ~/bitwize-music/audio/sample-album/ ~/bitwize-music/audio/artists/bitwize/albums/electronic/sample-album/
+   mv ~/bitwize-music/audio/sample-album/ ~/bitwize-music/audio/bitwize/sample-album/
 ```
 
 ---
 
 ## Important Notes
 
-1. **Use MCP tools first** - `get_config()`, `find_album()`, `validate_album_structure()` before manual checks
+1. **Always read config first** - Never assume paths
 2. **Check both correct AND wrong locations** - Catch misplaced files
 3. **Provide actionable fixes** - Include exact commands to fix issues
 4. **Use appropriate status** - PASS/FAIL/WARN/SKIP based on severity

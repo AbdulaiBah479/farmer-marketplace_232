@@ -1,11 +1,107 @@
 {
   "version": 1,
   "skills": {
+    "activate-site": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/power-pages/skills/activate-site/SKILL.md",
+      "computedHash": "9b59c5ff852b1d24e54abb8b4f1f461c4640afb219e89bf81a226d4d1bbc5dcb"
+    },
     "adaptyv": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
       "skillPath": "skills/adaptyv/SKILL.md",
       "computedHash": "78749ee9b0dc67df7fac0c64c076d80ffb350412315a8153e75c927c07496910"
+    },
+    "add-azuredevops": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/code-apps/skills/add-azuredevops/SKILL.md",
+      "computedHash": "6f16b0f151110c1b8eaf3f6d111719bdf14e0a7061696eac8b84acafd888b88a"
+    },
+    "add-cloud-flow": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/power-pages/skills/add-cloud-flow/SKILL.md",
+      "computedHash": "f9ac0f5aa493b865d9a8c261d398899365ced33185d1acaa87e10f313e32ce46"
+    },
+    "add-connector": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/code-apps/skills/add-connector/SKILL.md",
+      "computedHash": "15bc0a63ccd41114a5fd7ae1ea56e79cadde5784d9e53eab0e2ab1629d45feb5"
+    },
+    "add-data-source": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/canvas-apps/skills/add-data-source/SKILL.md",
+      "computedHash": "ef9a3161f1a1b455471da4fef06b51954a1ce6d5a335a9c8d9f37d0c3d74573e"
+    },
+    "add-datasource": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/code-apps/skills/add-datasource/SKILL.md",
+      "computedHash": "048a3f3f3e3036573acbe287fc0eb2df41e0214594d0c64f4b7718ceffc1c26c"
+    },
+    "add-dataverse": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/code-apps/skills/add-dataverse/SKILL.md",
+      "computedHash": "de098d7093cc9e058d0898040120d4e6f1d5d4ca3adfb5999a805f6f270e77cd"
+    },
+    "add-excel": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/code-apps/skills/add-excel/SKILL.md",
+      "computedHash": "e8fb8c45ab916362bc71f7a7fcd42b85f934e2bbf690e604bfce47cd42c65c8b"
+    },
+    "add-mcscopilot": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/code-apps/skills/add-mcscopilot/SKILL.md",
+      "computedHash": "2e8863ec38fc122b4dcc94a95ffe2ba2c219185adc6903f46b02572638bc8fbb"
+    },
+    "add-office365": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/code-apps/skills/add-office365/SKILL.md",
+      "computedHash": "1a717eda21ee0697c2fe70dcaadfa5bf30aeaaa7d183b8b65bfbf5e10c000a30"
+    },
+    "add-onedrive": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/code-apps/skills/add-onedrive/SKILL.md",
+      "computedHash": "4d0729ac4aa0025fd100a3c71e87d58f4b5551bb319c15e136a0e3161504e127"
+    },
+    "add-sample-data": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/power-pages/skills/add-sample-data/SKILL.md",
+      "computedHash": "3af05b211dcd8e2efc34a3aba4b6ac7c1ea44ca33f13d1d0970a313c283bc151"
+    },
+    "add-seo": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/power-pages/skills/add-seo/SKILL.md",
+      "computedHash": "ba580e504db169b5ffc99a3995a522e9e87f395d14cb3f291bb941b38249b7b2"
+    },
+    "add-server-logic": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/power-pages/skills/add-server-logic/SKILL.md",
+      "computedHash": "8e36380680ced480dcb7d2a58fc1c4e64506cad87e54ace021fc6275acd7fef1"
+    },
+    "add-sharepoint": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/code-apps/skills/add-sharepoint/SKILL.md",
+      "computedHash": "4ce67d1e19a1ead44c676f06ae850ee0080906930e1a3995cfef60cc98891cfc"
+    },
+    "add-teams": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/code-apps/skills/add-teams/SKILL.md",
+      "computedHash": "cdbcbfd94f8fe9f6d99cea57f50b4e57395ea2eac1859ce882fb77e4416f4121"
     },
     "adhd-daily-planner": {
       "source": "bitroc-ai/medical-skills",
@@ -84,6 +180,12 @@
       "sourceType": "github",
       "skillPath": "skills/arxiv-search/SKILL.md",
       "computedHash": "dbf9afcf79e59c54dc66f9cd17455f70fdde038c20ba4f3af3b359f40761a350"
+    },
+    "audit-permissions": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/power-pages/skills/audit-permissions/SKILL.md",
+      "computedHash": "6ae0e6751fa9ead5a88d8c3572448b059817956f32a832c3dddfa973539791e4"
     },
     "auto-updater": {
       "source": "anthropics/claude-for-legal",
@@ -2743,6 +2845,12 @@
       "skillPath": "skills/bulk-trajblend-interpolation/SKILL.md",
       "computedHash": "2981cb986d8dbc5272fbc74bd8213585f41372e3afb471e784dd79568d7f02dd"
     },
+    "canvas-app": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/canvas-apps/skills/canvas-app/SKILL.md",
+      "computedHash": "95d706cdfc4d5bbc04fe5e12f9a0d92ba074c60b5b6774486a00ba3ab52c6f53"
+    },
     "case-brief": {
       "source": "anthropics/claude-for-legal",
       "sourceType": "github",
@@ -2947,6 +3055,18 @@
       "skillPath": "regulatory-legal/skills/comments/SKILL.md",
       "computedHash": "52b6573a66e0558e68c84c96e580a82a343b7df2ee42505233e0cde9d3917330"
     },
+    "configure-canvas-mcp": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/canvas-apps/skills/configure-canvas-mcp/SKILL.md",
+      "computedHash": "7407de8b9e5c6020c3dae8efacfbfe774862535c78675b819e647429cb4ddcb7"
+    },
+    "configure-env-variables": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/power-pages/skills/configure-env-variables/SKILL.md",
+      "computedHash": "27f8b955229266028230b46aa04049df1a735656c325b1f6bee71f8375b54bbe"
+    },
     "convergence-study": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
@@ -2958,6 +3078,24 @@
       "sourceType": "github",
       "skillPath": "skills/cosmic-database/SKILL.md",
       "computedHash": "8c25b8e9c72f731c01f3aef9bd4e5a851e50e7f5716a822ff15b56bff854aa24"
+    },
+    "create-code-app": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/code-apps/skills/create-code-app/SKILL.md",
+      "computedHash": "66a5602d16cb863b7801a3282da8013123994bd63675a13d8df41b71d3aedbc3"
+    },
+    "create-site": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/power-pages/skills/create-site/SKILL.md",
+      "computedHash": "5bf082d07ac6868aa6d008ce1971c64acfbb859284110d932aba842d82e04c87"
+    },
+    "create-webroles": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/power-pages/skills/create-webroles/SKILL.md",
+      "computedHash": "6e728c89a79bd186356f054f0a156dffdce11fa7a9718f0760b5bb8c3a72caaa"
     },
     "crisis-detection-intervention-ai": {
       "source": "bitroc-ai/medical-skills",
@@ -3061,6 +3199,24 @@
       "skillPath": "litigation-legal/skills/demand-received/SKILL.md",
       "computedHash": "484e1a91467a7e8991530fc53de1f4acdbcd9a7b4a63b7d7275baa063147d1fe"
     },
+    "deploy": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/code-apps/skills/deploy/SKILL.md",
+      "computedHash": "20d488ae98b871794cfc5dcf8f35a387982be1d596fd032e90f37c2a6cf87357"
+    },
+    "deploy-pipeline": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/power-pages/skills/deploy-pipeline/SKILL.md",
+      "computedHash": "0494a346706ade2a4a4b09d3a22bf31f4a4afdcf6598ad7fbacc409e611dd769"
+    },
+    "deploy-site": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/power-pages/skills/deploy-site/SKILL.md",
+      "computedHash": "6df549f798b640dda866734783e101a5dd4faf509085986044cd3a59da118cf6"
+    },
     "depmap": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
@@ -3072,6 +3228,12 @@
       "sourceType": "github",
       "skillPath": "litigation-legal/skills/deposition-prep/SKILL.md",
       "computedHash": "2e419a362a01e034ec7077c1537a1d4440e5a4ac7faf393549bc0e7ee59ed76a"
+    },
+    "diagnose-deployment": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/power-pages/skills/diagnose-deployment/SKILL.md",
+      "computedHash": "97c84715258d62c8b71488286bd20910389c9b4a4e359f3349e8c39f043e7689"
     },
     "diffdock": {
       "source": "bitroc-ai/medical-skills",
@@ -3187,6 +3349,12 @@
       "skillPath": "skills/ensembl-database/SKILL.md",
       "computedHash": "a261e1d3dbf3c16c4e27aed5143f6b74f97f77644cb5b25f19f3d1222524a004"
     },
+    "ensure-pipelines-host": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/power-pages/skills/ensure-pipelines-host/SKILL.md",
+      "computedHash": "b212a8863b8e0f0bbcd950951ad3e9af2375867b83a7900805c2133bf0078bb9"
+    },
     "entity-compliance": {
       "source": "anthropics/claude-for-legal",
       "sourceType": "github",
@@ -3252,6 +3420,12 @@
       "sourceType": "github",
       "skillPath": "skills/exploratory-data-analysis/SKILL.md",
       "computedHash": "0567655b147076fe3d85429c081bd2a06b427c01a6ae72f0606a2586b940d381"
+    },
+    "export-solution": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/power-pages/skills/export-solution/SKILL.md",
+      "computedHash": "5e8705d3599199ec2848a50dbfbb4b4ac51aa4a1a7df8d6607c75d21145fcfb9"
     },
     "family-health-analyzer": {
       "source": "bitroc-ai/medical-skills",
@@ -3319,6 +3493,12 @@
       "skillPath": "skills/foldseek/SKILL.md",
       "computedHash": "d5bec47430d61b45ffe5405ef338f41b6bb73baa2671765901cdb81a6f2074f6"
     },
+    "force-link-environment": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/power-pages/skills/force-link-environment/SKILL.md",
+      "computedHash": "312e4b0fb08d80d28b8a8f440066c48844249d80cd236c0831468640b7da8e17"
+    },
     "form-generation": {
       "source": "anthropics/claude-for-legal",
       "sourceType": "github",
@@ -3355,6 +3535,18 @@
       "skillPath": "skills/gene-database/SKILL.md",
       "computedHash": "9f4d3d482a905e13085429181a0ecae63da5f6482318eb699a2b425866402b04"
     },
+    "generate-canvas-app": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/canvas-apps/skills/generate-canvas-app/SKILL.md",
+      "computedHash": "77b8654ae4a50681534473e2a85b84ed6dccda19f1eefefc77aed18e454c9154"
+    },
+    "generate-mcp-app-ui": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/mcp-apps/skills/generate-mcp-app-ui/SKILL.md",
+      "computedHash": "fae9e7601dfa4d3a866c08a60603560b93f5a6553b4d61ac56674e234d9d3a5f"
+    },
     "geniml": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
@@ -3366,6 +3558,12 @@
       "sourceType": "github",
       "skillPath": "skills/genome-compare/SKILL.md",
       "computedHash": "5b2f3802c250bb16315091f229229310373f84db54ceecce7f6870f7d1144eff"
+    },
+    "genpage": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/model-apps/skills/genpage/SKILL.md",
+      "computedHash": "90eae9c8e407e64a58257a17f19960e61dba8b95c143b04f6ee5fc6d0e11b6c9"
     },
     "geo-database": {
       "source": "bitroc-ai/medical-skills",
@@ -3775,6 +3973,12 @@
       "skillPath": "skills/imaging-data-commons/SKILL.md",
       "computedHash": "bbef524b1de71df6a64763cbf38e5a1b0c04e953663ec7f88403e4ac816713f0"
     },
+    "import-solution": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/power-pages/skills/import-solution/SKILL.md",
+      "computedHash": "a7391337221faa973f471026baf3399978193a9baeeae079e403f80a42a59c8f"
+    },
     "infographics": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
@@ -3792,6 +3996,18 @@
       "sourceType": "github",
       "skillPath": "skills/instrument-data-to-allotrope/SKILL.md",
       "computedHash": "b04fcbebc675d31fbb75f42f22dd83a0d31da5c314ec1cd5ed90b459be8757b4"
+    },
+    "integrate-backend": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/power-pages/skills/integrate-backend/SKILL.md",
+      "computedHash": "c87b932a1aada00ba384039a7eeaffdb4d007130d774ae50cdc28d8efa771656"
+    },
+    "integrate-webapi": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/power-pages/skills/integrate-webapi/SKILL.md",
+      "computedHash": "7ac82d5f6a730549c06760c579eed9f368bb03737aaf016e67a398f53ed24eda"
     },
     "integration-management": {
       "source": "anthropics/claude-for-legal",
@@ -3967,6 +4183,12 @@
       "skillPath": "skills/linear-solvers/SKILL.md",
       "computedHash": "230784665f417029b73d4ee7f65a52c335d45d0b5861c954593bb7924a8f8fd2"
     },
+    "list-connections": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/code-apps/skills/list-connections/SKILL.md",
+      "computedHash": "7fdf5ca27d668d9af4a5b370aa11e7a9b644edb2e7c598a24d5ccadcb478cf1f"
+    },
     "lit-synthesizer": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
@@ -3996,6 +4218,18 @@
       "sourceType": "github",
       "skillPath": "employment-legal/skills/log-leave/SKILL.md",
       "computedHash": "0e12f74ca42070e78362152ea76e142db3ac63abc72055b23c0e9babffa0656c"
+    },
+    "manage-firewall": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/power-pages/skills/manage-firewall/SKILL.md",
+      "computedHash": "7bb5ee4de4824f5e6a090ce9350e652679fdd16873b54183524e15254baf8c22"
+    },
+    "manage-headers": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/power-pages/skills/manage-headers/SKILL.md",
+      "computedHash": "c416024a7111b1cd6b11ec0b6477ac087ced39010355c5cd14ca95658053e807"
     },
     "markdown-mermaid-writing": {
       "source": "bitroc-ai/medical-skills",
@@ -4476,6 +4710,12 @@
       "sourceType": "github",
       "skillPath": "legal-clinic/skills/plain-language-letters/SKILL.md",
       "computedHash": "0baeacdd693a753f03f2412aa99b44f3cd2df58b444bbd7d26ca55819d70df63"
+    },
+    "plan-alm": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/power-pages/skills/plan-alm/SKILL.md",
+      "computedHash": "d345572d503788b18c42b734ff0897ec77b08da1ac7c7b4bd0e9b7ccab6ba780"
     },
     "plotly": {
       "source": "bitroc-ai/medical-skills",
@@ -4999,6 +5239,12 @@
       "skillPath": "commercial-legal/skills/renewal-tracker/SKILL.md",
       "computedHash": "be59f84218677da302c4e448693818637cbb32701e4493ff004ce43c29ca6f51"
     },
+    "report-issue": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/power-pages/skills/report-issue/SKILL.md",
+      "computedHash": "b6479d28ab2a2e6861fd9ac8e6a34057b848164cf88f987deb0169f0b7a65bd9"
+    },
     "repro-enforcer": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
@@ -5052,6 +5298,12 @@
       "sourceType": "github",
       "skillPath": "commercial-legal/skills/saas-msa-review/SKILL.md",
       "computedHash": "cd6bfcf03224d4f9a1b8eb1ddb91aedf5bd60971cba019c63b34b069bf9d2929"
+    },
+    "scan-site": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/power-pages/skills/scan-site/SKILL.md",
+      "computedHash": "155fb76aa433a3ed7e560603203795532dc49e511d6dd4566f6514d4f2a8b20e"
     },
     "scanpy": {
       "source": "bitroc-ai/medical-skills",
@@ -5143,6 +5395,12 @@
       "skillPath": "skills/seaborn/SKILL.md",
       "computedHash": "c7292c8048941783cf6b769a7fb48dc1e7df9d4857ea06930bc05573fb1ee357"
     },
+    "security-review": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/power-pages/skills/security-review/SKILL.md",
+      "computedHash": "eed6777da7a2a3acc3f8ec798969c9d73a3e4a6546d30bacb56451e7025ec8de"
+    },
     "seedance-20": {
       "source": "Emily2040/seedance-2.0",
       "sourceType": "github",
@@ -5166,6 +5424,30 @@
       "sourceType": "github",
       "skillPath": "law-student/skills/session/SKILL.md",
       "computedHash": "e8e9e0667571676c0544c955e57292327f8b86b4dbcac2e3ad1b8a1f4b40b2a2"
+    },
+    "setup-auth": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/power-pages/skills/setup-auth/SKILL.md",
+      "computedHash": "ccd2e95602b9fd605bebbadaeba907bbc312fd13ad5c1cea460e23a929f9501c"
+    },
+    "setup-datamodel": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/power-pages/skills/setup-datamodel/SKILL.md",
+      "computedHash": "6d317b9fa27ab9b3fd18a876c5c0bbc268357ce959ba382d2b9c33451048aa5d"
+    },
+    "setup-pipeline": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/power-pages/skills/setup-pipeline/SKILL.md",
+      "computedHash": "1b3b71aa7d5a89e2f6a71c9f709d1a8a948e2a8ad477f60293e068db40ca2751"
+    },
+    "setup-solution": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/power-pages/skills/setup-solution/SKILL.md",
+      "computedHash": "2d5fe55fab3dbdbe2f15bb31a57ad5369880b4e0b0aef329a675ec01ef0c6e23"
     },
     "shap": {
       "source": "bitroc-ai/medical-skills",
@@ -5406,6 +5688,12 @@
       "sourceType": "github",
       "skillPath": "skills/test-driven-development/SKILL.md",
       "computedHash": "126f1ebf6ccd414f42544f6e83d8cc5adb089e1108eaffb7c400701e37eecd9f"
+    },
+    "test-site": {
+      "source": "microsoft/power-platform-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/power-pages/skills/test-site/SKILL.md",
+      "computedHash": "7e6786b78f0c0dd28f40ef92e801de3b50c88cef1d65538a1cadeb6422a0e7ab"
     },
     "tiledbvcf": {
       "source": "bitroc-ai/medical-skills",
@@ -5881,11 +6169,89 @@
       "skillPath": "skills/wikipedia-search/SKILL.md",
       "computedHash": "f8773a6d5d8c3d44ba8cba175c47471b2a1ad645e25be311ba222a22c3b183e6"
     },
+    "wordpress-router": {
+      "source": "automattic/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/wordpress-router/SKILL.md",
+      "computedHash": "7e1ab6a500f78ecbadde3b9f8277370f7f5d8bc01c014c7bb94f6d5948f2d109"
+    },
     "worker-classification": {
       "source": "anthropics/claude-for-legal",
       "sourceType": "github",
       "skillPath": "employment-legal/skills/worker-classification/SKILL.md",
       "computedHash": "a1fc3a986ec3270c742560514d9eae9c67da667e39be4201ac76b0b899a89f03"
+    },
+    "wp-abilities-api": {
+      "source": "automattic/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/wp-abilities-api/SKILL.md",
+      "computedHash": "2f5b235bd0484b9cea7b2efe7e96bad1f181238ae1a3e45da1ba04c9ed7213dd"
+    },
+    "wp-block-development": {
+      "source": "automattic/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/wp-block-development/SKILL.md",
+      "computedHash": "663b1974050e443c3888e714a7204768a45459d07ad0d8102a2f2eca56bb8f9d"
+    },
+    "wp-block-themes": {
+      "source": "automattic/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/wp-block-themes/SKILL.md",
+      "computedHash": "ec31dc2e2a224299225fed1be6f6a94085b3fbfdcf57f22d673949063abf24bc"
+    },
+    "wp-interactivity-api": {
+      "source": "automattic/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/wp-interactivity-api/SKILL.md",
+      "computedHash": "50ffcda715b63dfb0f9ca2a2543b9a070fe68f7da89b321295902426e918966c"
+    },
+    "wp-performance": {
+      "source": "automattic/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/wp-performance/SKILL.md",
+      "computedHash": "580d879ffecd41835e297cbf222443bff6bebf7aaa0efb46852d743249330f9b"
+    },
+    "wp-phpstan": {
+      "source": "automattic/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/wp-phpstan/SKILL.md",
+      "computedHash": "66fc5a465493bfa6993459d56d0781f5bfed31dbf0d98f2d538cd5400a10cf65"
+    },
+    "wp-playground": {
+      "source": "automattic/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/wp-playground/SKILL.md",
+      "computedHash": "1125d6cd0d9097ae478d4b067cf02f2b2e5f0c6690209aa05c97a3e13dbb8921"
+    },
+    "wp-plugin-development": {
+      "source": "automattic/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/wp-plugin-development/SKILL.md",
+      "computedHash": "3c13a9d2e6e346c9f933918fdf4d191cdba9f2cfe24f87cbcd763d090bbd8014"
+    },
+    "wp-project-triage": {
+      "source": "automattic/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/wp-project-triage/SKILL.md",
+      "computedHash": "8df079d09f518217580c8eae57d6edf1827b6a8aabe7d6ec5858ca07cdd81e4d"
+    },
+    "wp-rest-api": {
+      "source": "automattic/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/wp-rest-api/SKILL.md",
+      "computedHash": "07d98b54fb41b6dccb0bae9f1a5b0d786776e9438ff5eba17d9dec7db89e5104"
+    },
+    "wp-wpcli-and-ops": {
+      "source": "automattic/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/wp-wpcli-and-ops/SKILL.md",
+      "computedHash": "b04471067f1577112c37870ee564cd06f0787487dc764edf4229f73e3b5981ca"
+    },
+    "wpds": {
+      "source": "automattic/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/wpds/SKILL.md",
+      "computedHash": "1a05f741c9a43026507c8c9641b2dbde4b4928a14038f97322c36ee8b1e88470"
     },
     "writing-plans": {
       "source": "bitroc-ai/medical-skills",

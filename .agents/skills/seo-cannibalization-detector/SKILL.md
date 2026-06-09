@@ -1,9 +1,10 @@
 ---
 name: seo-cannibalization-detector
-description: Analyzes multiple provided pages to identify keyword overlap and potential cannibalization issues. Suggests differentiation strategies. Use PROACTIVELY when reviewing similar content.
-risk: unknown
-source: community
-date_added: '2026-02-27'
+description: Analyzes multiple provided pages to identify keyword overlap and
+  potential cannibalization issues. Suggests differentiation strategies. Use
+  PROACTIVELY when reviewing similar content.
+metadata:
+  model: haiku
 ---
 
 ## Use this skill when
@@ -120,8 +121,3 @@ Resolution Strategy:
 - Add canonical tags
 
 Focus on clear differentiation. Each page should serve a unique purpose with distinct targeting.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

@@ -1,393 +1,217 @@
 ---
 name: design-exploration
-description: |
-  Generate visual design proposal catalogues for existing projects. Use when:
-  - User wants to explore design directions before implementation
-  - Redesigning or refreshing an existing interface
-  - Starting /aesthetic or /polish without clear direction
-  - User says "explore designs", "show me options", "design directions"
-  Keywords: design catalogue, proposals, visual exploration, aesthetic directions, DNA
+description: 新功能设计探索流程。当用户有模糊想法要做新功能/新模块时使用。通过"需求收敛 → 技术调研 → ASCII 批量探索 → HTML 设计稿 → 全状态覆盖 → 需求总结"的结构化流程，从模糊想法产出可交付的设计参考文档，作为 PRD 阶段的输入。
 ---
 
-# Design Exploration
+用户有一个模糊的想法，想做一个新功能或新模块，但还没想清楚具体要什么。通过结构化的探索流程，帮助用户从模糊想法收敛到明确的设计方案，并产出完整的设计参考文档。
 
-Investigate existing designs, generate a visual catalogue of 6-12 diverse proposals, facilitate iterative refinement, and output a selected direction for implementation.
+## 核心原则
 
-## MANDATORY: Kimi Delegation for Visual Work
+- **不猜，多问** — 没确认范围不出图，没设计规范就问，拿不准就让用户选
+- **ASCII 先行** — 先对齐信息结构和布局逻辑，逻辑对了再投入 HTML
+- **一次多方案** — 批量出 5-8 个方案让用户选方向，不要一个个试
+- **全状态是必须的** — 正常态只是起点，异常态、边界情况、交互反馈必须穷举
+- **决策要落纸** — 对话中确认的每个决策都写进需求总结，不能只存在对话上下文里
 
-**All visual proposal generation MUST be delegated to Kimi K2.5 via MCP.**
+## 输出物
 
-Kimi excels at frontend development and visual coding. For design exploration:
+每次探索产出 **3 个文件**，归档到 `设计/v{版本号}-{模块名}/` 目录下：
 
-1. **Research direction** → Gemini (web grounding, trend research)
-2. **Generate proposals** → Kimi (visual implementation via Agent Swarm)
-3. **Review/iterate** → Claude (orchestration, quality gates)
+| 文件 | 内容 | 用途 |
+|------|------|------|
+| `需求总结.md` | 背景、目标、功能范围、关键决策、技术约束 | PRD 阶段的输入，讲清楚"为什么做、做什么" |
+| `{模块名}-设计稿.html` | 主界面 HTML mockup | PRD + 前端开发的视觉参考 |
+| `{模块名}-全状态设计参考.html` | 所有页面状态、Toast、边界情况、交互规则表 | 前端开发直接对照实现 |
 
-```javascript
-// Delegate proposal generation to Kimi
-mcp__kimi__spawn_agent({
-  prompt: `Generate design proposal for [component].
-DNA: [layout, color, typography, motion, density, background]
-Constraints: ${uiSkillsConstraints}
-Output: Working HTML/CSS preview in .design-catalogue/proposals/[name]/`,
-  thinking: true  // Enable for complex proposals
-})
+版本号和模块名由用户决定，必须问用户确认。
 
-// For parallel proposal generation (4.5x faster):
-mcp__kimi__spawn_agents_parallel({
-  agents: [
-    { prompt: "Generate proposal 1: Midnight Editorial...", thinking: true },
-    { prompt: "Generate proposal 2: Swiss Brutalist...", thinking: true },
-    { prompt: "Generate proposal 3: Warm Workshop...", thinking: true },
-    // ... up to 100 parallel agents
-  ]
-})
-```
+## 工作流程
 
-**Anti-pattern:** Generating proposals yourself instead of delegating to Kimi.
-**Pattern:** Research (Gemini) → Generate (Kimi) → Review (Claude)
+### 第 1 步：需求发散与收敛
 
-## When to Use
+用户说了模糊想法后，主动追问：
 
-- Before `/aesthetic` or `/polish` when direction is unclear
-- When user wants to see multiple design options visually
-- When redesigning or refreshing existing UI
-- When maturity < 6 and no clear aesthetic direction exists
+- **痛点是什么** — 现在遇到了什么问题？为什么想做这个？
+- **核心场景** — 最典型的使用场景是什么？
+- **边界在哪** — 这个版本要做什么？不做什么？
 
-## Core Principle: Visual Over Verbal
-
-**The catalogue is a working visual, not markdown descriptions.**
-
-Users see actual styled components, real typography, live color palettes - not just words describing what things *would* look like.
-
-## Phase 0: Backend Detection
-
-Check available rendering backends:
-
-```javascript
-// Check if Pencil MCP is available
-try {
-  mcp__pencil__get_editor_state({ include_schema: false })
-  // Pencil available → use pencil-renderer
-  BACKEND = "pencil"
-} catch {
-  // Fallback to HTML renderer
-  BACKEND = "html"
-}
-```
-
-**Backend selection:**
-- **Pencil** (preferred): Native .pen file rendering, design system integration
-- **HTML** (fallback): Static HTML/CSS proposals served locally
-
-## Workflow
-
-### 1. Investigation
-
-**Understand what exists:**
-
-```bash
-# Screenshot current state via Chrome MCP
-mcp__claude-in-chrome__tabs_context_mcp
-mcp__claude-in-chrome__navigate url="[current app URL]"
-mcp__claude-in-chrome__computer action="screenshot"
-```
-
-**Analyze the current design:**
-- Typography: What fonts, sizes, weights?
-- Colors: What palette, what semantic meaning?
-- Layout: Centered? Asymmetric? Grid-based?
-- Motion: Any animations? What timing?
-- Components: What patterns exist?
-
-**Infer current DNA:**
-```
-DNA Axes:
-- Layout: [centered|asymmetric|grid-breaking|full-bleed|bento|editorial]
-- Color: [dark|light|monochrome|gradient|high-contrast|brand-tinted]
-- Typography: [display-heavy|text-forward|minimal|expressive|editorial]
-- Motion: [orchestrated|subtle|aggressive|none|scroll-triggered]
-- Density: [spacious|compact|mixed|full-bleed]
-- Background: [solid|gradient|textured|patterned|layered]
-```
-
-**Identify:**
-- Strengths to preserve
-- Weaknesses/opportunities
-- Constraints (brand colors, accessibility, tech stack)
-
-**Research via Gemini:**
-```bash
-gemini -p "I'm building [describe component/page]. Research:
-1. Distinctive design approaches (avoid AI-slop aesthetics)
-2. Real-world examples of excellent [component type]
-3. Current typography/color/layout trends for this context
-4. Unexpected alternatives to obvious solutions"
-```
-
-### 2. Build Visual Catalogue
-
-**Generate 6-12 proposals** using DNA variation system.
-
-#### If BACKEND = "pencil":
-
-Use `pencil-renderer` primitive:
-
-```javascript
-// For each proposal
-// 1. Get style guide matching DNA mood
-mcp__pencil__get_style_guide_tags()
-mcp__pencil__get_style_guide({ tags: [mapped_tags] })
-
-// 2. Render via pencil-renderer workflow
-// See: pencil-renderer/SKILL.md
-```
-
-All proposals render to a single .pen document as separate frames.
-
-#### If BACKEND = "html":
-
-Create catalogue directory:
-```
-.design-catalogue/
-├── index.html              # Main viewer
-├── styles/catalogue.css    # Viewer chrome styles
-├── proposals/
-│   ├── 01-[name]/
-│   │   ├── preview.html
-│   │   └── styles.css
-│   ├── 02-[name]/
-│   │   └── ...
-│   └── ... (6-12 total)
-└── assets/
-```
-
-**DNA Variation Rule:** No two proposals share >2 axes.
-
-**Required diversity:**
-- At least 2 bold/dramatic directions
-- At least 2 refined/subtle directions
-- At least 1 unexpected/wild card
-- At least 1 that preserves current strengths
-
-**Each proposal preview includes:**
-- Hero section in that style
-- Sample card component
-- Button states (default, hover, active)
-- Typography scale (h1-h6, body, caption)
-- Color palette swatches with hex codes
-- DNA code badge
-
-**Reference templates:**
-- `references/viewer-template.html` - Main catalogue viewer
-- `references/proposal-template.html` - Individual proposal page
-- `references/catalogue-template.md` - Metadata structure
-
-**Anti-convergence check:** Reference `aesthetic-system/references/banned-patterns.md`
-- No Inter, Space Grotesk, Roboto as primary fonts
-- No purple gradients on white
-- No centered-only layouts for all proposals
-
-### 3. Present & Serve
-
-#### If BACKEND = "pencil":
-
-```javascript
-// Screenshot each proposal frame
-for (const frame of proposalFrames) {
-  mcp__pencil__get_screenshot({ nodeId: frame.id })
-}
-```
-
-Present in chat with screenshots.
-
-#### If BACKEND = "html":
-
-```bash
-cd .design-catalogue && python -m http.server 8888 &
-echo "Catalogue available at http://localhost:8888"
-```
-
-**Open in Chrome MCP:**
-```bash
-mcp__claude-in-chrome__navigate url="http://localhost:8888"
-mcp__claude-in-chrome__computer action="screenshot"
-```
-
-**Present to user:**
-```
-Design Catalogue Ready
-
-I've built [N] visual proposals exploring different directions for [project].
-
-Quick overview:
-1. Midnight Editorial - [soul statement]
-2. Swiss Brutalist - [soul statement]
-3. Warm Workshop - [soul statement]
-...
-
-[If Pencil] View the .pen file directly in your editor
-[If HTML] Browse the catalogue: http://localhost:8888
-
-Tell me which 2-3 resonate.
-```
-
-### 4. Collaborative Refinement
-
-**First selection:**
-```
-AskUserQuestion:
-"Which 2-3 directions interest you most?"
-Options: [Proposal names with brief descriptions]
-```
-
-**Refinement dialogue:**
-- "What specifically appeals about [selection]?"
-- "Anything you'd change or combine?"
-- "Should I generate hybrid proposals?"
-
-**If refinement requested:**
-- Generate 2-3 new proposals based on feedback
-- Add to catalogue as new entries
-- Update viewer to highlight refined options
-
-### 5. Direction Selection
-
-**Present finalists** with expanded detail:
-- Full color palette (all semantic tokens)
-- Complete typography scale with specimens
-- Component transformation examples (before → after)
-- Implementation priority list
-
-**Final selection:**
-```
-AskUserQuestion:
-"Which direction should we implement?"
-Options: [Finalist names]
-+ "Make more changes first"
-```
-
-### 5.5. Expert Panel Review (MANDATORY)
-
-**Before presenting any design to user, run expert panel review.**
-
-See: `ui-skills/references/expert-panel-review.md`
-
-1. Simulate 10 world-class advertorial experts (Ogilvy, Rams, Scher, Wiebe, Laja, Walter, Cialdini, Ive, Wroblewski, Millman)
-2. Each expert scores 0-100 and provides specific improvement feedback
-3. Calculate average score
-4. **If average < 90:** Implement highest-impact feedback, iterate, re-review
-5. **If average ≥ 90:** Proceed to handoff
-
-```markdown
-Expert Panel Review: [Design Name]
-
-| Expert | Score | Critical Improvement |
-|--------|-------|---------------------|
-| Ogilvy | 88 | Headline needs stronger benefit |
-| Rams | 92 | Clean execution |
-| ...
-**Average: 89.2** ❌ → Iterating...
-```
-
-**Do not return design until 90+ average achieved.**
-
-### 6. Output & Handoff
-
-**Return selected direction:**
-```markdown
-## Selected Direction: [Name]
-
-**DNA:** [layout, color, typography, motion, density, background]
-
-**Typography:**
-- Headings: [Font family, weights]
-- Body: [Font family, weights]
-- Code/Mono: [Font family]
-
-**Color Palette:**
-- Background: [hex]
-- Foreground: [hex]
-- Primary: [hex]
-- Secondary: [hex]
-- Accent: [hex]
-- Muted: [hex]
-
-**Implementation Priorities:**
-1. [First change - highest impact]
-2. [Second change]
-3. [Third change]
-
-**Preserve:**
-- [What to keep from current design]
-
-**Transform:**
-- [What changes dramatically]
-
-**Anti-patterns to avoid:**
-- [Specific things NOT to do]
-```
-
-**Handoff routing:**
-
-| Backend | Handoff Target |
-|---------|---------------|
-| Pencil | `pencil-to-code` — exports .pen → React/Tailwind |
-| HTML | `design-theme` — implements tokens in codebase |
+整理成结构化的需求共识：
 
 ```
-AskUserQuestion:
-"Ready to generate implementation code?"
-Options:
-- "Yes, generate React components" → invoke handoff
-- "No, I'll implement manually" → return spec only
+做什么：
+- xxx
+- xxx
+
+不做什么：
+- xxx
+
+载体：独立应用 / 已有应用的新 Tab / 插件 / ...
 ```
 
-**Cleanup (HTML backend only):**
-```bash
-# Stop local server
-pkill -f "python -m http.server 8888"
-# Optionally remove catalogue
-# rm -rf .design-catalogue
+**禁止**：用户说了一句话就开始出图。必须先对齐需求边界。
+
+### 第 2 步：技术调研（按需）
+
+**判断是否需要调研**：如果功能涉及外部数据（配置文件、API、第三方系统、文件格式），必须先调研技术约束。如果是纯 UI 功能不涉及外部依赖，跳过。
+
+调研内容：
+- 数据存储位置和格式
+- 现有系统的接口和限制
+- 技术可行性验证
+
+调研结果会直接影响设计方案（比如发现两个工具配置格式不同，决定了界面需要展示"类型"列）。
+
+**禁止**：跳过调研直接画图，画出来发现技术上实现不了。
+
+### 第 3 步：ASCII 批量探索
+
+一次出 **5-8 个**不同思路的 ASCII 布局方案，每个方案包含：
+- ASCII 布局图
+- 一句话说明核心思路
+
+```
+方案 A：卡片列表 + 工具勾选
+┌──────────────────────────────────┐
+│ ┌────────────────────────────┐   │
+│ │ pencil       [✓] CC [✓] CX│   │
+│ └────────────────────────────┘   │
+└──────────────────────────────────┘
+
+方案 B：表格视图，一行一个
+┌──────────────────────────────────┐
+│ 名称       类型   CC    CX      │
+│ pencil     stdio  [✓]   [✓]    │
+│ github     http   [✓]   [✓]    │
+└──────────────────────────────────┘
 ```
 
-## Quick Reference
+用户可以：
+- 直接选一个方案
+- 组合多个方案的元素（"B 的结构 + E 的开关风格"）
+- 全部否掉，补充新的方向
 
-| Phase | Action |
-|-------|--------|
-| Backend Detection | Check Pencil MCP availability |
-| Investigation | Screenshot, analyze, infer DNA, research via Gemini |
-| Catalogue | Build 6-12 visual proposals with DNA variety |
-| Present | Serve/screenshot, describe options |
-| Refine | User picks favorites, generate hybrids if needed |
-| Select | Final choice with full spec |
-| Handoff | Route to pencil-to-code or design-theme |
+**禁止**：
+- 只出 1-2 个方案（用户没有选择空间）
+- 超过 10 个方案（选择困难）
+- 方案之间差异太小（换汤不换药）
 
-## Integration
+### 第 4 步：确认设计风格
 
-**Invoked by:**
-- `/design` command (directly)
-- `/aesthetic` at Phase 0 (recommended)
-- `/polish` when maturity < 6 (suggested)
+问用户以下问题：
 
-**Outputs to:**
-- `pencil-to-code` — when Pencil backend, user wants code
-- `design-theme` — when HTML backend, user wants implementation
-- `/aesthetic` — guides all subsequent phases
-- `/polish` — constrains DNA for refinement loop
+1. **有没有已有的设计规范？**（如 design-system.html）
+   - 有 → 读取并严格遵循 design tokens（颜色、字号、圆角、间距）
+   - 没有 → 问风格偏好，或直接出图让用户挑感觉
 
-## Related Skills
+2. **有没有要参考的已有页面？**（外框、导航结构）
+   - 有 → 读取参考页面，对齐外框样式（如 mac-window、sidebar 布局）
+   - 没有 → 按独立页面处理
 
-- `pencil-renderer` — Pencil MCP rendering primitive
-- `pencil-to-code` — .pen → React/Tailwind export
-- `aesthetic-system` — DNA codes, anti-convergence rules
-- `design-tokens` — Token system patterns
-- `design-theme` — Theme implementation
+3. **载体形式？**
+   - 已有应用的新页面/Tab → 必须对齐已有页面的外框和导航
+   - 独立应用 → 自定义外框
+   - 其他 → 问清楚
 
-## References
+**禁止**：没问就默认使用某个设计规范。
 
-- `references/viewer-template.html` - Catalogue viewer HTML
-- `references/proposal-template.html` - Individual proposal HTML
-- `references/catalogue-template.md` - Metadata structure
-- `aesthetic-system/references/dna-codes.md` - DNA axis definitions
-- `aesthetic-system/references/banned-patterns.md` - Anti-convergence rules
+### 第 5 步：HTML 设计稿
+
+基于选定方案 + 确认的设计风格，输出 HTML mockup：
+
+- 使用真实数据填充（不用 lorem ipsum）
+- 如有设计规范，严格使用 CSS 变量 / design tokens
+- 如有参考页面，外框结构保持一致
+
+输出后让用户浏览器打开查看，根据反馈微调。微调是具体的小修改（间距、配色、文案），直接执行，不需要重新走方案选择。
+
+### 第 6 步：全状态覆盖
+
+产出一个完整的全状态设计参考 HTML，固定包含以下内容：
+
+#### 必须覆盖的页面状态
+
+| 状态 | 说明 |
+|------|------|
+| 正常态 | 有数据的标准展示 |
+| 加载态 | 数据加载中（spinner + 禁用交互） |
+| 空态 | 没有数据，引导文案 |
+| 搜索/筛选无结果 | 有数据但当前条件无匹配 |
+| 错误态 | 数据加载失败、文件不存在、格式错误等（按场景拆多个） |
+| 部分可用 | 部分数据源可用、部分失败 |
+
+#### 必须覆盖的交互反馈
+
+- **Toast 汇总**：所有操作的成功/失败/警告 Toast，包含具体文案
+- Toast 规则：位置、时长（成功短、错误长）、同时最多显示几条
+
+#### 必须覆盖的边界情况
+
+- 长文本截断（名称、路径、URL）
+- 大量数据滚动
+- 其他根据具体场景补充
+
+#### 必须包含的交互行为规则表
+
+表格格式，列定义：
+
+| 触发 | 用户操作 | 系统行为 | 反馈 |
+|------|---------|---------|------|
+| 用户/系统/异常 | 具体操作 | 详细的系统处理步骤 | Toast/状态变化/界面更新 |
+
+覆盖所有用户操作和系统行为的完整映射，前端开发直接对照实现。
+
+#### 文档结构
+
+- 顶部：标题、版本、日期
+- 目录：锚点跳转
+- 每个状态一个 section：标签 + 标题 + 说明 + 预览截面 + 标注
+- 底部：交互行为规则表
+
+**禁止**：只做正常态就结束。全状态覆盖是本流程的核心交付物。
+
+### 第 7 步：需求总结 + 归档
+
+按模板（`templates/需求总结-模板.md`）生成需求总结文档。
+
+将对话中确认的所有决策提取出来，写入"关键决策"部分。这些决策往往散落在对话各处，必须主动收集整理，不能遗漏。
+
+三个文件归档到 `设计/v{版本号}-{模块名}/` 目录下。版本号和模块名问用户确认。
+
+```
+设计/v0.11-MCP管理/
+├── 需求总结.md
+├── mcp-manager-设计稿.html
+└── mcp-manager-全状态设计参考.html
+```
+
+## 过程中的沟通规范
+
+### 必须问用户的
+
+| 时机 | 问什么 |
+|------|--------|
+| 第 1 步 | 痛点、场景、边界（做什么/不做什么） |
+| 第 3 步 | 选哪个方案 |
+| 第 4 步 | 有无设计规范、参考页面、载体形式 |
+| 第 5 步 | mockup 效果是否满意，有无微调 |
+| 第 6 步 | 全状态覆盖有无遗漏的场景 |
+| 第 7 步 | 版本号和模块名 |
+
+### 不需要问用户的
+
+| 事项 | 直接做 |
+|------|--------|
+| 全状态要不要覆盖 | 必须覆盖，不用问 |
+| 交互规则表要不要写 | 必须写，不用问 |
+| 需求总结要不要输出 | 必须输出，不用问 |
+| Toast 文案 | 先给出建议，用户不满意再调 |
+
+### AI 绝不应该做的
+
+- 用户说了一句模糊想法就开始出 HTML
+- 只出一个 ASCII 方案
+- 只做正常态不管异常态
+- 跳过技术调研直接画图（如果涉及外部数据）
+- 把决策留在对话里不写进需求总结
+- 自己编版本号和模块名
+- 没问就默认使用某个设计规范

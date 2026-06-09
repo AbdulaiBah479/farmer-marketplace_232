@@ -1,13 +1,9 @@
 ---
 name: wettbewerb
-description: "Wettbewerbs- und Kartellrecht im Energiesektor prüfen: Marktmacht, Diskriminierung, Missbrauch. Normen: §§ 18 ff. GWB, Art. 101 102 AEUV, EnWG. Prüfraster: Marktabgrenzung, Marktmacht, Diskriminierungsverbot, Entflechtung. Output: Kartellrechtliche Risikoeinschaetzung Energiemarkt. Abgrenzung: nicht allgemeines Wettbewerbsrecht im Energierecht: prüft konkret die einschlägigen Tatbestandsmerkmale, Fristen, Belege und Rechtsprechung. Liefert priorisierten Output mit Norm-Pinpoints, Risikoampel und nächstem Arbeitsschritt."
+description: "Wettbewerbs- und Kartellrecht im Energiesektor prüfen: Marktmacht, Diskriminierung, Missbrauch. Normen: §§ 18 ff. GWB, Art. 101 102 AEUV, EnWG. Prüfraster: Marktabgrenzung, Marktmacht, Diskriminierungsverbot, Entflechtung. Output: Kartellrechtliche Risikoeinschaetzung Energiemarkt. Abgrenzung: ni..."
 ---
 
 # Wettbewerb und Beihilfen im Energierecht
-
-## Arbeitsbereich
-
-Wettbewerbs- und Kartellrecht im Energiesektor prüfen: Marktmacht, Diskriminierung, Missbrauch. Normen: §§ 18 ff. GWB, Art. 101 102 AEUV, EnWG. Prüfraster: Marktabgrenzung, Marktmacht, Diskriminierungsverbot, Entflechtung. Output: Kartellrechtliche Risikoeinschaetzung Energiemarkt. Abgrenzung: nicht allgemeines Wettbewerbsrecht. Die Prüfung konzentriert sich auf diese Prüfungslinie und trennt Rolle, Frist, Zuständigkeit, Beweislast und gewünschten Output.
 
 ## Arbeitsweg
 
@@ -16,10 +12,6 @@ Wettbewerbs- und Kartellrecht im Energiesektor prüfen: Marktmacht, Diskriminier
 - Tragende Normen verifizieren: KWKG — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
 - Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
 - Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
-
-## Zweck
-
-Behandelt wettbewerbsrechtliche Aspekte im Energie-Bereich: Marktbeherrschung, BNetzA-Missbrauchskontrolle, Kartellamts-Fusionen, EU-Beihilfen, Entflechtungs-Vorschriften.
 
 ## Eingaben
 
@@ -271,9 +263,6 @@ Behandelt wettbewerbsrechtliche Aspekte im Energie-Bereich: Marktbeherrschung, B
 
 §§ 6-10 EnWG (Entflechtung) — § 33 EnWG (Missbrauchskontrolle BNetzA) — §§ 18, 19 GWB (Marktbeherrschung, Missbrauch) — §§ 35-41 GWB (Fusionskontrolle) — Art. 101, 102 AEUV (Kartellverbot, Missbrauch) — Art. 107, 108 AEUV (Beihilfen) — § 46 EnWG (Konzessionsvertrag)
 
-## Quellenregel
-
-Quellenregel: Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen; Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff.
 ## Verzahnung
 
 - `energierecht-verfahren` (BNetzA / OLG Düsseldorf)

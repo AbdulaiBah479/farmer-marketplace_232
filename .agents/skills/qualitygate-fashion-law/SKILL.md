@@ -9,20 +9,12 @@ description: "Qualitygate für Fashion-Law-Outputs: Normen, Register, Produktdat
 
 Vor Versand von Memo, Vertrag oder Launch-Freigabe.
 
-## Arbeitsweise
-
-Prüfe, ob der Output Modewirklichkeit, Recht und Belege zusammenbringt.
-
 ## Prüfpunkte
 
 - Sachverhalt und Rolle sauber erfassen: Wer handelt, wer ist Rechteinhaber, wer ist Gegner, welches Produkt oder welche Kollektion ist betroffen?
 - Fristen, Registerstand, Veröffentlichungen, Vertragslage und Beweisunterlagen früh sichern.
 - Materielle Prüfung und Verfahrensstrategie trennen: Ein gutes Ergebnis sagt nicht nur, ob etwas möglich ist, sondern wie man es belegt, vorbereitet und durchsetzt.
 - Unsichere Tatsachen offen markieren und mit präzisen Rückfragen schließen.
-
-## Output
-
-Freigabevermerk.
 
 ## Quellen-Hardening
 

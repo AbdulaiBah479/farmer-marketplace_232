@@ -1,150 +1,103 @@
 ---
 name: xiaohongshu-search
-description: "Search Xiaohongshu (RedNote / xhs) notes by keyword and return a paginated list with title, author, engagement stats (likes, collects, comments), cover image URL, and xsecToken for detail lookup. Use when user mentions find notes on xiaohongshu, search rednote, search xhs, scrape xiaohongshu search, xiaohongshu keyword search, rednote post search, xhs search results, monitor xiaohongshu topics, KOL content discovery via xiaohongshu, xiaohongshu note list, rednote scrape, xhs data collection, collect xiaohongshu posts, xiaohongshu topic search, xiaohongshu content monitoring, rednote post list, xhs keyword scrape."
+description: 小红书运营全链路数据工具｜关键词监控+爆款挖掘+竞品分析+KOL筛选+趋势洞察，用数据驱动小红书流量增长，告别盲目创作
+license: MIT
+metadata:
+  openclaw:
+    type: command
+    runtime: "nodejs@16+"
+    entrypoint: "scripts/search.js"
+    version: "1.0.0"
+    requires:
+      bins: ["node"]
+      env: ["GUAIKEI_API_TOKEN"]
+    keywords:
+      [
+        "小红书",
+        "竞品分析",
+        "爆款笔记",
+        "KOL营销",
+        "市场调研",
+        "数据挖掘",
+        "流量增长",
+        "用户画像",
+        "趋势监控",
+      ]
+    examples:
+      - "搜索近7天'露营装备'的热门小红书笔记"
+      - "分析一下博主'XXX'的粉丝画像和互动率"
+      - "监控'早春穿搭'这个关键词的搜索结果"
+      - "追踪竞品品牌'XX'近一周小红书笔记数据"
 ---
 
-# Xiaohongshu — Search Notes
+# 📊 小红书商业洞察与竞品分析助手
 
-> keyword → list of notes with title, author, engagement stats, xsecToken
+> **一句话价值主张**：告别盲目创作，用数据驱动小红书流量增长。从海量公开数据中提炼可落地的爆款逻辑、竞品策略、KOL价值，覆盖内容创作、品牌营销、市场分析全场景，让小红书运营决策有迹可循。
 
-## Language
+## 1. 技能概述
 
-All process output to user (progress updates, process notifications) follows the user's language.
+这是一款专注于**小红书商业数据挖掘**的工具。它能够穿透小红书的公开数据层，为你提供深度的**竞品监控**、**趋势预测**和**KOL 筛选**服务。无论你是内容创作者、品牌营销人员还是市场分析师，都能通过此工具获取决策支持。
 
-## Objective
+### 1.1 核心能力矩阵
 
-Search Xiaohongshu notes by keyword and extract the result list including engagement metrics and tokens for downstream detail lookup.
+| 能力模块        | 核心功能                     | 解决痛点                             |
+| :-------------- | :--------------------------- | :----------------------------------- |
+| **🔍 爆款挖掘** | 热门笔记发现、高互动内容检索 | 找不到选题灵感，不知道什么内容火     |
+| **🕵️ 竞品分析** | 对标账号监控、笔记表现追踪   | 竞品为什么涨粉快？他们的策略是什么？ |
+| **👥 KOL 筛选** | 博主粉丝画像、互动率分析     | 找不到合适的投放博主，担心数据造假   |
+| **📈 趋势监控** | 关键词热度追踪、话题趋势分析 | 错过热点，无法预判市场风向           |
 
-## Prerequisites
+### 1.2 适用人群
 
-- Browser opened to `https://www.xiaohongshu.com/search_result/?keyword={keyword}`
-- User is logged in (avatar or username visible in the left sidebar)
+✅ 小红书内容创作者/运营 | ✅ 品牌营销/市场人员 | ✅ 数据分析师 | ✅ MCN机构/博主经纪人
 
-## Pre-execution Checks
+## 2. 快速使用指南
 
-### 1. Tool Readiness
+### 2.1 前置条件
 
-If browser-act has been confirmed available in the current session → skip this step.
+- 安装Node.js 16+环境
+- 配置环境变量 `GUAIKEI_API_TOKEN`（默认TOKEN仅用于体验，私有TOKEN需申请）
 
-Invoke `browser-act` via Skill tool to load usage. If installation or configuration issues arise, follow its guidance to resolve then retry.
+### 2.2 基础语法
 
-### 2. Login Verification
-
-If login status for Xiaohongshu has been confirmed in the current session → skip this step.
-
-Otherwise: open `https://www.xiaohongshu.com` and observe the left sidebar:
-- User avatar or "Me" entry visible → logged in, continue execution
-- "Login" button visible → not logged in, inform the user that login is required, use `remote-assist` to let the user scan the QR code
-
-User refuses or cannot log in → terminate execution.
-
-## Capability Components
-
-> This Skill's operational boundary = what the user can manually do in their browser. It only reads data already displayed to the user on the page, never bypassing authentication or access controls. Its role is equivalent to copy-pasting on the user's behalf — the data is already on screen, automation merely saves time. JS code is encapsulated in Python files under the `scripts/` directory, invoked via `eval "$(python scripts/xxx.py {params})"`. `$(...)` is bash syntax; it is recommended to use the bash tool for execution.
-
-Below are all atomic capabilities discovered and verified during the exploration phase, listed by command template with parameters. Simply invoke them as needed — no need to read `scripts/*.py` source code or re-verify. Only inspect scripts when execution fails for troubleshooting. Combine freely as needed during execution.
-
-### DOM: extract search results
-
-Navigate to the search page (business parameters injected via URL), wait for the Vue SSR state to populate, then extract from `window.__INITIAL_STATE__.search.feeds`:
-
-1. `navigate https://www.xiaohongshu.com/search_result/?keyword={keyword}`
-2. `wait stable`
-3. (optional) apply filters — see AI Workflow below
-4. `eval "$(python scripts/extract-search.py --limit {limit})"`
-
-Parameters:
-- `{keyword}`: URL-encoded search keyword (e.g., `travel`, `coffee`)
-- `--limit`: max items to return from current feeds buffer, default `20`
-
-Output example:
-```json
-{
-  "total": 44,
-  "hasMore": true,
-  "page": 2,
-  "items": [
-    {
-      "id": "69d8cd8c0000000022002295",
-      "xsecToken": "ABpK6gG0Dmt6MoVt60wJf-J0VMaCw5Y1Hi766ap7uWrxE=",
-      "type": "normal",
-      "title": "Not Switzerland! This is a natural grassland in Fujian!!",
-      "userId": "5bac4e3f7a4c7300016a6b88",
-      "nickname": "half-goose",
-      "likedCount": "5149",       // likes
-      "collectedCount": "4170",   // collects/saves
-      "commentCount": "390",      // comments
-      "coverUrl": "https://sns-..."
-    }
-  ]
-}
+```bash
+# 语法：node scripts/search.js [关键词] [选项]
 ```
 
-Error handling: if `error: true` is returned, verify the page URL is a search result page and `wait stable` has completed before retrying.
+### 2.3 选项说明
 
-### AI Workflow: apply sort and note-type filters (before extraction)
+- `--type <0>`：搜索类型，0-全部，1-视频，2-图文（默认0）
+- `--sort <0>`：排序依据，0-综合，1-最新，2-最多点赞，3-最多评论，4-最多收藏（默认0）
+- `--limit <10>`：返回数量，1-60（默认10）
+- `--output <json>`：输出格式，json/markdown（默认json）
 
-Run this workflow before the extraction step when the user specifies a sort order or note type. Uses the filter panel on the search result page:
+### 2.4 典型示例
 
-1. `state` — locate the "Filter" button in the top-right area of the search content area → `click <index>`
-2. Wait for filter panel to appear (visible on the right side of the page)
-3. For **sort order** — `state` locate the desired sort tag in the "Sort By" row → `click <index>`
+```bash
+# 示例1：基础搜索(JSON格式)
+node scripts/search.js AI
+# 示例2：带空格的关键词
+node scripts/search.js "AI 教程"
+# 示例3：自定义搜索类型(视频)
+node scripts/search.js AI --type 1
+# 示例4：自定义排序(最多点赞)
+node scripts/search.js "AI 模型" --sort 2
+# 示例5：自定义返回结果数量(20条)
+node scripts/search.js AI --limit 20
+# 示例6：自定义输出格式(Markdown)
+node scripts/search.js "AI 教程" --output markdown
+# 示例7：复杂搜索(图文+最多点赞+20条结果+JSON格式)
+node scripts/search.js --keyword "AI 教程" --type 2 --sort 2 --limit 20 --output json
+```
 
-   | UI Label | filterParams value |
-   |---|---|
-   | General (default) | `general` |
-   | Latest | `time_descending` |
-   | Most Liked | `popularity_descending` |
-   | Most Commented | `comment_descending` |
-   | Most Collected | `collect_descending` |
+## 3. 数据合规说明
 
-4. For **note type** — `state` locate the desired type tag in the "Note Type" row → `click <index>`
+✅ 仅抓取小红书**公开可见**内容，无隐私数据泄露风险
+✅ 数据仅用于商业分析参考，需遵守小红书平台使用条款
+✅ 所有输出数据均做脱敏处理，不涉及用户个人信息
 
-   | UI Label | filterParams value |
-   |---|---|
-   | All (default) | — |
-   | Video | `video-note` (site internal) |
-   | Image-text | `image-text-note` (site internal) |
+## 4. 技术说明（OpenClaw 适配）
 
-5. `state` locate the "Collapse" button at the bottom of the filter panel → `click <index>`
-6. `wait stable`
-7. Then run: `eval "$(python scripts/extract-search.py --limit {limit})"`
-
-## Enum Parameters
-
-[AI] sort — filterParams.tags[0] value for the sort_type filter. Acquisition: open filter panel via `state` + `click`, read "Sort By" row options. Verified values: `general`, `time_descending`, `popularity_descending`, `comment_descending`, `collect_descending`.
-
-[AI] note_type — filterParams.tags[0] value for the filter_note_type filter. Acquisition: open filter panel via `state` + `click`, read "Note Type" row options. Verified values: video-note type (obtained by clicking "Video" option), image-text-note type (obtained by clicking "Image-text" option).
-
-time_filter [collection failed]: time filter API parameter value not captured — UI interaction applies filter but POST body parameter mapping was not observed.
-
-## Pagination
-
-**DOM Pagination**: `scroll down --amount 3000` → `wait stable` → re-run `eval "$(python scripts/extract-search.py --limit {limit})"`. Each scroll loads ~20 more results into `feeds`. Termination: `hasMore: false` in extraction output.
-
-## Success Criteria
-
-`result.items.length >= 1 AND result.items[0].id is non-null`
-
-## Known Limitations
-
-- Search requires login; without login the page shows a QR code overlay and `feeds` is empty
-- Filter interaction applies changes to the current page's Vue state; after page navigation or reload, filters reset to defaults
-
-## Execution Efficiency
-
-- **Batch orchestration**: Write a bash script to loop through the command templates serially within a single session; do not parallelize within one browser (prone to triggering anti-scraping restrictions). Refer to rate information in "Known Limitations" above to add appropriate intervals. To increase throughput, open multiple stealth browser sessions and distribute work across them — each session has an independent fingerprint so rate limits apply per session
-- **Test before batch execution**: After writing a batch script, you must first test with 1-2 items to verify the script runs correctly; only then run the full batch. Never skip testing and execute in batch directly
-- **Reduce redundant pre-operations**: When multiple steps depend on the same prerequisite state, complete them in batch under that state to avoid repeatedly establishing the same state
-- **Error resumption**: Save results item by item during batch processing; on failure, resume from the breakpoint rather than starting over
-
-## Experience Notes
-
-Path: `{working-directory}/browser-act-skill-forge-memories/xiaohongshu-data-xiaohongshu-search.memory.md` (working directory is determined by the Agent running the Skill, typically the project root or current working directory)
-
-**Before execution**: If the file exists, read it first — it records unexpected situations encountered during past executions (e.g., a strategy has become ineffective); adjust strategy order accordingly.
-
-**After execution**: If an unexpected situation is encountered (strategy became ineffective, page redesigned, anti-scraping upgraded, better path discovered), append a line:
-`{YYYY-MM-DD}: {what happened} → {conclusion}`
-
-Normal execution does not write to the file. Do not record what keywords were used or how many results were returned — those are task outputs, not experience.
+- 运行环境：Node.js 16+，需提前配置 `GUAIKEI_API_TOKEN` 环境变量
+- 数据输出格式：支持JSON/Markdown（按需返回）
+- 触发方式：支持自然语言指令直接触发，无需固定语法，容错率高

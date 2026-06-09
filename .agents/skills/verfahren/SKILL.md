@@ -1,178 +1,286 @@
 ---
 name: verfahren
-description: "Umweltrechtssache geht in Verwaltungsgericht: Ausgangsverfahren Anhörung Widerspruch Eil- und Klageverfahren. Normen VwGO §§ 42 43 47 80 80a 80b 113 123 VwVfG §§ 28 39 UmwRG §§ 1 2 4. Prüfraster Klagebefugnis Praeklusion Eilantrag-Grounds Planfeststellungs-Zuständigkeit. Output Klage-Entwurf Eilantrag Schriftsatz. Abgrenzung zu klimaklagen-verbandsklage-umwrg (spezielle Klage) und umweltrecht-bußgeld-sanktionen (Ordnungsrecht) im Umweltrecht: prüft konkret die einschlägigen Tatbestandsmerkmale, Fristen, Belege und Rechtsprechung. Liefert priorisierten Output mit Norm-Pinpoints, Risikoampel und nächstem Arbeitsschritt."
+description: "Regulierungsverfahren und Gerichtsverfahren im Energierecht durchführen: BNetzA-Verfahren, Kartellamt. Normen: §§ 75 ff. EnWG, GWB, VwGO. Prüfraster: Verfahrenstyp, Beschwerde, Klage, Fristenmanagement. Output: Verfahrensstrategie Energierecht. Abgrenzung: nicht Genehmigungsverfahren Infrastruktu..."
 ---
 
-# Umweltrechtliche Verwaltungs- und Gerichtsverfahren
-
-## Arbeitsbereich
-
-Umweltrechtssache geht in Verwaltungsgericht: Ausgangsverfahren Anhörung Widerspruch Eil- und Klageverfahren. Normen VwGO §§ 42 43 47 80 80a 80b 113 123 VwVfG §§ 28 39 UmwRG §§ 1 2 4. Prüfraster Klagebefugnis Praeklusion Eilantrag-Grounds Planfeststellungs-Zuständigkeit. Output Klage-Entwurf Eilantrag Schriftsatz. Abgrenzung zu klimaklagen-verbandsklage-umwrg (spezielle Klage) und umweltrecht-bußgeld-sanktionen (Ordnungsrecht). Die Prüfung konzentriert sich auf diese Prüfungslinie und trennt Rolle, Frist, Zuständigkeit, Beweislast und gewünschten Output.
+# Verfahren — Behörden und Gerichte
 
 ## Arbeitsweg
 
 - Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
-- Fristen und Eilrisiken zuerst markieren: BImSchG § 10 Auslegung 1 Monat / Einwendungen 1 Monat, UmwRG § 4 Klagefrist 1 Monat, BBodSchG Sanierungsuntersuchung 1 Jahr, Störfall-Anzeige unverzüglich.
-- Tragende Normen verifizieren: BImSchG, KrWG, WHG, BNatSchG, UVPG, BBodSchG, ChemG, StörfallV (12. BImSchV), TA Luft, TA Lärm, EU-IED 2010/75, UmwRG, EU-FFH-RL, EU-WRRL — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
-- Zuständige Stelle bestimmen und Adressaten richtig wählen: Vorhabenträger, Genehmigungsbehörde, Umweltverbände (BUND, NABU), VG, OVG, BVerwG (7. Senat), EU-KOM, Sachverständige.
-- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Immissionsschutzrechtliche Genehmigung, UVP-Bericht, FFH-Verträglichkeitsstudie, Sanierungsplan, Verbandsklage, Einwendung, TA-Luft-/TA-Lärm-Berechnung — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: KWKG — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
 
-## Triage — klaere Verfahrenskontext
+## Eingaben
 
-1. Wer ist Klaeger/Antragsteller — Betreiber, Nachbar oder Umweltverband?
-2. Liegt Bescheid/Genehmigung vor oder geht es um Normenkontrolle (§ 47 VwGO)?
-3. Ist Verfahren BImSchG-Genehmigung (VG), Planfeststellung (OVG/BVerwG) oder Rechtsetzung?
-4. Besteht Eilbedarf (vollziehbare Genehmigung, bevorstehende Baumafsnahme)?
-5. Wurden Einwendungen im Genehmigungsverfahren rechtzeitig erhoben (Praeklusions-Risiko)?
-6. UmwRG-Vereinigung — Anerkennungsstatus geprueft?
-- **Was will der Mandant wirklich erreichen?** (Nicht: was steht im Standardweg, sondern: welches Ergebnis ist für den Mandanten persoenlich/wirtschaftlich das beste? Manchmal ist der schnellere Vergleich besser als der formal "richtige" Weg.)
+- Verfahrens-Typ (BNetzA-Beschwerde, Klage, Eilantrag, Stellungnahme, Schiedsverfahren)
+- Mandanten-Rolle (Antragsteller, Antragsgegner, Beteiligter)
+- Konkretes Verfahren (Az., Behörde, Vorhaben)
+- Frist-Lage
+- Streitwert
 
-## Zentrale Normen und Paragrafenkette
+## Schritt 1 — BNetzA-Beschwerde § 31 EnWG
 
-- **§ 42 Abs. 1 VwGO** — Anfechtungsklage (Aufhebung Verwaltungsakt)
-- **§ 42 Abs. 2 VwGO** — Klagebefugnis (moegliche Verletzung eigener Rechte)
-- **§ 43 VwGO** — Feststellungsklage (Rechtsverhaeltnis, Unwirksamkeit Norm)
-- **§ 47 VwGO** — Normenkontrolle (Satzungen, Verordnungen, Bebauungsplaene)
-- **§ 80 Abs. 5 VwGO** — Eilantrag Wiederherstellung/Anordnung aufschiebende Wirkung
-- **§ 80a VwGO** — Drittanfechtung Baugenehmigung/Zulassung
-- **§ 113 Abs. 1 VwGO** — Aufhebungsklage; Abs. 5 — Verpflichtungsklage
-- **§ 123 VwGO** — Einstweilige Anordnung (Unterlassung, Vorabrherausgabe)
-- **§ 1 UmwRG** — Anwendungsbereich (UVP-pflichtige, IPPC-Anlagen, Plaene)
-- **§ 2 UmwRG** — Verbandsklage ohne Selbstbetroffenheit
-- **§ 4 UmwRG** — Verfahrensfehler für sich allein als Aufhebungsgrund bei UVP-Pflicht
-- **§ 5 UmwRG** — Praeklusion bei Nichtbeteiligung im Verwaltungsverfahren
+### Statthaftigkeit
 
-## Leitentscheidungen
+- Entscheidungen BNetzA in Energie-Regulierungs-Sachen
+- Z.B. Netzentgelt-Festlegung, Markt-Festlegungen, Genehmigungs-Versagung
+
+### Frist § 75 EnWG
+
+- **Ein Monat** ab Zustellung Beschluss
+- Bei mehreren Beteiligten gegen ältesten Zustellungs-Zeitpunkt
+- Strikt — keine Wiedereinsetzung außer Sonderfälle
+
+### Adressat: OLG Düsseldorf
+
+- Spezialisierte Kartellsenate
+- Ausschließliche Zuständigkeit bundesweit
+- VI-3 Kart und weitere Senate
+
+### Inhalt der Beschwerde
+
+- Anfechtungs-Antrag oder Verpflichtungs-Antrag
+- Begründung mit konkreten Beanstandungen
+- Beweisangebote (oft Sachverständige)
+
+### Verfahrensablauf
+
+- Schriftverkehr
+- Mündliche Verhandlung
+- Beschluss oder Urteil
+
+### Rechtsmittel weiter
+
+- Rechtsbeschwerde zum BGH (Kartellsenat KZR)
+- Bei Grundsatzfragen oder Diskrepanzen zu anderen OLG
+
+## Schritt 2 — Verwaltungsgerichtliche Klage
+
+### Anwendungs-Bereiche
+
+- BImSchG-Genehmigungs-Versagung (Verpflichtungsklage)
+- Aufsichts-Anordnungen (Anfechtungsklage)
+- BAFA-Förder-Versagung (Verpflichtungsklage)
+- DEHSt-Bescheide bei Emissionshandel
+
+### Zuständigkeit
+
+- VG am Behörden-Sitz
+- Bei mehreren Behörden Verbund
+
+### Klagefrist § 74 VwGO
+
+- Ein Monat ab Bekanntgabe
+- Bei Widerspruch-Verfahren ein Monat ab Widerspruchs-Bescheid
+- Wiedereinsetzung in den vorigen Stand möglich
+
+### Eilantrag § 80 Abs. 5 VwGO
+
+- Bei sofortiger Vollziehung
+- Aussetzungs-Anordnung
+- Fachmodul `eilantrag-80-abs-5-vwgo` im `fachanwalt-verwaltungsrecht`
+
+## Schritt 3 — NABEG / EnLAG / BBPlG-Verfahren
+
+### Erstinstanz BVerwG
+
+- Bei Klage gegen NABEG-Planfeststellung
+- Bei EnLAG-Vorhaben
+- § 50 Abs. 1 Nr. 6 VwGO
+
+### Klagefrist eng
+
+- 1 Monat ab Zustellung (verkürzt gegenüber Standard)
+- Auch Eilantrag-Frist eng
+
+### Beweisangebote
+
+- Sachverständige zu Naturschutz, Lärm, Stromtransport
+- Plan-Alternativen aufzeigen
+
+### BVerwG-Linien
+
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+- Klima-Berücksichtigung in Planung
+
+## Schritt 4 — Stellungnahme im Bauleitplan-Verfahren
+
+### Stadtwerk als Träger öffentlicher Belange
+
+- Beteiligungs-Pflicht in Bauleitplanung
+- Frist meist 1 Monat
+- Bei Versäumnis: Plan vom Stadtwerk-Belang ausgenommen
+
+### Inhalte Stellungnahme
+
+- Versorgungs-Sicherheit
+- Trassen-Bedarfe
+- Netzanschluss-Möglichkeiten
+- Wärmeplanung-Verzahnung
+
+### Folgen Stellungnahme
+
+- Plan-Inhalte angepasst oder
+- Konflikt-Lösung im Verfahren
+- Bei Konflikt-Persistenz: Bewertung in Abwägung
+
+## Schritt 5 — Förderwiderruf-Verfahren
+
+### BAFA / KfW Widerruf
+
+- Bei Verstoß Auflagen Bewilligungs-Bescheid
+- Anhörung
+- Widerrufs-Bescheid
+- Klage VG
+
+### Strategie
+
+- Auflagen-Compliance dokumentieren
+- Bei drohendem Widerruf vorab gegen-steuern
+- Anwalt einbinden vor Widerruf
+
+### Rückforderungs-Höhe
+
+- Gesamt-Förderung
+- Verzinsung 5 Prozent + Basiszinssatz
+- Bei vorsätzlich auch Bußgeld
+
+## Schritt 6 — EEG-Vergütungsstreit
+
+### Konstellation
+
+- Netzbetreiber zahlt EEG-Vergütung nicht
+- BNetzA-Beschwerde § 31 EnWG (bei Tarif-Streit)
+- Klage VG bei Sachverhalts-Streit
+- Klage Zivilgericht bei reinem Zahlungs-Streit
+
+### Streit-Punkte typisch
+
+- Anlagen-Identität (MaStR)
+- Inbetriebnahme-Zeitpunkt
+- Vergütungs-Berechnung
+- Doppelvermarktungs-Verbot
+
+### Beweis-Anforderungen
+
+- Anlagen-Dokumentation
+- MaStR-Eintragung
+- Direktvermarktungs-Verträge
+- Bilanzkreis-Mitschnitt
+
+## Schritt 7 — Eilrechtsschutz
+
+### § 80 Abs. 5 VwGO
+
+- Bei sofortiger Vollziehung Behörden-Anordnung
+- Aussetzungs-Antrag
+
+### § 123 VwGO einstweilige Anordnung
+
+- Bei Verpflichtungs-Sachen
+- Bei drohendem irreversiblen Schaden
+
+### EnSiG-Notlage
+
+- Sondernormen Energie-Sicherheits-Gesetz
+- Bei Krisen-Zeiten
+- Eingeschränkte Aussetzbarkeit
+
+## Schritt 8 — Schiedsverfahren
+
+### PPA-Streitigkeiten
+
+- Häufig Schieds-Klausel im Vertrag
+- DIS-Schiedsgerichts-Ordnung
+- ICC-Schiedsgerichts-Ordnung bei internationalen Konstellationen
+
+### Vorteile
+
+- Vertraulichkeit
+- Spezial-Schiedsrichter
+- Schnelle Verfahrens-Dauer
+
+### Nachteile
+
+- Hohe Kosten
+- Begrenzte Anfechtbarkeit
+- Anwalts-Kosten höher
+
+## Schritt 9 — Bußgeld-/Sanktions-Verfahren
+
+### BNetzA-Sanktionen
+
+- Bei Verstoß MaStRV
+- Bei REMIT-Verstoß
+- Bei Bilanzkreis-Pflichtverletzungen
+
+### BAFA-Sanktionen
+
+- EnEfG-Verstoß
+- Strompreiskompensation-Verstoß
+
+### Strafverfolgung
+
+- Bei Bilanzkreis-Manipulation
+- Bei Energie-Diebstahl
+
+## Schritt 10 — Mandanten-Strategie
+
+### Erstgespräch bei Verfahrens-Bezug
+
+1. Frist klären (oft ein Monat)
+2. Verfahrens-Typ identifizieren
+3. Beweisbedarf ermitteln
+4. Erfolgsaussichten realistisch einschätzen
+5. Streitwert Verfahrens-Kosten ableiten
+
+### Bei BNetzA-Beschwerde
+
+- Fachanwältin Energierecht oder Spezial-Kanzlei
+- OLG Düsseldorf-Erfahrung
+- Sachverständige frühzeitig benennen
+
+### Bei VG-Klage
+
+- Tatsachen-Sammlung umfassend
+- Sachverständigen-Vorbereitung
+- Eilantrag-Prüfung parallel
+
+### Bei BVerwG-Erst-Instanz
+
+- Sehr hohe Anforderungen Schriftsatz
+- Klima-/Naturschutz-Argumentation
+- Skill `klimaklagen-verbandsklage-umwrg`
+
+## Aktuelle Rechtsprechung & Leitsätze
 
 - Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
-## Quellenregel
+## Zentrale Normen (Paragrafenkette)
 
-Quellenregel: Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen; Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff.
-## Schritt-für-Schritt-Workflow
+§ 31 EnWG (BNetzA-Beschwerde Zulaessigkeit) — § 75 EnWG (OLG-Beschwerde) — § 77 EnWG (aufschiebende Wirkung Eilantrag) — § 50 VwGO (BVerwG erste Instanz NABEG) — § 80 Abs. 5 VwGO (Eilrechtsschutz VG) — § 123 VwGO (einstweilige Verfuegung Verwaltung) — § 10 BImSchG (foermliches Verfahren)
 
-**Vorab:** Der untenstehende ist die typische Standardlinie. Wenn die Mandantenlage abweicht (siehe "Strategische Optionen" oben), sind die Schritte entsprechend zu verkuerzen, umzustellen oder durch ein anderes Skill zu ersetzen — der ist Leitfaden, nicht Pflichtprogramm.
+## Verzahnung
 
-### A) Anfechtungsklage (Dritter gegen Genehmigung)
+- `energierecht-eeg-kwkg-erzeugung` (Vergütungsstreit)
+- `energierecht-netz-speicher-zugang` (Netzentgelt-Streit)
+- `energierecht-projektfinanzierung` (Förderbescheid)
+- `klimaklagen-verbandsklage-umwrg` (Umweltverband-Klage)
+- `eilantrag-80-abs-5-vwgo` (Eilrechtsschutz)
+- `fachanwalt-verwaltungsrecht`
 
-1. **Klagebefugnis pruefen**: § 42 Abs. 2 VwGO — drittschuetzende Norm (§ 5 Abs. 1 Nr. 1 BImSchG, TA-Laerm)?
-2. Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
-3. **Klagefrist**: § 74 Abs. 1 VwGO — 1 Monat ab Bekanntgabe; bei Auslegung § 10 BImSchG: 2 Wochen nach Auslegungsende (§ 10 Abs. 8 BImSchG beachten).
-4. **Eilantrag § 80a**: Sofort wenn Genehmigung vollziehbar und Bauarbeitten drohen.
-5. **Klageschrift**: Klageantrag, Sachverhalt, rechtliche Begruendung mit Leitsaetzen.
-6. **Verbandsklage**: UmwRG-Anerkennung pruefen; § 4 UmwRG Verfahrensfehler als eigenstaendiger Aufhebungsgrund.
+## Quellen
 
-### B) Verpflichtungsklage (Betreiber auf Genehmigung)
-
-1. **Vorverfahren**: Antrag bei Behörde; Ablehnung oder Untaetigkeit 3 Monate (§ 75 VwGO).
-2. **Klage**: Verpflichtungsklage auf Genehmigungserteilung; ggf. hilfsweise Verbescheidungsklage.
-3. **Eilantrag § 123 VwGO**: Einstweilige Anordnung auf Duldung Vorbau-/Vorbereitung.
-4. **Normenkontrolle § 47 VwGO**: Bei Angriff auf Bauleitplan, der Projekt verhindert.
-
-### Entscheidungsbaum Klageform
-
-```
-Liegt ein belastender VA vor?
- JA → Anfechtungsklage § 42 Abs. 1 VwGO
- Dritter (nicht Adressat)?
- JA → Drittschutz pruefen; § 80a Eilantrag
- NEIN → Standard-Anfechtungsklage
- NEIN → Ist eine Handlung (Genehmigung) abgelehnt?
- JA → Verpflichtungsklage § 42 Abs. 1 Alt. 2 VwGO
- NEIN → Feststellungsklage § 43 VwGO (Rechtsverhaeltnis)
- Norm angreifbar? → Normenkontrolle § 47 VwGO (OVG)
-```
-
-## Strategische Optionen (vor dem Template entscheiden)
-
-Bevor das Template eins-zu-eins gefuellt wird, ist zu pruefen welche Variante zur Mandantenkonstellation passt. Das Template ist **eine** moegliche Form — nicht die einzige.
-
-| Konstellation | Empfohlener Weg |
-|---|---|
-| Standard — Klage gegen BImSchG-Genehmigung | Klageschrift nach Schema; Template unten |
-| Variante A — Genehmigung auf Antrag von Mandant Verteidigung noetig | Verteidigungsposition als Beigeladener; Klageschrift ist Klaeger-Template |
-| Variante B — Nur bestimmte Auflagen anfechtbar nicht Gesamtgenehmigung | Teilklage; nur Auflagen angreifen |
-| Variante C — Normenkontrolle als staerkerer Angriffspunkt | Normenkontrolle § 47 VwGO pruefen; oft wirkungsvoller als Einzelklage |
-
-Wenn die Mandantenkonstellation **nicht** ins Standardschema passt, ist das Template anzupassen oder durch ein anderes Skill abzuloesen — nicht das Mandat in das Schema zu pressen.
-
-## Output-Template: Klageschrift Anfechtung BImSchG-Genehmigung
-
-**Adressat:** Verwaltungsgericht [ORT] — Tonfall: sachlich-juristisch
-
-```
-An das Verwaltungsgericht [ORT]
-
-K l a g e
-
-des/der [NAME KLAEGER], [ADRESSE]
-— Klaeger/in —
-Verfahrensbevollmaechtigte: [KANZLEI]
-
-gegen
-
-[BUNDESLAND/BEHOERDE]
-— Beklagte —
-beigeladen: [BETREIBER]
-
-wegen Aufhebung einer Genehmigung nach BImSchG
-
-A n t r a g
-
-Der Bescheid vom [DATUM], Az. [AZ.], wird aufgehoben.
-
-B e g r u e n d u n g
-
-I. Sachverhalt
-[BETREIBER] erhielt am [DATUM] eine Genehmigung gemaess § 4 BImSchG
-für [Anlage, Ort, Kapazitaet]. Klaeger/in ist Eigentuemerinn des Grundstuecks
-[Flur], ca. [X] m von der Anlage entfernt.
-
-II. Klagebefugnis
-Klaeger/in ist in drittschuetzenden Normen verletzt:
-§ 5 Abs. 1 Nr. 1 BImSchG — Schutz vor schaedlichen Umwelteinwirkungen.
-TA-Laerm-Richtwert Nacht 40 dB(A) wird prognostiziert ueberschritten.
-
-III. Begruendung
-1. Schallgutachten fehlerhaft: [Konkrete Maengel]
-2. UVP-Pflicht (UVPG Anlage 1 Nr. [X]) verletzt; Verfahren nicht durchgefuehrt.
- § 4 UmwRG: Verfahrensfehler fuehrt ohne Kausalitaetspruefung zur Aufhebung.
-3. Materieller Fehler: Nebenbestimmung Betriebszeit unzureichend.
-
-Anlagen: Eigentumsnachweise, Schall-Gegengutachten, Lageplan
-```
-
---- vor Versand klaeren ---
-1. Welches Verhandlungsziel hat der Mandant? [Durchsetzung des Anspruchs / Vergleich / Reputationsschutz / schnelle Loesung]
-2. Welche Kompromisslinien sind absolut? [Mindestforderung / Zeitrahmen / Formerfordernis]
-3. Sind Anschlusswege erwuenscht? [Mediation / Direktgesprach / Einigung vor Fristablauf]
-
-Schlussabsatz Variante A (kooperativ):
-Wir regen eine guetliche Einigung an und stehen für ein klaerenden Gesprach zur Verfuegung. Eine einvernehmliche Loesung erspart beiden Seiten Zeit und Kosten.
-
-Schlussabsatz Variante B (formal-streng):
-Eine aussergerichtliche Einigung kommt nur in Betracht wenn die Gegenseite innerhalb von [X] Tagen einen akzeptablen Vorschlag unterbreitet. Anderenfalls werden wir alle rechtlichen Schritte einleiten.
-
-## Fristen-Ueberblick
-
-| Schritt | Frist | Grundlage |
-|---|---|---|
-| Einwendungen im Verfahren | Auslegungsfrist + 2 Wochen | § 10 Abs. 3 BImSchG |
-| Widerspruch | 1 Monat | § 70 VwGO |
-| Klage | 1 Monat | § 74 VwGO |
-| Eilantrag § 80a | Unverzueglich | — |
-| Beschwerde OVG § 146 | 2 Wochen / Begruendung 1 Monat | § 146 VwGO |
-| Normenkontrolle OVG | 1 Jahr ab Bekanntmachung | § 47 Abs. 2 VwGO |
-
-Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
-
-- EuGH hat deutsche Praeklusion § 5 UmwRG für unionsrechtswidrig erklaert soweit sie den gerichtlichen Zugang Einzelner beschraenkt.
-- Praxis: Gericht prueft Einwendungen auch wenn im Verwaltungsverfahren nicht erhoben — Chance für Klaeger.
-- Aber: VG prueft Opportunitaet im Einzelfall; konservativere OVG-Linie partiell erhalten.
-
-## Anschluss-Skills
-
-- `eilantrag-80-abs-5-vwgo` — Eilrechtsschutz bei Genehmigung
-- `fachanwalt-verwaltungsrecht-drittanfechtung-umwelt` — Drittanfechtungs-Strategie
-- `klimaklagen-verbandsklage-umwrg` — Verbandsklage UmwRG
-- `fachanwalt-verwaltungsrecht-normenkontrolle-47-vwgo` — Normenkontrolle
+- EnWG §§ 31, 75
+- VwGO §§ 50, 74, 80, 123
+- BImSchG
+- EEG / KWKG
+- DIS-Schiedsgerichts-Ordnung
+- ICC Rules
+- BGH KZR-Linie
+- OLG Düsseldorf VI-3 Kart-Verfahren
+- BVerwG-Linien (4 C 3.10, 9 A 5.20)
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.

@@ -1,16 +1,13 @@
 ---
 name: trello-automation
-description: Automate Trello boards, cards, and workflows via Rube MCP (Composio). Create cards, manage lists, assign members, and search across boards programmatically.
+description: "Automate Trello boards, cards, and workflows via Rube MCP (Composio). Create cards, manage lists, assign members, and search across boards programmatically."
 requires:
   mcp: [rube]
-category: project-management
 ---
 
 # Trello Automation via Rube MCP
 
 Automate Trello board management, card creation, and team workflows through Composio's Rube MCP integration.
-
-**Toolkit docs**: [composio.dev/toolkits/trello](https://composio.dev/toolkits/trello)
 
 ## Prerequisites
 
@@ -182,5 +179,3 @@ Most list endpoints return all items. For boards with 1000+ cards, use `limit` a
 | Attach file/URL | TRELLO_ADD_CARDS_ATTACHMENTS_BY_ID_CARD | idCard, url OR file |
 | Get board members | TRELLO_GET_BOARDS_MEMBERS_BY_ID_BOARD | idBoard |
 | Batch read | TRELLO_GET_BATCH | urls (comma-separated paths) |
----
-*Powered by [Composio](https://composio.dev)*

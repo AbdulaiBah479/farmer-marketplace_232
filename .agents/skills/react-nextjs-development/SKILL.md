@@ -1,10 +1,11 @@
 ---
 name: react-nextjs-development
 description: "React and Next.js 14+ application development with App Router, Server Components, TypeScript, Tailwind CSS, and modern frontend patterns."
-category: granular-workflow-bundle
-risk: safe
 source: personal
-date_added: "2026-02-27"
+risk: safe
+domain: frontend-development
+category: granular-workflow-bundle
+version: 1.0.0
 ---
 
 # React/Next.js Development Workflow
@@ -226,8 +227,3 @@ Use @vercel-deployment to deploy Next.js app to production
 - `testing-qa` - Testing workflow
 - `documentation` - Documentation
 - `typescript-development` - TypeScript patterns
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

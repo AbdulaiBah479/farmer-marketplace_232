@@ -1,122 +1,178 @@
 ---
 name: readme-i18n
-description: README 多語言同步。觸發：i18n、翻譯、多語言、sync readme。
+description: Use when the user wants to translate a repository README, make a repo multilingual, localize docs, add a language switcher, internationalize the README, or update localized README variants in a GitHub-style repository.
 ---
 
-# README 國際化 (i18n) 技能
+# README Internationalization (i18n)
 
-## 觸發條件
+Localize a repository `README.md` without breaking the repo mechanics around it.
 
-| 用戶說法 | 觸發 |
-|----------|------|
-| 翻譯 README、sync readme | ✅ |
-| 多語言、i18n | ✅ |
-| README 有變更時 | ✅ 自動觸發 |
+The default job is translate + wire-up:
 
----
+- read the source-of-truth README
+- create localized sibling files such as `README.zh.md`
+- preserve GitHub-flavored Markdown structure and repo-specific tokens
+- add or update a shared language selector near the top of every variant
 
-## 可用工具
+This skill is for multilingual README workflows, not general website/app i18n.
 
-| 操作 | 工具 |
-|------|------|
-| 讀取 README | `read_file()` |
-| 更新 README | `replace_string_in_file()` |
-| 比對差異 | `get_changed_files()` |
+## Inputs
 
----
+Expect these inputs when available:
 
-## 檔案結構
+- source README path, default `README.md`
+- source language, default inferred or English
+- one or more target languages
+- optional glossary or do-not-translate list
+- optional filename override if the repo already uses a different multilingual naming pattern
 
-```
-README.md          # 主 README（英文，Primary）
-README.zh-TW.md    # 繁體中文版本
-```
+If target languages are not named, inspect existing translated files, selectors, filenames, issues, or prior repo conventions. If that still leaves the target languages unclear, ask once. Do not invent target languages.
 
----
+## Defaults And Decision Rules
 
-## 同步方向
+- Treat the root `README.md` as the source-of-truth unless the user explicitly says otherwise.
+- If the source language is ambiguous, ask once. Otherwise assume English.
+- Keep section order aligned with the source README. Only make a small heading wording adjustment when needed to produce a valid localized anchor.
+- Output localized siblings with `README.<bcp47-tag>.md` naming unless the repo already has a different established pattern that should be preserved.
+- Update an existing language selector in place. Do not duplicate it.
+- Translate only human-language content.
+- Preserve project names, package names, commands, CLI flags, option names, environment variables, URLs, file paths, inline code, code fences, HTML attributes, and badge/image URLs.
+- Badge alt text or visible labels may be translated only when the change does not require changing the badge URL, query params, or image source.
+- If a glossary or do-not-translate list is provided, apply it consistently across every target language.
 
-| 情況 | 動作 |
-|------|------|
-| 用戶提供中文 | 同步到英文版 |
-| 用戶提供英文 | 同步到中文版 |
-| README.md 變更 | 同步到 README.zh-TW.md |
+## Workflow
 
----
+### 1. Establish the source README and languages
 
-## 標準工作流程
+- Confirm the source README path. Default to `README.md`.
+- Identify the source language from the file contents and repo context.
+- Determine target languages from the request or existing repo pattern.
+- Note any glossary terms, product names, or phrases that must stay untranslated.
 
-```python
-# 1. 讀取兩個版本
-en_content = read_file("README.md")
-zh_content = read_file("README.zh-TW.md")
+### 2. Audit the Markdown structure before translating
 
-# 2. 比對章節差異
-# - 檢查 ## 標題數量是否一致
-# - 檢查程式碼區塊數量是否一致
+Read the source README once as structure, not prose. Open [`references/preservation-checklist.md`](./references/preservation-checklist.md) and inventory the elements most likely to break:
 
-# 3. 翻譯新增/變更的段落
-# - 技術術語保持一致（見術語表）
-# - 程式碼只翻譯註解
+- headings and heading levels
+- badge rows, shields URLs, and image links
+- tables and alignment rows
+- raw HTML blocks and inline HTML
+- GitHub alerts or admonitions such as `> [!NOTE]`
+- code fences, inline code, commands, and config snippets
+- intra-document anchors such as `(#installation)`
+- relative links to files, docs, screenshots, or other README variants
 
-# 4. 更新對應版本
-replace_string_in_file("README.zh-TW.md", old, new)
-```
+If the README already has localized siblings, inspect them too before choosing filenames or selector style.
 
----
+### 3. Translate only the prose layer
 
-## 術語對照表
+Translate:
 
-| English | 中文 |
-|---------|------|
-| Constitution | 憲法 |
-| Bylaws | 子法 |
-| Skills | 技能 |
-| Memory Bank | 記憶庫 |
-| Domain-Driven Design | 領域驅動設計 |
-| Data Access Layer | 資料存取層 |
-| Workflow | 工作流 |
-| Architecture | 架構 |
+- paragraph text
+- list item prose
+- table cell prose
+- visible text inside HTML blocks
+- image alt text when safe
+- selector labels and other human-facing labels
 
----
+Do not translate:
 
-## 翻譯原則
+- fenced code blocks
+- inline code spans
+- shell commands
+- flags such as `--help`
+- env vars such as `OPENAI_API_KEY`
+- URLs
+- file paths
+- repo/package/project identifiers
+- badge and image URLs
 
-1. **技術術語一致** - 使用術語對照表
-2. **程式碼不翻譯** - 只翻譯註解
-3. **結構對應** - Markdown 結構完全對應
-4. **Emoji 一致** - 兩個版本保持相同
+When in doubt, preserve the literal token and translate the surrounding sentence instead.
 
----
+### 4. Preserve structure while writing the localized README
 
-## 同步檢查清單
+- Keep the same heading hierarchy and section order as the source.
+- Keep the same number of code fences unless the user explicitly asks to rewrite examples.
+- Preserve table shape, list nesting, HTML wrappers, and Markdown comments.
+- Preserve relative links unless a link intentionally needs to point at a localized sibling README.
 
-```markdown
-- [ ] 章節數量一致
-- [ ] 程式碼區塊一致
-- [ ] 連結有效性
-- [ ] 術語一致性
-```
+### 5. Rewrite localized anchors and anchor-dependent links
 
----
+When a translated heading changes, GitHub will generate a different heading ID. After translating headings:
 
-## 輸出範例
+- rewrite every same-file `(#...)` link so it matches the localized heading slug in that file
+- preserve custom explicit anchors such as `<a id="...">` unless the file already uses localized explicit IDs
+- verify that every intra-document anchor target resolves to an existing heading or explicit anchor
 
-```
-🌐 README 國際化同步
+Prefer a small heading wording adjustment over a broken anchor. The section order should still match the source README.
 
-變更來源: README.md
-同步目標: README.zh-TW.md
+### 6. Write sibling files using the repo's naming pattern
 
-變更內容:
-  + ## New Feature → ## 新功能
-  + Installation → 安裝
+Default to sibling filenames like:
 
-✅ 同步完成
-```
+- `README.zh.md`
+- `README.es.md`
+- `README.fr.md`
 
----
+If the repo already uses a different multilingual naming pattern, keep using it consistently rather than forcing the default pattern.
 
-## 相關技能
+### 7. Insert or update the language selector
 
-- `readme-updater` - 基礎 README 更新
+Open [`references/language-selector-reference.md`](./references/language-selector-reference.md) before editing selectors.
+
+Placement:
+
+- keep the selector near the top of the file
+- if the README starts with a title, badges, hero image, or short intro block, place the selector immediately after that opening cluster
+
+Behavior:
+
+- update an existing selector block in place if one already exists
+- if you add a new selector, use the canonical marker comments from the reference file so later runs can update it deterministically
+- emphasize the current language and link the other variants
+- keep selector order and labels consistent across every README variant
+
+### 8. Final verification
+
+Before finishing, verify:
+
+- localized filenames follow the chosen pattern
+- every README variant contains exactly one selector block
+- code fence counts are preserved
+- badge/image URLs and relative file links still point to the original targets unless intentionally localized
+- every `(#...)` link resolves inside its own file
+- the localized README still feels structurally identical to the source
+
+## Output
+
+Produce:
+
+- one localized sibling README per target language
+- an updated selector block in every README variant
+- a brief note to the user covering created or updated files, any assumptions, and any terms intentionally left untranslated
+
+## Maintenance Note
+
+Keep `README.md` as the canonical source unless the user says otherwise. When the source README changes later, update each localized sibling by diffing the changed prose, then re-check selectors, filenames, and anchor links instead of reformatting the whole file from scratch.
+
+## Example Prompts
+
+**Example 1**
+
+`Translate this README into Chinese and add a language switcher. Keep badge URLs, code fences, and all commands exactly as they are.`
+
+**Example 2**
+
+`Make the repo multilingual. Add Spanish and Chinese README variants, keep the internal anchor links working, and wire the selector into every file.`
+
+**Example 3**
+
+`We already have README.zh.md. Add README.es.md and update the existing selector in place instead of adding a second one.`
+
+## Common Mistakes
+
+- Translating fenced code blocks or inline code instead of only the prose around them
+- Duplicating the language selector instead of updating the existing block
+- Translating a heading but forgetting to rewrite same-file `(#...)` links
+- Changing badge URLs or image sources while trying to translate visible labels
+- Reordering sections in the localized README even though the source README is the authority

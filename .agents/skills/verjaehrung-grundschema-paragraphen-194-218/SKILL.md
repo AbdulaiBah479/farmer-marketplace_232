@@ -1,51 +1,77 @@
 ---
 name: verjaehrung-grundschema-paragraphen-194-218
-description: "Prüft Verjährung nach §§ 194 bis 218 BGB: Anspruch, Fristdauer, Fristbeginn, Kenntnis, Hemmung, Neubeginn, Einrede, Nebenrechte und Rücktrittssperre."
+description: "Klausurfall zum Verjährungsrecht nach §§ 194 bis 218 BGB: regelmäßige Verjährungsfrist drei Jahre nach § 195 BGB mit Fristbeginn § 199 BGB, Hemmung §§ 203 bis 213 BGB, Neubeginn § 212 BGB, Einrede der Verjährung und Folge nach § 214 BGB. Prüfraster für Examen."
 ---
 
-# Verjaehrung Grundschema Paragraphen 194 218
+# Verjährung — Grundschema §§ 194 bis 218 BGB
 
-## Zweck
+## Mandantenfall
 
-Verjährung als Durchsetzbarkeitseinwand prüfen.
+- Schadensersatzanspruch aus Werkvertrag — wann begann die Verjährung und ist sie eingetreten?
+- Klage eingereicht kurz vor Ablauf der Verjährungsfrist — Hemmung nach § 204 BGB eingetreten?
+- Klausurkonstellation: Schuldner zahlt Abschlag — Neubeginn der Verjährung nach § 212 BGB?
 
-## Normanker
+## Erste Schritte
 
-§§ 194-218 BGB
+1. Verjährungsfähigkeit prüfen: Anspruch nach § 194 BGB als subjektives Recht gegenüber einer anderen Person.
+2. Zutreffende Verjährungsfrist bestimmen: Regelfrist drei Jahre (§ 195 BGB) oder Sonderfrist.
+3. Fristbeginn nach § 199 Abs. 1 BGB: Entstehung des Anspruchs und Kenntnis bzw. grob fahrlässige Unkenntnis.
+4. Hemmungstatbestände prüfen: Verhandlungen (§ 203 BGB), Klageerhebung (§ 204 BGB), höhere Gewalt (§ 206 BGB).
+5. Neubeginn nach § 212 BGB: Anerkenntnis oder Vollstreckungshandlung.
+6. Rechtsfolge der Verjährung: Einrede nach § 214 BGB — Schuldner kann Leistung verweigern.
 
-## Intake
+## Rechtsrahmen
 
-- Welche Rolle hat die Nutzerin oder der Nutzer: Kanzlei, Rechtsabteilung, Ausbildung, Gerichtsvorbereitung oder Selbststudium?
-- Was ist das konkrete Arbeitsziel: Anspruchsprüfung, Memo, Klausurlösung, Schriftsatzbaustein, Fristenvermerk oder Rückfragenkatalog?
-- Welche Tatsachen sind belegt, welche sind nur Behauptung, welche fehlen noch?
-- Welche Daten, Uhrzeiten, Erklärungen, Vollmachten, Formvorgaben und Fristen sind im Sachverhalt erkennbar?
+- § 195 BGB: Regelmäßige Verjährungsfrist drei Jahre.
+- § 199 Abs. 1 BGB: Beginn der regelmäßigen Verjährungsfrist — Entstehung und Kenntnis.
+- §§ 203 bis 213 BGB: Hemmung der Verjährung.
+- § 212 BGB: Neubeginn der Verjährung.
+- § 214 BGB: Wirkung der Verjährung — Einrederecht des Schuldners.
 
 ## Prüfraster
 
-1. konkreten Anspruch bestimmen
-2. Fristdauer und Beginn ermitteln
-3. Hemmung, Ablaufhemmung und Neubeginn prüfen
-4. Einrede und Folgen für Nebenrechte einordnen
-5. Ergebnis mit Norm, Tatbestandsmerkmal, Subsumtion und Rechtsfolge festhalten.
-6. Offene Tatsachen als Rückfrage formulieren und nicht durch Vermutung ersetzen.
+1. Anspruch verjährungsfähig nach § 194 BGB?
+2. Verjährungsfrist: § 195 BGB (drei Jahre) oder Sonderfrist (z.B. §§ 196 und 197 BGB)?
+3. Fristbeginn: § 199 Abs. 1 BGB — Entstehung des Anspruchs und Kenntnis oder grob fahrlässige Unkenntnis; 31. Dezember des Entstehungsjahres als Jahresschluss.
+4. Hemmung: Relevante Tatbestände aus §§ 203 bis 213 BGB — Dauer der Hemmung berechnen.
+5. Neubeginn nach § 212 BGB: Anerkenntnis oder Vollstreckungsmaßnahme erfolgt?
+6. Ablauf der Verjährungsfrist berechnen unter Berücksichtigung von Hemmung und Neubeginn.
+7. Einrede nach § 214 BGB: Ist Verjährung eingetreten und Einrede erhoben?
 
-## Output
+## Typische Fallstricke
 
-- Kurztriage mit Ampel und nächstem Schritt
-- Prüfung im Gutachtenstil oder als praxisnahes Mandatsmemo
-- Anspruchs- oder Erklärungsmatrix mit Beweisankern
-- Rückfragenliste und optionaler Entwurfsbaustein
+- Verjährung beginnt am 1. Januar nach Anspruchsentstehung und Kenntnis — Jahreswechsel-Trick.
+- Grob fahrlässige Unkenntnis kann Kenntnis ersetzen — objektiver Maßstab, kein subjektiver Vorwurf.
+- Hemmung verlängert, Neubeginn lässt die Frist komplett neu laufen — Unterschied ist klausurrelevant.
+- § 214 BGB gibt nur eine Einrede — Verjährung muss gerügt werden, sie wirkt nicht von Amts wegen.
 
-## Qualitätsregeln
+## Quellen
 
-- BGB-AT-Fragen immer an der passenden Stelle im Anspruchsaufbau prüfen.
-- Auslegung geht regelmäßig vor Anfechtung, Dissens oder Lückenschließung.
-- Keine erfundenen Rechtsprechungs- oder Literaturzitate verwenden; bei Zitaten Primärquelle prüfen.
-- Bei Fristen den Rechenweg sichtbar machen.
-- Bei Wertungen die tragenden Tatsachen ausdrücklich nennen.
+- [§ 195 BGB — gesetze-im-internet.de](https://www.gesetze-im-internet.de/bgb/__195.html)
+- [§ 199 BGB — gesetze-im-internet.de](https://www.gesetze-im-internet.de/bgb/__199.html)
+- [§ 214 BGB — gesetze-im-internet.de](https://www.gesetze-im-internet.de/bgb/__214.html)
+- [dejure.org § 195 BGB](https://dejure.org/gesetze/BGB/195.html)
+- [dejure.org § 199 BGB](https://dejure.org/gesetze/BGB/199.html)
 
-## Anschluss-Skills
+## Vertiefung
 
-- allgemein
-- anspruchsaufbau-zivilrecht-bgb-at
-- bgb-at-output-gutachten-memo-schriftsatz
+### Verjährungsfristen im Überblick
+
+Regelfrist 3 Jahre (§ 195 BGB): Beginnt mit Ende des Jahres der Entstehung und Kenntnis.
+Sonderfristen: § 196 BGB (10 Jahre für Grundstücksrechte), § 197 BGB (30 Jahre für rechtskräftig
+festgestellte Ansprüche, Renten etc.), § 199 Abs. 3 BGB (10 Jahre ohne Kenntnis, 30 Jahre
+absolute Frist für Körperschäden).
+
+### Einrede und Einwendung
+
+§ 214 BGB gibt eine Einrede — der Schuldner muss sie erheben. Das Gericht berücksichtigt
+Verjährung nicht von Amts wegen. Nach Erhebung der Einrede kann der Schuldner die Leistung
+verweigern, auch wenn er noch Eigentum haben würde.
+
+### Klausur-Checkliste Verjährung
+
+- Anspruch entstanden und Fristtyp bestimmt?
+- Fristbeginn: Entstehung und Kenntnis/grob fahrlässige Unkenntnis — 31. Dezember-Regel?
+- Hemmung: §§ 203 bis 213 BGB — welche Tatbestände greifen wie lange?
+- Neubeginn: § 212 BGB — Anerkenntnis oder Vollstreckungshandlung?
+- Einrede nach § 214 BGB: Erhoben und gerichtlich berücksichtigt?

@@ -1,673 +1,550 @@
 ---
 name: ralph
-description: "Autonomous feature development - setup and execution. Triggers on: ralph, set up ralph, run ralph, run the loop, implement tasks. Two phases: (1) Setup - chat through feature, create tasks with dependencies (2) Loop - pick ready tasks, implement, commit, repeat until done."
+description: "Specification-first AI development powered by Ouroboros. Socratic questioning exposes hidden assumptions before writing code. Evolutionary loop (Interview → Seed → Execute → Evaluate → Evolve) runs until ontology converges. Ralph mode persists until verification passes — the boulder never stops. Use when user says \"ralph\", \"ooo\", \"don't stop\", \"must complete\", \"until it works\", \"keep going\", \"interview me\", or \"stop prompting\"."
+allowed-tools: Read Write Bash Grep Glob WebFetch
+metadata:
+  tags: ralph, ouroboros, specification-first, socratic, interview, seed, evaluate, evolve, loop, completion, self-referential, multi-platform, claude, codex, gemini, boulder, ooo
+  platforms: Claude Code, Codex, Gemini-CLI, OpenCode
+  keyword: ralph
+  version: 3.0.0
+  source: Q00/ouroboros
 ---
 
-# Ralph Feature Setup
 
-Interactive feature planning that creates ralph-ready tasks with dependencies.
+# ralph (Ouroboros) — Specification-First AI Development
 
----
-
-## The Job
-
-**Two modes:**
-
-### Mode 1: New Feature
-1. Chat through the feature - Ask clarifying questions
-2. Break into small tasks - Each completable in one iteration
-3. Create task_list tasks - Parent + subtasks with `dependsOn`
-4. Set up ralph files - Save parent ID, reset progress.txt
-
-### Mode 2: Existing Tasks
-1. Find existing parent task - Search or let user specify
-2. Verify structure - Check subtasks have proper `dependsOn`
-3. Set up ralph files - Save parent ID to parent-task-id.txt
-4. Show status - Which tasks are ready, completed, blocked
-
-**Ask the user which mode they need:**
-```
-Are you:
-1. Starting a new feature (I'll help you plan and create tasks)
-2. Using existing tasks (I'll set up Ralph to run them)
-```
+> **Stop prompting. Start specifying.**
+>
+> *"The beginning is the end, and the end is the beginning."*
+> The serpent doesn't repeat — it evolves.
 
 ---
 
-## Step 1: Understand the Feature
+## When to use this skill
 
-Start by asking the user about their feature. Don't assume - ASK:
-
-```
-What feature are you building?
-```
-
-Then ask clarifying questions:
-- What's the user-facing goal?
-- What parts of the codebase will this touch? (database, UI, API, etc.)
-- Are there any existing patterns to follow?
-- What should it look like when done?
-
-**Keep asking until you have enough detail to break it into tasks.**
+- **Before writing any code** — expose hidden assumptions with Socratic interviewing
+- **Long-running tasks** that need autonomous iteration until verified
+- **Vague requirements** — crystallize them into an immutable spec (Ambiguity ≤ 0.2)
+- **Tasks requiring guaranteed completion** — loop until verification passes
+- **When stuck** — 5 lateral thinking personas break through stagnation
+- **Drift detection** — measure how far execution has deviated from original spec
 
 ---
 
-## Step 2: Break Into Tasks
+## Core Architecture: The Loop
 
-**Each task must be completable in ONE Ralph iteration (~one context window).**
+```
+    Interview → Seed → Execute → Evaluate
+        ↑                           ↓
+        └──── Evolutionary Loop ────┘
+```
 
-Ralph spawns a fresh Amp instance per iteration with no memory of previous work. If a task is too big, the LLM runs out of context before finishing.
+Each cycle **evolves**, not repeats. Evaluation output feeds back as input for the next generation until the system converges.
 
-### Right-sized tasks:
-- Add a database column + migration
-- Create a single UI component
-- Implement one server action
-- Add a filter to an existing list
-- Write tests for one module
+### Double Diamond
 
-### Too big (split these):
-- "Build the entire dashboard" → Split into: schema, queries, components, filters
-- "Add authentication" → Split into: schema, middleware, login UI, session handling
-- "Refactor the API" → Split into one task per endpoint
+```
+    ◇ Wonder          ◇ Design
+   ╱  (diverge)      ╱  (diverge)
+  ╱    explore      ╱    create
+ ╱                 ╱
+◆ ──────────── ◆ ──────────── ◆
+ ╲                 ╲
+  ╲    define       ╲    deliver
+   ╲  (converge)     ╲  (converge)
+    ◇ Ontology        ◇ Evaluation
+```
 
-**Rule of thumb:** If you can't describe the change in 2-3 sentences, it's too big.
+The first diamond is **Socratic**: diverge into questions, converge into ontological clarity.
+The second diamond is **pragmatic**: diverge into design options, converge into verified delivery.
 
 ---
 
-## Step 3: Order by Dependencies
+## 1. Commands (Full Reference)
 
-Tasks execute based on `dependsOn`. Earlier tasks must complete before dependent ones start.
-
-**Typical order:**
-1. Schema/database changes (migrations)
-2. Server actions / backend logic
-3. UI components that use the backend
-4. Integration / E2E tests
-
-Use `dependsOn` to express this:
-```
-Task 1: Schema (no dependencies)
-Task 2: Server action (dependsOn: [task-1])
-Task 3: UI component (dependsOn: [task-2])
-Task 4: Tests (dependsOn: [task-3])
-```
-
-Parallel tasks that don't depend on each other can share the same dependency.
+| Command | Trigger Keywords | What It Does |
+|---------|-----------------|--------------|
+| `ooo interview` | `ooo interview`, `interview me`, `clarify requirements`, `socratic questioning` | Socratic questioning → expose hidden assumptions |
+| `ooo seed` | `ooo seed`, `crystallize`, `generate seed`, `freeze requirements` | Crystallize interview into immutable spec (Ambiguity ≤ 0.2) |
+| `ooo run` | `ooo run`, `execute seed`, `ouroboros run` | Execute via Double Diamond decomposition |
+| `ooo evaluate` | `ooo evaluate`, `3-stage check`, `evaluate this`, `verify execution` | 3-stage gate: Mechanical → Semantic → Multi-Model Consensus |
+| `ooo evolve` | `ooo evolve`, `evolutionary loop`, `iterate until converged` | Evolutionary loop until ontology converges (similarity ≥ 0.95) |
+| `ooo unstuck` | `ooo unstuck`, `I'm stuck`, `think sideways`, `lateral thinking` | 5 lateral thinking personas when stuck |
+| `ooo status` | `ooo status`, `am I drifting?`, `drift check`, `session status` | Drift detection + session tracking |
+| `ooo ralph` | `ooo ralph`, `ralph`, `don't stop`, `must complete`, `keep going` | Persistent loop until verified — The boulder never stops |
+| `ooo setup` | `ooo setup` | Register MCP server (one-time) |
+| `ooo help` | `ooo help` | Full reference |
 
 ---
 
-## Step 4: Create Tasks
+## 2. Interview → Specification Flow
 
-### First, create the parent task:
+### Philosophy: From Wonder to Ontology
 
-```
-task_list create
-  title: "[Feature Name]"
-  description: "[One-line description of the feature]"
-  repoURL: "https://github.com/snarktank/untangle"
-```
-
-**Save the returned task ID** - you'll need it for subtasks.
-
-### Then, create subtasks with parentID and dependsOn:
+> *Wonder → "How should I live?" → "What IS 'live'?" → Ontology* — Socrates
 
 ```
-task_list create
-  title: "[Task title - action-oriented]"
-  description: "[Detailed description with:
-    - What to implement
-    - Files to create/modify
-    - Acceptance criteria
-    - How to verify (typecheck, tests, browser)]"
-  parentID: "<parent-task-id>"
-  dependsOn: ["<previous-task-id>"]  // omit for first task
-  repoURL: "https://github.com/snarktank/untangle"
+   Wonder                          Ontology
+     💡                               🔬
+"What do I want?"    →    "What IS the thing I want?"
+"Build a task CLI"   →    "What IS a task? What IS priority?"
+"Fix the auth bug"   →    "Is this the root cause, or a symptom?"
 ```
 
-### Task description format:
-
-Write descriptions that a future Ralph iteration can pick up without context:
+### Step 1: Interview (expose hidden assumptions)
 
 ```
-Implement category name to ID mapping for expenses.
+ooo interview "I want to build a task management CLI"
+```
 
-**What to do:**
-- Create function mapExpenseCategoryNameToId(name, isChildExpense)
-- Query item_category table with category_type filter
-- Add alias mapping for common synonyms (rent → Rent or Mortgage)
+The Socratic Interviewer asks questions until **Ambiguity ≤ 0.2**.
 
-**Files:**
-- workflows/tools/upsert-expense.ts
+**Ambiguity formula:**
+```
+Ambiguity = 1 − Σ(clarityᵢ × weightᵢ)
 
-**Acceptance criteria:**
-- Function returns category ID for valid names
-- Returns null for unknown categories
-- npm run typecheck passes
+Greenfield: Goal(40%) + Constraint(30%) + Success(30%)
+Brownfield: Goal(35%) + Constraint(25%) + Success(25%) + Context(15%)
 
-**Notes:**
-- Follow pattern from upsert-income.ts
-- EXPENSE type for family, CHILD_EXPENSE for child
+Threshold: Ambiguity ≤ 0.2 → ready for Seed
+```
+
+Example scoring:
+```
+Goal:       0.9 × 0.4 = 0.36
+Constraint: 0.8 × 0.3 = 0.24
+Success:    0.7 × 0.3 = 0.21
+                        ──────
+Clarity             = 0.81
+Ambiguity = 1 − 0.81 = 0.19 ≤ 0.2 → ✓ Ready for Seed
+```
+
+### Step 2: Seed (crystallize into immutable spec)
+
+```
+ooo seed
+```
+
+Generates YAML specification:
+```yaml
+goal: Build a CLI task management tool
+constraints:
+  - Python 3.14+
+  - No external database
+  - SQLite for persistence
+acceptance_criteria:
+  - Tasks can be created
+  - Tasks can be listed
+  - Tasks can be marked complete
+ontology_schema:
+  name: TaskManager
+  fields:
+    - name: tasks
+      type: array
+    - name: title
+      type: string
+```
+
+### Step 3: Run (execute via Double Diamond)
+
+```
+ooo run seed.yaml
+ooo run  # uses seed from conversation context
+```
+
+### Step 4: Evaluate (3-stage verification)
+
+```
+ooo evaluate <session_id>
+```
+
+| Stage | Cost | What It Checks |
+|-------|------|----------------|
+| **Mechanical** | $0 | Lint, build, tests, coverage |
+| **Semantic** | Standard | AC compliance, goal alignment, drift score |
+| **Consensus** | Frontier (optional) | Multi-model vote, majority ratio |
+
+Drift thresholds:
+- `0.0 – 0.15` — Excellent: on track
+- `0.15 – 0.30` — Acceptable: monitor closely
+- `0.30+` — Exceeded: course correction needed
+
+---
+
+## 3. Ralph — Persistent Loop Until Verified
+
+```
+ooo ralph "fix all failing tests"
+/ouroboros:ralph "fix all failing tests"
+```
+
+**"The boulder never stops."**
+Each failure is data for the next attempt. Only complete success or max iterations stops it.
+
+### How Ralph Works
+
+```
+┌─────────────────────────────────┐
+│  1. EXECUTE (parallel)          │
+│     Independent tasks           │
+│     concurrent scheduling       │
+├─────────────────────────────────┤
+│  2. VERIFY                      │
+│     Check completion            │
+│     Validate tests pass         │
+│     Measure drift vs seed       │
+├─────────────────────────────────┤
+│  3. LOOP (if failed)            │
+│     Analyze failure             │
+│     Fix identified issues       │
+│     Repeat from step 1          │
+├─────────────────────────────────┤
+│  4. PERSIST (checkpoint)        │
+│     .omc/state/ralph-state.json │
+│     Resume after interruption   │
+└─────────────────────────────────┘
+```
+
+### State File
+
+Create `.omc/state/ralph-state.json` on start:
+```json
+{
+  "mode": "ralph",
+  "session_id": "<uuid>",
+  "request": "<user request>",
+  "status": "running",
+  "iteration": 0,
+  "max_iterations": 10,
+  "last_checkpoint": null,
+  "verification_history": []
+}
+```
+
+### Loop Logic
+
+```
+while iteration < max_iterations:
+    result = execute_parallel(request, context)
+    verification = verify_result(result, acceptance_criteria)
+    state.verification_history.append({
+        "iteration": iteration,
+        "passed": verification.passed,
+        "score": verification.score,
+        "timestamp": <now>
+    })
+    if verification.passed:
+        save_checkpoint("complete")
+        break
+    iteration += 1
+    save_checkpoint("iteration_{iteration}")
+```
+
+### Progress Report Format
+
+```
+[Ralph Iteration 1/10]
+Executing in parallel...
+
+Verification: FAILED
+Score: 0.65
+Issues:
+- 3 tests still failing
+- Type errors in src/api.py
+
+The boulder never stops. Continuing...
+
+[Ralph Iteration 3/10]
+Executing in parallel...
+
+Verification: PASSED
+Score: 1.0
+
+Ralph COMPLETE
+==============
+Request: Fix all failing tests
+Duration: 8m 32s
+Iterations: 3
+
+Verification History:
+- Iteration 1: FAILED (0.65)
+- Iteration 2: FAILED (0.85)
+- Iteration 3: PASSED (1.0)
+```
+
+### Cancellation
+
+| Action | Command |
+|--------|---------|
+| Save checkpoint & exit | `/ouroboros:cancel` |
+| Force clear all state | `/ouroboros:cancel --force` |
+| Resume after interruption | `ooo ralph continue` or `ralph continue` |
+
+---
+
+## 4. Evolutionary Loop (Evolve)
+
+```
+ooo evolve "build a task management CLI"
+ooo evolve "build a task management CLI" --no-execute  # ontology-only, fast mode
+```
+
+### Flow
+
+```
+Gen 1: Interview → Seed(O₁) → Execute → Evaluate
+Gen 2: Wonder → Reflect → Seed(O₂) → Execute → Evaluate
+Gen 3: Wonder → Reflect → Seed(O₃) → Execute → Evaluate
+...until ontology converges (similarity ≥ 0.95) or max 30 generations
+```
+
+### Convergence Formula
+
+```
+Similarity = 0.5 × name_overlap + 0.3 × type_match + 0.2 × exact_match
+Threshold: Similarity ≥ 0.95 → CONVERGED
+
+Gen 1: {Task, Priority, Status}
+Gen 2: {Task, Priority, Status, DueDate}  → similarity 0.78 → CONTINUE
+Gen 3: {Task, Priority, Status, DueDate}  → similarity 1.00 → CONVERGED ✓
+```
+
+### Stagnation Detection
+
+| Signal | Condition | Meaning |
+|--------|-----------|---------|
+| **Stagnation** | Similarity ≥ 0.95 for 3 consecutive gens | Ontology has stabilized |
+| **Oscillation** | Gen N ≈ Gen N-2 (period-2 cycle) | Stuck bouncing between two designs |
+| **Repetitive feedback** | ≥ 70% question overlap across 3 gens | Wonder asking the same things |
+| **Hard cap** | 30 generations reached | Safety valve |
+
+### Ralph in Evolve Mode
+
+```
+Ralph Cycle 1: evolve_step(lineage, seed) → Gen 1 → action=CONTINUE
+Ralph Cycle 2: evolve_step(lineage)       → Gen 2 → action=CONTINUE
+Ralph Cycle 3: evolve_step(lineage)       → Gen 3 → action=CONVERGED ✓
+                                                └── Ralph stops.
+                                                    The ontology has stabilized.
+```
+
+### Rewind
+
+```
+ooo evolve --status <lineage_id>          # check lineage status
+ooo evolve --rewind <lineage_id> <gen_N>  # roll back to generation N
 ```
 
 ---
 
-## Step 5: Set Up Ralph Files
+## 5. The Nine Minds (Agents)
 
-After creating all tasks, **run the shared setup steps from "Final Setup (Required for Both Modes)" section.**
+Loaded on-demand — never preloaded:
 
-This ensures:
-- Parent task ID is saved to `scripts/ralph/parent-task-id.txt`
-- Previous progress.txt is archived if it has content
-- Fresh progress.txt is created with Codebase Patterns preserved
+| Agent | Role | Core Question |
+|-------|------|--------------|
+| **Socratic Interviewer** | Questions-only. Never builds. | *"What are you assuming?"* |
+| **Ontologist** | Finds essence, not symptoms | *"What IS this, really?"* |
+| **Seed Architect** | Crystallizes specs from dialogue | *"Is this complete and unambiguous?"* |
+| **Evaluator** | 3-stage verification | *"Did we build the right thing?"* |
+| **Contrarian** | Challenges every assumption | *"What if the opposite were true?"* |
+| **Hacker** | Finds unconventional paths | *"What constraints are actually real?"* |
+| **Simplifier** | Removes complexity | *"What's the simplest thing that could work?"* |
+| **Researcher** | Stops coding, starts investigating | *"What evidence do we actually have?"* |
+| **Architect** | Identifies structural causes | *"If we started over, would we build it this way?"* |
 
 ---
 
-## Step 6: Confirm Setup
+## 6. Unstuck — Lateral Thinking
 
-Show the user what was created:
+When blocked after repeated failures, choose a persona:
 
 ```
-✅ Ralph is ready!
+ooo unstuck                 # auto-select based on situation
+ooo unstuck simplifier      # cut scope to MVP — "Start with exactly 2 tables"
+ooo unstuck hacker          # make it work first, elegance later
+ooo unstuck contrarian      # challenge all assumptions
+ooo unstuck researcher      # stop coding, find missing information
+ooo unstuck architect       # restructure the approach entirely
+```
 
-**Parent task:** [title] (ID: [id])
-
-**Subtasks:**
-1. [Task 1 title] - no dependencies
-2. [Task 2 title] - depends on #1
-3. [Task 3 title] - depends on #2
-...
-
-**To start Ralph:** Say "run ralph" or "start the loop" - I'll use handoff to execute the first ready task, and each task will hand off to the next until complete.
+**When to use each:**
+- Repeated similar failures → `contrarian` (challenge assumptions)
+- Too many options → `simplifier` (reduce scope)
+- Missing information → `researcher` (seek data)
+- Analysis paralysis → `hacker` (just make it work)
+- Structural issues → `architect` (redesign)
 
 ---
 
-## Mode 2: Setting Up Existing Tasks
+## 7. Platform Installation & Usage
 
-If the user already has tasks created, help them set up Ralph to run them.
-
-### Find the parent task:
-
-**First, check if a parent task is already saved:**
+### Claude Code (Native Plugin — Full Mode)
 
 ```bash
-cat scripts/ralph/parent-task-id.txt
+# Install
+claude plugin marketplace add Q00/ouroboros
+claude plugin install ouroboros@ouroboros
+
+# One-time setup
+ooo setup
+
+# Use
+ooo interview "I want to build a task CLI"
+ooo seed
+ooo run
+ooo evaluate <session_id>
+ooo ralph "fix all failing tests"
 ```
 
-If this file exists and contains a task ID, use it! Verify it's valid by fetching the task:
-```
-task_list action: "get", taskID: "<id-from-file>"
-```
+All `ooo` commands work natively. Hooks auto-activate:
+- `UserPromptSubmit` → keyword-detector.mjs detects triggers
+- `PostToolUse(Write|Edit)` → drift-monitor.mjs tracks deviation
+- `SessionStart` → session initialization
 
-**Only if no saved parent task exists**, ask the user:
-```
-What's the parent task? You can give me:
-- The task ID directly
-- A search term and I'll find it
-- Or say "list recent" to see recent tasks
-```
-
-To search for tasks (always use limit to avoid context overflow):
-```
-task_list list
-  repoURL: "https://github.com/snarktank/untangle"
-  limit: 10
+**Claude Code hooks.json** (installed at `${CLAUDE_PLUGIN_ROOT}/hooks/hooks.json`):
+```json
+{
+  "hooks": {
+    "SessionStart": [{ "matcher": "*", "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/session-start.mjs\"", "timeout": 5 }] }],
+    "UserPromptSubmit": [{ "matcher": "*", "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/keyword-detector.mjs\"", "timeout": 5 }] }],
+    "PostToolUse": [{ "matcher": "Write|Edit", "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/scripts/drift-monitor.mjs\"", "timeout": 3 }] }]
+  }
+}
 ```
 
-### Verify subtasks exist:
+### Codex CLI (Adapted Mode — bash loop)
 
-Once you have the parent ID, check for subtasks (always use limit):
-```
-task_list list
-  parentID: "<parent-task-id>"
-  limit: 10
-```
-
-If no subtasks found, the parent task might BE the work (not a container). Ask:
-```
-This task has no subtasks. Is this:
-1. A parent task with subtasks I should find differently?
-2. The actual work task (I should create it as a parent with this as the first subtask)?
-```
-
-### Check dependencies:
-
-Review the subtasks and verify:
-- Do they have `dependsOn` set correctly?
-- Are there any circular dependencies?
-- Is the first task(s) dependency-free so Ralph can start?
-
-If dependencies are missing, offer to fix:
-```
-These tasks don't have dependencies set. Should I:
-1. Add dependencies based on their order?
-2. Leave them parallel (Ralph picks any ready task)?
-```
-
-### Set up ralph files:
-
-**Run the shared setup steps from "Final Setup (Required for Both Modes)" section below.**
-
-### Show status:
-
-```
-✅ Ralph is ready to use existing tasks!
-
-**Parent task:** [title] (ID: [id])
-
-**Status:**
-- ✅ Completed: 3 tasks
-- 🔄 Ready to work: 2 tasks  
-- ⏳ Blocked: 5 tasks (waiting on dependencies)
-
-**Next task Ralph will pick:**
-[Task title] - [brief description]
-
-**To start Ralph:** Say "run ralph" or "start the loop"
-
----
-
-## Final Setup (Required for Both Modes)
-
-**ALWAYS run these steps after creating tasks OR setting up existing tasks:**
-
-### 1. Save parent task ID:
+Codex CLI has no native AfterAgent hooks. Use the setup script to configure:
 
 ```bash
-echo "<parent-task-id>" > scripts/ralph/parent-task-id.txt
+# Setup
+bash <your-agent-skills>/ralph/scripts/setup-codex-hook.sh
+
+# Restart Codex, then use:
+/prompts:ralph              # load ralph loop context
+/prompts:ouroboros          # load full ouroboros context
+
+# Use ooo commands in conversation:
+ooo interview "build a REST API"
+ooo ralph "fix all TypeScript errors"
 ```
 
-Verify it was saved:
-```bash
-cat scripts/ralph/parent-task-id.txt
+**Codex ralph loop contract:**
+1. Treat `/ralph "<task>" [--completion-promise=TEXT] [--max-iterations=N]` as a contract command
+2. Parse completion signal inside XML: `<promise>VALUE</promise>`
+3. If promise missing and iteration < max-iterations → continue immediately with same original command
+4. If promise found or max-iterations reached → finish with status report
+
+**Completion promise syntax:**
+```xml
+<promise>DONE</promise>
 ```
 
-### 2. Check if progress.txt needs archiving:
+Manual state management for Codex:
+- Create `.omc/state/ralph-state.json` at loop start
+- Update `iteration` counter each cycle
+- Set `status: "complete"` when promise found
+- Default completion promise: `DONE` | Default max iterations: `10`
 
-Read the current progress.txt:
-```bash
-cat scripts/ralph/progress.txt
-```
-
-**Archive if:**
-- It has content beyond the header (learnings from a previous feature)
-- The previous feature is different from the current one
-
-**Archive command:**
-```bash
-DATE=$(date +%Y-%m-%d)
-FEATURE="previous-feature-name-here"
-mkdir -p scripts/ralph/archive/$DATE-$FEATURE
-cp scripts/ralph/progress.txt scripts/ralph/archive/$DATE-$FEATURE/
-echo "Archived to scripts/ralph/archive/$DATE-$FEATURE/"
-```
-
-### 3. Reset progress.txt:
-
-**Preserve useful Codebase Patterns** from the previous run, then reset:
-
-```bash
-cat > scripts/ralph/progress.txt << 'EOF'
-# Ralph Progress Log
-Started: [current date]
-
-## Codebase Patterns
-[Copy any patterns from previous run that are still relevant]
----
-EOF
-```
-
-### 4. Verify setup is complete:
+### Gemini CLI (AfterAgent Hook Mode)
 
 ```bash
-# Confirm parent ID is saved
-cat scripts/ralph/parent-task-id.txt
-
-# Confirm progress.txt is reset
-head -10 scripts/ralph/progress.txt
-
-# List subtasks to confirm they exist
-# (use task_list list with parentID)
+# Install via extensions
+gemini extensions install https://github.com/Q00/ouroboros
+# OR install skills-template
+gemini extensions install https://github.com/supercent-io/skills-template
 ```
 
-**Only after completing all 4 steps is Ralph ready to run.**
+Required in `~/.gemini/settings.json`:
+```json
+{
+  "hooksConfig": { "enabled": true },
+  "context": {
+    "includeDirectories": ["~/.gemini/extensions/ralph"]
+  }
+}
+```
+
+AfterAgent hook for loop continuation (add to `~/.gemini/settings.json`):
+```json
+{
+  "hooks": {
+    "AfterAgent": [{
+      "matcher": "*",
+      "hooks": [{
+        "type": "command",
+        "command": "bash ~/.gemini/hooks/ralph-check.sh",
+        "timeout": 10
+      }]
+    }]
+  }
+}
+```
+
+Run in sandbox + YOLO mode to prevent constant confirmation prompts:
+```bash
+gemini -s -y
+```
+
+Then use `ooo` commands directly:
+```
+ooo interview "build a task CLI"
+ooo ralph "fix all tests"
+```
+
+⚠️ **Gemini v0.30.0 bug**: `stop_hook_active` always `false` in hook JSON.
+Workaround: check `.omc/state/ralph-state.json` directly instead of relying on the hook field.
 
 ---
 
-## Acceptance Criteria for Each Task
+## 8. Platform Support Matrix
 
-Each task description MUST include verifiable acceptance criteria:
-
-### Good criteria (verifiable):
-- "Add `investorType` column to investor table with default 'cold'"
-- "Filter dropdown has options: All, Cold, Friend"
-- "npm run typecheck passes"
-- "npm test -- path/to/test.ts passes"
-
-### Bad criteria (vague):
-- ❌ "Works correctly"
-- ❌ "Good UX"
-- ❌ "Handles edge cases"
-
-### Always include:
-```
-npm run typecheck passes
-```
-
-### For tasks with testable logic:
-```
-npm test passes
-```
-
-### For UI/browser tasks:
-
-**For functional testing** (checking behavior, not appearance):
-```
-Use Chrome DevTools MCP with take_snapshot to read page content (NOT screenshots)
-```
-- `take_snapshot` returns the a11y tree as text that Ralph can read and verify
-- `take_screenshot` returns images which Ralph cannot interpret for functional checks
-- Only use screenshots when testing visual appearance/look and feel
-
-**For visual testing** (checking appearance):
-```
-Use take_screenshot to capture and verify visual appearance
-```
+| Platform | Native Support | Mechanism | ooo Commands | Loop |
+|----------|---------------|-----------|-------------|------|
+| **Claude Code** | ✅ Full | Plugin + hooks | All `ooo` commands | Auto via hooks |
+| **Codex CLI** | 🔧 Adapted | bash + `/prompts:ralph` | Via conversation | Manual state file |
+| **Gemini CLI** | ✅ Native | AfterAgent hook | All `ooo` commands | Auto via hook |
+| **OpenCode** | ✅ Native | Skills system | All `ooo` commands | Auto via loop |
 
 ---
 
-## Example Conversation
+## 9. Quick Reference
 
-**User:** set up ralph for adding expense tracking to the legal agent
-
-**Assistant:** What feature are you building?
-
-**User:** I want Grace (our legal chat agent) to be able to create, update, and delete expenses when users mention them in conversation.
-
-**Assistant:** Got it - an expense upsert tool for the legal agent. A few questions:
-
-1. Are there existing tools in the legal agent I should follow as a pattern?
-2. Do expenses have different types (family vs child)?
-3. Should it also list expenses or just CRUD?
-4. Any task completion logic needed?
-
-**User:** Follow upsert-income.ts. Yes family and child expenses (different tables). Yes list too. Mark APP_EXPENSES_ENTERED task complete.
-
-**Assistant:** Perfect. Here's my proposed breakdown:
-
-1. **Create tool skeleton** - Zod schema, basic structure
-2. **Category mapping** - Map names like "rent" to category IDs
-3. **Amount parsing** - Handle currency formats, allow $0
-4. **Duplicate detection** - Check before creating
-5. **Create family expenses** - Insert into expense table
-6. **Create child expenses** - Insert into child_expense table
-7. **Update action** - Modify existing expenses
-8. **Delete action** - Remove expenses
-9. **List action** - Show all expenses with totals
-10. **Task completion** - Mark APP_EXPENSES_ENTERED done
-11. **Register tool** - Add to legal chat workflow
-12. **UI progress indicator** - Show progress during tool use
-13. **Unit tests** - Test helper functions
-14. **E2E tests** - Test via chat interface
-
-Does this look right? Any tasks to add or remove?
-
-**User:** Looks good, create the tasks
-
-**Assistant:** [Creates parent task, then subtasks with dependencies, saves parent-task-id.txt]
-
-✅ Ralph is ready!
-
-**Parent task:** Legal Agent Expense Upsert Tool (ID: task-abc123)
-
-**Subtasks:** 14 tasks created with dependencies
-
-**To start:** Say "run ralph" or "start the loop"
+| Action | Command |
+|--------|---------|
+| Socratic interview | `ooo interview "topic"` |
+| Generate spec | `ooo seed` |
+| Execute spec | `ooo run [seed.yaml]` |
+| 3-stage evaluate | `ooo evaluate <session_id>` |
+| Evolve until converged | `ooo evolve "topic"` |
+| Persistent loop | `ooo ralph "task"` |
+| Break stagnation | `ooo unstuck [persona]` |
+| Check drift | `ooo status [session_id]` |
+| First-time setup | `ooo setup` |
+| Cancel | `/ouroboros:cancel` |
+| Force cancel + clear | `/ouroboros:cancel --force` |
+| Resume | `ooo ralph continue` |
+| Cancel (Gemini/Codex) | `/ralph:cancel` |
 
 ---
 
-## How Ralph Completes
-
-When all subtasks are completed:
-1. Ralph marks the **parent task** as `completed`
-2. Reports "✅ Build complete - all tasks finished!"
-3. Summarizes what was accomplished
-
-**Important:** Ralph uses `limit: 5` when querying tasks to avoid context overflow. If you have many subtasks, they'll be processed over multiple iterations.
-
----
-
-## Checklist Before Creating Tasks
-
-- [ ] Chatted through feature to understand scope
-- [ ] Each task completable in one iteration (small enough)
-- [ ] Tasks ordered by dependency (schema → backend → UI → tests)
-- [ ] Every task has "npm run typecheck passes" in description
-- [ ] UI tasks have browser verification in description
-- [ ] Descriptions have enough detail for Ralph to implement without context
-- [ ] Parent task ID saved to scripts/ralph/parent-task-id.txt
-- [ ] Previous run archived if progress.txt had content
-
----
-
-# Phase 2: The Execution Loop
-
-Once setup is complete, Ralph runs the autonomous loop to implement tasks one by one.
-
----
-
-## Loop Workflow
-
-### 0. Get the parent task ID
-
-First, read the parent task ID that scopes this feature:
+## 10. Installation
 
 ```bash
-cat scripts/ralph/parent-task-id.txt
+# Claude Code
+claude plugin marketplace add Q00/ouroboros
+claude plugin install ouroboros@ouroboros
+ooo setup
+
+# Codex CLI
+bash <skills>/ralph/scripts/setup-codex-hook.sh
+
+# Gemini CLI (extensions)
+gemini extensions install https://github.com/Q00/ouroboros
+
+# All platforms via skills-template
+npx skills add https://github.com/supercent-io/skills-template --skill ralph
 ```
 
-If this file doesn't exist, ask the user which parent task to work on.
-
-**Check if this is a new feature:** Compare the parent task ID to the one in `scripts/ralph/progress.txt` header. If they differ (or progress.txt doesn't exist), this is a NEW feature - reset progress.txt:
-
-```markdown
-# Build Progress Log
-Started: [today's date]
-Feature: [parent task title]
-
-## Codebase Patterns
-(Patterns discovered during this feature build)
-
----
-```
-
-This ensures each feature starts with a clean slate. Progress.txt is SHORT-TERM memory for the current feature only.
-
-### 1. Check for ready tasks (with nested hierarchy support)
-
-The task hierarchy may have multiple levels (parent → container → leaf tasks). Use this approach to find all descendant tasks:
-
-**Step 1: Get all tasks for the repo**
-```
-task_list action: "list", repoURL: "<repo-url>", ready: true, status: "open", limit: 10
-```
-
-**Important:** Always use `limit` (5-10) to avoid context overflow with many tasks.
-
-**Step 2: Build the descendant set**
-Starting from the parent task ID, collect all tasks that are descendants:
-1. Find tasks where `parentID` equals the parent task ID (direct children)
-2. For each child found, recursively find their children
-3. Continue until no more descendants are found
-
-**Step 3: Filter to workable tasks**
-From the descendant set, select tasks that are:
-- `ready: true` (all dependencies satisfied)
-- `status: "open"` 
-- Leaf tasks (no children of their own) - these are the actual work items
-
-**CRITICAL:** Skip container tasks that exist only to group other tasks. A container task has other tasks with its ID as their `parentID`.
-
-### 2. If no ready tasks
-
-Check if all descendant tasks are completed:
-- Query `task_list list` with `repoURL: "<repo-url>"` (no ready filter)
-- Build the full descendant set (same recursive approach as step 1)
-- If all leaf tasks in the descendant set are `completed`:
-  1. Archive progress.txt:
-     ```bash
-     DATE=$(date +%Y-%m-%d)
-     FEATURE="feature-name-here"
-     mkdir -p scripts/ralph/archive/$DATE-$FEATURE
-     mv scripts/ralph/progress.txt scripts/ralph/archive/$DATE-$FEATURE/
-     ```
-  2. Create fresh progress.txt with empty template
-  3. Clear parent-task-id.txt: `echo "" > scripts/ralph/parent-task-id.txt`
-  4. Commit: `git add scripts/ralph && git commit -m "chore: archive progress for [feature-name]"`
-  5. Mark the parent task as `completed`
-  6. Stop and report "✅ Build complete - all tasks finished!"
-- If some are blocked: Report which tasks are blocked and why
-
-### 3. If ready tasks exist
-
-**Pick the next task:**
-- Prefer tasks related to what was just completed (same module/area, dependent work)
-- If no prior context, pick the first ready task
-
-**Execute the task:**
-
-Use the `handoff` tool with this goal:
-
-```
-Implement and verify task [task-id]: [task-title].
-
-[task-description]
-
-FIRST: Read scripts/ralph/progress.txt - check the "Codebase Patterns" section for important context from previous iterations.
-
-When complete:
-
-1. Run quality checks: `npm run typecheck` and `npm test`
-   - If either fails, FIX THE ISSUES and re-run until both pass
-   - Do NOT proceed until quality checks pass
-
-2. Update AGENTS.md files if you learned something important:
-   - Check for AGENTS.md in directories where you edited files
-   - Add learnings that future developers/agents should know (patterns, gotchas, dependencies)
-   - This is LONG-TERM memory - things anyone editing this code should know
-   - Do NOT add task-specific details or temporary notes
-
-3. Update progress.txt (APPEND, never replace) - this is SHORT-TERM memory for the current feature:
-   ```
-   ## [Date] - [Task Title]
-   Thread: [current thread URL]
-   Task ID: [task-id]
-   - What was implemented
-   - Files changed
-   - **Learnings for future iterations:**
-     - Patterns discovered
-     - Gotchas encountered
-     - Useful context
-   ---
-   ```
-
-4. If you discovered a reusable pattern for THIS FEATURE, add it to the `## Codebase Patterns` section at the TOP of progress.txt
-
-5. Commit all changes with message: `feat: [Task Title]`
-
-6. Mark task as completed: `task_list action: "update", taskID: "[task-id]", status: "completed"`
-
-7. Invoke the ralph skill to continue the loop
-```
-
----
-
-## Progress File Format
-
-```markdown
-# Build Progress Log
-Started: [date]
-Feature: [feature name]
-Parent Task: [parent-task-id]
-
-## Codebase Patterns
-(Patterns discovered during this feature build)
-
----
-
-## [Date] - [Task Title]
-Thread: https://ampcode.com/threads/[thread-id]
-Task ID: [id]
-- What was implemented
-- Files changed
-- **Learnings for future iterations:**
-  - Patterns discovered
-  - Gotchas encountered
----
-```
-
-**Note:** When a new feature starts with a different parent task ID, reset progress.txt completely. Long-term learnings belong in AGENTS.md files, not progress.txt.
-
----
-
-## Task Discovery
-
-While working, **liberally create new tasks** when you discover:
-- Failing tests or test gaps
-- Code that needs refactoring
-- Missing error handling
-- Documentation gaps
-- TODOs or FIXMEs in the code
-- Build/lint warnings
-- Performance issues
-
-Use `task_list action: "create"` immediately. Set appropriate `dependsOn` relationships.
-
----
-
-## Browser Verification
-
-For UI tasks, specify the right verification method:
-
-**Functional testing** (checking behavior, not appearance):
-```
-Use agent-browser with snapshot -i to read page content
-```
-- `agent-browser snapshot -i` returns interactive elements with refs that can be verified
-- Use for: button exists, text appears, form works
-- Example: `agent-browser snapshot -i | grep "Submit"` to verify button exists
-
-**Visual testing** (checking appearance):
-```
-Use agent-browser screenshot to capture and verify visual appearance
-```
-- `agent-browser screenshot tmp/result.png` saves a screenshot
-- Use for: layout, colors, styling, animations
-
----
-
-## Quality Requirements
-
-Before marking any task complete:
-- `npm run typecheck` must pass
-- `npm test` must pass
-- Changes must be committed
-- Progress must be logged
-
----
-
-## Stop Condition
-
-When no ready tasks remain AND all tasks are completed:
-1. Output: "✅ Build complete - all tasks finished!"
-2. Summarize what was accomplished
-
----
-
-## Important Notes
-
-- Always use `ready: true` when listing tasks to only get tasks with satisfied dependencies
-- Always use `limit: 5-10` when listing tasks to avoid context overflow
-- Each handoff runs in a fresh thread with clean context
-- Progress.txt is the memory between iterations - keep it updated
-- Prefer tasks in the same area as just-completed work for better context continuity
-- The handoff goal MUST include instructions to update progress.txt, commit, and re-invoke this skill
+Source: [Q00/ouroboros](https://github.com/Q00/ouroboros) — MIT License

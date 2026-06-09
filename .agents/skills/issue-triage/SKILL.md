@@ -1,112 +1,158 @@
 ---
 name: issue-triage
-description: >
-  Triage a raw, vague issue or bug report into a structured document that names what is known,
-  what is missing, and what to do next. Use when an incoming issue, bug report, or problem
-  description is too vague or incomplete for investigation or planning, and recommend the right
-  next han skill. Does not investigate root causes or trace code paths — use investigate for
-  debugging, diagnosis, and root cause analysis. Does not plan features or build solutions — use
-  plan-a-feature or plan-implementation for that.
-argument-hint: "[issue text, bug report, or path to a report file; optional output path]"
-allowed-tools: Read, Write, Bash(find *), Bash(mkdir *)
+description: GitHub Issue 处理协作流程。当用户收到 issue 需要分析和回复时使用。通过"诊断 → 定性 → 决策 → 回复"四步法，从一个 issue 产出准确的根因分析和得体的用户回复，避免误判问题类型或回复不专业。
 ---
 
-## Project Context
+用户收到了一个 GitHub Issue（bug 报告、疑问、feature request），需要 AI 协助分析问题、判断是否要做、起草回复。AI 全程主导推进，用户只在关键节点做判断。
 
-- CLAUDE.md: !`find . -maxdepth 1 -name "CLAUDE.md" -type f`
-- project-discovery.md: !`find . -maxdepth 3 -name "project-discovery.md" -type f`
+## 核心原则
 
-## Triage Approach
+- **先诊断后开口** — 没看完代码不下结论，没找到根因不定性
+- **对用户诚实** — 是 bug 就认，是架构限制就说清楚，不甩锅也不画饼
+- **量化成本** — "成本高"不是结论，要说清楚高在哪：改几个文件、涉及哪些模块、有没有测试条件
+- **给替代方案** — 不做不等于不管，要告诉用户现在怎么绕过
 
-- Work only from what the reporter wrote. Do not infer facts that are not stated. This is the single most important constraint in this skill.
-- Classify the issue type before doing anything else. The type drives what counts as missing information.
-- Severity and reproducibility are estimates based on what is known. For a Bug, Regression, Performance, or Security issue, mark them Unknown when not inferable. For a Feature Request, Question, or Other issue, omit them entirely when they are not inferable (see Step 4) rather than rendering Unknown.
-- The recommended next step is the single most appropriate han skill (or "clarify with reporter") to run after triage completes.
-- Project context (CLAUDE.md, project-discovery.md) is read only to identify Suspected Areas. Never use it to supply information the reporter omitted.
+## 工作流程
 
-# Issue Triage
+### 第 1 步：获取 Issue 内容
 
-## Step 0: Resolve the Issue Text
+**目标：** 拿到 issue 的完整信息。
 
-Determine the issue text from the argument:
+方法：
+1. 用户提供 issue 链接或仓库地址
+2. 通过 `gh issue view` 或 WebFetch 获取 issue 详情
+3. 提取关键信息：用户环境、复现步骤、期望行为、实际行为、用户的猜测
 
-- If the argument is a path to an existing file, read that file; its contents are the issue text.
-- Otherwise the argument text itself is the issue text.
-- If no argument was given and no issue text is present in the conversation, ask the reporter to paste the issue or bug report, then stop until they provide it.
+**输出：** 向用户简要转述 issue 内容，确认理解无误。
 
-## Step 1: Classify the Issue
+**禁止：** 只看标题就开始分析。必须读完 issue 全文。
 
-Determine the issue type from the report text. Choose exactly one:
+### 第 2 步：代码诊断
 
-- **Bug** — something is broken or behaving unexpectedly
-- **Feature Request** — something new is being asked for
-- **Performance** — the system is too slow, uses too much memory, or degrades under load
-- **Security** — a vulnerability, exposure, or access control concern
-- **Regression** — the reporter explicitly says it used to work and no longer does; quote or paraphrase that statement
-- **Question** — the reporter is asking how something works, not reporting a problem
-- **Other** — none of the above apply
+**目标：** 在代码中找到根因。
 
-## Step 2: Extract What Is Known
+方法：
+1. 从 issue 描述中提取关键词（功能名、错误信息、页面名等）
+2. 在代码中定位相关链路：从前端入口 → IPC 调用 → 后端处理 → 底层实现
+3. 画出完整调用链，标注每个环节的文件和行号
+4. 确认根因：代码哪里出了问题，或者代码为什么不支持用户的场景
 
-From the report, identify:
+**输出：** 向用户展示：
+- 完整调用链（文件 + 行号）
+- 根因的一句话总结
+- 必要时附关键代码片段
 
-- **Summary** — one sentence describing the problem in plain terms
-- **Reported Behavior** — what the reporter said happened, in their words or a close paraphrase
-- **Expected Behavior** — what the reporter said should happen; if not stated, mark Unknown
+**禁止：**
+- 没读代码就猜原因
+- 只看一个文件就下结论（要追完整条链路）
 
-## Step 3: Identify Missing Information
+### 第 3 步：定性
 
-List what a developer would need to reproduce or investigate this issue that is absent from the report. Common gaps by issue type:
+**目标：** 判断这个 issue 属于哪种类型。
 
-- **Bug / Regression** — reproduction steps, environment (OS, browser, version), error messages or stack traces, affected data or user accounts, frequency of occurrence
-- **Performance** — scale or load at which the problem occurs, baseline measurements, environment
-- **Security** — affected endpoints or data, attack surface description, access level required to trigger
-- **Feature Request** — use case or job to be done, success criteria, constraints
-- **Feature Request / Question (problem space not yet decided)** — which options or approaches are in play, prior art, a build-vs-buy choice, or which direction to take, when the reporter is asking to define or scope the problem rather than supplying a missing fact about a direction already chosen
+| 类型 | 判断标准 | 应对策略 |
+|------|---------|---------|
+| Bug | 在产品设计范围内，行为不符合预期 | 排期修复 |
+| 架构限制 | 用户场景超出产品的设计前提 | 解释现状，评估是否值得扩展 |
+| Feature Request | 产品本身没问题，用户想要新能力 | 评估成本和优先级 |
+| 使用问题 | 用户操作方式不对，但产品可以做得更友好 | 回复指引，考虑优化体验 |
 
-List only what is genuinely absent. Do not list information already present in the report. If nothing is missing, write exactly: `None - report has enough to proceed.`
+**关键判断：** 区分"该做但做错了"（bug）和"没打算做"（架构限制/feature）。
 
-## Step 4: Assess Severity and Reproducibility
+**输出：** 向用户说明定性结论和理由，等用户确认后再往下走。
 
-**Severity** (estimate from what is known):
+### 第 4 步：决策（做还是不做）
 
-- **Critical** — data loss, system down, security breach, or blocks all users
-- **High** — major feature broken, significant user impact, no workaround known
-- **Medium** — feature degraded, workaround exists, or affects a subset of users
-- **Low** — cosmetic, edge case, or minor inconvenience
-- **Unknown** — not enough information to assess
+**目标：** 基于根因和定性，给出做/不做的建议。
 
-**Reproducibility** (estimate from what is known):
+#### 评估四个维度
 
-- **Always** — happens consistently under described conditions
-- **Intermittent** — happens sometimes; conditions unclear
-- **Rare** — reported once or infrequently; hard to reproduce
-- **Unknown** — not stated in the report
+1. **改动范围** — 改几行 / 改一个模块 / 新增一个模块
+2. **影响面** — 只动一个文件 / 要改多个文件的调用链 / 要重构
+3. **测试条件** — 有没有环境能复现和验证（没环境 = 高风险）
+4. **用户绕过成本** — 用户自己能不能用其他方式解决
 
-**Omit when inapplicable.** Severity and Reproducibility describe a problem that is occurring. When the issue type is Feature Request, Question, or Other **and** neither is inferable from the report, omit both sections entirely rather than rendering `Unknown` — the same omit-when-not-inferable pattern Step 5 applies to Suspected Areas. For a Bug, Regression, Performance, or Security issue, always render both (as `Unknown` if needed); they are core to triaging a problem.
+#### 决策矩阵
 
-## Step 5: Identify Suspected Areas
+| 改动范围 | 有测试条件 | 用户可绕过 | 建议 |
+|---------|-----------|-----------|------|
+| 小（几行） | 有 | — | 直接修 |
+| 中（一个模块） | 有 | — | 排期做 |
+| 大（新模块/重构） | 有 | 否 | 评估后排期 |
+| 大（新模块/重构） | 没有 | 是 | 记下需求，暂不做 |
+| 任意 | 没有 | 是 | 告知绕过方案，需求记下 |
 
-If the report points to a specific system area, list it. Then, only to sharpen those areas, consult project context: if the `CLAUDE.md` label is non-empty, read it; if the `project-discovery.md` label is non-empty, read it (it is the richer system map when present). Use them to name relevant areas such as upload pipeline, authentication middleware, database migrations, or frontend state management.
+**输出：** 向用户说明建议和理由。如果建议不做，要量化成本（改几个文件、涉及哪些模块、为什么没法测）。
 
-Do not infer areas the report does not point to, and never use project context to supply information the reporter omitted. If both `CLAUDE.md` and `project-discovery.md` are absent or empty, or nothing in the report points to a specific system area, omit the Suspected Areas section entirely and continue.
+**等用户确认决策后，再进入回复环节。**
 
-## Step 6: Determine the Recommended Next Step
+### 第 5 步：起草回复
 
-Decide the single recommendation using the issue type from Step 1 and the gaps from Step 3:
+**目标：** 写一条专业、得体、有信息量的 issue 回复。
 
-- **Bug, Regression, Performance, or Security** — if reproduction steps, environment details (OS, browser, version), or user-impact scope are missing, the recommendation is `Clarify with reporter before proceeding`. Otherwise it is `/investigate`.
-- **Feature Request** — if the Step 3 Missing Information names a problem-space gap (which options or approaches are in play, prior art, a build-vs-buy choice, or which direction to take) rather than a missing user-supplied fact, the recommendation is `/research` — the problem space must be researched before the feature can be specified. Otherwise, if the use case (job to be done) or success criteria are missing, the recommendation is `Clarify with reporter before proceeding`. Otherwise, if the feature is described but not yet specified, it is `/plan-a-feature`; if requirements are already specified, it is `/plan-implementation`.
-- **Question** — if the Step 3 Missing Information names a problem-space gap (options, approaches, prior art, a build-vs-buy choice, or which direction to take), the recommendation is `/research`. Otherwise, if the report plus project context is enough to answer it, the recommendation is `Answer the question directly; no han skill needed`; if not, it is `Clarify with reporter before proceeding`.
-- **Other** — the recommendation is `Clarify with reporter before proceeding`.
+#### 回复结构（三层）
 
-## Step 7: Write the Triage Report
+1. **解释场景定位** — 这个功能是为什么场景设计的，让用户理解"为什么当前不支持"
+2. **给出实际影响** — 对用户来说，没有这个功能影响大不大，有没有替代方案
+3. **说明后续计划** — 如果做，给方向；如果不做，诚实说明成本和原因
 
-Resolve the output path:
+#### 语气原则
 
-- If the user specified an output path, use it.
-- Otherwise use `$HOME/.claude/triages/{kebab-case-summary}.md`, where `{kebab-case-summary}` is the Step 2 Summary lowercased with non-alphanumeric runs replaced by single hyphens.
+- **感谢反馈** — 用户花时间提 issue 值得尊重
+- **不甩锅** — 不说"你用错了"，说"这个场景我们还没覆盖到"
+- **给具体建议** — 不只说"不行"，要告诉用户现在怎么办
+- **量化成本** — 让用户理解不是不想做，是客观上成本高
 
-Run `mkdir -p` on the directory that will contain the file (for the default, `mkdir -p "$HOME/.claude/triages"`). Write the report using the template at [template.md](references/template.md), filling every section from Steps 1-6 and writing the Step 6 result verbatim into Recommended Next Step. Omit the Suspected Areas section if Step 5 determined nothing is inferable, and omit Severity and Reproducibility per the Step 4 omit rule.
+#### 回复模板
 
-Present the completed triage report to the user. When the Recommended Next Step is a han skill (`/investigate`, `/research`, `/plan-a-feature`, or `/plan-implementation`), state plainly that this triage report is the handoff document — the operator passes the report itself to that skill rather than re-summarizing the issue. No separate brief is produced; the report already serves as the handoff.
+```
+Hi @{用户名}，感谢反馈！
+
+**1. 功能定位**
+{这个功能是为什么场景设计的，为什么当前不支持用户的场景}
+
+**2. 对你的实际影响**
+{用户现在能不能绕过，怎么绕过，核心功能是否受影响}
+
+**3. 关于{用户期望的能力}**
+{成本说明 + 后续计划}
+```
+
+**输出：** 回复草稿，等用户确认后发布。
+
+**禁止：**
+- 不经用户确认就直接发布到 GitHub
+- 用技术黑话回复非技术用户
+- 只说结论不解释原因
+
+### 第 6 步：发布
+
+用户确认回复内容后：
+1. 通过 `gh issue comment` 发布评论
+2. 根据定性结果打标签（bug / enhancement / wontfix / question）
+3. 如果需要记录为需求，提醒用户是否要加到需求池
+
+## 过程中的沟通规范
+
+### AI 主导的节奏
+
+1. 每一步完成后主动推进到下一步
+2. 关键结论让用户确认后再往下走（定性、决策、回复内容）
+3. 技术细节 AI 自己搞定，只向用户展示结论
+
+### 必须等用户确认的节点
+
+| 步骤 | 确认什么 |
+|------|---------|
+| 第 1 步 | "issue 内容我理解的对吗？" |
+| 第 3 步 | "这个定性你认同吗？" |
+| 第 4 步 | "这个决策你同意吗？" |
+| 第 5 步 | "回复内容可以发吗？" |
+
+### 不需要问用户的
+
+| 事项 | 直接做 |
+|------|--------|
+| 代码怎么查 | AI 自己追链路 |
+| 根因怎么分析 | AI 自己判断 |
+| 成本怎么量化 | AI 自己评估 |

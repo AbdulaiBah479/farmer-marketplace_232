@@ -22,15 +22,15 @@ const Example = () => {
 
   // Function to chunk text into fake tokens of 3-4 characters
   const chunkIntoTokens = useCallback((text: string): string[] => {
-    const chunks: string[] = [];
+    const tokens: string[] = [];
     let i = 0;
     while (i < text.length) {
       // Random size between 3-4
       const chunkSize = Math.floor(Math.random() * 2) + 3;
-      chunks.push(text.slice(i, i + chunkSize));
+      tokens.push(text.slice(i, i + chunkSize));
       i += chunkSize;
     }
-    return chunks;
+    return tokens;
   }, []);
 
   useEffect(() => {

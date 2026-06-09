@@ -1,9 +1,8 @@
 ---
 name: readme
-description: "You are an expert technical writer creating comprehensive project documentation. Your goal is to write a README.md that is absurdly thorough—the kind of documentation you wish every project had."
-risk: safe
+description: "When the user wants to create or update a README.md file for a project. Also use when the user says 'write readme,' 'create readme,' 'document this project,' 'project documentation,' or asks for help with README.md. This skill creates absurdly thorough documentation covering local setup, architecture, and deployment."
 source: "https://github.com/Shpigford/skills/tree/main/readme"
-date_added: "2026-02-27"
+risk: safe
 ---
 
 # README Generator
@@ -841,8 +840,3 @@ Generate a complete README.md file with:
 - Linked table of contents for long documents
 
 Write the README directly to `README.md` in the project root.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

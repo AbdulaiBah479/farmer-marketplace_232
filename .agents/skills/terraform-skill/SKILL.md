@@ -1,9 +1,12 @@
 ---
 name: terraform-skill
 description: "Terraform infrastructure as code best practices"
-risk: safe
+license: Apache-2.0
+metadata: 
+author: "Anton Babenko"
+version: 1.5.0
 source: "https://github.com/antonbabenko/terraform-skill"
-date_added: "2026-02-27"
+risk: safe
 ---
 # Terraform Skill for Claude
 
@@ -61,7 +64,7 @@ examples/           # Module usage examples (also serve as tests)
 - Use **examples/** as both documentation and integration test fixtures
 - Keep modules small and focused (single responsibility)
 
-**For detailed module architecture, see:** Code Patterns: Module Types & Hierarchy
+**For detailed module architecture, see:** [Code Patterns: Module Types & Hierarchy](references/code-patterns.md)
 
 ### 2. Naming Conventions
 
@@ -165,8 +168,8 @@ var.database_instance_class # Not just "instance_class"
 - IAM policy statements: **set** (use for expressions)
 
 **For detailed testing guides, see:**
-- **Testing Frameworks Guide** - Deep dive into static analysis, native tests, and Terratest
-- **Quick Reference** - Decision flowchart and command cheat sheet
+- **[Testing Frameworks Guide](references/testing-frameworks.md)** - Deep dive into static analysis, native tests, and Terratest
+- **[Quick Reference](references/quick-reference.md#testing-approach-selection)** - Decision flowchart and command cheat sheet
 
 ## Code Structure Standards
 
@@ -222,7 +225,7 @@ variable "environment" {
 }
 ```
 
-**For complete structure guidelines, see:** Code Patterns: Block Ordering & Structure
+**For complete structure guidelines, see:** [Code Patterns: Block Ordering & Structure](references/code-patterns.md#block-ordering--structure)
 
 ## Count vs For_Each: When to Use Each
 
@@ -266,7 +269,7 @@ resource "aws_subnet" "private" {
 }
 ```
 
-**For migration guides and detailed examples, see:** Code Patterns: Count vs For_Each
+**For migration guides and detailed examples, see:** [Code Patterns: Count vs For_Each](references/code-patterns.md#count-vs-for_each-deep-dive)
 
 ## Locals for Dependency Management
 
@@ -308,7 +311,7 @@ resource "aws_subnet" "public" {
 - Ensures correct dependency order without explicit `depends_on`
 - Particularly useful for VPC configurations with secondary CIDR blocks
 
-**For detailed examples, see:** Code Patterns: Locals for Dependency Management
+**For detailed examples, see:** [Code Patterns: Locals for Dependency Management](references/code-patterns.md#locals-for-dependency-management)
 
 ## Module Development
 
@@ -344,8 +347,8 @@ my-module/
 - ✅ Document what consumers should do with each output
 
 **For detailed module patterns, see:**
-- **Module Patterns Guide** - Variable best practices, output design, ✅ DO vs ❌ DON'T patterns
-- **Quick Reference** - Resource naming, variable naming, file organization
+- **[Module Patterns Guide](references/module-patterns.md)** - Variable best practices, output design, ✅ DO vs ❌ DON'T patterns
+- **[Quick Reference](references/quick-reference.md#common-patterns)** - Resource naming, variable naming, file organization
 
 ## CI/CD Integration
 
@@ -364,8 +367,8 @@ my-module/
 4. **Tag all test resources** (track spending)
 
 **For complete CI/CD templates, see:**
-- **CI/CD Workflows Guide** - GitHub Actions, GitLab CI, Atlantis integration, cost optimization
-- **Quick Reference** - Common CI/CD issues and solutions
+- **[CI/CD Workflows Guide](references/ci-cd-workflows.md)** - GitHub Actions, GitLab CI, Atlantis integration, cost optimization
+- **[Quick Reference](references/quick-reference.md#troubleshooting-guide)** - Common CI/CD issues and solutions
 
 ## Security & Compliance
 
@@ -392,7 +395,7 @@ checkov -d .
 - Use least-privilege security groups
 
 **For detailed security guidance, see:**
-- **Security & Compliance Guide** - Trivy/Checkov integration, secrets management, state file security, compliance testing
+- **[Security & Compliance Guide](references/security-compliance.md)** - Trivy/Checkov integration, secrets management, state file security, compliance testing
 
 ## Version Management
 
@@ -426,7 +429,7 @@ terraform init -upgrade     # Updates providers
 terraform plan
 ```
 
-**For detailed version management, see:** Code Patterns: Version Management
+**For detailed version management, see:** [Code Patterns: Version Management](references/code-patterns.md#version-management)
 
 ## Modern Terraform Features (1.0+)
 
@@ -471,7 +474,7 @@ variable "backup_days" {
 }
 ```
 
-**For complete patterns and examples, see:** Code Patterns: Modern Terraform Features
+**For complete patterns and examples, see:** [Code Patterns: Modern Terraform Features](references/code-patterns.md#modern-terraform-features-10)
 
 ## Version-Specific Guidance
 
@@ -492,18 +495,18 @@ variable "backup_days" {
 
 ### Terraform vs OpenTofu
 
-Both are fully supported by this skill. For licensing, governance, and feature comparison, see Quick Reference: Terraform vs OpenTofu.
+Both are fully supported by this skill. For licensing, governance, and feature comparison, see [Quick Reference: Terraform vs OpenTofu](references/quick-reference.md#terraform-vs-opentofu-comparison).
 
 ## Detailed Guides
 
 This skill uses **progressive disclosure** - essential information is in this main file, detailed guides are available when needed:
 
 📚 **Reference Files:**
-- **Testing Frameworks** - In-depth guide to static analysis, native tests, and Terratest
-- **Module Patterns** - Module structure, variable/output best practices, ✅ DO vs ❌ DON'T patterns
-- **CI/CD Workflows** - GitHub Actions, GitLab CI templates, cost optimization, automated cleanup
-- **Security & Compliance** - Trivy/Checkov integration, secrets management, compliance testing
-- **Quick Reference** - Command cheat sheets, decision flowcharts, troubleshooting guide
+- **[Testing Frameworks](references/testing-frameworks.md)** - In-depth guide to static analysis, native tests, and Terratest
+- **[Module Patterns](references/module-patterns.md)** - Module structure, variable/output best practices, ✅ DO vs ❌ DON'T patterns
+- **[CI/CD Workflows](references/ci-cd-workflows.md)** - GitHub Actions, GitLab CI templates, cost optimization, automated cleanup
+- **[Security & Compliance](references/security-compliance.md)** - Trivy/Checkov integration, secrets management, compliance testing
+- **[Quick Reference](references/quick-reference.md)** - Command cheat sheets, decision flowcharts, troubleshooting guide
 
 **How to use:** When you need detailed information on a topic, reference the appropriate guide. Claude will load it on demand to provide comprehensive guidance.
 
@@ -512,8 +515,3 @@ This skill uses **progressive disclosure** - essential information is in this ma
 This skill is licensed under the **Apache License 2.0**. See the LICENSE file for full terms.
 
 **Copyright © 2026 Anton Babenko**
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

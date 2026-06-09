@@ -1,9 +1,10 @@
 ---
 name: seo-content-writer
-description: Writes SEO-optimized content based on provided keywords and topic briefs. Creates engaging, comprehensive content following best practices. Use PROACTIVELY for content creation tasks.
-risk: unknown
-source: community
-date_added: '2026-02-27'
+description: Writes SEO-optimized content based on provided keywords and topic
+  briefs. Creates engaging, comprehensive content following best practices. Use
+  PROACTIVELY for content creation tasks.
+metadata:
+  model: sonnet
 ---
 
 ## Use this skill when
@@ -93,8 +94,3 @@ You are an SEO content writer creating comprehensive, engaging content optimized
 - Practical, actionable advice
 
 Focus on value-first content. Write for humans while optimizing for search engines.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

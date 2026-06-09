@@ -1,9 +1,6 @@
 ---
 name: voice-ai-engine-development
 description: "Build real-time conversational AI voice engines using async worker pipelines, streaming transcription, LLM agents, and TTS synthesis with interrupt handling and multi-provider support"
-risk: unknown
-source: community
-date_added: "2026-02-27"
 ---
 
 # Voice AI Engine Development
@@ -722,8 +719,3 @@ Building a voice AI engine requires:
 - ✅ Proper error handling and graceful shutdown
 
 **The key insight**: Everything must stream and everything must be interruptible for natural, real-time conversations.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

@@ -1,885 +1,115 @@
 ---
 name: automotive-supply-chain
-description: When the user wants to optimize automotive manufacturing supply chains, manage tier suppliers, implement JIT production, or handle automotive-specific logistics. Also use when the user mentions "automotive manufacturing," "OEM supply chain," "tier 1/2/3 suppliers," "sequenced parts delivery," "just-in-time automotive," "vehicle assembly," or "automotive aftermarket." For general manufacturing, see production-scheduling. For lean principles, see lean-manufacturing.
+description: "Automobilzuliefererkette China: Einzelteile und Module aus VR China unter EU-Anti-Dumping-Watch (E-Fahrzeuge), LkSG-Risikoanalyse Tier-1 bis Tier-n, XUAR-Bezüge (Aluminium, Baumwolle, Polysilizium), Dual-Use-Prüfung Elektronik-ECU, EU-Batterie-VO 2023/1542 Supply Chain Due Diligence. Output: Auto..."
 ---
 
-# Automotive Supply Chain
+# Automotive-Lieferkette China: Anti-Dumping/LkSG/Batterie-VO
 
-You are an expert in automotive supply chain management and manufacturing operations. Your goal is to help optimize complex multi-tier supply networks, implement just-in-time delivery, manage supplier relationships, and ensure efficient vehicle assembly operations.
+## Arbeitsweg
 
-## Initial Assessment
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: die im Plugin-Kontext einschlägigen Normen über gesetze-im-internet.de, dejure.org, eur-lex.europa.eu und die amtlichen Bundes-/Landesportale live prüfen — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
 
-Before optimizing automotive supply chains, understand:
+## Fachkern: Automotive-Lieferkette China: Anti-Dumping/LkSG/Batterie-VO
+- **Normen-/Quellenanker:** AWG/AWV, EU-Dual-Use, Sanktionen, Zoll/USt, Incoterms, Lieferkette/LkSG/CSDDD, IP-/Know-how-Schutz, Datenschutz/Cybersecurity und lokale China-Compliance live prüfen.
+- **Entscheidende Weiche:** Ordne Lieferant, Werk, Datenfluss, Zahlungsweg, Exportgut, politisches Risiko, IP-Leck und Exit-Szenario getrennt.
 
-1. **Manufacturing Context**
-   - OEM, Tier 1, Tier 2, or Tier 3 supplier?
-   - Product types? (vehicles, engines, transmissions, components)
-   - Production volume? (high-volume, low-volume, custom)
-   - Manufacturing approach? (make-to-stock, make-to-order, configure-to-order)
-   - Number of platforms/models?
+Dieser Skill begleitet Mandanten und Berater im Wirtschaftsverkehr mit der Volksrepublik China.
+Ausgangspunkt ist der konkrete Mandantenfall; Ergebnis ist stets ein verwertbares Arbeitsprodukt.
 
-2. **Supply Chain Structure**
-   - How many tier suppliers?
-   - Geographic footprint? (local, regional, global)
-   - Sole source vs. multi-source strategy?
-   - In-house vs. outsourced components?
-   - Vertical integration level?
+## Mandantenfall
 
-3. **Current State**
-   - Inventory turns?
-   - Supplier quality metrics (PPM defects)?
-   - On-time delivery performance?
-   - Line stoppage frequency?
-   - Supply chain costs as % of revenue?
+**Fall 1:** Ein Unternehmen fragt nach konkreten Handlungspflichten im Bereich Automotive Supply Chain beim Chinageschaeft.
 
-4. **Business Drivers**
-   - Cost reduction targets?
-   - New model launches?
-   - Electrification strategy (EV transition)?
-   - Reshoring or nearshoring plans?
-   - Sustainability goals?
+**Fall 2:** Eine Rechtsabteilung benötigt einen Prüfbericht zu Automotive Supply Chain für ein laufendes China-Projekt.
 
----
+**Fall 3:** Ein Vorstand bittet um ein Board-Paper zu Automotive Supply Chain im Kontext der De-risking-Strategie.
 
-## Automotive Supply Chain Framework
+## Erste Schritte
 
-### Tier Structure
+1. Sachverhalt und Ziel bestimmen: Was soll im Bereich Automotive Supply Chain geprüft/erstellt werden?
+2. Relevante Normen identifizieren: AWG §§ 55 ff., AWV §§ 55-62a als Ausgangspunkt.
+3. Unterlagen sichten: Verträge, Genehmigungen, Behördenschriftverkehr, interne Richtlinien.
+4. Risikoeinschätzung Automotive Supply Chain: Kritikalitätsbewertung nach De-risking-Matrix.
+5. Maßnahmen priorisieren: Kurzfristige Compliance-Lücken schließen, mittelfristige Strukturmaßnahmen planen.
+6. Dokumentation erstellen: Prüfprotokoll, Risikoampel, Handlungsempfehlung.
 
-**Multi-Tier Supplier Network:**
+## Rechtsrahmen
 
-```
-OEM (Vehicle Manufacturer)
-  ↑
-Tier 1 (System Integrators)
-  ↑ ↑ ↑
-Tier 2 (Component Suppliers)
-  ↑ ↑ ↑ ↑
-Tier 3 (Raw Materials, Basic Parts)
-```
+Verbindliches Recht und anerkannte Soft-Law-Quellen für diesen Skill:
 
-**Tier Definitions:**
+- AWG §§ 55 ff.
+- AWV §§ 55-62a
+- LkSG §§ 3-10
+- EU-VO 2019/452
+- De-risking-Strategie Bundesregierung 2023: Politisch-strategischer Orientierungsrahmen.
+- EU-VO 2019/452: FDI-Kooperationsmechanismus als Referenzrahmen.
+- §§ 3-10 LkSG: Lieferkettensorgfaltspflichten als Querschnittspflicht.
 
-- **OEM (Original Equipment Manufacturer)**: Ford, GM, Toyota, VW, Tesla
-  - Final vehicle assembly
-  - Design and engineering
-  - Brand ownership
-  - Dealer network management
+Quellen sind getrennt nach deutschem Recht, EU-Recht und chinesischem Recht zu handhaben.
+Bei Widersprüchen gilt: Verbindliches Recht geht Soft Law vor; aktueller Stand ist zu prüfen.
 
-- **Tier 1 Suppliers**: Bosch, Continental, Denso, Magna
-  - Major systems and modules (seats, cockpit, powertrain)
-  - Direct delivery to OEM assembly lines
-  - Often sequenced or just-in-time
-  - Design and engineering capability
+## Prüfraster
 
-- **Tier 2 Suppliers**: Component manufacturers
-  - Individual parts and subassemblies
-  - Supply to Tier 1
-  - More standardized products
-  - Limited design input
+Schritt für Schritt abzuarbeiten, Ergebnisse dokumentieren:
 
-- **Tier 3 Suppliers**: Raw materials and commodities
-  - Steel, aluminum, plastics, electronics
-  - Supply to Tier 2 (sometimes Tier 1)
-  - Highly commoditized
+- Ist Automotive Supply Chain-Relevanz für das konkrete Vorhaben gegeben?
+- Welche Normen und Behörden sind zuständig?
+- Bestehen Genehmigungs- oder Meldepflichten?
+- Welche Fristen sind zu beachten?
+- Gibt es De-risking- oder Diversifizierungsanforderungen?
+- Ist die Dokumentation für Behörden und Investoren belastbar?
 
----
+## Typische Fallstricke
 
-## Just-In-Time (JIT) and Sequencing
+Aus der Beratungspraxis: Diese Fehler sollten aktiv vermieden werden.
 
-### JIT Delivery Model
+- Automotive Supply Chain-Relevanz unterschätzt: Regulierungsrahmen wird zu spät geprüft.
+- Fristen versäumt: AWV/BAFA-Fristen sind streng und führen zu Bußgeldern.
+- Dokumentationslücken: Behörden und Gerichte verlangen lückenlose Aufzeichnungen.
 
-```python
-import pandas as pd
-import numpy as np
-from datetime import datetime, timedelta
+## Gegenposition
 
-class AutomotiveJITScheduler:
-    """
-    Manage Just-In-Time delivery schedules for automotive assembly
-    """
+Folgende Gegenargumente sind im Mandantengespräch zu adressieren:
 
-    def __init__(self, assembly_schedule, takt_time_minutes):
-        """
-        Initialize JIT scheduler
+- Behörde (BMWK/BAFA): Behältst du den Ermessensspielraum der Behörde im Blick?
+- Vertragspartner China: Welche Interessen und Risikobewertungen hat die chinesische Seite?
+- Investoren/Aufsichtsrat: Sind ESG- und Menschenrechts-Anforderungen berücksichtigt?
+- Compliance: Wurde auf Exportkontroll- und Sanktions-Risiken geprüft?
 
-        Parameters:
-        - assembly_schedule: vehicle build schedule
-        - takt_time_minutes: time per vehicle (e.g., 60 seconds = 1 vehicle/min)
-        """
-        self.assembly_schedule = assembly_schedule
-        self.takt_time = takt_time_minutes
+## Quellen
 
-    def calculate_part_requirements(self, bom_df):
-        """
-        Calculate part requirements based on assembly schedule
+Nur frei prüfbare Quellen aus erlaubten Domains. Rechtsprechung nur mit Gericht und Datum.
 
-        Parameters:
-        - bom_df: Bill of Materials with parts per vehicle
+- [AWG Volltext](https://www.gesetze-im-internet.de/awg_2013/)
+- [AWV Volltext](https://www.gesetze-im-internet.de/awv_2013/)
+- [BAFA Außenwirtschaft](https://www.bafa.de/DE/Aussenwirtschaft/aussenwirtschaft_node.html)
+- [EU-VO 2019/452 EUR-Lex](https://eur-lex.europa.eu/legal-content/DE/TXT/?uri=CELEX:32019R0452)
+- [LkSG Volltext](https://www.gesetze-im-internet.de/lksg/)
+- [BMWK China-Strategie](https://www.bmwk.de/Redaktion/DE/Artikel/Aussenwirtschaft/china-strategie.html)
 
-        Returns:
-        - time-phased part requirements
-        """
+## Normen und Rechtsprechung
 
-        requirements = []
+### Kuratierte Normen-Bibliothek
 
-        for idx, vehicle in self.assembly_schedule.iterrows():
-            build_time = vehicle['scheduled_time']
-            model = vehicle['model']
-            vin = vehicle['vin']
-
-            # Get BOM for this model
-            model_bom = bom_df[bom_df['model'] == model]
-
-            for _, part in model_bom.iterrows():
-                requirements.append({
-                    'vin': vin,
-                    'model': model,
-                    'part_number': part['part_number'],
-                    'quantity': part['quantity_per_vehicle'],
-                    'required_time': build_time,
-                    'supplier': part['supplier'],
-                    'delivery_lead_time_hours': part['delivery_lead_time_hours']
-                })
-
-        return pd.DataFrame(requirements)
-
-    def generate_supplier_call_off(self, part_requirements, buffer_hours=2):
-        """
-        Generate supplier call-off schedule (when to deliver each part)
-
-        Parameters:
-        - part_requirements: parts needed with timing
-        - buffer_hours: safety buffer before assembly need
-
-        Returns:
-        - supplier delivery schedule
-        """
-
-        call_offs = []
-
-        # Group by supplier and part
-        grouped = part_requirements.groupby(['supplier', 'part_number'])
-
-        for (supplier, part_number), group in grouped:
-            # Sort by required time
-            group = group.sort_values('required_time')
-
-            # Determine delivery frequency
-            lead_time = group['delivery_lead_time_hours'].iloc[0]
-
-            # Calculate delivery windows
-            for idx, row in group.iterrows():
-                required_time = row['required_time']
-                delivery_time = required_time - timedelta(hours=lead_time + buffer_hours)
-
-                call_offs.append({
-                    'supplier': supplier,
-                    'part_number': part_number,
-                    'vin': row['vin'],
-                    'quantity': row['quantity'],
-                    'delivery_time': delivery_time,
-                    'required_time': required_time,
-                    'dock_door': self._assign_dock_door(supplier)
-                })
-
-        call_off_df = pd.DataFrame(call_offs)
-
-        return call_off_df.sort_values('delivery_time')
-
-    def _assign_dock_door(self, supplier):
-        """Assign dock door based on supplier"""
-        # Simplified: hash supplier name to dock door
-        return (hash(supplier) % 20) + 1  # 20 dock doors
-
-    def calculate_lineside_inventory(self, call_offs, consumption_rate):
-        """
-        Calculate lineside inventory levels
-
-        Parameters:
-        - call_offs: delivery schedule
-        - consumption_rate: parts consumed per hour
-
-        Returns:
-        - inventory profile over time
-        """
-
-        # Simulate inventory over time
-        inventory_profile = []
-
-        current_inventory = 0
-        time_periods = pd.date_range(
-            start=call_offs['delivery_time'].min(),
-            end=call_offs['required_time'].max(),
-            freq='H'
-        )
-
-        for t in time_periods:
-            # Add deliveries at this time
-            deliveries = call_offs[call_offs['delivery_time'] == t]['quantity'].sum()
-            current_inventory += deliveries
-
-            # Subtract consumption
-            current_inventory -= consumption_rate
-
-            inventory_profile.append({
-                'time': t,
-                'inventory': max(0, current_inventory),
-                'deliveries': deliveries
-            })
-
-        return pd.DataFrame(inventory_profile)
-
-
-# Example usage
-assembly_schedule = pd.DataFrame({
-    'vin': ['VIN001', 'VIN002', 'VIN003'],
-    'model': ['Model_A', 'Model_B', 'Model_A'],
-    'scheduled_time': pd.to_datetime([
-        '2025-01-20 08:00',
-        '2025-01-20 09:00',
-        '2025-01-20 10:00'
-    ])
-})
-
-bom = pd.DataFrame({
-    'model': ['Model_A', 'Model_A', 'Model_B'],
-    'part_number': ['PART_001', 'PART_002', 'PART_001'],
-    'quantity_per_vehicle': [4, 2, 4],
-    'supplier': ['Supplier_A', 'Supplier_B', 'Supplier_A'],
-    'delivery_lead_time_hours': [4, 2, 4]
-})
-
-scheduler = AutomotiveJITScheduler(assembly_schedule, takt_time_minutes=60)
-requirements = scheduler.calculate_part_requirements(bom)
-call_offs = scheduler.generate_supplier_call_off(requirements, buffer_hours=2)
-
-print("Supplier Call-Off Schedule:")
-print(call_offs[['supplier', 'part_number', 'delivery_time', 'quantity']])
-```
-
-### Sequenced Parts Delivery
-
-**What is Sequencing?**
-- Parts delivered in exact build sequence
-- Example: Seats delivered in order 1-2-3 matching VINs
-- Eliminates sorting at assembly line
-- Requires tight coordination with supplier
-
-```python
-class SequencedPartsManager:
-    """
-    Manage sequenced parts delivery (e.g., seats, cockpits)
-    """
-
-    def __init__(self, build_sequence):
-        self.build_sequence = build_sequence
-
-    def generate_sequenced_order(self, part_specs):
-        """
-        Generate sequenced parts order matching build sequence
-
-        Parameters:
-        - part_specs: specifications for each vehicle (e.g., seat color/material)
-
-        Returns:
-        - sequenced order for supplier
-        """
-
-        sequenced_order = []
-
-        for idx, vehicle in self.build_sequence.iterrows():
-            vin = vehicle['vin']
-            model = vehicle['model']
-
-            # Get part spec for this VIN
-            spec = part_specs[part_specs['vin'] == vin].iloc[0]
-
-            sequenced_order.append({
-                'sequence_number': idx + 1,
-                'vin': vin,
-                'model': model,
-                'part_spec': spec['specification'],
-                'color': spec['color'],
-                'material': spec['material'],
-                'delivery_time': vehicle['scheduled_time'] - timedelta(hours=2)
-            })
-
-        return pd.DataFrame(sequenced_order)
-
-    def validate_sequence(self, delivered_sequence, expected_sequence):
-        """
-        Validate delivered parts match expected sequence
-
-        Returns:
-        - sequence accuracy and errors
-        """
-
-        errors = []
-
-        for i, (delivered, expected) in enumerate(zip(delivered_sequence, expected_sequence)):
-            if delivered['vin'] != expected['vin']:
-                errors.append({
-                    'position': i + 1,
-                    'expected_vin': expected['vin'],
-                    'delivered_vin': delivered['vin'],
-                    'error_type': 'sequence_mismatch'
-                })
-
-            if delivered['spec'] != expected['spec']:
-                errors.append({
-                    'position': i + 1,
-                    'vin': delivered['vin'],
-                    'expected_spec': expected['spec'],
-                    'delivered_spec': delivered['spec'],
-                    'error_type': 'specification_mismatch'
-                })
-
-        accuracy = 1 - (len(errors) / len(expected_sequence))
-
-        return {
-            'accuracy_pct': accuracy * 100,
-            'errors': errors,
-            'error_count': len(errors)
-        }
-```
-
----
-
-## Supplier Quality Management
-
-### PPM (Parts Per Million) Defect Tracking
-
-```python
-class AutomotiveQualityManager:
-    """
-    Track supplier quality performance (PPM defects)
-    """
-
-    def __init__(self, target_ppm=50):
-        """
-        Initialize quality manager
-
-        Parameters:
-        - target_ppm: target defect rate (parts per million)
-        """
-        self.target_ppm = target_ppm
-        self.quality_data = []
-
-    def record_receipt(self, receipt_data):
-        """Record parts receipt and inspection"""
-        self.quality_data.append(receipt_data)
-
-    def calculate_supplier_ppm(self, supplier=None, time_period_days=90):
-        """
-        Calculate PPM for supplier(s)
-
-        Parameters:
-        - supplier: specific supplier (None = all)
-        - time_period_days: rolling time period
-
-        Returns:
-        - PPM metrics by supplier
-        """
-
-        df = pd.DataFrame(self.quality_data)
-
-        # Filter time period
-        cutoff_date = datetime.now() - timedelta(days=time_period_days)
-        df = df[df['receipt_date'] >= cutoff_date]
-
-        # Filter supplier if specified
-        if supplier:
-            df = df[df['supplier'] == supplier]
-
-        # Calculate PPM by supplier
-        supplier_ppm = df.groupby('supplier').agg({
-            'quantity_received': 'sum',
-            'quantity_defective': 'sum'
-        })
-
-        supplier_ppm['ppm'] = (
-            supplier_ppm['quantity_defective'] /
-            supplier_ppm['quantity_received'] * 1000000
-        )
-
-        supplier_ppm['meets_target'] = supplier_ppm['ppm'] <= self.target_ppm
-
-        return supplier_ppm.sort_values('ppm', ascending=False)
-
-    def identify_quality_issues(self):
-        """Identify suppliers with quality problems"""
-
-        ppm_data = self.calculate_supplier_ppm()
-
-        critical_suppliers = ppm_data[ppm_data['ppm'] > self.target_ppm * 3]
-        warning_suppliers = ppm_data[
-            (ppm_data['ppm'] > self.target_ppm) &
-            (ppm_data['ppm'] <= self.target_ppm * 3)
-        ]
-
-        return {
-            'critical_suppliers': critical_suppliers,
-            'warning_suppliers': warning_suppliers,
-            'total_suppliers': len(ppm_data),
-            'compliant_suppliers': len(ppm_data[ppm_data['meets_target']]),
-            'compliance_rate': len(ppm_data[ppm_data['meets_target']]) / len(ppm_data) * 100
-        }
-
-    def generate_corrective_action(self, supplier, issue_description):
-        """Generate corrective action request (CAR)"""
-
-        car = {
-            'car_id': f"CAR_{datetime.now().strftime('%Y%m%d%H%M%S')}",
-            'supplier': supplier,
-            'issue_date': datetime.now(),
-            'issue_description': issue_description,
-            'current_ppm': self.calculate_supplier_ppm(supplier)['ppm'].iloc[0],
-            'target_ppm': self.target_ppm,
-            'required_actions': [
-                'Root cause analysis within 48 hours',
-                'Containment plan immediate',
-                'Corrective action plan within 1 week',
-                'Effectiveness validation within 30 days'
-            ],
-            'status': 'open'
-        }
-
-        return car
-
-
-# Example
-qm = AutomotiveQualityManager(target_ppm=50)
-
-# Record receipts
-qm.record_receipt({
-    'receipt_date': datetime.now() - timedelta(days=10),
-    'supplier': 'Supplier_A',
-    'part_number': 'PART_001',
-    'quantity_received': 10000,
-    'quantity_defective': 3
-})
-
-qm.record_receipt({
-    'receipt_date': datetime.now() - timedelta(days=5),
-    'supplier': 'Supplier_B',
-    'part_number': 'PART_002',
-    'quantity_received': 5000,
-    'quantity_defective': 8
-})
-
-ppm = qm.calculate_supplier_ppm()
-print("Supplier PPM:")
-print(ppm)
-
-issues = qm.identify_quality_issues()
-print(f"\nCompliance Rate: {issues['compliance_rate']:.0f}%")
-```
-
----
-
-## EV Supply Chain Considerations
-
-### Electric Vehicle Transition
-
-**Supply Chain Differences:**
-
-**Traditional ICE (Internal Combustion Engine) Vehicle:**
-- ~30,000 parts
-- Complex powertrain (engine, transmission, exhaust)
-- Mature supplier base
-- Established processes
-
-**Electric Vehicle (EV):**
-- ~20,000 parts (simpler)
-- Battery pack (40-50% of vehicle cost)
-- Electric motors and inverters
-- New supplier base
-- Battery supply chain critical
-
-```python
-class EVSupplyChainAnalyzer:
-    """
-    Analyze EV vs. ICE supply chain differences
-    """
-
-    def __init__(self):
-        self.ice_bom_cost = 25000  # Average ICE vehicle BOM cost
-        self.ev_bom_cost = 35000   # Average EV vehicle BOM cost
-
-    def compare_cost_structures(self):
-        """Compare ICE vs. EV cost structures"""
-
-        ice_structure = {
-            'powertrain': 0.25,  # 25% - engine, transmission
-            'body_chassis': 0.30,
-            'electronics': 0.15,
-            'interior': 0.20,
-            'other': 0.10
-        }
-
-        ev_structure = {
-            'battery_pack': 0.40,  # 40% - massive cost driver
-            'electric_motor': 0.05,
-            'power_electronics': 0.10,
-            'body_chassis': 0.25,
-            'electronics': 0.10,
-            'interior': 0.08,
-            'other': 0.02
-        }
-
-        comparison = pd.DataFrame({
-            'ICE_pct': ice_structure,
-            'EV_pct': ev_structure,
-            'ICE_cost': {k: v * self.ice_bom_cost for k, v in ice_structure.items()},
-            'EV_cost': {k: v * self.ev_bom_cost for k, v in ev_structure.items()}
-        })
-
-        return comparison
-
-    def analyze_battery_supply_chain(self, battery_capacity_kwh, cell_chemistry='NMC'):
-        """
-        Analyze battery supply chain requirements
-
-        Parameters:
-        - battery_capacity_kwh: battery pack size (kWh)
-        - cell_chemistry: NMC (Nickel Manganese Cobalt) or LFP (Lithium Iron Phosphate)
-
-        Returns:
-        - material requirements
-        """
-
-        # Material requirements per kWh (kg)
-        if cell_chemistry == 'NMC':
-            materials = {
-                'lithium': 0.8,
-                'nickel': 1.2,
-                'cobalt': 0.2,
-                'manganese': 0.3,
-                'graphite': 1.0,
-                'copper': 1.5,
-                'aluminum': 2.0
-            }
-        elif cell_chemistry == 'LFP':
-            materials = {
-                'lithium': 0.6,
-                'iron': 1.0,
-                'phosphate': 0.8,
-                'graphite': 1.0,
-                'copper': 1.2,
-                'aluminum': 1.8
-            }
-
-        # Calculate total materials
-        total_materials = {
-            material: amount * battery_capacity_kwh
-            for material, amount in materials.items()
-        }
-
-        # Estimate costs ($/kg)
-        material_costs = {
-            'lithium': 30,
-            'nickel': 18,
-            'cobalt': 35,
-            'manganese': 2,
-            'iron': 0.50,
-            'phosphate': 1.50,
-            'graphite': 8,
-            'copper': 9,
-            'aluminum': 2.5
-        }
-
-        total_material_cost = sum(
-            total_materials.get(mat, 0) * cost
-            for mat, cost in material_costs.items()
-        )
-
-        return {
-            'battery_capacity_kwh': battery_capacity_kwh,
-            'cell_chemistry': cell_chemistry,
-            'materials_kg': total_materials,
-            'material_cost': total_material_cost,
-            'cost_per_kwh': total_material_cost / battery_capacity_kwh
-        }
-
-
-# Example
-analyzer = EVSupplyChainAnalyzer()
-
-cost_comparison = analyzer.compare_cost_structures()
-print("Cost Structure Comparison:")
-print(cost_comparison)
-
-battery_analysis = analyzer.analyze_battery_supply_chain(
-    battery_capacity_kwh=75,
-    cell_chemistry='NMC'
-)
-
-print(f"\nBattery Materials for 75 kWh pack:")
-print(f"Lithium: {battery_analysis['materials_kg']['lithium']:.1f} kg")
-print(f"Total Material Cost: ${battery_analysis['material_cost']:,.0f}")
-print(f"Cost per kWh: ${battery_analysis['cost_per_kwh']:.0f}")
-```
-
----
-
-## Automotive-Specific Performance Metrics
-
-### Key Performance Indicators
-
-```python
-class AutomotiveKPITracker:
-    """
-    Track automotive supply chain KPIs
-    """
-
-    def __init__(self):
-        self.kpis = {}
-
-    def calculate_inventory_turns(self, annual_cogs, avg_inventory):
-        """Inventory turnover (target: 15-20 for automotive)"""
-        turns = annual_cogs / avg_inventory
-        self.kpis['inventory_turns'] = turns
-        return turns
-
-    def calculate_dock_to_dock_time(self, total_cycle_time_hours):
-        """Dock-to-dock time (supplier dock to customer dock)"""
-        self.kpis['dock_to_dock_hours'] = total_cycle_time_hours
-        return total_cycle_time_hours
-
-    def calculate_otd(self, on_time_deliveries, total_deliveries):
-        """On-Time Delivery (target: >99%)"""
-        otd = on_time_deliveries / total_deliveries * 100
-        self.kpis['otd_pct'] = otd
-        return otd
-
-    def calculate_line_stoppage_rate(self, stoppages, production_hours):
-        """Line stoppages per 1000 production hours"""
-        rate = (stoppages / production_hours) * 1000
-        self.kpis['line_stoppage_per_1000hrs'] = rate
-        return rate
-
-    def generate_scorecard(self, benchmarks):
-        """Generate KPI scorecard with benchmarks"""
-
-        scorecard = []
-
-        for kpi, value in self.kpis.items():
-            benchmark = benchmarks.get(kpi, {})
-
-            if 'target' in benchmark:
-                if 'higher_better' in benchmark and benchmark['higher_better']:
-                    status = 'green' if value >= benchmark['target'] else 'red'
-                else:
-                    status = 'green' if value <= benchmark['target'] else 'red'
-            else:
-                status = 'unknown'
-
-            scorecard.append({
-                'kpi': kpi,
-                'actual': value,
-                'target': benchmark.get('target', 'N/A'),
-                'status': status
-            })
-
-        return pd.DataFrame(scorecard)
-
-
-# Example
-tracker = AutomotiveKPITracker()
-
-tracker.calculate_inventory_turns(annual_cogs=50000000, avg_inventory=2500000)
-tracker.calculate_otd(on_time_deliveries=9950, total_deliveries=10000)
-tracker.calculate_line_stoppage_rate(stoppages=5, production_hours=2000)
-
-benchmarks = {
-    'inventory_turns': {'target': 15, 'higher_better': True},
-    'otd_pct': {'target': 99, 'higher_better': True},
-    'line_stoppage_per_1000hrs': {'target': 3, 'higher_better': False}
-}
-
-scorecard = tracker.generate_scorecard(benchmarks)
-print("Automotive Supply Chain Scorecard:")
-print(scorecard)
-```
-
----
-
-## Tools & Technologies
-
-### Automotive Supply Chain Software
-
-**Tier 1 Supplier Management:**
-- **SAP Automotive**: Integrated supply chain for automotive
-- **Oracle E-Business Suite**: Automotive-specific modules
-- **Kinaxis RapidResponse**: S&OP for automotive
-- **Blue Yonder**: Supply chain planning and execution
-- **Coupa Supply Chain Design**: Network optimization
-
-**Supplier Collaboration:**
-- **SupplyOn**: Automotive supplier network (BMW, VW, Continental)
-- **Elemica**: Supply chain collaboration
-- **E2open**: Multi-tier visibility
-- **Llamasoft**: Supply chain modeling
-
-**Quality Management:**
-- **IQMS**: Manufacturing ERP with quality
-- **TrackWise**: Quality and compliance
-- **MasterControl**: Supplier quality management
-- **ETQ Reliance**: CAPA and quality
-
-### Python Libraries
-
-```python
-# Supply chain optimization
-from pulp import *
-import pyomo.environ as pyo
-
-# Data analysis
-import pandas as pd
-import numpy as np
-
-# Visualization
-import matplotlib.pyplot as plt
-import seaborn as sns
-import plotly.express as px
-
-# Machine learning for forecasting
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.linear_model import LinearRegression
-```
-
----
-
-## Common Challenges & Solutions
-
-### Challenge: Single-Source Supply Risk
-
-**Problem:**
-- Critical part from single supplier
-- Plant shutdown if supplier fails
-- High negotiating leverage for supplier
-
-**Solutions:**
-- Dual-source strategy (at least 30/70 split)
-- Safety stock for critical parts
-- Supplier financial monitoring
-- Contract manufacturing agreements
-- Vertical integration for critical components
-
-### Challenge: Long Lead Times for New Tools/Dies
-
-**Problem:**
-- Tooling lead times 6-12 months
-- Delays new model launches
-- High capital costs
-
-**Solutions:**
-- Early supplier involvement (ESI)
-- Concurrent engineering
-- Rapid prototyping and testing
-- Modular tooling design
-- Digital simulation before physical tooling
-
-### Challenge: Managing 1,000+ Suppliers
-
-**Problem:**
-- Complexity managing multi-tier network
-- Lack of visibility to Tier 2/3
-- Quality issues from sub-tier
-
-**Solutions:**
-- Supplier tiering and segmentation
-- Multi-tier visibility platforms
-- Supplier scorecards and audits
-- Supplier development programs
-- Strategic supplier reductions (consolidation)
-
-### Challenge: EV Battery Supply Constraints
-
-**Problem:**
-- Limited battery cell production capacity
-- Competition for lithium, cobalt, nickel
-- Price volatility
-- Geographic concentration (China)
-
-**Solutions:**
-- Long-term supply agreements (offtake contracts)
-- Vertical integration (own battery plants)
-- Diversify cell suppliers and chemistries
-- Recycling programs (circular economy)
-- Alternative chemistries (LFP, solid-state)
-
----
-
-## Output Format
-
-### Automotive Supply Chain Report
-
-**Executive Summary:**
-- Plant: Detroit Assembly (Model A, Model B)
-- Daily Production: 1,000 vehicles
-- Tier 1 Suppliers: 120
-- Inventory Turns: 18.5 (target: 15+)
-- OTD Performance: 98.5% (target: 99%)
-- Quality: 42 PPM (target: <50 PPM)
-- Line Stoppages: 2.1 per 1000 hrs (target: <3)
-
-**Supply Chain Performance:**
-
-| Metric | Actual | Target | Status |
-|--------|--------|--------|--------|
-| Inventory Turns | 18.5 | 15+ | ✓ Green |
-| OTD% | 98.5% | 99% | ⚠ Yellow |
-| Quality (PPM) | 42 | <50 | ✓ Green |
-| Line Stoppages | 2.1 | <3 | ✓ Green |
-| Dock-to-Dock Time | 4.2 hrs | <6 hrs | ✓ Green |
-
-**Supplier Quality (Top Issues):**
-
-| Supplier | Part | PPM | Status | Action |
-|----------|------|-----|--------|--------|
-| Supplier_X | PART_123 | 285 | Critical | CAR issued |
-| Supplier_Y | PART_456 | 110 | Warning | Under review |
-| Supplier_Z | PART_789 | 45 | Good | Monitor |
-
-**JIT Delivery Performance:**
-
-| Supplier | Deliveries | On-Time | Early | Late | Performance |
-|----------|------------|---------|-------|------|-------------|
-| Supplier_A | 250 | 248 | 1 | 1 | 99.2% |
-| Supplier_B | 180 | 175 | 3 | 2 | 97.2% |
-| Supplier_C | 300 | 300 | 0 | 0 | 100% |
-
-**Action Items:**
-1. Address Supplier_X quality issue (285 PPM) - CAR in progress
-2. Improve OTD from 98.5% to 99% - focus on 3 underperforming suppliers
-3. Complete EV battery supplier qualification for Model C launch
-4. Implement Tier 2 visibility platform for critical components
-
----
-
-## Questions to Ask
-
-If you need more context:
-1. OEM or Tier 1/2/3 supplier?
-2. What products/components are manufactured?
-3. Production volume and model complexity?
-4. Current supply chain structure and key metrics?
-5. JIT delivery in place?
-6. Supplier quality performance (PPM)?
-7. Any EV products or transition plans?
-8. Major supply chain challenges or pain points?
-
----
-
-## Related Skills
-
-- **production-scheduling**: For assembly line scheduling
-- **lean-manufacturing**: For waste elimination and continuous improvement
-- **capacity-planning**: For production capacity management
-- **supplier-selection**: For supplier evaluation and qualification
-- **supplier-risk-management**: For supply continuity
-- **quality-management**: For quality systems and SPC
-- **inventory-optimization**: For safety stock and inventory policies
-- **master-production-scheduling**: For MPS development
-- **demand-forecasting**: For production planning
+- § 3-10 LkSG
+- § 299 StGB
+- § 2 LkSG
+- § 1 AWG
+- § 3 PatG
+- § 8 LkSG
+- § 4 LkSG
+- § 17 AWG
+- § 143 MarkenG
+- § 3-5 LkSG
+- § 5-6 LkSG
+- § 5 LkSG
+
+### Leitentscheidungen
+
+- BVerfGE Band 6 Rn 32 (Lüth, Drittwirkung der Grundrechte)
+- BVerwG 6 C 12.21 (Maßstab Verwaltungsentscheidung)
+- BGH GSZ 1/14 (richterliche Rechtsfortbildung)

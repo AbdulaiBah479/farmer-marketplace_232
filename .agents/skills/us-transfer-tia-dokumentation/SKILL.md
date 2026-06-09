@@ -128,14 +128,6 @@ Erzeuge auf Wunsch ein zusammenhängendes Paket:
 7. **Antwortbaustein für Aufsichtsbehörde**.
 8. **Wiedervorlage- und Monitoringplan**.
 
-## Qualitätsregeln
-
-- Keine erfundenen DPF-Listungen. Wenn nicht live geprüft, Ausgabe als `nicht verifiziert` kennzeichnen.
-- Keine pauschale Aussage "USA immer unzulässig" oder "DPF immer ausreichend".
-- Keine SCC umschreiben. Die offiziellen Klauseln unverändert verwenden; nur Modulwahl, Anlagen und Dokumentation vorbereiten.
-- Beschäftigtendaten und Mandats-/Berufsgeheimnisdaten gesondert markieren.
-- Bei KI-Diensten zusätzlich `mandantendaten-ki`, `ki-verordnung-compliance` oder `ki-vo-ai-act-pruefer` vorschlagen.
-
 ## Quellen und Aktualität
 
 - Stand: 05/2026.

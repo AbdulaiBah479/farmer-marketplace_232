@@ -1,16 +1,20 @@
 ---
 name: postgres-best-practices
 description: "Postgres performance optimization and best practices from Supabase. Use this skill when writing, reviewing, or optimizing Postgres queries, schema designs, or database configurations."
-risk: safe
+license: MIT
+metadata:
+  author: supabase
+  version: "1.0.0"
+risk: unknown
 source: community
-date_added: "2026-02-27"
 ---
 
 # Supabase Postgres Best Practices
 
 Comprehensive performance optimization guide for Postgres, maintained by Supabase. Contains rules across 8 categories, prioritized by impact to guide automated query optimization and schema design.
 
-## When to Use
+## When to Apply
+
 Reference these guidelines when:
 - Writing SQL queries or designing schemas
 - Implementing indexes or query optimization
@@ -54,10 +58,5 @@ Each rule file contains:
 
 For the complete guide with all rules expanded: `AGENTS.md`
 
-### When to Use
+## When to Use
 This skill is applicable to execute the workflow or actions described in the overview.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

@@ -3,14 +3,11 @@ name: stripe-automation
 description: "Automate Stripe tasks via Rube MCP (Composio): customers, charges, subscriptions, invoices, products, refunds. Always search tools first for current schemas."
 requires:
   mcp: [rube]
-category: ecommerce
 ---
 
 # Stripe Automation via Rube MCP
 
 Automate Stripe payment operations through Composio's Stripe toolkit via Rube MCP.
-
-**Toolkit docs**: [composio.dev/toolkits/stripe](https://composio.dev/toolkits/stripe)
 
 ## Prerequisites
 
@@ -199,6 +196,3 @@ Stripe uses smallest currency unit:
 | Payment methods | STRIPE_LIST_CUSTOMER_PAYMENT_METHODS | customer |
 | Checkout session | STRIPE_CREATE_CHECKOUT_SESSION | line_items |
 | List payment intents | STRIPE_LIST_PAYMENT_INTENTS | customer |
-
----
-*Powered by [Composio](https://composio.dev)*

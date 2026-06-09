@@ -1,13 +1,9 @@
 ---
 name: musik-app-bei
-description: "Datenbankrecht für Musik-, Film- und Bildarchive: §§ 87a-87e UrhG für Mediendatenbanken, Schichtenschutz (Datenbankherstellerrecht + Urheberrecht an Einzelwerken), Lizenzmodelle für Stock-Media-Portale und Verwertungsgesellschaften (GEMA, VGBild), TDM-Schranken und Einzel-Metadaten-Schutz. Erstellt Medienlizenz-Konzept und Herstellerrechts-Gutachten für Contentportale im Datenbankrecht: prüft konkret die einschlägigen Tatbestandsmerkmale, Fristen, Belege und Rechtsprechung. Liefert priorisierten Output mit Norm-Pinpoints, Risikoampel und nächstem Arbeitsschritt."
+description: "Datenbankrecht für Musik-, Film- und Bildarchive: §§ 87a-87e UrhG für Mediendatenbanken, Schichtenschutz (Datenbankherstellerrecht + Urheberrecht an Einzelwerken), Lizenzmodelle für Stock-Media-Portale und Verwertungsgesellschaften (GEMA, VGBild), TDM-Schranken und Einzel-Metadaten-Schutz. Erstel..."
 ---
 
 # Datenbankrecht für Musik-, Film- und Bildarchive — Mediendatenbanken
-
-## Arbeitsbereich
-
-Datenbankrecht für Musik-, Film- und Bildarchive: §§ 87a-87e UrhG für Mediendatenbanken, Schichtenschutz (Datenbankherstellerrecht + Urheberrecht an Einzelwerken), Lizenzmodelle für Stock-Media-Portale und Verwertungsgesellschaften (GEMA, VGBild), TDM-Schranken und Einzel-Metadaten-Schutz. Erstellt Medienlizenz-Konzept und Herstellerrechts-Gutachten für Contentportale. Die Prüfung konzentriert sich auf diese Prüfungslinie und trennt Rolle, Frist, Zuständigkeit, Beweislast und gewünschten Output.
 
 ## Arbeitsweg
 
@@ -58,14 +54,6 @@ Datenbankrecht für Musik-, Film- und Bildarchive: §§ 87a-87e UrhG für Medien
 - Metadaten-Entnahme kann Datenbankherstellerrecht verletzen, auch wenn keine Bilder übernommen werden.
 - IPTC-Metadaten-Opt-out (XMP-Creator-Tag) wird von vielen KI-Crawlern nicht respektiert — zusätzliche technische Sperren nötig.
 - Leistungsschutzrecht der Tonträgerhersteller (§ 85 UrhG) ist separat von Datenbankrecht zu lizenzieren.
-
-## Output
-
-- Schichtenschutz-Analyse für Mediendatenbank (Datenbankrecht + Urheberrecht + Leistungsschutz)
-- TDM-Opt-out-Implementierungsguide für Bild- und Musikdatenbanken (IPTC-Standard)
-- Stock-Media-Lizenzvertrag-Vorlage (Editorial / Kommerziell / Abo)
-- Verwertungsgesellschafts-Schnittstellen-Übersicht (GEMA / VGBild-Kunst)
-- Verletzungsklage-Strategie für Mediendatenbank-Scraping
 
 ## Quellen
 

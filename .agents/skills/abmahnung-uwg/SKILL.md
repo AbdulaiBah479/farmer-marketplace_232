@@ -1,161 +1,282 @@
 ---
 name: abmahnung-uwg
-description: "Unterstützt beim Verfassen und Prüfen von UWG-Abmahnungen nach § 13 UWG sowie der dazugehörigen modifizierten Unterlassungserklärung mit Vertragsstrafe und der Schutzschrift. Lädt, wenn ein Mandat eine wettbewerbsrechtliche Abmahnung, eine strafbewehrte Unterlassungserklärung oder eine Schutzschrift zum Gegenstand hat."
+description: "UWG-Abmahnung prüfen versenden oder auf Eingang reagieren: § 8 UWG Unterlassungsanspruch §§ 3 4 5 UWG Verbotsgrunde §§ 12 13 UWG Durchsetzung. Prüfraster: Verletzungshandlung Abmahnberechtigung Fris..."
 ---
 
-# UWG-Abmahnung – Erstellung und Prüfung
+# UWG-Abmahnung prüfen versenden oder auf Eingang reagieren
 
-## Zweck
 
-Dieser Skill unterstützt Rechtsanwält:innen bei der Ausarbeitung einer wettbewerbsrechtlichen
-Abmahnung nach § 13 UWG, der Formulierung einer modifizierten Unterlassungserklärung (sog.
-„Hamburger Brauch") und der Erstellung einer Schutzschrift gegen eine drohende einstweilige
-Verfügung. Anwendungsfelder sind Verstöße gegen §§ 3 ff. UWG (irreführende Werbung,
-vergleichende Werbung, aggressive Geschäftspraktiken), Verletzungen von Kennzeichenrechten im
-lauterkeitsrechtlichen Kontext sowie Verstöße gegen § 5a UWG (Informationspflichten).
+## Arbeitsweg
 
-## Eingaben
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: die im Plugin-Kontext einschlägigen Normen über gesetze-im-internet.de, dejure.org, eur-lex.europa.eu und die amtlichen Bundes-/Landesportale live prüfen — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
 
-Das Modell benötigt folgende Informationen:
+**Fokus:** UWG-Abmahnung prüfen versenden oder auf Eingang reagieren. § 8 UWG Unterlassungsanspruch §§ 3 4 5 UWG Verbotsgrunde §§ 12 13 UWG Durchsetzung. Prüfraster: Verletzungshandlung Abmahnberechtigung Fristen UE Vertragsstrafe Kosten. Output: Abmahnschreiben oder Erwiderung modifizierte UE Kostennote. Abgrenzung: nicht für Markenrecht (fachanwalt-gewerblicher-rechtsschutz-markenanmeldung).
 
-1. **Wettbewerbsverstoß**: konkrete Handlung (Anzeigentext, Screenshot, URL, Beschreibung)
-2. **Verletzter und Verletzer**: vollständige Firmierung, Rechtsform, Sitz
-3. **Abmahnender**: Partei (Mitbewerber, Verband § 8 Abs. 3 Nr. 2 UWG oder qualifizierte
-   Einrichtung § 8 Abs. 3 Nr. 3 UWG) – Sachlegitimation prüfen!
-4. **Fristsetzung**: gewünschte Unterlassungsfrist (üblicherweise 1–2 Wochen)
-5. **Vertragsstrafe**: gewünschte Höhe oder Bitte um Vorschlag (Orientierung: GRUR-Praxis,
-   typisch EUR 5.001 bis EUR 15.000 je nach Branche und Verletzungsgewicht)
-6. **Schutzschrift**: liegt ein konkreter Verfügungsantrag vor oder nur eine vorbeugend
-   einzureichende Schutzschrift?
+## Mandantenfragen beim Kaltstart
 
-## Rechtlicher Rahmen
+1. Welcher konkrete Wettbewerbsverstoß liegt vor — irreführende Werbung (§ 5 UWG), Rechtsbruch (§ 3a UWG), Spam (§ 7 UWG), aggressive Handlung (§ 4a UWG) oder vergleichende Werbung (§ 6 UWG)?
+2. Ist die Mandantschaft aktivlegitimiert nach § 8 Abs. 3 UWG — besteht ein konkretes Wettbewerbsverhältnis, oder ist sie qualifizierter Verband?
+3. Wann erlangte die Mandantschaft Kenntnis vom Verstoß — Verjährung 6 Monate nach § 11 UWG läuft?
+4. Wurde die Mandantschaft bereits abgemahnt, oder plant sie die Abmahnung der Gegenseite?
+5. Liegt der Verdacht eines missbräuchlichen Abmahnens der Gegenseite vor (§ 8c UWG) — Massenabmahnungen, übersetzte Vertragsstrafe?
+6. Hat die Gegenseite eine Schutzschrift beim Zentralen Schutzschriftenregister hinterlegt?
+7. Besteht UWG-Anspruchskonkurrenz mit Marken- oder Designrecht?
+8. Welcher Streitwert und damit welche Kostenrisiken sind realistisch?
+- **Was will der Mandant wirklich erreichen?** (Nicht: was steht im Standardweg, sondern: welches Ergebnis ist für den Mandanten persoenlich/wirtschaftlich das beste? Manchmal ist der schnellere Vergleich besser als der formal "richtige" Weg.)
 
-### Normen
+## Rechtsgrundlagen
 
-- **§§ 3, 3a, 5, 5a, 7 UWG** – Verbotstatbestände
-- **§ 8 Abs. 1 UWG** – Beseitigungs- und Unterlassungsanspruch
-- **§ 8 Abs. 3 UWG** – Anspruchsberechtigte (Mitbewerber, Verbände, qualifizierte Einrichtungen)
-- **§ 13 UWG** – formale Anforderungen der Abmahnung (Pflichtinhalt seit UWG-Reform 2021)
-- **§ 13a UWG** – Gegenanspruch des Abgemahnten bei unberechtigter Abmahnung
-- **§ 14 UWG** – Zuständigkeit (i. d. R. LG am Sitz des Verletzers oder des Verletzten)
-- **§ 11 UWG** – Verjährung (6 Monate ab Kenntnis bei Ansprüchen nach §§ 8, 9 Abs. 1, 13 Abs. 3 UWG; Höchstfristen nach § 11 Abs. 3 und 4 UWG)
-- **§ 339 BGB** – Vertragsstrafe; **§ 242 BGB** – Herabsetzungsrecht bei unverhältnismäßiger
-  Strafe (sog. Korrektivklausel)
+| Norm | Inhalt |
+|------|--------|
+| § 3 Abs. 1 UWG | Verbot unlauterer geschäftlicher Handlungen |
+| § 3a UWG | Rechtsbruchtatbestand: Verstoß gegen Marktverhaltensregel |
+| § 4 Nr. 3 UWG | Mitbewerberschutz: Nachahmungsschutz (ergänzender Leistungsschutz) |
+| § 4a UWG | Aggressive geschäftliche Handlungen |
+| § 5 UWG | Irreführende Werbung: objektiv unrichtige oder zur Täuschung geeignete Angaben |
+| § 5a UWG | Irreführung durch Unterlassen wesentlicher Informationen |
+| § 6 UWG | Vergleichende Werbung: zulässig wenn objektiv, nicht irreführend, nicht verunglimpfend |
+| § 7 UWG | Unzumutbare Belästigung: E-Mail-Spam, Kalt-Telefonate, Briefkastenwerbung |
+| § 8 Abs. 1 UWG | Unterlassungs- und Beseitigungsanspruch |
+| § 8 Abs. 3 UWG | Aktivlegitimation: Mitbewerber (Nr. 1), qualifizierte Wirtschaftsverbände (Nr. 2), qualifizierte Verbraucherverbände (Nr. 3), Kammern (Nr. 4) |
+| § 8b UWG | Qualifizierte Einrichtungen und Verbände (Liste beim BfJ) |
+| § 8c UWG | Rechtsmissbräuchliche Abmahnung: Indizien, Rechtsfolgen (keine Kostenerstattung) |
+| § 9 UWG | Schadensersatz bei Verschulden; § 9 Abs. 2 bei Verbraucherbeeinträchtigung |
+| § 11 UWG | Verjährung: Unterlassungsanspruch 6 Monate ab Kenntnis; Schadensersatz 3 Jahre §§ 195, 199 BGB |
+| § 12 Abs. 1 UWG | Dringlichkeitsvermutung für einstweilige Verfügung |
+| § 13 Abs. 3 UWG | Aufwendungsersatz für Abmahnkosten (bei berechtigter Abmahnung) |
+| § 13 Abs. 4 UWG | Ausschluss Aufwendungsersatz bei bestimmten Online-Handel-/Datenschutzverstößen |
+| § 14 UWG | Gerichtliche Zuständigkeit: LG am Ort der gewerblichen Niederlassung; fliegender Gerichtsstand eingeschränkt |
 
-### Leitentscheidungen
+## Leitentscheidungen
 
-- BGH, Urt. v. 17.07.2008 – I ZR 219/05, GRUR 2008, 996 – „Clone-CD": Anforderungen an die
-  Wiederholungsgefahr und die Beseitigungswirkung einer Unterlassungserklärung; eine
-  eingeschränkt abgegebene UE beseitigt die Wiederholungsgefahr nur für den konkret bezeichneten
-  Verletzungsfall.
-- BGH, Urt. v. 11.06.2015 – I ZR 7/14, GRUR 2016, 526 – „Fressnapf": Zur Auslegung der
-  Reichweite einer strafbewehrten Unterlassungserklärung; der Gläubiger muss konkret
-  beschreiben, welche zukünftigen Handlungen erfasst sein sollen.
-- BGH, Urt. v. 26.01.2017 – I ZR 217/15, GRUR 2017, 918 Rn. 12 – „Vollständigkeit der
-  Abmahnung": Die Abmahnung muss die beanstandete Verletzungshandlung so klar bezeichnen, dass
-  der Abgemahnte die Berechtigung prüfen kann; andernfalls ist die Abmahnung unbeachtlich.
-- BGH, Urt. v. 04.03.2021 – I ZR 60/20, GRUR 2021, 752 Rn. 18 – „Bestellbestätigung I": Zur
-  Dringlichkeitsvermutung im einstweiligen Verfügungsverfahren; selbst nach UWG-Reform 2021
-  gilt die Dringlichkeitsfrist von 1 Monat ab Kenntnis als maßgeblich.
+| Gericht | Aktenzeichen | Datum | Kernaussage |
+|---------|-------------|-------|-------------|
+| Rechtsprechung live prüfen | Live-Verifikation erforderlich | - | keine Entscheidung aus Modellwissen zitieren; vor Ausgabe offizielle oder frei zugängliche Quelle mit Gericht, Datum, Aktenzeichen und Aussage protokollieren |
 
-### Kommentarliteratur
+## Prüfschema UWG-Abmahnung
 
-- Köhler, in: Köhler/Bornkamm/Feddersen, UWG, 42. Aufl. 2024, § 13 Rn. 1 ff. (Pflichtinhalt
-  der Abmahnung: Name/Firma des Abmahnenden, Art der Verletzung, Ansprüche, Aufforderung zur
-  Unterlassung und Fristsetzung).
-- Feddersen, in: Köhler/Bornkamm/Feddersen, UWG, 42. Aufl. 2024, § 13a Rn. 5 ff.
-  (Gegenanspruch bei unberechtigter Abmahnung; insbesondere Kostenerstattung bei missbräuchlichen
-  Massenabmahnungen).
-- Brüning, in: Harte/Henning, UWG, 5. Aufl. 2023, § 13 Rn. 12 ff. (Form und Fristen der
-  Abmahnung; modifizierte Unterlassungserklärung; keine Formvorschrift, aber Schriftform aus
-  Beweisgründen dringend empfohlen).
-- Goldmann, in: Harte/Henning, UWG, 5. Aufl. 2023, Vor § 12 Rn. 80 ff. (Hamburger Brauch:
-  Schuldner darf den Gläubiger durch eigene Formulierung der UE binden; Gläubiger muss annehmen,
-  sofern Erklärung ausreichend ist).
+**Vorab:** Der untenstehende ist die typische Standardlinie. Wenn die Mandantenlage abweicht (siehe "Strategische Optionen" oben), sind die Schritte entsprechend zu verkuerzen, umzustellen oder durch ein anderes Skill zu ersetzen — der ist Leitfaden, nicht Pflichtprogramm.
 
-## Ablauf
+| Schritt | Prüfpunkt | Norm | Rechtsfolge |
+|---------|-----------|------|-------------|
+| 1 | Geschäftliche Handlung? | § 2 Abs. 1 Nr. 2 UWG | Anwendungsbereich; nicht bei rein privaten Handlungen |
+| 2 | Konkreter Verbotstatbestand | §§ 3a, 4, 4a, 5, 5a, 6, 7 UWG; Anhang | Abmahnfähigkeit |
+| 3 | Aktivlegitimation § 8 Abs. 3 UWG? | § 8 Abs. 3 Nr. 1–4 UWG | Ohne Aktivlegitimation: keine strafbewehrte UE; Klage unzulässig |
+| 4 | Missbrauchsprüfung § 8c UWG | § 8c Abs. 2 UWG (Indizien) | Missbräuchliche Abmahnung: kein Kostenersatz; Gegenanspruch § 8c Abs. 3 UWG |
+| 5 | Abmahninhalt: Beanstandung + Unterlassungsaufforderung + Frist | § 13 UWG | Formell mangelhafte Abmahnung löst keinen Kostenersatz aus |
+| 6 | Unterlassungserklärung abgegeben? Ausreichend strafbewehrt? | §§ 339 BGB; § 12 UWG | Unzureichende UE = Wiederholungsgefahr bleibt; eV-Antrag nötig |
+| 7 | Einstweilige Verfügung nötig? | §§ 935, 940 ZPO; § 12 Abs. 1 UWG | Dringlichkeit; Selbstwiderlegung ab ca. 4 Wochen Untätigkeit |
+| 8 | Verjährung geprüft? | § 11 Abs. 1 UWG | 6 Monate ab Kenntnis; Unterbrechung durch Abmahnung oder eV-Antrag |
 
-1. **Sachverhaltsaufnahme** (Tag 0): Wettbewerbsverstoß dokumentieren (Screenshot mit
-   Zeitstempel, Notaranschrift oder eidesstattliche Versicherung).
-2. **Prüfung der Aktivlegitimation** (§ 8 Abs. 3 UWG): Ist der Mandant Mitbewerber?
-   Wettbewerbsverhältnis konkret darlegen.
-3. **Prüfung der Dringlichkeit** (§ 12 Abs. 1 UWG): Kenntnis seit wann? 1-Monats-Frist für eV
-   wahren. Cave: eigene Werbung mit ähnlichem Inhalt = Verwirkung der Dringlichkeit.
-4. **Entwurf der Abmahnung** mit Pflichtangaben § 13 Abs. 2 UWG:
-   - Name/Firma des Abmahnenden
-   - Bezeichnung der Verletzung (Handlung, Fundort, Datum)
-   - Unterlassungsbegehren mit konkreter Beschreibung
-   - Angemessene Frist (i. d. R. 7–14 Tage)
-   - Aufforderung zur Abgabe einer strafbewehrten Unterlassungserklärung
-5. **Entwurf der modifizierten Unterlassungserklärung** (Hamburger Brauch):
-   - Benennung der konkreten Verletzungshandlung
-   - Vertragsstrafe nach Wahl des Gläubigers oder „angemessene Strafe", Mindestbetrag EUR 5.001
-   - Korrektivklausel (Gericht kann Strafe auf EUR 2.500 reduzieren § 342 BGB analog)
-   - Reichweite: kerngleiche Verletzungshandlungen einschließen
-6. **Prüfung einer Schutzschrift** (§ 945a ZPO): Wenn Gegenabmahnung droht oder Antrag auf
-   einstweilige Verfügung zu erwarten ist → Schutzschrift in das Schutzschriftenregister
-   (www.zssr.de) einreichen.
-7. **Versand**: per Telefax + Einschreiben/Rückschein oder per Boten; Fristlauf dokumentieren.
-8. **Reaktion des Gegners**: eingehende UE prüfen (ausreichend? kerngleiche Handlungen
-   erfasst?); ggf. Ablehnung mit Begründung.
-9. **Gerichtliche Durchsetzung** bei ausbleibender/unzureichender Reaktion: einstweilige
-   Verfügung §§ 935, 940 ZPO oder Hauptsacheklage nach §§ 8, 14 UWG.
+## Strategische Optionen (vor dem Template entscheiden)
 
-## Ausgabeformat
+Bevor das Template eins-zu-eins gefuellt wird, ist zu pruefen welche Variante zur Mandantenkonstellation passt. Das Template ist **eine** moegliche Form — nicht die einzige.
 
-Das Modell gibt folgende Dokumente aus:
+| Konstellation | Empfohlener Weg |
+|---|---|
+| Standard — UWG-Abmahnung aussprechen oder empfangen | Abmahnungs-Vollmuster und ggf. eAVV-Antrag unten |
+| Variante A — Abmahnung ist missbraeuchlich (§ 8c UWG) | Widerspruchsbaustein unten; kein UE unterzeichnen |
+| Variante B — Mandant moechte selbst abmahnen | Abmahnungs-Vollmuster unten; Streitwert sorgfaeltig berechnen |
+| Variante C — einstweilige Verfuegung noetig | eAVV-Antrag unten; Dringlichkeit pruefen |
 
-- **Abmahnschreiben** (Urteilsstil, vollständiger Briefkopf, Datum, Fristsetzung, Anlage UE)
-- **Entwurf der Unterlassungserklärung** (separate Anlage, unterschriftsreif)
-- **Rechtliches Memo** (Gutachtenstil) mit Prüfung der Erfolgsaussichten
-- Optional: **Schutzschrift** (vgl. Skill einstweilige-verfügung)
+Wenn die Mandantenkonstellation **nicht** ins Standardschema passt, ist das Template anzupassen oder durch ein anderes Skill abzuloesen — nicht das Mandat in das Schema zu pressen.
 
-## Beispiel
+## Schriftsatz-Bausteine
 
-**Sachverhalt**: Die Musterprint GmbH bewirbt ihre Druckprodukte online mit „Testersieger Stiftung
-Warentest 2023". Das Testergebnis stammt tatsächlich aus 2018 und ist nicht auf das aktuelle
-Produkt übertragbar. Der Mandant, die Quickprint AG, ist Mitbewerber im selben Marktsegment.
+### Abmahnung (vollständiges Muster)
 
-**Prüfung (Gutachtenstil)**:
+```
+[Briefkopf Kanzlei] [Ort, Datum]
 
-*§ 5 Abs. 1 S. 2 Nr. 1 UWG – Irreführung über die Beschaffenheit*: Die Angabe „Testersieger
-Stiftung Warentest 2023" ist eine Angabe über wesentliche Merkmale des Produkts (Qualität,
-Prüfungsdatum). Sie ist unwahr, da das Testergebnis aus 2018 stammt. Die angesprochenen
-Verkehrskreise verstehen die Jahreszahl als Beleg eines aktuellen Tests; eine irreführende
-Wirkung ist nach dem Erfahrungssatz des BGH zu bejahen (BGH, Urt. v. 11.06.2015 – I ZR 7/14,
-GRUR 2016, 526 Rn. 14 – „Fressnapf"). Die Wiederholungsgefahr folgt aus dem fortgesetzten
-Einsatz der Werbung.
+An [Name der Wettbewerberin] - Per Einschreiben/Rückschein -
 
-*Aktivlegitimation (§ 8 Abs. 3 Nr. 1 UWG)*: Die Quickprint AG steht mit der Musterprint GmbH
-in einem konkreten Wettbewerbsverhältnis, da beide im selben Segment (Digitaldruckprodukte B2C)
-tätig sind. Damit ist die Aktivlegitimation gegeben (Köhler, in: Köhler/Bornkamm/Feddersen,
-UWG, 42. Aufl. 2024, § 8 Rn. 3.12).
+Wettbewerbsrechtliche Abmahnung gemäß § 13 UWG
 
-**Ergebnis**: Die Abmahnung ist begründet. Empfohlen wird eine Frist von 10 Tagen zur Abgabe
-der UE sowie eine Vertragsstrafe von EUR 8.001 (Hamburger Brauch).
+Unsere Mandantin: [Unternehmensname]
+Ihre Referenz: [Beschreibung des Verstoßes]
 
-## Risiken und typische Fehler
+Sehr geehrte Damen und Herren,
 
-- **Fristversäumnis (Dringlichkeit)**: Kenntnis vom Verstoß länger als 1 Monat → Dringlichkeit
-  entfallen; eV nicht mehr ohne weiteres zulässig. Fristlauf intern dokumentieren.
-- **Unzureichende Bezeichnung der Verletzungshandlung**: Abmahnung ist zu vage → Gegner kann
-  Kostengegenanspruch nach § 13a UWG geltend machen.
-- **Fehlende Aktivlegitimation**: Kein echtes Wettbewerbsverhältnis → Abmahnung unberechtig
-  → Schadensersatz nach § 13a UWG; Missbrauchsgefahr § 8c UWG.
-- **Missbrauch (§ 8c UWG)**: Verdacht bei Serienabmahnungen, sachfremden Motiven, überhöhten
-  Vertragsstrafen → Abmahnung unwirksam; Mandant haftet für Kosten des Gegners.
-- **Unterlassungserklärung zu eng**: Kerngleiche Verletzungen nicht miterfasst → erneute Abmahnung
-  erforderlich; Gerichtsverfahren nicht vermieden.
-- **Berufsrechtliche Pflichten**: Verschwiegenheit (§ 43a Abs. 2 BRAO, § 203 StGB) wahren;
-  Mandantendaten nicht ungesichert per E-Mail übermitteln.
-- **Verjährung § 11 UWG**: 6 Monate ab Kenntnis von Verstoß und Verletzer; absolute
-  Verjährung 3 Jahre (§§ 195, 199 BGB analog).
+wir zeigen die Vertretung der [Mandantin] an (Vollmacht Anlage 1).
 
-## Quellenpflicht
+I. Sachverhalt
+Die Mandantin und Ihr Unternehmen sind Mitbewerber i. S. § 2 Abs. 1 Nr. 4 UWG
+im Bereich [Branche]. Sie haben am [Datum] auf der Website [URL] / in [Medium]
+folgende Aussage veröffentlicht: "[wörtliches Zitat]" (Anlage 2, Screenshot /
+Kopie).
 
-Jede juristische Aussage in Abmahnschreiben, Memos und Schriftsätzen ist nach
-`references/zitierweise.md` zu belegen. Rechtsprechungszitate im BGH-Stil (Gericht, Datum,
-Az., Fundstelle, Rn., ggf. Kurzbezeichnung). Kommentarzitate mit Bearbeiter, Werk, Auflage,
-§ und Rn. Bei umstrittenen Fragen (z. B. Reichweite der Kerngleichheit, Höhe der Vertragsstrafe)
-h. M. und Mindermeinung getrennt darstellen. Keine pauschalen „vgl."-Verweise ohne konkrete
-Seitenangabe.
+II. Rechtliche Würdigung
+Die Aussage ist irreführend i. S. § 5 Abs. 1 S. 2 Nr. 1 UWG [alternativ:
+Verstoß gegen § 3a UWG durch Verletzung von [Marktverhaltensregel]],
+da [Begründung: objektiv unrichtig / geeignet zur Täuschung / Pflichtangabe
+fehlend nach §§ 5a, 8 TMG / Impressumspflicht DDG verletzt].
+
+III. Aufforderung
+Wir fordern Sie auf:
+
+1. Die beanstandete Werbung / Handlung unverzüglich einzustellen;
+
+2. bis spätestens [Datum] (Frist: 10 Werktage) die anliegende strafbewehrte
+ Unterlassungserklärung (Anlage 3) unterzeichnet zurückzusenden;
+
+3. die der Mandantin entstandenen Abmahnkosten gemäß § 13 Abs. 3 UWG
+ in Höhe von EUR [Betrag nach RVG; Streitwert EUR [X]; 1.3-Gebühr zzgl.
+ Auslagen zzgl. 19 % MwSt.] auf folgendes Konto zu zahlen:
+ IBAN: [DE XX XXXX ...]
+
+Bei fruchtlosem Ablauf der Frist werden wir ohne weitere Ankündigung
+Antrag auf Erlass einer einstweiligen Verfügung stellen.
+
+Mit freundlichen Grüßen
+[Kanzlei, Fachanwalt/Fachanwältin für gewerblichen Rechtsschutz]
+
+--- ANLAGE 3: Strafbewehrte Unterlassungserklärung ---
+
+Die [Schuldnerin], gesetzlich vertreten durch [Vertretung], verpflichtet sich
+gegenüber der [Gläubigerin] für jeden Fall der schuldhaften Zuwiderhandlung
+zur Zahlung einer Vertragsstrafe nach dem Hamburger Brauch (festzusetzen nach
+billigem Ermessen der Gläubigerin, im Streitfall durch das zuständige Gericht
+zu überprüfen), das folgende Handlung zu unterlassen:
+
+[Konkrete Verletzungsform — nicht zu weit, nicht zu eng formulieren]
+
+[Ort, Datum, Unterschrift, Firmenstempel]
+```
+
+### Antrag einstweilige Verfügung UWG
+
+```
+An das Landgericht [Ort]
+
+ANTRAG AUF ERLASS EINER EINSTWEILIGEN VERFÜGUNG
+gemäß §§ 935, 940 ZPO iVm § 8 Abs. 1 UWG
+
+Verfügungsklägerin: [Mandantin]
+Verfügungsbeklagte: [Wettbewerberin]
+
+Es wird beantragt, der Verfügungsbeklagten unter Androhung der Ordnungsmittel
+des § 890 ZPO zu untersagen, im geschäftlichen Verkehr [Verletzungsform].
+
+Dringlichkeit (§ 12 Abs. 1 UWG):
+Kenntnis vom Verstoß am [Datum]. Antrag nach [X] Tagen. Keine Schutzschrift
+im Zentralen Schutzschriftenregister (§ 945a ZPO) feststellbar.
+
+Glaubhaftmachung:
+Anlage AS 1: Eidesstattliche Versicherung [Name];
+Anlage AS 2: Screenshot der beanstandeten Werbung [Datum];
+Anlage AS 3: Handelsregisterauszug Mandantin (Aktivlegitimation);
+Anlage AS 4: Abmahnung vom [Datum] (zur Dokumentation).
+
+Streitwert: EUR [X].
+
+[Ort, Datum]
+[Kanzlei, Fachanwalt/Fachanwältin für gewerblichen Rechtsschutz]
+```
+
+### Widerspruch gegen missbräuchliche Abmahnung (§ 8c UWG)
+
+```
+An [Kanzlei der Abmahnenden] [Ort, Datum]
+
+In Sachen [Abgemahnte] / [Abmahnende]
+Az. Ihrer Kanzlei: [Ref.]
+
+Wir zeigen die Vertretung der [Abgemahnten] an (Vollmacht in Anlage).
+
+Die Abmahnung vom [Datum] ist missbräuchlich i. S. § 8c UWG und wird
+zurückgewiesen.
+
+Begründung:
+[Indizien nach § 8c Abs. 2 UWG, z. B.: Mandantin hat im selben Zeitraum
+[X] gleichartige Abmahnungen versandt (§ 8c Abs. 2 Nr. 1); überhöhte
+Vertragsstrafe bei geringfügigem Verstoß (§ 8c Abs. 2 Nr. 2); kein
+konkretes Wettbewerbsverhältnis (§ 8c Abs. 2 Nr. 5).]
+
+Aufwendungsersatz wird gemäß § 8c Abs. 3 UWG zurückgefordert.
+
+Wir behalten uns vor, unsererseits Klage auf Feststellung der Missbräuchlichkeit
+und auf Ersatz unserer Abwehrkosten zu erheben.
+
+[Kanzlei, Datum]
+```
+
+--- vor Versand klaeren ---
+1. Welches Verhandlungsziel hat der Mandant? [Bestand / Abfindung / Reputation / Schnelle Loesung]
+2. Welche Kompromisslinien sind absolut? [Mindestabfindung / Freistellung / Zeugnisformulierung]
+3. Sind Anschlusswege erwuenscht? [Mediation / Direktgespraech / Settlement vor Klageerhebung]
+
+## Beweislast
+
+| Beweisthema | Beweislast | Beweismittel |
+|------------|-----------|--------------|
+| Wettbewerbsverstoß (konkrete Verletzungshandlung) | Abmahnender | Screenshot, Testkauf, eidesstattliche Versicherung |
+| Aktivlegitimation (konkretes Wettbewerbsverhältnis) | Abmahnender | Handelsregisterauszüge, Produktkataloge, Website-Vergleich |
+| Wiederholungsgefahr entfallen | Abgemahnter | Strafbewehrte Unterlassungserklärung; bei Erstverstoß: strukturelle Änderung |
+| Missbrauch § 8c UWG | Abgemahnter | Liste paralleler Abmahnungen; Übersetzung Vertragsstrafe; fehlende eigene wirtschaftliche Tätigkeit |
+| Schaden für Schadensersatz § 9 UWG | Abmahnender | Konkrete Umsatzeinbußen; Sachverständiger; Kundenverlust-Belege |
+| Verjährung nicht eingetreten | Abmahnender | Kenntnisdatum belegen (z. B. internes Monitoring-Protokoll) |
+
+## Fristen
+
+| Frist | Inhalt | Norm |
+|-------|--------|------|
+| 6 Monate | Verjährung Unterlassungsanspruch ab Kenntnis des Verstoßes | § 11 Abs. 1 UWG |
+| 3 Jahre | Verjährung Schadensersatz | §§ 195, 199 BGB |
+| 8–10 Werktage | Übliche Frist zur Abgabe der UE in der Abmahnung | § 13 Abs. 2 Nr. 4 UWG |
+| ca. 4 Wochen | Selbstwiderlegungsrisiko bei einstweiliger Verfügung | § 12 Abs. 1 UWG; Rspr. |
+| 1 Monat | Widerspruch gegen einstweilige Verfügung | § 924 ZPO |
+| 1 Monat | Abschlusserklärung nach Zustellung einstweiliger Verfügung fordern | Praxis; mündliche Verhandlung vermeiden |
+
+## Gegenargumente und Reaktion
+
+| Gegenargument | Herkunft | Reaktion |
+|--------------|---------|----------|
+| Rechtsprechung live prüfen | Live-Verifikation erforderlich | keine Entscheidung aus Modellwissen; Quelle vor Ausgabe protokollieren |
+| "Abmahnung ist missbräuchlich (§ 8c UWG)" | Abgemahnter | Gegenprüfung der Indizien; bei klaren Verstößen: Klage trotzdem zulässig und kostenpflichtig für Schuldner |
+| "Verstoß ist bagatellmäßig" | Abgemahnter | § 3 Abs. 1 UWG: "spürbar" Erfordernis; bei Schwarze-Liste-Verstößen keine Spürbarkeitserfordernis |
+| "Werbung ist Meinung, keine Tatsachenbehauptung" | Abgemahnter | Meinungsäußerung nur bei wertenden Aussagen ohne Tatsachenkern; gemischte Aussagen nach BGH-Kriterien aufteilen |
+| "Verjährung abgelaufen" | Abgemahnter | Kenntnisdatum exakt dokumentieren; Verjährungsunterbrechung durch Abmahnung prüfen (Meinungsstreit) |
+| "Unterlassungserklärung ist zu weit gefasst" | Abgemahnter | Modifizierte Unterlassungserklärung anbieten; Schutz vor Vertragsstrafe-Inflation durch enge Formulierung |
+
+## Streitwert und Kosten
+
+**Streitwertorientierung (OLG-Streitwertkataloge Wettbewerbssachen):**
+- Einfache Irreführung in Werbung: EUR 10.000–30.000.
+- Spam-E-Mails (einzeln): EUR 5.000–15.000.
+- Influencer-Schleichwerbung: EUR 15.000–30.000.
+- Markenverletzung parallel: Erhöhung möglich.
+- Fehlende Impressumspflicht (DDG/TMG): EUR 1.000–5.000; § 13 Abs. 4 UWG schließt Aufwendungsersatz häufig aus.
+
+**Anwaltsgebühren aus EUR 20.000 Streitwert:**
+- Abmahnung: 1.3-Gebühr VV RVG ca. EUR 1.029 zzgl. Auslagen zzgl. 19 % MwSt.
+- Einstweilige Verfügung: Verfahrensgebühr 1.3 + Terminsgebühr 1.2 = ca. EUR 2.000 netto.
+
+**Ordnungsgeld bei Verstoß gegen Unterlassungsurteil/eV:** EUR 5.000–250.000 (§ 890 ZPO); Ordnungshaft bis 6 Monate.
+
+## Strategische Empfehlung
+
+| Situation | Empfehlung | Begründung |
+|-----------|------------|-----------|
+| Eindeutiger Verstoß, Gegenseite kooperativ | Abmahnung mit kurzer Frist (10 Tage); keine eV | Kostengünstigste Lösung; UE mit Hamburger Brauch ausreichend |
+| Verstoß läuft weiter / Gegenseite ignoriert Abmahnung | Sofort einstweilige Verfügung; keine weitere Vorwarnung | Dringlichkeit bleibt erhalten; OLG: Abmahnung unterbricht Dringlichkeit nicht automatisch |
+| Verdacht auf missbräuchliche Gegenabmahnung | § 8c UWG-Gegenangriff; Kostenforderung zurückweisen; Negativfeststellungsklage prüfen | Kostenerstattung entfällt; Gegenanspruch nach § 8c Abs. 3 UWG |
+| Eigene Werbepraktiken prüfen lassen | Präventiv-Compliance: UWG-Audit der Website, AGB, Impressum, Produktaussagen | § 5a UWG und DDG-Pflichten häufig übersehen |
+
+## Anschluss-Skills
+
+- `fachanwalt-gewerblicher-rechtsschutz-designverletzung` — Designrechtliche Anspruchskonkurrenz
+- `fachanwalt-gewerblicher-rechtsschutz-markenanmeldung` — Markenrechtliche Abmahnung analog UWG
+- `fachanwalt-gewrechts-ki-vo-50-genai` — Kennzeichnungspflichten KI-generierter Inhalte als UWG-Abmahnungsanker
+- `fachanwalt-gewrechts-geschgehg-kollisionen-nda-hinschg-urhg` — Unlautere Verwertung von Geschäftsgeheimnissen
+
+## Quellen
+
+- UWG: https://www.gesetze-im-internet.de/uwg_2004/
+- § 8c UWG: https://www.gesetze-im-internet.de/uwg_2004/__8c.html
+- BGH I ZR 154/16: https://juris.bundesgerichtshof.de/cgi-bin/rechtsprechung/document.py?Gericht=bgh&Art=en&az=I%20ZR%20154/16
+- BGH I ZR 45/11: https://juris.bundesgerichtshof.de/cgi-bin/rechtsprechung/document.py?Gericht=bgh&Art=en&az=I%20ZR%2045/11
+- Zentrales Schutzschriftenregister: https://www.schutzschriftenregister.de/

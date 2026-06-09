@@ -1,44 +1,23 @@
 ---
 name: anschluss
-description: "Einstieg, Schnelltriage und Fallrouting im Insolvenzrecht-Plugin. Fragt Rolle, Ziel, Fristen, Unterlagen, Risiken und Wunsch-Output ab, schlägt passende Fachmodule aus diesem Plugin vor und führt in einen klaren Arbeitsplan. Bei Dokument-Upload ohne Begleittext reagiert der Skill eigenständig: ordnet das Material, prüft Eil- und Fristenhinweise, routet in passende Fachmodule oder stellt genau eine gezielte Rückfrage im Insolvenzrecht: prüft konkret die einschlägigen Tatbestandsmerkmale, Fristen, Belege und Rechtsprechung. Liefert priorisierten Output mit Norm-Pinpoints, Risikoampel und nächstem Arbeitsschritt."
+description: "Einstieg, Schnelltriage und Fallrouting im Energierecht-Plugin. Fragt Rolle, Ziel, Fristen, Unterlagen, Risiken und Wunsch-Output ab, schlägt passende Fachmodule aus diesem Plugin vor und führt in einen klaren Arbeitsplan. Bei Dokument-Upload ohne Begleittext reagiert der Skill eigenständig: ordn..."
 ---
 
-# Insolvenzrecht — Allgemein
-
-## Arbeitsbereich
-
-Einstieg, Schnelltriage und Fallrouting im Insolvenzrecht-Plugin. Fragt Rolle, Ziel, Fristen, Unterlagen, Risiken und Wunsch-Output ab, schlägt passende Fachmodule aus diesem Plugin vor und führt in einen klaren Arbeitsplan. Bei Dokument-Upload ohne Begleittext reagiert der Skill eigenständig: ordnet das Material, prüft Eil- und Fristenhinweise, routet in passende Fachmodule oder stellt genau eine gezielte Rückfrage. Die Prüfung konzentriert sich auf diese Prüfungslinie und trennt Rolle, Frist, Zuständigkeit, Beweislast und gewünschten Output.
+# Energierecht — Allgemein
 
 ## Arbeitsweg
 
 - Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
 - Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
-- Tragende Normen verifizieren: InsO §§ 1, 13-22, 35, 39, 47, 55-56, 60, 80, 87, 129, 133, 174, 175, 270 ff., 286-300, StaRUG §§ 1, 29, 31; StaRUG §§ 1, 29, 31, 39, 49-55, 84, 102, IDW S 6, IDW S 11, InsO § 270 — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Tragende Normen verifizieren: KWKG — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
 - Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
 - Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
 
-## Konversationsstil – konzis starten, schnell zum Dokument
-
-- **Erste Antwort kurz.** Sachverhalt einordnen, höchstens **eine** unverzichtbare Rückfrage stellen, dann arbeiten.
-- **Kein Lehrbuch-Intro.** Keine Norm-Wiederholung, keine Selbstankündigung – sofort einsteigen.
-- **Schnell zum Dokument.** Sobald die Mindestangaben vorliegen, liefere einen ersten Entwurf mit `[noch zu klären: …]`-Platzhaltern, statt weiter abzufragen.
-- **Allgemein-Skill = Einstieg, nicht Vorlesung.** Triage, Rückfrage falls nötig, dann auf die Fachmodule dieses Plugins verweisen oder direkt den ersten Entwurf produzieren.
-- **Ausführlich nur, wenn es das Arbeitsergebnis verlangt:** echte Subsumtion im Gutachtenstil, Tabellen, Chronologien, Risiko-/Beweislastanalysen, Schriftsatz- oder Memo-Text.
-- **Erklärungen nur auf Nachfrage.** Wenn der Nutzer Hintergrund will, ausführlich. Sonst nicht.
-
-## Fachlicher Kern — Insolvenz- und Sanierungsrecht
-- **Problemfokus dieses Skills:** Bleibe beim konkreten Titel `Insolvenzrecht — Allgemein` und löse die dort angelegte Fachfrage; keine Flucht in allgemeines Routing, außer eine echte Frist oder Zuständigkeit ist unklar.
-- **Normenradar:** InsO §§ 1, 13, 15a, 17, 18, 19, 21, 38 ff., 47, 49 ff., 55, 80, 103 ff., 129-147, 165 ff., 217 ff., 270 ff., 343; StaRUG; COVInsAG/Übergangsrecht nur bei Altzeiträumen; SGB III § 165.
-- **Verifizierte Anker:** BGH, Urteil vom 10.02.2005 - IX ZR 211/02 (Grenzen § 133 InsO bei Zwangsvollstreckung/verschlepptem Antrag als Klassiker); ausländische Verfahren: § 343 InsO Anerkennung, kein deutsches Chapter-15-Verfahren, häufig inzidente Prüfung durch Register, Grundbuch, Prozessgericht und Banken.
-- **Arbeitsmodus:** Zuerst Insolvenzgrund, Frist, Organpflicht, Verfahrensstand, Sicherheiten, Massebezug und Anfechtungszeitraum klären; dann Sanierungsfähigkeit, Plan/StaRUG, Haftung und Dokumentationsschutz.
-- **Outputpflicht:** Krisenzeitachse, Liquiditätsstatus, Anfechtungsmatrix, Sicherheitenradar, IDW-S6-/Sanierungscheck, Register-/Grundbuch-Nachweispaket oder Schriftsatzbaustein.
-- **Fehlerbremse:** Tragende Normen/Entscheidungen live oder aus der Akte verifizieren; Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei prüfbarer Quelle. Keine BeckRS-, juris-, Kommentar- oder Aufsatz-Blindzitate aus Modellwissen.
-
 ## Schnellstart-Workflow
 
-Dieser Allgemein-Skill ist der schöne, schnelle Eingang in das Plugin **Insolvenzrecht**. Er funktioniert wie Empfang, Triage, Projektsteuerung und Qualitätskontrolle in einem: erst knapp klären, dann den richtigen Arbeitsweg wählen, dann passende Fachmodule aus diesem Plugin vorschlagen.
+Dieser Allgemein-Skill ist der schöne, schnelle Eingang in das Plugin **Energierecht**. Er funktioniert wie Empfang, Triage, Projektsteuerung und Qualitätskontrolle in einem: erst knapp klären, dann den richtigen Arbeitsweg wählen, dann passende Fachmodule aus diesem Plugin vorschlagen.
 
-**Plugin-Fokus:** Insolvenzrechtliche Skills zu Zahlungsunfähigkeit, Überschuldung, Antragspflicht und Gläubigerantrag.
+**Plugin-Fokus:** Freistehendes Energierecht-Plugin für Stadtwerke, Versorger, Wärme, Netze, Vertrieb, Industrie, EEG, KWKG, Verfahren, Transaktionen und Projektfinanzierung.
 
 ### 0. Stummer Upload — Material ohne Begleittext
 
@@ -130,141 +109,124 @@ Nutze als erste Antwort nach Aktivierung möglichst dieses kompakte Format:
 
 | Skill | Wann vorschlagen? |
 |---|---|
-| `anfechtungsrechte-pruefen` | Insolvenzverwalter klagt auf Rückgewaehr einer Zahlung vor Insolvenz oder Gläubiger muss Insolvenzanfechtung abwehren. Prüfraster §§ 129 ff. InsO kongruente Deckung § 130 inkongruente Deckung § 131 vorsaetzliche… |
-| `antragspflicht-15a-inso` | Analysiert die Insolvenzantragspflicht des Geschäftsleiters nach § 15a InsO, die Haftung wegen Insolvenzverschleppung (§ 823 Abs. 2 BGB iVm § 15a InsO) sowie das Zahlungsverbot nach § 15b InsO. Lädt, wenn Schlagwörter… |
-| `do-versicherung-manager-haftung` | Insolvenzverwalter verklagt Geschäftsführer und D&O-Versicherung soll Deckung prüfen oder Manager fragt nach Versicherungsschutz in der Krise. Prüfraster D&O-Versicherung Claims-made-Prinzip Schadensereignis vs.… |
-| `forderungsanmeldung-glaeubiger-174-177-inso` | Gläubiger meldet Forderung im Insolvenzverfahren an §§ 174-177 InsO: Fristen Form Anlagen Rang § 39 InsO Vorsatz § 174 Abs. 2 InsO nachtraegliche Anmeldung § 177 InsO Prüfungstermin § 176 Bestreiten § 178 Tabelle § 179… |
-| `glaeubigerantrag-pruefung` | Prüft Zulässigkeit und Begründetheit eines Gläubigerantrags auf Eröffnung des Insolvenzverfahrens nach § 14 InsO — sowohl aus Gläubigerperspektive (Antragstellung) als auch aus Schuldnerperspektive (Abwehrstrategien).… |
-| `glaeubigerausschuss-mitwirkung` | Mandant ist Mitglied des Gläubiger-ausschusses oder soll in den Ausschuss gewählt werden und fragt nach Rechten Pflichten und Haftung. Prüfraster §§ 67 ff. InsO Gläubigerausschuss vorläufiger Gläubigerausschuss § 22a… |
-| `insolvenzgeld-165-sgb-iii` | Arbeitnehmer eines insolventen Unternehmens will Insolvenzgeld beantragen oder Insolvenzverwalter bearbeitet Insolvenzgeld-Anmeldungen. Prüfraster § 165 ff. SGB III Anspruchs-Voraussetzungen Arbeitsentgelt letzte drei… |
-| `insolvenzrecht-kaltstart-interview` | Kaltstart-Interview für das Insolvenzrecht-Plugin. Befüllt das Praxisprofil unter ~/.claude/plugins/config/claude-für-deutsches-recht/insolvenzrecht/CLAUDE.md mit Angaben zur Rolle (Insolvenzverwalter / Sachwalter /… |
-| `konzerninsolvenz-koordination` | Mehrere Gesellschaften eines Konzerns sind insolvent und Koordination der Verfahren muss geplant werden. Prüfraster Konzerninsolvenz §§ 269a-269i InsO Konzern-Gerichtsstand § 3a InsO Gruppen-Folgeverfahren § 3d InsO.… |
-| `liquiditaetsvorschau-insolvenzrechtlich` | Erstellt und bewertet die rollierende Liquiditätsvorschau als strukturierte Arbeitsgrundlage für insolvenzrechtliche Tatbestände nach § 17 InsO (Zahlungsunfähigkeit) und § 19 Abs. 2 InsO (Fortbestehensprognose). Lädt,… |
-| `mandat-triage-insolvenzrecht` | Eingangs-Abfrage für insolvenzrechtliche Mandate — Mandant ist Geschäftsführer mit Antragspflicht Gläubiger der Forderung anmelden will oder Arbeitnehmer der Insolvenzgeld beantragt. Klaert Mandantenrolle und Vorgang… |
-| `ueberschuldung-pruefung-19-inso` | Führt die zweistufige Überschuldungsprüfung gem. § 19 Abs. 2 InsO durch: Fortbestehensprognose (Stufe 1) und insolvenzrechtlicher Überschuldungsstatus auf Liquidationswertbasis (Stufe 2). Lädt, wenn Überschuldung… |
-| `uebertragende-sanierung-und-asset-deals` | Insolvenzverwalter will Geschäftsbetrieb verkaufen oder Investor kauft aus der Insolvenz und braucht Prüfung des Asset-Deals. Prüfraster uebertragende Sanierung Asset Deal im Regelverfahren Zustimmung… |
-| `vorsatzanfechtung-133-inso` | Insolvenzverwalter will Zahlungen nach § 133 InsO anfechten oder Gläubiger muss Vorsatzanfechtung abwehren. Prüfraster vorsaetzliche Gläubiger-Benachteiligung Kenntnis Gläubiger des Benachteiligungsvorsatzes. BGH-Linie… |
-| `zahlungsunfaehigkeit-pruefung-17-inso` | Erstellt ein strukturiertes Prüfgutachten zum Eröffnungsgrund der Zahlungsunfähigkeit nach § 17 InsO. Berechnet den Liquiditätsstatus zum Stichtag, wendet das 10-%-/3-Wochen-Schema des BGH an und würdigt Indizien der… |
+| `energierecht-eeg-kwkg-erzeugung` | EEG- und KWKG-Verguetungen für Stromerzeugungsanlagen prüfen: Einspeiseverguetung, Marktpraemie, KWK-Zuschlag. Normen: §§ 19 ff. EEG, §§ 6 ff. KWKG. Prüfraster: Anlagenanschluss, Verguetungsmodalitaeten,… |
+| `energierecht-emobility-wasserstoff` | Rechtliche Rahmenbedingungen für Elektromobilitaet und gruenen Wasserstoff prüfen: Ladepunkte, H2-Einspeisung. Normen: § 14a EnWG, EEG, GEG, EU-Verordnung Alternative Kraftstoffe. Prüfraster: Netzintegration,… |
+| `energierecht-energievertraege` | Energieliefervertraege prüfen und entwerfen: Strom- und Gasliefervertraege mit Industrie- und Privatkunden. Normen: §§ 41 ff. EnWG, StromGVV, GasGVV. Prüfraster: Preisanpassungsklauseln, Laufzeiten,… |
+| `energierecht-industriekunden` | Sonderregelungen für Industriekunden im Energierecht: Netzentgeltbefreiungen, Direktleitungen, Eigenerzeugung. Normen: § 19 StromNEV, §§ 17 ff. EnWG, EEG. Prüfraster: atypische Netznutzung, Eigenversorgungsprivileg,… |
+| `energierecht-infrastrukturprojekte` | Energieinfrastrukturprojekte rechtlich begleiten: Leitungsgenehmigungen, Planfeststellung, Enteignung. Normen: §§ 43 ff. EnWG, NABEG, BImSchG, BauGB. Prüfraster: Genehmigungsverfahren, Einwendungen,… |
+| `energierecht-kommandocenter` | Navigationszentrum für alle Energierecht-Skills: Weiterleitung je Rechtsthema und Anfrageart. Normen: EnWG, EEG, KWKG, GEG. Prüfraster: Themenfeld Erzeugung/Netz/Vertrieb, Kundentyp, einschlaegige Norm. Output:… |
+| `energierecht-netz-speicher-zugang` | Netzanschluss und Netzzugang für Erzeugungsanlagen und Speicher prüfen. Normen: §§ 17 ff. 20 ff. EnWG, NAV. Prüfraster: Netzanschlussrecht, Anschlussbegehren, Kapazitaetsprüfung, Diskriminierungsfreiheit. Output:… |
+| `energierecht-projektfinanzierung` | Projektfinanzierung für Energieanlagen strukturieren: Darlehen, Sicherheiten, Ratinganforderungen. Normen: EnWG, EEG, KWKG, BGB. Prüfraster: Finanzierungsstruktur, Sicherheitenpakete, Cashflow-Analyse, Foerderdarlehen.… |
+| `energierecht-transaktionen-dd` | Due Diligence bei Energierecht-Transaktionen: Kauf von Windparks, Solarprojekten, Netzen. Normen: §§ 453 ff. BGB, EnWG, EEG, KWKG. Prüfraster: Genehmigungs-Status, Netzvertrag, EEG-Verguetungsrecht, Umweltrisiken.… |
+| `energierecht-verfahren` | Regulierungsverfahren und Gerichtsverfahren im Energierecht durchführen: BNetzA-Verfahren, Kartellamt. Normen: §§ 75 ff. EnWG, GWB, VwGO. Prüfraster: Verfahrenstyp, Beschwerde, Klage, Fristenmanagement. Output:… |
+| `energierecht-vertrieb-marktrollen` | Energievertrieb und Marktrollen im liberalisierten Energiemarkt: Lieferant, Netzbetreiber, Bilanzkreis. Normen: §§ 4 ff. EnWG, MaBiS-Prozesse. Prüfraster: Marktrollen, Bilanzkreisvertrag, Lieferantenwechsel. Output:… |
+| `energierecht-waerme-quartier` | Waermenetze und Quartiersversorgung rechtlich strukturieren: Fernwaerme, GEG-Erfuellung, lokale Waermewende. Normen: AVBFernwaermeV, GEG, EnWG, EEG. Prüfraster: Konzessionspflicht, Preisanpassungsklauseln,… |
+| `energierecht-wettbewerb` | Wettbewerbs- und Kartellrecht im Energiesektor prüfen: Marktmacht, Diskriminierung, Missbrauch. Normen: §§ 18 ff. GWB, Art. 101 102 AEUV, EnWG. Prüfraster: Marktabgrenzung, Marktmacht, Diskriminierungsverbot,… |
 
 ## Worum geht es?
 
-Dieses Plugin deckt die insolvenzrechtlichen Grundfragen ab, die in der taeaglichen Beratungspraxis vor und waehrend eines Insolvenzverfahrens entstehen. Im Mittelpunkt stehen die Eroeffnungsgruende (Zahlungsunfaehigkeit, drohende Zahlungsunfaehigkeit, Ueberschuldung), die Insolvenzantragspflicht des Geschaeftsleiters nach § 15a InsO, das Zahlungsverbot nach § 15b InsO, Anfechtungsrechte des Insolvenzverwalters, Forderungsanmeldung durch Glaeubiger, D-and-O-Haftungsfragen und die Koordination von Konzerninsolvenzen.
+Dieses Plugin deckt das gesamte Energierecht ab — von der Erzeugung ueber Netze bis zum Vertrieb. Adressaten sind Rechtsanwaelte, Unternehmensjuristen und Compliance-Beauftragte bei Stadtwerken, Energieversorgern, Netzbetreibern, Industriekunden und Projektierungsgesellschaften. Das Plugin unterstuetzt bei Einzelpruefungen ebenso wie bei der Begleitung von Transaktionen und Regulierungsverfahren.
 
-Das Plugin richtet sich an Anwaelte, Insolvenzverwalter, Sachwalter, Sanierungsberater und Unternehmensberater. Es ist ein strukturiertes Pruefwerkzeug für insolvenzrechtliche Triage-Situationen. Fuer vertiefte Planwerkstatt-Arbeit (Insolvenzplan, StaRUG) steht das Plugin `insolvenzplan-starug-planwerkstatt` zur Verfuegung.
+Schwerpunkte sind das Energiewirtschaftsgesetz (EnWG), das EEG, das KWKG, kartellrechtliche Sektorfragen (GWB), das Recht der Waermenetze und Quartiersbloecke, die Projektfinanzierung von Erneuerbaren-Anlagen sowie Due Diligence bei M&A-Transaktionen im Energiesektor.
 
 ## Wann brauchen Sie diese Skill?
 
-- Geschaeftsfuehrer fragt, ob er einen Insolvenzantrag stellen muss und bis wann die Dreiwochenfrist laeuft.
-- Glaeubiger moechte wissen, ob er einen Insolvenzantrag stellen kann und was dabei zu beachten ist.
-- Arbeitnehmer eines insolventen Unternehmens fragt nach Insolvenzgeld.
-- Insolvenzverwalter prueft Anfechtungsansprueche gegen Zahlungen vor Verfahrenseroffnung.
-- Mandant ist Mitglied des Glaeubigerausschusses und fragt nach Rechten, Pflichten und Haftung.
+- Ein Windparkbetreiber prueft Ansprueche auf EEG-Einspeiseverguetung oder Marktpraemie nach neuer Anlageninbetriebnahme.
+- Ein Stadtwerk will ein Waermenetz nach GEG-Vorgaben strukturieren und benoetigt den Rechtsrahmen.
+- Ein Industrie-Gross-Kunde fragt nach Netzentgeltbefreiungen und Direktleitungsoptionen.
+- Eine Investmentgesellschaft kauft einen Solarpark und benoetigt energierechtliche Due Diligence.
+- Ein Versorger fuehrt ein BNetzA-Regulierungsverfahren durch oder klaegt gegen einen Netzentgeltbescheid.
 
 ## Fachbegriffe (kurz erklaert)
 
-- **Zahlungsunfaehigkeit** — Schuldner kann faellige Zahlungspflichten nicht mehr erfuellen; § 17 InsO; BGH-Schema: zehn Prozent Liquiditaetslucke für mindestens drei Wochen.
-- **Drohende Zahlungsunfaehigkeit** — Schuldner wird voraussichtlich faellige Zahlungspflichten nicht erfuellen koennen; § 18 InsO; Grundlage für freiwilligen Antrag und StaRUG.
-- **Ueberschuldung** — Vermoegen des Schuldners deckt bestehende Verbindlichkeiten nicht, sofern keine positive Fortbestehensprognose (§ 19 InsO).
-- **Antragspflicht** — Geschaeftsfuehrer und Vorstand muessen bei Zahlungsunfaehigkeit oder Ueberschuldung ohne schuldhaftes Zoegern, spaetestens drei Wochen nach Eintreten, Antrag stellen (§ 15a InsO).
-- **Zahlungsverbot** — Nach Insolvenzreife sind Zahlungen nur noch zulasaig, die mit der Sorgfalt eines ordentlichen Kaufmanns vereinbar sind (§ 15b InsO).
-- **Insolvenzverschleppung** — Verspaetete Antragstellung; Haftung gegenueber Neuglaeubigeern und Altglaeubigern aus § 823 Abs. 2 BGB iVm § 15a InsO.
-- **Bargeschaeft** — Leistungsaustausch mit sofortiger Gegenleistung; schuetzt vor Insolvenzanfechtung nach § 142 InsO.
-- **Glaeubigerausschuss** — Kontrollorgan des Insolvenzverfahrens nach §§ 67 ff. InsO; prueft und beaufsichtigt den Insolvenzverwalter.
+- **EEG** — Erneuerbare-Energien-Gesetz; regelt Einspeiseverguetung und Marktpraemie für Strom aus erneuerbaren Quellen.
+- **KWKG** — Kraft-Waerme-Kopplungsgesetz; regelt KWK-Zuschlaege für effiziente Kraftwaermekopplungsanlagen.
+- **EnWG** — Energiewirtschaftsgesetz; Rahmengesetz für Strom- und Gasnetzregulierung, Lieferpflichten und Marktregeln.
+- **BNetzA** — Bundesnetzagentur; Regulierungsbehoerde für Netze (Strom, Gas, Telekommunikation).
+- **Marktpraemie** — Foerderinstrument nach EEG: Differenz zwischen Marktpreis und anzulegendem Wert wird vom Netzbetreiber erstattet.
+- **NAV** — Niederspannungsanschlussverordnung; regelt Anschlusspflichten und Bedingungen für Stromkunden.
+- **GEG** — Gebaeude-Energie-Gesetz; verpflichtet Kommunen zur Waermeplanung und regelt Anforderungen an neue Heizungsanlagen.
+- **Planfeststellung** — Behoerdliches Genehmigungsverfahren für groessere Leitungsinfrastrukturen nach §§ 43 ff. EnWG.
 
 ## Rechtsgrundlagen
 
-- § 17 InsO — Zahlungsunfaehigkeit als Eroeffnungsgrund.
-- § 18 InsO — Drohende Zahlungsunfaehigkeit.
-- § 19 InsO — Ueberschuldung; zweistufige Pruefung.
-- § 14 InsO — Glaeubigerantrag.
-- § 15a InsO — Antragspflicht des Geschaeftsleiters; Dreiwochenfrist.
-- § 15b InsO — Zahlungsverbot nach Insolvenzreife.
-- §§ 67 ff. InsO — Glaeubigerausschuss.
-- §§ 129 ff. InsO — Insolvenzanfechtung (Grundtatbestand, Deckungsanfechtung, Vorsatzanfechtung).
-- § 142 InsO — Bargeschaeftsprivileg.
-- §§ 165 ff. SGB III — Insolvenzgeld für Arbeitnehmer.
-- §§ 174 bis 179 InsO — Forderungsanmeldung, Pruefungstermin, Tabelle.
-- §§ 269a bis 269i InsO — Konzerninsolvenz.
+- §§ 1 ff. EnWG (Zweck, Netzregulierung, Netzzugang)
+- §§ 17 ff. EnWG (Netzanschluss), §§ 20 ff. EnWG (Netzzugang)
+- §§ 43 ff. EnWG (Planfeststellung Leitungsinfrastruktur)
+- §§ 75 ff. EnWG (Verfahren vor der BNetzA)
+- §§ 19 ff. EEG (Einspeiseverguetung, Marktpraemie)
+- §§ 6 ff. KWKG (KWK-Zuschlaege)
+- §§ 18 ff. GWB (Marktmachtmissbrauch im Energiesektor)
+- GEG — Gebaeude-Energie-Gesetz (Waermeplanung, Heizungspflichten)
 
 ## Schritt-für-Schritt: Einstieg ins Plugin
 
-1. Mandantenrolle klaeren: Geschaeftsfuehrer, Glaeubiger, Arbeitnehmer, Ausschussmitglied?
-2. Triage-Interview durchfuehren: Skill `mandat-triage-insolvenzrecht`.
-3. Sofort-Fristen sichern: Dreiwochenfrist § 15a InsO oder Anmeldefrist § 165 SGB III?
-4. Eroeffnungsgruende pruefen: `zahlungsunfaehigkeit-pruefung-17-inso` und/oder `ueberschuldung-pruefung-19-inso`.
-5. Anschluss-Skill auswaehlen nach Ergebnis der Triage.
+1. Mandantenkonstellation klaeren: Erzeuger, Netzbetreiber, Versorger, Industrie oder Investor?
+2. Rechtsgebiet eingrenzen: EEG/KWKG-Förderung, Netz, Vertrieb, Waerme, Transaktion oder Verfahren?
+3. Passenden Skill auswaehlen (siehe Skill-Tour unten).
+4. Eilfristen pruefen: Widerspruchs- und Klagfristen bei BNetzA-Bescheiden sind kurz.
+5. Anschluss-Skill bestimmen: Genehmigung, Finanzierungsstruktur oder kartellrechtliches Gutachten?
 
 ## Skill-Tour (was gibt es hier?)
 
-**Einstieg und Triage**
-
-- `mandat-triage-insolvenzrecht` — Eingangsabfrage; Mandantenrolle und Sofort-Fristen klaeren.
-- `insolvenzrecht-kaltstart-interview` — Kaltstart-Interview für Plugin-Profil und Praxiskonfiguration.
-
-**Eroeffnungsgruende und Liquiditaet**
-
-- `zahlungsunfaehigkeit-pruefung-17-inso` — Liquiditaetsstatus nach § 17 InsO; BGH-Schema zehn Prozent und drei Wochen.
-- `ueberschuldung-pruefung-19-inso` — Zweistufige Ueberschuldungspruefung nach § 19 InsO; Fortbestehensprognose und Liquidationswerte.
-- `liquiditaetsvorschau-insolvenzrechtlich` — Rollierende Liquiditaetsvorschau nach IDW S 11; 13-Wochen- und 24-Monats-Vorschau.
-
-**Antragspflicht und Haftung**
-
-- `antragspflicht-15a-inso` — Antragspflicht nach § 15a InsO; Dreiwochenfrist; Zahlungsverbot § 15b InsO; Insolvenzverschleppungshaftung.
-- `do-versicherung-manager-haftung` — D-and-O-Versicherungsdeckung bei Insolvenzhaftung; Claims-made-Prinzip; Ausschluesse.
-
-**Glaeubigerantrag und Glaeubigerrechte**
-
-- `glaeubigerantrag-pruefung` — Zulaessigkeit und Begruendetheit des Glaeubigerantrags nach § 14 InsO.
-- `glaeubigerausschuss-mitwirkung` — Rechte, Pflichten und Haftung des Glaeubigerausschussmitglieds.
-- `forderungsanmeldung-glaeubiger-174-177-inso` — Forderungsanmeldung, Fristen, Form, Rang, Pruefungstermin.
-
-**Anfechtung**
-
-- `anfechtungsrechte-pruefen` — Uebersicht aller InsO-Anfechtungstatbestaende §§ 129 ff. InsO; Betrag, Verteidigungslinien.
-- `vorsatzanfechtung-133-inso` — Vorsatzanfechtung nach § 133 InsO; Fassung seit 5. April 2017; Bargeschaeftsprivileg.
-
-**Sanierung und Sondersituationen**
-
-- `uebertragende-sanierung-und-asset-deals` — Unternehmensverkauf aus der Insolvenz; Asset-Deal, Glaeubigerausschuss-Zustimmung.
-- `konzerninsolvenz-koordination` — Koordination mehrerer Konzerngesellschaften nach §§ 269a bis 269i InsO.
-
-**Arbeitnehmer**
-
-- `insolvenzgeld-165-sgb-iii` — Insolvenzgeld für Arbeitnehmer; Voraussetzungen, Antragsfrist zwei Monate, Vorfinanzierung.
+- `energierecht-kommandocenter` — Navigationszentrum: Weiterleitung je Rechtsthema und Anfrageart; Schnellstart für alle Energierecht-Mandate.
+- `energierecht-eeg-kwkg-erzeugung` — EEG-Einspeiseverguetung und Marktpraemie sowie KWK-Zuschlaege für Stromerzeugungsanlagen pruefen.
+- `energierecht-netz-speicher-zugang` — Netzanschluss und Netzzugang für Erzeugungsanlagen und Speicher nach EnWG pruefen.
+- `energierecht-energievertraege` — Strom- und Gasliefervertraege mit Industrie- und Privatkunden pruefen und entwerfen.
+- `energierecht-industriekunden` — Sonderregelungen für Industriekunden: Netzentgeltbefreiungen, Direktleitungen, Eigenerzeugung.
+- `energierecht-infrastrukturprojekte` — Energieinfrastrukturprojekte rechtlich begleiten: Leitungsgenehmigungen, Planfeststellung, Enteignung.
+- `energierecht-vertrieb-marktrollen` — Energievertrieb und Marktrollen im liberalisierten Energiemarkt: Lieferant, Netzbetreiber, Bilanzkreis.
+- `energierecht-waerme-quartier` — Waermenetze und Quartiersversorgung rechtlich strukturieren: Fernwaerme, GEG-Erfuellung, lokale Waermewende.
+- `energierecht-emobility-wasserstoff` — Rechtliche Rahmenbedingungen für Elektromobilitaet und gruenen Wasserstoff pruefen.
+- `energierecht-wettbewerb` — Wettbewerbs- und Kartellrecht im Energiesektor pruefen: Marktmacht, Diskriminierung, Missbrauch.
+- `energierecht-verfahren` — Regulierungsverfahren und Gerichtsverfahren im Energierecht durchfuehren (BNetzA, Kartellamt).
+- `energierecht-transaktionen-dd` — Due Diligence bei Energierecht-Transaktionen: Kauf von Windparks, Solarprojekten, Netzen.
+- `energierecht-projektfinanzierung` — Projektfinanzierung für Energieanlagen strukturieren: Darlehen, Sicherheiten, Ratinganforderungen.
 
 ## Worauf besonders achten
 
-- **Dreiwochenfrist laeuft ab Eintritt des Eroeffnungsgrundes** — Nicht ab Kenntnis des Geschaeftsfuehrers; bei unklarem Eintrittszeitpunkt ist das Risiko gross.
-- **Zahlungsverbot schon vor Antragstellung** — § 15b InsO greift mit Eintritt der Insolvenzreife, nicht erst mit Eroffnung; Einzelzahlungen muessen ab diesem Zeitpunkt geprueft werden.
-- **Glaeubigerantrag: Glaubhaftmachung reicht nicht immer** — § 14 InsO verlangt Nachweis der Forderung und des Eroeffnungsgrundes; bloss drohende ZU genuegt dem Glaeubiger nicht.
-- **Anfechtungsreform 2017 beachten** — § 133 InsO wurde durch das AnfRefG 2017 grundlegend geaendert; Fristen und Indizien unterscheiden sich für Sachverhalte vor und nach dem 5. April 2017.
-- **Insolvenzgeld: Zweimonatsfrist ab Insolvenz-Ereignis** — Arbeitnehmer verlieren den Anspruch, wenn Antrag zu spaet gestellt wird.
+- EEG-Förderung ist anlagenspezifisch und zeitraumgebunden: Inbetriebnahmedatum und Ausschreibungsergebnis bestimmen den Foerdermechanismus.
+- Netzanschluss-Fristen nach NAV und EnWG koennen mit Vertragsrechten kollidieren — Lieferantenwechsel und Anschlussprozesse haben eigene Taktfristen.
+- Kartellrecht im Energiesektor: Marktmachtmissbrauch nach §§ 18 ff. GWB und EnWG-Diskriminierungsverbot sind parallel anwendbar.
+- GEG-Pflichten zur kommunalen Waermeplanung gelten ab 2024/2026 gestaffelt — Uebergangszeitraeume beachten.
+- Bei Energietransaktionen: EEG-Foerderansprueche gehen nicht automatisch auf Erwerber ueber, wenn Anlagenstruktur veraendert wird.
 
 ## Typische Fehler
 
-- Geschaeftsfuehrer errechnet Dreiwochenfrist ab dem Tag, an dem er Kenntnis erlangt, statt ab Eintritt der Insolvenzreife.
-- Glaeubiger stellt Antrag nach § 14 InsO ohne vollstreckbaren Titel und laeuft in Zulaessigkeitsproblem.
-- Forderungsanmeldung versaeumt, weil Anmeldefrist nicht im Blick war; nachtraegliche Anmeldung nach § 177 InsO noch moeglich, aber mit Kostenrisiko.
-- D-and-O-Versicherung wird nicht informiert, bevor Insolvenzantrag gestellt wird; Claims-made-Risiko.
-- Koordinationsplan für Konzerninsolvenz wird nicht erwaogen, obwohl mehrere Schwestergesellschaften betroffen sind.
-
-## Querverweise
-
-- `insolvenzplan-starug-planwerkstatt` — Fuer Insolvenzplan- und StaRUG-Plangestaltung.
-- `bereicherungs-und-anfechtungsrecht-pruefer` — Fuer vertiefte Anfechtungspruefung nach §§ 129 ff. InsO und AnfG.
-- `europarecht-kompass` — Bei grenzueberschreitender Insolvenz nach EuInsVO Art. 56 ff.
+- EEG-Degression und Ausschreibungspflicht-Schwellen nicht aktuell geprueft: Foerderantraege werden zu spaet gestellt oder falsch berechnet.
+- Netzentgeltbefreiungen für Industriekunden als selbstverstaendlich angenommen: Voraussetzungen (Benutzungsstunden, Bandlastprofil) werden nicht konkret geprueft.
+- Planfeststellungsverfahren ohne fruehzeitige Einbindung der Raumordnung gestartet: Verzoegerungen durch spaete Beteiligung der Länder.
+- Wasserrechte und Naturschutzrecht bei Windparks oder Wasserkraftprojekten uebersehen.
+- Waermeversorgungsvertraege ohne Preisanpassungsklausel nach § 24 AVBFernwaermeV abgeschlossen.
 
 ## Quellen und Aktualitaet
 
 - Stand: 05/2026
-- InsO in der geltenden Fassung (insb. §§ 15a und 15b InsO; §§ 129 und 133 InsO Fassung seit 5. April 2017)
-- SGB III §§ 165 ff. in der geltenden Fassung
-- IDW S 11 (Beurteilung des Vorliegens von Insolvenzeroefffnungsgruenden)
+- Gesetzesfassungen zum Stand-Datum
+- EEG 2023 in der zum Stand-Datum geltenden Fassung
+- GEG in der Fassung des Waermepumpen-Aenderungsgesetzes 2024
 
-## Qualitäts-Hardening
+## Normen und Rechtsprechung
 
-- Arbeite aktennah: Tatsachen, Belege, Fristen, Zuständigkeit und gewünschtes Arbeitsprodukt zuerst klären.
-- Keine Rechtsprechung aus Modellwissen zitieren. Jede Entscheidung vor Ausgabe mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei oder amtlich prüfbarer Quelle absichern.
-- Keine BeckRS-, juris-, Kommentar-, Handbuch- oder Aufsatz-Blindzitate. Literatur nur verwenden, wenn der Nutzer sie bereitstellt oder ein lizenzierter Live-Zugriff im konkreten Arbeitsschritt dokumentiert ist.
-- Wenn eine Quelle, Randnummer, Behördenpraxis oder Frist nicht sicher geprüft ist, sichtbar als Prüfpunkt markieren und keine Scheinpräzision erzeugen.
-- Ergebnisse so liefern, dass sie sofort weiterverwendbar sind: Kurzbild, Prüfpfad, Risikoampel, Lückenliste und konkrete nächste Schritte.
+### Kuratierte Normen-Bibliothek
+
+- § 33 EEG
+- § 75 EnWG
+- § 31 EnWG
+- § 80 VwG
+- § 17 EnWG
+- § 8 EEG
+- § 41 EnWG
+- § 13a EnWG
+- § 46 EnWG
+- § 13 EnWG
+- § 123 VwG
+- § 21 EEG
+
+### Leitentscheidungen
+
+- EuGH C-359/11
+- BGH VIII ZR 158/11
+- BGH VIII ZR 178/08
+- BGH VIII ZR 295/09
+- EuGH C-718/18

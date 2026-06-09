@@ -1,13 +1,9 @@
 ---
 name: datenpanne-meldung
-description: "Begleitet Verantwortliche und Berater bei der Prüfung der Meldepflicht nach Art. 33 DSGVO (72-Stunden-Frist an Aufsichtsbehörde) und der Benachrichtigungspflicht nach Art. 34 DSGVO (betroffene Personen), einschließlich Dokumentation. Lädt bei Datenpannen, Sicherheitsvorfällen, unberechtigten Zugriffen und Datenverlust."
+description: "Datenpanne nach Art. 33 34 DSGVO melden wenn Sicherheitsverletzung personenbezogener Daten vorliegt. Art. 33 34 DSGVO Meldepflichten § 65 BDSG. Prüfraster: Meldepflicht 72-Stunden-Frist Schwere Risikobewertung Behordenmeldung Betroffenenbenachrichtigung Dokumentation. Output: Meldeschreiben an Au..."
 ---
 
 # Datenpannen-Meldung (Art. 33/34 DSGVO)
-
-## Zweck
-
-Dieser Skill unterstützt beim strukturierten Umgang mit Verletzungen des Schutzes personenbezogener Daten (Art. 4 Nr. 12 DSGVO). Er führt durch die dreistufige Prüfung: (1) Liegt eine meldepflichtige Datenschutzverletzung vor? (2) Muss die Aufsichtsbehörde innerhalb von 72 Stunden informiert werden? (3) Besteht zusätzlich eine Benachrichtigungspflicht gegenüber Betroffenen? Anwendungsfälle: Ransomware-Angriff, versehentlich offengelegter Datenexport, gestohlener Laptop, Fehlversand personenbezogener Daten, unbefugter Mitarbeiterzugriff.
 
 ## Eingaben
 
@@ -26,7 +22,7 @@ Das Modell benötigt:
 
 ### Primärnormen
 
-- **Art. 4 Nr. 12 DSGVO**: Definition „Verletzung des Schutzes personenbezogener Daten" – Vernichtung, Verlust, Veränderung, unbefugte Offenlegung oder Zugang zu personenbezogenen Daten.
+- **Art. 4 Nr. 12 DSGVO**: Definition "Verletzung des Schutzes personenbezogener Daten" – Vernichtung, Verlust, Veränderung, unbefugte Offenlegung oder Zugang zu personenbezogenen Daten.
 - **Art. 33 Abs. 1 DSGVO**: Meldepflicht des Verantwortlichen an zuständige Aufsichtsbehörde; Frist: 72 Stunden nach Kenntniserlangung; bei verspäteter Meldung: Begründungspflicht.
 - **Art. 33 Abs. 3 DSGVO**: Inhalt der Meldung: Beschreibung des Vorfalls, Kategorien und Anzahl Betroffener, Datenkategorien und -mengen, Kontaktdaten DPO, wahrscheinliche Folgen, ergriffene/geplante Maßnahmen.
 - **Art. 33 Abs. 4 DSGVO**: Nachlieferung von Informationen in Stufen zulässig, wenn nicht alle Informationen sofort verfügbar.
@@ -36,16 +32,13 @@ Das Modell benötigt:
 
 ### Leitentscheidungen
 
-1. EuGH, Urt. v. 14.12.2023 – C-340/21 (Natsionalna agentsia za prihodite/VB), NJW 2024, 685 Rn. 55–79: Allein der unbefugte Zugang zu personenbezogenen Daten durch Dritte begründet keinen automatischen Schadensersatzanspruch; das nationale Gericht muss das tatsächliche Risiko zukünftiger Schäden prüfen. Für die Meldepflicht nach Art. 33 DSGVO ist jedoch schon die bloße Möglichkeit eines Risikos ausreichend, um die 72-Stunden-Frist auszulösen.
+1. Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
-2. BVerwG, Urt. v. 27.04.2022 – 6 C 8.20, BVerwGE 175, 234 Rn. 38–42: Zur Kompetenz der deutschen Aufsichtsbehörden bei grenzüberschreitenden Datenschutzverstößen; Meldung an federführende Behörde nach Art. 56 DSGVO bei international tätigen Verantwortlichen, ohne dass nationale Zuständigkeit entfällt, wenn inländische Betroffene beschwert sind.
+2. Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
-### Kommentarliteratur
+### Quellenregel
 
-1. Reif, in: Gola/Heckmann, DSGVO/BDSG, 3. Aufl. 2022, Art. 33 DSGVO Rn. 14–40: Ausführlich zur Schwellenwertprüfung „voraussichtlich kein Risiko für Rechte und Freiheiten" (Art. 33 Abs. 1 a.E. DSGVO); Abgrenzung meldepflichtiger von nicht meldepflichtiger Verletzung anhand der EDSA-Fallgruppen; zur Kenntniserlangung durch Auftragsverarbeiter.
-
-2. Bergt, in: Kühling/Buchner, DSGVO/BDSG, 4. Aufl. 2024, Art. 33 DSGVO Rn. 22–55: Zu gestufter Meldung, Nachreichung von Informationen, Inhalt der Meldung im Einzelnen und zur Frage, wann die 72-Stunden-Frist zu laufen beginnt (Kenntniserlangung des verantwortlichen Organs vs. beliebiger Mitarbeiter).
-
+Quellenregel: Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen; Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff.
 ### EDSA-Leitlinien
 
 EDSA, Guidelines 9/2022 on personal data breach notification under GDPR, angenommen 28.03.2023: Enthält Fallkatalog typischer Datenpannen (Ransomware, Fehlversand, Datenverlust) mit Musterlösungen zur Risikoeinschätzung und Meldepflicht. Verbindliche Auslegungshilfe für Art. 33/34 DSGVO.
@@ -97,9 +90,9 @@ EDSA, Guidelines 9/2022 on personal data breach notification under GDPR, angenom
 
 *Fristbeginn*: Kenntniserlangung durch U am 10.03.2025 um 09:00 Uhr. Die 72-Stunden-Frist nach Art. 33 Abs. 1 DSGVO läuft bis zum 13.03.2025 um 09:00 Uhr.
 
-*Meldepflicht*: Eine Datenschutzverletzung i.S.d. Art. 4 Nr. 12 DSGVO (unbefugte Offenlegung) liegt vor. Angesichts von 4.000 Betroffenen und personenbezogenen Daten der Bestellhistorie besteht ein Risiko für Rechte und Freiheiten; die Ausnahme „kein Risiko" greift nicht. Meldung an LfDI ist spätestens bis 13.03.2025 erforderlich (Art. 33 Abs. 1 DSGVO; EDSA Guidelines 9/2022, Beispiel 9).
+*Meldepflicht*: Eine Datenschutzverletzung i.S.d. Art. 4 Nr. 12 DSGVO (unbefugte Offenlegung) liegt vor. Angesichts von 4.000 Betroffenen und personenbezogenen Daten der Bestellhistorie besteht ein Risiko für Rechte und Freiheiten; die Ausnahme "kein Risiko" greift nicht. Meldung an LfDI ist spätestens bis 13.03.2025 erforderlich (Art. 33 Abs. 1 DSGVO; EDSA Guidelines 9/2022, Beispiel 9).
 
-*Benachrichtigungspflicht*: Ob ein hohes Risiko i.S.d. Art. 34 Abs. 1 DSGVO vorliegt, hängt davon ab, ob Dritte die Daten gezielt ausgenutzt haben (z.B. Phishing). Bei bloßem Zugriff ohne Nachweis der Datennutzung ist die Schwelle zum „hohen Risiko" nach EDSA Guidelines 9/2022 noch nicht zwingend erreicht; Einzelfallbewertung erforderlich.
+*Benachrichtigungspflicht*: Ob ein hohes Risiko i.S.d. Art. 34 Abs. 1 DSGVO vorliegt, hängt davon ab, ob Dritte die Daten gezielt ausgenutzt haben (z.B. Phishing). Bei bloßem Zugriff ohne Nachweis der Datennutzung ist die Schwelle zum "hohen Risiko" nach EDSA Guidelines 9/2022 noch nicht zwingend erreicht; Einzelfallbewertung erforderlich.
 
 *Dokumentation*: Unabhängig vom Ergebnis ist der Vorfall im internen Register nach Art. 33 Abs. 5 DSGVO zu dokumentieren.
 
@@ -115,4 +108,24 @@ EDSA, Guidelines 9/2022 on personal data breach notification under GDPR, angenom
 
 ## Quellenpflicht
 
-Alle Aussagen in Meldeformularen, Memos und Betroffenenbriefen sind nach `references/zitierweise.md` zu belegen. Mindestens zwei Rechtsprechungsbelege im BGH-Stil und zwei Kommentarbelege im Bearbeiter-Stil. Die EDSA-Guidelines 9/2022 sind als EU-Soft-Law-Quelle stets anzugeben. Wo Rspr. fehlt, ausdrücklich auf Kommentarliteratur und EDSA-Leitlinien verweisen.
+Quellenregel: Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen; Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff.
+
+## Quellen / Updates
+
+Stand: 05/2026. Aktualität prüfen bei neuen EuGH-Entscheidungen zum Schadensersatz nach Art. 82 DSGVO, EDSA-Updates zu den Guidelines 9/2022 sowie Änderungen der nationalen Meldeportale der Aufsichtsbehörden.
+
+## Faktische Updates (Stand 05/2026)
+
+- **NIS-2-UmsuCG (deutsches Umsetzungsgesetz):** in Kraft seit Ende 2025 (BSIG n. F.). Bei meldepflichtigen Datenpannen, die zugleich Cyber-Sicherheitsvorfaelle bei wichtigen oder besonders wichtigen Einrichtungen sind, parallel zur DSGVO-Meldung an die Aufsichtsbehoerde die BSI-Meldung nach § 32 BSIG n. F. binnen 24 h (Fruehwarnung), 72 h (Vorfallsmeldung) und 1 Monat (Abschlussbericht) abgeben. Quelle: BGBl 2025, BSI-Portal bsi.bund.de.
+- **Art. 82 DSGVO — Schadensersatz EuGH-Linie:** Der blosse Kontrollverlust kann immateriellen Schaden begruenden, ein automatischer Anspruch entsteht aber nicht. Verschulden des Verantwortlichen wird vermutet, Entlastung moeglich. Konkrete Aktenzeichen vor Zitat live ueber curia.europa.eu pruefen.
+- **EDSA Guidelines 9/2022 zu Datenpannen:** Endfassung (angenommen 28.03.2023) ist verbindliche Auslegungshilfe; enthaelt Fallkatalog Ransomware, Phishing, Exfiltration, Fehlversand, Diebstahl mit konkreten Risikoampeln. Quelle: edpb.europa.eu/our-work-tools/our-documents/guidelines.
+- **BfDI / Landesdatenschutzbehoerden:** Bei standortuebergreifenden Vorfaellen Federfuehrung nach Art. 56 DSGVO (One-Stop-Shop) klaeren. BfDI für Bundes- und TK-/Postwesen; LDA-Bayern, LfDI BW etc. für privatwirtschaftliche Verantwortliche.
+
+**Querverweise:**
+- `datenschutzrecht/skills/drittlandstransfer-pruefung/SKILL.md` — bei Datenpannen mit Drittlandbezug (Benachrichtigungspflicht des Importeurs)
+- `datenschutzrecht/skills/dsfa-erstellung/SKILL.md` — Nachträgliche DSFA-Prüfung nach Datenpanne; Vorab-Konsultation Art. 36 DSGVO
+- `datenschutzrecht/skills/avv-pruefung/SKILL.md` — Meldepflicht des Auftragsverarbeiters nach Art. 33 Abs. 2 DSGVO im AVV-Kontext
+
+## Aktuelle Rechtsprechung (v14.2)
+
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.

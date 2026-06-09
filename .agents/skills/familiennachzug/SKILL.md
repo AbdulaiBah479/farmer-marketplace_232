@@ -1,0 +1,245 @@
+---
+name: familiennachzug
+description: "Mandant will Ehegatten Kinder oder Eltern nach Deutschland holen und fragt nach Voraussetzungen und Verfahren: Prüfraster §§ 27-36 AufenthG Famili..."
+---
+
+# Mandant will Ehegatten Kinder oder Eltern nach Deutschland holen und fragt nach Voraussetzungen und Verfahren
+
+
+## Aktenstart statt Formularstart
+
+Wenn zu **Familiennachzug Orientierung Mandat Triage** bereits Unterlagen, ein Ordner, ein ZIP, ein PDF-Buendel, E-Mails, Screenshots, Tabellen oder Entwuerfe vorliegen, lies diese zuerst aus. Bilde fuer **Fachanwalt Migrationsrecht** eine Arbeitshypothese zu Beteiligten, Rolle des Nutzers, Verfahrensstand, Fristen, Betrags-/Datumslogik, Belegen und naechstem sinnvollen Output. Frage nicht routinemaessig nach Angaben, die sich aus der Akte ergeben.
+
+Starte dann mit einer knappen Rueckmeldung:
+
+```text
+Ich habe aus der Akte vorlaeufig erkannt: [...]
+Unsicher sind noch: [...]
+Als naechsten Schritt schlage ich vor: [...]
+```
+
+Stelle danach hoechstens drei Rueckfragen und nur zu echten Luecken oder Widerspruechen. Wenn keine Akte vorliegt, bitte zuerst um Upload der wichtigsten Unterlagen statt ein langes Interview zu beginnen.
+
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: AsylG §§ 13-19, 24-26a, 27-30, 71-74, 77; AufenthG §§ 4, 5, 7-9, 16a-d, 18a-c, 19-21, 28-36, 53-55, 60, 81, 95; AufenthG, AsylG, FreizügG/EU, StAG; AufenthG § 18b Abs. 2, § 18g, EU-Richtlinie 2021/1883; Dublin-III-VO (EU) 604/2013 Art. 3, 7-15, 17, 21-23, 29; StAG §§ 8, 9, 10, 11, 12a, 13, 16, 17, 25, 30; AufenthG §§ 18, 18a, 18b, 18c, 18d, 18g, 19c, FachkräfteEG 2023; AufenthG §§ 27-36; EU-Asylpaket (GEAS-Reform 2024): Asylverfahrens-VO, Asylkrisen-VO, Eurodac, AMMR; Genfer Flüchtlingskonvention Art. 1A, 31, 33; StAG §§ 4, 5, 8-17, 25, 27, 30; AufenthG, AsylG, StAG, FreizügG/EU, AsylbLG — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+**Fokus:** Mandant will Ehegatten Kinder oder Eltern nach Deutschland holen und fragt nach Voraussetzungen und Verfahren. Prüfraster §§ 27-36 AufenthG Familiennachzug Lebensunterhalt Wohnraum Sprachkenntnisse A1. Beschleunigtes Visum-Verfahren Familiennachzug zu Schutzbedürftigen nach § 36a AufenthG. Normen § 27 AufenthG Grundsatz § 28 AufenthG Ehegatten § 32 AufenthG Kinder. Output Nachzugs-Prüf-Memo Antragscheckliste Visum-Entwurf Klage-Option bei Ablehnung. Abgrenzung: fachanwalt-migrationsrecht-aufenthaltstitel-antrag für eigenständige Titelerteilung.
+
+### Familiennachzug
+
+## 1) Eingangs-Abfrage
+
+1. Wer ist der "Stamm-Inhaber" — Deutscher, EU-Bürger, Drittstaater?
+2. Welche Familienangehörige (Ehegatte, Kinder, Eltern)?
+3. Aufenthaltstitel des Stamm-Inhabers?
+4. Wohnraum / Einkommen Stamm-Inhaber?
+5. Sprachkenntnis Antragsteller?
+6. Heimatland und deutsche Botschaft zuständig?
+
+## 2) Familiennachzug nach Konstellation
+
+### Ehegatten-Nachzug § 30 AufenthG
+
+- Stamm-Inhaber: Niederlassungserlaubnis oder bestimmte Aufenthaltstitel
+- Ehegatte: 18 Jahre, A1-Sprachkenntnis
+- Lebensunterhaltssicherung (Einkommen)
+- Wohnraum
+
+### Kinder-Nachzug § 32 AufenthG
+
+- Bis 16. Lebensjahr: Standardweg
+- 16-17 Jahre: Voraussetzungen wie Ehegatte
+- A1-Pflicht ab 16
+
+### Eltern-Nachzug § 36 II AufenthG
+
+- Nur bei außergewoehnlicher Härte
+- Sehr restriktiv
+
+### Familiennachzug zu Schutzbedürftigen
+
+- Anerkannte Fluechtlinge: vereinfachter Nachzug § 36a AufenthG
+- Subsidiaer Schutzbedürftige: § 36a AufenthG, monatliches Kontingent 1.000
+- Bei Volljaehrigkeit Kind nach Anerkennung Eltern: § 36 I AufenthG
+
+## 3) Voraussetzungen Lebensunterhaltssicherung § 5 I Nr. 1 AufenthG
+
+### Standard
+
+- Netto-Einkommen Stamm-Inhaber muss reichen für:
+ - Eigenen Lebensunterhalt
+ - Lebensunterhalt aller mitnachziehenden
+- Mietkosten + Sozialhilfe-Bedarfssatz als Maßstab
+
+### Ausnahmen
+
+- Schutzbedürftige im Erstjahr
+- Familienzusammenführung mit deutschen Staatsangehörigen § 28 AufenthG (geringere Anforderungen)
+
+## 4) Sprachkenntnis A1
+
+### Pflicht
+
+- Bei Ehegatten-Nachzug
+- Prüfung Goethe / TELC / OESD
+- Vor Visum-Antrag
+
+### Ausnahmen
+
+- Schutzbedürftige
+- Behinderung
+- EU-Bürger-Familienangehörige
+- Klage gegen schwer erfuellbare Anforderung (EGMR-Linie)
+
+## 5) Visum-Verfahren
+
+### Antrag deutsche Botschaft
+
+- Mit Anlagen
+- Termin meist 4-12 Wochen Wartezeit
+- Beschleunigtes Verfahren BeschAusG (Beauftragten-Verfahren) seit 2020
+
+### Beschleunigtes Verfahren § 81a AufenthG
+
+- Antrag durch AG / Familie in Deutschland
+- Ausländerbehoerde stimmt vorab zu
+- Visum-Erteilung beschleunigt
+
+### Visum-Ablehnung
+
+- **Klage VG Berlin** (zuständiges Gericht bei Visum)
+- Eilantrag § 123 VwGO
+
+## 6) Workflow
+
+### Phase 1 — Vorbereitung
+
+- Lebensunterhalt + Wohnraum kalkulieren
+- Sprachkurs Antragsteller buchen
+- Dokumente sammeln (Heiratsurkunde, Geburts-, Schul-)
+
+### Phase 2 — Antrag
+
+- Botschaft im Heimatland
+- Begleitung durch Anwalt empfohlen
+- Bei Schwellen-Land: Vorabzustimmung Ausländerbehoerde
+
+### Phase 3 — Visum erteilt
+
+- Einreise innerhalb der Frist
+- Bei Ausländerbehoerde Aufenthaltstitel beantragen
+- Aufenthaltstitel zum gleichen Zweck § 28 / 30 / 32 AufenthG
+
+### Phase 4 — Bei Ablehnung
+
+- Klage VG Berlin
+- Eilantrag bei dringender Familien-Sache
+
+## 7) Schutz Art. 6 GG / Art. 8 EMRK
+
+### Familienleben
+
+- Verfassungsrechtlicher Schutz
+- Prüfung Verhältnismaessigkeit Ablehnung
+
+### Kindeswohl
+
+- Bei Kindern besondere Prüfung
+- EGMR-Linie zur Familienzusammenführung
+
+## 8) Typische Fehler
+
+1. **A1-Sprachkenntnis unvollständig nachgewiesen**
+2. **Lebensunterhalts-Kalkulation falsch**
+3. **Termin Botschaft zu spaet** — Wartezeit unterschaetzt
+4. **Vorabzustimmung Ausländerbehoerde versäumt** bei beschleunigtem Verfahren
+5. **Klage-Frist 1 Monat versäumt**
+
+## 9) Familiennachzug zu deutschen Staatsangehörigen § 28 AufenthG
+
+### Vereinfacht
+
+- Keine Lebensunterhalts-Pflicht
+- Sprachkenntnis erforderlich (mit Ausnahmen)
+- Standard-Weg für deutsch-ausländische Ehepaare
+
+## 10) BVerwG-/EuGH-Linien
+
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+
+## Anschluss
+
+- `fachanwalt-migrationsrecht-orientierung` — Triage
+- `aufenthaltstitel-pruefung` (Power-Tool) — Prüfraster
+- `fachanwalt-migrationsrecht-einbuergerung` — bei Staatsangehoerigkeit
+
+## Vertiefung: Aktuelle Rechtsprechung
+
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+- Quellenregel: Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff; keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen.
+
+## Normen-Kette Familiennachzug
+
+- **§§ 27, 28, 29, 30, 32, 36 AufenthG** — Grundsatz Familiennachzug, Deutschennachzug, allgemeiner Nachzug, Ehegatten, Kinder, Eltern
+- **§ 36a AufenthG** — Familiennachzug zu subsidiaer Schutzberechtigten (Kontingent 1.000/Monat)
+- **§ 5 Abs. 1 Nr. 1 AufenthG** — Lebensunterhaltssicherung als Regelerteilungsvoraussetzung
+- **§ 81a AufenthG** — beschleunigtes Fachkraefte-Visum-Verfahren
+- **Art. 6 GG / Art. 8 EMRK** — verfassungsrechtlicher Familien- und Privatlebensschutz
+- **EU-Familienzusammenf.-RL 2003/86/EG** — Rechtsanspruch auf Nachzug bei Fluechtlingen
+
+## Output-Template: Antragsschreiben Visum Familiennachzug
+
+**Adressat:** Deutsche Botschaft [LAND], Visumstelle
+**Tonfall:** Sachlich-begruendend, auf Anspruchsgrundlage hinweisend
+
+```
+[KANZLEI]
+[ADRESSE]
+
+Deutsche Botschaft [HAUPTSTADT/LAND]
+Visumstelle
+[ADRESSE]
+
+Re: Visumsantrag Familiennachzug für [ANTRAGSTELLER NAME, geb. DATUM]
+ zu [STAMMINHABER NAME, AufenthaltsstT/NE, wohnhaft ADRESSE D]
+ Visumantrag-Nr.: [falls vorhanden]
+
+Sehr geehrte Damen und Herren,
+
+wir vertreten [STAMMINHABER NAME] und zeigen die anwaltliche Begleitung
+des Visumsantrags für [FAMILIENANGEHOERIGE(R)] an.
+
+I. SACHVERHALT
+[NAME STAMMINHABER] lebt seit [DATUM] in Deutschland (Aufenthaltstitel:
+[Art und Gueltigkeit], Anlage 1). Er beantragt Familiennachzug für
+seine Ehegattin / sein Kind [NAME].
+
+II. ANSPRUCHSGRUNDLAGE
+§ [28 / 30 / 32] AufenthG in Verbindung mit Art. 6 GG.
+
+III. VORAUSSETZUNGEN LIEGEN VOR
+a) Lebensunterhalt: Netto-Einkommen [BETRAG EUR] (Einkommensnachweise
+ Anlage 2). Der Bedarf für 2 Personen betraegt nach Sozialrechtssaetzen
+ ca. [BETRAG] EUR. Deckung gegeben.
+b) Wohnraum: [Groesse m2] — ausreichend für [X] Personen (Anlage 3: Mietvertrag).
+c) Sprachkenntnis: A1-Zertifikat Anlage 4. [ODER: Ausnahme wegen ...]
+d) Keine Ausweisungsinteressen (§ 5 Abs. 1 Nr. 2 AufenthG).
+
+IV. ANLAGEN
+1. Aufenthaltstitel / Niederlassungserlaubnis
+2. Einkommensnachweise letzter 3 Monate
+3. Mietvertrag / Wohnraumnachweis
+4. A1-Zertifikat
+5. Heiratsurkunde / Geburtsurkunde (beglaubigt und apostilliert)
+[...]
+
+Wir bitten um zeitnahe Bearbeitung und stehen für Rueckfragen zur Verfuegung.
+
+[KANZLEI], [ORT], [DATUM]
+[RA-NAME]
+```

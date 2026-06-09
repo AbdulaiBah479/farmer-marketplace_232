@@ -1,116 +1,134 @@
 ---
 name: kommandocenter
-description: "Umweltmandat-Einstieg: Intake Anlagenkarte Behördenkarte Fristen Risiken naechstes Arbeitsprodukt. Routing zu BImSchG KrWG WHG BBodSchG TEHG BNatSchG-Skills. Normen je nach Routing. Prüfraster Mandanten-Typ-Identifikation Sachgebiets-Routing Triage-Matrix. Output Mandat-Karte Routing-Empfehlung Naechste-Schritte-Plan. Abgrenzung zu allen Fach-Skills (nur Master-Routing) im Umweltrecht: prüft konkret die einschlägigen Tatbestandsmerkmale, Fristen, Belege und Rechtsprechung. Liefert priorisierten Output mit Norm-Pinpoints, Risikoampel und nächstem Arbeitsschritt."
+description: "Kanzlei startet Common-Law- UK- US- oder bilinguales Drafting-Mandat und braucht strukturierten Einstieg. Jurisdiktionscheck False-Friends-Scan Arbeitsplan. Prüfraster Jurisdiktion-Identifikation Primaeranliegen-Erfassung Skill-Routing. Output Mandat-Karte Jurisdiktion-Check Arbeitsplan. Abgrenzu..."
 ---
 
-# Umweltrecht-Kommandocenter
+# Common-Law-Kommandocenter
 
-## Arbeitsbereich
+## Regelungs- und Quellenanker
 
-Umweltmandat-Einstieg: Intake Anlagenkarte Behördenkarte Fristen Risiken naechstes Arbeitsprodukt. Routing zu BImSchG KrWG WHG BBodSchG TEHG BNatSchG-Skills. Normen je nach Routing. Prüfraster Mandanten-Typ-Identifikation Sachgebiets-Routing Triage-Matrix. Output Mandat-Karte Routing-Empfehlung Naechste-Schritte-Plan. Abgrenzung zu allen Fach-Skills (nur Master-Routing). Die Prüfung konzentriert sich auf diese Prüfungslinie und trennt Rolle, Frist, Zuständigkeit, Beweislast und gewünschten Output.
+Vor einer rechtlichen Schlussfolgerung diese Anker am aktuellen Normtext prüfen; Spezial- und Landesrecht nur hinzunehmen, wenn es den konkreten Auftrag traegt:
+
+- `UCC § 2-201` — Statute of Frauds für Warenkauf.
+- `UCC § 2-313` — express warranties.
+- `UCC § 2-314` — implied warranty of merchantability.
+- `Restatement (Second) of Contracts § 17` — formation by bargain.
+- `Restatement (Second) of Contracts § 71` — consideration.
+- `Restatement (Second) of Contracts § 90` — promissory estoppel.
+- `CISG Art. 14` — Angebot.
+- `CISG Art. 18` — Annahme.
+- `CISG Art. 25` — wesentliche Vertragsverletzung.
+- `CISG Art. 35` — Vertragsmaessigkeit der Ware.
+
+Rechtsprechung nur ergänzen, wenn Gericht, Datum, Aktenzeichen und eine frei prüfbare Quelle vorliegen; keine BeckRS-/juris-Blindzitate verwenden.
 
 ## Arbeitsweg
 
 - Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
-- Fristen und Eilrisiken zuerst markieren: BImSchG § 10 Auslegung 1 Monat / Einwendungen 1 Monat, UmwRG § 4 Klagefrist 1 Monat, BBodSchG Sanierungsuntersuchung 1 Jahr, Störfall-Anzeige unverzüglich.
-- Tragende Normen verifizieren: BImSchG, KrWG, WHG, BNatSchG, UVPG, BBodSchG, ChemG, StörfallV (12. BImSchV), TA Luft, TA Lärm, EU-IED 2010/75, UmwRG, EU-FFH-RL, EU-WRRL — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
-- Zuständige Stelle bestimmen und Adressaten richtig wählen: Vorhabenträger, Genehmigungsbehörde, Umweltverbände (BUND, NABU), VG, OVG, BVerwG (7. Senat), EU-KOM, Sachverständige.
-- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Immissionsschutzrechtliche Genehmigung, UVP-Bericht, FFH-Verträglichkeitsstudie, Sanierungsplan, Verbandsklage, Einwendung, TA-Luft-/TA-Lärm-Berechnung — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+- Fristen und Eilrisiken zuerst markieren: England Limitation Act 1980 (6 Jahre Contract, 6 Jahre Tort), US-Statutes of Limitations einzelstaatlich (oft 3-6 Jahre), ICC-Schiedsverfahren Antwort 30 Tage.
+- Tragende Normen verifizieren: Englisches Recht (Common Law / Equity), US-Recht (Restatements, UCC), Vergleich BGB-System, IPR-Anknüpfung (Rom I, Rom II), HCCH-Konventionen, New Yorker Übereinkommen (Schiedssprüche) — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant mit US/UK-Bezug, Solicitor, Barrister, US-Attorney, deutscher Anwalt, Schiedsgericht (ICC, LCIA, ICDR), High Court, Court of Appeal.
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Letter of Engagement, Statement of Claim / Particulars of Claim, Defence, Affidavit, Witness Statement, Discovery/Disclosure, Settlement Agreement — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
 
-## Triage-Matrix — welcher Fachmodul?
+## Wann verwenden
 
-| Sachverhalt | Fachmodul |
-|---|---|
-| BImSchG-Genehmigung beantragen oder anfechten | `umweltrecht-immissionsschutz-bimschg` |
-| Emissionshandel TEHG, BEHG, DEHSt | `umweltrecht-emissionshandel-tehg` |
-| Abfallstatus, KrWG, Nebenprodukt, Circular Economy | `umweltrecht-abfall-circular-economy` |
-| Naturschutz, FFH, Artenschutz § 44 BNatSchG | `umweltrecht-naturschutz-artenschutz` |
-| Stoerfall-Anlage, 12. BImSchV, Seveso | `umweltrecht-stoerfall-anlagen` |
-| Wasser-Erlaubnis, Altlasten, BBodSchG | `umweltrecht-wasser-bodenschutz` |
-| M&A-Transaktion, Umwelt-DD, Red Flags | `umweltrecht-transaktionen-dd` |
-| UIG/IFG-Informationsantrag, Ablehnung | `umweltrecht-umweltinformation-uig-ifg` |
-| VG-Klage, Eilantrag, Beschwerde OVG | `umweltrecht-verfahren` |
-| Bussgeld-Bescheid, Anhörung, Sanktionen | `umweltrecht-bussgeld-sanktionen` |
-| Compliance, Beauftragte, Schulungsplan | `umweltrecht-compliance-schulung` |
-| ESG, CSRD, Greenwashing | `esg-greenwashing-csrd` |
-| Klimaklage, Verbandsklage UmwRG | `klimaklagen-verbandsklage-umwrg` |
-| Lieferkette, LkSG, CSDDD | `lksg-csddd-lieferkettensorgfalt` |
+- bei Verträgen, Memos, Redlines, Übersetzungen oder Schulungen mit Common-Law-Bezug
+- wenn deutsche Rechtsbegriffe ins Englische übertragen werden
+- wenn UK/US-Unterschiede oder False Friends drohen
 
-## Intake-Fragen (für jeden Mandat)
+## Rückfragen, wenn unklar
 
-1. **Mandantenrolle**: Betreiber, Investor, Betroffener Dritter, Umweltverband, Behörde?
-2. **Rechtsgebiet**: BImSchG, KrWG, WHG, BBodSchG, TEHG, BNatSchG — oder mehrere?
-3. **Verfahrensstand**: Noch kein Verfahren / Antragsverfahren laufend / Bescheid ergangen / Klage anhangig?
-4. **Fristen akut**: Widerspruch 1 Monat, Klage 1 Monat, Eilantrag unverzueglich — Eingang Bescheid?
-5. **Beweismaterial**: Welche Dokumente — Genehmigung, Gutachten, Behördenkorrespondenz, Fotos?
-6. **Wirtschaftliches Ziel**: Betrieb sichern, Anlage verhindern, Entschaedigung, Informationszugang, Reputationsschutz?
+- Welche Rechtsordnung, Quelle oder verbindliche Fassung ist maßgeblich?
+- Welche Partei oder Rolle vertreten wir?
+- Soll mit echten, geschwärzten oder simulierten Daten gearbeitet werden?
+- Welches Arbeitsprodukt wird gebraucht und wie eilig ist es?
 
-## Zentrale Querschnitts-Normen Umweltrecht
+## Typische Fehler vermeiden
 
-- **§§ 3-10 BImSchG** — Grundpflichten Emissionsschutz
-- **§§ 4 9 10 BBodSchG** — Altlasten-Verantwortung und Sanierung
-- **§§ 8 9 10 WHG** — Wasserrechtliche Erlaubnisse
-- **§§ 14 15 34 44 BNatSchG** — Eingriff, FFH, Artenschutz
-- **§ 2 UmwRG** — Verbandsklage-Befugnis
-- **§ 4 UmwRG** — Verfahrensfehler als Aufhebungsgrund
-- **§ 80 Abs. 5 VwGO** — Eilrechtsschutz gegen vollziehbare Genehmigung
+- Bürgschaft, guarantee, suretyship und indemnity nicht gleichsetzen.
+- Consideration nicht als deutsche Gegenleistung behandeln.
+- UK, USA, New York, Delaware und UCC nicht vermischen.
+- Keine erfundenen Fälle oder Quellen verwenden.
 
-## Leitentscheidungen (Ueberblick)
+## Ton
 
-- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+Common-Law-Kompass arbeitet freundlich, präzise und verzeihend. Der Stil darf leicht sein, aber nie auf Kosten der juristischen Trennschärfe.
 
-## Quellenregel
+## Triage vor Mandatseinstieg
 
-Quellenregel: Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen; Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff.
-## Ampelmatrix Risikobewertung (Standard-Output)
+Kläre vor dem ersten Schritt:
 
-| Risiko | Ampel | Fristen | Verantwortlich | Naechste Handlung |
-|---|---|---|---|---|
-| [THEMA 1] | ROT | [DATUM] | [PERSON] | [HANDLUNG] |
-| [THEMA 2] | ORANGE | [DATUM] | [PERSON] | [HANDLUNG] |
-| [THEMA 3] | GRUEN | — | [PERSON] | Monitoring |
+1. Welche Rechtsordnung gilt? (English law / New York law / Delaware law / andere US-Bundesstaaten / sonstige Common-Law-Jurisdiktion)
+2. Verbindliche Sprache des Vertrages — Englisch, zweisprachig oder Englisch mit Deutsch als Fallback?
+3. Vertreten wir Käufer, Verkäufer, Kreditnehmer, Garantiegeber oder einen anderen Part?
+4. Zeitdruck: Same-Day-Redline oder sorgfältige Vertragsprüfung über mehrere Tage?
+5. Soll Local Counsel einbezogen werden, oder geht es um internes Erste-Einschätzung-Memo?
 
-## Output-Template: Mandatskarte Umweltrecht
+## Key Case Law — Grundlagenfälle Common Law
 
-**Adressat:** Akte / Interne Notiz — Tonfall: strukturiert, stichwortartig
+- *Donoghue v Stevenson* [1932] AC 562 (HL) — Begründung der modernen Negligence-Doktrin; Duty of Care als Grundbaustein des Common-Law-Deliktsrechts, relevant für jede Mandatsplanung mit Haftungsbezug.
+- *Carlill v Carbolic Smoke Ball Co* [1893] 1 QB 256 (CA) — Offer und Acceptance bei öffentlichen Ankündigungen; zeigt, dass Common-Law-Vertragsschluss ohne Gegenleistungs-Bestätigung durch den Annehmenden möglich ist.
+- *Hedley Byrne & Co Ltd v Heller & Partners Ltd* [1964] AC 465 (HL) — Haftung für fahrlässige Falschauskunft (negligent misstatement); Grundlage aller Pre-Contractual-Haftungsprüfungen im englischen Recht.
+- *Entores Ltd v Miles Far East Corporation* [1955] 2 QB 327 (CA) — Postal Rule und ihre Grenzen bei moderner Kommunikation; maßgeblich für Fragen des Vertragsschlusszeitpunkts bei elektronischen Mitteilungen.
+
+## Normen und Quellen — Common-Law-Überblick
+
+**UK (England & Wales)**
+- Misrepresentation Act 1967 — Schadensersatz bei vorvertraglichen Falschangaben
+- Sale of Goods Act 1979 (sowie Consumer Rights Act 2015) — implied terms
+- Unfair Contract Terms Act 1977 (UCTA) + Consumer Rights Act 2015 — reasonableness test
+- Companies Act 2006 — corporate authority, capacity
+- Law of Property (Miscellaneous Provisions) Act 1989 — deed-Anforderungen
+
+**US (New York / Delaware)**
+- Uniform Commercial Code (UCC) Art. 1, 2 — Verkauf beweglicher Sachen
+- Restatement (Second) of Contracts §§ 1-385 — Common-Law-Vertragsrecht (non-UCC)
+- Delaware General Corporation Law (DGCL) — Gesellschaftsrecht
+- New York General Obligations Law § 5-701 (Statute of Frauds)
+
+**Rechtsvergleichend**
+- Zweigert/Kötz, Einführung in die Rechtsvergleichung, 3. Aufl. 1996 — Standardwerk für deutsch-englische Rechtsvergleichung
+- Goode/McKendrick, Commercial Law, 6th ed. 2020 — umfassender UK-Commercial-Law-Überblick
+
+## Schritt-für-Schritt-Mandatseinstieg
+
+1. **Jurisdiktion fixieren** — Rechtswahlklausel lesen, Sitz und Registered Office prüfen, UK/US-Spur wählen.
+2. **False-Friends-Scan** — Begriffe wie "material breach", "condition", "warranty", "indemnity", "guarantee", "representation" im Vertragstext identifizieren und auf deutsche Rechtsbehelfs-Äquivalente abgleichen.
+3. **Consideration prüfen** — bei UK-Verträgen: liegt Consideration vor? Bei Deed-Abschluss statt Simple Contract: Formanforderungen beachten.
+4. **Kapazitätsprüfung** — Corporate authority der Vertragsparteien (Board resolutions, Power of Attorney, Registered Signatories).
+5. **Haftungsklauseln bewerten** — Limitation of Liability, Indemnity-Kaskaden, Consequential-Loss-Ausschluss im Licht von UCTA (UK) bzw. UCC-Disclaimer-Regeln (US) prüfen.
+6. **Zuständigkeits- und Vollstreckungsfrage klären** — Exclusive jurisdiction clause, Arbitration clause, Hague Convention-Anwendbarkeit.
+7. **Mandantenhinweis** — Kurzlage mit Ampel, offene Annahmen, Local-Counsel-Bedarf, nächste Schritte.
+
+## Output-Template: Mandatseinstiegs-Kurzlage
+
+**Adressat:** Mandant (intern) — **Tonfall:** sachlich-juristisch, strukturiert
 
 ```
-MANDATSKARTE UMWELTRECHT
-Stand: [DATUM]
-Akte: [AKTENZEICHEN]
+COMMON-LAW-MANDATSEINSTIEG — KURZLAGE
+Datum: [DATUM]
+Mandat: [BEZEICHNUNG]
+Bearbeiter: [NAME]
 
-MANDANT: [NAME], [ROLLE: Betreiber/Nachbar/Verband]
-GEGNER/BEHOERDE: [NAME/STELLE]
-ANLAGE: [BEZEICHNUNG], [ORT], [TYP]
+1. JURISDIKTION
+ Rechtsordnung: [English Law / New York Law / Delaware / ...]
+ Verbindliche Sprache: [EN / DE+EN]
+ Vertragstyp: [SPA / SHA / Loan / Services / ...]
 
-RECHTSRAHMEN:
-- Hauptnorm: § [X] [GESETZ]
-- Nebenrecht: [weitere Normen]
+2. PARTEIROLLE & INTERESSEN
+ Mandant: [PARTEI]
+ Gegenpartei: [PARTEI]
+ Kerninteressen: [...]
 
-VERFAHRENSSTAND:
-- [DATUM]: Genehmigung erteilt / Antrag gestellt / Bescheid erhalten
-- [DATUM]: Widerspruch eingelegt / Klage erhoben
-- [DATUM]: Naechster Termin [Erörterungstermin / VG / OVG]
+3. FALSE-FRIENDS-TREFFER (Ampel)
+ GRUEN: [Begriff] — unproblematisch
+ GELB: [Begriff] — Klarstellungsbedarf, Kommentar: [...]
+ ROT: [Begriff] — dringend ueberarbeiten, Risiko: [...]
 
-FRISTEN:
-- [DATUM]: Klagefrist / Einwendungsfrist / TEHG-Abgabe
+4. OFFENE ANNAHMEN / LOCAL-COUNSEL-BEDARF
+ - [...]
 
-RISIKEN:
-- ROT: [Konkrete Gefahr, z.B. Praeklusion mangels Einwendung]
-- ORANGE: [Risiko mit Einschaetzung Wahrscheinlichkeit]
-
-NAECHSTE HANDLUNG:
-1. [Konkrete Massnahme, Verantwortlich, Deadline]
-2. [Weitere Massnahme]
-
-OFFENE FRAGEN / BENOETIGT:
-- [Dokument / Information]
+5. NAECHSTE SCHRITTE
+ - [Schritt 1 mit Frist]
+ - [Schritt 2 mit Verantwortlichem]
 ```
-
-## Schnittstellen-Skills
-
-- `fachanwalt-verwaltungsrecht-orientierung` — allgemeine Verwaltungsrechtspruefung
-- `energieanlagen-bimschg-genehmigung-verfahren` — Energie-Spezial-BImSchG
-- `energietrassen-planfeststellung-rechtsschutz` — Energie-Planfeststellung
-- `esg-greenwashing-csrd` — Nachhaltigkeitsberichte
-- `klimaklagen-verbandsklage-umwrg` — Klimaklagen

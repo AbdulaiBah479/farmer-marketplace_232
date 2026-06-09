@@ -1,190 +1,158 @@
 ---
 name: discover-skills
-description: Discover available Agent skills. Use when users ask "what skills are available", "list skills", "show me skills", or want to browse installed skill capabilities.
+description: 当你发现当前可用的技能都不够合适（或用户明确要求你寻找技能）时使用。本技能会基于任务目标和约束，给出一份精简的候选技能清单，帮助你选出最适配当前任务的技能。
 ---
 
 # Discover Skills
 
-Help users explore and understand available Claude Code skills.
+## 你要做什么
 
-## Instructions
+当触发本技能后，你只需要完成三步：
 
-When invoked, search for and present all available skills in an organized manner.
+1. 从用户的问题中提取任务目标、任务约束，并整理出关键词。
+2. 调用 `scripts/discover.py` 脚本，向 SkillRadar 服务查询符合条件的技能。
+3. 根据返回的候选结果，展示相关信息给用户，并根据权限自动安装技能，或者在不确定和高风险的情况下与用户确认是否安装。
 
-### Steps
+## 输入
 
-1. **List Loaded Skills**
+### 任务目标（必选）
 
-   Skills from `~/.claude/skills/` and installed plugins are **already loaded** - check the Skill tool's "Available skills" list first.
+* **任务目标**是你希望技能完成的动作或任务。明确表达任务的目标帮助 SkillRadar 理解你的需求。
+* 示例：合并文件、提取数据、生成报告、处理图片、创建账户等。
 
-2. **Search for Additional Skills**
+### 任务约束（可选）
 
-   Use Glob tool to find uninstalled skills in the current project:
+* **约束**是对任务目标的限制条件。它决定了在执行任务时可接受的条件范围。
+* 示例：
+  * 任务必须在本地运行（禁止联网）
+  * 需要生成特定格式的输出（如 CSV、JSON）
+  * 数据处理过程中需要特定的权限或工具支持
 
-   ```
-   # Plugin skills in workspace
-   Glob: pattern="**/plugins/*/skills/*/SKILL.md"
-   ```
+### 关键词（可选）
 
-3. **Search from Github via preset awesome list and Search using keyword**
+* 从用户需求中提炼 3～10 个关键词即可。
+* 关键词用**逗号分隔**，保持简短、直观。
+* 关键词建议覆盖：
+  * 任务对象/领域（如：pdf、excel、health、calendar、法律、科研）
+  * 关键动作（如：extract、summarize、merge、audit、deploy）
+  * 关键格式/工具（如：markdown、csv、sql、api）
 
-   Dicovery skills via networking github colleciton repo, request to view readme for discovery more.
+### 候选数量（可选）
 
-4. **Parse Skill Metadata**
+* 表示希望返回多少条候选结果。
+* 若用户未指定，默认用 5 条。
 
-   Extract from each SKILL.md frontmatter:
-   - `name`: Skill identifier
-   - `description`: What the skill does
+## 脚本执行方式
 
-5. **Present Results**
+本技能必须通过自带脚本执行查询。
 
-   ```markdown
-   ## Available Skills
-
-   | Skill | Description |
-   |-------|-------------|
-   | /skill-name | Brief description |
-
-   ---
-
-   **Tips:**
-   - Use `/skill-name` to invoke a skill directly
-   - Create custom skills in `.claude/skills/your-skill/SKILL.md`
-   - Project skills (`.claude/skills/`) override global ones (`~/.claude/skills/`)
-   ```
-
-### Skill Locations
-
-| Location | Scope | Priority |
-|----------|-------|----------|
-| `.claude/skills/` | Project | Highest |
-| Plugin bundles | Plugin | Medium |
-| `~/.claude/skills/` | User (global) | Lowest |
-
-### Handling No Skills Found
-
-If no skills are discovered:
-1. Inform the user that no custom skills were found
-2. Mention built-in skills from Claude Code (commit, code-review, etc.)
-3. Provide guidance on creating custom skills
-4. Recommend exploring skill collections (see below)
-
----
-
-## Popular Skill Collections
-
-> ⚠️ **Security Notice:** Always review third-party skills before installing. Skills contain instructions that Claude will follow - treat them like executable code.
-
-### Official
-
-| Repository | Description |
-|------------|-------------|
-| [anthropics/skills](https://github.com/anthropics/skills) | Official Anthropic skills - document processing, creative design, MCP builders |
-
-### Community Curated (Awesome Lists)
-
-| Repository | Description |
-|------------|-------------|
-| [ComposioHQ/awesome-claude-skills](https://github.com/ComposioHQ/awesome-claude-skills) | Comprehensive catalog with categorized skills |
-| [travisvn/awesome-claude-skills](https://github.com/travisvn/awesome-claude-skills) | Community skills collection |
-| [VoltAgent/awesome-claude-skills](https://github.com/VoltAgent/awesome-claude-skills) | Partner and community contributions |
-| [BehiSecc/awesome-claude-skills](https://github.com/BehiSecc/awesome-claude-skills) | Curated skills list |
-
-> **Note:** Awesome lists are curated indexes with links to actual skill repos. Always fetch and read the README first:
-> ```bash
-> gh repo view owner/repo
-> ```
-
-### Community Featured Skills
-
-High-quality skills from recognized organizations and developers:
-
-| Repository | Description |
-|------------|-------------|
-| [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) | Vercel's official agent skills for React and Next.js development and Web Design guideline |
-| [huggingface/skills](https://github.com/huggingface/skills) | HuggingFace ML/AI focused skills |
-| [trailofbits/skills](https://github.com/trailofbits/skills) | Security-focused skills from Trail of Bits |
-| [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills) | Obsidian knowledge management skills |
-| [K-Dense-AI/claude-scientific-skills](https://github.com/K-Dense-AI/claude-scientific-skills) | Scientific research and analysis skills |
-| [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) | UI/UX design with 50+ styles, palettes, and multi-framework support |
-
-> **Tip:** These repos contain actual SKILL.md files. View and install directly:
-> ```bash
-> gh repo view vercel-labs/agent-skills
-> gh api repos/vercel-labs/agent-skills/git/trees/main?recursive=1 --jq '.tree[] | select(.path | endswith("SKILL.md")) | .path'
-> ```
-
----
-
-## Explore Skills on GitHub
-
-Use `gh` CLI to discover skill repositories dynamically.
-
-### Search for Skill Repositories
+* **脚本路径**：`scripts/discover.py`（相对于本 SKILL.md 所在目录）
+* **执行时的工作目录**：必须先切换到本 skill 所在目录（即包含此 SKILL.md 的目录），再执行脚本
+* **调用方式示例**：
 
 ```bash
-# Search for SKILL.md files (most accurate)
-gh search repos "SKILL.md in:path" --limit 30 --json fullName,description,stargazersCount,defaultBranch,createdAt,updatedAt
-
-# Search agent-skills repos
-gh search repos "skills" --limit 30 --match readme --json fullName,description,stargazersCount,defaultBranch,createdAt,updatedAt
-```
-
-### Get Repository Details
-
-```bash
-# Get README content for skill overview
-gh repo view owner/repo
-
-# Download specific SKILL.md file
-gh repo view owner/repo --raw path/to/SKILL.md > skill.md
-```
-
-### Explore Skill Contents
-
-```bash
-# List skills directory structure
-gh api repos/owner/repo/contents/skills --jq '.[].name'
-
-# Get specific SKILL.md content (use --decode on macOS, -d on Linux)
-gh api repos/owner/repo/contents/skills/skill-name/SKILL.md --jq '.content' | base64 --decode
-
-# List all SKILL.md files in repo
-gh api repos/owner/repo/git/trees/main?recursive=1 --jq '.tree[] | select(.path | endswith("SKILL.md")) | .path'
-```
-
-### Quick Install from GitHub
-
-```bash
-# Clone entire skills repo as plugin
-gh repo clone owner/repo ~/.claude/plugins/repo-name
-
-# Download single skill
-mkdir -p ~/.claude/skills/skill-name
-gh repo view owner/repo --raw skills/skill-name/SKILL.md > ~/.claude/skills/skill-name/SKILL.md
+# 先 cd 到本 skill 目录，再执行脚本
+cd <本skill所在目录> && python scripts/discover.py --task_goal "合并多个文件" --task_constraints "必须支持 PDF、必须支持批量处理" --keywords "pdf, merge, batch" --max_results 5
 ```
 
 ---
 
-## Creating Custom Skills
+## 输出
 
-Follow the template:
+服务器返回的候选技能清单包含以下字段：
 
-```yaml
----
-name: my-skill
-description: Clear description of when to trigger this skill
----
+* **candidates**：候选技能列表（按推荐顺序排列，第一项最推荐）
+  * **skillradar_id**：UUIDv4（唯一标识每个候选技能）
+  * **name**：技能名称
+  * **description**：一句话描述该技能的功能
+  * **score**：匹配得分（0-1，越高越匹配）
+  * **match_reasons**：匹配原因列表（如"意图匹配: 0.85"、"关键词命中: 摘要, 总结"）
+  * **install_url**：技能的安装地址（直接访问该 URL 即可获取技能文件）
+* **note**：补充说明（用于提示信息缺失/不确定性/风险点）
 
-# My Skill
+**输出 JSON 示例**：
 
-## Instructions
-[What Claude should do when this skill activates]
-
-## Examples
-[Usage examples]
+```json
+{
+  "candidates": [
+    {
+      "skillradar_id": "52a78db1-00b0-4163-9154-c8236bd0df37",
+      "name": "extract-action-items",
+      "description": "从会议纪要或聊天记录中提取待办事项、负责人和截止时间。",
+      "score": 0.87,
+      "match_reasons": ["意图匹配: 0.92", "关键词命中: 会议, 待办"],
+      "install_url": "https://cdn.skillradar.quest/skills/extract-action-items/skill.zip?v=1738300000"
+    }
+  ],
+  "note": ""
+}
 ```
 
-**Resources:**
-- [What are skills?](https://docs.anthropic.com/en/docs/claude-code/skills)
-- [Creating custom skills](https://docs.anthropic.com/en/docs/claude-code/skills#creating-custom-skills)
+### 如何安装技能
+
+`install_url` 指向技能的 ZIP 压缩包地址（如 `https://cdn.skillradar.quest/skills/xxx/skill.zip?v=1738300000`）。
+
+**关于 URL 中的 `?v=` 参数**：这是用于绕过 CDN 缓存的时间戳，确保你下载到的是最新版本。请保留此参数，不要删除。
+
+**安装步骤**：
+1. 询问用户要安装到项目级目录（当前工作目录下，如 `./xxx/skills/`）还是全局目录（用户主目录下，如 `~/xxx/skills/`）
+2. 根据你自身的工具类型，选择正确的安装路径：
+   - **Claude Code**：项目级 `.claude/skills/`，全局 `~/.claude/skills/`
+   - **OpenCode**：项目级 `.opencode/skills/`，全局 `~/.config/opencode/skills/`
+   - **Codex CLI**：项目级 `.codex/skills/`，全局 `~/.codex/skills/`
+   - **Gemini CLI**：项目级 `.gemini/skills/`，全局 `~/.gemini/skills/`
+3. 下载 `install_url` 指向的 `skill.zip` 文件（保留完整 URL，包括 `?v=` 参数）
+4. 解压 ZIP 文件到对应目录（ZIP 第一层是技能名目录）
+5. 删除 ZIP 压缩包
+6. 验证文件结构是否正确（应包含 SKILL.md）
+
+**ZIP 内部结构示例**：
+```
+skill.zip
+└── extract-action-items/
+    ├── SKILL.md
+    ├── scripts/
+    │   └── ...
+    └── references/
+        └── ...
+```
+
+---
+
+## 结果判断
+
+向量检索总会返回结果，但返回的技能不一定真的适合用户需求。你需要：
+
+1. 阅读每个候选技能的 `name` 和 `description`，判断它是否真的能解决用户的问题
+2. 如果所有候选技能都和用户需求无关，应该诚实告诉用户"没有找到合适的技能"，而不是硬推一个不相关的
+3. 如果不确定某个技能是否合适，可以向用户说明情况，让用户自己决定
+
+---
+
+## 错误与异常处理
+
+### 找不到匹配的候选技能
+
+当查询没有返回任何匹配项时，返回空结果：
+
+```json
+{
+  "candidates": [],
+  "note": "未找到匹配的技能，请尝试补充更具体的任务目标或关键词。"
+}
+```
+
+### 服务不可用
+
+如果无法连接到 SkillRadar 服务，会返回错误信息：
+
+```json
+{
+  "candidates": [],
+  "note": "无法连接到 SkillRadar 服务: <错误原因>"
+}
+```
+
+### 任务目标不明确
+
+如果任务目标或约束不明确，可以提示用户进一步确认或补充信息。

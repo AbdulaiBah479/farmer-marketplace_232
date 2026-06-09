@@ -1,6 +1,7 @@
 "use client";
 
 import type { PromptInputMessage } from "@/components/ai-elements/prompt-input";
+
 import {
   PromptInput,
   PromptInputButton,
@@ -124,9 +125,9 @@ const Example = () => {
                 <PromptInputSelectValue />
               </PromptInputSelectTrigger>
               <PromptInputSelectContent>
-                {models.map((m) => (
-                  <PromptInputSelectItem key={m.id} value={m.id}>
-                    {m.name}
+                {models.map((model) => (
+                  <PromptInputSelectItem key={model.id} value={model.id}>
+                    {model.name}
                   </PromptInputSelectItem>
                 ))}
               </PromptInputSelectContent>

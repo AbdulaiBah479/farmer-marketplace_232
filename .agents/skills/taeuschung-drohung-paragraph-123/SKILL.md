@@ -1,51 +1,78 @@
 ---
 name: taeuschung-drohung-paragraph-123
-description: "Prüft Anfechtung wegen arglistiger Täuschung oder widerrechtlicher Drohung nach § 123 BGB mit Kausalität, Dritten, Wissenszurechnung und Jahresfrist."
+description: "Klausurfall zur Anfechtung wegen arglistiger Täuschung oder widerrechtlicher Drohung nach § 123 BGB: Täuschungshandlung und Kausalität, Drohung mit dem versprochenen empfindlichen Übel, Anfechtungsfrist ein Jahr nach § 124 BGB und Ausschluss bei Täuschung durch Dritte."
 ---
 
-# Taeuschung Drohung Paragraph 123
+# Täuschung und Drohung — § 123 BGB
 
-## Zweck
+## Mandantenfall
 
-Täuschung und Drohung tatsachen- und beweisnah prüfen.
+- Verkäufer verschweigt arglistig Mängel des Kaufobjekts — Anfechtung nach § 123 BGB möglich?
+- Arbeitnehmer unterschreibt Aufhebungsvertrag unter Drohung mit fristloser Kündigung — § 123 BGB?
+- Klausurkonstellation: Täuschung durch Dritten, nicht Vertragspartner — Ausnahme bei Kenntnis oder Kennenmüssen.
 
-## Normanker
+## Erste Schritte
 
-§§ 123 und 124 BGB
+1. Täuschungsvariante: arglistige Täuschung durch aktives Tun oder Verschweigen pflichtwidriger Umstände.
+2. Arglist prüfen: Wissenselement (Kenntnis der Unrichtigkeit) und Willensmerkmal (Täuschungsabsicht).
+3. Drohungsvariante: Inaussichtstellen eines empfindlichen Übels als Mittel zur Willensbeeinflussung.
+4. Widerrechtlichkeit der Drohung: Mittel oder Zweck widerrechtlich — BGH-Formel.
+5. Kausalität: Täuschung oder Drohung war für Willenserklärung mitursächlich.
+6. Anfechtungsfrist: § 124 BGB — ein Jahr ab Entdeckung der Täuschung oder Ende der Zwangslage.
 
-## Intake
+## Rechtsrahmen
 
-- Welche Rolle hat die Nutzerin oder der Nutzer: Kanzlei, Rechtsabteilung, Ausbildung, Gerichtsvorbereitung oder Selbststudium?
-- Was ist das konkrete Arbeitsziel: Anspruchsprüfung, Memo, Klausurlösung, Schriftsatzbaustein, Fristenvermerk oder Rückfragenkatalog?
-- Welche Tatsachen sind belegt, welche sind nur Behauptung, welche fehlen noch?
-- Welche Daten, Uhrzeiten, Erklärungen, Vollmachten, Formvorgaben und Fristen sind im Sachverhalt erkennbar?
+- § 123 Abs. 1 BGB: Anfechtung bei arglistiger Täuschung oder widerrechtlicher Drohung.
+- § 123 Abs. 2 BGB: Täuschung durch Dritte — Anfechtung nur bei Kenntnis oder Kennenmüssen des Empfängers.
+- § 124 BGB: Anfechtungsfrist — ein Jahr ab Entdeckung bzw. Ende der Zwangslage; zehn Jahre absolute Frist.
+- § 142 BGB: Nichtigkeit ex tunc bei wirksamer Anfechtung.
+- § 826 BGB: Schadensersatz bei vorsätzlicher sittenwidriger Schädigung als Auffangnorm.
 
 ## Prüfraster
 
-1. Täuschungshandlung, Irrtum, Kausalität und Arglist prüfen
-2. Drohung mit empfindlichem Übel und Widerrechtlichkeit prüfen
-3. Dritte und Zurechnung einordnen
-4. Jahresfrist nach § 124 BGB berechnen
-5. Ergebnis mit Norm, Tatbestandsmerkmal, Subsumtion und Rechtsfolge festhalten.
-6. Offene Tatsachen als Rückfrage formulieren und nicht durch Vermutung ersetzen.
+1. Tatbestand Täuschung: aktive Irreführung oder arglistiges Verschweigen einer Aufklärungspflicht?
+2. Arglist: Doppeltes Vorsatzelement — Kenntnis der Unrichtigkeit und Täuschungsabsicht?
+3. Tatbestand Drohung: Inaussichtstellen eines empfindlichen Übels durch den Drohenden?
+4. Widerrechtlichkeit: Ist das angedrohte Mittel oder der verfolgte Zweck widerrechtlich?
+5. Kausalität: War Täuschung oder Drohung für die Willenserklärung mitursächlich?
+6. Täuschung durch Dritte (§ 123 Abs. 2 BGB): Kannte oder musste Empfänger die Täuschung kennen?
+7. Frist nach § 124 BGB: Ein Jahr gewahrt? Absolute Zehn-Jahres-Frist?
+8. Rechtsfolge § 142 BGB: Nichtigkeit ex tunc — Rückabwicklung nach § 812 BGB?
 
-## Output
+## Typische Fallstricke
 
-- Kurztriage mit Ampel und nächstem Schritt
-- Prüfung im Gutachtenstil oder als praxisnahes Mandatsmemo
-- Anspruchs- oder Erklärungsmatrix mit Beweisankern
-- Rückfragenliste und optionaler Entwurfsbaustein
+- Arglist erfordert Täuschungsabsicht — Fahrlässigkeit reicht nicht aus.
+- Täuschung durch Dritte nach § 123 Abs. 2 BGB: Nur anfechtbar, wenn Empfänger Kenntnis hatte oder haben musste.
+- Anfechtungsfrist § 124 BGB läuft ab Entdeckung, nicht ab Abschluss — wichtig für Fristberechnung.
+- Drohung mit Ausübung eines Rechts kann dennoch widerrechtlich sein, wenn Zweck-Mittel-Verhältnis nicht stimmt.
 
-## Qualitätsregeln
+## Quellen
 
-- BGB-AT-Fragen immer an der passenden Stelle im Anspruchsaufbau prüfen.
-- Auslegung geht regelmäßig vor Anfechtung, Dissens oder Lückenschließung.
-- Keine erfundenen Rechtsprechungs- oder Literaturzitate verwenden; bei Zitaten Primärquelle prüfen.
-- Bei Fristen den Rechenweg sichtbar machen.
-- Bei Wertungen die tragenden Tatsachen ausdrücklich nennen.
+- [§ 123 BGB — gesetze-im-internet.de](https://www.gesetze-im-internet.de/bgb/__123.html)
+- [§ 124 BGB — gesetze-im-internet.de](https://www.gesetze-im-internet.de/bgb/__124.html)
+- [§ 142 BGB — gesetze-im-internet.de](https://www.gesetze-im-internet.de/bgb/__142.html)
+- [dejure.org § 123 BGB](https://dejure.org/gesetze/BGB/123.html)
+- [dejure.org § 124 BGB](https://dejure.org/gesetze/BGB/124.html)
 
-## Anschluss-Skills
+## Vertiefung
 
-- allgemein
-- anspruchsaufbau-zivilrecht-bgb-at
-- bgb-at-output-gutachten-memo-schriftsatz
+### Verhältnis zu § 119 BGB
+
+§ 123 BGB und § 119 BGB stehen grundsätzlich nebeneinander: Bei arglistiger Täuschung über
+Eigenschaften (§ 119 Abs. 2 BGB) kann sowohl nach § 119 Abs. 2 als auch nach § 123 BGB angefochten
+werden. Der Unterschied: § 119 BGB erfordert Kausalität und Unverzüglichkeit (§ 121 BGB),
+§ 123 BGB die Jahresfrist (§ 124 BGB) und kein Verschuldenserfordernis beim Erklärungsempfänger.
+
+### Drohung mit Ausübung eines Rechts
+
+BGH: Drohung mit Ausübung eines Rechts (z.B. Strafanzeige) kann widerrechtlich sein, wenn
+Mittel und Zweck in einem unangemessenen Verhältnis stehen. Klassischer Fall: Drohung mit
+Strafanzeige, um Schulden einzutreiben.
+
+### Klausur-Checkliste § 123 BGB
+
+- Täuschungsvariante: Aktive Irreführung oder arglistiges Verschweigen?
+- Arglist: Doppeltes Vorsatzelement (Kenntnis und Täuschungsabsicht)?
+- Drohungsvariante: Empfindliches Übel in Aussicht gestellt?
+- Widerrechtlichkeit der Drohung: Mittel oder Zweck rechtswidrig?
+- Dritte-Täuschung (§ 123 Abs. 2 BGB): Empfänger kannte Täuschung?

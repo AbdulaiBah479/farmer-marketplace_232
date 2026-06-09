@@ -1,165 +1,248 @@
 ---
 name: anwendungsfall-triage
-description: "Klassifiziert einen vorgeschlagenen KI-Anwendungsfall gegen das Unternehmensregister — freigegeben, bedingt oder nicht freigegeben — und erstellt Auflagenliste und nächste Schritte. Prüft gegen verbotene Praktiken (Art. 5 KI-VO) und Hochrisiko-Kategorien (Anhang III KI-VO). Lädt, wenn der Nutzer „KI-Anwendungsfall triage\", „dürfen wir KI für X einsetzen\", „ist das freigegeben\" oder „Hochrisiko-KI klassifizieren\" sagt."
+description: "Datenschutzrechtlichen Sachverhalt einordnen und Bearbeitungsroute bestimmen. Art. 2 3 DSGVO Anwendungsbereich § 1 BDSG. Prüfraster: Anwendungsbereich personenbezogene Daten Verantwortlicher Auftragsverarbeiter Drittland. Output: Triage-Memo Bearbeitungsroute Normenmap. Abgrenzung: Einstieg und T..."
 ---
 
-# KI-Anwendungsfall-Triage
+# Datenschutz-Triage neuer Verarbeitungsvorgänge
 
-## Zweck
+## Aktenstart statt Formularstart
 
-Das Gespräch stoppen, das als „Können wir nicht einfach KI dafür einsetzen?"
-beginnt. Schnelle, kalibrierte Antwort aus dem Register geben — und bei
-bedingter Freigabe die Auflagen konkret und den nächsten Schritt klar machen.
+Wenn zu **Anwendungsfall Triage** bereits Unterlagen, ein Ordner, ein ZIP, ein PDF-Buendel, E-Mails, Screenshots, Tabellen oder Entwuerfe vorliegen, lies diese zuerst aus. Bilde fuer **Datenschutzrecht** eine Arbeitshypothese zu Beteiligten, Rolle des Nutzers, Verfahrensstand, Fristen, Betrags-/Datumslogik, Belegen und naechstem sinnvollen Output. Frage nicht routinemaessig nach Angaben, die sich aus der Akte ergeben.
 
-Die Triage-Skill ist ein Eingangstor: klassifizieren, Erforderliches
-kennzeichnen, weiterleiten. Die Folgenabschätzungs-Skill erledigt die
-Tiefenarbeit. Pflichtprüfung vor allem anderen: Art. 5 KI-VO (verbotene
-Praktiken, ab 02.02.2025) und DSGVO Art. 22 (automatisierte Einzelentscheidung).
+Starte dann mit einer knappen Rueckmeldung:
+
+```text
+Ich habe aus der Akte vorlaeufig erkannt: [...]
+Unsicher sind noch: [...]
+Als naechsten Schritt schlage ich vor: [...]
+```
+
+Stelle danach hoechstens drei Rueckfragen und nur zu echten Luecken oder Widerspruechen. Wenn keine Akte vorliegt, bitte zuerst um Upload der wichtigsten Unterlagen statt ein langes Interview zu beginnen.
 
 ## Eingaben
 
-- Beschreibung des KI-Anwendungsfalls: was tut die KI, wer ist betroffen,
-  gibt es menschliche Überprüfung, welcher Anbieter?
-- Praxisprofil aus `CLAUDE.md` (Anwendungsfall-Register, Rote Linien,
-  Governance-Stufen, regulatorischer Fußabdruck)
+- Beschreibung des Verarbeitungsvorgangs (Datenarten, Zweck, Betroffenenkreis)
+- Datenkategorien (Art. 4 Nr. 1, Art. 9 DSGVO); Beschäftigtendaten (§ 26 BDSG)?
+- Neu erhoben oder Zweckänderung bei vorhandenen Daten (Art. 5 Abs. 1 lit. b DSGVO)?
+- Auftragsverarbeiter / Drittland-Übermittlung?
+- Automatisierte Entscheidungsfindung (Art. 22 DSGVO)?
+- Cookies / Endgerätezugriff (§§ 24 ff. TDDDG)?
 
 ## Rechtlicher Rahmen
 
-**Kernvorschriften**
+### Kernvorschriften
 
-- **AI Act Art. 5 KI-VO (verbotene Praktiken)**: Social Scoring durch
-  öffentliche oder private Stellen (Art. 5 Abs. 1 lit. c); subliminale
-  Manipulation (Art. 5 Abs. 1 lit. a/b); Ausnutzung von Vulnerabilität
-  (Art. 5 Abs. 1 lit. b); biometrische Kategorisierung nach geschützten
-  Merkmalen (Art. 5 Abs. 1 lit. g); Echtzeitfernidentifizierung in
-  öffentlichen Räumen (Art. 5 Abs. 1 lit. h); Emotionserkennung am
-  Arbeitsplatz/Bildung (Art. 5 Abs. 1 lit. f). Ab 02.02.2025 anwendbar.
-- **AI Act Art. 6 i.V.m. Anhang III KI-VO**: Hochrisiko-Kategorien —
-  Nr. 1 Biometrie; Nr. 2 Beschäftigung (Bewerbungs-Screening, Leistungs-
-  bewertung); Nr. 3 Wesentliche Dienstleistungen (Kredit, Versicherung);
-  Nr. 4 Bildung; Nr. 5 Kritische Infrastruktur; Nr. 6 Strafverfolgung;
-  Nr. 7 Migration; Nr. 8 Rechtspflege. Hochrisiko: Art. 9–15 (Anbieter),
-  Art. 26/29 (Betreiber).
-- **DSGVO Art. 22**: Vollautomatisierte Einzelentscheidungen mit Rechtswirkung
-  oder erheblicher Beeinträchtigung nur nach Art. 22 Abs. 2 lit. a–c
-  (Vertrag, gesetzliche Pflicht, ausdrückliche Einwilligung). Widerspruchs-
-  und Transparenzpflichten.
-- **§ 87 Abs. 1 Nr. 6 BetrVG**: Mitbestimmungsrecht des Betriebsrats bei
-  KI-Tools zur Mitarbeiterüberwachung/-bewertung.
+- **DSGVO:** Art. 5 (Grundsätze), Art. 6 (Rechtsgrundlagen), Art. 9 (besondere
+ Kategorien), Art. 13/14 (Informationspflichten), Art. 17 (Löschrecht), Art. 22
+ (automatisierte Entscheidungen), Art. 25 (Privacy by Design/Default), Art. 28 (AVV),
+ Art. 30 (Verarbeitungsverzeichnis), Art. 32 (TOM), Art. 35 (DSFA), Art. 44 ff.
+ (Drittlandtransfer).
+- **BDSG:** § 22 (Gesundheits-/Sozialdaten), § 26 (Beschäftigtendatenschutz), § 38
+ (betrieblicher DSB).
+- **TDDDG (ehem. TTDSG):** §§ 24 ff. — Einwilligung für Cookies/Endgerätezugriffe.
+- **Art. 35 Abs. 4 DSGVO** i. V. m. DSK-Positivliste — nationale Pflichttatbestände.
 
-**Leitentscheidungen**
+### Leitentscheidungen
 
-- EuGH, Urt. v. 07.12.2023 – C-634/21, NJW 2024, 126 Rn. 49 (Schufa-Score): Automatisiertes Profiling als Art. 22 Abs. 1 DSGVO-Entscheidung, wenn KI-Note maßgebliche Grundlage für Drittentscheidung; Maßstab für Scoring-/Kredit-/HR-Anwendungsfälle.
-- EuGH, Urt. v. 04.10.2024 – C-203/22, NJW 2025, 56 Rn. 38 (Dun & Bradstreet): Betreiber algorithmischer Entscheidungssysteme müssen Entscheidungslogik verständlich offenlegen; Maßstab für Transparenzauflagen bei bedingter Freigabe.
-- BAG, Urt. v. 13.01.2004 – 9 AZR 603/02, NZA 2004, 784 Rn. 16: Mitbestimmungspflicht bei technischen Überwachungssystemen; gilt für KI-basierte Mitarbeiterbewertung.
-- BGH, Urt. v. 19.06.2018 – VI ZR 184/17, NJW 2018, 2877 Rn. 15: Haftung bei automatisierten Informationssystemen; Organisationspflicht bei KI-Einsatz.
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+ — Ungültigkeit EU-US-Privacy-Shield; Standardvertragsklauseln erfordern Transfer
+ Impact Assessment; maßgeblich für Art. 44 ff. DSGVO.
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+ — Automatisiertes Scoring als Entscheidung i. S. d. Art. 22 DSGVO, wenn Dritte
+ maßgeblich darauf abstellen; zentral für Triage von KI-/Scoring-Vorhaben.
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+ — Datenschutzrechtliche Haftung Art. 82 DSGVO; Beweislastverteilung.
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+ *(Recht auf Vergessen I)* — Datenschutz als Teil des allgemeinen Persönlichkeitsrechts
+ (Art. 2 Abs. 1 i. V. m. Art. 1 Abs. 1 GG); Abwägung mit Kommunikationsfreiheiten.
 
-**Kommentare**
+### Kommentare
 
-- Wendehorst/Grinzinger, in: Wendehorst/Grinzinger, AI Act, 1. Aufl. 2024, Art. 5 Rn. 8 (verbotene Praktiken) und Art. 6 i.V.m. Anhang III Rn. 15 (Hochrisiko-Klassifikation).
-- Ehmann/Selmayr, in: Ehmann/Selmayr, DS-GVO, 3. Aufl. 2024, Art. 22 Rn. 10.
-- Müller-Glöge, in: Erfurter Kommentar, 25. Aufl. 2025, § 87 BetrVG Rn. 32.
-- Spindler/Schuster, Recht der elektronischen Medien, 4. Aufl. 2024,
-  Teil IV Rn. 88.
-
-*Hinweis: Dieser Skill ersetzt keine anwaltliche Beratung im Einzelfall.*
+- Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen zitieren. Literatur nur nutzen, wenn der Nutzer die Quelle bereitstellt oder ein lizenzierter Live-Zugriff sie verifiziert.
+ — DSFA-Pflicht, Schwellenwerte, Verhältnis zu nationalen Listen.
+- `Simitis/Hornung/Spiecker (Hrsg.), DSGVO, 2. Aufl. 2022, Art. 6 Rn. 30 ff.`
+ — Rechtsgrundlagen; berechtigtes Interesse als Auffangtatbestand.
+- `Gola (Hrsg.), DSGVO, 3. Aufl. 2022, Art. 22 Rn. 5 ff.`
+ — Automatisierte Entscheidungsfindung; Abgrenzung zu Profiling.
+- `Paal/Pauly (Hrsg.), DS-GVO BDSG, 3. Aufl. 2021, Art. 25 DSGVO Rn. 7 ff.`
+ — Privacy by Design und Privacy by Default als Entwurfspflicht.
+- `Ehmann/Selmayr (Hrsg.), DS-GVO, 2. Aufl. 2018, Art. 35 Rn. 25 ff.`
+ — Anwendungsbereich der DSFA; Verhältnis zu Art. 5, 25 DSGVO.
 
 ## Ablauf
 
-**Schritt 1 — Anwendungsfall verstehen**
+### Schritt 1: Verarbeitungsvorgang klären
 
-Bei vager Beschreibung fragen: Was tut die KI genau? Auf wen/was wirkt sie?
-Prüft ein Mensch vor Wirkung? Welcher Anbieter? Nur intern oder Kunden/Dritte?
+Bei vager Beschreibung zuerst nachfragen: Datenkategorien (Art. 9?), Betroffenenkreis
+(Beschäftigte → § 26 BDSG!), Zweck, Neu oder Zweckänderung, Auftragsverarbeiter,
+automatisierte Entscheidung (Art. 22), Endgerätezugriff (§ 24 TDDDG).
 
-**Schritt 2 — Art. 5-Prüfung (ERSTE PRIORITÄT)**
+### Schritt 2: Hausinternes DSA-Raster
 
-Vor dem Register prüfen: Liegt ein absolutes Verbot vor?
-- Social Scoring, subliminale Manipulation, Vulnerabilitäts-Ausnutzung
-- Biometrische Kategorisierung nach geschützten Merkmalen
-- Echtzeitbiometrie in öffentlichen Räumen
-- Emotionserkennung am Arbeitsplatz/Bildung
+Konfiguriertes Prüfraster aus CLAUDE.md lesen. Trigger erfüllt → mindestens
+**DSA ERFORDERLICH**. Nicht erfüllt → weiter mit Schritt 3.
 
-Bei Treffer: sofort melden, ohne Abmilderung:
-> „Dieser Anwendungsfall berührt [Art. 5 KI-VO]. Verbotene Praktiken sind
-> absolute Verbote. Wenn etwas anders ist: anwaltliche Entscheidung nötig,
-> keine Triage-Freigabe."
+### Schritt 3: DSFA-Pflichtprüfung (Art. 35 DSGVO)
 
-**Schritt 3 — Register-Abgleich**
+**Pflichttatbestände (Art. 35 Abs. 3, DSK-Positivliste):**
+- Systematische automatisierte Bewertung persönlicher Aspekte inkl. Profiling mit
+ Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+- Umfangreiche Verarbeitung besonderer Datenkategorien (Art. 9 DSGVO).
+- Systematische umfangreiche Überwachung öffentlich zugänglicher Bereiche.
 
-Direkttreffer → anwenden. Nahes Match → kennzeichnen. Kein Treffer →
-BEDINGT (Folgenabschätzung ausstehend); vorläufige Risikoeinschätzung
-einschließlich Anhang-III-Prüfung ausgeben.
+**Starke Indikatoren (kein Pflichttatbestand, aber DSFA dringend empfohlen):**
+neue Technologie, Kinderdaten, Zusammenführung getrennter Datensätze,
+Diskriminierungspotenzial, Cross-Context-Tracking, verhaltensbasierte Werbung.
 
-**Schritt 4 — Jurisdiktionaler Anwendungsbereich und Anhang-III-Prüfung**
+Pflichttatbestand erfüllt → **DSFA PFLICHT**. Nur Indikatoren → **DSA ERFORDERLICH**.
 
-Alle Regime aus `## Regulatorischer Fußabdruck` prüfen. Striktest
-anwendbare Behandlung bei Mehrfach-Jurisdiktion. Anhang-III-Kategorien
-(Nr. 1–8) explizit gegen den Anwendungsfall prüfen; bei Hochrisiko:
-Betreiberpflichten Art. 26/29 KI-VO vermerken.
+### Schritt 4: Datenschutzrichtlinien-Abgleich
 
-**Schritt 5 — DSGVO Art. 22-Prüfung**
+Vorhaben gegen konfigurierte Richtlinien prüfen. Typische Konflikte:
+Datenkategorie nicht in Richtlinie erfasst; Drittlandweitergabe ohne Grundlage
+(Art. 44 ff. DSGVO); Löschfristen (Art. 17) überschritten; Zweckbindung (Art. 5
+Abs. 1 lit. b) verletzt; Betroffenenrechte unvollständig.
 
-Vollautomatisiert + Rechtswirkung/erhebliche Beeinträchtigung? → Art. 22
-Abs. 1 greift; Rechtsgrundlage nach Abs. 2 dokumentieren und Human-in-the-
-Loop oder Einwilligung sicherstellen.
+Direkter Konflikt → **STOPP**. Konflikt muss aufgelöst sein vor Fortführung.
 
-**Schritt 6 — Klassifikation und Ausgabe**
+### Schritt 5: Klassifikation und Ausgabe
 
-Bei Nicht-Jurist-Rolle: vor FREIGEGEBEN-Klassifikation anwaltliche Prüfung
-abfragen; 1-seitigen Kurzüberblick für das Anwaltsgespräch generieren.
+```
+Kurzergebnis: [DSFA PFLICHT / DSA ERFORDERLICH / FREIGABE / STOPP — ein Satz]
 
----
+VORGANG: [wie verstanden]
+KLASSIFIKATION: [...]
+Hausinternes DSA-Raster ausgelöst? [Ja / Nein]
+DSFA-Pflicht (Art. 35 DSGVO)? [Ja — Tatbestand / Nein / N/A]
+Richtlinienkonflikt? [Keiner / Ja — konkreter Konflikt]
+Begründung: [1–3 Sätze]
+```
 
-**ANWENDUNGSFALL:** [Anwendungsfall wie verstanden]
-**KLASSIFIKATION:** [FREIGEGEBEN / BEDINGT / NICHT FREIGEGEBEN]
-**Art. 5 KI-VO:** [Kein Verbot / [Verbotene Praxis] — ABSOLUTES VERBOT]
-**Anhang III KI-VO:** [Nicht einschlägig / Hochrisiko Kategorie [Nr.]]
-**DSGVO Art. 22:** [Nicht einschlägig / Einschlägig — Rechtsgrundlage: [Abs. 2]]
-**Begründung:** [1–3 Sätze]
-**Ausgelöste Rote Linien:** [Keine / Liste]
-
-*Bei BEDINGT:*
+*Voraussetzungen bei DSA / DSFA:*
 
 | Anforderung | Verantwortlich | Erledigt? |
 |---|---|---|
-| KI-Folgenabschätzung (ggf. DSFA Art. 35 DSGVO) | [KI-Beauftragter] | ☐ |
-| DSGVO Art. 22 Rechtsgrundlage dokumentieren | [DSB] | ☐ |
-| Human-in-the-Loop — keine vollautomatisierten Entscheidungen | [Produkt] | ☐ |
-| Offenlegung ggü. Betroffenen (Art. 13/14 DSGVO) | [Produkt/Recht] | ☐ |
-| Betriebsrats-Beteiligung (§ 87 Abs. 1 Nr. 6 BetrVG) | [HR/Recht] | ☐ |
+| Datenschutzprüfung / DSFA (Art. 35 DSGVO) | DSB | ☐ |
+| Berechtigtes-Interesse-Abwägung (Art. 6 Abs. 1 lit. f) | DSB / Legal | ☐ |
+| DSB-Konsultation (DSFA-Pflichtverfahren) | DSB | ☐ |
+| AVV (Art. 28 DSGVO) | Legal | ☐ |
+| Richtlinienaktualisierung vor Launch | DSB | ☐ |
+| Eintrag Verarbeitungsverzeichnis (Art. 30) | DSB | ☐ |
 
-**Governance-Stufe:** [Standard / Erhöht / Hoch]
+**Rechtsgrundlage (Art. 6 DSGVO):** [lit. a Einwilligung / lit. b Vertrag /
+lit. c rechtliche Verpflichtung / lit. f berechtigte Interessen — oder "unklar"]
 
-## Ausgabeformat
+Nach Klassifikation immer anbieten: "Soll ich jetzt direkt mit der DSFA beginnen?"
 
-Bei Einzel-Anwendungsfall: wie oben. Bei mehreren Anwendungsfällen:
-zuerst Übersichtstabelle (✅ Freigegeben / ⚠️ Bedingt / ❌ Nicht freigegeben
-+ Schlüssel-Blocker), dann Detailausführung für bedingte und abgelehnte.
+*Bei STOPP:*
+Konflikt benennen. Optionen: (A) Vorhaben umgestalten, (B) Richtlinie aktualisieren
+(Vereinbarkeit mit Rechtsgrundlage prüfen). Keinen Weg vorschlagen, wenn keiner besteht.
+
+### Schritt 6: Weiterleitung
+
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+ KI-Folgenabschätzung erwägen.
+- **Beschäftigtendatenschutz:** § 26 BDSG und Mitbestimmung (§§ 87 Abs. 1 Nr. 6,
+ 94 BetrVG) prüfen.
 
 ## Beispiel
 
-**Anfrage:** „HR will KI zur automatischen Bewerbungs-Vorselektion einsetzen."
-**Triage:** Art. 5: kein Verbot. Anhang III Nr. 2: Hochrisiko (Einstellungs-
-entscheidung) `[prüfen-pinpoint]`. DSGVO Art. 22 Abs. 1 bei Vollautomatisierung.
-§ 87 Abs. 1 Nr. 6 BetrVG: Betriebsrats-Beteiligung prüfen.
-**Klassifikation: BEDINGT.** Folgenabschätzung + DSFA; Human-in-the-Loop;
-Betriebsrat einbeziehen; Offenlegung ggü. Bewerber:innen (Art. 13 DSGVO).
+**Vorgang:** ML-basiertes Kreditscoring für Bestandskunden; Ergebnis fließt in
+automatisierte Kreditentscheidung.
+
+**Klassifikation:** DSFA PFLICHT — Art. 35 Abs. 3 lit. a DSGVO: systematische
+automatisierte Bewertung persönlicher Aspekte mit erheblichen Auswirkungen
+Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+(Schufa-Scoring) reicht es, dass Dritte maßgeblich auf das Scoring abstellen.
+DSB-Konsultation und Verarbeitungsverzeichnis-Eintrag (Art. 30) zwingend.
 
 ## Risiken und typische Fehler
 
-- Art. 5 KI-VO ist Pflichtprüfung — immer zuerst, vor dem Register.
-- „Nur intern" reduziert das Risiko nicht: Mitarbeiter-KI oft höheres
-  Risiko als kundenseitige KI.
-- „Wir testen nur" ist keine Ausnahme bei echten Personen-Daten.
-- „Der Anbieter sagt, es ist sicher" ersetzt nicht die eigene Folgenabschätzung.
+- **"Anonymisiert" = FREIGABE:** Pseudonymisierte Daten bleiben personenbezogen
+ (Art. 4 Nr. 1 DSGVO). Re-Identifikationsrisiko konkret prüfen.
+- **"Wir machen das ähnlich":** Bestehende, nie geprüfte Verarbeitungen legitimieren
+ keine neue. Bei anderem Umfang/Zweck/Kategorie: neu triagen.
+- **"Nur ein Pilot":** Pilot mit echten Personendaten unterliegt denselben Anforderungen.
+- **"Der Anbieter regelt Datenschutz":** AVV nach Art. 28 zwingend; Triage bleibt beim
+ Verantwortlichen (Art. 4 Nr. 7 DSGVO).
+- **Inferred Data übersehen:** Score, Risikoklasse, Präferenz = personenbezogenes Datum.
+
+Hinweis: Dieser Skill ersetzt keine anwaltliche Beratung im konkreten Einzelfall.
 
 ## Quellenpflicht
 
-- **AI Act Art. 5** und **Art. 6 i.V.m. Anhang III** (mit konkreter Nr.) bei
-  jeder Klassifikation.
-- **DSGVO Art. 22** bei automatisierten Entscheidungen.
-- **§ 87 Abs. 1 Nr. 6 BetrVG** bei Mitarbeiter-Überwachungs-/Bewertungstools.
-- **EuGH C-634/21 (Schufa-Score)** bei Scoring-/Profiling-Anwendungsfällen.
-- **Wendehorst/Grinzinger, in: Wendehorst/Grinzinger, AI Act, 1. Aufl. 2024, Art. 5 Rn. 8 und Anhang III Rn. 15.**
-- **Ehmann/Selmayr, in: Ehmann/Selmayr, DS-GVO, 3. Aufl. 2024, Art. 22 Rn. 10.**
-- **Müller-Glöge, in: Erfurter Kommentar, 25. Aufl. 2025, § 87 BetrVG Rn. 32.**
+Jede Klassifikation muss nennen: einschlägige DSGVO-/BDSG-Normen mit Artikel/Absatz,
+DSK-Listenfundstelle bei DSFA-Pflicht, einschlägige Rechtsprechung in korrekter
+Quellenregel: Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen; Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff.
+
+Beispiel Rechtsprechung:
+Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+
+Beispiel Kommentar:
+Quellenregel: Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen; Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff.
+
+## Quellen / Updates
+
+Stand: 05/2026. Aktualität prüfen bei Änderungen der DSK-Blacklist/Whitelist (Art. 35 Abs. 4/5 DSGVO), neuen EDSA-Leitlinien zur DSFA sowie KI-VO-Umsetzungsakten.
+
+**Querverweise:**
+- `datenschutzrecht/skills/dsfa-erstellung/SKILL.md` — vollständige DSFA bei positiver Triage
+- `datenschutzrecht/skills/drittlandstransfer-pruefung/SKILL.md` — bei Drittlandbezug in der Triage
+- `datenschutzrecht/skills/avv-pruefung/SKILL.md` — bei Auftragsverarbeitung als Verarbeitungsbestandteil
+
+## Aktuelle Rechtsprechung (Ergaenzung v14.2)
+
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+
+## Output-Template — Triage-Ergebnis
+
+**Adressat:** Datenschutzbeauftragter / Prozessverantwortlicher — Tonfall: sachlich-strukturiert
+
+```
+Datenschutz-Triage-Ergebnis [DATUM]
+Verarbeitungsvorgang: [BEZEICHNUNG]
+Beschreibung: [KURZBESCHREIBUNG]
+
+Einstufung: FREIGABE / DSA ERFORDERLICH / DSFA PFLICHT / STOPP
+
+Rechtsgrundlage: Art. [X] DSGVO [§ BDSG optional]
+Verantwortlichkeit: Art. 24 (allein) / Art. 26 (gemeinsam) / Art. 28 (Auftragsverarbeitung)
+Drittlandbezug: ja (→ Drittlandprüfung) / nein
+DSFA-Pflicht: ja (Grund: [...]) / nein (Begründung: [...])
+
+Naechste Schritte:
+1. [AKTION]
+2. [AKTION]
+
+Frist: [DATUM]
+Verantwortlich: [PERSON / ROLLE]
+```
+
+## Normen und Rechtsprechung
+
+### Kuratierte Normen-Bibliothek
+
+- Art. 5 DSGVO (Grundsätze der Verarbeitung)
+- Art. 6, 9 DSGVO (Rechtsgrundlagen, besondere Datenkategorien)
+- Art. 13, 14 DSGVO (Informationspflichten)
+- Art. 15 DSGVO (Auskunftsrecht)
+- Art. 28 DSGVO (Auftragsverarbeitung)
+- Art. 32 DSGVO (Sicherheit der Verarbeitung)
+- Art. 33, 34 DSGVO (Meldepflichten bei Verletzung)
+- Art. 82 DSGVO (Schadensersatz)
+- Art. 83 DSGVO (Bußgelder)
+- §§ 4, 20, 41 BDSG (Aufsicht, Rechtsweg, Strafvorschriften)
+
+### Leitentscheidungen
+
+- EuGH C-300/21 (immaterieller Schaden Art. 82 DSGVO)
+- EuGH C-634/21 (automatisierte Bonitätsbewertung Schufa)
+- EuGH C-26/22 (Datenschutzbehörden-Befugnisse)
+- EuGH C-807/21 (Bußgeldhaftung juristischer Personen)
+- BVerfG 1 BvR 16/13 (Recht auf Vergessen I)
+
+### Anwendung im Skill
+
+- Rechtsgrundlage nach Art. 6 DSGVO sauber waehlen; berechtigte Interessen nach Art. 6 Abs. 1 lit. f DSGVO mit dokumentierter Abwaegung.
+- Bei Datenpannen die 72-Stunden-Frist nach Art. 33 DSGVO einhalten; Risikoabwaegung Art. 34 DSGVO separat dokumentieren.
+- Auskunftsanspruch Art. 15 DSGVO nicht mit Kopie nach Art. 15 Abs. 3 DSGVO verwechseln; EuGH C-307/22 Reichweite beachten.

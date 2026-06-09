@@ -1,13 +1,9 @@
 ---
 name: waerme-quartier
-description: "Waermenetze und Quartiersversorgung rechtlich strukturieren: Fernwaerme, GEG-Erfuellung, lokale Waermewende. Normen: AVBFernwaermeV, GEG, EnWG, EEG. Prüfraster: Konzessionspflicht, Preisanpassungsklauseln, GEG-Anforderungen. Output: Waermenetz-Rechtsgutachten. Abgrenzung: nicht allgemeine Energieliefervertraege im Energierecht: prüft konkret die einschlägigen Tatbestandsmerkmale, Fristen, Belege und Rechtsprechung. Liefert priorisierten Output mit Norm-Pinpoints, Risikoampel und nächstem Arbeitsschritt."
+description: "Waermenetze und Quartiersversorgung rechtlich strukturieren: Fernwaerme, GEG-Erfuellung, lokale Waermewende. Normen: AVBFernwaermeV, GEG, EnWG, EEG. Prüfraster: Konzessionspflicht, Preisanpassungsklauseln, GEG-Anforderungen. Output: Waermenetz-Rechtsgutachten. Abgrenzung: nicht allgemeine Energie..."
 ---
 
 # Wärme, Quartier und Fernwärme
-
-## Arbeitsbereich
-
-Waermenetze und Quartiersversorgung rechtlich strukturieren: Fernwaerme, GEG-Erfuellung, lokale Waermewende. Normen: AVBFernwaermeV, GEG, EnWG, EEG. Prüfraster: Konzessionspflicht, Preisanpassungsklauseln, GEG-Anforderungen. Output: Waermenetz-Rechtsgutachten. Abgrenzung: nicht allgemeine Energieliefervertraege. Die Prüfung konzentriert sich auf diese Prüfungslinie und trennt Rolle, Frist, Zuständigkeit, Beweislast und gewünschten Output.
 
 ## Arbeitsweg
 
@@ -16,10 +12,6 @@ Waermenetze und Quartiersversorgung rechtlich strukturieren: Fernwaerme, GEG-Erf
 - Tragende Normen verifizieren: KWKG — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
 - Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
 - Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
-
-## Zweck
-
-Behandelt kommunale Wärmeplanung, Fernwärmeverträge, Mieterstrom, BEW-Förderung und integrierte Quartiers-Konzepte. Praktisch oft wichtigster Bereich kommunaler Klimapolitik.
 
 ## Eingaben
 
@@ -281,9 +273,6 @@ f) Wasserstoff-Heizung (eingeschränkt)
 
 §§ 3, 14 WPG (Kommunale Waermeplanung, Fristen) — §§ 71, 72 GEG (65%-EE-Anforderung Heizung) — AVBFernwaermeV (Vertragsbeziehungen Fernwaerme) — §§ 1, 5 BEW (Bundesfoerderung Waermenetze) — § 21 EEG (Mieterstrom) — §§ 313, 315 BGB (Anpassung, billiges Ermessen)
 
-## Quellenregel
-
-Quellenregel: Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen; Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff.
 ## Verzahnung
 
 - `energierecht-vertrieb-marktrollen` — Mieterstrom-Vertrieb

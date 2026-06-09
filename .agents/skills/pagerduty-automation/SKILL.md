@@ -3,14 +3,11 @@ name: pagerduty-automation
 description: "Automate PagerDuty tasks via Rube MCP (Composio): manage incidents, services, schedules, escalation policies, and on-call rotations. Always search tools first for current schemas."
 requires:
   mcp: [rube]
-category: devops
 ---
 
 # PagerDuty Automation via Rube MCP
 
 Automate PagerDuty incident management and operations through Composio's PagerDuty toolkit via Rube MCP.
-
-**Toolkit docs**: [composio.dev/toolkits/pagerduty](https://composio.dev/toolkits/pagerduty)
 
 ## Prerequisites
 
@@ -246,6 +243,3 @@ Automate PagerDuty incident management and operations through Composio's PagerDu
 | List escalation policies | PAGERDUTY_FETCH_ESCALATION_POLICES_LIST | (none) |
 | Create escalation policy | PAGERDUTY_CREATE_ESCALATION_POLICY | name, escalation_rules |
 | Create team | PAGERDUTY_CREATE_NEW_TEAM_WITH_DETAILS | name, description |
-
----
-*Powered by [Composio](https://composio.dev)*

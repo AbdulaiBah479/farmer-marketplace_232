@@ -1,905 +1,556 @@
 ---
 name: deployment-automation
-description: Expert DevOps automation consultant for building production-grade CI/CD deployment pipelines using Vercel, GitHub Actions, and Railway. Implements build/test/preview/production workflows, automated rollbacks, canary deployments, blue-green strategies, environment promotion, secrets management, health checks, smoke testing, and live monitoring. Use when deploying web applications, setting up CI/CD pipelines, configuring automated deployments, implementing deployment strategies, managing production releases, or troubleshooting deployment issues.
-license: Apache-2.0
+description: Automate application deployment to cloud platforms and servers. Use when setting up CI/CD pipelines, deploying to Docker/Kubernetes, or configuring cloud infrastructure. Handles GitHub Actions, Docker, Kubernetes, AWS, Vercel, and deployment best practices.
+metadata:
+  tags: deployment, CI/CD, Docker, Kubernetes, AWS, GitHub-Actions, automation
+  platforms: Claude, ChatGPT, Gemini
 ---
 
-# Deployment Automation Guide
 
-## Overview
+# Deployment Automation
 
-This skill provides comprehensive deployment automation patterns for modern web applications using industry-leading platforms: **Vercel** (frontend), **Railway** (backend), and **GitHub Actions** (CI/CD orchestration).
 
-**Core Capabilities**:
-- CI/CD pipeline design and implementation
-- Preview and production deployment workflows
-- Canary and blue-green deployment strategies
-- Automated rollback mechanisms
-- Environment variable and secrets management
-- Health checks and smoke testing
-- Status monitoring and notifications
-- Performance optimization and caching
-- Multi-environment orchestration
+## When to use this skill
 
-**Updated for 2025**: This guide reflects the latest platform features, security best practices, and deployment patterns validated by production teams.
+- **New Projects**: Set up automated deployment from scratch
+- **Manual Deployment Improvement**: Automate repetitive manual tasks
+- **Multi-Environment**: Separate dev, staging, and production environments
+- **Scaling**: Introduce Kubernetes to handle traffic growth
 
----
+## Instructions
 
-## 2025 Deployment Best Practices
+### Step 1: Docker Containerization
 
-### Key Principles
+Package the application as a Docker image.
 
-1. **Test Before Deploy**: Always run linting, type checking, and tests in CI before deploying
-2. **Progressive Rollout**: Start with 10% traffic, monitor, then gradually increase
-3. **Automated Rollback**: Configure automatic rollback on error rate > 1% or latency spike > 20%
-4. **Health Checks**: Implement `/health` endpoints that verify all dependencies
-5. **Zero-Downtime**: Use blue-green or canary deployments for production changes
-6. **Environment Parity**: Keep staging and production configurations as similar as possible
-7. **Secrets Rotation**: Rotate credentials every 90 days, use short-lived tokens when possible
-8. **Monitoring First**: Set up alerts BEFORE deploying, not after incidents occur
+**Dockerfile** (Node.js app):
+```dockerfile
+# Multi-stage build for smaller image size
+FROM node:18-alpine AS builder
 
-### Modern CI/CD Pipeline Structure
+WORKDIR /app
 
+# Copy package files and install dependencies
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Copy source code
+COPY . .
+
+# Build application (if needed)
+RUN npm run build
+
+# Production stage
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy only necessary files from builder
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package.json ./
+
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+USER nodejs
+
+# Expose port
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node healthcheck.js
+
+# Start application
+CMD ["node", "dist/index.js"]
 ```
-┌─────────────┐    ┌──────────┐    ┌─────────────┐    ┌──────────┐
-│   Commit    │ -> │   Test   │ -> │   Deploy    │ -> │  Monitor │
-│   & Push    │    │  & Lint  │    │   Preview   │    │  Health  │
-└─────────────┘    └──────────┘    └─────────────┘    └──────────┘
-                                           │
-                                           v
-                                    ┌─────────────┐
-                                    │   Deploy    │
-                                    │  Production │
-                                    │  (Canary)   │
-                                    └─────────────┘
-                                           │
-                                           v
-                                    ┌─────────────┐
-                                    │   Promote   │
-                                    │  or Rollback│
-                                    └─────────────┘
+
+**.dockerignore**:
+```
+node_modules
+npm-debug.log
+.git
+.env
+.env.local
+dist
+build
+coverage
+.DS_Store
 ```
 
-### Performance Targets (2025 Standards)
+**Build and Run**:
+```bash
+# Build image
+docker build -t myapp:latest .
 
-| Metric | Target | Action if Exceeded |
-|--------|--------|-------------------|
-| Build Time | < 5 minutes | Investigate caching, optimize dependencies |
-| Deployment Time | < 2 minutes | Check network, reduce asset size |
-| Health Check Response | < 500ms | Optimize endpoint, check database |
-| P95 Latency | < 200ms | Add caching, optimize queries |
-| Error Rate | < 0.1% | Automatic rollback + investigation |
+# Run container
+docker run -d -p 3000:3000 --name myapp-container myapp:latest
 
----
+# Check logs
+docker logs myapp-container
 
-## Quick Start Decision Matrix
+# Stop and remove
+docker stop myapp-container
+docker rm myapp-container
+```
 
-**Choose Your Platform**:
+### Step 2: GitHub Actions CI/CD
 
-| Use Case | Platform | Why |
-|----------|----------|-----|
-| Next.js, React, Vue, Static Sites | **Vercel** | Zero-config, edge network, instant previews |
-| Node.js, Python, Go backends | **Railway** | Simple setup, good DX, affordable |
-| Custom workflows, monorepos | **GitHub Actions** | Full control, free for public repos |
+Automatically runs tests and deploys on code push.
 
----
-
-## Platform-Specific Deployment Guides
-
-### 1. Vercel Deployment Strategy
-
-**When to Use**: Frontend applications, Next.js, static sites, serverless functions
-
-**Key Features**:
-- Automatic preview deployments for every PR
-- Production deployments on merge to main
-- Edge network CDN
-- Built-in SSL certificates
-- Environment-specific configurations
-
-**Standard Workflow with Testing** (2025 Pattern):
-
+**.github/workflows/deploy.yml**:
 ```yaml
-# .github/workflows/vercel-preview.yml
-name: Vercel Preview Deployment
-env:
-  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+name: CI/CD Pipeline
 
 on:
+  push:
+    branches: [main, develop]
   pull_request:
-    types: [opened, synchronize, reopened]
+    branches: [main]
 
-jobs:
-  # Step 1: Run tests first
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      
-      - name: Install dependencies
-        run: npm ci
-      
-      - name: Run ESLint
-        run: npm run lint
-      
-      - name: Run type checking
-        run: npm run type-check
-      
-      - name: Run tests
-        run: npm test
-  
-  # Step 2: Deploy only if tests pass
-  deploy-preview:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Install Vercel CLI
-        run: npm install --global vercel@latest
-      
-      - name: Pull Vercel Environment
-        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-      
-      - name: Build Project
-        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
-      
-      - name: Deploy to Vercel
-        id: deploy
-        run: |
-          URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
-          echo "preview-url=$URL" >> $GITHUB_OUTPUT
-      
-      - name: Comment PR with Preview URL
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '🚀 Preview deployment ready!\n\n**URL:** ${{ steps.deploy.outputs.preview-url }}'
-            })
-```
-
-```yaml
-# .github/workflows/vercel-production.yml
-name: Vercel Production Deployment
 env:
-  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
-on:
-  push:
-    branches:
-      - main
+  NODE_VERSION: '18'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  # Step 1: Full test suite
   test:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
-      - name: Run full test suite
-        run: |
-          npm run lint
-          npm run type-check
-          npm test
-          npm run test:e2e  # End-to-end tests
-  
-  # Step 2: Deploy to production
-  deploy-production:
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test -- --coverage
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/coverage-final.json
+
+  build:
     needs: test
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Install Vercel CLI
-        run: npm install --global vercel@latest
-      
-      - name: Pull Vercel Environment
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-      
-      - name: Build Project
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-      
-      - name: Deploy to Vercel
-        id: deploy
-        run: |
-          URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
-          echo "production-url=$URL" >> $GITHUB_OUTPUT
-      
-      - name: Post-deployment smoke tests
-        run: |
-          chmod +x ./scripts/smoke-test.sh
-          ./scripts/smoke-test.sh ${{ steps.deploy.outputs.production-url }}
-      
-      - name: Notify on success
-        if: success()
-        run: |
-          curl -X POST ${{ secrets.SLACK_WEBHOOK }} \
-               -H 'Content-Type: application/json' \
-               -d '{"text":"✅ Production deployment successful!\n**URL:** ${{ steps.deploy.outputs.production-url }}"}'
-      
-      - name: Notify on failure
-        if: failure()
-        run: |
-          curl -X POST ${{ secrets.SLACK_WEBHOOK }} \
-               -H 'Content-Type: application/json' \
-               -d '{"text":"❌ Production deployment failed! Check GitHub Actions logs."}'
-```
 
-**Required Secrets**:
-- `VERCEL_TOKEN`: Create at vercel.com/account/tokens
-- `VERCEL_ORG_ID`: Found in `.vercel/project.json` after running `vercel link`
-- `VERCEL_PROJECT_ID`: Found in `.vercel/project.json`
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-**Best Practices**:
-- Disable Vercel's auto-deployment when using GitHub Actions (gives you more control)
-- Run linting and tests before deployment
-- Use environment-specific variables (Preview vs Production)
-- Cache dependencies to speed up builds
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-See `references/VERCEL_ADVANCED.md` for advanced patterns, caching strategies, and troubleshooting.
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix={{branch}}-
+            type=semver,pattern={{version}}
+            latest
 
----
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-### 2. Railway Deployment Strategy
-
-**When to Use**: Backend services, databases, Node.js/Python/Go apps, APIs
-
-**Key Features**:
-- Simple container-based deployments
-- Automatic HTTPS with custom domains
-- Built-in database support (PostgreSQL, MySQL, Redis)
-- Environment management
-- Zero-downtime deployments
-
-**Standard Workflow**:
-
-```yaml
-# .github/workflows/railway-deploy.yml
-name: Deploy to Railway
-
-on:
-  push:
-    branches:
-      - main
-
-jobs:
   deploy:
+    needs: build
     runs-on: ubuntu-latest
-    container: ghcr.io/railwayapp/cli:latest
-    env:
-      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-      SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
-    
+    environment: production
+
     steps:
-      - uses: actions/checkout@v3
-      
-      - name: Deploy to Railway
-        run: railway up --service=${{ env.SERVICE_ID }}
+      - name: Deploy to production
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            cd /app
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            docker-compose up -d --no-deps --build web
+            docker image prune -f
 ```
 
-**Alternative: Custom Docker Workflow**
+### Step 3: Kubernetes Deployment
 
+Implement scalable container orchestration.
+
+**k8s/deployment.yaml**:
 ```yaml
-# .github/workflows/railway-docker.yml
-name: Railway Docker Deploy
-
-on:
-  push:
-    branches:
-      - main
-
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20'
-      
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli
-      
-      - name: Link Railway Project
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+  namespace: production
+  labels:
+    app: myapp
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+      - name: myapp
+        image: ghcr.io/username/myapp:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: |
-          railway link --project=${{ secrets.RAILWAY_PROJECT_ID }} \
-                       --environment=${{ secrets.RAILWAY_ENVIRONMENT_ID }}
-      
-      - name: Deploy
-        run: railway redeploy --yes
-```
-
-**Required Secrets**:
-- `RAILWAY_TOKEN`: Create at railway.app/account/tokens
-- `RAILWAY_SERVICE_ID`: Found in service settings
-- `RAILWAY_PROJECT_ID`: Found in project settings
-- `RAILWAY_ENVIRONMENT_ID`: Found in environment settings (production/staging)
-
-**Best Practices**:
-- Use separate Railway projects for staging and production
-- Configure health check endpoints
-- Set up automatic rollback on failed deployments
-- Monitor deployment logs in Railway dashboard
-
-See `references/RAILWAY_ADVANCED.md` for monorepo deployments, database migrations, and optimization strategies.
-
----
-
-### 3. Canary Deployment Strategy
-
-**What is Canary Deployment?**
-
-Gradually roll out changes to a small subset of users before full production release. This minimizes blast radius if issues occur.
-
-**When to Use**:
-- High-traffic production applications
-- Changes with uncertain performance impact
-- Features requiring real-world validation
-- Risk-sensitive deployments
-
-**Implementation Pattern**:
-
-**Stage 1: Deploy Canary (10% traffic)**
-```yaml
-# .github/workflows/canary-deploy.yml
-name: Canary Deployment
-
-on:
-  push:
-    branches:
-      - main
-
-jobs:
-  deploy-canary:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      # Deploy to canary environment (separate service or slot)
-      - name: Deploy Canary Version
-        run: |
-          # Deploy to Railway with canary tag
-          railway up --service=${{ secrets.CANARY_SERVICE_ID }} \
-                     --environment=production
-      
-      # Route 10% traffic to canary
-      - name: Configure Traffic Split
-        run: |
-          # Use your platform's traffic management API
-          # Vercel: Update deployment alias with traffic routing
-          # Railway: Use load balancer configuration
-          echo "Routing 10% traffic to canary"
-      
-      # Wait and monitor for 15 minutes
-      - name: Monitor Canary Health
-        run: |
-          sleep 900  # 15 minutes
-          # Run health checks (see scripts/health-check.sh)
-          ./scripts/health-check.sh ${{ secrets.CANARY_URL }}
-```
-
-**Stage 2: Promote or Rollback**
-
-```yaml
-  promote-or-rollback:
-    needs: deploy-canary
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check Canary Metrics
-        id: metrics
-        run: |
-          # Fetch error rate, latency, success rate from monitoring
-          # Example: Query Prometheus/Datadog/custom metrics endpoint
-          ERROR_RATE=$(curl -s ${{ secrets.METRICS_API }}/error-rate)
-          
-          if [ "$ERROR_RATE" -lt "1" ]; then
-            echo "status=success" >> $GITHUB_OUTPUT
-          else
-            echo "status=failure" >> $GITHUB_OUTPUT
-          fi
-      
-      - name: Promote Canary
-        if: steps.metrics.outputs.status == 'success'
-        run: |
-          # Route 100% traffic to new version
-          railway up --service=${{ secrets.PRODUCTION_SERVICE_ID }}
-          echo "✅ Canary promoted to production"
-      
-      - name: Rollback Canary
-        if: steps.metrics.outputs.status == 'failure'
-        run: |
-          # Route all traffic back to stable version
-          railway rollback --service=${{ secrets.CANARY_SERVICE_ID }}
-          echo "⚠️ Canary rolled back due to high error rate"
-```
-
-**Progressive Rollout Schedule**:
-1. **10% traffic** → Monitor for 15 minutes
-2. If stable: **25% traffic** → Monitor for 15 minutes  
-3. If stable: **50% traffic** → Monitor for 30 minutes
-4. If stable: **100% traffic** → Full production
-
-**Rollback Triggers**:
-- Error rate > 1%
-- P95 latency increase > 20%
-- Success rate < 99%
-- Manual intervention required
-
-See `references/CANARY_DEPLOYMENTS.md` for detailed canary strategies, A/B testing, and feature flags.
+        - name: NODE_ENV
+          value: "production"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: myapp-secrets
+              key: database-url
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
 
 ---
-
-## 4. Rollback Procedures
-
-### Automated Rollback
-
-**Railway Rollback**:
-```bash
-# Rollback to previous deployment
-railway rollback --service=my-service
-
-# Rollback to specific deployment ID
-railway rollback --service=my-service --deployment=dep_abc123
-```
-
-**Vercel Rollback**:
-```bash
-# List recent deployments
-vercel ls
-
-# Promote previous deployment to production
-vercel promote [deployment-url] --prod
-```
-
-**GitHub Actions Rollback Workflow**:
-```yaml
-# .github/workflows/rollback.yml
-name: Emergency Rollback
-
-on:
-  workflow_dispatch:
-    inputs:
-      target_version:
-        description: 'Version to rollback to'
-        required: true
-        type: string
-
-jobs:
-  rollback:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          ref: ${{ inputs.target_version }}
-      
-      - name: Rollback Vercel
-        run: |
-          vercel promote [previous-deployment-url] --prod \
-                --token=${{ secrets.VERCEL_TOKEN }}
-      
-      - name: Rollback Railway
-        run: railway rollback --service=${{ secrets.SERVICE_ID }}
-      
-      - name: Notify Team
-        run: |
-          # Send Slack/Discord notification
-          curl -X POST ${{ secrets.SLACK_WEBHOOK }} \
-               -d '{"text":"🚨 Rollback to version ${{ inputs.target_version }} completed"}'
-```
-
-### Manual Rollback Checklist
-
-1. **Identify Issue**: Check monitoring dashboards (error rates, latency, logs)
-2. **Stop Current Deployment**: Pause or cancel ongoing deployments
-3. **Revert Code**: `git revert` or `git reset` to stable commit
-4. **Redeploy Stable Version**: Trigger production deployment workflow
-5. **Verify Rollback**: Run smoke tests, check health endpoints
-6. **Notify Team**: Alert via Slack/Discord with incident details
-7. **Post-Mortem**: Document what failed and prevention strategies
-
-See `references/ROLLBACK_STRATEGIES.md` for advanced rollback patterns and disaster recovery.
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp-service
+  namespace: production
+spec:
+  selector:
+    app: myapp
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 3000
+  type: LoadBalancer
 
 ---
-
-## 5. Environment Variable Management
-
-### Secret Storage Strategy
-
-**GitHub Secrets** (for CI/CD):
-- Repository Settings → Secrets and variables → Actions → New repository secret
-- Store: API tokens, deployment credentials, webhook URLs
-
-**Vercel Environment Variables**:
-```bash
-# Via CLI
-vercel env add VARIABLE_NAME production
-vercel env add VARIABLE_NAME preview
-
-# Via Dashboard
-Project Settings → Environment Variables → Add
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: myapp-hpa
+  namespace: production
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: myapp
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
 ```
 
-**Railway Environment Variables**:
-```bash
-# Via CLI
-railway variables set VARIABLE_NAME=value
-
-# Via Dashboard
-Service Settings → Variables → Add Variable
-```
-
-### Environment Variable Patterns
-
-**Development**:
-```env
-NODE_ENV=development
-API_URL=http://localhost:3000
-DATABASE_URL=postgresql://localhost:5432/dev_db
-DEBUG=true
-```
-
-**Preview/Staging**:
-```env
-NODE_ENV=staging
-API_URL=https://api-staging.example.com
-DATABASE_URL=postgresql://staging-db.railway.app/db
-DEBUG=true
-SENTRY_ENVIRONMENT=staging
-```
-
-**Production**:
-```env
-NODE_ENV=production
-API_URL=https://api.example.com
-DATABASE_URL=postgresql://prod-db.railway.app/db
-DEBUG=false
-SENTRY_ENVIRONMENT=production
-```
-
-**Security Best Practices**:
-- ✅ Never commit secrets to git
-- ✅ Use separate credentials for each environment
-- ✅ Rotate secrets every 90 days
-- ✅ Use least-privilege access tokens
-- ✅ Audit secret access logs
-- ❌ Don't hardcode secrets in code
-- ❌ Don't share production secrets in Slack/email
-- ❌ Don't use same password across environments
-
----
-
-## 6. Health Checks and Smoke Tests
-
-### Health Check Endpoint Pattern
-
-**Implementation Example (Express.js)**:
-```javascript
-// /health endpoint
-app.get('/health', (req, res) => {
-  const health = {
-    uptime: process.uptime(),
-    status: 'UP',
-    timestamp: Date.now(),
-    checks: {
-      database: checkDatabaseConnection(),
-      redis: checkRedisConnection(),
-      api: checkExternalAPI()
-    }
-  };
-  
-  const isHealthy = Object.values(health.checks).every(check => check === true);
-  res.status(isHealthy ? 200 : 503).json(health);
-});
-```
-
-### Automated Smoke Tests
-
-Use `scripts/smoke-test.sh`:
+**Deployment Script** (deploy.sh):
 ```bash
 #!/bin/bash
-# Health check script for post-deployment verification
+set -e
 
-DEPLOYMENT_URL=$1
-MAX_RETRIES=10
-RETRY_DELAY=5
+# Variables
+NAMESPACE="production"
+IMAGE_TAG="${1:-latest}"
 
-for i in $(seq 1 $MAX_RETRIES); do
-  HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" $DEPLOYMENT_URL/health)
-  
-  if [ "$HTTP_CODE" -eq 200 ]; then
-    echo "✅ Health check passed (attempt $i/$MAX_RETRIES)"
-    exit 0
-  else
-    echo "⚠️ Health check failed with status $HTTP_CODE (attempt $i/$MAX_RETRIES)"
-    sleep $RETRY_DELAY
-  fi
-done
+echo "Deploying myapp:${IMAGE_TAG} to ${NAMESPACE}..."
 
-echo "❌ Health check failed after $MAX_RETRIES attempts"
-exit 1
+# Apply Kubernetes manifests
+kubectl apply -f k8s/namespace.yaml
+kubectl apply -f k8s/secrets.yaml
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/service.yaml
+
+# Update image
+kubectl set image deployment/myapp myapp=ghcr.io/username/myapp:${IMAGE_TAG} -n ${NAMESPACE}
+
+# Wait for rollout
+kubectl rollout status deployment/myapp -n ${NAMESPACE} --timeout=5m
+
+# Verify
+kubectl get pods -n ${NAMESPACE} -l app=myapp
+
+echo "Deployment completed successfully!"
 ```
 
-**Integration in Workflow**:
-```yaml
-- name: Smoke Test Deployment
-  run: |
-    chmod +x ./scripts/smoke-test.sh
-    ./scripts/smoke-test.sh https://my-app.vercel.app
+### Step 4: Vercel/Netlify (Frontend)
+
+Simply deploy static sites and Next.js apps.
+
+**vercel.json**:
+```json
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "env": {
+    "DATABASE_URL": "@database-url",
+    "API_KEY": "@api-key"
+  },
+  "regions": ["sin1", "icn1"],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        }
+      ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/old-path",
+      "destination": "/new-path",
+      "permanent": true
+    }
+  ]
+}
 ```
 
----
-
-## 7. Status Monitoring
-
-### Monitoring Stack Recommendations
-
-**Frontend (Vercel)**:
-- Vercel Analytics (built-in)
-- Sentry for error tracking
-- LogRocket for session replay
-
-**Backend (Railway)**:
-- Railway Observability (built-in logs)
-- Prometheus + Grafana for metrics
-- Datadog or New Relic for APM
-
-### Alert Configuration
-
-**Railway Health Check**:
-```yaml
-# Railway service configuration
-healthCheckPath: /health
-healthCheckTimeout: 30
-restartPolicyMaxRetries: 3
-```
-
-**Uptime Monitoring**:
-- UptimeRobot (free tier: 5-minute checks)
-- Better Uptime (paid: 30-second checks)
-- StatusCake (free tier: 5-minute checks)
-
----
-
-## Deployment Workflow Templates
-
-### Complete CI/CD Pipeline
-
-**Full Example: Frontend + Backend**
-
-```yaml
-# .github/workflows/deploy-full-stack.yml
-name: Deploy Full Stack Application
-
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    types: [opened, synchronize, reopened]
-
-jobs:
-  # Step 1: Lint and Test
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20'
-          cache: 'npm'
-      
-      - name: Install Dependencies
-        run: npm ci
-      
-      - name: Run Linter
-        run: npm run lint
-      
-      - name: Run Tests
-        run: npm test
-  
-  # Step 2: Deploy Frontend to Vercel
-  deploy-frontend:
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Deploy to Vercel
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: |
-          npm i -g vercel
-          vercel pull --yes --environment=production --token=$VERCEL_TOKEN
-          vercel build --prod --token=$VERCEL_TOKEN
-          vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
-  
-  # Step 3: Deploy Backend to Railway
-  deploy-backend:
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    container: ghcr.io/railwayapp/cli:latest
-    env:
-      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-      SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
-    steps:
-      - uses: actions/checkout@v3
-      - run: railway up --service=$SERVICE_ID
-  
-  # Step 4: Post-Deployment Verification
-  verify-deployment:
-    needs: [deploy-frontend, deploy-backend]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Health Check Frontend
-        run: |
-          curl -f ${{ secrets.FRONTEND_URL }}/api/health || exit 1
-      
-      - name: Health Check Backend
-        run: |
-          curl -f ${{ secrets.BACKEND_URL }}/health || exit 1
-      
-      - name: Notify Success
-        run: |
-          curl -X POST ${{ secrets.SLACK_WEBHOOK }} \
-               -d '{"text":"✅ Deployment successful: Frontend + Backend deployed"}'
-```
-
----
-
-## Quick Reference: Common Commands
-
-### Vercel CLI
+**CLI Deployment**:
 ```bash
-vercel login                              # Authenticate
-vercel link                               # Link to project
-vercel                                    # Deploy preview
-vercel --prod                             # Deploy production
-vercel ls                                 # List deployments
-vercel inspect [url]                      # Inspect deployment
-vercel logs [url]                         # View logs
-vercel env ls                             # List environment variables
-vercel domains add example.com            # Add custom domain
+# Install Vercel CLI
+npm i -g vercel
+
+# Login
+vercel login
+
+# Deploy to preview
+vercel
+
+# Deploy to production
+vercel --prod
+
+# Set environment variable
+vercel env add DATABASE_URL
 ```
 
-### Railway CLI
+### Step 5: Zero-Downtime Deployment Strategy
+
+Deploy new versions without service interruption.
+
+**Blue-Green Deployment** (docker-compose):
+```yaml
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - app-blue
+      - app-green
+
+  app-blue:
+    image: myapp:blue
+    environment:
+      - NODE_ENV=production
+      - COLOR=blue
+
+  app-green:
+    image: myapp:green
+    environment:
+      - NODE_ENV=production
+      - COLOR=green
+```
+
+**switch.sh** (Blue/Green Switch):
 ```bash
-railway login                             # Authenticate
-railway init                              # Initialize project
-railway up                                # Deploy service
-railway status                            # Check status
-railway logs                              # View logs
-railway run [command]                     # Run command
-railway variables                         # List variables
-railway open                              # Open in browser
-railway rollback                          # Rollback deployment
+#!/bin/bash
+
+CURRENT_COLOR=$(cat current_color.txt)
+NEW_COLOR=$([[ "$CURRENT_COLOR" == "blue" ]] && echo "green" || echo "blue")
+
+# Deploy new version to inactive environment
+docker-compose up -d app-${NEW_COLOR}
+
+# Wait for health check
+sleep 10
+
+# Health check
+if curl -f http://localhost:8080/health; then
+  # Update nginx to point to new environment
+  sed -i "s/${CURRENT_COLOR}/${NEW_COLOR}/g" nginx.conf
+  docker-compose exec nginx nginx -s reload
+
+  # Update current color
+  echo ${NEW_COLOR} > current_color.txt
+
+  # Stop old environment after 5 minutes (rollback window)
+  sleep 300
+  docker-compose stop app-${CURRENT_COLOR}
+
+  echo "Deployment successful! Switched to ${NEW_COLOR}"
+else
+  echo "Health check failed! Keeping ${CURRENT_COLOR}"
+  docker-compose stop app-${NEW_COLOR}
+  exit 1
+fi
 ```
 
-### GitHub CLI
-```bash
-gh workflow list                          # List workflows
-gh workflow run [name]                    # Trigger workflow
-gh run list                               # List workflow runs
-gh run view [id]                          # View run details
-gh secret set [name]                      # Set secret
+## Output format
+
+### Deployment Checklist
+
+```markdown
+## Deployment Checklist
+
+### Pre-Deployment
+- [ ] All tests passing (unit, integration, E2E)
+- [ ] Code review approved
+- [ ] Environment variables configured
+- [ ] Database migrations ready
+- [ ] Rollback plan documented
+
+### Deployment
+- [ ] Docker image built and tagged
+- [ ] Image pushed to container registry
+- [ ] Kubernetes manifests applied
+- [ ] Rolling update started
+- [ ] Pods healthy and ready
+
+### Post-Deployment
+- [ ] Health check endpoint responding
+- [ ] Metrics/logs monitoring active
+- [ ] Performance baseline established
+- [ ] Old pods terminated (after grace period)
+- [ ] Deployment documented in changelog
 ```
 
----
+## Constraints
 
-## Troubleshooting Guide
+### Required Rules (MUST)
 
-### Common Issues
+1. **Health Checks**: Health check endpoint for all services
+   ```typescript
+   app.get('/health', (req, res) => {
+     res.status(200).json({ status: 'ok' });
+   });
+   ```
 
-**Vercel: Build Failed**
-- Check build logs in Vercel dashboard
-- Verify Node.js version matches local (`node -v`)
-- Check environment variables are set
-- Clear cache: `vercel build --force`
+2. **Graceful Shutdown**: Handle SIGTERM signal
+   ```javascript
+   process.on('SIGTERM', async () => {
+     console.log('SIGTERM received, shutting down gracefully');
+     await server.close();
+     await db.close();
+     process.exit(0);
+   });
+   ```
 
-**Railway: Service Not Starting**
-- Check service logs: `railway logs`
-- Verify health check endpoint is responding
-- Check resource limits (CPU/memory)
-- Ensure environment variables are correctly set
+3. **Environment Variable Separation**: No hardcoding; use .env files
 
-**GitHub Actions: Workflow Failed**
-- Check Actions tab for error logs
-- Verify secrets are correctly set
-- Check workflow YAML syntax
-- Review job dependencies and conditions
+### Prohibited Rules (MUST NOT)
 
-**Deployment Stuck**
-- Cancel current deployment
-- Check for resource locks
-- Verify credentials haven't expired
-- Try manual deployment via CLI
+1. **No Committing Secrets**: Never commit API keys or passwords to Git
+2. **No Debug Mode in Production**: `NODE_ENV=production` is required
+3. **Avoid latest tag only**: Use version tags (v1.0.0, sha-abc123)
 
----
+## Best practices
 
-## Additional Resources
+1. **Multi-stage Docker builds**: Minimize image size
+2. **Immutable infrastructure**: Redeploy instead of modifying servers
+3. **Blue-Green deployment**: Zero-downtime deployment and easy rollback
+4. **Monitoring required**: Prometheus, Grafana, Datadog
 
-**References** (detailed documentation):
-- `references/VERCEL_ADVANCED.md` - Advanced Vercel patterns, caching, optimization
-- `references/RAILWAY_ADVANCED.md` - Railway monorepos, databases, Docker optimization
-- `references/CANARY_DEPLOYMENTS.md` - Progressive delivery, A/B testing, feature flags
-- `references/ROLLBACK_STRATEGIES.md` - Disaster recovery, incident response procedures
-- `references/SECURITY_BEST_PRACTICES.md` - Comprehensive security guide for CI/CD pipelines (NEW 2025)
+## References
 
-**Scripts** (automation tools):
-- `scripts/smoke-test.sh` - Post-deployment health verification
-- `scripts/setup-secrets.sh` - Automate GitHub secrets configuration
-- `scripts/health-check.sh` - Comprehensive health check script for production monitoring
+- [Docker Docs](https://docs.docker.com/)
+- [Kubernetes Docs](https://kubernetes.io/docs/)
+- [GitHub Actions](https://docs.github.com/en/actions)
+- [Vercel](https://vercel.com/docs)
+- [12 Factor App](https://12factor.net/)
 
----
+## Metadata
 
-## Best Practices Summary
+### Version
+- **Current Version**: 1.0.0
+- **Last Updated**: 2025-01-01
+- **Compatible Platforms**: Claude, ChatGPT, Gemini
 
-✅ **DO**:
-- Run tests before every deployment
-- Use separate environments (dev/staging/prod)
-- Implement health check endpoints
-- Monitor deployments with alerts
-- Document rollback procedures
-- Automate everything possible
-- Use semantic versioning for releases
+### Related Skills
+- [monitoring](../monitoring/SKILL.md): Post-deployment monitoring
+- [security](../security/SKILL.md): Deployment security
 
-❌ **DON'T**:
-- Deploy directly to production without testing
-- Hardcode secrets in code or workflows
-- Skip health checks after deployment
-- Ignore monitoring alerts
-- Deploy on Fridays without rollback plan
-- Use production credentials in staging
+### Tags
+`#deployment` `#CI/CD` `#Docker` `#Kubernetes` `#automation` `#infrastructure`
 
----
+## Examples
 
-## Getting Started Checklist
+### Example 1: Basic usage
+<!-- Add example content here -->
 
-- [ ] Set up GitHub repository with `.github/workflows/` directory
-- [ ] Create Vercel project and link to repository
-- [ ] Create Railway project for backend services
-- [ ] Configure GitHub secrets (tokens, IDs, credentials)
-- [ ] Set up environment variables in Vercel and Railway
-- [ ] Create health check endpoints in backend
-- [ ] Implement smoke test scripts
-- [ ] Configure monitoring and alerting
-- [ ] Test preview deployment workflow
-- [ ] Test production deployment workflow
-- [ ] Document rollback procedure
-- [ ] Schedule regular secret rotation
-
----
-
-**This skill provides production-ready deployment automation patterns. Adapt workflows to your specific needs and always test thoroughly in non-production environments first.**
+### Example 2: Advanced usage
+<!-- Add advanced example content here -->

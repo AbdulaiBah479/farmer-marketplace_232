@@ -1,44 +1,92 @@
 ---
 name: imagegen
-description: |
-  Generate and edit images using OpenAI's Image API for project assets — UI mockups, icons, illustrations, social cards, and visual references.
-triggers:
-  - "generate image"
-  - "create image"
-  - "image gen"
-  - "openai image"
-  - "icon design"
-  - "mockup"
-od:
-  mode: image
-  category: image-generation
-  upstream: "https://github.com/openai/skills"
+description: Generate AI images using DALL-E 3 or gpt-image-1 through the verging.ai proxy API. Supports standard and HD quality, multiple images per request, and returns CDN-hosted image URLs.
 ---
 
-# imagegen
+# AI Image Generation — verging.ai
 
-> Curated from OpenAI's skills repository.
+Generate AI images using DALL-E 3 / gpt-image-1 through the verging.ai proxy API.
 
-## What it does
+## Authentication
 
-Generate and edit images using OpenAI's Image API for project assets — UI mockups, icons, illustrations, social cards, and visual references.
+All requests require an API key in the `Authorization` header:
 
-## Source
-
-- Upstream: https://github.com/openai/skills
-- Category: `image-generation`
-
-## How to use
-
-This catalogue entry advertises the skill in Open Design so the agent
-discovers it during planning. To run the full upstream workflow with
-its original assets, scripts, and references, install the upstream
-bundle into your active agent's skills directory:
-
-```bash
-# Inspect the upstream README for exact paths
-open https://github.com/openai/skills
+```
+Authorization: ApiKey vrg_sk_xxx
 ```
 
-Then ask the agent to invoke this skill by name (`imagegen`) or with
-one of the trigger phrases listed in this skill's frontmatter.
+Replace `vrg_sk_xxx` with your verging.ai API key. You can generate one at https://verging.ai under your account settings.
+
+## Endpoint
+
+```
+POST https://verging.ai/api/v1/ai/imagegen
+Content-Type: application/json
+```
+
+## Parameters
+
+| Parameter | Type   | Required | Default      | Description                                      |
+|-----------|--------|----------|--------------|--------------------------------------------------|
+| prompt    | string | Yes      | —            | Text description of the image to generate        |
+| model     | string | No       | gpt-image-1  | Model to use for generation                      |
+| size      | string | No       | 1024x1024    | Image dimensions                                 |
+| quality   | string | No       | standard     | Image quality (`standard` or `hd`)               |
+| n         | int    | No       | 1            | Number of images to generate (1–4)               |
+
+## Example
+
+```bash
+curl -X POST https://verging.ai/api/v1/ai/imagegen \
+  -H "Authorization: ApiKey vrg_sk_xxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "A futuristic cityscape at sunset, digital art style",
+    "quality": "hd",
+    "n": 2
+  }'
+```
+
+## Response
+
+```json
+{
+  "images": [
+    "https://cdn.verging.ai/proxy/imagegen/abc123.png",
+    "https://cdn.verging.ai/proxy/imagegen/def456.png"
+  ],
+  "credits_consumed": 6
+}
+```
+
+- `images` — Array of CDN URLs for the generated images.
+- `credits_consumed` — Total credits deducted for this request.
+
+## Credits
+
+| Quality  | Cost per Image |
+|----------|---------------|
+| standard | 2 credits     |
+| hd       | 3 credits     |
+
+When generating multiple images (`n > 1`), the cost is multiplied accordingly.
+
+## Error Codes
+
+| HTTP Status | Error Code | Description                                      |
+|-------------|------------|--------------------------------------------------|
+| 400         | —          | Content policy violation or invalid parameters   |
+| 402         | 40001      | Insufficient credits                             |
+| 429         | —          | Rate limit exceeded (check `X-RateLimit-Reset`)  |
+| 502         | —          | Upstream provider error                          |
+| 503         | —          | Service unavailable or upstream timeout          |
+
+Error response format:
+
+```json
+{
+  "error_code": 40001,
+  "message": "Insufficient credits. Required: 4, available: 1",
+  "upstream_error": null
+}
+```

@@ -1,16 +1,13 @@
 ---
 name: pipedrive-automation
-description: Automate Pipedrive CRM operations including deals, contacts, organizations, activities, notes, and pipeline management via Rube MCP (Composio). Always search tools first for current schemas.
+description: "Automate Pipedrive CRM operations including deals, contacts, organizations, activities, notes, and pipeline management via Rube MCP (Composio). Always search tools first for current schemas."
 requires:
   mcp: [rube]
-category: crm
 ---
 
 # Pipedrive Automation via Rube MCP
 
 Automate Pipedrive CRM workflows including deal management, contact and organization operations, activity scheduling, notes, and pipeline/stage queries through Composio's Pipedrive toolkit.
-
-**Toolkit docs**: [composio.dev/toolkits/pipedrive](https://composio.dev/toolkits/pipedrive)
 
 ## Prerequisites
 
@@ -225,6 +222,3 @@ Most list endpoints use offset-based pagination:
 | Deals in pipeline | `PIPEDRIVE_GET_DEALS_IN_A_PIPELINE` | `id`, `stage_id` |
 | Deals in stage | `PIPEDRIVE_GET_DEALS_IN_A_STAGE` | `id`, `start`, `limit` |
 | Add product to deal | `PIPEDRIVE_ADD_A_PRODUCT_TO_A_DEAL` | `id`, `product_id`, `item_price` |
-
----
-*Powered by [Composio](https://composio.dev)*

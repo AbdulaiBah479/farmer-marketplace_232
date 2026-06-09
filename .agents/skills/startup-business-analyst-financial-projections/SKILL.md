@@ -1,13 +1,8 @@
 ---
 name: startup-business-analyst-financial-projections
-description: 'Create detailed 3-5 year financial model with revenue, costs, cash
-
+description: Create detailed 3-5 year financial model with revenue, costs, cash
   flow, and scenarios
-
-  '
-risk: unknown
-source: community
-date_added: '2026-02-27'
+allowed-tools: Read Write Edit Glob Grep Bash WebSearch WebFetch
 ---
 
 # Financial Projections
@@ -356,8 +351,3 @@ Growth assumptions?
 - Share with investors and board
 - Use for fundraising decks
 - Basis for budget and hiring decisions
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

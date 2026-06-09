@@ -1,14 +1,27 @@
 ---
 name: vergleichsverhandlung-strategie
-description: "Vergleichsverhandlungs-Strategie für Vergaberecht (Oberschwellen- und Unterschwellenvergabe): ZOPA, BATNA, Verhandlungsfenster, Druckmittel, Settlement-Skript, Vergleichsentwurf und prozessuale Absicherung (Protokoll-/Anwaltsvergleich)."
+description: "Vergleichsverhandlungs-Strategie für Agrar-, Forst- und Lebensmittelrecht: ZOPA, BATNA, Verhandlungsfenster, Druckmittel, Settlement-Skript, Vergleichsentwurf und prozessuale Absicherung (Protokoll-/Anwaltsvergleich): Vergleichsverhandlungs-Strategie für A..."
 ---
 
-# Vergleichsverhandlung und Einigung im Vergaberecht (Oberschwellen- und Unterschwellenvergabe)
+# Vergleichsverhandlungs-Strategie für Agrar-, Forst- und Lebensmittelrecht: ZOPA, BATNA, Verhandlungsfenster, Druckmittel, Settlement-Skript, Vergleichsentwurf und prozessuale Absicherung (Protokoll-/Anwaltsvergleich).
 
-## Wann dieser Skill greift
 
-- Sachverhalte aus dem Bereich Vergaberecht (Oberschwellen- und Unterschwellenvergabe), in denen eine aussergerichtliche oder prozessbegleitende Einigung sinnvoll erscheint.
-- Typische Konstellationen: Ruegestadium-Loesung, einvernehmliche Aufhebung, Mehraufwand.
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: GrdstVG Genehmigung 1 Monat (verlängerbar), GAP-Antrag bis 15.05. jährlich (Mehrfachantrag), BGB § 594a Landpacht-Kündigung 2. Werktag im 3. Pachtjahr.
+- Tragende Normen verifizieren: FAO § 14b, BGB §§ 581 ff. (Landpacht), GrdstVG, Landwirtschaftsanpassungsgesetz (LwAnpG), HöfeO, EU-GAP-VO (2021/2115, 2021/2116, 2021/2117), MarktorganisationsG, BNatSchG, DüV, AwSV — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Landwirt, Bundesanstalt für Landwirtschaft und Ernährung (BLE), Landwirtschaftskammer, Genehmigungsbehörde nach GrdstVG, Landpächter/-verpächter, Amtsgericht Landwirtschaftsgericht.
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Mehrfachantrag (Flächenförderung), Pachtvertrag, GrdstVG-Genehmigung, Düngeplan, Cross-Compliance-Nachweis, Hofübergabevertrag — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+**Fokus:** Vergleichsverhandlungs-Strategie für Agrar-, Forst- und Lebensmittelrecht: ZOPA, BATNA, Verhandlungsfenster, Druckmittel, Settlement-Skript, Vergleichsentwurf und prozessuale Absicherung (Protokoll-/Anwaltsvergleich).
+
+### Vergleichsverhandlung und Einigung im Agrar-, Forst- und Lebensmittelrecht
+
+## Wann dieser Arbeitsgang greift
+
+- Sachverhalte aus dem Bereich Agrar-, Forst- und Lebensmittelrecht, in denen eine aussergerichtliche oder prozessbegleitende Einigung sinnvoll erscheint.
+- Typische Konstellationen: Pachtaufhebung, Hofuebergabe-Streit, Direktzahlungs-Rueckforderung.
 - Sowohl in der aussergerichtlichen Phase (vor Klage) als auch im laufenden Prozess (Gueteverhandlung, Hauptverhandlung).
 
 ## Vorbereitung der Verhandlung
@@ -22,7 +35,7 @@ description: "Vergleichsverhandlungs-Strategie für Vergaberecht (Oberschwellen-
 
 ### 2. Interessen vs. Positionen
 
-Klassisches Harvard-Konzept: nicht nur Positionen ("Ich will 100.000 Euro") sondern Interessen ("Ich brauche bis Jahresende Liquiditaet"). In Vergaberecht (Oberschwellen- und Unterschwellenvergabe) typische Interessen-Cluster:
+Klassisches Harvard-Konzept: nicht nur Positionen ("Ich will 100.000 Euro") sondern Interessen ("Ich brauche bis Jahresende Liquiditaet"). In Agrar-, Forst- und Lebensmittelrecht typische Interessen-Cluster:
 
 - Liquiditaet (Sofort-Zahlung vs. Ratenzahlung)
 - Reputation (Gegnerin will keinen Prozess mit Pressewirkung)
@@ -32,7 +45,7 @@ Klassisches Harvard-Konzept: nicht nur Positionen ("Ich will 100.000 Euro") sond
 
 ### 3. Druckmittel und Hebel
 
-- Frist (Klage-/Verjaehrungsfrist als Druckmittel der Gegenseite kennen und eigene Frist gezielt einsetzen).
+- Frist (Klage-/Verjährungsfrist als Druckmittel der Gegenseite kennen und eigene Frist gezielt einsetzen).
 - Eskalationsstufen ankuendigen ohne sie zu uebertreiben.
 - Hinweis auf Beweismittel, ohne diese vollstaendig offen zu legen.
 - Reputationsdruck (Presse, Branche, Berufsregeln) sehr massvoll, nur wenn ethisch vertretbar.
@@ -42,7 +55,7 @@ Klassisches Harvard-Konzept: nicht nur Positionen ("Ich will 100.000 Euro") sond
 ### Eroeffnung
 
 - Anker setzen: erste Zahl/Position deutlich hoeher als Reservation, aber begruendbar.
-- Begruendung mit konkreten Positionen aus GWB Teil 4, VgV, UVgO, VOB/A, SektVO, KonzVgV verknuepfen.
+- Begruendung mit konkreten Positionen aus §§ 585 ff. BGB, GAP-DZ-VO, BTSchG, BNatSchG, BImSchG, LFGB verknuepfen.
 
 ### Konzessionsphase
 
@@ -78,9 +91,9 @@ Klassisches Harvard-Konzept: nicht nur Positionen ("Ich will 100.000 Euro") sond
 - Kostenregelung: ueblich Kostenaufhebung, ggf. Quote.
 - Beteiligung der Streithelfer/Nebenintervenienten beachten.
 
-## Risiken und Stolpersteine im Vergaberecht (Oberschwellen- und Unterschwellenvergabe)
+## Risiken und Stolpersteine im Agrar-, Forst- und Lebensmittelrecht
 
-- Steuerliche Fehlbehandlung: Vergleichszahlung als Schadensersatz vs. Lohn vs. USt-pflichtige Leistung -> GWB Teil 4 und ESt-/USt-Regeln pruefen.
+- Steuerliche Fehlbehandlung: Vergleichszahlung als Schadensersatz vs. Lohn vs. USt-pflichtige Leistung -> §§ 585 ff. BGB und ESt-/USt-Regeln pruefen.
 - Vollmacht: Mandantin muss zustimmen, anwaltliche Vergleichsbefugnis muss in Vollmacht expliziert sein.
 - Vollstreckbarkeit: aussergerichtlicher Vergleich ohne notarielle Form/Anwaltsvergleich ist kein Vollstreckungstitel.
 - Verzicht zu weit gefasst: pauschale Abgeltungsklausel kann eigene Ansprueche unbeabsichtigt mit erfassen.
@@ -94,12 +107,11 @@ Klassisches Harvard-Konzept: nicht nur Positionen ("Ich will 100.000 Euro") sond
 4. **Steuer- und Vollstreckungs-Memo** zum Vergleich.
 5. **Abschluss-Schreiben** an Gegenseite mit Kopien und Erfuellungsplan.
 
-
 ## Verhandlungs-Skripte
 
 ### Skript 1: Eroeffnung mit Ankerwert
 
-> "Wir haben die Sache durchgerechnet. Auf Basis von GWB Teil 4 und der aktuellen Rechtsprechung kommen wir auf eine Hauptforderung von X Euro plus Y Euro Nebenforderungen. Wir sind bereit, ueber eine Pauschalsumme zu sprechen, die die Sache abschliesst."
+> "Wir haben die Sache durchgerechnet. Auf Basis von §§ 585 ff. BGB und der aktuellen Rechtsprechung kommen wir auf eine Hauptforderung von X Euro plus Y Euro Nebenforderungen. Wir sind bereit, ueber eine Pauschalsumme zu sprechen, die die Sache abschliesst."
 
 ### Skript 2: Begruendete Konzession
 
@@ -107,7 +119,7 @@ Klassisches Harvard-Konzept: nicht nur Positionen ("Ich will 100.000 Euro") sond
 
 ### Skript 3: Abschluss-Frage
 
-> "Wenn wir uns auf 47.500 Euro einigen und das Geld bis zum 30. dieses Monats fliesst, ist die Sache fuer Sie dann erledigt?"
+> "Wenn wir uns auf 47.500 Euro einigen und das Geld bis zum 30. dieses Monats fliesst, ist die Sache für Sie dann erledigt?"
 
 ### Skript 4: Walk-Away-Signal
 
@@ -116,12 +128,12 @@ Klassisches Harvard-Konzept: nicht nur Positionen ("Ich will 100.000 Euro") sond
 ## Stoerfeuer und Antwort-Bausteine
 
 - **"Wir haben rechtsschutzversichert, uns ist der Prozess egal":** "Die Versicherung pruft Erfolgsaussichten. Wir koennen Ihnen gerne unser BVerfG-/BGH-Zitat zur Klage-Quote in diesen Faellen schicken."
-- **"Wir warten erstmal das Urteil im Verfahren XY ab":** "Verjaehrung laeuft uns weg. Wir lassen den Schiedsspruch im Hintergrund mitlaufen."
+- **"Wir warten erstmal das Urteil im Verfahren XY ab":** "Verjährung laeuft uns weg. Wir lassen den Schiedsspruch im Hintergrund mitlaufen."
 - **"Ihre Mandantin hat sich rechtsmissbraeuchlich verhalten":** "Bitte praezisieren Sie - dann nehmen wir das ggf. in den Vergleich auf."
 
 ## Steuerliche Behandlung des Vergleichs
 
-Im Bereich Vergaberecht (Oberschwellen- und Unterschwellenvergabe) oft uebersehen:
+Im Bereich Agrar-, Forst- und Lebensmittelrecht oft uebersehen:
 
 - Vergleichszahlung als Schadensersatz (in der Regel keine USt, EStG je nach Art).
 - Vergleich ueber Lohn-/Gehaltsanspruch -> Lohnsteuer- und SV-Abzug pruefen.
@@ -134,7 +146,7 @@ Im Bereich Vergaberecht (Oberschwellen- und Unterschwellenvergabe) oft uebersehe
 - Wenn Beziehung erhalten bleiben soll (Familie, Geschaeftspartner, Mieter und Vermieter).
 - Mediator unparteiisch, kein Entscheidungstraeger - braucht Vertraulichkeitsvereinbarung.
 - Mediations-Vergleich kann durch Notar oder Anwaltsvergleich vollstreckbar gemacht werden.
-- Foerderung MediationsG; in einigen Bundeslaendern Kostenuebernahme bei Familiensachen.
+- Förderung MediationsG; in einigen Bundeslaendern Kostenuebernahme bei Familiensachen.
 
 ## Vollstreckbarkeit
 
@@ -145,33 +157,31 @@ Im Bereich Vergaberecht (Oberschwellen- und Unterschwellenvergabe) oft uebersehe
 
 ## Vergleichs-Reichweite und Abgeltungsklausel
 
-Klassische Stolperfalle in Vergaberecht (Oberschwellen- und Unterschwellenvergabe):
+Klassische Stolperfalle in Agrar-, Forst- und Lebensmittelrecht:
 
 - **Eng:** "Mit Zahlung sind alle Anspruche aus diesem Verfahren erledigt."
 - **Mittel:** "Mit Zahlung sind alle Anspruche aus dem zugrundeliegenden Sachverhalt erledigt."
-- **Weit:** "Mit Zahlung sind saemtliche bekannten und unbekannten Anspruche zwischen den Parteien erledigt." -> Vorsicht: Schadensersatz fuer noch nicht erkannte Schaeden ggf. weg.
+- **Weit:** "Mit Zahlung sind saemtliche bekannten und unbekannten Anspruche zwischen den Parteien erledigt." -> Vorsicht: Schadensersatz für noch nicht erkannte Schaeden ggf. weg.
 
 ## Cross-Refs
 
-- `erstgespraech-mandatsannahme` (im selben Plugin) fuer die Erstaufnahme und Streitwertgrundlage.
-- `schriftsatzkern-substantiierung` (im selben Plugin) fuer den Fall, dass Vergleichsverhandlungen scheitern und Klage erforderlich wird.
+- `erstgespraech-mandatsannahme` (im selben Plugin) für die Erstaufnahme und Streitwertgrundlage.
+- `schriftsatzkern-substantiierung` (im selben Plugin) für den Fall, dass Vergleichsverhandlungen scheitern und Klage erforderlich wird.
 
-## Vertiefung: Leitsaetze Vergleich im Vergaberecht
+## Vertiefung — Rechtsprechung Vergleich Agrarrecht
 
-### Ergaenzende Leitsaetze
+### Leitsatz-Zitate
 
-- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
-### Spezifika Vergaberecht Vergleich
+Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
-Bei Nachpruefungsverfahren-Vergleich:
-- Verfahren wird eingestellt wenn Bieter Antrag zuruecknimmt
-- Kein Prozessvergleich wie in ZPO-Verfahren; Vergabekammer stellt Verfahren ein
-- Einigung ueber kuenftige Auftragserteilung ist vergaberechtlich riskant (De-facto-Vergabe)
-- Schadensersatz § 181 GWB als Vergleichsgegenstand: prozessoekonomisch sinnvoll
+Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
-### Normen Vergaberecht Vergleich
-- § 779 BGB — Vergleichsvertrag
-- § 181 GWB — Schadensersatzanspruch Bieter
-- §§ 160-163 GWB — Nachpruefungsverfahren VK
-- § 168 GWB — Entscheidung Vergabekammer
+### Normen-Ergänzung Vergleich Agrarrecht
+
+§ 779 BGB (Vergleich) → §§ 54-62 VwVfG (öffentlich-rechtlicher Vertrag, Behördenvergleich) → § 794 Abs. 1 Nr. 1 ZPO (Prozessvergleich als Vollstreckungstitel) → § 13 HöfeO (Nachabfindungsanspruch — im Vergleich gesondert zu regeln) → § 593 BGB (Pachtzins-Anpassung — im Vergleich fixieren)
+
+### Quellenregel
+
+Quellenregel: Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen; Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff.

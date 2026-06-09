@@ -1,243 +1,246 @@
 ---
 name: weekly-report
-description: Generate weekly performance reports aggregating metrics across accounts and campaigns, highlighting winners and losers, calculating ROI/ROAS, and providing recommendations. Use for weekly review meetings, client updates, or tracking overall performance trends.
+description: 帮助用户梳理周报，按照完整逻辑展示工作价值和边界。当用户说"写周报"、"周报"、"梳理周报"、"整理工作"时触发。
 ---
 
-# Weekly Report Generator
+# 周报写作助手
 
-Create comprehensive weekly performance summaries.
+## 用途
 
-## Process
+帮助用户把一周的工作梳理成逻辑清晰、价值明确的周报，让团队了解做了什么、遇到什么问题、下一步计划。
 
-### Step 1: Aggregate Metrics
+## 工作流程
 
-**Gather Data From:**
-- All active ad accounts
-- All campaigns
-- Tracking platforms
-- Network/offer dashboards
+### 第一步：收集素材
 
-**Key Metrics:**
-- Total spend
-- Total revenue/conversions
-- CPA/CPL by offer
-- ROAS/ROI overall
-- Click metrics (CTR, CPC)
-- Conversion metrics (CVR)
+引导用户讲述本周工作，可以想到什么说什么，不需要有条理：
 
-### Step 2: Highlight Winners and Losers
+1. **按模块引导**：你这周主要做了哪几块的事情？（客户、项目、内部工作等）
+2. **自由描述**：每一块具体做了什么？不用组织语言，想到什么说什么
+3. **不打断**：让用户先全部讲完，再补充细节
 
-**Winners:**
-- Top performing campaigns
-- Best creative performers
-- Offers exceeding targets
-- Scaling successes
+### 第二步：分类整理
 
-**Losers:**
-- Underperforming campaigns
-- Failing creatives
-- Offers below target
-- Budget drains
+根据用户的工作性质和角色，灵活选择合适的模块分类。以下是不同角色的常见分类参考：
 
-### Step 3: Calculate Overall ROI/ROAS
+**技术/开发角色**：
+- 功能开发/需求实现
+- Bug修复/问题排查
+- 技术优化/重构
+- Code Review/技术评审
+- 技术调研/学习
+- 文档编写
 
-**Formulas:**
-- ROI = (Revenue - Spend) / Spend × 100
-- ROAS = Revenue / Spend
-- Profit = Revenue - Spend
-- Margin = Profit / Revenue × 100
+**产品经理角色**：
+- 需求调研/用户访谈
+- 产品设计/原型设计
+- 需求评审/排期
+- 数据分析/用户反馈
+- 竞品分析
+- 产品迭代/上线
 
-**Segment By:**
-- Offer/vertical
-- Traffic source
-- Account
-- Creative type
+**运营角色**：
+- 活动策划/执行
+- 用户增长/留存
+- 内容运营/社区运营
+- 数据分析/效果复盘
+- 用户反馈处理
+- 渠道合作/商务对接
 
-### Step 4: Identify Trends and Anomalies
+**设计角色**：
+- UI/视觉设计
+- 交互设计/用户体验
+- 设计规范/组件库
+- 设计评审/走查
+- 视觉优化
 
-**Trend Analysis:**
-- Week-over-week changes
-- Month-over-month changes
-- Seasonal patterns
-- Platform changes impact
+**测试/QA角色**：
+- 测试用例编写
+- 功能测试/回归测试
+- 自动化测试
+- Bug跟踪/质量分析
+- 性能测试/安全测试
 
-**Anomaly Detection:**
-- Sudden performance drops
-- Unexpected winners
-- Cost spikes
-- Volume changes
+**SA/售前/商务角色**：
+- 客户跟进/拜访
+- POC/Demo演示
+- 方案设计/技术支持
+- 商务谈判/合同
+- 客户培训/分享
 
-### Step 5: Output Executive Summary
+**通用模块**（适用所有角色）：
+- 项目交付/执行
+- 内部提效/工具建设
+- 会议/培训/分享
+- 团队协作/跨部门沟通
+- 学习/调研
 
-```
-## WEEKLY REPORT: [Date Range]
+**使用建议**：
+- 根据自己的实际工作选择2-4个主要模块
+- 模块名称可以根据自己习惯调整（如"功能开发"可以叫"需求实现"）
+- 每个模块下按具体项目/客户/事项进一步细分
 
-### EXECUTIVE SUMMARY
+### 第三步：补充关键信息
 
-**Overall Performance:**
-- Total Spend: $[X]
-- Total Revenue: $[X]
-- Profit: $[X]
-- ROI: [X]%
-- ROAS: [X]x
+针对每件事，通过追问补充完整逻辑：
 
-**Week-over-Week:**
-- Spend: [+/-X%]
-- Revenue: [+/-X%]
-- ROI: [+/-X pts]
+1. **背景/原因**：为什么要做这件事？基于什么需求或问题？
+2. **具体做了什么**：采取了什么行动？用了什么方法/工具？
+3. **结果/价值**：
+   - 达到了什么效果？
+   - 有具体数字吗？（成本、收益、时间等）
+   - 给客户/团队带来了什么价值？
+4. **当前状态**：
+   - 完成了？进行中？等待反馈？
+   - 遇到什么卡点或问题？
+   - 问题的本质是什么？（技术问题、交付问题、沟通问题？）
+5. **下一步动作**：
+   - 接下来要做什么？
+   - 谁来负责？
 
-**Key Wins:**
-- [Win 1]
-- [Win 2]
+**关键追问模板**：
+- "这个成本大概是多少？"（能量化的尝试量化）
+- "为什么要做这个？是客户要求还是主动优化？"
+- "结果怎么样？客户反馈如何？"
+- "目前卡在哪里？本质是什么问题？"
+- "下一步谁来处理？"
 
-**Key Challenges:**
-- [Challenge 1]
-- [Challenge 2]
+### 第四步：讨论调整
 
----
+给用户看初稿，确认：
+1. **表述习惯**：是否保持了用户的表达方式？不要用自己的套路改写
+2. **逻辑完整**：每件事是否说清楚了背景→做了什么→结果→下一步？
+3. **重点突出**：哪些是重点成果？是否体现出来了？
+4. **问题明确**：遇到的卡点和挑战是否说清楚了？
 
-### PERFORMANCE BY OFFER
+根据用户反馈调整措辞、结构和重点。
 
-| Offer | Spend | Revenue | Profit | ROI | vs Target | Status |
-|-------|-------|---------|--------|-----|-----------|--------|
-| [Offer 1] | $X | $X | $X | X% | +/-X% | [G/Y/R] |
-| [Offer 2] | $X | $X | $X | X% | +/-X% | [G/Y/R] |
-| **TOTAL** | $X | $X | $X | X% | | |
+### 第五步：输出文档
 
----
+生成最终的周报文档，包含：
 
-### TOP PERFORMERS
+```markdown
+# 本周工作
 
-**Best Campaigns:**
-1. [Campaign] - ROI: X%, Spend: $X
-2. [Campaign] - ROI: X%, Spend: $X
-3. [Campaign] - ROI: X%, Spend: $X
+## 一、[模块名称]
 
-**Best Creatives:**
-1. [Creative] - CPA: $X, Spend: $X
-2. [Creative] - CPA: $X, Spend: $X
-3. [Creative] - CPA: $X, Spend: $X
+**1. [客户/项目名称] - [一句话概括]**
+[完整描述：背景 → 做了什么 → 结果 → 下一步]
 
-**Scaling Successes:**
-- [Description of what scaled well]
+**2. [客户/项目名称] - [一句话概括]**
+① [子项1]：[描述]
+② [子项2]：[描述]
+③ [子项3]：[描述]
 
----
+**核心卡点/挑战**：[如果有重要问题，单独说明]
 
-### UNDERPERFORMERS
+## 二、[模块名称]
+...
 
-**Struggling Campaigns:**
-1. [Campaign] - Issue: [Problem], Action: [Fix]
-2. [Campaign] - Issue: [Problem], Action: [Fix]
+## 下周重点
 
-**Failed Creatives:**
-- [Creative batch] - Why: [Analysis]
+**1. [重点事项1]**
+- [具体内容]
 
-**Budget Drains:**
-- [Where money was lost and why]
-
----
-
-### TREND ANALYSIS
-
-**Week-over-Week Comparison:**
-| Metric | Last Week | This Week | Change |
-|--------|-----------|-----------|--------|
-| Spend | $X | $X | +/-X% |
-| Revenue | $X | $X | +/-X% |
-| CPA | $X | $X | +/-X% |
-| CVR | X% | X% | +/-X pts |
-
-**Notable Trends:**
-- [Trend 1 with analysis]
-- [Trend 2 with analysis]
-
-**Anomalies:**
-- [Unusual occurrence and explanation]
-
----
-
-### ACCOUNT HEALTH
-
-| Account | Status | Spend | Issues |
-|---------|--------|-------|--------|
-| [Acc 1] | Active | $X | None |
-| [Acc 2] | Warning | $X | [Issue] |
-| [Acc 3] | Scaling | $X | None |
-
----
-
-### CREATIVE STATUS
-
-**Production This Week:**
-- New creatives launched: [#]
-- Variations created: [#]
-- Concepts tested: [#]
-
-**Creative Inventory:**
-- Active winners: [#]
-- In testing: [#]
-- In production: [#]
-
-**Fatigue Alerts:**
-- [Creatives showing fatigue]
-
----
-
-### RECOMMENDATIONS
-
-**Immediate Actions (This Week):**
-1. [Action] - Priority: High - Owner: [Name]
-2. [Action] - Priority: High - Owner: [Name]
-
-**Strategic Initiatives (This Month):**
-1. [Initiative] - Expected impact: [Result]
-2. [Initiative] - Expected impact: [Result]
-
-**Tests to Run:**
-1. [Test hypothesis]
-2. [Test hypothesis]
-
----
-
-### NEXT WEEK GOALS
-
-| Metric | Target | Stretch |
-|--------|--------|---------|
-| Spend | $X | $X |
-| Revenue | $X | $X |
-| ROI | X% | X% |
-
-**Focus Areas:**
-1. [Priority 1]
-2. [Priority 2]
-3. [Priority 3]
-
----
-
-### APPENDIX
-
-**Daily Breakdown:**
-[Detailed daily metrics if needed]
-
-**Campaign Details:**
-[Expanded campaign-level data]
+**2. [重点事项2]**
+- [具体内容]
 ```
 
-## Reporting Best Practices
+## 核心原则
 
-**Frequency:**
-- Daily: Quick CPA/spend check
-- Weekly: Full performance review
-- Monthly: Strategic analysis
+1. **用用户的话**：保持用户的表达习惯和语气，不要用自己的套路改写
+2. **完整的逻辑链**：每件事都要有背景→做了什么→结果→下一步
+3. **能量化的就量化**：用户提到数字就写上，用户没说也不强求
+4. **如实展示边界**：
+   - 能搞定的：体现专业能力和价值
+   - 搞不定的：说清楚卡在哪、为什么、谁来解决
+5. **明确下一步**：每个事项说清楚当前状态和下一步动作
+6. **格式自然**：该有的结构要有，但内容要自然成段，不要搞成标签式（"做了什么：""取得结果："）
 
-**Audience Adaptation:**
-- Executive: Summary + recommendations
-- Media buyer: Detailed metrics + actions
-- Creative team: What's working/not working
+## 常见场景
 
-**Action Orientation:**
-- Every insight should have an action
-- Prioritize recommendations
-- Assign ownership
+### 场景 1：用户说得很散乱
 
-Source: General affiliate/agency best practices
+- 不要急着整理，先全部听完
+- 记录关键词和模块，脑子里分类
+- 听完后按模块复述一遍，确认没有遗漏
+
+### 场景 2：用户不愿意提供细节
+
+- 不要强求量化或过度追问
+- 重点是把逻辑讲清楚
+- 如果确实影响表达，可以说明"如果有具体数字会更有说服力"
+
+### 场景 3：用户觉得自己做得不够多
+
+- 周报不是炫耀，是信息同步
+- 如实写做了什么、遇到什么问题
+- 卡点和挑战也是价值，说明你在解决难题
+
+### 场景 4：用户想美化或夸大
+
+- 提醒周报的目的是如实展示价值和边界
+- 过度美化会导致预期不符，后续更被动
+- 建议保持客观真实的表述
+
+## 输出物存放
+
+把生成的周报文档保存为：
+`周报-[日期].md`
+
+建议放在用户的工作目录或文档目录中，如：
+- `/Users/xxx/Documents/周报/`
+- 项目目录下的 `weekly-reports/` 文件夹
+
+## 示例对话流程
+
+```
+助手：你好，我来帮你梳理周报。这周主要做了哪几块的事情？
+
+用户：[描述工作内容]
+
+助手：好的，我理解了。让我确认几个细节：
+1. [追问背景]
+2. [追问结果]
+3. [追问下一步]
+...
+
+用户：[回答]
+
+助手：明白了。我按这个逻辑整理一下：
+[展示分类后的结构]
+
+你看看有没有遗漏的？
+
+用户：[补充或确认]
+
+助手：好的，我写个初稿给你看看：
+[展示周报初稿]
+
+这样可以吗？有哪里需要调整的？
+
+用户：[反馈调整意见]
+
+助手：好，我按你说的改一下：
+[展示调整后的版本]
+
+现在说说下周重点做啥？
+
+用户：[说下周计划]
+
+助手：好的，完整的周报已经整理好了：
+[展示最终版本]
+
+我把周报保存在：[路径]
+
+你可以直接复制去提交了。
+```
+
+## 注意事项
+
+- **不要过度美化**：周报是信息同步，不是自我表扬，保持客观真实
+- **不要强求量化**：能量化的就量化，量化不了的就讲清楚逻辑
+- **不要忽略问题**：卡点和挑战也是价值的一部分，要如实写出来
+- **不要用自己的套路**：每个人的表达习惯不同，要保持用户的风格
+- **格式服务于内容**：结构化是为了清晰，不是为了好看，不要本末倒置
+- **明确责任边界**：问题要说清楚谁来解决，不要让人觉得你在甩锅或揽功

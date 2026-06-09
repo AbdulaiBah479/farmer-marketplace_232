@@ -1,6 +1,6 @@
 ---
 name: zeitleiste
-description: "Erstellt eine minutiös rekonstruierte Zeitleiste vom Eintritt der Verletzung bis zur Meldung und Benachrichtigung. Behandelt: Eintritt; Erstwahrnehmung; Meldung an Service-Desk; Eingang Datenschutzpostfach; Kenntnisbegriff Art. 33 DSGVO; 72-Stunden-Lauf; Sofortmaßnahmen; Forensik-Beauftragung; Meldung an Aufsichtsbehörde; Benachrichtigung Betroffene; Pressemitteilung; Nachmeldung. Output: tabellarische Zeitleiste mit Quellen und Rechtsfolgen. Abgrenzung: keine Risikobewertung; keine Behördenmeldung im engeren Sinne."
+description: "Erstellt eine minutiös rekonstruierte Zeitleiste vom Eintritt der Verletzung bis zur Meldung und Benachrichtigung. Behandelt: Eintritt; Erstwahrnehmung; Meldung an Service-Desk; Eingang Datenschutzpostfach; Kenntnisbegriff Art. 33 DSGVO; 72-Stunden-Lauf; Sofortmaßnahmen; Forensik-Beauftragung; Me..."
 ---
 
 # Zeitleiste des Datenschutzvorfalls — minutiöse Rekonstruktion
@@ -28,10 +28,6 @@ Nicht aus Modellwissen; insbesondere zur Auslegung Kenntnisbegriff und zum Begin
 ## Zentrale Normen
 
 Art. 33 Abs. 1; Art. 33 Abs. 4; Art. 5 Abs. 2 DSGVO; Erwägungsgrund 87.
-
-## Quellenregel
-
-Quellenregel: Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen. Rechtsprechung nicht aus Modellwissen zitieren; vor Ausgabe ueber offizielle oder frei zugaengliche Quelle (eur-lex.europa.eu, edpb.europa.eu, bfdi.bund.de, dejure.org, openjur.de, gesetze-im-internet.de) mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren. BeckRS-Fundstellen nur in Verbindung mit einer primaeren oder offenen Sekundaerquelle.
 
 ## Praxisformulierung — Zeitleisten-Spalten
 

@@ -1,51 +1,76 @@
 ---
 name: vertragsschluss-antrag-annahme
-description: "Prüft Vertragsschluss durch Antrag und Annahme nach §§ 145 ff. BGB einschließlich essentialia negotii, Rechtsbindungswillen, Bindung und Annahmeerklärung."
+description: "Klausurfall zum Vertragsschluss durch Antrag und Annahme nach §§ 145 bis 156 BGB: Bindungswirkung des Antrags, Erlöschungsgründe, Annahmefrist unter An- und Abwesenden, verspätete und abgeänderte Annahme sowie Zeitpunkt des Vertragsschlusses. Output: vollständiger Subsumtionspfad."
 ---
 
-# Vertragsschluss Antrag Annahme
+# Vertragsschluss — Antrag und Annahme §§ 145 bis 156 BGB
 
-## Zweck
+## Mandantenfall
 
-Vertragsschluss aus konkreten Erklärungen rekonstruieren.
+- Angebot per Brief abgegeben — Käufer nimmt nach zwei Wochen an; Frist abgelaufen?
+- Annahme mit Änderung des Preises — gilt dies als neues Angebot oder als (abgeänderte) Annahme?
+- Klausurkonstellation: Anbieter stirbt nach Abgabe des Angebots, bevor der Empfänger annimmt.
 
-## Normanker
+## Erste Schritte
 
-§§ 145-151 BGB
+1. Antrag bestimmen: Vollständiges, auf Vertragsschluss gerichtetes Angebot mit Rechtsbindungswillen.
+2. Bindungswirkung nach § 145 BGB: Antragende ist an das Angebot gebunden, solange Annahmefrist läuft.
+3. Erlöschen des Antrags: § 146 BGB — Ablehnung oder nicht rechtzeitige Annahme.
+4. Annahmefrist: § 147 BGB — unter Anwesenden sofort, unter Abwesenden angemessene Postlaufzeit.
+5. Verspätete Annahme: § 149 BGB — gilt als neues Angebot; Antragender kann sofort annehmen.
+6. Abgeänderte Annahme: § 150 Abs. 2 BGB — gilt als Ablehnung verbunden mit neuem Antrag.
 
-## Intake
+## Rechtsrahmen
 
-- Welche Rolle hat die Nutzerin oder der Nutzer: Kanzlei, Rechtsabteilung, Ausbildung, Gerichtsvorbereitung oder Selbststudium?
-- Was ist das konkrete Arbeitsziel: Anspruchsprüfung, Memo, Klausurlösung, Schriftsatzbaustein, Fristenvermerk oder Rückfragenkatalog?
-- Welche Tatsachen sind belegt, welche sind nur Behauptung, welche fehlen noch?
-- Welche Daten, Uhrzeiten, Erklärungen, Vollmachten, Formvorgaben und Fristen sind im Sachverhalt erkennbar?
+- § 145 BGB: Bindungswirkung des Antrags — Antragender ist grundsätzlich gebunden.
+- § 146 BGB: Erlöschen des Antrags bei Ablehnung oder nicht rechtzeitiger Annahme.
+- § 147 BGB: Annahmefrist — unter Anwesenden sofort, unter Abwesenden angemessene Zeit.
+- § 149 BGB: Verspätete Annahme — gilt dem Antragenden gegenüber als neues Angebot.
+- § 150 Abs. 2 BGB: Abgeänderte Annahme — gilt als Ablehnung und neues Angebot.
 
 ## Prüfraster
 
-1. erstes verbindliches Angebot finden
-2. essentialia und Rechtsbindungswillen prüfen
-3. Bindung und Erlöschen des Angebots bewerten
-4. inhaltsgleiche rechtzeitige Annahme prüfen
-5. Ergebnis mit Norm, Tatbestandsmerkmal, Subsumtion und Rechtsfolge festhalten.
-6. Offene Tatsachen als Rückfrage formulieren und nicht durch Vermutung ersetzen.
+1. Antrag vollständig: Alle essentialia negotii enthalten und Rechtsbindungswille erkennbar?
+2. Antrag zugegangen: § 130 BGB — Zeitpunkt des Zugangs beim Empfänger.
+3. Annahmefrist nach § 147 BGB: Unter Anwesenden sofort, unter Abwesenden wie lange?
+4. Annahme innerhalb der Frist zugegangen: Zeitpunkt dokumentiert?
+5. Verspätete Annahme nach § 149 BGB: Antragender muss unverzüglich ablehnen, sonst gilt Vertrag?
+6. Abgeänderte Annahme nach § 150 Abs. 2 BGB: Änderung wesentlich oder unwesentlich?
+7. Tod oder Geschäftsunfähigkeit des Antragenden: § 130 Abs. 2 BGB — Antrag bleibt grundsätzlich wirksam.
 
-## Output
+## Typische Fallstricke
 
-- Kurztriage mit Ampel und nächstem Schritt
-- Prüfung im Gutachtenstil oder als praxisnahes Mandatsmemo
-- Anspruchs- oder Erklärungsmatrix mit Beweisankern
-- Rückfragenliste und optionaler Entwurfsbaustein
+- Verspätete Annahme ist kein Vertragsschluss, sondern neues Angebot — Antragender muss annehmen.
+- Abgeänderte Annahme, auch bei geringfügiger Änderung, gilt als Ablehnung und neues Angebot.
+- § 130 Abs. 2 BGB: Tod des Antragenden nach Abgabe hindert Wirksamkeit nicht — häufig falsch gelöst.
+- Kaufmännisches Bestätigungsschreiben kann Vertragsinhalt nachträglich modifizieren.
 
-## Qualitätsregeln
+## Quellen
 
-- BGB-AT-Fragen immer an der passenden Stelle im Anspruchsaufbau prüfen.
-- Auslegung geht regelmäßig vor Anfechtung, Dissens oder Lückenschließung.
-- Keine erfundenen Rechtsprechungs- oder Literaturzitate verwenden; bei Zitaten Primärquelle prüfen.
-- Bei Fristen den Rechenweg sichtbar machen.
-- Bei Wertungen die tragenden Tatsachen ausdrücklich nennen.
+- [§ 145 BGB — gesetze-im-internet.de](https://www.gesetze-im-internet.de/bgb/__145.html)
+- [§ 147 BGB — gesetze-im-internet.de](https://www.gesetze-im-internet.de/bgb/__147.html)
+- [§ 150 BGB — gesetze-im-internet.de](https://www.gesetze-im-internet.de/bgb/__150.html)
+- [dejure.org § 145 BGB](https://dejure.org/gesetze/BGB/145.html)
+- [dejure.org § 150 BGB](https://dejure.org/gesetze/BGB/150.html)
 
-## Anschluss-Skills
+## Vertiefung
 
-- allgemein
-- anspruchsaufbau-zivilrecht-bgb-at
-- bgb-at-output-gutachten-memo-schriftsatz
+### Annahmefrist-Berechnung
+
+§ 147 Abs. 2 BGB: Die angemessene Frist umfasst Bearbeitungszeit für das Angebot, Postlaufzeit
+hin und zurück sowie eine kurze Überlegungszeit. Bei Angeboten per E-Mail ist die Frist kürzer
+als bei Briefangeboten, weil die Übermittlungszeit kürzer ist.
+
+### Vertragsschluss im internationalen Handel
+
+Bei grenzüberschreitenden Verträgen kann das UN-Kaufrecht (CISG) anwendbar sein, das eigene
+Regeln für Angebot und Annahme enthält. Das CISG kennt kein Abstraktionsprinzip — wichtig für
+den internationalen BGB-AT-Vergleich.
+
+### Klausur-Checkliste Vertragsschluss
+
+- Antrag vollständig mit allen essentialia negotii?
+- Zugangszeitpunkt des Antrags nach § 130 BGB bestimmt?
+- Annahmefrist nach § 147 BGB berechnet?
+- Annahme innerhalb der Frist zugegangen?
+- Verspätete Annahme (§ 149 BGB) oder abgeänderte Annahme (§ 150 Abs. 2 BGB) als neues Angebot?

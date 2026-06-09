@@ -1,13 +1,9 @@
 ---
 name: verarbeitungsverzeichnis-vvt-generator
-description: "Verzeichnis der Verarbeitungstätigkeiten nach Art. 30 DSGVO erstellen oder aktualisieren. Art. 30 DSGVO VVT-Pflicht. Prüfraster: Pflichtangaben Art. 30 Abs. 1 Verantwortlicher Zweck Kategorien Empfaenger Fristen Massnahmen. Output: vollständiges VVT je Verarbeitungstätigkeit. Abgrenzung: nicht für Datenschutz-Folgenabschaetzung (dsfa-erstellung)."
+description: "Verzeichnis der Verarbeitungstätigkeiten nach Art. 30 DSGVO erstellen oder aktualisieren. Art. 30 DSGVO VVT-Pflicht. Prüfraster: Pflichtangaben Art. 30 Abs. 1 Verantwortlicher Zweck Kategorien Empfaenger Fristen Massnahmen. Output: vollständiges VVT je Verarbeitungstätigkeit. Abgrenzung: nicht fü..."
 ---
 
 # VVT — Verzeichnis von Verarbeitungstätigkeiten
-
-## Zweck
-
-Art. 30 DSGVO Pflicht-Dokument für alle datenverarbeitenden Stellen ab Schwellenwerten. Dieses Skill bedient den Aufbau und die Aktualisierung des VVT.
 
 ## Eingaben
 
@@ -168,11 +164,11 @@ TOMs:
 - **Drittland bezeichnen**
 - **Empfänger nennen**
 - **Garantie nach Art. 46 DSGVO** spezifizieren:
-  - SCC (Standard-Vertrags-Klauseln)
-  - BCR (Binding Corporate Rules)
-  - Verhaltens-Regeln Art. 40
-  - Zertifizierung Art. 42
-  - Internationales Abkommen (z.B. EU-US Data Privacy Framework)
+ - SCC (Standard-Vertrags-Klauseln)
+ - BCR (Binding Corporate Rules)
+ - Verhaltens-Regeln Art. 40
+ - Zertifizierung Art. 42
+ - Internationales Abkommen (z.B. EU-US Data Privacy Framework)
 - Bei Art. 49 Ausnahme bezeichnen (Einwilligung Vertrag Lebenswichtige Interessen etc.)
 
 ### Anhang TIA (Transfer Impact Assessment)
@@ -332,7 +328,7 @@ TIA durchgeführt: ja, Skill drittlandstransfer-pruefung
 Lösch-Frist:
 - Aktive Abonnenten: Bis zum Widerruf
 - Nach Widerruf: 3 Jahre Aufbewahrung der
-  Widerrufs-Information (Beweis-Funktion)
+ Widerrufs-Information (Beweis-Funktion)
 - Click-Verhalten: 13 Monate (Statistik-Auswertung)
 
 TOMs:

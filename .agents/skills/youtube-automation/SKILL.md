@@ -3,14 +3,11 @@ name: youtube-automation
 description: "Automate YouTube tasks via Rube MCP (Composio): upload videos, manage playlists, search content, get analytics, and handle comments. Always search tools first for current schemas."
 requires:
   mcp: [rube]
-category: social-media
 ---
 
 # YouTube Automation via Rube MCP
 
 Automate YouTube operations through Composio's YouTube toolkit via Rube MCP.
-
-**Toolkit docs**: [composio.dev/toolkits/youtube](https://composio.dev/toolkits/youtube)
 
 ## Prerequisites
 
@@ -219,6 +216,3 @@ Automate YouTube operations through Composio's YouTube toolkit via Rube MCP.
 | List subscriptions | YOUTUBE_LIST_USER_SUBSCRIPTIONS | (check schema) |
 | List comments | YOUTUBE_LIST_COMMENT_THREADS | videoId |
 | Channel activities | YOUTUBE_GET_CHANNEL_ACTIVITIES | (check schema) |
-
----
-*Powered by [Composio](https://composio.dev)*

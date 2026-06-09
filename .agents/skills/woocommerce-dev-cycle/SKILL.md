@@ -1,6 +1,6 @@
 ---
 name: woocommerce-dev-cycle
-description: Run tests, linting, and quality checks for WooCommerce development. Use when running tests, fixing code style, or following the development workflow in WooCommerce projects.
+description: Run tests, linting, and quality checks for WooCommerce development. Use when running tests, fixing code style, or following the development workflow.
 ---
 
 # WooCommerce Development Cycle
@@ -25,8 +25,6 @@ The standard development workflow:
 3. Run linting/type checking: `pnpm run lint:changes:branch:php`
 4. Fix any issues: `pnpm run lint:php:fix`
 5. Commit changes only after tests pass
-
-**Note**: WooCommerce uses pnpm for its build system. For other Node.js projects, prefer bun over npm/pnpm.
 
 ## Key Principles
 

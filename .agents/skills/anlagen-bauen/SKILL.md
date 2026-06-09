@@ -1,135 +1,125 @@
 ---
 name: anlagen-bauen
-description: "Baut aus den Belegen eines Fluggastrechte-Mandats ein beA-konformes Anlagenkonvolut. Verwendet zum bestehenden Schriftsatz (Forderungsschreiben Mahnung Klage) die Belege Buchungsbestätigung Boardingpass Annullierungsbestätigung E-Mail-Verkehr Quittungen. Konvertiert alles nach PDF nummeriert in der Reihenfolge der ersten Erwaehnung im Schriftsatz stempelt oben rechts Anlage K 1 in Arial 12 fett und benennt beA-tauglich. Liefert Einzel-PDFs Konvolut-PDF Anlagenverzeichnis und optional ein Schriftsatz-mit-Anlagen-Bundle als ein PDF."
+description: "Baut aus den Belegen eines Fahrgastrechte-Mandats ein beA-konformes Anlagenkonvolut. Verwendet zum bestehenden Schriftsatz (Forderungsschreiben Widerspruch Schlichtungsantrag Klage) die Belege Buchungsbestaetigung E-Ticket Verspaetungsbestaetigung Foto Anzeigetafel App-Screenshots Belege zu Ausla..."
 ---
 
-# Fluggastrechte — Anlagen bauen
-
-## Zweck
-
-Im Fluggastrechte-Mandat sammelt der Mandant typischerweise einen bunten Strauß an Belegen: Buchungsbestätigung als PDF, Boardingpass als Screenshot, E-Mails der Airline mit Annullierungsbestätigung, Restaurant-Quittungen vom Flughafen als Foto, Taxiquittungen, Hotelrechnungen. Dieser Skill macht aus diesem Material ein einheitliches, gerichtsfestes Anlagenkonvolut.
-
-Der Skill wird **automatisch** von den Schreiben-Skills (`forderungsschreiben-erste-stufe`, `forderungsschreiben-mahnung`, `klage-amtsgericht-fluggast`) angestoßen, sobald dort ein Schriftsatz fertig ist und Belege im Mandantenordner liegen. Er kann auch manuell aufgerufen werden, etwa wenn nur die Belege geordnet werden sollen.
+# Fahrgastrechte — Anlagen bauen
 
 ## Eingaben
 
-- **Schriftsatz** (PDF oder DOCX) — das vom vorhergehenden Skill erzeugte Forderungsschreiben, die Mahnung oder die Klage.
-- **Belege-Ordner** mit den Beweisstücken in beliebigem Format:
- - PDF (Buchungsbestätigung, Annullierungsbestätigung, Tickets)
- - DOCX (eigene Aufzeichnungen, Mandanten-Sachverhaltsdarstellung)
- - JPG / PNG (Boardingpass-Foto, Anzeigetafel-Foto, Quittungs-Foto)
- - EML / MSG (E-Mail-Korrespondenz mit der Airline)
-- **Zielordner** für das Ergebnis (wird angelegt).
-- **Bundle-Option** (`--bundle`): zusätzlich ein einziges PDF `Schriftsatz_mit_Anlagen.pdf` mit dem Schriftsatz vorne und allen Anlagen dahinter.
+```yaml
+schriftsatz: <pfad zum Schriftsatz, z.B. widerspruch-2026-05-15.md>
+rohbelege_verzeichnis: <fall>/belege/
+ausgabeverzeichnis: <fall>/anlagen/
+bundle: true                       # erzeugt zusätzlich Schriftsatz_mit_Anlagen.pdf
+schriftgrad_stempel: 12
+schrift_stempel: Arial-Bold        # Arial 12 FETT oben rechts
+bezeichnung: "Anlage K"
+```
 
 ## Workflow
 
-### Schritt 1 — Belege konvertieren
+### 1. Schriftsatz parsen
 
-Alle Belege werden zunächst nach PDF normalisiert:
+Liest den Schriftsatz und identifiziert alle erwähnten Anlagen anhand der Bezeichnung `Anlage K 1`, `Anlage K 2`, ... oder `Anlage K1`, `Anlage K2`. Erstellt geordnete Liste in Reihenfolge der Erwähnung im Text.
 
-| Eingang | Verfahren |
-|---|---|
-| PDF | unverändert übernommen |
-| JPG / PNG | Pillow legt das Bild auf eine A4-Seite mit 150 dpi |
-| DOCX / EML / MSG / ODT / RTF / TXT / HTML | LibreOffice headless konvertiert nach PDF |
+### 2. Rohbelege zuordnen
 
-Fehlt LibreOffice oder Pillow, gibt der Skill eine konkrete Installations-Anweisung aus und lässt den Beleg in der Eingangsliste mit Warnung stehen.
+Verzeichnis `belege/` durchsuchen und jedem Anlage-K-Eintrag eine Datei zuordnen. Typische Belege im Fahrgastrechte-Kontext:
 
-### Schritt 2 — Anlagen aus dem Schriftsatz lesen
+| Anlage typisch | Datei-Pattern | Beschreibung |
+|---|---|---|
+| K1 | `buchung-*.pdf` | Buchungsbestätigung der DB / des EVU |
+| K2 | `e-ticket-*.pdf` oder `fahrkarten-*.pdf` | E-Tickets / Fahrkarten aller Reisenden |
+| K3 | `verspaetung-*.png` oder `db-navigator-*.png` | DB-Verspätungsmitteilung (App / SMS / E-Mail) |
+| K4 | `anzeigetafel-*.jpg` | Foto Anzeigetafel Zielbahnhof mit Uhrzeit |
+| K5 | `belege-auslagen/*.pdf` | Belege zu Ersatzbeförderung / Verpflegung / Hotel |
+| K6 | `erstantrag-*.pdf` | Eigener Erstantrag an DB Servicecenter |
+| K7 | `ablehnung-*.pdf` | Ablehnungsschreiben der DB |
+| K8 | `widerspruch-*.pdf` | Eigener Widerspruch (in Klage relevant) |
+| K9 | `schlichtungsspruch-*.pdf` | Schlichtungsspruch der Schlichtungsstelle Reise & Verkehr |
+| K10 ff. | `vollmacht-*.pdf` | Vollmachten der Mitreisenden |
 
-Der Skill liest den Schriftsatz und extrahiert alle Bezugnahmen vom Muster "Anlage K 1", "Anlage K2", "Anlage K 3a". Reihenfolge: die der **ersten Erwähnung im Schriftsatz** (BGH-Stil, nicht chronologisch). Wenn der Schriftsatz noch keine Anlagen-Nummern enthält, wird alphabetisch durchnummeriert — dann sollte der Schreiben-Skill in einem zweiten Lauf die Bezeichnungen im Schriftsatz nachtragen.
+Wenn eine erwähnte Anlage nicht zugeordnet werden kann: **Prüfer-Flag** mit Liste der unzugeordneten Bezugnamen.
 
-### Schritt 3 — Stempel oben rechts (Arial 12 fett)
+### 3. Belege konvertieren und stempeln
 
-Auf der ersten Seite jeder Anlage wird ein dezenter, aber deutlicher Stempel gesetzt:
-
-- Position: rechter oberer Rand, ca. 1,5 cm vom oberen Seitenrand, ca. 1,5 cm vom rechten Seitenrand.
-- Schrift: Arial 12 pt **fett** (in der reportlab-Basisschrift Helvetica-Bold).
-- Format: `Anlage K 1`, `Anlage K 7`, `Anlage K 3a`.
-
-Mehrseitige Anlagen erhalten den Stempel nur auf Seite 1.
-
-### Schritt 4 — beA-konforme Dateinamen
-
-Jede Einzelanlage wird unter einem Dateinamen abgelegt, der beA-kompatibel ist:
+Jeden Rohbeleg in PDF konvertieren (HEIC / JPG / PNG / DOCX / XLSX → PDF). Auf jedem Anlagen-PDF oben rechts in **Arial 12 FETT** (Helvetica-Bold 12pt) den Bezeichner stempeln:
 
 ```
-Anlage_K-01_Buchungsbestaetigung.pdf
-Anlage_K-02_Boardingpass.pdf
-Anlage_K-03_Email-Airline-Annullierung.pdf
-Anlage_K-04_Quittung-Restaurant-Flughafen.pdf
-Anlage_K-05_Taxiquittung.pdf
+                                                                    Anlage K 1
+[Inhalt]
 ```
 
-Regeln: keine Umlaute, kein scharfes ß, keine Leerzeichen, Nummer zweistellig, maximal ca. 90 Zeichen.
+Dateibenennung: ohne Umlaute und Leerzeichen — `Anlage_K_1.pdf`, `Anlage_K_2.pdf`, … gemäß beA-Konvention.
 
-### Schritt 5 — Konvolut + Anlagenverzeichnis
+### 4. Sammel-PDF optional
 
-Im Zielordner entstehen:
+Wenn `bundle: true`: Sammel-PDF `Schriftsatz_mit_Anlagen.pdf` erzeugen — Schriftsatz vorne, Anlagen in nummerierter Reihenfolge mit Lesezeichen je Anlage. Nützlich für Akteneintrag und Sicht-Backup.
+
+### 5. Ausgabe
+
+Im `ausgabeverzeichnis/`:
+
+- `Anlage_K_1.pdf`, `Anlage_K_2.pdf`, … (separate Anlagen-PDFs für beA-Upload)
+- `Schriftsatz_mit_Anlagen.pdf` (Sammel-PDF, wenn bundle: true)
+- `anlagen-uebersicht.md` (Tabelle Anlage K → Datei → Beschreibung; Fehlen-Hinweise)
+
+## beA-Konvention
+
+- Anlagen werden im beA als **separate PDFs** eingereicht.
+- Jeweils mit Stempel oben rechts in **Arial 12 FETT**.
+- **Dateiname** ohne Umlaute, ohne Leerzeichen: `Anlage_K_1.pdf`.
+- **Reihenfolge** muss der Erwähnung im Schriftsatz entsprechen.
+- Sammel-PDF zusätzlich für eigenes Aktenexemplar (nicht für beA-Upload).
+
+## Foto-Belege bei DB-Verspätung — besondere Hinweise
+
+- **Foto Anzeigetafel:** Uhrzeit muss erkennbar sein. Bei mehreren Anzeigetafeln nur die maßgebliche (Zielbahnhof). Datum eines Tages-Vergleichs ggf. durch EXIF-Daten ergänzen.
+- **DB-Navigator-Screenshot:** möglichst mit Verbindungsdetails-Seite, die geplante und tatsächliche Ankunftszeit zeigt.
+- **Ablehnungsschreiben:** alle Seiten in einer PDF (auch Rückseiten / Anlagen des Schreibens).
+- **Vollmachten:** Originale-Scans hoher Qualität. Beidseitige Unterschriften bei sorgeberechtigten Eltern eines Minderjährigen.
+
+## Fehlerquellen
+
+- Schriftsatz erwähnt `Anlage K5`, im Belege-Verzeichnis fehlt die zugehörige Datei → Skript bricht ab; Prüfer-Flag.
+- Doppelte Anlage K-Nummerierung im Schriftsatz → Fehlermeldung; manueller Eingriff.
+- HEIC-Dateien iOS → automatische Konvertierung; bei OCR-Bedarf Hinweis.
+- Mehrseitige Anlage in mehreren Dateien (z.B. Ablehnungsschreiben S. 1 separat) → Pre-Merge in eine Datei vor Stempelung.
+
+## Ausgabe-Beispiel
 
 ```
-konvertiert/ Zwischenstand der konvertierten Belege
-gestempelt/ Einzelanlagen mit Stempel, beA-konform benannt
-Anlagenkonvolut.pdf alle Anlagen, mit Lesezeichen pro Anlage
-Anlagenverzeichnis.md tabellarische Übersicht (Anlage / Beschreibung / Seiten)
-Anlagenverzeichnis.pdf gleiche Tabelle als PDF
+anlagen-uebersicht.md
+============================
+Fall: FGR-2026-0042
+Schriftsatz: widerspruch-2026-05-15.md
+Erzeugte Anlagen:
+
+| Anlage   | Datei                       | Beschreibung                          | Status |
+|----------|-----------------------------|----------------------------------------|--------|
+| Anlage K 1 | Anlage_K_1.pdf             | Buchungsbestätigung PNR ABC123          | ok      |
+| Anlage K 2 | Anlage_K_2.pdf             | E-Tickets Mueller (3 Personen)          | ok      |
+| Anlage K 3 | Anlage_K_3.pdf             | DB-Navigator Verspätungsmitteilung       | ok      |
+| Anlage K 4 | Anlage_K_4.pdf             | Foto Anzeigetafel Muenchen Hbf 15:05   | ok      |
+| Anlage K 5 | Anlage_K_5.pdf             | Kassenbon Bahnhofs-Imbiss 12,50 EUR    | ok      |
+| Anlage K 6 | Anlage_K_6.pdf             | Erstantrag an DB Servicecenter           | ok      |
+| Anlage K 7 | Anlage_K_7.pdf             | Ablehnungsschreiben DB vom 12.05.2026    | ok      |
+
+Sammel-PDF: Schriftsatz_mit_Anlagen.pdf erzeugt (28 Seiten, 4.2 MB).
 ```
 
-### Schritt 6 — Optional: Schriftsatz-mit-Anlagen-Bundle
+## Normen und Rechtsprechung
 
-Mit `--bundle` legt der Skill **zusätzlich** `Schriftsatz_mit_Anlagen.pdf` an: der Schriftsatz vorne, dann das Konvolut, durchlaufende Lesezeichen. Genau das spart den Mandanten den letzten Schritt der Zusammenstellung, wenn er das Ganze einreichen oder per Post schicken will.
+### Kuratierte Normen-Bibliothek
 
-## Werkzeug
+- Art. 13 DSGVO
+- § 71 GVG
+- § 32 VSBG
+- § 23 VSBG
 
-`werkzeuge/build_fluggast_anlagen.py`. Aufruf-Beispiel:
+### Leitentscheidungen
 
-```bash
-# Forderungsschreiben mit Belegen
-python3 werkzeuge/build_fluggast_anlagen.py \
- --belege ./mandat-mueller/belege \
- --schriftsatz ./mandat-mueller/forderungsschreiben.pdf \
- --ausgang ./mandat-mueller/anlagen \
- --titel "Forderungsschreiben Erste Stufe"
-
-# Klage mit gebundeltem Schriftsatz + Anlagen
-python3 werkzeuge/build_fluggast_anlagen.py \
- --belege ./mandat-mueller/belege \
- --schriftsatz ./mandat-mueller/klage.pdf \
- --ausgang ./mandat-mueller/anlagen \
- --titel "Klage Amtsgericht Hamburg" \
- --bundle
-```
-
-Abhängigkeiten: `pypdf`, `reportlab`, optional `Pillow` (für Bild-Konvertierung), optional LibreOffice (für DOCX/EML).
-
-## Rückfragen, falls etwas fehlt
-
-Der Skill stoppt mit einer klaren Frage zurück an den Mandanten / die Sekretariatskraft, wenn:
-
-- der Belege-Ordner leer ist (Frage: "Welche Belege liegen vor und in welchem Format? Bitte alle in den Ordner kopieren, auch Fotos und E-Mails.");
-- der Schriftsatz weder PDF noch DOCX ist (Frage: "Liegt der Schriftsatz als PDF vor? Wenn er noch in der Mahnung-Skill-Vorschau steht, bitte erst dort als PDF exportieren.");
-- mehr Anlagen im Schriftsatz benannt sind, als Belege im Ordner liegen (Frage: "Der Schriftsatz nennt Anlage K 5, im Ordner sind aber nur 4 Dateien — welcher Beleg fehlt?");
-- ein Beleg im Ordner liegt, der im Schriftsatz nicht erwähnt wird (Hinweis: "Beleg X wird im Schriftsatz nicht zitiert. Soll er trotzdem als zusätzliche Anlage angehängt werden, oder weggelassen?").
-
-## Was dieser Skill bewusst NICHT tut
-
-- **Keine inhaltliche Schwärzung** (Kontonummern, Personalausweis-Daten, fremde Passagierdaten auf Boardingpässen). Wenn die Anlage geschwärzt werden muss, wird das vor diesem Skill manuell erledigt.
-- **Keine OCR-Vollerkennung.** Das Werkzeug liest nur den Schriftsatz, um Anlagen-Nummern zu finden — es liest die Belege nicht inhaltlich aus.
-- **Keine elektronische Signatur** und **kein automatisches beA-Hochladen.** Das macht der Mandant oder die Kanzlei selbst.
-- **Keine Echtheitsprüfung** der Belege.
-
-## Beispiele typischer Nutzerformulierungen, die diesen Skill auslösen
-
-- "Bitte die Belege aus dem Ordner ./belege als Anlagen K 1 bis K 5 zum Forderungsschreiben aufbereiten."
-- "Erstelle ein Anlagenkonvolut für die Klage, alles in einem PDF."
-- "Stemple meine Belege als Anlagen und benenne sie beA-konform."
-- "Mach aus dem Schriftsatz und den Belegen ein einziges PDF zum Einreichen."
-
-## Übergabe
-
-Die Schreiben-Skills (`forderungsschreiben-erste-stufe`, `forderungsschreiben-mahnung`, `klage-amtsgericht-fluggast`) rufen diesen Skill **automatisch** am Ende ihrer Arbeit auf, sobald ein Belege-Ordner im Mandatsverzeichnis vorhanden ist. Der Nutzer kann das mit der Option "Anlagen separat lassen" abwählen.
-
-## Leitentscheidungen Anlagen / Schriftsatz
-
-- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+- BVerfGE Band 6 Rn 32 (Lüth, Drittwirkung der Grundrechte)
+- BVerwG 6 C 12.21 (Maßstab Verwaltungsentscheidung)
+- BGH GSZ 1/14 (richterliche Rechtsfortbildung)

@@ -1,9 +1,22 @@
 ---
 name: dsv-meldung-bfdi
-description: "Reicht eine Meldung nach Art. 33 DSGVO bei der Bundesbeauftragte für den Datenschutz und die Informationsfreiheit (BfDI) ein. Behandelt: Zuständigkeit für Verantwortliche mit Hauptniederlassung in Bund (Telekommunikation, Post, Bundesbehörden, Krankenkassen) und für nicht-öffentliche Stellen; Online-Formular und Postweg; Pflichtangaben in der Reihenfolge der Berliner Goldstandard-Struktur I bis VI; Sonderregelungen aus BDSG insbesondere § 65 für Bundesbehörden; Eingangsbestätigung; Aktenzeichen; Nachmeldung. Output: einreichungsfertige Meldung als Fließtext mit Erläuterung der Eingabewege. Abgrenzung: keine Risikobewertung; keine Benachrichtigung Art. 34 DSGVO."
+description: "Reicht eine Meldung nach Art: 33 DSGVO bei der Bundesbeauftragte für den Datenschutz und die Informationsfreiheit (BfDI) ein. Behandelt: Zuständigkeit für Verantwortliche mit Hauptniederlassung in Bund (Telekommunikation, Post, — Arbeitskontext: Datenschutzrecht DSGVO/BDSG, Schwerpunkt dsv meldung bfdi."
 ---
 
-# Meldung Art. 33 DSGVO an die BfDI
+# Reicht eine Meldung nach Art
+
+
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: DSGVO; BDSG; TDDDG; Art. 44 ff — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+**Fokus:** Reicht eine Meldung nach Art. 33 DSGVO bei der Bundesbeauftragte für den Datenschutz und die Informationsfreiheit (BfDI) ein. Behandelt: Zuständigkeit für Verantwortliche mit Hauptniederlassung in Bund (Telekommunikation, Post, Bundesbehörden, Krankenkassen) und für nicht-öffentliche Stellen; Online-Formular und Postweg; Pflichtangaben in der Reihenfolge der Berliner Goldstandard-Struktur I bis VI; Sonderregelungen aus BDSG insbesondere § 65 für Bundesbehörden; Eingangsbestätigung; Aktenzeichen; Nachmeldung. Output: einreichungsfertige Meldung als Fließtext mit Erläuterung der Eingabewege. Abgrenzung: keine Risikobewertung; keine Benachrichtigung Art. 34 DSGVO.
+
+### Meldung Art. 33 DSGVO an die BfDI
 
 ## Triage — kläre vor der Bearbeitung
 
@@ -29,10 +42,6 @@ Nicht aus Modellwissen; aktuelle Bußgeldpraxis der BfDI vor Ausgabe verifiziere
 
 Art. 33; Art. 55; Art. 5 Abs. 2 DSGVO; BDSG insbesondere § 65 für Bundesbehörden.
 
-## Quellenregel
-
-Quellenregel: Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen. Rechtsprechung nicht aus Modellwissen zitieren; vor Ausgabe ueber offizielle oder frei zugaengliche Quelle (eur-lex.europa.eu, edpb.europa.eu, bfdi.bund.de, dejure.org, openjur.de, gesetze-im-internet.de) mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren. BeckRS-Fundstellen nur in Verbindung mit einer primaeren oder offenen Sekundaerquelle.
-
 ## Behördenstammdaten BfDI
 
 - Name: Bundesbeauftragte für den Datenschutz und die Informationsfreiheit
@@ -46,10 +55,10 @@ Hinweis: Adressen und URLs werden vor Versendung über die offizielle Behördens
 
 ## Berliner Struktur als Goldstandard
 
-Die Meldeformular-Vorlage der Berliner Beauftragten fuer Datenschutz und Informationsfreiheit deckt strukturell alle Pflichtangaben nach Art. 33 Abs. 3 DSGVO ab und wird als inhaltliche Pruefliste verwendet. Die Meldung gliedert sich in sechs Bloecke:
+Die Meldeformular-Vorlage der Berliner Beauftragten für Datenschutz und Informationsfreiheit deckt strukturell alle Pflichtangaben nach Art. 33 Abs. 3 DSGVO ab und wird als inhaltliche Pruefliste verwendet. Die Meldung gliedert sich in sechs Bloecke:
 
 **I. Wo ist die Datenpanne passiert?**
-- Verantwortliche Stelle (Unternehmen, Verein, Praxis, Behoerde) — Name, Anschrift, Webseite, Branche.
+- Verantwortliche Stelle (Unternehmen, Verein, Praxis, Behörde) — Name, Anschrift, Webseite, Branche.
 - Angaben zur meldenden Person — Name, Funktion, dienstliche E-Mail, Telefon.
 
 **II. Was ist passiert?**
@@ -60,10 +69,10 @@ Die Meldeformular-Vorlage der Berliner Beauftragten fuer Datenschutz und Informa
 - Datum der Kenntnisnahme (loest 72-Stunden-Frist aus).
 - Betroffene Datenarten — Namen; Adressen; E-Mail-Adressen; Standort; Geburtsdatum; Passwoerter; Personalausweisnummer; Pass; Steuernummer; Bankdaten; wirtschaftliche Verhaeltnisse; Straftaten; politische Meinungen; religioese Ueberzeugungen; Gewerkschaftszugehoerigkeit; Gesundheit; Sexualitaet; ethnische Herkunft; Biometrie; Identifikationsnummern; Fotos/Videos; unbekannt.
 - Art. 9 DSGVO-Daten ja/nein/nicht bekannt.
-- Kategorien betroffener Personen — Mitarbeitende; Nutzer; Kunden; Patienten; Politiker; Kinder/Minderjaehrige; Personen oeffentlichen Lebens; andere.
+- Kategorien betroffener Personen — Mitarbeitende; Nutzer; Kunden; Patienten; Politiker; Kinder/Minderjaehrige; Personen öffentlichen Lebens; andere.
 - Anzahl betroffener Personen (Obergrenze).
 - Anzahl betroffener Datensaetze.
-- Wahrscheinliche Folgen fuer Betroffene — Geheimnisoffenbarung; wirtschaftliche Nachteile; finanzieller Schaden; Bloss­stellung; Rufschaedigung; Verlust des Arbeitsplatzes; Existenzgefaehrdung; Lebensgefaehrdung; Diskriminierung; gesellschaftliche Nachteile; Identitaetsdiebstahl; Aufhebung Pseudonymisierung; andere.
+- Wahrscheinliche Folgen für Betroffene — Geheimnisoffenbarung; wirtschaftliche Nachteile; finanzieller Schaden; Bloss­stellung; Rufschaedigung; Verlust des Arbeitsplatzes; Existenzgefaehrdung; Lebensgefaehrdung; Diskriminierung; gesellschaftliche Nachteile; Identitaetsdiebstahl; Aufhebung Pseudonymisierung; andere.
 
 **III. Welche Gegenmassnahmen wurden ergriffen oder werden vorgeschlagen?**
 - Bereits eingeleitete und geplante Gegenmassnahmen zur Schadensminderung und zur kuenftigen Verhinderung.
@@ -71,7 +80,7 @@ Die Meldeformular-Vorlage der Berliner Beauftragten fuer Datenschutz und Informa
 - Information der Betroffenen ja/nein; wie und wann; welche Empfehlungen; bei nein Begruendung zu Art. 34 DSGVO.
 
 **IV. Sonstige Mitteilungen an die Aufsichtsbehoerde**
-- Andere Behoerden eingeschaltet (mit Aktenzeichen).
+- Andere Behörden eingeschaltet (mit Aktenzeichen).
 - Strafanzeige (Dienststelle, Aktenzeichen).
 - Sonstige Hinweise.
 
@@ -82,9 +91,9 @@ Die Meldeformular-Vorlage der Berliner Beauftragten fuer Datenschutz und Informa
 - Schluesselmaterial (PGP).
 
 **VI. Abschluss**
-- Vorlaeufige Meldung ja/nein; bei vorlaeufiger Meldung Ergaenzung binnen 14 Tagen.
+- Vorlaeufige Meldung ja/nein; bei vorläufiger Meldung Ergaenzung binnen 14 Tagen.
 
-Diese sechs Bloecke werden in jeder Behoerden-spezifischen Meldung adressiert; die Reihenfolge kann je nach Formular variieren.
+Diese sechs Bloecke werden in jeder Behörden-spezifischen Meldung adressiert; die Reihenfolge kann je nach Formular variieren.
 
 ## Praxisformulierung — Einreichungsablauf
 

@@ -133,7 +133,3 @@ You've succeeded when:
 ---
 
 **Bias toward deletion. Measure the end state.**
-
-## Attribution
-
-- Original skill by @joshuadavidthomas from [joshuadavidthomas/agent-skills](https://github.com/joshuadavidthomas/agent-skills) (MIT)

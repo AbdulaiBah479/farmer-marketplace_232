@@ -30,7 +30,6 @@ import {
 import {
   PromptInput,
   PromptInputActionAddAttachments,
-  PromptInputActionAddScreenshot,
   PromptInputActionMenu,
   PromptInputActionMenuContent,
   PromptInputActionMenuTrigger,
@@ -169,7 +168,6 @@ const InputDemo = () => {
                 <PromptInputActionMenuTrigger />
                 <PromptInputActionMenuContent>
                   <PromptInputActionAddAttachments />
-                  <PromptInputActionAddScreenshot />
                 </PromptInputActionMenuContent>
               </PromptInputActionMenu>
               <PromptInputButton
@@ -241,7 +239,6 @@ export async function POST(req: Request) {
 
 - Auto-resizing textarea that adjusts height based on content
 - File attachment support with drag-and-drop
-- Built-in screenshot capture action
 - Image preview for image attachments
 - Configurable file constraints (max files, max size, accepted types)
 - Automatic submit button icons based on status
@@ -402,13 +399,6 @@ Attachment components have been moved to a separate module. See the [Attachment]
 | `...props` | `React.ComponentProps<typeof DropdownMenuItem>` | - | Any other props are spread to the underlying DropdownMenuItem component. |
 
 ### `<PromptInputActionAddAttachments />`
-
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `label` | `string` | - | Label for the menu item. |
-| `...props` | `React.ComponentProps<typeof DropdownMenuItem>` | - | Any other props are spread to the underlying DropdownMenuItem component. |
-
-### `<PromptInputActionAddScreenshot />`
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|

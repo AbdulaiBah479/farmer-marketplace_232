@@ -3,14 +3,11 @@ name: whatsapp-automation
 description: "Automate WhatsApp Business tasks via Rube MCP (Composio): send messages, manage templates, upload media, and handle contacts. Always search tools first for current schemas."
 requires:
   mcp: [rube]
-category: communication
 ---
 
 # WhatsApp Business Automation via Rube MCP
 
 Automate WhatsApp Business operations through Composio's WhatsApp toolkit via Rube MCP.
-
-**Toolkit docs**: [composio.dev/toolkits/whatsapp](https://composio.dev/toolkits/whatsapp)
 
 ## Prerequisites
 
@@ -215,6 +212,3 @@ Automate WhatsApp Business operations through Composio's WhatsApp toolkit via Ru
 | Create template | WHATSAPP_CREATE_MESSAGE_TEMPLATE | template_name, category, language |
 | List templates | WHATSAPP_GET_MESSAGE_TEMPLATES | (none) |
 | Check template status | WHATSAPP_GET_TEMPLATE_STATUS | template_id |
-
----
-*Powered by [Composio](https://composio.dev)*

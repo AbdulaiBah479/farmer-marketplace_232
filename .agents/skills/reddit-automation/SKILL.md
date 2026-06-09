@@ -3,14 +3,11 @@ name: reddit-automation
 description: "Automate Reddit tasks via Rube MCP (Composio): search subreddits, create posts, manage comments, and browse top content. Always search tools first for current schemas."
 requires:
   mcp: [rube]
-category: social-media
 ---
 
 # Reddit Automation via Rube MCP
 
 Automate Reddit operations through Composio's Reddit toolkit via Rube MCP.
-
-**Toolkit docs**: [composio.dev/toolkits/reddit](https://composio.dev/toolkits/reddit)
 
 ## Prerequisites
 
@@ -213,6 +210,3 @@ t5_ = Subreddit
 | Get specific comment | REDDIT_RETRIEVE_SPECIFIC_COMMENT | comment_id |
 | List post flairs | REDDIT_LIST_SUBREDDIT_POST_FLAIRS | subreddit |
 | Get user flair | REDDIT_GET_USER_FLAIR | subreddit |
-
----
-*Powered by [Composio](https://composio.dev)*

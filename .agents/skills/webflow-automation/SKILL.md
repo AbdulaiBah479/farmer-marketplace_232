@@ -1,16 +1,13 @@
 ---
 name: webflow-automation
-description: Automate Webflow CMS collections, site publishing, page management, asset uploads, and ecommerce orders via Rube MCP (Composio). Always search tools first for current schemas.
+description: "Automate Webflow CMS collections, site publishing, page management, asset uploads, and ecommerce orders via Rube MCP (Composio). Always search tools first for current schemas."
 requires:
   mcp: [rube]
-category: development-code
 ---
 
 # Webflow Automation via Rube MCP
 
 Automate Webflow operations including CMS collection management, site publishing, page inspection, asset uploads, and ecommerce order retrieval through Composio's Webflow toolkit.
-
-**Toolkit docs**: [composio.dev/toolkits/webflow](https://composio.dev/toolkits/webflow)
 
 ## Prerequisites
 
@@ -237,6 +234,3 @@ Typical CMS content creation flow:
 | Upload asset | `WEBFLOW_UPLOAD_ASSET` | `site_id`, `file_name`, `file_content`, `content_type`, `md5` |
 | List orders | `WEBFLOW_LIST_ORDERS` | `site_id`, `status` |
 | Get order | `WEBFLOW_GET_ORDER` | `site_id`, `order_id` |
-
----
-*Powered by [Composio](https://composio.dev)*

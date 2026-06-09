@@ -1,171 +1,152 @@
 ---
 name: richtlinien-monitor
-description: "Überwacht die interne KI-Richtlinie auf Abweichungen von der gelebten Praxis — wöchentlicher Abgleich gespeicherter Folgenabschätzungen, Triage-Ergebnisse und Anbieterprüfungen, oder direkte Prüfung einer geplanten neuen KI-Praxis. Lädt, wenn der Nutzer „Richtlinien-Sweep\", „KI-Richtlinie prüfen\", „deckt unsere Richtlinie das ab\", „wir wollen X einführen — brauchen wir eine Richtlinienänderung\" oder „Policy-Monitor starten\" sagt."
+description: "Datenschutzrichtlinien und Unternehmensanweisungen auf Aktualitaet und Konformität monitoren. Art. 24 32 DSGVO TOMs §§ 4 ff. BDSG. Prüfraster: Richtlinienbestand Aenderungsbedarf neue Verarbeitungstätigkeiten gesetzliche Neuerungen Umsetzungsstatus. Output: Monitoring-Bericht Aenderungsliste. Abg..."
 ---
 
-# KI-Richtlinien-Monitor
-
-## Zweck
-
-KI-Richtlinien laufen der Praxis schneller hinterher als fast jedes andere
-Richtliniendokument — Anwendungsfälle multiplizieren sich, jede freigegebene
-Folgenabschätzung begründet neue Verpflichtungen, die die Richtlinie noch
-nicht aufgegriffen hat.
-
-Zwei Modi: (1) **Sweep-Modus** — wöchentlicher Abgleich des Ausgabeordners
-auf Policy-Drift; (2) **Direktanfrage-Modus** — direkte Antwort auf
-„Wir wollen X einführen — was bedeutet das für unsere KI-Richtlinie?"
-
-Ausgabe ist immer: Hier ist die Lücke — ERFORDERLICH (Richtlinie wider-
-spricht Praxis) oder EMPFOHLEN (Richtlinie schweigt) — plus Formulierungsvorschlag.
+# Policy-Monitor – Drift-Monitoring Datenschutzerklärung
 
 ## Eingaben
 
-**Sweep-Modus:** `CLAUDE.md` (Ausgabeordner-Pfad, Richtlinienstandort,
-letztes Sweep-Datum); alle Ausgabedateien seit letztem Sweep.
+- **Sweep-Modus:** Ausgabenordner aus `CLAUDE.md` (wo DSFAs, AVV-Reviews, Triage-Ergebnisse gespeichert sind), Datenschutzerklärungsquelle (URL oder Datei), Liste aktueller Verarbeitungstätigkeiten
+- **Direkt-Modus:** Beschreibung der geplanten Änderung der Verarbeitungspraxis
 
-**Direktanfrage-Modus:** Beschreibung der geplanten KI-Praxis; aktuelle
-Richtlinien-Verpflichtungen und Anwendungsfall-Register aus `CLAUDE.md`.
+## Ablauf – Sweep-Modus
 
-## Rechtlicher Rahmen
+1. **Commitment-Inventur.**
+ Alle Datenschutz-Commitment-Flächen aus `CLAUDE.md` lesen:
+ - Datenschutzerklärung (Haupt-URL / Dokument)
+ - CMP / Cookie-Consent-Banner-Konfiguration
+ - App-Store Privacy Labels
+ - In-Produkt-Einwilligungsflows
+ - Sektorspezifische Hinweise (TDDDG, KUG)
 
-**Kernvorschriften**
+2. **Praxis-Inventur.**
+ Aktuelle Verarbeitungspraxis aus Ausgaben des Plugins rekonstruieren:
+ - Neueste AVV-Reviews (neue Sub-AVs, neue Drittlandtransfers)
+ - Neueste DSFA-Ergebnisse (neue Verarbeitungstätigkeiten)
+ - Neueste Triage-Ergebnisse (Rechtsgrundlagenänderungen)
+ - Aus `CLAUDE.md` bekannte Systemliste und Drittlandsituation
 
-- **AI Act Art. 17 KI-VO**: Anbieter von Hochrisiko-KI müssen ein Qualitäts-
-  managementsystem unterhalten inkl. laufender Überprüfung. Für Betreiber:
-  Art. 29 Abs. 1–4 KI-VO (Überwachungs- und Meldepflichten).
-- **DSGVO Art. 5 Abs. 2 (Rechenschaftspflicht)**: Verantwortliche müssen
-  Einhaltung der Grundsätze nachweisen; Richtlinie und gelebte Praxis
-  müssen übereinstimmen.
-- **DSGVO Art. 22 i.V.m. Art. 13/14**: Betroffene müssen über automatisierte
-  Entscheidungen informiert werden; Richtlinie muss Offenlegungspflichten
-  widerspiegeln.
-- **DSA Art. 27, 38 (VO (EU) 2022/2065)**: Transparenzpflichten für
-  algorithmische Empfehlungssysteme sehr großer Plattformen.
+3. **Drift-Analyse.**
+ Für jede Commit-Fläche: Ist-Inhalt gegen Praxis-Inventur abgleichen.
 
-**Leitentscheidungen**
+ | Commit-Fläche | Praxis-Ist | Erklärung-Ist | Drift? | Schwere |
+ |---|---|---|---|---|
+ | Datenschutzerklärung – Empfänger | [aktuelle Liste] | [publizierte Liste] | Ja/Nein | 🔴/🟡/🟢 |
+ | Cookie-Banner – Kategorien | [aktiv gesetzt] | [angekündigt] | Ja/Nein | … |
+ | Speicherfristen | [tatsächlich] | [publiziert] | Ja/Nein | … |
+ | Drittlandtransfer-Mechanismus | [aktuell] | [publiziert] | Ja/Nein | … |
 
-- EuGH, Urt. v. 07.12.2023 – C-634/21, NJW 2024, 126 (Schufa-Score):
-  KI-Richtlinie ohne Adressierung von Scoring-Systemen schafft materielle
-  Lücke, wenn entsprechende Systeme operativ eingesetzt werden.
-- EuGH, Urt. v. 04.10.2024 – C-203/22 (Dun & Bradstreet): Interne Richt-
-  linien müssen verständliche Erklärung der algorithmischen Entscheidungs-
-  logik vorsehen.
-- BGH, Urt. v. 19.06.2018 – VI ZR 184/17, NJW 2018, 2877: Anforderungen
-  an interne Organisationspflichten und deren Dokumentation; auf KI-
-  Governance-Richtlinien übertragbar.
-- BVerfG, Beschl. v. 06.11.2019 – 1 BvR 16/13, NJW 2020, 300 (Recht auf
-  Vergessen I): Grundrechtliche Schutzpflichten gegenüber algorithmischen
-  Systemen; Transparenzgebot beim KI-Einsatz.
+4. **Drift-Klassifikation.**
+ - 🔴 **Sofortiger Handlungsbedarf:** Verarbeitung erfolgt, die in der Erklärung nicht angekündigt ist → Informationspflicht-Verstoß Art. 13/14 DSGVO, potenziell rechtswidrige Verarbeitung.
+ - 🟠 **Hoch:** Wesentliche Erweiterung des Verarbeitungsumfangs nicht reflektiert (z.B. neuer Zweck, neues Empfänger-Land).
+ - 🟡 **Mittel:** Aktualisierung empfohlen, keine unmittelbare Rechtswidrigkeit (z.B. neue Formulierung genauer als nötig, aber nicht falsch).
+ - 🟢 **Gering:** Kosmetische Anpassung, kein Handlungsdruck.
 
-**Kommentare**
+5. **Änderungsentwürfe.**
+ Für jede 🔴- und 🟠-Drift: konkreten Textvorschlag für die Datenschutzerklärung formulieren (nicht als Meta-Kommentar, sondern als fertiger Erklärungstext).
 
-- Wendehorst/Grinzinger, AI Act, 1. Aufl. 2024, Art. 17 Rn. 8 ff.
-  (Qualitätsmanagementsystem; laufende Richtlinienüberprüfung).
-- Ehmann/Selmayr, DS-GVO, 3. Aufl. 2024, Art. 5 Rn. 62 ff.
-  (Rechenschaftspflicht; Dokumentation der Verarbeitungspolitik).
-- Spindler/Schuster, Recht der elektronischen Medien, 4. Aufl. 2024,
-  Teil IV Rn. 95 ff. (Transparenzpflichten bei Algorithmen).
-- Hoffmann-Riem (Hrsg.), Big Data, KI und das Recht, 2021, S. 89 ff.
+6. **Sweep-Bericht.**
+ Zusammenfassung: [N] Drifts, davon [N] 🔴, [N] 🟠, [N] 🟡; Änderungsvorschläge inline; Folgeaktionen.
 
-*Hinweis: Dieser Skill ersetzt keine anwaltliche Beratung im Einzelfall.*
+## Ablauf – Direkt-Modus
 
-## Ablauf
+1. Geplante Änderung der Verarbeitungspraxis beschreiben lassen.
+2. Prüfen: Welche Art. 13/14 DSGVO-Pflichtinformationen sind betroffen?
+ - Neue Datenkategorie → Art. 13 Abs. 1 lit. c DSGVO
+ - Neuer Zweck → Art. 13 Abs. 1 lit. c DSGVO
+ - Neuer Empfänger → Art. 13 Abs. 1 lit. e DSGVO
+ - Neue Speicherfrist → Art. 13 Abs. 2 lit. a DSGVO
+ - Neues Drittland → Art. 13 Abs. 1 lit. f DSGVO
+3. Prüfen: Ändert sich die Rechtsgrundlage (Art. 6/9 DSGVO)? Muss ggf. neue Einwilligung eingeholt werden?
+4. Prüfen: Ist eine DSFA erforderlich? (Weiterleitung an `dsfa-erstellung` anbieten)
+5. Änderungsentwurf für betroffene Abschnitte der Datenschutzerklärung erstellen.
+6. Prüfen: Erfordern App-Store-Labels oder Cookie-Banner-Konfiguration Anpassung?
 
-**Modus-Erkennung:** kein Argument oder `--sweep` → Sweep-Modus;
-Beschreibung einer Praxis → Direktanfrage-Modus.
+## Quellen und Zitierweise
 
-### Sweep-Modus
+Verbindlich nach `../../references/zitierweise.md`.
 
-1. `CLAUDE.md` laden: `## KI-Richtlinien-Verpflichtungen`, `## KI-Anwendungsfall-
-   Register`, `## Ausgaben` (Ordner-Pfad, Richtlinienstandort, letztes Sweep-Datum).
-2. Ausgabedateien seit letztem Sweep scannen. Bei keinen neuen Dateien:
-   „Keine neuen Ausgaben seit [Datum]. Nächster Sweep: [Datum]."
-3. Aus jeder Ausgabe extrahieren: freigegebener Anwendungsfall, Einsatzmodus
-   (assistiv/automatisiert), Auflagen, betroffene Parteien, Anbieter-Datennutzung.
-4. Kennzeichnen: neue Anwendungsfälle ohne Richtlinienabdeckung; automatisierte
-   Entscheidungen wo Richtlinie menschliche Aufsicht impliziert; Anbieter-
-   Datennutzung die Richtlinie referenzieren sollte.
-5. Lücken klassifizieren: **ERFORDERLICH** (Richtlinie widerspricht Praxis,
-   Nicht-Aktualisierung = materielle Falschdarstellung) oder **EMPFOHLEN**
-   (Richtlinie schweigt, Praxis vertretbar aber klarer mit Aktualisierung).
-6. Ergebnisse vorlegen; erst nach Bestätigung durch den Nutzer:
-   `Letztes Sweep-Datum` und `gefundene_Lücken` in `CLAUDE.md` aktualisieren.
+- Art. 13 DSGVO (Informationspflicht bei Datenerhebung bei Betroffenen)
+- Art. 14 DSGVO (Informationspflicht bei Datenerhebung nicht bei Betroffenen)
+- Art. 5 Abs. 1 lit. a DSGVO (Transparenzgrundsatz)
+- Art. 12 DSGVO (Transparente Information)
+- §§ 19, 25 TDDDG (Einwilligung Endgerätezugriff, Cookie-Einwilligung)
+- EDSA-Leitlinien 03/2022 zu Dunklen Designmustern (Consent-Flows)
+- EDSA-Leitlinien 05/2020 zu Einwilligung
+- Paal, in: Paal/Pauly, DSGVO/BDSG, 3. Aufl. 2021, Art. 13 Rn. 1 ff.
+- Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen zitieren. Literatur nur nutzen, wenn der Nutzer die Quelle bereitstellt oder ein lizenzierter Live-Zugriff sie verifiziert.
+- Quellenregel: Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff; keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen.
 
-### Direktanfrage-Modus
+## Beispiel (Direkt-Modus)
 
-Aus der Beschreibung extrahieren: KI-System; Funktion (assistiv/automatisiert/
-Inhaltsgenerierung); Betroffene; Anbieter; menschliche Überprüfung?; Offenlegung?;
-unerwartete Datenweitergabe? — bei vager Beschreibung eine Rückfrage.
+**Geplante Änderung:** Das Unternehmen möchte einen neuen Analytics-Anbieter mit Sitz in den USA integrieren (bisher EU-only).
 
-Abgleich gegen Richtlinie und Register:
+**Analyse:**
+- Neue Datenkategorie: Nein (Nutzungsverhalten bereits erfasst).
+- Neuer Empfänger (Drittland USA): **Ja** – Art. 13 Abs. 1 lit. f DSGVO (Drittlandtransfer mit Transfermechanismus angeben).
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+- Consent-Management: Ist der Anbieter nur nach Einwilligung aktiv (§ 25 TDDDG)? Dann Cookie-Banner anpassen (neue Kategorie / neuer Anbieter).
+- DSFA: `anwendungsfall-triage` empfehlen – bei umfangreichem Tracking ggf. DSFA nach Art. 35 DSGVO erforderlich.
 
-| Prüfpunkt | Aktuelle Richtlinie / Register | Geplante Praxis | Ergebnis |
-|---|---|---|---|
-| Anwendungsfall-Kategorie | [Register-Eintrag] | [neu] | ✅/⚠️/❌ |
-| Automatisierte Entscheidung | [DSGVO Art. 22 Position] | [automatisiert?] | |
-| Offenlegung ggü. Betroffenen | [Richtlinien-Zusage] | [erforderlich?] | |
-| Anbieter-Datennutzung | [Playbook-Position] | [Anbieter-Bedingungen] | |
+**Änderungsentwurf (Datenschutzerklärung, Abschnitt "Drittlandsübermittlung"):**
+> "[Neue Passage] Wir übermitteln Daten an [Anbieter] mit Sitz in den USA. Die Übermittlung erfolgt auf Grundlage von [Transfermechanismus: EU-Standardvertragsklauseln nach Beschluss 2021/914/EU / EU-US Data Privacy Framework]. Eine Transferfolgenabschätzung liegt vor. Weitere Informationen erhalten Sie auf Anfrage bei unserem Datenschutzbeauftragten."
 
-## Ausgabeformat
+## Risiken / typische Fehler
 
-**Sweep-Bericht:**
+- **Sweep ohne konfigurierten Ausgabenordner:** Ohne Ordner-Pfad kann der Sweep keine Praxis-Inventur aus Plugin-Ausgaben erstellen; Direkt-Modus bleibt aber ohne Ausgabenordner vollständig nutzbar.
+- **Datenschutzerklärungsversion nicht datiert:** Nutzer sollten publizierte Erklärungen immer mit Datum versehen; anderenfalls kann Drift nicht datiert werden.
+- **Cookie-Banner ≠ Datenschutzerklärung:** TDDDG-Einwilligung (§ 25 TDDDG) ist unabhängig von der DSGVO-Rechtsgrundlage; eine korrekte Datenschutzerklärung ersetzt nicht den rechtskonformen Cookie-Banner.
+- **Stillschweigendes Weglassen veralteter Klauseln:** Wenn eine Verarbeitung eingestellt wird, muss die Datenschutzerklärung aktiv aktualisiert werden – das Fehlen einer Praxis ist kein Automatismus für korrekte Erklärung.
+- **Frequenz:** EDSA empfiehlt anlassbezogene Aktualisierung; ein rein jährliches Review ist bei schnell wachsenden Produkten nicht ausreichend.
+
+## Quellen / Updates
+
+Stand: 05/2026. Aktualität prüfen bei Änderungen des TDDDG, neuen EDSA-Leitlinien zu Transparenz und Einwilligung sowie DSK-Orientierungshilfen zu Telemedien.
+
+**Querverweise:**
+- `datenschutzrecht/skills/regulierungs-luecken-analyse/SKILL.md` — Eingehende neue Anforderungen vs. Praxis-Drift
+- `datenschutzrecht/skills/drittlandstransfer-pruefung/SKILL.md` — Drittlandtransfer-Passagen in Datenschutzerklärungen
+- `datenschutzrecht/skills/anwendungsfall-triage/SKILL.md` — Neue Verarbeitungstätigkeiten identifizieren
+
+## Aktuelle Rechtsprechung (v14.2)
+
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+
+## Faktische Updates (Stand 05/2026)
+
+- **TDDDG (Telekommunikation-Digitale-Dienste-Datenschutz-Gesetz):** Seit 14.05.2024 (loest TTDSG ab); enthaelt §§ 24-25 zur Cookie- und Endgeraetezugriffs-Einwilligung. Quelle: gesetze-im-internet.de/tdddg.
+- **EDSA-Guidelines Cookies / Tracking:** EDSA-Guidelines 02/2023 und Aktualisierungen (z.B. Dark Patterns) live ueber edpb.europa.eu pruefen.
+- **DSK-Beschluesse (Datenschutzkonferenz Bund-Länder):** Aktuelle DSK-Beschluesse zu Cookies, Drittlandtransfer, KI, Beschaeftigtendatenschutz live ueber datenschutzkonferenz-online.de pruefen.
+- **EuGH-Linie Cookies / Einwilligung:** Aktuelle EuGH-Verfahren zur Granularitaet, Freiwilligkeit, Pay-or-OK-Modellen live ueber curia.europa.eu pruefen.
+- **DSA-Werbetransparenz:** Datenschutzerklaerung sollte bei Plattformen Hinweise auf DSA-Werbearchiv (Art. 39 DSA) und Empfehlungssysteme (Art. 38 DSA) enthalten.
+- **KI-VO Art. 50:** Falls Webseite Chatbot oder KI-generierte Inhalte enthaelt — KI-VO-Transparenzpflichten ab 02.08.2026 in Datenschutzerklaerung / Impressum / Hinweise integrieren.
+
+## Triage zu Beginn
+
+1. Routinemonitor (wöchentlich/monatlich) oder konkreter Anlass (neue Verarbeitung, Systemwechsel)?
+2. Welche Dokumente sollen geprüft werden? (Datenschutzerklärung Website / intern / beides)
+3. Welche neuen Verarbeitungsvorgänge wurden seit dem letzten Monitor eingeführt?
+4. Gibt es EDSA-Leitlinien oder DSK-Beschlüsse, die seit dem letzten Monitor in Kraft getreten sind?
+
+## Output-Template — Monitor-Ergebnis
+
+**Adressat:** DSB / Compliance — Tonfall: sachlich-strukturiert
+
 ```
-# KI-Richtlinien-Monitor — Sweep-Bericht
-Datum: [Datum] | Gescannte Ausgaben: [N] | Neu: [N]
-Gefundene Lücken: [N] ERFORDERLICH | [N] EMPFOHLEN
+Richtlinien-Monitor [DATUM]
+Organisation: [NAME]
+Geprüfte Dokumente: [LISTE]
 
-## ERFORDERLICHE Änderungen
-### [Lücke]
-Quelle: [Datei] | Was geschieht: [Beschreibung]
-Aktuelle Richtlinie: [Zitat oder „Keine Abdeckung"]
-Lücke: [was fehlt]
-Formulierungsvorschlag: „[Richtlinientext]" — ergänzen in [Abschnitt]
+Befunde:
+| Nr. | Dokument | Abweichung / Drift | Prioritaet | Frist |
+|-----|------------------|----------------------------------|------------|--------|
+| 1 | Datenschutzerklärung | Cookie-Liste veraltet (3 neue) | HOCH | [DATUM]|
+| 2 | Datenschutzerklärung | Empfaenger nicht konkret benannt| MITTEL | [DATUM]|
+| 3 | Interne Richtlinie | KI-Tools noch nicht erwaehnt | HOCH | [DATUM]|
 
-## EMPFOHLENE Änderungen [gleiche Struktur]
+Keine Abweichungen: [LISTE GEPRÜFTER BEREICHE]
 
-## Kein Handlungsbedarf [Liste]
-## Anwendungsfall-Register-Abgleich [neue Einträge vorschlagen]
+Empfehlung: Aktualisierung bis [DATUM]
+Verantwortlich: [PERSON/ROLLE]
 ```
-
-**Direktanfrage-Ausgabe:**
-```
-# KI-Richtlinienprüfung: [Praxis]
-Ergebnis: [RICHTLINIENÄNDERUNG ERFORDERLICH / EMPFOHLEN / KEINE ÄNDERUNG]
-
-## Was abgedeckt ist | ## Was fehlt | ## Was im Widerspruch steht
-## Anwendungsfall-Register [Vorschlag falls neu]
-## Zeitplan [vor Inbetriebnahme / beim nächsten Update]
-```
-
-## Beispiel
-
-**Direktanfrage:** „Wir wollen KI-gestützte Zusammenfassungen von
-Kundenbeschwerden einführen. Ein Mitarbeiter überprüft sie vor Weiterleitung."
-
-**Ausgabe:** Register-Eintrag „Kundenseitige KI-Assistenz" → bedingt →
-Offenlegung erforderlich. Richtlinie schweigt zur KI-gestützten Beschwerde-
-bearbeitung. EMPFOHLENE Ergänzung: Abschnitt zu assistierter Kunden-
-kommunikation. DSGVO Art. 13/14: Datenschutzinformation muss KI-Einsatz
-nennen. Ergebnis: RICHTLINIENÄNDERUNG EMPFOHLEN.
-
-## Risiken und typische Fehler
-
-- Sweep-Datum vor Bestätigung aktualisieren: unterdrückt beim nächsten Lauf
-  die Aufmerksamkeit für dieselben Lücken.
-- Zu vage Formulierungsvorschläge: „KI-gestützt" bevorzugen statt
-  konkreter Modellnamen; keine Zusagen formulieren, die das Team nicht
-  einhalten kann.
-- Richtlinie selbst aktualisieren: nur nach menschlicher Prüfung und Freigabe.
-- Eingehende Regelungsänderungen: das ist `regulierungs-luecken-analyse`. Dieser Skill
-  überwacht nur interne Praxis-Abweichungen.
-
-## Quellenpflicht
-
-- **AI Act Art. 17** (Qualitätsmanagement) bei Hochrisiko-Anwendungsfällen.
-- **AI Act Art. 29** (Betreiberpflichten, Überwachung).
-- **DSGVO Art. 5 Abs. 2** (Rechenschaftspflicht) bei Richtlinien-Dokumentation.
-- **DSGVO Art. 22** bei automatisierten Entscheidungen.
-- **EuGH C-634/21 (Schufa-Score)** bei Scoring-/Profiling-Lücken.
-- **Wendehorst/Grinzinger, AI Act, 1. Aufl. 2024, Art. 17.**
-- **Ehmann/Selmayr, DS-GVO, 3. Aufl. 2024, Art. 5 Rn. 62 ff.**

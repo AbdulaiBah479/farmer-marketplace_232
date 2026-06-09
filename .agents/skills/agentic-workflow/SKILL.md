@@ -1,133 +1,289 @@
 ---
 name: agentic-workflow
-description: Agentic Workflow Pattern
-user-invocable: false
+description: Practical AI agent workflows and productivity techniques. Provides optimized patterns for daily development tasks such as commands, shortcuts, Git integration, MCP usage, and session management.
+allowed-tools: Read Write Bash Grep Glob
+metadata:
+  tags: agentic-workflow, productivity, git, mcp, commands, multi-agent
+  platforms: Claude, Gemini, ChatGPT, Codex
+  version: 2.0.0
+  source: Claude Code Complete Guide - 70 tips (ykdojo + Ado Kukic)
 ---
 
-# Agentic Workflow Pattern
 
-Standard multi-agent pipeline for implementation tasks.
+# AI Agent Workflow (Workflow & Productivity)
 
-## Architecture Principles
+## When to use this skill
 
-- Use `run_in_background: true` for all agents to keep main context minimal
-- Use `Task` tool (never `TaskOutput`) to avoid receiving full agent transcripts
-- Agents write outputs to `.claude/cache/agents/<stage>/` for injection into subsequent agents
-- Main conversation is pure orchestration — no heavy lifting, only coordination
+- Optimize everyday AI agent work
+- Integrate Git/GitHub workflows
+- Use MCP servers
+- Manage and recover sessions
+- Apply productivity techniques
 
-## Workflow Stages
+---
 
-### 1. Research Agent
-```
-Task(subagent_type="oracle", run_in_background=true, prompt="""
-Query NIA Oracle (via /nia-docs skill) to verify approach and gather best practices.
+## 1. Key commands by agent
 
-Output to: .claude/cache/agents/oracle/<task>-research.md
-""")
-```
-- Enforce NIA as the research layer
-- Output: Research findings
+### Claude Code commands
 
-### 2. Planning Agent
-```
-Task(subagent_type="plan-agent", run_in_background=true, prompt="""
-Read: .claude/cache/agents/oracle/<task>-research.md
-Use RP-CLI to analyze the target codebase section.
-Generate implementation plan informed by research.
+| Command | Function | When to use |
+|--------|------|----------|
+| `/init` | Auto-generate a CLAUDE.md draft | Start a new project |
+| `/usage` | Show token usage/reset time | Start of every session |
+| `/clear` | Clear conversation history | When context is polluted; start a new task |
+| `/context` | Context window X-Ray | When performance degrades |
+| `/clone` | Clone the entire conversation | A/B experiments; backups |
+| `/mcp` | Manage MCP servers | Enable/disable MCP |
+| `!cmd` | Run immediately without Claude processing | Quick status checks |
 
-Output to: .claude/cache/agents/plan-agent/<task>-plan.md
-""")
-```
-- Receives: Research agent output as context
-- Output: Implementation plan
+### Gemini CLI commands
 
-### 3. Validation Agent
-```
-Task(subagent_type="validate-agent", run_in_background=true, prompt="""
-Read: .claude/cache/agents/plan-agent/<task>-plan.md
-Read: .claude/cache/agents/oracle/<task>-research.md
-Review plan against research findings and best practices.
+| Command | Function |
+|--------|------|
+| `gemini` | Start a conversation |
+| `@file` | Add file context |
+| `-m model` | Select model |
 
-Output to: .claude/cache/agents/validate-agent/<task>-validated.md
-""")
-```
-- Reviews plan against research
-- Output: Validated plan with amendments
+### Codex CLI commands
 
-### 4. Implementation Agent
-```
-Task(subagent_type="agentica-agent", run_in_background=true, prompt="""
-Read: .claude/cache/agents/validate-agent/<task>-validated.md
-Read: .claude/cache/agents/oracle/<task>-research.md
+| Command | Function |
+|--------|------|
+| `codex` | Start a conversation |
+| `codex run` | Run a command |
 
-TDD approach: Write failing tests FIRST, then implement.
-Run tests to verify.
+---
 
-Output summary to: .claude/cache/agents/implement-agent/<task>-implementation.md
-""")
-```
-- Receives: Validated plan + research context
-- **TDD**: Failing tests first
-- Output: Implementation + tests
+## 2. Keyboard shortcuts (Claude Code)
 
-### 5. Review Agent
-```
-Task(subagent_type="review-agent", run_in_background=true, prompt="""
-Read: .claude/cache/agents/implement-agent/<task>-implementation.md
-Read: .claude/cache/agents/validate-agent/<task>-validated.md
-Read: .claude/cache/agents/oracle/<task>-research.md
+### Essential shortcuts
 
-Cross-reference implementation against plan and research.
-Run tests to confirm passing.
+| Shortcut | Function | Importance |
+|--------|------|--------|
+| `Esc Esc` | Cancel the last task immediately | Highest |
+| `Ctrl+R` | Search prompt history | High |
+| `Shift+Tab` x2 | Toggle plan mode | High |
+| `Tab` / `Enter` | Accept prompt suggestion | Medium |
+| `Ctrl+B` | Send to background | Medium |
+| `Ctrl+G` | Edit in external editor | Low |
 
-Output to: .claude/cache/agents/review-agent/<task>-review.md
-""")
-```
-- Cross-references all artifacts
-- Confirms tests pass
-- Output: Review summary
+### Editor editing shortcuts
 
-## Agent Progress Monitoring
+| Shortcut | Function |
+|--------|------|
+| `Ctrl+A` | Move to start of line |
+| `Ctrl+E` | Move to end of line |
+| `Ctrl+W` | Delete previous word |
+| `Ctrl+U` | Delete to start of line |
+| `Ctrl+K` | Delete to end of line |
 
+---
+
+## 3. Session management
+
+### Claude Code sessions
 ```bash
-# Watch for system reminders:
-# "Agent a42a16e progress: 6 new tools used, 88914 new tokens"
+# Continue the last conversation
+claude --continue
 
-# Poll for output files:
-find .claude/cache/agents -name "*.md" -mmin -5
+# Resume a specific session
+claude --resume <session-name>
 
-# Check task file size growth:
-wc -c /tmp/claude/.../tasks/<id>.output
+# Name the session during the conversation
+/rename stripe-integration
 ```
 
-**Stuck detection:**
-1. Progress reminders stop arriving
-2. Task output file size stops growing
-3. Expected output file not created after reasonable time
-
-## Directory Structure
-
-```
-.claude/cache/agents/
-├── oracle/
-│   └── <task>-research.md
-├── plan-agent/
-│   └── <task>-plan.md
-├── validate-agent/
-│   └── <task>-validated.md
-├── implement-agent/
-│   └── <task>-implementation.md
-└── review-agent/
-    └── <task>-review.md
+### Recommended aliases
+```bash
+# ~/.zshrc or ~/.bashrc
+alias c='claude'
+alias cc='claude --continue'
+alias cr='claude --resume'
+alias g='gemini'
+alias cx='codex'
 ```
 
-## Key Rules
+---
 
-1. **Never use TaskOutput** - floods context with 70k+ token transcripts
-2. **Always run_in_background=true** - isolates agent context
-3. **File-based handoff** - each agent reads previous agent's output file
-4. **Poll, don't block** - check file system for outputs, don't wait
-5. **TDD in implementation** - failing tests first, then make them pass
+## 4. Git workflow
 
-## Source
-- Session 2026-01-01: SDK Phase 3 implementation using this pattern
+### Auto-generate commit messages
+```
+"Analyze the changes, write an appropriate commit message, then commit"
+```
+
+### Auto-generate draft PR
+```
+"Create a draft PR from the current branch's changes.
+Make the title summarize the changes, and list the key changes in the body."
+```
+
+### Use Git worktrees
+```bash
+# Work on multiple branches simultaneously
+git worktree add ../myapp-feature-auth feature/auth
+git worktree add ../myapp-hotfix hotfix/critical-bug
+
+# Independent AI sessions per worktree
+Tab 1: ~/myapp-feature-auth → new feature development
+Tab 2: ~/myapp-hotfix → urgent bug fix
+Tab 3: ~/myapp (main) → keep main branch
+```
+
+### PR review workflow
+```
+1. "Run gh pr checkout 123 and summarize this PR's changes"
+2. "Analyze changes in src/auth/middleware.ts. Check for security issues or performance problems"
+3. "Is there a way to make this logic more efficient?"
+4. "Apply the improvements you suggested and run tests"
+```
+
+---
+
+## 5. Using MCP servers (Multi-Agent)
+
+### Key MCP servers
+
+| MCP server | Function | Use case |
+|----------|------|------|
+| Playwright | Control web browser | E2E tests |
+| Supabase | Database queries | Direct DB access |
+| Firecrawl | Web crawling | Data collection |
+| Gemini-CLI | Large-scale analysis | 1M+ token analysis |
+| Codex-CLI | Run commands | Build, deploy |
+
+### MCP usage examples
+```bash
+# Gemini: large-scale analysis
+> ask-gemini "@src/ Analyze the structure of the entire codebase"
+
+# Codex: run commands
+> shell "docker-compose up -d"
+> shell "npm test && npm run build"
+```
+
+### MCP optimization
+```bash
+# Disable unused MCP servers
+/mcp
+
+# Recommended numbers
+# - MCP servers: fewer than 10
+# - Active tools: fewer than 80
+```
+
+---
+
+## 6. Multi-Agent workflow patterns
+
+### Orchestration pattern
+```
+[Claude] Plan → [Gemini] Analysis/research → [Claude] Write code → [Codex] Run/test → [Claude] Synthesize results
+```
+
+### Practical example: API design + implementation + testing
+```
+1. [Claude] Design API spec using the skill
+2. [Gemini] ask-gemini "@src/ Analyze existing API patterns" - large-scale codebase analysis
+3. [Claude] Implement code based on the analysis
+4. [Codex] shell "npm test && npm run build" - test and build
+5. [Claude] Create final report
+```
+
+### TDD workflow
+```
+"Work using TDD. First write a failing test,
+then write code that makes the test pass."
+
+# The AI:
+# 1. Write a failing test
+# 2. git commit -m "Add failing test for user auth"
+# 3. Write minimal code to pass the test
+# 4. Run tests → confirm they pass
+# 5. git commit -m "Implement user auth to pass test"
+```
+
+---
+
+## 7. Container workflow
+
+### Docker container setup
+```dockerfile
+FROM ubuntu:22.04
+RUN apt-get update && apt-get install -y \
+    curl git tmux vim nodejs npm python3 python3-pip
+RUN curl -fsSL https://claude.ai/install.sh | sh
+WORKDIR /workspace
+CMD ["/bin/bash"]
+```
+
+### Safe experimentation environment
+```bash
+# Build and run the container
+docker build -t ai-sandbox .
+docker run -it --rm \
+  -v $(pwd):/workspace \
+  -e ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY \
+  ai-sandbox
+
+# Do experimental work inside the container
+```
+
+---
+
+## 8. Troubleshooting
+
+### When context is overloaded
+```bash
+/context  # Check usage
+/clear    # Reset context
+
+# Or create HANDOFF.md and start a new session
+```
+
+### Cancel a task
+```
+Esc Esc  # Cancel the last task immediately
+```
+
+### When performance degrades
+```bash
+# Check MCP/tool counts
+/mcp
+
+# Disable unnecessary MCP servers
+# Reset context
+```
+
+---
+
+## Quick Reference Card
+
+```
+=== Essential commands ===
+/clear      reset context
+/context    check usage
+/usage      check tokens
+/init       generate project description file
+!command    run immediately
+
+=== Shortcuts ===
+Esc Esc     cancel task
+Ctrl+R      search history
+Shift+Tab×2 plan mode
+Ctrl+B      background
+
+=== CLI flags ===
+--continue  continue conversation
+--resume    resume session
+-p "prompt" headless mode
+
+=== Multi-Agent ===
+Claude      plan/code generation
+Gemini      large-scale analysis
+Codex       run commands
+
+=== Troubleshooting ===
+Context overloaded → /clear
+Cancel task → Esc Esc
+Performance degradation → check /context
+```

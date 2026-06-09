@@ -1,9 +1,6 @@
 ---
 name: shellcheck-configuration
-description: "Master ShellCheck static analysis configuration and usage for shell script quality. Use when setting up linting infrastructure, fixing code issues, or ensuring script portability."
-risk: unknown
-source: community
-date_added: "2026-02-27"
+description: Master ShellCheck static analysis configuration and usage for shell script quality. Use when setting up linting infrastructure, fixing code issues, or ensuring script portability.
 ---
 
 # ShellCheck Configuration and Static Analysis
@@ -467,8 +464,3 @@ shellcheck --format=quiet script.sh
 - **ShellCheck GitHub**: https://github.com/koalaman/shellcheck
 - **ShellCheck Wiki**: https://www.shellcheck.net/wiki/
 - **Error Code Reference**: https://www.shellcheck.net/
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

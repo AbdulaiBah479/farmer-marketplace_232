@@ -29,8 +29,7 @@ import {
   SourcesTrigger,
 } from "@/components/ai-elements/sources";
 import {
-  PromptInput,
-  type PromptInputMessage,
+  Input,
   PromptInputTextarea,
   PromptInputSubmit,
 } from "@/components/ai-elements/prompt-input";
@@ -55,9 +54,10 @@ const SourceDemo = () => {
     }),
   });
 
-  const handleSubmit = (message: PromptInputMessage) => {
-    if (message.text.trim()) {
-      sendMessage({ text: message.text });
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (input.trim()) {
+      sendMessage({ text: input });
       setInput("");
     }
   };
@@ -118,7 +118,7 @@ const SourceDemo = () => {
           </Conversation>
         </div>
 
-        <PromptInput
+        <Input
           onSubmit={handleSubmit}
           className="mt-4 w-full max-w-2xl mx-auto relative"
         >
@@ -133,7 +133,7 @@ const SourceDemo = () => {
             disabled={!input.trim()}
             className="absolute bottom-1 right-1"
           />
-        </PromptInput>
+        </Input>
       </div>
     </div>
   );

@@ -29,8 +29,7 @@ Add the following component to your frontend:
 
 import { Image } from "@/components/ai-elements/image";
 import {
-  PromptInput,
-  type PromptInputMessage,
+  Input,
   PromptInputTextarea,
   PromptInputSubmit,
 } from "@/components/ai-elements/prompt-input";
@@ -42,15 +41,16 @@ const ImageDemo = () => {
   const [imageData, setImageData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (message: PromptInputMessage) => {
-    if (!message.text.trim()) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!prompt.trim()) return;
     setPrompt("");
 
     setIsLoading(true);
     try {
       const response = await fetch("/api/image", {
         method: "POST",
-        body: JSON.stringify({ prompt: message.text.trim() }),
+        body: JSON.stringify({ prompt: prompt.trim() }),
       });
 
       const data = await response.json();
@@ -79,7 +79,7 @@ const ImageDemo = () => {
           {isLoading && <Spinner />}
         </div>
 
-        <PromptInput
+        <Input
           onSubmit={handleSubmit}
           className="mt-4 w-full max-w-2xl mx-auto relative"
         >
@@ -94,7 +94,7 @@ const ImageDemo = () => {
             disabled={!prompt.trim()}
             className="absolute bottom-1 right-1"
           />
-        </PromptInput>
+        </Input>
       </div>
     </div>
   );

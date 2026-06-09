@@ -1,317 +1,211 @@
 ---
 name: backlog-manager
-description: Expert guidance for managing tasks using the Backlog.md CLI tool. Use this skill when working with backlog tasks, creating or editing task files, managing acceptance criteria, tracking task progress, or understanding backlog workflows and best practices. Activates when users mention backlog, tasks, acceptance criteria, task management, or backlog commands.
+description: 需求池管理。用户随时抛出想法/痛点，AI 负责追问、整理、合并、归档到需求池文件。用户准备开新版本时，协助从池中筛选。痛点驱动，不做提前排期。
 ---
 
-# Backlog Manager Skill
+用户随时会抛出产品想法、使用痛点、功能需求。AI 负责将这些零散输入整理成结构化的需求池，
+并在用户准备启动新版本时协助筛选。需求池是一个持续维护的文件，不是一次性产出。
 
-This skill provides comprehensive guidance for using the Backlog.md CLI tool to manage project tasks effectively.
+## 核心原则
 
-## Core Principles
+- **痛点驱动** — 只收集真实痛点和明确想法，不做假设性规划
+- **AI 整理，用户决策** — AI 负责追问、归类、合并；用户负责确认和拍板
+- **先归档，再说做不做** — 新想法先进池子，不急着排优先级或启动开发
+- **池子要活** — 定期清理过时条目，升档想清楚的条目，不让池子变成垃圾堆
+- **不越界** — 需求池管理到"可以做了"为止，后续的设计/PRD/开发由其他流程接管
 
-**⚠️ CRITICAL RULE: NEVER EDIT TASK FILES DIRECTLY**
+## 需求池文件
 
-All task operations MUST use the Backlog.md CLI commands:
-- ✅ Use `backlog task edit` and other CLI commands
-- ✅ Use `backlog task create` to create new tasks
-- ✅ Use `backlog task edit <id> --check-ac <index>` to mark acceptance criteria
-- ❌ DON'T edit markdown files directly
-- ❌ DON'T manually change checkboxes in files
-- ❌ DON'T add or modify text in task files without using CLI
+**位置**：`docs/需求池.md`
 
-**Why?** Direct file editing breaks metadata synchronization, Git tracking, and task relationships.
+如果文件已存在，在现有内容上更新。如果不存在，按以下模板创建。
 
-## Task Lifecycle
+### 文件模板
 
-### 1. Creating Tasks
-
-Use CLI to create tasks with proper metadata:
-
-```bash
-# Basic task
-backlog task create "Task title" -d "Description"
-
-# With acceptance criteria
-backlog task create "Task title" \
-  -d "Description" \
-  --ac "First criterion" \
-  --ac "Second criterion"
-
-# With full metadata
-backlog task create "Task title" \
-  -d "Description" \
-  -a @assignee \
-  -s "To Do" \
-  -l backend,api \
-  --priority high
 ```
+# 需求池
+
+> 随手记，随时加，隔段时间过一遍。
+>
+> 状态说明：
+> - **可以做了** — 痛点清晰，知道要做成什么样，随时能进设计/PRD
+> - **需要想想** — 方向有了，细节没展开，需要调研或讨论
+> - **先放着** — 记着就行，现在不花精力想
+> - **已完成** — 做完了，标版本号归档
 
-**Task Components:**
-- **Title**: Clear, brief summary (one liner)
-- **Description (The "why")**: Purpose and goal without implementation details
-- **Acceptance Criteria (The "what")**: Outcome-oriented, testable criteria
-
-**Good AC Examples:**
-- ✅ "User can successfully log in with valid credentials"
-- ✅ "System processes 1000 requests per second without errors"
-- ❌ "Add a new function handleLogin() in auth.ts" (implementation detail)
-
-### 2. Starting Work
-
-**FIRST STEPS when taking over a task:**
-
-```bash
-# Set status and assign yourself
-backlog task edit 42 -s "In Progress" -a @myself
-
-# View task details
-backlog task 42 --plain
-
-# Create implementation plan (The "how")
-backlog task edit 42 --plan $'1. Research codebase\n2. Implement solution\n3. Add tests\n4. Update docs'
-```
-
-### 3. During Implementation
-
-Mark acceptance criteria as complete when done:
-
-```bash
-# Check single AC
-backlog task edit 42 --check-ac 1
-
-# Check multiple ACs at once
-backlog task edit 42 --check-ac 1 --check-ac 2 --check-ac 3
-
-# Mixed operations
-backlog task edit 42 --check-ac 1 --uncheck-ac 2 --remove-ac 3
-```
-
-**Important:** Only implement what's in the Acceptance Criteria. If you need to do more:
-1. Update the AC first: `backlog task edit 42 --ac "New requirement"`
-2. Or create a follow-up task: `backlog task create "Additional feature"`
-
-### 4. Completing Tasks
-
-Add implementation notes (PR description):
-
-```bash
-# Replace notes
-backlog task edit 42 --notes $'Implemented using pattern X\n- Modified files Y and Z\n- Added comprehensive tests'
-
-# Append notes progressively
-backlog task edit 42 --append-notes $'- Added tests\n- Updated docs'
-```
-
-Mark task as done:
-
-```bash
-backlog task edit 42 -s Done
-```
-
-## Common Operations
-
-### Finding and Viewing Tasks
-
-```bash
-# List all tasks (AI-friendly output)
-backlog task list --plain
-
-# List by status
-backlog task list -s "To Do" --plain
-backlog task list -s "In Progress" --plain
-
-# List by assignee
-backlog task list -a @sara --plain
-
-# View specific task
-backlog task 42 --plain
-
-# Search tasks (fuzzy matching)
-backlog search "auth" --plain
-backlog search "api" --type task --status "In Progress" --plain
-```
-
-### Editing Task Metadata
-
-```bash
-# Change title
-backlog task edit 42 -t "New Title"
-
-# Change status
-backlog task edit 42 -s "In Progress"
-
-# Assign task
-backlog task edit 42 -a @sara
-
-# Add/change labels
-backlog task edit 42 -l backend,api,urgent
-
-# Set priority
-backlog task edit 42 --priority high
-
-# Multiple changes at once
-backlog task edit 42 -s "In Progress" -a @myself -l backend
-```
-
-### Managing Acceptance Criteria
-
-```bash
-# Add new criteria
-backlog task edit 42 --ac "New criterion" --ac "Another criterion"
-
-# Check criteria (mark as complete)
-backlog task edit 42 --check-ac 1
-backlog task edit 42 --check-ac 1 --check-ac 2  # Multiple at once
-
-# Uncheck criteria
-backlog task edit 42 --uncheck-ac 3
-
-# Remove criteria
-backlog task edit 42 --remove-ac 2
-
-# Mixed operations
-backlog task edit 42 --ac "New" --check-ac 1 --remove-ac 4
-```
-
-## Multi-line Content
-
-For descriptions, plans, and notes with newlines, use shell-specific syntax:
-
-**Bash/Zsh (ANSI-C quoting):**
-```bash
-backlog task edit 42 --desc $'Line 1\nLine 2\n\nLine 3'
-backlog task edit 42 --plan $'1. Step one\n2. Step two'
-backlog task edit 42 --notes $'Implemented A\nTested B'
-```
-
-**PowerShell:**
-```powershell
-backlog task edit 42 --notes "Line 1`nLine 2"
-```
-
-**POSIX portable:**
-```bash
-backlog task edit 42 --notes "$(printf 'Line 1\nLine 2')"
-```
-
-## Definition of Done
-
-A task is **Done** only when ALL of the following are complete:
-
-**Via CLI:**
-1. All acceptance criteria checked (`--check-ac`)
-2. Implementation notes added (`--notes`)
-3. Status set to Done (`-s Done`)
-
-**Via Code/Testing:**
-4. Tests pass
-5. Documentation updated
-6. Code reviewed
-7. No regressions
-
-## Quick Reference: DO vs DON'T
-
-### Viewing Tasks
-
-| ✅ DO | ❌ DON'T |
-|------|---------|
-| `backlog task 42 --plain` | Open .md file directly |
-| `backlog task list --plain` | Browse backlog/tasks folder |
-| `backlog search "topic" --plain` | Manually grep files |
-
-### Modifying Tasks
-
-| ✅ DO | ❌ DON'T |
-|------|---------|
-| `backlog task edit 42 --check-ac 1` | Change `- [ ]` to `- [x]` in file |
-| `backlog task edit 42 --notes "..."` | Type notes into .md file |
-| `backlog task edit 42 -s Done` | Edit status in frontmatter |
-| `backlog task edit 42 --ac "New"` | Add `- [ ] New` to file |
-
-## Best Practices
-
-1. **Phase Discipline:**
-   - **Creation**: Title, Description, Acceptance Criteria, optional metadata
-   - **Implementation**: Implementation Plan (after moving to "In Progress")
-   - **Wrap-up**: Implementation Notes, AC checks, mark as Done
-
-2. **Task Quality:**
-   - Atomic tasks (one unit of work = one PR)
-   - Independent (don't depend on future tasks)
-   - Testable with clear verification criteria
-   - Valuable (delivers standalone value)
-
-3. **Implementation Notes Formatting:**
-   - Keep PR-ready and human-friendly
-   - Use short paragraphs or bullet lists
-   - Lead with the outcome, then supporting details
-   - Use Markdown bullets for easy GitHub paste
-
-4. **Always use `--plain` flag** when viewing/listing for AI-friendly output
-
-## Typical Workflow
-
-```bash
-# 1. Find work
-backlog task list -s "To Do" --plain
-
-# 2. Read task
-backlog task 42 --plain
-
-# 3. Start work
-backlog task edit 42 -s "In Progress" -a @myself
-
-# 4. Add plan
-backlog task edit 42 --plan $'1. Research\n2. Implement\n3. Test'
-
-# 5. Work on the task (write code, test)
-
-# 6. Mark criteria complete
-backlog task edit 42 --check-ac 1 --check-ac 2 --check-ac 3
-
-# 7. Add notes
-backlog task edit 42 --notes $'Implemented feature X\n- Modified files A, B\n- Added tests'
-
-# 8. Mark done
-backlog task edit 42 -s Done
-```
-
-## File Structure (Read-Only Reference)
-
-Tasks live in `backlog/tasks/` as `task-<id> - <title>.md` files. Never edit these directly!
-
-**Task Structure (for viewing only):**
-```markdown
----
-id: task-42
-title: Add GraphQL resolver
-status: To Do
-assignee: [@sara]
-labels: [backend, api]
 ---
 
-## Description
-Brief explanation of the task purpose.
+## 总览
 
-## Acceptance Criteria
-<!-- AC:BEGIN -->
-- [ ] #1 First criterion
-- [x] #2 Second criterion (completed)
-- [ ] #3 Third criterion
-<!-- AC:END -->
+| # | 需求 | 状态 | 依赖 | 备注 |
+|---|------|------|------|------|
+| 1 | xxx  | 可以做了 | 无 | xxx |
 
-## Implementation Plan
-1. Research approach
-2. Implement solution
+---
 
-## Implementation Notes
-Summary of what was done.
+## 可以做了
+
+### 需求名称
+- 痛点：xxx
+- 方案：xxx
+- 备注：xxx
+
+---
+
+## 需要想想
+
+### 需求名称
+- 方向：xxx
+- 依赖：xxx
+- 待展开：xxx
+
+---
+
+## 先放着
+
+### 需求名称
+- 想法：xxx
+- 备注：xxx
+
+---
+
+## 已完成
+
+### 需求名称（V0.xx）
+- 完成时间：yyyy-mm-dd
+- 简述：xxx
 ```
 
-## Remember
+### 条目模板说明
 
-**🎯 The Golden Rule:** If you want to change ANYTHING in a task, use `backlog task edit`.
+每个条目根据所在分区使用不同字段：
 
-**📖 CLI is the interface** - it handles Git, metadata, relationships, and file naming.
+| 分区 | 必填字段 | 可选字段 |
+|------|---------|---------|
+| 可以做了 | 痛点、方案 | 备注 |
+| 需要想想 | 方向 | 依赖、待展开 |
+| 先放着 | 想法 | 依赖、备注 |
+| 已完成 | 完成时间、简述 | — |
 
-For complete help: `backlog --help`
+总览表每个条目必须有：编号、需求名称、状态、依赖、备注。
+
+## 工作流程
+
+### 第 1 步：收集 — 用户抛出新想法
+
+用户说了一个想法或痛点后，主动追问：
+
+- **痛点是什么** — 现在遇到了什么问题？什么场景下不爽？
+- **频率多高** — 多久碰到一次？
+- **现在怎么绕** — 不做这个功能的话，手动怎么解决？
+
+整理成一句话描述，向用户确认："我理解的是 xxx，对吗？"
+
+**禁止**：
+- 用户说了一句话就直接写进需求池，必须先追问确认
+- 追问超过 3 轮还没收敛，先按当前理解归档，标注"待进一步讨论"
+
+### 第 2 步：归类 — 判断状态和合并
+
+1. **读取现有需求池**（如果存在）
+2. **检查是否可合并** — 新想法是否和已有条目属于同一个方向？
+   - 可合并 → 告诉用户"这个和 #X 相关，我建议合并成 xxx"，等用户确认
+   - 不可合并 → 作为新条目
+3. **判断状态** — 根据追问结果归档：
+   - 用户能说清痛点和大致方案 → **可以做了**
+   - 用户有方向但细节模糊 → **需要想想**
+   - 用户自己也说"先记着" → **先放着**
+4. **向用户确认归类结果**，用户同意后再写入文件
+
+**禁止**：
+- AI 自行判断状态不跟用户确认
+- 强行合并用户认为不同的需求
+
+### 第 3 步：写入 — 更新需求池文件
+
+确认后更新 `docs/需求池.md`：
+
+1. 在对应分区添加条目详情
+2. 更新总览表（加新行或修改已有行）
+3. 如果发生合并，更新被合并条目的内容和总览表
+
+**格式要求**：
+- 总览表和详情区必须同步更新，不能只改一处
+- 编号递增，不复用已删除的编号
+- 已完成的条目保留在总览表中，状态标"已完成"
+
+### 第 4 步：整理 — 定期过一遍池子
+
+当用户说"整理一下需求池"或"看看需求池"时：
+
+1. 读取完整需求池文件
+2. 逐条过，对每条给出建议：
+   - **过时了** → 建议删除，说明理由
+   - **想清楚了** → 建议升档（先放着 → 需要想想，或需要想想 → 可以做了），说明依据
+   - **还是模糊** → 追问 1-2 个关键问题，帮用户想清楚
+   - **没变化** → 跳过，不废话
+3. 用户逐条确认后，批量更新文件
+
+**禁止**：
+- 没有用户确认就批量修改状态
+- 每条都问一遍"要不要改"（没变化的直接跳过）
+
+### 第 5 步：筛选 — 挑下一个版本做什么
+
+当用户说"下一个版本做什么"或"挑一个来做"时：
+
+1. 读取需求池，列出所有"可以做了"的条目
+2. 如果"可以做了"为空，从"需要想想"里挑最接近的，帮用户聊清楚
+3. 对候选条目，用三个标准分析：
+
+| 标准 | 问题 |
+|------|------|
+| 频率 | 你多久被这个问题卡一次？ |
+| 可绕过性 | 不做的话手动能搞定吗？多麻烦？ |
+| ROI | 做完之后日常能省多少事？ |
+
+4. 给出分析结果，**不替用户做决定**，让用户选
+5. 用户选定后，在需求池中标记该条目为"进行中"（或由用户直接进入 design-exploration / PRD 流程）
+
+**禁止**：
+- 替用户决定做哪个
+- 给所有条目强行排优先级序号（只在用户要挑的时候才做对比分析）
+- 用户选完就开始做设计或写 PRD（需求池流程到"选定"为止，后续流程用户自己触发）
+
+### 第 6 步：归档 — 版本完成
+
+当用户说"xxx 做完了"或"标记完成"时：
+
+1. 将条目从当前分区移到"已完成"
+2. 补充版本号和完成时间
+3. 更新总览表状态
+4. 如果该条目被其他条目依赖，检查依赖条目是否可以升档，提醒用户
+
+## 沟通规范
+
+### 必须问用户的
+
+| 时机 | 问什么 |
+|------|--------|
+| 第 1 步 | 痛点、频率、现在怎么绕 |
+| 第 2 步 | 合并是否合理、状态归类是否正确 |
+| 第 4 步 | 每条变更建议是否同意 |
+| 第 5 步 | 从候选里选哪个 |
+
+### 不需要问用户的
+
+| 事项 | 直接做 |
+|------|--------|
+| 文件格式 | 按模板写，不用问 |
+| 编号分配 | 自动递增 |
+| 总览表同步 | 改了详情就同步总览表 |
+| 没变化的条目 | 整理时直接跳过 |
+
+### AI 绝不应该做的
+
+- 替用户决定做哪个需求
+- 用户扔了一个想法就开始做设计或写 PRD（先归档，用户说启动才启动）
+- 自己编造需求内容（必须基于用户原话整理）
+- 没有用户确认就修改需求池文件
+- 给所有条目强行排优先级（只在筛选时做对比分析）
+- 把需求池当待办清单催用户（池子是被动的，用户主动来才响应）

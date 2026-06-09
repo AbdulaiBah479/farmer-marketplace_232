@@ -1,9 +1,30 @@
 ---
 name: pflichtteil-berechnen
-description: "Pflichtteilsanspruch und Pflichtteilsergaenzungsanspruch berechnen. §§ 2303 2311 2325 BGB Pflichtteil. Prüfraster: Pflichtteilsquote Nachlasswert Bewertungsstichtag Abzuege Ergaenzungsanspruch Auskunft. Output: Pflichtteilsberechnung mit Rechenweg. Abgrenzung: nicht für Auskunftsklage oder Pflichtteilsklage (schriftsatzkern-substantiierung)."
+description: "Pflichtteilsanspruch und Pflichtteilsergaenzungsanspruch berechnen: §§ 2303 2311 2325 BGB Pflichtteil. Prüfraster: Pflichtteilsquote Nachlasswert Bewertungsstichtag Abzuege Ergaenzungsanspr..."
 ---
 
-# Pflichtteil und Pflichtteilsergänzung berechnen
+# Pflichtteilsanspruch und Pflichtteilsergaenzungsanspruch berechnen
+
+
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: AO §§ 38, 42, 90, 93, 153, 162, 164, 169-171, 173, 233a, 370-378, UStG, EStG, KStG, GewStG, GrEStG, ErbStG, FGO — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+**Fokus:** Pflichtteilsanspruch und Pflichtteilsergaenzungsanspruch berechnen. §§ 2303 2311 2325 BGB Pflichtteil. Prüfraster: Pflichtteilsquote Nachlasswert Bewertungsstichtag Abzuege Ergaenzungsanspruch Auskunft. Output: Pflichtteilsberechnung mit Rechenweg. Abgrenzung: nicht für Auskunftsklage oder Pflichtteilsklage (schriftsatzkern-substantiierung).
+
+### Pflichtteil und Pflichtteilsergänzung berechnen
+
+## Fachlicher Kern — Erbrecht
+- **Problemfokus dieses Skills:** Bleibe beim konkreten Titel `Pflichtteil und Pflichtteilsergänzung berechnen` und löse die dort angelegte Fachfrage; arbeite mit konkreten Tatbestandsmerkmalen, Beweisfragen und dem unmittelbar benötigten Arbeitsprodukt. Routingfragen bleiben Hilfsmittel, wenn Frist, Zuständigkeit oder Verfahrensart offen sind.
+- **Normenradar:** BGB §§ 1922 ff., 1937, 1942 ff., 1953, 1967, 2032 ff., 2042, 2050 ff., 2078, 2084, 2203 ff., 2303 ff., 2314, 2325, 2333; FamFG §§ 343 ff.; EuErbVO.
+- **Verifizierte Anker:** BGH, Urteil vom 12.03.2025 - IV ZR 88/24 (Pflichtteil, Entstehung und Verjährung bei postmortaler Vaterschaftsfeststellung); BGH, Beschluss vom 15.01.2025 - IV ZR 166/24 (Auskunftspflichten bei Pflichtteil/Testamentsvollstreckung); Rechtsprechung zu notariellen Nachlassverzeichnissen nur mit Aktenzeichen/Quelle ausgeben.
+- **Arbeitsmodus:** Erst Erbfolge, Ausschlagung, Nachlassbestand, Haftung und Fristen sichern; dann Pflichtteil, Auskunft/Wertermittlung, Testamentsauslegung, Erbengemeinschaft und internationale Anknüpfung trennen.
+- **Outputpflicht:** Nachlassmatrix, Pflichtteils-/Ergänzungstabelle, Auskunftsverlangen, Erbscheinsantrag, Teilungsplan oder Klagebaustein.
+- **Fehlerbremse:** Tragende Normen/Entscheidungen live oder aus der Akte verifizieren; Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei prüfbarer Quelle. Keine BeckRS-, juris-, Kommentar- oder Aufsatz-Blindzitate aus Modellwissen.
 
 ## Mandantenfragen beim Kaltstart
 
@@ -15,7 +36,7 @@ description: "Pflichtteilsanspruch und Pflichtteilsergaenzungsanspruch berechnen
 6. Gibt es Vorausempfänge des Pflichtteilsberechtigten mit Anrechnungsbestimmung (§ 2315 BGB)?
 7. Hat der Pflichtteilsberechtigte einen Pflichtteilsverzicht erklärt (§ 2346 BGB)?
 8. Besteht ein Pflichtteilsentzugsgrund nach § 2333 BGB (Straftat gegen Erblasser, Erblasser-nahe Personen)?
-- **Was will der Mandant wirklich erreichen?** (Nicht: was steht im Standardweg, sondern: welches Ergebnis ist fuer den Mandanten persoenlich/wirtschaftlich das beste? Manchmal ist der schnellere Vergleich besser als der formal "richtige" Weg.)
+- **Was will der Mandant wirklich erreichen?** (Nicht: was steht im Standardweg, sondern: welches Ergebnis ist für den Mandanten persoenlich/wirtschaftlich das beste? Manchmal ist der schnellere Vergleich besser als der formal "richtige" Weg.)
 
 ## Rechtsgrundlagen
 
@@ -47,8 +68,7 @@ description: "Pflichtteilsanspruch und Pflichtteilsergaenzungsanspruch berechnen
 
 ## Prüfschema — Stufenweise Pflichtteilsberechnung
 
-**Vorab:** Der untenstehende Workflow ist die typische Standardlinie. Wenn die Mandantenlage abweicht (siehe "Strategische Optionen" oben), sind die Schritte entsprechend zu verkuerzen, umzustellen oder durch ein anderes Skill zu ersetzen — der Workflow ist Leitfaden, nicht Pflichtprogramm.
-
+**Vorab:** Der untenstehende ist die typische Standardlinie. Wenn die Mandantenlage abweicht (siehe "Strategische Optionen" oben), sind die Schritte entsprechend zu verkuerzen, umzustellen oder durch ein anderes Skill zu ersetzen — der ist Leitfaden, nicht Pflichtprogramm.
 
 | Schritt | Prüfpunkt | Norm | Ergebnis |
 |---------|-----------|------|---------|
@@ -167,32 +187,32 @@ Pflichtteilsquote = 1/2 × gesetzlicher Erbteil
 PFLICHTTEILSBERECHNUNG
 
 I. Nettonachlass
-   Aktiva zum Todestag:                    EUR [A]
- - Passiva:                                EUR [B]
- = Nettonachlass:                          EUR [C]
+ Aktiva zum Todestag: EUR [A]
+ - Passiva: EUR [B]
+ = Nettonachlass: EUR [C]
 
 II. Pflichtteilsergänzung (Schenkungen)
-   Schenkung Nr. 1 vom [Datum]:
-     Wert (nicht verbrauchbar — Niederstwert): EUR [X]
-     Abschmelzung [X]%:                     EUR [Y]
-   Schenkung Nr. 2 vom [Datum]:
-     Wert (verbrauchbar — Nominalbetrag):    EUR [X]
-     Abschmelzung [X]%:                     EUR [Y]
-   Summe Ergänzungsmasse:                   EUR [D]
+ Schenkung Nr. 1 vom [Datum]:
+ Wert (nicht verbrauchbar — Niederstwert): EUR [X]
+ Abschmelzung [X]%: EUR [Y]
+ Schenkung Nr. 2 vom [Datum]:
+ Wert (verbrauchbar — Nominalbetrag): EUR [X]
+ Abschmelzung [X]%: EUR [Y]
+ Summe Ergänzungsmasse: EUR [D]
 
 III. Berechnungsbasis
-   Nettonachlass + Ergänzungsmasse:         EUR [C+D]
+ Nettonachlass + Ergänzungsmasse: EUR [C+D]
 
 IV. Pflichtteilsquote: [X/Y] (z.B. 1/8)
 
 V. Pflichtteilsanspruch:
-   Nettonachlass × Quote:                  EUR [P1]
-   Ergänzungsanspruch:
-   Ergänzungsmasse × Quote:                EUR [P2]
-   Gesamt (vor Anrechnung):                EUR [P1+P2]
+ Nettonachlass × Quote: EUR [P1]
+ Ergänzungsanspruch:
+ Ergänzungsmasse × Quote: EUR [P2]
+ Gesamt (vor Anrechnung): EUR [P1+P2]
 
-VI. Anrechnung § 2315 BGB (Vorausempfang):  EUR [minus A]
-   Gesamt-Pflichtteilsanspruch:            EUR [Summe]
+VI. Anrechnung § 2315 BGB (Vorausempfang): EUR [minus A]
+ Gesamt-Pflichtteilsanspruch: EUR [Summe]
 ```
 
 ## Strategische Optionen (vor dem Template entscheiden)
@@ -228,10 +248,10 @@ BGB vorzulegen.
 
 Das Verzeichnis muss enthalten:
 1. Sämtliche Aktiva und Passiva des Nachlasses zum Todestag
-   [Datum], bewertet nach §§ 2311, 2311a BGB
+ [Datum], bewertet nach §§ 2311, 2311a BGB
 2. Sämtliche Schenkungen des Erblassers der letzten 10 Jahre
-   nach § 2325 BGB (auch gemischte Schenkungen und
-   Schenkungen unter Nießbrauchsvorbehalt)
+ nach § 2325 BGB (auch gemischte Schenkungen und
+ Schenkungen unter Nießbrauchsvorbehalt)
 3. Ausgleichungspflichtige Zuwendungen nach §§ 2315, 2316 BGB
 
 Hinsichtlich der Bewertung von Immobilien und Unternehmen
@@ -256,27 +276,26 @@ In der Sache [Pflichtteilsberechtigter] ./. [Erben]
 beantragen wir:
 
 I. Auskunftsstufe:
-   Die Beklagten werden verurteilt, Auskunft über den Bestand
-   des Nachlasses nach [Erblasser] zu erteilen durch Vorlage
-   eines vollständigen Bestandsverzeichnisses einschließlich
-   aller Schenkungen der letzten 10 Jahre.
+ Die Beklagten werden verurteilt, Auskunft über den Bestand
+ des Nachlasses nach [Erblasser] zu erteilen durch Vorlage
+ eines vollständigen Bestandsverzeichnisses einschließlich
+ aller Schenkungen der letzten 10 Jahre.
 
 II. Versicherungsstufe:
-   Die Beklagten werden verurteilt, die Richtigkeit des
-   vorgelegten Verzeichnisses an Eides statt zu versichern.
+ Die Beklagten werden verurteilt, die Richtigkeit des
+ vorgelegten Verzeichnisses an Eides statt zu versichern.
 
 III. Zahlungsstufe:
-   Die Beklagten werden verurteilt, an den Kläger den sich
-   aus der Auskunft ergebenden Pflichtteilsanspruch nebst
-   Zinsen in Höhe von 5 Prozentpunkten über dem
-   Basiszinssatz seit Klagezustellung zu zahlen.
+ Die Beklagten werden verurteilt, an den Kläger den sich
+ aus der Auskunft ergebenden Pflichtteilsanspruch nebst
+ Zinsen in Höhe von 5 Prozentpunkten über dem
+ Basiszinssatz seit Klagezustellung zu zahlen.
 ```
 
 --- vor Versand klaeren ---
 1. Welches Verhandlungsziel hat der Mandant? [Bestand / Abfindung / Reputation / Schnelle Loesung]
 2. Welche Kompromisslinien sind absolut? [Mindestabfindung / Freistellung / Zeugnisformulierung]
 3. Sind Anschlusswege erwuenscht? [Mediation / Direktgespraech / Settlement vor Klageerhebung]
-
 
 ## Beweislast
 

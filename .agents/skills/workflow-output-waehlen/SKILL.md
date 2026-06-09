@@ -1,15 +1,23 @@
 ---
 name: workflow-output-waehlen
-description: "Output wählen im Plugin vertragsrecht: entscheidet zwischen Memo, Schriftsatz, Tabelle, Brief, Checkliste, Vermerk, Redline oder Mandantenübersetzung."
+description: "Output wählen: Output wählen im Plugin datenschutzrecht: entscheidet zwischen Memo, Schriftsatz, Tabelle, Brief, Checkliste, Vermerk, Redline oder Mandantenübersetzung."
 ---
 
 # Output wählen
 
-## Aufgabe
-Dieser Workflow-Skill für `vertragsrecht` Output wählen im Plugin vertragsrecht: entscheidet zwischen Memo, Schriftsatz, Tabelle, Brief, Checkliste, Vermerk, Redline oder Mandantenübersetzung.. Er ist dazu da, den Nutzer schneller und sicherer in die richtige Bearbeitung zu führen.
 
-## Kaltstart
-Wenn Material vorliegt, arbeite zuerst mit dem Material. Stelle nur Rückfragen, die für die nächste Weiche nötig sind:
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: DSGVO; BDSG; TDDDG; Art. 44 ff — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+**Fokus:** Output wählen im Plugin datenschutzrecht: entscheidet zwischen Memo, Schriftsatz, Tabelle, Brief, Checkliste, Vermerk, Redline oder Mandantenübersetzung.
+
+## Einstieg
+Prüfe zuerst das vorhandene Material. Stelle nur Rückfragen, die die nächste fachliche Weiche verändern:
 
 1. Wer fragt in welcher Rolle?
 2. Was ist das gewünschte Ergebnis?
@@ -19,17 +27,17 @@ Wenn Material vorliegt, arbeite zuerst mit dem Material. Stelle nur Rückfragen,
 ## Arbeitsworkflow
 1. Rolle, Ziel, Frist und Unterlagenlage in höchstens fünf Fragen klären.
 2. Bestehende Dokumente zuerst auswerten; Rückfragen nur dort stellen, wo sie die Entscheidung ändern.
-3. Passende Spezialskills aus diesem Plugin vorschlagen und begründen.
+3. Passende Fachmodule aus diesem Plugin vorschlagen und begründen.
 4. Ein sofort nutzbares Ergebnis erzeugen: Ampel, Plan, Brief, Tabelle, Checkliste oder Memo.
 
-## Output-Standard
-- Kurzbild: worum es geht, was gesichert ist, was offen ist.
-- Prüf- oder Bearbeitungsmatrix mit den entscheidenden Punkten.
-- Konkreter nächster Schritt mit Frist, Zuständigkeit und Unterlagen.
-- Bei Außenkommunikation: knapper, sachlicher Textbaustein ohne unnötige Nebenangaben.
+## Outputformen Datenschutz
+- **Auskunftsentwurf nach Art. 15 DSGVO** mit Datenkopie, Empfängerliste, Speicherdauer, Widerspruchsrechten.
+- **DSFA-Bericht** nach Art. 35 DSGVO mit Bewertungsmethodik, Risiken, Schutzmaßnahmen, Restrisikobewertung.
+- **AVV-Redline** nach Art. 28 Abs. 3 DSGVO mit Markierungen für TOM-Anlage, Subunternehmer, Audit-Rechte.
+- **Meldung nach Art. 33 DSGVO** (Datenpanne) — Standardformular der zuständigen Aufsichtsbehörde verwenden (BfDI / LfD-Portal).
+- **Benachrichtigung der Betroffenen** nach Art. 34 DSGVO mit klarer Sprache, Beschreibung, Kontakt DSB.
+- **Datenschutzhinweise** nach Art. 13/14 DSGVO mit allen Pflichtangaben.
+- **Drittlandstransfer-Doku**: SCC-Modul-Auswahl + TIA + ggf. supplementary measures.
 
-## Quellenregel
-- Aktuelle Normen, Behördenhinweise, Gerichtsseiten, Register, Formulare und EU-/Landesrecht live prüfen, wenn sie für das Ergebnis tragend sind.
-- Rechtsprechung nur mit Gericht, Datum, Aktenzeichen und frei prüfbarer Quelle ausgeben.
-- Keine BeckRS-, juris-, Kommentar-, Handbuch- oder Aufsatz-Blindzitate aus Modellwissen.
-- Unsicherheiten und Annahmen ausdrücklich markieren.
+## Praxis-Tipp
+Bei einer Datenpannenmeldung nach Art. 33 stets das Online-Meldeformular der zuständigen Behörde (z. B. BfDI-Meldeportal, LDI NRW-Formular) verwenden und parallel intern eine Aktennotiz mit Zeitlinie führen — die 72-Stunden-Frist verläuft schnell, eine spätere Rekonstruktion ist mühsam.

@@ -1,168 +1,173 @@
 ---
 name: product-naming
-description: Use when brainstorming product names, company names, or brand names. Based on David Placek's Lexicon Branding methodology (Vercel, Swiffer, Sonos, Azure, BlackBerry).
-argument-hint: "[product description or naming brief]"
+description: 产品命名协作流程。当用户想给产品/项目/模块起名字时使用。通过"灵魂挖掘 → 约束提取 → 路线发散 → 方向选择 → 竞品验证 → 最终确认"的结构化流程，从模糊想法产出有品牌生命力的名字，避免拍脑袋起名。
 ---
 
-# Product Naming Methodology
+用户想给产品、项目或模块起一个名字，但还没想好叫什么。通过结构化的协作流程，从产品本质出发推导名字，而不是直接列一堆候选词让用户挑。
 
-Based on David Placek's Lexicon Branding approach—the firm behind Vercel, Swiffer, Sonos, Azure, BlackBerry, Pentium, and Windsurf.
+## 核心原则
 
-## Core Principles
+- **先想清楚再起名** — 没有理解产品灵魂之前，绝不列候选名字
+- **名字是推导出来的，不是拼凑出来的** — 从产品定位、用户画像、品牌气质中自然推导
+- **给路线，不给列表** — 先让用户选命名方向，再在方向内发散具体名字
+- **用数据验证直觉** — 调研同赛道产品的命名规律，避免闭门造车
+- **不催不赶** — 名字是品牌的根基，值得花时间想清楚
 
-### 1. Invent, Never Describe
+## 工作流程
 
-Descriptive names are forgettable. Invented names signal innovation and are easier to own.
+### 第 1 步：产品灵魂挖掘（不碰名字）
 
-- **Bad**: "FormFiller", "QuickSign", "DocAssist" (literal, forgettable)
-- **Good**: "Vercel" (evokes versatile + accelerate + excel without stating what it does)
+这一步的目标是理解产品的本质，而不是收集功能列表。
 
-### 2. Combine Word Stems Meaningfully
+主动了解项目背景（读代码、读文档），然后向用户追问以下问题：
 
-The best names draw from multiple word roots, creating rich associations:
+1. **用户是谁？** — 什么人在用？什么场景下用？使用频率？
+2. **产品本质** — 用一句话介绍这个产品是什么？（不是功能列表，是角色/定位/比喻）
+3. **产品边界** — 做什么、不做什么、未来往哪个方向长？
+4. **品牌气质** — 用户看到这个名字时，应该有什么第一反应？（专业/亲切/极客/轻松/...）
+5. **硬性约束** — 语言偏好？长度限制？需要避开的词？
 
-- **Vercel**: versatile + accelerate + excel
-- **Swiffer**: swift + efficient (with playful "-er" suffix)
-- **Pentium**: penta (five) + -ium (element suffix, signals substance)
+**关键**：如果用户给出一个比喻（比如"像 Jarvis"），一定要深挖这个比喻背后的含义——它揭示的是用户对产品角色的想象。
 
-Target names that can be "extrapolated to many different meanings"—this gives the brand room to grow.
+**禁止**：
+- 读完项目文档就开始列名字
+- 问一个问题就觉得够了，必须把以上问题都覆盖到
+- 把这些问题当表单一次性丢给用户，应该是自然对话
 
-### 3. Design for the Ear First
+### 第 2 步：命名约束提取
 
-Consider phonetic flow and sound symbolism before settling on spelling.
+从第 1 步的回答中提取：
 
-**Sound Symbolism Research (Lexicon's findings):**
+1. **关键词** — 从用户的描述中提炼核心语素（如：编程、助手、伙伴、工具、管理）
+2. **识别张力** — 用户的多个诉求之间是否存在矛盾？（如"要像人名一样有温度" vs "一眼看出跟编程有关"）
+3. **明确优先级** — 如果有张力，哪个诉求优先？
 
-- **V** = vibrant, alive, dynamic (Vercel, Viagra, Corvette)
-- **B** = reliable, stable, trustworthy (BlackBerry)
-- **Z** = attention-grabbing, distinctive (Azure)
-- **X** = innovative, cutting-edge
-- **Soft endings (-i, -a)** = light, approachable (Dasani)
-- **Hard consonants (K, T)** = strong, decisive
-
-**Avoid:**
-
-- Awkward consonant clusters (e.g., "fl" sound in "FormFlow")
-- Hard-to-pronounce combinations
-- Names that sound different than they're spelled
-
-### 4. Avoid These Patterns
-
-**Tired suffixes:**
-
-- "-AI" or "-GPT" (dated, overused, signals follower not innovator)
-- "-ly" (Grammarly era, feels 2015)
-- "-ify" (Spotify era, feels 2010)
-
-**Literal descriptions:**
-
-- Avoid naming what it does ("FormFiller", "AutoDoc")
-- The name should create an impression, not explain functionality
-
-**Compound words that telegraph function:**
-
-- "QuickBooks" worked in 1992; the bar is higher now
-
-## The Process
-
-### Phase 1: Identify (The Diamond Framework)
-
-Before generating names, answer these strategic questions:
+向用户展示你的分析，确认理解无误。
 
 ```
-        WIN
-    (What does winning look like?)
-         △
-        /│\
-       / │ \
-HAVE ◀──┼──▶ NEED
-(What do   (What do
-we have?)   we need?)
-       \ │ /
-        \│/
-         ▽
-        SAY
-    (What do we need to say?)
+示例：
+你的核心诉求：
+- ✅ 让人知道跟团队协作有关
+- ✅ 轻松不严肃，不像企业软件
+- ⚡ 这两个有张力：协作类名字容易显得"企业味重"，轻松的名字又容易看不出用途
+
+我的判断是"轻松感"优先，因为你要跟 Slack/钉钉竞争的是体验而非功能。对吗？
 ```
 
-Define:
+**禁止**：跳过分析直接出名字。这一步是从"感觉"到"逻辑"的关键桥梁。
 
-- What winning looks like for this brand
-- What assets/positioning you already have
-- What's missing that you need to acquire
-- What the name needs to communicate
+### 第 3 步：路线发散
 
-### Phase 2: Invent (Volume Generation)
+基于约束分析，推导出 **2-4 条命名路线**，每条路线代表一种不同的命名策略。
 
-Generate at least 500-1000 candidate names before narrowing.
+每条路线包含：
+- **路线名称** — 一句话概括这条路的思路
+- **2-3 个示意名字** — 让用户感受这个方向的味道
+- **优缺点** — 诚实说明每条路的利弊
 
-**Techniques:**
+```
+示例：
+路线 A：拟声/动作词
+示意：Ping、Holler、Nudge
+✅ 轻快、有画面感
+❌ 不直接关联"站会"场景
 
-1. **Word stem combinations**: Blend roots from Latin, Greek, English
-2. **Sound-first approach**: What phonetic impression do you want? Start there
-3. **Cross-domain inspiration**: What would this product be called if it were a bike? A song? A place?
-4. **Competitive contrast**: What sounds are competitors NOT using?
+路线 B：时间/节奏隐喻
+示意：DayBeat、MorningSync、Cadence
+✅ 暗示每日节奏，贴合站会频率
+❌ 偏长，组合感强
 
-**Three-Team Method (Lexicon's approach):**
+路线 C：缩写/造词
+示意：Stanly（standup + daily）、Asynco（async + co）
+✅ 独特好注册
+❌ 需要解释含义
+```
 
-- Team A: Knows the real brief
-- Team B: Thinks they're naming a competitor
-- Team C: Works on an unrelated category entirely
+**禁止**：
+- 只给一条路线
+- 路线之间差异太小
+- 不说缺点，只说好话
+- 在这一步列超过 5 个具体名字/路线（让用户选方向，不是选名字）
 
-The best names often come from Team C—unconstrained by the problem.
+### 第 4 步：用户选择方向
 
-### Phase 3: Implement (Testing & Refinement)
+用户可以：
+- 直接选一条路线
+- 组合多条路线的元素（"C 的直接 + A 的温度"）
+- 全部否掉，补充新方向 → 回到第 3 步
 
-**Good signs:**
+选定方向后，在该方向内深挖 **3-5 个具体候选名字**，每个附带一句话解释。
 
-- Name causes debate/polarization (strong names provoke reaction)
-- Easy to spell after hearing once
-- Works across cultures (no negative meanings)
-- Domain available or acquirable
+**禁止**：用户选了方向之后还在其他方向上发散。聚焦。
 
-**Test by asking:**
+### 第 5 步：竞品验证 + 命名策略
 
-- Can you imagine this on a billboard?
-- Does it pass the "radio test" (clear when spoken)?
-- Does it have room to grow beyond current product?
+用户倾向某个名字后，做两件事：
 
-### Phase 4: Domain Availability Check
+#### 5a. 竞品命名调研
 
-After narrowing to top candidates, check domain availability.
+搜索同赛道产品的命名规律：
+- 纯英文 / 中英文双品牌 / 纯中文，哪种多？
+- 名字长度？音节数？
+- 有没有撞名风险？
 
-**Process:**
+#### 5b. 命名策略确认
 
-1. For each finalist name, check availability across TLDs (.com, .io, .ai, .co, .app)
-2. Use the user's preferred registrars if configured (see `config.local.md`)
-3. Note pricing—premium domains may cost more but signal the name is desirable
-4. Consider alternative spellings only if they don't compromise the name's integrity
+基于调研结果，向用户建议：
+- 需要几个名字？（英文名 + 中文名？还是只要一个？）
+- 要不要 slogan？
+- 理由是什么？
 
-**Domain checking tools:**
+```
+示例：
+调研发现同赛道的 Geekbot、Range、Standuply 都只用一个英文名。
+建议：只用 Ping，不另起中文名。
+理由：用户是开发团队，日常沟通已经用英文工具；一个音节最好记。
+如果需要中文场景，加 slogan："Ping — 轻拍一下，站会搞定"
+```
 
-- Use `whois` command for basic availability
-- Check registrar APIs or websites for pricing
-- If user has `config.local.md`, respect their registrar preferences and budget
+**禁止**：不做调研就建议命名策略，所有建议必须有数据支撑。
 
-See `references/domain-checking.md` for detailed instructions.
+### 第 6 步：最终确认
 
-## Example Analysis: "Vercel"
+汇总整个过程的决策链路，输出最终结论：
 
-Why it works:
+```
+📌 产品名称：Ping
+📌 Slogan：轻拍一下，站会搞定
+📌 命名策略：纯英文单品牌
+📌 决策依据：
+   - 用户画像：远程开发团队
+   - 产品定位：替代每日站会的异步同步工具
+   - 核心约束：轻松不严肃，一看就想用
+   - 竞品惯例：同赛道主流为纯英文短名称
+```
 
-- **V** opening = vibrant, dynamic (sound symbolism)
-- Evokes: versatile, accelerate, excel, vertical
-- Doesn't describe what it does (deployment platform)
-- Easy to spell after hearing
-- Short, punchy, professional
-- Room to grow beyond original product
+## 沟通规范
 
-## When Reviewing Name Candidates
+### 必须问用户的
 
-Ask:
+| 时机 | 问什么 |
+|------|--------|
+| 第 1 步 | 用户画像、产品本质、产品边界、品牌气质、硬性约束 |
+| 第 3 步 | 选哪条路线 |
+| 第 4 步 | 倾向哪个具体名字 |
+| 第 5 步 | 命名策略是否认同（几个名字、要不要 slogan） |
+| 第 6 步 | 最终确认 |
 
-1. Is it easy to say? (Test: "fl", "thr", awkward clusters = red flag)
-2. Does it describe the product literally? (If yes, reject)
-3. Does it use tired suffixes like "-AI"? (If yes, reject)
-4. Can it be extrapolated to multiple meanings?
-5. What does it sound like phonetically? (Design for the ear)
-6. Does it cause a reaction? (Polarization is good)
+### 不需要问用户的
+
+| 事项 | 直接做 |
+|------|--------|
+| 读项目文档了解背景 | 直接读，带着理解去问用户 |
+| 竞品调研 | 直接搜索，带着数据给建议 |
+| 分析诉求之间的张力 | 直接分析，向用户确认判断 |
+
+### AI 绝不应该做的
+
+- 读完项目文档就甩一个名字列表
+- 没有理解产品本质就开始起名
+- 只从"好不好听"角度评价名字，不从品牌策略角度分析
+- 用户说"不好"的时候换一批名字再来，而不是反思流程哪里出了问题
+- 为了显得专业而列过多选项，造成选择瘫痪
+- 催用户赶快做决定

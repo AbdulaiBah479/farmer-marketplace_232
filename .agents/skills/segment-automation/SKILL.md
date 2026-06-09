@@ -3,14 +3,11 @@ name: segment-automation
 description: "Automate Segment tasks via Rube MCP (Composio): track events, identify users, manage groups, page views, aliases, batch operations. Always search tools first for current schemas."
 requires:
   mcp: [rube]
-category: analytics
 ---
 
 # Segment Automation via Rube MCP
 
 Automate Segment customer data platform operations through Composio's Segment toolkit via Rube MCP.
-
-**Toolkit docs**: [composio.dev/toolkits/segment](https://composio.dev/toolkits/segment)
 
 ## Prerequisites
 
@@ -226,6 +223,3 @@ Segment recommends consistent event naming:
 | Source schema | SEGMENT_LIST_SCHEMA_SETTINGS_IN_SOURCE | sourceId |
 | Update source | SEGMENT_UPDATE_SOURCE | sourceId |
 | Warehouses | SEGMENT_LIST_CONNECTED_WAREHOUSES_FROM_SOURCE | sourceId |
-
----
-*Powered by [Composio](https://composio.dev)*

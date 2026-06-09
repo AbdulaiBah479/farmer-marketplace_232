@@ -1,13 +1,9 @@
 ---
 name: widerspruch
-description: "Erstellt einen formellen Widerspruchsbrief gegen die Ablehnung eines Fahrgastrechte-Antrags der Deutschen Bahn oder eines anderen Eisenbahnverkehrsunternehmens. Verwende diesen Skill immer wenn der Nutzer ein Ablehnungsschreiben des DB-Servicecenters Fahrgastrechte (oder gleichwertiger EVU-Stelle) zum Thema Verspaetungsentschaedigung erwaehnt einen Widerspruch gegen die Deutsche Bahn formulieren moechte oder Begriffe wie Fahrgastrechte Verspaetungsentschaedigung Servicecenter Fahrgastrechte Entschaedigungsantrag abgelehnt oder DB Ablehnung verwendet. Strukturierter Schriftsatz mit Pinpoint auf konkreten Ablehnungsgrund und Anlagen-YAML."
+description: "Erstellt einen formellen Widerspruchsbrief gegen die Ablehnung eines Fahrgastrechte-Antrags der Deutschen Bahn oder eines anderen Eisenbahnverkehrsunternehmens. Verwende diesen Skill immer wenn der Nutzer ein Ablehnungsschreiben des DB-Servicecenters Fahrgastrechte (oder gleichwertiger EVU-Stelle..."
 ---
 
 # Fahrgastrechte-Widerspruch — Skill
-
-## Zweck
-
-Analysiert drei Eingabedokumente (Ablehnungsschreiben der DB, ursprünglicher Antrag, Ticket) und erstellt daraus einen juristisch fundierten Widerspruchsbrief als strukturierten Schriftsatz, den der Nutzer an das Servicecenter Fahrgastrechte der Deutschen Bahn (oder das jeweils ausführende EVU) senden kann. Der Brief wird mit dem Skill `fahrgastrechte-anlagen-bauen` in ein beA-konformes Anlagenkonvolut überführt.
 
 ## Eingabedokumente
 
@@ -232,7 +228,3 @@ Nicht alle Informationen auf einmal abfragen, sondern nur das, was wirklich fehl
 - Schlichtungsstelle Reise & Verkehr e.V. — schlichtungsstelle-reise-verkehr.de
 
 Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über amtliche oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
-
-## Quellenregel
-
-Quellenregel: Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen; Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff.

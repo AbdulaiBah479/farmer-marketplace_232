@@ -1,272 +1,412 @@
-# notebooklm-py
-<p align="left">
-  <img src="https://raw.githubusercontent.com/teng-lin/notebooklm-py/main/notebooklm-py.png" alt="notebooklm-py logo" width="128">
-</p>
+<div align="center">
 
-**A Comprehensive NotebookLM Skill & Unofficial Python API.** Full programmatic access to NotebookLM's features—including capabilities the web UI doesn't expose—via Python, CLI, and AI agents like Claude Code, Codex, and OpenClaw.
+# NotebookLM Claude Code Skill
 
-[![PyPI version](https://img.shields.io/pypi/v/notebooklm-py.svg)](https://pypi.org/project/notebooklm-py/)
-[![Python Version](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue)](https://pypi.org/project/notebooklm-py/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://github.com/teng-lin/notebooklm-py/actions/workflows/test.yml/badge.svg)](https://github.com/teng-lin/notebooklm-py/actions/workflows/test.yml)
-<p>
-  <a href="https://trendshift.io/repositories/19116" target="_blank"><img src="https://trendshift.io/api/badge/repositories/19116" alt="teng-lin%2Fnotebooklm-py | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
-</p>
+**Let [Claude Code](https://github.com/anthropics/claude-code) chat directly with NotebookLM for source-grounded answers based exclusively on your uploaded documents**
 
-**Source & Development**: <https://github.com/teng-lin/notebooklm-py>
+[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
+[![Claude Code Skill](https://img.shields.io/badge/Claude%20Code-Skill-purple.svg)](https://www.anthropic.com/news/skills)
+[![Based on](https://img.shields.io/badge/Based%20on-NotebookLM%20MCP-green.svg)](https://github.com/PleasePrompto/notebooklm-mcp)
+[![GitHub](https://img.shields.io/github/stars/PleasePrompto/notebooklm-skill?style=social)](https://github.com/PleasePrompto/notebooklm-skill)
 
-> **⚠️ Unofficial Library - Use at Your Own Risk**
->
-> This library uses **undocumented Google APIs** that can change without notice.
->
-> - **Not affiliated with Google** - This is a community project
-> - **APIs may break** - Google can change internal endpoints anytime
-> - **Rate limits apply** - Heavy usage may be throttled
->
-> Best for prototypes, research, and personal projects. See [Troubleshooting](docs/troubleshooting.md) for debugging tips.
+> Use this skill to query your Google NotebookLM notebooks directly from Claude Code for source-grounded, citation-backed answers from Gemini. Browser automation, library management, persistent auth. Drastically reduced hallucinations - answers only from your uploaded documents.
 
-## What You Can Build
+[Installation](#installation) • [Quick Start](#quick-start) • [Why NotebookLM](#why-notebooklm-not-local-rag) • [How It Works](#how-it-works) • [MCP Alternative](https://github.com/PleasePrompto/notebooklm-mcp)
 
-🤖 **AI Agent Tools** - Integrate NotebookLM into Claude Code, Codex, and other LLM agents. Ships with a root [NotebookLM skill](SKILL.md) for GitHub and `npx skills add` discovery, local `notebooklm skill install` support for Claude Code and `.agents` skill directories, and repo-level Codex guidance in [`AGENTS.md`](AGENTS.md).
+</div>
 
-📚 **Research Automation** - Bulk-import sources (URLs, PDFs, YouTube, Google Drive), run web/Drive research queries with auto-import, and extract insights programmatically. Build repeatable research pipelines.
+---
 
-🎙️ **Content Generation** - Generate Audio Overviews (podcasts), videos, slide decks, quizzes, flashcards, infographics, data tables, mind maps, and study guides. Full control over formats, styles, and output.
+## ⚠️ Important: Local Claude Code Only
 
-📥 **Downloads & Export** - Download all generated artifacts locally (MP3, MP4, PDF, PNG, CSV, JSON, Markdown). Export to Google Docs/Sheets. **Features the web UI doesn't offer**: batch downloads, quiz/flashcard export in multiple formats, mind map JSON extraction.
+**This skill works ONLY with local [Claude Code](https://github.com/anthropics/claude-code) installations, NOT in the web UI.**
 
-## Three Ways to Use
+The web UI runs skills in a sandbox without network access, which this skill requires for browser automation. You must use [Claude Code](https://github.com/anthropics/claude-code) locally on your machine.
 
-| Method | Best For |
-|--------|----------|
-| **Python API** | Application integration, async workflows, custom pipelines |
-| **CLI** | Shell scripts, quick tasks, CI/CD automation |
-| **Agent Integration** | Claude Code, Codex, LLM agents, natural language automation |
+---
 
-## Features
+## The Problem
 
-### Complete NotebookLM Coverage
+When you tell [Claude Code](https://github.com/anthropics/claude-code) to "search through my local documentation", here's what happens:
+- **Massive token consumption**: Searching through documentation means reading multiple files repeatedly
+- **Inaccurate retrieval**: Searches for keywords, misses context and connections between docs
+- **Hallucinations**: When it can't find something, it invents plausible-sounding APIs
+- **Manual copy-paste**: Switching between NotebookLM browser and your editor constantly
 
-| Category | Capabilities |
-|----------|--------------|
-| **Notebooks** | Create, list, rename, delete |
-| **Sources** | URLs, YouTube, files (PDF, text, Markdown, Word, EPUB, audio, video, images), Google Drive, pasted text; refresh, get guide/fulltext |
-| **Chat** | Questions, conversation history, custom personas |
-| **Research** | Web and Drive research agents (fast/deep modes) with auto-import |
-| **Sharing** | Public/private links, user permissions (viewer/editor), view level control |
+## The Solution
 
-### Content Generation (All Artifact Types)
+This Claude Code Skill lets [Claude Code](https://github.com/anthropics/claude-code) chat directly with [**NotebookLM**](https://notebooklm.google/) — Google's **source-grounded knowledge base** powered by Gemini 2.5 that provides intelligent, synthesized answers exclusively from your uploaded documents.
 
-| Type | Options | Download Format |
-|------|---------|-----------------|
-| **Audio Overview** | 4 formats (deep-dive, brief, critique, debate), 3 lengths, 50+ languages | MP3/MP4 |
-| **Video Overview** | 3 formats (explainer, brief, cinematic), 9 visual styles, plus a dedicated `cinematic-video` CLI alias | MP4 |
-| **Slide Deck** | Detailed or presenter format, adjustable length; individual slide revision | PDF, PPTX |
-| **Infographic** | 3 orientations, 3 detail levels | PNG |
-| **Quiz** | Configurable quantity and difficulty | JSON, Markdown, HTML |
-| **Flashcards** | Configurable quantity and difficulty | JSON, Markdown, HTML |
-| **Report** | Briefing doc, study guide, blog post, or custom prompt | Markdown |
-| **Data Table** | Custom structure via natural language | CSV |
-| **Mind Map** | Hierarchical node tree — **two kinds**: note-backed JSON or the newer interactive studio map (`--kind` / `MindMapKind`) | JSON |
+```
+Your Task → Claude asks NotebookLM → Gemini synthesizes answer → Claude writes correct code
+```
 
-### Beyond the Web UI
+**No more copy-paste dance**: Claude asks questions directly and gets answers straight back in the CLI. It builds deep understanding through automatic follow-ups, getting specific implementation details, edge cases, and best practices.
 
-These features are available via API/CLI but not exposed in NotebookLM's web interface:
+---
 
-- **Batch downloads** - Download all artifacts of a type at once
-- **Quiz/Flashcard export** - Get structured JSON, Markdown, or HTML (web UI only shows interactive view)
-- **Mind map data extraction** - Export hierarchical JSON for visualization tools
-- **Data table CSV export** - Download structured tables as spreadsheets
-- **Slide deck as PPTX** - Download editable PowerPoint files (web UI only offers PDF)
-- **Slide revision** - Modify individual slides with natural-language prompts
-- **Report template customization** - Append extra instructions to built-in format templates
-- **Save chat to notes** - Save Q&A answers or conversation history as notebook notes
-- **Source fulltext access** - Retrieve the indexed text content of any source
-- **Programmatic sharing** - Manage permissions without the UI
-- **Multi-account profiles** - Switch between Google accounts without re-authenticating
-- **Browser cookie import** - Reuse cookies from your existing browser session instead of driving Playwright
+## Why NotebookLM, Not Local RAG?
+
+| Approach | Token Cost | Setup Time | Hallucinations | Answer Quality |
+|----------|------------|------------|----------------|----------------|
+| **Feed docs to Claude** | 🔴 Very high (multiple file reads) | Instant | Yes - fills gaps | Variable retrieval |
+| **Web search** | 🟡 Medium | Instant | High - unreliable sources | Hit or miss |
+| **Local RAG** | 🟡 Medium-High | Hours (embeddings, chunking) | Medium - retrieval gaps | Depends on setup |
+| **NotebookLM Skill** | 🟢 Minimal | 5 minutes | **Minimal** - source-grounded only | Expert synthesis |
+
+### What Makes NotebookLM Superior?
+
+1. **Pre-processed by Gemini**: Upload docs once, get instant expert knowledge
+2. **Natural language Q&A**: Not just retrieval — actual understanding and synthesis
+3. **Multi-source correlation**: Connects information across 50+ documents
+4. **Citation-backed**: Every answer includes source references
+5. **No infrastructure**: No vector DBs, embeddings, or chunking strategies needed
+
+---
 
 ## Installation
 
-The full install guide — six personas (agent, end-user, library, headless, contributor, power-user), optional extras matrix, platform notes — lives in **[docs/installation.md](docs/installation.md)**.
-
-**Quickest start** (CLI users and AI agents):
+### The simplest installation ever:
 
 ```bash
-pip install "notebooklm-py[browser]"   # core + Playwright
-playwright install chromium             # ~170 MB; no progress bar — be patient (30–90 s)
-notebooklm login                        # opens browser for Google sign-in
-notebooklm auth check --test --json     # verify: expect "status": "ok"
+# 1. Create skills directory (if it doesn't exist)
+mkdir -p ~/.claude/skills
+
+# 2. Clone this repository
+cd ~/.claude/skills
+git clone https://github.com/PleasePrompto/notebooklm-skill notebooklm
+
+# 3. That's it! Open Claude Code and say:
+"What are my skills?"
 ```
 
-**As a library** (embedded in your app — no Playwright, no Chromium):
+When you first use the skill, it automatically:
+- Creates an isolated Python environment (`.venv`)
+- Installs all dependencies including **Google Chrome**
+- Sets up browser automation with Chrome (not Chromium) for maximum reliability
+- Everything stays contained in the skill folder
 
-```bash
-pip install notebooklm-py               # ~10 MB; ship a pre-acquired storage_state.json
-```
+**Note:** The setup uses real Chrome instead of Chromium for cross-platform reliability, consistent browser fingerprinting, and better anti-detection with Google services
 
-If `playwright install chromium` fails on Linux with `TypeError: onExit is not a function`, see the [Linux workaround](docs/troubleshooting.md#linux). **Contributors:** see [CONTRIBUTING.md](CONTRIBUTING.md).
+---
 
 ## Quick Start
 
-<p align="center">
-  <a href="https://asciinema.org/a/767284" target="_blank"><img src="https://asciinema.org/a/767284.svg" width="600" /></a>
-  <br>
-  <em>16-minute session compressed to 30 seconds</em>
-</p>
+### 1. Check your skills
 
-### CLI
+Say in Claude Code:
+```
+"What skills do I have?"
+```
+
+Claude will list your available skills including NotebookLM.
+
+### 2. Authenticate with Google (one-time)
+
+```
+"Set up NotebookLM authentication"
+```
+*A Chrome window opens → log in with your Google account*
+
+### 3. Create your knowledge base
+
+Go to [notebooklm.google.com](https://notebooklm.google.com) → Create notebook → Upload your docs:
+- 📄 PDFs, Google Docs, markdown files
+- 🔗 Websites, GitHub repos
+- 🎥 YouTube videos
+- 📚 Multiple sources per notebook
+
+Share: **⚙️ Share → Anyone with link → Copy**
+
+### 4. Add to your library
+
+**Option A: Let Claude figure it out (Smart Add)**
+```
+"Query this notebook about its content and add it to my library: [your-link]"
+```
+Claude will automatically query the notebook to discover its content, then add it with appropriate metadata.
+
+**Option B: Manual add**
+```
+"Add this NotebookLM to my library: [your-link]"
+```
+Claude will ask for a name and topics, then save it for future use.
+
+### 5. Start researching
+
+```
+"What does my React docs say about hooks?"
+```
+
+Claude automatically selects the right notebook and gets the answer directly from NotebookLM.
+
+---
+
+## How It Works
+
+This is a **Claude Code Skill** - a local folder containing instructions and scripts that Claude Code can use when needed. Unlike the [MCP server version](https://github.com/PleasePrompto/notebooklm-mcp), this runs directly in Claude Code without needing a separate server.
+
+### Key Differences from MCP Server
+
+| Feature | This Skill | MCP Server |
+|---------|------------|------------|
+| **Protocol** | Claude Skills | Model Context Protocol |
+| **Installation** | Clone to `~/.claude/skills` | `claude mcp add ...` |
+| **Sessions** | Fresh browser each question | Persistent chat sessions |
+| **Compatibility** | Claude Code only (local) | Claude Code, Codex, Cursor, etc. |
+| **Language** | Python | TypeScript |
+| **Distribution** | Git clone | npm package |
+
+### Architecture
+
+```
+~/.claude/skills/notebooklm/
+├── SKILL.md              # Instructions for Claude
+├── scripts/              # Python automation scripts
+│   ├── ask_question.py   # Query NotebookLM
+│   ├── notebook_manager.py # Library management
+│   └── auth_manager.py   # Google authentication
+├── .venv/                # Isolated Python environment (auto-created)
+└── data/                 # Local notebook library
+```
+
+When you mention NotebookLM or send a notebook URL, Claude:
+1. Loads the skill instructions
+2. Runs the appropriate Python script
+3. Opens a browser, asks your question
+4. Returns the answer directly to you
+5. Uses that knowledge to help with your task
+
+---
+
+## Core Features
+
+### **Source-Grounded Responses**
+NotebookLM significantly reduces hallucinations by answering exclusively from your uploaded documents. If information isn't available, it indicates uncertainty rather than inventing content.
+
+### **Direct Integration**
+No copy-paste between browser and editor. Claude asks and receives answers programmatically.
+
+### **Smart Library Management**
+Save NotebookLM links with tags and descriptions. Claude auto-selects the right notebook for your task.
+
+### **Automatic Authentication**
+One-time Google login, then authentication persists across sessions.
+
+### **Self-Contained**
+Everything runs in the skill folder with an isolated Python environment. No global installations.
+
+### **Human-Like Automation**
+Uses realistic typing speeds and interaction patterns to avoid detection.
+
+---
+
+## Common Commands
+
+| What you say | What happens |
+|--------------|--------------|
+| *"Set up NotebookLM authentication"* | Opens Chrome for Google login |
+| *"Add [link] to my NotebookLM library"* | Saves notebook with metadata |
+| *"Show my NotebookLM notebooks"* | Lists all saved notebooks |
+| *"Ask my API docs about [topic]"* | Queries the relevant notebook |
+| *"Use the React notebook"* | Sets active notebook |
+| *"Clear NotebookLM data"* | Fresh start (keeps library) |
+
+---
+
+## Real-World Examples
+
+### Example 1: Workshop Manual Query
+
+**User asks**: "Check my Suzuki GSR 600 workshop manual for brake fluid type, engine oil specs, and rear axle torque."
+
+**Claude automatically**:
+- Authenticates with NotebookLM
+- Asks comprehensive questions about each specification
+- Follows up when prompted "Is that ALL you need to know?"
+- Provides accurate specifications: DOT 4 brake fluid, SAE 10W-40 oil, 100 N·m rear axle torque
+
+![NotebookLM Chat Example](images/example_notebookchat.png)
+
+### Example 2: Building Without Hallucinations
+
+**You**: "I need to build an n8n workflow for Gmail spam filtering. Use my n8n notebook."
+
+**Claude's internal process:**
+```
+→ Loads NotebookLM skill
+→ Activates n8n notebook
+→ Asks comprehensive questions with follow-ups
+→ Synthesizes complete answer from multiple queries
+```
+
+**Result**: Working workflow on first try, no debugging hallucinated APIs.
+
+---
+
+## Technical Details
+
+### Core Technology
+- **Patchright**: Browser automation library (Playwright-based)
+- **Python**: Implementation language for this skill
+- **Stealth techniques**: Human-like typing and interaction patterns
+
+Note: The MCP server uses the same Patchright library but via TypeScript/npm ecosystem.
+
+### Dependencies
+- **patchright==1.55.2**: Browser automation
+- **python-dotenv==1.0.0**: Environment configuration
+- Automatically installed in `.venv` on first use
+
+### Data Storage
+
+All data is stored locally within the skill directory:
+
+```
+~/.claude/skills/notebooklm/data/
+├── library.json       - Your notebook library with metadata
+├── auth_info.json     - Authentication status info
+└── browser_state/     - Browser cookies and session data
+```
+
+**Important Security Note:**
+- The `data/` directory contains sensitive authentication data and personal notebooks
+- It's automatically excluded from git via `.gitignore`
+- NEVER manually commit or share the contents of the `data/` directory
+
+### Session Model
+
+Unlike the MCP server, this skill uses a **stateless model**:
+- Each question opens a fresh browser
+- Asks the question, gets the answer
+- Adds a follow-up prompt to encourage Claude to ask more questions
+- Closes the browser immediately
+
+This means:
+- No persistent chat context
+- Each question is independent
+- But your notebook library persists
+- **Follow-up mechanism**: Each answer includes "Is that ALL you need to know?" to prompt Claude to ask comprehensive follow-ups
+
+For multi-step research, Claude automatically asks follow-up questions when needed.
+
+---
+
+## Limitations
+
+### Skill-Specific
+- **Local Claude Code only** - Does not work in web UI (sandbox restrictions)
+- **No session persistence** - Each question is independent
+- **No follow-up context** - Can't reference "the previous answer"
+
+### NotebookLM
+- **Rate limits** - Free tier has daily query limits
+- **Manual upload** - You must upload docs to NotebookLM first
+- **Share requirement** - Notebooks must be shared publicly
+
+---
+
+## FAQ
+
+**Why doesn't this work in the Claude web UI?**
+The web UI runs skills in a sandbox without network access. Browser automation requires network access to reach NotebookLM.
+
+**How is this different from the MCP server?**
+This is a simpler, Python-based implementation that runs directly as a Claude Skill. The MCP server is more feature-rich with persistent sessions and works with multiple tools (Codex, Cursor, etc.).
+
+**Can I use both this skill and the MCP server?**
+Yes! They serve different purposes. Use the skill for quick Claude Code integration, use the MCP server for persistent sessions and multi-tool support.
+
+**What if Chrome crashes?**
+Run: `"Clear NotebookLM browser data"` and try again.
+
+**Is my Google account secure?**
+Chrome runs locally on your machine. Your credentials never leave your computer. Use a dedicated Google account if you're concerned.
+
+---
+
+## Troubleshooting
+
+### Skill not found
+```bash
+# Make sure it's in the right location
+ls ~/.claude/skills/notebooklm/
+# Should show: SKILL.md, scripts/, etc.
+```
+
+### Authentication issues
+Say: `"Reset NotebookLM authentication"`
+
+### Browser crashes
+Say: `"Clear NotebookLM browser data"`
+
+### Dependencies issues
+```bash
+# Manual reinstall if needed
+cd ~/.claude/skills/notebooklm
+rm -rf .venv
+python -m venv .venv
+source .venv/bin/activate  # or .venv\Scripts\activate on Windows
+pip install -r requirements.txt
+```
+
+---
+
+## Disclaimer
+
+This tool automates browser interactions with NotebookLM to make your workflow more efficient. However, a few friendly reminders:
+
+**About browser automation:**
+While I've built in humanization features (realistic typing speeds, natural delays, mouse movements) to make the automation behave more naturally, I can't guarantee Google won't detect or flag automated usage. I recommend using a dedicated Google account for automation rather than your primary account—think of it like web scraping: probably fine, but better safe than sorry!
+
+**About CLI tools and AI agents:**
+CLI tools like Claude Code, Codex, and similar AI-powered assistants are incredibly powerful, but they can make mistakes. Please use them with care and awareness:
+- Always review changes before committing or deploying
+- Test in safe environments first
+- Keep backups of important work
+- Remember: AI agents are assistants, not infallible oracles
+
+I built this tool for myself because I was tired of the copy-paste dance between NotebookLM and my editor. I'm sharing it in the hope it helps others too, but I can't take responsibility for any issues, data loss, or account problems that might occur. Use at your own discretion and judgment.
+
+That said, if you run into problems or have questions, feel free to open an issue on GitHub. I'm happy to help troubleshoot!
+
+---
+
+## Credits
+
+This skill is inspired by my [**NotebookLM MCP Server**](https://github.com/PleasePrompto/notebooklm-mcp) and provides an alternative implementation as a Claude Code Skill:
+- Both use Patchright for browser automation (TypeScript for MCP, Python for Skill)
+- Skill version runs directly in Claude Code without MCP protocol
+- Stateless design optimized for skill architecture
+
+If you need:
+- **Persistent sessions** → Use the [MCP Server](https://github.com/PleasePrompto/notebooklm-mcp)
+- **Multiple tool support** (Codex, Cursor) → Use the [MCP Server](https://github.com/PleasePrompto/notebooklm-mcp)
+- **Quick Claude Code integration** → Use this skill
+
+---
+
+## The Bottom Line
+
+**Without this skill**: NotebookLM in browser → Copy answer → Paste in Claude → Copy next question → Back to browser...
+
+**With this skill**: Claude researches directly → Gets answers instantly → Writes correct code
+
+Stop the copy-paste dance. Start getting accurate, grounded answers directly in Claude Code.
 
 ```bash
-# 1. Authenticate (opens browser)
-notebooklm login
-# Or use Microsoft Edge (for orgs that require Edge for SSO)
-# notebooklm login --browser msedge
-# Or reuse cookies from an already-logged-in browser session
-# notebooklm login --browser-cookies chrome
-# notebooklm login --browser-cookies 'chrome::Profile 1'  # one Chromium profile
-# (combine with --profile to populate a specific profile;
-#  use --account / --all-accounts after auth inspect when several
-#  Google accounts are signed in)
-
-# 2. Create a notebook and add sources
-notebooklm create "My Research"
-notebooklm use <notebook_id>
-notebooklm source add "https://en.wikipedia.org/wiki/Artificial_intelligence"
-notebooklm source add "./paper.pdf"
-
-# 3. Chat with your sources
-notebooklm ask "What are the key themes?"
-notebooklm ask --prompt-file ./long_question.txt  # Read question from file
-
-# 4. Generate content (use --prompt-file for long prompts)
-notebooklm generate audio "make it engaging" --wait
-notebooklm generate video --style whiteboard --wait
-notebooklm generate cinematic-video "documentary-style summary" --wait
-notebooklm generate quiz --difficulty hard
-notebooklm generate flashcards --quantity more
-notebooklm generate slide-deck
-notebooklm generate infographic --orientation portrait
-notebooklm generate mind-map                       # interactive studio map (default); --kind note-backed for the JSON tree
-notebooklm generate data-table "compare key concepts"
-
-# 5. Download artifacts
-notebooklm download audio ./podcast.mp3
-notebooklm download video ./overview.mp4
-notebooklm download cinematic-video ./documentary.mp4
-notebooklm download quiz --format markdown ./quiz.md
-notebooklm download flashcards --format json ./cards.json
-notebooklm download slide-deck ./slides.pdf
-notebooklm download infographic ./infographic.png
-notebooklm download mind-map ./mindmap.json
-notebooklm download data-table ./data.csv
+# Get started in 30 seconds
+cd ~/.claude/skills
+git clone https://github.com/PleasePrompto/notebooklm-skill notebooklm
+# Open Claude Code: "What are my skills?"
 ```
 
-Other useful CLI commands:
+---
 
-```bash
-notebooklm auth check --test         # Diagnose auth/cookie issues
-notebooklm auth refresh --quiet      # One-shot cookie keepalive (for cron / launchd / systemd)
-notebooklm auth refresh --browser-cookies chrome  # Re-extract and repair account routing
-notebooklm auth inspect --browser 'chrome::Profile 1'  # Preview one Chromium profile
-notebooklm agent show codex          # Print bundled Codex instructions
-notebooklm agent show claude         # Print bundled Claude Code skill template
-notebooklm language list             # List supported output languages
-notebooklm metadata --json           # Export notebook metadata and sources
-notebooklm share status              # Inspect sharing state
-notebooklm source add-research "AI"  # Start web research and import sources
-notebooklm skill status              # Check local agent skill installation
-notebooklm profile list              # List all Google account profiles
-notebooklm profile switch work       # Switch active account profile
-```
+<div align="center">
 
-Use `--prompt-file PATH` with `ask`, prompt-based `generate` commands, and `source add-research` when the text is too long for the shell command line. This reads prompt/query text from a file and is separate from `source add ./file.pdf`, which still uploads that file as a NotebookLM source.
+Built as a Claude Code Skill adaptation of my [NotebookLM MCP Server](https://github.com/PleasePrompto/notebooklm-mcp)
 
-### Python API
+For source-grounded, document-based research directly in Claude Code
 
-```python
-import asyncio
-from notebooklm import NotebookLMClient, MindMapKind
-
-async def main():
-    async with NotebookLMClient.from_storage() as client:
-        # Create notebook and add sources
-        nb = await client.notebooks.create("Research")
-        await client.sources.add_url(nb.id, "https://example.com", wait=True)
-
-        # Chat with your sources
-        result = await client.chat.ask(nb.id, "Summarize this")
-        print(result.answer)
-
-        # Generate content (podcast, video, quiz, etc.)
-        status = await client.artifacts.generate_audio(nb.id, instructions="make it fun")
-        await client.artifacts.wait_for_completion(nb.id, status.task_id)
-        await client.artifacts.download_audio(nb.id, "podcast.mp3")
-
-        # Generate quiz and download as JSON
-        status = await client.artifacts.generate_quiz(nb.id)
-        await client.artifacts.wait_for_completion(nb.id, status.task_id)
-        await client.artifacts.download_quiz(nb.id, "quiz.json", output_format="json")
-
-        # Generate a mind map via the unified client.mind_maps API (issue #1256) —
-        # two kinds: the newer MindMapKind.INTERACTIVE studio map (shown; polled to
-        # completion by default) or MindMapKind.NOTE_BACKED JSON. Both export via:
-        await client.mind_maps.generate(nb.id, kind=MindMapKind.INTERACTIVE)
-        await client.artifacts.download_mind_map(nb.id, "mindmap.json")
-
-asyncio.run(main())
-```
-
-### Agent Setup
-
-**Option 1 — CLI install**:
-
-```bash
-notebooklm skill install
-```
-
-Installs the skill into `~/.claude/skills/notebooklm` and `~/.agents/skills/notebooklm`.
-
-**Option 2 — `npx` install** (via the open skills ecosystem):
-
-```bash
-npx skills add teng-lin/notebooklm-py
-```
-
-Fetches the canonical [SKILL.md](SKILL.md) directly from GitHub.
-
-
-## Documentation
-
-- **[CLI Reference](docs/cli-reference.md)** - Complete command documentation
-- **[Python API](docs/python-api.md)** - Full API reference
-- **[Configuration](docs/configuration.md)** - Storage and settings
-- **[Release Guide](docs/releasing.md)** - Release checklist and packaging verification
-- **[Troubleshooting](docs/troubleshooting.md)** - Common issues and solutions
-- **[API Stability](docs/stability.md)** - Versioning policy and stability guarantees
-- **[Upgrading to v0.8.0](docs/upgrading-to-0.8.0.md)** - Breaking-change migration guide for the v0.8.0 error-and-return contract
-
-### For Contributors
-
-- **[Architecture](docs/architecture.md)** - Architectural overview and design principles
-- **[Development Guide](docs/development.md)** - Architecture, testing, and releasing
-- **[RPC Development](docs/rpc-development.md)** - Protocol capture and debugging
-- **[RPC Reference](docs/rpc-reference.md)** - Payload structures
-- **[Changelog](CHANGELOG.md)** - Version history and release notes
-- **[Security](SECURITY.md)** - Security policy and credential handling
-
-## Platform Support
-
-| Platform | Status | Notes |
-|----------|--------|-------|
-| **macOS** | ✅ Tested | Primary development platform |
-| **Linux** | ✅ Tested | Fully supported |
-| **Windows** | ✅ Tested | Tested in CI |
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/image?repos=teng-lin/notebooklm-py&type=timeline&legend=top-left)](https://www.star-history.com/?repos=teng-lin%2Fnotebooklm-py&type=timeline&legend=top-left)
-
-## License
-
-MIT License. See [LICENSE](LICENSE) for details.
+</div>

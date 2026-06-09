@@ -1,9 +1,30 @@
 ---
 name: eingliederungshilfe-schule
-description: "Kind mit Behinderung benoetigt Schulbegleitung und Eltern oder Anwalt muessen Anspruch klaeren und durchsetzen. SGB IX Teil 2 §§ 90 ff. Eingliederungshilfe § 35a SGB VIII bei seelischer Behinderung. Prüfraster: Behinderungsbegriff § 99 SGB IX zuständiger Traeger (Eingliederungshilfetraeger Jugendamt) Antragspraxis Gesamtplanverfahren UN-BRK Inklusionsrecht. Output: Widerspruchsentwurf oder Klagebaustein Eingliederungshilfe Schulbegleitung. Abgrenzung zu hilfsmittelantrag-prüfen (Sachmittel) und fachanwalt-sozialrecht-gdb-schwerbehinderung."
+description: "Kind mit Behinderung benoetigt Schulbegleitung und Eltern oder Anwalt muessen Anspruch klaeren und durchsetzen: SGB IX Teil 2 §§ 90 ff. Eingliede..."
 ---
 
-# Eingliederungshilfe in Schule und Bildung
+# Kind mit Behinderung benoetigt Schulbegleitung und Eltern oder Anwalt muessen Anspruch klaeren und durchsetzen
+
+
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: SGG §§ 51, 78, 87, 90, 130a, 144, 160, 183, 193, SGB I, II, III, V, VI, IX, X; § 11. SGB I-XII und Sozialgerichtsbarkeit SGG. Widerspruch; § 84 SGG Klage; § 87 SGG Eilantrag — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+**Fokus:** Kind mit Behinderung benoetigt Schulbegleitung und Eltern oder Anwalt muessen Anspruch klaeren und durchsetzen. SGB IX Teil 2 §§ 90 ff. Eingliederungshilfe § 35a SGB VIII bei seelischer Behinderung. Prüfraster: Behinderungsbegriff § 99 SGB IX zuständiger Traeger (Eingliederungshilfetraeger Jugendamt) Antragspraxis Gesamtplanverfahren UN-BRK Inklusionsrecht. Output: Widerspruchsentwurf oder Klagebaustein Eingliederungshilfe Schulbegleitung. Abgrenzung zu hilfsmittelantrag-prüfen (Sachmittel) und fachanwalt-sozialrecht-gdb-schwerbehinderung.
+
+### Eingliederungshilfe in Schule und Bildung
+
+## Fachlicher Kern — Sozialrecht und Sozialversicherungsrecht
+- **Problemfokus dieses Skills:** Bleibe beim konkreten Titel `Eingliederungshilfe in Schule und Bildung` und löse die dort angelegte Fachfrage; arbeite mit konkreten Tatbestandsmerkmalen, Beweisfragen und dem unmittelbar benötigten Arbeitsprodukt. Routingfragen bleiben Hilfsmittel, wenn Frist, Zuständigkeit oder Verfahrensart offen sind.
+- **Normenradar:** SGB I, IV § 7 und § 7a, V, VI, VII, IX, X §§ 20, 24, 44, 45, 48, 50, 60 ff.; SGB II, XII; SGG §§ 54, 86a, 86b, 87, 90, 103, 109, 144, 151, 160; Pflegebegutachtung/MD-Richtlinien live prüfen.
+- **Verifizierte Anker:** BSG, Urteil vom 05.11.2024 - B 12 BA 3/23 R (Lehrende/Dozenten: Status immer einzelfallabhängig); BSG, Urteil vom 23.04.2024 - B 12 BA 9/22 R (Pilot/Freelancer, Eingliederung und unternehmerisches Risiko); BSG, Urteil vom 01.02.2022 - B 12 KR 37/19 R und Urteil vom 20.02.2024 - B 12 KR 1/22 R (GmbH-Geschäftsführer, Sperrminorität/mittelbare Beteiligung).
+- **Arbeitsmodus:** Immer Verwaltungsakt, Frist, Widerspruch/Klage/eA, Amtsermittlung, medizinische Tatsachen, Mitwirkungspflichten und Beweisgutachten trennen; bei Status § 7 SGB IV: tatsächliche Eingliederung, Weisung, Rechtsmacht und Unternehmerrisiko abgleichen.
+- **Outputpflicht:** Bescheidanalyse in einfacher Sprache, Widerspruch, eA-Antrag, Statusmatrix, medizinische Beweisfragen, Belegliste, Fristenplan oder SG-Schriftsatz.
+- **Fehlerbremse:** Tragende Normen/Entscheidungen live oder aus der Akte verifizieren; Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei prüfbarer Quelle. Keine BeckRS-, juris-, Kommentar- oder Aufsatz-Blindzitate aus Modellwissen.
 
 ## Anspruchsgrundlagen
 
@@ -77,7 +98,7 @@ description: "Kind mit Behinderung benoetigt Schulbegleitung und Eltern oder Anw
 ## Schnittstelle zu anderen Plugins
 
 - Bei Schulrechtsfragen Verwaltungsrechtsplugin / `fachanwalt-verwaltungsrecht`.
-- Bei familienrechtlichem Bezug (Sorgerecht Streit Eltern) `fachanwalt-familienrecht`.
+- Bei familienrechtlichem Bezug (Sorgerecht Streit Eltern) `kindeswohlgefaehrdung-eilantrag`.
 
 ## Triage — kläre vor Antragstellung
 
@@ -89,12 +110,4 @@ description: "Kind mit Behinderung benoetigt Schulbegleitung und Eltern oder Anw
 
 ## Aktuelle Rechtsprechung
 
-- BSG, Urt. v. 08.03.2017 - B 8 SO 2/16 R, SozR 4-3500 § 54 Nr. 13 Rn. 14 — Schulbegleitung als Eingliederungshilfe ist auch dann zu gewähren, wenn die Schule eine Begleitung pädagogisch für nötig hält; die Zuständigkeitsabgrenzung zur schulischen Aufgabe richtet sich nach dem individuellen Bedarf der behinderten Person.
-- BSG, Urt. v. 22.03.2012 - B 8 SO 30/10 R, SozR 4-3500 § 54 Nr. 8 Rn. 20 — Hilfen zur Schulbildung nach § 54 Abs. 1 Satz 1 Nr. 1 SGB XII (jetzt § 112 SGB IX) umfassen alle notwendigen Hilfen, einschließlich persönlicher Schulbegleitung, wenn ohne diese eine dem Bildungsziel entsprechende Teilnahme am Unterricht nicht möglich ist.
-- BSG, Urt. v. 09.12.2016 - B 8 SO 8/15 R, SozR 4-3500 § 54 Nr. 14 Rn. 18 — Für die Abgrenzung SGB IX/SGB VIII ist auf die (überwiegende) Art der Behinderung abzustellen; bei seelischer Behinderung ist das Jugendamt nach § 35a SGB VIII zuständig, selbst wenn körperliche Begleitbefunde vorliegen.
-- BVerfG, Beschl. v. 08.10.1997 - 1 BvR 9/97, BVerfGE 96, 288 Rn. 42 — Art. 3 Abs. 3 Satz 2 GG schützt behinderte Menschen vor Benachteiligung; staatliche Stellen sind gehalten, die tatsächliche Teilhabe behinderter Kinder am Bildungssystem zu ermöglichen.
-
-## Kommentarliteratur
-
-- Lachwitz/Schellhorn/Welti, Handkommentar SGB IX, § 112 Rn. 1 ff. (Hilfen zur Schulbildung)
-- Hauck/Noftz SGB VIII, § 35a Rn. 1 ff. (seelische Behinderung Jugendamt)
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.

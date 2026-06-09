@@ -1,714 +1,292 @@
 ---
-name: Testing Strategies
-description: Comprehensive testing approaches for reliable software
-version: 1.0.0
-license: MIT
-tier: community
+name: testing-strategies
+description: Design comprehensive testing strategies for software quality assurance. Use when planning test coverage, implementing test pyramids, or setting up testing infrastructure. Handles unit testing, integration testing, E2E testing, TDD, and testing best practices.
+metadata:
+  tags: testing, test-strategy, TDD, unit-test, integration-test, E2E, test-pyramid
+  platforms: Claude, ChatGPT, Gemini
 ---
+
 
 # Testing Strategies
 
-> **Write tests that catch bugs, not tests that waste time**
 
-This skill provides strategies for effective testing at all levels, from unit to end-to-end.
+## When to use this skill
 
-## Core Principles
+- **New project**: define a testing strategy
+- **Quality issues**: bugs happen frequently
+- **Before refactoring**: build a safety net
+- **CI/CD setup**: automated tests
 
-### 1. Tests Are Documentation
-Good tests explain what the code should do. They're living documentation that can't go stale.
+## Instructions
 
-### 2. Test Behavior, Not Implementation
-Tests should verify outcomes, not internal details. Implementation can change; behavior shouldn't.
-
-### 3. Fast Feedback Loops
-Most tests should run in seconds, not minutes. Save slow tests for CI.
-
-## The Testing Pyramid
+### Step 1: Understand the Test Pyramid
 
 ```
-                         ╱╲
-                        ╱  ╲
-                       ╱E2E ╲     5-10%
-                      ╱──────╲
-                     ╱        ╲
-                    ╱  Integr- ╲  15-25%
-                   ╱   ation    ╲
-                  ╱──────────────╲
-                 ╱                ╲
-                ╱       Unit       ╲  65-80%
-               ╱────────────────────╲
+       /\
+      /E2E\          ← few (slow, expensive)
+     /______\
+    /        \
+   /Integration\    ← medium
+  /____________\
+ /              \
+/   Unit Tests   \  ← many (fast, inexpensive)
+/________________\
 ```
 
-**Why this distribution:**
-- Unit tests are fast, cheap, and precise
-- Integration tests catch interface issues
-- E2E tests verify critical user journeys
+**Ratio guide**:
+- Unit: 70%
+- Integration: 20%
+- E2E: 10%
 
-## Unit Testing
+### Step 2: Unit testing strategy
 
-### What to Unit Test
+**Given-When-Then pattern**:
+```typescript
+describe('calculateDiscount', () => {
+  it('should apply 10% discount for orders over $100', () => {
+    // Given: setup
+    const order = { total: 150, customerId: '123' };
 
-```yaml
-Always Test:
-  - Pure functions with logic
-  - State machines
-  - Parsers and transformers
-  - Validation logic
-  - Calculations
-  - Data formatting
+    // When: perform action
+    const discount = calculateDiscount(order);
 
-Skip:
-  - Simple getters/setters
-  - Direct pass-through functions
-  - Framework internals
-  - Third-party library code
-```
+    // Then: verify result
+    expect(discount).toBe(15);
+  });
 
-### Unit Test Structure (AAA Pattern)
+  it('should not apply discount for orders under $100', () => {
+    const order = { total: 50, customerId: '123' };
+    const discount = calculateDiscount(order);
+    expect(discount).toBe(0);
+  });
 
-```javascript
-describe('calculateTotal', () => {
-  it('calculates total with tax', () => {
-    // Arrange - set up test data
-    const items = [
-      { price: 100, quantity: 2 },
-      { price: 50, quantity: 1 }
-    ];
-    const taxRate = 0.1;
-
-    // Act - perform the action
-    const result = calculateTotal(items, taxRate);
-
-    // Assert - verify the outcome
-    expect(result).toBe(275); // (200 + 50) * 1.1
+  it('should throw error for invalid order', () => {
+    const order = { total: -10, customerId: '123' };
+    expect(() => calculateDiscount(order)).toThrow('Invalid order');
   });
 });
 ```
 
-### Test Case Design
+**Mocking strategy**:
+```typescript
+// Mock external dependencies
+jest.mock('../services/emailService');
+import { sendEmail } from '../services/emailService';
 
-```yaml
-Coverage Strategy:
-
-  Happy Path:
-    - Normal, expected inputs
-    - Typical use cases
-
-  Edge Cases:
-    - Empty inputs ([], null, undefined)
-    - Single item (boundary)
-    - Maximum values
-    - Minimum values
-
-  Error Cases:
-    - Invalid inputs
-    - Missing required data
-    - Out of range values
-    - Type mismatches
-
-  Boundary Conditions:
-    - Off-by-one scenarios
-    - Exact boundaries
-    - Just over/under limits
-```
-
-### Example: Comprehensive Unit Tests
-
-```javascript
-describe('UserValidator', () => {
-  describe('validateEmail', () => {
-    // Happy path
-    it('accepts valid email', () => {
-      expect(validateEmail('user@example.com')).toBe(true);
-    });
-
-    // Variations of valid
-    it('accepts email with subdomain', () => {
-      expect(validateEmail('user@mail.example.com')).toBe(true);
-    });
-
-    it('accepts email with plus sign', () => {
-      expect(validateEmail('user+tag@example.com')).toBe(true);
-    });
-
-    // Edge cases
-    it('rejects empty string', () => {
-      expect(validateEmail('')).toBe(false);
-    });
-
-    it('rejects null', () => {
-      expect(validateEmail(null)).toBe(false);
-    });
-
-    // Invalid formats
-    it('rejects email without @', () => {
-      expect(validateEmail('userexample.com')).toBe(false);
-    });
-
-    it('rejects email without domain', () => {
-      expect(validateEmail('user@')).toBe(false);
-    });
-
-    it('rejects email with spaces', () => {
-      expect(validateEmail('user @example.com')).toBe(false);
-    });
-  });
-});
-```
-
-### Mocking Strategy
-
-```javascript
-// Mock external dependencies, not internal code
 describe('UserService', () => {
-  // Mock the database client (external)
-  const mockDb = {
-    users: {
-      findById: jest.fn(),
-      update: jest.fn()
-    }
-  };
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('updates user name', async () => {
+  it('should send welcome email on registration', async () => {
     // Arrange
-    mockDb.users.findById.mockResolvedValue({
-      id: '123',
-      name: 'Old Name'
-    });
-    mockDb.users.update.mockResolvedValue({
-      id: '123',
-      name: 'New Name'
-    });
-
-    const service = new UserService(mockDb);
+    const mockSendEmail = sendEmail as jest.MockedFunction<typeof sendEmail>;
+    mockSendEmail.mockResolvedValueOnce(true);
 
     // Act
-    const result = await service.updateName('123', 'New Name');
+    await userService.register({ email: 'test@example.com', password: 'pass' });
 
     // Assert
-    expect(mockDb.users.update).toHaveBeenCalledWith('123', {
-      name: 'New Name'
+    expect(mockSendEmail).toHaveBeenCalledWith({
+      to: 'test@example.com',
+      subject: 'Welcome!',
+      body: expect.any(String)
     });
-    expect(result.name).toBe('New Name');
   });
 });
 ```
 
-## Integration Testing
+### Step 3: Integration Testing
 
-### What to Integration Test
-
-```yaml
-Focus Areas:
-  - API endpoints (request → response)
-  - Database operations (CRUD)
-  - Service-to-service calls
-  - Authentication flows
-  - External integrations (with mocks)
-```
-
-### API Integration Test Pattern
-
-```javascript
+**API endpoint tests**:
+```typescript
 describe('POST /api/users', () => {
-  beforeAll(async () => {
-    // Setup test database
-    await setupTestDatabase();
+  beforeEach(async () => {
+    await db.user.deleteMany();  // Clean DB
   });
 
-  afterAll(async () => {
-    // Cleanup
-    await teardownTestDatabase();
-  });
-
-  afterEach(async () => {
-    // Reset between tests
-    await clearUsers();
-  });
-
-  it('creates a new user', async () => {
+  it('should create user with valid data', async () => {
     const response = await request(app)
       .post('/api/users')
       .send({
         email: 'test@example.com',
-        name: 'Test User'
+        username: 'testuser',
+        password: 'Password123!'
       });
 
     expect(response.status).toBe(201);
-    expect(response.body).toMatchObject({
+    expect(response.body.user).toMatchObject({
       email: 'test@example.com',
-      name: 'Test User'
+      username: 'testuser'
     });
-    expect(response.body.id).toBeDefined();
+
+    // Verify it was actually saved to the DB
+    const user = await db.user.findUnique({ where: { email: 'test@example.com' } });
+    expect(user).toBeTruthy();
   });
 
-  it('validates required fields', async () => {
-    const response = await request(app)
-      .post('/api/users')
-      .send({});
-
-    expect(response.status).toBe(400);
-    expect(response.body.errors).toContain('email is required');
-  });
-
-  it('prevents duplicate emails', async () => {
+  it('should reject duplicate email', async () => {
     // Create first user
     await request(app)
       .post('/api/users')
-      .send({ email: 'test@example.com', name: 'First' });
+      .send({ email: 'test@example.com', username: 'user1', password: 'Pass123!' });
 
-    // Try duplicate
+    // Attempt duplicate
     const response = await request(app)
       .post('/api/users')
-      .send({ email: 'test@example.com', name: 'Second' });
+      .send({ email: 'test@example.com', username: 'user2', password: 'Pass123!' });
 
     expect(response.status).toBe(409);
   });
 });
 ```
 
-### Database Integration Testing
+### Step 4: E2E Testing (Playwright)
 
-```javascript
-describe('UserRepository', () => {
-  let testDb;
-
-  beforeAll(async () => {
-    testDb = await createTestDatabase();
-  });
-
-  afterAll(async () => {
-    await testDb.close();
-  });
-
-  beforeEach(async () => {
-    await testDb.truncate('users');
-  });
-
-  it('creates and retrieves user', async () => {
-    const repo = new UserRepository(testDb);
-
-    // Create
-    const created = await repo.create({
-      email: 'test@example.com',
-      name: 'Test User'
-    });
-
-    // Retrieve
-    const retrieved = await repo.findById(created.id);
-
-    expect(retrieved).toMatchObject({
-      email: 'test@example.com',
-      name: 'Test User'
-    });
-  });
-
-  it('handles not found', async () => {
-    const repo = new UserRepository(testDb);
-    const result = await repo.findById('non-existent-id');
-    expect(result).toBeNull();
-  });
-});
-```
-
-## End-to-End Testing
-
-### What to E2E Test
-
-```yaml
-Test These Flows:
-  - Critical user journeys (signup, purchase, etc.)
-  - Revenue-impacting paths
-  - Frequently reported bug areas
-  - Complex multi-step workflows
-
-Don't E2E Test:
-  - Every permutation
-  - Edge cases (use unit tests)
-  - Visual styling
-  - Performance (use dedicated tools)
-```
-
-### Playwright E2E Pattern
-
-```javascript
+```typescript
 import { test, expect } from '@playwright/test';
 
-test.describe('Authentication Flow', () => {
-  test('user can sign up and log in', async ({ page }) => {
-    const email = `test-${Date.now()}@example.com`;
+test.describe('User Registration Flow', () => {
+  test('should complete full registration process', async ({ page }) => {
+    // 1. Visit homepage
+    await page.goto('http://localhost:3000');
 
-    // Navigate to signup
-    await page.goto('/signup');
+    // 2. Click Sign Up button
+    await page.click('text=Sign Up');
 
-    // Fill signup form
-    await page.fill('[data-testid="email-input"]', email);
-    await page.fill('[data-testid="password-input"]', 'SecurePass123!');
-    await page.fill('[data-testid="confirm-password"]', 'SecurePass123!');
+    // 3. Fill out form
+    await page.fill('input[name="email"]', 'test@example.com');
+    await page.fill('input[name="username"]', 'testuser');
+    await page.fill('input[name="password"]', 'Password123!');
 
-    // Submit
-    await page.click('[data-testid="signup-button"]');
+    // 4. Submit
+    await page.click('button[type="submit"]');
 
-    // Verify redirect to dashboard
-    await expect(page).toHaveURL('/dashboard');
-    await expect(page.locator('[data-testid="welcome-message"]'))
-      .toContainText('Welcome');
+    // 5. Confirm success message
+    await expect(page.locator('text=Welcome')).toBeVisible();
 
-    // Log out
-    await page.click('[data-testid="logout-button"]');
-    await expect(page).toHaveURL('/');
+    // 6. Confirm redirect to dashboard
+    await expect(page).toHaveURL('http://localhost:3000/dashboard');
 
-    // Log back in
-    await page.goto('/login');
-    await page.fill('[data-testid="email-input"]', email);
-    await page.fill('[data-testid="password-input"]', 'SecurePass123!');
-    await page.click('[data-testid="login-button"]');
+    // 7. Confirm user info is displayed
+    await expect(page.locator('text=testuser')).toBeVisible();
+  });
 
-    // Verify successful login
-    await expect(page).toHaveURL('/dashboard');
+  test('should show error for invalid email', async ({ page }) => {
+    await page.goto('http://localhost:3000/signup');
+    await page.fill('input[name="email"]', 'invalid-email');
+    await page.fill('input[name="password"]', 'Password123!');
+    await page.click('button[type="submit"]');
+
+    await expect(page.locator('text=Invalid email')).toBeVisible();
   });
 });
 ```
 
-### E2E Test Selectors
+### Step 5: TDD (Test-Driven Development)
 
-```yaml
-Selector Priority (best to worst):
-  1. data-testid: '[data-testid="submit-button"]'
-     - Explicit, decoupled from styling
-     - Won't break with CSS changes
+**Red-Green-Refactor Cycle**:
 
-  2. Role: 'button:has-text("Submit")'
-     - Accessibility-based
-     - Good for semantic elements
-
-  3. Text: 'text=Submit'
-     - Human readable
-     - Can break with copy changes
-
-  4. CSS Class: '.submit-btn'
-     - Couples tests to styling
-     - Avoid if possible
-```
-
-## Component Testing (React)
-
-### Testing Library Pattern
-
-```javascript
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { LoginForm } from './LoginForm';
-
-describe('LoginForm', () => {
-  const mockOnSubmit = jest.fn();
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('submits form with credentials', async () => {
-    render(<LoginForm onSubmit={mockOnSubmit} />);
-
-    // Fill form using accessible queries
-    await userEvent.type(
-      screen.getByLabelText(/email/i),
-      'user@example.com'
-    );
-    await userEvent.type(
-      screen.getByLabelText(/password/i),
-      'password123'
-    );
-
-    // Submit
-    await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
-
-    // Verify
-    expect(mockOnSubmit).toHaveBeenCalledWith({
-      email: 'user@example.com',
-      password: 'password123'
-    });
-  });
-
-  it('shows validation errors', async () => {
-    render(<LoginForm onSubmit={mockOnSubmit} />);
-
-    // Submit without filling form
-    await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
-
-    // Verify errors shown
-    expect(screen.getByText(/email is required/i)).toBeInTheDocument();
-    expect(screen.getByText(/password is required/i)).toBeInTheDocument();
-    expect(mockOnSubmit).not.toHaveBeenCalled();
-  });
-
-  it('disables submit while loading', () => {
-    render(<LoginForm onSubmit={mockOnSubmit} isLoading />);
-
-    expect(screen.getByRole('button', { name: /signing in/i })).toBeDisabled();
+```typescript
+// 1. RED: write a failing test
+describe('isPalindrome', () => {
+  it('should return true for palindrome', () => {
+    expect(isPalindrome('racecar')).toBe(true);
   });
 });
-```
 
-### Query Priority for Testing Library
-
-```yaml
-Priority (most to least preferred):
-
-  1. getByRole: Accessible roles (button, textbox, etc.)
-  2. getByLabelText: Form elements by label
-  3. getByPlaceholderText: When label not available
-  4. getByText: Non-interactive elements
-  5. getByDisplayValue: Current value of form element
-  6. getByAltText: Images
-  7. getByTitle: Title attribute
-  8. getByTestId: Last resort, data-testid attribute
-```
-
-## Test Data Management
-
-### Test Data Strategies
-
-```yaml
-Strategies:
-
-  Inline Data:
-    When: Simple, few tests
-    How: Define in test file
-    Pro: Visible, explicit
-    Con: Can clutter tests
-
-  Factories:
-    When: Multiple tests need similar data
-    How: Factory functions that generate data
-    Pro: Reusable, consistent
-    Con: Extra abstraction
-
-  Fixtures:
-    When: Complex, realistic data needed
-    How: JSON/YAML files loaded by tests
-    Pro: Realistic, shareable
-    Con: Can become stale
-
-  Seeded Database:
-    When: Integration/E2E tests
-    How: Migration scripts for test data
-    Pro: Real database state
-    Con: Slower, more complex
-```
-
-### Factory Pattern Example
-
-```javascript
-// test/factories/user.factory.js
-export function createUser(overrides = {}) {
-  return {
-    id: `user-${Date.now()}`,
-    email: `test-${Date.now()}@example.com`,
-    name: 'Test User',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    ...overrides
-  };
+// 2. GREEN: minimal code to pass the test
+function isPalindrome(str: string): boolean {
+  return str === str.split('').reverse().join('');
 }
 
-export function createUsers(count, overrides = {}) {
-  return Array.from({ length: count }, (_, i) =>
-    createUser({ ...overrides, name: `Test User ${i + 1}` })
-  );
+// 3. REFACTOR: improve the code
+function isPalindrome(str: string): boolean {
+  const cleaned = str.toLowerCase().replace(/[^a-z0-9]/g, '');
+  return cleaned === cleaned.split('').reverse().join('');
 }
 
-// Usage in tests
-describe('UserList', () => {
-  it('displays users', () => {
-    const users = createUsers(3);
-    render(<UserList users={users} />);
-    expect(screen.getAllByRole('listitem')).toHaveLength(3);
-  });
+// 4. Additional test cases
+it('should ignore case and spaces', () => {
+  expect(isPalindrome('A man a plan a canal Panama')).toBe(true);
+});
+
+it('should return false for non-palindrome', () => {
+  expect(isPalindrome('hello')).toBe(false);
 });
 ```
 
-## Test Organization
+## Output format
 
-### File Structure
+### Testing strategy document
 
-```
-src/
-├── components/
-│   └── Button/
-│       ├── Button.tsx
-│       ├── Button.test.tsx     # Unit tests
-│       └── index.ts
-├── services/
-│   └── user/
-│       ├── userService.ts
-│       └── userService.test.ts # Unit tests
-tests/
-├── integration/
-│   └── api/
-│       └── users.test.ts       # API integration tests
-├── e2e/
-│   └── auth.spec.ts            # E2E tests
-├── factories/
-│   └── user.factory.ts         # Test factories
-└── setup/
-    └── testDatabase.ts         # Test utilities
-```
+```markdown
+## Testing Strategy
 
-### Naming Conventions
+### Coverage Goals
+- Unit Tests: 80%
+- Integration Tests: 60%
+- E2E Tests: Critical user flows
 
-```yaml
-Unit Tests:
-  File: ComponentName.test.ts
-  Describe: 'ComponentName'
-  It: 'does specific thing'
+### Test Execution
+- Unit: Every commit (local + CI)
+- Integration: Every PR
+- E2E: Before deployment
 
-Integration Tests:
-  File: feature.test.ts
-  Describe: 'POST /api/endpoint'
-  It: 'returns 201 when valid'
+### Tools
+- Unit: Jest
+- Integration: Supertest
+- E2E: Playwright
+- Coverage: Istanbul/nyc
 
-E2E Tests:
-  File: feature.spec.ts
-  Describe: 'Feature Name Flow'
-  Test: 'user can complete flow'
+### CI/CD Integration
+- GitHub Actions: Run all tests on PR
+- Fail build if coverage < 80%
+- E2E tests on staging environment
 ```
 
-## Continuous Integration
+## Constraints
 
-### Test Pipeline Structure
+### Required rules (MUST)
 
-```yaml
-name: Test
+1. **Test isolation**: each test is independent
+2. **Fast feedback**: unit tests should be fast (<1 min)
+3. **Deterministic**: same input → same result
 
-on: [push, pull_request]
+### Prohibited items (MUST NOT)
 
-jobs:
-  unit:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: npm ci
-      - run: npm run test:unit -- --coverage
-      - uses: codecov/codecov-action@v3
+1. **Test dependencies**: do not let test A depend on test B
+2. **Production DB**: do not use a real DB in tests
+3. **Sleep/Timeout**: avoid time-based tests
 
-  integration:
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_PASSWORD: test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    steps:
-      - uses: actions/checkout@v4
-      - run: npm ci
-      - run: npm run test:integration
-        env:
-          DATABASE_URL: postgresql://postgres:test@localhost:5432/test
+## Best practices
 
-  e2e:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: npm ci
-      - run: npx playwright install
-      - run: npm run build
-      - run: npm run test:e2e
-```
+1. **AAA pattern**: Arrange-Act-Assert
+2. **Test names**: "should ... when ..."
+3. **Edge Cases**: boundary values, null, empty values
+4. **Happy Path + Sad Path**: both success/failure scenarios
 
-### Test Coverage Targets
+## References
 
-```yaml
-Coverage Guidelines:
+- [Test Pyramid](https://martinfowler.com/articles/practical-test-pyramid.html)
+- [Jest](https://jestjs.io/)
+- [Playwright](https://playwright.dev/)
+- [Testing Best Practices](https://github.com/goldbergyoni/javascript-testing-best-practices)
 
-  Overall: Aim for 70-80%
-    - 100% is often counterproductive
-    - Focus on meaningful coverage
+## Metadata
 
-  Critical Paths: 90%+
-    - Payment processing
-    - Authentication
-    - Data validation
+### Version
+- **Current version**: 1.0.0
+- **Last updated**: 2025-01-01
+- **Compatible platforms**: Claude, ChatGPT, Gemini
 
-  UI Components: 60-70%
-    - Business logic: High
-    - Rendering: Medium
-    - Styling: Low
+### Related skills
+- [backend-testing](../backend-testing/SKILL.md)
+- [code-review](../code-review/SKILL.md)
 
-  Utilities: 90%+
-    - Pure functions should be well tested
-```
+### Tags
+`#testing` `#test-strategy` `#TDD` `#unit-test` `#integration-test` `#E2E` `#code-quality`
 
-## Debugging Failing Tests
+## Examples
 
-### Common Issues & Solutions
+### Example 1: Basic usage
+<!-- Add example content here -->
 
-```yaml
-Flaky Tests:
-  Symptoms:
-    - Pass sometimes, fail others
-    - Fail in CI, pass locally
-
-  Causes:
-    - Timing issues (async not awaited)
-    - Shared state between tests
-    - External dependencies
-
-  Solutions:
-    - Use proper async/await
-    - Reset state in beforeEach
-    - Mock external services
-
-Slow Tests:
-  Symptoms:
-    - Test suite takes minutes
-    - Developers skip running tests
-
-  Causes:
-    - Too many E2E tests
-    - No parallel execution
-    - Heavy setup/teardown
-
-  Solutions:
-    - Move tests down the pyramid
-    - Run tests in parallel
-    - Optimize fixtures
-
-False Positives:
-  Symptoms:
-    - Tests pass but bugs exist
-    - Tests don't catch regressions
-
-  Causes:
-    - Testing implementation not behavior
-    - Missing edge cases
-    - Over-mocking
-
-  Solutions:
-    - Test from user perspective
-    - Add edge case tests
-    - Use real implementations where possible
-```
-
-## Quality Checklist
-
-### Before Merging
-
-- [ ] All tests pass locally
-- [ ] New code has test coverage
-- [ ] No skipped tests without reason
-- [ ] Test descriptions are clear
-- [ ] No flaky tests introduced
-- [ ] Coverage hasn't decreased
-
----
-
-*"A test suite is like a fire alarm. You want it sensitive enough to catch problems, but not so sensitive that you ignore it."*
+### Example 2: Advanced usage
+<!-- Add advanced example content here -->

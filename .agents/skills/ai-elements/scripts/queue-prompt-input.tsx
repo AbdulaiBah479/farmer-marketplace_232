@@ -1,5 +1,8 @@
 "use client";
 
+import type { PromptInputMessage } from "@/components/ai-elements/prompt-input";
+import type { QueueTodo } from "@/components/ai-elements/queue";
+
 import {
   Attachment,
   AttachmentPreview,
@@ -19,7 +22,6 @@ import {
   ModelSelectorName,
   ModelSelectorTrigger,
 } from "@/components/ai-elements/model-selector";
-import type { PromptInputMessage } from "@/components/ai-elements/prompt-input";
 import {
   PromptInput,
   PromptInputActionAddAttachments,
@@ -35,7 +37,6 @@ import {
   PromptInputTools,
   usePromptInputAttachments,
 } from "@/components/ai-elements/prompt-input";
-import type { QueueTodo } from "@/components/ai-elements/queue";
 import {
   Queue,
   QueueItem,

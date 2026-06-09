@@ -1,23 +1,53 @@
 ---
 name: werkvertrag-grundschema-paragraph-631
-description: "Prüft Herstellungserfolg, Vergütung, Abnahme, Mangel, Nacherfüllung, Rücktritt, Minderung und Selbstvornahme."
+description: "Werkvertrag § 631 BGB: Grundschema, Vergütung, Abnahme, Mängelrechte und Kündigung."
 ---
+
 # Werkvertrag Grundschema § 631 BGB
 
-## Sofortstart
+## Fachkern: Werkvertrag Grundschema § 631 BGB
+- **Normen-/Quellenanker:** BGB Besonderer Teil: Kaufrecht, Werk-/Dienstvertrag, Auftrag/Geschäftsbesorgung, Miet-/Leasingnähe, GoA, Bereicherung, Delikt, Verjährung und AGB-Schnittstellen.
+- **Entscheidende Weiche:** Anspruchsgrundlage, Vertragstyp/Mischvertrag, Pflichtverletzung, Vertretenmüssen, Schaden, Einwendung und Beweisfrage sauber trennen.
+- **Arbeitsprodukt:** Liefere eine fallbezogene `Norm / Tatsache / Beleg / Wertung / Gegenargument / nächster Schritt`-Matrix und einen direkt nutzbaren Textbaustein, wenn der Nutzer einen Entwurf braucht.
 
-1. Kläre Rolle, Ziel, Gegner, Frist, Dokumente und gewünschtes Arbeitsprodukt.
-2. Zerlege den Fall in Tatsachen, Normen, Streitpunkte, Beweisfragen und methodische Wertungen.
-3. Liefere zuerst eine Kurzantwort mit Risikoampel, danach den Prüfpfad.
-4. Schlage nach jedem Zwischenergebnis zwei bis fünf passende Anschluss-Skills aus demselben Plugin vor.
+## Normanker
 
-## Arbeitsweise
+- § 631 BGB: Vertragstypische Pflichten beim Werkvertrag
+- § 633 BGB: Sach- und Rechtsmangel beim Werkvertrag
+- § 634 BGB: Rechte des Bestellers bei Mängeln
+- § 635 BGB: Nacherfüllung beim Werkvertrag
+- § 636 BGB: Besondere Bestimmungen für Rücktritt und Schadensersatz
+- § 640 BGB: Abnahme
+- § 641 BGB: Fälligkeit der Vergütung
+- § 648 BGB: Kündigung durch den Besteller
+- § 648a BGB: Kündigung aus wichtigem Grund
 
-Beginne bei Erfolg, Beschaffenheit, Abnahme und Vergütungsfälligkeit.
+## Intake
 
-## Rechts- und Quellenanker
+- Was ist der Vertragsgegenstand (Bauleistung, Reparatur, IT-Leistung, Gutachten)?
+- Wurde ein Werk-Erfolg definiert und ist er eingetreten?
+- Welche Mängel werden gerügt?
+- Ist das Werk abgenommen?
+- Gilt VOB/B oder AGB des Unternehmers?
 
-BGB amtlich prüfen: https://www.gesetze-im-internet.de/bgb/. Je nach Skill insbesondere §§ 241 ff., 249 ff., 280 ff., 433 ff., 488 ff., 535 ff., 581 ff., 611 ff., 631 ff., 662 ff., 675 ff., 677 ff., 765 ff., 812 ff., 823 ff. BGB.
+## Prüfraster
+
+1. Vertragsschluss: Parteien, Werkgegenstand, Vergütung, Fälligkeit
+2. Pflichten des Unternehmers: mangelfreie Herstellung des Werks; Eigenverantwortung für Ausführung
+3. Pflichten des Bestellers: Abnahme (§ 640 BGB), Vergütungszahlung (§ 641 BGB), Mitwirkung
+4. Sachmangel nach § 633 BGB: subjektive, objektive Anforderungen, Montagemangel
+5. Rechte des Bestellers nach § 634 BGB: Nacherfüllung, Selbstvornahme, Rücktritt, Minderung, Schadensersatz
+6. Nacherfüllung nach § 635 BGB: Vorrang; Besteller muss Frist setzen
+7. Abnahme: Voraussetzungen, Rechtsfolgen, Abnahmeverweigerungsrecht
+8. Verjährung: § 634a BGB (2 Jahre beweglich; 5 Jahre Bauleistungen)
+9. Kündigung: § 648 BGB (jederzeitiges Recht des Bestellers; Vergütungsfolge) oder § 648a BGB (wichtiger Grund)
+
+## Fallstricke
+
+- Vergütung wird erst fällig nach Abnahme (§ 641 BGB); ohne Abnahme kein Anspruch auf volle Vergütung.
+- Nacherfüllungsrecht des Unternehmers vor Rücktritt und Schadensersatz beachten.
+- Kündigung nach § 648 BGB jederzeit möglich, aber Besteller muss vereinbarte Vergütung abzüglich ersparter Aufwendungen zahlen.
+- VOB/B-Verträge haben eigene Abnahme- und Mängelregelungen die BGB ergänzen oder ersetzen.
 
 ## Stoppschilder
 
@@ -26,10 +56,9 @@ BGB amtlich prüfen: https://www.gesetze-im-internet.de/bgb/. Je nach Skill insb
 - Rechtsprechung nur mit Gericht, Datum, Aktenzeichen und überprüfbarer Quelle verwenden.
 - Bei Unsicherheit die Annahme ausdrücklich markieren und eine Rückfrage oder Quellenprüfung auslösen.
 
-## Output
+## Anschluss-Skills
 
-- Kurzantwort mit Risikoampel
-- Anspruchsmatrix
-- Prüfvermerk oder Gutachten
-- Beweis- und Lückenliste
-- Anschluss-Skill-Empfehlung
+- werkvertrag-abnahme-und-faelligkeit
+- werkvertrag-maengelrechte
+- werk-dienst-abgrenzung-erfolg
+- bauvertrag-und-verbraucherbauvertrag

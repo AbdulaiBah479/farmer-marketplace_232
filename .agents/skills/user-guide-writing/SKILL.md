@@ -1,130 +1,356 @@
 ---
 name: user-guide-writing
-description: Master user guide writing with clear instructions, tutorials, screenshots, and end-user documentation.
+description: Write clear and helpful user guides and tutorials for end users. Use when creating onboarding docs, how-to guides, or FAQ pages. Handles user-focused documentation, screenshots, step-by-step instructions.
+metadata:
+  tags: user-guides, tutorials, documentation, onboarding, how-to, FAQ
+  platforms: Claude, ChatGPT, Gemini
 ---
+
 
 # User Guide Writing
 
-Create clear, user-friendly guides that help end-users understand and effectively use your product.
 
-## When to Use This Skill
+## When to use this skill
 
-- Onboarding new users
-- Feature documentation
-- Step-by-step tutorials
-- Troubleshooting guides
-- FAQ creation
-- Release documentation
-- Training materials
-- Quick start guides
+- **New Features**: Introduce new features to users
+- **Onboarding**: Train new users
+- **FAQ**: Organize frequently asked questions
 
-## Core Concepts
+## Instructions
 
-### 1. Getting Started Guide
+### Step 1: Quick Start Guide
 
 ```markdown
-# Getting Started with ProductName
+# Getting Started with MyApp
 
-## Create Your Account
+Welcome to MyApp! This guide will help you get up and running in 5 minutes.
 
-1. Go to https://product.com/signup
-2. Enter your email address
-3. Choose a strong password
-4. Click "Create Account"
-5. Check your email for verification link
+## Step 1: Create an Account
 
-**Tip**: Use a work email for team collaboration features.
+1. Go to [https://myapp.com/signup](https://myapp.com/signup)
+2. Enter your email and create a password
+   - Password must be at least 8 characters
+   - Include uppercase, lowercase, and numbers
+3. Click "Sign Up"
+4. Check your email for verification link
+5. Click the link to verify your account
 
-## Set Up Your First Project
+![Sign Up Form](images/signup.png)
 
-1. Click "+ New Project" in the dashboard
-2. Enter project name and description
-3. Choose a template or start blank
+## Step 2: Complete Your Profile
+
+1. Click on your avatar in the top-right corner
+2. Select "Profile Settings"
+3. Add your name and profile picture
+4. Click "Save Changes"
+
+## Step 3: Create Your First Project
+
+1. Click the "+ New Project" button
+2. Enter a project name
+3. Choose a template (or start from scratch)
 4. Click "Create"
 
-**Screenshot**: [Dashboard with New Project button highlighted]
+🎉 Congratulations! You're ready to start using MyApp.
 
-## Invite Your Team
+## Next Steps
 
-1. Open your project
-2. Click "Settings" → "Team"
-3. Enter team member emails
-4. Select their role (Admin, Member, Viewer)
-5. Click "Send Invitations"
+- [Watch the video tutorial](https://youtube.com/watch?v=xxx)
+- [Explore features](docs/features.md)
+- [Join our community](https://community.myapp.com)
 
-**Next Steps**: Learn how to [create tasks](#) and [set up workflows](#).
+## Need Help?
+
+- 📧 Email: support@myapp.com
+- 💬 Live chat: Available 9 AM - 5 PM EST
+- 📚 [Help Center](https://help.myapp.com)
 ```
 
-### 2. Tutorial Structure
+### Step 2: How-To Guide (Task-Focused)
 
 ```markdown
-# How to Create a Dashboard
+# How to Export Your Data
 
-**What you'll learn**: Create custom dashboards to visualize your data.
+This guide shows you how to export all your data from MyApp.
 
-**Time**: 10 minutes
-**Difficulty**: Beginner
+## Before You Start
 
-## Prerequisites
+- Exporting data may take 5-10 minutes depending on size
+- You'll receive an email when the export is ready
+- Exported data is in JSON format
 
-- Active account
-- At least one data source connected
+## Step-by-Step Instructions
 
-## Steps
+### 1. Navigate to Settings
 
-### Step 1: Create Dashboard
+Click on your profile picture in the top-right corner and select **Settings**.
 
-Navigate to Dashboards and click "+ New Dashboard".
+![Settings Menu](images/settings-menu.png)
 
-[Screenshot]
+### 2. Go to Data Export
 
-### Step 2: Add Widgets
+In the left sidebar, click on **Privacy & Data**.
 
-Click "Add Widget" and select chart type:
-- Line chart for trends
-- Bar chart for comparisons
-- Pie chart for distributions
+Then scroll down to the **Export Data** section.
 
-[Screenshot with widget options]
+![Privacy & Data Page](images/privacy-data.png)
 
-### Step 3: Configure Data
+### 3. Request Export
 
-1. Select data source
-2. Choose metrics
-3. Set time range
-4. Apply filters (optional)
+Click the **Request Export** button.
 
-[Screenshot of configuration panel]
+A confirmation dialog will appear:
 
-### Step 4: Customize Appearance
+> **Export Your Data**
+>
+> We'll send you an email with a download link when your export is ready.
+> This usually takes 5-10 minutes.
+>
+> [Cancel] [Confirm]
 
-- Change colors in the "Style" tab
-- Add title and description
-- Adjust chart size
+Click **Confirm** to proceed.
 
-### Step 5: Save and Share
+### 4. Check Your Email
 
-Click "Save" and optionally "Share" to generate public link.
+You'll receive an email at your registered address with subject:
+**"Your Data Export is Ready"**
 
-## You Did It!
+The email contains a secure download link that expires in 7 days.
 
-Your dashboard is ready. Try adding more widgets to create a comprehensive view.
+### 5. Download Your Data
 
-**Related**: [Advanced Dashboard Features](#), [Data Sources Guide](#)
+Click the download link in the email.
+
+A ZIP file will be downloaded containing:
+- `profile.json` - Your profile information
+- `projects.json` - All your projects
+- `files/` - Uploaded files
+
+## Troubleshooting
+
+**Problem**: I didn't receive the email
+- Check your spam folder
+- Make sure your email is correct in Settings
+- Try requesting again (you can request once per day)
+
+**Problem**: Download link expired
+- Request a new export from Settings
+
+**Problem**: Export file is corrupted
+- Try downloading again
+- If issue persists, contact support@myapp.com
+
+## Related Guides
+
+- [How to Delete Your Account](delete-account.md)
+- [Privacy Policy](privacy-policy.md)
+- [Data Security](data-security.md)
 ```
 
-## Best Practices
+### Step 3: FAQ (Frequently Asked Questions)
 
-1. **Task-oriented** - Focus on what users want to accomplish
-2. **Clear steps** - Numbered, sequential instructions
-3. **Visual aids** - Screenshots, diagrams, videos
-4. **Plain language** - Avoid technical jargon
-5. **Test instructions** - Follow your own steps
-6. **Provide context** - Explain why, not just how
-7. **Link related content** - Help users discover more
-8. **Keep updated** - Maintain accuracy with product changes
+```markdown
+# Frequently Asked Questions (FAQ)
 
-## Resources
+## Account & Billing
 
-- **Style guides**: Google Developer Documentation Style Guide
-- **Screenshot tools**: Snagit, CloudApp, Loom for videos
+### How do I change my email address?
+
+1. Go to **Settings** > **Account**
+2. Click **Change Email**
+3. Enter your new email and password
+4. Click **Update**
+5. Verify your new email
+
+### Can I use MyApp for free?
+
+Yes! MyApp has a free tier that includes:
+- Up to 3 projects
+- 1 GB storage
+- Basic features
+
+[Compare plans](https://myapp.com/pricing)
+
+### How do I cancel my subscription?
+
+1. Go to **Settings** > **Billing**
+2. Click **Cancel Subscription**
+3. Follow the prompts
+
+Your subscription will remain active until the end of the billing period.
+
+## Features
+
+### How do I collaborate with team members?
+
+1. Open your project
+2. Click the **Share** button
+3. Enter team member's email
+4. Choose their permission level (View, Edit, Admin)
+5. Click **Send Invite**
+
+They'll receive an email invitation.
+
+### Can I export my projects?
+
+Yes, see our [Export Guide](export-data.md).
+
+### What file formats are supported?
+
+- Images: JPG, PNG, GIF, SVG
+- Documents: PDF, DOCX, TXT, MD
+- Code: All text files
+
+## Technical
+
+### Is my data secure?
+
+Yes! We use:
+- 256-bit SSL encryption
+- Regular security audits
+- SOC 2 Type II certified
+- GDPR compliant
+
+[Read our Security Page](security.md)
+
+### Can I use MyApp offline?
+
+Currently, MyApp requires an internet connection. Offline mode is planned for Q2 2025.
+
+### Browser compatibility?
+
+MyApp works best on:
+- Chrome 90+
+- Firefox 88+
+- Safari 14+
+- Edge 90+
+
+## Still Have Questions?
+
+- 📧 Email: support@myapp.com
+- 💬 Live Chat (9 AM - 5 PM EST)
+- 🎓 [Video Tutorials](tutorials.md)
+- 👥 [Community Forum](https://community.myapp.com)
+```
+
+### Step 4: Tutorial (Learning-Focused)
+
+```markdown
+# Tutorial: Build Your First Dashboard
+
+In this tutorial, you'll learn how to create a beautiful dashboard with charts and widgets.
+
+**Time**: 15 minutes
+**Difficulty**: Beginner
+**Prerequisites**: MyApp account
+
+## What You'll Build
+
+![Final Dashboard](images/tutorial-dashboard.png)
+
+## Step 1: Create a New Dashboard
+
+Click **+ New Dashboard** and name it "Sales Dashboard".
+
+## Step 2: Add a Chart Widget
+
+1. Click **Add Widget** → **Chart**
+2. Select **Bar Chart**
+3. Configure data source:
+   - Data: Monthly Sales
+   - X-axis: Month
+   - Y-axis: Revenue
+4. Click **Add to Dashboard**
+
+![Adding Chart Widget](images/add-chart.gif)
+
+## Step 3: Add a Stats Widget
+
+1. Click **Add Widget** → **Stat Card**
+2. Choose metric: Total Revenue
+3. Set comparison: vs. Last Month
+4. Click **Add to Dashboard**
+
+## Step 4: Arrange Widgets
+
+Drag and drop widgets to arrange them.
+
+**Pro Tip**: Hold Shift while resizing for precise control.
+
+## Step 5: Save and Share
+
+1. Click **Save Dashboard**
+2. Click **Share** to invite team members
+
+## Next Steps
+
+Now that you've created your first dashboard, try:
+
+- [Adding filters](filters.md)
+- [Scheduling reports](reports.md)
+- [Customizing themes](themes.md)
+
+## Congratulations!
+
+You've completed the tutorial. Happy dashboard building! 🎉
+```
+
+## Output format
+
+```
+docs/
+├── getting-started.md      # Quick start
+├── how-to/
+│   ├── export-data.md
+│   ├── invite-team.md
+│   └── create-project.md
+├── tutorials/
+│   ├── first-dashboard.md
+│   └── advanced-features.md
+├── faq.md
+└── images/
+    ├── signup.png
+    └── dashboard.png
+```
+
+## Constraints
+
+### Required Rules (MUST)
+
+1. **Include Screenshots**: Visual guides
+2. **Step-by-Step Instructions**: 1, 2, 3 format
+3. **User Language**: Avoid technical jargon
+
+### Forbidden (MUST NOT)
+
+1. **Technical Jargon Overload**: API, endpoint, etc.
+2. **Long Paragraphs**: Keep short and clear
+
+## Best practices
+
+1. **User-Centric**: Write from the user's perspective
+2. **Show, Don't Tell**: Screenshots, GIFs, videos
+3. **Update Regularly**: Update docs when UI changes
+
+## References
+
+- [Docs as Code](https://www.writethedocs.org/guide/docs-as-code/)
+- [Good Docs Project](https://thegooddocsproject.dev/)
+
+## Metadata
+
+### Version
+- **Current Version**: 1.0.0
+- **Last Updated**: 2025-01-01
+- **Compatible Platforms**: Claude, ChatGPT, Gemini
+
+### Tags
+`#user-guides` `#tutorials` `#documentation` `#onboarding` `#how-to` `#FAQ`
+
+## Examples
+
+### Example 1: Basic usage
+<!-- Add example content here -->
+
+### Example 2: Advanced usage
+<!-- Add advanced example content here -->

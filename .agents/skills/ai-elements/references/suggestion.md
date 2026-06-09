@@ -22,8 +22,7 @@ Add the following component to your frontend:
 "use client";
 
 import {
-  PromptInput,
-  type PromptInputMessage,
+  Input,
   PromptInputTextarea,
   PromptInputSubmit,
 } from "@/components/ai-elements/prompt-input";
@@ -41,9 +40,10 @@ const SuggestionDemo = () => {
   const [input, setInput] = useState("");
   const { sendMessage, status } = useChat();
 
-  const handleSubmit = (message: PromptInputMessage) => {
-    if (message.text.trim()) {
-      sendMessage({ text: message.text });
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (input.trim()) {
+      sendMessage({ text: input });
       setInput("");
     }
   };
@@ -65,7 +65,7 @@ const SuggestionDemo = () => {
               />
             ))}
           </Suggestions>
-          <PromptInput
+          <Input
             onSubmit={handleSubmit}
             className="mt-4 w-full max-w-2xl mx-auto relative"
           >
@@ -80,7 +80,7 @@ const SuggestionDemo = () => {
               disabled={!input.trim()}
               className="absolute bottom-1 right-1"
             />
-          </PromptInput>
+          </Input>
         </div>
       </div>
     </div>

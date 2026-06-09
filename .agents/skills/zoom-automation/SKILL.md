@@ -1,16 +1,13 @@
 ---
 name: zoom-automation
-description: Automate Zoom meeting creation, management, recordings, webinars, and participant tracking via Rube MCP (Composio). Always search tools first for current schemas.
+description: "Automate Zoom meeting creation, management, recordings, webinars, and participant tracking via Rube MCP (Composio). Always search tools first for current schemas."
 requires:
   mcp: [rube]
-category: automation
 ---
 
 # Zoom Automation via Rube MCP
 
 Automate Zoom operations including meeting scheduling, webinar management, cloud recording retrieval, participant tracking, and usage reporting through Composio's Zoom toolkit.
-
-**Toolkit docs**: [composio.dev/toolkits/zoom](https://composio.dev/toolkits/zoom)
 
 ## Prerequisites
 
@@ -218,6 +215,3 @@ Most Zoom list endpoints use token-based pagination:
 | Register for meeting | `ZOOM_ADD_A_MEETING_REGISTRANT` | `meetingId`, participant details |
 | Register for webinar | `ZOOM_ADD_A_WEBINAR_REGISTRANT` | webinar ID, participant details |
 | List archived files | `ZOOM_LIST_ARCHIVED_FILES` | `from`, `to` |
-
----
-*Powered by [Composio](https://composio.dev)*

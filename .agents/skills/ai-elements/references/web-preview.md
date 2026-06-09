@@ -35,8 +35,7 @@ import {
 } from "@/components/ai-elements/web-preview";
 import { useState } from "react";
 import {
-  PromptInput,
-  type PromptInputMessage,
+  Input,
   PromptInputTextarea,
   PromptInputSubmit,
 } from "@/components/ai-elements/prompt-input";
@@ -47,8 +46,9 @@ const WebPreviewDemo = () => {
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const handleSubmit = async (message: PromptInputMessage) => {
-    if (!message.text.trim()) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!prompt.trim()) return;
     setPrompt("");
 
     setIsGenerating(true);
@@ -56,7 +56,7 @@ const WebPreviewDemo = () => {
       const response = await fetch("/api/v0", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: message.text }),
+        body: JSON.stringify({ prompt }),
       });
 
       const data = await response.json();
@@ -94,7 +94,7 @@ const WebPreviewDemo = () => {
           )}
         </div>
 
-        <PromptInput
+        <Input
           onSubmit={handleSubmit}
           className="w-full max-w-2xl mx-auto relative"
         >
@@ -109,7 +109,7 @@ const WebPreviewDemo = () => {
             disabled={!prompt.trim()}
             className="absolute bottom-1 right-1"
           />
-        </PromptInput>
+        </Input>
       </div>
     </div>
   );

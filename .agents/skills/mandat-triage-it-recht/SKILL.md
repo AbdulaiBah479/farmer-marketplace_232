@@ -1,13 +1,36 @@
 ---
 name: mandat-triage-it-recht
-description: "Strukturierte Eingangs-Abfrage für IT-rechtliche Mandate mit Fristen-Sofort-Check. Anwendungsfall neues IT-Rechtsmandat geht ein und muss schnell triagiert und dem richtigen Workflow zugeordnet werden. Normen Art. 33 DSGVO 72-Stunden-Frist NIS-2 24-Stunden-Fruehwarnung §§ 327 ff. BGB Digitale Produkte. Prüfraster Sachgebiet Mandantenrolle Vertragstyp Phase Sofort-Fristen Cyber-Vorfall Eskalation. Output Triage-Ergebnis mit Routing zu Folgeskills und Fristen-Eskalationshinweis bei Cyber-Vorfall. Abgrenzung zu erstgespraech-mandatsannahme und cyber-incident-response-72h."
+description: "Strukturierte Eingangs-Abfrage für IT-rechtliche Mandate mit Fristen-Sofort-Check: Anwendungsfall neues IT-Rechtsmandat geht ein und muss schnell triagiert und dem richtigen..."
 ---
 
-# Mandat-Triage IT-Recht
+# Strukturierte Eingangs-Abfrage für IT-rechtliche Mandate mit Fristen-Sofort-Check
 
-## Zweck
 
-IT-Recht ist breit und stark im Wandel (DSGVO NIS-2 AI Act DSA). Triage stellt Sachgebiet und Eskalation richtig.
+## Aktenstart statt Formularstart
+
+Wenn zu **Itr Open Source Mandat Triage** bereits Unterlagen, ein Ordner, ein ZIP, ein PDF-Buendel, E-Mails, Screenshots, Tabellen oder Entwuerfe vorliegen, lies diese zuerst aus. Bilde fuer **Fachanwalt It Recht** eine Arbeitshypothese zu Beteiligten, Rolle des Nutzers, Verfahrensstand, Fristen, Betrags-/Datumslogik, Belegen und naechstem sinnvollen Output. Frage nicht routinemaessig nach Angaben, die sich aus der Akte ergeben.
+
+Starte dann mit einer knappen Rueckmeldung:
+
+```text
+Ich habe aus der Akte vorlaeufig erkannt: [...]
+Unsicher sind noch: [...]
+Als naechsten Schritt schlage ich vor: [...]
+```
+
+Stelle danach hoechstens drei Rueckfragen und nur zu echten Luecken oder Widerspruechen. Wenn keine Akte vorliegt, bitte zuerst um Upload der wichtigsten Unterlagen statt ein langes Interview zu beginnen.
+
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: DSGVO Art. 5, 6, 7, 9, 12-22, 25, 28, 30, 32, 33-34, 35, 51-58, 77-83, BDSG §§ 22-25, 26, 30; DSGVO; BDSG; TTDSG — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+**Fokus:** Strukturierte Eingangs-Abfrage für IT-rechtliche Mandate mit Fristen-Sofort-Check. Anwendungsfall neues IT-Rechtsmandat geht ein und muss schnell triagiert und dem richtigen zugeordnet werden. Normen Art. 33 DSGVO 72-Stunden-Frist NIS-2 24-Stunden-Fruehwarnung §§ 327 ff. BGB Digitale Produkte. Prüfraster Sachgebiet Mandantenrolle Vertragstyp Phase Sofort-Fristen Cyber-Vorfall Eskalation. Output Triage-Ergebnis mit Routing zu Folgeskills und Fristen-Eskalationshinweis bei Cyber-Vorfall. Abgrenzung zu erstgespraech-mandatsannahme und cyber-incident-response-72h.
+
+### Mandat-Triage IT-Recht
 
 ## Ablauf — sieben Fragen
 
@@ -79,7 +102,7 @@ IT-Recht ist breit und stark im Wandel (DSGVO NIS-2 AI Act DSA). Triage stellt S
 - Versicherung Cyber Berufshaftpflicht IT
 - Berufshaftpflicht Anwalt für Beratung
 - Streitwert sehr variabel
-- **Was will der Mandant wirklich erreichen?** (Nicht: was steht im Standardweg, sondern: welches Ergebnis ist fuer den Mandanten persoenlich/wirtschaftlich das beste? Manchmal ist der schnellere Vergleich besser als der formal "richtige" Weg.)
+- **Was will der Mandant wirklich erreichen?** (Nicht: was steht im Standardweg, sondern: welches Ergebnis ist für den Mandanten persoenlich/wirtschaftlich das beste? Manchmal ist der schnellere Vergleich besser als der formal "richtige" Weg.)
 
 ## Routing-Matrix
 
@@ -171,9 +194,6 @@ Wenn die Mandantenkonstellation **nicht** ins Standardschema passt, ist das Temp
 - § 32 BSIG n. F. — NIS-2-Meldepflicht 24 Stunden / 72 Stunden
 - Art. 19 NIS-2-RL (EU 2022/2555) — Haftung Geschaeftsleitungsorgane
 
-## Quellenregel
-
-Quellenregel: Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen; Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff.
 ## Triage zu Beginn
 1. Besteht ein Interessenkonflikt — wurde dieselbe Partei oder Gegenseite bereits beraten (§ 43a BRAO)?
 2. Liegt ein Cyber-Vorfall oder eine Datenpanne vor — laeuft die 72-Stunden-Frist (Art. 33 DSGVO)?
@@ -190,14 +210,14 @@ TRIAGE-PROTOKOLL IT-RECHT
 1. Mandantenrolle: [Auftraggeber / Auftragnehmer / Plattform / Nutzer]
 2. Sachgebiet: [Softwareerstellung / SaaS / DSGVO / NIS-2 / AI Act / DSA / ...]
 3. Eilbeduerftigkeit:
-   - Cyber-Vorfall: [Ja / Nein] — Entdeckungszeitpunkt: [DATUM UHRZEIT]
-   - DSGVO-Meldung 72h laeuft ab: [DATUM UHRZEIT] (Art. 33 DSGVO)
-   - NIS-2-Fruehwarnung 24h laeuft ab: [DATUM UHRZEIT] (§ 32 BSIG n. F.)
+ - Cyber-Vorfall: [Ja / Nein] — Entdeckungszeitpunkt: [DATUM UHRZEIT]
+ - DSGVO-Meldung 72h laeuft ab: [DATUM UHRZEIT] (Art. 33 DSGVO)
+ - NIS-2-Fruehwarnung 24h laeuft ab: [DATUM UHRZEIT] (§ 32 BSIG n. F.)
 4. Konflikt-Check: [Durchgefuehrt — kein Konflikt / KONFLIKT: BESCHREIBUNG]
 5. Streitwert-Schaetzung: EUR [BETRAG]
 6. Naechste Schritte:
-   - [MASSNAHME 1] bis [DATUM]
-   - [MASSNAHME 2] bis [DATUM]
+ - [MASSNAHME 1] bis [DATUM]
+ - [MASSNAHME 2] bis [DATUM]
 7. Routing: [FOLGE-SKILL]
 
 Bearbeiter: [NAME RA/RAin]

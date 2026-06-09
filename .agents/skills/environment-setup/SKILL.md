@@ -1,122 +1,360 @@
 ---
-name: Environment Setup
-description: Environment verification, tool checking, version validation, and path configuration. Use when checking system requirements, verifying tool installations, validating versions, checking PATH configuration, or when user mentions environment setup, system check, tool verification, version check, missing tools, or installation requirements.
+name: environment-setup
+description: Configure and manage development, staging, and production environments. Use when setting up environment variables, managing configurations, or separating environments. Handles .env files, config management, and environment-specific settings.
+allowed-tools: Read Write Edit Bash
+metadata:
+  tags: environment, configuration, env-variables, dotenv, config-management
+  platforms: Claude, ChatGPT, Gemini
 ---
 
-# Environment Setup
 
-**CRITICAL: The description field above controls when Claude auto-loads this skill.**
+# Environment Configuration
 
-## Overview
 
-Provides comprehensive environment verification, tool installation checking, version validation, PATH configuration, and environment variable management for development workflows.
+## When to use this skill
+
+- **New Projects**: Initial environment setup
+- **Multiple Environments**: Separate dev, staging, production
+- **Team Collaboration**: Share consistent environments
 
 ## Instructions
 
-### Environment Verification
+### Step 1: .env File Structure
 
-1. Use `scripts/check-environment.sh` to verify all required tools are installed
-2. Check versions of languages, package managers, and build tools
-3. Validate PATH configuration and tool accessibility
-4. Verify environment variables are properly configured
-5. Generate comprehensive environment report
+**.env.example** (template):
+```bash
+# Application
+NODE_ENV=development
+PORT=3000
+APP_URL=http://localhost:3000
 
-### Tool Installation Verification
+# Database
+DATABASE_URL=postgresql://user:password@localhost:5432/myapp
+DATABASE_POOL_MIN=2
+DATABASE_POOL_MAX=10
 
-1. Use `scripts/check-tools.sh` to verify specific tools (node, python, go, rust, etc.)
-2. Check if tools are in PATH and accessible
-3. Verify tool versions meet minimum requirements
-4. Provide installation instructions for missing tools
-5. Detect version managers (nvm, pyenv, rbenv, rustup)
+# Redis
+REDIS_URL=redis://localhost:6379
+REDIS_TTL=3600
 
-### Version Validation
+# Authentication
+JWT_ACCESS_SECRET=change-me-in-production-min-32-characters
+JWT_REFRESH_SECRET=change-me-in-production-min-32-characters
+JWT_ACCESS_EXPIRY=15m
+JWT_REFRESH_EXPIRY=7d
 
-1. Use `scripts/validate-versions.sh` to check language and tool versions
-2. Compare against project requirements (package.json, .tool-versions, etc.)
-3. Identify version mismatches and compatibility issues
-4. Suggest version upgrades or downgrades
-5. Check for deprecated versions
+# Email
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
 
-### PATH Configuration
+# External APIs
+STRIPE_SECRET_KEY=sk_test_xxx
+STRIPE_PUBLISHABLE_KEY=pk_test_xxx
+AWS_ACCESS_KEY_ID=AKIAXXXXXXXX
+AWS_SECRET_ACCESS_KEY=xxxxxxxx
+AWS_REGION=us-east-1
+AWS_S3_BUCKET=myapp-uploads
 
-1. Use `scripts/validate-path.sh` to verify PATH is correctly configured
-2. Check for tool binaries in expected locations
-3. Detect PATH issues (missing entries, duplicate entries, ordering problems)
-4. Suggest PATH fixes for shell configuration files
-5. Validate system paths vs user paths
+# Monitoring
+SENTRY_DSN=https://xxx@sentry.io/xxx
+LOG_LEVEL=info
 
-### Environment Variable Management
+# Feature Flags
+ENABLE_2FA=false
+ENABLE_ANALYTICS=true
+```
 
-1. Use `scripts/check-env-vars.sh` to validate required environment variables
-2. Check for missing, empty, or misconfigured variables
-3. Validate API keys and credentials (without exposing values)
-4. Suggest environment variable configuration
-5. Detect conflicts between .env files and system environment
+**.env.local** (per developer):
+```bash
+# Developer personal settings (add to .gitignore)
+DATABASE_URL=postgresql://localhost:5432/myapp_dev
+LOG_LEVEL=debug
+```
 
-## Available Scripts
+**.env.production**:
+```bash
+NODE_ENV=production
+PORT=8080
+APP_URL=https://myapp.com
 
-- **check-environment.sh**: Comprehensive environment verification across all tools
-- **check-tools.sh**: Verify specific tools are installed and accessible
-- **validate-versions.sh**: Check tool versions against requirements
-- **validate-path.sh**: Verify PATH configuration and detect issues
-- **check-env-vars.sh**: Validate environment variables and configuration
+DATABASE_URL=${DATABASE_URL}  # Injected from environment variables
+REDIS_URL=${REDIS_URL}
 
-## Templates
+JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
 
-- **environment-report.template**: Comprehensive environment status report
-- **tool-requirements.md**: Project tool requirements documentation
-- **path-config.sh.template**: Shell configuration for PATH setup
-- **env-template.template**: Environment variable template file
-- **version-requirements.json**: Tool version requirements specification
-- **installation-guide.md.template**: Tool installation instructions
+LOG_LEVEL=warn
+ENABLE_2FA=true
+```
 
-## Examples
+### Step 2: Type-Safe Environment Variables (TypeScript)
 
-See `examples/` directory for:
-- **basic-usage.md**: Simple environment checks
-- **advanced-usage.md**: Complex multi-tool verification
-- **common-patterns.md**: Typical environment setup patterns
-- **error-handling.md**: Handling missing tools and version issues
-- **integration.md**: Using with other skills and workflows
+**config/env.ts**:
+```typescript
+import { z } from 'zod';
+import dotenv from 'dotenv';
 
-## Requirements
+// Load .env file
+dotenv.config();
 
-- Support major languages: Node.js, Python, Go, Rust, Ruby, Java, PHP, .NET
-- Support package managers: npm, yarn, pnpm, pip, poetry, cargo, gem, maven, composer
-- Support build tools: make, cmake, gradle, webpack, vite, rollup
-- Support version managers: nvm, pyenv, rbenv, rustup, jenv, phpbrew
-- Detect operating system differences (Linux, macOS, Windows/WSL)
-- Provide actionable error messages with installation instructions
-- Generate reports in multiple formats (text, JSON, markdown)
+// Define schema
+const envSchema = z.object({
+  NODE_ENV: z.enum(['development', 'production', 'test']),
+  PORT: z.coerce.number().default(3000),
 
-## Best Practices
+  DATABASE_URL: z.string().url(),
 
-- **Never assume tools are installed** - Always verify before proceeding
-- **Check versions before operations** - Prevent version-related failures
-- **Provide clear error messages** - Include installation instructions
-- **Support multiple OSes** - Handle Linux, macOS, Windows/WSL differences
-- **Detect version managers** - Use nvm, pyenv, etc. when available
-- **Cache verification results** - Avoid redundant checks within same session
-- **Report all issues** - Don't fail on first error, collect all problems
+  JWT_ACCESS_SECRET: z.string().min(32),
+  JWT_REFRESH_SECRET: z.string().min(32),
 
-## Output Format
+  SMTP_HOST: z.string(),
+  SMTP_PORT: z.coerce.number(),
+  SMTP_USER: z.string().email(),
+  SMTP_PASSWORD: z.string(),
 
-All scripts output structured results:
-```json
-{
-  "status": "success|warning|error",
-  "tools": {
-    "node": {"installed": true, "version": "20.11.0", "required": ">=18.0.0", "status": "ok"},
-    "python": {"installed": true, "version": "3.11.5", "required": ">=3.9.0", "status": "ok"},
-    "go": {"installed": false, "status": "missing"}
-  },
-  "path": {"valid": true, "issues": []},
-  "env_vars": {"valid": true, "missing": []},
-  "recommendations": []
+  STRIPE_SECRET_KEY: z.string().startsWith('sk_'),
+
+  LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).default('info'),
+});
+
+// Validate and export
+export const env = envSchema.parse(process.env);
+
+// Usage:
+// import { env } from './config/env';
+// console.log(env.DATABASE_URL); // Type-safe!
+```
+
+**Error Handling**:
+```typescript
+try {
+  const env = envSchema.parse(process.env);
+} catch (error) {
+  if (error instanceof z.ZodError) {
+    console.error('❌ Invalid environment variables:');
+    error.errors.forEach((err) => {
+      console.error(`  - ${err.path.join('.')}: ${err.message}`);
+    });
+    process.exit(1);
+  }
 }
 ```
 
----
+### Step 3: Per-Environment Config Files
 
-**Purpose**: Comprehensive environment verification and configuration management
-**Used by**: All agents requiring tool verification, project setup, and environment validation
+**config/index.ts**:
+```typescript
+interface Config {
+  env: string;
+  port: number;
+  database: {
+    url: string;
+    pool: { min: number; max: number };
+  };
+  jwt: {
+    accessSecret: string;
+    refreshSecret: string;
+    accessExpiry: string;
+    refreshExpiry: string;
+  };
+  features: {
+    enable2FA: boolean;
+    enableAnalytics: boolean;
+  };
+}
+
+const config: Config = {
+  env: process.env.NODE_ENV || 'development',
+  port: parseInt(process.env.PORT || '3000'),
+
+  database: {
+    url: process.env.DATABASE_URL!,
+    pool: {
+      min: parseInt(process.env.DATABASE_POOL_MIN || '2'),
+      max: parseInt(process.env.DATABASE_POOL_MAX || '10'),
+    },
+  },
+
+  jwt: {
+    accessSecret: process.env.JWT_ACCESS_SECRET!,
+    refreshSecret: process.env.JWT_REFRESH_SECRET!,
+    accessExpiry: process.env.JWT_ACCESS_EXPIRY || '15m',
+    refreshExpiry: process.env.JWT_REFRESH_EXPIRY || '7d',
+  },
+
+  features: {
+    enable2FA: process.env.ENABLE_2FA === 'true',
+    enableAnalytics: process.env.ENABLE_ANALYTICS !== 'false',
+  },
+};
+
+// Validate required fields
+const requiredEnvVars = [
+  'DATABASE_URL',
+  'JWT_ACCESS_SECRET',
+  'JWT_REFRESH_SECRET',
+];
+
+for (const envVar of requiredEnvVars) {
+  if (!process.env[envVar]) {
+    throw new Error(`Missing required environment variable: ${envVar}`);
+  }
+}
+
+export default config;
+```
+
+### Step 4: Environment-Specific Configuration Files
+
+**config/environments/development.ts**:
+```typescript
+export default {
+  logging: {
+    level: 'debug',
+    prettyPrint: true,
+  },
+  cors: {
+    origin: '*',
+    credentials: true,
+  },
+  rateLimit: {
+    enabled: false,
+  },
+};
+```
+
+**config/environments/production.ts**:
+```typescript
+export default {
+  logging: {
+    level: 'warn',
+    prettyPrint: false,
+  },
+  cors: {
+    origin: process.env.ALLOWED_ORIGINS?.split(',') || [],
+    credentials: true,
+  },
+  rateLimit: {
+    enabled: true,
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+  },
+};
+```
+
+**config/index.ts** (unified):
+```typescript
+import development from './environments/development';
+import production from './environments/production';
+
+const env = process.env.NODE_ENV || 'development';
+
+const configs = {
+  development,
+  production,
+  test: development,
+};
+
+export const environmentConfig = configs[env];
+```
+
+### Step 5: Docker Environment Variables
+
+**docker-compose.yml**:
+```yaml
+version: '3.8'
+
+services:
+  app:
+    build: .
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://postgres:password@db:5432/myapp
+      - REDIS_URL=redis://redis:6379
+    env_file:
+      - .env.local
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: myapp
+
+  redis:
+    image: redis:7-alpine
+```
+
+## Output format
+
+```
+project/
+├── .env.example           # Template (commit)
+├── .env                   # Local (gitignore)
+├── .env.local             # Per developer (gitignore)
+├── .env.production        # Production (gitignore or vault)
+├── config/
+│   ├── index.ts           # Main configuration
+│   ├── env.ts             # Environment variable validation
+│   └── environments/
+│       ├── development.ts
+│       ├── production.ts
+│       └── test.ts
+└── .gitignore
+```
+
+**.gitignore**:
+```
+.env
+.env.local
+.env.*.local
+.env.production
+```
+
+## Constraints
+
+### Required Rules (MUST)
+
+1. **Provide .env.example**: List of required environment variables
+2. **Validation**: Error when required environment variables are missing
+3. **.gitignore**: Never commit .env files
+
+### Prohibited (MUST NOT)
+
+1. **Commit Secrets**: Never commit .env files
+2. **Hardcoding**: Do not hardcode environment-specific settings in code
+
+## Best practices
+
+1. **12 Factor App**: Manage configuration via environment variables
+2. **Type Safety**: Runtime validation with Zod
+3. **Secrets Management**: Use AWS Secrets Manager, Vault
+
+## References
+
+- [dotenv](https://github.com/motdotla/dotenv)
+- [Zod](https://zod.dev/)
+- [12 Factor App - Config](https://12factor.net/config)
+
+## Metadata
+
+### Version
+- **Current Version**: 1.0.0
+- **Last Updated**: 2025-01-01
+- **Compatible Platforms**: Claude, ChatGPT, Gemini
+
+### Tags
+`#environment` `#configuration` `#env-variables` `#dotenv` `#config-management` `#utilities`
+
+## Examples
+
+### Example 1: Basic usage
+<!-- Add example content here -->
+
+### Example 2: Advanced usage
+<!-- Add advanced example content here -->

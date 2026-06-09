@@ -1,13 +1,30 @@
 ---
 name: n-of-1-therapie
-description: "N-of-1-Therapie und Heilversuch: moderner Medizinrechts-Skill für Individualisierte Therapie außerhalb Standardpfad, Erkenntnisgrenze, Einwilligung und Kostenträger. Mit Haftung, Aufklärung, Behördenweg, Beweislogik und Quellencheck."
+description: "N-of-1-Therapie und Heilversuch: moderner Medizinrechts-Skill für Individualisierte Therapie außerhalb Standardpfad, Erkenntnisgrenze, Einwilligung und Kostenträger: N-of-1-Therapie und Heilversuch: moderner Medizinrechts-Skill für Individualisierte Therapi..."
 ---
 
-# N-of-1-Therapie und Heilversuch
+# N-of-1-Therapie und Heilversuch: moderner Medizinrechts-Skill für Individualisierte Therapie außerhalb Standardpfad, Erkenntnisgrenze, Einwilligung und Kostenträger
+
+
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: BRAO, BORA, FAO, BNotO, StBerG, WPO, PAO; BGB §§ 630a-h, MBO-Ä, GKV-Vorgaben, SGB V, PrüfvV, HeilberufsG der Länder; SGB V §§ 27, 39, 92, 109, 137, 295, 301, RisikoStruktAusglV, SGB IV, SGB X, SGG — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+**Fokus:** N-of-1-Therapie und Heilversuch: moderner Medizinrechts-Skill für Individualisierte Therapie außerhalb Standardpfad, Erkenntnisgrenze, Einwilligung und Kostenträger. Mit Haftung, Aufklärung, Behördenweg, Beweislogik und Quellencheck.
+
+### N-of-1-Therapie und Heilversuch
+
+## Fachkern: N-of-1-Therapie und Heilversuch
+- **Normen-/Quellenanker:** BGB §§ 630a ff., SGB V, ärztliches Berufsrecht, GOÄ/EBM, MPDG/MDR, AMG, Krankenhausrecht, Vertragsarztrecht und Arzthaftungsprozess.
+- **Entscheidende Weiche:** Trenne Behandlungsfehler, Aufklärung, Dokumentation, Kausalität, Beweislast, Sozialleistungsbezug, Zulassung und Haftpflichtdeckung.
 
 ## Worum es geht
 
-Nutze diesen Skill im Plugin **Fachanwalt Medizinrecht**, wenn der Fall genau in diese Lage führt. Ziel ist keine allgemeine Belehrung, sondern ein steuerbarer Arbeitsweg mit Dokumentenlogik, Risikoampel, nächstem Schritt und sauberem Quellencheck.
+Er verdichtet Sachverhalt, Rollen, Dokumente, Risiken, Quellen und nächsten Schritt zu einem steuerbaren Arbeitsweg.
 
 **Fokus:** Individualisierte Therapie außerhalb Standardpfad, Erkenntnisgrenze, Einwilligung und Kostenträger.
 
@@ -32,13 +49,6 @@ Nutze diesen Skill im Plugin **Fachanwalt Medizinrecht**, wenn der Fall genau in
 - Produkt-, Behandlungs-, Organisations- und Aufklärungsfehler nicht vermischen.
 - Bei neuen EU-Regeln Übergangsfristen und nationale Durchführung gesondert prüfen.
 - Gesundheitsdaten, Genomdaten und Patientengeheimnisse nur datensparsam verarbeiten.
-
-## Output
-
-- Mandats-/Fallvermerk mit Normenroute und Quellenstand.
-- Dokumentenmatrix mit Lücken und Beweiswert.
-- Risikoampel Haftung/Regulierung/Datenschutz/Erstattung.
-- Nächster Schriftsatz-, Behörden- oder Mandantenkommunikationsbaustein.
 
 ## Quellen- und Aktualitätsgate
 

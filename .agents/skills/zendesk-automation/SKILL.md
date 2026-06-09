@@ -3,14 +3,11 @@ name: zendesk-automation
 description: "Automate Zendesk tasks via Rube MCP (Composio): tickets, users, organizations, replies. Always search tools first for current schemas."
 requires:
   mcp: [rube]
-category: customer-support
 ---
 
 # Zendesk Automation via Rube MCP
 
 Automate Zendesk operations through Composio's Zendesk toolkit via Rube MCP.
-
-**Toolkit docs**: [composio.dev/toolkits/zendesk](https://composio.dev/toolkits/zendesk)
 
 ## Prerequisites
 
@@ -216,6 +213,3 @@ new -> open -> pending -> solved -> closed
 | Create org | ZENDESK_CREATE_ZENDESK_ORGANIZATION | name |
 | Update org | ZENDESK_UPDATE_ZENDESK_ORGANIZATION | organization_id, name |
 | Count orgs | ZENDESK_COUNT_ZENDESK_ORGANIZATIONS | (none) |
-
----
-*Powered by [Composio](https://composio.dev)*

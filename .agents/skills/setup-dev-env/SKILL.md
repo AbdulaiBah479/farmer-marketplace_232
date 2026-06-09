@@ -1,66 +1,108 @@
 ---
 name: setup-dev-env
-description: Set up the development environment for the project. Use when starting work on the project, when dependencies are out of sync, or to fix environment setup failures.
+description: 開発環境セットアップスキル（依存関係インストール、DB初期化、環境変数設定）
 ---
 
-# Setup Development Environment
+# Setup Dev Env Skill - 開発環境セットアップスキル
 
-This skill automates the process of setting up the development environment to ensure all tools and dependencies are correctly installed and configured.
+## 役割
 
-## Workflow Checklist
+開発環境のセットアップを自動化するスキルです。依存関係のインストール、データベース初期化、環境変数設定を行います。
 
-- [ ] **Step 1: Environment Validation**
-  - [ ] Check Node.js version against `.node-version`
-  - [ ] Check for `trunk` installation
-- [ ] **Step 2: Dependency Installation**
-  - [ ] Run `pnpm install`
-- [ ] **Step 3: Tooling Setup**
-  - [ ] Run `trunk install` to fetch managed linters and formatters
+## 実行フロー
 
-## Detailed Instructions
-
-### 1. Environment Validation
-
-#### Node.js Version
-
-Read the `.node-version` file in the workspace root. Ensure the current Node.js environment matches this version. If there's a mismatch, inform the user to switch Node versions (e.g., using `nvm` or `fnm`).
-
-#### Trunk CLI
-
-Check if `trunk` is installed by running `trunk --version`.
-If `trunk` is not found, advise the user to install it. On macOS, use:
-
+### Phase 1: 環境確認
 ```bash
-brew install trunk-io
+# Java バージョン確認
+java -version
+
+# Node.js バージョン確認
+node -version
+
+# pnpm インストール確認
+pnpm -version
+
+# Docker 確認
+docker --version
+docker-compose --version
 ```
 
-For other platforms, refer to the [Trunk installation documentation](https://docs.trunk.io/references/cli/getting-started/install).
-
-### 2. Dependency Installation
-
-Run the following command at the workspace root to install all project dependencies. Refer to [../common-references/pnpm-commands.md](../common-references/pnpm-commands.md) for more pnpm commands.
-
+### Phase 2: Backend セットアップ（target="backend"/"both"時）
 ```bash
+cd backend
+
+# Gradle Wrapper 実行権限付与
+chmod +x gradlew
+
+# 依存関係ダウンロード
+./gradlew build -x test
+```
+
+### Phase 3: Frontend セットアップ（target="frontend"/"both"時）
+```bash
+cd frontend
+
+# 依存関係インストール
 pnpm install
 ```
 
-### 3. Tooling Setup
-
-Trunk manages linters and formatters hermetically. Run the following command to ensure all required tools are downloaded and ready. Refer to [../common-references/trunk-commands.md](../common-references/trunk-commands.md) for more Trunk commands.
-
+### Phase 4: Database セットアップ（target="db"/"both"時）
 ```bash
-trunk install
+# Docker Compose でPostgreSQL起動
+docker-compose up -d db
+
+# DBの起動待機
+sleep 10
+
+# Flywayマイグレーション実行
+cd backend
+./gradlew flywayMigrate
 ```
 
-## Success Criteria
+### Phase 5: 環境変数設定確認
+```bash
+# Backend .env確認
+ls backend/.env
 
-- All `pnpm` dependencies are installed successfully.
-- `trunk` is installed and all managed tools are initialized.
-- The Node.js version matches the requirement in `.node-version`.
+# Frontend .env.local確認
+ls frontend/.env.local
+```
 
-## Post-Setup Verification
+### Phase 6: セットアップ検証
+```bash
+# Backend ビルド確認
+cd backend
+./gradlew build -x test
 
-To ensure the environment is fully operational:
+# Frontend ビルド確認
+cd frontend
+pnpm run build
+```
 
-1. **Invoke Verifier**: Run the `verifier` subagent ([../../agents/verifier.md](../../agents/verifier.md)). This confirms that the freshly installed dependencies allow for a successful build, pass lint checks, and satisfy all unit tests.
-2. **Handle Failure**: If the `verifier` fails, follow its reporting to resolve environment-specific issues.
+### Phase 7: 完了報告
+```markdown
+## Setup Dev Env 完了報告
+
+### Backend
+- ✅ Java 21 確認済み
+- ✅ Gradle依存関係インストール完了
+- ✅ ビルド成功
+
+### Frontend
+- ✅ Node.js 20+ 確認済み
+- ✅ pnpm依存関係インストール完了
+- ✅ ビルド成功
+
+### Database
+- ✅ PostgreSQL起動完了
+- ✅ Flywayマイグレーション完了
+
+### 環境変数
+- ✅ backend/.env 確認済み
+- ✅ frontend/.env.local 確認済み
+
+### 次のステップ
+開発サーバーを起動できます:
+- Backend: `cd backend && ./gradlew bootRun`
+- Frontend: `cd frontend && pnpm dev`
+```

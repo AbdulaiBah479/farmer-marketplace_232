@@ -1,19 +1,30 @@
 ---
 name: expansion-aktualisierung
-description: "Aktualisiert den Status eines laufenden Expansionsprojekts — ermittelt, welche Punkte nun freigegeben sind, kennzeichnet überfällige Positionen und benennt die nächsten Prioritäten. Lädt, wenn seit der letzten Sitzung Fortschritte erzielt wurden und der Tracker den aktuellen Stand widerspiegeln soll."
+description: "Aktualisiert den Status eines laufenden Expansionsprojekts — ermittelt, welche Punkte nun freigegeben sind, kennzeichnet überfällige Positionen und benennt die nächsten Prioritäten: Aktualisiert den Status eines laufenden Expansionsprojekts — ermittelt, wel..."
 ---
 
-# Expansions-Update (Arbeitsrecht)
+# Aktualisiert den Status eines laufenden Expansionsprojekts — ermittelt, welche Punkte nun freigegeben sind, kennzeichnet überfällige Positionen und benennt die nächsten Prioritäten
 
-## Zweck
 
-Diese Skill kehrt zu einem laufenden Expansions-Tracker zurück und aktualisiert
-den Bearbeitungsstand anhand der seit der letzten Sitzung eingetretenen
-Entwicklungen. Sie berechnet neu, welche Punkte jetzt angegangen werden können,
-kennzeichnet überfällige Positionen und benennt die nächsten Prioritäten.
+## Arbeitsweg
 
-Lädt, wenn Fortschritte bei einer laufenden Auslandseinstellung zu dokumentieren
-sind und der Tracker aktualisiert werden soll.
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: die im Plugin-Kontext einschlägigen Normen über gesetze-im-internet.de, dejure.org, eur-lex.europa.eu und die amtlichen Bundes-/Landesportale live prüfen — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+**Fokus:** Aktualisiert den Status eines laufenden Expansionsprojekts — ermittelt, welche Punkte nun freigegeben sind, kennzeichnet überfällige Positionen und benennt die nächsten Prioritäten. Lädt, wenn seit der letzten Sitzung Fortschritte erzielt wurden und der Tracker den aktuellen Stand widerspiegeln soll.
+
+### Expansions-Update (Arbeitsrecht)
+
+## Fachlicher Kern — Arbeitsrecht
+- **Problemfokus dieses Skills:** Bleibe beim konkreten Titel `Expansions-Update (Arbeitsrecht)` und löse die dort angelegte Fachfrage; arbeite mit konkreten Tatbestandsmerkmalen, Beweisfragen und dem unmittelbar benötigten Arbeitsprodukt. Routingfragen bleiben Hilfsmittel, wenn Frist, Zuständigkeit oder Verfahrensart offen sind.
+- **Normenradar:** BGB §§ 611a, 613a, 615, 623; KSchG §§ 1, 4, 7; TzBfG §§ 14, 15, 16; AGG §§ 1, 3, 7, 15, 22; EntgTranspG §§ 3, 5, 7; BUrlG §§ 1, 3, 7; BetrVG §§ 87, 99, 102; ArbZG; NachwG; SGB IX §§ 164, 167, 168.
+- **Verifizierte Anker:** BAG, Urteil vom 23.10.2025 - 8 AZR 300/24 (Entgeltgleichheit, Paarvergleich, Beweislast, bundesarbeitsgericht.de); BAG, Urteil vom 03.06.2025 - 9 AZR 104/24 (kein Verzicht auf gesetzlichen Mindesturlaub im bestehenden Arbeitsverhältnis); bei Kündigungszugang immer § 623 BGB, Zugang nach § 130 BGB, Dreiwochenfrist §§ 4, 7 KSchG und Beweis des konkreten Umschlags trennen.
+- **Arbeitsmodus:** Zuerst Status, Zugang, Frist, Beteiligungsrechte, Sonderkündigungsschutz, Beweislast und prozessualen nächsten Schritt sichern; dann erst Materiellrecht vertiefen.
+- **Outputpflicht:** Fristenblatt, Zugangsmatrix, Beweisangebot, Mandantenmail, Betriebsrats-/Gegnerbrief oder Klage-/Erwiderungsbaustein.
+- **Fehlerbremse:** Tragende Normen/Entscheidungen live oder aus der Akte verifizieren; Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei prüfbarer Quelle. Keine BeckRS-, juris-, Kommentar- oder Aufsatz-Blindzitate aus Modellwissen.
 
 ## Eingaben
 
@@ -26,28 +37,28 @@ sind und der Tracker aktualisiert werden soll.
 **Kernvorschriften:**
 
 - § 7 SGB IV: Beschäftigungsverhältnis und Scheinselbständigkeit — bei
-  Verlängerung eines EOR-Verhältnisses weiterhin zu prüfen
+ Verlängerung eines EOR-Verhältnisses weiterhin zu prüfen
 - § 1 Abs. 1b AÜG: Gesetzliche Höchstüberlassungsdauer von 18 Monaten —
-  bei andauernder EOR-Nutzung kontinuierlich zu überwachen
+ bei andauernder EOR-Nutzung kontinuierlich zu überwachen
 - § 8 AÜG: Equal-Pay-Gebot nach neun Monaten Überlassung — Ausnahme nur
-  durch einschlägigen Tarifvertrag
+ durch einschlägigen Tarifvertrag
 - Art. 8 Rom I-VO: Fortlaufende Relevanz des Beschäftigungsstatuts bei
-  grenzüberschreitenden Arbeitsverhältnissen
+ grenzüberschreitenden Arbeitsverhältnissen
 - §§ 17, 18 KSchG: Massenentlassungsanzeige bei Erreichung der
-  Schwellenwerte im Rahmen des Aufbaus
+ Schwellenwerte im Rahmen des Aufbaus
 
 **Leitentscheidungen:**
 
 - Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
-  Rechtsfolgen fehlender AÜG-Erlaubnis; Entstehung eines Arbeitsverhältnisses
-  zum Entleiher kraft Gesetzes — Relevanz, wenn EOR ohne korrekte AÜG-Struktur
-  fortgeführt wird
+ Rechtsfolgen fehlender AÜG-Erlaubnis; Entstehung eines Arbeitsverhältnisses
+ zum Entleiher kraft Gesetzes — Relevanz, wenn EOR ohne korrekte AÜG-Struktur
+ fortgeführt wird
 - Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
-  Interessenausgleich und Sozialplan bei Betriebsänderungen infolge
-  Auslandsexpansion — zu beachten, wenn durch den Aufbau im Ausland
-  inländische Strukturen betroffen werden
+ Interessenausgleich und Sozialplan bei Betriebsänderungen infolge
+ Auslandsexpansion — zu beachten, wenn durch den Aufbau im Ausland
+ inländische Strukturen betroffen werden
 - Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
-  Gesamtbetrachtung bei der Statusfeststellung nach § 7a SGB IV
+ Gesamtbetrachtung bei der Statusfeststellung nach § 7a SGB IV
 
 - Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen zitieren. Literatur nur nutzen, wenn der Nutzer die Quelle bereitstellt oder ein lizenzierter Live-Zugriff sie verifiziert.
 
@@ -74,9 +85,9 @@ Lese den Tracker. Zeige den Gesamtstatus:
 Offen: [N] | In Bearbeitung: [N] | Erledigt: [N] | Blockiert: [N]
 
 Nächste Prioritäten (offene Punkte nach Fälligkeit / Abhängigkeit):
-  [Punkt] — Verantwortung: [Person/Funktion]
-  [Punkt] — Verantwortung: [Person/Funktion]
-  [Punkt] — Verantwortung: [Person/Funktion]
+ [Punkt] — Verantwortung: [Person/Funktion]
+ [Punkt] — Verantwortung: [Person/Funktion]
+ [Punkt] — Verantwortung: [Person/Funktion]
 ```
 
 **Schritt 3 — Änderungen abfragen**
@@ -118,12 +129,6 @@ Tracker aktualisiert — [N] Punkte geschlossen, [N] noch offen.
 Nächste Priorität: [oberster offener Punkt].
 ```
 
-## Ausgabeformat
-
-Statusanzeige nach Schritt 2 (Tabellenform), gefolgt von freiem Abfrageblock,
-dann Bestätigungsnachricht nach Update. Bei AÜG-Fristwarnung: gesonderter
-Warnblock über der Bestätigung.
-
 ## Beispiel
 
 ```
@@ -146,17 +151,17 @@ Beispiel-Ausgabe bei laufendem EOR-Einsatz seit 14 Monaten:
 ## Risiken und typische Fehler
 
 - **18-Monats-Grenze übersehen**: Die AÜG-Frist läuft unabhängig davon,
-  ob die Parteien die Überlassung bewusst als solche strukturiert haben.
-  Frühzeitige Planung der Folgeoption (Direkteinstellung oder neuer EOR-Vertrag
-  mit echtem Unterbrechungszeitraum) ist erforderlich.
+ ob die Parteien die Überlassung bewusst als solche strukturiert haben.
+ Frühzeitige Planung der Folgeoption (Direkteinstellung oder neuer EOR-Vertrag
+ mit echtem Unterbrechungszeitraum) ist erforderlich.
 - **Equal-Pay vergessen**: Nach neun Monaten ununterbrochener Überlassung
-  gilt das Equal-Pay-Gebot (§ 8 AÜG), sofern kein einschlägiger TV gilt.
-  Budgetauswirkung für Finance vorab modellieren.
+ gilt das Equal-Pay-Gebot (§ 8 AÜG), sofern kein einschlägiger TV gilt.
+ Budgetauswirkung für Finance vorab modellieren.
 - **Tracker nicht gepflegt**: Ein veralteter Tracker führt zu fehlerhafter
-  Priorisierung. Update zeitnah nach jeder relevanten Entwicklung.
+ Priorisierung. Update zeitnah nach jeder relevanten Entwicklung.
 - **Statusänderungen nicht auf Abhängigkeiten geprüft**: Wird z. B. die
-  EOR-Entscheidung getroffen, schaltet dies typischerweise Punkte für
-  Steuer, Finance und HR frei — diese dürfen nicht übersehen werden.
+ EOR-Entscheidung getroffen, schaltet dies typischerweise Punkte für
+ Steuer, Finance und HR frei — diese dürfen nicht übersehen werden.
 
 ## Quellenpflicht
 

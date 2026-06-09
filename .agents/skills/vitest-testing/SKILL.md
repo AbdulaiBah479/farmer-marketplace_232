@@ -1,718 +1,462 @@
 ---
-<<<<<<< HEAD
 name: vitest-testing
-description: "Fast unit testing with Vitest: ESM support, HMR, and Jest-compatible API."
-category: testing
+description: "**AI-friendly comprehensive testing guidance for Vitest with practical patterns and behavior-driven development.**"
 ---
 
-# Vitest Unit Testing
+# Vitest Testing Skill - Master Reference
 
-Fast unit testing with Vitest: ESM support, HMR, and Jest-compatible API.
+**AI-friendly comprehensive testing guidance for Vitest with practical patterns and behavior-driven development.**
 
-## When to Use
-Use this skill when working on tasks related to vitest unit testing.
+> **For humans:** Start with [README.md](README.md) for full navigation
+> **For AI agents:** This file provides quick access to all skill resources
 
-## Key Capabilities
-- Expert guidance on vitest unit testing workflows and best practices
-- Step-by-step assistance for common vitest unit testing tasks
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-=======
-name: Vitest Testing
-description: Modern JavaScript and TypeScript testing with Vitest, covering unit testing, integration testing, mocking, snapshots, browser mode, and Vite integration.
-version: 1.0.0
-author: thetestingacademy
-license: MIT
-tags: [vitest, unit-testing, vite, typescript, javascript, mocking, snapshots]
-testingTypes: [unit, integration]
-frameworks: []
-languages: [typescript, javascript]
-domains: [web]
-agents: [claude-code, cursor, github-copilot, windsurf, codex, aider, continue, cline, zed, bolt]
 ---
 
-# Vitest Testing Skill
+## 🎯 Quick Access for Agents
 
-You are an expert software engineer specializing in testing with Vitest. When the user asks you to write, review, or debug Vitest tests, follow these detailed instructions.
+### Decision Support
+- **What type of test should I write?** → [index.md](index.md)
+- **How do I structure this test?** → [principles/aaa-pattern.md](principles/aaa-pattern.md)
+- **Is this code testable?** → [refactoring/testability-patterns.md](refactoring/testability-patterns.md)
 
-## Core Principles
+### Most Referenced Patterns
+- **[F.I.R.S.T Principles](principles/first-principles.md)** - Fast, Isolated, Repeatable, Self-Checking, Timely
+- **[AAA Pattern](principles/aaa-pattern.md)** - Arrange-Act-Assert structure
+- **[Black Box Testing](strategies/black-box-testing.md)** - Test behavior through public APIs
+- **[Test Doubles](patterns/test-doubles.md)** - Mocks, stubs, spies, fakes
 
-1. **Blazing fast** -- Vitest is designed for speed with native ESM support and smart test running.
-2. **Vite-native** -- Leverages Vite's config, transformers, and plugins for seamless integration.
-3. **Jest-compatible API** -- Familiar API makes migration from Jest straightforward.
-4. **Watch mode first** -- Vitest excels at watch mode with instant feedback.
-5. **Test isolation** -- Each test should be independent and deterministic.
+---
 
-## Project Structure
+## 📚 Skill Organization
 
-```
-project/
-  src/
-    components/
-      Button.tsx
-      Button.test.tsx
-    services/
-      user.service.ts
-      user.service.test.ts
-    utils/
-      validators.ts
-      validators.test.ts
-  tests/
-    integration/
-      api.test.ts
-      db.test.ts
-    fixtures/
-      test-data.ts
-    setup.ts
-  vitest.config.ts
-  vite.config.ts
-```
+### Core Principles `/principles/`
+Foundation concepts that guide all testing decisions:
 
-## Configuration
+| File | Purpose | When to Use |
+|------|---------|-------------|
+| [first-principles.md](principles/first-principles.md) | F.I.R.S.T quality attributes | Every test |
+| [aaa-pattern.md](principles/aaa-pattern.md) | Arrange-Act-Assert structure | Structuring tests |
+| [bdd-integration.md](principles/bdd-integration.md) | Given/When/Then with AAA | Business-focused tests |
 
-### Basic Config
+### Testing Strategies `/strategies/`
+Approaches for different testing scenarios:
 
+| File | Purpose | When to Use |
+|------|---------|-------------|
+| [black-box-testing.md](strategies/black-box-testing.md) | Testing via public APIs | Default approach (99% of tests) |
+| [implementation-details.md](strategies/implementation-details.md) | When to test internals | Rare exceptions only |
+
+### Practical Patterns `/patterns/`
+Ready-to-use patterns for common scenarios:
+
+| File | Purpose | When to Use |
+|------|---------|-------------|
+| [test-doubles.md](patterns/test-doubles.md) | Mocks, stubs, spies, fakes | Isolating dependencies |
+| [async-testing.md](patterns/async-testing.md) | Testing promises, async/await | Async operations |
+| [error-testing.md](patterns/error-testing.md) | Testing exceptions, edge cases | Error scenarios |
+| [component-testing.md](patterns/component-testing.md) | React/Vue component patterns | UI components |
+| [api-testing.md](patterns/api-testing.md) | HTTP clients, REST APIs | API integration |
+| [performance-testing.md](patterns/performance-testing.md) | Benchmarks, load testing | Performance-critical code |
+| [test-data.md](patterns/test-data.md) | Factories, builders, fixtures | Test data management |
+
+### Refactoring for Testability `/refactoring/`
+Transform untestable code into testable code:
+
+| File | Purpose | When to Use |
+|------|---------|-------------|
+| [testability-patterns.md](refactoring/testability-patterns.md) | Extract pure functions, DI, etc. | Code hard to test |
+
+### Quick Reference `/quick-reference/`
+Fast lookups and decision aids:
+
+| File | Purpose | When to Use |
+|------|---------|-------------|
+| [cheatsheet.md](quick-reference/cheatsheet.md) | Syntax, matchers, mocking | Quick syntax lookup |
+| [jest-to-vitest.md](quick-reference/jest-to-vitest.md) | Migration from Jest | Migrating projects |
+
+---
+
+## 🤖 Agent Integration Points
+
+### For typescript-coder Agent
+
+**When writing tests:**
 ```typescript
-// vitest.config.ts
-import { defineConfig } from 'vitest/config';
-import react from '@vitejs/plugin-react';
+// 1. Check decision tree
+const testType = checkDecisionTree(codeType)
+// Reference: /skills/vitest-testing/index.md
 
-export default defineConfig({
-  plugins: [react()],
-  test: {
-    globals: true,
-    environment: 'jsdom',
-    setupFiles: './tests/setup.ts',
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html'],
-      exclude: [
-        'node_modules/',
-        'tests/',
-        '**/*.test.ts',
-        '**/*.spec.ts',
-        '**/types/',
-      ],
-      thresholds: {
-        lines: 80,
-        functions: 80,
-        branches: 80,
-        statements: 80,
-      },
-    },
-    include: ['**/*.{test,spec}.{ts,tsx}'],
-    exclude: ['node_modules', 'dist', 'build'],
-    testTimeout: 10000,
-    hookTimeout: 10000,
-  },
-});
+// 2. Apply F.I.R.S.T principles
+ensureTestsAreFast()        // < 100ms
+ensureTestsAreIsolated()    // No shared state
+// Reference: /skills/vitest-testing/principles/first-principles.md
+
+// 3. Use AAA structure
+// Arrange → Act → Assert
+// Reference: /skills/vitest-testing/principles/aaa-pattern.md
+
+// 4. Follow black box strategy
+testThroughPublicAPI()      // Not private methods
+// Reference: /skills/vitest-testing/strategies/black-box-testing.md
 ```
 
-### Advanced Config with Multiple Environments
-
+**When refactoring:**
 ```typescript
-// vitest.config.ts
-import { defineConfig } from 'vitest/config';
-
-export default defineConfig({
-  test: {
-    globals: true,
-    environment: 'node',
-    environmentMatchGlobs: [
-      ['**/*.test.tsx', 'jsdom'],
-      ['**/*.browser.test.ts', 'jsdom'],
-      ['**/*.node.test.ts', 'node'],
-      ['**/*.edge.test.ts', 'edge-runtime'],
-    ],
-    poolOptions: {
-      threads: {
-        singleThread: false,
-        isolate: true,
-      },
-    },
-    coverage: {
-      provider: 'v8',
-      include: ['src/**/*.{ts,tsx}'],
-    },
-    benchmark: {
-      include: ['**/*.bench.{ts,tsx}'],
-    },
-  },
-});
-```
-
-## Writing Tests
-
-### Basic Test Structure
-
-```typescript
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { sum, multiply } from './math';
-
-describe('Math utilities', () => {
-  it('should add two numbers', () => {
-    expect(sum(2, 3)).toBe(5);
-  });
-
-  it('should multiply two numbers', () => {
-    expect(multiply(4, 5)).toBe(20);
-  });
-
-  it('should handle zero', () => {
-    expect(sum(0, 0)).toBe(0);
-    expect(multiply(5, 0)).toBe(0);
-  });
-
-  it('should handle negative numbers', () => {
-    expect(sum(-1, 1)).toBe(0);
-    expect(multiply(-2, 3)).toBe(-6);
-  });
-});
-```
-
-### Testing Classes and Services
-
-```typescript
-// user.service.ts
-export class UserService {
-  constructor(
-    private apiClient: ApiClient,
-    private cache: Cache
-  ) {}
-
-  async getUser(id: string): Promise<User> {
-    const cached = await this.cache.get(`user:${id}`);
-    if (cached) return JSON.parse(cached);
-
-    const user = await this.apiClient.get(`/users/${id}`);
-    await this.cache.set(`user:${id}`, JSON.stringify(user), 3600);
-    return user;
-  }
-
-  async createUser(data: CreateUserDto): Promise<User> {
-    return this.apiClient.post('/users', data);
-  }
+// Check if code is testable
+if (isHardToTest(code)) {
+  // Apply testability patterns
+  applyPattern(testabilityPatterns)
+  // Reference: /skills/vitest-testing/refactoring/testability-patterns.md
 }
 ```
 
-```typescript
-// user.service.test.ts
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { UserService } from './user.service';
+### For Code Review Agents
 
-describe('UserService', () => {
-  let userService: UserService;
-  let mockApiClient: any;
-  let mockCache: any;
+**Check these aspects:**
+- [ ] Tests follow F.I.R.S.T principles
+- [ ] Tests use AAA structure
+- [ ] Tests use black box approach (public APIs only)
+- [ ] Proper mocking of external dependencies
+- [ ] Error scenarios covered
+- [ ] Async operations handled correctly
 
-  beforeEach(() => {
-    mockApiClient = {
-      get: vi.fn(),
-      post: vi.fn(),
-    };
+---
 
-    mockCache = {
-      get: vi.fn(),
-      set: vi.fn(),
-    };
+## 🎯 Common Workflows
 
-    userService = new UserService(mockApiClient, mockCache);
-  });
+### Workflow 1: Writing Tests for New Feature
 
-  describe('getUser', () => {
-    it('should return cached user if available', async () => {
-      const cachedUser = { id: '1', name: 'Cached User' };
-      mockCache.get.mockResolvedValue(JSON.stringify(cachedUser));
-
-      const result = await userService.getUser('1');
-
-      expect(result).toEqual(cachedUser);
-      expect(mockCache.get).toHaveBeenCalledWith('user:1');
-      expect(mockApiClient.get).not.toHaveBeenCalled();
-    });
-
-    it('should fetch user from API if not cached', async () => {
-      const user = { id: '1', name: 'API User' };
-      mockCache.get.mockResolvedValue(null);
-      mockApiClient.get.mockResolvedValue(user);
-
-      const result = await userService.getUser('1');
-
-      expect(result).toEqual(user);
-      expect(mockApiClient.get).toHaveBeenCalledWith('/users/1');
-      expect(mockCache.set).toHaveBeenCalledWith(
-        'user:1',
-        JSON.stringify(user),
-        3600
-      );
-    });
-  });
-
-  describe('createUser', () => {
-    it('should create a new user', async () => {
-      const newUser = { id: '2', name: 'New User', email: 'new@example.com' };
-      mockApiClient.post.mockResolvedValue(newUser);
-
-      const result = await userService.createUser({
-        name: 'New User',
-        email: 'new@example.com',
-      });
-
-      expect(result).toEqual(newUser);
-      expect(mockApiClient.post).toHaveBeenCalledWith('/users', {
-        name: 'New User',
-        email: 'new@example.com',
-      });
-    });
-  });
-});
+```
+1. Consult decision tree → /skills/vitest-testing/index.md
+2. Determine test type → Unit/Integration/Component
+3. Apply F.I.R.S.T principles → /skills/vitest-testing/principles/first-principles.md
+4. Structure with AAA → /skills/vitest-testing/principles/aaa-pattern.md
+5. Use relevant pattern → /skills/vitest-testing/patterns/
+6. Reference examples → /skills/vitest-testing/examples/ (when created)
 ```
 
-## Mocking Patterns
+### Workflow 2: Refactoring for Testability
 
-### Function Mocking
-
-```typescript
-import { vi, describe, it, expect } from 'vitest';
-
-describe('Function mocking', () => {
-  it('should mock a function', () => {
-    const mockFn = vi.fn();
-    mockFn.mockReturnValue(42);
-
-    expect(mockFn()).toBe(42);
-    expect(mockFn).toHaveBeenCalledOnce();
-  });
-
-  it('should mock implementation', () => {
-    const mockFn = vi.fn((x: number) => x * 2);
-
-    expect(mockFn(5)).toBe(10);
-    expect(mockFn).toHaveBeenCalledWith(5);
-  });
-
-  it('should mock resolved value', async () => {
-    const mockFn = vi.fn();
-    mockFn.mockResolvedValue({ id: 1, name: 'Test' });
-
-    const result = await mockFn();
-    expect(result).toEqual({ id: 1, name: 'Test' });
-  });
-
-  it('should mock rejected value', async () => {
-    const mockFn = vi.fn();
-    mockFn.mockRejectedValue(new Error('Failed'));
-
-    await expect(mockFn()).rejects.toThrow('Failed');
-  });
-});
+```
+1. Identify pain points → What makes this hard to test?
+2. Select pattern → /skills/vitest-testing/refactoring/testability-patterns.md
+3. Apply pattern → Extract pure functions, inject dependencies, etc.
+4. Write tests → Black box tests for refactored code
+5. Verify → All tests pass, code is easier to test
 ```
 
-### Module Mocking
+### Workflow 3: Testing Async Code
 
-```typescript
-// __mocks__/axios.ts
-import { vi } from 'vitest';
-
-export default {
-  get: vi.fn(),
-  post: vi.fn(),
-  put: vi.fn(),
-  delete: vi.fn(),
-  create: vi.fn(() => ({
-    get: vi.fn(),
-    post: vi.fn(),
-  })),
-};
+```
+1. Check async patterns → /skills/vitest-testing/patterns/async-testing.md
+2. Mock external APIs → /skills/vitest-testing/patterns/test-doubles.md
+3. Control timing → Use vi.useFakeTimers()
+4. Test states → Loading, success, error
+5. Verify cleanup → Resources released
 ```
 
-```typescript
-// api.test.ts
-import { describe, it, expect, vi } from 'vitest';
+---
 
-vi.mock('axios');
+## 📖 Philosophy
 
-import axios from 'axios';
-import { fetchUser } from './api';
+This skill follows these core beliefs:
 
-describe('API', () => {
-  it('should fetch user data', async () => {
-    const mockUser = { id: 1, name: 'Test User' };
-    vi.mocked(axios.get).mockResolvedValue({ data: mockUser });
+### 1. Behavior over Implementation
+Tests should verify WHAT the code does, not HOW it does it. Focus on observable outcomes and public contracts. Implementation details should be testable indirectly through public APIs.
 
-    const user = await fetchUser('1');
+### 2. Example-Driven Learning
+Every principle includes practical examples. Before/after refactoring shows impact. Complete examples provide working templates.
 
-    expect(user).toEqual(mockUser);
-    expect(axios.get).toHaveBeenCalledWith('/api/users/1');
-  });
-});
+### 3. Testability by Design
+Code that's hard to test is poorly designed. Refactoring patterns transform untestable code. Testability improvements enhance overall code quality.
+
+### 4. F.I.R.S.T Quality
+Fast, Isolated, Repeatable, Self-Checking, Timely tests create a valuable safety net that developers trust and maintain.
+
+---
+
+## 🔍 Skill Map
+
+```
+vitest-testing/
+├── SKILL.md                    ← You are here (AI agent entry point)
+├── README.md                   ← Human navigation hub
+├── index.md                    ← Decision tree
+├── principles/                 ← Testing fundamentals
+│   ├── first-principles.md     ← F.I.R.S.T (most important)
+│   ├── aaa-pattern.md          ← Test structure
+│   └── bdd-integration.md      ← Given/When/Then
+├── strategies/                 ← Testing approaches
+│   ├── black-box-testing.md    ← Default strategy
+│   └── implementation-details.md ← Rare exceptions
+├── patterns/                   ← Practical implementations
+│   ├── test-doubles.md         ← Mocking (highly referenced)
+│   ├── component-testing.md    ← React/UI testing
+│   ├── async-testing.md        ← Promises, async/await
+│   ├── error-testing.md        ← Error scenarios
+│   ├── api-testing.md          ← HTTP/API testing
+│   ├── performance-testing.md  ← Benchmarks, load tests
+│   └── test-data.md            ← Factories, builders
+├── refactoring/                ← Making code testable
+│   └── testability-patterns.md ← Extract, inject, isolate
+└── quick-reference/            ← Fast lookups
+    ├── cheatsheet.md           ← Syntax reference
+    └── jest-to-vitest.md       ← Migration guide
 ```
 
-### Partial Module Mocking
+---
+
+## 🎓 Learning Paths
+
+### For Beginners
+1. [F.I.R.S.T Principles](principles/first-principles.md) - Understand quality attributes
+2. [AAA Pattern](principles/aaa-pattern.md) - Learn test structure
+3. [Cheatsheet](quick-reference/cheatsheet.md) - Basic syntax
+4. [Test Doubles](patterns/test-doubles.md) - Mocking basics
+
+### For Intermediate Developers
+1. [Black Box Testing](strategies/black-box-testing.md) - Strategy
+2. [BDD Integration](principles/bdd-integration.md) - Business focus
+3. [Async Testing](patterns/async-testing.md) - Handle promises
+4. [Component Testing](patterns/component-testing.md) - UI testing
+
+### For Advanced Developers
+1. [Testability Patterns](refactoring/testability-patterns.md) - Design for testability
+2. [Implementation Details](strategies/implementation-details.md) - Rare exceptions
+3. [Performance Testing](patterns/performance-testing.md) - Benchmarking
+4. [Architecture Alignment](integration/architecture-alignment.md) - DDD/Clean Architecture
+
+---
+
+## 🚀 Integration with Other Skills
+
+### With architecture-patterns Skill
+- **Domain Models** → Test business rules (black box)
+- **Aggregates** → Test invariants
+- **Use Cases** → Test orchestration with mocks
+- **Repositories** → Test with in-memory implementations
+
+### With typescript-coder Agent
+- Automatically references this skill for test generation
+- Applies F.I.R.S.T principles
+- Uses AAA structure
+- Follows black box strategy
+
+---
+
+## 📊 Statistics
+
+**Files Created:** 20+
+**Coverage:**
+- ✅ Core principles (F.I.R.S.T, AAA, BDD)
+- ✅ Testing strategies (black box, implementation details)
+- ✅ Practical patterns (mocks, async, errors, components, APIs, performance, test data)
+- ✅ Refactoring guidance (testability patterns)
+- ✅ Quick references (cheatsheet, migration guide)
+
+**Integration:**
+- ✅ typescript-coder agent updated
+- ✅ Cross-references to architecture-patterns
+- ✅ Decision trees for quick pattern selection
+
+---
+
+## 💡 Usage Examples for Agents
+
+### Example 1: Agent Writing a Test
 
 ```typescript
-import { vi } from 'vitest';
+// Agent receives: "Write a test for the UserService.register function"
 
-// Mock only specific exports
-vi.mock('./utils', async () => {
-  const actual = await vi.importActual('./utils');
-  return {
-    ...actual,
-    fetchData: vi.fn(),
-  };
-});
+// Step 1: Check decision tree (index.md)
+// → New feature → Unit test (Black Box)
+
+// Step 2: Apply F.I.R.S.T (first-principles.md)
+// → Fast: Mock database
+// → Isolated: Fresh mocks in beforeEach
+// → Repeatable: Control time
+// → Self-Checking: Use expect()
+// → Timely: Write now
+
+// Step 3: Use AAA pattern (aaa-pattern.md)
+describe('UserService.register', () => {
+  it('creates user and sends welcome email', async () => {
+    // ARRANGE
+    const mockDb = { users: { create: vi.fn().mockResolvedValue({...}) } }
+    const mockEmailer = { sendWelcome: vi.fn() }
+    const service = new UserService(mockDb, mockEmailer)
+
+    // ACT
+    const user = await service.register({ email: 'test@example.com' })
+
+    // ASSERT
+    expect(mockDb.users.create).toHaveBeenCalled()
+    expect(mockEmailer.sendWelcome).toHaveBeenCalledWith('test@example.com')
+  })
+})
+
+// Step 4: Add error scenarios (error-testing.md)
+it('throws ValidationError for invalid email', async () => {
+  const service = new UserService(mockDb, mockEmailer)
+
+  await expect(service.register({ email: 'invalid' }))
+    .rejects.toThrow(ValidationError)
+})
 ```
 
-### Spying
+### Example 2: Agent Refactoring Code
 
 ```typescript
-import { vi, describe, it, expect } from 'vitest';
-
-describe('Spying', () => {
-  it('should spy on console.error', () => {
-    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-    console.error('Test error');
-
-    expect(spy).toHaveBeenCalledWith('Test error');
-    spy.mockRestore();
-  });
-
-  it('should spy on object method', () => {
-    const obj = {
-      method: (x: number) => x * 2,
-    };
-
-    const spy = vi.spyOn(obj, 'method');
-    obj.method(5);
-
-    expect(spy).toHaveBeenCalledWith(5);
-    expect(spy).toHaveReturnedWith(10);
-  });
-});
-```
-
-## Timer Mocking
-
-```typescript
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-
-describe('Timer tests', () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  it('should debounce function calls', () => {
-    const fn = vi.fn();
-    const debounced = debounce(fn, 300);
-
-    debounced();
-    debounced();
-    debounced();
-
-    expect(fn).not.toHaveBeenCalled();
-
-    vi.advanceTimersByTime(300);
-
-    expect(fn).toHaveBeenCalledOnce();
-  });
-
-  it('should throttle function calls', () => {
-    const fn = vi.fn();
-    const throttled = throttle(fn, 100);
-
-    throttled();
-    expect(fn).toHaveBeenCalledOnce();
-
-    throttled();
-    expect(fn).toHaveBeenCalledOnce(); // still once
-
-    vi.advanceTimersByTime(100);
-    throttled();
-    expect(fn).toHaveBeenCalledTimes(2);
-  });
-
-  it('should handle setTimeout', () => {
-    const callback = vi.fn();
-    setTimeout(callback, 1000);
-
-    expect(callback).not.toHaveBeenCalled();
-
-    vi.advanceTimersByTime(1000);
-
-    expect(callback).toHaveBeenCalledOnce();
-  });
-});
-```
-
-## Snapshot Testing
-
-```typescript
-import { describe, it, expect } from 'vitest';
-
-describe('Snapshot tests', () => {
-  it('should match snapshot', () => {
-    const data = {
-      id: 1,
-      name: 'Test User',
-      roles: ['admin', 'user'],
-      createdAt: new Date('2024-01-01'),
-    };
-
-    expect(data).toMatchSnapshot();
-  });
-
-  it('should match inline snapshot', () => {
-    const formatted = formatUserName({ first: 'John', last: 'Doe' });
-
-    expect(formatted).toMatchInlineSnapshot(`"John Doe"`);
-  });
-
-  it('should match file snapshot', () => {
-    const html = renderComponent({ title: 'Test', count: 5 });
-    expect(html).toMatchFileSnapshot('./__snapshots__/component.html');
-  });
-});
-```
-
-## Testing React Components
-
-```typescript
-import { describe, it, expect } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { Button } from './Button';
-
-describe('Button component', () => {
-  it('should render with text', () => {
-    render(<Button>Click me</Button>);
-    expect(screen.getByText('Click me')).toBeInTheDocument();
-  });
-
-  it('should handle click events', () => {
-    const onClick = vi.fn();
-    render(<Button onClick={onClick}>Click me</Button>);
-
-    fireEvent.click(screen.getByText('Click me'));
-
-    expect(onClick).toHaveBeenCalledOnce();
-  });
-
-  it('should be disabled when disabled prop is true', () => {
-    render(<Button disabled>Click me</Button>);
-    expect(screen.getByRole('button')).toBeDisabled();
-  });
-
-  it('should apply variant classes', () => {
-    render(<Button variant="primary">Primary</Button>);
-    expect(screen.getByRole('button')).toHaveClass('btn-primary');
-  });
-});
-```
-
-## Async Testing
-
-```typescript
-import { describe, it, expect } from 'vitest';
-
-describe('Async tests', () => {
-  it('should handle async/await', async () => {
-    const result = await fetchData();
-    expect(result.status).toBe('success');
-  });
-
-  it('should handle promises with resolves', async () => {
-    await expect(fetchUser('1')).resolves.toEqual({
-      id: '1',
-      name: 'Test User',
-    });
-  });
-
-  it('should handle promise rejections', async () => {
-    await expect(fetchUser('invalid')).rejects.toThrow('User not found');
-  });
-
-  it('should test multiple async operations', async () => {
-    const [user, posts] = await Promise.all([
-      fetchUser('1'),
-      fetchPosts('1'),
-    ]);
-
-    expect(user.id).toBe('1');
-    expect(posts).toHaveLength(5);
-  });
-});
-```
-
-## Testing with Context and Fixtures
-
-```typescript
-import { describe, it, expect, beforeEach } from 'vitest';
-
-describe('User operations', () => {
-  let testUser: User;
-
-  beforeEach<{ user: User }>(async (context) => {
-    // Setup runs before each test
-    testUser = await createTestUser();
-    context.user = testUser;
-  });
-
-  it<{ user: User }>('should update user name', async ({ user }) => {
-    await updateUserName(user.id, 'New Name');
-    const updated = await getUser(user.id);
-    expect(updated.name).toBe('New Name');
-  });
-
-  it<{ user: User }>('should delete user', async ({ user }) => {
-    await deleteUser(user.id);
-    await expect(getUser(user.id)).rejects.toThrow('Not found');
-  });
-});
-```
-
-## Browser Mode (Experimental)
-
-```typescript
-// vitest.config.ts
-export default defineConfig({
-  test: {
-    browser: {
-      enabled: true,
-      name: 'chromium',
-      provider: 'playwright',
-      headless: true,
-    },
-  },
-});
-```
-
-```typescript
-// button.browser.test.ts
-import { describe, it, expect } from 'vitest';
-import { page } from '@vitest/browser/context';
-
-describe('Button in real browser', () => {
-  it('should interact with button', async () => {
-    await page.goto('/button-demo');
-
-    const button = await page.locator('button');
-    await button.click();
-
-    const counter = await page.locator('#counter');
-    await expect(counter).toHaveText('1');
-  });
-});
-```
-
-## Best Practices
-
-1. **Use globals or imports** -- Choose between `globals: true` or explicit imports.
-2. **Co-locate tests** -- Keep `*.test.ts` files next to source files for quick access.
-3. **Use beforeEach for setup** -- Ensure each test starts with clean state.
-4. **Leverage watch mode** -- Vitest's watch mode is incredibly fast and smart.
-5. **Use vi.mock at top level** -- Hoisting ensures mocks are ready before imports.
-6. **Test behavior, not implementation** -- Focus on what functions do, not how.
-7. **Use descriptive test names** -- Tests should read like specifications.
-8. **Keep tests isolated** -- No shared mutable state between tests.
-9. **Use coverage wisely** -- Aim for high coverage but don't chase 100%.
-10. **Prefer integration over unit** -- Test realistic user flows when possible.
-
-## Anti-Patterns to Avoid
-
-1. **Mocking everything** -- Over-mocking tests nothing real.
-2. **Testing implementation details** -- Tests should survive refactoring.
-3. **Shared mutable state** -- Use beforeEach to reset state.
-4. **Giant test files** -- Split by feature or component.
-5. **No test isolation** -- Tests should run in any order.
-6. **Hardcoded waits** -- Use proper async patterns instead of delays.
-7. **Snapshot abuse** -- Don't snapshot large objects without reason.
-8. **Testing framework code** -- Don't test that Array.map works.
-9. **Ignoring test failures** -- Never commit with `test.skip` or `.only`.
-10. **Not cleaning up** -- Use afterEach or cleanup functions.
-
-## Running Tests
-
-```bash
-# Run all tests
-vitest
-
-# Run in watch mode (default)
-vitest watch
-
-# Run once (CI mode)
-vitest run
-
-# Run specific file
-vitest run src/utils/validators.test.ts
-
-# Run with UI
-vitest --ui
-
-# Run with coverage
-vitest --coverage
-
-# Run tests matching pattern
-vitest --reporter=verbose --grep="user"
-
-# Run in browser mode
-vitest --browser
-
-# Run benchmarks
-vitest bench
-```
-
-## Debugging
-
-```typescript
-// Use test.only to isolate tests
-it.only('should debug this test', () => {
-  // debugger; // Breakpoint
-  expect(true).toBe(true);
-});
-
-// Use console.log for quick debugging
-it('should log values', () => {
-  const value = computeValue();
-  console.log('Computed value:', value);
-  expect(value).toBe(42);
-});
-```
-
-## Custom Matchers
-
-```typescript
-// tests/setup.ts
-import { expect } from 'vitest';
-
-expect.extend({
-  toBeWithinRange(received: number, floor: number, ceiling: number) {
-    const pass = received >= floor && received <= ceiling;
-    return {
-      pass,
-      message: () =>
-        `expected ${received} to be within range ${floor} - ${ceiling}`,
-    };
-  },
-});
-
-declare module 'vitest' {
-  interface Assertion<T = any> {
-    toBeWithinRange(floor: number, ceiling: number): T;
+// Agent receives: "Make this code testable"
+
+// Step 1: Identify issue (testability-patterns.md)
+// → Mixed logic and side effects
+
+// Step 2: Apply Pattern 1: Extract Pure Functions
+// Before:
+class OrderService {
+  async processOrder(order) {
+    let total = 0
+    for (const item of order.items) {
+      total += item.price * item.quantity
+    }
+    await this.db.save({ ...order, total })
   }
 }
+
+// After:
+export function calculateOrderTotal(order) {
+  return order.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+}
+
+class OrderService {
+  async processOrder(order) {
+    const total = calculateOrderTotal(order)
+    await this.db.save({ ...order, total })
+  }
+}
+
+// Step 3: Write tests (black-box-testing.md)
+describe('calculateOrderTotal', () => {
+  it.each([
+    [{ items: [{ price: 10, quantity: 2 }] }, 20],
+    [{ items: [{ price: 15, quantity: 3 }] }, 45],
+  ])('calculates %o as %d', (order, expected) => {
+    expect(calculateOrderTotal(order)).toBe(expected)
+  })
+})
 ```
 
-## Integration with Vite Plugins
+---
 
-Vitest automatically uses your Vite config, including plugins like:
-- `@vitejs/plugin-react` for React JSX support
-- `vite-tsconfig-paths` for TypeScript path mapping
-- Any custom Vite plugins for asset handling
+## 🔗 External Resources
 
-This makes Vitest the natural choice for Vite-based projects.
->>>>>>> 4b9d09d6dab9a725d3e3c3e2f77c256484dc8d8b
+- **[Vitest Documentation](https://vitest.dev/)** - Official docs
+- **[Testing Library](https://testing-library.com/)** - React/DOM testing
+- **[MSW](https://mswjs.io/)** - API mocking
+- **[@faker-js/faker](https://fakerjs.dev/)** - Test data generation
+
+---
+
+## 📋 Agent Checklist
+
+When generating tests, ensure:
+
+- [ ] Test follows [F.I.R.S.T principles](principles/first-principles.md)
+- [ ] Test uses [AAA structure](principles/aaa-pattern.md)
+- [ ] Test uses [black box approach](strategies/black-box-testing.md)
+- [ ] External dependencies are [mocked](patterns/test-doubles.md)
+- [ ] [Error scenarios](patterns/error-testing.md) are covered
+- [ ] [Async operations](patterns/async-testing.md) handled correctly
+- [ ] Test is fast (< 100ms), isolated, and repeatable
+
+---
+
+## 🎯 Common Agent Tasks
+
+### Task: Generate Unit Test
+1. Read [index.md](index.md) → Identify test type
+2. Apply [first-principles.md](principles/first-principles.md) → F.I.R.S.T
+3. Structure with [aaa-pattern.md](principles/aaa-pattern.md)
+4. Mock using [test-doubles.md](patterns/test-doubles.md)
+5. Reference [cheatsheet.md](quick-reference/cheatsheet.md) for syntax
+
+### Task: Generate Component Test
+1. Read [component-testing.md](patterns/component-testing.md)
+2. Use Testing Library queries
+3. Test user interactions
+4. Handle [async operations](patterns/async-testing.md)
+5. Cover [error states](patterns/error-testing.md)
+
+### Task: Refactor for Testability
+1. Read [testability-patterns.md](refactoring/testability-patterns.md)
+2. Identify pattern (extract, inject, wrap)
+3. Apply refactoring
+4. Generate tests for refactored code
+
+### Task: Review Test Quality
+1. Check [F.I.R.S.T compliance](principles/first-principles.md)
+2. Verify [AAA structure](principles/aaa-pattern.md)
+3. Ensure [black box approach](strategies/black-box-testing.md)
+4. Validate [mock usage](patterns/test-doubles.md)
+5. Check [error coverage](patterns/error-testing.md)
+
+---
+
+## 📖 Skill Metadata
+
+**Version:** 1.0.0
+**Type:** Testing guidance
+**Framework:** Vitest
+**Language:** TypeScript/JavaScript
+**Integration:** typescript-coder agent, architecture-patterns skill
+**Status:** Production ready (core files complete)
+
+**Files:** 20+ markdown documents
+**Categories:** Principles (3), Strategies (2), Patterns (7), Refactoring (1), Quick Reference (2)
+
+---
+
+## 💡 Quick Decision Trees
+
+### "What test should I write?"
+
+```
+Is it a new feature?
+└─ YES → Unit test (black box) + [index.md](index.md#new-feature)
+
+Is it a bug fix?
+└─ YES → Regression test + [index.md](index.md#bug-fix)
+
+Is it async code?
+└─ YES → [async-testing.md](patterns/async-testing.md)
+
+Is it a React component?
+└─ YES → [component-testing.md](patterns/component-testing.md)
+
+Is it an API client?
+└─ YES → [api-testing.md](patterns/api-testing.md)
+
+Is it complex logic?
+└─ YES → Extract pure function + black box test
+```
+
+### "How do I make this testable?"
+
+```
+Mixed logic and side effects?
+└─ [testability-patterns.md](refactoring/testability-patterns.md#pattern-1)
+
+Hard-coded dependencies?
+└─ [testability-patterns.md](refactoring/testability-patterns.md#pattern-2)
+
+Complex private method?
+└─ [testability-patterns.md](refactoring/testability-patterns.md#pattern-3)
+
+Time-dependent code?
+└─ [testability-patterns.md](refactoring/testability-patterns.md#pattern-5)
+```
+
+---
+
+**This is the master reference for AI agents. For human-friendly navigation, see [README.md](README.md).**

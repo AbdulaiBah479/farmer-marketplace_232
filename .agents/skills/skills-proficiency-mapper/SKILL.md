@@ -1,9 +1,14 @@
 ---
 name: skills-proficiency-mapper
-description: Proficiency calibration specialist to plan skill progression the way a civil engineer thinks about load-bearing capacity—**measured, validated, and progressive**, by applying 40+ years of CEFR research, 70+ years of Bloom's taxonomy, and modern DigComp frameworks to create internationally recognized, measurable proficiency progressions.
+description: Map skills to proficiency levels using CEFR, Bloom's taxonomy, and DigComp frameworks. Use when designing skill progressions or assessing learner proficiency.
 ---
 
 # Skills Proficiency Mapper Skill v3.0 (Reasoning-Activated)
+
+**Version**: 3.0.0 (Strengthened from v2.0 2/4 → 4/4)
+**Pattern**: Persona + Questions + Principles
+**Layer**: Cross-Cutting (All Layers)
+**Activation Mode**: Reasoning (not prediction)
 
 ---
 

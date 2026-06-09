@@ -1,483 +1,427 @@
 ---
-name: Code Review Standards
-description: Best practices for conducting effective code reviews that improve code quality, share knowledge, and maintain team standards.
+name: code-review-standards
+description: Code review framework and criteria. References security-sentinel for security checks. Use when performing code reviews or defining review standards.
+allowed-tools: Read, Grep
 ---
 
 # Code Review Standards
 
+## When to Use
+- Reviewing pull requests
+- Performing code reviews
+- Defining review criteria
+- Establishing review process
+
 ## Overview
 
-Code Review Standards define how teams review code to catch bugs, share knowledge, maintain quality, and ensure consistency. Good code reviews make teams stronger.
+Code review standards ensure consistent, thorough reviews that catch bugs before they reach production. This skill aggregates criteria from specialized skills.
 
-**Core Principle**: "Code review is about learning, not judging. Review the code, not the person."
+## Review Framework
+
+### 4-Level Severity Classification
+
+1. **CRITICAL** 🔴 - Must fix before merge
+   - Security vulnerabilities
+   - Data loss risks
+   - Authentication bypasses
+   - SQL injection risks
+
+2. **HIGH** 🟠 - Should fix before merge
+   - TypeScript strict mode violations
+   - Missing error handling
+   - Performance issues (N+1 queries)
+   - Missing input validation
+
+3. **MEDIUM** 🟡 - Fix soon (can merge with plan)
+   - Code quality issues
+   - Missing tests
+   - Poor naming
+   - Missing documentation
+
+4. **LOW** 🟢 - Nice to have
+   - Style suggestions
+   - Optimization opportunities
+   - Refactoring ideas
 
 ---
 
-## 1. Code Review Checklist
+## Review Checklist
+
+### 1. Correctness
+→ See: [correctness-criteria.md](./correctness-criteria.md)
+
+- [ ] Logic is correct for all test cases
+- [ ] Edge cases handled (null, empty, max, min)
+- [ ] Error conditions properly handled
+- [ ] Return types match function signatures
+- [ ] Async operations properly awaited
+- [ ] No race conditions
+- [ ] No off-by-one errors
+
+---
+
+### 2. Security
+→ See: [security-sentinel skill](../security-sentinel/SKILL.md)
+→ See: [security-checklist.md](./security-checklist.md)
+
+**CRITICAL - Must check every review:**
+
+- [ ] No hardcoded secrets
+- [ ] Input validation with Zod (ALL inputs)
+- [ ] Authentication checked on protected routes
+- [ ] Authorization enforced (resource ownership)
+- [ ] SQL injection prevented (using Drizzle)
+- [ ] XSS prevented (no dangerouslySetInnerHTML without sanitization)
+- [ ] CSRF protection on state-changing operations
+- [ ] No sensitive data in logs
+- [ ] Passwords hashed (bcrypt, 12+ rounds)
+- [ ] JWTs properly verified
+
+**For complete security criteria:**
+→ [security-sentinel/SKILL.md](../security-sentinel/SKILL.md)
+
+---
+
+### 3. TypeScript Quality
+→ See: [typescript-strict-guard skill](../typescript-strict-guard/SKILL.md)
+
+- [ ] No `any` types
+- [ ] No `@ts-ignore` without extensive comment
+- [ ] No `!` non-null assertions without comment
+- [ ] Explicit types on all function parameters
+- [ ] Explicit return types on all functions
+- [ ] Type guards used for unknown types
+- [ ] Proper use of generics
+- [ ] No implicit any
+
+---
+
+### 4. Testing
+→ See: [quality-gates/test-patterns.md](../quality-gates/test-patterns.md)
+
+- [ ] Tests exist for new code
+- [ ] Tests follow AAA pattern
+- [ ] Coverage meets thresholds (75%/90%)
+- [ ] UI tests verify DOM state (not just mocks)
+- [ ] E2E tests for visual changes
+- [ ] No skipped tests without reason
+- [ ] Tests are independent
+- [ ] Tests clean up after themselves
+
+---
+
+### 5. Performance
+→ See: [performance-criteria.md](./performance-criteria.md)
+
+- [ ] No N+1 query problems
+- [ ] Database queries optimized
+- [ ] Async operations parallelized where possible
+- [ ] Large datasets paginated
+- [ ] Images optimized
+- [ ] No unnecessary re-renders
+- [ ] Expensive calculations memoized
+
+---
+
+### 6. Code Quality
+→ See: [maintainability-rules.md](./maintainability-rules.md)
+
+- [ ] No console.log in production code
+- [ ] No commented-out code
+- [ ] No TODO without GitHub issue
+- [ ] Functions have single responsibility
+- [ ] Variable names are descriptive
+- [ ] No dead code
+- [ ] No duplicated logic
+- [ ] Proper error messages
+
+---
+
+### 7. Architecture Compliance
+→ See: [architecture-patterns skill](../architecture-patterns/SKILL.md)
+
+- [ ] Correct pattern chosen for problem
+- [ ] Pattern implemented correctly
+- [ ] No pattern violations
+- [ ] Follows Next.js best practices
+- [ ] Server vs Client Components correct
+- [ ] State management appropriate
+
+---
+
+## Review Process
+
+### Step 1: Pre-Review (2 minutes)
+
+1. Read PR description
+2. Understand what changed and why
+3. Check CI/CD status (tests, build, coverage)
+4. Identify high-risk areas (auth, payments, data handling)
+
+### Step 2: Security Review (5 minutes)
+
+**For ALL PRs:**
+- Check for hardcoded secrets
+- Verify input validation
+- Check authentication/authorization
+
+**For Auth/API/Data PRs:**
+- Run security-sentinel skill
+- Review OWASP Top 10 criteria
+- Check for injection risks
+
+→ [security-checklist.md](./security-checklist.md)
+
+### Step 3: Code Review (10-20 minutes)
+
+1. **Correctness**: Does it work as intended?
+2. **TypeScript**: Strict mode compliance?
+3. **Testing**: Adequate coverage and quality?
+4. **Performance**: Any obvious issues?
+5. **Quality**: Readable, maintainable code?
+6. **Architecture**: Follows established patterns?
+
+### Step 4: Write Feedback (5 minutes)
+
+Use severity levels and templates:
+→ [review-templates.md](./review-templates.md)
+
+**Format:**
+```markdown
+## 🔴 CRITICAL Issues
+
+- [ ] [Security] Hardcoded API key in auth.ts:45
+  - **Risk**: API key exposed in version control
+  - **Fix**: Move to environment variable
+  - **File**: src/lib/auth.ts:45
+
+## 🟠 HIGH Issues
+
+- [ ] [TypeScript] Using `any` type in processData()
+  - **Issue**: No type safety
+  - **Fix**: Define explicit interface
+  - **File**: src/utils/process.ts:12
+
+## 🟡 MEDIUM Issues
+
+- [ ] [Testing] Missing tests for error cases
+  - **Coverage**: Only happy path tested
+  - **Needed**: Test null input, invalid format
+  - **File**: tests/unit/process.test.ts
+
+## 🟢 LOW Issues / Suggestions
+
+- Consider extracting helper function for readability
+```
+
+### Step 5: Verdict
+
+**Choose one:**
+
+- ✅ **APPROVE** - No critical/high issues
+- 🔄 **REQUEST CHANGES** - Critical or multiple high issues
+- 💬 **COMMENT** - Questions or low/medium issues only
+
+---
+
+## Review Templates
+
+### Security Issue Template
 
 ```markdown
-# Code Review Checklist
+🔴 **[Security] [Vulnerability Type]**
 
-## Functionality
-- [ ] Code does what it's supposed to do
-- [ ] Edge cases are handled
-- [ ] Error handling is appropriate
-- [ ] No obvious bugs
+**Location**: `src/path/file.ts:123`
 
-## Code Quality
-- [ ] Code is readable and self-documenting
-- [ ] Functions are small and focused
-- [ ] No code duplication (DRY)
-- [ ] Follows project conventions
+**Issue**: [Description of vulnerability]
 
-## Testing
-- [ ] Tests are included
-- [ ] Tests cover edge cases
-- [ ] Tests are readable
-- [ ] All tests pass
+**Risk**: [What could go wrong]
 
-## Security
-- [ ] No sensitive data exposed
-- [ ] Input is validated
-- [ ] SQL injection prevented
-- [ ] XSS vulnerabilities addressed
-
-## Performance
-- [ ] No obvious performance issues
-- [ ] Database queries are optimized
-- [ ] No N+1 queries
-- [ ] Caching used appropriately
-
-## Documentation
-- [ ] Complex logic is commented
-- [ ] API changes are documented
-- [ ] README updated if needed
-- [ ] Breaking changes noted
-```
-
----
-
-## 2. Review Process
-
-```mermaid
-graph TD
-    A[Create PR] --> B[Self-Review]
-    B --> C[Request Reviewers]
-    C --> D[Reviewers Review]
-    D --> E{Approved?}
-    E -->|Changes Requested| F[Address Feedback]
-    F --> D
-    E -->|Approved| G[Merge]
-    G --> H[Delete Branch]
-```
-
----
-
-## 3. Pull Request Template
-
-```markdown
-# Pull Request Template
-
-## Description
-[Brief description of what this PR does]
-
-## Type of Change
-- [ ] Bug fix
-- [ ] New feature
-- [ ] Breaking change
-- [ ] Documentation update
-
-## Related Issues
-Closes #123
-
-## Changes Made
-- Added user authentication
-- Updated database schema
-- Added tests for login flow
-
-## Screenshots (if applicable)
-[Add screenshots for UI changes]
-
-## Testing
-- [ ] Unit tests added/updated
-- [ ] Integration tests added/updated
-- [ ] Tested locally
-- [ ] Tested on staging
-
-## Checklist
-- [ ] Code follows style guidelines
-- [ ] Self-reviewed my code
-- [ ] Commented complex code
-- [ ] Updated documentation
-- [ ] No new warnings
-- [ ] Added tests
-- [ ] All tests pass
-- [ ] No breaking changes (or documented)
-
-## Deployment Notes
-[Any special deployment considerations]
-
-## Reviewer Notes
-[Anything reviewers should pay special attention to]
-```
-
----
-
-## 4. Review Comments Guide
-
-### Good Comments
+**Fix**:
 ```typescript
-// ✅ Specific and actionable
-"Consider using a Map instead of an object here for O(1) lookups"
-
-// ✅ Asks questions
-"What happens if userId is null here?"
-
-// ✅ Suggests improvements
-"This could be simplified using Array.filter()"
-
-// ✅ Praises good code
-"Nice! This is much more readable than the old version"
-
-// ✅ Explains reasoning
-"We should validate email format here to prevent invalid data in the database"
+// Suggested fix
 ```
 
-### Bad Comments
+**Reference**: [OWASP link or skill reference]
+```
+
+### TypeScript Issue Template
+
+```markdown
+🟠 **[TypeScript] [Issue Type]**
+
+**Location**: `src/path/file.ts:45`
+
+**Issue**: [What's wrong]
+
+**Fix**:
 ```typescript
-// ❌ Vague
-"This doesn't look right"
+// Current (bad)
+function process(data: any) { }
 
-// ❌ Judgmental
-"This is terrible code"
+// Suggested (good)
+function process(data: ProcessData): ProcessedResult { }
+```
 
-// ❌ Not actionable
-"Needs improvement"
+**Reference**: typescript-strict-guard skill
+```
 
-// ❌ Nitpicky without value
-"Add a space here"
+### Performance Issue Template
 
-// ❌ Demanding without explanation
-"Change this immediately"
+```markdown
+🟡 **[Performance] [Issue Type]**
+
+**Location**: `src/path/file.ts:78`
+
+**Issue**: N+1 query problem in getUserProjects()
+
+**Impact**: Linear time complexity, slow for large datasets
+
+**Fix**:
+```typescript
+// Use join instead of separate queries
+const projects = await db
+  .select()
+  .from(projectsTable)
+  .leftJoin(usersTable, eq(projectsTable.userId, usersTable.id))
+```
 ```
 
 ---
 
-## 5. Review Severity Levels
+## Common Review Patterns
 
-```markdown
-## Comment Severity
+### Code Smells
 
-### 🔴 Blocking (Must Fix)
-- Security vulnerabilities
-- Data loss risks
-- Breaking changes without migration
-- Critical bugs
-
-**Example**: "🔴 This SQL query is vulnerable to injection. Use parameterized queries."
-
-### 🟡 Important (Should Fix)
-- Performance issues
-- Code quality concerns
-- Missing tests
-- Poor error handling
-
-**Example**: "🟡 This N+1 query will be slow. Consider using eager loading."
-
-### 🟢 Suggestion (Nice to Have)
-- Code style improvements
-- Refactoring opportunities
-- Alternative approaches
-
-**Example**: "🟢 Consider extracting this into a helper function for reusability."
-
-### 💡 Question (Seeking Clarification)
-- Understanding intent
-- Asking about edge cases
-
-**Example**: "💡 What happens if the user is already logged in?"
-
-### 🎉 Praise (Positive Feedback)
-- Good solutions
-- Clever implementations
-- Learning moments
-
-**Example**: "🎉 Great use of TypeScript generics here!"
-```
-
----
-
-## 6. Review Size Guidelines
-
-```markdown
-## Optimal PR Size
-
-### Small (< 200 lines) ✅
-- Easy to review thoroughly
-- Quick feedback cycle
-- Lower risk
-
-### Medium (200-500 lines) ⚠️
-- Acceptable
-- May need multiple review sessions
-- Consider breaking up if possible
-
-### Large (> 500 lines) ❌
-- Hard to review thoroughly
-- Slow feedback
-- High risk of missing issues
-
-**Solution**: Break into smaller PRs
-```
-
-### Breaking Up Large PRs
-```markdown
-## Example: Large Feature → Multiple PRs
-
-**Instead of**: One 2000-line PR with entire feature
-
-**Do**:
-1. PR #1: Database schema changes (100 lines)
-2. PR #2: Backend API endpoints (300 lines)
-3. PR #3: Frontend components (400 lines)
-4. PR #4: Integration and tests (200 lines)
-
-Each PR is reviewable and can be merged independently.
-```
-
----
-
-## 7. Review Turnaround Time
-
-```markdown
-## Response Time SLAs
-
-| PR Size | First Response | Final Approval |
-|---------|----------------|----------------|
-| Small (< 200 lines) | 2 hours | 4 hours |
-| Medium (200-500) | 4 hours | 8 hours |
-| Large (> 500) | 8 hours | 24 hours |
-
-### Tips for Reviewers
-- Set aside dedicated review time daily
-- Review small PRs immediately
-- Use GitHub notifications
-- Block calendar time for reviews
-```
-
----
-
-## 8. Self-Review Checklist
-
-```markdown
-# Before Requesting Review
-
-## Code Quality
-- [ ] Removed console.logs and debugger statements
-- [ ] Removed commented-out code
-- [ ] No TODO comments (or created issues for them)
-- [ ] Formatted code (Prettier)
-- [ ] Linted code (ESLint)
-
-## Testing
-- [ ] Ran all tests locally
-- [ ] Added new tests
-- [ ] Tested edge cases manually
-
-## Documentation
-- [ ] Updated README if needed
-- [ ] Added JSDoc comments for public APIs
-- [ ] Updated API documentation
-
-## Git
-- [ ] Meaningful commit messages
-- [ ] Squashed WIP commits
-- [ ] No merge commits (rebased)
-- [ ] Branch is up to date with main
-
-## PR Description
-- [ ] Clear description of changes
-- [ ] Screenshots for UI changes
-- [ ] Linked related issues
-- [ ] Added deployment notes
-```
-
----
-
-## 9. Handling Feedback
-
-### For Authors
-```markdown
-## Responding to Feedback
-
-### ✅ Good Responses
-- "Good catch! Fixed in abc123"
-- "I considered that, but chose X because Y. What do you think?"
-- "Great suggestion! Implemented in def456"
-- "I don't understand. Could you clarify?"
-
-### ❌ Bad Responses
-- "This is fine as is"
-- "That's not important"
-- "We can fix that later" (without creating issue)
-- Ignoring comments
-
-### When You Disagree
-1. Explain your reasoning
-2. Ask for clarification
-3. Suggest alternatives
-4. Escalate if needed (tech lead)
-5. Default to reviewer if no strong opinion
-```
-
-### For Reviewers
-```markdown
-## Giving Feedback
-
-### Do
-- ✅ Be specific and actionable
-- ✅ Explain the "why"
-- ✅ Suggest alternatives
-- ✅ Praise good code
-- ✅ Ask questions
-
-### Don't
-- ❌ Be vague or judgmental
-- ❌ Nitpick without value
-- ❌ Demand changes without explanation
-- ❌ Ignore the PR
-- ❌ Approve without reading
-```
-
----
-
-## 10. Code Review Automation
-
-### GitHub Actions
-```yaml
-# .github/workflows/pr-checks.yml
-name: PR Checks
-
-on: [pull_request]
-
-jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-      - run: npm ci
-      - run: npm run lint
-      
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-      - run: npm ci
-      - run: npm test
-      
-  type-check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-      - run: npm ci
-      - run: npm run type-check
-      
-  size-check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Check PR size
-        run: |
-          FILES_CHANGED=$(git diff --name-only origin/main | wc -l)
-          LINES_CHANGED=$(git diff --stat origin/main | tail -1 | awk '{print $4}')
-          if [ $LINES_CHANGED -gt 500 ]; then
-            echo "⚠️ PR is large ($LINES_CHANGED lines). Consider breaking it up."
-          fi
-```
-
-### Danger.js (Automated Review Comments)
-```javascript
-// dangerfile.js
-import { danger, warn, fail, message } from 'danger';
-
-// Warn on large PRs
-const bigPRThreshold = 500;
-if (danger.github.pr.additions + danger.github.pr.deletions > bigPRThreshold) {
-  warn('⚠️ This PR is quite large. Consider breaking it into smaller PRs.');
+**Long Functions**
+```typescript
+// 🔴 BAD: 100+ line function
+function processEverything() {
+  // ... 100 lines
 }
 
-// Require tests
-const hasTests = danger.git.modified_files.some(f => f.includes('.test.'));
-if (!hasTests) {
-  warn('⚠️ No test files were modified. Did you add tests?');
+// ✅ GOOD: Extracted helpers
+function processEverything() {
+  const validated = validateInput()
+  const processed = processData(validated)
+  const saved = saveToDatabase(processed)
+  return saved
 }
+```
 
-// Require description
-if (danger.github.pr.body.length < 10) {
-  fail('❌ Please add a description to your PR.');
-}
-
-// Check for console.log
-const jsFiles = danger.git.modified_files.filter(f => f.endsWith('.ts') || f.endsWith('.js'));
-for (const file of jsFiles) {
-  const content = await danger.github.utils.fileContents(file);
-  if (content.includes('console.log')) {
-    warn(`⚠️ Found console.log in ${file}. Remove before merging.`);
+**Deeply Nested Logic**
+```typescript
+// 🔴 BAD: 4+ levels of nesting
+if (user) {
+  if (user.projects) {
+    if (user.projects.length > 0) {
+      if (user.projects[0].status === 'active') {
+        // ...
+      }
+    }
   }
 }
 
-// Praise for good PR
-if (danger.github.pr.additions < 200) {
-  message('🎉 Nice small PR! Easy to review.');
-}
+// ✅ GOOD: Early returns
+if (!user) return
+if (!user.projects || user.projects.length === 0) return
+if (user.projects[0].status !== 'active') return
+// ...
 ```
 
----
-
-## 11. Review Metrics
-
+**Magic Numbers**
 ```typescript
-interface ReviewMetrics {
-  avgReviewTime: number;  // hours
-  avgPRSize: number;  // lines
-  approvalRate: number;  // percentage
-  commentsPerPR: number;
-  bugsFoundInReview: number;
-}
+// 🔴 BAD: Unexplained numbers
+setTimeout(callback, 3600000)
 
-// Track effectiveness
-function calculateReviewQuality() {
-  const bugsFoundInReview = 15;
-  const bugsFoundInProduction = 2;
-  
-  return {
-    catchRate: (bugsFoundInReview / (bugsFoundInReview + bugsFoundInProduction)) * 100,
-    // Target: > 85%
-  };
-}
+// ✅ GOOD: Named constants
+const ONE_HOUR_MS = 60 * 60 * 1000
+setTimeout(callback, ONE_HOUR_MS)
 ```
 
 ---
 
-## 12. Code Review Standards Checklist
+## Progressive Disclosure
 
-- [ ] **Process Defined**: Review process documented?
-- [ ] **PR Template**: Template with checklist?
-- [ ] **Review Checklist**: What to look for documented?
-- [ ] **Comment Guidelines**: How to give feedback?
-- [ ] **Severity Levels**: Blocking vs suggestions clear?
-- [ ] **Size Guidelines**: PR size limits defined?
-- [ ] **Turnaround SLAs**: Response time expectations?
-- [ ] **Automation**: Automated checks in place?
-- [ ] **Metrics**: Tracking review effectiveness?
-- [ ] **Training**: Team trained on review standards?
+1. **SKILL.md** (this file) - Review framework overview
+2. **security-checklist.md** - OWASP Top 10 checklist
+3. **performance-criteria.md** - Performance review criteria
+4. **maintainability-rules.md** - Code quality rules
+5. **review-templates.md** - Feedback templates
 
 ---
 
-## Related Skills
-- `45-developer-experience/lint-format-typecheck`
-- `45-developer-experience/commit-conventions`
-- `45-developer-experience/onboarding-docs`
+## Integration with Other Skills
+
+Code review aggregates criteria from:
+- **security-sentinel** - Security vulnerability checks
+- **typescript-strict-guard** - Type safety validation
+- **quality-gates** - Quality checkpoint framework
+- **architecture-patterns** - Pattern compliance
+- **nextjs-15-specialist** - Next.js best practices
+
+---
+
+## Example Review
+
+```markdown
+# Code Review: Add User Authentication
+
+## Summary
+Adds JWT-based authentication with login/logout endpoints.
+
+## 🔴 CRITICAL Issues
+
+### 1. Hardcoded JWT Secret
+**File**: `src/lib/auth.ts:12`
+**Issue**: JWT secret is hardcoded as "secret123"
+**Risk**: Anyone can forge JWTs
+**Fix**:
+```typescript
+- const secret = "secret123"
++ const secret = process.env.JWT_SECRET
++ if (!secret) throw new Error('JWT_SECRET not set')
+```
+
+## 🟠 HIGH Issues
+
+### 2. Missing Input Validation
+**File**: `src/app/api/auth/login/route.ts:15`
+**Issue**: User input not validated before use
+**Fix**: Add Zod schema validation
+```typescript
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
+})
+
+const validated = loginSchema.parse(body)
+```
+
+## 🟡 MEDIUM Issues
+
+### 3. Missing Tests
+**File**: `tests/integration/auth.test.ts`
+**Issue**: No tests for error cases
+**Needed**:
+- Test invalid email format
+- Test wrong password
+- Test expired JWT
+
+## Verdict
+
+🔄 **REQUEST CHANGES** - Fix critical and high issues before merge.
+
+Once fixed, this will be a solid authentication implementation.
+```
+
+---
+
+## See Also
+
+- security-checklist.md - OWASP Top 10 checklist
+- performance-criteria.md - Performance review guide
+- maintainability-rules.md - Code quality rules
+- review-templates.md - Feedback templates
+- ../security-sentinel/SKILL.md - Security patterns
+- ../quality-gates/SKILL.md - Quality framework

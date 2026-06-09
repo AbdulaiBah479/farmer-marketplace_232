@@ -28,9 +28,7 @@ export default defineConfig({
   entry: ['./src/index.ts'],
   format: ['esm', 'cjs'],
   platform: 'neutral',
-  deps: {
-    neverBundle: ['react', 'react-dom'],
-  },
+  external: ['react', 'react-dom'],
   dts: true,
 })
 ```
@@ -115,9 +113,7 @@ import pluginBabel from '@rollup/plugin-babel'
 export default defineConfig({
   entry: ['src/index.tsx'],
   format: ['esm', 'cjs'],
-  deps: {
-    neverBundle: ['react', 'react-dom'],
-  },
+  external: ['react', 'react-dom'],
   plugins: [
     pluginBabel({
       babelHelpers: 'bundled',
@@ -142,13 +138,11 @@ export default defineConfig({
   entry: ['src/index.ts'],
   format: ['esm', 'cjs'],
   platform: 'neutral',
-  deps: {
-    neverBundle: [
-      'react',
-      'react-dom',
-      /^react\//,  // react/jsx-runtime, etc.
-    ],
-  },
+  external: [
+    'react',
+    'react-dom',
+    /^react\//,  // react/jsx-runtime, etc.
+  ],
   dts: true,
   clean: true,
 })
@@ -165,9 +159,7 @@ export default defineConfig({
     Modal: 'src/Modal.tsx',
   },
   format: ['esm', 'cjs'],
-  deps: {
-    neverBundle: ['react', 'react-dom'],
-  },
+  external: ['react', 'react-dom'],
   dts: true,
 })
 ```
@@ -179,9 +171,7 @@ export default defineConfig({
   entry: ['src/index.ts'],
   format: ['esm', 'cjs'],
   platform: 'neutral',
-  deps: {
-    neverBundle: ['react'],  // Only React needed
-  },
+  external: ['react'],  // Only React needed
   dts: true,
   treeshake: true,
 })
@@ -194,13 +184,11 @@ export default defineConfig({
   workspace: 'packages/*',
   entry: ['src/index.ts'],
   format: ['esm', 'cjs'],
-  deps: {
-    neverBundle: [
-      'react',
-      'react-dom',
-      /^@mycompany\//,  // Other workspace packages
-    ],
-  },
+  external: [
+    'react',
+    'react-dom',
+    /^@mycompany\//,  // Other workspace packages
+  ],
   dts: true,
 })
 ```
@@ -269,9 +257,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig((options) => ({
   entry: ['src/index.ts'],
   format: ['esm'],
-  deps: {
-    neverBundle: ['react', 'react-dom'],
-  },
+  external: ['react', 'react-dom'],
   plugins: options.watch
     ? [
         // @ts-expect-error Vite plugin
@@ -298,9 +284,7 @@ export default defineConfig((options) => ({
 Ensure React is externalized:
 
 ```ts
-deps: {
-  neverBundle: ['react', 'react-dom', /^react\//],
-}
+external: ['react', 'react-dom', /^react\//]
 ```
 
 ### Type Errors with JSX
@@ -317,17 +301,15 @@ Check `tsconfig.json`:
 
 ### Duplicate React
 
-Add to deps.neverBundle:
+Add to external patterns:
 
 ```ts
-deps: {
-  neverBundle: [
-    'react',
-    'react-dom',
-    'react/jsx-runtime',
-    'react/jsx-dev-runtime',
-  ],
-}
+external: [
+  'react',
+  'react-dom',
+  'react/jsx-runtime',
+  'react/jsx-dev-runtime',
+]
 ```
 
 ## Related

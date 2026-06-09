@@ -1,7 +1,6 @@
 ---
 name: visual-asset-workflow
-description: This skill should be used when creating visual assets for educational content. It provides professional creative brief methodology to activate reasoning mode for distinctive, pedagogically effective visuals.
-version: "1.0.0"
+description: Generate distinctive educational visuals using creative brief methodology. Use when creating chapter illustrations, diagrams, or teaching visuals with Gemini.
 ---
 
 # Visual Asset Workflow Skill
@@ -31,8 +30,8 @@ This skill provides professional creative brief methodology to activate Gemini 3
 **Prefer:** Strategic planning phase (Q0)
 
 Read FIRST:
-- `robolearn-interface/docs/chapter-index.md` → Extract part, proficiency (A2/B1/C2), prerequisites
-- `robolearn-interface/docs/[part]/[chapter]/README.md` → Understand lesson structure
+- `apps/learn-app/docs/chapter-index.md` → Extract part, proficiency (A2/B1/C2), prerequisites
+- `apps/learn-app/docs/[part]/[chapter]/README.md` → Understand lesson structure
 
 Detect conflicts BEFORE work:
 - Proficiency-complexity mismatch (complex visual for A2 beginners)

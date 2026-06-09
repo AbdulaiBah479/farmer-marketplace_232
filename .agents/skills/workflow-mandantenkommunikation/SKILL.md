@@ -1,15 +1,35 @@
 ---
 name: workflow-mandantenkommunikation
-description: "Mandantenkommunikation im Plugin insolvenzrecht: übersetzt das Ergebnis in eine klare Nachricht mit Entscheidungspunkten, Risiken und nächsten Schritten."
+description: "Mandantenkommunikation: übersetzt das Ergebnis in eine klare Nachricht mit Entscheidungspunkten, Risiken und nächsten Schritten im Anlagen zu Schriftsätzen."
 ---
 
 # Mandantenkommunikation
 
-## Aufgabe
-Dieser Workflow-Skill für `insolvenzrecht` Mandantenkommunikation im Plugin insolvenzrecht: übersetzt das Ergebnis in eine klare Nachricht mit Entscheidungspunkten, Risiken und nächsten Schritten.. Er ist dazu da, den Nutzer schneller und sicherer in die richtige Bearbeitung zu führen.
+## Normenanker
 
-## Kaltstart
-Wenn Material vorliegt, arbeite zuerst mit dem Material. Stelle nur Rückfragen, die für die nächste Weiche nötig sind:
+Arbeitsfokus: **Mandantenkommunikation**. Prüfe diese Anker am Sachverhalt; ergänze nur Normen, die denselben Output, dieselbe Frist oder dieselbe Beweisfrage tragen:
+
+- `§ 130 Nr. 6 ZPO` — Schriftsatzanforderungen.
+- `§ 130a Abs. 1 ZPO` — elektronisches Dokument.
+- `§ 131 Abs. 1 ZPO` — Beifügung von Abschriften/Anlagen.
+- `§ 133 Abs. 1 ZPO` — Abschriften für Zustellung.
+- `§ 138 Abs. 1 ZPO` — Tatsachenvortrag.
+- `§ 253 Abs. 2 ZPO` — Klageinhalt.
+- `§ 299 Abs. 1 ZPO` — Akteneinsicht.
+- `§ 371 Abs. 1 ZPO` — Augenschein.
+
+Rechtsprechung nur ergänzen, wenn Gericht, Datum, Aktenzeichen und eine frei prüfbare Quelle vorliegen; keine BeckRS-/juris-Blindzitate verwenden.
+
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: die im Plugin-Kontext einschlägigen Normen über gesetze-im-internet.de, dejure.org, eur-lex.europa.eu und die amtlichen Bundes-/Landesportale live prüfen — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+## Einstieg
+Prüfe zuerst das vorhandene Material. Stelle nur Rückfragen, die die nächste fachliche Weiche verändern:
 
 1. Wer fragt in welcher Rolle?
 2. Was ist das gewünschte Ergebnis?
@@ -19,34 +39,5 @@ Wenn Material vorliegt, arbeite zuerst mit dem Material. Stelle nur Rückfragen,
 ## Arbeitsworkflow
 1. Rolle, Ziel, Frist und Unterlagenlage in höchstens fünf Fragen klären.
 2. Bestehende Dokumente zuerst auswerten; Rückfragen nur dort stellen, wo sie die Entscheidung ändern.
-3. Passende Spezialskills aus diesem Plugin vorschlagen und begründen.
+3. Passende Fachmodule aus diesem Plugin vorschlagen und begründen.
 4. Ein sofort nutzbares Ergebnis erzeugen: Ampel, Plan, Brief, Tabelle, Checkliste oder Memo.
-
-## Output-Standard
-- Kurzbild: worum es geht, was gesichert ist, was offen ist.
-- Prüf- oder Bearbeitungsmatrix mit den entscheidenden Punkten.
-- Konkreter nächster Schritt mit Frist, Zuständigkeit und Unterlagen.
-- Bei Außenkommunikation: knapper, sachlicher Textbaustein ohne unnötige Nebenangaben.
-
-## Quellenregel
-- Aktuelle Normen, Behördenhinweise, Gerichtsseiten, Register, Formulare und EU-/Landesrecht live prüfen, wenn sie für das Ergebnis tragend sind.
-- Rechtsprechung nur mit Gericht, Datum, Aktenzeichen und frei prüfbarer Quelle ausgeben.
-- Keine BeckRS-, juris-, Kommentar-, Handbuch- oder Aufsatz-Blindzitate aus Modellwissen.
-- Unsicherheiten und Annahmen ausdrücklich markieren.
-
-## Mandantenbrief-Bausteine Insolvenzrecht
-- **Adressat:** Geschäftsführer / Vorstand persönlich (Hinweis auf persönliche Haftung), in CC keine Vertraulichkeitsbedenken (§ 43a Abs. 2 BRAO, § 203 StGB).
-- **Eröffnung:** "In dem Mandat … / In Sachen Insolvenzantrag/Sanierung … senden wir Ihnen folgende Einschätzung."
-- **Inhalt nach Triage-Ergebnis:**
-  - Status: liegt eine materielle Insolvenz vor (§§ 17, 18, 19 InsO)?
-  - Frist: Antragspflicht § 15a InsO — 3 Wochen ab Zahlungsunfähigkeit, 6 Wochen ab Überschuldung; bei Aussichtslosigkeit der Sanierung kürzer.
-  - Haftung: persönliche Haftung Geschäftsführer für verspäteten Antrag (§ 15a Abs. 4 InsO Strafbarkeit; § 15b InsO Zahlungsverbot und Erstattungspflicht für nach Insolvenzreife erfolgte Zahlungen, ehemals § 64 GmbHG).
-  - Alternativen: Eigenverwaltung § 270 InsO, Schutzschirm § 270d InsO, StaRUG (nur drohende ZU § 18 InsO).
-- **Empfehlung:** klare Handlungsoption — antragstellen, Sanierungskonzept, Beraterhinzuziehung.
-- **Nächste Schritte mit konkreter Frist:** Tag der nächsten Besprechung, Liste der benötigten Unterlagen.
-- **Kostenhinweis:** Hinweis auf RVG / Honorarvereinbarung; bei Insolvenz Gerichtsverfahren-Wertgebühr nach RVG, vorinsolvenzliche Beratung nach Honorarvereinbarung.
-
-## Heikle Themen
-- **Verschwiegenheit § 43a BRAO:** Mandantengeheimnis auch nach Insolvenzeröffnung; Verwalter wird nicht automatisch Mandant.
-- **Aufklärungspflicht:** Geschäftsführer ist über § 15a, § 15b InsO und § 266a StGB (Sozialversicherungsbeiträge) ausdrücklich aufzuklären — Beweissicherung der Aufklärung (E-Mail, Protokoll).
-- **Eilkommunikation:** Bei akuter Antragspflicht keine Beratung nur per E-Mail; telefonische Aufklärung dokumentieren.

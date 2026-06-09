@@ -1,8 +1,6 @@
 ---
 name: emergency-card
 description: 生成紧急情况下快速访问的医疗信息摘要卡片。当用户需要旅行、就诊准备、紧急情况或询问"紧急信息"、"医疗卡片"、"急救信息"时使用此技能。提取关键信息（过敏、用药、急症、植入物），支持多格式输出（JSON、文本、二维码），用于急救或快速就医。
-risk: unknown
-source: community
 ---
 
 # 紧急医疗信息卡生成器
@@ -117,7 +115,7 @@ const basicInfo = {
 };
 ```
 
-#### 2.2 严重过敏
+##### 2.2 严重过敏
 ```javascript
 // 过滤出3-4级严重过敏
 const criticalAllergies = allergies.allergies
@@ -130,61 +128,7 @@ const criticalAllergies = allergies.allergies
   }));
 ```
 
-#### 2.3 慢性疾病诊断（新增）
-```javascript
-// 从慢性病管理数据中提取诊断信息
-const chronicConditions = [];
-
-// 高血压
-try {
-  const hypertensionData = readFile('data/hypertension-tracker.json');
-  if (hypertensionData.hypertension_management?.diagnosis_date) {
-    chronicConditions.push({
-      condition: '高血压',
-      diagnosis_date: hypertensionData.hypertension_management.diagnosis_date,
-      classification: hypertensionData.hypertension_management.classification,
-      current_bp: hypertensionData.hypertension_management.average_bp,
-      risk_level: hypertensionData.hypertension_management.cardiovascular_risk?.risk_level
-    });
-  }
-} catch (e) {
-  // 文件不存在或读取失败，跳过
-}
-
-// 糖尿病
-try {
-  const diabetesData = readFile('data/diabetes-tracker.json');
-  if (diabetesData.diabetes_management?.diagnosis_date) {
-    chronicConditions.push({
-      condition: diabetesData.diabetes_management.type === 'type_1' ? '1型糖尿病' : '2型糖尿病',
-      diagnosis_date: diabetesData.diabetes_management.diagnosis_date,
-      duration_years: diabetesData.diabetes_management.duration_years,
-      hba1c: diabetesData.diabetes_management.hba1c?.history?.[0]?.value,
-      control_status: diabetesData.diabetes_management.hba1c?.achievement ? '控制良好' : '需改善'
-    });
-  }
-} catch (e) {
-  // 文件不存在或读取失败，跳过
-}
-
-// COPD
-try {
-  const copdData = readFile('data/copd-tracker.json');
-  if (copdData.copd_management?.diagnosis_date) {
-    chronicConditions.push({
-      condition: '慢阻肺（COPD）',
-      diagnosis_date: copdData.copd_management.diagnosis_date,
-      gold_grade: `GOLD ${copdData.copd_management.gold_grade}级`,
-      cat_score: copdData.copd_management.symptom_assessment?.cat_score?.total_score,
-      exacerbations_last_year: copdData.copd_management.exacerbations?.last_year
-    });
-  }
-} catch (e) {
-  // 文件不存在或读取失败，跳过
-}
-```
-
-#### 2.4 当前用药
+##### 2.3 当前用药
 ```javascript
 // 只包含活跃的药物
 const currentMedications = medications.medications
@@ -247,12 +191,11 @@ const emergencyCard = {
   basic_info: basicInfo,
   critical_allergies: criticalAllergies.sort(bySeverityDesc),
   current_medications: currentMedications,
-  medical_conditions: [...medicalConditions, ...chronicConditions], // 合并急症和慢性病
+  medical_conditions: medicalConditions,
   implants: implants,
   recent_radiation_exposure: recentRadiation,
   disclaimer: "此信息卡仅供参考，不替代专业医疗诊断",
-  data_source: "my-his个人健康信息系统",
-  chronic_conditions: chronicConditions // 单独字段便于访问
+  data_source: "my-his个人健康信息系统"
 };
 ```
 
@@ -277,21 +220,13 @@ const emergencyCard = {
 ╠═══════════════════════════════════════════════════════════╣
 ║ 💊 当前用药                                              ║
 ║ ─────────────────────────────────────────────────────── ║
-║ • 氨氯地平 5mg - 每日1次（高血压）                      ║
-║ • 二甲双胍 1000mg - 每日2次（糖尿病）                    ║
+║ • 阿司匹林 100mg - 每日1次，心血管预防                   ║
+║ • 氨氯地平 5mg - 每日2次，降压治疗                       ║
 ╠═══════════════════════════════════════════════════════════╣
-║ 🏥 慢性疾病                                              ║
+║ 🏥 医疗状况                                              ║
 ║ ─────────────────────────────────────────────────────── ║
-║ • 高血压（2023-01-01诊断，1级，控制中）                 ║
-║   平均血压：132/82 mmHg                                 ║
-║ • 2型糖尿病（2022-05-10诊断，HbA1c 6.8%）              ║
-║   控制状态：良好                                        ║
-║ • 慢阻肺（2020-03-15诊断，GOLD 2级）                    ║
-║   CAT评分：18分                                        ║
-╠═══════════════════════════════════════════════════════════╣
-║ 🏥 其他疾病                                              ║
-║ ─────────────────────────────────────────────────────── ║
-║ （其他急症或手术诊断，如有）                            ║
+║ • 高血压（2023-01-15诊断）- 控制中                       ║
+║ • 2型糖尿病（2022-08-20诊断）- 监测中                    ║
 ╠═══════════════════════════════════════════════════════════╣
 ║ 📿 植入物                                                ║
 ║ ─────────────────────────────────────────────────────── ║
@@ -368,11 +303,6 @@ saveFile('emergency-card-qr.png', emergencyCard.qr_code);
 - **data/allergies.json**：过敏史和严重程度分级
 - **data/medications/medications.json**：当前用药计划和剂量
 
-### 慢性病数据源（新增）
-- **data/hypertension-tracker.json**：高血压管理数据（诊断日期、分级、血压控制、靶器官损害、心血管风险）
-- **data/diabetes-tracker.json**：糖尿病管理数据（类型、HbA1c、血糖控制、并发症筛查）
-- **data/copd-tracker.json**：COPD管理数据（GOLD分级、CAT评分、急性加重史、肺功能）
-
 ### 辅助数据源
 - **data/radiation-records.json**：近期辐射暴露记录
 - **data/手术记录/**/*.json**：手术植入物信息
@@ -417,21 +347,12 @@ saveFile('emergency-card-qr.png', emergencyCard.qr_code);
 
 ## 示例输出
 
-完整示例请参考相关文档。
+完整示例请参考 [examples.md](examples.md)。
 
 ## 测试数据
 
-测试数据请参考相关文档。
+测试数据文件位于 [test-data/emergency-example.json](test-data/emergency-example.json)。
 
 ## 格式说明
 
-详细格式请参考相关文档。
-
-
-## When to Use
-Use this skill when tackling tasks related to its primary domain or functionality as described above.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
+详细的输出格式说明请参考 [formats.md](formats.md)。

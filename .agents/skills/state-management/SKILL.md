@@ -1,266 +1,158 @@
 ---
-name: State Management
-description: This skill should be used when the user asks about "Effect Ref", "mutable state", "Ref.make", "Ref.get", "Ref.set", "Ref.update", "SubscriptionRef", "SynchronizedRef", "reactive state", "state updates", "concurrent state", "shared mutable state", or needs to understand how Effect handles mutable state in a functional way.
-version: 1.0.0
+name: state-management
+description: TanStack Query + Zustand patterns.
 ---
 
-# State Management in Effect
+# State Management
 
-## Overview
+## Philosophy
 
-Effect provides functional mutable state primitives:
+- **Server State** → TanStack Query
+- **Client State** → Zustand
+- **Form State** → React Hook Form + Zod
+- **URL State** → nuqs or searchParams
 
-- **Ref** - Basic mutable reference
-- **SynchronizedRef** - Ref with effectful updates
-- **SubscriptionRef** - Ref with change notifications
+## TanStack Query
 
-All are fiber-safe and work correctly with concurrent access.
-
-## Ref - Basic Mutable Reference
-
-### Creating and Using Refs
-
+### Query Keys Factory
 ```typescript
-import { Effect, Ref } from "effect"
-
-const program = Effect.gen(function* () {
-  const counter = yield* Ref.make(0)
-
-  const current = yield* Ref.get(counter)
-
-  yield* Ref.set(counter, 10)
-
-  yield* Ref.update(counter, (n) => n + 1)
-
-  const old = yield* Ref.getAndSet(counter, 0)
-
-  const newValue = yield* Ref.updateAndGet(counter, (n) => n + 5)
-
-  const [oldVal, result] = yield* Ref.modify(counter, (n) => [
-    n,
-    n * 2
-  ])
-})
+export const userKeys = {
+  all: ['users'] as const,
+  lists: () => [...userKeys.all, 'list'] as const,
+  list: (filters: Filters) => [...userKeys.lists(), filters] as const,
+  details: () => [...userKeys.all, 'detail'] as const,
+  detail: (id: string) => [...userKeys.details(), id] as const,
+};
 ```
 
-### Atomic Operations
-
+### Hooks Pattern
 ```typescript
-const atomicIncrement = Effect.gen(function* () {
-  const counter = yield* Ref.make(0)
+export function useUsers(filters?: Filters) {
+  return useQuery({
+    queryKey: userKeys.list(filters ?? {}),
+    queryFn: () => getUsers(filters),
+  });
+}
 
-  yield* Effect.all([
-    Ref.update(counter, (n) => n + 1),
-    Ref.update(counter, (n) => n + 1),
-    Ref.update(counter, (n) => n + 1)
-  ], { concurrency: "unbounded" })
+export function useUser(id: string) {
+  return useQuery({
+    queryKey: userKeys.detail(id),
+    queryFn: () => getUser(id),
+    enabled: !!id,
+  });
+}
 
-  return yield* Ref.get(counter)
-})
+export function useCreateUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: userKeys.lists() });
+    },
+  });
+}
+
+export function useUpdateUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateUserInput }) =>
+      updateUser(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: userKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: userKeys.lists() });
+    },
+  });
+}
 ```
 
-### Ref in Services
+## Zustand
 
+### Typed Store
 ```typescript
-const CounterService = Effect.gen(function* () {
-  const ref = yield* Ref.make(0)
+interface UIStore {
+  sidebarOpen: boolean;
+  theme: 'light' | 'dark';
+  toggleSidebar: () => void;
+  setTheme: (theme: 'light' | 'dark') => void;
+}
 
-  return {
-    increment: Ref.update(ref, (n) => n + 1),
-    decrement: Ref.update(ref, (n) => n - 1),
-    get: Ref.get(ref),
-    reset: Ref.set(ref, 0)
-  }
-})
-
-const CounterLive = Layer.effect(Counter, CounterService)
+export const useUIStore = create<UIStore>((set) => ({
+  sidebarOpen: true,
+  theme: 'light',
+  toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
+  setTheme: (theme) => set({ theme }),
+}));
 ```
 
-## SynchronizedRef - Effectful Updates
-
-For updates that require running effects:
-
+### Performance: Use Selectors
 ```typescript
-import { Effect, SynchronizedRef } from "effect"
+// CORRECT - Only re-renders when sidebarOpen changes
+const sidebarOpen = useUIStore((s) => s.sidebarOpen);
 
-const program = Effect.gen(function* () {
-  const ref = yield* SynchronizedRef.make({ count: 0, lastUpdated: Date.now() })
-
-  yield* SynchronizedRef.updateEffect(ref, (state) =>
-    Effect.gen(function* () {
-      yield* Effect.log("Updating state")
-      return {
-        count: state.count + 1,
-        lastUpdated: Date.now()
-      }
-    })
-  )
-
-  const result = yield* SynchronizedRef.modifyEffect(ref, (state) =>
-    Effect.gen(function* () {
-      const newCount = state.count + 1
-      yield* sendMetric("counter", newCount)
-      return [
-        newCount,
-        { ...state, count: newCount }
-      ]
-    })
-  )
-})
+// WRONG - Re-renders on ANY state change
+const { sidebarOpen } = useUIStore();
 ```
 
-### When to Use SynchronizedRef
-
-- Updates require API calls
-- Updates require logging/metrics
-- Updates depend on external state
-- Updates need error handling
-
+### Persist Middleware
 ```typescript
-// Cache with async refresh
-const cache = yield* SynchronizedRef.make<Data | null>(null)
+import { persist } from 'zustand/middleware';
 
-const refreshCache = SynchronizedRef.updateEffect(cache, () =>
-  Effect.tryPromise(() => fetchLatestData())
-)
-```
-
-## SubscriptionRef - Reactive State
-
-For state that needs to notify subscribers:
-
-```typescript
-import { Effect, SubscriptionRef, Stream } from "effect"
-
-const program = Effect.gen(function* () {
-  const ref = yield* SubscriptionRef.make(0)
-
-  const changes = yield* SubscriptionRef.changes(ref)
-
-  yield* Effect.fork(
-    Stream.runForEach(changes, (value) =>
-      Effect.log(`Value changed to: ${value}`)
-    )
-  )
-
-  yield* SubscriptionRef.set(ref, 1)
-  yield* SubscriptionRef.update(ref, (n) => n + 1)
-  yield* SubscriptionRef.set(ref, 10)
-})
-```
-
-### Reactive Patterns
-
-```typescript
-const configRef = yield* SubscriptionRef.make(initialConfig)
-
-const subscriber1 = Effect.fork(
-  Stream.runForEach(
-    SubscriptionRef.changes(configRef),
-    (config) => updateService1(config)
-  )
-)
-
-const subscriber2 = Effect.fork(
-  Stream.runForEach(
-    SubscriptionRef.changes(configRef),
-    (config) => updateService2(config)
-  )
-)
-
-yield* SubscriptionRef.set(configRef, newConfig)
-```
-
-## Comparison
-
-| Feature | Ref | SynchronizedRef | SubscriptionRef |
-|---------|-----|-----------------|-----------------|
-| Basic get/set | ✅ | ✅ | ✅ |
-| Atomic updates | ✅ | ✅ | ✅ |
-| Effectful updates | ❌ | ✅ | ❌ |
-| Change notifications | ❌ | ❌ | ✅ |
-| Use case | Simple state | Async updates | Reactive state |
-
-## Common Patterns
-
-### Counter Service
-
-```typescript
-class Counter extends Context.Tag("Counter")<
-  Counter,
-  {
-    readonly increment: Effect.Effect<number>
-    readonly decrement: Effect.Effect<number>
-    readonly get: Effect.Effect<number>
-  }
->() {}
-
-const CounterLive = Layer.effect(
-  Counter,
-  Effect.gen(function* () {
-    const ref = yield* Ref.make(0)
-    return {
-      increment: Ref.updateAndGet(ref, (n) => n + 1),
-      decrement: Ref.updateAndGet(ref, (n) => n - 1),
-      get: Ref.get(ref)
+export const useSettingsStore = create<SettingsStore>()(
+  persist(
+    (set) => ({
+      language: 'en',
+      setLanguage: (language) => set({ language }),
+    }),
+    {
+      name: 'settings-storage',
     }
-  })
-)
+  )
+);
 ```
 
-### State Machine
+### Computed Values with Selectors
+```typescript
+// Create a selector
+const selectFilteredItems = (state: Store) =>
+  state.items.filter(item => item.active);
+
+// Use in component
+const filteredItems = useStore(selectFilteredItems);
+```
+
+## Form State: React Hook Form + Zod
 
 ```typescript
-type State = "idle" | "loading" | "success" | "error"
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 
-const stateMachine = Effect.gen(function* () {
-  const state = yield* Ref.make<State>("idle")
+const schema = z.object({
+  name: z.string().min(1, 'Required'),
+  email: z.string().email('Invalid email'),
+});
 
-  const transition = (from: State, to: State) =>
-    Ref.modify(state, (current) =>
-      current === from
-        ? [true, to]
-        : [false, current]
-    )
+type FormData = z.infer<typeof schema>;
 
-  return {
-    state: Ref.get(state),
-    startLoading: transition("idle", "loading"),
-    succeed: transition("loading", "success"),
-    fail: transition("loading", "error"),
-    reset: Ref.set(state, "idle")
-  }
-})
+export function UserForm() {
+  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+    resolver: zodResolver(schema),
+  });
+
+  const onSubmit = (data: FormData) => {
+    // data is typed and validated
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <input {...register('name')} />
+      {errors.name && <span>{errors.name.message}</span>}
+
+      <input {...register('email')} />
+      {errors.email && <span>{errors.email.message}</span>}
+
+      <button type="submit">Submit</button>
+    </form>
+  );
+}
 ```
-
-### Accumulator
-
-```typescript
-const accumulator = Effect.gen(function* () {
-  const items = yield* Ref.make<Array<Item>>([])
-
-  return {
-    add: (item: Item) => Ref.update(items, (arr) => [...arr, item]),
-    getAll: Ref.get(items),
-    clear: Ref.set(items, []),
-    count: Effect.map(Ref.get(items), (arr) => arr.length)
-  }
-})
-```
-
-## Best Practices
-
-1. **Use Ref for simple state** - Basic counters, flags, accumulators
-2. **Use SynchronizedRef for async updates** - When updates need effects
-3. **Use SubscriptionRef for reactive patterns** - When others need notifications
-4. **Keep state minimal** - Don't store derived data
-5. **Prefer immutable updates** - Return new objects, don't mutate
-
-## Additional Resources
-
-For comprehensive state management documentation, consult `${CLAUDE_PLUGIN_ROOT}/references/llms-full.txt`.
-
-Search for these sections:
-- "Ref" for basic mutable references
-- "SynchronizedRef" for effectful updates
-- "SubscriptionRef" for reactive state

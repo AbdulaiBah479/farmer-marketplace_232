@@ -1,454 +1,645 @@
 ---
 name: refactor
-description: Execute safe refactors.
-practices:
-- refactoring
-- legacy-code-seams
-- design-patterns
-hexagonal_role: supporting
-consumes:
-- complexity
-- repo-context
-produces:
-- git-changes
-context_rel: []
-skill_api_version: 1
-context:
-  window: fork
-  intent:
-    mode: task
-  sections:
-    exclude:
-    - HISTORY
-  intel_scope: topic
-metadata:
-  tier: execution
-  dependencies:
-  - standards
-  - complexity
-  - beads
-output_contract: code changes with regression verification
+description: 'Surgical code refactoring to improve maintainability without changing behavior. Covers extracting functions, renaming variables, breaking down god functions, improving type safety, eliminating code smells, and applying design patterns. Less drastic than repo-rebuilder; use for gradual improvements.'
+license: MIT
 ---
-# Refactor Skill
 
-> **Quick Ref:** Safe, incremental refactoring with test verification at every step. One transformation, one test run, one commit. Never batch.
+# Refactor
 
-**YOU MUST EXECUTE THIS WORKFLOW. Do not just describe it.**
+## Overview
 
-## Modes
+Improve code structure and readability without changing external behavior. Refactoring is gradual evolution, not revolution. Use this for improving existing code, not rewriting from scratch.
 
-### 1. Target Mode (default)
+## When to Use
 
-```
-/refactor <file-or-function>
-```
+Use this skill when:
 
-Refactor a specific file, function, or class. You identify what needs improving, plan the steps, and execute them one at a time with test verification.
+- Code is hard to understand or maintain
+- Functions/classes are too large
+- Code smells need addressing
+- Adding features is difficult due to code structure
+- User asks "clean up this code", "refactor this", "improve this"
 
-### 2. Sweep Mode
+---
 
-```
-/refactor --sweep <scope>
-```
+## Refactoring Principles
 
-Find and fix complexity hotspots across a directory, package, or entire project. Runs `/complexity` first to identify targets, then works through them in priority order (highest complexity first).
+### The Golden Rules
 
-`<scope>` can be:
-- A directory path (`cli/internal/`)
-- A package name (`goals`)
-- `all` (entire project -- use with caution)
+1. **Behavior is preserved** - Refactoring doesn't change what the code does, only how
+2. **Small steps** - Make tiny changes, test after each
+3. **Version control is your friend** - Commit before and after each safe state
+4. **Tests are essential** - Without tests, you're not refactoring, you're editing
+5. **One thing at a time** - Don't mix refactoring with feature changes
 
-### 3. Extract Mode
-
-```
-/refactor --extract <pattern>
-```
-
-Extract method, class, or module from a target. The `<pattern>` describes what to extract:
-
-- `method:<function-name>` -- extract a section of a long function into a named helper
-- `module:<file>` -- split a god file into focused modules
-- `class:<class-name>` -- extract a class into its own file
-
-## Core Principle
-
-**Every refactoring step must be verified by running tests before proceeding to the next step.**
-
-For simplification, de-slop cleanup, over-abstraction removal, or readability-focused refactors, load [references/behavior-preserving-simplification.md](references/behavior-preserving-simplification.md) before planning transformations.
-
-No batching. No "I'll run tests after all changes." Each transformation is atomic:
+### When NOT to Refactor
 
 ```
-Transform -> Test -> Pass? -> Commit -> Next
-                       |
-                       No -> Revert -> Re-analyze
+- Code that works and won't change again (if it ain't broke...)
+- Critical production code without tests (add tests first)
+- When you're under a tight deadline
+- "Just because" - need a clear purpose
 ```
 
-## Execution Steps
+---
 
-### Step 0: Pre-flight -- Establish Green Baseline
+## Common Code Smells & Fixes
 
-Run the full test suite for the target scope BEFORE making any changes.
+### 1. Long Method/Function
 
-**Go projects:**
-```bash
-cd cli && go test ./...
+```diff
+# BAD: 200-line function that does everything
+- async function processOrder(orderId) {
+-   // 50 lines: fetch order
+-   // 30 lines: validate order
+-   // 40 lines: calculate pricing
+-   // 30 lines: update inventory
+-   // 20 lines: create shipment
+-   // 30 lines: send notifications
+- }
+
+# GOOD: Broken into focused functions
++ async function processOrder(orderId) {
++   const order = await fetchOrder(orderId);
++   validateOrder(order);
++   const pricing = calculatePricing(order);
++   await updateInventory(order);
++   const shipment = await createShipment(order);
++   await sendNotifications(order, pricing, shipment);
++   return { order, pricing, shipment };
++ }
 ```
 
-**Python projects:**
-```bash
-pytest
+### 2. Duplicated Code
+
+```diff
+# BAD: Same logic in multiple places
+- function calculateUserDiscount(user) {
+-   if (user.membership === 'gold') return user.total * 0.2;
+-   if (user.membership === 'silver') return user.total * 0.1;
+-   return 0;
+- }
+-
+- function calculateOrderDiscount(order) {
+-   if (order.user.membership === 'gold') return order.total * 0.2;
+-   if (order.user.membership === 'silver') return order.total * 0.1;
+-   return 0;
+- }
+
+# GOOD: Extract common logic
++ function getMembershipDiscountRate(membership) {
++   const rates = { gold: 0.2, silver: 0.1 };
++   return rates[membership] || 0;
++ }
++
++ function calculateUserDiscount(user) {
++   return user.total * getMembershipDiscountRate(user.membership);
++ }
++
++ function calculateOrderDiscount(order) {
++   return order.total * getMembershipDiscountRate(order.user.membership);
++ }
 ```
 
-**If tests fail: STOP.** Do not refactor code with a broken test suite. Fix the failing tests first, or scope your refactoring to exclude the broken area.
+### 3. Large Class/Module
 
-Record the baseline:
-- Number of passing tests
-- Test execution time
-- Any skipped tests
+```diff
+# BAD: God object that knows too much
+- class UserManager {
+-   createUser() { /* ... */ }
+-   updateUser() { /* ... */ }
+-   deleteUser() { /* ... */ }
+-   sendEmail() { /* ... */ }
+-   generateReport() { /* ... */ }
+-   handlePayment() { /* ... */ }
+-   validateAddress() { /* ... */ }
+-   // 50 more methods...
+- }
 
-### Step 1: Analyze Target
-
-**Target mode:** Read the target code. Identify:
-- Cyclomatic complexity (count branches, loops, conditions)
-- Function length (lines)
-- Parameter count
-- Nesting depth
-- Code duplication
-- Naming clarity
-
-**Sweep mode:** Run `/complexity` on the scope to get a ranked list of targets:
-```
-/complexity <scope>
-```
-Sort by complexity score descending. Work the worst offenders first.
-
-**Extract mode:** Read the target and identify the extraction boundary:
-- What code moves out?
-- What interface connects the pieces?
-- What are the inputs and outputs of the extracted unit?
-
-### Step 2: Plan Refactoring
-
-For each target, produce a numbered list of specific transformations:
-
-```
-1. Extract lines 45-78 of processConfig() into validateConfig()
-2. Replace nested if/else at line 92 with guard clause + early return
-3. Rename `cfg` to `clusterConfig` for clarity
-4. Inline single-use helper `tmpName()` at line 120
+# GOOD: Single responsibility per class
++ class UserService {
++   create(data) { /* ... */ }
++   update(id, data) { /* ... */ }
++   delete(id) { /* ... */ }
++ }
++
++ class EmailService {
++   send(to, subject, body) { /* ... */ }
++ }
++
++ class ReportService {
++   generate(type, params) { /* ... */ }
++ }
++
++ class PaymentService {
++   process(amount, method) { /* ... */ }
++ }
 ```
 
-For each transformation, identify:
-- **Which tests cover it** -- grep for test functions that exercise the target
-- **Risk level** -- low (rename, formatting), medium (extract, inline), high (interface change, moved code)
-- **Order dependency** -- does this step depend on a prior step?
+### 4. Long Parameter List
 
-If no tests cover the target: write tests FIRST. Do not refactor untested code.
+```diff
+# BAD: Too many parameters
+- function createUser(email, password, name, age, address, city, country, phone) {
+-   /* ... */
+- }
 
-### Step 3: Execute Step-by-Step
+# GOOD: Group related parameters
++ interface UserData {
++   email: string;
++   password: string;
++   name: string;
++   age?: number;
++   address?: Address;
++   phone?: string;
++ }
++
++ function createUser(data: UserData) {
++   /* ... */
++ }
 
-For EACH transformation in the plan:
-
-#### 3a. Make ONE transformation
-
-Apply a single, focused change. Do not combine multiple transformations. Keep the diff minimal and reviewable.
-
-#### 3b. Run tests immediately
-
-```bash
-# Go
-cd cli && go test ./...
-
-# Python
-pytest
-
-# Or the project-specific test command
+# EVEN BETTER: Use builder pattern for complex construction
++ const user = UserBuilder
++   .email('test@example.com')
++   .password('secure123')
++   .name('Test User')
++   .address(address)
++   .build();
 ```
 
-#### 3c. Evaluate result
+### 5. Feature Envy
 
-**Tests pass:**
-- Commit with conventional commit format:
-  ```
-  refactor(<scope>): <description>
-  ```
-  Examples:
-  - `refactor(goals): extract validateConfig from processConfig`
-  - `refactor(hooks): simplify conditional logic in pre-push gate`
-  - `refactor(cli): reduce parameter count in NewCommand`
+```diff
+# BAD: Method that uses another object's data more than its own
+- class Order {
+-   calculateDiscount(user) {
+-     if (user.membershipLevel === 'gold') {
++       return this.total * 0.2;
++     }
++     if (user.accountAge > 365) {
++       return this.total * 0.1;
++     }
++     return 0;
++   }
++ }
 
-**Tests fail:**
-- **Revert the change immediately.** Do not debug on top of a broken refactor.
-- Re-read the failing test to understand what contract was violated.
-- Re-analyze the transformation -- was the approach wrong, or was the scope too large?
-- Retry with a smaller, safer transformation.
-
-#### 3d. Proceed to next transformation
-
-Repeat 3a-3c for each planned step. After completing all steps for a target, move to Step 4.
-
-### Step 4: Post-Refactor Verification
-
-After all transformations are complete:
-
-1. **Run full test suite** -- not just the targeted tests, the entire suite:
-   ```bash
-   cd cli && go test ./...
-   ```
-
-2. **Run complexity analysis** on changed files:
-   ```
-   /complexity <changed-files>
-   ```
-
-3. **Compare before/after metrics:**
-
-   | Metric | Before | After | Delta |
-   |--------|--------|-------|-------|
-   | Cyclomatic complexity | ? | ? | ? |
-   | Lines of code | ? | ? | ? |
-   | Function count | ? | ? | ? |
-   | Max nesting depth | ? | ? | ? |
-   | Test count | ? | ? | ? |
-
-4. **Verify no behavioral change** -- the refactored code must do exactly what the old code did. If tests were added, they must pass against BOTH the old and new code.
-
-### Step 5: Output Summary
-
-Write a refactoring summary to `.agents/refactor/`:
-
-```bash
-mkdir -p .agents/refactor
+# GOOD: Move logic to the object that owns the data
++ class User {
++   getDiscountRate(orderTotal) {
++     if (this.membershipLevel === 'gold') return 0.2;
++     if (this.accountAge > 365) return 0.1;
++     return 0;
++   }
++ }
++
++ class Order {
++   calculateDiscount(user) {
++     return this.total * user.getDiscountRate(this.total);
++   }
++ }
 ```
 
-File: `.agents/refactor/YYYY-MM-DD-refactor-<scope>.md`
+### 6. Primitive Obsession
 
-Content:
-```markdown
-# Refactor: <scope>
+```diff
+# BAD: Using primitives for domain concepts
+- function sendEmail(to, subject, body) { /* ... */ }
+- sendEmail('user@example.com', 'Hello', '...');
 
-**Date:** YYYY-MM-DD
-**Mode:** target | sweep | extract
-**Files changed:** <count>
+- function createPhone(country, number) {
+-   return `${country}-${number}`;
+- }
 
-## Targets
-
-- <file:function> -- <what was done>
-
-## Metrics
-
-| Metric | Before | After | Delta |
-|--------|--------|-------|-------|
-| Cyclomatic complexity | X | Y | -Z |
-| Lines of code | X | Y | -Z |
-| Max nesting depth | X | Y | -Z |
-
-## Transformations Applied
-
-1. <description> -- <commit hash>
-2. <description> -- <commit hash>
-
-## Tests
-
-- Baseline: X passing, Y skipped
-- Final: X passing, Y skipped
-- New tests added: Z
-
-## Learnings
-
-- <anything worth noting for future refactors>
+# GOOD: Use domain types
++ class Email {
++   private constructor(public readonly value: string) {
++     if (!Email.isValid(value)) throw new Error('Invalid email');
++   }
++   static create(value: string) { return new Email(value); }
++   static isValid(email: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
++ }
++
++ class PhoneNumber {
++   constructor(
++     public readonly country: string,
++     public readonly number: string
++   ) {
++     if (!PhoneNumber.isValid(country, number)) throw new Error('Invalid phone');
++   }
++   toString() { return `${this.country}-${this.number}`; }
++   static isValid(country: string, number: string) { /* ... */ }
++ }
++
++ // Usage
++ const email = Email.create('user@example.com');
++ const phone = new PhoneNumber('1', '555-1234');
 ```
 
-## Refactoring Catalog
+### 7. Magic Numbers/Strings
 
-### Extract Method
+```diff
+# BAD: Unexplained values
+- if (user.status === 2) { /* ... */ }
+- const discount = total * 0.15;
+- setTimeout(callback, 86400000);
 
-**When:** Function exceeds 30 lines, or a block of code has a clear single purpose.
-
-**Pattern:**
-```
-Before: longFunction() { ... block A ... block B ... block C ... }
-After:  longFunction() { doA(); doB(); doC(); }
-        doA() { ... block A ... }
-        doB() { ... block B ... }
-        doC() { ... block C ... }
-```
-
-**Safety:** Low risk if inputs/outputs are clear. Watch for:
-- Shared local variables -- pass as parameters or return as values
-- Error handling -- propagate errors from extracted functions
-- Side effects -- document any mutations
-
-### Extract Module
-
-**When:** A file exceeds 500 lines, or contains multiple unrelated concerns.
-
-**Pattern:**
-```
-Before: god_file.go (800 lines, 5 concerns)
-After:  config.go (validation, loading)
-        metrics.go (collection, reporting)
-        handlers.go (request handling)
+# GOOD: Named constants
++ const UserStatus = {
++   ACTIVE: 1,
++   INACTIVE: 2,
++   SUSPENDED: 3
++ } as const;
++
++ const DISCOUNT_RATES = {
++   STANDARD: 0.1,
++   PREMIUM: 0.15,
++   VIP: 0.2
++ } as const;
++
++ const ONE_DAY_MS = 24 * 60 * 60 * 1000;
++
++ if (user.status === UserStatus.INACTIVE) { /* ... */ }
++ const discount = total * DISCOUNT_RATES.PREMIUM;
++ setTimeout(callback, ONE_DAY_MS);
 ```
 
-**Safety:** Medium risk. Watch for:
-- Circular imports between new modules
-- Package-level variables shared across concerns
-- Init functions with ordering dependencies
+### 8. Nested Conditionals
 
-### Rename
+```diff
+# BAD: Arrow code
+- function process(order) {
+-   if (order) {
+-     if (order.user) {
+-       if (order.user.isActive) {
+-         if (order.total > 0) {
+-           return processOrder(order);
++         } else {
++           return { error: 'Invalid total' };
++         }
++       } else {
++         return { error: 'User inactive' };
++       }
++     } else {
++       return { error: 'No user' };
++     }
++   } else {
++     return { error: 'No order' };
++   }
++ }
 
-**When:** A name is ambiguous, misleading, or uses abbreviations that obscure meaning.
+# GOOD: Guard clauses / early returns
++ function process(order) {
++   if (!order) return { error: 'No order' };
++   if (!order.user) return { error: 'No user' };
++   if (!order.user.isActive) return { error: 'User inactive' };
++   if (order.total <= 0) return { error: 'Invalid total' };
++   return processOrder(order);
++ }
 
-**Pattern:**
-```
-Before: func proc(cfg *C) error
-After:  func processClusterConfig(config *ClusterConfig) error
-```
-
-**Safety:** Low risk with tooling. Always:
-- Search for ALL references (including string literals, comments, docs)
-- Update test assertions that reference the old name
-- Check exported symbols -- renaming public APIs is a breaking change
-
-### Inline
-
-**When:** A function or variable adds indirection without adding clarity. Single-use helpers that obscure the flow.
-
-**Pattern:**
-```
-Before: x := getName(item)    // func getName(i Item) string { return i.Name }
-After:  x := item.Name
-```
-
-**Safety:** Low risk. Verify the inlined code does not have side effects you are hiding.
-
-### Simplify Conditional
-
-**When:** Nested if/else chains exceed 3 levels, or boolean expressions are complex.
-
-**Patterns:**
-- **Guard clauses:** Move error/edge cases to top with early return
-- **Early return:** Eliminate else branches by returning early
-- **Table-driven logic:** Replace long switch/case with map lookup
-- **Polymorphism:** Replace type-based switching with interface dispatch
-
-```
-Before:
-  if err != nil {
-      if isRetryable(err) {
-          if attempts < max {
-              retry()
-          } else {
-              fail()
-          }
-      } else {
-          fail()
-      }
-  } else {
-      succeed()
-  }
-
-After:
-  if err == nil {
-      succeed()
-      return
-  }
-  if !isRetryable(err) || attempts >= max {
-      fail()
-      return
-  }
-  retry()
+# EVEN BETTER: Using Result type
++ function process(order): Result<ProcessedOrder, Error> {
++   return Result.combine([
++     validateOrderExists(order),
++     validateUserExists(order),
++     validateUserActive(order.user),
++     validateOrderTotal(order)
++   ]).flatMap(() => processOrder(order));
++ }
 ```
 
-### Reduce Parameters
+### 9. Dead Code
 
-**When:** A function takes more than 4 parameters.
+```diff
+# BAD: Unused code lingers
+- function oldImplementation() { /* ... */ }
+- const DEPRECATED_VALUE = 5;
+- import { unusedThing } from './somewhere';
+- // Commented out code
+- // function oldCode() { /* ... */ }
 
-**Pattern:**
-```
-Before: func deploy(name, ns, image string, replicas int, labels map[string]string, timeout time.Duration) error
-After:  func deploy(opts DeployOptions) error
-
-type DeployOptions struct {
-    Name     string
-    NS       string
-    Image    string
-    Replicas int
-    Labels   map[string]string
-    Timeout  time.Duration
-}
+# GOOD: Remove it
++ // Delete unused functions, imports, and commented code
++ // If you need it again, git history has it
 ```
 
-**Safety:** Medium risk -- all callers must be updated. Use the struct field convention from `go.md`: grep all call sites and update each one.
+### 10. Inappropriate Intimacy
 
-### Remove Dead Code
+```diff
+# BAD: One class reaches deep into another
+- class OrderProcessor {
+-   process(order) {
+-     order.user.profile.address.street;  // Too intimate
+-     order.repository.connection.config;  // Breaking encapsulation
++   }
++ }
 
-**When:** Functions, variables, constants, or types are defined but never referenced.
-
-**How to identify:**
-```bash
-# Go: unused exports
-go vet ./...
-# Or use staticcheck, deadcode, or unparam tools
-
-# Python: vulture or pylint unused-import
-vulture <directory>
+# GOOD: Ask, don't tell
++ class OrderProcessor {
++   process(order) {
++     order.getShippingAddress();  // Order knows how to get it
++     order.save();  // Order knows how to save itself
++   }
++ }
 ```
 
-**Safety:** Low risk for truly dead code. But verify:
-- Not called via reflection or string-based dispatch
-- Not part of an interface implementation
-- Not used in build tags or conditional compilation
-- Not referenced in external packages (if this is a library)
+---
 
-**CLI command, flag, or cross-language surface removal:** source-language
-callers are not enough. Before considering the removal complete, grep every
-tracked callsite surface that agents commonly forget:
+## Extract Method Refactoring
 
-```bash
-scripts/check-removed-symbol-refs.sh -- <removed-command-or-flag>
+### Before and After
+
+```diff
+# Before: One long function
+- function printReport(users) {
+-   console.log('USER REPORT');
+-   console.log('============');
+-   console.log('');
+-   console.log(`Total users: ${users.length}`);
+-   console.log('');
+-   console.log('ACTIVE USERS');
+-   console.log('------------');
+-   const active = users.filter(u => u.isActive);
+-   active.forEach(u => {
+-     console.log(`- ${u.name} (${u.email})`);
+-   });
+-   console.log('');
+-   console.log(`Active: ${active.length}`);
+-   console.log('');
+-   console.log('INACTIVE USERS');
+-   console.log('--------------');
+-   const inactive = users.filter(u => !u.isActive);
+-   inactive.forEach(u => {
+-     console.log(`- ${u.name} (${u.email})`);
+-   });
+-   console.log('');
+-   console.log(`Inactive: ${inactive.length}`);
+- }
+
+# After: Extracted methods
++ function printReport(users) {
++   printHeader('USER REPORT');
++   console.log(`Total users: ${users.length}\n`);
++   printUserSection('ACTIVE USERS', users.filter(u => u.isActive));
++   printUserSection('INACTIVE USERS', users.filter(u => !u.isActive));
++ }
++
++ function printHeader(title) {
++   const line = '='.repeat(title.length);
++   console.log(title);
++   console.log(line);
++   console.log('');
++ }
++
++ function printUserSection(title, users) {
++   console.log(title);
++   console.log('-'.repeat(title.length));
++   users.forEach(u => console.log(`- ${u.name} (${u.email})`));
++   console.log('');
++   console.log(`${title.split(' ')[0]}: ${users.length}`);
++   console.log('');
++ }
 ```
 
-The check searches tracked repo files across source, shell scripts, GitHub
-workflow YAML, docs, skills, Codex skills, and tests while excluding historical
-changelogs and release notes. Any remaining hit is a blocker unless it is
-explicitly excluded with `--exclude` and justified in the closeout.
+---
 
-## Guardrails
+## Introducing Type Safety
 
-### What NOT to Refactor
+### From Untyped to Typed
 
-- **Code you don't understand.** Read it, test it, understand it -- THEN refactor.
-- **Code without tests.** Write tests first. Refactoring untested code is gambling.
-- **Code under active development.** If someone else is working on it, coordinate first.
-- **Performance-critical hot paths** without benchmarks. Measure before and after.
+```diff
+# Before: No types
+- function calculateDiscount(user, total, membership, date) {
+-   if (membership === 'gold' && date.getDay() === 5) {
+-     return total * 0.25;
+-   }
+-   if (membership === 'gold') return total * 0.2;
+-   return total * 0.1;
+- }
 
-### When to Stop
+# After: Full type safety
++ type Membership = 'bronze' | 'silver' | 'gold';
++
++ interface User {
++   id: string;
++   name: string;
++   membership: Membership;
++ }
++
++ interface DiscountResult {
++   original: number;
++   discount: number;
++   final: number;
++   rate: number;
++ }
++
++ function calculateDiscount(
++   user: User,
++   total: number,
++   date: Date = new Date()
++ ): DiscountResult {
++   if (total < 0) throw new Error('Total cannot be negative');
++
++   let rate = 0.1; // Default bronze
++
++   if (user.membership === 'gold' && date.getDay() === 5) {
++     rate = 0.25; // Friday bonus for gold
++   } else if (user.membership === 'gold') {
++     rate = 0.2;
++   } else if (user.membership === 'silver') {
++     rate = 0.15;
++   }
++
++   const discount = total * rate;
++
++   return {
++     original: total,
++     discount,
++     final: total - discount,
++     rate
++   };
++ }
+```
 
-- **Diminishing returns.** If complexity dropped from 45 to 12, don't chase 8.
-- **Test instability.** If tests start flaking, stop and stabilize.
-- **Scope creep.** Refactoring should not change behavior. If you find a bug, file an issue -- don't fix it mid-refactor.
-- **Time budget exceeded.** Set a timebox. Refactoring expands to fill available time.
+---
 
-### Red Flags During Refactoring
+## Design Patterns for Refactoring
 
-- Tests pass but you changed behavior (test gap -- add a test)
-- You need to refactor the tests to make them pass (you broke the contract)
-- The diff is growing beyond what you can review in one sitting (split into smaller PRs)
-- You are renaming things to match your preference, not for clarity (stop)
+### Strategy Pattern
 
-## See Also
+```diff
+# Before: Conditional logic
+- function calculateShipping(order, method) {
+-   if (method === 'standard') {
+-     return order.total > 50 ? 0 : 5.99;
+-   } else if (method === 'express') {
+-     return order.total > 100 ? 9.99 : 14.99;
++   } else if (method === 'overnight') {
++     return 29.99;
++   }
++ }
 
-- `/complexity` -- analyze code complexity metrics
-- `/standards` -- language-specific conventions
-- `/vibe` -- validate code quality post-refactor
-- `/bug-hunt` -- if refactoring uncovers bugs
-- `/implement` -- if refactoring requires new code
+# After: Strategy pattern
++ interface ShippingStrategy {
++   calculate(order: Order): number;
++ }
++
++ class StandardShipping implements ShippingStrategy {
++   calculate(order: Order) {
++     return order.total > 50 ? 0 : 5.99;
++   }
++ }
++
++ class ExpressShipping implements ShippingStrategy {
++   calculate(order: Order) {
++     return order.total > 100 ? 9.99 : 14.99;
++   }
++ }
++
++ class OvernightShipping implements ShippingStrategy {
++   calculate(order: Order) {
++     return 29.99;
++   }
++ }
++
++ function calculateShipping(order: Order, strategy: ShippingStrategy) {
++   return strategy.calculate(order);
++ }
+```
 
-## Reference Documents
+### Chain of Responsibility
 
-- [references/refactor.feature](references/refactor.feature) — Executable spec: one transformation/one test/one commit, target + hotspot (complexity-first) modes, revert on test fail (soc-qk4b)
+```diff
+# Before: Nested validation
+- function validate(user) {
+-   const errors = [];
+-   if (!user.email) errors.push('Email required');
++   else if (!isValidEmail(user.email)) errors.push('Invalid email');
++   if (!user.name) errors.push('Name required');
++   if (user.age < 18) errors.push('Must be 18+');
++   if (user.country === 'blocked') errors.push('Country not supported');
++   return errors;
++ }
 
-- [references/behavior-preserving-simplification.md](references/behavior-preserving-simplification.md)
+# After: Chain of responsibility
++ abstract class Validator {
++   abstract validate(user: User): string | null;
++   setNext(validator: Validator): Validator {
++     this.next = validator;
++     return validator;
++   }
++   validate(user: User): string | null {
++     const error = this.doValidate(user);
++     if (error) return error;
++     return this.next?.validate(user) ?? null;
++   }
++ }
++
++ class EmailRequiredValidator extends Validator {
++   doValidate(user: User) {
++     return !user.email ? 'Email required' : null;
++   }
++ }
++
++ class EmailFormatValidator extends Validator {
++   doValidate(user: User) {
++     return user.email && !isValidEmail(user.email) ? 'Invalid email' : null;
++   }
++ }
++
++ // Build the chain
++ const validator = new EmailRequiredValidator()
++   .setNext(new EmailFormatValidator())
++   .setNext(new NameRequiredValidator())
++   .setNext(new AgeValidator())
++   .setNext(new CountryValidator());
+```
+
+---
+
+## Refactoring Steps
+
+### Safe Refactoring Process
+
+```
+1. PREPARE
+   - Ensure tests exist (write them if missing)
+   - Commit current state
+   - Create feature branch
+
+2. IDENTIFY
+   - Find the code smell to address
+   - Understand what the code does
+   - Plan the refactoring
+
+3. REFACTOR (small steps)
+   - Make one small change
+   - Run tests
+   - Commit if tests pass
+   - Repeat
+
+4. VERIFY
+   - All tests pass
+   - Manual testing if needed
+   - Performance unchanged or improved
+
+5. CLEAN UP
+   - Update comments
+   - Update documentation
+   - Final commit
+```
+
+---
+
+## Refactoring Checklist
+
+### Code Quality
+
+- [ ] Functions are small (< 50 lines)
+- [ ] Functions do one thing
+- [ ] No duplicated code
+- [ ] Descriptive names (variables, functions, classes)
+- [ ] No magic numbers/strings
+- [ ] Dead code removed
+
+### Structure
+
+- [ ] Related code is together
+- [ ] Clear module boundaries
+- [ ] Dependencies flow in one direction
+- [ ] No circular dependencies
+
+### Type Safety
+
+- [ ] Types defined for all public APIs
+- [ ] No `any` types without justification
+- [ ] Nullable types explicitly marked
+
+### Testing
+
+- [ ] Refactored code is tested
+- [ ] Tests cover edge cases
+- [ ] All tests pass
+
+---
+
+## Common Refactoring Operations
+
+| Operation                                     | Description                           |
+| --------------------------------------------- | ------------------------------------- |
+| Extract Method                                | Turn code fragment into method        |
+| Extract Class                                 | Move behavior to new class            |
+| Extract Interface                             | Create interface from implementation  |
+| Inline Method                                 | Move method body back to caller       |
+| Inline Class                                  | Move class behavior to caller         |
+| Pull Up Method                                | Move method to superclass             |
+| Push Down Method                              | Move method to subclass               |
+| Rename Method/Variable                        | Improve clarity                       |
+| Introduce Parameter Object                    | Group related parameters              |
+| Replace Conditional with Polymorphism         | Use polymorphism instead of switch/if |
+| Replace Magic Number with Constant            | Named constants                       |
+| Decompose Conditional                         | Break complex conditions              |
+| Consolidate Conditional                       | Combine duplicate conditions          |
+| Replace Nested Conditional with Guard Clauses | Early returns                         |
+| Introduce Null Object                         | Eliminate null checks                 |
+| Replace Type Code with Class/Enum             | Strong typing                         |
+| Replace Inheritance with Delegation           | Composition over inheritance          |

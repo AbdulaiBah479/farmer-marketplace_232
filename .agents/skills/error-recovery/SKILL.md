@@ -1,399 +1,223 @@
 ---
 name: error-recovery
-description: Use when encountering failures - assess severity, preserve evidence, execute rollback decision tree, and verify post-recovery state
+description: Strategies for handling subagent failures with retry logic and escalation patterns.
+allowed-tools: Read, Task
 ---
 
-# Error Recovery
+# Error Recovery Skill
 
-## Overview
+Pattern for handling subagent failures gracefully with appropriate retry strategies.
 
-Handle failures gracefully with structured recovery.
+## When to Load This Skill
 
-**Core principle:** When things break, don't panic. Assess, preserve, recover, verify.
+- You are spawning subagents that may fail
+- A subagent returned an error or unexpected output
+- You need to decide whether to retry, escalate, or abort
 
-**Announce at start:** "I'm using error-recovery to handle this failure."
+## Failure Categories
 
-## The Recovery Protocol
+| Category | Symptoms | Strategy |
+|----------|----------|----------|
+| **Transient** | Timeout, malformed output, parsing error | Simple Retry |
+| **Context Gap** | "I don't have enough information", unclear task | Context Enhancement |
+| **Complexity** | Partial completion, scope creep, tangents | Scope Reduction |
+| **Boundary/Contract** | `status: blocked`, boundary_violation, contract_change | Escalation |
+| **Fatal** | Repeated failures (3+), fundamental misunderstanding | Abort with Report |
 
-```
-Error Detected
-      │
-      ▼
-┌─────────────┐
-│ 1. ASSESS   │ ← Severity? Scope? Impact?
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│ 2. PRESERVE │ ← Capture evidence before it's lost
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│ 3. RECOVER  │ ← Follow decision tree
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│ 4. VERIFY   │ ← Confirm clean state
-└──────┬──────┘
-       │
-       ▼
-┌─────────────┐
-│ 5. DOCUMENT │ ← Record what happened
-└─────────────┘
-```
+## Retry Strategies
 
-## Step 1: Assess Severity
+### Strategy 1: Simple Retry
 
-### Severity Levels
-
-| Level | Description | Examples |
-|-------|-------------|----------|
-| **Critical** | System unusable, data at risk | Build completely broken, tests cause data loss |
-| **Major** | Significant functionality broken | Feature doesn't work, many tests failing |
-| **Minor** | Isolated issue, workaround exists | Single test flaky, style error |
-| **Info** | Warning only, not blocking | Deprecation notice, performance hint |
-
-### Assessment Questions
-
-```markdown
-## Error Assessment
-
-**Error:** [Description of error]
-**Location:** [Where it occurred]
-
-### Severity Checklist
-- [ ] Is the system still functional?
-- [ ] Is any data at risk?
-- [ ] Are other features affected?
-- [ ] Is this blocking progress?
-
-### Scope
-- Files affected: [list]
-- Features affected: [list]
-- Users affected: [none/some/all]
-```
-
-## Step 2: Preserve Evidence
-
-**Capture BEFORE attempting fixes:**
-
-### Error Logs
-
-```bash
-# Capture error output
-pnpm test 2>&1 | tee error-log.txt
-
-# Or from failed command
-./failing-command 2>&1 | tee error-log.txt
-```
-
-### Stack Traces
-
-```markdown
-## Stack Trace
+For transient failures. Same prompt, up to 3 attempts.
 
 ```
-Error: Connection refused
-    at Database.connect (src/db/connection.ts:45)
-    at UserService.init (src/services/user.ts:23)
-    at main (src/index.ts:12)
-```
-```
+# Track attempts
+attempts: 0
+max_attempts: 3
 
-### State Capture
-
-```bash
-# Git state
-git status
-git diff
-
-# Environment state
-env | grep -E "NODE|NPM|PATH"
-
-# Dependency state
-pnpm list
+# On failure
+IF attempts < max_attempts:
+  attempts += 1
+  Task(same_subagent_type, same_model, same_prompt)
+ELSE:
+  Mark as FAILED, move on
 ```
 
-### Screenshot (if visual)
+**Use when:**
+- Output was malformed or truncated
+- Timeout occurred
+- Agent returned empty/null response
 
-For UI errors, capture screenshots before changes.
+### Strategy 2: Context Enhancement
 
-## Step 3: Recover
-
-### Decision Tree
+Add more information to help the agent succeed.
 
 ```
-What type of failure?
-         │
-    ┌────┴────┬────────────┬────────────┐
-    │         │            │            │
-  Code      Build      Environment   External
-  Error     Error        Issue       Service
-    │         │            │            │
-    ▼         ▼            ▼            ▼
-  ┌────┐   ┌────┐      ┌────┐      ┌────┐
-  │Git │   │Clean│     │Re-  │     │Wait/│
-  │reco│   │build│     │init │     │Retry│
-  │very│   │     │     │     │     │     │
-  └────┘   └────┘      └────┘      └────┘
+Task(
+  subagent_type: "implementer",
+  model: "sonnet",
+  prompt: |
+    ## PREVIOUS ATTEMPT FAILED
+
+    Error: {error_message}
+    Output received: {partial_output}
+
+    ## ADDITIONAL CONTEXT
+
+    Here is more information that may help:
+    - Related file: @{additional_file_path}
+    - Pattern to follow: {example_pattern}
+    - Specific guidance: {clarification}
+
+    ## ORIGINAL TASK
+
+    {original_task_description}
+
+    Output to: {output_path}
+)
 ```
 
-### Code Error Recovery
+**Use when:**
+- Agent said "I don't understand" or "unclear requirements"
+- Agent made incorrect assumptions
+- Agent asked questions in output
 
-**Single file broken:**
+**Context to add:**
+- Related code files the agent might need
+- Similar implementations as examples
+- Explicit clarification of ambiguous points
+- Error message from previous attempt
 
-```bash
-# Revert just that file
-git checkout HEAD -- path/to/file.ts
+### Strategy 3: Scope Reduction
+
+Break the failing task into smaller, more manageable pieces.
+
+```
+# Original task failed
+Task: "Implement full authentication system"
+
+# Split into subtasks
+Task(implementer, "Implement password hashing utility")
+Task(implementer, "Implement session token generation")
+Task(implementer, "Implement login endpoint")
+Task(implementer, "Implement logout endpoint")
 ```
 
-**Feature broken (multiple files):**
+**Use when:**
+- Agent completed partial work then failed
+- Task description was too broad
+- Agent went off on tangents
+- Output shows confusion about scope
 
-```bash
-# Find last good commit
-git log --oneline
+**Splitting guidelines:**
+- Each subtask should be independently completable
+- Each subtask should have clear boundaries
+- Subtasks can run in parallel if no dependencies
+- Recombine outputs after all subtasks complete
 
-# Revert to that commit (soft reset keeps changes staged)
-git reset --soft [GOOD_COMMIT]
+### Strategy 4: Escalation
 
-# Or hard reset (discards changes)
-git reset --hard [GOOD_COMMIT]
+Route to specialized agent for resolution.
+
+```
+# For boundary violations
+Task(
+  subagent_type: "contract-resolver",
+  model: "sonnet",
+  prompt: |
+    A task is blocked due to boundary/contract issues.
+
+    Blocked task output: memory/tasks/{task_id}/output.json
+    Blocked reason: {blocked_reason}
+    Current contracts: {contract_paths}
+
+    Analyze impact and provide resolution.
+    Output to: memory/contracts/resolution_{task_id}.json
+)
 ```
 
-**Working directory is a mess:**
+**Escalation paths:**
 
-```bash
-# Stash current changes
-git stash
+| Failure Type | Escalate To | Action |
+|--------------|-------------|--------|
+| `blocked_reason: boundary_violation` | contract-resolver | Expand boundaries or redesign |
+| `blocked_reason: contract_change` | contract-resolver | Modify contract, re-verify dependents |
+| `blocked_reason: dependency_issue` | executor (self) | Re-check dependency status |
+| Repeated implementation failures | architect | Reconsider design approach |
 
-# Verify clean state
-git status
+### Strategy 5: Abort with Report
 
-# Optionally recover stash later
-git stash pop
+When recovery is not possible, fail gracefully.
+
+```json
+{"tasks":[{"id":"{task_id}","status":"failed","failure_reason":"{specific reason}","attempts_made":3,"recovery_attempted":[{"strategy":"simple_retry","result":"same_error"},{"strategy":"context_enhancement","result":"different_error"},{"strategy":"scope_reduction","result":"subtasks_also_failed"}],"recommendation":"Task may need architectural redesign"}]}
 ```
 
-### Build Error Recovery
+**Use when:**
+- 3+ retry attempts failed
+- Different strategies all failed
+- Fundamental misunderstanding of requirements
+- Task is actually impossible given constraints
 
-```bash
-# Clean build artifacts
-rm -rf node_modules dist build .cache
+## Decision Tree
 
-# Reinstall dependencies
-pnpm install --frozen-lockfile  # Clean install from lock file
-
-# Rebuild
-pnpm build
+```
+On Subagent Failure:
+│
+├─ Is output malformed/empty/timeout?
+│  └─ YES → Strategy 1: Simple Retry (up to 3x)
+│
+├─ Did agent say "unclear" or ask questions?
+│  └─ YES → Strategy 2: Context Enhancement
+│
+├─ Did agent complete partial work?
+│  └─ YES → Strategy 3: Scope Reduction
+│
+├─ Is status "blocked" with boundary/contract reason?
+│  └─ YES → Strategy 4: Escalation to contract-resolver
+│
+├─ Have we tried 3+ strategies already?
+│  └─ YES → Strategy 5: Abort with Report
+│
+└─ Unknown error
+   └─ Try Strategy 2 first, then escalate
 ```
 
-### Environment Error Recovery
+## Retry State Tracking
 
-```bash
-# Check environment
-env | grep -E "NODE|PNPM"
+Track retry attempts in the execution state file:
 
-# Reset Node modules
-rm -rf node_modules
-pnpm install --frozen-lockfile
-
-# If using nvm, verify version
-nvm use
-
-# Re-run init script
-./scripts/init.sh
+```json
+{"tasks":[{"id":"task-001","status":"running","attempts":2,"last_error":"Timeout after 120s","retry_strategy":"simple_retry"},{"id":"task-002","status":"running","attempts":1,"last_error":"Needs access to src/config/db.ts","retry_strategy":"context_enhancement","context_added":["src/config/db.ts","src/types/config.ts"]}]}
 ```
 
-### External Service Error
+## Integration with Executor Loop
 
-```bash
-# Check if service is up
-curl -I https://service.example.com/health
-
-# If down, wait and retry
-sleep 60
-curl -I https://service.example.com/health
-
-# If still down, check status page
-# Document as external blocker
+```
+# Enhanced execution loop
+WHILE tasks remain incomplete:
+  1. Read state file
+  2. Find ready tasks
+  3. Spawn ready tasks
+  4. Check completed tasks:
+     FOR each completed task:
+       IF status == pre_complete:
+         spawn verifier
+       ELIF status == blocked:
+         apply Strategy 4 (Escalation)
+       ELIF status == failed:
+         determine_failure_category()
+         apply_appropriate_strategy()
+         update_retry_state()
+  5. Update state file
+  6. IF all verified: EXIT
+  7. IF all failed with no recovery: EXIT with failure report
 ```
 
-## Step 4: Verify
+## Principles
 
-After recovery, verify clean state:
-
-### Basic Verification
-
-```bash
-# Clean working directory
-git status
-# Expected: "nothing to commit, working tree clean" or known changes
-
-# Tests pass
-pnpm test
-
-# Build succeeds
-pnpm build
-
-# Types check
-pnpm typecheck
-```
-
-### Functionality Verification
-
-```bash
-# Run the specific thing that was broken
-pnpm test --grep "specific test"
-
-# Or verify the feature manually
-```
-
-## Step 5: Document
-
-### Issue Comment
-
-```bash
-gh issue comment [ISSUE_NUMBER] --body "## Error Recovery
-
-**Error encountered:** [Description]
-
-**Severity:** Major
-
-**Evidence:**
-\`\`\`
-[Error output]
-\`\`\`
-
-**Recovery actions:**
-1. [Action 1]
-2. [Action 2]
-
-**Verification:**
-- [x] Tests pass
-- [x] Build succeeds
-
-**Root cause:** [If known]
-
-**Prevention:** [If applicable]
-"
-```
-
-### Knowledge Graph
-
-```javascript
-// Store for future reference
-mcp__memory__add_observations({
-  observations: [{
-    entityName: "Issue #[NUMBER]",
-    contents: [
-      "Encountered [error type] on [date]",
-      "Caused by: [root cause]",
-      "Resolved by: [recovery action]"
-    ]
-  }]
-});
-```
-
-## Common Recovery Patterns
-
-### "Tests were passing, now failing"
-
-```bash
-# What changed?
-git diff HEAD~3
-
-# Did dependencies change?
-git diff HEAD~3 pnpm-lock.yaml
-
-# Clean reinstall
-rm -rf node_modules && pnpm install --frozen-lockfile
-```
-
-### "Works locally, fails in CI"
-
-```bash
-# Check for environment differences
-# - Node version
-# - OS differences
-# - Env vars
-
-# Run with CI-like settings
-CI=true pnpm test
-```
-
-### "Build was working, now broken"
-
-```bash
-# Check TypeScript errors
-pnpm typecheck
-
-# Check for circular dependencies
-pnpm dlx madge --circular src/
-
-# Clean build
-rm -rf dist && pnpm build
-```
-
-### "I broke everything"
-
-```bash
-# Don't panic
-# Find last known good state
-git log --oneline
-
-# Reset to that state
-git reset --hard [GOOD_COMMIT]
-
-# Verify
-pnpm test
-
-# Start again more carefully
-```
-
-## Escalation
-
-If recovery fails after 2-3 attempts:
-
-```markdown
-## Escalation: Unrecoverable Error
-
-**Issue:** #[NUMBER]
-
-**Error:** [Description]
-
-**Recovery attempts:**
-1. [Attempt 1] - [Result]
-2. [Attempt 2] - [Result]
-
-**Current state:** [Broken/Partially working]
-
-**Evidence preserved:** [Links to logs, screenshots]
-
-**Requesting help with:** [Specific question]
-```
-
-Mark issue as Blocked and await human input.
-
-## Checklist
-
-When error occurs:
-
-- [ ] Severity assessed
-- [ ] Evidence preserved (logs, state, screenshots)
-- [ ] Recovery action selected
-- [ ] Recovery executed
-- [ ] Clean state verified
-- [ ] Tests pass
-- [ ] Build succeeds
-- [ ] Issue documented
-
-## Integration
-
-This skill is called by:
-- `issue-driven-development` - When errors occur
-- `ci-monitoring` - CI failures
-
-This skill may trigger:
-- `research-after-failure` - If cause is unknown
-- Issue update via `issue-lifecycle`
+1. **Fail fast, recover smart** - Don't retry blindly; analyze the failure first
+2. **Preserve partial work** - If agent completed 50%, don't discard it
+3. **Escalate early** - Boundary/contract issues need resolver, not retries
+4. **Track everything** - Log all attempts for reflection phase
+5. **Know when to quit** - 3 failed strategies = abort, don't loop forever

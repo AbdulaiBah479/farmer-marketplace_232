@@ -9,11 +9,11 @@ Group multiple code blocks with tabs and automatic icons.
 
 ## Requirements
 
-Enable Comark syntax in headmatter:
+Enable MDC syntax in headmatter:
 
 ```md
 ---
-comark: true
+mdc: true
 ---
 ```
 

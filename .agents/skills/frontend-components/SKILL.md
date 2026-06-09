@@ -1,25 +1,26 @@
 ---
-name: Frontend Components
-description: Design and build reusable, composable UI components with single responsibility, clear interfaces, and proper encapsulation. Use this skill when creating or editing React components, Vue components, Svelte components, or any modular UI building blocks. When defining component props, state management, component composition, or component APIs. When working with component files (e.g., `.jsx`, `.tsx`, `.vue`, `.svelte`), component libraries, design systems, or shared UI elements. When refactoring components, extracting reusable logic, or building component hierarchies.
+name: frontend-components
+description: Build reusable, composable UI components with single responsibilities, clear prop interfaces, proper state management, and minimal coupling. Use this skill when creating or editing React components (.tsx, .jsx files), when designing component APIs with props, when implementing component composition patterns, when managing local component state, when building shadcn/ui components, when creating shared UI components in resources/js/Components/, when implementing component documentation, or when refactoring large components into smaller, focused pieces.
 ---
 
 # Frontend Components
 
+This Skill provides Claude Code with specific guidance on how to adhere to coding standards as they relate to how it should handle frontend components.
+
 ## When to use this skill
 
-- When creating new UI component files (e.g., React, Vue, Svelte, Web Components)
-- When editing existing component files (`.jsx`, `.tsx`, `.vue`, `.svelte`)
-- When defining component props and interfaces
-- When implementing component state management
-- When building reusable component libraries or design systems
-- When composing complex UIs from smaller components
-- When refactoring monolithic components into smaller pieces
-- When documenting component usage and APIs
-- When creating component prop defaults and validation
-- When managing component lifecycle and side effects
-- When working in component directories or shared UI folders
-
-This Skill provides Claude Code with specific guidance on how to adhere to coding standards as they relate to how it should handle frontend components.
+- When creating new React components in `.tsx` or `.jsx` files
+- When editing existing components in `resources/js/Components/` or similar directories
+- When designing component prop interfaces and TypeScript types
+- When implementing component composition by combining smaller components
+- When managing component state (useState, useReducer, etc.)
+- When building or customizing shadcn/ui components
+- When creating reusable UI components (buttons, cards, modals, forms, etc.)
+- When refactoring monolithic components into smaller, focused pieces
+- When implementing component documentation or usage examples
+- When deciding between local state and lifting state up to parent components
+- When defining component naming conventions
+- When encapsulating component internal logic and exposing minimal APIs
 
 ## Instructions
 

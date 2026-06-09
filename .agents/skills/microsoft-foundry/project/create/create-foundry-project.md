@@ -1,17 +1,15 @@
 ---
 name: foundry-create-project
-description: |
+description: >-
   Create a new Azure AI Foundry project using Azure Developer CLI (azd) to provision infrastructure for hosting AI agents and models.
   USE FOR: create Foundry project, new AI Foundry project, set up Foundry, azd init Foundry, provision Foundry infrastructure, onboard to Foundry, create Azure AI project, set up AI project.
-  DO NOT USE FOR: deploying agents to existing projects (use agent/deploy), creating agent code (use agent/create), deploying AI models from catalog (use microsoft-foundry main skill), Azure Functions (use azure-functions).
+  DO NOT USE FOR: deploying agents to existing projects (use deploy), creating agent code (use agent/create), deploying AI models from catalog (use microsoft-foundry main skill), Azure Functions (use azure-functions).
 allowed-tools: Read, Write, Bash, AskUserQuestion
 ---
 
 # Create Azure AI Foundry Project
 
-Create a new Azure AI Foundry project using azd. Provisions: Foundry account, project, Application Insights, managed identity, and RBAC permissions. Optionally enables hosted agents (capability host + Container Registry).
-
-**Table of Contents:** [Prerequisites](#prerequisites) · [Workflow](#workflow) · [Best Practices](#best-practices) · [Troubleshooting](#troubleshooting) · [Related Skills](#related-skills) · [Resources](#resources)
+Create a new Azure AI Foundry project using azd. Provisions: Foundry account, project, Container Registry, Application Insights, managed identity, and RBAC permissions.
 
 ## Prerequisites
 
@@ -32,10 +30,10 @@ If multiple subscriptions, ask which to use, then `az account set --subscription
 **3. Role permissions:**
 
 ```bash
-az role assignment list --assignee "$(az ad signed-in-user show --query id -o tsv)" --query "[?contains(roleDefinitionName, 'Owner') || contains(roleDefinitionName, 'Contributor') || contains(roleDefinitionName, 'Foundry')].{Role:roleDefinitionName, Scope:scope}" -o table
+az role assignment list --assignee "$(az ad signed-in-user show --query id -o tsv)" --query "[?contains(roleDefinitionName, 'Owner') || contains(roleDefinitionName, 'Contributor') || contains(roleDefinitionName, 'Azure AI')].{Role:roleDefinitionName, Scope:scope}" -o table
 ```
 
-Requires Owner, Contributor, or Foundry Owner. If insufficient — STOP, request elevated access from admin.
+Requires Owner, Contributor, or Azure AI Owner. If insufficient — STOP, request elevated access from admin.
 
 **4. Azure Developer CLI** — `azd version`. If missing: https://aka.ms/azure-dev/install
 
@@ -55,7 +53,6 @@ Use AskUserQuestion for:
 
 1. **Project name** — used as azd environment name and resource group (`rg-<name>`). Must contain only alphanumeric characters and hyphens. Examples: `my-ai-project`, `dev-agents`
 2. **Azure location** (optional) — defaults to North Central US (required for hosted agents preview)
-3. **Enable hosted agents?** (yes/no) — provisions a capability host and Container Registry for deploying hosted agents. Defaults to no.
 
 ### Step 3: Create Directory and Initialize
 
@@ -75,21 +72,13 @@ If user specified a non-default location:
 azd config set defaults.location <location>
 ```
 
-If user chose to enable hosted agents:
-
-```bash
-azd env set ENABLE_HOSTED_AGENTS true
-```
-
-This provisions a capability host (`capabilityHosts/agents`) on the Foundry account and auto-adds an Azure Container Registry for hosted agent deployments.
-
 ### Step 4: Provision Infrastructure
 
 ```bash
 azd provision --no-prompt
 ```
 
-Takes 5–10 minutes. Creates resource group, Foundry account/project, Application Insights, managed identity, and RBAC roles. If hosted agents enabled, also creates Container Registry and capability host.
+Takes 5–10 minutes. Creates resource group, Foundry account/project, Container Registry, Application Insights, managed identity, and RBAC roles.
 
 ### Step 5: Retrieve Project Details
 
@@ -101,7 +90,7 @@ Capture `AZURE_AI_PROJECT_ID`, `AZURE_AI_PROJECT_ENDPOINT`, and `AZURE_RESOURCE_
 
 ### Step 6: Next Steps
 
-- Deploy an agent → `agent/deploy` skill
+- Deploy an agent → `deploy` skill
 - Browse models → `foundry_models_list` MCP tool
 - Manage project → https://ai.azure.com
 
@@ -120,13 +109,13 @@ Capture `AZURE_AI_PROJECT_ID`, `AZURE_AI_PROJECT_ENDPOINT`, and `AZURE_RESOURCE_
 | `azd: command not found` | Install from https://aka.ms/azure-dev/install |
 | `ERROR: Failed to authenticate` | Run `azd auth login`; verify subscription with `az account list` |
 | `environment name '' is invalid` | Name must be alphanumeric + hyphens only |
-| `ERROR: Insufficient permissions` | Request Contributor or Foundry Owner role from admin |
+| `ERROR: Insufficient permissions` | Request Contributor or Azure AI Owner role from admin |
 | Region not supported for hosted agents | Use `azd config set defaults.location northcentralus` |
 | Provisioning timeout | Check region availability, verify connectivity, retry `azd provision` |
 
 ## Related Skills
 
-- **agent/deploy** — Deploy agents to the created project
+- **deploy** — Deploy agents to the created project
 - **agent/create** — Create a new agent for deployment
 
 ## Resources

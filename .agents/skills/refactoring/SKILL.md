@@ -1,191 +1,228 @@
 ---
 name: refactoring
-description: Apply refactoring patterns when consolidating code, extracting functions, or discussing DRY principles. Use when identifying duplicate code, planning consolidation, or discussing code organization. Auto-apply when editing files in src/ or when user mentions "duplicate", "refactor", "DRY", "extract", "consolidate", or "similar code".
+description: Systematic refactoring with small-step discipline. Use when user says 'refactor', 'clean up', 'restructure', 'extract', 'rename', 'simplify', or mentions code smells. Enforces one change → test → commit cycle. For structural improvements, NOT style/formatting (use /lint). NOT for adding features or fixing bugs.
+allowed-tools: '*'
 ---
 
-# Refactoring Skill
+# Refactoring
 
-Guide for identifying and consolidating duplicate code while maintaining codebase quality.
+Improve code structure without changing behavior. One small step at a time.
 
-## Core Principle: Discuss Before Deciding
+**Iron Law:** ONE REFACTORING → TEST → COMMIT. Never batch changes.
 
-**IMPORTANT**: Always discuss refactoring decisions with the user before implementing. Use `AskUserQuestion` to:
-- Confirm whether code is truly duplicate vs. intentionally similar
-- Validate proposed extraction patterns
-- Get approval on naming and module placement
-- Check if there are historical reasons for current structure
+## When to Use
 
-## Critical Anti-Pattern: Dead Helpers
+Answer IN ORDER. Stop at first match:
 
-**The most dangerous duplication**: A tested helper that production doesn't use.
+1. User says "refactor", "clean up", "restructure"? → Use this skill
+2. User asks to "extract", "rename", "simplify"? → Use this skill
+3. Code smell identified? → Use this skill
+4. User wants to add feature or fix bug? → Skip (use tdd-enforcer)
+5. User wants formatting/style fixes? → Skip (use /lint)
 
+**Code smells** (common triggers):
+
+- Duplicated code (same logic in multiple places)
+- Long function (>30 lines, doing too much)
+- Magic numbers/strings (unexplained literals)
+- Deep nesting (>3 levels of indentation)
+- Dead code (unused functions, unreachable branches)
+- Poor naming (unclear what something does)
+
+---
+
+## Phase 1: ASSESS
+
+**Is this actually refactoring?**
+
+| User Intent         | Action                                          |
+| ------------------- | ----------------------------------------------- |
+| "Make this cleaner" | ✓ Refactoring                                   |
+| "Add validation"    | ✗ New behavior → tdd-enforcer                   |
+| "Fix this bug"      | ✗ Bug fix → tdd-enforcer or systematic-debugger |
+| "Format this code"  | ✗ Style → /lint                                 |
+
+**If not refactoring:** Explain and suggest correct approach.
+
+---
+
+## Phase 2: PROTECT
+
+**Does the code have tests?**
+
+| Coverage         | Action                                        |
+| ---------------- | --------------------------------------------- |
+| Well-tested      | Skip to Phase 3                               |
+| Partial coverage | Add characterization tests for untested parts |
+| No tests         | Add characterization tests first              |
+
+### Characterization Tests
+
+Capture current behavior before refactoring:
+
+```typescript
+// Characterization test - captures ACTUAL behavior
+it('processOrder returns current behavior', () => {
+  const result = processOrder({ items: [], user: null });
+  // Whatever it returns NOW is the expected value
+  expect(result).toEqual({ status: 'empty', total: 0 });
+});
 ```
-❌ What we found:
-   marchingSquares.js: renderMultiContour() - tested, used by Storybook
-   main.jsx: inline loop doing same thing - untested, used in production
 
-   Result: Tests pass, but production runs different code.
+**Purpose:** Safety net, not specification. Test what the code DOES, not what it SHOULD do.
+
+---
+
+## Phase 3: REFACTOR
+
+**Iron Law:** ONE refactoring at a time. Run tests after EVERY change.
+
+### Refactoring Catalog
+
+**Tier 1 - Always Safe** (no behavior change possible):
+
+| Smell                | Refactoring          | Example                                |
+| -------------------- | -------------------- | -------------------------------------- |
+| Unclear name         | **Rename**           | `d` → `discountAmount`                 |
+| Long function        | **Extract Function** | Pull 10 lines into `calculateTax()`    |
+| Unnecessary variable | **Inline Variable**  | Remove `temp = x; return temp;`        |
+| Misplaced code       | **Move Function**    | Move `validate()` to `Validator` class |
+
+```typescript
+// ❌ Before: unclear name
+const d = price * 0.2;
+
+// ✅ After: Rename
+const discountAmount = price * 0.2;
 ```
 
-### How to Detect
+**Tier 2 - Safe with Tests** (low risk if tests exist):
 
-Before any refactoring work, check for unused helpers:
-```bash
-grep -l "export function" src/render/*.js | while read f; do
-  funcs=$(grep -o "export function [a-zA-Z]*" "$f" | cut -d' ' -f3)
-  for func in $funcs; do
-    if ! grep -rq "$func" src/main.jsx src/stories/; then
-      echo "⚠️  $f: $func exported but not used in production"
-    fi
-  done
-done
-```
+| Smell               | Refactoring               | Example                                           |
+| ------------------- | ------------------------- | ------------------------------------------------- |
+| Repeated expression | **Extract Variable**      | `order.items.length > 0` → `const hasItems = ...` |
+| Complex conditional | **Decompose Conditional** | Extract `if` branches to named functions          |
+| Nested conditionals | **Guard Clauses**         | Early returns instead of deep nesting             |
+| Magic literal       | **Replace Magic Literal** | `0.2` → `VIP_DISCOUNT_RATE`                       |
+| Unused code         | **Remove Dead Code**      | Delete unreachable branches                       |
 
-### How to Fix
-
-1. **If helper is correct**: Update main.jsx to use it, delete inline code
-2. **If inline is correct**: Delete the unused helper and its tests
-3. **Never leave both**: One implementation, used everywhere
-
-## Duplicate Code Patterns to Look For
-
-### 1. Copy-Paste Functions
-Similar functions with minor variations:
-```javascript
-// Suspicious pattern - similar structure, different constants
-function calculateFoamA(x, y) {
-  return x * 0.5 + y * FOAM_FACTOR_A;
+```typescript
+// ❌ Before: nested conditionals
+function getDiscount(user) {
+  if (user) {
+    if (user.isVIP) {
+      return 0.2;
+    } else {
+      return 0.1;
+    }
+  }
+  return 0;
 }
-function calculateFoamB(x, y) {
-  return x * 0.5 + y * FOAM_FACTOR_B;
+
+// ✅ After: Guard Clauses
+function getDiscount(user) {
+  if (!user) return 0;
+  if (user.isVIP) return 0.2;
+  return 0.1;
 }
 ```
 
-**Before refactoring, ASK**:
-- Are these intentionally separate for performance/clarity?
-- Should they share logic or remain independent?
+**Tier 3 - Requires Care** (higher risk, break into smaller steps):
 
-### 2. Repeated Logic Blocks
-Same operations appearing in multiple places:
-```javascript
-// Pattern: repeated clamping/normalization
-const value = Math.max(0, Math.min(1, rawValue));  // appears in 5 files
-```
+| Smell                      | Refactoring                    | Caution                                     |
+| -------------------------- | ------------------------------ | ------------------------------------------- |
+| God class                  | **Extract Class**              | Do incrementally, move one method at a time |
+| Type-checking conditionals | **Replace with Polymorphism**  | Requires class hierarchy                    |
+| Too many parameters        | **Introduce Parameter Object** | Changes function signature                  |
+| Complex loop               | **Replace Loop with Pipeline** | Ensure equivalent behavior                  |
 
-### 3. Similar Data Transformations
-Multiple functions doing equivalent transformations on different data shapes.
+**Tie-breaker:** If multiple refactorings apply, choose smallest scope first (Rename < Extract Variable < Extract Function < Extract Class).
 
-### 4. Parallel Structures
-Similar class/module structures that could share a base:
-```javascript
-// src/render/foamRenderer.js
-// src/render/waveRenderer.js
-// Both have: init(), update(), render(), cleanup()
-```
+---
 
-## Refactoring Decision Framework
+## Phase 4: VERIFY
 
-### When TO Consolidate (Rule of 3+)
-- Same logic appears 3+ times
-- Changes to one copy usually require changes to others
-- The abstraction has a clear, meaningful name
-- User agrees the duplication is problematic
+After each refactoring:
 
-### When NOT to Consolidate
-- Code is similar but serves different purposes
-- Premature abstraction would obscure intent
-- Performance-critical paths benefit from inlining
-- User prefers explicit over DRY in this case
+1. **Run tests** - Must pass
+2. **If tests pass:** Commit with `refactor: [what changed]`
+3. **If tests fail:** Revert immediately
 
-## Discovery Process
-
-1. **Identify candidates**: Use grep/glob to find similar patterns
-2. **Assess scope**: How many instances? How similar?
-3. **Discuss with user**: Present findings, propose options
-4. **Get explicit approval**: Before any extraction
-5. **Plan the refactor**: Create plan document if significant
-6. **Implement incrementally**: One extraction at a time
-7. **Verify**: Run tests after each change
-
-## Codebase-Specific Patterns
-
-This project uses:
-- Vanilla JavaScript (no TypeScript)
-- Canvas 2D rendering
-- Physics simulation with tight loops
-- Vitest for testing
-
-**Performance considerations**:
-- Rendering code may intentionally inline for speed
-- Physics calculations may duplicate for cache locality
-- Always check if duplication is intentional optimization
-
-## Discussion Templates
-
-When presenting refactoring opportunities:
-
-```
-I found [N] similar code blocks:
-- [file1:line] - [brief description]
-- [file2:line] - [brief description]
-
-Options:
-A) Extract to shared function in [module]
-B) Keep separate (they serve different purposes)
-C) Other approach
-
-Which direction would you prefer?
-```
-
-## Integration with Plans
-
-For significant refactoring:
-1. Create plan in `plans/refactoring/` using `/feat refactoring/[name]`
-2. Document current state, proposed changes, affected files
-3. Track progress via plan status
-
-## Commands Reference
+### Revert Protocol
 
 ```bash
-# Search for similar functions
-grep -r "function.*calculate" src/
-
-# Find files with similar structure
-find src/ -name "*.js" -exec grep -l "pattern" {} \;
-
-# Check test coverage before refactoring
-npm test
-
-# Verify after changes
-npm run lint && npm test
+git checkout -- <changed-files>
 ```
 
-## Checklist Before Refactoring
+**After revert:**
 
-- [ ] Discussed approach with user
-- [ ] Confirmed duplication is problematic (not intentional)
-- [ ] Tests exist for affected code
-- [ ] User approved proposed pattern/naming
-- [ ] Plan document created (if significant change)
+- Was the refactoring too large? → Try smaller step
+- Did it accidentally change behavior? → Reconsider approach
+- DO NOT attempt to "fix" a failed refactoring
 
-## CRITICAL: Testing After Refactoring
+### After 2 Failed Attempts
 
-After EVERY refactoring change, run tests in this order:
+**STOP.** Ask user:
 
-```bash
-# 1. Lint first (fast feedback)
-npm run lint
+> "I've attempted this refactoring twice and tests keep failing. This suggests either:
+>
+> 1. The refactoring is too large (need smaller steps)
+> 2. The code has hidden dependencies
+> 3. Tests are brittle
+>
+> How would you like to proceed?"
 
-# 2. Smoke test - verify app actually loads
-npx playwright test tests/smoke.spec.js:3
+---
 
-# 3. Specific tests for changed files
-npx vitest run src/path/changed-file.test.js
+## Phase 5: ITERATE
 
-# 4. Full suite only if needed
-npm test
+```text
+More refactoring needed?
+├─ Yes → Return to Phase 3 (one more refactoring)
+└─ No → Done
+    └─ Report: "Refactoring complete. Changes: [summary]"
 ```
 
-**DO NOT skip the smoke test** - unit tests can pass while the app is broken (e.g., broken imports not exercised in unit tests).
+---
 
-**DO NOT run the full test suite first** - start with specific tests for faster iteration.
+## Edge Cases
+
+**Partial test coverage:**
+
+- Identify which functions are tested vs untested
+- Add characterization tests only for code you're about to refactor
+- Don't boil the ocean - test what you touch
+
+**Refactoring reveals a bug:**
+
+- STOP refactoring
+- Note the bug location
+- Ask user: "Found potential bug at X. Fix it now (switching to tdd-enforcer) or continue refactoring?"
+
+**User requests large refactoring:**
+
+- Break into steps: "I'll refactor this incrementally. First: [step 1]"
+- Complete each step fully before next
+- Never batch multiple refactorings in one edit
+
+---
+
+## Anti-Patterns
+
+| Don't                           | Do                                    |
+| ------------------------------- | ------------------------------------- |
+| Batch multiple refactorings     | One refactoring → test → commit       |
+| "Fix" a failed refactoring      | Revert, then try smaller step         |
+| Refactor without tests          | Add characterization tests first      |
+| Change behavior during refactor | That's a feature/fix, not refactoring |
+| Skip the commit                 | Commit after every green test         |
+
+---
+
+## Key Takeaways
+
+1. **One change at a time** - Never batch refactorings
+2. **Tests before refactoring** - No safety net = no refactoring
+3. **Revert on failure** - Don't fix, revert and retry smaller
+4. **Commit after each success** - `refactor: [description]`
+5. **Smallest scope first** - Rename < Extract < Move < Restructure

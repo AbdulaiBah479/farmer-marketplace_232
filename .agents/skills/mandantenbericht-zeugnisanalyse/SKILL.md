@@ -5,11 +5,15 @@ description: "Schriftlicher Ergebnisbericht an den Arbeitnehmer nach abgeschloss
 
 # Mandantenbericht zur Zeugnisanalyse
 
-Nach Abschluss der Ampelanalyse erhaelt der Mandant einen schriftlichen Bericht. Dieser Bericht ist das zentrale Mandantenkommunikationsdokument: Er fasst die Befunde zusammen, ordnet sie rechtlich ein, zeigt Handlungsoptionen auf und enthaelt eine klare Empfehlung. Er ist nicht das Anwaltsschreiben an den Arbeitgeber.
+## Fachlicher Anker
+
+- **Normen:** §§ 611a, §§ 1, §§ 14.
+- **Entscheidungs-/Quellenanker:** Tragende Rechtsprechung nur mit Gericht, Datum, Aktenzeichen und frei prüfbarer Quelle einsetzen; keine Entscheidung aus Modellwissen erzwingen.
+- **Quellenhygiene:** `references/quellenhygiene.md` und `references/zitierweise.md` beachten.
 
 ## Zielgruppe und Sprachstil
 
-Der Bericht ist fuer einen juristischen Laien geschrieben. Fachbegriffe werden eingefuehrt und erklaert. Die Sprache ist klar, sachlich und respektvoll. Der Mandant soll am Ende verstehen, wie schlecht oder gut sein Zeugnis tatsaechlich ist, welche Stellen warum problematisch sind und welche Optionen er hat. Floskeln und Konjunktivketten sind zu vermeiden.
+Der Bericht ist für einen juristischen Laien geschrieben. Fachbegriffe werden eingefuehrt und erklaert. Die Sprache ist klar, sachlich und respektvoll. Der Mandant soll am Ende verstehen, wie schlecht oder gut sein Zeugnis tatsaechlich ist, welche Stellen warum problematisch sind und welche Optionen er hat. Floskeln und Konjunktivketten sind zu vermeiden.
 
 ## Aufbau in sieben Abschnitten
 

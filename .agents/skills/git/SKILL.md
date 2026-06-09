@@ -1,100 +1,65 @@
 ---
 name: git
-description: Git operations with conventional commits. Use for staging, committing, pushing, PRs, merges. Auto-splits commits by type/scope. Security scans for secrets.
-version: 1.0.0
+description: Git workflow management including branch validation, commit conventions, PR preparation, and repository health checks.
 ---
 
-# Git Operations
+# Git Workflow Skill
 
-Execute git workflows via `git-manager` subagent to isolate verbose output.
-Activate `context-engineering` skill.
+Git workflow management including branch validation, commit conventions, PR preparation, and repository health checks.
 
-**IMPORTANT:**
-- Sacrifice grammar for the sake of concision.
-- Ensure token efficiency while maintaining high quality.
-- Pass these rules to subagents.
+## Activation
 
-## Arguments
-- `cm`: Stage files & create commits
-- `cp`: Stage files, create commits and push
-- `pr`: Create Pull Request [to-branch] [from-branch]
-  - `to-branch`: Target branch (default: main)
-  - `from-branch`: Source branch (default: current branch)
-- `merge`: Merge [to-branch] [from-branch]
-  - `to-branch`: Target branch (default: main)
-  - `from-branch`: Source branch (default: current branch)
+Auto-activates on keywords: git, branch, commit, pull request, PR, merge, rebase, workflow, conventional commits, branch strategy
 
-## Quick Reference
+## Workflows
 
-| Task | Reference |
-|------|-----------|
-| Commit | `references/workflow-commit.md` |
-| Push | `references/workflow-push.md` |
-| Pull Request | `references/workflow-pr.md` |
-| Merge | `references/workflow-merge.md` |
-| Standards | `references/commit-standards.md` |
-| Safety | `references/safety-protocols.md` |
-| Branches | `references/branch-management.md` |
-| GitHub CLI | `references/gh-cli-guide.md` |
+### Branch Management
+- **branch.md**: Branch creation, validation, and naming conventions
+- **status.md**: Repository status and health checks
 
-## Core Workflow
+### Commit Management
+- **commit.md**: Conventional commit message preparation
 
-### Step 1: Stage + Analyze
+### PR Workflow
+- **pr-prepare.md**: Pull request description generation
+- **pr-check.md**: PR validation and checklist
+
+## Context Files
+
+- **conventional-commits.md**: Commit message format standards
+- **branch-strategies.md**: Branch naming and workflow patterns
+
+## Commands
+
 ```bash
-git add -A && git diff --cached --stat && git diff --cached --name-only
+# Check branch status
+git branch --show-current
+git status
+
+# Validate branch naming
+# Branch format: {type}/{descriptive-slug}
+# Types: feat, fix, docs, refactor, perf, test, chore, hotfix
+
+# Create conventional commit
+git commit -m "$(cat <<'EOF'
+{type}({scope}): {description}
+
+{body}
+
+{footer}
+EOF
+)"
 ```
 
-### Step 2: Security Check
-Scan for secrets before commit:
-```bash
-git diff --cached | grep -iE "(api[_-]?key|token|password|secret|credential)"
-```
-**If secrets found:** STOP, warn user, suggest `.gitignore`.
+## Semantic Release Mapping
 
-### Step 3: Split Decision
-
-**NOTE:**
-- Search for related issues on GitHub and add to body.
-- Only use `feat`, `fix`, or `perf` prefixes for files in `.claude` directory (do not use `docs`).
-
-**Split commits if:**
-- Different types mixed (feat + fix, code + docs)
-- Multiple scopes (auth + payments)
-- Config/deps + code mixed
-- FILES > 10 unrelated
-
-**Single commit if:**
-- Same type/scope, FILES ≤ 3, LINES ≤ 50
-
-### Step 4: Commit
-```bash
-git commit -m "type(scope): description"
-```
-
-## Output Format
-```
-✓ staged: N files (+X/-Y lines)
-✓ security: passed
-✓ commit: HASH type(scope): description
-✓ pushed: yes/no
-```
-
-## Error Handling
-
-| Error | Action |
-|-------|--------|
-| Secrets detected | Block commit, show files |
-| No changes | Exit cleanly |
-| Push rejected | Suggest `git pull --rebase` |
-| Merge conflicts | Suggest manual resolution |
-
-## References
-
-- `references/workflow-commit.md` - Commit workflow with split logic
-- `references/workflow-push.md` - Push workflow with error handling
-- `references/workflow-pr.md` - PR creation with remote diff analysis
-- `references/workflow-merge.md` - Branch merge workflow
-- `references/commit-standards.md` - Conventional commit format rules
-- `references/safety-protocols.md` - Secret detection, branch protection
-- `references/branch-management.md` - Naming, lifecycle, strategies
-- `references/gh-cli-guide.md` - GitHub CLI commands reference
+| Branch Prefix | Commit Type | Version Impact |
+|---------------|-------------|----------------|
+| feat/         | feat:       | Minor (0.X.0)  |
+| fix/          | fix:        | Patch (0.0.X)  |
+| docs/         | docs:       | No release     |
+| refactor/     | refactor:   | No release     |
+| perf/         | perf:       | Patch (0.0.X)  |
+| test/         | test:       | No release     |
+| chore/        | chore:      | No release     |
+| hotfix/       | fix:        | Patch (0.0.X)  |

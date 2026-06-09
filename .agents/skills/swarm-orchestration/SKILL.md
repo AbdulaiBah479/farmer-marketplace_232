@@ -1,5 +1,5 @@
 ---
-name: "Swarm Orchestration"
+name: swarm-orchestration
 description: "Orchestrate multi-agent swarms with agentic-flow for parallel task execution, dynamic topology, and intelligent coordination. Use when scaling beyond single agents, implementing complex workflows, or building distributed AI systems."
 ---
 
@@ -11,7 +11,7 @@ Orchestrates multi-agent swarms using agentic-flow's advanced coordination syste
 
 ## Prerequisites
 
-- agentic-flow v3.0.0-alpha.1+
+- agentic-flow v1.5.11+
 - Node.js 18+
 - Understanding of distributed systems (helpful)
 

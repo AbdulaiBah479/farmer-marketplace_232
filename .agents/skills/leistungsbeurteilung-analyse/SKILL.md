@@ -5,13 +5,11 @@ description: "Analysiert Sätze zur Arbeitsqualität, Arbeitsbereitschaft, Arbei
 
 # Leistungsbeurteilung-Analyse
 
-Die Leistungsbeurteilung umfasst alle Aussagen über die Art und Qualität, in der der Arbeitnehmer seine Aufgaben tatsächlich ausgeführt hat. Sie ist neben der Zufriedenheitsformel der wichtigste Bewertungsbaustein und gliedert sich typischerweise in: Fachkenntnisse und Qualifikation, Arbeitsbereitschaft und Motivation, Arbeitsqualität und Sorgfalt, Arbeitstempo und Effizienz, Belastbarkeit und Stressresistenz sowie Selbstständigkeit und Eigeninitiative.
+## Fachlicher Anker
 
-Jeder dieser Teilbereiche wird durch charakteristische Formulierungen bewertet. Das System ist fein differenziert: "stets sorgfältig" ist eine starke Aussage; "sorgfältig" ohne Steigerung ist mittelwertig; "im Wesentlichen sorgfältig" ist eine Abschwächung. Das Adverb "stets" erhöht die Note; sein Fehlen senkt sie. Das Adjektiv "bemüht" ist im deutschen Zeugniscode eine klassische Note-4-Formulierung — es signalisiert guten Willen, aber fehlende Ergebnisse.
-
-Besonders tückisch sind Sätze, die auf den ersten Blick positiv wirken: "Er zeigte stets großes Engagement" klingt gut, sagt aber nichts über den Erfolg. "Sie war in der Lage, auch schwierige Situationen zu meistern" klingt positiv, impliziert aber, dass sie dies nur gelegentlich schaffte. Formulierungen wie "hat unsere Erwartungen erfüllt" klingen neutral, sind aber kodiert als unterdurchschnittlich.
-
-Belastbarkeit wird häufig durch Formulierungen wie "auch in Stressphasen zuverlässig", "behielt stets die Übersicht" oder "war auch unter hohem Druck belastbar" ausgedrückt. Fehlt ein Hinweis auf Belastbarkeit bei einer Position, die erkennbar belastend war, ist das ein orangefarbenes Signal. Eigeninitiative wird durch "aus eigenem Antrieb", "eigenverantwortlich" oder "ohne gesonderte Anweisung" signalisiert.
+- **Normen:** §§ 611a, §§ 1, §§ 14.
+- **Entscheidungs-/Quellenanker:** Tragende Rechtsprechung nur mit Gericht, Datum, Aktenzeichen und frei prüfbarer Quelle einsetzen; keine Entscheidung aus Modellwissen erzwingen.
+- **Quellenhygiene:** `references/quellenhygiene.md` und `references/zitierweise.md` beachten.
 
 ## Geheimcode-Regeln
 
@@ -40,10 +38,6 @@ Belastbarkeit wird häufig durch Formulierungen wie "auch in Stressphasen zuverl
 
 **Beispiel 5 – Irreführend positiv:** "Er war in der Lage, auch anspruchsvolle Projekte erfolgreich abzuschließen." → Implikation: nur gelegentlich, Note 3-4.
 
-## Ausgabeformat
-
-Jede Leistungsaussage wird in der Ampeltabelle mit Satz, Teilbereich (Qualität/Tempo/Motivation/Belastbarkeit/Eigeninitiative), Ampelfarbe, Notentendenz und Begründung ausgewiesen. Die Gesamttendenz der Leistungsbeurteilung wird am Ende zusammengefasst.
-
 ## Rechtliche Einordnung und Normen
 
 - **§ 109 GewO** — Anspruch auf qualifiziertes wohlwollendes Zeugnis; Grundlage aller Bewertungen
@@ -52,3 +46,4 @@ Jede Leistungsaussage wird in der Ampeltabelle mit Satz, Teilbereich (Qualität/
 ## Aktuelle Rechtsprechung
 
 - Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+

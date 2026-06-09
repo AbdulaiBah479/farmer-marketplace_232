@@ -1,196 +1,145 @@
 ---
 name: nano-banana
-description: "AI image generation using Nano Banana PRO (Gemini 3 Pro Image) and Nano Banana (Gemini 2.5 Flash Image). Use this skill when: (1) Generating images from text prompts, (2) Editing existing images, (3) Creating professional visual assets like infographics, logos, product shots, stickers, (4) Working with character consistency across multiple images, (5) Creating images with accurate text rendering, (6) Any task requiring AI-generated visuals. Triggers on: 'generate image', 'create image', 'make a picture', 'design a logo', 'create infographic', 'AI image', 'nano banana', or any image generation request."
+description: "Generate images with Google Gemini native image models via inference.sh CLI. Models: Gemini 3 Pro Image, Gemini 2.5 Flash Image. Capabilities: text-to-image, image editing, multi-image input. Triggers: nano banana, gemini image, gemini 3 pro image, gemini 2.5 flash image, google image generation, native image generation, gemini native image"
+allowed-tools: Bash(infsh *)
 ---
 
-# Nano Banana PRO Image Generation
+# Nano Banana - Gemini Native Image Generation
 
-Generate professional AI images using Google's Nano Banana models via the Gemini API.
+Generate images with Google Gemini native image models via [inference.sh](https://inference.sh) CLI.
 
-## Prerequisites
+![Nano Banana](https://cloud.inference.sh/u/33sqbmzt3mrg2xxphnhw5g5ear/01k8d6xa9cwawrvzk9cgtsexfc.png)
 
-- API key must be set as `GEMINI_API_KEY` environment variable
-- Uses curl for all API calls (no SDK required)
+## Quick Start
 
-## Model Selection
-
-| Model | Identifier | Best For |
-|-------|------------|----------|
-| **Nano Banana PRO** | `gemini-3-pro-image-preview` | Professional assets, text rendering, infographics, 4K output, complex multi-turn editing |
-| **Nano Banana** | `gemini-2.5-flash-image` | Fast generation, simple edits, lower cost |
-
-**Default to PRO** for quality work. Use Flash for rapid iterations or simple tasks.
-
-## CRITICAL: Prompt Engineering First
-
-**BEFORE calling the API, always craft an effective prompt.** Read [`references/prompting-guide.md`](references/prompting-guide.md) for comprehensive prompting strategies. Key principles:
-
-### The Golden Rules
-
-1. **Describe scenes, don't list keywords** - Write narrative descriptions, not tag soup
-2. **Use natural language** - Full sentences with proper grammar
-3. **Be specific** - Define subject, setting, lighting, mood, materials
-4. **Provide context** - The "why" helps the model make better artistic decisions
-5. **Edit, don't re-roll** - If 80% correct, ask for specific changes
-
-### The ICS Framework (Quick Reference)
-
-For any image, specify:
-- **I**mage type: What kind of visual (photo, infographic, logo, sticker, etc.)
-- **C**ontent: Specific elements, data, or information to include
-- **S**tyle: Visual style, color palette, artistic approach
-
-## API Reference
-
-### Text-to-Image Generation
+> Requires inference.sh CLI (`infsh`). Get installation instructions: `npx skills add inference-sh/skills@agent-tools`
 
 ```bash
-curl -s -X POST \
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent" \
-  -H "x-goog-api-key: $GEMINI_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "contents": [{
-      "parts": [{"text": "YOUR_PROMPT_HERE"}]
-    }],
-    "generationConfig": {
-      "responseModalities": ["TEXT", "IMAGE"],
-      "imageConfig": {
-        "aspectRatio": "16:9",
-        "imageSize": "2K"
-      }
-    }
-  }'
+infsh login
+
+infsh app run google/gemini-3-pro-image-preview --input '{"prompt": "a banana in space, photorealistic"}'
+```
+
+
+## Models
+
+| Model | App ID | Speed | Quality |
+|-------|--------|-------|---------|
+| Gemini 3 Pro Image | `google/gemini-3-pro-image-preview` | Slower | Best |
+| Gemini 2.5 Flash Image | `google/gemini-2-5-flash-image` | Fast | Excellent |
+
+## Search Gemini Image Apps
+
+```bash
+infsh app list --search "gemini image"
+```
+
+## Examples
+
+### Basic Text-to-Image
+
+```bash
+infsh app run google/gemini-3-pro-image-preview --input '{
+  "prompt": "A futuristic cityscape at sunset with flying cars"
+}'
+```
+
+### Multiple Images
+
+```bash
+infsh app run google/gemini-2-5-flash-image --input '{
+  "prompt": "Minimalist logo design for a coffee shop",
+  "num_images": 4
+}'
+```
+
+### Custom Aspect Ratio
+
+```bash
+infsh app run google/gemini-3-pro-image-preview --input '{
+  "prompt": "Panoramic mountain landscape with northern lights",
+  "aspect_ratio": "16:9"
+}'
 ```
 
 ### Image Editing (with input image)
 
 ```bash
-curl -s -X POST \
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent" \
-  -H "x-goog-api-key: $GEMINI_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "contents": [{
-      "parts": [
-        {"text": "YOUR_EDIT_INSTRUCTION"},
-        {"inline_data": {"mime_type": "image/png", "data": "BASE64_IMAGE_DATA"}}
-      ]
-    }],
-    "generationConfig": {
-      "responseModalities": ["TEXT", "IMAGE"]
-    }
-  }'
+infsh app run google/gemini-2-5-flash-image --input '{
+  "prompt": "Add a rainbow in the sky",
+  "images": ["https://example.com/landscape.jpg"]
+}'
 ```
 
-### Configuration Options
-
-| Parameter | Values | Notes |
-|-----------|--------|-------|
-| `aspectRatio` | `1:1`, `2:3`, `3:2`, `3:4`, `4:3`, `4:5`, `5:4`, `9:16`, `16:9`, `21:9` | Match use case |
-| `imageSize` | `1K`, `2K`, `4K` | Use uppercase K; PRO model only for 4K |
-
-### Google Search Grounding (Real-time Data)
-
-Add `"tools": [{"google_search": {}}]` to generate images based on current information:
+### High Resolution (4K)
 
 ```bash
-curl -s -X POST \
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent" \
-  -H "x-goog-api-key: $GEMINI_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "contents": [{"parts": [{"text": "Create an infographic of current tech stock prices"}]}],
-    "tools": [{"google_search": {}}],
-    "generationConfig": {
-      "responseModalities": ["TEXT", "IMAGE"],
-      "imageConfig": {"aspectRatio": "16:9"}
-    }
-  }'
+infsh app run google/gemini-3-pro-image-preview --input '{
+  "prompt": "Detailed illustration of a medieval castle",
+  "resolution": "4K"
+}'
 ```
 
-## Workflow
-
-### Step 1: Craft the Prompt
-
-Use the ICS framework and prompting guide. Examples:
-
-**Photorealistic:**
-```
-A photorealistic close-up portrait of an elderly Japanese ceramicist with deep wrinkles and a warm smile, inspecting a tea bowl. Soft golden hour light from a window. 85mm lens, shallow depth of field. Serene mood.
-```
-
-**Infographic:**
-```
-Create a clean, modern infographic explaining photosynthesis as a recipe. Show "ingredients" (sunlight, water, CO2) and "finished dish" (energy). Style like a colorful kids' cookbook page.
-```
-
-**Product Shot:**
-```
-High-resolution studio photograph of a matte black ceramic coffee mug on polished concrete. Three-point softbox lighting, 45-degree angle, sharp focus on rising steam. Square format.
-```
-
-### Step 2: Generate Image
-
-Use `scripts/generate-image.sh` or call API directly:
+### With Google Search Grounding
 
 ```bash
-./scripts/generate-image.sh "Your prompt here" output.png --ratio 16:9 --size 2K
+infsh app run google/gemini-3-pro-image-preview --input '{
+  "prompt": "Current weather in Tokyo visualized as an artistic scene",
+  "enable_google_search": true
+}'
 ```
 
-### Step 3: Process Response
+## Input Options
 
-The API returns base64-encoded image data. Extract and decode:
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `prompt` | string | **Required.** What to generate or change |
+| `images` | array | Input images for editing (up to 14) |
+| `num_images` | integer | Number of images to generate |
+| `aspect_ratio` | string | Output ratio: "1:1", "16:9", "9:16", "4:3", "3:4", "auto" |
+| `resolution` | string | "1K", "2K", "4K" (Gemini 3 Pro only) |
+| `output_format` | string | Output format for images |
+| `enable_google_search` | boolean | Enable real-time info grounding |
+
+## Prompt Tips
+
+**Styles**: photorealistic, illustration, watercolor, oil painting, digital art, anime, 3D render
+
+**Composition**: close-up, wide shot, aerial view, macro, portrait, landscape
+
+**Lighting**: natural light, studio lighting, golden hour, dramatic shadows, neon
+
+**Details**: add specific details about textures, colors, mood, atmosphere
+
+## Sample Workflow
 
 ```bash
-# Response contains: {"candidates":[{"content":{"parts":[{"inlineData":{"mimeType":"image/png","data":"BASE64..."}}]}}]}
-# Extract with jq and decode:
-cat response.json | jq -r '.candidates[0].content.parts[] | select(.inlineData) | .inlineData.data' | base64 -d > image.png
+# 1. Generate sample input to see all options
+infsh app sample google/gemini-3-pro-image-preview --save input.json
+
+# 2. Edit the prompt
+# 3. Run
+infsh app run google/gemini-3-pro-image-preview --input input.json
 ```
 
-## Common Use Cases
+## Related Skills
 
-### Landing Pages & Ads
-- Use 16:9 or 21:9 for hero images
-- Specify brand colors, modern/minimal style
-- Include text requirements in prompt
+```bash
+# Full platform skill (all 150+ apps)
+npx skills add inference-sh/skills@agent-tools
 
-### Logos & Icons
-- Use 1:1 aspect ratio
-- Request "minimalist", "clean lines", "vector-style"
-- Specify color scheme explicitly
+# All image generation models
+npx skills add inference-sh/skills@ai-image-generation
 
-### Product Photography
-- Describe lighting setup (softbox, natural, studio)
-- Mention surface/background materials
-- Include camera angle and lens type
+# Video generation (for image-to-video)
+npx skills add inference-sh/skills@ai-video-generation
+```
 
-### Infographics
-- Define data to visualize
-- Specify style (corporate, playful, technical)
-- Request clear text and labeled sections
+Browse all image apps: `infsh app list --category image`
 
-### Stickers & Illustrations
-- Request "bold outlines", "kawaii", "cel-shading"
-- Specify "white background" or "transparent background"
-- Define color palette
+## Documentation
 
-### Character Consistency (Multiple Images)
-- PRO supports up to 14 reference images
-- Explicitly state: "Keep facial features exactly the same as Image 1"
-- Describe expression/pose changes while maintaining identity
+- [Running Apps](https://inference.sh/docs/apps/running) - How to run apps via CLI
+- [Streaming Results](https://inference.sh/docs/api/sdk/streaming) - Real-time progress updates
+- [File Handling](https://inference.sh/docs/api/sdk/files) - Working with images
 
-## Scripts
-
-See [`scripts/generate-image.sh`](scripts/generate-image.sh) for a ready-to-use generation script.
-
-## Detailed Prompting Guide
-
-For advanced techniques including:
-- Photorealistic scene templates
-- Text rendering best practices  
-- Sequential art and storyboarding
-- Dimensional translation (2D↔3D)
-- Search grounding for real-time data
-
-Read [`references/prompting-guide.md`](references/prompting-guide.md).

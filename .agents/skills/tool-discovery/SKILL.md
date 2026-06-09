@@ -1,124 +1,87 @@
 ---
 name: tool-discovery
-description: Guide for discovering and using MCP tools via the discover_tools meta-tool. Use this skill when asked to perform tasks that require finding the right tools, when you see only discover_tools in your available tools, when asked "what tools are available", "find tools for X", or when planning multi-step workflows across Slack, WhatsApp, Google, or Slides.
+description: "Recommend the right agents and skills for any task. Covers both heavyweight agents (Task tool) and lightweight skills (Skill tool). Triggers on: which agent, which skill, what tool should I use, help me choose, recommend agent, find the right tool."
+allowed-tools: "Read Glob"
+depends-on: []
+related-skills: [claude-code-templates, claude-code-debug]
 ---
 
-# Tool Discovery System
+# Tool Discovery
 
-This MCP server uses a **discovery-based tool loading pattern** to reduce context overhead. Instead of loading all 35+ tools upfront, only the `discover_tools` meta-tool is exposed. Use it to find and load the specific tools needed for your task.
+Recommend the right agents and skills for any task.
 
-## Quick Reference
-
-```
-# List all categories
-discover_tools({ mode: "list_categories" })
-
-# Browse tools in a category
-discover_tools({ mode: "browse", category: "messaging" })
-
-# Search by natural language
-discover_tools({ mode: "search", query: "send slack message" })
-
-# Search by intent
-discover_tools({ mode: "search", intent: "check team blockers" })
-```
-
-## Tool Categories
-
-| Category    | Tools | Use For                                  |
-| ----------- | ----- | ---------------------------------------- |
-| `messaging` | 4     | Slack DMs, channel messages, user lookup |
-| `whatsapp`  | 8     | Message history, contacts, groups, media |
-| `docs`      | 11    | Google Slides, Sheets, presentations     |
-| `google`    | 8     | Calendar, Gmail, Tasks (OAuth)           |
-| `apps`      | 5     | Mini-app creation and management         |
-| `agents`    | 3     | Agent context and handoff                |
-| `context`   | 2     | Context management                       |
-| `media`     | 1     | Image/video generation                   |
-| `system`    | 2     | Health check, configuration              |
-
-## Workflow: Starting a Task
-
-**Always discover tools before attempting to use them.**
-
-1. Identify what you need to accomplish
-2. Call `discover_tools` with appropriate mode
-3. Review returned tool schemas
-4. Execute the discovered tools
-
-## Examples
-
-### Example 1: Notify Team on Slack
-
-**Task:** "Send a message to the team channel"
+## Decision Flowchart
 
 ```
-# Step 1: Find messaging tools
-discover_tools({ mode: "search", query: "send slack channel message" })
-# Returns: ai_first_slack_send_channel_message
-
-# Step 2: Send the message
-ai_first_slack_send_channel_message({ channel: "#orienter", message: "Quick update..." })
+Is this a reference/lookup task?
+├── YES → Use a SKILL (lightweight, auto-injects)
+└── NO → Does it require reasoning/decisions?
+         ├── YES → Use an AGENT (heavyweight, spawns subagent)
+         └── MAYBE → Check catalogs below
 ```
 
-### Example 2: Find Upcoming Meetings
+**Rule:** Skills = patterns/reference. Agents = decisions/expertise.
 
-**Task:** "What meetings do I have this week?"
+## Quick Skill Reference
 
+| Skill | Triggers |
+|-------|----------|
+| **file-search** | fd, rg, fzf, find files |
+| **find-replace** | sd, batch replace |
+| **code-stats** | tokei, difft, line counts |
+| **data-processing** | jq, yq, json, yaml |
+| **structural-search** | ast-grep, sg, ast pattern |
+| **git-workflow** | lazygit, gh, delta, rebase |
+| **python-env** | uv, venv, pyproject |
+| **rest-patterns** | http methods, status codes |
+| **sql-patterns** | cte, window functions |
+| **sqlite-ops** | sqlite, aiosqlite |
+| **tailwind-patterns** | tailwind, tw classes |
+| **mcp-patterns** | mcp server, protocol |
+
+## Quick Agent Reference
+
+| Agent | Triggers |
+|-------|----------|
+| **python-expert** | Python, async, pytest |
+| **typescript-expert** | TypeScript, types, generics |
+| **react-expert** | React, hooks, state |
+| **postgres-expert** | PostgreSQL, query optimization |
+| **cloudflare-expert** | Workers, KV, D1, R2 |
+| **Explore** | "where is", "find" |
+| **Plan** | design, architect |
+
+## How to Launch
+
+**Skills:**
 ```
-# Step 1: Find calendar tools
-discover_tools({ mode: "browse", category: "google" })
-# Returns: google_calendar_list_events
-
-# Step 2: List events
-google_calendar_list_events({ days: 7 })
+Skill tool → skill: "file-search"
 ```
 
-### Example 3: Search WhatsApp History
-
-**Task:** "Find messages about the project deadline"
-
+**Agents:**
 ```
-# Step 1: Find WhatsApp tools
-discover_tools({ mode: "browse", category: "whatsapp" })
-# Returns: whatsapp_search_messages, whatsapp_get_conversation, etc.
-
-# Step 2: Search messages
-whatsapp_search_messages({ text: "project deadline" })
+Task tool → subagent_type: "python-expert"
+         → prompt: "Your task"
 ```
 
-### Example 4: Update Presentation Text
+## Match by Task Type
 
-**Task:** "Replace placeholders in the weekly slides"
+| Task | Skill First | Agent If Needed |
+|------|-------------|-----------------|
+| "How to write a CTE?" | sql-patterns | sql-expert |
+| "Optimize this query" | — | postgres-expert |
+| "Find files named X" | file-search | Explore |
+| "Set up Python project" | python-env | python-expert |
+| "What HTTP status for X?" | rest-patterns | — |
 
-```
-# Step 1: Find Slides tools
-discover_tools({ mode: "browse", category: "docs" })
-# Returns: ai_first_slides_update_text
+## Tips
 
-# Step 2: Update text placeholders
-ai_first_slides_update_text({ presentationUrl: "...", replacements: [{ placeholder: "{{WEEK_ENDING}}", replacement: "Jan 26" }] })
-```
+- **Skills are cheaper** - Use for lookups, patterns
+- **Agents are powerful** - Use for decisions, optimization
+- **Don't over-recommend** - Max 2-3 tools per task
 
-## Search Tips
+## Additional Resources
 
-- **Exact tool names** get highest scores: `discover_tools({ query: "ai_first_slack_send_channel_message" })`
-- **Keywords** work well: `"blocker"`, `"sprint"`, `"slack"`, `"whatsapp"`
-- **Intent phrases** find related tools: `"notify team about progress"`
-- **Use limit** to reduce results: `discover_tools({ mode: "search", query: "message", limit: 5 })`
-
-## Common Tool Names
-
-Quick reference for frequently used tools:
-
-**Messaging (Slack):**
-
-- `ai_first_slack_send_dm` - Direct message
-- `ai_first_slack_send_channel_message` - Channel post
-- `ai_first_slack_get_channel_messages` - Read channel history
-
-**WhatsApp:**
-
-- `whatsapp_search_messages` - Search message history
-- `whatsapp_get_conversation` - Get chat with contact
-- `whatsapp_list_groups` - List groups
+For complete catalogs, load:
+- `./references/agents-catalog.md` - All agents with capabilities
+- `./references/skills-catalog.md` - All skills with details

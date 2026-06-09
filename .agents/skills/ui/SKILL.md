@@ -1,58 +1,75 @@
 ---
 name: ui
-description: UI/UE (user interface & user experience) skill for designing and reviewing interfaces. Use for tasks like creating UI specs, interaction states, component guidelines, visual hierarchy, responsive layouts, accessibility, design tokens, and handoff-ready requirements for engineers.
+description: "Generates UI components and feedback forms. Use when user mentions コンポーネント, component, UI, ヒーロー, hero, フォーム, form, フィードバック, feedback, 問い合わせ. Do NOT load for: 認証機能, バックエンド実装, データベース操作, ビジネスロジック."
+allowed-tools: ["Read", "Write", "Edit", "Bash"]
+metadata:
+  skillport:
+    category: ui
+    tags: [ui, component, form, feedback]
+    alwaysApply: false
 ---
 
-# ui
+# UI Skills
 
-Use this skill for UI/UE 设计与评审：把“体验”落到可交付的界面规范与交互细节。
+UIコンポーネントとフォームの生成を担当するスキル群です。
 
-## Outputs (choose what the task needs)
+## 含まれる小スキル
 
-- Screen list + navigation map
-- Wireframe-level UI spec (layout, components, spacing)
-- Interaction spec (states, transitions, micro-interactions)
-- Component guidelines (variants, props, usage rules)
-- Design tokens (colors, typography, spacing, radii, shadows)
-- Accessibility checklist (WCAG basics)
-- Engineer handoff notes (assets, copy, edge cases)
+| スキル | 用途 |
+|--------|------|
+| component | UIコンポーネント生成 |
+| feedback | フィードバックフォーム生成 |
 
-## Workflow
+## ルーティング
 
-1) Clarify context
-- Platform: Web / mobile / mini program.
-- Users and primary tasks; define success for the screen.
+- コンポーネント生成: component/doc.md
+- フィードバックフォーム: feedback/doc.md
 
-2) Define information hierarchy
-- What is primary CTA? What must be seen first?
-- Use progressive disclosure for secondary actions.
+## 実行手順
 
-3) Specify layouts and components
-- Grid system / spacing rules.
-- Component inventory and reuse plan.
-- Responsive behavior (breakpoints) where relevant.
+1. **品質判定ゲート**（Step 0）
+2. ユーザーのリクエストを分類
+3. 適切な小スキルの doc.md を読む
+4. その内容に従って生成
 
-4) Define states (must-have)
-- Empty / loading / error / success
-- Disabled / hover / focus / pressed
-- Validation states for forms
+### Step 0: 品質判定ゲート（a11y チェックリスト）
 
-5) Interaction details
-- Feedback timing, confirmations, undo patterns.
-- Prevent errors; provide clear recovery paths.
+UI コンポーネント生成時は、アクセシビリティを確保:
 
-6) Visual design consistency
-- Tokenize: colors, typography scale, spacing, radii.
-- Ensure contrast and readable typography.
+```markdown
+♿ アクセシビリティチェックリスト
 
-7) Accessibility
-- Keyboard navigation, focus order, ARIA labels (web).
-- Dynamic type and screen reader labels (mobile).
+生成する UI は以下を満たすことを推奨：
 
-## UI acceptance criteria template
+### 必須項目
+- [ ] 画像に alt 属性を設定
+- [ ] フォーム要素に label を関連付け
+- [ ] キーボード操作可能（Tab でフォーカス移動）
+- [ ] フォーカス状態が視覚的に分かる
 
-- Given [state], when [action], then [UI updates] within [time].
-- Copy: [exact text], error message: [exact text].
-- Responsive: at [breakpoint], [layout change].
-- Accessibility: [tab order], [label], [contrast].
+### 推奨項目
+- [ ] 色だけに依存しない情報伝達
+- [ ] コントラスト比 4.5:1 以上（テキスト）
+- [ ] aria-label / aria-describedby の適切な使用
+- [ ] 見出し構造（h1 → h2 → h3）が論理的
 
+### インタラクティブ要素
+- [ ] ボタンに適切なラベル（「詳細」ではなく「製品詳細を見る」）
+- [ ] モーダル/ダイアログのフォーカストラップ
+- [ ] エラーメッセージがスクリーンリーダーで読まれる
+```
+
+### VibeCoder 向け
+
+```markdown
+♿ 誰でも使えるデザインにするために
+
+1. **画像には説明をつける**
+   - 「商品画像」ではなく「赤いスニーカー、正面から」
+
+2. **クリックできる場所はキーボードでも操作可能に**
+   - Tab キーで移動、Enter で決定
+
+3. **色だけで判断させない**
+   - 赤=エラー だけでなく、アイコン+テキストも
+```

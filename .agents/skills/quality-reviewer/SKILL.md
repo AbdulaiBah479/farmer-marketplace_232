@@ -1,177 +1,157 @@
 ---
 name: quality-reviewer
-description: Automatically reviews DevPrep AI code for quality standards including ESLint compliance, TypeScript strict mode, 180-line file limits, complexity under 15, proper naming conventions, import patterns, and architectural compliance with the 6-folder structure
-allowed-tools: [Read, Bash, Grep, Glob]
+description: Deep code review with web research to verify against latest ecosystem. Use when user says 'double check against latest', 'verify versions', 'check security', 'review against docs', or needs deep analysis beyond automatic quality hook.
+allowed-tools: '*'
 ---
 
 # Quality Reviewer
 
-Automatically enforces DevPrep AI code quality standards during development.
+Deep quality review with web research to verify code against the latest ecosystem state.
 
----
+**Primary differentiator**: Web research to verify against current versions, documentation, and best practices.
 
-## Auto-Triggers
+**Triggers**:
 
-Auto-triggered by keywords:
-- "review", "check", "validate", "verify"
-- "lint", "quality", "standards"
-- "type check", "typescript"
-- "complexity", "file size", "architecture"
+- **Explicit web research request**: "double check against latest docs", "verify we're using latest version", "check for security issues"
+- **Deep dive needed**: User wants analysis beyond automatic hook (performance, architecture alternatives, trade-offs)
+- **No SAFEWORD.md/CLAUDE.md**: Projects without context files (automatic hook won't run, manual review needed)
+- **Pre-change review**: User wants review before making changes (automatic hook only triggers after changes)
 
----
+**Relationship to automatic quality hook**:
 
-## Quick Standards
+- **Automatic hook**: Fast quality check using existing knowledge + project context (guaranteed, runs on every change)
+- **This skill**: Deep review with web research when verification against current ecosystem is needed (on-demand, 2-3 min)
 
-### File Limits
-- **≤180 lines** per file (code only)
-- **Complexity ≤15** per function
-- **≤50 lines** per function
-- **≤4 parameters** per function
+## Review Protocol
 
-### TypeScript
-- Strict mode enabled
-- No `any` types
-- Interfaces: `I` prefix (e.g., `IButtonProps`)
-- Type imports: `import type { ... }`
+### 1. Identify What Changed
 
-### Naming
-- Interfaces: `IUserProfile`, `IButtonProps`
-- Types: `QuestionType`, `Difficulty`
-- Functions: `camelCase`
-- Components: `PascalCase`
+Understand context:
 
-### Imports
-Use path aliases:
-```typescript
-@shared/ui/button      // ✅ Correct
-@modules/practice/*    // ✅ Correct
-@lib/trpc/client       // ✅ Correct
-@store/hooks           // ✅ Correct
+- What files were just modified?
+- What problem is being solved?
+- What was the implementation approach?
 
-../../../shared/ui/*   // ❌ Wrong
-```
+### 2. Read Project Standards
 
-### Architecture (6-Folder)
-```
-app/      Routes only
-modules/  Features (practice, assessment, results, profile, questions, home)
-shared/   Cross-cutting (ui, components, hooks, utils)
-lib/      Integrations (trpc, claude)
-store/    Zustand state
-styles/   Design system
-```
-
----
-
-## Run Checks
-
-### Single Check
 ```bash
-# Target specific issues
-./.claude/skills/quality-reviewer/scripts/check-file-size.sh
-./.claude/skills/quality-reviewer/scripts/check-complexity.sh
-./.claude/skills/quality-reviewer/scripts/check-imports.sh
-./.claude/skills/quality-reviewer/scripts/check-architecture.sh
-./.claude/skills/quality-reviewer/scripts/check-naming.sh
+ls CLAUDE.md SAFEWORD.md ARCHITECTURE.md .claude/
 ```
 
-### Full Review
-```bash
-# Run all 7 checks at once
-./.claude/skills/quality-reviewer/scripts/full-review.sh
+Read relevant standards:
+
+- `CLAUDE.md` or `SAFEWORD.md` - Project-specific guidelines
+- `ARCHITECTURE.md` - Architectural principles
+
+### 3. Evaluate Correctness
+
+**Will it work?**
+
+- Does the logic make sense?
+- Are there obvious bugs?
+
+**Edge cases:**
+
+- Empty inputs, null/undefined, boundary conditions (0, -1, max)?
+- Concurrent access, network failures?
+
+**Error handling:**
+
+- Are errors caught appropriately?
+- Helpful error messages?
+- Cleanup handled (resources, connections)?
+
+**Logic errors:**
+
+- Off-by-one errors, race conditions, wrong assumptions?
+
+### 4. Evaluate Anti-Bloat
+
+- Are all dependencies necessary? Could we use stdlib/built-ins?
+- Are abstractions solving real problems or imaginary ones?
+- YAGNI: Is this feature actually needed now?
+
+### 5. Evaluate Elegance
+
+- Is the code easy to understand?
+- Are names clear and descriptive?
+- Is the intent obvious?
+- Will this be easy to change later?
+
+### 6. Check Standards Compliance
+
+**Project standards** (from CLAUDE.md/SAFEWORD.md/ARCHITECTURE.md):
+
+- Does it follow established patterns?
+- Does it violate any documented principles?
+
+**Library best practices:**
+
+- Are we using libraries correctly?
+- Are we following official documentation?
+
+### 7. Verify Latest Versions - PRIMARY VALUE
+
+**CRITICAL**: This is your main differentiator from automatic hook. ALWAYS check versions.
+
+Search for: "[library name] latest stable version 2025"
+Search for: "[library name] security vulnerabilities"
+
+**Flag if outdated:**
+
+- Major versions behind → WARN (e.g., React 17 when 19 is stable)
+- Minor versions behind → NOTE (e.g., React 19.0.0 when 19.1.0 is stable)
+- Security vulnerabilities → CRITICAL (must upgrade)
+- Using latest → Confirm
+
+**Common libraries**: React, TypeScript, Vite, Next.js, Node.js, Vitest, Playwright, Jest, esbuild
+
+### 8. Verify Latest Documentation - PRIMARY VALUE
+
+**CRITICAL**: This is your main differentiator from automatic hook. ALWAYS verify against current docs.
+
+Fetch and check official documentation sites for the libraries in use.
+
+**Look for:**
+
+- Are we using deprecated APIs?
+- Are there newer, better patterns?
+- Did the library's recommendations change recently?
+
+## Output Format
+
+**Simple question** ("is it correct?"):
+
+```text
+**Correctness:** ✓ Logic is sound, edge cases handled, no obvious errors.
 ```
 
-Checks: file size → complexity → imports → architecture → naming → ESLint → TypeScript
+**Full review** ("double check and critique"):
 
----
+```markdown
+## Quality Review
 
-## Common Fixes
+**Correctness:** [✓/⚠️/❌] [Brief assessment]
+**Anti-Bloat:** [✓/⚠️/❌] [Brief assessment]
+**Elegance:** [✓/⚠️/❌] [Brief assessment]
+**Standards:** [✓/⚠️/❌] [Brief assessment]
+**Versions:** [✓/⚠️/❌] [Latest version check]
+**Documentation:** [✓/⚠️/❌] [Current docs check]
 
-### Interface Missing 'I' Prefix
-```typescript
-interface ButtonProps { }  // ❌
-interface IButtonProps { } // ✅
+**Verdict:** [APPROVE / REQUEST CHANGES / NEEDS DISCUSSION]
+
+**Critical issues:** [List or "None"]
+**Suggested improvements:** [List or "None"]
 ```
 
-### Direct React Import
-```typescript
-import { ReactElement } from 'react';      // ❌
-import type { ReactElement } from 'react'; // ✅
-```
+## Critical Reminders
 
-### Relative Import
-```typescript
-import { Button } from '../../../shared/ui/button'; // ❌
-import { Button } from '@shared/ui/button';         // ✅
-```
-
-### Using 'any'
-```typescript
-const data: any = fetchData();    // ❌
-const data: IUserData = fetchData(); // ✅
-```
-
-### File Too Large
-Split into:
-- `Component.tsx` - UI only
-- `hooks.ts` - Logic
-- `types.ts` - Types
-- `utils.ts` - Helpers
-
-See: `examples/refactor-after/`
-
-### Complexity Too High (>15)
-```typescript
-// ❌ Before: Nested ifs (complexity 18)
-if (user.role === 'admin') {
-  if (user.isActive) {
-    if (user.permissions.includes('write')) {
-      // do something
-    }
-  }
-}
-
-// ✅ After: Early returns (complexity 3)
-if (!user.role === 'admin') return;
-if (!user.isActive) return;
-if (!user.permissions.includes('write')) return;
-// do something
-```
-
-**Quick fixes:**
-- Extract conditionals → separate functions
-- Use early returns → avoid nesting
-- Replace switch → lookup objects `const MAP = { key: 'value' };`
-
----
-
-## When to Load Additional Docs
-
-**SKILL.md is self-sufficient for:**
-- Running checks (all scripts listed above)
-- Simple fixes (naming, imports, basic refactoring)
-- Understanding standards
-
-**Load additional docs only when needed:**
-
-| Need | Load | Lines |
-|------|------|-------|
-| File splitting strategies | `examples/refactor-after/` | ~256 |
-| Complexity reduction tactics | `docs/standards.md` (lines 75-163) | ~88 |
-| Architecture patterns | `docs/standards.md` (lines 224-280) | ~56 |
-| Type safety patterns | `docs/standards.md` (lines 283-348) | ~65 |
-| Deep-dive on any violation | `docs/standards.md` (full file) | ~370 |
-
-**Code examples:**
-- ✅ Perfect: `examples/good-code.tsx`
-- ❌ Violations: `examples/bad-code.tsx`
-- 🔄 Refactoring: `examples/refactor-after/`
-
-**Full project standards:** `Docs/code-standards.md`
-
----
-
-**Version:** 1.1.0 (Optimized) | **Updated:** October 2025
-**Optimization**: 31% smaller, 52% fewer tokens for typical usage
-
-**Note**: Example files use `// @ts-nocheck` and `/* eslint-disable */` directives to suppress IDE warnings, since they demonstrate intentional violations or reference non-existent paths for educational purposes. They are also excluded from build-time TypeScript compilation via `frontend/tsconfig.json`.
+1. **Primary value: Web research** - Verify against current ecosystem (versions, docs, security)
+2. **Complement automatic hook** - Hook does fast check with existing knowledge, you do deep dive with web research
+3. **Explicit triggers matter** - "double check against latest docs", "verify versions", "check security" = invoke web research
+4. **Always check latest docs** - Verify patterns are current, not outdated
+5. **Always verify versions** - Flag outdated dependencies
+6. **Be thorough but concise** - Cover all areas but keep explanations brief
+7. **Provide actionable feedback** - Specific line numbers, concrete suggestions
+8. **Clear verdict** - Always end with APPROVE/REQUEST CHANGES/NEEDS DISCUSSION
+9. **Separate critical vs nice-to-have** - User needs to know what's blocking vs optional

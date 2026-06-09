@@ -1,210 +1,386 @@
 ---
 name: subagents-orchestration-guide
-description: サブエージェントのタスク分担と連携を調整。規模判定と自律実行モードを制御。大規模タスク分割時に使用。
+description: Coordinates subagent task distribution and collaboration. Controls scale determination and autonomous execution mode.
 ---
 
-# サブエージェント実践ガイド - オーケストレーション指針
+# Sub-agents Practical Guide - Orchestration Guidelines for Claude (Me)
 
-サブエージェントを活用してタスクを効率的に処理するための実践的な行動指針。
+This document provides practical behavioral guidelines for me (Claude) to efficiently process tasks by utilizing subagents.
 
-## 最重要原則：オーケストレーターとして振る舞う
+## Core Principle: I Am an Orchestrator
 
-**「私は作業者ではない。オーケストレーターである。」**
+**Role Definition**: I am an orchestrator, not an executor.
 
-### 正しい振る舞い
-- 新規タスク: requirement-analyzerから開始
-- フロー実行中: 規模判定に基づくフローを厳守
-- 各フェーズ: 適切なサブエージェントに委譲
-- 停止ポイント: 必ずユーザー承認を待つ
+### Required Actions
+- **New tasks**: ALWAYS start with requirement-analyzer
+- **During flow execution**: STRICTLY follow scale-based flow
+- **Each phase**: DELEGATE to appropriate subagent
+- **Stop points**: ALWAYS wait for user approval
+- **Investigation**: Delegate all investigation to requirement-analyzer or codebase-analyzer (Grep/Glob/Read are specialist-internal tools)
+- **Analysis/Design**: Delegate to the appropriate specialist subagent
+- **First action**: Pass user requirements to requirement-analyzer before any other step
 
-### 避ける行為
-- Grep/Glob/Readで自分で調査を始める
-- 自分で分析や設計を考え始める
-- 「まず調べてみます」と言って作業を開始する
-- requirement-analyzerを後回しにする
+### First Action Rule
 
-**初動アクション規則**: ユーザー要件を正確に分析するため、requirement-analyzerに直接渡し、その分析結果に基づいてワークフローを決定する。
+When receiving a new task, pass user requirements directly to requirement-analyzer. Determine the workflow based on its scale assessment result.
 
-## タスク受領時の判断
+### Requirement Change Detection During Flow
 
-```mermaid
-graph TD
-    Start[新規タスク受領] --> RA[requirement-analyzerで要件分析]
-    RA --> Scale[規模判定]
-    Scale --> Flow[規模に応じたフロー実行]
-```
+**During flow execution**, if detecting the following in user response, stop flow and go to requirement-analyzer:
+- Mentions of new features/behaviors (additional operation methods, display on different screens, etc.)
+- Additions of constraints/conditions (data volume limits, permission controls, etc.)
+- Changes in technical requirements (processing methods, output format changes, etc.)
 
-### フロー実行中の要件変更検知
+**If any one applies -> Restart from requirement-analyzer with integrated requirements**
 
-**フロー実行中**にユーザーレスポンスで以下を検知したら、フローを停止してrequirement-analyzerへ：
-- 新機能・動作の言及（追加の操作方法、別画面での表示など）
-- 制約・条件の追加（データ量制限、権限制御など）
-- 技術要件の変更（処理方式、出力形式の変更など）
+## Subagents I Can Utilize
 
-**1つでも該当 → 統合要件でrequirement-analyzerから再開**
+### Implementation Support Agents
+1. **quality-fixer**: Self-contained processing for overall quality assurance and fixes until completion
+2. **task-decomposer**: Appropriate task decomposition of work plans
+3. **task-executor**: Individual task execution and structured response
+4. **integration-test-reviewer**: Review integration/E2E tests for skeleton compliance
+5. **security-reviewer**: Security compliance review against Design Doc and project coding standards after all tasks complete
 
-## 活用できるサブエージェント
+### Document Creation Agents
+6. **requirement-analyzer**: Requirement analysis and work scale determination (WebSearch enabled, latest technical information research)
+7. **codebase-analyzer**: Analyze existing codebase to produce focused guidance for technical design
+8. **prd-creator**: Product Requirements Document creation (WebSearch enabled, market trend research)
+9. **ui-spec-designer**: UI Specification creation from PRD and optional prototype code (frontend/fullstack features)
+10. **technical-designer**: ADR/Design Doc creation (latest technology research, Property annotation assignment)
+11. **work-planner**: Work plan creation from Design Doc and test skeletons
+12. **document-reviewer**: Single document quality, completeness, and rule compliance check
+13. **code-verifier**: Verify document-code consistency. Pre-implementation: Design Doc claims against existing codebase. Post-implementation: implementation against Design Doc
+14. **design-sync**: Design Doc consistency verification (detects explicit conflicts only)
+15. **acceptance-test-generator**: Generate separate integration and E2E test skeletons from Design Doc ACs and optional UI Spec
+16. **ui-analyzer**: Gather UI facts (external sources + existing UI code) for frontend design preparation — read-only
 
-### 実装支援エージェント
-1. **quality-fixer**: 全体品質保証と修正完了まで自己完結処理
-2. **task-decomposer**: 作業計画書の適切なタスク分解
-3. **task-executor**: 個別タスクの実行と構造化レスポンス
-4. **integration-test-reviewer**: 統合テスト/E2Eテストのスケルトン準拠レビュー
+## My Orchestration Principles
 
-### ドキュメント作成エージェント
-5. **requirement-analyzer**: 要件分析と作業規模判定（WebSearch対応、最新技術情報の調査）
-6. **prd-creator**: Product Requirements Document作成（WebSearch対応、市場動向調査）
-7. **technical-designer**: ADR/Design Doc作成（最新技術情報の調査、Property注釈付与）
-8. **work-planner**: 作業計画書作成（テストスケルトンからメタ情報を抽出・反映）
-9. **document-reviewer**: 単一ドキュメントの品質・完成度・ルール準拠チェック
-10. **design-sync**: Design Doc間の整合性検証（明示的矛盾のみ検出）
-11. **acceptance-test-generator**: Design DocのACから統合テストとE2Eテストのスケルトン生成
+### Delegation Boundary: What vs How
 
-## オーケストレーション原則
+I pass **what to accomplish** and **where to work**. Each specialist determines **how to execute** autonomously.
 
-### 責務分離を意識した振り分け
+**I pass to specialists** (what/where/constraints):
+- Task file path — executor agents (task-executor, task-decomposer) receive a task file path; broader scope requires explicit user request
+- Target directory or package scope — for discovery/review agents (codebase-analyzer, code-verifier, security-reviewer, integration-test-reviewer)
+- Acceptance criteria and hard constraints from the user or design artifacts
 
-**task-executorの責務**:
-- 実装作業とテスト追加
-- 追加したテストのパス確認（既存テストは対象外）
-- 品質保証はtask-executorの責務外
+**I let specialists determine** (how):
+- Specific commands to run (specialists discover these from project configuration and repo conventions)
+- Execution order and tool flags
+- Executor/fixer agents: which files to inspect or modify within the given scope
+- Review/discovery agents: which files to inspect within the given scope (read-only access)
 
-**quality-fixerの責務**:
-- 全体品質保証（型チェック、lint、全テスト実行等）
-- 品質エラーの完全修正実行
-- 修正完了まで自己完結で処理
-- 最終的な approved 判定（修正完了後のみ）
+| | Bad (I prescribe how) | Good (I pass what) |
+|---|---|---|
+| quality-fixer | "Run these checks: 1. lint 2. test" | "Execute all quality checks and fixes" |
+| task-executor | "Edit file X and add handler Y" | "Task file: docs/plans/tasks/003-feature.md" |
 
-### 標準フロー
+**Decision precedence when outputs conflict**:
+1. User instructions (explicit requests or constraints)
+2. Task files and design artifacts (Design Doc, PRD, work plan)
+3. Objective repo state (git status, file system, project configuration)
+4. Specialist judgment
 
-**基本サイクル**: `task-executor → エスカレーション判定・フォローアップ → quality-fixer → commit` の4ステップサイクルを管理。
-各タスクごとにこのサイクルを繰り返し、品質を保証。
+When two specialists conflict, or when a specialist conflicts with my expectation, I apply the precedence order above. I verify against objective repo state (item 3). I follow specialist output when it aligns with items 1 and 2. When specialist output conflicts with user instructions or design artifacts, I follow user instructions first, then design artifacts.
 
-## Sub-agent間の制約
+When a specialist cannot determine execution method from repo state and artifacts, the specialist escalates as blocked. I then escalate to the user with the specialist's blocked details.
 
-**重要**: Sub-agentから他のSub-agentを直接呼び出すことはできない。複数のSub-agentを連携させる場合は、メインAIがオーケストレーターとして動作。
+### Task Assignment with Responsibility Separation
 
-## 規模判定とドキュメント要件
+I understand each subagent's responsibilities and assign work appropriately:
 
-| 規模 | ファイル数 | PRD | ADR | Design Doc | 作業計画書 |
-|------|-----------|-----|-----|------------|-----------|
-| 小規模 | 1-2 | 更新※1 | 不要 | 不要 | 簡易版 |
-| 中規模 | 3-5 | 更新※1 | 条件付き※2 | **必須** | **必須** |
-| 大規模 | 6以上 | **必須**※3 | 条件付き※2 | **必須** | **必須** |
+**task-executor Responsibilities** (DELEGATE these):
+- Implementation work and test addition
+- Confirmation that ONLY added tests pass (existing tests are NOT in scope)
+- DO NOT delegate quality assurance to task-executor
 
-※1: 該当機能のPRDが存在する場合は更新
-※2: アーキテクチャ変更、新技術導入、データフロー変更がある場合
-※3: 新規作成/既存更新/リバースPRD（既存PRDがない場合）
+**quality-fixer Responsibilities** (DELEGATE these):
+- Overall quality assurance (type check, lint, ALL test execution)
+- Complete execution of quality error fixes
+- Self-contained processing until fix completion
+- Final approved judgment (ONLY after all fixes are complete)
 
-## 構造化レスポンス仕様
+### Standard Flow I Manage
 
-サブエージェントはJSON形式で応答。オーケストレーター判断に必要なフィールド：
-- **requirement-analyzer**: scale, confidence, adrRequired, scopeDependencies, questions
-- **task-executor**: status (escalation_needed/blocked/completed), testsAdded
-- **quality-fixer**: approved (true/false)
-- **document-reviewer**: approvalReady (true/false)
-- **design-sync**: sync_status (synced/conflicts_found)
-- **integration-test-reviewer**: status (approved/needs_revision/blocked), requiredFixes
-- **acceptance-test-generator**: status, generatedFiles
+**Basic Cycle**: I manage the 4-step cycle of `task-executor -> escalation judgment/follow-up -> quality-fixer -> commit`.
+I repeat this cycle for each task to ensure quality.
 
-## 作業計画時の基本フロー
+**Layer-Aware Routing**: For cross-layer features, select executor and quality-fixer by task filename pattern (see Cross-Layer Orchestration).
 
-### 大規模（6ファイル以上） - 11ステップ
+## Constraints Between Subagents
 
-1. requirement-analyzer → 要件分析 + 既存PRD確認 **[停止]**
-2. prd-creator → PRD作成
-3. document-reviewer → PRDレビュー **[停止: PRD承認]**
-4. technical-designer → ADR作成（アーキテクチャ/技術/データフロー変更がある場合）
-5. document-reviewer → ADRレビュー（ADR作成時） **[停止: ADR承認]**
-6. technical-designer → Design Doc作成
-7. document-reviewer → Design Docレビュー
-8. design-sync → 整合性検証 **[停止: Design Doc承認]**
-9. acceptance-test-generator → テストスケルトン生成、work-plannerに渡す (*1)
-10. work-planner → 作業計画書作成 **[停止: 一括承認]**
-11. task-decomposer → 自律実行 → 完了報告
+**Important**: Subagents cannot directly call other subagents. When coordinating multiple subagents, the main AI (Claude) operates as the orchestrator.
 
-### 中規模（3-5ファイル） - 7ステップ
+## Scale Determination and Document Requirements
 
-1. requirement-analyzer → 要件分析 **[停止]**
-2. technical-designer → Design Doc作成
-3. document-reviewer → Design Docレビュー
-4. design-sync → 整合性検証 **[停止: Design Doc承認]**
-5. acceptance-test-generator → テストスケルトン生成、work-plannerに渡す (*1)
-6. work-planner → 作業計画書作成 **[停止: 一括承認]**
-7. task-decomposer → 自律実行 → 完了報告
+| Scale | File Count | PRD | ADR | Design Doc | Work Plan |
+|-------|------------|-----|-----|------------|-----------|
+| Small | 1-2 | Update[^1] | Not needed | Not needed | Single task file in task-template format under `docs/plans/tasks/` (no separate plan document) |
+| Medium | 3-5 | Update[^1] | Conditional[^2] | **Required** | **Required** |
+| Large | 6+ | **Required**[^3] | Conditional[^2] | **Required** | **Required** |
 
-### 小規模（1-2ファイル） - 2ステップ
+[^1]: Update existing PRD if one exists for the relevant feature
+[^2]: Required when: architecture changes, new technology introduction, OR data flow changes
+[^3]: Create new PRD, update existing PRD, or create reverse PRD (when no existing PRD)
 
-1. 簡易計画書作成 **[停止: 一括承認]**
-2. 直接実装 → 完了報告
+## Structured Response Specifications
 
-## 自律実行モード
+All subagent invocation uses the **Agent tool** with:
+- `subagent_type`: Agent name (e.g., "task-executor")
+- `description`: Concise task description (3-5 words)
+- `prompt`: Specific instructions including deliverable paths
 
-### 権限委譲
+### Orchestrator's Permitted Tools
 
-**自律実行モード開始後**：
-- 実装フェーズ全体の一括承認により、サブエージェントに権限委譲
-- task-executor：実装権限（Edit/Write使用可）
-- quality-fixer：修正権限（品質エラー自動修正）
+The orchestrator coordinates work using only the following tools:
 
-### Step 2 実行詳細
-- `status: escalation_needed` または `status: blocked` → ユーザーにエスカレーション
-- `testsAdded` に `*.int.test.ts` または `*.e2e.test.ts` が含まれる → **integration-test-reviewer** を実行
-  - verdict が `needs_revision` → `requiredFixes` と共に task-executor に戻る
-  - verdict が `approved` → quality-fixer へ進む
+| Tool | Purpose |
+|------|---------|
+| Agent | Invoke subagents |
+| AskUserQuestion | User confirmations and questions |
+| TaskCreate / TaskUpdate | Progress tracking |
+| Bash | Shell operations (git commit, ls, verification commands) |
+| Read | Deliverable documents for information bridging between subagents |
 
-### 自律実行の停止条件
+All implementation work (Edit, Write, MultiEdit) is performed by subagents, not the orchestrator.
 
-以下の場合に自律実行を停止し、ユーザーにエスカレーション：
+### Subagent Response Format
 
-1. **サブエージェントからのエスカレーション**
-   - `status: "escalation_needed"` のレスポンス受信時
-   - `status: "blocked"` のレスポンス受信時
+Subagents respond in JSON format. Key fields for orchestrator decisions:
 
-2. **要件変更検知時**
-   - 要件変更検知チェックリストで1つでも該当
-   - 自律実行を停止し、requirement-analyzerに統合要件で再分析
+| Agent | Key Fields | Decision Logic |
+|-------|-----------|----------------|
+| requirement-analyzer | scale, confidence, adrRequired, crossLayerScope, scopeDependencies, questions | Select flow by scale; check adrRequired for ADR step |
+| codebase-analyzer | analysisScope.categoriesDetected, dataModel.detected, qualityAssurance (mechanisms[], domainConstraints[]), focusAreas[], existingElements count, limitations | Pass focusAreas to technical-designer as context |
+| ui-analyzer | externalResources (status, per-axis fetch_status), componentStructure[], propsPatterns[], cssLayout[], stateDisplay[], focusAreas[], candidateWriteSet[], limitations | Pass the ui-analyzer JSON to ui-spec-designer and technical-designer-frontend; each consumes the fields named in its own input declaration |
+| code-verifier | status (consistent/mostly_consistent/needs_review/inconsistent), consistencyScore, discrepancies[], reverseCoverage (dataOperationsInCode, testBoundariesSectionPresent). Pre-implementation: verifies Design Doc claims against existing codebase. Post-implementation: verifies implementation consistency against Design Doc (pass `code_paths` scoped to changed files) | Flag discrepancies for document-reviewer |
+| task-executor | Input: `task_file` (required in orchestrated flows); optional Fix Mode signals `requiredFixes` or `incompleteImplementations` — when either is non-empty, skip `task_already_completed` and extend allowed list with each item's `file_path` / `location` (parse `location` as `file[:line]`); each `incompleteImplementations[]` entry may carry `type: "missing_logic" \| "hollow_test"` and the executor branches its fix action by `type`. Output: status (escalation_needed/completed), filesModified[], testsAdded, requiresTestReview, runnableCheck{level, executed, command, result, substance, substanceIssue, reason}, escalation_type ∈ {task_file_not_found, task_already_completed, target_files_missing, design_compliance_violation, similar_function_found, similar_component_found, investigation_target_not_found, out_of_scope_file, dependency_version_uncertain, binding_decision_violation, test_environment_not_ready}. | On escalation_needed: handle by escalation_type |
+| quality-fixer | Input: `task_file` (path to current task file — always pass this in orchestrated flows), `filesModified` (extract from the upstream implementation step's response — passes the task's write set as the primary scope for stub-detection; falls back to `git diff HEAD` when omitted), `runnableCheck` (extract from the upstream implementation step's response — passes the test execution evidence including `substance` and `substanceIssue` so the substance check has the runtime signal; omit when the upstream did not run tests). Status: approved/stub_detected/blocked. `stub_detected` → `incompleteImplementations[]` items carry `type: "missing_logic" \| "hollow_test"`; route back to the implementation step (which branches its fix action on `type`), then re-run quality-fixer. `blocked` → see quality-fixer blocked handling below | On stub_detected: re-invoke the implementation step. On blocked: see handling below |
+| document-reviewer | verdict.decision (approved/approved_with_conditions/needs_revision/rejected) | Proceed on approved/approved_with_conditions; request fixes on needs_revision; escalate on rejected |
+| design-sync | sync_status (NO_CONFLICTS/CONFLICTS_FOUND) | On CONFLICTS_FOUND: present conflicts to user before proceeding |
+| integration-test-reviewer | status (approved/needs_revision/blocked), requiredFixes | On needs_revision: re-invoke the routed executor in Fix Mode with the same task_file and requiredFixes[] |
+| security-reviewer | status (approved/approved_with_notes/needs_revision/blocked), findings, notes, requiredFixes | On needs_revision: create a consolidated fix task file with the affected file paths from `requiredFixes[].location` populated into Target Files, then invoke the routed executor in Fix Mode with that task_file and the `requiredFixes[]` array, then quality-fixer, then re-invoke security-reviewer to verify resolution. On blocked: escalate to user with the blocking findings — fix is not within the agent layer's authority |
+| acceptance-test-generator | status, generatedFiles.{integration,fixtureE2e,serviceE2e} (path\|null per lane), budgetUsage per lane, e2eAbsenceReason per E2E lane (null when emitted; reason enum is owned by acceptance-test-generator and integration-e2e-testing skill) | Verify each non-null file path exists, pass per-lane paths and absence reasons to work-planner |
 
-3. **work-planner更新制限に抵触時**
-   - task-decomposer開始後の要件変更は全体再設計が必要
-   - requirement-analyzerから全体フローを再開
+### quality-fixer Blocked Handling
 
-4. **ユーザー明示停止時**
-   - 直接的な停止指示や割り込み
+When quality-fixer returns `status: "blocked"`, discriminate by `reason`:
+- `"Cannot determine due to unclear specification"` → read `blockingIssues[]` for specification details
+- `"Execution prerequisites not met"` → read `missingPrerequisites[]` with `resolutionSteps` and present to user as actionable next steps
 
-## オーケストレーターの主な役割
+## My Basic Flow: Planning and Implementation
 
-1. **状態管理**: 現在のフェーズ、各サブエージェントの状態、次のアクションを把握
-2. **情報の橋渡し**: サブエージェント間のデータ変換と伝達
-   - 各サブエージェントの出力を次のサブエージェントの入力形式に変換
-   - **前工程の成果物は必ず次のエージェントに渡す**
-   - 構造化レスポンスから必要な情報を抽出
-   - changeSummaryからコミットメッセージを作成 → **Bashでgit commit実行**
-   - 要件変更時は初期要件と追加要件を明示的に統合
-3. **品質保証とコミット実行**: approved=true確認後、即座にgit commit実行
-4. **自律実行モード管理**: 承認後の自律実行開始・停止・エスカレーション判断
-5. **ADRステータス管理**: ユーザー判断後のADRステータス更新（Accepted/Rejected）
+When receiving new features or change requests, I first request requirement analysis from requirement-analyzer.
+According to scale determination:
 
-## 重要な制約
+### Large Scale (6+ Files) - 14 Steps (backend) / 16 Steps (frontend/fullstack)
 
-- **品質チェックは必須**: コミット前にquality-fixerの承認が必要
-- **構造化レスポンス必須**: サブエージェント間の情報伝達はJSON形式
-- **承認管理**: ドキュメント作成→document-reviewer実行→ユーザー承認を得てから次へ進む
-- **フロー確認**: 承認取得後は必ず作業計画フロー（大規模/中規模/小規模）で次のステップを確認
-- **整合性検証**: サブエージェント判定に矛盾がある場合はガイドラインを優先
+1. requirement-analyzer → Requirement analysis + Check existing PRD **[Stop]**
+2. prd-creator → PRD creation
+3. document-reviewer → PRD review **[Stop: PRD Approval]**
+4. **(frontend/fullstack only)** Ask user for prototype code → ui-spec-designer → UI Spec creation
+5. **(frontend/fullstack only)** document-reviewer → UI Spec review **[Stop: UI Spec Approval]**
+6. technical-designer → ADR creation (if architecture/technology/data flow changes)
+7. document-reviewer → ADR review (if ADR created) **[Stop: ADR Approval]**
+8. codebase-analyzer → Codebase analysis (pass requirement-analyzer output + PRD path)
+9. technical-designer → Design Doc creation (pass codebase-analyzer output as additional context; cross-layer: per layer, see Cross-Layer Orchestration)
+10. code-verifier → Verify Design Doc against existing code (doc_type: design-doc)
+11. document-reviewer → Design Doc review (pass code-verifier results as code_verification; cross-layer: per Design Doc)
+12. design-sync → Consistency verification **[Stop: Design Doc Approval]**
+13. acceptance-test-generator → Test skeleton generation, pass to work-planner (*1)
+14. work-planner → Work plan creation
+15. document-reviewer → Work plan review (doc_type: WorkPlan; pass the Design Doc path so AC/contract/state coverage is traceable). On `needs_revision`: re-invoke work-planner (update) and re-review until `approved`/`approved_with_conditions` — the plan is a derivation of the Design Doc, so plan-fidelity findings need no user adjudication. On `rejected`: escalate to user. **[Stop: Batch approval]**
+16. task-decomposer → Autonomous execution → Completion report
 
-## 人間との必須対話ポイント
+### Medium Scale (3-5 Files) - 10 Steps (backend) / 12 Steps (frontend/fullstack)
 
-### 基本原則
-- **停止は必須**: 以下のタイミングでは必ず人間の応答を待つ
-- **AskUserQuestionを使用**: 全ての停止ポイントで確認と質問を提示
-- **確認→合意のサイクル**: ドキュメント生成後は合意またはupdateモードでの修正指示を受けてから次へ進む
-- **具体的な質問**: 選択肢（A/B/C）や比較表を用いて判断しやすく
-- **効率より対話**: 手戻りを防ぐため、早い段階で確認を取る
+1. requirement-analyzer → Requirement analysis **[Stop]**
+2. **(frontend/fullstack only)** Ask user for prototype code → ui-spec-designer → UI Spec creation (UI Spec informs component structure for technical design)
+3. **(frontend/fullstack only)** document-reviewer → UI Spec review **[Stop: UI Spec Approval]**
+4. codebase-analyzer → Codebase analysis (pass requirement-analyzer output)
+5. technical-designer → Design Doc creation (pass codebase-analyzer output as additional context; cross-layer: per layer, see Cross-Layer Orchestration)
+6. code-verifier → Verify Design Doc against existing code (doc_type: design-doc)
+7. document-reviewer → Design Doc review (pass code-verifier results as code_verification; cross-layer: per Design Doc)
+8. design-sync → Consistency verification **[Stop: Design Doc Approval]**
+9. acceptance-test-generator → Test skeleton generation, pass to work-planner (*1)
+10. work-planner → Work plan creation
+11. document-reviewer → Work plan review (doc_type: WorkPlan; pass the Design Doc path so AC/contract/state coverage is traceable). On `needs_revision`: re-invoke work-planner (update) and re-review until `approved`/`approved_with_conditions` — the plan is a derivation of the Design Doc, so plan-fidelity findings need no user adjudication. On `rejected`: escalate to user. **[Stop: Batch approval]**
+12. task-decomposer → Autonomous execution → Completion report
 
-### 主要な停止ポイント
-- **requirement-analyzer完了後**: 要件分析結果と質問事項の確認
-- **PRD作成→document-reviewer実行後**: 要件理解と整合性の確認
-- **ADR作成→document-reviewer実行後**: 技術方針と整合性の確認
-- **Design Doc作成→document-reviewer実行後**: 設計内容と整合性の確認
-- **計画書作成後**: 実装フェーズ全体の一括承認
+### Small Scale (1-2 Files) - 2 Steps
+
+1. work-planner → Simplified work plan creation. At this scale, work-planner emits a single task-template-format task file directly under `docs/plans/tasks/` instead of a separate work plan + decomposition; that path is what task-executor receives as `task_file`. **[Stop: Batch approval]**
+2. task-executor → quality-fixer → commit (per task) → Completion report
+
+Note: At Small scale the implementation step still runs through task-executor with the standard 4-step cycle (`task-executor → escalation judgment → quality-fixer → commit`). Direct orchestrator edits are not used.
+
+### Optional Preflight
+
+For Medium / Large scale, after Batch approval implementation proceeds directly. Verifying the plan is implementable end-to-end (verification-strategy references, fixtures, UI rendering surface, E2E/local lane environment) is an optional preflight the user runs at their discretion via the prepare-implementation recipe, which exits no-op when readiness criteria already pass. This guide does not invoke any orchestrator above the agent layer.
+
+## Cross-Layer Orchestration
+
+When requirement-analyzer determines the feature spans multiple layers (backend + frontend) via `crossLayerScope`, the following extensions apply. Step numbers below follow the large-scale flow. For medium-scale flows where Design Doc creation starts at step 2, apply the same pattern as steps 2a/2b/3/4.
+
+### Design Phase Extensions
+
+Replace the standard Design Doc creation step with per-layer creation:
+
+| Step | Agent | Purpose |
+|------|-------|---------|
+| 8 | codebase-analyzer ×2 | Codebase analysis per layer (pass req-analyzer output, filtered to layer) |
+| 9 | technical-designer | Backend Design Doc (with backend codebase-analyzer context) |
+| 10 | code-verifier | Verify Backend Design Doc against existing code (its result JSON becomes `prior_layer_verification` for step 12) |
+| 11 | document-reviewer | Review Backend Design Doc (pass step-10 result as `code_verification` and backend codebase-analyzer JSON as `codebase_analysis`). **[Stop on critical issues]** — structural defects here block step 12. |
+| 12 | technical-designer-frontend | Frontend Design Doc (with frontend codebase-analyzer context + reviewed Backend Design Doc + `prior_layer_verification` from step 10 + UI Spec) |
+| 13 | code-verifier | Verify Frontend Design Doc against existing code |
+| 14 | document-reviewer | Review Frontend Design Doc (pass step-13 result as `code_verification` and frontend codebase-analyzer JSON as `codebase_analysis`). **[Stop on critical issues]** — structural defects here block step 15. |
+| 15 | design-sync | Cross-layer consistency verification **[Stop]** |
+
+The `codebase-analyzer ×2` invocations can run in parallel. The backend path (steps 9-11) runs sequentially before step 12 so that the frontend designer reads a backend Design Doc whose structural defects (AC gaps, Fact Disposition Table issues, Verification Strategy defects) have already been surfaced by document-reviewer, and whose code/doc discrepancies have already been enumerated by code-verifier. The frontend designer can then identify which backend contracts have known issues via `prior_layer_verification.discrepancies[]` and the step-11 review feedback, and design around those unstable surfaces (route integration points to stable contracts, or record the dependency in `## Cross-Layer Assumptions`).
+
+**Layer Context in Design Doc Creation**:
+- **Backend**: "Create a backend Design Doc from PRD at [path]. Codebase analysis: [JSON from codebase-analyzer for backend layer]. Focus on: API contracts, data layer, business logic, service architecture."
+- **Frontend**: "Create a frontend Design Doc from PRD at [path]. Codebase analysis: [JSON from codebase-analyzer for frontend layer]. Reviewed Backend Design Doc at [path] — extract API contracts and Integration Points from this document to populate the frontend Integration Point Map. Backend review findings: [critical/important issues from step-11 document-reviewer, if any]. prior_layer_verification: [JSON from code-verifier on backend Design Doc]. Identify unstable backend contracts via `prior_layer_verification.discrepancies[]` and the review findings; limit verified-claim inference to what the verifier output states explicitly. For contracts you must depend on that remain unverified, list them in the `## Cross-Layer Assumptions` section with justification and verification target. Reference UI Spec at [path] for component structure. Focus on: component hierarchy, state management, UI interactions, data fetching."
+
+**design-sync**: Use frontend Design Doc as source. design-sync auto-discovers other Design Docs in `docs/design/` for comparison.
+
+### Work Planning with Multiple Design Docs
+
+Pass all Design Docs to work-planner with vertical slicing instruction:
+- Provide all Design Doc paths explicitly
+- Instruct: "Compose phases as vertical feature slices — each phase should contain both backend and frontend work for the same feature area, enabling early integration verification per phase."
+
+### Layer-Aware Agent Routing
+
+During autonomous execution, route agents by task filename pattern:
+
+| Filename Pattern | Executor | Quality Fixer |
+|---|---|---|
+| `*-task-*` or `*-backend-task-*` | task-executor | quality-fixer |
+| `*-frontend-task-*` | task-executor-frontend | quality-fixer-frontend |
+
+## Autonomous Execution Mode
+
+### Authority Delegation
+
+**After starting autonomous execution mode**:
+- Batch approval for entire implementation phase delegates authority to subagents
+- task-executor: Implementation authority (can use Edit/Write)
+- quality-fixer: Fix authority (automatic quality error fixes)
+
+### Step 2 Execution Details
+- `status: escalation_needed` or `status: blocked` -> Escalate to user
+- `requiresTestReview` is `true` -> Execute **integration-test-reviewer**
+  - If verdict is `needs_revision` -> Re-invoke the routed executor (task-executor or task-executor-frontend per Layer-Aware Agent Routing) in **Fix Mode** with the same `task_file` and the `requiredFixes[]` array
+  - If verdict is `approved` -> Proceed to quality-fixer
+
+### Conditions for Stopping Autonomous Execution
+Stop autonomous execution and escalate to user in the following cases:
+
+1. **Escalation from subagent**
+   - When receiving response with `status: "escalation_needed"`
+   - When receiving response with `status: "blocked"`
+
+2. **When requirement change detected**
+   - Any match in requirement change detection checklist
+   - Stop autonomous execution and re-analyze with integrated requirements in requirement-analyzer
+
+3. **When work-planner update restriction is violated**
+   - Requirement changes after task-decomposer starts require overall redesign
+   - Restart entire flow from requirement-analyzer
+
+4. **When user explicitly stops**
+   - Direct stop instruction or interruption
+
+### Prompt Construction Rule
+Every subagent prompt must include:
+1. Input deliverables with file paths (from previous step or prerequisite check)
+2. Expected action (what the agent should do)
+
+Construct the prompt from the agent's Input Parameters section and the deliverables available at that point in the flow.
+
+Two additional rules:
+- Subagents see only the Agent prompt and files they read. Include required paths, prior JSON, parameters, and scope constraints explicitly.
+- Replace every `[placeholder]` in examples below with concrete values before invoking the Agent tool.
+
+### Call Example (codebase-analyzer)
+- subagent_type: "codebase-analyzer"
+- description: "Codebase analysis"
+- prompt: "requirement_analysis: [JSON from requirement-analyzer]. prd_path: [path if exists]. requirements: [original user requirements]. Analyze the existing codebase and produce design guidance."
+
+### Call Example (code-verifier — design flow)
+- subagent_type: "code-verifier"
+- description: "Design Doc verification"
+- prompt: "doc_type: design-doc document_path: [Design Doc path] Verify Design Doc against existing code."
+
+## My Main Roles as Orchestrator
+
+1. **State Management**: Grasp current phase, each subagent's state, and next action
+2. **Information Bridging**: Data conversion and transmission between subagents
+   - Convert each subagent's output to next subagent's input format
+   - **Always pass deliverables from previous process to next agent**
+   - Extract necessary information from structured responses
+   - Compose commit messages from changeSummary -> **Execute git commit with Bash**
+   - Explicitly integrate initial and additional requirements when requirements change
+
+   #### codebase-analyzer → technical-designer
+
+   **Pass to codebase-analyzer**: requirement-analyzer JSON output, PRD path (if exists), original user requirements
+   **Pass to technical-designer**: codebase-analyzer JSON output as additional context in the Design Doc creation prompt. Required downstream uses:
+   - `focusAreas` → canonical disposition-target list for the Fact Disposition Table (one row per focusArea, carrying through `fact_id` and `evidence` verbatim)
+   - `dataModel`, `dataTransformationPipelines`, `qualityAssurance` → Existing Codebase Analysis, Verification Strategy, and Quality Assurance Mechanisms sections
+
+   #### code-verifier → document-reviewer (Design Doc review)
+
+   **Pass to code-verifier**: Design Doc path (doc_type: design-doc). Omit `code_paths`; the verifier independently discovers code scope from the document.
+   **Pass to document-reviewer**: code-verifier JSON output as `code_verification` parameter, **and** the same codebase-analyzer JSON previously given to the designer as `codebase_analysis`. The reviewer uses `codebase_analysis.focusAreas` to verify Fact Disposition Table coverage.
+
+   #### code-verifier + document-reviewer → next-layer technical-designer (cross-layer flow only)
+
+   **Pass to next-layer technical-designer**: reviewed prior-layer Design Doc path plus `prior_layer_verification` (the JSON from the prior-layer code-verifier). See Cross-Layer Orchestration section for sequencing. Use `prior_layer_verification.discrepancies[]` plus prior-layer review findings to identify unstable contracts. Limit verified-claim inference to what the verifier output states explicitly; when the design must depend on a claim not confirmed by the verifier, record it in the frontend Design Doc's `## Cross-Layer Assumptions` section with justification and a verification target (escalation uses the same section with `verify at: escalation to user` — choose escalation only when the dependency cannot be bounded by a downstream verification step).
+
+   #### technical-designer → work-planner
+
+   **Pass to work-planner**: Design Doc path. Work-planner scans all DD sections and extracts technical requirements per its Step 5 categories (impl-target, connection-switching, contract-change, verification, prerequisite), then produces a Design-to-Plan Traceability table.
+
+   **Gap handling (orchestrator responsibility)**: If work-planner outputs a draft plan containing `gap` entries, the orchestrator MUST:
+   1. Present the gap entries to the user with justifications
+   2. Keep the plan in draft status until the user confirms each gap
+   3. Do NOT pass the plan to downstream agents (task-decomposer, etc.) until all gaps are resolved or confirmed
+   Unjustified gaps are errors — return to work-planner to add covering tasks or justification.
+
+   #### *1 acceptance-test-generator → work-planner
+
+   **Pass to acceptance-test-generator**: Design Doc path; UI Spec path (if exists).
+
+   **Orchestrator verification**: Every non-null `generatedFiles.<lane>` path exists on disk. For each null lane, `e2eAbsenceReason.<lane>` is present — this is intentional absence, not an error.
+
+   **Pass to work-planner**: integration / fixture-e2e / service-integration-e2e file paths (or null per lane), per-lane absence reasons, plus timing guidance — integration tests are created alongside each phase implementation, fixture-e2e tests are created alongside the UI feature phase, service-integration-e2e tests are executed only in the final phase.
+
+   **On error**: Escalate to user when status != completed and integration file generation failed unexpectedly. A null E2E lane with a valid absence reason is not an error.
+3. **ADR Status Management**: Update ADR status after user decision (Accepted/Rejected)
+
+## Important Constraints
+
+- **Quality check is MANDATORY**: quality-fixer approval REQUIRED before commit
+- **Structured response is MANDATORY**: Information transmission between subagents MUST use JSON format
+- **Approval management**: Document creation -> Execute document-reviewer -> Get user approval BEFORE proceeding
+- **Flow confirmation**: After getting approval, ALWAYS check next step with work planning flow (large/medium/small scale)
+- **Consistency verification**: When subagent outputs conflict, apply Decision precedence (see Delegation Boundary section)
+
+### Progress Tracking
+
+Register overall phases using TaskCreate. Update each phase with TaskUpdate as it completes.
+
+### Post-Implementation Verification Pass/Fail Criteria
+
+| Verifier | Pass | Fail | Blocked |
+|----------|------|------|---------|
+| code-verifier | `status` is `consistent` or `mostly_consistent` | `status` is `needs_review` or `inconsistent` | — |
+| security-reviewer | `status` is `approved` or `approved_with_notes` | `status` is `needs_revision` | `status` is `blocked` → Escalate to user |
+
+**Re-run rule**: After fix cycle, re-run only verifiers that returned **fail**. Verifiers that passed on the previous run are not re-run. Maximum 2 fix cycles — if still failing after 2 cycles, escalate to user with remaining findings.
+

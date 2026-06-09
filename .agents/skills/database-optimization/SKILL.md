@@ -1,211 +1,152 @@
 ---
-id: SKL-database-DATABASEOPTIMIZATION
-name: Database Optimization
-description: 'Database optimization involves improving query performance, reducing
-  resource consumption, and ensuring efficient data access patterns. This skill covers
-  query analysis, indexing strategies, caching, '
-version: 1.0.0
-status: active
-owner: '@cerebra-team'
-last_updated: '2026-02-22'
-category: Backend
-tags:
-- api
-- backend
-- server
-- database
-stack:
-- Python
-- Node.js
-- REST API
-- GraphQL
-difficulty: Intermediate
+name: database-optimization
+description: SQL query optimization and database performance specialist. Use when
+  optimizing slow queries, fixing N+1 problems, designing indexes, implementing caching,
+  or improving database performance. Works with PostgreSQL, MySQL, and other databases.
+author: Joseph OBrien
+status: unpublished
+updated: '2025-12-23'
+version: 1.0.1
+tag: skill
+type: skill
 ---
 
 # Database Optimization
 
-## Skill Profile
-*(Select at least one profile to enable specific modules)*
-- [ ] **DevOps**
-- [x] **Backend**
-- [ ] **Frontend**
-- [ ] **AI-RAG**
-- [ ] **Security Critical**
+This skill optimizes database performance including query optimization, indexing strategies, N+1 problem resolution, and caching implementation.
 
-## Overview
-Database optimization involves improving query performance, reducing resource consumption, and ensuring efficient data access patterns. This skill covers query analysis, indexing strategies, caching, and maintenance practices.
+## When to Use This Skill
 
-## Why This Matters
-Database optimization is critical because:
-- **Performance**: Faster queries improve user experience
-- **Scalability**: Optimized databases handle more load
-- **Cost Efficiency**: Reduced resource usage lowers infrastructure costs
-- **User Experience**: Faster response times increase satisfaction
-- **System Reliability**: Optimized queries reduce timeout and failure rates
+- When optimizing slow database queries
+- When fixing N+1 query problems
+- When designing indexes
+- When implementing caching strategies
+- When optimizing database migrations
+- When improving database performance
 
-## Core Concepts & Rules
+## What This Skill Does
 
-### 1. Core Principles
-- Follow established patterns and conventions
-- Maintain consistency across codebase
-- Document decisions and trade-offs
+1. **Query Optimization**: Analyzes and optimizes SQL queries
+2. **Index Design**: Creates appropriate indexes
+3. **N+1 Resolution**: Fixes N+1 query problems
+4. **Caching**: Implements caching layers (Redis, Memcached)
+5. **Migration Optimization**: Optimizes database migrations
+6. **Performance Monitoring**: Sets up query performance monitoring
 
-### 2. Implementation Guidelines
-- Start with the simplest viable solution
-- Iterate based on feedback and requirements
-- Test thoroughly before deployment
+## How to Use
 
+### Optimize Queries
 
-## Inputs / Outputs / Contracts
-**Inputs:**
-- Database connection or pool
-- Query to analyze or optimize
-- Performance metrics data
-- Index configuration
-
-**Outputs:**
-- Optimized query plans
-- Index recommendations
-- Performance improvements
-- Monitoring metrics
-
-**Contracts:**
-- Optimizations must be tested before production
-- Index changes must be monitored
-- Query changes must maintain correctness
-- Performance improvements must be measurable
-
-## Skill Composition
-* **Depends on**: None
-* **Compatible with**: None
-* **Conflicts with**: None
-* **Related Skills**: None
-
-## Quick Start / Implementation Example
-
-1. Review requirements and constraints
-2. Set up development environment
-3. Implement core functionality following patterns
-4. Write tests for critical paths
-5. Run tests and fix issues
-6. Document any deviations or decisions
-
-```python
-# Example implementation following best practices
-def example_function():
-    # Your implementation here
-    pass
+```
+Optimize this slow database query
 ```
 
+```
+Fix the N+1 query problem in this code
+```
 
-## Assumptions / Constraints / Non-goals
+### Specific Analysis
 
-* **Assumptions**:
-  - Development environment is properly configured
-  - Required dependencies are available
-  - Team has basic understanding of domain
-* **Constraints**:
-  - Must follow existing codebase conventions
-  - Time and resource limitations
-  - Compatibility requirements
-* **Non-goals**:
-  - This skill does not cover edge cases outside scope
-  - Not a replacement for formal training
+```
+Analyze query performance and suggest indexes
+```
 
+## Optimization Areas
 
-## Compatibility & Prerequisites
+### Query Optimization
 
-* **Supported Versions**:
-  - Python 3.8+
-  - Node.js 16+
-  - Modern browsers (Chrome, Firefox, Safari, Edge)
-* **Required AI Tools**:
-  - Code editor (VS Code recommended)
-  - Testing framework appropriate for language
-  - Version control (Git)
-* **Dependencies**:
-  - Language-specific package manager
-  - Build tools
-  - Testing libraries
-* **Environment Setup**:
-  - `.env.example` keys: `API_KEY`, `DATABASE_URL` (no values)
+**Techniques:**
 
+- Use EXPLAIN ANALYZE
+- Optimize JOINs
+- Reduce data scanned
+- Use appropriate indexes
+- Avoid SELECT *
 
-## Test Scenario Matrix (QA Strategy)
+### Index Design
 
-| Type | Focus Area | Required Scenarios / Mocks |
-| :--- | :--- | :--- |
-| **Unit** | Core Logic | Must cover primary logic and at least 3 edge/error cases. Target minimum 80% coverage |
-| **Integration** | DB / API | All external API calls or database connections must be mocked during unit tests |
-| **E2E** | User Journey | Critical user flows to test |
-| **Performance** | Latency / Load | Benchmark requirements |
-| **Security** | Vuln / Auth | SAST/DAST or dependency audit |
-| **Frontend** | UX / A11y | Accessibility checklist (WCAG), Performance Budget (Lighthouse score) |
+**Strategies:**
 
+- Index frequently queried columns
+- Composite indexes for multi-column queries
+- Avoid over-indexing
+- Monitor index usage
+- Remove unused indexes
 
-## Technical Guardrails & Security Threat Model
+### N+1 Problem
 
-### 1. Security & Privacy (Threat Model)
-* **Top Threats**: Injection attacks, authentication bypass, data exposure
-- [ ] **Data Handling**: Sanitize all user inputs to prevent Injection attacks. Never log raw PII
-- [ ] **Secrets Management**: No hardcoded API keys. Use Env Vars/Secrets Manager
-- [ ] **Authorization**: Validate user permissions before state changes
+**Pattern:**
 
-### 2. Performance & Resources
-- [ ] **Execution Efficiency**: Consider time complexity for algorithms
-- [ ] **Memory Management**: Use streams/pagination for large data
-- [ ] **Resource Cleanup**: Close DB connections/file handlers in finally blocks
+```python
+# Bad: N+1 queries
+users = User.all()
+for user in users:
+    posts = Post.where(user_id=user.id)  # N queries
 
-### 3. Architecture & Scalability
-- [ ] **Design Pattern**: Follow SOLID principles, use Dependency Injection
-- [ ] **Modularity**: Decouple logic from UI/Frameworks
+# Good: Single query with JOIN
+users = User.all().includes(:posts)  # 1 query
+```
 
-### 4. Observability & Reliability
-- [ ] **Logging Standards**: Structured JSON, include trace IDs `request_id`
-- [ ] **Metrics**: Track `error_rate`, `latency`, `queue_depth`
-- [ ] **Error Handling**: Standardized error codes, no bare except
-- [ ] **Observability Artifacts**:
-    - **Log Fields**: timestamp, level, message, request_id
-    - **Metrics**: request_count, error_count, response_time
-    - **Dashboards/Alerts**: High Error Rate > 5%
+## Examples
 
+### Example 1: Query Optimization
 
-## Agent Directives & Error Recovery
-*(ข้อกำหนดสำหรับ AI Agent ในการคิดและแก้ปัญหาเมื่อเกิดข้อผิดพลาด)*
+**Input**: Optimize slow user query
 
-- **Thinking Process**: Analyze root cause before fixing. Do not brute-force.
-- **Fallback Strategy**: Stop after 3 failed test attempts. Output root cause and ask for human intervention/clarification.
-- **Self-Review**: Check against Guardrails & Anti-patterns before finalizing.
-- **Output Constraints**: Output ONLY the modified code block. Do not explain unless asked.
+**Output**:
 
+```markdown
+## Database Optimization: User Query
 
-## Definition of Done (DoD) Checklist
+### Current Query
+```sql
+SELECT * FROM users
+WHERE email = 'user@example.com';
+-- Execution time: 450ms
+```
 
-- [ ] Tests passed + coverage met
-- [ ] Lint/Typecheck passed
-- [ ] Logging/Metrics/Trace implemented
-- [ ] Security checks passed
-- [ ] Documentation/Changelog updated
-- [ ] Accessibility/Performance requirements met (if frontend)
+### Analysis
 
+- Full table scan (no index on email)
+- Scanning 1M+ rows
 
-## Anti-patterns / Pitfalls
+### Optimization
 
-* ⛔ **Don't**: Log PII, catch-all exception, N+1 queries
-* ⚠️ **Watch out for**: Common symptoms and quick fixes
-* 💡 **Instead**: Use proper error handling, pagination, and logging
+```sql
+-- Add index
+CREATE INDEX idx_users_email ON users(email);
 
+-- Optimized query
+SELECT id, email, name FROM users
+WHERE email = 'user@example.com';
+-- Execution time: 2ms
+```
 
-## Reference Links & Examples
+### Impact
 
-* Internal documentation and examples
-* Official documentation and best practices
-* Community resources and discussions
+- Query time: 450ms → 2ms (99.5% improvement)
+- Index size: ~50MB
 
+```
 
-## Versioning & Changelog
+## Best Practices
 
-* **Version**: 1.0.0
-* **Changelog**:
-  - 2026-02-22: Initial version with complete template structure
+### Database Optimization
 
+1. **Measure First**: Use EXPLAIN ANALYZE
+2. **Index Strategically**: Not every column needs an index
+3. **Monitor**: Track slow query logs
+4. **Cache**: Cache expensive queries
+5. **Denormalize**: When justified by read patterns
+
+## Reference Files
+
+- **`references/query_patterns.md`** - Common query optimization patterns, anti-patterns, and caching strategies
+
+## Related Use Cases
+
+- Query optimization
+- Index design
+- N+1 problem resolution
+- Caching implementation
+- Database performance improvement

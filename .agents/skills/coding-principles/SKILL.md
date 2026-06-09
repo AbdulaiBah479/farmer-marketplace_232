@@ -9,22 +9,24 @@ description: Language-agnostic coding principles for maintainability, readabilit
 
 1. **Maintainability over Speed**: Prioritize long-term code health over initial development velocity
 2. **Simplicity First**: Choose the simplest solution that meets requirements (YAGNI principle)
-3. **Explicit over Implicit**: Make intentions clear through code structure and naming
-4. **Delete over Comment**: Remove unused code instead of commenting it out
+3. **Minimum Surface for Required Coverage**: When introducing maintenance-surface-bearing elements (persistent state, public-contract or cross-boundary fields/props, behavioral modes/flags/variants, reusable abstractions, or component splits), select the smallest design surface that covers the current user-visible requirements and accepted technical constraints (audit, data integrity, compatibility, security, performance, accessibility). Adoption is justified by naming a current requirement or constraint that smaller alternatives fail to cover; value-based arguments serve as tiebreakers. Distinct from YAGNI (time-axis judgment of present vs. future need), this principle governs surface-area minimization at a fixed coverage point.
+4. **Explicit over Implicit**: Make intentions clear through code structure and naming
+5. **Delete over Comment**: Remove unused code instead of commenting it out
 
 ## Code Quality
 
 ### Continuous Improvement
-- Refactor as you go - don't accumulate technical debt
+- Refactor related code within each change set — address style, naming, or structure issues in the files being modified
 - Improve code structure incrementally
 - Keep the codebase lean and focused
 - Delete unused code immediately
 
 ### Readability
-- Use meaningful, descriptive names for variables and functions
-- Avoid abbreviations unless they are widely recognized
+- Use meaningful, descriptive names drawn from the problem domain
+- Use full words in names; abbreviations are acceptable only when widely recognized in the domain
+- Use descriptive names; single-letter names are acceptable only for loop counters or well-known conventions (i, j, x, y)
+- Extract magic numbers and strings into named constants
 - Keep code self-documenting where possible
-- Write code that humans can easily understand
 
 ## Function Design
 
@@ -47,7 +49,7 @@ description: Language-agnostic coding principles for maintainability, readabilit
 - Pure functions when possible (no side effects)
 - Separate data transformation from side effects
 - Use early returns to reduce nesting
-- Avoid deep nesting (maximum 3 levels)
+- Keep nesting to a maximum of 3 levels; use early returns or extracted functions to flatten deeper nesting
 
 ## Error Handling
 
@@ -65,17 +67,23 @@ description: Language-agnostic coding principles for maintainability, readabilit
 
 ## Dependency Management
 
-### Loose Coupling
-- Inject external dependencies as parameters
-- Avoid direct imports within functions when possible
+### Loose Coupling via Parameterized Dependencies
+- Inject external dependencies as parameters (constructor injection for classes, function parameters for procedural/functional code)
 - Depend on abstractions, not concrete implementations
 - Minimize inter-module dependencies
-
-### Parameterized Dependencies
-- Pass dependencies explicitly through function parameters
-- Use constructor parameter injection for class-based languages
-- Use function parameters for functional/procedural approaches
 - Facilitate testing through mockable dependencies
+
+## Reference Representativeness
+
+### Verifying References Before Adoption
+When adopting patterns, APIs, or dependencies from existing code:
+- **IF** referencing only 2-3 nearby files → **THEN** confirm the pattern is representative by checking usage across the repository before adopting
+- **IF** multiple approaches coexist in the repository → **THEN** identify the majority pattern and make a deliberate choice — selecting whichever is nearest is insufficient
+- **IF** adopting an external dependency (library, plugin, SDK) → **THEN** verify repository-wide usage distribution for the same dependency; if the appropriate version cannot be determined from repository state alone, escalate
+- **IF** following an existing pattern → **THEN** state the reason for following it when an alternative exists (e.g., consistency with surrounding code, avoiding breaking changes, pending coordinated update)
+
+### Principle
+Nearby code is a starting point for investigation, not a sufficient basis for adoption. Verify that what you reference is representative of the repository's conventions and current best practices before using it as a model.
 
 ## Performance Considerations
 
@@ -86,9 +94,9 @@ description: Language-agnostic coding principles for maintainability, readabilit
 - **Resource management**: Handle memory, connections, and files properly
 
 ### When to Optimize
-- After identifying actual bottlenecks
+- After identifying actual bottlenecks through profiling
 - When performance issues are measurable
-- Not prematurely during initial development
+- Optimize only after measurable bottlenecks are identified, not during initial development
 
 ## Code Organization
 
@@ -112,14 +120,14 @@ description: Language-agnostic coding principles for maintainability, readabilit
 - **Note limitations**: Document known constraints or edge cases
 - **API documentation**: Public interfaces need clear documentation
 
-### When NOT to Comment
-- Avoid describing "how" (the code shows that)
-- Don't include historical information (use version control)
-- Remove commented-out code (use git to retrieve old code)
-- Avoid obvious comments that restate the code
+### Comment Scope
+- Comment the "what" and "why"; the code itself communicates the "how"
+- Record historical context in version control commit messages, not in comments
+- Delete commented-out code (retrieve from git history when needed)
+- Write comments that add information beyond what the code states
 
 ### Comment Quality
-- Keep comments concise and timeless
+- Write comments that remain accurate regardless of future code changes; avoid references to dates, versions, or temporary state
 - Update comments when changing code
 - Use proper grammar and formatting
 - Write for future maintainers
@@ -138,27 +146,6 @@ description: Language-agnostic coding principles for maintainability, readabilit
 - Complex conditional logic
 - Unclear naming or structure
 
-## Clean Code Guidelines
-
-### Naming Conventions
-- Use domain language in names
-- Be specific and descriptive
-- Avoid single-letter names (except loop counters)
-- Follow language-specific conventions (camelCase, snake_case, etc.)
-
-### Code Structure
-- Prefer early returns over nested conditionals
-- Extract magic numbers into named constants
-- Remove debug statements before committing
-- Keep functions at a single level of abstraction
-
-### Code Smells to Avoid
-- Long parameter lists
-- Deeply nested conditionals
-- Duplicated code blocks
-- Unclear variable names
-- Large modules, classes, or functions
-
 ## Testing Considerations
 
 ### Testability
@@ -175,17 +162,28 @@ description: Language-agnostic coding principles for maintainability, readabilit
 
 ## Security Principles
 
-### General Security
-- Store secrets in environment variables or secret managers
-- Validate all external input
-- Use parameterized queries for databases
-- Follow principle of least privilege
+### Secure Defaults
+- Store credentials and secrets through environment variables or dedicated secret managers
+- Use parameterized queries (prepared statements) for all database access
+- Use established cryptographic libraries provided by the language or framework
+- Generate security-critical values (tokens, IDs, nonces) with cryptographically secure random generators
+- Encrypt sensitive data at rest and in transit using standard protocols
 
-### Data Protection
-- Encrypt sensitive data at rest and in transit
-- Sanitize user input
-- Avoid logging sensitive information
-- Use secure random generators for security-critical operations
+### Input and Output Boundaries
+- Validate all external input at system entry points for expected format, type, and length
+- Encode output appropriately for its rendering context (HTML, SQL, shell, URL)
+- Return only information necessary for the caller in error responses; log detailed diagnostics server-side
+
+### Access Control
+- Apply authentication to all entry points that handle user data or trigger state changes
+- Verify authorization for each resource access, not only at the entry point
+- Grant only the permissions required for the operation (files, database connections, API scopes)
+
+### Knowledge Cutoff Supplement (2026-03)
+- OWASP Top 10:2025 shifted from symptoms to root causes; added "Software Supply Chain Failures" (A03) and "Mishandling of Exceptional Conditions" (A10)
+- Recent research indicates AI-generated code shows elevated rates of access control gaps — treat authentication and authorization as high-priority review targets
+- OpenSSF published "Security-Focused Guide for AI Code Assistant Instructions" — recommends language-specific, actionable constraints over generic advice
+- For detailed detection patterns, see `references/security-checks.md`
 
 ## Documentation
 
@@ -193,7 +191,7 @@ description: Language-agnostic coding principles for maintainability, readabilit
 - Document public APIs and interfaces
 - Include usage examples for complex functionality
 - Maintain README files for modules
-- Keep documentation in sync with code
+- Update documentation in the same commit that changes the corresponding behavior
 
 ### Architecture Documentation
 - Document high-level design decisions
@@ -207,7 +205,7 @@ description: Language-agnostic coding principles for maintainability, readabilit
 - Make atomic, focused commits
 - Write clear, descriptive commit messages
 - Commit working code (passes tests)
-- Avoid committing debug code or secrets
+- Commit only production-ready code; store secrets in environment variables or secret managers
 
 ### Code Review Readiness
 - Self-review before requesting review
@@ -225,9 +223,3 @@ While these principles are language-agnostic, adapt them to your specific progra
 - **Functional languages**: Prefer pure functions and immutability
 - **Concurrency**: Follow language-specific patterns for thread safety
 
-## Continuous Learning
-
-- Stay updated with language-specific best practices
-- Learn from code reviews
-- Study well-maintained open source projects
-- Regularly refactor and improve existing code

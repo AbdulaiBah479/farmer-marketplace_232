@@ -1,87 +1,81 @@
 ---
 name: sql-queries
-description: "Generate SQL queries from natural language descriptions. Supports BigQuery, PostgreSQL, MySQL, and other dialects. Reads database schemas from uploaded diagrams or documentation. Use when writing SQL, building data reports, exploring databases, or translating business questions into queries."
+description: Expert SQL query generation for DBX Studio. Use when writing, optimizing, or debugging SQL queries against user database connections.
 ---
 
-# SQL Query Generator
+# SQL Query Expert — DBX Studio
 
-## Purpose
-Transform natural language requirements into optimized SQL queries across multiple database platforms. This skill helps product managers, analysts, and engineers generate accurate queries without manual syntax work.
+This project supports multiple database backends via user connections. Always write dialect-appropriate SQL.
 
-## How It Works
+## Supported Dialects
 
-### Step 1: Understand Your Database Schema
-- If you provide a schema file (SQL, documentation, or diagram description), I will read and analyze it
-- Extract table names, column definitions, data types, and relationships
-- Identify primary keys, foreign keys, and indexing strategies
+| Dialect | Provider |
+|---------|----------|
+| PostgreSQL | Default / Railway |
+| Snowflake | Via MCP connector |
+| BigQuery | Via MCP connector |
+| Databricks | Via MCP connector |
+| MySQL | Via connection string |
+| SQLite | Via connection string |
 
-### Step 2: Process Your Request
-- Clarify the exact data you need to retrieve or analyze
-- Confirm the SQL dialect (BigQuery, PostgreSQL, MySQL, Snowflake, etc.)
-- Ask for any additional requirements (filters, aggregations, sorting)
+## Query Patterns
 
-### Step 3: Generate Optimized Query
-- Write efficient SQL that leverages your database structure
-- Include comments explaining complex logic
-- Add performance considerations for large datasets
-- Provide alternative approaches if applicable
-
-### Step 4: Explain and Test
-- Explain the query logic in plain English
-- Suggest how to test or validate results
-- Offer tips for performance optimization
-- If you want, generate a test script or sample data
-
-## Usage Examples
-
-**Example 1: Query from Schema File**
-```
-Upload your database_schema.sql file and say:
-"Generate a query to find users who signed up in the last 30 days
-and had at least 5 active sessions"
+### Safe SELECT with limit
+Always add LIMIT unless the user explicitly wants all rows:
+```sql
+SELECT * FROM "schema"."table" LIMIT 100;
 ```
 
-**Example 2: Query from Diagram Description**
-```
-"Here's my database: Users table (id, email, created_at), Sessions table
-(id, user_id, timestamp, duration). Generate a query for average session
-duration per user in January 2026."
-```
-
-**Example 3: Complex Analysis Query**
-```
-"Create a BigQuery query to analyze our revenue by region and customer tier,
-including year-over-year growth rates."
+### CTEs for complex queries
+```sql
+WITH ranked AS (
+  SELECT *, ROW_NUMBER() OVER (PARTITION BY category ORDER BY created_at DESC) AS rn
+  FROM orders
+)
+SELECT * FROM ranked WHERE rn = 1;
 ```
 
-## Key Capabilities
+### Aggregations
+```sql
+SELECT
+  DATE_TRUNC('month', created_at) AS month,
+  COUNT(*) AS total,
+  SUM(amount) AS revenue
+FROM orders
+GROUP BY 1
+ORDER BY 1 DESC;
+```
 
-- **Multi-Dialect Support**: Works with BigQuery, PostgreSQL, MySQL, Snowflake, SQL Server
-- **File Reading**: Reads schema files, SQL dumps, and data documentation
-- **Query Optimization**: Suggests indexes, partitioning, and performance improvements
-- **Explanation**: Breaks down queries for learning and documentation
-- **Testing**: Can generate test queries and sample data scripts
-- **Script Execution**: Create executable SQL scripts for your database
+### Window Functions
+```sql
+SELECT
+  user_id,
+  amount,
+  SUM(amount) OVER (PARTITION BY user_id ORDER BY created_at) AS running_total
+FROM transactions;
+```
 
-## Tips for Best Results
+## Tool Usage in DBX Studio AI
 
-1. **Provide context**: Share your database schema or structure
-2. **Be specific**: Clearly describe what data you need and any filters
-3. **Mention database**: Specify which SQL dialect you're using
-4. **Include constraints**: Mention data volume, time ranges, and performance needs
-5. **Request format**: Ask for the query result format if you need specific output
+The AI has access to these tools — always use them rather than guessing:
 
-## Output Format
+| Tool | When to Use |
+|------|-------------|
+| `read_schema` | First call — understand table structure |
+| `get_table_data` | Preview rows before writing complex queries |
+| `execute_query` | Run SELECT queries (SELECT/WITH only) |
+| `describe_table` | Get column details, FK relationships |
+| `get_table_stats` | Row counts, distributions |
+| `generate_chart` | Visualize query results |
 
-You'll receive:
-- **SQL Query**: Production-ready SQL code with comments
-- **Explanation**: What the query does and how it works
-- **Performance Notes**: Optimization tips and considerations
-- **Test Script** (if requested): Sample data and validation queries
+## Query Safety Rules
+- Only SELECT and WITH (CTEs) are permitted via `execute_query`
+- Always quote identifiers: `"schema"."table"."column"`
+- Add LIMIT automatically unless the user asks for all data
+- Validate table/column names exist via `read_schema` or `describe_table` first
 
----
-
-### Further Reading
-
-- [The Product Analytics Playbook: AARRR, HEART, Cohorts & Funnels for PMs](https://www.productcompass.pm/p/the-product-analytics-playbook-aarrr)
-- [How to Become a Technology-Literate PM](https://www.productcompass.pm/p/how-to-become-a-technology-literate)
+## Response Format
+1. Execute tool to get data
+2. Answer the user's question directly with the result
+3. Show SQL in ```sql blocks only if the user asks "how" or "show me the query"
+4. Present numbers clearly: "There are **1,247 orders** this month"

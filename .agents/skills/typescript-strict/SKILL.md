@@ -1,56 +1,94 @@
 ---
 name: typescript-strict
-<<<<<<< HEAD
-description: "Strict TypeScript: noImplicitAny, strictNullChecks, template literals, and satisfies operator."
-category: js
+description: Strict TypeScript rules. Use when writing ANY TypeScript.
 ---
 
-# TypeScript Strict Mode
+# Strict TypeScript Standards
 
-Strict TypeScript: noImplicitAny, strictNullChecks, template literals, and satisfies operator.
+## Rules
 
-## When to Use
-Use this skill for typescript strict mode tasks.
-=======
-description: Write type-safe TypeScript code with strict mode enabled, comprehensive type definitions, proper error handling, and elimination of any types. Use when enabling TypeScript strict mode, adding types to existing JavaScript, fixing type errors, creating type definitions, using utility types, implementing type guards, avoiding any types, creating generic types, or ensuring complete type safety across the codebase.
----
+### 1. NO `any`
+```typescript
+// NEVER
+function process(data: any) {}
 
-# TypeScript Strict - Type Safety Best Practices
+// CORRECT
+function process(data: unknown) {
+  if (isValidData(data)) { /* use data */ }
+}
+```
 
-## When to use this skill
+### 2. Explicit Returns
+```typescript
+// NEVER
+function getUser(id: string) { return db.find(id); }
 
-- Enabling TypeScript strict mode in projects
-- Adding types to existing JavaScript codebases
-- Fixing TypeScript type errors systematically
-- Creating comprehensive type definitions
-- Using TypeScript utility types (Partial, Pick, Omit)
-- Implementing type guards and assertions
-- Eliminating any types from codebase
-- Creating generic, reusable typed functions
-- Ensuring null/undefined safety
-- Typing complex data structures
-- Creating discriminated unions
-- Implementing strict function signatures
+// CORRECT
+function getUser(id: string): Promise<User | null> { return db.find(id); }
+```
 
-## When to use this skill
+### 3. Typed Errors
+```typescript
+// NEVER
+catch (e) { console.log(e.message); }
 
-- Ensuring type safety, preventing runtime errors.
-- When working on related tasks or features
-- During development that requires this expertise
+// CORRECT
+catch (error: unknown) {
+  if (error instanceof AppError) { logger.error(error.message); }
+  else if (error instanceof Error) { logger.error(error.message); }
+  else { logger.error('Unknown error', { error }); }
+}
+```
 
-**Use when**: Ensuring type safety, preventing runtime errors.
+### 4. No Unexplained Assertions
+```typescript
+// NEVER
+const user = users.find(u => u.id === id)!;
 
-## Config
-\`\`\`json
-{
-  "compilerOptions": {
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitReturns": true
+// CORRECT
+const user = users.find(u => u.id === id);
+if (!user) throw new NotFoundError(`User ${id} not found`);
+```
+
+### 5. Prefer Type Inference Where Obvious
+```typescript
+// Unnecessary - type is inferred
+const count: number = 5;
+
+// Good - type is inferred
+const count = 5;
+
+// Good - explicit for function signatures
+function add(a: number, b: number): number {
+  return a + b;
+}
+```
+
+### 6. Use Discriminated Unions
+```typescript
+// CORRECT
+type Result<T> =
+  | { success: true; data: T }
+  | { success: false; error: string };
+
+function handle(result: Result<User>) {
+  if (result.success) {
+    // TypeScript knows result.data exists
+    console.log(result.data.name);
+  } else {
+    // TypeScript knows result.error exists
+    console.log(result.error);
   }
 }
-\`\`\`
+```
 
-## Resources
-- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
->>>>>>> 4b9d09d6dab9a725d3e3c3e2f77c256484dc8d8b
+## Quick Reference
+
+| Pattern | Status |
+|---------|--------|
+| `any` | NEVER |
+| Implicit return | NEVER |
+| `!` without comment | NEVER |
+| `// @ts-ignore` | NEVER |
+| `as` casting | MINIMIZE |
+| `unknown` + guards | PREFERRED |

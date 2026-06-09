@@ -50,7 +50,15 @@ Custom cache location. Default: `node_modules/.cache/turbo`.
 
 ## daemon
 
-**Deprecated**: The daemon is no longer used for `turbo run` and this option will be removed in version 3.0. The daemon is still used by `turbo watch` and the Turborepo LSP.
+Background process for faster subsequent runs. Default: `true`.
+
+```json
+{
+  "daemon": false
+}
+```
+
+Disable in CI or when debugging.
 
 ## envMode
 
@@ -141,10 +149,6 @@ When using `outputLogs: "errors-only"`, show task hashes on start/completion:
 
 - Cache miss: `cache miss, executing <hash> (only logging errors)`
 - Cache hit: `cache hit, replaying logs (no errors) <hash>`
-
-### `longerSignatureKey`
-
-Enforce a minimum key length of 32 bytes for `TURBO_REMOTE_CACHE_SIGNATURE_KEY` when `remoteCache.signature` is enabled. Short keys weaken HMAC-SHA256 signatures. Fails the run immediately if the key is too short.
 
 ## noUpdateNotifier
 

@@ -5,13 +5,11 @@ description: "Decodiert die fünfstufige Zufriedenheitsformel deutscher Arbeitsz
 
 # Zufriedenheitsformel-Decodierung
 
-Die Zufriedenheitsformel ist das Herzstück des deutschen Arbeitszeugnisses. Sie ist die am häufigsten verwendete und am stärksten kodierte Formulierung — und für Laien oft kaum von einer guten Note zu unterscheiden. Vier Worte können den Unterschied zwischen einer Eins und einer Vier ausmachen.
+## Fachlicher Anker
 
-Die fünfstufige Skala folgt einem präzisen Steigerungssystem, das auf den Wörtern "stets" (immer, ohne Ausnahme), "vollsten" (Superlativ) und "vollen" (Positiv) beruht. Jede Stufe unterscheidet sich von der nächsten durch das Fehlen eines Wortes oder dessen Abschwächung. Wer diese Abstufungen nicht kennt, liest eine Note-4-Formulierung als positiv — genau das ist der Geheimcode der Zeugnissprache.
-
-Wichtig: Die Formel erscheint selten isoliert. Sie ist oft Teil eines längeren Satzes, der auch Arbeitsbereitschaft und Fachkenntnisse umfasst. Der Gesamtsatz ist nach seiner schwächsten Komponente zu beurteilen. "Ihre Fachkenntnisse und ihre stets überzeugende Arbeitsweise überzeugten uns; die Ergebnisse entsprachen unseren Erwartungen" — die schwache Schlusskomponente zieht die Note herunter.
-
-Verstärker und Abschwächer können die Grundformel verändern: Adverbien wie "jederzeit", "durchweg" oder "in jeder Hinsicht" können als positive Verstärker wirken. Einschränkungen wie "im Wesentlichen", "in aller Regel" oder "soweit beurteilt werden konnte" schwächen die Formel deutlich ab.
+- **Normen:** §§ 611a, §§ 1, §§ 14.
+- **Entscheidungs-/Quellenanker:** Tragende Rechtsprechung nur mit Gericht, Datum, Aktenzeichen und frei prüfbarer Quelle einsetzen; keine Entscheidung aus Modellwissen erzwingen.
+- **Quellenhygiene:** `references/quellenhygiene.md` und `references/zitierweise.md` beachten.
 
 ## Geheimcode-Regeln
 
@@ -38,10 +36,6 @@ Verstärker und Abschwächer können die Grundformel verändern: Adverbien wie "
 
 **Beispiel 5 – Note 5 (Rot):** "Sie hat ihre Aufgaben im Großen und Ganzen zu unserer Zufriedenheit erledigt." — Einschränkung durch "im Großen und Ganzen" → Note 5.
 
-## Ausgabeformat
-
-Der Skill gibt die erkannte Formel im Wortlaut aus, ordnet sie der Note zu (Note 1 bis Note 5), zeigt die Ampelfarbe und erklärt das entscheidende sprachliche Merkmal. Bei mehreren Zufriedenheitsformeln im Zeugnis (Leistung und Verhalten getrennt) werden beide separat ausgewiesen.
-
 ## Rechtliche Einordnung und Normen
 
 - **§ 109 GewO** — Anspruch auf qualifiziertes wohlwollendes Zeugnis
@@ -50,3 +44,4 @@ Der Skill gibt die erkannte Formel im Wortlaut aus, ordnet sie der Note zu (Note
 ## Aktuelle Rechtsprechung
 
 - Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+

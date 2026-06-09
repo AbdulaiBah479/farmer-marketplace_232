@@ -1,683 +1,459 @@
 ---
 name: product-discovery
-description: Conducts discovery sessions for features/products. Explores concept definition, business model, user journeys, competitive analysis, success metrics, and scoping decisions. Use when you need to explore "what is X", "let's understand", "discovery for", or the /discovery command.
+description: Product discovery and market research expert. Use when validating product ideas, conducting market research, user interviews, competitive analysis, or opportunity assessment. Covers JTBD, Kano model, and Value Proposition Canvas.
 ---
+# Product Discovery
 
-# Discovery Skill
+## Core Principles
 
-Conduct structured discovery sessions for features and products. This skill helps PMs explore and document a problem space before writing PRDs or creating user stories.
-
-## Workflow Overview
-
-The discovery process has **7 flexible phases**. All phases are optional—ask the user which aspects they want to explore at the start.
-
-```
-Phase 1: Concept Definition   → What is it? Is the problem validated?
-Phase 2: Business Model       → Who manages it, for whom, how is it monetized?
-Phase 3: Journey Mapping      → How do personas interact?
-Phase 4: Competitive Analysis → How do competitors solve this? (OPTIONAL)
-Phase 5: Success Metrics      → How do we know the solution worked? (OPTIONAL)
-Phase 6: Scoping Decisions    → What goes into v1 vs. later?
-Phase 7: Documentation        → Compile into a research document
-
-```
+- **Continuous Discovery** — Weekly user conversations, not episodic research
+- **Outcome-Driven** — Start with outcomes to achieve, not solutions to build
+- **Assumption Testing** — Validate risky assumptions before committing resources
+- **Co-Creation** — Build with customers, not just for them
+- **Data-Driven** — Use evidence over intuition and stakeholder opinions
+- **Problem-First** — Deeply understand the problem space before ideating solutions
 
 ---
 
-## Phase 1: Concept Definition
+## Hard Rules (Must Follow)
 
-**Objective:** Establish a shared understanding of what the concept/feature is.
+> These rules are mandatory. Violating them means the skill is not working correctly.
 
-**Approach:** Open-ended questions first, then structuring.
+### No Solution-First Thinking
 
-### Steps
-
-```
-1.1 Initial open-ended question
-    └── "What do you understand by [X]?"
-    └── "Tell me more about [X]"
-
-1.2 Active listening + synthesis
-    └── Rephrase what the user said
-    └── "So [X] is [my interpretation]. Is that correct?"
-
-1.3 Iterate until alignment
-    └── As many questions as necessary
-    └── Do not proceed with doubts
-
-1.4 Concept checkpoint
-    └── Summarize agreed definition
-    └── "Before moving on, I confirm: [X] is [final definition]"
-
-1.5 Problem validation
-    └── "Why is this a pain point for the company?"
-    └── "What evidence supports this problem?"
-        ├── Quantitative: metrics, conversion, churn
-        └── Qualitative: client reports, support tickets, interviews
-    └── "Why solve this now?"
-        ├── Urgency: revenue impact, competition, regulatory
-        └── Opportunity cost of delay
-    └── "What data do we have?"
-        ├── Internal: analytics, NPS, support volume
-        └── External: client feedback, market research
-
-1.6 Problem validation checkpoint
-    └── Summarize in table before proceeding
-
-```
-
-### Problem Validation Table Template
-
-| Dimension         | Evidence                 | Source            |
-| ----------------- | ------------------------ | ----------------- |
-| Pain point        | [description]            | [who reported]    |
-| Quantitative data | [metrics/numbers]        | [system/report]   |
-| Qualitative data  | [client quotes/feedback] | [interviews/CS]   |
-| Urgency driver    | [why now]                | [business reason] |
-
-### Example 1: Hotlist (Public Safety)
-
-```
-Claude: "What do you know about hotlists in your context?"
-→ Proposes hypothesis: "vehicle license plate watchlists"
-User: "Let's discuss to enrich this context"
-→ Series of questions about entity types, ownership, match actions
-→ Result: "Hotlist = vehicle license plate watchlists that trigger
-   real-time alerts when detected by LPR cameras"
-
-```
-
-### Example 2: Urgency Tag (Marketplace)
-
-```
-Claude: "What do you mean by 'urgency tag' feature?"
-User: "A way for sellers to mark items they need to sell fast"
-Claude: "So buyers could filter by urgency, and sellers pay premium
-   for visibility. Is this about seller monetization or buyer UX?"
-User: "Both - sellers pay, buyers find urgent deals faster"
-→ Result: "Urgency tag = paid feature for sellers to highlight
-   time-sensitive listings, improving discovery for buyers"
-
-```
-
-### Example 3: Customization Settings (SaaS)
-
-```
-User: "Users want more customization options"
-Claude: "What specifically do they want to customize?"
-User: "Dashboard layout, notification preferences, integrations"
-Claude: "Analytics show that 80% never change defaults. Is the real
-   problem that defaults don't match their workflow needs?"
-→ Result: "The problem isn't lack of customization—it's that defaults
-   don't serve the primary use cases. Focus on smarter defaults,
-   not more options."
-
-```
-
-### Example 4: Problem Validation (E-commerce)
-
-```
-User: "We need a loyalty program"
-Claude: "Why is this a pain point? What evidence do we have?"
-User: "Repeat purchase rate is 15%, competitors have loyalty programs"
-Claude: "What data supports this?"
-→ Quantitative: 15% repeat rate vs 25% industry avg, 40% churn at 90 days
-→ Qualitative: NPS comments mention "no reason to come back", CS tickets
-   asking about rewards
-
-| Dimension         | Evidence                     | Source             |
-|-------------------|------------------------------|--------------------|
-| Pain point        | Low repeat purchase rate     | Product analytics  |
-| Quantitative data | 15% repeat vs 25% benchmark  | Mixpanel + industry|
-| Qualitative data  | "No reason to come back"     | NPS survey Q4      |
-| Urgency driver    | Competitor launched program  | Market research    |
-
-→ Result: Problem validated. Evidence shows retention gap with clear
-   quantitative + qualitative support. Competitive pressure adds urgency.
-
-```
-
----
-
-## Phase 2: Business Model
-
-**Objective:** Understand who manages it, for whom, and business impact.
-
-**Approach:** Questions emerge from context (not fixed). ALWAYS distinguish primary vs. future segments.
-
-### Steps
-
-```
-2.1 Ownership
-    └── "Who creates/manages [X]?"
-    └── Typical options: company, client, end-user, hybrid
-
-2.2 Segments (ALWAYS distinguish timing)
-    └── "Who is the primary customer now?"
-    └── "Is there potential expansion to other segments?"
-
-2.3 Contextual questions (examples)
-    ├── If data is involved: "Who owns the data?"
-    ├── If payment is involved: "How is it monetized?"
-    ├── If third parties are involved: "Who pays whom?"
-    └── If compliance is involved: "What regulations apply?"
-
-2.4 Checkpoint
-    └── Summarize model in table: | Dimension | Primary | Future |
-
-```
-
-### Example 1: Hotlist (Public Safety)
-
-```
-| Dimension     | Primary             | Future                |
-|--------------|---------------------|-----------------------|
-| Ownership    | Admin Gabriel       | B2B Self-service      |
-| Segment      | Police/City Guard   | Parking, Security     |
-| Monetization | Included in product | New revenue stream    |
-
-```
-
-### Example 2: Seller Premium Features (Marketplace)
-
-```
-| Dimension     | Primary             | Future                 |
-|--------------|---------------------|------------------------|
-| Ownership    | Seller buys         | Subscription bundles   |
-| Segment      | Power sellers       | All sellers            |
-| Monetization | Fee per listing     | Monthly subscription   |
-
-```
-
-### Example 3: Notification System (SaaS)
-
-```
-| Dimension     | Primary             | Future                 |
-|--------------|---------------------|------------------------|
-| Ownership    | Company defines rules| Configurable rules     |
-| Segment      | Enterprise clients  | SMB self-service       |
-| Monetization | Included in plan    | Usage-based add-on     |
-
-```
-
----
-
-## Phase 3: User Journey Mapping
-
-**Objective:** Map how personas interact with the feature.
-
-**Approach:** Focus on 2-3 personas, flow in simple text.
-
-### Steps
-
-```
-3.1 Identify personas (focus on 2-3, allow more)
-    └── "Who are the primary users of [X]?"
-    └── Suggest options based on context
-    └── Allow user to add others
-
-3.2 Choose journey stage
-    ├── Setup/Onboarding - initial configuration
-    ├── Main use - core flow
-    └── Post-action - what happens after
-
-3.3 Map flow (simple text)
-    └── Numbered steps or bullets
-    └── Distinguish actions by persona if relevant
-
-3.4 Permissions (if applicable)
-    └── "What can each persona do?"
-    └── Table: Persona | Can create? | Can edit? | Can delete?
-
-3.5 Checkpoint
-    └── Validate flow with user before proceeding
-
-```
-
-### Example 1: Hotlist Setup Journey
-
-```
-Personas: Police Operator, Police Commander
-
-Setup Journey:
-1. Admin Gabriel creates hotlist types for client
-2. Admin Gabriel configures webhooks per type
-3. Operator/Commander views available hotlists
-4. Operator/Commander adds plate + reason
-5. System records audit trail (who added it)
-
-Permissions:
-| Persona    | Add plate | View list | Remove plate |
-|------------|-----------|-----------|--------------|
-| Operator   | Yes       | Yes       | Yes          |
-| Commander  | Yes       | Yes       | Yes          |
-
-```
-
-### Example 2: Checkout Optimization Journey
-
-```
-Personas: Guest Buyer, Recurring Customer
-
-Purchase Journey:
-1. Buyer adds items to cart
-2. Buyer goes to checkout
-3. Guest: Enters shipping info OR Recurring: Uses saved address
-4. Guest: Enters payment OR Recurring: Uses saved payment
-5. System calculates taxes/shipping
-6. Buyer reviews order summary
-7. Buyer confirms purchase
-8. System sends confirmation email
-
-Drop-off points to investigate:
-- Step 3: Guest abandonment (friction)
-- Step 6: Price shock (unexpected fees)
-
-```
-
-### Example 3: Lead Management Journey in CRM
-
-```
-Personas: Sales Rep, Sales Manager
-
-Lead Processing:
-1. Marketing creates lead from form submission
-2. System auto-assigns to Rep based on territory
-3. Rep qualifies lead (BANT criteria)
-4. Rep logs touchpoints on timeline
-5. Manager reviews pipeline on dashboard
-6. Rep converts to opportunity or archives
-
-Permissions:
-| Persona   | Create lead | Edit lead | Delete lead | View reports |
-|-----------|-------------|-----------|-------------|--------------|
-| Rep       | No (auto)   | Yes       | No          | Own only     |
-| Manager   | Yes         | Yes       | Yes         | Entire team  |
-
-```
-
----
-
-## Phase 4: Competitive Analysis (OPTIONAL)
-
-**Objective:** Understand how competitors solve the same problem.
-
-**Approach:** 2-3 main competitors, table + qualitative highlights.
-
-### Steps
-
-```
-4.1 Ask if user wants to include it
-    └── "Do you want to include competitive analysis?"
-    └── If no, skip to Phase 5
-
-4.2 Identify competitors (2-3 main ones)
-    └── "Do you know any competitors to analyze?"
-    └── If no: perform web search for the domain
-
-4.3 Research each competitor
-    └── WebSearch: "[competitor] + [feature] + features"
-    └── WebFetch: documentation if available
-    └── G2/Capterra: feature comparison tables
-
-4.4 Create comparison table
-    └── Identified features vs. each competitor
-    └── Column: Our decision + justification
-
-4.5 Qualitative highlights
-    └── Differentiators for each competitor
-    └── Gaps/opportunities for us
-
-4.6 Save references with links
-    └── URLs of researched sources
-
-```
-
-### Example 1: Hotlist Competitive Analysis
-
-```
-Competitors analyzed: Flock Safety, Genetec AutoVu, Vigilant
-
-| Feature       | Gabriel v1 | Flock           | Justification           |
-|---------------|------------|-----------------|-------------------------|
-| Metadata      | Minimal    | Rich (color,type)| Cloning invalidates data|
-| Alert channel | Webhooks   | Mobile+RTCC     | v1 Simplicity           |
-| TTL           | Per hotlist| Per plate       | Simple, extensible      |
-
-Flock Differentiators:
-- Shift mode (alerts only when on duty)
-- Radius alerts (distance-based)
-- Vehicle fingerprinting beyond plates
-
-```
-
-### Example 2: CRM Competitive Analysis
-
-```
-Competitors analyzed: Salesforce, HubSpot, Pipedrive
-
-| Feature          | Our CRM   | Salesforce  | HubSpot   | Justification         |
-|------------------|-----------|-------------|-----------|----------------------|
-| Pricing model    | Per seat  | Per seat    | Freemium  | SMB needs + simple   |
-| Customization    | Templates | Full custom | Limited   | Balance flexibility  |
-| Mobile app       | Basic     | Full        | Full      | v2 Priority          |
-| AI Features      | None      | Einstein    | Predictive| Roadmap item         |
-
-HubSpot Differentiators:
-- Free tier drives adoption
-- Seamless marketing integration
-- Better content management
-
-Salesforce Differentiators:
-- Enterprise-grade customization
-- Massive app ecosystem
-- Industry-specific clouds
-
-```
-
-### Example 3: Project Management Competitive Analysis
-
-```
-Competitors analyzed: Asana, Monday.com, Notion
-
-| Feature       | Our Tool  | Asana      | Monday     | Notion     |
-|---------------|-----------|------------|------------|------------|
-| Views         | List only | List,Board | 8+ views   | Flexible   |
-| Automations   | Basic     | Advanced   | Extensive  | Limited    |
-| Docs          | Separate  | Minimal    | Minimal    | Native     |
-| Price         | Simple    | Tiered     | Per seat   | Generous   |
-
-Key Insight:
-- Monday wins on visual appeal and templates
-- Asana wins on workflow automation
-- Notion wins on flexibility but loses on structure
-- Our opportunity: Opinionated simplicity for small teams
-
-```
-
----
-
-## Phase 5: Success Metrics (OPTIONAL)
-
-**Objective:** Define how we'll know the solution worked.
-
-**Approach:** Use problem evidence (Phase 1), journey touchpoints (Phase 3), and competitive benchmarks (Phase 4) to define measurable success criteria.
-
-### Steps
-
-```
-5.1 Ask if user wants to define metrics
-    └── "Do you want to define success metrics now?"
-    └── If no, skip to Phase 6
-
-5.2 Primary success metric
-    └── "What single metric proves the problem is solved?"
-    └── Derived from problem evidence (Phase 1)
-
-5.3 Leading indicators
-    └── "What early signals show we're on track?"
-    └── Derived from journey touchpoints (Phase 3)
-
-5.4 Benchmarks
-    └── "What are competitors achieving?" (if Phase 4 done)
-    └── "What's a realistic target for v1?"
-
-5.5 Guardrail metrics
-    └── "What shouldn't get worse?"
-
-5.6 Timeframe
-    └── "When do we measure success?"
-    └── v1 milestone vs long-term target
-
-5.7 Success metrics checkpoint
-    └── Summarize in table before proceeding
-
-```
-
-### Success Metrics Table Template
-
-| Metric Type | Metric           | Baseline  | Target     | Timeframe |
-| ----------- | ---------------- | --------- | ---------- | --------- |
-| Primary     | [main KPI]       | [current] | [goal]     | [when]    |
-| Leading     | [early signal]   | [current] | [goal]     | [when]    |
-| Benchmark   | [competitor ref] | [theirs]  | [ours]     | [when]    |
-| Guardrail   | [don't break]    | [current] | [maintain] | [always]  |
-
-### Example 1: Loyalty Program (E-commerce)
-
-```
-| Metric Type | Metric | Baseline | Target | Timeframe |
-|-------------|--------|----------|--------|-----------|
-| Primary | Repeat purchase rate | 15% | 20% | 6 months |
-| Leading | Loyalty signup rate | N/A | 30% | 1 month |
-| Leading | Points redemption | N/A | 50% | 3 months |
-| Benchmark | Industry avg repeat | 25% | 20% | 6 months |
-| Guardrail | Avg order value | $85 | ≥$80 | Always |
-
-```
-
-### Example 2: Hotlist Alerts (Public Safety)
-
-```
-| Metric Type | Metric | Baseline | Target | Timeframe |
-|-------------|--------|----------|--------|-----------|
-| Primary | Alert response time | N/A | <2 min | 3 months |
-| Leading | Hotlist adoption | 0 clients | 5 clients | 1 month |
-| Leading | Plates added/client | N/A | >100 | 2 months |
-| Benchmark | Flock response time | 90 sec | <120 sec | 3 months |
-| Guardrail | False positive rate | N/A | <5% | Always |
-
-```
-
-### Example 3: Notification System (SaaS)
-
-```
-| Metric Type | Metric | Baseline | Target | Timeframe |
-|-------------|--------|----------|--------|-----------|
-| Primary | User engagement | 40% | 55% | 3 months |
-| Leading | Email open rate | 18% | 25% | 1 month |
-| Leading | Click-through rate | 3% | 6% | 2 months |
-| Benchmark | Industry open rate | 22% | 25% | 3 months |
-| Guardrail | Unsubscribe rate | 2% | <3% | Always |
-
-```
-
----
-
-## Phase 6: Scoping Decisions
-
-**Objective:** Define what goes into v1 and what comes later.
-
-**Approach:** List features from competition + journey, decide on each.
-
-### Steps
-
-```
-6.1 Compile feature list
-    └── Extract from competitive analysis (if done)
-    └── Derive from user journey
-    └── Consolidate into a single list
-
-6.2 Ask for analysis level
-    └── "Do you want to analyze line-by-line or general decision?"
-    └── If line-by-line: discuss each feature individually
-    └── If general: summarize decisions in a table
-
-6.3 For each feature (if line-by-line)
-    └── "Why [decision]? What is the justification?"
-    └── Capture user's reasoning
-    └── Document trade-off
-
-6.4 Document in table
-    └── | # | Feature | v1 Decision | Justification |
-    └── Add "Future" column if relevant
-
-6.5 Checkpoint
-    └── Validate complete table before proceeding
-
-```
-
-### Example 1: Hotlist Feature Scope
-
-```
-| # | Feature          | Gabriel v1       | Competitor    | Justification          |
-|---|------------------|------------------|---------------|------------------------|
-| 1 | Hotlist creation | Admin only       | Self-service  | Flexible core API      |
-| 2 | Plate metadata   | Minimal          | Rich          | Cloning invalidates    |
-| 3 | Alert channel    | Webhooks only    | Multi-channel | v1 Simplicity          |
-| 4 | Bulk import      | API only         | CSV + API     | CSV on roadmap         |
-| 5 | Org sharing      | Not in v1        | Federation    | Low demand + GDPR      |
-
-```
-
-### Example 2: Notification System Scope
-
-```
-| # | Feature          | v1 Decision       | Justification                    |
-|---|------------------|-------------------|----------------------------------|
-| 1 | Delivery channels| Email only        | Lowest friction to start         |
-| 2 | Freq. control    | Daily digest      | Prevent notification fatigue     |
-| 3 | Custom triggers  | Pre-defined only  | User rules add complexity        |
-| 4 | Prefs UI         | Simple toggles    | Advanced prefs in v2             |
-| 5 | Analytics        | Open rates        | Deep analytics needs data        |
-
-Future Roadmap:
-- Push notifications (mobile)
-- Slack/Teams integration
-- User-defined trigger rules
-- A/B testing for notification copy
-
-```
-
-### Example 3: Checkout Optimization Scope
-
-```
-| # | Feature           | v1 Decision      | Impact   | Justification          |
-|---|-------------------|------------------|----------|------------------------|
-| 1 | Guest checkout    | Yes              | +30% CR  | Reduces friction       |
-| 2 | Saved payment     | Yes              | +15% CR  | Speed for recurring user|
-| 3 | Progress indicator| Yes              | +5% CR   | Reduces uncertainty    |
-| 4 | Buy now pay later | Not in v1        | Unkn.    | Needs vendor partner   |
-| 5 | Social login      | Not in v1        | +10% CR  | Privacy concerns       |
-| 6 | Address autocomp. | Yes              | +8% CR   | Google API available   |
-
-Decision: Focus on #1, #2, #3, #6 for v1 (expected +58% CR improvement)
-
-```
-
----
-
-## Phase 7: Documentation
-
-**Objective:** Compile everything into a research document.
-
-**Approach:** Preview before saving, document saves in the squad's research folder.
-
-### Steps
-
-```
-7.1 Compile document
-    └── Standard structure based on completed phases
-    └── Include only sections that were explored
-
-7.2 Show preview to user
-    └── Display formatted document
-    └── Ask: "Anything to adjust before saving?"
-
-7.3 Save document
-    └── Location: {squad}/{product}/research/research-{feature}.md
-    └── Confirm saving with full path
-
-7.4 Wrap up
-    └── "Discovery complete. Document saved at [path]."
-
-```
-
-### Document Structure
+**Never start with a solution. Always define the problem and outcome first.**
 
 ```markdown
-# [Feature] - Research & Discovery
+❌ FORBIDDEN:
+"We should build a search bar for the product page"
+"Let's add AI recommendations"
+"Users need a mobile app"
 
-**Author:** [user]
-**Date:** [today]
-**Status:** Discovery complete
+✅ REQUIRED:
+"Problem: Users can't find products (40% exit rate on catalog)
+Outcome: Reduce exit rate to 20%
+Possible solutions:
+1. Search bar with filters
+2. AI-powered recommendations
+3. Better category navigation
+4. Visual product browsing"
+```
 
-## 1. Context
+### Evidence-Based Decisions
 
-(from Phase 1 + 2)
+**Never assume user needs without evidence from real user research.**
 
-## 2. Product Decisions
+```markdown
+❌ FORBIDDEN:
+- "Users probably want X" (assumption without data)
+- "Our competitor has X, so we need it too" (copycat without validation)
+- "The CEO thinks we should build X" (HiPPO without evidence)
+- "It's obvious users need X" (intuition without validation)
 
-(from Phase 6 - table)
+✅ REQUIRED:
+- "5 out of 8 interviewed users mentioned X as a pain point"
+- "Analytics show 60% of users abandon at step 3"
+- "Prototype test: 7/10 users completed task successfully"
+- "Survey (n=500): 45% rated feature as 'must have'"
+```
 
-## 3. User Journeys
+### Minimum Interview Threshold
 
-(from Phase 3)
+**Never validate a problem with fewer than 5 user interviews per segment.**
 
-## 4. Success Metrics
+```markdown
+❌ FORBIDDEN:
+- "We talked to 2 users and they loved the idea"
+- "One customer requested this feature"
+- "Based on a quick chat with sales..."
 
-(from Phase 5, if done)
+✅ REQUIRED:
+| Segment | Interviews | Key Finding |
+|---------|------------|-------------|
+| Power Users | 6 | 5/6 struggle with X |
+| New Users | 5 | 4/5 drop off at onboarding |
+| Churned | 5 | 3/5 cited missing feature Y |
 
-## 5. Competitive Analysis
+Minimum per segment: 5 interviews
+Confidence increases with more interviews
+```
 
-(from Phase 4, if done)
+### Falsifiable Assumptions
 
-## 6. Next Steps
+**Every assumption must be testable and falsifiable with clear success criteria.**
 
-- [ ] Checklist of identified actions
+```markdown
+❌ FORBIDDEN:
+- "Users will like the new design" (not falsifiable)
+- "This will improve engagement" (no success criteria)
+- "The feature will be useful" (vague)
+
+✅ REQUIRED:
+| Assumption | Test | Success Criteria | Result |
+|------------|------|------------------|--------|
+| Users will complete onboarding in new flow | Prototype test with 10 users | >70% completion | TBD |
+| Users prefer visual search | A/B test | >10% lift in conversions | TBD |
+| Price point is acceptable | Landing page test | >3% conversion | TBD |
 ```
 
 ---
 
-## Integrations
+## Quick Reference
 
-**Slack:** Search for existing discussions on the topic before starting.
-**Web Search:** For competitive analysis in Phase 4.
-**Linear:** Check if related projects/issues already exist.
+### When to Use What
 
----
-
-## Tips for PMs
-
-### Before Starting Discovery
-
-1. **Gather existing context** - Check Slack, docs, previous discussions.
-2. **Know your stakeholders** - Who needs to be involved?
-3. **Set time expectations** - Full discovery can take 30-60 min.
-
-### During Discovery
-
-1. **Be patient with iteration** - Good definitions take multiple passes.
-2. **Challenge assumptions** - "Why do we think users need this?"
-3. **Document trade-offs** - Future you will thank present you.
-4. **Think in segments** - Primary vs. future helps prioritize.
-
-### After Discovery
-
-1. **Share the document** - Alignment requires visibility.
-2. **Revisit as you learn** - Discovery is not a one-time event.
-3. **Use for PRD** - The research doc is input for the PRD.
+| Scenario | Framework/Tool | Output |
+|----------|---------------|--------|
+| Validate product idea | Product Opportunity Assessment | Go/no-go decision |
+| Size market opportunity | TAM/SAM/SOM | Market size estimates |
+| Understand user needs | User Research (interviews, surveys) | User insights, pain points |
+| Analyze competition | Competitive Analysis | Competitive landscape map |
+| Discover user motivations | Jobs-to-be-Done (JTBD) | Job stories, outcomes |
+| Prioritize features | Kano Model | Feature categorization |
+| Define value proposition | Value Proposition Canvas | Value prop statement |
+| Test product concept | Lean Startup / MVP | Validated learnings |
+| Map opportunities | Opportunity Solution Tree | Prioritized opportunities |
 
 ---
 
-## References
+## Continuous Discovery Habits
 
-### Product Discovery Frameworks
+### The Product Trio
 
-- [Teresa Torres' Opportunity Solution Tree](https://www.producttalk.org/)
-- [Dual-Track Development](https://www.productboard.com/blog/step-by-step-framework-for-better-product-discovery/)
-- [7 Product Discovery Examples - Zeda.io](https://zeda.io/blog/product-discovery-examples)
+Discovery is led by three roles working together weekly:
 
-### Competitive Analysis Best Practices
+```
+Product Manager → Defines outcomes, owns roadmap
+Designer        → Explores solutions, tests usability
+Engineer        → Assesses feasibility, proposes technical solutions
+```
 
-- [B2B SaaS Competitive Analysis Guide](https://rampiq.agency/blog/saas-competitive-analysis/)
-- [Competitor Research Template - Kalungi](https://www.kalungi.com/blog/b2b-saas-competitor-research)
+### Weekly Activities
 
-### Statistics
+```markdown
+## 1. Customer Interviews (Weekly)
+- Schedule 3-5 interviews per week minimum
+- Mix of current users, churned users, prospects
+- Focus on understanding problems, not pitching solutions
+- Record and share insights with team
 
-- Microsoft: 70% of features are rarely or never used.
-- Subito.it Premium Features: +3% CR, +5% revenue from discovery-led approach.
+## 2. Assumption Testing (Weekly)
+- Identify riskiest assumptions about solutions
+- Design quick tests (prototypes, landing pages, fake doors)
+- Run experiments with real users
+- Measure results against success criteria
+
+## 3. Opportunity Mapping (Ongoing)
+- Build opportunity solution tree
+- Map customer needs to potential solutions
+- Prioritize based on impact and feasibility
+- Update as you learn
+```
+
+### Discovery vs Delivery
+
+```
+Discovery (What to Build)          Delivery (How to Build It)
+├─ Customer interviews             ├─ Sprint planning
+├─ Prototype testing               ├─ Development
+├─ Assumption validation           ├─ QA testing
+├─ Market research                 ├─ Deployment
+└─ Opportunity assessment          └─ Post-launch monitoring
+
+Key difference: Discovery reduces risk BEFORE committing to build
+```
 
 ---
 
-**Discovery complete. Would you like me to translate the next skill, or should we refine one of these further?**
+## Product Opportunity Assessment
+
+### Marty Cagan's 10 Questions
+
+Before starting any product initiative, answer these questions:
+
+```markdown
+## 1. Problem Definition
+**What problem are we solving?**
+- Be specific and measurable
+- Validate it's a real problem (not assumed)
+
+## 2. Target Market
+**For whom are we solving this problem?**
+- Define specific user segments
+- Size the addressable market (TAM/SAM/SOM)
+
+## 3. Opportunity Size
+**How big is the opportunity?**
+- Revenue potential
+- User growth potential
+- Strategic value
+
+## 4. Success Metrics
+**How will we measure success?**
+- Leading indicators (usage, engagement)
+- Lagging indicators (revenue, retention)
+- Define targets upfront
+
+## 5. Alternative Solutions
+**What alternatives exist today?**
+- Direct competitors
+- Indirect solutions
+- Current user workarounds
+
+## 6. Our Advantage
+**Why are we best suited to solve this?**
+- Unique capabilities
+- Market position
+- Technical advantages
+
+## 7. Strategic Fit
+**Why now? Why us?**
+- Market timing
+- Strategic alignment
+- Resource availability
+
+## 8. Dependencies
+**What do we need to succeed?**
+- Technical dependencies
+- Partnership requirements
+- Regulatory considerations
+
+## 9. Risks
+**What could go wrong?**
+- Market risk (will anyone want it?)
+- Execution risk (can we build it?)
+- Monetization risk (will they pay?)
+
+## 10. Cost of Delay
+**What happens if we don't build this?**
+- Competitive disadvantage
+- Lost revenue
+- Market opportunity window
+```
+
+### Value vs Effort Framework
+
+Quick prioritization of opportunities:
+
+```
+High Value, Low Effort  → Do First (Quick Wins)
+High Value, High Effort → Plan Strategically (Big Bets)
+Low Value, Low Effort   → Do Later (Fill Gaps)
+Low Value, High Effort  → Don't Do (Money Pit)
+```
+
+---
+
+## Discovery Methods
+
+### When to Use What Method
+
+```markdown
+## Generative Research (What problems exist?)
+Use when: Starting new product area, exploring unknown space
+Methods:
+- Ethnographic field studies
+- Contextual inquiry
+- Diary studies
+- Open-ended interviews
+
+## Evaluative Research (Does our solution work?)
+Use when: Testing specific solutions, validating designs
+Methods:
+- Usability testing
+- Prototype testing
+- A/B testing
+- Concept testing
+
+## Quantitative Research (How much? How many?)
+Use when: Need statistical validation, measuring impact
+Methods:
+- Surveys
+- Analytics analysis
+- A/B experiments
+- Market sizing
+
+## Qualitative Research (Why? How?)
+Use when: Understanding motivations, uncovering insights
+Methods:
+- User interviews
+- Focus groups
+- Customer advisory boards
+- User observation
+```
+
+### Interview Best Practices
+
+```markdown
+## Preparation
+- Define research goals and hypotheses
+- Create interview guide (but stay flexible)
+- Recruit right participants (6-8 per segment)
+- Schedule 45-60 min sessions
+
+## During Interview
+✓ Ask open-ended questions ("Tell me about...")
+✓ Follow up with "Why?" 5 times to get to root cause
+✓ Listen more than talk (80/20 rule)
+✓ Ask about past behavior, not future hypotheticals
+✓ Look for workarounds and pain points
+✓ Record and take notes
+
+✗ Don't ask leading questions
+✗ Don't pitch your solution
+✗ Don't ask "Would you use X?" (people lie)
+✗ Don't multi-task while interviewing
+
+## Example Questions
+- "Walk me through the last time you [did task]"
+- "What's most frustrating about [current solution]?"
+- "How are you solving this problem today?"
+- "What would make [task] easier for you?"
+- "Tell me more about that..."
+```
+
+### Survey Best Practices
+
+```markdown
+## When to Survey
+✓ Validate findings from qualitative research
+✓ Measure satisfaction or sentiment at scale
+✓ Prioritize features (Kano surveys)
+✓ Segment users by behavior/needs
+
+## Survey Design
+- Keep it short (<10 min to complete)
+- One question per screen on mobile
+- Mix question types (multiple choice, scale, open-ended)
+- Avoid leading or biased questions
+- Test survey with 5 people before sending
+
+## Question Types
+- Multiple choice → Segmentation, categorization
+- Likert scale (1-5) → Satisfaction, importance
+- Open-ended → Qualitative insights
+- Ranking → Prioritization
+- NPS (0-10) → Loyalty measurement
+
+## Distribution
+- In-app surveys (high response, biased to engaged users)
+- Email surveys (broader reach, lower response)
+- Incentivize thoughtful responses ($10 gift card, early access)
+- Follow up with interviews for interesting responses
+```
+
+---
+
+## 2025 Trends in Product Discovery
+
+### AI-Powered Research
+
+```markdown
+## AI Tools for Discovery
+- **Insight synthesis** — AI analyzes interview transcripts, identifies patterns
+- **Synthetic personas** — AI-generated user proxies for rapid testing
+- **Market intelligence** — AI tracks competitor moves, pricing changes
+- **Survey analysis** — Automated sentiment analysis, theme extraction
+- **Trend detection** — AI identifies emerging market trends early
+
+## Examples
+- Crayon → Competitive intelligence automation
+- Glimpse → Trend detection from web data
+- Delve AI → Automated persona creation
+- Attest → AI-powered survey insights
+- Quantilope → Machine learning research automation
+
+## Best Practices
+✓ Use AI to scale research, not replace human insight
+✓ Validate AI findings with real user conversations
+✓ Combine AI analysis with qualitative depth
+✗ Don't rely solely on synthetic users
+✗ Don't skip talking to real customers
+```
+
+### Continuous Discovery at Scale
+
+```markdown
+## Modern Approach
+- Discovery is embedded in every sprint, not a phase
+- Weekly user touchpoints (interviews, tests, feedback)
+- Rapid experimentation (dozens of tests running)
+- Fast pivots based on evidence (days, not months)
+
+## Team Structure
+- Product trios own discovery for their area
+- Centralized research team supports (tools, methods)
+- Customer success shares feedback loop
+- Data analysts provide quantitative insights
+
+## Cadence
+- Weekly: Customer interviews, prototype tests
+- Bi-weekly: Opportunity review, assumption validation
+- Monthly: Market analysis, competitive review
+- Quarterly: Strategic discovery (new markets, big bets)
+```
+
+---
+
+## Opportunity Solution Tree
+
+### What It Is
+
+Visual framework for mapping the path from outcome to solution:
+
+```
+        OUTCOME (Business goal)
+             |
+    ┌────────┴────────┐
+    │                 │
+OPPORTUNITY 1    OPPORTUNITY 2
+    │                 │
+    ├─ Solution A     ├─ Solution C
+    ├─ Solution B     └─ Solution D
+    └─ Solution C
+```
+
+### How to Build One
+
+```markdown
+## Step 1: Define Outcome
+Start with measurable business outcome
+Example: "Increase Day 30 retention from 20% to 30%"
+
+## Step 2: Map Opportunities
+Discover customer needs/pain points through research
+Example: "Users don't understand core features"
+
+## Step 3: Generate Solutions
+For each opportunity, brainstorm multiple solutions
+Example:
+- Better onboarding tutorial
+- In-app tooltips
+- Interactive product tour
+
+## Step 4: Test Assumptions
+For each solution, identify riskiest assumption and test
+Example: "Users will complete a 5-step tutorial"
+Test: Build simple prototype, test with 10 users
+
+## Step 5: Compare Solutions
+Use evidence to choose best path forward
+Build what tests validate, discard what fails
+```
+
+### Benefits
+
+```
+✓ Visualizes multiple paths to outcome
+✓ Prevents jumping to first solution
+✓ Encourages broad exploration before narrowing
+✓ Documents why decisions were made
+✓ Keeps team aligned on priorities
+```
+
+---
+
+
+## Extended Reference
+
+Detailed material starting at `## Integrating Discovery with Delivery` has been moved to [`reference/extended.md`](reference/extended.md) to keep this skill concise. Load that reference when the task requires the moved examples, command catalogs, checklists, platform details, or implementation templates.

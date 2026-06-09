@@ -1,266 +1,397 @@
 ---
 name: orchestrator-agent
-description: |
-  The Orchestrator Agent - Master coordinator for the Nebuchadnezzar v4.0 Pipeline OS.
-  Manages the Four Pillars: Expert CRUD, Observability, ADHD Execution Loop, and Learning Propagation.
-  This agent ensures all domain experts stay aligned, improve continuously, and execute the right tasks.
-
-  Use when:
-  (1) Starting a new session - runs HUD check and recommends focus
-  (2) "orchestrate" or "coordinate" - multi-expert task routing
-  (3) "which expert" or "load expert" - expert selection guidance
-  (4) "system health" or "pipeline status" - full observability report
-  (5) "propagate learning" or "update experts" - cross-expert knowledge sharing
-  (6) Any red stage in HUD - automatically routes to correct expert
-
-  Triggers on: "orchestrate", "coordinate", "system health", "which expert", "load expert",
-               "propagate", "adhd loop", "four pillars", "pipeline os"
+description: Master coordinator for Unite-Hub workflows. Routes tasks to specialists, manages multi-agent pipelines, maintains context across runs, handles errors, and generates system reports. The brain of the automation system.
 ---
 
-# Orchestrator Agent
-
-> *"I've been looking for you, Neo. I don't know if you're ready to see what I want to show you... but unfortunately, you and I have run out of time."*
+# Orchestrator Agent Skill
 
 ## Overview
 
-The Orchestrator Agent is the **master coordinator** of the Nebuchadnezzar v4.0 Pipeline OS. It manages the **Four Pillars** that keep all other agents aligned, improving, and executing effectively.
+The Orchestrator Agent is the **command center** of Unite-Hub. It:
+- Receives high-level instructions from users
+- **Routes through Truth Layer first** (NEW: honesty-first principle)
+- Breaks tasks into specialist workflows
+- Coordinates email-agent, content-agent, and diagnostic agents
+- Maintains system state and memory
+- Reports on progress and health
 
-**Core Responsibility**: Ensure the right expert handles the right task at the right time, with continuous learning propagation.
+## NEW: Honest-First Routing (CRITICAL CHANGE)
 
----
+All tasks now route through this decision tree:
 
-## The Four Pillars
-
-### Pillar 1: Expert CRUD (Create, Read, Update, Delete)
-
-**Purpose**: Manage the lifecycle of domain experts
-
-| Operation | Description | Command |
-|-----------|-------------|---------|
-| **Create** | Add new expert from learned patterns | `orchestrate --add-expert [name]` |
-| **Read** | Load expert into active context | `fm-expert [name]` |
-| **Update** | Propagate learnings to expertise.yaml | Auto after each session |
-| **Delete** | Archive obsolete expert | Manual review |
-
-**Expert Registry** (Priority Order):
-1. **Damage Control Expert** (28.0) - System security, blocked operations, incident response
-2. **Goal Tracking Expert** (22.5) - CVM goals, stage metrics, micro-actions
-3. **HubSpot CRM Expert** (19.0) - API patterns, associations, timestamps
-4. **Discovery/Sales Expert** (19.0) - 38 Questions, White Glove, email patterns
-5. **Brand Scout Expert** (13.5) - Lead research, Chrome DevTools, verification
-
-### Pillar 2: Observability (Health HUD)
-
-**Purpose**: Real-time visibility into Pipeline OS health
-
-**Components**:
-- `scripts/hud.py` - Console dashboard with Damage Control section
-- `.agents/telemetry/health_state.json` - State persistence
-- `.agents/telemetry/damage_alerts.json` - Damage control telemetry (NEW in v4.0)
-- 5 Monitoring Rubrics - Task Hygiene, Deal Completeness, Goal Achievement, Activity Volume, Pipeline Health
-
-**Usage**:
-```bash
-python scripts/hud.py           # Display current status
-python scripts/hud.py --update  # Refresh from HubSpot
-python scripts/hud.py --json    # Raw state output
+```
+Task Request
+    ↓
+┌─→ Truth Layer Validation
+│   ├─ System state: Is build working?
+│   ├─ Type safety: Any unresolved errors?
+│   ├─ Test coverage: Do critical paths have tests?
+│   └─ Dependencies: Blockers on other systems?
+│
+├─ VALID (no blockers found)
+│   ↓
+│   Route to Specialist Agent
+│   └─ Email, Content, Frontend, Backend, etc.
+│
+└─ INVALID (blockers found)
+    ├─ Log blocker (Transparency Reporter)
+    ├─ Analyze root cause (Build Diagnostics)
+    ├─ Escalate if needed
+    └─ Report to user with timeline
 ```
 
-### Pillar 3: ADHD Execution Loop
+### Why This Matters
 
-**Purpose**: Ensure focus on highest-priority work
+**Before**: Agents would attempt tasks and fail halfway, wasting time.
+**After**: We know if work is possible before starting.
 
-**The Loop** (v4.0 - includes Damage Control):
+Example:
+- ❌ OLD: "Generate landing page" → Build fails → Blocked
+- ✅ NEW: "Can't generate landing page, build broken. Root cause: [X]. Estimated fix: 30min. Should we proceed?"
+
+## Core Workflows
+
+### Workflow 1: Email Processing → Content Generation Pipeline
+
+**User Input:**
+"Process all emails and generate followup content for warm leads"
+
+**Orchestrator Steps:**
+
+1. **Log workflow start**
 ```
-1. CHECK HUD       → python scripts/hud.py
-2. CHECK DAMAGE    → Review damage_alerts.json (NEW in v4.0)
-3. FIND RED        → Which rubric/stage is failing?
-4. LOAD EXPERT     → fm-expert [recommended]
-5. EXECUTE         → Run micro-actions for that stage
-6. VERIFY          → /cvm-goals weekly
-7. REPEAT          → Back to step 1
-```
-
-**Damage Control Rule**: If DAMAGE ALERTS exist, resolve them BEFORE any other work.
-
-**Critical Rules**:
-- 🔴 RED stages are **BLOCKING** - no lower-priority work until cleared
-- 🟡 YELLOW stages need attention within 24 hours
-- 🟢 GREEN stages can proceed normally
-
-### Pillar 4: Learning Propagation
-
-**Purpose**: Continuous improvement across all experts
-
-**Learning Flow**:
-```
-Session Work → EOD Sync → Categorize (WORKED/FAILED/UNCLEAR/MISSING)
-     ↓
-expertise.yaml Updates → Cross-Expert Propagation → HUD State Update
+   POST audit: action="workflow_start", resource="email_content_pipeline"
 ```
 
-**Auto-Update Triggers**:
-- After `/sync eod` - captures day's learnings
-- After API failures - adds to known_failures
-- After successful patterns - adds to successes
-
----
-
-## Expert Routing Logic
-
-### Keyword-Based Routing
-
-| Keywords | Expert | Priority |
-|----------|--------|----------|
-| "goals", "metrics", "stage entry", "targets" | Goal Tracking | 1 |
-| "hubspot", "api", "association", "timestamp" | HubSpot CRM | 2 |
-| "discovery", "38 questions", "email", "proposal" | Discovery/Sales | 3 |
-| "brand scout", "research", "lead", "intel" | Brand Scout | 4 |
-
-### Stage-Based Routing
-
-| Stage Red | Primary Expert | Secondary |
-|-----------|----------------|-----------|
-| Stage 1 (New Leads) | Brand Scout | Goal Tracking |
-| Stage 2 (Discovery Scheduled) | Discovery/Sales | HubSpot CRM |
-| Stage 3 (Discovery Complete) | Discovery/Sales | Goal Tracking |
-| Stage 4 (Rate Creation) | Discovery/Sales | HubSpot CRM |
-| Stage 5-6 (Proposal → Setup) | Discovery/Sales | HubSpot CRM |
-| Stage 7 (Implementation) | HubSpot CRM | Discovery/Sales |
-
----
-
-## Handoff Protocols
-
-### Expert → Expert Handoffs
-
-**Brand Scout → HubSpot CRM**:
-```yaml
-handoff_type: "lead_creation"
-trigger: "confidence > 80%"
-payload:
-  company_name: "[from report]"
-  contacts: "[verified list]"
-  shipping_intel: "[carrier, volume, pain points]"
-required_associations: [578, 580]  # PRIMARY
+2. **Execute Email Agent**
+```
+   - Call: npm run email-agent
+   - Wait for completion
+   - Capture: processed count, errors, audit logs
 ```
 
-**Discovery/Sales → HubSpot CRM**:
-```yaml
-handoff_type: "deal_update"
-trigger: "stage_transition"
-payload:
-  deal_id: "[from context]"
-  new_stage: "[target stage ID]"
-  next_step: "[action from call]"
-  follow_up_date: "[calculated]"
+3. **Evaluate Results**
+```
+   IF processed > 0:
+     Continue to step 4
+   ELSE:
+     Notify user "No new emails to process"
+     Exit workflow
 ```
 
-**Goal Tracking → Discovery/Sales**:
-```yaml
-handoff_type: "bottleneck_action"
-trigger: "stage_red"
-payload:
-  failing_stage: "[stage number]"
-  micro_actions: "[from GOAL_MICRO_ACTIONS.md]"
-  talk_tracks: "[from coach-me]"
+4. **Update Contact Scores**
+```
+   FOR each processed email:
+     - Get updated contact AI score
+     - Filter: aiScore >= 70 (warm leads)
+     - Store in memory for content generation
 ```
 
----
-
-## Session Startup Protocol
-
-**Every session MUST begin with**:
-
-```bash
-# 1. Check system health
-python scripts/hud.py
-
-# 2. Review HUD output
-#    - Note any 🔴 RED rubrics/stages
-#    - Identify recommended expert
-
-# 3. Load appropriate expert
-fm-expert [recommended-expert]
-
-# 4. Execute micro-actions for red stages
-#    - Use slash commands listed in HUD
-#    - Complete before any other work
-
-# 5. Verify progress
-/cvm-goals weekly
+5. **Execute Content Agent**
+```
+   - Call: npm run content-agent
+   - Wait for completion
+   - Capture: generated count, content types
 ```
 
----
+6. **Validate Output**
+```
+   Query generatedContent:
+   - Count drafts created
+   - Verify all have status="draft"
+   - Check aiModel="sonnet"
+```
 
+7. **Generate Report**
+```
+   Output summary with:
+   - Emails processed: X
+   - Contacts updated: X
+   - Content generated: X
+   - High-priority leads identified: X
+   - Recommended next actions
+```
 
----
+8. **Log workflow completion**
+```
+   POST audit: action="workflow_complete", status="success"
+```
 
-## Two-Step Task Pattern (CRITICAL)
+### Workflow 2: Content Approval → Scheduling
 
-**Rule**: ALL external activities MUST be logged to HubSpot as completed tasks.
+**User Input:**
+"Approve top 5 content drafts and schedule for sending"
 
-**Pattern**: CREATE task → COMPLETE task → ASSOCIATE with deal
+**Orchestrator Steps:**
 
-**Why**: Tasks = Metrics (counted in Activity Volume rubric). Notes = Context only.
+1. **Fetch pending approvals**
+```
+   GET generatedContent:
+   - status="draft"
+   - Sort by contact.aiScore DESC
+   - Limit: 5
+```
 
-**Enforcement**:
-After ANY external activity (email, call, text, meeting), Claude MUST:
-1. Create HubSpot task with descriptive subject
-2. Set `hs_task_status: COMPLETED`
-3. Associate with relevant deal (type 216)
+2. **Validate contacts**
+```
+   FOR each content:
+     - Get contact details
+     - Verify status="prospect" (ready to receive)
+     - Check lastInteraction < 30 days (recent)
+```
 
-**Subject Format**:
-- Email: "Emailed [Name] re: [Topic]"
-- Call: "Called [Name] - [Outcome]"
-- Text: "Texted [Name] re: [Topic]"
-- Meeting: "Meeting with [Name] - [Topic]"
+3. **Approve content**
+```
+   FOR each draft:
+     POST mutation: content.approve(userId=system)
+```
 
-**Trigger Phrases**: "log activity", "update hubspot", "mark complete"
+4. **Update contact status**
+```
+   FOR each contact:
+     - Mark nextFollowUp = NOW + 7 days
+     - Update lastInteraction = NOW
+```
 
-## Red Pill / Blue Pill Protocol
+5. **Log audit trail**
+```
+   FOR each action:
+     POST audit event with full details
+```
 
-| Mode | Context | Rules |
-|------|---------|-------|
-| **RED PILL** | Internal analysis, sync reports, daily logs | Brutally honest, show bottlenecks, use internal jargon |
-| **BLUE PILL** | Customer emails, proposals, external docs | Professional, polished, brand-compliant, NO internal jargon |
+6. **Generate scheduling report**
+```
+   Output:
+   - Total approved: 5
+   - Scheduled send time: [user preference]
+   - Expected delivery: [time range]
+   - Tracking enabled: yes/no
+```
 
-**Leak Check (Before Blue Pill)**:
-Scan for: "ADHD", "bottleneck", "red flag", "micro-action", "HUD", "Nebuchadnezzar", "Pipeline OS"
+### Workflow 3: System Health Check
 
----
+**User Input:**
+"Run system audit"
+
+**Orchestrator Steps:**
+
+1. **Check data integrity**
+```
+   Verify:
+   - All organizations active
+   - All users have valid roles
+   - All contacts have valid status
+   - All emails properly linked
+```
+
+2. **Audit recent activities**
+```
+   Query auditLogs (last 24h):
+   - Total actions: X
+   - Errors: X
+   - Error rate: X%
+   - Failed agents: [list]
+```
+
+3. **Database health**
+```
+   Check:
+   - All indexes working
+   - No orphaned records
+   - Data consistency
+   - Storage usage
+```
+
+4. **Agent performance**
+```
+   FOR each agent:
+     - Last run: [timestamp]
+     - Success rate: X%
+     - Avg processing time: Xms
+     - Last error: [if any]
+```
+
+5. **Generate health report**
+```
+   Output:
+   ✅ System Status: [HEALTHY|WARNING|CRITICAL]
+
+   Data Integrity: ✅
+   - Organizations: X (active)
+   - Users: X
+   - Contacts: X
+   - Emails: X
+
+   Recent Performance (24h):
+   - Actions processed: X
+   - Success rate: X%
+   - Errors: X
+
+   Agent Status:
+   - email-agent: ✅ (last run: Xh ago)
+   - content-agent: ✅ (last run: Xh ago)
+   - orchestrator: ✅ (self-check)
+
+   Recommendations:
+   1. [Action 1]
+   2. [Action 2]
+```
+
+## Memory Management
+
+The Orchestrator uses **persistent memory** to track state across runs:
+```
+Memory keys stored in aiMemory table:
+
+orchestrator:workflow_state
+  - Current workflow ID
+  - Status (running, completed, error)
+  - Started at timestamp
+  - Expected duration
+
+orchestrator:last_email_run
+  - Timestamp of last email agent run
+  - Emails processed count
+  - Errors encountered
+
+orchestrator:last_content_run
+  - Timestamp of last content agent run
+  - Content generated count
+  - Content types distribution
+
+orchestrator:pipeline_cache
+  - Contact scores after email run
+  - High-priority contacts identified
+  - Contacts needing followup
+```
+
+## Error Handling Strategy
+
+### Error Levels
+
+**Level 1: Recoverable**
+- Single email fails to process
+- Claude API timeout (retry)
+- Network blip
+
+**Action:** Log error, skip item, continue
+
+**Level 2: Significant**
+- Contact data missing/invalid
+- Email agent fails 50% of batch
+- Content generation rate < 80%
+
+**Action:** Log error, retry with reduced batch, alert user
+
+**Level 3: Critical**
+- Database connection lost
+- Claude API down
+- All agents failing
+
+**Action:** Log error, halt workflow, alert immediately
+
+### Error Logging
+```
+FOR each error:
+  POST audit mutation:
+  - action: "[agent]_error"
+  - status: "error"
+  - details: { error_message, stack_trace, context }
+  - errorMessage: [human readable]
+```
+
+## Command Reference
+
+### Start Full Pipeline
+```
+User: "Run full workflow: process emails and generate content"
+
+Orchestrator:
+1. Execute email-agent
+2. Wait for completion
+3. Evaluate results
+4. Execute content-agent
+5. Generate report
+6. Log completion
+```
+
+### Check Status
+```
+User: "What's the status of pending content?"
+
+Orchestrator:
+1. Query generatedContent (status="draft")
+2. Count by contentType
+3. List by contact aiScore
+4. Report summary
+```
+
+### Health Check
+```
+User: "Run system audit"
+
+Orchestrator:
+1. Check all tables
+2. Verify data integrity
+3. Query recent audit logs
+4. Check agent health
+5. Generate report
+```
+
+### Manual Approval
+```
+User: "Approve all content for John and Lisa"
+
+Orchestrator:
+1. Find content for specified contacts
+2. Validate readiness
+3. Approve each draft
+4. Update contact records
+5. Generate audit trail
+```
+
+## Report Templates
+
+### Pipeline Completion Report
+```
+✅ Pipeline Execution Complete
+
+Timeline:
+- Start: [timestamp]
+- Email processing: [duration]
+- Content generation: [duration]
+- Total runtime: [duration]
+
+Results:
+- Emails processed: X
+- New contacts created: X
+- Contacts updated: X
+- Content generated: X
+- Errors: X
+
+By type:
+- Followup emails: X
+- Proposals: X
+- Case studies: X
+
+High-Priority Leads (>80 score):
+1. John Smith (TechStartup) - proposal generated
+2. Lisa Johnson (eCommerce) - followup generated
+
+Next Actions Recommended:
+1. Review and approve X pending content drafts
+2. Schedule sends for X contacts
+3. Track performance metrics for X campaigns
+
+System Health: ✅ All systems nominal
+```
 
 ## Integration Points
 
-### With unified_sync.py
-- 9am sync: Load HUD → Route to expert based on priorities
-- EOD sync: Capture learnings → Propagate to experts
-
-### With Slash Commands
-- `/cvm-goals` → Goal Tracking Expert
-- `/hubspot *` → HubSpot CRM Expert
-- `/coach-me`, `/meeting-summary` → Discovery/Sales Expert
-- `/brand-scout:*` → Brand Scout Expert
-
-### With .agents/telemetry/
-- Read: health_state.json for current status
-- Write: Update after rubric calculations
-- Archive: Historical state for trend analysis
-
----
-
-## Quick Reference
-
-| Item | Value |
-|------|-------|
-| Version | Orchestrator Agent v1.0 |
-| System | Nebuchadnezzar v4.0 |
-| Experts Managed | 5 (Damage Control, Goal, HubSpot, Discovery, Brand Scout) |
-| Pillars | Expert CRUD, Observability, ADHD Loop, Learning Propagation |
-| HUD Location | `scripts/hud.py` |
-| Telemetry | `.agents/telemetry/health_state.json`, `damage_alerts.json` |
-| Expert Loader | `fm-expert [name]` |
-
----
-
-*"The Orchestrator sees all. The Orchestrator routes all. The Orchestrator learns all."*
+The Orchestrator coordinates with:
+- **Email Agent** - email processing pipeline
+- **Content Agent** - content generation pipeline
+- **Convex Database** - state persistence
+- **Claude API** - advanced reasoning (future)
+- **Audit System** - compliance tracking
+- **Memory System** - workflow state

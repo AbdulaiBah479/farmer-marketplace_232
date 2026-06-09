@@ -1,33 +1,15 @@
 ---
 name: baoyu-markdown-to-html
-description: Converts Markdown to styled HTML with WeChat-compatible themes. Supports code highlighting, math, Mermaid (rendered to PNG via headless Chrome), PlantUML, footnotes, alerts, infographics, and optional bottom citations for external links. Use when user asks for "markdown to html", "convert md to html", "md 转 html", "微信外链转底部引用", or needs styled HTML output from markdown.
-version: 1.57.0
-metadata:
-  openclaw:
-    homepage: https://github.com/JimLiu/baoyu-skills#baoyu-markdown-to-html
-    requires:
-      anyBins:
-        - bun
-        - npx
+description: Converts Markdown to styled HTML with WeChat-compatible themes. Supports code highlighting, math, PlantUML, footnotes, alerts, and infographics. Use when user asks for "markdown to html", "convert md to html", "md转html", or needs styled HTML output from markdown.
 ---
 
 # Markdown to HTML Converter
 
 Converts Markdown files to beautifully styled HTML with inline CSS, optimized for WeChat Official Account and other platforms.
 
-## User Input Tools
-
-When this skill prompts the user, follow this tool-selection rule (priority order):
-
-1. **Prefer built-in user-input tools** exposed by the current agent runtime — e.g., `AskUserQuestion`, `request_user_input`, `clarify`, `ask_user`, or any equivalent.
-2. **Fallback**: if no such tool exists, emit a numbered plain-text message and ask the user to reply with the chosen number/answer for each question.
-3. **Batching**: if the tool supports multiple questions per call, combine all applicable questions into a single call; if only single-question, ask them one at a time in priority order.
-
-Concrete `AskUserQuestion` references below are examples — substitute the local equivalent in other runtimes.
-
 ## Script Directory
 
-**Agent Execution**: Determine this SKILL.md directory as `{baseDir}`. Resolve `${BUN_X}` runtime: if `bun` installed → `bun`; if `npx` available → `npx -y bun`; else suggest installing bun. Replace `{baseDir}` and `${BUN_X}` with actual values.
+**Agent Execution**: Determine this SKILL.md directory as `SKILL_DIR`, then use `${SKILL_DIR}/scripts/<name>.ts`.
 
 | Script | Purpose |
 |--------|---------|
@@ -35,17 +17,33 @@ Concrete `AskUserQuestion` references below are examples — substitute the loca
 
 ## Preferences (EXTEND.md)
 
-Check EXTEND.md in priority order — the first one found wins:
+Use Bash to check EXTEND.md existence (priority order):
 
-| Priority | Path | Scope |
-|----------|------|-------|
-| 1 | `.baoyu-skills/baoyu-markdown-to-html/EXTEND.md` | Project |
-| 2 | `${XDG_CONFIG_HOME:-$HOME/.config}/baoyu-skills/baoyu-markdown-to-html/EXTEND.md` | XDG |
-| 3 | `$HOME/.baoyu-skills/baoyu-markdown-to-html/EXTEND.md` | User home |
+```bash
+# Check project-level first
+test -f .baoyu-skills/baoyu-markdown-to-html/EXTEND.md && echo "project"
 
-If none found, use defaults.
+# Then user-level (cross-platform: $HOME works on macOS/Linux/WSL)
+test -f "$HOME/.baoyu-skills/baoyu-markdown-to-html/EXTEND.md" && echo "user"
+```
 
-**EXTEND.md supports**: default theme, custom CSS variables, code block style, mermaid defaults (`mermaid_theme`, `mermaid_scale`, `mermaid_background`).
+┌──────────────────────────────────────────────────────────────┬───────────────────┐
+│                             Path                             │     Location      │
+├──────────────────────────────────────────────────────────────┼───────────────────┤
+│ .baoyu-skills/baoyu-markdown-to-html/EXTEND.md               │ Project directory │
+├──────────────────────────────────────────────────────────────┼───────────────────┤
+│ $HOME/.baoyu-skills/baoyu-markdown-to-html/EXTEND.md         │ User home         │
+└──────────────────────────────────────────────────────────────┴───────────────────┘
+
+┌───────────┬───────────────────────────────────────────────────────────────────────────┐
+│  Result   │                                  Action                                   │
+├───────────┼───────────────────────────────────────────────────────────────────────────┤
+│ Found     │ Read, parse, apply settings                                               │
+├───────────┼───────────────────────────────────────────────────────────────────────────┤
+│ Not found │ Use defaults                                                              │
+└───────────┴───────────────────────────────────────────────────────────────────────────┘
+
+**EXTEND.md Supports**: Default theme | Custom CSS variables | Code block style
 
 ## Workflow
 
@@ -70,37 +68,20 @@ Use `AskUserQuestion` to ask whether to format first. Formatting can fix:
 
 **If user declines**: Continue with original file.
 
-### Step 1: Determine Theme
+### Step 1: Confirm Theme
 
-**Theme resolution order** (first match wins):
-1. User explicitly specified theme (CLI `--theme` or conversation)
-2. EXTEND.md `default_theme` (this skill's own EXTEND.md, checked in Step 0)
-3. `baoyu-post-to-wechat` EXTEND.md `default_theme` (cross-skill fallback)
-4. If none found → use AskUserQuestion to confirm
+Before converting, use AskUserQuestion to confirm the theme (unless user already specified):
 
-**Cross-skill EXTEND.md check** (only if this skill's EXTEND.md has no `default_theme`):
-
-Read `$HOME/.baoyu-skills/baoyu-post-to-wechat/EXTEND.md` if it exists and look for a `default_theme:` line. Use the value if present; otherwise fall through.
-
-**If theme is resolved from EXTEND.md**: Use it directly, do NOT ask the user.
-
-**If no default found**: use `AskUserQuestion` to confirm a theme from the [Themes](#themes) table below.
-
-### Step 1.5: Determine Citation Mode
-
-**Default**: Off. Do not ask by default.
-
-**Enable only if the user explicitly asks** for "微信外链转底部引用", "底部引用", "文末引用", or passes `--cite`.
-
-**Behavior when enabled**:
-- Ordinary external links are rendered with numbered superscripts and collected under a final `引用链接` section.
-- `https://mp.weixin.qq.com/...` links stay as direct links and are not moved to the bottom.
-- Bare links where link text equals URL stay inline.
+| Theme | Description |
+|-------|-------------|
+| `default` (Recommended) | 经典主题 - 传统排版，标题居中带底边，二级标题白字彩底 |
+| `grace` | 优雅主题 - 文字阴影，圆角卡片，精致引用块 |
+| `simple` | 简洁主题 - 现代极简风，不对称圆角，清爽留白 |
 
 ### Step 2: Convert
 
 ```bash
-${BUN_X} {baseDir}/scripts/main.ts <markdown_file> --theme <theme> [--cite]
+npx -y bun ${SKILL_DIR}/scripts/main.ts <markdown_file> --theme <theme>
 ```
 
 ### Step 3: Report Result
@@ -110,65 +91,32 @@ Display the output path from JSON result. If backup was created, mention it.
 ## Usage
 
 ```bash
-${BUN_X} {baseDir}/scripts/main.ts <markdown_file> [options]
+npx -y bun ${SKILL_DIR}/scripts/main.ts <markdown_file> [options]
 ```
 
 **Options:**
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| `--theme <name>` | Theme name (default, grace, simple, modern) | default |
-| `--color <name\|hex>` | Primary color: preset name or hex value | theme default |
-| `--font-family <name>` | Font: sans, serif, serif-cjk, mono, or CSS value | theme default |
-| `--font-size <N>` | Font size: 14px, 15px, 16px, 17px, 18px | 16px |
+| `--theme <name>` | Theme name (default, grace, simple) | default |
 | `--title <title>` | Override title from frontmatter | |
-| `--cite` | Convert external links to bottom citations, append `引用链接` section | false (off) |
 | `--keep-title` | Keep the first heading in content | false (removed) |
-| `--mermaid-theme <name>` | Mermaid theme: `default`, `forest`, `dark`, `neutral`, `base` | default |
-| `--mermaid-scale <N>` | Mermaid render scale (positive number ≤ 4) | 2 |
-| `--mermaid-width <N>` | Mermaid target display width in CSS px; PNG is rendered at `width × scale` pixels when the diagram is narrower than this | 860 |
-| `--mermaid-bg <value>` | Mermaid background: `white`, `transparent`, or `#hex` | white |
-| `--no-mermaid` | Skip Mermaid PNG rendering; emit `<pre class="mermaid">` fallback | false |
 | `--help` | Show help | |
-
-**Color Presets:**
-
-| Name | Hex | Label |
-|------|-----|-------|
-| blue | #0F4C81 | Classic Blue |
-| green | #009874 | Emerald Green |
-| vermilion | #FA5151 | Vibrant Vermilion |
-| yellow | #FECE00 | Lemon Yellow |
-| purple | #92617E | Lavender Purple |
-| sky | #55C9EA | Sky Blue |
-| rose | #B76E79 | Rose Gold |
-| olive | #556B2F | Olive Green |
-| black | #333333 | Graphite Black |
-| gray | #A9A9A9 | Smoke Gray |
-| pink | #FFB7C5 | Sakura Pink |
-| red | #A93226 | China Red |
-| orange | #D97757 | Warm Orange (modern default) |
 
 **Examples:**
 
 ```bash
 # Basic conversion (uses default theme, removes first heading)
-${BUN_X} {baseDir}/scripts/main.ts article.md
+npx -y bun ${SKILL_DIR}/scripts/main.ts article.md
 
 # With specific theme
-${BUN_X} {baseDir}/scripts/main.ts article.md --theme grace
-
-# Theme with custom color
-${BUN_X} {baseDir}/scripts/main.ts article.md --theme modern --color red
-
-# Enable bottom citations for ordinary external links
-${BUN_X} {baseDir}/scripts/main.ts article.md --cite
+npx -y bun ${SKILL_DIR}/scripts/main.ts article.md --theme grace
 
 # Keep the first heading in content
-${BUN_X} {baseDir}/scripts/main.ts article.md --keep-title
+npx -y bun ${SKILL_DIR}/scripts/main.ts article.md --keep-title
 
 # Override title
-${BUN_X} {baseDir}/scripts/main.ts article.md --title "My Article"
+npx -y bun ${SKILL_DIR}/scripts/main.ts article.md --title "My Article"
 ```
 
 ## Output
@@ -195,27 +143,17 @@ ${BUN_X} {baseDir}/scripts/main.ts article.md --title "My Article"
       "localPath": "/path/to/img.png",
       "originalPath": "imgs/image.png"
     }
-  ],
-  "mermaidImages": [
-    {
-      "hash": "a1b2c3d4e5f6",
-      "localPath": "/path/to/imgs/.mermaid-cache/mermaid-a1b2c3d4e5f6.png",
-      "cached": false
-    }
   ]
 }
 ```
-
-**Mermaid rendering**: Code blocks fenced as ` ```mermaid ` are rendered to PNGs via headless Chrome (CDP) and cached at `imgs/.mermaid-cache/mermaid-<hash>.png`. The cache key includes the code, theme, scale, target width, background, and mermaid version. Add `imgs/.mermaid-cache/` to `.gitignore` if you do not want generated diagrams checked in. Requires Chrome/Chromium/Edge on the system; otherwise the block falls back to `<pre class="mermaid">…</pre>` and conversion still succeeds.
 
 ## Themes
 
 | Theme | Description |
 |-------|-------------|
-| `default` | Classic - traditional layout, centered title with bottom border, H2 with white text on colored background |
-| `grace` | Elegant - text shadow, rounded cards, refined blockquotes (by @brzhang) |
-| `simple` | Minimal - modern minimalist, asymmetric rounded corners, clean whitespace (by @okooo5km) |
-| `modern` | Modern - large radius, pill-shaped titles, relaxed line height (pair with `--color red` for traditional red-gold style) |
+| `default` | 经典主题 - 传统排版，标题居中带底边，二级标题白字彩底 |
+| `grace` | 优雅主题 - 文字阴影，圆角卡片，精致引用块 (by @brzhang) |
+| `simple` | 简洁主题 - 现代极简风，不对称圆角，清爽留白 (by @okooo5km) |
 
 ## Supported Markdown Features
 
@@ -227,13 +165,13 @@ ${BUN_X} {baseDir}/scripts/main.ts article.md --title "My Article"
 | Inline code | `` `code` `` |
 | Tables | GitHub-flavored markdown tables |
 | Images | `![alt](src)` |
-| Links | `[text](url)`; add `--cite` to move ordinary external links into bottom references |
+| Links | `[text](url)` with footnote references |
 | Blockquotes | `> quote` |
 | Lists | `-` unordered, `1.` ordered |
 | Alerts | `> [!NOTE]`, `> [!WARNING]`, etc. |
 | Footnotes | `[^1]` references |
 | Ruby text | `{base|annotation}` |
-| Mermaid | ` ```mermaid ` blocks rendered to local PNG via headless Chrome (cached under `imgs/.mermaid-cache/`); falls back to `<pre class="mermaid">` if Chrome is unavailable or rendering fails |
+| Mermaid | ` ```mermaid ` diagrams |
 | PlantUML | ` ```plantuml ` diagrams |
 
 ## Frontmatter

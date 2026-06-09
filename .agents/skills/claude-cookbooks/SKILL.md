@@ -1,184 +1,313 @@
 ---
 name: claude-cookbooks
-description: Look up examples and patterns from the official Anthropic Claude Cookbooks repository. Use when you need reference implementations, code examples, or best practices for Claude integrations, tool use, agents, prompting techniques, or API usage.
+description: Claude AI cookbooks - code examples, tutorials, and best practices for using Claude API. Use when learning Claude API integration, building Claude-powered applications, or exploring Claude capabilities.
 ---
 
-<objective>
-Access the official Anthropic Claude Cookbooks repository (https://github.com/anthropics/claude-cookbooks) to find reference implementations, code examples, and best practices. This skill helps you find working examples for common Claude integration patterns.
-</objective>
+# Claude Cookbooks Skill
 
-<repository_structure>
-The Claude Cookbooks repository contains categorized examples:
+Comprehensive code examples and guides for building with Claude AI, sourced from the official Anthropic cookbooks repository.
 
-**skills/** - Claude Code skill examples
-- Building custom skills
-- Skill patterns and templates
-- Progressive disclosure techniques
+## When to Use This Skill
 
-**misc/** - Miscellaneous examples
-- Various integration patterns
-- Utility functions
+This skill should be triggered when:
+- Learning how to use Claude API
+- Implementing Claude integrations
+- Building applications with Claude
+- Working with tool use and function calling
+- Implementing multimodal features (vision, image analysis)
+- Setting up RAG (Retrieval Augmented Generation)
+- Integrating Claude with third-party services
+- Building AI agents with Claude
+- Optimizing prompts for Claude
+- Implementing advanced patterns (caching, sub-agents, etc.)
 
-**third_party/** - Third-party integrations
-- AWS Bedrock examples
-- Google Vertex AI examples
-- Framework integrations (LangChain, etc.)
+## Quick Reference
 
-**tool_use/** - Tool calling examples
-- Function calling patterns
-- Tool definition best practices
-- Multi-tool orchestration
+### Basic API Usage
 
-**multimodal/** - Vision and document examples
-- Image processing
-- PDF handling
-- Multi-modal prompting
+```python
+import anthropic
 
-**prompt_engineering/** - Prompting techniques
-- System prompt patterns
-- Few-shot examples
-- Chain-of-thought techniques
+client = anthropic.Anthropic(api_key="your-api-key")
 
-**agents/** - Agentic patterns
+# Simple message
+response = client.messages.create(
+    model="claude-3-5-sonnet-20241022",
+    max_tokens=1024,
+    messages=[{
+        "role": "user",
+        "content": "Hello, Claude!"
+    }]
+)
+```
+
+### Tool Use (Function Calling)
+
+```python
+# Define a tool
+tools = [{
+    "name": "get_weather",
+    "description": "Get current weather for a location",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "location": {"type": "string", "description": "City name"}
+        },
+        "required": ["location"]
+    }
+}]
+
+# Use the tool
+response = client.messages.create(
+    model="claude-3-5-sonnet-20241022",
+    max_tokens=1024,
+    tools=tools,
+    messages=[{"role": "user", "content": "What's the weather in San Francisco?"}]
+)
+```
+
+### Vision (Image Analysis)
+
+```python
+# Analyze an image
+response = client.messages.create(
+    model="claude-3-5-sonnet-20241022",
+    max_tokens=1024,
+    messages=[{
+        "role": "user",
+        "content": [
+            {
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": "image/jpeg",
+                    "data": base64_image
+                }
+            },
+            {"type": "text", "text": "Describe this image"}
+        ]
+    }]
+)
+```
+
+### Prompt Caching
+
+```python
+# Use prompt caching for efficiency
+response = client.messages.create(
+    model="claude-3-5-sonnet-20241022",
+    max_tokens=1024,
+    system=[{
+        "type": "text",
+        "text": "Large system prompt here...",
+        "cache_control": {"type": "ephemeral"}
+    }],
+    messages=[{"role": "user", "content": "Your question"}]
+)
+```
+
+## Key Capabilities Covered
+
+### 1. Classification
+- Text classification techniques
+- Sentiment analysis
+- Content categorization
+- Multi-label classification
+
+### 2. Retrieval Augmented Generation (RAG)
+- Vector database integration
+- Semantic search
+- Context retrieval
+- Knowledge base queries
+
+### 3. Summarization
+- Document summarization
+- Meeting notes
+- Article condensing
+- Multi-document synthesis
+
+### 4. Text-to-SQL
+- Natural language to SQL queries
+- Database schema understanding
+- Query optimization
+- Result interpretation
+
+### 5. Tool Use & Function Calling
+- Tool definition and schema
+- Parameter validation
+- Multi-tool workflows
+- Error handling
+
+### 6. Multimodal
+- Image analysis and OCR
+- Chart/graph interpretation
+- Visual question answering
+- Image generation integration
+
+### 7. Advanced Patterns
 - Agent architectures
-- Multi-agent coordination
-- Tool-using agents
-</repository_structure>
+- Sub-agent delegation
+- Prompt optimization
+- Cost optimization with caching
 
-<quick_start>
-<workflow>
-1. Identify what you're looking for (tool use, agents, skills, etc.)
-2. Fetch the repository index to find relevant notebooks/examples
-3. Fetch specific example files for detailed implementation
-4. Adapt the patterns to your use case
-</workflow>
+## Repository Structure
 
-<example title="Find tool use examples">
-```
-User: I need examples of how to define tools for Claude
+The cookbooks are organized into these main categories:
 
-Action: Fetch https://github.com/anthropics/claude-cookbooks/tree/main/tool_use
-        to see available tool use examples, then fetch specific notebooks
-```
-</example>
+- **capabilities/** - Core AI capabilities (classification, RAG, summarization, text-to-SQL)
+- **tool_use/** - Function calling and tool integration examples
+- **multimodal/** - Vision and image-related examples
+- **patterns/** - Advanced patterns like agents and workflows
+- **third_party/** - Integrations with external services (Pinecone, LlamaIndex, etc.)
+- **claude_agent_sdk/** - Agent SDK examples and templates
+- **misc/** - Additional utilities (PDF upload, JSON mode, evaluations, etc.)
 
-<example title="Find skill examples">
-```
-User: Show me how to build a Claude Code skill
+## Reference Files
 
-Action: Fetch https://github.com/anthropics/claude-cookbooks/tree/main/skills
-        to find skill implementation patterns
-```
-</example>
-</quick_start>
+This skill includes comprehensive documentation in `references/`:
 
-<lookup_urls>
-<base_url>https://github.com/anthropics/claude-cookbooks/tree/main</base_url>
+- **main_readme.md** - Main repository overview
+- **capabilities.md** - Core capabilities documentation
+- **tool_use.md** - Tool use and function calling guides
+- **multimodal.md** - Vision and multimodal capabilities
+- **third_party.md** - Third-party integrations
+- **patterns.md** - Advanced patterns and agents
+- **index.md** - Complete reference index
 
-<category name="skills">
-https://github.com/anthropics/claude-cookbooks/tree/main/skills
-</category>
+## Common Use Cases
 
-<category name="tool_use">
-https://github.com/anthropics/claude-cookbooks/tree/main/tool_use
-</category>
+### Building a Customer Service Agent
+1. Define tools for CRM access, ticket creation, knowledge base search
+2. Use tool use API to handle function calls
+3. Implement conversation memory
+4. Add fallback mechanisms
 
-<category name="agents">
-https://github.com/anthropics/claude-cookbooks/tree/main/agents
-</category>
+See: `references/tool_use.md#customer-service`
 
-<category name="multimodal">
-https://github.com/anthropics/claude-cookbooks/tree/main/multimodal
-</category>
+### Implementing RAG
+1. Create embeddings of your documents
+2. Store in vector database (Pinecone, etc.)
+3. Retrieve relevant context on query
+4. Augment Claude's response with context
 
-<category name="prompt_engineering">
-https://github.com/anthropics/claude-cookbooks/tree/main/prompt_engineering
-</category>
+See: `references/capabilities.md#rag`
 
-<category name="third_party">
-https://github.com/anthropics/claude-cookbooks/tree/main/third_party
-</category>
+### Processing Documents with Vision
+1. Convert document to images or PDF
+2. Use vision API to extract content
+3. Structure the extracted data
+4. Validate and post-process
 
-<category name="misc">
-https://github.com/anthropics/claude-cookbooks/tree/main/misc
-</category>
+See: `references/multimodal.md#vision`
 
-<raw_content_base>
-For fetching actual file content, use raw GitHub URLs:
-https://raw.githubusercontent.com/anthropics/claude-cookbooks/main/{path}
-</raw_content_base>
-</lookup_urls>
+### Building Multi-Agent Systems
+1. Define specialized agents for different tasks
+2. Implement routing logic
+3. Use sub-agents for delegation
+4. Aggregate results
 
-<usage_patterns>
-<pattern name="browse_category">
-**When user wants to see what examples exist:**
-1. Use WebFetch on the category URL
-2. List available notebooks/files
-3. Ask which specific example to explore
-</pattern>
+See: `references/patterns.md#agents`
 
-<pattern name="fetch_example">
-**When user needs a specific example:**
-1. Use WebFetch on the raw GitHub URL for the file
-2. Extract relevant code patterns
-3. Explain how to adapt for user's context
-</pattern>
+## Best Practices
 
-<pattern name="search_pattern">
-**When user describes a problem:**
-1. Identify likely category (tool_use, agents, skills, etc.)
-2. Fetch category listing
-3. Find most relevant example
-4. Fetch and explain the implementation
-</pattern>
-</usage_patterns>
+### API Usage
+- Use appropriate model for task (Sonnet for balance, Haiku for speed, Opus for complex tasks)
+- Implement retry logic with exponential backoff
+- Handle rate limits gracefully
+- Monitor token usage for cost optimization
 
-<common_lookups>
-| Need | Category | Example File |
-|------|----------|--------------|
-| Define tools for Claude | tool_use | calculator_tool.ipynb |
-| Build a skill | skills | various SKILL.md examples |
-| Multi-agent patterns | agents | agent examples |
-| Image/PDF processing | multimodal | vision examples |
-| AWS Bedrock setup | third_party | bedrock examples |
-| Prompting techniques | prompt_engineering | various notebooks |
-</common_lookups>
+### Prompt Engineering
+- Be specific and clear in instructions
+- Provide examples when needed
+- Use system prompts for consistent behavior
+- Structure outputs with JSON mode when needed
 
-<workflow_for_lookup>
-<step n="1">
-**Identify the domain**: What type of example does the user need?
-- Tool calling → tool_use/
-- Skills/commands → skills/
-- Agent patterns → agents/
-- Vision/docs → multimodal/
-- Cloud providers → third_party/
-- Prompting → prompt_engineering/
-</step>
+### Tool Use
+- Define clear, specific tool schemas
+- Validate inputs and outputs
+- Handle errors gracefully
+- Keep tool descriptions concise but informative
 
-<step n="2">
-**Fetch the category index**:
-```
-WebFetch: https://github.com/anthropics/claude-cookbooks/tree/main/{category}
-Prompt: List all available examples and notebooks in this directory
-```
-</step>
+### Multimodal
+- Use high-quality images (higher resolution = better results)
+- Be specific about what to extract/analyze
+- Respect size limits (5MB per image)
+- Use appropriate image formats (JPEG, PNG, GIF, WebP)
 
-<step n="3">
-**Fetch specific example**:
-```
-WebFetch: https://raw.githubusercontent.com/anthropics/claude-cookbooks/main/{category}/{filename}
-Prompt: Extract the key implementation patterns and code examples
-```
-</step>
+## Performance Optimization
 
-<step n="4">
-**Apply to context**: Adapt the example patterns to the user's specific use case
-</step>
-</workflow_for_lookup>
+### Prompt Caching
+- Cache large system prompts
+- Cache frequently used context
+- Monitor cache hit rates
+- Balance caching vs. fresh content
 
-<success_criteria>
-- Found relevant example from cookbooks
-- Fetched actual implementation code
-- Explained how to adapt for user's needs
-- Provided working code based on official patterns
-</success_criteria>
+### Cost Optimization
+- Use Haiku for simple tasks
+- Implement prompt caching for repeated context
+- Set appropriate max_tokens
+- Batch similar requests
+
+### Latency Optimization
+- Use streaming for long responses
+- Minimize message history
+- Optimize image sizes
+- Use appropriate timeout values
+
+## Resources
+
+### Official Documentation
+- [Anthropic Developer Docs](https://docs.claude.com)
+- [API Reference](https://docs.claude.com/claude/reference)
+- [Anthropic Support](https://support.anthropic.com)
+
+### Community
+- [Anthropic Discord](https://www.anthropic.com/discord)
+- [GitHub Cookbooks Repo](https://github.com/anthropics/claude-cookbooks)
+
+### Learning Resources
+- [Claude API Fundamentals Course](https://github.com/anthropics/courses/tree/master/anthropic_api_fundamentals)
+- [Prompt Engineering Guide](https://docs.claude.com/claude/docs/guide-to-anthropics-prompt-engineering-resources)
+
+## Working with This Skill
+
+### For Beginners
+Start with `references/main_readme.md` and explore basic examples in `references/capabilities.md`
+
+### For Specific Features
+- Tool use → `references/tool_use.md`
+- Vision → `references/multimodal.md`
+- RAG → `references/capabilities.md#rag`
+- Agents → `references/patterns.md#agents`
+
+### For Code Examples
+Each reference file contains practical, copy-pasteable code examples
+
+## Examples Available
+
+The cookbook includes 50+ practical examples including:
+- Customer service chatbot with tool use
+- RAG with Pinecone vector database
+- Document summarization
+- Image analysis and OCR
+- Chart/graph interpretation
+- Natural language to SQL
+- Content moderation filter
+- Automated evaluations
+- Multi-agent systems
+- Prompt caching optimization
+
+## Notes
+
+- All examples use official Anthropic Python SDK
+- Code is production-ready with error handling
+- Examples follow current API best practices
+- Regular updates from Anthropic team
+- Community contributions welcome
+
+## Skill Source
+
+This skill was created from the official Anthropic Claude Cookbooks repository:
+https://github.com/anthropics/claude-cookbooks
+
+Repository cloned and processed on: 2025-10-29

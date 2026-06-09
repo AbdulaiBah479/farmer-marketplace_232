@@ -27,25 +27,34 @@ Expert guidance for Just, a command runner with syntax inspired by make. Use thi
 set allow-duplicate-recipes       # Allow recipes to override imported ones
 set allow-duplicate-variables     # Allow variables to override imported ones
 set shell := ["bash", "-euo", "pipefail", "-c"]  # Strict bash with error handling
-set unstable                      # Enable unstable features (modules, script attribute)
+set unstable                      # Enable unstable features (user-defined functions, eager keyword)
 set dotenv-load                   # Auto-load .env file
 set positional-arguments          # Pass recipe args as $1, $2, etc.
+set lazy                          # Defer evaluation of unused variables (v1.48.0+)
+set no-cd                         # Don't change to justfile directory for any recipe (v1.51.0+)
+set default-list := true          # Bare `just` lists recipes instead of running default (v1.52.0+)
+set default-script := true        # Make unannotated recipes script recipes; use sparingly (v1.52.0+)
 ```
 
 ### Common Attributes
 
-| Attribute                 | Purpose                                        |
-| ------------------------- | ---------------------------------------------- |
-| `[arg("p", long, ...)]`   | Configure parameter as `--flag` option (v1.46) |
-| `[arg("p", pattern="…")]` | Constrain parameter to match regex pattern     |
-| `[group("name")]`         | Group recipes in `just --list` output          |
-| `[no-cd]`                 | Don't change to justfile directory             |
-| `[private]`               | Hide from `just --list` (same as `_` prefix)   |
-| `[script]`                | Execute recipe as single script block          |
-| `[script("interpreter")]` | Use specific interpreter (bash, python, etc.)  |
-| `[confirm("prompt")]`     | Require user confirmation before running       |
-| `[doc("text")]`           | Override recipe documentation                  |
-| `[positional-arguments]`  | Enable positional args for this recipe only    |
+| Attribute                  | Purpose                                                        |
+| -------------------------- | -------------------------------------------------------------- |
+| `[arg("p", long, ...)]`    | Configure parameter as `--flag` option (v1.46)                 |
+| `[arg("p", pattern="…")]`  | Constrain parameter to match regex pattern                     |
+| `[confirm("prompt")]`      | Require user confirmation (expressions OK as of v1.49)         |
+| `[doc("text")]`            | Override recipe documentation                                  |
+| `[env("NAME", "VALUE")]`   | Set env var for this recipe only (v1.47+, expr v1.51)          |
+| `[group("name")]`          | Group recipes in `just --list` output                          |
+| `[linux]` / `[macos]` …    | Restrict to OS; also `[android]` (v1.50+) and BSD variants     |
+| `[no-cd]`                  | Don't change to justfile directory                             |
+| `[parallel]`               | Run direct dependencies concurrently                           |
+| `[positional-arguments]`   | Enable positional args for this recipe only                    |
+| `[private]`                | Hide from `just --list` (same as `_` prefix)                   |
+| `[script]`                 | Execute recipe as single script block                          |
+| `[script("interpreter")]`  | Use specific interpreter (bash, python, etc.)                  |
+| `[shell]`                  | Force linewise shell mode when `set default-script` is enabled |
+| `[working-directory: "…"]` | Run from given path (expressions OK as of v1.51)               |
 
 ### Recipe Argument Flags (v1.46.0+)
 
@@ -107,7 +116,7 @@ Terminal formatting constants are globally available (no definition needed):
 | `BOLD`, `ITALIC`, `UNDERLINE`, `STRIKETHROUGH`      | Text styles                                |
 | `NORMAL`                                            | Reset formatting                           |
 | `BG_*`                                              | Background colors (BG_RED, BG_GREEN, etc.) |
-| `HEX`, `HEXLOWER`                                   | Hexadecimal digits                         |
+| `HEX`, `HEXLOWER`, `HEXUPPER`                       | Hexadecimal digits                         |
 
 Usage:
 
@@ -128,127 +137,44 @@ log_level := env("LOG_LEVEL", "info")
 
 # Get justfile directory path
 root := justfile_dir()
+
+# Module location (useful inside `mod` files)
+mod_path := module_path()            # Full submodule path, e.g. "foo::bar"
+mod_file := module_file()            # Absolute path to module's justfile
+mod_dir := module_directory()        # Directory containing the module justfile
+
+# Runtime directory (v1.49.0; typically $XDG_RUNTIME_DIR, falls back to tempdir)
+rt := runtime_directory()
 ```
+
+### User-Defined Functions (v1.49.0+)
+
+Define reusable named expressions with `name(args) := expression`. Requires `set unstable`. Functions can reference module-level assignments.
+
+```just
+set unstable
+
+base := "foo"
+join(extension) := base + "." + extension
+
+# Use f-strings for interpolation
+hello(name) := f"Hello, {{ name }}!"
+
+create:
+    touch {{ join("c") }}
+    touch {{ join("html") }}
+    echo '{{ hello("World") }}'
+```
+
+Use these to dedupe expression logic that would otherwise repeat across recipes; prefer them over backtick-evaluated variables when the value depends on input.
 
 ## Recipe Patterns
 
-### Status Reporter Pattern
-
-Display formatted status during multi-step workflows:
-
-```just
-@_run-with-status recipe *args:
-    echo ""
-    echo -e '{{ CYAN }}→ Running {{ recipe }}...{{ NORMAL }}'
-    just {{ recipe }} {{ args }}
-    echo -e '{{ GREEN }}✓ {{ recipe }} completed{{ NORMAL }}'
-alias rws := _run-with-status
-```
-
-### Check/Write Pattern
-
-Pair check (verify) and write (fix) recipes for code quality tools:
-
-```just
-[group("checks")]
-@biome-check +globs=".":
-    na biome check {{ globs }}
-alias bc := biome-check
-
-[group("checks")]
-@biome-write +globs=".":
-    na biome check --write {{ globs }}
-alias bw := biome-write
-```
-
-### Full Check/Write Pattern
-
-Aggregate all checks with status reporting:
-
-```just
-[group("checks")]
-@full-check:
-    just _run-with-status biome-check
-    just _run-with-status prettier-check
-    just _run-with-status tsc-check
-    echo ""
-    echo -e '{{ GREEN }}All code checks passed!{{ NORMAL }}'
-alias fc := full-check
-
-[group("checks")]
-@full-write:
-    just _run-with-status biome-write
-    just _run-with-status prettier-write
-    echo ""
-    echo -e '{{ GREEN }}All code fixes applied!{{ NORMAL }}'
-alias fw := full-write
-```
-
-### Standard Alias Conventions
-
-| Recipe         | Alias | Recipe         | Alias |
-| -------------- | ----- | -------------- | ----- |
-| full-check     | fc    | full-write     | fw    |
-| biome-check    | bc    | biome-write    | bw    |
-| prettier-check | pc    | prettier-write | pw    |
-| mdformat-check | mc    | mdformat-write | mw    |
-| tsc-check      | tc    | ruff-check     | rc    |
-| test           | t     | build          | b     |
+When designing recipes that use status reporting, check/write semantics, or alias conventions, see [references/patterns.md](references/patterns.md).
 
 ## Inline Scripts
 
-Just supports inline scripts in any language via two methods:
-
-### Script Attribute (Recommended)
-
-Use `[script("interpreter")]` for cross-platform compatibility:
-
-```just
-[script("node")]
-fetch-data:
-    const response = await fetch('https://api.example.com/data');
-    const data = await response.json();
-    console.log(data);
-
-[script("python3")]
-analyze:
-    import json
-    with open('package.json') as f:
-        pkg = json.load(f)
-    print(f"Package: {pkg['name']}@{pkg['version']}")
-
-[script("bash")]
-deploy:
-    set -e
-    npm run build
-    aws s3 sync dist/ s3://bucket/
-```
-
-### Shebang Method
-
-Use `#!/usr/bin/env interpreter` at the recipe start:
-
-```just
-node-script:
-    #!/usr/bin/env node
-    console.log(`Node ${process.version}`);
-    console.log(JSON.stringify(process.env, null, 2));
-
-python-script:
-    #!/usr/bin/env python3
-    import sys
-    print(f"Python {sys.version}")
-
-bash-script:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    echo "Running on $(uname -s)"
-```
-
-**When to use which:**
-
-- `[script()]` - Better cross-platform support, cleaner syntax
-- Shebang - Traditional Unix approach, works without `set unstable`
+When writing recipes that need shell scripts (script attribute or shebang style), see [references/inline-scripts.md](references/inline-scripts.md).
 
 ## Modules & Imports
 
@@ -304,10 +230,29 @@ Common sections (in order):
 
 ## Default Recipe
 
-Always define a default recipe:
+Define a curated default recipe when one action should be the entrypoint:
 
 ```just
-# Show available commands
+# Run all checks by default
+default: full-check
+```
+
+If no single default makes sense, prefer `set default-list := true` (v1.52.0+) over a `default` recipe that shells out to
+`just --list`:
+
+```just
+set default-list := true
+
+# Optional: still define recipes normally; bare `just` now lists them.
+build:
+    cargo build
+```
+
+The setting is per-module. It can also be forced at runtime with `JUST_DEFAULT_LIST=true` or `just --default-list`.
+
+For compatibility with older `just` versions, keep the explicit listing recipe:
+
+```just
 default:
     @just --list
 ```
@@ -341,7 +286,7 @@ build:
 For Just features not covered in this skill (new attributes, advanced functions, edge cases), fetch the latest documentation:
 
 ```
-Use context7 MCP with library ID `/websites/just_systems-man` to get up-to-date Just documentation.
+Use context7 MCP with library ID `/websites/just_systems_man_en` to get up-to-date Just documentation.
 ```
 
 Example topics to search:
@@ -374,7 +319,11 @@ Working justfile templates in `examples/`:
 
 - **Official Manual**: https://just.systems/man/en/
 - **GitHub Repository**: https://github.com/casey/just
-- **Context7 Library ID**: `/websites/just_systems-man`
+- **Context7 Library ID**: `/websites/just_systems_man_en`
+
+## No Justfile Formatter
+
+Do not use `just --fmt` or `just --dump`. The user has bespoke formatting preferences that the built-in formatter does not respect. Preserve existing formatting as-is.
 
 ## Tips
 

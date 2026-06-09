@@ -1,26 +1,26 @@
 ---
 name: backend-models
-description: Define database models and ORM entities with proper naming, relationships, validation, and data integrity constraints. Use this skill when creating or modifying model classes, database table definitions, model relationships (one-to-many, many-to-many), data validation rules, database constraints, or model methods. Apply when working with ORM model files, ActiveRecord, SQLAlchemy, Sequelize, Prisma schemas, or any database model definitions that map objects to database tables and enforce data structure and relationships.
+description: Define and configure database models with proper naming, relationships, timestamps, data types, constraints, and validation. Use this skill when creating or editing model files in app/Models/, Eloquent model classes, model relationships (hasMany, belongsTo, etc.), database table structures, model attributes and casts, model factories, or seeders. Use when working on model validation logic, database constraints, foreign key relationships, indexes, scopes, accessors, mutators, or any ORM-related model configuration.
 ---
 
 # Backend Models
 
+This Skill provides Claude Code with specific guidance on how to adhere to coding standards as they relate to how it should handle backend models.
+
 ## When to use this skill
 
-- When creating new model classes or database table definitions
-- When modifying existing model files or ORM entity definitions
-- When defining model relationships (belongs_to, has_many, many-to-many)
-- When adding validation rules or constraints to model attributes
-- When implementing timestamps (created_at, updated_at) on models
-- When setting up foreign keys and database-level constraints
-- When choosing appropriate data types for model attributes
-- When creating indexes on model fields for query optimization
-- When defining cascade behaviors for related records
-- When implementing model methods, scopes, or query helpers
-- When refactoring model structure for better data integrity
-- When working with ORM configuration files or schema definitions
-
-This Skill provides Claude Code with specific guidance on how to adhere to coding standards as they relate to how it should handle backend models.
+- When creating or editing model files in `app/Models/` or similar model directories
+- When defining Eloquent model classes and their properties
+- When configuring model relationships (hasMany, belongsTo, belongsToMany, hasOne, morphTo, etc.)
+- When setting up model casts, fillable properties, or hidden attributes
+- When implementing model validation rules or business logic
+- When configuring database timestamps (created_at, updated_at) on models
+- When defining model scopes (query scopes, local scopes, global scopes)
+- When creating model factories for testing or seeding
+- When writing database seeders that use models
+- When implementing model accessors or mutators for attribute transformation
+- When setting up soft deletes or other model traits
+- When configuring model events or observers
 
 ## Instructions
 

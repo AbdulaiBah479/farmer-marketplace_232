@@ -1,50 +1,44 @@
 ---
-name: Analyzing Spreadsheets
-description: Analyzes Excel spreadsheets, summarizes trends, and recommends charts when users mention spreadsheets, Excel workbooks, or .xlsx files.
+name: analyzing-spreadsheets
+description: Processes Excel spreadsheet files (.xlsx, .xlsm, .csv). Creates workbooks, builds formulas, preserves formatting, analyzes tabular data, and validates financial models with zero-formula-error delivery. Use when working with spreadsheet files or tabular data analysis. Do NOT use for Word documents, PDFs, presentations, or database pipelines.
+user-invocable: false
+allowed-tools: Bash, Read, Write, Edit, Glob
+argument-hint: <file.xlsx | task>
 ---
 
-# Analyzing Spreadsheets
+# XLSX Processing
 
-## When to use
-- User shares an Excel workbook or asks about spreadsheet analysis
-- Tasks include summarizing metrics, spotting anomalies, or drafting charts
-- Data lives in tabular form (CSV or XLSX)
+Create, edit, analyze `.xlsx` files. LibreOffice required for formula recalculation via `recalc.py`.
 
-## Workflow
-1. **Inspect workbook structure**
-   ```python
-   import pandas as pd
-   xl = pd.ExcelFile("input.xlsx")
-   xl.sheet_names
-   ```
-2. **Load relevant sheets**
-   ```python
-   df = pd.read_excel("input.xlsx", sheet_name="Sheet1")
-   df.head()
-   ```
-3. **Clean and validate**
-   - Drop empty columns/rows
-   - Normalize date formats with `pd.to_datetime`
-   - Verify numeric columns with `df.describe()`
-4. **Analyze and summarize**
-   - Use groupby/pivot patterns from [reference/pandas-recipes.md](reference/pandas-recipes.md)
-   - Highlight KPIs, trends, and outliers
-5. **Recommend visuals**
-   - Suggest chart types (line for time series, bar for categorical comparisons, heatmap for correlations)
-   - Provide short rationale per recommendation
+## Iron Rule
 
-## Output expectations
-- Concise summary (1–3 paragraphs) covering key findings
-- Bullet list of insights with supporting numbers
-- Optional chart suggestions with column mappings
+**Zero formula errors at delivery.** All formulas must compute — no `#REF!`, `#DIV/0!`, `#VALUE!`, `#N/A`, `#NAME?`. Always run `recalc.py` after writing formulas.
 
-## Validation checklist
-- [ ] Loaded the correct sheet(s) and reported row/column counts
-- [ ] Highlighted missing or unusual data
-- [ ] Referenced actual values from the workbook
-- [ ] Included next-step recommendations (e.g., further slicing, charting)
+## Decision Matrix
 
-## Additional resources
-- [reference/pandas-recipes.md](reference/pandas-recipes.md) – common aggregation patterns
-- `python -m pip install pandas openpyxl` – install requirements if missing (Claude Code already includes pandas)
+| Task | Tool | Reference |
+|------|------|-----------|
+| Data analysis, bulk ops, simple export | pandas | [recipes.md](references/recipes.md) |
+| Formulas, formatting, Excel features | openpyxl | [recipes.md](references/recipes.md) |
+| Financial model standards | — | [financial-model.md](references/financial-model.md) |
+| Recalculate formulas | `recalc.py` | [recipes.md](references/recipes.md) |
 
+## Common Workflow
+
+1. **Choose tool**: pandas for data, openpyxl for formulas/formatting
+2. **Create/Load** workbook
+3. **Modify** data, formulas, formatting
+4. **Save**
+5. **Recalculate** (MANDATORY if formulas): `python recalc.py output.xlsx`
+6. **Verify & fix errors** — check JSON output, fix `#REF!` / `#DIV/0!` / `#VALUE!` / `#NAME?`
+
+## Hard Constraints
+
+- **Use formulas, not hardcoded values** — calculations stay dynamic. See [recipes.md](references/recipes.md#critical-use-formulas-not-hardcoded-values).
+- **Preserve existing templates** — match existing format/style EXACTLY when updating; user template overrides defaults.
+- **Financial models** — follow color/format conventions in [financial-model.md](references/financial-model.md).
+
+## Code Style
+
+- Concise Python, no unnecessary comments or print statements.
+- Excel files: comment cells with complex formulas, document hardcode sources.

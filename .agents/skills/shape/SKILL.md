@@ -1,206 +1,96 @@
 ---
 name: shape
-description: Bridge WHAT (intent) to HOW (implementation). Auto-triggers after /hope:intent when spec_score >=5. Discovers relevant aspects, consults anchor experts, outputs SHAPE.md with criteria/mustNot/verification. Triggers on "shape this", "how should I build", "implementation approach".
-model: opus
-allowed-tools: Read, Bash
-hooks:
-  Stop:
-    - hooks:
-        - type: prompt
-          prompt: "If this shape session made architectural decisions or identified constraints, return {\"ok\": false, \"reason\": \"Consider running /hope:learn to capture these design decisions.\"}. If just exploration, return {\"ok\": true}."
+description: Plan the UX and UI for a feature before writing code. Runs a structured discovery interview, then produces a design brief that guides implementation. Use during the planning phase to establish design direction, constraints, and strategy before any code is written.
+version: 2.1.1
+user-invocable: true
+argument-hint: "[feature to shape]"
 ---
 
-# Shape
+## MANDATORY PREPARATION
 
-Bridge between intent clarification and implementation. Transforms WHAT into HOW.
-
-## When This Skill Activates
-
-- After `/hope:intent` when spec_score >= 5
-- Explicit request: "shape this", "how should I build this"
-- Implementation approach questions
-- Architecture decisions needed before coding
-
-**If spec_score < 5:** Return to `/hope:intent` for clarification first.
+Invoke /impeccable, which contains design principles, anti-patterns, and the **Context Gathering Protocol**. Follow the protocol before proceeding. If no design context exists yet, you MUST run /impeccable teach first.
 
 ---
 
-## Protocol
+Shape the UX and UI for a feature before any code is written. This skill produces a **design brief**: a structured artifact that guides implementation through discovery, not guesswork.
 
-### 1. Aspect Discovery
+**Scope**: Design planning only. This skill does NOT write code. It produces the thinking that makes code good.
 
-Not all aspects apply to every task. Discover which are relevant:
+**Output**: A design brief that can be handed off to /impeccable craft, /impeccable, or any other implementation skill.
 
-| Aspect | Signal Keywords | When Relevant |
-|--------|-----------------|---------------|
-| Data | database, schema, storage, persist | Stateful changes |
-| API | endpoint, route, request, response | Service boundaries |
-| UI | component, display, user, interaction | Visual interfaces |
-| Auth | permission, role, access, security | Protected resources |
-| Performance | fast, scale, concurrent, cache | High-traffic paths |
-| Error | fail, recover, retry, fallback | Resilience needed |
-| Testing | verify, confidence, coverage | Quality requirements |
-| Migration | existing, legacy, transition | Brownfield work |
-| Integration | third-party, external, sync | Cross-system |
-| Deployment | release, rollback, feature flag | Delivery concerns |
+## Philosophy
 
-**Rule:** Only shape aspects that appear in the spec or have clear dependencies.
+Most AI-generated UIs fail not because of bad code, but because of skipped thinking. They jump to "here's a card grid" without asking "what is the user trying to accomplish?" This skill inverts that: understand deeply first, so implementation is precise.
 
----
+## Phase 1: Discovery Interview
 
-### 2. Expert Consultation
+**Do NOT write any code or make any design decisions during this phase.** Your only job is to understand the feature deeply enough to make excellent design decisions later.
 
-For each relevant aspect, consult the appropriate expert:
+Ask these questions in conversation, adapting based on answers. Don't dump them all at once; have a natural dialogue. ask the user directly to clarify what you cannot infer.
 
-| Aspect | Anchor Expert | Philosophy |
-|--------|---------------|------------|
-| Data | Rich Hickey | Immutability, simplicity, facts over place |
-| API | Martin Fowler | Pragmatic patterns, evolvability |
-| UI | Don Norman | User-centered, affordances, feedback |
-| Auth | OWASP | Defense in depth, least privilege |
-| Performance | Brendan Gregg | Measure first, optimize bottlenecks |
-| Error | Michael Nygard | Stability patterns, circuit breakers |
-| Testing | Kent Beck | Test behavior, not implementation |
-| Migration | Sam Newman | Strangler fig, incremental migration |
-| Integration | Gregor Hohpe | Messaging patterns, loose coupling |
-| Deployment | Jez Humble | Continuous delivery, reversibility |
+### Purpose & Context
+- What is this feature for? What problem does it solve?
+- Who specifically will use it? (Not "users"; be specific: role, context, frequency)
+- What does success look like? How will you know this feature is working?
+- What's the user's state of mind when they reach this feature? (Rushed? Exploring? Anxious? Focused?)
 
-See [anchor-experts.md](references/anchor-experts.md) for detailed guidance.
+### Content & Data
+- What content or data does this feature display or collect?
+- What are the realistic ranges? (Minimum, typical, maximum, e.g., 0 items, 5 items, 500 items)
+- What are the edge cases? (Empty state, error state, first-time use, power user)
+- Is any content dynamic? What changes and how often?
 
----
+### Design Goals
+- What's the single most important thing a user should do or understand here?
+- What should this feel like? (Fast/efficient? Calm/trustworthy? Fun/playful? Premium/refined?)
+- Are there existing patterns in the product this should be consistent with?
+- Are there specific examples (inside or outside the product) that capture what you're going for?
 
-### 3. Conflict Resolution
+### Constraints
+- Are there technical constraints? (Framework, performance budget, browser support)
+- Are there content constraints? (Localization, dynamic text length, user-generated content)
+- Mobile/responsive requirements?
+- Accessibility requirements beyond WCAG AA?
 
-When experts disagree, apply the anchor hierarchy:
+### Anti-Goals
+- What should this NOT be? What would be a wrong direction?
+- What's the biggest risk of getting this wrong?
 
-```
-1. Hickey (simplicity) — "Is this genuinely simple, or just familiar?"
-2. Fowler (pragmatism) — "Can I change this later without a rewrite?"
-3. If still tied — Pick option with fewer dependencies
-```
+## Phase 2: Design Brief
 
-**Document conflicts:** Note which experts disagreed and why one was chosen.
+After the interview, synthesize everything into a structured design brief. Present it to the user for confirmation before considering this skill complete.
 
----
+### Brief Structure
 
-### 4. SHAPE.md Output
+**1. Feature Summary** (2-3 sentences)
+What this is, who it's for, what it needs to accomplish.
 
-Generate `.loop/shape/SHAPE.md`:
+**2. Primary User Action**
+The single most important thing a user should do or understand here.
 
-```markdown
-## Shape: [Task Name]
+**3. Design Direction**
+How this should feel. What aesthetic approach fits. Reference the project's design context from `.impeccable.md` and explain how this feature should express it.
 
-### Relevant Aspects
-- [Aspect 1]: [Why relevant]
-- [Aspect 2]: [Why relevant]
+**4. Layout Strategy**
+High-level spatial approach: what gets emphasis, what's secondary, how information flows. Describe the visual hierarchy and rhythm, not specific CSS.
 
-### Implementation Criteria
+**5. Key States**
+List every state the feature needs: default, empty, loading, error, success, edge cases. For each, note what the user needs to see and feel.
 
-criteria:
-- [Criterion 1 — Boolean, verifiable]
-- [Criterion 2 — Specific outcome]
-- [Criterion 3 — Measurable state]
+**6. Interaction Model**
+How users interact with this feature. What happens on click, hover, scroll? What feedback do they get? What's the flow from entry to completion?
 
-### Must-NOT Constraints
+**7. Content Requirements**
+What copy, labels, empty state messages, error messages, and microcopy are needed. Note any dynamic content and its realistic ranges.
 
-mustNot:
-- [Constraint 1 — What to avoid]
-- [Constraint 2 — Anti-pattern to prevent]
+**8. Recommended References**
+Based on the brief, list which impeccable reference files would be most valuable during implementation (e.g., spatial-design.md for complex layouts, motion-design.md for animated features, interaction-design.md for form-heavy features).
 
-### Verification Plan
-
-| Criterion | Verification Type | Command/Method |
-|-----------|------------------|----------------|
-| [Criterion 1] | execution output | `npm test` |
-| [Criterion 2] | observation | Visual check in browser |
-| [Criterion 3] | measurement | Response time < 100ms |
-
-### Expert Decisions
-
-| Aspect | Expert | Recommendation | Confidence |
-|--------|--------|----------------|------------|
-| Data | Hickey | Use immutable events | 85% |
-| API | Fowler | REST with HATEOAS | 75% |
-
-### Conflicts Resolved
-
-[If any experts disagreed, document here with reasoning]
-```
-
-See [shape-template.md](references/shape-template.md) for full template.
+**9. Open Questions**
+Anything unresolved that the implementer should resolve during build.
 
 ---
 
-## Modes
+ask the user directly to clarify what you cannot infer. Get explicit confirmation of the brief before finishing. If the user disagrees with any part, revisit the relevant discovery questions.
 
-### Present Mode (Default)
-
-Show reasoning, ask user on conflicts:
-
-1. Display discovered aspects with evidence
-2. Show expert recommendations
-3. Pause on conflicts: "Hickey suggests X, Fowler suggests Y. Which aligns with your goals?"
-4. Generate SHAPE.md after user approval
-
-### Autonomous Mode
-
-Apply anchor hierarchy silently:
-
-1. Discover aspects
-2. Consult experts
-3. Resolve conflicts using hierarchy
-4. Generate SHAPE.md
-5. Announce: `[SHAPE] Generated .loop/shape/SHAPE.md | N criteria | M mustNot`
-
-**Trigger autonomous:** "shape this autonomously" or fit_score >= 40
-
----
-
-## Loop Integration
-
-SHAPE.md feeds directly into `/loop:start`:
-
-| SHAPE Field | Loop Field |
-|-------------|------------|
-| `criteria:` | `criteriaStatus` |
-| `mustNot:` | Circuit breaker triggers |
-| `verification:` | Verification type per criterion |
-
-**Exit blocked:** If any criterion has verification type "assumption", exit_signal cannot be true.
-
----
-
-## Quality Footer
-
-After generating SHAPE.md:
-
-```
-╭─ [VERDICT] ──────────────────────────────╮
-│ Aspects: N shaped | Experts: M consulted │
-│ Criteria: X | MustNot: Y                 │
-│ Conflicts: Z resolved via hierarchy      │
-├──────────────────────────────────────────┤
-│ ↳ Alt: [alternative approach]            │
-│ ↳ Key assumption: [main uncertainty]     │
-╰──────────────────────────────────────────╯
-```
-
----
-
-## Boundary
-
-**Shape surfaces considerations; user owns architecture.**
-
-- Expert recommendations are patterns, not prescriptions
-- User resolves conflicts — hierarchy is a tiebreaker, not authority
-- If user disagrees with expert guidance, user's context wins
-
-Shape informs design decisions, never makes them.
-
----
-
-## References
-
-- `references/aspect-discovery.md` — Detailed aspect signals
-- `references/anchor-experts.md` — Expert philosophies and guidance
-- `references/shape-template.md` — Full SHAPE.md template
+Once confirmed, the brief is complete. The user can now hand it to /impeccable, or use it to guide any other implementation approach. (If the user wants the full discovery-then-build flow in one step, they should use /impeccable craft instead, which runs this skill internally.)

@@ -1,207 +1,202 @@
 ---
 name: polish
-description: Remove AI slop, comments, and lint errors from the current branch.
-disable-model-invocation: true
+description: Final quality pass before shipping. Fixes alignment, spacing, consistency, and detail issues that separate good from great.
+args:
+  - name: target
+    description: The feature or area to polish (optional)
+    required: false
+user-invokable: true
 ---
 
-# Polish Protocol
+**First**: Use the frontend-design skill for design principles and anti-patterns.
 
-Remove AI slop and lint errors from the current branch.
-**Autonomous Mode: No confirmation required for cleanup tasks.**
+Perform a meticulous final pass to catch all the small details that separate good work from great work. The difference between shipped and polished.
 
-# Can Be Used By Any Agent
+## Pre-Polish Assessment
 
-All technical agents can invoke this skill:
-- `@backend-architect`
-- `@frontend-architect`
-- `@mobile-architect`
-- `@qa-engineer`
+Understand the current state and goals:
 
-# Critical Rules
+1. **Review completeness**:
+   - Is it functionally complete?
+   - Are there known issues to preserve (mark with TODOs)?
+   - What's the quality bar? (MVP vs flagship feature?)
+   - When does it ship? (How much time for polish?)
 
-1.  **ONLY remove slop:** No refactoring logic, only cleanup.
-2.  **ONLY fix lint/type errors:** Do not change style preferences.
-3.  **NEVER change logic:** If a "better" way exists, ignore it. Only fix broken things.
-4.  **NEVER touch unrelated code:** Only files in `git diff main...HEAD`.
+2. **Identify polish areas**:
+   - Visual inconsistencies
+   - Spacing and alignment issues
+   - Interaction state gaps
+   - Copy inconsistencies
+   - Edge cases and error states
+   - Loading and transition smoothness
 
-# Slop Reference (Delete these)
+**CRITICAL**: Polish is the last step, not the first. Don't polish work that's not functionally complete.
 
-- "Here is the logic" comments
-- "TODO: implement this" comments (unless legitimate)
-- `// ... existing code ...` markers
-- `as any` type bypasses (unless absolutely necessary)
-- Excessive `console.log` (unless for intentional logging)
-- Dead code / Unused imports
-- Commented-out code blocks
-- Empty functions with no implementation
+## Polish Systematically
 
-# Workflow
+Work through these dimensions methodically:
 
-## Step 1: Check Git Status
+### Visual Alignment & Spacing
 
-```bash
-git status
-```
+- **Pixel-perfect alignment**: Everything lines up to grid
+- **Consistent spacing**: All gaps use spacing scale (no random 13px gaps)
+- **Optical alignment**: Adjust for visual weight (icons may need offset for optical centering)
+- **Responsive consistency**: Spacing and alignment work at all breakpoints
+- **Grid adherence**: Elements snap to baseline grid
 
-**Error Handling:**
-- If not a git repo: "❌ Not a git repository. Run `git init` first."
-- If no changes: "✅ No changes to polish. Branch is clean."
+**Check**:
+- Enable grid overlay and verify alignment
+- Check spacing with browser inspector
+- Test at multiple viewport sizes
+- Look for elements that "feel" off
 
-## Step 2: Get Changed Files
+### Typography Refinement
 
-```bash
-git diff --name-only main...HEAD
-```
+- **Hierarchy consistency**: Same elements use same sizes/weights throughout
+- **Line length**: 45-75 characters for body text
+- **Line height**: Appropriate for font size and context
+- **Widows & orphans**: No single words on last line
+- **Hyphenation**: Appropriate for language and column width
+- **Kerning**: Adjust letter spacing where needed (especially headlines)
+- **Font loading**: No FOUT/FOIT flashes
 
-**Error Handling:**
-- If `main` branch doesn't exist: Try `master` or `develop`
-- If command fails: Ask user for base branch name
+### Color & Contrast
 
-## Step 3: Identify File Types
+- **Contrast ratios**: All text meets WCAG standards
+- **Consistent token usage**: No hard-coded colors, all use design tokens
+- **Theme consistency**: Works in all theme variants
+- **Color meaning**: Same colors mean same things throughout
+- **Accessible focus**: Focus indicators visible with sufficient contrast
+- **Tinted neutrals**: No pure gray or pure black—add subtle color tint (0.01 chroma)
+- **Gray on color**: Never put gray text on colored backgrounds—use a shade of that color or transparency
 
-Group files by type:
-- **JavaScript/TypeScript:** `.js`, `.ts`, `.jsx`, `.tsx`
-- **Python:** `.py`
-- **Other:** (CSS, Markdown, etc.) - Skip or minimal cleanup
+### Interaction States
 
-## Step 4: Remove Slop
+Every interactive element needs all states:
 
-For each file:
-1. Read the file
-2. Identify slop patterns
-3. Remove/fix them
-4. Save the file
+- **Default**: Resting state
+- **Hover**: Subtle feedback (color, scale, shadow)
+- **Focus**: Keyboard focus indicator (never remove without replacement)
+- **Active**: Click/tap feedback
+- **Disabled**: Clearly non-interactive
+- **Loading**: Async action feedback
+- **Error**: Validation or error state
+- **Success**: Successful completion
 
-**Process files in batches of 5** to avoid overwhelming the system.
+**Missing states create confusion and broken experiences**.
 
-## Step 5: Run Linter/Type Checker
+### Micro-interactions & Transitions
 
-**JavaScript/TypeScript:**
-```bash
-# Get changed JS/TS files
-CHANGED_JS_FILES=$(git diff --name-only main...HEAD 2>/dev/null | grep -E '\.(js|ts|jsx|tsx)$' | tr '\n' ' ')
+- **Smooth transitions**: All state changes animated appropriately (150-300ms)
+- **Consistent easing**: Use ease-out-quart/quint/expo for natural deceleration. Never bounce or elastic—they feel dated.
+- **No jank**: 60fps animations, only animate transform and opacity
+- **Appropriate motion**: Motion serves purpose, not decoration
+- **Reduced motion**: Respects `prefers-reduced-motion`
 
-if [ -n "$CHANGED_JS_FILES" ] && [ -f "package.json" ]; then
-  # Try ESLint
-  if npm list eslint >/dev/null 2>&1; then
-    npx eslint --fix $CHANGED_JS_FILES
-  fi
-  
-  # Try TypeScript
-  if [ -f "tsconfig.json" ]; then
-    npx tsc --noEmit
-  fi
-fi
-```
+### Content & Copy
 
-**Python:**
-```bash
-# Get changed Python files
-CHANGED_PY_FILES=$(git diff --name-only main...HEAD 2>/dev/null | grep -E '\.py$' | tr '\n' ' ')
+- **Consistent terminology**: Same things called same names throughout
+- **Consistent capitalization**: Title Case vs Sentence case applied consistently
+- **Grammar & spelling**: No typos
+- **Appropriate length**: Not too wordy, not too terse
+- **Punctuation consistency**: Periods on sentences, not on labels (unless all labels have them)
 
-if [ -n "$CHANGED_PY_FILES" ]; then
-  # Try Black (formatter)
-  if command -v black >/dev/null 2>&1; then
-    black $CHANGED_PY_FILES
-  fi
+### Icons & Images
 
-  # Try Ruff (linter)
-  if command -v ruff >/dev/null 2>&1; then
-    ruff check --fix $CHANGED_PY_FILES
-  fi
-fi
-```
+- **Consistent style**: All icons from same family or matching style
+- **Appropriate sizing**: Icons sized consistently for context
+- **Proper alignment**: Icons align with adjacent text optically
+- **Alt text**: All images have descriptive alt text
+- **Loading states**: Images don't cause layout shift, proper aspect ratios
+- **Retina support**: 2x assets for high-DPI screens
 
-**Error Handling:**
-- If linter not found: Skip and report
-- If linter fails: Show errors and ask if user wants to continue
-- If type errors exist: Report them (don't auto-fix)
+### Forms & Inputs
 
-## Step 6: Run Prettier (if available)
+- **Label consistency**: All inputs properly labeled
+- **Required indicators**: Clear and consistent
+- **Error messages**: Helpful and consistent
+- **Tab order**: Logical keyboard navigation
+- **Auto-focus**: Appropriate (don't overuse)
+- **Validation timing**: Consistent (on blur vs on submit)
 
-```bash
-# Get all changed files for formatting
-CHANGED_FILES=$(git diff --name-only main...HEAD 2>/dev/null | tr '\n' ' ')
+### Edge Cases & Error States
 
-if [ -n "$CHANGED_FILES" ] && npm list prettier >/dev/null 2>&1; then
-  npx prettier --write $CHANGED_FILES
-fi
-```
+- **Loading states**: All async actions have loading feedback
+- **Empty states**: Helpful empty states, not just blank space
+- **Error states**: Clear error messages with recovery paths
+- **Success states**: Confirmation of successful actions
+- **Long content**: Handles very long names, descriptions, etc.
+- **No content**: Handles missing data gracefully
+- **Offline**: Appropriate offline handling (if applicable)
 
-## Step 7: Summary Report
+### Responsiveness
 
-**Success:**
-```
-✅ Polish Complete!
+- **All breakpoints**: Test mobile, tablet, desktop
+- **Touch targets**: 44x44px minimum on touch devices
+- **Readable text**: No text smaller than 14px on mobile
+- **No horizontal scroll**: Content fits viewport
+- **Appropriate reflow**: Content adapts logically
 
-📊 Summary:
-- Files processed: 12
-- Slop removed: 23 instances
-- Lint errors fixed: 7
-- Type errors: 0
+### Performance
 
-✨ Branch is clean and ready for review!
+- **Fast initial load**: Optimize critical path
+- **No layout shift**: Elements don't jump after load (CLS)
+- **Smooth interactions**: No lag or jank
+- **Optimized images**: Appropriate formats and sizes
+- **Lazy loading**: Off-screen content loads lazily
 
-➡️ Next Steps:
-1. Review changes: git diff
-2. Commit: git add . && git commit -m "Polish: Remove slop and fix lint"
-3. Ship it: /ship-it
-```
+### Code Quality
 
-**With Warnings:**
-```
-⚠️ Polish Complete (with warnings)
+- **Remove console logs**: No debug logging in production
+- **Remove commented code**: Clean up dead code
+- **Remove unused imports**: Clean up unused dependencies
+- **Consistent naming**: Variables and functions follow conventions
+- **Type safety**: No TypeScript `any` or ignored errors
+- **Accessibility**: Proper ARIA labels and semantic HTML
 
-📊 Summary:
-- Files processed: 12
-- Slop removed: 23 instances
-- Lint errors fixed: 7
-- Type errors: 3 remaining
+## Polish Checklist
 
-❌ Type Errors:
-1. src/utils.ts:45 - Type 'string | undefined' is not assignable to type 'string'
-2. src/api.ts:78 - Property 'id' does not exist on type 'User'
-3. src/components/Form.tsx:120 - 'onClick' is missing in type 'ButtonProps'
+Go through systematically:
 
-➡️ Action Required:
-Fix type errors manually before committing.
-```
+- [ ] Visual alignment perfect at all breakpoints
+- [ ] Spacing uses design tokens consistently
+- [ ] Typography hierarchy consistent
+- [ ] All interactive states implemented
+- [ ] All transitions smooth (60fps)
+- [ ] Copy is consistent and polished
+- [ ] Icons are consistent and properly sized
+- [ ] All forms properly labeled and validated
+- [ ] Error states are helpful
+- [ ] Loading states are clear
+- [ ] Empty states are welcoming
+- [ ] Touch targets are 44x44px minimum
+- [ ] Contrast ratios meet WCAG AA
+- [ ] Keyboard navigation works
+- [ ] Focus indicators visible
+- [ ] No console errors or warnings
+- [ ] No layout shift on load
+- [ ] Works in all supported browsers
+- [ ] Respects reduced motion preference
+- [ ] Code is clean (no TODOs, console.logs, commented code)
 
-# Error Handling Summary
+**IMPORTANT**: Polish is about details. Zoom in. Squint at it. Use it yourself. The little things add up.
 
-**Not a git repo:**
-- Error: "❌ Not a git repository. Initialize with: git init"
-- Exit
+**NEVER**:
+- Polish before it's functionally complete
+- Spend hours on polish if it ships in 30 minutes (triage)
+- Introduce bugs while polishing (test thoroughly)
+- Ignore systematic issues (if spacing is off everywhere, fix the system)
+- Perfect one thing while leaving others rough (consistent quality level)
 
-**No changes detected:**
-- Info: "✅ No changes to polish. Branch is clean."
-- Exit
+## Final Verification
 
-**Base branch not found:**
-- Ask: "What's your base branch? (main/master/develop)"
-- Retry with user input
+Before marking as done:
 
-**Linter/Formatter not installed:**
-- Warn: "⚠️ [Tool] not found. Skipping [action]."
-- Continue with remaining steps
+- **Use it yourself**: Actually interact with the feature
+- **Test on real devices**: Not just browser DevTools
+- **Ask someone else to review**: Fresh eyes catch things
+- **Compare to design**: Match intended design
+- **Check all states**: Don't just test happy path
 
-**Linter fails:**
-- Show errors
-- Ask: "Continue with remaining files? (Yes/No)"
+Remember: You have impeccable attention to detail and exquisite taste. Polish until it feels effortless, looks intentional, and works flawlessly. Sweat the details - they matter.
 
-**File read/write errors:**
-- Log: "❌ Failed to process [file]: [error]"
-- Continue with next file
-
-**No slop found:**
-- Success: "✅ No slop detected. Code is clean!"
-- Still run linter/formatter
-
-# Success Criteria
-
-- [ ] All changed files scanned
-- [ ] AI slop removed
-- [ ] Lint errors fixed (or reported)
-- [ ] Code formatted consistently
-- [ ] Summary provided
-- [ ] User knows next steps

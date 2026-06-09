@@ -1,98 +1,36 @@
 ---
 name: skill-template
-description: Template for creating new Agent Skills for context engineering. Use this template when adding new skills to the collection.
+description: Template for production-grade DocEngineering skills
+allowed-tools:
+  - Read
+  - Grep
+  - Write
+  - "Bash(python:*)"
 ---
 
-# Skill Name
+# Skill Template
 
-Provide a clear, concise description of what this skill covers and when to use it. This description appears in skill discovery and should help agents (and humans) determine when this skill is relevant.
+## Overview
 
-**Important**: Keep the total SKILL.md body under 500 lines for optimal performance. Move detailed reference material to separate files in the `references/` directory.
+Use this folder as the starting point for a new skill.
 
-## When to Activate
+## Prerequisites
 
-Describe specific situations, tasks, or contexts where this skill should be activated. Include both direct triggers (specific keywords or task types) and indirect signals (broader patterns that indicate skill relevance).
+- Confirm required input paths exist.
+- Prefer relative paths via `{baseDir}` for portability.
 
-Write in third person. The description is injected into the system prompt, and inconsistent point-of-view can cause discovery problems.
+## Instructions
 
-- Good: "Processes Excel files and generates reports"
-- Avoid: "I can help you process Excel files"
+1. **Scout**: Use `Grep`/`find` to locate only the relevant files.
+2. **Analyze**: Read the minimum set of files needed.
+3. **Execute**: Prefer deterministic scripts under `{baseDir}/scripts/`.
+4. **Verify**: Run validation scripts and/or tests before returning results.
 
-## Core Concepts
+## Output Format
 
-Explain the fundamental concepts covered by this skill. These are the mental models, principles, or frameworks that the skill teaches.
+- Define a strict output format (Markdown template in `{baseDir}/assets/` and/or JSON schema).
 
-Default assumption: Claude is already very smart. Only add context Claude does not already have. Challenge each piece of information:
-- "Does Claude really need this explanation?"
-- "Can I assume Claude knows this?"
-- "Does this paragraph justify its token cost?"
+## Error Handling
 
-## Detailed Topics
-
-### Topic 1
-
-Provide detailed explanation of the first major topic. Include specific techniques, patterns, or approaches. Use examples to illustrate concepts.
-
-### Topic 2
-
-Provide detailed explanation of the second major topic. Continue with additional topics as needed.
-
-For longer topics, consider moving content to `references/` and linking:
-- See [detailed reference](./references/topic-details.md) for complete implementation
-
-## Practical Guidance
-
-Provide actionable guidance for applying the skill. Include common patterns, anti-patterns to avoid, and decision frameworks for choosing between approaches.
-
-Match the level of specificity to the task's fragility:
-- **High freedom**: Multiple approaches are valid, decisions depend on context
-- **Medium freedom**: Preferred pattern exists, some variation acceptable
-- **Low freedom**: Operations are fragile, specific sequence must be followed
-
-## Examples
-
-Provide concrete examples that illustrate skill application. Examples should show before/after comparisons, demonstrate correct usage, or show how to handle edge cases.
-
-Use input/output pairs for clarity:
-
-**Example:**
-```
-Input: [describe input]
-Output: [show expected output]
-```
-
-## Guidelines
-
-List specific guidelines to follow when applying this skill. These should be actionable rules that can be checked or verified.
-
-1. Guideline one with specific, verifiable criteria
-2. Guideline two with clear success conditions
-3. Continue as needed
-
-## Integration
-
-Explain how this skill integrates with other skills in the collection. List related skills as plain text (not links) to avoid cross-directory reference issues:
-
-- skill-name-one - Brief description of relationship
-- skill-name-two - Brief description of relationship
-
-## References
-
-Internal reference (use relative path to skill's own reference files):
-- [Reference Name](./references/reference-file.md) - Description
-
-Related skills in this collection:
-- skill-name - Relationship description
-
-External resources:
-- Research papers, documentation, or guides
-
----
-
-## Skill Metadata
-
-**Created**: [Date]
-**Last Updated**: [Date]
-**Author**: [Author or Attribution]
-**Version**: [Version number]
-
+- If required inputs are missing, ask for them explicitly and stop.
+- If any hard gate fails, return `EXIT_BLOCKED` and list blockers.

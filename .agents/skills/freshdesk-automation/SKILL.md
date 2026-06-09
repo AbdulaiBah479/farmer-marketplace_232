@@ -1,16 +1,13 @@
 ---
 name: freshdesk-automation
-description: Automate Freshdesk helpdesk operations including tickets, contacts, companies, notes, and replies via Rube MCP (Composio). Always search tools first for current schemas.
+description: "Automate Freshdesk helpdesk operations including tickets, contacts, companies, notes, and replies via Rube MCP (Composio). Always search tools first for current schemas."
 requires:
   mcp: [rube]
-category: customer-support
 ---
 
 # Freshdesk Automation via Rube MCP
 
 Automate Freshdesk customer support workflows including ticket management, contact and company operations, notes, replies, and ticket search through Composio's Freshdesk toolkit.
-
-**Toolkit docs**: [composio.dev/toolkits/freshdesk](https://composio.dev/toolkits/freshdesk)
 
 ## Prerequisites
 
@@ -220,6 +217,3 @@ Freshdesk uses page-based pagination:
 | List companies | `FRESHDESK_GET_COMPANIES` | `page` |
 | List ticket fields | `FRESHDESK_LIST_TICKET_FIELDS` | (none) |
 | List company fields | `FRESHDESK_LIST_COMPANY_FIELDS` | (none) |
-
----
-*Powered by [Composio](https://composio.dev)*

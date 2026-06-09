@@ -1,10 +1,48 @@
 ---
+skill_id: when-training-rl-agents-use-agentdb-learning
 name: agentdb-reinforcement-learning-training
-description: Skill guidance for agentdb reinforcement learning training.
+description: "Train AI agents using AgentDB's 9 reinforcement learning algorithms including Q-Learning, DQN, PPO, and Actor-Critic. Build self-learning agents, implement RL training loops with experience replay, and deploy optimized models to production."
+version: 1.0.0
+category: agentdb
+subcategory: machine-learning
+trigger_pattern: "when-training-rl-agents"
+agents:
+  - ml-developer
+  - safla-neural
+  - performance-benchmarker
+complexity: advanced
+estimated_duration: 6-10 hours
+prerequisites:
+  - AgentDB basics
+  - Reinforcement learning fundamentals
+  - Neural network knowledge
+  - Python/TypeScript proficiency
+outputs:
+  - Trained RL agents
+  - Learning plugin modules
+  - Performance benchmarks
+  - Deployment pipeline
+validation_criteria:
+  - Training converges successfully
+  - Reward curve shows improvement
+  - Agent passes validation tasks
+  - Benchmarks meet targets
+evidence_based_techniques:
+  - Self-consistency validation
+  - Program-of-thought decomposition
+  - Chain-of-verification
+  - Multi-agent consensus
+metadata:
+  author: claude-flow
+  created: 2025-10-30
+  updated: 2025-10-30
+  tags:
+    - agentdb
+    - reinforcement-learning
+    - neural-networks
+    - ai-training
+    - q-learning
 ---
-
-
-
 
 # AgentDB Reinforcement Learning Training
 
@@ -799,67 +837,9 @@ quickStart().catch(console.error);
    - Monitoring active and alerting
    - Deployment pipeline documented
 
-## MCP Requirements
-
-This skill operates using AgentDB's npm package and API only. No additional MCP servers required.
-
-All AgentDB learning plugin operations are performed through:
-- npm CLI: `npx agentdb@latest create-plugin`
-- TypeScript/JavaScript API: `import { AgentDB, LearningPlugin } from 'agentdb-learning'`
-
 ## Additional Resources
 
 - AgentDB Learning Documentation: https://agentdb.dev/docs/learning
 - RL Algorithms Guide: https://agentdb.dev/docs/rl-algorithms
 - Training Best Practices: https://agentdb.dev/docs/training
 - Production Deployment: https://agentdb.dev/docs/deployment
-
-## Core Principles
-
-AgentDB Reinforcement Learning Training operates on 3 fundamental principles:
-
-### Principle 1: Experience Replay - Learn from Past Mistakes Without Catastrophic Forgetting
-
-Naive online learning suffers from correlation bias (agent learns from consecutive similar experiences) and catastrophic forgetting (new experiences overwrite old knowledge). Prioritized experience replay stores diverse experiences in a buffer, samples uniformly to break correlations, and prioritizes high-error transitions to focus learning on difficult scenarios.
-
-In practice:
-- Maintain replay buffer with 100K+ experiences to ensure diverse sampling across state space
-- Use prioritized replay (alpha=0.6) to oversample transitions with high TD-error, accelerating convergence 2-3x
-- Apply importance sampling correction (beta=0.4->1.0) to prevent bias from non-uniform sampling
-- Start training only after 1000+ warm-up experiences to ensure sufficient diversity
-
-### Principle 2: Exploration-Exploitation Balance - Decay Epsilon to Shift from Discovery to Refinement
-
-The exploration-exploitation dilemma is fundamental to RL: explore too much and waste time on suboptimal actions, exploit too much and miss better strategies. Epsilon-greedy with decay starts high (explore aggressively to map state space) and decays toward zero (exploit learned policy once confident).
-
-In practice:
-- Initialize epsilon=1.0 to ensure comprehensive state space exploration in early episodes
-- Decay epsilon geometrically (multiply by 0.995 each episode) to smoothly transition from exploration to exploitation
-- Set epsilon_min=0.01 to maintain 1% exploration indefinitely, preventing policy stagnation from environment changes
-- Monitor reward variance - high variance indicates insufficient exploration, consider slower decay
-
-### Principle 3: Target Network Stabilization - Decouple Policy from Value Estimation
-
-Q-learning suffers from instability when the target (expected future reward) shifts while training. Using the same network for both action selection and target computation creates a moving target problem. Target networks freeze value estimates periodically, stabilizing training and improving convergence reliability.
-
-In practice:
-- Update target network every 1000 training steps (hard update) or use soft updates (tau=0.001) every step
-- Soft updates provide smoother convergence for continuous control tasks (robotics, game AI)
-- Hard updates work better for discrete action spaces with sparse rewards
-- Monitor TD-error convergence - diverging errors indicate target network update frequency needs adjustment
-
-## Common Anti-Patterns
-
-| Anti-Pattern | Problem | Solution |
-|--------------|---------|----------|
-| **Reward Hacking - Agent Finds Unintended Policy Shortcuts** | Poorly designed reward functions incentivize agents to exploit loopholes rather than solve the intended task. Classic example: agent learns to pause game indefinitely to avoid losing instead of playing well. | Use shaped rewards with multiple components (task completion + efficiency + constraints). Validate reward function with adversarial testing - manually identify shortcuts and penalize them. Prefer sparse terminal rewards over dense step rewards when task definition is clear. |
-| **Training Convergence Blindness - Run Fixed Episode Count Without Monitoring** | Training for arbitrary 10K episodes wastes compute if convergence happens at 3K or fails to converge at all. Agents either plateau early or train indefinitely without improvement. | Implement early stopping with patience threshold (stop if no improvement in 500 episodes). Monitor moving average reward over 100-episode window. Track loss curves alongside rewards - diverging loss indicates hyperparameter tuning needed before continuing training. |
-| **Hyperparameter Lottery - Use Default Values Without Task-Specific Tuning** | RL algorithms are notoriously sensitive to hyperparameters. Default learning_rate=0.001 may be 10x too high for high-dimensional state spaces or 10x too low for simple tasks. | Start with baseline hyperparameters from algorithm papers for similar task domains. Run hyperparameter sweeps on key parameters (learning_rate, discount_factor, exploration_rate) using small-scale experiments (1K episodes). Use grid search or Bayesian optimization to find task-specific optimal values before full-scale training. |
-
-## Conclusion
-
-AgentDB Reinforcement Learning Training provides a production-ready framework for training autonomous agents across 9 RL algorithms, from classic Q-Learning to state-of-the-art Decision Transformers. The 5-phase SOP systematically guides you from environment initialization and algorithm configuration through training iterations, performance validation, and production deployment, with comprehensive monitoring and benchmarking at each stage. By integrating experience replay, exploration-exploitation balancing, and target network stabilization, the framework implements proven RL best practices that accelerate convergence and improve final policy quality.
-
-This skill is essential when building self-learning agents for game AI, robotics control, resource optimization, or any domain where optimal behavior must be discovered through trial-and-error rather than explicitly programmed. The key differentiator is systematic validation - rather than blindly training for arbitrary episode counts, the framework monitors convergence, validates against baselines, and implements early stopping to prevent wasted computation. The deployment pipeline ensures trained policies are properly exported, optimized (quantization, format conversion), and monitored in production with latency and action distribution tracking.
-
-The choice of RL algorithm matters critically. Q-Learning and SARSA suit discrete action spaces with full observability. DQN scales to high-dimensional state spaces (images, sensor data). Policy gradient methods (PPO, A2C) handle continuous control and partial observability. Decision Transformers enable offline RL from logged data without environment interaction. The framework provides all 9 algorithms with unified interfaces, allowing rapid experimentation to find the optimal approach for your specific task complexity, state/action space characteristics, and data availability constraints. With proper validation against baselines and comprehensive benchmarking, you can confidently deploy RL agents that genuinely learn and improve rather than memorizing fixed policies.

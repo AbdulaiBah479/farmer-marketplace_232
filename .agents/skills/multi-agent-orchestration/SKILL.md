@@ -1,316 +1,175 @@
 ---
-name: "Multi-Agent Orchestration"
-description: "Coordinate multiple AI agents for complex tasks — decomposition, delegation, and synthesis"
-applyTo: "**/*agent*,**/*orchestrat*,**/*multi*,**/*workflow*,**/*subagent*"
+name: multi-agent-orchestration
+description: "Orchestrate tasks across multiple AI providers (Claude, OpenAI, Gemini, Cursor, OpenCode, Ollama). Use when delegating tasks to specialized providers, routing based on capabilities, or implementing fallback strategies."
 ---
 
 # Multi-Agent Orchestration Skill
 
-> Decompose complex problems into agent-appropriate subtasks, delegate effectively, and synthesize results.
+Route and delegate tasks to the most appropriate AI provider based on task characteristics and provider capabilities.
 
-## ⚠️ Rapid Evolution Domain
+## Variables
 
-Multi-agent patterns are evolving rapidly. This skill captures stable patterns while acknowledging the field is in flux.
+| Variable | Default | Description |
+|----------|---------|-------------|
+| ENABLED_CLAUDE | true | Enable Claude Code as provider |
+| ENABLED_OPENAI | true | Enable OpenAI/Codex as provider |
+| ENABLED_GEMINI | true | Enable Gemini as provider |
+| ENABLED_CURSOR | true | Enable Cursor as provider |
+| ENABLED_OPENCODE | true | Enable OpenCode as provider |
+| ENABLED_OLLAMA | true | Enable local Ollama as provider |
+| DEFAULT_PROVIDER | claude | Fallback when routing is uncertain |
+| CHECK_COST_STATUS | true | Check usage before delegating |
 
-**Refresh triggers:**
-- New orchestration frameworks (LangGraph, AutoGen, CrewAI releases)
-- Claude/GPT native multi-agent features
-- VS Code Copilot agent architecture changes
+## Instructions
 
-**Last validated:** February 2026
+**MANDATORY** - Follow the Workflow steps below in order. Do not skip steps.
 
----
+- Before delegating, understand the task characteristics
+- Use the model-discovery skill for current model names
+- Check cost/usage status before high-volume delegation
 
-## Core Concepts
-
-### When to Use Multi-Agent
-
-| Scenario | Single Agent | Multi-Agent |
-|----------|--------------|-------------|
-| Simple code edit | ✅ | ❌ Overkill |
-| Multi-file refactor | ✅ (if capable model) | ⚠️ Consider |
-| Research + implement | ⚠️ Long context | ✅ Decompose |
-| Cross-domain task | ❌ Context overload | ✅ Specialists |
-| Parallel independent work | ❌ Sequential | ✅ Parallel agents |
-
-### Agent Roles
-
-| Role | Responsibility | Example |
-|------|---------------|---------|
-| **Orchestrator** | Decompose, delegate, synthesize | Main chat session |
-| **Specialist** | Deep expertise in one domain | Security reviewer agent |
-| **Worker** | Execute well-defined subtask | "Find all usages of X" |
-| **Critic** | Validate, review, improve | Code review agent |
-
----
-
-## Decomposition Patterns
-
-### 1. **Horizontal Decomposition** (Parallel)
-
-Split task into independent subtasks that can run simultaneously.
+## Quick Decision Tree
 
 ```
-┌─────────────────┐
-│  Orchestrator   │
-└───────┬─────────┘
-        │ decompose
-   ┌────┴────┬────────┐
-   ▼         ▼        ▼
-┌─────┐  ┌─────┐  ┌─────┐
-│ A1  │  │ A2  │  │ A3  │   (parallel)
-└──┬──┘  └──┬──┘  └──┬──┘
-   └────────┼────────┘
-            ▼
-      synthesize
+What type of task is this?
+│
+├─ Needs conversation history? ─────────► Keep in Claude (no delegation)
+│
+├─ Needs sandboxed execution? ──────────► OpenAI/Codex
+│
+├─ Large context (>100k tokens)? ───────► Gemini
+│
+├─ Multimodal (images/video)? ──────────► Gemini
+│
+├─ Needs web search? ───────────────────► Gemini
+│
+├─ Quick IDE edit? ─────────────────────► Cursor
+│
+├─ Privacy required / offline? ─────────► Ollama
+│
+├─ Provider-agnostic fallback? ─────────► OpenCode
+│
+└─ General reasoning / coding? ─────────► Claude (default)
 ```
 
-**When to use:**
-- Tasks have no dependencies
-- Results can be merged mechanically
-- Time is critical
+## Red Flags - STOP and Reconsider
 
-**Example:** "Search for security issues in auth, api, and database modules"
+If you're about to:
+- Delegate without checking provider availability
+- Use hardcoded model names (use model-discovery skill instead)
+- Send sensitive data to a provider without user consent
+- Delegate a task that requires your conversation history
+- Skip the routing decision and guess which provider
 
-### 2. **Vertical Decomposition** (Pipeline)
+**STOP** -> Read the appropriate cookbook file -> Check provider status -> Then proceed
 
-Chain agents where each builds on previous output.
+## Workflow
 
-```
-┌─────────────────┐
-│  Orchestrator   │
-└───────┬─────────┘
-        ▼
-    ┌───────┐
-    │  A1   │ → research
-    └───┬───┘
-        ▼
-    ┌───────┐
-    │  A2   │ → analyze
-    └───┬───┘
-        ▼
-    ┌───────┐
-    │  A3   │ → implement
-    └───────┘
-```
+1. [ ] Analyze the task: What capabilities are required?
+2. [ ] **CHECKPOINT**: Consult `reference/provider-matrix.md` for routing decision
+3. [ ] Check provider availability: Run provider-check and cost-status if CHECK_COST_STATUS is true
+4. [ ] Read the appropriate cookbook file for the selected provider
+5. [ ] **CHECKPOINT**: Confirm API key / auth is configured
+6. [ ] Execute delegation with proper context
+7. [ ] Parse and summarize results for the user
 
-**When to use:**
-- Each step needs output from previous
-- Context builds incrementally
-- Quality gates between steps
+## Cookbook
 
-**Example:** "Research best practices → Design API → Implement → Review"
+### Claude Code (Orchestrator)
+- IF: Task requires complex reasoning, multi-file analysis, or conversation history
+- THEN: Keep task in Claude Code (you are the orchestrator)
+- WHY: Best for architecture decisions, complex refactoring
 
-### 3. **Hierarchical Decomposition** (Tree)
+### OpenAI / Codex
+- IF: Task needs sandboxed execution OR security-sensitive operations
+- THEN: Read and execute `cookbook/openai-codex.md`
+- REQUIRES: `OPENAI_API_KEY` or Codex subscription
 
-Orchestrator delegates to sub-orchestrators who manage workers.
+### Google Gemini
+- IF: Task involves large context (>100k tokens), multimodal (images/video), OR web search
+- THEN: Read and execute `cookbook/gemini-cli.md`
+- REQUIRES: `GEMINI_API_KEY` or Gemini subscription
 
-```
-┌─────────────────┐
-│   Root Orch     │
-└───────┬─────────┘
-   ┌────┴────┐
-   ▼         ▼
-┌─────┐   ┌─────┐
-│SubO1│   │SubO2│    (sub-orchestrators)
-└──┬──┘   └──┬──┘
- ┌─┴─┐    ┌──┴──┐
- ▼   ▼    ▼     ▼
-┌─┐ ┌─┐  ┌─┐   ┌─┐
-│W│ │W│  │W│   │W│   (workers)
-└─┘ └─┘  └─┘   └─┘
-```
+### Cursor
+- IF: Task is quick IDE edits, simple codegen, or rename/refactor
+- THEN: Read and execute `cookbook/cursor-agent.md`
+- REQUIRES: Cursor installed and configured
 
-**When to use:**
-- Very complex tasks
-- Different domains within task
-- Scale beyond single orchestrator's context
+### OpenCode
+- IF: Need provider-agnostic execution or a fallback CLI
+- THEN: Read and execute `cookbook/opencode-cli.md`
+- REQUIRES: OpenCode CLI installed and configured
 
----
+### Ollama (Local)
+- IF: Task needs privacy, offline operation, or cost-free inference
+- THEN: Read and execute `cookbook/ollama-local.md`
+- REQUIRES: Ollama running with models pulled
 
-## Delegation Best Practices
+## Model Names
 
-### Crafting Agent Instructions
+**Do not hardcode model version numbers** - they become stale quickly.
 
-When delegating to a subagent, specify:
-
-| Element | Purpose | Example |
-|---------|---------|---------|
-| **Context** | What they need to know | "Working on Alex VS Code extension" |
-| **Scope** | Clear boundaries | "Only look in /src/services" |
-| **Output** | Expected format | "Return JSON with findings" |
-| **Constraints** | What NOT to do | "Don't modify files, only report" |
-
-### Template for Subagent Prompt
-
-```
-**Task:** [One-sentence objective]
-
-**Context:**
-- Project: [name/type]
-- Relevant files: [list]
-- What's already done: [state]
-
-**Scope:**
-- DO: [specific actions]
-- DON'T: [boundaries]
-
-**Expected Output:**
-[Format and content expectations]
-
-**Success Criteria:**
-[How you'll know it's done right]
+For current model names, use the `model-discovery` skill:
+```bash
+python .claude/ai-dev-kit/skills/model-discovery/scripts/fetch_models.py
 ```
 
----
+Or read: `.claude/ai-dev-kit/skills/model-discovery/SKILL.md`
 
-## Synthesis Patterns
+## Quick Reference
 
-### Merging Agent Outputs
+| Task Type | Primary | Fallback |
+|-----------|---------|----------|
+| Complex reasoning | Claude | OpenAI |
+| Sandboxed execution | OpenAI | Cursor |
+| Large context (>100k) | Gemini | Claude |
+| Multimodal | Gemini | Claude |
+| Quick codegen | Cursor | Claude |
+| Web search | Gemini | (web tools) |
+| Privacy/offline | Ollama | Claude |
 
-| Pattern | When | How |
-|---------|------|-----|
-| **Concatenate** | Independent results | Simple append |
-| **Deduplicate** | Overlapping searches | Hash/compare |
-| **Vote** | Multiple opinions | Majority wins |
-| **Synthesize** | Diverse perspectives | LLM summary |
-| **Validate** | Critical decisions | Critic agent reviews |
+See `reference/provider-matrix.md` for detailed routing guidance.
 
-### Conflict Resolution
+## Tool Discovery
 
-When agents disagree:
+Orchestration tools are available in `.claude/ai-dev-kit/dev-tools/orchestration/`:
 
-1. **Identify conflict type**
-   - Factual (check sources)
-   - Opinion (escalate to user)
-   - Interpretation (provide both views)
+```bash
+# Check provider status and usage
+.claude/ai-dev-kit/dev-tools/orchestration/monitoring/cost-status.sh
 
-2. **Resolution strategies**
-   - Ask clarifying questions
-   - Request evidence from agents
-   - Escalate to more capable model
-   - Present options to user
+# Check CLI availability (optional apply)
+.claude/ai-dev-kit/dev-tools/orchestration/monitoring/provider-check.py
 
----
+# Intelligent task routing
+.claude/ai-dev-kit/dev-tools/orchestration/routing/route-task.py "your task"
 
-## VS Code Copilot Patterns
-
-### Using `runSubagent` Effectively
-
-The `runSubagent` tool enables orchestration within VS Code:
-
-```typescript
-// Good: Clear task with expected output
-await runSubagent({
-  prompt: `Search the codebase for all error handling patterns.
-           Return a JSON array of: {file, line, pattern, quality}`,
-  description: "Find error patterns"
-});
-
-// Bad: Vague delegation
-await runSubagent({
-  prompt: "Look for problems in the code",  // Too vague
-  description: "Find issues"
-});
+# Direct provider execution
+.claude/ai-dev-kit/dev-tools/orchestration/providers/claude-code/spawn.sh "task"
+.claude/ai-dev-kit/dev-tools/orchestration/providers/codex/execute.sh "task"
+.claude/ai-dev-kit/dev-tools/orchestration/providers/gemini/query.sh "task"
+.claude/ai-dev-kit/dev-tools/orchestration/providers/cursor/agent.sh "task"
+.claude/ai-dev-kit/dev-tools/orchestration/providers/opencode/execute.sh "task"
+.claude/ai-dev-kit/dev-tools/orchestration/providers/ollama/query.sh "task"
 ```
 
-### When to Use Subagent vs Direct
+## Output
 
-| Scenario | Approach |
-|----------|----------|
-| Simple search | Direct `grep_search` |
-| Complex multi-step search | `runSubagent` |
-| Single file edit | Direct `replace_string_in_file` |
-| Multi-file coordinated change | Consider subagent for planning |
-| Research + implementation | Subagent for research, direct for implementation |
+Delegation results should be:
+1. Parsed from provider's response format
+2. Summarized for the user
+3. Integrated back into the conversation context
 
----
+```markdown
+## Delegation Result
 
-## Common Anti-Patterns
+**Provider**: [provider name]
+**Task**: [brief description]
+**Status**: Success / Partial / Failed
 
-### ❌ Over-Orchestration
+### Summary
+[Key findings or outputs]
 
-**Problem:** Using multiple agents for simple tasks
-**Symptom:** Slower, more expensive, no quality gain
-**Fix:** Trust capable models for multi-step tasks up to complexity threshold
-
-### ❌ Insufficient Context
-
-**Problem:** Agents lack needed information
-**Symptom:** Repeated clarification requests, wrong assumptions
-**Fix:** Front-load context in delegation prompt
-
-### ❌ No Synthesis Strategy
-
-**Problem:** Raw agent outputs dumped on user
-**Symptom:** User must manually integrate results
-**Fix:** Plan synthesis before decomposition
-
-### ❌ Circular Dependencies
-
-**Problem:** Agent A needs B's output, B needs A's output
-**Symptom:** Deadlock or infinite loops
-**Fix:** Identify and break cycles in task graph
-
----
-
-## Framework Landscape (2026)
-
-| Framework | Strength | Use Case |
-|-----------|----------|----------|
-| **LangGraph** | State machines, cycles | Complex workflows |
-| **AutoGen** | Conversation patterns | Research, debate |
-| **CrewAI** | Role-based teams | Business processes |
-| **VS Code Agents** | IDE integration | Code tasks |
-| **Semantic Kernel** | .NET native | Enterprise C# |
-
----
-
-## Alex-Specific Patterns
-
-### Heir Orchestration
-
-Master Alex can coordinate heirs for cross-platform tasks:
-
+### Details
+[Full response if relevant]
 ```
-Master Alex (orchestrator)
-├── VS Code Heir → code analysis
-├── M365 Heir → document synthesis
-└── Global Knowledge → pattern matching
-```
-
-### Skill Selection as Orchestration
-
-When Alex runs Skill Selection Optimization (SSO), it's a form of self-orchestration:
-
-1. Survey available skills (agents)
-2. Match to task requirements
-3. Load relevant skills
-4. Execute with combined expertise
-
----
-
-## Implementation Checklist
-
-When designing multi-agent workflows:
-
-- [ ] Can a single capable model handle this?
-- [ ] Are subtasks truly independent (or pipelined)?
-- [ ] Is context sufficient for each agent?
-- [ ] Is output format clearly specified?
-- [ ] Is synthesis strategy defined?
-- [ ] Are failure modes handled?
-- [ ] Is the orchestration overhead justified?
-
----
-
-## Related Skills
-
-- **skill-selection-optimization** — Pre-task skill loading
-- **prompt-engineering** — Crafting effective agent prompts
-- **appropriate-reliance** — Knowing when to trust agent output
-- **root-cause-analysis** — Debugging multi-agent failures
-
----
-
-*Multi-agent orchestration is powerful but not always necessary. Start simple, add agents when complexity demands it.*

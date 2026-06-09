@@ -1,571 +1,247 @@
 ---
 name: obsidian-plan-wiki
-description: Create and manage behavior specification wikis in Obsidian format. Use when creating specs, documenting features, or when user mentions "wiki", "spec", "feature", or "Obsidian".
+description: This skill should be used when creating or working with modular project plans stored as Obsidian-compatible markdown wikis. Use when the user asks to create a plan, roadmap, or documentation system that needs to be navigable in Obsidian, or when working with existing plan wikis that use the %% [ ] %% task tracking format.
 ---
 
-# Obsidian Spec Wiki
+# Obsidian Plan Wiki
 
-Create and manage specification wikis as Obsidian-compatible markdown. Feature areas capture both **what** the system does (specs) and **how** to build it (plans).
-
-## Change Tracking (No LWW)
-
-There is no LWW model. Specs, plans, and code are updated intentionally and together.
-
-**Required change workflow:**
-1. Open or reference a `tk` ticket (https://github.com/wedow/ticket).
-2. Update the relevant feature spec/plan.
-3. Update the code.
-4. Add a changelog entry via `tinychange`.
-5. Link the `tk` ticket and feature ID in the changelog entry or spec note.
-
-**ADRs:** Store decisions in `docs/reference/decisions/` with Johnny Decimal IDs. Track updates like any other change.
+Create and manage modular project plans as Obsidian-compatible markdown wikis with progressive disclosure, task tracking, and research integration.
 
 ## When to Use
 
-- Creating new project specs or documentation
-- Working with existing wikis using the open-questions format: `%% 🙋‍♂️ ... %%` / `%% 🤖 ... %%`
-- User mentions "wiki", "spec", "feature", or "Obsidian"
-- Need to document behavior for agent-driven code updates
-
-## One-Shot Usage (LLM Quickstart)
-
-When asked to use this skill, follow this sequence in a single pass:
-1. Read `docs/AGENTS.md` (and `docs/handbook/README.md` if present).
-2. Identify the structure: `features/` or `workstreams/` (treat workstreams as feature areas).
-3. Use Johnny Decimal with two-digit decimals (`NN.NN`).
-4. Apply the open-questions format with `🙋‍♂️/🤖/✅` and block IDs.
-5. Record changes via `tk` and `tinychange` (merge to `docs/changelog.md`).
-
-## Wiki Discovery
-
-Check for existing wiki in order:
-1. `docs/` - Primary location
-2. `docs/wiki/` - Nested variant
-3. `wiki/` - Root alternative
-4. `.plans/*/` - Legacy support
-
-First match wins. **Always use `docs/` for new wikis.**
+- Creating new project plans, roadmaps, or documentation systems
+- Working with existing plan wikis using `%% [ ] %%` task format
+- User mentions "plan", "roadmap", "wiki", or "Obsidian"
+- Need to organize complex multi-phase projects
 
 ## Directory Structure
 
+Initialize new plan wikis with this structure:
+
 ```
-docs/
-├── README.md              # Index with feature table (Johnny Decimal)
-├── CLAUDE.md              # Symlink → AGENTS.md
-├── AGENTS.md              # Actual agent instructions
-├── changelog.md           # Keep a Changelog format (generated via tinychange)
-├── handbook/              # Process/tooling docs (Johnny Decimal)
-├── reference/             # Architecture + research (Johnny Decimal)
-│   └── decisions/         # ADRs (Johnny Decimal IDs)
-├── features/              # OR workstreams/ (treat as feature areas)
-│   └── NN-name/           # Johnny Decimal area (10-19, 20-29, ...)
-│       ├── README.md      # Area summary + feature tables
-│       ├── AGENTS.md      # Optional: area-specific agent rules
-│       ├── NN.NN-spec.md  # Feature specs (what)
-│       └── NN.NN-plan.md  # Implementation plans (how)
-└── research/              # Oracle outputs (frozen)
+plan-name/
+├── README.md           # Index - start here, links to everything
+├── CLAUDE.md           # Rules for Claude working with this plan
+├── changelog.md        # Amendment history (Keep a Changelog format)
+├── deferred.md         # Preserved deferred work (optional)
+├── phases/             # High-level phase overviews
+│   ├── 01-phase-name.md
+│   └── 02-phase-name.md
+├── tasks/              # Individual task specifications
+│   ├── 1.1-task-slug.md
+│   └── 1.2-task-slug.md
+├── reference/          # Supporting documentation
+│   └── architecture.md
+└── research/           # Oracle/Delphi research outputs
+    ├── index.md
+    └── topic-name.md
 ```
-
-**CLAUDE.md vs AGENTS.md convention:**
-- `CLAUDE.md` = **symlink** to `AGENTS.md` (NOT a file containing `@AGENTS.md`)
-- `AGENTS.md` = actual agent instructions and wiki operations
-
-**Why symlink?** The `@filename` convention in file contents causes some tools to ignore the file entirely. A symlink ensures CLAUDE.md is always read as the actual AGENTS.md content.
-
-**Key concepts:**
-- **Feature areas** = Johnny Decimal functional areas (not temporal phases). Treat everything as a feature (product, infra, tooling, docs)
-- **Specs** = behavior documents (what the system does)
-- **Plans** = implementation documents (how to build it)
-- **Research** = Oracle/Delphi outputs (frozen snapshots)
-
-## Codebase AGENTS.md (Required)
-
-Every top-level code or source folder must include an `AGENTS.md` that explains:
-- The folder's purpose
-- Feature area IDs it implements (link to `docs/features/`)
-- Boundaries (what does NOT belong here)
-- Primary entry points and tests
 
 ## Core Principles
 
 ### 1. Progressive Disclosure
 
-Load only what's needed:
+Load only what's needed for the current task:
 
 ```
-User asks about auth → Read features/10-core/README.md
-User asks about login → Read features/10-core/10.01-auth-spec.md
+User asks about camera → Read tasks/3.3-camera.md only
+User asks about Phase 2 → Read phases/02-entity-system.md only
 User asks for overview → Read README.md only
 ```
 
-Load only what each task requires.
+Never load the entire plan into context at once.
 
-### 2. Johnny Decimal Structure
+### 2. Task Tracking with Obsidian Comments
 
-Organize all feature areas using Johnny Decimal (johnnydecimal.com). Use ranges like 10-19, 20-29, ... Each feature has an ID `NN.NN` and uses that prefix in filenames.
-
-Example:
-```
-docs/features/10-core/
-├── README.md
-├── 10.01-auth-spec.md
-└── 10.01-auth-plan.md
-```
-
-### 3. Wiki Links Everywhere
-
-All references use `[[wiki-links]]`. Broken links = sync signal.
+Track open questions and tasks using hidden Obsidian comments:
 
 ```markdown
-[[features/10-core/10.01-auth-spec|Login Flow]]
-[[reference/architecture#auth-middleware|Auth Middleware]]
+%% [ ] this is an open question/task %%
+%% [x] this was completed → see [[research/result]] %%
 ```
 
-### 4. Task Tracking with Obsidian Comments
-
-Track open questions using hidden comments with emoji prefixes and block references. Multi-line is allowed if it improves readability.
-
-```markdown
-%% 🙋‍♂️ Human question/task %% ^q-scope-descriptor
-
-%% 🤖 Agent question waiting on human %% ^q-scope-question
-
-%% ✅ Question here → Answer here %% ^q-scope-resolved
-```
-
-**CRITICAL: Separate each question with a blank line.** Obsidian treats consecutive lines as a single block; only the last block ID works.
-
-**Format components:**
-- `🙋‍♂️` = **human wrote this** → AGENTS SHOULD ACTION/ANSWER
-- `🤖` = **agent wrote this** → AGENTS MUST SKIP (waiting for human)
-- `✅` = **resolved** → no action needed
-- `^q-{scope}-{descriptor}` = block ID for Obsidian navigation
-
-**WHO ANSWERS WHAT:**
-| Emoji | Who wrote it | Who should answer/action |
-|-------|--------------|--------------------------|
-| 🙋‍♂️ | Human | **Agent** (this is work for you!) |
-| 🤖 | Agent | **Human** (skip this, you asked it) |
-| ✅ | Resolved | **No one** |
-
-**Conversation threading:** Questions can have inline replies. The **LAST emoji** determines whose turn:
-```
-%% 🤖 Should we cache? 🙋‍♂️ yes 🤖 what limit? %% ^q-cache
-```
-Last emoji is 🤖 → Human's turn. When `✅` → Done.
-
-**Block ID convention:** `^q-{scope}-{descriptor}`
-- `^q-auth-oauth` (auth feature, OAuth question)
-- `^q-tabs-persist` (tabs feature, persistence question)
-
-**Workflow:**
-- Agent adds `🤖` question → human answers (agent skips these)
-- Human answers → convert to `🙋‍♂️` (now actionable by agent) or `✅` (resolved)
-- Human adds `🙋‍♂️` task → agent should action this
-- Resolved format: `%% ✅ question → answer %% ^q-id`
-
-**Linking to questions:**
-```markdown
-[[features/10-core/10.01-auth-spec#^q-auth-oauth|OAuth question]]
-```
-
-**Search in Obsidian:** Search for the emoji.
-
-**Find via terminal:**
+To find all open tasks:
 ```bash
-rg "🙋‍♂️" docs/                 # human tasks
-rg "🤖" docs/                    # agent questions
-rg "✅" docs/                    # resolved
-rg "%% .*%%$" docs/              # missing block IDs (lines ending with %%)
+grep -r '%% \[ \]' path/to/plan/
 ```
 
-**Agent responsibility:** Add block IDs to any question missing one. Generate the ID from the file's feature/spec and the question topic:
-```
-%% 🤖 how to handle OAuth? %%           → missing block ID
-%% 🤖 how to handle OAuth? %% ^q-auth-oauth   → fixed
-```
+When completing a task:
+1. Change `[ ]` to `[x]`
+2. Add arrow `→` with link to result
+3. Add entry to changelog.md
 
-### 5. Changelog Protocol
+### 3. Research Workflow
 
-Update `changelog.md` via `tinychange`. Do not hand-edit.
+When a `%% [ ] %%` comment needs research:
 
-Setup (once):
-```bash
-tinychange init
-```
+**Simple question:** Launch single oracle agent (Task tool with general-purpose)
 
-Add entry (interactive):
-```bash
-tinychange
-```
+**Complex/uncertain:** Use Delphi pattern (3 parallel oracles + synthesis)
+- Launch 3 agents with same question but different search angles
+- Synthesize results into single research document
+- Store in `research/` directory
 
-Add entry (scripted):
-```bash
-tinychange new --kind Added --message "Describe the change" --author "Your Name"
+**After research:**
+```markdown
+%% [x] question → Delphi complete: [[research/topic-delphi]] %%
+> **Research:** See [[research/topic]] for details
 ```
 
-Include the `tk` ticket ID in the message when available (e.g., "[tk-123] Add feature X").
+### 4. Changelog Protocol
 
-Merge entries into `docs/changelog.md`:
-```bash
-tinychange merge
-```
-
-Ensure `tinychange.toml` points to `docs/changelog.md` and uses Keep a Changelog format.
-
-## Templates
-
-### Spec File Template
+Every change must be logged in `changelog.md` using Keep a Changelog format:
 
 ```markdown
-# NN.NN Spec Name
+## YYYY-MM-DD (Session N)
 
-> **Feature Area:** [[../README|NN-Feature-Area-Name]]
-> **Feature ID:** NN.NN
-> **Ticket:** tk-000 (optional)
+### Added
+- [[path/to/file]] - Description
 
-## Behavior
+### Changed
+- [[path/to/file]] - What changed and why
 
-### Contract
-- **Input:** description
-- **Output:** description
-- **Preconditions:** what must be true before
-- **Postconditions:** what will be true after
-
-### Scenarios
-- When X happens → Y should occur
-- When edge case → handle gracefully
-
-## Decisions
-
-### Assumptions
-1. [Assumption] - [implication if wrong]
-2. [Assumption] - [implication if wrong]
-
-### Failure Modes
-| Failure | Detection | Recovery |
-|---------|-----------|----------|
-| [scenario] | [how to detect] | [what to do] |
-
-### ADR-1: Decision Title
-- **Status:** Proposed | Accepted | Deprecated | Superseded
-- **Context:** Why this decision was needed
-- **Decision:** What we decided
-- **Consequences:** What happens as a result
-- **Alternatives:** What we considered and rejected
-
-### Open Questions
-
-%% 🤖 Question needing resolution? %% ^q-specname-topic
-
-## Integration
-
-### Dependencies
-- [[path/to/spec|Display Name]] - what we need from it
-
-### Consumers
-- [[path/to/spec|Display Name]] - what uses us
-
-### Diagram
-```mermaid
-graph LR
-    A --> B
-    B --> C
-```
+### Research
+- **Topic:** Summary of findings
 ```
 
-### Plan File Template
+### 5. Wiki-Link Format
+
+Use Obsidian wiki-links for all internal references:
 
 ```markdown
-# NN.NN Plan Name
-
-> **Feature Area:** [[../README|NN-Feature-Area-Name]]
-> **Related Spec:** [[NN.NN-spec-name]] (optional)
-> **Ticket:** tk-000 (optional)
-
-## Goal
-What this plan achieves.
-
-## Prerequisites
-- [ ] Dependency 1
-- [ ] Dependency 2
-
-## Implementation Steps
-
-### Phase 1: [Name]
-- [ ] Step 1
-- [ ] Step 2
-
-### Phase 2: [Name]
-- [ ] Step 3
-- [ ] Step 4
-
-## Files to Modify
-| File | Changes |
-|------|---------|
-| `path/to/file` | Description of changes |
-
-## Testing Strategy
-How to verify the implementation works.
-
-## Risks & Mitigations
-| Risk | Mitigation |
-|------|------------|
-| [What could go wrong] | [How to prevent/handle] |
-
-## Open Questions
-
-%% 🤖 Implementation question? %% ^q-planname-topic
+[[tasks/1.1-project-structure]]           # Same directory
+[[../research/unity-cinemachine]]         # Relative path
+[[tasks/4.1-ui-framework|UI Framework]]   # With display text
 ```
 
-### Feature Area README Template
+## File Templates
+
+### README.md Template
 
 ```markdown
-# NN Feature Area Name
+# Project Name
 
-> Brief description of what this feature area covers.
+> **For Claude:** Read specific phase/task files as needed. Don't load everything at once.
 
-## Goal
-What this feature area achieves.
+**Goal:** [One sentence goal]
 
-## Specs
-
-| Spec | Description | Status |
-|------|-------------|--------|
-| [[NN.NN-spec-name]] | Brief description | Status |
-| [[NN.NN-spec-name]] | Brief description | Status |
-
-## Plans
-
-| Plan | Description | Status |
-|------|-------------|--------|
-| [[NN.NN-plan-name]] | Implementation approach | Status |
-
-## Shared Decisions
-
-ADRs that apply to all specs in this feature area:
-- **Decision:** Brief summary
-
-## Integration Points
-
-This feature area connects to:
-- [[../20-other-area/README|Other Feature Area]] - how
-```
-
-### CLAUDE.md Setup (Symlink)
-
-CLAUDE.md should be a **symlink** to AGENTS.md, not a file with content:
-
-```bash
-# From within docs/ directory
-ln -s AGENTS.md CLAUDE.md
-```
-
-This ensures CLAUDE.md and AGENTS.md always have identical content. All actual instructions go in AGENTS.md.
-
-### AGENTS.md Template
-
-Agent instructions belong here:
-
-```markdown
-# Agent Instructions: [Project Name]
-
-[Project-specific rules here...]
+**Tech Stack:** [Key technologies]
 
 ---
 
-## Wiki Operations
-
-**IMPORTANT:** When working with this wiki, use the `obsidian-plan-wiki` skill if available. It provides the full spec format and workflow patterns.
-
-This documentation uses Obsidian vault format. Follow these patterns.
-
-### Change Tracking (No LWW)
-
-Specs, plans, and code are updated intentionally and together. Track changes via `tk` tickets and `tinychange` entries.
-
-### Ticketing (tk)
-
-All work is tracked via `tk` (https://github.com/wedow/ticket). Include ticket IDs in spec/plan headers and in `tinychange` messages.
-
-### Progressive Disclosure
-
-**Don't load everything.** Navigate in layers:
-
-1. **Start at feature area README** - `features/NN-name/README.md`
-   - Understand scope and current status
-   - See which specs exist
-
-2. **Read specific specs as needed** - `features/NN-name/NN.NN-*-spec.md`
-   - Load only the spec you're implementing
-   - Check "Integration" section for related specs
-
-3. **Dive into reference docs for deep context** - `reference/` or `features/NN-name/reference/`
-
-4. **Check research for background** - `research/topic/`
-
-### Johnny Decimal Features
-
-Feature areas use Johnny Decimal IDs with two-digit decimals. Specs/plans use `NN.NN-` prefixes.
-
-### Open Questions System
-
-See [[handbook/10-docs/10.01-open-questions-system]] for full spec.
-
-**WHO ANSWERS WHAT:**
-| Emoji | Who wrote it | Who should answer/action |
-|-------|--------------|--------------------------|
-| 🙋‍♂️ | Human | **Agent** (this is work for you!) |
-| 🤖 | Agent | **Human** (skip this, you asked it) |
-| ✅ | Resolved | **No one** |
-
-### Updating Specs
-
-**Before:** Read Assumptions and Failure Modes
-**During:** Mark open questions resolved with `✅`, note discoveries
-**After:** Update Success Criteria checkboxes, update README status
-
-### Link Format
-
-| Target | Format |
-|--------|--------|
-| Same directory | `[text](filename.md)` |
-| Parent | `[text](../README.md)` |
-| Cross-feature area | `[text](../20-name/README.md)` |
-```
-
-### Codebase AGENTS.md
-
-Every top-level code or source folder must include an `AGENTS.md` that explains:
-- The folder's purpose
-- Feature area IDs it implements (link to `docs/features/`)
-- Boundaries (what does NOT belong here)
-- Primary entry points and tests
-
-### Root README Template
-
-```markdown
-# Project Wiki
-
-> **For Claude:** Start here. Read feature area READMEs for context, then specific specs as needed.
-
-## Feature Areas
-
-| # | Feature Area | Description |
-|---|--------------|-------------|
-| 10 | [[features/10-name/README\|Name]] | Description |
-
 ## Quick Links
 
-- [[AGENTS]] - Rules for agents
-- [[changelog]] - What changed and when
-- [[reference/architecture]] - System overview
-- [[reference/decisions]] - ADRs
+- [[CLAUDE]] - **Rules for Claude** (read first)
+- [[changelog]] - Amendment history with links
 
 ## Research
 
-Oracle/Delphi outputs (frozen snapshots):
 - [[research/topic]] - Description
+
+## Phases
+
+| Phase | Description | File |
+|-------|-------------|------|
+| 1 | Phase Name | [[phases/01-name]] |
+| 2 | Phase Name | [[phases/02-name]] |
+
+## Task Index
+
+### Phase 1: Name
+- [[tasks/1.1-slug|1.1 Task Title]]
+- [[tasks/1.2-slug|1.2 Task Title]]
 ```
+
+### Task File Template
+
+```markdown
+# Task X.Y: Title
+
+**Phase:** N - Phase Name
+**Commit:** `type(scope): description`
+
+%% [ ] any open questions %%
+
+> **Research:** See [[../research/topic]] if applicable
+
+## Overview
+[Brief description]
+
+## Files
+- Create: `path/to/file.ext`
+- Update: `path/to/existing.ext`
+
+## Steps
+
+### Step 1: Name
+[Implementation details]
+
+## Success Criteria
+- [ ] Criterion 1
+- [ ] Criterion 2
+```
+
+### CLAUDE.md Template
+
+See `references/claude-template.md` for the full template.
 
 ## Workflow Patterns
 
-### Creating a New Wiki
+### Creating a New Plan
 
-1. Create `docs/` directory structure
-2. Write README.md with feature area table (Johnny Decimal)
-3. Create AGENTS.md with actual agent instructions
-4. Create CLAUDE.md as a symlink: `ln -s AGENTS.md CLAUDE.md`
-5. Initialize changelog via `tinychange init`
-6. Create feature area folders with README.md
-7. Add specs as needed
+1. Create directory structure (see above)
+2. Write README.md with phase overview
+3. Create CLAUDE.md with plan-specific rules
+4. Initialize changelog.md
+5. Create phase files with task lists
+6. Create individual task files as needed
 
-### Adding a Spec
+### Processing Open Tasks
 
-1. Create `NN.NN-spec-name.md` in feature area folder
-2. Add `tk` ticket in the header if applicable
-3. Fill in Behavior (contract + scenarios)
-4. Document Decisions (ADRs)
-5. Map Integration (dependencies + consumers with wiki links)
-6. Update feature area README table
-7. Update changelog via CLI
+1. Find open tasks: `grep -r '%% \[ \]' path/to/plan/`
+2. For each task:
+   - Read the file containing the task
+   - Determine if research is needed
+   - Execute research (oracle or Delphi)
+   - Update task marker to `[x]` with result link
+   - Update changelog
 
-### Adding a Plan
+### Adding Research
 
-1. Create `NN.NN-plan-name.md` in feature area folder
-2. Link to related spec if one exists
-3. Add `tk` ticket in the header if applicable
-4. Fill in Implementation Steps with checkboxes
-5. List Files to Modify
-6. Document Risks & Mitigations
-7. Update feature area README plans table
-8. Update changelog via CLI
+1. Create file in `research/` directory
+2. Use descriptive name: `topic-name.md` or `topic-delphi.md` for Delphi synthesis
+3. Include metadata header:
+   ```markdown
+   > **Research Type:** Oracle | Delphi
+   > **Date:** YYYY-MM-DD
+   > **Topic:** Brief description
+   ```
+4. Update research index if exists
+5. Link from relevant task files
+6. Add to changelog
 
-### Research Workflow
+### Converting Diagrams to Mermaid
 
-When a `%% 🙋‍♂️ ... %%` or `%% 🤖 ... %%` comment needs research:
+Replace ASCII art and text flow diagrams with Mermaid:
 
-**Simple question:** Launch oracle agent
-**Complex/uncertain:** Use Delphi (3 parallel oracles + synthesis)
-
-Store results in `research/`, link from spec:
 ```markdown
-%% ✅ question → see [[research/topic]] %% ^q-scope-topic
+# Before (ASCII)
+Phase 1 → Phase 2 → Phase 3
+
+# After (Mermaid)
+​```mermaid
+graph LR
+    P1[Phase 1] --> P2[Phase 2] --> P3[Phase 3]
+​```
 ```
 
-### Keeping Specs and Code in Sync
-
-Specs and code are updated together. If you discover drift:
-1. Open or link a `tk` ticket.
-2. Decide the intended behavior (document in spec or ADR).
-3. Update spec/plan and code to match that decision.
-4. Add a `tinychange` entry.
-
-### Updating Specs During Implementation
-
-**Before:** Read the spec's Assumptions and Failure Modes.
-
-**During implementation:**
-- Add implementation notes to the spec
-- Mark open questions as resolved: `%% ✅ Decided → [outcome] %%`
-- Note any discovered failure modes
-
-**After completing:**
-- Update Success Criteria checkboxes
-- Add commit hash if significant
-- Update feature area README status if needed
-
-## Link Format
-
-Use relative markdown links (Obsidian-compatible):
-
-| Target | Link Format |
-|--------|-------------|
-| Same directory | `[text](filename.md)` |
-| Parent directory | `[text](../README.md)` |
-| Subdirectory | `[text](reference/file.md)` |
-| Cross-feature area | `[text](../20-context-menu/README.md)` |
-| Heading anchor | `[text](file.md#section-name)` |
-
-## When to Create New Documentation
-
-| Situation | Action |
-|-----------|--------|
-| New feature area | Create new feature area directory |
-| New behavior to document | Create numbered spec file (`NN.NN-spec.md`) |
-| New implementation approach | Create numbered plan file (`NN.NN-plan.md`) |
-| Deep technical topic | Add to `reference/` subdirectory |
-| Research question | Use Oracle, save to `research/` |
-| Feature-area-specific rules | Create `AGENTS.md` in feature area |
-| New code/source folder | Create `AGENTS.md` in that folder |
+Preserve directory trees as-is (they're fine as ASCII).
 
 ## Best Practices
 
-1. **Specs describe behavior** - What it does (contract, scenarios)
-2. **Plans describe implementation** - How to build it (steps, files, risks)
-3. **All references are wiki links** - Broken links signal sync issues
-4. **Update changelog via CLI immediately** - Don't hand-edit
-5. **One spec per feature/component** - Keep focused
+1. **Keep files focused** - One topic per file, link to related content
+2. **Use consistent naming** - `{phase}.{task}-{slug}.md` for tasks
+3. **Update changelog immediately** - Don't batch changes
+4. **Preserve deferred work** - Never delete, move to `deferred.md`
+5. **Version before major changes** - Copy to `{filename}.v{n}.md`
 6. **Research before deciding** - Use oracles for uncertain questions
-7. **Optional AGENTS.md per feature area** - For scoped agent rules
-8. **CLAUDE.md is a symlink** - Points to AGENTS.md via symlink

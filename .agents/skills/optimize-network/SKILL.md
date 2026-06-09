@@ -74,7 +74,7 @@ Run the bandwidth/responsiveness portion only when the user is ready for a bandw
 RUN_NETWORKQUALITY=1 ~/.claude/skills/optimize-network/scripts/macos_network_snapshot.sh
 ```
 
-If testing from a local Codex skill copy instead of an installed Claude Arsenal copy, use the equivalent path under `~/.codex/skills/optimize-network/scripts/`.
+If testing from a local Codex skill copy instead of an installed Spellbook copy, use the equivalent path under `~/.codex/skills/optimize-network/scripts/`.
 
 ### 2. Baseline
 
@@ -267,6 +267,8 @@ Use these prompts when evaluating the skill manually:
 - "帮我安全优化 macOS 网络，Clash 和 Tailscale 绝对不能动。"
 - "我的 Wi-Fi 信号很好但 ping 路由器偶尔 100ms，帮我诊断，不要直接改配置。"
 - "把 Codex 网络优化流程跑一遍，输出 before/after 报告和可回滚建议。"
+
+Structured eval cases live in `evals/evals.json`; use them when checking that proxy-safe routing, rollback language, and before/after evidence stay intact.
 
 ## Version
 

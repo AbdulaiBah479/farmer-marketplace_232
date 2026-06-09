@@ -3,14 +3,11 @@ name: jira-automation
 description: "Automate Jira tasks via Rube MCP (Composio): issues, projects, sprints, boards, comments, users. Always search tools first for current schemas."
 requires:
   mcp: [rube]
-category: project-management
 ---
 
 # Jira Automation via Rube MCP
 
 Automate Jira operations through Composio's Jira toolkit via Rube MCP.
-
-**Toolkit docs**: [composio.dev/toolkits/jira](https://composio.dev/toolkits/jira)
 
 ## Prerequisites
 
@@ -186,6 +183,3 @@ Automate Jira operations through Composio's Jira toolkit via Rube MCP.
 | List filters | JIRA_LIST_FILTERS | (none) |
 | Project roles | JIRA_GET_PROJECT_ROLES | projectIdOrKey |
 | Project versions | JIRA_GET_PROJECT_VERSIONS | projectIdOrKey |
-
----
-*Powered by [Composio](https://composio.dev)*

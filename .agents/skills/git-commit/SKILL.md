@@ -1,124 +1,99 @@
 ---
 name: git-commit
-description: 'Execute git commit with conventional commit message analysis, intelligent staging, and message generation. Use when user asks to commit changes, create a git commit, or mentions "/commit". Supports: (1) Auto-detecting type and scope from changes, (2) Generating conventional commit messages from diff, (3) Interactive commit with optional type/scope/description overrides, (4) Intelligent file staging for logical grouping'
-license: MIT
-allowed-tools: Bash
+description: Use this skill when user asks to "commit changes", "create a commit", "stage and commit", or wants help with git commit workflow.
+version: 1.0.0
+allowed-tools: [Read, Bash, Glob, Grep]
 ---
 
-# Git Commit with Conventional Commits
+# Git Commit
 
-## Overview
+Create well-structured git commits with conventional commit messages based on staged changes.
 
-Create standardized, semantic git commits using the Conventional Commits specification. Analyze the actual diff to determine appropriate type, scope, and message.
+## Parameters
 
-## Conventional Commit Format
-
-```
-<type>[optional scope]: <description>
-
-[optional body]
-
-[optional footer(s)]
-```
-
-## Commit Types
-
-| Type       | Purpose                        |
-| ---------- | ------------------------------ |
-| `feat`     | New feature                    |
-| `fix`      | Bug fix                        |
-| `docs`     | Documentation only             |
-| `style`    | Formatting/style (no logic)    |
-| `refactor` | Code refactor (no feature/fix) |
-| `perf`     | Performance improvement        |
-| `test`     | Add/update tests               |
-| `build`    | Build system/dependencies      |
-| `ci`       | CI/config changes              |
-| `chore`    | Maintenance/misc               |
-| `revert`   | Revert commit                  |
-
-## Breaking Changes
-
-```
-# Exclamation mark after type/scope
-feat!: remove deprecated endpoint
-
-# BREAKING CHANGE footer
-feat: allow config to extend other configs
-
-BREAKING CHANGE: `extends` key behavior changed
+```json
+{
+  "type": "object",
+  "properties": {
+    "message": {
+      "type": "string",
+      "description": "Optional commit message override"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["feat", "fix", "docs", "style", "refactor", "test", "chore"],
+      "description": "Conventional commit type",
+      "default": "auto"
+    },
+    "scope": {
+      "type": "string",
+      "description": "Optional scope for the commit"
+    }
+  }
+}
 ```
 
-## Workflow
+## When to Use
 
-### 1. Analyze Diff
+- User asks to "commit" changes
+- User wants to "save" their work to git
+- User asks for help with commit messages
+- User wants to stage and commit files
 
-```bash
-# If files are staged, use staged diff
-git diff --staged
+## Methodology
 
-# If nothing staged, use working tree diff
-git diff
+### Phase 1: Status Check
+- Run `git status` to see current state
+- Run `git diff --staged` to see staged changes
+- Run `git diff` to see unstaged changes
+- Check recent commit history for message style
 
-# Also check status
-git status --porcelain
-```
+### Phase 2: Analysis
+1. **Categorize Changes**: Identify what changed (new files, modifications, deletions)
+2. **Determine Type**: Is this a feature, fix, refactor, etc.?
+3. **Identify Scope**: What component/module is affected?
+4. **Summarize Purpose**: What does this change accomplish?
 
-### 2. Stage Files (if needed)
+### Phase 3: Commit Creation
+- Stage relevant files if not already staged
+- Generate conventional commit message
+- Execute the commit
+- Verify success with `git status`
 
-If nothing is staged or you want to group changes differently:
+### Phase 4: Output
+Report:
+- What was committed
+- The commit message used
+- The new commit hash
 
-```bash
-# Stage specific files
-git add path/to/file1 path/to/file2
+## Guidelines
 
-# Stage by pattern
-git add *.test.*
-git add src/components/*
+- Follow Conventional Commits format: `type(scope): description`
+- Keep subject line under 72 characters
+- Use imperative mood ("Add feature" not "Added feature")
+- Don't commit sensitive files (.env, credentials, etc.)
+- Don't use --force or --amend unless explicitly requested
+- Include meaningful description of WHY, not just WHAT
 
-# Interactive staging
-git add -p
-```
+## Examples
 
-**Never commit secrets** (.env, credentials.json, private keys).
+### Example 1: Auto Commit
 
-### 3. Generate Commit Message
+**User Input**: "Commit my changes"
 
-Analyze the diff to determine:
+**Expected Behavior**:
+1. Run `git status` and `git diff` to understand changes
+2. Analyze the nature of changes
+3. Generate appropriate commit message
+4. Stage files if needed
+5. Create commit and report success
 
-- **Type**: What kind of change is this?
-- **Scope**: What area/module is affected?
-- **Description**: One-line summary of what changed (present tense, imperative mood, <72 chars)
+### Example 2: Specific Type
 
-### 4. Execute Commit
+**User Input**: "创建一个 fix 类型的 commit"
 
-```bash
-# Single line
-git commit -m "<type>[scope]: <description>"
-
-# Multi-line with body/footer
-git commit -m "$(cat <<'EOF'
-<type>[scope]: <description>
-
-<optional body>
-
-<optional footer>
-EOF
-)"
-```
-
-## Best Practices
-
-- One logical change per commit
-- Present tense: "add" not "added"
-- Imperative mood: "fix bug" not "fixes bug"
-- Reference issues: `Closes #123`, `Refs #456`
-- Keep description under 72 characters
-
-## Git Safety Protocol
-
-- NEVER update git config
-- NEVER run destructive commands (--force, hard reset) without explicit request
-- NEVER skip hooks (--no-verify) unless user asks
-- NEVER force push to main/master
-- If commit fails due to hooks, fix and create NEW commit (don't amend)
+**Expected Behavior**:
+1. 检查当前的改动
+2. 确认这些改动符合 "fix" 类型
+3. 生成格式为 `fix(scope): 描述` 的提交信息
+4. 执行提交并报告结果

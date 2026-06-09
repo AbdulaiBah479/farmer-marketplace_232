@@ -1,262 +1,186 @@
 ---
-name: "Tailwind CSS"
-description: "Utility-first CSS framework for rapidly building custom user interfaces"
-when_to_use: "When you need to style HTML/React components with utility classes, create responsive layouts, or build UI components with Tailwind CSS"
-requirements: ["Node.js", "Tailwind CSS installed", "PostCSS configuration"]
+name: tailwind-css
+user-invocable: false
+description: This skill should be used when the user asks to style with Tailwind v4, add or fix Tailwind classes, use tailwind-variants or tw-animate-css, or configure Tailwind. Trigger phrases include "style with Tailwind", "fix Tailwind styles", "configure Tailwind v4", "migrate to Tailwind v4".
 ---
 
-# Tailwind CSS
+# Tailwind CSS v4
 
-## Quick Start
+Expert guidance for Tailwind CSS v4, CSS-first configuration, modern utility patterns, and type-safe component styling with tailwind-variants.
 
-```html
-<!-- Basic card component -->
-<div class="max-w-sm mx-auto bg-white rounded-xl shadow-md p-6">
-  <h2 class="text-xl font-bold text-gray-800 mb-2">Card Title</h2>
-  <p class="text-gray-600">Card content goes here</p>
-  <button
-    class="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-  >
-    Action
-  </button>
-</div>
-```
+## CSS-First Configuration
 
-```jsx
-// React component example
-function Button({ variant = "primary", children, ...props }) {
-  const baseClasses = "font-semibold py-2 px-4 rounded transition-colors";
-  const variantClasses = {
-    primary: "bg-blue-500 hover:bg-blue-700 text-white",
-    secondary: "bg-gray-200 hover:bg-gray-300 text-gray-800",
-  };
+Tailwind CSS v4 eliminates `tailwind.config.ts` in favor of CSS-only configuration. All configuration lives in CSS files using special directives.
 
-  return (
-    <button className={`${baseClasses} ${variantClasses[variant]}`} {...props}>
-      {children}
-    </button>
-  );
-}
-```
+**Core Directives:**
 
-## Common Patterns
+- `@import "tailwindcss"` - Entry point that loads Tailwind
+- `@theme { }` - Define or extend design tokens
+- `@theme static { }` - Define tokens that should not generate utilities
+- `@utility` - Create custom utilities
+- `@custom-variant` - Define custom variants
 
-### Layout Systems
-
-```html
-<!-- Flexbox centering -->
-<div class="flex items-center justify-center min-h-screen">
-  <div class="text-center">Centered content</div>
-</div>
-
-<!-- Grid layout -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-  <div class="bg-white p-6 rounded-lg shadow">Item 1</div>
-  <div class="bg-white p-6 rounded-lg shadow">Item 2</div>
-  <div class="bg-white p-6 rounded-lg shadow">Item 3</div>
-</div>
-
-<!-- Responsive container -->
-<div class="container mx-auto px-4 sm:px-6 lg:px-8">
-  <!-- Content -->
-</div>
-```
-
-### Responsive Design
-
-```html
-<!-- Responsive text sizing -->
-<h1 class="text-2xl md:text-3xl lg:text-4xl font-bold">Responsive Heading</h1>
-
-<!-- Responsive spacing -->
-<div class="py-4 sm:py-6 lg:py-8">
-  <!-- Content with responsive padding -->
-</div>
-
-<!-- Mobile-first approach -->
-<div class="w-full md:w-1/2 lg:w-1/3">
-  <!-- Full width on mobile, half on tablet, third on desktop -->
-</div>
-```
-
-### Component Patterns
-
-```html
-<!-- Navigation bar -->
-<nav class="bg-white shadow-lg">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex justify-between h-16">
-      <div class="flex items-center">
-        <div class="text-xl font-bold text-gray-800">Logo</div>
-      </div>
-      <div class="hidden md:flex items-center space-x-8">
-        <a href="#" class="text-gray-600 hover:text-gray-800">Home</a>
-        <a href="#" class="text-gray-600 hover:text-gray-800">About</a>
-        <a href="#" class="text-gray-600 hover:text-gray-800">Contact</a>
-      </div>
-    </div>
-  </div>
-</nav>
-
-<!-- Form inputs -->
-<div class="space-y-4">
-  <div>
-    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-    <input
-      type="email"
-      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-    />
-  </div>
-  <div>
-    <label class="block text-sm font-medium text-gray-700 mb-2">Message</label>
-    <textarea
-      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-      rows="4"
-    ></textarea>
-  </div>
-</div>
-
-<!-- Card with hover effects -->
-<div
-  class="transform transition-all duration-200 hover:scale-105 hover:shadow-xl"
->
-  <div class="bg-white rounded-lg overflow-hidden shadow-lg">
-    <img src="image.jpg" alt="Card image" class="w-full h-48 object-cover" />
-    <div class="p-6">
-      <h3 class="text-lg font-semibold mb-2">Card Title</h3>
-      <p class="text-gray-600">Card description with hover effects</p>
-    </div>
-  </div>
-</div>
-```
-
-### Utility Combinations
-
-```html
-<!-- Text with gradient -->
-<div
-  class="bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent"
->
-  Gradient Text
-</div>
-
-<!-- Glass morphism effect -->
-<div class="backdrop-blur-md bg-white/20 border border-white/30 rounded-lg p-6">
-  Glass effect card
-</div>
-
-<!-- Custom spacing with arbitrary values -->
-<div class="p-[2.5rem] m-[1.75rem]">Custom padding and margin</div>
-
-<!-- Aspect ratio containers -->
-<div class="aspect-w-16 aspect-h-9">
-  <iframe src="video-url" class="w-full h-full"></iframe>
-</div>
-```
-
-### Dark Mode
-
-```html
-<!-- Dark mode aware component -->
-<div
-  class="bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg p-6"
->
-  <h2 class="text-xl font-bold mb-4">Dark Mode Compatible</h2>
-  <p class="text-gray-600 dark:text-gray-300">
-    This content adapts to dark/light theme
-  </p>
-</div>
-
-<!-- Toggle button -->
-<button
-  class="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white px-4 py-2 rounded"
->
-  Toggle Theme
-</button>
-```
-
-## Interactive Elements
-
-```html
-<!-- Buttons with states -->
-<button
-  class="bg-blue-500 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-2 px-4 rounded transition-colors"
->
-  Interactive Button
-</button>
-
-<!-- Dropdown menu -->
-<div class="relative">
-  <button
-    class="bg-white border border-gray-300 rounded-md px-4 py-2 text-left"
-  >
-    Select Option
-  </button>
-  <div
-    class="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg"
-  >
-    <a href="#" class="block px-4 py-2 hover:bg-gray-100">Option 1</a>
-    <a href="#" class="block px-4 py-2 hover:bg-gray-100">Option 2</a>
-  </div>
-</div>
-```
-
-## Animation & Transitions
-
-```html
-<!-- Fade in animation -->
-<div class="animate-fade-in opacity-0 animation-fill-forwards">
-  Fade in content
-</div>
-
-<!-- Smooth transitions -->
-<div class="transform transition-transform duration-300 hover:translate-x-2">
-  Slide on hover
-</div>
-
-<!-- Loading spinner -->
-<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-```
-
-## Custom CSS Integration
+**Minimal Example:**
 
 ```css
-/* tailwind.config.js */
-module.exports = {
-  theme: {
-    extend: {
-      colors: {
-        brand: '#3B82F6',
-        'brand-dark': '#1E40AF',
-      },
-      spacing: {
-        '72': '18rem',
-        '84': '21rem',
-      },
-    },
-  },
-  plugins: [],
+@import "tailwindcss";
+
+@theme {
+  --color-brand: oklch(0.72 0.11 178);
+  --font-display: "Inter", sans-serif;
+  --spacing-edge: 1.5rem;
 }
 ```
 
-```html
-<!-- Using custom theme values -->
-<div class="bg-brand text-white p-4">Custom brand color</div>
-<div class="p-72">Custom spacing</div>
+All theme tokens defined with `@theme` automatically become available as utility classes. For example, `--color-brand` can be used as `bg-brand`, `text-brand`, `border-brand`, etc.
+
+## ESLint Integration
+
+Use `eslint-plugin-better-tailwindcss` for Tailwind CSS v4 class validation and style enforcement.
+
+**Correctness Rules (errors):**
+
+- `no-conflicting-classes` - Detect classes that override each other
+- `no-unknown-classes` - Flag classes not registered with Tailwind
+
+**Stylistic Rules (warnings):**
+
+- `enforce-canonical-classes` - Use standard v4 class names
+- `enforce-shorthand-classes` - Use abbreviated class versions
+- `no-deprecated-classes` - Remove outdated class names
+- `no-duplicate-classes` - Eliminate redundant declarations
+- `no-unnecessary-whitespace` - Clean up extra spacing
+
+**Examples:**
+
+```typescript
+// ❌ Bad: separate padding
+<div className="px-6 py-6">
+
+// ✅ Good: shorthand
+<div className="p-6">
 ```
 
-## Best Practices
+```typescript
+// ❌ Bad: separate width/height
+<div className="w-6 h-6">
 
-1. **Component-based approach**: Extract repeated class combinations into components
-2. **Mobile-first**: Use responsive prefixes (`md:`, `lg:`) to enhance mobile designs
-3. **Consistent spacing**: Use the spacing scale (`p-4`, `m-6`, `gap-8`) consistently
-4. **Semantic naming**: Use utility classes that describe their function
-5. **Responsive images**: Always include `object-cover` or `object-contain` for images
+// ✅ Good: size utility
+<div className="size-6">
+```
 
-## Performance Tips
+Run the project's ESLint check after modifying Tailwind classes to validate all changes across the codebase.
 
-- Use PurgeCSS/JIT mode to remove unused utilities
-- Group related classes together
-- Use CSS variables for dynamic values
-- Leverage container queries for component-based responsive design
-- Consider using `@apply` sparingly for truly reusable patterns
+## Coding Preferences
+
+For detailed coding patterns covering layout, spacing, typography, colors, borders, gradients, arbitrary values, class merging, image sizing, z-index, and dark mode, see [references/coding-preferences.md](references/coding-preferences.md).
+
+## CSS Modules
+
+Use CSS Modules only as a last resort for complex CSS that cannot be easily written with Tailwind classes.
+
+All `.module.css` files must include `@reference "#tailwind";` at the top to enable Tailwind utilities and theme tokens inside the module.
+
+**Example:**
+
+```css
+/* component.module.css */
+@reference "#tailwind";
+
+.component {
+  /* Complex CSS that can't be expressed with Tailwind utilities */
+  /* Can still use Tailwind utilities and theme tokens */
+}
+```
+
+## Common Tasks
+
+### Adding a Component with Variants
+
+1. Read `references/tailwind-variants.md` for patterns
+2. Check the project's `@theme` configuration for available tokens
+3. Use `tv()` from `tailwind-variants` for type-safe variants
+
+**Example:**
+
+```typescript
+import { tv } from "tailwind-variants";
+
+const button = tv({
+  base: "rounded-lg px-4 py-2 font-medium",
+  variants: {
+    color: {
+      primary: "bg-blue-600 text-white",
+      secondary: "bg-gray-600 text-white",
+    },
+    size: {
+      sm: "text-sm",
+      md: "text-base",
+      lg: "text-lg",
+    },
+  },
+});
+```
+
+### Debugging Styles
+
+1. Check `references/tailwind-v4-rules.md` for breaking changes
+2. Verify gradient syntax (`bg-linear-*`, not `bg-gradient-*`)
+3. Verify CSS variable syntax (`bg-my-color`, not `bg-[--var-my-color]`)
+4. Check if arbitrary value exists in the project's `@theme` configuration
+
+### Working with Colors
+
+1. Check the project's `@theme` configuration first to see available colors
+2. Use semantic color names when available
+3. Use opacity modifiers for transparency (`/20`, `/50`, etc.)
+4. Avoid arbitrary colors unless absolutely necessary
+
+**Example:**
+
+```typescript
+// ✅ Good: theme token with opacity
+<div className="bg-brand/20 text-brand">
+
+// ❌ Avoid: arbitrary hex
+<div className="bg-[#4f46e5]/20 text-[#4f46e5]">
+```
+
+### Adding Animations
+
+1. Read `references/tw-animate-css.md` for available animations
+2. Combine a base class (`animate-in` or `animate-out`) with effect classes
+3. Note decimal spacing gotcha: use `[0.625rem]` syntax, not `2.5`
+
+**Example:**
+
+```typescript
+// Enter: fade + slide up
+<div className="fade-in slide-in-from-bottom-4 duration-300 animate-in">
+
+// Exit: fade + slide down
+<div className="fade-out slide-out-to-bottom-4 duration-200 animate-out">
+```
+
+## Quick Reference Table
+
+| Aspect             | Pattern                                           |
+| ------------------ | ------------------------------------------------- |
+| Configuration      | CSS-only: `@theme`, `@utility`, `@custom-variant` |
+| Gradients          | `bg-linear-*`, `bg-radial`, `bg-conic`            |
+| Opacity            | Modifier syntax: `bg-black/50`                    |
+| Line Height        | Modifier syntax: `text-base/7`                    |
+| Font Features      | `font-features-zero`, `font-features-ss01`, etc.  |
+| CSS Variables      | `bg-my-color` (auto-created from `@theme`)        |
+| CSS Modules        | `@reference "#tailwind";` at top                  |
+| Class Merging      | `cn()` for conditionals; plain string for static  |
+| Viewport           | `min-h-dvh` (not `min-h-screen`)                  |
+| Component Variants | `references/tailwind-variants.md`                 |
+| Animations         | `references/tw-animate-css.md`                    |
+| V4 Rules           | `references/tailwind-v4-rules.md`                 |
+
+## Reference Documentation
+
+- **Tailwind v4 Rules & Best Practices:** `references/tailwind-v4-rules.md` — Breaking changes, removed/renamed utilities, layout rules, typography, gradients, CSS variables, new v4 features, common pitfalls
+- **tailwind-variants Patterns:** `references/tailwind-variants.md` — Component variants, slots API, composition, TypeScript integration, responsive variants
+- **tw-animate-css Reference:** `references/tw-animate-css.md` — Enter/exit animations, slide/fade/zoom utilities, spacing gotchas

@@ -1,60 +1,67 @@
 ---
-name: Code Review Expert
-description: Standards for performing high-quality, readable code reviews.
-metadata:
-  labels: [common, review, quality, best-practices]
-  triggers:
-    keywords: [review, pr, critique, analyze code]
+name: code-review-expert
+description: Comprehensive code review expertise. Use when reviewing code, evaluating architecture, or assessing quality. Triggers on review, evaluate, assess, audit, code quality, best practices.
 ---
 
 # Code Review Expert
 
-## **Priority: P1 (OPERATIONAL)**
+Comprehensive code review expertise for evaluating architecture and quality.
 
-Act as a **Principal Engineer**. Focus on logic, security, and architecture. Be constructive.
+## When to Use
 
-## Review Principles
+- Reviewing code changes before merge
+- Evaluating architecture decisions
+- Assessing code quality
+- Auditing for security issues
+- Performing pre-commit reviews
 
-- **Substance > Style**: Ignore formatting (leave to linters). Find bugs & design flaws.
-- **Questions > Commands**: "Does this handle null?" vs "Fix this."
-- **Readability**: Group by `[BLOCKER]`, `[MAJOR]`, `[NIT]`.
-- **Cross-Check**: Enforce P0 rules from active framework skills (e.g. `flutter/security`, `react/hooks`).
+## Workflow
 
-## Review Checklist (Summary)
+### Step 1: Initial Scan (10%)
 
-1.  **Shields Up (Security)**: Injection? Auth? Secrets?
-2.  **Performance**: Big O? N+1 queries? Memory leaks?
-3.  **Correctness**: Requirements met? Edge cases?
-4.  **Clean Code**: DRY? SOLID? Intent-revealing names?
+Review structure and architecture overview.
 
-See [references/checklist.md](references/checklist.md) for full inspection list.
+### Step 2: Top-Down Review (40%)
 
-## Output Format (Mandatory)
+Architecture → Modules → Functions.
 
-**1. Summary**: One sentence on overall quality/impact.
-**2. Categorized Findings**:
+### Step 3: Multi-Perspective (30%)
 
-````markdown
-### 🔴 [BLOCKER]
+Review as Architect, PM, QA, UX.
 
-- **File**: `auth.ts`
-- **Issue**: SQL Injection risk in `login`.
-- **Suggestion**: Use parameterized query.
-  ```typescript
-  // Recommended Fix
-  db.query('SELECT * FROM users WHERE id = $1', [userId]);
-  ```
-````
+### Step 4: Deep Dives (15%)
 
-### 🟢 [NIT]
+Focus on security and performance.
 
-- **File**: `utils.ts`
-- **Issue**: Rename `d` to `days` for clarity.
+### Step 5: Report (5%)
 
-See [references/output-format.md](references/output-format.md) for templates.
+Summarize and prioritize findings.
 
-## Anti-Patterns
+---
 
-- **No Nitpicking**: Don't flood with minor style comments.
-- **No Vague Demands**: "Fix this" -> Explain _why_ and _how_.
-- **No Ghosting**: Always review tests and edge cases.
+## Review Phases
+```
+Phase 1 (10%): Initial scan - structure, architecture
+Phase 2 (40%): Top-down - Architecture → Modules → Functions
+Phase 3 (30%): Multi-perspective - Architect, PM, QA, UX
+Phase 4 (15%): Deep dives - Security, performance
+Phase 5 (5%):  Report - Summarize, prioritize
+```
+
+## Severity
+
+| Level | Action |
+|-------|--------|
+| 🔴 Critical | Must fix before deploy |
+| 🟠 High | Fix this sprint |
+| 🟡 Medium | Fix next sprint |
+| 🟢 Low | Backlog |
+
+## Quick Checklist
+
+- [ ] No `any` types
+- [ ] Error handling complete
+- [ ] Input validation present
+- [ ] No hardcoded secrets
+- [ ] Parameterized queries
+- [ ] Async errors handled

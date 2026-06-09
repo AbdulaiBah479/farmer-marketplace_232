@@ -1,15 +1,21 @@
 ---
 name: betreuer-als-erbe
-description: "Beraet zur Frage, ob ein Berufsbetreuer testamentarisch bedacht werden darf und welche Folgen sich aus Paragraph 30 BtOG ergeben. Verweist auf Leitentscheidung OLG Nuernberg Beschluss 19.07.2023 Az. 15 Wx 988/23 (NJW-RR 2023 S. 1307; MDR 2023 S. 1460; BeckRS 2023 Nr. 25863): Verstoss gegen Paragraph 30 BtOG fuehrt nicht zur Nichtigkeit nach Paragraph 134 BGB; Testierfreiheit bleibt gewahrt; nur Sittenwidrigkeit nach Paragraph 138 BGB bei Ausnutzung der Vertrauensstellung. Klaert Herausgabepflichten nach dem Erbfall (Paragraph 1872 BGB, Konfusion), berufsrechtliche Folgen Paragraph 27 BtOG und Ausschlagungsfrist Paragraph 1944 BGB. Verwenden bei Fragen wie 'Darf ich als Berufsbetreuer erben', 'Testament zugunsten Betreuer', 'Schenkung Betreuer Erblasser', 'Paragraph 30 BtOG', 'Erbschein Betreuer'."
+description: "Prüfungslinie für betreuer als erbe im Betreuungsrecht."
 ---
 
 # Betreuer als Erbe und Beschenkter
 
 ## Wann diesen Skill aufrufen
 
-Immer dann, wenn die Frage steht, ob ein **Berufsbetreuer** im Sinne des § 19 Abs. 2 BtOG durch den Betreuten oder dessen Angehoerige durch Verfügung von Todes wegen (Erbe, Vermaechtnis, Auflage) oder durch lebzeitige Zuwendung bedacht werden darf, und welche zivil- und berufsrechtlichen Folgen sich daraus ergeben. Auch wenn die Frage nur dem Anschein nach erbrechtlich ist (Erbschein, Pflichtteil), aber der Erbe **gerade der Berufsbetreuer** des Erblassers ist.
+Immer dann, wenn die Frage steht, ob ein **Berufsbetreuer** im Sinne des § 19 Abs. 2 BtOG durch den Betreuten oder dessen Angehörige durch Verfügung von Todes wegen (Erbe, Vermächtnis, Auflage) oder durch lebzeitige Zuwendung bedacht werden darf, und welche zivil- und berufsrechtlichen Folgen sich daraus ergeben. Auch wenn die Frage nur dem Anschein nach erbrechtlich ist (Erbschein, Pflichtteil), aber der Erbe **gerade der Berufsbetreuer** des Erblassers ist.
 
 Der Skill greift nicht, wenn der Bedachte **ehrenamtlicher** Betreuer im Sinne der §§ 21, 22 BtOG ist — für diese gilt § 30 BtOG nicht. Hierzu siehe Skill `betreuer-registrierung` zur Abgrenzung.
+
+## Aktuelle Rechtsprechung (Stand 05/2026, Live-Verifikation zwingend)
+
+- BGH, Urteil vom 02.07.2025 - IV ZR 93/24: Strukturanaloge Bestätigung der Trennung von Berufsrecht und Erbrecht. Eine Zuwendung von Todes wegen an den behandelnden Arzt ist nicht deshalb unwirksam, weil sie gegen § 32 Abs. 1 S. 1 (M)BO-Ä verstößt. Die Berufsordnung ist kein Verbotsgesetz i.S.d. § 134 BGB; die Testierfreiheit (Art. 14 GG) überwiegt; § 138 BGB bleibt Einzelfallprüfung. Übertragbarkeit der Argumentationsstruktur auf § 30 BtOG-Konstellationen ist sehr nahe liegend, BGH hat zu § 30 BtOG aber noch nicht ausdrücklich entschieden. Quelle: bundesgerichtshof.de PM 2025/2025122.html.
+- OLG Nürnberg (Live-Verifikation erforderlich für Aktenzeichen und Datum): bestätigte vor BGH-Entscheidung bereits, dass § 30 BtOG kein § 134 BGB-Verbotsgesetz ist, das Testament wirksam bleibt, aber berufsrechtliche Sanktion droht.
+- Weitere Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über bundesgerichtshof.de, dejure.org oder openjur.de verifizieren.
 
 ## Pflichtbestandteile der Antwort
 
@@ -36,8 +42,8 @@ Sanktion: Widerruf der Registrierung als beruflicher Betreuer nach § 27 BtOG we
 
 ## II. Leitentscheidung OLG Nürnberg
 
-**OLG Nürnberg, Beschluss vom 19.07.2023 — Az. 15 Wx 988/23**
-Fundstellen: NJW-RR 2023, S. 1307; MDR 2023, S. 1460; BeckRS 2023 Nr. 25863.
+- Rechtsprechung live prüfen: Keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über amtliche oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+- Quellenregel: Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff; keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen.
 
 ### Drei amtliche Leitsätze
 
@@ -47,13 +53,13 @@ Fundstellen: NJW-RR 2023, S. 1307; MDR 2023, S. 1460; BeckRS 2023 Nr. 25863.
 
 ### Sachverhalt in Kuerze
 
-Ein Berufsbetreuer war von dem Betreuten in einem nur teilweise eigenhaendigen Testament als Alleinerbe eingesetzt. Das Nachlassgericht (AG Schwabach) versagte den Erbschein unter Hinweis auf § 30 BtOG und Formunwirksamkeit. Das OLG Nürnberg gab der Beschwerde des Betreuers statt.
+Ein Berufsbetreuer war von dem Betreuten in einem nur teilweise eigenhändigen Testament als Alleinerbe eingesetzt. Das Nachlassgericht (AG Schwabach) versagte den Erbschein unter Hinweis auf § 30 BtOG und Formunwirksamkeit. Das OLG Nürnberg gab der Beschwerde des Betreuers statt.
 
 ### Tragende Gründe
 
 - § 30 BtOG richtet sich **einseitig** an den Berufsbetreuer und ist Berufsrecht, kein Verbotsgesetz mit zivilrechtlicher Nichtigkeitsfolge.
 - Die Testierfreiheit (Art. 14 Abs. 1 GG i.V.m. § 1937 BGB) würde durch eine Nichtigkeitsfolge unverhältnismäßig eingeschraenkt.
-- Der Gesetzgeber hat bewusst **keine** mit § 14 HeimG a.F. bzw. § 7 WBVG vergleichbare Verbotsnorm geschaffen — für diese Vorschriften hatte der BGH (Beschluss vom 26.10.2011, IV ZB 33/10, BGHZ Bd. 191 S. 224) die Nichtigkeit des Testaments angenommen.
+- Rechtsprechung live prüfen: Keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über amtliche oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
 ## III. Trennung erbrechtliche Wirksamkeit / berufsrechtliche Sanktion
 
@@ -61,23 +67,23 @@ Ein Berufsbetreuer war von dem Betreuten in einem nur teilweise eigenhaendigen T
 |---|---|
 | Erbrechtliche Wirksamkeit | Testament und Vermögensübergang nach § 1922 BGB wirksam |
 | § 134 BGB | Keine Nichtigkeit |
-| § 138 BGB | Nur bei Hinzutreten besonderer Umstaende (Ausnutzung der Vertrauensstellung) |
+| § 138 BGB | Nur bei Hinzutreten besonderer Umstände (Ausnutzung der Vertrauensstellung) |
 | Berufsrecht | Verstoß gegen Berufspflichten; Widerruf der Registrierung nach § 27 BtOG möglich |
 | Nachträgliche Gestattung nach § 30 Abs. 3 BtOG | Nach Erbfall nicht mehr möglich |
 
 ## IV. Sittenwidrigkeit nach § 138 Abs. 1 BGB
 
-Im Einzelfall kann das Testament dennoch nichtig sein, wenn der Betreuer seine **gerichtlich verliehene Vertrauensstellung** und seinen Einfluss auf einen älteren, kranken und alleinstehenden Erblasser gezielt ausnutzt, um auf den Testierwillen einzuwirken. Maßgeblich ist die **vorhergehende Linie** des OLG Nürnberg: Urteil vom 07.01.2021, Az. 6 U 22/20.
+Rechtsprechung live prüfen: Keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über amtliche oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
-Die blosse gesetzgeberische Wertung des § 30 BtOG fuehrt aber **nicht automatisch** zur Sittenwidrigkeit — sonst würde die bewusste Entscheidung des Gesetzgebers gegen eine Verbotsnorm im Sinne des § 134 BGB unterlaufen.
+Die blosse gesetzgeberische Wertung des § 30 BtOG führt aber **nicht automatisch** zur Sittenwidrigkeit — sonst würde die bewusste Entscheidung des Gesetzgebers gegen eine Verbotsnorm im Sinne des § 134 BGB unterlaufen.
 
 Prüfungsraster im Einzelfall (kumulativ erforderlich):
 
-- besonderes Schutzbeduerfnis des Erblassers (Alter, Krankheit, Vereinsamung),
+- besonderes Schutzbedürfnis des Erblassers (Alter, Krankheit, Vereinsamung),
 - Nähe und Vertrauensstellung des Betreuers,
 - Initiative des Betreuers bei der Testamentserrichtung,
 - fehlende sachliche Rechtfertigung der Zuwendung,
-- gegebenenfalls Isolation des Erblassers gegenüber Angehoerigen.
+- gegebenenfalls Isolation des Erblassers gegenüber Angehörigen.
 
 ## V. Herausgabepflichten nach dem Erbfall
 
@@ -85,7 +91,7 @@ Prüfungsraster im Einzelfall (kumulativ erforderlich):
 
 Da das Testament wirksam ist, scheidet der Erbschaftsanspruch nach § 2018 BGB aus: der Berufsbetreuer ist **wahrer Erbe**, nicht Erbschaftsbesitzer mit angemasstem Recht. Auch §§ 2287, 2288 BGB scheiden aus, da keine lebzeitige Schenkung vorliegt. Eine Leistungskondiktion nach § 812 Abs. 1 S. 1 Alt. 1 BGB scheitert am wirksamen Rechtsgrund.
 
-**Pflichtteilsansprueche** nach §§ 2303 ff. BGB der pflichtteilsberechtigten Angehoerigen bleiben **unberuehrt** — diese werden durch § 30 BtOG nicht tangiert.
+**Pflichtteilsansprueche** nach §§ 2303 ff. BGB der pflichtteilsberechtigten Angehörigen bleiben **unberuehrt** — diese werden durch § 30 BtOG nicht tangiert.
 
 ### 2. Betreuungsrechtlich: Schlussabwicklung nach § 1872 BGB
 
@@ -96,11 +102,11 @@ Mit dem Tod des Betreuten endet das Amt des Betreuers ipso iure (§ 1871 Abs. 1 
 
 **Pointe:** Erbe ist der Berufsbetreuer selbst. Gläubiger und Schuldner der Vermögensherausgabe fallen in einer Person zusammen — der Anspruch nach § 1872 BGB erlischt durch **Konfusion** (vgl. § 1976 BGB analog).
 
-Die Schlussrechnungslegung gegenüber dem **Betreuungsgericht** (§ 1872 Abs. 4 S. 2 BGB) bleibt jedoch bestehen, weil sie der Prüfung des Vermögensbestands waehrend der Betreuung dient. Praktisch bedeutsam: das Gericht kann hier berufsrechtliche Auffälligkeiten feststellen und an die Betreuungsbehörde melden.
+Die Schlussrechnungslegung gegenüber dem **Betreuungsgericht** (§ 1872 Abs. 4 S. 2 BGB) bleibt jedoch bestehen, weil sie der Prüfung des Vermögensbestands während der Betreuung dient. Praktisch bedeutsam: das Gericht kann hier berufsrechtliche Auffälligkeiten feststellen und an die Betreuungsbehörde melden.
 
 ### 3. Sonderkonstellation: Betreuer als Miterbe
 
-Ist der Betreuer **Miterbe** in einer Erbengemeinschaft (§ 2032 BGB) und verwaltet faktisch weiter Vermögen, so ist er nach OLG Hamm, Urteil vom 02.03.2017, Az. 10 U 9/16, **gegenüber den Miterben** aus §§ 1872, 1865 BGB sowie aus GoA / § 666 BGB zur Auskunft und Rechnungslegung verpflichtet — bezogen auf die Abwicklung der Erbengemeinschaft, nicht auf den Erbteil selbst.
+Rechtsprechung live prüfen: Keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über amtliche oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
 ### 4. Übersicht mögliche Ansprueche Dritter
 
@@ -138,15 +144,36 @@ Die Faustformel "Berufsbetreuer darf nicht erben" ist daher zu pauschal und in d
 
 ## VIII. Offene Folgefragen
 
-- Wie verhalten sich andere OLG zur Frage der Sittenwidrigkeit ohne notarielle Beurkundung — eine Klaerung durch den BGH steht aus.
+- Wie verhalten sich andere OLG zur Frage der Sittenwidrigkeit ohne notarielle Beurkundung — eine Klärung durch den BGH steht aus.
 - Was geschieht bei späterer Nichtigerklärung des Testaments durch Anfechtung (§§ 2078, 2080 BGB)? Dann greifen die Rückabwicklungsmechanismen über § 2018 BGB ein.
 - Wie wirkt die Konfusion auf Drittansprueche (Pflichtteilsbelastung, Pflichtteilsergänzung nach § 2325 BGB)?
 
 ## IX. Zitierhinweise im Antworttext
 
-- OLG Nürnberg Beschluss vom 19.07.2023 Az. 15 Wx 988/23, NJW-RR 2023 S. 1307; MDR 2023 S. 1460; BeckRS 2023 Nr. 25863.
-- OLG Nürnberg Urteil vom 07.01.2021 Az. 6 U 22/20 (Sittenwidrigkeit bei Ausnutzung der Vertrauensstellung).
-- BGH Beschluss vom 26.10.2011 Az. IV ZB 33/10, BGHZ Bd. 191 S. 224 (zu § 14 HeimG a.F.).
-- OLG Hamm Urteil vom 02.03.2017 Az. 10 U 9/16 (Betreuer-Miterbe, Auskunfts- und Rechnungslegungspflicht).
+- Quellenregel: Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff; keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen.
+- Rechtsprechung live prüfen: Keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über amtliche oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+- Rechtsprechung live prüfen: Keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über amtliche oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+- Rechtsprechung live prüfen: Keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über amtliche oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
 Pinpoint-Zitierung mit Randnummer und juengere Entscheidungen zuerst.
+
+## Normen und Rechtsprechung
+
+### Kuratierte Normen-Bibliothek
+
+- § 278 FamFG
+- § 5 BtOG
+- § 274 FamFG
+- § 280 FamFG
+- § 30 BtOG
+- § 23 BtOG
+- § 8 BtOG
+- § 293 FamFG
+- § 292 FamFG
+- § 299 FamFG
+- § 312 FamFG
+- § 319 FamFG
+
+### Leitentscheidungen
+
+- BGH XII ZB 174/18

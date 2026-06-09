@@ -1,19 +1,12 @@
 ---
 name: ios-debugger-agent
-description: Debug the current iOS project on a booted simulator with XcodeBuildMCP.
-risk: safe
-source: "Dimillian/Skills (MIT)"
-date_added: "2026-03-25"
+description: Use XcodeBuildMCP to build, run, launch, and debug the current iOS project on a booted simulator. Trigger when asked to run an iOS app, interact with the simulator UI, inspect on-screen state, capture logs/console output, or diagnose runtime behavior using XcodeBuildMCP tools.
 ---
 
 # iOS Debugger Agent
 
 ## Overview
 Use XcodeBuildMCP to build and run the current project scheme on a booted iOS simulator, interact with the UI, and capture logs. Prefer the MCP tools for simulator control, logs, and view inspection.
-
-## When to Use
-- When the user asks to run, debug, or inspect an iOS app on a simulator.
-- When you need simulator UI interaction, screenshots, or runtime logs via XcodeBuildMCP.
 
 ## Core Workflow
 Follow this sequence unless the user asks for a narrower action.
@@ -31,8 +24,6 @@ Follow this sequence unless the user asks for a narrower action.
 
 ### 3) Build + run (when requested)
 - Call `mcp__XcodeBuildMCP__build_run_sim`.
-- **If the build fails**, check the error output and retry (optionally with `preferXcodebuild: true`) or escalate to the user before attempting any UI interaction.
-- **After a successful build**, verify the app launched by calling `mcp__XcodeBuildMCP__describe_ui` or `mcp__XcodeBuildMCP__screenshot` before proceeding to UI interaction.
 - If the app is already built and only launch is requested, use `mcp__XcodeBuildMCP__launch_app_sim`.
 - If bundle id is unknown:
   1) `mcp__XcodeBuildMCP__get_sim_app_path`
@@ -56,8 +47,3 @@ Use these when asked to inspect or interact with the running app.
 - If build fails, ask whether to retry with `preferXcodebuild: true`.
 - If the wrong app launches, confirm the scheme and bundle id.
 - If UI elements are not hittable, re-run `describe_ui` after layout changes.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

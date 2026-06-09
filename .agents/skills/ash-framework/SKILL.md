@@ -1,164 +1,130 @@
 ---
 name: ash-framework
-description: Comprehensive Ash framework guidelines for Elixir applications. Use when working with Ash resources, domains, actions, queries, changesets, policies, calculations, or aggregates. Covers code interfaces, error handling, validations, changes, relationships, and authorization. Read documentation before using Ash features - do not assume prior knowledge.
+description: "Ash Framework — resources, actions, policies, aggregates, calculations, AshPhoenix.Form, LiveView, migrations. Use when generating resources via mix ash.codegen, editing changes, checks, types, validations, or domain code interfaces."
+effort: medium
+user-invocable: false
 ---
 
-# Ash Framework Guidelines
+# Ash Framework Reference
 
-Ash is a declarative framework for modeling domains with resources. **Read documentation before using features.**
+Reference for Ash Framework in Phoenix/LiveView projects.
+Ash complements Phoenix/Ecto — LiveView, security, and OTP Iron Laws still apply.
+Only data access patterns shift toward Ash actions and domain code interfaces.
 
-## Code Interfaces
+## Iron Laws
 
-Define code interfaces on domains - avoid direct `Ash.get!/2` calls in LiveViews/Controllers:
+1. **USE DOMAIN CODE INTERFACES** — Never call `Ash.create/Ash.read` directly in LiveViews or Controllers; use domain code interfaces: `MyApp.Accounts.register_user()` not `Ash.create(User, attrs)`
+2. **SET ACTOR/SCOPE AT QUERY PREP, NOT EXECUTION** — Pass `actor:` or `scope:` to
+   `for_read/for_create/for_action` (prep), NOT to `Ash.read!/Ash.create!` (execution);
+   execution-level actor bypasses row-level policy evaluation. If project uses `Ash.Scope`,
+   pass `scope:` consistently instead of bare `actor:` — do not mix styles
+3. **GENERATORS FIRST** — Before writing Ash code manually, run `mix ash.gen.resource` or `mix ash.gen.domain` with `--yes`; check `mix help ash.gen.<task>` for options
+4. **CODEGEN AFTER RESOURCE CHANGES** — Always run `mix ash.codegen` after modifying resources; this generates migrations from resource snapshots — never write AshPostgres migrations by hand
+5. **ACTIONS OVER FUNCTIONS** — Put business logic in named actions, not domain functions; expose via code interfaces defined on the domain
+6. **NEVER EDIT RESOURCE SNAPSHOTS** — `priv/resource_snapshots/` is owned exclusively by `mix ash.codegen`; manual edits corrupt migration tracking
+7. **NO DIRECT `Repo.*` IN ASH PROJECTS** — `Repo.all/get/insert` bypass Ash policies and notifications; use domain code interfaces. Any `Repo` call in an Ash project is an escape hatch and must be documented
 
-```elixir
-# In domain
-resource Post do
-  define :get_post, action: :read, get_by: [:id]
-  define :list_posts, action: :read
-  define :create_post, action: :create, args: [:title]
-end
+## Quick Reference
 
-# Usage - prefer query option over manual Ash.Query building
-posts = MyApp.Blog.list_posts!(
-  query: [filter: [status: :published], sort: [published_at: :desc], limit: 10],
-  load: [author: :profile, comments: [:author]]
-)
-
-post = MyApp.Blog.get_post!(id, load: [comments: [:author]])
-```
-
-**Authorization functions** are auto-generated: `can_create_post?(actor)`, `can_update_post?(actor, post)`.
-
-**Using scopes**: Pass `scope: socket.assigns.scope` in LiveViews; use `context` parameter in hooks.
-
-## Actions
-
-- Create specific, well-named actions (not generic CRUD)
-- Put business logic inside action definitions
-- Use `before_action/after_action` for same-transaction logic
-- Use `before_transaction/after_transaction` for external calls
+### Domain Code Interface Pattern
 
 ```elixir
-actions do
-  create :sign_up do
-    argument :invite_code, :string, allow_nil?: false
-    change set_attribute(:joined_at, &DateTime.utc_now/0)
-    change relate_actor(:creator)
+# Domain definition
+defmodule MyApp.Accounts do
+  use Ash.Domain
+
+  resources do
+    resource MyApp.Accounts.User do
+      define :register_user, action: :create, args: [:email, :password]
+      define :get_user_by_email, action: :read, get_by: [:email]
+    end
   end
 end
+
+# In LiveView/Controller — always via domain, never Ash.create directly
+{:ok, user} = MyApp.Accounts.register_user(email, password, actor: nil)
+user = MyApp.Accounts.get_user_by_email!(email, actor: current_user)
 ```
 
-## Querying
-
-**Important**: `Ash.Query.filter/2` is a macro - you must `require Ash.Query`:
+### Authorization — Actor/Scope at Query Prep
 
 ```elixir
-require Ash.Query
-
-Post
-|> Ash.Query.filter(status == :published)
-|> Ash.Query.sort(published_at: :desc)
-|> Ash.Query.load([:author, :comments])
-|> Ash.Query.limit(10)
+# CORRECT — actor at query prep, policies evaluated per-row
+MyApp.Post
+|> Ash.Query.for_read(:list_published, %{}, actor: current_user)
 |> Ash.read!()
+
+# CORRECT with Ash.Scope (carries actor + tenant + context; use if project adopts it)
+MyApp.Post
+|> Ash.Query.for_read(:list_published, %{}, scope: scope)
+|> Ash.read!()
+
+# WRONG — actor at execution bypasses row-level policy evaluation
+MyApp.Post
+|> Ash.Query.for_read(:list_published)
+|> Ash.read!(actor: current_user)
 ```
 
-## Error Handling
+### Ash.Scope — When the Project Uses It
 
-- Use `!` variations (`Ash.create!`, `Domain.action!`) when expecting success
-- Prefer `!` over pattern matching `{:ok, result} = ...`
-- Error classes: `Forbidden` > `Invalid` > `Framework` > `Unknown`
-
-## Validations
+`Ash.Scope` bundles `actor + tenant + context` into a single struct passed through actions.
+Implement `Ash.Scope.ToOpts` on a project-defined scope struct:
 
 ```elixir
-# Built-in validations
-validate compare(:age, greater_than_or_equal_to: 18)
-validate match(:email, ~r/@/)
-validate one_of(:status, [:active, :pending])
-
-# Conditional validation
-validate present(:phone) do
-  where eq(:contact_method, "phone")
-end
-
-# Skip if prior validations failed
-validate expensive_check() do
-  only_when_valid? true
-end
-```
-
-**Avoid redundant validations** - don't duplicate attribute constraints (`allow_nil? false` already validates presence).
-
-## Changes
-
-```elixir
-# Built-in changes
-change set_attribute(:status, "pending")
-change relate_actor(:creator)
-change atomic_update(:counter, expr(counter + 1))
-
-# Custom change module
-defmodule MyApp.Changes.Slugify do
-  use Ash.Resource.Change
-
-  def change(changeset, _opts, _context) do
-    title = Ash.Changeset.get_attribute(changeset, :title)
-    slug = title |> String.downcase() |> String.replace(~r/[^a-z0-9]+/, "-")
-    Ash.Changeset.change_attribute(changeset, :slug, slug)
-  end
+defimpl Ash.Scope.ToOpts, for: MyApp.Scope do
+  def get_actor(%{current_user: u}), do: {:ok, u}
+  def get_tenant(%{current_tenant: t}), do: {:ok, t}
+  def get_context(%{locale: l}), do: {:ok, %{shared: %{locale: l}}}
+  def get_tracer(_), do: :error
+  def get_authorize?(_), do: :error
 end
 ```
 
-**Prefer custom modules** over anonymous functions for changes, validations, preparations.
+**Detection**: if the project has a `Scope` module implementing `Ash.Scope.ToOpts`, use
+`scope:` everywhere instead of bare `actor:`. Do NOT mix the two styles in the same codebase.
+See `mix usage_rules.docs Ash.Scope` for full protocol spec.
 
-## Preparations
+### File Conventions (from `mix ash.gen.*`)
 
-Modify queries before execution:
+| File           | Location                          | Behaviour                     |
+| -------------- | --------------------------------- | ----------------------------- |
+| Changes        | `lib/app/ctx/changes/name.ex`     | `use Ash.Resource.Change`     |
+| Policy Checks  | `lib/app/ctx/checks/name.ex`      | `use Ash.Policy.Check`        |
+| Custom Actions | `lib/app/ctx/actions/name.ex`     | generic action logic          |
+| Custom Types   | `lib/app/ctx/types/name.ex`       | `use Ash.Type`                |
+| Validations    | `lib/app/ctx/validations/name.ex` | `use Ash.Resource.Validation` |
 
-```elixir
-prepare build(sort: [created_at: :desc])
-prepare build(filter: [deleted: false])
+### Generator Workflow
 
-# Conditional preparation
-prepare build(filter: [visible: true]) do
-  where argument_equals(:include_hidden, false)
-end
+```bash
+mix ash.gen.resource MyApp.Accounts.User --yes
+mix ash.gen.domain MyApp.Accounts --yes
+mix ash.codegen        # reads resource snapshots → generates migration
+mix ash.migrate
 ```
 
-## Data Layers
+## Research
 
-```elixir
-use Ash.Resource,
-  domain: MyApp.Blog,
-  data_layer: AshPostgres.DataLayer  # or :embedded, Ash.DataLayer.Ets
+Prefer the highest-fidelity source available:
 
-postgres do
-  table "posts"
-  repo MyApp.Repo
-end
-```
+1. **Tidewave** (exact version from `mix.lock`):
 
-## Migrations
+   ```
+   mcp__tidewave__get_docs(module: "Ash.Resource")
+   mcp__tidewave__get_docs(module: "AshPhoenix.Form")
+   ```
 
-Run `mix ash.codegen <name>` after modifying resources. Use `--dev` during development, final name at end.
+2. **usage_rules** (project-synced to your installed ash_* dep versions):
 
-## Testing
+   ```bash
+   mix usage_rules.search_docs "<topic>" -p ash -p ash_phoenix -p ash_postgres -p ash_authentication -p ash_oban
+   mix usage_rules.docs Ash.Resource
+   ```
 
-- Test through code interfaces
-- Use `authorize?: false` when auth isn't the focus
-- Use `Ash.can?` to test policies
-- Use raising `!` functions
+3. **WebFetch hexdocs.pm** (fallback when neither is available):
 
-**Prevent deadlocks** - use unique values for identity fields in concurrent tests:
+   ```
+   WebFetch(url: "https://hexdocs.pm/ash/Ash.Resource.html", prompt: "Extract module docs.")
+   ```
 
-```elixir
-%{email: "test-#{System.unique_integer([:positive])}@example.com"}
-```
-
-## References
-
-- **Authorization & Policies**: See [references/policies.md](references/policies.md)
-- **Relationships**: See [references/relationships.md](references/relationships.md)
-- **Calculations & Aggregates**: See [references/calculations.md](references/calculations.md)
+If `usage_rules` is not configured, the SessionStart hook suggests how to install it.

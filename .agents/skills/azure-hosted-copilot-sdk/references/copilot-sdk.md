@@ -23,15 +23,13 @@ azd init --template azure-samples/copilot-sdk-service
 
 ## Getting Current Examples
 
-Use `github-mcp-server-get_file_contents` with `owner: "github"`, `repo: "copilot-sdk"` to read files directly from the repo and get current SDK documentation and code examples.
-
-If the **context7** MCP server is available, it can also be used to query SDK docs:
+Use **context7** MCP tools as the PRIMARY way to get SDK documentation and code examples:
 
 1. Call `context7-resolve-library-id` with `libraryName: "copilot-sdk"` to find the library ID
 2. Call `context7-query-docs` with the resolved ID and a query matching the user's goal
 3. Select the most relevant snippets for the user's scenario
 
-> 💡 **Tip:** If context7 is not installed, instruct the user to add it. For a quick one-off use: `npx -y @upstash/context7-mcp@latest`. To persist it, add `@upstash/context7-mcp` as an entry in their MCP server configuration file.
+> 💡 **Tip:** Fall back to `github-mcp-server-get_file_contents` with `owner: "github"`, `repo: "copilot-sdk"` to read files directly from the repo.
 
 ## Three Model Paths
 
@@ -39,7 +37,7 @@ If the **context7** MCP server is available, it can also be used to query SDK do
 |------|--------|------|
 | GitHub default | No `model` param | `GITHUB_TOKEN` |
 | GitHub specific | `model: "<name>"` | `GITHUB_TOKEN` |
-| Azure BYOM | `model` + `provider` with `bearerToken` | `DefaultAzureCredential` (local dev) / `ManagedIdentityCredential` (production) |
+| Azure BYOM | `model` + `provider` with `bearerToken` | `DefaultAzureCredential` |
 
 **Model discovery:**
 - GitHub models: call `listModels()` on the SDK client

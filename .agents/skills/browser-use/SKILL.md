@@ -1,97 +1,141 @@
 ---
 name: browser-use
-description: >-
-  You are an expert in Browser Use, the Python library that lets AI agents
-  control a web browser. You help developers build agents that can navigate
-  websites, fill forms, click buttons, extract data, and complete multi-step
-  web tasks — using vision and DOM understanding to interact with any website
-  like a human would.
-license: Apache-2.0
-compatibility: ''
-metadata:
-  author: terminal-skills
-  version: 1.0.0
-  category: AI & Machine Learning
-  tags:
-    - browser
-    - automation
-    - agent
-    - web
-    - scraping
-    - ai
-    - playwright
+description: Browser automation using Playwright MCP. Navigate websites, fill forms, click elements, take screenshots, and extract data. Use when tasks require web browsing, form submission, web scraping, UI testing, or any browser interaction.
 ---
 
-# Browser Use — AI Browser Automation Agent
+# Browser Automation
 
-You are an expert in Browser Use, the Python library that lets AI agents control a web browser. You help developers build agents that can navigate websites, fill forms, click buttons, extract data, and complete multi-step web tasks — using vision and DOM understanding to interact with any website like a human would.
+Automate browser interactions via Playwright MCP server.
 
-## Core Capabilities
+## Server Lifecycle
 
-```python
-from browser_use import Agent
-from langchain_openai import ChatOpenAI
+### Start Server
+```bash
+# Using helper script (recommended)
+bash scripts/start-server.sh
 
-agent = Agent(
-    task="Go to amazon.com, search for 'mechanical keyboard', and find the best-rated one under $100",
-    llm=ChatOpenAI(model="gpt-4o"),
-)
-result = await agent.run()
-print(result)  # "The best-rated mechanical keyboard under $100 is..."
-
-# Multi-step tasks
-agent = Agent(
-    task="""
-    1. Go to github.com/myorg/myrepo
-    2. Click on Issues tab
-    3. Create a new issue with title 'Update dependencies' and body 'Run npm audit fix'
-    4. Add the label 'maintenance'
-    """,
-    llm=ChatOpenAI(model="gpt-4o"),
-)
-await agent.run()
-
-# With custom browser config
-from browser_use import BrowserConfig
-
-config = BrowserConfig(
-    headless=True,
-    proxy="http://proxy:8080",
-    cookies=[{"name": "session", "value": "abc123", "domain": ".example.com"}],
-)
-agent = Agent(task="...", llm=llm, browser_config=config)
-
-# Extract structured data
-from pydantic import BaseModel
-
-class Product(BaseModel):
-    name: str
-    price: float
-    rating: float
-
-agent = Agent(
-    task="Go to bestbuy.com and find the top 5 laptops. Return structured data.",
-    llm=ChatOpenAI(model="gpt-4o"),
-    output_model=list[Product],
-)
-result = await agent.run()
-# result is list[Product] — validated Pydantic objects
+# Or manually
+npx @playwright/mcp@latest --port 8808 --shared-browser-context &
 ```
 
-## Installation
+### Stop Server
+```bash
+# Using helper script (closes browser first)
+bash scripts/stop-server.sh
+
+# Or manually
+python3 scripts/mcp-client.py call -u http://localhost:8808 -t browser_close -p '{}'
+pkill -f "@playwright/mcp"
+```
+
+### When to Stop
+- **End of task**: Stop when browser work is complete
+- **Long sessions**: Keep running if doing multiple browser tasks
+- **Errors**: Stop and restart if browser becomes unresponsive
+
+**Important:** The `--shared-browser-context` flag is required to maintain browser state across multiple mcp-client.py calls. Without it, each call gets a fresh browser context.
+
+## Quick Reference
+
+### Navigation
 
 ```bash
-pip install browser-use
-playwright install
+# Go to URL
+python3 scripts/mcp-client.py call -u http://localhost:8808 -t browser_navigate \
+  -p '{"url": "https://example.com"}'
+
+# Go back
+python3 scripts/mcp-client.py call -u http://localhost:8808 -t browser_navigate_back -p '{}'
 ```
 
-## Best Practices
+### Get Page State
 
-1. **Vision model** — Use GPT-4o or Claude for best browser understanding; sees screenshots + DOM
-2. **Structured output** — Pass `output_model` for typed extraction; Pydantic validation on results
-3. **Headless mode** — Use `headless=True` for server/CI; `False` for debugging to watch the agent
-4. **Cookies/auth** — Pre-set cookies for authenticated sessions; agent operates as logged-in user
-5. **Task decomposition** — Write tasks as numbered steps for complex flows; agent follows the sequence
-6. **Proxy support** — Use proxies for scraping at scale; rotate IPs to avoid blocks
-7. **Retry on failure** — Browser Use auto-retries failed interactions; configure max attempts
-8. **Combine with APIs** — Use browser for sites without APIs; prefer APIs when available (faster, cheaper)
+```bash
+# Accessibility snapshot (returns element refs for clicking/typing)
+python3 scripts/mcp-client.py call -u http://localhost:8808 -t browser_snapshot -p '{}'
+
+# Screenshot
+python3 scripts/mcp-client.py call -u http://localhost:8808 -t browser_take_screenshot \
+  -p '{"type": "png", "fullPage": true}'
+```
+
+### Interact with Elements
+
+Use `ref` from snapshot output to target elements:
+
+```bash
+# Click element
+python3 scripts/mcp-client.py call -u http://localhost:8808 -t browser_click \
+  -p '{"element": "Submit button", "ref": "e42"}'
+
+# Type text
+python3 scripts/mcp-client.py call -u http://localhost:8808 -t browser_type \
+  -p '{"element": "Search input", "ref": "e15", "text": "hello world", "submit": true}'
+
+# Fill form (multiple fields)
+python3 scripts/mcp-client.py call -u http://localhost:8808 -t browser_fill_form \
+  -p '{"fields": [{"ref": "e10", "value": "john@example.com"}, {"ref": "e12", "value": "password123"}]}'
+
+# Select dropdown
+python3 scripts/mcp-client.py call -u http://localhost:8808 -t browser_select_option \
+  -p '{"element": "Country dropdown", "ref": "e20", "values": ["US"]}'
+```
+
+### Wait for Conditions
+
+```bash
+# Wait for text to appear
+python3 scripts/mcp-client.py call -u http://localhost:8808 -t browser_wait_for \
+  -p '{"text": "Success"}'
+
+# Wait for time (ms)
+python3 scripts/mcp-client.py call -u http://localhost:8808 -t browser_wait_for \
+  -p '{"time": 2000}'
+```
+
+### Execute JavaScript
+
+```bash
+python3 scripts/mcp-client.py call -u http://localhost:8808 -t browser_evaluate \
+  -p '{"function": "return document.title"}'
+```
+
+### Multi-Step Playwright Code
+
+For complex workflows, use `browser_run_code` to run multiple actions in one call:
+
+```bash
+python3 scripts/mcp-client.py call -u http://localhost:8808 -t browser_run_code \
+  -p '{"code": "async (page) => { await page.goto(\"https://example.com\"); await page.click(\"text=Learn more\"); return await page.title(); }"}'
+```
+
+**Tip:** Use `browser_run_code` for complex multi-step operations that should be atomic (all-or-nothing).
+
+## Workflow: Form Submission
+
+1. Navigate to page
+2. Get snapshot to find element refs
+3. Fill form fields using refs
+4. Click submit
+5. Wait for confirmation
+6. Screenshot result
+
+## Workflow: Data Extraction
+
+1. Navigate to page
+2. Get snapshot (contains text content)
+3. Use browser_evaluate for complex extraction
+4. Process results
+
+## Tool Reference
+
+See [references/playwright-tools.md](references/playwright-tools.md) for complete tool documentation.
+
+## Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| Element not found | Run browser_snapshot first to get current refs |
+| Click fails | Try browser_hover first, then click |
+| Form not submitting | Use `"submit": true` with browser_type |
+| Page not loading | Increase wait time or use browser_wait_for |

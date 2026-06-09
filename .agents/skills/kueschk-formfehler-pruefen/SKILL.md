@@ -1,9 +1,30 @@
 ---
 name: kueschk-formfehler-pruefen
-description: "Formfehler-Prüfung bei Kündigungen: Schriftform § 623 BGB; Vollmachtsruege § 174 BGB bei fehlender Originalvollmacht; Anhoerung Betriebsrat § 102 BetrVG; Massenentlassung §§ 17 und 18 KSchG mit Anzeigepflicht bei Bundesagentur."
+description: "Formfehler-Prüfung bei Kündigungen: Schriftform § 623 BGB: Vollmachtsruege § 174 BGB bei fehlender Originalvollmacht; Anhörung Betriebsrat § 102 BetrVG; Massenentlassung §§ 17 und 18 KSchG mit Anzei..."
 ---
 
-# Formfehler bei der Kündigung prüfen
+# Formfehler-Prüfung bei Kündigungen: Schriftform § 623 BGB
+
+
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: die im Plugin-Kontext einschlägigen Normen über gesetze-im-internet.de, dejure.org, eur-lex.europa.eu und die amtlichen Bundes-/Landesportale live prüfen — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+**Fokus:** Formfehler-Prüfung bei Kündigungen: Schriftform § 623 BGB; Vollmachtsruege § 174 BGB bei fehlender Originalvollmacht; Anhörung Betriebsrat § 102 BetrVG; Massenentlassung §§ 17 und 18 KSchG mit Anzeigepflicht bei Bundesagentur.
+
+### Formfehler bei der Kündigung prüfen
+
+## Fachlicher Kern — Arbeitsrecht
+- **Problemfokus dieses Skills:** Bleibe beim konkreten Titel `Formfehler bei der Kündigung prüfen` und löse die dort angelegte Fachfrage; arbeite mit konkreten Tatbestandsmerkmalen, Beweisfragen und dem unmittelbar benötigten Arbeitsprodukt. Routingfragen bleiben Hilfsmittel, wenn Frist, Zuständigkeit oder Verfahrensart offen sind.
+- **Normenradar:** BGB §§ 611a, 613a, 615, 623; KSchG §§ 1, 4, 7; TzBfG §§ 14, 15, 16; AGG §§ 1, 3, 7, 15, 22; EntgTranspG §§ 3, 5, 7; BUrlG §§ 1, 3, 7; BetrVG §§ 87, 99, 102; ArbZG; NachwG; SGB IX §§ 164, 167, 168.
+- **Verifizierte Anker:** BAG, Urteil vom 23.10.2025 - 8 AZR 300/24 (Entgeltgleichheit, Paarvergleich, Beweislast, bundesarbeitsgericht.de); BAG, Urteil vom 03.06.2025 - 9 AZR 104/24 (kein Verzicht auf gesetzlichen Mindesturlaub im bestehenden Arbeitsverhältnis); bei Kündigungszugang immer § 623 BGB, Zugang nach § 130 BGB, Dreiwochenfrist §§ 4, 7 KSchG und Beweis des konkreten Umschlags trennen.
+- **Arbeitsmodus:** Zuerst Status, Zugang, Frist, Beteiligungsrechte, Sonderkündigungsschutz, Beweislast und prozessualen nächsten Schritt sichern; dann erst Materiellrecht vertiefen.
+- **Outputpflicht:** Fristenblatt, Zugangsmatrix, Beweisangebot, Mandantenmail, Betriebsrats-/Gegnerbrief oder Klage-/Erwiderungsbaustein.
+- **Fehlerbremse:** Tragende Normen/Entscheidungen live oder aus der Akte verifizieren; Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei prüfbarer Quelle. Keine BeckRS-, juris-, Kommentar- oder Aufsatz-Blindzitate aus Modellwissen.
 
 ## Triage zu Beginn — kläre sofort nach Zugang der Kündigung
 
@@ -25,16 +46,7 @@ description: "Formfehler-Prüfung bei Kündigungen: Schriftform § 623 BGB; Voll
 
 ## Aktuelle Rechtsprechung
 
-- BAG, Urt. v. 14.04.2011 – 6 AZR 727/09, NZA 2011, 806 — Kündigung per Telefax verstößt gegen § 623 BGB; ein Telefax enthält zwar eine Kopie der Unterschrift, aber nicht die eigenhändig unterzeichnete Originalurkunde; die Nichtigkeit nach § 125 BGB ist nicht heilbar.
-- BAG, Urt. v. 14.11.2013 – 6 AZR 688/12, NZA 2014, 196 — Vollmachtsrüge nach § 174 BGB: Die Zurückweisung muss unverzüglich nach Zugang der Kündigung erfolgen; „unverzüglich" bedeutet ohne schuldhaftes Zögern (§ 121 Abs. 1 BGB); mehr als eine Woche ohne besonderes Hindernis ist regelmäßig nicht mehr unverzüglich.
-- BAG, Urt. v. 22.09.2016 – 2 AZR 700/15, NZA 2017, 175 — Betriebsratsanhörung nach § 102 BetrVG: Unvollständige Mitteilung der Sozialdaten des Arbeitnehmers oder des Kündigungsgrunds macht die Anhörung fehlerhaft; die Kündigung ist dann nach § 102 Abs. 1 Satz 3 BetrVG unwirksam, auch wenn der Arbeitgeber den BR informiert hat.
-- BAG, Urt. v. 13.06.2019 – 6 AZR 459/18, NZA 2019, 1270 — Massenentlassungsanzeige nach § 17 KSchG: Die Anzeige muss vor Zugang der Kündigung bei der Agentur für Arbeit eingegangen sein; eine nach Ausspruch der Kündigung eingegangene Anzeige heilt den Fehler nicht; alle betroffenen Kündigungen sind unwirksam.
-
-## Kommentarliteratur
-
-- ErfK/Müller-Glöge, 24. Aufl. 2024, § 623 BGB Rn. 1–15 (Schriftformerfordernis; Fehlerfolge; Heilbarkeit)
-- ErfK/Kiel, 24. Aufl. 2024, § 102 BetrVG Rn. 50–90 (Anhörungsinhalt; Fehlerfolge; Wiederholung der Anhörung)
-- Schaub/Linck, Arbeitsrechts-Handbuch, 19. Aufl. 2021, § 124 Rn. 1–25 (Formfehler Kündigung; Vollmachtsrüge; BR-Anhörung)
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
 ## Prüfkatalog Formfehler
 
@@ -44,7 +56,7 @@ Die Kündigung eines Arbeitsverhältnisses bedarf der **Schriftform** (§ 623 BG
 - Mündliche Kündigung
 - Kündigung per E-Mail
 - Kündigung per SMS oder WhatsApp
-- Kündigung per Fax (nicht ausreichend — BAG, Urt. v. 14.04.2011 – 6 AZR 727/09)
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 - Digitale Signatur ohne eigenhändige Unterschrift
 
 Erforderlich ist das **Original mit eigenhändiger Unterschrift** (§ 126 Abs. 1 BGB). Eine Kopie oder ein Scan genügt nicht.
@@ -57,7 +69,7 @@ Erforderlich ist das **Original mit eigenhändiger Unterschrift** (§ 126 Abs. 1
 
 Hat nicht der Arbeitgeber selbst, sondern ein Vertreter (Personalleiter, HR-Managerin, Prokurist) die Kündigung unterschrieben, muss dem Kündigungsschreiben eine **Originalvollmacht** beigefügt sein. Liegt keine Vollmacht bei, kann der Arbeitnehmer die Kündigung **unverzüglich zurückweisen** (§ 174 Satz 1 BGB).
 
-**Unverzüglich:** In der Praxis maximal eine Woche nach Zugang. Länger = Rügerecht verloren (BAG, Urt. v. 14.11.2013 – 6 AZR 688/12).
+Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
 **Ausnahme § 174 Satz 2 BGB:** Hatte der Arbeitgeber den Bevollmächtigten gegenüber dem Arbeitnehmer als solchen bekannt gemacht (z.B. offizieller Personalleiter, der als solcher im Betrieb bekannt ist), scheidet die Vollmachtsrüge aus.
 
@@ -85,32 +97,32 @@ Bei Massenentlassungen (Schwellenwerte: z.B. mehr als fünf Arbeitnehmer in Betr
 - Den Betriebsrat konsultieren (§ 17 Abs. 2 KSchG)
 - Die Entlassungen der Bundesagentur für Arbeit **vor Zugang der Kündigung** anzeigen (§ 17 Abs. 1 KSchG)
 
-Ohne wirksame Massenentlassungsanzeige sind die Kündigungen unwirksam (BAG, Urt. v. 13.06.2019 – 6 AZR 459/18).
+Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
 ## Entscheidungsbaum: Formfehler-Prüfung
 
 ```
 Kündigung erhalten?
 └─ Schriftform § 623 BGB?
-    ├─ E-Mail/Fax/Scan → NICHTIG nach § 125 BGB; sofort rügen
-    └─ Original mit Unterschrift → weiter prüfen
+ ├─ E-Mail/Fax/Scan → NICHTIG nach § 125 BGB; sofort rügen
+ └─ Original mit Unterschrift → weiter prüfen
 
 Wer hat unterschrieben?
 ├─ Arbeitgeber selbst → kein Problem
 └─ Vertreter → Vollmacht beigefügt?
-    ├─ Ja → OK
-    └─ Nein → SOFORT unverzüglich zurückweisen (§ 174 BGB)!
-               → Bevollmächtigter dem AN bekannt gemacht? → Ja: kein Rügerecht
+ ├─ Ja → OK
+ └─ Nein → SOFORT unverzüglich zurückweisen (§ 174 BGB)!
+ → Bevollmächtigter dem AN bekannt gemacht? → Ja: kein Rügerecht
 
 Gibt es BR?
 ├─ Nein → kein BetrVG-Fehler
 └─ Ja → BR ordnungsgemäß angehört?
-    ├─ Ja → OK
-    └─ Nein/unvollständig → Kündigung unwirksam (§ 102 BetrVG)
+ ├─ Ja → OK
+ └─ Nein/unvollständig → Kündigung unwirksam (§ 102 BetrVG)
 
 Massenentlassung?
 └─ Schwellenwerte § 17 KSchG erfüllt?
-    └─ Ja → Anzeige vor Zugang der Kündigung eingegangen? → Nein: unwirksam
+ └─ Ja → Anzeige vor Zugang der Kündigung eingegangen? → Nein: unwirksam
 ```
 
 ## Zusammenfassung Formfehler-Matrix

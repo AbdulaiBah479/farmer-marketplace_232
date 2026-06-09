@@ -1,138 +1,63 @@
 ---
-name: Creating Hooks
-description: Build event-driven hooks in Claude Code for validation, setup, and automation. Use when you need to validate inputs, check environment state, or automate tasks at specific lifecycle events.
+name: creating-hooks
+description: |
+  Creates Claude Code hooks for automation and workflow customization.
+  Guides through hook events, configuration, and script creation.
+  Use when user wants to create a hook, automate Claude Code, or asks about hook events.
 ---
 
 # Creating Hooks
 
-## Overview
+Guides creation of Claude Code hooks for automation and workflow customization.
 
-Hooks are event-driven scripts that execute at specific points in Claude Code's lifecycle. They receive JSON input with session data and event-specific information, enabling validation, environment checks, and automated workflows.
+## Quick Start
 
-## When to Use
+1. Choose hook event (when should it trigger?)
+2. Configure in settings.json
+3. Create hook script
+4. Test the hook
 
-- Validate tool inputs before execution (PreToolUse)
-- Verify outputs after tool completion (PostToolUse)
-- Check environment state before processing prompts (UserPromptSubmit)
-- Initialize resources at session startup (SessionStart)
-- Clean up resources at session end (SessionEnd)
+## Workflow: Create New Hook
 
-## Hook Types
-
-### PreToolUse
-Runs before tool execution. Use for:
-- Environment validation (check dependencies exist)
-- Input validation (verify paths, parameters)
-- Permission checks (ensure access rights)
-- State verification (git status, working directory)
-
-### PostToolUse
-Runs after tool completion. Use for:
-- Output validation (verify file changes)
-- Quality checks (run linters, formatters)
-- Side effects (update logs, metrics)
-- Failure detection (check for errors)
-
-### UserPromptSubmit
-Runs before processing user input. Use for:
-- Input sanitization
-- Context injection
-- Usage tracking
-- Cost estimation
-
-### SessionStart
-Runs at session initialization. Use for:
-- Environment setup
-- Dependency checks
-- Configuration loading
-- Initialization logging
-
-### SessionEnd
-Runs at session termination. Use for:
-- Cleanup tasks
-- Result archiving
-- Metrics reporting
-- Resource deallocation
-
-## JSON Input Structure
-
-### Common Fields (All Events)
-
-```json
-{
-  "session_id": "unique-session-identifier",
-  "transcript_path": "/path/to/conversation.json",
-  "cwd": "/current/working/directory",
-  "hook_event_name": "PreToolUse|PostToolUse|UserPromptSubmit|SessionStart|SessionEnd"
-}
+```
+Progress:
+- [ ] Select hook event
+- [ ] Add to settings.json
+- [ ] Create hook script
+- [ ] Test and validate
 ```
 
-### Event-Specific Fields
+### Step 1: Select Hook Event
 
-**PreToolUse:**
-```json
-{
-  "tool_name": "Bash",
-  "tool_input": {
-    "command": "pytest tests/",
-    "description": "Run test suite"
-  }
-}
-```
+| Event | When It Triggers | Common Use |
+|-------|------------------|------------|
+| `PreToolUse` | Before tool runs | Block/modify tools |
+| `PostToolUse` | After tool succeeds | Validate, log, feedback |
+| `UserPromptSubmit` | User sends message | Inject context, validate |
+| `SessionStart` | Session begins | Load context, init state |
+| `SessionEnd` | Session ends | Cleanup, save state |
+| `Stop` | Agent finishes | Decide if should continue |
 
-**PostToolUse:**
-```json
-{
-  "tool_name": "Edit",
-  "tool_input": {
-    "file_path": "/path/to/file.py",
-    "old_string": "...",
-    "new_string": "..."
-  },
-  "tool_response": {
-    "success": true,
-    "message": "File edited successfully"
-  }
-}
-```
+Full event reference: [reference.md](reference.md)
 
-**UserPromptSubmit:**
-```json
-{
-  "prompt": "User's input text here"
-}
-```
+### Step 2: Configure settings.json
 
-**SessionStart:**
-```json
-{
-  "source": "startup|resume"
-}
-```
+Location priority (highest wins):
+1. `.claude/settings.local.json` (local, not committed)
+2. `.claude/settings.json` (project)
+3. `~/.claude/settings.json` (user)
 
-**SessionEnd:**
-```json
-{
-  "reason": "user_exit|error|timeout"
-}
-```
-
-## Configuration
-
-### Path Resolution with CLAUDE_PROJECT_DIR
-
-**Always use `$CLAUDE_PROJECT_DIR` to reference hook scripts.** Claude Code sets this environment variable to your project root, ensuring hooks work regardless of the current working directory.
-
+Basic structure:
 ```json
 {
   "hooks": {
-    "PostToolUse": [
+    "EventName": [
       {
-        "matcher": "Write|Edit",
+        "matcher": "ToolPattern",
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/check-style.sh"
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/my-hook.sh\""
           }
         ]
       }
@@ -141,259 +66,121 @@ Runs at session termination. Use for:
 }
 ```
 
-**Why this matters:**
-- Claude's CWD can change during execution
-- Relative paths like `./scripts/hook.sh` become fragile
-- `$CLAUDE_PROJECT_DIR` always points to your project root
-- Ensures hooks work from any directory
+### Step 3: Create Hook Script
 
-**Note:** The environment variable is only available when Claude Code spawns the hook command.
+Use templates from [templates/](templates/) directory.
 
-### Settings File Integration
+Key requirements:
+- Read JSON from stdin
+- Use exit codes for control (0=success, 2=block)
+- Output JSON for decisions
 
-Add hooks to `.claude/settings.json`:
+### Step 4: Test
 
-```json
-{
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/scripts/pre-tool-hook.sh"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/scripts/validate-edits.sh"
-          }
-        ]
-      }
-    ]
-  }
-}
+Run hook manually with test input:
+```bash
+echo '{"tool_name":"Write"}' | bash .claude/hooks/my-hook.sh
 ```
+
+## Hook Configuration
 
 ### Matcher Patterns
 
-- `*` - Match all tools
-- `Edit` - Match specific tool
-- `Edit|Write` - Match multiple tools
-- `Bash(git:*)` - Match tool with pattern
-
-## Process
-
-1. **Identify the trigger event** - Which lifecycle point needs automation?
-2. **Design hook script** - What validation or action is needed?
-3. **Parse JSON input** - Extract relevant fields from stdin
-4. **Implement logic** - Perform checks or automation
-5. **Return exit code** - 0 for success, non-zero blocks execution
-6. **Add to settings.json** - Configure hook with matcher
-7. **Test hook** - Trigger event and verify behavior
-
-## Examples
-
-### Example 1: Pre-Tool Git Status Check
-
-**Use case:** Warn if working directory is dirty before file operations
-
-```bash
-#!/bin/bash
-# scripts/pre-tool-git-check.sh
-
-INPUT=$(cat)
-TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name')
-
-if [[ "$TOOL_NAME" == "Edit" || "$TOOL_NAME" == "Write" ]]; then
-  if ! git diff-index --quiet HEAD --; then
-    echo "⚠️  Warning: Uncommitted changes in working directory"
-    echo "Consider committing before editing files"
-  fi
-fi
-
-exit 0  # Don't block, just warn
+```json
+"matcher": "Write"           // Exact match
+"matcher": "Edit|Write"      // Multiple tools
+"matcher": "mcp__.*"         // MCP tools (regex)
+"matcher": "*"               // All tools
 ```
 
-**Configuration:**
+Matchers apply to: `PreToolUse`, `PostToolUse`, `PermissionRequest`
+
+### Timeout
+
 ```json
 {
-  "PreToolUse": [{
-    "matcher": "Edit|Write",
-    "hooks": [{"type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/scripts/pre-tool-git-check.sh"}]
-  }]
+  "type": "command",
+  "command": "...",
+  "timeout": 120
+}
+```
+Default: 60 seconds. Max recommended: 300 seconds.
+
+## Exit Codes
+
+| Code | Meaning | Behavior |
+|------|---------|----------|
+| 0 | Success | Continue normally |
+| 2 | Block | Stop action, show error |
+| Other | Non-blocking error | Log only (verbose mode) |
+
+## JSON Output
+
+Return JSON to stdout for decisions:
+
+```json
+{
+  "decision": "block",
+  "reason": "Why blocked",
+  "additionalContext": "Info for Claude"
 }
 ```
 
-### Example 2: Post-Tool Code Formatting
+Decision values by event:
+- `PreToolUse`: `allow`, `deny`, `ask`
+- `PostToolUse`: `block` (with reason)
+- `UserPromptSubmit`: `block` (with reason)
+- `Stop`: `block` (requires reason)
 
-**Use case:** Auto-format Python files after editing
+## Security Best Practices
+
+1. **Quote all variables**: `"$VAR"` not `$VAR`
+2. **Use absolute paths**: `"$CLAUDE_PROJECT_DIR/..."`
+3. **Validate inputs**: Check before processing
+4. **Block path traversal**: Reject paths with `..`
+5. **Set timeouts**: Prevent runaway scripts
+
+## Environment Variables
+
+Available in all hooks:
+- `CLAUDE_PROJECT_DIR` - Project root path
+- `CLAUDE_CODE_REMOTE` - "true" if web environment
+
+SessionStart only:
+- `CLAUDE_ENV_FILE` - Path to persist env vars
+
+## Common Patterns
+
+### Inject Context on Session Start
 
 ```bash
 #!/bin/bash
-# scripts/post-edit-format.sh
+# Output context for Claude
+echo '{"additionalContext": "Project uses TypeScript"}'
+exit 0
+```
 
+### Block Dangerous File Edits
+
+```bash
+#!/bin/bash
 INPUT=$(cat)
-TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name')
-FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path')
-
-if [[ "$TOOL_NAME" == "Edit" && "$FILE_PATH" == *.py ]]; then
-  black "$FILE_PATH" --quiet
-  echo "✅ Formatted $FILE_PATH with black"
+FILE=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty')
+if [[ "$FILE" == *".env"* ]]; then
+  echo "Blocking edit to sensitive file" >&2
+  exit 2
 fi
-
 exit 0
 ```
 
-### Example 3: Session Start Environment Check
-
-**Use case:** Verify dependencies exist before starting
+### Log All Tool Usage
 
 ```bash
 #!/bin/bash
-# scripts/session-start-check.sh
-
-MISSING=()
-
-command -v python >/dev/null || MISSING+=("python")
-command -v git >/dev/null || MISSING+=("git")
-command -v jq >/dev/null || MISSING+=("jq")
-
-if [ ${#MISSING[@]} -gt 0 ]; then
-  echo "❌ Missing dependencies: ${MISSING[*]}"
-  exit 1  # Block session
-fi
-
-echo "✅ All dependencies available"
+INPUT=$(cat)
+TOOL=$(echo "$INPUT" | jq -r '.tool_name')
+echo "$(date -Iseconds) $TOOL" >> "$CLAUDE_PROJECT_DIR/.claude/tool.log"
 exit 0
 ```
 
-## Best Practices
-
-### Path Configuration
-- ✅ **Do**: Always use `$CLAUDE_PROJECT_DIR` for hook script paths
-- ✅ **Do**: Quote the path: `"$CLAUDE_PROJECT_DIR"/scripts/hook.sh`
-- ❌ **Don't**: Use relative paths like `./scripts/hook.sh` (breaks if CWD changes)
-- ❌ **Don't**: Use absolute paths like `/home/user/project/...` (not portable)
-
-### Design
-- ✅ **Do**: Keep hooks fast (<1 second)
-- ✅ **Do**: Use specific matchers to reduce overhead
-- ✅ **Do**: Return non-zero to block execution
-- ❌ **Don't**: Perform expensive operations in hooks
-- ❌ **Don't**: Block on warnings (use exit 0)
-
-### Error Handling
-- ✅ **Do**: Provide clear error messages
-- ✅ **Do**: Log hook failures for debugging
-- ✅ **Do**: Handle missing JSON fields gracefully
-- ❌ **Don't**: Fail silently
-- ❌ **Don't**: Assume JSON structure without validation
-
-### JSON Parsing
-- ✅ **Do**: Use `jq` for robust JSON parsing
-- ✅ **Do**: Provide default values for optional fields
-- ✅ **Do**: Validate required fields exist
-- ❌ **Don't**: Use regex to parse JSON
-- ❌ **Don't**: Assume fields are always present
-
-### Performance
-- ✅ **Do**: Exit early when hook doesn't apply
-- ✅ **Do**: Cache expensive checks when possible
-- ✅ **Do**: Use narrow matchers to reduce invocations
-- ❌ **Don't**: Run hooks on every tool unconditionally
-- ❌ **Don't**: Perform network requests without caching
-
-## Integration Patterns
-
-### With Git
-```bash
-# Check for uncommitted changes
-git diff-index --quiet HEAD --
-
-# Get current branch
-git branch --show-current
-
-# Check if file is tracked
-git ls-files --error-unmatch "$FILE_PATH"
-```
-
-### With Linters
-```bash
-# Python
-pylint "$FILE_PATH" --score=no --msg-template='{msg_id}: {msg}'
-
-# JavaScript
-eslint "$FILE_PATH" --format=compact
-
-# Go
-golint "$FILE_PATH"
-```
-
-### With Testing
-```bash
-# Run tests related to changed file
-pytest "tests/test_${FILENAME}" --quiet
-
-# Fast syntax check only
-python -m py_compile "$FILE_PATH"
-```
-
-## Common Use Cases
-
-### Validation Hooks
-- Verify environment variables set
-- Check file permissions
-- Validate input parameters
-- Ensure dependencies installed
-
-### Quality Hooks
-- Run linters on edited files
-- Format code automatically
-- Check test coverage
-- Validate commit messages
-
-### Workflow Hooks
-- Update documentation
-- Regenerate configuration
-- Sync database schemas
-- Trigger CI/CD pipelines
-
-### Monitoring Hooks
-- Log tool usage
-- Track session metrics
-- Report errors
-- Update dashboards
-
-## Anti-patterns
-
-- ❌ **Don't**: Use relative or absolute paths for hook commands
-  - ✅ **Do**: Use `$CLAUDE_PROJECT_DIR` for portable, reliable paths
-
-- ❌ **Don't**: Use hooks for long-running tasks
-  - ✅ **Do**: Keep hooks under 1 second
-
-- ❌ **Don't**: Block on non-critical checks
-  - ✅ **Do**: Use exit 0 for warnings
-
-- ❌ **Don't**: Parse JSON with string manipulation
-  - ✅ **Do**: Use `jq` for reliable parsing
-
-- ❌ **Don't**: Match all tools without filtering
-  - ✅ **Do**: Use specific matchers for relevant tools
-
-- ❌ **Don't**: Ignore hook failures silently
-  - ✅ **Do**: Provide clear feedback to user
-
-## Resources
-
-- **Official Docs**: https://docs.claude.com/en/docs/claude-code/hooks
-- **Settings Reference**: https://docs.claude.com/en/docs/claude-code/settings
-- **JSON Parsing**: `man jq` or https://jqlang.github.io/jq/
+See [reference.md](reference.md) for complete event details and more examples.

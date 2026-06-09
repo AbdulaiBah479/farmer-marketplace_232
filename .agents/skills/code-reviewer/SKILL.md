@@ -1,121 +1,224 @@
 ---
 name: code-reviewer
-description: Analyzes code diffs and files to identify bugs, security vulnerabilities (SQL injection, XSS, insecure deserialization), code smells, N+1 queries, naming issues, and architectural concerns, then produces a structured review report with prioritized, actionable feedback. Use when reviewing pull requests, conducting code quality audits, identifying refactoring opportunities, or checking for security issues. Invoke for PR reviews, code quality checks, refactoring suggestions, review code, code quality. Complements specialized skills (security-reviewer, test-master) by providing broad-scope review across correctness, performance, maintainability, and test coverage in a single pass.
-license: MIT
-allowed-tools: Read, Grep, Glob
-metadata:
-  author: https://github.com/Jeffallan
-  version: "1.1.0"
-  domain: quality
-  triggers: code review, PR review, pull request, review code, code quality
-  role: specialist
-  scope: review
-  output-format: report
-  related-skills: security-reviewer, test-master, architecture-designer
+description: Use when asked to review MERN stack code - comprehensive code reviewer that checks project health, security, maintainability, performance, testing, and architecture. Combines general code quality analysis with MERN-specific expertise.
 ---
 
 # Code Reviewer
 
-Senior engineer conducting thorough, constructive code reviews that improve quality and share knowledge.
+## Overview
 
-## When to Use This Skill
+Comprehensive code review: General intelligence + MERN specialization.
 
-- Reviewing pull requests
-- Conducting code quality audits
-- Identifying refactoring opportunities
-- Checking for security vulnerabilities
-- Validating architectural decisions
+**Philosophy:** Check project health FIRST, then dive into code. A 6,000-line file is a problem regardless of what's in it.
 
-## Core Workflow
+## Review Workflow
 
-1. **Context** — Read PR description, understand the problem being solved. **Checkpoint:** Summarize the PR's intent in one sentence before proceeding. If you cannot, ask the author to clarify.
-2. **Structure** — Review architecture and design decisions. Ask: Does this follow existing patterns in the codebase? Are new abstractions justified?
-3. **Details** — Check code quality, security, and performance. Apply the checks in the Reference Guide below. Ask: Are there N+1 queries, hardcoded secrets, or injection risks?
-4. **Tests** — Validate test coverage and quality. Ask: Are edge cases covered? Do tests assert behavior, not implementation?
-5. **Feedback** — Produce a categorized report using the Output Template. If critical issues are found in step 3, note them immediately and do not wait until the end.
+### Phase 0: Project Health (Do This First)
 
-> **Disagreement handling:** If the author has left comments explaining a non-obvious choice, acknowledge their reasoning before suggesting an alternative. Never block on style preferences when a linter or formatter is configured.
+Before reading any code, assess project health:
 
-## Reference Guide
+1. **Build status:** Run `tsc --noEmit` or check for compilation errors
+2. **Project docs:** Read README, any STATUS/BUGS/TODO files - look for deployment blockers
+3. **Test health:** Do tests exist? Check `package.json` scripts, look for test directories
+4. **File sizes:** `find src -name "*.ts" -o -name "*.tsx" | xargs wc -l | sort -n | tail -20`
+5. **Dependencies:** Check for `npm audit` issues, unusual deps (Angular in React?)
 
-Load detailed guidance based on context:
+**Stop here if:** Build is broken, docs say "DO NOT DEPLOY", or critical blockers found. Report immediately.
 
-<!-- Spec Compliance and Receiving Feedback rows adapted from obra/superpowers by Jesse Vincent (@obra), MIT License -->
+### Phase 1: Scope Detection
 
-| Topic | Reference | Load When |
-|-------|-----------|-----------|
-| Review Checklist | `references/review-checklist.md` | Starting a review, categories |
-| Common Issues | `references/common-issues.md` | N+1 queries, magic numbers, patterns |
-| Feedback Examples | `references/feedback-examples.md` | Writing good feedback |
-| Report Template | `references/report-template.md` | Writing final review report |
-| Spec Compliance | `references/spec-compliance-review.md` | Reviewing implementations, PR review, spec verification |
-| Receiving Feedback | `references/receiving-feedback.md` | Responding to review comments, handling feedback |
+1. Identify scope from context:
+   - Full repo → Broad review, sample key files
+   - Feature/PR → All changed files
+   - Single file → Deep dive
+2. Detect layers: React? Express? MongoDB? Node.js?
+3. If ambiguous → ask user
 
-## Review Patterns (Quick Reference)
+### Phase 2: Review by Priority
 
-### N+1 Query — Bad vs Good
-```python
-# BAD: query inside loop
-for user in users:
-    orders = Order.objects.filter(user=user)  # N+1
+| Priority | Focus | Severity |
+|----------|-------|----------|
+| 0. Blockers | Build failures, "DO NOT DEPLOY", broken deploys | STOP |
+| 1. Security | Injection, auth, secrets, XSS | Critical |
+| 2. Maintainability | God files, complexity, duplication | Critical/Important |
+| 3. Performance | N+1, missing indexes, re-renders | Important |
+| 4. Testing | No tests, low coverage, flaky tests | Important |
+| 5. Best Practices | Error handling, async patterns | Suggestion |
+| 6. Architecture | API design, state management | Suggestion |
 
-# GOOD: prefetch in bulk
-users = User.objects.prefetch_related('orders').all()
+Load reference files ON-DEMAND when you hit MERN-specific edge cases.
+
+### Phase 3: Report
+
+Use the output format below. Offer to fix starting with Critical.
+
+## Output Format
+
+```markdown
+# MERN Code Review
+
+## Project Health
+- Build: [Compiles / X errors / Not checked]
+- Tests: [X passing / X failing / None found]
+- Blockers: [Any deployment blockers from docs]
+- Large files: [Files >500 lines]
+
+## Scope
+[What was reviewed]
+
+## Summary
+- Files reviewed: X
+- Issues: X Critical, X Important, X Suggestions
+
+## Critical (Must Fix)
+### [C1] Category: Title
+**File:** `path:line`
+**Why:** [1-2 sentences]
+**Fix:** [Code or instruction]
+
+## Important (Should Fix)
+### [I1] Category: Title
+...
+
+## Suggestions
+- `file:line` - Note
+
+## What's Good
+- [Positive observations]
+
+## Verdict
+[Ready to deploy / Blocked / Needs fixes] - [1 sentence reason]
+
+---
+**Ready to fix these?** Starting with Critical issues.
 ```
 
-### Magic Number — Bad vs Good
-```python
-# BAD
-if status == 3:
-    ...
+## Checklists
 
-# GOOD
-ORDER_STATUS_SHIPPED = 3
-if status == ORDER_STATUS_SHIPPED:
-    ...
+**Minimum required checks.** Report other issues you find during review.
+
+### Blockers (Check First)
+- [ ] Project compiles without errors
+- [ ] No "DO NOT DEPLOY" or similar warnings in docs
+- [ ] No critical security advisories in `npm audit`
+
+### Security
+- [ ] No `$where`, `$ne`, `$regex` with user input (NoSQL injection/ReDoS)
+- [ ] No `dangerouslySetInnerHTML` without DOMPurify
+- [ ] JWT in httpOnly cookies, not localStorage
+- [ ] Secrets in env vars, not hardcoded (check config files too, not just code)
+- [ ] Helmet middleware configured
+- [ ] CORS properly restricted
+- [ ] Rate limiting on auth endpoints
+- [ ] Input validation on all endpoints
+- [ ] No `eval()` or `new Function()` with user input
+
+### Maintainability
+- [ ] No file >500 lines (god files)
+- [ ] No function >50 lines
+- [ ] No class/component with >20 methods
+- [ ] No deep nesting (>4 levels)
+- [ ] No copy-paste blocks >10 lines (DRY)
+- [ ] Clear naming (no cryptic abbreviations)
+- [ ] Consistent code style
+
+### Performance
+- [ ] No N+1 queries (use populate/$lookup)
+- [ ] Indexes on frequently queried fields
+- [ ] `.lean()` for read-only Mongoose queries
+- [ ] No `fs.readFileSync` in request handlers
+- [ ] React.memo on expensive components
+- [ ] useCallback/useMemo where beneficial
+- [ ] Pagination on list endpoints
+
+### Testing
+- [ ] Tests exist for critical paths (auth, payments, core flows)
+- [ ] Test coverage reasonable (>50% for services)
+- [ ] No skipped/commented-out tests
+- [ ] Tests actually assert behavior (not just "doesn't crash")
+- [ ] Mocks don't hide real integration issues
+
+### Best Practices
+- [ ] Async errors handled (try/catch or error middleware)
+- [ ] useEffect cleanup functions present
+- [ ] No floating promises (unhandled async)
+- [ ] Middleware order correct (body-parser before routes, error handler last)
+- [ ] Environment variables validated at startup
+- [ ] Graceful shutdown handlers
+
+### Architecture
+- [ ] Consistent API response format
+- [ ] Service layer between controllers and DB
+- [ ] Types aligned frontend/backend
+- [ ] No circular dependencies
+- [ ] Clear module boundaries
+- [ ] No god components (React >300 lines)
+- [ ] State management appropriate for complexity
+
+## Red Flags (Immediate Critical)
+
+These are automatic Critical issues:
+
+- `eval()`, `new Function()` with user input
+- Hardcoded secrets/credentials in code
+- `dangerouslySetInnerHTML` without sanitization
+- JWT/auth tokens in localStorage
+- Missing auth middleware on protected routes
+- `$where` clause with user input
+- File >1000 lines
+- "DO NOT DEPLOY" in project docs
+- `npm audit` critical vulnerabilities
+
+## Scope Calibration
+
+| Scope | Phase 0 | Code Depth | Focus |
+|-------|---------|------------|-------|
+| Single file | Skip | Deep | All checklists on that file |
+| Last commit | Quick | Medium | Changed lines + immediate context |
+| Feature/PR | Quick | Medium | All changed files |
+| Full repo | Full | Broad | Sample key files, architecture |
+
+## Reference Files
+
+Load ONLY when you encounter MERN-specific patterns you need to verify:
+
+| When to Load | Reference |
+|--------------|-----------|
+| NoSQL query security question | [security.md](reference/security.md) |
+| React hooks/re-render issue | [react.md](reference/react.md) |
+| Express middleware question | [express.md](reference/express.md) |
+| MongoDB schema/index question | [mongodb.md](reference/mongodb.md) |
+| Node.js async/memory issue | [nodejs.md](reference/nodejs.md) |
+| API design/auth flow question | [fullstack.md](reference/fullstack.md) |
+
+**Do NOT load all references upfront.** They're for edge cases, not general review.
+
+## Don't
+
+- Don't claim "no issues found" without actually searching for them
+- Don't report on code you haven't read
+- Don't classify style issues as Critical
+
+## Examples
+
+### God File Detection
+```
+Found: EventService.ts - 6,165 lines
+→ Critical [C1] Maintainability: God file
+→ Recommend split into: EventQueryService, EventBookingService,
+   EventGuestService, EventInviteService (~500 lines each)
 ```
 
-### Security: SQL Injection — Bad vs Good
-```python
-# BAD: string interpolation in query
-cursor.execute(f"SELECT * FROM users WHERE id = {user_id}")
-
-# GOOD: parameterized query
-cursor.execute("SELECT * FROM users WHERE id = %s", [user_id])
+### Missing Health Check
+```
+Found: CURRENT_STATUS_AND_BUGS.md contains "DO NOT DEPLOY"
+→ Critical [C1] Blocker: Deployment blocked by known issues
+→ Fix TypeScript errors in EditEventModal.tsx before proceeding
 ```
 
-## Constraints
-
-### MUST DO
-- Summarize PR intent before reviewing (see Workflow step 1)
-- Provide specific, actionable feedback
-- Include code examples in suggestions
-- Praise good patterns
-- Prioritize feedback (critical → minor)
-- Review tests as thoroughly as code
-- Check for security issues (OWASP Top 10 as baseline)
-
-### MUST NOT DO
-- Be condescending or rude
-- Nitpick style when linters exist
-- Block on personal preferences
-- Demand perfection
-- Review without understanding the why
-- Skip praising good work
-
-## Output Template
-
-Code review report must include:
-1. **Summary** — One-sentence intent recap + overall assessment
-2. **Critical issues** — Must fix before merge (bugs, security, data loss)
-3. **Major issues** — Should fix (performance, design, maintainability)
-4. **Minor issues** — Nice to have (naming, readability)
-5. **Positive feedback** — Specific patterns done well
-6. **Questions for author** — Clarifications needed
-7. **Verdict** — Approve / Request Changes / Comment
-
-## Knowledge Reference
-
-SOLID, DRY, KISS, YAGNI, design patterns, OWASP Top 10, language idioms, testing patterns
-
-[Documentation](https://jeffallan.github.io/claude-skills/skills/quality/code-reviewer/)
+### Security + Specific Fix
+```
+Found: No Helmet middleware in index.ts
+→ Critical [C2] Security: Missing security headers
+→ Fix: npm install helmet && app.use(helmet())
+```

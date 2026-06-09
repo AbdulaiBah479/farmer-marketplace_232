@@ -1,181 +1,190 @@
 ---
+argument-hint: <skill-name> [--project | --global]
+disable-model-invocation: false
 name: create-skill
-description: Scaffolds new agent skills for the dotnet/skills repository. Use when creating a new skill, generating SKILL.md files, or setting up skill directory structures. Handles frontmatter generation, section templates, and validation guidance.
+user-invocable: true
+description: This skill should be used when the user asks to "create a skill", "new skill", "scaffold a skill", "make a skill", "init a skill", or wants to bootstrap a new agent skill in `.agents/skills` (default) or `~/.agents/skills` (with `--global`).
 ---
 
 # Create Skill
 
-This skill helps you scaffold new agent skills that conform to the Agent Skills specification and the dotnet/skills repository conventions.
+Bootstrap a new agent skill, then symlink it into `.claude/skills/` so Claude Code can discover it. Default to splitting bulk content into `references/` and `scripts/` so `SKILL.md` stays lean.
 
-## When to Use
+## Arguments
 
-- Creating a new skill from scratch
-- Generating a SKILL.md file with proper frontmatter
-- Setting up the skill directory structure with optional folders
-- Ensuring compliance with agentskills.io specification
+- **skill-name** (required): kebab-case name (e.g., `my-skill`). Stop if missing or invalid.
+- `--global` (optional): install under `~` instead of the current repo.
 
-## When Not to Use
+## Resolved Paths
 
-- Modifying existing skills (edit directly instead)
-- Creating custom agents (use the agents/ directory pattern)
+| Mode            | Skill source               | Claude Code symlink       |
+| --------------- | -------------------------- | ------------------------- |
+| local (default) | `.agents/skills/<name>/`   | `.claude/skills/<name>`   |
+| `--global`      | `~/.agents/skills/<name>/` | `~/.claude/skills/<name>` |
 
-## Inputs
+The symlink target is always the relative path `../../.agents/skills/<name>` so it resolves correctly in both scopes.
 
-| Input | Required | Description |
-|-------|----------|-------------|
-| Skill name | Yes | Lowercase, alphanumeric, hyphens only (e.g., `code-review`, `ci-triage`) |
-| Description | Yes | What the skill does and when agents should use it (1-1024 chars) |
-| Purpose | Yes | One paragraph describing the outcome |
-| Workflow steps | Recommended | Numbered steps the agent should follow |
+## Skill Layout
+
+```
+<name>/
+├── SKILL.md       # Required: frontmatter + lean workflow (aim for <500 lines)
+├── agents/
+│   └── openai.yaml # Required: Codex metadata; disables implicit invocation
+├── scripts/       # Optional: executable code (Bash/Python/etc.) the workflow invokes
+├── references/    # Optional: long-form docs loaded on demand
+└── assets/        # Optional: templates / fonts / images used in OUTPUT (never loaded into context)
+```
+
+Agents load skills via **progressive disclosure**, in three stages:
+
+1. **Discovery** — only `name` + `description` are visible at startup. Front-load triggers in `description`.
+2. **Activation** — the full `SKILL.md` body is read once a task matches.
+3. **Execution** — `scripts/` run without being read into context; `references/` are read only when `SKILL.md` explicitly links to them.
+
+Keep `SKILL.md` focused on workflow. Push bulk into `scripts/` (deterministic logic) or `references/` (documentation).
+
+## When to Split Content
+
+### Use `scripts/` when
+
+- The same code would be rewritten on every invocation (e.g., PDF rotate, JSON transform, curl wrapper).
+- Determinism matters more than flexibility (parsing, validation, codegen, idempotent setup).
+- A shell pipeline grows past ~5 lines or needs real error handling.
+- A long heredoc keeps appearing inside `SKILL.md`.
+
+Scripts are token-efficient: the agent invokes them without reading them. Document the CLI signature in `SKILL.md` and leave the implementation in `scripts/`.
+
+### Use `references/` when
+
+- A topic exceeds ~100 lines of prose, examples, or schemas.
+- Content is conditionally relevant (variant-, framework-, or domain-specific) — splitting keeps irrelevant context out.
+- Detailed API surfaces, DB schemas, policies, or large templates would otherwise dominate `SKILL.md`.
+- The same explanation would be repeated across multiple skills (extract once, link from each).
+
+Rules of thumb:
+
+- **One level deep** — link `references/placeholder.md` directly from `SKILL.md`, never reference-to-reference.
+- Files >100 lines: include a table of contents at the top.
+- Files >10k words: document grep patterns in `SKILL.md` so the agent can locate sections without reading the whole file.
+- **No duplication** — each fact lives in `SKILL.md` *or* a reference, never both.
+- For every reference, write one line in `SKILL.md` that says *when* to read it.
+
+### Reference organization patterns
+
+**Pattern A — High-level guide + topical references**
+
+```
+SKILL.md
+references/
+├── forms.md
+├── api.md
+└── examples.md
+```
+
+`SKILL.md` teaches the happy path; references hold deep-dive material.
+
+**Pattern B — Domain or variant split**
+
+```
+SKILL.md           # workflow + selection logic
+references/
+├── aws.md
+├── gcp.md
+└── azure.md
+```
+
+The agent reads only the variant the user picked — irrelevant providers never enter context.
+
+**Pattern C — Conditional details**
+
+Inline the basic case in `SKILL.md`, link advanced files for edge cases (`tracked-changes.md`, `ooxml.md`, etc.).
+
+### Do NOT add to a skill
+
+- `README.md`, `INSTALLATION.md`, `CHANGELOG.md`, `QUICK_REFERENCE.md` — extraneous.
+- Notes about how the skill was authored, test logs, scratch files.
+- Anything the agent will not use at runtime.
 
 ## Workflow
 
-### Step 1: Validate the skill name
+### 1. Fetch Agent Skills Docs
 
-Ensure the name:
-- Contains only lowercase letters, numbers, and hyphens
-- Does not start or end with a hyphen
-- Does not contain consecutive hyphens
-- Is between 1-64 characters
+Always fetch the latest spec before authoring frontmatter or content:
 
-### Step 2: Create the skill directory
+- https://agentskills.io
 
+Use `WebFetch` to confirm the current frontmatter schema, naming rules, and progressive-disclosure conventions. Do not guess — the spec evolves.
+
+### 2. Validate
+
+- Reject names that are not kebab-case or collide with an existing skill at the resolved path.
+- Stop if `<scope>/.agents/skills/<name>/` or `<scope>/.claude/skills/<name>` already exists.
+
+### 3. Plan the Layout
+
+Before writing anything, decide what belongs where:
+
+- Will the workflow invoke helper code? → `scripts/<name>.{sh,py,ts}`
+- Schemas, long examples, variant guides, domain knowledge? → `references/<topic>.md`
+- Templates or files the skill writes into the user's output? → `assets/`
+- None of the above? → ship just `SKILL.md`.
+
+Sketch the directory tree first, then create only the subdirectories the layout actually needs.
+
+### 4. Create the Skill
+
+```bash
+mkdir -p "<scope>/.agents/skills/<name>/agents"
+# Add only the subdirectories the layout calls for:
+# mkdir -p "<scope>/.agents/skills/<name>/scripts"
+# mkdir -p "<scope>/.agents/skills/<name>/references"
 ```
-skills/<skill-name>/
-└── SKILL.md
-```
 
-### Step 3: Generate SKILL.md with frontmatter
+Write `<scope>/.agents/skills/<name>/SKILL.md` with:
 
-Create the file with required YAML frontmatter:
+- Frontmatter sorted alphabetically, with `description` last. The `description` is the only field seen at discovery time — front-load trigger phrases there, not in the body.
+- A short `# Title`.
+- A one-line summary of what the skill does.
+- `## Arguments` (if any) and `## Workflow` sections in **imperative form** with concrete steps.
+- Explicit links to every `references/` file the workflow may need, each with a one-line note describing *when* to read it.
+- CLI signatures for any bundled scripts so the agent can call them without reading them.
+
+Aim for `SKILL.md` under 500 lines. If a section grows past ~50 lines and is not core workflow, move it to `references/` and link it.
+
+Write `<scope>/.agents/skills/<name>/agents/openai.yaml` with:
 
 ```yaml
----
-name: <skill-name>
-description: <description of what the skill does and when to use it>
----
+policy:
+  allow_implicit_invocation: false
 ```
 
-### Step 4: Add body content sections
+This keeps Codex invocation explicit-only while preserving Claude-specific frontmatter behavior. If later adding Codex UI metadata or MCP/tool dependencies, merge them into the same file and keep the policy.
 
-Include these recommended sections:
+### 5. Create the Claude Code Symlink
 
-1. **Purpose**: One paragraph describing the outcome
-2. **When to Use**: Bullet list of appropriate scenarios
-3. **When Not to Use**: Boundaries and exclusions
-4. **Inputs**: Table of required and optional inputs
-5. **Workflow**: Numbered steps with checkpoints
-6. **Validation**: How to confirm the skill worked correctly
-7. **Common Pitfalls**: Known traps and how to avoid them
+Always create a relative symlink so Claude Code picks the skill up from its own discovery path:
 
-### Step 5: Add optional directories (if needed)
-
-```
-skills/<skill-name>/
-├── SKILL.md
-├── scripts/       # Executable code agents can run
-├── references/    # Additional documentation loaded on demand
-└── assets/        # Templates, images, data files
+```bash
+mkdir -p "<scope>/.claude/skills"
+ln -s "../../.agents/skills/<name>" "<scope>/.claude/skills/<name>"
 ```
 
-### Step 6: Update CODEOWNERS
+### 6. Verify
 
-Add entries in `.github/CODEOWNERS` for the new skill and its test directory:
+- `test -f "<scope>/.agents/skills/<name>/SKILL.md"`
+- `test -f "<scope>/.agents/skills/<name>/agents/openai.yaml"`
+- `readlink "<scope>/.claude/skills/<name>"` resolves to the source directory.
+- Print both absolute paths to the user.
 
-```
-/plugins/<plugin>/skills/<skill-name>/  @owner-team
-/tests/<plugin>/<skill-name>/           @owner-team
-```
+## Notes
 
-Match the owner pattern used by sibling skills in the same plugin.
-
-### Step 7: Validate the skill
-
-- Confirm frontmatter fields are valid
-- Ensure SKILL.md is under 500 lines
-- Check that file references use relative paths
-- Verify instructions are actionable and specific
-
-## SKILL.md Template
-
-Use this template when creating a new skill:
-
-```markdown
----
-name: <skill-name>
-description: <1-1024 char description of what the skill does and when to use it>
----
-
-# <Skill Title>
-
-<One paragraph describing the skill's purpose and outcome.>
-
-## When to Use
-
-- <Scenario 1>
-- <Scenario 2>
-
-## When Not to Use
-
-- <Exclusion 1>
-- <Exclusion 2>
-
-## Inputs
-
-| Input | Required | Description |
-|-------|----------|-------------|
-| <input-name> | Yes/No | <description> |
-
-## Workflow
-
-### Step 1: <Action>
-
-<Instructions for this step>
-
-### Step 2: <Action>
-
-<Instructions for this step>
-
-## Validation
-
-- [ ] <Verification step 1>
-- [ ] <Verification step 2>
-
-## Common Pitfalls
-
-| Pitfall | Solution |
-|---------|----------|
-| <Problem> | <How to avoid or fix> |
-```
-
-## Validation Checklist
-
-After creating a skill, verify:
-
-- [ ] Skill name matches directory name exactly
-- [ ] Skill name is lowercase with hyphens only
-- [ ] Description is non-empty and under 1024 characters
-- [ ] SKILL.md body is under 500 lines
-- [ ] Instructions are specific and actionable
-- [ ] Workflow has numbered steps with clear checkpoints
-- [ ] Validation section exists with observable success criteria
-- [ ] No secrets, tokens, or internal URLs included
-- [ ] `.github/CODEOWNERS` has entries for the new skill and its test directory
-
-## Common Pitfalls
-
-| Pitfall | Solution |
-|---------|----------|
-| Name contains uppercase letters | Use only lowercase: `code-review` not `Code-Review` |
-| Description is vague | Include what it does AND when to use it |
-| Instructions are ambiguous | Use numbered steps with concrete actions |
-| Missing validation steps | Add checkpoints that verify success |
-| SKILL.md too long | Move detailed content to `references/` files |
-| Hardcoded environment assumptions | Document requirements in `compatibility` field |
-| Missing CODEOWNERS entry | Add entries for both `/plugins/<plugin>/skills/<skill-name>/` and `/tests/<plugin>/<skill-name>/` matching sibling skills' owner pattern |
-
-## References
-
-- [Agent Skills Specification](https://agentskills.io/specification)
-- [Repository README](../../README.md)
-- [Contributing Guidelines](../../CONTRIBUTING.md)
+- Frontmatter rule: sort fields alphabetically, but always place `description` last.
+- Codex parses `SKILL.md` frontmatter as YAML before loading a skill. Avoid unquoted colon-space tokens in scalar values
+  such as `Triggers: "foo"` inside `description`; either omit the label or quote the whole value.
+- "When to use" information belongs in `description` (discovery-time), not in the body (activation-time only).
+- Use imperative / infinitive form throughout `SKILL.md`.
+- All paths inside `SKILL.md` (e.g., `references/placeholder.md`, `scripts/example.sh`) are relative to the skill directory.
+- Every new skill must include `agents/openai.yaml` with `policy.allow_implicit_invocation: false`.
+- Bash scripts inside the skill must be compatible with Bash 3.2 (`/bin/bash`), since Codex uses the built-in Bash by default.
+- Do not commit the new skill — leave that to the user.

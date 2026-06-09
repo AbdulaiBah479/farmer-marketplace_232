@@ -1,6 +1,13 @@
 ---
 name: ai-voice-cloning
-description: "AI voice generation, text-to-speech, and voice synthesis via inference.sh CLI. Models: Kokoro TTS, DIA, Chatterbox, Higgs, VibeVoice for natural speech. Capabilities: multiple voices, emotions, accents, long-form narration, conversation. Use for: voiceovers, audiobooks, podcasts, video narration, accessibility. Triggers: voice cloning, tts, text to speech, ai voice, voice generation, voice synthesis, voice over, narration, speech synthesis, ai narrator, elevenlabs alternative, natural voice, realistic speech, voice ai"
+description: |
+  AI voice generation, text-to-speech, and voice synthesis via inference.sh CLI.
+  Models: Kokoro TTS, DIA, Chatterbox, Higgs, VibeVoice for natural speech.
+  Capabilities: multiple voices, emotions, accents, long-form narration, conversation.
+  Use for: voiceovers, audiobooks, podcasts, video narration, accessibility.
+  Triggers: voice cloning, tts, text to speech, ai voice, voice generation,
+  voice synthesis, voice over, narration, speech synthesis, ai narrator,
+  elevenlabs alternative, natural voice, realistic speech, voice ai
 allowed-tools: Bash(infsh *)
 ---
 
@@ -8,22 +15,17 @@ allowed-tools: Bash(infsh *)
 
 Generate natural AI voices via [inference.sh](https://inference.sh) CLI.
 
-![AI Voice Generation](https://cloud.inference.sh/u/4mg21r6ta37mpaz6ktzwtt8krr/01jz00krptarq4bwm89g539aea.png)
-
 ## Quick Start
 
-> Requires inference.sh CLI (`infsh`). Get installation instructions: `npx skills add inference-sh/skills@agent-tools`
-
 ```bash
-infsh login
+curl -fsSL https://cli.inference.sh | sh && infsh login
 
 # Generate speech
 infsh app run infsh/kokoro-tts --input '{
-  "prompt": "Hello! This is an AI-generated voice that sounds natural and engaging.",
+  "text": "Hello! This is an AI-generated voice that sounds natural and engaging.",
   "voice": "af_sarah"
 }'
 ```
-
 
 ## Available Models
 
@@ -63,7 +65,7 @@ infsh app run infsh/kokoro-tts --input '{
 
 ```bash
 infsh app run infsh/kokoro-tts --input '{
-  "prompt": "Welcome to our quarterly earnings call. Today we will discuss the financial performance and strategic initiatives for the past quarter.",
+  "text": "Welcome to our quarterly earnings call. Today we will discuss the financial performance and strategic initiatives for the past quarter.",
   "voice": "am_michael",
   "speed": 1.0
 }'
@@ -82,7 +84,7 @@ infsh app run infsh/dia-tts --input '{
 
 ```bash
 infsh app run infsh/kokoro-tts --input '{
-  "prompt": "Chapter One. The morning mist hung low over the valley as Sarah made her way down the winding path. She had been walking for hours.",
+  "text": "Chapter One. The morning mist hung low over the valley as Sarah made her way down the winding path. She had been walking for hours.",
   "voice": "bf_emma",
   "speed": 0.9
 }'
@@ -92,7 +94,7 @@ infsh app run infsh/kokoro-tts --input '{
 
 ```bash
 infsh app run infsh/kokoro-tts --input '{
-  "prompt": "Introducing the next generation of productivity. Work smarter, not harder.",
+  "text": "Introducing the next generation of productivity. Work smarter, not harder.",
   "voice": "af_nicole",
   "speed": 1.1
 }'
@@ -102,7 +104,7 @@ infsh app run infsh/kokoro-tts --input '{
 
 ```bash
 infsh app run infsh/kokoro-tts --input '{
-  "prompt": "Welcome back to Tech Talk! Im your host, and today we are diving deep into the world of artificial intelligence.",
+  "text": "Welcome back to Tech Talk! Im your host, and today we are diving deep into the world of artificial intelligence.",
   "voice": "am_adam"
 }'
 ```
@@ -113,13 +115,13 @@ infsh app run infsh/kokoro-tts --input '{
 # Generate dialogue between two speakers
 # Speaker 1
 infsh app run infsh/kokoro-tts --input '{
-  "prompt": "Have you seen the latest AI developments? Its incredible how fast things are moving.",
+  "text": "Have you seen the latest AI developments? Its incredible how fast things are moving.",
   "voice": "am_michael"
 }' > speaker1.json
 
 # Speaker 2
 infsh app run infsh/kokoro-tts --input '{
-  "prompt": "I know, right? Just last week I tried that new image generator and was blown away.",
+  "text": "I know, right? Just last week I tried that new image generator and was blown away.",
   "voice": "af_sarah"
 }' > speaker2.json
 
@@ -143,13 +145,13 @@ TEXT="Your very long text here..."
 # Split and generate
 # Chunk 1
 infsh app run infsh/kokoro-tts --input '{
-  "prompt": "<chunk-1>",
+  "text": "<chunk-1>",
   "voice": "bf_emma"
 }' > chunk1.json
 
 # Chunk 2
 infsh app run infsh/kokoro-tts --input '{
-  "prompt": "<chunk-2>",
+  "text": "<chunk-2>",
   "voice": "bf_emma"
 }' > chunk2.json
 
@@ -167,7 +169,7 @@ infsh app run infsh/media-merger --input '{
 ```bash
 # 1. Generate voiceover
 infsh app run infsh/kokoro-tts --input '{
-  "prompt": "This stunning footage shows the beauty of nature in its purest form.",
+  "text": "This stunning footage shows the beauty of nature in its purest form.",
   "voice": "am_michael"
 }' > voiceover.json
 
@@ -183,7 +185,7 @@ infsh app run infsh/media-merger --input '{
 ```bash
 # 1. Generate speech
 infsh app run infsh/kokoro-tts --input '{
-  "prompt": "Hi, Im excited to share some updates with you today.",
+  "text": "Hi, Im excited to share some updates with you today.",
   "voice": "af_sarah"
 }' > speech.json
 
@@ -207,7 +209,7 @@ infsh app run bytedance/omnihuman-1-5 --input '{
 ```bash
 # Slow narration
 infsh app run infsh/kokoro-tts --input '{
-  "prompt": "Take a deep breath. Let yourself relax.",
+  "text": "Take a deep breath. Let yourself relax.",
   "voice": "bf_emma",
   "speed": 0.8
 }'
@@ -228,7 +230,7 @@ Use punctuation to control speech rhythm:
 
 ```bash
 infsh app run infsh/kokoro-tts --input '{
-  "prompt": "Wait... Did you hear that? Something is coming. Something big!",
+  "text": "Wait... Did you hear that? Something is coming. Something big!",
   "voice": "am_adam"
 }'
 ```
@@ -268,8 +270,7 @@ npx skills add inference-sh/skills@ai-avatar-video
 npx skills add inference-sh/skills@ai-video-generation
 
 # Full platform skill
-npx skills add inference-sh/skills@agent-tools
+npx skills add inference-sh/skills@inference-sh
 ```
 
 Browse audio apps: `infsh app list --category audio`
-

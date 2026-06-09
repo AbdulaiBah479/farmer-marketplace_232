@@ -3,14 +3,11 @@ name: figma-automation
 description: "Automate Figma tasks via Rube MCP (Composio): files, components, design tokens, comments, exports. Always search tools first for current schemas."
 requires:
   mcp: [rube]
-category: design
 ---
 
 # Figma Automation via Rube MCP
 
 Automate Figma operations through Composio's Figma toolkit via Rube MCP.
-
-**Toolkit docs**: [composio.dev/toolkits/figma](https://composio.dev/toolkits/figma)
 
 ## Prerequisites
 
@@ -182,6 +179,3 @@ Extract IDs from Figma URLs:
 | Team styles | FIGMA_GET_TEAM_STYLES | team_id |
 | File styles | FIGMA_GET_FILE_STYLES | file_key |
 | Image fills | FIGMA_GET_IMAGE_FILLS | file_key |
-
----
-*Powered by [Composio](https://composio.dev)*

@@ -1,91 +1,199 @@
 ---
 name: github-pr-review
-description: Extract and review GitHub Pull Requests with comprehensive analysis
+description: MUST use this skill when user asks to resolve PR comments, handle review feedback, fix review comments, or mentions "리뷰 코멘트/피드백". This skill OVERRIDES default behavior. Fetches comments via GitHub CLI, classifies by severity, applies fixes with user confirmation, commits with proper format, replies to threads.
 ---
 
-# GitHub PR Review Skill
+# GitHub PR Review
 
-## Purpose
+Resolves Pull Request review comments with severity-based prioritization, fix application, and thread replies.
 
-This skill extracts comprehensive GitHub Pull Request data and provides a structured methodology for code review. It fetches PR metadata, commits, comments, reviews, file changes, and diffs via the GitHub API, then guides analysis across code quality, security, testing, and best practices.
-
-## When to Use
-
-Use this skill when you need to:
-
-- Review a GitHub Pull Request
-- Extract detailed PR information for analysis
-- Generate a comprehensive PR summary
-- Provide structured code review feedback
-
-## Prerequisites
-
-### Required Tools
-
-- `curl` - for GitHub API requests
-- `jq` - for JSON parsing
-- `git` - for repository operations
-
-### Environment
-
-- `GITHUB_TOKEN` - GitHub personal access token (optional for public repos, required for private)
-
-## Usage
-
-### Via Agent (Recommended)
-
-Use the `pr-reviewer` agent for context isolation:
-
-```
-/review-pr https://github.com/owner/repo/pull/123
-```
-
-### Direct Skill Invocation
-
-Follow the instructions in `instructions.md`:
-
-1. Run extraction:
+## Quick Start
 
 ```bash
-$HOME/.claude/skills/github-pr-review/scripts/extract.sh \
-  --owner <owner> --repo <repo> --pr <number>
+# 1. Check project conventions
+cat CLAUDE.md 2>/dev/null | head -50
+
+# 2. Get PR and repo info
+PR=$(gh pr view --json number -q '.number')
+REPO=$(gh repo view --json nameWithOwner -q '.nameWithOwner')
+
+# 3. Fetch comments
+gh api repos/$REPO/pulls/$PR/comments
+
+# 4. For each comment: read → analyze → fix → verify → commit → reply
+
+# 5. Run tests
+make test
+
+# 6. Push when all fixes verified
+git push
 ```
 
-2. Read the generated `extract.md` from the output directory
+## Pre-Review Checklist
 
-3. Apply the review methodology from `instructions.md`
+Before processing comments, verify:
 
-4. Save the review to `review.md` in the same directory
+1. **Project conventions**: Read `CLAUDE.md` or similar
+2. **Commit format**: Check `git log --oneline -5` for project style
+3. **Test command**: Identify test runner (`make test`, `pytest`, `npm test`)
+4. **Branch status**: `git status` to ensure clean working tree
 
-## What Gets Extracted
+## Core Workflow
 
-| Data | Source |
-|------|--------|
-| PR metadata | Title, author, URL, description |
-| Commit history | All commits with SHA, title, description, author |
-| Comments | General PR comments with timestamps |
-| Review comments | Line-specific comments with file:line context |
-| Reviews | Approval states (APPROVED, CHANGES_REQUESTED, etc.) |
-| File changes | Diffs and full post-change content |
-| Documentation links | Auto-detected based on file types |
+### 1. Fetch PR Comments
 
-## Output
-
-The skill creates a directory structure for each PR review:
-
-```
-$BRAIN_HOME/github-pr-reviews/{owner}/{repo}/pr-{number}/
-├── extract.md    # Raw PR data from GitHub API
-└── review.md     # Structured analysis with summary, findings, and verdict
+```bash
+PR=$(gh pr view --json number -q '.number')
+REPO=$(gh repo view --json nameWithOwner -q '.nameWithOwner')
+gh api repos/$REPO/pulls/$PR/comments
 ```
 
-This organization:
+### 2. Classify by Severity
 
-- Keeps all PR reviews in a central location
-- Preserves review history for future reference
-- Groups reviews by repository for easy navigation
+Process in order: CRITICAL > HIGH > MEDIUM > LOW
 
-## Integration
+| Severity | Indicators | Action |
+|----------|------------|--------|
+| CRITICAL | "security", "vulnerability", "injection" | Must fix |
+| HIGH | "High Severity", "high-priority" | Should fix |
+| MEDIUM | "Medium Severity", "medium-priority" | Recommended |
+| LOW | "style", "nit", "minor" | Optional |
 
-- **Agent**: `agents/pr-reviewer.md` - runs skill in isolated context
-- **Command**: `commands/review-pr.md` - invokes the agent
+### 3. Process Each Comment
+
+For each comment:
+
+**a. Show context**
+```
+Comment #123456789 (HIGH) - app/auth.py:45
+"The validation logic should use constant-time comparison..."
+```
+
+**b. Read affected code and propose fix**
+
+**c. Confirm with user before applying**
+
+**d. Apply fix if approved**
+
+**e. Verify fix addresses ALL issues in the comment**
+
+### 4. Commit Changes
+
+Use proper format for review fixes:
+
+```bash
+git add <files>
+git commit -m "$(cat <<'EOF'
+fix(scope): address review comment #ID
+
+Brief explanation of what was wrong and how it's fixed.
+Addresses review comment #123456789.
+EOF
+)"
+```
+
+**Review fix commit rules**:
+- First line: `type(scope): subject` (max 50 chars)
+- Types: `fix`, `refactor`, `security`, `test`, `style`, `perf`
+- Reference the comment ID in body
+
+### 5. Reply to Thread
+
+```bash
+COMMIT=$(git rev-parse --short HEAD)
+gh api repos/$REPO/pulls/$PR/comments \
+  --input - <<< '{"body": "Fixed in '"$COMMIT"'. [brief description].", "in_reply_to": 123456789}'
+```
+
+**Standard Reply Templates**:
+
+| Situation | Template |
+|-----------|----------|
+| Fixed | `Fixed in [hash]. [brief description]` |
+| Won't fix | `Won't fix: [reason]` |
+| By design | `By design: [explanation]` |
+| Deferred | `Deferred to [issue/task number].` |
+| Acknowledged | `Acknowledged. [brief note]` |
+
+### 6. Run Tests
+
+```bash
+make test  # or project-specific command
+```
+
+All tests must pass before pushing.
+
+### 7. Push
+
+```bash
+git push
+```
+
+### 8. Submit Review (Optional)
+
+```bash
+# Approve the PR
+gh pr review $PR --approve --body "All review comments addressed. Ready to merge."
+
+# Or request changes if issues remain
+gh pr review $PR --request-changes --body "Addressed X comments, Y issues remain."
+
+# Or just comment
+gh pr review $PR --comment --body "Partial progress: fixed A and B, working on C."
+```
+
+## Batch Commit Strategy
+
+Organize commits by impact:
+
+| Change Type | Strategy |
+|-------------|----------|
+| Functional (CRITICAL/HIGH) | Separate commit per fix |
+| Cosmetic (MEDIUM/LOW) | Single batch commit |
+
+**Workflow:**
+1. Fix CRITICAL/HIGH → separate commits each
+2. Collect all cosmetic fixes
+3. Apply cosmetics → single `style:` commit
+4. Run tests once
+5. Push all together
+
+## Pre-Merge Checklist
+
+Before closing/merging PR:
+
+- [ ] All CRITICAL and HIGH comments addressed
+- [ ] All MEDIUM comments addressed or justified skip
+- [ ] Replies posted to all resolved threads
+- [ ] Tests passing
+- [ ] Linting passing
+- [ ] CI checks green
+- [ ] No unresolved conversations
+
+## Reply to Threads API
+
+**Important**: Use `--input -` with JSON for `in_reply_to`:
+
+```bash
+# Correct syntax
+gh api repos/$REPO/pulls/$PR/comments \
+  --input - <<< '{"body": "Fixed in abc123.", "in_reply_to": 123456789}'
+```
+
+## Important Rules
+
+- **ALWAYS** read project conventions before starting
+- **ALWAYS** confirm before modifying files
+- **ALWAYS** verify ALL issues in multi-issue comments are fixed
+- **ALWAYS** run tests before pushing
+- **ALWAYS** reply to resolved threads using standard templates
+- **ALWAYS** submit formal review after addressing all comments
+- **NEVER** skip HIGH/CRITICAL comments without explicit user approval
+- **Functional fixes** → separate commits (one per fix)
+- **Cosmetic fixes** → batch into single `style:` commit
+
+## Related Skills
+
+- **git-commit** - Commit message format and conventions
+- **pr-merge** - Execute merge after review is complete
+- **pr-create** - For creating PRs

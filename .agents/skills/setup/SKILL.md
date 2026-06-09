@@ -1,35 +1,39 @@
 ---
 name: setup
-description: Provisions the oracle ML inference daemon with onnxruntime via uv. Use when setting up local ONNX model inference for skill quality evaluation.
+description: "Sets up new projects and generates workflow files like CLAUDE.md, AGENTS.md, Plans.md. Use when user mentions セットアップ, setup, 初期化, initialize, 新規プロジェクト, ワークフローファイル生成. Do NOT load for: 実装作業, レビュー, ビルド検証, デプロイ."
+allowed-tools: ["Read", "Write", "Edit", "Grep", "Glob", "Bash"]
+user-invocable: false
+metadata:
+  skillport:
+    category: setup
+    tags: [setup, initialize, workflow, project]
+    alwaysApply: false
 ---
 
-# Oracle Setup
+# Setup Skills
 
-Provision the ML inference environment.
+プロジェクトセットアップとワークフローファイル生成を担当するスキル群です。
 
-## What This Does
+## 含まれる小スキル
 
-1. Creates a Python 3.11+ virtual environment using uv
-2. Installs onnxruntime into the venv
-3. Verifies the installation
+| スキル | 用途 |
+|--------|------|
+| adaptive-setup | プロジェクト状況に応じた適応的セットアップ |
+| project-scaffolder | 新規プロジェクトのスキャフォールディング |
+| generate-workflow-files | CLAUDE.md, AGENTS.md, Plans.md 生成 |
+| generate-claude-settings | .claude/settings.json 生成 |
+| ask-project-type | 曖昧ケースでユーザーに新規/既存を質問 |
 
-## Prerequisites
+## ルーティング
 
-- uv must be installed
-- Internet connection for initial download
+- 適応的セットアップ: adaptive-setup/doc.md
+- スキャフォールディング: project-scaffolder/doc.md
+- ワークフローファイル: generate-workflow-files/doc.md
+- 設定ファイル: generate-claude-settings/doc.md
+- プロジェクト種別確認: ask-project-type/doc.md
 
-## Steps
+## 実行手順
 
-1. Run provisioning:
-
-```bash
-cd plugins/oracle && uv run python -c "
-from oracle.provision import provision_venv, get_venv_path
-result = provision_venv(get_venv_path())
-print(result.message)
-"
-```
-
-2. Report result to the user.
-3. If successful, tell the user the daemon will start on next session.
-4. If failed, show the error and suggest checking uv and network.
+1. ユーザーのリクエストを分類
+2. 適切な小スキルの doc.md を読む
+3. その内容に従ってセットアップ

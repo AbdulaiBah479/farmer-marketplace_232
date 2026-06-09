@@ -1,287 +1,199 @@
 ---
 name: plan-feature
-description: Create implementation plans for features using a Task tool worker.
-version: 1.1.0
-tags: [planning, workflow, tasks]
-owner: orchestration
-status: active
+description: Plan a new feature with analysis, design, and implementation steps. Use when the user asks to plan a feature or run /plan-feature.
 ---
 
-# Plan Feature Skill
+# Feature Planning
 
-Create implementation plans for features using Task tool worker.
+Plan and structure new features with thorough analysis, design considerations, and actionable implementation steps.
 
-## Overview
+## Instructions
 
-This skill handles Phase 1 (Planning) of the workflow. It spawns a worker Claude via the Task tool to analyze requirements and create a structured implementation plan.
+When this skill is invoked:
 
-## Prerequisites
+1. **Gather Requirements**
+   - Identify the feature name and high-level goal
+   - Ask clarifying questions if requirements are ambiguous
+   - Determine acceptance criteria for the feature
 
-- `Docs/PRODUCT.md` exists with a valid feature specification.
+2. **Analyze Existing Codebase**
+   - Search for related existing functionality
+   - Identify patterns and conventions in the codebase
+   - Find integration points where the feature will connect
 
-## Token Efficiency
+3. **Design the Solution**
+   - Determine affected modules (lobby, session, api, ui)
+   - Identify required changes per architectural layer
+   - Consider edge cases and error handling
+   - Note any external dependencies or constraints
 
-| Method | Token Cost | Notes |
-|--------|-----------|-------|
-| Old (subprocess) | ~13k overhead | Full context duplication |
-| New (Task tool) | ~4k overhead | Filtered context |
-| **Savings** | **70%** | Native integration |
+4. **Create Implementation Plan**
+   - Break down into atomic, testable tasks
+   - Order tasks by dependencies
+   - Write the plan to the todo list using TodoWrite
 
-## Input Requirements
+5. **Save Plan to File**
+   - Create `.claude/plans/` directory if it doesn't exist
+   - Generate a slug from the feature name (e.g., "Custom Voting Decks" → `custom-voting-decks.md`)
+   - Write the plan to `.claude/plans/<feature-slug>.md` using the Output Format below
+   - This creates a persistent record of the plan for reference
 
-Before running this skill, ensure:
-- `Docs/PRODUCT.md` exists with feature specification (REQUIRED)
-- `Docs/` folder contains project documentation (vision, architecture, requirements)
-- `CONTEXT.md` has discussion outcomes (optional)
+6. **Present for Approval**
+   - Summarize the approach
+   - Highlight key design decisions
+   - Present the task breakdown
+   - Reference the saved plan file location
+   - Wait for user approval before implementing
 
-**Note:** If PRODUCT.md is in project root (legacy), it will be used but a warning is logged. Prefer `Docs/PRODUCT.md`.
+## Task Breakdown Structure
 
-## Task Tool Invocation
-
-Use the Task tool with subagent_type="Plan":
-
-```
-Task(
-  subagent_type="Plan",
-  prompt="""
-  # Planning Task: Create Implementation Plan
-
-  ## Your Role
-  You are a senior software architect creating an implementation plan.
-
-  ## Input Files to Read
-
-  **Step 1: Read ALL documentation from Docs/ folder**
-
-  Use Glob to find all docs:
-  ```
-  Glob: Docs/**/*.md
-  ```
-
-  This reads ALL `.md` files in Docs/ and all subfolders, regardless of structure.
-
-  **Required:**
-  - Docs/PRODUCT.md - Feature specification (REQUIRED)
-
-  **Also read:**
-  - ALL other `.md` files in Docs/ (any structure)
-  - CONTEXT.md - Developer preferences from discussion (if exists)
-  - Existing codebase structure
-
-  **Fallback:** If Docs/PRODUCT.md doesn't exist, check for PRODUCT.md in project root.
-
-  ## Build Context Before Planning
-
-  Before creating the plan, ensure you understand:
-  - **Vision**: Why are we building this? (from available documentation)
-  - **Constraints**: What technical limitations exist? (from available documentation)
-  - **Requirements**: What must it do? (from available documentation)
-  - **Past decisions**: What has already been decided? (from available documentation)
-  - **Success criteria**: How do we know we're done? (from Docs/PRODUCT.md)
-
-  ## Output Requirements
-
-  Create a plan.json with this structure:
-  {
-    "feature": {
-      "name": "Feature name from PRODUCT.md",
-      "summary": "Brief description",
-      "acceptance_criteria": ["From PRODUCT.md"]
-    },
-    "tasks": [
-      {
-        "id": "T1",
-        "title": "Short descriptive title (max 80 chars)",
-        "user_story": "As a [user], I want [feature] so that [benefit]",
-        "acceptance_criteria": [
-          "Criterion 1",
-          "Criterion 2"
-        ],
-        "files_to_create": ["path/to/new/file.py"],
-        "files_to_modify": ["path/to/existing/file.py"],
-        "test_files": ["tests/test_feature.py"],
-        "dependencies": [],
-        "priority": "critical|high|medium|low",
-        "estimated_complexity": "low|medium|high"
-      }
-    ],
-    "architecture": {
-      "patterns": ["Patterns to use"],
-      "components": ["Components involved"],
-      "data_flow": "Description of data flow"
-    },
-    "test_strategy": {
-      "unit_tests": ["What to unit test"],
-      "integration_tests": ["What to integration test"],
-      "coverage_target": 80
-    },
-    "risks": [
-      {
-        "description": "Risk description",
-        "mitigation": "How to mitigate",
-        "severity": "high|medium|low"
-      }
-    ]
-  }
-
-  ## Task Granularity Rules
-
-  Each task MUST follow these limits:
-  - Max 3 files to create
-  - Max 5 files to modify
-  - Max 5 acceptance criteria
-  - Title max 80 characters
-  - Should be completable in <10 minutes
-
-  If a logical task exceeds these limits, SPLIT IT:
-  - Group files by directory/module
-  - Create T1-a, T1-b, T1-c with dependencies
-  - Distribute acceptance criteria
-
-  ## Task Dependencies
-
-  Express dependencies as task IDs:
-  - "dependencies": [] = no dependencies, can run first
-  - "dependencies": ["T1"] = must run after T1
-  - "dependencies": ["T1", "T2"] = must run after both
-
-  ## Priority Guidelines
-
-  - critical: Core functionality, blocks everything
-  - high: Important feature, blocks some things
-  - medium: Standard feature work
-  - low: Nice to have, can be deferred
-
-  ## Output Location
-
-  Save the plan to `phase_outputs` (type=plan)
-
-  ## Validation Checklist
-
-  Before completing, verify:
-  [ ] All Docs/PRODUCT.md requirements covered
-  [ ] All acceptance criteria mapped to tasks
-  [ ] Architecture constraints from documentation respected
-  [ ] Task dependencies form a valid DAG
-  [ ] No circular dependencies
-  [ ] Each task respects size limits
-  [ ] Test strategy covers all tasks
-  [ ] Plan aligns with project vision from documentation
-  """,
-  run_in_background=false
-)
-```
-
-## Plan Schema
-
-```json
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "type": "object",
-  "required": ["feature", "tasks", "test_strategy"],
-  "properties": {
-    "feature": {
-      "type": "object",
-      "required": ["name", "summary"],
-      "properties": {
-        "name": {"type": "string", "maxLength": 100},
-        "summary": {"type": "string", "maxLength": 500},
-        "acceptance_criteria": {"type": "array", "items": {"type": "string"}}
-      }
-    },
-    "tasks": {
-      "type": "array",
-      "minItems": 1,
-      "items": {
-        "type": "object",
-        "required": ["id", "title", "acceptance_criteria"],
-        "properties": {
-          "id": {"type": "string", "pattern": "^T\\d+(-[a-z])?$"},
-          "title": {"type": "string", "maxLength": 80},
-          "user_story": {"type": "string"},
-          "acceptance_criteria": {"type": "array", "maxItems": 5},
-          "files_to_create": {"type": "array", "maxItems": 3},
-          "files_to_modify": {"type": "array", "maxItems": 5},
-          "test_files": {"type": "array"},
-          "dependencies": {"type": "array", "items": {"type": "string"}},
-          "priority": {"enum": ["critical", "high", "medium", "low"]},
-          "estimated_complexity": {"enum": ["low", "medium", "high"]}
-        }
-      }
-    },
-    "test_strategy": {
-      "type": "object",
-      "properties": {
-        "unit_tests": {"type": "array"},
-        "integration_tests": {"type": "array"},
-        "coverage_target": {"type": "number", "minimum": 0, "maximum": 100}
-      }
-    }
-  }
-}
-```
-
-## After Planning
-
-1. **Save plan**: Store in `phase_outputs` (type=plan)
-
-2. **Update state**:
-   ```json
-   {
-     "current_phase": 2,
-     "phase_status": {
-       "planning": "completed",
-       "validation": "in_progress"
-     },
-     "plan": { ... }
-   }
-   ```
-
-3. **Proceed to validation**: Run `/validate-plan`
-
-## Auto-Split Logic
-
-If a task exceeds limits, the planning worker should split it:
+### Backend Tasks (if applicable)
 
 ```
-Original Task T1:
-  files_to_create: [a.py, b.py, c.py, d.py, e.py, f.py]  # 6 files!
-
-After Auto-Split (max 3):
-  T1-a:
-    files_to_create: [a.py, b.py, c.py]
-    dependencies: []
-
-  T1-b:
-    files_to_create: [d.py, e.py, f.py]
-    dependencies: ["T1-a"]
+[ ] Define API contract (Commands/Events/Queries in api module)
+[ ] Implement domain logic (aggregates, entities, value objects)
+[ ] Create command/query handlers
+[ ] Update read model projections
+[ ] Add usecase tests for handlers
+[ ] Add integration tests
 ```
 
-## Outputs
+### Frontend Tasks (if applicable)
 
-- `phase_outputs` entry for `plan` and `task_breakdown`.
+```
+[ ] Design component structure
+[ ] Implement state management (stores/hooks)
+[ ] Create UI components
+[ ] Wire up API integration
+[ ] Add component tests
+```
 
-## Error Handling
+### Cross-Cutting Tasks
 
-### Missing Docs/PRODUCT.md
-- Check for PRODUCT.md in project root (legacy fallback)
-- If neither exists, cannot proceed without specification
-- Ask user to provide Docs/PRODUCT.md or run `/discover`
+```
+[ ] Update shared types/contracts
+[ ] Add documentation if needed
+[ ] Verify build passes
+[ ] Run full test suite
+```
 
-### Missing Docs/ Folder
-- Log warning: "No Docs/ folder found. Planning with limited context."
-- Proceed with just PRODUCT.md if available
-- Recommend user add supporting documentation
+## Analysis Guidelines
 
-### Task Exceeds Limits
-- Auto-split the task
-- Log split decision in plan
+### Questions to Answer
 
-### Circular Dependencies
-- Validate DAG before saving
-- Report error if cycles detected
+1. **What problem does this solve?** - Clear user value
+2. **Who is affected?** - Which users/roles
+3. **What are the boundaries?** - What's in/out of scope
+4. **What could go wrong?** - Failure modes and mitigations
+5. **How will we know it works?** - Testability criteria
 
-## Related Skills
+### Architecture Considerations
 
-- `/orchestrate` - Main workflow
-- `/validate-plan` - Next phase (validation)
+**Domain Layer**:
+- New aggregates or entities needed?
+- Changes to existing aggregate behavior?
+- New domain events?
+
+**Application Layer**:
+- New commands or queries?
+- Handler orchestration complexity?
+- Transaction boundaries?
+
+**Adapter Layer**:
+- API endpoint changes?
+- Persistence schema updates?
+- External service integrations?
+
+**UI Layer**:
+- New pages or components?
+- State management approach?
+- User interaction flows?
+
+## File Naming Convention
+
+Plans are saved to `.claude/plans/<feature-slug>.md` where:
+- Feature slug is derived from the feature name
+- Convert to lowercase
+- Replace spaces and special characters with hyphens
+- Remove consecutive hyphens
+
+Examples:
+- "Custom Voting Decks" → `custom-voting-decks.md`
+- "Add User Authentication" → `add-user-authentication.md`
+- "Fix Timer Bug" → `fix-timer-bug.md`
+
+## Output Format
+
+Write the plan to the file using this structure:
+
+```markdown
+# Feature: [Name]
+
+> **Created**: [YYYY-MM-DD]
+> **Status**: Draft | Approved | In Progress | Completed
+
+## Summary
+[1-2 sentence description of what this feature does]
+
+## Affected Modules
+- [ ] api (contracts)
+- [ ] guessimate-lobby
+- [ ] guessimate-session
+- [ ] guessimate-ui
+
+## Key Design Decisions
+1. [Decision 1 with rationale]
+2. [Decision 2 with rationale]
+
+## Implementation Tasks
+[Numbered list of specific, actionable tasks]
+
+## Risks & Considerations
+- [Risk 1]
+- [Risk 2]
+
+## Open Questions
+- [Question needing user input]
+```
+
+## Example
+
+For a feature request like "Add ability to customize voting deck", the plan would be saved to `.claude/plans/custom-voting-decks.md`:
+
+```markdown
+# Feature: Custom Voting Decks
+
+> **Created**: 2026-01-02
+> **Status**: Draft
+
+## Summary
+Allow lobby owners to create and select custom card decks for estimation sessions instead of using only the default Fibonacci sequence.
+
+## Affected Modules
+- [x] api (new commands/events for deck management)
+- [x] guessimate-lobby (deck storage in lobby aggregate)
+- [ ] guessimate-session (use selected deck)
+- [x] guessimate-ui (deck configuration UI)
+
+## Key Design Decisions
+1. Store custom decks at lobby level (not user level) - simpler model, decks tied to where they're used
+2. Provide preset templates (Fibonacci, T-shirt, Powers of 2) - quick setup for common cases
+3. Validate deck has 2-15 cards - reasonable constraints
+
+## Implementation Tasks
+1. Add Deck value object with validation to api module
+2. Add CreateCustomDeckCommand and DeckCreatedEvent to api
+3. Implement deck storage in LobbyAggregate
+4. Create DeckSelectionComponent in UI
+5. Add deck preview functionality
+6. Update session creation to use selected deck
+7. Add usecase tests for deck commands
+8. Add integration test for full flow
+
+## Risks & Considerations
+- Migration: existing lobbies need default deck assigned
+- UI complexity: deck editor could become complex
+
+## Open Questions
+- Should decks be shareable between lobbies?
+```

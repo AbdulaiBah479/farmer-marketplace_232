@@ -3,14 +3,11 @@ name: linear-automation
 description: "Automate Linear tasks via Rube MCP (Composio): issues, projects, cycles, teams, labels. Always search tools first for current schemas."
 requires:
   mcp: [rube]
-category: project-management
 ---
 
 # Linear Automation via Rube MCP
 
 Automate Linear operations through Composio's Linear toolkit via Rube MCP.
-
-**Toolkit docs**: [composio.dev/toolkits/linear](https://composio.dev/toolkits/linear)
 
 ## Prerequisites
 
@@ -179,6 +176,3 @@ Automate Linear operations through Composio's Linear toolkit via Rube MCP.
 | List users | LINEAR_LIST_LINEAR_USERS | (none) |
 | Current user | LINEAR_GET_CURRENT_USER | (none) |
 | Run GraphQL | LINEAR_RUN_QUERY_OR_MUTATION | query, variables |
-
----
-*Powered by [Composio](https://composio.dev)*

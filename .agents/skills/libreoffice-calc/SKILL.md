@@ -14,12 +14,12 @@ If setup or runtime issues appear, check `references/troubleshooting.md`.
 
 ```python
 # Non-session utilities
-create_spreadsheet(path, source=None)              # source: path to .json or .xml file to import
-export_spreadsheet(path, output_path, export_format)   # formats: "pdf", "xlsx", "csv"
+create_spreadsheet(path)
+export_spreadsheet(path, output_path, format)   # formats: "pdf", "xlsx", "csv"
 snapshot_area(doc_path, output_path, sheet="Sheet1", row=0, col=0, width=None, height=None, dpi=150)
 
 # Session (primary editing API)
-CalcSession(path) -> context manager
+open_calc_session(path) -> CalcSession
 
 CalcSession methods:
   read_cell(target: CalcTarget) -> dict[str, object]
@@ -41,7 +41,7 @@ CalcSession methods:
   delete_chart(target: CalcTarget)
   recalculate()
   patch(patch_text, mode="atomic") -> PatchApplyResult
-  export(output_path, export_format)
+  export(output_path, format)
   reset()
   close(save=True)
 
@@ -288,18 +288,18 @@ mutations in the current open session state.
 from pathlib import Path
 
 from calc import (
-    CalcSession,
     CalcTarget,
     CellFormatting,
     ChartSpec,
     ValidationRule,
+    open_calc_session,
 )
 from calc.core import create_spreadsheet
 
 output = str(Path("test-output/revenue-report.ods").resolve())
 create_spreadsheet(output)
 
-with CalcSession(output) as session:
+with open_calc_session(output) as session:
     session.rename_sheet(CalcTarget(kind="sheet", sheet="Sheet1"), "Revenue Data")
     session.add_sheet("Summary")
     session.write_range(
@@ -348,26 +348,26 @@ from calc import patch
 result = patch(
     "/abs/path/revenue-report.ods",
     """
-    [operation]
-    type = write_cell
-    target.kind = cell
-    target.sheet = Summary
-    target.row = 1
-    target.col = 1
-    value = Ready
-    value_type = text
+[operation]
+type = write_cell
+target.kind = cell
+target.sheet = Summary
+target.row = 1
+target.col = 1
+value = Ready
+value_type = text
 
-    [operation]
-    type = format_range
-    target.kind = cell
-    target.sheet = Summary
-    target.row = 1
-    target.col = 1
-    format.bold = true
+[operation]
+type = format_range
+target.kind = cell
+target.sheet = Summary
+target.row = 1
+target.col = 1
+format.bold = true
 
-    [operation]
-    type = recalculate
-    """,
+[operation]
+type = recalculate
+""",
     mode="best_effort",
 )
 
@@ -382,7 +382,7 @@ from calc import snapshot_area
 
 result = snapshot_area(doc_path, "/tmp/revenue.png", sheet="Revenue Data", row=0, col=0, dpi=150)
 print(result.file_path, result.width, result.height)
-Path(result.file_path).unlink(missing_ok=True)   # clean up used snapshots
+Path(result.file_path).unlink(missing_ok=True)
 ```
 
 Use snapshots to verify chart placement, formatting, and sheet layout before delivery.
@@ -395,6 +395,4 @@ Use snapshots to verify chart placement, formatting, and sheet layout before del
 - Assuming `create_chart()` picks a random later target name; when `title` is set, targeting the chart by that same name is the safest follow-up pattern.
 - Forgetting `chart.data_range.*` fields when patching chart operations.
 - Expecting exact requested PNG dimensions from `snapshot_area()`; Calc export can differ by a small amount.
-- Forgetting to clean up captured snapshots after inspection.
 - Calling session methods after `session.close()`.
-- JSON / XML import requires LibreOffice 26.2+.

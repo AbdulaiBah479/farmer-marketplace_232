@@ -1,21 +1,30 @@
 ---
 name: agb-entwurf-kaltstart
-description: "Einstiegs- und Workflow-Skill für AGB Entwurf Kaltstart: sortiert Ziel, Rolle, Dokumente, Normenstand, AGB-Risiko und nächsten Output schnell und anfängertauglich."
+description: "Einstiegs- und Prüfungslinie für AGB Entwurf Kaltstart: sortiert Ziel, Rolle, Dokumente, Normenstand, AGB-Risiko und nächsten Output schnell und anfängertauglich."
 ---
 
 # AGB Entwurf Kaltstart
 
-## Wann verwenden
+## Aktenstart statt Formularstart
 
-Nutze diesen Skill für **AGB Entwurf Kaltstart** im deutschen AGB-Recht, wenn eine Klausel geprüft, entworfen, redlined, verhandelt oder prozessual verteidigt werden soll.
+Wenn zu **Agb Entwurf Kaltstart** bereits Unterlagen, ein Ordner, ein ZIP, ein PDF-Buendel, E-Mails, Screenshots, Tabellen oder Entwuerfe vorliegen, lies diese zuerst aus. Bilde fuer **Agb Recht Pruefer** eine Arbeitshypothese zu Beteiligten, Rolle des Nutzers, Verfahrensstand, Fristen, Betrags-/Datumslogik, Belegen und naechstem sinnvollen Output. Frage nicht routinemaessig nach Angaben, die sich aus der Akte ergeben.
 
-## Minimal-Intake
+Starte dann mit einer knappen Rueckmeldung:
 
-- Rolle: Verwender, Kunde, Verbraucher, Unternehmer, Plattform, Händler, Verband oder Prozessgegner.
-- Klausel: Wortlaut, Fundstelle, Überschrift, Kontext, Version und Einbeziehungsweg.
-- Vertrag: Vertragstyp, Hauptleistung, Preis-/Risikomodell, Laufzeit und Vertriebskanal.
-- Ziel: Wirksamkeit prüfen, Risiko senken, härter entwerfen, redlinen, verhandeln oder verteidigen.
-- Nachweis: Screenshots, Checkout, E-Mail, Angebot, Auftragsbestätigung, Archivversion oder Kundendaten.
+```text
+Ich habe aus der Akte vorlaeufig erkannt: [...]
+Unsicher sind noch: [...]
+Als naechsten Schritt schlage ich vor: [...]
+```
+
+Stelle danach hoechstens drei Rueckfragen und nur zu echten Luecken oder Widerspruechen. Wenn keine Akte vorliegt, bitte zuerst um Upload der wichtigsten Unterlagen statt ein langes Interview zu beginnen.
+
+## Fachkern: AGB Entwurf Kaltstart
+
+- **Klauselproblem (AGB Entwurf Kaltstart):** sortiert Ziel, Rolle, Dokumente, Normenstand, AGB-Risiko und nächsten Output schnell und anfängertauglich.
+- **AGB-Weiche:** Einbeziehung (§ 305 BGB), überraschende Klausel (§ 305c BGB), Transparenz (§ 307 Abs. 1 S. 2 BGB), Inhaltskontrolle (§§ 307-309 BGB), Rechtsfolge (§ 306 BGB) und Prozess-/Verbandsrisiko sauber trennen.
+- **Beleglogik:** Originalklausel, Vertragsumfeld, Verwendungsnachweis, Verhandlungsspuren, Kundengruppe, Marktstandard und wirtschaftliche Wirkung als Matrix erfassen.
+- **Arbeitsprodukt:** Klauselampel, Redline, Ersatzformulierung, Verhandlungsposition und gerichtsfeste Kurzbegründung mit Live-Check amtlicher Normenquellen.
 
 ## Prüfpfad
 
@@ -27,25 +36,34 @@ Nutze diesen Skill für **AGB Entwurf Kaltstart** im deutschen AGB-Recht, wenn e
 6. **Rechtsfolge:** Unwirksamkeit, gesetzliche Ersatzregel, Rückzahlung, Vertragsfortbestand, Prozess- und UKlaG-Risiko prüfen.
 7. **Verbesserung:** mindestens eine sichere Ersatzfassung und bei Bedarf eine verhandelbare Fallback-Fassung formulieren.
 
-## Output
+## Normen und Rechtsprechung
 
-| Punkt | Befund |
-| --- | --- |
-| Klauselzweck | ... |
-| AGB-Kontrolle | ja/nein/unklar, warum |
-| Hauptangriff | ... |
-| Verteidigung | ... |
-| Risiko | Grün/Gelb/Rot |
-| Bessere Fassung | ... |
-| offene Tatsachen | ... |
+### Kuratierte Normen-Bibliothek
 
-## Qualitätsregeln
+- § 305 BGB (Einbeziehung von AGB)
+- § 305c BGB (überraschende und mehrdeutige Klauseln)
+- § 306 BGB (Rechtsfolgen bei Nichteinbeziehung und Unwirksamkeit)
+- § 307 BGB (Inhaltskontrolle, Transparenzgebot)
+- § 308 BGB (Klauselverbote mit Wertungsmöglichkeit)
+- § 309 BGB (Klauselverbote ohne Wertungsmöglichkeit)
+- § 310 BGB (Anwendungsbereich, B2B-Modifikation)
+- §§ 1, 3, 4 UKlaG (Verbandsklage, qualifizierte Einrichtungen)
+- § 8 Abs. 3, § 13, § 13a UWG (Abmahnung, Vertragsstrafe)
+- Art. 6 ff. Rom-I-VO (Verbraucherverträge, anwendbares Recht)
 
-- Keine Scheinzitate. Rechtsprechung nur mit Gericht, Datum, Aktenzeichen und frei prüfbarer Quelle.
-- Keine geltungserhaltende Reduktion als Standardlösung anbieten.
-- Bei B2B nicht so tun, als sei alles frei verhandelbar; Transparenz und Leitbild bleiben wichtig.
-- Bei B2C streng, verständlich und dokumentationsfähig formulieren.
-- Wenn eine Klausel wirtschaftlich gewollt, aber rechtlich riskant ist: Risiko offen labeln und Fallback anbieten.
+### Leitentscheidungen
+
+- BGH VIII ZR 178/08 (Transparenzgebot Preisanpassung)
+- BGH I ZR 26/19 (Cookie-Banner als AGB)
+- BGH XI ZR 26/20 (Bankgebühren-Anpassungsklauseln)
+- BGH I ZR 196/19 (Verbandsklagebefugnis vzbv)
+- BGH IX ZR 119/14 (geltungserhaltende Reduktion)
+
+### Anwendung im Skill
+
+- AGB-Eigenschaft, Einbeziehung und Inhaltskontrolle in dieser Reihenfolge pruefen; nicht mit § 307 BGB beginnen ohne § 305 BGB zu klaeren.
+- Klauselverbote nach §§ 308, 309 BGB sind im B2B-Verkehr nur Indizien; § 310 Abs. 1 BGB ist nicht 'AGB-Recht light'.
+- Bei Abmahnung Frist und Vertragsstrafenhoehe gegen § 13 Abs. 3 und § 13a UWG pruefen; modifizierte UE statt voreiliger Unterzeichnung.
 
 ## Quellenanker
 

@@ -1,213 +1,141 @@
 ---
 name: system-design-interview
-description: >
-  Apply system design principles from System Design Interview by Alex Xu.
-  Covers scaling (load balancing, DB replication, sharding, caching, CDN),
-  estimation (QPS, storage, bandwidth), the 4-step framework, and 12 real
-  designs: rate limiter, consistent hashing, key-value store, unique ID
-  generator, URL shortener, web crawler, notification system, news feed,
-  chat system, search autocomplete, YouTube, Google Drive. Trigger on
-  "system design", "scale", "high-level design", "distributed system",
-  "rate limiter", "consistent hashing", "back-of-envelope", "QPS",
-  "sharding", "load balancer", "CDN", "cache", "message queue",
-  "web crawler", "news feed", "chat system", "autocomplete", "URL shortener".
+description: "Structure a complete system design answer for interview questions or real architecture sessions. Use when asked to design a system, answer a system design interview question, or architect a solution at scale. Produces a structured answer covering requirements, capacity estimates, high-level design, component deep-dives, trade-offs, and follow-up considerations."
 ---
 
 # System Design Interview Skill
 
-You are an expert system design advisor grounded in the 16 chapters from
-*System Design Interview* by Alex Xu. You help in two modes:
+Structures a complete, interview-grade system design response — covering clarifying questions, requirements, capacity estimates, architecture, component design, and trade-offs. Works equally well for real architecture sessions.
 
-1. **Design Application** — Apply system design principles to architect solutions for real problems
-2. **Design Review** — Analyze existing system architectures and recommend improvements
+## Required Inputs
 
-## How to Decide Which Mode
+Ask for these if not provided:
+- **The system to design** (e.g. "design a URL shortener", "design a notification service", "design Twitter's feed")
+- **Scope** (interview prep / real architecture decision / practice run)
+- **Scale target** (rough numbers: DAU, requests/sec, data volume — or "assume typical web scale")
+- **Constraints or priorities** (e.g. prioritise availability over consistency, minimise cost, low-latency reads)
+- **Time available** (interview context only: 30 / 45 / 60 minutes — skip for real architecture sessions)
+- **Emphasis** (optional — any area to go deeper on, e.g. "focus on the DB design" or "spend more time on scaling")
 
-- If the user asks to *design*, *architect*, *build*, *scale*, or *plan* a system → **Design Application**
-- If the user asks to *review*, *evaluate*, *audit*, *assess*, or *improve* an existing design → **Design Review**
-- If ambiguous, ask briefly which mode they'd prefer
+## Output Format
 
----
+### 1. Clarifying Questions
+Before designing, list 4–6 questions that would change the design. Examples:
+- Read-heavy or write-heavy? (affects caching and DB choice)
+- Global or single-region? (affects latency requirements)
+- Strong or eventual consistency? (affects storage and replication)
+- Acceptable latency targets? (p50 / p99)
+- Any existing infrastructure constraints?
 
-## Mode 1: Design Application
+Then proceed with stated assumptions if answering an interview question.
 
-When helping design systems, follow this decision flow:
+### 2. Functional Requirements
+**Core features (must have):**
+- [Feature 1]
+- [Feature 2]
+- [Feature 3]
 
-### Step 1 — Understand the Context
+**Out of scope (for this design):**
+- [What's deliberately excluded and why]
 
-Ask (or infer from context):
+### 3. Non-Functional Requirements
+| Requirement | Target |
+|---|---|
+| Availability | [e.g. 99.9% / 99.99%] |
+| Latency | [e.g. p95 < 100ms for reads] |
+| Throughput | [e.g. 10k writes/sec peak] |
+| Consistency | [Strong / Eventual] |
+| Durability | [e.g. 99.999% — no data loss] |
 
-- **What system?** — What type of system are we designing?
-- **What scale?** — Expected users, QPS, storage, bandwidth?
-- **What constraints?** — Latency requirements, availability target, cost budget?
-- **What scope?** — Full system or specific component?
+### 4. Capacity Estimation
+**Traffic:**
+- DAU: [X]
+- Reads/sec: [X] (peak: [X])
+- Writes/sec: [X] (peak: [X])
 
-### Step 2 — Apply the 4-Step Framework (Ch 3)
+**Storage:**
+- Per record size: [X bytes]
+- Records per day: [X]
+- 5-year storage: [X GB/TB]
 
-Every design should follow:
+**Bandwidth:**
+- Inbound: [X MB/s]
+- Outbound: [X MB/s]
 
-1. **Understand the problem and establish design scope** (3–10 min) — Clarify requirements, define functional and non-functional requirements, make back-of-envelope estimates
-2. **Propose high-level design and get buy-in** (10–15 min) — Draw initial blueprint, identify main components, propose APIs
-3. **Design deep dive** (10–25 min) — Dive into 2–3 critical components, discuss trade-offs
-4. **Wrap up** (3–5 min) — Summarize, discuss error handling, operational concerns, scaling
+### 5. High-Level Architecture
 
-### Step 3 — Apply the Right Practices
+Draw an ASCII diagram specific to this system. Do not default to the client→CDN→LB→API→Cache→DB template unless it genuinely applies. Label each component with the specific technology chosen (e.g. "Kafka" not "Message Queue", "PostgreSQL" not "DB"). Describe each component in 1–2 sentences explaining its role and why that technology was chosen.
 
-Read `references/api_reference.md` for the full chapter-by-chapter catalog. Quick decision guide:
+### 6. Component Deep-Dive
 
-| Concern | Chapters to Apply |
-|---------|-------------------|
-| Scaling from zero to millions | Ch 1: Load balancer, DB replication, cache, CDN, sharding, message queue, stateless tier |
-| Estimating capacity | Ch 2: Powers of 2, latency numbers, QPS/storage/bandwidth estimation |
-| Structuring the interview | Ch 3: 4-step framework (scope → high-level → deep dive → wrap up) |
-| Controlling request rates | Ch 4: Token bucket, leaking bucket, fixed/sliding window, Redis-based distributed rate limiting |
-| Distributing data evenly | Ch 5: Consistent hashing, hash ring, virtual nodes |
-| Building distributed storage | Ch 6: CAP theorem, quorum consensus (N/W/R), vector clocks, gossip protocol, Merkle trees |
-| Generating unique IDs | Ch 7: Multi-master, UUID, ticket server, Twitter snowflake approach |
-| Shortening URLs | Ch 8: Hash + collision resolution, base-62 conversion, 301 vs 302 redirects |
-| Crawling the web | Ch 9: BFS traversal, URL frontier (politeness/priority queues), robots.txt, content dedup |
-| Sending notifications | Ch 10: APNs/FCM push, SMS, email; notification log, retry, dedup, rate limiting, templates |
-| Building news feeds | Ch 11: Fanout on write vs read, hybrid for celebrities, cache layers (content, social graph, counters) |
-| Real-time messaging | Ch 12: WebSocket, long polling, stateful chat services, key-value store, presence, service discovery |
-| Search autocomplete | Ch 13: Trie data structure, data gathering service, query service, browser caching, sharding |
-| Video streaming | Ch 14: Upload flow, DAG-based transcoding, streaming protocols, CDN cost optimization, pre-signed URLs |
-| Cloud file storage | Ch 15: Block servers, delta sync, resumable upload, metadata DB, long-polling notifications, conflict resolution |
+Pick the 2–3 most critical/interesting components and go deep:
 
-### Step 4 — Design the System
+**[Component 1: e.g. Database Layer]**
+- Choice: [Technology and why — e.g. PostgreSQL for ACID guarantees, Cassandra for write throughput]
+- Schema design (high-level): [Key tables/collections and their structure]
+- Indexing strategy: [What gets indexed and why]
+- Replication: [Primary-replica / Multi-primary — and why]
 
-Follow these principles:
+**[Component 2: e.g. Caching Strategy]**
+- Cache type: [Redis / Memcached — and why]
+- What gets cached: [Hot data — e.g. user sessions, frequent reads]
+- Cache invalidation: [TTL / Write-through / Write-behind — trade-offs]
+- Cache hit rate target: [e.g. 95%]
 
-- **Start simple, then scale** — Begin with single-server, identify bottlenecks, scale incrementally
-- **Estimate first** — Use back-of-envelope estimation to validate feasibility
-- **Identify bottlenecks** — Find the single points of failure and address them
-- **Trade-offs explicit** — Every design decision has trade-offs; state them clearly
-- **Consider failures** — Design for failure: replication, retry, graceful degradation
+**[Component 3: e.g. API Design]**
+- Key endpoints: [List the 3–5 most important API calls]
+- Authentication: [JWT / OAuth / API keys]
+- Rate limiting: [Where and at what rate]
 
-When applying design, produce:
+### 7. Data Flow
+Walk through the two most critical paths end-to-end:
 
-1. **Requirements** — Functional and non-functional requirements, constraints
-2. **Back-of-envelope estimation** — QPS, storage, bandwidth, memory estimates
-3. **High-level design** — Main components and how they interact
-4. **Deep dive** — 2–3 most critical components with detailed design
-5. **Operational concerns** — Error handling, monitoring, scaling plan
+**Write path:** [Step 1 → Step 2 → Step 3...]
+**Read path:** [Step 1 → Step 2 → Step 3...]
 
-### Design Application Examples
+### 8. Scaling Bottlenecks and Mitigations
+| Bottleneck | Mitigation |
+|---|---|
+| [e.g. DB write throughput] | [e.g. sharding by user_id, write batching] |
+| [e.g. Hot-key cache misses] | [e.g. local in-process cache, probabilistic early expiry] |
+| [e.g. Single region latency] | [e.g. multi-region deployment, GeoDNS routing] |
 
-**Example 1 — Rate Limiter:**
-```
-User: "Design a rate limiter for our API"
+### 9. Trade-offs and Alternatives
+Be explicit about what was chosen and what was sacrificed:
 
-Apply: Ch 4 (rate limiting algorithms), Ch 1 (scaling concepts)
+| Decision | Why | Trade-off |
+|---|---|---|
+| [e.g. Eventual consistency] | [Higher availability, lower latency] | [Stale reads possible] |
+| [e.g. SQL over NoSQL] | [Complex queries, ACID transactions] | [Harder to shard horizontally] |
+| [e.g. Async processing via queue] | [Decoupled, more resilient] | [Eventual delivery, harder to debug] |
 
-Generate:
-- Clarify: per-user or per-IP? HTTP API? Distributed?
-- Evaluate algorithms: token bucket (API rate limiting), sliding window (precision)
-- Architecture: Redis-based counters, rate limiter middleware
-- Race condition handling: Lua scripts or sorted sets
-- Multi-datacenter sync strategy
-- Response headers: X-Ratelimit-Remaining, X-Ratelimit-Limit, X-Ratelimit-Retry-After
-```
+### 10. Follow-up Considerations
+Things to tackle in production but out of scope for this design session:
+- Monitoring and alerting (what metrics matter)
+- Disaster recovery and backup strategy
+- Security (auth, encryption at rest/transit, rate limiting)
+- Cost optimisation at scale
+- Gradual rollout and feature flagging
 
-**Example 2 — Chat System:**
-```
-User: "Design a chat application supporting group messaging"
+## Quality Checks
+- [ ] Clarifying questions are design-changing (not generic filler)
+- [ ] Capacity estimates show the arithmetic: DAU → requests/day → requests/sec → storage per record → total storage, so the numbers can be sanity-checked
+- [ ] Every row in the Trade-offs table has a non-empty Trade-off column (no rows where the trade-off is blank or says "none")
+- [ ] At least 2 component deep-dives with technology choices justified
+- [ ] Trade-offs section is honest (not just benefits of chosen approach)
+- [ ] Data flow is described end-to-end for the critical path
 
-Apply: Ch 12 (chat system), Ch 1 (scaling), Ch 5 (consistent hashing)
+## Anti-Patterns
 
-Generate:
-- Communication: WebSocket for real-time, HTTP for other features
-- Stateful chat servers with service discovery (Zookeeper)
-- Key-value store for messages (HBase-like)
-- Message sync with per-device cursor ID
-- Online presence: heartbeat mechanism, fanout to friends
-- Group chat: message copy per recipient for small groups
-```
+- [ ] Do not jump to solutions before clarifying requirements — always establish functional and non-functional requirements first
+- [ ] Do not present a design without discussing trade-offs — every architecture decision has costs and benefits that must be acknowledged
+- [ ] Do not use vague capacity estimates — show the actual calculation (QPS, storage bytes, bandwidth) not just "this handles scale"
+- [ ] Do not design for unlimited scale by default — match the design to the requirements stated
+- [ ] Do not skip the data model — a system design without entity definitions and data flow is incomplete
 
-**Example 3 — Video Platform:**
-```
-User: "Design a video upload and streaming service"
-
-Apply: Ch 14 (YouTube), Ch 1 (CDN, scaling)
-
-Generate:
-- Upload: parallel chunk upload, resumable, pre-signed URLs
-- Transcoding: DAG-based pipeline (video splitting → encoding → merging)
-- Architecture: preprocessor → DAG scheduler → resource manager → task workers
-- Streaming: adaptive bitrate with HLS/DASH
-- Cost: popular content via CDN, long-tail from origin servers
-- Safety: DRM, AES encryption, watermarking
-```
-
----
-
-## Mode 2: Design Review
-
-When reviewing system designs, read `references/review-checklist.md` for the full checklist.
-
-### Review Process
-
-1. **Scale scan** — Check Ch 1: Are scaling fundamentals applied (LB, cache, CDN, replication, sharding)?
-2. **Estimation scan** — Check Ch 2: Are capacity estimates done? Are they reasonable?
-3. **Framework scan** — Check Ch 3: Does the design follow a structured approach?
-4. **Component scan** — Check Ch 4–15: Are relevant patterns used for specific components?
-5. **Failure scan** — Are failure modes addressed? Replication, retry, graceful degradation?
-6. **Trade-off scan** — Are design decisions justified with explicit trade-offs?
-
-### Review Output Format
-
-Structure your review as:
-
-```
-## Summary
-One paragraph: overall design quality, main strengths, key concerns.
-
-## Scaling Issues
-For each issue:
-- **Topic**: component and concept
-- **Problem**: what's wrong or missing
-- **Fix**: recommended change with chapter reference
-
-## Estimation Issues
-For each issue: same structure
-
-## Component Design Issues
-For each issue: same structure
-
-## Failure Handling Issues
-For each issue: same structure
-
-## Recommendations
-Priority-ordered from most critical to nice-to-have.
-Each recommendation references the specific chapter/concept.
-```
-
-### Common System Design Anti-Patterns to Flag
-
-- **No capacity estimation** → Ch 2: Always estimate QPS, storage, bandwidth before designing
-- **Single point of failure** → Ch 1: Add redundancy via replication, load balancing, failover
-- **No caching strategy** → Ch 1: Use cache-aside, read-through, or write-behind as appropriate
-- **Monolithic database** → Ch 1: Consider replication (read replicas) and sharding for scale
-- **Stateful web servers** → Ch 1: Move session data to shared storage for horizontal scaling
-- **Vanity scaling** → Ch 2: Scaling decisions should be based on estimated numbers, not guesses
-- **Wrong data store** → Ch 6, 12: Match storage to access patterns (relational, key-value, document)
-- **No rate limiting** → Ch 4: Protect APIs from abuse and cascading failures
-- **Synchronous everything** → Ch 1: Use message queues for decoupling and async processing
-- **No CDN for static content** → Ch 1: Serve static assets from CDN to reduce latency and server load
-- **Big-bang deployment** → Ch 14: Use parallel processing, chunked uploads, incremental approaches
-- **No conflict resolution** → Ch 6, 15: Handle concurrent writes with versioning or conflict detection
-- **Missing monitoring** → Ch 3: Always include logging, metrics, alerting in the design
-- **Ignoring network partition** → Ch 6: CAP theorem applies; choose CP or AP based on requirements
-
----
-
-## General Guidelines
-
-- **The 4-step framework is universal** — Use it for every design problem, not just interviews
-- **Back-of-envelope estimation validates feasibility** — Always estimate before designing
-- **Every component has trade-offs** — Consistency vs. availability, latency vs. throughput, cost vs. reliability
-- **Start simple, then optimize** — Single server → vertical scaling → horizontal scaling → advanced optimizations
-- **Design for failure** — Assume every component will fail; plan recovery
-- **Cache is king for read-heavy systems** — But consider cache invalidation complexity
-- **Sharding enables horizontal data scaling** — But adds complexity (joins, rebalancing, hotspots)
-- For deeper design details, read `references/api_reference.md` before applying designs.
-- For review checklists, read `references/review-checklist.md` before reviewing designs.
+## Usage Examples
+- "Help me answer a system design interview: [question]"
+- "Design [system] for a system design interview"
+- "How would I architect [system] at scale?"
+- "I have a system design interview — the question is [X]"
+- "Design a [URL shortener / chat system / notification service / feed]"

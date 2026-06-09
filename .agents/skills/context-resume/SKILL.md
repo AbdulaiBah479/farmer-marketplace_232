@@ -1,256 +1,178 @@
 ---
 name: context-resume
-description: Load plugin context from handoff files to resume work. Invoked by /continue command, 'resume [PluginName]', 'continue working on [PluginName]', 'pick up where I left off with [PluginName]', or 'show me where [PluginName] is at'. Locates handoff across 2 locations, parses state, presents summary, and routes to appropriate continuation skill.
-allowed-tools:
-  - Read
-  - Bash
-  - Skill # To invoke next skill
-preconditions:
-  - Handoff file must exist in one of 2 locations
+description: 恢复之前保存的会话上下文。列出所有待处理的 session，读取选定 session 的任务信息，更新进度，任务全部完成后删除文件。
 ---
 
-# context-resume Skill
+# 上下文恢复指南
 
-**Purpose:** Universal entry point for resuming plugin work from `.continue-here.md` handoff files. Handles workflow, ideation, mockup, and improvement resume scenarios.
+## 使用场景
 
-**Capabilities:**
-- Locates handoff files (2 possible locations)
-- Parses YAML frontmatter and markdown context
-- Presents state summary with time-ago calculation
-- Routes to appropriate continuation skill (via Skill tool)
-- Graceful error recovery for missing/corrupt handoffs
-
-## Orchestration Protocol
-
-<delegation_rule>
-
-**CRITICAL:** This skill MUST NOT implement workflow stages directly.
-
-When resuming workflow (Stages 0-3), this skill:
-1. Locates handoff file
-2. Parses context
-3. Presents summary to user
-4. Checks for `orchestration_mode: true` in handoff YAML
-5. If orchestration_mode enabled → Invokes plugin-workflow skill via Skill tool (resume context passed via handoff file, not invocation params)
-6. If orchestration_mode disabled → Uses legacy direct routing
-
-**NEVER bypass orchestration_mode.** This enforces the dispatcher pattern:
-- plugin-workflow orchestrates
-- Subagents implement
-- context-resume just loads and routes
-
-See **[references/continuation-routing.md](references/continuation-routing.md)** Step 4a-1 for complete protocol.
-
-**What is orchestration_mode?**
-
-When enabled in handoff YAML, this flag activates the dispatcher pattern: plugin-workflow orchestrates implementation by invoking subagents in fresh contexts. When disabled (legacy mode), context-resume directly routes to implementation skills. Modern workflows always use orchestration_mode for consistent subagent dispatch and clean context isolation.
-
-</delegation_rule>
-
-## Handoff File Locations
-
-The system uses 2 handoff locations, checked in priority order:
-
-**Priority 1: Main Workflow Handoff**
-`plugins/[PluginName]/.continue-here.md`
-
-Plugin in active development (Stages 0-3, ideation, improvement planning). Contains stage, phase, orchestration_mode, next_action, completed work, next steps.
-
-**Priority 2: Mockup Handoff**
-`plugins/[PluginName]/.ideas/mockups/.continue-here.md`
-
-UI mockup iteration in progress. Contains mockup_version, iteration notes, finalization status.
-
-**Search order:** Priority 1 → 2. If multiple found, present disambiguation menu to user (see references/handoff-location.md Step 1c).
+在新的 Claude Code 窗口中，需要继续之前未完成的任务时调用此 Skill。
 
 ---
 
-## Resume Workflow
+## 执行步骤
 
-**Progress Tracking:**
+### Step 1: 列出所有 Session
 
-Copy this checklist to track your progress:
+读取 `docs/context-sessions/` 目录下的所有 `.md` 文件（排除 .gitkeep）。
+
+**输出格式**:
 
 ```
-Context Resume Progress:
-- [ ] Step 1: Locate handoff file (check 2 locations, disambiguate if needed)
-- [ ] Step 2: Parse context (YAML + markdown body)
-- [ ] Step 3: Present summary (wait for user confirmation)
-- [ ] Step 4: Route to continuation skill (load context files first)
+📋 待处理的 Session 列表:
+
+1. 20251128-1430-实现用户登录功能.md
+   未完成任务: 3 项
+
+2. 20251128-1600-修复导出bug.md
+   未完成任务: 1 项
+
+请告诉我要恢复哪个 session（输入序号或文件名）
 ```
 
-### Step 1: Locate Handoff File
+如果目录为空，输出：
 
-Search for handoff files across 2 locations (see [Handoff File Locations](#handoff-file-locations) above). Handle interactive plugin selection if no name provided, and present disambiguation menu when multiple handoffs exist for same plugin.
+```
+📭 当前没有待处理的 session。
 
-**Details:** [references/handoff-location.md](references/handoff-location.md)
+所有任务已完成，或尚未使用 context-save 保存过上下文。
+```
 
-**Validation:** MUST complete before Step 2. If no handoff found, proceed to error recovery.
+### Step 2: 读取并展示 Session 内容
+
+用户选择后，读取对应的 session 文件，完整展示内容。
+
+**输出格式**:
+
+```
+📂 已加载 Session: {文件名}
+
+---
+{session 文件完整内容}
+---
+
+🎯 接下来要处理哪个任务？或者需要我继续之前的工作？
+```
+
+### Step 3: 开始工作
+
+根据 session 中的信息：
+1. 读取关键文件，恢复上下文理解
+2. 按优先级处理未完成任务
+3. 遵循"下一步行动"的建议
+
+### Step 4: 更新任务进度
+
+每完成一个任务后，**立即更新** session 文件：
+
+1. 将已完成的任务从"未完成"移到"已完成"
+2. 更新元信息中的"最后更新"时间
+3. 添加新发现的任务（如果有）
+
+**示例更新**:
+
+```markdown
+## 已完成任务
+- [x] 任务1描述
+- [x] 任务2描述
+- [x] 🔴 高优先级: 实现 publishArticle 方法  ← 新完成
+
+## 未完成任务
+- [ ] 🔴 高优先级: 处理图片上传到微信服务器
+- [ ] 🟡 中优先级: 添加发布结果回调
+```
+
+### Step 5: 任务完成处理
+
+当所有未完成任务都被完成后：
+
+1. **立即删除** session 文件
+2. 输出完成信息
+
+**输出格式**:
+
+```
+🎉 Session 所有任务已完成！
+
+已完成任务汇总:
+- [x] 任务1
+- [x] 任务2
+- [x] 任务3
+
+Session 文件已删除: docs/context-sessions/{文件名}
+```
 
 ---
 
-### Step 2: Parse Context
+## 工作流程图
 
-Parse YAML frontmatter (plugin, stage, status, last_updated, etc.) and markdown body (current state, completed work, next steps, key decisions).
-
-**Details:** [references/context-parsing.md](references/context-parsing.md)
-
-**Validation:** MUST complete before Step 3.
-
----
-
-### Step 3: Present Summary
-
-Calculate "time ago" and build user-facing summary:
-- Where we are in workflow
-- What's completed
-- What's next
-- Build/test status
-- Time since last session
-
-**Details:** [references/context-parsing.md](references/context-parsing.md) (presentation logic)
-
-**DECISION GATE:** MUST wait for user confirmation. DO NOT auto-proceed. Present numbered decision menu following checkpoint protocol.
-
----
-
-**VALIDATION GATE:** Before proceeding to Step 4, verify:
-
-1. Handoff parsed successfully (YAML + markdown body extracted)
-2. User confirmed continuation (received explicit confirmation, not assumed)
-3. Plugin name is known and valid
-4. Stage type is identified (workflow/ideation/mockup/improvement)
-
-If any verification fails:
-- Return to failed step (Step 1 or Step 2)
-- Present error recovery options (see [references/error-recovery.md](references/error-recovery.md))
-
-Only proceed to Step 4 when all verifications pass.
-
----
-
-### Step 4: Route to Continuation Skill
-
-Determine routing based on stage type (workflow, ideation, mockup, improvement). Load relevant context files (contracts, source code, git history) BEFORE invoking continuation skill.
-
-Routes to plugin-workflow (Stages 0-6), plugin-ideation (ideation/improvements), ui-mockup (mockup iteration), or plugin-improve (improvement implementation) based on stage type and orchestration_mode. See **[references/continuation-routing.md](references/continuation-routing.md)** for complete routing logic.
-
-**Validation:** Requires user confirmation from Step 3.
-
----
-
-## Error Recovery
-
-Common error scenarios with recovery strategies:
-
-- **No Handoff Found**: Check PLUGINS.md and git log to infer state, offer reconstruction options
-- **Corrupted Handoff File**: Parse git log to infer stage, offer manual recreation
-- **Stale Handoff (>2 weeks old)**: Warn about staleness, offer to verify code changes
-- **Multiple Handoffs for Same Plugin**: Present disambiguation menu with recommendations
-
-See **[references/error-recovery.md](references/error-recovery.md)** for all error scenarios and advanced features.
+```
+┌─────────────────┐
+│  调用 skill     │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  列出所有       │
+│  session 文件   │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  用户选择       │
+│  要恢复的       │
+│  session        │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  读取并展示     │
+│  session 内容   │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  开始处理任务   │◄──────────┐
+└────────┬────────┘           │
+         │                    │
+         ▼                    │
+┌─────────────────┐           │
+│  完成一个任务   │           │
+│  更新 session   │           │
+└────────┬────────┘           │
+         │                    │
+         ▼                    │
+    ┌────────────┐            │
+    │ 还有未完成 │───Yes──────┘
+    │   任务？   │
+    └─────┬──────┘
+          │ No
+          ▼
+┌─────────────────┐
+│  删除 session   │
+│  文件           │
+└─────────────────┘
+```
 
 ---
 
-## Integration Points
+## 命令快捷方式
 
-<integration>
+在恢复 session 后，可以使用以下指令：
 
-**Inbound (Command triggers):**
-
-1. `/continue` command (no args) → Triggers interactive plugin selection
-2. `/continue [PluginName]` command → Triggers specific plugin resume
-3. Natural language: "resume [PluginName]", "continue working on [PluginName]"
-
-**Backward Compatibility:**
-
-Handles legacy handoffs with old stage references:
-- Old validation stage → Maps to "Stage 3 complete, plugin validated, ready to install"
-- Old preset/finalization stage → Maps to "Stage 3 complete, plugin validated, ready to install"
-- Detects old stage numbers during parsing (Step 2)
-- Automatically migrates to new workflow state
-- Presents clear explanation to user
-
-</integration>
-
-<integration>
-
-**Outbound (Skill delegation):**
-
-1. `plugin-workflow` - For workflow resume at specific stage (Stages 0-3)
-2. `plugin-ideation` - For ideation resume (improvements or refinement)
-3. `ui-mockup` - For mockup iteration resume
-4. `plugin-improve` - For improvement implementation resume
-5. `workflow-reconciliation` - For corrupt handoff recovery scenarios (state mismatch detection)
-6. `system-setup` - If error recovery detects missing dependencies
-
-MUST use Skill tool for invocation, NEVER implement directly.
-
-</integration>
-
-<state_requirement>
-
-**This skill is READ-ONLY for state files.**
-
-MUST read:
-- `.continue-here.md` files (all 2 locations)
-- PLUGINS.md (status verification)
-- Git log (commit history for inference)
-- Contract files (creative-brief.md, parameter-spec.md, architecture.md, plan.md)
-- Source files (if mentioned in handoff)
-- CHANGELOG.md (for improvements)
-
-MUST NOT write:
-- Any `.continue-here.md` files
-- PLUGINS.md
-- Any source code or contract files
-
-**Why:** This skill is an orchestrator - state updates are handled by the continuation skills it delegates to (plugin-workflow, plugin-ideation, ui-mockup, plugin-improve, etc.). Orchestrators read state and route; implementation skills update state and execute checkpoints. See Checkpoint Protocol in CLAUDE.md for state update requirements in implementation skills.
-
-</state_requirement>
+| 指令 | 作用 |
+|------|------|
+| `继续` | 按优先级继续处理下一个任务 |
+| `更新进度` | 手动触发 session 文件更新 |
+| `查看剩余` | 显示剩余未完成任务 |
+| `换窗口处理-` | 再次保存并切换窗口 |
 
 ---
 
-## Success Criteria
+## 注意事项
 
-Resume is successful when:
-
-1. **Handoff located:** Found correct handoff file(s) from 2 possible locations
-2. **Context parsed:** YAML and markdown extracted without errors
-3. **State understood:** User sees clear summary of where they left off
-4. **Continuity felt:** User doesn't need to remember details, handoff provides everything
-5. **Appropriate routing:** Correct continuation skill invoked with right parameters
-6. **Context loaded:** Contract files and relevant code loaded before proceeding
-7. **Error handled:** Missing/corrupt handoff handled gracefully with fallbacks
-8. **User control:** User explicitly chooses to continue, not auto-proceeded
-
----
-
-## Execution Requirements
-
-<requirements>
-
-**MUST do when executing this skill:**
-
-1. **ALWAYS** search all 2 handoff locations before declaring "not found"
-2. **MUST** parse YAML carefully - handle missing optional fields gracefully
-3. **MUST** present time-ago in human-readable format (not raw timestamps)
-4. **MUST** show enough context that user remembers where they were
-5. **NEVER** auto-proceed - wait for explicit user choice
-6. **MUST** load contract files BEFORE invoking continuation skill (provides context)
-7. **MUST** use git log as backup IF handoff is missing, stale (>2 weeks old), or corrupt
-8. **MUST** preserve user's mental model - summary should match how they think about plugin
-
-</requirements>
-
-<anti_patterns>
-
-**NEVER do these common mistakes:**
-
-- Checking only Priority 1 location and stopping early (MUST check both locations)
-- Auto-proceeding after summary without waiting for user confirmation
-- Invoking continuation skill before loading contract files
-- Presenting raw YAML/markdown instead of formatted human-readable summary
-- Auto-selecting when multiple handoffs exist (MUST present disambiguation menu)
-
-</anti_patterns>
+1. **及时更新** - 每完成一个任务立即更新 session 文件
+2. **保持文件同步** - 如果发现新任务，添加到未完成列表
+3. **删除确认** - 只有当所有任务完成才删除文件
+4. **关键文件** - 恢复时优先读取 session 中列出的关键文件

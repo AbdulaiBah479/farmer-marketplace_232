@@ -1,40 +1,60 @@
 ---
 name: quality
-description: Code quality principles - guides judgment
-user-invocable: false
-model: sonnet
+description: Code quality validation, formatting, linting, and pre-commit checks.
 ---
 
-# Quality Principles
+# Code Quality Skill
 
-You're a senior developer. These principles guide judgment, not limit capability.
+Code quality validation, formatting, linting, and pre-commit checks.
 
-## Core Rules
+## Activation
 
-1. **Understand before coding.** Read target + related files. Match existing patterns.
+Auto-activates on keywords: quality, lint, format, precommit, naming, black, ruff, mypy, basedpyright, validation
 
-2. **Clean code.** Clear names, small functions, obvious flow, match surrounding style.
+## Workflows
 
-3. **Handle reality.** Null data, network failures, loading states, errors.
+### Formatting
+- **format.md**: Code formatting with Black and Ruff
 
-4. **Type safety.** No `any`, no `@ts-ignore`. Types are documentation.
+### Linting
+- **lint.md**: Linting checks with Ruff
+- **naming.md**: Naming convention validation
 
-5. **Design system.** Semantic tokens, spacing scale, reuse components.
+### Pre-commit
+- **precommit.md**: Pre-commit hook validation
 
-## All UI States
+## Commands
 
-Always handle: `loading → error → empty → content`
+```bash
+# Format code
+uv run black .
+uv run ruff format .
 
-## The Standard
+# Lint code
+uv run ruff check .
+uv run ruff check --fix .
 
-**Correct + Clear + Complete.** If it meets all three, it's ready.
+# Type checking
+uv run basedpyright src/
 
-**Would you approve this PR?** If not, improve it.
+# Run all pre-commit hooks
+uv run pre-commit run --all-files
+```
 
-## Token Efficiency
+## Quality Standards
 
-**Be concise.** Short responses = more runway.
-- Don't repeat file contents back
-- Don't explain what you're about to do
-- Just do it, report result briefly
-- Use subagents for exploration (separate context)
+### Python Standards
+- **Line Length**: 88 characters (Black default)
+- **Type Checking**: BasedPyright strict mode
+- **Linting**: Ruff with PyStrict-aligned rules
+
+### Rule Categories
+- **BLE**: Blind except detection
+- **EM**: Error message best practices
+- **SLF**: Private member access violations
+- **INP**: Require `__init__.py` in packages
+- **T10**: No debugger statements
+- **G**: Logging format strings
+
+### Per-File Ignores
+Tests and scripts have relaxed rules for pragmatic development.

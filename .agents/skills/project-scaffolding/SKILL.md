@@ -1,838 +1,257 @@
 ---
 name: project-scaffolding
-description: Project type detection matrix, template recommendations per project type, post-scaffolding checklist, Harness integration patterns, and testing recommendations
-allowed-tools: [Bash, Read, Write, Edit, Glob, Grep, Task, WebFetch, WebSearch]
-dependencies: [universal-templating, harness-expert]
-triggers: [scaffold project, create project, project template, project type, initialize project]
+description: >
+  IDE-grade project scaffolding wizard for creating new projects with comprehensive configuration.
+  Supports 70+ project types: HTML/CSS websites, React, Next.js, Vue, Astro, Remix, React Native,
+  Flutter, Expo, FastAPI, Django, Express, NestJS, Go/Gin, Rust/Axum, Spring Boot, Hono, Elysia,
+  Chrome Extensions, VS Code Extensions, Tauri desktop apps, serverless functions, and more.
+  Provides WebStorm/PyCharm-level project creation with interactive SDK selection, framework
+  configuration, database setup, and DevOps tooling. Use when: creating a new project, setting up
+  a framework application, initializing a codebase, scaffolding boilerplate, building extensions,
+  creating mobile/desktop/web apps, setting up monorepos, or making static websites/landing pages.
 ---
 
-# Project Scaffolding Skill
+# Project Scaffolding Wizard
 
-Comprehensive guide to project type detection, template selection, post-scaffolding setup, Harness integration, and testing strategies.
+Professional-grade project scaffolding comparable to WebStorm/PyCharm project wizards. Creates fully configured projects with SDK setup, framework options, database configuration, linting, and CI/CD.
 
-## Project Type Detection Matrix
+## Wizard Workflow
 
-### How to Detect Project Type
+When a user requests a new project, follow this interactive workflow:
 
-**Detection Priority:**
-1. Look for language-specific files in root
-2. Check build system presence
-3. Examine package/dependency files
-4. Analyze configuration files
-5. Review existing CI/CD setup
+### Step 1: Project Type Selection
 
-### Type Identification Checklist
+Present the project type menu. Ask the user to select a category and type:
 
-```
-Python Project:
-  ✓ setup.py, pyproject.toml, or requirements.txt
-  ✓ .python-version file
-  ✓ Pipfile (Pipenv)
-  ✓ poetry.lock (Poetry)
+| Category | Types |
+|----------|-------|
+| **Static Websites** | HTML/CSS, HTML+Sass, HTML+Tailwind, Landing Page, Multi-page Site |
+| **Frontend Web** | React, Next.js, Vue, Nuxt, Svelte, Angular, Astro, Remix, Solid, Qwik, Preact |
+| **Mobile/Desktop** | React Native, Expo, Flutter, Tauri, Electron, Ionic |
+| **Backend (JS/TS)** | Express, NestJS, Fastify, Hono, Elysia, tRPC, Koa |
+| **Backend (Python)** | FastAPI, Django, Django REST, Flask, Litestar |
+| **Backend (Go)** | Gin, Fiber, Echo, Chi |
+| **Backend (Rust)** | Axum, Actix, Rocket |
+| **Backend (Java)** | Spring Boot, Quarkus, Ktor, Micronaut |
+| **Backend (Other)** | Laravel, Rails, .NET Web API |
+| **Libraries** | TypeScript NPM, Python PyPI, Go Module, Rust Crate |
+| **CLI Tools** | Node CLI, Python CLI (Typer/Click), Go CLI (Cobra), Rust CLI (Clap) |
+| **Extensions** | Chrome Extension, Firefox Extension, VS Code Extension, Figma Plugin, Obsidian Plugin |
+| **Serverless** | AWS Lambda, Cloudflare Workers, Vercel Functions, Supabase Functions |
+| **Full-Stack** | T3 Stack, MERN, PERN, MEAN |
+| **Monorepos** | Turborepo, Nx Workspace, pnpm Workspace |
 
-Node.js/JavaScript:
-  ✓ package.json exists
-  ✓ node_modules/ directory
-  ✓ .npmrc or .yarnrc
-  ✓ yarn.lock or package-lock.json
+### Step 2: Basic Configuration
 
-Java/JVM:
-  ✓ pom.xml (Maven) or build.gradle (Gradle)
-  ✓ src/main/java structure
-  ✓ .java files present
+Gather for ALL projects:
+- **Project name** (required)
+- **Location/directory**
+- **Description**
+- **Author name**
+- **License** (MIT, Apache-2.0, GPL-3.0, ISC, Unlicense)
 
-Go:
-  ✓ go.mod file
-  ✓ *.go source files
-  ✓ go.sum dependencies file
+### Step 3: Framework-Specific Options
 
-Rust:
-  ✓ Cargo.toml
-  ✓ src/ directory
-  ✓ Cargo.lock
+Load `references/wizard-options.md` for detailed configuration options based on the selected project type. Key decisions include:
 
-C#/.NET:
-  ✓ *.csproj or *.sln files
-  ✓ appsettings.json
-  ✓ global.json
+- **Language/SDK version** - Node.js, Python, Go, Rust, Java versions
+- **Package manager** - npm, pnpm, yarn, bun, poetry, uv
+- **CSS framework** - Tailwind, CSS Modules, Styled Components
+- **State management** - Zustand, Redux, Jotai, TanStack Query
+- **Database/ORM** - PostgreSQL, SQLite, Prisma, SQLAlchemy, sqlc
+- **Authentication** - NextAuth, JWT, OAuth2
+- **Testing** - Vitest, Jest, pytest, Playwright
 
-TypeScript:
-  ✓ tsconfig.json
-  ✓ *.ts or *.tsx files
-  ✓ package.json with typescript dependency
+### Step 4: Code Quality & DevOps
 
-Kubernetes/DevOps:
-  ✓ Dockerfile
-  ✓ docker-compose.yml
-  ✓ k8s/ or helm/ directory
-  ✓ Helmfile
+- **Linting** - ESLint, Ruff, golangci-lint, clippy
+- **Formatting** - Prettier, Ruff, gofmt, rustfmt
+- **Pre-commit hooks** - husky + lint-staged, pre-commit framework
+- **CI/CD** - GitHub Actions, GitLab CI
+- **Docker** - Dockerfile (multi-stage), docker-compose
+- **Deployment** - Vercel, Railway, Fly.io, AWS, self-hosted
 
-Infrastructure as Code:
-  ✓ *.tf files (Terraform)
-  ✓ bicep/ directory (Azure Bicep)
-  ✓ cloudformation.yaml (AWS CloudFormation)
-```
+### Step 5: Generate Project
 
----
+Use `scripts/scaffold.py` or native CLI tools to create the project structure.
 
-## Project Type Recommendations Matrix
+## CLI Integration
 
-### 1. Python Projects
+Prefer native CLI tools when available:
 
-**Best Templates:**
-- **Cookiecutter** - Standard Python projects, packages
-- **Copier** - Complex projects with versioning needs
-- **Poetry** - Modern Python packaging
+| Framework | CLI Command |
+|-----------|-------------|
+| Next.js | `npx create-next-app@latest` |
+| React (Vite) | `npm create vite@latest -- --template react-ts` |
+| Vue | `npm create vue@latest` |
+| Nuxt | `npx nuxi@latest init` |
+| Astro | `npm create astro@latest` |
+| Remix | `npx create-remix@latest` |
+| SvelteKit | `npm create svelte@latest` |
+| Solid | `npm create solid@latest` |
+| Expo | `npx create-expo-app@latest` |
+| React Native | `npx @react-native-community/cli init` |
+| Flutter | `flutter create` |
+| Tauri | `npm create tauri-app@latest` |
+| NestJS | `npx @nestjs/cli new` |
+| Spring Boot | `spring init` or start.spring.io |
+| Go | `go mod init` |
+| Rust | `cargo new` |
+| Chrome Ext | `npm create plasmo@latest` |
+| T3 Stack | `npx create-t3-app@latest` |
 
-**Template Structure:**
-```
-{project_name}/
-├── {project_name}/          # Main package
-│   ├── __init__.py
-│   ├── main.py
-│   └── config.py
-├── tests/                   # Test directory
-│   ├── __init__.py
-│   ├── conftest.py         # pytest fixtures
-│   └── test_main.py
-├── docs/                    # Documentation
-│   ├── conf.py             # Sphinx config
-│   ├── index.rst
-│   └── api.rst
-├── .gitignore
-├── README.md
-├── LICENSE
-├── requirements.txt         # Or pyproject.toml
-├── setup.py                # Or tool.poetry in pyproject.toml
-├── pytest.ini
-├── tox.ini                 # Multi-environment testing
-└── Dockerfile
-```
+## Quick Start Examples
 
-**Key Variables:**
-```yaml
-project_name: str           # Package name (lowercase, underscores)
-author_name: str           # Author name
-author_email: str          # Author email
-python_version: str        # Target version (3.9, 3.10, 3.11, 3.12)
-use_poetry: bool          # Use Poetry for dependency management
-use_pytest: bool          # Use pytest (default: true)
-use_docker: bool          # Include Dockerfile
-include_cli: bool         # Include Click CLI framework
-```
-
-**Post-Scaffolding:**
+### HTML/CSS Website
 ```bash
-cd {project_name}
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-pytest tests/             # Verify test setup
+mkdir my-website && cd my-website
+touch index.html style.css
+# Or use boilerplate:
+npx degit h5bp/html5-boilerplate my-website
 ```
 
----
-
-### 2. Node.js/JavaScript Projects
-
-**Best Templates:**
-- **Cookiecutter** - Standard Node projects
-- **Copier** - Full-stack applications
-
-**Template Structure:**
-```
-{project_name}/
-├── src/
-│   ├── index.js
-│   ├── config.js
-│   └── utils/
-├── tests/
-│   ├── unit/
-│   ├── integration/
-│   └── fixtures/
-├── public/                # Static assets
-├── docs/
-├── .env.example          # Environment template
-├── .eslintrc.json        # ESLint config
-├── .prettierrc.json      # Code formatting
-├── jest.config.js        # Jest testing config
-├── tsconfig.json         # If using TypeScript
-├── package.json
-├── package-lock.json     # Or yarn.lock / pnpm-lock.yaml
-├── Dockerfile
-├── docker-compose.yml
-├── .gitignore
-├── README.md
-└── LICENSE
+### HTML + Tailwind (CDN)
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Website</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+  <h1 class="text-3xl font-bold">Hello World</h1>
+</body>
+</html>
 ```
 
-**Key Variables:**
-```yaml
-project_name: str              # Project name
-author_name: str               # Author
-use_typescript: bool          # TypeScript support
-use_eslint: bool              # ESLint (default: true)
-use_prettier: bool            # Code formatter
-use_jest: bool                # Jest testing
-use_docker: bool              # Docker support
-use_express: bool             # Express.js framework
-package_manager: str          # npm, yarn, pnpm
-```
-
-**Post-Scaffolding:**
+### T3 Stack (Next.js + tRPC + Prisma)
 ```bash
-cd {project_name}
-npm install              # or yarn / pnpm install
-npm run lint             # Check linting
-npm run test             # Run tests
-npm run dev              # Start development server
+npx create-t3-app@latest my-app
 ```
 
----
-
-### 3. Java/JVM Projects
-
-**Best Templates:**
-- **Maven Archetypes** - Standard Java projects
-- **Gradle Template** - Gradle-based projects
-
-**Template Structure (Maven):**
-```
-{project_name}/
-├── src/
-│   ├── main/
-│   │   ├── java/
-│   │   │   └── com/company/{project_name}/
-│   │   │       ├── App.java
-│   │   │       └── service/
-│   │   └── resources/
-│   │       └── application.properties
-│   └── test/
-│       ├── java/
-│       │   └── com/company/{project_name}/
-│       │       └── AppTest.java
-│       └── resources/
-├── docs/
-├── pom.xml              # Maven configuration
-├── README.md
-├── Dockerfile
-└── .gitignore
-```
-
-**Key Variables:**
-```yaml
-groupId: str             # Maven group ID (e.g., com.company)
-artifactId: str          # Maven artifact ID
-package: str             # Java package name
-java_version: str        # JDK version (11, 17, 21)
-spring_boot_version: str # If using Spring Boot
-build_tool: str          # maven or gradle
-```
-
-**Post-Scaffolding:**
+### Expo (React Native)
 ```bash
-cd {project_name}
-mvn clean compile        # Compile project
-mvn test                 # Run tests
-mvn spring-boot:run      # If using Spring Boot
+npx create-expo-app@latest my-app --template tabs
 ```
 
----
-
-### 4. TypeScript Projects
-
-**Best Templates:**
-- **ts-node** - CLI tools and scripts
-- **Next.js** - Full-stack web applications
-- **NestJS** - Backend APIs
-
-**Template Structure:**
-```
-{project_name}/
-├── src/
-│   ├── index.ts
-│   ├── types/
-│   │   └── index.ts
-│   ├── services/
-│   ├── controllers/      # If REST API
-│   └── utils/
-├── tests/
-│   ├── unit/
-│   └── integration/
-├── dist/                 # Compiled JavaScript (output)
-├── tsconfig.json        # TypeScript config
-├── jest.config.js       # Jest testing
-├── .eslintrc.json       # ESLint
-├── package.json
-├── Dockerfile
-├── README.md
-└── .gitignore
-```
-
-**Key Variables:**
-```yaml
-project_name: str
-typescript_version: str   # Exact version or latest
-jest_enabled: bool        # Testing framework
-eslint_enabled: bool      # Linting
-strict_mode: bool         # tsconfig strict
-target: str               # Compilation target (ES2020, etc.)
-module: str               # Module system (ESNext, CommonJS)
-```
-
-**Post-Scaffolding:**
+### Tauri Desktop App
 ```bash
-cd {project_name}
-npm install
-npm run build             # Compile TypeScript
-npm test                  # Run tests
-npm start                 # Run compiled code
+npm create tauri-app@latest my-app -- --template react-ts
 ```
 
----
-
-### 5. Go Projects
-
-**Best Templates:**
-- **Go Project Layout** - Standard Go project structure
-- **Cobra CLI** - CLI applications
-
-**Template Structure:**
-```
-{project_name}/
-├── cmd/
-│   ├── cli/
-│   │   └── main.go      # Application entry point
-│   └── server/          # If server application
-│       └── main.go
-├── internal/            # Private packages
-│   ├── config/
-│   ├── handler/
-│   └── service/
-├── pkg/                 # Public packages
-│   └── {package_name}/
-├── api/                 # API definitions
-├── test/
-├── docs/
-├── Makefile             # Build automation
-├── go.mod               # Module definition
-├── go.sum               # Checksums
-├── Dockerfile
-├── .gitignore
-├── README.md
-└── LICENSE
-```
-
-**Key Variables:**
-```yaml
-project_name: str        # Go module name (github.com/user/project)
-author_name: str
-go_version: str          # Minimum Go version (1.19, 1.20, 1.21)
-use_cobra: bool          # CLI framework
-use_gin: bool            # Web framework (if server)
-use_gorm: bool           # ORM (if database needed)
-```
-
-**Post-Scaffolding:**
+### Chrome Extension
 ```bash
-cd {project_name}
-go mod download          # Download dependencies
-go build ./cmd/cli       # Build application
-go test ./...            # Run tests
-./cli --help             # Test CLI
+npm create plasmo@latest my-extension
 ```
 
----
+## Example Conversations
 
-### 6. Kubernetes/DevOps Projects
-
-**Best Templates:**
-- **Helm Chart** - Kubernetes deployments
-- **Kustomize** - Kubernetes customization
-- **Copier** - Multi-environment setups
-
-**Template Structure:**
+### Simple HTML/CSS Website
 ```
-{project_name}/
-├── helm/
-│   └── {release_name}/
-│       ├── Chart.yaml
-│       ├── values.yaml
-│       ├── values-dev.yaml
-│       ├── values-prod.yaml
-│       └── templates/
-│           ├── deployment.yaml
-│           ├── service.yaml
-│           ├── configmap.yaml
-│           └── ingress.yaml
-├── k8s/
-│   ├── base/
-│   ├── dev/
-│   └── prod/
-├── kustomization.yaml
-├── docker-compose.yml   # For local development
-├── Dockerfile
-├── .dockerignore
-├── docs/
-├── README.md
-└── .gitignore
+User: Create a simple website with HTML and CSS
+
+Claude: I'll create a static HTML/CSS website:
+
+- Multi-page (Home, About, Contact)
+- Mobile-first responsive CSS
+- BEM naming convention
+- Live Server for development
+
+Structure:
+my-website/
+├── index.html
+├── about.html
+├── contact.html
+├── css/style.css
+├── js/main.js
+└── images/
+
+Shall I create this?
 ```
 
-**Key Variables:**
-```yaml
-project_name: str        # Application name
-image_registry: str      # Docker registry
-image_name: str          # Docker image name
-replicas_dev: int        # Dev environment replicas
-replicas_prod: int       # Prod environment replicas
-namespace: str           # Kubernetes namespace
-enable_ingress: bool
-enable_monitoring: bool  # Prometheus/monitoring
+### Mobile App
+```
+User: Create a mobile app for iOS and Android
+
+Claude: I recommend Expo for the easiest setup:
+
+- TypeScript
+- Expo Router (file-based navigation)
+- NativeWind (Tailwind for RN)
+- Tab navigation template
+
+Ready to scaffold?
 ```
 
-**Post-Scaffolding:**
-```bash
-cd {project_name}
-docker build -t {image}:latest .
-helm lint helm/{release}
-helm template helm/{release} -f values-dev.yaml
-kubectl apply -f k8s/dev/  # Deploy to dev
+### Full-Stack with Type Safety
+```
+User: Create a full-stack app with type-safe API
+
+Claude: I recommend the T3 Stack:
+
+- Next.js 14 (App Router)
+- tRPC (type-safe API)
+- Prisma (type-safe ORM)
+- Tailwind CSS
+- NextAuth.js
+- PostgreSQL with docker-compose
+
+This gives you full type safety from database to frontend!
 ```
 
----
-
-### 7. Infrastructure as Code (Terraform)
-
-**Best Templates:**
-- **Terraform Module** - Reusable infrastructure components
-- **Terraform Project** - Full environment setup
-
-**Template Structure:**
+### Chrome Extension
 ```
-{project_name}/
-├── main.tf              # Main configuration
-├── variables.tf         # Input variables
-├── outputs.tf           # Output values
-├── terraform.tfvars     # Variable values
-├── locals.tf            # Local values
-├── vpc.tf               # VPC configuration
-├── security.tf          # Security groups
-├── iam.tf               # IAM roles/policies
-├── modules/
-│   ├── vpc/
-│   ├── compute/
-│   └── database/
-├── environments/
-│   ├── dev/
-│   │   └── terraform.tfvars
-│   ├── staging/
-│   └── prod/
-├── docs/
-├── .gitignore
-├── README.md
-├── versions.tf          # Terraform version constraints
-└── backend.tf           # State backend config
+User: Build a Chrome extension
+
+Claude: What features do you need?
+
+- Popup UI
+- Content script (modifies pages)
+- Background service worker
+- Side panel
+
+Tech stack: React + Vite + TypeScript + Manifest V3
+
+I recommend using Plasmo framework for easier development.
 ```
 
-**Key Variables:**
-```yaml
-project_name: str        # Project identifier
-aws_region: str          # AWS region
-environment: str         # dev, staging, prod
-terraform_version: str   # Minimum version
-```
-
-**Post-Scaffolding:**
-```bash
-cd environments/dev
-terraform init           # Initialize backend
-terraform plan           # Preview changes
-terraform apply          # Apply configuration
-terraform output         # View outputs
-```
-
----
-
-## Post-Scaffolding Checklist
-
-### Universal Tasks (All Projects)
-
-- [ ] Review generated files and structure
-- [ ] Verify .gitignore is appropriate
-- [ ] Update README.md with project-specific info
-- [ ] Add LICENSE file (if not included)
-- [ ] Initialize Git repository
-- [ ] Create initial commit
-- [ ] Add remote repository
-- [ ] Verify dependency installation
-- [ ] Run basic tests to confirm setup works
-- [ ] Document build/run commands
-- [ ] Set up CI/CD configuration
-
-### Language-Specific Tasks
-
-**Python:**
-- [ ] Verify virtual environment works
-- [ ] Test package imports
-- [ ] Check pytest configuration
-- [ ] Verify linting (flake8/pylint) setup
-- [ ] Test documentation build (if Sphinx)
-- [ ] Verify type hints (if mypy configured)
-
-**Node.js:**
-- [ ] Verify npm/yarn/pnpm setup
-- [ ] Test linting and formatting
-- [ ] Verify test framework (Jest/Mocha)
-- [ ] Check TypeScript compilation
-- [ ] Verify build output directory
-- [ ] Test hot reload (if dev server)
-
-**Java:**
-- [ ] Verify Maven/Gradle build
-- [ ] Test unit tests run successfully
-- [ ] Verify IDE integration
-- [ ] Check dependency tree
-- [ ] Verify JAR/WAR packaging
-
-**Go:**
-- [ ] Verify go mod download
-- [ ] Test build command
-- [ ] Verify all tests pass
-- [ ] Check linting (golangci-lint)
-- [ ] Verify binary execution
-
-### Docker Tasks
-
-- [ ] Build Docker image
-- [ ] Test image runs locally
-- [ ] Verify volumes/ports are correct
-- [ ] Document docker run command
-- [ ] Add Docker Compose if multi-container
-- [ ] Set up .dockerignore
-
----
-
-## Harness Integration Patterns
-
-### Pattern 1: Basic CI Pipeline
-
-**For:** Single service, simple build and push
-
-```yaml
-# harness/build-pipeline.yaml
-pipeline:
-  name: Build and Push
-  identifier: build_push
-  stages:
-    - stage:
-        name: Build Docker
-        type: CI
-        spec:
-          codebase:
-            repoName: {project_name}
-            branch: main
-          build:
-            type: Docker
-            spec:
-              dockerfile: Dockerfile
-              registryConnector: <+input.docker_connector>
-              imageName: <+input.image_name>
-              imageTag: <+codebase.commitSha>
-```
-
-### Pattern 2: Build, Test, and Deploy
-
-**For:** Multi-stage pipeline with testing
-
-```yaml
-pipeline:
-  name: Build Test Deploy
-  identifier: build_test_deploy
-  stages:
-    - stage:
-        name: Build
-        type: CI
-        spec:
-          build:
-            type: Docker
-            spec:
-              dockerfile: Dockerfile
-
-    - stage:
-        name: Test
-        type: CI
-        depends_on:
-          - Build
-        spec:
-          steps:
-            - step:
-                type: Run
-                spec:
-                  image: <+artifact.image>
-                  script: npm test
-
-    - stage:
-        name: Deploy Dev
-        type: Deployment
-        depends_on:
-          - Test
-        spec:
-          service:
-            serviceRef: <+input.service>
-          environment:
-            environmentRef: dev
-```
-
-### Pattern 3: Multi-Environment Deployment
-
-**For:** Dev → Staging → Production with approvals
-
-```yaml
-stages:
-  - stage:
-      name: Deploy Dev
-      type: Deployment
-      spec:
-        environment: dev
-        infrastructure: dev-k8s-cluster
-
-  - stage:
-      name: Deploy Staging
-      type: Deployment
-      depends_on:
-        - Deploy Dev
-      spec:
-        environment: staging
-        infrastructure: staging-k8s-cluster
-
-  - stage:
-      name: Approval for Production
-      type: Approval
-      depends_on:
-        - Deploy Staging
-      spec:
-        approvers:
-          - <+input.approver_group>
-
-  - stage:
-      name: Deploy Production
-      type: Deployment
-      depends_on:
-        - Approval for Production
-      spec:
-        environment: production
-        infrastructure: prod-k8s-cluster
-```
-
-### Pattern 4: GitOps with Harness
-
-**For:** Managing manifests separately from source code
-
-```yaml
-stages:
-  - stage:
-      name: Build
-      type: CI
-      spec:
-        build:
-          type: Docker
-
-  - stage:
-      name: Update Manifests
-      type: CI
-      spec:
-        steps:
-          - step:
-              type: Run
-              spec:
-                script: |
-                  git clone <+input.manifest_repo>
-                  sed -i "s/IMAGE_TAG/<+artifact.imageTag>/g" k8s/deployment.yaml
-                  git commit && git push
-
-  - stage:
-      name: Deploy via GitOps
-      type: Deployment
-      spec:
-        gitOpsEnabled: true
-        service:
-          serviceRef: <+input.service>
-        environment:
-          environmentRef: <+input.environment>
-```
-
----
-
-## Testing Recommendations by Project Type
-
-### Python Testing
-
-**Frameworks:**
-- **pytest** - Modern, flexible test framework
-- **unittest** - Standard library
-- **nose2** - Plugin-based testing
-
-**Setup:**
-```bash
-pip install pytest pytest-cov pytest-mock
-```
-
-**Test Structure:**
-```
-tests/
-├── conftest.py          # Shared fixtures
-├── unit/
-│   ├── test_module.py
-│   └── test_service.py
-├── integration/
-│   └── test_api.py
-└── fixtures/
-    └── sample_data.py
-```
-
-**Coverage Target:** 80%+
-
----
-
-### Node.js Testing
-
-**Frameworks:**
-- **Jest** - All-in-one solution
-- **Mocha + Chai** - Flexible combination
-- **Vitest** - Fast alternative
-
-**Setup:**
-```bash
-npm install --save-dev jest @testing-library/react
-```
-
-**Test Structure:**
-```
-tests/
-├── unit/
-│   ├── utils.test.js
-│   └── helpers.test.js
-├── integration/
-│   └── api.test.js
-└── e2e/
-    └── user-flow.test.js
-```
-
-**Coverage Target:** 80%+
-
----
-
-### Java Testing
-
-**Frameworks:**
-- **JUnit 5** - Modern testing framework
-- **Mockito** - Mocking framework
-- **TestNG** - Alternative to JUnit
-
-**Setup:**
-```xml
-<dependency>
-    <groupId>junit</groupId>
-    <artifactId>junit-jupiter</artifactId>
-    <scope>test</scope>
-</dependency>
-```
-
-**Test Structure:**
-```
-src/test/java/
-└── com/company/project/
-    ├── ServiceTest.java
-    ├── ControllerTest.java
-    └── IntegrationTest.java
-```
-
-**Coverage Target:** 80%+
-
----
-
-### Go Testing
-
-**Testing Style:**
-- Standard Go testing package
-- Table-driven tests
-- Subtests
-
-**Setup:**
-```bash
-go get github.com/stretchr/testify
-```
-
-**Test Structure:**
-```
-internal/
-├── service/
-│   ├── service.go
-│   └── service_test.go
-└── handler/
-    ├── handler.go
-    └── handler_test.go
-```
-
-**Coverage Target:** 80%+
-
----
-
-## Post-Scaffolding Setup Verification
-
-### Universal Verification Commands
-
-```bash
-# Git setup
-git init
-git add .
-git commit -m "Initial commit from template"
-
-# Dependency verification
-{build-tool} list              # List dependencies
-
-# Test verification
-{build-tool} test              # Run test suite
-
-# Build verification
-{build-tool} build             # Build project
-
-# Docker verification (if applicable)
-docker build -t {image}:test .
-docker run {image}:test --version
-```
-
-### Checklist Summary
-
-```
-ESSENTIAL:
-- [ ] Project initialized and builds
-- [ ] Dependencies installed
-- [ ] Tests run and pass
-- [ ] Documentation exists
-- [ ] .gitignore configured
-- [ ] Initial commit created
-
-HARNESS INTEGRATION:
-- [ ] Harness service created
-- [ ] Pipeline template ready
-- [ ] Environment configured
-- [ ] Deployment target defined
-
-QUALITY GATES:
-- [ ] Linting passes
-- [ ] Tests pass
-- [ ] Code coverage >= 80%
-- [ ] Documentation complete
-- [ ] Security scan passes
-```
-
----
-
-## Related Documentation
-
-- [Cookiecutter Documentation](https://cookiecutter.readthedocs.io/)
-- [Copier Documentation](https://copier.readthedocs.io/)
-- [Maven Archetypes](https://maven.apache.org/guides/introduction/introduction-to-archetypes.html)
-- [Harness Delegate Setup](https://developer.harness.io/docs/platform/delegates)
-- [Helm Charts](https://helm.sh/docs/)
-- [Terraform Best Practices](https://www.terraform.io/docs/cloud/guides)
+## Available Resources
+
+Load reference files based on what you need:
+
+| Resource | When to Load | Purpose |
+|----------|--------------|---------|
+| `references/wizard-options.md` | During Step 3 (gathering user preferences) | Configuration choices and defaults for each framework |
+| `references/frameworks.md` | When generating code | Project structures, code examples, configuration files |
+| `references/best-practices.md` | For architecture decisions | Directory organization, naming conventions, patterns |
+| `scripts/scaffold.py` | For custom scaffolding | Python engine when CLI tools aren't suitable |
+
+**Workflow:**
+1. Present options from `wizard-options.md` to gather user preferences
+2. Use `frameworks.md` for code patterns and project structure when generating
+3. Consult `best-practices.md` for architecture decisions
+
+## Default Recommendations
+
+| Category | Recommendation |
+|----------|----------------|
+| JS Runtime | Node.js 22 LTS |
+| Package Manager | pnpm |
+| Python Version | 3.12 |
+| Go Version | 1.23 |
+| Rust Edition | 2021 |
+| Java Version | 21 LTS |
+| CSS Framework | Tailwind CSS |
+| State (React) | Zustand + TanStack Query |
+| ORM (Node) | Prisma |
+| ORM (Python) | SQLAlchemy 2.0 |
+| ORM (Go) | sqlc |
+| Testing (JS) | Vitest |
+| Testing (Python) | pytest |
+| E2E Testing | Playwright |
+| Linting (JS) | ESLint + Prettier |
+| Linting (Python) | Ruff |
+| CI/CD | GitHub Actions |
+| Containerization | Multi-stage Dockerfile |

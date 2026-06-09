@@ -1,7 +1,5 @@
 # Common Patterns: Create Foundry Resource
 
-**Table of Contents:** [Pattern A: Quick Setup](#pattern-a-quick-setup) · [Pattern B: Multi-Region Setup](#pattern-b-multi-region-setup) · [Quick Commands Reference](#quick-commands-reference)
-
 ## Pattern A: Quick Setup
 
 Complete setup in one go:

@@ -68,26 +68,26 @@ Schema for the [Cost Management Query API](https://learn.microsoft.com/en-us/res
 
 ### Filter
 
-Filter expressions restrict which cost records are included. Filters support logical operators (`and`, `or`, `not`) and comparison operators on dimensions or tags.
+Filter expressions restrict which cost records are included. Filters support logical operators (`And`, `Or`, `Not`) and comparison operators on dimensions or tags.
 
 #### Filter Expression Structure
 
 ```json
 "filter": {
-  "and": [
+  "And": [
     {
-      "dimensions": {
-        "name": "ResourceGroupName",
-        "operator": "In",
-        "values": ["rg-prod", "rg-staging"]
+      "Dimensions": {
+        "Name": "ResourceGroupName",
+        "Operator": "In",
+        "Values": ["rg-prod", "rg-staging"]
       }
     },
     {
-      "not": {
-        "tags": {
-          "name": "Environment",
-          "operator": "Equal",
-          "values": ["dev"]
+      "Not": {
+        "Tags": {
+          "Name": "Environment",
+          "Operator": "Equal",
+          "Values": ["dev"]
         }
       }
     }
@@ -99,29 +99,29 @@ Filter expressions restrict which cost records are included. Filters support log
 
 | Operator | Description | Children |
 |----------|-------------|----------|
-| `and` | All child expressions must match. | 2 or more expressions. |
-| `or` | Any child expression must match. | 2 or more expressions. |
-| `not` | Negates a single child expression. | Exactly 1 expression. |
+| `And` | All child expressions must match. | 2 or more expressions. |
+| `Or` | Any child expression must match. | 2 or more expressions. |
+| `Not` | Negates a single child expression. | Exactly 1 expression. |
 
-> ⚠️ **Warning:** `and` and `or` must contain at least 2 child expressions. `not` must contain exactly 1.
+> ⚠️ **Warning:** `And` and `Or` must contain at least 2 child expressions. `Not` must contain exactly 1.
 
 #### Comparison Operators (ComparisonOperator Enum)
 
 | Operator | Description | Example |
 |----------|-------------|---------|
-| `In` | Value is in the provided list. Supports multiple values. | `"values": ["vm", "storage"]` |
-| `Equal` | Exact match against a single value. | `"values": ["production"]` |
-| `Contains` | String contains the specified substring. | `"values": ["prod"]` |
-| `LessThan` | Numeric less-than comparison. | `"values": ["100"]` |
-| `GreaterThan` | Numeric greater-than comparison. | `"values": ["0"]` |
-| `NotEqual` | Value does not match the specified value. | `"values": ["dev"]` |
+| `In` | Value is in the provided list. Supports multiple values. | `"Values": ["vm", "storage"]` |
+| `Equal` | Exact match against a single value. | `"Values": ["production"]` |
+| `Contains` | String contains the specified substring. | `"Values": ["prod"]` |
+| `LessThan` | Numeric less-than comparison. | `"Values": ["100"]` |
+| `GreaterThan` | Numeric greater-than comparison. | `"Values": ["0"]` |
+| `NotEqual` | Value does not match the specified value. | `"Values": ["dev"]` |
 
 #### Filter Target Types
 
 | Target | Description |
 |--------|-------------|
-| `dimensions` | Filter on built-in dimensions (e.g., `ResourceGroupName`, `ServiceName`). |
-| `tags` | Filter on Azure resource tags (e.g., `Environment`, `CostCenter`). |
+| `Dimensions` | Filter on built-in dimensions (e.g., `ResourceGroupName`, `ServiceName`). |
+| `Tags` | Filter on Azure resource tags (e.g., `Environment`, `CostCenter`). |
 
 ### Sorting
 

@@ -28,12 +28,12 @@ Immediately stop and reconsider design when detecting the following patterns:
 ## Fail-Fast Fallback Design Principles
 
 ### Core Principle
-Prioritize primary code reliability over fallback implementations. In distributed systems, excessive fallback mechanisms can mask errors and make debugging difficult.
+Make all errors visible and traceable with full context. Prioritize primary code reliability over fallback implementations. Excessive fallback mechanisms mask errors and make debugging difficult.
 
 ### Implementation Guidelines
 
 #### Default Approach
-- **Prohibit unconditional fallbacks**: Do not automatically return default values on errors
+- **Propagate all errors explicitly** unless a Design Doc specifies a fallback
 - **Make failures explicit**: Errors should be visible and traceable
 - **Preserve error context**: Include original error information when re-throwing
 
@@ -69,14 +69,12 @@ Prioritize primary code reliability over fallback implementations. In distribute
 
 ### Implementation Pattern
 
-**Core principle**: Make errors explicit with full context. Never hide errors with silent fallbacks.
-
 ```
-❌ AVOID: Silent fallback that hides errors
+AVOID: Silent fallback that hides errors
     <handle error>:
         return DEFAULT_VALUE  // Error hidden, debugging impossible
 
-✅ PREFERRED: Explicit failure with context
+PREFERRED: Explicit failure with context
     <handle error>:
         log_error('Operation failed', context, error)
         <propagate error>  // Re-throw exception, return Error, return error tuple
@@ -108,20 +106,6 @@ How to handle duplicate code based on Martin Fowler's "Refactoring":
 - Significant readability decrease from commonalization
 - Simple helpers in test code
 
-### Implementation Example
-
-```
-// ❌ Immediate commonalization on 1st duplication
-validateUserEmail(email) { /* ... */ }
-validateContactEmail(email) { /* ... */ }
-
-// ✅ Commonalize on 3rd occurrence with context parameter
-validateEmail(email, context) { /* ... */ }
-// context: 'user' | 'contact' | 'admin'
-```
-
-**Adaptation**: Use appropriate abstraction for your codebase (functions, classes, modules, configuration)
-
 ## Common Failure Patterns and Avoidance Methods
 
 ### Pattern 1: Error Fix Chain
@@ -145,21 +129,22 @@ validateEmail(email, context) { /* ... */ }
 **Avoidance**:
 - Record certainty evaluation at the beginning of task files
   ```
-  Certainty: low (Reason: no examples of MCP connection found)
+  Certainty: low (Reason: no working examples found for this integration)
   Exploratory implementation: true
-  Fallback: use conventional API
+  Fallback: use established alternative approach
   ```
 - For low certainty cases, create minimal verification code first
 
 ### Pattern 5: Insufficient Existing Code Investigation
-**Symptom**: Duplicate implementations, architecture inconsistency, integration failures
-**Cause**: Insufficient understanding of existing code before implementation
+**Symptom**: Duplicate implementations, architecture inconsistency, integration failures, adopting outdated patterns
+**Cause**: Insufficient understanding of existing code before implementation; referencing only nearby files without verifying representativeness
 **Avoidance Methods**:
 - Before implementation, always search for similar functionality (using domain, responsibility, configuration patterns as keywords)
 - Similar functionality found → Use that implementation (do not create new implementation)
 - Similar functionality is technical debt → Create ADR improvement proposal before implementation
 - No similar functionality exists → Implement new functionality following existing design philosophy
 - Record all decisions and rationale in "Existing Codebase Analysis" section of Design Doc
+- **Reference representativeness check**: When adopting a pattern or dependency from nearby code, verify it is representative across the repository before adopting — nearby files alone are an insufficient basis
 
 ## Debugging Techniques
 
@@ -169,14 +154,7 @@ validateEmail(email, context) { /* ... */ }
 3. Identify first line where your code appears
 
 ### 2. 5 Whys - Root Cause Analysis
-```
-Example:
-Symptom: Build error
-Why1: Contract definitions don't match → Why2: Interface was updated
-Why3: Dependency change → Why4: Package update impact
-Why5: Major version upgrade with breaking changes
-Root cause: Inappropriate version specification in dependency manifest
-```
+Trace the failure through repeated "why" questions until the root cause is actionable.
 
 ### 3. Minimal Reproduction Code
 To isolate problems, attempt reproduction with minimal code:
@@ -185,21 +163,17 @@ To isolate problems, attempt reproduction with minimal code:
 - Create minimal configuration that reproduces problem
 
 ### 4. Debug Log Output
-```
-Pattern: Structured logging with context
-{
-  context: 'operation-name',
-  input: { relevant, input, data },
-  state: currentState,
-  timestamp: current_time_ISO8601
-}
+Include operation context, relevant input data, current state, and timestamp.
 
-Key elements:
-- Operation context (what is being executed)
-- Input data (what was received)
-- Current state (relevant state variables)
-- Timestamp (for correlation)
-```
+## Quality Assurance Mechanism Awareness
+
+Before executing quality checks, identify what quality mechanisms exist for the change area:
+- Primary detection: inspect the change area's file types, project manifest, and configuration to identify applicable quality tools
+  - Check CI pipeline definitions for checks that cover the affected paths
+  - Check for domain-specific linter or validator configurations (e.g., schema validators, API spec validators, configuration file linters)
+  - Check for domain-specific constraints in project configuration (naming rules, length limits, format requirements)
+- Supplementary hint: IF task file specifies Quality Assurance Mechanisms → use them as additional hints for which domain-specific checks to look for
+- Include discovered domain-specific checks alongside standard quality phases below
 
 ## Quality Check Workflow
 
@@ -228,7 +202,7 @@ All checks must pass before proceeding:
 - Zero static analysis errors
 - Build succeeds
 - All tests pass
-- Coverage meets threshold
+- Coverage meets project-configured threshold
 
 ### Quality Check Pattern (Language-Agnostic)
 ```
@@ -252,20 +226,21 @@ Auto-fix capabilities (when available):
 - Prioritize current simplicity over future extensibility
 
 ### Performance vs Readability
-- Prioritize readability unless clear bottleneck exists
-- Measure before optimizing (don't guess, measure)
+- Prioritize readability unless profiling identifies a measurable bottleneck (e.g., response time exceeding SLA, memory exceeding allocation)
+- Measure before optimizing
 - Document reason with comments when optimizing
 
 ### Granularity of Contracts and Interfaces
 - Overly detailed contracts reduce maintainability
-- Design interfaces that appropriately express domain
+- Design interfaces where each method maps to a single domain operation and parameter types use domain vocabulary
 - Use abstraction mechanisms to reduce duplication
 
-## Continuous Improvement Mindset
-
-- **Humility**: Perfect code doesn't exist, welcome feedback
-- **Courage**: Execute necessary refactoring boldly
-- **Transparency**: Clearly document technical decision reasoning
+### Scope Expansion
+- Apply implementation/edit instructions to the user's or task's specified scope. Escalate before expanding it.
+- Treat explicit quantities and targets ("one", "this file", "only X") as boundaries
+- Copy/move/mirror requests preserve content verbatim; edit content only when requested
+- Port/translation requests preserve intent and behavior; adapt only what the destination context requires
+- Before changing related files, symmetric locations, adjacent behavior, or adding helpful extras, escalate with the proposed expansion
 
 ## Implementation Completeness Assurance
 

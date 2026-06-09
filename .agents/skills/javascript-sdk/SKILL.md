@@ -515,7 +515,7 @@ const result = await client.run({...});
 npx skills add inference-sh/skills@python-sdk
 
 # Full platform skill (all 150+ apps via CLI)
-npx skills add inference-sh/skills@agent-tools
+npx skills add inference-sh/skills@infsh-cli
 
 # LLM models
 npx skills add inference-sh/skills@llm-models
@@ -528,7 +528,7 @@ npx skills add inference-sh/skills@ai-image-generation
 
 - [JavaScript SDK Reference](https://inference.sh/docs/api/sdk-javascript) - Full API documentation
 - [Agent SDK Overview](https://inference.sh/docs/api/agent-sdk) - Building agents
-- [Tool Builder Reference](https://inference.sh/docs/api/agent-tools) - Creating tools
+- [Tool Builder Reference](https://inference.sh/docs/api/infsh-cli) - Creating tools
 - [Server Proxy Setup](https://inference.sh/docs/api/sdk/server-proxy) - Frontend integration
 - [Authentication](https://inference.sh/docs/api/authentication) - API key setup
 - [Streaming](https://inference.sh/docs/api/sdk/streaming) - Real-time updates

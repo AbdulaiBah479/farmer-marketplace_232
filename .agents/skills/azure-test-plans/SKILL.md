@@ -1,93 +1,45 @@
 ---
 name: azure-test-plans
-description: Create and manage Azure Test Plans including test cases, suites, and execution. Use when setting up test plans or managing QA processes.
+description: Expert knowledge for Azure Test Plans development including limits & quotas, security, and integrations & coding patterns. Use when configuring test run custom fields, data retention, permissions, access levels, or tcm.exe automation, and other Azure Test Plans related development tasks. Not for Azure DevOps (use azure-devops), Azure Pipelines (use azure-pipelines), Azure App Testing (use azure-app-testing), Azure Boards (use azure-boards).
+compatibility: Requires network access. Uses mcp_microsoftdocs:microsoft_docs_fetch or fetch_webpage to retrieve documentation.
+metadata:
+  generated_at: "2026-05-17"
+  generator: "docs2skills/1.0.0"
 ---
-
 # Azure Test Plans Skill
 
-Azure Test Plansでテスト管理を行うスキルです。
+This skill provides expert guidance for Azure Test Plans. Covers limits & quotas, security, and integrations & coding patterns. It combines local quick-reference content with remote documentation fetching capabilities.
 
-## 主な機能
+## How to Use This Skill
 
-- **テストケース作成**: 手動・自動テスト
-- **テストスイート**: グループ化
-- **テスト実行**: 結果記録
-- **バグ報告**: テスト失敗からバグ作成
+> **IMPORTANT for Agent**: Use the **Category Index** below to locate relevant sections. For categories with line ranges (e.g., `L35-L120`), use `read_file` with the specified lines. For categories with file links (e.g., `[security.md](security.md)`), use `read_file` on the linked reference file
 
-## テストケース作成
+> **IMPORTANT for Agent**: If `metadata.generated_at` is more than 3 months old, suggest the user pull the latest version from the repository. If `mcp_microsoftdocs` tools are not available, suggest the user install it: [Installation Guide](https://github.com/MicrosoftDocs/mcp/blob/main/README.md)
 
-### REST API (Python)
+This skill requires **network access** to fetch documentation content:
+- **Preferred**: Use `mcp_microsoftdocs:microsoft_docs_fetch` with query string `from=learn-agent-skill`. Returns Markdown.
+- **Fallback**: Use `fetch_webpage` with query string `from=learn-agent-skill&accept=text/markdown`. Returns Markdown.
 
-```python
-import requests
-import json
+## Category Index
 
-organization = "myorg"
-project = "MyProject"
-pat = "your-pat"
+| Category | Lines | Description |
+|----------|-------|-------------|
+| Limits & Quotas | L31-L36 | Managing custom fields on test runs and understanding data retention limits, default quotas, and how long Azure Test Plans data is kept or deleted |
+| Security | L37-L41 | Managing permissions, access levels, and security roles for users and groups in Azure Test Plans manual testing features. |
+| Integrations & Coding Patterns | L42-L45 | Using tcm.exe CLI to manage Azure Test Plans: create and run test suites, import/export test cases, manage test configurations, and automate test management tasks |
 
-url = f"https://dev.azure.com/{organization}/{project}/_apis/wit/workitems/$Test Case?api-version=7.0"
+### Limits & Quotas
+| Topic | URL |
+|-------|-----|
+| Use custom fields for Azure DevOps test runs | https://learn.microsoft.com/en-us/azure/devops/test/custom-fields?view=azure-devops |
+| Understand Azure Test Plans data retention limits | https://learn.microsoft.com/en-us/azure/devops/test/reference-qa?view=azure-devops |
 
-headers = {
-    "Content-Type": "application/json-patch+json",
-    "Authorization": f"Basic {pat}"
-}
+### Security
+| Topic | URL |
+|-------|-----|
+| Configure permissions and access for Azure manual testing | https://learn.microsoft.com/en-us/azure/devops/test/manual-test-permissions?view=azure-devops |
 
-test_case = [
-    {
-        "op": "add",
-        "path": "/fields/System.Title",
-        "value": "ログイン機能のテスト"
-    },
-    {
-        "op": "add",
-        "path": "/fields/Microsoft.VSTS.TCM.Steps",
-        "value": "<steps><step id='1'><parameterizedString>1. ログインページを開く</parameterizedString><expectedResult>ログインフォームが表示される</expectedResult></step><step id='2'><parameterizedString>2. メールアドレスとパスワードを入力</parameterizedString></step><step id='3'><parameterizedString>3. ログインボタンをクリック</parameterizedString><expectedResult>ダッシュボードにリダイレクトされる</expectedResult></step></steps>"
-    },
-    {
-        "op": "add",
-        "path": "/fields/Microsoft.VSTS.TCM.AutomatedTestName",
-        "value": "LoginTests.TestSuccessfulLogin"
-    }
-]
-
-response = requests.post(url, headers=headers, data=json.dumps(test_case))
-print(response.json())
-```
-
-## テストスイート作成
-
-```bash
-# テストプラン作成
-az boards test-plan create \
-  --name "Sprint 1 Tests" \
-  --area-path "MyProject" \
-  --iteration "MyProject\\Sprint 1"
-
-# テストスイート作成
-az boards test-suite create \
-  --plan-id 1 \
-  --name "Login Tests" \
-  --suite-type "StaticTestSuite"
-```
-
-## 自動テスト統合
-
-```yaml
-# Azure Pipeline with Test Results
-steps:
-  - task: VSTest@2
-    inputs:
-      testSelector: 'testAssemblies'
-      testAssemblyVer2: |
-        **\*test*.dll
-        !**\*TestAdapter.dll
-        !**\obj\**
-      searchFolder: '$(System.DefaultWorkingDirectory)'
-      codeCoverageEnabled: true
-      testRunTitle: 'Automated Tests'
-      publishRunAttachments: true
-```
-
-## バージョン情報
-- Version: 1.0.0
+### Integrations & Coding Patterns
+| Topic | URL |
+|-------|-----|
+| Use tcm.exe commands for Azure Test Plans management | https://learn.microsoft.com/en-us/azure/devops/test/test-case-managment-reference?view=azure-devops |

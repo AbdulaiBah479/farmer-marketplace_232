@@ -1,16 +1,13 @@
 ---
 name: github-automation
-description: Automate GitHub repositories, issues, pull requests, branches, CI/CD, and permissions via Rube MCP (Composio). Manage code workflows, review PRs, search code, and handle deployments programmatically.
+description: "Automate GitHub repositories, issues, pull requests, branches, CI/CD, and permissions via Rube MCP (Composio). Manage code workflows, review PRs, search code, and handle deployments programmatically."
 requires:
   mcp: [rube]
-category: devops
 ---
 
 # GitHub Automation via Rube MCP
 
 Automate GitHub repository management, issue tracking, pull request workflows, branch operations, and CI/CD through Composio's GitHub toolkit.
-
-**Toolkit docs**: [composio.dev/toolkits/github](https://composio.dev/toolkits/github)
 
 ## Prerequisites
 
@@ -228,6 +225,3 @@ All list endpoints use page-based pagination:
 | Check CI | `GITHUB_LIST_CHECK_RUNS_FOR_A_REF` | `owner`, `repo`, ref |
 | List collaborators | `GITHUB_LIST_REPOSITORY_COLLABORATORS` | `owner`, `repo` |
 | Branch protection | `GITHUB_GET_BRANCH_PROTECTION` | `owner`, `repo`, `branch` |
-
----
-*Powered by [Composio](https://composio.dev)*

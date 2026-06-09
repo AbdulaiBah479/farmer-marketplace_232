@@ -1,44 +1,71 @@
 ---
-name: GitLab
-description: GitLab workflow best practices and glab CLI usage. Use when working with GitLab repositories, merge requests, issues, pipelines, or GitLab API interactions.
+name: gitlab
+description: "GitLab operations via glab CLI. Use when user mentions: MR, merge request, gitlab issue, pipeline, CI status, glab, or when git remote shows gitlab.com or self-hosted GitLab."
 ---
-# GitLab
 
-GitLab workflows use `glab`, the official GitLab CLI. This skill helps adapt GitHub (`gh`) patterns to GitLab (`glab`).
+# GitLab CLI (glab)
 
-## Terminology
+## When to Use This Skill
 
-- **Pull Request → Merge Request (MR)**: Use `glab mr` instead of `gh pr`
-- **Repository → Project**: GitLab calls repositories "projects"
-- **Actions → CI/CD**: Use `glab ci` for pipelines and jobs
-
-## Quick Start
-
+Use `glab` for GitLab repositories. To detect GitLab:
 ```bash
-# Authenticate
-glab auth login
-
-# Create merge request (push branch first!)
-git push -u origin feature-branch
-glab mr create --fill
-
-# List merge requests
-glab mr list
+git remote -v | grep -i gitlab
 ```
 
-## Reference Files
+If the remote contains `gitlab.com` or a known GitLab instance, use this skill.
 
-- **merge-requests.md**: Working with merge requests (`glab mr`)
-- **ci.md**: CI/CD pipelines and jobs (`glab ci`)
-- **api.md**: REST and GraphQL API access (`glab api`)
+## Before Any Operation
 
-## Key Rules
+Always verify authentication first:
+```bash
+glab auth status
+```
 
-- **Always** use `glab` for GitLab (never `gh`)
-- **Always** push branch before creating MR
-- **Always** use `--fill` to auto-populate from commits
-- Use `glab ci lint` to validate `.gitlab-ci.yml`
+If not authenticated, guide the user to run `glab auth login`.
 
-## Common Mistakes
+## Behavioral Guidelines
 
-Don't use `gh` commands, call MRs "pull requests", or forget to push before creating MRs.
+1. **Creating MRs**: Always check for uncommitted changes first with `git status`
+2. **Viewing MRs/Issues**: Prefer `--comments` flag when user wants full context
+3. **CI Operations**: Check `glab ci status` before suggesting `glab ci run`
+4. **Use `--web`**: When the user might benefit from the browser UI
+
+## Command Reference
+
+### Merge Requests
+| Action | Command |
+|--------|---------|
+| Create | `glab mr create --title "Title" --description "Desc"` |
+| Create draft | `glab mr create --draft --title "Title"` |
+| List | `glab mr list` |
+| View | `glab mr view <id>` |
+| View with comments | `glab mr view <id> --comments` |
+| Checkout | `glab mr checkout <id>` |
+| Merge | `glab mr merge <id>` |
+| Approve | `glab mr approve <id>` |
+
+### Issues
+| Action | Command |
+|--------|---------|
+| Create | `glab issue create --title "Title" --description "Desc"` |
+| List | `glab issue list` |
+| List mine | `glab issue list --assignee=@me` |
+| View | `glab issue view <id>` |
+| Close | `glab issue close <id>` |
+| Comment | `glab issue note <id> --message "Comment"` |
+
+### CI/CD Pipelines
+| Action | Command |
+|--------|---------|
+| Status | `glab ci status` |
+| List | `glab ci list` |
+| View logs | `glab ci trace` |
+| Run new | `glab ci run` |
+| Retry failed | `glab ci retry` |
+
+### Repository
+| Action | Command |
+|--------|---------|
+| View info | `glab repo view` |
+| Clone | `glab repo clone <repo>` |
+| Open in browser | `glab repo view --web`|

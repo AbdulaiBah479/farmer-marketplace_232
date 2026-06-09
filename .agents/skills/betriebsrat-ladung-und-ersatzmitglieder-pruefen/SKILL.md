@@ -1,9 +1,30 @@
 ---
 name: betriebsrat-ladung-und-ersatzmitglieder-pruefen
-description: "Workflow-Skill zu betriebsrat ladung und ersatzmitglieder pruefen. Nutzt Normtext, Nutzerangaben und verifizierte Quellen; Rechtsprechung nur nach Live-Pruefung mit Gericht, Datum und Aktenzeichen."
+description: "Betriebsrat Ladung Und Ersatzmitglieder Pruefen: ordnet Normen, Nutzerangaben, Fristen, Belege und verifizierte Rechtsprechung zu einer belastbaren Prüfung: Betriebsrat Ladung Und Ersatzmitglieder Pruefen: ordnet Normen, Nutzerangaben, Fristen, Belege und..."
 ---
 
-# Betriebsrat — Ladung und Ersatzmitglieder prüfen
+# Betriebsrat Ladung Und Ersatzmitglieder Pruefen: ordnet Normen, Nutzerangaben, Fristen, Belege und verifizierte Rechtsprechung zu einer belastbaren Prüfung.
+
+
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: die im Plugin-Kontext einschlägigen Normen über gesetze-im-internet.de, dejure.org, eur-lex.europa.eu und die amtlichen Bundes-/Landesportale live prüfen — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+**Fokus:** Betriebsrat Ladung Und Ersatzmitglieder Pruefen: ordnet Normen, Nutzerangaben, Fristen, Belege und verifizierte Rechtsprechung zu einer belastbaren Prüfung.
+
+### Betriebsrat — Ladung und Ersatzmitglieder prüfen
+
+## Fachlicher Kern — Arbeitsrecht
+- **Problemfokus dieses Skills:** Bleibe beim konkreten Titel `Betriebsrat — Ladung und Ersatzmitglieder prüfen` und löse die dort angelegte Fachfrage; arbeite mit konkreten Tatbestandsmerkmalen, Beweisfragen und dem unmittelbar benötigten Arbeitsprodukt. Routingfragen bleiben Hilfsmittel, wenn Frist, Zuständigkeit oder Verfahrensart offen sind.
+- **Normenradar:** BGB §§ 611a, 613a, 615, 623; KSchG §§ 1, 4, 7; TzBfG §§ 14, 15, 16; AGG §§ 1, 3, 7, 15, 22; EntgTranspG §§ 3, 5, 7; BUrlG §§ 1, 3, 7; BetrVG §§ 87, 99, 102; ArbZG; NachwG; SGB IX §§ 164, 167, 168.
+- **Verifizierte Anker:** BAG, Urteil vom 23.10.2025 - 8 AZR 300/24 (Entgeltgleichheit, Paarvergleich, Beweislast, bundesarbeitsgericht.de); BAG, Urteil vom 03.06.2025 - 9 AZR 104/24 (kein Verzicht auf gesetzlichen Mindesturlaub im bestehenden Arbeitsverhältnis); bei Kündigungszugang immer § 623 BGB, Zugang nach § 130 BGB, Dreiwochenfrist §§ 4, 7 KSchG und Beweis des konkreten Umschlags trennen.
+- **Arbeitsmodus:** Zuerst Status, Zugang, Frist, Beteiligungsrechte, Sonderkündigungsschutz, Beweislast und prozessualen nächsten Schritt sichern; dann erst Materiellrecht vertiefen.
+- **Outputpflicht:** Fristenblatt, Zugangsmatrix, Beweisangebot, Mandantenmail, Betriebsrats-/Gegnerbrief oder Klage-/Erwiderungsbaustein.
+- **Fehlerbremse:** Tragende Normen/Entscheidungen live oder aus der Akte verifizieren; Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei prüfbarer Quelle. Keine BeckRS-, juris-, Kommentar- oder Aufsatz-Blindzitate aus Modellwissen.
 
 ## Rechtsgrundlagen
 
@@ -47,15 +68,15 @@ Für jedes ordentliche Mitglied:
 
 ```
 □ War das Mitglied an dem Sitzungstag verhindert?
-   → Urlaub (geplant, im Voraus bekannt)
-   → Krankheit (kurzfristig, wann genau bekannt geworden?)
-   → Dienstliche Abwesenheit
-   → Befangenheit / Interessenkollision in einer Tagesordnungs-Sache
-   → Erlöschen der Mitgliedschaft (§ 24 BetrVG)
+ → Urlaub (geplant, im Voraus bekannt)
+ → Krankheit (kurzfristig, wann genau bekannt geworden?)
+ → Dienstliche Abwesenheit
+ → Befangenheit / Interessenkollision in einer Tagesordnungs-Sache
+ → Erlöschen der Mitgliedschaft (§ 24 BetrVG)
 □ Wann wurde die Verhinderung bekannt?
-   → Vor dem Sitzungstag: rechtzeitige Nachladung möglich → war erforderlich
-   → Am Sitzungstag: Beurteilungsspielraum des Vorsitzenden
-     Rechtsprechung live prüfen: Keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über amtliche oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+ → Vor dem Sitzungstag: rechtzeitige Nachladung möglich → war erforderlich
+ → Am Sitzungstag: Beurteilungsspielraum des Vorsitzenden
+ Rechtsprechung live prüfen: Keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über amtliche oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 □ Dokumentierte Mitteilung der Verhinderung?
 ```
 
@@ -65,12 +86,12 @@ Bei Verhinderung muss das **richtige** Ersatzmitglied geladen werden:
 
 ```
 □ Wahl mit Listenwahl oder Mehrheitswahl?
-   → Listenwahl: Ersatzmitglied stammt aus DERSELBEN Liste wie das
-     verhinderte ordentliche Mitglied (Listentreue)
-   → Mehrheitswahl: Ersatzmitglieder nach Stimmenzahl
+ → Listenwahl: Ersatzmitglied stammt aus DERSELBEN Liste wie das
+ verhinderte ordentliche Mitglied (Listentreue)
+ → Mehrheitswahl: Ersatzmitglieder nach Stimmenzahl
 □ Innerhalb der Liste: Reihenfolge nach dem festgestellten Wahlergebnis
 □ Geschlechterquote (§ 15 Abs. 2 BetrVG) — Minderheitsgeschlecht
-   muss bei der Nachrückreihenfolge beachtet werden
+ muss bei der Nachrückreihenfolge beachtet werden
 □ Ist das richtige Ersatzmitglied geladen worden?
 □ Ist das richtige Ersatzmitglied erschienen?
 □ Hat es an der Abstimmung teilgenommen?
@@ -80,7 +101,7 @@ Bei Verhinderung muss das **richtige** Ersatzmitglied geladen werden:
 
 ```
 □ War der Betriebsrat beschlussfähig?
-   (mehr als die Hälfte der Mitglieder anwesend, § 33 Abs. 2 BetrVG)
+ (mehr als die Hälfte der Mitglieder anwesend, § 33 Abs. 2 BetrVG)
 □ Wurde der Beschluss mit Mehrheit der abgegebenen Stimmen gefasst?
 □ Stimmenthaltungen korrekt behandelt (zählen nicht als Ja-Stimme)?
 ```
@@ -89,22 +110,22 @@ Bei Verhinderung muss das **richtige** Ersatzmitglied geladen werden:
 
 ```
 □ Alle vorstehenden Punkte erfüllt?
-   → Beschluss wirksam
+ → Beschluss wirksam
 
 □ Verstoß gegen Nachrückreihenfolge (§ 25 Abs. 2 BetrVG)?
-   Rechtsprechung live prüfen: Keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über amtliche oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
-   → ABER: Heilung möglich (→ Skill `betriebsrat-beschluss-heilung-nachtraeglich`)
+ Rechtsprechung live prüfen: Keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über amtliche oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+ → ABER: Heilung möglich (→ Skill `betriebsrat-beschluss-heilung-nachtraeglich`)
 
 □ Verstoß gegen Ladungsvorschriften (§ 29 Abs. 2 BetrVG)?
-   → Grundsätzlich Unwirksamkeit
-   → Heilung durch neuen Beschluss möglich (→ Heilungs-Skill)
+ → Grundsätzlich Unwirksamkeit
+ → Heilung durch neuen Beschluss möglich (→ Heilungs-Skill)
 
 □ Verhinderung erst am Sitzungstag bekannt und Vorsitzender hat
-   keine Nachladung versucht?
-   Rechtsprechung live prüfen: Keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über amtliche oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
-   → Beurteilungsspielraum des Vorsitzenden
-   → Beschluss bleibt wirksam, wenn das Quorum auch ohne
-     Nachladung erreicht war
+ keine Nachladung versucht?
+ Rechtsprechung live prüfen: Keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über amtliche oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+ → Beurteilungsspielraum des Vorsitzenden
+ → Beschluss bleibt wirksam, wenn das Quorum auch ohne
+ Nachladung erreicht war
 ```
 
 ## Häufige Fehlerquellen
@@ -131,9 +152,3 @@ Bei Verhinderung muss das **richtige** Ersatzmitglied geladen werden:
 5. Bewertung (Schritt 5) → Beschluss **unwirksam** wegen § 25 Abs. 2 BetrVG
 
 **Folge**: Wechsel zum Skill `betriebsrat-beschluss-heilung-nachtraeglich` — kann der Betriebsrat den Beschluss in einer Folgesitzung nachträglich heilen?
-
-## Querverweise
-
-- → `betriebsrat-beschluss-heilung-nachtraeglich` — Heilungsmöglichkeit bei festgestelltem Fehler
-- → `betriebsrat-anhoerung` — formgerechte Anhörung des Betriebsrats vor Kündigung
-- → `kuendigungsschutz-grundlagen`

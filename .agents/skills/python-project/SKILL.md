@@ -1,265 +1,462 @@
 ---
 name: python-project
-description: Use whenever working on a python project. Manage Python projects using uv package manager with modern Python project structure.
+description: Modern Python project architecture guide for 2025. Use when creating Python projects (APIs, CLI, data pipelines). Covers uv, Ruff, Pydantic, FastAPI, and async patterns.
+---
+# Python Project Architecture
+
+## Core Principles
+
+- **Type hints everywhere** — Pydantic for runtime, mypy for static
+- **uv for everything** — Package management, virtualenv, Python version
+- **Ruff only** — Replace Flake8 + Black + isort with single tool
+- **src layout** — All code under `src/` directory
+- **pyproject.toml only** — No setup.py, no requirements.txt
+- **Async all the way** — Once async, stay async through call chain
+- **No backwards compatibility** — Delete, don't deprecate. Change directly
+- **LiteLLM for LLM APIs** — Use LiteLLM proxy for all LLM integrations
+
 ---
 
-# UV Project Management
+## No Backwards Compatibility
 
-Guide for managing Python projects using the uv package manager with proper understanding of modern Python project structures.
+> **Delete unused code. Change directly. No compatibility layers.**
 
-## Key Concepts
+```python
+# ❌ BAD: Deprecated decorator kept around
+import warnings
 
-### Fetch Versions of a package
+def old_function():
+    warnings.warn("Use new_function instead", DeprecationWarning)
+    return new_function()
 
-For newly added dependency or when need to upgrade the version of a dependency, use pip to fetch versions.
+# ❌ BAD: Alias for renamed functions
+new_name = old_name  # "for backwards compatibility"
 
-**Use `uv pip index versions <package>` to fetch versions**
+# ❌ BAD: Unused parameters with underscore
+def process(_legacy_param, data):
+    ...
 
-### Dependency Groups vs Optional Dependencies
+# ❌ BAD: Version checking for old behavior
+if version < "2.0":
+    # old behavior
+    ...
 
-Modern Python projects using uv should use `dependency-groups` instead of `[project.optional-dependencies]`:
+# ✅ GOOD: Just delete and update all usages
+def new_function():
+    ...
+# Then: Find & replace all old_function → new_function
 
-**Use `[dependency-groups]`** (PEP 735):
-```toml
-[dependency-groups]
-dev = [
-    "pytest>=9.0.0",
-    "ruff>=0.14.0",
-]
-test = [
-    "pytest>=9.0.0",
-    "pytest-cov>=4.0.0",
-]
+# ✅ GOOD: Remove unused parameters entirely
+def process(data):
+    ...
 ```
 
-**Avoid `[project.optional-dependencies]`**:
-```toml
-# ❌ Old pattern - don't use with uv
-[project.optional-dependencies]
-dev = ["pytest>=9.0.0"]
+---
+
+## LiteLLM for LLM APIs
+
+> **Use LiteLLM proxy. Don't call provider APIs directly.**
+
+```python
+# src/myapp/llm.py
+from openai import AsyncOpenAI
+
+from myapp.config import settings
+
+# Connect to LiteLLM proxy using OpenAI SDK
+client = AsyncOpenAI(
+    base_url=settings.litellm_url,  # "http://localhost:4000"
+    api_key=settings.litellm_api_key,
+)
+
+
+async def complete(prompt: str, model: str = "gpt-4o") -> str:
+    """Call any LLM through LiteLLM proxy."""
+    response = await client.chat.completions.create(
+        model=model,  # "gpt-4o", "claude-3-opus", "gemini-pro", etc.
+        messages=[{"role": "user", "content": prompt}],
+    )
+    return response.choices[0].message.content or ""
 ```
 
-### Installing Dependency Groups
+---
 
-Install specific dependency groups:
+## Quick Start
+
+### 1. Initialize Project
+
 ```bash
-uv sync --group dev
-uv sync --group test
+# Install uv (if not installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Create new project
+uv init myapp
+cd myapp
+
+# Set Python version
+echo "3.12" > .python-version
+
+# Add dependencies
+uv add fastapi uvicorn pydantic sqlalchemy httpx
+uv add --dev pytest pytest-asyncio ruff mypy
 ```
 
-Install all groups:
-```bash
-uv sync --all-groups
-```
+### 2. Apply Tech Stack
 
-Install without any groups:
-```bash
-uv sync --no-dev
-```
+| Layer | Recommendation |
+|-------|----------------|
+| Package Manager | uv |
+| Linting + Format | Ruff |
+| Type Checking | mypy |
+| Validation | Pydantic v2 |
+| Web Framework | FastAPI |
+| Database | SQLAlchemy 2.0 + asyncpg |
+| HTTP Client | httpx |
+| Testing | pytest + pytest-asyncio |
+| Logging | structlog |
 
-## Common Patterns
+### Version Strategy
 
-### Basic pyproject.toml Structure
+> **Always use latest. Never pin in templates.**
 
 ```toml
 [project]
-name = "my-project"
-version = "0.1.0"
-description = "Project description"
-requires-python = ">=3.11"
 dependencies = [
-    "requests>=2.31.0",
-    "pydantic>=2.0.0",
+    "fastapi",      # uv resolves to latest
+    "pydantic",
+    "sqlalchemy",
 ]
-
-[dependency-groups]
-dev = [
-    "pytest>=9.0.0",
-    "ruff>=0.14.0",
-    "mypy>=1.8.0",
-]
-
-[build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
 ```
 
-### Project Initialization
+- `uv add` fetches latest compatible versions
+- `uv.lock` ensures reproducible builds
+- `uv sync` installs exact locked versions
 
-Create new project:
-```bash
-uv init my-project
-cd my-project
+### 3. Use Standard Structure (src layout)
+
+```
+myapp/
+├── pyproject.toml         # Single config file
+├── uv.lock                # Lock file (commit this)
+├── .python-version        # Python version for uv
+├── src/
+│   └── myapp/
+│       ├── __init__.py
+│       ├── __main__.py    # Entry point
+│       ├── main.py        # FastAPI app
+│       ├── config.py      # Pydantic Settings
+│       ├── models/        # Pydantic models
+│       │   ├── __init__.py
+│       │   └── user.py
+│       ├── services/      # Business logic
+│       │   ├── __init__.py
+│       │   └── user.py
+│       ├── repositories/  # Data access
+│       │   ├── __init__.py
+│       │   └── user.py
+│       ├── api/           # HTTP layer
+│       │   ├── __init__.py
+│       │   ├── deps.py    # Dependencies
+│       │   └── routes/
+│       │       ├── __init__.py
+│       │       └── user.py
+│       └── core/          # Shared utilities
+│           ├── __init__.py
+│           ├── exceptions.py
+│           └── logging.py
+├── tests/
+│   ├── __init__.py
+│   ├── conftest.py        # Fixtures
+│   └── test_user.py
+└── Makefile
 ```
 
-Add dependencies:
-```bash
-# Production dependency
-uv add requests
+---
 
-# Dev dependency
-uv add --group dev pytest
+## Architecture Layers
+
+### main.py — FastAPI Application
+
+```python
+# src/myapp/main.py
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+
+from myapp.api.routes import router
+from myapp.config import settings
+from myapp.core.logging import setup_logging
+from myapp.db import engine
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    setup_logging()
+    yield
+    # Shutdown
+    await engine.dispose()
+
+
+app = FastAPI(
+    title=settings.app_name,
+    lifespan=lifespan,
+)
+
+app.include_router(router, prefix="/api/v1")
+
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
 ```
 
-### Running Commands
+### config.py — Pydantic Settings
 
-Run Python with project dependencies:
-```bash
-uv run python script.py
-uv run pytest
+```python
+# src/myapp/config.py
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+    )
+
+    app_name: str = "myapp"
+    debug: bool = False
+
+    # Database
+    database_url: str = "postgresql+asyncpg://localhost/myapp"
+
+    # LiteLLM
+    litellm_url: str = "http://localhost:4000"
+    litellm_api_key: str = ""
+
+
+settings = Settings()
 ```
 
-Run installed tools:
-```bash
-uv run ruff check .
-uv run mypy src/
+### models/ — Pydantic Models
+
+```python
+# src/myapp/models/user.py
+from datetime import datetime
+from uuid import UUID
+
+from pydantic import BaseModel, EmailStr, Field
+
+
+class UserBase(BaseModel):
+    email: EmailStr
+    name: str = Field(min_length=2, max_length=100)
+
+
+class UserCreate(UserBase):
+    pass
+
+
+class UserUpdate(BaseModel):
+    email: EmailStr | None = None
+    name: str | None = Field(default=None, min_length=2, max_length=100)
+
+
+class User(UserBase):
+    id: UUID
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
 ```
 
-### Syncing Dependencies
+### services/ — Business Logic
 
-Sync all dependencies and groups:
-```bash
-uv sync --all-groups
+```python
+# src/myapp/services/user.py
+from uuid import UUID
+
+from myapp.core.exceptions import NotFoundError, ConflictError
+from myapp.models.user import User, UserCreate, UserUpdate
+from myapp.repositories.user import UserRepository
+
+
+class UserService:
+    def __init__(self, repo: UserRepository):
+        self.repo = repo
+
+    async def get(self, id: UUID) -> User:
+        user = await self.repo.get(id)
+        if not user:
+            raise NotFoundError("user", str(id))
+        return user
+
+    async def create(self, data: UserCreate) -> User:
+        existing = await self.repo.get_by_email(data.email)
+        if existing:
+            raise ConflictError("email already exists")
+        return await self.repo.create(data)
+
+    async def update(self, id: UUID, data: UserUpdate) -> User:
+        user = await self.get(id)
+        return await self.repo.update(user, data)
+
+    async def delete(self, id: UUID) -> None:
+        user = await self.get(id)
+        await self.repo.delete(user)
 ```
 
-Lock dependencies without installing:
-```bash
-uv lock
+### api/routes/ — HTTP Handlers
+
+```python
+# src/myapp/api/routes/user.py
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, status
+
+from myapp.api.deps import get_user_service
+from myapp.models.user import User, UserCreate, UserUpdate
+from myapp.services.user import UserService
+
+router = APIRouter(prefix="/users", tags=["users"])
+
+
+@router.get("/{id}", response_model=User)
+async def get_user(
+    id: UUID,
+    service: UserService = Depends(get_user_service),
+):
+    return await service.get(id)
+
+
+@router.post("", response_model=User, status_code=status.HTTP_201_CREATED)
+async def create_user(
+    data: UserCreate,
+    service: UserService = Depends(get_user_service),
+):
+    return await service.create(data)
+
+
+@router.patch("/{id}", response_model=User)
+async def update_user(
+    id: UUID,
+    data: UserUpdate,
+    service: UserService = Depends(get_user_service),
+):
+    return await service.update(id, data)
+
+
+@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user(
+    id: UUID,
+    service: UserService = Depends(get_user_service),
+):
+    await service.delete(id)
 ```
 
-## Migration from Old Patterns
+### core/exceptions.py — Custom Exceptions
 
-When updating projects from optional-dependencies to dependency-groups:
+```python
+# src/myapp/core/exceptions.py
+from fastapi import HTTPException, status
 
-1. **Rename section**:
-   ```toml
-   # Change from:
-   [project.optional-dependencies]
-   # To:
-   [dependency-groups]
-   ```
 
-2. **Update installation commands**:
-   ```bash
-   # Change from:
-   pip install -e ".[dev]"
-   # To:
-   uv sync --group dev
-   ```
+class AppError(Exception):
+    """Base application error."""
 
-3. **Update CI/CD scripts** to use `uv sync --all-groups` or specific groups
+    def __init__(self, message: str, code: str):
+        self.message = message
+        self.code = code
+        super().__init__(message)
 
-## Pytest
 
-use pytest for testing. place tests under `./tests/`. And never create './tests/__init__.py`
+class NotFoundError(AppError):
+    def __init__(self, resource: str, id: str):
+        super().__init__(f"{resource} not found: {id}", "NOT_FOUND")
 
-Also follow the no `__init__.py` convention of pytest, that's no `__init__.py` in all subdirectories in `./tests`.
 
-If anything shall be shared, use conftest.py.
+class ConflictError(AppError):
+    def __init__(self, message: str):
+        super().__init__(message, "CONFLICT")
 
-options in pyproject.toml:
+
+class ValidationError(AppError):
+    def __init__(self, message: str):
+        super().__init__(message, "VALIDATION_ERROR")
+
+
+# FastAPI exception handler
+def app_error_to_http(error: AppError) -> HTTPException:
+    status_map = {
+        "NOT_FOUND": status.HTTP_404_NOT_FOUND,
+        "CONFLICT": status.HTTP_409_CONFLICT,
+        "VALIDATION_ERROR": status.HTTP_400_BAD_REQUEST,
+    }
+    return HTTPException(
+        status_code=status_map.get(error.code, status.HTTP_500_INTERNAL_SERVER_ERROR),
+        detail={"message": error.message, "code": error.code},
+    )
+```
+
+---
+
+## pyproject.toml
 
 ```toml
-[tool.pytest]
-addopts = ["--import-mode=importlib"]
-pythonpath = ["src"]
+[project]
+name = "myapp"
+version = "0.1.0"
+description = "My application"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "pydantic",
+    "pydantic-settings",
+    "sqlalchemy[asyncio]",
+    "asyncpg",
+    "httpx",
+    "structlog",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest",
+    "pytest-asyncio",
+    "pytest-cov",
+    "ruff",
+    "mypy",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "SIM", # flake8-simplify
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["myapp"]
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
 testpaths = ["tests"]
-
 ```
 
-Do **NOTE** that don't create folders in tests that are the same name with your bebing tested package.
+---
 
-So this file structure is **NOT** allowed cause it will shadow your package.
 
-```
-src/app/__init__.py
-src/app/mymodule.py
-tests/app/__init__.py
-tests/app/test_mymodule.py # this will shadow and fail to import app.mymodule
-```
+## Extended Reference
 
-## pytest fixtures
-
-fixtures are shared test objects among all tests. 
-
-use `@pytest.fixture def some_fixture()` to create a fixture.
-
-declare tests with args of the same name to request the fixture. def test
-
-```python
-@pytest.fixture
-def sample_data1():
-    reutrn "a"
-
-@pytest.fixture
-def sample_data(sample_data1):
-    """fixture can also request another fixture"""
-    return f"hello {sample_data1)"
-
-def test_ok(sample_data):
-    assert "hello a" == sample_data
-```
-
-## test asset files with fixture
-
-use `tests/conftest.py` to manage shared fixtures, and also it's a common pattern to provide file paths in conftest.py as fixtures.
-
-The rational is you have stable file path handling if you do all the relative paths in a single conftest.py file.
-
-```python
-import pytest
-from pathlib import Path
-
-@pytest.fixture
-def test_data_dir():
-    """Returns the absolute path to the directory containing test assets."""
-    return Path(__file__).parent / "data"
-
-@pytest.fixture
-def sample_json(test_data_dir):
-    """Provides the path to a specific asset."""
-    return test_data_dir / "sample_input.json"
-```
-
-## Best Practices
-
-1. **Always use dependency-groups** for dev/test/docs dependencies with uv
-2. **Pin major versions** in dependencies: `package>=1.0.0,<2.0.0`
-3. **Use uv.lock** for reproducible environments (committed to git)
-4. **Run via uv run** to ensure correct environment: `uv run pytest` not `pytest`
-5. **Group related dependencies**: separate dev, test, docs, lint groups as needed
-
-## Common Commands Reference
-
-```bash
-# Project setup
-uv init              # Initialize new project
-uv sync              # Install dependencies from pyproject.toml
-uv sync --all-groups # Install with all dependency groups
-
-# Dependency management
-uv add package       # Add production dependency
-uv add --group dev package  # Add to dependency group
-uv remove package    # Remove dependency
-uv lock              # Update uv.lock file
-
-# Running code
-uv run python script.py    # Run Python with project deps
-uv run pytest             # Run tests
-uv run --with package cmd # One-off dependency
-
-# Environment info
-uv pip list          # List installed packages
-uv pip show package  # Show package details
-```
-
-## Troubleshooting
-
-**Issue**: Old `pip install -e ".[dev]"` pattern doesn't work
-- **Solution**: Use `uv sync --group dev` instead
-
-**Issue**: Dependencies not found when running scripts
-- **Solution**: Use `uv run python script.py` instead of `python script.py`
-
-**Issue**: Need to add dependency to specific group
-- **Solution**: `uv add --group dev package-name`
+Detailed material starting at `## Testing` has been moved to [`reference/extended.md`](reference/extended.md) to keep this skill concise. Load that reference when the task requires the moved examples, command catalogs, checklists, platform details, or implementation templates.

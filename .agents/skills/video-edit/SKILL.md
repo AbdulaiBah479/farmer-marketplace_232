@@ -1,133 +1,225 @@
 ---
 name: video-edit
-description: Edit any video into a captioned showcase — transcribe (any language, defaults to large-v3), present a transcript_review.txt for the user to fix mishears BEFORE rendering, then build a HyperFrames composition with liquid-glass caption pills, liquid blob background, liquid morph wipes, optional behind-subject text via background removal, and render the final video. Use whenever the user provides a video file and asks to edit it, caption it, add subtitles, fix existing captions, make a reel/promo/captioned tutorial, or "do the same" pattern as a prior captioned video. Supports English, Hebrew, and any Whisper-supported language. **Renders both 16:9 (YouTube / horizontal) and 9:16 (TikTok / Instagram Reels / YouTube Shorts) from the SAME 16:9 source** — vertical mode uses a centered footage strip with a blurred backdrop + liquid blobs and a vertical-tuned caption pill, no need to re-shoot. THE PIPELINE PAUSES FOR USER APPROVAL on the transcript before final render — this is the support mechanism for getting captions perfect (especially Hebrew). Pairs with hyperframes, hyperframes-cli, hyperframes-registry, and yuv-design-system skills.
+displayName: "Video Edit — Pro Pack on RunComfy"
+description: >
+  Edit existing video on RunComfy — this skill is a smart router that
+  matches the user's intent to the right edit model in the RunComfy
+  catalog. Picks Wan 2.7 Edit-Video (general restyle / background swap
+  / packaging swap, identity + motion preservation), Kling 2.6 Pro
+  Motion Control (transfer precise motion from a reference video to a
+  target character), or Lucy Edit Restyle (lightweight identity-stable
+  restyle / outfit swap). Bundles each model's documented prompting
+  patterns so the skill gets sharper edits without burning iterations
+  on the wrong model. Calls `runcomfy run <vendor>/<model>/<endpoint>`
+  through the local RunComfy CLI. Triggers on "video edit", "edit
+  video", "restyle video", "swap video background", "motion control",
+  "outfit swap video", or any explicit ask to transform a video.
+homepage: https://www.runcomfy.com
+license: MIT
 ---
 
-# Video Edit — Captioned Showcase Pipeline
+# Video Edit — Pro Pack on RunComfy
 
-End-to-end captioned video editor on top of HyperFrames. The user gives you a video; you orchestrate transcribe → review → render and ALWAYS pause for transcript approval before the long render.
+[runcomfy.com](https://www.runcomfy.com/?utm_source=skills.sh&utm_medium=skill&utm_campaign=video-edit) · [Wan 2.7 Edit-Video](https://www.runcomfy.com/models/wan-ai/wan-2-7/edit-video?utm_source=skills.sh&utm_medium=skill&utm_campaign=video-edit) · [Kling Motion-Control Pro](https://www.runcomfy.com/models/kling/kling-2-6/motion-control-pro?utm_source=skills.sh&utm_medium=skill&utm_campaign=video-edit) · [Lucy Edit Restyle](https://www.runcomfy.com/models/decart/lucy-edit/restyle?utm_source=skills.sh&utm_medium=skill&utm_campaign=video-edit) · [GitHub](https://github.com/agentspace-so/runcomfy-skills/tree/main/video-edit)
 
-## Where this skill sits in the YUV.AI pyramid
-
-`video-edit` is in the **middle tier** of the YUV.AI skills pyramid alongside `yuv-design-system`, `yuv-decks`, `yuv-viral-video`, `parallax-landing-page`, and `video-to-landing-page`. The top-tier orchestrator `yuv-pilot` routes here whenever the user wants a captioned showcase, tutorial, or talking-head edit with subtitles.
-
-This is the more general video sibling to `yuv-viral-video`. The split:
-- `yuv-viral-video` — opinionated YUV.AI viral-short pipeline (MrBeast pacing, signature editorial style)
-- `video-edit` — general captioned editor with transcript-review-before-render (Hebrew + English + any Whisper language)
-
-For YUV.AI-branded captioned video, pair this skill with `yuv-design-system` (Neon mode for type/palette decisions). For generic / third-party captioned video, this skill works standalone.
-
-## When to invoke
-
-- A path to a video file (mp4/mov/mkv) + a request to "edit", "caption", "add subtitles", "make a reel/promo", "do the same"
-- "Fix the captions / Hebrew misspells" — re-enter at the review step on an existing project
-- Any captioned tutorial / talking-head / promo build
-
-## Save location
-
-**Default:** `~/Documents/yuv-projects/videos/<slug>/` — always save captioned video projects here so renders are findable. The `<slug>` is short, derived from the topic or source filename.
+**Video edit, intent-routed.** This skill doesn't lock you to one model — it picks the right video-edit model in the RunComfy catalog based on what the user actually wants: general restyle, motion transfer from a reference clip, or lightweight identity-stable outfit / background swap.
 
 ```bash
-mkdir -p ~/Documents/yuv-projects/videos
-cd ~/Documents/yuv-projects/videos
-# Initialize the project here.
+npx skills add agentspace-so/runcomfy-skills --skill video-edit -g
 ```
 
-Final render lands at `~/Documents/yuv-projects/videos/<slug>/renders/<name>_FINAL.mp4`. Tell the user where the video lives at the end of the render.
+## Pick the right model for the user's intent
+
+| User intent | Model | Why |
+|---|---|---|
+| Restyle a talking-head video — preserve face / pose / lip movement | **Wan 2.7 Edit-Video** | Strong identity + motion preservation; supports up to 1080p |
+| Swap product background, keep camera motion | **Wan 2.7 Edit-Video** | Camera motion preserved; one-direction edit honored |
+| Replace packaging design using a reference image | **Wan 2.7 Edit-Video** + `reference_image` | Reference-conditioned design transfer |
+| Apply cinematic color grade / commercial polish | **Wan 2.7 Edit-Video** | Good at single-direction global look changes |
+| **Transfer precise motion** from a reference video to a target character | **Kling 2.6 Pro Motion Control** | Designed for motion mapping with identity hold |
+| Lip-sync motion of a target character to source video's lip movement | **Kling 2.6 Pro Motion Control** | Built for tight temporal coherence |
+| **Lightweight outfit / costume swap** with identity preservation | **Lucy Edit Restyle** | Core strength is localized identity-stable edits |
+| **Identity-stable restyle** ("astronaut in desert", "warm golden-hour lighting") | **Lucy Edit Restyle** | Specializes in temporal consistency for restyle |
+| Default if unspecified | **Wan 2.7 Edit-Video** | Most versatile, highest resolution |
+
+The agent reads this table, classifies the user's intent, and picks the matching subsection below.
+
+## Prerequisites
+
+1. **RunComfy CLI** — `npm i -g @runcomfy/cli`
+2. **RunComfy account** — `runcomfy login`.
+3. **CI / containers** — set `RUNCOMFY_TOKEN=<token>`.
+4. **A source video URL** — formats and limits depend on the chosen route.
 
 ---
 
-## Workflow (12 steps)
+## Route 1: Wan 2.7 Edit-Video — default for restyle / background / packaging
 
-1. **Probe the source** — `ffprobe` for dimensions, fps, duration, audio.
-2. **Scaffold** — `cd ~/Documents/yuv-projects/videos && npx hyperframes init <slug> --video <path> --non-interactive`. Rename the copied video to `source.mp4`.
-3. **Extract audio** — `ffmpeg -i source.mp4 -vn -ac 1 -ar 16000 audio.wav`.
-4. **Transcribe** — copy `references/transcribe.py` into the project. Default model `large-v3` (best Hebrew). CUDA usually fails on Windows (missing cuDNN); the script falls back to CPU int8. Force `language="he"` for Hebrew, `language="en"` for English; otherwise auto-detect.
-5. **Apply known corrections** — copy `references/corrections-hebrew.md` content into a `corrections.json` at the project root (keys = wrong token, values = correct token).
-6. 🛑 **STOP — start the review server and let the user approve in a webapp.**
-   First apply known corrections: copy `references/make_review.py` into the project and run
-   `python make_review.py`. It applies `corrections.json` to `transcript.json`.
+**Model**: `wan-ai/wan-2-7/edit-video`
 
-   Then spawn the review server **as a background task** (it blocks until the user clicks
-   "Approve & Render" in the browser):
-   ```bash
-   python "$HOME/.claude/skills/video-edit/references/serve_review.py" .
-   # On Windows: python "C:\Users\<you>\.claude\skills\video-edit\references\serve_review.py" .
-   ```
-   The server prints a line like `REVIEW_URL=http://localhost:PORT/`. Grab that URL from
-   the background-task output (or read stdout) and send the user:
+### Schema
 
-   > 👉 Review your transcript here: **http://localhost:PORT/**
-   > When you click **Approve & Render**, I'll continue automatically.
+| Field | Type | Required | Default | Notes |
+|---|---|---|---|---|
+| `prompt` | string | yes | — | Lead with preservation. One edit direction per call. |
+| `video` | string | yes | — | MP4/MOV URL, 2–10s, ≤100MB. |
+| `reference_image` | string | no | — | URL — use for direct design / appearance transfer only. |
+| `resolution` | enum | no | (input) | `720p` or `1080p`. |
+| `aspect_ratio` | enum | no | (input) | W:H. Defaults to input. |
+| `duration` | int | no | 0 | `0` = match input; `2–10` = truncate from start. |
+| `audio_setting` | enum | no | `auto` | `auto` or `origin` (preserve source audio). |
+| `seed` | int | no | — | Reproducibility. |
 
-   The agent **does not need a "continue" message** — when the user clicks the button, the
-   server writes `transcript_review.txt` to the project dir AND exits with code 0. The
-   agent's background-task notification fires, and the pipeline resumes from step 8.
+### Invoke
 
-   **Fallback if no browser / no server**: open the editor as a static file
-   (`start "" "$HOME/.claude/skills/video-edit/transcript-editor/index.html"`),
-   ask the user to pick the project folder, edit, save `transcript_review.txt` back into
-   the project, and reply "continue". The editor supports both modes.
+**Background swap, identity preserved, audio kept:**
 
-7. **(Optional) Background removal** — see step 7 below; can run in parallel with the user's
-   review.
+```bash
+runcomfy run wan-ai/wan-2-7/edit-video \
+  --input '{
+    "prompt": "Preserve the speaker'\''s face, pose, and lip movement; change the background to a modern office with neutral lighting.",
+    "video": "https://.../speaker.mp4",
+    "audio_setting": "origin"
+  }' \
+  --output-dir <absolute/path>
+```
 
-8. After approval, run `python references/apply_review.py`. It re-tokenises edited lines and
-   redistributes word timings back into `transcript.json` so caption sync still works.
-7. **(Optional) Background removal** — if any talking-head segment needs behind-subject text, extract the segment as `outro.mp4` (or `intro.mp4`) and run `npx hyperframes remove-background <clip>.mp4 -o <name>_subject.webm --quality best`. CPU only on most setups (~3–8 min for a ~15s 1440p clip).
-8. **Re-encode source with dense keyframes** — multi-worker render seeks freeze on sparse keyframes. Always run:
-   ```bash
-   ffmpeg -y -i source.mp4 -c:v libx264 -preset medium -crf 18 -r 30 -g 30 -keyint_min 30 -sc_threshold 0 -pix_fmt yuv420p -movflags +faststart -c:a copy footage.mp4
-   ```
-9. **Re-load the (edited) transcript** and generate the body sub-composition via `references/gen_body.py`. The generator emits the full `compositions/components/caption-body.html` with editorial + matrix alternating in liquid-glass pills, anchored lower-left-of-centre (clears bottom-right webcam PiPs).
-10. **Wire the host `index.html`** from `references/host-template.html`. Layer order (z-index, NOT track-index):
-    - z0: footage `.cam-bg`
-    - z1: liquid blob background (`compositions/liquid-blobs.html`, `mix-blend-mode: screen`, full duration)
-    - z2: parallax behind-subject caption (intro and/or outro, when bg-removal used)
-    - z3: subject cut-out `.cam-out` / `.cam-sub` (with matching `data-media-start`)
-    - z6: body captions
-    - z46: progress bar + flash + liquid morph wipe
-11. **Lint** — `npx hyperframes lint`. Must be 0 errors. Common fixes: GSAP/CSS transform conflict on the wipe element (use `xPercent/yPercent` or remove the CSS transform); overlapping tweens on the same property (add `overwrite: "auto"`).
-12. **Render** — `npx hyperframes render --quality standard --fps 30 --output renders/<name>_FINAL.mp4`. Standard is the right delivery target — `high` roughly doubles render time. Verify with 6–8 spot-check frames from across the timeline before reporting done.
+**Packaging swap with reference image:**
 
-### Vertical (9:16) output for TikTok / Reels / Shorts
+```bash
+runcomfy run wan-ai/wan-2-7/edit-video \
+  --input '{
+    "prompt": "Maintain the original framing and hand movement; replace the packaging design using the reference image.",
+    "video": "https://.../hand-holding-package.mp4",
+    "reference_image": "https://.../new-packaging.png",
+    "audio_setting": "origin"
+  }' \
+  --output-dir <absolute/path>
+```
 
-When the user asks for vertical / portrait / TikTok / Reels / 9:16 output (from a 16:9 source):
+### Prompting tips
 
-1. Clone the project to a sibling folder: `cp -r project/ project-vertical/`.
-2. Replace its `index.html` with `references/host-template-vertical.html` (1080×1920 canvas, blurred-bg backdrop with liquid blobs, the 16:9 footage as a centered horizontal strip, captions below).
-3. Replace its `gen_body.py` with `references/gen_body_vertical.py` (centered pill, larger fonts, narrower max-width), then re-run it to emit `compositions/components/caption-body.html`.
-4. Drop the behind-subject cut-out + parallax sub-compositions (the cutout is aligned for 16:9; not worth re-aligning for v1). The vertical comp uses the blurred-source backdrop + blobs for atmosphere instead.
-5. Update `data-duration` to the actual video duration. Update the brand-chip text in `index.html` (`YUV.AI` by default).
-6. Lint + render — same commands. Output is `1080×1920`. Drop straight onto TikTok / IG Reels / YT Shorts.
+- **Preservation goals first**: `"Preserve [face / pose / motion / framing / lip movement]; [then state the change]"`.
+- **One edit direction per call.** Compound edits drift on motion.
+- **`reference_image` only when justified** (packaging swap, costume swap with target visual). Don't pass refs for general restyle.
+- **`audio_setting: "origin"`** for talking-head where you don't want soundtrack regenerated.
+- **Source video constraints**: 2–10s, ≤100MB.
 
-To deliver **both** 16:9 and 9:16 in one go, run two render commands (in parallel projects). The transcript_review.txt approval applies to both — same captions, two compositions.
+---
 
-## Critical rules
+## Route 2: Kling 2.6 Pro Motion Control — when motion FROM a reference clip is the point
 
-- **Never render the final without explicit transcript approval.** The review step is the whole point.
-- For Hebrew: `large-v3` + `language="he"` + `direction: rtl` + Rubik (700 + 900 for editorial dual-weight emphasis).
-- Caption pills always need an opaque dark backing — bare light text vanishes on white app UI.
-- Centre caption pills horizontally but shift the centre x-coord left (e.g. `left: 720px`) when the footage has a bottom-right webcam PiP.
-- The behind-subject cut-out clip MUST carry `data-media-start` matching its `data-start` (or matching the offset from the source if the clip was extracted), or the cut-out plays from frame 0 and desyncs.
-- The `remove-background` webm keeps the original RGB and writes only the alpha mask — `ffprobe` reports `yuv420p`, which looks like "no alpha". Confirm via `TAG:ALPHA_MODE=1` or composite over a solid colour.
-- Outro/end cards with burned-in text — do NOT caption over them; they collide.
+**Model**: `kling/kling-2-6/motion-control-pro`
 
-## File references
+Use when the user wants to **transfer the motion of a reference video** onto a target character (driven by an image OR another video). This isn't restyle — it's motion mapping with identity hold.
 
-| File | Purpose |
-| --- | --- |
-| `transcript-editor/index.html` | **Interactive browser editor** — video preview, RTL editing, dictionary apply, optional WebLLM AI suggestions, saves `transcript_review.txt` |
-| `references/setup.md` | Prerequisites + install commands for Node / Python / FFmpeg / faster-whisper |
-| `references/transcribe.py` | faster-whisper transcribe with CPU fallback + word timestamps |
-| `references/serve_review.py` | **Local review server** — auto-loads editor, blocks until user clicks Approve & Render, then writes `transcript_review.txt` and exits (signals the agent) |
-| `references/make_review.py` | Apply corrections + emit `transcript_review.txt` (file-mode fallback) |
-| `references/apply_review.py` | Parse edited review file, redistribute word timings, update `transcript.json` |
-| `references/gen_body.py` | Caption-body generator (editorial + matrix in liquid-glass pills) |
-| `references/host-template.html` | **16:9** host composition with liquid effects + transition wipe |
-| `references/host-template-vertical.html` | **9:16** host (1080×1920) — TikTok / Reels / Shorts layout: blurred bg, centered 16:9 footage strip, captions below, brand chip top-right |
-| `references/gen_body_vertical.py` | Caption-body generator tuned for vertical (centered pill, larger fonts, narrower max-width) |
-| `references/liquid-blobs.html` | Full-duration drifting blob layer |
-| `references/caption-parallax-outro.html` | Behind-subject caption template (English; clone for other languages) |
-| `references/corrections-hebrew.md` | Known Hebrew Whisper mishears |
-| `references/transcript-review-workflow.md` | The pause/approve step in detail |
+### Schema
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `prompt` | string | yes | Describe target motion / style. |
+| `image` | string | yes (image orientation) | Reference for character / background consistency. |
+| `video` | string | yes | **Motion reference**. 10–30s depending on orientation. |
+| `keep_original_sound` | bool | no | Preserve audio from reference video. |
+| `character_orientation` | enum | yes | `image` (max 10s output) or `video` (max 30s output). |
+
+### Invoke
+
+```bash
+runcomfy run kling/kling-2-6/motion-control-pro \
+  --input '{
+    "prompt": "A young american woman dancing",
+    "image": "https://.../target-character.jpg",
+    "video": "https://.../motion-reference-dance.mp4",
+    "character_orientation": "image",
+    "keep_original_sound": true
+  }' \
+  --output-dir <absolute/path>
+```
+
+### Prompting tips
+
+- **Subject must be > 5% of frame** in the image reference for clean identity hold.
+- **Spatial constraints help**: `"character on left side, background motion right"`.
+- **Simplify** if results drift between iterations — drop adjectives, keep core motion description.
+- **`character_orientation: "image"`** caps output at 10s; `"video"` allows 30s.
+
+---
+
+## Route 3: Lucy Edit Restyle — lightweight identity-stable restyle / outfit swap
+
+**Model**: `decart/lucy-edit/restyle`
+
+Use when the edit is **localized style modification** — outfit swap, scene relight, atmospheric restyle — and identity preservation is critical. Lighter-weight than Wan 2.7 Edit; capped at 720p.
+
+### Schema
+
+| Field | Type | Required | Default | Notes |
+|---|---|---|---|---|
+| `prompt` | string | yes | — | Natural-language edit instruction. |
+| `video_url` | string | yes | — | MP4/MOV/WEBM/GIF. |
+| `resolution` | enum | no | `720p` | `720p` only on this tier. |
+
+### Invoke
+
+**Outfit swap:**
+
+```bash
+runcomfy run decart/lucy-edit/restyle \
+  --input '{
+    "prompt": "Change outfit to professional business attire; preserve face and motion.",
+    "video_url": "https://.../subject-walking.mp4"
+  }' \
+  --output-dir <absolute/path>
+```
+
+**Atmospheric restyle:**
+
+```bash
+runcomfy run decart/lucy-edit/restyle \
+  --input '{
+    "prompt": "Make lighting warm and golden hour; preserve face, pose, and motion.",
+    "video_url": "https://.../subject-portrait.mp4"
+  }' \
+  --output-dir <absolute/path>
+```
+
+### Prompting tips
+
+- **Localized change phrasing wins.** "Outfit", "lighting", "background" — pick one bucket.
+- **Preserve identity goals** — `"preserve face and motion"` is enough; don't over-specify.
+- **Avoid total replacement** ("astronaut in space" works; "swap subject for a different person" doesn't). Lucy is built for localized style mods, not full character swap.
+- **No aspect ratio control** — output matches input. Cropping happens server-side if you don't pre-match.
+
+---
+
+## Limitations
+
+- **Each route inherits its model's limits.** Wan 2.7 Edit: 2–10s, 1080p ceiling. Kling: 10s (image orientation) or 30s (video orientation). Lucy: 720p ceiling, no aspect control.
+- **No multi-route blending.** This skill picks one model per call.
+- **Brand-specific overrides** — if the user named a specific model, route to the corresponding brand skill (`wan-2-7`) for fuller treatment.
+
+## Exit codes
+
+| code | meaning |
+|---|---|
+| 0  | success |
+| 64 | bad CLI args |
+| 65 | bad input JSON / schema mismatch |
+| 69 | upstream 5xx |
+| 75 | retryable: timeout / 429 |
+| 77 | not signed in or token rejected |
+
+Full reference: [docs.runcomfy.com/cli/troubleshooting](https://docs.runcomfy.com/cli/troubleshooting?utm_source=skills.sh&utm_medium=skill&utm_campaign=video-edit).
+
+## How it works
+
+The skill picks one of Wan 2.7 Edit-Video / Kling 2.6 Pro Motion Control / Lucy Edit Restyle based on user intent and invokes `runcomfy run <model_id>` with the matching JSON body. The CLI POSTs to the Model API, polls the request, fetches the result, and downloads any `.runcomfy.net`/`.runcomfy.com` URL into `--output-dir`. `Ctrl-C` cancels the remote request before exit.
+
+## Security & Privacy
+
+- **Token storage**: `runcomfy login` writes the API token to `~/.config/runcomfy/token.json` with mode 0600 (owner-only read/write). Set `RUNCOMFY_TOKEN` env var to bypass the file entirely in CI / containers.
+- **Input boundary**: the user prompt is passed as a JSON string to the CLI via `--input`. The CLI does NOT shell-expand the prompt; it transmits the JSON body directly to the Model API over HTTPS. No shell injection surface from prompt content.
+- **Third-party content**: image / mask / video URLs you pass are fetched by the RunComfy model server, not by the CLI on your machine. Treat external URLs as untrusted; image-based prompt injection is a known risk for any image-edit / video-edit model.
+- **Outbound endpoints**: only `model-api.runcomfy.net` (request submission) and `*.runcomfy.net` / `*.runcomfy.com` (download whitelist for generated outputs). No telemetry, no callbacks.
+- **Generated-file size cap**: the CLI aborts any single download > 2 GiB to prevent disk-fill from a malicious or runaway model output.

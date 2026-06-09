@@ -1,18 +1,30 @@
 ---
 name: untersuchung-abfrage
-description: "Beantwortet Fragen gegen ein laufendes Untersuchungsprotokoll — was Zeugen gesagt haben, wo Schilderungen im Widerspruch stehen, welche Lücken bestehen, was die stärksten Belege zu jeder Frage sind. Lädt, wenn der Anwalt das Untersuchungsprotokoll abfragen möchte, ohne jeden Eintrag einzeln durchlesen zu müssen."
+description: "Beantwortet Fragen gegen ein laufendes Untersuchungsprotokoll — was Zeugen gesagt haben, wo Schilderungen im Widerspruch stehen, welche Lücken bestehen, was die stärksten Belege zu jeder Frage sind: Beantwortet Fragen gegen ein laufendes Untersuchungsprotok..."
 ---
 
-# Untersuchungsprotokoll-Abfrage (Arbeitsrecht)
+# Beantwortet Fragen gegen ein laufendes Untersuchungsprotokoll — was Zeugen gesagt haben, wo Schilderungen im Widerspruch stehen, welche Lücken bestehen, was die stärksten Belege zu jeder Frage sind
 
-## Zweck
 
-Beantwortet Fragen gegen das Untersuchungsprotokoll — was Zeugen gesagt haben,
-wo Schilderungen im Widerspruch stehen, welche Lücken bestehen, was die
-stärksten Belege zu jeder Untersuchungsfrage sind.
+## Arbeitsweg
 
-Lädt, wenn der Anwalt das Erkenntnisbild der Untersuchung abfragen möchte,
-ohne alle Protokolleinträge einzeln lesen zu müssen.
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: die im Plugin-Kontext einschlägigen Normen über gesetze-im-internet.de, dejure.org, eur-lex.europa.eu und die amtlichen Bundes-/Landesportale live prüfen — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+**Fokus:** Beantwortet Fragen gegen ein laufendes Untersuchungsprotokoll — was Zeugen gesagt haben, wo Schilderungen im Widerspruch stehen, welche Lücken bestehen, was die stärksten Belege zu jeder Frage sind. Lädt, wenn der Anwalt das Untersuchungsprotokoll abfragen möchte, ohne jeden Eintrag einzeln durchlesen zu müssen.
+
+### Untersuchungsprotokoll-Abfrage (Arbeitsrecht)
+
+## Fachlicher Kern — Arbeitsrecht
+- **Problemfokus dieses Skills:** Bleibe beim konkreten Titel `Untersuchungsprotokoll-Abfrage (Arbeitsrecht)` und löse die dort angelegte Fachfrage; arbeite mit konkreten Tatbestandsmerkmalen, Beweisfragen und dem unmittelbar benötigten Arbeitsprodukt. Routingfragen bleiben Hilfsmittel, wenn Frist, Zuständigkeit oder Verfahrensart offen sind.
+- **Normenradar:** BGB §§ 611a, 613a, 615, 623; KSchG §§ 1, 4, 7; TzBfG §§ 14, 15, 16; AGG §§ 1, 3, 7, 15, 22; EntgTranspG §§ 3, 5, 7; BUrlG §§ 1, 3, 7; BetrVG §§ 87, 99, 102; ArbZG; NachwG; SGB IX §§ 164, 167, 168.
+- **Verifizierte Anker:** BAG, Urteil vom 23.10.2025 - 8 AZR 300/24 (Entgeltgleichheit, Paarvergleich, Beweislast, bundesarbeitsgericht.de); BAG, Urteil vom 03.06.2025 - 9 AZR 104/24 (kein Verzicht auf gesetzlichen Mindesturlaub im bestehenden Arbeitsverhältnis); bei Kündigungszugang immer § 623 BGB, Zugang nach § 130 BGB, Dreiwochenfrist §§ 4, 7 KSchG und Beweis des konkreten Umschlags trennen.
+- **Arbeitsmodus:** Zuerst Status, Zugang, Frist, Beteiligungsrechte, Sonderkündigungsschutz, Beweislast und prozessualen nächsten Schritt sichern; dann erst Materiellrecht vertiefen.
+- **Outputpflicht:** Fristenblatt, Zugangsmatrix, Beweisangebot, Mandantenmail, Betriebsrats-/Gegnerbrief oder Klage-/Erwiderungsbaustein.
+- **Fehlerbremse:** Tragende Normen/Entscheidungen live oder aus der Akte verifizieren; Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei prüfbarer Quelle. Keine BeckRS-, juris-, Kommentar- oder Aufsatz-Blindzitate aus Modellwissen.
 
 ## Eingaben
 
@@ -24,42 +36,38 @@ ohne alle Protokolleinträge einzeln lesen zu müssen.
 **Kernvorschriften:**
 
 - § 626 BGB: Wichtiger Grund für außerordentliche Kündigung — Abfragen
-  des Protokolls helfen, den Tatverdacht zu verdichten oder zu widerlegen
+ des Protokolls helfen, den Tatverdacht zu verdichten oder zu widerlegen
 - § 22 AGG: Beweislastverteilung bei Diskriminierungsvorwürfen — bei
-  AGG-Sachverhalt strukturierte Protokollauswertung als Basis für
-  Enthaftungsnachweis des Arbeitgebers
+ AGG-Sachverhalt strukturierte Protokollauswertung als Basis für
+ Enthaftungsnachweis des Arbeitgebers
 - § 1 Abs. 2 KSchG: Soziale Rechtfertigung der Kündigung — Abfragen der
-  Stärke der Beweislage je Untersuchungsfrage hilft, Wirksamkeitsrisiken
-  einer verhaltens- oder personenbedingten Kündigung zu bewerten
+ Stärke der Beweislage je Untersuchungsfrage hilft, Wirksamkeitsrisiken
+ einer verhaltens- oder personenbedingten Kündigung zu bewerten
 - § 26 BDSG: Verarbeitungszweck — Protokollabfragen dienen ausschließlich
-  dem Untersuchungszweck; kein Zweckwechsel ohne neue Rechtsgrundlage
+ dem Untersuchungszweck; kein Zweckwechsel ohne neue Rechtsgrundlage
 
 **Leitentscheidungen:**
 
-- BAG, Urt. v. 20.06.2013 – 2 AZR 546/12, NZA 2014, 143 Rn. 14 ff.:
-  Verdachtskündigung — dringender Tatverdacht erfordert objektive Schwere
-  auf Basis des tatsächlich Ermittelten; Protokollauswertung bestimmt, ob
-  Schwelle erreicht ist
-- BAG, Urt. v. 27.11.2008 – 2 AZR 675/07, NZA 2009, 842 Rn. 20:
-  Tatkündigung — Überzeugungsmaßstab des Arbeitgebers; Protokollauswertung
-  zur Überprüfung, ob der volle Nachweis einer Pflichtverletzung vorliegt
-- BAG, Urt. v. 22.11.2012 – 2 AZR 732/11, NZA 2013, 665 Rn. 30 ff.:
-  Widersprüchliche Zeugenaussagen im Kündigungsschutzprozess — der Arbeitgeber
-  trägt die Darlegungs- und Beweislast für den Kündigungsgrund; nur was
-  bei der Kündigung bekannt war, zählt (Nachschieben von Gründen nur
-  eingeschränkt möglich)
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+ Verdachtskündigung — dringender Tatverdacht erfordert objektive Schwere
+ auf Basis des tatsächlich Ermittelten; Protokollauswertung bestimmt, ob
+ Schwelle erreicht ist
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+ Tatkündigung — Überzeugungsmaßstab des Arbeitgebers; Protokollauswertung
+ zur Überprüfung, ob der volle Nachweis einer Pflichtverletzung vorliegt
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+ Widersprüchliche Zeugenaussagen im Kündigungsschutzprozess — der Arbeitgeber
+ trägt die Darlegungs- und Beweislast für den Kündigungsgrund; nur was
+ bei der Kündigung bekannt war, zählt (Nachschieben von Gründen nur
+ eingeschränkt möglich)
 
-**Kommentarliteratur:**
+- Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen zitieren. Literatur nur nutzen, wenn der Nutzer die Quelle bereitstellt oder ein lizenzierter Live-Zugriff sie verifiziert.
 
-- Erfurter Kommentar/Müller-Glöge, 24. Aufl. 2024, § 626 BGB Rn. 165 ff.:
-  Verdachtsgrad; objektive Indizien; Abgrenzung Tatverdacht von bloßem
-  Verdacht
-- HWK/Thüsing, 11. Aufl. 2024, § 1 KSchG Rn. 220 ff.:
-  Darlegungs- und Beweislast des Arbeitgebers; Nachschieben von
-  Kündigungsgründen
-- Bauer/Krieger/Günther, AGG, 5. Aufl. 2022, § 22 Rn. 15 ff.:
-  Beweislastverteilung; Indizien für Benachteiligung; Enthaftungsnachweis
-  des Arbeitgebers durch ordnungsgemäße Untersuchung
+- § 626 BGB: Zwei-Wochen-Frist, Verdachtskündigung und Anhörung nur mit verifizierter BAG-Rechtsprechung oder Nutzerquelle vertiefen.
+- Quellenregel: Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff; keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen.
+ Darlegungs- und Beweislast des Arbeitgebers; Nachschieben von
+ Kündigungsgründen
+- AGG: §§ 12, 15, 22 AGG anhand Gesetz, Nutzerquelle und frei verifizierter Rechtsprechung prüfen.
 
 ## Ablauf
 
@@ -89,21 +97,21 @@ Anbieten, den Punkt als Beweislücke zu protokollieren.
 
 **Schritt 5 — Abfragetypen**
 
-**Sachverhaltsabfrage** („Was hat [Person] zu [Thema] gesagt?"):
+**Sachverhaltsabfrage** ("Was hat [Person] zu [Thema] gesagt?"):
 Aus Protokolleinträgen antworten, Eintrags-IDs zitieren.
 
-**Widerspruchsabfrage** („Wo widersprechen sich die Schilderungen?"):
+**Widerspruchsabfrage** ("Wo widersprechen sich die Schilderungen?"):
 Alle `widerspricht_eintrag`-Verknüpfungen zeigen. Pro Widerspruch:
 Was ist der Konflikt, welche Einträge stehen in Spannung, welche
 dokumentarische Evidenz bezieht sich auf den Widerspruch.
 
-**Deckungsabfrage** („Was fehlt noch?" / „Wo haben wir Lücken?"):
+**Deckungsabfrage** ("Was fehlt noch?" / "Wo haben wir Lücken?"):
 `quellen-checkliste.yaml` und `beweislücken` im log.yaml auslesen. Melden:
 - Noch offene Checklistenpunkte
 - Protokollierte Beweislücken
 - Schilderungen, die auf noch nicht erhobene Quellen hinweisen
 
-**Stärkeabfrage** („Was ist die stärkste Evidenz zu jeder Frage?"):
+**Stärkeabfrage** ("Was ist die stärkste Evidenz zu jeder Frage?"):
 Für jede Untersuchungsfrage: höchstbewertete Protokolleinträge, dokumentarische
 Bestätigungen und ungelöste Widersprüche — frageweise strukturiert.
 
@@ -111,13 +119,6 @@ Bestätigungen und ungelöste Widersprüche — frageweise strukturiert.
 Für eine Verdachtskündigung nach § 626 BGB: Protokolleinträge nach
 objektiver Schwere und Dringlichkeit des Verdachts auswerten. Anhörung
 der beschuldigten Person dokumentiert? Falls nicht: flaggen.
-
-## Ausgabeformat
-
-Direkte Antwort auf die gestellte Frage, mit Eintrags-IDs in Klammern.
-Bei fehlenden Erkenntnissen: expliziter Hinweis und Angebot zur
-Beweislückendokumentation. Bei Widerspruchsabfragen: tabellarische
-Gegenüberstellung der Einträge mit Beschreibung des Konflikts.
 
 ## Beispiel
 
@@ -142,12 +143,12 @@ Beispiel-Antwort bei Widerspruchsabfrage:
 Identifizierte Widersprüche:
 
 Widerspruch 1 — Eintrag #3 vs. Eintrag #7:
-  Eintrag #3 (Beschwerdeführerin Koch, 15.01.2025): "Das Gespräch fand nur
-  zwischen mir und Herrn Müller statt."
-  Eintrag #7 (Zeuge Bauer, 22.01.2025): "Frau Schmidt war bei dem Gespräch
-  anwesend."
-  Dokumentarische Evidenz: Kalender-Eintrag vom 12.11.2024 (Eintrag #5)
-  zeigt drei Teilnehmer. Widerspruch zur Schilderung der Beschwerdeführerin.
+ Eintrag #3 (Beschwerdeführerin Koch, 15.01.2025): "Das Gespräch fand nur
+ zwischen mir und Herrn Müller statt."
+ Eintrag #7 (Zeuge Bauer, 22.01.2025): "Frau Schmidt war bei dem Gespräch
+ anwesend."
+ Dokumentarische Evidenz: Kalender-Eintrag vom 12.11.2024 (Eintrag #5)
+ zeigt drei Teilnehmer. Widerspruch zur Schilderung der Beschwerdeführerin.
 
 Handlungsbedarf: Frau Schmidt als Zeugin befragen (Checkliste Punkt 3 — noch offen).
 ```
@@ -155,30 +156,39 @@ Handlungsbedarf: Frau Schmidt als Zeugin befragen (Checkliste Punkt 3 — noch o
 ## Risiken und typische Fehler
 
 - **Protokollabfrage ohne vollständiges Lesen**: Antworten ohne Lesen des
-  Gesamtprotokolls können Widersprüche und Lücken übersehen. Immer alle
-  Einträge sichten.
+ Gesamtprotokolls können Widersprüche und Lücken übersehen. Immer alle
+ Einträge sichten.
 - **Fehlende Eintrags-IDs**: Antworten ohne Eintrags-ID-Referenzen sind
-  nicht rückverfolgbar und erschweren spätere Anfechtungen.
-- **Lücken nicht als Lücken benennen**: „Dazu weiß ich nichts" ist kein
-  angemessenes Ergebnis — die Nicht-Existenz von Erkenntnissen im Protokoll
-  muss explizit als potenzielle Beweislücke benannt werden.
+ nicht rückverfolgbar und erschweren spätere Anfechtungen.
+- **Lücken nicht als Lücken benennen**: "Dazu weiß ich nichts" ist kein
+ angemessenes Ergebnis — die Nicht-Existenz von Erkenntnissen im Protokoll
+ muss explizit als potenzielle Beweislücke benannt werden.
 - **Widersprüche glätten**: Widersprechende Schilderungen dürfen nicht
-  harmonisiert werden. Sie müssen direkt benannt werden — der Anwalt
-  entscheidet, welcher Version geglaubt wird.
+ harmonisiert werden. Sie müssen direkt benannt werden — der Anwalt
+ entscheidet, welcher Version geglaubt wird.
 - **Zweckbindung beachten**: Protokolldaten dürfen nur für Untersuchungs-
-  zwecke genutzt werden (§ 26 BDSG). Keine Weitergabe für andere Zwecke
-  ohne neue Rechtsgrundlage.
+ zwecke genutzt werden (§ 26 BDSG). Keine Weitergabe für andere Zwecke
+ ohne neue Rechtsgrundlage.
 
 ## Quellenpflicht
 
 Bei Abfragen zur Beweislage für Kündigung zitieren:
 - § 626 BGB (Tatverdacht / Wichtiger Grund)
-- BAG, Urt. v. 20.06.2013 – 2 AZR 546/12, NZA 2014, 143 (Verdachtsgrad)
-- BAG, Urt. v. 27.11.2008 – 2 AZR 675/07, NZA 2009, 842 (Tatkündigung)
-- Bei AGG-Sachverhalt: § 22 AGG, Bauer/Krieger/Günther, AGG, 5. Aufl. 2022, § 22 Rn. 15 ff.
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+- Bei AGG-Sachverhalt: § 22 AGG und frei verifizierte BAG-Rechtsprechung
 
 Detaillierter Abfrageprozess, Zitierregeln und Lückendokumentations-Templates
 befinden sich in der Referenz-Skill `interne-untersuchung` — diese vor
 inhaltlicher Arbeit laden.
 
 Hinweis: Dieser Skill ersetzt keine anwaltliche Beratung im konkreten Einzelfall.
+
+## Ergänzende Rechtsprechung (v14.2)
+
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+
+## Triage — vor der Protokollabfrage klären
+
+1. Welche Art der Abfrage ist gewünscht (Sachverhalts-, Widerspruchs-, Deckungsabfrage oder Stärkeabfrage)?
+2. Ist eine Kündigung in der Schwebe? → Dann Reife-Abfrage nach § 626 BGB-Schwellenwert
+3. Liegt ein AGG-relevanter Sachverhalt vor? → Besondere Sorgfalt bei § 22 AGG-Beweislast

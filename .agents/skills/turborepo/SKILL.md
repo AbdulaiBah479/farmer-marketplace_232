@@ -9,7 +9,7 @@ description: |
   monorepo, shares code between apps, runs changed/affected packages, debugs cache,
   or has apps/packages directories.
 metadata:
-  version: 2.8.18-canary.7
+  version: 2.8.1
 ---
 
 # Turborepo Skill
@@ -722,7 +722,7 @@ import { Button } from "@repo/ui/button";
 
 ```json
 {
-  "$schema": "https://v2-8-18-canary-7.turborepo.dev/schema.json",
+  "$schema": "https://turborepo.dev/schema.v2.json",
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -910,5 +910,5 @@ The `transit` task creates dependency relationships without matching any actual 
 
 This skill is based on the official Turborepo documentation at:
 
-- Source: `apps/docs/content/docs/` in the Turborepo repository
+- Source: `docs/site/content/docs/` in the Turborepo repository
 - Live: https://turborepo.dev/docs

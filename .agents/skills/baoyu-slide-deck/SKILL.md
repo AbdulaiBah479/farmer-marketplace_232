@@ -5,238 +5,295 @@ description: Generate professional slide deck images from content. Creates compr
 
 # Slide Deck Generator
 
-Transform content into professional slide deck images with flexible style options.
+Transform content into professional slide deck with comprehensive outlines and generated slide images.
 
 ## Usage
 
 ```bash
-/baoyu-slide-deck path/to/content.md
-/baoyu-slide-deck path/to/content.md --style sketch-notes
-/baoyu-slide-deck path/to/content.md --audience executives
-/baoyu-slide-deck path/to/content.md --lang zh
-/baoyu-slide-deck path/to/content.md --slides 10
-/baoyu-slide-deck path/to/content.md --outline-only
-/baoyu-slide-deck  # Then paste content
+# From markdown file
+/baoyu-slide-deck path/to/article.md
+
+# With style preference
+/baoyu-slide-deck path/to/article.md --style corporate
+/baoyu-slide-deck path/to/article.md --style playful
+/baoyu-slide-deck path/to/article.md --style technical
+
+# With audience specification
+/baoyu-slide-deck path/to/article.md --audience beginners
+/baoyu-slide-deck path/to/article.md --audience executives
+
+# With language
+/baoyu-slide-deck path/to/article.md --lang zh
+/baoyu-slide-deck path/to/article.md --lang en
+
+# Outline only (no image generation)
+/baoyu-slide-deck path/to/article.md --outline-only
+
+# Direct content input
+/baoyu-slide-deck
+[paste content]
 ```
-
-## Script Directory
-
-**Important**: All scripts are located in the `scripts/` subdirectory of this skill.
-
-**Agent Execution Instructions**:
-1. Determine this SKILL.md file's directory path as `SKILL_DIR`
-2. Script path = `${SKILL_DIR}/scripts/<script-name>.ts`
-3. Replace all `${SKILL_DIR}` in this document with the actual path
-
-**Script Reference**:
-| Script | Purpose |
-|--------|---------|
-| `scripts/merge-to-pptx.ts` | Merge slides into PowerPoint |
-| `scripts/merge-to-pdf.ts` | Merge slides into PDF |
 
 ## Options
 
 | Option | Description |
 |--------|-------------|
-| `--style <name>` | Visual style (see Style Gallery) |
-| `--audience <type>` | Target audience: beginners, intermediate, experts, executives, general |
-| `--lang <code>` | Output language (en, zh, ja, etc.) |
-| `--slides <number>` | Target slide count |
+| `--style <name>` | Visual style preset (see Style Gallery) |
+| `--audience <type>` | Target audience level |
+| `--lang <code>` | Output language (en, zh, etc.) |
+| `--slides <number>` | Target slide count (max 20) |
 | `--outline-only` | Generate outline only, skip image generation |
 
 ## Style Gallery
 
-| Style | Description | Best For |
-|-------|-------------|----------|
-| `blueprint` (Default) | Technical schematics, grid texture | Architecture, system design |
-| `chalkboard` | Black chalkboard, colorful chalk | Education, tutorials, classroom |
-| `notion` | SaaS dashboard, card-based layouts | Product demos, SaaS, B2B |
-| `bold-editorial` | Magazine cover, bold typography, dark | Product launches, keynotes |
-| `corporate` | Navy/gold, structured layouts | Investor decks, proposals |
-| `dark-atmospheric` | Cinematic dark mode, glowing accents | Entertainment, gaming |
-| `editorial-infographic` | Magazine explainers, flat illustrations | Tech explainers, research |
-| `fantasy-animation` | Ghibli/Disney style, hand-drawn | Educational, storytelling |
-| `intuition-machine` | Technical briefing, bilingual labels | Technical docs, academic |
-| `minimal` | Ultra-clean, maximum whitespace | Executive briefings, premium |
-| `pixel-art` | Retro 8-bit, chunky pixels | Gaming, developer talks |
-| `scientific` | Academic diagrams, precise labeling | Biology, chemistry, medical |
-| `sketch-notes` | Hand-drawn, warm & friendly | Educational, tutorials |
-| `vector-illustration` | Flat vector, retro & cute | Creative, children's content |
-| `vintage` | Aged-paper, historical styling | Historical, heritage, biography |
-| `watercolor` | Hand-painted textures, natural warmth | Lifestyle, wellness, travel |
+| Style | Description |
+|-------|-------------|
+| `editorial` (Default) | Clean, sophisticated, minimalist |
+| `corporate` | Professional, trustworthy, polished |
+| `technical` | Precise, data-driven, analytical |
+| `playful` | Bold, energetic, engaging |
+| `minimal` | Ultra-clean, zen-like, focused |
+| `storytelling` | Narrative-driven, cinematic, immersive |
+| `warm` | Cozy, healing, hand-drawn illustration style |
+| `retro-flat` | Flat vector illustration with retro palette |
+| `notion` | Minimalist hand-drawn line art, intellectual |
+
+Detailed style definitions: `references/styles/<style>.md`
 
 ## Auto Style Selection
 
+When no `--style` is specified, analyze content for style signals:
+
 | Content Signals | Selected Style |
-|-----------------|----------------|
-| tutorial, learn, education, guide, intro, beginner | `sketch-notes` |
-| classroom, teaching, school, chalkboard, blackboard | `chalkboard` |
-| architecture, system, data, analysis, technical | `blueprint` |
-| creative, children, kids, cute, illustration | `vector-illustration` |
-| briefing, academic, research, bilingual, infographic, concept | `intuition-machine` |
-| executive, minimal, clean, simple, elegant | `minimal` |
-| saas, product, dashboard, metrics, productivity | `notion` |
-| investor, quarterly, business, corporate, proposal | `corporate` |
-| launch, marketing, keynote, bold, impact, magazine | `bold-editorial` |
-| entertainment, music, gaming, creative, atmospheric | `dark-atmospheric` |
-| explainer, journalism, science communication | `editorial-infographic` |
-| story, fantasy, animation, magical, whimsical | `fantasy-animation` |
-| gaming, retro, pixel, developer, nostalgia | `pixel-art` |
-| biology, chemistry, medical, pathway, scientific | `scientific` |
-| history, heritage, vintage, expedition, historical | `vintage` |
-| lifestyle, wellness, travel, artistic, natural | `watercolor` |
-| Default | `blueprint` |
+|----------------|----------------|
+| AI, coding, tech, digital, algorithm, data | `technical` |
+| Business, strategy, investment, corporate | `corporate` |
+| Personal story, journey, narrative, emotion | `storytelling` |
+| Simple, zen, focus, essential, one idea | `minimal` |
+| Fun, creative, workshop, educational | `playful` |
+| Research, analysis, thought leadership | `editorial` |
+| Wellness, healing, cozy, self-care, lifestyle, comfort | `warm` |
+| Tutorial, explainer, how-to, beginner, product, guide | `retro-flat` |
+| Knowledge, concept, productivity, SaaS, notion, intellectual | `notion` |
 
-## Design Philosophy
+## Audience Presets
 
-This deck is designed for **reading and sharing**, not live presentation:
-- Each slide must be **self-explanatory** without verbal commentary
-- Structure content for **logical flow** when scrolling
-- Include **all necessary context** within each slide
-- Optimize for **social media sharing** and offline reading
+| Audience | Approach |
+|----------|----------|
+| `beginners` | Step-by-step, more context, simpler visuals |
+| `intermediate` | Balanced detail, some assumed knowledge |
+| `experts` | Dense information, technical depth, less hand-holding |
+| `executives` | High-level insights, key metrics, strategic focus |
+| `general` | Accessible language, broad appeal, clear takeaways |
 
 ## File Management
 
-### Output Directory
-
-Each session creates an independent directory named by content slug:
+### With Article Path
 
 ```
-slide-deck/{topic-slug}/
-├── source-{slug}.{ext}    # Source files (text, images, etc.)
+path/to/
+├── article.md
+└── slide-deck/
+    ├── outline.md
+    ├── prompts/
+    │   ├── 01-cover.md
+    │   ├── 02-content-1.md
+    │   └── ...
+    ├── 01-cover.png
+    ├── 02-content-1.png
+    └── ...
+```
+
+### Without Article Path
+
+```
+./baoyu-slide-deck-outputs/YYYY-MM-DD/[topic-slug]/
 ├── outline.md
-├── outline-{style}.md     # Style variant outlines
 ├── prompts/
-│   └── 01-slide-cover.md, 02-slide-{slug}.md, ...
-├── 01-slide-cover.png, 02-slide-{slug}.png, ...
-├── {topic-slug}.pptx
-└── {topic-slug}.pdf
+│   ├── 01-cover.md
+│   └── ...
+├── 01-cover.png
+└── ...
 ```
-
-**Slug Generation**:
-1. Extract main topic from content (2-4 words, kebab-case)
-2. Example: "Introduction to Machine Learning" → `intro-machine-learning`
-
-### Conflict Resolution
-
-If `slide-deck/{topic-slug}/` already exists:
-- Append timestamp: `{topic-slug}-YYYYMMDD-HHMMSS`
-- Example: `intro-ml` exists → `intro-ml-20260118-143052`
-
-### Source Files
-
-Copy all sources with naming `source-{slug}.{ext}`:
-- `source-article.md` (main text content)
-- `source-diagram.png` (image from conversation)
-- `source-data.xlsx` (additional file)
-
-Multiple sources supported: text, images, files from conversation.
 
 ## Workflow
 
-### Step 1: Analyze Content
+### Step 1: Analyze Content & Select Style
 
-1. Save source content (if pasted, save as `source.md`)
-2. Follow `references/analysis-framework.md` for deep content analysis
-3. Determine style (use `--style` or auto-select from signals)
-4. Detect languages (source vs. user preference)
-5. Plan slide count (`--slides` or dynamic)
+1. Read source content
+2. If `--style` specified, use that style
+3. Otherwise, analyze content for style signals
+4. Extract key information:
+   - Core narrative and key messages
+   - Important data points and statistics
+   - Logical flow and structure
+   - Target audience signals
 
-### Step 2: Generate Outline Variants
+### Step 2: Generate Outline
 
-1. Generate 3 style variant outlines based on content analysis
-2. Follow `references/outline-template.md` for structure
-3. Save as `outline-{style}.md` for each variant
+Create outline with `STYLE_INSTRUCTIONS` block and slide specifications.
 
-### Step 3: User Confirmation
+**Outline Format**:
 
-**Single AskUserQuestion with all applicable options:**
+```markdown
+# Slide Deck Outline: [Topic]
 
-| Question | When to Ask |
-|----------|-------------|
-| Style variant | Always (3 options + custom) |
-| Language | Only if source ≠ user language |
+**Source**: [source file or "Direct input"]
+**Style**: [selected style]
+**Audience**: [target audience]
+**Language**: [output language]
+**Slide Count**: N slides
+**Generated**: YYYY-MM-DD HH:mm
 
-After selection:
-- Copy selected `outline-{style}.md` to `outline.md`
-- Regenerate in different language if requested
-- User may edit `outline.md` for fine-tuning
+---
 
-If `--outline-only`, stop here.
+<STYLE_INSTRUCTIONS>
+Design Aesthetic: [Overall style description]
+Background Color: [Description and Hex Code]
+Primary Font: [Font name for Headlines]
+Secondary Font: [Font name for Body copy]
+Color Palette:
+  Primary Text Color: [Hex Code]
+  Primary Accent Color: [Hex Code]
+Visual Elements: [Lines, shapes, imagery style, etc.]
+</STYLE_INSTRUCTIONS>
 
-### Step 4: Generate Prompts
+---
 
-1. Read `references/base-prompt.md`
-2. Combine with style instructions from outline
-3. Add slide-specific content
-4. Save to `prompts/` directory
+## Slide 1: [Descriptive Title]
+
+**Position**: Cover
+**Filename**: 01-cover.png
+
+// NARRATIVE GOAL
+[Storytelling purpose within the overall arc]
+
+// KEY CONTENT
+Headline: [Main message - narrative, not "Title: Subtitle" format]
+Sub-headline: [Supporting context]
+Body:
+- [Key point 1 with specific data from source]
+- [Key point 2 with specific data from source]
+
+// VISUAL
+[Detailed description of imagery, charts, graphics, or abstract visuals]
+
+// LAYOUT
+[Composition, hierarchy, spatial arrangement, focus points]
+
+---
+
+## Slide 2: [First Content]
+...
+
+## Slide N: [Back Cover]
+...
+```
+
+**Required Slide Structure**:
+1. **Slide 1**: Cover Slide (poster-style, heroic typography)
+2. **Slides 2-N-1**: Content slides (consistent internal style)
+3. **Slide N**: Back Cover (closing statement, not "Thank You")
+
+### Step 3: Save Outline
+
+Save outline as `outline.md` in target directory.
+
+If `--outline-only` flag is set, stop here.
+
+### Step 4: Create Prompt Files
+
+For each slide, create a style-specific prompt file.
+
+**Prompt Format**:
+
+```markdown
+Slide theme: [slide title]
+Style: [style name]
+Position: [cover/content/back-cover]
+
+Visual composition:
+- Main visual: [style-appropriate description from VISUAL section]
+- Layout: [from LAYOUT section]
+- Decorative elements: [style-specific decorations]
+
+Color scheme:
+- Background: [style background color]
+- Primary text: [style text color]
+- Accent: [style accent color]
+
+Text content:
+- Headline: [headline text]
+- Sub-headline: [sub-headline if any]
+- Body points: [bullet points if any]
+
+Style notes: [specific style characteristics to emphasize]
+```
 
 ### Step 5: Generate Images
 
-1. Select available image generation skill
-2. Generate session ID: `slides-{topic-slug}-{timestamp}`
-3. Generate each slide with same session ID
-4. Report progress: "Generated X/N"
-
-### Step 6: Merge to PPTX and PDF
+For each slide, generate using:
 
 ```bash
-npx -y bun ${SKILL_DIR}/scripts/merge-to-pptx.ts <slide-deck-dir>
-npx -y bun ${SKILL_DIR}/scripts/merge-to-pdf.ts <slide-deck-dir>
+/baoyu-gemini-web --promptfiles [SKILL_ROOT]/skills/baoyu-slide-deck/prompts/system.md [TARGET_DIR]/prompts/01-cover.md --image [TARGET_DIR]/01-cover.png
 ```
 
-### Step 7: Output Summary
+Generation flow:
+1. Generate images sequentially
+2. After each image, output progress: "Generated X/N"
+3. On failure, auto-retry once
+4. If retry fails, log reason, continue to next
+
+### Step 6: Completion Report
 
 ```
-Slide Deck Complete!
+Slide Deck Generated!
 
 Topic: [topic]
 Style: [style name]
+Audience: [audience]
 Location: [directory path]
 Slides: N total
 
-- 01-slide-cover.png ✓ Cover
-- 02-slide-intro.png ✓ Content
+- 01-cover.png ✓ Cover
+- 02-content-1.png ✓ Content
+- 03-content-2.png ✓ Content
 - ...
-- {NN}-slide-back-cover.png ✓ Back Cover
+- 0N-back-cover.png ✓ Back Cover
 
 Outline: outline.md
-PPTX: {topic-slug}.pptx
-PDF: {topic-slug}.pdf
+
+[If any failures]
+Failed:
+- 0X-slide-name.png: [failure reason]
 ```
-
-## Slide Modification
-
-See `references/modification-guide.md` for:
-- Edit single slide workflow
-- Add new slide (with renumbering)
-- Delete slide (with renumbering)
-- File naming conventions
-
-## References
-
-| File | Content |
-|------|---------|
-| `references/analysis-framework.md` | Deep content analysis for presentations |
-| `references/outline-template.md` | Outline structure and STYLE_INSTRUCTIONS format |
-| `references/modification-guide.md` | Edit, add, delete slide workflows |
-| `references/content-rules.md` | Content and style guidelines |
-| `references/base-prompt.md` | Base prompt for image generation |
-| `references/styles/<style>.md` | Full style specifications |
 
 ## Notes
 
-- Image generation: 10-30 seconds per slide
+### Design Philosophy
+- Deck is designed for **reading and sharing**, not live presentation
+- Structure should be self-explanatory without a presenter
+- Include enough context for visuals to be understood standalone
+- Err on the side of audience having **more expertise** than expected
+
+### Content Rules
+- Maximum 20 slides per deck
+- Every data point must trace to source material
+- All details in prompts - image generator has no access to source
+
+### Style Rules
+- Avoid AI-generated clichés ("It wasn't just X, it was Y")
+- Use narrative headlines, not "Title: Subtitle" format
+- Cover and Back Cover should be visually distinct (poster-style)
+- Back Cover should be meaningful closure, not "Thank You" or "Questions?"
+
+### Prohibited
+- Never include photorealistic images of prominent individuals
+- Never include placeholder slides for author name, date, etc.
+
+### Image Generation
+- Image generation typically takes 10-30 seconds per slide
 - Auto-retry once on generation failure
-- Use stylized alternatives for sensitive public figures
-- Maintain style consistency via session ID
-
-## Extension Support
-
-Custom styles and configurations via EXTEND.md.
-
-**Check paths** (priority order):
-1. `.baoyu-skills/baoyu-slide-deck/EXTEND.md` (project)
-2. `~/.baoyu-skills/baoyu-slide-deck/EXTEND.md` (user)
-
-If found, load before Step 1. Extension content overrides defaults.
+- Use cartoon alternatives for sensitive public figures
+- Output language matches content language
+- Maintain style consistency across all slides

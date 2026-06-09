@@ -1,313 +1,125 @@
 ---
 name: layout
-description: Create complex panel layouts for testing. Use patterns like "2H", "3V", "2x2", "1+2H" to quickly set up multi-panel configurations.
-argument-hint: "<pattern> e.g. 2H, 3V, 2x2, 1+2H"
-allowed-tools: Bash(curl:*)
+description: Improve layout, spacing, and visual rhythm. Fixes monotonous grids, inconsistent spacing, and weak visual hierarchy. Use when the user mentions layout feeling off, spacing issues, visual hierarchy, crowded UI, alignment problems, or wanting better composition.
+version: 2.1.1
+user-invocable: true
+argument-hint: "[target]"
 ---
 
-# Create Panel Layout
+Assess and improve layout and spacing that feels monotonous, crowded, or structurally weak — turning generic arrangements into intentional, rhythmic compositions.
 
-Generate and apply complex panel layouts for testing the iOS/web grid system.
+## MANDATORY PREPARATION
 
-## Arguments
+Invoke /impeccable — it contains design principles, anti-patterns, and the **Context Gathering Protocol**. Follow the protocol before proceeding — if no design context exists yet, you MUST run /impeccable teach first.
 
-`$ARGUMENTS` should contain a layout pattern. Supported patterns:
+---
 
-| Pattern | Description |
-|---------|-------------|
-| `2H` | 2 panels side-by-side (horizontal split) |
-| `2V` | 2 panels stacked (vertical split) |
-| `3H` | 3 panels in a row |
-| `3V` | 3 panels in a column |
-| `2x2` | 4 panels in a 2x2 grid |
-| `1+2H` | 1 panel left, 2 stacked on right |
-| `1+2V` | 1 panel top, 2 side-by-side on bottom |
-| `2+1H` | 2 stacked on left, 1 panel on right |
-| `2+1V` | 2 side-by-side on top, 1 panel on bottom |
-| `1+3` | 1 large left, 3 stacked on right |
-| `3+1` | 3 stacked on left, 1 large right |
-| `6` | 6 panels (2 rows of 3) |
-| `clear` | Remove all panels (empty layout) |
+## Assess Current Layout
 
-If no pattern provided, default to `2H`.
+Analyze what's weak about the current spatial design:
 
-## Steps
+1. **Spacing**:
+   - Is spacing consistent or arbitrary? (Random padding/margin values)
+   - Is all spacing the same? (Equal padding everywhere = no rhythm)
+   - Are related elements grouped tightly, with generous space between groups?
 
-### 1. Parse the pattern
+2. **Visual hierarchy**:
+   - Apply the squint test: blur your (metaphorical) eyes — can you still identify the most important element, second most important, and clear groupings?
+   - Is hierarchy achieved effectively? (Space and weight alone can be enough — but is the current approach working?)
+   - Does whitespace guide the eye to what matters?
 
-Determine how many panels are needed based on the pattern.
+3. **Grid & structure**:
+   - Is there a clear underlying structure, or does the layout feel random?
+   - Are identical card grids used everywhere? (Icon + heading + text, repeated endlessly)
+   - Is everything centered? (Left-aligned with asymmetric layouts feels more designed, but not a hard and fast rule)
 
-### 2. Get current plugins and start instances
+4. **Rhythm & variety**:
+   - Does the layout have visual rhythm? (Alternating tight/generous spacing)
+   - Is every section structured the same way? (Monotonous repetition)
+   - Are there intentional moments of surprise or emphasis?
 
-```bash
-# Get available plugins
-curl -s http://localhost:47100/plugins
-```
+5. **Density**:
+   - Is the layout too cramped? (Not enough breathing room)
+   - Is the layout too sparse? (Excessive whitespace without purpose)
+   - Does density match the content type? (Data-dense UIs need tighter spacing; marketing pages need more air)
 
-Use the `agent` plugin by default. Start as many instances as needed:
+**CRITICAL**: Layout problems are often the root cause of interfaces feeling "off" even when colors and fonts are fine. Space is a design material — use it with intention.
 
-```bash
-# Start a new agent instance (repeat as needed)
-curl -s -X POST http://localhost:47100/plugins/agent/start
-```
+## Plan Layout Improvements
 
-Track the instance IDs returned from each start call.
+Consult the [spatial design reference](reference/spatial-design.md) from the impeccable skill for detailed guidance on grids, rhythm, and container queries.
 
-### 3. Generate the layout JSON
+Create a systematic plan:
 
-Build the layout tree based on the pattern. Each leaf needs:
-- `type`: "leaf"
-- `id`: unique string (e.g., "panel-1", "panel-2")
-- `pluginName`: "agent"
-- `instanceId`: the instance ID from step 2
+- **Spacing system**: Use a consistent scale — whether that's a framework's built-in scale (e.g., Tailwind), rem-based tokens, or a custom system. The specific values matter less than consistency.
+- **Hierarchy strategy**: How will space communicate importance?
+- **Layout approach**: What structure fits the content? Flex for 1D, Grid for 2D, named areas for complex page layouts.
+- **Rhythm**: Where should spacing be tight vs generous?
 
-For splits:
-- `type`: "split"
-- `id`: unique string
-- `direction`: "horizontal" or "vertical"
-- `children`: array of exactly 2 nodes
-- `sizes`: array of 2 numbers that sum to 100 (e.g., [50, 50])
+## Improve Layout Systematically
 
-### 4. Apply the layout
+### Establish a Spacing System
 
-```bash
-curl -s -X PUT http://localhost:47100/layout \
-  -H "Content-Type: application/json" \
-  -d '{"layout": {"version": 1, "root": <generated-tree>}}'
-```
+- Use a consistent spacing scale — framework scales (Tailwind, etc.), rem-based tokens, or a custom scale all work. What matters is that values come from a defined set, not arbitrary numbers.
+- Name tokens semantically if using custom properties: `--space-xs` through `--space-xl`, not `--spacing-8`
+- Use `gap` for sibling spacing instead of margins — eliminates margin collapse hacks
+- Apply `clamp()` for fluid spacing that breathes on larger screens
 
-## Layout Examples
+### Create Visual Rhythm
 
-### 2H (2 horizontal)
-```json
-{
-  "version": 1,
-  "root": {
-    "type": "split",
-    "id": "root",
-    "direction": "horizontal",
-    "sizes": [50, 50],
-    "children": [
-      {"type": "leaf", "id": "panel-1", "pluginName": "agent", "instanceId": "1"},
-      {"type": "leaf", "id": "panel-2", "pluginName": "agent", "instanceId": "2"}
-    ]
-  }
-}
-```
+- **Tight grouping** for related elements (8-12px between siblings)
+- **Generous separation** between distinct sections (48-96px)
+- **Varied spacing** within sections — not every row needs the same gap
+- **Asymmetric compositions** — break the predictable centered-content pattern when it makes sense
 
-### 3V (3 vertical)
-```json
-{
-  "version": 1,
-  "root": {
-    "type": "split",
-    "id": "root",
-    "direction": "vertical",
-    "sizes": [33, 67],
-    "children": [
-      {"type": "leaf", "id": "panel-1", "pluginName": "agent", "instanceId": "1"},
-      {
-        "type": "split",
-        "id": "split-2",
-        "direction": "vertical",
-        "sizes": [50, 50],
-        "children": [
-          {"type": "leaf", "id": "panel-2", "pluginName": "agent", "instanceId": "2"},
-          {"type": "leaf", "id": "panel-3", "pluginName": "agent", "instanceId": "3"}
-        ]
-      }
-    ]
-  }
-}
-```
+### Choose the Right Layout Tool
 
-### 2x2 (4 panel grid)
-```json
-{
-  "version": 1,
-  "root": {
-    "type": "split",
-    "id": "root",
-    "direction": "vertical",
-    "sizes": [50, 50],
-    "children": [
-      {
-        "type": "split",
-        "id": "top-row",
-        "direction": "horizontal",
-        "sizes": [50, 50],
-        "children": [
-          {"type": "leaf", "id": "panel-1", "pluginName": "agent", "instanceId": "1"},
-          {"type": "leaf", "id": "panel-2", "pluginName": "agent", "instanceId": "2"}
-        ]
-      },
-      {
-        "type": "split",
-        "id": "bottom-row",
-        "direction": "horizontal",
-        "sizes": [50, 50],
-        "children": [
-          {"type": "leaf", "id": "panel-3", "pluginName": "agent", "instanceId": "3"},
-          {"type": "leaf", "id": "panel-4", "pluginName": "agent", "instanceId": "4"}
-        ]
-      }
-    ]
-  }
-}
-```
+- **Use Flexbox for 1D layouts**: Rows of items, nav bars, button groups, card contents, most component internals. Flex is simpler and more appropriate for the majority of layout tasks.
+- **Use Grid for 2D layouts**: Page-level structure, dashboards, data-dense interfaces, anything where rows AND columns need coordinated control.
+- **Don't default to Grid** when Flexbox with `flex-wrap` would be simpler and more flexible.
+- Use `repeat(auto-fit, minmax(280px, 1fr))` for responsive grids without breakpoints.
+- Use named grid areas (`grid-template-areas`) for complex page layouts — redefine at breakpoints.
 
-### 1+2H (1 left, 2 stacked right)
-```json
-{
-  "version": 1,
-  "root": {
-    "type": "split",
-    "id": "root",
-    "direction": "horizontal",
-    "sizes": [50, 50],
-    "children": [
-      {"type": "leaf", "id": "panel-1", "pluginName": "agent", "instanceId": "1"},
-      {
-        "type": "split",
-        "id": "right-stack",
-        "direction": "vertical",
-        "sizes": [50, 50],
-        "children": [
-          {"type": "leaf", "id": "panel-2", "pluginName": "agent", "instanceId": "2"},
-          {"type": "leaf", "id": "panel-3", "pluginName": "agent", "instanceId": "3"}
-        ]
-      }
-    ]
-  }
-}
-```
+### Break Card Grid Monotony
 
-### 1+2V (1 top, 2 side-by-side bottom)
-```json
-{
-  "version": 1,
-  "root": {
-    "type": "split",
-    "id": "root",
-    "direction": "vertical",
-    "sizes": [50, 50],
-    "children": [
-      {"type": "leaf", "id": "panel-1", "pluginName": "agent", "instanceId": "1"},
-      {
-        "type": "split",
-        "id": "bottom-row",
-        "direction": "horizontal",
-        "sizes": [50, 50],
-        "children": [
-          {"type": "leaf", "id": "panel-2", "pluginName": "agent", "instanceId": "2"},
-          {"type": "leaf", "id": "panel-3", "pluginName": "agent", "instanceId": "3"}
-        ]
-      }
-    ]
-  }
-}
-```
+- Don't default to card grids for everything — spacing and alignment create visual grouping naturally
+- Use cards only when content is truly distinct and actionable — never nest cards inside cards
+- Vary card sizes, span columns, or mix cards with non-card content to break repetition
 
-### 1+3 (1 large left, 3 stacked right)
-```json
-{
-  "version": 1,
-  "root": {
-    "type": "split",
-    "id": "root",
-    "direction": "horizontal",
-    "sizes": [50, 50],
-    "children": [
-      {"type": "leaf", "id": "panel-1", "pluginName": "agent", "instanceId": "1"},
-      {
-        "type": "split",
-        "id": "right-stack",
-        "direction": "vertical",
-        "sizes": [33, 67],
-        "children": [
-          {"type": "leaf", "id": "panel-2", "pluginName": "agent", "instanceId": "2"},
-          {
-            "type": "split",
-            "id": "right-bottom",
-            "direction": "vertical",
-            "sizes": [50, 50],
-            "children": [
-              {"type": "leaf", "id": "panel-3", "pluginName": "agent", "instanceId": "3"},
-              {"type": "leaf", "id": "panel-4", "pluginName": "agent", "instanceId": "4"}
-            ]
-          }
-        ]
-      }
-    ]
-  }
-}
-```
+### Strengthen Visual Hierarchy
 
-### 6 panels (2 rows of 3)
-```json
-{
-  "version": 1,
-  "root": {
-    "type": "split",
-    "id": "root",
-    "direction": "vertical",
-    "sizes": [50, 50],
-    "children": [
-      {
-        "type": "split",
-        "id": "top-row",
-        "direction": "horizontal",
-        "sizes": [33, 67],
-        "children": [
-          {"type": "leaf", "id": "panel-1", "pluginName": "agent", "instanceId": "1"},
-          {
-            "type": "split",
-            "id": "top-right",
-            "direction": "horizontal",
-            "sizes": [50, 50],
-            "children": [
-              {"type": "leaf", "id": "panel-2", "pluginName": "agent", "instanceId": "2"},
-              {"type": "leaf", "id": "panel-3", "pluginName": "agent", "instanceId": "3"}
-            ]
-          }
-        ]
-      },
-      {
-        "type": "split",
-        "id": "bottom-row",
-        "direction": "horizontal",
-        "sizes": [33, 67],
-        "children": [
-          {"type": "leaf", "id": "panel-4", "pluginName": "agent", "instanceId": "4"},
-          {
-            "type": "split",
-            "id": "bottom-right",
-            "direction": "horizontal",
-            "sizes": [50, 50],
-            "children": [
-              {"type": "leaf", "id": "panel-5", "pluginName": "agent", "instanceId": "5"},
-              {"type": "leaf", "id": "panel-6", "pluginName": "agent", "instanceId": "6"}
-            ]
-          }
-        ]
-      }
-    ]
-  }
-}
-```
+- Use the fewest dimensions needed for clear hierarchy. Space alone can be enough — generous whitespace around an element draws the eye. Some of the most sophisticated designs achieve rhythm with just space and weight. Add color or size contrast only when simpler means aren't sufficient.
+- Be aware of reading flow — in LTR languages, the eye naturally scans top-left to bottom-right, but primary action placement depends on context (e.g., bottom-right in dialogs, top in navigation).
+- Create clear content groupings through proximity and separation.
 
-### clear (empty layout)
-```json
-{
-  "version": 1,
-  "root": null
-}
-```
+### Manage Depth & Elevation
 
-## Output
+- Create a semantic z-index scale (dropdown → sticky → modal-backdrop → modal → toast → tooltip)
+- Build a consistent shadow scale (sm → md → lg → xl) — shadows should be subtle
+- Use elevation to reinforce hierarchy, not as decoration
 
-Report:
-1. Pattern interpreted
-2. Number of instances started
-3. Layout applied successfully
-4. Tell user to check their iOS/web client
+### Optical Adjustments
+
+- If an icon looks visually off-center despite being geometrically centered, nudge it — but only if you're confident it actually looks wrong. Don't adjust speculatively.
+
+**NEVER**:
+- Use arbitrary spacing values outside your scale
+- Make all spacing equal — variety creates hierarchy
+- Wrap everything in cards — not everything needs a container
+- Nest cards inside cards — use spacing and dividers for hierarchy within
+- Use identical card grids everywhere (icon + heading + text, repeated)
+- Center everything — left-aligned with asymmetry feels more designed
+- Default to the hero metric layout (big number, small label, stats, gradient) as a template. If showing real user data, a prominent metric can work — but it should display actual data, not decorative numbers.
+- Default to CSS Grid when Flexbox would be simpler — use the simplest tool for the job
+- Use arbitrary z-index values (999, 9999) — build a semantic scale
+
+## Verify Layout Improvements
+
+- **Squint test**: Can you identify primary, secondary, and groupings with blurred vision?
+- **Rhythm**: Does the page have a satisfying beat of tight and generous spacing?
+- **Hierarchy**: Is the most important content obvious within 2 seconds?
+- **Breathing room**: Does the layout feel comfortable, not cramped or wasteful?
+- **Consistency**: Is the spacing system applied uniformly?
+- **Responsiveness**: Does the layout adapt gracefully across screen sizes?
+
+Remember: Space is the most underused design tool. A layout with the right rhythm and hierarchy can make even simple content feel polished and intentional.

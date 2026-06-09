@@ -1,10 +1,11 @@
 ---
 name: calc
 description: "Spreadsheet creation, format conversion (ODS/XLSX/CSV), formulas, data automation with LibreOffice Calc."
-category: spreadsheet-processing
-risk: safe
 source: personal
-date_added: "2026-02-27"
+risk: safe
+domain: office-productivity
+category: spreadsheet-processing
+version: 1.0.0
 ---
 
 # LibreOffice Calc
@@ -198,8 +199,3 @@ soffice --headless --accept="socket,host=localhost,port=8100;urp;"
 - base
 - xlsx-official
 - workflow-automation
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

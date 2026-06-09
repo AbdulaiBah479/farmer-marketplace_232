@@ -1,231 +1,171 @@
 ---
 name: configuring-tmux
-description: Build, review, and troubleshoot tmux configurations with modern best practices. Use when creating tmux.conf from scratch, adding plugins, configuring themes, integrating with Neovim, setting up session management, or debugging tmux issues.
+description: Configures tmux status bars, installs frameworks and plugins, adds widgets and scripts, and sets up multiple status bars. Use when working with oh-my-tmux, Catppuccin, or tmux-powerline; adding weather/finance/clock/news widgets; troubleshooting why bar changes aren't appearing; or setting up tmux on a new machine.
 ---
 
-# tmux Configuration Skill
+# Configuring tmux
 
-Help users build, review, and maintain modern tmux configurations. Always check
-for an existing config before proposing changes. Prefer the XDG config path.
+## Step 0: Choose a Framework
 
-## Before Making Changes
+Ask the user which framework they want **before** touching any config.
 
-1. Check tmux version: `tmux -V`
-2. Check existing config: `~/.config/tmux/tmux.conf` then `~/.tmux.conf`
-3. Check if TPM is installed: `ls ~/.config/tmux/plugins/tpm` or `ls ~/.tmux/plugins/tpm`
-4. Read the current config before editing
-
-## Config File Location
-
-Prefer the XDG-compliant path (supported since tmux 3.1):
-
-```text
-~/.config/tmux/tmux.conf      # modern (preferred)
-~/.tmux.conf                   # legacy (still works)
+### Option 1: oh-my-tmux
+```bash
+cd ~ && git clone https://github.com/gpakosz/.tmux.git
+ln -sf .tmux/.tmux.conf .tmux.conf
+cp .tmux/.tmux.conf.local .tmux.conf.local
 ```
+- Theming via `tmux_conf_theme_*` variables in `~/.tmux.conf.local` — never edit `~/.tmux.conf`
+- **Gotcha:** its theming layer owns bar 0 and overrides raw `set -g status-right` — use `status-format[]` for extra bars
 
-If migrating, move the file and remove the old one.
+### Option 2: Catppuccin (TPM-based, no clone needed)
+```bash
+set -g @plugin 'catppuccin/tmux#v2.1.3'
+set -g @catppuccin_flavor 'mocha'
+set -g @catppuccin_status_modules_right "application session date_time"
+```
+- Module list controls bar 0 — add custom `#()` calls via `status-right-append`
+- Extra bars use `status-format[]` directly
 
-## Essential Baseline Config
+### Option 3: tmux-powerline
+```bash
+git clone https://github.com/erikw/tmux-powerline.git ~/.config/tmux-powerline
+set-option -g status-left "#(~/.config/tmux-powerline/powerline.sh left)"
+set-option -g status-right "#(~/.config/tmux-powerline/powerline.sh right)"
+```
+- Requires Nerd Font or Powerline-patched font
+- Segments live in `~/.config/tmux-powerline/segments/`
 
-These are near-universal best practices. Start here:
+### Option 4: User-provided framework
+Ask for: repo URL, install method, where customizations live, how it handles status content. Then apply the patterns below.
+
+---
+
+## Plugin Setup (all frameworks)
 
 ```bash
-# -- Prefix --
-unbind C-b
-set -g prefix C-a
-bind C-a send-prefix
-
-# -- General --
-set -g mouse on
-set -g base-index 1
-setw -g pane-base-index 1
-set -g renumber-windows on
-set -g history-limit 50000
-set -g display-time 4000
-set -g status-interval 5
-set -g focus-events on
-set -sg escape-time 0
-set -g set-clipboard on
-
-# -- Terminal & Colors --
-set -g default-terminal "tmux-256color"
-set -ag terminal-overrides ",xterm-256color:RGB"
-
-# -- Copy Mode (vi) --
-setw -g mode-keys vi
-bind -T copy-mode-vi v send -X begin-selection
-bind -T copy-mode-vi y send -X copy-pipe-and-cancel
-
-# -- Easy reload --
-bind r source-file ~/.config/tmux/tmux.conf \; display "Reloaded!"
-
-# -- Pane splitting (intuitive keys) --
-bind | split-window -h -c "#{pane_current_path}"
-bind - split-window -v -c "#{pane_current_path}"
-unbind '"'
-unbind %
-
-# -- New windows keep current path --
-bind c new-window -c "#{pane_current_path}"
-```
-
-## Plugin Manager (TPM)
-
-TPM is the standard. Install to the XDG plugins directory:
-
-```bash
+# Install TPM
 git clone https://github.com/tmux-plugins/tpm ~/.config/tmux/plugins/tpm
-```
 
-In tmux.conf (must be at the BOTTOM):
-
-```bash
-# -- Plugins --
+# Essential plugins
 set -g @plugin 'tmux-plugins/tpm'
-set -g @plugin 'tmux-plugins/tmux-sensible'
+set -g @plugin 'tmux-plugins/tmux-resurrect'
+set -g @plugin 'tmux-plugins/tmux-continuum'
+set -g @plugin 'tmux-plugins/tmux-cpu'          # #{cpu_percentage} #{ram_percentage}
+set -g @plugin 'tmux-plugins/tmux-net-speed'    # #{net_speed_up} #{net_speed_down}
 
-# Initialize TPM (keep these at the very bottom)
-set-environment -g TMUX_PLUGIN_MANAGER_PATH '~/.config/tmux/plugins/'
+set -g @continuum-restore 'on'
+set -g @continuum-save-interval '10'
+set -g @resurrect-capture-pane-contents 'on'
+
 run '~/.config/tmux/plugins/tpm/tpm'
+# Install: prefix + I
 ```
 
-**IMPORTANT**: The `set-environment` line tells TPM where plugins live. Without
-it, TPM defaults to `~/.tmux/plugins/` and plugins end up split across two
-locations.
+---
 
-After adding plugins: `prefix + I` to install, `prefix + U` to update.
+## Multiple Status Bars
 
-### Installing plugins headlessly (outside tmux)
+tmux 3.2+ supports 2–5 bars. **The correct syntax is `status-format[]` array** — not `status2-right` (invalid, will error).
 
 ```bash
-tmux start-server \; source-file ~/.config/tmux/tmux.conf
-~/.config/tmux/plugins/tpm/bin/install_plugins
+set -g status 3
+
+# Bar 1: widgets row
+set -g status-format[1] "#[bg=#1a1b26,fg=#c0caf5,align=right]#(~/.config/tmux/scripts/weather.sh)  #(~/.config/tmux/scripts/finance.sh)  #[fg=#1e3a8a,bg=#b8970d,bold]PT #(TZ=America/Los_Angeles date +%H:%M) EST #(TZ=America/New_York date +%H:%M)#[default]"
+
+# Bar 2: news ticker
+set -g status-format[2] "#[bg=#16161e,fg=#e0af68,align=right]  #(~/.config/tmux/scripts/news-ticker.sh)"
 ```
 
-### Plugins that need a build step
+With `status-position top` and `status 3`:
+```
+Bar 0  ← framework owns (oh-my-tmux / Catppuccin)
+Bar 1  ← status-format[1]  — configure freely
+Bar 2  ← status-format[2]  — configure freely
+──────────────────────────────
+Terminal panes
+```
 
-**tmux-thumbs** is written in Rust. After TPM clones it, build it:
+Verify: `tmux show-options -g status` (must equal your total bar count)
+
+---
+
+## Widget Scripts
+
+### Single-line output rule
+Scripts in `#()` must emit **one line**. Multi-line output corrupts the bar.
+
+### Caching pattern (required for network scripts)
+```bash
+#!/bin/bash
+CACHE="/tmp/my-widget-cache"
+CACHE_AGE=300
+
+if [ -f "$CACHE" ]; then
+    age=$(( $(date +%s) - $(stat -c %Y "$CACHE") ))
+    [ "$age" -lt "$CACHE_AGE" ] && cat "$CACHE" && exit 0
+fi
+
+python3 << 'PYEOF' | tee "$CACHE"
+# fetch and print ONE line
+PYEOF
+```
+
+### World clocks (no cache needed)
+```bash
+# In status-format[]: use %H:%M directly
+"PT #(TZ=America/Los_Angeles date +%H:%M) EST #(TZ=America/New_York date +%H:%M)"
+
+# In oh-my-tmux tmux_conf_theme_status_right: escape % as %%
+"PT #(TZ=America/Los_Angeles date +%%H:%%M)"
+```
+
+### Rotating news ticker
+```bash
+#!/bin/bash
+CACHE="/tmp/news-cache"  # one headline per line, refreshed by background fetch
+[ ! -s "$CACHE" ] && echo "Loading..." && exit 0
+count=$(wc -l < "$CACHE")
+idx=$(( ($(date +%s) / 20) % count ))   # rotates every 20s
+sed -n "$((idx + 1))p" "$CACHE"
+```
+
+### Finance widget (Yahoo Finance v8)
+Use `-A "Mozilla/5.0"` — Yahoo blocks default curl UA:
+```bash
+curl -sf --max-time 4 -A "Mozilla/5.0 (X11; Linux x86_64)" \
+  "https://query1.finance.yahoo.com/v8/finance/chart/BTC-USD?interval=1d&range=1d"
+```
+
+---
+
+## oh-my-tmux: Bar 0 Reference
 
 ```bash
-cd ~/.config/tmux/plugins/tmux-thumbs && cargo build --release
+# ~/.tmux.conf.local
+tmux_conf_theme_status_right="#{prefix}#{mouse} 🌿 #[fg=#000,bg=#2ea043,bold]#(git -C #{pane_current_path} symbolic-ref --short HEAD 2>/dev/null)#[default] #[fg=#fff,bg=#cc1111,bold]⚡#{cpu_percentage}/💾#{ram_percentage}#[default]"
+tmux_conf_theme_status_right_fg="#000000,#000000,#000000"
+tmux_conf_theme_status_right_bg="#2ea043,#1155cc,#2ea043"
+tmux_conf_theme_status_right_length=300
 ```
 
-Without this, `prefix + Space` silently fails.
+---
 
-## Plugin Tiers
+## Common Mistakes
 
-### Tier 1: Essential (install these first)
+| Mistake | Fix |
+|---------|-----|
+| `set -g status-right` overridden | Use `tmux_conf_theme_status_right=` (oh-my-tmux) or framework equivalent |
+| `status2-right` → invalid option | Use `set -g status-format[1] "..."` |
+| New bars not visible | `tmux show-options -g status` must equal bar count |
+| Bar appears blank | Script must output exactly one non-empty line |
+| Script works in terminal, blank in bar | tmux `#()` has minimal PATH — use `~/` or absolute paths |
+| `%%` vs `%` confusion | `%%` in `tmux_conf_theme_*`; `%H:%M` directly in `status-format[]` |
 
-| Plugin                        | Purpose                               |
-| ----------------------------- | ------------------------------------- |
-| `tmux-plugins/tmux-sensible`  | Sane defaults everyone agrees on      |
-| `tmux-plugins/tmux-resurrect` | Save/restore sessions across restarts |
-| `tmux-plugins/tmux-continuum` | Auto-save sessions every 15 min       |
-| `tmux-plugins/tmux-yank`      | System clipboard integration          |
-
-### Tier 2: Power User
-
-| Plugin                           | Purpose                                   |
-| -------------------------------- | ----------------------------------------- |
-| `laktak/extrakto`                | Fuzzy-select text from pane with fzf      |
-| `fcsonline/tmux-thumbs`          | Vimium-like hint copy (Rust, needs build) |
-| `sainnhe/tmux-fzf`               | Fuzzy find sessions/windows/panes         |
-| `tmux-plugins/tmux-pain-control` | Standard pane navigation bindings         |
-
-### Tier 3: Nice to Have
-
-| Plugin                           | Purpose                              |
-| -------------------------------- | ------------------------------------ |
-| `tmux-plugins/tmux-open`         | Open highlighted file/URL            |
-| `27medkamal/tmux-session-wizard` | Session management with fzf + zoxide |
-| `tmux-plugins/tmux-fzf-url`      | Open URLs from pane                  |
-
-## Neovim Integration
-
-For seamless pane/split navigation between tmux and Neovim:
-
-**Option A: All-in-one** — `aserowy/tmux.nvim` (nav + clipboard + resize)
-**Option B: Navigation only** — `alexghergh/nvim-tmux-navigation` (Lua)
-**Option C: Classic** — `christoomey/vim-tmux-navigator`
-
-The tmux side needs matching keybindings. See [REFERENCE.md](REFERENCE.md) for setup.
-
-## Themes
-
-**catppuccin/tmux** — Modular status line with widgets, most popular modern theme:
+## Reload
 
 ```bash
-set -g @plugin 'catppuccin/tmux'
-set -g @catppuccin_flavor 'mocha'  # latte, frappe, macchiato, mocha
+tmux source-file ~/.tmux.conf        # full reload (re-applies framework theming)
+tmux source-file ~/.tmux.conf.local  # local overrides only
 ```
-
-**dracula/tmux** — Feature-rich status bar with system info widgets.
-**tokyo-night** — Matching theme if you use tokyo-night in your editor.
-
-## tmux 3.6 Features Worth Using
-
-- **Scrollbars**: `set -g pane-scrollbars on`
-- **Popup windows**: `display-popup` for floating terminals/menus
-- **Mode 2031**: Auto dark/light theme detection
-- **Performance**: Better handling of slow terminals and fast output
-
-## Troubleshooting Checklist
-
-1. **Colors wrong?** Check `echo $TERM` inside tmux — should be `tmux-256color`
-2. **Slow escape?** Set `escape-time 0` (tmux-sensible does this)
-3. **Clipboard not working over SSH?** Ensure `set -g set-clipboard on` in config.
-   tmux-yank uses OSC-52. Terminal must support it (iTerm2, kitty, WezTerm do).
-4. **Plugins not loading?** TPM `run` line must be the LAST line in config.
-   Run `prefix + I` after adding new plugins.
-5. **tmux-thumbs not working?** It's Rust — needs `cargo build --release` after install.
-6. **Plugins in wrong directory?** With XDG path, you need
-   `set-environment -g TMUX_PLUGIN_MANAGER_PATH '~/.config/tmux/plugins/'`
-   before the TPM `run` line.
-7. **After upgrade issues?** Kill all tmux servers: `tmux kill-server`
-8. **Removed options still active after reload?** `prefix + r` (source-file) does
-   NOT unset removed options — they persist in tmux's memory. To clear a stale
-   option: `tmux set-option -gu @option-name`. To verify what's live:
-   `tmux show-options -g | grep pattern`. This is critical when iterating on
-   plugin configs like `@thumbs-regexp-N` — old regexps stay active and can
-   cause silent failures even after removing them from tmux.conf.
-
-## tmux-thumbs Custom Patterns
-
-tmux-thumbs uses Rust's `regex` crate. Add custom patterns with `@thumbs-regexp-N`.
-
-**IMPORTANT**: When adding/removing/changing `@thumbs-regexp-N` patterns, you MUST
-manually unset old values — config reload doesn't clear them:
-
-```bash
-# Unset a specific pattern
-tmux set-option -gu @thumbs-regexp-1
-
-# Check what's currently live
-tmux show-options -g | grep thumbs
-
-# Nuclear option: unset all thumbs settings
-for opt in $(tmux show-options -g | grep @thumbs | cut -d' ' -f1); do
-  tmux set-option -gu "$opt"
-done
-```
-
-After clearing, reload config (`prefix + r`) to re-apply only what's in tmux.conf.
-
-Useful settings:
-
-- `@thumbs-osc52 1` — clipboard works over SSH
-- `@thumbs-contrast 1` — hints show in brackets for readability
-
-Useful patterns for coding workflows:
-
-```bash
-set -g @thumbs-regexp-1 '\S+\.\w+:\d+'            # file:line (src/main.rs:42)
-set -g @thumbs-regexp-2 '\b[a-f0-9]{7,12}\b'       # short commit/change IDs
-```
-
-**Caution**: Test patterns one at a time. A bad regex causes thumbs to crash
-silently (`|| true` in tmux-thumbs.sh swallows all errors). If thumbs flashes
-and shows nothing, unset all `@thumbs-regexp-N` and add them back individually.
-
-See [REFERENCE.md](REFERENCE.md) for detailed plugin configs and advanced patterns.

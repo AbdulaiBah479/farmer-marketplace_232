@@ -1,11 +1,10 @@
 ---
 name: aws-security-audit
-description: "Comprehensive AWS security posture assessment using AWS CLI and security best practices"
-category: security
+description: Comprehensive AWS security posture assessment using AWS CLI and security best practices
 risk: safe
 source: community
-tags: "[aws, security, audit, compliance, kiro-cli, security-assessment]"
-date_added: "2026-02-27"
+category: security
+tags: [aws, security, audit, compliance, kiro-cli, security-assessment]
 ---
 
 # AWS Security Audit
@@ -13,6 +12,7 @@ date_added: "2026-02-27"
 Perform comprehensive security assessments of AWS environments to identify vulnerabilities and misconfigurations.
 
 ## When to Use
+
 Use this skill when you need to audit AWS security posture, identify vulnerabilities, or prepare for compliance assessments.
 
 ## Audit Categories
@@ -367,8 +367,3 @@ kiro-cli chat "Generate a security audit report with aws-security-audit"
 - [AWS Security Best Practices](https://aws.amazon.com/security/best-practices/)
 - [CIS AWS Foundations Benchmark](https://www.cisecurity.org/benchmark/amazon_web_services)
 - [AWS Security Hub](https://aws.amazon.com/security-hub/)
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

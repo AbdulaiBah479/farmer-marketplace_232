@@ -1,273 +1,154 @@
 ---
 name: planner
-description: Interactive planning and execution for complex tasks. Use when breaking down multi-step projects (planning) or executing approved plans through delegation (execution). Planning creates milestones with specifications; execution delegates to specialized agents.
-license: MIT
-metadata:
-version: 1.0.0
-model: claude-opus-4-5
+description: >
+  Create comprehensive, phased implementation plans with sprints and atomic tasks.
+  Use when user says: "make a plan", "create a plan", "plan this out", "plan the implementation",
+  "help me plan", "design a plan", "draft a plan", "write a plan", "outline the steps",
+  "break this down into tasks", "what's the plan for", or any similar planning request.
+  Also triggers on explicit "/planner" or "/plan" commands.
 ---
 
-# Planner Skill
+# Planner Agent
 
-## Purpose
+Create detailed, phased implementation plans for bugs, features, or tasks.
 
-Two workflows for complex tasks:
+## Process
 
-1. **Planning workflow** (planner.py): Create and review implementation plans
-2. **Execution workflow** (executor.py): Execute approved plans through delegation
+### Phase 0: Research
 
-## Invocation Routing
+1. **Investigate the codebase:**
+   - Architecture and patterns
+   - Similar existing implementations
+   - Dependencies and frameworks
+   - Related components
 
-**Invoke planner.py** when user asks to:
+2. **Analyze the request:**
+   - Core requirements
+   - Challenges & edge cases
+   - Security/performance/UX considerations
 
-- "plan", "design", "architect" a feature
-- "review" an existing plan
-- Break down a complex task into milestones
+### Phase 1: Clarify Requirements
 
-**Invoke executor.py** when user asks to:
+Before doing ANY documentation search: clarify requirements with user.
+This will narrow and aid you in finding the right docs.
 
-- "execute", "implement", "run" a plan
-- "resume" or "continue" execution
-- Provides a plan file path for implementation
+Think of 5-10 questions that will help you generate the best plan possible.
 
----
+Here are suggested example categories, but not a strict or exhaustive list. You may ask anything helpful. Use best judgement & prioritize ambiguity and risk reduction:
+1. Goals & success criteria
+2. Scope & non‑goals
+3. Users & core workflows
+4. Platforms & environments
+5. Tech constraints
+6. Data & integrations
+7. Auth & permissions
+8. Performance & reliability
+9. Testing & validation
+10. Ask any helpful question
 
-## When to Use
+### Phase 2: Retrieve Documentation
 
-Use the planner skill when the task has:
+When the plan involves any external library, API, framework, or service, use the Context7 skill to fetch the latest official docs before drafting tasks. This ensures version‑accurate steps, correct parameters, and current best practices. If no external dependencies apply, skip this phase.
 
-- Multiple milestones with dependencies
-- Architectural decisions requiring documentation
-- Migration steps that need coordination
-- Complexity that benefits from forced reflection pauses
+### Phase 3: Create Plan
 
-## When to Skip
+#### Structure
+- **Overview**: Brief summary and approach
+- **Sprints**: Logical phases that build on each other
+- **Tasks**: Specific, actionable items within sprints
 
-Skip the planner skill when the task is:
+#### Sprint Requirements
+Each sprint must:
+- Result in **demoable, runnable, testable** increment
+- Build on prior sprint work
+- Include demo/verification checklist
 
-- Single-step with obvious implementation
-- A quick fix or minor change
-- Already well-specified by the user
+#### Task Requirements
+Each task must be:
+- **Atomic and committable** (small, independent)
+- Specific with clear inputs/outputs
+- Independently testable
+- Include file paths when relevant
+- Include dependencies for parallel execution
+- Include tests or validation method
 
----
+**Bad:** "Implement Google OAuth"
+**Good:**
+- "Add Google OAuth config to env variables"
+- "Install passport-google-oauth20 package"
+- "Create OAuth callback route in src/routes/auth.ts"
+- "Add Google sign-in button to login UI"
 
-# PLANNING WORKFLOW (planner.py)
+### Phase 3: Save
+Save the file
 
-## Workflow Overview
+Generate filename from request:
+1. Extract keywords
+2. Convert to kebab-case
+3. Add `-plan.md` suffix
 
-```
-PLANNING PHASE (steps 1-N)
-    |
-    v
-Write plan to file
-    |
-    v
-REVIEW PHASE (steps 1-2)
-    |-- Step 1: @agent-technical-writer (plan-annotation)
-    |-- Step 2: @agent-quality-reviewer (plan-review)
-    v
-APPROVED --> Execution workflow
-```
+Examples:
+- "fix xyz bug" → `xyz-bug-plan.md`
 
-## Preconditions
+### Phase 4: Gotchas
 
-Before invoking step 1, you MUST have:
+AFTER it is saved. Identify potential issues & edge cases in plan. Address proactively. Where could smth go wrong? What about the plan is ambiguous? Missing step, dependency, or pitfall?
 
-1. **Plan file path** - If user did not specify, ASK before proceeding
-2. **Clear problem statement** - What needs to be accomplished
+If any gotchas found, stop & ask up to 3 more questions. (either w/ request_user_input or directly)
 
-## Invocation
+Refine the plan if any additional useful info is provided.
 
-```bash
-python3 scripts/planner.py \
-  --step-number 1 \
-  --total-steps <estimated_steps> \
-  --thoughts "<your thinking about the problem>"
-```
+## Plan Template
 
-### Arguments
+```markdown
+# Plan: [Task Name]
 
-| Argument        | Description                                      |
-| --------------- | ------------------------------------------------ |
-| `--phase`       | Workflow phase: `planning` (default) or `review` |
-| `--step-number` | Current step (starts at 1)                       |
-| `--total-steps` | Estimated total steps for this phase             |
-| `--thoughts`    | Your thinking, findings, and progress            |
+**Generated**: [Date]
+**Estimated Complexity**: [Low/Medium/High]
 
-## Planning Workflow
+## Overview
+[Summary of task and approach]
 
-1. Confirm preconditions (plan file path, problem statement)
-2. Invoke step 1 immediately
-3. Complete REQUIRED ACTIONS from output
-4. Invoke next step with your thoughts
-5. Repeat until `STATUS: phase_complete`
-6. Write plan to file using format below
+## Prerequisites
+- [Dependencies or requirements]
+- [Tools, libraries, access needed]
 
-## Phase Transition: Planning to Review
+## Sprint 1: [Name]
+**Goal**: [What this accomplishes]
+**Demo/Validation**:
+- [How to run/demo]
+- [What to verify]
 
-When planning phase completes, the script outputs an explicit `ACTION REQUIRED`
-marker:
+### Task 1.1: [Name]
+- **Location**: [File paths]
+- **Description**: [What to do]
+- **Dependencies**: [Previous tasks]
+- **Acceptance Criteria**:
+  - [Specific criteria]
+- **Validation**:
+  - [Tests or verification]
 
-```
-============================================
->>> ACTION REQUIRED: INVOKE REVIEW PHASE <<<
-============================================
-```
+### Task 1.2: [Name]
+[...]
 
-**You MUST invoke the review phase before proceeding to execution.**
+## Sprint 2: [Name]
+[...]
 
-The review phase ensures:
+## Testing Strategy
+- [How to test]
+- [What to verify per sprint]
 
-- Temporally contaminated comments are fixed (via @agent-technical-writer)
-- Code snippets have WHY comments (via @agent-technical-writer)
-- Plan is validated for production risks (via @agent-quality-reviewer)
-- Documentation needs are identified
+## Potential Risks & Gotchas
+- [What could go wrong]
+- [Mitigation strategies]
 
-## Review Phase
-
-After writing the plan file, transition to review phase:
-
-```bash
-python3 scripts/planner.py \
-  --phase review \
-  --step-number 1 \
-  --total-steps 2 \
-  --thoughts "Plan written to [path/to/plan.md]"
-```
-
-### Review Step 1: Technical Writer
-
-Delegate to @agent-technical-writer with mode: `plan-annotation`
-
-### Review Step 2: Quality Reviewer
-
-Delegate to @agent-quality-reviewer with mode: `plan-review`
-
-### After Review
-
-- **PASS / PASS_WITH_CONCERNS**: Ready for execution workflow
-- **NEEDS_CHANGES**: Return to planning phase to address issues
-
----
-
-# EXECUTION WORKFLOW (executor.py)
-
-## Workflow Overview
-
-```
-Step 1: Execution Planning
-    |
-    v
-Step 2: Reconciliation (conditional, if prior work signaled)
-    |
-    v
-Step 3: Milestone Execution (repeat until all complete)
-    |
-    v
-Step 4: Post-Implementation QR
-    |
-    v
-QR issues? --YES--> Step 5: Issue Resolution --> delegate fixes --> Step 4
-    |
-    NO
-    v
-Step 6: Documentation
-    |
-    v
-Step 7: Retrospective
+## Rollback Plan
+- [How to undo if needed]
 ```
 
-## Preconditions
+## Important
 
-Before invoking step 1, you MUST have:
-
-1. **Approved plan file** - Plan that passed review phase
-2. **Clear context window** - User should /clear before execution
-
-## Invocation
-
-```bash
-python3 scripts/executor.py \
-  --plan-file PATH \
-  --step-number 1 \
-  --total-steps 7 \
-  --thoughts "<user's request and context>"
-```
-
-### Arguments
-
-| Argument        | Description                      |
-| --------------- | -------------------------------- |
-| `--plan-file`   | Path to the approved plan file   |
-| `--step-number` | Current step (1-7)               |
-| `--total-steps` | Always 7 for executor            |
-| `--thoughts`    | Your current thinking and status |
-
-## Execution Steps
-
-| Step | Name                   | Purpose                                       |
-| ---- | ---------------------- | --------------------------------------------- |
-| 1    | Execution Planning     | Analyze plan, detect reconciliation, strategy |
-| 2    | Reconciliation         | (conditional) Validate existing code vs plan  |
-| 3    | Milestone Execution    | Delegate to agents, run tests (repeat)        |
-| 4    | Post-Implementation QR | Quality review of implemented code            |
-| 5    | Issue Resolution       | (conditional) Present issues, collect fixes   |
-| 6    | Documentation          | TW pass for CLAUDE.md, README.md              |
-| 7    | Retrospective          | Present execution summary                     |
-
-Note: Step 3 may be re-invoked multiple times until all milestones complete.
-Step 4 may loop back through step 5 until QR passes.
-
----
-
-## Resources
-
-| Resource                              | Purpose                                            |
-| ------------------------------------- | -------------------------------------------------- |
-| `resources/plan-format.md`            | Plan template (injected at planning completion)    |
-| `resources/diff-format.md`            | Authoritative specification for code change format |
-| `resources/temporal-contamination.md` | Detecting/fixing temporally contaminated comments  |
-| `resources/default-conventions.md`    | Default conventions when project docs are silent   |
-
-Note: Execution guidance is embedded directly in `scripts/executor.py` (not in
-separate resource files) since it's only used by that script.
-
----
-
-## Quick Reference
-
-```bash
-# === PLANNING WORKFLOW ===
-
-# Start planning
-python3 scripts/planner.py --step-number 1 --total-steps 4 --thoughts "..."
-
-# Continue planning
-python3 scripts/planner.py --step-number 2 --total-steps 4 --thoughts "..."
-
-# Start review (after plan written)
-python3 scripts/planner.py --phase review --step-number 1 --total-steps 2 \
-  --thoughts "Plan at plans/feature.md"
-
-# Continue review
-python3 scripts/planner.py --phase review --step-number 2 --total-steps 2 \
-  --thoughts "TW done, ready for QR"
-
-# === EXECUTION WORKFLOW ===
-
-# Start execution
-python3 scripts/executor.py --plan-file plans/feature.md --step-number 1 \
-  --total-steps 7 --thoughts "Execute the feature plan"
-
-# Continue milestone execution
-python3 scripts/executor.py --plan-file plans/feature.md --step-number 3 \
-  --total-steps 7 --thoughts "Completed M1, M2. Executing M3..."
-
-# After QR passes
-python3 scripts/executor.py --plan-file plans/feature.md --step-number 6 \
-  --total-steps 7 --thoughts "QR passed. Running documentation."
-
-# Generate retrospective
-python3 scripts/executor.py --plan-file plans/feature.md --step-number 7 \
-  --total-steps 7 --thoughts "Execution complete. Generating retrospective."
-```
+- Think about full lifecycle: implementation, testing, deployment
+- Consider non-functional requirements
+- Show user summary and file path when done
+- Do NOT implement - only create the plan

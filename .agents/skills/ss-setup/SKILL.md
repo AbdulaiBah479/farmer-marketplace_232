@@ -1,7 +1,7 @@
 ---
 name: ss-setup
 description: Interactive setup wizard — guides you step-by-step to configure the design system for your project
-argument-hint: (no arguments needed)
+argument-hint: "(no arguments needed)"
 allowed-tools: Read, Write, Edit, Grep, Glob, Bash, WebFetch
 ---
 
@@ -163,6 +163,8 @@ Next steps:
 - /ss-page to add more pages
 - /ss-audit to check UX quality
 - /ss-review to verify design compliance
+
+⭐ If StyleSeed helped, a star means a lot: https://github.com/bitjaru/styleseed
 ```
 
 ## Rules

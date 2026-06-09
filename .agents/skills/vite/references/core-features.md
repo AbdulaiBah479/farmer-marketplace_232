@@ -1,205 +1,170 @@
 ---
-name: vite-features
-description: Vite-specific import patterns and runtime features
+name: core-features
+description: Core Vite features including TypeScript, JSX, CSS, and HTML processing
 ---
 
-# Vite Features
+# Core Features
 
-## Glob Import
+## TypeScript
 
-Import multiple modules matching a pattern:
+Vite supports `.ts` files out of the box with transpilation via Oxc Transformer (20-30x faster than tsc).
 
-```ts
-const modules = import.meta.glob('./dir/*.ts')
-// { './dir/foo.ts': () => import('./dir/foo.ts'), ... }
+### Important: Transpile Only
 
-for (const path in modules) {
-  modules[path]().then((mod) => {
-    console.log(path, mod)
-  })
+Vite does NOT perform type checking. Run type checking separately:
+
+```bash
+# Production build
+tsc --noEmit && vite build
+
+# During development (separate process)
+tsc --noEmit --watch
+
+# Or use vite-plugin-checker for browser error reporting
+```
+
+### TypeScript Configuration
+
+Required `tsconfig.json` settings:
+
+```json
+{
+  "compilerOptions": {
+    "isolatedModules": true,
+    "useDefineForClassFields": true,
+    "skipLibCheck": true
+  }
 }
 ```
 
-### Eager Loading
+### Client Types
 
-```ts
-const modules = import.meta.glob('./dir/*.ts', { eager: true })
-// Modules loaded immediately, no dynamic import
+Add Vite's client types for `import.meta.env` and asset imports:
+
+```json
+{
+  "compilerOptions": {
+    "types": ["vite/client"]
+  }
+}
 ```
 
-### Named Imports
+This provides types for:
+- Asset imports (`.svg`, `.png`, etc.)
+- `import.meta.env` constants
+- `import.meta.hot` HMR API
+
+### Custom Type Overrides
+
+Override default asset import types:
 
 ```ts
-const modules = import.meta.glob('./dir/*.ts', { import: 'setup' })
-// Only imports the 'setup' export from each module
-
-const defaults = import.meta.glob('./dir/*.ts', { import: 'default', eager: true })
+// vite-env-override.d.ts
+declare module '*.svg' {
+  const content: React.FC<React.SVGProps<SVGElement>>
+  export default content
+}
 ```
 
-### Multiple Patterns
+### Path Aliases with tsconfig
+
+Enable tsconfig paths resolution:
 
 ```ts
-const modules = import.meta.glob(['./dir/*.ts', './another/*.ts'])
-```
-
-### Negative Patterns
-
-```ts
-const modules = import.meta.glob(['./dir/*.ts', '!**/ignored.ts'])
-```
-
-### Custom Queries
-
-```ts
-const svgRaw = import.meta.glob('./icons/*.svg', { query: '?raw', import: 'default' })
-const svgUrls = import.meta.glob('./icons/*.svg', { query: '?url', import: 'default' })
-```
-
-## Asset Import Queries
-
-### URL Import
-
-```ts
-import imgUrl from './img.png'
-// Returns resolved URL: '/src/img.png' (dev) or '/assets/img.2d8efhg.png' (build)
-```
-
-### Explicit URL
-
-```ts
-import workletUrl from './worklet.js?url'
-```
-
-### Raw String
-
-```ts
-import shaderCode from './shader.glsl?raw'
-```
-
-### Inline/No-Inline
-
-```ts
-import inlined from './small.png?inline'    // Force base64 inline
-import notInlined from './large.png?no-inline'  // Force separate file
-```
-
-### Web Workers
-
-```ts
-import Worker from './worker.ts?worker'
-const worker = new Worker()
-
-// Or inline:
-import InlineWorker from './worker.ts?worker&inline'
-```
-
-Preferred pattern using constructor:
-
-```ts
-const worker = new Worker(new URL('./worker.ts', import.meta.url), {
-  type: 'module',
+// vite.config.ts
+export default defineConfig({
+  resolve: {
+    tsconfigPaths: true
+  }
 })
 ```
 
-## Environment Variables
+## JSX
 
-### Built-in Constants
-
-```ts
-import.meta.env.MODE      // 'development' | 'production' | custom
-import.meta.env.BASE_URL  // Base URL from config
-import.meta.env.PROD      // true in production
-import.meta.env.DEV       // true in development
-import.meta.env.SSR       // true when running in server
-```
-
-### Custom Variables
-
-Only `VITE_` prefixed vars exposed to client:
-
-```
-# .env
-VITE_API_URL=https://api.example.com
-DB_PASSWORD=secret  # NOT exposed to client
-```
+`.jsx` and `.tsx` files are supported out of the box. Custom JSX configuration:
 
 ```ts
-console.log(import.meta.env.VITE_API_URL) // works
-console.log(import.meta.env.DB_PASSWORD)  // undefined
+export default defineConfig({
+  oxc: {
+    jsx: {
+      runtime: 'classic',  // or 'automatic'
+      pragma: 'h',
+      pragmaFrag: 'Fragment'
+    },
+    // Auto-inject JSX helpers
+    jsxInject: `import React from 'react'`
+  }
+})
 ```
 
-### Mode-specific Files
+## HTML
 
-```
-.env                # always loaded
-.env.local          # always loaded, gitignored
-.env.[mode]         # only in specified mode
-.env.[mode].local   # only in specified mode, gitignored
-```
+`index.html` is the entry point, not tucked away in `public/`. Vite processes it as part of the module graph.
 
-### TypeScript Support
+### Supported Elements
 
-```ts
-// vite-env.d.ts
-interface ImportMetaEnv {
-  readonly VITE_API_URL: string
-}
+Vite processes these HTML element attributes:
 
-interface ImportMeta {
-  readonly env: ImportMetaEnv
-}
-```
+- `<script type="module" src>`
+- `<link href>` (stylesheets)
+- `<img src>`, `<img srcset>`
+- `<video src>`, `<video poster>`
+- `<audio src>`
+- `<source src>`, `<source srcset>`
+- `<meta content>` (for og:image, twitter:image, etc.)
 
-### HTML Replacement
+### Opt-out of Processing
 
 ```html
-<p>Running in %MODE%</p>
-<script>window.API = "%VITE_API_URL%"</script>
+<script vite-ignore type="module" src="https://cdn.example.com/lib.js"></script>
 ```
 
-## CSS Modules
+### Multi-Page Apps
 
-Any `.module.css` file treated as CSS module:
+Access any HTML file by its path:
+
+- `<root>/index.html` → `http://localhost:5173/`
+- `<root>/about.html` → `http://localhost:5173/about.html`
+- `<root>/blog/index.html` → `http://localhost:5173/blog/index.html`
+
+## JSON
+
+Direct import with named exports support:
 
 ```ts
-import styles from './component.module.css'
-element.className = styles.button
+// Import entire object
+import json from './data.json'
+
+// Named imports (tree-shakeable)
+import { field } from './data.json'
 ```
 
-With camelCase conversion:
+## Framework Support
+
+Official framework plugins:
+
+| Framework | Plugin |
+|-----------|--------|
+| Vue 3 | `@vitejs/plugin-vue` |
+| Vue 3 JSX | `@vitejs/plugin-vue-jsx` |
+| React | `@vitejs/plugin-react` |
+| React (SWC) | `@vitejs/plugin-react-swc` |
+| React Server Components | `@vitejs/plugin-rsc` |
+| Legacy browsers | `@vitejs/plugin-legacy` |
+
+## Content Security Policy
+
+Configure nonce for CSP:
 
 ```ts
-// .my-class -> myClass (if css.modules.localsConvention configured)
-import { myClass } from './component.module.css'
+export default defineConfig({
+  html: {
+    cspNonce: 'PLACEHOLDER'  // Replace per-request
+  }
+})
 ```
 
-## JSON Import
-
-```ts
-import pkg from './package.json'
-import { version } from './package.json'  // Named import with tree-shaking
-```
-
-## HMR API
-
-```ts
-if (import.meta.hot) {
-  import.meta.hot.accept((newModule) => {
-    // Handle update
-  })
-  
-  import.meta.hot.dispose((data) => {
-    // Cleanup before module is replaced
-  })
-  
-  import.meta.hot.invalidate()  // Force full reload
-}
-```
-
-<!--
+<!-- 
 Source references:
-- https://vite.dev/guide/features
-- https://vite.dev/guide/env-and-mode
-- https://vite.dev/guide/assets
-- https://vite.dev/guide/api-hmr
+- https://vite.dev/guide/features.html
 -->

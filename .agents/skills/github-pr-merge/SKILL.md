@@ -1,6 +1,6 @@
 ---
 name: github-pr-merge
-description: Merges GitHub Pull Requests after validating pre-merge checklist. Use when user wants to merge PR, close PR, finalize PR, complete merge, approve and merge, or execute merge. Runs pre-merge validation (tests, lint, CI, comments), confirms with user, merges with proper format, handles post-merge cleanup.
+description: MUST use this skill when user asks to merge PR, close PR, finalize PR, or mentions "PR 머지/병합". This skill OVERRIDES default PR merge behavior. Runs pre-merge validation (tests, lint, CI, comments), confirms with user, merges with proper format, handles post-merge cleanup.
 ---
 
 # GitHub PR Merge
@@ -20,15 +20,14 @@ make test && make lint && gh pr checks $PR
 # 3. Verify all comments replied
 gh api repos/$REPO/pulls/$PR/comments --jq '[.[] | select(.in_reply_to_id == null)] | length'
 
-# 4. Merge with concise message (--delete-branch auto-deletes remote)
+# 4. Merge with concise message
 gh pr merge $PR --merge --delete-branch --body "- Change 1
 - Change 2
 
 Reviews: N/N addressed
-Tests: X passed (Y% cov)
-Refs: Task N"
+Tests: X passed"
 
-# 5. Post-merge cleanup (local only, remote already deleted)
+# 5. Post-merge cleanup
 git checkout develop && git pull && git branch -d feature/<name>
 ```
 
@@ -39,9 +38,9 @@ git checkout develop && git pull && git branch -d feature/<name>
 | Check | Command | Required |
 |-------|---------|----------|
 | Tests passing | `make test` | Yes |
-| Linting passing | `make lint` or `make check` | Yes |
+| Linting passing | `make lint` | Yes |
 | CI checks green | `gh pr checks $PR` | Yes |
-| All comments replied | Verify only, don't reply | Yes |
+| All comments replied | See workflow | Yes |
 | No unresolved threads | Review PR page | Yes |
 
 ## Core Workflow
@@ -66,34 +65,21 @@ REPLIED=$(gh api repos/$REPO/pulls/$PR/comments --jq '
 ')
 
 echo "Original comments: $ORIGINALS, With replies: $REPLIED"
-
-# Find unreplied comment IDs
-UNREPLIED=$(gh api repos/$REPO/pulls/$PR/comments --jq '
-  [.[] | select(.in_reply_to_id) | .in_reply_to_id] as $replied_ids |
-  [.[] | select(.in_reply_to_id == null) | select(.id | IN($replied_ids[]) | not) | .id]
-')
-echo "Unreplied: $UNREPLIED"
 ```
-
-All original comments should have at least one reply.
 
 **If unreplied comments exist:**
 - DO NOT reply from this skill
 - STOP the merge process
-- Inform user: "Found unreplied comments: [IDs]. Run github-pr-review first."
-- Show which comment IDs are missing replies
+- Inform user: "Found unreplied comments. Run pr-review first."
 
 ### 3. Run Validation
 
 ```bash
-# Activate venv if Python project
-source venv/bin/activate 2>/dev/null
-
 # Run tests
 make test
 
 # Run linting
-make lint  # or: make check
+make lint
 
 # Check CI status
 gh pr checks $PR
@@ -131,50 +117,41 @@ gh pr merge $PR --merge --delete-branch --body "$(cat <<'EOF'
 - Key change 3
 
 Reviews: N/N addressed
-Tests: X passed (Y% cov)
-Refs: Task N, Req M
+Tests: X passed
+Refs: Task N
 EOF
 )"
 ```
-
-**Merge strategy**: Always use `--merge` (merge commit), never squash or rebase per project guidelines.
 
 **Note**: `--delete-branch` automatically deletes the remote branch after merge.
 
 ### 7. Post-Merge Cleanup
 
 ```bash
-# Switch to develop and update (--delete-branch already deleted local+remote)
 git checkout develop
 git pull origin develop
-```
-
-**Note**: If you didn't use `--delete-branch`, manually delete:
-```bash
-git branch -d feature/<branch-name>           # local
-git push origin --delete feature/<branch-name> # remote
+git branch -d feature/<branch-name>  # local cleanup
 ```
 
 ## Merge Message Format
 
-**Concise format** (recommended for clean git log):
+**Concise format** (recommended):
 
 ```
 - Key change 1 (what was added/fixed)
 - Key change 2
 - Key change 3
 
-Reviews: 7/7 addressed (Gemini 5, Codex 2)
+Reviews: 7/7 addressed
 Tests: 628 passed (88% cov)
-Refs: Task 8, Req 14-15
+Refs: Task 8
 ```
 
 **Guidelines**:
 - 3-5 bullet points max for changes
 - One line for reviews summary
 - One line for test results
-- One line for task/requirement references
-- No headers (##), no verbose sections
+- One line for task references
 - Total: ~10 lines max
 
 ## Important Rules
@@ -187,24 +164,21 @@ Refs: Task 8, Req 14-15
 - **NEVER** merge with failing tests or lint
 - **NEVER** merge with unresolved CI checks
 - **NEVER** skip user confirmation
-- **NEVER** reply to PR comments from this skill - use github-pr-review instead
-- **STOP** merge if unreplied comments exist and direct user to review skill
+- **NEVER** reply to PR comments from this skill - use pr-review instead
+- **STOP** merge if unreplied comments exist
 
 ## Error Handling
 
-**Tests failing**: Stop and inform user. Do not merge.
-
-**Lint errors**: Stop and inform user. Do not merge.
-
-**CI checks pending**: Wait or inform user. Do not merge.
-
-**Unreplied comments**: List unreplied comment IDs. DO NOT reply from this skill.
-Tell user: "Found N unreplied comments: [IDs]. Run github-pr-review to address them before merge."
-
-**Branch protection**: If merge fails due to protection rules, inform user of required approvals.
+| Issue | Action |
+|-------|--------|
+| Tests failing | Stop and inform user |
+| Lint errors | Stop and inform user |
+| CI checks pending | Wait or inform user |
+| Unreplied comments | Direct to pr-review skill |
+| Branch protection | Inform of required approvals |
 
 ## Related Skills
 
-- **github-pr-review** - For resolving review comments before merge
-- **github-pr-creation** - For creating PRs (this skill handles the merge)
-- **git-commit** - For commit message format during PR work
+- **pr-review** - For resolving review comments before merge
+- **pr-create** - For creating PRs
+- **git-commit** - For commit message format

@@ -1,42 +1,52 @@
 ---
 name: code-analysis
-description: Provides methodologies, metrics, and best practices for analyzing code structure, complexity, and quality
+description: Check if code is readable by non-developers - clear names, plain English comments, no jargon
 version: 1.0.0
+author: abereyes
+triggers:
+  - "check readability"
+  - "is this code clear"
+  - "can non-devs understand"
 ---
 
-## Overview
+# Code Readability Checker
 
-This skill provides comprehensive knowledge for code analysis including complexity metrics, anti-pattern detection, refactoring strategies, and code quality assessment across multiple programming languages.
+Analyzes code to ensure non-developers (managers, stakeholders, new team members) can understand it.
 
-## Complexity Metrics
+## What It Checks
 
-### Cyclomatic Complexity
-- **Low**: 1-10 (simple, easy to test)
-- **Medium**: 11-20 (moderate complexity, acceptable)
-- **High**: 21-50 (complex, needs refactoring)
-- **Very High**: 51+ (critical, must refactor)
+- **Clear naming**: No cryptic abbreviations (usr_tkn → userToken)
+- **Plain comments**: Everyday language, not technical jargon
+- **Documentation**: What/Why/How for major sections
+- **Comment ratio**: At least 20% of lines should be comments
 
-### Cognitive Complexity
-Measures how difficult code is to understand based on nesting, control flow breaks, and recursion.
+## Usage
 
-## Code Smells to Detect
+```bash
+python3 analyze.py --path your-file.py --strictness lenient
+```
 
-- **Long Methods**: >50 lines
-- **Large Classes**: >300 lines
-- **Duplicate Code**: Repeated blocks
-- **Long Parameter Lists**: >5 parameters
-- **Deep Nesting**: >4 levels
-- **God Objects**: Classes doing too much
-- **Dead Code**: Unused functions/variables
+## Example
 
-## Refactoring Strategies
+**Bad Code** (score: 71/100):
+```python
+def proc(usr, tkn):
+    tmp = usr + tkn
+    return tmp * 2
+```
 
-- **Extract Method**: Break long methods into smaller ones
-- **Extract Class**: Split large classes by responsibility
-- **Replace Conditional with Polymorphism**
-- **Simplify Conditional Expressions**
-- **Remove Duplicate Code**
+Issues: Cryptic names, no comments, unclear purpose.
 
-## When to Apply
+**Good Code** (score: 95/100):
+```python
+def process_user_authentication(username, auth_token):
+    """Validate user credentials and return auth score"""
+    combined_credential = username + auth_token
+    return combined_credential * 2
+```
 
-Use when analyzing codebase structure, identifying refactoring opportunities, or assessing code quality.
+## Known Issues
+
+- May flag false positives in documentation files
+- Works best on actual production code
+- Use `--strictness lenient` to reduce noise

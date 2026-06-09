@@ -1,9 +1,8 @@
 ---
 name: aws-cost-optimizer
-description: "Comprehensive AWS cost analysis and optimization recommendations using AWS CLI and Cost Explorer"
+description: Comprehensive AWS cost analysis and optimization recommendations using AWS CLI and Cost Explorer
 risk: safe
 source: community
-date_added: "2026-02-27"
 ---
 
 # AWS Cost Optimizer
@@ -191,8 +190,3 @@ kiro-cli chat "Create a cost optimization plan using aws-cost-optimizer"
 - [AWS Cost Optimization Best Practices](https://aws.amazon.com/pricing/cost-optimization/)
 - [AWS Well-Architected Framework - Cost Optimization](https://docs.aws.amazon.com/wellarchitected/latest/cost-optimization-pillar/welcome.html)
 - [AWS Cost Explorer API](https://docs.aws.amazon.com/cost-management/latest/APIReference/Welcome.html)
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

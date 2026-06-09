@@ -1,63 +1,54 @@
 ---
 name: strategic-compact
-description: Suggests manual context compaction at logical intervals to preserve context through task phases rather than arbitrary auto-compaction.
+description: "当用户需要在长会话的逻辑边界手动压缩上下文、保留关键决策和约束、丢弃中间探索过程时使用。"
 ---
 
-# Strategic Compact Skill
+# Strategic Compact
 
-Suggests manual `/compact` at strategic points in your workflow rather than relying on arbitrary auto-compaction.
+## 概述
 
-## Why Strategic Compaction?
+在长会话中，上下文窗口有限。此 skill 指导何时压缩、保留什么、丢弃什么。
 
-Auto-compaction triggers at arbitrary points:
-- Often mid-task, losing important context
-- No awareness of logical task boundaries
-- Can interrupt complex multi-step operations
+核心原则：**在逻辑边界压缩，不在任意时刻压缩。**
 
-Strategic compaction at logical boundaries:
-- **After exploration, before execution** - Compact research context, keep implementation plan
-- **After completing a milestone** - Fresh start for next phase
-- **Before major context shifts** - Clear exploration context before different task
+## 压缩决策表
 
-## How It Works
+| 当前阶段 | 下一阶段 | 是否压缩 | 理由 |
+|----------|----------|----------|------|
+| 研究/探索 | 规划 | 是 | 探索细节不需要带入规划 |
+| 规划 | 实现 | 是 | 保留计划，丢弃规划过程 |
+| 实现步骤 N | 实现步骤 N+1 | 否 | 实现中途压缩会丢失上下文 |
+| 实现完成 | 验证 | 可选 | 如果上下文接近上限 |
+| 验证 | 提交 | 否 | 验证结果需要带入提交 |
+| 任务 A 完成 | 任务 B 开始 | 是 | 不同任务间压缩 |
 
-The `suggest-compact.sh` script runs on PreToolUse (Edit/Write) and:
+## 压缩后保留清单
 
-1. **Tracks tool calls** - Counts tool invocations in session
-2. **Threshold detection** - Suggests at configurable threshold (default: 50 calls)
-3. **Periodic reminders** - Reminds every 25 calls after threshold
+必须保留：
+- 当前任务目标和约束
+- 已做的架构决策及理由
+- 已修改的文件列表
+- 未完成的步骤
+- 发现的问题和 TODO
+- VibeGuard 约束（始终保留）
 
-## Hook Setup
+可以丢弃：
+- 文件内容的完整引用（保留路径即可）
+- 搜索过程中的中间结果
+- 已解决的错误的完整堆栈
+- 探索性的代码阅读记录
 
-Add to your `~/.claude/settings.json`:
+## 使用方式
 
-```json
-{
-  "hooks": {
-    "PreToolUse": [{
-      "matcher": "tool == \"Edit\" || tool == \"Write\"",
-      "hooks": [{
-        "type": "command",
-        "command": "~/.claude/skills/strategic-compact/suggest-compact.sh"
-      }]
-    }]
-  }
-}
-```
+当感觉上下文即将耗尽时：
 
-## Configuration
+1. 判断当前处于哪个阶段
+2. 查压缩决策表，确认是否适合压缩
+3. 如果适合，按保留清单整理摘要
+4. 执行压缩
 
-Environment variables:
-- `COMPACT_THRESHOLD` - Tool calls before first suggestion (default: 50)
+## 反模式
 
-## Best Practices
-
-1. **Compact after planning** - Once plan is finalized, compact to start fresh
-2. **Compact after debugging** - Clear error-resolution context before continuing
-3. **Don't compact mid-implementation** - Preserve context for related changes
-4. **Read the suggestion** - The hook tells you *when*, you decide *if*
-
-## Related
-
-- [The Longform Guide](https://x.com/affaanmustafa/status/2014040193557471352) - Token optimization section
-- Memory persistence hooks - For state that survives compaction
+- 在实现中途压缩 → 丢失关键上下文，导致重复工作
+- 压缩时丢弃约束 → 后续步骤违反规则
+- 不压缩直到溢出 → 被动截断比主动压缩更危险

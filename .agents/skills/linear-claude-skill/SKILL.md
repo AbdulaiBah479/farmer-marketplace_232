@@ -1,9 +1,10 @@
 ---
 name: linear-claude-skill
 description: "Manage Linear issues, projects, and teams"
-risk: safe
+allowed-tools: 
+- WebFetch(domain: linear.app)
 source: "https://github.com/wrsmith108/linear-claude-skill"
-date_added: "2026-02-27"
+risk: safe
 ---
 
 ## When to Use This Skill
@@ -48,6 +49,12 @@ linear issues list
 
 ---
 
+
+## When to Use This Skill
+
+Manage Linear issues, projects, and teams
+
+Use this skill when working with manage linear issues, projects, and teams.
 ## 🔐 Security: Varlock Integration
 
 **CRITICAL**: Never expose API keys in terminal output or Claude's context.
@@ -168,6 +175,12 @@ See [Project Management Commands](#project-management-commands) for full referen
 
 ---
 
+
+## When to Use This Skill
+
+Manage Linear issues, projects, and teams
+
+Use this skill when working with manage linear issues, projects, and teams.
 ## Project Planning Workflow
 
 ### Create Issues in the Correct Project from the Start
@@ -314,6 +327,12 @@ npx tsx scripts/linear-ops.ts link-initiative "Phase 11" "Q2 Goals"
 
 ---
 
+
+## When to Use This Skill
+
+Manage Linear issues, projects, and teams
+
+Use this skill when working with manage linear issues, projects, and teams.
 ## Tool Selection
 
 Choose the right tool for the task:
@@ -341,7 +360,7 @@ Choose the right tool for the task:
 }
 ```
 
-> **WARNING**: Do NOT use deprecated community servers. See troubleshooting.md for details.
+> **WARNING**: Do NOT use deprecated community servers. See [troubleshooting.md](troubleshooting.md) for details.
 
 ### MCP Reliability (Official Server)
 
@@ -364,7 +383,7 @@ node scripts/linear-helpers.mjs update-status Done 123 124 125
 
 ### Helper Script Reference
 
-For detailed helper script usage, see **troubleshooting.md**.
+For detailed helper script usage, see **[troubleshooting.md](troubleshooting.md)**.
 
 ### Parallel Agent Execution
 
@@ -390,7 +409,7 @@ Task({
 - Quick status checks
 - Operations needing immediate results
 
-See **sync.md** for parallel execution patterns.
+See **[sync.md](sync.md)** for parallel execution patterns.
 
 ## Critical Requirements
 
@@ -403,7 +422,7 @@ See **sync.md** for parallel execution patterns.
 | Issue | Project | Not visible in project board |
 | Project | Initiative | Not visible in roadmap |
 
-See **projects.md** for complete project creation checklist.
+See **[projects.md](projects.md)** for complete project creation checklist.
 
 ---
 
@@ -416,7 +435,7 @@ See **projects.md** for complete project creation checklist.
 
 ### Labels
 
-Uses **domain-based label taxonomy**. See docs/labels.md.
+Uses **domain-based label taxonomy**. See [docs/labels.md](docs/labels.md).
 
 **Key rules:**
 - ONE Type label: `feature`, `bug`, `refactor`, `chore`, `spike`
@@ -445,7 +464,7 @@ Scripts provide full type hints and are easier to debug than raw GraphQL for mul
 
 **Fallback only.** Use when operations aren't supported by MCP or SDK.
 
-See **api.md** for complete documentation including:
+See **[api.md](api.md)** for complete documentation including:
 - Authentication and setup
 - Example queries and mutations
 - Timeout handling patterns
@@ -460,7 +479,7 @@ npx tsx ~/.claude/skills/linear/scripts/query.ts "query { viewer { name } }"
 
 ## Projects & Initiatives
 
-For advanced project and initiative management patterns, see **projects.md**.
+For advanced project and initiative management patterns, see **[projects.md](projects.md)**.
 
 **Quick reference** - common project commands:
 
@@ -488,9 +507,15 @@ npx tsx scripts/linear-ops.ts unlink-initiative "Phase X" "Old Initiative"
 
 ---
 
+
+## When to Use This Skill
+
+Manage Linear issues, projects, and teams
+
+Use this skill when working with manage linear issues, projects, and teams.
 ## Sync Patterns (Bulk Operations)
 
-For bulk synchronization of code changes to Linear, see **sync.md**.
+For bulk synchronization of code changes to Linear, see **[sync.md](sync.md)**.
 
 **Quick sync commands:**
 
@@ -508,16 +533,11 @@ npx tsx scripts/linear-ops.ts project-status "My Project" completed
 
 | Document | Purpose |
 |----------|---------|
-| api.md | GraphQL API reference, timeout handling |
-| sdk.md | SDK automation patterns |
-| sync.md | Bulk sync patterns |
-| projects.md | Project & initiative management |
-| troubleshooting.md | Common issues, MCP debugging |
-| docs/labels.md | Label taxonomy |
+| [api.md](api.md) | GraphQL API reference, timeout handling |
+| [sdk.md](sdk.md) | SDK automation patterns |
+| [sync.md](sync.md) | Bulk sync patterns |
+| [projects.md](projects.md) | Project & initiative management |
+| [troubleshooting.md](troubleshooting.md) | Common issues, MCP debugging |
+| [docs/labels.md](docs/labels.md) | Label taxonomy |
 
 **External:** [Linear MCP Documentation](https://linear.app/docs/mcp.md)
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

@@ -1,6 +1,10 @@
 ---
 name: subagent-orchestration
-description: Esta skill debe usarse cuando el usuario pide "orquestar agentes", "coordinar subagentes", "agentes en paralelo", "flujo multi-agente", "delegar a agentes", "lanzar agentes en paralelo", o necesita ejecutar múltiples tareas independientes con subagentes simultáneos.
+description: |
+  This skill should be used when coordinating multiple subagents, implementing orchestrator
+  patterns, or managing parallel agent workflows.
+  Trigger phrases: "orchestrate agents", "coordinate subagents", "parallel agents",
+  "multi-agent workflow", "delegate to agents", "run agents in parallel", "launch multiple agents".
 ---
 
 # Orchestrating Subagents

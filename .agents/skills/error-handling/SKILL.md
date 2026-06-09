@@ -1,480 +1,569 @@
 ---
 name: error-handling
-description: Implements error handling patterns, structured logging, retry strategies, circuit breakers, and graceful degradation. Use when designing error handling, setting up logging, implementing retries, adding error tracking, or when asked about error boundaries, log aggregation, alerting, or resilience patterns.
+description: |
+  Use when implementing structured error handling in backend or frontend code.
+  Triggers for: try-catch patterns, custom exception classes, global error handlers,
+  error logging, user-friendly error messages, or API error responses.
+  NOT for: business logic validation (use domain exceptions) or unrelated error types.
 ---
 
-# Error Handling & Observability
+# Error Handling Skill
 
-### When to Load
+Expert structured error handling for FastAPI backends and React/Next.js frontends with consistent error messages and logging.
 
-- **Trigger**: Try/catch patterns, retry logic, error responses, circuit breakers, structured logging
-- **Skip**: No error handling or observability involved in the current task
+## Quick Reference
 
-## Error Handling Workflow
+| Pattern | Backend | Frontend |
+|---------|---------|----------|
+| Custom exception | `class FeeNotPaidError(AppException)` | N/A |
+| Try-catch | `try: ... except SpecificError:` | `try { } catch (e) { }` |
+| Global handler | `@app.exception_handler` | `ErrorBoundary` component |
+| User message | `detail` field in response | Toast/Snackbar |
+| Error logging | `logger.error(...)` | Console/Sentry |
 
-Copy this checklist and track progress:
+## Custom Exceptions (Backend)
 
-```
-Error Handling Progress:
-- [ ] Step 1: Define error taxonomy (categories and severity)
-- [ ] Step 2: Implement error handling by layer
-- [ ] Step 3: Set up structured logging
-- [ ] Step 4: Add retry and circuit breaker patterns
-- [ ] Step 5: Configure error tracking service
-- [ ] Step 6: Define user-facing error messages
-- [ ] Step 7: Validate against anti-patterns checklist
-```
-
-## Error Handling Patterns by Language
-
-### JavaScript / TypeScript
-
-```typescript
-// Custom error hierarchy
-class AppError extends Error {
-  constructor(
-    message: string,
-    public statusCode: number = 500,
-    public code: string = "INTERNAL_ERROR",
-    public isOperational: boolean = true,
-  ) {
-    super(message);
-    this.name = this.constructor.name;
-  }
-}
-class NotFoundError extends AppError {
-  constructor(resource: string, id: string) {
-    super(`${resource} with id ${id} not found`, 404, "NOT_FOUND");
-  }
-}
-class ValidationError extends AppError {
-  constructor(public errors: Record<string, string[]>) {
-    super("Validation failed", 400, "VALIDATION_ERROR");
-  }
-}
-
-// WRONG: Swallowing errors silently
-try {
-  await saveUser(data);
-} catch (e) {
-  // nothing here -- bug hides forever
-}
-
-// WRONG: Catching and re-throwing without context
-try {
-  await saveUser(data);
-} catch (e) {
-  throw e; // pointless try/catch
-}
-
-// CORRECT: Add context, handle or propagate
-try {
-  await saveUser(data);
-} catch (error) {
-  if (error instanceof ValidationError) {
-    return res.status(400).json({ errors: error.errors });
-  }
-  logger.error("Failed to save user", { error, userId: data.id });
-  throw new AppError("Unable to save user", 500, "USER_SAVE_FAILED");
-}
-```
-
-### Express Global Error Handler
-
-```typescript
-// Centralized error handler middleware (must have 4 params)
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  if (err instanceof AppError) {
-    logger.warn("Operational error", {
-      code: err.code,
-      statusCode: err.statusCode,
-      path: req.path,
-    });
-    return res.status(err.statusCode).json({
-      error: { code: err.code, message: err.message },
-    });
-  }
-
-  // Unexpected errors -- these are bugs
-  logger.error("Unexpected error", {
-    error: err.message,
-    stack: err.stack,
-    path: req.path,
-  });
-  res.status(500).json({
-    error: { code: "INTERNAL_ERROR", message: "An unexpected error occurred" },
-  });
-});
-```
-
-### Python
+### Base Exception Hierarchy
 
 ```python
-# Custom exception hierarchy
-class AppError(Exception):
-    def __init__(self, message: str, code: str = "INTERNAL_ERROR", status: int = 500):
-        self.message = message
-        self.code = code
-        self.status = status
-        super().__init__(message)
+# backend/app/errors/exceptions.py
+from fastapi import HTTPException
+from typing import Any
 
-class NotFoundError(AppError):
-    def __init__(self, resource: str, id: str):
-        super().__init__(f"{resource} {id} not found", "NOT_FOUND", 404)
 
-class ValidationError(AppError):
-    def __init__(self, errors: dict[str, list[str]]):
-        self.errors = errors
-        super().__init__("Validation failed", "VALIDATION_ERROR", 400)
+class AppException(HTTPException):
+    """Base application exception with user-friendly messages."""
 
-# WRONG: Bare except
+    def __init__(
+        self,
+        status_code: int,
+        detail: str,
+        user_message: str,
+        headers: dict[str, Any] | None = None,
+    ):
+        self.user_message = user_message
+        super().__init__(status_code=status_code, detail=detail, headers=headers)
+
+
+class NotFoundError(AppException):
+    """Resource not found (404)."""
+
+    def __init__(self, resource: str, identifier: str):
+        super().__init__(
+            status_code=404,
+            detail=f"{resource} with id '{identifier}' not found",
+            user_message=f"{resource} not found. Please check and try again.",
+        )
+
+
+class ValidationError(AppException):
+    """Validation failed (400)."""
+
+    def __init__(self, field: str, reason: str):
+        super().__init__(
+            status_code=400,
+            detail=f"Validation error for field '{field}': {reason}",
+            user_message=f"Invalid value for {field}. {reason}",
+        )
+
+
+class UnauthorizedError(AppException):
+    """Authentication required (401)."""
+
+    def __init__(self, reason: str = "Authentication required"):
+        super().__init__(
+            status_code=401,
+            detail=reason,
+            user_message="Please log in to continue.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+
+class ForbiddenError(AppException):
+    """Permission denied (403)."""
+
+    def __init__(self, action: str):
+        super().__init__(
+            status_code=403,
+            detail=f"Permission denied for action: {action}",
+            user_message=f"You don't have permission to {action}.",
+        )
+
+
+class ConflictError(AppException):
+    """Resource conflict (409)."""
+
+    def __init__(self, resource: str, reason: str):
+        super().__init__(
+            status_code=409,
+            detail=f"Conflict for {resource}: {reason}",
+            user_message=f"{resource} conflict. {reason}",
+        )
+
+
+class RateLimitError(AppException):
+    """Too many requests (429)."""
+
+    def __init__(self, retry_after: int = 60):
+        super().__init__(
+            status_code=429,
+            detail=f"Rate limit exceeded. Retry after {retry_after} seconds.",
+            user_message="Too many requests. Please wait a moment and try again.",
+            headers={"Retry-After": str(retry_after)},
+        )
+```
+
+### Domain-Specific Exceptions
+
+```python
+# backend/app/errors/domains.py
+from .exceptions import NotFoundError, ValidationError, ConflictError
+
+
+class StudentNotFoundError(NotFoundError):
+    def __init__(self, student_id: int):
+        super().__init__(resource="Student", identifier=str(student_id))
+
+
+class FeeNotPaidError(ConflictError):
+    def __init__(self, student_id: int, amount_due: float):
+        super().__init__(
+            resource="Fee",
+            reason=f"Student {student_id} has unpaid fee of ${amount_due:.2f}",
+        )
+
+
+class AttendanceAlreadyMarkedError(ConflictError):
+    def __init__(self, student_id: int, date: str):
+        super().__init__(
+            resource="Attendance",
+            reason=f"Attendance already marked for student {student_id} on {date}",
+        )
+
+
+class InvalidGradeError(ValidationError):
+    def __init__(self, grade: str, valid_grades: list[str]):
+        super().__init__(
+            field="grade",
+            reason=f"'{grade}' is not valid. Must be one of: {', '.join(valid_grades)}",
+        )
+
+
+class InsufficientBalanceError(ValidationError):
+    def __init__(self, required: float, available: float):
+        super().__init__(
+            field="amount",
+            reason=f"Insufficient balance. Required: ${required:.2f}, Available: ${available:.2f}",
+        )
+```
+
+## Try-Catch Patterns
+
+### Narrow Try Blocks
+
+```python
+# GOOD: Specific exception, narrow scope
 try:
-    result = process(data)
-except:  # catches SystemExit, KeyboardInterrupt too!
-    pass
+    student = await get_student_by_id(student_id)
+except StudentNotFoundError:
+    raise StudentNotFoundError(student_id)
 
-# CORRECT: Specific exceptions, proper logging
+# BAD: Too broad, catches everything
 try:
-    result = process(data)
-except ValidationError as e:
-    logger.warning("Validation failed", extra={"errors": e.errors})
-    raise
-except DatabaseError as e:
-    logger.error("Database error during processing", exc_info=True)
-    raise AppError("Processing failed", "PROCESS_FAILED") from e
+    student = await get_student_by_id(student_id)
+    calculate_fees(student)
+    send_notification(student)
+    update_records(student)
+except Exception:
+    pass  # Swallowed!
 ```
 
-### Go
+### Cleanup with Finally
 
-```go
-// Define sentinel errors and custom types
-var (
-    ErrNotFound     = errors.New("resource not found")
-    ErrUnauthorized = errors.New("unauthorized")
-)
+```python
+import asyncio
+from contextlib import asynccontextmanager
 
-type ValidationError struct {
-    Field   string
-    Message string
-}
 
-func (e *ValidationError) Error() string {
-    return fmt.Sprintf("validation: %s - %s", e.Field, e.Message)
-}
+@asynccontextmanager
+async def database_connection():
+    conn = await get_db_connection()
+    try:
+        yield conn
+    except Exception as e:
+        await conn.rollback()
+        raise
+    finally:
+        await conn.close()
 
-// WRONG: Ignoring errors
-data, _ := json.Marshal(user)  // error silently dropped
 
-// WRONG: Only returning error string
-if err != nil {
-    return fmt.Errorf("failed: %s", err.Error())  // loses error chain
-}
-
-// CORRECT: Wrap errors with context
-if err != nil {
-    return fmt.Errorf("saving user %s: %w", user.ID, err)  // %w preserves chain
-}
-
-// CORRECT: Check error types
-if errors.Is(err, ErrNotFound) {
-    http.Error(w, "Not found", http.StatusNotFound)
-    return
-}
-var valErr *ValidationError
-if errors.As(err, &valErr) {
-    http.Error(w, valErr.Error(), http.StatusBadRequest)
-    return
-}
+async def transfer_funds(from_account: int, to_account: int, amount: float):
+    async with database_connection() as conn:
+        try:
+            await conn.execute("UPDATE accounts SET balance = balance - ? WHERE id = ?", amount, from_account)
+            await conn.execute("UPDATE accounts SET balance = balance + ? WHERE id = ?", amount, to_account)
+            await conn.commit()
+        except InsufficientBalanceError:
+            await conn.rollback()
+            raise
 ```
 
-## Structured Logging
+## Error Logging (Backend)
 
-### JSON Log Format
+### Structured JSON Logging
+
+```python
+# backend/app/core/logger.py
+import logging
+import json
+from datetime import datetime
+from typing import Any
+from contextvars import ContextVar
+import traceback
+
+# Correlation ID for request tracing
+correlation_id_var: ContextVar[str] = ContextVar("correlation_id", default="")
+
+
+class StructuredLogger:
+    """Structured JSON logger with correlation IDs."""
+
+    def __init__(self, name: str):
+        self.logger = logging.getLogger(name)
+        self.logger.setLevel(logging.INFO)
+
+    def _log_record(self, level: str, message: str, extra: dict[str, Any] = None):
+        record = {
+            "timestamp": datetime.utcnow().isoformat(),
+            "level": level,
+            "message": message,
+            "correlation_id": correlation_id_var.get(),
+            **(extra or {}),
+        }
+        return json.dumps(record)
+
+    def info(self, message: str, **extra):
+        self.logger.info(self._log_record("INFO", message, extra))
+
+    def warning(self, message: str, **extra):
+        self.logger.warning(self._log_record("WARNING", message, extra))
+
+    def error(self, message: str, error: Exception = None, **extra):
+        log_extra = {**extra}
+        if error:
+            log_extra["error_type"] = type(error).__name__
+            log_extra["error_message"] = str(error)
+            log_extra["stack_trace"] = traceback.format_exc()
+        self.logger.error(self._log_record("ERROR", message, log_extra))
+
+
+logger = StructuredLogger(__name__)
+```
+
+### Using the Logger
+
+```python
+from app.core.logger import logger, correlation_id_var
+
+
+async def get_student(student_id: int) -> Student:
+    logger.info("Fetching student", student_id=student_id)
+
+    try:
+        student = await db.get_student(student_id)
+        logger.info("Student fetched successfully", student_id=student_id, has_fees=bool(student.fees))
+        return student
+    except StudentNotFoundError:
+        logger.warning("Student not found", student_id=student_id)
+        raise
+    except Exception as e:
+        logger.error("Unexpected error fetching student", error=e, student_id=student_id)
+        raise  # Re-raise for handler
+```
+
+## Global Error Handler (Backend)
+
+```python
+# backend/app/middleware/error_handler.py
+from fastapi import Request, FastAPI
+from fastapi.responses import JSONResponse
+from app.errors.exceptions import AppException
+from app.core.logger import logger
+
+
+def setup_error_handlers(app: FastAPI):
+    @app.exception_handler(AppException)
+    async def app_exception_handler(request: Request, exc: AppException):
+        logger.error(
+            "App exception occurred",
+            error=exc,
+            status_code=exc.status_code,
+            path=request.url.path,
+        )
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={
+                "error": {
+                    "code": exc.__class__.__name__,
+                    "message": exc.user_message,
+                    "internal": exc.detail,  # Only in debug mode
+                }
+            },
+            headers=exc.headers,
+        )
+
+    @app.exception_handler(Exception)
+    async def general_exception_handler(request: Request, exc: Exception):
+        logger.error(
+            "Unhandled exception",
+            error=exc,
+            path=request.url.path,
+            method=request.method,
+        )
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "Something went wrong. Please try again later.",
+                }
+            },
+        )
+```
+
+## Frontend Error Handling
+
+### Error Types
 
 ```typescript
-// WRONG: Unstructured string logs
-console.log(`User ${userId} created order ${orderId} at ${new Date()}`);
-// Impossible to parse, filter, or aggregate
-
-// CORRECT: Structured JSON logs
-import pino from "pino";
-
-const logger = pino({
-  level: process.env.LOG_LEVEL || "info",
-  formatters: {
-    level: (label) => ({ level: label }),
-  },
-  redact: ["req.headers.authorization", "password", "ssn"],
-});
-logger.info({
-  event: "order_created",
-  userId: "123",
-  orderId: "456",
-  amount: 99.99,
-  currency: "USD",
-});
-// Output: {"level":"info","event":"order_created","userId":"123","orderId":"456",...}
-```
-
-### Correlation IDs
-
-```typescript
-// Middleware to propagate correlation ID across requests
-import { randomUUID } from "crypto";
-import { AsyncLocalStorage } from "async_hooks";
-
-const asyncStorage = new AsyncLocalStorage<{ correlationId: string }>();
-
-app.use((req, res, next) => {
-  const correlationId =
-    (req.headers["x-correlation-id"] as string) || randomUUID();
-  res.setHeader("x-correlation-id", correlationId);
-
-  asyncStorage.run({ correlationId }, () => next());
-});
-
-// Logger automatically includes correlation ID
-function getLogger() {
-  const store = asyncStorage.getStore();
-  return logger.child({ correlationId: store?.correlationId });
-}
-
-// Usage in any handler or service
-const log = getLogger();
-log.info({ event: "payment_processed", amount: 50 });
-// Output includes correlationId automatically
-```
-
-### Log Levels Guide
-
-```
-TRACE: Extremely detailed (loop iterations, variable values)  -- dev only
-DEBUG: Diagnostic info (function entry/exit, state changes)   -- dev/staging
-INFO:  Normal operations (request handled, job completed)     -- all envs
-WARN:  Unexpected but recoverable (retry succeeded, fallback used)
-ERROR: Operation failed (unhandled exception, service down)
-FATAL: Application cannot continue (missing config, DB unreachable)
-
-Production default: INFO
-Never log: passwords, tokens, PII, credit cards, full request bodies
-```
-
-## Error Boundaries and Graceful Degradation
-
-### React Error Boundary
-
-```tsx
-class ErrorBoundary extends React.Component<
-  { fallback: React.ReactNode; children: React.ReactNode },
-  { hasError: boolean; error?: Error }
-> {
-  state = { hasError: false, error: undefined };
-  static getDerivedStateFromError(error: Error) {
-    return { hasError: true, error };
-  }
-  componentDidCatch(error: Error, info: React.ErrorInfo) {
-    logger.error("React error boundary caught error", {
-      error: error.message,
-      componentStack: info.componentStack,
-    });
-  }
-  render() {
-    return this.state.hasError ? this.props.fallback : this.props.children;
-  }
-}
-
-// Usage: wrap sections independently
-<ErrorBoundary fallback={<p>Dashboard unavailable</p>}>
-  <Dashboard />
-</ErrorBoundary>
-<ErrorBoundary fallback={<p>Sidebar unavailable</p>}>
-  <Sidebar />
-</ErrorBoundary>
-```
-
-### Service Degradation
-
-```typescript
-// Graceful degradation: serve stale data when service is down
-async function getProductRecommendations(userId: string) {
-  try {
-    return await recommendationService.get(userId);
-  } catch (error) {
-    logger.warn("Recommendation service unavailable, using fallback", {
-      userId,
-      error: error.message,
-    });
-    return getCachedRecommendations(userId) || getDefaultRecommendations();
-  }
-}
-```
-
-## Retry Patterns
-
-### Exponential Backoff
-
-```typescript
-async function withRetry<T>(
-  fn: () => Promise<T>,
-  options: {
-    maxRetries?: number;
-    baseDelay?: number;
-    maxDelay?: number;
-    retryOn?: (error: Error) => boolean;
-  } = {},
-): Promise<T> {
-  const {
-    maxRetries = 3,
-    baseDelay = 1000,
-    maxDelay = 30000,
-    retryOn,
-  } = options;
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      return await fn();
-    } catch (error) {
-      if (attempt === maxRetries) throw error;
-      if (retryOn && !retryOn(error as Error)) throw error;
-
-      const delay = Math.min(
-        baseDelay * 2 ** attempt + Math.random() * 1000,
-        maxDelay,
-      );
-      logger.warn("Retrying operation", { attempt: attempt + 1, delay });
-      await new Promise((r) => setTimeout(r, delay));
-    }
-  }
-  throw new Error("Unreachable");
-}
-
-// Usage: retry only on transient errors
-const data = await withRetry(() => fetch("https://api.example.com/data"), {
-  retryOn: (err) => err.message.includes("ECONNRESET"),
-});
-```
-
-### Circuit Breaker
-
-```typescript
-class CircuitBreaker {
-  private failures = 0;
-  private lastFailure = 0;
-  private state: "closed" | "open" | "half-open" = "closed";
-
-  constructor(
-    private threshold: number = 5,
-    private resetTimeout: number = 60000,
-  ) {}
-
-  async execute<T>(fn: () => Promise<T>, fallback?: () => T): Promise<T> {
-    if (this.state === "open") {
-      if (Date.now() - this.lastFailure > this.resetTimeout) {
-        this.state = "half-open";
-      } else {
-        if (fallback) return fallback();
-        throw new Error("Circuit breaker is open");
-      }
-    }
-
-    try {
-      const result = await fn();
-      this.failures = 0;
-      this.state = "closed";
-      return result;
-    } catch (error) {
-      this.failures++;
-      this.lastFailure = Date.now();
-      if (this.failures >= this.threshold) this.state = "open";
-      if (fallback) return fallback();
-      throw error;
-    }
-  }
-}
-
-// Usage: trips open after 5 failures, resets after 30s
-const paymentCircuit = new CircuitBreaker(5, 30000);
-const result = await paymentCircuit.execute(
-  () => paymentService.charge(amount),
-  () => ({ queued: true, message: "Payment will be processed shortly" }),
-);
-```
-
-## Error Tracking Integration
-
-### Sentry Setup
-
-```typescript
-import * as Sentry from "@sentry/node";
-
-Sentry.init({
-  dsn: process.env.SENTRY_DSN,
-  environment: process.env.NODE_ENV,
-  tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
-  beforeSend(event) {
-    // Scrub sensitive data
-    if (event.request?.headers) delete event.request.headers["authorization"];
-    return event;
-  },
-});
-
-Sentry.setUser({ id: user.id, email: user.email });
-Sentry.captureException(error, {
-  tags: { subsystem: "payment", provider: "stripe" },
-  extra: { orderId, amount },
-});
-```
-
-## User-Facing vs Internal Errors
-
-```typescript
-// Map internal errors to user-friendly messages
-const USER_MESSAGES: Record<string, string> = {
-  VALIDATION_ERROR: "Please check your input and try again.",
-  NOT_FOUND: "The requested resource could not be found.",
-  RATE_LIMITED: "Too many requests. Please wait a moment.",
-  PAYMENT_FAILED: "Payment could not be processed. Please try another method.",
-  INTERNAL_ERROR: "Something went wrong. Please try again later.",
-};
-
-function toUserResponse(error: AppError) {
-  return {
-    error: {
-      code: error.code,
-      message: USER_MESSAGES[error.code] || USER_MESSAGES["INTERNAL_ERROR"],
-    },
+// frontend/lib/errors.ts
+export interface ApiError {
+  error: {
+    code: string;
+    message: string;
+    internal?: string;
   };
 }
 
-// WRONG: Exposing internal details to users
-res.status(500).json({
-  error: 'QueryFailedError: relation "users" does not exist',
-  stack: error.stack,
-});
+export class ApiResponseError extends Error {
+  code: string;
+  userMessage: string;
+  internalMessage?: string;
+  statusCode: number;
 
-// CORRECT: Generic message to user, full details in logs
-logger.error("Database query failed", {
-  error: error.message,
-  stack: error.stack,
-  query,
-});
-res.status(500).json(toUserResponse(new AppError("DB error", 500)));
+  constructor(error: ApiError["error"], statusCode: number) {
+    super(error.message);
+    this.name = "ApiResponseError";
+    this.code = error.code;
+    this.userMessage = error.message;
+    this.internalMessage = error.internal;
+    this.statusCode = statusCode;
+  }
+}
 ```
 
-## Common Anti-Patterns Summary
+### Error Mapper
 
+```typescript
+// frontend/lib/errorMapper.ts
+import { ApiResponseError } from "./errors";
+
+export function getUserMessage(error: unknown): string {
+  if (error instanceof ApiResponseError) {
+    return error.userMessage;
+  }
+
+  if (error instanceof Error) {
+    // Network errors
+    if (error.name === "TypeError" && error.message.includes("fetch")) {
+      return "Unable to connect to server. Please check your internet connection.";
+    }
+
+    // Unexpected errors
+    return "An unexpected error occurred. Please try again.";
+  }
+
+  return "An unknown error occurred.";
+}
+
+export function getErrorTitle(error: unknown): string {
+  if (error instanceof ApiResponseError) {
+    switch (error.statusCode) {
+      case 401:
+        return "Authentication Required";
+      case 403:
+        return "Access Denied";
+      case 404:
+        return "Not Found";
+      case 409:
+        return "Conflict";
+      case 422:
+        return "Validation Error";
+      case 429:
+        return "Rate Limited";
+      case 500:
+        return "Server Error";
+      default:
+        return "Error";
+    }
+  }
+
+  return "Error";
+}
 ```
-AVOID                              DO INSTEAD
--------------------------------------------------------------------
-Empty catch blocks                 Log and handle or re-throw
-Bare `except:` in Python           Catch specific exceptions
-console.log for production         Structured logger (pino, winston)
-Logging passwords/tokens           Redact sensitive fields
-Retry without backoff              Exponential backoff with jitter
-Retry on all errors                Only retry transient/network errors
-No circuit breaker                 Circuit breaker for external calls
-Exposing stack traces to users     Generic user messages, detailed logs
-No correlation IDs                 Propagate correlation ID across services
-One giant try/catch                Granular error handling per operation
-Logging inside tight loops         Log summaries/aggregates
-No error boundaries in React       Wrap independent sections separately
+
+### API Client with Error Handling
+
+```typescript
+// frontend/lib/api.ts
+import { ApiResponseError } from "./errors";
+import { getUserMessage } from "./errorMapper";
+
+interface RequestOptions extends RequestInit {
+  params?: Record<string, string>;
+}
+
+class ApiClient {
+  private baseUrl: string;
+
+  constructor(baseUrl: string = "/api/v1") {
+    this.baseUrl = baseUrl;
+  }
+
+  async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
+    const url = new URL(`${this.baseUrl}${endpoint}`, window.location.origin);
+
+    if (options.params) {
+      Object.entries(options.params).forEach(([key, value]) => {
+        url.searchParams.append(key, value);
+      });
+    }
+
+    const response = await fetch(url.toString(), {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+
+      throw new ApiResponseError(
+        {
+          code: errorData.error?.code || "HTTP_ERROR",
+          message: errorData.error?.message || response.statusText,
+          internal: errorData.error?.internal,
+        },
+        response.status
+      );
+    }
+
+    if (response.status === 204) {
+      return undefined as T;
+    }
+
+    return response.json() as Promise<T>;
+  }
+
+  get<T>(endpoint: string, params?: Record<string, string>): Promise<T> {
+    return this.request<T>(endpoint, { method: "GET", params });
+  }
+
+  post<T>(endpoint: string, body: unknown): Promise<T> {
+    return this.request<T>(endpoint, { method: "POST", body: JSON.stringify(body) });
+  }
+
+  put<T>(endpoint: string, body: unknown): Promise<T> {
+    return this.request<T>(endpoint, { method: "PUT", body: JSON.stringify(body) });
+  }
+
+  delete<T>(endpoint: string): Promise<T> {
+    return this.request<T>(endpoint, { method: "DELETE" });
+  }
+}
+
+export const api = new ApiClient();
 ```
+
+### React Query with Error Handling
+
+```typescript
+// frontend/hooks/useApi.ts
+import { useQuery, useMutation, UseQueryOptions } from "@tanstack/react-query";
+import { api } from "../lib/api";
+import { ApiResponseError } from "../lib/errors";
+import { toast } from "sonner";
+
+export function useFetch<T>(
+  key: string[],
+  endpoint: string,
+  options?: Partial<UseQueryOptions<T>>
+) {
+  return useQuery({
+    queryKey: key,
+    queryFn: () => api.get<T>(endpoint),
+    ...options,
+    onError: (error: unknown) => {
+      if (error instanceof ApiResponseError) {
+        toast.error(error.userMessage);
+      } else {
+        toast.error("Failed to fetch data");
+      }
+    },
+  });
+}
+
+export function useMutationWithError<T, V>(
+  mutationFn: (variables: V) => Promise<T>,
+  successMessage: string,
+  onSuccess?: (data: T) => void
+) {
+  return useMutation({
+    mutationFn,
+    onSuccess: (data) => {
+      toast.success(successMessage);
+      onSuccess?.(data);
+    },
+    onError: (error: unknown) => {
+      if (error instanceof ApiResponseError) {
+        toast.error(error.userMessage);
+      } else {
+        toast.error("An error occurred. Please try again.");
+      }
+    },
+  });
+}
+```
+
+## Quality Checklist
+
+- [ ] **No swallowed errors**: Every exception is either logged or surfaced to user
+- [ ] **Internal vs user message separation**: Technical details in `detail`, user-friendly in `user_message`
+- [ ] **4xx vs 5xx correctly mapped**: Client errors (4xx) vs server errors (5xx)
+- [ ] **No PII in logs**: Never log passwords, tokens, personal data
+- [ ] **Correlation IDs**: Track errors across services with request IDs
+- [ ] **Consistent error format**: Same structure for all API errors
+
+## Error Response Format
+
+```json
+{
+  "error": {
+    "code": "STUDENT_NOT_FOUND",
+    "message": "Student not found. Please check and try again.",
+    "internal": "Student with id '12345' not found"
+  }
+}
+```
+
+## Integration Points
+
+| Skill | Integration |
+|-------|-------------|
+| `@fastapi-app` | Global exception handlers in main.py |
+| `@api-route-design` | Proper status codes in responses |
+| `@jwt-auth` | UnauthorizedError for auth failures |
+| `@db-migration` | Handle migration errors gracefully |
+| `@env-config` | Configuration validation errors |

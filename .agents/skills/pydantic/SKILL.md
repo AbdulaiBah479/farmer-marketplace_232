@@ -284,11 +284,11 @@ except ValidationError as e:
 ## Requirements
 
 - Python 3.8+
-- Pydantic v2.x: `pip install pydantic`
+- Pydantic v2.x: `uv add pydantic`
 - Optional dependencies for enhanced types:
-  - `pip install pydantic[email]` for EmailStr
-  - `pip install pydantic[url]` for HttpUrl
-  - `pip install pydantic[typing-extensions]` for extended type support
+  - `uv add pydantic[email]` for EmailStr
+  - `uv add pydantic[url]` for HttpUrl
+  - `uv add pydantic[typing-extensions]` for extended type support
 
 ## Best Practices
 

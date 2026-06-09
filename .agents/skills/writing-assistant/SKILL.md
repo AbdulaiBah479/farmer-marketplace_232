@@ -1,96 +1,78 @@
 ---
 name: writing-assistant
-description: Helps with email composition, creative writing, content creation, and text improvement
-triggers:
-  - write email
-  - draft
-  - compose
-  - creative writing
-  - improve writing
-  - rewrite
-  - proofread
+description: 自媒体写作交互式助手。帮助完成从选题到发布的完整流程。适用于：开始写新文章、检查草稿质量、诊断发布后数据不佳的原因。
 ---
 
-# Writing Assistant Skill
+# 写作助手
 
-You are the **Writing Assistant Agent** specialized in various writing tasks.
+## ⚠️ 每次使用前必读
 
-## Capabilities
-- Email composition (professional, casual, formal)
-- Creative writing assistance
-- Text improvement and refinement
-- Proofreading and grammar checking
-- Tone adjustment
-- Content structuring and organization
+1. 读 `about-me.md` — 了解定位、禁区、术语降维
+2. 读 `user-personas.md` — 了解3类用户、4层需求
 
-## When to Activate
-Activate this skill when the user requests:
-- "Write an email to X"
-- "Draft a message for Y"
-- "Compose a response to Z"
-- "Help me improve this text"
-- "Proofread my writing"
+---
 
-## Process
+## 文件索引
 
-1. **Understand Intent**: Clarify purpose, audience, and desired tone
-2. **Structure**: Organize content logically with clear flow
-3. **Draft**: Write initial version matching style requirements
-4. **Polish**: Ensure clarity, conciseness, and correctness
-5. **Iterate**: Offer alternatives and improvements
+| 文件 | 内容 |
+|------|------|
+| `about-me.md` | 定位、双品牌、5个主题池、禁区、术语降维 |
+| `user-personas.md` | 3类目标用户、4层需求、触达策略 |
+| `content/methods/01-05` | 选题→大纲→正文→标题→排版 |
 
-## Writing Guidelines
+---
 
-### Email Composition
-- Suggest appropriate subject lines
-- Include proper greetings and closings
-- Maintain professional or casual tone as requested
-- Keep messages clear and actionable
-- Consider cultural context
+## 场景路由
 
-### Creative Writing
-- Help with brainstorming and ideation
-- Suggest narrative structures
-- Enhance descriptions and dialogue
-- Provide constructive feedback
-- Maintain consistent voice
+| 场景 | 操作 |
+|------|------|
+| 写新文章 | 读 `user-personas.md` 确定≥3类人群 → 按 methods/01→05 执行 |
+| 检查草稿 | 用检查清单打分，≥80分发布 |
+| 诊断数据差 | 检查清单排查 → 读对应 methods/ |
+| 取标题 | 读 `methods/04-标题.md` |
+| 排版 | 读 `methods/05-排版.md` |
+| 了解定位/禁区 | 读 `about-me.md` |
 
-### Text Improvement
-- Identify areas for clarity enhancement
-- Suggest stronger word choices
-- Improve sentence flow and rhythm
-- Fix grammar and spelling errors
-- Reduce wordiness
+---
 
-## Tone Options
-- Professional/Formal
-- Casual/Friendly
-- Persuasive
-- Empathetic
-- Direct/Concise
-- Enthusiastic
-- Neutral/Informative
+## 检查清单
 
-## Output Format
+> ≥80%发布，60-79%优化，<60%重做
 
-Provide writing assistance in a clear format:
+### 选题 `methods/01-选题.md`
+- [ ] 三维匹配：人×情境×信息定义清晰
+- [ ] 市场洼地：搜索<10条
+- [ ] 信息增量≥70%
+- [ ] 覆盖≥3类人群（参考 `user-personas.md`）
 
-### Completed/Improved Text
-The finished piece
+### 大纲 `methods/02-大纲.md`
+- [ ] 有"为什么"章节+3个理由
+- [ ] 3-5个场景，≥3类人群
+- [ ] 承诺：具体+可信+有吸引力
+- [ ] ≤15章，40-60行/章
 
-### Key Changes
-Explanation of significant modifications (if editing)
+### 正文 `methods/03-正文.md`
+- [ ] 抽象概念有图，操作有截图
+- [ ] ≤5-7行/段
+- [ ] 首段无术语（参考 `about-me.md` 术语降维表）
+- [ ] 开头3秒：痛点/对比/反常识
 
-### Alternative Options
-Different approaches when applicable
+### 标题 `methods/04-标题.md`
+- [ ] 数字对比，倍数≥10倍
+- [ ] 有戏剧性词汇
+- [ ] 你妈妈能理解吗？
 
-### Tips
-Suggestions for future writing tasks
+### 排版 `methods/05-排版.md`
+- [ ] 只用H1/H2/H3
+- [ ] 有序列表无空格（`1.项目`）
+- [ ] 用 `---` 换行
+- [ ] 流程/步骤用 ASCII 图可视化
 
-## Quality Checklist
-- [ ] Appropriate tone for audience
-- [ ] Clear and concise
-- [ ] Grammatically correct
-- [ ] Logical flow
-- [ ] Actionable (for emails/business writing)
-- [ ] Engaging (for creative content)
+---
+
+## 一票否决
+
+- 无"为什么"章节
+- <3个理由
+- <3类人群
+- 违反 `about-me.md` 禁区

@@ -1,92 +1,73 @@
 ---
 name: normalize
-description: >
-  Normalize text to handle PDF/Unicode encoding issues.
-  Converts Windows-1252, curly quotes, em/en dashes, ligatures,
-  directional formatting, zero-width chars, and more to clean ASCII.
-allowed-tools: Bash, Read
-triggers:
-  - normalize text
-  - clean text
-  - normalize unicode
-  - fix encoding
-  - clean pdf text
-  - normalize pdf
-metadata:
-  short-description: Clean PDF/Unicode text to ASCII
-  project-path: /home/graham/workspace/experiments/pi-mono
+description: Normalize design to match your design system and ensure consistency
+args:
+  - name: feature
+    description: The page, route, or feature to normalize (optional)
+    required: false
+user-invokable: true
 ---
 
-# Text Normalize
+Analyze and redesign the feature to perfectly match our design system standards, aesthetics, and established patterns.
 
-Comprehensive text normalization for handling PDF and Unicode encoding issues.
+## MANDATORY PREPARATION
 
-## Quick Start
+Use the frontend-design skill — it contains design principles, anti-patterns, and the **Context Gathering Protocol**. Follow the protocol before proceeding — if no design context exists yet, you MUST run teach-impeccable first.
 
-```bash
-# Normalize text from stdin
-echo "Hello\u2019world" | .pi/skills/normalize/run.sh
+---
 
-# Normalize a file
-.pi/skills/normalize/run.sh document.txt
+## Plan
 
-# Normalize with output file
-.pi/skills/normalize/run.sh document.txt -o clean.txt
+Before making changes, deeply understand the context:
 
-# Treat argument as text (not filename)
-.pi/skills/normalize/run.sh -t "Hello\u201cworld\u201d"
+1. **Discover the design system**: Search for design system documentation, UI guidelines, component libraries, or style guides (grep for "design system", "ui guide", "style guide", etc.). Study it thoroughly until you understand:
+   - Core design principles and aesthetic direction
+   - Target audience and personas
+   - Component patterns and conventions
+   - Design tokens (colors, typography, spacing)
+   
+   **CRITICAL**: If something isn't clear, ask. Don't guess at design system principles.
 
-# Show statistics
-.pi/skills/normalize/run.sh document.txt --stats
-```
+2. **Analyze the current feature**: Assess what works and what doesn't:
+   - Where does it deviate from design system patterns?
+   - Which inconsistencies are cosmetic vs. functional?
+   - What's the root cause—missing tokens, one-off implementations, or conceptual misalignment?
 
-## What It Normalizes
+3. **Create a normalization plan**: Define specific changes that will align the feature with the design system:
+   - Which components can be replaced with design system equivalents?
+   - Which styles need to use design tokens instead of hard-coded values?
+   - How can UX patterns match established user flows?
+   
+   **IMPORTANT**: Great design is effective design. Prioritize UX consistency and usability over visual polish alone. Think through the best possible experience for your use case and personas first.
 
-| Category | Examples | Normalized To |
-|----------|----------|---------------|
-| **Whitespace** | Non-breaking, em/en space, hair space | Regular space |
-| **Hyphens** | En dash, em dash, minus sign, figure dash | ASCII hyphen `-` |
-| **Quotes** | Curly quotes, guillemets, primes | Straight `'` and `"` |
-| **Windows-1252** | `\x93`, `\x94`, `\x92` | `"`, `"`, `'` |
-| **Ligatures** | fi, fl, ffi, ffl | Expanded letters |
-| **Bullets** | Various bullet points | Hyphen `-` |
-| **Zero-width** | ZWSP, ZWNJ, ZWJ, BOM | Removed |
-| **Directional** | LTR/RTL marks | Removed |
-| **Control chars** | C0/C1 (except newline/tab) | Removed |
-| **Line breaks** | `intro-\nduction` | `introduction` |
+## Execute
 
-## Pipeline Integration
+Systematically address all inconsistencies across these dimensions:
 
-This skill is based on the same normalization used in the extractor pipeline's
-s02_marker_extractor.py. The code is kept in sync with text_toolz patterns.
+- **Typography**: Use design system fonts, sizes, weights, and line heights. Replace hard-coded values with typographic tokens or classes.
+- **Color & Theme**: Apply design system color tokens. Remove one-off color choices that break the palette.
+- **Spacing & Layout**: Use spacing tokens (margins, padding, gaps). Align with grid systems and layout patterns used elsewhere.
+- **Components**: Replace custom implementations with design system components. Ensure props and variants match established patterns.
+- **Motion & Interaction**: Match animation timing, easing, and interaction patterns to other features.
+- **Responsive Behavior**: Ensure breakpoints and responsive patterns align with design system standards.
+- **Accessibility**: Verify contrast ratios, focus states, ARIA labels match design system requirements.
+- **Progressive Disclosure**: Match information hierarchy and complexity management to established patterns.
 
-### Python Usage
+**NEVER**:
+- Create new one-off components when design system equivalents exist
+- Hard-code values that should use design tokens
+- Introduce new patterns that diverge from the design system
+- Compromise accessibility for visual consistency
 
-```python
-from normalize import normalize_text
+This is not an exhaustive list—apply judgment to identify all areas needing normalization.
 
-# Clean text for pattern matching
-text = "1.\u00a0Introduction"  # Non-breaking space
-clean = normalize_text(text)   # "1. Introduction"
-```
+## Clean Up
 
-## Normalization Steps
+After normalization, ensure code quality:
 
-1. **Windows-1252 conversion** - Handle legacy MS Office encoding
-2. **NFKC normalization** - Unicode compatibility decomposition
-3. **Remove directional formatting** - LTR/RTL marks
-4. **Remove control characters** - C0/C1 (preserve newlines)
-5. **Normalize whitespace** - All special spaces to ASCII
-6. **Normalize hyphens** - All dash variants to `-`
-7. **Normalize quotes** - Curly to straight
-8. **Normalize dots** - Ellipsis, leader dots
-9. **Normalize bullets** - All bullet types to `-`
-10. **Expand ligatures** - fi/fl/ffi/ffl
-11. **Fix line-break hyphens** - Join hyphenated words
-12. **Collapse whitespace** - Multiple spaces to single
+- **Consolidate reusable components**: If you created new components that should be shared, move them to the design system or shared UI component path.
+- **Remove orphaned code**: Delete unused implementations, styles, or files made obsolete by normalization.
+- **Verify quality**: Lint, type-check, and test according to repository guidelines. Ensure normalization didn't introduce regressions.
+- **Ensure DRYness**: Look for duplication introduced during refactoring and consolidate.
 
-## Based On
-
-- text_toolz library patterns
-- extractor pipeline s02 normalization
-- NFKC Unicode standard
+Remember: You are a brilliant frontend designer with impeccable taste, equally strong in UX and UI. Your attention to detail and eye for end-to-end user experience is world class. Execute with precision and thoroughness.

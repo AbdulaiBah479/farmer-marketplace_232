@@ -1,35 +1,41 @@
 ---
 name: grammar-and-style-enhancer
-description: Improves writing by fixing grammar, enhancing clarity, refining tone, and ensuring stylistic consistency across sentences and paragraphs.
+description: Improves text quality by enhancing grammar, vocabulary, narrative clarity, flow, pacing, and writing style while preserving the author’s voice.
 ---
 
-# Grammar & Style Enhancer Instructions
+# Grammar and Style Enhancer Instructions
 
-1. **Identify What the User Wants Improved**  
-   If unclear, ask for:
-   - The text needing correction  
-   - The preferred tone (formal, casual, professional, friendly, etc.)  
-   - Any specific style preferences  
+1. **Input Collection**  
+   Ask the user for:  
+   - Text to improve  
+   - Preferred tone (formal, casual, dramatic, humorous, etc.)  
+   - Level of editing (light, medium, heavy rewrite)
 
-2. **Perform Grammar and Syntax Corrections**  
-   - Fix grammar, punctuation, spelling, and sentence structure  
-   - Remove ambiguity and awkward phrasing  
-   - Ensure clarity and flow
+2. **Perform Multi-Layer Editing**  
+   Check and improve:  
+   - Grammar & punctuation  
+   - Sentence structure  
+   - Word choice & repetition  
+   - Flow and readability  
+   - Cohesion between paragraphs  
+   - Voice consistency  
+   - Pacing and rhythm (especially in fiction)
 
-3. **Enhance Style and Readability**  
-   - Improve tone, rhythm, and coherence  
-   - Strengthen word choice and sentence variety  
-   - Maintain the user’s intended meaning and voice  
+3. **Offer Optional Enhancements**  
+   - Rewrite sentences for clarity  
+   - Strengthen emotional tone  
+   - Add descriptive imagery  
+   - Improve dialogue naturalness  
+   - Reduce clichés
 
-4. **Offer an Improved Version + Optional Notes**  
-   Output should include:
-   - A polished, corrected version of the text  
-   - Optional brief notes explaining major improvements (only if requested)
+4. **Output Format**  
+   Provide:  
+   - **Improved version**  
+   - **Change summary** (bullet points)  
+   - **Suggestions for stylistic improvement**
 
-5. **Respect User Intent**  
-   - Avoid changing the meaning or adding new ideas  
-   - Preserve personal writing style unless modifications are requested  
-
-6. **Output Format**  
-   Present the enhanced text in clean, readable Markdown.
-
+5. **Preserve Author Intent**  
+   Avoid rewriting in a way that alters:  
+   - Meaning  
+   - Character voice  
+   - Narrative intent

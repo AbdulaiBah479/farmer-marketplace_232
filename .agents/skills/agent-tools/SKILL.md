@@ -1,22 +1,10 @@
 ---
 name: agent-tools
-description: 'Run 150+ AI apps via inference.sh CLI - image generation, video creation,
-  LLMs, search, 3D, Twitter automation. Models: FLUX, Veo, Gemini, Grok, Claude, Seedance,
-  OmniHuman, Tavily, Exa, OpenRouter, and many more. Use when running AI apps, generating
-  images/videos, calling LLMs, web search...'
+description: "Run 150+ AI apps via inference.sh CLI - image generation, video creation, LLMs, search, 3D, Twitter automation. Models: FLUX, Veo, Gemini, Grok, Claude, Seedance, OmniHuman, Tavily, Exa, OpenRouter, and many more. Use when running AI apps, generating images/videos, calling LLMs, web search, or automating Twitter. Triggers: inference.sh, infsh, ai model, run ai, serverless ai, ai api, flux, veo, claude api, image generation, video generation, openrouter, tavily, exa search, twitter api, grok"
 allowed-tools: Bash(infsh *)
-risk: safe
-source: community
-license: MIT
 ---
 
-
-
 # [inference.sh](https://inference.sh)
-
-## When to Use
-
-Use this skill as needed to perform the specified automation task.
 
 Run 150+ AI apps in the cloud with a simple CLI. No GPU required.
 

@@ -1,200 +1,432 @@
 ---
 name: spec-driven-development
-description: Creates specs before coding. Use when starting a new project, feature, or significant change and no specification exists yet. Use when requirements are unclear, ambiguous, or only exist as a vague idea.
+description: Spec-Driven Development (SDD) methodology based on GitHub's SpecKit.
+  Use for structured AI-assisted development with constitutional governance, phased
+  workflows, and multi-agent coordination. Implements 7-phase process from constitution
+  to implementation.
+author: Joseph OBrien
+status: unpublished
+updated: '2025-12-23'
+version: 1.0.1
+tag: skill
+type: skill
 ---
 
-# Spec-Driven Development
+# Spec-Driven Development (SDD)
 
-## Overview
+This skill implements GitHub's SpecKit methodology for structured, AI-assisted software development. SpecKit transforms
+specifications into executable artifacts through a systematic, phase-based approach with built-in quality gates and
+multi-agent coordination.
 
-Write a structured specification before writing any code. The spec is the shared source of truth between you and the human engineer — it defines what we're building, why, and how we'll know it's done. Code without a spec is guessing.
+## Core Philosophy
 
-## When to Use
+**"Specifications become executable, directly generating working implementations rather than just guiding them."**
 
-- Starting a new project or feature
-- Requirements are ambiguous or incomplete
-- The change touches multiple files or modules
-- You're about to make an architectural decision
-- The task would take more than 30 minutes to implement
+## When to Use This Skill
 
-**When NOT to use:** Single-line fixes, typo corrections, or changes where requirements are unambiguous and self-contained.
+- Starting new projects that require structured development
+- Coordinating multiple AI agents or developers on complex features
+- Ensuring consistent quality through constitutional governance
+- Breaking down complex features into manageable, parallel work
+- Preventing premature implementation before clear specifications
+- Enterprise projects with strict governance requirements
+- Teams needing real-time visibility across multiple features
 
-## The Gated Workflow
+## The 7-Phase Workflow
 
-Spec-driven development has four phases. Do not advance to the next phase until the current one is validated.
+### Phase 0: Project Initialization
+
+**Purpose:** Create project structure and configure development environment
+
+**Artifacts:**
+
+- `.specify/` directory structure
+- Git repository
+- Automation scripts
+- Templates
+
+**Key Actions:**
+
+- Set up directory structure
+- Initialize version control
+- Configure AI agent preferences
+- Generate script variants (bash/powershell)
+
+### Phase 1: Constitution
+
+**Purpose:** Establish project governance and development principles
+
+**Artifact:** `memory/constitution.md`
+
+**Core Principles:**
+
+1. **Library-First Principle:** Every feature starts as a standalone library
+2. **CLI Interface Mandate:** All libraries must have text-based interfaces
+3. **Test-First Imperative:** Tests must precede implementation
+4. **Simplicity and Anti-Abstraction:** Minimize complexity
+5. **Integration-First Testing:** Prioritize realistic testing environments
+
+**Versioning:** Semantic versioning (MAJOR.MINOR.PATCH)
+
+- MAJOR: Backward-incompatible governance changes
+- MINOR: New principles or material expansions
+- PATCH: Minor clarifications or refinements
+
+**Orchestration:** Interactive principle definition with validation across all artifacts
+
+### Phase 2: Specification
+
+**Purpose:** Create detailed feature specifications focused on WHAT and WHY, not HOW
+
+**Artifact:** `specs/[feature]/spec.md`
+
+**Required Sections:**
+
+- Feature branch name (2-4 words)
+- User scenarios (P1, P2, P3 prioritized)
+- Acceptance scenarios (Given/When/Then format)
+- Edge cases
+- Functional requirements (FR-XXX)
+- Key entities
+- Success criteria (measurable, technology-agnostic)
+
+**Key Constraints:**
+
+- Focus on business value, not implementation
+- Write for stakeholders, not developers
+- Maximum 3 clarification markers for critical unknowns
+- Each user story must be independently testable
+
+**Quality Gates:**
+
+- Content quality validation
+- Requirement completeness check
+- Feature readiness assessment
+- Success criteria measurability
+
+### Phase 3: Clarification
+
+**Purpose:** Systematically identify and resolve ambiguities in specifications
+
+**Artifact:** Updates `specs/[feature]/spec.md`
+
+**Clarification Dimensions:**
+
+- Functional scope
+- Data model
+- User experience (UX)
+- Non-functional attributes (performance, security, etc.)
+- Integration points
+
+**Key Constraints:**
+
+- Maximum 5 questions per session
+- Multiple-choice or short-answer format
+- Focus on high-impact, implementation-critical uncertainties
+- One question at a time for iterative refinement
+
+**Orchestration:** Interactive questioning workflow with incremental spec updates after each answer
+
+### Phase 4: Planning
+
+**Purpose:** Create technical implementation strategy and resolve technical unknowns
+
+**Sub-Phases:**
+
+**Phase 0 - Research:**
+
+- Identify and research technical unknowns
+- Output: `research.md` with all uncertainties resolved
+- **Gate:** ERROR on unresolved clarifications
+
+**Phase 1 - Design:**
+
+- Create data models and API contracts
+- Outputs: `data-model.md`, contract schemas, agent-specific context
+
+**Artifacts:**
+
+- `specs/[feature]/plan.md`
+- `specs/[feature]/research.md`
+- `specs/[feature]/data-model.md`
+- `specs/[feature]/contracts/`
+
+**Plan Sections:**
+
+- Feature summary
+- Technical context (language, dependencies, platform)
+- Project structure
+- Repository layout
+- Complexity tracking for non-standard approaches
+
+### Phase 5: Analysis
+
+**Purpose:** Validate cross-artifact consistency before implementation
+
+**Artifacts Analyzed:**
+
+- `specs/[feature]/spec.md`
+- `specs/[feature]/plan.md`
+- `specs/[feature]/tasks.md`
+
+**Detection Passes:**
+
+1. Duplications
+2. Ambiguities
+3. Underspecified items
+4. Constitution conflicts
+
+**Output:** Analysis report with severity-ranked findings (max 50 high-signal issues)
+
+**Key Constraints:**
+
+- Read-only operation (cannot modify files)
+- Must run after task breakdown
+- Prioritizes constitution principles
+
+### Phase 6: Task Breakdown
+
+**Purpose:** Generate actionable, dependency-ordered task list from plan
+
+**Artifact:** `specs/[feature]/tasks.md`
+
+**Task Structure:**
+
+- Checkbox for completion tracking
+- Sequential Task ID
+- Optional parallelization marker (`||`)
+- Story label (P1, P2, P3 when applicable)
+- Precise file path
+- Clear description
+
+**Phase Structure:**
+
+1. **Phase 1:** Project Setup
+2. **Phase 2:** Foundational Prerequisites (BLOCKING - must complete before user stories)
+3. **Phase 3+:** User Story Implementation (priority order: P1 → P2 → P3)
+4. **Final Phase:** Polish & Cross-Cutting Concerns
+
+**Key Principles:**
+
+- Tasks grouped by user story for independent implementation
+- Each story independently testable and deliverable
+- Clear dependency tracking
+- Explicit parallelization markers
+- No user story work until foundational phase complete
+
+### Phase 7: Implementation
+
+**Purpose:** Execute implementation phase-by-phase with built-in validation
+
+**8-Stage Process:**
+
+1. **Prerequisite Checking:** Validate project readiness
+2. **Checklist Validation:** Count completed/incomplete items, require confirmation if incomplete
+3. **Context Analysis:** Read required artifacts (tasks.md, plan.md) and optional ones
+4. **Project Setup:** Create/verify ignore files for detected technologies
+5. **Task Processing:** Parse tasks, extract phases, dependencies, execution flow
+6. **Phased Implementation:** Execute tasks phase-by-phase following TDD
+7. **Error Handling:** Report progress, handle failures, provide debugging context
+8. **Final Validation:** Confirm completion, validate implementation, check test coverage
+
+**Orchestration:** Systematic multi-stage execution with built-in checks and balances
+
+## Orchestration & Parallel Execution
+
+### Core Orchestration Philosophy
+
+**Sequential phase progression with parallel execution within phases where dependencies allow.**
+
+### Coordination Mechanisms
+
+#### 1. Phase-Based Gates
+
+- Each phase must complete and validate before next phase begins
+- Gates block on errors or unresolved issues
+- Implementation: Template validation, checklist requirements, constitution alignment checks
+
+#### 2. Dependency Tracking
+
+- Tasks marked with dependencies that must be resolved before execution
+- Foundational phase blocks all user story work
+- Tasks reference prerequisites explicitly
+
+#### 3. Parallelization Markers
+
+- Tasks explicitly marked for parallel execution when no dependencies exist
+- Optional `||` marker in task format
+- Indicates tasks can run concurrently
+
+#### 4. User Story Grouping
+
+- Tasks grouped by user story for independent, parallel implementation
+- Each user story is independently testable and deliverable
+- Enables multiple agents/developers to work simultaneously
+
+#### 5. Constitutional Consistency
+
+- All phases reference constitution to maintain consistent practices
+- Constitution loaded and validated across all commands
+- Ensures alignment across parallel work streams
+
+### Parallel Execution Patterns
+
+#### Pattern 1: User Story Parallelization
+
+After foundational phase completes, user stories (P1, P2, P3) can be implemented in parallel by different agents
+
+**Benefits:**
+
+- Independent testability
+- Incremental delivery
+- Reduced blocking
+- Scalable team coordination
+
+**Example:**
 
 ```
-SPECIFY ──→ PLAN ──→ TASKS ──→ IMPLEMENT
-   │          │        │          │
-   ▼          ▼        ▼          ▼
- Human      Human    Human      Human
- reviews    reviews  reviews    reviews
+Foundation: ✓ Project setup, database schema, auth framework
+
+Parallel Work:
+├─ Agent 1: P1 Story - User registration flow
+├─ Agent 2: P1 Story - User login flow
+└─ Agent 3: P2 Story - Profile management
 ```
 
-### Phase 1: Specify
+#### Pattern 2: Task-Level Parallelization
 
-Start with a high-level vision. Ask the human clarifying questions until requirements are concrete.
+Within a phase, tasks without dependencies can execute concurrently
 
-**Surface assumptions immediately.** Before writing any spec content, list what you're assuming:
-
-```
-ASSUMPTIONS I'M MAKING:
-1. This is a web application (not native mobile)
-2. Authentication uses session-based cookies (not JWT)
-3. The database is PostgreSQL (based on existing Prisma schema)
-4. We're targeting modern browsers only (no IE11)
-→ Correct me now or I'll proceed with these.
-```
-
-Don't silently fill in ambiguous requirements. The spec's entire purpose is to surface misunderstandings *before* code gets written — assumptions are the most dangerous form of misunderstanding.
-
-**Write a spec document covering these six core areas:**
-
-1. **Objective** — What are we building and why? Who is the user? What does success look like?
-
-2. **Commands** — Full executable commands with flags, not just tool names.
-   ```
-   Build: npm run build
-   Test: npm test -- --coverage
-   Lint: npm run lint --fix
-   Dev: npm run dev
-   ```
-
-3. **Project Structure** — Where source code lives, where tests go, where docs belong.
-   ```
-   src/           → Application source code
-   src/components → React components
-   src/lib        → Shared utilities
-   tests/         → Unit and integration tests
-   e2e/           → End-to-end tests
-   docs/          → Documentation
-   ```
-
-4. **Code Style** — One real code snippet showing your style beats three paragraphs describing it. Include naming conventions, formatting rules, and examples of good output.
-
-5. **Testing Strategy** — What framework, where tests live, coverage expectations, which test levels for which concerns.
-
-6. **Boundaries** — Three-tier system:
-   - **Always do:** Run tests before commits, follow naming conventions, validate inputs
-   - **Ask first:** Database schema changes, adding dependencies, changing CI config
-   - **Never do:** Commit secrets, edit vendor directories, remove failing tests without approval
-
-**Spec template:**
-
-```markdown
-# Spec: [Project/Feature Name]
-
-## Objective
-[What we're building and why. User stories or acceptance criteria.]
-
-## Tech Stack
-[Framework, language, key dependencies with versions]
-
-## Commands
-[Build, test, lint, dev — full commands]
-
-## Project Structure
-[Directory layout with descriptions]
-
-## Code Style
-[Example snippet + key conventions]
-
-## Testing Strategy
-[Framework, test locations, coverage requirements, test levels]
-
-## Boundaries
-- Always: [...]
-- Ask first: [...]
-- Never: [...]
-
-## Success Criteria
-[How we'll know this is done — specific, testable conditions]
-
-## Open Questions
-[Anything unresolved that needs human input]
-```
-
-**Reframe instructions as success criteria.** When receiving vague requirements, translate them into concrete conditions:
+**Example:**
 
 ```
-REQUIREMENT: "Make the dashboard faster"
-
-REFRAMED SUCCESS CRITERIA:
-- Dashboard LCP < 2.5s on 4G connection
-- Initial data load completes in < 500ms
-- No layout shift during load (CLS < 0.1)
-→ Are these the right targets?
+Phase 3: P1 User Registration
+├─ [ ] T3.1 || Create user model (tests/models/test_user.py)
+├─ [ ] T3.2 || Create registration endpoint (tests/api/test_register.py)
+└─ [ ] T3.3 || Create validation service (tests/services/test_validation.py)
 ```
 
-This lets you loop, retry, and problem-solve toward a clear goal rather than guessing what "faster" means.
+#### Pattern 3: Multi-Agent Coordination
 
-### Phase 2: Plan
+Different AI agents can work on different aspects using shared artifact format
 
-With the validated spec, generate a technical implementation plan:
+**Example:**
 
-1. Identify the major components and their dependencies
-2. Determine the implementation order (what must be built first)
-3. Note risks and mitigation strategies
-4. Identify what can be built in parallel vs. what must be sequential
-5. Define verification checkpoints between phases
-
-The plan should be reviewable: the human should be able to read it and say "yes, that's the right approach" or "no, change X."
-
-### Phase 3: Tasks
-
-Break the plan into discrete, implementable tasks:
-
-- Each task should be completable in a single focused session
-- Each task has explicit acceptance criteria
-- Each task includes a verification step (test, build, manual check)
-- Tasks are ordered by dependency, not by perceived importance
-- No task should require changing more than ~5 files
-
-**Task template:**
-```markdown
-- [ ] Task: [Description]
-  - Acceptance: [What must be true when done]
-  - Verify: [How to confirm — test command, build, manual check]
-  - Files: [Which files will be touched]
+```
+Feature "User Authentication":
+├─ Claude: Generated spec.md and plan.md (reasoning strength)
+├─ Copilot: Implemented auth endpoints (code generation)
+└─ Gemini: Wrote integration tests (test coverage)
 ```
 
-### Phase 4: Implement
+### Synchronization Points
 
-Execute tasks one at a time following `skills/incremental-implementation/SKILL.md` (`incremental-implementation`) and `skills/test-driven-development/SKILL.md` (`test-driven-development`). Use `skills/context-engineering/SKILL.md` (`context-engineering`) to load the right spec sections and source files at each step rather than flooding the agent with the entire spec.
+Critical points where parallel work must synchronize:
 
-## Keeping the Spec Alive
+1. **After constitution:** All subsequent work must align with principles
+2. **After specification:** Clarifications must be resolved before planning
+3. **After planning research:** All unknowns must be resolved before design
+4. **After tasks:** Analysis must validate before implementation
+5. **After foundational tasks:** User story work can begin
+6. **Within implementation:** Checklist validation blocks execution
 
-The spec is a living document, not a one-time artifact:
+## Agent Coordination Patterns
 
-- **Update when decisions change** — If you discover the data model needs to change, update the spec first, then implement.
-- **Update when scope changes** — Features added or cut should be reflected in the spec.
-- **Commit the spec** — The spec belongs in version control alongside the code.
-- **Reference the spec in PRs** — Link back to the spec section that each PR implements.
+### Pattern 1: Template-Driven Handoffs
 
-## Common Rationalizations
+Structured markdown templates ensure consistent artifact format across different AI agents
 
-| Rationalization | Reality |
-|---|---|
-| "This is simple, I don't need a spec" | Simple tasks don't need *long* specs, but they still need acceptance criteria. A two-line spec is fine. |
-| "I'll write the spec after I code it" | That's documentation, not specification. The spec's value is in forcing clarity *before* code. |
-| "The spec will slow us down" | A 15-minute spec prevents hours of rework. Waterfall in 15 minutes beats debugging in 15 hours. |
-| "Requirements will change anyway" | That's why the spec is a living document. An outdated spec is still better than no spec. |
-| "The user knows what they want" | Even clear requests have implicit assumptions. The spec surfaces those assumptions. |
+**Benefits:** Agent interoperability, consistent documentation, reduced ambiguity
 
-## Red Flags
+### Pattern 2: Constitutional Alignment
 
-- Starting to write code without any written requirements
-- Asking "should I just start building?" before clarifying what "done" means
-- Implementing features not mentioned in any spec or task list
-- Making architectural decisions without documenting them
-- Skipping the spec because "it's obvious what to build"
+Constitution acts as shared context across all agents and phases
 
-## Verification
+**Benefits:** Consistent quality standards, predictable behavior, alignment across team/agents
 
-Before proceeding to implementation, confirm:
+### Pattern 3: Phased Progression
 
-- [ ] The spec covers all six core areas
-- [ ] The human has reviewed and approved the spec
-- [ ] Success criteria are specific and testable
-- [ ] Boundaries (Always/Ask First/Never) are defined
-- [ ] The spec is saved to a file in the repository
+Linear phase progression with clear handoff points between agents
+
+**Benefits:** Clear responsibilities, reduced confusion, quality gates
+
+### Pattern 4: Incremental Refinement
+
+Iterative improvement within phases before moving forward
+
+**Benefits:** Higher quality artifacts, reduced rework, early error detection
+
+### Pattern 5: Artifact-Driven Context
+
+Context passed through artifact references rather than conversation
+
+**Benefits:** Stateless execution, context recovery, long-running projects
+
+## Directory Structure
+
+```
+.specify/
+├── memory/
+│   └── constitution.md          # Project governance and principles
+├── scripts/
+│   ├── *.sh                     # Bash automation scripts
+│   └── *.ps1                    # PowerShell automation scripts
+├── specs/
+│   └── [feature-name]/
+│       ├── spec.md              # Feature specification
+│       ├── plan.md              # Technical implementation plan
+│       ├── tasks.md             # Actionable task breakdown
+│       ├── research.md          # Research findings (optional)
+│       ├── data-model.md        # Data structure design (optional)
+│       ├── quickstart.md        # Getting started (optional)
+│       └── contracts/           # API/interface definitions (optional)
+└── templates/                   # Command and artifact templates
+```
+
+## Best Practices
+
+1. **Establish constitution early** to guide all subsequent decisions
+2. **Use clarify command** to resolve ambiguities before planning
+3. **Run analyze command** before implementation to catch issues early
+4. **Structure user stories** for independent testability
+5. **Mark parallelizable tasks** explicitly with `||`
+6. **Complete foundational phase** fully before user story work
+7. **Maintain constitution alignment** throughout all phases
+8. **Use specific, measurable success criteria** in specifications
+9. **Avoid implementation details** in specification phase
+10. **Leverage multiple AI agents** for different strengths
+
+## Pitfalls to Avoid
+
+1. Skipping clarification phase leads to ambiguous specifications
+2. Premature implementation details in specs reduce flexibility
+3. Ignoring constitution causes inconsistent practices
+4. Parallel work without proper dependency tracking causes conflicts
+5. Incomplete foundational phase blocks all user story work
+6. Not running analyze before implementation wastes effort on flawed plans
+7. Over-specification in early phases limits AI agent creativity
+8. Insufficient success criteria make validation subjective
+9. Not using user story grouping limits parallelization potential
+
+## Implementation Scenarios
+
+### Scenario 1: Starting a New Project
+
+Use full 7-phase workflow with constitutional governance. Focus on establishing principles early.
+
+### Scenario 2: Team with Multiple Developers/Agents
+
+Emphasize user story parallelization and worktree isolation. Use dashboard for real-time visibility.
+
+### Scenario 3: Enterprise with Governance Requirements
+
+Comprehensive constitution with enterprise constraints. Mandate analysis phase before implementation.
+
+### Scenario 4: Rapid Prototyping
+
+Detailed specifications to align on vision, but lighter planning. Small user stories for quick validation.
+
+## References
+
+Based on GitHub SpecKit (spec-kit) methodology - an open-source toolkit for Spec-Driven Development supporting 15+ AI
+coding agents including Claude Code, GitHub Copilot, Gemini, and Cursor.

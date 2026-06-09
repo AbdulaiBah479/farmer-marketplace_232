@@ -1,6 +1,6 @@
 ---
 name: technical-clarity
-description: "Review technical prose for accessibility, jargon density, and gatekeeping language. Ensures content passes the 'Grandma Test' and avoids 'obviously', 'simply' (Gatekeeping). Use this to refine technical explanations."
+description: Audit technical writing for learner comprehension and accessibility. Use when reviewing documentation, tutorials, or educational content for clarity.
 ---
 
 # Technical Clarity Skill v3.0 (Reasoning-Activated)
@@ -251,3 +251,246 @@ This skill validates output from:
 - **→ book-scaffolding**: Chapter narratives coherent?
 
 **Usage Pattern**: Run technical-clarity AFTER content creation, BEFORE finalization.
+
+---
+
+## Activation Example (Full Workflow)
+
+**Input**: "Review this decorator explanation for B1 (intermediate) learners"
+
+```markdown
+Obviously, decorators are simple. Just wrap your function and you're done.
+
+def my_decorator(func):
+    def wrapper():
+        func()
+    return wrapper
+```
+
+### Activation (Reasoning Mode):
+
+**1. Audience Context** (Questions):
+- Target: B1 (intermediate)
+- Prerequisites: Should know functions, closures
+- Context: Tutorial (learning decorators)
+- Tier: Intermediate (moderate scaffolding)
+
+**2. Readability Gap** (Questions):
+- Grade level: "Obviously" + "simple" + "Just" = gatekeeping (problematic)
+- Sentence length: "Obviously, decorators are simple" = 4 words (OK)
+- Jargon: "decorators," "wrap," "function" (3 terms, needs definition)
+- Gatekeeping: "Obviously," "simple," "Just" (3 violations)
+
+**3. Jargon Necessity** (Questions):
+- "decorators": Necessary (topic being taught) → Must define
+- "wrap": Necessary (core concept) → Must explain
+- "function": Assumed knowledge (prerequisite) → OK
+- Definitions missing: ALL core terms undefined
+
+**4. Completeness** (Questions):
+- Prerequisites: Not stated (should mention "you learned functions in Ch12")
+- Examples: Code shown BUT no example of USE
+- "Why" missing: No explanation of decorator purpose
+- Error cases: Not mentioned (what if func() fails?)
+
+**5. Accessibility** (Questions):
+- Code indentation: OK (readable)
+- No alt text needed (no images)
+- No color reliance: OK
+- Analogies: None provided (could help)
+
+### Output (Reasoning-Activated Review):
+
+```markdown
+## Technical Clarity Report
+
+**Target Audience**: B1 (Intermediate)
+**Overall Clarity Score**: 1.5/5 (Needs Significant Improvement)
+
+---
+
+### CRITICAL ISSUES (Must Fix)
+
+**Issue 1: Gatekeeping Language (3 violations)**
+- **Location**: Opening sentence
+- **Problem**: "Obviously," "simple," "Just" are dismissive
+- **Impact**: Learners who don't find it obvious feel inadequate
+- **Fix**:
+  ❌ "Obviously, decorators are simple. Just wrap your function..."
+  ✅ "Decorators modify function behavior by wrapping them. Here's how:"
+
+**Issue 2: Undefined Core Terms**
+- **Location**: Throughout
+- **Problem**: "decorators," "wrap" never defined
+- **Impact**: B1 learners may not know these terms
+- **Fix**: Define on first use:
+  ```markdown
+  A **decorator** is a function that modifies another function's behavior.
+  **Wrapping** means one function calls another and adds behavior around it.
+  ```
+
+**Issue 3: Missing Example of USE**
+- **Location**: Code block
+- **Problem**: Shows decorator definition, not usage
+- **Impact**: Learner doesn't see WHY decorators useful
+- **Fix**: Add usage example:
+  ```python
+  @my_decorator
+  def say_hello():
+      print("Hello!")
+
+  say_hello()  # Runs wrapper, which calls say_hello()
+  ```
+
+---
+
+### IMPORTANT ISSUES (Should Fix)
+
+**Issue 4: No Context Provided**
+- **Missing**: Prerequisites, motivation, connections
+- **Fix**: Add:
+  ```markdown
+  **Prerequisite**: Understanding functions (Chapter 12)
+  **Why we need this**: Decorators let you add logging, timing,
+  authentication to functions without changing function code.
+  **Building on**: You learned closures in Chapter 13; decorators
+  use closures to "remember" the wrapped function.
+  ```
+
+**Issue 5: Show Before Tell Violated**
+- **Problem**: Explanation before concrete example
+- **Fix**: Reorder (example first, explanation after)
+
+---
+
+### ENHANCEMENT OPPORTUNITIES
+
+**Enhancement 1: Add Analogy**
+```markdown
+**Analogy**: Think of a decorator like gift wrapping. The gift
+(function) stays the same, but wrapping (decorator) adds presentation
+around it.
+```
+
+**Enhancement 2: Show Error Case**
+```markdown
+**Common Mistake**: If wrapped function takes arguments, wrapper must too:
+
+❌ WRONG:
+def wrapper():  # No *args, **kwargs
+    func()      # Can't pass arguments!
+
+✅ CORRECT:
+def wrapper(*args, **kwargs):
+    func(*args, **kwargs)
+```
+
+---
+
+### READABILITY METRICS
+
+- **Flesch-Kincaid Grade Level**: 8.2 (target: 9-12 for B1) → Slightly low
+- **Average Sentence Length**: 8 words (target: <25) → Good
+- **Jargon Density**: 3 undefined terms/paragraph → Exceeds B1 limit (4-5)
+
+---
+
+### REVISED VERSION (AFTER FIXES)
+
+```markdown
+## Understanding Decorators
+
+**Prerequisite**: Chapter 12 (Functions), Chapter 13 (Closures)
+
+A **decorator** is a function that modifies another function's behavior
+without changing the function's code. **Wrapping** means one function
+calls another and adds behavior before or after.
+
+### Why Decorators Matter
+
+You want to add logging to 10 functions without editing each one.
+Decorators let you do this:
+
+```python
+@log_calls
+def calculate_total(items):
+    return sum(items)
+
+# Now automatically logs when called, without changing function body
+```
+
+### How Decorators Work
+
+Here's a simple decorator that prints before and after:
+
+```python
+def my_decorator(func):
+    def wrapper(*args, **kwargs):
+        print("Before function call")
+        result = func(*args, **kwargs)
+        print("After function call")
+        return result
+    return wrapper
+
+# Using the decorator
+@my_decorator
+def say_hello():
+    print("Hello!")
+
+say_hello()
+# Output:
+# Before function call
+# Hello!
+# After function call
+```
+
+**How it works**:
+1. `@my_decorator` wraps `say_hello`
+2. When you call `say_hello()`, you're actually calling `wrapper()`
+3. `wrapper()` adds behavior, then calls original `say_hello()`
+
+**Analogy**: Like gift wrapping—the gift (function) stays the same,
+but wrapping (decorator) adds presentation around it.
+
+### Common Mistake to Avoid
+
+❌ **WRONG** (wrapper doesn't accept arguments):
+```python
+def wrapper():
+    func()  # Can't pass arguments!
+```
+
+✅ **CORRECT** (wrapper accepts any arguments):
+```python
+def wrapper(*args, **kwargs):
+    func(*args, **kwargs)
+```
+```
+```
+
+**Self-Monitoring Check**:
+- ✅ Gatekeeping removed (no "obviously," "simply," "just")
+- ✅ Terms defined (decorator, wrapping)
+- ✅ Example shown before explanation
+- ✅ Grade level appropriate (B1: 9-12)
+- ✅ Context provided (prerequisites, why, connections)
+- ✅ Show before tell (code example first)
+- ✅ Error case mentioned (common mistake)
+
+---
+
+## Success Metrics
+
+**Reasoning Activation Score**: 4/4
+- ✅ Persona: Cognitive stance established (accessibility auditor)
+- ✅ Questions: Systematic inquiry structure (5 question sets)
+- ✅ Principles: Decision frameworks (7 principles)
+- ✅ Meta-awareness: Anti-convergence monitoring (5 convergence points)
+
+**Comparison**:
+- v2.0 (procedural): 0/4 reasoning activation
+- v3.0 (reasoning): 4/4 reasoning activation
+
+---
+
+**Ready to use**: Invoke this skill to review technical content for clarity, accessibility, and comprehension at target proficiency level. Run AFTER content creation, BEFORE finalization.

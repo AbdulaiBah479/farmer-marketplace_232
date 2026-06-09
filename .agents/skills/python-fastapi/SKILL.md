@@ -1,561 +1,203 @@
 ---
 name: python-fastapi
-description: Build high-performance Python APIs with FastAPI. Covers async endpoints, dependency injection, Pydantic validation, OpenAPI auto-generation, OAuth2/JWT authentication, and database integration. Use when building REST APIs, microservices, or backend services with Python.
+description: Python FastAPI development with uv package manager, modular project structure, SQLAlchemy ORM, and production-ready patterns.
+alwaysApply: false
 ---
 
-# FastAPI Skill
+# Python FastAPI Development
 
-## Trigger Phrases
+Expert patterns for building Python APIs with FastAPI, uv package manager, modular architecture, and SQLAlchemy database integration.
 
-- FastAPI, fast api, python api
-- async api, async endpoint, async python
-- pydantic model, request validation, response model
-- openapi, swagger, api docs
-- dependency injection, depends
-- oauth2, jwt authentication, bearer token
-- sqlalchemy async, async database
-- pytest fastapi, test client
+## Technology Stack
+
+- **Runtime**: Python 3.12+
+- **Package Manager**: uv (fast, Rust-based)
+- **Framework**: FastAPI
+- **ORM**: SQLAlchemy 2.0 (async)
+- **Validation**: Pydantic v2
+- **Database**: PostgreSQL (or SQLite for dev)
+- **Migrations**: Alembic
+- **Testing**: pytest, pytest-asyncio
+- **Linting**: ruff
 
 ## Project Structure
 
+Feature-based modular architecture - code organized by domain, not by layer:
+
 ```
-project/
-├── app/
-│   ├── __init__.py
-│   ├── main.py              # FastAPI app instance
-│   ├── config.py            # Settings with pydantic-settings
-│   ├── dependencies.py      # Shared dependencies
-│   ├── api/
-│   │   ├── __init__.py
-│   │   ├── v1/
-│   │   │   ├── __init__.py
-│   │   │   ├── router.py    # API v1 router
-│   │   │   └── endpoints/
-│   │   │       ├── users.py
-│   │   │       └── items.py
-│   ├── core/
-│   │   ├── __init__.py
-│   │   ├── security.py      # JWT, OAuth2
-│   │   └── exceptions.py    # Custom exceptions
-│   ├── db/
-│   │   ├── __init__.py
-│   │   ├── session.py       # Async session factory
-│   │   └── base.py          # SQLAlchemy base
-│   ├── models/              # SQLAlchemy models
-│   │   ├── __init__.py
-│   │   └── user.py
-│   ├── schemas/             # Pydantic schemas
-│   │   ├── __init__.py
-│   │   └── user.py
-│   └── services/            # Business logic
+my-project/
+├── pyproject.toml           # Project config with uv
+├── uv.lock                   # Lock file
+├── .python-version           # Python version
+├── .env                      # Environment variables
+├── .env.example
+├── alembic.ini               # Alembic config
+├── alembic/                  # Migrations
+│   ├── env.py
+│   ├── script.py.mako
+│   └── versions/
+├── src/
+│   └── app/
 │       ├── __init__.py
-│       └── user_service.py
-├── tests/
-│   ├── conftest.py
-│   ├── test_users.py
-│   └── test_items.py
-├── alembic/                 # Migrations
-├── pyproject.toml
-└── .env
+│       ├── main.py           # FastAPI app entry
+│       ├── config.py         # Settings
+│       ├── database.py       # DB session
+│       ├── core/
+│       │   ├── __init__.py
+│       │   ├── dependencies.py  # Shared dependencies
+│       │   ├── exceptions.py    # Custom exceptions
+│       │   ├── middleware.py    # Middleware
+│       │   └── security.py      # Auth utilities
+│       ├── models/
+│       │   ├── __init__.py
+│       │   └── base.py          # SQLAlchemy base & mixins
+│       ├── features/
+│       │   ├── __init__.py
+│       │   ├── auth/
+│       │   │   ├── __init__.py
+│       │   │   ├── api.py       # Auth endpoints
+│       │   │   ├── schemas.py   # Auth Pydantic schemas
+│       │   │   ├── services.py  # Auth business logic
+│       │   │   ├── models.py    # Auth SQLAlchemy models
+│       │   │   └── utils.py     # Auth helpers (JWT, etc.)
+│       │   ├── users/
+│       │   │   ├── __init__.py
+│       │   │   ├── api.py       # User endpoints
+│       │   │   ├── schemas.py   # User Pydantic schemas
+│       │   │   ├── services.py  # User business logic
+│       │   │   ├── models.py    # User SQLAlchemy models
+│       │   │   └── repository.py # User data access
+│       │   └── items/
+│       │       ├── __init__.py
+│       │       ├── api.py
+│       │       ├── schemas.py
+│       │       ├── services.py
+│       │       └── models.py
+│       └── api/
+│           ├── __init__.py
+│           └── router.py        # Aggregates all feature routers
+└── tests/
+    ├── __init__.py
+    ├── conftest.py
+    ├── features/
+    │   ├── auth/
+    │   │   └── test_auth.py
+    │   └── users/
+    │       └── test_users.py
+    └── integration/
 ```
 
-## Application Setup
+## Quick Setup with uv
 
-### Main Application
+```bash
+# Install uv
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
-```python
-# app/main.py
-from contextlib import asynccontextmanager
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+# Create new project
+uv init my-project
+cd my-project
 
-from app.api.v1.router import api_router
-from app.config import settings
-from app.db.session import engine
+# Set Python version
+uv python pin 3.12
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup: initialize connections, load models
-    yield
-    # Shutdown: close connections
-    await engine.dispose()
+# Add dependencies
+uv add fastapi uvicorn[standard] sqlalchemy[asyncio] asyncpg
+uv add pydantic pydantic-settings python-dotenv
+uv add alembic
 
-app = FastAPI(
-    title=settings.PROJECT_NAME,
-    version="1.0.0",
-    openapi_url=f"{settings.API_V1_PREFIX}/openapi.json",
-    lifespan=lifespan,
-)
+# Add dev dependencies
+uv add --dev pytest pytest-asyncio pytest-cov httpx ruff mypy
 
-# CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-app.include_router(api_router, prefix=settings.API_V1_PREFIX)
+# Create source structure
+mkdir -p src/app/{api/v1/endpoints,core,models,schemas,services,repositories}
+touch src/app/__init__.py
 ```
 
-### Configuration with pydantic-settings
+## Core Patterns
+
+### pyproject.toml
+
+```toml
+[project]
+name = "my-project"
+version = "0.1.0"
+description = "FastAPI application"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "sqlalchemy[asyncio]>=2.0.0",
+    "asyncpg>=0.30.0",
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.6.0",
+    "python-dotenv>=1.0.0",
+    "alembic>=1.14.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0",
+    "httpx>=0.28.0",
+    "ruff>=0.8.0",
+    "mypy>=1.13.0",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "C4", "SIM"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+```
+
+### Configuration (src/app/config.py)
 
 ```python
-# app/config.py
 from functools import lru_cache
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
-        case_sensitive=True,
+        case_sensitive=False,
     )
-    
-    PROJECT_NAME: str = "FastAPI Project"
-    API_V1_PREFIX: str = "/api/v1"
-    DEBUG: bool = False
-    
+
+    # App
+    app_name: str = "My API"
+    debug: bool = False
+    api_v1_prefix: str = "/api/v1"
+
     # Database
-    DATABASE_URL: str
-    DATABASE_ECHO: bool = False
-    
+    database_url: str = "postgresql+asyncpg://user:pass@localhost:5432/db"
+
     # Security
-    SECRET_KEY: str
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    ALGORITHM: str = "HS256"
-    
-    # CORS
-    ALLOWED_ORIGINS: list[str] = ["http://localhost:3000"]
+    secret_key: str = "change-me-in-production"
+    access_token_expire_minutes: int = 30
+
 
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
 
+
 settings = get_settings()
 ```
 
-## Async Endpoints
-
-### Basic CRUD Endpoints
+### Database Setup (src/app/database.py)
 
 ```python
-# app/api/v1/endpoints/users.py
-from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.db.session import get_db
-from app.schemas.user import UserCreate, UserRead, UserUpdate
-from app.services.user_service import UserService
-
-router = APIRouter(prefix="/users", tags=["users"])
-
-@router.get("/", response_model=list[UserRead])
-async def list_users(
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=100),
-    db: AsyncSession = Depends(get_db),
-) -> list[UserRead]:
-    """List users with pagination."""
-    service = UserService(db)
-    return await service.get_many(skip=skip, limit=limit)
-
-@router.get("/{user_id}", response_model=UserRead)
-async def get_user(
-    user_id: int,
-    db: AsyncSession = Depends(get_db),
-) -> UserRead:
-    """Get user by ID."""
-    service = UserService(db)
-    user = await service.get_by_id(user_id)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
-        )
-    return user
-
-@router.post("/", response_model=UserRead, status_code=status.HTTP_201_CREATED)
-async def create_user(
-    user_in: UserCreate,
-    db: AsyncSession = Depends(get_db),
-) -> UserRead:
-    """Create new user."""
-    service = UserService(db)
-    return await service.create(user_in)
-
-@router.patch("/{user_id}", response_model=UserRead)
-async def update_user(
-    user_id: int,
-    user_in: UserUpdate,
-    db: AsyncSession = Depends(get_db),
-) -> UserRead:
-    """Update user by ID."""
-    service = UserService(db)
-    user = await service.update(user_id, user_in)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
-        )
-    return user
-
-@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_user(
-    user_id: int,
-    db: AsyncSession = Depends(get_db),
-) -> None:
-    """Delete user by ID."""
-    service = UserService(db)
-    deleted = await service.delete(user_id)
-    if not deleted:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
-        )
-```
-
-## Dependency Injection
-
-### Creating Reusable Dependencies
-
-```python
-# app/dependencies.py
-from typing import Annotated
-from fastapi import Depends, HTTPException, status, Header
-
-from app.core.security import verify_token
-from app.db.session import get_db
-from app.models.user import User
-from app.services.user_service import UserService
-
-async def get_current_user(
-    token: Annotated[str, Depends(verify_token)],
-    db: Annotated[AsyncSession, Depends(get_db)],
-) -> User:
-    """Get current authenticated user from token."""
-    service = UserService(db)
-    user = await service.get_by_id(token.user_id)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found",
-        )
-    return user
-
-async def get_current_active_user(
-    current_user: Annotated[User, Depends(get_current_user)],
-) -> User:
-    """Ensure user is active."""
-    if not current_user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Inactive user",
-        )
-    return current_user
-
-async def get_current_superuser(
-    current_user: Annotated[User, Depends(get_current_active_user)],
-) -> User:
-    """Ensure user is superuser."""
-    if not current_user.is_superuser:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Insufficient permissions",
-        )
-    return current_user
-
-# Type aliases for cleaner annotations
-CurrentUser = Annotated[User, Depends(get_current_active_user)]
-SuperUser = Annotated[User, Depends(get_current_superuser)]
-DbSession = Annotated[AsyncSession, Depends(get_db)]
-```
-
-### Using Dependencies in Endpoints
-
-```python
-# app/api/v1/endpoints/protected.py
-from fastapi import APIRouter
-from app.dependencies import CurrentUser, SuperUser, DbSession
-
-router = APIRouter(prefix="/protected", tags=["protected"])
-
-@router.get("/me")
-async def get_current_user_info(current_user: CurrentUser):
-    """Get current user info (requires authentication)."""
-    return {"user_id": current_user.id, "email": current_user.email}
-
-@router.get("/admin")
-async def admin_only(admin: SuperUser):
-    """Admin-only endpoint."""
-    return {"message": "Welcome, admin!"}
-```
-
-## Pydantic Validation
-
-### Request/Response Schemas
-
-```python
-# app/schemas/user.py
-from datetime import datetime
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
-import re
-
-class UserBase(BaseModel):
-    email: EmailStr
-    full_name: str = Field(..., min_length=1, max_length=100)
-    
-class UserCreate(UserBase):
-    password: str = Field(..., min_length=8, max_length=100)
-    
-    @field_validator("password")
-    @classmethod
-    def validate_password(cls, v: str) -> str:
-        if not re.search(r"[A-Z]", v):
-            raise ValueError("Password must contain uppercase letter")
-        if not re.search(r"[a-z]", v):
-            raise ValueError("Password must contain lowercase letter")
-        if not re.search(r"\d", v):
-            raise ValueError("Password must contain digit")
-        return v
-
-class UserUpdate(BaseModel):
-    email: EmailStr | None = None
-    full_name: str | None = Field(None, min_length=1, max_length=100)
-    password: str | None = Field(None, min_length=8, max_length=100)
-
-class UserRead(UserBase):
-    model_config = ConfigDict(from_attributes=True)
-    
-    id: int
-    is_active: bool
-    is_superuser: bool
-    created_at: datetime
-    updated_at: datetime | None = None
-
-class UserInDB(UserRead):
-    hashed_password: str
-```
-
-### Complex Nested Schemas
-
-```python
-# app/schemas/item.py
-from decimal import Decimal
-from pydantic import BaseModel, ConfigDict, Field
-from enum import Enum
-
-class ItemStatus(str, Enum):
-    DRAFT = "draft"
-    PUBLISHED = "published"
-    ARCHIVED = "archived"
-
-class TagRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-    id: int
-    name: str
-
-class ItemBase(BaseModel):
-    title: str = Field(..., min_length=1, max_length=200)
-    description: str | None = Field(None, max_length=2000)
-    price: Decimal = Field(..., ge=0, decimal_places=2)
-    status: ItemStatus = ItemStatus.DRAFT
-
-class ItemCreate(ItemBase):
-    tag_ids: list[int] = Field(default_factory=list)
-
-class ItemRead(ItemBase):
-    model_config = ConfigDict(from_attributes=True)
-    id: int
-    owner_id: int
-    tags: list[TagRead] = Field(default_factory=list)
-```
-
-## OpenAPI Generation
-
-### Customizing OpenAPI Schema
-
-```python
-# app/main.py
-from fastapi import FastAPI
-from fastapi.openapi.utils import get_openapi
-
-app = FastAPI()
-
-def custom_openapi():
-    if app.openapi_schema:
-        return app.openapi_schema
-    
-    openapi_schema = get_openapi(
-        title="My API",
-        version="1.0.0",
-        description="API with custom OpenAPI schema",
-        routes=app.routes,
-    )
-    
-    # Add security schemes
-    openapi_schema["components"]["securitySchemes"] = {
-        "bearerAuth": {
-            "type": "http",
-            "scheme": "bearer",
-            "bearerFormat": "JWT",
-        }
-    }
-    
-    # Add tags metadata
-    openapi_schema["tags"] = [
-        {"name": "users", "description": "User management"},
-        {"name": "items", "description": "Item operations"},
-    ]
-    
-    app.openapi_schema = openapi_schema
-    return app.openapi_schema
-
-app.openapi = custom_openapi
-```
-
-### Endpoint Documentation
-
-```python
-@router.post(
-    "/",
-    response_model=ItemRead,
-    status_code=status.HTTP_201_CREATED,
-    summary="Create a new item",
-    description="Create a new item with the provided data. Requires authentication.",
-    response_description="The created item",
-    responses={
-        400: {"description": "Invalid input data"},
-        401: {"description": "Not authenticated"},
-        403: {"description": "Not authorized"},
-    },
-)
-async def create_item(
-    item_in: ItemCreate,
-    current_user: CurrentUser,
-    db: DbSession,
-) -> ItemRead:
-    """
-    Create a new item.
-    
-    - **title**: Item title (required)
-    - **description**: Optional description
-    - **price**: Item price (must be >= 0)
-    - **status**: Item status (draft, published, archived)
-    """
-    service = ItemService(db)
-    return await service.create(item_in, owner_id=current_user.id)
-```
-
-## Authentication (OAuth2, JWT)
-
-### Security Module
-
-```python
-# app/core/security.py
-from datetime import datetime, timedelta, timezone
-from typing import Any
-
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
-from passlib.context import CryptContext
-from pydantic import BaseModel
-
-from app.config import settings
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_PREFIX}/auth/login")
-
-class TokenPayload(BaseModel):
-    sub: int  # user_id
-    exp: datetime
-
-class TokenData(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-
-def hash_password(password: str) -> str:
-    """Hash a password."""
-    return pwd_context.hash(password)
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify password against hash."""
-    return pwd_context.verify(plain_password, hashed_password)
-
-def create_access_token(user_id: int, expires_delta: timedelta | None = None) -> str:
-    """Create JWT access token."""
-    expire = datetime.now(timezone.utc) + (
-        expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    )
-    payload = {"sub": str(user_id), "exp": expire}
-    return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
-
-async def verify_token(token: str = Depends(oauth2_scheme)) -> TokenPayload:
-    """Verify and decode JWT token."""
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
-        )
-        user_id = int(payload.get("sub"))
-        if user_id is None:
-            raise credentials_exception
-        return TokenPayload(sub=user_id, exp=payload.get("exp"))
-    except (JWTError, ValueError):
-        raise credentials_exception
-```
-
-### Auth Endpoints
-
-```python
-# app/api/v1/endpoints/auth.py
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
-
-from app.core.security import create_access_token, verify_password, TokenData
-from app.dependencies import DbSession
-from app.services.user_service import UserService
-
-router = APIRouter(prefix="/auth", tags=["authentication"])
-
-@router.post("/login", response_model=TokenData)
-async def login(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    db: DbSession = None,
-) -> TokenData:
-    """Authenticate user and return access token."""
-    service = UserService(db)
-    user = await service.get_by_email(form_data.username)
-    
-    if not user or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Inactive user",
-        )
-    
-    access_token = create_access_token(user_id=user.id)
-    return TokenData(access_token=access_token)
-```
-
-## Database Integration (SQLAlchemy Async)
-
-### Async Session Setup
-
-```python
-# app/db/session.py
 from collections.abc import AsyncGenerator
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -566,23 +208,20 @@ from sqlalchemy.ext.asyncio import (
 from app.config import settings
 
 engine = create_async_engine(
-    settings.DATABASE_URL,
-    echo=settings.DATABASE_ECHO,
-    pool_size=5,
-    max_overflow=10,
+    settings.database_url,
+    echo=settings.debug,
+    pool_pre_ping=True,
 )
 
-async_session_factory = async_sessionmaker(
+async_session_maker = async_sessionmaker(
     engine,
     class_=AsyncSession,
     expire_on_commit=False,
-    autocommit=False,
-    autoflush=False,
 )
 
+
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    """Dependency that provides async database session."""
-    async with async_session_factory() as session:
+    async with async_session_maker() as session:
         try:
             yield session
             await session.commit()
@@ -591,345 +230,480 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             raise
 ```
 
-### SQLAlchemy Models
+### SQLAlchemy Base Model (src/app/models/base.py)
 
 ```python
-# app/models/user.py
 from datetime import datetime
-from sqlalchemy import Boolean, DateTime, String, func
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import DateTime, func
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-from app.db.base import Base
 
-class User(Base):
-    __tablename__ = "users"
-    
-    id: Mapped[int] = mapped_column(primary_key=True)
-    email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
-    full_name: Mapped[str] = mapped_column(String(100))
-    hashed_password: Mapped[str] = mapped_column(String(255))
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    is_superuser: Mapped[bool] = mapped_column(Boolean, default=False)
+class Base(DeclarativeBase):
+    pass
+
+
+class TimestampMixin:
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
+        DateTime(timezone=True),
+        server_default=func.now(),
     )
-    updated_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), onupdate=func.now()
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
     )
-    
-    # Relationships
-    items: Mapped[list["Item"]] = relationship(back_populates="owner")
 ```
 
-### Service Layer Pattern
+## Feature Module Pattern
+
+Each feature is self-contained with its own api, schemas, services, models, and utils.
+
+### Feature: users/schemas.py
 
 ```python
-# app/services/user_service.py
+from pydantic import BaseModel, EmailStr, ConfigDict
+
+
+class UserBase(BaseModel):
+    email: EmailStr
+    full_name: str | None = None
+
+
+class UserCreate(UserBase):
+    password: str
+
+
+class UserUpdate(BaseModel):
+    email: EmailStr | None = None
+    full_name: str | None = None
+    password: str | None = None
+
+
+class UserResponse(UserBase):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    is_active: bool
+```
+
+### Feature: users/models.py
+
+```python
+from sqlalchemy import String
+from sqlalchemy.orm import Mapped, mapped_column
+
+from app.models.base import Base, TimestampMixin
+
+
+class User(Base, TimestampMixin):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
+    hashed_password: Mapped[str] = mapped_column(String(255))
+    full_name: Mapped[str | None] = mapped_column(String(255))
+    is_active: Mapped[bool] = mapped_column(default=True)
+```
+
+### Feature: users/repository.py
+
+```python
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import hash_password
-from app.models.user import User
-from app.schemas.user import UserCreate, UserUpdate
+from app.features.users.models import User
 
-class UserService:
+
+class UserRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
-    
-    async def get_by_id(self, user_id: int) -> User | None:
-        result = await self.db.execute(select(User).where(User.id == user_id))
+
+    async def get(self, id: int) -> User | None:
+        result = await self.db.execute(select(User).where(User.id == id))
         return result.scalar_one_or_none()
-    
+
     async def get_by_email(self, email: str) -> User | None:
         result = await self.db.execute(select(User).where(User.email == email))
         return result.scalar_one_or_none()
-    
-    async def get_many(self, skip: int = 0, limit: int = 100) -> list[User]:
-        result = await self.db.execute(
-            select(User).offset(skip).limit(limit).order_by(User.id)
-        )
+
+    async def get_all(self, skip: int = 0, limit: int = 100) -> list[User]:
+        result = await self.db.execute(select(User).offset(skip).limit(limit))
         return list(result.scalars().all())
-    
-    async def create(self, user_in: UserCreate) -> User:
-        user = User(
-            email=user_in.email,
-            full_name=user_in.full_name,
-            hashed_password=hash_password(user_in.password),
-        )
+
+    async def create(self, data: dict) -> User:
+        user = User(**data)
         self.db.add(user)
         await self.db.flush()
         await self.db.refresh(user)
         return user
-    
-    async def update(self, user_id: int, user_in: UserUpdate) -> User | None:
-        user = await self.get_by_id(user_id)
-        if not user:
-            return None
-        
-        update_data = user_in.model_dump(exclude_unset=True)
-        if "password" in update_data:
-            update_data["hashed_password"] = hash_password(update_data.pop("password"))
-        
-        for field, value in update_data.items():
-            setattr(user, field, value)
-        
+
+    async def update(self, user: User, data: dict) -> User:
+        for field, value in data.items():
+            if value is not None:
+                setattr(user, field, value)
         await self.db.flush()
         await self.db.refresh(user)
         return user
-    
-    async def delete(self, user_id: int) -> bool:
-        user = await self.get_by_id(user_id)
-        if not user:
-            return False
-        await self.db.delete(user)
-        return True
 ```
 
-## Testing with pytest
-
-### Test Configuration
+### Feature: users/services.py
 
 ```python
-# tests/conftest.py
-import asyncio
-from collections.abc import AsyncGenerator
+from sqlalchemy.ext.asyncio import AsyncSession
 
-import pytest
-import pytest_asyncio
-from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from app.core.security import hash_password
+from app.features.users.models import User
+from app.features.users.repository import UserRepository
+from app.features.users.schemas import UserCreate, UserUpdate
 
-from app.db.base import Base
-from app.db.session import get_db
-from app.main import app
 
-TEST_DATABASE_URL = "sqlite+aiosqlite:///./test.db"
+class UserService:
+    def __init__(self, db: AsyncSession):
+        self.db = db
+        self.repo = UserRepository(db)
 
-@pytest.fixture(scope="session")
-def event_loop():
-    """Create event loop for async tests."""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
+    async def get(self, user_id: int) -> User | None:
+        return await self.repo.get(user_id)
 
-@pytest_asyncio.fixture(scope="function")
-async def db_session() -> AsyncGenerator[AsyncSession, None]:
-    """Create test database session."""
-    engine = create_async_engine(TEST_DATABASE_URL, echo=False)
-    
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    
-    async_session = async_sessionmaker(engine, expire_on_commit=False)
-    
-    async with async_session() as session:
-        yield session
-    
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-    
+    async def get_by_email(self, email: str) -> User | None:
+        return await self.repo.get_by_email(email)
+
+    async def list(self, skip: int = 0, limit: int = 100) -> list[User]:
+        return await self.repo.get_all(skip=skip, limit=limit)
+
+    async def create(self, user_in: UserCreate) -> User:
+        data = user_in.model_dump()
+        data["hashed_password"] = hash_password(data.pop("password"))
+        return await self.repo.create(data)
+
+    async def update(self, user: User, user_in: UserUpdate) -> User:
+        data = user_in.model_dump(exclude_unset=True)
+        if "password" in data:
+            data["hashed_password"] = hash_password(data.pop("password"))
+        return await self.repo.update(user, data)
+```
+
+### Feature: users/api.py
+
+```python
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.database import get_db
+from app.features.users.schemas import UserCreate, UserResponse, UserUpdate
+from app.features.users.services import UserService
+
+router = APIRouter(prefix="/users", tags=["users"])
+
+
+def get_service(db: AsyncSession = Depends(get_db)) -> UserService:
+    return UserService(db)
+
+
+@router.get("", response_model=list[UserResponse])
+async def list_users(
+    skip: int = 0,
+    limit: int = 100,
+    service: UserService = Depends(get_service),
+):
+    return await service.list(skip=skip, limit=limit)
+
+
+@router.get("/{user_id}", response_model=UserResponse)
+async def get_user(
+    user_id: int,
+    service: UserService = Depends(get_service),
+):
+    user = await service.get(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+
+@router.post("", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+async def create_user(
+    user_in: UserCreate,
+    service: UserService = Depends(get_service),
+):
+    if await service.get_by_email(user_in.email):
+        raise HTTPException(status_code=400, detail="Email already registered")
+    return await service.create(user_in)
+
+
+@router.patch("/{user_id}", response_model=UserResponse)
+async def update_user(
+    user_id: int,
+    user_in: UserUpdate,
+    service: UserService = Depends(get_service),
+):
+    user = await service.get(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return await service.update(user, user_in)
+```
+
+### Feature: users/__init__.py (exports)
+
+```python
+from app.features.users.api import router
+from app.features.users.models import User
+from app.features.users.schemas import UserCreate, UserResponse, UserUpdate
+from app.features.users.services import UserService
+
+__all__ = ["router", "User", "UserCreate", "UserResponse", "UserUpdate", "UserService"]
+```
+
+### Main Router (src/app/api/router.py)
+
+```python
+from fastapi import APIRouter
+
+from app.features.auth import router as auth_router
+from app.features.users import router as users_router
+from app.features.items import router as items_router
+
+api_router = APIRouter()
+api_router.include_router(auth_router)
+api_router.include_router(users_router)
+api_router.include_router(items_router)
+```
+
+### FastAPI App (src/app/main.py)
+
+```python
+from contextlib import asynccontextmanager
+from collections.abc import AsyncIterator
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.api.router import api_router
+from app.config import settings
+from app.database import engine
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    # Startup
+    yield
+    # Shutdown
     await engine.dispose()
 
-@pytest_asyncio.fixture
-async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
-    """Create test client with database override."""
-    async def override_get_db():
-        yield db_session
-    
-    app.dependency_overrides[get_db] = override_get_db
-    
-    async with AsyncClient(
-        transport=ASGITransport(app=app),
-        base_url="http://test",
-    ) as ac:
-        yield ac
-    
-    app.dependency_overrides.clear()
 
-@pytest_asyncio.fixture
-async def auth_client(client: AsyncClient, db_session: AsyncSession) -> AsyncClient:
-    """Create authenticated test client."""
-    from app.services.user_service import UserService
-    from app.schemas.user import UserCreate
-    from app.core.security import create_access_token
-    
-    service = UserService(db_session)
-    user = await service.create(UserCreate(
-        email="test@example.com",
-        full_name="Test User",
-        password="TestPass123",
-    ))
-    await db_session.commit()
-    
-    token = create_access_token(user.id)
-    client.headers["Authorization"] = f"Bearer {token}"
-    return client
+app = FastAPI(
+    title=settings.app_name,
+    openapi_url=f"{settings.api_v1_prefix}/openapi.json",
+    lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Configure for production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(api_router, prefix=settings.api_v1_prefix)
+
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
 ```
 
-### Writing Tests
+## Database Migrations with Alembic
+
+```bash
+# Initialize Alembic
+uv run alembic init alembic
+
+# Update alembic/env.py for async
+# Then create migration
+uv run alembic revision --autogenerate -m "Initial migration"
+
+# Apply migrations
+uv run alembic upgrade head
+```
+
+### Async Alembic env.py
 
 ```python
-# tests/test_users.py
+import asyncio
+from logging.config import fileConfig
+
+from sqlalchemy import pool
+from sqlalchemy.ext.asyncio import async_engine_from_config
+from alembic import context
+
+from app.config import settings
+from app.models.base import Base
+from app.models import user, item  # Import all models
+
+config = context.config
+config.set_main_option("sqlalchemy.url", settings.database_url)
+
+if config.config_file_name is not None:
+    fileConfig(config.config_file_name)
+
+target_metadata = Base.metadata
+
+
+def run_migrations_offline() -> None:
+    url = config.get_main_option("sqlalchemy.url")
+    context.configure(
+        url=url,
+        target_metadata=target_metadata,
+        literal_binds=True,
+        dialect_opts={"paramstyle": "named"},
+    )
+    with context.begin_transaction():
+        context.run_migrations()
+
+
+def do_run_migrations(connection) -> None:
+    context.configure(connection=connection, target_metadata=target_metadata)
+    with context.begin_transaction():
+        context.run_migrations()
+
+
+async def run_async_migrations() -> None:
+    connectable = async_engine_from_config(
+        config.get_section(config.config_ini_section, {}),
+        prefix="sqlalchemy.",
+        poolclass=pool.NullPool,
+    )
+    async with connectable.connect() as connection:
+        await connection.run_sync(do_run_migrations)
+    await connectable.dispose()
+
+
+def run_migrations_online() -> None:
+    asyncio.run(run_async_migrations())
+
+
+if context.is_offline_mode():
+    run_migrations_offline()
+else:
+    run_migrations_online()
+```
+
+## Testing
+
+### conftest.py
+
+```python
+import pytest
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+
+from app.main import app
+from app.database import get_db
+from app.models.base import Base
+
+
+@pytest.fixture
+async def db_session():
+    engine = create_async_engine(
+        "sqlite+aiosqlite:///:memory:",
+        echo=True,
+    )
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+    session_maker = async_sessionmaker(engine, expire_on_commit=False)
+    async with session_maker() as session:
+        yield session
+
+    await engine.dispose()
+
+
+@pytest.fixture
+async def client(db_session: AsyncSession):
+    async def override_get_db():
+        yield db_session
+
+    app.dependency_overrides[get_db] = override_get_db
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://test"
+    ) as ac:
+        yield ac
+    app.dependency_overrides.clear()
+```
+
+### Example Test
+
+```python
 import pytest
 from httpx import AsyncClient
 
-pytestmark = pytest.mark.asyncio
 
-class TestUserEndpoints:
-    async def test_create_user(self, client: AsyncClient):
-        response = await client.post(
-            "/api/v1/users/",
-            json={
-                "email": "newuser@example.com",
-                "full_name": "New User",
-                "password": "SecurePass123",
-            },
-        )
-        assert response.status_code == 201
-        data = response.json()
-        assert data["email"] == "newuser@example.com"
-        assert "id" in data
-        assert "hashed_password" not in data
-    
-    async def test_create_user_invalid_password(self, client: AsyncClient):
-        response = await client.post(
-            "/api/v1/users/",
-            json={
-                "email": "user@example.com",
-                "full_name": "User",
-                "password": "weak",
-            },
-        )
-        assert response.status_code == 422
-    
-    async def test_get_current_user(self, auth_client: AsyncClient):
-        response = await auth_client.get("/api/v1/protected/me")
-        assert response.status_code == 200
-        assert response.json()["email"] == "test@example.com"
-    
-    async def test_unauthorized_access(self, client: AsyncClient):
-        response = await client.get("/api/v1/protected/me")
-        assert response.status_code == 401
+@pytest.mark.asyncio
+async def test_create_user(client: AsyncClient):
+    response = await client.post(
+        "/api/v1/users",
+        json={
+            "email": "test@example.com",
+            "password": "testpassword123",
+            "full_name": "Test User",
+        },
+    )
+    assert response.status_code == 201
+    data = response.json()
+    assert data["email"] == "test@example.com"
+    assert "id" in data
+```
+
+## Running the Application
+
+```bash
+# Development
+uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+# Production
+uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+
+# Run tests
+uv run pytest -v
+
+# Run with coverage
+uv run pytest --cov=app --cov-report=html
+
+# Lint and format
+uv run ruff check .
+uv run ruff format .
+
+# Type check
+uv run mypy src/
 ```
 
 ## Best Practices
 
-### Error Handling
+1. **Layered Architecture**
+   - Routes: Handle HTTP, validation, response formatting
+   - Services: Business logic, orchestration
+   - Repositories: Data access, queries
 
-```python
-# app/core/exceptions.py
-from fastapi import HTTPException, Request
-from fastapi.responses import JSONResponse
+2. **Dependency Injection**
+   - Use FastAPI's `Depends()` for clean DI
+   - Inject database sessions, services, configs
 
-class AppException(Exception):
-    def __init__(self, message: str, status_code: int = 400):
-        self.message = message
-        self.status_code = status_code
+3. **Type Safety**
+   - Use Pydantic for all request/response schemas
+   - Use SQLAlchemy 2.0 mapped columns with types
+   - Enable strict mypy
 
-async def app_exception_handler(request: Request, exc: AppException):
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"detail": exc.message},
-    )
+4. **Async First**
+   - Use async/await throughout
+   - Use asyncpg for PostgreSQL
+   - Use aiosqlite for testing
 
-# Register in main.py
-app.add_exception_handler(AppException, app_exception_handler)
-```
+5. **Configuration**
+   - Use pydantic-settings for type-safe config
+   - Load from environment variables
+   - Never commit secrets
 
-### Background Tasks
-
-```python
-from fastapi import BackgroundTasks
-
-async def send_email(email: str, message: str):
-    # Async email sending logic
-    ...
-
-@router.post("/notify")
-async def notify_user(
-    email: str,
-    background_tasks: BackgroundTasks,
-):
-    background_tasks.add_task(send_email, email, "Welcome!")
-    return {"message": "Notification scheduled"}
-```
-
-### Rate Limiting with slowapi
-
-```python
-from slowapi import Limiter
-from slowapi.util import get_remote_address
-
-limiter = Limiter(key_func=get_remote_address)
-
-@router.get("/limited")
-@limiter.limit("5/minute")
-async def limited_endpoint(request: Request):
-    return {"message": "This endpoint is rate limited"}
-```
-
-### Health Check Endpoint
-
-```python
-@router.get("/health")
-async def health_check(db: DbSession):
-    try:
-        await db.execute(text("SELECT 1"))
-        return {"status": "healthy", "database": "connected"}
-    except Exception as e:
-        return JSONResponse(
-            status_code=503,
-            content={"status": "unhealthy", "database": str(e)},
-        )
-```
-
-## Dependencies
-
-```toml
-# pyproject.toml
-[project]
-dependencies = [
-    "fastapi>=0.109.0",
-    "uvicorn[standard]>=0.27.0",
-    "pydantic>=2.5.0",
-    "pydantic-settings>=2.1.0",
-    "sqlalchemy>=2.0.0",
-    "asyncpg>=0.29.0",          # PostgreSQL
-    "aiosqlite>=0.19.0",        # SQLite (dev/test)
-    "alembic>=1.13.0",
-    "python-jose[cryptography]>=3.3.0",
-    "passlib[bcrypt]>=1.7.4",
-    "python-multipart>=0.0.6",
-    "httpx>=0.26.0",
-]
-
-[project.optional-dependencies]
-dev = [
-    "pytest>=7.4.0",
-    "pytest-asyncio>=0.23.0",
-    "pytest-cov>=4.1.0",
-    "ruff>=0.1.0",
-    "mypy>=1.8.0",
-]
-```
-
-## Quick Commands
-
-```bash
-# Run development server
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-
-# Run tests
-pytest -v --cov=app tests/
-
-# Type checking
-mypy app/
-
-# Linting
-ruff check app/ tests/
-ruff format app/ tests/
-
-# Database migrations
-alembic revision --autogenerate -m "Description"
-alembic upgrade head
-```
+6. **Testing**
+   - Use in-memory SQLite for unit tests
+   - Use test containers for integration tests
+   - Mock external services

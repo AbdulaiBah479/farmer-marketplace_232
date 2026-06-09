@@ -1,6 +1,16 @@
 ---
 name: cocoindex
-description: Comprehensive toolkit for developing with the CocoIndex library. Use when users need to create data transformation pipelines (flows), write custom functions, or operate flows via CLI or API. Covers building ETL workflows for AI data processing, including embedding documents into vector databases, building knowledge graphs, creating search indexes, or processing data streams with incremental updates.
+description: Comprehensive toolkit for developing with the CocoIndex library. Use
+  when users need to create data transformation pipelines (flows), write custom functions,
+  or operate flows via CLI or API. Covers building ETL workflows for AI data processing,
+  including embedding documents into vector databases, building knowledge graphs,
+  creating search indexes, or processing data streams with incremental updates.
+author: Joseph OBrien
+status: unpublished
+updated: '2025-12-23'
+version: 1.0.1
+tag: skill
+type: skill
 ---
 
 # CocoIndex

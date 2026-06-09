@@ -1,6 +1,6 @@
 ---
 name: allaymc-plugin-dev
-description: Create, update and troubleshoot AllayMC plugins in Java or other JVM languages. Use when (1) creating a new AllayMC plugin. (2) migrating an existing plugin to AllayMC. (3) troubleshooting an AllayMC plugin.
+description: Build, update, and troubleshoot AllayMC plugins in Java or other JVM languages. Use when creating a new AllayMC plugin, migrating an existing plugin to a new Allay API version, wiring commands/events/tasks/config, or setting up Gradle and plugin metadata (plugin.json or AllayGradle plugin block).
 license: LGPL-2.1
 metadata:
   author: AllayMC
@@ -8,88 +8,81 @@ metadata:
 
 # AllayMC Plugin Development
 
-## About AllayMC
+## Overview
 
-AllayMC is a third-party server software for Minecraft: Bedrock Edition written in Java. It provides a set of
-APIs for plugins to use. AllayMC is broadly divided into the following two modules:
+Create AllayMC plugins using the official Java template and the Allay API. Keep the workflow aligned with the latest Allay API and docs from the bundled references, and default to the template's Java 21 toolchain unless the user requests otherwise.
 
-- api: A set of interfaces provided for plugins.
-- server: An implementation of the api. Plugins usually don't have access to it.
+## Null-safety policy
 
-## About Plugin
+AllayMC currently does not use annotations such as JSpecify's @Nullable/@NonNull. Unless a method's Javadoc explicitly states that a parameter or return value may be null, treat it as non-null.
 
-Plugins in AllayMC are just like Bukkit plugins, they are loaded by the server when the server starts. Plugins
-are used to extend server functionality.
+## Workflow
 
-## Workflow for a new plugin
+### 1) Pick the starting point
 
-### 1) Initialize the project
+- Prefer the official template at `references/JavaPluginTemplate` for new plugins.
+- If updating an existing plugin, diff its `build.gradle.kts` and plugin main class against the template.
 
-- Use the official template at `references/JavaPluginTemplate` If the user haven't initialize the project.
-- If the user has already initialized the project, proceed to the next step.
+### 2) Align Gradle and plugin metadata
 
-### 2) Initialize Gradle and plugin metadata
-
-Before you begin, ask the user the following questions:
-
-- What is the name of the plugin?
-- What is the package name used by the plugin?
-- What is the plugin author(s) name?
-- What is the website of the plugin?
-- What is the allay-api version used for the plugin?
-
-After the user answers the above questions, initialize the project metadata with the collected information.
-Before that, determine whether the user is using `JavaPluginTemplate`, which is implemented by determining whether
-the current project package name is `org.allaymc.javaplugintemplate`.
-
-#### Case 1: If the project is using `JavaPluginTemplate`:
-
-- Rename package name from `org.allaymc.javaplugintemplate` to the user provided group name.
-- Set the project name in `settings.gradle.kts` to the user provided plugin name.
-- Update `build.gradle.kts`, solve all the TODOs inside.
-
-#### Case 2: If the project is not using `JavaPluginTemplate`:
-
-- Update `group`, `version` (should start with `0.1.0`), and `description` in `build.gradle.kts`.
-- Keep package of the plugin main class aligned with the value of `group` in `build.gradle.kts`.
-- Set the Java toolchain to 21 unless the user needs a different version in `build.gradle.kts`.
-- If the project is using `AllayGradle` plugin, update the `allay {}` block in `build.gradle.kts`:
+- Update `group`, `description`, and `version` in `build.gradle.kts`.
+- Keep `group` aligned with the package of the plugin main class.
+- Keep the Java toolchain consistent with the template unless the user needs a different version.
+- In the `allay {}` block:
   - Set `api` to the target Allay API version.
   - Set `plugin.entrance` to the fully qualified main class (or short suffix as used in the template).
   - Update `authors` and `website`.
-- If the project does not use the `AllayGradle` plugin, create `plugin.json` per the docs in `references/Allay/docs/tutorials/create-your-first-plugin.md`.
+- If the project does not use the AllayGradle plugin, create or update `plugin.json` per the docs in `references/Allay/docs/tutorials/create-your-first-plugin.md`.
 
 ### 3) Implement the plugin entry class
 
-- Create the plugin entry class using plugin name and let it extends `org.allaymc.api.plugin.Plugin`
-- Override lifecycle methods in the entry class as needed:
-  - `onLoad` which is called before world loading.
-  - `onEnable` which is called after world loading.
-  - `onDisable` which is called when the server is stopping.
+- Extend `org.allaymc.api.plugin.Plugin`.
+- Override lifecycle methods as needed:
+  - `onLoad` for lightweight setup.
+  - `onEnable` for registrations and runtime wiring.
+  - `onDisable` for cleanup.
+- Keep the class name and `plugin.entrance`/`plugin.json` entrance consistent.
 - If reloadable behavior is required, override `isReloadable` and implement `reload`.
+- Reference the base class in `references/Allay/api/src/main/java/org/allaymc/api/plugin/Plugin.java`.
 
-### 4) Implement the plugin logic
+### 4) Add core features (choose only what is needed)
 
-Understand the user's needs and read the documentation and code marked in the reference map below as needed.
+- Commands: follow `references/Allay/docs/tutorials/register-commands.md`.
+- Events: follow `references/Allay/docs/tutorials/register-event-listeners.md`.
+- Tasks: follow `references/Allay/docs/tutorials/schedule-tasks.md`.
+- Config: follow `references/Allay/docs/tutorials/use-config.md`.
+- Permissions: follow `references/Allay/docs/tutorials/use-permission.md`.
+- i18n: follow `references/Allay/docs/tutorials/use-i18n.md`.
+- Forms/UI: follow `references/Allay/docs/tutorials/use-forms.md`.
+- Data: follow `references/Allay/docs/tutorials/persistent-data-container.md`.
+- Blocks/items: follow `references/Allay/docs/tutorials/block-api.md` and `references/Allay/docs/tutorials/item-api.md`.
 
 ### 5) Build and run
 
 - Use `./gradlew runServer` for local testing when the AllayGradle plugin is configured.
 - Use `./gradlew shadowJar` to build the shaded jar.
+- Copy the jar from `build/libs/*-shaded.jar` into the Allay server `plugins` directory.
 
-## Reference map
+### 6) Troubleshoot (only when asked)
 
-- Allay documents (read on demand): `references/Allay/docs/tutorials` and `references/Allay/docs/advanced`.
-- JavaPluginTemplate: `references/JavaPluginTemplate`
-- Allay project source: `references/Allay`
-  - Allay API: `references/Allay/api/src/main/java/org/allaymc/api`
-  - Allay Server (API Implementation): `references/Allay/server/src/main/java/org/allaymc/server`
-- AllayGradle project source: `references/AllayGradle`
-  - Usage Guide: `references/AllayGradle/README.md`
+- Plugin not loading: verify `plugin.entrance` (or `plugin.json` entrance), `api`/`api_version`, and the jar location.
+- API mismatch: update the Gradle `allay.api` version to a valid Allay API release.
+- Class not found: confirm the package name matches `group` and the compiled class name.
 
-## Notes
+## Reference map (load on demand)
 
-- AllayMC is multithreaded, and special attention should be paid to multithreaded security issues when writing project code.
-- AllayMC currently does not use annotations such as JSpecify's `@Nullable`/`@NonNull`. Unless a method's Javadoc explicitly states that
-  a parameter or return value may be null, treat it as non-null.
-- Don't overwrite defensive code, such as checking if an object that is explicitly marked as impossible null is null. Produce readable, easy-to-maintain code.
+- Template project: `references/JavaPluginTemplate`
+  - `build.gradle.kts` for Gradle + AllayGradle conventions
+  - `README.md` for template initialization steps
+  - `src/main/java/.../JavaPluginTemplate.java` for lifecycle structure
+- AllayGradle: `references/AllayGradle`
+  - Gradle plugin sources and configuration patterns
+- Allay source and API: `references/Allay`
+  - API entry points: `api/src/main/java/org/allaymc/api`
+  - Tutorials: `docs/tutorials/*.md`
+
+## Output expectations
+
+- Keep Gradle config, plugin metadata, and main class in sync.
+- Target the requested Allay API version and reflect it in Gradle metadata.
+- Prefer the template conventions unless the user explicitly wants a custom structure.

@@ -1,497 +1,256 @@
 ---
 name: figma-to-code
-description: Génère du code à partir d'une sélection Figma en utilisant les composants existants et Code Connect. Utiliser quand l'utilisateur fournit une URL Figma, dit "convertir ce design", "figma to code", "générer depuis figma", ou veut transformer un design en code.
-model: opus
-context: fork
-agent: Plan
-allowed-tools:
-  - Read
-  - Write
-  - Glob
-  - Grep
-  - Bash
-  - WebFetch
-argument-hint: <figma-url>
-user-invocable: true
-knowledge:
-  core:
-    - figma/mcp-tools-reference.md
-    - figma/tokens-mapping.md
-  advanced:
-    - figma/code-connect-guide.md
+description: Extract Figma designs and generate production-ready React/Next.js components with TypeScript, Tailwind CSS, and pixel-perfect accuracy. Use when a user provides a Figma URL or asks to convert Figma designs to code.
 ---
 
-# Figma to Code
+# Figma to Code - Production-Ready Component Generator
 
-## 📥 Contexte à charger
+## 🎯 Purpose
 
-**Au démarrage, vérifier l'environnement Figma et les composants existants.**
-
-| Contexte | Pattern/Action | Priorité |
-|----------|----------------|----------|
-| Code Connect | `Read: figma.config.json` | Recommandé |
-| Composants existants | `Glob: src/components/ui/*.{tsx,jsx,vue}` | Requis |
-| Mappings Figma | `Glob: src/components/**/*.figma.tsx` | Optionnel |
-| Framework | `Grep: package.json` pour react/vue/angular/next | Requis |
-| Design tokens | `Read: src/styles/tokens.css` ou `docs/planning/ui/tokens.css` | Optionnel |
-
-### Instructions de chargement
-1. Vérifier si Code Connect est configuré (figma.config.json)
-2. Scanner les composants UI existants pour réutilisation
-3. Identifier les mappings .figma.tsx existants
-4. Détecter le framework pour générer le bon code
+Extract **complete, lossless** design information from Figma and generate production-ready React/Next.js components with TypeScript and Tailwind CSS.
 
 ---
 
-## Activation
+## 🚨 CRITICAL RULES - Read First!
 
-> **Au démarrage :**
-> 1. Parser l'URL Figma fournie
-> 2. Vérifier si Code Connect est configuré
-> 3. Détecter le framework du projet
-> 4. Identifier les composants mappés disponibles
+### **Rule 1: NEVER Truncate Code**
 
-## Rôle & Principes
-
-**Rôle** : Transformer un design Figma en code fonctionnel en utilisant les composants existants du projet. Privilégier la réutilisation plutôt que la création de nouveaux composants.
-
-**Principes** :
-- **Réutilisation first** - Utiliser les composants mappés existants
-- **Tokens first** - Utiliser les design tokens du projet
-- **Clean code** - Générer du code lisible et maintenable
-- **Framework-aware** - Respecter les conventions du framework détecté
-
-**Règles** :
-- ⛔ Ne JAMAIS créer de nouveaux composants de base (Button, Input, etc.)
-- ⛔ Ne JAMAIS hardcoder des valeurs de style (utiliser les tokens)
-- ⛔ Ne JAMAIS ignorer les composants mappés existants
-- ✅ Toujours vérifier les mappings avant de générer
-- ✅ Toujours utiliser les tokens CSS existants
-- ✅ Toujours proposer de créer les mappings manquants
-
----
-
-## Process
-
-### 1. Parsing de l'URL Figma
-
-```markdown
-🔗 **Analyse URL Figma**
-
-**URL** : [URL fournie]
-
-**Extraction** :
-| Élément | Valeur |
-|---------|--------|
-| File Key | [file_key] |
-| Node ID | [node_id ou "page entière"] |
-| File Name | [nom si disponible] |
-
-**Type de sélection** :
-- [ ] Composant unique
-- [ ] Frame / Screen
-- [ ] Page complète
-
-Je récupère les informations du design ?
-```
-
-**⏸️ STOP** - Validation avant appel API
-
----
-
-### 2. Vérification des mappings existants
-
-```markdown
-🔍 **Mappings Code Connect**
-
-**Composants mappés disponibles** :
-| Composant Figma | Composant Code | Mapping |
-|-----------------|----------------|---------|
-| Button | `<Button>` | ✅ |
-| Input | `<Input>` | ✅ |
-| Card | `<Card>` | ✅ |
-| [Autre] | - | ❌ |
-
-**Composants dans le design** :
-[Liste des composants détectés dans la sélection Figma]
-
-**Match** : [X/Y] composants ont un mapping existant
-
-[Si mappings manquants]
-⚠️ [N] composants sans mapping. Options :
-- [C] Continuer avec composants génériques
-- [M] Créer les mappings d'abord (`/figma-setup`)
-```
-
-**⏸️ STOP** - Décision sur les mappings manquants
-
----
-
-### 3. Extraction du design
-
-Utiliser les outils MCP Figma :
-
-```markdown
-📐 **Design extrait**
-
-**Structure** :
-```
-[Frame Name]
-├── Header
-│   ├── Logo (Image)
-│   └── Navigation (→ mapped: NavBar)
-├── Hero Section
-│   ├── Title (Text)
-│   ├── Description (Text)
-│   └── CTA (→ mapped: Button)
-└── Content
-    └── Cards Grid
-        ├── Card 1 (→ mapped: Card)
-        ├── Card 2 (→ mapped: Card)
-        └── Card 3 (→ mapped: Card)
-```
-
-**Tokens utilisés** :
-| Token Figma | Token CSS local |
-|-------------|-----------------|
-| Primary/500 | --color-primary-500 |
-| Spacing/lg | --space-lg |
-| Radius/md | --radius-md |
-
-**Dimensions** : [W] × [H]
-
-Je génère le code ?
-```
-
-**⏸️ STOP** - Validation structure avant génération
-
----
-
-### 4. Génération du code
-
-```markdown
-💻 **Code généré**
-
-**Fichier** : `src/components/[name].tsx`
+Use **100% of Figma MCP output**. Every className, every property matters.
 
 ```tsx
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+// ✅ CORRECT: Keep ALL className from Figma MCP
+<div className="absolute font-source-serif h-[108px] leading-[1.8] left-[100px] not-italic text-[20px] text-[rgba(29,38,45,0.8)] text-justify top-[210px] w-[1096px] whitespace-pre-wrap">
 
-interface [ComponentName]Props {
-  // Props extraites du design
-}
-
-export function [ComponentName]({ ...props }: [ComponentName]Props) {
-  return (
-    <div className="[styles utilisant tokens]">
-      {/* Structure générée depuis Figma */}
-    </div>
-  );
-}
+// ❌ WRONG: Removing any className
+<div className="absolute left-[100px] top-[210px] font-source-serif text-[20px]">
 ```
 
-**Composants utilisés** :
-- `Button` (mapped) ✅
-- `Card` (mapped) ✅
-- `Input` (mapped) ✅
+### **Rule 2: Flatten `absolute contents` Structures**
 
-**Tokens utilisés** :
-- `--color-primary-500`
-- `--space-lg`
-- `--radius-md`
+**🔥 CRITICAL: Figma MCP returns nested `absolute contents` containers. `display: contents` makes the parent "disappear" - children are positioned relative to the nearest positioned ancestor (root)!**
 
-Ce code te convient ?
-```
-
-**⏸️ STOP** - Validation code généré
-
----
-
-### 5. Proposition de mappings manquants
-
-Si des composants Figma n'ont pas de mapping :
-
-```markdown
-🔗 **Mappings manquants**
-
-Ces composants Figma n'ont pas de mapping Code Connect :
-
-| Composant Figma | Composant code suggéré | Action |
-|-----------------|------------------------|--------|
-| [FigmaComponent] | `src/components/ui/[name].tsx` | Créer mapping |
-| [Autre] | `src/components/ui/[name].tsx` | Créer mapping |
-
-**Créer les mappings maintenant ?**
-- [Y] Oui, créer les fichiers .figma.tsx
-- [N] Non, utiliser les composants génériques
-- [S] Setup complet (`/figma-setup`)
-```
-
-**⏸️ STOP** - Décision mappings
-
-Si oui, créer les fichiers .figma.tsx :
+**Key Insight: Children's positions are ALREADY absolute - DO NOT add parent's top/left!**
 
 ```tsx
-// src/components/ui/[name].figma.tsx
-import figma from "@figma/code-connect";
-import { ComponentName } from "./[name]";
-
-figma.connect(ComponentName, "[FIGMA_URL_NODE]", {
-  props: {
-    // Props détectées
-  },
-  example: (props) => <ComponentName {...props} />,
-});
-```
-
----
-
-### 6. Écriture du fichier
-
-```markdown
-📝 **Fichier créé**
-
-**Path** : `src/components/[path]/[name].tsx`
-
-**Contenu** : [résumé du composant]
-
-**Imports** :
-- [X] composants UI mappés
-- [Y] tokens CSS
-- [Z] types
-
-Le fichier a été créé. Vérifications :
-- [ ] Pas d'erreurs TypeScript
-- [ ] Imports corrects
-- [ ] Tokens utilisés (pas de hardcode)
-```
-
-Écrire le fichier avec Write.
-
----
-
-### 7. Validation & Résumé
-
-```markdown
-## ✅ Code généré depuis Figma
-
-**Source** : [URL Figma]
-**Fichier créé** : `src/components/[name].tsx`
-
-**Résumé** :
-| Métrique | Valeur |
-|----------|--------|
-| Composants mappés utilisés | [N] |
-| Tokens CSS utilisés | [N] |
-| Lignes de code | [N] |
-| Props typées | [N] |
-
-**Composants réutilisés** :
-- `Button` ✅
-- `Card` ✅
-- `Input` ✅
-
-**Nouveaux mappings créés** : [N] (si applicable)
-
----
-
-**Prochaine étape ?**
-- [A] Générer un autre composant (`/figma-to-code [url]`)
-- [T] Écrire les tests (`/test-runner`)
-- [R] Review le code (`/code-reviewer`)
-```
-
-**⏸️ STOP** - Fin de génération
-
----
-
-## Détection du framework
-
-### React / Next.js
-
-```tsx
-// Imports
-import { ComponentName } from "@/components/ui/component";
-
-// Styles
-className="flex gap-4 p-6"  // Tailwind si détecté
-className={styles.container} // CSS Modules si détecté
-
-// Props
-interface Props {
-  title: string;
-  onClick?: () => void;
-}
-```
-
-### Vue
-
-```vue
-<template>
-  <div class="container">
-    <ComponentName :prop="value" />
-  </div>
-</template>
-
-<script setup lang="ts">
-import ComponentName from '@/components/ui/ComponentName.vue';
-
-defineProps<{
-  title: string;
-}>();
-</script>
-```
-
-### HTML / Web Components
-
-```html
-<div class="container">
-  <custom-button variant="primary">Click me</custom-button>
+// ❌ WRONG: Figma MCP output (has redundant parent wrapper)
+<div className="absolute contents left-0 top-[41px]">
+  <p className="absolute left-[100px] top-[41px]">TITLE</p>
+  <div className="absolute left-0 top-[100px]">Line</div>
 </div>
 
-<style>
-.container {
-  display: flex;
-  gap: var(--space-md);
+// ✅ CORRECT: Just remove the parent wrapper, keep children's positions AS-IS
+<>
+  <p className="absolute left-[100px] top-[41px]">TITLE</p>
+  <div className="absolute left-0 top-[100px] w-[1920px] h-[1px] bg-[#C5CBCE] opacity-30" />
+</>
+```
+
+**Position Handling Rules:**
+
+| Parent Type | Child Position | Action |
+|-------------|----------------|--------|
+| `absolute contents` | Child has own `top/left` | **Keep child position AS-IS**, just remove parent |
+| `absolute` (no contents) | Child has relative `top/left` | Calculate: `parent + child` |
+| `relative` | Child has `top/left` | Calculate: `parent + child` |
+
+**🔥 The Golden Rule:**
+```
+If parent has "contents" class → Child positions are already absolute → Keep AS-IS
+If parent has NO "contents" class → Child positions are relative → Add parent + child
+```
+
+**Reference: Verified correct positions (from production HTML):**
+- Header text: `top-[41px]` (not 82px)
+- Header line: `top-[100px]` (not 141px)
+- Footer line: `top-[980px]`
+- Page number: `top-[1004px]`
+
+### **Rule 3: Extract Dimensions from Metadata**
+
+**NEVER hardcode dimensions!**
+
+```typescript
+// 1. Get metadata first
+const metadata = await mcp__figma__get_metadata({
+  fileKey: 'xxx',
+  nodeId: '11:1420'
+})
+
+// 2. Extract from XML
+// <frame width="1920" height="1080">
+const pageWidth = 1920
+const pageHeight = 1080
+
+// 3. Use extracted values
+<div className="w-[1920px] h-[1080px]">
+```
+
+### **Rule 4: Font Loading & Name Mapping**
+
+**🔥 CRITICAL: Use Google Fonts CDN directly, NOT `next/font/google`!**
+
+`next/font/google` generates CSS variables and self-hosts fonts, but the font rendering may differ from reference HTML that uses Google Fonts CDN directly. This causes:
+- Different character widths (text wrapping issues)
+- Different optical size handling for variable fonts
+
+#### **4.1 Font Loading (layout.tsx)**
+
+```tsx
+// ❌ WRONG: Using next/font/google
+import { Source_Serif_4, Kaisei_Tokumin } from 'next/font/google'
+const sourceSerif = Source_Serif_4({ subsets: ['latin'], variable: '--font-source-serif' })
+// This may render fonts differently than Google Fonts CDN!
+
+// ✅ CORRECT: Use Google Fonts CDN directly in layout.tsx
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&family=Kaisei+Tokumin:wght@400;500;700;800&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body>{children}</body>
+    </html>
+  )
 }
-</style>
 ```
 
----
+**Key:** Include `opsz` (optical size) axis for Source Serif 4 - this affects character widths!
 
-## Mapping des styles Figma → Code
+#### **4.2 Font CSS (globals.css)**
 
-### Couleurs
-
-| Figma | Tailwind | CSS Variable |
-|-------|----------|--------------|
-| `Primary/500` | `bg-primary-500` | `var(--color-primary-500)` |
-| `Neutral/100` | `bg-gray-100` | `var(--color-neutral-100)` |
-
-### Spacing
-
-| Figma | Tailwind | CSS Variable |
-|-------|----------|--------------|
-| `8` | `p-2` | `var(--space-sm)` |
-| `16` | `p-4` | `var(--space-md)` |
-| `24` | `p-6` | `var(--space-lg)` |
-
-### Typography
-
-| Figma | Tailwind | CSS Variable |
-|-------|----------|--------------|
-| `Heading/H1` | `text-3xl font-bold` | `var(--font-heading-1)` |
-| `Body/Regular` | `text-base` | `var(--font-body)` |
-
----
-
-## Output Validation
-
-Avant de terminer, valider :
-
-```markdown
-### ✅ Checklist Output Figma to Code
-
-| Critère | Status |
-|---------|--------|
-| URL Figma parsée correctement | ✅/❌ |
-| Design extrait | ✅/❌ |
-| Composants mappés utilisés | ✅/❌ |
-| Tokens CSS utilisés (pas hardcode) | ✅/❌ |
-| Code TypeScript valide | ✅/❌ |
-| Fichier créé | ✅/❌ |
-
-**Score : X/6** → Si < 5, corriger avant de terminer
+```css
+@layer utilities {
+  /* Use direct font-family names, NOT CSS variables */
+  .font-source-serif {
+    font-family: 'Source Serif 4', serif;
+  }
+  .font-kaisei {
+    font-family: 'Kaisei Tokumin', serif;
+  }
+}
 ```
 
----
+#### **4.3 Font Name Mapping**
 
-## Auto-Chain
+```typescript
+// Figma MCP returns:
+font-['Kaisei_Tokumin:ExtraBold',sans-serif]
+font-['Source_Serif_Pro:SemiBold',sans-serif]
 
-Après la génération, proposer :
+// ✅ Convert to Tailwind classes:
+font-kaisei font-extrabold
+font-source-serif font-semibold
 
-```markdown
-## 🔗 Prochaine étape
-
-✅ Code généré depuis Figma.
-
-**Suggestions :**
-
-→ 🧪 **`/test-runner`** - Écrire des tests pour le composant
-→ 🔄 **`/code-reviewer`** - Review du code généré
-→ 🖼️ **`/figma-to-code [autre-url]`** - Générer un autre composant
-
----
-
-**[T] Tests** | **[R] Review** | **[F] Autre Figma** | **[X] Terminé**
+// Font name corrections (Google Fonts 2024):
+'Source Serif Pro' → 'Source Serif 4'
+'Source Sans Pro' → 'Source Sans 3'
 ```
 
-**⏸️ STOP** - Attendre choix
+#### **4.4 Font Weight Mismatch Warning**
 
----
+**⚠️ Figma's font weight names may NOT match CSS font-weights!**
 
-## Gestion des erreurs
+Figma renders fonts differently than browsers. What Figma calls "Bold" might visually appear lighter than CSS `font-weight: 700`.
 
-### URL invalide
+| Figma Weight Name | Expected CSS | May Actually Need |
+|-------------------|--------------|-------------------|
+| Regular | 400 | 400 |
+| Medium | 500 | 500 |
+| Bold | 700 | **500 or 600** (test visually!) |
+| ExtraBold | 800 | **700** (test visually!) |
 
-```markdown
-❌ **URL Figma invalide**
+**Solution:** Always compare with Figma screenshot. If text looks too bold, try one weight lighter:
+- `font-bold` (700) → try `font-medium` (500)
+- `font-extrabold` (800) → try `font-bold` (700)
 
-L'URL fournie ne semble pas être une URL Figma valide.
+### **Rule 5: Critical CSS**
 
-**Format attendu** :
-```
-https://figma.com/design/FILE_KEY/FILE_NAME?node-id=NODE_ID
-https://figma.com/file/FILE_KEY/FILE_NAME?node-id=NODE_ID
-```
+**Must add to globals.css:**
 
-**Exemples valides** :
-- `https://figma.com/design/ABC123/MyDesign?node-id=1:234`
-- `https://figma.com/file/XYZ789/Components`
+```css
+body {
+  overflow-x: auto; /* Allow horizontal scroll */
+}
 
-Fournis une URL Figma valide.
-```
-
-### Pas de Code Connect
-
-```markdown
-⚠️ **Code Connect non configuré**
-
-Pour une meilleure génération, configure d'abord Code Connect :
-
-```bash
-/figma-setup
+.page-container {
+  min-width: max-content;  /* Prevent compression */
+  display: inline-block;   /* Keep layout intact */
+}
 ```
 
-**Options** :
-- [S] Setup Code Connect d'abord (recommandé)
-- [C] Continuer sans mappings (génération basique)
+### **Rule 6: Replace Simple Images with CSS**
+
+**Optimize line images:**
+
+```tsx
+// ❌ Before: Image-based line
+<div className="absolute h-0 left-0 top-[100px] w-[1920px]">
+  <div className="absolute inset-[-1px_0_0_0]">
+    <img src={imgLine} />
+  </div>
+</div>
+
+// ✅ After: CSS-based line
+<div className="absolute left-0 top-[141px] w-[1920px] h-[1px] bg-[#C5CBCE] opacity-30" />
 ```
 
-### Accès refusé
+### **Rule 7: Inline SVG Assets**
 
-```markdown
-❌ **Accès au fichier Figma refusé**
+```tsx
+// ❌ Before: External image
+<img src={imgVector} />
 
-Tu n'as pas accès à ce fichier Figma.
-
-**Solutions** :
-1. Vérifie que tu es connecté au bon compte Figma
-2. Demande l'accès au propriétaire du fichier
-3. Vérifie que le lien de partage est activé
-
-Re-authentification :
-```bash
-npx figma connect
-```
+// ✅ After: Inline SVG
+<svg viewBox="0 0 35 34" fill="none">
+  <path d="M17.5 0L0 34..." fill="#1d262d"/>
+</svg>
 ```
 
----
+### **Rule 7.5: Remove Fixed Heights from Text Blocks**
 
-## Transitions
+**🔥 CRITICAL: Figma MCP outputs fixed heights for text blocks, but this causes line-wrapping issues!**
 
-- **Vers test-runner** : "On écrit les tests pour ce composant ?"
-- **Vers code-reviewer** : "On review le code généré ?"
-- **Vers figma-setup** : "On configure Code Connect d'abord ?"
+Font metrics differ between Figma's rendering and browser rendering (even with the same font family). Fixed heights can cause:
+- Text overflow or clipping
+- Different line counts than expected
+- Layout breaks when font rendering differs slightly
+
+```tsx
+// ❌ WRONG: Figma MCP output with fixed height
+<p className="absolute h-[72px] leading-[1.8] left-[100px] text-[20px] top-[570px] w-[1096px]">
+  Long text that might wrap differently in browser...
+</p>
+
+// ✅ CORRECT: Remove h-[Xpx], let text flow naturally
+<div className="absolute leading-[1.8] left-[100px] text-[20px] top-[570px] w-[1096px]">
+  <p className="mb-0">Long text that might wrap differently in browser...</p>
+</div>
+```
+
+**When to keep fixed heights:**
+- Container elements (cards, boxes) - keep dimensions
+- Table rows with single-line content - keep `h-[34px]`
+- Images and icons - keep dimensions
+
+**When to remove fixed heights:**
+- Multi-line text paragraphs - ALWAYS remove `h-[Xpx]`
+- Text blocks with `text-justify` - especially important
+- Any text that could wrap differently
+
+**Pattern: Use `<div>` wrapper with `<p className="mb-0">`:**
+```tsx
+// This matches reference HTML structure and ensures proper text flow
+<div className="absolute font-source-serif leading-[1.8] left-[100px] text-[20px] top-[570px] w-[1096px]">
+  <p className="mb-0">Text content here...</p>
+</div>
+```
+
+
+## Extended Reference
+
+Detailed material starting at `### **Rule 8: Table Pattern Detection & Conversion**` has been moved to [`reference/extended.md`](reference/extended.md) to keep this skill concise. Load that reference when the task requires the moved examples, command catalogs, checklists, platform details, or implementation templates.

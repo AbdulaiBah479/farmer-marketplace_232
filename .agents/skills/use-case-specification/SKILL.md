@@ -1,147 +1,79 @@
 ---
 name: use-case-specification
-description: Creates use case specifications with structured scenarios and business rules.
+description: Creates a reusable use case specification file that defines the business problem, stakeholders, and measurable success criteria for model customization, as recommended by the AWS Responsible AI Lens. Use as the default first step in any model customization plan. Skip only if the user explicitly declines or already has a use case specification to reuse. Captures problem statement, primary users, and LLM-as-a-Judge success tenets.
+metadata:
+  version: "1.0.0"
 ---
 
-# Use Case Specification Writer
+# Use Case Specification
 
-## Instructions
+Multi-turn conversation to gather use case details and produce a use case specification document.
 
-Create or update use case specification documents in `docs/use_cases/`. Each use case describes a complete interaction
-between an actor and the system to achieve a goal.
+## Principles
 
-## DO NOT
-
-- Write vague or incomplete scenarios
-- Skip numbering steps in the Main Success Scenario
-- Omit alternative flows for error conditions
-- Leave postconditions undefined
-- Mix multiple use cases in one document
-- Use technical implementation details in the flow steps
-
-## Template
-
-Use [templates/use-case.md](templates/use-case.md) as the document structure.
-
-## Example Use Case
-
-# Use Case: Create Reservation
-
-## Overview
-
-**Use Case ID:** UC-001
-**Use Case Name:** Create Reservation
-**Primary Actor:** Front Desk Clerk
-**Goal:** Create a new room reservation for a guest
-**Status:** Approved
-
-## Preconditions
-
-- Clerk is logged into the system
-- At least one room type is available for the requested dates
-
-## Main Success Scenario
-
-1. Clerk selects "New Reservation" from the menu.
-2. System displays the reservation form.
-3. Clerk enters guest information (name, email, phone).
-4. Clerk selects check-in and check-out dates.
-5. System displays available room types for the selected dates.
-6. Clerk selects a room type.
-7. System calculates the total price.
-8. Clerk confirms the reservation.
-9. System creates the reservation and displays a confirmation number.
-
-## Alternative Flows
-
-### A1: Guest Already Exists
-
-**Trigger:** Guest email matches existing record (step 3)
-**Flow:**
-
-1. System displays existing guest information.
-2. Clerk confirms or updates guest details.
-3. Use case continues at step 4.
-
-### A2: No Rooms Available
-
-**Trigger:** No rooms available for selected dates (step 5)
-**Flow:**
-
-1. System displays "No availability" message.
-2. Clerk adjusts dates or cancels operation.
-3. Use case continues at step 4 or ends.
-
-### A3: Payment Required
-
-**Trigger:** Business rule requires deposit (step 8)
-**Flow:**
-
-1. System prompts for payment information.
-2. Clerk enters payment details.
-3. System processes payment.
-4. Use case continues at step 9.
-
-## Postconditions
-
-### Success Postconditions
-
-- Reservation is stored in the system with status "Confirmed"
-- Room availability is updated for the reserved dates
-- Confirmation email is sent to the guest
-
-### Failure Postconditions
-
-- No reservation is created
-- Room availability remains unchanged
-- System displays error message to clerk
-
-## Business Rules
-
-### BR-001: Minimum Stay
-
-Reservations must be for at least one night.
-
-### BR-002: Advance Booking Limit
-
-Reservations cannot be made more than 365 days in advance.
-
-### BR-003: Deposit Requirement
-
-Reservations of 3 or more nights require a 50% deposit.
-
-## Status Reference
-
-| Status   | Description                                      |
-|----------|--------------------------------------------------|
-| Draft    | Initial version, still being written.            |
-| Review   | Complete, awaiting stakeholder review.           |
-| Approved | Reviewed and approved for implementation.        |
-| Obsolete | No longer valid, superseded by another use case. |
-
-## Step Writing Guidelines
-
-| Do                                  | Don't                                         |
-|-------------------------------------|-----------------------------------------------|
-| "User clicks Save button"           | "User triggers onClick handler"               |
-| "System validates the email format" | "System runs regex /^[\w]+@[\w]+$/"           |
-| "System displays error message"     | "System throws ValidationException"           |
-| "User enters check-in date"         | "User populates dateField component"          |
-| "System stores the reservation"     | "System executes INSERT INTO reservations..." |
+1. **One thing at a time.** Each response advances exactly one decision or collects one piece of information.
+2. **Confirm before proceeding.** Wait for the user to approve the spec before considering this skill complete.
+3. **Infer, don't interrogate.** Use what's already known from the conversation. Only ask when you truly can't infer.
+4. **Do NOT ask about base model selection.** Model selection is handled exclusively by the finetuning-setup skill.
 
 ## Workflow
 
-1. Read the requirements document and use case diagram
-2. Identify the use case to document
-3. Use TodoWrite to track progress
-4. Write the Overview section with actor and goal
-5. Define preconditions (what must be true before starting)
-6. Write the Main Success Scenario step by step
-7. Identify alternative flows:
-    - Error conditions
-    - Optional paths
-    - Exceptional situations
-8. Define postconditions for both success and failure
-9. Document applicable business rules
-10. Review for completeness and clarity
-11. Mark todo complete
+### Step 0: Check for Existing Spec
+
+Before starting discovery, check if a `*_use_case_spec.md` file already exists in the project. If it does, present it to the user and ask whether they want to reuse it, modify it, or start fresh.
+
+### Phase 1: Discovery (1–3 turns)
+
+Review what is already known from the conversation so far, then identify what is still missing. You need these three things:
+
+- **What** is the problem the user is trying to solve with model customization
+- **Who** will use the finetuned model and in what context
+- **Which** success criteria can be used to evaluate how well the custom model performs compared to the base model on a test set. Success criteria must be measurable by an LLM-as-a-Judge (e.g., response accuracy, tone adherence) — not things like latency or throughput.
+
+**Guidelines**:
+
+- Infer as much as possible from what the user has already said
+- If the user gave examples, use them to fill gaps rather than asking again
+- Only ask clarifying questions when you cannot infer the information needed for Phase 2
+- If everything is already clear, say "You've given me a clear picture. I'll put together a use case specification now." and move to Phase 2.
+
+⏸ Wait for user after each clarifying question.
+
+### Phase 2: Producing a Use Case Specification Document
+
+1. Save all generated artifacts under the project directory structure defined by the directory-management skill, if available.
+2. Synthesize the information you collected from the user into a Markdown document called [relevant_title]_use_case_spec.md containing the following fields (and only these fields):
+
+```
+Use case description
+  - Concise problem statement + what the custom model will do
+  - Field name: “Business Problem”
+  - Type: String
+
+Key stakeholders
+  - Who uses the model and in what context
+  - Field name: “Primary Users”
+  - Type: String, comma separated if there are multiple 
+
+Success criteria
+  - A list of 3 criteria (a short name and a description) with which the user measure the success of the custom model. 
+  - Field name: “Success Tenets”
+  - Type: list of name-description pairs
+```
+
+1. Present the use case specification in a human-readable format as follows:
+
+I have put together a use case specification and saved it in [relevant_title]_use_case_spec.md.
+
+A use case specification is a design principle recommended by the [AWS Responsible AI Lens](https://docs.aws.amazon.com/wellarchitected/latest/responsible-ai-lens/design-principles.html).
+
+[use case in human-readable format]
+
+Does this match your intent?
+
+⏸ Wait for user approval.
+
+## use_case_specification Edit Protocol
+
+- If the user requests changes pertaining to any information covered by use_case_spec.md, you must edit it accordingly and ask for confirmation again.
+- The user can edit use_case_spec.md directly if they want to. If the user says they've updated the file directly, read it to get the latest in your context.

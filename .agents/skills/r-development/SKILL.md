@@ -1,274 +1,214 @@
 ---
 name: r-development
-description: Expert guidance for R package development following best practices for devtools, testthat, roxygen2, and R ecosystem tools
+description: Modern R development practices emphasizing tidyverse patterns (dplyr 1.1 and later, native pipe, join_by, .by grouping), rlang metaprogramming, performance optimization, and package development. Use when Claude needs to write R code, create R packages, optimize R performance, or provide R programming guidance.
 ---
 
-# R Package Development
+# R Development
 
-Use this skill when working with R packages to ensure proper development workflows, testing patterns, and documentation standards.
+This skill provides comprehensive guidance for modern R development, emphasizing current best practices with tidyverse, performance optimization, and professional package development.
 
-## Development Workflow
+## Core Principles
 
-### Package Building and Management
+1. **Use modern tidyverse patterns** - Prioritize dplyr 1.1+ features, native pipe, and current APIs
+2. **Profile before optimizing** - Use profvis and bench to identify real bottlenecks
+3. **Write readable code first** - Optimize only when necessary and after profiling
+4. **Follow tidyverse style guide** - Consistent naming, spacing, and structure
+
+## Modern Tidyverse Essentials
+
+### Native Pipe (`|>` not `%>%`)
+
+Always use native pipe `|>` instead of magrittr `%>%` (R 4.1+):
 
 ```r
-# Load package for interactive development
-devtools::load_all()
+# Modern
+data |> 
+  filter(year >= 2020) |>
+  summarise(mean_value = mean(value))
 
-# Update documentation (REQUIRED before committing R changes)
-devtools::document()
-
-# Run all tests
-devtools::test()
-
-# Run specific test file
-testthat::test_file("tests/testthat/test-filename.R")
-
-# Run tests matching a pattern
-devtools::test(filter = "pattern")
-testthat::test_local(filter = "pattern")
-
-# Check package (R CMD check)
-devtools::check()
-
-# Build package
-devtools::build()
-
-# Install package locally
-devtools::install()
-
-# Check with vignettes built
-devtools::check(build_args = c("--compact-vignettes=both"))
+# Avoid legacy pipe
+data %>% filter(year >= 2020)
 ```
 
-### Code Quality and Style
+### Join Syntax (dplyr 1.1+)
+
+Use `join_by()` for all joins:
 
 ```r
-# Lint package (configuration in .lintr)
-lintr::lint_package()
+# Modern join syntax with equality
+transactions |> 
+  inner_join(companies, by = join_by(company == id))
 
-# Lint specific file
-lintr::lint("R/filename.R")
+# Inequality joins
+transactions |>
+  inner_join(companies, join_by(company == id, year >= since))
 
-# Style code (pre-commit hook typically uses tidyverse style)
-styler::style_pkg()
-
-# Check test coverage
-covr::package_coverage()
+# Rolling joins (closest match)
+transactions |>
+  inner_join(companies, join_by(company == id, closest(year >= since)))
 ```
 
-### Documentation Building
+Control match behavior:
 
 ```r
-# Build vignettes
-devtools::build_vignettes()
+# Expect 1:1 matches
+inner_join(x, y, by = join_by(id), multiple = "error")
 
-# Build specific vignette
-rmarkdown::render("vignettes/name.Rmd")
-
-# Build pkgdown site locally
-pkgdown::build_site()
+# Ensure all rows match
+inner_join(x, y, by = join_by(id), unmatched = "error")
 ```
 
-## Testing Best Practices
+### Per-Operation Grouping with `.by`
 
-### testthat Patterns
-
-**Preferred expectations:**
-
-- `expect_identical()` > `expect_equal()` (when exact match expected)
-- Multiple `expect_true()` calls > stacking conditions with `&&`
-- `expect_s3_class()` > `expect_true(inherits(...))`
-- Use specific `expect_*` functions:
-  - `expect_lt()`, `expect_gt()`, `expect_lte()`, `expect_gte()`
-  - `expect_length()`
-  - `expect_named()`
-  - `expect_type()`
-
-**Examples:**
+Use `.by` instead of `group_by() |> ... |> ungroup()`:
 
 ```r
-# Good
-expect_identical(result, expected)
-expect_s3_class(obj, "data.frame")
-expect_lt(value, 10)
-expect_true(condition1)
-expect_true(condition2)
+# Modern approach (always returns ungrouped)
+data |>
+  summarise(mean_value = mean(value), .by = category)
 
-# Avoid
-expect_equal(result, expected)  # when identical match is needed
-expect_true(inherits(obj, "data.frame"))
-expect_true(value < 10)
-expect_true(condition1 && condition2)
+# Multiple grouping variables
+data |>
+  summarise(total = sum(revenue), .by = c(company, year))
 ```
 
-### Test Organisation
+### Column Operations
 
-- Use testthat edition 3
-- Test files named `test-{component}.R`
-- Helper files in `tests/testthat/helper-{name}.R`
-- Setup files in `tests/testthat/setup.R` for shared fixtures
-- Custom expectations in `tests/testthat/helper-expectations.R`
-
-### Conditional Testing
+Use modern column selection and transformation functions:
 
 ```r
-# Skip tests on CRAN
-testthat::skip_on_cran()
+# pick() for column selection in data-masking contexts
+data |>
+  summarise(
+    n_x_cols = ncol(pick(starts_with("x"))),
+    n_y_cols = ncol(pick(starts_with("y")))
+  )
 
-# Skip if not on CI
-testthat::skip_if_not(on_ci())
+# across() for applying functions to multiple columns
+data |>
+  summarise(across(where(is.numeric), mean, .names = "mean_{.col}"), .by = group)
 
-# Skip if package not available
-testthat::skip_if_not_installed("package")
+# reframe() for multi-row results per group
+data |>
+  reframe(quantiles = quantile(x, c(0.25, 0.5, 0.75)), .by = group)
 ```
 
-## Documentation Standards
+## rlang Metaprogramming
 
-### roxygen2 Best Practices
+For comprehensive rlang patterns, see [references/rlang-patterns.md](references/rlang-patterns.md).
 
-**Avoid duplication with `@inheritParams`:**
+### Quick Reference
 
-```r
-#' @param x Input data
-#' @param ... Additional arguments
-my_function <- function(x, ...) {}
+- **`{{}}`** - Forward function arguments to data-masking functions
+- **`!!`** - Inject single expressions or values
+- **`!!!`** - Inject multiple arguments from a list
+- **`.data[[]]`** - Access columns by name (character vectors)
+- **`pick()`** - Select columns inside data-masking functions
 
-#' @inheritParams my_function
-#' @param y Another parameter
-wrapper_function <- function(x, y, ...) {}
-```
-
-**Documentation structure:**
-
-- One sentence per line in descriptions
-- Max 80 characters per line
-- Use `@family` tags for related functions
-- Use `@examples` or `@examplesIf` for examples
-- UK English spelling
-
-**Example documentation:**
+Example function with embracing:
 
 ```r
-#' Process input data
-#'
-#' This function processes the input data according to specified parameters.
-#' It returns a processed data frame with additional columns.
-#'
-#' @param data A data.frame containing the input data
-#' @param method Character string specifying the processing method
-#'
-#' @return A data.frame with processed results
-#'
-#' @family preprocessing
-#'
-#' @examples
-#' \dontrun{
-#' result <- process_data(my_data, method = "standard")
-#' }
-#'
-#' @export
-process_data <- function(data, method = "standard") {
-  # implementation
+my_summary <- function(data, group_var, summary_var) {
+  data |>
+    summarise(mean_val = mean({{ summary_var }}), .by = {{ group_var }})
 }
 ```
 
-## Code Style Guidelines
+## Performance Optimization
 
-### Naming Conventions
+For detailed performance guidance, see [references/performance.md](references/performance.md).
 
-- **Internal functions**: Prefix with `.`
+### Key Strategies
 
-  ```r
-  .internal_helper <- function() {}
-  ```
+1. **Profile first**: Use `profvis::profvis()` and `bench::mark()`
+2. **Vectorize operations**: Avoid loops when vectorized alternatives exist
+3. **Use dtplyr**: For large data operations (lazy evaluation with data.table backend)
+4. **Parallel processing**: Use `furrr::future_map()` for parallelizable work
+5. **Memory efficiency**: Pre-allocate, use appropriate data types
 
-- **Exported functions**: Use snake_case
-
-  ```r
-  public_function <- function() {}
-  ```
-
-### Formatting
-
-- Max 80 characters per line
-- No trailing whitespace
-- No spurious blank lines
-- Use tidyverse style guide
-- Set up pre-commit hooks for automatic formatting
-
-### Pre-commit Hooks
-
-Typical `.pre-commit-config.yaml` includes:
-
-- `style-files`: Auto-format R code
-- `lintr`: Lint R code
-- `readme-rmd-rendered`: Ensure README.md is up-to-date
-- `parsable-R`: Check R syntax
-- `deps-in-desc`: Check dependencies are in DESCRIPTION
-
-```bash
-# Install pre-commit
-pip install pre-commit
-
-# Install hooks
-pre-commit install
-
-# Run manually
-pre-commit run --all-files
-```
-
-## Common Data Structures
-
-### data.table Usage
-
-Many R packages use `data.table` for performance:
-
-- Functions often expect/return `data.table` objects
-- Use `data.table::setDT()` or custom `coerce_dt()` to ensure input is data.table
-- Set keys for efficient joins: `data.table::setkey(dt, col)`
-- Use `:=` for in-place modification
-
-### S3 Classes
-
-- Check class with `inherits()` or `expect_s3_class()`
-- Document S3 methods properly
-- Export constructors, not internal class definitions
-
-## Package Dependencies
-
-### Managing Dependencies
+Quick example:
 
 ```r
-# Use specific package functions with ::
-package::function()
+# Profile code
+profvis::profvis({
+  result <- data |> 
+    complex_operation() |>
+    another_operation()
+})
 
-# Add to DESCRIPTION Imports or Suggests
-usethis::use_package("package_name")
-usethis::use_package("package_name", type = "Suggests")
+# Benchmark alternatives
+bench::mark(
+  approach_1 = method1(data),
+  approach_2 = method2(data),
+  check = FALSE
+)
 ```
 
-### Common R Package Ecosystem Tools
+## Package Development
 
-- **devtools**: Development workflow
-- **testthat**: Testing framework
-- **roxygen2**: Documentation generation
-- **usethis**: Package setup automation
-- **lintr**: Code linting
-- **styler**: Code formatting
-- **covr**: Test coverage
-- **pkgdown**: Website generation
+For complete package development guidance, see [references/package-development.md](references/package-development.md).
 
-## When to Use This Skill
+### Quick Guidelines
 
-Activate this skill when:
+**API Design:**
+- Use `.by` parameter for per-operation grouping
+- Use `{{}}` for column arguments
+- Return tibbles consistently
+- Validate user-facing function inputs thoroughly
 
-- Developing R packages
-- Writing R tests
-- Documenting R functions
-- Setting up R package infrastructure
-- Running R package checks
-- Working with devtools, testthat, or roxygen2
+**Dependencies:**
+- Add dependencies for significant functionality gains
+- Core tidyverse packages usually worth including: dplyr, purrr, stringr, tidyr
+- Minimize dependencies for widely-used packages
 
-This skill provides R-specific development patterns.
-Project-specific architecture and domain knowledge should remain in project CLAUDE.md files.
+**Testing:**
+- Unit tests for individual functions
+- Integration tests for workflows
+- Test edge cases and error conditions
+
+**Documentation:**
+- Document all exported functions
+- Provide usage examples
+- Explain non-obvious parameter interactions
+
+## Common Migration Patterns
+
+### Base R → Tidyverse
+
+```r
+# Data manipulation
+subset(data, condition)         → filter(data, condition)
+data[order(data$x), ]          → arrange(data, x)
+aggregate(x ~ y, data, mean)   → summarise(data, mean(x), .by = y)
+
+# Functional programming
+sapply(x, f)                   → map(x, f)  # type-stable
+lapply(x, f)                   → map(x, f)
+
+# Strings
+grepl("pattern", text)         → str_detect(text, "pattern")
+gsub("old", "new", text)       → str_replace_all(text, "old", "new")
+```
+
+### Old → New Tidyverse
+
+```r
+# Pipes
+%>%                            → |>
+
+# Grouping
+group_by() |> ... |> ungroup() → summarise(..., .by = x)
+
+# Joins
+by = c("a" = "b")             → by = join_by(a == b)
+
+# Reshaping
+gather()/spread()              → pivot_longer()/pivot_wider()
+```
+
+## Additional Resources
+
+- **rlang patterns**: See [references/rlang-patterns.md](references/rlang-patterns.md) for comprehensive data-masking and metaprogramming guidance
+- **Performance optimization**: See [references/performance.md](references/performance.md) for profiling, benchmarking, and optimization strategies
+- **Package development**: See [references/package-development.md](references/package-development.md) for complete package creation guidance
+- **Object systems**: See [references/object-systems.md](references/object-systems.md) for S3, S4, S7, R6, and vctrs guidance

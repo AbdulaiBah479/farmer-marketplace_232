@@ -1,233 +1,148 @@
 ---
 name: finetuning
-description: This skill should be used when picking or diagnosing a training move (SFT, LoRA, DPO/KTO/ORPO, RFT, GRPO/PPO/RLOO, RLHF), or when the user mentions fine-tuning, post-training, training recipe, reward design, or weight updates. Decision tree by reward shape, smoke-run gate, three failure diagnostics, five false-progress patterns. Provider recipes and I/O contract in references/.
-evo_version: 0.5.0
+description: Generates a Jupyter notebook that fine-tunes a base model using SageMaker serverless training jobs. Use when the user says "start training", "fine-tune my model", "I'm ready to train", or when the plan reaches the finetuning step. Supports SFT, DPO, and RLVR trainers, including RLVR Lambda reward function creation.
+metadata:
+  version: "1.0.0"
 ---
 
-# Finetuning
+# Prerequisites
 
-Priors, not rules. Only firm guardrails: held-out eval you never train on, no leakage, trust evo's recorded numbers over the run's self-report. Override anything else against the gate.
+Before starting this workflow, verify:
 
-## Pick the technique by reward shape
+1. A `use_case_spec.md` file exists
+   - If missing: Activate the `use-case-specification` skill first, then resume
+   - DON'T EVER offer to create a use case spec without activating the use-case-specification skill.
 
-Decide on the reward first, technique second. Choosing the comfortable technique over the matching one is the most common failure.
+2. A fine-tuning technique (SFT, DPO, or RLVR) and base model have already been selected
+   - If missing: Activate the `finetuning-setup` skill to collect what's missing, then resume
+   - Don't make recommendations on the spot. You MUST activate the finetuning-setup skill.
 
-| Reward shape | Technique |
-|---|---|
-| Verifiable (exact match, unit tests, parser-decidable) | **RL** (GRPO / RLOO / PPO) — reward includes format, so the model learns to emit verifier-acceptable shape |
-| Preference pairs (chosen vs rejected) | **DPO / KTO / ORPO** — cheaper than full RL, no rollouts |
-| Demonstrations only (curated traces, chat data) | **SFT** — install format/tone/capability the base lacks |
-| Have a scorer + want SFT stability | **RFT** — sample, filter by reward, SFT on survivors |
+3. A base model name available on SageMakerHub has been identified
+   - If missing: Activate the `finetuning-setup` skill to get it
+   - **Important:** Only use the model name that `finetuning-setup` retrieves, as it may differ from other commonly used names for the same model
 
-"SFT-then-RL" is not a law. For a competent base model on a verifiable benchmark, RL-from-base often beats SFT-then-RL end-to-end.
+# Critical Rules
 
-## Research the literature before the first commit
+## Code Generation Rules
 
-The decision tree above is the structural prior. The empirical answer for *this* model on *this* benchmark usually has a recent paper, blog, or HF Space recipe behind it -- and what beats baseline on a 4B base model in 2026 is not what the agent's pre-training data captures. Before picking the technique for `exp_0001` (the first experiment after baseline), invoke `evo:ideator` with a `literature` brief:
+- ✅ Use EXACTLY the imports shown in each cell template
+- ❌ Do NOT add additional imports even if they seem helpful
+- ❌ Do NOT create variables before they're needed in that cell
+- 📋 Copy the code structure precisely - no improvisation
+- 🎯 Follow the minimal code principle strictly
+- ✅ When writing a notebook cell, make sure the indentation and f strings are correct
+- ✅ Write notebooks using your standard file write tool to create the `.ipynb` file with the complete notebook JSON, OR use notebook MCP tools (e.g., `create_notebook`, `add_cell`) if available
+- ❌ Do NOT use bash commands, shell scripts, or `echo`/`cat` piping to generate notebooks
 
-```
-Task(
-    subagent_type="evo:ideator",
-    prompt="brief=literature\n"
-           "model_family=<e.g. Qwen3-4B-Base, Llama-3.1-8B-Base>\n"
-           "benchmark=<name + URL/paper if known>\n"
-           "objective=<one line: what beats baseline looks like>\n"
-           "constraints=<budget, data sources allowed, gated models forbidden, etc>"
-)
-```
+## User Communication Rules
 
-The ideator returns ranked proposals with references (arXiv, HF Hub, GitHub, blogs). Read them before picking from the reward-shape table. A paper showing GRPO-from-base works on `<model_family>` for a similar verifiable benchmark beats applying the table cold.
+- ❌ NEVER offer to run the notebook for the user (you don't have the tools)
+- ❌ NEVER offer to move on to a downstream skill while training is in progress (logically impossible)
+- ❌ NEVER set ACCEPT_EULA to True yourself for Meta/Llama models (user must read and agree)
+- ✅ Always mention both the number AND title of cells you reference
+- ✅ If user asks how to run: Tell them to run cells one by one, mention ipykernel requirement
 
-Run this **once before `exp_0001`**, and again whenever the optimize loop hits a plateau (the "stuck across distinct techniques" diagnostic below). Not every subsequent experiment needs a literature pass -- the table + diagnostics carry the rest.
+---
 
-## Before committing the budget: smoke-run
+# Workflow
 
-Run the full pipeline on ~10 examples for ~1 minute. Must produce: a checkpoint the benchmark can load AND a non-zero eval on a held-out item. If not, the recipe is broken — fix it, don't scale it. dtype mismatch, tokenizer/template drift, OOM at this batch size, empty artifacts dir despite falling loss — all surface on 10 examples. Running longer doesn't surface them differently, just more expensively.
+## 1. Notebook Setup
 
-## Long training: checkpoint, mid-eval, early-stop in-script
+### 1.1 Directory Setup
 
-Training for an hour and getting one number at the end is the wrong granularity for evo's tree search. By the time you know the recipe failed, you've spent the budget. Build the verification *into* the training script, not around it.
+1. Identify project directory from conversation context
+   - If unclear (multiple relevant directories exist) → Ask user which folder to use
+   - If no project directory exists → activate the **directory-management** skill to set one up
+2. Check if the project notebook already exists at `<project-dir>/notebooks/<project-name>.ipynb`
+   - If it exists → ask: _"Would you like me to append the fine-tuning cells to the existing notebook, or create a new one?"_
+   - If it doesn't exist → create it
+3. When appending, add a markdown header cell `## Fine-Tuning` as a section divider before the new cells
 
-Pattern for any training run expected to exceed ~30 min wall-clock:
+⏸ Wait for user.
 
-1. **Periodic checkpoint** every N steps (e.g. every 0.25 epoch, or every 200 steps — whichever is faster).
-2. **Mini-eval after each checkpoint** on a small held-out subset (5–10 items, not the full held-out — that's reserved for the final committed score). Same scorer as the real eval; the model just sees fewer items.
-3. **Early-stop on regression**: track best mid-eval score; stop if it hasn't improved in `patience` checkpoints (typically 2). Don't burn 60 more minutes once the trajectory has flattened or reverted.
-4. **Save the BEST checkpoint, not the last.** Early-stop means the current model is probably past its peak; the checkpoint you commit should be the one that scored highest mid-training, not whatever the trainer happened to leave behind.
-5. **Log every mid-eval score to your tracker** (see `## Stream training metrics live`). The user watching the live dashboard sees the trajectory build up step-by-step instead of staring at the loss curve hoping it transfers.
+### 1.2 Select Reference Template
 
-HuggingFace TRL: implement as a `TrainerCallback` on `on_step_end` — save checkpoint, run the mini-eval via vLLM or HF transformers, compare to `best_score`, set `control.should_training_stop = True` on stall. Pattern is one ~30-line class.
+Read the example notebook matching the finetuning strategy:
 
-Keep vLLM warm across mid-evals when you can (one serve process, reload adapter between checkpoints) — cold-starting vLLM every 200 steps adds 5 min of overhead per checkpoint.
+- SFT → `references/sft_example.md`
+- DPO → `references/dpo_example.md`
+- RLVR → `references/rlvr_example.md`
 
-Use a tighter mini-eval subset than the full held-out. The mini-eval is a *signal*, not the score that gets committed. If the mini-eval scores ≥ baseline on its subset, run the full held-out as the eval-gate scoring pass at the end. If it doesn't, early-stop.
+### 1.3 Copy Notebook Structure
 
-This is Pattern B from the design tradeoff with multi-node staging (Pattern A — break the training into multiple committed evo nodes, each a stage). Pattern B keeps the experiment as one evo node with the verification logic inside the script; it's simpler to write and avoids per-stage vLLM spin-up, at the cost of less tree-search introspection. Multi-stage as separate nodes is preferable when you want the orchestrator to be able to branch alternative continuations from any mid-training checkpoint.
+1. Write the exact cells from the example to the project notebook
+2. Use same order, dependencies, and imports as the example
+3. DO NOT improvise or add extra code
+4. If the model is **NOT** a Meta/Llama model (model ID does NOT start with `meta-`):
+   - Omit the `ACCEPT_EULA = False` line from the config cell
+   - Omit the `accept_eula=ACCEPT_EULA,` line from the trainer call
+5. If the model is in the Nova family, exclude print and override statements for the following hyperparameters: `max_epochs` and `lr_warmup_ratio`
 
-## Cap retries at training scale
+### 1.4 Auto-Generate Configuration Values
 
-`evo run` allows up to `max_attempts=3` retries per experiment by default. That budget was designed for second-scale benchmarks where retrying after an edit-bug fix is free. At training scale (~hours per attempt), it's the wrong tradeoff — by attempt 2 you've spent more compute than just trying a fresh hypothesis would cost.
+**In the 'Setup & Credentials' cell, populate:**
 
-For training-heavy workspaces, set the cap to 1 once at init:
+1. **BASE_MODEL**
+   - Use the exact SageMakerHub model name from context
 
-```bash
-evo config set max-attempts 1
-```
+2. **MODEL_PACKAGE_GROUP_NAME**
+   - Generate from use case (read `use_case_spec.md` if needed)
+   - Format rules:
+     - Lowercase, alphanumeric with hyphens only
+     - 1-63 characters
+     - Pattern: `[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}`
+     - Example: "Customer Support Chatbot" → `customer-support-chatbot-v1`
 
-One attempt, one shot. Regression → `evo discard` → new branch from parent with a different hypothesis. This pairs with the in-script early-stop above: each attempt is single-shot, but its internal verification keeps it from burning the budget on a clearly-failing trajectory.
+3. Save notebook
 
-The "fix-and-rerun" retry pattern still applies for sub-minute benchmarks; leave the default `max_attempts=3` there.
+## 2. RLVR Reward Function (for RLVR only, skip this section if technique is SFT or DPO)
 
-## Four diagnostics
+### 2.1 Check Reward Function Status
 
-**Stuck at 0 on a verifiable benchmark after 2+ SFT runs.** Technique class is wrong, not the recipe. Pivot to RL with the verifier as reward; SFT loss can be healthy while the model emits unparseable output.
+- Ask if user has a reward function already, or would like help creating one.
+  - If user says they have one → Ask for the SageMaker Hub Evaluator ARN. Only proceed to Section 2.3 once the user provides a valid Evaluator ARN. If they don't have it registered as a SageMaker Hub Evaluator, continue to 2.2.
+  - If user says they do not have one → Continue to 2.2
 
-**Base scores below random before any training (knowledge-heavy benchmark).** Model lacks the knowledge, not the format. Post-training shapes existing knowledge; it does not install new knowledge. Right axis: continued pre-training on a domain corpus, distillation from a stronger model that has the knowledge, or retrieval-augmented inference.
+### 2.2 Generate Reward Function From Template
 
-**`delta <= 0` across several committed train moves.** Method exhausted on this target. Try a different method, change the data, or improve the harness instead of the weights.
+1. Follow workflow in `references/rlvr_reward_function.md` section "Helping Users Create Lambda Functions"
 
-**Stuck at the same non-zero score across 3+ experiments spanning distinct techniques.** When 3+ committed experiments — across structurally different techniques (e.g. SFT, GRPO, RFT) — all land at the same non-zero score, the bottleneck is not the training method. The most common cause is a train↔verifier objective mismatch: the model has learned to emit answers in one format, but the verifier expects a different one. Examples: training data uses `\boxed{X}` but the verifier prompt requests `ANSWER: X` (or vice versa); training uses one chat template, eval uses another; training optimizes step-by-step CoT but the verifier wants the answer alone.
+### 2.3 Set CUSTOM_REWARD_FUNCTION value
 
-Diagnostic action: spot-check 3 training examples and 3 eval-prompt examples side by side. If a perfect-score training example would NOT pass the verifier (or vice versa), the objective is mismatched. Realign the training data format to the verifier's expected output, OR change the eval prompt (if rules allow). Do NOT try a fourth training-technique variant before doing this spot-check.
+1. Set the value for `CUSTOM_REWARD_FUNCTION` in the Notebook with the ARN of the reward function (either given directly by the user, or from the function generation code as `evaluator.arn`).
 
-## What never counts as progress
+## 3. EULA review and acceptance
 
-Five patterns produce a number going up without the model improving. See `references/false-progress.md` for examples + detection.
+1. Look up the official license link for the selected base model from references/eula_links.md
+2. Display the license to the user following the phrasing in references/eula_links.md. For OSS models: "This model is licensed under **{License}**. Please review the license terms here: {URL}." For Nova models: "This model is subject to the AWS Service Terms: {URL}."
+3. Check if the selected base model is a Meta/Llama model (model ID starts with `meta-`)
+   - **If Meta/Llama**: Tell the user they must read and agree to the EULA before using this model. Ask them to manually change `ACCEPT_EULA` to `True` in the notebook after reviewing the license. **NEVER set ACCEPT_EULA to True yourself for Meta/Llama models.**
+   - **If non-Meta**: Inform the user of the license for their awareness. No code-level action needed — the `ACCEPT_EULA` variable and `accept_eula` parameter should already be omitted from the notebook (see Step 1.3).
 
-1. Training on the held-out set — direct or transitive (public instruction datasets sometimes contain eval-derived items).
-2. Embedding eval items in "synthetic" data, even renamed or paraphrased.
-3. Generating training data conditioned on per-eval-item failure logs.
-4. Submitting a checkpoint you didn't train (off-the-shelf instruct model; parent's checkpoint unchanged).
-5. Training a different objective than the verifier scores.
+## 4. Notebook Execution
 
-The verifier should catch these. List is here so the train move doesn't produce them.
+1. **Display the following to the user:**: `I have updated your Jupyter Notebook with the finetuning code. If you run it cell by cell, you should be able to launch your SageMaker Training job. 
+Training takes a while. Please monitor the progress and let me know when it's complete so I can help you get to the next step in your plan.`
 
-## Surviving session compaction
+2. Wait for user's confirmation about training completion. Once the user has confirmed, you are free to move to the next step of the plan.
 
-Write the dataset URL, method choice, user-imposed constraints, and hyperparameters you converged on to `methodlog.md` in the experiment worktree. One line each. Re-read after any context reset, before the next train move. Prevents silent dataset swaps between experiments and re-running ablations.
+**CRITICAL:**
 
-## Numbers that matter (in order)
+- DON'T suggest moving to next steps before training completes
+- DON'T elaborate on the next steps unless the user specifically asks you about them.
 
-1. A reward you trust — verifiable beats a learned reward (which gets hacked).
-2. A held-out eval you never train on.
-3. On-policy freshness for RL — train on current policy's samples, not stale ones.
-4. LoRA LR ~10x full-FT; rank 32 is a fine default. LoRA ~ full-FT for RL and small-data SFT; lags on large SFT.
+## 5. Continuous Customization
 
-Method/provider-specific numbers (LR, KL, group size) live in the recipe under `references/`.
+If the user wants to finetune a model they had already customized, follow the instructions in references/continuous_customization.md
 
-## Stream training metrics live
+---
 
-A long training run is observability-blind until the experiment commits — without a live tracker, nobody can tell if loss is converging, if the GPU is idle, or if the recipe is silently broken. They get one number at the end. Wire a tracker into the training script by default.
+# References
 
-Detection prior — apply when the corresponding env var is set, skip otherwise. Don't install a tracker the user didn't opt into:
-
-| Env var | Tracker | TRL one-liner |
-|---|---|---|
-| `WANDB_API_KEY` | wandb | `SFTConfig(report_to="wandb")` |
-| `TRACKIO_SPACE_ID` | trackio (wandb-compatible OSS, logs to a public HF Space) | `SFTConfig(report_to="trackio")` |
-| `MLFLOW_TRACKING_URI` | mlflow | `SFTConfig(report_to="mlflow")` |
-| (none set) | none | train without a tracker; don't invent one |
-
-For custom training loops, use `tracker.init(project=..., name=f"exp_{exp_id}") + tracker.log({"loss": ..., "step": ...})` — concrete patterns in `references/observability.md`.
-
-Use `EVO_EXPERIMENT_ID` as the run name so each experiment shows up as its own line in the tracker dashboard. The same env detection applies to HuggingFace datasets / Hub uploads: if `HF_TOKEN` is set, treat gated datasets and private Hub pushes as available.
-
-## Warm-start from a parent / prior checkpoint
-
-When the orchestrator branches an experiment from a committed or preserved checkpoint with `evo new --from-artifact <exp[:label]>`, evo exposes that artifact's path to your recipe as `EVO_SEED_ARTIFACT` (and, for back-compat, the same value as `EVO_PARENT_POLICY`). Warm-start from it rather than re-training from base — re-training from base every time burns the budget on duplicated work and stops the tree from accumulating capability across generations. To *make* a run reusable this way you must DECLARE your checkpoint as an artifact: write it to `EVO_CHECKPOINT_DIR` and name it in the benchmark result's `artifacts` field (full contract in `references/glue.md`). Only declared artifacts are preserved on discard and seedable via `--from-artifact`.
-
-Concrete pattern:
-
-```python
-seed = os.environ.get("EVO_SEED_ARTIFACT") or os.environ.get("EVO_PARENT_POLICY")
-if seed and os.path.exists(seed):
-    print(f"warm-starting from {seed}")
-    model = AutoModelForCausalLM.from_pretrained(seed, ...)
-else:
-    print("no seed; loading base")
-    model = AutoModelForCausalLM.from_pretrained(BASE_MODEL, ...)
-```
-
-Override only when the brief explicitly asks for a fresh-from-base ablation. The full I/O contract is in `references/glue.md`.
-
-**Configure for training, not inference.** Put the whole training computation on the accelerator you're training on, and don't enable *inference*-oriented conveniences for a training run. Auto device-mapping / model-sharding / CPU-offload exist to fit oversized models for *inference* by spreading or offloading layers; inside a training step they either break the backward pass or silently fall back to slower memory — so training still "runs" but crawls, with no error to surface the problem (the most dangerous case: it looks like it's working). Shard only when the model genuinely doesn't fit one device, and then use the framework's *training* parallelism path, not an inference placement shortcut. Same logic for other inference-mode defaults that leak into training (eval-mode quantization, kv-cache, dropout off). *(Concrete instance — HuggingFace: load with `device_map={"": 0}` / `.to("cuda")`, never `device_map="auto"`, which errors with a meta-device gradient mismatch or offloads to CPU at a large slowdown; for real multi-GPU use accelerate/FSDP/DDP.)*
-
-## Cache expensive intermediates
-
-LoRA adapters, filtered/curated datasets, tokenized datasets, computed embeddings, generated rollouts -- expensive to produce, large, and gitignored. They don't ride the experiment branch. They also don't have to be rebuilt per experiment.
-
-Write expensive artifacts to a stable, workspace-level path; check for them first, compute only on miss. Subsequent experiments (siblings, descendants, or re-runs of the same experiment after a worktree clean) read the same path.
-
-Convention: under `.evo/cache/`, sibling to `run_<NNNN>/`. Already gitignored (via `.evo/` in the workspace's git excludes). Survives across runs -- it's not nested inside any `run_<id>/`, so `evo new`/`evo run`/`evo reset` don't touch it.
-
-Pattern:
-
-```python
-import os
-from pathlib import Path
-# walk up from cwd to find the workspace root (the dir that has .evo/)
-def _workspace_root() -> Path:
-    p = Path.cwd().resolve()
-    for d in [p, *p.parents]:
-        if (d / ".evo").is_dir():
-            return d
-    raise RuntimeError("not inside an evo workspace")
-
-cache = _workspace_root() / ".evo" / "cache" / "datasets"
-cache.mkdir(parents=True, exist_ok=True)
-# Cache key embeds every input that changes the artifact: dataset name,
-# filter recipe version, tokenizer, max length, etc. Different recipe ->
-# different key, so a sibling experiment with a different filter keeps
-# its own cache without trampling yours.
-key = cache / "numina-cot-r1-filter-v2-qwen3-tok-3072.arrow"
-if key.exists():
-    ds = datasets.Dataset.load_from_disk(str(key))
-else:
-    ds = build_and_filter_dataset()
-    ds.save_to_disk(str(key))
-```
-
-High-value caches (not exhaustive): curated/tokenized training corpora (tokenization is the slow part on millions of rows); LoRA adapters produced by prior experiments that a sibling might warm-start from (the parent path is already handled by `EVO_PARENT_POLICY` above; this is for sibling-reachable named adapters); computed embeddings, retrieval indexes, precomputed eval-time generations.
-
-Don't duplicate the HuggingFace Hub cache (`~/.cache/huggingface/`). That handles `from_pretrained` downloads automatically and is user-level, already shared across all experiments.
-
-Anti-pattern: writing the artifact inside the experiment's worktree (`<worktree>/some_cache/`). Worktrees are gitignored for these files, the artifact doesn't propagate to descendants via the git tree, and a worktree clean / gc removes it. Use the workspace-level `.evo/cache/` instead.
-
-A first-class named registry (`evo asset put/get/list/use`) for these is tracked in issue #55. The path convention above is the lightweight version anyone can adopt today.
-
-## References
-
-Pull via Read tool when the trigger applies. Tree organized by category --
-core contracts first, then provider-specific recipes under `rl/`, `sft/`, `serving/`.
-
-```
-finetuning/references/
-│
-├── glue.md             writing train.py -- I/O contract evo expects.
-│                       Read FIRST when starting any training code.
-├── trace-schema.md     TrainingTrace JSON shape (per-step train trace fields)
-├── diagnostics.md      held_out_score / delta / reward_saturation /
-│                       generalization_gap -- read when interpreting a result
-├── false-progress.md   the five patterns + how to detect them.
-│                       Read when a score improves implausibly fast or
-│                       breaks the smoke gate.
-├── observability.md    wandb / trackio / mlflow wiring -- env-driven detection,
-│                       TRL report_to options, custom-loop patterns.
-│                       Read when writing a training script.
-│
-├── rl/                 RL framework recipes (rollouts + reward + policy update)
-│   └── art.md          ART (Algorithm-Refined Training)
-│
-├── sft/                SFT framework recipes
-│   └── tinker.md       Tinker SFT runner
-│
-└── serving/            Eval-time inference framework references
-    └── vllm.md         vLLM serving config + LoRA-multi (load multiple
-                        adapters in one server -- saves cold-start per experiment)
-```
-
-Cross-skill references also worth pulling during finetuning work:
-
-- `discover/references/sdk_python.py` / `sdk_node.js` -- wiring per-task instrumentation in the benchmark
-- `discover/references/inline_instrumentation.py` -- inline fallback when SDK can't be used (copy as-is)
-- `references/evo-wait.md` -- waiting for training / eval without burning context
+- `rlvr_reward_function.md` - Lambda reward function creation guide (RLVR only)
+- `templates/rlvr_reward_function_source_template.py` - Lambda reward function source template for open-weights models (RLVR only)
+- `templates/nova_rlvr_reward_function_source_template.py` - Lambda reward function source template for Nova 2.0 Lite (RLVR only)
+- `sft_example.md` - Complete notebook template for Supervised Fine-Tuning
+- `dpo_example.md` - Complete notebook template for Direct Preference Optimization
+- `rlvr_example.md` - Complete notebook template for Reinforcement Learning from Verifiable Rewards
+- `continuous_customization.md` - Instructions on fine-tuning an already fine-tuned model.

@@ -1,178 +1,259 @@
 ---
-name: Codebase Analysis
-description: This skill should be used when the user asks about "analyzing codebase", "understanding project structure", "code exploration", "architecture discovery", "codebase patterns", or needs to systematically analyze and document a codebase's organization and conventions.
+name: codebase-analysis
+description: Systematically analyze codebase structure, complexity, dependencies, and architectural patterns to understand project organization
 version: 1.0.0
+author: AI-Vibe-Prompts
+tags: [analysis, code-quality, architecture, dependencies]
+auto_invoke: true
 ---
 
 # Codebase Analysis Skill
 
-This skill provides systematic approaches to analyzing and understanding codebases of any size and complexity.
+## Objective
 
-## Analysis Strategy by Project Size
+Perform comprehensive, systematic analysis of project codebases to understand:
+- Project structure and organization
+- Technology stack and dependencies
+- Architectural patterns and conventions
+- Code complexity and quality metrics
+- Key components and their relationships
 
-```
-Small (<50 files):     Comprehensive scan of all files
-Medium (50-500 files): Representative sampling per category
-Large (>500 files):    Strategic sampling of key areas
-```
+## When to Use This Skill
 
-## Parallel Analysis Tracks
+Auto-invoke when:
+- Starting work on a new project
+- User asks to "analyze", "review", "audit", or "understand" the codebase
+- Before making architectural decisions
+- Planning refactoring or major changes
+- Onboarding new developers
 
-Run these tracks concurrently for efficiency:
+## Analysis Methodology
 
-### Track 1: Product Understanding
-```bash
-# Files to examine:
-- README.md, README*.md
-- package.json "description" field
-- docs/ or documentation/ folder
-- Main entry points (index.ts, main.ts, app.ts)
-- API documentation
-```
+### Phase 1: Discovery (Project Structure)
 
-### Track 2: Technical Stack Discovery
-```bash
-# Configuration files:
-- package.json (dependencies, devDependencies, scripts)
-- tsconfig.json / jsconfig.json
-- Build configs: vite.config.*, webpack.config.*, rollup.config.*
-- Test configs: jest.config.*, vitest.config.*
-- Linter configs: .eslintrc.*, eslint.config.*
-- Formatter configs: .prettierrc.*, prettier.config.*
-```
+**Goal**: Map the high-level project organization
 
-### Track 3: Structure Mapping
-```bash
-# Analyze:
-- Top-level directories (src/, lib/, packages/, apps/)
-- 2-3 representative files per major directory
-- Naming conventions (kebab-case, camelCase, PascalCase)
-- Module organization patterns
-- Index/barrel files
-```
+**Tools**: Glob, LS, Read
 
-### Track 4: Convention Detection
-```bash
-# Patterns to identify:
-- Export style: named vs default exports
-- Component patterns: functional vs class, HOCs
-- State management: Redux, Zustand, Context
-- Testing patterns: unit, integration, e2e
-- Error handling: try/catch, Result types, error boundaries
-```
+**Process**:
+1. **Identify project type** by reading `package.json`, `tsconfig.json`, or framework-specific configs
+2. **Map directory structure** using LS at root level:
+   ```
+   Key directories to identify:
+   - Source code: src/, app/, pages/, components/
+   - Tests: __tests__/, tests/, *.test.*, *.spec.*
+   - Config: config/, .config/
+   - Documentation: docs/, README.md
+   - Build output: dist/, build/, .next/
+   ```
+3. **Scan for important files**:
+   - Build configs: `vite.config.*, webpack.config.*, next.config.*`
+   - TypeScript: `tsconfig.json`, `tsconfig.*.json`
+   - Package management: `package.json`, `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`
+   - Environment: `.env*`, `.env.example`
+   - Git: `.gitignore`, `.git/`
 
-## Analysis Output Templates
+### Phase 2: Technology Stack Analysis
 
-### Package Analysis
+**Goal**: Identify frameworks, libraries, and versions
+
+**Tools**: Read, Grep
+
+**Process**:
+1. **Read package.json**:
+   - Extract `dependencies` (runtime libraries)
+   - Extract `devDependencies` (development tools)
+   - Note `scripts` (available commands)
+   - Check `engines` (Node.js version requirements)
+
+2. **Identify framework**:
+   - Next.js: Check for `next` in dependencies, `next.config.*`, `app/` or `pages/` directory
+   - React: Check for `react` and `react-dom`
+   - Vue: Check for `vue`, `*.vue` files
+   - Svelte: Check for `svelte`, `*.svelte` files
+   - Angular: Check for `@angular/core`, `angular.json`
+
+3. **Identify key libraries**:
+   - State management: Redux, Zustand, MobX, Pinia
+   - Routing: react-router, vue-router, next/navigation
+   - UI libraries: MUI, Ant Design, shadcn/ui, Chakra UI
+   - Styling: Tailwind CSS, styled-components, emotion, CSS modules
+   - Testing: Vitest, Jest, Playwright, Cypress
+   - Build tools: Vite, Webpack, esbuild, Turbopack
+
+### Phase 3: Architecture Pattern Analysis
+
+**Goal**: Understand code organization and patterns
+
+**Tools**: Grep, Glob, Read
+
+**Process**:
+1. **Component patterns** (for React/Vue/Svelte):
+   ```
+   Use Glob to find: **/*.{jsx,tsx,vue,svelte}
+   Analyze:
+   - Component naming conventions
+   - File structure (co-located styles, tests)
+   - Component size (lines of code)
+   ```
+
+2. **API/Backend patterns**:
+   ```
+   Use Grep to search for:
+   - API routes: "export.*GET|POST|PUT|DELETE"
+   - Database queries: "prisma\.|mongoose\.|sql"
+   - Authentication: "auth|jwt|session"
+   ```
+
+3. **State management patterns**:
+   ```
+   Use Grep to find:
+   - Context API: "createContext|useContext"
+   - Redux: "createSlice|useSelector"
+   - Zustand: "create.*useStore"
+   ```
+
+4. **File organization patterns**:
+   - Monorepo: Check for `packages/`, `apps/`, `turbo.json`, `nx.json`
+   - Feature-based: Check for directories like `features/`, `modules/`
+   - Layer-based: Check for `components/`, `services/`, `utils/`, `hooks/`
+
+### Phase 4: Code Quality & Complexity Assessment
+
+**Goal**: Identify potential issues and technical debt
+
+**Tools**: Grep, Bash, Read
+
+**Process**:
+1. **Linting & Formatting**:
+   - Check for: `.eslintrc*`, `.prettierrc*`, `biome.json`
+   - Run linter if available: `npm run lint` (via Bash)
+
+2. **Testing coverage**:
+   - Find test files: Use Glob for `**/*.{test,spec}.{js,ts,jsx,tsx}`
+   - Calculate coverage: Run `npm run test:coverage` if available
+
+3. **TypeScript strictness**:
+   - Read `tsconfig.json`
+   - Check `strict: true`, `strictNullChecks`, etc.
+   - Look for `@ts-ignore` or `any` usage (Grep)
+
+4. **Code complexity indicators**:
+   ```
+   Use Grep to flag potential issues:
+   - Large files: Find files > 500 lines
+   - Deep nesting: Search for excessive indentation
+   - TODO/FIXME comments: Grep for "TODO|FIXME|HACK"
+   - Console logs: Grep for "console\.(log|debug|warn)"
+   ```
+
+### Phase 5: Dependency & Security Analysis
+
+**Goal**: Identify outdated or vulnerable dependencies
+
+**Tools**: Bash, Read
+
+**Process**:
+1. **Check for lock files**:
+   - Presence of `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`
+
+2. **Run security audit** (if npm/pnpm available):
+   ```bash
+   npm audit --json
+   # or
+   pnpm audit --json
+   ```
+
+3. **Check for outdated dependencies**:
+   ```bash
+   npm outdated
+   ```
+
+## Output Format
+
+Provide a structured analysis report:
+
 ```markdown
-## Package: {name}
+# Codebase Analysis Report
 
-**Purpose**: {description}
-**Type**: Library | Application | CLI | Framework
-**Entry**: {main entry point}
+## Project Overview
+- **Name**: [project name from package.json]
+- **Type**: [framework/library]
+- **Version**: [version]
+- **Node.js**: [required version]
 
-### Dependencies
-- Production: {count} packages
-- Development: {count} packages
-- Key deps: {list critical dependencies}
+## Technology Stack
+### Core Framework
+- [Framework name & version]
 
-### Scripts
-| Script | Command | Purpose |
-|--------|---------|---------|
-| dev | {cmd} | Development server |
-| build | {cmd} | Production build |
-| test | {cmd} | Run tests |
+### Key Dependencies
+- UI: [library]
+- State: [library]
+- Routing: [library]
+- Styling: [library]
+- Testing: [library]
+
+### Build Tools
+- [Vite/Webpack/etc]
+
+## Architecture
+
+### Directory Structure
+```
+[tree-like representation of key directories]
 ```
 
-### Directory Analysis
-```markdown
-## Directory: {path}
+### Patterns Identified
+- [Component patterns]
+- [State management approach]
+- [API structure]
+- [File organization]
 
-**Purpose**: {description}
-**Pattern**: {naming convention}
-**File Count**: {count}
+## Code Quality Metrics
+- **TypeScript**: [strict/loose/none]
+- **Linting**: [ESLint/Biome/none]
+- **Testing**: [X test files found, coverage: Y%]
+- **Code Issues**: [TODOs: X, Console logs: Y]
 
-### Structure
-{tree representation, 2-3 levels}
+## Recommendations
+1. [Priority recommendation]
+2. [Next priority]
+3. ...
 
-### Key Files
-| File | Purpose |
-|------|---------|
-| {file} | {purpose} |
+## Risk Areas
+- [Potential issues or technical debt]
+
+## Next Steps
+- [Suggested actions based on analysis]
 ```
-
-### Convention Analysis
-```markdown
-## Detected Conventions
-
-### Confirmed Patterns
-- {Pattern}: {evidence} (found in X% of files)
-
-### Inconsistencies
-⚠️ {Pattern}: {variant1} ({X%}) vs {variant2} ({Y%})
-   Recommendation: Standardize on {recommended}
-```
-
-## Monorepo Analysis
-
-For monorepos (pnpm workspaces, yarn workspaces, nx, turborepo):
-
-```markdown
-## Monorepo Structure
-
-### Workspace Configuration
-- Tool: {pnpm/yarn/npm/nx/turborepo}
-- Config: {workspace config file}
-
-### Packages
-| Package | Type | Dependencies |
-|---------|------|--------------|
-| {name} | {lib/app} | {internal deps} |
-
-### Build Order
-1. {package1} (no deps)
-2. {package2} (depends on 1)
-3. {package3} (depends on 1, 2)
-
-### Shared Configuration
-- TypeScript: {shared tsconfig}
-- Testing: {shared test config}
-- Linting: {shared lint config}
-```
-
-## Error Patterns to Flag
-
-```markdown
-## Issues Detected
-
-### Critical
-❌ {issue}: {description}
-   Location: {file:line}
-   Impact: {impact}
-
-### Warning
-⚠️ {issue}: {description}
-   Location: {file:line}
-   Recommendation: {fix}
-
-### Info
-ℹ️ {observation}
-```
-
-## Integration with Steering Workflow
-
-When used during `/steering`:
-
-1. **Phase 2** uses this skill for systematic codebase exploration
-2. **Product track** extracts README and documentation
-3. **Tech track** discovers dependencies and build tools
-4. **Structure track** maps directories and patterns
-5. **Convention track** identifies code style rules
 
 ## Best Practices
 
-1. **Sample Strategically**: Don't read every file; pick representative samples
-2. **Parallel Execution**: Run independent analyses concurrently
-3. **Evidence-Based**: Document where patterns were observed
-4. **Mark Uncertainty**: Use ⚠️ for unclear or conflicting patterns
-5. **Actionable Output**: Focus on patterns AI agents need to follow
+1. **Progressive Detail**: Start with high-level overview, dive deeper only when needed
+2. **Context Window Management**: For large codebases, analyze in chunks (by directory/feature)
+3. **Tool Selection**: 
+   - Use Glob for file discovery (faster than find)
+   - Use Grep for pattern search (faster than reading all files)
+   - Use Read only for critical files (package.json, configs)
+4. **Time Efficiency**: Complete analysis in < 60 seconds for typical projects
+5. **Actionable Insights**: Always provide specific, actionable recommendations
+
+## Integration with Other Skills
+
+This skill works well with:
+- `quality-gates` - Use analysis results to run appropriate quality checks
+- `project-initialization` - Compare against templates to identify missing setup
+- `refactoring-safe` - Identify refactoring opportunities
+- Framework-specific skills (`nextjs-optimization`, `react-patterns`) - Auto-invoke based on detected framework
+
+## Error Handling
+
+If analysis cannot complete:
+1. **Missing dependencies**: Suggest running `npm install`
+2. **Corrupted files**: Report specific files and continue with partial analysis
+3. **Large codebase**: Switch to targeted analysis mode (specific directories only)
+4. **Permission issues**: Request necessary file access permissions
+
+## Version History
+
+- **1.0.0** (2025-01-03): Initial skill creation with progressive disclosure support

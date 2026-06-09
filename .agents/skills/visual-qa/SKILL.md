@@ -1,187 +1,96 @@
 ---
 name: visual-qa
-description: "Visual QA checkpoint for conductor gates. Uses tabz MCP tools to check browser console errors, take screenshots, and identify obvious UI issues. Returns structured result with pass/fail status and captured screenshots."
-user-invocable: true
+description: Complete visual QA - screenshots with full-page scroll to trigger animations, then analyze with Claude. Run after CSS/template changes.
+allowed-tools: Read, Write, Edit, Bash, Task
 ---
 
-# Visual QA Checkpoint
+# Visual QA Skill
 
-Visual quality assurance checkpoint that uses browser automation to verify the UI.
+Automated visual testing that properly handles GSAP animations by scrolling through the entire page before capturing screenshots.
+
+## Usage
+
+Ask Claude to run visual QA:
+- "Run visual QA on the CSR site"
+- "Take screenshots of all pages and analyze them"
+- "Check the visual state of the website"
 
 ## What This Skill Does
 
-1. Checks browser console for errors
-2. Takes screenshot of current page
-3. Analyzes for obvious visual issues
-4. Writes result to checkpoint file
+1. **Full-Page Scroll** - Scrolls through entire page in increments to trigger all GSAP/ScrollTrigger animations
+2. **Multi-Device Screenshots** - Desktop (1920px), Tablet (768px), Mobile (375px)
+3. **Parallel Processing** - Uses Haiku sub-agents to analyze multiple pages simultaneously
+4. **Visual Analysis** - Reviews screenshots for issues
 
-## Prerequisites
+## Pages Tested
 
-- TabzChrome extension running
-- Application loaded in browser tab
-- `tabz` MCP server connected
+| Page | URL |
+|------|-----|
+| Home | https://csrdevelopment.com/ |
+| About | https://csrdevelopment.com/about/ |
+| Portfolio | https://csrdevelopment.com/portfolio/ |
+| Contact | https://csrdevelopment.com/contact/ |
+| Privacy Policy | https://csrdevelopment.com/privacy-policy/ |
+| Terms | https://csrdevelopment.com/terms-of-service/ |
 
-## Workflow
+## Screenshot Script
 
-### Step 1: Check Console Errors
+Location: `/root/.claude/skills/visual-qa/screenshot.py`
 
+### Single Page
 ```bash
-# Get console logs filtered for errors
-mcp-cli info tabz/tabz_get_console_logs
-mcp-cli call tabz/tabz_get_console_logs '{"level": "error"}'
+python3 /root/.claude/skills/visual-qa/screenshot.py --url https://csrdevelopment.com/about/
 ```
 
-**Important:** Console errors don't automatically fail - evaluate if they're blocking:
-- JS runtime errors that prevent functionality = FAIL
-- 404s for optional resources = WARNING
-- Deprecation warnings = INFO
-
-### Step 2: Take Screenshot
-
+### All Pages
 ```bash
-# Capture current page state
-mcp-cli info tabz/tabz_screenshot
-mcp-cli call tabz/tabz_screenshot '{}'
+python3 /root/.claude/skills/visual-qa/screenshot.py --all
 ```
 
-The screenshot file path is returned. Read it to visually inspect the page.
+### Output
+Screenshots saved to: `/home/dev/screenshots/`
 
-### Step 3: Check Page State
+## Parallel Analysis with Haiku
 
-```bash
-# Verify page loaded correctly
-mcp-cli info tabz/tabz_get_page_info
-mcp-cli call tabz/tabz_get_page_info '{}'
-```
-
-Verify:
-- Page title is not error page
-- URL matches expected
-- Page is not stuck loading
-
-### Step 4: Optional - Check Network Errors
-
-If functionality seems broken:
-
-```bash
-# Enable capture first (if not already)
-mcp-cli call tabz/tabz_enable_network_capture '{}'
-
-# Trigger the problematic action, then:
-mcp-cli call tabz/tabz_get_network_requests '{"statusMin": 400}'
-```
-
-### Step 5: Parse and Write Result
-
-Create structured result:
-
-```json
-{
-  "checkpoint": "visual-qa",
-  "timestamp": "2026-01-19T12:00:00Z",
-  "passed": true,
-  "issues": [],
-  "screenshots": ["/path/to/screenshot.png"],
-  "console_errors": 0,
-  "summary": "Page loads correctly, no visual issues detected"
-}
-```
-
-**Result Fields:**
-- `passed`: true if no blocking visual/console issues
-- `issues`: array of `{severity: "error"|"warning"|"info", message: string, type: "console"|"visual"|"network"}`
-- `screenshots`: array of screenshot file paths
-- `console_errors`: count of console errors found
-- `summary`: brief human-readable summary
-
-### Step 6: Write Checkpoint File
-
-```bash
-mkdir -p .checkpoints
-cat > .checkpoints/visual-qa.json << 'EOF'
-{
-  "checkpoint": "visual-qa",
-  "timestamp": "...",
-  "passed": true,
-  "issues": [],
-  "screenshots": [...],
-  "console_errors": 0,
-  "summary": "..."
-}
-EOF
-```
-
-## Decision Criteria
-
-**Pass if:**
-- Page loads without critical console errors
-- No obvious visual breakage (blank page, missing components)
-- Key functionality appears present
-
-**Fail if:**
-- JS errors prevent page from rendering
-- Page shows error state or blank
-- Critical UI elements missing
-- API calls failing (5xx errors)
-
-**Warning (pass with notes) if:**
-- Non-critical console warnings
-- Minor styling issues
-- Slow load times
-
-## Visual Inspection Guidelines
-
-When viewing the screenshot, check for:
-
-1. **Layout integrity** - Is content properly positioned?
-2. **Text readability** - Is text visible, correct font/size?
-3. **Interactive elements** - Are buttons/links visible?
-4. **Error states** - Any error messages displayed?
-5. **Responsive fit** - Does content fit the viewport?
-
-## Example Usage
-
-When invoked as `/visual-qa`:
+When running full visual QA, launch multiple Haiku agents to analyze different pages simultaneously:
 
 ```
-Running Visual QA checkpoint...
-
-Checking console for errors...
-Found 0 errors, 2 warnings.
-
-Taking screenshot...
-Screenshot saved to /tmp/tabz-screenshot-123.png
-[Viewing screenshot...]
-
-Page appears to load correctly. Navigation visible, content renders.
-
-Checking page info...
-Title: "My App - Dashboard"
-URL: http://localhost:3000/dashboard
-Status: Complete
-
-Result:
-{
-  "passed": true,
-  "issues": [
-    {"severity": "warning", "message": "React DevTools warning", "type": "console"}
-  ],
-  "screenshots": ["/tmp/tabz-screenshot-123.png"],
-  "console_errors": 0,
-  "summary": "Page loads correctly. Minor console warnings only."
-}
-
-Checkpoint result written to .checkpoints/visual-qa.json
+Agent 1: Analyze Home + About screenshots
+Agent 2: Analyze Portfolio + Contact screenshots
+Agent 3: Analyze Legal pages screenshots
 ```
 
-## Troubleshooting
+## Visual QA Checklist
 
-**No MCP connection:**
-```bash
-mcp-cli tools tabz  # Should list tabz_* tools
-```
+### All Pages
+- [ ] Header visible and logo centered
+- [ ] Menu button works
+- [ ] Footer links present
+- [ ] No horizontal scroll
+- [ ] Text readable at all sizes
 
-**Screenshot fails:**
-- Ensure Chrome tab is focused
-- Check TabzChrome extension is active
-- Verify localhost:8129 backend is running
+### Home Page
+- [ ] Hero video/image loaded
+- [ ] Hero text visible (not opacity 0)
+- [ ] Property cards show with images
+- [ ] Animations completed
+
+### About Page
+- [ ] Team member photos loaded (not placeholders)
+- [ ] Bio text visible
+- [ ] Images have grayscale filter
+
+### Portfolio
+- [ ] Property grid displays
+- [ ] Status badges visible
+- [ ] Different images for each property
+
+### Contact
+- [ ] Form fields visible
+- [ ] Contact info displayed
+- [ ] Submit button styled
+
+### Property Detail
+- [ ] Hero image loaded
+- [ ] Property details sidebar
+- [ ] Inquiry form present

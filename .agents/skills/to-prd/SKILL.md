@@ -1,76 +1,74 @@
 ---
 name: to-prd
-description: Synthesize current conversation context and codebase understanding into a PRD artifact (markdown file by default, GitHub issue via flag). Trigger when the user asks for a PRD, requirements doc, feature spec, or wants to crystallize an in-flight discussion into a durable artifact before planning. PRD precedes implementation planning.
+description: Turn the current conversation context into a PRD and publish it to the project issue tracker. Use when user wants to create a PRD from the current context.
 ---
 
-Synthesize a PRD from what you already know. Do NOT interview — extract from context, codebase exploration, and prior decisions. Iterate the artifact in place; commit when the user signs off.
+This skill takes the current conversation context and codebase understanding and produces a PRD. Do NOT interview the user — just synthesize what you already know.
 
-## Emission Modes [LOCKED]
-
-**Default (file mode):** Write to `<project-root>/docs/prd/<feature>.md`. Idempotent — overwrite on rerun. Use file mode when no flag is passed, when working offline, when the repo has no GitHub remote, or when the user explicitly wants a tracked file.
-
-**Flag mode (`--emit-issue`):** Submit via `gh issue create --title "PRD: <feature>" --body-file <tmp>`. Use only when the user explicitly opts in or the project's convention is issue-tracked PRDs (check `<project-root>/CONTRIBUTING.md` and `.github/ISSUE_TEMPLATE/`).
-
-When ambiguous, default to file mode and ask the user one targeted question rather than guessing.
+The issue tracker and triage label vocabulary should have been provided to you — run `/setup-matt-pocock-skills` if not.
 
 ## Process
 
-### 1. Reuse priming if available; explore only when context is thin
+1. Explore the repo to understand the current state of the codebase, if you haven't already. Use the project's domain glossary vocabulary throughout the PRD, and respect any ADRs in the area you're touching.
 
-If conversation context already covers domain language, naming conventions, and module shape, skip discovery and proceed to step 2. Otherwise dispatch an Explore agent over the codebase. Goal: current architectural state, naming conventions, ADRs, domain language. Read `CONTEXT.md`, `AGENTS.md`, `docs/adr/`, and any `UBIQUITOUS_LANGUAGE.md`. Use `fd -e md . docs/` then `bat -P -p -n -r` for targeted reads.
+2. Sketch out the major modules you will need to build or modify to complete the implementation. Actively look for opportunities to extract deep modules that can be tested in isolation.
 
-### 2. Identify deep modules
+A deep module (as opposed to a shallow module) is one which encapsulates a lot of functionality in a simple, testable interface which rarely changes.
 
-Sketch modules to build or modify. Prefer **deep modules** — large functionality behind a narrow, stable interface — over shallow modules. Surface 3-7 candidates and their interfaces. Recommend which modules deserve isolated tests; defer to user on edge cases.
+Check with the user that these modules match their expectations. Check with the user which modules they want tests written for.
 
-### 3. Verify intent only when blocked
+3. Write the PRD using the template below, then publish it to the project issue tracker. Apply the `needs-triage` triage label so it enters the normal triage flow.
 
-If the module breakdown is unambiguous from prior context, skip this step and proceed to writing. Ask the user only when an axis (scope, depth, or test coverage) is genuinely unresolved or when a decision is reversible-but-costly. Surface one unresolved axis at a time with a recommendation; never ask three default-bound axes at once.
-
-### 4. Write the PRD
-
-Render the template below. In file mode, write to `docs/prd/<feature>.md` and `git add` it. In flag mode, write to `/tmp/prd-<feature>.md` then `gh issue create --body-file /tmp/prd-<feature>.md`.
-
-## Template
-
-```
-# PRD: <feature>
+<prd-template>
 
 ## Problem Statement
-The user-visible problem, framed from the user's perspective. No internal jargon.
+
+The problem that the user is facing, from the user's perspective.
 
 ## Solution
-The user-visible resolution. Behavior, not implementation.
+
+The solution to the problem, from the user's perspective.
 
 ## User Stories
-Numbered, exhaustive. Format: `As an <actor>, I want <feature>, so that <benefit>`.
+
+A LONG, numbered list of user stories. Each user story should be in the format of:
+
+1. As an <actor>, I want a <feature>, so that <benefit>
+
+<user-story-example>
+1. As a mobile bank customer, I want to see balance on my accounts, so that I can make better informed decisions about my spending
+</user-story-example>
+
+This list of user stories should be extremely extensive and cover all aspects of the feature.
 
 ## Implementation Decisions
-- Modules to build/modify and their interface contracts
-- Architectural decisions (no file paths, no code snippets — they go stale)
-- Schema changes, API contracts, key interactions
+
+A list of implementation decisions that were made. This can include:
+
+- The modules that will be built/modified
+- The interfaces of those modules that will be modified
+- Technical clarifications from the developer
+- Architectural decisions
+- Schema changes
+- API contracts
+- Specific interactions
+
+Do NOT include specific file paths or code snippets. They may end up being outdated very quickly.
 
 ## Testing Decisions
-- What makes a test durable: assert on observable behavior through public interfaces, not internal state
-- Which modules earn tests
-- Prior art: link to similar tests already in the codebase by name (not path)
+
+A list of testing decisions that were made. Include:
+
+- A description of what makes a good test (only test external behavior, not implementation details)
+- Which modules will be tested
+- Prior art for the tests (i.e. similar types of tests in the codebase)
 
 ## Out of Scope
-Explicit non-goals.
+
+A description of the things that are out of scope for this PRD.
 
 ## Further Notes
-Open questions, follow-ups, deferred decisions.
-```
 
-User-story examples across stacks:
-1. As a Rust crate consumer, I want zero-copy deserialization, so that hot paths avoid heap traffic.
-2. As a TypeScript SPA user, I want optimistic updates with rollback, so that latency feels invisible.
-3. As an API caller (any language), I want idempotent retries, so that partial failures are recoverable.
+Any further notes about the feature.
 
-## Iteration Loop
-
-PRD is a living artifact. On every rerun: diff current artifact against latest context (`difft` if file mode); extend or revise sections; never silently drop existing content; bump `Last-revised: <ISO date>` footer.
-
-## Handoff
-
-The PRD file produced here is the **input contract** for downstream implementation planning. Implementation planners read `docs/prd/<feature>.md` (or fetch the issue body in flag mode) and produce the implementation plan. Hand off the path or issue URL explicitly.
+</prd-template>

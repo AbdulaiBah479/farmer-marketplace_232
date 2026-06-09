@@ -1,7 +1,7 @@
 ---
 name: ss-lint
 description: Quick automated lint — detects common design system violations in seconds
-argument-hint: [file-path or directory]
+argument-hint: "[file-path or directory]"
 allowed-tools: Read, Grep, Glob, Bash
 ---
 

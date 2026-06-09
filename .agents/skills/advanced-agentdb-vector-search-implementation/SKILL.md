@@ -1,10 +1,49 @@
 ---
+skill_id: when-using-advanced-vector-search-use-agentdb-advanced
 name: advanced-agentdb-vector-search-implementation
-description: Skill guidance for advanced agentdb vector search implementation.
+description: Master advanced AgentDB features including QUIC synchronization, multi-database management, custom distance metrics, and hybrid search for distributed AI systems.
+version: 1.0.0
+category: agentdb
+subcategory: distributed-systems
+trigger_pattern: "when-using-advanced-vector-search"
+agents:
+  - ml-developer
+  - backend-dev
+  - performance-analyzer
+complexity: advanced
+estimated_duration: 8-12 hours
+prerequisites:
+  - Basic AgentDB knowledge
+  - Vector database concepts
+  - Distributed systems understanding
+  - TypeScript/Node.js proficiency
+outputs:
+  - Multi-database AgentDB cluster
+  - QUIC synchronization system
+  - Custom distance metrics
+  - Hybrid search implementation
+  - Performance benchmarks
+validation_criteria:
+  - 150x faster search vs baseline
+  - Multi-DB synchronization working
+  - Custom metrics functional
+  - Hybrid search accurate
+evidence_based_techniques:
+  - Self-consistency validation
+  - Program-of-thought decomposition
+  - Chain-of-verification
+  - Multi-agent consensus
+metadata:
+  author: claude-flow
+  created: 2025-10-30
+  updated: 2025-10-30
+  tags:
+    - agentdb
+    - vector-search
+    - distributed-systems
+    - quic-sync
+    - hybrid-search
 ---
-
-
-
 
 # Advanced AgentDB Vector Search Implementation
 
@@ -1073,67 +1112,9 @@ cache.reconfigure({
 - 99.9% uptime in production
 - Health checks pass continuously
 
-## MCP Requirements
-
-This skill operates using AgentDB's npm package and API only. No additional MCP servers required.
-
-All AgentDB advanced operations are performed through:
-- npm CLI: `npx agentdb@latest`
-- TypeScript/JavaScript API: `import { AgentDB, QUICSync, DistributedCoordinator } from 'agentdb-advanced'`
-
 ## Additional Resources
 
 - AgentDB Advanced Documentation: https://agentdb.dev/docs/advanced
 - QUIC Synchronization Guide: https://agentdb.dev/docs/quic
 - Custom Metrics Tutorial: https://agentdb.dev/docs/metrics
 - Production Deployment Best Practices: https://agentdb.dev/docs/production
-
-## Core Principles
-
-Advanced AgentDB Vector Search Implementation operates on 3 fundamental principles:
-
-### Principle 1: QUIC Synchronization - Low-Latency Replication for Distributed Consistency
-
-Traditional TCP-based replication suffers from head-of-line blocking (one lost packet stalls entire stream) and connection setup overhead (3-way handshake adds 50-150ms latency). QUIC's multiplexed streams and 0-RTT connection resumption enable sub-100ms replication lag across distributed databases, maintaining consistency without sacrificing performance.
-
-In practice:
-- Configure maxStreams=100 to parallelize replication of 100 concurrent vector updates without blocking
-- Use cubic congestion control for high-bandwidth datacenter links, BBR for variable network conditions
-- Set keepAlive=5000ms to detect replica failures quickly and trigger failover within 10 seconds
-- Monitor replication lag continuously - spikes above 100ms indicate network saturation or replica overload requiring capacity scaling
-
-### Principle 2: Custom Distance Metrics - Domain-Specific Similarity Beyond Cosine/Euclidean
-
-Generic distance metrics (cosine, Euclidean) assume all vector dimensions contribute equally to similarity. Domain-specific applications require weighted dimensions (emphasizing recent timestamps for time-series), hybrid metrics (combining vector and scalar features), or specialized functions (code similarity using AST structure + embeddings).
-
-In practice:
-- Implement weighted distance metrics assigning importance to specific dimensions (e.g., 2x weight to entity names in knowledge graphs)
-- Create hybrid metrics combining vector similarity (70% weight) with scalar features like timestamps, popularity scores, or categorical matches (30% weight)
-- Validate custom metrics satisfy mathematical properties (non-negativity, symmetry, triangle inequality) to ensure HNSW index correctness
-- Benchmark custom metrics against baselines - improvement in domain-specific accuracy (precision@10, recall@100) justifies added complexity
-
-### Principle 3: Fan-Out Merge Routing - Distribute Queries Across Replicas for Load Balancing
-
-Single-node vector search creates bottlenecks at scale. Fan-out routing distributes queries across multiple replicas in parallel, merges results, and balances load to maximize throughput. This enables horizontal scaling where adding replicas proportionally increases query capacity.
-
-In practice:
-- Use fan-out-merge strategy for read-heavy workloads: query all replicas concurrently, merge top-K results client-side
-- Apply load-balanced routing for mixed read/write workloads: direct queries to least-loaded replica based on health checks
-- Implement nearest-region routing for geo-distributed deployments: query local replicas first, fallback to remote on failure
-- Monitor per-replica query latency - imbalanced load (>20% variance) indicates routing strategy needs adjustment or replica capacity rebalancing
-
-## Common Anti-Patterns
-
-| Anti-Pattern | Problem | Solution |
-|--------------|---------|----------|
-| **Synchronous Replication Blocking Writes** | Requiring all replicas to acknowledge before write returns creates latency spikes (200ms+ for 3 replicas across regions). Writes become bottlenecked by slowest replica or network partition. | Use asynchronous QUIC replication with eventual consistency. Primary returns immediately after local write, QUIC streams propagate to replicas in background. Accept <100ms replication lag for 10x write throughput improvement. Implement read-your-writes consistency where needed. |
-| **Custom Metric Without Validation - Break HNSW Index Assumptions** | HNSW indexes assume distance metrics satisfy triangle inequality and symmetry. Violating these properties causes index corruption, incorrect nearest neighbors, and silent accuracy degradation. | Implement comprehensive metric validation (Phase 3 chain-of-verification): test non-negativity d(a,b)>=0, symmetry d(a,b)=d(b,a), triangle inequality d(a,c)<=d(a,b)+d(b,c). Run validation on 1000+ random vector triples before deploying metric to production. |
-| **Query All Replicas Always - Waste Network and Compute on Low-Traffic Systems** | Fan-out-merge routing sends every query to all replicas regardless of load. For low-traffic systems (100 QPS), this wastes 3x network bandwidth and compute capacity while adding merge latency overhead. | Implement adaptive routing: use single-replica for low load (<1000 QPS), load-balanced for medium (1K-10K QPS), fan-out-merge only for high load (>10K QPS). Monitor query latency distribution and switch strategies based on p95 latency targets. |
-
-## Conclusion
-
-Advanced AgentDB Vector Search Implementation enables production-scale distributed vector databases through three sophisticated capabilities: QUIC synchronization for sub-100ms replication lag, custom distance metrics for domain-specific similarity, and multi-database routing for horizontal scalability. The 5-phase SOP systematically guides infrastructure setup, advanced feature configuration, custom metric implementation, performance optimization, and production deployment with comprehensive monitoring and operational runbooks. This transforms basic vector search into enterprise-grade systems handling millions of queries per second with 99.9%+ uptime.
-
-This skill is critical when scaling beyond single-node deployments to handle massive query volumes (>10K QPS), implementing high-availability architectures with automatic failover, or building domain-specific search requiring specialized similarity functions. The key architectural decision is choosing the right synchronization model - synchronous replication guarantees consistency but limits write throughput, asynchronous QUIC replication enables high-speed writes with eventual consistency trade-offs. Most production systems choose asynchronous with <100ms replication lag as the optimal balance.
-
-Custom distance metrics unlock powerful domain applications but require rigorous validation. Generic cosine similarity fails for tasks like code search (needs AST structure), document retrieval (needs recency weighting), or fraud detection (needs anomaly scoring). The metric validation framework prevents silent accuracy degradation by verifying mathematical properties before production deployment. Combined with HNSW indexing, quantization, and caching from the optimization skill, you achieve both specialized similarity functions and sub-10ms query latency - enabling intelligent search experiences that feel magical to users while remaining cost-effective at scale. The comprehensive monitoring, alerting, and runbooks ensure systems remain operational through network partitions, replica failures, and traffic spikes that inevitably occur in production environments.

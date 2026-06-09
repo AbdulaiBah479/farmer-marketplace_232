@@ -1,5 +1,5 @@
 ---
-name: frontend/technical-spec
+name: frontend-technical-spec
 description: Defines frontend environment variables, component design, and data flow patterns. Use when configuring React environment.
 ---
 
@@ -17,10 +17,10 @@ TypeScript-based React application implementation. Architecture patterns should 
 - Properly implement default value settings and mandatory checks
 
 ```typescript
-// Build tool environment variables (public values only)
+// Build tool environment variables (public values only; client-exposed vars need the VITE_ prefix)
 const config = {
-  apiUrl: import.meta.env.API_URL || 'http://localhost:3000',
-  appName: import.meta.env.APP_NAME || 'My App'
+  apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+  appName: import.meta.env.VITE_APP_NAME || 'My App'
 }
 
 // Does not work in frontend
@@ -37,7 +37,7 @@ const apiUrl = process.env.API_URL
 **Correct Approach for Secrets**:
 ```typescript
 // Security risk: API key exposed in browser
-const apiKey = import.meta.env.API_KEY
+const apiKey = import.meta.env.VITE_API_KEY
 const response = await fetch(`https://api.example.com/data?key=${apiKey}`)
 
 // Correct: Backend manages secrets, frontend accesses via proxy
@@ -109,10 +109,10 @@ async function fetchUser(id: string): Promise<User> {
 Use the appropriate run command based on the `packageManager` field in package.json.
 
 ### Build Commands
-- `dev` - Development server
-- `build` - Production build
-- `preview` - Preview production build
-- `type-check` - Type check (no emit)
+- Auto-detect and execute the following from package.json scripts:
+  - Development server
+  - Production build
+  - Type check (no emit)
 
 ### Testing Commands
 - `test` - Run tests

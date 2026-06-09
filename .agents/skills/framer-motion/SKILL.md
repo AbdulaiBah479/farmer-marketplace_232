@@ -1,17 +1,3 @@
-<<<<<<< HEAD
----
-name: framer-motion
-description: "React animations with Framer Motion: variants, gestures, layout animations, and scroll."
-category: js
----
-
-# Framer Motion Animations
-
-React animations with Framer Motion: variants, gestures, layout animations, and scroll.
-
-## When to Use
-Use this skill for framer motion animations tasks.
-=======
 ---
 name: framer-motion
 description: Comprehensive Framer Motion animation library for React. Covers motion components, variants, gestures, page transitions, and scroll animations. Use when adding animations to React/Next.js applications.
@@ -324,4 +310,3 @@ const item = {
 5. **Spring for interactions**: More natural feel for hover/tap
 6. **Tween for page transitions**: More predictable timing
 7. **GPU-accelerated properties**: Prefer `opacity`, `scale`, `x`, `y` over `width`, `height`
->>>>>>> 4b9d09d6dab9a725d3e3c3e2f77c256484dc8d8b

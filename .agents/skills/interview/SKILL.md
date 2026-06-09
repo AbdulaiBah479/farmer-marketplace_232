@@ -1,125 +1,141 @@
 ---
 name: interview
-description: Interview me about a plan to generate a detailed spec.
-argument-hint: [idea_or_plan]
-model: opus
+description: "Erfasse Beruf des Auftraggebers (Rechtsanwalt Steuerberater Wirtschaftsprüfer Patentanwalt Notar) Anbieter Produktname Vertragsdokument Datenarten Verarbeitungszweck Hostingland und Subunternehmerstruktur. Bilde daraus den Norm-Adapter (BRAO StBerG WPO PAO BNotO) und entscheide ob Kanzleiinfrastr..."
 ---
 
-You are an expert Requirements Analyst.
-Read the input "$ARGUMENTS" and interview me in detail using the `AskUserQuestion` tool.
+# Kaltstart-Interview
 
-# Required Agents
+## Fachkern: Kaltstart-Interview
 
-- **MANDATORY:** `@product-manager` - This skill MUST be executed by product-manager agent
-- `@monetization-expert` - Called automatically to assess revenue potential
-- `@tech-lead` - (Optional) To validate technical feasibility
+- **KI-/Berufsrechtsproblem (Kaltstart-Interview):** Erfasse Beruf des Auftraggebers (Rechtsanwalt Steuerberater Wirtschaftsprüfer Patentanwalt Notar) Anbieter Produktname Vertragsdokument Datenarten Verarbeitungszweck Hostingland und Subunternehmerstruktur. Bilde daraus den Norm-Adapter (BRAO StBerG WPO PAO BNotO) und entscheide ob Kanzleiinfrastruktur oder Einzelmandats-Tool im Sinne Absatz fuenf vorliegt. Lade dazu die Skill parallelnormen-andere-berufe.
+- **Normenanker:** BRAO, BORA, § 203 StGB, § 204 StGB, DSGVO/BDSG, Auftragsverarbeitung, Dienstleisterregelungen der freien Berufe und prozessuale Akten-/Mandatsgeheimnisse fallbezogen prüfen.
+- **Entscheidende Weiche:** Anbieterbehauptung, Vertragswortlaut, technische Realität, Berufsgeheimnis, Datenschutzrolle und Strafbarkeitsrisiko auseinanderziehen.
+- **Arbeitsprodukt:** Anbieter-Fragenliste, Risikomatrix, Vertragsredline und Entscheidung, ob Pilot, Stop oder Nachverhandlung.
+- **Hinweis:** Ergebnis bleibt Vorprüfung für Kanzlei- oder Spezialberatung; keine Scheinsicherheit gegenüber Berufsrecht oder Strafrecht.
 
-# Goal
+## Pflichtfragen
 
-Convert a vague idea into a concrete Specification (Spec).
+### Beruf des Auftraggebers
 
-# Rules
+Welche Berufsgruppe nutzt das Tool?
 
-1.  **Dig Deep:** Do not ask obvious questions. Ask about edge cases, error states, and user flow details.
-2.  **Challenge Me:** If I suggest something technically bad or expensive, push back politely.
-3.  **Iterate:** Continue interviewing until you have enough info to write a `SPEC.md`.
-4.  **Monetization:** Ask: "Is this feature free or paid?" and consult `@monetization-expert`.
+- Rechtsanwalt — Norm: § 43e BRAO i.V.m. § 43a Abs. 2 BRAO und § 203 Abs. 1 Nr. 3 StGB
+- Steuerberater oder Steuerbevollmächtigter — Norm: § 62a StBerG i.V.m. § 57 Abs. 1 StBerG und § 203 Abs. 1 Nr. 3 StGB
+- Wirtschaftsprüfer oder vereidigter Buchprüfer — Norm: § 50a WPO i.V.m. § 43 WPO und § 203 Abs. 1 Nr. 3 StGB (bei Wirtschaftsprüfungsgesellschaft zusätzlich § 59c WPO)
+- Patentanwalt — Norm: § 39c PAO i.V.m. § 39a Abs. 2 PAO und § 203 Abs. 1 Nr. 3 StGB
+- Notar — Norm: § 26a BNotO i.V.m. § 18 BNotO und § 203 Abs. 1 Nr. 1 StGB
 
-# Interview Questions Checklist
+Sind mehrere Berufsgruppen in einer Sozietät gemischt vertreten (Anwalts-Steuerberater-Gesellschaft, multidisziplinäre Praxis), gelten die strengsten Anforderungen kumulativ. Beim Notar besonders auf § 26a Abs. 4 BNotO achten — bei Dienstleistungen für ein einzelnes Amtsgeschäft ist die Einwilligung des Beteiligten erforderlich.
 
-**User & Problem:**
-- Who is the target user?
-- What problem does this solve for them?
-- How do they solve this today (manual process or competitor)?
+### Anbieter und Produkt
 
-**Solution & Scope:**
-- What is the core functionality (one sentence)?
-- What features are must-have for v1?
-- What features can wait for v2?
+- Firmenname und Sitz des Anbieters (juristische Person, vertretungsberechtigte Personen)
+- Produktname und Versionsstand (Bsp.: gängige KI-Sprachmodelle und KI-Frontends; eigene Marken-Frontends)
+- Eigene KI-Modelle oder API-Aufruf an Drittanbieter (z.B. Microsoft Azure, AWS Bedrock)
+- Welche Subunternehmer sind vorgesehen (Hyperscaler, Modellanbieter, Hosting)?
 
-**Technical:**
-- Does this require a database? What kind?
-- Does this need real-time updates (WebSockets)?
-- Are there third-party integrations (Stripe, Twilio, etc.)?
+### Datenarten und Verarbeitungszweck
 
-**UX Flow:**
-- What's the happy path (step-by-step)?
-- What happens when something goes wrong (error states)?
-- What does the user see while loading?
+- Welche Datenkategorien werden eingegeben (Mandatsschriftsätze, Vertragsentwürfe, Personalakten, Bilanzdaten, Notariatsurkunden, Patentanmeldungen)?
+- Werden besondere Kategorien personenbezogener Daten verarbeitet (Art. 9 DS-GVO)?
+- Geht es um Kanzleiinfrastruktur (übergreifend) oder ein Tool, das einem konkreten Mandat dient (Abs. 5 der Dienstleisterregelung)?
+- Wer im Haus hat Zugriff?
 
-**Success Metrics:**
-- How will we measure success?
-- What's the expected usage (requests/day, users/month)?
+### Hostingland und Auslandsbezug
 
-# Workflow
+- Wo liegen die Server (EU/EWR, USA, sonstiges Drittland)?
+- Wo sitzt der Modellanbieter selbst (etwa OpenAI in den USA)?
+- Greift der US-CLOUD Act (US-Konzern oder US-Tochter)?
 
-1.  **Validate Arguments:** Check if `$ARGUMENTS` is provided
-   - If empty: Ask "What feature would you like to build?"
+### Vertragsstand
 
-2.  **Consult Product Manager:** Ensure `@product-manager` is handling this
-   - If not called by PM: "This skill requires @product-manager agent. Calling now..."
+- Liegt ein eigenständiger Vertrag vor, oder nur AGB plus Datenschutzanhang?
+- Wann wurde der Vertrag zuletzt geändert?
+- Wer hat unterzeichnet?
+- Liegt eine Auftragsverarbeitungsvereinbarung nach Art. 28 DS-GVO bei?
 
-3.  **Competitive Research:** `@product-manager` searches for competitors
+## Heuristik Kanzleiinfrastruktur vs. Einzelmandats-Tool
 
-4.  **Interview User:** Ask 5-10 targeted questions using `AskUserQuestion`
+Nach berufsrechtliche KI-Debatte 32/2025 (Seite 15) ist die Einwilligung des Mandanten oder Beteiligten regelmäßig nicht erforderlich, wenn das Tool als allgemeine Kanzleiinfrastruktur eingesetzt wird. Sie ist erforderlich, wenn das Tool unmittelbar einem einzelnen Mandat oder einem einzelnen Amtsgeschäft dient (Abs. 5 der jeweiligen Dienstleisterregelung).
 
-5.  **Monetization Check:** Call `@monetization-expert`
-   - "Should this be free or paid?"
-   - "How does this drive revenue?"
+Indikatoren für **Kanzleiinfrastruktur** (kein Einzelmandatsbezug, keine Einwilligung erforderlich):
 
-6.  **Technical Feasibility:** (Optional) Consult `@tech-lead`
-   - "Is this technically feasible with our stack?"
-   - "What are the technical risks?"
+- Mandant-unabhängige Recherche, Vorlagenerzeugung, allgemeine Vertragsanalyse, Wissensmanagement
+- Verfügbarkeit für alle Mandate
+- keine mandatsspezifische Konfiguration
 
-7.  **Generate Spec:** Use `.claude/templates/SPEC-TEMPLATE.md`
+Indikatoren für **Einzelmandats-Tool** (Einwilligung erforderlich):
 
-8.  **Save Spec:** Write to `.claude/docs/specs/[feature-name].md`
-   - Feature name from arguments (lowercase, hyphens)
-   - Example: "user profile editing" → `user-profile-editing.md`
+- Spezielle Konfiguration für einen Mandanten
+- Verarbeitung benannter Beteiligter
+- Mandat-spezifische Trainingsdaten oder Embeddings
+- Notariatsspezifisch: Tool dient einem konkreten Amtsgeschäft
 
-9.  **Confirmation:** Show summary and ask for approval
-   - "Spec generated. Review at .claude/docs/specs/[name].md. Approve?"
+Bei Unsicherheit: konservativ entscheiden und Einwilligung einholen.
 
-# Output Format
-
-Once the interview is complete, create (or update) a file named `.claude/docs/specs/[feature-name].md` with the full requirements using the template.
-
-**Success Message:**
-```
-✅ Spec created: .claude/docs/specs/[feature-name].md
-
-📋 Summary:
-- Target User: [User type]
-- Core Value: [One sentence]
-- Monetization: [Free/Paid/Usage-based]
-- Effort: [Small/Medium/Large]
-
-➡️ Next Steps:
-1. Review the spec
-2. Call @tech-lead to validate architecture
-3. Use /step-by-step to start implementation
+## Eingangsdaten
+- Beruf: ...
+- Norm-Adapter: § ...
+- Anbieter: ...
+- Produkt: ...
+- Subunternehmer: ...
+- Datenarten: ...
+- Hostingland: ...
+- Auslandsbezug: ...
+- Vertragstyp: Kanzleiinfrastruktur / Einzelmandats-Tool
+- Vertragsdokumente vorgelegt: ja/nein, Stand, Anlagen
 ```
 
-# Error Handling
+Diese Daten werden an alle folgenden Skills weitergereicht.
 
-**If $ARGUMENTS is empty:**
-- Prompt: "What feature or idea would you like to explore?"
+## Lückenmanagement
 
-**If .claude/docs/specs/ doesn't exist:**
-- Create the directory automatically
-- Log: "Created .claude/docs/specs/ directory"
+Wenn der Auftraggeber Antworten nicht hat, ist das selbst schon ein Befund. Fehlende Anbieter-Sitzangaben, fehlende Subunternehmerliste, unklarer Verarbeitungszweck — alles davon landet ohne weiteres im Rückfragebrief.
 
-**If user gives vague answers:**
-- Push back: "Can you be more specific? For example..."
-- Ask follow-up questions
+## Aktuelle Rechtsprechung zum Berufsgeheimnis
 
-**If technical feasibility is uncertain:**
-- Tag `@tech-lead`: "Is X technically feasible with our current stack?"
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
-**If feature is too large:**
-- Suggest: "This seems large. Can we break it into smaller features?"
-- Offer to create multiple specs
+## Zentrale Normen (Paragrafenkette)
 
-**If @product-manager is not active:**
-- Error: "❌ This skill requires @product-manager agent. Please call the skill via: @product-manager /interview [idea]"
-- Exit gracefully
+- § 43a Abs. 2 BRAO, § 43e BRAO — Verschwiegenheitspflicht und Dienstleisterregelung Rechtsanwalt
+- § 57 Abs. 1, § 62a StBerG — Steuerberater
+- § 43 Abs. 1, § 50a WPO — Wirtschaftsprüfer
+- § 39a Abs. 2, § 39c PAO — Patentanwalt
+- § 18 BNotO, § 26a BNotO — Notar
+- §§ 203, 204 StGB — Straftatbestände Verletzung/Verwertung von Privatgeheimnissen
+- §§ 53a, 97 StPO — Zeugnisverweigerungsrecht und Beschlagnahmeverbot für Berufshelfer
+
+## Triage-Frage (Entscheidungsbaum)
+
+```
+Beruf bestimmt?
+ Nein → Pflichtfrage 1 stellen
+ Ja → Norm-Adapter anwenden (BRAO / StBerG / WPO / PAO / BNotO)
+ → Kanzleiinfrastruktur oder Einzelmandats-Tool?
+ Einzelmandats-Tool → Einwilligungspflicht § 26a Abs. 4 BNotO prüfen
+ Kanzleiinfrastruktur → Einwilligung i.d.R. nicht erforderlich (DAV S. 15)
+ → Auslandsbezug (US-Anbieter)?
+ Ja → Cloud-Act-Prüfung erforderlich → Skill cloud-act-und-drittstaat-pruefen
+ Nein → Weiter mit Verschwiegenheitsprüfung
+```
+
+## Output-Template — Eingangsdatensatz
+
+**Adressat:** Kanzlei intern — Tonfall: sachlich-strukturiert
+
+```
+
+## Eingangsdaten [DATUM]
+- Beruf: [BERUF]
+- Norm-Adapter: § [NORM] [GESETZ]
+- Anbieter: [NAME, SITZ, LAND]
+- Produkt: [NAME, VERSION]
+- Subunternehmer: [LISTE ODER "noch nicht bekannt"]
+- Datenarten: [BESCHREIBUNG]
+- Drittlandbezug: [ja/nein; wenn ja: CLOUD-Act-Risiko: ja/nein]
+- Hostingland: [LAND]
+- Vertragstyp: Kanzleiinfrastruktur / Einzelmandats-Tool
+- Vertragsdokumente vorgelegt: [ja/nein, Datum, Anlagen]
+- Nächste Schritte: [Prüfpunkte auflisten]
+```

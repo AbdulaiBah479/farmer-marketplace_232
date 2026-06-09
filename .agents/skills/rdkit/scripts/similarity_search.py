@@ -16,7 +16,7 @@ from pathlib import Path
 
 try:
     from rdkit import Chem
-    from rdkit.Chem import AllChem, MACCSkeys, rdFingerprintGenerator
+    from rdkit.Chem import AllChem, MACCSkeys
     from rdkit import DataStructs
 except ImportError:
     print("Error: RDKit not installed. Install with: conda install -c conda-forge rdkit")
@@ -40,19 +40,17 @@ def generate_fingerprint(mol, method='morgan', radius=2, n_bits=2048):
     method = method.lower()
 
     if method == 'morgan':
-        gen = rdFingerprintGenerator.GetMorganGenerator(radius=radius, fpSize=n_bits)
-        return gen.GetFingerprint(mol)
+        return AllChem.GetMorganFingerprintAsBitVect(mol, radius, nBits=n_bits)
     elif method == 'rdkit':
-        gen = rdFingerprintGenerator.GetRDKitFPGenerator(maxPath=7, fpSize=n_bits)
-        return gen.GetFingerprint(mol)
+        return Chem.RDKFingerprint(mol, maxPath=7, fpSize=n_bits)
     elif method == 'maccs':
         return MACCSkeys.GenMACCSKeys(mol)
     elif method == 'atompair':
-        gen = rdFingerprintGenerator.GetAtomPairGenerator(fpSize=n_bits)
-        return gen.GetFingerprint(mol)
+        from rdkit.Chem.AtomPairs import Pairs
+        return Pairs.GetAtomPairFingerprintAsBitVect(mol, nBits=n_bits)
     elif method == 'torsion':
-        gen = rdFingerprintGenerator.GetTopologicalTorsionGenerator(fpSize=n_bits)
-        return gen.GetFingerprint(mol)
+        from rdkit.Chem.AtomPairs import Torsions
+        return Torsions.GetHashedTopologicalTorsionFingerprintAsBitVect(mol, nBits=n_bits)
     else:
         raise ValueError(f"Unknown fingerprint method: {method}")
 

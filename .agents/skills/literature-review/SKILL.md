@@ -1,26 +1,8 @@
 ---
 name: literature-review
 description: Conduct comprehensive, systematic literature reviews using multiple academic databases (PubMed, arXiv, bioRxiv, Semantic Scholar, etc.). This skill should be used when conducting systematic literature reviews, meta-analyses, research synthesis, or comprehensive literature searches across biomedical, scientific, and technical domains. Creates professionally formatted markdown documents and PDFs with verified citations in multiple citation styles (APA, Nature, Vancouver, etc.).
-allowed-tools: Read Write Edit Bash
-license: MIT license
-metadata:
-    skill-author: K-Dense Inc.
+allowed-tools: [Read, Write, Edit, Bash]
 ---
-
-<!--
-  ╔══════════════════════════════════════════════════════════════╗
-  ║  本文件为开源 Skill 原始文档，收录仅供学习与研究参考        ║
-  ║  CoPaper.AI 收集整理 | https://copaper.ai                  ║
-  ╚══════════════════════════════════════════════════════════════╝
-
-  来源仓库: https://github.com/K-Dense-AI/claude-scientific-skills
-  项目名称: claude-scientific-skills
-  开源协议: MIT License
-  收录日期: 2026-04-02
-
-  声明: 本文件版权归原作者所有。此处收录旨在为社会科学实证研究者
-  提供 AI Agent Skills 的集中参考。如有侵权，请联系删除。
--->
 
 # Literature Review
 
@@ -411,48 +393,6 @@ Detailed formatting guidelines are in `references/citation_styles.md`. Quick ref
 
 **Always verify citations** with verify_citations.py before finalizing.
 
-### Prioritizing High-Impact Papers (CRITICAL)
-
-**Always prioritize influential, highly-cited papers from reputable authors and top venues.** Quality matters more than quantity in literature reviews.
-
-#### Citation Count Thresholds
-
-Use citation counts to identify the most impactful papers:
-
-| Paper Age | Citation Threshold | Classification |
-|-----------|-------------------|----------------|
-| 0-3 years | 20+ citations | Noteworthy |
-| 0-3 years | 100+ citations | Highly Influential |
-| 3-7 years | 100+ citations | Significant |
-| 3-7 years | 500+ citations | Landmark Paper |
-| 7+ years | 500+ citations | Seminal Work |
-| 7+ years | 1000+ citations | Foundational |
-
-#### Journal and Venue Tiers
-
-Prioritize papers from higher-tier venues:
-
-- **Tier 1 (Always Prefer):** Nature, Science, Cell, NEJM, Lancet, JAMA, PNAS, Nature Medicine, Nature Biotechnology
-- **Tier 2 (Strong Preference):** High-impact specialized journals (IF>10), top conferences (NeurIPS, ICML for ML/AI)
-- **Tier 3 (Include When Relevant):** Respected specialized journals (IF 5-10)
-- **Tier 4 (Use Sparingly):** Lower-impact peer-reviewed venues
-
-#### Author Reputation Assessment
-
-Prefer papers from:
-- **Senior researchers** with high h-index (>40 in established fields)
-- **Leading research groups** at recognized institutions (Harvard, Stanford, MIT, Oxford, etc.)
-- **Authors with multiple Tier-1 publications** in the relevant field
-- **Researchers with recognized expertise** (awards, editorial positions, society fellows)
-
-#### Identifying Seminal Papers
-
-For any topic, identify foundational work by:
-1. **High citation count** (typically 500+ for papers 5+ years old)
-2. **Frequently cited by other included studies** (appears in many reference lists)
-3. **Published in Tier-1 venues** (Nature, Science, Cell family)
-4. **Written by field pioneers** (often cited as establishing concepts)
-
 ## Best Practices
 
 ### Search Strategy
@@ -460,7 +400,6 @@ For any topic, identify foundational work by:
 2. **Include preprint servers**: Captures latest unpublished findings
 3. **Document everything**: Search strings, dates, result counts for reproducibility
 4. **Test and refine**: Run pilot searches, review results, adjust search terms
-5. **Sort by citations**: When available, sort search results by citation count to surface influential work first
 
 ### Screening and Selection
 1. **Use clear criteria**: Document inclusion/exclusion criteria before screening

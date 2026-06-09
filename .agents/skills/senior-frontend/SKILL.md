@@ -1,194 +1,209 @@
 ---
 name: senior-frontend
-description: Frontend development skill for React, Next.js, TypeScript, and Tailwind CSS applications. Use when building React components, optimizing Next.js performance, analyzing bundle sizes, scaffolding frontend projects, implementing accessibility, or reviewing frontend code quality.
+description: Comprehensive frontend development skill for building modern, performant web applications using ReactJS, NextJS, TypeScript, Tailwind CSS. Includes component scaffolding, performance optimization, bundle analysis, and UI best practices. Use when developing frontend features, optimizing performance, implementing UI/UX designs, managing state, or reviewing frontend code.
 ---
 
 # Senior Frontend
 
-Frontend development patterns, performance optimization, and automation tools for React/Next.js applications.
+Complete toolkit for senior frontend with modern tools and best practices.
 
-## Project Scaffolding
+## Quick Start
 
-Generate a new Next.js or React project with TypeScript, Tailwind CSS, and best practice configurations.
+### Main Capabilities
 
-### Scaffolder Options
+This skill provides three core capabilities through automated scripts:
 
-| Option | Description |
-|--------|-------------|
-| `--template nextjs` | Next.js 14+ with App Router and Server Components |
-| `--template react` | React + Vite with TypeScript |
-| `--features auth` | Add NextAuth.js authentication |
-| `--features api` | Add React Query + API client |
-| `--features forms` | Add React Hook Form + Zod validation |
-| `--features testing` | Add Vitest + Testing Library |
+```bash
+# Script 1: Component Generator
+python scripts/component_generator.py [options]
 
-### Generated Structure (Next.js)
+# Script 2: Bundle Analyzer
+python scripts/bundle_analyzer.py [options]
 
-```
-my-app/
-├── app/
-│   ├── layout.tsx        # Root layout with fonts
-│   ├── page.tsx          # Home page
-│   ├── globals.css       # Tailwind + CSS variables
-│   └── api/health/route.ts
-├── components/
-│   ├── ui/               # Button, Input, Card
-│   └── layout/           # Header, Footer, Sidebar
-├── hooks/                # useDebounce, useLocalStorage
-├── lib/                  # utils (cn), constants
-├── types/                # TypeScript interfaces
-├── tailwind.config.ts
-├── next.config.js
-└── package.json
+# Script 3: Frontend Scaffolder
+python scripts/frontend_scaffolder.py [options]
 ```
 
-## Component Generation
+## Core Capabilities
 
-Generate React components with TypeScript, tests, and Storybook stories.
+### 1. Component Generator
 
-### Generator Options
+Automated tool for component generator tasks.
 
-| Option | Description |
-|--------|-------------|
-| `--type client` | Client component with 'use client' (default) |
-| `--type server` | Async server component |
-| `--type hook` | Custom React hook |
-| `--with-test` | Include test file |
-| `--with-story` | Include Storybook story |
+**Features:**
+- Automated scaffolding
+- Best practices built-in
+- Configurable templates
+- Quality checks
 
-## Bundle Analysis
-
-Analyze package.json and project structure for bundle optimization opportunities.
-
-### Heavy Dependencies to Replace
-
-| Package | Size | Alternative |
-|---------|------|-------------|
-| moment | 290KB | date-fns (12KB) or dayjs (2KB) |
-| lodash | 71KB | lodash-es with tree-shaking |
-| axios | 14KB | Native fetch or ky (3KB) |
-| jquery | 87KB | Native DOM APIs |
-| @mui/material | Large | shadcn/ui or Radix UI |
-
-## React Patterns
-
-### Compound Components
-
-```tsx
-const Tabs = ({ children }) => {
-  const [active, setActive] = useState(0);
-  return (
-    <TabsContext.Provider value={{ active, setActive }}>
-      {children}
-    </TabsContext.Provider>
-  );
-};
-
-Tabs.List = TabList;
-Tabs.Panel = TabPanel;
+**Usage:**
+```bash
+python scripts/component_generator.py <project-path> [options]
 ```
 
-### Custom Hooks
+### 2. Bundle Analyzer
 
-```tsx
-function useDebounce<T>(value: T, delay = 500): T {
-  const [debouncedValue, setDebouncedValue] = useState(value);
+Comprehensive analysis and optimization tool.
 
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedValue(value), delay);
-    return () => clearTimeout(timer);
-  }, [value, delay]);
+**Features:**
+- Deep analysis
+- Performance metrics
+- Recommendations
+- Automated fixes
 
-  return debouncedValue;
-}
+**Usage:**
+```bash
+python scripts/bundle_analyzer.py <target-path> [--verbose]
 ```
 
-## Next.js Optimization
+### 3. Frontend Scaffolder
 
-### Server vs Client Components
+Advanced tooling for specialized tasks.
 
-Use Server Components by default. Add 'use client' only when you need:
-- Event handlers (onClick, onChange)
-- State (useState, useReducer)
-- Effects (useEffect)
-- Browser APIs
+**Features:**
+- Expert-level automation
+- Custom configurations
+- Integration ready
+- Production-grade output
 
-### Image Optimization
-
-```tsx
-import Image from 'next/image';
-
-// Above the fold - load immediately
-<Image
-  src="/hero.jpg"
-  alt="Hero"
-  width={1200}
-  height={600}
-  priority
-/>
-
-// Responsive image with fill
-<div className="relative aspect-video">
-  <Image
-    src="/product.jpg"
-    alt="Product"
-    fill
-    sizes="(max-width: 768px) 100vw, 50vw"
-    className="object-cover"
-  />
-</div>
+**Usage:**
+```bash
+python scripts/frontend_scaffolder.py [arguments] [options]
 ```
 
-## Accessibility Checklist
+## Reference Documentation
 
-1. **Semantic HTML**: Use proper elements (`<button>`, `<nav>`, `<main>`)
-2. **Keyboard Navigation**: All interactive elements focusable
-3. **ARIA Labels**: Provide labels for icons and complex widgets
-4. **Color Contrast**: Minimum 4.5:1 for normal text
-5. **Focus Indicators**: Visible focus states
+### React Patterns
 
-```tsx
-// Accessible button
-<button
-  type="button"
-  aria-label="Close dialog"
-  onClick={onClose}
-  className="focus-visible:ring-2 focus-visible:ring-blue-500"
->
-  <XIcon aria-hidden="true" />
-</button>
+Comprehensive guide available in `references/react_patterns.md`:
+
+- Detailed patterns and practices
+- Code examples
+- Best practices
+- Anti-patterns to avoid
+- Real-world scenarios
+
+### Nextjs Optimization Guide
+
+Complete workflow documentation in `references/nextjs_optimization_guide.md`:
+
+- Step-by-step processes
+- Optimization strategies
+- Tool integrations
+- Performance tuning
+- Troubleshooting guide
+
+### Frontend Best Practices
+
+Technical reference guide in `references/frontend_best_practices.md`:
+
+- Technology stack details
+- Configuration examples
+- Integration patterns
+- Security considerations
+- Scalability guidelines
+
+## Tech Stack
+
+**Languages:** TypeScript, JavaScript, Python, Go, Swift, Kotlin
+**Frontend:** React, Next.js, React Native, Flutter
+**Backend:** Node.js, Express, GraphQL, REST APIs
+**Database:** PostgreSQL, Prisma, NeonDB, Supabase
+**DevOps:** Docker, Kubernetes, Terraform, GitHub Actions, CircleCI
+**Cloud:** AWS, GCP, Azure
+
+## Development Workflow
+
+### 1. Setup and Configuration
+
+```bash
+# Install dependencies
+npm install
+# or
+pip install -r requirements.txt
+
+# Configure environment
+cp .env.example .env
 ```
 
-## Quick Reference
+### 2. Run Quality Checks
 
-### Tailwind CSS Utilities
+```bash
+# Use the analyzer script
+python scripts/bundle_analyzer.py .
 
-```tsx
-import { cn } from '@/lib/utils';
-
-<button className={cn(
-  'px-4 py-2 rounded',
-  variant === 'primary' && 'bg-blue-500 text-white',
-  disabled && 'opacity-50 cursor-not-allowed'
-)} />
+# Review recommendations
+# Apply fixes
 ```
 
-### TypeScript Patterns
+### 3. Implement Best Practices
 
-```tsx
-// Props with children
-interface CardProps {
-  className?: string;
-  children: React.ReactNode;
-}
+Follow the patterns and practices documented in:
+- `references/react_patterns.md`
+- `references/nextjs_optimization_guide.md`
+- `references/frontend_best_practices.md`
 
-// Generic component
-interface ListProps<T> {
-  items: T[];
-  renderItem: (item: T) => React.ReactNode;
-}
+## Best Practices Summary
 
-function List<T>({ items, renderItem }: ListProps<T>) {
-  return <ul>{items.map(renderItem)}</ul>;
-}
+### Code Quality
+- Follow established patterns
+- Write comprehensive tests
+- Document decisions
+- Review regularly
+
+### Performance
+- Measure before optimizing
+- Use appropriate caching
+- Optimize critical paths
+- Monitor in production
+
+### Security
+- Validate all inputs
+- Use parameterized queries
+- Implement proper authentication
+- Keep dependencies updated
+
+### Maintainability
+- Write clear code
+- Use consistent naming
+- Add helpful comments
+- Keep it simple
+
+## Common Commands
+
+```bash
+# Development
+npm run dev
+npm run build
+npm run test
+npm run lint
+
+# Analysis
+python scripts/bundle_analyzer.py .
+python scripts/frontend_scaffolder.py --analyze
+
+# Deployment
+docker build -t app:latest .
+docker-compose up -d
+kubectl apply -f k8s/
 ```
+
+## Troubleshooting
+
+### Common Issues
+
+Check the comprehensive troubleshooting section in `references/frontend_best_practices.md`.
+
+### Getting Help
+
+- Review reference documentation
+- Check script output messages
+- Consult tech stack documentation
+- Review error logs
+
+## Resources
+
+- Pattern Reference: `references/react_patterns.md`
+- Workflow Guide: `references/nextjs_optimization_guide.md`
+- Technical Guide: `references/frontend_best_practices.md`
+- Tool Scripts: `scripts/` directory

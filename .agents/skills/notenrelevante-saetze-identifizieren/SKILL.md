@@ -5,13 +5,11 @@ description: "Identifiziert notenrelevante Saetze im Arbeitszeugnis und trennt s
 
 # Notenrelevante Sätze identifizieren
 
-Nicht jeder Satz in einem Arbeitszeugnis ist für die Benotung relevant. Die Aufgabenbeschreibung — also die Schilderung dessen, womit der Arbeitnehmer befasst war — enthält keine Bewertung und ist für die Notenbildung neutral. Erst wenn ein Satz eine Aussage über die Qualität der Aufgabenerfüllung trifft, wird er notenrelevant.
+## Fachlicher Anker
 
-Die vier Hauptkategorien sind: (1) Aufgabenbeschreibung (neutral, deskriptiv), (2) Leistungsbeurteilung (Arbeitsqualität, Arbeitsbereitschaft, Arbeitstempo, Arbeitsmenge, Fachkenntnisse), (3) Verhaltensbeurteilung (soziales Verhalten zu Vorgesetzten, Kollegen, Kunden, Lieferanten) und (4) Schlussformel (Bedauern, Dank, Zukunftswünsche). Leistungs- und Verhaltenssätze sind regelmäßig notenrelevant. Die Schlussformel wird als Signal bewertet, rechtlich aber gesondert behandelt.
-
-Ein besonderer Grenzfall ist die verkürzte Aufgabenbeschreibung: Wenn ein Zeugnis die Aufgaben sehr kurz beschreibt und damit signalisiert, dass der Arbeitnehmer nur geringe Verantwortung hatte — obwohl seine tatsächliche Stellung höher war — kann das ein implizites Abwertungssignal sein. Ebenso ist eine übertrieben lange Aufgabenbeschreibung bei gleichzeitig knapper Leistungsbeurteilung ein Hinweis darauf, dass der Aussteller das Positive bewusst minimiert.
-
-Besondere Aufmerksamkeit verdienen Sätze, die scheinbar deskriptiv sind, aber Bewertungen einschließen. "Er war stets bereit, Überstunden zu leisten" klingt nach Beschreibung, ist aber eine Leistungsaussage über Einsatzbereitschaft. "Sie bearbeitete sämtliche Aufgaben eigenverantwortlich" beschreibt Arbeitsweise und ist eine verdeckte Leistungsbeurteilung.
+- **Normen:** §§ 611a, §§ 1, §§ 14.
+- **Entscheidungs-/Quellenanker:** Tragende Rechtsprechung nur mit Gericht, Datum, Aktenzeichen und frei prüfbarer Quelle einsetzen; keine Entscheidung aus Modellwissen erzwingen.
+- **Quellenhygiene:** `references/quellenhygiene.md` und `references/zitierweise.md` beachten.
 
 ## Geheimcode-Regeln
 
@@ -36,10 +34,6 @@ Besondere Aufmerksamkeit verdienen Sätze, die scheinbar deskriptiv sind, aber B
 
 **Beispiel 5 – Schlussformel (signalrelevant):** Fehlen des Bedauerns über das Ausscheiden — mögliches Distanzsignal trotz positiver Leistungsformulierungen; rechtlich nicht automatisch einklagbar.
 
-## Ausgabeformat
-
-Jeder Satz des Zeugnisses wird in einer Tabelle klassifiziert: Satz (Kurzform) | Kategorie (Aufgabe/Leistung/Verhalten/Schluss) | Notenrelevant (Ja/Nein) | Weitergeleitet an Skill (z. B. leistungsbeurteilung-analyse). Notenrelevante Sätze werden im Anschluss an die zuständigen Analyse-Skills weitergegeben.
-
 ## Rechtliche Einordnung und Normen
 
 - **§ 109 GewO** — Anspruch auf qualifiziertes wohlwollendes Zeugnis
@@ -48,3 +42,4 @@ Jeder Satz des Zeugnisses wird in einer Tabelle klassifiziert: Satz (Kurzform) |
 ## Aktuelle Rechtsprechung
 
 - Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+

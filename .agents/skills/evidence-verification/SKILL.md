@@ -1,9 +1,6 @@
 ---
 name: evidence-verification
-description: Use when completing tasks, code reviews, or deployments to verify work with evidence. Collects test results, build outputs, coverage metrics, and exit codes to prove work is complete.
-version: 1.0.0
-author: SkillForge AI Agent Hub
-tags: [quality, verification, testing, evidence, completion]
+description: "This skill teaches agents how to collect and verify evidence before marking tasks complete. Inspired by production-grade development practices, it ensures all claims are backed by executable proof:..."
 ---
 
 # Evidence-Based Verification Skill

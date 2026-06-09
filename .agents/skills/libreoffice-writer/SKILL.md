@@ -14,12 +14,12 @@ If setup or runtime issues appear, check `references/troubleshooting.md`.
 
 ```python
 # Non-session utilities
-create_document(path, source=None)              # source: path to .md file to import
-export_document(path, output_path, export_format)   # formats: "pdf", "docx", "md"
+create_document(path)
+export_document(path, output_path, format)   # formats: "pdf", "docx"
 snapshot_page(doc_path, output_path, page=1, dpi=150)
 
 # Session (primary editing API)
-WriterSession(path) -> context manager
+open_writer_session(path) -> WriterSession
 
 WriterSession methods:
   read_text(target: WriterTarget | None = None) -> str
@@ -36,10 +36,8 @@ WriterSession methods:
   insert_list(items: list[ListItem], ordered: bool, target: WriterTarget | None = None)
   replace_list(target: WriterTarget, items: list[ListItem], ordered: bool | None = None)
   delete_list(target: WriterTarget)
-  set_metadata(field, value)          # field: "title", "subject", "description", "author"
-  get_metadata() -> dict[str, str]
   patch(patch_text, mode="atomic") -> PatchApplyResult
-  export(output_path, export_format)
+  export(output_path, format)
   reset()
   close(save=True)
 
@@ -94,7 +92,7 @@ TextFormatting(
     font_name=None,
     font_size=None,
     color=None,          # named color or integer
-    align=None,          # "left" | "center" | "right" | "justify" | "start" | "end"
+    align=None,          # "left" | "center" | "right" | "justify"
     line_spacing=None,
     spacing_before=None,
     spacing_after=None,
@@ -192,13 +190,13 @@ mutations in the current open session state.
 ```python
 from pathlib import Path
 
-from writer import ListItem, TextFormatting, WriterSession, WriterTarget
+from writer import ListItem, TextFormatting, WriterTarget, open_writer_session
 from writer.core import create_document
 
 output = str(Path("test-output/report.odt").resolve())
 create_document(output)
 
-with WriterSession(output) as session:
+with open_writer_session(output) as session:
     session.insert_text(
         "Executive Summary\n\n"
         "Financial Summary\n\n"
@@ -233,25 +231,25 @@ from writer import patch
 result = patch(
     "/abs/path/report.odt",
     """
-    [operation]
-    type = replace_text
-    target.kind = text
-    target.text = Draft
-    new_text = Final
+[operation]
+type = replace_text
+target.kind = text
+target.text = Draft
+new_text = Final
 
-    [operation]
-    type = update_table
-    target.kind = table
-    target.name = Summary
-    data = [["Metric", "Value"], ["Revenue", "$2M"]]
+[operation]
+type = update_table
+target.kind = table
+target.name = Summary
+data = [["Metric", "Value"], ["Revenue", "$2M"]]
 
-    [operation]
-    type = replace_list
-    target.kind = list
-    target.text = Confirm scope
-    items = [{"text": "Approve release", "level": 0}, {"text": "Notify team", "level": 1}]
-    list.ordered = true
-    """,
+[operation]
+type = replace_list
+target.kind = list
+target.text = Confirm scope
+items = [{"text": "Approve release", "level": 0}, {"text": "Notify team", "level": 1}]
+list.ordered = true
+""",
     mode="best_effort",
 )
 
@@ -266,7 +264,7 @@ from writer import snapshot_page
 
 result = snapshot_page(doc_path, "/tmp/page1.png", page=1, dpi=150)
 print(result.file_path, result.width, result.height)
-Path(result.file_path).unlink(missing_ok=True)   # clean up used snapshots
+Path(result.file_path).unlink(missing_ok=True)
 ```
 
 Use snapshots to verify layout after formatting, list edits, image placement, or table changes.
@@ -278,7 +276,4 @@ Use snapshots to verify layout after formatting, list edits, image placement, or
 - Using anchors that are too short or too common; prefer full-sentence or paragraph-level anchor text plus `after` / `before` bounds when possible.
 - Expecting `align` to apply only to a phrase; Writer applies paragraph alignment to the containing paragraph.
 - Supplying malformed JSON in `items` or `data` patch fields.
-- Forgetting to clean up captured snapshots after inspection.
 - Calling `session.export()` or other methods after `session.close()`.
-- The Markdown filter for markdown import / export requires LibreOffice 26.2+.
-- The `"start"` and `"end"` paragraph alignment options require LibreOffice 26.2+.

@@ -1,305 +1,141 @@
 ---
-name: Go-to-Market Planner
-description: Plan product launches and go-to-market strategy. Use when launching products, entering new markets, or planning marketing campaigns. Covers positioning, channels, messaging, and launch execution.
-version: 1.0.0
+name: go-to-market-planner
+description: "Build a go-to-market plan for any product launch, feature release, or new market entry. Use when planning a product launch, writing a GTM strategy, defining launch tiers, or coordinating cross-functional launch activities. Produces a tiered GTM plan with messaging, cross-functional activity tracker, success metrics, and launch day checklist."
 ---
 
-# Go-to-Market Planner
+# Go-to-Market Planner Skill
 
-Plan and execute successful product launches.
+Produce a complete, cross-functional GTM plan that aligns product, marketing, sales, and support around a single launch — with clear owners, timelines, and success metrics.
 
-## Core Principle
+## Launch Tier Framework
 
-**Launch is a campaign, not an event.** Build momentum before launch, peak at launch, sustain after launch.
+Before planning, classify the launch:
 
-## 5-Phase GTM Strategy
+| Tier | Scope | Typical Effort | Examples |
+|---|---|---|---|
+| **Tier 1 — Major Launch** | New product / significant platform change | 8–12 weeks | New pricing model, platform rebrand, new product line |
+| **Tier 2 — Feature Launch** | Significant new capability | 4–6 weeks | Major feature, API release, new integration |
+| **Tier 3 — Incremental Release** | Improvement, bug fix, minor feature | 1–2 weeks | UI tweak, performance improvement, small enhancement |
 
-### Phase 1: Market Positioning
-
-**Goal**: Define how product fits in market landscape
-
-**Positioning Statement**:
-
-```
-For [target customer]
-Who [customer need/problem]
-[Product name] is a [product category]
-That [key benefit/differentiation]
-Unlike [competitors]
-Our product [unique value]
-```
-
-**Competitive Analysis**:
-| Competitor | Strengths | Weaknesses | Our Advantage |
-|-----------|----------|-----------|---------------|
-| Competitor A | Feature X | Price | Better UX |
-
-**Validation**:
-
-- [ ] Target customer clearly defined
-- [ ] Differentiation identified
-- [ ] Positioning tested with 5+ customers
+Always confirm tier with the user before proceeding.
 
 ---
 
-### Phase 2: Messaging & Content
+## GTM Plan Output Format
 
-**Goal**: Create compelling launch messaging
+### GTM Plan — [Product/Feature Name] — [Launch Date]
 
-**Message Hierarchy**:
-
-1. **Headline**: Core benefit in 5-10 words
-2. **Sub-headline**: How it works or who it's for (1 sentence)
-3. **3 Key Benefits**: What users gain (feature → benefit)
-4. **Social Proof**: Testimonials, case studies, logos
-5. **Call-to-Action**: Clear next step
-
-**Content Types**:
-
-- Launch blog post
-- Product demo video (2-3 min)
-- Landing page
-- Email announcement
-- Social media posts (5-10 ready)
-- Press release (if targeting media)
-
-**Validation**:
-
-- [ ] Messaging tested with target customers
-- [ ] Content created 2 weeks before launch
-- [ ] CTAs clear and trackable
+**Launch Tier:** [1 / 2 / 3]
+**Launch Owner (PM):** [Name]
+**Target Launch Date:** [Date]
+**Soft Launch Date (Beta/Limited):** [Date, if applicable]
 
 ---
 
-### Phase 3: Channel Strategy
-
-**Goal**: Identify where to reach target customers
-
-**Channel Options**:
-
-**Owned Channels** (free, full control):
-
-- Email list (existing customers/subscribers)
-- Blog and SEO
-- Social media (Twitter, LinkedIn)
-- YouTube
-
-**Earned Channels** (free, limited control):
-
-- Press and media (TechCrunch, Product Hunt)
-- Influencers and partners
-- Community forums (Reddit, Hacker News)
-- Word of mouth
-
-**Paid Channels** (cost, full control):
-
-- Google Ads (search intent)
-- Facebook/Instagram Ads (awareness)
-- LinkedIn Ads (B2B)
-- Sponsorships
-
-**Channel Prioritization**:
-
-```
-1. Email list (highest ROI, existing audience)
-2. Product Hunt (tech products)
-3. Twitter/LinkedIn (organic + paid)
-4. Google Ads (intent-based)
-5. Press outreach (if newsworthy)
-```
-
-**Validation**:
-
-- [ ] 3-5 channels selected
-- [ ] Channel-specific content prepared
-- [ ] Budget allocated (if paid)
+### 1. What We're Launching
+**One-line description:** [What it is, for whom, and why now]
+**Key customer problem solved:** [Specific pain point]
+**Key differentiator:** [Why ours, why now]
 
 ---
 
-### Phase 4: Launch Timeline
-
-**Goal**: Coordinate launch activities
-
-**6-Week Launch Timeline**:
-
-**Week -6 (Planning)**:
-
-- Finalize messaging and positioning
-- Create content (blog, video, landing page)
-- Identify launch channels
-- Set success metrics
-
-**Week -4 (Pre-launch)**:
-
-- Build waitlist or early access program
-- Create social media content
-- Reach out to press/influencers
-- Prepare email sequences
-
-**Week -2 (Warm-up)**:
-
-- Tease launch on social media
-- Send "coming soon" emails
-- Activate early access users
-- Final QA and bug fixes
-
-**Week 0 (Launch Day)**:
-
-- Publish landing page and blog post
-- Post on Product Hunt (12:01 AM PT)
-- Send launch email to full list
-- Share on Twitter, LinkedIn
-- Monitor and respond to feedback
-
-**Week +1 (Momentum)**:
-
-- Share user testimonials
-- Post case studies or results
-- Continue social media engagement
-- Analyze metrics, optimize
-
-**Week +2 (Sustain)**:
-
-- Publish post-launch analysis
-- Plan ongoing marketing
-- Iterate based on feedback
-
-**Validation**:
-
-- [ ] Timeline documented with owners
-- [ ] Launch day checklist created
-- [ ] Post-launch plan defined
+### 2. Target Audience
+**Primary segment:** [Who benefits most — be specific]
+**Secondary segment:** [Who else benefits]
+**Not for:** [Who this is NOT for — helps sales and support]
 
 ---
 
-### Phase 5: Metrics & Success Criteria
+### 3. Messaging
 
-**Goal**: Measure launch effectiveness
+**Headline:** [Customer-facing headline — lead with outcome, not feature]
+**Sub-headline:** [Supporting context — how it works or why it matters]
+**3 key messages:**
+1. [Problem solved]
+2. [How it works / what's new]
+3. [Proof / social proof / data]
 
-**Launch Metrics**:
-
-- **Awareness**: Website visitors, social impressions
-- **Acquisition**: Signups, trial starts, purchases
-- **Activation**: Users who complete core action
-- **Engagement**: DAU/MAU, time in product
-- **Revenue**: MRR, conversion rate
-
-**Success Criteria** (Define before launch):
-
-```yaml
-week_1_goals:
-  signups: 500
-  trial_starts: 200
-  product_hunt_ranking: top 5
-  social_engagement: 1000+ interactions
-
-month_1_goals:
-  paying_customers: 50
-  mrr: $5,000
-  activation_rate: 40%
-  retention_week_1: 60%
-```
-
-**Post-Launch Review**:
-
-- What worked? (double down)
-- What didn't? (stop or pivot)
-- Unexpected insights?
-- Next 30-day plan
-
-**Validation**:
-
-- [ ] Success metrics defined
-- [ ] Tracking implemented
-- [ ] Daily monitoring during launch week
-- [ ] Post-launch review conducted
+**Elevator pitch (30 seconds):**
+> [For [target user] who [has this problem], [product/feature] is a [category] that [key benefit]. Unlike [alternative], we [differentiator].]
 
 ---
 
-## Launch Checklist
+### 4. Launch Activities by Function
 
-### Pre-Launch (2 weeks before)
+| Function | Activity | Owner | Due Date | Status |
+|---|---|---|---|---|
+| Product | Feature flagging / rollout plan | PM | [date] | |
+| Marketing | Blog post / landing page | Marketing | [date] | |
+| Marketing | Email campaign to existing users | Marketing | [date] | |
+| Marketing | Social media content | Marketing | [date] | |
+| Sales | Sales enablement deck | PM + Sales | [date] | |
+| Sales | FAQ for sales team | PM | [date] | |
+| Support | Help centre articles | Support | [date] | |
+| Support | Support team training | Support | [date] | |
+| Engineering | Monitoring/alerting in place | Eng | [date] | |
 
-- [ ] Landing page live with waitlist
-- [ ] Launch email drafted
-- [ ] Social media content scheduled
-- [ ] Product Hunt submission prepared
-- [ ] Press list compiled (if applicable)
-- [ ] Analytics and tracking set up
+---
 
-### Launch Day
+### 5. Success Metrics
 
-- [ ] Product Hunt posted (12:01 AM PT)
-- [ ] Launch email sent
+| Metric | Baseline | Target | Measurement Window |
+|---|---|---|---|
+| [Adoption metric] | [X] | [Y] | 30 days post-launch |
+| [Engagement metric] | [X] | [Y] | 60 days post-launch |
+| [Business metric] | [X] | [Y] | 90 days post-launch |
+
+---
+
+### 6. Risks & Contingencies
+
+| Risk | Likelihood | Impact | Mitigation |
+|---|---|---|---|
+| [Risk] | H/M/L | H/M/L | [Action if it happens] |
+
+---
+
+### 7. Launch Day Checklist
+- [ ] Feature live for [X%] of users
+- [ ] Monitoring dashboard active
+- [ ] Support team briefed
 - [ ] Blog post published
-- [ ] Social media posted
-- [ ] Community posts (Reddit, HN, etc.)
-- [ ] Monitor and respond to feedback
-- [ ] Track metrics in real-time
-
-### Post-Launch (Week 1)
-
-- [ ] Thank early adopters
-- [ ] Share testimonials and results
-- [ ] Engage with comments and questions
-- [ ] Analyze metrics vs. goals
-- [ ] Plan next 30 days
+- [ ] Email sent / scheduled
+- [ ] Sales team notified
+- [ ] Executive announcement sent (if Tier 1)
+- [ ] Rollback procedure confirmed
 
 ---
 
-## Launch Strategies
+## Required Inputs
 
-**Product Hunt Launch**:
+Ask the user for these if not provided:
+- **Product or feature name**
+- **Target launch date**
+- **Launch tier** (Tier 1 / 2 / 3 — or describe scope and the skill will classify)
+- **Target audience** (who benefits and who it's NOT for)
+- **Key message** (what's the headline outcome for the customer)
+- **PM and launch owner**
 
-- Post at 12:01 AM PT (most visibility)
-- Engage in comments all day
-- Ask community for upvotes (tastefully)
-- Prepare "Hunter" if possible (influencer posts for you)
+## Guidelines
 
-**Press Launch**:
+- Never plan a Tier 1 launch without at least 8 weeks of lead time
+- Always include a "Not for" section — it prevents misdirected sales and support tickets
+- Recommend a soft launch to 5–10% of users before full rollout for any Tier 1 or 2 launch
+- Post-launch retrospective should be scheduled at launch planning time — don't leave it to chance
 
-- Reach out 1-2 weeks before launch
-- Personalize pitches (not mass email)
-- Offer exclusive early access
-- Have assets ready (screenshots, quotes, data)
+## Quality Checks
 
-**Email Launch**:
+- [ ] Launch tier is confirmed and appropriate for scope
+- [ ] "Not for" section is included to prevent misdirected sales and support
+- [ ] Every function has at least one activity with a named owner and due date
+- [ ] Success metrics include a measurement window (30/60/90 days)
+- [ ] Rollback procedure is confirmed for Tier 1 and 2 launches
+- [ ] Post-launch retrospective is scheduled
 
-- Segment: existing customers vs. waitlist vs. cold leads
-- Subject line: Clear benefit, create urgency
-- Body: Problem → Solution → CTA
-- Send Tuesday-Thursday, 10 AM-2 PM for best open rates
+## Anti-Patterns
 
-**Community Launch**:
-
-- Be authentic, not salesy
-- Lead with value (solve a problem)
-- Engage genuinely in comments
-- Don't spam multiple communities same day
-
----
-
-## Common GTM Mistakes
-
-❌ **Launching without audience** → Build email list first
-❌ **One-day launch, then silence** → Sustain momentum
-❌ **No clear CTA** → Make next step obvious
-❌ **Launching to everyone** → Target specific segment first
-❌ **No success metrics** → Define goals before launch
-❌ **Ignoring feedback** → Respond and iterate quickly
-❌ **Over-promising** → Set realistic expectations
-
----
-
-## Related Resources
-
-**Related Skills**:
-
-- `product-strategist` - For validating market fit before launch
-- `mvp-builder` - For building product to launch
-- `user-researcher` - For understanding target customers
-
-**Related Playbooks**:
-
-- `PLAYBOOKS/launch-on-product-hunt.md` - PH launch guide (when created)
-- `PLAYBOOKS/press-outreach.md` - Press strategy (when created)
+- [ ] Do not build a Tier 1 GTM plan for an incremental feature update — tier the launch appropriately before planning
+- [ ] Do not create activity lists without named owners and due dates — unowned tasks do not get done
+- [ ] Do not skip the rollback procedure for Tier 1 and 2 launches — every significant launch must have an abort plan
+- [ ] Do not treat marketing and engineering as separate tracks — cross-functional coordination is the whole point of a GTM plan
+- [ ] Do not set success metrics without a defined measurement window — "increase signups" is not a measurable target

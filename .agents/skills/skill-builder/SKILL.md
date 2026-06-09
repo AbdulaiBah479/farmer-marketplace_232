@@ -1,910 +1,410 @@
 ---
-name: "Skill Builder"
-description: "Create new Claude Code Skills with proper YAML frontmatter, progressive disclosure structure, and complete directory organization. Use when you need to build custom skills for specific workflows, generate skill templates, or understand the Claude Skills specification."
+name: skill-builder
+description: Interactive skill creation assistant that guides users through building new Agent Skills for Claude Code. Use when creating new skills, building custom capabilities, or when the user runs /new-skill command. Helps design skill structure, craft descriptions, create scripts, and organize supporting files.
 ---
 
 # Skill Builder
 
-## What This Skill Does
+A conversational meta-skill that helps you create new Agent Skills for Claude Code through guided interaction.
 
-Creates production-ready Claude Code Skills with proper YAML frontmatter, progressive disclosure architecture, and complete file/folder structure. This skill guides you through building skills that Claude can autonomously discover and use across all surfaces (Claude.ai, Claude Code, SDK, API).
+## Core Purpose
 
-## Prerequisites
+Guide users through creating well-structured, discoverable Agent Skills by:
+1. Understanding the skill's purpose and use cases
+2. Crafting effective descriptions for model invocation
+3. Determining the right structure (instruction-based vs script-powered)
+4. Creating all necessary files with best practices
+5. Iteratively refining based on user feedback
 
-- Claude Code 2.0+ or Claude.ai with Skills support
-- Basic understanding of Markdown and YAML
-- Text editor or IDE
+## When This Skill Activates
 
-## Quick Start
+- User runs `/new-skill` command
+- User asks about creating, building, or designing a new skill
+- User wants to build custom Claude Code capabilities
+- User needs help with skill structure or organization
 
-### Creating Your First Skill
+## Official Documentation
 
-```bash
-# 1. Create skill directory (MUST be at top level, NOT in subdirectories!)
-mkdir -p ~/.claude/skills/my-first-skill
+**If you need clarification on skill features, YAML fields, or best practices**, fetch the official documentation:
 
-# 2. Create SKILL.md with proper format
-cat > ~/.claude/skills/my-first-skill/SKILL.md << 'EOF'
----
-name: "My First Skill"
-description: "Brief description of what this skill does and when Claude should use it. Maximum 1024 characters."
----
+- **Primary reference**: https://docs.claude.com/en/docs/claude-code/skills.md
 
-# My First Skill
+Use the WebFetch tool to get the latest information when:
+- Unsure about YAML frontmatter fields
+- Need clarification on allowed-tools behavior
+- Want to verify skill structure requirements
+- Need examples from official docs
 
-## What This Skill Does
-[Your instructions here]
+## Complete User Journey
 
-## Quick Start
-[Basic usage]
-EOF
+### Step 1: Initial Understanding
+**Ask clarifying questions to understand the user's needs:**
 
-# 3. Verify skill is detected
-# Restart Claude Code or refresh Claude.ai
+```markdown
+I'll help you create the **[skill-name]** skill. Let me ask a few questions to design it well:
+
+1. **What should this skill do?**
+   - What specific capability or expertise are you adding?
+   - What problem does it solve?
+
+2. **When should Claude use this skill?**
+   - What keywords or scenarios should trigger it?
+   - What types of user requests should activate it?
+
+3. **Scope:**
+   - Personal skill (just for you: ~/.claude/skills/)
+   - Project skill (shared with team: .claude/skills/)
 ```
 
----
+**Important:** Listen carefully to the user's responses. Their context might reveal:
+- Whether they need scripts or just instructions
+- Dependencies they'll need
+- Tool restrictions that make sense
+- Supporting files that would help
 
-## Complete Specification
+### Step 2: Description Crafting
+**Work with the user to create an effective description (max 1024 characters):**
 
-### 📋 YAML Frontmatter (REQUIRED)
+The description is THE MOST CRITICAL part of a skill. It must include:
+- **What the skill does** (capabilities)
+- **When to use it** (trigger keywords, scenarios, file types)
+- **Dependencies** (if any packages are required)
 
-Every SKILL.md **must** start with YAML frontmatter containing exactly two required fields:
+**Good description pattern:**
+```
+[Action verbs describing capabilities]. Use when [trigger scenarios, keywords, file types]. [Optional: Requires X packages/tools].
+```
+
+**Example (good):**
+```
+Extract text and tables from PDF files, fill forms, merge documents. Use when working with PDF files or when the user mentions PDFs, forms, or document extraction. Requires pypdf and pdfplumber packages.
+```
+
+**Example (bad - too vague):**
+```
+Helps with documents
+```
+
+**Present the description to the user and ask:**
+```markdown
+Here's the description I've crafted:
+
+"[description]"
+
+Does this accurately capture when Claude should use this skill? Any adjustments?
+```
+
+### Step 3: Structure Determination
+**Determine what files are needed:**
+
+**Ask the user:**
+```markdown
+Now let's determine the structure:
+
+**Does this skill need custom scripts/tooling?**
+- Python scripts for data processing, API calls, custom logic
+- Bash scripts for system operations
+- Templates for file generation
+- Reference documentation
+
+Or is it primarily instruction-based (teaching Claude how to do something)?
+```
+
+**Based on response, plan the structure:**
+
+**Instruction-based skill (simple):**
+```
+skill-name/
+└── SKILL.md
+```
+
+**Script-powered skill:**
+```
+skill-name/
+├── SKILL.md
+└── scripts/
+    └── [script-name].py
+```
+
+**Comprehensive skill:**
+```
+skill-name/
+├── SKILL.md
+├── REFERENCE.md
+└── scripts/
+    └── [script-name].py
+```
+
+### Step 4: Tool Restrictions (Optional)
+**Ask if the skill should restrict tools:**
+
+```markdown
+**Should this skill restrict which tools Claude can use?**
+
+Common patterns:
+- **Read-only** (Read, Grep, Glob) - for analysis/review skills
+- **File operations** (Read, Write, Edit, Glob, Grep) - for documentation
+- **No restrictions** - Claude asks permission as normal
+
+This uses the `allowed-tools` frontmatter field.
+```
+
+If user wants restrictions, add to SKILL.md frontmatter:
+```yaml
+allowed-tools: Read, Grep, Glob
+```
+
+### Step 5: Create the Skill
+**Now create all the files:**
+
+**5.1 - Determine the full path based on scope:**
+- Personal: `~/.claude/skills/[skill-name]/`
+- Project: `[repo-root]/.claude/skills/[skill-name]/`
+
+For personal-os repo, project skills go in: `[repo-root]/skills/[skill-name]/`
+
+**5.2 - Create SKILL.md with proper structure:**
 
 ```yaml
 ---
-name: "Skill Name"                    # REQUIRED: Max 64 chars
-description: "What this skill does    # REQUIRED: Max 1024 chars
-and when Claude should use it."       # Include BOTH what & when
----
-```
-
-#### Field Requirements
-
-**`name`** (REQUIRED):
-- **Type**: String
-- **Max Length**: 64 characters
-- **Format**: Human-friendly display name
-- **Usage**: Shown in skill lists, UI, and loaded into Claude's system prompt
-- **Best Practice**: Use Title Case, be concise and descriptive
-- **Examples**:
-  - ✅ "API Documentation Generator"
-  - ✅ "React Component Builder"
-  - ✅ "Database Schema Designer"
-  - ❌ "skill-1" (not descriptive)
-  - ❌ "This is a very long skill name that exceeds sixty-four characters" (too long)
-
-**`description`** (REQUIRED):
-- **Type**: String
-- **Max Length**: 1024 characters
-- **Format**: Plain text or minimal markdown
-- **Content**: MUST include:
-  1. **What** the skill does (functionality)
-  2. **When** Claude should invoke it (trigger conditions)
-- **Usage**: Loaded into Claude's system prompt for autonomous matching
-- **Best Practice**: Front-load key trigger words, be specific about use cases
-- **Examples**:
-  - ✅ "Generate OpenAPI 3.0 documentation from Express.js routes. Use when creating API docs, documenting endpoints, or building API specifications."
-  - ✅ "Create React functional components with TypeScript, hooks, and tests. Use when scaffolding new components or converting class components."
-  - ❌ "A comprehensive guide to API documentation" (no "when" clause)
-  - ❌ "Documentation tool" (too vague)
-
-#### YAML Formatting Rules
-
-```yaml
----
-# ✅ CORRECT: Simple string
-name: "API Builder"
-description: "Creates REST APIs with Express and TypeScript."
-
-# ✅ CORRECT: Multi-line description
-name: "Full-Stack Generator"
-description: "Generates full-stack applications with React frontend and Node.js backend. Use when starting new projects or scaffolding applications."
-
-# ✅ CORRECT: Special characters quoted
-name: "JSON:API Builder"
-description: "Creates JSON:API compliant endpoints: pagination, filtering, relationships."
-
-# ❌ WRONG: Missing quotes with special chars
-name: API:Builder  # YAML parse error!
-
-# ❌ WRONG: Extra fields (ignored but discouraged)
-name: "My Skill"
-description: "My description"
-version: "1.0.0"       # NOT part of spec
-author: "Me"           # NOT part of spec
-tags: ["dev", "api"]   # NOT part of spec
----
-```
-
-**Critical**: Only `name` and `description` are used by Claude. Additional fields are ignored.
-
+name: [skill-name]
+description: [crafted description]
+[optional: allowed-tools: Tool1, Tool2]
 ---
 
-### 📂 Directory Structure
+# [Skill Title]
 
-#### Minimal Skill (Required)
-```
-~/.claude/skills/                    # Personal skills location
-└── my-skill/                        # Skill directory (MUST be at top level!)
-    └── SKILL.md                     # REQUIRED: Main skill file
-```
+[Brief overview of what this skill does]
 
-**IMPORTANT**: Skills MUST be directly under `~/.claude/skills/[skill-name]/`.
-Claude Code does NOT support nested subdirectories or namespaces!
-
-#### Full-Featured Skill (Recommended)
-```
-~/.claude/skills/
-└── my-skill/                        # Top-level skill directory
-        ├── SKILL.md                 # REQUIRED: Main skill file
-        ├── README.md                # Optional: Human-readable docs
-        ├── scripts/                 # Optional: Executable scripts
-        │   ├── setup.sh
-        │   ├── validate.js
-        │   └── deploy.py
-        ├── resources/               # Optional: Supporting files
-        │   ├── templates/
-        │   │   ├── api-template.js
-        │   │   └── component.tsx
-        │   ├── examples/
-        │   │   └── sample-output.json
-        │   └── schemas/
-        │       └── config-schema.json
-        └── docs/                    # Optional: Additional documentation
-            ├── ADVANCED.md
-            ├── TROUBLESHOOTING.md
-            └── API_REFERENCE.md
-```
-
-#### Skills Locations
-
-**Personal Skills** (available across all projects):
-```
-~/.claude/skills/
-└── [your-skills]/
-```
-- **Path**: `~/.claude/skills/` or `$HOME/.claude/skills/`
-- **Scope**: Available in all projects for this user
-- **Version Control**: NOT committed to git (outside repo)
-- **Use Case**: Personal productivity tools, custom workflows
-
-**Project Skills** (team-shared, version controlled):
-```
-<project-root>/.claude/skills/
-└── [team-skills]/
-```
-- **Path**: `.claude/skills/` in project root
-- **Scope**: Available only in this project
-- **Version Control**: SHOULD be committed to git
-- **Use Case**: Team workflows, project-specific tools, shared knowledge
-
----
-
-### 🎯 Progressive Disclosure Architecture
-
-Claude Code uses a **3-level progressive disclosure system** to scale to 100+ skills without context penalty:
-
-#### Level 1: Metadata (Name + Description)
-**Loaded**: At Claude Code startup, always
-**Size**: ~200 chars per skill
-**Purpose**: Enable autonomous skill matching
-**Context**: Loaded into system prompt for ALL skills
-
-```yaml
----
-name: "API Builder"                   # 11 chars
-description: "Creates REST APIs..."   # ~50 chars
----
-# Total: ~61 chars per skill
-# 100 skills = ~6KB context (minimal!)
-```
-
-#### Level 2: SKILL.md Body
-**Loaded**: When skill is triggered/matched
-**Size**: ~1-10KB typically
-**Purpose**: Main instructions and procedures
-**Context**: Only loaded for ACTIVE skills
-
-```markdown
-# API Builder
-
-## What This Skill Does
-[Main instructions - loaded only when skill is active]
-
-## Quick Start
-[Basic procedures]
-
-## Step-by-Step Guide
-[Detailed instructions]
-```
-
-#### Level 3+: Referenced Files
-**Loaded**: On-demand as Claude navigates
-**Size**: Variable (KB to MB)
-**Purpose**: Deep reference, examples, schemas
-**Context**: Loaded only when Claude accesses specific files
-
-```markdown
-# In SKILL.md
-See [Advanced Configuration](docs/ADVANCED.md) for complex scenarios.
-See [API Reference](docs/API_REFERENCE.md) for complete documentation.
-Use template: `resources/templates/api-template.js`
-
-# Claude will load these files ONLY if needed
-```
-
-**Benefit**: Install 100+ skills with ~6KB context. Only active skill content (1-10KB) enters context.
-
----
-
-### 📝 SKILL.md Content Structure
-
-#### Recommended 4-Level Structure
-
-```markdown
----
-name: "Your Skill Name"
-description: "What it does and when to use it"
----
-
-# Your Skill Name
-
-## Level 1: Overview (Always Read First)
-Brief 2-3 sentence description of the skill.
-
-## Prerequisites
-- Requirement 1
-- Requirement 2
-
-## What This Skill Does
-1. Primary function
-2. Secondary function
-3. Key benefit
-
----
-
-## Level 2: Quick Start (For Fast Onboarding)
-
-### Basic Usage
+## Requirements
+[If scripts/dependencies needed]
 ```bash
-# Simplest use case
-command --option value
+pip install package1 package2
 ```
 
-### Common Scenarios
-1. **Scenario 1**: How to...
-2. **Scenario 2**: How to...
+## Instructions
 
----
+[Step-by-step instructions for Claude on how to use this skill]
 
-## Level 3: Detailed Instructions (For Deep Work)
-
-### Step-by-Step Guide
-
-#### Step 1: Initial Setup
-```bash
-# Commands
-```
-Expected output:
-```
-Success message
-```
-
-#### Step 2: Configuration
-- Configuration option 1
-- Configuration option 2
-
-#### Step 3: Execution
-- Run the main command
-- Verify results
-
-### Advanced Options
-
-#### Option 1: Custom Configuration
-```bash
-# Advanced usage
-```
-
-#### Option 2: Integration
-```bash
-# Integration steps
-```
-
----
-
-## Level 4: Reference (Rarely Needed)
-
-### Troubleshooting
-
-#### Issue: Common Problem
-**Symptoms**: What you see
-**Cause**: Why it happens
-**Solution**: How to fix
-```bash
-# Fix command
-```
-
-#### Issue: Another Problem
-**Solution**: Steps to resolve
-
-### Complete API Reference
-See [API_REFERENCE.md](docs/API_REFERENCE.md)
-
-### Examples
-See [examples/](resources/examples/)
-
-### Related Skills
-- [Related Skill 1](#)
-- [Related Skill 2](#)
-
-### Resources
-- [External Link 1](https://example.com)
-- [Documentation](https://docs.example.com)
-```
-
----
-
-### 🎨 Content Best Practices
-
-#### Writing Effective Descriptions
-
-**Front-Load Keywords**:
-```yaml
-# ✅ GOOD: Keywords first
-description: "Generate TypeScript interfaces from JSON schema. Use when converting schemas, creating types, or building API clients."
-
-# ❌ BAD: Keywords buried
-description: "This skill helps developers who need to work with JSON schemas by providing a way to generate TypeScript interfaces."
-```
-
-**Include Trigger Conditions**:
-```yaml
-# ✅ GOOD: Clear "when" clause
-description: "Debug React performance issues using Chrome DevTools. Use when components re-render unnecessarily, investigating slow updates, or optimizing bundle size."
-
-# ❌ BAD: No trigger conditions
-description: "Helps with React performance debugging."
-```
-
-**Be Specific**:
-```yaml
-# ✅ GOOD: Specific technologies
-description: "Create Express.js REST endpoints with Joi validation, Swagger docs, and Jest tests. Use when building new APIs or adding endpoints."
-
-# ❌ BAD: Too generic
-description: "Build API endpoints with proper validation and testing."
-```
-
-#### Progressive Disclosure Writing
-
-**Keep Level 1 Brief** (Overview):
-```markdown
-## What This Skill Does
-Creates production-ready React components with TypeScript, hooks, and tests in 3 steps.
-```
-
-**Level 2 for Common Paths** (Quick Start):
-```markdown
-## Quick Start
-```bash
-# Most common use case (80% of users)
-generate-component MyComponent
-```
-```
-
-**Level 3 for Details** (Step-by-Step):
-```markdown
-## Step-by-Step Guide
-
-### Creating a Basic Component
-1. Run generator
-2. Choose template
-3. Customize options
-[Detailed explanations]
-```
-
-**Level 4 for Edge Cases** (Reference):
-```markdown
-## Advanced Configuration
-For complex scenarios like HOCs, render props, or custom hooks, see [ADVANCED.md](docs/ADVANCED.md).
-```
-
----
-
-### 🛠️ Adding Scripts and Resources
-
-#### Scripts Directory
-
-**Purpose**: Executable scripts that Claude can run
-**Location**: `scripts/` in skill directory
-**Usage**: Referenced from SKILL.md
-
-Example:
-```bash
-# In skill directory
-scripts/
-├── setup.sh          # Initialization script
-├── validate.js       # Validation logic
-├── generate.py       # Code generation
-└── deploy.sh         # Deployment script
-```
-
-Reference from SKILL.md:
-```markdown
-## Setup
-Run the setup script:
-```bash
-./scripts/setup.sh
-```
-
-## Validation
-Validate your configuration:
-```bash
-node scripts/validate.js config.json
-```
-```
-
-#### Resources Directory
-
-**Purpose**: Templates, examples, schemas, static files
-**Location**: `resources/` in skill directory
-**Usage**: Referenced or copied by scripts
-
-Example:
-```bash
-resources/
-├── templates/
-│   ├── component.tsx.template
-│   ├── test.spec.ts.template
-│   └── story.stories.tsx.template
-├── examples/
-│   ├── basic-example/
-│   ├── advanced-example/
-│   └── integration-example/
-└── schemas/
-    ├── config.schema.json
-    └── output.schema.json
-```
-
-Reference from SKILL.md:
-```markdown
-## Templates
-Use the component template:
-```bash
-cp resources/templates/component.tsx.template src/components/MyComponent.tsx
-```
+1. [First step]
+2. [Second step]
+3. [etc.]
 
 ## Examples
-See working examples in `resources/examples/`:
-- `basic-example/` - Simple component
-- `advanced-example/` - With hooks and context
+
+[Concrete examples of using this skill]
+
+**Example 1:**
+[Show a usage example]
+
+**Example 2:**
+[Show another example]
 ```
 
----
+**5.3 - Create scripts if needed:**
 
-### 🔗 File References and Navigation
+If the user wants Python scripts, create self-contained scripts that use `uv` for dependency management.
 
-Claude can navigate to referenced files automatically. Use these patterns:
+**IMPORTANT: Python scripts must be self-contained and runnable via `uv run`**
 
-#### Markdown Links
-```markdown
-See [Advanced Configuration](docs/ADVANCED.md) for complex scenarios.
-See [Troubleshooting Guide](docs/TROUBLESHOOTING.md) if you encounter errors.
+```python
+#!/usr/bin/env -S uv run
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#     "package-name>=1.0.0",
+# ]
+# ///
+"""
+[Script purpose]
+
+Usage:
+    uv run scripts/[name].py [arguments]
+
+Description:
+    [What this script does]
+
+Dependencies are managed via inline metadata (PEP 723).
+uv will automatically install dependencies when the script runs.
+"""
+
+import argparse
+import sys
+from pathlib import Path
+
+
+def main():
+    """Main entry point."""
+    parser = argparse.ArgumentParser(description="[purpose]")
+    parser.add_argument("input", help="[input description]")
+    parser.add_argument("-o", "--output", help="Output file (optional)")
+
+    args = parser.parse_args()
+
+    # Implementation
+    print(f"Processing: {args.input}")
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
 ```
 
-#### Relative File Paths
-```markdown
-Use the template located at `resources/templates/api-template.js`
-See examples in `resources/examples/basic-usage/`
-```
+**Key points for uv-based scripts:**
+- Use `#!/usr/bin/env -S uv run` shebang
+- Include PEP 723 inline metadata with dependencies
+- Scripts are self-contained and portable
+- No need for separate requirements.txt or virtual environments
+- Users run with: `uv run scripts/name.py` or just `./scripts/name.py` (if executable)
 
-#### Inline File Content
-```markdown
-## Example Configuration
-See `resources/examples/config.json`:
-```json
-{
-  "option": "value"
-}
-```
-```
+**5.4 - Create REFERENCE.md if complex:**
 
-**Best Practice**: Keep SKILL.md lean (~2-5KB). Move lengthy content to separate files and reference them. Claude will load only what's needed.
+For skills with extensive APIs or detailed workflows, create REFERENCE.md with:
+- Detailed API documentation
+- Advanced usage patterns
+- Troubleshooting guide
+- Additional examples
 
----
-
-### ✅ Validation Checklist
-
-Before publishing a skill, verify:
-
-**YAML Frontmatter**:
-- [ ] Starts with `---`
-- [ ] Contains `name` field (max 64 chars)
-- [ ] Contains `description` field (max 1024 chars)
-- [ ] Description includes "what" and "when"
-- [ ] Ends with `---`
-- [ ] No YAML syntax errors
-
-**File Structure**:
-- [ ] SKILL.md exists in skill directory
-- [ ] Directory is DIRECTLY in `~/.claude/skills/[skill-name]/` or `.claude/skills/[skill-name]/`
-- [ ] Uses clear, descriptive directory name
-- [ ] **NO nested subdirectories** (Claude Code requires top-level structure)
-
-**Content Quality**:
-- [ ] Level 1 (Overview) is brief and clear
-- [ ] Level 2 (Quick Start) shows common use case
-- [ ] Level 3 (Details) provides step-by-step guide
-- [ ] Level 4 (Reference) links to advanced content
-- [ ] Examples are concrete and runnable
-- [ ] Troubleshooting section addresses common issues
-
-**Progressive Disclosure**:
-- [ ] Core instructions in SKILL.md (~2-5KB)
-- [ ] Advanced content in separate docs/
-- [ ] Large resources in resources/ directory
-- [ ] Clear navigation between levels
-
-**Testing**:
-- [ ] Skill appears in Claude's skill list
-- [ ] Description triggers on relevant queries
-- [ ] Instructions are clear and actionable
-- [ ] Scripts execute successfully (if included)
-- [ ] Examples work as documented
-
----
-
-## Skill Builder Templates
-
-### Template 1: Basic Skill (Minimal)
+### Step 6: Handover and Iteration
+**Summarize what was created and offer refinement:**
 
 ```markdown
----
-name: "My Basic Skill"
-description: "One sentence what. One sentence when to use."
----
+✓ Created the **[skill-name]** skill!
 
-# My Basic Skill
+**Files created:**
+- [list of files with paths]
 
-## What This Skill Does
-[2-3 sentences describing functionality]
+**What's next:**
+1. The skill is now available [personal: globally / project: in this repo]
+2. Test it by asking: "[example prompt that should trigger it]"
+3. If it doesn't activate, we can refine the description
 
-## Quick Start
-```bash
-# Single command to get started
+**Want to:**
+- Add more examples to SKILL.md?
+- Create additional helper scripts?
+- Add a REFERENCE.md for detailed documentation?
+- Test the skill together?
 ```
 
-## Step-by-Step Guide
+## Best Practices for Skill Creation
 
-### Step 1: Setup
-[Instructions]
+### Description Guidelines
+✓ **DO:**
+- Include specific trigger words (file types, technologies, use cases)
+- Mention what the skill does AND when to use it
+- Keep under 1024 characters
+- Use concrete terms users would actually say
 
-### Step 2: Usage
-[Instructions]
+✗ **DON'T:**
+- Be vague ("helps with files", "for data")
+- Only describe what without when
+- Use jargon users wouldn't say
+- Forget to mention file types or keywords
 
-### Step 3: Verify
-[Instructions]
+### Structure Guidelines
+✓ **DO:**
+- Keep skills focused on one capability
+- Use progressive disclosure (SKILL.md → REFERENCE.md for details)
+- Create scripts when there's actual tooling to build
+- Use clear step-by-step instructions
 
-## Troubleshooting
-- **Issue**: Problem description
-  - **Solution**: Fix description
+✗ **DON'T:**
+- Make "swiss army knife" skills that do everything
+- Put all details in SKILL.md (use REFERENCE.md)
+- Create scripts just for the sake of it
+- Write vague instructions
+
+### Script Guidelines (When Needed)
+✓ **DO:**
+- Emphasize Python for most tooling (user preference)
+- Use `uv run` for all Python scripts with PEP 723 inline metadata
+- Make scripts self-contained and portable
+- Add proper argument parsing
+- Include error handling
+- Document usage in docstrings with `uv run` commands
+- Show script invocation in SKILL.md
+
+✗ **DON'T:**
+- Use traditional pip/venv (always use uv)
+- Create scripts that just call existing tools
+- Skip error handling
+- Forget to make scripts executable
+- Hide script usage from SKILL.md
+- Create separate requirements.txt files (use inline metadata)
+
+## Iteration and Refinement
+
+**If the skill doesn't activate as expected:**
+
+1. **Check the description** - Is it specific enough?
+2. **Add trigger keywords** - Include terms users would actually say
+3. **Simplify if too broad** - Split into multiple focused skills
+4. **Test with user** - Ask them to try triggering it
+
+**Common fixes:**
+- Add file extensions to description (`.pdf`, `.xlsx`, etc.)
+- Include synonyms for key concepts
+- Mention specific technologies or tools
+- Add "Use when [scenario]" explicitly
+
+## Example Session
+
+**User:** I want to create a skill for analyzing Python test coverage
+
+**Assistant (you):**
+```
+I'll help you create a Python test coverage analyzer skill. Let me understand your needs:
+
+1. **What should this skill do specifically?**
+   - Run pytest with coverage?
+   - Analyze existing coverage reports?
+   - Suggest where to add tests?
+   - All of the above?
+
+2. **When should Claude use this skill?**
+   - When you mention "coverage"?
+   - When working with pytest files?
+   - When you ask about test quality?
+
+3. **Scope:**
+   - Personal skill (your projects only)?
+   - Project skill (team-shared)?
 ```
 
-### Template 2: Intermediate Skill (With Scripts)
+**[User responds...]**
 
-```markdown
----
-name: "My Intermediate Skill"
-description: "Detailed what with key features. When to use with specific triggers: scaffolding, generating, building."
----
+**Assistant (you):**
+```
+Perfect! Here's the description I've crafted:
 
-# My Intermediate Skill
+"Analyze Python test coverage using pytest-cov, identify untested code paths, and suggest test improvements. Use when working with Python tests, pytest, coverage reports, or when the user asks about test coverage or testing gaps. Requires pytest and pytest-cov packages."
 
-## Prerequisites
-- Requirement 1
-- Requirement 2
+Does this capture it well?
 
-## What This Skill Does
-1. Primary function
-2. Secondary function
-3. Integration capability
+And for structure - this sounds like it would benefit from a Python script to:
+- Parse coverage XML/JSON reports
+- Identify coverage gaps
+- Generate suggestions
 
-## Quick Start
-```bash
-./scripts/setup.sh
-./scripts/generate.sh my-project
+Should I create a script for this?
 ```
 
-## Configuration
-Edit `config.json`:
-```json
-{
-  "option1": "value1",
-  "option2": "value2"
-}
-```
+**[Continue conversation...]**
 
-## Step-by-Step Guide
+## Reference Documentation
 
-### Basic Usage
-[Steps for 80% use case]
+For detailed information on skill creation, see [REFERENCE.md](REFERENCE.md).
 
-### Advanced Usage
-[Steps for complex scenarios]
+## Summary
 
-## Available Scripts
-- `scripts/setup.sh` - Initial setup
-- `scripts/generate.sh` - Code generation
-- `scripts/validate.sh` - Validation
+You are a conversational guide for creating Agent Skills. Your job is to:
+1. **Understand** what the user wants to build
+2. **Collaborate** on crafting an effective description
+3. **Determine** the right structure (instructions vs scripts)
+4. **Create** all necessary files with best practices
+5. **Iterate** based on feedback and testing
 
-## Resources
-- Templates: `resources/templates/`
-- Examples: `resources/examples/`
-
-## Troubleshooting
-[Common issues and solutions]
-```
-
-### Template 3: Advanced Skill (Full-Featured)
-
-```markdown
----
-name: "My Advanced Skill"
-description: "Comprehensive what with all features and integrations. Use when [trigger 1], [trigger 2], or [trigger 3]. Supports [technology stack]."
----
-
-# My Advanced Skill
-
-## Overview
-[Brief 2-3 sentence description]
-
-## Prerequisites
-- Technology 1 (version X+)
-- Technology 2 (version Y+)
-- API keys or credentials
-
-## What This Skill Does
-1. **Core Feature**: Description
-2. **Integration**: Description
-3. **Automation**: Description
-
----
-
-## Quick Start (60 seconds)
-
-### Installation
-```bash
-./scripts/install.sh
-```
-
-### First Use
-```bash
-./scripts/quickstart.sh
-```
-
-Expected output:
-```
-✓ Setup complete
-✓ Configuration validated
-→ Ready to use
-```
-
----
-
-## Configuration
-
-### Basic Configuration
-Edit `config.json`:
-```json
-{
-  "mode": "production",
-  "features": ["feature1", "feature2"]
-}
-```
-
-### Advanced Configuration
-See [Configuration Guide](docs/CONFIGURATION.md)
-
----
-
-## Step-by-Step Guide
-
-### 1. Initial Setup
-[Detailed steps]
-
-### 2. Core Workflow
-[Main procedures]
-
-### 3. Integration
-[Integration steps]
-
----
-
-## Advanced Features
-
-### Feature 1: Custom Templates
-```bash
-./scripts/generate.sh --template custom
-```
-
-### Feature 2: Batch Processing
-```bash
-./scripts/batch.sh --input data.json
-```
-
-### Feature 3: CI/CD Integration
-See [CI/CD Guide](docs/CICD.md)
-
----
-
-## Scripts Reference
-
-| Script | Purpose | Usage |
-|--------|---------|-------|
-| `install.sh` | Install dependencies | `./scripts/install.sh` |
-| `generate.sh` | Generate code | `./scripts/generate.sh [name]` |
-| `validate.sh` | Validate output | `./scripts/validate.sh` |
-| `deploy.sh` | Deploy to environment | `./scripts/deploy.sh [env]` |
-
----
-
-## Resources
-
-### Templates
-- `resources/templates/basic.template` - Basic template
-- `resources/templates/advanced.template` - Advanced template
-
-### Examples
-- `resources/examples/basic/` - Simple example
-- `resources/examples/advanced/` - Complex example
-- `resources/examples/integration/` - Integration example
-
-### Schemas
-- `resources/schemas/config.schema.json` - Configuration schema
-- `resources/schemas/output.schema.json` - Output validation
-
----
-
-## Troubleshooting
-
-### Issue: Installation Failed
-**Symptoms**: Error during `install.sh`
-**Cause**: Missing dependencies
-**Solution**:
-```bash
-# Install prerequisites
-npm install -g required-package
-./scripts/install.sh --force
-```
-
-### Issue: Validation Errors
-**Symptoms**: Validation script fails
-**Solution**: See [Troubleshooting Guide](docs/TROUBLESHOOTING.md)
-
----
-
-## API Reference
-Complete API documentation: [API_REFERENCE.md](docs/API_REFERENCE.md)
-
-## Related Skills
-- [Related Skill 1](../related-skill-1/)
-- [Related Skill 2](../related-skill-2/)
-
-## Resources
-- [Official Documentation](https://example.com/docs)
-- [GitHub Repository](https://github.com/example/repo)
-- [Community Forum](https://forum.example.com)
-
----
-
-**Created**: 2025-10-19
-**Category**: Advanced
-**Difficulty**: Intermediate
-**Estimated Time**: 15-30 minutes
-```
-
----
-
-## Examples from the Wild
-
-### Example 1: Simple Documentation Skill
-
-```markdown
----
-name: "README Generator"
-description: "Generate comprehensive README.md files for GitHub repositories. Use when starting new projects, documenting code, or improving existing READMEs."
----
-
-# README Generator
-
-## What This Skill Does
-Creates well-structured README.md files with badges, installation, usage, and contribution sections.
-
-## Quick Start
-```bash
-# Answer a few questions
-./scripts/generate-readme.sh
-
-# README.md created with:
-# - Project title and description
-# - Installation instructions
-# - Usage examples
-# - Contribution guidelines
-```
-
-## Customization
-Edit sections in `resources/templates/sections/` before generating.
-```
-
-### Example 2: Code Generation Skill
-
-```markdown
----
-name: "React Component Generator"
-description: "Generate React functional components with TypeScript, hooks, tests, and Storybook stories. Use when creating new components, scaffolding UI, or following component architecture patterns."
----
-
-# React Component Generator
-
-## Prerequisites
-- Node.js 18+
-- React 18+
-- TypeScript 5+
-
-## Quick Start
-```bash
-./scripts/generate-component.sh MyComponent
-
-# Creates:
-# - src/components/MyComponent/MyComponent.tsx
-# - src/components/MyComponent/MyComponent.test.tsx
-# - src/components/MyComponent/MyComponent.stories.tsx
-# - src/components/MyComponent/index.ts
-```
-
-## Step-by-Step Guide
-
-### 1. Run Generator
-```bash
-./scripts/generate-component.sh ComponentName
-```
-
-### 2. Choose Template
-- Basic: Simple functional component
-- With State: useState hooks
-- With Context: useContext integration
-- With API: Data fetching component
-
-### 3. Customize
-Edit generated files in `src/components/ComponentName/`
-
-## Templates
-See `resources/templates/` for available component templates.
-```
-
----
-
-## Learn More
-
-### Official Resources
-- [Anthropic Agent Skills Documentation](https://docs.claude.com/en/docs/agents-and-tools/agent-skills)
-- [GitHub Skills Repository](https://github.com/anthropics/skills)
-- [Claude Code Documentation](https://docs.claude.com/en/docs/claude-code)
-
-### Community
-- [Skills Marketplace](https://github.com/anthropics/skills) - Browse community skills
-- [Anthropic Discord](https://discord.gg/anthropic) - Get help from community
-
-### Advanced Topics
-- Multi-file skills with complex navigation
-- Skills that spawn other skills
-- Integration with MCP tools
-- Dynamic skill generation
-
----
-
-**Created**: 2025-10-19
-**Version**: 1.0.0
-**Maintained By**: agentic-flow team
-**License**: MIT
+Be conversational, ask clarifying questions, and help the user build skills that Claude will actually discover and use effectively.

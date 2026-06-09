@@ -1,49 +1,135 @@
 ---
+argument-hint: '[--no-verify] [--no-report]'
+disable-model-invocation: false
 name: code-simplify
-description: Simplify and refine recently modified code for clarity, consistency, and maintainability while preserving all functionality. Use this skill when asked to simplify code, clean up recent changes, refine implementations, reduce complexity, or improve readability of code that was just written or modified. Focuses on recently touched code unless explicitly directed to a broader scope.
+user-invocable: true
+description: This skill should be used when the user asks to "simplify code", "clean up code", "refactor for clarity", "reduce complexity", "improve readability", "make this easier to maintain", or asks to simplify recently modified code.
 ---
 
-# Code Simplification
+# Code Simplify
 
-Enhance code clarity, consistency, and maintainability while preserving exact functionality. Prioritize readable, explicit code over compact solutions.
+## Objective
 
-## Scope
+Simplify code while preserving behavior, public contracts, and side effects. Favor explicit code and local clarity over clever or compressed constructs.
 
-Focus only on recently modified code unless explicitly instructed otherwise. Use `git diff` or `git diff --cached` to identify what changed. Read the project's AGENTS.md or CLAUDE.md for project-specific conventions and apply them consistently.
+## Arguments
 
-## Simplification Principles
+- `--no-verify`: Skip verification because a parent orchestrator will verify the final result separately.
+- `--no-report`: Skip the full user-facing report. Keep only concise working notes needed by the caller.
+- Default: verify touched behavior and present the full report.
 
-**Reduce complexity**
-- Flatten unnecessary nesting
-- Eliminate redundant code and premature abstractions
-- Consolidate related logic
-- Remove comments that describe obvious code
+## Scope Resolution
 
-**Improve clarity**
-- Use clear, descriptive variable and function names
-- Avoid nested ternary operators - prefer switch statements or if/else chains for multiple conditions
-- Choose explicit code over clever one-liners
-- Clarity over brevity - three similar lines beats a confusing abstraction
+1. Verify repository context: `git rev-parse --git-dir`. If this fails, stop and tell the user to run from a git repository.
+2. If user provides file paths/patterns, a commit/range, or a `Resolved scope` fenced block with one repo-relative path per line, scope is exactly those targets.
+3. Otherwise, scope is **only** session-modified files. Do not include other uncommitted changes.
+4. If there are no session-modified files, fall back to all uncommitted tracked + untracked files:
+   - tracked: `git diff --name-only --diff-filter=ACMR`
+   - untracked: `git ls-files --others --exclude-standard`
+   - combine both lists and de-duplicate.
+5. Exclude generated/low-signal files unless requested: lockfiles, minified bundles, build outputs, vendored code.
+6. If scope still resolves to zero files, report and stop.
 
-**Apply project standards**
-- Follow patterns established in AGENTS.md/CLAUDE.md
-- Match existing naming conventions
-- Use established abstractions where appropriate
+## Operating Rules
 
-## What NOT to Do
+- Preserve runtime behavior exactly. Keep inputs, outputs, side effects, and error behavior stable.
+- Prefer project conventions over personal preferences. Infer conventions from existing code, linters, formatters, and tests.
+- Limit scope to user-requested files or recently modified code unless explicitly asked to broaden.
+- Make small, reversible edits. Avoid broad rewrites when targeted simplifications solve the problem.
+- Call out uncertainty immediately when behavior may change.
 
-- Change what the code does - only change how it does it
-- Create overly clever solutions that are hard to understand
-- Combine too many concerns into single functions
-- Remove helpful abstractions that improve organization
-- Prioritize "fewer lines" over readability
-- Make code harder to debug or extend
-- Over-simplify to the point of reducing maintainability
+## Workflow
 
-## Process
+### 1) Determine Scope
 
-1. Identify recently modified code sections via git
-2. Read AGENTS.md/CLAUDE.md for project conventions
-3. Analyze for opportunities to improve clarity and consistency
-4. Apply refinements that preserve all functionality
-5. Verify the result is simpler and more maintainable
+- Resolve target files using the "Scope Resolution" section above.
+
+### 2) Build a Behavior Baseline
+
+- Read surrounding context, not only changed lines.
+- Identify invariants that must not change:
+  - function signatures and exported APIs
+  - state transitions and side effects
+  - persistence/network behavior
+  - user-facing messages and error semantics where externally relied on
+- Note available verification commands (lint, tests, typecheck).
+
+### 3) Apply Simplification Passes (in this order)
+
+1. Control flow:
+   - Flatten deep nesting with guard clauses and early returns.
+   - Replace nested ternaries with clearer conditionals.
+2. Naming and intent:
+   - Rename ambiguous identifiers when local context supports safe renaming.
+   - Separate mixed concerns into small helpers with intent-revealing names.
+3. Duplication:
+   - Remove obvious duplication.
+   - Abstract only when at least two real call sites benefit and the abstraction reduces cognitive load.
+4. Data shaping:
+   - Break dense transform chains into named intermediate steps when readability improves.
+   - Keep hot-path performance characteristics stable unless improvement is explicit and measured.
+5. Type and contract clarity:
+   - Add or tighten type annotations when they improve readability and safety without forcing broad churn.
+   - Preserve external interfaces unless asked to change them.
+
+### 4) Enforce Safety Constraints
+
+- Do not convert sync APIs to async (or reverse) unless explicitly requested.
+- Do not alter error propagation strategy unless behavior remains equivalent and verified.
+- Do not remove logging, telemetry, guards, or retries that encode operational intent.
+- Do not collapse domain-specific steps into generic helpers that hide intent.
+
+### 5) Verify
+
+Skip this step when `--no-verify` is set. Otherwise:
+
+- Run the narrowest useful checks first:
+  - formatter/lint on touched files
+  - targeted tests related to touched modules
+  - typecheck when relevant
+- If fast targeted checks pass, run broader checks only when risk warrants it.
+- If checks cannot run, state what was skipped and why.
+
+### 6) Report
+
+Skip the full report when `--no-report` is set. In that mode, keep only terse working notes covering touched scope, key simplifications, and residual risks for a parent orchestrator.
+
+Otherwise provide:
+
+1. Scope touched (files/functions)
+2. Key simplifications with concise rationale
+3. Verification commands run and outcomes
+4. Residual risks or assumptions
+
+## Simplification Heuristics
+
+- Prefer explicit local variables over nested inline expressions when it reduces cognitive load.
+- Prefer one clear branch per condition over compact but ambiguous condition trees.
+- Keep function length manageable, but do not split purely for line count.
+- Keep comments that explain intent, invariants, or non-obvious constraints.
+- Remove comments that restate obvious code behavior.
+- Optimize for the next maintainer's comprehension time, not minimum character count.
+
+## Anti-Patterns
+
+- Do not perform speculative architecture rewrites.
+- Do not introduce framework-wide patterns while simplifying a small local change.
+- Do not replace understandable duplication with opaque utility layers.
+- Do not bundle unrelated cleanups into one patch.
+
+## Stop Conditions
+
+- Stop and ask for direction when:
+  - simplification requires changing public API/contracts
+  - behavior parity cannot be confidently verified
+  - the code appears intentionally complex due to domain constraints
+  - the requested scope implies a larger redesign rather than simplification
+
+## Output Contract
+
+When `--no-report` is not set, present simplification results like this:
+
+1. Show the exact files and regions changed.
+2. Explain each meaningful change in one sentence focused on readability/maintainability gain.
+3. Confirm behavior-preservation assumptions explicitly.
+4. Summarize verification performed (or clearly state omissions).

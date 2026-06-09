@@ -1,487 +1,319 @@
 ---
-name: Test Infrastructure
-description: Reusable test traits, base test cases, and 46 helper methods from tests/Support/ for efficient test authoring
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Grep
-  - Glob
-  - Bash
+name: test-infrastructure
+description: "When invoked:"
 ---
 
-# Test Infrastructure
+# Test Infrastructure Agent - Real Coverage Builder
 
-Use PCR Card's comprehensive test infrastructure with 46 reusable methods across 5 traits and 2 base test cases.
+**Purpose**: Creates and maintains comprehensive test coverage. No stubs, no fakes, no empty files.
 
-## When to Use
+**Core Principle**: Tests are executable specifications. If a test is empty, the feature is incomplete.
 
-- Writing new PHPUnit tests
-- Writing new Dusk browser tests
-- Using test helpers (CreatesUsers, CreatesSubmissions, etc.)
-- Making assertions on states, payments, relationships
-- Testing Nova resources or API endpoints
+## Responsibilities
 
-## Quick Commands
+### 1. Test Inventory & Gap Analysis
+
+When invoked:
+
+```
+ASSESS CURRENT STATE
+├─ Count actual test lines (not file count)
+├─ Identify stub/empty test files
+├─ Find untested critical paths
+├─ Measure real coverage (not percentage games)
+└─ Create priority list for new tests
+
+REPORT
+├─ Tests with real coverage: X
+├─ Empty test files: Y
+├─ Critical gaps: Z
+└─ Estimated work: T hours
+```
+
+### 2. Test Writing
+
+**Standards**:
+- Real tests, real assertions
+- Tests actually run and verify behavior
+- Tests catch real bugs (not theater)
+- Coverage targets: critical paths first, then features
+
+**Test Hierarchy** (in order of priority):
+1. **Critical Path Tests** - Features that break revenue/core functionality
+2. **Integration Tests** - API routes, database, auth flows
+3. **Component Tests** - UI rendering, interaction
+4. **Unit Tests** - Individual functions, logic
+5. **Edge Case Tests** - Error handling, boundaries
+
+### 3. Quality Gates
+
+Every test must pass:
+- Actually runs (not syntax errors)
+- Actually asserts something (not just "does it crash?")
+- Catches real bugs (break the code, test fails)
+- Doesn't flake (passes consistently)
+- Is maintainable (readable, clear intent)
+
+## Workflow
+
+### Phase 1: Audit
+
+```typescript
+// Step 1: Identify test files
+Find all **/*.test.ts, **/*.test.tsx, **/*.spec.ts files
+
+// Step 2: Categorize them
+for each file {
+  lines = countRealTestCode(file) // exclude comments, setup
+  if (lines < 50) → STUB
+  if (lines < 200) → INCOMPLETE
+  if (lines >= 200) → HAS_COVERAGE
+}
+
+// Step 3: Identify gaps
+missing = criticalPaths.filter(p => !hasTest(p))
+```
+
+### Phase 2: Priority Assessment
+
+```
+CRITICAL (write first)
+├─ Authentication flow
+├─ API auth + RLS enforcement
+├─ Email processing
+├─ Content generation
+├─ Campaign execution
+└─ Database operations
+
+IMPORTANT (write next)
+├─ UI rendering
+├─ Form submission
+├─ Navigation
+├─ Error handling
+└─ Edge cases
+
+NICE-TO-HAVE (write if time)
+├─ Performance
+├─ Accessibility
+└─ Analytics
+```
+
+### Phase 3: Test Writing
+
+```
+For each critical path:
+
+1. UNDERSTAND THE FLOW
+   - What does this feature do?
+   - What are inputs/outputs?
+   - What can go wrong?
+
+2. WRITE TEST CASES
+   - Happy path (normal operation)
+   - Sad paths (errors, edge cases)
+   - Boundary conditions
+
+3. IMPLEMENT TESTS
+   - Use appropriate testing library
+   - Make assertions clear
+   - Avoid mocking unless necessary
+
+4. RUN & VERIFY
+   - Test runs without errors
+   - Breaks when code breaks
+   - Clear failure messages
+```
+
+## Test Writing Guidelines
+
+### Unit Tests (for functions/logic)
+
+```typescript
+describe('contactScoringEngine', () => {
+  // GOOD: Tests specific behavior
+  it('calculates score of 85 for high engagement contact', () => {
+    const contact = {
+      emailOpenRate: 0.8,
+      emailClickRate: 0.6,
+      sentiment: 'positive'
+    };
+    const score = scoreContact(contact);
+    expect(score).toBe(85);
+  });
+
+  // BAD: Doesn't assert anything meaningful
+  it('works', () => {
+    scoreContact({...});
+  });
+
+  // GOOD: Tests error case
+  it('returns 0 for contact with no engagement data', () => {
+    const contact = { emailOpenRate: 0, emailClickRate: 0 };
+    const score = scoreContact(contact);
+    expect(score).toBe(0);
+  });
+});
+```
+
+### Integration Tests (for API routes + database)
+
+```typescript
+describe('POST /api/contacts', () => {
+  // GOOD: Tests full flow with database
+  it('creates contact and returns assigned ID', async () => {
+    const response = await fetch('/api/contacts', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer token' },
+      body: JSON.stringify({
+        email: 'new@example.com',
+        name: 'Test User'
+      })
+    });
+
+    expect(response.status).toBe(201);
+    const data = await response.json();
+    expect(data.id).toBeDefined();
+
+    // Verify it was actually saved
+    const saved = await db.contacts.findById(data.id);
+    expect(saved.email).toBe('new@example.com');
+  });
+
+  // GOOD: Tests authorization
+  it('rejects request without valid auth token', async () => {
+    const response = await fetch('/api/contacts', {
+      method: 'POST',
+      body: JSON.stringify({ email: 'new@example.com' })
+    });
+    expect(response.status).toBe(401);
+  });
+});
+```
+
+### Component Tests (for React)
+
+```typescript
+describe('HotLeadsPanel', () => {
+  // GOOD: Tests rendering and interaction
+  it('displays hot leads and allows filtering', async () => {
+    const { getByText, getByRole } = render(
+      <HotLeadsPanel leads={mockLeads} />
+    );
+
+    expect(getByText('Hot Leads')).toBeInTheDocument();
+
+    const filterBtn = getByRole('button', { name: /filter/i });
+    fireEvent.click(filterBtn);
+
+    expect(getByText('Filter options')).toBeInTheDocument();
+  });
+
+  // BAD: Just checks it renders without error
+  it('renders', () => {
+    render(<HotLeadsPanel leads={mockLeads} />);
+  });
+});
+```
+
+## Test Coverage Targets
+
+```
+API Routes
+├─ Auth routes: 100% (critical security)
+├─ CRUD operations: 95% (core functionality)
+├─ Integration routes: 80% (complex flows)
+└─ Utility routes: 70% (less critical)
+
+Services
+├─ Email service: 100% (revenue critical)
+├─ Agent logic: 95% (core feature)
+├─ Database queries: 90% (data integrity)
+└─ Utilities: 70%
+
+Components
+├─ Critical path components: 90%
+├─ UI components: 70%
+└─ Utilities: 50%
+
+Overall: Target 75%+ real coverage
+```
+
+## Running Tests
 
 ```bash
-# Unit tests (fast, no browser)
-./scripts/dev.sh test
-./vendor/bin/sail artisan test --testsuite=Unit
+# Run all tests
+npm test
 
-# Feature tests
-./vendor/bin/sail artisan test --testsuite=Feature
+# Run specific suite
+npm test -- auth
 
-# Browser tests (headed Chrome)
-./scripts/dev.sh visible-test
-./scripts/dev.sh visible-test tests/Browser/PaymentFlowTest.php
+# Run with coverage report
+npm run test:coverage
 
-# Specific test
-./scripts/dev.sh test:file tests/Unit/PromoCodeTest.php
+# Watch mode for development
+npm test -- --watch
+
+# Generate coverage report
+npm run test:coverage -- --reporter=html
 ```
 
-## Test Infrastructure Overview
+## Dealing with Untestable Code
 
-### Location
+**If something is hard to test, that's a design problem.**
 
-**Directory**: `tests/Support/`
+Red flags:
+- Needs to mock 5+ dependencies
+- Tests require heavy fixtures
+- Can't test without hitting database
+- State is global or hidden
 
-**Structure**:
+Solutions:
+1. Refactor for testability
+2. Extract logic to pure functions
+3. Separate concerns (data access vs logic)
+4. Use dependency injection
+
+## Test Maintenance
 
 ```
-tests/Support/
-├── README.md                    # Comprehensive usage guide (600 lines)
-├── Base/
-│   ├── NovaTestCase.php        # Nova 5.x test helpers (400 lines)
-│   └── ApiTestCase.php         # API testing with Sanctum (506 lines)
-└── Traits/
-    ├── CreatesUsers.php        # User factory methods (6 methods)
-    ├── CreatesSubmissions.php  # Submission factory methods (6 methods)
-    ├── CreatesCards.php        # Card factory methods (7 methods)
-    ├── AssertsStates.php       # State assertion helpers (14 methods)
-    └── AssertsPayments.php     # Payment assertion helpers (13 methods)
+Monthly tasks:
+├─ Update tests when features change
+├─ Remove obsolete tests
+├─ Review test performance (slow tests?)
+├─ Check coverage hasn't dropped
+└─ Refactor duplicated test code
 ```
 
-**Total**: 2,618 lines, 46 reusable methods
-
-## Reusable Traits
-
-### 1. CreatesUsers (6 methods)
-
-Create test users with specific roles and permissions.
-
-```php
-use Tests\Support\Traits\CreatesUsers;
-
-class YourTest extends TestCase
-{
-    use CreatesUsers;
-
-    public function test_example()
-    {
-        // Create admin user
-        $admin = $this->createAdminUser();
-
-        // Create customer user
-        $customer = $this->createCustomerUser();
-
-        // Create user with beta access
-        $betaUser = $this->createCustomerUser(['beta_activated_at' => now()]);
-
-        // Create verified user
-        $verified = $this->createVerifiedUser();
-
-        // Create technician
-        $tech = $this->createTechnicianUser();
-
-        // Acting as user
-        $this->actingAs($customer);
-    }
-}
-```
-
-**Available Methods**:
-- `createAdminUser(array $attributes = [])` - Admin + Technician roles
-- `createTechnicianUser(array $attributes = [])` - Technician role only
-- `createCustomerUser(array $attributes = [])` - Customer role only
-- `createVerifiedUser(array $attributes = [])` - Email verified customer
-- `createBetaUser(array $attributes = [])` - Beta access granted
-- `createUserWithRole(string $role, array $attributes = [])` - Custom role
-
-### 2. CreatesSubmissions (6 methods)
-
-Create test submissions with various states and configurations.
-
-```php
-use Tests\Support\Traits\CreatesSubmissions;
-
-class YourTest extends TestCase
-{
-    use CreatesSubmissions;
-
-    public function test_example()
-    {
-        $user = User::factory()->create();
-
-        // Draft submission
-        $draft = $this->createDraftSubmission($user);
-
-        // Submitted submission
-        $submitted = $this->createSubmittedSubmission($user);
-
-        // Submission with cards
-        $withCards = $this->createSubmissionWithCards($user, 5); // 5 cards
-
-        // Submission with specific state
-        $received = $this->createSubmissionInState($user, SubmissionState::RECEIVED);
-
-        // Submission with payment
-        $paid = $this->createPaidSubmission($user);
-    }
-}
-```
-
-**Available Methods**:
-- `createDraftSubmission(User $user, array $attributes = [])` - Draft state
-- `createSubmittedSubmission(User $user, array $attributes = [])` - Submitted state
-- `createSubmissionWithCards(User $user, int $count, array $attributes = [])` - With cards
-- `createSubmissionInState(User $user, string $state, array $attributes = [])` - Custom state
-- `createPaidSubmission(User $user, array $attributes = [])` - With payment
-- `createSubmissionWithServices(User $user, array $serviceCodes)` - Specific services
-
-### 3. CreatesCards (7 methods)
-
-Create test cards (SubmissionTradingCard) with states and images.
-
-```php
-use Tests\Support\Traits\CreatesCards;
-
-class YourTest extends TestCase
-{
-    use CreatesCards;
-
-    public function test_example()
-    {
-        $submission = Submission::factory()->create();
-
-        // Card with specific state
-        $card = $this->createCardInState($submission, CardState::ASSESSMENT);
-
-        // Card with images
-        $withImages = $this->createCardWithImages($submission, 4); // 4 images
-
-        // Multiple cards
-        $cards = $this->createCardsForSubmission($submission, 3); // 3 cards
-
-        // Card with damage assessment
-        $damaged = $this->createCardWithDamage($submission, 'scratch', 'severe');
-    }
-}
-```
-
-**Available Methods**:
-- `createCardInState(Submission $submission, string $state, array $attributes = [])` - Custom card state
-- `createCardWithImages(Submission $submission, int $count, array $attributes = [])` - With images
-- `createCardsForSubmission(Submission $submission, int $count)` - Multiple cards
-- `createCardWithDamage(Submission $submission, string $type, string $severity)` - Damage assessment
-- `createCardInProgress(Submission $submission)` - In-progress state
-- `createCardCompleted(Submission $submission)` - Completed state
-- `createCardCancelled(Submission $submission)` - Cancelled state
-
-### 4. AssertsStates (14 methods)
-
-Assert submission and card states cleanly.
-
-```php
-use Tests\Support\Traits\AssertsStates;
-
-class YourTest extends TestCase
-{
-    use AssertsStates;
-
-    public function test_example()
-    {
-        $submission = Submission::factory()->create();
-        $card = SubmissionTradingCard::factory()->create();
-
-        // Assert submission states
-        $this->assertSubmissionIsDraft($submission);
-        $this->assertSubmissionIsSubmitted($submission);
-        $this->assertSubmissionIsReceived($submission);
-        $this->assertSubmissionIsCompleted($submission);
-        $this->assertSubmissionInState($submission, SubmissionState::ASSESSMENT);
-        $this->assertSubmissionInStates($submission, [
-            SubmissionState::COMPLETED,
-            SubmissionState::SHIPPED,
-        ]);
-
-        // Assert card states
-        $this->assertCardIsAssessment($card);
-        $this->assertCardIsInProgress($card);
-        $this->assertCardIsQualityCheck($card);
-        $this->assertCardIsCompleted($card);
-        $this->assertCardInState($card, CardState::QUALITY_CHECK);
-        $this->assertCardInStates($card, [
-            CardState::COMPLETED,
-            CardState::LABEL_SLAB,
-        ]);
-
-        // Terminal state
-        $this->assertSubmissionIsTerminal($submission);
-        $this->assertCardIsTerminal($card);
-    }
-}
-```
-
-### 5. AssertsPayments (13 methods)
-
-Assert payment states, amounts, and promo codes.
-
-```php
-use Tests\Support\Traits\AssertsPayments;
-
-class YourTest extends TestCase
-{
-    use AssertsPayments;
-
-    public function test_example()
-    {
-        $submission = Submission::factory()->create();
-        $promoCode = PromoCode::factory()->create();
-
-        // Payment status
-        $this->assertSubmissionIsPaid($submission);
-        $this->assertSubmissionIsUnpaid($submission);
-        $this->assertSubmissionHasPaymentIntent($submission);
-
-        // Payment amounts
-        $this->assertSubmissionTotalEquals($submission, 10000); // $100.00
-        $this->assertSubmissionTotalGreaterThan($submission, 5000);
-        $this->assertSubmissionTotalLessThan($submission, 20000);
-
-        // Promo codes
-        $this->assertSubmissionHasPromoCode($submission, $promoCode);
-        $this->assertSubmissionDiscountEquals($submission, 1000); // $10.00
-
-        // Manual payments
-        $this->assertSubmissionHasManualPayment($submission);
-        $this->assertManualPaymentVerified($manualPayment);
-        $this->assertManualPaymentPending($manualPayment);
-
-        // Price changes
-        $this->assertSubmissionHasPriceChangeRequest($submission);
-    }
-}
-```
-
-## Base Test Cases
-
-### NovaTestCase (400 lines)
-
-Test Nova resources with authentication and helpers.
-
-```php
-use Tests\Support\Base\NovaTestCase;
-
-class YourNovaTest extends NovaTestCase
-{
-    public function test_can_view_resource()
-    {
-        $this->actingAsAdmin();
-
-        $response = $this->get('/nova-api/submissions');
-
-        $response->assertStatus(200);
-    }
-
-    public function test_can_create_resource()
-    {
-        $this->actingAsAdmin();
-
-        $response = $this->postJson('/nova-api/submissions', [
-            'submission_number' => 'SUB-123',
-            'user_id' => 1,
-        ]);
-
-        $response->assertCreated();
-    }
-}
-```
-
-**Available Methods**:
-- `actingAsAdmin()` - Authenticate as admin
-- `actingAsTechnician()` - Authenticate as technician
-- `actingAsCustomer()` - Authenticate as customer
-- Nova-specific assertion helpers
-
-### ApiTestCase (506 lines)
-
-Test API endpoints with Sanctum authentication.
-
-```php
-use Tests\Support\Base\ApiTestCase;
-
-class YourApiTest extends ApiTestCase
-{
-    public function test_authenticated_request()
-    {
-        $user = $this->createAuthenticatedUser();
-
-        $response = $this->getJson('/api/submissions', [
-            'Authorization' => 'Bearer ' . $user->token,
-        ]);
-
-        $response->assertOk();
-    }
-
-    public function test_api_validation()
-    {
-        $user = $this->createAuthenticatedUser();
-
-        $response = $this->postJson('/api/submissions', [
-            // Missing required fields
-        ], [
-            'Authorization' => 'Bearer ' . $user->token,
-        ]);
-
-        $response->assertUnprocessable();
-    }
-}
-```
-
-**Available Methods**:
-- `createAuthenticatedUser(array $attributes = [])` - User with Sanctum token
-- `createApiToken(User $user, array $abilities = ['*'])` - Custom token
-- API-specific assertion helpers
-
-## Example Test
-
-### Complete Test Using Infrastructure
-
-```php
-<?php
-
-namespace Tests\Unit;
-
-use Tests\TestCase;
-use Tests\Support\Traits\CreatesUsers;
-use Tests\Support\Traits\CreatesSubmissions;
-use Tests\Support\Traits\CreatesCards;
-use Tests\Support\Traits\AssertsStates;
-use Tests\Support\Traits\AssertsPayments;
-
-class SubmissionWorkflowTest extends TestCase
-{
-    use CreatesUsers;
-    use CreatesSubmissions;
-    use CreatesCards;
-    use AssertsStates;
-    use AssertsPayments;
-
-    public function test_complete_submission_workflow()
-    {
-        // 1. Create customer
-        $customer = $this->createCustomerUser();
-
-        // 2. Create draft submission
-        $submission = $this->createDraftSubmission($customer);
-        $this->assertSubmissionIsDraft($submission);
-
-        // 3. Add cards
-        $cards = $this->createCardsForSubmission($submission, 3);
-        $this->assertCount(3, $submission->cards);
-
-        // 4. Transition to submitted
-        $submission->state->transitionTo(SubmissionState::SUBMITTED);
-        $this->assertSubmissionIsSubmitted($submission);
-
-        // 5. Process payment
-        // ... payment logic
-        $this->assertSubmissionIsPaid($submission);
-
-        // 6. Transition cards to assessment
-        foreach ($cards as $card) {
-            $card->card_state->transitionTo(CardState::ASSESSMENT);
-            $this->assertCardIsAssessment($card);
-        }
-
-        // 7. Complete workflow
-        $submission->state->transitionTo(SubmissionState::COMPLETED);
-        $this->assertSubmissionIsCompleted($submission);
-        $this->assertSubmissionIsTerminal($submission);
-    }
-}
-```
-
-## Test Results (October 2025)
-
-**Phase 1-3 Complete**:
-- ✅ State constant migration (42 files, 0 remaining errors)
-- ✅ Test infrastructure created (2,618 lines, 46 methods)
-- ✅ Unit tests improved (69→92 passing, +33%)
-
-**Current Status**:
-- Unit Tests: 92 passing, 165 failing
-- Test Infrastructure: 8 files, 46 methods
-- Documentation: tests/Support/README.md (600 lines)
-
-## Common Patterns
-
-### Testing State Transitions
-
-```php
-use Tests\Support\Traits\{CreatesSubmissions, AssertsStates};
-
-public function test_state_transition()
-{
-    $submission = $this->createDraftSubmission($user);
-    $this->assertSubmissionIsDraft($submission);
-
-    $submission->state->transitionTo(SubmissionState::SUBMITTED);
-    $this->assertSubmissionIsSubmitted($submission);
-}
-```
-
-### Testing Payments
-
-```php
-use Tests\Support\Traits\{CreatesSubmissions, AssertsPayments};
-
-public function test_payment_flow()
-{
-    $submission = $this->createSubmittedSubmission($user);
-    $this->assertSubmissionIsUnpaid($submission);
-
-    // Process payment
-    $submission->update(['payment_status' => 'paid']);
-
-    $this->assertSubmissionIsPaid($submission);
-    $this->assertSubmissionTotalEquals($submission, 10000);
-}
-```
-
-### Testing Nova Resources
-
-```php
-use Tests\Support\Base\NovaTestCase;
-
-class SubmissionResourceTest extends NovaTestCase
-{
-    public function test_index()
-    {
-        $this->actingAsAdmin();
-
-        $response = $this->get('/nova-api/submissions');
-
-        $response->assertOk();
-    }
-}
-```
-
-## Documentation Links
-
-- **Usage Guide**: `tests/Support/README.md` (600 lines, 20+ examples)
-- **Testing Guide**: `docs/development/TESTING-COMPREHENSIVE.md`
-- **Test Reorganization**: `tests/archived/2025-10-22-test-reorganization/`
-- **Laravel Testing**: https://laravel.com/docs/12.x/testing
-- **PHPUnit**: https://phpunit.de/documentation.html
+## Quality Metrics
+
+Track these:
+- Lines of actual test code (growing)
+- Real coverage % (not inflated by stubs)
+- Test execution time (should stay <5min)
+- Test flakiness (0 flaky tests)
+- Bugs caught before production (trending up)
+
+## Success Criteria
+
+✅ All critical paths have real tests
+✅ Tests are fast (<5 seconds)
+✅ Tests catch bugs (coverage > 75%)
+✅ No empty test files
+✅ All tests pass on main branch
+✅ Coverage trend is increasing
+
+## Anti-Patterns (What We Stop)
+
+❌ Empty test files that "count" toward coverage
+❌ Stub tests with no assertions
+❌ Mocking the thing you're testing
+❌ Tests that pass whether code works or not
+❌ Copy-paste tests (unmaintainable)
+❌ One giant test file (hard to find issues)
+❌ Writing tests after code (finds nothing)
+
+---
+
+**Key Mantra**:
+> "An empty test file is admitting we don't know if it works.
+> Real tests are how we earn the right to claim features are done."

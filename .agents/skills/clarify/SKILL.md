@@ -1,88 +1,186 @@
 ---
 name: clarify
-description: 요구사항 명확화 스킬. 모호한 요청을 구체적인 스펙으로 변환. Plan Mode 진입 전 사용.
+description: Improve unclear UX copy, error messages, microcopy, labels, and instructions. Makes interfaces easier to understand and use.
+args:
+  - name: target
+    description: The feature or component with unclear copy (optional)
+    required: false
+user-invokable: true
 ---
 
-# Clarify Skill
+Identify and improve unclear, confusing, or poorly written interface text to make the product easier to understand and use.
 
-모호한 요구사항을 구체적이고 실행 가능한 스펙으로 변환.
+## MANDATORY PREPARATION
 
-## 프로세스
+Use the frontend-design skill — it contains design principles, anti-patterns, and the **Context Gathering Protocol**. Follow the protocol before proceeding — if no design context exists yet, you MUST run teach-impeccable first. Additionally gather: audience technical level and users' mental state in context.
 
-```
-/clarify "요청"
-    │
-    ├─ Phase 1: 원본 기록
-    │   └─ 원본 요청 그대로 기록
-    │
-    ├─ Phase 2: 반복 질문
-    │   └─ AskUserQuestion으로 모호한 점 해결
-    │
-    ├─ Phase 3: Before/After 비교
-    │   └─ 원본 vs 명확화된 스펙 비교 제시
-    │
-    └─ Phase 4: 저장 옵션
-        └─ docs/requirements/ 에 저장 여부 확인
-```
+---
 
-## 질문 원칙
+## Assess Current Copy
 
-- **구체적 > 일반적**: 추상적 선호보다 구체적 세부사항
-- **선택지 > 개방형**: 2-4개 옵션 제시 (인식 > 회상)
-- **하나씩 질문**: 여러 질문 묶지 않기
-- **중립적 프레이밍**: 편향 없이 옵션 제시
+Identify what makes the text unclear or ineffective:
 
-## 모호함 카테고리
+1. **Find clarity problems**:
+   - **Jargon**: Technical terms users won't understand
+   - **Ambiguity**: Multiple interpretations possible
+   - **Passive voice**: "Your file has been uploaded" vs "We uploaded your file"
+   - **Length**: Too wordy or too terse
+   - **Assumptions**: Assuming user knowledge they don't have
+   - **Missing context**: Users don't know what to do or why
+   - **Tone mismatch**: Too formal, too casual, or inappropriate for situation
 
-| 카테고리 | 질문 예시 |
-|----------|----------|
-| **범위** | 포함/제외 항목? |
-| **동작** | 엣지 케이스? 에러 시나리오? |
-| **인터페이스** | 누가/무엇이 상호작용? |
-| **데이터** | 입력? 출력? 포맷? |
-| **제약** | 성능? 호환성? |
-| **우선순위** | 필수 vs 있으면 좋은 것? |
+2. **Understand the context**:
+   - Who's the audience? (Technical? General? First-time users?)
+   - What's the user's mental state? (Stressed during error? Confident during success?)
+   - What's the action? (What do we want users to do?)
+   - What's the constraint? (Character limits? Space limitations?)
 
-## 결과 템플릿
+**CRITICAL**: Clear copy helps users succeed. Unclear copy creates frustration, errors, and support tickets.
 
-```markdown
-## Before (원본)
-"{원본 요청}"
+## Plan Copy Improvements
 
-## After (명확화)
-**목표**: [구체적 설명]
-**범위**: [포함/제외 항목]
-**제약**: [제한사항, 요구사항]
-**성공 기준**: [완료 판단 기준]
+Create a strategy for clearer communication:
 
-**결정 사항**:
-| 질문 | 결정 |
-|------|------|
-| [모호함 1] | [선택된 옵션] |
-| [모호함 2] | [선택된 옵션] |
-```
+- **Primary message**: What's the ONE thing users need to know?
+- **Action needed**: What should users do next (if anything)?
+- **Tone**: How should this feel? (Helpful? Apologetic? Encouraging?)
+- **Constraints**: Length limits, brand voice, localization considerations
 
-## 예시
+**IMPORTANT**: Good UX writing is invisible. Users should understand immediately without noticing the words.
 
-### 입력
-```
-/clarify 태그 필터링 추가
-```
+## Improve Copy Systematically
 
-### 질문
-1. 다중 태그 선택 시 동작? → AND (모든 태그 포함)
-2. UI 위치? → 검색바 아래
-3. 태그 없는 링크 표시? → "태그 없음" 필터 제공
+Refine text across these common areas:
 
-### 결과
-- 목표: 다중 태그 AND 필터링 기능 추가
-- 범위: 태그 칩 UI, 필터 로직, "태그 없음" 옵션
-- 성공 기준: 선택한 모든 태그를 포함하는 링크만 표시
+### Error Messages
+**Bad**: "Error 403: Forbidden"
+**Good**: "You don't have permission to view this page. Contact your admin for access."
 
-## 규칙
+**Bad**: "Invalid input"
+**Good**: "Email addresses need an @ symbol. Try: name@example.com"
 
-1. **가정 금지**: 물어보기
-2. **의도 보존**: 방향 수정 아닌 명확화
-3. **최소 질문**: 필요한 것만
-4. **답변 존중**: 사용자 결정 수용
-5. **변화 추적**: 항상 Before/After 표시
+**Principles**:
+- Explain what went wrong in plain language
+- Suggest how to fix it
+- Don't blame the user
+- Include examples when helpful
+- Link to help/support if applicable
+
+### Form Labels & Instructions
+**Bad**: "DOB (MM/DD/YYYY)"
+**Good**: "Date of birth" (with placeholder showing format)
+
+**Bad**: "Enter value here"
+**Good**: "Your email address" or "Company name"
+
+**Principles**:
+- Use clear, specific labels (not generic placeholders)
+- Show format expectations with examples
+- Explain why you're asking (when not obvious)
+- Put instructions before the field, not after
+- Keep required field indicators clear
+
+### Button & CTA Text
+**Bad**: "Click here" | "Submit" | "OK"
+**Good**: "Create account" | "Save changes" | "Got it, thanks"
+
+**Principles**:
+- Describe the action specifically
+- Use active voice (verb + noun)
+- Match user's mental model
+- Be specific ("Save" is better than "OK")
+
+### Help Text & Tooltips
+**Bad**: "This is the username field"
+**Good**: "Choose a username. You can change this later in Settings."
+
+**Principles**:
+- Add value (don't just repeat the label)
+- Answer the implicit question ("What is this?" or "Why do you need this?")
+- Keep it brief but complete
+- Link to detailed docs if needed
+
+### Empty States
+**Bad**: "No items"
+**Good**: "No projects yet. Create your first project to get started."
+
+**Principles**:
+- Explain why it's empty (if not obvious)
+- Show next action clearly
+- Make it welcoming, not dead-end
+
+### Success Messages
+**Bad**: "Success"
+**Good**: "Settings saved! Your changes will take effect immediately."
+
+**Principles**:
+- Confirm what happened
+- Explain what happens next (if relevant)
+- Be brief but complete
+- Match the user's emotional moment (celebrate big wins)
+
+### Loading States
+**Bad**: "Loading..." (for 30+ seconds)
+**Good**: "Analyzing your data... this usually takes 30-60 seconds"
+
+**Principles**:
+- Set expectations (how long?)
+- Explain what's happening (when it's not obvious)
+- Show progress when possible
+- Offer escape hatch if appropriate ("Cancel")
+
+### Confirmation Dialogs
+**Bad**: "Are you sure?"
+**Good**: "Delete 'Project Alpha'? This can't be undone."
+
+**Principles**:
+- State the specific action
+- Explain consequences (especially for destructive actions)
+- Use clear button labels ("Delete project" not "Yes")
+- Don't overuse confirmations (only for risky actions)
+
+### Navigation & Wayfinding
+**Bad**: Generic labels like "Items" | "Things" | "Stuff"
+**Good**: Specific labels like "Your projects" | "Team members" | "Settings"
+
+**Principles**:
+- Be specific and descriptive
+- Use language users understand (not internal jargon)
+- Make hierarchy clear
+- Consider information scent (breadcrumbs, current location)
+
+## Apply Clarity Principles
+
+Every piece of copy should follow these rules:
+
+1. **Be specific**: "Enter email" not "Enter value"
+2. **Be concise**: Cut unnecessary words (but don't sacrifice clarity)
+3. **Be active**: "Save changes" not "Changes will be saved"
+4. **Be human**: "Oops, something went wrong" not "System error encountered"
+5. **Be helpful**: Tell users what to do, not just what happened
+6. **Be consistent**: Use same terms throughout (don't vary for variety)
+
+**NEVER**:
+- Use jargon without explanation
+- Blame users ("You made an error" → "This field is required")
+- Be vague ("Something went wrong" without explanation)
+- Use passive voice unnecessarily
+- Write overly long explanations (be concise)
+- Use humor for errors (be empathetic instead)
+- Assume technical knowledge
+- Vary terminology (pick one term and stick with it)
+- Repeat information (headers restating intros, redundant explanations)
+- Use placeholders as the only labels (they disappear when users type)
+
+## Verify Improvements
+
+Test that copy improvements work:
+
+- **Comprehension**: Can users understand without context?
+- **Actionability**: Do users know what to do next?
+- **Brevity**: Is it as short as possible while remaining clear?
+- **Consistency**: Does it match terminology elsewhere?
+- **Tone**: Is it appropriate for the situation?
+
+Remember: You're a clarity expert with excellent communication skills. Write like you're explaining to a smart friend who's unfamiliar with the product. Be clear, be helpful, be human.
+

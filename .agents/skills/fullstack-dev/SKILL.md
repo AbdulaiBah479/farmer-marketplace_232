@@ -1,1310 +1,1037 @@
 ---
 name: fullstack-dev
-description: World-class #1 expert full stack developer specializing in enterprise-grade JavaScript/Node.js, modern frontend architecture, scalable backend systems, and database optimization. Expert in microservices, CI/CD, cloud infrastructure, and performance tuning. Use when building scalable applications, architecting distributed systems, optimizing database performance, or implementing production-ready features.
-argument-hint: [feature-description]
+description: |
+  Full-stack backend architecture and frontend-backend integration guide.
+  TRIGGER when: building a full-stack app, creating REST API with frontend, scaffolding backend service,
+  building todo app, building CRUD app, building real-time app, building chat app,
+  Express + React, Next.js API, Node.js backend, Python backend, Go backend,
+  designing service layers, implementing error handling, managing config/auth,
+  setting up API clients, implementing auth flows, handling file uploads,
+  adding real-time features (SSE/WebSocket), hardening for production.
+  DO NOT TRIGGER when: pure frontend UI work, pure CSS/styling, database schema only.
+license: MIT
+metadata:
+  category: full-stack
+  version: "1.0.0"
+  sources:
+    - The Twelve-Factor App (12factor.net)
+    - Clean Architecture (Robert C. Martin)
+    - Domain-Driven Design (Eric Evans)
+    - Patterns of Enterprise Application Architecture (Martin Fowler)
+    - Martin Fowler (Testing Pyramid, Contract Tests)
+    - Google SRE Handbook (Release Engineering)
+    - ThoughtWorks Technology Radar
 ---
 
-# World-Class Full Stack Developer - Enterprise Edition
+# Full-Stack Development Practices
 
-## Project Context: DriverConnect (eddication.io)
+## MANDATORY WORKFLOW — Follow These Steps In Order
 
-**IMPORTANT**: This project is a Fuel Delivery Management System - full-stack logistics platform.
+**When this skill is triggered, you MUST follow this workflow before writing any code.**
 
-### Application Architecture
+### Step 0: Gather Requirements
+
+Before scaffolding anything, ask the user to clarify (or infer from context):
+
+1. **Stack**: Language/framework for backend and frontend (e.g., Express + React, Django + Vue, Go + HTMX)
+2. **Service type**: API-only, full-stack monolith, or microservice?
+3. **Database**: SQL (PostgreSQL, SQLite, MySQL) or NoSQL (MongoDB, Redis)?
+4. **Integration**: REST, GraphQL, tRPC, or gRPC?
+5. **Real-time**: Needed? If yes — SSE, WebSocket, or polling?
+6. **Auth**: Needed? If yes — JWT, session, OAuth, or third-party (Clerk, Auth.js)?
+
+If the user has already specified these in their request, skip asking and proceed.
+
+### Step 1: Architectural Decisions
+
+Based on requirements, make and state these decisions before coding:
+
+| Decision | Options | Reference |
+|----------|---------|-----------|
+| Project structure | Feature-first (recommended) vs layer-first | [Section 1](#1-project-structure--layering-critical) |
+| API client approach | Typed fetch / React Query / tRPC / OpenAPI codegen | [Section 5](#5-api-client-patterns-medium) |
+| Auth strategy | JWT + refresh / session / third-party | [Section 6](#6-authentication--middleware-high) |
+| Real-time method | Polling / SSE / WebSocket | [Section 11](#11-real-time-patterns-medium) |
+| Error handling | Typed error hierarchy + global handler | [Section 3](#3-error-handling--resilience-high) |
+
+Briefly explain each choice (1 sentence per decision).
+
+### Step 2: Scaffold with Checklist
+
+Use the appropriate checklist below. Ensure ALL checked items are implemented — do not skip any.
+
+### Step 3: Implement Following Patterns
+
+Write code following the patterns in this document. Reference specific sections as you implement each part.
+
+### Step 4: Test & Verify
+
+After implementation, run these checks before claiming completion:
+
+1. **Build check**: Ensure both backend and frontend compile without errors
+   ```bash
+   # Backend
+   cd server && npm run build
+   # Frontend
+   cd client && npm run build
+   ```
+2. **Start & smoke test**: Start the server, verify key endpoints return expected responses
+   ```bash
+   # Start server, then test
+   curl http://localhost:3000/health
+   curl http://localhost:3000/api/<resource>
+   ```
+3. **Integration check**: Verify frontend can connect to backend (CORS, API base URL, auth flow)
+4. **Real-time check** (if applicable): Open two browser tabs, verify changes sync
+
+If any check fails, fix the issue before proceeding.
+
+### Step 5: Handoff Summary
+
+Provide a brief summary to the user:
+
+- **What was built**: List of implemented features and endpoints
+- **How to run**: Exact commands to start backend and frontend
+- **What's missing / next steps**: Any deferred items, known limitations, or recommended improvements
+- **Key files**: List the most important files the user should know about
+
+---
+
+## Scope
+
+**USE this skill when:**
+- Building a full-stack application (backend + frontend)
+- Scaffolding a new backend service or API
+- Designing service layers and module boundaries
+- Implementing database access, caching, or background jobs
+- Writing error handling, logging, or configuration management
+- Reviewing backend code for architectural issues
+- Hardening for production
+- Setting up API clients, auth flows, file uploads, or real-time features
+
+**NOT for:**
+- Pure frontend/UI concerns (use your frontend framework's docs)
+- Pure database schema design without backend context
+
+---
+
+## Quick Start — New Backend Service Checklist
+
+- [ ] Project scaffolded with **feature-first** structure
+- [ ] Configuration **centralized**, env vars **validated at startup** (fail fast)
+- [ ] **Typed error hierarchy** defined (not generic `Error`)
+- [ ] **Global error handler** middleware
+- [ ] **Structured JSON logging** with request ID propagation
+- [ ] Database: **migrations** set up, **connection pooling** configured
+- [ ] **Input validation** on all endpoints (Zod / Pydantic / Go validator)
+- [ ] **Authentication middleware** in place
+- [ ] **Health check** endpoints (`/health`, `/ready`)
+- [ ] **Graceful shutdown** handling (SIGTERM)
+- [ ] **CORS** configured (explicit origins, not `*`)
+- [ ] **Security headers** (helmet or equivalent)
+- [ ] `.env.example` committed (no real secrets)
+
+## Quick Start — Frontend-Backend Integration Checklist
+
+- [ ] **API client** configured (typed fetch wrapper, React Query, tRPC, or OpenAPI generated)
+- [ ] **Base URL** from environment variable (not hardcoded)
+- [ ] **Auth token** attached to requests automatically (interceptor / middleware)
+- [ ] **Error handling** — API errors mapped to user-facing messages
+- [ ] **Loading states** handled (skeleton/spinner, not blank screen)
+- [ ] **Type safety** across the boundary (shared types, OpenAPI, or tRPC)
+- [ ] **CORS** configured with explicit origins (not `*` in production)
+- [ ] **Refresh token** flow implemented (httpOnly cookie + transparent retry on 401)
+
+---
+
+## Quick Navigation
+
+| Need to… | Jump to |
+|----------|---------|
+| Organize project folders | [1. Project Structure](#1-project-structure--layering-critical) |
+| Manage config + secrets | [2. Configuration](#2-configuration--environment-critical) |
+| Handle errors properly | [3. Error Handling](#3-error-handling--resilience-high) |
+| Write database code | [4. Database Access Patterns](#4-database-access-patterns-high) |
+| Set up API client from frontend | [5. API Client Patterns](#5-api-client-patterns-medium) |
+| Add auth middleware | [6. Auth & Middleware](#6-authentication--middleware-high) |
+| Set up logging | [7. Logging & Observability](#7-logging--observability-medium-high) |
+| Add background jobs | [8. Background Jobs](#8-background-jobs--async-medium) |
+| Implement caching | [9. Caching](#9-caching-patterns-medium) |
+| Upload files (presigned URL, multipart) | [10. File Upload Patterns](#10-file-upload-patterns-medium) |
+| Add real-time features (SSE, WebSocket) | [11. Real-Time Patterns](#11-real-time-patterns-medium) |
+| Handle API errors in frontend UI | [12. Cross-Boundary Error Handling](#12-cross-boundary-error-handling-medium) |
+| Harden for production | [13. Production Hardening](#13-production-hardening-medium) |
+| Design API endpoints | [API Design](references/api-design.md) |
+| Design database schema | [Database Schema](references/db-schema.md) |
+| Auth flow (JWT, refresh, Next.js SSR, RBAC) | [references/auth-flow.md](references/auth-flow.md) |
+| CORS, env vars, environment management | [references/environment-management.md](references/environment-management.md) |
+
+---
+
+## Core Principles (7 Iron Rules)
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                      FRONTEND LAYER                          │
-│  ┌──────────────────────┐  ┌──────────────────────────────┐ │
-│  │   Admin Panel (Web)  │  │   Driver App (LINE LIFF)     │ │
-│  │   admin/index.html   │  │   driverapp/index.html       │ │
-│  │   - Vanilla JS       │  │   - Vanilla JS + LIFF SDK    │ │
-│  │   - Google Maps API  │  │   - GPS/Geolocation API      │ │
-│  │   - Real-time map    │  │   - Camera (alcohol test)    │ │
-│  └──────────────────────┘  └──────────────────────────────┘ │
-├─────────────────────────────────────────────────────────────┤
-│                      API LAYER                               │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐   │
-│  │ Supabase API │  │ Edge Functions│  │ Google Apps     │   │
-│  │ - CRUD       │  │ - geocode     │  │ Script (Legacy)  │   │
-│  │ - Realtime   │  │ - enrich-coord│  │ - Sheets API     │   │
-│  └──────────────┘  └──────────────┘  └──────────────────┘   │
-├─────────────────────────────────────────────────────────────┤
-│                      DATABASE LAYER                           │
-│           Supabase PostgreSQL + Google Sheets               │
-└─────────────────────────────────────────────────────────────┘
+1. ✅ Organize by FEATURE, not by technical layer
+2. ✅ Controllers never contain business logic
+3. ✅ Services never import HTTP request/response types
+4. ✅ All config from env vars, validated at startup, fail fast
+5. ✅ Every error is typed, logged, and returns consistent format
+6. ✅ All input validated at the boundary — trust nothing from client
+7. ✅ Structured JSON logging with request ID — not console.log
 ```
 
-### Key Directories
+---
 
-| Directory | Purpose | Tech |
-|:---|:---|:---|
-| `PTGLG/driverconnect/admin/` | Admin web panel | Vanilla JS, Google Maps |
-| `PTGLG/driverconnect/driverapp/` | Driver LIFF app | LIFF v2, Geolocation API |
-| `PTGLG/driverconnect/shared/` | Shared utilities | Config, auth helpers |
-| `backend/` | Node.js/Express server | Express, Google APIs |
-| `supabase/functions/` | Edge Functions | Deno, TypeScript |
-| `supabase/migrations/` | Database migrations | PostgreSQL SQL |
+## 1. Project Structure & Layering (CRITICAL)
 
-### Recent Refactoring (Phase 2.1)
+### Feature-First Organization
 
-**Before**: `admin/admin.old.js` (3,118 lines monolithic)
-
-**After**: Modular structure
 ```
-admin/
-├── admin.js (162 lines - entry point)
-└── js/
-    ├── main.js - Initialization
-    ├── dashboard.js - Analytics
-    ├── map.js - Google Maps + markers
-    ├── jobs.js - Job management
-    ├── users.js - User management
-    ├── reports.js - Reports
-    ├── utils.js - Utilities (sanitizeHTML, etc.)
-    └── realtime.js - Supabase Realtime
+✅ Feature-first                    ❌ Layer-first
+src/                                src/
+  orders/                             controllers/
+    order.controller.ts                 order.controller.ts
+    order.service.ts                    user.controller.ts
+    order.repository.ts               services/
+    order.dto.ts                        order.service.ts
+    order.test.ts                       user.service.ts
+  users/                              repositories/
+    user.controller.ts                  ...
+    user.service.ts
+  shared/
+    database/
+    middleware/
 ```
 
-### Development Commands
+### Three-Layer Architecture
+
+```
+Controller (HTTP) → Service (Business Logic) → Repository (Data Access)
+```
+
+| Layer | Responsibility | ❌ Never |
+|-------|---------------|---------|
+| Controller | Parse request, validate, call service, format response | Business logic, DB queries |
+| Service | Business rules, orchestration, transaction mgmt | HTTP types (req/res), direct DB |
+| Repository | Database queries, external API calls | Business logic, HTTP types |
+
+### Dependency Injection (All Languages)
+
+**TypeScript:**
+```typescript
+class OrderService {
+  constructor(
+    private readonly orderRepo: OrderRepository,    // ✅ injected interface
+    private readonly emailService: EmailService,
+  ) {}
+}
+```
+
+**Python:**
+```python
+class OrderService:
+    def __init__(self, order_repo: OrderRepository, email_service: EmailService):
+        self.order_repo = order_repo                 # ✅ injected
+        self.email_service = email_service
+```
+
+**Go:**
+```go
+type OrderService struct {
+    orderRepo    OrderRepository                      // ✅ interface
+    emailService EmailService
+}
+
+func NewOrderService(repo OrderRepository, email EmailService) *OrderService {
+    return &OrderService{orderRepo: repo, emailService: email}
+}
+```
+
+---
+
+## 2. Configuration & Environment (CRITICAL)
+
+### Centralized, Typed, Fail-Fast
+
+**TypeScript:**
+```typescript
+const config = {
+  port: parseInt(process.env.PORT || '3000', 10),
+  database: { url: requiredEnv('DATABASE_URL'), poolSize: intEnv('DB_POOL_SIZE', 10) },
+  auth: { jwtSecret: requiredEnv('JWT_SECRET'), expiresIn: process.env.JWT_EXPIRES_IN || '1h' },
+} as const;
+
+function requiredEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) throw new Error(`Missing required env var: ${name}`);  // fail fast
+  return value;
+}
+```
+
+**Python:**
+```python
+from pydantic_settings import BaseSettings
+
+class Settings(BaseSettings):
+    database_url: str                        # required — app won't start without it
+    jwt_secret: str                          # required
+    port: int = 3000                         # optional with default
+    db_pool_size: int = 10
+    class Config:
+        env_file = ".env"
+
+settings = Settings()                        # fails fast if DATABASE_URL missing
+```
+
+### Rules
+
+```
+✅ All config via environment variables (Twelve-Factor)
+✅ Validate required vars at startup — fail fast
+✅ Type-cast at config layer, not at usage sites
+✅ Commit .env.example with dummy values
+
+❌ Never hardcode secrets, URLs, or credentials
+❌ Never commit .env files
+❌ Never scatter process.env / os.environ throughout code
+```
+
+---
+
+## 3. Error Handling & Resilience (HIGH)
+
+### Typed Error Hierarchy
+
+```typescript
+// Base (TypeScript)
+class AppError extends Error {
+  constructor(
+    message: string,
+    public readonly code: string,
+    public readonly statusCode: number,
+    public readonly isOperational: boolean = true,
+  ) { super(message); }
+}
+class NotFoundError extends AppError {
+  constructor(resource: string, id: string) {
+    super(`${resource} not found: ${id}`, 'NOT_FOUND', 404);
+  }
+}
+class ValidationError extends AppError {
+  constructor(public readonly errors: FieldError[]) {
+    super('Validation failed', 'VALIDATION_ERROR', 422);
+  }
+}
+```
+
+```python
+# Base (Python)
+class AppError(Exception):
+    def __init__(self, message: str, code: str, status_code: int):
+        self.message, self.code, self.status_code = message, code, status_code
+
+class NotFoundError(AppError):
+    def __init__(self, resource: str, id: str):
+        super().__init__(f"{resource} not found: {id}", "NOT_FOUND", 404)
+```
+
+### Global Error Handler
+
+```typescript
+// TypeScript (Express)
+app.use((err, req, res, next) => {
+  if (err instanceof AppError && err.isOperational) {
+    return res.status(err.statusCode).json({
+      title: err.code, status: err.statusCode,
+      detail: err.message, request_id: req.id,
+    });
+  }
+  logger.error('Unexpected error', { error: err.message, stack: err.stack, request_id: req.id });
+  res.status(500).json({ title: 'Internal Error', status: 500, request_id: req.id });
+});
+```
+
+### Rules
+
+```
+✅ Typed, domain-specific error classes
+✅ Global error handler catches everything
+✅ Operational errors → structured response
+✅ Programming errors → log + generic 500
+✅ Retry transient failures with exponential backoff
+
+❌ Never catch and ignore errors silently
+❌ Never return stack traces to client
+❌ Never throw generic Error('something')
+```
+
+---
+
+## 4. Database Access Patterns (HIGH)
+
+### Migrations Always
 
 ```bash
-# Apply database migration
-cd supabase
-node apply-migration.js
-
-# Start backend server
-cd backend
-npm install
-npm start
-
-# Deploy edge functions
-supabase functions deploy geocode
-supabase functions deploy enrich-coordinates
+# TypeScript (Prisma)           # Python (Alembic)              # Go (golang-migrate)
+npx prisma migrate dev          alembic revision --autogenerate  migrate -source file://migrations
+npx prisma migrate deploy       alembic upgrade head             migrate -database $DB up
 ```
 
----
-
-## Philosophy & Principles
-
-## Core Engineering Philosophy
-
-1. **Scalability First** - Design for growth from day one
-2. **Observability** - Make systems debuggable and monitorable
-3. **Security by Default** - Never trust, always validate
-4. **Progressive Enhancement** - Build resilient, degradable systems
-5. **Developer Experience** - Great code enables great products
-6. **Production Mindset** - Code is live from day one
-
-## Best Practices Mindset
-
-- **Write code for the maintainer** (future you)
-- **Measure before optimizing** - data-driven decisions
-- **Fail fast, fail gracefully** - proper error handling
-- **API design is product design** - thoughtful contracts
-- **Database schema is your foundation** - get it right early
-- **Test what matters** - critical paths over edge cases
-
----
-
-# When to Use This Skill
-
-Engage this expertise when the user asks about:
-
-- Building scalable web applications or microservices
-- Frontend architecture (React, Vue, vanilla JS systems)
-- Backend API development (Node.js, Express, Fastify)
-- Database design and optimization (SQL, NoSQL, caching)
-- API architecture and integration patterns
-- Authentication and authorization systems
-- Real-time features and websockets
-- Performance optimization and profiling
-- CI/CD pipelines and deployment strategies
-- Cloud architecture and infrastructure
-- Microservices or monolith architecture decisions
-- State management and data flow design
-
----
-
-# Tech Stack Mastery
-
-## Frontend Excellence
-
-### Modern JavaScript Patterns
-
-```javascript
-// ============================================
-// MODULE ARCHITECTURE - ES6+
-// ============================================
-
-// Dependency Injection for testability
-class UserService {
-  constructor(apiClient, cache) {
-    this.api = apiClient;
-    this.cache = cache;
-  }
-
-  async getUser(id) {
-    // Check cache first
-    const cached = await this.cache.get(`user:${id}`);
-    if (cached) return JSON.parse(cached);
-
-    // Fetch from API
-    const user = await this.api.get(`/users/${id}`);
-    await this.cache.set(`user:${id}`, JSON.stringify(user), 300);
-
-    return user;
-  }
-}
-
-// Singleton with lazy initialization
-class Config {
-  constructor() {
-    if (Config.instance) return Config.instance;
-    this.config = this.loadConfig();
-    Config.instance = this;
-  }
-
-  loadConfig() {
-    // Environment-based config loading
-    const env = process.env.NODE_ENV || 'development';
-    return require(`./config/${env}.js`);
-  }
-}
-
-// Factory Pattern for object creation
-class DatabaseConnectionFactory {
-  create(type, options) {
-    switch (type) {
-      case 'postgresql':
-        return new PostgreSQLConnection(options);
-      case 'mongodb':
-        return new MongoDBConnection(options);
-      case 'redis':
-        return new RedisConnection(options);
-      default:
-        throw new Error(`Unsupported database type: ${type}`);
-    }
-  }
-}
-
-// Observer Pattern for event-driven architecture
-class EventEmitter {
-  constructor() {
-    this.events = new Map();
-  }
-
-  on(event, callback) {
-    if (!this.events.has(event)) {
-      this.events.set(event, []);
-    }
-    this.events.get(event).push(callback);
-    return () => this.off(event, callback); // Unsubscribe function
-  }
-
-  emit(event, data) {
-    const callbacks = this.events.get(event) || [];
-    callbacks.forEach(cb => cb(data));
-  }
-
-  off(event, callback) {
-    const callbacks = this.events.get(event) || [];
-    const index = callbacks.indexOf(callback);
-    if (index > -1) callbacks.splice(index, 1);
-  }
-}
+```
+✅ Schema changes via migrations, never manual SQL
+✅ Migrations must be reversible
+✅ Review migration SQL before production
+❌ Never modify production schema manually
 ```
 
-### State Management Patterns
+### N+1 Prevention
 
-```javascript
-// ============================================
-// STATE MANAGEMENT - Vanilla JS
-// ============================================
+```typescript
+// ❌ N+1: 1 query + N queries
+const orders = await db.order.findMany();
+for (const o of orders) { o.items = await db.item.findMany({ where: { orderId: o.id } }); }
 
-// Centralized State Store
-class StateStore {
-  constructor(initialState = {}) {
-    this.state = initialState;
-    this.listeners = new Set();
-    this.middleware = [];
-  }
+// ✅ Single JOIN query
+const orders = await db.order.findMany({ include: { items: true } });
+```
 
-  // Redux-like middleware support
-  use(middleware) {
-    this.middleware.push(middleware);
-  }
+### Transactions for Multi-Step Writes
 
-  getState() {
-    return this.state;
-  }
-
-  setState(updater) {
-    const prevState = { ...this.state };
-
-    // Apply middleware
-    let state = this.state;
-    for (const mw of this.middleware) {
-      state = mw(state, updater) || state;
-    }
-
-    // Apply update
-    this.state = typeof updater === 'function'
-      ? updater(this.state)
-      : { ...this.state, ...updater };
-
-    // Notify listeners
-    this.listeners.forEach(listener => listener(this.state, prevState));
-  }
-
-  subscribe(listener) {
-    this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
-  }
-}
-
-// Usage with React-like reactivity
-const store = new StateStore({
-  users: [],
-  loading: false,
-  error: null
-});
-
-// Subscribe to changes
-store.subscribe((state, prev) => {
-  if (state.users !== prev.users) {
-    renderUserList(state.users);
-  }
+```typescript
+await db.$transaction(async (tx) => {
+  const order = await tx.order.create({ data: orderData });
+  await tx.inventory.decrement({ productId, quantity });
+  await tx.payment.create({ orderId: order.id, amount });
 });
 ```
 
-## Backend Architecture
+### Connection Pooling
 
-### Enterprise API Design
-
-```javascript
-// ============================================
-// EXPRESS API - Enterprise Patterns
-// ============================================
-
-const express = require('express');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-const { createProxyMiddleware } = require('http-proxy-middleware');
-
-class ApiServer {
-  constructor(options = {}) {
-    this.app = express();
-    this.port = options.port || 3000;
-    this.middlewares = [];
-    this.routes = new Map();
-    this.setupMiddleware();
-  }
-
-  setupMiddleware() {
-    // Security headers
-    this.app.use(helmet({
-      contentSecurityPolicy: {
-        directives: {
-          defaultSrc: ["'self'"],
-          styleSrc: ["'self'", "'unsafe-inline'"],
-          scriptSrc: ["'self'"],
-          imgSrc: ["'self'", 'data:', 'https:'],
-        },
-      },
-    }));
-
-    // Rate limiting
-    const limiter = rateLimit({
-      windowMs: 15 * 60 * 1000, // 15 minutes
-      max: 100, // Limit each IP to 100 requests per windowMs
-      standardHeaders: true,
-      legacyHeaders: false,
-    });
-
-    // Body parsing with validation
-    this.app.use(express.json({ limit: '1mb' }));
-    this.app.use(express.urlencoded({ extended: true, limit: '1mb' }));
-
-    // Request logging
-    this.app.use((req, res, next) => {
-      const start = Date.now();
-      res.on('finish', () => {
-        const duration = Date.now() - start;
-        console.log(`${req.method} ${req.path} ${res.statusCode} - ${duration}ms`);
-      });
-      next();
-    });
-  }
-
-  // Route registration with metadata
-  registerRoute(method, path, handlers) {
-    const route = this.routes.get(path) || {};
-    route[method] = handlers;
-    this.routes.set(path, route);
-
-    this.app[method.toLowerCase()](path, ...handlers);
-  }
-
-  // Error handling middleware
-  setupErrorHandling() {
-    // 404 handler
-    this.app.use((req, res) => {
-      res.status(404).json({
-        error: 'Not Found',
-        path: req.path,
-        method: req.method,
-        timestamp: new Date().toISOString()
-      });
-    });
-
-    // Global error handler
-    this.app.use((err, req, res, next) => {
-      console.error('Error:', err);
-
-      // Don't leak error details in production
-      const isDev = process.env.NODE_ENV === 'development';
-      res.status(err.status || 500).json({
-        error: err.message || 'Internal Server Error',
-        ...(isDev && { stack: err.stack }),
-        timestamp: new Date().toISOString()
-      });
-    });
-  }
-
-  async start() {
-    return new Promise((resolve) => {
-      this.server = this.app.listen(this.port, () => {
-        console.log(`API server listening on port ${this.port}`);
-        resolve();
-      });
-    });
-  }
-
-  async stop() {
-    if (this.server) {
-      return new Promise((resolve) => {
-        this.server.close(resolve);
-      });
-    }
-  }
-}
-```
-
-### Database Connection Pooling
-
-```javascript
-// ============================================
-// DATABASE CONNECTION POOL - PostgreSQL
-// ============================================
-
-const { Pool } = require('pg');
-
-class DatabaseManager {
-  constructor(config) {
-    this.pool = new Pool({
-      host: config.host,
-      port: config.port || 5432,
-      database: config.database,
-      user: config.user,
-      password: config.password,
-      max: config.max || 20, // Maximum pool size
-      idleTimeoutMillis: config.idleTimeout || 30000,
-      connectionTimeoutMillis: config.connectTimeout || 2000,
-    });
-
-    this.pool.on('error', (err) => {
-      console.error('Unexpected error on idle client', err);
-      process.exit(-1);
-    });
-  }
-
-  async query(text, params) {
-    const start = Date.now();
-
-    try {
-      const result = await this.pool.query(text, params);
-      const duration = Date.now() - start;
-
-      // Log slow queries (>100ms)
-      if (duration > 100) {
-        console.warn(`Slow query (${duration}ms):`, { text, params });
-      }
-
-      return result;
-    } catch (error) {
-      console.error('Query error:', { text, params, error });
-      throw error;
-    }
-  }
-
-  async transaction(callback) {
-    const client = await this.pool.connect();
-
-    try {
-      await client.query('BEGIN');
-
-      const result = await callback(client);
-
-      await client.query('COMMIT');
-      return result;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
-  }
-
-  async close() {
-    await this.pool.end();
-  }
-}
-```
+Pool size = `(CPU cores × 2) + spindle_count` (start with 10-20). Always set connection timeout. Use PgBouncer for serverless.
 
 ---
 
-# Database Architecture
+## 5. API Client Patterns (MEDIUM)
 
-## Schema Design Patterns
+The "glue layer" between frontend and backend. Choose the approach that fits your team and stack.
 
-```sql
--- ============================================
--- ENTERPRISE DATABASE SCHEMA
--- ============================================
+### Option A: Typed Fetch Wrapper (Simple, No Dependencies)
 
--- Users table with audit trail
-CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    full_name VARCHAR(255),
-    role VARCHAR(50) NOT NULL DEFAULT 'user',
-    is_active BOOLEAN DEFAULT true,
-    email_verified_at TIMESTAMPTZ,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    deleted_at TIMESTAMPTZ, -- Soft delete
-    CONSTRAINT valid_email CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$')
-);
+```typescript
+// lib/api-client.ts
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
--- Indexes for performance
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_role ON users(role);
-CREATE INDEX idx_users_active ON users(is_active) WHERE is_active = true;
-CREATE INDEX idx_users_created ON users(created_at DESC);
-
--- GIN index for JSONB queries (if needed)
--- CREATE INDEX idx_users_metadata ON users USING GIN (metadata);
-
--- Audit log table
-CREATE TABLE audit_logs (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    table_name TEXT NOT NULL,
-    record_id UUID NOT NULL,
-    action TEXT NOT NULL, -- INSERT, UPDATE, DELETE
-    old_data JSONB,
-    new_data JSONB,
-    changed_by UUID REFERENCES users(id),
-    changed_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Index for audit queries
-CREATE INDEX idx_audit_table_record ON audit_logs(table_name, record_id);
-CREATE INDEX idx_audit_changed_at ON audit_logs(changed_at DESC);
-
--- Trigger for automatic audit logging
-CREATE OR REPLACE FUNCTION audit_trigger_func()
-RETURNS TRIGGER AS $$
-BEGIN
-    IF (TG_OP = 'DELETE') THEN
-        INSERT INTO audit_logs (table_name, record_id, action, old_data, changed_by)
-        VALUES (TG_TABLE_NAME, OLD.id, 'DELETE', row_to_json(OLD), NULL);
-    ELSIF (TG_OP = 'UPDATE') THEN
-        INSERT INTO audit_logs (table_name, record_id, action, old_data, new_data, changed_by)
-        VALUES (TG_TABLE_NAME, NEW.id, 'UPDATE', row_to_json(OLD), row_to_json(NEW), NULL);
-    ELSIF (TG_OP = 'INSERT') THEN
-        INSERT INTO audit_logs (table_name, record_id, action, new_data)
-        VALUES (TG_TABLE_NAME, NEW.id, 'INSERT', row_to_json(NEW));
-    END IF;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Apply audit trigger to users table
-CREATE TRIGGER users_audit_trigger
-    AFTER INSERT OR UPDATE OR DELETE ON users
-    FOR EACH ROW EXECUTE FUNCTION audit_trigger_func();
-```
-
----
-
-# API Design Patterns
-
-## RESTful API Best Practices
-
-```javascript
-// ============================================
-// RESTful API CONTROLLER
-// ============================================
-
-class ApiController {
-  constructor(db, logger) {
-    this.db = db;
-    this.logger = logger;
-  }
-
-  // Generic CRUD operations
-  async list(req, res) {
-    try {
-      const {
-        page = 1,
-        limit = 20,
-        sort = '-created_at',
-        filter = {}
-      } = req.query;
-
-      // Parse filter parameter
-      const where = this.parseFilter(filter);
-
-      // Parse sort parameter
-      const orderBy = this.parseSort(sort);
-
-      // Calculate offset
-      const offset = (page - 1) * limit;
-
-      // Execute query
-      const [data, countResult] = await Promise.all([
-        this.db.query('SELECT * FROM users WHERE ?::jsonb ORDER BY ? LIMIT ? OFFSET ?', [where, orderBy, limit, offset]),
-        this.db.query('SELECT COUNT(*) FROM users WHERE ?::jsonb', [where])
-      ]);
-
-      // Build response with pagination metadata
-      res.json({
-        data: data.rows,
-        meta: {
-          page: parseInt(page),
-          limit: parseInt(limit),
-          total: parseInt(countResult.rows[0].count),
-          totalPages: Math.ceil(countResult.rows[0].count / limit)
-        }
-      });
-    } catch (error) {
-      this.handleError(res, error);
-    }
-  }
-
-  async create(req, res) {
-    try {
-      const { body } = req;
-
-      // Validate input
-      const validation = this.validateCreateInput(body);
-      if (!validation.valid) {
-        return res.status(400).json({
-          error: 'Validation Failed',
-          details: validation.errors
-        });
-      }
-
-      // Insert record
-      const result = await this.db.query(
-        'INSERT INTO users (email, password_hash, full_name, role) VALUES ($1, $2, $3, $4) RETURNING *',
-        [body.email, body.password_hash, body.full_name, body.role || 'user']
-      );
-
-      res.status(201).json({
-        data: result.rows[0],
-        meta: {
-          timestamp: new Date().toISOString()
-        }
-      });
-    } catch (error) {
-      if (error.code === '23505') { // Unique violation
-        return res.status(409).json({
-          error: 'Conflict',
-          message: 'Email already exists'
-        });
-      }
-      this.handleError(res, error);
-    }
-  }
-
-  parseFilter(filterString) {
-    // Convert filter string to WHERE clause
-    // Example: {"name":"John","age":30} -> SQL WHERE clause
-    try {
-      return JSON.stringify(JSON.parse(filterString || '{}'));
-    } catch {
-      return '{}';
-    }
-  }
-
-  parseSort(sortString) {
-    // Convert sort string to ORDER BY clause
-    // Example: "-created_at,name" -> ORDER BY created_at DESC, name ASC
-    if (!sortString) return ['created_at DESC'];
-
-    return sortString.split(',').map(field => {
-      const direction = field.startsWith('-') ? 'DESC' : 'ASC';
-      const columnName = field.replace(/^[+-]/, '');
-      return `${columnName} ${direction}`;
-    }).join(', ');
-  }
-
-  handleError(res, error) {
-    this.logger.error('API Error:', error);
-
-    const statusCode = error.statusCode || 500;
-    const message = error.message || 'Internal Server Error';
-
-    res.status(statusCode).json({
-      error: message,
-      ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
-    });
+class ApiError extends Error {
+  constructor(public status: number, public body: any) {
+    super(body?.detail || body?.message || `API error ${status}`);
   }
 }
-```
 
-## GraphQL API Patterns
+async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const token = getAuthToken();  // from cookie / memory / context
 
-```javascript
-// ============================================
-// GRAPHQL API STRUCTURE
-// ============================================
+  const res = await fetch(`${BASE_URL}${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
+    },
+  });
 
-const { ApolloServer, gql, ApolloError, AuthenticationError } = require('apollo-server-express');
-
-const typeDefs = gql`
-  type User {
-    id: ID!
-    email: String!
-    fullName: String!
-    role: String!
-    isActive: Boolean!
-    createdAt: DateTime!
-    updatedAt: DateTime!
-    posts(limit: Int, offset: Int): PostConnection!
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new ApiError(res.status, body);
   }
 
-  type Post {
-    id: ID!
-    title: String!
-    content: String!
-    author: User!
-    publishedAt: DateTime!
-    tags: [String!]!
-  }
+  if (res.status === 204) return undefined as T;
+  return res.json();
+}
 
-  type PostConnection {
-    nodes: [Post!]!
-    pageInfo: PageInfo!
-    totalCount: Int!
-  }
-
-  type PageInfo {
-    hasNextPage: Boolean!
-    hasPreviousPage: Boolean!
-    startCursor: String
-    endCursor: String
-  }
-
-  type Query {
-    me: User
-    user(id: ID!): User
-    users(limit: Int, offset: Int): UserConnection!
-  }
-
-  type Mutation {
-    login(email: String!, password: String!): AuthPayload!
-    createPost(input: CreatePostInput!): Post!
-    updateProfile(input: UpdateProfileInput!): User!
-  }
-
-  type AuthPayload {
-    token: String!
-    user: User!
-  }
-
-  scalar DateTime
-`;
-
-const resolvers = {
-  Query: {
-    me: async (parent, args, { user }) => {
-      if (!user) throw new AuthenticationError('Not authenticated');
-      return getUserById(user.id);
-    }
-  },
-
-  User: {
-    posts: async (user, { limit = 10, offset = 0 }, { dataSources }) => {
-      const { nodes, totalCount } = await dataSources.postAPI.getPostsByUser(
-        user.id,
-        limit,
-        offset
-      );
-      return {
-        nodes,
-        pageInfo: get pageInfo(nodes),
-        totalCount
-      };
-    }
-  }
+export const apiClient = {
+  get: <T>(path: string) => api<T>(path),
+  post: <T>(path: string, data: unknown) => api<T>(path, { method: 'POST', body: JSON.stringify(data) }),
+  put: <T>(path: string, data: unknown) => api<T>(path, { method: 'PUT', body: JSON.stringify(data) }),
+  patch: <T>(path: string, data: unknown) => api<T>(path, { method: 'PATCH', body: JSON.stringify(data) }),
+  delete: <T>(path: string) => api<T>(path, { method: 'DELETE' }),
 };
-
-// Data loader for batching
-const { DataLoader } = require('dataloader');
-
-const userLoader = new DataLoader(async (ids) => {
-  const users = await db.query(
-    'SELECT * FROM users WHERE id = ANY($1)',
-    [ids]
-  );
-  return ids.map(id => users.rows.find(u => u.id === id));
-});
 ```
+
+### Option B: React Query + Typed Client (Recommended for React)
+
+```typescript
+// hooks/use-orders.ts
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api-client';
+
+interface Order { id: string; total: number; status: string; }
+interface CreateOrderInput { items: { productId: string; quantity: number }[] }
+
+export function useOrders() {
+  return useQuery({
+    queryKey: ['orders'],
+    queryFn: () => apiClient.get<{ data: Order[] }>('/api/orders'),
+    staleTime: 1000 * 60,  // 1 min
+  });
+}
+
+export function useCreateOrder() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateOrderInput) =>
+      apiClient.post<{ data: Order }>('/api/orders', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+    },
+  });
+}
+
+// Usage in component:
+function OrdersPage() {
+  const { data, isLoading, error } = useOrders();
+  const createOrder = useCreateOrder();
+  if (isLoading) return <Skeleton />;
+  if (error) return <ErrorBanner error={error} />;
+  // ...
+}
+```
+
+### Option C: tRPC (Same Team Owns Both Sides)
+
+```typescript
+// server: trpc/router.ts
+export const appRouter = router({
+  orders: router({
+    list: publicProcedure.query(async () => {
+      return db.order.findMany({ include: { items: true } });
+    }),
+    create: protectedProcedure
+      .input(z.object({ items: z.array(orderItemSchema) }))
+      .mutation(async ({ input, ctx }) => {
+        return orderService.create(ctx.user.id, input);
+      }),
+  }),
+});
+export type AppRouter = typeof appRouter;
+
+// client: automatic type safety, no code generation
+const { data } = trpc.orders.list.useQuery();
+const createOrder = trpc.orders.create.useMutation();
+```
+
+### Option D: OpenAPI Generated Client (Public / Multi-Consumer APIs)
+
+```bash
+npx openapi-typescript-codegen \
+  --input http://localhost:3001/api/openapi.json \
+  --output src/generated/api \
+  --client axios
+```
+
+### Decision: Which API Client?
+
+| Approach | When | Type Safety | Effort |
+|----------|------|-------------|--------|
+| Typed fetch wrapper | Simple apps, small teams | Manual types | Low |
+| React Query + fetch | React apps, server state | Manual types | Medium |
+| tRPC | Same team, TypeScript both sides | Automatic | Low |
+| OpenAPI generated | Public API, multi-consumer | Automatic | Medium |
+| GraphQL codegen | GraphQL APIs | Automatic | Medium |
 
 ---
 
-# Authentication & Authorization
+## 6. Authentication & Middleware (HIGH)
 
-## JWT-Based Authentication
+> **Full reference:** [references/auth-flow.md](references/auth-flow.md) — JWT bearer flow, automatic token refresh, Next.js server-side auth, RBAC pattern, backend middleware order.
 
-```javascript
-// ============================================
-// JWT AUTHENTICATION
-// ============================================
+### Standard Middleware Order
 
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
-const crypto = require('crypto');
+```
+Request → 1.RequestID → 2.Logging → 3.CORS → 4.RateLimit → 5.BodyParse
+       → 6.Auth → 7.Authz → 8.Validation → 9.Handler → 10.ErrorHandler → Response
+```
 
-class AuthService {
-  constructor(secretKey, refreshTokenSecret) {
-    this.secretKey = secretKey;
-    this.refreshTokenSecret = refreshTokenSecret;
-  }
+### JWT Rules
 
-  async hashPassword(password) {
-    const salt = await bcrypt.genSalt(12);
-    return bcrypt.hash(password, salt);
-  }
+```
+✅ Short expiry access token (15min) + refresh token (server-stored)
+✅ Minimal claims: userId, roles (not entire user object)
+✅ Rotate signing keys periodically
 
-  async comparePassword(password, hash) {
-    return bcrypt.compare(password, hash);
-  }
+❌ Never store tokens in localStorage (XSS risk)
+❌ Never pass tokens in URL query params
+```
 
-  generateAccessToken(payload) {
-    return jwt.sign(payload, this.secretKey, {
-      expiresIn: '15m', // Short-lived access token
-      issuer: 'your-api',
-      audience: 'your-app'
-    });
-  }
+### RBAC Pattern
 
-  generateRefreshToken(payload) {
-    return jwt.sign(payload, this.refreshTokenSecret, {
-      expiresIn: '7d', // Longer-lived refresh token
-      issuer: 'your-api',
-      audience: 'your-app'
-    });
-  }
-
-  verifyAccessToken(token) {
-    try {
-      return jwt.verify(token, this.secretKey, {
-        issuer: 'your-api',
-        audience: 'your-app'
-      });
-    } catch (error) {
-      throw new Error('Invalid or expired token');
-    }
-  }
-
-  generateResetToken() {
-    // Secure random token for password reset
-    return crypto.randomBytes(32).toString('hex');
-  }
-}
-
-// Authentication middleware
-function authenticate(req, res, next) {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Missing or invalid authorization header' });
-  }
-
-  const token = authHeader.substring(7);
-
-  try {
-    const decoded = authService.verifyAccessToken(token);
-    req.user = decoded;
-    next();
-  } catch (error) {
-    return res.status(401).json({ error: 'Invalid or expired token' });
-  }
-}
-
-// Authorization middleware - RBAC
-function authorize(...roles) {
+```typescript
+function authorize(...roles: Role[]) {
   return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
-    }
-
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ error: 'Insufficient permissions' });
-    }
-
+    if (!req.user) throw new UnauthorizedError();
+    if (!roles.some(r => req.user.roles.includes(r))) throw new ForbiddenError();
     next();
   };
 }
+router.delete('/users/:id', authenticate, authorize('admin'), deleteUser);
 ```
 
----
+### Auth Token Automatic Refresh
 
-# Real-Time Features
-
-## WebSocket Implementation
-
-```javascript
-// ============================================
-// WEBSOCKET SERVER - Real-time Updates
-// ============================================
-
-const WebSocket = require('ws');
-
-class WebSocketServer {
-  constructor(options = {}) {
-    this.wss = new WebSocket.Server({
-      port: options.port || 8080,
-      perMessageDeflate: false, // Compression
-      clientTracking: true
-    });
-
-    this.clients = new Map(); // userId -> WebSocket
-    this.rooms = new Map(); // room -> Set of WebSocket
-
-    this.setupHandlers();
-  }
-
-  setupHandlers() {
-    this.wss.on('connection', (ws, req) => {
-      this.handleConnection(ws, req);
-    });
-  }
-
-  handleConnection(ws, req) {
-    const userId = this.extractUserId(req);
-
-    if (!userId) {
-      ws.close(4001, 'Unauthorized');
-      return;
-    }
-
-    // Store connection
-    this.clients.set(userId, ws);
-
-    // Send welcome message
-    this.sendToClient(ws, {
-      type: 'connected',
-      timestamp: new Date().toISOString()
-    });
-
-    // Handle incoming messages
-    ws.on('message', (data) => {
-      this.handleMessage(ws, userId, data);
-    });
-
-    // Handle disconnection
-    ws.on('close', () => {
-      this.handleDisconnection(userId);
-    });
-
-    // Handle errors
-    ws.on('error', (error) => {
-      console.error(`WebSocket error for user ${userId}:`, error);
-    });
-  }
-
-  handleMessage(ws, userId, data) {
-    try {
-      const message = JSON.parse(data);
-
-      switch (message.type) {
-        case 'subscribe':
-          this.handleSubscribe(ws, userId, message);
-          break;
-        case 'unsubscribe':
-          this.handleUnsubscribe(ws, userId, message);
-          break;
-        case 'ping':
-          this.sendToClient(ws, { type: 'pong', timestamp: new Date().toISOString() });
-          break;
-        default:
-          console.warn(`Unknown message type: ${message.type}`);
-      }
-    } catch (error) {
-      console.error('Failed to parse WebSocket message:', error);
-    }
-  }
-
-  handleSubscribe(ws, userId, message) {
-    const room = message.room;
-
-    if (!this.rooms.has(room)) {
-      this.rooms.set(room, new Set());
-    }
-
-    this.rooms.get(room).add(ws);
-
-    // Send confirmation
-    this.sendToClient(ws, {
-      type: 'subscribed',
-      room,
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  handleUnsubscribe(ws, userId, message) {
-    const room = message.room;
-
-    if (this.rooms.has(room)) {
-      this.rooms.get(room).delete(ws);
-
-      if (this.rooms.get(room).size === 0) {
-        this.rooms.delete(room);
-      }
-    }
-  }
-
-  handleDisconnection(userId) {
-    this.clients.delete(userId);
-
-    // Remove from all rooms
-    for (const [room, clients] of this.rooms.entries()) {
-      clients.forEach((client) => {
-        if (client === this.clients.get(userId)) {
-          clients.delete(client);
-        }
+```typescript
+// lib/api-client.ts — transparent refresh on 401
+async function apiWithRefresh<T>(path: string, options: RequestInit = {}): Promise<T> {
+  try {
+    return await api<T>(path, options);
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 401) {
+      const refreshed = await api<{ accessToken: string }>('/api/auth/refresh', {
+        method: 'POST',
+        credentials: 'include',  // send httpOnly cookie
       });
-
-      if (clients.size === 0) {
-        this.rooms.delete(room);
-      }
+      setAuthToken(refreshed.accessToken);
+      return api<T>(path, options);  // retry
     }
-  }
-
-  broadcastToRoom(room, message) {
-    const clients = this.rooms.get(room);
-
-    if (clients) {
-      clients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
-          this.sendToClient(client, message);
-        }
-      });
-    }
-  }
-
-  sendToClient(ws, message) {
-    if (ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify(message));
-    }
-  }
-
-  extractUserId(req) {
-    // Extract user ID from session or token
-    return req.user?.id;
+    throw err;
   }
 }
 ```
 
 ---
 
-# Performance Optimization
+## 7. Logging & Observability (MEDIUM-HIGH)
 
-## Caching Strategies
+### Structured JSON Logging
 
-```javascript
-// ============================================
-// MULTI-LAYER CACHING
-// ============================================
+```typescript
+// ✅ Structured — parseable, filterable, alertable
+logger.info('Order created', {
+  orderId: order.id, userId: user.id, total: order.total,
+  items: order.items.length, duration_ms: Date.now() - startTime,
+});
+// Output: {"level":"info","msg":"Order created","orderId":"ord_123",...}
 
-const NodeCache = require('node-cache');
-const Redis = require('ioredis');
+// ❌ Unstructured — useless at scale
+console.log(`Order created for user ${user.id} with total ${order.total}`);
+```
 
-class CacheManager {
-  constructor(config) {
-    // L1: In-memory cache (fast, local)
-    this.memoryCache = new NodeCache({
-      stdTTL: 60, // 1 minute default
-      checkperiod: 120
-    });
+### Log Levels
 
-    // L2: Redis cache (shared across instances)
-    this.redis = new Redis({
-      host: config.redis.host,
-      port: config.redis.port || 6379,
-      password: config.redis.password,
-      db: config.redis.db || 0
-    });
+| Level | When | Production? |
+|-------|------|------------|
+| error | Requires immediate attention | ✅ Always |
+| warn | Unexpected but handled | ✅ Always |
+| info | Normal operations, audit trail | ✅ Always |
+| debug | Dev troubleshooting | ❌ Dev only |
 
-    // L3: CDN cache (for static assets)
-  }
+### Rules
 
-  async get(key) {
-    // Try L1: In-memory
-    const value = this.memoryCache.get(key);
-    if (value !== undefined) {
-      return { source: 'memory', value };
-    }
+```
+✅ Request ID in every log entry (propagated via middleware)
+✅ Log at layer boundaries (request in, response out, external call)
+❌ Never log passwords, tokens, PII, or secrets
+❌ Never use console.log in production code
+```
 
-    // Try L2: Redis
-    const redisValue = await this.redis.get(key);
-    if (redisValue !== null) {
-      // Promote to L1 cache
-      this.memoryCache.set(key, JSON.parse(redisValue));
-      return { source: 'redis', value: JSON.parse(redisValue) };
-    }
+---
 
-    return null;
-  }
+## 8. Background Jobs & Async (MEDIUM)
 
-  async set(key, value, ttl = 300) {
-    // Set in all layers
-    this.memoryCache.set(key, value, ttl);
-    await this.redis.setex(key, ttl, JSON.stringify(value));
-  }
+### Rules
 
-  async invalidate(pattern) {
-    // Invalidate from all layers
-    const keys = this.memoryCache.keys();
-    keys.forEach(key => {
-      if (key.match(pattern)) {
-        this.memoryCache.del(key);
-      }
-    });
+```
+✅ All jobs must be IDEMPOTENT (same job running twice = same result)
+✅ Failed jobs → retry (max 3) → dead letter queue → alert
+✅ Workers run as SEPARATE processes (not threads in API server)
 
-    // Redis scan for pattern matching
-    const stream = redis.scanStream();
-    for await (const key of stream) {
-      if (key.match(pattern)) {
-        await this.redis.del(key);
-      }
-    }
-  }
+❌ Never put long-running tasks in request handlers
+❌ Never assume job runs exactly once
+```
 
-  // Cache-aside pattern for database queries
-  async cacheQuery(key, queryFn, ttl = 300) {
-    // Check cache first
-    const cached = await this.get(key);
-    if (cached) {
-      return cached.value;
-    }
+### Idempotent Job Pattern
 
-    // Execute query
-    const result = await queryFn();
-
-    // Store in cache
-    await this.set(key, result, ttl);
-
-    return result;
-  }
+```typescript
+async function processPayment(data: { orderId: string }) {
+  const order = await orderRepo.findById(data.orderId);
+  if (order.paymentStatus === 'completed') return;  // already processed
+  await paymentGateway.charge(order);
+  await orderRepo.updatePaymentStatus(order.id, 'completed');
 }
 ```
 
 ---
 
-# Testing Strategy
+## 9. Caching Patterns (MEDIUM)
 
-## Test Patterns
+### Cache-Aside (Lazy Loading)
 
-```javascript
-// ============================================
-// TESTING UTILITIES
-// ============================================
+```typescript
+async function getUser(id: string): Promise<User> {
+  const cached = await redis.get(`user:${id}`);
+  if (cached) return JSON.parse(cached);
 
-// Test database setup
-class TestDatabase {
-  constructor() {
-    this.pool = new Pool({
-      host: 'localhost',
-      database: 'test_db',
-      user: 'test_user',
-      password: 'test_pass'
+  const user = await userRepo.findById(id);
+  if (!user) throw new NotFoundError('User', id);
+
+  await redis.set(`user:${id}`, JSON.stringify(user), 'EX', 900);  // 15min TTL
+  return user;
+}
+```
+
+### Rules
+
+```
+✅ ALWAYS set TTL — never cache without expiry
+✅ Invalidate on write (delete cache key after update)
+✅ Use cache for reads, never for authoritative state
+
+❌ Never cache without TTL (stale data is worse than slow data)
+```
+
+| Data Type | Suggested TTL |
+|-----------|---------------|
+| User profile | 5-15 min |
+| Product catalog | 1-5 min |
+| Config / feature flags | 30-60 sec |
+| Session | Match session duration |
+
+---
+
+## 10. File Upload Patterns (MEDIUM)
+
+### Option A: Presigned URL (Recommended for Large Files)
+
+```
+Client → GET /api/uploads/presign?filename=photo.jpg&type=image/jpeg
+Server → { uploadUrl: "https://s3.../presigned", fileKey: "uploads/abc123.jpg" }
+Client → PUT uploadUrl (direct to S3, bypasses your server)
+Client → POST /api/photos { fileKey: "uploads/abc123.jpg" }  (save reference)
+```
+
+**Backend:**
+```typescript
+app.get('/api/uploads/presign', authenticate, async (req, res) => {
+  const { filename, type } = req.query;
+  const key = `uploads/${crypto.randomUUID()}-${filename}`;
+  const url = await s3.getSignedUrl('putObject', {
+    Bucket: process.env.S3_BUCKET, Key: key,
+    ContentType: type, Expires: 300,  // 5 min
+  });
+  res.json({ uploadUrl: url, fileKey: key });
+});
+```
+
+**Frontend:**
+```typescript
+async function uploadFile(file: File) {
+  const { uploadUrl, fileKey } = await apiClient.get<PresignResponse>(
+    `/api/uploads/presign?filename=${file.name}&type=${file.type}`
+  );
+  await fetch(uploadUrl, { method: 'PUT', body: file, headers: { 'Content-Type': file.type } });
+  return apiClient.post('/api/photos', { fileKey });
+}
+```
+
+### Option B: Multipart (Small Files < 10MB)
+
+```typescript
+// Frontend
+const formData = new FormData();
+formData.append('file', file);
+formData.append('description', 'Profile photo');
+const res = await fetch('/api/upload', { method: 'POST', body: formData });
+// Note: do NOT set Content-Type header — browser sets boundary automatically
+```
+
+### Decision
+
+| Method | File Size | Server Load | Complexity |
+|--------|-----------|-------------|------------|
+| Presigned URL | Any (recommended > 5MB) | None (direct to storage) | Medium |
+| Multipart | < 10MB | High (streams through server) | Low |
+| Chunked / Resumable | > 100MB | Medium | High |
+
+---
+
+## 11. Real-Time Patterns (MEDIUM)
+
+### Option A: Server-Sent Events (SSE) — One-Way Server → Client
+
+Best for: notifications, live feeds, streaming AI responses.
+
+**Backend (Express):**
+```typescript
+app.get('/api/events', authenticate, (req, res) => {
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    Connection: 'keep-alive',
+  });
+  const send = (event: string, data: unknown) => {
+    res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+  };
+  const unsubscribe = eventBus.subscribe(req.user.id, (event) => {
+    send(event.type, event.payload);
+  });
+  req.on('close', () => unsubscribe());
+});
+```
+
+**Frontend:**
+```typescript
+function useServerEvents(userId: string) {
+  useEffect(() => {
+    const source = new EventSource(`/api/events?userId=${userId}`);
+    source.addEventListener('notification', (e) => {
+      showToast(JSON.parse(e.data).message);
     });
-  }
+    source.onerror = () => { source.close(); setTimeout(() => /* reconnect */, 3000); };
+    return () => source.close();
+  }, [userId]);
+}
+```
 
-  async setup() {
-    // Run migrations
-    await this.runMigrations();
+### Option B: WebSocket — Bidirectional
 
-    // Seed test data
-    await this.seedData();
-  }
+Best for: chat, collaborative editing, gaming.
 
-  async teardown() {
-    // Clean up test database
-    const tables = await this.pool.query(`
-      SELECT tablename FROM pg_tables WHERE schemaname = 'public'
-    `);
+**Backend (ws library):**
+```typescript
+import { WebSocketServer } from 'ws';
+const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+wss.on('connection', (ws, req) => {
+  const userId = authenticateWs(req);
+  if (!userId) { ws.close(4001, 'Unauthorized'); return; }
+  ws.on('message', (raw) => handleMessage(userId, JSON.parse(raw.toString())));
+  ws.on('close', () => cleanupUser(userId));
+  const interval = setInterval(() => ws.ping(), 30000);
+  ws.on('pong', () => { /* alive */ });
+  ws.on('close', () => clearInterval(interval));
+});
+```
 
-    for (const table of tables.rows) {
-      await this.pool.query(`TRUNCATE TABLE ${table.tablename} CASCADE`);
+**Frontend:**
+```typescript
+function useWebSocket(url: string) {
+  const [ws, setWs] = useState<WebSocket | null>(null);
+  useEffect(() => {
+    const socket = new WebSocket(url);
+    socket.onopen = () => setWs(socket);
+    socket.onclose = () => setTimeout(() => /* reconnect */, 3000);
+    return () => socket.close();
+  }, [url]);
+  const send = useCallback((data: unknown) => ws?.send(JSON.stringify(data)), [ws]);
+  return { ws, send };
+}
+```
+
+### Option C: Polling (Simplest, No Infrastructure)
+
+```typescript
+function useOrderStatus(orderId: string) {
+  return useQuery({
+    queryKey: ['order-status', orderId],
+    queryFn: () => apiClient.get<Order>(`/api/orders/${orderId}`),
+    refetchInterval: (query) => {
+      if (query.state.data?.status === 'completed') return false;
+      return 5000;
+    },
+  });
+}
+```
+
+### Decision
+
+| Method | Direction | Complexity | When |
+|--------|-----------|------------|------|
+| Polling | Client → Server | Low | Simple status checks, < 10 clients |
+| SSE | Server → Client | Medium | Notifications, feeds, AI streaming |
+| WebSocket | Bidirectional | High | Chat, collaboration, gaming |
+
+---
+
+## 12. Cross-Boundary Error Handling (MEDIUM)
+
+### API Error → User-Facing Message
+
+```typescript
+// lib/error-handler.ts
+export function getErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    switch (error.status) {
+      case 401: return 'Please log in to continue.';
+      case 403: return 'You don\'t have permission to do this.';
+      case 404: return 'The item you\'re looking for doesn\'t exist.';
+      case 409: return 'This conflicts with an existing item.';
+      case 422:
+        const fields = error.body?.errors;
+        if (fields?.length) return fields.map((f: any) => f.message).join('. ');
+        return 'Please check your input.';
+      case 429: return 'Too many requests. Please wait a moment.';
+      default: return 'Something went wrong. Please try again.';
     }
   }
-
-  async truncate(table) {
-    await this.pool.query(`TRUNCATE TABLE ${table} CASCADE`);
+  if (error instanceof TypeError && error.message === 'Failed to fetch') {
+    return 'Cannot connect to server. Check your internet connection.';
   }
+  return 'An unexpected error occurred.';
 }
+```
 
-// API testing helper
-class ApiTestClient {
-  constructor(app) {
-    this.app = app;
-  }
+### React Query Global Error Handler
 
-  async get(path, headers = {}) {
-    return this.request('GET', path, null, headers);
-  }
+```typescript
+const queryClient = new QueryClient({
+  defaultOptions: {
+    mutations: { onError: (error) => toast.error(getErrorMessage(error)) },
+    queries: {
+      retry: (failureCount, error) => {
+        if (error instanceof ApiError && error.status < 500) return false;
+        return failureCount < 3;
+      },
+    },
+  },
+});
+```
 
-  async post(path, body, headers = {}) {
-    return this.request('POST', path, body, headers);
-  }
+### Rules
 
-  async request(method, path, body, headers) {
-    return this.app.inject({
-      method,
-      url: path,
-      payload: body,
-      headers: {
-        'content-type': 'application/json',
-        ...headers
-      }
-    });
-  }
+```
+✅ Map every API error code to a human-readable message
+✅ Show field-level validation errors next to form inputs
+✅ Auto-retry on 5xx (max 3, with backoff), never on 4xx
+✅ Redirect to login on 401 (after refresh attempt fails)
+✅ Show "offline" banner when fetch fails with TypeError
 
-  async authenticate(email, password) {
-    const response = await this.post('/api/auth/login', { email, password });
-    return response.result.token;
-  }
-}
+❌ Never show raw API error messages to users ("NullPointerException")
+❌ Never silently swallow errors (show toast or log)
+❌ Never retry 4xx errors (client is wrong, retrying won't help)
+```
+
+### Integration Decision Tree
+
+```
+Same team owns frontend + backend?
+│
+├─ YES, both TypeScript
+│   └─ tRPC (end-to-end type safety, zero codegen)
+│
+├─ YES, different languages
+│   └─ OpenAPI spec → generated client (type safety via codegen)
+│
+├─ NO, public API
+│   └─ REST + OpenAPI → generated SDKs for consumers
+│
+└─ Complex data needs, multiple frontends
+    └─ GraphQL + codegen (flexible queries per client)
+
+Real-time needed?
+│
+├─ Server → Client only (notifications, feeds, AI streaming)
+│   └─ SSE (simplest, auto-reconnect, works through proxies)
+│
+├─ Bidirectional (chat, collaboration)
+│   └─ WebSocket (need heartbeat + reconnection logic)
+│
+└─ Simple status polling (< 10 clients)
+    └─ React Query refetchInterval (no infrastructure needed)
 ```
 
 ---
 
-# Deployment & DevOps
+## 13. Production Hardening (MEDIUM)
 
-## CI/CD Pipeline
+### Health Checks
 
-```yaml
-# ============================================
-# CI/CD PIPELINE - GitHub Actions
-# ============================================
+```typescript
+app.get('/health', (req, res) => res.json({ status: 'ok' }));           // liveness
+app.get('/ready', async (req, res) => {                                   // readiness
+  const checks = {
+    database: await checkDb(), redis: await checkRedis(), 
+  };
+  const ok = Object.values(checks).every(c => c.status === 'ok');
+  res.status(ok ? 200 : 503).json({ status: ok ? 'ok' : 'degraded', checks });
+});
+```
 
-name: CI/CD Pipeline
+### Graceful Shutdown
 
-on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
+```typescript
+process.on('SIGTERM', async () => {
+  logger.info('SIGTERM received');
+  server.close();              // stop new connections
+  await drainConnections();    // finish in-flight
+  await closeDatabase();
+  process.exit(0);
+});
+```
 
-jobs:
-  test:
-    runs-on: ubuntu-latest
+### Security Checklist
 
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_DB: test_db
-          POSTGRES_USER: test_user
-          POSTGRES_PASSWORD: test_pass
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run linter
-        run: npm run lint
-
-      - name: Run tests
-        run: npm test
-        env:
-          DATABASE_URL: postgresql://test_user:test_pass@localhost:5432/test_db
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./coverage/lcov.info
-
-  build:
-    needs: test
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Build Docker image
-        run: |
-          docker build -t myapp:${{ github.sha }} .
-          docker tag myapp:${{ github.sha }} myapp:latest
-
-      - name: Push to registry
-        run: |
-          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-          docker push myapp:${{ github.sha }}
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Deploy to production
-        run: |
-          kubectl set image deployment/myapp myapp=myapp:${{ github.sha }}
-          kubectl rollout status deployment/myapp
+```
+✅ CORS: explicit origins (never '*' in production)
+✅ Security headers (helmet / equivalent)
+✅ Rate limiting on public endpoints
+✅ Input validation on ALL endpoints (trust nothing)
+✅ HTTPS enforced
+❌ Never expose internal errors to clients
 ```
 
 ---
 
-# Resources
+## Anti-Patterns
 
-## Learning Resources
+| # | ❌ Don't | ✅ Do Instead |
+|---|---------|--------------|
+| 1 | Business logic in routes/controllers | Move to service layer |
+| 2 | `process.env` scattered everywhere | Centralized typed config |
+| 3 | `console.log` for logging | Structured JSON logger |
+| 4 | Generic `Error('oops')` | Typed error hierarchy |
+| 5 | Direct DB calls in controllers | Repository pattern |
+| 6 | No input validation | Validate at boundary (Zod/Pydantic) |
+| 7 | Catching errors silently | Log + rethrow or return error |
+| 8 | No health check endpoints | `/health` + `/ready` |
+| 9 | Hardcoded config/secrets | Environment variables |
+| 10 | No graceful shutdown | Handle SIGTERM properly |
+| 11 | Hardcode API URL in frontend | Environment variable (`NEXT_PUBLIC_API_URL`) |
+| 12 | Store JWT in localStorage | Memory + httpOnly refresh cookie |
+| 13 | Show raw API errors to users | Map to human-readable messages |
+| 14 | Retry 4xx errors | Only retry 5xx (server failures) |
+| 15 | Skip loading states | Skeleton/spinner while fetching |
+| 16 | Upload large files through API server | Presigned URL → direct to S3 |
+| 17 | Poll for real-time data | SSE or WebSocket |
+| 18 | Duplicate types frontend + backend | Shared types, tRPC, or OpenAPI codegen |
 
-**Backend Architecture**:
-- The Twelve-Factor App: https://12factor.net/
-- Designing Data-Intensive Applications: https://www.ddia.com/
-- Microservices Patterns: https://microservices.io/patterns/
+---
 
-**Frontend Architecture**:
-- React Documentation: https://react.dev/
-- Web Performance: https://web.dev/
-- Progressive Web Apps: https://web.dev/progressive-web-apps/
+## Common Issues
 
-**Database**:
-- PostgreSQL Docs: https://www.postgresql.org/docs/
-- Supabase Docs: https://supabase.com/docs
-**Node.js Best Practices**:
-- Node.js Best Practices: https://github.com/goldbergyoni/nodebestpractices
-- Async/Await Patterns: https://javascript.info/async
+### Issue 1: "Where does this business rule go?"
+
+**Rule:** If it involves HTTP (request parsing, status codes, headers) → controller. If it involves business decisions (pricing, permissions, rules) → service. If it touches the database → repository.
+
+### Issue 2: "Service is getting too big"
+
+**Symptom:** One service file > 500 lines with 20+ methods.
+
+**Fix:** Split by sub-domain. `OrderService` → `OrderCreationService` + `OrderFulfillmentService` + `OrderQueryService`. Each focused on one workflow.
+
+### Issue 3: "Tests are slow because they hit the database"
+
+**Fix:** Unit tests mock the repository layer (fast). Integration tests use test containers or transaction rollback (real DB, still fast). Never mock the service layer in integration tests.
+
+---
+
+## Reference Documents
+
+This skill includes deep-dive references for specialized topics. Read the relevant reference when you need detailed guidance.
+
+| Need to… | Reference |
+|----------|-----------|
+| Write backend tests (unit, integration, e2e, contract, performance) | [references/testing-strategy.md](references/testing-strategy.md) |
+| Validate a release before deployment (6-gate checklist) | [references/release-checklist.md](references/release-checklist.md) |
+| Choose a tech stack (language, framework, database, infra) | [references/technology-selection.md](references/technology-selection.md) |
+| Build with Django / DRF (models, views, serializers, admin) | [references/django-best-practices.md](references/django-best-practices.md) |
+| Design REST/GraphQL/gRPC endpoints (URLs, status codes, pagination) | [references/api-design.md](references/api-design.md) |
+| Design database schema, indexes, migrations, multi-tenancy | [references/db-schema.md](references/db-schema.md) |
+| Auth flow (JWT bearer, token refresh, Next.js SSR, RBAC, middleware order) | [references/auth-flow.md](references/auth-flow.md) |
+| CORS config, env vars per environment, common CORS issues | [references/environment-management.md](references/environment-management.md) |

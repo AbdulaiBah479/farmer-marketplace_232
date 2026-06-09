@@ -1,16 +1,13 @@
 ---
 name: clickup-automation
-description: Automate ClickUp project management including tasks, spaces, folders, lists, comments, and team operations via Rube MCP (Composio). Always search tools first for current schemas.
+description: "Automate ClickUp project management including tasks, spaces, folders, lists, comments, and team operations via Rube MCP (Composio). Always search tools first for current schemas."
 requires:
   mcp: [rube]
-category: project-management
 ---
 
 # ClickUp Automation via Rube MCP
 
 Automate ClickUp project management workflows including task creation and updates, workspace hierarchy navigation, comments, and team member management through Composio's ClickUp toolkit.
-
-**Toolkit docs**: [composio.dev/toolkits/clickup](https://composio.dev/toolkits/clickup)
 
 ## Prerequisites
 
@@ -235,6 +232,3 @@ Always resolve names to IDs through the hierarchy:
 | List user groups | `CLICKUP_GET_TEAMS` | `team_id` |
 | Get user details | `CLICKUP_GET_USER` | `team_id`, `user_id` |
 | Custom roles | `CLICKUP_GET_CUSTOM_ROLES` | `team_id` |
-
----
-*Powered by [Composio](https://composio.dev)*

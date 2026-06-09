@@ -1,73 +1,34 @@
 ---
 name: workflow
-description: Skill orchestration - user commands vs auto-triggered
-user-invocable: false
-model: haiku
+description: "Manages workflow transitions including handoffs between PM and implementation roles, and auto-fixes review comments. Use when user mentions ハンドオフ, handoff, PMに報告, 実装役に渡して, レビュー指摘を自動修正, auto-fix. Triggers: ハンドオフ, handoff, PMに報告, 実装役に渡して, 完了報告, 自動修正, auto-fix. Do not use for 2-Agent setup - use 2agent skill instead."
+allowed-tools: ["Read", "Write", "Edit", "Bash"]
+metadata:
+  skillport:
+    category: workflow
+    tags: [workflow, handoff, pm, implementation, auto-fix]
+    alwaysApply: false
 ---
 
-# Workflow Overview
+# Workflow Skills
 
-## User Commands (6)
+PM-実装役間のハンドオフとレビュー指摘の自動修正を担当するスキル群です。
 
-```
-┌─────────────────────────────────────────────────────────┐
-│  "auto"          → Execute all tasks autonomously       │
-│  "review"        → Code quality check on recent changes │
-│  "brainstorm"    → Scan → propose → create stories      │
-│  "test"          → npm test + browser tests on latest   │
-│  "audit"         → Rate aspects → create stories        │
-│  "status"        → Quick progress check                 │
-└─────────────────────────────────────────────────────────┘
+## 含まれる小スキル
 
-Aliases: "what next" = brainstorm
-```
+| スキル | 用途 |
+|--------|------|
+| auto-fix | レビュー指摘の自動修正 |
+| handoff-to-impl | PM から実装役へのハンドオフ |
+| handoff-to-pm | 実装役から PM への完了報告 |
 
-## Auto-Triggered (Internal)
+## ルーティング
 
-| Trigger | Action |
-|---------|--------|
-| Task complete | `verify` runs automatically |
-| Every 5 tasks | `checkpoint` saves context |
-| User says "ship" | `deploy` runs |
-| Artifacts pile up | `clean` suggested |
+- 自動修正: auto-fix/doc.md
+- PM→実装役: handoff-to-impl/doc.md
+- 実装役→PM: handoff-to-pm/doc.md
 
-## Analysis → Stories Flow
+## 実行手順
 
-```
-brainstorm / audit / what next
-    ↓
-Parallel scans (6 Haiku agents)
-    ↓
-Rate aspects / Present scenarios
-    ↓
-Auto-create stories for top issues
-    ↓
-User says "auto" → Execute
-```
-
-## Task Lifecycle
-
-```
-TaskCreate (from brainstorm/audit)
-    ↓
-auto picks up task
-    ↓
-Implement → Typecheck → Build
-    ↓
-verify (auto) → Browser test if UX
-    ↓
-TaskUpdate: completed
-    ↓
-checkpoint (every 5) → Next task
-```
-
-## Quick Reference
-
-| Want to... | Say |
-|------------|-----|
-| Work through tasks | `auto` |
-| Check quality | `review` |
-| Don't know what's next | `brainstorm` or `what next` |
-| Run all tests | `test` |
-| Rate the app | `audit` |
-| See progress | `status` |
+1. ユーザーのリクエストを分類
+2. 適切な小スキルの doc.md を読む
+3. その内容に従って実行

@@ -1,13 +1,40 @@
 ---
 name: antfu-eslint-config
-description: Configuring @antfu/eslint-config for framework support, formatters, and rule overrides. Use when adding React/Vue/Svelte/Astro support, customizing rules, or setting up VS Code integration.
+description: ESLint flat config for formatting and linting - replaces Prettier
 ---
 
 # @antfu/eslint-config
 
-Handles both linting and formatting (no Prettier needed). Auto-detects TypeScript and Vue.
+A comprehensive ESLint flat config that handles both linting and formatting. Designed to replace Prettier entirely.
 
-**Style**: Single quotes, no semicolons, sorted imports, dangling commas.
+## Key Characteristics
+
+- **No Prettier needed** - Handles all formatting via ESLint
+- **ESLint Flat config** - Uses the new `eslint.config.js` format
+- **Auto-detection** - TypeScript and Vue are detected automatically
+- **Style principle**: Single quotes, no semicolons, sorted imports, dangling commas
+- **Respects `.gitignore`** by default
+
+## Basic Configuration
+
+Create `eslint.config.mjs` (or `eslint.config.js` with `// @ts-check`):
+
+```js
+// eslint.config.mjs
+import antfu from '@antfu/eslint-config'
+
+export default antfu()
+```
+
+Add scripts to `package.json`:
+
+```json
+{
+  "scripts": {
+    "lint": "eslint"
+  }
+}
+```
 
 ## Configuration Options
 

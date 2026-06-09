@@ -1,45 +1,34 @@
 ---
 name: deploy
-description: Deploy workflow for Vercel and Supabase Edge Functions
-allowed-tools: Bash
-model: sonnet
-user-invocable: false
+description: "Sets up deployment, analytics, and health monitoring for projects. Use when user mentions デプロイ, deploy, Vercel, Netlify, 公開, アナリティクス, analytics, GA, Google Analytics, 環境診断, health check. Do NOT load for: 実装作業, ローカル開発, レビュー, セットアップ."
+allowed-tools: ["Read", "Write", "Edit", "Bash"]
+metadata:
+  skillport:
+    category: deploy
+    tags: [deploy, vercel, netlify, analytics, health-check]
+    alwaysApply: false
 ---
 
-# Deploy Workflow
+# Deploy Skills
 
-## Pre-deploy Checklist
-1. `npm run typecheck` - passes
-2. `npm run build` - passes
-3. `npm run test` - passes (if available)
-4. No `console.log` in production code
-5. Environment variables set in hosting platform
+デプロイとモニタリングの設定を担当するスキル群です。
 
-## Vercel
+## 含まれる小スキル
 
-**Preview:**
-```bash
-npx vercel --yes
-```
+| スキル | 用途 |
+|--------|------|
+| deploy-setup | Vercel/Netlify デプロイ設定 |
+| analytics | GA/Vercel Analytics 設定 |
+| health-check | 環境診断 |
 
-**Production:**
-```bash
-npx vercel --prod --yes
-```
+## ルーティング
 
-## Supabase Edge Functions
+- デプロイ設定: deploy-setup/doc.md
+- アナリティクス: analytics/doc.md
+- 環境診断: health-check/doc.md
 
-**Single function:**
-```bash
-supabase functions deploy [name] --project-ref [ref]
-```
+## 実行手順
 
-**All functions:**
-```bash
-supabase functions deploy --project-ref [ref]
-```
-
-## Post-deploy
-1. Verify production URL loads
-2. Test critical user flows
-3. Monitor error logs for 5 minutes
+1. ユーザーのリクエストを分類
+2. 適切な小スキルの doc.md を読む
+3. その内容に従って設定

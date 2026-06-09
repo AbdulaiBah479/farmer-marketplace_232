@@ -1,522 +1,289 @@
 ---
 name: coding-standards
-description: Universal coding standards, best practices, and patterns for TypeScript, JavaScript, React, and Node.js development.
-author: affaan-m
-version: "1.0"
+description: Detects code smells, anti-patterns, and readability issues. Use when implementing features, reviewing code, or refactoring.
 ---
 
-# Coding Standards & Best Practices
+# Universal Coding Standards
 
-Universal coding standards applicable across all projects.
+## Technical Anti-patterns (Red Flag Patterns)
 
-## Code Quality Principles
+Immediately stop and reconsider design when detecting the following patterns:
 
-### 1. Readability First
-- Code is read more than written
-- Clear variable and function names
-- Self-documenting code preferred over comments
-- Consistent formatting
+### Code Quality Anti-patterns
+1. **Writing similar code 3 or more times** - Violates Rule of Three
+2. **Multiple responsibilities mixed in a single file** - Violates Single Responsibility Principle (SRP)
+3. **Defining same content in multiple files** - Violates DRY principle
+4. **Making changes without checking dependencies** - Potential for unexpected impacts
+5. **Disabling code with comments** - Should use version control
+6. **Error suppression** - Hiding problems creates technical debt
+7. **Excessive use of type assertions (as)** - Abandoning type safety
 
-### 2. KISS (Keep It Simple, Stupid)
-- Simplest solution that works
-- Avoid over-engineering
-- No premature optimization
-- Easy to understand > clever code
+### Design Anti-patterns
+- **"Make it work for now" thinking** - Accumulation of technical debt
+- **Patchwork implementation** - Unplanned additions to existing code
+- **Optimistic implementation of uncertain technology** - Designing unknown elements assuming "it'll probably work"
+- **Symptomatic fixes** - Surface-level fixes that don't solve root causes
+- **Unplanned large-scale changes** - Lack of incremental approach
 
-### 3. DRY (Don't Repeat Yourself)
-- Extract common logic into functions
-- Create reusable components
-- Share utilities across modules
-- Avoid copy-paste programming
+## Basic Principles
 
-### 4. YAGNI (You Aren't Gonna Need It)
-- Don't build features before they're needed
-- Avoid speculative generality
-- Add complexity only when required
-- Start simple, refactor when needed
+- **Aggressive Refactoring** - Prevent technical debt and maintain health
+- **No Unused "Just in Case" Code** - Violates YAGNI principle (Kent Beck)
+- **Minimum Surface for Required Coverage** - When introducing maintenance-surface-bearing elements (persistent state, public-contract elements or cross-boundary fields/props, behavioral modes/flags/variants, reusable abstractions, or component splits), select the smallest design surface that covers current user-visible requirements and accepted technical constraints (audit, data integrity, compatibility, security, performance, accessibility). Adoption is justified by naming a current requirement or constraint that smaller alternatives fail to cover; value-based arguments (reusable, future-ready, convenient for implementation) serve as tiebreakers only. Distinct from YAGNI: YAGNI is a time-axis check (refuse work for future-only needs); this principle constrains surface area at a fixed coverage point.
 
-## TypeScript/JavaScript Standards
+## Comment Writing Rules
 
-### Variable Naming
+- **Function Description Focus**: Describe what the code "does"
+- **No Historical Information**: Do not record development history
+- **Timeless**: Write only content that remains valid whenever read
+- **Conciseness**: Keep explanations to necessary minimum
 
-```typescript
-// ✅ GOOD: Descriptive names
-const marketSearchQuery = 'election'
-const isUserAuthenticated = true
-const totalRevenue = 1000
+## Error Handling Fundamentals
 
-// ❌ BAD: Unclear names
-const q = 'election'
-const flag = true
-const x = 1000
+### Fail-Fast Principle
+Fail quickly on errors to prevent processing continuation in invalid states. Error suppression is prohibited.
+
+For detailed implementation methods (Result type, custom error classes, layered error handling, etc.), refer to language and framework-specific rules.
+
+## Rule of Three - Criteria for Code Duplication
+
+How to handle duplicate code based on Martin Fowler's "Refactoring":
+
+| Duplication Count | Action | Reason |
+|-------------------|--------|--------|
+| 1st time | Inline implementation | Cannot predict future changes |
+| 2nd time | Consider future consolidation | Pattern beginning to emerge |
+| 3rd time | Implement commonalization | Pattern established |
+
+### Criteria for Commonalization
+
+**Cases for Commonalization**
+- Business logic duplication
+- Complex processing algorithms
+- Areas likely requiring bulk changes
+- Validation rules
+
+**Cases to Avoid Commonalization**
+- Accidental matches (coincidentally same code)
+- Possibility of evolving in different directions
+- Significant readability decrease from commonalization
+- Simple helpers in test code
+
+## Reference Representativeness
+
+**Failure mode**: Adopting patterns or dependency versions from the nearest 2-3 files without verifying repository-wide usage leads to outdated patterns, version mismatches, and architecture inconsistency.
+
+### Verifying References Before Adoption
+When adopting patterns, APIs, or dependencies from existing code:
+- **IF** referencing only 2-3 nearby files → **THEN** Grep the pattern across the repository; adopt only when ≥3 files across different directories use the same pattern
+- **IF** Grep returns 1-2 files outside the reference → **THEN** investigate whether those files are the canonical implementation or legacy outliers before adopting
+- **IF** Grep returns 0 files outside the reference → **THEN** treat the pattern as local convention; adopt only with explicit justification (e.g., consistency with surrounding code, avoiding breaking changes)
+- **IF** multiple approaches coexist in the repository → **THEN** identify the majority pattern (highest file count) and adopt it; state the reason when choosing a minority pattern
+- **IF** adopting an external dependency (library, plugin, SDK) → **THEN** verify repository-wide usage distribution for the same dependency; if the appropriate version cannot be determined from repository state alone, escalate
+- **IF** following an existing pattern → **THEN** state the reason for following it when an alternative exists (e.g., consistency with surrounding code, avoiding breaking changes, pending coordinated update)
+
+### Principle
+Nearby code is a starting point for investigation. Verify repository-wide usage (≥3 files across different directories) before adopting a pattern as representative.
+
+## Common Failure Patterns and Avoidance Methods
+
+### Pattern 1: Error Fix Chain
+**Symptom**: Fixing one error causes new errors
+**Cause**: Surface-level fixes without understanding root cause
+**Avoidance**: Identify root cause with 5 Whys before fixing
+
+### Pattern 2: Abandoning Type Safety
+**Symptom**: Excessive use of any type or as
+**Cause**: Impulse to avoid type errors
+**Avoidance**: Handle safely with unknown type and type guards
+
+### Pattern 3: Implementation Without Sufficient Testing
+**Symptom**: Many bugs after implementation
+**Cause**: Ignoring Red-Green-Refactor process
+**Avoidance**: Always start with failing tests
+
+### Pattern 4: Ignoring Technical Uncertainty
+**Symptom**: Frequent unexpected errors when introducing new technology
+**Cause**: Assuming "it should work according to official documentation" without prior investigation
+**Avoidance**:
+- Record certainty evaluation at the beginning of task files
+- For low certainty cases, create minimal verification code first
+
+### Pattern 5: Insufficient Existing Code Investigation
+**Symptom**: Duplicate implementations, architecture inconsistency, integration failures, adopting outdated patterns
+**Cause**: Insufficient understanding of existing code before implementation; referencing only nearby files without verifying representativeness
+**Avoidance Methods**:
+- Before implementation, always search for similar functionality (using domain, responsibility, configuration patterns as keywords)
+- Similar functionality found -> Use that implementation (do not create new implementation)
+- Similar functionality is technical debt -> Create ADR improvement proposal before implementation
+- No similar functionality exists -> Implement new functionality following existing design philosophy
+- Record all decisions and rationale in "Existing Codebase Analysis" section of Design Doc
+- **Reference representativeness check**: See "Reference Representativeness" section above for IF-THEN thresholds
+
+## Debugging Techniques
+
+### 1. Error Analysis Procedure
+1. Read error message (first line) accurately
+2. Focus on first and last of stack trace
+3. Identify first line where your code appears
+
+### 2. 5 Whys - Root Cause Analysis
+```
+Symptom: Build error
+Why1: Type definitions don't match -> Why2: Interface was updated
+Why3: Dependency change -> Why4: Package update impact
+Why5: Major version upgrade with breaking changes
+Root cause: Inappropriate version specification
 ```
 
-### Function Naming
+### 3. Minimal Reproduction Code
+To isolate problems, attempt reproduction with minimal code:
+- Remove unrelated parts
+- Replace external dependencies with mocks
+- Create minimal configuration that reproduces problem
 
+## Type Safety Fundamentals
+
+**Type Safety Principle**: Use `unknown` type with type guards. `any` type disables type checking and causes runtime errors.
+
+**any Type Alternatives (Priority Order)**
+1. **unknown Type + Type Guards**: Use for validating external input
+2. **Generics**: When type flexibility is needed
+3. **Union Types/Intersection Types**: Combinations of multiple types
+4. **Type Assertions (Last Resort)**: Only when type is certain
+
+**Type Guard Implementation Pattern**
 ```typescript
-// ✅ GOOD: Verb-noun pattern
-async function fetchMarketData(marketId: string) { }
-function calculateSimilarity(a: number[], b: number[]) { }
-function isValidEmail(email: string): boolean { }
-
-// ❌ BAD: Unclear or noun-only
-async function market(id: string) { }
-function similarity(a, b) { }
-function email(e) { }
-```
-
-### Immutability Pattern (CRITICAL)
-
-```typescript
-// ✅ ALWAYS use spread operator
-const updatedUser = {
-  ...user,
-  name: 'New Name'
-}
-
-const updatedArray = [...items, newItem]
-
-// ❌ NEVER mutate directly
-user.name = 'New Name'  // BAD
-items.push(newItem)     // BAD
-```
-
-### Error Handling
-
-```typescript
-// ✅ GOOD: Comprehensive error handling
-async function fetchData(url: string) {
-  try {
-    const response = await fetch(url)
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-    }
-
-    return await response.json()
-  } catch (error) {
-    console.error('Fetch failed:', error)
-    throw new Error('Failed to fetch data')
-  }
-}
-
-// ❌ BAD: No error handling
-async function fetchData(url) {
-  const response = await fetch(url)
-  return response.json()
-}
-```
-
-### Async/Await Best Practices
-
-```typescript
-// ✅ GOOD: Parallel execution when possible
-const [users, markets, stats] = await Promise.all([
-  fetchUsers(),
-  fetchMarkets(),
-  fetchStats()
-])
-
-// ❌ BAD: Sequential when unnecessary
-const users = await fetchUsers()
-const markets = await fetchMarkets()
-const stats = await fetchStats()
-```
-
-### Type Safety
-
-```typescript
-// ✅ GOOD: Proper types
-interface Market {
-  id: string
-  name: string
-  status: 'active' | 'resolved' | 'closed'
-  created_at: Date
-}
-
-function getMarket(id: string): Promise<Market> {
-  // Implementation
-}
-
-// ❌ BAD: Using 'any'
-function getMarket(id: any): Promise<any> {
-  // Implementation
-}
-```
-
-## React Best Practices
-
-### Component Structure
-
-```typescript
-// ✅ GOOD: Functional component with types
-interface ButtonProps {
-  children: React.ReactNode
-  onClick: () => void
-  disabled?: boolean
-  variant?: 'primary' | 'secondary'
-}
-
-export function Button({
-  children,
-  onClick,
-  disabled = false,
-  variant = 'primary'
-}: ButtonProps) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className={`btn btn-${variant}`}
-    >
-      {children}
-    </button>
-  )
-}
-
-// ❌ BAD: No types, unclear structure
-export function Button(props) {
-  return <button onClick={props.onClick}>{props.children}</button>
+function isUser(value: unknown): value is User {
+  return typeof value === 'object' && value !== null && 'id' in value && 'name' in value
 }
 ```
 
-### Custom Hooks
+**Type Complexity Management**
+- Field Count: Up to 20 (split by responsibility if exceeded, external API types are exceptions)
+- Optional Ratio: Up to 30% (separate required/optional if exceeded)
+- Nesting Depth: Up to 3 levels (flatten if exceeded)
+- Type Assertions: Review design if used 3+ times
+- **External API Types**: Relax constraints and define according to reality (convert appropriately internally)
 
-```typescript
-// ✅ GOOD: Reusable custom hook
-export function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value)
+## Refactoring Techniques
 
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value)
-    }, delay)
+**Basic Policy**
+- Small Steps: Maintain always-working state through gradual improvements
+- Safe Changes: Minimize the scope of changes at once
+- Behavior Guarantee: Ensure existing behavior remains unchanged while proceeding
 
-    return () => clearTimeout(handler)
-  }, [value, delay])
+**Implementation Procedure**: Understand Current State -> Gradual Changes -> Behavior Verification -> Final Validation
 
-  return debouncedValue
-}
+**Priority**: Duplicate Code Removal > Large Function Division > Complex Conditional Branch Simplification > Type Safety Improvement
 
-// Usage
-const debouncedQuery = useDebounce(searchQuery, 500)
+## Implementation Completeness Assurance
+
+### Required Procedure for Impact Analysis
+
+**Completion Criteria**: Complete all 3 stages
+
+#### 1. Discovery
+```bash
+Grep -n "TargetClass\|TargetMethod" -o content
+Grep -n "DependencyClass" -o content
+Grep -n "targetData\|SetData\|UpdateData" -o content
 ```
 
-### State Management
+#### 2. Understanding
+**Mandatory**: Read all discovered files and include necessary parts in context:
+- Caller's purpose and context
+- Dependency direction
+- Data flow: generation -> modification -> reference
 
-```typescript
-// ✅ GOOD: Proper state updates
-const [count, setCount] = useState(0)
-
-// Functional update for state based on previous state
-setCount(prev => prev + 1)
-
-// ❌ BAD: Direct state reference
-setCount(count + 1)  // Can be stale in async scenarios
+#### 3. Identification
+Structured impact report (mandatory):
+```
+## Impact Analysis
+### Direct Impact: ClassA, ClassB (with reasons)
+### Indirect Impact: SystemX, ComponentY (with integration paths)
+### Processing Flow: Input -> Process1 -> Process2 -> Output
 ```
 
-### Conditional Rendering
+**Important**: Do not stop at search; execute all 3 stages
 
-```typescript
-// ✅ GOOD: Clear conditional rendering
-{isLoading && <Spinner />}
-{error && <ErrorMessage error={error} />}
-{data && <DataDisplay data={data} />}
+### Unused Code Deletion Rule
 
-// ❌ BAD: Ternary hell
-{isLoading ? <Spinner /> : error ? <ErrorMessage error={error} /> : data ? <DataDisplay data={data} /> : null}
-```
+When unused code is detected -> Will it be used?
+- Yes -> Implement immediately (no deferral allowed)
+- No -> Delete immediately (remains in Git history)
 
-## API Design Standards
+Target: Code, documentation, configuration files
 
-### REST API Conventions
+## Red-Green-Refactor Process (Test-First Development)
 
-```
-GET    /api/markets              # List all markets
-GET    /api/markets/:id          # Get specific market
-POST   /api/markets              # Create new market
-PUT    /api/markets/:id          # Update market (full)
-PATCH  /api/markets/:id          # Update market (partial)
-DELETE /api/markets/:id          # Delete market
+**Recommended Principle**: Always start code changes with tests
 
-# Query parameters for filtering
-GET /api/markets?status=active&limit=10&offset=0
-```
+**Development Steps**:
+1. **Red**: Write test for expected behavior (it fails)
+2. **Green**: Pass test with minimal implementation
+3. **Refactor**: Improve code while maintaining passing tests
 
-### Response Format
+**NG Cases (Test-first not required)**:
+- Pure configuration file changes (.env, config, etc.)
+- Documentation-only updates (README, comments, etc.)
+- Emergency production incident response (post-incident tests mandatory)
 
-```typescript
-// ✅ GOOD: Consistent response structure
-interface ApiResponse<T> {
-  success: boolean
-  data?: T
-  error?: string
-  meta?: {
-    total: number
-    page: number
-    limit: number
-  }
-}
+## Test Design Principles
 
-// Success response
-return NextResponse.json({
-  success: true,
-  data: markets,
-  meta: { total: 100, page: 1, limit: 10 }
-})
+### Test Case Structure
+- Tests consist of three stages: "Arrange," "Act," "Assert"
+- Clear naming that shows purpose of each test
+- One test case verifies only one behavior
 
-// Error response
-return NextResponse.json({
-  success: false,
-  error: 'Invalid request'
-}, { status: 400 })
-```
+### Test Data Management
+- Manage test data in dedicated directories
+- Define test-specific environment variable values
+- Always mock sensitive information
+- Keep test data minimal, using only data directly related to test case verification purposes
 
-### Input Validation
+### Mock and Stub Usage Policy
 
-```typescript
-import { z } from 'zod'
+**Recommended: Mock external dependencies in unit tests**
+- Merit: Ensures test independence and reproducibility
+- Practice: Mock DB, API, file system, and other external dependencies
 
-// ✅ GOOD: Schema validation
-const CreateMarketSchema = z.object({
-  name: z.string().min(1).max(200),
-  description: z.string().min(1).max(2000),
-  endDate: z.string().datetime(),
-  categories: z.array(z.string()).min(1)
-})
+**Avoid: Actual external connections in unit tests**
+- Reason: Slows test speed and causes environment-dependent problems
 
-export async function POST(request: Request) {
-  const body = await request.json()
+### Test Failure Response Decision Criteria
 
-  try {
-    const validated = CreateMarketSchema.parse(body)
-    // Proceed with validated data
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({
-        success: false,
-        error: 'Validation failed',
-        details: error.errors
-      }, { status: 400 })
-    }
-  }
-}
-```
+**Fix tests**: Wrong expected values, references to non-existent features, dependence on implementation details, implementation only for tests
+**Fix implementation**: Valid specifications, business logic, important edge cases
+**When in doubt**: Confirm with user
 
-## File Organization
+## Test Granularity Principles
 
-### Project Structure
+### Core Principle: Observable Behavior Only
+**MUST Test**: Public APIs, return values, exceptions, external calls, persisted state
+**MUST NOT Test**: Private methods, internal state, algorithm implementation details
 
-```
-src/
-├── app/                    # Next.js App Router
-│   ├── api/               # API routes
-│   ├── markets/           # Market pages
-│   └── (auth)/           # Auth pages (route groups)
-├── components/            # React components
-│   ├── ui/               # Generic UI components
-│   ├── forms/            # Form components
-│   └── layouts/          # Layout components
-├── hooks/                # Custom React hooks
-├── lib/                  # Utilities and configs
-│   ├── api/             # API clients
-│   ├── utils/           # Helper functions
-│   └── constants/       # Constants
-├── types/                # TypeScript types
-└── styles/              # Global styles
-```
+## Security Principles
 
-### File Naming
+### Secure Defaults
+- Store credentials and secrets through environment variables or dedicated secret managers
+- Use parameterized queries (prepared statements) for all database access
+- Use established cryptographic libraries provided by the language or framework
+- Generate security-critical values (tokens, IDs, nonces) with cryptographically secure random generators
+- Encrypt sensitive data at rest and in transit using standard protocols
 
-```
-components/Button.tsx          # PascalCase for components
-hooks/useAuth.ts              # camelCase with 'use' prefix
-lib/formatDate.ts             # camelCase for utilities
-types/market.types.ts         # camelCase with .types suffix
-```
+### Input and Output Boundaries
+- Validate all external input at system entry points for expected format, type, and length
+- Encode output appropriately for its rendering context (HTML, SQL, shell, URL)
+- Return only information necessary for the caller in error responses; log detailed diagnostics server-side
 
-## Comments & Documentation
+### Access Control
+- Apply authentication to all entry points that handle user data or trigger state changes
+- Verify authorization for each resource access, not only at the entry point
+- Grant only the permissions required for the operation (files, database connections, API scopes)
 
-### When to Comment
-
-```typescript
-// ✅ GOOD: Explain WHY, not WHAT
-// Use exponential backoff to avoid overwhelming the API during outages
-const delay = Math.min(1000 * Math.pow(2, retryCount), 30000)
-
-// Deliberately using mutation here for performance with large arrays
-items.push(newItem)
-
-// ❌ BAD: Stating the obvious
-// Increment counter by 1
-count++
-
-// Set name to user's name
-name = user.name
-```
-
-### JSDoc for Public APIs
-
-```typescript
-/**
- * Searches markets using semantic similarity.
- *
- * @param query - Natural language search query
- * @param limit - Maximum number of results (default: 10)
- * @returns Array of markets sorted by similarity score
- * @throws {Error} If OpenAI API fails or Redis unavailable
- *
- * @example
- * ```typescript
- * const results = await searchMarkets('election', 5)
- * console.log(results[0].name) // "Trump vs Biden"
- * ```
- */
-export async function searchMarkets(
-  query: string,
-  limit: number = 10
-): Promise<Market[]> {
-  // Implementation
-}
-```
-
-## Performance Best Practices
-
-### Memoization
-
-```typescript
-import { useMemo, useCallback } from 'react'
-
-// ✅ GOOD: Memoize expensive computations
-const sortedMarkets = useMemo(() => {
-  return markets.sort((a, b) => b.volume - a.volume)
-}, [markets])
-
-// ✅ GOOD: Memoize callbacks
-const handleSearch = useCallback((query: string) => {
-  setSearchQuery(query)
-}, [])
-```
-
-### Lazy Loading
-
-```typescript
-import { lazy, Suspense } from 'react'
-
-// ✅ GOOD: Lazy load heavy components
-const HeavyChart = lazy(() => import('./HeavyChart'))
-
-export function Dashboard() {
-  return (
-    <Suspense fallback={<Spinner />}>
-      <HeavyChart />
-    </Suspense>
-  )
-}
-```
-
-### Database Queries
-
-```typescript
-// ✅ GOOD: Select only needed columns
-const { data } = await supabase
-  .from('markets')
-  .select('id, name, status')
-  .limit(10)
-
-// ❌ BAD: Select everything
-const { data } = await supabase
-  .from('markets')
-  .select('*')
-```
-
-## Testing Standards
-
-### Test Structure (AAA Pattern)
-
-```typescript
-test('calculates similarity correctly', () => {
-  // Arrange
-  const vector1 = [1, 0, 0]
-  const vector2 = [0, 1, 0]
-
-  // Act
-  const similarity = calculateCosineSimilarity(vector1, vector2)
-
-  // Assert
-  expect(similarity).toBe(0)
-})
-```
-
-### Test Naming
-
-```typescript
-// ✅ GOOD: Descriptive test names
-test('returns empty array when no markets match query', () => { })
-test('throws error when OpenAI API key is missing', () => { })
-test('falls back to substring search when Redis unavailable', () => { })
-
-// ❌ BAD: Vague test names
-test('works', () => { })
-test('test search', () => { })
-```
-
-## Code Smell Detection
-
-Watch for these anti-patterns:
-
-### 1. Long Functions
-```typescript
-// ❌ BAD: Function > 50 lines
-function processMarketData() {
-  // 100 lines of code
-}
-
-// ✅ GOOD: Split into smaller functions
-function processMarketData() {
-  const validated = validateData()
-  const transformed = transformData(validated)
-  return saveData(transformed)
-}
-```
-
-### 2. Deep Nesting
-```typescript
-// ❌ BAD: 5+ levels of nesting
-if (user) {
-  if (user.isAdmin) {
-    if (market) {
-      if (market.isActive) {
-        if (hasPermission) {
-          // Do something
-        }
-      }
-    }
-  }
-}
-
-// ✅ GOOD: Early returns
-if (!user) return
-if (!user.isAdmin) return
-if (!market) return
-if (!market.isActive) return
-if (!hasPermission) return
-
-// Do something
-```
-
-### 3. Magic Numbers
-```typescript
-// ❌ BAD: Unexplained numbers
-if (retryCount > 3) { }
-setTimeout(callback, 500)
-
-// ✅ GOOD: Named constants
-const MAX_RETRIES = 3
-const DEBOUNCE_DELAY_MS = 500
-
-if (retryCount > MAX_RETRIES) { }
-setTimeout(callback, DEBOUNCE_DELAY_MS)
-```
-
-**Remember**: Code quality is not negotiable. Clear, maintainable code enables rapid development and confident refactoring.
+### Knowledge Cutoff Supplement (2026-03)
+- OWASP Top 10:2025 shifted from symptoms to root causes; added "Software Supply Chain Failures" (A03) and "Mishandling of Exceptional Conditions" (A10)
+- Recent research indicates AI-generated code shows elevated rates of access control gaps — treat authentication and authorization as high-priority review targets
+- OpenSSF published "Security-Focused Guide for AI Code Assistant Instructions" — recommends language-specific, actionable constraints over generic advice
+- For detailed detection patterns, see `references/security-checks.md`

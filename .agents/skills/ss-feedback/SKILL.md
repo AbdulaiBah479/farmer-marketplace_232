@@ -1,7 +1,7 @@
 ---
 name: ss-feedback
 description: Add appropriate user feedback states (loading, success, error, empty) to a component or page
-argument-hint: [file-path]
+argument-hint: "[file-path]"
 allowed-tools: Read, Write, Edit, Grep, Glob
 ---
 

@@ -1,220 +1,177 @@
 ---
 name: infrastructure
-description: TMNL Docker infrastructure documentation. Service topology, health checks, troubleshooting. Model-invoked when debugging containers or understanding service architecture.
-model_invoked: true
-triggers:
-  - "infrastructure"
-  - "docker architecture"
-  - "service topology"
-  - "container health"
-  - "why is service down"
-  - "container not starting"
-  - "port conflict"
-  - "what's running"
-  - "infra status"
-  - "check containers"
+description: Infrastructure as Code patterns for deploying Guts nodes using Terraform, Docker, and Kubernetes
 ---
 
-# TMNL Infrastructure
+# Infrastructure Skill for Guts
 
-Docker-based infrastructure for the TMNL stack. All services defined in `docker/docker-compose.yml`.
+You are managing infrastructure for a decentralized application with multiple node types.
 
-## Visualization Protocol
+## Deployment Targets
 
-When presenting infrastructure status, **generate ASCII diagrams dynamically** based on actual container state:
+1. **Local Development**: Docker Compose
+2. **Testing**: Kubernetes (k3s/kind)
+3. **Production**: Cloud-agnostic Kubernetes + Terraform
 
-1. **Collect data**: Run `/infra:status --json --resources`
-2. **Analyze state**: Count healthy/unhealthy, identify issues
-3. **Render diagram**: Draw topology with health indicators
+## Terraform Patterns
 
-### Health Indicators
-- `●` (green) — healthy/running
-- `○` (red) — unhealthy/exited
-- `◐` (yellow) — starting/created
-
-### Example Dynamic Output
+### Module Structure
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    TMNL Infrastructure Status                    │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│   CORE SERVICES                                                  │
-│   ┌─────────────┐      ┌─────────────────┐                      │
-│   │  postgres   │─────▶│    electric     │                      │
-│   │ ● :5432     │      │ ● :3000         │                      │
-│   └─────────────┘      └─────────────────┘                      │
-│          │                                                       │
-│          ▼                                                       │
-│   ┌─────────────────┐                                           │
-│   │ durable-streams │                                           │
-│   │ ● :3030         │                                           │
-│   └─────────────────┘                                           │
-│                                                                  │
-│   SUPPORT SERVICES                                               │
-│   ┌─────────┐  ┌─────────┐  ┌─────────┐                         │
-│   │  nats   │  │  minio  │  │ y-sweet │                         │
-│   │ ● :4222 │  │ ○ :9000 │  │ ● :8080 │                         │
-│   └─────────┘  └─────────┘  └─────────┘                         │
-│                                                                  │
-├─────────────────────────────────────────────────────────────────┤
-│ ● healthy (5)  ○ unhealthy (1)  CPU: 8%  MEM: 1.2GB            │
-└─────────────────────────────────────────────────────────────────┘
+infra/
+├── terraform/
+│   ├── modules/
+│   │   ├── network/
+│   │   ├── compute/
+│   │   └── storage/
+│   ├── environments/
+│   │   ├── dev/
+│   │   ├── staging/
+│   │   └── prod/
+│   └── main.tf
 ```
 
-### Smart Routing
+### Example Module
 
-Choose output depth based on state:
+```hcl
+# modules/guts-node/main.tf
+variable "node_count" {
+  type        = number
+  description = "Number of Guts nodes to deploy"
+  default     = 3
+}
 
-| Condition | Response |
-|-----------|----------|
-| All healthy | Compact topology with summary |
-| Unhealthy services | Full diagnostic with logs |
-| Resource pressure | Resource-focused view |
-| Connectivity issues | Network topology focus |
-| Specific service query | Service detail + dependencies |
+variable "instance_type" {
+  type        = string
+  description = "Instance type for nodes"
+  default     = "t3.medium"
+}
 
-## Service Topology
+resource "aws_instance" "guts_node" {
+  count         = var.node_count
+  ami           = data.aws_ami.ubuntu.id
+  instance_type = var.instance_type
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                         TMNL Stack                               │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  ┌─────────────┐     ┌─────────────────┐     ┌───────────────┐  │
-│  │  postgres   │────▶│    electric     │────▶│  search-*     │  │
-│  │  (5432)     │     │    (3000)       │     │  (8100-8102)  │  │
-│  └─────────────┘     └─────────────────┘     └───────────────┘  │
-│         │                                           │            │
-│         │            ┌─────────────────┐           │            │
-│         └───────────▶│ durable-streams │◀──────────┘            │
-│                      │    (3030)       │                        │
-│                      └─────────────────┘                        │
-│                                                                  │
-│  ┌─────────────┐     ┌─────────────────┐     ┌───────────────┐  │
-│  │    nats     │     │     minio       │     │   y-sweet     │  │
-│  │ (4222/8222) │     │  (9000/9001)    │     │    (8080)     │  │
-│  └─────────────┘     └─────────────────┘     └───────────────┘  │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
+  tags = {
+    Name        = "guts-node-${count.index}"
+    Environment = var.environment
+    Project     = "guts"
+  }
+}
 ```
 
-## Quick Reference
+## Docker Best Practices
 
-| Service | Port | Purpose | Health Check |
-|---------|------|---------|--------------|
-| **postgres** | 5432 | PostGIS + TimescaleDB | `pg_isready` |
-| **durable-streams** | 3030 | Persistent event streams | HTTP /health |
-| **electric** | 3000 | Real-time Postgres sync | HTTP /health |
-| **search-cluster-coordinator** | 8100 | Effect Cluster coordinator | TCP |
-| **search-cluster-sources** | 8101 | Effect Cluster data sources | TCP |
-| **ingestion-cluster** | 8102 | Data ingestion RPC | TCP |
-| **nats** | 4222, 8222 | Message broker | HTTP monitoring |
-| **minio** | 9000, 9001 | S3 object storage | HTTP /minio/health |
-| **y-sweet** | 8080 | Yjs document sync | TCP |
+### Multi-stage Builds
 
-## Service Groups
+```dockerfile
+# Build stage
+FROM rust:1.75-slim as builder
+WORKDIR /app
+COPY . .
+RUN cargo build --release --bin guts-node
 
-| Group | Services | Use Case |
-|-------|----------|----------|
-| **core** | postgres, durable-streams, electric | Essential services |
-| **cluster** | search-cluster-*, ingestion-cluster | Effect Cluster nodes |
-| **collab** | y-sweet, nats | Real-time collaboration |
-| **access** | ssh, ngrok | Remote access |
-
-## Commands
-
-```bash
-/infra:up                          # Start core services
-/infra:up --group cluster          # Start cluster services
-/infra:up --all                    # Start everything
-/infra:down                        # Stop core services
-/infra:status                      # Check health (table)
-/infra:status --json --resources   # Full data for visualization
-/infra:logs postgres               # View logs
-/infra:rebuild <service>           # Rebuild service
-/infra:query "why is X failing"    # Ask infrastructure questions
+# Runtime stage
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
+COPY --from=builder /app/target/release/guts-node /usr/local/bin/
+EXPOSE 8080 9000
+ENTRYPOINT ["guts-node"]
 ```
 
-## Dependency Chain
+### Docker Compose for Development
 
+```yaml
+version: '3.8'
+
+services:
+  node1:
+    build: .
+    ports:
+      - "8081:8080"
+    environment:
+      - GUTS_NODE_ID=node1
+      - GUTS_PEERS=node2:9000,node3:9000
+    volumes:
+      - node1-data:/data
+
+  node2:
+    build: .
+    ports:
+      - "8082:8080"
+    environment:
+      - GUTS_NODE_ID=node2
+      - GUTS_PEERS=node1:9000,node3:9000
+    volumes:
+      - node2-data:/data
+
+  node3:
+    build: .
+    ports:
+      - "8083:8080"
+    environment:
+      - GUTS_NODE_ID=node3
+      - GUTS_PEERS=node1:9000,node2:9000
+    volumes:
+      - node3-data:/data
+
+volumes:
+  node1-data:
+  node2-data:
+  node3-data:
 ```
-postgres (foundation)
-    └── electric (requires postgres logical replication)
-        └── search-cluster-* (requires electric sync)
-            └── ingestion-cluster (requires search cluster)
 
-minio (independent)
-    └── y-sweet (stores documents in minio)
+## Kubernetes Patterns
 
-durable-streams (independent)
-    └── all services can emit events
+### StatefulSet for Nodes
 
-nats (independent)
-    └── real-time messaging between services
+```yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: guts-node
+spec:
+  serviceName: guts-nodes
+  replicas: 3
+  selector:
+    matchLabels:
+      app: guts-node
+  template:
+    metadata:
+      labels:
+        app: guts-node
+    spec:
+      containers:
+      - name: guts-node
+        image: guts/node:latest
+        ports:
+        - containerPort: 8080
+          name: api
+        - containerPort: 9000
+          name: p2p
+        volumeMounts:
+        - name: data
+          mountPath: /data
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 100Gi
 ```
 
-## Common Issues & Fixes
+## Monitoring Stack
 
-### Electric Restart Loop
-**Symptom**: Electric container constantly restarting
-**Cause**: Missing `ELECTRIC_INSECURE=true` for dev mode
-**Fix**: Add to docker-compose.yml environment
+- **Metrics**: Prometheus with custom Rust metrics
+- **Logs**: Loki + Grafana
+- **Tracing**: Jaeger with OpenTelemetry
 
-### Postgres Not Ready
-**Symptom**: Services fail waiting for postgres
-**Cause**: TimescaleDB extension loading takes time
-**Fix**: Wait for `start_period: 30s` to complete
+## Security Checklist
 
-### Search Cluster Connection Refused
-**Symptom**: 8100/8101/8102 not accessible
-**Cause**: Service not built or health check failing
-**Fix**: `/infra:rebuild search-cluster-coordinator`
-
-### NATS WebSocket Issues
-**Symptom**: Browser can't connect to NATS
-**Cause**: Port 9222 not exposed or config missing
-**Fix**: Check `nats-server.conf` has websocket block
-
-## Documentation
-
-### Service Briefings
-
-Detailed documentation for each service:
-
-- [postgres](./briefings/postgres.md) - PostGIS + TimescaleDB
-- [durable-streams](./briefings/durable-streams.md) - Event streaming
-- [electric](./briefings/electric.md) - Real-time sync
-- [search-cluster](./briefings/search-cluster.md) - Effect Cluster search
-- [ingestion-cluster](./briefings/ingestion-cluster.md) - Data ingestion
-- [nats](./briefings/nats.md) - Message broker
-- [minio](./briefings/minio.md) - Object storage
-- [y-sweet](./briefings/y-sweet.md) - Yjs sync
-- [ngrok](./briefings/ngrok.md) - Remote access
-
-### Journals
-
-Runbooks and troubleshooting guides:
-
-- [troubleshooting](./journals/troubleshooting.md) - Common issues
-- [build-issues](./journals/build-issues.md) - Build problems
-- [changelog](./journals/changelog.md) - Infrastructure changes
-
-## Quick Diagnostics
-
-```bash
-# Check all container status
-docker compose ps
-
-# Check specific service health
-docker compose ps postgres
-
-# View recent logs
-docker compose logs --tail 50 postgres
-
-# Check network connectivity
-docker compose exec postgres pg_isready
-
-# Check electric replication
-docker compose exec postgres psql -U tmnl -c "SELECT * FROM pg_replication_slots;"
-```
+- [ ] TLS certificates via cert-manager
+- [ ] Network policies for pod isolation
+- [ ] Secrets management with external-secrets
+- [ ] Regular security scanning with Trivy
+- [ ] RBAC for Kubernetes access

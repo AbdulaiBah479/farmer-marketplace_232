@@ -1,101 +1,232 @@
 ---
 name: pr
-description: INVOKE THIS SKILL before creating any PR to ensure compliance with branch naming, changelog requirements, and reviewer assignment.
+description: PR作成Skill。仕様レビュー用または実装レビュー用のPRを作成。/spec や spec-workflow から呼び出される。
 ---
 
-# ActivityPub PR Workflow
+# /pr Skill - プルリクエスト作成
 
-## Branch Naming
+SDDワークフローにおけるPR作成を担当するSkill。
+仕様策定・実装それぞれのフェーズで適切なPRを作成します。
 
-| Prefix | Use |
-|--------|-----|
-| `add/{feature}` | New features |
-| `update/{feature}` | Iterating on existing features |
-| `fix/{bug}` | Bug fixes |
-| `try/{idea}` | Experimental ideas |
+## 発動条件
 
-**Reserved:** `release/{X.Y.Z}` (releases only), `trunk` (main branch).
+- `/pr` コマンドで明示的に呼び出し
+- `/spec` Skill から自動呼び出し（仕様策定完了時）
+- `spec-workflow` Skill から自動呼び出し（実装完了時）
 
-## PR Creation
+## PRタイトル規則
 
-**Every PR must:**
-- Assign `@me`
-- Add `Automattic/fediverse` as reviewer
-- Include changelog entry OR "Skip Changelog" label
-- Pass CI checks
-- Merge cleanly with trunk
+### 仕様策定用
+
+```
+spec: {アクションタイトル}
+```
+
+例: `spec: ユーザー認証機能の仕様策定`
+
+### 実装用
+
+```
+impl: {アクションタイトル}
+```
+
+例: `impl: ユーザー認証機能の実装`
+
+## ワークフロー
+
+```
+┌─────────────────────────────────────────────────┐
+│  1. 変更確認                                    │
+│     - git status で変更内容を確認               │
+│     - git diff で差分を確認                     │
+│                                                 │
+│  2. コミット確認                                │
+│     - 未コミットの変更があればコミット          │
+│     - コミットメッセージを生成                  │
+│                                                 │
+│  3. リモートへプッシュ                          │
+│     git push -u origin {branch-name}            │
+│                                                 │
+│  4. PR内容生成                                  │
+│     - タイトル: 規則に従って生成                │
+│     - サマリー: 変更内容の要約                  │
+│     - テストプラン: 検証項目                    │
+│                                                 │
+│  5. ユーザー確認                                │
+│     「このPRを作成しますか？」                  │
+│                                                 │
+│  6. PR作成                                      │
+│     gh pr create                                │
+│                                                 │
+│  7. 完了通知                                    │
+│     PR URLを表示                                │
+└─────────────────────────────────────────────────┘
+```
+
+## パラメータ
+
+| パラメータ | 必須 | 説明 | 例 |
+|-----------|------|------|-----|
+| type | Yes | PRタイプ | `spec` or `impl` |
+| action-id | No | アクションID（ブランチ名から自動取得可） | `001-01-01` |
+| base | No | ベースブランチ（デフォルト: main） | `main` |
+
+## PRテンプレート
+
+### 仕様策定用
+
+```markdown
+## Summary
+
+- {アクションID} の仕様を策定
+- {生成したファイル一覧}
+
+## 変更内容
+
+- specs/phases/{id}.md: フェーズ定義
+- specs/tasks/{id}.md: タスク定義
+- specs/actions/{id}.md: アクション定義
+
+## レビュー観点
+
+- [ ] ユーザーストーリーが明確か
+- [ ] ACがEARS記法で記述されているか
+- [ ] 依存関係が整理されているか
+- [ ] スコープが適切か
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+```
+
+### 実装用
+
+```markdown
+## Summary
+
+- {アクションID} を実装
+- {実装した機能の概要}
+
+## 変更内容
+
+- {変更ファイル一覧}
+
+## Test plan
+
+- [ ] 全ACのテストが通過
+- [ ] TDDサイクルを遵守
+- [ ] スコープ外の変更なし
+
+## AC確認
+
+- [x] {AC1}
+- [x] {AC2}
+- [x] {AC3}
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+```
+
+## 使用例
+
+### 直接呼び出し
+
+```
+ユーザー: /pr
+
+Claude: 現在のブランチ: impl/001-01-01-user-auth
+
+        以下のPRを作成しますか？
+
+        タイトル: impl: ユーザー認証機能の実装
+        ベース: main
+
+        ## Summary
+        - 001-01-01 を実装
+        - ログイン/ログアウト機能
+
+        ## Test plan
+        - [ ] 全ACのテストが通過
+        ...
+
+ユーザー: OK
+
+Claude: ✅ PRを作成しました
+        URL: https://github.com/user/repo/pull/123
+```
+
+### /spec からの自動呼び出し
+
+```
+[/spec Skill 内部]
+→ ファイル生成完了後に /pr を発火
+→ type: spec
+→ 仕様レビュー用PRを作成
+```
+
+### spec-workflow からの自動呼び出し
+
+```
+[spec-workflow Skill 内部]
+→ 実装完了・AC全チェック後に /pr を発火
+→ type: impl
+→ 実装レビュー用PRを作成
+```
+
+## 実行コマンド
 
 ```bash
-# Create PR (includes required assignment/reviewer)
-gh pr create --assignee @me --reviewer Automattic/fediverse
+# 変更確認
+git status
+git diff
+
+# コミット（必要な場合）
+git add .
+git commit -m "..."
+
+# プッシュ
+git push -u origin {branch-name}
+
+# PR作成
+gh pr create --title "{title}" --body "{body}"
 ```
 
-**Use the exact template from `.github/PULL_REQUEST_TEMPLATE.md`** — do not create custom formatting.
+## エラーハンドリング
 
-## Changelog
+### 変更がない場合
 
-End all changelog messages with punctuation:
 ```
-✅ Add support for custom post types.
-❌ Add support for custom post types
-```
+Claude: コミットする変更がありません。
 
-Add manually if forgotten:
-```bash
-composer changelog:add
-git add . && git commit -m "Add changelog entry" && git push
+対応案:
+1. 作業を続ける
+2. 既存のコミットでPRを作成
+
+どれを選択しますか？
 ```
 
-See [release](../release/SKILL.md) for complete changelog details.
+### リモートに既にPRがある場合
 
-## Workflow
+```
+Claude: このブランチには既にPRが存在します。
+        URL: https://github.com/user/repo/pull/123
 
-### Create Branch
-```bash
-git checkout trunk && git pull origin trunk
-git checkout -b fix/notification-issue
+対応案:
+1. 既存のPRを更新（追加コミットをプッシュ）
+2. 既存のPRを閉じて新規作成
+
+どれを選択しますか？
 ```
 
-### Pre-Push Checks
-```bash
-composer lint         # PHP standards (composer lint:fix to auto-fix)
-npm run lint:js       # If JS changed
-npm run lint:css      # If CSS changed
-npm run env-test      # Run tests
-npm run build         # If assets changed
+### gh CLI が未認証の場合
+
+```
+Claude: GitHub CLIが認証されていません。
+
+以下のコマンドで認証してください:
+gh auth login
 ```
 
-See [dev](../dev/SKILL.md) for complete commands.
+## 禁止事項
 
-### Keep Branch Updated
-```bash
-git fetch origin
-git rebase origin/trunk
-# Resolve conflicts if any
-git push --force-with-lease
-```
-
-## Special Cases
-
-**Hotfixes:** Branch `fix/critical-issue`, minimal changes, add "Hotfix" label, request expedited review.
-
-**Experimental:** Use `try/` prefix, mark as draft, get early feedback, convert to proper branch type once confirmed.
-
-**Multi-PR features:** Create tracking issue, link all PRs, use consistent naming (`add/feature-part-1`, etc.), merge in order.
-
-## Labels
-
-| Label | Use |
-|-------|-----|
-| `Bug` | Bug fixes |
-| `Enhancement` | New features |
-| `Documentation` | Doc updates |
-| `Code Quality` | Refactoring, cleanup, etc. |
-| `Skip Changelog` | No changelog needed |
-| `Needs Review` | Ready for review |
-| `In Progress` | Still working |
-| `Hotfix` | Urgent fix |
-
-## Reference
-
-See [Pull Request Guide](../../../docs/pull-request.md) for complete workflow details.
+- ユーザー確認なしのPR作成
+- テスト未通過でのPR作成（impl時）
+- 空のPR作成
+- ベースブランチへの直接プッシュ

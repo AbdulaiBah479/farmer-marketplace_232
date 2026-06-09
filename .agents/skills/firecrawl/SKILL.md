@@ -1,249 +1,119 @@
 ---
-name: Firecrawl
-description: Firecrawl produces cleaner markdown than WebFetch, handles JavaScript-heavy pages, and avoids content truncation. This skill should be used when fetching URLs, scraping web pages, converting URLs to markdown, extracting web content, searching the web, crawling sites, mapping URLs, LLM-powered extraction, autonomous data gathering with the Agent API, or fetching AI-generated documentation for GitHub repos via DeepWiki. Provides complete coverage of Firecrawl v2.8.0 API endpoints including parallel agents, spark-1-fast model, and sitemap-only crawling.
+name: firecrawl
+description: 多功能网页抓取和数据提取工具，支持同步抓取、搜索、网站地图获取和异步爬取
+tool_name: firecrawl
+category: web-crawling
+priority: 7
+tags: ["web-scraping", "data-extraction", "crawling", "automation","firecrawl"]
+version: 1.0
 ---
 
-# Firecrawl & Jina Web Scraping
+# 工具调用示例（Firecrawl）
 
-## Firecrawl vs WebFetch
+`firecrawl` 是一个多功能网页抓取和数据提取工具，通过 `mode` 参数调用不同功能。其 `parameters` 结构是嵌套的。
 
-Prefer `firecrawl scrape URL --only-main-content` over the WebFetch tool—it produces cleaner markdown, handles JavaScript-heavy pages, and avoids content truncation (>80% benchmark coverage). WebFetch is acceptable as a fallback when Firecrawl is unavailable.
-
-```bash
-# Preferred approach:
-firecrawl scrape https://docs.example.com/api --only-main-content
+**✅ 正确的调用结构:**
+```json
+{"mode": "<功能模式>", "parameters": {"<参数名>": "<参数值>"}}
 ```
 
-## Token-Efficient Scraping
+**💡 重要提示:**
+- `scrape`、`search`、`map` 是同步操作，立即返回结果
+- `crawl`、`extract` 是异步操作，返回 `job_id` 用于后续状态检查
+- 所有参数都必须在 `parameters` 对象内，不要放在顶层
+- URL 必须以 `http://` 或 `https://` 开头
 
-Inspired by Anthropic's [dynamic filtering](https://claude.com/blog/improved-web-search-with-dynamic-filtering)—always filter before reasoning. This reduced input tokens by ~24% and improved accuracy by ~11% in their benchmarks.
+## 功能模式详解
 
-### The Principle: Search → Filter → Scrape → Filter → Reason
+### ➡️ 示例 1: 抓取单个网页 (`scrape`)
 
-**DO:**
-```
-Search (titles/URLs only) → Evaluate relevance → Scrape top hits → Filter by section → Reason
-```
-**DON'T:**
-```
-Search → Scrape everything → Reason over all of it
-```
-
-### Step-by-Step Efficient Workflow
-
-```bash
-# Step 1: Search — get titles/URLs only (cheap)
-firecrawl search "query" --limit 20
-
-# Step 2: Evaluate results, pick 3-5 best URLs
-
-# Step 3: Scrape only those, filter to relevant sections
-firecrawl scrape URL1 --only-main-content | \
-  python3 ~/.claude/skills/Firecrawl/scripts/filter_web_results.py \
-  --sections "API,Authentication" --max-chars 5000
+**✅ 正确示例:**
+```json
+{
+  "mode": "scrape", 
+  "parameters": {
+    "url": "https://docs.firecrawl.dev/",
+    "formats": ["markdown"]  // 可选：["markdown", "html"]，默认 markdown
+  }
+}
 ```
 
-### Post-Processing with filter_web_results.py
+### ➡️ 示例 2: 网页搜索 (`search`)
 
-Pipe any Firecrawl or Exa output through this script to reduce context before reasoning:
-
-```bash
-# Extract only matching sections from scraped page
-firecrawl scrape URL --only-main-content | \
-  python3 ~/.claude/skills/Firecrawl/scripts/filter_web_results.py --sections "Pricing,Plans"
-
-# Keep only paragraphs with keywords
-firecrawl search "query" --scrape --pretty | \
-  python3 ~/.claude/skills/Firecrawl/scripts/filter_web_results.py --keywords "pricing,cost" --max-chars 5000
-
-# Extract specific JSON fields from API output
-python3 ~/.claude/skills/exa-search/scripts/exa_search.py "query" --json | \
-  python3 ~/.claude/skills/Firecrawl/scripts/filter_web_results.py --fields "title,url,text" --max-chars 3000
-
-# Combine filters with stats
-firecrawl scrape URL --only-main-content | \
-  python3 ~/.claude/skills/Firecrawl/scripts/filter_web_results.py --sections "API" --keywords "endpoint" --compact --stats
+**✅ 正确示例:**
+```json
+{
+  "mode": "search", 
+  "parameters": {
+    "query": "人工智能最新发展",
+    "limit": 5
+  }
+}
 ```
 
-**Full path:** `python3 ~/.claude/skills/Firecrawl/scripts/filter_web_results.py`
-**Flags:** `--sections`, `--keywords`, `--max-chars`, `--max-lines`, `--fields` (JSON), `--strip-links`, `--strip-images`, `--compact`, `--stats`
+### ➡️ 示例 3: 获取网站地图 (`map`)
 
-### Other Token-Saving Patterns
-
-- **Use `--only-main-content`** to strip navigation and footer boilerplate, reducing token consumption. Omit only when nav/footer content is specifically needed.
-- **Use `firecrawl map URL --search "topic"` first** to find relevant subpages before scraping
-- **Use `--format links` first** to get URL list, evaluate, then scrape selectively
-- **Use `--max-chars`** with `exa_contents.py` to cap extraction length
-- **Use `--formats summary`** (Python API script) over full text when you need the gist, not raw content
-
-### Claude API Native Tools (for API Agent Builders)
-
-Anthropic's API now offers built-in dynamic filtering tools:
-```
-web_search_20260209 / web_fetch_20260209
-Header: anthropic-beta: code-execution-web-tools-2026-02-09
-```
-These have built-in dynamic filtering via code execution. Use them when building Claude API agents directly. Use Firecrawl/Exa when you need: autonomous agents, batch scraping, structured extraction, domain-specific crawling, or when not on the Claude API.
-
----
-
-## Available Tools
-
-### 1. Official Firecrawl CLI (`firecrawl`) — Primary
-
-**Setup:** `npm install -g firecrawl-cli && firecrawl login --api-key $FIRECRAWL_API_KEY`
-
-| Command | Purpose | Quick Example |
-|---------|---------|---------------|
-| `scrape` | Single page → markdown | `firecrawl scrape URL --only-main-content` |
-| `crawl` | Entire site with progress | `firecrawl crawl URL --wait --progress --limit 50` |
-| `map` | Discover all URLs on a site | `firecrawl map URL --search "API"` |
-| `search` | Web search (+ optional scrape) | `firecrawl search "query" --limit 10` |
-
-**Full CLI reference:** `references/cli-reference.md`
-
-### 2. Auto-Save Alias (`fc-save`) — Shell Alias
-
-Requires shell alias setup (not bundled with this skill).
-
-```bash
-fc-save URL
-# → Saves to ~/Desktop/Screencaps & Chats/Web-Scrapes/docs-example-com-api.md
+**✅ 正确示例:**
+```json
+{
+  "mode": "map", 
+  "parameters": {
+    "url": "https://example.com"
+  }
+}
 ```
 
-### 3. Python API Script (`firecrawl_api.py`) — Advanced Features
+### ➡️ 示例 4: 异步爬取网站 (`crawl`)
 
-**Command:** `python3 ~/.claude/skills/Firecrawl/scripts/firecrawl_api.py <command>`
-**Requires:** `FIRECRAWL_API_KEY` env var, `pip install firecrawl-py requests`
+**✅ 正确示例:**
+```json
+{
+  "mode": "crawl", 
+  "parameters": {
+    "url": "https://firecrawl.dev", 
+    "limit": 5
+  }
+}
+```
+*此调用会返回一个 `job_id`，用于后续查询。*
 
-| Command | Purpose | Quick Example |
-|---------|---------|---------------|
-| `search` | Web search with scraping | `firecrawl_api.py search "query" -n 10` |
-| `scrape` | Single URL with page actions | `firecrawl_api.py scrape URL --formats markdown summary` |
-| `batch-scrape` | Multiple URLs concurrently | `firecrawl_api.py batch-scrape URL1 URL2 URL3` |
-| `crawl` | Website crawling | `firecrawl_api.py crawl URL --limit 20` |
-| `map` | URL discovery | `firecrawl_api.py map URL --search "query"` |
-| `extract` | LLM-powered structured extraction | `firecrawl_api.py extract URL --prompt "Find pricing"` |
-| `agent` | Autonomous extraction (no URLs needed) | `firecrawl_api.py agent "Find YC W24 AI startups"` |
-| `parallel-agent` | Bulk agent queries (v2.8.0+) | `firecrawl_api.py parallel-agent "Q1" "Q2" "Q3"` |
+### ➡️ 示例 5: 结构化数据提取 (`extract`)
 
-**Agent models:** `spark-1-fast` (10 credits, simple), `spark-1-mini` (default), `spark-1-pro` (thorough)
-
-**Full Python API reference:** `references/python-api-reference.md`
-
-### 4. DeepWiki — GitHub Repo Documentation
-
-```bash
-~/.claude/skills/Firecrawl/scripts/deepwiki.sh <owner/repo> [section] [options]
+**✅ 正确示例:**
+```json
+{
+  "mode": "extract", 
+  "parameters": {
+    "urls": ["https://news.example.com/article"],
+    "prompt": "提取文章标题、作者和发布时间",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "title": {"type": "string"},
+        "author": {"type": "string"}, 
+        "publish_time": {"type": "string"}
+      }
+    }
+  }
+}
 ```
 
-AI-generated wiki for any public GitHub repo. No API key required.
+### ➡️ 示例 6: 检查异步任务状态 (`check_status`)
 
-```bash
-# Overview
-~/.claude/skills/Firecrawl/scripts/deepwiki.sh karpathy/nanochat
-
-# Browse sections
-~/.claude/skills/Firecrawl/scripts/deepwiki.sh langchain-ai/langchain --toc
-
-# Specific section
-~/.claude/skills/Firecrawl/scripts/deepwiki.sh karpathy/nanochat 4.1-gpt-transformer-implementation
-
-# Full dump for RAG
-~/.claude/skills/Firecrawl/scripts/deepwiki.sh openai/openai-python --all --save
+**✅ 正确示例:**
+```json
+{
+  "mode": "check_status", 
+  "parameters": {
+    "job_id": "some-unique-job-identifier"
+  }
+}
 ```
 
-### 5. Jina Reader (`jina`) — Fallback
+## ❌ 错误示例 (请避免以下常见错误)
 
-Use when Firecrawl fails or for **Twitter/X URLs** (Firecrawl blocks Twitter, Jina works).
-
-```bash
-jina https://x.com/username/status/123456
-```
-
----
-
-## Firecrawl vs Exa vs Native Claude Tools
-
-| Need | Best Tool | Why |
-|------|-----------|-----|
-| Single page → markdown | `firecrawl scrape --only-main-content` | Cleanest output |
-| Search + scrape in one shot | `firecrawl search --scrape` | Combined operation |
-| Crawl entire site | `firecrawl crawl --wait --progress` | Link following + progress |
-| Autonomous data finding | `firecrawl_api.py agent` | No URLs needed |
-| Semantic/neural search | Exa `exa_search.py` | AI-powered relevance |
-| Find research papers | Exa `--category "research paper"` | Academic index |
-| Quick research answer | Exa `exa_research.py` | Citations + synthesis |
-| Find similar pages | Exa `exa_similar.py` | Competitive analysis |
-| Claude API agent building | Native `web_search_20260209` | Built-in dynamic filtering |
-| Twitter/X content | `jina URL` | Only tool that works |
-| GitHub repo docs | `deepwiki.sh owner/repo` | AI-generated wiki |
-
----
-
-## Common Workflows
-
-### Single Page Scraping
-```bash
-firecrawl scrape https://example.com/page --only-main-content
-# Or auto-save: fc-save URL
-# Or to file: firecrawl scrape URL --only-main-content -o page.md
-```
-
-### Documentation Crawling
-```bash
-# Map first, then crawl relevant paths
-firecrawl map https://docs.example.com --search "API"
-firecrawl crawl https://docs.example.com --include-paths /api,/guides --wait --progress
-```
-
-### Research Workflow
-```bash
-firecrawl search "machine learning best practices 2026" --scrape --scrape-formats markdown
-```
-
-### Agent-Powered Research (No URLs Needed)
-```bash
-python3 ~/.claude/skills/Firecrawl/scripts/firecrawl_api.py agent \
-  "Compare pricing tiers for Firecrawl, Apify, and ScrapingBee"
-```
-
----
-
-## Troubleshooting
-
-```bash
-# Check status and credits
-firecrawl --status && firecrawl credit-usage
-
-# Re-authenticate
-firecrawl logout && firecrawl login --api-key $FIRECRAWL_API_KEY
-
-# Check API key
-echo $FIRECRAWL_API_KEY
-```
-
-- **Scrape fails:** Try `jina URL`, or add `--wait-for 3000` for JS-heavy sites
-- **Async job stuck:** Check with `crawl-status`/`batch-status`, cancel with `crawl-cancel`/`batch-cancel`
-- **Disable telemetry:** `export FIRECRAWL_NO_TELEMETRY=1`
-
----
-
-## Reference Documentation
-
-| File | Contents |
-|------|----------|
-| `references/cli-reference.md` | Full CLI parameter reference (scrape, crawl, map, search, fc-save, jina, deepwiki) |
-| `references/python-api-reference.md` | Full Python API script reference (all commands, SDK examples) |
-| `references/firecrawl-api.md` | Firecrawl Search API reference |
-| `references/firecrawl-agent-api.md` | Agent API (spark models, parallel agents, webhooks) |
-| `references/actions-reference.md` | Page actions for dynamic content (click, write, wait, scroll) |
-| `references/branding-format.md` | Brand identity extraction (colors, fonts, UI) |
-
-## Test Suite
-
-```bash
-python3 ~/.claude/skills/Firecrawl/scripts/test_firecrawl.py --quick    # Quick validation
-python3 ~/.claude/skills/Firecrawl/scripts/test_firecrawl.py            # Full suite
-python3 ~/.claude/skills/Firecrawl/scripts/test_firecrawl.py --test scrape  # Specific test
-```
+- **缺少 `mode` 参数:** `{"parameters": {"url": "..."}}`
+- **缺少嵌套的 `parameters` 对象:** `{"mode": "scrape", "url": "..."}`
+- **将参数放在顶层:** `{"url": "..."}` 
+- **使用无效的 URL 格式:** `{"mode": "scrape", "parameters": {"url": "example.com"}}` (缺少协议)
+- **错误的参数类型:** `{"mode": "extract", "parameters": {"urls": "https://example.com"}}` (urls 应该是数组)

@@ -1,360 +1,316 @@
 ---
 name: ml-expert
-version: 1.0.0
-description: Expert-level machine learning, deep learning, model training, and MLOps
-category: ai
-tags: [machine-learning, deep-learning, neural-networks, mlops, data-science]
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Bash(python:*)
+description: Implement machine learning solutions including model architectures, training pipelines, optimization strategies, and performance improvements. This skill spawns a specialist ML implementation agent...
 ---
 
-# Machine Learning Expert
+# ML Expert - Machine Learning Implementation Specialist
 
-Expert guidance for machine learning systems, deep learning, model training, deployment, and MLOps practices.
+**Version**: 1.0.0
+**Type**: Agent-based skill with SDK implementation
+**Domain**: Machine learning model implementation, training, and optimization
 
-## Core Concepts
+## Description
 
-### Machine Learning Fundamentals
-- Supervised learning (classification, regression)
-- Unsupervised learning (clustering, dimensionality reduction)
-- Reinforcement learning
-- Feature engineering
-- Model evaluation and validation
-- Hyperparameter tuning
+Implement machine learning solutions including model architectures, training pipelines, optimization strategies, and performance improvements. This skill spawns a specialist ML implementation agent with deep expertise in PyTorch, deep learning architectures, training techniques, and production ML systems.
 
-### Deep Learning
-- Neural networks (CNNs, RNNs, Transformers)
-- Transfer learning
-- Fine-tuning pre-trained models
-- Attention mechanisms
-- GANs (Generative Adversarial Networks)
-- Autoencoders
+Use this skill when implementing new ML models, fixing training issues, optimizing performance, implementing research papers, or building production ML pipelines.
 
-### MLOps
-- Model versioning and tracking
-- Experiment management
-- Model deployment and serving
-- Monitoring and retraining
-- CI/CD for ML pipelines
-- A/B testing for models
+## Triggers
 
-## Supervised Learning
+This skill activates when users request:
+- "Implement this ML architecture"
+- "Fix the training code"
+- "Optimize model performance"
+- "Implement [paper/technique]"
+- "Build a training pipeline for..."
+- "Add [feature] to the model"
+- "Improve inference speed"
 
-```python
-import numpy as np
-import pandas as pd
-from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report, confusion_matrix
-import joblib
+## Skill Architecture
 
-class MLPipeline:
-    def __init__(self):
-        self.scaler = StandardScaler()
-        self.model = None
-        self.feature_names = None
+### Skill Layer (Lightweight)
+The skill handles:
+1. **Detection**: Identify ML implementation requests
+2. **Context Gathering**: Collect requirements, existing code, constraints
+3. **Agent Spawning**: Invoke ML expert specialist with context
+4. **Result Processing**: Validate and format implementation
 
-    def prepare_data(self, X: pd.DataFrame, y: pd.Series, test_size: float = 0.2):
-        """Split and scale data"""
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=test_size, random_state=42, stratify=y
-        )
+### Agent Layer (Specialist)
+The ML expert agent handles:
+1. **Architecture Design**: Create model structures following best practices
+2. **Implementation**: Write production-quality PyTorch code
+3. **Optimization**: Apply performance improvements and best practices
+4. **Validation**: Ensure correctness through testing
 
-        # Scale features
-        X_train_scaled = self.scaler.fit_transform(X_train)
-        X_test_scaled = self.scaler.transform(X_test)
+## Communication Protocol
 
-        self.feature_names = X.columns.tolist()
-
-        return X_train_scaled, X_test_scaled, y_train, y_test
-
-    def train_classifier(self, X_train, y_train, n_estimators: int = 100):
-        """Train random forest classifier"""
-        self.model = RandomForestClassifier(
-            n_estimators=n_estimators,
-            max_depth=10,
-            random_state=42,
-            n_jobs=-1
-        )
-
-        self.model.fit(X_train, y_train)
-
-        # Cross-validation
-        cv_scores = cross_val_score(self.model, X_train, y_train, cv=5)
-
-        return {
-            "cv_mean": cv_scores.mean(),
-            "cv_std": cv_scores.std(),
-            "feature_importance": dict(zip(
-                self.feature_names,
-                self.model.feature_importances_
-            ))
-        }
-
-    def evaluate(self, X_test, y_test) -> dict:
-        """Evaluate model performance"""
-        y_pred = self.model.predict(X_test)
-        y_proba = self.model.predict_proba(X_test)
-
-        return {
-            "predictions": y_pred,
-            "probabilities": y_proba,
-            "confusion_matrix": confusion_matrix(y_test, y_pred).tolist(),
-            "classification_report": classification_report(y_test, y_pred, output_dict=True)
-        }
-
-    def save_model(self, path: str):
-        """Save model and scaler"""
-        joblib.dump({
-            "model": self.model,
-            "scaler": self.scaler,
-            "feature_names": self.feature_names
-        }, path)
+### Skill → Agent Context Package
+```json
+{
+  "task": "Implement TRM × Titans-MAG architecture",
+  "requirements": {
+    "model_type": "transformer",
+    "parameters": "25M target",
+    "features": ["sliding_window_attention", "long_term_memory", "ACT"],
+    "framework": "pytorch",
+    "constraints": {
+      "vram": "6GB",
+      "inference_speed": "real-time"
+    }
+  },
+  "existing_code": {
+    "files": ["model.py", "config.py"],
+    "status": "partial_implementation"
+  },
+  "reference_materials": {
+    "papers": ["TRM.pdf", "Titans-MAG.pdf"],
+    "implementations": ["reference_model.py"]
+  }
+}
 ```
 
-## Deep Learning with PyTorch
-
-```python
-import torch
-import torch.nn as nn
-import torch.optim as optim
-from torch.utils.data import DataLoader, Dataset
-
-class NeuralNetwork(nn.Module):
-    def __init__(self, input_size: int, hidden_size: int, num_classes: int):
-        super().__init__()
-        self.fc1 = nn.Linear(input_size, hidden_size)
-        self.relu = nn.ReLU()
-        self.dropout = nn.Dropout(0.3)
-        self.fc2 = nn.Linear(hidden_size, hidden_size // 2)
-        self.fc3 = nn.Linear(hidden_size // 2, num_classes)
-
-    def forward(self, x):
-        x = self.fc1(x)
-        x = self.relu(x)
-        x = self.dropout(x)
-        x = self.fc2(x)
-        x = self.relu(x)
-        x = self.fc3(x)
-        return x
-
-class Trainer:
-    def __init__(self, model, device='cuda' if torch.cuda.is_available() else 'cpu'):
-        self.model = model.to(device)
-        self.device = device
-        self.criterion = nn.CrossEntropyLoss()
-        self.optimizer = optim.Adam(model.parameters(), lr=0.001)
-
-    def train_epoch(self, dataloader: DataLoader) -> float:
-        """Train for one epoch"""
-        self.model.train()
-        total_loss = 0
-
-        for batch_idx, (data, target) in enumerate(dataloader):
-            data, target = data.to(self.device), target.to(self.device)
-
-            self.optimizer.zero_grad()
-            output = self.model(data)
-            loss = self.criterion(output, target)
-
-            loss.backward()
-            self.optimizer.step()
-
-            total_loss += loss.item()
-
-        return total_loss / len(dataloader)
-
-    def evaluate(self, dataloader: DataLoader) -> dict:
-        """Evaluate model"""
-        self.model.eval()
-        correct = 0
-        total = 0
-
-        with torch.no_grad():
-            for data, target in dataloader:
-                data, target = data.to(self.device), target.to(self.device)
-                output = self.model(data)
-                _, predicted = torch.max(output.data, 1)
-                total += target.size(0)
-                correct += (predicted == target).sum().item()
-
-        return {
-            "accuracy": 100 * correct / total,
-            "total_samples": total
-        }
-
-    def train(self, train_loader: DataLoader, val_loader: DataLoader,
-              epochs: int = 10):
-        """Full training loop"""
-        history = {"train_loss": [], "val_acc": []}
-
-        for epoch in range(epochs):
-            train_loss = self.train_epoch(train_loader)
-            val_metrics = self.evaluate(val_loader)
-
-            history["train_loss"].append(train_loss)
-            history["val_acc"].append(val_metrics["accuracy"])
-
-            print(f"Epoch {epoch+1}/{epochs} - Loss: {train_loss:.4f} - Val Acc: {val_metrics['accuracy']:.2f}%")
-
-        return history
+### Agent → Skill Results
+```json
+{
+  "status": "implementation_complete",
+  "deliverables": {
+    "code_files": [
+      {
+        "path": "src/model/titans_mag.py",
+        "description": "Titans-MAG backbone implementation",
+        "loc": 350,
+        "tested": true
+      }
+    ],
+    "tests": [
+      {
+        "path": "tests/test_model.py",
+        "coverage": 95,
+        "all_passing": true
+      }
+    ],
+    "documentation": {
+      "architecture_diagram": "docs/architecture.md",
+      "usage_examples": "examples/train.py"
+    }
+  },
+  "performance_metrics": {
+    "parameter_count": "25.6M",
+    "inference_time": "45ms (GPU)",
+    "vram_usage": "5.2GB"
+  },
+  "validation": {
+    "unit_tests": "48/48 passing",
+    "integration_tests": "12/12 passing",
+    "manual_verification": "Forward/backward pass successful"
+  }
+}
 ```
 
-## Model Deployment
+## Agent Spawning Logic
 
 ```python
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-import numpy as np
+from claude_agent_sdk import ClaudeSDKClient, ClaudeAgentOptions
+import asyncio
 
-app = FastAPI()
+async def execute_ml_expert(context: dict):
+    """Spawn ML implementation specialist agent."""
 
-class PredictionRequest(BaseModel):
-    features: list[float]
+    # Load specialist agent prompt
+    with open('agents/ml-expert-specialist.prompt', 'r') as f:
+        specialist_prompt = f.read()
 
-class PredictionResponse(BaseModel):
-    prediction: int
-    probability: float
-    model_version: str
+    # Configure agent with write permissions (plan mode for safety)
+    options = ClaudeAgentOptions(
+        model='claude-sonnet-4-5',
+        system_prompt=specialist_prompt,
+        permission_mode='plan',  # Show intent before editing
+        allowed_tools=['Read', 'Write', 'Edit', 'Bash', 'Grep'],
+        setting_sources=['project']
+    )
 
-class ModelServer:
-    def __init__(self, model_path: str):
-        self.model_data = joblib.load(model_path)
-        self.model = self.model_data["model"]
-        self.scaler = self.model_data["scaler"]
-        self.version = "1.0.0"
+    client = ClaudeSDKClient(options)
 
-    def predict(self, features: np.ndarray) -> dict:
-        """Make prediction"""
-        # Scale features
-        features_scaled = self.scaler.transform(features.reshape(1, -1))
-
-        # Predict
-        prediction = self.model.predict(features_scaled)[0]
-        probability = self.model.predict_proba(features_scaled)[0].max()
-
-        return {
-            "prediction": int(prediction),
-            "probability": float(probability),
-            "model_version": self.version
-        }
-
-# Global model instance
-model_server = ModelServer("model.pkl")
-
-@app.post("/predict", response_model=PredictionResponse)
-async def predict(request: PredictionRequest):
     try:
-        features = np.array(request.features)
-        result = model_server.predict(features)
-        return PredictionResponse(**result)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        await client.connect()
 
-@app.get("/health")
-async def health():
-    return {"status": "healthy", "model_version": model_server.version}
+        # Format task for agent
+        task = f"""Implement ML solution:
+
+Requirements: {context['requirements']}
+
+Existing code: {context['existing_code']}
+
+Reference materials: {context['reference_materials']}
+
+Deliver production-quality implementation with tests and documentation."""
+
+        await client.query(task)
+
+        # Collect implementation results
+        results = []
+        async for message in client.receive_messages():
+            if message.type == 'assistant':
+                results.append(message.content)
+
+        return parse_implementation(results)
+
+    finally:
+        await client.disconnect()
 ```
-
-## MLOps with MLflow
-
-```python
-import mlflow
-import mlflow.sklearn
-from mlflow.tracking import MlflowClient
-
-class MLflowExperiment:
-    def __init__(self, experiment_name: str):
-        mlflow.set_experiment(experiment_name)
-        self.client = MlflowClient()
-
-    def log_training_run(self, model, X_train, y_train, X_test, y_test,
-                        params: dict):
-        """Log training run with MLflow"""
-        with mlflow.start_run():
-            # Log parameters
-            mlflow.log_params(params)
-
-            # Train model
-            model.fit(X_train, y_train)
-
-            # Evaluate
-            train_score = model.score(X_train, y_train)
-            test_score = model.score(X_test, y_test)
-
-            # Log metrics
-            mlflow.log_metric("train_accuracy", train_score)
-            mlflow.log_metric("test_accuracy", test_score)
-
-            # Log model
-            mlflow.sklearn.log_model(model, "model")
-
-            # Log feature importance
-            if hasattr(model, 'feature_importances_'):
-                feature_importance = dict(enumerate(model.feature_importances_))
-                mlflow.log_dict(feature_importance, "feature_importance.json")
-
-            run_id = mlflow.active_run().info.run_id
-            return run_id
-
-    def register_model(self, run_id: str, model_name: str):
-        """Register model in MLflow model registry"""
-        model_uri = f"runs:/{run_id}/model"
-        mlflow.register_model(model_uri, model_name)
-
-    def promote_to_production(self, model_name: str, version: int):
-        """Promote model version to production"""
-        self.client.transition_model_version_stage(
-            name=model_name,
-            version=version,
-            stage="Production"
-        )
-```
-
-## Best Practices
-
-### Data Preparation
-- Handle missing values appropriately
-- Scale/normalize features
-- Encode categorical variables properly
-- Split data before any preprocessing
-- Use stratified splits for imbalanced data
-- Create validation set for hyperparameter tuning
-
-### Model Training
-- Start with simple baselines
-- Use cross-validation
-- Monitor training and validation metrics
-- Implement early stopping
-- Save best model checkpoints
-- Track experiments systematically
-
-### Deployment
-- Version models and datasets
-- Monitor model performance in production
-- Implement model A/B testing
-- Set up retraining pipelines
-- Log predictions for analysis
-- Implement fallback mechanisms
-
-## Anti-Patterns
-
-❌ Training on test data (data leakage)
-❌ No validation set for hyperparameter tuning
-❌ Ignoring class imbalance
-❌ Not scaling features
-❌ Overfitting to training data
-❌ No model versioning
-❌ Missing monitoring in production
 
 ## Resources
 
-- Scikit-learn: https://scikit-learn.org/
-- PyTorch: https://pytorch.org/
-- TensorFlow: https://www.tensorflow.org/
-- MLflow: https://mlflow.org/
-- Hugging Face: https://huggingface.co/
+### Scripts
+- `scripts/init_model_template.py` - Generate model boilerplate
+- `scripts/test_model.py` - Model testing utilities
+- `scripts/profile_performance.py` - Performance profiling
+- `scripts/validate_architecture.py` - Architecture validation
+
+### References
+- `references/pytorch-best-practices.md` - PyTorch coding standards
+- `references/architecture-patterns.md` - Common ML architecture patterns
+- `references/optimization-techniques.md` - Training optimization guide
+- `references/testing-guide.md` - ML testing best practices
+
+### Templates
+- `templates/model_template.py` - Base model class template
+- `templates/trainer_template.py` - Training loop template
+- `templates/config_template.py` - Configuration dataclass template
+
+### Custom Tools
+- `create_model_skeleton()` - Generate model file structure
+- `add_tests()` - Create test cases for model components
+- `benchmark_model()` - Performance benchmarking
+
+## Usage Examples
+
+### Example 1: Implement New Architecture
+```
+User: "Implement the TRM × Titans-MAG architecture from these papers with 25M parameters"
+
+Skill gathers:
+- Paper PDFs with architecture details
+- Target parameter count constraint
+- PyTorch as framework
+- GPU memory constraint (6GB)
+
+Agent implements:
+- Titans-MAG backbone (sliding window attention, LMM, MAG gate)
+- TRM wrapper (multi-pass reasoning)
+- ACT head (adaptive computation)
+- Full model integration
+- Unit tests (95% coverage)
+- Usage examples
+- Architecture documentation
+
+Deliverables:
+- src/model/titans_mag.py (350 LOC)
+- src/model/trm_wrapper.py (180 LOC)
+- src/model/act_head.py (120 LOC)
+- src/model/full_model.py (200 LOC)
+- tests/test_*.py (48 tests, all passing)
+- docs/architecture.md
+```
+
+### Example 2: Fix Training Issue
+```
+User: "The ACT head has variance=0 issue. Add diversity regularization."
+
+Skill gathers:
+- Current ACT head implementation
+- Diagnosis from ml-training-debugger skill
+- Recommended fix (diversity loss)
+
+Agent implements:
+- Modify compute_act_loss() method
+- Add diversity regularization term
+- Update docstrings
+- Add test for variance>0
+- Verify training runs without warning
+
+Deliverables:
+- Modified src/model/act_head.py
+- New test: tests/test_act_diversity.py
+- Validation: Warning eliminated in training
+```
+
+### Example 3: Optimize Performance
+```
+User: "Model inference is too slow. Optimize for real-time performance."
+
+Skill gathers:
+- Current model code
+- Profiling results
+- Performance requirements (< 100ms)
+
+Agent optimizes:
+- Enable gradient checkpointing
+- Fuse operations where possible
+- Use torch.compile() for JIT optimization
+- Optimize tensor operations
+- Add caching for repeated computations
+
+Deliverables:
+- Optimized model code
+- Performance benchmarks (45ms → 28ms)
+- Memory usage reduced (6.2GB → 5.2GB)
+- All tests still passing
+```
+
+## Quality Standards
+
+The ML expert agent must:
+- ✅ Write production-quality, well-documented code
+- ✅ Follow PyTorch best practices and idioms
+- ✅ Include comprehensive tests (≥90% coverage)
+- ✅ Verify all implementations work end-to-end
+- ✅ Provide usage examples and documentation
+- ✅ Optimize for readability and maintainability
+
+## Integration with Other Skills
+
+This skill works with:
+- **ml-training-debugger** - Implements fixes from diagnoses
+- **code-analyzer** - Reviews implementation quality
+- **functionality-audit** - Validates implementations work
+- **style-audit** - Ensures code style compliance
+
+## Failure Modes and Escalation
+
+If the agent cannot implement the solution:
+1. Clarify ambiguous requirements with user
+2. Request additional reference materials
+3. Implement partial solution with clear TODOs
+4. Escalate if task exceeds ML expertise scope
+
+The agent should NEVER:
+- Write code without understanding requirements
+- Implement untested functionality
+- Make breaking changes to existing APIs
+- Commit directly without validation
+
+## Testing
+
+Test the skill with:
+1. New model implementation (TRM × Titans-MAG)
+2. Bug fix implementation (ACT diversity loss)
+3. Performance optimization (inference speed)
+4. Research paper implementation
+5. Production pipeline creation
+
+## Documentation
+
+- Agent system prompt: `agents/ml-expert-specialist.prompt`
+- SDK implementation: `index.py`
+- Process visualization: `ml-expert-process.dot`
+- Testing guide: `tests/README.md`
+
+---
+
+**Next Steps**:
+1. Create agent system prompt with ML implementation expertise
+2. Implement SDK-based agent spawning
+3. Add model templates and utilities
+4. Test on Phase 1 implementation tasks
+5. Integrate with ml-training-debugger workflow

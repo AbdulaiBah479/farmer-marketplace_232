@@ -1,357 +1,226 @@
 ---
 name: review
-description: 'Review diffs for risk, find mocks, scan for bugs, audit codebases. Use when: reviewing a diff/PR for bugs and risk, hunting mocks/stubs/placeholders, or auditing for quality.'
-practices:
-- code-complete
-- refactoring
-- design-by-contract
-hexagonal_role: driving-adapter
-consumes:
-- github-pr
-- validate
-produces:
-- result.json
-context_rel:
-- kind: customer-of
-  with: validate
-skill_api_version: 1
-context:
-  window: fork
-  intent:
-    mode: task
-  sections:
-    exclude:
-    - HISTORY
-  intel_scope: topic
+description: "Reviews code for quality, security, performance, and accessibility issues. Use when user mentions レビュー, review, コードレビュー, セキュリティ, パフォーマンス, 品質チェック, セルフレビュー, PR, diff, 変更確認. Do NOT load for: 実装作業, 新機能開発, バグ修正, セットアップ."
+allowed-tools: ["Read", "Grep", "Glob", "Bash", "Task"]
+context: fork
 metadata:
-  tier: judgment
-  dependencies:
-  - standards
-  - council
-output_contract: skills/council/schemas/verdict.json
----
-# Review Skill
-
-> **Quick Ref:** `/review <PR>` reviews a PR, `/review --diff` reviews local changes, `/review --agent <path>` reviews agent output with extra scrutiny.
-
-**YOU MUST EXECUTE THIS WORKFLOW. Do not just describe it.**
-
-This skill is for reviewing OTHER people's or agents' changes. For validating your own code quality, use `/vibe` instead.
-
+  skillport:
+    category: review
+    tags: [review, quality, security, performance, accessibility]
+    alwaysApply: false
 ---
 
-## Modes
+# Review Skills
 
-```bash
-/review 42                          # PR mode — review PR #42
-/review https://github.com/o/r/pull/42  # PR mode — review by URL
-/review --diff                      # Diff mode — review unstaged/staged changes
-/review --diff --staged             # Diff mode — staged only
-/review --agent .agents/crank/      # Agent mode — review agent-generated output
-/review --agent ./output.patch      # Agent mode — review a patch file
-/review --deep 42                   # Deep mode — spawns council for second opinion
-/review --mocks                     # Find stubs, mocks, placeholders, TODOs
-/review --bugs                      # Bug scanner: null derefs, leaks, security holes
-/review --audit security            # Domain audit: security, perf, UX, API, CLI
-/review --deep-scan                 # Iterative audit-fix-rescan until clean
-```
+コードレビューと品質チェックを担当するスキル群です。
 
----
+## 含まれる小スキル
 
-## Execution Steps
+| スキル | 用途 |
+|--------|------|
+| review-changes | 変更内容のレビュー |
+| review-quality | コード品質チェック |
+| review-security | セキュリティレビュー |
+| review-performance | パフォーマンスレビュー |
+| review-accessibility | アクセシビリティチェック |
 
-### Step 0: Detect Review Target and Load Standards
+## ルーティング
 
-Determine the review mode from arguments:
+ユーザーの意図に応じて適切な小スキルを選択:
 
-1. **PR mode** (default): argument is a number or GitHub PR URL.
-2. **Diff mode**: `--diff` flag present.
-3. **Agent mode**: `--agent <path>` flag present.
+- 一般的なレビュー: review-changes/doc.md
+- 品質重視: review-quality/doc.md
+- セキュリティ重視: review-security/doc.md
+- パフォーマンス重視: review-performance/doc.md
+- アクセシビリティ重視: review-accessibility/doc.md
 
-Load language-specific conventions from `/standards` based on file extensions in the diff. If `ao` is available, pull prior review context:
+## 実行手順
 
-```bash
-ao lookup --query "code review patterns $(basename "$PWD")" --limit 3 2>/dev/null || true
-```
+1. **品質判定ゲート**（Step 0）
+2. ユーザーのリクエストを分類
+3. **（Claude-mem 有効時）過去のレビュー指摘を検索**
+4. 並列実行の判定（下記参照）
+5. 適切な小スキルの doc.md を読む、または並列サブエージェント起動
+6. 結果を統合してレビュー完了
 
-**Apply retrieved knowledge (mandatory when results returned):**
+### Step 0: 品質判定ゲート（レビュー重点領域の特定）
 
-If learnings are returned, do NOT just load them as passive context. For each returned item:
-1. Check: does this learning apply to the code under review? (answer yes/no)
-2. If yes: include it as a `known_risk` — state the pattern, what to look for, and whether the diff exhibits it
-3. Cite the learning by filename in your review output when it influences a finding
-
-After applying, record the citation:
-```bash
-ao metrics cite "<learning-path>" --type applied 2>/dev/null || true
-```
-
-Skip silently if ao is unavailable or returns no results.
-
-### Step 0.5: Apply Behavioral Discipline
-
-Load the behavioral discipline standard from `/standards` before reviewing the diff. Use it to answer four questions:
-
-1. What assumptions does this change make, and were they surfaced or silently chosen?
-2. Could the same outcome be achieved with a smaller or more local change?
-3. Does every changed line trace back to the stated goal?
-4. Does the verification prove the claimed behavior, or only that the code builds?
-
-If any answer is weak, record the problem as a finding. Hidden assumptions, speculative abstractions, drive-by edits, and weak verification are review defects, not style preferences.
-
----
-
-### Step 1: Fetch the Diff
-
-#### PR Mode
-
-```bash
-gh pr view "$PR_REF" --json title,body,author,baseRefName,headRefName,labels,reviewDecision,commits
-gh pr diff "$PR_REF"
-gh pr diff "$PR_REF" --name-only
-```
-
-If the PR has more than 500 changed lines, prioritize: security-sensitive files, high-complexity changes, new files, then test files.
-
-#### Diff Mode
-
-```bash
-git diff HEAD                  # unstaged + staged
-git diff --cached              # staged only (with --staged flag)
-git diff HEAD --name-only      # changed file list
-```
-
-#### Agent Mode
-
-```bash
-# Directory: find all generated files
-find "$AGENT_PATH" -type f \( -name '*.go' -o -name '*.py' -o -name '*.ts' -o -name '*.sh' -o -name '*.md' \)
-# Patch file: inspect stats
-git apply --stat "$AGENT_PATH"
-```
-
----
-
-### Step 2: Context Gathering
-
-Understand the intent behind the changes before reviewing the code:
-
-- **PR Mode:** Read PR title/body, check linked issues (`fixes #`, `closes #`), read commit messages.
-- **Diff Mode:** Check `git log --oneline -5`, branch name, open issues via `bd list --status open`.
-- **Agent Mode:** Read execution logs in output directory, check `.agents/rpi/` artifacts.
-
-**Output a one-line intent summary before proceeding:**
+レビュー開始前に変更内容を分析し、重点領域を特定:
 
 ```
-INTENT: <what the change is trying to accomplish>
+変更ファイル分析
+    ↓
+┌─────────────────────────────────────────┐
+│           品質判定ゲート                 │
+├─────────────────────────────────────────┤
+│  判定項目:                              │
+│  ├── カバレッジ不足？（テストなし）     │
+│  ├── セキュリティ注意？（auth/api/）    │
+│  ├── a11y 注意？（UI コンポーネント）   │
+│  └── パフォーマンス注意？（DB/ループ）  │
+└─────────────────────────────────────────┘
+          ↓
+    重点レビュー領域を決定
 ```
 
-If intent is unclear, flag it: "PR description does not explain the purpose of this change."
+#### カバレッジ判定
 
----
+| 状況 | 指摘内容 |
+|------|---------|
+| 新規ファイルにテストなし | 「テストが不足しています」 |
+| 変更ファイルのテストが古い | 「テストの更新を検討してください」 |
+| カバレッジ < 60% | 「カバレッジ向上を推奨」 |
 
-### Step 3: Systematic Review Pass (SCORED)
+#### セキュリティ重点レビュー
 
-Review every changed file against the SCORED checklist. For each category, actively look for problems. Do not skim -- read each changed line.
+| パス | 追加チェック項目 |
+|------|-----------------|
+| auth/, api/ | OWASP Top 10 チェックリスト |
+| 入力処理 | サニタイズ、バリデーション |
+| DB クエリ | パラメータ化確認 |
 
-For audit-style reviews, generated-code suspicion, mock leakage, or external-review-tool findings, load [references/audit-and-mock-sweeps.md](references/audit-and-mock-sweeps.md) before writing final findings.
+#### a11y 重点レビュー
 
-#### S -- Security
+| パス | チェック項目 |
+|------|------------|
+| src/components/ | alt, aria, キーボード操作 |
+| src/pages/ | 見出し構造, フォーカス管理 |
 
-- [ ] No hardcoded secrets, API keys, tokens, or passwords
-- [ ] Input validation on all external data (user input, API responses, file reads)
-- [ ] SQL/command injection: parameterized queries, no string interpolation in commands
-- [ ] Auth/authz checks present where needed (not just authn)
-- [ ] Sensitive data not logged or exposed in error messages
-- [ ] Dependencies: no known-vulnerable versions added
-- [ ] File operations: path traversal prevention, safe temp file handling
+#### パフォーマンス重点レビュー
 
-#### C -- Correctness
+| パターン | 警告内容 |
+|---------|---------|
+| ループ内 DB クエリ | N+1 クエリの可能性 |
+| 大規模データ処理 | ページネーション検討 |
+| useEffect 乱用 | レンダリング最適化 |
 
-- [ ] Logic errors: off-by-one, wrong operator, inverted condition
-- [ ] Edge cases: nil/null handling, empty collections, boundary values
-- [ ] Error handling: errors checked, not swallowed, wrapped with context
-- [ ] Race conditions: shared mutable state, concurrent access patterns
-- [ ] Resource leaks: unclosed files, connections, goroutines, channels
-- [ ] Type safety: unchecked casts, implicit conversions, overflow potential
-- [ ] Contract compliance: does the change match the stated intent?
-
-#### O -- Observability
-
-- [ ] Errors include enough context for debugging (what failed, with what input)
-- [ ] New features have appropriate logging at correct levels
-- [ ] Metrics or health indicators added for new failure modes
-- [ ] Error messages are actionable (not just "something went wrong")
-
-#### R -- Readability
-
-- [ ] Names are descriptive and consistent with codebase conventions
-- [ ] Functions are focused (single responsibility, not doing too much)
-- [ ] Complex logic has comments explaining WHY (not WHAT)
-- [ ] No dead code, commented-out code, or leftover debug statements
-- [ ] Consistent formatting with the rest of the codebase
-
-#### E -- Efficiency
-
-- [ ] No unnecessary allocations in hot paths
-- [ ] N+1 query patterns (database calls in loops)
-- [ ] Unbounded growth: maps/slices that grow without limits
-- [ ] Appropriate use of caching, batching, or pagination
-- [ ] No blocking operations in async/concurrent contexts
-
-#### D -- Design
-
-- [ ] Abstraction level is appropriate (not over-engineered, not under-abstracted)
-- [ ] API surface is minimal and consistent with existing patterns
-- [ ] Changes are cohesive (single concern per PR, not mixing refactoring with features)
-- [ ] Ambiguity was surfaced instead of silently assumed away
-- [ ] No speculative flexibility or abstractions beyond the stated need
-- [ ] Every changed line traces to the requested outcome or required cleanup
-- [ ] Dependencies flow in the right direction (no circular imports)
-- [ ] Test coverage: new code has tests, tests verify behavior (not just coverage)
-- [ ] Breaking changes are documented and intentional
-
----
-
-### Step 4: Agent-Specific Checks (--agent mode only)
-
-When reviewing agent-generated code, apply additional scrutiny for common agent failure modes:
-
-#### Hallucinated References
-- [ ] All imports exist (no invented packages or modules)
-- [ ] All called functions exist in the codebase or dependencies
-- [ ] Referenced files and paths actually exist
-- [ ] API endpoints and URLs are real
-
-#### Over-Engineering
-- [ ] No unnecessary abstractions (interfaces with one implementation, factory for one type)
-- [ ] No premature generalization (generic solution where specific was asked)
-- [ ] No gold-plating (features not requested)
-- [ ] Reasonable LOC for the task complexity
-
-#### Missing Fundamentals
-- [ ] Error handling is present (agents frequently skip error paths)
-- [ ] Edge cases are handled (agents often only handle the happy path)
-- [ ] Cleanup/teardown logic exists (defer, finally, context cancellation)
-- [ ] Concurrency safety if applicable
-
-#### Test Quality
-- [ ] Tests actually assert meaningful behavior (not just `!= nil` or `!= ""`)
-- [ ] Test names describe the scenario being tested
-- [ ] Tests cover error paths, not just happy paths
-- [ ] No `cov*_test.go` naming pattern (coverage-padding anti-pattern)
-- [ ] Mocks are realistic (not returning hardcoded success for everything)
-
-#### Codebase Consistency
-- [ ] Follows existing naming conventions (check 3+ similar files for patterns)
-- [ ] Uses existing helpers/utilities instead of reimplementing
-- [ ] Error handling style matches the codebase
-- [ ] File organization follows project structure
-
----
-
-### Step 5: Generate Structured Review Output
-
-Create a review artifact:
-
-```bash
-REVIEW_DIR=".agents/review"
-mkdir -p "$REVIEW_DIR"
-REVIEW_FILE="$REVIEW_DIR/$(date +%Y-%m-%d)-review-$(echo "$PR_REF" | tr '/' '-').md"
-```
-
-#### Review Document Structure
+#### 重点レビュー統合出力
 
 ```markdown
-# Review: <PR title or change description>
-**Date:** YYYY-MM-DD  |  **Verdict:** APPROVE | REQUEST_CHANGES | COMMENT
-**Target:** PR #N / local diff / agent output at <path>
+📊 品質判定結果 → 重点レビュー領域
 
-## Intent
-<one-line summary>
+| 判定 | 該当 | 対象ファイル |
+|------|------|-------------|
+| セキュリティ | ⚠️ | src/api/auth.ts |
+| カバレッジ | ⚠️ | src/utils/helpers.ts (テストなし) |
+| a11y | ✅ | - |
+| パフォーマンス | ✅ | - |
 
-## SCORED Assessment
-| Category | Rating | Notes |
-|----------|--------|-------|
-| Security | pass/warn/fail | ... |
-| Correctness | pass/warn/fail | ... |
-| Observability | pass/warn/fail | ... |
-| Readability | pass/warn/fail | ... |
-| Efficiency | pass/warn/fail | ... |
-| Design | pass/warn/fail | ... |
-
-## Findings
-### Critical (must fix)
-- **[file:line]** Issue. Suggested fix: ...
-### Warning (should fix)
-- **[file:line]** Issue. Suggested fix: ...
-### Suggestion / Nit
-- **[file:line]** Description.
-
-## Missing
-<expected but absent: tests, docs, error handling, migration>
+→ セキュリティ・カバレッジを重点的にレビュー
 ```
 
-#### Verdict Rules
+### Step 2: 過去のレビュー指摘検索（Memory-Enhanced）
 
-- **APPROVE**: No critical or warning findings. All SCORED categories pass.
-- **REQUEST_CHANGES**: Any critical finding, OR 3+ warnings, OR any SCORED category rated "fail".
-- **COMMENT**: 1-2 warnings with no critical findings. Worth discussing but not blocking.
+Claude-mem が有効な場合、レビュー開始前に過去の類似指摘を検索:
 
-#### PR Mode: Post Comments
-
-If reviewing a PR and the verdict is REQUEST_CHANGES or COMMENT, offer to post the review:
-
-```bash
-# Post review comment on the PR
-gh pr review "$PR_REF" --comment --body "$(cat "$REVIEW_FILE")"
-
-# Or for blocking review
-gh pr review "$PR_REF" --request-changes --body "$(cat "$REVIEW_FILE")"
+```
+# mem-search で過去のレビュー指摘を検索
+mem-search: type:review "{変更ファイルのパターン}"
+mem-search: concepts:security "{セキュリティ関連のキーワード}"
+mem-search: concepts:gotcha "{変更箇所に関連するキーワード}"
 ```
 
-Only post if the user confirms. Never auto-post a review without explicit approval.
+**表示例**:
+
+```markdown
+📚 過去のレビュー指摘（関連あり）
+
+| 日付 | 指摘内容 | ファイル |
+|------|---------|---------|
+| 2024-01-15 | XSS脆弱性: innerHTML 使用禁止 | src/components/*.tsx |
+| 2024-01-20 | N+1クエリ: prefetch 必須 | src/api/*.ts |
+
+💡 今回のレビューで上記パターンを重点チェック
+```
+
+> **注**: Claude-mem が未設定の場合、このステップはスキップされます。
+
+## 並列サブエージェント起動（推奨）
+
+以下の条件を**両方**満たす場合、Task tool で code-reviewer を並列起動:
+
+- レビュー観点 >= 2（例: セキュリティ + パフォーマンス）
+- 変更ファイル >= 5
+
+**起動パターン（1つのレスポンス内で複数の Task tool を同時呼び出し）:**
+
+```
+Task tool 並列呼び出し:
+  #1: subagent_type="code-reviewer"
+      prompt="セキュリティ観点でレビュー: {files}"
+  #2: subagent_type="code-reviewer"
+      prompt="パフォーマンス観点でレビュー: {files}"
+  #3: subagent_type="code-reviewer"
+      prompt="コード品質観点でレビュー: {files}"
+```
+
+**小規模な場合（条件を満たさない）:**
+- 子スキル（doc.md）を順次読み込んで直列実行
 
 ---
 
-## Deep Mode (--deep)
+## 🔧 LSP 機能の活用
 
-When `--deep` is specified, after the initial SCORED pass, spawn a council for a second opinion:
+レビューでは LSP（Language Server Protocol）を活用して精度を向上します。
 
-```bash
-/council validate "Review these changes for issues I might have missed: <summary of changes>"
+### LSP をレビューに統合
+
+| レビュー観点 | LSP 活用方法 |
+|-------------|-------------|
+| **品質** | Diagnostics で型エラー・未使用変数を自動検出 |
+| **セキュリティ** | Find-references で機密データの流れを追跡 |
+| **パフォーマンス** | Go-to-definition で重い処理の実装を確認 |
+
+### LSP Diagnostics の出力例
+
+```
+📊 LSP 診断結果
+
+| ファイル | エラー | 警告 |
+|---------|--------|------|
+| src/components/Form.tsx | 0 | 2 |
+| src/utils/api.ts | 1 | 0 |
+
+⚠️ 1件のエラーを検出
+→ レビューで指摘事項に追加
 ```
 
-Merge council findings into the review document under a "## Council Findings" section.
+### Find-references による影響分析
+
+```
+🔍 変更影響分析
+
+変更: validateInput()
+
+参照箇所:
+├── src/pages/signup.tsx:34
+├── src/pages/settings.tsx:56
+└── tests/validate.test.ts:12
+
+→ テストでカバー済み ✅
+```
+
+詳細: [docs/LSP_INTEGRATION.md](../../docs/LSP_INTEGRATION.md)
 
 ---
 
-## Integration with Other Skills
+## VibeCoder 向け
 
-| Skill | Relationship |
-|-------|-------------|
-| `/vibe` | Self-review (your own code). `/review` is for others' code. |
-| `/council` | Optional second opinion via `--deep` flag. |
-| `/standards` | Auto-loaded for language-specific rules. |
-| `/bug-hunt` | `/review` does a structured pass; `/bug-hunt` does deep investigation of suspected bugs. |
-| `/validate --mode=pr` | PR-specific validation (isolation, scope creep). Complementary to `/review`. |
+```markdown
+📝 コードチェックを依頼するときの言い方
 
----
+1. **「チェックして」**
+   - 全体的に問題がないか見てもらう
 
-## Reference Documents
+2. **「セキュリティ大丈夫？」**
+   - 悪意ある攻撃に耐えられるかチェック
 
-- [references/review.feature](references/review.feature) — Executable spec: risk-ranked diff review, mock/stub detection, bug scan, result.json (soc-qk4b)
+3. **「遅くない？」**
+   - 速度に問題がないかチェック
 
-- [references/MOCK_FINDER.md](references/MOCK_FINDER.md) — Find stubs, mocks, placeholders, TODOs
-- [references/BUG_SCANNER.md](references/BUG_SCANNER.md) — Bug scanner: null derefs, leaks, security
-- [references/DOMAIN_AUDIT.md](references/DOMAIN_AUDIT.md) — Domain-parameterized audit (security, perf, UX, API, CLI)
-- [references/DEEP_SCAN.md](references/DEEP_SCAN.md) — Iterative audit-fix-rescan cycle
+4. **「誰でも使える？」**
+   - 障害のある方でも使えるかチェック
 
-## See Also
-
-- [vibe](../vibe/SKILL.md) — Self-review and code quality validation
-- [council](../council/SKILL.md) — Multi-model consensus council
-- [standards](../standards/SKILL.md) — Language-specific coding conventions
-- [bug-hunt](../bug-hunt/SKILL.md) — Deep bug investigation
-- [validate --mode=pr](../validate/SKILL.md) — PR scope and isolation checks
-- [references/audit-and-mock-sweeps.md](references/audit-and-mock-sweeps.md)
+💡 ヒント: 「全部チェックして」と言えば、
+4つの観点すべてを自動で確認します
+```

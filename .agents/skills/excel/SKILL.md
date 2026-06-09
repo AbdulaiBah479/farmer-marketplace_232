@@ -1,62 +1,72 @@
 ---
-id: "e4da0f84-9e6a-4aca-af89-a9baaa8dee9c"
-name: "从Excel批量下载图片"
-description: "从指定Excel文件的特定工作表中，遍历单元格，识别HYPERLINK公式中的图片链接，下载图片到本地同名文件夹，并按行列命名文件。"
-version: "0.1.0"
-tags:
-  - "Excel"
-  - "图片下载"
-  - "openpyxl"
-  - "requests"
-  - "批量处理"
-triggers:
-  - "从Excel下载图片"
-  - "批量下载Excel中的图片"
-  - "Excel HYPERLINK图片下载"
-  - "遍历Excel单元格下载图片"
-  - "Excel图片批量保存"
+name: excel
+description: "Macht Tabellenanlagen im Schriftsatz verständlich: Zahlenkern, Rechenweg, PDF-Ausdruck, Anlagenzitat und kurze Erläuterung."
 ---
 
-# 从Excel批量下载图片
+# Excel-Anlagen und Zahlenbausteine
 
-从指定Excel文件的特定工作表中，遍历单元格，识别HYPERLINK公式中的图片链接，下载图片到本地同名文件夹，并按行列命名文件。
+## Normenanker
 
-## Prompt
+Arbeitsfokus: **Excel-Anlagen und Zahlenbausteine**. Prüfe diese Anker am Sachverhalt; ergänze nur Normen, die denselben Output, dieselbe Frist oder dieselbe Beweisfrage tragen:
 
-# Role & Objective
-你是一个Python脚本生成助手，用于生成从Excel文件批量下载图片的脚本。脚本需要根据用户提供的Excel文件路径、目标工作表名称，自动创建与Excel同名的文件夹，遍历指定工作表的所有单元格，识别以'=HYPERLINK'开头的单元格，提取其中的图片URL，下载图片并按行列号命名保存到本地文件夹，避免重复下载。
+- `§ 138 Abs. 1 ZPO` — vollständiger und wahrer Tatsachenvortrag.
+- `§ 138 Abs. 2 ZPO` — Erklärungslast.
+- `§ 253 Abs. 2 Nr. 2 ZPO` — bestimmter Klagegrund.
+- `§ 284 ZPO` — Beweisaufnahme.
+- `§ 371 Abs. 1 ZPO` — Augenschein.
+- `§ 416 ZPO` — Beweiskraft privater Urkunden.
+- `§ 420 ZPO` — Vorlegung durch Beweisführer.
+- `§ 142 Abs. 1 ZPO` — Urkundenvorlegung durch Partei/Dritte.
 
-# Communication & Style Preferences
-- 使用中文回复。
-- 提供可直接运行的完整Python代码。
-- 代码中包含必要的注释说明关键步骤。
+Rechtsprechung nur ergänzen, wenn Gericht, Datum, Aktenzeichen und eine frei prüfbare Quelle vorliegen; keine BeckRS-/juris-Blindzitate verwenden.
 
-# Operational Rules & Constraints
-- 使用openpyxl库读取Excel文件。
-- 使用requests库下载图片。
-- 使用os库进行文件夹和文件存在性判断及创建。
-- 目标文件夹路径为Excel文件路径去掉扩展名（.xlsx）。
-- 仅处理指定名称的工作表，若工作表不存在则跳过。
-- 遍历范围从指定起始行（默认为第2行）到工作表最大行，所有列。
-- 识别单元格值以'=HYPERLINK'开头，并从中提取包含'jpg'的URL。
-- 图片保存路径为：目标文件夹 + 工作表名 + '{行}-{列}.jpg'。
-- 如果本地已存在同名图片文件，则跳过下载。
-- 下载完成后关闭工作簿并打印完成信息。
+## Mindestinput
 
-# Anti-Patterns
-- 不要使用多线程或异步下载，除非用户明确要求。
-- 不要处理非HYPERLINK公式的单元格。
-- 不要覆盖已存在的图片文件。
-- 不要在代码中硬编码绝对路径，应使用用户提供的变量。
+- Excel/CSV.
+- Zahlenbehauptung.
+- Schriftsatzstelle.
 
-# Interaction Workflow
-1. 询问用户Excel文件路径和目标工作表名称（可选，默认为第一个工作表）。
-2. 生成并返回完整的Python脚本。
+## Arbeitsablauf
 
-## Triggers
+1. Bestimme Kernzahlen.
+2. Prüfe sichtbare Formeln/Filter.
+3. Erzeuge Erläuterungsbaustein.
 
-- 从Excel下载图片
-- 批量下载Excel中的图片
-- Excel HYPERLINK图片下载
-- 遍历Excel单元格下载图片
-- Excel图片批量保存
+## Ausgabe
+
+- Zahlenbelegmatrix.
+- Schriftsatzbaustein.
+- PDF-Ausdrucksanweisung.
+
+## Typische Fehler, die du aktiv suchst
+
+- Unklare Anlagenfunktion: Die Datei existiert, aber niemand sagt, welche Tatsache sie beweist.
+- Nummerierung folgt dem Ordner, nicht dem Schriftsatz.
+- Der Schriftsatz versteckt entscheidenden Vortrag in der Anlage.
+- Dateiname, Stempel oder Anlagenverzeichnis widersprechen einander.
+
+## Anschluss-Skills
+
+- `anlagen-zu-schriftsaetzen` für den Hauptworkflow.
+- `anlagen-qualitygate-finalcheck` vor Versand.
+- `schriftsatz-anlagen-mapping` für Belegmatrix und Lückenliste.
+
+## Quellen- und Vorsichtsregel
+
+Bei tragenden Aussagen zu Form, elektronischer Einreichung oder prozessualer Verwertbarkeit aktuelle amtliche Quellen prüfen: ZPO, BRAO, ERVV, ERVB und gerichtliche Hinweise. Keine BeckRS-/juris-/Literatur-Blindzitate. Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei prüfbarer Quelle nennen.
+
+## Vertiefter Anlagen-Workflow
+
+Arbeite wie ein Schriftsatzteam kurz vor Versand: erst Ordnung schaffen, dann Beweisfunktion sichern, dann technische Einreichbarkeit prüfen.
+
+1. **Materialkarte:** Jede Datei einer Tatsachenbehauptung, einem Schriftsatzabschnitt und einer Anlagenkategorie zuordnen. Dubletten, alte Fassungen, Screenshots ohne Datum und unleserliche Scans separat markieren.
+2. **K1-Logik:** Nummerierung nicht nach Ordnerzufall, sondern nach Beweisgang: Vertrag/Grundlage, Kommunikation, Zahlung, Fristen/Zugang, Fotos/Screenshots, Tabellen, Behörden-/Gerichtsdokumente.
+3. **Technikcheck:** PDF/A-Eignung, OCR, Seitenzählung, Dateigröße, Signatur-/beA-/ERVV-Kontext, Anlagenverzeichnis, Deckblatt und Dateinamen konsistent prüfen.
+4. **Prozessrisiko:** Nichts Entscheidendes nur in der Anlage verstecken. Wenn eine Anlage eine tragende Tatsache beweist, muss der Schriftsatz diese Tatsache ausdrücklich behaupten und die Anlage präzise referenzieren.
+5. **Versandpaket:** Am Ende eine Versandliste mit Paketname, Anlagenbereich, Seitenzahl, Hash/Version, Risikoampel und offener To-do-Liste erzeugen.
+
+## Ergebnisqualität
+
+- Gib immer eine sofort nutzbare Tabelle aus: Anlage, Quelle, Datum, Beweisfunktion, Schriftsatzstelle, technischer Status, Risiko.
+- Weise auf fehlende Lesbarkeit, fehlenden Zugangsnachweis, fehlende Übersetzung und fehlende Vollständigkeit ausdrücklich hin.
+- Bei elektronischem Rechtsverkehr keine Mutmaßung: aktuelle ZPO/BRAO/ERVV/ERVB-Quelle oder gerichtliche Verfügung prüfen, bevor formale Aussagen final werden.

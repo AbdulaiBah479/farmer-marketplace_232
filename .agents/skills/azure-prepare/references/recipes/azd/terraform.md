@@ -117,27 +117,6 @@ provider "azurerm" {
 
 ### 4. Variables and Outputs
 
-> ⚠️ **WARNING: Use `${VAR}` syntax in `main.tfvars.json`, NOT Go-style `{{ .Env.* }}`**
->
-> azd's template engine processes `azure.yaml` and service manifests — it does **NOT** interpolate
-> Go-style `{{ .Env.* }}` template variables in `.tfvars.json` or any Terraform variable files.
-> Literal strings like `{{ .Env.AZURE_ENV_NAME }}` will be passed directly to Terraform, causing
-> deployment failures.
->
-> azd reads `infra/main.tfvars.json`, substitutes `${VAR}` references using its built-in envsubst,
-> and passes the resolved file to Terraform via `-var-file=`. Use this pattern:
->
-> ```json
-> {
->     "environment_name": "${AZURE_ENV_NAME}",
->     "location": "${AZURE_LOCATION}",
->     "subscription_id": "${AZURE_SUBSCRIPTION_ID}"
-> }
-> ```
->
-> For additional variables not in `main.tfvars.json`, use **`TF_VAR_*` environment variables**:
-> `azd env set TF_VAR_myvar value`
-
 **variables.tf:**
 ```hcl
 variable "environment_name" {
@@ -230,7 +209,7 @@ resource "azurerm_resource_group" "main" {
 
 ```bash
 # 1. Create azd environment
-azd env new dev --no-prompt
+azd env new dev
 
 # 2. Set required variables
 azd env set AZURE_LOCATION eastus2
@@ -249,35 +228,16 @@ azd up
 
 **azd environment variables** → **Terraform variables**
 
-azd passes variables to Terraform through `main.tfvars.json` (with `${VAR}` substitution) or
-explicit `TF_VAR_*` environment variables. Define the variable in `variables.tf` and reference
-it in `main.tfvars.json`.
-
-infra/main.tfvars.json — azd substitutes ${VAR} references via envsubst:
-```json
-{
-    "environment_name": "${AZURE_ENV_NAME}",
-    "location": "${AZURE_LOCATION}",
-    "database_name": "${DATABASE_NAME}"
-}
-```
-
-variables.tf — value provided via main.tfvars.json or TF_VAR_database_name:
-```hcl
-variable "database_name" {
-  type = string
-}
-```
-
-For variables not in `main.tfvars.json`, use `TF_VAR_*` environment variables:
-
 ```bash
-azd env set TF_VAR_custom_setting "my-value"
-```
+# Set azd variable
+azd env set DATABASE_NAME mydb
 
-> ⚠️ **Use `${VAR}` syntax in `main.tfvars.json`, NOT Go-style `{{ .Env.* }}`.** azd substitutes
-> `${VAR}` references using its built-in envsubst. Go-style template variables are only processed
-> in `azure.yaml` and service manifests. See [Variables and Outputs](#4-variables-and-outputs) for details.
+# Access in Terraform
+variable "database_name" {
+  type    = string
+  default = env("DATABASE_NAME")
+}
+```
 
 **Remote state setup:**
 
@@ -313,20 +273,6 @@ When preparing a new azd+Terraform project:
    - Resource group: `azd-env-name`
    - Hosting resources: `azd-service-name` (matches azure.yaml services)
 4. **Research best practices** - Call `mcp_azure_mcp_azureterraformbestpractices`
-
-## AVM Terraform Module Priority
-
-For Terraform module selection, enforce this order:
-
-1. AVM Terraform Pattern Modules
-2. AVM Terraform Resource Modules
-3. AVM Terraform Utility Modules
-
-Use `mcp_azure_mcp_documentation` (`azure-documentation`) for current guidance and AVM context first, then use Context7 only as supplemental examples if required. If Context7 is not available, instruct the user to install it:
-
-```bash
-npx @upstash/context7-mcp@latest
-```
 
 ## Migration from Pure Terraform
 
@@ -470,8 +416,6 @@ resource "azurerm_cosmosdb_account" "cosmos" {
 | `terraform command not found` | Install Terraform CLI: `brew install terraform` or download from terraform.io |
 | State conflicts | Configure remote backend in provider.tf |
 | Variable not passed to Terraform | Ensure variable is set with `azd env set` and defined in variables.tf |
-| Literal `{{ .Env.* }}` in Terraform errors | Use `${VAR}` syntax in `main.tfvars.json`, not Go-style `{{ .Env.* }}`. azd substitutes `${VAR}` references via envsubst |
-| `main.tfvars.json` interpolation failure | Ensure `main.tfvars.json` uses `${VAR}` syntax (e.g., `${AZURE_ENV_NAME}`), not Go-style `{{ .Env.* }}` templates |
 
 ## References
 

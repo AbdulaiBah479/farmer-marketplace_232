@@ -1,7 +1,6 @@
 ---
 name: root-cause-tracing
-description: Systematically trace bugs backward through call stack to find original trigger. Use when errors occur deep in execution and you need to trace back to find the original trigger.
-version: 1.1.0
+description: Use when errors occur deep in execution and you need to trace back to find the original trigger - systematically traces bugs backward through call stack, adding instrumentation when needed, to identify source of invalid data or incorrect behavior
 ---
 
 # Root Cause Tracing
@@ -14,6 +13,21 @@ Bugs often manifest deep in the call stack (git init in wrong directory, file cr
 
 ## When to Use
 
+```dot
+digraph when_to_use {
+    "Bug appears deep in stack?" [shape=diamond];
+    "Can trace backwards?" [shape=diamond];
+    "Fix at symptom point" [shape=box];
+    "Trace to original trigger" [shape=box];
+    "BETTER: Also add defense-in-depth" [shape=box];
+
+    "Bug appears deep in stack?" -> "Can trace backwards?" [label="yes"];
+    "Can trace backwards?" -> "Trace to original trigger" [label="yes"];
+    "Can trace backwards?" -> "Fix at symptom point" [label="no - dead end"];
+    "Trace to original trigger" -> "BETTER: Also add defense-in-depth";
+}
+```
+
 **Use when:**
 - Error happens deep in execution (not at entry point)
 - Stack trace shows long call chain
@@ -24,7 +38,7 @@ Bugs often manifest deep in the call stack (git init in wrong directory, file cr
 
 ### 1. Observe the Symptom
 ```
-Error: git init failed in ~/project/packages/core
+Error: git init failed in /Users/jesse/project/packages/core
 ```
 
 ### 2. Find Immediate Cause
@@ -77,7 +91,7 @@ async function gitInit(directory: string) {
 
 **Run and capture:**
 ```bash
-bun test 2>&1 | grep 'DEBUG git init'
+npm test 2>&1 | grep 'DEBUG git init'
 ```
 
 **Analyze stack traces:**
@@ -89,14 +103,13 @@ bun test 2>&1 | grep 'DEBUG git init'
 
 If something appears during tests but you don't know which test:
 
-Use the bisection script to run tests one-by-one:
+Use the bisection script: @find-polluter.sh
 
 ```bash
-# Example: find which test creates .git in wrong place
-bun test --run --bail 2>&1 | tee test-output.log
+./find-polluter.sh '.git' 'src/**/*.test.ts'
 ```
 
-Runs tests one-by-one, stops at first polluter.
+Runs tests one-by-one, stops at first polluter. See script for usage.
 
 ## Real Example: Empty projectDir
 
@@ -121,6 +134,28 @@ Runs tests one-by-one, stops at first polluter.
 
 ## Key Principle
 
+```dot
+digraph principle {
+    "Found immediate cause" [shape=ellipse];
+    "Can trace one level up?" [shape=diamond];
+    "Trace backwards" [shape=box];
+    "Is this the source?" [shape=diamond];
+    "Fix at source" [shape=box];
+    "Add validation at each layer" [shape=box];
+    "Bug impossible" [shape=doublecircle];
+    "NEVER fix just the symptom" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
+
+    "Found immediate cause" -> "Can trace one level up?";
+    "Can trace one level up?" -> "Trace backwards" [label="yes"];
+    "Can trace one level up?" -> "NEVER fix just the symptom" [label="no"];
+    "Trace backwards" -> "Is this the source?";
+    "Is this the source?" -> "Trace backwards" [label="no - keeps going"];
+    "Is this the source?" -> "Fix at source" [label="yes"];
+    "Fix at source" -> "Add validation at each layer";
+    "Add validation at each layer" -> "Bug impossible";
+}
+```
+
 **NEVER fix just where the error appears.** Trace back to find the original trigger.
 
 ## Stack Trace Tips
@@ -132,7 +167,7 @@ Runs tests one-by-one, stops at first polluter.
 
 ## Real-World Impact
 
-From debugging session:
+From debugging session (2025-10-03):
 - Found root cause through 5-level trace
 - Fixed at source (getter validation)
 - Added 4 layers of defense

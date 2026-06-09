@@ -1,28 +1,49 @@
 ---
-name: "yeet"
-description: "Use only when the user explicitly asks to stage, commit, push, and open a GitHub pull request in one flow using the GitHub CLI (`gh`)."
+argument-hint: <create-pr|update-pr|create-issue|update-issue|comment-issue|create-discussion> [options]
+disable-model-invocation: false
+effort: high
+name: yeet
+user-invocable: true
+description: This skill should be used when the user asks to create or update a GitHub PR, file or update an issue, post a comment, or start a discussion. Trigger phrases include "create PR", "open PR", "file an issue", "update issue", "yeet a PR/issue/discussion", "comment on an issue".
 ---
+
+# GitHub Contribution Workflows
+
+Facilitate GitHub-based open source contribution workflows including pull requests, issues, and discussions. Emphasizes semantic analysis over mechanical operations — understand the intent and context of changes before generating titles, descriptions, or selecting templates. All generated content should be conversational and informal.
 
 ## Prerequisites
 
-- Require GitHub CLI `gh`. Check `gh --version`. If missing, ask the user to install `gh` and stop.
-- Require authenticated `gh` session. Run `gh auth status`. If not authenticated, ask the user to run `gh auth login` (and re-run `gh auth status`) before continuing.
+Verify GitHub CLI authentication before any workflow:
 
-## Naming conventions
+```bash
+gh auth status
+```
 
-- Branch: `codex/{description}` when starting from main/master/default.
-- Commit: `{description}` (terse).
-- PR title: `[codex] {description}` summarizing the full diff.
+For pull request workflows, also verify:
 
-## Workflow
+- Working tree is clean or changes are committed
+- Current branch has commits ahead of the base branch
+- Remote tracking is configured
 
-- If on main/master/default, create a branch: `git checkout -b "codex/{description}"`
-- Otherwise stay on the current branch.
-- Confirm status, then stage everything: `git status -sb` then `git add -A`.
-- Commit tersely with the description: `git commit -m "{description}"`
-- Run checks if not already. If checks fail due to missing deps/tools, install dependencies and rerun once.
-- Push with tracking: `git push -u origin $(git branch --show-current)`
-- If git push fails due to workflow auth errors, pull from master and retry the push.
-- Open a PR and edit title/body to reflect the description and the deltas: `GH_PROMPT_DISABLED=1 GIT_TERMINAL_PROMPT=0 gh pr create --draft --fill --head $(git branch --show-current)`
-- Write the PR description to a temp file with real newlines (e.g. pr-body.md ... EOF) and run pr-body.md to avoid \\n-escaped markdown.
-- PR description (markdown) must be detailed prose covering the issue, the cause and effect on users, the root cause, the fix, and any tests or checks used to validate.
+## Related Skills
+
+For detailed GitHub CLI command syntax, flags, and patterns, activate the `cli-gh` skill.
+
+## Workflows
+
+Each workflow is fully documented in its reference file. Load the appropriate reference based on user intent.
+
+| Workflow          | Trigger                                                | Reference                         |
+| ----------------- | ------------------------------------------------------ | --------------------------------- |
+| Create PR         | "create PR", "open PR", "yeet a PR"                    | `references/create-pr.md`         |
+| Update PR         | "update PR", "edit PR"                                 | `references/update-pr.md`         |
+| Create Issue      | "create issue", "file issue" (generic repo)            | `references/create-issue.md`      |
+| Update Issue      | "update issue", "edit issue", "relabel issue"          | `references/update-issue.md`      |
+| Claude Code Issue | "Claude Code issue", "report bug in CC"                | `references/issue-claude-code.md` |
+| Codex CLI Issue   | "Codex issue", "report bug in Codex"                   | `references/issue-codex-cli.md`   |
+| Sablier Issue     | "Sablier issue", "sablier-labs issue"                  | `references/issue-sablier.md`     |
+| Biome Issue       | "Biome issue", "biomejs issue"                         | `references/issue-biome.md`       |
+| Comment on Issue  | "comment on issue", "reply on issue", "post a comment" | `references/comment-issue.md`     |
+| Create Discussion | "create discussion", "start discussion"                | `references/create-discussion.md` |
+
+Shared patterns (auth validation, admonitions, HEREDOC syntax, semantic analysis, tone, platform normalization, error handling, file links) are in `references/commons.md`.

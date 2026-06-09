@@ -1,351 +1,190 @@
 ---
-name: "animate"
-description: "User interface animations and transitions. When Claude needs to create performant, tasteful animations."
-license: Proprietary
+name: animate
+description: Review a feature and enhance it with purposeful animations, micro-interactions, and motion effects that improve usability and delight.
+args:
+  - name: target
+    description: The feature or component to animate (optional)
+    required: false
+user-invokable: true
 ---
 
-# UI Animation & Microinteraction Skill
+Analyze a feature and strategically add animations and micro-interactions that enhance understanding, provide feedback, and create delight.
 
-You are a specialized UI animation expert focused on creating smooth, performant animations and microinteractions using **native CSS** and **Framer Motion**.
+## MANDATORY PREPARATION
 
-## Available Tools in This Repo
+### Context Gathering (Do This First)
 
-### 1. Framer Motion
-Already installed via `framer-motion`. Import as:
-```tsx
-import { motion } from 'framer-motion'
+You cannot do a great job without having necessary context, such as target audience (critical), desired use-cases (critical), brand personality/tone (playful vs serious, energetic vs calm), and performance constraints.
+
+Attempt to gather these from the current thread or codebase.
+
+1. If you don't find *exact* information and have to infer from existing design and functionality, you MUST STOP and {{ask_instruction}} whether you got it right.
+2. Otherwise, if you can't fully infer or your level of confidence is medium or lower, you MUST {{ask_instruction}} clarifying questions first to complete your context.
+
+Do NOT proceed until you have answers. Guessing leads to inappropriate or excessive animation.
+
+### Use frontend-design skill
+
+Use the frontend-design skill for design principles and anti-patterns. Do NOT proceed until it has executed and you know all DO's and DON'Ts.
+
+---
+
+## Assess Animation Opportunities
+
+Analyze where motion would improve the experience:
+
+1. **Identify static areas**:
+   - **Missing feedback**: Actions without visual acknowledgment (button clicks, form submission, etc.)
+   - **Jarring transitions**: Instant state changes that feel abrupt (show/hide, page loads, route changes)
+   - **Unclear relationships**: Spatial or hierarchical relationships that aren't obvious
+   - **Lack of delight**: Functional but joyless interactions
+   - **Missed guidance**: Opportunities to direct attention or explain behavior
+
+2. **Understand the context**:
+   - What's the personality? (Playful vs serious, energetic vs calm)
+   - What's the performance budget? (Mobile-first? Complex page?)
+   - Who's the audience? (Motion-sensitive users? Power users who want speed?)
+   - What matters most? (One hero animation vs many micro-interactions?)
+
+If any of these are unclear from the codebase, {{ask_instruction}}
+
+**CRITICAL**: Respect `prefers-reduced-motion`. Always provide non-animated alternatives for users who need them.
+
+## Plan Animation Strategy
+
+Create a purposeful animation plan:
+
+- **Hero moment**: What's the ONE signature animation? (Page load? Hero section? Key interaction?)
+- **Feedback layer**: Which interactions need acknowledgment?
+- **Transition layer**: Which state changes need smoothing?
+- **Delight layer**: Where can we surprise and delight?
+
+**IMPORTANT**: One well-orchestrated experience beats scattered animations everywhere. Focus on high-impact moments.
+
+## Implement Animations
+
+Add motion systematically across these categories:
+
+### Entrance Animations
+- **Page load choreography**: Stagger element reveals (100-150ms delays), fade + slide combinations
+- **Hero section**: Dramatic entrance for primary content (scale, parallax, or creative effects)
+- **Content reveals**: Scroll-triggered animations using intersection observer
+- **Modal/drawer entry**: Smooth slide + fade, backdrop fade, focus management
+
+### Micro-interactions
+- **Button feedback**:
+  - Hover: Subtle scale (1.02-1.05), color shift, shadow increase
+  - Click: Quick scale down then up (0.95 → 1), ripple effect
+  - Loading: Spinner or pulse state
+- **Form interactions**:
+  - Input focus: Border color transition, slight scale or glow
+  - Validation: Shake on error, check mark on success, smooth color transitions
+- **Toggle switches**: Smooth slide + color transition (200-300ms)
+- **Checkboxes/radio**: Check mark animation, ripple effect
+- **Like/favorite**: Scale + rotation, particle effects, color transition
+
+### State Transitions
+- **Show/hide**: Fade + slide (not instant), appropriate timing (200-300ms)
+- **Expand/collapse**: Height transition with overflow handling, icon rotation
+- **Loading states**: Skeleton screen fades, spinner animations, progress bars
+- **Success/error**: Color transitions, icon animations, gentle scale pulse
+- **Enable/disable**: Opacity transitions, cursor changes
+
+### Navigation & Flow
+- **Page transitions**: Crossfade between routes, shared element transitions
+- **Tab switching**: Slide indicator, content fade/slide
+- **Carousel/slider**: Smooth transforms, snap points, momentum
+- **Scroll effects**: Parallax layers, sticky headers with state changes, scroll progress indicators
+
+### Feedback & Guidance
+- **Hover hints**: Tooltip fade-ins, cursor changes, element highlights
+- **Drag & drop**: Lift effect (shadow + scale), drop zone highlights, smooth repositioning
+- **Copy/paste**: Brief highlight flash on paste, "copied" confirmation
+- **Focus flow**: Highlight path through form or workflow
+
+### Delight Moments
+- **Empty states**: Subtle floating animations on illustrations
+- **Completed actions**: Confetti, check mark flourish, success celebrations
+- **Easter eggs**: Hidden interactions for discovery
+- **Contextual animation**: Weather effects, time-of-day themes, seasonal touches
+
+## Technical Implementation
+
+Use appropriate techniques for each animation:
+
+### Timing & Easing
+
+**Durations by purpose:**
+- **100-150ms**: Instant feedback (button press, toggle)
+- **200-300ms**: State changes (hover, menu open)
+- **300-500ms**: Layout changes (accordion, modal)
+- **500-800ms**: Entrance animations (page load)
+
+**Easing curves (use these, not CSS defaults):**
+```css
+/* Recommended - natural deceleration */
+--ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);    /* Smooth, refined */
+--ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);   /* Slightly snappier */
+--ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);     /* Confident, decisive */
+
+/* AVOID - feel dated and tacky */
+/* bounce: cubic-bezier(0.34, 1.56, 0.64, 1); */
+/* elastic: cubic-bezier(0.68, -0.6, 0.32, 1.6); */
 ```
 
-### 2. Custom Easing Curves
-Available in `src/styles/easing.css` (imported globally):
-- `--ease-in-quad`, `--ease-in-cubic`, `--ease-in-quart`, `--ease-in-quint`, `--ease-in-expo`, `--ease-in-circ`
-- `--ease-out-quad`, `--ease-out-cubic`, `--ease-out-quart`, `--ease-out-quint`, `--ease-out-expo`, `--ease-out-circ`
-- `--ease-in-out-quad`, `--ease-in-out-cubic`, `--ease-in-out-quart`, `--ease-in-out-quint`, `--ease-in-out-expo`, `--ease-in-out-circ`
+**Exit animations are faster than entrances.** Use ~75% of enter duration.
 
-### 3. Tailwind CSS
-Full Tailwind including transitions, transforms, and animations. Dark mode via `dark:` prefix.
-
-## Core Principles
-
-1. **Favor CSS over JavaScript** when possible for performance
-2. **Use `transform` and `opacity`** for smooth 60fps animations
-3. **Leverage GPU acceleration** via `translate3d`, `scale3d`, `rotate3d`
-4. **Keep durations short**: 150-300ms for most interactions, 400-600ms for complex animations
-5. **Use appropriate easing**: ease-out for entrances, ease-in for exits, ease-in-out for transitions
-6. **Respect `prefers-reduced-motion`** for accessibility
-
-## Common Animation Patterns
-
-### 1. Hover Effects (Pure CSS)
-
-**Scale on hover:**
-```tsx
-<button className="transition-transform duration-200 hover:scale-105 active:scale-95">
-  Hover me
-</button>
+### CSS Animations
+```css
+/* Prefer for simple, declarative animations */
+- transitions for state changes
+- @keyframes for complex sequences
+- transform + opacity only (GPU-accelerated)
 ```
 
-**Smooth color transitions:**
-```tsx
-<div className="bg-blue-500 transition-colors duration-300 hover:bg-blue-600">
-  Content
-</div>
+### JavaScript Animation
+```javascript
+/* Use for complex, interactive animations */
+- Web Animations API for programmatic control
+- Framer Motion for React
+- GSAP for complex sequences
 ```
 
-**With custom easing:**
-```tsx
-<div
-  className="hover:translate-y-[-2px] active:translate-y-0"
-  style={{
-    transition: 'transform 0.2s var(--ease-out-cubic)'
-  }}
->
-  Custom ease
-</div>
-```
+### Performance
+- **GPU acceleration**: Use `transform` and `opacity`, avoid layout properties
+- **will-change**: Add sparingly for known expensive animations
+- **Reduce paint**: Minimize repaints, use `contain` where appropriate
+- **Monitor FPS**: Ensure 60fps on target devices
 
-### 2. Entrance Animations (Framer Motion)
-
-**Fade in from below:**
-```tsx
-<motion.div
-  initial={{ opacity: 0, y: 20 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: 0.4, ease: [0.19, 1, 0.22, 1] }} // ease-out-expo
->
-  Content
-</motion.div>
-```
-
-**Staggered list animation:**
-```tsx
-<motion.ul
-  initial="hidden"
-  animate="visible"
-  variants={{
-    visible: { transition: { staggerChildren: 0.1 } }
-  }}
->
-  {items.map((item, i) => (
-    <motion.li
-      key={i}
-      variants={{
-        hidden: { opacity: 0, x: -20 },
-        visible: { opacity: 1, x: 0 }
-      }}
-    >
-      {item}
-    </motion.li>
-  ))}
-</motion.ul>
-```
-
-**Scale and fade in:**
-```tsx
-<motion.div
-  initial={{ opacity: 0, scale: 0.9 }}
-  animate={{ opacity: 1, scale: 1 }}
-  transition={{ duration: 0.3, ease: [0.165, 0.84, 0.44, 1] }} // ease-out-quart
->
-  Content
-</motion.div>
-```
-
-### 3. Exit Animations (Framer Motion)
-
-**Fade out:**
-```tsx
-<motion.div
-  initial={{ opacity: 1 }}
-  exit={{ opacity: 0 }}
-  transition={{ duration: 0.2 }}
->
-  Content
-</motion.div>
-```
-
-**Slide out to right:**
-```tsx
-<motion.div
-  exit={{ x: '100%', opacity: 0 }}
-  transition={{ duration: 0.3, ease: [0.55, 0.055, 0.675, 0.19] }} // ease-in-cubic
->
-  Content
-</motion.div>
-```
-
-### 4. Loading & Progress States
-
-**Spinner (CSS):**
-```tsx
-<div
-  className="w-8 h-8 border-4 border-zinc-200 border-t-blue-500 rounded-full animate-spin"
-/>
-```
-
-**Pulse animation:**
-```tsx
-<div className="animate-pulse bg-zinc-200 dark:bg-zinc-700 h-4 w-full rounded" />
-```
-
-**Progress bar with Motion:**
-```tsx
-<motion.div
-  className="h-2 bg-blue-500 rounded-full"
-  initial={{ width: 0 }}
-  animate={{ width: `${progress}%` }}
-  transition={{ duration: 0.5, ease: [0.19, 1, 0.22, 1] }}
-/>
-```
-
-### 5. Microinteractions
-
-**Button press feedback:**
-```tsx
-<motion.button
-  whileTap={{ scale: 0.95 }}
-  whileHover={{ scale: 1.05 }}
-  transition={{ type: "spring", stiffness: 400, damping: 17 }}
->
-  Click me
-</motion.button>
-```
-
-**Toggle switch animation:**
-```tsx
-<motion.div
-  className="w-12 h-6 bg-zinc-300 rounded-full p-1 cursor-pointer"
-  animate={{ backgroundColor: isOn ? '#3b82f6' : '#d4d4d8' }}
->
-  <motion.div
-    className="w-4 h-4 bg-white rounded-full"
-    animate={{ x: isOn ? 24 : 0 }}
-    transition={{ type: "spring", stiffness: 500, damping: 30 }}
-  />
-</motion.div>
-```
-
-**Card flip:**
-```tsx
-<motion.div
-  className="preserve-3d cursor-pointer"
-  animate={{ rotateY: isFlipped ? 180 : 0 }}
-  transition={{ duration: 0.6, ease: [0.645, 0.045, 0.355, 1] }} // ease-in-out-cubic
-  style={{ transformStyle: 'preserve-3d' }}
->
-  <div className="backface-hidden">{/* Front */}</div>
-  <div className="backface-hidden absolute inset-0" style={{ transform: 'rotateY(180deg)' }}>
-    {/* Back */}
-  </div>
-</motion.div>
-```
-
-### 6. Page Transitions
-
-```tsx
-<motion.div
-  initial={{ opacity: 0, x: -20 }}
-  animate={{ opacity: 1, x: 0 }}
-  exit={{ opacity: 0, x: 20 }}
-  transition={{ duration: 0.3, ease: [0.19, 1, 0.22, 1] }}
->
-  <YourPage />
-</motion.div>
-```
-
-### 7. Gesture Animations
-
-**Drag:**
-```tsx
-<motion.div
-  drag
-  dragConstraints={{ left: 0, right: 300, top: 0, bottom: 300 }}
-  dragElastic={0.2}
-  dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
->
-  Drag me
-</motion.div>
-```
-
-**Tap to expand:**
-```tsx
-const [isExpanded, setIsExpanded] = useState(false)
-
-<motion.div
-  layout
-  onClick={() => setIsExpanded(!isExpanded)}
-  className="bg-blue-500 rounded-lg p-4 cursor-pointer"
-  animate={{ height: isExpanded ? 'auto' : 100 }}
->
-  Content
-</motion.div>
-```
-
-## Advanced Techniques
-
-### Layout Animations
-Use `layout` prop for automatic layout animations:
-```tsx
-<motion.div layout>
-  {/* Content that changes size/position */}
-</motion.div>
-```
-
-### Shared Layout Animations
-```tsx
-<motion.div layoutId="unique-id">
-  {/* Component that moves between positions */}
-</motion.div>
-```
-
-### Scroll-triggered Animations
-```tsx
-import { useScroll, useTransform } from 'framer-motion'
-
-const { scrollYProgress } = useScroll()
-const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
-
-<motion.div style={{ opacity }}>
-  Fades on scroll
-</motion.div>
-```
-
-### Animation Orchestration
-```tsx
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      delayChildren: 0.3,
-      staggerChildren: 0.2
-    }
+### Accessibility
+```css
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
-
-const itemVariants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: { y: 0, opacity: 1 }
-}
-
-<motion.div variants={containerVariants} initial="hidden" animate="visible">
-  <motion.div variants={itemVariants} />
-  <motion.div variants={itemVariants} />
-  <motion.div variants={itemVariants} />
-</motion.div>
 ```
 
-## Performance Optimization
+**NEVER**:
+- Use bounce or elastic easing curves—they feel dated and draw attention to the animation itself
+- Animate layout properties (width, height, top, left)—use transform instead
+- Use durations over 500ms for feedback—it feels laggy
+- Animate without purpose—every animation needs a reason
+- Ignore `prefers-reduced-motion`—this is an accessibility violation
+- Animate everything—animation fatigue makes interfaces feel exhausting
+- Block interaction during animations unless intentional
 
-1. **Use `will-change` sparingly** for elements that will animate:
-   ```css
-   .animating { will-change: transform, opacity; }
-   ```
+## Verify Quality
 
-2. **Prefer transforms over absolute positioning:**
-   ```tsx
-   // Good
-   <motion.div animate={{ x: 100 }} />
+Test animations thoroughly:
 
-   // Avoid
-   <motion.div animate={{ left: 100 }} />
-   ```
+- **Smooth at 60fps**: No jank on target devices
+- **Feels natural**: Easing curves feel organic, not robotic
+- **Appropriate timing**: Not too fast (jarring) or too slow (laggy)
+- **Reduced motion works**: Animations disabled or simplified appropriately
+- **Doesn't block**: Users can interact during/after animations
+- **Adds value**: Makes interface clearer or more delightful
 
-3. **Use `layoutId` instead of animating between different components**
-
-4. **Reduce motion for accessibility:**
-   ```tsx
-   const shouldReduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
-   <motion.div
-     animate={{ y: shouldReduceMotion ? 0 : -20 }}
-     transition={{ duration: shouldReduceMotion ? 0 : 0.4 }}
-   />
-   ```
-
-## Common Easing Values (as arrays)
-
-For Framer Motion, use these cubic-bezier arrays:
-- `ease-out-expo`: `[0.19, 1, 0.22, 1]`
-- `ease-out-quart`: `[0.165, 0.84, 0.44, 1]`
-- `ease-out-cubic`: `[0.215, 0.61, 0.355, 1]`
-- `ease-in-out-cubic`: `[0.645, 0.045, 0.355, 1]`
-- `ease-in-cubic`: `[0.55, 0.055, 0.675, 0.19]`
-
-## When to Use What
-
-**CSS transitions:** Simple hover states, color changes, basic transforms
-**CSS animations:** Loading spinners, pulsing effects, infinite loops
-**Framer Motion:** Complex entrances/exits, gesture handling, layout animations, orchestrated sequences
-
-## Your Role
-
-When asked to create animations:
-1. **Ask clarifying questions** about the desired feel (playful, subtle, snappy, smooth)
-2. **Choose the right tool** (CSS vs Motion) based on complexity
-3. **Provide complete, working code** with appropriate easing and timing
-4. **Consider accessibility** and reduced motion preferences
-5. **Explain the animation** briefly (what moves, when, why this timing/easing)
-6. **Optimize for performance** by using transforms and opacity
-
-Always favor **native CSS** for simple interactions and **Framer Motion** for complex, orchestrated, or gesture-based animations.
+Remember: Motion should enhance understanding and provide feedback, not just add decoration. Animate with purpose, respect performance constraints, and always consider accessibility. Great animation is invisible - it just makes everything feel right.

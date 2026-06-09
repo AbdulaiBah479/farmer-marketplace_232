@@ -1,7 +1,7 @@
 ---
 name: wp-interactivity-api
-description: "Use when building or debugging WordPress Interactivity API features: data-wp-* directives, @wordpress/interactivity store/state/actions, block viewScriptModule integration, performance, hydration, and directive behavior."
-compatibility: "Targets WordPress 6.9+ (PHP 8.0+). Requires @wordpress/scripts for building."
+description: "Use when building or debugging WordPress Interactivity API features (data-wp-* directives, @wordpress/interactivity store/state/actions, block viewScriptModule integration) including performance, hydration, and directive behavior."
+compatibility: "Targets WordPress 6.9+ (PHP 7.2.24+). Filesystem-based agent with bash + node. Some workflows require WP-CLI."
 ---
 
 # WP Interactivity API
@@ -10,150 +10,100 @@ compatibility: "Targets WordPress 6.9+ (PHP 8.0+). Requires @wordpress/scripts f
 
 Use this skill when the user mentions:
 
-- Interactivity API, `@wordpress/interactivity`
-- `data-wp-interactive`, `data-wp-on--*`, `data-wp-bind--*`, `data-wp-context`
-- Block `viewScriptModule` / module-based view scripts
-- Hydration issues or "directives don't fire"
+- Interactivity API, `@wordpress/interactivity`,
+- `data-wp-interactive`, `data-wp-on--*`, `data-wp-bind--*`, `data-wp-context`,
+- block `viewScriptModule` / module-based view scripts,
+- hydration issues or “directives don’t fire”.
 
 ## Inputs required
 
-- Repo root + project type (plugin, theme, block)
-- Which surfaces are affected (frontend, editor, both)
-- WordPress version constraints
+- Repo root + triage output (`wp-project-triage`).
+- Which block/theme/plugin surfaces are affected (frontend, editor, both).
+- Any constraints: WP version, whether modules are supported in the build.
 
 ## Procedure
 
-### 1) Set up interactivity in a block
+### 1) Detect existing usage + integration style
 
-**block.json:**
+Search for:
 
-```json
-{
-  "name": "my-plugin/interactive-block",
-  "title": "Interactive Block",
-  "viewScriptModule": "file:./view.js",
-  "supports": {
-    "interactivity": true
-  }
-}
-```
+- `data-wp-interactive`
+- `@wordpress/interactivity`
+- `viewScriptModule`
 
-**view.js (ES module):**
+Decide:
 
-```javascript
-import { store, getContext } from '@wordpress/interactivity';
+- Is this a block providing interactivity via `block.json` view script module?
+- Is this theme-level interactivity?
+- Is this plugin-side “enhance existing markup” usage?
 
-store('my-plugin', {
-  state: {
-    get isOpen() {
-      return getContext().isOpen;
-    }
-  },
-  actions: {
-    toggle() {
-      const context = getContext();
-      context.isOpen = !context.isOpen;
-    }
-  }
-});
-```
+If you’re creating a new interactive block (not just debugging), prefer the official scaffold template:
 
-### 2) Core directives reference
+- `@wordpress/create-block-interactive-template` (via `@wordpress/create-block`)
 
-| Directive | Purpose | Example |
-|-----------|---------|---------|
-| `data-wp-interactive` | Activate interactivity on element | `data-wp-interactive="my-plugin"` |
-| `data-wp-context` | Provide local state | `data-wp-context='{"isOpen": false}'` |
-| `data-wp-bind--attr` | Bind attribute to state | `data-wp-bind--aria-expanded="state.isOpen"` |
-| `data-wp-on--event` | Handle events | `data-wp-on--click="actions.toggle"` |
-| `data-wp-class--name` | Toggle CSS class | `data-wp-class--is-open="state.isOpen"` |
-| `data-wp-text` | Set text content | `data-wp-text="state.count"` |
-| `data-wp-watch` | Run side effects | `data-wp-watch="callbacks.logChanges"` |
+### 2) Identify the store(s)
 
-### 3) PHP render with directives
+Locate store definitions and confirm:
 
-```php
-<?php
-$context = array( 'isOpen' => false );
-?>
-<div
-  <?php echo get_block_wrapper_attributes(); ?>
-  data-wp-interactive="my-plugin"
-  <?php echo wp_interactivity_data_wp_context( $context ); ?>
->
-  <button data-wp-on--click="actions.toggle">
-    Toggle
-  </button>
-  <div data-wp-bind--hidden="!state.isOpen">
-    Content here
-  </div>
-</div>
-```
+- state shape,
+- actions (mutations),
+- callbacks/event handlers used by `data-wp-on--*`.
 
-### 4) WordPress 6.9 changes
+### 3) Implement or change directives safely
 
-**Deprecated:**
-- `data-wp-ignore` is deprecated - avoid using it
+When touching markup directives:
 
-**New features:**
-- Unique directive IDs with `---` separator:
-  ```html
-  data-wp-on--click---plugin-a="actions.handleA"
-  data-wp-on--click---plugin-b="actions.handleB"
-  ```
-- New TypeScript types: `AsyncAction<ReturnType>`, `TypeYield<T>`
-- `getServerState()` and `getServerContext()` reset between page transitions
+- keep directive usage minimal and scoped,
+- prefer stable data attributes that map clearly to store state,
+- ensure server-rendered markup + client hydration align.
 
-### 5) Create interactive block from scratch
+**WordPress 6.9 changes:**
 
-```bash
-npx @wordpress/create-block@latest my-interactive-block --template @wordpress/create-block-interactive-template
-```
+- **`data-wp-ignore` is deprecated** and will be removed in future versions. It broke context inheritance and caused issues with client-side navigation. Avoid using it.
+- **Unique directive IDs**: Multiple directives of the same type can now exist on one element using the `---` separator (e.g., `data-wp-on--click---plugin-a="..."` and `data-wp-on--click---plugin-b="..."`).
+- **New TypeScript types**: `AsyncAction<ReturnType>` and `TypeYield<T>` help with async action typing.
 
-This scaffolds:
-- block.json with `viewScriptModule`
-- view.js with store setup
-- render.php with directives
+For quick directive reminders, see `references/directives-quickref.md`.
+
+### 4) Build/tooling alignment
+
+Verify the repo supports the required module build path:
+
+- if it uses `@wordpress/scripts`, prefer its conventions.
+- if it uses custom bundling, confirm module output is supported.
+
+### 5) Debug common failure modes
+
+If “nothing happens” on interaction:
+
+- confirm the `viewScriptModule` is enqueued/loaded,
+- confirm the DOM element has `data-wp-interactive`,
+- confirm the store namespace matches the directive’s value,
+- confirm there are no JS errors before hydration.
+
+See `references/debugging.md`.
 
 ## Verification
 
-- Manual smoke test: directive triggers and state updates as expected
-- View script loads in browser Network tab
-- No JS console errors before hydration
-- If tests exist: add/extend Playwright E2E
+- `wp-project-triage` indicates `signals.usesInteractivityApi: true` after your change (if applicable).
+- Manual smoke test: directive triggers and state updates as expected.
+- If tests exist: add/extend Playwright E2E around the interaction path.
 
 ## Failure modes / debugging
 
-**Directives not firing:**
-- View script not loading - check `viewScriptModule` path
-- Missing `data-wp-interactive` on parent element
-- Store namespace mismatch
-- JS errors before hydration
-
-**Hydration mismatch / flicker:**
-- Server markup differs from client expectations
-- Simplify or align initial state
-
-**Performance issues:**
-- Overly broad interactive roots
-- Scope interactivity to smaller subtrees
-
-**Debug checklist:**
-
-```bash
-# Check view script is registered
-wp eval 'print_r(wp_scripts()->registered);' | grep "view"
-
-# Check for interactivity usage
-grep -r "data-wp-interactive" .
-grep -r "@wordpress/interactivity" .
-```
+- Directives present but inert:
+  - view script not loading, wrong module entrypoint, or missing `data-wp-interactive`.
+- Hydration mismatch / flicker:
+  - server markup differs from client expectations; simplify or align initial state.
+- Performance regressions:
+  - overly broad interactive roots; scope interactivity to smaller subtrees.
+- Client-side navigation issues (WordPress 6.9):
+  - `getServerState()` and `getServerContext()` now reset between page transitions—ensure your code doesn't assume stale values persist.
+  - Router regions now support `attachTo` for rendering overlays (modals, pop-ups) dynamically.
 
 ## Escalation
 
-If build constraints are unclear, ask:
-> "Is this using @wordpress/scripts or a custom bundler (webpack/vite)?"
-
-Consult:
-- [Interactivity API Reference](https://developer.wordpress.org/block-editor/reference-guides/interactivity-api/)
-- [Interactivity API Docs](https://make.wordpress.org/core/tag/interactivity-api/)
+- If repo build constraints are unclear, ask: “Is this using `@wordpress/scripts` or a custom bundler (webpack/vite)?”
+- Consult:
+  - `references/directives-quickref.md`
+  - `references/debugging.md`

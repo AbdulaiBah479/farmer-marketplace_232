@@ -184,9 +184,7 @@ export default defineConfig({
   entry: ['src/index.tsx'],
   format: ['esm', 'cjs'],
   platform: 'browser',
-  deps: {
-    neverBundle: ['react', 'react-dom'],
-  },
+  external: ['react', 'react-dom'],
 })
 ```
 

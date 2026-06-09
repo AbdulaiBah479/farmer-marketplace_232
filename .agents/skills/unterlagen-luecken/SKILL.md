@@ -1,42 +1,39 @@
 ---
 name: unterlagen-luecken
-description: "Unterlagen und Lücken: sortiert Dokumente, erkennt Lücken, ordnet Beweiswert und formuliert gezielte Rückfragen."
+description: "Lücken- und Beschaffungsliste für Strafrechtliche Aktenaufbereitung: trennt fehlende Tatsachen von fehlenden Belegen (Ermittlungsakte, Anklageschrift, Hauptverhandlungsprotokoll), nennt pro Lücke Beweisthema, Beschaffungsweg (Staatsanwaltschaft), Frist und Ersatznachweis."
 ---
 
 # Unterlagen und Lücken
 
 ## Einsatzlage
 
-Diese Unterlagenprüfung für **Mietrecht** benennt fehlende Dokumente, streitige Tatsachen, Beweisrisiken und die kürzeste sichere Nachforderung.
+Diese Unterlagenprüfung für **Aktenaufbereiter Strafrecht** benennt fehlende Dokumente, streitige Tatsachen, Beweisrisiken und die kürzeste sichere Nachforderung.
 
 ## Fachlandkarte dieses Plugins
 
-- `allgemein-workflow-chronologie-workflow-fristen` — Allgemein Chronologie Fristen
-- `amtlichen-amtsgericht-sonderfall-ausschliesslich` — Amtlichen Amtsgericht Sonderfall Ausschliesslich
-- `bundesland-datenerhebung-grossstadt-mietspiegel` — Bundesland Datenerhebung Grossstadt Mietspiegel
-- `klageentwurf-amtsgericht-miet-gewerbemiete-mietvertrag-bauleiter` — Klageentwurf Amtsgericht Miet Gewerbemiete Mietvertrag Bauleiter
-- `lage-ausstattung-mahnung-zahlungsverzug-mandat-triage` — Lage Ausstattung Mahnung Zahlungsverzug Mandat Triage
-- `miet-kuendigungsschutz-miet-mietminderung-mieteranfragen` — Miet Kuendigungsschutz Miet Mietminderung Mieteranfragen
-- `mieter-mieteranfragen-mandantenentscheidung-mieterhoehungs` — Mieter Mieteranfragen Mandantenentscheidung Mieterhoehungs
-- `mieterhoehung-widersprechen-mieterhoehungsverlangen-erstellen` — Mieterhoehung Widersprechen Mieterhoehungsverlangen Erstellen
-- `mietpreisueberhoehung-wistrg-mietsenkungsverlangen-mietspiegel` — Mietpreisueberhoehung Wistrg Mietsenkungsverlangen Mietspiegel
-- `mietrecht-mietsenkungsverlangen-international-mietspiegel` — Mietrecht Mietsenkungsverlangen International Mietspiegel
-- `mr-betriebskostenabrechnung-mr-kuendigungsschutz-mr` — Mr Betriebskostenabrechnung Mr Kuendigungsschutz Mr
-- `mr-einfuehrung-klageentwurf-beweislast-eigenbedarfskuendigung` — Mr Einfuehrung Klageentwurf Beweislast Eigenbedarfskuendigung
-- `nebenkostenabrechnung-erstellen-faktenbank` — Nebenkostenabrechnung Erstellen Faktenbank
-- `nebenkostenpruefung-prozessstrategie-mieterhoehung-quellen` — Nebenkostenpruefung Prozessstrategie Mieterhoehung Quellen
+- `aktenaufbereiter-erstpruefung-und-mandatsziel` — Aktenaufbereiter Erstpruefung und Mandatsziel
+- `aktenaufbereiter-strafrecht` — Aktenaufbereiter Strafrecht
+- `akteneinsicht-uebersicht-aktenvorblatt` — Akteneinsicht Uebersicht Aktenvorblatt
+- `aktenlektuere-fristennotiz-und-naechster-schritt` — Aktenlektuere Fristennotiz und Naechster Schritt
+- `aktenvorblatt-erstellen` — Aktenvorblatt Erstellen
+- `aktenvorblatt-schriftsatz-brief-und-memo-bausteine` — Aktenvorblatt Schriftsatz Brief und Memo Bausteine
+- `anklageschrift-zerlegen` — Anklageschrift Zerlegen
+- `aussageanalyse-aussagepsychologie` — Aussageanalyse Aussagepsychologie
+- `beweismittel-katalog-beweisverwertungsverbote` — Beweismittel Katalog Beweisverwertungsverbote
+- `beweisverwertungsverbote-pruefen` — Beweisverwertungsverbote Pruefen
+- `beziehungen-spezial-chronologie-ergaenzbar` — Beziehungen Spezial Chronologie Ergaenzbar
+- `beziehungsmatrix-personen-taten` — Beziehungsmatrix Personen Taten
+- `chronologie-compliance-dokumentation-und-akte` — Chronologie Compliance Dokumentation und Akte
+- `anschluss-routing` — Anschluss Routing
+- `dokumente-intake` — Dokumente Intake
 
 ## Arbeitsweg
 
-- Sollkatalog aufstellen: Welche Dokumente brauche ich für die konkrete Mietrecht und WEG-Recht-Frage zwingend (Mietvertrag, Mieterhöhungsverlangen, Mietspiegel, Nebenkostenabrechnung, Kündigungsschreiben, Modernisierungsankündigung, WEG-Protokoll, Beschlusssammlung)?
+- Sollkatalog aufstellen: Welche Dokumente brauche ich für die konkrete Aktenaufbereiter Strafrecht-Frage zwingend (Vertragsurkunden, Schriftsätze, Verwaltungsakte, Protokolle, Bescheide und externe Beweismittel des Fachgebiets)?
 - Ist-Abgleich: Welche Dokumente sind vorhanden, welche fehlen, welche sind unvollständig, undatiert oder ohne Unterschrift?
-- Lückenliste priorisieren nach: fristrelevant (§ 573c BGB Kündigung 3 Monate, § 558b BGB Zustimmung Mieterhöhung Ende 2. Folgemonat, § 24 Abs. 4 WEG Ladung 3 Wochen, § 556 BGB Nebenkostenabrechnung 12 Monate), beweisrelevant, formerheblich.
-- Rückfrageschreiben an Vermieter, Mieter, Hausverwaltung, WEG-Verwaltung, Amtsgericht der Belegenheit, Mieterverein, Eigentümergemeinschaft entwerfen — Wer hat das Dokument, woher kann es beschafft werden, bis wann?
+- Lückenliste priorisieren nach: fristrelevant (die im Fachgebiet einschlägigen Verfahrens- und materiellen Fristen pflichtmäßig vorab markieren und nicht aus Modellwissen finalisieren), beweisrelevant, formerheblich.
+- Rückfrageschreiben an Mandant, Gegner, zuständiges Gericht oder Behörde, etwaige Sachverständige oder beauftragte Stellen entwerfen — Wer hat das Dokument, woher kann es beschafft werden, bis wann?
 - Bei behördlichen Lücken: Akteneinsichtsrecht (z. B. § 29 VwVfG, § 147 StPO, § 25 SGB X) prüfen und nutzen.
-
-## Output
-
-Priorisierte Lückenliste mit Frist, Beweiszweck, Beschaffungsweg, Ersatznachweis und Verantwortlichem; im Mandat Mietrecht (Wohnraum/Gewerbe) typischerweise Mietvertrag, Nebenkostenabrechnung zuerst.
 
 ## Qualitätsanker
 

@@ -1,265 +1,150 @@
 ---
 name: use-skills
-description: Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions
+description: Helps choose relevant installed skills for complex requests and briefly shows the working set before answering.
 ---
 
-<EXTREMELY-IMPORTANT>
-If you think there is even a 1% chance a skill might apply to what you are doing, you ABSOLUTELY MUST invoke the skill.
+# Use Skills
 
-IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
+Use this skill when the user invokes `$use-skills`, or when a request clearly benefits from combining more than one installed skill.
 
-This is not negotiable. This is not optional. You cannot rationalize your way out of this.
-</EXTREMELY-IMPORTANT>
+## Purpose
 
-## How to Access Skills
+Choose a small, relevant working set of skills and turn their guidance into one coherent result.
 
-**In Claude Code:** Use the `Skill` tool. When you invoke a skill, its content is loaded and presented to you—follow it directly. Never use the Read tool on skill files.
+Good fits include requests that combine areas such as:
 
-**In other environments:** Check your platform's documentation for how skills are loaded.
+- planning and implementation
+- review and testing
+- writing and structure
+- design and frontend work
+- documentation and code changes
 
-# Using Skills
+Skip this skill when one domain skill is clearly enough.
 
-## The Rule
+## Selection Process
 
-**Invoke relevant or requested skills BEFORE any response or action.** Even a 1% chance a skill might apply means that you should invoke the skill to check. If an invoked skill turns out to be wrong for the situation, you don't need to use it.
+0. Resolve the skill mode using the hard gate below.
+1. Review the visible skill list.
+2. Compare each skill with the user request and expected output.
+3. Pick the strongest matches as the working set.
+4. Use supporting skills only when they materially improve the result.
+5. Read only the parts of selected skills that help with the current task.
+6. Produce one unified answer, plan, patch, or recommendation.
 
-```dot
-digraph skill_flow {
-    "User message received" [shape=doublecircle];
-    "Might any skill apply?" [shape=diamond];
-    "Invoke Skill tool" [shape=box];
-    "Announce: 'Using [skill] to [purpose]'" [shape=box];
-    "Has checklist?" [shape=diamond];
-    "Create TodoWrite todo per item" [shape=box];
-    "Follow skill exactly" [shape=box];
-    "Respond (including clarifications)" [shape=doublecircle];
+Keep the working set appropriate to the selected mode. `Recommended` is the usual choice when the user wants balanced quality, but ask for a mode when no reusable prior choice exists.
 
-    "User message received" -> "Might any skill apply?";
-    "Might any skill apply?" -> "Invoke Skill tool" [label="yes, even 1%"];
-    "Might any skill apply?" -> "Respond (including clarifications)" [label="definitely not"];
-    "Invoke Skill tool" -> "Announce: 'Using [skill] to [purpose]'";
-    "Announce: 'Using [skill] to [purpose]'" -> "Has checklist?";
-    "Has checklist?" -> "Create TodoWrite todo per item" [label="yes"];
-    "Has checklist?" -> "Follow skill exactly" [label="no"];
-    "Create TodoWrite todo per item" -> "Follow skill exactly";
-}
+## Match Labels
+
+Use these labels while choosing:
+
+- `primary`: directly shapes the result
+- `support`: adds useful quality, structure, review, wording, or edge-case coverage
+- `skip`: not useful for the current request
+
+If no skill is a strong fit, leave this skill unused.
+
+## Modes
+
+Ask the user to choose one mode before any workspace exploration, tool calls, file reads, skill selection, or main response when there is no reusable prior choice:
+
+- `All related`: use every available skill that is meaningfully related to the request
+- `Recommended`: use the best balanced working set for the request
+- `Restricted`: use only the strongest matches, usually one to three skills
+
+Ask with this compact terminal-friendly format, inside a fenced `text` code block:
+
+```text
+1. All related - use every available skill that is meaningfully related.
+   Using: use-skills, <all related skill candidates>
+   For: broad coverage across <purposes>
+
+2. Recommended - use the best balanced working set.
+   Using: use-skills, <recommended skill candidates>
+   For: strong output without unnecessary noise
+
+3. Restricted - use only the strongest matches.
+   Using: use-skills, <one to three strongest skill candidates>
+   For: focused output with minimal skill involvement
+
+Choose skill mode. Reply with 1, 2, or 3.
 ```
 
-## Red Flags
+## Mode Choice Hard Gate
 
-These thoughts mean STOP—you're rationalizing:
+If `$use-skills` is invoked and the prompt does not explicitly name `All related`, `Recommended`, or `Restricted`, the next assistant response must be only:
 
-| Thought | Reality |
-|---------|---------|
-| "This is just a simple question" | Questions are tasks. Check for skills. |
-| "I need more context first" | Skill check comes BEFORE clarifying questions. |
-| "Let me explore the codebase first" | Skills tell you HOW to explore. Check first. |
-| "I can check git/files quickly" | Files lack conversation context. Check for skills. |
-| "Let me gather information first" | Skills tell you HOW to gather information. |
-| "This doesn't need a formal skill" | If a skill exists, use it. |
-| "I remember this skill" | Skills evolve. Read current version. |
-| "This doesn't count as a task" | Action = task. Check for skills. |
-| "The skill is overkill" | Simple things become complex. Use it. |
-| "I'll just do this one thing first" | Check BEFORE doing anything. |
-| "This feels productive" | Undisciplined action wastes time. Skills prevent this. |
-| "I know what that means" | Knowing the concept ≠ using the skill. Invoke it. |
+the fenced `text` mode menu above.
 
-## Skill Priority
+Do not inspect files, search the workspace, read skill files, or infer a final mode before asking.
 
-When multiple skills could apply, use this order:
+The menu should still mention likely skills for each option. Use only the current prompt and visible/provided skill names/descriptions to draft those candidate lists. Do not use tools to discover more context before the user chooses.
 
-1. **Process skills first** (brainstorming, debugging) - these determine HOW to approach the task
-2. **Implementation skills second** (frontend-design, mcp-builder) - these guide execution
+Candidate sources allowed before mode choice:
 
-"Let's build X" → brainstorming first, then implementation skills.
-"Fix this bug" → debugging first, then domain-specific skills.
+- installed skill metadata already visible in the current session
+- skill blocks pasted or provided by the user in the current conversation, such as `<skill><name>enhance-prompt</name>...`
+- skills explicitly named by the user with `$skill-name`, when a visible/provided description exists in the session
 
-## Skill Types
+Replace the placeholder skill candidates with actual visible/provided skill names whenever they are available. In the mode menu, use bare skill names such as `use-skills`, `brainstorming`, and `writing-plans` without a `$` prefix. If the visible skill list is unavailable, say `skills selected after mode choice` instead of inventing names.
 
-**Rigid** (TDD, debugging): Follow exactly. Don't adapt away discipline.
+For `All related`, be aggressive. Include every candidate with a meaningful primary, support, adjacent-context, prompt-quality, wording, planning, or framing role. If a skill is commonly helpful for making the prompt, context, plan, or output better, include it in `All related` even when it is not the narrowest domain match. If the user explicitly names or provides a skill and it has any plausible support role, include it in `All related` even when it is too broad or weak for `Recommended`. Example: include `enhance-prompt` when the task involves improving prompts, examples, mode menus, docs, UI prompts, or prompt-facing wording.
 
-**Flexible** (patterns): Adapt principles to context.
+When the user asks to improve a prompt, tighten a prompt, clarify prompt wording, make prompt/context better, or includes prompt-facing wording like `Patch this bug report so it is clearer...`, include `enhance-prompt` in `All related` if it is installed, visible, provided in the conversation, or explicitly mentioned. Do not exclude it from `All related` just because the current task is not a Stitch UI prompt; use it as support for prompt structure and clarity.
 
-The skill itself tells you which.
+For `Recommended`, include `brainstorming` when the task needs strategy, context analysis, behavior changes, feature changes, prompt/context improvement, report framing, or deciding how to shape the work before execution. `Recommended` should usually include common support skills that materially improve output quality, not only the strictest domain skills.
 
-## User Instructions
+The mode menu must be a standalone fenced `text` code block, not a Markdown bullet, not a paragraph, and not nested under another list item.
 
-Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.
+Spacing is mandatory:
 
----
+- Insert one completely empty line after option 1's `For:` line before option 2.
+- Insert one completely empty line after option 2's `For:` line before option 3.
+- Insert one completely empty line after option 3's `For:` line before `Choose skill mode. Reply with 1, 2, or 3.`
+- Do not add blank lines inside an option between the option title, `Using:`, and `For:`.
 
-## Planning & Implementation Workflow
+If `2. Recommended` appears directly under option 1's `For:` line, or `3. Restricted` appears directly under option 2's `For:` line, the menu is incorrectly formatted and must be rewritten with separator lines.
 
-When starting work that involves creating or changing functionality, follow this workflow:
+Do not use Markdown bold or all-caps labels in the mode menu because terminal transcripts may not render styling. Put `Choose skill mode. Reply with 1, 2, or 3.` after the three options, not before them. Do not add any explanatory sentence before or after the fenced block when asking for the mode.
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    STARTING NEW WORK?                           │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-              ┌───────────────────────────────┐
-              │ Are requirements clear?       │
-              └───────────────────────────────┘
-                     │              │
-                    NO             YES
-                     │              │
-                     ▼              ▼
-         ┌─────────────────┐   ┌─────────────────┐
-         │ /brainstorming  │   │ Does a plan     │
-         │                 │   │ file exist?     │
-         │ Explore intent, │   │ (gi_*.md)       │
-         │ design approach │   └─────────────────┘
-         └─────────────────┘          │       │
-                  │                  NO      YES
-                  ▼                   │       │
-         ┌─────────────────┐         │       │
-         │ Outputs design  │         │       │
-         │ to doc/plans/   │         │       │
-         └─────────────────┘         │       │
-                  │                  │       │
-                  ▼                  ▼       │
-         ┌─────────────────────────────┐    │
-         │      /issue-planning        │    │
-         │                             │    │
-         │ Create detailed plan in     │    │
-         │ doc/plans/issues/gi_*.md    │    │
-         └─────────────────────────────┘    │
-                        │                   │
-                        └─────────┬─────────┘
-                                  ▼
-         ┌─────────────────────────────────────┐
-         │  Is it a discrete issue (gi_*.md)  │
-         │  or a larger plan?                  │
-         └─────────────────────────────────────┘
-                     │              │
-             gi_*.md issue    larger plan
-                     │              │
-                     ▼              ▼
-         ┌─────────────────┐  ┌─────────────────┐
-         │/executing-issues│  │ /executing-plans│
-         └─────────────────┘  └─────────────────┘
-                     │              │
-                     └──────┬───────┘
-                            ▼
-         ┌─────────────────────────────────────┐
-         │       /pre-deploy-validation        │
-         │                                     │
-         │ Before pushing to production        │
-         └─────────────────────────────────────┘
-```
+Phrases like `best`, `most relevant`, `strongest`, `helpful`, or `best combination` do not count as explicit mode choices.
 
-### Quick Reference
+Do not choose silently unless the user already specified one of the three modes or a previous mode still applies. Reuse the previous mode only when the task and expected output are materially the same. Ask again when the task, expected output, or selected skill set changes.
 
-| Situation | Skill |
-|-----------|-------|
-| Unclear requirements, exploring ideas | `/brainstorming` |
-| Need to create detailed implementation plan | `/issue-planning` |
-| Implementing a discrete issue with `gi_*.md` file | `/executing-issues` |
-| Executing a larger architecture plan | `/executing-plans` |
-| Ready to deploy | `/pre-deploy-validation` |
+## Response Block
 
-### Workflow Tips
+When this skill is used, start with a compact block:
 
-- **Always start with `/brainstorming`** if requirements are fuzzy or you're exploring options
-- **Skip to `/issue-planning`** if you already know what to build
-- **Skip to `/executing-issues`** if a plan file already exists
-- **Use `/executing-plans`** for multi-issue architecture work (e.g., migrations, refactors)
+- `Mode: All related | Recommended | Restricted`
+- `Using: use-skills, <selected skill>`
+- `For: <short purpose>`
 
----
+List only skills that actually shape the answer. Keep selection details out of the response unless the user asks for them.
 
-## Complete Skill Catalog
+## Conflict Handling
 
-### Planning & Execution (Sequential Workflow)
+When selected skills point in different directions, prefer:
 
-| Skill | When to Use | Trigger Phrases |
-|-------|-------------|-----------------|
-| `/brainstorming` | Requirements unclear, exploring approaches, new feature design | "Let's build...", "How should we...", "I want to add..." |
-| `/issue-planning` | Create detailed implementation plan for discrete task | "Plan this feature", "Create an issue for...", after brainstorming |
-| `/executing-issues` | Implement a task with existing `gi_*.md` plan file | "Implement PREPQ-001", "Execute the issue plan" |
-| `/executing-plans` | Execute large multi-step plans (migrations, refactors) | "Execute the migration plan", "Implement the architecture" |
-| `/pre-deploy-validation` | Verify changes before pushing to production | "Ready to deploy", "Check if this is deployment-ready" |
+1. the user's current request
+2. higher-priority session and project guidance
+3. narrower domain skills over broader general skills
+4. newer and more specific guidance over older or vague guidance
 
-### Implementation Process (Use During Coding)
+## Quality Checks
 
-| Skill | When to Use | Trigger Phrases |
-|-------|-------------|-----------------|
-| `/software-architecture` | Reference for code patterns, naming, structure | "What's the convention for...", "How should I structure...", while writing code |
-| `/test-driven-development` | Writing any new code (features, bugfixes) | "Implement...", "Fix bug...", "Add feature..." |
+- Keep the answer focused on the user's task.
+- Avoid irrelevant skill advice.
+- Avoid duplicate guidance.
+- Keep the opening block shorter than the answer it introduces.
+- Include a support skill in `Using:` only when it materially changes the result.
+- Ask for mode before doing anything else when no reusable prior mode exists.
+- Do not ask again when the prior mode still fits the task and expected output.
+- Ask again when the task, expected output, or selected skill set has changed.
 
-**Note:** `software-architecture` is a **reference skill** — consult it while coding. `test-driven-development` is a **process skill** — follow it strictly.
+## Example Triggers
 
-### Code Review (After Implementation)
-
-| Skill | When to Use | Trigger Phrases |
-|-------|-------------|-----------------|
-| `/requesting-code-review` | After completing work, before merge | "Review my changes", "Check this before merge" |
-| `/receiving-code-review` | When you receive feedback on your code | "Here's review feedback...", PR comments received |
-
-### Domain Expert Reviewers (Validation)
-
-These skills activate **read-only reviewers** who provide feedback without making edits. Use them to validate work from different perspectives.
-
-| Skill | Expertise | When to Use |
-|-------|-----------|-------------|
-| `/hydrological-modeller` | Scientific validity, model correctness, skill metrics | Reviewing model implementations, forecast quality, documentation for modellers |
-| `/operational-hydrologist` | End-user workflows, dashboard UX, forecast interpretation | **Any UI changes**, frontend changes, user-facing documentation, visualization decisions |
-| `/hydromet-sysadmin` | Server operations, deployment, security, troubleshooting | Deployment docs, maintenance procedures, server-related changes |
-
-**Mandatory reviews:**
-- **UI/Frontend changes** → Always invoke `/operational-hydrologist` (they are the end users)
-- **Model/forecast changes** → Always invoke `/hydrological-modeller`
-- **Deployment/server changes** → Always invoke `/hydromet-sysadmin`
-
-**Typical workflow:** After implementation, invoke the relevant reviewer(s) for domain-specific feedback before deployment.
-
-### Technical Reference (Domain-Specific Guidance)
-
-| Skill | When to Use | Trigger Phrases |
-|-------|-------------|-----------------|
-| `/ieasyhydro-sdk` | Working with iEasyHydro HF API, SDK errors, data retrieval | "SDK error", "get_data_values", "422 error", working in `preprocessing_runoff` |
-| `/cicd-master` | GitHub Actions, deployment scripts, Docker pipelines, cron jobs | Editing `.github/workflows/`, `bin/` scripts, Docker builds |
-| `/documentation` | Writing/updating docs, documentation audits, identifying gaps | "Update the docs", "Write documentation for...", working in `doc/` |
-
-### Meta Skills
-
-| Skill | When to Use |
-|-------|-------------|
-| `/use-skills` | Unsure which skill applies, starting a conversation |
-| `/skill-creator` | Creating or updating a skill |
-
----
-
-## Skill Combinations
-
-Common skill sequences for different work types:
-
-**New Feature:**
-```
-/brainstorming → /issue-planning → /test-driven-development → /executing-issues → /requesting-code-review → /pre-deploy-validation
-```
-
-**Bug Fix:**
-```
-/test-driven-development → /requesting-code-review → /pre-deploy-validation
-```
-
-**Documentation:**
-```
-/documentation → /hydrological-modeller (for technical review)
-```
-
-**Model Changes:**
-```
-/brainstorming → /issue-planning → /test-driven-development → /hydrological-modeller (review) → /pre-deploy-validation
-```
-
-**UI/Frontend Changes (dashboard, visualizations):**
-```
-/brainstorming → /issue-planning → /test-driven-development → /operational-hydrologist (REQUIRED) → /pre-deploy-validation
-```
-
-**Deployment/CI Changes:**
-```
-/cicd-master → /hydromet-sysadmin (review) → /pre-deploy-validation
-```
+- `$use-skills`
+- `Turn this feature idea into an implementation plan with testing notes.`
+- `Rewrite this README so it is clearer and better structured.`
+- `This spans planning, implementation, and review. Use the best combination of skills.`
+- `Review this change and give the strongest findings first.`
+- `Use restricted mode and only the strongest skills for this request.`

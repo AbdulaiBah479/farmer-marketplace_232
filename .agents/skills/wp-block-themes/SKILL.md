@@ -1,7 +1,7 @@
 ---
 name: wp-block-themes
 description: "Use when developing WordPress block themes: theme.json (global settings/styles), templates and template parts, patterns, style variations, and Site Editor troubleshooting (style hierarchy, overrides, caching)."
-compatibility: "Targets WordPress 6.9+ (PHP 8.0+). Filesystem-based agent with bash + node."
+compatibility: "Targets WordPress 6.9+ (PHP 7.2.24+). Filesystem-based agent with bash + node. Some workflows require WP-CLI."
 ---
 
 # WP Block Themes
@@ -10,197 +10,107 @@ compatibility: "Targets WordPress 6.9+ (PHP 8.0+). Filesystem-based agent with b
 
 Use this skill for block theme work such as:
 
-- Editing `theme.json` (presets, settings, styles, per-block styles)
-- Adding or changing templates (`templates/*.html`) and template parts (`parts/*.html`)
-- Adding patterns (`patterns/*.php`) and controlling inserter visibility
-- Adding style variations (`styles/*.json`)
-- Debugging "styles not applying" / "editor doesn't reflect theme.json"
+- editing `theme.json` (presets, settings, styles, per-block styles)
+- adding or changing templates (`templates/*.html`) and template parts (`parts/*.html`)
+- adding patterns (`patterns/*.php`) and controlling what appears in the inserter
+- adding style variations (`styles/*.json`)
+- debugging “styles not applying” / “editor doesn’t reflect theme.json”
 
 ## Inputs required
 
-- Repo root and which theme is targeted
-- Target WordPress version range (theme.json version varies by core version)
-- Where the issue manifests: Site Editor, post editor, frontend, or all
+- Repo root and which theme is targeted (theme directory if multiple exist).
+- Target WordPress version range (theme.json version and features vary by core version).
+- Where the issue manifests: Site Editor, post editor, frontend, or all.
 
 ## Procedure
 
-### 1) Verify block theme structure
+### 0) Triage and locate block theme roots
 
-Required structure:
+1. Run triage:
+   - `node skills/wp-project-triage/scripts/detect_wp_project.mjs`
+2. Detect theme roots + key folders:
+   - `node skills/wp-block-themes/scripts/detect_block_themes.mjs`
 
-```
-theme-name/
-├── style.css          # Theme header (required)
-├── theme.json         # Global settings and styles (required)
-├── templates/         # Full page templates
-│   ├── index.html     # Fallback template (required)
-│   ├── single.html
-│   ├── archive.html
-│   └── ...
-├── parts/             # Template parts
-│   ├── header.html
-│   ├── footer.html
-│   └── ...
-├── patterns/          # Block patterns (optional)
-│   └── *.php
-└── styles/            # Style variations (optional)
-    └── *.json
-```
+If multiple themes exist, pick one and scope all changes to that theme root.
 
-### 2) theme.json structure
+### 1) Create a new block theme (if needed)
 
-**Settings** (what the UI allows):
+If you are creating a new block theme from scratch (or converting a classic theme):
 
-```json
-{
-  "$schema": "https://schemas.wp.org/trunk/theme.json",
-  "version": 3,
-  "settings": {
-    "color": {
-      "palette": [
-        { "slug": "primary", "color": "#0073aa", "name": "Primary" }
-      ]
-    },
-    "typography": {
-      "fontSizes": [
-        { "slug": "small", "size": "14px", "name": "Small" }
-      ]
-    },
-    "layout": {
-      "contentSize": "800px",
-      "wideSize": "1200px"
-    }
-  }
-}
-```
+- Prefer starting from a known-good scaffold (or exporting from a WP environment) rather than guessing file layout.
+- Be explicit about the minimum supported WordPress version because `theme.json` schema versions differ.
 
-**Styles** (how it looks by default):
+Read:
+- `references/creating-new-block-theme.md`
 
-```json
-{
-  "styles": {
-    "color": {
-      "background": "var(--wp--preset--color--base)",
-      "text": "var(--wp--preset--color--contrast)"
-    },
-    "elements": {
-      "link": {
-        "color": { "text": "var(--wp--preset--color--primary)" }
-      }
-    },
-    "blocks": {
-      "core/button": {
-        "color": {
-          "background": "var(--wp--preset--color--primary)"
-        }
-      }
-    }
-  }
-}
-```
+After creating the theme root, re-run `detect_block_themes` and continue below.
 
-### 3) Templates and template parts
+### 2) Confirm theme type and override expectations
 
-**Templates** (`templates/*.html`):
+- Block theme indicators:
+  - `theme.json` present
+  - `templates/` and/or `parts/` present
+- Remember the style hierarchy:
+  - core defaults → theme.json → child theme → user customizations
+  - user customizations can make theme.json edits appear “ignored”
 
-```html
-<!-- wp:template-part {"slug":"header"} /-->
+Read:
+- `references/debugging.md` (style hierarchy + fastest checks)
 
-<!-- wp:group {"tagName":"main"} -->
-<main class="wp-block-group">
-  <!-- wp:post-title /-->
-  <!-- wp:post-content /-->
-</main>
-<!-- /wp:group -->
+### 3) Make `theme.json` changes safely
 
-<!-- wp:template-part {"slug":"footer"} /-->
-```
+Decide whether you are changing:
 
-**Template parts** (`parts/*.html`):
-- Must NOT be nested in subdirectories
-- Must have matching `slug` in template-part block
+- **settings** (what the UI allows): presets, typography scale, colors, layout, spacing
+- **styles** (how it looks by default): CSS-like rules for elements/blocks
 
-### 4) Patterns
+Read:
+- `references/theme-json.md`
 
-Create patterns in `patterns/*.php`:
+### 4) Templates and template parts
 
-```php
-<?php
-/**
- * Title: Hero Section
- * Slug: theme-name/hero
- * Categories: featured
- * Keywords: hero, banner
- */
-?>
-<!-- wp:cover {"url":"..."} -->
-...
-<!-- /wp:cover -->
-```
+- Templates live under `templates/` and are HTML.
+- Template parts live under `parts/` and must not be nested in subdirectories.
 
-### 5) Style variations
+Read:
+- `references/templates-and-parts.md`
 
-Create variations in `styles/*.json`:
+### 5) Patterns
 
-```json
-{
-  "$schema": "https://schemas.wp.org/trunk/theme.json",
-  "version": 3,
-  "title": "Dark Mode",
-  "settings": {},
-  "styles": {
-    "color": {
-      "background": "#1a1a1a",
-      "text": "#ffffff"
-    }
-  }
-}
-```
+Prefer filesystem patterns under `patterns/` when you want theme-owned patterns.
 
-### 6) Style hierarchy (debugging)
+Read:
+- `references/patterns.md`
 
-Styles apply in this order (later overrides earlier):
+### 6) Style variations
 
-1. Core defaults
-2. theme.json (parent theme)
-3. theme.json (child theme)
-4. User customizations (stored in DB)
+Style variations are JSON files under `styles/`. Note: once a user picks a style variation, that selection is stored in the DB, so changing the file may not “update what the user sees” automatically.
 
-If your theme.json changes don't appear:
-- Check if user customizations override them
-- Clear any caches
-- Validate JSON syntax
+Read:
+- `references/style-variations.md`
 
 ## Verification
 
-- Site Editor reflects changes (Styles UI, templates, patterns)
-- Frontend renders with expected styles
-- If styles aren't changing, confirm user customizations don't override
+- Site Editor reflects changes where expected (Styles UI, templates, patterns).
+- Frontend renders with expected styles.
+- If styles aren’t changing, confirm whether user customizations override theme defaults.
+- Run the repo’s build/lint scripts if assets are involved (fonts, custom JS/CSS build).
 
 ## Failure modes / debugging
 
+Start with:
+
+- `references/debugging.md`
+
 Common issues:
 
-- **Wrong theme root**: Editing inactive theme
-- **User overrides**: Customizations in DB override theme.json
-- **Invalid JSON**: Typos prevent application
-- **Wrong folder**: Templates/parts in wrong location or nested
-
-Debug commands:
-
-```bash
-# Validate theme.json
-cat theme.json | python3 -m json.tool
-
-# Check template files
-ls -la templates/ parts/
-
-# Verify theme is active
-wp theme list --status=active
-```
+- wrong theme root (editing an inactive theme)
+- user customizations override your defaults
+- invalid `theme.json` shape/typos prevent application
+- templates/parts in wrong folders (or nested parts)
 
 ## Escalation
 
-Consult canonical docs:
-- [Theme Handbook - Block Themes](https://developer.wordpress.org/themes/block-themes/)
-- [theme.json Reference](https://developer.wordpress.org/block-editor/reference-guides/theme-json-reference/)
+If upstream behavior is unclear, consult canonical docs:
+
+- Theme Handbook and Block Editor Handbook for `theme.json`, templates, patterns, and style variations.

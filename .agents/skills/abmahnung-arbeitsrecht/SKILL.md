@@ -1,13 +1,34 @@
 ---
 name: abmahnung-arbeitsrecht
-description: "Entwirft und bewertet arbeitsrechtliche Abmahnungen. Lädt, wenn eine Abmahnung erstellt, inhaltlich geprüft oder deren Wirksamkeitsvoraussetzungen (Warnfunktion, Bestimmtheit, Dokumentation) beurteilt werden sollen – sowohl aus Arbeitgeber- als auch aus Arbeitnehmerperspektive."
+description: "Arbeitgeber will Arbeitnehmer abmahnen oder Arbeitnehmer hat Abmahnung erhalten und will sie anfechten: Prüfraster Warnfunktion Ruegefunktion Dokumentati..."
 ---
 
-# Abmahnung im Arbeitsrecht
+# Arbeitgeber will Arbeitnehmer abmahnen oder Arbeitnehmer hat Abmahnung erhalten und will sie anfechten
 
-## Zweck
 
-Dieser Skill dient dem Entwurf und der rechtlichen Bewertung von Abmahnungen im Arbeitsverhältnis. Er ist einschlägig, wenn ein Arbeitgeber eine Abmahnung aussprechen will (Wirksamkeitsvoraussetzungen, Formulierung), ein Arbeitnehmer eine erhaltene Abmahnung anfechten oder deren Entfernung aus der Personalakte begehrt, oder wenn eine verhaltensbedingte Kündigung vorbereitet wird und die Frage der vorherigen Abmahnung zu klären ist. Die Abmahnung ist regelmäßig notwendige Vorstufe einer verhaltensbedingten ordentlichen oder außerordentlichen Kündigung (§§ 1 KSchG, 626 BGB) und deshalb in ihrer formellen wie inhaltlichen Anforderung sorgfältig zu behandeln.
+## Arbeitsbereich
+
+**Kueschk Annahmeverzug Lohnsteuer** ordnet den Fall über die tragenden Prüfungslinien: Annahmeverzugslohn nach § 615 BGB und § 11 KSchG, Beurteilt den sozialversicherungsrechtlichen Status, § 7a. Arbeite zuerst die tragende Rechtsfrage heraus; Nebenaspekte werden nur verarbeitet, soweit sie Frist, Zuständigkeit, Beweislast oder das konkrete Arbeitsprodukt tatsächlich beeinflussen.
+
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: die im Plugin-Kontext einschlägigen Normen über gesetze-im-internet.de, dejure.org, eur-lex.europa.eu und die amtlichen Bundes-/Landesportale live prüfen — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+**Fokus:** Arbeitgeber will Arbeitnehmer abmahnen oder Arbeitnehmer hat Abmahnung erhalten und will sie anfechten. Prüfraster Warnfunktion Ruegefunktion Dokumentationsfunktion nach BAG-Rspr. § 314 Abs. 2 BGB § 241 Abs. 2 BGB. Inhaltliche Anforderungen Bestimmtheit Konkretheit des Vorwurfs Verhältnismäßigkeit. Prüfung ob Abmahnung entbehrlich (verhaltensbedingte Kündigung). Output Abmahnungsschreiben oder Gegendarstellung Widerspruchsschreiben Löschungsantrag. Abgrenzung: Kündigungsprüfung bei kueschk-skills; BR-Anhörung bei betriebsrat-anhoerung.
+
+### Abmahnung im Arbeitsrecht
+
+## Fachlicher Kern — Arbeitsrecht
+- **Problemfokus dieses Skills:** Bleibe beim konkreten Titel `Abmahnung im Arbeitsrecht` und löse die dort angelegte Fachfrage; arbeite mit konkreten Tatbestandsmerkmalen, Beweisfragen und dem unmittelbar benötigten Arbeitsprodukt. Routingfragen bleiben Hilfsmittel, wenn Frist, Zuständigkeit oder Verfahrensart offen sind.
+- **Normenradar:** BGB §§ 611a, 613a, 615, 623; KSchG §§ 1, 4, 7; TzBfG §§ 14, 15, 16; AGG §§ 1, 3, 7, 15, 22; EntgTranspG §§ 3, 5, 7; BUrlG §§ 1, 3, 7; BetrVG §§ 87, 99, 102; ArbZG; NachwG; SGB IX §§ 164, 167, 168.
+- **Verifizierte Anker:** BAG, Urteil vom 23.10.2025 - 8 AZR 300/24 (Entgeltgleichheit, Paarvergleich, Beweislast, bundesarbeitsgericht.de); BAG, Urteil vom 03.06.2025 - 9 AZR 104/24 (kein Verzicht auf gesetzlichen Mindesturlaub im bestehenden Arbeitsverhältnis); bei Kündigungszugang immer § 623 BGB, Zugang nach § 130 BGB, Dreiwochenfrist §§ 4, 7 KSchG und Beweis des konkreten Umschlags trennen.
+- **Arbeitsmodus:** Zuerst Status, Zugang, Frist, Beteiligungsrechte, Sonderkündigungsschutz, Beweislast und prozessualen nächsten Schritt sichern; dann erst Materiellrecht vertiefen.
+- **Outputpflicht:** Fristenblatt, Zugangsmatrix, Beweisangebot, Mandantenmail, Betriebsrats-/Gegnerbrief oder Klage-/Erwiderungsbaustein.
+- **Fehlerbremse:** Tragende Normen/Entscheidungen live oder aus der Akte verifizieren; Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei prüfbarer Quelle. Keine BeckRS-, juris-, Kommentar- oder Aufsatz-Blindzitate aus Modellwissen.
 
 ## Eingaben
 
@@ -34,23 +55,20 @@ Dieser Skill dient dem Entwurf und der rechtlichen Bewertung von Abmahnungen im 
 ### Leitentscheidungen (BGH-Stil)
 
 - **Warnfunktion / Bestimmtheit:**
-  BAG, Urt. v. 19.04.2007 – 2 AZR 180/06, NZA 2007, 1227 Rn. 17 f.: Eine wirksame Abmahnung muss das beanstandete Verhalten so konkret bezeichnen, dass der Arbeitnehmer erkennen kann, welche konkreten Handlungen oder Unterlassungen beanstandet werden; pauschale Vorwürfe genügen nicht.
+ Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
 - **Entbehrlichkeit der Abmahnung:**
-  BAG, Urt. v. 27.11.2008 – 2 AZR 675/07, NZA 2009, 842 Rn. 20: Eine Abmahnung ist entbehrlich, wenn von vornherein anzunehmen ist, dass der Arbeitnehmer sein Verhalten nicht ändern wird (beharrliche Pflichtverletzung), oder wenn die Pflichtverletzung so schwerwiegend ist, dass eine Hinnahme durch den Arbeitgeber offensichtlich ausgeschlossen erscheint.
+ Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
 - **Abmahnung als Kündigung vorbereitende Maßnahme:**
-  BAG, Urt. v. 14.09.1994 – 2 AZR 164/94, NZA 1995, 269 Rn. 27: Für eine verhaltensbedingte Kündigung nach vorangegangener Abmahnung ist erforderlich, dass die abgemahnte Pflichtverletzung ihrer Art nach mit der neuen Pflichtverletzung gleichartig ist.
+ Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
 - **Entfernung aus Personalakte:**
-  BAG, Urt. v. 19.07.2012 – 2 AZR 782/11, NZA 2013, 91 Rn. 15: Der Arbeitnehmer hat einen Anspruch auf Entfernung einer unberechtigten Abmahnung aus der Personalakte; dies folgt aus § 242 BGB (Treue- und Fürsorgepflicht des Arbeitgebers).
+ Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
-### Kommentarliteratur
+### Quellenregel
 
-- Preis, in: ErfK, 25. Aufl. 2025, § 314 BGB Rn. 8 ff. (Abmahnerfordernis im Arbeitsverhältnis, Bestimmtheit, Warnfunktion).
-- Niemann, in: MüKoBGB, 9. Aufl. 2024, § 626 BGB Rn. 130 ff. (Entbehrlichkeit der Abmahnung, Interessenabwägung, beharrliche Pflichtverletzung).
-- Linck, in: HWK, 11. Aufl. 2024, § 622 BGB Rn. 5 ff. (Verhältnis Abmahnung / Kündigung, Gleichartigkeit).
-- Kiel, in: APS, Kündigungsrecht, 6. Aufl. 2021, Vorbem. § 1 KSchG Rn. 50 ff. (Abmahnung als Verhältnismäßigkeitserfordernis der Kündigung).
+Quellenregel: Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen; Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff.
 
 ## Ablauf
 
@@ -58,10 +76,10 @@ Dieser Skill dient dem Entwurf und der rechtlichen Bewertung von Abmahnungen im 
 
 1. Liegt eine **arbeitsvertragliche Pflichtverletzung** vor (Hauptleistungspflicht, Nebenpflicht nach § 241 Abs. 2 BGB)?
 2. Ist die Pflichtverletzung **schuldhaft** (Verschulden des Arbeitnehmers)?
-3. **Entbehrlichkeit der Abmahnung prüfen** (BAG, Urt. v. 27.11.2008 – 2 AZR 675/07, NZA 2009, 842 Rn. 20):
-   - Beharrliche oder wiederholte Pflichtverletzung trotz vorangegangener Abmahnungen?
-   - Schwerwiegender Vertrauensbruch (z. B. Betrug, Diebstahl zu Lasten des Arbeitgebers)?
-   - Dann: direkte Kündigung ggf. möglich.
+3. Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+ - Beharrliche oder wiederholte Pflichtverletzung trotz vorangegangener Abmahnungen?
+ - Schwerwiegender Vertrauensbruch (z. B. Betrug, Diebstahl zu Lasten des Arbeitgebers)?
+ - Dann: direkte Kündigung ggf. möglich.
 4. **Folgeziel**: Verhaltensänderung herbeiführen → Abmahnung aussprechen. Nur Dokumentation ohne Kündigung → Abmahnung möglich, aber sachlich beschränkt.
 
 ### Schritt 2 – Wirksamkeitsvoraussetzungen prüfen (Checkliste)
@@ -122,16 +140,9 @@ in Betracht ziehen werden.
 
 ### Schritt 6 – Verhältnis zur Kündigung
 
-- Jede verhaltensbedingte Kündigung muss Gleichartigkeit der Pflichtverletzung aufweisen (BAG, Urt. v. 14.09.1994 – 2 AZR 164/94, NZA 1995, 269 Rn. 27).
-- Abmahnung verliert Wirkung, wenn zwischen ihr und der Kündigung ein erheblicher Zeitraum (i. d. R. mehr als 2 Jahre) liegt; Neubewertung erforderlich (h. M., vgl. Preis, in: ErfK, 25. Aufl. 2025, § 314 BGB Rn. 14).
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+- Quellenregel: Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff; keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen.
 - Mehrere Abmahnungen wegen gleichartiger Verstöße erhöhen die Kündbarkeit der Pflichtverletzung.
-
-## Ausgabeformat
-
-- **Standardausgabe**: Memo im Gutachtenstil mit Wirksamkeitsprüfung (Aufbau vgl. references/methodik-buergerliches-recht.md Ziff. 6).
-- **Auf Anforderung**: Vollständiges Abmahnungsschreiben (Urteilsstil, direkte Formulierung).
-- **Auf Anforderung**: Widerspruchsschreiben / Gegendarstellung (Arbeitnehmerperspektive).
-- **Auf Anforderung**: Checkliste Wirksamkeitsvoraussetzungen als Tabelle.
 
 ## Beispiel
 
@@ -139,9 +150,9 @@ in Betracht ziehen werden.
 
 **Abmahnungsentwurf (Auszug):**
 
-> „Wir rügen folgendes Verhalten: Am 03.03.2025 haben Sie Ihre Arbeitsleistung nicht wie vertraglich geschuldet um 08:00 Uhr, sondern erst um 08:45 Uhr aufgenommen, ohne uns vorher über die Verspätung zu informieren. Sie haben dadurch gegen Ihre arbeitsvertragliche Pflicht zur pünktlichen Erbringung der Arbeitsleistung verstoßen. Wir fordern Sie auf, Ihre Arbeit künftig pünktlich um 08:00 Uhr aufzunehmen und uns bei absehbaren Verspätungen rechtzeitig zu informieren. Wir weisen Sie ausdrücklich darauf hin, dass wir im Wiederholungsfall arbeitsrechtliche Konsequenzen bis hin zur Kündigung des Arbeitsverhältnisses in Betracht ziehen werden."
+> "Wir rügen folgendes Verhalten: Am 03.03.2025 haben Sie Ihre Arbeitsleistung nicht wie vertraglich geschuldet um 08:00 Uhr, sondern erst um 08:45 Uhr aufgenommen, ohne uns vorher über die Verspätung zu informieren. Sie haben dadurch gegen Ihre arbeitsvertragliche Pflicht zur pünktlichen Erbringung der Arbeitsleistung verstoßen. Wir fordern Sie auf, Ihre Arbeit künftig pünktlich um 08:00 Uhr aufzunehmen und uns bei absehbaren Verspätungen rechtzeitig zu informieren. Wir weisen Sie ausdrücklich darauf hin, dass wir im Wiederholungsfall arbeitsrechtliche Konsequenzen bis hin zur Kündigung des Arbeitsverhältnisses in Betracht ziehen werden."
 
-**Rechtliche Bewertung:** Das Schreiben genügt den Anforderungen an eine wirksame Abmahnung: Es bezeichnet das Verhalten konkret (Datum, Uhrzeit, Art des Verstoßes), rügt die Pflichtverletzung, fordert zur Verhaltensänderung auf und enthält die gebotene Kündigungswarnung (BAG, Urt. v. 19.04.2007 – 2 AZR 180/06, NZA 2007, 1227 Rn. 17).
+Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
 ## Risiken und typische Fehler
 
@@ -156,13 +167,22 @@ in Betracht ziehen werden.
 | Inhaltlich falsche Tatsachen | Anspruch auf Entfernung (§ 242 BGB) | Sachverhalt vor Abmahnung sorgfältig aufklären |
 | Datenschutz / § 203 StGB | Strafbarkeit bei unbefugter Weitergabe | Abmahnungsinhalt nicht an Dritte ohne Rechtsgrundlage |
 
-**Beweislast:** Der Arbeitgeber trägt im Kündigungsschutzprozess die Beweislast für Inhalt und Zugang der Abmahnung sowie für die Tatsachen der beanstandeten Pflichtverletzung (BAG, Urt. v. 19.04.2007 – 2 AZR 180/06, NZA 2007, 1227 Rn. 20).
+Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
 ## Quellenpflicht
 
 Jede juristische Aussage in jedem auf diesem Skill basierenden Dokument ist nach **references/zitierweise.md** zu belegen:
 
 - Rechtsprechungsbelege im BGH-Stil (Gericht, Entscheidungsform, Datum, AZ, Fundstelle, Rn.).
-- Kommentarbelege mit Bearbeiter, Werk, Auflage, Jahr, §, Rn.
+- Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen zitieren. Literatur nur nutzen, wenn der Nutzer die Quelle bereitstellt oder ein lizenzierter Live-Zugriff sie verifiziert.
 - Bei der Frage der Entbehrlichkeit der Abmahnung h. M. und Gegenauffassung getrennt benennen.
 - Halluzinationsrisiko: Alle zitierten Entscheidungen vor Verwendung in Schriftsätzen durch Datenbankrecherche verifizieren.
+
+<!-- AUDIT 27.05.2026 | Bundle 012 | Task 1
+Rechtsprechung live prüfen: Keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über amtliche oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+Befund: AZ korrekt eingesetzt. Thema laut dejure.org und bundesarbeitsgericht.de bestätigt als
+"Entfernung Abmahnung aus Personalakte; Wirkungslosigkeit durch Zeitablauf; Warnfunktion/Dokumentationsfunktion"
+Rechtsprechung live prüfen: Keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über amtliche oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+Claimed_topic "Weiterbeschäftigungsanspruch" nicht im SKILL-Text vorhanden; kein Änderungsbedarf.
+Quelle: https://dejure.org/dienste/vernetzung/rechtsprechung?Text=2+AZR+782%2F11
+-->

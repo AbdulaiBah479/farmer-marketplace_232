@@ -1,361 +1,245 @@
 ---
 name: social-media-strategy
-description: "Develop comprehensive social media strategies across multiple platforms. Create content calendars, establish posting schedules, design engagement tactics, plan influencer outreach, and structure paid social campaigns with ROI measurement."
+description: "Build a social media strategy for a brand, product, or creator. Use when asked to create a social media strategy, define a social content strategy, plan content pillars, set social KPIs, or build a posting framework. Produces a complete strategy with audience definition, platform selection, content pillars, posting cadence, KPIs, and a 4-week starter calendar."
 ---
 
-# Social Media Strategy
-
-## Overview
-The Social Media Strategy skill enables marketers to build cohesive, multi-platform social presence that drives awareness, engagement, and conversions. It covers platform selection, content planning, community management, paid strategies, and influencer partnerships.
-
-## When to Use This Skill
-- Building or revamping social media strategy
-- Planning quarterly or annual content calendar
-- Launching social campaigns or product announcements
-- Developing influencer partnership programs
-- Planning paid social budgets and campaigns
-- Analyzing and improving social media ROI
-
-## Platform Selection Framework
-
-### Platform Overview and Fit
-
-**LinkedIn (Professional Network)**
-- Audience: B2B decision-makers, professionals
-- Content focus: Thought leadership, industry insights, company news
-- Best for: B2B, enterprise, recruiting, business services
-- Typical content: Articles, white papers, company updates
-- Ad formats: Sponsored content, InMail, display ads
-- Engagement rates: 3-5% (lower but higher intent)
-
-**Facebook (Community & Reach)**
-- Audience: Broad demographics, community-focused
-- Content focus: Stories, videos, community engagement
-- Best for: B2C, consumer brands, local business
-- Typical content: Videos, customer stories, behind-scenes
-- Ad formats: Feed ads, stories, carousel, video
-- Engagement rates: 1-3% (high volume, lower rates)
-
-**Instagram (Visual Storytelling)**
-- Audience: Ages 18-35, visual-focused, lifestyle-oriented
-- Content focus: Aesthetics, lifestyle, product showcases
-- Best for: Consumer brands, lifestyle, visual products
-- Typical content: High-quality images, reels, stories
-- Ad formats: Feed, stories, reels, shopping
-- Engagement rates: 3-6% (strong with quality content)
-
-**TikTok (Entertainment & Trends)**
-- Audience: Gen Z and younger millennials
-- Content focus: Trending audio, entertainment, humor
-- Best for: Consumer brands, younger demographics, viral potential
-- Typical content: Short-form videos, trends, challenges
-- Ad formats: In-feed ads, branded content, hashtag challenges
-- Engagement rates: 5-8% (highest engagement potential)
-
-**Twitter/X (News & Conversation)**
-- Audience: Journalists, influencers, tech-savvy users
-- Content focus: News, real-time commentary, conversations
-- Best for: B2B tech, news, thought leadership
-- Typical content: Links, opinions, commentary, quick updates
-- Ad formats: Promoted tweets, trends, conversations
-- Engagement rates: 1-2% (lower but high-quality audience)
-
-**YouTube (Long-form Video)**
-- Audience: Broad, all ages, search and discovery
-- Content focus: Educational, tutorials, entertainment
-- Best for: Educational content, product demos, tutorials
-- Typical content: 5-20+ minute videos, series
-- Ad formats: Pre-roll, mid-roll, discovery ads
-- Engagement rates: Variable (high watch time value)
-
-### Platform Prioritization Matrix
-
-| Platform | Reach | Engagement | Cost | Audience Fit | Priority |
-|----------|-------|-----------|------|--------------|----------|
-| LinkedIn | High | Medium | Medium | Very High | Primary |
-| Facebook | Very High | Low | Low | High | Primary |
-| Instagram | High | High | Medium | Medium | Secondary |
-| TikTok | Very High | Very High | High | Low | Exploratory |
-| Twitter | Medium | Medium | Low | Medium | Secondary |
-| YouTube | High | High | High | High | Primary |
-
-## Social Content Calendar
-
-### Content Pillars (Topic categories)
-
-**Pillar 1: Educational Content** (40% of posts)
-- How-to guides and tutorials
-- Industry tips and best practices
-- Webinars and educational series
-- Examples: "5 ways to improve email open rates"
-
-**Pillar 2: Brand/Company Stories** (25% of posts)
-- Team spotlights and culture
-- Company milestones and news
-- Behind-the-scenes content
-- Examples: "Meet our Product Manager Sarah"
-
-**Pillar 3: Social Proof & Results** (20% of posts)
-- Customer success stories
-- Case studies and testimonials
-- User-generated content
-- Examples: "How customer X grew 3x with us"
-
-**Pillar 4: Engagement & Community** (15% of posts)
-- Questions and polls
-- Trending topics and commentary
-- Community challenges
-- Examples: "What's your biggest marketing challenge?"
-
-### Monthly Content Calendar Template
-
-**Platform: LinkedIn**
-
-| Week | Monday | Wednesday | Friday |
-|------|--------|-----------|--------|
-| Week 1 | Educational: Email best practices | Company news: Expansion announcement | Social proof: Customer case study |
-| Week 2 | Team story: Sales manager spotlight | Educational: Lead qualification tips | Community: Industry poll |
-| Week 3 | Thought leadership: CEO insight | Educational: ROI calculation guide | User-generated: Customer success |
-| Week 4 | Behind-scenes: Office tour | Trending: React to industry news | Educational: Q&A roundup |
-
-**Posting Schedule:**
-- LinkedIn: Tuesday-Thursday, 7-9 AM (optimal for professionals)
-- Facebook: Wednesday-Sunday, 1-3 PM (leisure engagement)
-- Instagram: Tuesday-Thursday, 11 AM-1 PM, 7-9 PM
-- TikTok: Daily, 6-10 AM, 7-11 PM (algorithm favors frequency)
-- Twitter: 3-5x daily (real-time, conversation-focused)
-
-### Content Batching Strategy
-
-**Batch 1: Educational Series (Monthly, first week)**
-- 4 posts on related topic
-- Different formats (carousel, video, article, image)
-- Spaced across calendar
-- Repurpose into multiple assets
-
-**Batch 2: Team/Company Stories (Monthly, second week)**
-- 3-4 spotlight or culture posts
-- Mix of photos and video
-- Tie to company values
-- Share across platforms
-
-**Batch 3: Campaign/Promotion Push (Monthly, third week)**
-- 4-5 posts on specific offer or announcement
-- Multi-format with consistent messaging
-- Include CTAs for conversions
-- Retarget on paid
-
-**Batch 4: Evergreen/Trending (Monthly, fourth week)**
-- Flexible content responding to trends
-- Community engagement and polling
-- Algorithm-friendly experimental formats
-- Capture emerging interests
-
-## Engagement Tactics & Community Management
-
-### Engagement Strategy (Daily practices)
-
-**Comment on Industry Posts** (20 minutes daily)
-- Find trending posts in your industry
-- Leave thoughtful, value-adding comments
-- Link back to relevant company content
-- Build relationships with key influencers
-
-**Respond to Comments** (Real-time, 30 minutes)
-- Engage within first hour (algorithm boost)
-- Ask follow-up questions
-- Provide additional value
-- Build community relationships
-
-**Participate in Conversations** (15 minutes daily)
-- Join relevant hashtag discussions
-- Respond to brand mentions
-- Engage with customer posts
-- Support user-generated content
-
-**Messaging & DM Response** (As-needed)
-- Respond within 24 hours minimum
-- Personalize responses
-- Direct to sales/support where needed
-- Build one-on-one relationships
-
-### Community Guidelines
-
-- Respond to all comments/mentions within 24 hours
-- Keep tone consistent with brand voice
-- Don't delete criticism (address constructively)
-- Celebrate and amplify customer voices
-- Monitor sentiment and flag issues early
-
-## Influencer Outreach Strategy
-
-### Influencer Identification
-
-**Tier 1: Mega-influencers** (1M+ followers)
-- High reach, lower engagement rates
-- Best for: Brand awareness campaigns
-- Budget: $5K-50K+ per post
-- ROI: 2-3x typical
-
-**Tier 2: Macro-influencers** (100K-1M followers)
-- Strong reach with decent engagement
-- Best for: Awareness + conversion balance
-- Budget: $1K-5K per post
-- ROI: 3-5x typical
-
-**Tier 3: Micro-influencers** (10K-100K followers)
-- Highly engaged, niche audiences
-- Best for: Conversion, community building
-- Budget: $500-1K per post
-- ROI: 5-10x typical (highest ROI)
-
-**Tier 4: Nano-influencers** (<10K followers)
-- Ultra-niche, authentic engagement
-- Best for: Community, early adoption
-- Budget: $100-500 or gifting
-- ROI: Variable but high engagement
-
-### Outreach Template
-
-**Subject:** Collaboration opportunity with [Influencer Name]
-
-Dear [First Name],
-
-I've been following your [platform] content and love your focus on [specific topic]. Your recent post on [specific example] resonated especially with our team.
-
-We're [brief company description] and think our [product/service] aligns well with your audience's interests. We'd like to explore a collaboration where you could [specific opportunity: authentic review, sponsored post, affiliate partnership].
-
-Here's what we typically offer:
-- [Compensation: payment amount OR product value]
-- [Timeline and deliverables]
-- [Creative freedom/guidelines balance]
-- [Analytics and reporting]
-
-Let me know if you're interested! Happy to discuss further.
-
-Best,
-[Your Name]
-
-## Paid Social Strategy
-
-### Budget Allocation Framework
-
-**Total Monthly Budget: $X**
-
-```
-Campaign 1: Brand Awareness (40% budget)
-- Objective: Reach and impressions
-- Audience: Broad demographic match
-- Budget: $X
-- Expected reach: X impressions
-
-Campaign 2: Engagement (30% budget)
-- Objective: Build community, engagement
-- Audience: Website visitors, lookalikes
-- Budget: $X
-- Expected engagement rate: 2-3%
-
-Campaign 3: Conversion (20% budget)
-- Objective: Lead generation or sales
-- Audience: High-intent, retargeting
-- Budget: $X
-- Expected conversion rate: 1-3%
-
-Campaign 4: Testing (10% budget)
-- Objective: Test new audiences, creative, placements
-- Audience: Experimental segments
-- Budget: $X
-- Expected learning: New targeting opportunities
-```
-
-### Ad Creative Best Practices
-
-**Visual Design:**
-- Use high-quality images (4K preferred)
-- Include text overlays (20% image max for Facebook)
-- Maintain brand consistency
-- Test carousel vs. single image
-- Video: Silent-first, captions required
-
-**Copy Guidelines:**
-- First line hooks in feed (25 characters)
-- Emotional triggers over rational
-- Keep CTA clear and action-oriented
-- A/B test headlines and descriptions
-- Include social proof where possible
-
-**Targeting:**
-- Start broad (1% lookalikes)
-- Exclude existing customers
-- Test new audiences with 10% budget
-- Layer demographics + interests
-- Retarget website visitors (30-90 days)
-
-## Analytics & ROI Measurement
-
-### Key Social Metrics by Goal
-
-**Awareness Goal:**
-- Reach: Unique people seeing content
-- Impressions: Total times content shown
-- CPM: Cost per thousand impressions (target: $5-15)
-- Share of voice: Your share of conversation in category
-
-**Engagement Goal:**
-- Engagement rate: (Likes+Comments+Shares) / Followers (target: 2-5%)
-- Comments: Quality discussion and sentiment
-- Saves/Shares: Content value indicator
-- Video watch time: Content holding power
-
-**Conversion Goal:**
-- Click-through rate: % clicking link (target: 1-3%)
-- Cost per click: Ad spend / clicks
-- Cost per conversion: Ad spend / conversions
-- ROAS: Revenue / ad spend (target: 3:1 or higher)
-
-### Reporting Dashboard
-
-**Daily Monitoring:**
-- Reach and impressions
-- Engagement count and rate
-- Comment sentiment (positive/negative/neutral)
-- Website traffic from social
-
-**Weekly Report:**
-- Campaign performance vs. targets
-- Top performing content by type
-- Audience growth
-- Cost per metric trending
-
-**Monthly Analysis:**
-- Goal attainment (awareness, engagement, conversion)
-- ROI by campaign and platform
-- Audience insights and growth
-- Content pillars performance breakdown
-
-## Social Media Checklist
-
-- [ ] Platform strategy approved and prioritized
-- [ ] Content calendar created for 3 months
-- [ ] Content pillars and themes defined
-- [ ] Posting schedule optimized per platform
-- [ ] Paid social budget allocated
-- [ ] Target audiences defined and segmented
-- [ ] Creative assets prepared (images, video, copy)
-- [ ] Engagement response process established
-- [ ] Community guidelines documented
-- [ ] Analytics dashboard configured
-- [ ] Influencer prospect list built
-- [ ] Monitoring keywords and mentions set up
-- [ ] Team training and responsibilities assigned
-
-## Output Deliverables
-
-1. **Social Strategy Document** - Platforms, pillars, positioning
-2. **Content Calendar** - 3-month planned content
-3. **Posting Schedule** - Optimal times per platform
-4. **Paid Social Plan** - Budget allocation and targeting
-5. **Influencer Prospects** - Tiered list with outreach plan
-6. **Analytics Dashboard** - Performance tracking
-7. **Community Guidelines** - Response protocols
-8. **Monthly Reports** - Performance analysis and insights
+# Social Media Strategy Skill
+
+This skill produces a complete social media strategy covering audience definition, platform rationale, content pillars, posting cadence, tone of voice guidelines, measurement framework, and a 4-week starter content calendar. Output is ready for a marketing team, founder, or agency to execute immediately.
+
+## Required Inputs
+
+Ask the user for these if not provided:
+- **Brand / product / creator name**
+- **What you're promoting** — product, service, personal brand, community, or event
+- **Target audience** — who are you trying to reach? (job title, age, interests, platforms they use)
+- **Business goal** — what does social need to achieve? (brand awareness / lead generation / community building / sales / recruitment)
+- **Current social presence** — which platforms are you on? What's working, what isn't?
+- **Competitors or aspirational accounts** — who does social well in your space?
+- **Resources** — how many people and how much time per week can you dedicate to social?
+
+## Output Structure
+
+---
+
+# Social Media Strategy: [Brand / Product / Creator]
+
+**Goal:** [Primary business goal]
+**Audience:** [1-sentence description of primary audience]
+**Timeframe:** [e.g. Q3 2026 — 3-month strategy]
+**Owner:** [Marketing lead / founder / social team]
+**Date:** [Date]
+
+---
+
+## 1. Audience Profile
+
+**Primary audience:**
+
+| Dimension | Detail |
+|---|---|
+| **Who they are** | [Job title, age range, life stage, geography] |
+| **What they care about** | [Professional or personal priorities, pain points] |
+| **Where they spend time online** | [Platforms, communities, influencers they follow] |
+| **What they consume** | [Content formats they engage with — video, threads, newsletters, podcasts] |
+| **What would make them follow you** | [The specific value proposition of your social presence] |
+
+**Secondary audience:** [Any secondary segment — e.g. job seekers if you're a brand, investors if you're a startup]
+
+---
+
+## 2. Platform Strategy
+
+Not every platform is right for every brand. Justify each platform choice:
+
+| Platform | Audience fit | Content format | Priority | Why (or why not) |
+|---|---|---|---|---|
+| **LinkedIn** | [B2B / professional] | [Text posts, carousels, articles] | [Primary / Secondary / Skip] | [e.g. Primary platform for B2B SaaS — where buyers and influencers are] |
+| **X / Twitter** | [Tech, media, founders] | [Short text, threads, replies] | [...] | [...] |
+| **Instagram** | [Consumer, visual brands, creators] | [Reels, Stories, carousels] | [...] | [...] |
+| **TikTok** | [B2C, Gen Z, consumer] | [Short-form video] | [...] | [...] |
+| **YouTube** | [All audiences — discovery + long-form] | [Long-form video, Shorts] | [...] | [...] |
+| **Threads** | [Text-first, creator, early adopter] | [Short text, conversations] | [...] | [...] |
+
+**Lead platform:** [One platform to invest most heavily in — where your audience is most active and where you have the best chance to stand out]
+
+**Supporting platforms:** [1–2 secondary platforms where you'll repurpose or adapt content]
+
+---
+
+## 3. Content Pillars
+
+Define 3–5 content themes that anchor your social presence. Each pillar must serve the audience, not just the brand.
+
+### Pillar 1: [Name — e.g. "Behind the build"]
+
+**What it is:** [1-sentence description]
+**Why the audience cares:** [What value does this deliver to them?]
+**Content examples:**
+- [e.g. Engineering decisions we made and why]
+- [e.g. Week-in-the-life of the founding team]
+- [e.g. What we shipped this week and what we learned]
+
+**Format mix:** [Carousel / video / thread / short-form text]
+**Posting cadence:** [X times per week]
+
+---
+
+### Pillar 2: [Name — e.g. "Practical education"]
+
+**What it is:** [...]
+**Why the audience cares:** [...]
+**Content examples:**
+- [...]
+- [...]
+
+**Format mix:** [...]
+**Posting cadence:** [...]
+
+---
+
+### Pillar 3: [Name — e.g. "Social proof and community"]
+
+**What it is:** [Customer stories, testimonials, user-generated content, community spotlights]
+**Why the audience cares:** [Validation from peers carries more weight than brand claims]
+**Content examples:**
+- [Customer outcome stories — 1 metric + 1 quote format]
+- [Repost community member wins]
+- [Case study carousels]
+
+**Format mix:** [...]
+**Posting cadence:** [...]
+
+---
+
+### Pillar 4: [Name — e.g. "Point of view"]
+
+**What it is:** [Opinions on industry trends, hot takes, commentary on news in your space]
+**Why the audience cares:** [People follow accounts that say something, not just share information]
+**Content examples:**
+- [Contrarian takes on common advice]
+- [Reaction to industry news — what it means for your audience]
+- [Founder's personal perspective on a topic]
+
+**Format mix:** [...]
+**Posting cadence:** [...]
+
+---
+
+## 4. Tone of Voice
+
+Define how your brand sounds on social — before you write a single post:
+
+| Dimension | [Your brand] sounds like... | [Your brand] does NOT sound like... |
+|---|---|---|
+| **Formality** | [e.g. Conversational, plain English] | [Corporate speak, jargon] |
+| **Energy** | [e.g. Curious, enthusiastic] | [Aggressive, hypey] |
+| **Personality** | [e.g. Smart friend who happens to be an expert] | [Faceless institution] |
+| **Humour** | [e.g. Dry wit, occasional] | [Try-hard memes, sarcasm] |
+| **Self-promotion** | [e.g. Earns the right to mention the product] | [Every post is an ad] |
+
+**Reference accounts that nail the tone you're aiming for:** [Name 2–3 accounts — and why]
+
+---
+
+## 5. Posting Cadence & Workflow
+
+| Platform | Posts per week | Best days | Best times | Format split |
+|---|---|---|---|---|
+| [LinkedIn] | [3–5] | [Tue–Thu] | [07:30–09:00 or 12:00–13:00] | [60% educational, 30% POV, 10% product] |
+| [X / Twitter] | [5–7] | [Any] | [Morning and lunchtime] | [50% replies/engagement, 30% original, 20% reposts] |
+| [Instagram] | [3–4] | [Mon, Wed, Fri] | [18:00–20:00] | [50% Reels, 30% carousels, 20% Stories] |
+
+**Content production workflow:**
+
+| Day | Activity | Owner | Time required |
+|---|---|---|---|
+| Monday | Plan the week's content — review pillars, select topics | [Social manager] | 30 min |
+| Tuesday | Write long-form posts for LinkedIn and threads | [Writer / founder] | 60 min |
+| Wednesday | Design carousels or graphics | [Designer / Canva] | 45 min |
+| Thursday | Schedule the week's content in [Buffer / Hootsuite / Later] | [Social manager] | 20 min |
+| Daily | Engage with comments, reply to mentions, interact with community | [Social manager] | 15 min |
+
+---
+
+## 6. Growth Tactics
+
+Beyond posting, how will you grow your following and reach?
+
+| Tactic | Description | Platform | Frequency |
+|---|---|---|---|
+| **Engage before you post** | Spend 15 min commenting on posts from target accounts before posting your own | All | Daily |
+| **Collaboration posts** | Co-create content with a complementary brand or creator | LinkedIn / IG | Monthly |
+| **Community participation** | Answer questions in relevant groups, subreddits, or Discord servers | LinkedIn / Reddit / Discord | Weekly |
+| **Tag relevant accounts** | When mentioning companies, tools, or people — tag them (earns reshares) | All | As relevant |
+| **Cross-promote** | Mention your social in newsletters, emails, events, and podcast appearances | All | Ongoing |
+| **Use trending formats early** | When a new format (e.g. LinkedIn carousels, IG Reels) emerges, adopt early | Platform-specific | When relevant |
+
+---
+
+## 7. Measurement Framework
+
+**Primary KPIs (tied to business goal):**
+
+| KPI | Platform | Current baseline | Target (90 days) | Why it matters |
+|---|---|---|---|---|
+| [Follower growth rate] | [LinkedIn] | [X%/month] | [≥ Y%/month] | [Audience reach] |
+| [Engagement rate] | [LinkedIn] | [X%] | [≥ Y%] | [Content resonance] |
+| [Link clicks / traffic from social] | [All] | [X visits/month] | [≥ Y visits/month] | [Direct business impact] |
+| [Inbound leads attributed to social] | [LinkedIn] | [X/month] | [≥ Y/month] | [Revenue impact] |
+
+**Secondary metrics (health indicators):**
+- Reach per post
+- Saves and shares (not just likes)
+- Comment sentiment and quality
+- DMs initiated from content
+
+**Reporting cadence:** [Weekly check on engagement / Monthly review of follower and traffic / Quarterly strategy review]
+
+---
+
+## 8. 4-Week Starter Content Calendar
+
+A concrete first month of content — ready to adapt and post:
+
+| Week | Day | Platform | Pillar | Format | Topic idea |
+|---|---|---|---|---|---|
+| 1 | Mon | LinkedIn | Education | Carousel | [e.g. "5 things we wished we knew before building [X]"] |
+| 1 | Wed | LinkedIn | Behind the build | Text post | [e.g. "We almost gave up in month 3. Here's what changed."] |
+| 1 | Fri | Instagram | Social proof | Reel | [e.g. Customer story — problem → solution → result] |
+| 2 | Tue | LinkedIn | POV | Thread | [e.g. "Hot take: [common advice in your space] is wrong. Here's why."] |
+| 2 | Thu | X/Twitter | Education | Thread | [e.g. "The [X] framework we use every week — and how you can steal it"] |
+| 2 | Sat | Instagram | Behind the build | Story | [e.g. "Week 2 update — what we shipped and one thing that didn't go to plan"] |
+| 3 | Mon | LinkedIn | Education | Carousel | [e.g. "How to [achieve outcome] in [timeframe] — step by step"] |
+| 3 | Wed | LinkedIn | Community | Text post | [e.g. Reshare a customer win with commentary] |
+| 3 | Fri | Instagram | POV | Reel | [e.g. "[Industry myth] — why we disagree and what we do instead"] |
+| 4 | Tue | LinkedIn | Behind the build | Video | [e.g. Founder talking to camera — "One thing I learned building [X] this month"] |
+| 4 | Thu | X/Twitter | POV | Thread | [e.g. "[Trend in your space] — here's what's actually happening"] |
+| 4 | Sat | All | Milestone | Text + image | [e.g. "[X followers / X users / X months] — thank you + what's next"] |
+
+---
+
+## Quality Checks
+
+- [ ] Every content pillar delivers value to the audience — not just the brand
+- [ ] Platform selection is justified by where the target audience actually spends time
+- [ ] Tone of voice examples are specific enough to use as a writing guide
+- [ ] KPIs are tied to the business goal, not just vanity metrics (likes, followers in isolation)
+- [ ] Posting cadence is realistic for the available resources — sustainable beats ambitious
+- [ ] The 4-week calendar has specific topic ideas, not just "write an educational post"
+
+## Example Trigger Phrases
+
+- "Build a social media strategy for [brand/product]"
+- "Create a LinkedIn content strategy for our B2B SaaS"
+- "Help me define content pillars and posting cadence for our startup"
+- "Design a 90-day social media plan for [company]"
+- "What should our social media strategy be for a product launch?"
+
+## Anti-Patterns
+
+- [ ] Do not recommend every platform — justify each choice with where the target audience actually spends time
+- [ ] Do not define content pillars that serve only the brand — each pillar must deliver specific value to the audience or it will not earn attention
+- [ ] Do not set a posting cadence that exceeds the team's realistic capacity — an unsustainable strategy fails faster than a modest one
+- [ ] Do not use vanity metrics (likes, followers in isolation) as primary KPIs — tie KPIs to the stated business goal
+- [ ] Do not skip the tone of voice section — without it, multiple contributors produce inconsistent content that erodes brand identity

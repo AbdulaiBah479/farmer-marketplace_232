@@ -1,6 +1,6 @@
 ---
 name: implementation-approach
-description: Implementation strategy selection framework with meta-cognitive approach, verification levels, and integration point definitions. Use when planning implementation strategy, selecting development approach, or defining verification criteria.
+description: Selects implementation strategy (vertical slice, horizontal, or hybrid) with risk assessment. Use when planning feature implementation.
 ---
 
 # Implementation Strategy Selection Framework (Meta-cognitive Approach)
@@ -26,7 +26,7 @@ Historical Context Understanding: Current form rationale, past decision validity
 
 ### Phase 2: Strategy Exploration and Creation
 
-**Core Question**: "When determining before → after, what implementation patterns or strategies should be referenced?"
+**Core Question**: "When determining before -> after, what implementation patterns or strategies should be referenced?"
 
 #### Strategy Discovery Process
 ```yaml
@@ -110,8 +110,8 @@ Select optimal solution from basic implementation approaches (creative combinati
 Priority for completion verification of each task:
 
 - **L1: Functional Operation Verification** - Operates as end-user feature (e.g., search executable)
-- **L2: Test Operation Verification** - New tests added and passing
-- **L3: Build Success Verification** - Code builds/runs without errors
+- **L2: Test Operation Verification** - New tests added and passing (e.g., type definition tests)
+- **L3: Build Success Verification** - No compile errors (e.g., interface definitions)
 
 **Priority**: L1 > L2 > L3 in order of verifiability importance
 

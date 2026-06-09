@@ -1,55 +1,52 @@
 ---
 name: writing-plans
-description: Use when you have a spec or requirements for a multi-step task, before touching code
+description: Structured implementation planning for multi-step development tasks. Use when you have a spec or requirements and need to break work into executable steps.
 ---
 
 # Writing Plans
 
 ## Overview
 
-Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
+Create implementation plans for an engineer with zero codebase context.
 
-Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
+Each plan includes:
+- Exact file paths for every operation
+- Complete code (not "add validation here")
+- Test-first approach with verification commands
+- Bite-sized steps (2-5 min each)
 
-**Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
+Principles: DRY, YAGNI, TDD, frequent commits.
 
-**Context:** This should be run in a dedicated worktree (created by brainstorming skill).
+**Announce at start:** "I'm using the `writing-plans` skill to create the implementation plan."
 
-**Save plans to:** `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
-- (User preferences for plan location override this default)
+**Context:** Run in dedicated worktree. If none exists, use `using-git-worktrees` skill first.
 
-## Scope Check
+**Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
 
-If the spec covers multiple independent subsystems, it should have been broken into sub-project specs during brainstorming. If it wasn't, suggest breaking this into separate plans — one per subsystem. Each plan should produce working, testable software on its own.
+## Before Writing
 
-## File Structure
-
-Before defining tasks, map out which files will be created or modified and what each one is responsible for. This is where decomposition decisions get locked in.
-
-- Design units with clear boundaries and well-defined interfaces. Each file should have one clear responsibility.
-- You reason best about code you can hold in context at once, and your edits are more reliable when files are focused. Prefer smaller, focused files over large ones that do too much.
-- Files that change together should live together. Split by responsibility, not by technical layer.
-- In existing codebases, follow established patterns. If the codebase uses large files, don't unilaterally restructure - but if a file you're modifying has grown unwieldy, including a split in the plan is reasonable.
-
-This structure informs the task decomposition. Each task should produce self-contained changes that make sense independently.
+1. Read spec/requirements completely
+2. Explore project structure (`view .`)
+3. Identify tech stack (package.json, pyproject.toml, etc.)
+4. Note existing patterns in similar files
+5. Check docs/ for existing conventions
 
 ## Bite-Sized Task Granularity
 
-**Each step is one action (2-5 minutes):**
-- "Write the failing test" - step
-- "Run it to make sure it fails" - step
-- "Implement the minimal code to make the test pass" - step
-- "Run the tests and make sure they pass" - step
-- "Commit" - step
+Each step is one action (2-5 minutes), independently verifiable:
+
+- "Write the failing test" — step
+- "Run it to confirm failure" — step
+- "Implement minimal code to pass" — step
+- "Run tests to confirm pass" — step
+- "Commit" — step
 
 ## Plan Document Header
 
-**Every plan MUST start with this header:**
+Every plan MUST start with this header:
 
-```markdown
+~~~markdown
 # [Feature Name] Implementation Plan
-
-> **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -58,11 +55,11 @@ This structure informs the task decomposition. Each task should produce self-con
 **Tech Stack:** [Key technologies/libraries]
 
 ---
-```
+~~~
 
 ## Task Structure
 
-````markdown
+~~~markdown
 ### Task N: [Component Name]
 
 **Files:**
@@ -70,7 +67,7 @@ This structure informs the task decomposition. Each task should produce self-con
 - Modify: `exact/path/to/existing.py:123-145`
 - Test: `tests/exact/path/to/test.py`
 
-- [ ] **Step 1: Write the failing test**
+**Step 1: Write the failing test**
 
 ```python
 def test_specific_behavior():
@@ -78,70 +75,59 @@ def test_specific_behavior():
     assert result == expected
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+**Step 2: Run test to verify it fails**
 
 Run: `pytest tests/path/test.py::test_name -v`
 Expected: FAIL with "function not defined"
 
-- [ ] **Step 3: Write minimal implementation**
+**Step 3: Write minimal implementation**
 
 ```python
 def function(input):
     return expected
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+**Step 4: Run test to verify it passes**
 
 Run: `pytest tests/path/test.py::test_name -v`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+**Step 5: Commit**
 
 ```bash
 git add tests/path/test.py src/path/file.py
 git commit -m "feat: add specific feature"
 ```
-````
+~~~
 
-## Remember
-- Exact file paths always
-- Complete code in plan (not "add validation")
-- Exact commands with expected output
-- Reference relevant skills with @ syntax
-- DRY, YAGNI, TDD, frequent commits
+## Before Handoff
 
-## Plan Review Loop
+Verify plan completeness:
 
-After completing each chunk of the plan:
-
-1. Dispatch plan-document-reviewer subagent (see plan-document-reviewer-prompt.md) with precisely crafted review context — never your session history. This keeps the reviewer focused on the plan, not your thought process.
-   - Provide: chunk content, path to spec document
-2. If ❌ Issues Found:
-   - Fix the issues in the chunk
-   - Re-dispatch reviewer for that chunk
-   - Repeat until ✅ Approved
-3. If ✅ Approved: proceed to next chunk (or execution handoff if last chunk)
-
-**Chunk boundaries:** Use `## Chunk N: <name>` headings to delimit chunks. Each chunk should be ≤1000 lines and logically self-contained.
-
-**Review loop guidance:**
-- Same agent that wrote the plan fixes it (preserves context)
-- If loop exceeds 5 iterations, surface to human for guidance
-- Reviewers are advisory - explain disagreements if you believe feedback is incorrect
+- Every file path exists or will be created
+- Every command can be run exactly as written
+- No TODO/placeholder text remains
+- Tests cover all acceptance criteria from spec
+- Include exact test code, not descriptions
 
 ## Execution Handoff
 
-After saving the plan:
+After saving plan, present:
 
-**"Plan complete and saved to `docs/superpowers/plans/<filename>.md`. Ready to execute?"**
+**"Plan saved to `docs/plans/<filename>.md`. Choose execution mode:**
 
-**Execution path depends on harness capabilities:**
+1. **Subagent-Driven** — same session, fresh subagent per task, fast iteration
+2. **Parallel Session** — new session, batched execution with checkpoints
 
-**If harness has subagents (Claude Code, etc.):**
-- **REQUIRED:** Use superpowers:subagent-driven-development
-- Do NOT offer a choice - subagent-driven is the standard approach
+**Which approach?"**
+
+### If Subagent-Driven chosen
+
+- Stay in this session
+- **REQUIRED SUB-SKILL:** `subagent-driven-development`
 - Fresh subagent per task + two-stage review
 
-**If harness does NOT have subagents:**
-- Execute plan in current session using superpowers:executing-plans
-- Batch execution with checkpoints for review
+### If Parallel Session chosen
+
+- Guide user to open new session in worktree
+- **REQUIRED SUB-SKILL:** New session uses `executing-plans`

@@ -1,24 +1,3 @@
-<<<<<<< HEAD
----
-name: nx-monorepo
-description: "Enterprise monorepo management with Nx: generators, executors, affected commands, and Nx Cloud."
-category: frameworks
----
-
-# Nx Monorepo
-
-Enterprise monorepo management with Nx: generators, executors, affected commands, and Nx Cloud.
-
-## When to Use
-Use this skill when working on tasks related to nx monorepo.
-
-## Key Capabilities
-- Expert guidance on nx monorepo workflows and best practices
-- Step-by-step assistance for common nx monorepo tasks
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-=======
 ---
 name: nx-monorepo
 description: |
@@ -410,4 +389,3 @@ nx graph --file=graph.json
 
 - **monorepo-workflow**: PR stacking, trunk-based development, code review
 - **monorepo-team-lead**: CODEOWNERS, human-AI task routing, RFC process
->>>>>>> 4b9d09d6dab9a725d3e3c3e2f77c256484dc8d8b

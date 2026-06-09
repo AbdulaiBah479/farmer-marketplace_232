@@ -211,7 +211,9 @@ stringData:
     ...
     -----END CERTIFICATE-----
   tls.key: |
-    <BASE64_PRIVATE_KEY>
+    -----BEGIN PRIVATE KEY-----
+    ...
+    -----END PRIVATE KEY-----
 ```
 
 **Security considerations:**

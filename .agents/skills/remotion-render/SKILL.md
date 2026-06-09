@@ -12,9 +12,10 @@ Render videos from React/Remotion component code via [inference.sh](https://infe
 
 ## Quick Start
 
+> Requires inference.sh CLI (`infsh`). Get installation instructions: `npx skills add inference-sh/skills@agent-tools`
+
 ```bash
-# Install CLI
-curl -fsSL https://cli.inference.sh | sh && infsh login
+infsh login
 
 # Render a simple animation
 infsh app run infsh/remotion-render --input '{
@@ -26,7 +27,6 @@ infsh app run infsh/remotion-render --input '{
 }'
 ```
 
-> **Install note:** The [install script](https://cli.inference.sh) only detects your OS/architecture, downloads the matching binary from `dist.inference.sh`, and verifies its SHA-256 checksum. No elevated permissions or background processes. [Manual install & verification](https://dist.inference.sh/cli/checksums.txt) available.
 
 ## Input Schema
 
@@ -199,7 +199,7 @@ npx skills add inference-sh/skills@ai-image-generation
 npx skills add inference-sh/skills@python-sdk
 
 # Full platform skill
-npx skills add inference-sh/skills@inference-sh
+npx skills add inference-sh/skills@agent-tools
 ```
 
 ## Documentation
@@ -207,3 +207,4 @@ npx skills add inference-sh/skills@inference-sh
 - [Remotion Documentation](https://www.remotion.dev/docs) - Official Remotion docs
 - [Running Apps](https://inference.sh/docs/apps/running) - How to run apps via CLI
 - [Streaming Results](https://inference.sh/docs/api/sdk/streaming) - Real-time progress updates
+

@@ -1,27 +1,17 @@
 ---
 name: review-code
-description: >-
-  Backend code review following best practices. TODO: Implement for backend.
-  Invoked by: "code review", "review PR", "review changes", "audit code".
+description: Provides a structured workflow for planning and executing code reviews like a senior engineer. Use when asked to review code, PRs, or plan a code review task.
 ---
 
-# Review Code
+# Code Review Skill
 
-**Status**: Stub - Not Implemented
-**Domain**: Backend
+## Workflow
+1. **Understand**: Read context (ticket, PR description) and identifiy scope.
+2. **Execute**: Use the checklist in [references/checklist.md](references/checklist.md).
+   - Core areas: Quality, Security, Performance, Maintainability.
+3. **Tools**: Run project-specific linting and testing commands (e.g., `just lint`, `npm test`, `pytest`); use static analysis if available.
+4. **Document**: Provide constructive feedback with rationale and suggestions.
+5. **Follow Up**: Track and verify fixes.
 
-## Overview
-
-This is a placeholder skill for backend repositories. It will guide systematic code review for backend applications, covering architecture, security, performance, and maintainability.
-
-## TODO
-
-- [ ] Define review workflow and checklist
-- [ ] Add templates for review reports
-- [ ] Add security review guidelines (injection, auth, data validation)
-- [ ] Add performance review guidelines (N+1 queries, caching)
-- [ ] Add API design review guidelines
-
----
-
-**End of Skill**
+## References
+- `checklist.md`: Detailed review criteria.

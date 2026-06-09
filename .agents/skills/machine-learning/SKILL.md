@@ -1,598 +1,215 @@
 ---
 name: machine-learning
-description: Machine Learning integration for Flutter using TensorFlow Lite and Firebase ML
-keywords: ml, machine-learning, ai, tflite, tensorflow, firebase-ml, image-classification
+description: Machine learning development patterns, model training, evaluation, and
+  deployment. Use when building ML pipelines, training models, feature engineering,
+  model evaluation, or deploying ML systems to production.
+author: Joseph OBrien
+status: unpublished
+updated: '2025-12-23'
+version: 1.0.1
+tag: skill
+type: skill
 ---
 
-# Skill 20: Machine Learning Integration
+# Machine Learning
 
-## Overview
+Comprehensive machine learning skill covering the full ML lifecycle from experimentation to production deployment.
 
-This skill enables machine learning capabilities in Flutter applications using TensorFlow Lite and Firebase ML Kit. Supports image classification, object detection, text recognition, and custom model deployment.
+## When to Use This Skill
 
-## Features
+- Building machine learning pipelines
+- Feature engineering and data preprocessing
+- Model training, evaluation, and selection
+- Hyperparameter tuning and optimization
+- Model deployment and serving
+- ML experiment tracking and versioning
+- Production ML monitoring and maintenance
 
-- Image classification with pre-trained models
-- Object detection and tracking
-- Text recognition (OCR)
-- Face detection
-- Barcode scanning
-- Custom TFLite model integration
-- On-device inference
-- Cloud-based ML with Firebase
+## ML Development Lifecycle
 
-## Installation
+### 1. Problem Definition
 
-### Dependencies
+**Classification Types:**
 
-```yaml
-dependencies:
-  tflite_flutter: ^0.10.4
-  tflite_flutter_helper: ^0.3.1
-  firebase_ml_model_downloader: ^0.2.4
-  google_mlkit_text_recognition: ^0.11.0
-  google_mlkit_face_detection: ^0.9.0
-  google_mlkit_barcode_scanning: ^0.10.0
-  google_mlkit_object_detection: ^0.11.0
-  image_picker: ^1.0.7
-  image: ^4.1.3
+- Binary classification (spam/not spam)
+- Multi-class classification (image categories)
+- Multi-label classification (document tags)
+- Regression (price prediction)
+- Clustering (customer segmentation)
+- Ranking (search results)
+- Anomaly detection (fraud detection)
+
+**Success Metrics by Problem Type:**
+
+| Problem Type | Primary Metrics | Secondary Metrics |
+|--------------|-----------------|-------------------|
+| Binary Classification | AUC-ROC, F1 | Precision, Recall, PR-AUC |
+| Multi-class | Macro F1, Accuracy | Per-class metrics |
+| Regression | RMSE, MAE | R², MAPE |
+| Ranking | NDCG, MAP | MRR |
+| Clustering | Silhouette, Calinski-Harabasz | Davies-Bouldin |
+
+### 2. Data Preparation
+
+**Data Quality Checks:**
+
+- Missing value analysis and imputation strategies
+- Outlier detection and handling
+- Data type validation
+- Distribution analysis
+- Target leakage detection
+
+**Feature Engineering Patterns:**
+
+- Numerical: scaling, binning, log transforms, polynomial features
+- Categorical: one-hot, target encoding, frequency encoding, embeddings
+- Temporal: lag features, rolling statistics, cyclical encoding
+- Text: TF-IDF, word embeddings, transformer embeddings
+- Geospatial: distance features, clustering, grid encoding
+
+**Train/Test Split Strategies:**
+
+- Random split (standard)
+- Stratified split (imbalanced classes)
+- Time-based split (temporal data)
+- Group split (prevent data leakage)
+- K-fold cross-validation
+
+### 3. Model Selection
+
+**Algorithm Selection Guide:**
+
+| Data Size | Problem | Recommended Models |
+|-----------|---------|-------------------|
+| Small (<10K) | Classification | Logistic Regression, SVM, Random Forest |
+| Small (<10K) | Regression | Linear Regression, Ridge, SVR |
+| Medium (10K-1M) | Classification | XGBoost, LightGBM, Neural Networks |
+| Medium (10K-1M) | Regression | XGBoost, LightGBM, Neural Networks |
+| Large (>1M) | Any | Deep Learning, Distributed training |
+| Tabular | Any | Gradient Boosting (XGBoost, LightGBM, CatBoost) |
+| Images | Classification | CNN, ResNet, EfficientNet, Vision Transformers |
+| Text | NLP | Transformers (BERT, RoBERTa, GPT) |
+| Sequential | Time Series | LSTM, Transformer, Prophet |
+
+### 4. Model Training
+
+**Hyperparameter Tuning:**
+
+- Grid Search: exhaustive, good for small spaces
+- Random Search: efficient, good for large spaces
+- Bayesian Optimization: smart exploration (Optuna, Hyperopt)
+- Early stopping: prevent overfitting
+
+**Common Hyperparameters:**
+
+| Model | Key Parameters |
+|-------|---------------|
+| XGBoost | learning_rate, max_depth, n_estimators, subsample |
+| LightGBM | num_leaves, learning_rate, n_estimators, feature_fraction |
+| Random Forest | n_estimators, max_depth, min_samples_split |
+| Neural Networks | learning_rate, batch_size, layers, dropout |
+
+### 5. Model Evaluation
+
+**Evaluation Best Practices:**
+
+- Always use held-out test set for final evaluation
+- Use cross-validation during development
+- Check for overfitting (train vs validation gap)
+- Evaluate on multiple metrics
+- Analyze errors qualitatively
+
+**Handling Imbalanced Data:**
+
+- Resampling: SMOTE, undersampling
+- Class weights: weighted loss functions
+- Threshold tuning: optimize decision threshold
+- Evaluation: use PR-AUC over ROC-AUC
+
+### 6. Production Deployment
+
+**Model Serving Patterns:**
+
+- REST API (Flask, FastAPI, TF Serving)
+- Batch inference (scheduled jobs)
+- Streaming (real-time predictions)
+- Edge deployment (mobile, IoT)
+
+**Production Considerations:**
+
+- Latency requirements (p50, p95, p99)
+- Throughput (requests per second)
+- Model size and memory footprint
+- Fallback strategies
+- A/B testing framework
+
+### 7. Monitoring & Maintenance
+
+**What to Monitor:**
+
+- Prediction latency
+- Input feature distributions (data drift)
+- Prediction distributions (concept drift)
+- Model performance metrics
+- Error rates and types
+
+**Retraining Triggers:**
+
+- Performance degradation below threshold
+- Significant data drift detected
+- Scheduled retraining (daily, weekly)
+- New training data available
+
+## MLOps Best Practices
+
+### Experiment Tracking
+
+Track for every experiment:
+
+- Code version (git commit)
+- Data version (hash or version ID)
+- Hyperparameters
+- Metrics (train, validation, test)
+- Model artifacts
+- Environment (packages, versions)
+
+### Model Versioning
+
+```
+models/
+├── model_v1.0.0/
+│   ├── model.pkl
+│   ├── metadata.json
+│   ├── requirements.txt
+│   └── metrics.json
+├── model_v1.1.0/
+└── model_v2.0.0/
 ```
 
-## Image Classification
+### CI/CD for ML
 
-### 1. Model Setup
+1. **Continuous Integration:**
+   - Data validation tests
+   - Model training tests
+   - Performance regression tests
 
-Add your TensorFlow Lite model to `assets/models/`:
+2. **Continuous Deployment:**
+   - Staging environment validation
+   - Shadow mode testing
+   - Gradual rollout (canary)
+   - Automatic rollback
 
-```yaml
-# pubspec.yaml
-flutter:
-  assets:
-    - assets/models/model.tflite
-    - assets/labels/labels.txt
-```
+## Reference Files
 
-### 2. Image Classification Service
+For detailed patterns and code examples, load reference files as needed:
 
-```dart
-import 'package:tflite_flutter/tflite_flutter.dart';
-import 'package:image/image.dart' as img;
-import 'dart:io';
+- **`references/preprocessing.md`** - Data preprocessing patterns and feature engineering techniques
+- **`references/model_patterns.md`** - Model architecture patterns and implementation examples
+- **`references/evaluation.md`** - Comprehensive evaluation strategies and metrics
 
-class ImageClassifier {
-  Interpreter? _interpreter;
-  List<String>? _labels;
+## Integration with Other Skills
 
-  Future<void> loadModel() async {
-    try {
-      _interpreter = await Interpreter.fromAsset('assets/models/model.tflite');
-
-      // Load labels
-      final labelData = await rootBundle.loadString('assets/labels/labels.txt');
-      _labels = labelData.split('\n');
-    } catch (e) {
-      print('Error loading model: $e');
-    }
-  }
-
-  Future<Map<String, double>> classifyImage(File imageFile) async {
-    if (_interpreter == null) {
-      throw Exception('Model not loaded');
-    }
-
-    // Load and preprocess image
-    final imageData = await imageFile.readAsBytes();
-    var image = img.decodeImage(imageData)!;
-
-    // Resize to model input size (e.g., 224x224)
-    image = img.copyResize(image, width: 224, height: 224);
-
-    // Convert to input format
-    final input = _imageToInputList(image);
-
-    // Run inference
-    final output = List.filled(1 * _labels!.length, 0).reshape([1, _labels!.length]);
-    _interpreter!.run(input, output);
-
-    // Process results
-    final results = <String, double>{};
-    for (int i = 0; i < _labels!.length; i++) {
-      results[_labels![i]] = output[0][i];
-    }
-
-    return results;
-  }
-
-  List<List<List<List<double>>>> _imageToInputList(img.Image image) {
-    final input = List.generate(
-      1,
-      (_) => List.generate(
-        224,
-        (y) => List.generate(
-          224,
-          (x) {
-            final pixel = image.getPixel(x, y);
-            return [
-              pixel.r / 255.0,
-              pixel.g / 255.0,
-              pixel.b / 255.0,
-            ];
-          },
-        ),
-      ),
-    );
-    return input;
-  }
-
-  void dispose() {
-    _interpreter?.close();
-  }
-}
-```
-
-### 3. Classification UI
-
-```dart
-class ImageClassificationPage extends ConsumerStatefulWidget {
-  const ImageClassificationPage({super.key});
-
-  @override
-  ConsumerState<ImageClassificationPage> createState() => _ImageClassificationPageState();
-}
-
-class _ImageClassificationPageState extends ConsumerState<ImageClassificationPage> {
-  final ImageClassifier _classifier = ImageClassifier();
-  File? _selectedImage;
-  Map<String, double>? _results;
-  bool _isLoading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _classifier.loadModel();
-  }
-
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final picked = await picker.pickImage(source: ImageSource.gallery);
-
-    if (picked != null) {
-      setState(() {
-        _selectedImage = File(picked.path);
-        _isLoading = true;
-      });
-
-      final results = await _classifier.classifyImage(_selectedImage!);
-
-      setState(() {
-        _results = results;
-        _isLoading = false;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Image Classification')),
-      body: Column(
-        children: [
-          if (_selectedImage != null)
-            Image.file(_selectedImage!, height: 300),
-          const SizedBox(height: 20),
-          if (_isLoading)
-            const CircularProgressIndicator()
-          else if (_results != null)
-            Expanded(
-              child: ListView.builder(
-                itemCount: _results!.length,
-                itemBuilder: (context, index) {
-                  final label = _results!.keys.elementAt(index);
-                  final confidence = _results![label]!;
-
-                  return ListTile(
-                    title: Text(label),
-                    trailing: Text('${(confidence * 100).toStringAsFixed(1)}%'),
-                    subtitle: LinearProgressIndicator(
-                      value: confidence,
-                    ),
-                  );
-                },
-              ),
-            ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _pickImage,
-        child: const Icon(Icons.image),
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    _classifier.dispose();
-    super.dispose();
-  }
-}
-```
-
-## Text Recognition (OCR)
-
-```dart
-import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
-
-class TextRecognitionService {
-  final TextRecognizer _textRecognizer = TextRecognizer();
-
-  Future<String> recognizeText(File imageFile) async {
-    final inputImage = InputImage.fromFile(imageFile);
-    final recognizedText = await _textRecognizer.processImage(inputImage);
-
-    return recognizedText.text;
-  }
-
-  Future<List<TextBlock>> recognizeTextBlocks(File imageFile) async {
-    final inputImage = InputImage.fromFile(imageFile);
-    final recognizedText = await _textRecognizer.processImage(inputImage);
-
-    return recognizedText.blocks;
-  }
-
-  void dispose() {
-    _textRecognizer.close();
-  }
-}
-
-class OCRWidget extends StatefulWidget {
-  const OCRWidget({super.key});
-
-  @override
-  State<OCRWidget> createState() => _OCRWidgetState();
-}
-
-class _OCRWidgetState extends State<OCRWidget> {
-  final TextRecognitionService _service = TextRecognitionService();
-  File? _image;
-  String _recognizedText = '';
-
-  Future<void> _scanText() async {
-    final picker = ImagePicker();
-    final picked = await picker.pickImage(source: ImageSource.camera);
-
-    if (picked != null) {
-      setState(() => _image = File(picked.path));
-
-      final text = await _service.recognizeText(_image!);
-      setState(() => _recognizedText = text);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            if (_image != null)
-              Image.file(_image!, height: 200),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _scanText,
-              child: const Text('Scan Text'),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Recognized Text:',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 10),
-            Text(_recognizedText),
-          ],
-        ),
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    _service.dispose();
-    super.dispose();
-  }
-}
-```
-
-## Object Detection
-
-```dart
-import 'package:google_mlkit_object_detection/google_mlkit_object_detection.dart';
-
-class ObjectDetectionService {
-  late ObjectDetector _objectDetector;
-
-  void initialize() {
-    final options = ObjectDetectorOptions(
-      mode: DetectionMode.single,
-      classifyObjects: true,
-      trackMultipleObjects: true,
-    );
-    _objectDetector = ObjectDetector(options: options);
-  }
-
-  Future<List<DetectedObject>> detectObjects(File imageFile) async {
-    final inputImage = InputImage.fromFile(imageFile);
-    return await _objectDetector.processImage(inputImage);
-  }
-
-  void dispose() {
-    _objectDetector.close();
-  }
-}
-
-class ObjectDetectionPainter extends CustomPainter {
-  final List<DetectedObject> objects;
-  final Size imageSize;
-
-  ObjectDetectionPainter({required this.objects, required this.imageSize});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.0
-      ..color = Colors.green;
-
-    final textPainter = TextPainter(
-      textDirection: TextDirection.ltr,
-    );
-
-    for (final object in objects) {
-      final rect = _scaleRect(object.boundingBox, imageSize, size);
-      canvas.drawRect(rect, paint);
-
-      // Draw label
-      if (object.labels.isNotEmpty) {
-        final label = object.labels.first;
-        textPainter.text = TextSpan(
-          text: '${label.text} ${(label.confidence * 100).toStringAsFixed(0)}%',
-          style: const TextStyle(
-            color: Colors.green,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            backgroundColor: Colors.white,
-          ),
-        );
-        textPainter.layout();
-        textPainter.paint(canvas, Offset(rect.left, rect.top - 20));
-      }
-    }
-  }
-
-  Rect _scaleRect(Rect rect, Size imageSize, Size canvasSize) {
-    final scaleX = canvasSize.width / imageSize.width;
-    final scaleY = canvasSize.height / imageSize.height;
-
-    return Rect.fromLTRB(
-      rect.left * scaleX,
-      rect.top * scaleY,
-      rect.right * scaleX,
-      rect.bottom * scaleY,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-}
-```
-
-## Barcode Scanning
-
-```dart
-import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
-
-class BarcodeScannerService {
-  final BarcodeScanner _scanner = BarcodeScanner();
-
-  Future<List<Barcode>> scanBarcodes(File imageFile) async {
-    final inputImage = InputImage.fromFile(imageFile);
-    return await _scanner.processImage(inputImage);
-  }
-
-  void dispose() {
-    _scanner.close();
-  }
-}
-
-// Real-time barcode scanning with camera
-class BarcodeScannerPage extends StatefulWidget {
-  const BarcodeScannerPage({super.key});
-
-  @override
-  State<BarcodeScannerPage> createState() => _BarcodeScannerPageState();
-}
-
-class _BarcodeScannerPageState extends State<BarcodeScannerPage> {
-  CameraController? _cameraController;
-  final BarcodeScanner _scanner = BarcodeScanner();
-  bool _isProcessing = false;
-  String? _scannedBarcode;
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeCamera();
-  }
-
-  Future<void> _initializeCamera() async {
-    final cameras = await availableCameras();
-    _cameraController = CameraController(
-      cameras.first,
-      ResolutionPreset.medium,
-      enableAudio: false,
-    );
-
-    await _cameraController!.initialize();
-    await _cameraController!.startImageStream(_processCameraImage);
-
-    setState(() {});
-  }
-
-  Future<void> _processCameraImage(CameraImage image) async {
-    if (_isProcessing) return;
-    _isProcessing = true;
-
-    try {
-      final WriteBuffer allBytes = WriteBuffer();
-      for (final Plane plane in image.planes) {
-        allBytes.putUint8List(plane.bytes);
-      }
-      final bytes = allBytes.done().buffer.asUint8List();
-
-      final imageSize = Size(image.width.toDouble(), image.height.toDouble());
-
-      final inputImage = InputImage.fromBytes(
-        bytes: bytes,
-        metadata: InputImageMetadata(
-          size: imageSize,
-          rotation: InputImageRotation.rotation0,
-          format: InputImageFormat.nv21,
-          bytesPerRow: image.planes.first.bytesPerRow,
-        ),
-      );
-
-      final barcodes = await _scanner.processImage(inputImage);
-
-      if (barcodes.isNotEmpty) {
-        setState(() {
-          _scannedBarcode = barcodes.first.rawValue;
-        });
-      }
-    } finally {
-      _isProcessing = false;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Scan Barcode')),
-      body: Stack(
-        children: [
-          if (_cameraController != null)
-            CameraPreview(_cameraController!),
-          if (_scannedBarcode != null)
-            Center(
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                color: Colors.black54,
-                child: Text(
-                  'Scanned: $_scannedBarcode',
-                  style: const TextStyle(color: Colors.white, fontSize: 20),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    _cameraController?.dispose();
-    _scanner.close();
-    super.dispose();
-  }
-}
-```
-
-## Firebase ML Model Download
-
-```dart
-import 'package:firebase_ml_model_downloader/firebase_ml_model_downloader.dart';
-
-class FirebaseMLService {
-  Future<void> downloadModel(String modelName) async {
-    final model = await FirebaseModelDownloader.instance.getModel(
-      modelName,
-      FirebaseModelDownloadType.localModel,
-      FirebaseModelDownloadConditions(
-        iosAllowsCellularAccess: true,
-        iosAllowsBackgroundDownloading: false,
-        androidChargingRequired: false,
-        androidWifiRequired: false,
-        androidDeviceIdleRequired: false,
-      ),
-    );
-
-    print('Model downloaded to: ${model.file}');
-  }
-}
-```
-
-## Best Practices
-
-1. **Load models asynchronously** - Don't block UI thread
-2. **Dispose properly** - Release model resources
-3. **Use quantized models** - Smaller, faster inference
-4. **Cache results** - Avoid re-processing same images
-5. **Handle low confidence** - Filter results below threshold
-6. **Test on real devices** - Simulators may not support ML
-
-## Performance Optimization
-
-```dart
-class OptimizedMLService {
-  Interpreter? _interpreter;
-  bool _isModelLoaded = false;
-
-  Future<void> loadModel() async {
-    if (_isModelLoaded) return;
-
-    final options = InterpreterOptions()
-      ..threads = 4  // Use multiple threads
-      ..useNnApiForAndroid = true;  // Use NNAPI acceleration
-
-    _interpreter = await Interpreter.fromAsset(
-      'model.tflite',
-      options: options,
-    );
-
-    _isModelLoaded = true;
-  }
-
-  // Process multiple images in batch
-  Future<List<dynamic>> batchInference(List<File> images) async {
-    final results = <dynamic>[];
-
-    for (final image in images) {
-      final result = await _singleInference(image);
-      results.add(result);
-    }
-
-    return results;
-  }
-
-  Future<dynamic> _singleInference(File image) async {
-    // Preprocess and run inference
-    // ...
-  }
-}
-```
-
-## Troubleshooting
-
-### Model not loading
-- Check model format is valid TFLite
-- Verify model path is correct
-- Ensure model is included in pubspec.yaml
-
-### Out of memory
-- Use smaller input sizes
-- Load model on-demand, not at startup
-- Dispose models when not needed
-
-### Slow inference
-- Use quantized models (INT8)
-- Enable NNAPI/GPU delegates
-- Reduce image resolution
+- **performance** - For optimizing inference latency
+- **testing** - For ML-specific testing patterns
+- **database-optimization** - For feature store queries
+- **debugging** - For model debugging and error analysis

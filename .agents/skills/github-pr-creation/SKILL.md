@@ -1,6 +1,6 @@
 ---
 name: github-pr-creation
-description: Creates GitHub Pull Requests with automated validation and task tracking. Use when user wants to create PR, open pull request, submit for review, or check if ready for PR. Analyzes commits, validates task completion, generates Conventional Commits title and description, suggests labels. NOTE - for merging existing PRs, use github-pr-merge instead.
+description: MUST use this skill when user asks to create PR, open pull request, submit for review, or mentions "PR 생성/만들기". This skill OVERRIDES default PR creation behavior. Analyzes commits, validates task completion, generates Conventional Commits title and description, suggests labels.
 ---
 
 # GitHub PR Creation
@@ -13,15 +13,15 @@ Creates Pull Requests with task validation, test execution, and Conventional Com
 # 1. Verify GitHub CLI
 gh --version && gh auth status
 
-# 2. Gather information (Claude does this directly)
-git log develop..HEAD --oneline        # Commits to include
-git diff develop --stat                 # Files changed
-git rev-parse --abbrev-ref HEAD        # Current branch
+# 2. Gather information
+git log develop..HEAD --oneline
+git diff develop --stat
+git rev-parse --abbrev-ref HEAD
 
 # 3. Run project tests
 make test  # or: pytest, npm test
 
-# 4. Create PR (after generating content)
+# 4. Create PR
 gh pr create --title "..." --body "..." --base develop --label feature
 ```
 
@@ -46,16 +46,11 @@ I'm about to create a PR from [current-branch] to [target-branch]. Is this corre
 
 ### 3. Gather Information
 
-Execute these commands and analyze results directly:
-
 ```bash
 # Current branch
 git rev-parse --abbrev-ref HEAD
 
 # Commits since base branch
-git log [base-branch]..HEAD --pretty=format:"%H|%an|%ai|%s"
-
-# Commits with full details (for context)
 git log [base-branch]..HEAD --oneline
 
 # Files changed
@@ -67,16 +62,11 @@ git status -sb
 
 ### 4. Search for Task Documentation
 
-Look for task files in these locations (in order):
+Look for task files in these locations:
 1. `.kiro/specs/*/tasks.md`
 2. `docs/specs/*/tasks.md`
 3. `specs/*/tasks.md`
 4. Any `tasks.md` in project root
-
-Extract from task files:
-- Task IDs (format: `Task X` or `Task X.Y`)
-- Task titles and descriptions
-- Requirements (format: `Requirements: X, Y, Z`)
 
 ### 5. Analyze Commits
 
@@ -84,36 +74,18 @@ For each commit, identify:
 - **Type**: feat, fix, refactor, docs, test, chore, ci, perf, style
 - **Scope**: component/module affected (kebab-case)
 - **Task references**: look for `task X.Y`, `Task X`, `#X.Y` patterns
-- **Breaking changes**: exclamation mark after type/scope, or `BREAKING CHANGE` in body
+- **Breaking changes**: exclamation mark (!) or `BREAKING CHANGE` in body
 
-Map commits to documented tasks when task files exist.
-
-### 6. Verify Task Completion
-
-If task documentation exists:
-1. Identify main task from branch name (e.g., `feature/task-2-*` → Task 2)
-2. Find all sub-tasks (e.g., Task 2.1, 2.2, 2.3)
-3. Check which sub-tasks are referenced in commits
-4. Report missing sub-tasks
-
-**If tasks incomplete**: STOP and inform user with:
-```
-✗ Task 2 INCOMPLETE: 1/3 sub-tasks missing
-- Task 2.1: ✓ Implemented
-- Task 2.2: ✓ Implemented
-- Task 2.3: ✗ MISSING
-```
-
-### 7. Run Tests
+### 6. Run Tests
 
 Detect and run project tests:
-- If Makefile with `test` target: `make test`
-- If package.json: `npm test`
-- If Python project: `pytest`
+- Makefile: `make test`
+- package.json: `npm test`
+- Python: `pytest`
 
 **Tests MUST pass before creating PR.**
 
-### 8. Determine PR Type
+### 7. Determine PR Type
 
 | Branch Flow | PR Type | Title Prefix |
 |-------------|---------|--------------|
@@ -123,18 +95,32 @@ Detect and run project tests:
 | develop → main | Release | `release:` |
 | refactor/* → develop | Refactoring | `refactor(scope):` |
 
-### 9. Generate PR Content
-
-Use appropriate template from `references/pr_templates.md` based on PR type.
+### 8. Generate PR Content
 
 **Title format**: `<type>(<scope>): <description>`
 - Type: dominant commit type (feat > fix > refactor)
-- Scope: most common scope from commits, or task-related scope (kebab-case)
+- Scope: most common scope from commits (kebab-case)
 - Description: imperative, lowercase, no period, max 50 chars
 
-**Body**: Select template based on PR type and populate with gathered data.
+**Body structure**:
+```markdown
+## Summary
+- Key change 1
+- Key change 2
 
-### 10. Suggest Labels
+## Changes
+- List of specific changes
+
+## Test Plan
+- [ ] Unit tests passing
+- [ ] Integration tests passing
+- [ ] Manual testing done
+
+## Related
+- Refs: Task N, Issue #X
+```
+
+### 9. Suggest Labels
 
 | Commit Type | Labels |
 |-------------|--------|
@@ -142,13 +128,12 @@ Use appropriate template from `references/pr_templates.md` based on PR type.
 | fix | bug, bugfix |
 | refactor | refactoring, tech-debt |
 | docs | documentation |
-| ci | ci/cd, infrastructure |
+| ci | ci/cd |
 | security | security |
-| hotfix | urgent, priority:high |
 
 Check available labels: `gh label list`
 
-### 11. Create PR
+### 10. Create PR
 
 **Show content to user first**, then:
 
@@ -168,19 +153,8 @@ Before generating PR, ensure you have:
 - [ ] List of commits with types and scopes
 - [ ] Files changed summary
 - [ ] Task documentation (if exists)
-- [ ] Task completion status
 - [ ] Test results (must pass)
 - [ ] Available labels in repo
-
-## Error Handling
-
-**Missing GitHub CLI**: `brew install gh && gh auth login`
-
-**Incomplete Tasks**: Show status, ask user to complete or proceed anyway.
-
-**Failed Tests**: Show failures, ask user to fix before PR.
-
-**No tasks.md**: Proceed with commit-based PR, generate content from commits only.
 
 ## Important Rules
 
@@ -194,8 +168,5 @@ Before generating PR, ensure you have:
 ## Related Skills
 
 - **git-commit** - Commit message format and conventions
-
-## References
-
-- `references/pr_templates.md` - Complete PR templates for all types
-- `references/conventional_commits.md` - Commit format guide
+- **pr-merge** - For merging existing PRs
+- **pr-review** - For handling PR review comments

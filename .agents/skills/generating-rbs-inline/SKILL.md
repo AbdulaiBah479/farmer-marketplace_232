@@ -1,11 +1,11 @@
 ---
 name: generating-rbs-inline
-description: Generates or updates RBS-inline type annotations directly in Ruby source files as comments. Triggers when creating, updating, or maintaining inline type signatures for Ruby source files.
+description: Generates RBS-inline type annotations directly in Ruby source files as comments. Triggers when adding inline type signatures, annotating Ruby methods with rbs-inline syntax, or generating type comments without existing inline annotations.
 ---
 
 # RBS-Inline Generation Skill
 
-Generate or update RBS-inline type annotations as comments directly in Ruby source files. Supports both full generation from scratch and partial updates for individual changed files. Unlike pure RBS which uses separate `.rbs` files, rbs-inline embeds type information as structured comments within Ruby code.
+Generate RBS-inline type annotations as comments directly in Ruby source files. Unlike pure RBS which uses separate `.rbs` files, rbs-inline embeds type information as structured comments within Ruby code.
 
 # Instructions
 
@@ -31,32 +31,6 @@ RBS-Inline Generation Progress:
 - You MUST prepend any command with `bundle exec` if the project has Gemfile.
 - You MUST use `# @rbs` comment syntax for inline annotations.
 - You MUST NOT use regular RBS signatures and `.rbs` files in the project.
-- You MUST use the tracking file when processing multiple files to ensure no files are missed.
-
-## Multi-File Processing
-
-When processing multiple Ruby files, create a tracking file to ensure all files are covered:
-
-1. **Create tracking file** `.rbs-inline-generation-todo.tmp`:
-   ```
-   [ ] app/models/user.rb
-   [ ] app/models/post.rb
-   [ ] app/services/auth_service.rb
-   ```
-
-2. **Process files one by one**:
-   - Take the next pending `[ ]` entry
-   - Complete all steps (1-6) for that file
-   - Mark as processed `[x]`
-   - Save the tracking file
-   - Continue to next pending entry
-
-3. **Cleanup**: Remove the tracking file after all files are processed:
-   ```bash
-   rm .rbs-inline-generation-todo.tmp
-   ```
-
-If interrupted, the tracking file allows resuming from where you left off.
 
 ## 1. Analyze the Ruby Source
 

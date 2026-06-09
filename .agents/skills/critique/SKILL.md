@@ -1,74 +1,118 @@
 ---
 name: critique
-description: Adversarial stress test of an idea. Find fatal flaws, hidden assumptions, dependencies, and failure modes. Use after evaluate to break the idea before committing.
-allowed-tools: [Read, WebFetch, WebSearch, Grep, Glob]
+description: Evaluate design effectiveness from a UX perspective. Assesses visual hierarchy, information architecture, emotional resonance, and overall design quality with actionable feedback.
+args:
+  - name: area
+    description: The feature or area to critique (optional)
+    required: false
+user-invokable: true
 ---
 
-# Critique
+Conduct a holistic design critique, evaluating whether the interface actually works—not just technically, but as a designed experience. Think like a design director giving feedback.
 
-Your job is to break this. Be adversarial. Find the fatal flaws, not minor issues.
+**First**: Use the frontend-design skill for design principles and anti-patterns.
 
-**Start by reviewing the evaluate output.** Focus your critique on the least scrutinized assumptions, especially those flagged in the Contrarian perspective and any assumptions that multiple perspectives share without questioning.
+## Design Critique
 
-## Persona
+Evaluate the interface across these dimensions:
 
-If a persona or role is specified, such as "as a security engineer", adopt that expertise lens:
-- Surface assumptions that persona would challenge
-- Identify dependencies that persona knows are fragile
-- Focus on failure modes that persona has seen before
-- Assess hidden costs through that persona's experience
+### 1. AI Slop Detection (CRITICAL)
 
-The critique should feel like it comes from a domain expert who has seen things fail.
+**This is the most important check.** Does this look like every other AI-generated interface from 2024-2025?
 
-## Focus
+Review the design against ALL the **DON'T** guidelines in the frontend-design skill—they are the fingerprints of AI-generated work. Check for the AI color palette, gradient text, dark mode with glowing accents, glassmorphism, hero metric layouts, identical card grids, generic fonts, and all other tells.
 
-For each issue found, assign a severity level:
+**The test**: If you showed this to someone and said "AI made this," would they believe you immediately? If yes, that's the problem.
 
-- **Fatal**: This alone could cause the entire approach to fail. Must be addressed before proceeding.
-- **Serious**: Significant risk that could derail success if not mitigated. Needs a plan.
-- **Notable**: Worth knowing about but manageable. Should be monitored.
+### 2. Visual Hierarchy
+- Does the eye flow to the most important element first?
+- Is there a clear primary action? Can you spot it in 2 seconds?
+- Do size, color, and position communicate importance correctly?
+- Is there visual competition between elements that should have different weights?
 
-Organize findings by these categories:
+### 3. Information Architecture
+- Is the structure intuitive? Would a new user understand the organization?
+- Is related content grouped logically?
+- Are there too many choices at once? (cognitive overload)
+- Is the navigation clear and predictable?
 
-### Fatal Flaws
-Issues that could cause complete failure. If none exist, explicitly state that none were found after genuine stress testing.
+### 4. Emotional Resonance
+- What emotion does this interface evoke? Is that intentional?
+- Does it match the brand personality?
+- Does it feel trustworthy, approachable, premium, playful—whatever it should feel?
+- Would the target user feel "this is for me"?
 
-### Serious Risks
-Significant concerns requiring mitigation plans.
+### 5. Discoverability & Affordance
+- Are interactive elements obviously interactive?
+- Would a user know what to do without instructions?
+- Are hover/focus states providing useful feedback?
+- Are there hidden features that should be more visible?
 
-### Notable Issues
-Worth tracking but not blocking.
+### 6. Composition & Balance
+- Does the layout feel balanced or uncomfortably weighted?
+- Is whitespace used intentionally or just leftover?
+- Is there visual rhythm in spacing and repetition?
+- Does asymmetry feel designed or accidental?
 
-Within each severity level, address:
-- **Assumptions** What is being taken for granted that might not be true?
-- **Dependencies** What has to go right for this to work? How likely is that?
-- **Blind spots** What perspectives or stakeholders are being ignored?
-- **Failure modes** How does this fail? What is the worst realistic outcome?
-- **Hidden costs** What is not being accounted for in time, money, attention, or opportunity cost?
+### 7. Typography as Communication
+- Does the type hierarchy clearly signal what to read first, second, third?
+- Is body text comfortable to read? (line length, spacing, size)
+- Do font choices reinforce the brand/tone?
+- Is there enough contrast between heading levels?
 
-Do not be balanced. Do not soften. If this idea has a fatal flaw, say so directly.
+### 8. Color with Purpose
+- Is color used to communicate, not just decorate?
+- Does the palette feel cohesive?
+- Are accent colors drawing attention to the right things?
+- Does it work for colorblind users? (not just technically—does meaning still come through?)
 
-If it is actually solid, say that too, but only after genuinely trying to break it.
+### 9. States & Edge Cases
+- Empty states: Do they guide users toward action, or just say "nothing here"?
+- Loading states: Do they reduce perceived wait time?
+- Error states: Are they helpful and non-blaming?
+- Success states: Do they confirm and guide next steps?
 
-## Pre Mortem
+### 10. Microcopy & Voice
+- Is the writing clear and concise?
+- Does it sound like a human (the right human for this brand)?
+- Are labels and buttons unambiguous?
+- Does error copy help users fix the problem?
 
-Assume this decision was made 12 months ago and it failed. Write a brief narrative: What happened? What went wrong? Which risks materialized? What was the sequence of events that led to failure? Be specific and realistic.
+## Generate Critique Report
 
-## Cross Domain Concerns
+Structure your feedback as a design director would:
 
-Even if no cross domain flag was specified in the input, identify the single most relevant adjacent domain for this topic and surface two to three concerns from that perspective. Most decisions have blind spots that only become visible from outside the primary domain.
+### Anti-Patterns Verdict
+**Start here.** Pass/fail: Does this look AI-generated? List specific tells from the skill's Anti-Patterns section. Be brutally honest.
 
-If the input includes "also flag concerns from [X]" or "also consider [X] perspective", use that domain instead and expand to a more detailed section:
+### Overall Impression
+A brief gut reaction—what works, what doesn't, and the single biggest opportunity.
 
-### Cross Domain Concerns: [X] Perspective
+### What's Working
+Highlight 2-3 things done well. Be specific about why they work.
 
-Surface three to five concerns that an expert from that domain would immediately notice. These should be:
-- Issues the primary persona might overlook due to different priorities
-- Domain specific risks or requirements that are not obvious to outsiders
-- Quick flags, not a full analysis
+### Priority Issues
+The 3-5 most impactful design problems, ordered by importance:
 
-If adjacent domains were identified during the analyze step, this section carries extra weight. Treat these as potential blind spots that deserve serious attention, not just a footnote.
+For each issue:
+- **What**: Name the problem clearly
+- **Why it matters**: How this hurts users or undermines goals
+- **Fix**: What to do about it (be concrete)
+- **Command**: Which command to use (prefer: {{available_commands}} — or other installed skills you're sure exist)
 
-If a concern warrants deep investigation, note it as an open question rather than fully analyzing it here.
+### Minor Observations
+Quick notes on smaller issues worth addressing.
 
-Subject: $ARGUMENTS
+### Questions to Consider
+Provocative questions that might unlock better solutions:
+- "What if the primary action were more prominent?"
+- "Does this need to feel this complex?"
+- "What would a confident version of this look like?"
+
+**Remember**:
+- Be direct—vague feedback wastes everyone's time
+- Be specific—"the submit button" not "some elements"
+- Say what's wrong AND why it matters to users
+- Give concrete suggestions, not just "consider exploring..."
+- Prioritize ruthlessly—if everything is important, nothing is
+- Don't soften criticism—developers need honest feedback to ship great design

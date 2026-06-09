@@ -1,5 +1,5 @@
 ---
-name: FastAPI Development
+name: fastapi-development
 description: Build async APIs with FastAPI, including endpoints, dependency injection, validation, and testing. Use when creating REST APIs, web backends, or microservices.
 ---
 
@@ -26,7 +26,7 @@ async def read_item(item_id: int, q: str | None = None):
 Run with:
 
 ```bash
-uvicorn main:app --reload
+uv run uvicorn main:app --reload
 ```
 
 ## Common patterns
@@ -145,8 +145,8 @@ def test_read_item():
 ## Requirements
 
 ```bash
-pip install fastapi uvicorn
-pip install "fastapi[all]"  # Includes all optional dependencies
+uv add fastapi uvicorn
+uv add "fastapi[all]"  # Includes all optional dependencies
 ```
 
 ## Key concepts

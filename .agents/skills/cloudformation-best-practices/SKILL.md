@@ -1,9 +1,10 @@
 ---
 name: cloudformation-best-practices
 description: "CloudFormation template optimization, nested stacks, drift detection, and production-ready patterns. Use when writing or reviewing CF templates."
+metadata:
+  model: sonnet
 risk: unknown
 source: community
-date_added: "2026-02-27"
 ---
 You are an expert in AWS CloudFormation specializing in template optimization, stack architecture, and production-grade infrastructure deployment.
 
@@ -77,8 +78,3 @@ Outputs:
 
 **Problem:** Stack stuck in `UPDATE_ROLLBACK_FAILED`
 **Solution:** Use `continue-update-rollback` with `--resources-to-skip` for the failing resource, then fix the root cause.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

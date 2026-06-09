@@ -1,13 +1,15 @@
 ---
 name: writing-clearly-and-concisely
-description: Use when writing prose humans will read—documentation, commit messages, error messages, explanations, reports, or UI text. Applies Strunk's timeless rules for clearer, stronger, more professional writing.
+description: Apply Strunk's timeless writing rules to ANY prose humans will read—documentation, commit messages, error messages, explanations, reports, or UI text. Makes your writing clearer, stronger, and more professional.
 ---
 
 # Writing Clearly and Concisely
 
 ## Overview
 
-Write with clarity and force. This skill covers what to do (Strunk) and what not to do (AI patterns).
+William Strunk Jr.'s *The Elements of Style* (1918) teaches you to write clearly and cut ruthlessly.
+
+**WARNING:** `elements-of-style.md` consumes ~12,000 tokens. Read it only when writing or editing prose.
 
 ## When to Use This Skill
 
@@ -24,21 +26,22 @@ Use this skill whenever you write prose for humans:
 ## Limited Context Strategy
 
 When context is tight:
-
 1. Write your draft using judgment
-2. Dispatch a subagent with your draft and the relevant section file
+2. Dispatch a subagent with your draft and `elements-of-style.md`
 3. Have the subagent copyedit and return the revision
 
-Loading a single section (~1,000-4,500 tokens) instead of everything saves significant context.
+If you REALLY REALLY need to preserve context, you can skip the full `elements-of-style.md` and instead use Orwell's rules:
 
-## Elements of Style
+- Never use a metaphor, simile, or other figure of speech which you are used to seeing in print.
+- Never use a long word where a short one will do.
+- If it is possible to cut a word out, always cut it out.
+- Never use the passive where you can use the active.
+- Never use a foreign phrase, a scientific word, or a jargon word if you can think of an everyday English equivalent.
+- Break any of these rules sooner than say anything outright barbarous.
 
-William Strunk Jr.'s *The Elements of Style* (1918) teaches you to write clearly and cut ruthlessly.
+## All Rules
 
-### Rules
-
-**Elementary Rules of Usage (Grammar/Punctuation)**:
-
+### Elementary Rules of Usage (Grammar/Punctuation)
 1. Form possessive singular by adding 's
 2. Use comma after each term in series except last
 3. Enclose parenthetic expressions between commas
@@ -47,8 +50,7 @@ William Strunk Jr.'s *The Elements of Style* (1918) teaches you to write clearly
 6. Don't break sentences in two
 7. Participial phrase at beginning refers to grammatical subject
 
-**Elementary Principles of Composition**:
-
+### Elementary Principles of Composition
 8. One paragraph per topic
 9. Begin paragraph with topic sentence
 10. **Use active voice**
@@ -61,33 +63,9 @@ William Strunk Jr.'s *The Elements of Style* (1918) teaches you to write clearly
 17. Keep to one tense in summaries
 18. **Place emphatic words at end of sentence**
 
-### Reference Files
-
-The rules above are summarized from Strunk's original text. For complete explanations with examples:
-
-| Section | File | ~Tokens |
-|---------|------|---------|
-| Grammar, punctuation, comma rules | `02-elementary-rules-of-usage.md` | 2,500 |
-| Paragraph structure, active voice, concision | `03-elementary-principles-of-composition.md` | 4,500 |
-| Headings, quotations, formatting | `04-a-few-matters-of-form.md` | 1,000 |
-| Word choice, common errors | `05-words-and-expressions-commonly-misused.md` | 4,000 |
-
-**Most tasks need only `03-elementary-principles-of-composition.md`** — it covers active voice, positive form, concrete language, and omitting needless words.
-
-## AI Writing Patterns to Avoid
-
-LLMs regress to statistical means, producing generic, puffy prose. Avoid:
-
-- **Puffery:** pivotal, crucial, vital, testament, enduring legacy
-- **Empty "-ing" phrases:** ensuring reliability, showcasing features, highlighting capabilities
-- **Promotional adjectives:** groundbreaking, seamless, robust, cutting-edge
-- **Overused AI vocabulary:** delve, leverage, multifaceted, foster, realm, tapestry
-- **Formatting overuse:** excessive bullets, emoji decorations, bold on every other word
-
-Be specific, not grandiose. Say what it actually does.
-
-For comprehensive research on why these patterns occur, see `signs-of-ai-writing.md`. Wikipedia editors developed this guide to detect AI-generated submissions — their patterns are well-documented and field-tested.
+### Section V: Words and Expressions Commonly Misused
+Alphabetical reference for usage questions
 
 ## Bottom Line
 
-Writing for humans? Load the relevant section from `elements-of-style/` and apply the rules. For most tasks, `03-elementary-principles-of-composition.md` covers what matters most.
+Writing for humans? Read `elements-of-style.md` and apply the rules. Low on tokens? Dispatch a subagent to copyedit with the guide.

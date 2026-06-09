@@ -339,16 +339,16 @@ await scheduler.add_schedule(
 
 ```bash
 # Core package
-pip install apscheduler
+uv add apscheduler
 
 # Database backends
-pip install "apscheduler[postgresql]"  # PostgreSQL
-pip install "apscheduler[mongodb]"     # MongoDB
-pip install "apscheduler[sqlite]"      # SQLite
+uv add "apscheduler[postgresql]"  # PostgreSQL
+uv add "apscheduler[mongodb]"     # MongoDB
+uv add "apscheduler[sqlite]"      # SQLite
 
 # Event brokers
-pip install "apscheduler[redis]"       # Redis
-pip install "apscheduler[mqtt]"        # MQTT
+uv add "apscheduler[redis]"       # Redis
+uv add "apscheduler[mqtt]"        # MQTT
 ```
 
 **Dependencies by use case:**

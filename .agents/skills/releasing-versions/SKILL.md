@@ -1,184 +1,300 @@
 ---
 name: releasing-versions
-description: Interactive release workflow for OSS Sustain Guard with version updates, PyPI publishing, and GitHub release notes. Use when ready to release a new version to production.
+description: Manages release preparation including validation, version bumping, documentation verification, and security checks.
 ---
 
-# Release Process - Quick Start
+# Releasing Versions
 
-> **Quick guide to release a new version. For detailed info, see [workflow-details.md](../references/workflow-details.md).**
+## When to Use
 
-## Quick Release Checklist
+- Preparing a new release
+- Version bumping
+- Pre-release validation
+- Documentation verification before release
 
-```bash
-# 1. Verify local setup
-make test && make lint && make doc-build
+## Release Workflow Overview
 
-# 2. Analyze changes & update version
-# - Run: git log --oneline to see actual changes
-# - Edit pyproject.toml: change version
-# - Run: uv sync
-# - Edit CHANGELOG.md: add new section based on actual changes
+| Phase | Purpose | Blocking? |
+|-------|---------|-----------|
+| 1. Pre-Release Validation | Tests, security | Yes |
+| 2. Version Bump | Update version strings | Yes |
+| 3. Documentation | Verify/update docs | Warning |
+| 4. Template Sync | Cookiecutter alignment | Warning |
+| 5. Build Verification | Package builds | Yes |
+| 6. Git Operations | Commit and tag | Yes |
 
-# 3. Commit and tag
-git add pyproject.toml uv.lock CHANGELOG.md
-git commit -m "chore: release version X.Y.Z"
-git tag vX.Y.Z
-git push origin vX.Y.Z
+## Phase 1: Pre-Release Validation
 
-# 4. Watch pipeline
-# → Go to: https://github.com/onukura/oss-sustain-guard/actions
-# → Wait for all jobs to succeed
-
-# 5. Prepare English release notes
-# → Claude will generate English release notes based on CHANGELOG
-# → Copy to GitHub Releases description
-```
-
-## The 5 Steps
-
-### 1️⃣ Prepare & Test
-
-Make sure everything is ready:
+### 1.1 Verify Sprint Tasks Complete
 
 ```bash
-git fetch upstream
-make test          # All tests pass?
-make lint          # Code clean?
-make doc-build     # Docs build?
+# Check for incomplete tasks
+bpsai-pair task list --status in_progress
+bpsai-pair task list --status blocked
+
+# Check current state
+bpsai-pair status
 ```
 
-### 2️⃣ Decide Version
+**BLOCKER**: All tasks must be complete or moved to next sprint.
 
-Use [Semantic Versioning](https://semver.org/):
-- **MAJOR** (1.0.0): Breaking changes
-- **MINOR** (0.15.0): New features
-- **PATCH** (0.14.1): Bug fixes
-
-### 3️⃣ Update Files
-
-**Step 1: Analyze actual changes**
-
-View what changed since last version:
+### 1.2 Run Full Test Suite
 
 ```bash
-git log --oneline --since="2 weeks ago"
-# Or compare with last tag:
-git log --oneline v0.14.0..HEAD
+# All tests must pass
+pytest tests/ -v --tb=short
+
+# Check coverage meets target (80%)
+pytest tests/ --cov=bpsai_pair --cov-report=term-missing --cov-fail-under=80
 ```
 
-**pyproject.toml** - Change version:
+**BLOCKER**: Release cannot proceed if tests fail.
 
-```toml
-version = "0.15.0"
-```
-
-**Then sync lock file:**
+### 1.3 Security Scans
 
 ```bash
-uv sync
+# Scan for accidentally committed secrets
+bpsai-pair security scan-secrets
+
+# Scan dependencies for known vulnerabilities
+bpsai-pair security scan-deps
 ```
 
-**CHANGELOG.md** - Add at top based on actual changes:
+**BLOCKER**: Secrets detected = cannot release.
+**WARNING**: Dependency vulnerabilities should be reviewed but may not block.
+
+## Phase 2: Version Bump
+
+### Locate Version Files
+
+```bash
+grep -E "^version|__version__" tools/cli/pyproject.toml tools/cli/bpsai_pair/__init__.py
+```
+
+### Update Both Files
+
+| File | Format |
+|------|--------|
+| `pyproject.toml` | `version = "X.Y.Z"` |
+| `__init__.py` | `__version__ = "X.Y.Z"` |
+
+**Note**: Version in files has NO 'v' prefix. Git tags use 'v' prefix.
+
+### Related Files to Update
+
+| File | Update |
+|------|--------|
+| `capabilities.yaml` | `version: "X.Y.Z"` |
+| `config.yaml` | `version: "X.Y.Z"` |
+
+## Phase 3: Documentation Verification
+
+### 3.1 Required Documentation
+
+```bash
+# Check CHANGELOG has entry for this version
+grep -A 20 "## \[X.Y.Z\]" CHANGELOG.md
+
+# Check README mentions current features
+head -100 README.md
+
+# Check FEATURE_MATRIX is current
+head -50 .paircoder/docs/FEATURE_MATRIX.md
+```
+
+### 3.2 Documentation Freshness
+
+```bash
+# Check modification dates
+git log -1 --format="%ci" -- README.md
+git log -1 --format="%ci" -- CHANGELOG.md
+git log -1 --format="%ci" -- .paircoder/docs/FEATURE_MATRIX.md
+```
+
+**WARNING** if any required doc older than 7 days - may need update.
+
+### 3.3 CHANGELOG Entry Format
+
+If missing, create entry following Keep a Changelog format:
 
 ```markdown
-## v0.15.0 - 2026-01-20
+## [X.Y.Z] - YYYY-MM-DD
 
 ### Added
-- New metric for repository visibility
-- Support for Dart package resolver
+- Feature 1
+- Feature 2
+
+### Changed
+- Change 1
 
 ### Fixed
-- Bug in cache invalidation logic
-- Memory leak in GraphQL client
+- Fix 1
 
-### Improved
-- Performance optimization in dependency analysis
-- Better error messages for network timeouts
+### Removed
+- (if applicable)
 ```
 
-> **Important:** Write CHANGELOG entries based on the actual `git log` output from your recent commits, not generic templates.
+Generate content from archived tasks:
+```bash
+bpsai-pair task changelog-preview --since <last-version>
+```
 
-### 4️⃣ Commit & Tag
+## Phase 4: Template Sync (PairCoder Only)
+
+Verify cookiecutter template matches current version:
 
 ```bash
-git add pyproject.toml uv.lock CHANGELOG.md
-git commit -m "chore: release version 0.15.0"
-git tag v0.15.0
-git push origin v0.15.0
+# Check template exists
+ls -la tools/cli/bpsai_pair/data/cookiecutter-paircoder/
+
+# Compare key files
+diff .paircoder/config.yaml \
+  tools/cli/bpsai_pair/data/cookiecutter-paircoder/{{cookiecutter.project_slug}}/.paircoder/config.yaml
+
+diff CLAUDE.md \
+  tools/cli/bpsai_pair/data/cookiecutter-paircoder/{{cookiecutter.project_slug}}/CLAUDE.md
 ```
 
-### 5️⃣ Watch & Verify
+**Key files that should stay in sync:**
+- `config.yaml` structure (not values)
+- `CLAUDE.md` instructions
+- `capabilities.yaml` format
+- Skill files
 
-The publish workflow starts automatically:
+## Phase 5: Build Verification
+
+```bash
+# Clean old builds
+rm -rf tools/cli/dist/ tools/cli/build/ tools/cli/*.egg-info
+
+# Build the package
+cd tools/cli && pip install build && python -m build
+
+# Verify clean install
+pip install dist/*.whl --force-reinstall
+
+# Verify version is correct
+bpsai-pair --version
+```
+
+## Phase 6: Release Checklist
+
+- [ ] All sprint tasks complete
+- [ ] Tests passing (100%)
+- [ ] Coverage ≥ 80%
+- [ ] No secrets in codebase
+- [ ] Version bumped in pyproject.toml
+- [ ] Version bumped in __init__.py
+- [ ] Version bumped in capabilities.yaml
+- [ ] Version bumped in config.yaml
+- [ ] CHANGELOG updated
+- [ ] README current
+- [ ] FEATURE_MATRIX updated
+- [ ] Cookiecutter template synced (if applicable)
+- [ ] Package builds successfully
+- [ ] Package installs cleanly
+
+## Phase 7: Git Operations
+
+```bash
+# Stage all changes
+git add -A
+
+# Commit with release message
+git commit -m "Release vX.Y.Z"
+
+# Create annotated tag
+git tag -a "vX.Y.Z" -m "Release vX.Y.Z"
+
+# Show what will be pushed
+git log --oneline -5
+git tag -l | tail -5
+```
+
+**DO NOT push yet** - let user review and confirm.
+
+## Phase 8: Report Summary
 
 ```
-GitHub Actions → build → publish-to-pypi → github-release
+📦 **Release Prepared**: vX.Y.Z
+
+**Pre-Release Checks**:
+- ✅ All tasks complete
+- ✅ Tests: XXX passed
+- ✅ Coverage: XX%
+- ✅ Security: Clean
+
+**Documentation**:
+- ✅ CHANGELOG: Updated
+- ✅ README: Current
+- ✅ FEATURE_MATRIX: Updated
+- ⚠️ User guide: Last updated X days ago (review recommended)
+
+**Cookiecutter**: 
+- ✅ Template synced
+
+**Build**:
+- ✅ Package built: bpsai_pair-X.Y.Z-py3-none-any.whl
+- ✅ Installs cleanly
+- ✅ Version verified
+
+**Ready to Release**:
+```bash
+git push origin main
+git push origin vX.Y.Z
 ```
 
-**Check:**
+Then publish to PyPI:
+```bash
+cd tools/cli && twine upload dist/*
+```
+```
 
-- [ ] All jobs pass in Actions
-- [ ] New version on PyPI
-- [ ] Release appears on GitHub Releases
-- [ ] Can install: `pip install oss-sustain-guard==0.15.0`
+## Error Recovery
 
-### 6️⃣ Generate & Publish English Release Notes ⭐ **REQUIRED**
+### Tests Fail
+1. Do not proceed with release
+2. Fix failing tests
+3. Re-run from Phase 1
 
-After verifying the release on PyPI and GitHub, Claude will:
+### Secrets Detected
+1. Do not proceed with release
+2. Remove secrets from history (git filter-branch or BFG)
+3. Rotate any exposed credentials
+4. Re-run security scan
 
-1. **Read your CHANGELOG.md** to understand actual changes
-2. **Generate professional English release notes** with:
-   - Executive summary of the release
-   - Feature highlights with descriptions
-   - Bug fixes and improvements
-   - Migration notes (if breaking changes)
-   - Contributor appreciation
-3. **Provide formatted text** ready to copy/paste to GitHub Releases
+### Documentation Stale
+1. WARNING, not blocker
+2. User can choose to update or proceed
+3. Log the decision
 
-**You will:**
-- Copy the generated English release notes to GitHub Releases description
-- Update any version-specific links or instructions if needed
+### Cookiecutter Differs
+1. Determine if difference is intentional
+2. If template should be updated, do so
+3. If difference is project-specific, document why
 
-This ensures your release has comprehensive documentation for all users.
+## Configuration Reference
 
-## What Happens Automatically
+Release configuration in `config.yaml`:
 
-✅ Build Python package
-✅ Upload to PyPI (Trusted Publishing)
-✅ Sign artifacts with Sigstore
-✅ Create GitHub Release
-✅ **Claude generates English release notes** (based on CHANGELOG.md)
+```yaml
+release:
+  version_source: tools/cli/pyproject.toml
+  documentation:
+    - CHANGELOG.md
+    - README.md
+    - .paircoder/docs/FEATURE_MATRIX.md
+  cookie_cutter:
+    template_path: tools/cli/bpsai_pair/data/cookiecutter-paircoder
+    sync_required: true
+  freshness_days: 7
+```
 
-## GitHub Release Notes Template
+## Version Format Reference
 
-🎯 **After PyPI release completes**, you'll receive:
-
-1. **English release notes** based on your CHANGELOG.md
-2. **Ready-to-copy formatting** for GitHub Releases
-3. **Professional structure** with sections for features, fixes, improvements
-
-> Claude will automatically generate and present these - no need to ask!
-
-## Need More Details?
-
-See bundled references:
-
-- [workflow-details.md](../references/workflow-details.md) - Detailed technical info
-- [release-examples.md](../examples/release-examples.md) - Step-by-step examples & troubleshooting
-
-## Common Questions
-
-**Q: How do I write good CHANGELOG entries?**
-A: Review your actual commits with `git log --oneline` and group them by type (Added, Fixed, Improved). Use clear, user-focused language.
-
-**Q: What if tests fail?**
-A: Fix the issue and commit before running the release commands.
-
-**Q: How to undo a release?**
-A: Delete the tag (`git tag -d vX.Y.Z && git push origin :vX.Y.Z`) before PyPI publishes.
-
-**Q: Tag created but pipeline didn't start?**
-A: Verify tag format is `vX.Y.Z` (must start with 'v'). See troubleshooting docs.
-
-**Q: Do I need to ask Claude for release notes?**
-A: No! Claude will automatically generate English release notes after you verify the PyPI release. Just ask "Create release notes" when ready.
+| Location | Format | Example |
+|----------|--------|---------|
+| pyproject.toml | X.Y.Z | 2.9.0 |
+| __init__.py | X.Y.Z | 2.9.0 |
+| Git tags | vX.Y.Z | v2.9.0 |
+| CHANGELOG | [X.Y.Z] | [2.9.0] |

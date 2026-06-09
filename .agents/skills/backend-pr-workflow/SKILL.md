@@ -1,7 +1,14 @@
 ---
 name: backend-pr-workflow
-description: "Pedantic backend PR workflow skill enforcing ClickUp-linked branch/PR naming, PR hygiene, safe Django migrations, and downtime-safe schema changes."
-allowed-tools: Read Bash Glob Grep
+description: >
+  Pedantic Diversio backend dev workflow Skill that enforces ClickUp-linked
+  branch/PR naming, PR hygiene, safe Django migrations, and downtime-safe schema
+  changes for Django4Lyfe-style backends.
+allowed-tools:
+  - Read
+  - Bash
+  - Glob
+  - Grep
 ---
 
 # Backend PR Workflow Skill
@@ -412,9 +419,13 @@ When invoked, this Skill should:
 
 ## Compatibility Notes
 
-This Skill is designed to work with both Claude Code and OpenAI Codex.
+This skill is designed to work with both **Claude Code** and **OpenAI Codex**.
 
-- Claude Code: install the corresponding plugin and use its slash commands (see `plugins/backend-pr-workflow/commands/`).
-- Codex: install the Skill directory and invoke `name: backend-pr-workflow`.
+For Codex users:
+- Install via skill-installer with `--repo DiversioTeam/agent-skills-marketplace
+  --path plugins/backend-pr-workflow/skills/backend-pr-workflow`.
+- Use `$skill backend-pr-workflow` to invoke.
 
-For installation, see this repo's `README.md`.
+For Claude Code users:
+- Install via `/plugin install backend-pr-workflow@diversiotech`.
+- Use `/backend-pr-workflow:check-pr` to invoke.

@@ -1,11 +1,7 @@
 ---
 name: citation-management
-description: "Manage citations systematically throughout the research and writing process."
-license: MIT License
-metadata:
-    skill-author: K-Dense Inc.
-risk: unknown
-source: community
+description: Comprehensive citation management for academic research. Search Google Scholar and PubMed for papers, extract accurate metadata, validate citations, and generate properly formatted BibTeX entries. This skill should be used when you need to find papers, verify citation information, convert DOIs to BibTeX, or ensure reference accuracy in scientific writing.
+allowed-tools: [Read, Write, Edit, Bash]
 ---
 
 # Citation Management
@@ -451,39 +447,11 @@ python scripts/format_bibtex.py my_review_references.bib \
 
 ### Google Scholar Best Practices
 
-**Finding Seminal and High-Impact Papers** (CRITICAL):
-
-Always prioritize papers based on citation count, venue quality, and author reputation:
-
-**Citation Count Thresholds:**
-| Paper Age | Citations | Classification |
-|-----------|-----------|----------------|
-| 0-3 years | 20+ | Noteworthy |
-| 0-3 years | 100+ | Highly Influential |
-| 3-7 years | 100+ | Significant |
-| 3-7 years | 500+ | Landmark Paper |
-| 7+ years | 500+ | Seminal Work |
-| 7+ years | 1000+ | Foundational |
-
-**Venue Quality Tiers:**
-- **Tier 1 (Prefer):** Nature, Science, Cell, NEJM, Lancet, JAMA, PNAS
-- **Tier 2 (High Priority):** Impact Factor >10, top conferences (NeurIPS, ICML, ICLR)
-- **Tier 3 (Good):** Specialized journals (IF 5-10)
-- **Tier 4 (Sparingly):** Lower-impact peer-reviewed venues
-
-**Author Reputation Indicators:**
-- Senior researchers with h-index >40
-- Multiple publications in Tier-1 venues
-- Leadership at recognized institutions
-- Awards and editorial positions
-
-**Search Strategies for High-Impact Papers:**
+**Finding Seminal Papers**:
 - Sort by citation count (most cited first)
-- Look for review articles from Tier-1 journals for overview
-- Check "Cited by" for impact assessment and recent follow-up work
-- Use citation alerts for tracking new citations to key papers
-- Filter by top venues using `source:Nature` or `source:Science`
-- Search for papers by known field leaders using `author:LastName`
+- Look for review articles for overview
+- Check "Cited by" for impact assessment
+- Use citation alerts for tracking new citations
 
 **Advanced Operators** (full list in `references/google_scholar_search.md`):
 ```
@@ -1111,7 +1079,3 @@ The citation-management skill provides:
 
 Use this skill to maintain accurate, complete citations throughout your research and ensure publication-ready bibliographies.
 
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

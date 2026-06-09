@@ -1,13 +1,30 @@
 ---
 name: fehlzeit-erfassen
-description: "Neue Abwesenheit oder neuen Urlaubseintrag im Register anlegen – mit allen für die Fristenberechnung nach BUrlG, EFZG, MuSchG und BEEG notwendigen Informationen. Startet die Überwachung von Fristen ab dem ersten Tag."
+description: "Neue Abwesenheit oder neuen Urlaubseintrag im Register anlegen – mit allen für die Fristenberechnung nach BUrlG, EFZG, MuSchG und BEEG notwendigen Informationen: Neue Abwesenheit oder neuen Urlaubseintrag im Register anlegen – mit allen für die Fristenberec..."
 ---
 
-# /arbeitsrecht:fehlzeit-erfassen
+# Neue Abwesenheit oder neuen Urlaubseintrag im Register anlegen – mit allen für die Fristenberechnung nach BUrlG, EFZG, MuSchG und BEEG notwendigen Informationen
 
-## Zweck
 
-Neue Abwesenheit in `~/.claude/plugins/config/claude-fuer-deutsches-recht/arbeitsrecht/urlaubsregister.yaml` eintragen, sodass der Urlaub-/Fehlzeiten-Tracker alle Fristen ab Tag 1 überwacht.
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: die im Plugin-Kontext einschlägigen Normen über gesetze-im-internet.de, dejure.org, eur-lex.europa.eu und die amtlichen Bundes-/Landesportale live prüfen — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+**Fokus:** Neue Abwesenheit oder neuen Urlaubseintrag im Register anlegen – mit allen für die Fristenberechnung nach BUrlG, EFZG, MuSchG und BEEG notwendigen Informationen. Startet die Überwachung von Fristen ab dem ersten Tag.
+
+### /arbeitsrecht:fehlzeit-erfassen
+
+## Fachlicher Kern — Arbeitsrecht
+- **Problemfokus dieses Skills:** Bleibe beim konkreten Titel `/arbeitsrecht:fehlzeit-erfassen` und löse die dort angelegte Fachfrage; arbeite mit konkreten Tatbestandsmerkmalen, Beweisfragen und dem unmittelbar benötigten Arbeitsprodukt. Routingfragen bleiben Hilfsmittel, wenn Frist, Zuständigkeit oder Verfahrensart offen sind.
+- **Normenradar:** BGB §§ 611a, 613a, 615, 623; KSchG §§ 1, 4, 7; TzBfG §§ 14, 15, 16; AGG §§ 1, 3, 7, 15, 22; EntgTranspG §§ 3, 5, 7; BUrlG §§ 1, 3, 7; BetrVG §§ 87, 99, 102; ArbZG; NachwG; SGB IX §§ 164, 167, 168.
+- **Verifizierte Anker:** BAG, Urteil vom 23.10.2025 - 8 AZR 300/24 (Entgeltgleichheit, Paarvergleich, Beweislast, bundesarbeitsgericht.de); BAG, Urteil vom 03.06.2025 - 9 AZR 104/24 (kein Verzicht auf gesetzlichen Mindesturlaub im bestehenden Arbeitsverhältnis); bei Kündigungszugang immer § 623 BGB, Zugang nach § 130 BGB, Dreiwochenfrist §§ 4, 7 KSchG und Beweis des konkreten Umschlags trennen.
+- **Arbeitsmodus:** Zuerst Status, Zugang, Frist, Beteiligungsrechte, Sonderkündigungsschutz, Beweislast und prozessualen nächsten Schritt sichern; dann erst Materiellrecht vertiefen.
+- **Outputpflicht:** Fristenblatt, Zugangsmatrix, Beweisangebot, Mandantenmail, Betriebsrats-/Gegnerbrief oder Klage-/Erwiderungsbaustein.
+- **Fehlerbremse:** Tragende Normen/Entscheidungen live oder aus der Akte verifizieren; Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei prüfbarer Quelle. Keine BeckRS-, juris-, Kommentar- oder Aufsatz-Blindzitate aus Modellwissen.
 
 ## Eingaben
 
@@ -28,12 +45,12 @@ Standort-Fußabdruck, HRIS-Status, Tarifvertrag prüfen. Falls HRIS verbunden: H
 > - **Mitarbeiter-ID oder Rolle** (anonymisiert ist in Ordnung)
 > - **Bundesland** (bestimmt anwendbare Regeln)
 > - **Abwesenheitstyp:**
->   - Krankheit / Arbeitsunfähigkeit (EFZG)
->   - Urlaub (BUrlG)
->   - Mutterschutz / Beschäftigungsverbot (MuSchG)
->   - Elternzeit (BEEG)
->   - Pflegezeit (PflegeZG)
->   - Sonstiges
+> - Krankheit / Arbeitsunfähigkeit (EFZG)
+> - Urlaub (BUrlG)
+> - Mutterschutz / Beschäftigungsverbot (MuSchG)
+> - Elternzeit (BEEG)
+> - Pflegezeit (PflegeZG)
+> - Sonstiges
 > - **Startdatum** der Abwesenheit
 > - **Voraussichtliches Rückkehrdatum** (falls bekannt – leer lassen wenn unbekannt)
 > - **Bei Elternzeit:** Hat die Mitarbeiterin/der Mitarbeiter die Elternzeit schriftlich angemeldet? Anmeldedatum?
@@ -45,13 +62,13 @@ Standort-Fußabdruck, HRIS-Status, Tarifvertrag prüfen. Falls HRIS verbunden: H
 Je nach Abwesenheitstyp:
 
 **Krankheit (EFZG):**
-- EFZG-Erschöpfungsdatum: Startdatum + 42 Tage (6 Wochen) [Achtung: Werktage vs. Kalendertage; § 3 EFZG zählt Kalendertage, nicht Arbeitstage; BAG, Urt. v. 13.07.2005 – 5 AZR 578/04, NZA 2006, 98 `[Modellwissen – prüfen]`]
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 - BEM-Prüfdatum: ab 6-wöchiger AU innerhalb von 12 Monaten (§ 167 Abs. 2 SGB IX)
 - Wenn gleiche Erkrankung: Neuer EFZG-Anspruch? Letzter AU-Zeitraum prüfen.
 
 **Urlaub (BUrlG):**
 - Verfallsdatum: 31.12. des laufenden Jahres (§ 7 Abs. 3 S. 1 BUrlG) bzw. 31.03. des Folgejahres bei Übertragung
-- Hinweispflichts-Erinnerung: 3 Monate vor Verfall (EuGH C-684/16)
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 - Resturlaub berechnen: Gesamtanspruch − genommene Tage
 
 **Mutterschutz (MuSchG):**
@@ -76,19 +93,19 @@ Register-Eintrag anlegen in `~/.claude/plugins/config/claude-fuer-deutsches-rech
 
 ```yaml
 - id: [generierte ID]
-  mitarbeiter: [anonymisierte Bezeichnung]
-  bundesland: [BL]
-  typ: [krankheit|urlaub|mutterschutz|elternzeit|pflegezeit|sonstiges]
-  startdatum: [JJJJ-MM-TT]
-  rueckkehr_geplant: [JJJJ-MM-TT | unbekannt]
-  fristen:
-    efzg_erschoepfung: [JJJJ-MM-TT]      # nur bei Krankheit
-    bem_pruefung: [JJJJ-MM-TT]            # nur bei Krankheit ≥ 6 Wochen
-    urlaubsverfall_warnung: [JJJJ-MM-TT]  # nur bei Urlaub
-    schutzfrist_ende: [JJJJ-MM-TT]        # MuSchG/BEEG
-    ks_schutz_ende: [JJJJ-MM-TT]          # Kündigungsschutz-Ende
-  notizen: [ggf.]
-  status: offen
+ mitarbeiter: [anonymisierte Bezeichnung]
+ bundesland: [BL]
+ typ: [krankheit|urlaub|mutterschutz|elternzeit|pflegezeit|sonstiges]
+ startdatum: [JJJJ-MM-TT]
+ rueckkehr_geplant: [JJJJ-MM-TT | unbekannt]
+ fristen:
+ efzg_erschoepfung: [JJJJ-MM-TT] # nur bei Krankheit
+ bem_pruefung: [JJJJ-MM-TT] # nur bei Krankheit ≥ 6 Wochen
+ urlaubsverfall_warnung: [JJJJ-MM-TT] # nur bei Urlaub
+ schutzfrist_ende: [JJJJ-MM-TT] # MuSchG/BEEG
+ ks_schutz_ende: [JJJJ-MM-TT] # Kündigungsschutz-Ende
+ notizen: [ggf.]
+ status: offen
 ```
 
 ## Quellen und Zitierweise
@@ -100,25 +117,7 @@ Zitierstandard: `../references/zitierweise.md`. Methodik: `../references/methodi
 - § 3 MuSchG (Schutzfristen), § 17 MuSchG (Kündigungsschutz)
 - §§ 15–18 BEEG (Elternzeit, Anmeldung, Kündigungsschutz)
 - § 167 Abs. 2 SGB IX (BEM-Pflicht)
-- EuGH, Urt. v. 06.11.2018 – C-684/16 (Max-Planck), NZA 2018, 1474
-
-## Ausgabeformat
-
-```
-FEHLZEITEINTRAG ANGELEGT – [ID] – [Datum]
-
-Mitarbeiter:   [ID/Rolle]
-Typ:           [Abwesenheitstyp]
-Bundesland:    [BL]
-Start:         [Datum]
-Rückkehr:      [Datum / unbekannt]
-
-Berechnete Fristen:
-  [Fristname]:  [Datum]  [Norm]
-
-Gespeichert: ~/.../urlaubsregister.yaml
-Nächste Prüfung: /arbeitsrecht:fehlzeiten-register
-```
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
 ## Beispiele
 
@@ -132,5 +131,5 @@ Anmeldung liegt schriftlich vor (10.12.2024). Rückkehr geplant 01.02.2026.
 
 - **BEEG-Anmeldung nachträglich** – Elternzeit kann nicht rückwirkend beantragt werden; Anmeldedatum prüfen.
 - **Mehrere Abwesenheitsperioden bei gleicher Erkrankung** – EFZG-Neuanspruch-Prüfung nicht vergessen.
-- **Urlaubsverfall ohne Hinweis-Dokumentation** – Arbeitgeber muss nachweisen, dass er auf drohenden Urlaubsverfall hingewiesen hat (EuGH C-684/16); im Register dokumentieren.
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 - **Anonymisierung** – auch im internen Register: Mitarbeiter-IDs statt Namen verwenden; § 26 BDSG.

@@ -1,22 +1,36 @@
 ---
 name: dokumentenintake-und-aktenlog
-description: "Dokumentenintake und Aktenlog: prüft ordnet Uploads, Eingangspost, Aktenbestandteile und fehlende Unterlagen in berufsgerichtlichen Verfahren freier Berufe; mit Normencheck, Aktenlog, Verteidigungslinie, Verhältnismäßigkeit und Rechtsmittelspur."
+description: "Dokumentenintake und Aktenlog: vertiefter Berufsrechts-Skill für Anwälte; prüft ordnet Uploads, Eingangspost, Aktenbestandteile und fehlende Unterlagen, typische Rechtsprechungslinien nur nach Live-Verifikation, Kammerpraxis, Verteidigung und nächste Handlung im Berufsrecht Anwaelte."
 ---
 
 # Dokumentenintake und Aktenlog
 
+## Aktenstart statt Formularstart
+
+Wenn zu **Dokumentenintake Und Aktenlog** bereits Unterlagen, ein Ordner, ein ZIP, ein PDF-Buendel, E-Mails, Screenshots, Tabellen oder Entwuerfe vorliegen, lies diese zuerst aus. Bilde fuer **Berufsrecht Anwaelte** eine Arbeitshypothese zu Beteiligten, Rolle des Nutzers, Verfahrensstand, Fristen, Betrags-/Datumslogik, Belegen und naechstem sinnvollen Output. Frage nicht routinemaessig nach Angaben, die sich aus der Akte ergeben.
+
+Starte dann mit einer knappen Rueckmeldung:
+
+```text
+Ich habe aus der Akte vorlaeufig erkannt: [...]
+Unsicher sind noch: [...]
+Als naechsten Schritt schlage ich vor: [...]
+```
+
+Stelle danach hoechstens drei Rueckfragen und nur zu echten Luecken oder Widerspruechen. Wenn keine Akte vorliegt, bitte zuerst um Upload der wichtigsten Unterlagen statt ein langes Interview zu beginnen.
+
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: BRAO, BORA, FAO, BNotO, StBerG, WPO, PAO — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
 ## Fachkern: Dokumentenintake und Aktenlog
-- **Spezialgegenstand:** Dokumentenintake und Aktenlog wird als eigener Falltyp behandelt; der Skill muss ein konkretes Ergebnis liefern, nicht nur Einstieg und Routing.
-- **Normen-/Quellenanker:** BRAO/BORA, BNotO, StBerG/BOStB, WPO/BS WP, PAO/BOPA, RDG/RVG, Kammerverfahren, Berufsgerichtsbarkeit und Verwaltungsrechtsschutz.
-- **Entscheidende Weiche:** Bestimme Berufsgruppe, Pflichtnorm, Kammerzuständigkeit, Anhörung, Verteidigungsziel, Sanktion, Sofortmaßnahme und Reputationsschutz.
-- **Lösungsoutput:** Erzeuge eine fallbezogene Matrix `Norm / Tatbestand / Beleg / Risiko / Gegenargument / nächster Schritt` und benenne passende Anschluss-Skills nur, wenn sie wirklich eine Vertiefung lösen.
-
-
-## Einsatz
-
-Nutze diesen Skill im Plugin **Berufsgerichtliche Verfahren Freie Berufe**, wenn die Akte, der Nutzer oder der Kaltstart auf dieses Thema zeigt. Arbeite nicht wie ein Lehrbuch, sondern wie ein sorgfältiger Praxisbegleiter: erst ordnen, dann prüfen, dann ein verwertbares Arbeitsprodukt liefern.
-
-**Fokus:** ordnet Uploads, Eingangspost, Aktenbestandteile und fehlende Unterlagen
+- **Normen-/Quellenanker:** BRAO, BORA, FAO, RVG, RDG, GwG, beA, Verschwiegenheit, Interessenkollision und Anwaltsgerichtsbarkeit.
+- **Entscheidende Weiche:** Pflichtnorm, Mandatsrolle, Verschulden, Kammerverfahren, Reputationsrisiko, Rechtsbehelf und milderes Organisationsmittel trennen.
+- **Arbeitsprodukt:** Liefere eine fallbezogene `Norm / Tatsache / Beleg / Wertung / Gegenargument / nächster Schritt`-Matrix und einen direkt nutzbaren Textbaustein, wenn der Nutzer einen Entwurf braucht.
 
 ## Kaltstart in fünf Schritten
 
@@ -28,23 +42,17 @@ Nutze diesen Skill im Plugin **Berufsgerichtliche Verfahren Freie Berufe**, wenn
 
 ## Prüf- und Arbeitslogik
 
-- **Normenanker:** BRAO, PAO, StBerG, WPO, BNotO, BORA/BOStB/BS WP/vBP und einschlägige Verfahrensnormen live prüfen
+- **Normenanker:** BRAO, BORA, FAO, RVG, RDG, GwG, StPO/ZPO Schnittstellen und Kammerhinweise live prüfen
 - **Tatsachenarbeit:** sichere Tatsachen, streitige Tatsachen, fehlende Unterlagen und Beweisprobleme trennen.
 - **Verfahrensarbeit:** Zuständigkeit, Form, Frist, Anhörung, Akteneinsicht, Dokumentationspflicht und Rechtsbehelf prüfen.
 - **Gegenansicht:** eine ernsthafte Gegenposition formulieren und sagen, wie man sie entkräftet oder akzeptiert.
 - **Praxisentscheidung:** nicht nur prüfen, sondern eine handhabbare nächste Handlung vorschlagen.
 
+## Normen & Rechtsprechung
 
-## Spezielle Leitplanken
+Konkret zu prüfen:
 
-- Berufsrecht ist häufig existenzgefährdend; Sofortvollzug und Zulassungsfolgen zuerst prüfen.
-- Keine Kammer- oder Mandatsgeheimnisse in ungeprüfte Systeme eingeben.
-- Rechtsprechung nur frei/amtlich verifiziert ausgeben.
-
-## Output
-
-Erzeuge je nach Auftrag: Verteidigungsvermerk, Kammerantwort, Antrag, Klagebaustein, Fristenblatt oder Vergleichsvorschlag. Am Ende immer: Risikoampel, offene Punkte, Quellencheck und nächster Schritt.
-
-## Quellenhygiene
-
-Keine erfundenen Fundstellen. Rechtsprechung nur mit Gericht, Entscheidungsdatum, Aktenzeichen und frei oder amtlich prüfbarer Quelle. Bei aktuellem Behörden-, Kammer-, Berufs- oder Wettbewerbsrecht zuerst die amtliche Normfassung und die zuständige Behörden- oder Kammerseite prüfen.
+- § 43 BRAO (allgemeine Berufspflicht)
+- § 43a BRAO (Grundpflichten – Sachlichkeit, Verschwiegenheit, Interessenkollision)
+- § 113 ff. BRAO (anwaltsgerichtliches Verfahren)
+- §§ 1-30 BORA (Berufsordnung)

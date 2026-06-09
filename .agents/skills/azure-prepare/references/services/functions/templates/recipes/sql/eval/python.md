@@ -1,35 +1,39 @@
-# sql Recipe - Python Eval
+# SQL Recipe - Python Eval
 
-## MCP Template Validation
+## Test Summary
 
-| Criteria | Expected | Status |
-|----------|----------|--------|
-| Template discovery | `functions_template_get(language: "python")` returns list | ✅ PASS |
-| Filter by resource | `resource == "sql"` finds matches | ✅ PASS |
-| Template scaffolded | `sql-trigger-python-azd` | ✅ PASS |
-| Has trigger code | `@app.sql_trigger` decorator in output | ✅ PASS |
-| Has IaC | `projectFiles[]` includes Bicep | ✅ PASS |
-| Has RBAC | Appropriate role assignment | ✅ PASS |
+| Test | Status | Notes |
+|------|--------|-------|
+| Code Syntax | ✅ PASS | Python v2 model decorator pattern |
+| SQL Input | ✅ PASS | Uses `@app.sql_input` decorator |
+| SQL Output | ✅ PASS | Uses `@app.sql_output` decorator |
+| SQL Trigger | ✅ PASS | Change tracking with `@app.sql_trigger` |
+| Health Endpoint | ✅ PASS | Anonymous auth |
 
-## Agent Behavior Validation
+## Code Validation
 
-```text
-1. Agent calls: functions_template_get(language: "python")
-2. Agent scans templateList.triggers[] descriptions and resource field
-3. Agent selects: template where resource == "sql" → sql-trigger-python-azd
-4. Agent calls: functions_template_get(language: "python", template: "sql-trigger-python-azd")
-5. Agent writes: functionFiles[] + projectFiles[]
+```python
+# Validated patterns:
+# - @app.sql_input for reading data
+# - @app.sql_output for writing data
+# - @app.sql_trigger for change detection
+# - Parameterized queries with @param
 ```
 
-## Notes
+## Configuration Validated
 
-- Template names may vary - use `resource` field or `description` to match
-- Never hardcode template names - always discover via list call first
+- `SqlConnectionString` - Connection string or UAMI
+- Table/view names configurable
+- Uses SQL extension bundle
+
+## Grounding Source
+
+[Azure-Samples/functions-quickstart-python-azd-sql](https://github.com/Azure-Samples/functions-quickstart-python-azd-sql)
 
 ## Test Date
 
-2026-04-22
+2025-02-18
 
 ## Verdict
 
-**PASS** - MCP template provides complete sql trigger with IaC, RBAC, and UAMI binding.
+**PASS** - SQL recipe correctly implements input, output, and trigger bindings following the official AZD template patterns.

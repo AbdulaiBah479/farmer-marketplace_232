@@ -1,9 +1,6 @@
 ---
 name: auth-implementation-patterns
-description: "Build secure, scalable authentication and authorization systems using industry-standard patterns and modern best practices."
-risk: unknown
-source: community
-date_added: "2026-02-27"
+description: Master authentication and authorization patterns including JWT, OAuth2, session management, and RBAC to build secure, scalable access control systems. Use when implementing auth systems, securing APIs, or debugging security issues.
 ---
 
 # Authentication & Authorization Implementation Patterns
@@ -40,8 +37,3 @@ Build secure, scalable authentication and authorization systems using industry-s
 ## Resources
 
 - `resources/implementation-playbook.md` for detailed patterns and examples.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

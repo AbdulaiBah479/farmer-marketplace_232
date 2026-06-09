@@ -1,270 +1,160 @@
 ---
 name: testing-patterns
-description: "Jest testing patterns, factory functions, mocking strategies, and TDD workflow. Use when writing unit tests, creating test factories, or following TDD red-green-refactor cycle."
-risk: unknown
-source: community
-date_added: "2026-02-27"
+description: "Cross-language testing strategies and patterns. Triggers on: test pyramid, unit test, integration test, e2e test, TDD, BDD, test coverage, mocking strategy, test doubles, test isolation."
+compatibility: "Language-agnostic patterns. Framework-specific details in references."
+allowed-tools: "Read Write Bash"
 ---
 
-# Testing Patterns and Utilities
+# Testing Patterns
 
-## Testing Philosophy
+Universal testing strategies and patterns applicable across languages.
 
-**Test-Driven Development (TDD):**
-- Write failing test FIRST
-- Implement minimal code to pass
-- Refactor after green
-- Never write production code without a failing test
+## The Test Pyramid
 
-**Behavior-Driven Testing:**
-- Test behavior, not implementation
-- Focus on public APIs and business requirements
-- Avoid testing implementation details
-- Use descriptive test names that describe behavior
-
-**Factory Pattern:**
-- Create `getMockX(overrides?: Partial<X>)` functions
-- Provide sensible defaults
-- Allow overriding specific properties
-- Keep tests DRY and maintainable
-
-## Test Utilities
-
-### Custom Render Function
-
-Create a custom render that wraps components with required providers:
-
-```typescript
-// src/utils/testUtils.tsx
-import { render } from '@testing-library/react-native';
-import { ThemeProvider } from './theme';
-
-export const renderWithTheme = (ui: React.ReactElement) => {
-  return render(
-    <ThemeProvider>{ui}</ThemeProvider>
-  );
-};
+```
+        /\
+       /  \     E2E Tests (few, slow, expensive)
+      /    \    - Full system tests
+     /------\   - Real browser/API calls
+    /        \
+   /  Integ   \ Integration Tests (some)
+  /   Tests    \ - Service boundaries
+ /--------------\ - Database, APIs
+/                \
+/   Unit Tests    \ Unit Tests (many, fast, cheap)
+------------------  - Single function/class
+                    - Mocked dependencies
 ```
 
-**Usage:**
-```typescript
-import { renderWithTheme } from 'utils/testUtils';
-import { screen } from '@testing-library/react-native';
+## Test Types
 
-it('should render component', () => {
-  renderWithTheme(<MyComponent />);
-  expect(screen.getByText('Hello')).toBeTruthy();
-});
+### Unit Tests
+```
+Scope:      Single function/method/class
+Speed:      Milliseconds
+Dependencies: All mocked
+When:       Every code change
+Coverage:   80%+ of codebase
 ```
 
-## Factory Pattern
-
-### Component Props Factory
-
-```typescript
-import { ComponentProps } from 'react';
-
-const getMockMyComponentProps = (
-  overrides?: Partial<ComponentProps<typeof MyComponent>>
-) => {
-  return {
-    title: 'Default Title',
-    count: 0,
-    onPress: jest.fn(),
-    isLoading: false,
-    ...overrides,
-  };
-};
-
-// Usage in tests
-it('should render with custom title', () => {
-  const props = getMockMyComponentProps({ title: 'Custom Title' });
-  renderWithTheme(<MyComponent {...props} />);
-  expect(screen.getByText('Custom Title')).toBeTruthy();
-});
+### Integration Tests
+```
+Scope:      Multiple components together
+Speed:      Seconds
+Dependencies: Real databases, mocked external APIs
+When:       PR/merge, critical paths
+Coverage:   Key integration points
 ```
 
-### Data Factory
-
-```typescript
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: 'admin' | 'user';
-}
-
-const getMockUser = (overrides?: Partial<User>): User => {
-  return {
-    id: '123',
-    name: 'John Doe',
-    email: 'john@example.com',
-    role: 'user',
-    ...overrides,
-  };
-};
-
-// Usage
-it('should display admin badge for admin users', () => {
-  const user = getMockUser({ role: 'admin' });
-  renderWithTheme(<UserCard user={user} />);
-  expect(screen.getByText('Admin')).toBeTruthy();
-});
+### End-to-End Tests
+```
+Scope:      Full user journey
+Speed:      Minutes
+Dependencies: Real system (or staging)
+When:       Pre-deploy, nightly
+Coverage:   Critical user flows only
 ```
 
-## Mocking Patterns
+## Test Naming Convention
 
-### Mocking Modules
+```
+test_<unit>_<scenario>_<expected>
 
-```typescript
-// Mock entire module
-jest.mock('utils/analytics');
-
-// Mock with factory function
-jest.mock('utils/analytics', () => ({
-  Analytics: {
-    logEvent: jest.fn(),
-  },
-}));
-
-// Access mock in test
-const mockLogEvent = jest.requireMock('utils/analytics').Analytics.logEvent;
+Examples:
+- test_calculate_total_with_discount_returns_reduced_price
+- test_user_login_with_invalid_password_returns_401
+- test_order_submit_when_out_of_stock_raises_error
 ```
 
-### Mocking GraphQL Hooks
+## Arrange-Act-Assert (AAA)
 
-```typescript
-jest.mock('./GetItems.generated', () => ({
-  useGetItemsQuery: jest.fn(),
-}));
+```python
+def test_calculate_discount():
+    # Arrange - Set up test data and dependencies
+    cart = Cart()
+    cart.add_item(Item(price=100))
+    discount = Discount(percent=10)
 
-const mockUseGetItemsQuery = jest.requireMock(
-  './GetItems.generated'
-).useGetItemsQuery as jest.Mock;
+    # Act - Execute the code under test
+    total = cart.calculate_total(discount)
 
-// In test
-mockUseGetItemsQuery.mockReturnValue({
-  data: { items: [] },
-  loading: false,
-  error: undefined,
-});
+    # Assert - Verify the results
+    assert total == 90
 ```
 
-## Test Structure
+## Test Doubles
 
-```typescript
-describe('ComponentName', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
+| Type | Purpose | Example |
+|------|---------|---------|
+| **Stub** | Returns canned data | `stub.get_user.returns(fake_user)` |
+| **Mock** | Verifies interactions | `mock.send_email.assert_called_once()` |
+| **Spy** | Records calls, uses real impl | `spy.on(service, 'save')` |
+| **Fake** | Working simplified impl | `FakeDatabase()` instead of real DB |
+| **Dummy** | Placeholder, never used | `null` object for required param |
 
-  describe('Rendering', () => {
-    it('should render component with default props', () => {});
-    it('should render loading state when loading', () => {});
-  });
+## Test Isolation Strategies
 
-  describe('User interactions', () => {
-    it('should call onPress when button is clicked', async () => {});
-  });
+### Database Isolation
+```
+Option 1: Transaction rollback (fast)
+- Start transaction before test
+- Rollback after test
 
-  describe('Edge cases', () => {
-    it('should handle empty data gracefully', () => {});
-  });
-});
+Option 2: Truncate tables (medium)
+- Clear all data between tests
+
+Option 3: Separate database (slow)
+- Each test gets fresh database
 ```
 
-## Query Patterns
+### External Service Isolation
+```
+Option 1: Mock at boundary
+- Replace HTTP client with mock
 
-```typescript
-// Element must exist
-expect(screen.getByText('Hello')).toBeTruthy();
+Option 2: Fake server
+- WireMock, MSW, VCR cassettes
 
-// Element should not exist
-expect(screen.queryByText('Goodbye')).toBeNull();
-
-// Element appears asynchronously
-await waitFor(() => {
-  expect(screen.findByText('Loaded')).toBeTruthy();
-});
+Option 3: Contract testing
+- Pact, consumer-driven contracts
 ```
 
-## User Interaction Patterns
+## What to Test
 
-```typescript
-import { fireEvent, screen } from '@testing-library/react-native';
+### MUST Test
+- Business logic and calculations
+- Input validation and error handling
+- Security-sensitive code (auth, permissions)
+- Edge cases and boundary conditions
 
-it('should submit form on button click', async () => {
-  const onSubmit = jest.fn();
-  renderWithTheme(<LoginForm onSubmit={onSubmit} />);
+### SHOULD Test
+- Integration points (DB, APIs)
+- State transitions
+- Configuration handling
 
-  fireEvent.changeText(screen.getByLabelText('Email'), 'user@example.com');
-  fireEvent.changeText(screen.getByLabelText('Password'), 'password123');
-  fireEvent.press(screen.getByTestId('login-button'));
+### AVOID Testing
+- Framework internals
+- Third-party library behavior
+- Simple getters/setters
+- Private implementation details
 
-  await waitFor(() => {
-    expect(onSubmit).toHaveBeenCalled();
-  });
-});
-```
+## Test Quality Checklist
 
-## Anti-Patterns to Avoid
+- [ ] Tests are independent (no order dependency)
+- [ ] Tests are deterministic (no flaky tests)
+- [ ] Tests are fast (unit < 100ms, integration < 5s)
+- [ ] Tests have clear names describing behavior
+- [ ] Tests cover happy path AND error cases
+- [ ] Tests don't repeat production logic
+- [ ] Mocks are minimal (only external boundaries)
 
-### Testing Mock Behavior Instead of Real Behavior
+## Additional Resources
 
-```typescript
-// Bad - testing the mock
-expect(mockFetchData).toHaveBeenCalled();
+- `./references/tdd-workflow.md` - Test-Driven Development cycle
+- `./references/mocking-strategies.md` - When and how to mock
+- `./references/test-data-patterns.md` - Fixtures, factories, builders
+- `./references/ci-testing.md` - Testing in CI/CD pipelines
 
-// Good - testing actual behavior
-expect(screen.getByText('John Doe')).toBeTruthy();
-```
+## Scripts
 
-### Not Using Factories
-
-```typescript
-// Bad - duplicated, inconsistent test data
-it('test 1', () => {
-  const user = { id: '1', name: 'John', email: 'john@test.com', role: 'user' };
-});
-it('test 2', () => {
-  const user = { id: '2', name: 'Jane', email: 'jane@test.com' }; // Missing role!
-});
-
-// Good - reusable factory
-const user = getMockUser({ name: 'Custom Name' });
-```
-
-## Best Practices
-
-1. **Always use factory functions** for props and data
-2. **Test behavior, not implementation**
-3. **Use descriptive test names**
-4. **Organize with describe blocks**
-5. **Clear mocks between tests**
-6. **Keep tests focused** - one behavior per test
-
-## Running Tests
-
-```bash
-# Run all tests
-npm test
-
-# Run with coverage
-npm run test:coverage
-
-# Run specific file
-npm test ComponentName.test.tsx
-```
-
-## Integration with Other Skills
-
-- **react-ui-patterns**: Test all UI states (loading, error, empty, success)
-- **systematic-debugging**: Write test that reproduces bug before fixing
-
-## When to Use
-This skill is applicable to execute the workflow or actions described in the overview.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
+- `./scripts/coverage-check.sh` - Run coverage and fail if below threshold

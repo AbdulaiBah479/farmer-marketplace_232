@@ -1,36 +1,22 @@
 ---
 name: homeoffice
-description: "Homeoffice: vertiefter Berufsrechts-Skill für Notare; prüft Homeoffice im Berufsrecht für Notare, typische Rechtsprechungslinien nur nach Live-Verifikation, Kammerpraxis, Verteidigung und nächste Handlung: eigenständiges Prüffeld mit Norm-/Quellencheck, Risikoampel und verwertbarem Output."
+description: "Homeoffice: vertiefter Berufsrechts-Skill für Anwälte; prüft Homeoffice im Berufsrecht für Anwälte, typische Rechtsprechungslinien nur nach Live-Verifikation, Kammerpraxis, Verteidigung und nächste Handlung im Berufsrecht Anwaelte."
 ---
 
 # Homeoffice
-
-## Arbeitsbereich
-
-Homeoffice: vertiefter Berufsrechts-Skill für Notare; prüft Homeoffice im Berufsrecht für Notare, typische Rechtsprechungslinien nur nach Live-Verifikation, Kammerpraxis, Verteidigung und nächste Handlung. Die Prüfung konzentriert sich auf dieses Prüffeld und trennt Rolle, Frist, Zuständigkeit, Beweislast und gewünschten Output.
 
 ## Arbeitsweg
 
 - Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
 - Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
-- Tragende Normen verifizieren: BRAO, BORA, FAO, BNotO, StBerG, WPO, PAO; BeurkG — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Tragende Normen verifizieren: BRAO, BORA, FAO, BNotO, StBerG, WPO, PAO — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
 - Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
 - Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
 
-## Spezialwissen
-
 ## Fachkern: Homeoffice
-- **Spezialgegenstand:** Homeoffice; der Skill muss die konkrete Fachfrage tragen und nicht nur in einen allgemeinen Startdialog zurückfallen.
-- **Normen-/Quellenanker:** BNotO, BeurkG, DONot, GNotKG, GwG, Neutralität, Belehrung, Verwahrung, Dienstaufsicht und Notarbeschwerde.
-- **Entscheidende Weiche:** Amtsrolle, Beteiligteninteresse, Beurkundungs-/Vollzugsfehler, Treuhand, Dienstaufsicht, Kosten und Rechtsmittel trennen.
+- **Normen-/Quellenanker:** BRAO, BORA, FAO, RVG, RDG, GwG, beA, Verschwiegenheit, Interessenkollision und Anwaltsgerichtsbarkeit.
+- **Entscheidende Weiche:** Pflichtnorm, Mandatsrolle, Verschulden, Kammerverfahren, Reputationsrisiko, Rechtsbehelf und milderes Organisationsmittel trennen.
 - **Arbeitsprodukt:** Liefere eine fallbezogene `Norm / Tatsache / Beleg / Wertung / Gegenargument / nächster Schritt`-Matrix und einen direkt nutzbaren Textbaustein, wenn der Nutzer einen Entwurf braucht.
-
-
-## Einsatz
-
-Dieser Abschnitt bearbeitet **Fachkern: Homeoffice** im Bereich **Berufsrecht Notare**. Er ordnet die konkrete Lage, sichere Tatsachen, offene Fragen, Risiken, Quellen und den nächsten verwertbaren Schritt.
-
-**Fokus:** Homeoffice im Berufsrecht für Notare
 
 ## Kaltstart in fünf Schritten
 
@@ -42,23 +28,17 @@ Dieser Abschnitt bearbeitet **Fachkern: Homeoffice** im Bereich **Berufsrecht No
 
 ## Prüf- und Arbeitslogik
 
-- **Normenanker:** BNotO, BeurkG, DONot, GNotKG, GwG, Landesrecht und Kammer-/Dienstaufsichtshinweise live prüfen
+- **Normenanker:** BRAO, BORA, FAO, RVG, RDG, GwG, StPO/ZPO Schnittstellen und Kammerhinweise live prüfen
 - **Tatsachenarbeit:** sichere Tatsachen, streitige Tatsachen, fehlende Unterlagen und Beweisprobleme trennen.
 - **Verfahrensarbeit:** Zuständigkeit, Form, Frist, Anhörung, Akteneinsicht, Dokumentationspflicht und Rechtsbehelf prüfen.
 - **Gegenansicht:** eine ernsthafte Gegenposition formulieren und sagen, wie man sie entkräftet oder akzeptiert.
 - **Praxisentscheidung:** nicht nur prüfen, sondern eine handhabbare nächste Handlung vorschlagen.
 
+## Normen & Rechtsprechung
 
-## Spezielle Leitplanken
+Konkret zu prüfen:
 
-- Rechtsprechung ist tragend nur mit Gericht, Datum, Aktenzeichen und frei prüfbarer Quelle.
-- Berufsrechtliche Risiken sind oft reputations- und existenzrelevant; Verhältnismäßigkeit sichtbar prüfen.
-- Mandats-, Steuer-, Prüfungs- oder Amtsgeheimnisse vor Nutzung anonymisieren.
-
-## Output
-
-Erzeuge je nach Auftrag: Berufsrechtsmemo, Kammerantwort, Konfliktcheck, Organisationsanweisung, Vertragsklausel, Fristenblatt oder Verteidigungslinie. Am Ende immer: Risikoampel, offene Punkte, Quellencheck und nächster Schritt.
-
-## Quellenhygiene
-
-Keine erfundenen Fundstellen. Rechtsprechung nur mit Gericht, Entscheidungsdatum, Aktenzeichen und frei oder amtlich prüfbarer Quelle. Bei aktuellem Behörden-, Kammer-, Berufs- oder Wettbewerbsrecht zuerst die amtliche Normfassung und die zuständige Behörden- oder Kammerseite prüfen.
+- § 43 BRAO (allgemeine Berufspflicht)
+- § 43a BRAO (Grundpflichten – Sachlichkeit, Verschwiegenheit, Interessenkollision)
+- § 113 ff. BRAO (anwaltsgerichtliches Verfahren)
+- §§ 1-30 BORA (Berufsordnung)

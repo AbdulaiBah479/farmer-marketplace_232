@@ -1,320 +1,740 @@
 ---
 name: api-client
-description: Centralized TypeScript API client with typed namespaces, automatic token refresh with request deduplication, TanStack Query integration, and consistent error handling.
-license: MIT
-compatibility: TypeScript/JavaScript
-metadata:
-  category: api
-  time: 5h
-  source: drift-masterguide
+description: |
+  Use when setting up API clients - TanStack Query, Axios, JWT token management, error handling, or response parsing.
+  NOT when plain fetch calls, non-API data handling, or unrelated UI logic.
+  Triggers: "API client", "data fetching", "JWT token", "error handling", "paginated list", "TanStack Query".
 ---
 
-# TypeScript API Client
+# API Client Skill
 
-Centralized API client with typed namespaces, automatic token refresh, and TanStack Query integration.
+## Overview
 
-## When to Use This Skill
+Expert guidance for API client implementation using TanStack Query/Axios, including JWT token attachment via interceptors, global error handling with toasts, type-safe response parsing with Zod, and offline detection for robust data fetching.
 
-- Building frontend applications that call backend APIs
-- Need type safety on requests and responses
-- Want automatic token refresh without duplicated logic
-- Using TanStack Query for caching and state management
+## When This Skill Applies
 
-## Core Concepts
+This skill triggers when users request:
+- **API Setup**: "Setup API client", "Configure TanStack Query", "Axios instance"
+- **Data Fetching**: "Fetch student data", "Get attendance", "API calls"
+- **JWT/Token**: "Attach JWT token", "Bearer token headers", "Token refresh"
+- **Error Handling**: "API error toast", "Handle 401", "Retry failed requests"
+- **Response Parsing**: "Type-safe responses", "Zod validation", "Parse API data"
+- **Pagination**: "Paginated list", "Infinite query", "Load more data"
 
-The pattern provides:
-- Typed namespaces (auth, users, billing, etc.)
-- Automatic token refresh with request deduplication
-- TanStack Query integration for caching
-- Consistent error handling with custom error class
+## Core Rules
 
-Architecture:
-```
-Component → useQuery/useMutation → API Client → Fetch
-                                       ↓
-                                  401? → Refresh → Retry
-```
-
-## Implementation
-
-### TypeScript
+### 1. Setup: TanStack Query Configuration
 
 ```typescript
-// lib/api/types.ts
-export class APIClientError extends Error {
-  constructor(
-    message: string,
-    public code: string,
-    public statusCode: number,
-    public details?: Record<string, unknown>
-  ) {
-    super(message);
-    this.name = 'APIClientError';
-  }
-}
+// lib/queryClient.ts
+import { QueryClient } from '@tanstack/react-query';
 
-export interface TokenPair {
-  accessToken: string;
-  refreshToken: string;
-  expiresAt: string;
-}
-
-// lib/api/client.ts
-interface RequestOptions {
-  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
-  body?: Record<string, unknown>;
-  params?: Record<string, string | number | boolean | undefined>;
-  skipRefresh?: boolean;
-}
-
-export class APIClient {
-  private baseUrl: string;
-  private accessToken: string | null = null;
-  private refreshToken: string | null = null;
-  private onUnauthorized: () => void;
-  
-  // Refresh deduplication
-  private isRefreshing = false;
-  private refreshPromise: Promise<boolean> | null = null;
-
-  constructor(options: { baseUrl: string; onUnauthorized?: () => void }) {
-    this.baseUrl = options.baseUrl.replace(/\/$/, '');
-    this.onUnauthorized = options.onUnauthorized || (() => {});
-  }
-
-  setTokens(accessToken: string, refreshToken: string): void {
-    this.accessToken = accessToken;
-    this.refreshToken = refreshToken;
-  }
-
-  clearTokens(): void {
-    this.accessToken = null;
-    this.refreshToken = null;
-  }
-
-  // Typed namespaces
-  auth = {
-    login: (data: { email: string; password: string }) =>
-      this.request<{ tokens: TokenPair; user: User }>('/auth/login', {
-        method: 'POST',
-        body: data,
-      }),
-
-    refresh: () =>
-      this.request<TokenPair>('/auth/refresh', {
-        method: 'POST',
-        body: { refreshToken: this.refreshToken },
-        skipRefresh: true, // Prevent infinite loop
-      }),
-
-    me: () =>
-      this.request<User>('/auth/me', { method: 'GET' }),
-  };
-
-  users = {
-    get: (id: string) =>
-      this.request<User>(`/users/${id}`, { method: 'GET' }),
-
-    update: (id: string, data: Partial<User>) =>
-      this.request<User>(`/users/${id}`, { method: 'PATCH', body: data }),
-  };
-
-  private async request<T>(endpoint: string, options: RequestOptions): Promise<T> {
-    const url = this.buildUrl(endpoint, options.params);
-    
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-
-    if (this.accessToken) {
-      headers['Authorization'] = `Bearer ${this.accessToken}`;
-    }
-
-    const response = await fetch(url, {
-      method: options.method,
-      headers,
-      body: options.body ? JSON.stringify(options.body) : undefined,
-    });
-
-    // Handle 401 - attempt refresh
-    if (response.status === 401 && !options.skipRefresh) {
-      const refreshed = await this.attemptTokenRefresh();
-      if (refreshed) {
-        return this.request<T>(endpoint, { ...options, skipRefresh: true });
-      }
-      this.onUnauthorized();
-      throw new APIClientError('Unauthorized', 'UNAUTHORIZED', 401);
-    }
-
-    if (!response.ok) {
-      throw await this.parseError(response);
-    }
-
-    if (response.status === 204) return undefined as T;
-    return this.transformResponse<T>(await response.json());
-  }
-
-  private async attemptTokenRefresh(): Promise<boolean> {
-    if (!this.refreshToken) return false;
-
-    // Deduplicate concurrent refresh attempts
-    if (this.isRefreshing) {
-      return this.refreshPromise!;
-    }
-
-    this.isRefreshing = true;
-    this.refreshPromise = this.doRefresh();
-
-    try {
-      return await this.refreshPromise;
-    } finally {
-      this.isRefreshing = false;
-      this.refreshPromise = null;
-    }
-  }
-
-  private async doRefresh(): Promise<boolean> {
-    try {
-      const tokens = await this.auth.refresh();
-      this.setTokens(tokens.accessToken, tokens.refreshToken);
-      return true;
-    } catch {
-      this.clearTokens();
-      return false;
-    }
-  }
-
-  private buildUrl(endpoint: string, params?: Record<string, any>): string {
-    const url = new URL(`${this.baseUrl}${endpoint}`);
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) url.searchParams.set(key, String(value));
-      });
-    }
-    return url.toString();
-  }
-
-  private transformResponse<T>(data: unknown): T {
-    // Convert snake_case to camelCase
-    return this.snakeToCamel(data) as T;
-  }
-
-  private snakeToCamel(obj: unknown): unknown {
-    if (Array.isArray(obj)) return obj.map(item => this.snakeToCamel(item));
-    if (obj !== null && typeof obj === 'object') {
-      return Object.fromEntries(
-        Object.entries(obj).map(([key, value]) => [
-          key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase()),
-          this.snakeToCamel(value),
-        ])
-      );
-    }
-    return obj;
-  }
-
-  private async parseError(response: Response): Promise<APIClientError> {
-    try {
-      const data = await response.json();
-      return new APIClientError(
-        data.message || 'Request failed',
-        data.code || 'UNKNOWN_ERROR',
-        response.status,
-        data.details
-      );
-    } catch {
-      return new APIClientError('Request failed', 'UNKNOWN_ERROR', response.status);
-    }
-  }
-}
-
-// Singleton export
-export const apiClient = new APIClient({
-  baseUrl: process.env.NEXT_PUBLIC_API_URL || '/api',
-  onUnauthorized: () => {
-    if (typeof window !== 'undefined') window.location.href = '/login';
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes
+      retry: 3,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    },
+    mutations: {
+      retry: 1,
+    },
   },
 });
+
+// app/layout.tsx or app/providers.tsx
+'use client';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from '@/lib/queryClient';
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <QueryClientProvider client={queryClient}>
+      {children}
+    </QueryClientProvider>
+  );
+}
 ```
 
-### TanStack Query Integration
+**Requirements:**
+- Use TanStack Query v5 for data fetching
+- Configure appropriate staleTime and gcTime
+- Set retry strategy with exponential backoff
+- Wrap app with QueryClientProvider
+- Use Axios as fallback for complex scenarios
+
+### 2. JWT: Interceptors Auto-Attach
 
 ```typescript
-// lib/api/query-keys.ts
-export const queryKeys = {
-  auth: {
-    all: ['auth'] as const,
-    me: () => [...queryKeys.auth.all, 'me'] as const,
-  },
-  users: {
-    all: ['users'] as const,
-    detail: (id: string) => [...queryKeys.users.all, id] as const,
-  },
-} as const;
+// lib/apiClient.ts
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import { useAuthStore } from '@/lib/auth-store';
 
-// lib/api/hooks/use-auth.ts
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+class ApiClient {
+  private client: AxiosInstance;
 
-export function useCurrentUser() {
+  constructor() {
+    this.client = axios.create({
+      baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api',
+      timeout: 10000, // 10 seconds
+    });
+
+    this.setupInterceptors();
+  }
+
+  private setupInterceptors() {
+    // Request interceptor - attach JWT token
+    this.client.interceptors.request.use(
+      (config: InternalAxiosRequestConfig) => {
+        const { session } = useAuthStore.getState();
+        if (session?.token && config.headers) {
+          config.headers.Authorization = `Bearer ${session.token}`;
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
+    // Response interceptor - handle errors and 401
+    this.client.interceptors.response.use(
+      (response: AxiosResponse) => response,
+      async (error) => {
+        if (error.response?.status === 401) {
+          const { refresh } = useAuthStore.getState();
+          try {
+            const newToken = await refresh();
+            if (newToken) {
+              error.config!.headers!.Authorization = `Bearer ${newToken}`;
+              return this.client(error.config!);
+            }
+          } catch (refreshError) {
+            useAuthStore.getState().signOut();
+            window.location.href = '/auth/login';
+          }
+        }
+        return Promise.reject(error);
+      }
+    );
+  }
+
+  get<T>(url: string, config?: AxiosRequestConfig) {
+    return this.client.get<T>(url, config);
+  }
+
+  post<T>(url: string, data?: any, config?: AxiosRequestConfig) {
+    return this.client.post<T>(url, data, config);
+  }
+
+  put<T>(url: string, data?: any, config?: AxiosRequestConfig) {
+    return this.client.put<T>(url, data, config);
+  }
+
+  delete<T>(url: string, config?: AxiosRequestConfig) {
+    return this.client.delete<T>(url, config);
+  }
+}
+
+export const apiClient = new ApiClient();
+```
+
+**Requirements:**
+- Create Axios instance with baseURL and timeout
+- Request interceptor attaches JWT from auth store
+- Response interceptor handles 401 and token refresh
+- Automatic redirect to login on refresh failure
+- Type-safe methods with TypeScript generics
+
+### 3. Errors: Global Handler
+
+```typescript
+// lib/errorHandler.ts
+import axios from 'axios';
+import { toast } from 'sonner';
+
+export const handleApiError = (error: any) => {
+  if (axios.isAxiosError(error)) {
+    const message = error.response?.data?.message || error.message;
+
+    switch (error.response?.status) {
+      case 400:
+        toast.error('Bad Request', { description: message });
+        break;
+      case 401:
+        toast.error('Unauthorized', { description: 'Please log in again' });
+        break;
+      case 403:
+        toast.error('Forbidden', { description: 'You do not have permission' });
+        break;
+      case 404:
+        toast.error('Not Found', { description: message });
+        break;
+      case 429:
+        toast.error('Too Many Requests', { description: 'Please try again later' });
+        break;
+      case 500:
+        toast.error('Server Error', { description: message });
+        break;
+      default:
+        toast.error('Error', { description: message || 'Something went wrong' });
+    }
+  } else {
+    toast.error('Network Error', { description: error.message || 'Something went wrong' });
+  }
+};
+```
+
+```typescript
+// hooks/useApi.ts
+import { useQuery, useMutation, UseQueryOptions, UseMutationOptions } from '@tanstack/react-query';
+import { apiClient } from '@/lib/apiClient';
+import { handleApiError } from '@/lib/errorHandler';
+import { z } from 'zod';
+
+export function useApi<T>(
+  queryKey: any[],
+  url: string,
+  options?: Omit<UseQueryOptions<T>, 'queryKey' | 'queryFn'>
+) {
   return useQuery({
-    queryKey: queryKeys.auth.me(),
-    queryFn: () => apiClient.auth.me(),
-    staleTime: 5 * 60 * 1000,
-    retry: false,
+    queryKey,
+    queryFn: async () => {
+      const response = await apiClient.get<T>(url);
+      return response.data;
+    },
+    ...options,
   });
 }
 
-export function useLogin() {
-  const queryClient = useQueryClient();
-
+export function useApiMutation<T, V = any>(
+  url: string,
+  options?: Omit<UseMutationOptions<T, V, void>, 'mutationFn'>,
+  schema?: z.ZodSchema<T>
+) {
   return useMutation({
-    mutationFn: (data: { email: string; password: string }) =>
-      apiClient.auth.login(data),
-    onSuccess: (response) => {
-      apiClient.setTokens(response.tokens.accessToken, response.tokens.refreshToken);
-      queryClient.setQueryData(queryKeys.auth.me(), response.user);
+    mutationFn: async (variables: V) => {
+      const response = await apiClient.post<T>(url, variables);
+
+      // Zod validation if schema provided
+      if (schema) {
+        try {
+          const parsed = schema.parse(response.data);
+          return parsed;
+        } catch (error) {
+          if (error instanceof z.ZodError) {
+            toast.error('Validation Error', { description: error.errors[0].message });
+            throw new Error(`Response validation failed: ${error.errors[0].message}`);
+          }
+        }
+      }
+
+      return response.data;
+    },
+    onError: (error) => {
+      options?.onError?.(error);
+      handleApiError(error);
+    },
+    onSuccess: (data, variables) => {
+      options?.onSuccess?.(data, variables);
+      if (options?.context?.successMessage) {
+        toast.success('Success', { description: options.context.successMessage });
+      }
     },
   });
 }
 ```
 
-## Usage Examples
+**Requirements:**
+- Global error handler with toast notifications
+- Handle all HTTP status codes appropriately
+- Zod schema validation for response parsing
+- Automatic error display in toasts
+- Success message handling for mutations
 
-### Component Usage
+### 4. Parsing: Typed Responses, Optimistic Updates
 
-```tsx
-function UserProfile() {
-  const { data: user, isLoading } = useCurrentUser();
-  const logout = useLogout();
+```typescript
+// lib/api/types.ts
+import { z } from 'zod';
 
-  if (isLoading) return <div>Loading...</div>;
+// Student type with Zod schema
+export const StudentSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string().email(),
+  role: z.enum(['student', 'teacher', 'admin']),
+  classId: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export type Student = z.infer<typeof StudentSchema>;
+
+// Attendance type
+export const AttendanceSchema = z.object({
+  id: z.string(),
+  studentId: z.string(),
+  date: z.string(),
+  status: z.enum(['present', 'absent', 'late']),
+  notes: z.string().optional(),
+});
+
+export type Attendance = z.infer<typeof AttendanceSchema>;
+
+// Paginated response type
+export function PaginatedResponseSchema<T extends z.ZodTypeAny>(itemSchema: T) {
+  return z.object({
+    data: z.array(itemSchema),
+    meta: z.object({
+      total: z.number(),
+      page: z.number(),
+      pageSize: z.number(),
+      totalPages: z.number(),
+    }),
+  });
+}
+
+// hooks/useStudents.ts
+import { useApi } from './useApi';
+import { StudentSchema, PaginatedResponseSchema } from '@/lib/api/types';
+
+export function useStudents(page = 1, pageSize = 20) {
+  return useApi(
+    ['students', 'page', page],
+    `/students?page=${page}&pageSize=${pageSize}`,
+    {
+      select: (data) => {
+        const parsed = PaginatedResponseSchema(StudentSchema).parse(data);
+        return parsed;
+      },
+    }
+  );
+}
+
+// hooks/useUpdateStudent.ts
+export function useUpdateStudent() {
+  const queryClient = useQueryClient();
+
+  return useApiMutation(
+    (variables: { id: string; data: Partial<Student> }) =>
+      `/students/${variables.id}`,
+    {
+      onSuccess: (_, variables) => {
+        // Invalidate and refetch
+        queryClient.invalidateQueries({ queryKey: ['students'] });
+        queryClient.invalidateQueries({ queryKey: ['student', variables.id] });
+      },
+      context: { successMessage: 'Student updated successfully' },
+    }
+  );
+}
+
+// hooks/useDeleteStudent.ts
+export function useDeleteStudent() {
+  const queryClient = useQueryClient();
+
+  return useApiMutation(
+    (id: string) => `/students/${id}`,
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['students'] });
+      },
+      context: { successMessage: 'Student deleted successfully' },
+    }
+  );
+}
+```
+
+```typescript
+// Infinite queries for pagination
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { StudentSchema } from '@/lib/api/types';
+
+export function useInfiniteStudents() {
+  return useInfiniteQuery({
+    queryKey: ['students', 'infinite'],
+    queryFn: async ({ pageParam = 1 }) => {
+      const response = await apiClient.get(`/students?page=${pageParam}&pageSize=20`);
+      const data = response.data.map((item: any) => StudentSchema.parse(item));
+      return {
+        data,
+        nextPage: data.length === 20 ? pageParam + 1 : null,
+      };
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => lastPage.nextPage,
+  });
+}
+
+// Optimistic updates with rollback
+export function useUpdateAttendance() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ studentId, date, status }: { studentId: string; date: string; status: string }) => {
+      return apiClient.put(`/attendance/${studentId}/${date}`, { status });
+    },
+    onMutate: async ({ studentId, date, status }) => {
+      // Cancel outgoing queries
+      await queryClient.cancelQueries({ queryKey: ['attendance', studentId] });
+
+      // Snapshot previous value
+      const previousAttendance = queryClient.getQueryData(['attendance', studentId]);
+
+      // Optimistically update
+      queryClient.setQueryData(['attendance', studentId], (old: any) => ({
+        ...old,
+        data: old.data.map((item: any) =>
+          item.date === date ? { ...item, status } : item
+        ),
+      }));
+
+      return { previousAttendance };
+    },
+    onError: (error, variables, context) => {
+      // Rollback on error
+      if (context?.previousAttendance) {
+        queryClient.setQueryData(['attendance', variables.studentId], context.previousAttendance);
+      }
+    },
+    onSettled: (_, __, variables) => {
+      // Refetch on success or error
+      queryClient.invalidateQueries({ queryKey: ['attendance', variables.studentId] });
+    },
+  });
+}
+
+// Offline detection
+export function useOnlineStatus() {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  return isOnline;
+}
+
+// AbortController for cancelable requests
+export function useFetchWithAbort<T>(url: string) {
+  const [data, setData] = useState<T | null>(null);
+  const [error, setError] = useState<Error | null>(null);
+  const [loading, setLoading] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
+
+  const fetchData = useCallback(async () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    abortControllerRef.current = new AbortController();
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await apiClient.get<T>(url, {
+        signal: abortControllerRef.current.signal,
+      });
+      setData(response.data);
+    } catch (err) {
+      if (err instanceof Error && err.name !== 'AbortError') {
+        setError(err);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [url]);
+
+  return { data, error, loading, refetch: fetchData, abort: () => abortControllerRef.current?.abort() };
+}
+```
+
+**Requirements:**
+- Infinite queries for paginated lists
+- Optimistic updates for immediate feedback
+- Rollback on error
+- Offline detection and handling
+- AbortController for cancelable requests
+
+## Output Requirements
+
+### Code Files
+
+1. **API Client**:
+   - `lib/apiClient.ts` - Axios instance with interceptors
+   - `lib/queryClient.ts` - TanStack Query configuration
+
+2. **Error Handling**:
+   - `lib/errorHandler.ts` - Global error handler
+   - `hooks/useApi.ts` - Type-safe API hooks
+
+3. **Type Definitions**:
+   - `lib/api/types.ts` - Zod schemas and types
+
+4. **Feature Hooks**:
+   - `hooks/useStudents.ts` - Student-specific hooks
+   - `hooks/useAttendance.ts` - Attendance-specific hooks
+
+### Integration Requirements
+
+- **@auth-integration**: Use JWT tokens from auth store
+- **@react-component**: Functional components with hooks
+- **@tailwind-css**: Responsive UI with mobile support
+
+### Documentation
+
+- **PHR**: Create Prompt History Record for API decisions
+- **ADR**: Document caching strategy, retry policy
+- **Comments**: Document API endpoints and data flow
+
+## Workflow
+
+1. **Setup API Client**
+   - Configure TanStack Query
+   - Create Axios instance
+   - Setup JWT interceptors
+
+2. **Define Types**
+   - Create Zod schemas
+   - Export TypeScript types
+
+3. **Create Hooks**
+   - Build useApi and useApiMutation
+   - Add feature-specific hooks
+   - Implement error handling
+
+4. **Integrate with Auth**
+   - Attach JWT tokens automatically
+   - Handle 401 responses
+   - Refresh tokens on expiry
+
+5. **Implement Features**
+   - Query hooks for data fetching
+   - Mutation hooks with optimistic updates
+   - Infinite queries for pagination
+
+6. **Test and Optimize**
+   - Test error scenarios
+   - Verify offline behavior
+   - Optimize caching strategy
+
+## Quality Checklist
+
+Before completing any API client implementation:
+
+- [ ] **Typesafe Requests/Responses**: Zod schemas for all data
+- [ ] **Retry on Fail**: Exponential backoff for retries
+- [ ] **Offline Detection**: Handle network disconnections
+- [ ] **AbortController**: Support cancelable requests
+- [ ] **JWT Auto-Attach**: Headers with Authorization Bearer
+- [ ] **Error Handling**: Global error handler with toasts
+- [ ] **401 Logout**: Automatic redirect on token expiry
+- [ ] **Zod Validation**: Response schema validation
+- [ ] **Optimistic Updates**: Immediate UI feedback
+- [ ] **Query Invalidation**: Automatic cache updates
+
+## Common Patterns
+
+### Fetch Student Data
+
+```typescript
+// hooks/useStudent.ts
+export function useStudent(id: string) {
+  return useApi(
+    ['student', id],
+    `/students/${id}`,
+    {
+      enabled: !!id, // Only fetch if id exists
+    }
+  );
+}
+
+// Usage
+function StudentProfile({ studentId }: { studentId: string }) {
+  const { data: student, isLoading, error } = useStudent(studentId);
+
+  if (isLoading) return <LoadingSkeleton />;
+  if (error) return <ErrorMessage error={error} />;
 
   return (
     <div>
-      <h2>{user?.displayName}</h2>
-      <button onClick={() => logout.mutate()}>Logout</button>
+      <h1>{student?.name}</h1>
+      <p>{student?.email}</p>
     </div>
   );
 }
 ```
 
-## Best Practices
+### API Error Toast with Zod Parse
 
-1. Typed namespaces - Group related endpoints for discoverability
-2. Token refresh deduplication - Prevent multiple concurrent refresh requests
-3. Query key factory - Consistent cache key management
-4. Response transformation - Convert snake_case to camelCase automatically
-5. Singleton export - Single instance for consistent token state
+```typescript
+// hooks/useCreateStudent.ts
+export function useCreateStudent() {
+  const queryClient = useQueryClient();
 
-## Common Mistakes
+  return useApiMutation(
+    async (data: { name: string; email: string }) => {
+      const response = await apiClient.post('/students', data);
+      // Zod validation
+      const parsed = StudentSchema.parse(response.data);
+      return parsed;
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['students'] });
+      },
+      context: { successMessage: 'Student created successfully' },
+    }
+  );
+}
 
-- Not deduplicating token refresh (causes race conditions)
-- Forgetting skipRefresh on refresh endpoint (infinite loop)
-- Scattered fetch calls without centralized error handling
-- No response transformation (inconsistent casing)
-- Creating multiple client instances (token state mismatch)
+// Usage
+function CreateStudentForm() {
+  const { mutate: createStudent, isPending } = useCreateStudent();
 
-## Related Patterns
+  const handleSubmit = (data: FormData) => {
+    createStudent(data);
+  };
 
-- jwt-auth - JWT authentication implementation
-- rate-limiting - Client-side rate limiting
-- error-handling - Error handling patterns
+  return <form onSubmit={handleSubmit}>{/* form fields */}</form>;
+}
+```
+
+### Paginated List with Infinite Query
+
+```typescript
+// hooks/useInfiniteStudents.ts
+export function useInfiniteStudents() {
+  return useInfiniteQuery({
+    queryKey: ['students', 'infinite'],
+    queryFn: async ({ pageParam = 1 }) => {
+      const response = await apiClient.get(`/students?page=${pageParam}&pageSize=20`);
+      const parsed = z.array(StudentSchema).parse(response.data);
+      return {
+        data: parsed,
+        nextPage: parsed.length === 20 ? pageParam + 1 : null,
+      };
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => lastPage.nextPage,
+  });
+}
+
+// Usage
+function StudentList() {
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteStudents();
+
+  return (
+    <div>
+      {data?.pages.map((page, i) => (
+        <div key={i}>
+          {page.data.map((student) => (
+            <StudentCard key={student.id} student={student} />
+          ))}
+        </div>
+      ))}
+      {hasNextPage && (
+        <button
+          onClick={() => fetchNextPage()}
+          disabled={isFetchingNextPage}
+        >
+          {isFetchingNextPage ? 'Loading...' : 'Load More'}
+        </button>
+      )}
+    </div>
+  );
+}
+```
+
+### Attendance Fetch with Offline Support
+
+```typescript
+// hooks/useAttendance.ts
+export function useAttendance(studentId: string, date: string) {
+  const isOnline = useOnlineStatus();
+
+  return useApi(
+    ['attendance', studentId, date],
+    `/attendance/${studentId}/${date}`,
+    {
+      enabled: !!studentId && !!date && isOnline,
+      staleTime: 5 * 60 * 1000,
+    }
+  );
+}
+
+// Usage
+function AttendanceCard({ studentId, date }: { studentId: string; date: string }) {
+  const { data: attendance, isLoading, error } = useAttendance(studentId, date);
+  const isOnline = useOnlineStatus();
+
+  if (!isOnline) {
+    return <OfflineMessage />;
+  }
+
+  if (isLoading) return <LoadingSkeleton />;
+  if (error) return <ErrorMessage error={error} />;
+
+  return (
+    <div>
+      <p>Status: {attendance?.status}</p>
+    </div>
+  );
+}
+```
+
+## Caching Strategy
+
+```typescript
+// lib/queryClient.ts
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Fresh data is considered stale after 5 minutes
+      staleTime: 5 * 60 * 1000,
+      // Garbage collect unused queries after 10 minutes
+      gcTime: 10 * 60 * 1000,
+      // Retry failed requests 3 times
+      retry: 3,
+      // Exponential backoff: 1s, 2s, 4s (max 30s)
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      // Refetch on window focus (optional)
+      refetchOnWindowFocus: false,
+      // Refetch on reconnect
+      refetchOnReconnect: true,
+    },
+  },
+});
+```
+
+## Environment Variables
+
+```bash
+# .env.local
+NEXT_PUBLIC_API_URL=http://localhost:3001/api
+# For production
+NEXT_PUBLIC_API_URL=https://api.yourapp.com
+```
+
+## References
+
+- TanStack Query: https://tanstack.com/query/latest
+- Axios: https://axios-http.com
+- Zod: https://zod.dev
+- React Query Examples: https://tanstack.com/query/latest/docs/react/examples

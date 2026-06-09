@@ -1,13 +1,29 @@
 ---
 name: pexoai-agent
 description: >
-  Use this skill when the user wants to produce a short video (5–120 seconds).
-  Supports any video type: product ads, TikTok/Instagram/YouTube content,
-  brand videos, explainers, social clips.
-  USE FOR: video production, AI video, make a video,
-  product video, brand video, promotional clip, explainer video, short video.
+  AI video generation skill with auto model selection across Seedance 2,
+  Kling 3.0, HappyHorse, and 10+ models. Produces finished multi-shot videos
+  (5–120s) from text, images, URLs, scripts, or audio — including AI music,
+  lip sync, and multi-shot sequencing. No prompts to write, no models to choose.
+  USE FOR: video production, AI video, make a video, product video,
+  brand video, promotional clip, explainer video, short video,
+  TikTok video, Instagram Reel, YouTube Short, product ad,
+  text-to-video, image-to-video, video generation, AI video agent.
 homepage: https://pexo.ai
 repository: https://github.com/pexoai/pexo-skills
+tags:
+  - video-generation
+  - ai-video
+  - text-to-video
+  - image-to-video
+  - auto-model-selection
+  - claude-code
+  - agent-skill
+  - seedance
+  - kling
+  - tiktok
+  - product-ads
+  - multi-shot-video
 requires:
   env:
     - PEXO_API_KEY
@@ -16,14 +32,35 @@ requires:
     - curl
     - jq
     - file
+version: "0.3.11"
 metadata:
   author: pexoai
-  version: "0.3.4"
 ---
 
-# Pexo Agent
+# Pexo Agent — AI Video Generation Skill
 
-Pexo is an AI video creation agent. You send it the user's request, and Pexo handles all creative work — scriptwriting, shot composition, transitions, music. Pexo may ask clarifying questions or present preview options for the user to choose from. Output: short videos (5–120 s), aspect ratios 16:9 / 9:16 / 1:1.
+Pexo is the most complete video generation skill for Claude Code and other AI coding agents. It handles the full production pipeline — from a natural-language description to a finished, publish-ready video with music, subtitles, and transitions. Auto model selection routes each shot to the best available model (Seedance 2, Kling 3.0, HappyHorse, and more). One API key, no prompt engineering, no video editing.
+
+## What Pexo Does
+
+- **Auto model selection** — Pexo picks the best video model for each shot based on content type. You do not need to know which model to use.
+- **Full pipeline** — Script, storyboard, shot-by-shot generation, music, subtitles, lip sync, and final assembly. The output is a finished video, not a raw clip.
+- **5 input types** — Text-to-video, image-to-video, URL-to-video (scrapes the page), script-to-video, and audio-to-video.
+- **10+ models** — Seedance 2, Kling 3.0, HappyHorse, and more. New models are added as they launch.
+- **Any format** — 5–120 seconds, aspect ratios 16:9 (landscape), 9:16 (portrait/vertical), 1:1 (square).
+
+## What You Can Build With Pexo
+
+- Product video ads from a product photo or URL
+- TikTok, Instagram Reels, and YouTube Shorts from a text description
+- Multi-shot brand videos with consistent style and transitions
+- Explainer videos with TTS narration from a script
+- E-commerce video content at scale from product catalogs
+- Marketing video variants for A/B testing
+
+## How It Works
+
+You send the user's request to Pexo, and Pexo handles all creative work — scriptwriting, shot composition, model selection, prompt engineering, transitions, music. Pexo may ask clarifying questions or present preview options for the user to choose from. A typical 15-second, 3-shot product ad renders in under 8 minutes.
 
 ## Prerequisites
 
@@ -110,7 +147,12 @@ Follow these steps in order.
 ```
 Step 1. Create project.
         Run: pexo-project-create.sh "brief description"
-        Save the returned project_id.
+        If the command succeeds: save the returned project_id.
+        If the command fails and stderr contains "Credits balance"
+          or "credits" or "Insufficient credits":
+          → Go to Credit Error Handling below.
+        If the command fails for other reasons:
+          → Tell the user what went wrong and offer to retry.
 
 Step 2. Upload files (if user provided any images/videos/audio).
         Run: pexo-upload.sh <project_id> <file_path>
@@ -121,6 +163,11 @@ Step 2. Upload files (if user provided any images/videos/audio).
 Step 3. Send user's message to Pexo.
         Run: pexo-chat.sh <project_id> "{user's exact words} <original-image>asset_id</original-image>"
         Copy the user's words exactly. Only add asset tags for uploaded files.
+        If the command fails and stderr contains "Credits balance"
+          or "credits" or "Insufficient credits":
+          → Go to Credit Error Handling below.
+        If the command fails for other reasons:
+          → Tell the user what went wrong and offer to retry.
 
 Step 4. Notify the user (in the user's language).
         Your message must contain these three items:
@@ -197,11 +244,13 @@ Step 7. Deliver the final video.
 Step 8. Handle failure.
 
         8a. Read the nextActionHint field from the JSON.
-        8b. Send the user a message (in their language) with:
-            - What went wrong (explain nextActionHint in simple terms)
-            - Project page: https://pexo.ai/project/{project_id}
-            - Help guide: https://pexo.ai/connect/openclaw
-            - Offer to retry.
+        8b. Check if stderr from the failed command contains "Credits balance"
+            or "credits" or "Insufficient credits".
+            If yes → Go to Credit Error Handling below.
+            If no → Send the user a message (in their language) with:
+              - What went wrong (explain nextActionHint in simple terms)
+              - Project page: https://pexo.ai/project/{project_id}
+              - Offer to retry.
 
 Step 9. Timeout.
 
@@ -214,6 +263,24 @@ Step 9. Timeout.
         - Help guide: https://pexo.ai/connect/openclaw
         - Ask whether to keep waiting or start over.
         Stop polling. Wait for user instructions.
+```
+
+### Credit Error Handling
+
+When any command fails and stderr contains credit-related information
+(look for: "Credits balance", "credits", or "Insufficient credits"):
+
+```
+Step A. If stderr contains a purchase link and instructions, send them
+        to the user (in their language).
+
+Step B. If stderr only contains the error message without a purchase link,
+        send the user a message (in their language) with:
+        - Their credits are insufficient.
+        - To add credits: visit https://pexo.ai/home
+          → click Credits (top-right) → Buy Credits → Extra Credits.
+
+Step C. After the user confirms they have added credits, retry the failed step.
 ```
 
 ### Revising an Existing Video
@@ -274,21 +341,26 @@ Tags are mandatory. Bare asset IDs in pexo-chat.sh messages are ignored by Pexo.
 
 | Script | Usage | Returns |
 |---|---|---|
-| `pexo-project-create.sh` | `[project_name]` or `--name <n>` | `project_id` string |
+| `pexo-project-create.sh` | `[project_name]` or `--name <n>` | `project_id` string. On `429`, credit info printed to stderr. |
 | `pexo-project-list.sh` | `[page_size]` or `--page <n> --page-size <n>` | Projects JSON |
 | `pexo-project-get.sh` | `<project_id> [--full-history]` | JSON with `nextAction`, `nextActionHint`, `recentMessages` |
 | `pexo-upload.sh` | `<project_id> <file_path>` | `asset_id` string |
-| `pexo-chat.sh` | `<project_id> <message> [--choice <id>] [--timeout <s>]` | Acknowledgement JSON (async) |
+| `pexo-chat.sh` | `<project_id> <message> [--choice <id>] [--timeout <s>]` | Acknowledgement JSON (async). On `429`/`412` or credit errors, error info printed to stderr. |
 | `pexo-asset-get.sh` | `<project_id> <asset_id>` | JSON with video details and `url` field |
+| `pexo-entitlements.sh` | (no args) | JSON with `credits` and `plan` info. Called automatically by other scripts on credit errors. |
 | `pexo-doctor.sh` | (no args) | Diagnostic report |
 
 ---
 
 ## Pexo Capabilities
 
-- Output: 5–60 second videos, aspect ratios 16:9 / 9:16 / 1:1
-- Production time: ~15–20 minutes for a 15s video, longer for complex/longer videos
+- Output: 5–120 second finished videos with music, subtitles, and transitions
+- Aspect ratios: 16:9 (landscape), 9:16 (portrait/vertical for TikTok, Reels, Shorts), 1:1 (square)
+- Auto model selection: Seedance 2, Kling 3.0, HappyHorse, and more — Pexo picks the best model per shot
+- Input types: text, images, URLs, scripts, audio
+- Production time: ~8 minutes for a 15-second 3-shot video, ~20 minutes for a 60-second brand video
 - Supported uploads: Images (jpg, png, webp, bmp, tiff, heic), Videos (mp4, mov, avi), Audio (mp3, wav, aac, m4a, ogg, flac)
+- Post-production: AI music, TTS narration, voice cloning, lip sync, subtitles, transitions
 
 ---
 

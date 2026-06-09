@@ -9,16 +9,11 @@ When this skill is invoked, dispatch a dedicated oracle agent using the Task too
 
 ```
 Task(
-  subagent_type: "oracle",
-  model: "sonnet",  // Default. Use "opus" if user requests deep/complex investigation
+  subagent_type: "general-purpose",
+  model: "opus",
   prompt: <formulated oracle request - see below>
 )
 ```
-
-## Model Selection
-
-- **Default (sonnet)**: Standard oracle investigations - fast, cost-effective
-- **Opus**: Use when user explicitly requests ("use opus", "deep oracle", "thorough investigation") or for high-stakes architectural decisions
 
 ## How to Use The Oracle
 

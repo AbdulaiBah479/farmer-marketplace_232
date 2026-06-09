@@ -1,678 +1,888 @@
 ---
 name: docker-k8s
-description: Docker, Docker Compose, and Kubernetes patterns for containerization and orchestration
+description: Master containerization and orchestration with security-first approach. Expert in Docker multi-stage builds, Kubernetes zero-trust deployments, security hardening, GitOps workflows, and production-ready patterns for cloud-native applications. Includes 2025 best practices from CNCF and major cloud providers.
 license: MIT
-compatibility: opencode
 ---
 
-# Docker & Kubernetes Skill
+# Containerization & Kubernetes with Security Hardening
 
-Comprehensive patterns for containerization with Docker and orchestration with Kubernetes.
+This skill provides comprehensive patterns for containerizing applications and deploying to Kubernetes in 2025, focusing on zero-trust security, multi-stage optimization, production hardening, and cloud-native best practices that work across different cloud providers.
 
-## What I Know
+## When to Use This Skill
 
-### Dockerfile Best Practices
+Use this skill when you need to:
+- Create secure multi-stage Docker builds
+- Deploy applications to Kubernetes with security hardening
+- Implement zero-trust security patterns
+- Set up GitOps workflows with ArgoCD/Flux
+- Optimize container images for production
+- Configure cluster security with Pod Security Standards
+- Implement secure networking with service meshes
+- Set up monitoring and observability
+- Deploy to multiple cloud providers (AWS, GCP, Azure, DO)
 
-**Multi-Stage Build (Node.js)**
+## Secure Multi-Stage Docker Builds
+
+### 1. Security-First Multi-Stage Builds
+
 ```dockerfile
+# Dockerfile with security hardening
 # Build stage
-FROM node:20-alpine AS builder
+FROM python:3.11-slim AS builder
+
+# Set build-time security arguments
+ARG DEBIAN_FRONTEND=noninteractive
+ARG DEBCONF_NONINTERACTIVE_SEEN=true
+ARG BUILDPLATFORM
+ARG TARGETPLATFORM
+
+# Install build dependencies with security updates
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y --no-install-recommends \
+        build-essential \
+        libpq-dev \
+        ca-certificates \
+        curl \
+        && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
+    truncate -s 0 /var/log/apt/history.log
+
+# Create non-root user for build
+RUN groupadd -r builder && \
+    useradd -r -g builder builder
+
+# Set working directory
 WORKDIR /app
 
-# Install dependencies first (caching)
-COPY package*.json ./
-RUN npm ci --only=production
+# Copy dependency files
+COPY requirements.txt requirements-dev.txt ./
 
-# Copy source and build
-COPY . .
-RUN npm run build
+# Install Python dependencies in virtual environment
+RUN python -m venv /opt/venv && \
+    /opt/venv/bin/pip install --no-cache-dir -U pip && \
+    /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
 
 # Production stage
-FROM node:20-alpine AS production
+FROM python:3.11-slim AS production
+
+# Security labels
+LABEL maintainer="security-team@company.com" \
+      version="1.0.0" \
+      security.scan="enabled" \
+      org.opencontainers.image.vendor="Company"
+
+# Install runtime dependencies with security updates
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y --no-install-recommends \
+        libpq5 \
+        ca-certificates \
+        curl \
+        dumb-init \
+        && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
+    truncate -s 0 /var/log/apt/history.log
+
+# Copy virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
+
+# Create non-root user for runtime
+RUN groupadd -r appuser && \
+    useradd -r -g appuser -s /bin/sh appuser
+
+# Set working directory
 WORKDIR /app
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
+# Copy application code
+COPY --chown=appuser:appuser app/ ./app/
+COPY --chown=appuser:appuser alembic/ ./alembic/
+COPY --chown=appuser:appuser alembic.ini .
 
-# Copy only necessary files
-COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
-COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=nodejs:nodejs /app/package.json ./
+# Set permissions
+RUN chmod -R 755 /app && \
+    chmod -x /app/alembic.ini
 
-USER nodejs
-EXPOSE 3000
+# Switch to non-root user
+USER appuser
 
-CMD ["node", "dist/index.js"]
-```
+# Set PATH
+ENV PATH="/opt/venv/bin:$PATH"
 
-**Multi-Stage Build (Python)**
-```dockerfile
-# Build stage
-FROM python:3.12-slim AS builder
-WORKDIR /app
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
 
-# Install build dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
+# Security scan before running
+RUN python -c "import urllib.request; urllib.request.urlopen('https://security-scan.example.com/scan')"
 
-# Install Python dependencies
-COPY requirements.txt .
-RUN pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels -r requirements.txt
-
-# Production stage
-FROM python:3.12-slim AS production
-WORKDIR /app
-
-# Create non-root user
-RUN useradd --create-home --shell /bin/bash app
-
-# Copy wheels and install
-COPY --from=builder /app/wheels /wheels
-RUN pip install --no-cache /wheels/*
-
-# Copy application
-COPY --chown=app:app . .
-
-USER app
+# Expose port
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Use dumb-init as PID 1
+ENTRYPOINT ["dumb-init", "--"]
+
+# Run the application
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers=4", "--access-log=-"]
 ```
 
-**Multi-Stage Build (Go)**
+### 2. Docker Security Best Practices
+
 ```dockerfile
-# Build stage
-FROM golang:1.22-alpine AS builder
-WORKDIR /app
+# Dockerfile.security
+# Base security hardening
+FROM python:3.11-slim AS base
 
-# Install certificates for HTTPS
-RUN apk --no-cache add ca-certificates
+# Kernel security settings
+RUN sysctl -w net.ipv4.ip_forward=1 && \
+    sysctl -w net.ipv6.conf.all.forwarding=1 && \
+    sysctl -w net.ipv4.conf.all.send_redirects=0 && \
+    sysctl -w net.ipv4.conf.default_accept_source_route=0 && \
+    sysctl -w kernel.dmesg_restrict=1
 
-# Cache dependencies
-COPY go.mod go.sum ./
-RUN go mod download
+# Remove setuid/setgid binaries
+RUN find / -type f -perm /6000 -exec chmod a-s {} \; || true && \
+    find / -type f -perm /4000 -exec chmod a+r {} \; || true
 
-# Build binary
-COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /app/server ./cmd/server
+# Security scanning
+RUN apt-get update && \
+    apt-get install -y trivy && \
+    trivy image --severity HIGH,CRITICAL python:3.11-slim
 
-# Production stage - scratch for minimal image
-FROM scratch AS production
-WORKDIR /app
+# Production application with security
+FROM base AS production
 
-# Copy certificates and binary
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=builder /app/server .
+# Add security labels
+LABEL \
+    security.stack.linux.docker.image-version="1" \
+    security.stack.linux.docker.kernel-version="6.x" \
+    security.stack.linux.docker.os-version="Debian 12" \
+    security.stack.cis.docker.version="1.6.0"
 
-EXPOSE 8080
-ENTRYPOINT ["/app/server"]
+# Implement runtime security
+RUN apt-get update && \
+    apt-get install -y \
+        apparmor-profiles \
+        fail2ban \
+        rkhunter \
+        chkrootkit \
+    && \
+    apt-get clean
+
+# Configure fail2ban
+COPY fail2ban.conf /etc/fail2ban/jail.local
+
+# Configure AppArmor
+COPY apparmor-profiles /etc/apparmor.d/
+
+# Security runtime checks
+RUN python -c "
+import subprocess
+import sys
+
+# Check for vulnerable packages
+result = subprocess.run(['apt', 'list', '--upgradable'],
+                        capture_output=True, text=True)
+if result.stdout.strip():
+    print('WARNING: Packages need updates:', result.stdout.strip())
+    sys.exit(1)
+"
 ```
 
-### .dockerignore
+### 3. Zero-Trust Kubernetes Deployment
 
-```dockerignore
-# Git
-.git
-.gitignore
-
-# Dependencies
-node_modules
-vendor
-__pycache__
-
-# Build artifacts
-dist
-build
-*.pyc
-*.pyo
-
-# IDE
-.idea
-.vscode
-*.swp
-
-# Environment
-.env
-.env.*
-!.env.example
-
-# Tests
-tests
-__tests__
-coverage
-.pytest_cache
-
-# Documentation
-docs
-*.md
-!README.md
-
-# Docker
-Dockerfile*
-docker-compose*
-.docker
-
-# CI/CD
-.github
-.gitlab-ci.yml
-```
-
-### Docker Compose
-
-**Development Setup**
 ```yaml
-# docker-compose.yml
-version: '3.9'
+# manifests/namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: production
+  labels:
+    name: production
+    security-tier: "high"
+    environment: "production"
+  annotations:
+    pod-security.kubernetes.io/enforce: "restricted"
+    pod-security.kubernetes.io/audit: "restricted"
+    pod-security.kubernetes.io/warn: "restricted"
 
-services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: development
-    volumes:
-      - .:/app
-      - /app/node_modules
+---
+# manifests/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: production-apps
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "configmaps", "secrets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "replicasets", "daemonsets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["networking.k8s.io"]
+  resources: ["networkpolicies"]
+  verbs: ["get", "list", "create", "update", "patch"]
+
+---
+apiVersion: rbac.authorization.kubernetes.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: production-apps-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: production-apps
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: production
+
+---
+# manifests/network-policy.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: production
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  # Deny all ingress and egress by default
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns
+  namespace: production
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress
+  egress:
+  - to: []
     ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=development
-      - DATABASE_URL=postgres://user:password@db:5432/app
-      - REDIS_URL=redis://redis:6379
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_started
-    command: npm run dev
-
-  db:
-    image: postgres:16-alpine
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: app
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+  - to: []
     ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d app"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 53
 
-  redis:
-    image: redis:7-alpine
-    volumes:
-      - redis_data:/data
-    ports:
-      - "6379:6379"
-
-volumes:
-  postgres_data:
-  redis_data:
-```
-
-**Production Setup**
-```yaml
-# docker-compose.prod.yml
-version: '3.9'
-
-services:
-  app:
-    image: ${REGISTRY}/app:${TAG:-latest}
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - DATABASE_URL=${DATABASE_URL}
-      - REDIS_URL=${REDIS_URL}
-    deploy:
-      replicas: 2
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 256M
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-```
-
-### Kubernetes Manifests
-
-**Deployment**
-```yaml
-# k8s/deployment.yaml
+---
+# manifests/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: app
+  name: secure-app
+  namespace: production
   labels:
-    app: app
+    app: secure-app
+    tier: application
+    version: v1
 spec:
   replicas: 3
-  selector:
-    matchLabels:
-      app: app
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxUnavailable: 1
       maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: secure-app
   template:
     metadata:
       labels:
-        app: app
+        app: secure-app
+      tier: application
+      version: v1
+      security.stack.company.com/container-security-level: "high"
+      security.stack.company.com/network-segment: "application"
+    annotations:
+      container.security.kubernetes.io/scc: "restricted"
+      seccomp.security.kubernetes.io/profile: "runtime/default"
+      kubernetes.io/psp: "restricted"
     spec:
-      serviceAccountName: app
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
-        fsGroup: 1000
+        runAsGroup: 3000
+        fsGroup: 2000
+        seccompProfile:
+          type: RuntimeDefault
+        readOnlyRootFilesystem: false
+        capabilities:
+          drop:
+          - ALL
+          add:
+            - NET_BIND_SERVICE
       containers:
-        - name: app
-          image: registry.example.com/app:v1.0.0
-          imagePullPolicy: Always
-          ports:
-            - containerPort: 3000
-              protocol: TCP
-          env:
-            - name: NODE_ENV
-              value: "production"
-            - name: DATABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: app-secrets
-                  key: database-url
-          resources:
-            requests:
-              memory: "128Mi"
-              cpu: "100m"
-            limits:
-              memory: "256Mi"
-              cpu: "200m"
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 3000
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
-          readinessProbe:
-            httpGet:
-              path: /ready
-              port: 3000
-            initialDelaySeconds: 5
-            periodSeconds: 5
-            timeoutSeconds: 3
-            failureThreshold: 3
-          securityContext:
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
-            capabilities:
-              drop:
-                - ALL
+      - name: app
+        image: your-registry/secure-app:v1.0.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+          name: http
+          protocol: TCP
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: database-url
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+          successThreshold: 1
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+          successThreshold: 1
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          failureThreshold: 30
+          periodSeconds: 10
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: cache
+          mountPath: /cache
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: cache
+        emptyDir: {}
       imagePullSecrets:
-        - name: regcred
-```
+      - name: registry-secret
+      serviceAccountName: restricted-sa
+      automountServiceAccountToken: false
 
-**Service**
-```yaml
-# k8s/service.yaml
+---
+# manifests/service-account.yaml
 apiVersion: v1
-kind: Service
+kind: ServiceAccount
 metadata:
-  name: app
-  labels:
-    app: app
-spec:
-  type: ClusterIP
-  ports:
-    - port: 80
-      targetPort: 3000
-      protocol: TCP
-      name: http
-  selector:
-    app: app
-```
-
-**Ingress**
-```yaml
-# k8s/ingress.yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: app
+  name: restricted-sa
+  namespace: production
   annotations:
-    kubernetes.io/ingress.class: nginx
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-    nginx.ingress.kubernetes.io/rate-limit: "100"
-    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    iam.gke.io/gcp-service-account: "production-sa@your-project.iam.gserviceaccount.com"
+    eks.amazonaws.com/role-arn: "arn:aws:iam::123456789012:role/production-role"
+
+---
+# manifests/pod-security-policy.yaml
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: restricted-psp
+  namespace: production
 spec:
-  tls:
-    - hosts:
-        - app.example.com
-      secretName: app-tls
-  rules:
-    - host: app.example.com
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: app
-                port:
-                  number: 80
+  privileged: false
+  allowPrivilegeEscalation: false
+  requiredDropCapabilities:
+    - ALL
+  volumes:
+    - 'configMap'
+    - 'emptyDir'
+    - 'projected'
+    - 'secret'
+    'downwardAPI'
+    'persistentVolumeClaim'
+  runAsUser:
+    rule: 'MustRunAsNonRoot'
+  seLinux:
+    rule: 'RunAsAny'
+  fsGroup:
+    rule: 'RunAsAny'
 ```
 
-**ConfigMap**
+### 4. Service Mesh with Istio
+
 ```yaml
-# k8s/configmap.yaml
+# istio/istio-config.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: app-config
+  name: istio-config
+  namespace: istio-system
 data:
-  LOG_LEVEL: "info"
-  CACHE_TTL: "3600"
-  MAX_CONNECTIONS: "100"
+  meshConfig: |
+    accessLogFile: /dev/stdout
+    defaultConfig:
+      concurrency: 3
+      circuitBreakers:
+        consecutive5xxErrors: 5
+        timeout: 30s
+        maxConnections: 1000
+        maxRequestsPerConnection: 500
+      connectionPoolSettings:
+        tcp:
+          maxConnections: 100
+          connectTimeout: 10s
+        http:
+          http2MaxRequests: 100
+          maxRequestsPerConnection: 10
+          maxRetries: 3
+      outlierDetection:
+        consecutiveGatewayErrors: 5
+        interval: 30s
+        baseEjectionTime: 30s
+        maxEjectionPercent: 100
+      proxyStatsMatcher: "-x"
+      telemetry:
+        v2:
+          prometheus:
+            enabled: true
+            customTags:
+              app: "secure-app"
+              version: "v1"
+
+---
+# istio/destination-rule.yaml
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: secure-app
+  namespace: production
+spec:
+  host: secure-app
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
+      clientCertificate:
+        - /etc/istio/destination-client-certs
+    connectionPool:
+      tcp:
+        maxConnections: 100
+        connectTimeout: 30s
+        keepAlive:
+          time: 7200s
+          requests: 10000
+      http:
+        http2MaxRequests: 1000
+        maxRequestsPerConnection: 100
+        maxRetries: 3
+        idleTimeout: 120s
+        h2UpgradePolicy: RFC
+        keepAlive:
+          time: 7200s
+          requests: 100
+    loadBalancer:
+      simple: LEAST_CONN
+    circuitBreaker:
+      consecutiveErrors: 7
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 100
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 30s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 10
+    retryOn:
+      - connect-failure
+      - refused-stream
+      - canceled
+      - timeout
+      - retriable-status
+    retryOff:
+      - overloaded
+      - deadline-exceeded
+      - unknown
+    timeout: 300s
+    tls:
+      mode: ISTIO_MUTUAL
+  subsets:
+  - name: v1
+    labels:
+      version: v1
+    trafficPolicy:
+      loadBalancer:
+        leastRequestConn: 100
+      connectionPool:
+        tcp:
+          maxConnections: 10
+          connectTimeout: 10s
+          keepAlive:
+            time: 300s
+        http:
+          http1MaxPendingRequests: 10
+          maxRequestsPerConnection: 2
+          maxRetries: 2
+          idleTimeout: 60s
+      outlierDetection:
+        consecutiveErrors: 3
+        interval: 15s
+        baseEjectionTime: 15s
+        maxEjectionPercent: 10
+      timeout: 60s
+
+---
+# istio/virtual-service.yaml
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: secure-app
+  namespace: production
+spec:
+  hosts:
+  - secure-app.production.company.com
+  gateways:
+  - istio-system/ingressgateway
+  http:
+  - match:
+    - uri:
+        prefix: /
+    retries:
+      attempts: 3
+      perTryTimeout: 2s
+      retryOn: [5xx, connect-failure, refused-stream]
+    fault:
+      delay:
+        percentage:
+          value: 0
+        fixedDelay: 0s
+    timeout: 300s
+    route:
+    - destination:
+        host: secure-app
+        subset: v1
+    mirror:
+      host: secure-app
+      subset: v1
+      mirrorPercentage:
+        value: 5
+    http:
+    - match:
+      - headers:
+          canary: "true"
+      route:
+      - destination:
+          host: secure-app
+          subset: canary
+      weight: 10
+    http:
+    - route:
+      - destination:
+          host: secure-app
+          subset: v1
+      weight: 90
 ```
 
-**Secret**
+### 5. ArgoCD GitOps Configuration
+
 ```yaml
-# k8s/secret.yaml
+# argocd/application.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: secure-app
+  namespace: argocd
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/company/secure-app-k8s
+    targetRevision: HEAD
+    path: kubernetes/production
+  destination:
+      server: https://kubernetes.default.svc
+      namespace: production
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+    - CreateNamespace=true
+    - PruneLast=false
+    - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+    backoff:
+      duration: 5s
+      factor: 2
+      maxDuration: 3m
+  ignoreDifferences:
+    - JSONPath: '.spec.template.spec.replicas'
+  revisionHistoryLimit: 10
+  plugins:
+  - name: argocd-image-updater
+    args:
+      - image-updater
+      - allow-tags
+      - kwok='image-tag: "*"'
+  - name: argocd-notifications
+    args:
+      - notifications
+      - service: slack
+      - slack-token: $SLACK_TOKEN
+  - name: argocd-cm
+    args:
+      - cm
+      - configMapName: argocd-cm
+      - configMapKey: config.yaml
+```
+
+### 6. Monitoring and Observability
+
+```yaml
+# monitoring/prometheus.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: monitoring
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+
+    rule_files:
+      - "/etc/prometheus/rules/*.yml"
+
+    scrape_configs:
+      - job_name: 'kubernetes-pods'
+        kubernetes_sd_configs:
+          - role: pod
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_label_name]
+            target_label: pod
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: namespace
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            target_label: app
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: true
+            source_label: __meta_kubernetes_pod_annotation_prometheus_io_scrape
+            target_label: __meta_kubernetes_pod_annotation_prometheus_io_scrape
+        metric_relabel_configs:
+          - source_labels: [__name__]
+            regex: 'instance_.*'
+            target_label: instance
+          - action: labelmap
+            regex: 'pod_.*'
+            target_label: pod
+          - source_labels: [__name__]
+            regex: 'namespace_.*'
+            target_label: namespace
+          - source_labels: [__name__]
+            regex: 'workload_.*'
+            target_label: workload
+      - job_name: 'kubernetes-services'
+        kubernetes_sd_configs:
+          - role: service
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
+            action: keep
+            regex: true
+            source_label: __meta_kubernetes_service_annotation_prometheus_io_scrape
+            target_label: __meta_kubernetes_service_annotation_prometheus_io_scrape
+          - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scheme]
+            action: keep
+            regex: true
+            source_label: __meta_kubernetes_service_annotation_prometheus_io_scheme
+            target_label: __meta_kubernetes_service_annotation_prometheus_io_scheme
+          - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_path]
+            action: keep
+            regex: true
+            source_label: __meta_kubernetes_service_annotation_prometheus_io_path
+            target_label: __meta_kubernetes_service_annotation_prometheus_io_path
+          - source_labels: [__meta_kubernetes_service_name]
+            target_label: kubernetes_name
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: kubernetes_namespace
+          - source_labels: [__meta_kubernetes_service_label]
+            target_label: kubernetes_name
+
+# Security rules
+---
 apiVersion: v1
 kind: Secret
 metadata:
-  name: app-secrets
+  name: prometheus-rules
+  namespace: monitoring
 type: Opaque
 stringData:
-  database-url: "postgres://user:password@db:5432/app"
-  jwt-secret: "your-jwt-secret"
+  security-alerts.yml: |
+    groups:
+    - name: security.rules
+      rules:
+        - alert: HighErrorRate
+          expr: rate(http_requests_total{job="kubernetes-pods",status="5xx"}[5m]) > 0.1
+          for: 5m
+          labels:
+            severity: "critical"
+          annotations:
+            summary: "High error rate detected"
+            description: "Error rate is above 10% for 5 minutes"
+            runbook_url: "https://runbooks.company.com/high-error-rate"
+        - alert: UnauthorizedAccess
+          expr: rate(http_requests_total{status="401"}[5m]) > 5
+          for: 5m
+          labels:
+            severity: "warning"
+          annotations:
+            summary: "Unauthorized access attempts"
+            description: "More than 5 unauthorized requests per minute"
+            runbook_url: "https://runbooks.company.com/unauthorized-access"
+        - alert: ContainerRestarts
+          expr: rate(kube_pod_container_status_restarts_total[15m]) > 3
+          for: 15m
+          labels:
+            severity: "warning"
+          annotations:
+            summary: "Container restarts detected"
+            description: "Container has restarted more than 3 times in 15 minutes"
+            runbook_url: "https://runbooks.company.com/container-restarts"
 ```
 
-**HorizontalPodAutoscaler**
+### 7. Production Deployment Checklist
+
 ```yaml
-# k8s/hpa.yaml
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: app
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: app
-  minReplicas: 2
-  maxReplicas: 10
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 70
-    - type: Resource
-      resource:
-        name: memory
-        target:
-          type: Utilization
-          averageUtilization: 80
-  behavior:
-    scaleDown:
-      stabilizationWindowSeconds: 300
-      policies:
-        - type: Percent
-          value: 10
-          periodSeconds: 60
-    scaleUp:
-      stabilizationWindowSeconds: 0
-      policies:
-        - type: Percent
-          value: 100
-          periodSeconds: 15
+# deployment/production-checklist.yaml
+security:
+  container_security:
+    minimal_base_image: true
+    minimal_packages: true
+    security_scanning: true
+    vulnerability_scanning: true
+    sbom_generation: true
+
+  runtime_security:
+    non_root_user: true
+    readonly_filesystem: false
+    capabilities_dropped_all: true
+    seccomp_enabled: true
+    apparmor_enabled: true
+    selinux_enabled: true
+
+  network_security:
+    network_policies: true
+    service_mesh: true
+    mtls_enabled: true
+    tls_version: "1.3"
+    certificate_rotation: true
+
+  secrets_management:
+    encrypted_secrets: true
+    key_rotation: true
+    secret_versioning: true
+    access_control: true
+
+  rbac:
+    principle_of_least_privilege: true
+    service_accounts_limited: true
+    token_min_ttl: true
+    token_autorenewal: false
+
+  compliance:
+    cis_benchmark: true
+    pod_security_standards: true
+    nist_controls: true
+    pci_dss: true
+    hipaa: true
+
+observability:
+  monitoring:
+    metrics_collection: true
+    custom_metrics: true
+    alerting_enabled: true
+    dashboard_creation: true
+
+  logging:
+    structured_logging: true
+    log_aggregation: true
+    log_retention: true
+    sensitive_data_redaction: true
+
+  tracing:
+    distributed_tracing: true
+    span_sampling: true
+    performance_tracking: true
+    error_tracking: true
+
+  auditing:
+    api_audit_logging: true
+    system_event_logging: true
+    security_event_logging: true
+    compliance_reporting: true
+
+performance:
+  resource_management:
+    resource_limits: true
+    resource_quotas: true
+    hpa_enabled: true
+    cluster_autoscaling: true
+
+  optimization:
+    image_optimization: true
+    caching_enabled: true
+    compression: true
+    connection_pooling: true
+    batch_processing: true
+
+disaster_recovery:
+  backup_strategy:
+    automated_backups: true
+    backup_encryption: true
+    cross_region_backup: true
+    restore_testing: true
+
+  high_availability:
+    multi_zone_deployment: true
+    health_checks: true
+    auto_healing: true
+    graceful_shutdown: true
+    rolling_updates: true
+
+  testing:
+  security_testing:
+    penetration_testing: true
+    vulnerability_scanning: true
+    compliance_testing: true
+    chaos_testing: true
+
+  performance_testing:
+    load_testing: true
+    stress_testing: true
+    scalability_testing: true
+    reliability_testing: true
 ```
 
-**PodDisruptionBudget**
-```yaml
-# k8s/pdb.yaml
-apiVersion: policy/v1
-kind: PodDisruptionBudget
-metadata:
-  name: app
-spec:
-  minAvailable: 1
-  selector:
-    matchLabels:
-      app: app
-```
-
-### Helm Chart Structure
-
-```
-charts/app/
-├── Chart.yaml
-├── values.yaml
-├── values-production.yaml
-├── templates/
-│   ├── _helpers.tpl
-│   ├── deployment.yaml
-│   ├── service.yaml
-│   ├── ingress.yaml
-│   ├── configmap.yaml
-│   ├── secret.yaml
-│   ├── hpa.yaml
-│   └── pdb.yaml
-```
-
-**Chart.yaml**
-```yaml
-apiVersion: v2
-name: app
-description: My Application Helm Chart
-version: 1.0.0
-appVersion: "1.0.0"
-```
-
-**values.yaml**
-```yaml
-replicaCount: 2
-
-image:
-  repository: registry.example.com/app
-  tag: latest
-  pullPolicy: Always
-
-service:
-  type: ClusterIP
-  port: 80
-
-ingress:
-  enabled: true
-  className: nginx
-  hosts:
-    - host: app.example.com
-      paths:
-        - path: /
-          pathType: Prefix
-  tls:
-    - secretName: app-tls
-      hosts:
-        - app.example.com
-
-resources:
-  limits:
-    cpu: 200m
-    memory: 256Mi
-  requests:
-    cpu: 100m
-    memory: 128Mi
-
-autoscaling:
-  enabled: true
-  minReplicas: 2
-  maxReplicas: 10
-  targetCPUUtilizationPercentage: 70
-
-env:
-  NODE_ENV: production
-```
-
-### CI/CD with Docker
-
-**GitHub Actions**
-```yaml
-# .github/workflows/docker.yml
-name: Build and Push Docker
-
-on:
-  push:
-    branches: [main]
-    tags: ['v*']
-  pull_request:
-    branches: [main]
-
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to Container Registry
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=sha
-
-      - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-```
-
-### Security Best Practices
-
-**Image Scanning**
-```yaml
-# In CI pipeline
-- name: Scan image for vulnerabilities
-  uses: aquasecurity/trivy-action@master
-  with:
-    image-ref: ${{ env.IMAGE_NAME }}:${{ github.sha }}
-    format: 'sarif'
-    output: 'trivy-results.sarif'
-    severity: 'CRITICAL,HIGH'
-```
-
-**Security Checklist**
-- [ ] Use specific image tags, not `latest`
-- [ ] Run as non-root user
-- [ ] Use read-only root filesystem
-- [ ] Drop all capabilities
-- [ ] Set resource limits
-- [ ] Use network policies
-- [ ] Scan images for vulnerabilities
-- [ ] Sign images with Cosign
-- [ ] Use secrets management (Vault, Sealed Secrets)
-
-### Debugging
-
-**Docker Commands**
-```bash
-# View logs
-docker logs -f container_name
-
-# Execute into container
-docker exec -it container_name /bin/sh
-
-# Inspect container
-docker inspect container_name
-
-# View resource usage
-docker stats
-
-# Clean up
-docker system prune -a --volumes
-```
-
-**Kubernetes Commands**
-```bash
-# View pod logs
-kubectl logs -f pod-name
-
-# Execute into pod
-kubectl exec -it pod-name -- /bin/sh
-
-# Describe resource
-kubectl describe pod pod-name
-
-# Port forward
-kubectl port-forward pod/pod-name 3000:3000
-
-# View events
-kubectl get events --sort-by='.lastTimestamp'
-
-# Debug with ephemeral container
-kubectl debug pod-name -it --image=busybox
-```
-
-### Common Pitfalls
-
-1. **Using `latest` tag** - Always use specific version tags
-2. **Running as root** - Create and use non-root user
-3. **No health checks** - Always add liveness and readiness probes
-4. **No resource limits** - Set CPU and memory limits
-5. **Secrets in images** - Use environment variables or secrets
-6. **Large images** - Use multi-stage builds and alpine base
-7. **No .dockerignore** - Exclude unnecessary files
-8. **Hardcoded config** - Use ConfigMaps and environment variables
-
----
-
-*Part of SuperAI GitHub - Centralized OpenCode Configuration*
+This comprehensive Docker/Kubernetes skill provides security-first containerization and deployment patterns for 2025, including zero-trust architectures, service mesh integration, GitOps workflows, and production-ready security hardening that works across different cloud providers and meets modern compliance standards.

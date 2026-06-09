@@ -1,25 +1,27 @@
 ---
-name: Global Tech Stack
-description: Reference and maintain the project's technical stack including frameworks, languages, databases, testing tools, and third-party services to ensure consistency across the project. Use this skill when making technology choices, adding new dependencies, configuring frameworks, or ensuring consistency with existing stack decisions. When setting up new features that need to align with the project's chosen technologies. When documenting or updating the tech stack. This skill applies when working with any technology-specific configuration, framework setup, or when making architectural decisions about tools and libraries.
+name: global-tech-stack
+description: Understand and adhere to the project's technology stack including Laravel, PHP, React, PostgreSQL, Pest, Tailwind CSS, and all configured tools and services. Use this skill when making architectural decisions, when choosing libraries or packages, when configuring development tools, when setting up testing frameworks, when implementing authentication, when integrating third-party services, when configuring CI/CD pipelines, when setting up local development environments, or when ensuring consistency with the established tech stack across all parts of the application.
 ---
 
 # Global Tech Stack
 
+This Skill provides Claude Code with specific guidance on how to adhere to coding standards as they relate to how it should handle global tech stack.
+
 ## When to use this skill
 
-- When making decisions about which frameworks or libraries to use
-- When adding new dependencies or third-party services
-- When configuring application frameworks or runtime environments
-- When setting up database connections or ORM configurations
-- When choosing CSS frameworks or UI component libraries
-- When configuring testing frameworks or linting tools
-- When setting up deployment or CI/CD pipelines
-- When integrating third-party services (authentication, email, monitoring)
-- When documenting the project's technology choices
-- When ensuring new code aligns with existing stack decisions
-- When onboarding new team members to the project's technologies
-
-This Skill provides Claude Code with specific guidance on how to adhere to coding standards as they relate to how it should handle global tech stack.
+- When making architectural decisions or choosing approaches for new features
+- When selecting or evaluating third-party packages or libraries
+- When configuring development tools and environments
+- When setting up Laravel, PHP, or React project configurations
+- When implementing database-related functionality with PostgreSQL and Eloquent
+- When writing tests using Pest framework
+- When using Laravel-specific tools (Pint, Herd, Telescope, DebugBar, Wayfinder, Fortify)
+- When integrating third-party services (Resend for email, Sentry for errors, etc.)
+- When configuring CI/CD with GitHub Actions
+- When setting up local development with Laravel Herd
+- When implementing caching with Redis
+- When ensuring consistency with established frameworks and patterns
+- When documenting technical decisions or dependencies
 
 ## Instructions
 

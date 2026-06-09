@@ -1,61 +1,50 @@
 ---
 name: azure-networking
-cluster: cloud-azure
-description: "Configure Azure VNet, NSG, Load Balancer, and network topology."
-tags: ["azure-networking","vnet","nsg"] 
-dependencies: []
-composes: []
-similar_to: []
-called_by: []
-authorization_required: false
-scope: general
-model_hint: claude-sonnet
-embedding_hint: "Configure Azure VNet, NSG, Load Balancer, and network topology."
+description: Expert knowledge for Azure Networking development including troubleshooting, decision making, architecture & design patterns, and security. Use when designing hub-spoke VNets, Azure Firewall/NSG rules, App Gateway/Front Door WAF, DDoS, or fixing Microsoft.Network errors, and other Azure Networking related development tasks. Not for Azure Virtual Network (use azure-virtual-network), Azure Virtual Network Manager (use azure-virtual-network-manager), Azure Virtual WAN (use azure-virtual-wan), Azure Network Watcher (use azure-network-watcher).
+compatibility: Requires network access. Uses mcp_microsoftdocs:microsoft_docs_fetch or fetch_webpage to retrieve documentation.
+metadata:
+  generated_at: "2026-05-03"
+  generator: "docs2skills/1.0.0"
 ---
+# Azure Networking Skill
 
-# azure-networking
+This skill provides expert guidance for Azure Networking. Covers troubleshooting, decision making, architecture & design patterns, and security. It combines local quick-reference content with remote documentation fetching capabilities.
 
-## Microsoft Azure Agent Framework Integration
+## How to Use This Skill
 
-This skill delegates all Azure provisioning and operations to the official Microsoft Agent Framework.
+> **IMPORTANT for Agent**: Use the **Category Index** below to locate relevant sections. For categories with line ranges (e.g., `L35-L120`), use `read_file` with the specified lines. For categories with file links (e.g., `[security.md](security.md)`), use `read_file` on the linked reference file
 
-```bash
-# Python
-pip install semantic-kernel
+> **IMPORTANT for Agent**: If `metadata.generated_at` is more than 3 months old, suggest the user pull the latest version from the repository. If `mcp_microsoftdocs` tools are not available, suggest the user install it: [Installation Guide](https://github.com/MicrosoftDocs/mcp/blob/main/README.md)
 
-# .NET / C#
-dotnet add package Microsoft.SemanticKernel.Agents
-```
+This skill requires **network access** to fetch documentation content:
+- **Preferred**: Use `mcp_microsoftdocs:microsoft_docs_fetch` with query string `from=learn-agent-skill`. Returns Markdown.
+- **Fallback**: Use `fetch_webpage` with query string `from=learn-agent-skill&accept=text/markdown`. Returns Markdown.
 
-**Docs:** https://learn.microsoft.com/en-us/agent-framework/overview/
+## Category Index
 
-Use the Microsoft Agent Framework for all Azure provisioning and operational actions. This skill provides architecture guidance, cost modeling, and pre-flight requirements — the framework handles execution.
+| Category | Lines | Description |
+|----------|-------|-------------|
+| Troubleshooting | L32-L36 | Diagnosing and resolving Microsoft.Network resource provisioning failures in Azure, including common error patterns, causes, and step-by-step remediation guidance. |
+| Decision Making | L37-L41 | Guidance on choosing Azure network architectures: using region latency data, selecting secure topologies and app delivery options, and planning networking for remote and hybrid work scenarios. |
+| Architecture & Design Patterns | L42-L46 | Routing and traffic flow design in Azure: analyzing control vs data plane paths, and building secure hub-spoke network architectures for web apps. |
+| Security | L47-L50 | Zero Trust security for Azure networking: policies, NSGs, Azure Firewall, DDoS, App Gateway/Front Door WAF hardening, and securing virtual networks for web apps. |
 
-## Architecture Guidance
+### Troubleshooting
+| Topic | URL |
+|-------|-----|
+| Troubleshoot Microsoft.Network failed provisioning states | https://learn.microsoft.com/en-us/azure/networking/troubleshoot-failed-state |
 
-Consult this skill for:
-- Azure service selection and trade-off analysis
-- Cost estimation and optimization strategy  
-- Pre-flight Entra ID / RBAC permission requirements
-- IaC approach (Bicep vs ARM vs Terraform AzureRM)
-- Integration patterns with Microsoft 365 and other Azure services
-- Multi-agent workflow design using Agent Framework graph-based runtime
+### Decision Making
+| Topic | URL |
+|-------|-----|
+| Use Azure region latency stats for architecture planning | https://learn.microsoft.com/en-us/azure/networking/azure-network-latency |
 
-## Agent Framework Capabilities
+### Architecture & Design Patterns
+| Topic | URL |
+|-------|-----|
+| Design a secure hub-spoke network for Azure web apps | https://learn.microsoft.com/en-us/azure/networking/cross-service-scenarios/design-secure-hub-spoke-network |
 
-| Capability | Description |
-|---|---|
-| Agents | Individual LLM agents with tool + MCP server support |
-| Workflows | Graph-based multi-agent pipelines with checkpointing |
-| Providers | Azure OpenAI, OpenAI, Anthropic, Ollama, and more |
-| MCP | Native MCP client for external service integration |
-| Human-in-the-loop | Built-in approval and intervention checkpoints |
-
-## Reference
-
-- [Microsoft Agent Framework Overview](https://learn.microsoft.com/en-us/agent-framework/overview/)
-- [Agents](https://learn.microsoft.com/en-us/agent-framework/agents/)
-- [Workflows](https://learn.microsoft.com/en-us/agent-framework/workflows/)
-- [MCP Tools](https://learn.microsoft.com/en-us/agent-framework/agents/tools/hosted-mcp-tools)
-- [Azure Pricing Calculator](https://azure.microsoft.com/en-us/pricing/calculator/)
-- [Microsoft Entra ID](https://learn.microsoft.com/en-us/entra/identity/)
+### Security
+| Topic | URL |
+|-------|-----|
+| Apply Azure Policy compliance controls to networking | https://learn.microsoft.com/en-us/azure/networking/security-controls-policy |

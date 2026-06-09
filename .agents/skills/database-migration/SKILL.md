@@ -1,444 +1,251 @@
 ---
 name: database-migration
-description: "Master database schema and data migrations across ORMs (Sequelize, TypeORM, Prisma), including rollback strategies and zero-downtime deployments."
-risk: unknown
-source: community
-date_added: "2026-02-27"
+description: Guide for creating idempotent Supabase database migrations with RLS policies and workspace isolation
 ---
 
-# Database Migration
+# Database Migration Skill
+## Creating Idempotent Supabase Migrations
 
-Master database schema and data migrations across ORMs (Sequelize, TypeORM, Prisma), including rollback strategies and zero-downtime deployments.
+**When to Use**: Adding tables, modifying schemas, creating RLS policies, adding functions
 
-## Do not use this skill when
+---
 
-- The task is unrelated to database migration
-- You need a different domain or tool outside this scope
+## Process
 
-## Instructions
+### 1. Check Existing Schema
+**ALWAYS** check before creating:
+```bash
+# Read schema reference
+cat docs/guides/schema-reference.md
 
-- Clarify goals, constraints, and required inputs.
-- Apply relevant best practices and validate outcomes.
-- Provide actionable steps and verification.
-- If detailed examples are required, open `resources/implementation-playbook.md`.
-
-## Use this skill when
-
-- Migrating between different ORMs
-- Performing schema transformations
-- Moving data between databases
-- Implementing rollback procedures
-- Zero-downtime deployments
-- Database version upgrades
-- Data model refactoring
-
-## ORM Migrations
-
-### Sequelize Migrations
-```javascript
-// migrations/20231201-create-users.js
-module.exports = {
-  up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('users', {
-      id: {
-        type: Sequelize.INTEGER,
-        primaryKey: true,
-        autoIncrement: true
-      },
-      email: {
-        type: Sequelize.STRING,
-        unique: true,
-        allowNull: false
-      },
-      createdAt: Sequelize.DATE,
-      updatedAt: Sequelize.DATE
-    });
-  },
-
-  down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('users');
-  }
-};
-
-// Run: npx sequelize-cli db:migrate
-// Rollback: npx sequelize-cli db:migrate:undo
+# Or check existing migrations
+ls supabase/migrations/
 ```
 
-### TypeORM Migrations
-```typescript
-// migrations/1701234567-CreateUsers.ts
-import { MigrationInterface, QueryRunner, Table } from 'typeorm';
+### 2. Create Migration File
 
-export class CreateUsers1701234567 implements MigrationInterface {
-  public async up(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.createTable(
-      new Table({
-        name: 'users',
-        columns: [
-          {
-            name: 'id',
-            type: 'int',
-            isPrimary: true,
-            isGenerated: true,
-            generationStrategy: 'increment'
-          },
-          {
-            name: 'email',
-            type: 'varchar',
-            isUnique: true
-          },
-          {
-            name: 'created_at',
-            type: 'timestamp',
-            default: 'CURRENT_TIMESTAMP'
-          }
-        ]
-      })
-    );
-  }
+**Location**: `supabase/migrations/YYYYMMDDHHMMSS_description.sql`
 
-  public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.dropTable('users');
-  }
-}
-
-// Run: npm run typeorm migration:run
-// Rollback: npm run typeorm migration:revert
+**Naming**: Use timestamp + descriptive name
+```
+20251230120000_add_agent_registry_table.sql
 ```
 
-### Prisma Migrations
-```prisma
-// schema.prisma
-model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  createdAt DateTime @default(now())
-}
+### 3. Write Idempotent SQL
 
-// Generate migration: npx prisma migrate dev --name create_users
-// Apply: npx prisma migrate deploy
+**Pattern**: Use `IF NOT EXISTS` and `CREATE OR REPLACE`
+
+```sql
+-- Tables
+CREATE TABLE IF NOT EXISTS agent_registry (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+  agent_id TEXT NOT NULL,
+  version TEXT NOT NULL,
+  capabilities JSONB NOT NULL DEFAULT '[]'::jsonb,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+
+  UNIQUE(workspace_id, agent_id)
+);
+
+-- Indexes
+CREATE INDEX IF NOT EXISTS idx_agent_registry_workspace
+  ON agent_registry(workspace_id);
+
+CREATE INDEX IF NOT EXISTS idx_agent_registry_agent
+  ON agent_registry(agent_id, workspace_id);
+
+-- RLS
+ALTER TABLE agent_registry ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view their workspace agents" ON agent_registry;
+CREATE POLICY "Users can view their workspace agents" ON agent_registry
+  FOR SELECT USING (
+    workspace_id IN (
+      SELECT w.id FROM workspaces w
+      INNER JOIN user_organizations uo ON uo.org_id = w.org_id
+      WHERE uo.user_id = auth.uid()
+    )
+  );
+
+DROP POLICY IF EXISTS "System can manage agents" ON agent_registry;
+CREATE POLICY "System can manage agents" ON agent_registry
+  FOR ALL USING (true) WITH CHECK (true);
+
+-- Functions
+CREATE OR REPLACE FUNCTION get_agent_count(p_workspace_id UUID)
+RETURNS INTEGER AS $$
+BEGIN
+  RETURN (SELECT COUNT(*) FROM agent_registry WHERE workspace_id = p_workspace_id);
+END;
+$$ LANGUAGE plpgsql STABLE;
+
+-- Comments
+COMMENT ON TABLE agent_registry IS 'Registry of all active agents per workspace';
 ```
 
-## Schema Transformations
+### 4. RLS Policy Pattern
 
-### Adding Columns with Defaults
-```javascript
-// Safe migration: add column with default
-module.exports = {
-  up: async (queryInterface, Sequelize) => {
-    await queryInterface.addColumn('users', 'status', {
-      type: Sequelize.STRING,
-      defaultValue: 'active',
-      allowNull: false
-    });
-  },
+**ALWAYS use**: `user_organizations` + `workspaces` join (NOT workspace_members)
 
-  down: async (queryInterface) => {
-    await queryInterface.removeColumn('users', 'status');
-  }
-};
+```sql
+-- Correct pattern
+workspace_id IN (
+  SELECT w.id FROM workspaces w
+  INNER JOIN user_organizations uo ON uo.org_id = w.org_id
+  WHERE uo.user_id = auth.uid()
+)
+
+-- For admin/owner only
+workspace_id IN (
+  SELECT w.id FROM workspaces w
+  INNER JOIN user_organizations uo ON uo.org_id = w.org_id
+  WHERE uo.user_id = auth.uid() AND uo.role IN ('admin', 'owner')
+)
 ```
 
-### Renaming Columns (Zero Downtime)
-```javascript
-// Step 1: Add new column
-module.exports = {
-  up: async (queryInterface, Sequelize) => {
-    await queryInterface.addColumn('users', 'full_name', {
-      type: Sequelize.STRING
-    });
+### 5. Apply Migration
 
-    // Copy data from old column
-    await queryInterface.sequelize.query(
-      'UPDATE users SET full_name = name'
-    );
-  },
+**Method**: Supabase Dashboard → SQL Editor
 
-  down: async (queryInterface) => {
-    await queryInterface.removeColumn('users', 'full_name');
-  }
-};
+**Steps**:
+1. Copy migration SQL
+2. Paste into SQL Editor
+3. Click "Run"
+4. Verify success
 
-// Step 2: Update application to use new column
+**Alternative**: Use WORKING_MIGRATIONS.sql pattern for combined migrations
 
-// Step 3: Remove old column
-module.exports = {
-  up: async (queryInterface) => {
-    await queryInterface.removeColumn('users', 'name');
-  },
+---
 
-  down: async (queryInterface, Sequelize) => {
-    await queryInterface.addColumn('users', 'name', {
-      type: Sequelize.STRING
-    });
-  }
-};
+## Examples
+
+### Example 1: Simple Table
+
+```sql
+CREATE TABLE IF NOT EXISTS my_table (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  data JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_my_table_workspace ON my_table(workspace_id);
+
+ALTER TABLE my_table ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "workspace_isolation" ON my_table;
+CREATE POLICY "workspace_isolation" ON my_table
+  FOR ALL USING (
+    workspace_id IN (
+      SELECT w.id FROM workspaces w
+      INNER JOIN user_organizations uo ON uo.org_id = w.org_id
+      WHERE uo.user_id = auth.uid()
+    )
+  );
 ```
 
-### Changing Column Types
-```javascript
-module.exports = {
-  up: async (queryInterface, Sequelize) => {
-    // For large tables, use multi-step approach
+### Example 2: ENUM Type
 
-    // 1. Add new column
-    await queryInterface.addColumn('users', 'age_new', {
-      type: Sequelize.INTEGER
-    });
-
-    // 2. Copy and transform data
-    await queryInterface.sequelize.query(`
-      UPDATE users
-      SET age_new = CAST(age AS INTEGER)
-      WHERE age IS NOT NULL
-    `);
-
-    // 3. Drop old column
-    await queryInterface.removeColumn('users', 'age');
-
-    // 4. Rename new column
-    await queryInterface.renameColumn('users', 'age_new', 'age');
-  },
-
-  down: async (queryInterface, Sequelize) => {
-    await queryInterface.changeColumn('users', 'age', {
-      type: Sequelize.STRING
-    });
-  }
-};
+```sql
+DO $$ BEGIN
+  CREATE TYPE agent_status AS ENUM ('active', 'paused', 'disabled');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 ```
 
-## Data Transformations
+### Example 3: Trigger
 
-### Complex Data Migration
-```javascript
-module.exports = {
-  up: async (queryInterface, Sequelize) => {
-    // Get all records
-    const [users] = await queryInterface.sequelize.query(
-      'SELECT id, address_string FROM users'
-    );
+```sql
+CREATE OR REPLACE FUNCTION update_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
-    // Transform each record
-    for (const user of users) {
-      const addressParts = user.address_string.split(',');
-
-      await queryInterface.sequelize.query(
-        `UPDATE users
-         SET street = :street,
-             city = :city,
-             state = :state
-         WHERE id = :id`,
-        {
-          replacements: {
-            id: user.id,
-            street: addressParts[0]?.trim(),
-            city: addressParts[1]?.trim(),
-            state: addressParts[2]?.trim()
-          }
-        }
-      );
-    }
-
-    // Drop old column
-    await queryInterface.removeColumn('users', 'address_string');
-  },
-
-  down: async (queryInterface, Sequelize) => {
-    // Reconstruct original column
-    await queryInterface.addColumn('users', 'address_string', {
-      type: Sequelize.STRING
-    });
-
-    await queryInterface.sequelize.query(`
-      UPDATE users
-      SET address_string = CONCAT(street, ', ', city, ', ', state)
-    `);
-
-    await queryInterface.removeColumn('users', 'street');
-    await queryInterface.removeColumn('users', 'city');
-    await queryInterface.removeColumn('users', 'state');
-  }
-};
+DROP TRIGGER IF EXISTS trigger_update_updated_at ON my_table;
+CREATE TRIGGER trigger_update_updated_at
+  BEFORE UPDATE ON my_table
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at();
 ```
 
-## Rollback Strategies
+---
 
-### Transaction-Based Migrations
-```javascript
-module.exports = {
-  up: async (queryInterface, Sequelize) => {
-    const transaction = await queryInterface.sequelize.transaction();
+## Common Patterns
 
-    try {
-      await queryInterface.addColumn(
-        'users',
-        'verified',
-        { type: Sequelize.BOOLEAN, defaultValue: false },
-        { transaction }
-      );
+### Workspace Isolation (MANDATORY)
 
-      await queryInterface.sequelize.query(
-        'UPDATE users SET verified = true WHERE email_verified_at IS NOT NULL',
-        { transaction }
-      );
+```sql
+CREATE TABLE table_name (
+  ...
+  workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+  ...
+);
 
-      await transaction.commit();
-    } catch (error) {
-      await transaction.rollback();
-      throw error;
-    }
-  },
+-- Always add index on workspace_id
+CREATE INDEX IF NOT EXISTS idx_table_workspace ON table_name(workspace_id);
 
-  down: async (queryInterface) => {
-    await queryInterface.removeColumn('users', 'verified');
-  }
-};
+-- Always add RLS
+ALTER TABLE table_name ENABLE ROW LEVEL SECURITY;
 ```
 
-### Checkpoint-Based Rollback
-```javascript
-module.exports = {
-  up: async (queryInterface, Sequelize) => {
-    // Create backup table
-    await queryInterface.sequelize.query(
-      'CREATE TABLE users_backup AS SELECT * FROM users'
-    );
+### Constraints
 
-    try {
-      // Perform migration
-      await queryInterface.addColumn('users', 'new_field', {
-        type: Sequelize.STRING
-      });
-
-      // Verify migration
-      const [result] = await queryInterface.sequelize.query(
-        "SELECT COUNT(*) as count FROM users WHERE new_field IS NULL"
-      );
-
-      if (result[0].count > 0) {
-        throw new Error('Migration verification failed');
-      }
-
-      // Drop backup
-      await queryInterface.dropTable('users_backup');
-    } catch (error) {
-      // Restore from backup
-      await queryInterface.sequelize.query('DROP TABLE users');
-      await queryInterface.sequelize.query(
-        'CREATE TABLE users AS SELECT * FROM users_backup'
-      );
-      await queryInterface.dropTable('users_backup');
-      throw error;
-    }
-  }
-};
+```sql
+-- Check constraints
+CONSTRAINT valid_status CHECK (status IN ('active', 'inactive')),
+CONSTRAINT valid_score CHECK (score >= 0 AND score <= 100),
+CONSTRAINT valid_email CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$')
 ```
 
-## Zero-Downtime Migrations
+### Foreign Keys
 
-### Blue-Green Deployment Strategy
-```javascript
-// Phase 1: Make changes backward compatible
-module.exports = {
-  up: async (queryInterface, Sequelize) => {
-    // Add new column (both old and new code can work)
-    await queryInterface.addColumn('users', 'email_new', {
-      type: Sequelize.STRING
-    });
-  }
-};
+```sql
+-- With cascade delete
+workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
 
-// Phase 2: Deploy code that writes to both columns
+-- With set null
+created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
 
-// Phase 3: Backfill data
-module.exports = {
-  up: async (queryInterface) => {
-    await queryInterface.sequelize.query(`
-      UPDATE users
-      SET email_new = email
-      WHERE email_new IS NULL
-    `);
-  }
-};
-
-// Phase 4: Deploy code that reads from new column
-
-// Phase 5: Remove old column
-module.exports = {
-  up: async (queryInterface) => {
-    await queryInterface.removeColumn('users', 'email');
-  }
-};
+-- With restrict (prevents delete if referenced)
+org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE RESTRICT
 ```
 
-## Cross-Database Migrations
+---
 
-### PostgreSQL to MySQL
-```javascript
-// Handle differences
-module.exports = {
-  up: async (queryInterface, Sequelize) => {
-    const dialectName = queryInterface.sequelize.getDialect();
+## Checklist
 
-    if (dialectName === 'mysql') {
-      await queryInterface.createTable('users', {
-        id: {
-          type: Sequelize.INTEGER,
-          primaryKey: true,
-          autoIncrement: true
-        },
-        data: {
-          type: Sequelize.JSON  // MySQL JSON type
-        }
-      });
-    } else if (dialectName === 'postgres') {
-      await queryInterface.createTable('users', {
-        id: {
-          type: Sequelize.INTEGER,
-          primaryKey: true,
-          autoIncrement: true
-        },
-        data: {
-          type: Sequelize.JSONB  // PostgreSQL JSONB type
-        }
-      });
-    }
-  }
-};
-```
+Before applying migration:
 
-## Resources
+- [ ] Checked schema-reference.md for conflicts
+- [ ] Used `IF NOT EXISTS` on tables
+- [ ] Used `CREATE OR REPLACE` on functions
+- [ ] Added workspace_id column (if multi-tenant table)
+- [ ] Created index on workspace_id
+- [ ] Enabled RLS
+- [ ] Added RLS policies (user + system)
+- [ ] Used correct RLS pattern (user_organizations join)
+- [ ] Added constraints where appropriate
+- [ ] Added comments for documentation
+- [ ] Tested SQL syntax locally
 
-- **references/orm-switching.md**: ORM migration guides
-- **references/schema-migration.md**: Schema transformation patterns
-- **references/data-transformation.md**: Data migration scripts
-- **references/rollback-strategies.md**: Rollback procedures
-- **assets/schema-migration-template.sql**: SQL migration templates
-- **assets/data-migration-script.py**: Data migration utilities
-- **scripts/test-migration.sh**: Migration testing script
+---
 
-## Best Practices
+## Troubleshooting
 
-1. **Always Provide Rollback**: Every up() needs a down()
-2. **Test Migrations**: Test on staging first
-3. **Use Transactions**: Atomic migrations when possible
-4. **Backup First**: Always backup before migration
-5. **Small Changes**: Break into small, incremental steps
-6. **Monitor**: Watch for errors during deployment
-7. **Document**: Explain why and how
-8. **Idempotent**: Migrations should be rerunnable
+**Error**: "relation workspace_members does not exist"
+**Fix**: Use `user_organizations` + `workspaces` join (see RLS pattern above)
 
-## Common Pitfalls
+**Error**: "already exists"
+**Fix**: Use `IF NOT EXISTS` or `CREATE OR REPLACE`
 
-- Not testing rollback procedures
-- Making breaking changes without downtime strategy
-- Forgetting to handle NULL values
-- Not considering index performance
-- Ignoring foreign key constraints
-- Migrating too much data at once
+**Error**: "permission denied"
+**Fix**: Use service role key in Supabase Dashboard, not anon key
 
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
+---
+
+**Standard**: Idempotent, workspace-isolated, RLS-secured, well-documented

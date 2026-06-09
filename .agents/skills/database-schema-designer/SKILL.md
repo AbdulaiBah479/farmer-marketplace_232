@@ -1,214 +1,72 @@
 ---
 name: database-schema-designer
-description: Design robust, scalable database schemas for SQL and NoSQL databases. Provides normalization guidelines, indexing strategies, migration patterns, constraint design, and performance optimization. Ensures data integrity, query performance, and maintainable data models.
-license: MIT
+description: Use this skill when designing database schemas for relational (SQL) or document (NoSQL) databases. Provides normalization guidelines, indexing strategies, migration patterns, and performance optimization techniques. Ensures scalable, maintainable, and performant data models.
+version: 1.0.0
+author: AI Agent Hub
+tags: [database, schema-design, sql, nosql, performance, migrations]
 ---
 
 # Database Schema Designer
 
-Design production-ready database schemas with best practices built-in.
+## Overview
+
+This skill provides comprehensive guidance for designing robust, scalable database schemas for both SQL and NoSQL databases. Whether building from scratch or evolving existing schemas, this framework ensures data integrity, performance, and maintainability.
+
+**When to use this skill:**
+- Designing new database schemas
+- Refactoring or migrating existing schemas
+- Optimizing database performance
+- Choosing between SQL and NoSQL approaches
+- Creating database migrations
+- Establishing indexing strategies
+- Modeling complex relationships
+- Planning data archival and partitioning
+
+## Database Design Philosophy
+
+### Core Principles
+
+**1. Model the Domain, Not the UI**
+- Schema reflects business entities and relationships
+- Don't let UI requirements drive data structure
+- Separate presentation concerns from data model
+
+**2. Optimize for Reads or Writes (Not Both)**
+- OLTP (transactional): Normalized, optimized for writes
+- OLAP (analytical): Denormalized, optimized for reads
+- Choose based on access patterns
+
+**3. Plan for Scale From Day One**
+- Indexing strategy
+- Partitioning approach
+- Caching layer
+- Read replicas
+
+**4. Data Integrity Over Performance**
+- Use constraints, foreign keys, validation
+- Performance issues can be optimized later
+- Data corruption is costly to fix
 
 ---
 
-## Quick Start
+## SQL Database Design
 
-Just describe your data model:
+### Normalization
 
-```
-design a schema for an e-commerce platform with users, products, orders
-```
+Database normalization reduces redundancy and ensures data integrity.
 
-You'll get a complete SQL schema like:
+#### 1st Normal Form (1NF)
+**Rule**: Each column contains atomic (indivisible) values, no repeating groups.
 
 ```sql
-CREATE TABLE users (
-  id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  email VARCHAR(255) UNIQUE NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE orders (
-  id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  user_id BIGINT NOT NULL REFERENCES users(id),
-  total DECIMAL(10,2) NOT NULL,
-  INDEX idx_orders_user (user_id)
-);
-```
-
-**What to include in your request:**
-- Entities (users, products, orders)
-- Key relationships (users have orders, orders have items)
-- Scale hints (high-traffic, millions of records)
-- Database preference (SQL/NoSQL) - defaults to SQL if not specified
-
----
-
-## Triggers
-
-| Trigger | Example |
-|---------|---------|
-| `design schema` | "design a schema for user authentication" |
-| `database design` | "database design for multi-tenant SaaS" |
-| `create tables` | "create tables for a blog system" |
-| `schema for` | "schema for inventory management" |
-| `model data` | "model data for real-time analytics" |
-| `I need a database` | "I need a database for tracking orders" |
-| `design NoSQL` | "design NoSQL schema for product catalog" |
-
----
-
-## Key Terms
-
-| Term | Definition |
-|------|------------|
-| **Normalization** | Organizing data to reduce redundancy (1NF → 2NF → 3NF) |
-| **3NF** | Third Normal Form - no transitive dependencies between columns |
-| **OLTP** | Online Transaction Processing - write-heavy, needs normalization |
-| **OLAP** | Online Analytical Processing - read-heavy, benefits from denormalization |
-| **Foreign Key (FK)** | Column that references another table's primary key |
-| **Index** | Data structure that speeds up queries (at cost of slower writes) |
-| **Access Pattern** | How your app reads/writes data (queries, joins, filters) |
-| **Denormalization** | Intentionally duplicating data to speed up reads |
-
----
-
-## Quick Reference
-
-| Task | Approach | Key Consideration |
-|------|----------|-------------------|
-| New schema | Normalize to 3NF first | Domain modeling over UI |
-| SQL vs NoSQL | Access patterns decide | Read/write ratio matters |
-| Primary keys | INT or UUID | UUID for distributed systems |
-| Foreign keys | Always constrain | ON DELETE strategy critical |
-| Indexes | FKs + WHERE columns | Column order matters |
-| Migrations | Always reversible | Backward compatible first |
-
----
-
-## Process Overview
-
-```
-Your Data Requirements
-    |
-    v
-+-----------------------------------------------------+
-| Phase 1: ANALYSIS                                   |
-| * Identify entities and relationships               |
-| * Determine access patterns (read vs write heavy)   |
-| * Choose SQL or NoSQL based on requirements         |
-+-----------------------------------------------------+
-    |
-    v
-+-----------------------------------------------------+
-| Phase 2: DESIGN                                     |
-| * Normalize to 3NF (SQL) or embed/reference (NoSQL) |
-| * Define primary keys and foreign keys              |
-| * Choose appropriate data types                     |
-| * Add constraints (UNIQUE, CHECK, NOT NULL)         |
-+-----------------------------------------------------+
-    |
-    v
-+-----------------------------------------------------+
-| Phase 3: OPTIMIZE                                   |
-| * Plan indexing strategy                            |
-| * Consider denormalization for read-heavy queries   |
-| * Add timestamps (created_at, updated_at)           |
-+-----------------------------------------------------+
-    |
-    v
-+-----------------------------------------------------+
-| Phase 4: MIGRATE                                    |
-| * Generate migration scripts (up + down)            |
-| * Ensure backward compatibility                     |
-| * Plan zero-downtime deployment                     |
-+-----------------------------------------------------+
-    |
-    v
-Production-Ready Schema
-```
-
----
-
-## Commands
-
-| Command | When to Use | Action |
-|---------|-------------|--------|
-| `design schema for {domain}` | Starting fresh | Full schema generation |
-| `normalize {table}` | Fixing existing table | Apply normalization rules |
-| `add indexes for {table}` | Performance issues | Generate index strategy |
-| `migration for {change}` | Schema evolution | Create reversible migration |
-| `review schema` | Code review | Audit existing schema |
-
-**Workflow:** Start with `design schema` → iterate with `normalize` → optimize with `add indexes` → evolve with `migration`
-
----
-
-## Core Principles
-
-| Principle | WHY | Implementation |
-|-----------|-----|----------------|
-| Model the Domain | UI changes, domain doesn't | Entity names reflect business concepts |
-| Data Integrity First | Corruption is costly to fix | Constraints at database level |
-| Optimize for Access Pattern | Can't optimize for both | OLTP: normalized, OLAP: denormalized |
-| Plan for Scale | Retrofitting is painful | Index strategy + partitioning plan |
-
----
-
-## Anti-Patterns
-
-| Avoid | Why | Instead |
-|-------|-----|---------|
-| VARCHAR(255) everywhere | Wastes storage, hides intent | Size appropriately per field |
-| FLOAT for money | Rounding errors | DECIMAL(10,2) |
-| Missing FK constraints | Orphaned data | Always define foreign keys |
-| No indexes on FKs | Slow JOINs | Index every foreign key |
-| Storing dates as strings | Can't compare/sort | DATE, TIMESTAMP types |
-| SELECT * in queries | Fetches unnecessary data | Explicit column lists |
-| Non-reversible migrations | Can't rollback | Always write DOWN migration |
-| Adding NOT NULL without default | Breaks existing rows | Add nullable, backfill, then constrain |
-
----
-
-## Verification Checklist
-
-After designing a schema:
-
-- [ ] Every table has a primary key
-- [ ] All relationships have foreign key constraints
-- [ ] ON DELETE strategy defined for each FK
-- [ ] Indexes exist on all foreign keys
-- [ ] Indexes exist on frequently queried columns
-- [ ] Appropriate data types (DECIMAL for money, etc.)
-- [ ] NOT NULL on required fields
-- [ ] UNIQUE constraints where needed
-- [ ] CHECK constraints for validation
-- [ ] created_at and updated_at timestamps
-- [ ] Migration scripts are reversible
-- [ ] Tested on staging with production data
-
----
-
-<details>
-<summary><strong>Deep Dive: Normalization (SQL)</strong></summary>
-
-### Normal Forms
-
-| Form | Rule | Violation Example |
-|------|------|-------------------|
-| **1NF** | Atomic values, no repeating groups | `product_ids = '1,2,3'` |
-| **2NF** | 1NF + no partial dependencies | customer_name in order_items |
-| **3NF** | 2NF + no transitive dependencies | country derived from postal_code |
-
-### 1st Normal Form (1NF)
-
-```sql
--- BAD: Multiple values in column
+-- ❌ Violates 1NF (multiple values in one column)
 CREATE TABLE orders (
   id INT PRIMARY KEY,
-  product_ids VARCHAR(255)  -- '101,102,103'
+  customer_id INT,
+  product_ids VARCHAR(255)  -- '101,102,103' (bad!)
 );
 
--- GOOD: Separate table for items
+-- ✅ Follows 1NF
 CREATE TABLE orders (
   id INT PRIMARY KEY,
   customer_id INT
@@ -216,117 +74,160 @@ CREATE TABLE orders (
 
 CREATE TABLE order_items (
   id INT PRIMARY KEY,
-  order_id INT REFERENCES orders(id),
-  product_id INT
+  order_id INT,
+  product_id INT,
+  FOREIGN KEY (order_id) REFERENCES orders(id)
 );
 ```
 
-### 2nd Normal Form (2NF)
+#### 2nd Normal Form (2NF)
+**Rule**: Must be in 1NF + all non-key columns depend on the entire primary key.
 
 ```sql
--- BAD: customer_name depends only on customer_id
+-- ❌ Violates 2NF (customer_name depends only on customer_id, not full key)
 CREATE TABLE order_items (
   order_id INT,
   product_id INT,
-  customer_name VARCHAR(100),  -- Partial dependency!
+  customer_id INT,
+  customer_name VARCHAR(100),  -- Depends on customer_id only
+  quantity INT,
   PRIMARY KEY (order_id, product_id)
 );
 
--- GOOD: Customer data in separate table
+-- ✅ Follows 2NF (customer data in separate table)
+CREATE TABLE orders (
+  id INT PRIMARY KEY,
+  customer_id INT,
+  FOREIGN KEY (customer_id) REFERENCES customers(id)
+);
+
+CREATE TABLE order_items (
+  order_id INT,
+  product_id INT,
+  quantity INT,
+  PRIMARY KEY (order_id, product_id)
+);
+
 CREATE TABLE customers (
   id INT PRIMARY KEY,
   name VARCHAR(100)
 );
 ```
 
-### 3rd Normal Form (3NF)
+#### 3rd Normal Form (3NF)
+**Rule**: Must be in 2NF + no transitive dependencies (non-key columns depend only on primary key).
 
 ```sql
--- BAD: country depends on postal_code
+-- ❌ Violates 3NF (country depends on postal_code, not on customer_id)
 CREATE TABLE customers (
   id INT PRIMARY KEY,
+  name VARCHAR(100),
   postal_code VARCHAR(10),
-  country VARCHAR(50)  -- Transitive dependency!
+  country VARCHAR(50)  -- Depends on postal_code, not id
 );
 
--- GOOD: Separate postal_codes table
+-- ✅ Follows 3NF
+CREATE TABLE customers (
+  id INT PRIMARY KEY,
+  name VARCHAR(100),
+  postal_code VARCHAR(10),
+  FOREIGN KEY (postal_code) REFERENCES postal_codes(code)
+);
+
 CREATE TABLE postal_codes (
   code VARCHAR(10) PRIMARY KEY,
   country VARCHAR(50)
 );
 ```
 
-### When to Denormalize
+#### Denormalization (When to Break Rules)
 
-| Scenario | Denormalization Strategy |
-|----------|-------------------------|
-| Read-heavy reporting | Pre-calculated aggregates |
-| Expensive JOINs | Cached derived columns |
-| Analytics dashboards | Materialized views |
+Sometimes denormalization improves performance for read-heavy applications.
 
 ```sql
--- Denormalized for performance
+-- Denormalized for performance (caching derived data)
 CREATE TABLE orders (
   id INT PRIMARY KEY,
   customer_id INT,
-  total_amount DECIMAL(10,2),  -- Calculated
-  item_count INT               -- Calculated
+  total_amount DECIMAL(10, 2),  -- Calculated from order_items
+  item_count INT,               -- Calculated from order_items
+  created_at TIMESTAMP
 );
+
+-- Trigger or application code keeps denormalized data in sync
 ```
 
-</details>
+**When to denormalize:**
+- Read-heavy applications (reporting, analytics)
+- Frequently joined tables causing performance issues
+- Pre-calculated aggregates (counts, sums, averages)
+- Caching derived data to avoid complex joins
 
-<details>
-<summary><strong>Deep Dive: Data Types</strong></summary>
+---
 
-### String Types
+### Data Types
 
-| Type | Use Case | Example |
-|------|----------|---------|
-| CHAR(n) | Fixed length | State codes, ISO dates |
-| VARCHAR(n) | Variable length | Names, emails |
-| TEXT | Long content | Articles, descriptions |
+Choose appropriate data types for efficiency and accuracy.
+
+#### String Types
 
 ```sql
--- Good sizing
+-- Fixed-length (use for predictable lengths)
+CHAR(10)      -- ISO date: '2025-10-31'
+CHAR(2)       -- State code: 'CA'
+
+-- Variable-length (use for variable lengths)
+VARCHAR(255)  -- Email, name, short text
+TEXT          -- Long text (articles, descriptions)
+
+-- ✅ Good: Appropriate sizes
 email VARCHAR(255)
-phone VARCHAR(20)
-country_code CHAR(2)
+phone_number VARCHAR(20)
+postal_code VARCHAR(10)
+
+-- ❌ Bad: Wasteful or too small
+email VARCHAR(500)       -- Too large
+description VARCHAR(50)  -- Too small for long text
 ```
 
-### Numeric Types
-
-| Type | Range | Use Case |
-|------|-------|----------|
-| TINYINT | -128 to 127 | Age, status codes |
-| SMALLINT | -32K to 32K | Quantities |
-| INT | -2.1B to 2.1B | IDs, counts |
-| BIGINT | Very large | Large IDs, timestamps |
-| DECIMAL(p,s) | Exact precision | Money |
-| FLOAT/DOUBLE | Approximate | Scientific data |
+#### Numeric Types
 
 ```sql
--- ALWAYS use DECIMAL for money
-price DECIMAL(10, 2)  -- $99,999,999.99
+-- Integer types
+TINYINT    -- -128 to 127 (age, status codes)
+SMALLINT   -- -32,768 to 32,767 (quantities)
+INT        -- -2.1B to 2.1B (IDs, counts)
+BIGINT     -- Large numbers (timestamps, large IDs)
 
--- NEVER use FLOAT for money
+-- Decimal types
+DECIMAL(10, 2)  -- Exact precision (money: $99,999,999.99)
+FLOAT           -- Approximate (scientific calculations)
+DOUBLE          -- Higher precision approximations
+
+-- ✅ Use DECIMAL for money
+CREATE TABLE products (
+  id INT PRIMARY KEY,
+  price DECIMAL(10, 2)  -- Exact precision
+);
+
+-- ❌ Don't use FLOAT for money
 price FLOAT  -- Rounding errors!
 ```
 
-### Date/Time Types
+#### Date/Time Types
 
 ```sql
-DATE        -- 2025-10-31
-TIME        -- 14:30:00
-DATETIME    -- 2025-10-31 14:30:00
-TIMESTAMP   -- Auto timezone conversion
+DATE       -- Date only: 2025-10-31
+TIME       -- Time only: 14:30:00
+DATETIME   -- Date + time: 2025-10-31 14:30:00
+TIMESTAMP  -- Unix timestamp (auto-converts timezone)
 
--- Always store in UTC
+-- ✅ Always store in UTC
 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ```
 
-### Boolean
+#### Boolean
 
 ```sql
 -- PostgreSQL
@@ -336,194 +237,261 @@ is_active BOOLEAN DEFAULT TRUE
 is_active TINYINT(1) DEFAULT 1
 ```
 
-</details>
+---
 
-<details>
-<summary><strong>Deep Dive: Indexing Strategy</strong></summary>
+### Indexing Strategies
 
-### When to Create Indexes
+Indexes speed up reads but slow down writes. Use strategically.
 
-| Always Index | Reason |
-|--------------|--------|
-| Foreign keys | Speed up JOINs |
-| WHERE clause columns | Speed up filtering |
-| ORDER BY columns | Speed up sorting |
-| Unique constraints | Enforced uniqueness |
+#### When to Create Indexes
 
 ```sql
--- Foreign key index
-CREATE INDEX idx_orders_customer ON orders(customer_id);
+-- ✅ Index foreign keys
+CREATE INDEX idx_orders_customer_id ON orders(customer_id);
 
--- Query pattern index
-CREATE INDEX idx_orders_status_date ON orders(status, created_at);
+-- ✅ Index frequently queried columns
+CREATE INDEX idx_users_email ON users(email);
+
+-- ✅ Index columns used in WHERE, ORDER BY, GROUP BY
+CREATE INDEX idx_orders_created_at ON orders(created_at);
+
+-- ✅ Composite index for multi-column queries
+CREATE INDEX idx_orders_customer_status ON orders(customer_id, status);
 ```
 
-### Index Types
+#### Index Types
 
-| Type | Best For | Example |
-|------|----------|---------|
-| B-Tree | Ranges, equality | `price > 100` |
-| Hash | Exact matches only | `email = 'x@y.com'` |
-| Full-text | Text search | `MATCH AGAINST` |
-| Partial | Subset of rows | `WHERE is_active = true` |
+**B-Tree Index (Default)**
+```sql
+-- Best for equality and range queries
+CREATE INDEX idx_products_price ON products(price);
 
-### Composite Index Order
+-- Queries that benefit:
+SELECT * FROM products WHERE price > 100;
+SELECT * FROM products WHERE price BETWEEN 50 AND 150;
+```
+
+**Hash Index**
+```sql
+-- Best for exact matches only (not ranges)
+CREATE INDEX idx_users_email USING HASH ON users(email);
+
+-- Queries that benefit:
+SELECT * FROM users WHERE email = 'user@example.com';
+```
+
+**Full-Text Index**
+```sql
+-- Best for text search
+CREATE FULLTEXT INDEX idx_articles_content ON articles(title, content);
+
+-- Queries that benefit:
+SELECT * FROM articles WHERE MATCH(title, content) AGAINST('database design');
+```
+
+**Partial Index (PostgreSQL)**
+```sql
+-- Index only specific rows
+CREATE INDEX idx_active_users ON users(email) WHERE is_active = TRUE;
+```
+
+#### Composite Indexes (Column Order Matters)
 
 ```sql
-CREATE INDEX idx_customer_status ON orders(customer_id, status);
+-- ✅ Good: Index supports both queries
+CREATE INDEX idx_orders_customer_status ON orders(customer_id, status);
 
--- Uses index (customer_id first)
-SELECT * FROM orders WHERE customer_id = 123;
+-- Query 1: Uses index efficiently
 SELECT * FROM orders WHERE customer_id = 123 AND status = 'pending';
 
--- Does NOT use index (status alone)
+-- Query 2: Uses index (customer_id only)
+SELECT * FROM orders WHERE customer_id = 123;
+
+-- ❌ Query 3: Doesn't use index (status is second column)
 SELECT * FROM orders WHERE status = 'pending';
 ```
 
-**Rule:** Most selective column first, or column most queried alone.
+**Rule of Thumb**: Put most selective column first, or most frequently queried alone.
 
-### Index Pitfalls
+---
 
-| Pitfall | Problem | Solution |
-|---------|---------|----------|
-| Over-indexing | Slow writes | Only index what's queried |
-| Wrong column order | Unused index | Match query patterns |
-| Missing FK indexes | Slow JOINs | Always index FKs |
+### Constraints
 
-</details>
+Use constraints to enforce data integrity at the database level.
 
-<details>
-<summary><strong>Deep Dive: Constraints</strong></summary>
-
-### Primary Keys
+#### Primary Key
 
 ```sql
--- Auto-increment (simple)
-id INT AUTO_INCREMENT PRIMARY KEY
+-- Auto-incrementing integer
+CREATE TABLE users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(255) UNIQUE NOT NULL
+);
 
--- UUID (distributed systems)
-id CHAR(36) PRIMARY KEY DEFAULT (UUID())
-
--- Composite (junction tables)
-PRIMARY KEY (student_id, course_id)
+-- UUID (better for distributed systems)
+CREATE TABLE users (
+  id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+  email VARCHAR(255) UNIQUE NOT NULL
+);
 ```
 
-### Foreign Keys
-
-```sql
-FOREIGN KEY (customer_id) REFERENCES customers(id)
-  ON DELETE CASCADE     -- Delete children with parent
-  ON DELETE RESTRICT    -- Prevent deletion if referenced
-  ON DELETE SET NULL    -- Set to NULL when parent deleted
-  ON UPDATE CASCADE     -- Update children when parent changes
-```
-
-| Strategy | Use When |
-|----------|----------|
-| CASCADE | Dependent data (order_items) |
-| RESTRICT | Important references (prevent accidents) |
-| SET NULL | Optional relationships |
-
-### Other Constraints
-
-```sql
--- Unique
-email VARCHAR(255) UNIQUE NOT NULL
-
--- Composite unique
-UNIQUE (student_id, course_id)
-
--- Check
-price DECIMAL(10,2) CHECK (price >= 0)
-discount INT CHECK (discount BETWEEN 0 AND 100)
-
--- Not null
-name VARCHAR(100) NOT NULL
-```
-
-</details>
-
-<details>
-<summary><strong>Deep Dive: Relationship Patterns</strong></summary>
-
-### One-to-Many
+#### Foreign Key
 
 ```sql
 CREATE TABLE orders (
   id INT PRIMARY KEY,
-  customer_id INT NOT NULL REFERENCES customers(id)
+  customer_id INT NOT NULL,
+  FOREIGN KEY (customer_id) REFERENCES customers(id)
+    ON DELETE CASCADE      -- Delete orders when customer deleted
+    ON UPDATE CASCADE      -- Update orders when customer ID changes
+);
+
+-- Alternatives:
+ON DELETE RESTRICT   -- Prevent deletion if referenced
+ON DELETE SET NULL   -- Set to NULL when parent deleted
+ON DELETE NO ACTION  -- Same as RESTRICT
+```
+
+#### Unique Constraint
+
+```sql
+CREATE TABLE users (
+  id INT PRIMARY KEY,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  username VARCHAR(50) UNIQUE NOT NULL
+);
+
+-- Composite unique constraint
+CREATE TABLE enrollments (
+  student_id INT,
+  course_id INT,
+  UNIQUE (student_id, course_id)  -- Prevent duplicate enrollments
+);
+```
+
+#### Check Constraint
+
+```sql
+CREATE TABLE products (
+  id INT PRIMARY KEY,
+  price DECIMAL(10, 2) CHECK (price >= 0),
+  stock INT CHECK (stock >= 0),
+  discount_percent INT CHECK (discount_percent BETWEEN 0 AND 100)
+);
+```
+
+#### Not Null Constraint
+
+```sql
+CREATE TABLE users (
+  id INT PRIMARY KEY,
+  email VARCHAR(255) NOT NULL,
+  name VARCHAR(100) NOT NULL,
+  bio TEXT  -- Nullable (optional)
+);
+```
+
+---
+
+### Common Schema Patterns
+
+#### One-to-Many (Orders → Order Items)
+
+```sql
+CREATE TABLE orders (
+  id INT PRIMARY KEY,
+  customer_id INT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE order_items (
   id INT PRIMARY KEY,
-  order_id INT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+  order_id INT NOT NULL,
   product_id INT NOT NULL,
-  quantity INT NOT NULL
+  quantity INT NOT NULL,
+  price DECIMAL(10, 2) NOT NULL,
+  FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
 );
 ```
 
-### Many-to-Many
+#### Many-to-Many (Students ↔ Courses)
 
 ```sql
--- Junction table
+CREATE TABLE students (
+  id INT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE courses (
+  id INT PRIMARY KEY,
+  title VARCHAR(200) NOT NULL
+);
+
+-- Junction table (also called join table, linking table)
 CREATE TABLE enrollments (
-  student_id INT REFERENCES students(id) ON DELETE CASCADE,
-  course_id INT REFERENCES courses(id) ON DELETE CASCADE,
+  student_id INT,
+  course_id INT,
   enrolled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (student_id, course_id)
+  grade VARCHAR(2),
+  PRIMARY KEY (student_id, course_id),
+  FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+  FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
 );
 ```
 
-### Self-Referencing
+#### Self-Referencing (Employees → Manager)
 
 ```sql
 CREATE TABLE employees (
   id INT PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
-  manager_id INT REFERENCES employees(id)
+  manager_id INT,
+  FOREIGN KEY (manager_id) REFERENCES employees(id)
 );
 ```
 
-### Polymorphic
+#### Polymorphic Relationships (Comments on Posts/Photos)
 
 ```sql
--- Approach 1: Separate FKs (stronger integrity)
+-- Approach 1: Separate foreign keys with CHECK constraint
 CREATE TABLE comments (
   id INT PRIMARY KEY,
   content TEXT NOT NULL,
-  post_id INT REFERENCES posts(id),
-  photo_id INT REFERENCES photos(id),
+  post_id INT,
+  photo_id INT,
   CHECK (
     (post_id IS NOT NULL AND photo_id IS NULL) OR
     (post_id IS NULL AND photo_id IS NOT NULL)
-  )
+  ),
+  FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+  FOREIGN KEY (photo_id) REFERENCES photos(id) ON DELETE CASCADE
 );
 
--- Approach 2: Type + ID (flexible, weaker integrity)
+-- Approach 2: commentable_type + commentable_id (Rails-style)
 CREATE TABLE comments (
   id INT PRIMARY KEY,
   content TEXT NOT NULL,
-  commentable_type VARCHAR(50) NOT NULL,
+  commentable_type VARCHAR(50) NOT NULL,  -- 'Post' or 'Photo'
   commentable_id INT NOT NULL
 );
+-- Note: No foreign key constraint possible (less data integrity)
 ```
 
-</details>
+---
 
-<details>
-<summary><strong>Deep Dive: NoSQL Design (MongoDB)</strong></summary>
+## NoSQL Database Design
 
-### Embedding vs Referencing
+### Document Databases (MongoDB)
 
-| Factor | Embed | Reference |
-|--------|-------|-----------|
-| Access pattern | Read together | Read separately |
-| Relationship | 1:few | 1:many |
-| Document size | Small | Approaching 16MB |
-| Update frequency | Rarely | Frequently |
+**When to use**:
+- Schema flexibility needed
+- Rapid iteration
+- Hierarchical data
+- Read-heavy workloads
 
-### Embedded Document
+#### Embedding vs Referencing
 
+**Embedding (Denormalization)**
 ```json
 {
   "_id": "order_123",
@@ -533,70 +501,120 @@ CREATE TABLE comments (
     "email": "jane@example.com"
   },
   "items": [
-    { "product_id": "prod_789", "quantity": 2, "price": 29.99 }
+    { "product_id": "prod_789", "quantity": 2, "price": 29.99 },
+    { "product_id": "prod_101", "quantity": 1, "price": 49.99 }
   ],
-  "total": 109.97
+  "total": 109.97,
+  "created_at": "2025-10-31T10:30:00Z"
 }
 ```
 
-### Referenced Document
+**When to embed:**
+- Data accessed together frequently
+- 1:few relationships (few items)
+- Child documents don't need independent existence
 
+**Referencing (Normalization)**
 ```json
 {
   "_id": "order_123",
   "customer_id": "cust_456",
   "item_ids": ["item_1", "item_2"],
-  "total": 109.97
+  "total": 109.97,
+  "created_at": "2025-10-31T10:30:00Z"
 }
 ```
 
-### MongoDB Indexes
+**When to reference:**
+- Data accessed independently
+- 1:many relationships (many items)
+- Large documents (approaching 16MB limit)
+- Frequently updated data
+
+#### Indexing in MongoDB
 
 ```javascript
-// Single field
+// Create index
 db.users.createIndex({ email: 1 }, { unique: true });
 
-// Composite
+// Composite index
 db.orders.createIndex({ customer_id: 1, created_at: -1 });
 
-// Text search
+// Text index for search
 db.articles.createIndex({ title: "text", content: "text" });
 
-// Geospatial
+// Geospatial index
 db.stores.createIndex({ location: "2dsphere" });
 ```
 
-</details>
+---
 
-<details>
-<summary><strong>Deep Dive: Migrations</strong></summary>
+## Database Migrations
 
 ### Migration Best Practices
 
-| Practice | WHY |
-|----------|-----|
-| Always reversible | Need to rollback |
-| Backward compatible | Zero-downtime deploys |
-| Schema before data | Separate concerns |
-| Test on staging | Catch issues early |
+**1. Always Reversible**
+```sql
+-- Up migration
+ALTER TABLE users ADD COLUMN phone VARCHAR(20);
 
-### Adding a Column (Zero-Downtime)
+-- Down migration
+ALTER TABLE users DROP COLUMN phone;
+```
 
+**2. Backward Compatible**
+```sql
+-- ✅ Good: Add nullable column
+ALTER TABLE users ADD COLUMN middle_name VARCHAR(50);
+
+-- ❌ Bad: Add required column (breaks existing code)
+ALTER TABLE users ADD COLUMN middle_name VARCHAR(50) NOT NULL;
+
+-- ✅ Better: Add nullable, then populate, then make required
+-- Migration 1: Add column
+ALTER TABLE users ADD COLUMN middle_name VARCHAR(50);
+
+-- Migration 2: Populate with default
+UPDATE users SET middle_name = '' WHERE middle_name IS NULL;
+
+-- Migration 3: Make required
+ALTER TABLE users MODIFY COLUMN middle_name VARCHAR(50) NOT NULL;
+```
+
+**3. Data Migrations Separate from Schema Changes**
+```sql
+-- Migration 1: Schema change
+ALTER TABLE orders ADD COLUMN status VARCHAR(20) DEFAULT 'pending';
+
+-- Migration 2: Data migration
+UPDATE orders SET status = 'completed' WHERE completed_at IS NOT NULL;
+```
+
+**4. Test Migrations on Production Copy**
+- Test on staging with production data snapshot
+- Measure migration duration
+- Plan for downtime (if needed)
+
+---
+
+### Zero-Downtime Migrations
+
+**Adding a Column:**
 ```sql
 -- Step 1: Add nullable column
 ALTER TABLE users ADD COLUMN phone VARCHAR(20);
 
 -- Step 2: Deploy code that writes to new column
+-- (Application now writes to both old and new column)
 
 -- Step 3: Backfill existing rows
-UPDATE users SET phone = '' WHERE phone IS NULL;
+UPDATE users SET phone = old_phone WHERE phone IS NULL;
 
--- Step 4: Make required (if needed)
-ALTER TABLE users MODIFY phone VARCHAR(20) NOT NULL;
+-- Step 4: Make column required (if needed)
+ALTER TABLE users MODIFY COLUMN phone VARCHAR(20) NOT NULL;
 ```
 
-### Renaming a Column (Zero-Downtime)
-
+**Renaming a Column:**
 ```sql
 -- Step 1: Add new column
 ALTER TABLE users ADD COLUMN email_address VARCHAR(255);
@@ -604,84 +622,97 @@ ALTER TABLE users ADD COLUMN email_address VARCHAR(255);
 -- Step 2: Copy data
 UPDATE users SET email_address = email;
 
--- Step 3: Deploy code reading from new column
--- Step 4: Deploy code writing to new column
+-- Step 3: Deploy code that reads from new column
+
+-- Step 4: Deploy code that writes to new column
 
 -- Step 5: Drop old column
 ALTER TABLE users DROP COLUMN email;
 ```
 
-### Migration Template
+---
 
+## Performance Optimization
+
+### Query Optimization
+
+**Use EXPLAIN to analyze queries:**
 ```sql
--- Migration: YYYYMMDDHHMMSS_description.sql
-
--- UP
-BEGIN;
-ALTER TABLE users ADD COLUMN phone VARCHAR(20);
-CREATE INDEX idx_users_phone ON users(phone);
-COMMIT;
-
--- DOWN
-BEGIN;
-DROP INDEX idx_users_phone ON users;
-ALTER TABLE users DROP COLUMN phone;
-COMMIT;
+EXPLAIN SELECT * FROM orders WHERE customer_id = 123 AND status = 'pending';
 ```
 
-</details>
+**Look for:**
+- **Type**: ALL (table scan - bad), index, ref, eq_ref
+- **Possible keys**: Indexes available
+- **Key**: Index actually used
+- **Rows**: Estimated rows scanned
 
-<details>
-<summary><strong>Deep Dive: Performance Optimization</strong></summary>
-
-### Query Analysis
-
-```sql
-EXPLAIN SELECT * FROM orders
-WHERE customer_id = 123 AND status = 'pending';
-```
-
-| Look For | Meaning |
-|----------|---------|
-| type: ALL | Full table scan (bad) |
-| type: ref | Index used (good) |
-| key: NULL | No index used |
-| rows: high | Many rows scanned |
+**Optimization techniques:**
+- Add indexes on WHERE, ORDER BY, GROUP BY columns
+- Avoid SELECT * (fetch only needed columns)
+- Use LIMIT for pagination
+- Denormalize for read-heavy queries
 
 ### N+1 Query Problem
 
 ```python
-# BAD: N+1 queries
+# ❌ Bad: N+1 queries (1 query for orders + N queries for customers)
 orders = db.query("SELECT * FROM orders")
 for order in orders:
     customer = db.query(f"SELECT * FROM customers WHERE id = {order.customer_id}")
+    print(f"{customer.name} ordered {order.total}")
 
-# GOOD: Single JOIN
+# ✅ Good: Single query with JOIN
 results = db.query("""
     SELECT orders.*, customers.name
     FROM orders
     JOIN customers ON orders.customer_id = customers.id
 """)
+for result in results:
+    print(f"{result.name} ordered {result.total}")
 ```
-
-### Optimization Techniques
-
-| Technique | When to Use |
-|-----------|-------------|
-| Add indexes | Slow WHERE/ORDER BY |
-| Denormalize | Expensive JOINs |
-| Pagination | Large result sets |
-| Caching | Repeated queries |
-| Read replicas | Read-heavy load |
-| Partitioning | Very large tables |
-
-</details>
 
 ---
 
-## Extension Points
+## Integration with Agents
 
-1. **Database-Specific Patterns:** Add MySQL vs PostgreSQL vs SQLite variations
-2. **Advanced Patterns:** Time-series, event sourcing, CQRS, multi-tenancy
-3. **ORM Integration:** TypeORM, Prisma, SQLAlchemy patterns
-4. **Monitoring:** Query performance tracking, slow query alerts
+### Backend System Architect
+- Uses this skill when designing data models
+- Applies normalization and indexing strategies
+- Plans for scalability and performance
+
+### Code Quality Reviewer
+- Validates schema design follows best practices
+- Checks for missing indexes and constraints
+- Reviews migration safety
+
+### AI/ML Engineer
+- Uses denormalization patterns for analytics
+- Designs data pipelines and aggregation tables
+
+---
+
+## Quick Start Checklist
+
+When designing a new schema:
+
+- [ ] Identify entities and relationships
+- [ ] Choose SQL or NoSQL based on requirements
+- [ ] Normalize to 3NF (SQL) or decide embed/reference (NoSQL)
+- [ ] Define primary keys (INT auto-increment or UUID)
+- [ ] Add foreign key constraints
+- [ ] Choose appropriate data types
+- [ ] Add unique constraints where needed
+- [ ] Plan indexing strategy (foreign keys, WHERE columns)
+- [ ] Add NOT NULL constraints for required fields
+- [ ] Create CHECK constraints for validation
+- [ ] Plan for soft deletes (deleted_at column) if needed
+- [ ] Add timestamps (created_at, updated_at)
+- [ ] Design migration scripts (up and down)
+- [ ] Test migrations on staging
+
+---
+
+**Skill Version**: 1.0.0
+**Last Updated**: 2025-10-31
+**Maintained by**: AI Agent Hub Team

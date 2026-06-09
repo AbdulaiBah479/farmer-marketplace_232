@@ -1,9 +1,10 @@
 ---
 name: cc-skill-backend-patterns
 description: "Backend architecture patterns, API design, database optimization, and server-side best practices for Node.js, Express, and Next.js API routes."
+author: affaan-m
+version: "1.0"
 risk: unknown
 source: community
-date_added: "2026-02-27"
 ---
 
 # Backend Development Patterns
@@ -586,8 +587,3 @@ export async function GET(request: Request) {
 
 ## When to Use
 This skill is applicable to execute the workflow or actions described in the overview.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

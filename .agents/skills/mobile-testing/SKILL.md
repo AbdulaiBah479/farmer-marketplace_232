@@ -1,219 +1,194 @@
 ---
 name: mobile-testing
-description: "Comprehensive mobile testing for iOS and Android platforms including gestures, sensors, permissions, device fragmentation, and performance. Use when testing native apps, hybrid apps, or mobile web, ensuring quality across 1000+ device variants."
-category: specialized-testing
-priority: high
-tokenEstimate: 1000
-agents: [qe-test-executor, qe-performance-tester, qe-visual-tester]
-implementation_status: optimized
-optimization_version: 1.0
-last_optimized: 2025-12-02
-dependencies: []
-quick_reference_card: true
-tags: [mobile, ios, android, appium, gestures, device-fragmentation, sensors]
+description: Write and run tests for React Native apps using Jest and React Native Testing Library. Use when creating tests, debugging failures, or setting up test infrastructure.
+allowed-tools: Bash, Read, Write, Edit
 ---
 
 # Mobile Testing
 
-<default_to_action>
-When testing mobile applications:
-1. DEFINE device coverage matrix (Tier 1: 60%, Tier 2: 30%, Tier 3: 10%)
-2. TEST platform differences (iOS ≠ Android: back button, permissions, UI)
-3. VALIDATE touch gestures (tap, swipe, pinch, long-press)
-4. TEST mobile-specific scenarios (offline, low battery, interruptions)
-5. USE real devices for critical paths, emulators for fast feedback
+Testing guide for React Native applications.
 
-**Quick Mobile Checklist:**
-- Test on latest iOS + Android flagship devices
-- Test offline mode and network transitions
-- Verify push notifications work
-- Test gesture interactions (swipe, pinch)
-- Check permissions flow (camera, location, notifications)
+## When to Use
 
-**Critical Success Factors:**
-- Emulators for 80% of testing, real devices for 20% critical paths
-- Test on devices your users actually use (analytics)
-- Device fragmentation is Android's biggest challenge
-</default_to_action>
+- Writing unit tests for components or utilities
+- Creating integration tests for features
+- Setting up test infrastructure
+- Debugging test failures
+- Improving test coverage
 
-## Quick Reference Card
+## Test Setup
 
-### When to Use
-- Native app development (iOS/Android)
-- Hybrid apps (React Native, Flutter)
-- Mobile web / PWAs
-- App store submission preparation
+```bash
+# Install testing dependencies
+npm install --save-dev jest @testing-library/react-native
 
-### iOS vs Android Differences
-| Aspect | iOS | Android |
-|--------|-----|---------|
-| OS Versions | 2-3 supported | 10+ in use |
-| Devices | ~40 models | 1000+ variants |
-| Back Button | Gesture/nav | Hardware/software |
-| Permissions | Single prompt | Runtime granular |
-| App Store | Strict review | Google Play + sideload |
-
-### Device Coverage Tiers
-| Tier | Coverage | Devices |
-|------|----------|---------|
-| **Tier 1** | 60% users | iPhone 15, Galaxy S24, iPad |
-| **Tier 2** | 30% users | iPhone 14/13, Pixel 8 |
-| **Tier 3** | 10% users | Older devices, other manufacturers |
-
-### Mobile Performance Goals
-| Metric | Target |
-|--------|--------|
-| App launch | < 2 seconds |
-| Screen transition | < 300ms |
-| Frame rate | 60 FPS |
-| Battery drain | < 5%/hour background |
-
----
-
-## Touch Gesture Testing
-
-```javascript
-// Appium gesture examples
-// Tap
-await driver.touchAction({ action: 'tap', x: 100, y: 200 });
-
-// Swipe (scroll down)
-await driver.touchAction([
-  { action: 'press', x: 200, y: 400 },
-  { action: 'moveTo', x: 200, y: 100 },
-  { action: 'release' }
-]);
-
-// Pinch to zoom
-const finger1 = [
-  { action: 'press', x: 100, y: 200 },
-  { action: 'moveTo', x: 50, y: 150 },
-  { action: 'release' }
-];
-const finger2 = [
-  { action: 'press', x: 200, y: 200 },
-  { action: 'moveTo', x: 250, y: 250 },
-  { action: 'release' }
-];
-await driver.multiTouchAction([finger1, finger2]);
-
-// Long press
-await driver.touchAction({
-  action: 'longPress',
-  x: 100, y: 200,
-  duration: 2000
-});
+# Add to package.json
+{
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  }
+}
 ```
 
----
+## Component Test Template
 
-## Mobile-Specific Scenarios
+```typescript
+import { render, fireEvent } from '@testing-library/react-native';
+import { MyButton } from './MyButton';
 
-```javascript
-// Offline mode testing
-test('app works offline', async () => {
-  await driver.toggleAirplaneMode();
-
-  await driver.findElement('view-saved-items').click();
-  const items = await driver.findElements('saved-item');
-  expect(items.length).toBeGreaterThan(0);
-
-  const banner = await driver.findElement('offline-banner');
-  expect(banner.getText()).toContain('No internet');
-
-  await driver.toggleAirplaneMode(); // Restore
-});
-
-// Location testing
-test('location-based features', async () => {
-  await driver.setGeoLocation({
-    latitude: 37.7749,
-    longitude: -122.4194,
-    altitude: 0
+describe('MyButton', () => {
+  it('renders correctly', () => {
+    const { getByText } = render(<MyButton title="Click me" />);
+    expect(getByText('Click me')).toBeTruthy();
   });
 
-  const stores = await driver.findElement('stores-list');
-  expect(stores.getText()).toContain('San Francisco');
-});
+  it('calls onPress when pressed', () => {
+    const onPress = jest.fn();
+    const { getByText } = render(
+      <MyButton title="Click me" onPress={onPress} />
+    );
 
-// Permission testing (Android)
-test('camera permission flow', async () => {
-  await driver.findElement('take-photo').click();
-
-  // Handle permission dialog
-  await driver.findElement(
-    'com.android.packageinstaller:id/permission_allow_button'
-  ).click();
-
-  expect(await driver.findElement('camera-view')).toBeDefined();
+    fireEvent.press(getByText('Click me'));
+    expect(onPress).toHaveBeenCalledTimes(1);
+  });
 });
 ```
 
----
-
-## Agent-Driven Mobile Testing
+## Hook Test Template
 
 ```typescript
-// Cross-platform mobile testing
-await Task("Mobile Test Suite", {
-  platforms: ['iOS', 'Android'],
-  deviceTiers: [1, 2],
-  tests: 'regression-suite',
-  parallelDevices: 5,
-  deviceFarm: 'browserstack'
-}, "qe-test-executor");
+import { renderHook, act } from '@testing-library/react-native';
+import { useCounter } from './useCounter';
 
-// Device farm integration
-await Task("Device Farm Execution", {
-  service: 'browserstack',
-  devices: [
-    'iPhone 15 - iOS 17',
-    'Samsung Galaxy S24 - Android 14'
-  ],
-  recordVideo: true,
-  captureNetworkLogs: true
-}, "qe-test-executor");
-```
+describe('useCounter', () => {
+  it('increments count', () => {
+    const { result } = renderHook(() => useCounter());
 
----
+    act(() => {
+      result.current.increment();
+    });
 
-## Agent Coordination Hints
-
-### Memory Namespace
-```
-aqe/mobile-testing/
-├── device-matrix/*      - Device coverage strategy
-├── platform-tests/*     - iOS/Android specific tests
-├── gesture-library/*    - Reusable gesture patterns
-└── performance/*        - Mobile performance metrics
-```
-
-### Fleet Coordination
-```typescript
-const mobileFleet = await FleetManager.coordinate({
-  strategy: 'mobile-testing',
-  agents: [
-    'qe-test-executor',       // Cross-platform execution
-    'qe-performance-tester',  // Mobile performance
-    'qe-visual-tester'        // Screen size validation
-  ],
-  topology: 'parallel'
+    expect(result.current.count).toBe(1);
+  });
 });
 ```
 
----
+## Utility Test Template
 
-## Related Skills
-- [accessibility-testing](../accessibility-testing/) - VoiceOver, TalkBack
-- [performance-testing](../performance-testing/) - Mobile performance
-- [compatibility-testing](../compatibility-testing/) - Device compatibility
+```typescript
+import { formatDate } from './formatDate';
 
----
+describe('formatDate', () => {
+  it('formats date correctly', () => {
+    const date = new Date('2025-01-15');
+    expect(formatDate(date)).toBe('2025-01-15');
+  });
 
-## Remember
+  it('handles invalid input', () => {
+    expect(() => formatDate(null)).toThrow();
+  });
+});
+```
 
-**Mobile is not a smaller desktop - it's a different platform.** 60%+ of web traffic is mobile. Device fragmentation (1000+ Android devices), touch gestures, sensors, permissions, offline scenarios - all require specific testing.
+## Mocking Patterns
 
-**Test on real devices for critical flows.** Emulators catch 80% of bugs but real devices needed for actual performance, sensor behavior, and platform quirks.
+### Mock External Module
+```typescript
+jest.mock('expo-notifications', () => ({
+  scheduleNotificationAsync: jest.fn(),
+}));
+```
 
-**With Agents:** `qe-test-executor` orchestrates testing across device farms, manages platform differences, and tests 10+ devices in parallel. Reduces mobile testing from days to hours.
+### Mock Database
+```typescript
+jest.mock('@/db/client', () => ({
+  db: {
+    select: jest.fn(),
+    insert: jest.fn(),
+  },
+}));
+```
+
+### Mock Navigation
+```typescript
+jest.mock('expo-router', () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+    back: jest.fn(),
+  }),
+}));
+```
+
+## Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Watch mode (auto-rerun on changes)
+npm run test:watch
+
+# With coverage report
+npm run test:coverage
+
+# Run specific test file
+npm test -- MyComponent.test.tsx
+
+# Update snapshots
+npm test -- -u
+```
+
+## Best Practices
+
+1. **Test Behavior, Not Implementation**: Test what users see and do
+2. **Use `testID` for Selection**: More reliable than text matching
+3. **Mock External Dependencies**: Keep tests isolated and fast
+4. **Test Edge Cases**: Empty states, errors, loading states
+5. **Keep Tests Simple**: One assertion per test when possible
+6. **Clean Up**: Use `beforeEach`/`afterEach` for setup/teardown
+
+## Common Patterns
+
+### Async Testing
+```typescript
+it('loads data', async () => {
+  const { findByText } = render(<DataComponent />);
+  expect(await findByText('Loaded')).toBeTruthy();
+});
+```
+
+### Testing Forms
+```typescript
+it('validates input', () => {
+  const { getByTestId, getByText } = render(<LoginForm />);
+
+  fireEvent.changeText(getByTestId('email-input'), 'invalid');
+  fireEvent.press(getByTestId('submit-button'));
+
+  expect(getByText('Invalid email')).toBeTruthy();
+});
+```
+
+### Testing Lists
+```typescript
+it('renders list items', () => {
+  const items = [{ id: '1', name: 'Item 1' }];
+  const { getAllByTestId } = render(<ItemList items={items} />);
+
+  expect(getAllByTestId('list-item')).toHaveLength(1);
+});
+```
+
+## Troubleshooting
+
+- **Tests timing out**: Increase timeout or check for unresolved promises
+- **Can't find element**: Use `screen.debug()` to see rendered output
+- **Mock not working**: Ensure mock is before import
+- **Async issues**: Use `waitFor` or `findBy` queries
+
+## Resources
+
+- [Jest Docs](https://jestjs.io/)
+- [React Native Testing Library](https://callstack.github.io/react-native-testing-library/)

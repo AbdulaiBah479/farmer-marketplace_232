@@ -1,76 +1,100 @@
 ---
 name: anpassen
-description: "Geführte Anpassung Ihres Produktrecht-Praxisprofils – eine Sache ändern ohne das gesamte Kaltstart-Interview erneut auszuführen. Risikokalibrierung, Eskalationskontakte, Launch-Review-Framework, Werbeaussagen-Haltung oder Mandate-Workspace-Pfade anpassen. Verwenden wenn der Nutzer sagt mein [Ding] ändern, mein Profil aktualisieren, mein Framework bearbeiten, meine Kalibrierung anpassen oder anpassen im Produktrecht: prüft konkret die einschlägigen Tatbestandsmerkmale, Fristen, Belege und Rechtsprechung. Liefert priorisierten Output mit Norm-Pinpoints, Risikoampel und nächstem Arbeitsschritt."
+description: "Gezielte Anpassung des Arbeitsrechts-Praxisprofils – Standort-Fußabdruck, Risikoeinstellung, Eskalationskontakte, Einstellungsregeln, Kündigungsregeln, Handbuchpositionen oder Untersuchungseinstellungen ändern, ohne das gesamte Kaltstart-Interview neu zu du..."
 ---
 
-# /anpassen
+# Gezielte Anpassung des Arbeitsrechts-Praxisprofils – Standort-Fußabdruck, Risikoeinstellung, Eskalationskontakte, Einstellungsregeln, Kündigungsregeln, Handbuchpositionen oder Untersuchungseinstellungen ändern, ohne das gesamte Kaltstart-Interview neu zu durchlaufen.
 
-## Arbeitsbereich
-
-Geführte Anpassung Ihres Produktrecht-Praxisprofils – eine Sache ändern ohne das gesamte Kaltstart-Interview erneut auszuführen. Risikokalibrierung, Eskalationskontakte, Launch-Review-Framework, Werbeaussagen-Haltung oder Mandate-Workspace-Pfade anpassen. Verwenden wenn der Nutzer sagt "mein [Ding] ändern", "mein Profil aktualisieren", "mein Framework bearbeiten", "meine Kalibrierung anpassen" oder "anpassen". Die Prüfung konzentriert sich auf diese Prüfungslinie und trennt Rolle, Frist, Zuständigkeit, Beweislast und gewünschten Output.
 
 ## Arbeitsweg
 
 - Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
-- Fristen und Eilrisiken zuerst markieren: GPSR Geltungsbeginn 13.12.2024, MaschinenVO 20.01.2027, ProdHaftRL-Umsetzung 09.12.2026, Rückruf unverzüglich, Meldung schwerer Unfall innerhalb 2 Tagen.
-- Tragende Normen verifizieren: ProdSG, ProdHaftG, EU-Marktüberwachungs-VO 2019/1020, EU-Produktsicherheits-VO 2023/988 (GPSR ab 13.12.2024), Produkthaftungs-RL 2024/2853, MaschinenVO 2023/1230, GPSGV — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
-- Zuständige Stelle bestimmen und Adressaten richtig wählen: Hersteller, Importeur, Händler, Fulfillment-Dienstleister, Marktüberwachungsbehörde (BAuA, Länder), benannte Stelle, Endverbraucher.
-- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Konformitätserklärung, technische Dokumentation, Risikoanalyse, CE-Kennzeichnung, Rückrufkonzept, Sicherheitsbericht, Online-Marktplatz-AGB — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: die im Plugin-Kontext einschlägigen Normen über gesetze-im-internet.de, dejure.org, eur-lex.europa.eu und die amtlichen Bundes-/Landesportale live prüfen — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
 
-## Wann dies ausgeführt wird
+**Fokus:** Gezielte Anpassung des Arbeitsrechts-Praxisprofils – Standort-Fußabdruck, Risikoeinstellung, Eskalationskontakte, Einstellungsregeln, Kündigungsregeln, Handbuchpositionen oder Untersuchungseinstellungen ändern, ohne das gesamte Kaltstart-Interview neu zu durchlaufen.
 
-Der Nutzer hat `/produktrecht:produktrecht-anpassen` eingegeben. Er möchte etwas in seinem Produktrecht-Profil ändern – eine Risikokalibrierungs-Schwelle, einen Eskalationskontakt, einen Framework-Abschnitt – ohne das gesamte Kaltstart-Interview erneut auszuführen und ohne YAML direkt zu bearbeiten.
+### /arbeitsrecht:arbeitsrecht-anpassen
 
-## Was zu tun ist
+## Fachlicher Kern — Arbeitsrecht
+- **Problemfokus dieses Skills:** Bleibe beim konkreten Titel `/arbeitsrecht:arbeitsrecht-anpassen` und löse die dort angelegte Fachfrage; arbeite mit konkreten Tatbestandsmerkmalen, Beweisfragen und dem unmittelbar benötigten Arbeitsprodukt. Routingfragen bleiben Hilfsmittel, wenn Frist, Zuständigkeit oder Verfahrensart offen sind.
+- **Normenradar:** BGB §§ 611a, 613a, 615, 623; KSchG §§ 1, 4, 7; TzBfG §§ 14, 15, 16; AGG §§ 1, 3, 7, 15, 22; EntgTranspG §§ 3, 5, 7; BUrlG §§ 1, 3, 7; BetrVG §§ 87, 99, 102; ArbZG; NachwG; SGB IX §§ 164, 167, 168.
+- **Verifizierte Anker:** BAG, Urteil vom 23.10.2025 - 8 AZR 300/24 (Entgeltgleichheit, Paarvergleich, Beweislast, bundesarbeitsgericht.de); BAG, Urteil vom 03.06.2025 - 9 AZR 104/24 (kein Verzicht auf gesetzlichen Mindesturlaub im bestehenden Arbeitsverhältnis); bei Kündigungszugang immer § 623 BGB, Zugang nach § 130 BGB, Dreiwochenfrist §§ 4, 7 KSchG und Beweis des konkreten Umschlags trennen.
+- **Arbeitsmodus:** Zuerst Status, Zugang, Frist, Beteiligungsrechte, Sonderkündigungsschutz, Beweislast und prozessualen nächsten Schritt sichern; dann erst Materiellrecht vertiefen.
+- **Outputpflicht:** Fristenblatt, Zugangsmatrix, Beweisangebot, Mandantenmail, Betriebsrats-/Gegnerbrief oder Klage-/Erwiderungsbaustein.
+- **Fehlerbremse:** Tragende Normen/Entscheidungen live oder aus der Akte verifizieren; Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei prüfbarer Quelle. Keine BeckRS-, juris-, Kommentar- oder Aufsatz-Blindzitate aus Modellwissen.
 
-1. **Konfiguration lesen.** `~/.claude/plugins/config/claude-für-deutsches-recht/produktrecht/CLAUDE.md` lesen (und `~/.claude/plugins/config/claude-für-deutsches-recht/unternehmens-profil.md` eine Ebene darüber). Wenn die Plugin-Konfiguration nicht existiert oder noch `[PLATZHALTER]`-Werte enthält, sagen:
+## Eingaben
 
- > Sie haben das Setup noch nicht ausgeführt. Führen Sie zuerst `/produktrecht:produktrecht-kaltstart-interview` aus – anpassen ist für die Anpassung eines Profils das Sie bereits haben.
+- Beschreibung der gewünschten Änderung (Freitext oder Abschnittsname)
+- Aktuelle Konfigurationsdatei `~/.claude/plugins/config/claude-fuer-deutsches-recht/arbeitsrecht/CLAUDE.md`
 
-2. **Anpassbare Karte zeigen.** Was im Profil ist, gruppiert, mit einer einzeiligen Zusammenfassung des aktuellen Werts:
+## Ablauf
 
- - **Unternehmen / wer wir sind** – Name, Branche, Jurisdiktionen, Phase, Praxissetting, Produkt-Fläche *(geteilt über alle Plugins – Änderungen fließen durch `unternehmens-profil.md`)*
- - **Launch-Review-Prozess** – Eingang (Jira / Linear / Asana / Dokument), Review-SLA, Launch-Tiering, PRD-Speicherort
- - **Review-Framework** – die Kategorien gegen die Sie Launches prüfen (Werberecht, Datenschutz, AGB, Produktsicherheit, Geistiges Eigentum, Verbraucherrechte, Aufsichtsrecht) und die Tiefe pro Kategorie
- - **Risikokalibrierung** – was P0-Blocker / braucht-einen-Blick / in-Ordnung bei Ihrem Unternehmen ist, mit Beispielen die die Labels verankern
- - **Werbeaussagen** – Haltung zu marktschreierischer Anpreisung vs. substanziiert, vergleichende Werbehaltung nach § 6 UWG, Superlative, Hausregeln für KI-Feature-Aussagen
- - **Personen** – Produktpartner nach Fläche, Eskalationskette (Ihr Vorgesetzter, GC, Risikoausschuss), Marketing-Kontaktperson
- - **Ablauf** – Mandate-Workspaces, launch-radar-Watcher-Takt, Launch-Review-Vorlage
- - **Integrationen** – Jira / Linear / Asana / Slack / Dokumentenspeicher-Status, Ausweiche
+### 1. Konfiguration lesen
 
-3. **Fragen was geändert werden soll.**
+`~/.claude/plugins/config/claude-fuer-deutsches-recht/arbeitsrecht/CLAUDE.md` und `~/.claude/plugins/config/claude-fuer-deutsches-recht/unternehmens-profil.md` einlesen.
 
- > Was möchten Sie anpassen? Wählen Sie einen Abschnitt, oder beschreiben Sie die Änderung in Ihren eigenen Worten.
+Falls das Plugin noch nicht eingerichtet ist oder `[PLATZHALTER]` enthält:
+> Das Plugin wurde noch nicht eingerichtet. Führen Sie `/arbeitsrecht:arbeitsrecht-kaltstart-interview` aus.
 
-4. **Die Änderung machen.** Aktuellen Wert zeigen, nach neuem Wert fragen, erklären was sich downstream ändert, bestätigen, in die Konfiguration schreiben.
+### 2. Gewünschte Änderung klären
 
- Beispiele:
- - *Risikokalibrierung von "in-Ordnung" → "braucht-einen-Blick" für ein Muster festigen:* "`/ist-das-ein-problem` und `/launch-prüfung` werden dieses Muster beginnen zu flaggen. Bestehende Reviews bleiben wie geschrieben; erneut ausführen wenn Sie die neue Haltung angewendet haben möchten."
- - *Neue Launch-Review-Kategorie:* "`/launch-prüfung` fügt einen Abschnitt für diese Kategorie hinzu. `/ist-das-ein-problem` wird es in der Triage muster-erkennen."
- - *Werbeaussagen-Haltung festigen:* "`/werbeaussagen-prüfung` wird mehr Sprache als substanziierungsbedürftig oder umformulierungsbedürftig flaggen."
+Wenn die Angabe des Nutzers unklar ist, einen einzigen klärenden Prompt stellen – nicht mehrere Nachfragen hintereinander:
 
-5. **Für gemeinsames-Profil-Änderungen** (Unternehmensname, Branche, Jurisdiktionen, Praxissetting, Phase): nach `~/.claude/plugins/config/claude-für-deutsches-recht/unternehmens-profil.md` schreiben und vermerken:
+> Was möchten Sie ändern?
+> - Neuen Standort / neues Bundesland hinzufügen
+> - Tarifvertrag oder Betriebsratssituation aktualisieren
+> - Eskalationskontakt ändern
+> - Einstellungs- oder Kündigungsregeln anpassen
+> - Handbuch-/Betriebsvereinbarungsreferenz aktualisieren
+> - Integrationen neu prüfen (`--check-integrations`)
+> - Anderes – bitte beschreiben
 
- > Diese Änderung betrifft alle Plugins – jedes Plugin das Ihren Jurisdiktions-Fußabdruck liest sieht jetzt [neuer Wert].
+### 3. Nur den betroffenen Abschnitt aktualisieren
 
-6. **Abschließen.**
+Den relevanten Abschnitt in der Konfigurationsdatei isolieren, die Änderung durchführen, den Rest unberührt lassen. Keine komplette Neugenerierung.
 
- > Fertig. Ihre nächste Ausgabe spiegelt die Änderung wider. Sonst noch etwas? Sie können `/produktrecht:produktrecht-anpassen` jederzeit ausführen.
+**Besonderheiten:**
+- **Neuer Standort / Bundesland:** Eskalationstabelle um das neue Bundesland ergänzen. Auf besondere Landesgesetze hinweisen (z.B. Bayerisches Urlaubsgesetz, abweichendes Landesdatenschutzrecht). KSchG-Schwellenwert neu berechnen.
+- **Neuer Tarifvertrag:** Nachwirkung (§ 4 Abs. 5 TVG) und Günstigkeitsprinzip (§ 4 Abs. 3 TVG) berücksichtigen. Ggf. Hinweis auf Allgemeinverbindlichkeit (§ 5 TVG).
+- **Betriebsrat neu eingetragen:** § 102 BetrVG-Verpflichtung in Eskalationstabelle aufnehmen; Hinweis auf § 99 BetrVG (Einstellung) und § 87 BetrVG (Mitbestimmung).
+- **Eskalationskontakt:** Nur dieses Feld ändern; Risikologik bleibt.
 
-## Leitplanken
+### 4. Änderung schreiben und bestätigen
 
-- **Niemals einen Abschnitt löschen.** Wenn der Nutzer eine Review-Kategorie "entfernen" möchte, anbieten sie als `[Nicht im Umfang – anderswo weiterleiten]` zu markieren und das Plugin / Team zu nennen das sie übernimmt.
-- **Interne Inkonsistenz markieren.** Wenn die Änderung das Profil inkonsistent machen würde (z. B. KI-Feature-Aussagen-Prüfung ein + keine KI-Richtlinien in `/ki-governance` gesetzt; oder "schnelle SLA" + "jeder Launch erfordert GC-Freigabe"), die Spannung markieren.
-- **Leitplanken-Degradierung markieren.** Der `[prüfen]`-Flag, Quellenattributions-Tags und `[prüfen]`-Tags auf zitierten Normen sind tragende Bauelemente – nicht entfernen. Die Substanziierungsanforderung für Werbeaussagen ist das wofür `/werbeaussagen-prüfung` existiert; sie zu schwächen besiegt den Skill.
-- **Eine Änderung auf einmal.** Nicht das gesamte Interview neu stellen.
-## Aktuelle Rechtsprechung & Leitsätze
+Die geänderte Konfiguration zurückschreiben und dem Nutzer mitteilen, was geändert wurde (Vorher/Nachher, ein Diff).
 
+## Quellen und Zitierweise
+
+Zitierstandard: `../references/zitierweise.md`. Methodik: `../references/methodik-buergerliches-recht.md`.
+
+Relevante Normen je nach Änderungsbereich:
+- Neues Bundesland: Landesurlaubsgesetze, LDSG des Landes, ggf. Tarifvertrag mit Landesbezug
+- Betriebsrat: BetrVG §§ 1, 87, 99, 102, 111 ff.
 - Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
-## Zentrale Normen (Paragrafenkette)
+## Beispiele
 
-§§ 312 ff. BGB (Verbraucherschutzrecht, Informationspflichten) — §§ 1-4 ProdHaftG (Produkthaftung) — §§ 3, 3a UWG (Wettbewerbsrecht, Marktverhaltensregel) — §§ 5-6 DDG (Impressumspflicht) — EU AI Act VO 2024/1689 (KI-Produktrecht)
+```
+/arbeitsrecht:arbeitsrecht-anpassen
+Neuen Standort Hamburg hinzufügen, ca. 25 Mitarbeiter, kein Betriebsrat.
+```
 
-## Quellenregel
+```
+/arbeitsrecht:arbeitsrecht-anpassen
+Eskalationskontakt für betriebsbedingte Kündigungen auf Dr. Müller (GC) ändern.
+```
 
-Quellenregel: Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen; Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff.
+```
+/arbeitsrecht:arbeitsrecht-anpassen
+Wir sind seit Januar diesem Jahr an den Tarifvertrag Einzelhandel NRW gebunden.
+```
+
+## Risiken / typische Fehler
+
+- **Landesrecht übersehen.** Bayern, Brandenburg und andere Länder haben eigene Urlaubsgesetze mit abweichenden Mindesturlaubstagen. Bei neuem Bundesland immer Landesspezifika prüfen.
+- **Tarifbindung durch Bezugnahmeklausel.** Auch ohne Verbandsmitgliedschaft kann ein Tarifvertrag vertraglich einbezogen sein. Prüfen, ob neue Tarifbindung auch bestehende Verträge erfasst.
+- **Betriebsrat-Zuständigkeit.** Bei neuem Betriebsrat: § 102 BetrVG gilt für JEDE Kündigung, § 99 BetrVG für jede Einstellung – sofort in Eskalationstabelle aufnehmen.

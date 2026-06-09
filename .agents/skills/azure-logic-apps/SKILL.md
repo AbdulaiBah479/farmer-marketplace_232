@@ -1,9 +1,9 @@
 ---
 name: azure-logic-apps
-description: Expert knowledge for Azure Logic Apps development including troubleshooting, best practices, decision making, architecture & design patterns, limits & quotas, security, configuration, integrations & coding patterns, and deployment. Use when building Logic Apps with B2B/EDI, SAP/IBM/FTP connectors, AI/OpenAI calls, inline code, or CI/CD deployments, and other Azure Logic Apps related development tasks. Not for Azure Functions (use azure-functions), Azure Data Factory (use azure-data-factory), Azure Service Bus (use azure-service-bus), Azure Event Grid (use azure-event-grid).
+description: Expert knowledge for Azure Logic Apps development including troubleshooting, best practices, decision making, architecture & design patterns, limits & quotas, security, configuration, integrations & coding patterns, and deployment. Use when building B2B/EDI flows, AI/OpenAI integrations, hybrid/on-prem access, DR/HA designs, or cost-optimized deployments, and other Azure Logic Apps related development tasks. Not for Azure Functions (use azure-functions), Azure Data Factory (use azure-data-factory), Azure Service Bus (use azure-service-bus), Azure Event Grid (use azure-event-grid).
 compatibility: Requires network access. Uses mcp_microsoftdocs:microsoft_docs_fetch or fetch_webpage to retrieve documentation.
 metadata:
-  generated_at: "2026-03-19"
+  generated_at: "2026-06-07"
   generator: "docs2skills/1.0.0"
 ---
 # Azure Logic Apps Skill
@@ -24,21 +24,21 @@ This skill requires **network access** to fetch documentation content:
 
 | Category | Lines | Description |
 |----------|-------|-------------|
-| Troubleshooting | L37-L51 | Diagnosing and fixing Logic Apps failures, throttling/429s, B2B (AS2, X12, EDIFACT) acknowledgment errors, and interpreting detailed test/run error info and alerts |
-| Best Practices | L52-L59 | Best practices for Logic Apps: error/exception handling patterns, using control functions and rulesets efficiently, advanced rule operations, and handling non‑Unicode text encodings. |
-| Decision Making | L60-L69 | Guidance on when and how to migrate from BizTalk/Power Automate, choosing Standard vs Consumption, and planning/estimating Logic Apps costs and storage. |
-| Architecture & Design Patterns | L70-L86 | Architectural patterns for Logic Apps: AI agent loops, B2B flows, REST/web APIs, resource replication, rules engine, ordered messaging, and multi-region/zone-resilient DR and HA designs. |
-| Limits & Quotas | L87-L96 | Limits, quotas, and performance behaviors in Logic Apps: message size/chunking, pagination, SQL timeouts/results, inline JavaScript limits, configuration caps, and metering/billing rules. |
-| Security | L97-L113 | Securing Logic Apps with identities, OAuth/Easy Auth, private endpoints, certificates, and Azure Policy/Defender controls, including cross-tenant and connector access restrictions. |
-| Configuration | L114-L154 | Configuring Logic Apps workflows, runtime, B2B/integration accounts, on-prem connections, inline code, control flow, schemas/maps, and monitoring/diagnostic logging. |
-| Integrations & Coding Patterns | L155-L236 | Patterns and connectors for integrating Logic Apps with Azure/IBM/SAP/FTP/B2B systems, AI/OpenAI, data transforms (XML/EDI/Liquid), custom connectors, and automated testing of workflows |
-| Deployment | L237-L258 | CI/CD, ARM/Bicep/CLI deployment, DevOps pipelines, slots, hybrid setups, and migrating/cloning Consumption Logic Apps to Standard workflows |
+| Troubleshooting | L37-L52 | Diagnosing and fixing Logic Apps workflow failures, throttling/429s, B2B (AS2/EDIFACT/X12) acknowledgment errors, and using tests/metrics/alerts for detailed error analysis. |
+| Best Practices | L53-L60 | Best practices for Logic Apps: error/exception handling patterns, using control functions and rulesets efficiently, advanced rule operations, and handling non‑Unicode text encodings. |
+| Decision Making | L61-L70 | Guidance on when and how to migrate to Logic Apps (from BizTalk or Power Automate), choose Standard vs Consumption, and estimate/plan/manage Logic Apps costs and storage. |
+| Architecture & Design Patterns | L71-L84 | Architectural patterns for Logic Apps: AI agent loops, B2B flows, REST/web APIs, resource replication, rules engine, ordered messaging, and multi-region/zone-resilient DR and HA designs. |
+| Limits & Quotas | L85-L94 | Limits, quotas, and tuning for Logic Apps: JS inline code limits, SQL result/timeouts, connector pagination, large-message chunking, config limits, and metering/billing behavior. |
+| Security | L95-L111 | Securing Logic Apps: identity and OAuth auth, private endpoints, certificates, cross-tenant and connector blocking, and applying Azure Policy/Defender for governance and compliance. |
+| Configuration | L112-L154 | Configuring Logic Apps workflows, runtime, storage, monitoring, B2B/integration accounts, on-premises access, branching/loops, and reference schemas/expressions for advanced scenarios. |
+| Integrations & Coding Patterns | L155-L262 | Patterns and SDKs for integrating Logic Apps with Azure/OpenAI, SAP, IBM, storage, messaging, B2B/EDI, custom code (C#, Python), and automated testing of workflows and data maps. |
+| Deployment | L263-L285 | Deploying Logic Apps (Standard & Consumption) using ARM/Bicep, DevOps/CI-CD, VS Code, CLI, deployment slots, hybrid setups, and moving/migrating apps across environments. |
 
 ### Troubleshooting
 | Topic | URL |
 |-------|-----|
 | Resolve throttling and HTTP 429 errors in Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/handle-throttling-problems-429-errors |
-| Troubleshoot and diagnose Azure Logic Apps workflow failures | https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-diagnosing-failures |
+| Diagnose and fix Azure Logic Apps workflow failures | https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-diagnosing-failures |
 | Understand AS2 MDN acknowledgments in Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-enterprise-integration-as2-mdn-acknowledgment |
 | Troubleshoot common B2B Logic Apps errors | https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-enterprise-integration-b2b-list-errors-solutions |
 | Use EDIFACT CONTRL acknowledgments and error codes in Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-enterprise-integration-edifact-contrl-acknowledgment |
@@ -47,6 +47,7 @@ This skill requires **network access** to fetch documentation content:
 | Test and validate Logic Apps rulesets with Composer | https://learn.microsoft.com/en-us/azure/logic-apps/rules-engine/test-rulesets |
 | Interpret extended error details with TestErrorInfo in Logic Apps tests | https://learn.microsoft.com/en-us/azure/logic-apps/testing-framework/test-error-info-class-definition |
 | Use TestErrorResponseAdditionalInfo for detailed Logic Apps test errors | https://learn.microsoft.com/en-us/azure/logic-apps/testing-framework/test-error-response-additional-info-class-definition |
+| Use Logic Apps workflow metrics for health diagnosis | https://learn.microsoft.com/en-us/azure/logic-apps/view-workflow-metrics |
 | Diagnose Logic Apps workflow runs and alerts | https://learn.microsoft.com/en-us/azure/logic-apps/view-workflow-status-run-history |
 
 ### Best Practices
@@ -60,18 +61,16 @@ This skill requires **network access** to fetch documentation content:
 ### Decision Making
 | Topic | URL |
 |-------|-----|
-| Plan migration approaches from BizTalk Server to Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/biztalk-server-migration-approaches |
-| Evaluate migration from BizTalk Server to Azure Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/biztalk-server-migration-overview |
+| Plan migration approaches from BizTalk to Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/biztalk-server-migration-approaches |
 | Estimate Azure Logic Apps Standard storage costs | https://learn.microsoft.com/en-us/azure/logic-apps/estimate-storage-costs |
+| Create migration plans with Logic Apps Migration Agent | https://learn.microsoft.com/en-us/azure/logic-apps/migration/migration-agent-planning-stage |
 | Plan and manage Azure Logic Apps costs | https://learn.microsoft.com/en-us/azure/logic-apps/plan-manage-costs |
 | Decide when to migrate Power Automate flows to Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/power-automate-migration |
-| Choose between Standard and Consumption Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/single-tenant-overview-compare |
+| Choose between Standard and Consumption Azure Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/single-tenant-overview-compare |
 
 ### Architecture & Design Patterns
 | Topic | URL |
 |-------|-----|
-| Design autonomous AI agent workflows in Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/create-autonomous-agent-workflows |
-| Design conversational AI agent workflows in Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/create-conversational-agent-workflows |
 | Design Logic Apps workflows to replicate Azure resources | https://learn.microsoft.com/en-us/azure/logic-apps/create-replication-tasks-azure-resources |
 | Design web and REST API patterns for Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-create-api-app |
 | Design end-to-end B2B messaging workflows in Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-enterprise-integration-b2b |
@@ -81,7 +80,6 @@ This skill requires **network access** to fetch documentation content:
 | Use sequential convoy pattern for ordered Service Bus messages | https://learn.microsoft.com/en-us/azure/logic-apps/send-related-messages-sequential-convoy |
 | Implement handoff agent loop patterns with shared context | https://learn.microsoft.com/en-us/azure/logic-apps/set-up-handoff-agent-workflow |
 | Implement prompt-chaining agent loop workflows in Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/set-up-prompt-chain-agent-workflow |
-| Configure zone-redundant Logic Apps for high availability | https://learn.microsoft.com/en-us/azure/logic-apps/set-up-zone-redundancy-availability-zones |
 | Choose single vs multiple agent loops in Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/single-versus-multiple-agents |
 
 ### Limits & Quotas
@@ -91,7 +89,7 @@ This skill requires **network access** to fetch documentation content:
 | Control SQL result size and timeouts in Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/handle-long-running-stored-procedures-sql-connector |
 | Configure pagination to exceed Logic Apps connector page limits | https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-exceed-default-page-size-with-pagination |
 | Handle large Logic Apps messages with chunking limits | https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-handle-large-messages |
-| Logic Apps limits and configuration reference | https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-limits-and-config |
+| Reference Logic Apps limits and configuration settings | https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-limits-and-config |
 | Understand Logic Apps usage metering and billing behavior | https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-pricing |
 
 ### Security
@@ -103,7 +101,7 @@ This skill requires **network access** to fetch documentation content:
 | Deploy Standard Logic Apps to private storage with endpoints | https://learn.microsoft.com/en-us/azure/logic-apps/deploy-single-tenant-logic-apps-private-storage-account |
 | Configure Defender for Cloud health monitoring for Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/healthy-unhealthy-resource |
 | Configure Entra authentication for Logic Apps custom APIs | https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-custom-api-authentication |
-| Use certificates to secure B2B messages in Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-enterprise-integration-certificates |
+| Configure certificates to secure B2B messages in Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-enterprise-integration-certificates |
 | Secure Logic Apps workflow access and data | https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-securing-a-logic-app |
 | Use built-in Azure Policy definitions for Logic Apps governance | https://learn.microsoft.com/en-us/azure/logic-apps/policy-reference |
 | Secure Logic Apps Standard workflows with private endpoints | https://learn.microsoft.com/en-us/azure/logic-apps/secure-single-tenant-workflow-virtual-network-private-endpoint |
@@ -116,9 +114,9 @@ This skill requires **network access** to fetch documentation content:
 |-------|-----|
 | Execute inline PowerShell in Standard Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/add-run-powershell-scripts |
 | Configure Logic Apps connections to on-premises data sources | https://learn.microsoft.com/en-us/azure/logic-apps/connect-on-premises-data-sources |
+| Configure hosted MCP servers in Azure Connector Namespace | https://learn.microsoft.com/en-us/azure/logic-apps/connector-namespace/hosted-mcp-dev-guide |
 | Create Azure Monitor log queries for Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/create-monitoring-tracking-queries |
 | Create and publish reusable Logic Apps workflow templates | https://learn.microsoft.com/en-us/azure/logic-apps/create-publish-workflow-templates |
-| Run inline .NET code in Standard Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/create-run-custom-code-functions |
 | Configure app and host settings for Standard Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/edit-app-settings-host-settings |
 | Enable enhanced Application Insights telemetry for Logic Apps Standard | https://learn.microsoft.com/en-us/azure/logic-apps/enable-enhanced-telemetry-standard-workflows |
 | Create and manage integration accounts for Logic Apps B2B | https://learn.microsoft.com/en-us/azure/logic-apps/enterprise-integration/create-integration-account |
@@ -146,7 +144,9 @@ This skill requires **network access** to fetch documentation content:
 | Configure Azure Monitor logging for B2B Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/monitor-track-b2b-messages-consumption |
 | Configure B2B transaction monitoring in Logic Apps Standard | https://learn.microsoft.com/en-us/azure/logic-apps/monitor-track-b2b-transactions-standard |
 | Configure diagnostic logging for Logic Apps with Azure Monitor | https://learn.microsoft.com/en-us/azure/logic-apps/monitor-workflows-collect-diagnostic-data |
+| Configure Parse Document and Chunk Text actions in Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/parse-document-chunk-text |
 | Configure SQL database storage for Logic Apps Standard | https://learn.microsoft.com/en-us/azure/logic-apps/set-up-sql-database-storage-standard |
+| Configure zone redundancy for Azure Logic Apps workflows | https://learn.microsoft.com/en-us/azure/logic-apps/set-up-zone-redundancy-availability-zones |
 | Test Logic Apps workflows with mock outputs | https://learn.microsoft.com/en-us/azure/logic-apps/testing-framework/test-logic-apps-mock-data-static-results |
 | Define B2B tracking schemas for Logic Apps Consumption | https://learn.microsoft.com/en-us/azure/logic-apps/tracking-schemas-consumption |
 | Understand B2B tracking schemas for Logic Apps Standard | https://learn.microsoft.com/en-us/azure/logic-apps/tracking-schemas-standard |
@@ -155,10 +155,9 @@ This skill requires **network access** to fetch documentation content:
 ### Integrations & Coding Patterns
 | Topic | URL |
 |-------|-----|
-| Run Logic Apps workflows as Foundry agent actions | https://learn.microsoft.com/en-us/azure/logic-apps/add-agent-action-create-run-workflow |
 | Add Logic Apps connector tools to Foundry agents | https://learn.microsoft.com/en-us/azure/logic-apps/add-agent-tools-connector-actions |
 | Run inline C# scripts in Logic Apps Standard workflows | https://learn.microsoft.com/en-us/azure/logic-apps/add-run-csharp-scripts |
-| Call Azure Functions from Logic Apps workflows | https://learn.microsoft.com/en-us/azure/logic-apps/call-azure-functions-from-workflows |
+| Call Azure Functions from Azure Logic Apps workflows | https://learn.microsoft.com/en-us/azure/logic-apps/call-azure-functions-from-workflows |
 | Export Logic Apps as custom connectors for Power Apps | https://learn.microsoft.com/en-us/azure/logic-apps/call-from-power-apps |
 | Use Azure OpenAI and AI Search connectors in Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/connectors/azure-ai |
 | Reference for Logic Apps Standard built-in service provider connectors | https://learn.microsoft.com/en-us/azure/logic-apps/connectors/built-in/reference/ |
@@ -166,14 +165,14 @@ This skill requires **network access** to fetch documentation content:
 | Use Azure AI Search connector actions in Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/connectors/built-in/reference/azureaisearch/ |
 | Automate Azure Automation jobs with Logic Apps connector | https://learn.microsoft.com/en-us/azure/logic-apps/connectors/built-in/reference/azureautomation/ |
 | Integrate Azure Blob Storage via Logic Apps connector | https://learn.microsoft.com/en-us/azure/logic-apps/connectors/built-in/reference/azureblob/ |
-| Connect Azure Cosmos DB using Logic Apps connector | https://learn.microsoft.com/en-us/azure/logic-apps/connectors/built-in/reference/azurecosmosdb/ |
-| Access Azure File shares with Logic Apps connector | https://learn.microsoft.com/en-us/azure/logic-apps/connectors/built-in/reference/azurefile/ |
+| Integrate Azure Cosmos DB via Logic Apps connector | https://learn.microsoft.com/en-us/azure/logic-apps/connectors/built-in/reference/azurecosmosdb/ |
+| Access Azure File Storage using Logic Apps connector | https://learn.microsoft.com/en-us/azure/logic-apps/connectors/built-in/reference/azurefile/ |
 | Work with Azure Queue Storage via Logic Apps connector | https://learn.microsoft.com/en-us/azure/logic-apps/connectors/built-in/reference/azurequeues/ |
 | Use Azure Table Storage in Logic Apps connector | https://learn.microsoft.com/en-us/azure/logic-apps/connectors/built-in/reference/azuretables/ |
 | Invoke CICS programs using Logic Apps connector | https://learn.microsoft.com/en-us/azure/logic-apps/connectors/built-in/reference/cicsprogramcall/ |
 | Integrate Confluent Kafka with Logic Apps connector | https://learn.microsoft.com/en-us/azure/logic-apps/connectors/built-in/reference/confluentkafka/ |
 | Connect to IBM DB2 databases with Logic Apps connector | https://learn.microsoft.com/en-us/azure/logic-apps/connectors/built-in/reference/db2/ |
-| Use Azure AI Document Intelligence connector in Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/connectors/built-in/reference/documentintelligence/ |
+| Use Azure AI Document Intelligence with Logic Apps connector | https://learn.microsoft.com/en-us/azure/logic-apps/connectors/built-in/reference/documentintelligence/ |
 | Publish events to Event Grid with Logic Apps connector | https://learn.microsoft.com/en-us/azure/logic-apps/connectors/built-in/reference/eventgridpublisher/ |
 | Send and receive Event Hubs messages via Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/connectors/built-in/reference/eventhub/ |
 | Access on-premises file systems via Logic Apps connector | https://learn.microsoft.com/en-us/azure/logic-apps/connectors/built-in/reference/filesystem/ |
@@ -202,8 +201,8 @@ This skill requires **network access** to fetch documentation content:
 | Generate SAP IDoc and BAPI schemas via Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/connectors/sap-generate-schemas-for-artifacts |
 | Build custom built-in connectors for Standard Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/create-custom-built-in-connector-standard |
 | Create data transformation maps in Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/create-maps-data-transformation-visual-studio-code |
-| Create Logic Apps–driven MCP servers via API Center | https://learn.microsoft.com/en-us/azure/logic-apps/create-mcp-server-api-center |
 | Expose Logic Apps workflows as remote MCP servers | https://learn.microsoft.com/en-us/azure/logic-apps/create-model-context-protocol-server-standard |
+| Implement inline .NET custom functions in Logic Apps Standard | https://learn.microsoft.com/en-us/azure/logic-apps/create-run-custom-code-functions |
 | Host and call web or REST APIs from Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-custom-api-host-deploy-call |
 | Use Logic Apps data operations with workflow code samples | https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-data-operations-code-samples |
 | Send and receive AS2 messages in Logic Apps workflows | https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-enterprise-integration-as2 |
@@ -219,12 +218,39 @@ This skill requires **network access** to fetch documentation content:
 | Validate XML messages in B2B Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-enterprise-integration-xml-validation |
 | Use data operations in Azure Logic Apps workflows | https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-perform-data-operations |
 | Implement fact creators and retrievers for Logic Apps rules | https://learn.microsoft.com/en-us/azure/logic-apps/rules-engine/build-fact-creators-retrievers |
+| Use AgentToolContext for AI agent workflows | https://learn.microsoft.com/en-us/azure/logic-apps/standard-sdk/agent-tool-context-class-definition |
+| Build C# code-first workflows with Logic Apps SDK | https://learn.microsoft.com/en-us/azure/logic-apps/standard-sdk/create-workflows-with-csharp |
+| Chain Logic Apps workflow operations fluently | https://learn.microsoft.com/en-us/azure/logic-apps/standard-sdk/i-chainable-node-class-definition |
+| Work with variable workflow actions in Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/standard-sdk/i-variable-workflow-action-class-definition |
+| Implement Logic Apps workflow actions in SDK | https://learn.microsoft.com/en-us/azure/logic-apps/standard-sdk/i-workflow-action-class-definition |
+| Define Logic Apps workflow operations in code | https://learn.microsoft.com/en-us/azure/logic-apps/standard-sdk/i-workflow-operation-class-definition |
+| Provide Logic Apps workflows via IWorkflowProvider | https://learn.microsoft.com/en-us/azure/logic-apps/standard-sdk/i-workflow-provider-class-definition |
+| Implement Logic Apps workflow triggers in SDK | https://learn.microsoft.com/en-us/azure/logic-apps/standard-sdk/i-workflow-trigger-class-definition |
+| Use Azure Logic Apps Standard SDK workflow builders | https://learn.microsoft.com/en-us/azure/logic-apps/standard-sdk/logic-apps-standard-sdk |
+| Compose Logic Apps operation chains programmatically | https://learn.microsoft.com/en-us/azure/logic-apps/standard-sdk/operation-chain-class-definition |
+| Use typed workflow action interfaces in Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/standard-sdk/typed-workflow-action-interfaces-class-definition |
+| Use typed workflow trigger interfaces in Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/standard-sdk/typed-workflow-trigger-interfaces-class-definition |
+| Extend Logic Apps actions with WorkflowActionBase | https://learn.microsoft.com/en-us/azure/logic-apps/standard-sdk/workflow-action-base-class-definition |
+| Use WorkflowActions entry point in Logic Apps SDK | https://learn.microsoft.com/en-us/azure/logic-apps/standard-sdk/workflow-actions-class-definition |
+| Create built-in Logic Apps actions via SDK | https://learn.microsoft.com/en-us/azure/logic-apps/standard-sdk/workflow-built-in-actions-class-definition |
+| Create built-in Logic Apps triggers via SDK | https://learn.microsoft.com/en-us/azure/logic-apps/standard-sdk/workflow-built-in-triggers-class-definition |
+| Access runtime workflow context in Logic Apps code | https://learn.microsoft.com/en-us/azure/logic-apps/standard-sdk/workflow-context-class-definition |
+| Create Logic Apps control actions in code | https://learn.microsoft.com/en-us/azure/logic-apps/standard-sdk/workflow-control-actions-class-definition |
+| Create Logic Apps workflows with WorkflowFactory | https://learn.microsoft.com/en-us/azure/logic-apps/standard-sdk/workflow-factory-class-definition |
+| Access managed connector actions in Logic Apps SDK | https://learn.microsoft.com/en-us/azure/logic-apps/standard-sdk/workflow-managed-actions-class-definition |
+| Access managed connector triggers in Logic Apps SDK | https://learn.microsoft.com/en-us/azure/logic-apps/standard-sdk/workflow-managed-triggers-class-definition |
+| Register Logic Apps workflow providers with DI | https://learn.microsoft.com/en-us/azure/logic-apps/standard-sdk/workflow-provider-extensions-class-definition |
+| Extend Logic Apps triggers with WorkflowTriggerBase | https://learn.microsoft.com/en-us/azure/logic-apps/standard-sdk/workflow-trigger-base-class-definition |
+| Use WorkflowTriggers entry point in Logic Apps SDK | https://learn.microsoft.com/en-us/azure/logic-apps/standard-sdk/workflow-triggers-class-definition |
+| Manipulate variables with Logic Apps SDK actions | https://learn.microsoft.com/en-us/azure/logic-apps/standard-sdk/workflow-variable-actions-class-definition |
 | Mock Logic Apps actions with ActionMock in Automated Test SDK | https://learn.microsoft.com/en-us/azure/logic-apps/testing-framework/action-mock-class-definition |
 | Use Azure Logic Apps Automated Test SDK for workflow testing | https://learn.microsoft.com/en-us/azure/logic-apps/testing-framework/automated-test-sdk |
 | Test Logic Apps data maps with DataMapTestExecutor | https://learn.microsoft.com/en-us/azure/logic-apps/testing-framework/data-map-test-executor-class-definition |
+| Execute Liquid data map tests in Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/testing-framework/liquid-data-map-test-executor-class-definition |
 | Use TestActionExecutionContext for Logic Apps unit tests | https://learn.microsoft.com/en-us/azure/logic-apps/testing-framework/test-action-execution-context-class-definition |
 | Manage Logic Apps unit test state with TestExecutionContext | https://learn.microsoft.com/en-us/azure/logic-apps/testing-framework/test-execution-context-class-definition |
 | Work with loop iteration items using TestIterationItem in Logic Apps tests | https://learn.microsoft.com/en-us/azure/logic-apps/testing-framework/test-iteration-item-class-definition |
+| Select Liquid transform kinds for Logic Apps tests | https://learn.microsoft.com/en-us/azure/logic-apps/testing-framework/test-liquid-transform-kind-enum-definition |
 | Access workflow output parameters with TestWorkflowOutputParameter | https://learn.microsoft.com/en-us/azure/logic-apps/testing-framework/test-workflow-output-parameter-class-definition |
 | Inspect loop action results with TestWorkflowRunActionRepetitionResult | https://learn.microsoft.com/en-us/azure/logic-apps/testing-framework/test-workflow-run-action-repetition-result-class-definition |
 | Analyze Logic Apps action results with TestWorkflowRunActionResult | https://learn.microsoft.com/en-us/azure/logic-apps/testing-framework/test-workflow-run-action-result-class-definition |
@@ -242,11 +268,12 @@ This skill requires **network access** to fetch documentation content:
 | Create and deploy Standard Logic Apps in hybrid environments | https://learn.microsoft.com/en-us/azure/logic-apps/create-standard-workflows-hybrid-deployment |
 | Develop and deploy Standard Logic Apps with VS Code | https://learn.microsoft.com/en-us/azure/logic-apps/create-standard-workflows-visual-studio-code |
 | Develop and deploy Standard Logic Apps with VS Code | https://learn.microsoft.com/en-us/azure/logic-apps/create-standard-workflows-visual-studio-code |
-| Overview of DevOps CI/CD for Standard Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/devops-deployment-single-tenant-azure-logic-apps |
+| Implement DevOps deployment for Standard Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/devops-deployment-single-tenant-azure-logic-apps |
 | Export Consumption Logic Apps to Standard using VS Code | https://learn.microsoft.com/en-us/azure/logic-apps/export-from-consumption-to-standard-logic-app |
 | Use ARM templates to deploy Logic Apps | https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-azure-resource-manager-templates-overview |
 | Author ARM templates for Logic Apps Consumption workflows | https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-create-azure-resource-manager-templates |
 | Deploy ARM templates for Logic Apps Consumption workflows | https://learn.microsoft.com/en-us/azure/logic-apps/logic-apps-deploy-azure-resource-manager-templates |
+| Automate deployment of migrated Logic Apps workflows | https://learn.microsoft.com/en-us/azure/logic-apps/migration/migration-agent-deployment-stage |
 | Move Logic Apps across subscriptions, groups, and regions | https://learn.microsoft.com/en-us/azure/logic-apps/move-logic-app-resources |
 | Deploy Logic Apps Consumption workflows with ARM templates | https://learn.microsoft.com/en-us/azure/logic-apps/quickstart-create-deploy-azure-resource-manager-template |
 | Deploy Logic Apps Consumption workflows using Bicep | https://learn.microsoft.com/en-us/azure/logic-apps/quickstart-create-deploy-bicep |

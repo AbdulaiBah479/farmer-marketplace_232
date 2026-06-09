@@ -23,8 +23,6 @@ Use for: Event broadcasting, multiple consumers
 
 #### Node.js
 
-> **Auth:** `DefaultAzureCredential` is for local development. See [auth-best-practices.md](../../auth-best-practices.md) for production patterns.
-
 ```javascript
 const { ServiceBusClient } = require("@azure/service-bus");
 const { DefaultAzureCredential } = require("@azure/identity");
@@ -46,8 +44,6 @@ for (const message of messages) {
 ```
 
 #### Python
-
-> **Auth:** `DefaultAzureCredential` is for local development. See [auth-best-practices.md](../../auth-best-practices.md) for production patterns.
 
 ```python
 from azure.servicebus import ServiceBusClient, ServiceBusMessage
@@ -72,8 +68,6 @@ with receiver:
 ```
 
 #### .NET
-
-> **Auth:** `DefaultAzureCredential` is for local development. See [auth-best-practices.md](../../auth-best-practices.md) for production patterns.
 
 ```csharp
 using Azure.Identity;

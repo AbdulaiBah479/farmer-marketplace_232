@@ -1,16 +1,62 @@
 ---
+argument-hint: <update-readme|update-agents|init-readme|init-agents> [path] [--root-only] [--preserve] [--minimal] [--thorough] [--dry-run]
+disable-model-invocation: false
 name: md-docs
-description: This skill should be used when the user asks to "update README", "update context files", "init context", "create CLAUDE.md", "update CLAUDE.md", "update AGENTS.md", "update DOCS.md", "generate documentation", "API documentation", or mentions project documentation, context files, or markdown documentation workflows.
-version: 0.1.0
+user-invocable: true
+description: This skill should be used ONLY when the user asks to update or initialize README.md, CLAUDE.md, or AGENTS.md. Trigger phrases include "update README", "init README", "update context files", "update CLAUDE.md/AGENTS.md". Do NOT activate for any other Markdown file updates.
 ---
 
 # Markdown Documentation Management
 
 ## Overview
 
-Manage project documentation for Claude Code workflows including context files, READMEs, and agent instructions. This skill provides structured automation for maintaining accurate, up-to-date documentation that aligns with actual codebase structure and functionality. Use this skill when initializing new projects, updating existing documentation, or ensuring context files accurately reflect current code.
+Manage project documentation for Claude Code workflows including README.md and agent context files (AGENTS.md / CLAUDE.md). This skill enforces a strict audience split: **README.md is for humans**, **AGENTS.md is for agents and developers running commands**. Use this skill when initializing new projects, updating existing documentation, or ensuring context files accurately reflect current code.
 
-The skill emphasizes verification and validation over blind generation—analyze the actual codebase structure, file contents, and patterns before creating or updating documentation. All generated content should be terse, imperative, and expert-to-expert rather than verbose or tutorial-style.
+By default the skill operates **recursively** across the whole repository, not just the root. `update-*` workflows find and refresh every existing README.md / AGENTS.md in the tree; `init-*` workflows create files at the repo root and at each package root (a directory holding a manifest or workspace member) that lacks one. Each file is scoped to its own directory subtree and the nearest enclosing manifest. Pass `--root-only` to restrict any workflow to the repository root, or pass a `path` argument to limit the sweep to one subtree.
+
+The skill emphasizes verification and validation over blind generation — analyze the actual codebase structure, file contents, and patterns before creating or updating documentation. All generated content should be terse, imperative, and expert-to-expert rather than verbose or tutorial-style.
+
+## Audience Split
+
+This is the central rule for everything this skill produces.
+
+| File                                  | Audience                                     | Contains                                                                                                                                                                    | Excludes                                                                                                             |
+| ------------------------------------- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `README.md`                           | Humans browsing the repo (GitHub, npm, etc.) | Description, badges, links to docs/site/demo, references, papers, related work, acknowledgments, license, contributing pointer                                              | Any CLI commands, `just` recipes, package scripts, build/test/lint workflows, project structure trees, API reference |
+| `AGENTS.md` (and `CLAUDE.md` symlink) | AI agents and developers working in the repo | Stack, commands (install, dev, build, test, lint), `just` recipes, `package.json` scripts, `Makefile` targets, code style, architecture, conventions, contribution workflow | Marketing copy, badges, external links unrelated to development                                                      |
+
+When in doubt, ask: *would a human reading this on GitHub care, or only a developer/agent running commands?* If the latter, it goes in AGENTS.md.
+
+## Workflow Selection
+
+Pick the workflow that matches the user's intent:
+
+| Trigger                                                               | Workflow             | Reference                     |
+| --------------------------------------------------------------------- | -------------------- | ----------------------------- |
+| "update README" / "refresh README" (file already exists)              | Update README        | `references/update-readme.md` |
+| "init README" / "create README" / "new README" (no file or `--force`) | Initialize README    | `references/init-readme.md`   |
+| "update CLAUDE.md" / "update AGENTS.md" / "update context files"      | Update Context Files | `references/update-agents.md` |
+| "init AGENTS.md" / "create CLAUDE.md" / "init context"                | Initialize Context   | `references/init-agents.md`   |
+
+Selection rules:
+
+- If the target file already exists and the user says "update" / "refresh" / "fix", route to an `update-*` workflow.
+- If the target file is missing or the user says "create" / "init" / "new", route to an `init-*` workflow.
+- For ambiguous requests, enumerate the target files first (see Recursive Discovery) and confirm with the user.
+- If the user invokes the skill with no arguments, default to listing the files present across the tree and proposing a workflow rather than guessing.
+- Multiple workflows in one request (e.g. "update README and AGENTS.md") are fine — run them sequentially in the order the user listed them, reporting each result independently.
+- Each selected workflow applies to every target file the discovery step finds, unless `--root-only` or a narrowing `path` argument restricts the sweep.
+
+## CONTRIBUTING.md Policy
+
+This skill does **not** maintain `CONTRIBUTING.md`. If the workflow detects a `CONTRIBUTING.md` alongside any target file (repo root or any package root):
+
+1. Do not block other writes; surface the advisory for that directory.
+2. Recommend the user merge its contents into the sibling `AGENTS.md` (since AGENTS.md now owns the development workflow, branch conventions, review process, and tooling references).
+3. Suggest deleting `CONTRIBUTING.md` after the merge so the agent context file is the single source of truth.
+4. Do not auto-merge or auto-delete; the user performs the merge.
+
+Report the recommendation per directory in the standard summary format and continue with whichever README/AGENTS workflow the user requested, ignoring the `CONTRIBUTING.md` file itself.
 
 ## Prerequisites
 
@@ -22,462 +68,170 @@ git rev-parse --git-dir
 
 Ensure the output confirms you are in a git repository. If not initialized, documentation workflows may still proceed but git-specific features will be skipped.
 
-For update workflows, verify target files exist:
+Resolve the repository root once; all discovery is relative to it (or to a `path` argument, if given):
 
 ```bash
-ls -la CLAUDE.md AGENTS.md DOCS.md README.md
+git rev-parse --show-toplevel
 ```
 
-Check which files are present before attempting updates. Missing files will show errors, which helps identify what needs initialization. Note that DOCS.md is optional and only relevant for projects with APIs or public interfaces.
+Then enumerate target files (see Recursive Discovery below) before attempting any workflow. If `CONTRIBUTING.md` shows up next to a target, apply the policy above for that directory.
+
+## Recursive Discovery
+
+By default, workflows act on every relevant file in the tree. `--root-only` collapses this to the repo root; a `path` argument scopes it to one subtree.
+
+**Exclusions (always).** Skip these everywhere during discovery and creation:
+
+- VCS and dependency/build output dirs: `.git`, `node_modules`, `vendor`, `.venv`, `target`, `dist`, `build`, `out`, `.next`, `coverage`.
+- Anything ignored by git (rely on `--exclude-standard` / `git check-ignore`).
+- Hidden dot-directories (`.github`, `.vscode`, `.claude`, …) — **unless** the directory contains a manifest.
+
+**`update-*` discovery** — find existing files to refresh:
+
+```bash
+# README.md / AGENTS.md tracked or untracked, respecting .gitignore
+git ls-files --cached --others --exclude-standard -- '**/README.md' 'README.md' '**/AGENTS.md' 'AGENTS.md'
+```
+
+Drop any path under an excluded dir. `CLAUDE.md` is a symlink to its sibling `AGENTS.md` and is never processed on its own.
+
+**`init-*` discovery** — find package roots that should get a new file:
+
+```bash
+# Directories holding a language/tooling manifest = package roots
+git ls-files --cached --others --exclude-standard \
+  -- '**/package.json' 'package.json' '**/Cargo.toml' 'Cargo.toml' \
+     '**/pyproject.toml' 'pyproject.toml' '**/setup.py' 'setup.py' \
+     '**/go.mod' 'go.mod' '**/foundry.toml' 'foundry.toml' \
+     '**/Gemfile' 'Gemfile' '**/composer.json' 'composer.json'
+```
+
+The set of package roots is the repo root plus the unique directories of those manifests (minus exclusions). `init-*` creates the target file only in package roots that lack it; it does not create files in arbitrary leaf directories.
+
+**Per-file scoping.** Treat each target independently:
+
+- Metadata source is the nearest enclosing manifest (the one in its own directory, else walk up to the repo root).
+- A nested `README.md` links to its **sibling** `AGENTS.md`, not the root one.
+- Each `AGENTS.md` gets a sibling `CLAUDE.md` symlink in the **same** directory (`ln -sf AGENTS.md CLAUDE.md`, run from that directory).
+- `CONTRIBUTING.md` is checked per directory and merged into the sibling `AGENTS.md`.
+
+Process files deepest-first or root-first consistently, and report results grouped by path.
+
+## Common Arguments
+
+These flags are interpreted consistently across workflows. Each reference describes their per-workflow effects in detail; see `references/common-patterns.md` for shared parsing conventions.
+
+- `path` (positional): Limit the recursive sweep to this directory subtree instead of the whole repo. Combine with any workflow.
+- `--root-only`: Disable recursion; act on the repository root only (the pre-recursion behavior). Always supported.
+- `--dry-run`: Preview the changes that would be applied without writing files. Always supported.
+- `--preserve`: Keep existing user-authored content; only fix verifiable inaccuracies. Used by `update-*` workflows.
+- `--minimal`: Generate or verify the smallest useful output (top-level structure only).
+- `--thorough` (alias `--full`): Perform deep analysis or generate comprehensive content. Slowest mode.
+- `--force`: Override safety checks (e.g. overwrite existing target without prompting). Used by `init-*` workflows. Applies to every file in the sweep.
+
+If the user passes other flags, fall back to default mode and surface a one-line note about the unrecognized flag in the final report.
+
+## Writing Style
+
+All generated documentation should follow these conventions, regardless of workflow:
+
+- **Terse**: Omit needless words. Lead with the answer or the link.
+- **Imperative** (AGENTS.md): Use command form ("Build the project") not descriptive ("The project is built").
+- **Plain prose** (README.md): Short, direct descriptions; avoid imperative lecturing — the audience is browsing, not executing.
+- **Expert-to-expert**: Skip basic explanations; assume reader competence.
+- **Scannable**: Use headings, lists, and code blocks. A reader should find what they need in under 30 seconds.
+- **Accurate**: Verify every command, link, and path against the actual codebase before writing.
+
+Avoid tutorial-style prose, redundant context, and filler such as "In order to...". When in doubt, write less. See `references/common-patterns.md` for examples of good vs. bad output.
+
+## Safety Defaults
+
+Behaviors that apply across every workflow:
+
+- Never auto-commit. Workflows touch documentation files only; the user reviews and runs `git add` / `git commit` manually. Rely on git for recovery — do not create `*.backup` files.
+- For `init-*` workflows: refuse to overwrite an existing target unless `--force` is set or the user confirms via `AskUserQuestion`. When the sweep touches many files, confirm once for the batch rather than prompting per file.
+- Recurse by default but stay inside the repo (`git rev-parse --show-toplevel`); honor the exclusions in Recursive Discovery. Use `--root-only` or a `path` argument to narrow scope. Never write outside the discovered target set.
+- When a sweep would create or rewrite more than a handful of files, list the planned targets and get confirmation before writing (treat it like an implicit `--dry-run` preview first).
+- If `CONTRIBUTING.md` exists next to any target, do not edit it; surface the merge-into-AGENTS recommendation for that directory and continue.
 
 ## Update Context Files
 
-Verify and fix CLAUDE.md, AGENTS.md, and optionally DOCS.md against the actual codebase. This workflow reads existing context files, analyzes the codebase structure, identifies discrepancies, and updates documentation to match reality. DOCS.md is only processed if it exists (it contains API/code documentation).
+When to use: user asks to update CLAUDE.md or AGENTS.md so they match the actual codebase. Trigger phrases include "update CLAUDE.md", "update AGENTS.md", "update context files", "fix context", "refresh context".
 
-### Workflow Steps
+`CLAUDE.md` is a symlink to its sibling `AGENTS.md` and is not processed separately.
 
-**Parse Arguments**
+Runs on every existing `AGENTS.md` in the tree (see Recursive Discovery); each is scoped to its own directory and nearest manifest. AGENTS.md owns: stack, all CLI commands (install, dev, build, test, lint, deploy), `just` recipes, `package.json` scripts, `Makefile` targets, code style, architecture, conventions, and contribution workflow.
 
-Support the following arguments:
+Inputs: each existing `AGENTS.md` (required), the nearest enclosing manifests, lock files, scripts, `justfile`, `Makefile`. Outputs: rewritten `AGENTS.md` files, each with a refreshed sibling `CLAUDE.md` symlink.
 
-- `--dry-run`: Show what would change without writing files
-- `--preserve`: Keep existing content structure, only fix inaccuracies
-- `--thorough`: Perform deep analysis of all files (slower but comprehensive)
-- `--minimal`: Quick verification focusing on high-level structure only
+Recognised flags: `path`, `--root-only`, `--dry-run`, `--preserve`, `--thorough`, `--minimal`.
 
-**Verify Git Repository**
-
-Confirm working directory is a git repository. If not, warn the user but proceed with limitations (cannot analyze git history or branches).
-
-**Read Existing Context Files**
-
-Read current CLAUDE.md, AGENTS.md, and DOCS.md (if present) contents:
-
-```bash
-cat CLAUDE.md
-cat AGENTS.md
-cat DOCS.md  # if exists
-```
-
-Parse the structure and extract documented information including:
-
-- Project description and purpose
-- File structure and organization
-- Build and test commands
-- Custom tooling or scripts
-- Agent configurations and triggers
-- API endpoints and methods (from DOCS.md)
-- Function signatures and parameters (from DOCS.md)
-- Type definitions and interfaces (from DOCS.md)
-
-**Analyze Codebase**
-
-Scan the project to gather accurate information:
-
-- Directory structure (`ls -la`, `tree` if available)
-- Package configuration (`package.json`, `pyproject.toml`, `Cargo.toml`, etc.)
-- Build scripts and commands
-- Test frameworks and configurations
-- README badges and metadata
-
-For `--thorough` mode, also analyze:
-
-- File content patterns (imports, exports, interfaces)
-- Code organization conventions
-- Dependency relationships
-
-**Identify Discrepancies**
-
-Compare documented information against actual codebase:
-
-- Outdated file paths or structure
-- Incorrect build commands
-- Missing or removed features
-- Deprecated dependencies
-- Stale agent configurations
-- Outdated API endpoints or routes (DOCS.md)
-- Changed function signatures (DOCS.md)
-- Modified type definitions (DOCS.md)
-
-**Create Backups**
-
-Before overwriting, create backup files:
-
-```bash
-cp CLAUDE.md CLAUDE.md.backup
-cp AGENTS.md AGENTS.md.backup
-test -f DOCS.md && cp DOCS.md DOCS.md.backup
-```
-
-**Update Context Files**
-
-Write corrected versions maintaining the existing structure when `--preserve` is used, or reorganizing for clarity when not. For `--dry-run`, display the diff without writing:
-
-```bash
-diff -u CLAUDE.md.backup CLAUDE.md
-```
-
-**Generate Report**
-
-Display a summary of changes.
-
-When DOCS.md exists:
-
-```
-✓ Updated CLAUDE.md
-  - Fixed outdated build command
-  - Added new /api directory to structure
-
-✓ Updated AGENTS.md
-  - Updated test-runner trigger pattern
-
-✓ Updated DOCS.md
-  - Fixed outdated endpoint path /api/v1/users
-  - Updated function signature for createUser()
-```
-
-When DOCS.md is absent:
-
-```
-✓ Updated CLAUDE.md
-  - Fixed outdated build command
-
-✓ Updated AGENTS.md
-  - Updated test-runner trigger pattern
-
-⊘ DOCS.md not found (skipped)
-```
-
-For the complete update context files workflow with verification strategies, diff examples, and edge cases, refer to `./references/update-agents.md`.
+See [references/update-agents.md](references/update-agents.md).
 
 ## Update README
 
-Generate or update README.md based on project structure, package metadata, and codebase analysis. This workflow creates comprehensive, accurate READMEs that reflect the actual state of the project.
+When to use: user asks to update or refresh an existing README.md. Trigger phrases include "update README", "refresh README", "fix README", "regenerate README".
 
-### Workflow Steps
+Runs on every existing `README.md` in the tree (see Recursive Discovery). For any package root that has no `README.md`, route that directory to **Initialize README** instead (or, with `--force`, allow update-readme to create it there).
 
-**Parse Arguments**
+README owns: description, badges, links (homepage, docs site, demo, package registry), references, related work, acknowledgments, license, contributing pointer. It does **not** contain CLI commands, `just` recipes, scripts, or project structure trees — those live in the sibling AGENTS.md, and the README links to it for them.
 
-Support the following arguments:
+Inputs: each existing `README.md`; the nearest enclosing manifests for name/version/description/license/homepage URL; git remote for repository URL. Outputs: rewritten `README.md` files.
 
-- `--dry-run`: Preview README content without writing
-- `--preserve`: Keep existing sections, only update outdated information
-- `--minimal`: Generate minimal README (title, description, installation, usage)
-- `--full`: Generate comprehensive README with all optional sections
+Recognised flags: `path`, `--root-only`, `--dry-run`, `--preserve`, `--minimal`, `--thorough` (alias `--full`).
 
-**Analyze Project Structure**
+See [references/update-readme.md](references/update-readme.md).
 
-Gather information from multiple sources:
+## Initialize README
 
-```bash
-# Package metadata
-cat package.json
-cat pyproject.toml
-cat Cargo.toml
+When to use: user asks to create new README.md files from scratch in a repository (or package roots) that lack them. Trigger phrases include "init README", "create README", "new README", "generate a README".
 
-# Git information
-git remote get-url origin
-git describe --tags
+Creates a `README.md` in each package root that lacks one (repo root plus manifest-bearing directories; see Recursive Discovery). Refuses to overwrite an existing `README.md` without `--force` or explicit confirmation via `AskUserQuestion`. Supports two operating modes:
 
-# Directory structure
-ls -la
-```
+- **Automatic inference**: derive content entirely from project analysis.
+- **Guided**: focus content around a user-provided description (e.g., "TypeScript library for parsing dates with zero deps"). A guided description applies to the root file; nested package files are inferred from their own manifests.
 
-Extract:
+Same audience rules as Update README: humans only, no CLI.
 
-- Project name and description
-- Version number
-- Repository URL
-- License
-- Dependencies
-- Scripts/commands
+Inputs: per-package-root codebase analysis (language, framework, LICENSE, homepage URL, citations or papers in repo), optional user-provided description. Outputs: new `README.md` in each targeted package root.
 
-**Read Existing README**
+Recognised flags: `path`, `--root-only`, `--dry-run`, `--minimal`, `--full`, `--force`.
 
-If README.md exists and `--preserve` is used:
-
-```bash
-cat README.md
-```
-
-Parse existing sections to preserve custom content while updating technical details.
-
-**Create Backup**
-
-Before overwriting existing README:
-
-```bash
-cp README.md README.md.backup
-```
-
-**Generate README Content**
-
-Create structured content with appropriate sections:
-
-- **Title and badges** (version, license, build status)
-- **Description** (concise project summary)
-- **Installation** (package manager commands)
-- **Usage** (basic examples)
-- **Development** (build, test, lint commands)
-- **Contributing** (if applicable)
-- **License** (based on package metadata)
-
-For `--minimal` mode, include only title, description, installation, and usage.
-
-For `--full` mode, also include:
-
-- API documentation
-- Examples directory listing
-- Deployment instructions
-- Troubleshooting section
-- Credits and acknowledgments
-
-**Write README**
-
-Save the generated content. For `--dry-run`, display without writing.
-
-**Generate Report**
-
-Display summary:
-
-```
-✓ Updated README.md
-  - Added installation section
-  - Updated build commands to match package.json
-  - Added badges for license and version
-```
-
-For the complete update README workflow with section templates, metadata extraction strategies, and formatting examples, refer to `./references/update-readme.md`.
+See [references/init-readme.md](references/init-readme.md).
 
 ## Initialize Context
 
-Create project-specific CLAUDE.md from scratch based on codebase analysis. This workflow is ideal for new projects or repositories lacking context documentation.
+When to use: user asks to create new AGENTS.md (and CLAUDE.md symlink) files from scratch in a repository (or package roots) that lack context documentation. Trigger phrases include "init AGENTS.md", "create CLAUDE.md", "init context", "new context file", "generate AGENTS.md".
 
-### Workflow Steps
+Creates an `AGENTS.md` in each package root that lacks one (see Recursive Discovery). Like Initialize README, supports automatic inference and guided mode (e.g., "Foundry smart contract project with security-first mindset"). For each generated file, always creates the sibling `CLAUDE.md` symlink via `ln -sf AGENTS.md CLAUDE.md` run from that directory.
 
-**Parse Arguments**
+Each generated AGENTS.md must include a Commands section that consolidates every CLI invocation a developer or agent will need for that package: install, dev, build, test, lint, format, deploy, plus all `just` recipes, npm/pnpm/yarn/bun scripts, and Makefile targets discovered in its directory.
 
-Support the following arguments:
+Inputs: per-package-root codebase analysis (stack, scripts, `justfile`, `Makefile`, architecture hints, nearest `package.json`, `README.md`, language-specific manifests), optional user-provided description. Outputs: new `AGENTS.md` files, each with a sibling `CLAUDE.md` symlink.
 
-- `--dry-run`: Preview generated content without writing
-- `--minimal`: Create minimal context file (project description, structure)
-- `--full`: Create comprehensive context file with all relevant sections
+Recognised flags: `path`, `--root-only`, `--dry-run`, `--minimal`, `--full`, `--force`.
 
-**Verify No Existing CLAUDE.md**
+See [references/init-agents.md](references/init-agents.md).
 
-Check if CLAUDE.md already exists:
+## Reporting
 
-```bash
-test -f CLAUDE.md && echo "exists" || echo "missing"
-```
+Every workflow ends with a short summary. Use these conventions across all workflows:
 
-If exists, warn the user and suggest using the update workflow instead. Allow override with `--force` flag.
+- `✓` for successful operations: `✓ Updated AGENTS.md` followed by indented bullet points listing concrete changes.
+- `⊘` for skipped optional files.
+- `⚠` for advisory notices (e.g. CONTRIBUTING.md merge recommendation).
+- `✗` for failures: `✗ Failed to write README.md` with a one-line cause.
 
-**Analyze Project**
-
-Gather comprehensive information:
-
-- Language and framework (detect from files and package configs)
-- Directory structure and organization patterns
-- Build system (npm, cargo, poetry, gradle, etc.)
-- Test framework (jest, pytest, cargo test, etc.)
-- Linting and formatting tools
-- Environment variables or configuration files
-
-**Generate CLAUDE.md Content**
-
-Create structured sections:
-
-```markdown
-# Context
-
-Brief project description and purpose.
-
-## Structure
-
-Directory organization and key files.
-
-## Build
-
-Commands for building the project.
-
-## Test
-
-Commands for running tests.
-
-## Development
-
-Conventions, patterns, and workflows.
-```
-
-Adapt sections based on project type. For `--minimal`, include only Context and Structure. For `--full`, add all applicable sections including deployment, troubleshooting, and custom tooling.
-
-**Write CLAUDE.md**
-
-Save generated content. For `--dry-run`, display without writing.
-
-**Generate Report**
-
-Display summary:
-
-```
-✓ Created CLAUDE.md
-  - Detected Next.js project
-  - Added npm scripts from package.json
-  - Documented project structure
-  - Added testing section for Jest
-```
-
-For the complete initialize context workflow with language-specific templates, detection strategies, and customization options, refer to `./references/init-agents.md`.
-
-### DOCS.md Initialization
-
-DOCS.md is optional and not created by default. Create DOCS.md manually when the project has:
-
-- Public API endpoints requiring documentation
-- Exported functions or classes intended for external use
-- Complex type definitions users need to understand
-
-The update context workflow will suggest creating DOCS.md if it detects significant APIs without corresponding documentation.
-
-## Common Patterns
-
-Shared conventions and patterns used across all documentation workflows.
-
-### Argument Parsing
-
-Standard arguments supported across workflows:
-
-- `--dry-run`: Preview changes without writing files
-- `--preserve`: Maintain existing structure, only fix inaccuracies
-- `--minimal`: Generate minimal documentation
-- `--thorough`/`--full`: Generate comprehensive documentation
-- `--force`: Override safety checks
-
-Parse arguments from user input and set appropriate flags for workflow execution.
-
-### Backup File Handling
-
-Always create backups before overwriting existing files:
-
-```bash
-cp CLAUDE.md CLAUDE.md.backup
-cp AGENTS.md AGENTS.md.backup
-test -f DOCS.md && cp DOCS.md DOCS.md.backup  # only if exists
-```
-
-Inform the user when backups are created:
-
-```
-Created backup: CLAUDE.md.backup
-Created backup: AGENTS.md.backup
-Created backup: DOCS.md.backup (optional file)
-```
-
-Never delete backups automatically. Let users manage backup cleanup manually. Note that DOCS.md is optional—skip backup and update operations if it doesn't exist.
-
-### Writing Style
-
-Documentation should follow these conventions:
-
-- **Terse**: Omit needless words, lead with the answer
-- **Imperative**: Use command form ("Build the project") not descriptive ("The project is built")
-- **Expert-to-expert**: Skip basic explanations, assume competence
-- **Scannable**: Use headings, lists, and code blocks for easy navigation
-- **Accurate**: Verify all commands and paths against actual codebase
-
-**Good:**
-
-```markdown
-## Build
-
-Build the project:
-
-\`\`\`bash
-npm run build
-\`\`\`
-
-Run tests:
-
-\`\`\`bash
-npm test
-\`\`\`
-```
-
-**Bad:**
-
-```markdown
-## Building the Project
-
-In order to build the project, you will need to use the npm build command. This command will compile all of the TypeScript files and generate the output in the dist directory. First, make sure you have installed all dependencies by running npm install.
-```
-
-### Report Formatting
-
-After completing operations, display a clear summary:
-
-```
-✓ Updated CLAUDE.md
-  - Fixed build command
-  - Added new directory structure
-
-✓ Updated README.md
-  - Added installation section
-  - Updated badges
-
-✓ Updated DOCS.md
-  - Updated API endpoint documentation
-  - Fixed function signature
-
-✗ AGENTS.md not found
-  - Skipped update
-
-⊘ DOCS.md not found
-  - Skipped (optional file)
-```
-
-Use checkmarks (✓) for successful operations, crosses (✗) for failed operations, and ⊘ for skipped optional files. Include indented details showing specific changes made.
-
-### File Detection
-
-Detect project type and structure by checking for characteristic files:
-
-```bash
-# Node.js/JavaScript
-test -f package.json
-
-# Python
-test -f pyproject.toml || test -f setup.py
-
-# Rust
-test -f Cargo.toml
-
-# Go
-test -f go.mod
-```
-
-Use detection results to customize documentation templates and commands.
-
-### Metadata Extraction
-
-Read package configuration files to extract accurate metadata:
-
-```bash
-# Node.js
-cat package.json | grep -E '"name"|"version"|"description"'
-
-# Python
-cat pyproject.toml | grep -E 'name|version|description'
-```
-
-Parse JSON or TOML appropriately to extract values. Never hardcode or guess metadata when it can be read directly from configuration files.
+Indent change details under each line so the user can scan a single file's deltas without re-reading the header. For recursive runs, group results by file path (use the path relative to the repo root as a sub-header) and end with a one-line tally (e.g. `Updated 4 files, skipped 1, 1 advisory`). For `--dry-run`, prefix the report with a "Planned Changes" header, list every target path, and include the diff or proposed-content preview rather than a confirmation. Refer to `references/common-patterns.md` for full report templates.
 
 ## Additional Resources
 
 For detailed workflows, examples, and implementation guidance, refer to these reference documents:
 
-- **`./references/update-agents.md`** - Complete context file update workflow including verification strategies, diff generation, and discrepancy detection
-- **`./references/update-readme.md`** - Complete README update workflow including section templates, metadata extraction, and formatting conventions
-- **`./references/init-agents.md`** - Complete context initialization workflow including language-specific templates, detection strategies, and customization options
+- **`references/common-patterns.md`** — Audience split, argument parsing, writing style, report formatting, file detection, metadata extraction, CONTRIBUTING.md merge recommendation
+- **`references/update-agents.md`** — Complete context file update workflow including verification strategies, command discovery, and discrepancy detection
+- **`references/update-readme.md`** — Complete README update workflow for human-aimed content
+- **`references/init-readme.md`** — Complete README initialization workflow for human-aimed content
+- **`references/init-agents.md`** — Complete context initialization workflow including language-specific templates and commands consolidation
 
 These references provide implementation details, code examples, and troubleshooting guidance for each workflow type.

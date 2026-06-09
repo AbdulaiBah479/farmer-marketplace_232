@@ -1,136 +1,75 @@
 ---
 name: research
-description: Runs multi-source research across GitHub, HN, Reddit, arXiv, and Semantic Scholar. Use when surveying a technical topic across multiple channels.
-alwaysApply: false
-category: orchestration
-tags:
-  - research
-  - synthesis
-  - multi-source
-tools: []
-estimated_tokens: 600
-progressive_loading: true
-orchestrates:
-  - tome:code-search
-  - tome:discourse
-  - tome:papers
-  - tome:triz
-  - tome:synthesize
-model_hint: standard
+description: Multi-source parallel research with confidence-based synthesis.
 ---
-# Research Session Orchestrator
 
-Run a full multi-source research session: classify the
-domain, dispatch parallel agents, synthesize findings,
-and output a formatted report.
+# Research Skill
 
-## Workflow
+Multi-source parallel research with confidence-based synthesis.
 
-### Step 1: Classify Domain
+## Trigger Phrases
 
-Run the domain classifier on the topic:
+When user asks:
+- "research X for me"
+- "find out about X"
+- "what's the current status of X"
+- "gather information on X"
+- "deep dive into X"
 
-```python
-from tome.scripts.domain_classifier import classify
-result = classify(topic)
-# result.domain, result.triz_depth, result.channel_weights
+## Quick Reference
+
+| Mode | Speed | Depth | Use Case |
+|------|-------|-------|----------|
+| quick | ~30s | Shallow | Fact check, simple lookup |
+| standard | ~2min | Moderate | Typical research |
+| extensive | ~8min | Deep | Comprehensive analysis |
+
+## Command
+
+```
+/ai-dev-kit:research [mode] [query]
 ```
 
-If confidence < 0.6, ask the user to confirm or override
-the domain classification before proceeding.
+## Mode Selection
 
-### Step 2: Plan Research
-
-```python
-from tome.scripts.research_planner import plan
-research_plan = plan(result)
-# research_plan.channels, research_plan.weights, research_plan.triz_depth
+```
+Need quick answer? ─────────────► quick
+  │
+  ├─ Need current info? ────────► standard
+  │
+  └─ Need comprehensive? ───────► extensive
 ```
 
-### Step 3: Create Session
+## Research Types
 
-```python
-from tome.session import SessionManager
-mgr = SessionManager(Path.cwd())
-session = mgr.create(topic, result.domain, result.triz_depth, research_plan.channels)
-```
+| Type | Sources | Best For |
+|------|---------|----------|
+| Web | WebSearch | Current events, latest docs |
+| Docs | Local ai-docs/ | Library usage, patterns |
+| Code | Codebase grep | Implementation examples |
 
-### Step 4: Dispatch Agents
+## Confidence Levels
 
-Launch research agents in parallel using the Agent tool.
-Use this mapping:
+| Level | Meaning | Source Count |
+|-------|---------|--------------|
+| HIGH | Very reliable | 3+ agree |
+| MEDIUM | Likely accurate | 2 agree |
+| LOW | Needs verification | 1 only |
+| CONFLICTING | Check manually | Sources disagree |
 
-| Channel | Agent Type | Prompt Includes |
-|---------|-----------|-----------------|
-| code | `tome:code-searcher` | topic |
-| discourse | `tome:discourse-scanner` | topic, domain, subreddits |
-| academic | `tome:literature-reviewer` | topic, domain |
-| triz | `tome:triz-analyst` | topic, domain, triz_depth |
+## Cookbook
 
-**Rules:**
-- Always dispatch code and discourse agents
-- Dispatch academic agent only if "academic" is in
-  research_plan.channels
-- Dispatch triz agent only if "triz" is in
-  research_plan.channels AND triz_depth != "light"
-- Dispatch all eligible agents in a SINGLE message
-  (parallel, not sequential)
+- `cookbook/quick-mode.md` - Fast fact-checking pattern
+- `cookbook/standard-mode.md` - Balanced research pattern
+- `cookbook/extensive-mode.md` - Deep research pattern
 
-Each agent prompt must include:
-1. The topic string
-2. The domain classification
-3. Any channel-specific context (subreddits for discourse,
-   triz_depth for triz)
-4. Instruction to return findings as JSON
+## Reference
 
-### Step 5: Collect and Synthesize
+- `reference/researcher-types.md` - Available researcher agents
+- `reference/synthesis-patterns.md` - How findings are combined
 
-After all agents return:
+## Common Gotchas
 
-1. Parse each agent's findings into Finding objects
-2. Merge using `tome.synthesis.merger.merge_findings()`
-3. Rank using `tome.synthesis.ranker.rank_findings()`
-
-### Step 6: Generate Output
-
-```python
-from tome.output.report import format_report, format_brief, format_transcript
-
-# Default to report format
-output = format_report(session)
-
-# Save to docs/research/
-output_path = f"docs/research/{session.id}-{slug}.md"
-```
-
-Save the session state:
-```python
-mgr.save(session)
-```
-
-### Step 7: Present Results
-
-Display a brief summary to the user:
-- Number of findings per channel
-- Top 3 findings by relevance
-- Path to saved report
-
-Then offer interactive refinement:
-"Use `/tome:dig \"subtopic\"` to explore specific areas."
-
-## Error Handling
-
-- If an agent fails, continue with remaining agents
-- If all agents fail, report the error and suggest
-  manual research approaches
-- If synthesis produces 0 findings, state this clearly
-  rather than generating an empty report
-- Save session state even on partial failure
-
-## Output Format Selection
-
-| Flag | Format | Function |
-|------|--------|----------|
-| (default) | report | `format_report()` |
-| `--format brief` | brief | `format_brief()` |
-| `--format transcript` | transcript | `format_transcript()` |
+- **Timeout**: Extensive mode may timeout on slow connections. Results are still returned.
+- **Docs only**: If web is down, doc-only results are returned with note.
+- **Conflicting info**: Review "Conflicting Information" section when present.

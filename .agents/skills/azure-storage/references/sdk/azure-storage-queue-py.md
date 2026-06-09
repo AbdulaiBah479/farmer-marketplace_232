@@ -8,9 +8,6 @@
 pip install azure-storage-queue azure-identity
 
 ## Quick Start
-
-> **Auth:** `DefaultAzureCredential` is for local development. See [auth-best-practices.md](../auth-best-practices.md) for production patterns.
-
 ```python
 from azure.storage.queue import QueueClient
 from azure.identity import DefaultAzureCredential

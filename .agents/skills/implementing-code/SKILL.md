@@ -1,71 +1,55 @@
 ---
 name: implementing-code
-description: Write clean, efficient, maintainable code. Use when implementing features, writing functions, or creating new modules. Covers SOLID principles, error handling, and code organization.
-allowed-tools: Read, Write, Edit, Bash, Glob, Grep
+description: >
+  Implements code changes and creates commits.
+  Triggered when: implementation tasks, code changes, feature additions, bug fixes.
+allowed-tools: Read, Write, Edit, Bash(git:*), Glob, Grep
 ---
 
-# Implementing Code
+# Task Input
 
-## Workflows
+- **Purpose**: What to achieve
+- **Deliverable**: Completion criteria
 
-- [ ] **Security Check**: Injection flaws, auth issues, sensitive data exposure
-- [ ] **Performance Check**: N+1 queries, memory leaks, inefficient algorithms
-- [ ] **Readability Check**: SOLID principles, naming conventions, comments
-- [ ] **Testing Check**: Edge cases, error paths, happy paths
+# Implementation Flow
 
-## Feedback Loops
+1. Investigate related code (Glob, Grep, Read)
+2. Implement following existing patterns
+3. Commit changes
 
-1. Implement feature or fix
-2. Run local tests (unit/integration)
-3. Run linter/formatter
-4. If failure, fix and repeat
+# Commit Convention
 
-## Reference Implementation
+Check CLAUDE.md for project-specific rules.
 
-### SOLID Compliant Class (TypeScript)
-
-```typescript
-// Abstraction (Interface Segregation)
-interface ILogger {
-  log(message: string): void;
-}
-
-interface IUserRepository {
-  save(user: User): Promise<void>;
-}
-
-// Domain Entity
-class User {
-  constructor(public readonly id: string, public readonly email: string) {}
-}
-
-// Implementation (Single Responsibility)
-class UserService {
-  constructor(
-    private readonly userRepository: IUserRepository,
-    private readonly logger: ILogger
-  ) {}
-
-  public async registerUser(email: string): Promise<User> {
-    if (!email.includes('@')) {
-      throw new Error("Invalid email format");
-    }
-
-    const user = new User(crypto.randomUUID(), email);
-    await this.userRepository.save(user);
-    this.logger.log(`User registered: ${user.id}`);
-
-    return user;
-  }
-}
+Default format (Conventional Commits):
+```
+<type>: <description>
 ```
 
-## Code Review Checklist
+| type | usage |
+|------|-------|
+| feat | New feature |
+| fix | Bug fix |
+| docs | Documentation |
+| refactor | Refactoring |
+| test | Tests |
+| chore | Other |
 
-- [ ] No hardcoded secrets or credentials
-- [ ] Input validation on all external data
-- [ ] Proper error handling with meaningful messages
-- [ ] No N+1 query patterns
-- [ ] Functions follow single responsibility principle
-- [ ] Dependencies injected, not instantiated inline
-- [ ] Tests cover happy path and edge cases
+# Commit Execution
+
+```bash
+git add <files>
+git commit -m "<type>: <description>"
+```
+
+# Parallel Execution
+
+When running in parallel with other tasks:
+- Do NOT edit the same files
+- Report conflicts to manager
+
+# Completion Report
+
+- Changed files
+- Implementation summary
+- Commit hash

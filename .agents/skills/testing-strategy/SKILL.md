@@ -1,442 +1,543 @@
 ---
-name: "Testing Strategy"
-description: "Apply TDD with RED-GREEN-REFACTOR cycles, separate unit tests from integration tests, ensure comprehensive coverage. Apply when writing tests, evaluating test coverage, testing databases, or testing admin flows."
-allowed-tools: Read, Write, Edit, Bash
-version: 2.1.0
-compatibility: Claude Opus 4.5, Claude Code v2.x
-updated: 2026-01-24
+name: testing-strategy
+description: Comprehensive testing strategy using Vitest for unit/integration tests and Playwright for E2E tests with best practices and coverage targets
+version: 1.0.0
+author: AI-Vibe-Prompts
+tags: [testing, vitest, playwright, quality, tdd, e2e]
+auto_invoke: true
 ---
 
-# Testing Strategy
+# Testing Strategy Skill
 
-Systematic TDD workflow ensuring comprehensive test coverage following RED-GREEN-REFACTOR cycles.
+## Objective
 
-## Overview
+Implement comprehensive testing strategy covering unit, integration, and E2E tests using modern tools (Vitest, Playwright) with clear coverage targets and best practices.
 
-This Skill enforces:
-- RED-GREEN-REFACTOR cycles (TDD)
-- Atomic test coverage
-- Separation of logic from database tests (T-3)
-- E2E testing for critical admin flows (T-7)
-- Edge case coverage (T-8)
+## When to Use This Skill
 
-Apply when writing tests, designing test suites, or evaluating coverage.
+Auto-invoke when:
+- User mentions "test", "testing", "coverage", "TDD", "E2E"
+- Setting up new project
+- Adding new features (need tests)
+- Debugging test failures
+- Improving test coverage
 
-## RED-GREEN-REFACTOR Workflow
+## Testing Pyramid
 
-**Every feature follows this cycle**:
-
-### RED Phase: Write Failing Test
-
-Write test BEFORE implementation:
-
-```ts
-import { describe, test, expect } from 'vitest';
-import { validateEmail } from './email';
-
-describe('validateEmail', () => {
-  test('returns true for valid email', () => {
-    expect(validateEmail('user@example.com')).toBe(true);
-  });
-
-  test('returns false for missing @', () => {
-    expect(validateEmail('userexample.com')).toBe(false);
-  });
-
-  test('returns false for empty string', () => {
-    expect(validateEmail('')).toBe(false);
-  });
-});
+```
+        /\
+       /E2E\         Few, slow, expensive
+      /------\
+     /  Integ \      Some, moderate speed
+    /----------\
+   / Unit Tests \    Many, fast, cheap
+  /--------------\
 ```
 
-Run: `pnpm test validateEmail` → **FAILS** (RED)
+**Distribution**:
+- **70%** Unit Tests - Fast, isolated, cheap
+- **20%** Integration Tests - Moderate speed, test interactions
+- **10%** E2E Tests - Slow, expensive, critical user flows
 
-### GREEN Phase: Make Test Pass
+## Test Types
 
-Write minimal code to pass:
+### 1. Unit Tests (Vitest)
 
-```ts
-export function validateEmail(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
+**What**: Test individual functions/components in isolation
+
+**Tools**: Vitest, React Testing Library
+
+**Coverage Target**: 80%+
+
+**Setup**:
+```bash
+npm install -D vitest @vitest/ui @testing-library/react @testing-library/jest-dom
 ```
 
-Run: `pnpm test validateEmail` → **PASSES** (GREEN)
+**Config** (`vitest.config.ts`):
+```typescript
+import { defineConfig } from 'vitest/config'
+import react from '@vitejs/plugin-react'
 
-### REFACTOR Phase: Improve Code
-
-Improve without changing behavior:
-
-```ts
-// Extract pattern for readability
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-export function validateEmail(email: string): boolean {
-  return EMAIL_PATTERN.test(email);
-}
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './tests/setup.ts',
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      exclude: ['node_modules/', 'tests/'],
+      thresholds: {
+        lines: 80,
+        functions: 80,
+        branches: 75,
+        statements: 80
+      }
+    }
+  }
+})
 ```
 
-Run: `pnpm test validateEmail` → **STILL PASSES** (verify before claiming done)
+**Example** (`Button.test.tsx`):
+```typescript
+import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect, vi } from 'vitest'
+import { Button } from './Button'
+
+describe('Button', () => {
+  it('renders with text', () => {
+    render(<Button>Click me</Button>)
+    expect(screen.getByText('Click me')).toBeInTheDocument()
+  })
+
+  it('calls onClick when clicked', () => {
+    const handleClick = vi.fn()
+    render(<Button onClick={handleClick}>Click</Button>)
+    fireEvent.click(screen.getByText('Click'))
+    expect(handleClick).toHaveBeenCalledOnce()
+  })
+
+  it('is disabled when disabled prop is true', () => {
+    render(<Button disabled>Disabled</Button>)
+    expect(screen.getByRole('button')).toBeDisabled()
+  })
+})
+```
+
+**Commands**:
+```bash
+npm run test              # Run all tests
+npm run test:watch        # Watch mode
+npm run test:ui           # Visual UI
+npm run test:coverage     # With coverage
+```
+
+### 2. Integration Tests (Vitest)
+
+**What**: Test component interactions, API calls, state management
+
+**Example** (`UserProfile.test.tsx`):
+```typescript
+import { render, screen, waitFor } from '@testing-library/react'
+import { describe, it, expect, vi } from 'vitest'
+import { UserProfile } from './UserProfile'
+
+// Mock API
+vi.mock('./api', () => ({
+  fetchUser: vi.fn(() => Promise.resolve({
+    id: 1,
+    name: 'John Doe',
+    email: 'john@example.com'
+  }))
+}))
+
+describe('UserProfile Integration', () => {
+  it('fetches and displays user data', async () => {
+    render(<UserProfile userId="1" />)
+    
+    expect(screen.getByText('Loading...')).toBeInTheDocument()
+    
+    await waitFor(() => {
+      expect(screen.getByText('John Doe')).toBeInTheDocument()
+      expect(screen.getByText('john@example.com')).toBeInTheDocument()
+    })
+  })
+})
+```
+
+### 3. E2E Tests (Playwright)
+
+**What**: Test complete user flows in real browser
+
+**Tools**: Playwright
+
+**Coverage Target**: Critical paths only
+
+**Setup**:
+```bash
+npm install -D @playwright/test
+npx playwright install
+```
+
+**Config** (`playwright.config.ts`):
+```typescript
+import { defineConfig, devices } from '@playwright/test'
+
+export default defineConfig({
+  testDir: './e2e',
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : undefined,
+  reporter: 'html',
+  use: {
+    baseURL: 'http://localhost:3000',
+    trace: 'on-first-retry',
+  },
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'mobile',
+      use: { ...devices['iPhone 13'] },
+    },
+  ],
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://localhost:3000',
+    reuseExistingServer: !process.env.CI,
+  },
+})
+```
+
+**Example** (`e2e/auth.spec.ts`):
+```typescript
+import { test, expect } from '@playwright/test'
+
+test.describe('Authentication Flow', () => {
+  test('user can sign up and log in', async ({ page }) => {
+    // Sign up
+    await page.goto('/signup')
+    await page.fill('[name="email"]', 'test@example.com')
+    await page.fill('[name="password"]', 'SecurePass123!')
+    await page.click('button[type="submit"]')
+    
+    // Should redirect to dashboard
+    await expect(page).toHaveURL(/\/dashboard/)
+    await expect(page.locator('h1')).toContainText('Welcome')
+    
+    // Log out
+    await page.click('[aria-label="User menu"]')
+    await page.click('text=Logout')
+    
+    // Should redirect to home
+    await expect(page).toHaveURL('/')
+    
+    // Log back in
+    await page.goto('/login')
+    await page.fill('[name="email"]', 'test@example.com')
+    await page.fill('[name="password"]', 'SecurePass123!')
+    await page.click('button[type="submit"]')
+    
+    await expect(page).toHaveURL(/\/dashboard/)
+  })
+})
+```
+
+**Commands**:
+```bash
+npx playwright test                    # Run all E2E
+npx playwright test --ui               # Interactive mode
+npx playwright test --headed           # Show browser
+npx playwright test --project=chromium # Specific browser
+npx playwright show-report             # View last report
+```
+
+## Testing Best Practices
+
+### AAA Pattern
+```typescript
+// Arrange
+const user = { id: 1, name: 'John' }
+const mockFetch = vi.fn()
+
+// Act
+const result = await fetchUser(mockFetch, 1)
+
+// Assert
+expect(result).toEqual(user)
+expect(mockFetch).toHaveBeenCalledWith('/api/users/1')
+```
+
+### Test Naming
+```typescript
+// Good: descriptive, explains what and when
+it('displays error message when API returns 404', () => {})
+it('disables submit button when form is invalid', () => {})
+
+// Bad: vague, unclear
+it('works', () => {})
+it('test 1', () => {})
+```
+
+### One Assertion Per Test (Guideline)
+```typescript
+// Prefer focused tests
+it('renders user name', () => {
+  render(<User name="John" />)
+  expect(screen.getByText('John')).toBeInTheDocument()
+})
+
+it('renders user email', () => {
+  render(<User email="john@example.com" />)
+  expect(screen.getByText('john@example.com')).toBeInTheDocument()
+})
+
+// Over complex tests
+it('renders user data', () => {
+  // Multiple unrelated assertions
+})
+```
+
+### Mock External Dependencies
+```typescript
+// Mock API calls
+vi.mock('./api', () => ({
+  fetchUser: vi.fn()
+}))
+
+// Mock environment
+vi.stubEnv('API_URL', 'http://test-api.com')
+
+// Mock timers
+vi.useFakeTimers()
+const now = new Date('2024-01-01')
+vi.setSystemTime(now)
+```
+
+## Coverage Strategy
+
+### What to Test
+
+✅ **Do Test**:
+- Business logic
+- Edge cases and error handling
+- User interactions
+- API integration
+- State management
+- Validation logic
+- Critical user flows (E2E)
+
+❌ **Don't Test**:
+- Third-party libraries
+- Framework internals
+- Constants
+- Simple getters/setters
+- Generated code
+
+### Coverage Targets
+
+**Minimum**:
+- Lines: 80%
+- Functions: 80%
+- Branches: 75%
+- Statements: 80%
+
+**Ideal**:
+- Critical paths: 100%
+- Business logic: 95%+
+- UI components: 85%+
+- Utilities: 90%+
+
+### Run Coverage
+```bash
+npm run test:coverage
+
+# View in browser
+open coverage/index.html
+```
+
+## Testing Workflow
+
+### 1. TDD Approach (Recommended)
+```
+1. Write failing test
+2. Write minimal code to pass
+3. Refactor
+4. Repeat
+```
+
+### 2. Test-After (Pragmatic)
+```
+1. Implement feature
+2. Write tests
+3. Achieve 80%+ coverage
+4. Refactor with confidence
+```
+
+### 3. Pre-Commit Testing
+```bash
+# Run before every commit
+npm run test:quick        # Fast unit tests
+npm run lint
+npm run typecheck
+
+# Run before push
+npm run test             # All unit/integration
+npm run test:coverage    # Verify coverage
+
+# Run before deploy
+npm run test:e2e         # Full E2E suite
+```
 
 ## Test Organization
 
-### T-1 (MUST): Colocate Tests with Source
-
+### Directory Structure
 ```
-src/utils/validators.ts
-src/utils/validators.spec.ts      ← Same directory
-```
-
-### T-3 (MUST): Separate Logic from Database Tests
-
-**Unit Tests** (pure logic, no database):
-
-```ts
-// src/utils/helpers.spec.ts
-describe('calculateTotal', () => {
-  test('sums array correctly', () => {
-    const result = calculateTotal([10, 20, 30]);
-    expect(result).toBe(60);
-  });
-
-  test('handles empty array', () => {
-    expect(calculateTotal([])).toBe(0);
-  });
-});
+src/
+├── components/
+│   ├── Button/
+│   │   ├── Button.tsx
+│   │   ├── Button.test.tsx      # Co-located
+│   │   └── Button.stories.tsx   # Storybook
+│   └── ...
+tests/
+├── setup.ts                      # Test setup
+├── utils/                        # Test utilities
+│   ├── renderWithProviders.tsx  # Custom render
+│   └── mockData.ts              # Test fixtures
+└── __mocks__/                   # Global mocks
+e2e/
+├── auth.spec.ts
+├── checkout.spec.ts
+└── fixtures/                    # E2E test data
 ```
 
-**Integration Tests** (with database):
+### Naming Conventions
+- Unit/Integration: `*.test.ts` or `*.test.tsx`
+- E2E: `*.spec.ts`
+- Setup: `setup.ts`, `vitest.config.ts`
 
-```ts
-// server/tests/user-api.test.ts
-describe('User API', () => {
-  beforeEach(async () => {
-    await db.clear('users');
-  });
+## Continuous Integration
 
-  test('creates user in database', async () => {
-    const user = await createUser({
-      email: 'test@example.com',
-      name: 'Test User'
-    });
+### GitHub Actions Example
+```yaml
+name: Tests
+on: [push, pull_request]
 
-    const retrieved = await db.users.findById(user.id);
-    expect(retrieved).toEqual(user);
-  });
-});
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+      
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test:coverage
+      
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/coverage-final.json
+  
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+      - run: npm ci
+      - run: npx playwright install --with-deps
+      - run: npm run build
+      - run: npx playwright test
+      
+      - uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
 ```
 
-### Anti-Pattern: Mixed Tests
+## Debugging Tests
 
-```ts
-// ❌ BAD: Mixes logic and database
-describe('calculateTotal', () => {
-  test('calculates and saves', async () => {
-    const result = calculateTotal([10, 20, 30]);
-    await db.totals.save(result);  // Don't mix!
-    expect(result).toBe(60);
-  });
-});
-```
-
-## Test Coverage Requirements
-
-**By Feature Type**:
-
-- **Utilities** (formatting, validation): 80%+ coverage
-- **Business Logic** (algorithms, rules): 90%+ coverage
-- **Admin Flows** (user management): 100% coverage (T-7)
-- **Public APIs** (REST endpoints): 90%+ coverage
-
-Check coverage:
-
+### Vitest
 ```bash
-pnpm test --coverage
+# Run single test file
+npm run test -- Button.test.tsx
+
+# Run tests matching pattern
+npm run test -- --grep "Button renders"
+
+# Debug in VS Code
+# Add breakpoint, press F5
 ```
 
-## Unit Test Patterns
-
-### Pattern 1: Simple Function
-
-```ts
-// ✅ GOOD: Complete test
-test('returns true for valid email format', () => {
-  expect(validateEmail('user@example.com')).toBe(true);
-});
-
-// ❌ BAD: Unclear what's being tested
-test('validates email', () => {
-  expect(validateEmail('user@example.com')).toBe(true);
-});
-```
-
-### Pattern 2: Edge Cases (T-8)
-
-```ts
-// ✅ GOOD: Covers boundaries
-describe('calculateDiscount', () => {
-  test('returns 0% for purchases under $100', () => {
-    expect(calculateDiscount(99.99)).toBe(0);
-  });
-
-  test('returns 10% for purchases >= $100', () => {
-    expect(calculateDiscount(100)).toBe(10);
-    expect(calculateDiscount(100.01)).toBe(10.001);
-  });
-
-  test('handles edge cases', () => {
-    expect(calculateDiscount(0)).toBe(0);      // Zero
-    expect(calculateDiscount(-50)).toBe(0);    // Negative
-    expect(calculateDiscount(999999)).toBe(99999.9);  // Large
-  });
-});
-```
-
-### Pattern 3: Parameterized Tests
-
-```ts
-// ✅ GOOD: No magic literals
-test.each([
-  ['user@example.com', true],
-  ['invalid.email', false],
-  ['', false],
-  ['user@domain.co.uk', true]
-])('validateEmail("%s") returns %p', (email, expected) => {
-  expect(validateEmail(email)).toBe(expected);
-});
-```
-
-### Pattern 4: Entire Structure Assertion
-
-**T-1 (MUST)**: Compare entire result, not individual fields:
-
-```ts
-// ✅ GOOD: Complete structure
-const result = createUser({ name: 'Alice', email: 'alice@example.com' });
-expect(result).toEqual({
-  id: expect.any(String),
-  name: 'Alice',
-  email: 'alice@example.com',
-  createdAt: expect.any(Date)
-});
-
-// ❌ BAD: Separate assertions
-expect(result).toHaveProperty('id');
-expect(result.name).toBe('Alice');
-expect(result.email).toBe('alice@example.com');
-```
-
-## Anti-Patterns
-
-Avoid these:
-
-```ts
-// ❌ Testing implementation details
-test('caches value internally', () => {
-  const cache = getInternalCache();
-  expect(cache).toContain('value');
-});
-
-// ❌ Trivial assertions
-test('2 equals 2', () => {
-  expect(2).toBe(2);
-});
-
-// ❌ Magic numbers
-test('total calculation', () => {
-  expect(calculateTotal([10, 20, 30])).toBe(60);
-  // What do 10, 20, 30 represent?
-});
-
-// ❌ Testing type checker conditions
-test('rejects null', () => {
-  // @ts-expect-error - Testing invalid input
-  expect(validateEmail(null)).toBe(false);
-});
-
-// ❌ Mixing async and sync confusingly
-test('async function', () => {
-  const result = fetchUser('123');
-  expect(result).toBe(user);  // Wrong! result is Promise
-});
-```
-
-## Integration Test Patterns
-
-### Testing APIs
-
-```ts
-describe('POST /api/users', () => {
-  test('creates user with valid input', async () => {
-    const response = await request(app)
-      .post('/api/users')
-      .send({ name: 'Alice', email: 'alice@example.com' })
-      .expect(201);
-
-    expect(response.body).toEqual({
-      id: expect.any(String),
-      name: 'Alice',
-      email: 'alice@example.com'
-    });
-  });
-
-  test('returns 400 for missing required fields', async () => {
-    const response = await request(app)
-      .post('/api/users')
-      .send({ name: 'Alice' })
-      .expect(400);
-
-    expect(response.body.error).toContain('Email required');
-  });
-
-  test('returns 409 for duplicate email', async () => {
-    await request(app)
-      .post('/api/users')
-      .send({ name: 'Alice', email: 'alice@example.com' });
-
-    const response = await request(app)
-      .post('/api/users')
-      .send({ name: 'Bob', email: 'alice@example.com' })
-      .expect(409);
-
-    expect(response.body.error).toContain('already exists');
-  });
-});
-```
-
-### Testing Database Operations
-
-```ts
-describe('User model', () => {
-  beforeEach(async () => {
-    await db.connect();
-    await db.clear('users');
-  });
-
-  afterEach(async () => {
-    await db.disconnect();
-  });
-
-  test('creates and retrieves user', async () => {
-    const user = await User.create({
-      name: 'Alice',
-      email: 'alice@example.com'
-    });
-
-    const retrieved = await User.findById(user.id);
-    expect(retrieved).toEqual(user);
-  });
-
-  test('enforces unique email constraint', async () => {
-    await User.create({ name: 'Alice', email: 'alice@example.com' });
-
-    await expect(
-      User.create({ name: 'Bob', email: 'alice@example.com' })
-    ).rejects.toThrow('Unique constraint');
-  });
-});
-```
-
-## E2E Test Patterns
-
-### Critical Admin Flows (T-7)
-
-E2E test all critical admin workflows:
-
-```ts
-import { test, expect } from '@playwright/test';
-
-test.describe('Admin User Management', () => {
-  test.beforeEach(async ({ page }) => {
-    // Login as admin
-    await page.goto('/login');
-    await page.fill('input[name="email"]', 'admin@company.com');
-    await page.fill('input[name="password"]', 'password123');
-    await page.click('button:has-text("Login")');
-    await page.waitForURL('/admin/dashboard');
-  });
-
-  test('creates new user', async ({ page }) => {
-    await page.click('a:has-text("Users")');
-    await page.click('button:has-text("New User")');
-    await page.fill('input[name="name"]', 'John Doe');
-    await page.fill('input[name="email"]', 'john@company.com');
-    await page.click('button:has-text("Create")');
-
-    await page.waitForSelector('text=User created');
-    await expect(page).toContainText('john@company.com');
-  });
-
-  test('deletes user with confirmation', async ({ page }) => {
-    await page.click('a:has-text("Users")');
-    await page.click('[data-test="delete-btn"]');
-
-    // Must require confirmation (U-5)
-    await expect(page).toContainText('Are you sure?');
-    await page.click('button:has-text("Confirm")');
-
-    await page.waitForSelector('text=User deleted');
-  });
-
-  test('prevents accidental deletion', async ({ page }) => {
-    await page.click('a:has-text("Users")');
-    await page.click('[data-test="delete-btn"]');
-    await page.click('button:has-text("Cancel")');
-
-    // User should still exist
-    await expect(page).not.toContainText('User deleted');
-  });
-});
-```
-
-## Verification Before Completion
-
-Before marking tests complete:
-
-- [ ] **RED phase**: Watched tests fail first
-- [ ] **GREEN phase**: Tests pass with minimal code
-- [ ] **REFACTOR phase**: Improved code quality
-- [ ] **Verify again**: All tests still pass
-- [ ] Edge cases covered (null, empty, zero, negative, large values)
-- [ ] Pure logic separated from database operations
-- [ ] Coverage meets minimum requirements
-- [ ] No trivial assertions (avoid `expect(true).toBe(true)`)
-- [ ] Tests colocated with source code
-- [ ] E2E tests for critical admin flows
-
-## Running Tests
-
+### Playwright
 ```bash
-# All tests
-pnpm test
+# Debug mode
+npx playwright test --debug
 
-# Watch mode (rerun on change)
-pnpm test --watch
+# Specific test
+npx playwright test auth.spec.ts --debug
 
-# Specific file
-pnpm test src/utils/helpers.spec.ts
-
-# Coverage report
-pnpm test --coverage
-
-# Verbose output
-pnpm test --reporter=verbose
+# Trace viewer
+npx playwright show-trace trace.zip
 ```
 
-## Integration with CLAUDE.md
+## Common Testing Patterns
 
-Enforces CLAUDE.md Section 3:
-- **T-1**: Tests colocated with source
-- **T-2**: API changes have integration tests
-- **T-3**: Separate logic from database tests
-- **T-7**: E2E tests for admin flows
-- **T-8**: Edge cases tested
-- **T-9**: Redundant tests better than missing coverage
-- **T-10**: RED-GREEN-REFACTOR cycle
----
+### Testing Async Code
+```typescript
+it('fetches user data', async () => {
+  const { result } = renderHook(() => useUser(1))
+  
+  await waitFor(() => {
+    expect(result.current.data).toEqual({ id: 1, name: 'John' })
+  })
+})
+```
 
-**Last Updated:** January 24, 2026
-**Compatibility:** Claude Opus 4.5, Claude Code v2.x
-**Status:** Production Ready
+### Testing Error States
+```typescript
+it('displays error when fetch fails', async () => {
+  vi.mocked(fetchUser).mockRejectedValue(new Error('Network error'))
+  
+  render(<UserProfile userId="1" />)
+  
+  await waitFor(() => {
+    expect(screen.getByText(/error/i)).toBeInTheDocument()
+  })
+})
+```
 
-> **January 2026 Update:** This skill is compatible with Claude Opus 4.5 and Claude Code v2.x. For complex tasks, use the `effort: high` parameter for thorough analysis.
+### Testing Forms
+```typescript
+it('submits form with valid data', async () => {
+  const handleSubmit = vi.fn()
+  render(<LoginForm onSubmit={handleSubmit} />)
+  
+  await userEvent.type(screen.getByLabelText('Email'), 'test@example.com')
+  await userEvent.type(screen.getByLabelText('Password'), 'password123')
+  await userEvent.click(screen.getByRole('button', { name: /submit/i }))
+  
+  expect(handleSubmit).toHaveBeenCalledWith({
+    email: 'test@example.com',
+    password: 'password123'
+  })
+})
+```
+
+## Integration with Other Skills
+
+- `quality-gates` - Run tests as quality check
+- `git-workflow` - Tests in pre-commit hooks
+- `codebase-analysis` - Identify untested code
+
+## Package.json Scripts
+
+```json
+{
+  "scripts": {
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:all": "npm run test:coverage && npm run test:e2e"
+  }
+}
+```
+
+## Version History
+
+- **1.0.0** (2025-01-03): Initial testing strategy with Vitest and Playwright

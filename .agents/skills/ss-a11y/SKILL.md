@@ -1,7 +1,7 @@
 ---
 name: ss-a11y
 description: Audit a component or page for accessibility issues and fix them
-argument-hint: [file-path]
+argument-hint: "[file-path]"
 allowed-tools: Read, Write, Edit, Grep, Glob
 ---
 

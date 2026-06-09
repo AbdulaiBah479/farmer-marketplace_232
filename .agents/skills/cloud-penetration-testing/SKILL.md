@@ -1,13 +1,10 @@
 ---
 name: cloud-penetration-testing
-description: "Conduct comprehensive security assessments of cloud infrastructure across Microsoft Azure, Amazon Web Services (AWS), and Google Cloud Platform (GCP)."
-risk: offensive
-source: community
-author: zebbern
-date_added: "2026-02-27"
+description: This skill should be used when the user asks to "perform cloud penetration testing", "assess Azure or AWS or GCP security", "enumerate cloud resources", "exploit cloud misconfigurations", "test O365 security", "extract secrets from cloud environments", or "audit cloud infrastructure". It provides comprehensive techniques for security assessment across major cloud platforms.
+metadata:
+  author: zebbern
+  version: "1.1"
 ---
-
-> AUTHORIZED USE ONLY: Use this skill only for authorized security assessments, defensive validation, or controlled educational environments.
 
 # Cloud Penetration Testing
 
@@ -29,11 +26,7 @@ curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip
 unzip awscliv2.zip && sudo ./aws/install
 
 # GCP CLI
-tmpdir="$(mktemp -d)"
-trap 'rm -rf "$tmpdir"' EXIT
-curl -fsSLo "$tmpdir/google-cloud-sdk-install.sh" https://sdk.cloud.google.com
-sed -n '1,160p' "$tmpdir/google-cloud-sdk-install.sh"
-bash "$tmpdir/google-cloud-sdk-install.sh"
+curl https://sdk.cloud.google.com | bash
 gcloud init
 
 # Additional tools
@@ -506,6 +499,3 @@ gcloud beta compute ssh instance-name --zone us-central1-a --project target-proj
 ## References
 
 - [Advanced Cloud Scripts](references/advanced-cloud-scripts.md) - Azure Automation runbooks, Function Apps enumeration, AWS data exfiltration, GCP advanced exploitation
-
-## When to Use
-This skill is applicable to execute the workflow or actions described in the overview.

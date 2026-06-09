@@ -1,6 +1,7 @@
 ---
-argument-hint: '[package ...]'
+argument-hint: '[--dry-run] [package ...]'
 disable-model-invocation: false
+effort: high
 name: bump-deps
 user-invocable: true
 description: This skill should be used when the user asks to "update dependencies", "update npm packages", "bump dependencies", "upgrade node packages", "check for outdated packages", "update package.json", or mentions dependency updates, npm/pnpm/yarn/bun package upgrades, or taze CLI usage.
@@ -10,9 +11,20 @@ description: This skill should be used when the user asks to "update dependencie
 
 Update Node.js dependencies using taze CLI with smart prompting: auto-apply MINOR/PATCH updates, prompt for MAJOR updates individually, skip fixed-version packages.
 
+For projects with a package-manager minimum-age policy, pass Taze's maturity-period flags so Taze filters out too-new releases before writing manifests.
+
 When package names are provided as arguments (e.g. `/bump-deps react typescript`), scope all taze commands to only those packages using `--include`.
 
+When `--dry-run` is passed (e.g. `/bump-deps --dry-run` or `/bump-deps --dry-run react`), scan for updates and present a summary table **without applying any changes**. See [Dry Run Mode](#dry-run-mode) below.
+
 ## Prerequisites
+
+Before choosing commands, check whether the target project has either:
+
+- `bun.lock` or `bun.lockb` plus `bunfig.toml` with `[install].minimumReleaseAge`
+- pnpm or Yarn minimum-age settings
+
+If present, follow [Minimum Release Age Mode](#minimum-release-age-mode).
 
 Before starting, verify taze is installed by running:
 
@@ -24,6 +36,32 @@ If exit code is 1, stop and inform the user that taze must be installed:
 
 - Global install: `npm install -g taze`
 - One-time: `npx taze`
+
+## Minimum Release Age Mode
+
+Use this mode for projects that configure a package-manager minimum-age policy.
+
+Taze calls this `maturityPeriod`:
+
+- `--maturity-period [days]` filters out package versions newer than the given number of days
+- `--maturity-period-exclude <packages>` excludes packages from that filter, when supported by the installed Taze version
+
+```bash
+# 7-day cooldown
+taze major -r --maturity-period 7
+```
+
+For Bun `minimumReleaseAge`, convert seconds to whole days using a ceiling division. Example: `604800` seconds becomes `--maturity-period 7`. If the configured seconds are not a whole number of days, round up so Taze is not weaker than the package manager policy.
+
+Taze v19.13.0+ auto-infers maturity periods from pnpm and Yarn workspace config, but not from Bun `bunfig.toml`. For Bun projects, pass `--maturity-period` explicitly.
+
+When the package manager config has an exclude list, pass matching Taze excludes if available:
+
+```bash
+taze major -r --maturity-period 7 --maturity-period-exclude react,webpack
+```
+
+Append the same maturity flags to every Taze scan and write command in the workflow. After Taze writes manifests, run the project package manager install as usual; the package manager remains the final enforcement layer for direct and transitive resolution.
 
 ## Update Workflow
 
@@ -47,6 +85,35 @@ From the taze output, categorize each package update:
 | **MAJOR** | `x.y.z` → `X.0.0` (e.g., `1.0.0` → `2.0.0`) | Prompt user   |
 
 If package arguments were provided, filter to only those packages.
+
+#### Dry Run Mode
+
+If `--dry-run` was passed, **stop here** — do not apply any updates. Instead, present a single markdown table summarizing all available updates and exit. The table must include every discovered package (including fixed-version packages, shown as skipped):
+
+```
+| Package | Current | Available | Type | Action |
+|---------|---------|-----------|------|--------|
+| @types/node | ^20.0.0 | ^22.0.0 | major | prompt |
+| typescript | ^5.3.0 | ^5.4.0 | minor | auto-apply |
+| eslint | ^8.56.0 | ^8.57.0 | patch | auto-apply |
+| lucide-react | ^3.0.0 | ^4.0.0 | major | auto-apply |
+| lodash | 4.17.21 | 4.18.0 | minor | skip (fixed) |
+```
+
+**Column definitions:**
+
+- **Package** — package name
+- **Current** — version string as it appears in package.json (with range prefix)
+- **Available** — new version string (preserving range prefix)
+- **Type** — `major`, `minor`, or `patch`
+- **Action** — what the normal (non-dry-run) workflow would do:
+  - `auto-apply` — MINOR/PATCH updates and auto-skip major packages (e.g. `lucide-react`)
+  - `prompt` — MAJOR updates that would be prompted to the user
+  - `skip (fixed)` — fixed-version packages that would be skipped
+
+Sort the table by action priority: `prompt` first, then `auto-apply`, then `skip (fixed)`. Within each group, sort alphabetically by package name.
+
+After presenting the table, print a one-line summary: `N updates available (M major, P minor, Q patch, F fixed-skipped)` and stop. Do **not** proceed to Step 3 or beyond.
 
 **Identifying fixed versions:** In package.json, fixed versions have no range prefix:
 

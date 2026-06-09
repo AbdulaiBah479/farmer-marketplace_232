@@ -59,6 +59,5 @@ project/
 
 - [Region Availability](region-availability.md)
 - [Bicep Patterns](bicep.md)
-- [Terraform Patterns](terraform.md)
 - [Routing and Auth](routing.md)
 - [Deployment](deployment.md)

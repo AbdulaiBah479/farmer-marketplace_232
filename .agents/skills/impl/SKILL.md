@@ -1,7 +1,12 @@
 ---
 name: impl
-description: "Implements features and writes code based on Plans.md tasks. Use when user mentions implementation, adding features, writing code, or creating new functions. Do not use for review or build verification."
+description: "Implements features and writes code based on Plans.md tasks. Use when user mentions 実装, implement, 機能追加, コードを書いて, 機能を作って, feature, coding, 新機能, implementing functions, classes, or features, 新しい関数. Do not use for review or build verification."
 allowed-tools: ["Read", "Write", "Edit", "Grep", "Glob", "Bash"]
+metadata:
+  skillport:
+    category: impl
+    tags: [implementation, coding, feature, development]
+    alwaysApply: false
 ---
 
 # Implementation Skills
@@ -53,19 +58,29 @@ def slugify(text: str) -> str:
 ### 選択肢: [考えられる案]
 ```
 
-## 機能詳細
+## 含まれる小スキル
 
-| 機能 | 詳細 |
-|------|------|
-| **機能実装** | See [references/implementing-features.md](references/implementing-features.md) |
-| **テスト作成** | See [references/writing-tests.md](references/writing-tests.md) |
+| スキル | 用途 |
+|--------|------|
+| work-impl-feature | 機能の実装 |
+| work-write-tests | テストコードの作成 |
+
+## ルーティング
+
+### 機能実装
+
+work-impl-feature/doc.md を参照
+
+### テスト作成
+
+work-write-tests/doc.md を参照
 
 ## 実行手順
 
 1. **品質判定ゲート**（Step 0）
 2. ユーザーのリクエストを分類
 3. **（Claude-mem 有効時）過去の実装パターンを検索**
-4. 上記の「機能詳細」から適切な参照ファイルを読む
+4. 適切な小スキルの doc.md を読む
 5. その内容に従って実装
 
 ### Step 0: 品質判定ゲート（最初に実行）
@@ -128,36 +143,6 @@ def slugify(text: str) -> str:
 1. 成功基準から作る（推奨）
 2. とりあえず作り始める
 ```
-
-### Step 1: LSP 活用ガイドライン
-
-実装前に LSP ツールで既存コードを理解することを推奨:
-
-| LSP 操作 | 活用場面 | 効果 |
-|---------|---------|------|
-| goToDefinition | 既存関数の実装を確認 | パターン把握 |
-| findReferences | 影響範囲の事前調査 | 破壊的変更防止 |
-| hover | 型情報・JSDoc 確認 | 正しいインターフェース |
-
-**実装フロー**:
-1. `LSP.goToDefinition` で関連コードを確認
-2. `LSP.findReferences` で影響範囲を把握
-3. 実装
-4. `LSP.diagnostics` でエラーチェック
-
-**使用例**:
-```
-# 1. 関連関数の実装を確認
-LSP operation=goToDefinition filePath="src/utils/auth.ts" line=25 character=10
-
-# 2. 影響範囲を調査
-LSP operation=findReferences filePath="src/utils/auth.ts" line=25 character=10
-
-# 3. 型情報を確認
-LSP operation=hover filePath="src/types/user.ts" line=15 character=12
-```
-
-> **注**: LSP サーバーが設定されている言語でのみ動作します。
 
 ### Step 2: 過去の実装パターン検索（Memory-Enhanced）
 

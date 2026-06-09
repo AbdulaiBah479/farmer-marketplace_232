@@ -1,227 +1,120 @@
 ---
-id: SKL-disaster-DISASTERRECOVERY
-name: Disaster Recovery
-description: 'Disaster Recovery encompasses strategies and procedures for recovering
-  from catastrophic failures and ensuring business continuity. This includes backup
-  strategies, failover mechanisms, data recovery '
-version: 1.0.0
-status: active
-owner: '@cerebra-team'
-last_updated: '2026-02-22'
-category: Backend
-tags:
-- api
-- backend
-- server
-- database
-stack:
-- Python
-- Node.js
-- REST API
-- GraphQL
-difficulty: Intermediate
+name: disaster-recovery
+description: Implement disaster recovery and backup strategies for Proxmox. Create and manage backups, test recovery procedures, and ensure business continuity for your infrastructure.
 ---
 
-# Disaster Recovery
+# Disaster Recovery Skill
 
-## Skill Profile
-*(Select at least one profile to enable specific modules)*
-- [ ] **DevOps**
-- [x] **Backend**
-- [ ] **Frontend**
-- [ ] **AI-RAG**
-- [ ] **Security Critical**
+Implement and manage disaster recovery and backup strategies for Proxmox.
 
-## Overview
-Disaster Recovery encompasses strategies and procedures for recovering from catastrophic failures and ensuring business continuity. This includes backup strategies, failover mechanisms, data recovery procedures, and business continuity planning.
+## What this skill does
 
-**Core Principle**: "Plan for the worst, hope for the best. Test your recovery plan before you need it."
+This skill enables you to:
+- Create and manage VM backups
+- Create and manage container backups
+- Monitor backup status and history
+- Track backup storage usage
+- Restore VMs from backups
+- Restore containers from backups
+- Create VM snapshots for recovery
+- Create container snapshots for recovery
+- Plan backup strategies
+- Test disaster recovery procedures
+- Generate backup reports
+- Manage backup retention policies
 
-## Why This Matters
-- **Data Protection**: Prevents permanent data loss from catastrophic failures
-- **Business Continuity**: Ensures operations can resume quickly after major incidents
-- **Customer Trust**: Demonstrates commitment to data protection and reliability
-- **Compliance**: Meets regulatory requirements for data backup and retention
-- **Reduced Downtime**: Minimizes RTO (Recovery Time Objective) and RPO (Recovery Point Objective)
+## When to use this skill
 
----
+Use this skill when you need to:
+- Create backups of VMs and containers
+- Restore from backups
+- Plan backup strategies
+- Monitor backup status
+- Test recovery procedures
+- Verify backup integrity
+- Plan backup retention
+- Troubleshoot backup failures
+- Generate compliance reports
+- Plan for disaster scenarios
 
-## Core Concepts & Rules
+## Available Tools
 
-### 1. Core Principles
-- Follow established patterns and conventions
-- Maintain consistency across codebase
-- Document decisions and trade-offs
+- `create_vm_backup` - Create a backup of a VM
+- `create_container_backup` - Create a backup of a container
+- `restore_vm_backup` - Restore a VM from backup
+- `restore_container_backup` - Restore a container from backup
+- `create_vm_snapshot` - Create VM snapshot for recovery
+- `restore_vm_snapshot` - Restore from VM snapshot
+- `create_container_snapshot` - Create container snapshot
+- `restore_container_snapshot` - Restore from container snapshot
+- `delete_backup` - Delete a backup file
 
-### 2. Implementation Guidelines
-- Start with the simplest viable solution
-- Iterate based on feedback and requirements
-- Test thoroughly before deployment
+## Typical Workflows
 
+### Backup Creation & Management
+1. Create backups of critical VMs and containers
+2. Monitor backup completion and status
+3. Verify backup storage allocation
+4. Manage backup retention policies
+5. Clean up old backups
 
-## Inputs / Outputs / Contracts
-* **Inputs**:
-  - System architecture and component inventory
-  - Data classification and criticality levels
-  - RPO/RTO requirements per system
-  - Regulatory compliance requirements
-* **Entry Conditions**:
-  - Backup infrastructure is in place
-  - Recovery procedures are documented
-  - Team has been trained on recovery procedures
-* **Outputs**:
-  - Backup and recovery documentation
-  - Runbooks for disaster recovery
-  - Monitoring and alerting configuration
-* **Artifacts Required (Deliverables)**:
-  - Backup schedules and retention policies
-  - Recovery runbooks with step-by-step procedures
-  - Contact information for recovery teams and vendors
-* **Acceptance Evidence**:
-  - Successful backup restoration test (screenshot/log)
-  - Recovery drill results (RTO/RPO met)
-  - Compliance audit report
-* **Success Criteria**:
-  - RPO and RTO targets met for all critical systems
-  - Backups tested and verified regularly
-  - Recovery procedures validated through drills
+### Disaster Recovery Testing
+1. Create test backups of critical systems
+2. Use snapshots for point-in-time recovery
+3. Restore to test environment
+4. Verify functionality and data integrity
+5. Document recovery procedures
 
-## Skill Composition
-* **Depends on**: Failure Modes Analysis, Monitoring & Observability
-* **Compatible with**: Chaos Engineering, System Resilience patterns
-* **Conflicts with**: Systems without backup infrastructure
-* **Related Skills**: 
-  - [40-system-resilience/failure-modes](40-system-resilience/failure-modes/SKILL.md) - Understanding what to recover from
-  - [40-system-resilience/chaos-engineering](40-system-resilience/chaos-engineering/SKILL.md) - Testing recovery procedures
-  - [14-monitoring-observability/metrics-collection](14-monitoring-observability/metrics-collection/SKILL.md) - Detecting failures
+### Recovery Operations
+1. Identify failed VM/container
+2. Locate appropriate backup
+3. Use `restore_vm_backup` or `restore_container_backup`
+4. Verify restored system functionality
+5. Complete recovery procedures
 
----
+### Backup Monitoring
+1. Monitor backup schedule compliance
+2. Track backup storage usage
+3. Monitor backup success/failure rates
+4. Identify backup issues early
+5. Generate audit reports
 
-## Quick Start / Implementation Example
+## Example Questions
 
-1. Review requirements and constraints
-2. Set up development environment
-3. Implement core functionality following patterns
-4. Write tests for critical paths
-5. Run tests and fix issues
-6. Document any deviations or decisions
+- "Create a backup of VM 100 to storage"
+- "What's the status of recent backups?"
+- "Restore VM 200 from the backup created yesterday"
+- "Show me all available backups and their sizes"
+- "Create a snapshot of container 101 before updates"
+- "How much storage is used for backups?"
+- "Generate a disaster recovery test report"
 
-```python
-# Example implementation following best practices
-def example_function():
-    # Your implementation here
-    pass
-```
+## Response Format
 
+When using this skill, I provide:
+- Backup creation confirmations
+- Backup listings with dates and sizes
+- Restore operation status
+- Backup storage usage analysis
+- Recovery procedure documentation
+- Compliance and audit reports
 
-## Assumptions / Constraints / Non-goals
+## Best Practices
 
-* **Assumptions**:
-  - Development environment is properly configured
-  - Required dependencies are available
-  - Team has basic understanding of domain
-* **Constraints**:
-  - Must follow existing codebase conventions
-  - Time and resource limitations
-  - Compatibility requirements
-* **Non-goals**:
-  - This skill does not cover edge cases outside scope
-  - Not a replacement for formal training
-
-
-## Compatibility & Prerequisites
-
-* **Supported Versions**:
-  - Python 3.8+
-  - Node.js 16+
-  - Modern browsers (Chrome, Firefox, Safari, Edge)
-* **Required AI Tools**:
-  - Code editor (VS Code recommended)
-  - Testing framework appropriate for language
-  - Version control (Git)
-* **Dependencies**:
-  - Language-specific package manager
-  - Build tools
-  - Testing libraries
-* **Environment Setup**:
-  - `.env.example` keys: `API_KEY`, `DATABASE_URL` (no values)
-
-
-## Test Scenario Matrix (QA Strategy)
-
-| Type | Focus Area | Required Scenarios / Mocks |
-| :--- | :--- | :--- |
-| **Unit** | Core Logic | Must cover primary logic and at least 3 edge/error cases. Target minimum 80% coverage |
-| **Integration** | DB / API | All external API calls or database connections must be mocked during unit tests |
-| **E2E** | User Journey | Critical user flows to test |
-| **Performance** | Latency / Load | Benchmark requirements |
-| **Security** | Vuln / Auth | SAST/DAST or dependency audit |
-| **Frontend** | UX / A11y | Accessibility checklist (WCAG), Performance Budget (Lighthouse score) |
-
-
-## Technical Guardrails & Security Threat Model
-
-### 1. Security & Privacy (Threat Model)
-* **Top Threats**: Injection attacks, authentication bypass, data exposure
-- [ ] **Data Handling**: Sanitize all user inputs to prevent Injection attacks. Never log raw PII
-- [ ] **Secrets Management**: No hardcoded API keys. Use Env Vars/Secrets Manager
-- [ ] **Authorization**: Validate user permissions before state changes
-
-### 2. Performance & Resources
-- [ ] **Execution Efficiency**: Consider time complexity for algorithms
-- [ ] **Memory Management**: Use streams/pagination for large data
-- [ ] **Resource Cleanup**: Close DB connections/file handlers in finally blocks
-
-### 3. Architecture & Scalability
-- [ ] **Design Pattern**: Follow SOLID principles, use Dependency Injection
-- [ ] **Modularity**: Decouple logic from UI/Frameworks
-
-### 4. Observability & Reliability
-- [ ] **Logging Standards**: Structured JSON, include trace IDs `request_id`
-- [ ] **Metrics**: Track `error_rate`, `latency`, `queue_depth`
-- [ ] **Error Handling**: Standardized error codes, no bare except
-- [ ] **Observability Artifacts**:
-    - **Log Fields**: timestamp, level, message, request_id
-    - **Metrics**: request_count, error_count, response_time
-    - **Dashboards/Alerts**: High Error Rate > 5%
-
-
-## Agent Directives & Error Recovery
-*(ข้อกำหนดสำหรับ AI Agent ในการคิดและแก้ปัญหาเมื่อเกิดข้อผิดพลาด)*
-
-- **Thinking Process**: Analyze root cause before fixing. Do not brute-force.
-- **Fallback Strategy**: Stop after 3 failed test attempts. Output root cause and ask for human intervention/clarification.
-- **Self-Review**: Check against Guardrails & Anti-patterns before finalizing.
-- **Output Constraints**: Output ONLY the modified code block. Do not explain unless asked.
-
-
-## Definition of Done (DoD) Checklist
-
-- [ ] Tests passed + coverage met
-- [ ] Lint/Typecheck passed
-- [ ] Logging/Metrics/Trace implemented
-- [ ] Security checks passed
-- [ ] Documentation/Changelog updated
-- [ ] Accessibility/Performance requirements met (if frontend)
-
-
-## Anti-patterns / Pitfalls
-
-* ⛔ **Don't**: Log PII, catch-all exception, N+1 queries
-* ⚠️ **Watch out for**: Common symptoms and quick fixes
-* 💡 **Instead**: Use proper error handling, pagination, and logging
-
-
-## Reference Links & Examples
-
-* Internal documentation and examples
-* Official documentation and best practices
-* Community resources and discussions
-
-
-## Versioning & Changelog
-
-* **Version**: 1.0.0
-* **Changelog**:
-  - 2026-02-22: Initial version with complete template structure
+- Implement 3-2-1 backup rule (3 copies, 2 media types, 1 offsite)
+- Backup critical systems regularly
+- Test restore procedures regularly
+- Monitor backup success rates
+- Implement backup retention policies
+- Encrypt backups for security
+- Store backups off-site
+- Document recovery procedures
+- Verify backup integrity
+- Monitor backup storage capacity
+- Automate backup schedules
+- Test recovery before disaster strikes
+- Keep backup inventories current
+- Monitor backup performance
+- Plan for recovery time objectives (RTO)
+- Plan for recovery point objectives (RPO)
 

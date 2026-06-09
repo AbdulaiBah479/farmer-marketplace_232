@@ -1,60 +1,76 @@
 ---
 name: insichgeschaeft-paragraph-181
-description: "Prüft § 181 BGB bei Insichgeschäft, Mehrvertretung, Selbstkontrahieren, Gestattung, Erfüllung einer Verbindlichkeit und Genehmigung."
+description: "Klausurfall zum Insichgeschäft nach § 181 BGB: Selbstkontrahieren und Mehrfachvertretung, Ausnahmen bei lediglich rechtlich vorteilhaften Geschäften oder ausdrücklich gestatteten Insichgeschäften, BGH-Linie zur GmbH und schwebende Unwirksamkeit."
 ---
 
-# Insichgeschaeft Paragraph 181
+# Insichgeschäft — § 181 BGB
 
-## Zweck
+## Mandantenfall
 
-Interessenkollision bei Vertretung erkennen.
+- GmbH-Geschäftsführer schließt Vertrag zwischen der GmbH und sich selbst — § 181 BGB, wirksam?
+- Bevollmächtigter vertritt gleichzeitig Verkäufer und Käufer — Mehrfachvertretung nach § 181 BGB.
+- Klausurkonstellation: Elternteil als gesetzlicher Vertreter schließt Vertrag für Kind mit sich selbst.
 
-## Normanker
+## Erste Schritte
 
-§ 181 BGB
+1. Insichgeschäft-Tatbestand: Vertreter handelt auf beiden Seiten des Rechtsgeschäfts.
+2. Selbstkontrahieren: Vertreter schließt im Namen des Vertretenen mit sich selbst.
+3. Mehrfachvertretung: Vertreter vertritt mehrere Beteiligte auf verschiedenen Seiten.
+4. Ausnahme 1: Rechtsgeschäft ist lediglich rechtlich vorteilhaft für den Vertretenen.
+5. Ausnahme 2: Insichgeschäft wurde ausdrücklich gestattet durch Vollmachtgeber oder Satzung.
+6. Rechtsfolge ohne Ausnahme: schwebende Unwirksamkeit — Genehmigung durch Vertretenen erforderlich.
 
-## Intake
+## Rechtsrahmen
 
-- Welche Rolle hat die Nutzerin oder der Nutzer: Kanzlei, Rechtsabteilung, Ausbildung, Gerichtsvorbereitung oder Selbststudium?
-- Was ist das konkrete Arbeitsziel: Anspruchsprüfung, Memo, Klausurlösung, Schriftsatzbaustein, Fristenvermerk oder Rückfragenkatalog?
-- Welche Tatsachen sind belegt, welche sind nur Behauptung, welche fehlen noch?
-- Welche Daten, Uhrzeiten, Erklärungen, Vollmachten, Formvorgaben und Fristen sind im Sachverhalt erkennbar?
+- § 181 BGB: Verbot des Insichgeschäfts — Selbstkontrahieren und Mehrfachvertretung.
+- § 107 BGB: Ausnahme bei lediglich rechtlich vorteilhaftem Geschäft.
+- § 177 BGB: Schwebende Unwirksamkeit und Genehmigung bei unzulässigem Insichgeschäft.
+- § 35 Abs. 3 GmbHG: Befreiung des GmbH-Geschäftsführers von § 181 BGB durch Gesellschaftsvertrag.
+- § 164 BGB: Stellvertretungsvoraussetzungen als Grundlage.
 
 ## Prüfraster
 
-1. Selbstkontrahieren oder Mehrvertretung feststellen
-2. Gestattung prüfen
-3. Erfüllung einer Verbindlichkeit prüfen
-4. Genehmigung und Rechtsfolge dokumentieren
-5. Ergebnis mit Norm, Tatbestandsmerkmal, Subsumtion und Rechtsfolge festhalten.
-6. Offene Tatsachen als Rückfrage formulieren und nicht durch Vermutung ersetzen.
+1. Tatbestand Insichgeschäft: Handelt Vertreter auf beiden Seiten des Geschäfts?
+2. Selbstkontrahieren: Vertreter schließt im eigenen Namen und als Vertreter des Vertretenen?
+3. Mehrfachvertretung: Vertreter ist für beide Seiten des Vertrags bevollmächtigt?
+4. Ausnahme lediglich rechtlich vorteilhaft: Nur Vorteile für den Vertretenen — kein Nachteil?
+5. Ausdrückliche Gestattung: Vollmacht, Satzung oder gesetzliche Regelung erlaubt Insichgeschäft?
+6. GmbH-Sonderproblem: § 35 Abs. 3 GmbHG — Befreiung durch Gesellschaftsvertrag?
+7. Rechtsfolge ohne Ausnahme: schwebende Unwirksamkeit und Genehmigung nach § 177 BGB?
 
-## Output
+## Typische Fallstricke
 
-- Kurztriage mit Ampel und nächstem Schritt
-- Prüfung im Gutachtenstil oder als praxisnahes Mandatsmemo
-- Anspruchs- oder Erklärungsmatrix mit Beweisankern
-- Rückfragenliste und optionaler Entwurfsbaustein
+- § 181 BGB gilt auch für gesetzliche Vertreter (Eltern für Kinder), nicht nur gewillkürte Vertreter.
+- GmbH-Geschäftsführer kann durch Gesellschaftsvertrag von § 181 BGB befreit werden — oft vergessen.
+- Schwebende Unwirksamkeit nach § 177 BGB bedeutet Genehmigungsmöglichkeit — keine endgültige Nichtigkeit.
+- Ausnahme bei rechtlichem Vorteil gilt nur, wenn keinerlei rechtliche Belastung entsteht.
 
-## Qualitätsregeln
+## Quellen
 
-- BGB-AT-Fragen immer an der passenden Stelle im Anspruchsaufbau prüfen.
-- Auslegung geht regelmäßig vor Anfechtung, Dissens oder Lückenschließung.
-- Keine erfundenen Rechtsprechungs- oder Literaturzitate verwenden; bei Zitaten Primärquelle prüfen.
-- Bei Fristen den Rechenweg sichtbar machen.
-- Bei Wertungen die tragenden Tatsachen ausdrücklich nennen.
+- [§ 181 BGB — gesetze-im-internet.de](https://www.gesetze-im-internet.de/bgb/__181.html)
+- [§ 177 BGB — gesetze-im-internet.de](https://www.gesetze-im-internet.de/bgb/__177.html)
+- [§ 35 GmbHG — gesetze-im-internet.de](https://www.gesetze-im-internet.de/gmbhg/__35.html)
+- [dejure.org § 181 BGB](https://dejure.org/gesetze/BGB/181.html)
+- [dejure.org § 177 BGB](https://dejure.org/gesetze/BGB/177.html)
 
-## Anschluss-Skills
+## Vertiefung
 
-- allgemein
-- anspruchsaufbau-zivilrecht-bgb-at
-- bgb-at-output-gutachten-memo-schriftsatz
+### § 181 BGB und GmbH-Recht
 
+Im GmbH-Recht ist § 181 BGB besonders praxisrelevant: Geschäftsführer, die am Gesellschaftsvertrag
+keine Befreiung haben, können keine Verträge zwischen sich und der GmbH abschließen. In der Praxis
+wird § 181 BGB in Gesellschaftsverträgen regelmäßig abbedungen.
 
-## Qualitäts-Hardening
+### Mehrfachvertretung im Einzelnen
 
-- Arbeite aktennah: Tatsachen, Belege, Fristen, Zuständigkeit und gewünschtes Arbeitsprodukt zuerst klären.
-- Keine Rechtsprechung aus Modellwissen zitieren. Jede Entscheidung vor Ausgabe mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei oder amtlich prüfbarer Quelle absichern.
-- Keine BeckRS-, juris-, Kommentar-, Handbuch- oder Aufsatz-Blindzitate. Literatur nur verwenden, wenn der Nutzer sie bereitstellt oder ein lizenzierter Live-Zugriff im konkreten Arbeitsschritt dokumentiert ist.
-- Wenn eine Quelle, Randnummer, Behördenpraxis oder Frist nicht sicher geprüft ist, sichtbar als Prüfpunkt markieren und keine Scheinpräzision erzeugen.
-- Ergebnisse so liefern, dass sie sofort weiterverwendbar sind: Kurzbild, Prüfpfad, Risikoampel, Lückenliste und konkrete nächste Schritte.
+Mehrfachvertretung liegt vor, wenn der Vertreter für mehrere Beteiligte auf verschiedenen Seiten
+eines Rechtsgeschäfts handelt. Dies ist von der Doppelvertretung zu unterscheiden, bei der eine
+Person für zwei Vertragsparteien gleichzeitig verhandelt. § 181 BGB erfasst beide Konstellationen.
+
+### Klausur-Checkliste § 181 BGB
+
+- Tatbestand: Handelt Vertreter auf beiden Seiten des Rechtsgeschäfts (Selbstkontrahieren oder Mehrfachvertretung)?
+- Ausnahme rechtlicher Vorteil: Bringt das Geschäft nur Vorteile für den Vertretenen?
+- Ausdrückliche Gestattung: In Vollmacht, Satzung oder Gesellschaftsvertrag vorhanden?
+- Schwebende Unwirksamkeit und Genehmigung nach § 177 BGB als Folge?
+- GmbH-Besonderheit: § 35 Abs. 3 GmbHG als Befreiungsmöglichkeit?

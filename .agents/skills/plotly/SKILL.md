@@ -1,21 +1,11 @@
 ---
 name: plotly
-description: Interactive visualization library. Use when you need hover info, zoom, pan, or web-embeddable charts. Best for dashboards, exploratory analysis, and presentations. For static publication figures use matplotlib or scientific-visualization.
-license: MIT license
-metadata:
-    skill-author: K-Dense Inc.
-risk: unknown
-source: community
+description: Interactive scientific and statistical data visualization library for Python. Use when creating charts, plots, or visualizations including scatter plots, line charts, bar charts, heatmaps, 3D plots, geographic maps, statistical distributions, financial charts, and dashboards. Supports both quick visualizations (Plotly Express) and fine-grained customization (graph objects). Outputs interactive HTML or static images (PNG, PDF, SVG).
 ---
 
 # Plotly
 
 Python graphing library for creating interactive, publication-quality visualizations with 40+ chart types.
-
-## When to Use
-- You need interactive charts with hover, zoom, pan, or web embedding.
-- You are building dashboards, exploratory analysis notebooks, or presentations that benefit from rich interaction.
-- You want to choose between Plotly Express and Graph Objects for the same visualization task.
 
 ## Quick Start
 
@@ -47,7 +37,7 @@ For quick, standard visualizations with sensible defaults:
 - Need automatic color encoding and legends
 - Want minimal code (1-5 lines)
 
-See reference/plotly-express.md for complete guide.
+See [reference/plotly-express.md](reference/plotly-express.md) for complete guide.
 
 ### Use Graph Objects (go)
 For fine-grained control and custom visualizations:
@@ -56,7 +46,7 @@ For fine-grained control and custom visualizations:
 - Need precise control over individual components
 - Creating specialized visualizations with custom shapes and annotations
 
-See reference/graph-objects.md for complete guide.
+See [reference/graph-objects.md](reference/graph-objects.md) for complete guide.
 
 **Note:** Plotly Express returns graph objects Figure, so you can combine approaches:
 ```python
@@ -85,7 +75,7 @@ Plotly supports 40+ chart types organized into categories:
 
 **Specialized:** sunburst, treemap, sankey, parallel coordinates, gauge
 
-For detailed examples and usage of all chart types, see reference/chart-types.md.
+For detailed examples and usage of all chart types, see [reference/chart-types.md](reference/chart-types.md).
 
 ### 2. Layouts and Styling
 
@@ -112,7 +102,7 @@ fig = px.scatter(df, x='x', y='y', template='plotly_dark')
 - Margins and sizing
 - Annotations and shapes
 
-For complete layout and styling options, see reference/layouts-styling.md.
+For complete layout and styling options, see [reference/layouts-styling.md](reference/layouts-styling.md).
 
 ### 3. Interactivity
 
@@ -138,7 +128,7 @@ fig.update_xaxes(rangeslider_visible=True)
 fig = px.scatter(df, x='x', y='y', animation_frame='year')
 ```
 
-For complete interactivity guide, see reference/export-interactivity.md.
+For complete interactivity guide, see [reference/export-interactivity.md](reference/export-interactivity.md).
 
 ### 4. Export Options
 
@@ -159,7 +149,7 @@ fig.write_image('chart.pdf')   # PDF
 fig.write_image('chart.svg')   # SVG
 ```
 
-For complete export options, see reference/export-interactivity.md.
+For complete export options, see [reference/export-interactivity.md](reference/export-interactivity.md).
 
 ## Common Workflows
 
@@ -258,19 +248,14 @@ app.run_server(debug=True)
 
 ## Reference Files
 
-- **plotly-express.md** - High-level API for quick visualizations
-- **graph-objects.md** - Low-level API for fine-grained control
-- **chart-types.md** - Complete catalog of 40+ chart types with examples
-- **layouts-styling.md** - Subplots, templates, colors, customization
-- **export-interactivity.md** - Export options and interactive features
+- **[plotly-express.md](reference/plotly-express.md)** - High-level API for quick visualizations
+- **[graph-objects.md](reference/graph-objects.md)** - Low-level API for fine-grained control
+- **[chart-types.md](reference/chart-types.md)** - Complete catalog of 40+ chart types with examples
+- **[layouts-styling.md](reference/layouts-styling.md)** - Subplots, templates, colors, customization
+- **[export-interactivity.md](reference/export-interactivity.md)** - Export options and interactive features
 
 ## Additional Resources
 
 - Official documentation: https://plotly.com/python/
 - API reference: https://plotly.com/python-api-reference/
 - Community forum: https://community.plotly.com/
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

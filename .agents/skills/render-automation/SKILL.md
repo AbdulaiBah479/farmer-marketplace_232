@@ -3,14 +3,13 @@ name: render-automation
 description: "Automate Render tasks via Rube MCP (Composio): services, deployments, projects. Always search tools first for current schemas."
 requires:
   mcp: [rube]
-category: devops
+risk: unknown
+source: community
 ---
 
 # Render Automation via Rube MCP
 
 Automate Render cloud platform operations through Composio's Render toolkit via Rube MCP.
-
-**Toolkit docs**: [composio.dev/toolkits/render](https://composio.dev/toolkits/render)
 
 ## Prerequisites
 
@@ -183,5 +182,5 @@ Automate Render cloud platform operations through Composio's Render toolkit via 
 | Get deploy status | RENDER_RETRIEVE_DEPLOY | serviceId, deployId |
 | List projects | RENDER_LIST_PROJECTS | limit, cursor |
 
----
-*Powered by [Composio](https://composio.dev)*
+## When to Use
+This skill is applicable to execute the workflow or actions described in the overview.

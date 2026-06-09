@@ -1,139 +1,645 @@
 ---
-name: "architectural-analysis"
-description: "Performs deep architectural analysis of a specified module, directory, or feature area by examining structural coupling, data flow, concurrency patterns, risk, and SOLID alignment. Use when the user wants to assess, evaluate, or review the architecture, design quality, dependency structure, coupling, cohesion, or technical debt of an existing part of the codebase. Not for investigating specific bugs, runtime errors, or failures — use investigate. Not for test planning — use test-planning. Not for file-level code review — use code-review. Not for researching open-ended options, prior art, or how something works — use research. Not for writing documentation or architectural decision records."
-arguments: size
-argument-hint: "[size: small | medium | large] [focus area: module, directory, or feature to analyze]"
-allowed-tools: Read, Glob, Grep, Agent, Bash(find *)
+name: architectural-analysis
+description: Deep architectural audit focused on finding dead code, duplicated functionality, architectural anti-patterns, type confusion, and code smells. Use when user asks for architectural analysis, find dead code, identify duplication, or assess codebase health.
 ---
 
-## Project Context
+# Architectural Analysis
 
-- git installed: !`which git`
-- CLAUDE.md: !`find . -maxdepth 1 -name "CLAUDE.md" -type f`
-- project-discovery.md: !`find . -maxdepth 3 -name "project-discovery.md" -type f`
+## Instructions
 
-## Operating Principles
+Perform comprehensive architectural audit focused on structural issues, dead code, duplication, and systemic problems.
 
-Read these before dispatching anything. They constrain every step below.
+### Phase 1: Discovery & Planning
 
-- **A focus area is required.** This skill analyzes a specific module, directory, or feature. "Analyze the whole codebase" is not a valid input. If no focus area resolves to real files, stop and ask the user to name one.
-- **The agents own the judgment; the skill orchestrates.** The skill validates the focus area, classifies size, selects the roster, fans agents out and in, and renders the report. It does not produce findings itself.
-- **The discovery roster is signal-selected; the synthesis spine always runs.** `han.core:structural-analyst`, `han.core:behavioral-analyst`, `han.core:risk-analyst`, and `han.core:software-architect` run at every size BECAUSE structure, runtime behavior, risk-of-inaction, and SOLID synthesis are the irreducible core of an architectural read. Every other specialist is added only when the focus area's signals warrant it and the size band allows it, BECAUSE dispatching an agent whose domain the code does not touch burns tokens and dilutes the report with low-signal findings.
-- **Default to small.** Start classification at small and escalate only when a higher-band signal is clearly present. Borderline signals stay at the smaller band. Under-dispatching is recoverable by re-running at a larger size; over-dispatching is not.
-- **Recommendations, not refactors.** The skill never modifies code. `han.core:software-architect` (and `han.core:system-architect` when dispatched) produce pseudocode sketches for proposed boundaries. Implementation is a separate, later step.
-- **Negative results are valuable.** When a dimension is genuinely clean (no concurrency in a pure-functional module, sound boundaries), the report says so. Agents must not fabricate findings to fill a section.
-- **Single pass, no iteration round.** This skill is a fan-out / fan-in, not an iterative loop. If a band proves too small, the user re-runs at a larger size — the skill does not self-escalate mid-run.
-- **System-altitude work is deferred by default.** `han.core:software-architect` defers cross-service / bounded-context / trust-boundary findings rather than absorbing them. `han.core:system-architect` is added to the roster only at large size and only when a boundary-crossing seam is actually present. When it is not dispatched, those deferrals are surfaced in the report so the user can dispatch `han.core:system-architect` separately.
-- **The report template lives at [references/architectural-analysis-report-template.md](references/architectural-analysis-report-template.md).** The skill renders that template by filling placeholders and removing the sections whose agent was not dispatched. It does not invent a structure inline.
+#### Step 1: Map Codebase Structure
+```bash
+# Get directory structure
+find . -type d -not -path "*/node_modules/*" -not -path "*/.git/*"
 
-# Run an Architectural Analysis
+# Count files by type
+find . -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" | wc -l
+```
 
-## Step 1: Validate the Focus Area and Resolve Project Context
+#### Step 2: Identify Entry Points
+- Main application entry (`index.ts`, `main.ts`, `app.ts`)
+- API routes/controllers
+- Public exports (`index.ts` files)
+- CLI entry points
+- Test files
 
-**Bind `$size`.** If the user passed `small`, `medium`, or `large` as the first positional argument, bind `$size` to it. Anything else is part of the focus-area context, not a size; bind `$size` to the literal `none provided`.
+#### Step 3: Create Comprehensive File List
+Use Glob to find all source files.
+Create todo list with one item per file to analyze.
 
-**Resolve the focus area.** Take the remaining argument and conversation context as the focus area. Confirm it resolves to real files using `Glob` and `Read`. Identify the boundary: which files and directories the focus area includes, and one layer of neighbors in each direction (what it imports, what imports it). If the focus area does not resolve to actual files, stop and ask the user to clarify it before going further. If no focus area was supplied at all, ask the user to name one — do not proceed against the whole codebase.
+### Phase 2: Dead Code Detection
 
-**Resolve project context.** If `CLAUDE.md` is present (see Project Context), read its `## Project Discovery` section for conventions. Fall back to `project-discovery.md` if present. These resolve language, framework, and convention questions so the agents infer less. If neither exists, the agents fall back to surrounding-code inference — note this in the agent briefs.
+For EACH file in the todo list:
 
-**Note git availability.** Read the `git installed` value from Project Context. If it is empty, git is unavailable: the analysts will skip churn- and recency-based reasoning and the report must state this. If it is non-empty, the analysts may use git history for churn and likelihood evidence.
+#### Step 1: Identify Exports
+- What does this file export?
+- Are exports functions, classes, types, constants?
+- Is anything exported at all?
 
-**State the driving concern, if any.** If the user named a concern ("I suspect a race in the retry queue", "we want to split this module"), capture it. It biases every agent's attention without narrowing scope. Pass it into every brief.
+#### Step 2: Search for Usage
 
-## Step 2: Detect Signals and Classify Size
+For each export, search if it's imported/used anywhere:
+```bash
+# Search for imports of this export
+grep -r "import.*ExportName" . --include="*.ts" --include="*.tsx"
+grep -r "from.*filename" . --include="*.ts" --include="*.tsx"
 
-Run targeted `Grep` and `Glob` over the focus area to detect which domains the code actually touches. These signals drive both the size band and the roster:
+# Search for direct usage
+grep -r "ExportName" . --include="*.ts" --include="*.tsx"
+```
 
-- **Concurrency signal:** `async`/`await`, Promises, threads, goroutines, workers, channels, mutexes/locks, semaphores, queues, `Promise.all`, `WaitGroup`, thread pools, atomic types.
-- **Security signal:** authentication, authorization, sessions, tokens, passwords, secrets, crypto calls, PII fields, deserialization of untrusted input, SQL/command construction from input.
-- **Data signal:** schema or migration files, ORM models/repositories, hand-written SQL, query builders, data-pipeline or stream/event-contract code, document-store access.
-- **DevOps signal:** Dockerfiles, IaC (Terraform, CloudFormation, k8s manifests), CI/CD pipeline definitions, observability/metrics/tracing wiring, retry/timeout/scaling configuration.
-- **System-seam signal:** the focus area crosses a deployable unit or bounded-context boundary — RPC/HTTP clients to sibling services, message brokers, shared databases across services, cross-context model imports, contested data ownership.
-- **Unfamiliar-area signal:** the focus area is large or its internal structure is not legible from a first read, so the discovery analysts would benefit from a map first.
+#### Step 3: Categorize Code
 
-**Classify the size.** Default to small. Escalate only when a band's signal is clearly present; when a signal is borderline, stay at the smaller band.
+**Dead Code** (mark for removal):
+- Exported but never imported
+- Functions defined but never called
+- Classes instantiated nowhere
+- Types defined but never used
+- Constants defined but never referenced
+- Entire files with no imports from other files
 
-- **Small** *(default)* — a single module or directory, contained surface, no cross-cutting concerns: no security signal, no data signal, no DevOps signal, no system-seam signal. The concurrency signal may be present or absent.
-- **Medium** — two or three adjacent subsystems, OR exactly one cross-cutting concern present (one of: security, data, or DevOps signal — a single auth surface, a single data-contract, a single operational surface).
-- **Large** — more than roughly a dozen files across multiple subsystems, OR two or more cross-cutting concerns present together, OR a system-seam signal is present, OR `$size` is `large`.
+**Possibly Dead** (needs verification):
+- Only used in commented-out code
+- Only used in dead code
+- Only used in other unused exports
+- Used only in tests for deprecated features
 
-**Apply the size override.** If `$size` is not `none provided`, use it as the band and skip the signal-based classification above — but still select specialists by signal (a `large` override does not dispatch agents whose domain the code never touches). A conversational override ("run this large") is equivalent to `$size`.
+**Internal Dead Code**:
+- Functions defined in file but never called (not exported)
+- Variables assigned but never read
+- Parameters accepted but never used
 
-## Step 3: Build the Roster and Announce It
+#### Step 4: Check for False Positives
 
-**Synthesis spine — dispatched at every size:**
+Not dead if:
+- Used in tests (may be public API)
+- Dynamically imported/required
+- Used via reflection/string references
+- Part of public API (even if not used internally)
+- Framework hooks (lifecycle methods, callbacks)
+- Accessed via `window` or global scope
 
-- `han.core:structural-analyst` — static structure: module boundaries, coupling, dependency direction, abstractions, duplication. Emits `S#` findings.
-- `han.core:behavioral-analyst` — runtime behavior: data flow, error propagation, state management, integration boundaries. Emits `B#` findings.
-- `han.core:risk-analyst` — scores the `S`/`B`/`C` findings for risk of inaction (likelihood, severity, blast radius, reversibility). Emits `R#` items. Runs after the discovery wave.
-- `han.core:software-architect` — synthesizes all upstream findings into intra-codebase recommendations grounded in cohesion, coupling, and SOLID, with pseudocode sketches. Emits `A#` items. Runs last.
+#### Step 5: Record Findings
+```
+File: path/to/file.ts
+Status: [DEAD|POSSIBLY_DEAD|USED]
+Exports: [list]
+Dead Exports:
+  - ExportName - No imports found
+  - AnotherExport - Only used in test for deprecated feature
+Confidence: [HIGH|MEDIUM|LOW]
+```
 
-**Signal-selected discovery specialists — added when the signal is present and the band allows:**
+#### Step 6: Mark Complete
+Update todo list.
 
-| Specialist | Add when | Min band |
-|---|---|---|
-| `han.core:concurrency-analyst` (`C#`) | Concurrency signal present | Small |
-| `han.core:adversarial-security-analyst` (`SEC-###`) | Security signal present | Medium |
-| `han.core:data-engineer` | Data signal present | Medium |
-| `han.core:devops-engineer` (`DOR-###`) | DevOps signal present | Medium |
-| `han.core:on-call-engineer` (`OCE-###`) | On-call resilience signal present: application source in the focus area has outbound calls, retry logic, queue/buffer handling, async/await code, error-handling on a production path, fan-out loops, idempotency surfaces, or new production code paths whose failure would page someone | Medium |
-| `han.core:codebase-explorer` | Unfamiliar-area signal present | Large |
-| `han.core:system-architect` (`SA#`) | System-seam signal present | Large |
+### Phase 3: Duplication Detection
 
-Roster caps by band: **small** runs the spine plus `han.core:concurrency-analyst` only (3–4 agents); **medium** adds one or two of `{han.core:adversarial-security-analyst, han.core:data-engineer, han.core:devops-engineer, han.core:on-call-engineer}` by signal (4–6 agents); **large** adds the remaining signalled specialists, `han.core:codebase-explorer` if the area is unfamiliar, and `han.core:system-architect` if a system-seam signal is present (6–9 agents). If more than the cap's worth of specialists are signalled, keep the band's count and prefer the specialists covering the strongest signals; note the omitted domains in the executive summary so the user can re-run larger. When both `han.core:devops-engineer` and `han.core:on-call-engineer` are signalled, prefer `han.core:on-call-engineer` if the focus area is application source and `han.core:devops-engineer` if it is infrastructure or pipelines; include both at large size only.
+#### Step 1: Identify Duplicated Logic Patterns
 
-`han.core:system-architect` is the only specialist that changes `han.core:software-architect`'s behavior: when `han.core:system-architect` is on the roster, `han.core:software-architect` still defers boundary-crossing findings but the report carries `han.core:system-architect`'s recommendations for them instead of only listing them as deferred.
+Search for common patterns that suggest duplication:
+- Similar function names across files
+- Repeated code blocks
+- Multiple implementations of same concept
 
-**Announce the decision in one line before dispatching**, with per-specialist justification — for example:
+**Manual Pattern Recognition**:
+- Read files in same directory
+- Look for suspiciously similar code
+- Compare utilities/helpers across modules
+- Check for copy-pasted blocks
 
-> **Size: medium.** Focus area `src/auth/` spans the session and token subsystems; one security signal detected (token handling).
-> **Roster (5):** `han.core:structural-analyst`, `han.core:behavioral-analyst` (spine), `han.core:concurrency-analyst` (async token refresh detected), `han.core:adversarial-security-analyst` (token + session handling), then `han.core:risk-analyst` and `han.core:software-architect`.
+**Grep-Based Detection**:
+```bash
+# Find similar function signatures
+grep -r "function validateEmail" . --include="*.ts"
+grep -r "async.*fetch.*api" . --include="*.ts"
+grep -r "export.*UserForm" . --include="*.tsx"
+```
 
-State git availability in the same message if git is absent ("git unavailable — churn and recency evidence will be skipped"). Proceed without a blocking confirmation; this analysis is read-only and re-runnable, so a gate here would gate a reversible operation. If the user objects to the roster, honor the adjustment.
+#### Step 2: Analyze Duplicated Functionality
 
-## Step 4: Dispatch the Discovery Wave in Parallel
+For each potential duplication:
+- Read both/all implementations
+- Are they actually the same logic?
+- Do they handle same cases?
+- Could one replace the other?
+- Are differences intentional or accidental?
 
-Launch every discovery agent on the roster in a single message with one `Agent` call per agent so they run concurrently: `han.core:structural-analyst`, `han.core:behavioral-analyst`, and whichever of `han.core:concurrency-analyst`, `han.core:adversarial-security-analyst`, `han.core:data-engineer`, `han.core:devops-engineer`, `han.core:on-call-engineer`, `han.core:codebase-explorer` are on the roster. Do **not** launch `han.core:risk-analyst`, `han.core:software-architect`, or `han.core:system-architect` here — they are the synthesis layer (Steps 6 and 7).
+#### Step 3: Categorize Duplication
 
-Each brief must contain:
+**Exact Duplication** (CRITICAL):
+- Identical or near-identical code in multiple places
+- Copy-pasted functions
+- Duplicated utility functions
+- **Impact**: Bug fixes need multiple updates, maintenance burden
 
-- The resolved focus area and its boundary (the file/directory list from Step 1), plus the instruction to trace one layer outward.
-- The driving concern from Step 1, if any.
-- The resolved project-context conventions, or a note that none were found and surrounding-code inference applies.
-- Git availability, so the agent knows whether churn/recency evidence is in scope.
-- A **calibration directive scaled to the band**: at **small**, escalate only the clearest high-impact findings and let lower-confidence observations default down; at **medium**, surface high- and medium-impact findings; at **large**, surface the full finding set. This scales the brief to the size the same way the roster does.
-- For `han.core:adversarial-security-analyst`, `han.core:data-engineer`, `han.core:devops-engineer`, and `han.core:on-call-engineer`: scope the brief to the focus area and direct findings at architectural concerns within it (its domain's structural and behavioral risk), not a general audit of the whole repository. For `han.core:on-call-engineer`, the brief must restrict findings to application source files only — infrastructure, pipelines, and IaC are out of scope.
+**Similar Logic** (HIGH):
+- Same algorithm, different implementation
+- Slightly different parameter handling
+- Different names, same purpose
+- **Impact**: Inconsistency risk, harder to maintain
 
-Wait for the entire wave to return before proceeding.
+**Conceptual Duplication** (MEDIUM):
+- Multiple ways to do the same thing
+- Competing implementations
+- Overlapping utilities
+- **Impact**: Confusion, decision paralysis
 
-## Step 5: Compile the Discovery Findings
+**Type Duplication** (HIGH):
+- Same interface/type defined multiple times
+- Similar types that should be unified
+- Duplicate constants/enums
+- **Impact**: Type inconsistency, refactoring difficulty
 
-Collect the full verbatim output from every discovery agent. Preserve every numbered item and its prefix exactly: `S#` (structural), `B#` (behavioral), `C#` (concurrency), `SEC-###` (security), `DOR-###` (devops), and `han.core:data-engineer`'s own finding IDs. Do not renumber, summarize, or drop items — the verbatim output is what the report carries and what the synthesis layer cross-references.
+#### Step 4: Record Duplication
+```
+Duplication Group: Email Validation
+Type: Exact Duplication
+Instances:
+  - src/utils/validators.ts:42 - validateEmail()
+  - src/lib/email.ts:15 - isValidEmail()
+  - src/components/forms/validation.ts:67 - checkEmailFormat()
+Analysis: All three implement same regex check
+Recommendation: Keep utils/validators.ts version, remove others
+Impact: 3 places to update when logic changes
+```
 
-If `han.core:concurrency-analyst` reported "no concurrency patterns found", keep that statement verbatim — it is a valid negative result, not a missing section.
+### Phase 4: Architectural Anti-Patterns
 
-## Step 6: Dispatch the Risk Analyst
+#### Step 1: Identify God Objects/Classes
 
-Launch `han.core:risk-analyst` with one `Agent` call. Pass it the full verbatim `S#`, `B#`, and `C#` findings (its documented input contract). Do not pass it the security, data, or devops findings — those specialists already carry their own severity and impact framing, and `han.core:risk-analyst`'s rubric is built for the structural/behavioral/concurrency findings that lack inherent severity. The agent emits `R#` items cross-referencing the upstream `S`/`B`/`C` findings with likelihood, severity, blast radius, and reversibility. Wait for it to return.
+Search for files that do too much:
+- Files over 500 lines
+- Classes with 10+ methods
+- Files with many responsibilities
+- Modules that import from everywhere
 
-## Step 7: Dispatch the Synthesis Architects
+```bash
+# Find large files
+find . -name "*.ts" -exec wc -l {} + | sort -rn | head -20
+```
 
-Launch the synthesis layer with one `Agent` call per architect, in a single message when both are on the roster:
+Analyze large files:
+- What does this file do?
+- Does it have single responsibility?
+- Should it be split?
 
-- `han.core:software-architect` — always. Pass it the full verbatim discovery output (`S`/`B`/`C` plus any `SEC-###`, `DOR-###`, and `han.core:data-engineer` findings) AND the `han.core:risk-analyst` `R#` items. It produces `A#` intra-codebase recommendations with pseudocode sketches, each cross-referencing upstream findings and naming the SOLID/cohesion/coupling concern. It defers boundary-crossing findings rather than absorbing them.
-- `han.core:system-architect` — only when it is on the roster (large size, system-seam signal). Pass it the same verbatim discovery output and `R#` items, plus the `DOR-###` and `han.core:data-engineer` findings explicitly (its documented optional inputs). It produces `SA#` cross-service / bounded-context recommendations and a context-map sketch.
+#### Step 2: Detect Circular Dependencies
 
-Wait for the synthesis layer to return.
+Look for:
+- File A imports from B, B imports from A
+- Circular chains: A → B → C → A
+- Module coupling cycles
 
-## Step 8: Render and Present the Report
+Use grep to trace import chains:
+```bash
+# Check what file imports
+grep "^import.*from" src/services/auth.ts
 
-Read [references/architectural-analysis-report-template.md](references/architectural-analysis-report-template.md). Render it and present the result directly in the conversation. Render rules:
+# Check what imports this file
+grep -r "from.*auth" src/ --include="*.ts"
+```
 
-1. **Fill the front matter and "How to Read" frame.** Set the focus area, the chosen size with its one-line justification, the dispatched roster, and git availability.
-2. **Carry agent output verbatim.** Each analysis section is the corresponding agent's full output, unedited. The skill writes only the Executive Summary and the section prefaces.
-3. **Remove sections for agents that were not dispatched.** Drop the section, remove its line from `sections_included` in the front matter, and replace its promise in the "How to Read" frame with a single line stating it was not part of this run (the same way `gap-analysis` handles optional sections). A small run with no concurrency signal has no Concurrency section; a run with no security signal has no Security section.
-4. **Handle the concurrency negative result.** If `han.core:concurrency-analyst` ran but found nothing, keep the section and carry its "no concurrency patterns found" statement — this is a reported result, not an omission.
-5. **Resolve system-altitude content.** If `han.core:system-architect` was dispatched, render its `SA#` recommendations in the System-Architecture Recommendations section. If it was not, omit that section and instead render `han.core:software-architect`'s deferred boundary-crossing findings under "System-level concerns deferred", with the one-line note that the user can dispatch `han.core:system-architect` separately for recommendations at that altitude.
-6. **Write the Executive Summary last**, after every other section is filled: the focus area and size, the 3–5 most critical findings across all dispatched dimensions, the highest-impact recommendations, and an explicit note on any dimension that was clean or any signalled domain omitted by the band cap.
+#### Step 3: Find Tight Coupling
 
-Close by telling the user, in a short message: the size class and roster used (and why), git availability, the count of findings by dimension, and any open items — boundary-crossing concerns deferred to `han.core:system-architect`, or signalled domains the band cap omitted that would justify a re-run at a larger size.
+Identify:
+- High-level modules depending on low-level modules
+- Business logic depending on infrastructure
+- Core logic depending on framework specifics
+- Modules that import from many other modules
+
+#### Step 4: Spot Layer Violations
+
+Check architecture layers:
+- Do components import directly from database layer?
+- Do models import from views?
+- Do utilities import from business logic?
+- Is there proper separation of concerns?
+
+#### Step 5: Identify Other Anti-Patterns
+
+**Singleton Abuse**:
+- Global state everywhere
+- Module-level mutable state
+- Static class methods accessing shared state
+
+**Anemic Domain Models**:
+- Data classes with no behavior
+- All logic in services, models just have getters/setters
+
+**Shotgun Surgery**:
+- Single feature change requires touching many files
+- Indicates poor cohesion
+
+**Feature Envy**:
+- Methods that use more data from other classes than their own
+
+### Phase 5: Type Issues Analysis
+
+#### Step 1: Find Type Abuse
+
+Search for problematic type usage:
+```bash
+# Find 'any' usage
+grep -r ": any" . --include="*.ts" --include="*.tsx" -n
+
+# Find 'unknown' usage
+grep -r ": unknown" . --include="*.ts" -n
+
+# Find type assertions
+grep -r "as any" . --include="*.ts" -n
+grep -r "as unknown" . --include="*.ts" -n
+
+# Find @ts-ignore
+grep -r "@ts-ignore" . --include="*.ts" -n
+grep -r "@ts-expect-error" . --include="*.ts" -n
+```
+
+#### Step 2: Analyze Type Confusion
+
+For each file with type issues:
+- Why is `any` used?
+- Could proper type be defined?
+- Is type assertion hiding a real type error?
+- Are @ts-ignore comments masking actual problems?
+
+#### Step 3: Find Type Duplication
+
+Look for:
+- Same interface defined in multiple files
+- Similar types that could be unified
+- Types that could extend from common base
+- Constants/enums duplicated across files
+
+#### Step 4: Identify Missing Types
+
+Check for:
+- Implicit `any` from missing type annotations
+- Functions without return type
+- Callbacks without proper typing
+- Generic types that should be specific
+
+### Phase 6: Code Smells Detection
+
+#### Step 1: Long Methods/Functions
+```bash
+# Find functions with many lines
+# (manual inspection of large files)
+```
+
+Flag functions over 50 lines - likely doing too much.
+
+#### Step 2: Long Parameter Lists
+
+Search for functions with 4+ parameters:
+- Could use object parameter instead?
+- Are parameters related (should be grouped)?
+
+#### Step 3: Complex Conditionals
+
+Look for:
+- Deeply nested if statements (3+ levels)
+- Long boolean expressions
+- Switch statements with 10+ cases
+- Complex ternary operators
+
+#### Step 4: Magic Numbers/Strings
+
+Search for:
+- Hardcoded numbers with unclear meaning
+- String literals used repeatedly
+- Unexplained constants
+
+Should be named constants.
+
+#### Step 5: Commented-Out Code
+
+```bash
+# Find commented code blocks
+grep -r "^[[:space:]]*//.*function\|class\|const" . --include="*.ts"
+```
+
+Commented code should be deleted (use git history).
+
+#### Step 6: Poor Naming
+
+Look for:
+- Single letter variables (outside loops)
+- Abbreviations without context (`usr`, `msg`, `tmp`)
+- Misleading names
+- Names that don't reflect purpose
+
+### Phase 7: Generate Report
+
+Create report at `.audits/architectural-analysis-[timestamp].md`:
+
+```markdown
+# Architectural Analysis Report
+**Date**: [timestamp]
+**Files Analyzed**: X
+**Dead Code Files**: Y
+**Duplication Groups**: Z
+
+---
+
+## Executive Summary
+- **Dead Code**: X files, Y exports completely unused
+- **Duplicated Functionality**: Z duplication groups
+- **Architectural Anti-Patterns**: W issues
+- **Type Issues**: V problematic usages
+- **Code Smells**: U instances
+
+**Estimated Cleanup**: Remove ~X lines of dead code, consolidate Y duplications
+
+---
+
+## Dead Code
+
+### Completely Dead Files (DELETE)
+| File | Reason | Confidence |
+|------|--------|------------|
+| `src/old/legacy-processor.ts` | No imports found | HIGH |
+| `src/utils/unused-helper.ts` | Exported but never used | HIGH |
+| `src/temp/temp-service.ts` | Temporary file left behind | HIGH |
+
+**Total Lines**: X,XXX lines can be deleted
+
+### Dead Exports (REMOVE)
+| File | Export | Reason |
+|------|--------|--------|
+| `src/utils/format.ts` | `formatOldDate()` | Replaced by `formatDate()`, no usage |
+| `src/services/auth.ts` | `oldLogin()` | Deprecated, no usage found |
+
+### Possibly Dead (VERIFY)
+| File | Export | Reason | Verification Needed |
+|------|--------|--------|---------------------|
+| `src/lib/api.ts` | `fetchOldApi()` | Only used in commented code | Check if truly deprecated |
+
+### Internal Dead Code
+- `src/services/user.ts:125` - Private method `_validateLegacy()` never called
+- `src/components/form.tsx:89` - Variable `tempData` assigned but never read
+
+---
+
+## Duplicated Functionality
+
+### CRITICAL: Exact Duplicates
+
+#### Duplication Group 1: Email Validation
+**Instances**: 3
+**Files**:
+- `src/utils/validators.ts:42` - `validateEmail(email: string)`
+- `src/lib/email.ts:15` - `isValidEmail(email: string)`
+- `src/components/forms/validation.ts:67` - `checkEmailFormat(email: string)`
+
+**Analysis**: All three use identical regex pattern `/^[^\s@]+@[^\s@]+\.[^\s@]+$/`
+**Lines Duplicated**: ~15 lines × 3 = 45 lines
+**Recommendation**:
+- Keep: `src/utils/validators.ts:validateEmail()`
+- Remove: Other two implementations
+- Update: All imports to use validators version
+
+#### Duplication Group 2: API Error Handling
+**Instances**: 4
+**Files**: [list]
+**Analysis**: [similar]
+
+### HIGH: Similar Logic
+
+#### Duplication Group: Date Formatting
+**Instances**: 2
+**Files**:
+- `src/utils/date.ts:30` - `formatDate()` - Uses date-fns
+- `src/lib/format.ts:45` - `formatDateTime()` - Uses native Date
+
+**Analysis**: Both format dates but use different libraries
+**Recommendation**: Standardize on date-fns, remove native version
+
+### Type Duplication
+
+#### Type Group: User Interface
+**Instances**: 3
+**Files**:
+- `src/types/user.ts` - `User` interface
+- `src/models/user.ts` - `UserModel` interface (identical fields)
+- `src/api/types.ts` - `UserData` interface (identical fields)
+
+**Recommendation**: Use single `User` type from `src/types/user.ts`
+
+---
+
+## Architectural Anti-Patterns
+
+### God Objects
+
+#### `src/services/application-manager.ts` (850 lines)
+**Responsibilities**: Database, auth, config, logging, caching, validation
+**Issue**: Violates SRP, does everything
+**Recommendation**: Split into:
+- `database.service.ts`
+- `auth.service.ts`
+- `config.service.ts`
+- `logging.service.ts`
+
+### Circular Dependencies
+
+#### Cycle 1: `auth.ts` ↔ `user.ts`
+- `auth.ts` imports `getUserById` from `user.ts`
+- `user.ts` imports `validateToken` from `auth.ts`
+**Issue**: Creates tight coupling, makes testing hard
+**Recommendation**: Extract shared types to separate file
+
+### Tight Coupling
+
+#### `components/UserForm.tsx` → `services/database.ts`
+**Issue**: UI component directly importing database layer
+**Recommendation**: Use service layer abstraction
+
+### Layer Violations
+
+#### `models/User.ts` imports from `components/`
+**Issue**: Model layer should not know about view layer
+**Recommendation**: Remove dependency, pass data via props
+
+---
+
+## Type Issues
+
+### `any` Usage (X instances)
+
+| File | Line | Context | Severity |
+|------|------|---------|----------|
+| `src/api/client.ts` | 45 | `response: any` | HIGH |
+| `src/utils/parse.ts` | 23 | `data: any` | HIGH |
+
+**Total `any` usages**: X
+**Recommendation**: Define proper types for all cases
+
+### Type Assertions (Y instances)
+
+| File | Line | Assertion | Issue |
+|------|------|-----------|-------|
+| `src/lib/api.ts` | 67 | `as User` | Unsafe cast, no validation |
+| `src/utils/parse.ts` | 89 | `as unknown as T` | Double cast to bypass types |
+
+**Issue**: Type safety bypassed, runtime errors possible
+
+### @ts-ignore Comments (Z instances)
+
+| File | Line | Reason | Should Fix |
+|------|------|--------|------------|
+| `src/legacy/old.ts` | 34 | "Type error in legacy code" | Refactor or remove file |
+
+---
+
+## Code Smells
+
+### Long Functions (>50 lines)
+
+| File | Function | Lines | Issue |
+|------|----------|-------|-------|
+| `src/services/processor.ts` | `processData()` | 127 | Does too much, hard to test |
+
+**Recommendation**: Extract smaller functions
+
+### Complex Conditionals
+
+| File | Line | Issue |
+|------|------|-------|
+| `src/utils/validator.ts` | 45 | Nested 4 levels deep |
+| `src/lib/parser.ts` | 89 | Boolean expression spans 3 lines |
+
+### Magic Numbers
+
+| File | Line | Magic Value | Should Be |
+|------|------|-------------|-----------|
+| `src/config/limits.ts` | 12 | `86400` | `SECONDS_PER_DAY` |
+| `src/utils/format.ts` | 34 | `1000` | `MS_PER_SECOND` |
+
+### Commented-Out Code
+
+**Files with commented code**: X
+- `src/old/legacy.ts` - 45 lines of commented code
+- `src/services/auth.ts` - Old implementation commented out
+
+**Recommendation**: Delete all commented code (use git history)
+
+---
+
+## Statistics
+
+**Dead Code**:
+- Files: X
+- Exports: Y
+- Lines: Z (estimated)
+
+**Duplication**:
+- Groups: X
+- Files affected: Y
+- Duplicated lines: ~Z
+
+**Architectural Issues**:
+- God objects: X
+- Circular dependencies: Y
+- Layer violations: Z
+
+**Type Issues**:
+- `any` usage: X
+- Type assertions: Y
+- @ts-ignore: Z
+
+**Code Smells**:
+- Long functions: X
+- Complex conditionals: Y
+- Magic numbers: Z
+
+---
+
+## Impact Assessment
+
+### Code Cleanup Potential
+- **Dead code removal**: ~X,XXX lines
+- **Duplication consolidation**: ~Y,YYY lines
+- **Total reduction**: ~Z,ZZZ lines (AA% of codebase)
+
+### Maintainability Improvement
+- Fewer places to update when fixing bugs
+- Clearer code responsibilities
+- Better type safety
+- Reduced cognitive load
+
+### Risk Areas
+- High coupling in `services/` directory
+- Type safety compromised in `api/` layer
+- Architectural violations in `components/`
+```
+
+### Phase 8: Summary for User
+
+Provide concise summary:
+
+```markdown
+# Architectural Analysis Complete
+
+## Dead Code Found
+- **X completely dead files** - Can be deleted immediately
+- **Y unused exports** - Can be removed
+- **~Z,ZZZ lines** of dead code identified
+
+## Top Dead Files
+1. `src/old/legacy-processor.ts` - No imports
+2. `src/temp/temp-service.ts` - Temporary file
+3. `src/utils/unused-helper.ts` - Exported but never used
+
+## Duplication Found
+- **X duplication groups** identified
+- **Most duplicated**: Email validation (3 copies)
+- **~Y,YYY lines** of duplicated code
+
+## Architectural Issues
+- **Z god objects** doing too much
+- **W circular dependencies** found
+- **V layer violations** detected
+
+## Type Issues
+- **X `any` usages** - Should have proper types
+- **Y type assertions** - Bypassing type safety
+- **Z @ts-ignore comments** - Masking errors
+
+## Code Smells
+- **X long functions** (>50 lines)
+- **Y complex conditionals** (3+ nesting)
+- **Z magic numbers** - Should be constants
+
+## Cleanup Potential
+Removing dead code and consolidating duplication could eliminate **~X,XXX lines** (Y% of codebase)
+
+**Full Report**: `.audits/architectural-analysis-[timestamp].md`
+```
+
+## Critical Principles
+
+- **NEVER EDIT FILES** - This is analysis only, not cleanup
+- **NEVER SKIP FILES** - Analyze entire codebase systematically
+- **BE THOROUGH** - Dead code detection requires checking all imports
+- **VERIFY DUPLICATES** - Don't just match names, check if logic is same
+- **UNDERSTAND ARCHITECTURE** - See the big picture, not just individual files
+- **QUANTIFY IMPACT** - Count lines, estimate cleanup potential
+- **BE CONFIDENT** - Mark confidence level (HIGH/MEDIUM/LOW) for findings
+- **TRACK PROGRESS** - Use todo list for file-by-file analysis
+
+## Success Criteria
+
+A complete architectural analysis includes:
+- All files analyzed for dead code
+- All exports checked for usage
+- Duplication groups identified and cataloged
+- Architectural anti-patterns found and explained
+- Type issues located and categorized
+- Code smells flagged
+- Impact assessment quantified
+- Structured report generated

@@ -1,9 +1,6 @@
 ---
 name: grafana-dashboards
-description: "Create and manage production-ready Grafana dashboards for comprehensive system observability."
-risk: unknown
-source: community
-date_added: "2026-02-27"
+description: Create and manage production Grafana dashboards for real-time visualization of system and application metrics. Use when building monitoring dashboards, visualizing metrics, or creating operational observability interfaces.
 ---
 
 # Grafana Dashboards
@@ -382,8 +379,3 @@ resource "grafana_folder" "monitoring" {
 
 - `prometheus-configuration` - For metric collection
 - `slo-implementation` - For SLO dashboards
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

@@ -1,133 +1,178 @@
 ---
 name: parallel-agents
-description: Parallel Agent Orchestration
-user-invocable: false
+description: Dispatch multiple agents to work on independent problems concurrently. Use when facing 3+ independent failures or tasks.
 ---
 
-# Parallel Agent Orchestration
+# Dispatching Parallel Agents
 
-When launching multiple agents in parallel, follow this pattern to avoid context bloat.
+Assign separate agents to independent problem domains simultaneously for faster resolution.
 
-## Core Principles
+## When to Use
 
-1. **No TaskOutput calls** - TaskOutput returns full agent output, bloating context
-2. **Run in background** - Always use `run_in_background: true`
-3. **File-based confirmation** - Agents write status to files, not return values
-4. **Append, don't overwrite** - Multiple agents can write to same status file
+- 3+ test failures across different files/subsystems
+- Multiple independent tasks that don't share state
+- Investigations that won't interfere with each other
+- Failures from unrelated root causes
 
-## Output Patterns
+## When NOT to Use
 
-### Simple Confirmation (parallel batch work)
-For tasks where agents just need to confirm completion:
+- Failures are interconnected
+- Tasks share state or create conflicts
+- Agents would modify the same files
+- You lack context to properly scope tasks
 
-```bash
-# Agent writes to shared status file
-echo "COMPLETE: <task-name> - $(date)" >> .claude/cache/<batch-name>-status.txt
-```
+## Implementation Steps
 
-- Use `>>` to append (not `>` which overwrites)
-- Include timestamp for ordering
-- One line per agent completion
-- Check with: `cat .claude/cache/<batch-name>-status.txt`
+### 1. Group by Domain
 
-### Detailed Output (research/exploration)
-For tasks requiring detailed findings:
-
-```
-.claude/cache/agents/<task-type>/<agent-id>/
-├── output.md      # Main findings
-├── artifacts/     # Any generated files
-└── status.txt     # Completion confirmation
-```
-
-- Each agent gets own directory
-- Full output preserved for later reading
-- Status file still used for quick completion check
-
-## Task Prompt Template
+Organize failures/tasks into independent categories:
 
 ```markdown
-# Task: <TASK_NAME>
-
-## Your Mission
-<clear objective>
-
-## Output
-When done, write confirmation:
-\`\`\`bash
-echo "COMPLETE: <identifier> - $(date)" >> .claude/cache/<batch>-status.txt
-\`\`\`
-
-Do NOT return large output. Complete work silently.
+Group A: Authentication tests (3 failures)
+Group B: API endpoint tests (2 failures)
+Group C: UI component tests (4 failures)
 ```
 
-## Launching Pattern
+### 2. Define Focused Tasks
 
-```typescript
-// Launch all in single message block (parallel)
-Task({
-  description: "Task 1",
-  prompt: "...",
-  subagent_type: "general-purpose",
-  run_in_background: true
-})
-Task({
-  description: "Task 2",
-  prompt: "...",
-  subagent_type: "general-purpose",
-  run_in_background: true
-})
-// ... up to 15 parallel agents
+Each agent receives:
+
+| Field       | Description                      |
+| ----------- | -------------------------------- |
+| Scope       | Specific files/tests to focus on |
+| Goal        | Clear success criteria           |
+| Constraints | What NOT to change               |
+| Output      | Expected deliverable             |
+
+### 3. Dispatch Concurrently
+
+**IMPORTANT**: Launch all tasks in a **single message** (no `run_in_background`). Multiple Task calls in the same message automatically run in parallel, and Claude waits for all to complete.
+
+```
+# All three tasks run in parallel automatically when in the same message
+Task(test-engineer, prompt="Fix auth test failures in src/auth/*.test.ts")
+Task(test-engineer, prompt="Fix API test failures in src/api/*.test.ts")
+Task(frontend-developer, prompt="Fix UI test failures in src/components/*.test.tsx")
+# Claude waits for all to complete, then continues
 ```
 
-## Monitoring
+**Avoid `run_in_background: true`** unless you need to do other work while waiting. Task IDs must be captured and used within the same response.
 
-```bash
-# Check completion status
-cat .claude/cache/<batch>-status.txt
+### 4. Integrate Results
 
-# Count completions
-wc -l .claude/cache/<batch>-status.txt
+1. Review all agent outputs (available after parallel completion)
+2. Verify no conflicts between changes
+3. Run full test suite
+4. Merge changes
 
-# Watch for updates
-tail -f .claude/cache/<batch>-status.txt
+## Effective Agent Prompts
+
+**Good prompt:**
+
+```
+Fix the 3 failing tests in src/auth/login.test.ts:
+- "should reject invalid email format"
+- "should require password min length"
+- "should handle network errors"
+
+Error messages attached. Identify root causes - don't just increase timeouts.
+Constraints: Don't modify src/api/* files.
+Output: Summary of fixes with test results.
 ```
 
-## Batch Size
+**Bad prompt:**
 
-- **Max 15 agents** per parallel batch
-- Wait for batch to complete before launching next
-- Use status file to track which completed
-
-## DO
-
-- Use `run_in_background: true` always
-- Have agents write to status files
-- Use append (`>>`) not overwrite (`>`)
-- Give each agent clear, self-contained instructions
-- Include all context in prompt (agents don't share memory)
-
-## DON'T
-
-- Call TaskOutput (bloats context)
-- Return large outputs from agents
-- Launch more than 15 at once
-- Rely on agent return values for orchestration
-
-## Example: Provider Backfill
-
-```bash
-# Status file
-.claude/cache/provider-backfill-status.txt
-
-# Each agent appends on completion
-echo "COMPLETE: anthropic - Thu Jan 2 12:34:56 2025" >> .claude/cache/provider-backfill-status.txt
-echo "COMPLETE: openai - Thu Jan 2 12:35:12 2025" >> .claude/cache/provider-backfill-status.txt
+```
+Fix all the tests
 ```
 
-Check progress:
-```bash
-cat .claude/cache/provider-backfill-status.txt
-# COMPLETE: anthropic - Thu Jan 2 12:34:56 2025
-# COMPLETE: openai - Thu Jan 2 12:35:12 2025
+## Prompt Template
+
+```markdown
+## Task: [Specific description]
+
+**Scope:** [Files/tests to focus on]
+
+**Failures:**
+
+- [Test name]: [Error message]
+- [Test name]: [Error message]
+
+**Goal:** [What success looks like]
+
+**Constraints:**
+
+- Don't modify [files]
+- Preserve [behavior]
+
+**Output:**
+
+- Summary of root causes found
+- Changes made
+- Verification results
 ```
+
+## Common Pitfalls
+
+| Mistake         | Problem                   | Solution               |
+| --------------- | ------------------------- | ---------------------- |
+| Vague scope     | Agent changes wrong files | Specify exact paths    |
+| Missing context | Agent can't diagnose      | Include error messages |
+| No constraints  | Conflicting changes       | Define boundaries      |
+| Unclear output  | Can't verify success      | Specify deliverables   |
+
+## Benefits
+
+- Reduces investigation time through parallelization
+- Each agent maintains narrow focus
+- Minimizes cross-agent interference
+- Solves multiple problems concurrently
+
+## Background Execution
+
+For long-running tasks where you need to continue working, use `run_in_background: true`.
+
+### Pattern: Background + Foreground
+
+```
+# Long-running audit in background
+audit_task = Task(security-auditor,
+  prompt="Full security audit",
+  run_in_background: true)
+
+# Continue with implementation work
+Task(frontend-developer, prompt="Build login form")
+
+# Later, get audit results
+TaskOutput(audit_task.id, block: true)
+```
+
+### Pattern: Multiple Background Tasks
+
+```
+# Launch multiple background tasks
+task1 = Task(test-engineer, prompt="...", run_in_background: true)
+task2 = Task(code-reviewer, prompt="...", run_in_background: true)
+
+# Do other work...
+
+# Collect all results
+result1 = TaskOutput(task1.id, block: true)
+result2 = TaskOutput(task2.id, block: true)
+```
+
+### When to Use Background vs Foreground
+
+| Scenario                   | Mode                      | Why                          |
+| -------------------------- | ------------------------- | ---------------------------- |
+| Quick tasks (< 1 min)      | Foreground                | Simpler, immediate results   |
+| Long audit/analysis        | Background                | Continue working             |
+| Multiple independent tasks | Foreground (parallel)     | Auto-waits for all           |
+| Security + Implementation  | Background + Foreground   | Overlap work                 |
+
+### Important Notes
+
+- Task IDs are only valid within the same response
+- Always use `block: true` when retrieving results with TaskOutput
+- Prefer foreground parallel (single message, multiple Tasks) when possible
+- Background tasks should be collected before the response ends

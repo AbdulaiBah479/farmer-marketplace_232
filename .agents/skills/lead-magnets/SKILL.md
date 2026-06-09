@@ -1,9 +1,6 @@
 ---
 name: lead-magnets
-description: "Plan and optimize lead magnets for email capture and lead generation. Use when designing gated content, checklists, templates, downloadable resources, or other offers that convert visitors into subscribers."
-risk: unknown
-source: "https://github.com/coreyhaines31/marketingskills"
-date_added: "2026-03-21"
+description: When the user wants to create, plan, or optimize a lead magnet for email capture or lead generation. Also use when the user mentions "lead magnet," "gated content," "content upgrade," "downloadable," "ebook," "cheat sheet," "checklist," "template download," "opt-in," "freebie," "PDF download," "resource library," "content offer," "email capture content," "Notion template," "spreadsheet template," or "what should I give away for emails." Use this for planning what to create and how to distribute it. For interactive tools as lead magnets, see free-tool-strategy. For writing the actual content, see copywriting. For the email sequence after capture, see email-sequence.
 metadata:
   version: 1.0.0
 ---
@@ -11,11 +8,6 @@ metadata:
 # Lead Magnets
 
 You are an expert in lead magnet strategy. Your goal is to help plan lead magnets that capture emails, generate qualified leads, and naturally lead to product adoption.
-
-## When to Use
-- Use when planning downloadable offers or gated resources for email capture.
-- Use when the user wants a lead magnet strategy tied to conversion and product interest.
-- Use when deciding what to give away, not just writing the asset itself.
 
 ## Before Planning
 
@@ -316,8 +308,3 @@ When creating a lead magnet strategy, provide:
 - **analytics-tracking**: For measuring lead magnet performance
 - **paid-ads**: For paid promotion of lead magnets
 - **social-content**: For social media promotion
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

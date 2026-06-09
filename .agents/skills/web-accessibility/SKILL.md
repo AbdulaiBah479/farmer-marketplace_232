@@ -1,217 +1,146 @@
 ---
 name: web-accessibility
-description: Build accessible web applications following WCAG guidelines. Use when implementing ARIA patterns, keyboard navigation, screen reader support, or ensuring accessibility compliance. Triggers on accessibility, a11y, WCAG, ARIA, screen reader, keyboard navigation.
+description: Web accessibility compliance specialist. Use when conducting WCAG compliance
+  audits, testing screen reader compatibility, validating keyboard navigation, or
+  ensuring inclusive design. Focuses on WCAG 2.1/2.2 standards.
+author: Joseph OBrien
+status: unpublished
+updated: '2025-12-23'
+version: 1.0.1
+tag: skill
+type: skill
 ---
 
-# Web Accessibility (WCAG 2.1)
+# Web Accessibility
 
-Build accessible web applications that work for everyone.
+This skill provides comprehensive web accessibility analysis and remediation, focusing on WCAG compliance, screen reader compatibility, and inclusive design.
 
-## ARIA Patterns
+## When to Use This Skill
 
-### Button
-```tsx
-<button
-  type="button"
-  aria-pressed={isPressed}
-  aria-disabled={isDisabled}
-  onClick={handleClick}
->
-  Toggle Feature
-</button>
+- When conducting WCAG compliance audits
+- When testing screen reader compatibility
+- When validating keyboard navigation
+- When analyzing color contrast
+- When ensuring inclusive design
+- When remediating accessibility issues
+
+## What This Skill Does
+
+1. **WCAG Compliance**: Assesses compliance with WCAG 2.1/2.2 (A, AA, AAA)
+2. **Screen Reader Testing**: Validates semantic HTML and ARIA usage
+3. **Keyboard Navigation**: Tests keyboard accessibility and focus management
+4. **Color Contrast**: Analyzes color contrast ratios
+5. **Alternative Text**: Evaluates alt text and media accessibility
+6. **Form Accessibility**: Validates form labels and error handling
+
+## How to Use
+
+### Audit Accessibility
+
+```
+Conduct a WCAG compliance audit of this website
 ```
 
-### Modal Dialog
-```tsx
-<div
-  role="dialog"
-  aria-modal="true"
-  aria-labelledby="modal-title"
-  aria-describedby="modal-description"
->
-  <h2 id="modal-title">Confirm Action</h2>
-  <p id="modal-description">Are you sure you want to proceed?</p>
-  <button onClick={onConfirm}>Confirm</button>
-  <button onClick={onCancel}>Cancel</button>
-</div>
+```
+Test keyboard navigation and screen reader compatibility
 ```
 
-### Navigation Menu
-```tsx
-<nav aria-label="Main navigation">
-  <ul role="menubar">
-    <li role="none">
-      <a role="menuitem" href="/home">Home</a>
-    </li>
-    <li role="none">
-      <button
-        role="menuitem"
-        aria-haspopup="true"
-        aria-expanded={isOpen}
-      >
-        Products
-      </button>
-      {isOpen && (
-        <ul role="menu" aria-label="Products submenu">
-          <li role="none">
-            <a role="menuitem" href="/products/new">New</a>
-          </li>
-        </ul>
-      )}
-    </li>
-  </ul>
-</nav>
+### Specific Analysis
+
+```
+Check color contrast ratios and suggest improvements
 ```
 
-## Keyboard Navigation
+## WCAG Standards
 
-### Focus Management
-```tsx
-import { useEffect, useRef } from 'react';
+### Level A (Minimum)
 
-function Modal({ isOpen, onClose, children }) {
-  const modalRef = useRef<HTMLDivElement>(null);
-  const previousFocus = useRef<HTMLElement | null>(null);
+- Text alternatives for images
+- Captions for videos
+- Keyboard accessible
+- No seizure-inducing content
+- Proper heading structure
 
-  useEffect(() => {
-    if (isOpen) {
-      previousFocus.current = document.activeElement as HTMLElement;
-      modalRef.current?.focus();
-    } else {
-      previousFocus.current?.focus();
-    }
-  }, [isOpen]);
+### Level AA (Recommended)
 
-  // Trap focus within modal
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      onClose();
-    }
-    
-    if (e.key === 'Tab') {
-      const focusable = modalRef.current?.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      
-      if (focusable && focusable.length > 0) {
-        const first = focusable[0] as HTMLElement;
-        const last = focusable[focusable.length - 1] as HTMLElement;
-        
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
-      }
-    }
-  };
+- Color contrast ratio 4.5:1 (text)
+- Resizable text up to 200%
+- Multiple navigation methods
+- Consistent navigation
+- Error identification
 
-  if (!isOpen) return null;
+### Level AAA (Enhanced)
 
-  return (
-    <div
-      ref={modalRef}
-      role="dialog"
-      aria-modal="true"
-      tabIndex={-1}
-      onKeyDown={handleKeyDown}
-    >
-      {children}
-    </div>
-  );
-}
+- Color contrast ratio 7:1 (text)
+- Sign language interpretation
+- Extended audio descriptions
+- No timing restrictions
+- Context-sensitive help
+
+## Examples
+
+### Example 1: WCAG Audit
+
+**Input**: Audit homepage for WCAG compliance
+
+**Output**:
+
+```markdown
+## Accessibility Audit: Homepage
+
+### Critical Issues (Level A)
+
+**1. Missing Alt Text**
+- **Location**: Hero image (line 45)
+- **Issue**: Image has no alt attribute
+- **Fix**: Add descriptive alt text
+```html
+<!-- Before -->
+<img src="hero.jpg">
+
+<!-- After -->
+<img src="hero.jpg" alt="Team collaborating on project management dashboard">
 ```
 
-## Color Contrast
+**2. Missing Form Labels**
 
-Minimum contrast ratios (WCAG AA):
-- Normal text: 4.5:1
-- Large text (18pt+): 3:1
-- UI components: 3:1
+- **Location**: Email input (line 78)
+- **Issue**: Input has no associated label
+- **Fix**: Add proper label
 
-```typescript
-function getContrastRatio(color1: string, color2: string): number {
-  const lum1 = getLuminance(color1);
-  const lum2 = getLuminance(color2);
-  const lighter = Math.max(lum1, lum2);
-  const darker = Math.min(lum1, lum2);
-  return (lighter + 0.05) / (darker + 0.05);
-}
+```html
+<!-- Before -->
+<input type="email" id="email">
 
-function getLuminance(hex: string): number {
-  const rgb = hexToRgb(hex);
-  const [r, g, b] = rgb.map((c) => {
-    c = c / 255;
-    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-  });
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-}
+<!-- After -->
+<label for="email">Email Address</label>
+<input type="email" id="email" aria-required="true">
 ```
 
-## Accessible Forms
+### Warnings (Level AA)
 
-```tsx
-<form onSubmit={handleSubmit}>
-  <div>
-    <label htmlFor="email">
-      Email address
-      <span aria-hidden="true">*</span>
-      <span className="sr-only">(required)</span>
-    </label>
-    <input
-      id="email"
-      type="email"
-      aria-required="true"
-      aria-invalid={errors.email ? 'true' : 'false'}
-      aria-describedby={errors.email ? 'email-error' : undefined}
-    />
-    {errors.email && (
-      <p id="email-error" role="alert" className="error">
-        {errors.email}
-      </p>
-    )}
-  </div>
-  
-  <button type="submit">Submit</button>
-</form>
+**3. Color Contrast**
+
+- **Location**: Button text (line 92)
+- **Issue**: Contrast ratio 3.2:1 (needs 4.5:1)
+- **Fix**: Darken text color
+
 ```
 
-## Screen Reader Only Content
+## Best Practices
 
-```css
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-```
+### Accessibility Guidelines
 
-## Testing
+1. **Semantic HTML**: Use proper HTML elements
+2. **ARIA When Needed**: Use ARIA for complex interactions
+3. **Keyboard Access**: Ensure all functionality is keyboard accessible
+4. **Color Contrast**: Meet WCAG contrast requirements
+5. **Testing**: Test with screen readers and keyboard only
 
-```bash
-# Automated testing
-npm install -D axe-core @axe-core/react
+## Related Use Cases
 
-# In tests
-import { axe, toHaveNoViolations } from 'jest-axe';
-expect.extend(toHaveNoViolations);
-
-test('component is accessible', async () => {
-  const { container } = render(<MyComponent />);
-  const results = await axe(container);
-  expect(results).toHaveNoViolations();
-});
-```
-
-## Resources
-
-- **WCAG 2.1 Guidelines**: https://www.w3.org/WAI/WCAG21/quickref/
-- **ARIA Authoring Practices**: https://www.w3.org/WAI/ARIA/apg/
+- WCAG compliance audits
+- Screen reader testing
+- Keyboard navigation validation
+- Color contrast analysis
+- Inclusive design implementation

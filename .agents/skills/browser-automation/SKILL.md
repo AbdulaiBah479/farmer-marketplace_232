@@ -1,318 +1,174 @@
 ---
 name: browser-automation
-description: Browser automation for AI agents. Two providers — agent-browser (local CLI with Playwright) and agentic-browser (cloud via inference.sh). Both use the same @e ref-based workflow for navigating pages, filling forms, clicking buttons, taking screenshots, extracting data, and automating browser tasks.
-allowed-tools: Bash(agent-browser:*), Bash(infsh *)
+description: Enterprise-grade browser automation using WebDriver protocol. Use when the user needs to automate web browsers, perform web scraping, test web applications, fill forms, take screenshots, monitor performance, or execute multi-step browser workflows. Supports Chrome, Firefox, and Edge with connection pooling and health management.
+allowed-tools: "Read,Bash,Write"
+version: "1.0.0"
 ---
 
-# Browser Automation
+# Browser Automation Skill
 
-Browser automation for AI agents with two provider options. Both share the same core workflow: navigate, snapshot, interact using `@e` refs, re-snapshot after changes.
+This skill provides guidance for using the rust-browser-mcp server to automate web browsers through the WebDriver protocol. It enables enterprise-grade browser control with performance monitoring, multi-session support, and health management.
 
-| Provider | Runtime | Best For |
-|----------|---------|----------|
-| agent-browser | Local (Playwright CLI) | Local testing, iOS Simulator, file:// URLs |
-| agentic-browser | Cloud (inference.sh) | Video recording, cloud execution, parallel sessions |
+## Overview
 
----
+The rust-browser-mcp server provides 45+ MCP tools for browser automation:
 
-## Core Workflow (Both Providers)
+### Core Automation Tools (25)
+- **Navigation**: `navigate`, `back`, `forward`, `refresh`
+- **Element Interaction**: `click`, `send_keys`, `hover`, `find_element`, `find_elements`
+- **Information Extraction**: `get_title`, `get_text`, `get_attribute`, `get_property`, `get_page_source`
+- **Advanced**: `fill_and_submit_form`, `login_form`, `scroll_to_element`, `wait_for_element`
+- **JavaScript**: `execute_script`
+- **Visual**: `screenshot`, `resize_window`, `get_current_url`, `get_page_load_status`
 
-Every browser automation follows this pattern:
+### Performance Monitoring Tools (5)
+- `get_performance_metrics` - Page load times, resource timing, navigation data
+- `monitor_memory_usage` - Heap monitoring, memory leak detection
+- `get_console_logs` - Error detection, log filtering
+- `run_performance_test` - Automated performance analysis
+- `monitor_resource_usage` - Network, FPS, CPU tracking
 
-1. **Navigate** — Open a URL
-2. **Snapshot** — Get `@e` refs for interactive elements
-3. **Interact** — Use refs to click, fill, select
-4. **Re-snapshot** — After navigation or DOM changes, get fresh refs
+### Driver Management Tools (7)
+- `start_driver`, `stop_driver`, `stop_all_drivers`
+- `list_managed_drivers`
+- `get_healthy_endpoints`, `refresh_driver_health`
+- `force_cleanup_orphaned_processes`
 
-**Important: Refs are invalidated after navigation.** Always re-snapshot after clicking links/buttons, form submissions, or dynamic content loading.
+### Recipe System (4)
+- `create_recipe` - Create reusable automation workflows
+- `execute_recipe` - Run a saved recipe
+- `list_recipes` - List all available recipes
+- `delete_recipe` - Remove a recipe
 
----
+## Setup Instructions
 
-## Provider 1: agent-browser (Local CLI)
+### Prerequisites
+Ensure you have at least one WebDriver installed:
+- **Chrome**: ChromeDriver (must match Chrome version)
+- **Firefox**: GeckoDriver
+- **Edge**: MSEdgeDriver
 
-### Quick Start
+### Configuration for Claude Desktop
 
-```bash
-agent-browser open https://example.com/form
-agent-browser snapshot -i
-# Output: @e1 [input type="email"], @e2 [input type="password"], @e3 [button] "Submit"
+Add to your `claude_desktop_config.json`:
 
-agent-browser fill @e1 "user@example.com"
-agent-browser fill @e2 "password123"
-agent-browser click @e3
-agent-browser wait --load networkidle
-agent-browser snapshot -i  # Check result
+```json
+{
+  "mcpServers": {
+    "browser": {
+      "command": "/path/to/rust-browser-mcp",
+      "args": ["--transport", "stdio", "--browser", "chrome"]
+    }
+  }
+}
 ```
 
-### Essential Commands
+### Environment Variables
 
-```bash
-# Navigation
-agent-browser open <url>              # Navigate
-agent-browser close                   # Close browser
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `WEBDRIVER_ENDPOINT` | `auto` | WebDriver URL or "auto" for auto-discovery |
+| `WEBDRIVER_HEADLESS` | `true` | Run browsers in headless mode |
+| `WEBDRIVER_PREFERRED_DRIVER` | - | Preferred browser: chrome, firefox, edge |
+| `WEBDRIVER_CONCURRENT_DRIVERS` | `firefox,chrome` | Browsers to start concurrently |
+| `WEBDRIVER_POOL_ENABLED` | `true` | Enable connection pooling |
+| `WEBDRIVER_POOL_MAX_CONNECTIONS` | `3` | Max connections per driver type |
 
-# Snapshot
-agent-browser snapshot -i             # Interactive elements with refs
-agent-browser snapshot -i -C          # Include cursor-interactive elements
-agent-browser snapshot -s "#selector" # Scope to CSS selector
+## Usage Patterns
 
-# Interaction (use @refs from snapshot)
-agent-browser click @e1               # Click element
-agent-browser fill @e2 "text"         # Clear and type text
-agent-browser type @e2 "text"         # Type without clearing
-agent-browser select @e1 "option"     # Select dropdown option
-agent-browser check @e1               # Check checkbox
-agent-browser press Enter             # Press key
-agent-browser scroll down 500         # Scroll page
-
-# Get information
-agent-browser get text @e1            # Get element text
-agent-browser get url                 # Get current URL
-agent-browser get title               # Get page title
-
-# Wait
-agent-browser wait @e1                # Wait for element
-agent-browser wait --load networkidle # Wait for network idle
-agent-browser wait --url "**/page"    # Wait for URL pattern
-agent-browser wait 2000               # Wait milliseconds
-
-# Capture
-agent-browser screenshot              # Screenshot to temp dir
-agent-browser screenshot --full       # Full page screenshot
-agent-browser pdf output.pdf          # Save as PDF
+### Basic Navigation
+```
+1. Use `navigate` with URL to load a page
+2. Use `wait_for_element` to ensure page loads
+3. Use `get_title` or `get_text` to verify content
 ```
 
-### Authentication with State Persistence
-
-```bash
-# Login once and save state
-agent-browser open https://app.example.com/login
-agent-browser snapshot -i
-agent-browser fill @e1 "$USERNAME"
-agent-browser fill @e2 "$PASSWORD"
-agent-browser click @e3
-agent-browser wait --url "**/dashboard"
-agent-browser state save auth.json
-
-# Reuse in future sessions
-agent-browser state load auth.json
-agent-browser open https://app.example.com/dashboard
+### Form Filling
+```
+1. Navigate to the form page
+2. Use `find_element` with CSS selector to locate fields
+3. Use `send_keys` to input values
+4. Use `click` on submit button, or use `fill_and_submit_form` for convenience
 ```
 
-### Parallel Sessions
-
-```bash
-agent-browser --session site1 open https://site-a.com
-agent-browser --session site2 open https://site-b.com
-agent-browser session list
+### Web Scraping
 ```
-
-### Visual / Debugging
-
-```bash
-agent-browser --headed open https://example.com
-agent-browser highlight @e1
-agent-browser record start demo.webm
-```
-
-### Local Files
-
-```bash
-agent-browser --allow-file-access open file:///path/to/document.pdf
-agent-browser --allow-file-access open file:///path/to/page.html
-agent-browser screenshot output.png
-```
-
-### iOS Simulator (Mobile Safari)
-
-```bash
-# List available iOS simulators
-agent-browser device list
-
-# Launch Safari on a specific device
-agent-browser -p ios --device "iPhone 16 Pro" open https://example.com
-
-# Same workflow — snapshot, interact, re-snapshot
-agent-browser -p ios snapshot -i
-agent-browser -p ios tap @e1
-agent-browser -p ios fill @e2 "text"
-agent-browser -p ios swipe up
-agent-browser -p ios screenshot mobile.png
-agent-browser -p ios close
-```
-
-**Requirements:** macOS with Xcode, Appium (`npm install -g appium && appium driver install xcuitest`)
-
-### Semantic Locators (Alternative to Refs)
-
-```bash
-agent-browser find text "Sign In" click
-agent-browser find label "Email" fill "user@test.com"
-agent-browser find role button click --name "Submit"
-agent-browser find placeholder "Search" type "query"
-agent-browser find testid "submit-btn" click
-```
-
----
-
-## Provider 2: agentic-browser (Cloud via inference.sh)
-
-### Quick Start
-
-```bash
-# Install CLI
-curl -fsSL https://cli.inference.sh | sh && infsh login
-
-# Open a page
-infsh app run agentic-browser --function open --input '{"url": "https://example.com"}' --session new
-```
-
-### Core Functions
-
-| Function | Description |
-|----------|-------------|
-| `open` | Navigate to URL, configure browser (viewport, proxy, video) |
-| `snapshot` | Re-fetch page state with `@e` refs after DOM changes |
-| `interact` | Perform actions using `@e` refs |
-| `screenshot` | Take page screenshot (viewport or full page) |
-| `execute` | Run JavaScript code on the page |
-| `close` | Close session, returns video if recording enabled |
-
-### Interact Actions
-
-| Action | Description | Required Fields |
-|--------|-------------|-----------------|
-| `click` | Click element | `ref` |
-| `dblclick` | Double-click | `ref` |
-| `fill` | Clear and type text | `ref`, `text` |
-| `type` | Type without clearing | `text` |
-| `press` | Press key (Enter, Tab) | `text` |
-| `select` | Select dropdown option | `ref`, `text` |
-| `hover` | Hover over element | `ref` |
-| `check` / `uncheck` | Toggle checkbox | `ref` |
-| `drag` | Drag and drop | `ref`, `target_ref` |
-| `upload` | Upload file(s) | `ref`, `file_paths` |
-| `scroll` | Scroll page | `direction`, `scroll_amount` |
-| `back` | Go back in history | - |
-| `wait` | Wait milliseconds | `wait_ms` |
-| `goto` | Navigate to URL | `url` |
-
-### Full Example
-
-```bash
-# Start session
-RESULT=$(infsh app run agentic-browser --function open --session new --input '{
-  "url": "https://example.com/login"
-}')
-SESSION_ID=$(echo $RESULT | jq -r '.session_id')
-
-# Fill and submit
-infsh app run agentic-browser --function interact --session $SESSION_ID --input '{
-  "action": "fill", "ref": "@e1", "text": "user@example.com"
-}'
-infsh app run agentic-browser --function interact --session $SESSION_ID --input '{
-  "action": "fill", "ref": "@e2", "text": "password123"
-}'
-infsh app run agentic-browser --function interact --session $SESSION_ID --input '{
-  "action": "click", "ref": "@e3"
-}'
-
-# Re-snapshot after navigation
-infsh app run agentic-browser --function snapshot --session $SESSION_ID --input '{}'
-
-# Close when done
-infsh app run agentic-browser --function close --session $SESSION_ID --input '{}'
-```
-
-### Video Recording
-
-```bash
-# Start with recording enabled
-SESSION=$(infsh app run agentic-browser --function open --session new --input '{
-  "url": "https://example.com",
-  "record_video": true,
-  "show_cursor": true
-}' | jq -r '.session_id')
-
-# ... perform actions ...
-
-# Close to get the video file
-infsh app run agentic-browser --function close --session $SESSION --input '{}'
-# Returns: {"success": true, "video": <File>}
-```
-
-### Proxy Support
-
-```bash
-infsh app run agentic-browser --function open --session new --input '{
-  "url": "https://example.com",
-  "proxy_url": "http://proxy.example.com:8080",
-  "proxy_username": "user",
-  "proxy_password": "pass"
-}'
-```
-
-### File Upload
-
-```bash
-infsh app run agentic-browser --function interact --session $SESSION --input '{
-  "action": "upload",
-  "ref": "@e5",
-  "file_paths": ["/path/to/file.pdf"]
-}'
-```
-
-### JavaScript Execution
-
-```bash
-infsh app run agentic-browser --function execute --session $SESSION --input '{
-  "code": "document.querySelectorAll(\"h2\").length"
-}'
-# Returns: {"result": "5", "screenshot": <File>}
-```
-
----
-
-## Common Patterns (Both Providers)
-
-### Form Submission
-1. Open the form URL
-2. Snapshot to get element refs
-3. Fill each field using refs
-4. Click submit button
-5. Wait for navigation/network idle
-6. Re-snapshot to verify result
-
-### Data Extraction
 1. Navigate to target page
-2. Snapshot interactive elements
-3. Get text from specific elements
-4. Optionally use JSON output for parsing
+2. Use `find_elements` to get multiple matching elements
+3. Use `get_text` or `get_attribute` to extract data
+4. Use `execute_script` for complex DOM traversal
+```
 
-### Authentication Flow
-1. Navigate to login page
-2. Fill credentials
-3. Handle 2FA if prompted
-4. Save session state for reuse
-5. Load saved state in future sessions
+### Performance Testing
+```
+1. Navigate to page under test
+2. Use `run_performance_test` for automated analysis
+3. Use `get_performance_metrics` for detailed timing data
+4. Use `monitor_memory_usage` to detect leaks
+5. Use `get_console_logs` to capture errors
+```
 
----
+### Multi-Step Workflows with Recipes
+```
+1. Define a recipe with `create_recipe` including steps array
+2. Each step specifies: action (tool name), arguments, optional retry logic
+3. Execute with `execute_recipe` and parameters
+4. Recipes support conditions and browser-specific variants
+```
 
-## Deep-Dive Documentation
+## Session Management
 
-| Reference | Description |
-|-----------|-------------|
-| `references/commands.md` | Full command reference with all options |
-| `references/snapshot-refs.md` | Ref lifecycle, invalidation rules, troubleshooting |
-| `references/session-management.md` | Parallel sessions, state persistence |
-| `references/authentication.md` | Login flows, OAuth, 2FA handling |
-| `references/video-recording.md` | Recording workflows for debugging |
-| `references/proxy-support.md` | Proxy configuration, geo-testing |
+### Browser-Specific Sessions
+Use session IDs prefixed with browser name for explicit browser control:
+- `chrome_session1` - Uses Chrome
+- `firefox_work` - Uses Firefox
+- `edge_testing` - Uses Edge
 
-## Ready-to-Use Templates
+### Multi-Session Support
+You can run multiple browser sessions concurrently by using different session IDs:
+```
+Session: chrome_user1 -> Opens first Chrome tab
+Session: chrome_user2 -> Opens second Chrome tab
+Session: firefox_admin -> Opens Firefox for different workflow
+```
 
-| Template | Description |
-|----------|-------------|
-| `templates/form-automation.sh` | Form filling with validation |
-| `templates/authenticated-session.sh` | Login once, reuse state |
-| `templates/capture-workflow.sh` | Content extraction with screenshots |
+## Best Practices
+
+### Error Handling
+1. Always use `wait_for_element` before interacting with dynamic content
+2. Check `get_page_load_status` for slow-loading pages
+3. Use `get_console_logs` to debug JavaScript errors
+
+### Performance
+1. Enable connection pooling (default) for better resource usage
+2. Reuse session IDs when possible
+3. Use headless mode for faster execution
+
+### Security
+1. Never store credentials in recipes
+2. Use environment variables for sensitive data
+3. Clear sessions after authentication workflows
+
+## Troubleshooting
+
+### Driver Not Starting
+- Verify WebDriver is installed and in PATH
+- Check browser version matches driver version
+- Use `list_managed_drivers` to see status
+
+### Element Not Found
+- Use browser DevTools to verify selector
+- Wait for page load with `wait_for_element`
+- Try different selector strategies (CSS, XPath)
+
+### Performance Issues
+- Check `monitor_memory_usage` for leaks
+- Use `get_console_logs` for JavaScript errors
+- Consider reducing concurrent sessions
+
+## Reference Files
+
+See companion files for detailed information:
+- `reference/tools.md` - Complete tool documentation
+- `reference/recipes.md` - Recipe system guide
+- `examples/` - Example automation scripts

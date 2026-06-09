@@ -1,208 +1,407 @@
 ---
 name: writing-docs
-description: Guides for writing and editing Remotion documentation. Use when adding docs pages, editing MDX files in packages/docs, or writing documentation content.
+description: >
+  Expert at writing high-quality documentation for code, APIs, and projects. Auto-invokes when
+  generating docstrings, creating README files, writing API documentation, adding code comments,
+  or producing any technical documentation. Provides language-specific templates and best practices
+  for effective documentation writing.
+allowed-tools: Read, Write, Edit, Glob, Grep
 ---
 
-# Writing Remotion Documentation
+# Writing Documentation Skill
 
-Documentation lives in `packages/docs/docs` as `.mdx` files.
+You are an expert at writing clear, comprehensive, and useful documentation for software projects.
 
-## Adding a new page
+## When This Skill Activates
 
-1. Create a new `.mdx` file in `packages/docs/docs`
-2. Add the document to `packages/docs/sidebars.ts`
-3. Write the content following guidelines below
-4. Run `bun render-cards.ts` in `packages/docs` to generate social preview cards
+This skill auto-invokes when:
+- User asks to "document this function/class/module"
+- User wants to create or update a README
+- User needs JSDoc, docstrings, or code comments
+- User asks for API documentation
+- User wants documentation for a specific file or codebase
 
-**Breadcrumb (`crumb`)**: If a documentation page belongs to a package, add `crumb: '@remotion/package-name'` to the frontmatter. This displays the package name as a breadcrumb above the title.
+## Documentation Writing Principles
 
-```md
----
-image: /generated/articles-docs-my-package-my-api.png
-title: '<MyComponent>'
-crumb: '@remotion/my-package'
----
+### Core Principles
+
+1. **Clarity Over Cleverness**
+   - Use simple, direct language
+   - Avoid jargon when possible
+   - Define technical terms when first used
+
+2. **Show, Don't Just Tell**
+   - Include working code examples
+   - Demonstrate common use cases
+   - Show expected outputs
+
+3. **Structure for Scanning**
+   - Use clear headings
+   - Keep paragraphs short
+   - Use lists for multiple items
+   - Highlight important information
+
+4. **Write for Your Audience**
+   - Consider the reader's expertise level
+   - Provide appropriate context
+   - Link to prerequisites when needed
+
+## Language-Specific Templates
+
+### JavaScript/TypeScript (JSDoc)
+
+```javascript
+/**
+ * Brief one-line description of what the function does.
+ *
+ * Longer description if needed. Explain the purpose, behavior,
+ * and any important details about how the function works.
+ *
+ * @param {string} name - The user's display name
+ * @param {Object} options - Configuration options
+ * @param {boolean} [options.verbose=false] - Enable verbose output
+ * @param {number} [options.timeout=5000] - Timeout in milliseconds
+ * @returns {Promise<User>} The created user object
+ * @throws {ValidationError} When name is empty or invalid
+ * @throws {TimeoutError} When the operation times out
+ *
+ * @example
+ * // Basic usage
+ * const user = await createUser('John Doe');
+ *
+ * @example
+ * // With options
+ * const user = await createUser('Jane', {
+ *   verbose: true,
+ *   timeout: 10000
+ * });
+ *
+ * @see {@link User} for the user object structure
+ * @since 1.2.0
+ */
 ```
 
-**One API per page**: Each function or API should have its own dedicated documentation page. Do not combine multiple APIs (e.g., `getEncodableVideoCodecs()` and `getEncodableAudioCodecs()`) on a single page.
+### Python (Google Style Docstrings)
 
-**Public API only**: Documentation is for public APIs only. Do not mention, reference, or compare against internal/private APIs or implementation details.
+```python
+def create_user(name: str, **options) -> User:
+    """Create a new user with the given name.
 
-**Use headings for all fields**: When documenting API options or return values, each property should be its own heading. Use `###` for top-level properties and `####` for nested properties within an options object. Do not use bullet points for individual fields.
+    Longer description if needed. Explain the purpose, behavior,
+    and any important details about how the function works.
 
-## Language guidelines
+    Args:
+        name: The user's display name. Must be non-empty.
+        **options: Optional keyword arguments.
+            verbose (bool): Enable verbose output. Defaults to False.
+            timeout (int): Timeout in milliseconds. Defaults to 5000.
 
-- **Keep it brief**: Developers don't like to read. Extra words cause information loss.
-- **Link to terminology**: Use [terminology](/docs/terminology) page for Remotion-specific terms.
-- **Avoid emotions**: Remove filler like "Great! Let's move on..." - it adds no information.
-- **Separate into paragraphs**: Break up long sections.
-- **Address as "you"**: Not "we".
-- **Don't blame the user**: Say "The input is invalid" not "You provided wrong input".
-- **Don't assume it's easy**: Avoid "simply" and "just" - beginners may struggle.
+    Returns:
+        User: The created user object with populated fields.
 
-## Code snippets
+    Raises:
+        ValidationError: When name is empty or invalid.
+        TimeoutError: When the operation times out.
 
-Basic syntax highlighting:
+    Example:
+        Basic usage::
 
-````md
-```ts
-const x = 1;
-```
-````
+            user = create_user('John Doe')
 
-### Type-safe snippets (preferred)
+        With options::
 
-Use `twoslash` to check snippets against TypeScript:
+            user = create_user('Jane', verbose=True, timeout=10000)
 
-````md
-```ts twoslash
-import {useCurrentFrame} from 'remotion';
-const frame = useCurrentFrame();
-```
-````
+    Note:
+        The user is not persisted until `user.save()` is called.
 
-### Hiding imports
-
-Use `// ---cut---` to hide setup code - only content below is displayed:
-
-````md
-```ts twoslash
-import {useCurrentFrame} from 'remotion';
-// ---cut---
-const frame = useCurrentFrame();
-```
-````
-
-### Adding titles
-
-Always add a `title` to code fences that show example usage:
-
-````md
-```ts twoslash title="MyComponent.tsx"
-console.log('Hello');
-```
-````
-
-## Special components
-
-### Steps
-
-```md
-- <Step>1</Step> First step
-- <Step>2</Step> Second step
+    See Also:
+        User: The user object class.
+    """
 ```
 
-### Experimental badge
+### Go
 
-```md
-<ExperimentalBadge>
-<p>This feature is experimental.</p>
-</ExperimentalBadge>
+```go
+// CreateUser creates a new user with the given name.
+//
+// CreateUser validates the name, initializes a User struct with default
+// values, and returns a pointer to the new user. The user is not persisted
+// to the database until Save() is called.
+//
+// Parameters:
+//   - name: The user's display name. Must be non-empty string.
+//   - opts: Optional configuration. See UserOptions for available options.
+//
+// Returns the created User pointer and any error encountered.
+//
+// Example:
+//
+//	user, err := CreateUser("John Doe", nil)
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//
+// Errors:
+//   - ErrEmptyName: returned when name is empty
+//   - ErrInvalidName: returned when name contains invalid characters
+func CreateUser(name string, opts *UserOptions) (*User, error) {
 ```
 
-### Interactive demos
+### Rust
 
-```md
-<Demo type="rect"/>
+```rust
+/// Creates a new user with the given name.
+///
+/// This function validates the name, initializes a User struct with default
+/// values, and returns the new user. The user is not persisted to the
+/// database until [`User::save`] is called.
+///
+/// # Arguments
+///
+/// * `name` - The user's display name. Must be non-empty.
+/// * `options` - Optional configuration settings.
+///
+/// # Returns
+///
+/// Returns `Ok(User)` on success, or an error if validation fails.
+///
+/// # Errors
+///
+/// * [`UserError::EmptyName`] - If `name` is empty.
+/// * [`UserError::InvalidName`] - If `name` contains invalid characters.
+///
+/// # Examples
+///
+/// Basic usage:
+///
+/// ```
+/// let user = create_user("John Doe", None)?;
+/// ```
+///
+/// With options:
+///
+/// ```
+/// let opts = UserOptions { verbose: true, ..Default::default() };
+/// let user = create_user("Jane", Some(opts))?;
+/// ```
+///
+/// # Panics
+///
+/// This function does not panic under normal circumstances.
 ```
 
-Demos must be implemented in `packages/docs/components/demos/index.tsx`. See the `docs-demo` skill for details on adding new demos.
+## README Template
 
-### AvailableFrom
+```markdown
+# Project Name
 
-Use to indicate when a feature or parameter was added. No import needed - it's globally available.
+Brief description of what this project does and why it exists.
 
-**For page-level version indicators**, use an `# h1` heading with `<AvailableFrom>` inline so it appears next to the title (not below it). Use `&lt;` and `&gt;` to escape angle brackets in component names:
+## Features
 
-```md
-# &lt;MyComponent&gt;<AvailableFrom v="4.0.123" />
+- Feature 1: Brief description
+- Feature 2: Brief description
+- Feature 3: Brief description
+
+## Installation
+
+### Prerequisites
+
+- Requirement 1 (version X.X+)
+- Requirement 2
+
+### Install via [package manager]
+
+\`\`\`bash
+npm install project-name
+# or
+pip install project-name
+\`\`\`
+
+### Install from source
+
+\`\`\`bash
+git clone https://github.com/user/project-name
+cd project-name
+npm install
+\`\`\`
+
+## Quick Start
+
+\`\`\`javascript
+import { Project } from 'project-name';
+
+const project = new Project();
+project.doSomething();
+\`\`\`
+
+## Usage
+
+### Basic Example
+
+\`\`\`javascript
+// Code example with comments
+\`\`\`
+
+### Advanced Usage
+
+\`\`\`javascript
+// More complex example
+\`\`\`
+
+## API Reference
+
+### `functionName(param1, param2)`
+
+Description of the function.
+
+**Parameters:**
+- `param1` (Type): Description
+- `param2` (Type, optional): Description. Default: `value`
+
+**Returns:** Type - Description
+
+**Example:**
+\`\`\`javascript
+const result = functionName('value', { option: true });
+\`\`\`
+
+## Configuration
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `option1` | string | `"default"` | Description |
+| `option2` | number | `10` | Description |
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing`)
+5. Open a Pull Request
+
+## License
+
+[License Type] - see [LICENSE](LICENSE) for details.
 ```
 
-```md
-# @remotion/my-package<AvailableFrom v="4.0.123" />
+## Writing Guidelines
+
+### Function Documentation
+
+**Always Include:**
+1. Brief description (first line)
+2. Parameter descriptions with types
+3. Return value description
+4. Possible errors/exceptions
+5. At least one example
+
+**Include When Relevant:**
+- Side effects
+- Performance considerations
+- Thread safety notes
+- Deprecation notices
+- Links to related functions
+
+### Class Documentation
+
+**Always Include:**
+1. Class purpose and responsibility
+2. Constructor documentation
+3. Public method documentation
+4. Important properties
+
+**Include When Relevant:**
+- Inheritance relationships
+- Interface implementations
+- State management notes
+- Lifecycle information
+
+### Module/File Documentation
+
+**Always Include:**
+1. Module purpose
+2. Main exports
+3. Usage overview
+
+**Include When Relevant:**
+- Dependencies
+- Configuration requirements
+- Architecture notes
+
+## Common Patterns
+
+### Documenting Options Objects
+
+```javascript
+/**
+ * @typedef {Object} CreateUserOptions
+ * @property {boolean} [verbose=false] - Enable verbose logging
+ * @property {number} [timeout=5000] - Operation timeout in ms
+ * @property {string} [role='user'] - Initial user role
+ */
+
+/**
+ * Creates a user with the specified options.
+ * @param {string} name - User name
+ * @param {CreateUserOptions} [options] - Configuration options
+ */
 ```
 
-For section headings:
+### Documenting Callbacks
 
-```md
-## Saving to another cloud<AvailableFrom v="3.2.23" />
+```javascript
+/**
+ * @callback UserCallback
+ * @param {Error|null} error - Error if operation failed
+ * @param {User} user - The user object if successful
+ */
+
+/**
+ * Fetches a user asynchronously.
+ * @param {string} id - User ID
+ * @param {UserCallback} callback - Called with result
+ */
 ```
 
-### CompatibilityTable
+### Documenting Generic Types
 
-Use to indicate which runtimes and environments a component or API supports. No import needed. Place it in a `## Compatibility` section before `## See also`.
-
-Available boolean props: `chrome`, `firefox`, `safari`, `player`, `studio`, `clientSideRendering`, `serverSideRendering`. Set to `true` (supported) or `{false}` (not supported).
-
-Set to empty string `""` for not applicable if this is a frontend API: `nodejs=""`, `bun=""`, `serverlessFunctions=""`.
-Use `hideServers` to hide the Node.js/Bun/serverless row if this is a frontend API.
-
-```md
-## Compatibility
-
-<CompatibilityTable chrome firefox safari nodejs="" bun="" serverlessFunctions="" clientSideRendering={false} serverSideRendering player studio hideServers />
+```typescript
+/**
+ * A generic result wrapper.
+ * @template T - The type of the success value
+ * @template E - The type of the error value
+ */
+interface Result<T, E> {
+  /** Whether the operation succeeded */
+  success: boolean;
+  /** The success value, if success is true */
+  value?: T;
+  /** The error value, if success is false */
+  error?: E;
+}
 ```
 
-### Optional parameters
+## Quality Checklist
 
-For optional parameters in API documentation:
+Before finalizing documentation, verify:
 
-1. **Add `?` to the heading** - this indicates the parameter is optional
-   --> Don't do it if it is a CLI flag (beginning with `--`) - CLI flags are always optional
-2. **Do NOT add `_optional_` text** - the `?` suffix is sufficient
-3. **Include default value in description** - mention it naturally in the text
+- [ ] First line is a clear, concise summary
+- [ ] All parameters are documented with types
+- [ ] Return value is documented
+- [ ] Errors/exceptions are documented
+- [ ] At least one working example is included
+- [ ] Example code is tested and correct
+- [ ] Language is clear and grammatically correct
+- [ ] Formatting is consistent with codebase style
+- [ ] Links to related documentation are included
+- [ ] Edge cases and limitations are noted
 
-```md
-### onError?
+## Integration
 
-Called when an error occurs. Default: errors are thrown.
-```
-
-**Do NOT do this:**
-
-```md
-### onError?
-
-_optional_
-
-Called when an error occurs.
-```
-
-### Combining optional and AvailableFrom
-
-When a parameter is both optional and was added in a specific version:
-
-```md
-### onError?<AvailableFrom v="4.0.50" />
-
-Called when an error occurs.
-```
-
-### "Optional since" pattern
-
-If a parameter became optional in a specific version (was previously required):
-
-```md
-### codec?
-
-Optional since <AvailableFrom v="5.0.0" inline />. Previously required.
-```
-
-## Generating preview cards
-
-After adding or editing a page, generate social media preview cards:
-
-```bash
-cd packages/docs && bun render-cards.ts
-```
-
-## Verifying docs compile
-
-To check that documentation builds without errors:
-
-```bash
-# from the monorepo root
-bun run build-docs
-```
-
-This validates MDX syntax, twoslash snippets, and broken links.
+This skill works with:
+- **analyzing-docs** skill for identifying what needs documentation
+- **managing-docs** skill for organizing documentation structure
+- **docs-analyzer** agent for comprehensive documentation projects

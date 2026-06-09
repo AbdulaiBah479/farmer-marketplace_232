@@ -1,327 +1,76 @@
 ---
 name: shell-scripting
-description: Bash Shell 脚本编写
-version: 1.0.0
-author: terminal-skills
-tags: [linux, bash, shell, scripting, automation]
+description: Shell scripting best practices and patterns. Use when writing bash/zsh
+  scripts, automating tasks, creating CLI tools, or debugging shell commands.
+author: Joseph OBrien
+status: unpublished
+updated: '2025-12-23'
+version: 1.0.1
+tag: skill
+type: skill
 ---
 
-# Shell 脚本编写
+# Shell Scripting
 
-## 概述
-Bash 脚本编写、调试、最佳实践等技能。
+Comprehensive shell scripting skill covering bash/zsh patterns, automation, error handling, and CLI tool development.
 
-## 基础语法
+## When to Use This Skill
 
-### 脚本结构
+- Writing automation scripts
+- Creating CLI tools
+- System administration tasks
+- Build and deployment scripts
+- Log processing and analysis
+- File manipulation and batch operations
+- Cron jobs and scheduled tasks
+
+## Script Structure
+
+### Template
+
 ```bash
-#!/bin/bash
-# 脚本描述
-# Author: name
-# Date: 2024-01-01
+#!/usr/bin/env bash
+# Script: name.sh
+# Description: What this script does
+# Usage: ./name.sh [options] <args>
 
-set -euo pipefail                   # 严格模式
-
-# 变量定义
-VAR="value"
-readonly CONST="constant"
-
-# 主逻辑
-main() {
-    echo "Hello, World!"
-}
-
-main "$@"
-```
-
-### 变量
-```bash
-# 定义变量
-name="value"
-name='literal value'                # 不解析变量
-
-# 使用变量
-echo $name
-echo ${name}
-echo "${name}_suffix"
-
-# 默认值
-${var:-default}                     # 未设置时使用默认值
-${var:=default}                     # 未设置时赋值并使用
-${var:+value}                       # 已设置时使用 value
-${var:?error message}               # 未设置时报错
-
-# 字符串操作
-${#var}                             # 长度
-${var:0:5}                          # 子串
-${var#pattern}                      # 删除前缀
-${var%pattern}                      # 删除后缀
-${var/old/new}                      # 替换
-```
-
-### 数组
-```bash
-# 定义数组
-arr=(a b c d)
-arr[0]="first"
-
-# 访问数组
-${arr[0]}                           # 第一个元素
-${arr[@]}                           # 所有元素
-${#arr[@]}                          # 数组长度
-${!arr[@]}                          # 所有索引
-
-# 遍历数组
-for item in "${arr[@]}"; do
-    echo "$item"
-done
-```
-
-## 流程控制
-
-### 条件判断
-```bash
-# if 语句
-if [[ condition ]]; then
-    commands
-elif [[ condition ]]; then
-    commands
-else
-    commands
-fi
-
-# 条件表达式
-[[ -f file ]]                       # 文件存在
-[[ -d dir ]]                        # 目录存在
-[[ -z "$var" ]]                     # 变量为空
-[[ -n "$var" ]]                     # 变量非空
-[[ "$a" == "$b" ]]                  # 字符串相等
-[[ "$a" != "$b" ]]                  # 字符串不等
-[[ $a -eq $b ]]                     # 数字相等
-[[ $a -lt $b ]]                     # 小于
-[[ $a -gt $b ]]                     # 大于
-
-# 逻辑运算
-[[ cond1 && cond2 ]]                # 与
-[[ cond1 || cond2 ]]                # 或
-[[ ! cond ]]                        # 非
-```
-
-### 循环
-```bash
-# for 循环
-for i in 1 2 3 4 5; do
-    echo $i
-done
-
-for i in {1..10}; do
-    echo $i
-done
-
-for ((i=0; i<10; i++)); do
-    echo $i
-done
-
-for file in *.txt; do
-    echo "$file"
-done
-
-# while 循环
-while [[ condition ]]; do
-    commands
-done
-
-# 读取文件
-while IFS= read -r line; do
-    echo "$line"
-done < file.txt
-
-# until 循环
-until [[ condition ]]; do
-    commands
-done
-```
-
-### case 语句
-```bash
-case "$var" in
-    pattern1)
-        commands
-        ;;
-    pattern2|pattern3)
-        commands
-        ;;
-    *)
-        default commands
-        ;;
-esac
-```
-
-## 函数
-
-### 定义函数
-```bash
-# 方式1
-function_name() {
-    local var="local variable"
-    echo "Arguments: $@"
-    echo "First arg: $1"
-    echo "Arg count: $#"
-    return 0
-}
-
-# 方式2
-function function_name {
-    commands
-}
-
-# 调用函数
-function_name arg1 arg2
-
-# 获取返回值
-result=$(function_name)
-```
-
-### 常用函数模板
-```bash
-# 日志函数
-log() {
-    local level=$1
-    shift
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [$level] $*"
-}
-
-log INFO "This is info message"
-log ERROR "This is error message"
-
-# 错误处理
-die() {
-    echo "ERROR: $*" >&2
-    exit 1
-}
-
-# 确认函数
-confirm() {
-    read -p "$1 [y/N] " response
-    [[ "$response" =~ ^[Yy]$ ]]
-}
-
-if confirm "Continue?"; then
-    echo "Proceeding..."
-fi
-```
-
-## 输入输出
-
-### 读取输入
-```bash
-# 读取用户输入
-read -p "Enter name: " name
-read -sp "Enter password: " password   # 隐藏输入
-read -t 10 -p "Quick! " answer          # 超时
-
-# 读取文件
-while IFS= read -r line; do
-    echo "$line"
-done < file.txt
-```
-
-### 重定向
-```bash
-# 输出重定向
-command > file                      # 覆盖
-command >> file                     # 追加
-command 2> error.log                # 错误输出
-command > file 2>&1                 # 合并输出
-command &> file                     # 同上
-
-# 输入重定向
-command < file
-
-# Here Document
-cat << EOF
-多行文本
-变量: $var
-EOF
-
-cat << 'EOF'                        # 不解析变量
-原始文本
-EOF
-```
-
-## 调试技巧
-
-### 调试选项
-```bash
-# 启用调试
-set -x                              # 打印执行的命令
-set -v                              # 打印读取的行
-set -e                              # 出错即退出
-set -u                              # 未定义变量报错
-set -o pipefail                     # 管道错误传递
-
-# 组合使用
-set -euxo pipefail
-
-# 调试特定部分
-set -x
-# 调试代码
-set +x
-```
-
-### 调试工具
-```bash
-# 语法检查
-bash -n script.sh
-
-# 调试运行
-bash -x script.sh
-
-# shellcheck 静态分析
-shellcheck script.sh
-```
-
-## 最佳实践
-
-### 脚本模板
-```bash
-#!/bin/bash
-#
-# Script: script_name.sh
-# Description: Brief description
-# Author: Your Name
-# Date: 2024-01-01
-#
-
-set -euo pipefail
+set -euo pipefail  # Exit on error, undefined vars, pipe failures
+IFS=$'\n\t'        # Safer word splitting
 
 # Constants
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly SCRIPT_NAME="$(basename "$0")"
+readonly SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
 
-# Logging
-log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"; }
-error() { echo "[ERROR] $*" >&2; }
-die() { error "$*"; exit 1; }
+# Default values
+VERBOSE=false
+DRY_RUN=false
 
-# Usage
+# Functions
 usage() {
-    cat << EOF
-Usage: $SCRIPT_NAME [options] <arguments>
+    cat <<EOF
+Usage: $SCRIPT_NAME [options] <argument>
 
 Options:
     -h, --help      Show this help message
-    -v, --verbose   Enable verbose mode
-
-Examples:
-    $SCRIPT_NAME -v input.txt
+    -v, --verbose   Enable verbose output
+    -n, --dry-run   Show what would be done
 EOF
 }
 
-# Parse arguments
-parse_args() {
+log() {
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] $*" >&2
+}
+
+error() {
+    log "ERROR: $*"
+    exit 1
+}
+
+# Main logic
+main() {
+    # Parse arguments
     while [[ $# -gt 0 ]]; do
-        case $1 in
+        case "$1" in
             -h|--help)
                 usage
                 exit 0
@@ -330,31 +79,278 @@ parse_args() {
                 VERBOSE=true
                 shift
                 ;;
-            *)
-                ARGS+=("$1")
+            -n|--dry-run)
+                DRY_RUN=true
                 shift
+                ;;
+            *)
+                break
                 ;;
         esac
     done
-}
 
-# Main
-main() {
-    parse_args "$@"
-    
     # Your logic here
-    log "Starting $SCRIPT_NAME"
 }
 
 main "$@"
 ```
 
-## 故障排查
+## Error Handling
 
-| 问题 | 解决方法 |
-|------|----------|
-| 语法错误 | `bash -n script.sh` 检查 |
-| 变量未定义 | 使用 `set -u` 或 `${var:-}` |
-| 空格问题 | 变量加引号 `"$var"` |
-| 管道错误被忽略 | 使用 `set -o pipefail` |
-| 调试困难 | 使用 `set -x` 或 `shellcheck` |
+### Set Options
+
+```bash
+set -e          # Exit on any error
+set -u          # Error on undefined variables
+set -o pipefail # Pipe failure is script failure
+set -x          # Debug: print each command (use sparingly)
+```
+
+### Trap for Cleanup
+
+```bash
+cleanup() {
+    rm -f "$TEMP_FILE"
+    log "Cleanup complete"
+}
+trap cleanup EXIT
+
+# Also handle specific signals
+trap 'error "Script interrupted"' INT TERM
+```
+
+### Error Checking Patterns
+
+```bash
+# Check command exists
+command -v jq >/dev/null 2>&1 || error "jq is required but not installed"
+
+# Check file exists
+[[ -f "$FILE" ]] || error "File not found: $FILE"
+
+# Check directory exists
+[[ -d "$DIR" ]] || mkdir -p "$DIR"
+
+# Check variable is set
+[[ -n "${VAR:-}" ]] || error "VAR is not set"
+
+# Check exit status explicitly
+if ! some_command; then
+    error "some_command failed"
+fi
+```
+
+## Variables & Substitution
+
+### Variable Expansion
+
+```bash
+# Default values
+${VAR:-default}     # Use default if VAR is unset or empty
+${VAR:=default}     # Set VAR to default if unset or empty
+${VAR:+value}       # Use value if VAR is set
+${VAR:?error msg}   # Error if VAR is unset or empty
+
+# String manipulation
+${VAR#pattern}      # Remove shortest prefix match
+${VAR##pattern}     # Remove longest prefix match
+${VAR%pattern}      # Remove shortest suffix match
+${VAR%%pattern}     # Remove longest suffix match
+${VAR/old/new}      # Replace first occurrence
+${VAR//old/new}     # Replace all occurrences
+${#VAR}             # Length of VAR
+```
+
+### Arrays
+
+```bash
+# Declare array
+declare -a ARRAY=("one" "two" "three")
+
+# Access elements
+echo "${ARRAY[0]}"     # First element
+echo "${ARRAY[@]}"     # All elements
+echo "${#ARRAY[@]}"    # Number of elements
+echo "${!ARRAY[@]}"    # All indices
+
+# Iterate
+for item in "${ARRAY[@]}"; do
+    echo "$item"
+done
+
+# Append
+ARRAY+=("four")
+```
+
+### Associative Arrays
+
+```bash
+declare -A MAP
+MAP["key1"]="value1"
+MAP["key2"]="value2"
+
+# Access
+echo "${MAP[key1]}"
+
+# Check key exists
+[[ -v MAP[key1] ]] && echo "key1 exists"
+
+# Iterate
+for key in "${!MAP[@]}"; do
+    echo "$key: ${MAP[$key]}"
+done
+```
+
+## Control Flow
+
+### Conditionals
+
+```bash
+# String comparison
+[[ "$str" == "value" ]]
+[[ "$str" != "value" ]]
+[[ -z "$str" ]]  # Empty
+[[ -n "$str" ]]  # Not empty
+
+# Numeric comparison
+[[ "$num" -eq 5 ]]  # Equal
+[[ "$num" -ne 5 ]]  # Not equal
+[[ "$num" -lt 5 ]]  # Less than
+[[ "$num" -gt 5 ]]  # Greater than
+
+# File tests
+[[ -f "$file" ]]  # File exists
+[[ -d "$dir" ]]   # Directory exists
+[[ -r "$file" ]]  # Readable
+[[ -w "$file" ]]  # Writable
+[[ -x "$file" ]]  # Executable
+
+# Logical operators
+[[ "$a" && "$b" ]]  # AND
+[[ "$a" || "$b" ]]  # OR
+[[ ! "$a" ]]        # NOT
+```
+
+### Loops
+
+```bash
+# For loop
+for i in {1..10}; do
+    echo "$i"
+done
+
+# While loop
+while read -r line; do
+    echo "$line"
+done < "$file"
+
+# Process substitution
+while read -r line; do
+    echo "$line"
+done < <(command)
+
+# C-style for
+for ((i=0; i<10; i++)); do
+    echo "$i"
+done
+```
+
+## Input/Output
+
+### Reading Input
+
+```bash
+# Read from user
+read -r -p "Enter name: " name
+
+# Read password (hidden)
+read -r -s -p "Password: " password
+
+# Read with timeout
+read -r -t 5 -p "Quick! " answer
+
+# Read file line by line
+while IFS= read -r line; do
+    echo "$line"
+done < "$file"
+```
+
+### Output & Redirection
+
+```bash
+# Redirect stdout
+command > file      # Overwrite
+command >> file     # Append
+
+# Redirect stderr
+command 2> file
+
+# Redirect both
+command &> file
+command > file 2>&1
+
+# Discard output
+command > /dev/null 2>&1
+
+# Tee (output and save)
+command | tee file
+```
+
+## Text Processing
+
+### Common Patterns
+
+```bash
+# Find and process files
+find . -name "*.log" -exec grep "ERROR" {} +
+
+# Process CSV
+while IFS=, read -r col1 col2 col3; do
+    echo "$col1: $col2"
+done < file.csv
+
+# JSON processing (with jq)
+jq '.key' file.json
+jq -r '.items[]' file.json
+
+# AWK one-liners
+awk '{print $1}' file           # First column
+awk -F: '{print $1}' /etc/passwd  # Custom delimiter
+awk 'NR > 1' file               # Skip header
+
+# SED one-liners
+sed 's/old/new/g' file          # Replace all
+sed -i 's/old/new/g' file       # In-place edit
+sed -n '10,20p' file            # Print lines 10-20
+```
+
+## Best Practices
+
+### Do
+
+- Quote all variable expansions: `"$VAR"`
+- Use `[[ ]]` over `[ ]` for tests
+- Use `$(command)` over backticks
+- Check return values
+- Use `readonly` for constants
+- Use `local` in functions
+- Provide `--help` option
+- Use meaningful exit codes
+
+### Don't
+
+- Parse `ls` output
+- Use `eval` with untrusted input
+- Assume paths don't have spaces
+- Ignore shellcheck warnings
+- Write one giant script (modularize)
+
+## Reference Files
+
+- **`references/one_liners.md`** - Useful one-liner commands
+
+## Integration with Other Skills
+
+- **developer-experience** - For tooling automation
+- **debugging** - For script debugging
+- **testing** - For script testing patterns

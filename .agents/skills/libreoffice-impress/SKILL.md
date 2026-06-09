@@ -16,11 +16,11 @@ If setup or runtime issues appear, check `references/troubleshooting.md`.
 # Non-session utilities
 create_presentation(path)
 get_slide_count(path)
-export_presentation(path, output_path, export_format)   # formats: "pdf", "pptx"
+export_presentation(path, output_path, format)   # formats: "pdf", "pptx"
 snapshot_slide(doc_path, slide_index, output_path, width=1280, height=720)
 
 # Session (primary editing API)
-ImpressSession(path) -> context manager
+open_impress_session(path) -> ImpressSession
 
 ImpressSession methods:
   get_slide_count() -> int
@@ -29,7 +29,6 @@ ImpressSession methods:
   delete_slide(target: ImpressTarget)
   move_slide(target: ImpressTarget, to_index)
   duplicate_slide(target: ImpressTarget)
-  delete_item(target: ImpressTarget)
   read_text(target: ImpressTarget) -> str
   insert_text(text, target: ImpressTarget | None = None)
   replace_text(target: ImpressTarget, new_text)
@@ -38,6 +37,7 @@ ImpressSession methods:
   replace_list(target: ImpressTarget, items: list[ListItem], ordered: bool | None = None)
   insert_text_box(slide: ImpressTarget, text, placement: ShapePlacement, name=None)
   insert_shape(slide: ImpressTarget, shape_type, placement: ShapePlacement, fill_color=None, line_color=None, name=None)
+  delete_item(target: ImpressTarget)
   insert_image(slide: ImpressTarget, image_path, placement: ShapePlacement, name=None)
   replace_image(target: ImpressTarget, image_path=None, placement: ShapePlacement | None = None)
   insert_table(slide: ImpressTarget, rows, cols, placement: ShapePlacement, data=None, name=None)
@@ -53,7 +53,7 @@ ImpressSession methods:
   set_master_background(target: ImpressTarget, color)
   import_master_page(template_path) -> str
   patch(patch_text, mode="atomic") -> PatchApplyResult
-  export(output_path, export_format)
+  export(output_path, format)
   reset()
   close(save=True)
 
@@ -121,7 +121,7 @@ TextFormatting(
     font_name=None,
     font_size=None,
     color=None,          # named color or integer
-    align=None,          # "left" | "center" | "right" | "justify" | "start" | "end"
+    align=None,          # "left" | "center" | "right" | "justify"
 )
 ```
 
@@ -248,18 +248,18 @@ mutations in the current open session state.
 from pathlib import Path
 
 from impress import (
-    ImpressSession,
     ImpressTarget,
     ListItem,
     ShapePlacement,
     TextFormatting,
+    open_impress_session,
 )
 from impress.core import create_presentation
 
 output = str(Path("test-output/demo.odp").resolve())
 create_presentation(output)
 
-with ImpressSession(output) as session:
+with open_impress_session(output) as session:
     session.add_slide(layout="TITLE_AND_CONTENT")
     session.replace_text(
         ImpressTarget(kind="text", slide_index=1, placeholder="title"),
@@ -308,30 +308,30 @@ from impress import patch
 result = patch(
     "/abs/path/demo.odp",
     """
-    [operation]
-    type = replace_text
-    target.kind = text
-    target.slide_index = 1
-    target.placeholder = body
-    new_text = Quarterly revenue rose 21%.
+[operation]
+type = replace_text
+target.kind = text
+target.slide_index = 1
+target.placeholder = body
+new_text = Quarterly revenue rose 21%.
 
-    [operation]
-    type = insert_media
-    target.kind = slide
-    target.slide_index = 1
-    media_path = /abs/path/demo.wav
-    placement.x_cm = 1.0
-    placement.y_cm = 9.0
-    placement.width_cm = 5.0
-    placement.height_cm = 3.0
-    name = Demo Media
+[operation]
+type = insert_media
+target.kind = slide
+target.slide_index = 1
+media_path = /abs/path/demo.wav
+placement.x_cm = 1.0
+placement.y_cm = 9.0
+placement.width_cm = 5.0
+placement.height_cm = 3.0
+name = Demo Media
 
-    [operation]
-    type = delete_item
-    target.kind = media
-    target.slide_index = 1
-    target.shape_name = Demo Media
-    """,
+[operation]
+type = delete_item
+target.kind = media
+target.slide_index = 1
+target.shape_name = Demo Media
+""",
     mode="best_effort",
 )
 
@@ -346,7 +346,7 @@ from impress import snapshot_slide
 
 result = snapshot_slide(doc_path, 0, "/tmp/slide1.png")
 print(result.file_path, result.width, result.height)
-Path(result.file_path).unlink(missing_ok=True)   # clean up used snapshots
+Path(result.file_path).unlink(missing_ok=True)
 ```
 
 Use snapshots to verify slide layout after text edits, master-page changes,
@@ -359,6 +359,4 @@ table/chart placement, or other visual operations.
 - Using fragile single-word text anchors when a fuller phrase is available.
 - Expecting exact shape names after LibreOffice-native slide duplication; UNO may rename duplicates such as `Name 1`.
 - Supplying malformed JSON in `items` or `data` patch fields.
-- Forgetting to clean up captured snapshots after inspection.
 - Calling session methods after `session.close()`.
-- The `"start"` and `"end"` paragraph alignment options require LibreOffice 26.2+.

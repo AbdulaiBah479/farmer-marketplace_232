@@ -1,9 +1,30 @@
 ---
 name: kuendigungsschutzklage
-description: "Prüft und entwirft eine Kündigungsschutzklage nach § 4 KSchG. Lädt, wenn ein Arbeitnehmer eine ordentliche oder außerordentliche Kündigung anfechten will, die 3-Wochen-Frist droht oder ein Entwurf des Klageantrags, der Klagebegründung und der Sozialauswahl benötigt wird."
+description: "Prüft und entwirft eine Kündigungsschutzklage nach § 4 KSchG: Lädt, wenn ein Arbeitnehmer eine ordentliche oder außerordentliche Kündigung anfechten will, die 3-Wochen-Frist droht oder ein Entwur..."
 ---
 
-# Kündigungsschutzklage (§ 4 KSchG)
+# Prüft und entwirft eine Kündigungsschutzklage nach § 4 KSchG
+
+
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: die im Plugin-Kontext einschlägigen Normen über gesetze-im-internet.de, dejure.org, eur-lex.europa.eu und die amtlichen Bundes-/Landesportale live prüfen — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+**Fokus:** Prüft und entwirft eine Kündigungsschutzklage nach § 4 KSchG. Lädt, wenn ein Arbeitnehmer eine ordentliche oder außerordentliche Kündigung anfechten will, die 3-Wochen-Frist droht oder ein Entwurf des Klageantrags, der Klagebegründung und der Sozialauswahl benötigt wird.
+
+### Kündigungsschutzklage (§ 4 KSchG)
+
+## Fachlicher Kern — Arbeitsrecht
+- **Problemfokus dieses Skills:** Bleibe beim konkreten Titel `Kündigungsschutzklage (§ 4 KSchG)` und löse die dort angelegte Fachfrage; arbeite mit konkreten Tatbestandsmerkmalen, Beweisfragen und dem unmittelbar benötigten Arbeitsprodukt. Routingfragen bleiben Hilfsmittel, wenn Frist, Zuständigkeit oder Verfahrensart offen sind.
+- **Normenradar:** BGB §§ 611a, 613a, 615, 623; KSchG §§ 1, 4, 7; TzBfG §§ 14, 15, 16; AGG §§ 1, 3, 7, 15, 22; EntgTranspG §§ 3, 5, 7; BUrlG §§ 1, 3, 7; BetrVG §§ 87, 99, 102; ArbZG; NachwG; SGB IX §§ 164, 167, 168.
+- **Verifizierte Anker:** BAG, Urteil vom 23.10.2025 - 8 AZR 300/24 (Entgeltgleichheit, Paarvergleich, Beweislast, bundesarbeitsgericht.de); BAG, Urteil vom 03.06.2025 - 9 AZR 104/24 (kein Verzicht auf gesetzlichen Mindesturlaub im bestehenden Arbeitsverhältnis); bei Kündigungszugang immer § 623 BGB, Zugang nach § 130 BGB, Dreiwochenfrist §§ 4, 7 KSchG und Beweis des konkreten Umschlags trennen.
+- **Arbeitsmodus:** Zuerst Status, Zugang, Frist, Beteiligungsrechte, Sonderkündigungsschutz, Beweislast und prozessualen nächsten Schritt sichern; dann erst Materiellrecht vertiefen.
+- **Outputpflicht:** Fristenblatt, Zugangsmatrix, Beweisangebot, Mandantenmail, Betriebsrats-/Gegnerbrief oder Klage-/Erwiderungsbaustein.
+- **Fehlerbremse:** Tragende Normen/Entscheidungen live oder aus der Akte verifizieren; Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei prüfbarer Quelle. Keine BeckRS-, juris-, Kommentar- oder Aufsatz-Blindzitate aus Modellwissen.
 
 ## Zweck
 
@@ -38,26 +59,37 @@ Für eine vollständige Bearbeitung werden benötigt:
 - §§ 46 ff. ArbGG: Zuständigkeit und Verfahren Arbeitsgericht
 - § 256 ZPO: Feststellungsklage (entsprechend anwendbar über § 46 Abs. 2 ArbGG)
 
-### Leitentscheidungen (BGH-Stil)
+### Leitentscheidungen (BGH-Stil, Stand Mai 2026)
 
-- **Betriebsbedingte Kündigung / unternehmerische Entscheidung:**
-  BAG, Urt. v. 20.06.2013 – 2 AZR 379/12, NZA 2014, 139 Rn. 20 ff.: Der Arbeitgeber muss darlegen, welche unternehmerische Entscheidung er getroffen hat und dass infolge dieser Entscheidung der Beschäftigungsbedarf für den Arbeitnehmer dauerhaft entfallen ist; eine bloß pauschale Behauptung eines Auftragsrückgangs genügt nicht.
+- **Massenentlassung - Fehler im Anzeigeverfahren:**
+ BAG, Urteile vom 01.04.2026 - 6 AZR 152/22 und 6 AZR 157/22: Fehlende oder verfruehte (vor Abschluss der BR-Konsultation eingereichte) Massenentlassungsanzeige fuehrt zur Unwirksamkeit aller davon erfassten Kuendigungen; keine Heilung nach Kuendigungsausspruch. Quelle: dejure.org-Vernetzung; BAG-Pressemitteilung "Massenentlassung - Rechtsfolge von Fehlern im Anzeigeverfahren". Zugehoeriger EuGH: 30.10.2025 - C-134/24 und C-402/24.
 
-- **Sozialauswahl / Vergleichbarkeit:**
-  BAG, Urt. v. 29.01.2015 – 2 AZR 164/14, NZA 2015, 426 Rn. 11 ff.: Vergleichbar im Sinne von § 1 Abs. 3 KSchG sind nur Arbeitnehmer, die gegeneinander ausgetauscht werden können, ohne dass es einer Einarbeitung oder Umschulung von mehr als kurzer Dauer bedarf.
+- **Freistellungsklausel im Arbeitsvertrag:**
+ BAG, Urteil vom 25.03.2026 - 5 AZR 108/25: Pauschale formularmäßige Freistellungsklausel benachteiligt den Arbeitnehmer unangemessen (§ 307 Abs. 1 Satz 1 BGB); der Beschaeftigungsanspruch ueberwiegt das pauschale Freistellungsinteresse. Quelle: dejure.org-Vernetzung.
 
-- **Außerordentliche Kündigung / wichtiger Grund:**
-  BAG, Urt. v. 10.06.2010 – 2 AZR 541/09, NZA 2010, 1227 Rn. 16 ff. – „Emmely": Die außerordentliche Kündigung ist ultima ratio; es ist eine umfassende Interessenabwägung vorzunehmen, bei der auch langjährige Betriebszugehörigkeit und Verdienst zu berücksichtigen sind.
+- **Mindesturlaubsverzicht im Prozessvergleich:**
+ BAG, Urteil vom 03.06.2025 - 9 AZR 104/24: Pauschale Erledigungsklausel erfasst den gesetzlichen Mindesturlaub im laufenden Arbeitsverhaeltnis nicht wirksam; § 13 Abs. 1 Satz 3 BUrlG i.V.m. RL 2003/88/EG. Quelle: dejure.org-Vernetzung.
 
-- **Kündigungserklärung / Zugang:**
-  BAG, Urt. v. 26.03.2015 – 2 AZR 483/14, NZA 2015, 1183 Rn. 24: Der Zugang einer Kündigung unter Abwesenden setzt voraus, dass das Schreiben in den Machtbereich des Empfängers gelangt und er unter gewöhnlichen Umständen Kenntnis nehmen kann.
+- **Equal Pay / Paarvergleich:**
+ BAG, Urteil vom 23.10.2025 - 8 AZR 300/24: Paarvergleich mit einem einzelnen Vergleichskollegen des anderen Geschlechts genuegt für die Vermutung nach § 22 AGG; Mediane oder Vergleichsgruppengroessen sind irrelevant. Quelle: dejure.org-Vernetzung.
 
-### Kommentarliteratur
+- **DSGVO-Schadensersatz bei verspaeteter Auskunft:**
+ BAG, Urteil vom 20.02.2025 - 8 AZR 61/24: "Stoergefuehl" allein begruendet keinen Schadensersatzanspruch nach Art. 82 DSGVO; konkrete Kontrollverlust-Furcht oder tatsaechlicher Schaden erforderlich. Quelle: dejure.org-Vernetzung; Volltext-PDF auf bundesarbeitsgericht.de.
 
-- Preis, in: ErfK, 25. Aufl. 2025, § 1 KSchG Rn. 1–30 (Anwendungsbereich und Kündigungsgründe), Rn. 540 ff. (Sozialauswahl).
-- Kiel/Schmidt, in: APS, Kündigungsrecht, 6. Aufl. 2021, § 1 KSchG Rn. 700 ff. (Sozialauswahl, Vergleichbarkeit, Auswahlkriterien).
-- Linck, in: HWK, 11. Aufl. 2024, § 622 BGB Rn. 14 ff. (Kündigungsfristen, Fristberechnung).
-- Spinner, in: ErfK, 25. Aufl. 2025, § 4 KSchG Rn. 1 ff. (Klagefrist, Fristbeginn, Nachholung nach § 5 KSchG).
+- **Arbeitszeiterfassung:**
+ BAG, Beschluss vom 13.09.2022 - 1 ABR 22/21: Pflicht des Arbeitgebers zur Erfassung der gesamten Arbeitszeit aus § 3 Abs. 2 Nr. 1 ArbSchG. Quelle: dejure.org-Vernetzung.
+
+- **NachweisG-Schadensersatz:**
+ BAG, Urteil vom 22.09.2022 - 8 AZR 4/21: Bei Verstoss gegen NachwG kann der Arbeitnehmer Schadensersatz verlangen, soweit die Pflichtverletzung kausal für den Schaden war; Anspruch nicht auf Bussgeldhoehe begrenzt. Quelle: dejure.org-Vernetzung.
+
+- **Subjektive Determinationstheorie BR-Anhörung:**
+ BAG, 27.02.1997 - 2 AZR 302/96 (Standardlinie); BAG, 05.02.1998 - 2 AZR 227/97. Quelle: dejure.org-Vernetzung.
+
+Allgemein: Weitere Entscheidungen zu Sozialauswahl, betriebsbedingter Kuendigung, wichtigem Grund usw. vor Schriftsatzverwendung in offenen Quellen (dejure.org / openjur.de / bundesarbeitsgericht.de) verifizieren.
+
+### Quellenregel
+
+Quellenregel: Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen; Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff.
 
 ## Ablauf
 
@@ -109,13 +141,13 @@ Für eine vollständige Bearbeitung werden benötigt:
 **Klageanträge (Feststellungsklage):**
 ```
 1. Es wird festgestellt, dass das Arbeitsverhältnis der Parteien durch die Kündigung
-   der Beklagten vom [Datum], zugegangen am [Datum], nicht aufgelöst worden ist.
+ der Beklagten vom [Datum], zugegangen am [Datum], nicht aufgelöst worden ist.
 
 2. [Hilfsweise: Es wird festgestellt, dass das Arbeitsverhältnis auch nicht durch
-   andere Beendigungsgründe endet, sondern über den [Datum] hinaus fortbesteht.]
+ andere Beendigungsgründe endet, sondern über den [Datum] hinaus fortbesteht.]
 
 3. [Weiterbeschäftigungsantrag nach § 102 Abs. 5 BetrVG / allg. Weiterbeschäftigung
-   bis Rechtskraft des Urteils, soweit Widerspruch des BR oder schutzwürdiges Interesse.]
+ bis Rechtskraft des Urteils, soweit Widerspruch des BR oder schutzwürdiges Interesse.]
 ```
 
 **Begründung (Struktur):**
@@ -132,20 +164,6 @@ Für eine vollständige Bearbeitung werden benötigt:
 - Gütetermin within 2 Wochen (§ 54 ArbGG): aktive Vorbereitung auf Einigung; Abfindungsüberlegungen nach § 9, 10 KSchG.
 - Kammertermin bei Nichteinigung (§ 57 ArbGG).
 
-## Ausgabeformat
-
-**Standardausgabe:** Rechtliches Memo im Gutachtenstil (vgl. references/methodik-buergerliches-recht.md Ziff. 6):
-1. Sachverhalt
-2. Frage
-3. Ergebnis (1 Satz)
-4. Rechtliche Bewertung (je Prüfungspunkt)
-5. Gesamtergebnis und Empfehlung
-6. Quellenverzeichnis
-
-**Auf Anforderung:** Vollständige Klageschrift (Urteilsstil, Antrag + Begründung).
-
-**Zusätzlich:** Checkliste Fristablauf und Anhörungsfehler als Tabelle.
-
 ## Beispiel
 
 **Sachverhalt:** Arbeitnehmerin A ist seit 8 Jahren als Sachbearbeiterin bei der B-GmbH (85 Arbeitnehmer) beschäftigt. Am 15.04.2025 geht ihr eine ordentliche betriebsbedingte Kündigung zum 30.06.2025 zu. Ein Betriebsrat besteht. A behauptet, die B-GmbH habe die Sozialauswahl fehlerhaft durchgeführt, da die jüngere Kollegin K (3 Jahre Betriebszugehörigkeit, keine Unterhaltspflichten) trotz geringerer Sozialpunkte weiterbeschäftigt wurde.
@@ -157,9 +175,9 @@ Für eine vollständige Bearbeitung werden benötigt:
 **Bewertung:**
 *1. Geltungsbereich KSchG:* Die Wartezeit von 6 Monaten (§ 1 Abs. 1 KSchG) ist mit 8 Jahren erfüllt. Die Betriebsgröße von 85 Arbeitnehmern überschreitet den Schwellenwert des § 23 Abs. 1 KSchG. Das KSchG ist anwendbar.
 
-*2. Soziale Rechtfertigung (§ 1 Abs. 2 KSchG):* Als Grund ist Betriebsbedingtheit angeführt. Ob die unternehmerische Entscheidung und der dauerhafte Wegfall des Beschäftigungsbedarfs substantiiert dargetan werden können, ist im Gütetermin zu klären (BAG, Urt. v. 20.06.2013 – 2 AZR 379/12, NZA 2014, 139 Rn. 20).
+Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
-*3. Sozialauswahl (§ 1 Abs. 3 KSchG):* Kollegin K ist mit A vergleichbar (gleiche Tätigkeit, gegenseitig austauschbar, vgl. BAG, Urt. v. 29.01.2015 – 2 AZR 164/14, NZA 2015, 426 Rn. 11). Die Sozialpunkte der A (8 Jahre BZ, Unterhaltspflichten) überwiegen erkennbar jene der K. Die Nichteinhaltung der Sozialauswahl begründet die soziale Ungerechtfertigtheit der Kündigung (Kiel/Schmidt, in: APS, 6. Aufl. 2021, § 1 KSchG Rn. 700).
+Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
 **Klagefrist:** Die 3-Wochen-Frist nach § 4 KSchG läuft bis zum 06.05.2025. Klage ist sofort einzureichen.
 
@@ -176,14 +194,32 @@ Für eine vollständige Bearbeitung werden benötigt:
 | Vertraulichkeit / § 203 StGB | Strafbarkeit bei unbefugter Datenweitergabe | Mandantendaten nur in zulässigen Systemen verarbeiten |
 | Berufsrechtliche Pflichten (§ 43a BRAO) | Haftungs- und Berufsrechtsrisiko | Fristenkontrolle, Dokumentation, Belehrungspflichten |
 
-**Beweislast:** Der Arbeitgeber trägt die Beweislast für das Vorliegen von Kündigungsgründen (§ 1 Abs. 2 Satz 4 KSchG); für die ordnungsgemäße Sozialauswahl trägt er die Darlegungslast nach § 1 Abs. 3 Satz 3 KSchG, soweit der Arbeitnehmer Indizien darlegt (Preis, in: ErfK, 25. Aufl. 2025, § 1 KSchG Rn. 540).
+- Quellenregel: Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff; keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen.
+
+## DSGVO-Auskunft parallel zur KSchG-Klage
+
+**Regelfall in der Praxis:** Arbeitnehmer und ihre Bevollmächtigten stellen häufig zeitgleich mit der KSchG-Klage oder unmittelbar nach Zugang der Kündigung ein Auskunftsersuchen nach Art. 15 DSGVO. Ziel ist der Zugang zu Personalakten, internen Vermerken, Abmahnungsunterlagen oder elektronischer Korrespondenz, die im Kündigungsschutzprozess als Beweismittel dienen oder den Arbeitgeber zu Verhandlungen über eine höhere Abfindung bewegen sollen.
+
+Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+Ein erstmaliges Auskunftsersuchen kann ausnahmsweise nach Art. 12 Abs. 5 S. 2 DSGVO als "exzessiv" eingestuft werden, wenn der Arbeitgeber sowohl ein **objektives Element** (z. B. ungewöhnlich kurzer Abstand zwischen Ausspruch der Kündigung und Auskunftsantrag; massenhaftes Legal-Tech-Vorgehen) als auch ein **subjektives Element** (missbräuchliche Absicht — Instrumentalisierung zur Schadensersatzgenerierung nach Art. 82 DSGVO statt Datenschutzschutz) nachweist. Die Hürden sind hoch; das Auskunftsrecht ist Grundrecht (Art. 8 GRCh).
+
+**BAG-Linie zum immateriellen Schaden:**
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+
+**Prozessuale Koordination:**
+- Auskunftsklage nach Art. 15 DSGVO ist vor dem **Landgericht** einzuklagen (§ 44 BDSG i.V.m. Art. 79 DSGVO); das Arbeitsgericht ist nicht zuständig.
+- Bei parallelem KSchG-Verfahren (Arbeitsgericht) und DSGVO-Auskunftsverfahren (Landgericht) Prozesstaktik koordinieren.
+- Unberechtigte Ablehnung eines legitimen Auskunftsersuchens kann eigenständigen Schadensersatzanspruch nach Art. 82 DSGVO auslösen — auch ohne rechtswidrige Verarbeitung.
+- Frist: Art. 12 Abs. 3 DSGVO — Antwort innerhalb eines Monats ab Eingang des Ersuchens; Verzögerung muss begründet und kommuniziert werden.
+
+Querverweis: `arbeitsrecht/skills/kuendigungs-pruefung/SKILL.md` (Abschnitt DSGVO-Auskunftsersuchen als Druckmittel).
 
 ## Quellenpflicht
 
 Jede juristische Aussage in jedem auf diesem Skill basierenden Dokument ist nach **references/zitierweise.md** zu belegen. Insbesondere:
 
 - Rechtsprechungsbelege im BGH-Stil (Gericht, Entscheidungsform, Datum, Aktenzeichen, Fundstelle, Rn.).
-- Kommentarbelege mit Bearbeiter, Werk, Auflage, Jahr, §, Rn.
+- Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen zitieren. Literatur nur nutzen, wenn der Nutzer die Quelle bereitstellt oder ein lizenzierter Live-Zugriff sie verifiziert.
 - Bei umstrittenen Fragen (z. B. Vergleichbarkeitsbegriff, Interessenabwägung) h. M. und Gegenauffassung getrennt zitieren.
 - Halluzinationsrisiko: Alle Aktenzeichen und Fundstellen vor Einreichung gegenzuprüfen.
-- Keine reine „vgl."-Floskel ohne nachvollziehbaren Verweis.
+- Keine reine "vgl."-Floskel ohne nachvollziehbaren Verweis.

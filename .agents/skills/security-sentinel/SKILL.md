@@ -1,180 +1,619 @@
 ---
 name: security-sentinel
-description: Use this agent when performing security audits, vulnerability assessments, or security reviews of code. Triggers on requests like "security review", "check for vulnerabilities", "OWASP compliance check".
-model: inherit
+description: Use when working with authentication, API routes, user input, or sensitive data. Audits code for security vulnerabilities based on OWASP Top 10. Critical for payment processing, auth systems, and data handling.
+allowed-tools: Read, Grep, Bash
 ---
 
-# Security Sentinel
+# Security Sentinel (World-Class Security Skill)
 
-You are a security expert specializing in identifying vulnerabilities, security risks, and OWASP Top 10 compliance issues in code. Your goal is to ensure the codebase follows security best practices and is free from exploitable vulnerabilities.
+## When to Use
 
-## Core Responsibilities
+**ALWAYS use this skill when:**
+- Writing/reviewing API routes (especially POST/PATCH/PUT/DELETE)
+- Implementing authentication or authorization
+- Handling user input (forms, query params, file uploads)
+- Working with database queries
+- Processing file operations
+- Managing environment variables and secrets
+- Building payment processing features
+- Implementing session management
+- Handling sensitive data or encryption
+- Before creating pull requests
+- Before deployment
 
-- Identify OWASP Top 10 vulnerabilities
-- Detect hardcoded secrets and credentials
-- Flag authentication and authorization issues
-- Find injection vulnerabilities (SQL, XSS, CSRF, command injection)
-- Identify insecure data transmission and storage
-- Check for improper input validation
-- Flag insecure dependencies
-- Identify security misconfigurations
+## Comprehensive Documentation
 
-## Analysis Framework
+This skill includes complete security references:
 
-For each code change, check for:
+### 📚 Core References (10,426 lines total)
 
-### 1. Injection Vulnerabilities
-- **SQL Injection**: Unsanitized input in database queries
-- **XSS (Cross-Site Scripting)**: Unescaped user input in responses
-- **Command Injection**: User input in shell commands
-- **LDAP Injection**: Unsanitized input in LDAP queries
-- **NoSQL Injection**: Unsanitized input in NoSQL queries
+1. **owasp-top-10-complete.md** (2,133 lines) - Complete OWASP Top 10 with code examples
+   - A01: Broken Access Control (IDOR, path traversal)
+   - A02: Cryptographic Failures (weak hashing, hardcoded secrets)
+   - A03: Injection (SQL, NoSQL, Command injection)
+   - A04: Insecure Design (race conditions, rate limiting)
+   - A05: Security Misconfiguration (CORS, error messages)
+   - A06: Vulnerable Components (dependency management)
+   - A07: Authentication Failures (weak passwords, MFA)
+   - A08: Integrity Failures (supply chain, deserialization)
+   - A09: Logging Failures (audit trails, monitoring)
+   - A10: SSRF (URL validation, IP blocking)
 
-### 2. Authentication & Authorization
-- Missing or weak authentication
-- Hardcoded credentials
-- Session fixation vulnerabilities
-- Missing CSRF protection
-- Insecure direct object references (IDOR)
-- Missing authorization checks on protected endpoints
+2. **authentication-patterns.md** (1,529 lines) - Complete authentication guide
+   - JWT token authentication
+   - Session-based authentication
+   - Password hashing (bcrypt, Argon2)
+   - Password reset flow
+   - Email verification
+   - Multi-factor authentication (TOTP)
+   - OAuth 2.0 (GitHub, Google)
+   - Passwordless authentication (magic links)
+   - Refresh token pattern
 
-### 3. Data Protection
-- Hardcoded secrets (API keys, passwords, tokens)
-- Sensitive data in logs
-- Missing encryption for sensitive data
-- Insecure random number generation
-- Sensitive data in URL parameters
+3. **authorization-patterns.md** (1,062 lines) - Access control implementation
+   - Role-Based Access Control (RBAC)
+   - Attribute-Based Access Control (ABAC)
+   - Middleware protection
+   - API route protection
+   - Server Action protection
+   - Row-level security (Drizzle patterns)
+   - Permission system
+   - Resource ownership validation
 
-### 4. Configuration
-- Debug mode enabled in production
-- Default credentials not changed
-- Verbose error messages exposing internals
-- Missing security headers
-- CORS misconfiguration
+4. **input-validation-complete.md** (900 lines) - Zod validation for everything
+   - String, number, boolean, enum validation
+   - Email, URL, phone, UUID validation
+   - File upload validation (images, PDFs, CSVs)
+   - Password strength requirements
+   - Credit card validation (Luhn algorithm)
+   - IP address validation (v4, v6)
+   - Async validation (database checks)
+   - Error handling and display
 
-### 5. Dependencies
-- Known vulnerable dependencies
-- Outdated packages with security issues
-- Unnecessary dependencies with vulnerabilities
+5. **sql-injection-prevention.md** (741 lines) - Drizzle ORM security
+   - Parameterized queries (always safe)
+   - Dynamic query building
+   - Raw SQL safety patterns
+   - LIKE query sanitization
+   - Database schema security
+   - Testing for SQL injection
 
-## Output Format
+6. **xss-prevention.md** (630 lines) - React/Next.js XSS protection
+   - React's built-in escaping
+   - dangerouslySetInnerHTML with DOMPurify
+   - URL sanitization
+   - Content Security Policy (CSP)
+   - User-generated content handling
+   - innerHTML safety
 
-```markdown
-### Security Issue #[number]: [Title]
-**Severity:** P1 (Critical) | P2 (Important) | P3 (Nice-to-Have)
-**Category:** OWASP Category
-**CWE:** [CWE number if applicable]
-**File:** [path/to/file.ts]
-**Lines:** [line numbers]
+7. **csrf-prevention.md** (597 lines) - Cross-Site Request Forgery protection
+   - SameSite cookies (primary defense)
+   - CSRF tokens implementation
+   - Double submit cookie pattern
+   - Server Actions protection
+   - Origin header validation
 
-**Vulnerability:**
-[Clear description of the security issue]
+8. **secret-management.md** (547 lines) - Secure secret handling
+   - Environment variables best practices
+   - Secret rotation strategies
+   - Encryption at rest (AES-256-GCM)
+   - Secret detection (gitleaks, trufflehog)
+   - Production secrets (Vercel, AWS, Vault)
 
-**Current Code:**
-\`\`\`typescript
-[The vulnerable code snippet]
-\`\`\`
+9. **rate-limiting-patterns.md** (826 lines) - Prevent API abuse
+   - In-memory rate limiting
+   - Redis-based rate limiting
+   - API route protection
+   - Server Action protection
+   - IP-based rate limiting
+   - User-based rate limiting
+   - Sliding window algorithm
+   - Token bucket algorithm
 
-**Attack Vector:**
-[How an attacker could exploit this]
+10. **security-checklist.md** (471 lines) - Pre-deployment audit (250+ items)
+    - Authentication security (passwords, sessions, JWT, MFA)
+    - Authorization security (access control, RLS)
+    - Input validation
+    - Data security (secrets, logging, database)
+    - File upload security
+    - Rate limiting
+    - Security headers (CSP, CORS, HSTS)
+    - Error handling
+    - Dependency security
+    - Monitoring and logging
+    - Infrastructure security
+    - Compliance (GDPR, PCI DSS)
 
-**Fix:**
-\`\`\`typescript
-[The secure implementation]
-\`\`\`
+### 🛠️ Security Tools
+- **validate-security.py** (414 lines) - Automated vulnerability scanner
+  - Detects 20+ vulnerability types
+  - Scans for hardcoded secrets (API keys, passwords, tokens)
+  - Checks for SQL injection patterns
+  - Detects XSS vulnerabilities (dangerouslySetInnerHTML, innerHTML)
+  - Finds eval() and Function() usage
+  - Identifies weak cryptography (MD5, SHA1)
+  - Detects insecure randomness
+  - Checks for command injection
+  - Validates path traversal prevention
+  - Tests password hashing strength
+  - Audits JWT security
+  - Checks CORS configuration
+  - Validates cookie security (httpOnly, secure)
+  - Reports TypeScript issues (@ts-ignore, any)
+  - Exits with error on CRITICAL/HIGH issues
+  - Identifies XSS vulnerabilities
+  - Finds eval() and Function() usage
+  - Detects weak cryptography (MD5, SHA1)
+  - Checks for command injection
+  - Validates password hashing
+  - Finds CORS misconfigurations
+  - Checks for missing httpOnly cookies
+  - Reports TypeScript issues (@ts-ignore, any types)
 
-**Additional Recommendations:**
-- [ ] Specific recommendation 1
-- [ ] Specific recommendation 2
+### 🚀 Quick Start
 
-**References:**
-- [OWASP documentation link]
-- [CWE link]
+**Before implementing ANY security-sensitive feature:**
+```bash
+# 1. Read the relevant guide
+cat owasp-top-10-complete.md
+cat authentication-patterns.md
+
+# 2. Implement following patterns
+
+# 3. Run security scanner
+python validate-security.py src/
+
+# 4. Check against security checklist
+cat security-checklist.md
 ```
 
-## Severity Guidelines
+## When to Use
 
-**P1 (Critical) - Immediate Action Required:**
-- Remote code execution vulnerabilities
-- SQL injection, command injection
-- Hardcoded secrets in production code
-- Authentication bypass
-- Direct data access without authorization (IDOR)
-- XSS in authenticated pages
+## OWASP Top 10 Security Checks
 
-**P2 (Important) - Should Fix Promptly:**
-- Missing CSRF protection
-- Insecure cookie configuration
-- Missing security headers
-- Weak password requirements
-- Information disclosure in error messages
-- Deprecated cryptographic algorithms
+### 1. Injection Attacks
 
-**P3 (Nice-to-Have) - Security Enhancements:**
-- Security logging improvements
-- Additional input validation
-- Rate limiting
-- Security documentation updates
-
-## Common Vulnerabilities to Check
-
-### SQL Injection
+#### SQL Injection
 ```typescript
-// Vulnerable
-const query = `SELECT * FROM users WHERE id = ${userId}`;
+// ❌ DON'T: String concatenation in queries
+const query = `SELECT * FROM users WHERE email = '${email}'`
+// Vulnerable to: email = "' OR '1'='1"
 
-// Secure
-const query = `SELECT * FROM users WHERE id = ?`;
-await db.query(query, [userId]);
+// ✅ DO: Use Prisma (parameterized queries)
+const user = await prisma.user.findUnique({
+  where: { email },
+})
 ```
 
-### XSS (Cross-Site Scripting)
+#### Command Injection
 ```typescript
-// Vulnerable
-<div>{userInput}</div>
+// ❌ DON'T: Unvalidated shell commands
+const fileName = req.body.fileName
+exec(`cat ${fileName}`) // Vulnerable to: fileName = "; rm -rf /"
 
-// Secure
-<div>{escapeHtml(userInput)}</div>
-// or use framework auto-escaping
+// ✅ DO: Validate input and use safe APIs
+const allowedFiles = ['log.txt', 'data.csv']
+if (!allowedFiles.includes(fileName)) {
+  throw new Error('Invalid file name')
+}
+const content = await fs.readFile(path.join(SAFE_DIR, fileName))
 ```
 
-### Hardcoded Secrets
+#### NoSQL Injection
 ```typescript
-// Vulnerable
-const API_KEY = "sk-live-1234567890abcdef";
+// ❌ DON'T: Direct object insertion
+const user = await db.users.findOne({ email: req.body.email })
+// Vulnerable to: { email: { $ne: null } }
 
-// Secure
-const API_KEY = process.env.API_KEY;
+// ✅ DO: Validate input with Zod
+const emailSchema = z.string().email()
+const email = emailSchema.parse(req.body.email)
+const user = await db.users.findOne({ email })
 ```
 
-### Command Injection
+### 2. Broken Authentication
+
+#### Password Storage
 ```typescript
-// Vulnerable
-exec(`grep ${searchTerm} file.txt`);
+// ❌ DON'T: Plain text passwords
+const user = await prisma.user.create({
+  data: {
+    email,
+    password, // Never store plain text!
+  },
+})
 
-// Secure
-exec("grep", [searchTerm, "file.txt"]);
+// ✅ DO: Hash with bcrypt
+import bcrypt from 'bcrypt'
+
+const hashedPassword = await bcrypt.hash(password, 12) // 12 rounds minimum
+const user = await prisma.user.create({
+  data: {
+    email,
+    password: hashedPassword,
+  },
+})
 ```
 
-## OWASP Top 10 Checklist
+#### Session Management
+```typescript
+// ❌ DON'T: Weak session tokens
+const sessionId = Math.random().toString()
 
-- [ ] **A01:2021 - Broken Access Control**: Users can access/modify resources they shouldn't
-- [ ] **A02:2021 - Cryptographic Failures**: Sensitive data not properly encrypted
-- [ ] **A03:2021 - Injection**: SQL, NoSQL, OS, LDAP injections possible
-- [ ] **A04:2021 - Insecure Design**: Flawed architectural security decisions
-- [ ] **A05:2021 - Security Misconfiguration**: Default configs, debug enabled, unnecessary features
-- [ ] **A06:2021 - Vulnerable and Outdated Components**: Known CVEs in dependencies
-- [ ] **A07:2021 - Identification and Authentication Failures**: Weak auth, session management
-- [ ] **A08:2021 - Software and Data Integrity Failures**: Unsigned code, insecure updates
-- [ ] **A09:2021 - Security Logging and Monitoring Failures**: No audit trail
-- [ ] **A10:2021 - Server-Side Request Forgery (SSRF)**: User-controlled URLs
+// ✅ DO: Cryptographically secure tokens
+import crypto from 'crypto'
+const sessionId = crypto.randomBytes(32).toString('hex')
 
-## Success Criteria
+// ✅ DO: Set secure session cookie
+res.setHeader('Set-Cookie', [
+  `session=${sessionToken}; HttpOnly; Secure; SameSite=Strict; Max-Age=3600`,
+])
+```
 
-After your security review:
-- [ ] All vulnerabilities identified with CWE references where applicable
-- [ ] Severity classification based on exploitability and impact
-- [ ] Specific fix recommendations provided
-- [ ] Attack vectors explained
-- [ ] References to OWASP/CWE documentation included
-- [ ] No security issues marked P3 when they should be P1
+#### JWT Security
+```typescript
+// ❌ DON'T: Weak secret
+const token = jwt.sign(payload, 'secret123')
+
+// ✅ DO: Strong secret from environment
+const token = jwt.sign(payload, process.env.JWT_SECRET!, {
+  expiresIn: '1h',
+  algorithm: 'HS256',
+})
+
+// ✅ DO: Verify JWT properly
+try {
+  const decoded = jwt.verify(token, process.env.JWT_SECRET!)
+  // Use decoded data
+} catch (error) {
+  throw new Error('Invalid token')
+}
+```
+
+### 3. Sensitive Data Exposure
+
+#### Environment Variables
+```typescript
+// ❌ DON'T: Hardcoded secrets
+const apiKey = 'sk_live_abc123def456'
+const dbPassword = 'mypassword123'
+
+// ✅ DO: Environment variables
+const apiKey = process.env.STRIPE_API_KEY
+const dbPassword = process.env.DATABASE_PASSWORD
+
+if (!apiKey || !dbPassword) {
+  throw new Error('Missing required environment variables')
+}
+```
+
+#### Data in Logs
+```typescript
+// ❌ DON'T: Log sensitive data
+console.log('User data:', { email, password, creditCard })
+
+// ✅ DO: Redact sensitive fields
+const safeUserData = {
+  email,
+  creditCard: creditCard.slice(-4).padStart(creditCard.length, '*'),
+}
+console.log('User data:', safeUserData)
+```
+
+#### Never Return Sensitive Data
+```typescript
+// ❌ DON'T: Return password in API
+const user = await prisma.user.findUnique({ where: { id } })
+return user // Includes password hash!
+
+// ✅ DO: Exclude sensitive fields
+const user = await prisma.user.findUnique({
+  where: { id },
+  select: {
+    id: true,
+    email: true,
+    name: true,
+    // password field excluded
+  },
+})
+return user
+```
+
+### 4. XML External Entities (XXE)
+```typescript
+// ❌ DON'T: Parse untrusted XML
+const doc = xmlParser.parse(userInput)
+
+// ✅ DO: Disable external entities
+const parser = new xml2js.Parser({
+  explicitChildren: false,
+  explicitRoot: false,
+  ignoreAttrs: true,
+  xmlns: false,
+})
+```
+
+### 5. Broken Access Control
+
+#### Authorization Checks
+```typescript
+// ❌ DON'T: Missing authorization
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  await prisma.project.delete({ where: { id: params.id } })
+  return new Response(null, { status: 204 })
+}
+
+// ✅ DO: Verify ownership
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  const user = await getAuthUser(request)
+  if (!user) {
+    return new Response('Unauthorized', { status: 401 })
+  }
+
+  const project = await prisma.project.findUnique({
+    where: { id: params.id },
+  })
+
+  if (!project) {
+    return new Response('Not found', { status: 404 })
+  }
+
+  if (project.userId !== user.id) {
+    return new Response('Forbidden', { status: 403 })
+  }
+
+  await prisma.project.delete({ where: { id: params.id } })
+  return new Response(null, { status: 204 })
+}
+```
+
+#### IDOR (Insecure Direct Object Reference)
+```typescript
+// ❌ DON'T: Trust user input for IDs
+const userId = req.query.userId
+const data = await getPrivateData(userId) // Any user can access any data!
+
+// ✅ DO: Use authenticated user's ID
+const userId = req.user.id // From authenticated session
+const data = await getPrivateData(userId)
+```
+
+### 6. Security Misconfiguration
+
+#### CORS
+```typescript
+// ❌ DON'T: Allow all origins
+res.setHeader('Access-Control-Allow-Origin', '*')
+
+// ✅ DO: Whitelist specific origins
+const allowedOrigins = [
+  'https://app.quetrex.com',
+  'https://staging.quetrex.com',
+]
+
+const origin = req.headers.get('origin')
+if (origin && allowedOrigins.includes(origin)) {
+  res.setHeader('Access-Control-Allow-Origin', origin)
+}
+```
+
+#### Error Messages
+```typescript
+// ❌ DON'T: Expose internal details
+catch (error) {
+  res.status(500).json({
+    error: error.message, // Could leak stack trace, DB structure, etc.
+  })
+}
+
+// ✅ DO: Generic error messages
+catch (error) {
+  console.error('Internal error:', error) // Log internally
+  res.status(500).json({
+    error: 'An internal error occurred',
+  })
+}
+```
+
+### 7. Cross-Site Scripting (XSS)
+
+#### dangerouslySetInnerHTML
+```typescript
+// ❌ DON'T: Unsanitized HTML
+<div dangerouslySetInnerHTML={{ __html: userInput }} />
+// Vulnerable to: userInput = "<script>alert('XSS')</script>"
+
+// ✅ DO: Sanitize with DOMPurify
+import DOMPurify from 'dompurify'
+
+const sanitized = DOMPurify.sanitize(userInput)
+<div dangerouslySetInnerHTML={{ __html: sanitized }} />
+
+// ✅ BETTER: Avoid dangerouslySetInnerHTML entirely
+<div>{userInput}</div> // React escapes by default
+```
+
+#### URL Handling
+```typescript
+// ❌ DON'T: Unsanitized URLs
+<a href={userInput}>Click here</a>
+// Vulnerable to: userInput = "javascript:alert('XSS')"
+
+// ✅ DO: Validate URLs
+function isSafeUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url)
+    return ['http:', 'https:'].includes(parsed.protocol)
+  } catch {
+    return false
+  }
+}
+
+const href = isSafeUrl(userInput) ? userInput : '#'
+<a href={href}>Click here</a>
+```
+
+### 8. Insecure Deserialization
+```typescript
+// ❌ DON'T: eval() or Function()
+const code = req.body.code
+eval(code) // NEVER DO THIS
+
+// ❌ DON'T: Unvalidated JSON
+const data = JSON.parse(userInput)
+// Use data directly without validation
+
+// ✅ DO: Validate with Zod
+const data = JSON.parse(userInput)
+const validated = dataSchema.parse(data) // Validates structure and types
+```
+
+### 9. Using Components with Known Vulnerabilities
+```bash
+# ✅ DO: Regular dependency audits
+npm audit --audit-level=high
+
+# ✅ DO: Keep dependencies updated
+npm update
+
+# ✅ DO: Use automated tools
+npm install -g snyk
+snyk test
+```
+
+### 10. Insufficient Logging & Monitoring
+```typescript
+// ❌ DON'T: No logging
+export async function POST(request: Request) {
+  const user = await createUser(data)
+  return Response.json(user)
+}
+
+// ✅ DO: Log security events
+export async function POST(request: Request) {
+  try {
+    const user = await createUser(data)
+    logger.info('User created', {
+      userId: user.id,
+      email: user.email,
+      ip: request.headers.get('x-forwarded-for'),
+      timestamp: new Date().toISOString(),
+    })
+    return Response.json(user)
+  } catch (error) {
+    logger.error('User creation failed', {
+      error: error.message,
+      email: data.email,
+      ip: request.headers.get('x-forwarded-for'),
+      timestamp: new Date().toISOString(),
+    })
+    throw error
+  }
+}
+```
+
+## Input Validation Checklist
+
+```typescript
+// ✅ Complete input validation example
+import { z } from 'zod'
+
+const createUserSchema = z.object({
+  email: z.string().email().max(255),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(128)
+    .regex(/[A-Z]/, 'Password must contain uppercase letter')
+    .regex(/[a-z]/, 'Password must contain lowercase letter')
+    .regex(/[0-9]/, 'Password must contain number')
+    .regex(/[^A-Za-z0-9]/, 'Password must contain special character'),
+  name: z.string().min(1).max(100).optional(),
+})
+
+export async function POST(request: Request) {
+  // 1. Parse and validate input
+  const body = await request.json()
+  const validated = createUserSchema.parse(body) // Throws on validation error
+
+  // 2. Additional business logic validation
+  const existing = await prisma.user.findUnique({
+    where: { email: validated.email },
+  })
+  if (existing) {
+    throw new Error('Email already exists')
+  }
+
+  // 3. Hash password
+  const hashedPassword = await bcrypt.hash(validated.password, 12)
+
+  // 4. Create user
+  const user = await prisma.user.create({
+    data: {
+      email: validated.email,
+      password: hashedPassword,
+      name: validated.name,
+    },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      // password excluded
+    },
+  })
+
+  // 5. Log security event
+  logger.info('User registered', { userId: user.id, email: user.email })
+
+  return Response.json(user, { status: 201 })
+}
+```
+
+## Security Headers
+```typescript
+// ✅ DO: Set security headers
+export function middleware(request: NextRequest) {
+  const response = NextResponse.next()
+
+  response.headers.set('X-Content-Type-Options', 'nosniff')
+  response.headers.set('X-Frame-Options', 'DENY')
+  response.headers.set('X-XSS-Protection', '1; mode=block')
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  response.headers.set(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';"
+  )
+  response.headers.set(
+    'Strict-Transport-Security',
+    'max-age=31536000; includeSubDomains'
+  )
+
+  return response
+}
+```
+
+## Security Review Checklist
+
+For each code change, verify:
+
+- [ ] All user input validated with Zod
+- [ ] No hardcoded secrets (use environment variables)
+- [ ] SQL queries parameterized (using Prisma)
+- [ ] Passwords hashed with bcrypt (12+ rounds)
+- [ ] JWT tokens use strong secret and expire
+- [ ] Authorization checks on all protected routes
+- [ ] No dangerouslySetInnerHTML without DOMPurify
+- [ ] No eval() or Function() with user input
+- [ ] CORS configured for specific origins
+- [ ] Error messages don't leak internal details
+- [ ] Security headers set correctly
+- [ ] Sensitive data excluded from API responses
+- [ ] Security events logged
+- [ ] Dependencies audited (npm audit)
+- [ ] HTTPS enforced in production

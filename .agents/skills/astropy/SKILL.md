@@ -1,11 +1,6 @@
 ---
 name: astropy
-description: "Astropy is the core Python package for astronomy, providing essential functionality for astronomical research and data analysis."
-license: BSD-3-Clause license
-metadata:
-    skill-author: K-Dense Inc.
-risk: unknown
-source: "https://github.com/astropy/astropy"
+description: Comprehensive Python library for astronomy and astrophysics. This skill should be used when working with astronomical data including celestial coordinates, physical units, FITS files, cosmological calculations, time systems, tables, world coordinate systems (WCS), and astronomical data analysis. Use when tasks involve coordinate transformations, unit conversions, FITS file manipulation, cosmological distance calculations, time scale conversions, or astronomical data processing.
 ---
 
 # Astropy
@@ -328,8 +323,3 @@ For detailed information on specific modules:
 - `references/tables.md` - Table creation, I/O, and operations
 - `references/time.md` - Time formats, scales, and calculations
 - `references/wcs_and_other_modules.md` - WCS, NDData, modeling, visualization, constants, and utilities
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

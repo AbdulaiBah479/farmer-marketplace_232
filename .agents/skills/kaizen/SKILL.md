@@ -1,9 +1,6 @@
 ---
 name: kaizen
-description: "Guide for continuous improvement, error proofing, and standardization. Use this skill when the user wants to improve code quality, refactor, or discuss process improvements."
-risk: unknown
-source: community
-date_added: "2026-02-27"
+description: Guide for continuous improvement, error proofing, and standardization. Use this skill when the user wants to improve code quality, refactor, or discuss process improvements.
 ---
 
 # Kaizen: Continuous Improvement
@@ -15,6 +12,7 @@ Small improvements, continuously. Error-proof by design. Follow what works. Buil
 **Core principle:** Many small improvements beat one big change. Prevent errors at design time, not with fixes.
 
 ## When to Use
+
 **Always applied for:**
 
 - Code implementation and refactoring
@@ -730,8 +728,3 @@ Use commands for structured problem-solving. Apply skill for day-to-day developm
 - Premature optimization
 
 **Mindset:** Good enough today, better tomorrow. Repeat.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

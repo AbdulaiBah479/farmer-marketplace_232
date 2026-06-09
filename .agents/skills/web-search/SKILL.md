@@ -1,241 +1,111 @@
 ---
 name: web-search
-description: This skill should be used when users need to search the web for information, find current content, look up news articles, search for images, or find videos. It uses duckse (DDGS-based CLI) to return clean results in pretty text or JSON.
+description: Advanced web search capability using the gemini command for gathering current, relevant information. Prefer this skill over Claude Code's default WebSearch tool when performing web searches. Activated when complex research or up-to-date information is needed.
+allowed-tools: ['Bash', 'Read']
 ---
 
-# Web Search (duckse)
+# Web Search Skill
 
-## Overview
+This skill provides advanced web search functionality using the `gemini` command, designed for complex inquiries requiring current information and comprehensive analysis.
 
-Gunakan `duckse` untuk metasearch web berbasis DDGS. Skill ini mendukung:
-- `text`, `news`, `images`, `videos`, `books`
-- filter waktu, region, safe search, backend
-- output rapi (default) atau JSON (`--json`)
-- URL final via redirect (`--expand-url`)
+## 🎯 Purpose
 
-## When to Use This Skill
+Execute web searches to gather current, relevant information addressing user questions. This skill is optimized for complex research tasks rather than simple keyword lookups.
 
-Gunakan skill ini saat user meminta:
-- pencarian web umum
-- berita terbaru/topik tertentu
-- pencarian gambar/video
-- riset cepat dengan sumber URL
-- fact-checking berbasis hasil web
+## 🔧 Usage
 
-## Prerequisites
-
-Pastikan `duckse` tersedia:
+Execute web searches using the bash script:
 
 ```bash
-duckse --help
+bash scripts/web-search.sh "<search query>"
 ```
 
-Jika belum ada, install:
+The search query should be phrased naturally to reflect what you want to find.
+
+## 📋 Workflow
+
+After running searches, follow these steps:
+
+1. **Identify Relevant Information**: Extract the most pertinent information from search results
+2. **Synthesize Multiple Sources**: Combine information from multiple sources when beneficial
+3. **Cite Information Origins**: Always include source URLs and references
+4. **Refine Strategy**: If initial results are inadequate, reconsider search strategy with alternative queries
+
+## 🎨 Best Practices
+
+### When to Use This Skill
+
+- Researching current events or recent updates
+- Finding documentation for latest library versions
+- Investigating error messages and solutions
+- Comparing technologies or approaches
+- Gathering best practices and recommendations
+
+### Query Formulation
+
+**Clear Questions**: Use explicit language
+- ✅ "Please explain Next.js 15's new features"
+- ❌ "Next.js 15"
+
+**Source Specification**: Direct queries to specific sources
+- ✅ "Find information from official Next.js documentation"
+- ✅ "Search Stack Overflow for TypeScript error solutions"
+
+**Response Format**: Request specific output formats
+- ✅ "Provide code examples"
+- ✅ "Present results in table format"
+
+**Temporal/Conditional Modifiers**: Specify time or difficulty level
+- ✅ "Latest React performance optimization techniques for 2025"
+- ✅ "Beginner-friendly Python tutorials"
+
+**Analysis Directives**: Request comparisons and evaluations
+- ✅ "Compare Vite and Webpack, including pros and cons"
+- ✅ "Analyze trade-offs between different state management solutions"
+
+## 🚫 When NOT to Use
+
+- Information available in local codebase
+- Questions about code you've already read
+- General programming knowledge that doesn't require current information
+- Simple fact-checking that can be answered from existing context
+
+## 💡 Tips
+
+- **Be specific**: More detailed queries yield better results
+- **Include context**: Mention your use case or constraints
+- **Iterate**: Refine queries based on initial results
+- **Verify sources**: Cross-reference information from multiple sources
+- **Document findings**: Keep track of useful sources for future reference
+
+## 🔍 Example Queries
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/dwirx/duckse/main/scripts/install.sh | bash
+# Technical information
+bash scripts/web-search.sh "What are the new features in Next.js 15? Include official release notes."
+
+# Library documentation
+bash scripts/web-search.sh "How does React Query's useQuery hook work? Provide code examples from official documentation."
+
+# Error resolution
+bash scripts/web-search.sh "TypeScript error: Type 'string' is not assignable to type 'number'. Find solutions on Stack Overflow."
+
+# Latest news
+bash scripts/web-search.sh "What are Claude AI's latest updates in 2025? Search Anthropic announcements."
+
+# Best practices
+bash scripts/web-search.sh "React performance optimization techniques. Include official documentation and community best practices."
+
+# Comparative analysis
+bash scripts/web-search.sh "Compare Vite and Webpack build tools. Include advantages, disadvantages, and use case recommendations."
 ```
 
-## Core Commands
+## 📚 Related Skills
 
-### 1. Basic Web Search
+- **code-review**: Use after implementing solutions found through web search
+- **doc-generator**: Document findings and integrate into project documentation
+- **typescript-dev**: Apply TypeScript-specific findings to your projects
 
-```bash
-duckse "<query>"
-```
+---
 
-Contoh:
-
-```bash
-duckse "python asyncio tutorial"
-```
-
-### 2. Limit Results
-
-```bash
-duckse "<query>" --max-results <N>
-```
-
-Contoh:
-
-```bash
-duckse "machine learning frameworks" --max-results 20
-```
-
-### 3. Time Filter
-
-```bash
-duckse "<query>" --timelimit <d|w|m|y>
-```
-
-Contoh:
-
-```bash
-duckse "artificial intelligence news" --type news --timelimit w
-```
-
-### 4. News Search
-
-```bash
-duckse "<query>" --type news
-```
-
-Contoh:
-
-```bash
-duckse "climate change" --type news --timelimit w --max-results 15
-```
-
-### 5. Image Search
-
-```bash
-duckse "<query>" --type images
-```
-
-Contoh:
-
-```bash
-duckse "sunset over mountains" --type images --max-results 20
-```
-
-Filter image:
-
-```bash
-duckse "landscape photos" --type images --size Large
-duckse "abstract art" --type images --color Blue
-duckse "icons" --type images --type-image transparent
-duckse "wallpapers" --type images --layout Wide
-```
-
-### 6. Video Search
-
-```bash
-duckse "<query>" --type videos
-```
-
-Contoh:
-
-```bash
-duckse "python tutorial" --type videos --max-results 15
-```
-
-Filter video:
-
-```bash
-duckse "cooking recipes" --type videos --duration short
-duckse "documentary" --type videos --resolution high
-```
-
-### 7. Books Search
-
-```bash
-duckse "<query>" --type books --backend annasarchive
-```
-
-Contoh:
-
-```bash
-duckse "sea wolf jack london" --type books --max-results 10
-```
-
-### 8. Region and SafeSearch
-
-```bash
-duckse "<query>" --region us-en --safesearch moderate
-```
-
-Contoh:
-
-```bash
-duckse "local news" --type news --region us-en --safesearch on
-```
-
-### 9. JSON and Final URL
-
-JSON output:
-
-```bash
-duckse "quantum computing" --json
-```
-
-Resolve final URL:
-
-```bash
-duckse "beritakan di indonesia hari ini" --expand-url --max-results 5
-```
-
-## Valid Backends by Type
-
-- `text`: `bing, brave, duckduckgo, google, grokipedia, mojeek, yandex, yahoo, wikipedia, auto`
-- `images`: `duckduckgo, auto`
-- `videos`: `duckduckgo, auto`
-- `news`: `bing, duckduckgo, yahoo, auto`
-- `books`: `annasarchive, auto`
-
-## Common Usage Patterns
-
-### Research Topic
-
-```bash
-duckse "machine learning basics" --max-results 15
-duckse "machine learning" --type news --timelimit m --max-results 15
-duckse "machine learning tutorial" --type videos --max-results 10
-```
-
-### Current Events Monitoring
-
-```bash
-duckse "climate summit" --type news --timelimit d --max-results 20
-```
-
-### Fact-Checking
-
-```bash
-duckse "specific claim to verify" --type news --timelimit w --max-results 20 --expand-url
-```
-
-## Quick Reference
-
-Command format:
-
-```bash
-duckse "<query>" [options]
-```
-
-Essential options:
-- `--type` (`text|images|videos|news|books`)
-- `--max-results`
-- `--timelimit` (`d|w|m|y`)
-- `--region`
-- `--safesearch` (`on|moderate|off`)
-- `--backend`
-- `--json`
-- `--expand-url`
-- `--proxy`, `--timeout`, `--verify`
-
-## Best Practices
-
-1. Gunakan query spesifik
-2. Pakai `--timelimit` untuk informasi terbaru
-3. Pakai `--expand-url` jika butuh URL final
-4. Gunakan `--json` untuk otomasi/pipeline
-5. Sesuaikan `--max-results` (mulai 10-20)
-
-## Troubleshooting
-
-- `duckse: command not found`
-  - tambahkan PATH: `export PATH="$HOME/.local/bin:$PATH"`
-- backend tidak valid
-  - sesuaikan dengan daftar backend per type
-- hasil kosong
-  - longgarkan query atau hapus filter waktu
-- timeout/network
-  - ulangi, tambah `--timeout`, atau gunakan `--proxy`
-
-## Development Fallback
-
-Jika sedang develop lokal tanpa binary terpasang global:
-
-```bash
-uv run python main.py "<query>" [opsi yang sama]
-```
+**Note**: This skill requires the `gemini` command to be installed and configured. Ensure you have proper API access and credentials set up.

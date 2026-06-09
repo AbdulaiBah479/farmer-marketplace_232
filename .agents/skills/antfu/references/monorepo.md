@@ -1,9 +1,11 @@
 ---
 name: monorepo
-description: Monorepo setup with pnpm workspaces, centralized aliases, and Turborepo. Use when creating or managing multi-package repositories.
+description: Anthony Fu's monorepo setup conventions using pnpm workspaces
 ---
 
 # Monorepo Setup
+
+Conventions for setting up and managing monorepos.
 
 ## pnpm Workspaces
 

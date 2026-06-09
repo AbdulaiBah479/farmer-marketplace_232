@@ -1,68 +1,119 @@
 ---
-name: work
-description: Find and start the next highest-priority expedition from the kanban board
+argument-hint: <task>
 disable-model-invocation: true
-allowed-tools: Bash(yurtle-kanban *), Bash(git *), Read
-argument-hint: "[EXP-XXX]"
+name: work
+user-invocable: true
+description: This skill should be run only when the user explicitly invokes it. Orchestrates end-to-end task implementation — understands the task, assesses complexity, implements directly or via a team of subagents for complex work, and always finishes with a code-polish pass.
 ---
 
-# Pick Up Work
+# Work
 
-Find and start work on an expedition. If an expedition ID is provided ($ARGUMENTS), start that one. Otherwise, find the next highest-priority ready item.
+Orchestrate end-to-end task implementation: understand the task, assess complexity, implement directly or distribute across a team, then polish the result.
 
-## Steps
+## Workflow
 
-### 1. Check Current Work
+### 1) Parse Task
 
-First, check if already working on something:
+Read the task description from `$ARGUMENTS`.
 
-```bash
-yurtle-kanban list --status in_progress
-```
+- If `$ARGUMENTS` is empty, ask the user for a task description and stop.
+- Extract key signals: scope (files, modules, components mentioned), action type (new feature, bug fix, refactor, migration), and any constraints.
+- Note any referenced issues, PRs, or URLs for later context gathering.
 
-If items are in progress, show them and ask if the user wants to continue or pick up new work.
+### 2) Assess Complexity
 
-### 2. Find Ready Work
+Classify the task as **simple** or **complex** using these heuristics:
 
-If no specific expedition requested:
+| Signal           | Simple                   | Complex                                       |
+| ---------------- | ------------------------ | --------------------------------------------- |
+| File count       | 1-3 files                | 4+ files                                      |
+| Module span      | Single module or package | Cross-module or cross-package                 |
+| Dependency chain | No new dependencies      | New packages or service integrations          |
+| Risk surface     | Low (UI, docs, config)   | High (auth, payments, data, infra)            |
+| Parallelism      | Sequential steps only    | Independent subtasks benefit from concurrency |
 
-```bash
-yurtle-kanban list --status ready --limit 5
-```
+A task is complex when **3 or more** signals fall in the complex column. When in doubt, prefer the simple path — team overhead is only justified when parallelism provides a real speedup.
 
-Show the top 5 ready items with their priorities.
+- **Simple** — proceed to Step 3.
+- **Complex** — proceed to Step 4.
 
-### 3. Start Work
+### 3) Implement (Simple Path)
 
-Once an expedition is selected (either from $ARGUMENTS or user choice):
+Execute the task directly without spawning subagents.
 
-```bash
-# Move to in_progress
-yurtle-kanban move EXP-XXX in_progress
+1. **Gather context**: Read all relevant files. Understand existing code, tests, and conventions.
+2. **Implement**: Make the changes. Follow project conventions inferred from existing code, linters, and formatters.
+3. **Verify**: Run the narrowest useful checks:
+   - Formatter/linter on touched files.
+   - Targeted tests for touched modules.
+   - Type check when relevant.
+   - If fast checks pass, run broader checks only when risk warrants it.
+4. Proceed to Step 5 (Polish).
 
-# Create expedition branch from main
-git checkout main
-git pull origin main
-git checkout -b expedition/exp-XXX-short-description
-```
+### 4) Implement (Complex Path)
 
-**IMPORTANT**: Expedition branches use the `expedition/exp-XXX-name` prefix and are never deleted (permanent memory).
+Distribute work across a team of subagents.
 
-### 4. Load Context
+#### 4a) Decompose
 
-Read the expedition file to understand the work:
+Break the task into independent subtasks. Each subtask should:
 
-```bash
-# Find and read the expedition file
-cat kanban-work/expeditions/EXP-XXX*.md
-```
+- Target a distinct set of files with minimal overlap.
+- Be completable without waiting on other subtasks (no circular dependencies).
+- Include clear acceptance criteria.
 
-Summarize:
-- What needs to be done (Build Steps)
-- Success criteria
-- Dependencies
-- Current status from Ship's Log
+Avoid over-decomposition. If subtasks cannot run in parallel, prefer the simple path.
 
-### 5. Ready to Work
+#### 4b) Create Team and Assign
 
-Confirm the expedition is loaded and ready to begin implementation.
+Create a team with a name derived from the task (e.g., "add-auth", "refactor-api"). Create a task for each subtask. Set up dependencies when ordering matters.
+
+Spawn implementation agents as teammates. Assign each agent one or more tasks.
+
+Recommended team sizing:
+
+- 1 agent per module when modules are independent.
+- Separate agent for shared utilities when consumers depend on them (utility blocks consumers).
+- Dedicated agent for tests if test volume is high.
+
+#### 4c) Coordinate
+
+Monitor progress. As agents complete tasks:
+
+- Review output for integration issues.
+- Resolve cross-agent conflicts (merge overlaps, API mismatches).
+- Assign follow-up tasks if gaps emerge.
+
+After all tasks complete:
+
+- Run integration verification: full test suite, type check, lint.
+- Fix any integration issues directly — do not re-spawn agents for small fixes.
+- Shut down teammates.
+- Proceed to Step 5 (Polish).
+
+### 5) Polish
+
+Invoke `/code-polish` to simplify and review all session-modified files.
+
+Wait for completion. If it reports residual risks or stop conditions, relay them to the user.
+
+This step is mandatory — always run it, even if the implementation seems clean.
+
+## Error Handling
+
+| Error                                | Response                                                      |
+| ------------------------------------ | ------------------------------------------------------------- |
+| Empty `$ARGUMENTS`                   | Ask for a task description and stop                           |
+| Verification failures after impl     | Attempt to fix; if unfixable, report to user before polishing |
+| Team agent fails or times out        | Reclaim the task and complete it directly                     |
+| `code-polish` reports stop condition | Relay to user with context                                    |
+
+## Stop Conditions
+
+Stop and ask for direction when:
+
+- The task description is ambiguous and multiple interpretations exist.
+- Implementation requires changing public APIs or breaking contracts not mentioned in the task.
+- The task scope grows beyond the original description during implementation.
+- External dependencies (APIs, services, packages) are unavailable or broken.
+- A CRITICAL security concern is discovered in existing code adjacent to the task.

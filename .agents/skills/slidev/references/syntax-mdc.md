@@ -1,9 +1,9 @@
 ---
-name: comark
-description: Comark Syntax support
+name: mdc
+description: MDC (Markdown Components) syntax support
 ---
 
-# Comark Syntax
+# MDC Syntax
 
 Enhanced Markdown with component and style syntax.
 
@@ -11,7 +11,7 @@ Enhanced Markdown with component and style syntax.
 
 ```md
 ---
-comark: true
+mdc: true
 ---
 ```
 
@@ -48,4 +48,4 @@ The **default** slot content
 - Add attributes to images
 - Create complex component layouts
 
-Based on Comark Syntax.
+Based on Nuxt's MDC (Markdown Components) syntax.

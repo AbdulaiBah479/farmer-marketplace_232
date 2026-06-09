@@ -1,433 +1,77 @@
 ---
-name: Vercel Deploy
-description: This skill should be used when the user asks to "deploy to Vercel", "deploy frontend", "push to production", "deploy my app", "go live on Vercel", or mentions Vercel deployment workflows.
-version: 1.0.0
+name: vercel-deploy
+description: |
+  Use when deploying Next.js applications to Vercel.
+  Triggers for: vercel.json configuration, build optimization, environment variable setup,
+  custom domain configuration, API proxy setup, or deployment troubleshooting.
+  NOT for: backend-only deployments, non-Vercel hosting, or local development setup.
 ---
 
-# Deploy to Vercel
+# Vercel Deployment Skill
 
-## Overview
+Expert deployment of Next.js applications to Vercel with optimal build settings, environment configuration, and custom domain setup.
 
-Vercel deployment automates frontend application deployment with zero-configuration builds, automatic SSL, and global CDN. This skill guides through production-ready Vercel deployments for modern web applications.
+## Quick Reference
 
-## Prerequisites Check
+| Task | File/Command |
+|------|--------------|
+| Configure build | `vercel.json` |
+| Set env vars | Vercel Dashboard or CLI |
+| Deploy | `vercel --prod` |
+| Check status | `vercel inspect` |
+| Custom domain | Vercel Dashboard > Settings > Domains |
 
-### Install Vercel CLI
-```bash
-npm install -g vercel
+## Project Structure
+
+```
+project/
+├── vercel.json              # Vercel configuration
+├── next.config.js           # Next.js configuration
+├── .env.local               # Local development (not committed)
+├── .env.example             # Template (committed)
+├── docs/
+│   └── deployment.md        # Deployment documentation
+└── frontend/                # Next.js app
+    ├── app/
+    ├── public/
+    └── src/
 ```
 
-### Authentication
-```bash
-vercel login
+## vercel.json Configuration
+
+### Basic Configuration
+
+```json
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "regions": ["iad1"],
+  "env": {
+    "NEXT_PUBLIC_API_URL": "@api_url"
+  }
+}
 ```
 
-### Verify Setup
-```bash
-vercel --version
-vercel whoami
-```
-
-## Project Configuration
-
-### Vercel Configuration File
-Create `vercel.json` in project root:
+### Advanced Configuration with Rewrites
 
 ```json
 {
   "version": 2,
-  "builds": [
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "regions": ["iad1"],
+
+  "rewrites": [
     {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
+      "source": "/api/:path*",
+      "destination": "https://api.yourdomain.com/:path*"
     }
   ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  },
-  "build": {
-    "env": {
-      "VITE_API_URL": "@api_url"
-    }
-  }
-}
-```
 
-### Build Configuration
-Ensure `package.json` has proper build scripts:
-
-```json
-{
-  "scripts": {
-    "build": "vite build",
-    "preview": "vite preview",
-    "type-check": "tsc --noEmit"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  }
-}
-```
-
-## Deployment Workflows
-
-### Production Deployment
-```bash
-# Deploy to production
-vercel --prod
-
-# Deploy with custom domain
-vercel --prod --domain your-app.com
-```
-
-### Preview Deployment
-```bash
-# Deploy preview (staging)
-vercel
-
-# Deploy specific branch preview
-vercel --target preview --git-branch staging
-```
-
-### Environment-Specific Deployment
-```bash
-# Deploy with environment
-vercel --prod --env NODE_ENV=production --env API_URL=https://api.production.com
-```
-
-## Environment Configuration
-
-### Environment Variables Setup
-```bash
-# Add production environment variables
-vercel env add VITE_API_URL production
-vercel env add VITE_APP_NAME production
-vercel env add DATABASE_URL production
-
-# Add preview environment variables
-vercel env add VITE_API_URL preview
-vercel env add DATABASE_URL preview
-
-# List all environment variables
-vercel env ls
-```
-
-### Local Environment Sync
-```bash
-# Pull environment variables to local
-vercel env pull .env.local
-
-# Link project to Vercel
-vercel link
-```
-
-## Framework-Specific Configurations
-
-### React/Vite Applications
-```json
-// vite.config.js
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-
-export default defineConfig({
-  plugins: [react()],
-  build: {
-    outDir: 'dist',
-    sourcemap: true,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          ui: ['@mui/material', '@emotion/react']
-        }
-      }
-    }
-  },
-  optimizeDeps: {
-    exclude: ['lucide-react']
-  }
-});
-```
-
-### Next.js Applications
-```javascript
-// next.config.js
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  experimental: {
-    appDir: true
-  },
-  images: {
-    domains: ['your-image-domain.com']
-  },
-  env: {
-    CUSTOM_KEY: process.env.CUSTOM_KEY
-  }
-};
-
-module.exports = nextConfig;
-```
-
-### SvelteKit Applications
-```javascript
-// svelte.config.js
-import adapter from '@sveltejs/adapter-vercel';
-
-export default {
-  kit: {
-    adapter: adapter({
-      runtime: 'nodejs18.x'
-    })
-  }
-};
-```
-
-## Custom Domain Setup
-
-### Add Custom Domain
-```bash
-# Add domain to Vercel project
-vercel domains add your-domain.com
-
-# Set domain as alias
-vercel alias set your-deployment-url.vercel.app your-domain.com
-```
-
-### DNS Configuration
-Update DNS records with your domain provider:
-
-```
-Type: CNAME
-Name: www
-Value: cname.vercel-dns.com
-
-Type: A
-Name: @
-Value: 76.76.19.61
-```
-
-## Advanced Deployment Features
-
-### Edge Functions
-```typescript
-// api/edge-function.ts
-import { NextRequest } from 'next/server';
-
-export const config = {
-  runtime: 'edge'
-};
-
-export default function handler(req: NextRequest) {
-  return new Response(
-    JSON.stringify({
-      message: 'Hello from Edge Function',
-      timestamp: new Date().toISOString(),
-      location: req.geo?.city || 'Unknown'
-    }),
-    {
-      status: 200,
-      headers: {
-        'content-type': 'application/json',
-        'cache-control': 'max-age=60'
-      }
-    }
-  );
-}
-```
-
-### Serverless Functions
-```javascript
-// api/serverless.js
-export default function handler(req, res) {
-  if (req.method === 'POST') {
-    // Handle POST request
-    const { data } = req.body;
-
-    res.status(200).json({
-      success: true,
-      message: 'Data processed',
-      data: data
-    });
-  } else {
-    res.setHeader('Allow', ['POST']);
-    res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
-```
-
-### ISR (Incremental Static Regeneration)
-```typescript
-// pages/products/[id].tsx
-export async function getStaticProps({ params }) {
-  const product = await fetchProduct(params.id);
-
-  return {
-    props: { product },
-    revalidate: 60 // Regenerate page every 60 seconds
-  };
-}
-
-export async function getStaticPaths() {
-  const products = await fetchProducts();
-
-  return {
-    paths: products.map(p => ({ params: { id: p.id } })),
-    fallback: 'blocking'
-  };
-}
-```
-
-## CI/CD Integration
-
-### GitHub Actions Deployment
-```yaml
-# .github/workflows/vercel-deployment.yml
-name: Deploy to Vercel
-
-on:
-  push:
-    branches: [main, staging]
-  pull_request:
-    branches: [main]
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v3
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: npm ci
-
-    - name: Run tests
-      run: npm test
-
-    - name: Build application
-      run: npm run build
-
-    - name: Deploy to Vercel
-      uses: amondnet/vercel-action@v25
-      with:
-        vercel-token: ${{ secrets.VERCEL_TOKEN }}
-        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-        vercel-args: '--prod'
-      if: github.ref == 'refs/heads/main'
-```
-
-### GitLab CI/CD
-```yaml
-# .gitlab-ci.yml
-stages:
-  - test
-  - build
-  - deploy
-
-variables:
-  NODE_VERSION: "18"
-
-test:
-  stage: test
-  image: node:$NODE_VERSION
-  script:
-    - npm ci
-    - npm run test
-    - npm run type-check
-
-build:
-  stage: build
-  image: node:$NODE_VERSION
-  script:
-    - npm ci
-    - npm run build
-  artifacts:
-    paths:
-      - dist/
-
-deploy_production:
-  stage: deploy
-  image: node:$NODE_VERSION
-  script:
-    - npm install -g vercel
-    - vercel --token $VERCEL_TOKEN --prod --yes
-  only:
-    - main
-  environment:
-    name: production
-    url: https://your-app.vercel.app
-```
-
-## Monitoring and Analytics
-
-### Vercel Analytics Integration
-```typescript
-// app/layout.tsx
-import { Analytics } from '@vercel/analytics/react';
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <html lang="en">
-      <body>
-        {children}
-        <Analytics />
-      </body>
-    </html>
-  );
-}
-```
-
-### Performance Monitoring
-```javascript
-// lib/analytics.js
-export function trackPageView(url) {
-  if (typeof window !== 'undefined' && window.gtag) {
-    window.gtag('config', 'GA_MEASUREMENT_ID', {
-      page_location: url
-    });
-  }
-}
-
-export function trackEvent(action, category, label, value) {
-  if (typeof window !== 'undefined' && window.gtag) {
-    window.gtag('event', action, {
-      event_category: category,
-      event_label: label,
-      value: value
-    });
-  }
-}
-```
-
-## Security Configuration
-
-### Security Headers
-```json
-// vercel.json
-{
   "headers": [
     {
       "source": "/(.*)",
@@ -443,102 +87,11 @@ export function trackEvent(action, category, label, value) {
         {
           "key": "X-XSS-Protection",
           "value": "1; mode=block"
-        },
-        {
-          "key": "Referrer-Policy",
-          "value": "strict-origin-when-cross-origin"
-        },
-        {
-          "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';"
         }
       ]
-    }
-  ]
-}
-```
-
-### Environment Security
-```bash
-# Secure environment variable management
-vercel env add SECRET_KEY production --sensitive
-vercel env add API_KEY production --sensitive
-
-# Use Vercel's built-in secrets
-vercel secrets add my-secret-name "secret-value"
-```
-
-## Troubleshooting Common Issues
-
-### Build Failures
-```bash
-# Check build logs
-vercel logs
-
-# Local build debugging
-vercel dev --debug
-
-# Clear build cache
-vercel --force
-```
-
-### Domain Issues
-```bash
-# Verify domain configuration
-vercel domains inspect your-domain.com
-
-# Check DNS propagation
-nslookup your-domain.com
-
-# Force SSL certificate renewal
-vercel certs issue your-domain.com
-```
-
-### Performance Issues
-```bash
-# Analyze bundle size
-npm install -g @vercel/ncc
-ncc analyze dist/
-
-# Check Core Web Vitals
-vercel inspect https://your-app.vercel.app
-```
-
-## Best Practices
-
-### Optimization Strategies
-
-**Code Splitting:**
-```javascript
-// Lazy load components
-const LazyComponent = React.lazy(() => import('./LazyComponent'));
-
-// Dynamic imports for large dependencies
-const loadChartLibrary = () => import('chart.js');
-```
-
-**Image Optimization:**
-```typescript
-// Next.js Image component
-import Image from 'next/image';
-
-<Image
-  src="/hero-image.jpg"
-  alt="Hero"
-  width={800}
-  height={600}
-  priority
-  placeholder="blur"
-  blurDataURL="data:image/jpeg;base64,..."
-/>
-```
-
-**Caching Strategy:**
-```json
-{
-  "headers": [
+    },
     {
-      "source": "/static/(.*)",
+      "source": "/static/:path*",
       "headers": [
         {
           "key": "Cache-Control",
@@ -547,54 +100,479 @@ import Image from 'next/image';
       ]
     },
     {
-      "source": "/api/(.*)",
+      "source": "/api/:path*",
       "headers": [
         {
-          "key": "Cache-Control",
-          "value": "s-maxage=60, stale-while-revalidate"
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
         }
       ]
+    }
+  ],
+
+  "redirects": [
+    {
+      "source": "/old-path/:path*",
+      "destination": "/new-path/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/www/:path*",
+      "destination": "/:path*",
+      "permanent": true
     }
   ]
 }
 ```
 
-### Deployment Checklist
+### Next.js Config Integration
 
-**Pre-Deployment:**
-- [ ] All tests pass locally
-- [ ] Build completes without errors
-- [ ] Environment variables configured
-- [ ] Dependencies up to date
-- [ ] Security headers configured
-- [ ] Performance optimizations applied
+```javascript
+// next.config.js
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // Output configuration for Vercel
+  output: 'standalone',
 
-**Post-Deployment:**
-- [ ] Deployment URL accessible
-- [ ] Custom domain working
-- [ ] SSL certificate valid
-- [ ] Analytics tracking functional
-- [ ] Error monitoring active
-- [ ] Performance metrics baseline established
+  // Image optimization
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'api.yourdomain.com',
+        pathname: '/uploads/**',
+      },
+    ],
+    formats: ['image/avif', 'image/webp'],
+  },
 
-## Additional Resources
+  // Headers for security
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'X-DNS-Prefetch-Control',
+            value: 'on',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'origin-when-cross-origin',
+          },
+        ],
+      },
+    ];
+  },
 
-### Reference Files
-For detailed deployment configurations, consult:
-- **`references/framework-configs.md`** - Framework-specific Vercel configurations
-- **`references/performance-optimization.md`** - Performance optimization strategies
-- **`references/security-best-practices.md`** - Security configuration guidelines
+  // Redirects
+  async redirects() {
+    return [
+      {
+        source: '/legacy/:path*',
+        destination: '/:path*',
+        permanent: true,
+      },
+    ];
+  },
 
-### Example Files
-Working deployment examples in `examples/`:
-- **`examples/react-vite-config.js`** - Complete React+Vite Vercel setup
-- **`examples/nextjs-deployment.js`** - Next.js deployment configuration
-- **`examples/ci-cd-pipeline.yml`** - Complete CI/CD pipeline
+  // Experimental features
+  experimental: {
+    serverActions: {
+      allowedOrigins: ['yourdomain.com'],
+    },
+  },
+};
 
-### Scripts
-Deployment utility scripts in `scripts/`:
-- **`scripts/deploy-production.sh`** - Automated production deployment
-- **`scripts/setup-vercel-project.sh`** - Initial Vercel project setup
-- **`scripts/performance-check.sh`** - Post-deployment performance validation
+module.exports = nextConfig;
+```
 
-Deploy modern web applications with confidence using Vercel's powerful platform and these production-ready configurations.
+## Environment Variables
+
+### Variable Naming Convention
+
+| Prefix | Access | Description |
+|--------|--------|-------------|
+| `NEXT_PUBLIC_` | Client + Server | Exposed to browser |
+| No prefix | Server only | Backend/API use only |
+
+### Required Variables
+
+```bash
+# .env.example - Copy to .env.local for local dev
+
+# API Configuration
+# Backend API URL (development)
+NEXT_PUBLIC_API_URL="http://localhost:8000/api/v1"
+
+# Authentication
+NEXT_PUBLIC_AUTH_ENABLED="true"
+
+# Feature Flags
+NEXT_PUBLIC_ENABLE_DARK_MODE="true"
+NEXT_PUBLIC_SHOW_BETA_FEATURES="false"
+```
+
+### Production Variables (Set in Vercel Dashboard)
+
+```bash
+# Environment variables for Production
+
+# API Configuration
+NEXT_PUBLIC_API_URL="https://api.yourdomain.com"
+
+# Optional: Analytics
+NEXT_PUBLIC_GA_ID="G-XXXXXXXXXX"
+NEXT_PUBLIC_POSTHOG_KEY="phc_xxx"
+
+# Optional: Error tracking
+NEXT_PUBLIC_SENTRY_DSN="https://xxx@sentry.io/xxx"
+```
+
+### Sensitive Variables (Server-Only)
+
+These should NOT have `NEXT_PUBLIC_` prefix:
+
+```bash
+# Server-only (never exposed to client)
+API_SECRET_KEY="vercel-secret-key"
+DATABASE_URL="postgresql://..."
+REDIS_URL="redis://..."
+```
+
+## Vercel CLI Deployment
+
+### Installation and Login
+
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Login to Vercel
+vercel login
+
+# Link to project
+cd frontend
+vercel link
+```
+
+### Deployment Commands
+
+```bash
+# Deploy to preview (staging)
+vercel
+
+# Deploy to production
+vercel --prod
+
+# Deploy with environment
+vercel --env=NODE_ENV=production
+
+# Pull environment variables from Vercel
+vercel env pull .env.local
+```
+
+### CI/CD Deployment
+
+```bash
+# In CI pipeline
+npm i -g vercel
+vercel --token=$VERCEL_TOKEN --yes
+```
+
+## Custom Domain Setup
+
+### Adding Domain in Vercel
+
+1. Go to Vercel Dashboard > Project > Settings > Domains
+2. Add your domain (e.g., `yourdomain.com`)
+3. Configure DNS records
+
+### DNS Configuration
+
+```dns
+# For root domain (yourdomain.com)
+Type: A
+Name: @
+Value: 76.76.21.21
+
+# For www subdomain
+Type: CNAME
+Name: www
+Value: cname.vercel-dns.com.
+
+# For API subdomain (optional)
+Type: CNAME
+Name: api
+Value: cname.vercel-dns.com.
+```
+
+### www to Root Redirect
+
+```json
+{
+  "redirects": [
+    {
+      "source": "/:path*",
+      "destination": "https://yourdomain.com/:path*",
+      "permanent": true
+    }
+  ]
+}
+```
+
+## API Proxy Setup
+
+### Option 1: Vercel Rewrites (Recommended)
+
+```json
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://api.yourdomain.com/:path*"
+    }
+  ]
+}
+```
+
+### Option 2: Next.js Rewrite
+
+```javascript
+// next.config.js
+async rewrites() {
+  return [
+    {
+      source: '/api/:path*',
+      destination: `${process.env.NEXT_PUBLIC_API_URL}/:path*`,
+    },
+  ];
+}
+```
+
+### Edge Function for API (Advanced)
+
+```typescript
+// frontend/app/api/[...route]/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+
+export async function GET(request: NextRequest) {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/v1/endpoint`,
+    {
+      headers: {
+        'Authorization': request.headers.get('Authorization') || '',
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  const data = await response.json();
+  return NextResponse.json(data);
+}
+```
+
+## Build Optimization
+
+### Build Command
+
+```bash
+# Standard build
+npm run build
+
+# With TypeScript check only
+npm run build -- --no-lint
+
+# Custom build
+next build
+```
+
+### Performance Settings
+
+```javascript
+// next.config.js
+const nextConfig = {
+  // Enable SWC minifier (faster builds)
+  swcMinify: true,
+
+  // Compiler options
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+
+  // Image optimization
+  images: {
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+  },
+
+  // Enable react strict mode
+  reactStrictMode: true,
+
+  // Generate Etag
+  generateEtags: true,
+};
+```
+
+### Bundle Analysis
+
+```bash
+# Install bundle analyzer
+npm install -D @next/bundle-analyzer
+
+# next.config.js
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
+module.exports = withBundleAnalyzer({
+  // your config
+});
+```
+
+## Error Pages
+
+### Custom 404 Page
+
+```typescript
+// frontend/app/not-found.tsx
+import Link from 'next/link';
+
+export default function NotFound() {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center">
+      <h1 className="text-4xl font-bold">404 - Page Not Found</h1>
+      <p className="mt-2 text-gray-600">
+        The page you're looking for doesn't exist.
+      </p>
+      <Link
+        href="/"
+        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded"
+      >
+        Go Home
+      </Link>
+    </div>
+  );
+}
+```
+
+### Custom 500 Page
+
+```typescript
+// frontend/app/error.tsx
+'use client';
+
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center">
+      <h1 className="text-4xl font-bold">Something went wrong!</h1>
+      <p className="mt-2 text-gray-600">
+        An unexpected error occurred.
+      </p>
+      <button
+        onClick={() => reset()}
+        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded"
+      >
+        Try Again
+      </button>
+    </div>
+  );
+}
+```
+
+### Global Error Boundary
+
+```typescript
+// frontend/app/global-error.tsx
+'use client';
+
+export default function GlobalError({
+  error,
+}: {
+  error: Error & { digest?: string };
+}) {
+  return (
+    <html>
+      <body>
+        <div className="min-h-screen flex items-center justify-center">
+          <h1 className="text-2xl">Application Error</h1>
+        </div>
+      </body>
+    </html>
+  );
+}
+```
+
+## Deployment Checklist
+
+- [ ] **Build succeeds locally**: `npm run build` completes without errors
+- [ ] **Build succeeds on Vercel**: Deploy preview builds correctly
+- [ ] **Correct API URLs**: NEXT_PUBLIC_API_URL points to correct environment
+- [ ] **No sensitive vars exposed**: No `NEXT_PUBLIC_` prefix on secrets
+- [ ] **404 page configured**: Custom not-found.tsx exists
+- [ ] **500 page configured**: Custom error.tsx exists
+- [ ] **Custom domain set up**: DNS records configured correctly
+- [ ] **HTTPS enforced**: Automatic SSL certificate
+- [ ] **Redirects configured**: www to root or vice versa
+- [ ] **Cache headers set**: Static assets properly cached
+
+## Deployment Documentation Template
+
+```markdown
+# Deployment Guide
+
+## Quick Deploy
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new)
+
+## Environment Variables
+
+### Development
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+```
+
+### Production
+```bash
+NEXT_PUBLIC_API_URL=https://api.yourdomain.com
+```
+
+## Custom Domain
+
+1. Add `yourdomain.com` in Vercel Dashboard > Settings > Domains
+2. Configure DNS:
+   - A record: `@` -> `76.76.21.21`
+   - CNAME: `www` -> `cname.vercel-dns.com`
+
+## Troubleshooting
+
+### Build Fails
+```bash
+# Run locally to see error
+npm run build
+```
+
+### Environment Variables Not Working
+- Check variable name starts with `NEXT_PUBLIC_` for client access
+- Redeploy after adding new variables
+
+### 404 on Production
+- Verify `vercel.json` outputDirectory matches build output
+- Check page files are in `app/` directory (App Router)
+```
+
+## Integration Points
+
+| Skill | Integration |
+|-------|-------------|
+| `@frontend-nextjs-app-router` | Next.js App Router configuration |
+| `@env-config` | Environment variable management |
+| `@tailwind-css` | CSS build optimization |
+| `@api-route-design` | API routes and rewrites |
+| `@error-handling` | Custom error pages |

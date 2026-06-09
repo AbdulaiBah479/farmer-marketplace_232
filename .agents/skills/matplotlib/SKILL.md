@@ -1,11 +1,6 @@
 ---
 name: matplotlib
-description: "Matplotlib is Python's foundational visualization library for creating static, animated, and interactive plots."
-license: https://github.com/matplotlib/matplotlib/tree/main/LICENSE
-metadata:
-    skill-author: K-Dense Inc.
-risk: unknown
-source: community
+description: "Foundational plotting library. Create line plots, scatter, bar, histograms, heatmaps, 3D, subplots, export PNG/PDF/SVG, for scientific visualization and publication figures."
 ---
 
 # Matplotlib
@@ -358,8 +353,3 @@ Matplotlib integrates well with:
 - Gallery: https://matplotlib.org/stable/gallery/index.html
 - Cheatsheets: https://matplotlib.org/cheatsheets/
 - Tutorials: https://matplotlib.org/stable/tutorials/index.html
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

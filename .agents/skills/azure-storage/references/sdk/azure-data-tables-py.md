@@ -8,9 +8,6 @@
 pip install azure-data-tables azure-identity
 
 ## Quick Start
-
-> **Auth:** `DefaultAzureCredential` is for local development. See [auth-best-practices.md](../auth-best-practices.md) for production patterns.
-
 ```python
 from azure.data.tables import TableClient
 from azure.identity import DefaultAzureCredential

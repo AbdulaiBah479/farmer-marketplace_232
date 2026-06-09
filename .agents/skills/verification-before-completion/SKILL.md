@@ -1,141 +1,164 @@
 ---
 name: verification-before-completion
-description: Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always
+description: |
+  Force verification before claiming success or completion. Prevents false "it works" claims.
+  Triggers when about to say "done", "complete", "works", "fixed", or "the implementation is ready".
+  Requires actually running builds/tests and showing output before claiming success.
 ---
 
 # Verification Before Completion
 
-## Overview
+Force verification before claiming success or completion. Prevents false "it works" claims.
 
-**Announce at start:** "Verification Before Completion skill activated."
+## Purpose
 
-Claiming work is complete without verification is dishonesty, not efficiency.
+Claude often claims things "work" or are "complete" without actually verifying. This skill ensures
+actual verification happens before any success claim.
 
-**Core principle:** Evidence before claims, always.
+## Triggers
 
-**Violating the letter of this rule is violating the spirit of this rule.**
+Activate this skill when you're about to say ANY of:
 
-## The Iron Law
+- "Done"
+- "Complete"
+- "Finished"
+- "Works"
+- "Fixed"
+- "The implementation is ready"
+- "This should work"
+- "I've implemented..."
 
-```
-NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE
-```
+## NEVER Claim Success Without
 
-If you haven't run the verification command in this message, you cannot claim it passes.
+### For Code Changes
 
-## The Gate Function
+- [ ] `dotnet build` passes (no errors)
+- [ ] `dotnet test` passes (or explicit reason why skipped)
+- [ ] No new warnings introduced
+- [ ] Actually ran the code and showed output
 
-```
-BEFORE claiming any status or expressing satisfaction:
+### For Factual Claims
 
-1. IDENTIFY: What command proves this claim?
-2. RUN: Execute the FULL command (fresh, complete)
-3. READ: Full output, check exit code, count failures
-4. VERIFY: Does output confirm the claim?
-   - If NO: State actual status with evidence
-   - If YES: State claim WITH evidence
-5. ONLY THEN: Make the claim
+- [ ] Verified against assertions.yaml
+- [ ] WebSearch if claim involves dates/versions/status
+- [ ] Source cited
 
-Skip any step = lying, not verifying
-```
+### For "It Works" Claims
 
-## Common Failures
+- [ ] Actually executed the code
+- [ ] Showed the output to user
+- [ ] Tested at least one edge case
 
-| Claim | Requires | Not Sufficient |
-|-------|----------|----------------|
-| Tests pass | Test command output: 0 failures | Previous run, "should pass" |
-| Linter clean | Linter output: 0 errors | Partial check, extrapolation |
-| Build succeeds | Build command: exit 0 | Linter passing, logs look good |
-| Bug fixed | Test original symptom: passes | Code changed, assumed fixed |
-| Regression test works | Red-green cycle verified | Test passes once |
-| Agent completed | VCS diff shows changes | Agent reports "success" |
-| Requirements met | Line-by-line checklist | Tests passing |
+### For "Bug Fixed" Claims
 
-## Red Flags - STOP
+- [ ] Reproduced the original bug
+- [ ] Applied the fix
+- [ ] Verified bug no longer occurs
+- [ ] Ran regression tests
 
-- Using "should", "probably", "seems to"
-- Expressing satisfaction before verification ("Great!", "Perfect!", "Done!", etc.)
-- About to commit/push/PR without verification
-- Trusting agent success reports
-- Relying on partial verification
-- Thinking "just this once"
-- Tired and wanting work over
-- **ANY wording implying success without having run verification**
+## Red Flag Thoughts (REJECT THESE)
 
-## Rationalization Prevention
+| If you're about to say... | Stop and... |
+|---------------------------|-------------|
+| "This should work" | Actually test it |
+| "The fix is complete" | Run the build |
+| "I've implemented the feature" | Show test output |
+| "The bug is fixed" | Reproduce - fix - verify |
+| ".NET 10 preview supports..." | WebSearch to verify version |
+| "This is the correct approach" | Cite source or run tests |
 
-| Excuse | Reality |
-|--------|---------|
-| "Should work now" | RUN the verification |
-| "I'm confident" | Confidence ≠ evidence |
-| "Just this once" | No exceptions |
-| "Linter passed" | Linter ≠ compiler |
-| "Agent said success" | Verify independently |
-| "I'm tired" | Exhaustion ≠ excuse |
-| "Partial check is enough" | Partial proves nothing |
-| "Different words so rule doesn't apply" | Spirit over letter |
+## Output Format
 
-## Key Patterns
+Before ANY completion claim, show:
 
-**Tests:**
-```
-✅ [Run test command] [See: 34/34 pass] "All tests pass"
-❌ "Should pass now" / "Looks correct"
-```
+```markdown
+## Verification Checklist
 
-**Regression tests (TDD Red-Green):**
-```
-✅ Write → Run (pass) → Revert fix → Run (MUST FAIL) → Restore → Run (pass)
-❌ "I've written a regression test" (without red-green verification)
-```
+### Build Status
 
-**Build:**
-```
-✅ [Run build] [See: exit 0] "Build passes"
-❌ "Linter passed" (linter doesn't check compilation)
+- [ ] `dotnet build` - [PASS/FAIL]
+- [ ] `dotnet test` - [PASS/FAIL/SKIPPED: reason]
+
+### Verification Steps Performed
+
+1. [What you actually did]
+2. [What output you saw]
+3. [What edge case you tested]
+
+### Confidence
+
+[high/medium/low] - [why]
+
+### Ready to Claim Complete
+
+[YES/NO] - [if NO, what's missing]
 ```
 
-**Requirements:**
-```
-✅ Re-read plan → Create checklist → Verify each → Report gaps or completion
-❌ "Tests pass, phase complete"
-```
+## Anti-Pattern Examples
 
-**Agent delegation:**
-```
-✅ Agent reports success → Check VCS diff → Verify changes → Report actual state
-❌ Trust agent report
+**WRONG:**
+
+```text
+"I've fixed the null reference bug. The implementation is complete."
+[No build run, no test run, no verification shown]
 ```
 
-## Why This Matters
+**CORRECT:**
 
-From 24 failure memories:
-- your human partner said "I don't believe you" - trust broken
-- Undefined functions shipped - would crash
-- Missing requirements shipped - incomplete features
-- Time wasted on false completion → redirect → rework
-- Violates: "Honesty is a core value. If you lie, you'll be replaced."
+```text
+"Let me verify the fix...
 
-## When To Apply
+$ dotnet build
+Build succeeded.
 
-**ALWAYS before:**
-- ANY variation of success/completion claims
-- ANY expression of satisfaction
-- ANY positive statement about work state
-- Committing, PR creation, task completion
-- Moving to next task
-- Delegating to agents
+$ dotnet test --filter "NullReferenceTests"
+Passed! 3/3 tests passing.
 
-**Rule applies to:**
-- Exact phrases
-- Paraphrases and synonyms
-- Implications of success
-- ANY communication suggesting completion/correctness
+Verification complete. The null reference bug is fixed."
+```
 
-## The Bottom Line
+**WRONG:**
 
-**No shortcuts for verification.**
+```text
+"This React component should render correctly now."
+```
 
-Run the command. Read the output. THEN claim the result.
+**CORRECT:**
 
-This is non-negotiable.
+```text
+"Let me verify...
+
+$ npm run dev
+[Shows browser screenshot or console output]
+
+Component renders correctly. Tested:
+- Initial load
+- Empty state
+- Error state
+
+Verification complete."
+```
+
+## Integration
+
+This skill is the FINAL checkpoint before claiming completion:
+
+```text
+[all other skills] - analysis complete
+     |
+[implementation] - code written
+     |
+[verification-before-completion] - THIS SKILL
+     |
+     +-- Run build
+     +-- Run tests
+     +-- Show output
+     +-- THEN claim success
+     |
+[Present to user] - "Ready to proceed?"
+```
+
+## The Golden Rule
+
+> **If you didn't run it, you don't know if it works.**
+> **If you didn't verify it, don't claim it's complete.**

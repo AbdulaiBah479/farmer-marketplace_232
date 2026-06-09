@@ -1,36 +1,34 @@
 ---
 name: anschluss-router
-description: "Einstieg, Schnelltriage und Fallrouting im Jurastudium-Plugin. Fragt Rolle, Ziel, Fristen, Unterlagen, Risiken und Wunsch-Output ab, schlägt passende Fachmodule aus diesem Plugin vor und führt in einen klaren Arbeitsplan. Bei Dokument-Upload ohne Begleittext reagiert der Skill eigenständig: ordnet das Material, prüft Eil- und Fristenhinweise, routet in passende Fachmodule oder stellt genau eine gezielte Rückfrage im Jurastudium: prüft konkret die einschlägigen Tatbestandsmerkmale, Fristen, Belege und Rechtsprechung. Liefert priorisierten Output mit Norm-Pinpoints, Risikoampel und nächstem Arbeitsschritt."
+description: "Einstieg, Schnelltriage und Fallrouting im Betreuungsrecht-Plugin für ehrenamtliche Familienbetreuer, Berufsbetreuer, Angehörige, Betroffene und anwaltliche Begleiter. Fragt Rolle, Aufgabenkreise, Fristen, Unterlagen, Risiken, Wunsch der betreuten Person und Ziel-Output ab, schlägt passende Fachm — Arbeitskontext: Betreuungsrecht, Schwerpunkt anschluss router."
 ---
 
-# Jurastudium — Allgemein
-
-## Arbeitsbereich
-
-Einstieg, Schnelltriage und Fallrouting im Jurastudium-Plugin. Fragt Rolle, Ziel, Fristen, Unterlagen, Risiken und Wunsch-Output ab, schlägt passende Fachmodule aus diesem Plugin vor und führt in einen klaren Arbeitsplan. Bei Dokument-Upload ohne Begleittext reagiert der Skill eigenständig: ordnet das Material, prüft Eil- und Fristenhinweise, routet in passende Fachmodule oder stellt genau eine gezielte Rückfrage. Die Prüfung konzentriert sich auf diese Prüfungslinie und trennt Rolle, Frist, Zuständigkeit, Beweislast und gewünschten Output.
+# Betreuungsrecht — Allgemein
 
 ## Arbeitsweg
 
 - Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
-- Fristen und Eilrisiken zuerst markieren: DRiG § 5a Studiendauer 9 Semester (Regelstudienzeit), Freischuss-Frist (i.d.R. 8 Semester nach JAG), Wiederholungsfrist, Hausarbeit 4-6 Wochen.
-- Tragende Normen verifizieren: DRiG §§ 5, 5a, 5b (Erste Prüfung), JAG der Länder, JAPO Bayern, JAG NRW, BBesG (Referendariat), Hochschulgesetze, Studienordnungen — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
-- Zuständige Stelle bestimmen und Adressaten richtig wählen: Studierende, Justizprüfungsamt (Landesjustizverwaltung), Universität, Repetitorium, Klausurleiter, Mündliche-Prüfungs-Kommission.
-- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Klausurgutachten (Anspruchsgrundlage, Tatbestand, Subsumtion, Ergebnis), Hausarbeit, Aktenvortrag (Referendar), Probeklausur, Prüfungsprotokoll — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
-
-## Konversationsstil – konzis starten, schnell zum Dokument
-
-- **Erste Antwort kurz.** Sachverhalt einordnen, höchstens **eine** unverzichtbare Rückfrage stellen, dann arbeiten.
-- **Kein Lehrbuch-Intro.** Keine Norm-Wiederholung, keine Selbstankündigung – sofort einsteigen.
-- **Schnell zum Dokument.** Sobald die Mindestangaben vorliegen, liefere einen ersten Entwurf mit `[noch zu klären: …]`-Platzhaltern, statt weiter abzufragen.
-- **Allgemein-Skill = Einstieg, nicht Vorlesung.** Triage, Rückfrage falls nötig, dann auf die Fachmodule dieses Plugins verweisen oder direkt den ersten Entwurf produzieren.
-- **Ausführlich nur, wenn es das Arbeitsergebnis verlangt:** echte Subsumtion im Gutachtenstil, Tabellen, Chronologien, Risiko-/Beweislastanalysen, Schriftsatz- oder Memo-Text.
-- **Erklärungen nur auf Nachfrage.** Wenn der Nutzer Hintergrund will, ausführlich. Sonst nicht.
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: BtOG — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
 
 ## Schnellstart-Workflow
 
-Dieser Allgemein-Skill ist der schöne, schnelle Eingang in das Plugin **Jurastudium**. Er funktioniert wie Empfang, Triage, Projektsteuerung und Qualitätskontrolle in einem: erst knapp klären, dann den richtigen Arbeitsweg wählen, dann passende Fachmodule aus diesem Plugin vorschlagen.
+Dieser Allgemein-Skill ist der schöne, schnelle Eingang in das Plugin **Betreuungsrecht**. Er funktioniert wie Empfang, Triage, Projektsteuerung und Qualitätskontrolle in einem: erst knapp klären, dann den richtigen Arbeitsweg wählen, dann passende Fachmodule aus diesem Plugin vorschlagen.
 
-**Plugin-Fokus:** Studium und Referendariat – Prüfungsgespräch nach AG-Tradition, Subsumtionslehre, Methodenlehre (Zivilrecht, Strafrecht, Öffentliches Recht), Rechtsgeschichte, Lernstrategien, Lösungsschemata, Gutachtenstil, Klausurkorrektur, Lernplanung.
+**Plugin-Fokus:** Betreuungsrechtliche Skills für ehrenamtliche Familienbetreuer und professionelle Betreuung: erster Monat, Scan-Akte, Kalender/Reminder, Gerichtskommunikation, Wunschermittlung, Jahresbericht, Vermögensverzeichnis, Genehmigungspflichten, Kontoanalyse, Verdachtsverträge und Schutzplan nach BtOG und BGB.
+
+### Ehrenamtlicher Familienbetreuer-Modus
+
+Wenn der Nutzer als Angehöriger, Familienbetreuer oder erstmaliger ehrenamtlicher Betreuer schreibt, führe besonders niedrigschwellig:
+
+1. **Beruhigen und ordnen:** Erst klären, ob überhaupt schon ein Beschluss vorliegt und welche Aufgabenkreise genau gelten.
+2. **Nicht überfordern:** keine juristische Gesamtabhandlung, sondern drei Ebenen: `heute`, `diese Woche`, `laufend beobachten`.
+3. **Schutz der betreuten Person:** Wunschermittlung nach § 1821 BGB, mildestes Mittel, keine automatische Bevormundung.
+4. **Gerichtstaugliche Ordnung:** Scans, Belege, Aktenzeichen, Fristen, Jahresbericht, Vermögensverzeichnis.
+5. **Hilfe aktivieren:** Betreuungsgericht, Betreuungsbehörde, Betreuungsverein, Verhinderungsbetreuung und anwaltliche Hilfe an den richtigen Stellen.
+6. **Überforderung ernst nehmen:** Bei Immobilien, Erbe, hohem Vermögen, Familienkonflikt, freiheitsentziehenden Maßnahmen, Zwangsbehandlung oder verworrener Vermögenslage früh eskalieren.
 
 ### 0. Stummer Upload — Material ohne Begleittext
 
@@ -67,7 +65,9 @@ Frage zu Beginn nur das ab, was für die Weichenstellung wirklich nötig ist. We
 
 | Punkt | Frage | Warum wichtig? |
 |---|---|---|
-| Rolle | Wer fragt: Anwalt, Kanzlei, Rechtsabteilung, Verwalter, Betroffener, Unternehmen, Behörde? | Perspektive und Ton bestimmen. |
+| Rolle | Wer fragt: betreute Person, Angehöriger/Familienbetreuer, ehrenamtlicher Betreuer, Berufs-/Vereinsbetreuer, Betreuungsbehörde, Anwalt? | Perspektive, Ton und Hilfen bestimmen. |
+| Aufgabenkreise | Welche Aufgabenkreise stehen im Beschluss: Vermögenssorge, Gesundheitssorge, Wohnen, Behörden, Post, Aufenthalt? | Nur innerhalb des Aufgabenkreises handeln. |
+| Wunsch | Was will die betreute Person selbst, heute oder früher erkennbar? | § 1821 BGB ist der Kern der Betreuung. |
 | Ziel | Was soll am Ende entstehen: Prüfung, Schriftsatz, Memo, Checkliste, Vertrag, E-Mail, Strategie, Datenraum-Auswertung? | Output sofort sauber ausrichten. |
 | Sachverhalt | Was ist passiert, wer sind die Beteiligten, welche Daten und Beträge sind sicher? | Keine Arbeit auf Luft bauen. |
 | Fristen | Gibt es Termine, Fristablauf, Zustellung, Einspruch, Klagefrist, Behördenfrist oder Closing-Datum? | Eilsachen zuerst sichern. |
@@ -122,148 +122,132 @@ Nutze als erste Antwort nach Aktivierung möglichst dieses kompakte Format:
 
 | Skill | Wann vorschlagen? |
 |---|---|
-| `ag-vorbereitung` | AG-Vorbereitung und Cold-Call-Prep für Jurastudium: Anwendungsfall Student wird im naechsten Seminar oder Arbeitsgemeinschaft aufgerufen und muss konkrete Faelle vorbereiten und Fragen des Dozenten antizipieren.… |
-| `examens-prognose` | Examensprognose auf Basis bisheriger JPA-Klausuren und BMJV-Statistiken: Anwendungsfall Student will Lernzeit auf wahrscheinliche Themen konzentrieren und fragt welche Schwerpunkte das Justizprüfungsamt bisher prüfte.… |
-| `examensvorbereitung-fragen` | Examensvorbereitungs-Fragen für 1. und 2. Staatsexamen erstellen: Anwendungsfall Student will Examenswissen durch gezielte Uebungsfragen trainieren und Schwachstellen erkennen. 1. StEx und 2. StEx, JAG Bundesland… |
-| `fall-zusammenfassung` | Juristischen Fall zusammenfassen und strukturieren: Anwendungsfall Student oder Referendar muss langen Sachverhalt oder Urteil in praegnante Fallzusammenfassung fassen und Kernprobleme herausarbeiten. Gutachtenstil,… |
-| `gliederungs-baukasten` | Gliederungs-Baukasten für juristische Hausarbeiten und Seminararbeiten: Anwendungsfall Student erstellt Gliederung für Hausarbeit Seminararbeit oder wissenschaftliche Arbeit und braucht strukturierten Aufbau.… |
-| `gutachten-uebung` | Gutachten Uebung für Jurastudium und Examensvorbereitung: Anwendungsfall Student bearbeitet Uebungsfall und soll Klausurtechnik Gutachtenstil Subsumtion und Zeitmanagement trainieren. Gutachtenstil mit Obersatz… |
-| `jurastudium-anpassen` | Lernprofil im Jurastudium anpassen und aktualisieren: Anwendungsfall Student wechselt Lernstil, aendert Studienschwerpunkte, wechselt Bundesland oder aktualisiert Prüfungsziel von Zwischenprüfung auf Examen. 1. und 2.… |
-| `jurastudium-kaltstart-interview` | Jurastudium-Einstieg und Lernprofil-Aufnahme: Anwendungsfall Student startet erstmals Jurastudium-Skill und muss Lernprofil Semester Bundesland Prüfungsziel und Lernstil konfigurieren. 1. StEx und 2. StEx, JAG… |
-| `juristisches-schreiben` | Juristisches Schreiben trainieren für Klausur und Seminararbeit: Anwendungsfall Student will Schreibstil verbessern und benoetigt Feedback zu Formulierungen Argumentationsstruktur und Praegnanz. Gutachtenstil,… |
-| `karteikarten` | Karteikarten für Jurastudium und Examensvorbereitung erstellen: Anwendungsfall Student will Definitionen Tatbestaende Normen und Klausurrelevante Faelle als Lernkarten strukturieren. Lösungsschemata, Tatbestaende,… |
-| `lernplan` | Erstellt oder aktualisiert einen strukturierten Lernplan für das Erste Staatsexamen, das Referendariat oder das Zweite Staatsexamen — phasenbezogen, nach Schwächen gewichtet, adaptiv nach Lernverlauf. Berücksichtigt… |
-| `lernsitzung` | Lernsitzung für Jurastudium interaktiv durchführen: Anwendungsfall Student will aktive Lernsitzung zu bestimmtem Thema absolvieren mit Erklärungen Uebungsaufgaben und sofortigem Feedback. Tatbestaende, Subsumtion,… |
-| `lernstrategien` | Lernstrategien für Jurastudium und Examensvorbereitung entwickeln: Anwendungsfall Student sucht effektive Lernmethoden für Examensvorbereitung und will Zeit und Energie optimal einsetzen. Examensvorbereitung 1. und 2.… |
-| `loesungsschemata` | Stellt klassische Lösungsschemata für die deutsche Juristenklausur bereit — Anspruchsprüfung, Verbrechensaufbau, Grundrechtsprüfung, Verhältnismäßigkeit, Klageart-Bestimmung, EBV, Bereicherung, GoA, c.i.c.,… |
-| `methodenlehre-grundlagen` | Übt die juristische Methodenlehre für Studierende — Auslegung nach Wortlaut/Systematik/Historie/Telos, Analogie, teleologische Reduktion, Auslegung gegen den Wortlaut, verfassungskonforme und unionsrechtskonforme… |
-| `methodenlehre-öffentliches-recht` | Übt die öffentlich-rechtliche Methodenlehre — Schichtenprüfung bei Grundrechten, Verhältnismäßigkeit, Ermessen und Ermessensfehler, Verwaltungsaktqualität, prozessuale Methodik der Klagearten, unionsrechtskonforme… |
-| `methodenlehre-strafrecht` | Übt die strafrechtliche Methodenlehre — dreistufiger Verbrechensaufbau (Tatbestand, Rechtswidrigkeit, Schuld), Trennung objektiver/subjektiver Tatbestand, Konkurrenzlehre (Tateinheit § 52, Tatmehrheit § 53,… |
-| `methodenlehre-zivilrecht` | Übt die zivilrechtliche Methodenlehre für Studierende — Anspruchsgrundlagen-Schema, AGL-Reihenfolge (vertraglich, vertragsähnlich, dinglich, deliktisch, bereicherungsrechtlich), Konkurrenzen, Auslegung von… |
-| `pruefungsgespraech-ag` | Prüfungsgespraech und Sokrates-Methode in Arbeitsgemeinschaft simulieren: Anwendungsfall Student will AG-Diskussion oder Dozentengespraeach simulieren und Argumentation trainieren. Subsumtion, Lösungsschemata,… |
-| `rechtsgeschichte` | Übt deutsche und europäische Rechtsgeschichte für Studierende — römisches Recht und die BGB-Entstehung 1900, NS-Unrechtsjustiz und die Folgen der Radbruchschen Formel, SED-Unrecht und Mauerschützenprozesse, Entstehung… |
-| `subsumtionslehre` | Übt die Subsumtion als Königsdisziplin der deutschen Klausur — Trennung Obersatz/Definition/Subsumtion/Ergebnis, Tatbestandsmerkmal für Tatbestandsmerkmal, mit Pushback bei Subsumtionssprüngen, vorweggenommener… |
-| `tatbestaende-lernen` | Tatbestaende lernen für Jurastudium und Examensvorbereitung: Anwendungsfall Student muss Tatbestaende und Definitionen sicher beherrschen für Klausuren und Examen. Lösungsschemata Tatbestandsmerkmale BGB Strafrecht… |
+| `ehrenamtlicher-betreuer-erster-monat` | Wenn ein Angehöriger oder ehrenamtlicher Betreuer neu bestellt ist und einen handhabbaren 30-Tage-Plan braucht. |
+| `familienbetreuer-alltagscockpit` | Wenn Post, Pflege, Bank, Heim, Arzt, Gericht und Behörden in einen Wochenplan gebracht werden sollen. |
+| `dokumentenscan-aktenablage-und-belegmappe` | Wenn Scans, Fotos, E-Mails, Kontoauszüge und Bescheide unsortiert vorliegen. |
+| `kalender-reminder-und-fristenmanagement` | Wenn Termine, Berichtspflichten, Bescheidfristen, Zahlungen und Routinekontakte in Reminder übersetzt werden sollen. |
+| `betreuungsgericht-kommunikation-für-angehoerige` | Wenn ein knapper Brief, eine Rückfrage, Fristverlängerung oder Genehmigungsanfrage ans Gericht benötigt wird. |
+| `wunschermittlung-unterstuetzte-entscheidung` | Wenn unklar ist, was die betreute Person will oder wie ihr Wunsch dokumentiert werden soll. |
+| `betreuungsverein-behoerde-hilfe-holen` | Wenn der ehrenamtliche Betreuer Unterstützung, Einführung, Fortbildung oder Anbindung braucht. |
+| `ueberforderung-verhinderung-und-abgabe` | Wenn der Betreuer merkt, dass Zeit, Krankheit, Konflikt oder Komplexität die Betreuung gefährden. |
+| `schutzplan-betreute-person-risikoampel` | Wenn Gesundheits-, Wohn-, Vermögens-, Digitalbetrugs- oder Pflegerisiken schnell priorisiert werden müssen. |
+| `familienkonflikt-grenzen-und-rollen` | Wenn Angehörige streiten, Auskunft verlangen, Druck machen oder Eigeninteressen im Raum stehen. |
+| Rechtsprechung live prüfen | Keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über amtliche oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren. |
+| `betreuer-registrierung` | Erklärt die Abgrenzung beruflicher / ehrenamtlicher (privater) Betreuer nach BtOG seit 01.01.2023 sowie den Weg zur Registrierung als beruflicher Betreuer nach Paragraphen 23 ff. BtOG und der… |
+| `betreuungsrecht-kaltstart-interview` | Kaltstart-Interview für das Betreuungsrecht-Plugin. Befüllt das Praxisprofil unter ~/.claude/plugins/config/claude-fuer-deutsches-recht/betreuungsrecht/CLAUDE.md mit Angaben zur Betreuerrolle (Berufsbetreuer /… |
+| `genehmigungspflicht-pruefung` | Prüft, ob ein konkretes Rechtsgeschäft, eine Maßnahme oder eine Entscheidung des Betreuers der Genehmigung des Betreuungsgerichts bedarf (§§ 1848 ff. BGB) — etwa Grundstücksverkauf, Erbausschlagung,… |
+| `jahresbericht-betreuungsgericht` | Jahresbericht, Anfangsbericht oder Schlussbericht nach § 1863 BGB erstellen und sauber von Vermögensverzeichnis/Rechnungslegung trennen. |
+| `kontodaten-vertragsverdacht-pruefung` | Kontoauszüge und Vertragsunterlagen in Betreuungsfällen auf Missbrauch prüfen: Anwendungsfall Betreuer oder Betreuungsgericht hat Verdacht auf ungewöhnliche Zahlungen verdächtige Dauerverträge oder Anlagegeschäfte zum… |
+| `vermoegensverzeichnis-pruefung` | Vermögensverzeichnis für Betreuung prüfen und erstellen: Anwendungsfall Betreuer muss nach § 1835 BGB Vermögensverzeichnis aufnehmen oder bestehendes Verzeichnis auf Vollständigkeit und Richtigkeit prüfen. § 1835 BGB… |
 
 ## Worum geht es?
 
-Dieses Plugin unterstuetzt Jurastudenten und Referendare bei allen Phasen der juristischen Ausbildung: von der Einuebung des Gutachtenstils und der Subsumtion ueber die Methodenlehre in allen drei Hauptrechtsgebieten bis hin zur strukturierten Examensvorbereitung. Es orientiert sich an der AG-Tradition (Arbeitsgemeinschaft) und an den Anforderungen des Ersten und Zweiten Staatsexamens in deutschen Bundeslaendern.
+Das Betreuungsrecht regelt die rechtliche Fuersorge für Erwachsene, die ihre Angelegenheiten ganz oder teilweise nicht selbst besorgen koennen. Seit der Reform zum 01.01.2023 gilt das Betreuungsorganisationsgesetz (BtOG) neben den materiellen Normen der §§ 1814 ff. BGB. Das Reformgesetz staerkt das Selbstbestimmungsrecht der betreuten Person, praezisiert die Pflichten des Betreuers und regelt erstmals umfassend die Registrierung und Verguetung beruflicher Betreuer.
 
-Das Plugin ist kein Rechtsgutachten-Generator für echte Mandate, sondern ein Lernassistent: interaktive Uebungen, Feedback zu Gutachten, Karteikarten, Lernplaene und Pruefungsgespraeche stehen im Vordergrund.
+Dieses Plugin unterstützt ehrenamtliche Familienbetreuer, berufliche Betreuer, Vereins- und Behördenbetreuer sowie deren Rechtsbeistände bei der täglich anfallenden Schutz-, Organisations-, Dokumentations-, Berichts- und Genehmigungsarbeit gegenüber betreuter Person, Betreuungsgericht, Behörden, Banken, Heimen, Ärzten und Pflegekassen.
 
 ## Wann brauchen Sie diese Skill?
 
-- Sie bereiten sich auf eine Klausur oder das Erste Staatsexamen vor und benoetigen strukturierte Uebungsaufgaben mit Feedback.
-- Sie wollen den Gutachtenstil, die Subsumtion oder die juristische Methodenlehre gezielt trainieren.
-- Sie muessen einen Lernplan für die Examensvorbereitung erstellen und nach Schwaechen gewichten.
-- Sie bereiten sich auf ein Pruefungsgespraeach oder eine AG-Diskussion vor und wollen moegliche Dozentenfragen antizipieren.
-- Sie suchen Loesungsschemata für Zivilrecht, Strafrecht oder öffentliches Recht als Orientierungsrahmen für die Klausurbearbeitung.
+- Sie sind als Angehöriger oder ehrenamtlicher Betreuer neu bestellt und wollen nichts falsch machen.
+- Sie müssen Post scannen, Bescheide verstehen, Fristen notieren und mit Gericht, Bank, Heim oder Pflegekasse kommunizieren.
+- Sie sind neu im Betreuungsrecht und möchten einen strukturierten Einstieg in Zuständigkeiten, Aufgabenkreise und Pflichten.
+- Sie sind bereits Betreuer und wollen pruefen, welches Rechtsgeschaeft genehmigungspflichtig ist.
+- Sie müssen den Jahresbericht nach § 1863 BGB für das Betreuungsgericht erstellen.
+- Sie haben Zweifel, ob Kontobewegungen oder Vertraege der betreuten Person auf Missbrauch hindeuten.
+- Sie moechten wissen, ob Sie als Berufsbetreuer testamentarisch bedacht werden duerfen.
 
 ## Fachbegriffe (kurz erklaert)
 
-- **Gutachtenstil** — Der klassische juristische Schreibstil mit Obersatz, Definition, Subsumtion und Ergebnis je Tatbestandsmerkmal.
-- **Urteilsstil** — Umgekehrte Reihenfolge: Ergebnis zuerst, dann Begruendung; im Urteil und in bestimmten Klausurteilen.
-- **Subsumtion** — Einordnung des Sachverhalts unter die Definition eines Tatbestandsmerkmals.
-- **Loesungsschema** — Strukturierter Pruefungsaufbau für ein Rechtsgebiet (z.B. Anspruchspruefungsschema BGB, Verbrechensaufbau StGB).
-- **AG** — Arbeitsgemeinschaft; Kleingruppenveranstaltung im Jurastudium mit Sokrates-Methode und Fallbearbeitung.
-- **JPA** — Justizpruefungsamt; prueft das Erste Staatsexamen (Erste Juristische Pruefung).
-- **Repetitorium** — Kommerzielle Vorbereitungskurse für das Erste oder Zweite Staatsexamen (z.B. Alpmann, Hemmer, Kaiser).
+- **Betreuer** — vom Betreuungsgericht bestellte Person (§ 1814 BGB), die die betreute Person in bestimmten Aufgabenkreisen rechtlich vertritt.
+- **Aufgabenkreis** — der konkret durch das Gericht festgelegte Wirkungsbereich des Betreuers (z.B. Vermögenssorge, Gesundheitssorge, Aufenthaltsbestimmung).
+- **Berufsbetreuer** — registrierter Betreuer nach §§ 23 ff. BtOG, der Betreuungen entgeltlich fuehrt und bestimmte Sachkundeanforderungen erfuellt.
+- **Genehmigungsvorbehalt** — Rechtsgeschaefte, die der Betreuer nur mit vorheriger Zustimmung des Betreuungsgerichts vornehmen darf (§§ 1848 ff. BGB).
+- **Vermögensverzeichnis** — Aufstellung aller Vermoegensgegenstaende und Verbindlichkeiten der betreuten Person bei Amtsuebernahme (§ 1835 BGB).
+- **Jahresbericht** — jährliche Berichtspflicht des Betreuers gegenüber dem Betreuungsgericht (§ 1863 Abs. 3 BGB).
+- **Betreuungsverein** — anerkannte Stelle, die ehrenamtliche Betreuer einführt, fortbildet, berät und unterstützen kann (§ 15 BtOG).
+- **VBVG** — Vergütung beruflicher Betreuer nach dem Vormünder- und Betreuervergütungsgesetz.
 
 ## Rechtsgrundlagen
 
-- §§ 133, 157 BGB — Auslegung von Willenserklaerungen
-- §§ 195 ff. BGB — Verjährung (klausurrelevant)
-- §§ 305 ff. BGB — AGB-Recht (Auslegungsfragen)
-- Art. 103 Abs. 2 GG — Analogieverbot im Strafrecht
-- §§ 52, 53 StGB — Tateinheit, Tatmehrheit (Konkurrenzlehre)
-- Art. 267 AEUV — Vorabentscheidungsverfahren (Methodenlehre EU-Recht)
-- JAG der jeweiligen Bundeslaender — Zugelassene Hilfsmittel, Themenbereiche Staatsexamen
+- § 1814 BGB — Voraussetzungen der Betreuung
+- §§ 1816 ff. BGB — Auswahl und Eignung des Betreuers
+- § 1821 BGB — Pflichten des Betreuers und Wünsche der betreuten Person
+- §§ 1835 ff. BGB — Vermögensverzeichnis und Rechnungslegung
+- § 1863 BGB — Anfangsbericht, Jahresbericht und Schlussbericht
+- §§ 15, 21, 22 BtOG — Unterstützung, Eignung und Anbindung ehrenamtlicher Betreuer
+- §§ 1848 ff. BGB — Genehmigungspflichtige Rechtsgeschaefte
+- § 30 BtOG — Verbot des Erwerbs von Vermoegensvorteilen
+- §§ 23 ff. BtOG — Registrierung als Berufsbetreuer
+- VBVG — Verguetung beruflicher Betreuer
 
 ## Schritt-für-Schritt: Einstieg ins Plugin
 
-1. Mandantenkonstellation klaeren: Welche Ausbildungsphase (Studium, Repetitorium, Referendariat, Zweites Staatsexamen), welches Bundesland, welche Schwerpunkte.
-2. Phase des Mandats bestimmen: Konfiguration, Lernplanung, Uebung, Klausurtraining oder Pruefungsgespraeach.
-3. Passenden Skill auswaehlen (siehe Skill-Tour).
-4. Lernprofil konfigurieren mit `jurastudium-kaltstart-interview` wenn Plugin erstmals genutzt wird.
-5. Anschluss-Skill bestimmen: nach Lernplan typischerweise Lernsitzung oder Gutachten-Uebung; nach Examens-Prognose gezieltes Thementraining.
+1. Rolle klären: betreute Person, Angehöriger, ehrenamtlicher Betreuer, Berufsbetreuer, Verein/Behörde oder anwaltliche Begleitung?
+2. Phase des Mandats bestimmen: Ersteinrichtung (Registrierung, Vermögensverzeichnis), laufende Betreuung (Jahresbericht, Genehmigungen) oder Krisenfall (Missbrauchsverdacht, Erbschaftsfragen)?
+3. Passenden Skill auswaehlen (siehe Skill-Tour unten).
+4. Eilfristen pruefen: Genehmigungsantraege nach §§ 1848 ff. BGB sind vor der Massnahme einzuholen; Jahresbericht hat gerichtliche Einreichungsfristen.
+5. Anschluss-Skill bestimmen: Nach Jahresbericht ggf. Vermoegensverzechnis-Pruefung; nach Missbrauchsverdacht ggf. Genehmigungspflicht-Pruefung.
 
 ## Skill-Tour (was gibt es hier?)
 
-**Konfiguration**
-
-- `jurastudium-kaltstart-interview` — Ersteinrichtung: Lernprofil, Semester, Bundesland, Pruefungsziel und Lernstil aufnehmen.
-- `jurastudium-anpassen` — Lernprofil aktualisieren: Lernstil aendern, Schwerpunkte anpassen, Bundesland wechseln.
-
-**Lernplanung**
-
-- `lernplan` — Strukturierten Lernplan erstellen für Erstes Staatsexamen, Referendariat oder Zweites Staatsexamen; phasenbezogen und nach Schwaechen gewichtet.
-- `lernstrategien` — Effektive Lernmethoden entwickeln: Spaced-Repetition, aktives Erinnern, Priorisierung nach Pruefungsrelevanz.
-- `examens-prognose` — Gewichtete Themenliste mit Lernprioritaet auf Basis bisheriger JPA-Klausuren und BMJV-Statistiken.
-
-**Lernen und Ueben**
-
-- `lernsitzung` — Interaktive Lernsitzung zu bestimmtem Thema mit Erklaerungen, Uebungsaufgaben und sofortigem Feedback.
-- `karteikarten` — Karteikarten für Definitionen, Tatbestaende und Normen für Spaced-Repetition erstellen.
-- `tatbestaende-lernen` — Tatbestaende und Definitionen sicher einueben mit Abgrenzungshinweisen und Examensrelevanz.
-- `fall-zusammenfassung` — Langen Sachverhalt oder Urteil in praegnante Fallzusammenfassung fassen.
-
-**Gutachten und Klausurtechnik**
-
-- `gutachten-uebung` — Gutachten-Uebung: Klausurtechnik, Gutachtenstil, Subsumtion und Zeitmanagement trainieren.
-- `juristisches-schreiben` — Schreibstil verbessern: Feedback zu Formulierungen, Argumentationsstruktur und Praegnanz.
-- `gliederungs-baukasten` — Gliederung für Hausarbeiten und Seminararbeiten strukturiert aufbauen.
-- `examensvorbereitung-fragen` — Uebungsfragen für Erstes und Zweites Staatsexamen mit Musterloesungen und Schwachstellen-Hinweis.
-
-**Pruefungsgespraeach und AG**
-
-- `pruefungsgespraech-ag` — AG-Diskussion oder Dozentengespraeach simulieren und Argumentation mit Sokrates-Methode trainieren.
-- `ag-vorbereitung` — Cold-Call-Vorbereitung: Faelle für Seminar oder AG aufbereiten und Dozentenfragen antizipieren.
-
-**Methodenlehre**
-
-- `subsumtionslehre` — Subsumtion als Koenigsdisziplin der deutschen Klausur einueben; Pushback bei Subsumtionsspruengen.
-- `methodenlehre-grundlagen` — Juristische Methodenlehre: Wortlaut, Systematik, Historie, Telos, Analogie, teleologische Reduktion.
-- `methodenlehre-zivilrecht` — Zivilrechtliche Methodenlehre: AGL-Reihenfolge, Willenserklaerungs-Auslegung, AGB-Auslegung.
-- `methodenlehre-strafrecht` — Strafrechtliche Methodenlehre: dreistufiger Verbrechensaufbau, Konkurrenzlehre, Analogieverbot.
-- `methodenlehre-öffentliches-recht` — Oeffentlich-rechtliche Methodenlehre: Grundrechtspruefung, Verhaeltnismaessigkeit, Ermessen, Klageart.
-
-**Loesungsschemata und Rechtsgeschichte**
-
-- `loesungsschemata` — Klassische Loesungsschemata: Anspruchspruefung, Verbrechensaufbau, Grundrechtspruefung und weitere.
-- `rechtsgeschichte` — Deutsche und europaeische Rechtsgeschichte: roemisches Recht, BGB-Entstehung, NS-Justiz, SED-Unrecht, GG-Genese.
+- `ehrenamtlicher-betreuer-erster-monat` — erste 30 Tage nach Bestellung: Beschluss, Hilfe-System, Akte, Fristen, Gericht.
+- `familienbetreuer-alltagscockpit` — Wochensteuerung für Post, Pflege, Bank, Arzt, Heim, Behörden und Gericht.
+- `dokumentenscan-aktenablage-und-belegmappe` — macht aus Scans und Fotos eine gerichtstaugliche Belegmappe.
+- `kalender-reminder-und-fristenmanagement` — baut aus Bescheiden, Gerichtspost und Routinepflichten einen Reminderplan.
+- `betreuungsgericht-kommunikation-für-angehoerige` — formuliert knappe Rückfragen, Sachstandsmitteilungen und Genehmigungsanfragen.
+- `wunschermittlung-unterstuetzte-entscheidung` — dokumentiert Wünsche, Präferenzen und unterstützte Entscheidungen nach § 1821 BGB.
+- `betreuungsrecht-kaltstart-interview` — Ersteinrichtung des Plugins: Praxisprofil mit Betreuerrolle, Gericht und Aufgabenkreisen anlegen.
+- `betreuer-registrierung` — Erklaert Registrierungsweg, Sachkundeanforderungen und Berufshaftpflicht für Berufsbetreuer nach BtOG.
+- `genehmigungspflicht-pruefung` — Prueft, ob ein konkretes Rechtsgeschaeft der Genehmigung des Betreuungsgerichts bedarf (§§ 1848 ff. BGB).
+- `jahresbericht-betreuungsgericht` — Erstellt den vollständigen Jahresbericht nach § 1863 BGB für das Betreuungsgericht.
+- `vermoegensverzeichnis-pruefung` — Erstellt und prueft das Vermögensverzeichnis nach § 1835 BGB bei Amtsuebernahme oder Kontrollpruefung.
+- `kontodaten-vertragsverdacht-pruefung` — Forensische Pruefung von Kontobewegungen und Vertraegen auf Missbrauch zum Nachteil der betreuten Person.
+- `betreuer-als-erbe` — Beraet zur Zulaessigkeit testamentarischer Zuwendungen an Berufsbetreuer nach § 30 BtOG.
 
 ## Worauf besonders achten
 
-- **Lernprofil zu Beginn konfigurieren.** Skill `jurastudium-kaltstart-interview` muss vor anderen Skills ausgefuehrt werden; ohne Bundesland und Pruefungsziel sind Empfehlungen unscharf.
-- **Schemata sind keine Dogmatik.** Loesungsschemata koennen das Verstaendnis unterstuetzen, sind aber nie zwingend; Abweichungen und Kontroversen erkennen.
-- **Zeitmanagement in der Klausur.** Ein haeufiger Fehler ist Ueberschreiten der Zeit im Oberteil; Skill `gutachten-uebung` simuliert Zeitlimit.
-- **Bundesland-Varianten beachten.** JAG-Anforderungen und zugelassene Hilfsmittel variieren; Prognosen und Lernplaene immer bundesland-spezifisch konfigurieren.
-- **Subsumtionsspruenge erkennen.** Das Plugin gibt aktiv Pushback, wenn Definition und Sachverhalt uebersprungen werden.
+- **Genehmigung vor der Massnahme**: Genehmigungspflichtige Rechtsgeschaefte (§§ 1848 ff. BGB) darf der Betreuer erst nach Erteilung der Genehmigung vornehmen; ein nachtraegliches Genehmigungsverfahren ist nur in engen Ausnahmefaellen moeglich.
+- **Subsidiaritaet**: Ein Berufsbetreuer darf nur bestellt werden, wenn geeignete ehrenamtliche oder Angehoerigenbetreuer nicht zur Verfuegung stehen (§ 1816 Abs. 5 BGB).
+- **Unterstützung vor Vertretung**: Erst die betreute Person zur eigenen Entscheidung befähigen; Vertretungsmacht nur nutzen, soweit erforderlich (§ 1821 Abs. 1 BGB).
+- **Trennung von Betreuervermoegen und eigenem Vermoegen**: Einnahmen und Ausgaben der betreuten Person sind lückenlos zu dokumentieren; Vermischung mit eigenem Vermögen ist ein Haftungsrisiko (§ 1836 BGB).
+- **§ 30 BtOG-Verbot**: Berufsbetreuer duerfen sich von der betreuten Person keine Vermoegensvorteile versprechen oder gewähren lassen; Verstoss ist berufsrechtlich relevant.
 
 ## Typische Fehler
 
-- Gutachten beginnt mit dem Ergebnis statt mit dem Obersatz; Urteilsstil und Gutachtenstil werden vermischt.
-- Definitionen werden aus dem Kopf formuliert statt aus herrschender Meinung und Rechtsprechung abgeleitet.
-- Einreden und Gegenansprueche werden nicht geprueft; Subsumtion endet bei der anspruchsbegruendenden Norm.
-- Zeitlimit wird nicht simuliert; in der echten Klausur fehlt Zeit für spaetere Punkte.
-- Rechtsgeschichte und Methodenlehre werden als prueflungsirrelevant abgetan; beide koennen im Staatsexamen gefragt werden.
-
-## Querverweise
-
-- `subsumtions-pruefer` — Fuer vertiefte mechanische Subsumtion von Normen ausserhalb des Lernkontexts.
-- `verfassungsrecht` — Fuer vertiefte Verfassungsrechtsfragen im öffentlichen Recht.
-- `gesellschaftsrecht` — Wenn gesellschaftsrechtliche Faelle im Studium behandelt werden.
+- Jahresbericht, Vermögensverzeichnis und Rechnungslegung werden zusammengeworfen: § 1863 BGB, § 1835 BGB und Vermögens-/Rechnungslegungspflichten sind sauber zu trennen.
+- Genehmigungen werden nach der Massnahme beantragt: Insbesondere bei Grundstuecksveraeusserungen und Heimvertraegen laeuft der Betreuer in eine Unwirksamkeitsfalle.
+- Vermögensverzeichnis wird bei Amtsantritt vergessen oder unvollstaendig aufgestellt: Das Gericht kann spaeter keine Veraenderungen mehr nachvollziehen.
+- Berufsrechtliche Konsequenzen von § 30 BtOG werden unterschaetzt: Ein Testament zugunsten des Betreuers ist zivilrechtlich nicht automatisch nichtig (OLG Nuernberg 19.07.2023), kann aber berufsrechtliche Folgen nach § 27 BtOG ausloesen.
+- Subsidiaritaetsprinzip wird nicht geprueft: Wenn ein geeigneter Angehoeriger vorhanden ist, darf kein Berufsbetreuer bestellt werden.
 
 ## Quellen und Aktualitaet
 
-- Stand: 05/2026
-- Gesetzesfassungen zum Stand-Datum (BGB, StGB, GG, ZPO, VwGO, HGB, AEUV)
-- Repetitoriumskalender: Alpmann, Hemmer, Jura Intensiv, Kaiser-Skripten in aktueller Auflage
+- Stand: 06/2026
+- BGB §§ 1814 ff. in der Fassung ab 01.01.2023 (BtOG-Reform)
+- BtOG in der Fassung ab 01.01.2023
+- VBVG in der aktuellen Fassung
+- Aktuelle BGH-Rechtsprechung XII. Zivilsenat (verifiziert):
+ - BGH 24.09.2025 - XII ZB 513/24 (Verhinderungsbetreuer; Vorrang Angehörigen-Wunsch; Amtsermittlung § 26 FamFG)
+ - BGH 12.02.2025 - XII ZB 433/24 (Bestimmtheitsanforderungen an Beschluss zur medikamentösen Zwangsbehandlung; § 323 Abs. 1 Nr. 1 FamFG)
+- Weitere Rechtsprechung live prüfen: Keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über amtliche oder frei zugängliche Quelle (bundesgerichtshof.de, dejure.org, openjur.de) mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
-## Qualitäts-Hardening
+## Normen und Rechtsprechung
 
-- Arbeite aktennah: Tatsachen, Belege, Fristen, Zuständigkeit und gewünschtes Arbeitsprodukt zuerst klären.
-- Keine Rechtsprechung aus Modellwissen zitieren. Jede Entscheidung vor Ausgabe mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei oder amtlich prüfbarer Quelle absichern.
-- Keine BeckRS-, juris-, Kommentar-, Handbuch- oder Aufsatz-Blindzitate. Literatur nur verwenden, wenn der Nutzer sie bereitstellt oder ein lizenzierter Live-Zugriff im konkreten Arbeitsschritt dokumentiert ist.
-- Wenn eine Quelle, Randnummer, Behördenpraxis oder Frist nicht sicher geprüft ist, sichtbar als Prüfpunkt markieren und keine Scheinpräzision erzeugen.
-- Ergebnisse so liefern, dass sie sofort weiterverwendbar sind: Kurzbild, Prüfpfad, Risikoampel, Lückenliste und konkrete nächste Schritte.
+### Kuratierte Normen-Bibliothek
+
+- § 278 FamFG
+- § 5 BtOG
+- § 274 FamFG
+- § 280 FamFG
+- § 30 BtOG
+- § 23 BtOG
+- § 8 BtOG
+- § 293 FamFG
+- § 292 FamFG
+- § 299 FamFG
+- § 312 FamFG
+- § 319 FamFG
+
+### Leitentscheidungen
+
+- BGH XII ZB 174/18

@@ -1,47 +1,56 @@
 ---
 name: rechtsstand-mai-2026-faktenbank
-description: "Faktenbank und Quellen-Gate für aktuelle mietrechtliche und WEG-rechtliche Aussagen mit Stand 29.05.2026. Nutze diesen Skill vor Ausgaben zu Mietpreisbremse, Mieterhöhung, Betriebskosten, Kündigung, Kaution, Steckersolargeräten, virtueller Eigentümerversammlung, WEG-Beschlussklage und baulichen Veränderungen."
+description: "Faktenbank und Quellen-Gate für aktuelle arbeitsrechtliche Aussagen mit Stand 29.05.2026: Dieses Fachmodul dient als Quellen-Gate vor Ausgaben zu BAG-/BSG-Rechtsprechu..."
 ---
 
-# Rechtsstand Mai 2026 — Faktenbank Mietrecht und WEG
+# Faktenbank und Quellen-Gate für aktuelle arbeitsrechtliche Aussagen mit Stand 29.05.2026
 
-## Zweck
 
-Dieser Skill ist das Quellen-Gate des Mietrecht-Plugins. Er wird geladen, wenn aktuelle Rechtslage, Mietpreisbremse, WEG-Reform, Betriebskosten, Kündigung, Kaution, bauliche Veränderung oder gerichtliche Durchsetzung relevant sind.
+## Arbeitsweg
 
-Stand dieser Faktenbank: **29.05.2026**. Bei konkreten Mietspiegeln, Landesverordnungen und Rechtsprechung immer live prüfen.
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: die im Plugin-Kontext einschlägigen Normen über gesetze-im-internet.de, dejure.org, eur-lex.europa.eu und die amtlichen Bundes-/Landesportale live prüfen — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
 
-## Quellenregel
+**Fokus:** Faktenbank und Quellen-Gate für aktuelle arbeitsrechtliche Aussagen mit Stand 29.05.2026. Dieses Fachmodul dient als Quellen-Gate vor Ausgaben zu BAG-/BSG-Rechtsprechung, Statusfeststellung, AGG/Equal Pay, Urlaub, Freistellung, Kündigung, Arbeitszeit und Lohn/SV. Zitiert nur Gericht, Entscheidungsform, Datum, Aktenzeichen und frei prüfbare Quelle.
 
-- Keine BeckRS-, juris-, Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen.
-- Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und freiem/amtlichem Link.
-- Mietspiegel nur aus amtlicher kommunaler Quelle oder aus `references/mietspiegel-quellen.md`.
-- Landesverordnungen zur Mietpreisbremse/Kappungsgrenze immer für Bundesland, Gemeinde und Zeitpunkt prüfen.
+### Rechtsstand Mai 2026 — Faktenbank Arbeitsrecht
 
-## Verifizierte Rechtsstandsanker
+## Fachlicher Kern — Arbeitsrecht
+- **Problemfokus dieses Skills:** Bleibe beim konkreten Titel `Rechtsstand Mai 2026 — Faktenbank Arbeitsrecht` und löse die dort angelegte Fachfrage; arbeite mit konkreten Tatbestandsmerkmalen, Beweisfragen und dem unmittelbar benötigten Arbeitsprodukt. Routingfragen bleiben Hilfsmittel, wenn Frist, Zuständigkeit oder Verfahrensart offen sind.
+- **Normenradar:** BGB §§ 611a, 613a, 615, 623; KSchG §§ 1, 4, 7; TzBfG §§ 14, 15, 16; AGG §§ 1, 3, 7, 15, 22; EntgTranspG §§ 3, 5, 7; BUrlG §§ 1, 3, 7; BetrVG §§ 87, 99, 102; ArbZG; NachwG; SGB IX §§ 164, 167, 168.
+- **Verifizierte Anker:** BAG, Urteil vom 23.10.2025 - 8 AZR 300/24 (Entgeltgleichheit, Paarvergleich, Beweislast, bundesarbeitsgericht.de); BAG, Urteil vom 03.06.2025 - 9 AZR 104/24 (kein Verzicht auf gesetzlichen Mindesturlaub im bestehenden Arbeitsverhältnis); bei Kündigungszugang immer § 623 BGB, Zugang nach § 130 BGB, Dreiwochenfrist §§ 4, 7 KSchG und Beweis des konkreten Umschlags trennen.
+- **Arbeitsmodus:** Zuerst Status, Zugang, Frist, Beteiligungsrechte, Sonderkündigungsschutz, Beweislast und prozessualen nächsten Schritt sichern; dann erst Materiellrecht vertiefen.
+- **Outputpflicht:** Fristenblatt, Zugangsmatrix, Beweisangebot, Mandantenmail, Betriebsrats-/Gegnerbrief oder Klage-/Erwiderungsbaustein.
+- **Fehlerbremse:** Tragende Normen/Entscheidungen live oder aus der Akte verifizieren; Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei prüfbarer Quelle. Keine BeckRS-, juris-, Kommentar- oder Aufsatz-Blindzitate aus Modellwissen.
 
-| Thema | Gesicherter Anker | Praktische Aussage | Freie Quelle |
+## Verifizierte Rechtsprechungsanker
+
+| Thema | Gesicherter Anker | Tragende Aussage für den | Freie Quelle |
 |---|---|---|---|
-| Mietpreisbremse | § 556d BGB; BGH, Urteil vom 18.12.2024, VIII ZR 16/23 | Mietpreisbremse immer dreistufig prüfen: Gebiet/Verordnung, Ausgangsmiete und Ausnahmen, dann Rüge/Rückforderung. Verfassungs- und Verordnungsfragen nicht aus Modellwissen behaupten. | https://www.gesetze-im-internet.de/bgb/__556d.html / https://juris.bundesgerichtshof.de/cgi-bin/rechtsprechung/document.py?Gericht=bgh&nr=140461 |
-| Modernisierung und Mietpreisbremse | BGH, Urteil vom 27.11.2024, VIII ZR 36/23 | Modernisierungsausnahmen sauber nach Vor-/Nachmaßnahmen, Informationslage und konkreter Berechnung trennen; umfassende Modernisierung nicht pauschal unterstellen. | https://juris.bundesgerichtshof.de/cgi-bin/rechtsprechung/document.py?Gericht=bgh&nr=140073 |
-| Steckersolargeräte Miete | § 554 BGB | Mieter können eine bauliche Veränderung für Steckersolargeräte verlangen; Interessenabwägung, Zumutbarkeit, technische Sicherheit und Rückbau dokumentieren. | https://www.gesetze-im-internet.de/bgb/__554.html |
-| Steckersolargeräte WEG | § 20 Abs. 2 WEG | Wohnungseigentümer haben einen Anspruch auf angemessene bauliche Veränderungen u. a. für Steckersolargeräte; Ausführung bleibt ordnungsmäßig zu beschließen. | https://www.gesetze-im-internet.de/woeigg/__20.html |
-| Virtuelle Eigentümerversammlung | § 23 Abs. 1a WEG; § 48 Abs. 6 WEG | Rein virtuelle Versammlung nur aufgrund Beschlusses mit qualifizierter Mehrheit und befristeter Wirkung; bis Ende 2028 Übergangsrecht mit Präsenzversammlung beachten. | https://www.gesetze-im-internet.de/woeigg/__23.html / https://www.gesetze-im-internet.de/woeigg/__48.html |
-| Verwalterabberufung | § 26 Abs. 3 WEG | Verwalter kann jederzeit abberufen werden; der Verwaltervertrag endet spätestens sechs Monate nach Abberufung. "Nur bei wichtigem Grund" ist seit WEMoG falsch. | https://www.gesetze-im-internet.de/woeigg/__26.html |
-| WEG bauliche Veränderung | BGH, Urteil vom 28.03.2025, V ZR 105/24 | Bei baulichen Veränderungen § 20 WEG und Kostenfolge § 21 WEG getrennt prüfen; § 20 Abs. 4 WEG bleibt Grenze bei grundlegender Umgestaltung/unbilliger Benachteiligung. | https://juris.bundesgerichtshof.de/cgi-bin/rechtsprechung/document.py?Gericht=bgh&nr=141815 |
-| WEG Störerhaftung bei Mietern | BGH, Urteil vom 21.03.2025, V ZR 1/24 | Vermietende Wohnungseigentümer können gegenüber der Gemeinschaft als mittelbare Handlungsstörer haften, wenn ihr Mieter unzulässig in Gemeinschaftseigentum eingreift. | https://juris.bundesgerichtshof.de/cgi-bin/rechtsprechung/document.py?Gericht=bgh&nr=141725 |
+| Mindesturlaub und Vergleich | BAG, Urteil vom 03.06.2025, 9 AZR 104/24 | Auf gesetzlichen Mindesturlaub kann während des bestehenden Arbeitsverhältnisses nicht wirksam durch gerichtlichen Vergleich verzichtet werden; § 13 Abs. 1 Satz 3 BUrlG sperrt Abweichungen zu Lasten des Arbeitnehmers. | https://www.bundesarbeitsgericht.de/entscheidung/9-azr-104-24/ |
+| Entgeltgleichheit / Paarvergleich | BAG, Urteil vom 23.10.2025, 8 AZR 300/24 | Für den Anspruch auf gleiches Entgelt kann ein Paarvergleich genügen; bei geringerer Vergütung einer Frau für gleiche oder gleichwertige Arbeit greift die Vermutung einer Benachteiligung wegen des Geschlechts. | https://www.bundesarbeitsgericht.de/entscheidung/8-azr-300-24/ |
+| Freistellungsklausel und Dienstwagen | BAG, Urteil vom 25.03.2026, 5 AZR 108/25 | Eine AGB-Klausel, die den Arbeitgeber im gekündigten Arbeitsverhältnis pauschal zur Freistellung und zum Widerruf der Dienstwagennutzung berechtigt, kann unangemessen sein; konkrete Interessenabwägung nötig. | https://www.bundesarbeitsgericht.de/presse/wirksamkeit-einer-freistellungsklausel-widerruf-der-dienstwagennutzung/ |
+| Status Honorarlehrkraft | BSG, Urteil vom 05.11.2024, B 12 BA 3/23 R | Statusprüfung bleibt einzelfallbezogen; Vertragsbezeichnung und Parteiwille tragen nicht, wenn tatsächliche Eingliederung und fehlendes Unternehmerrisiko für Beschäftigung sprechen. | https://www.bsg.bund.de/SharedDocs/Entscheidungen/DE/2024/2024_11_05_B_12_BA_03_23_R.html |
+| Status in fremder Betriebsorganisation | BSG, Urteil vom 12.06.2024, B 12 BA 2/22 R | Bei Tätigkeiten in einer fremden Arbeitsorganisation sind Eingliederung, Weisungsbindung, eigene Betriebsmittel, Preis-/Personalrisiko und unternehmerische Freiheit konkret zu prüfen. | https://www.bsg.bund.de/SharedDocs/Entscheidungen/DE/2024/2024_06_12_B_12_BA_02_22_R.html |
 
-## Workflow-Gate
+## Norm- und Praxisanker
 
-1. **Rolle klären:** Mieter, Vermieter, WEG-Eigentümer, Gemeinschaft, Verwalter, Beirat.
-2. **Objekt klären:** Wohnraum, Gewerbe, Mischmiete, Wohnungseigentum, Sonder-/Gemeinschaftseigentum.
-3. **Eilfristen zuerst:** Kündigung, Räumung, Mieterhöhung, WEG-Beschlussklage (§ 45 WEG: Klage 1 Monat, Begründung 2 Monate), Betriebskostenfrist.
-4. **Quelle auswählen:** Mietspiegel/Landesverordnung, BGB, WEG, BetrKV, BGH/Amts-/Landgericht nur wenn frei geprüft.
-5. **Output anschließen:** `mieterhoehung-pruefen-widersprechen`, `mietsenkungsverlangen`, `nebenkostenabrechnung-pruefen`, `mahnung-zahlungsverzug-mieter`, `weg-beschluss-anfechten`, `klageentwurf-amtsgericht`.
+| Thema | Normen | Workflow-Hinweis |
+|---|---|---|
+| Kündigungsschutz | §§ 1, 4, 7, 9, 10, 12, 17, 18 KSchG; §§ 622, 626 BGB; § 102 BetrVG | Erst Frist/Zugang und Sonderkündigungsschutz sichern, dann Grund, Sozialauswahl, Betriebsrat, Massenentlassung, Weiterbeschäftigung und Vergleichsdruck prüfen. |
+| Befristung und Schriftform | § 14 Abs. 4, §§ 16, 17 TzBfG; §§ 126, 126a, 623 BGB | Befristungsabrede vor Arbeitsbeginn schriftlich oder mit wirksamer QES; Scan/einfache Signatur reicht nicht. Dreiwochenfrist ab vereinbartem Ende. |
+| Urlaub | §§ 1, 3, 7, 13 BUrlG | Mindesturlaub nicht durch Vergleich im laufenden Arbeitsverhältnis preisgeben; bei Beendigung Urlaubsabgeltung getrennt prüfen. |
+| AGG / Equal Pay | §§ 1, 7, 15, 22 AGG; EntgTranspG | Erst Vergleichsperson und gleiche/gleichwertige Arbeit, dann Vermutung, Rechtfertigung, Fristen und Auskunfts-/Dokumentationslage. |
+| Status/Scheinselbständigkeit | § 611a BGB; §§ 7, 7a, 28p SGB IV; § 266a StGB | Tatsächliche Durchführung vor Vertragstext; bei hohem Risiko DRV-Statusfeststellung, SV-Nachberechnung und Strafbarkeitsrisiko getrennt dokumentieren. |
+| Arbeitszeit und Mindestlohn | ArbZG, MiLoG, NachwG, EFZG | Bei Arbeitszeit immer Aufzeichnung, Bereitschaft/Überstunden, Ausschlussfristen, Mindestlohnfestigkeit und Beweislast getrennt prüfen. |
 
-## Kurzkorrekturen für bestehende Workflows
+## Ausgabe-Standard
 
-- WEG-Sachen nach §§ 43 ff. WEG gehen erstinstanzlich grundsätzlich zum Amtsgericht der Belegenheit; nicht nach allgemeiner Streitwertlogik zum Landgericht springen.
-- Bauliche Veränderungen: Beschluss/Anspruch, ordnungsmäßige Ausführung, Grenzen des § 20 Abs. 4 WEG und Kostenverteilung § 21 WEG getrennt prüfen.
-- Schonfristzahlung heilt die fristlose Kündigung wegen Zahlungsverzugs, nicht automatisch eine hilfsweise ordentliche Kündigung; konkrete BGH-Linie live verifizieren.
-- Mietpreisbremse nie ohne lokale Landesverordnung, Mietspiegel und Ausnahmen prüfen.
+Jede aktuelle arbeitsrechtliche Antwort enthält am Ende kurz:
+
+1. **Gesicherte Quellen:** Normen und ggf. Gerichtsentscheidungen mit Datum/Aktenzeichen/Link.
+2. **Nicht verifiziert:** Alles, was nicht frei/amtlich geprüft werden konnte.
+3. **Nächster Fachmodul:** aus diesem Plugin, z. B. `kuendigungs-pruefung`, `arbeitnehmer-status`, `lohnsteuer-sozialversicherung`, `agg-pruefung-bewerber-und-beschaeftigte`, `aufhebungsvertrag` oder `entfristung-schriftform-14-abs-4-erkennen`.

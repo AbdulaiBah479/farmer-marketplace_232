@@ -1,9 +1,30 @@
 ---
 name: betriebsrat-anhoerung
-description: "Prüft und dokumentiert die ordnungsgemäße Anhörung des Betriebsrats vor Kündigungen nach § 102 BetrVG. Lädt, wenn die Wirksamkeit einer BR-Anhörung (Inhalt, Fristen, Reaktion des BR) beurteilt oder ein Anhörungsschreiben erstellt werden soll."
+description: "Prüft und dokumentiert die ordnungsgemäße Anhörung des Betriebsrats vor Kündigungen nach § 102 BetrVG: Lädt, wenn die Wirksamkeit einer BR-Anhörung (Inhal..."
 ---
 
-# Betriebsratsanhörung vor Kündigung (§ 102 BetrVG)
+# Prüft und dokumentiert die ordnungsgemäße Anhörung des Betriebsrats vor Kündigungen nach § 102 BetrVG
+
+
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: die im Plugin-Kontext einschlägigen Normen über gesetze-im-internet.de, dejure.org, eur-lex.europa.eu und die amtlichen Bundes-/Landesportale live prüfen — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+**Fokus:** Prüft und dokumentiert die ordnungsgemäße Anhörung des Betriebsrats vor Kündigungen nach § 102 BetrVG. Lädt, wenn die Wirksamkeit einer BR-Anhörung (Inhalt, Fristen, Reaktion des BR) beurteilt oder ein Anhörungsschreiben erstellt werden soll.
+
+### Betriebsratsanhörung vor Kündigung (§ 102 BetrVG)
+
+## Fachlicher Kern — Arbeitsrecht
+- **Problemfokus dieses Skills:** Bleibe beim konkreten Titel `Betriebsratsanhörung vor Kündigung (§ 102 BetrVG)` und löse die dort angelegte Fachfrage; arbeite mit konkreten Tatbestandsmerkmalen, Beweisfragen und dem unmittelbar benötigten Arbeitsprodukt. Routingfragen bleiben Hilfsmittel, wenn Frist, Zuständigkeit oder Verfahrensart offen sind.
+- **Normenradar:** BGB §§ 611a, 613a, 615, 623; KSchG §§ 1, 4, 7; TzBfG §§ 14, 15, 16; AGG §§ 1, 3, 7, 15, 22; EntgTranspG §§ 3, 5, 7; BUrlG §§ 1, 3, 7; BetrVG §§ 87, 99, 102; ArbZG; NachwG; SGB IX §§ 164, 167, 168.
+- **Verifizierte Anker:** BAG, Urteil vom 23.10.2025 - 8 AZR 300/24 (Entgeltgleichheit, Paarvergleich, Beweislast, bundesarbeitsgericht.de); BAG, Urteil vom 03.06.2025 - 9 AZR 104/24 (kein Verzicht auf gesetzlichen Mindesturlaub im bestehenden Arbeitsverhältnis); bei Kündigungszugang immer § 623 BGB, Zugang nach § 130 BGB, Dreiwochenfrist §§ 4, 7 KSchG und Beweis des konkreten Umschlags trennen.
+- **Arbeitsmodus:** Zuerst Status, Zugang, Frist, Beteiligungsrechte, Sonderkündigungsschutz, Beweislast und prozessualen nächsten Schritt sichern; dann erst Materiellrecht vertiefen.
+- **Outputpflicht:** Fristenblatt, Zugangsmatrix, Beweisangebot, Mandantenmail, Betriebsrats-/Gegnerbrief oder Klage-/Erwiderungsbaustein.
+- **Fehlerbremse:** Tragende Normen/Entscheidungen live oder aus der Akte verifizieren; Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei prüfbarer Quelle. Keine BeckRS-, juris-, Kommentar- oder Aufsatz-Blindzitate aus Modellwissen.
 
 ## Zweck
 
@@ -34,23 +55,21 @@ Dieser Skill dient der Prüfung und Durchführung der Betriebsratsanhörung nach
 ### Leitentscheidungen (BGH-Stil)
 
 - **Inhalt der Anhörungsmitteilung / subjektive Determinierung:**
-  BAG, Urt. v. 23.06.2009 – 2 AZR 474/07, NZA 2009, 1136 Rn. 22 ff.: Der Arbeitgeber muss dem Betriebsrat diejenigen Gründe mitteilen, auf die er die Kündigung stützt; eine subjektiv vollständige Mitteilung genügt – der Arbeitgeber muss dem BR nicht mehr mitteilen als das, was ihm selbst bekannt ist. Unvollständige oder fehlerhafte Angaben zu Sozialdaten können zur Unwirksamkeit der Kündigung führen, wenn sie bewusst erfolgen oder objektiv wesentlich sind.
+ BAG, Urteil vom 27.02.1997 - 2 AZR 302/96: Der Arbeitgeber muss dem Betriebsrat die Umstaende mitteilen, die seine Kuendigungsentscheidung tatsaechlich bestimmt haben; auch dem AG bekannte, für den AN guenstige Umstaende sind grundsaetzlich mitzuteilen. Quelle: dejure.org-Vernetzung BAG 27.02.1997 - 2 AZR 302/96.
+ BAG, Urteil vom 05.02.1998 - 2 AZR 227/97: Praezisierung der subjektiven Determinierung; objektiv relevante Umstaende duerfen nicht zurueckgehalten werden. Quelle: dejure.org-Vernetzung.
 
-- **Fristbeginn / Vollständigkeit der Unterlagen:**
-  BAG, Urt. v. 16.07.2015 – 2 AZR 15/15, NZA 2016, 99 Rn. 15 ff.: Die Wochenfrist des § 102 Abs. 2 Satz 1 BetrVG beginnt erst, wenn dem Betriebsrat alle zur Beurteilung der Kündigung wesentlichen Informationen vorliegen; eine unvollständige Anhörung setzt die Frist nicht in Lauf.
+- **Fristbeginn / Vollstaendigkeit der Unterlagen:**
+ BAG, Urteil vom 10.10.2002 - 2 AZR 472/01: Bei Nachreichung relevanter Informationen beginnt die Stellungnahmefrist neu. Quelle: dejure.org-Vernetzung.
 
-- **Widerspruch des BR / Weiterbeschäftigung:**
-  BAG, Urt. v. 24.06.2004 – 2 AZR 461/03, NZA 2005, 41 Rn. 20: Der Weiterbeschäftigungsanspruch nach § 102 Abs. 5 Satz 1 BetrVG setzt voraus, dass der Arbeitnehmer Kündigungsschutzklage erhoben hat und der BR form- und fristgerecht widersprochen hat; der Arbeitgeber kann nach § 102 Abs. 5 Satz 2 BetrVG beim Arbeitsgericht beantragen, von der Weiterbeschäftigungspflicht entbunden zu werden.
+- **Widerspruch des BR / Weiterbeschaeftigung:**
+ Hier weitere Rechtsprechung zur § 102 Abs. 5 BetrVG-Weiterbeschaeftigung vor Schriftsatzverwendung in dejure.org / openjur.de / bundesarbeitsgericht.de verifizieren.
 
-- **Nachschieben von Kündigungsgründen:**
-  BAG, Urt. v. 11.04.1985 – 2 AZR 239/84, BAGE 48, 320 Rn. 18: Das Nachschieben von Kündigungsgründen ist nur zulässig, wenn der BR auch zu diesen Gründen angehört wurde; nicht mitgeteilte Gründe sind im Prozess unbeachtlich.
+- **Nachschieben von Kuendigungsgruenden:**
+ Standardrechtsprechung: Nachschieben grundsaetzlich nur für Kuendigungsgruende, die im Zeitpunkt der Anhörung bereits objektiv vorlagen und dem Arbeitgeber bekannt waren - vor Zitat konkretes BAG-Aktenzeichen in dejure.org verifizieren.
 
-### Kommentarliteratur
+### Quellenregel
 
-- Fitting, in: Fitting, BetrVG, 32. Aufl. 2024, § 102 Rn. 1 ff. (Anhörungspflicht, Inhalt, Fristen), Rn. 58 ff. (Widerspruchsrecht, Weiterbeschäftigung).
-- Richardi, in: Richardi, BetrVG, 17. Aufl. 2022, § 102 Rn. 1 ff. (subjektive Determinierung, Sozialdaten, Vollständigkeit), Rn. 95 ff. (Sanktionsfolge des § 102 Abs. 1 Satz 3 BetrVG).
-- Preis, in: ErfK, 25. Aufl. 2025, § 102 BetrVG Rn. 1 ff. (Überblick, Verhältnis KSchG / BetrVG, Abgrenzung Anhörungsfehler).
-- Kiel, in: APS, Kündigungsrecht, 6. Aufl. 2021, § 102 BetrVG Rn. 1 ff. (Inhalt der Mitteilung, Fristablauf, Widerspruchsgründe).
+Quellenregel: Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen; Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff.
 
 ## Ablauf
 
@@ -74,13 +93,13 @@ Das Anhörungsschreiben muss folgende Angaben enthalten:
 | **Vorherige Abmahnungen** | (bei verhaltensbedingter Kündigung) Datum, Inhalt der Abmahnungen |
 | **Sozialauswahl** | (bei betriebsbedingter Kündigung) Auswahlkriterien und Entscheidungsergebnis |
 
-**Grundsatz subjektiver Determinierung** (BAG, Urt. v. 23.06.2009 – 2 AZR 474/07, NZA 2009, 1136 Rn. 22): Der Arbeitgeber muss dem BR das mitteilen, was ihm bekannt ist und worauf er die Kündigung stützt; bewusste Irreführung oder absichtliche Verkürzung führt zur Unwirksamkeit.
+Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
 ### Schritt 3 – Fristen (§ 102 Abs. 2 BetrVG)
 
 | Kündigungsart | Frist | Fristbeginn |
 |---|---|---|
-| Ordentliche Kündigung | 1 Woche | Zugang des vollständigen Anhörungsschreibens beim BR (BAG, Urt. v. 16.07.2015 – 2 AZR 15/15, NZA 2016, 99 Rn. 15) |
+| Ordentliche Kuendigung | 1 Woche (§ 102 Abs. 2 Satz 1 BetrVG) | Zugang des vollstaendigen Anhörungsschreibens beim Vorsitzenden, § 26 Abs. 2 BetrVG |
 | Außerordentliche Kündigung | 3 Tage | Zugang des vollständigen Anhörungsschreibens |
 
 - **Fristablauf ohne Stellungnahme des BR** → Arbeitgeber kann kündigen (§ 102 Abs. 2 Satz 2 BetrVG: BR gilt als angehört).
@@ -112,19 +131,13 @@ Checkliste für die Prüfung:
 - Wurde ggf. ein Widerspruch fristgerecht erhoben?
 - Hat der Arbeitgeber einen Widerspruch bei der Kündigung mitgeteilt?
 
-## Ausgabeformat
-
-- **Standardausgabe**: Memo im Gutachtenstil mit Checkliste der Anhörungsanforderungen.
-- **Auf Anforderung**: Vollständiges Anhörungsschreiben (Urteilsstil, alle Pflichtangaben).
-- **Auf Anforderung**: Prüfschema Anhörungsfehler als Tabelle (Arbeitnehmerperspektive).
-
 ## Beispiel
 
 **Sachverhalt:** Arbeitgeberin C-GmbH will Arbeitnehmer D (Buchhalter, 10 Jahre BZ, 44 Jahre alt, verheiratet, 2 Kinder, keine Schwerbehinderung) betriebsbedingt kündigen wegen Wegfalls seiner Stelle (Outsourcing der Buchhaltung). Der Betriebsrat besteht aus 5 Mitgliedern.
 
 **Anhörungsschreiben (Auszug):**
 
-> „Betreff: Anhörung nach § 102 BetrVG – Beabsichtigte ordentliche betriebsbedingte Kündigung von Herrn D
+> "Betreff: Anhörung nach § 102 BetrVG – Beabsichtigte ordentliche betriebsbedingte Kündigung von Herrn D
 >
 > Wir beabsichtigen, das Arbeitsverhältnis mit Herrn D, geb. [Datum], Buchhalter, seit [Datum] beschäftigt, verheiratet, 2 unterhaltsberechtigte Kinder, zum [Datum] ordentlich zu kündigen.
 >
@@ -132,7 +145,7 @@ Checkliste für die Prüfung:
 >
 > Wir bitten um Stellungnahme innerhalb von einer Woche nach Zugang dieses Schreibens."
 
-**Rechtliche Bewertung:** Die Mitteilung entspricht den Anforderungen des § 102 Abs. 1 Satz 2 BetrVG: Sozialdaten vollständig (BAG, Urt. v. 23.06.2009 – 2 AZR 474/07, NZA 2009, 1136 Rn. 22), Kündigungsgrund und unternehmerische Entscheidung konkret benannt, Sozialauswahl erläutert. Die Wochenfrist des § 102 Abs. 2 Satz 1 BetrVG läuft ab Zugang.
+Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
 ## Risiken und typische Fehler
 
@@ -154,7 +167,7 @@ Checkliste für die Prüfung:
 Jede juristische Aussage in jedem auf diesem Skill basierenden Dokument ist nach **references/zitierweise.md** zu belegen:
 
 - Rechtsprechungsbelege im BGH-Stil (Gericht, Entscheidungsform, Datum, AZ, Fundstelle, Rn.).
-- Kommentarbelege mit Bearbeiter, Werk, Auflage, Jahr, §, Rn.; bei BetrVG-Kommentaren insbesondere Fitting und Richardi.
+- Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen zitieren. Literatur nur nutzen, wenn der Nutzer die Quelle bereitstellt oder ein lizenzierter Live-Zugriff sie verifiziert.
 - Bei umstrittenen Fragen (z. B. Umfang der Mitteilungspflicht, Fehlerfolgen) h. M. und Gegenauffassung getrennt zitieren.
 - Halluzinationsrisiko: Alle Aktenzeichen und Fundstellen vor Einreichung verifizieren.
-- Keine Präjudizienbindung – die BAG-Rechtsprechung wirkt nicht nach US-amerikanischem stare-decisis-Modell, sondern entfaltet faktische Leitwirkung. Bei fehlender BAG-Entscheidung kann jüngere LAG-Rechtsprechung argumentativ herangezogen werden; sie ist offen für Gegenargumentation aus Kommentarliteratur (insb. Fitting, Richardi) und Aufsätzen.
+- Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen zitieren. Literatur nur nutzen, wenn der Nutzer die Quelle bereitstellt oder ein lizenzierter Live-Zugriff sie verifiziert.

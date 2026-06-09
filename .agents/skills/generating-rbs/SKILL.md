@@ -1,11 +1,11 @@
 ---
 name: generating-rbs
-description: Generates or updates RBS type signatures in separate .rbs files. Triggers when creating, updating, or maintaining type signatures for Ruby source files.
+description: Generates RBS type signatures from Ruby source files. Triggers when creating type definitions, adding types to Ruby code, or generating .rbs files for classes/modules without existing RBS signatures.
 ---
 
 # RBS Generate Skill
 
-Generate or update pure RBS signatures for Ruby source files. Supports both full generation from scratch and partial updates for individual changed files. Does not handle RBS-inline signatures.
+Generate pure RBS signatures for Ruby source files from scratch. Does not handle RBS-inline signatures or updates for existing signatures.
 
 # Instructions
 
@@ -29,32 +29,6 @@ There are several rules that you MUST follow while performing this skill:
 - You MUST not use `untyped`. Infer the proper type instead.
 - You MUST ask the user to provide more details if something is not clear.
 - You MUST prepend any command with `bundle exec` if the project has Gemfile.
-- You MUST use the tracking file when processing multiple files to ensure no files are missed.
-
-## Multi-File Processing
-
-When processing multiple Ruby files, create a tracking file to ensure all files are covered:
-
-1. **Create tracking file** `.rbs-generation-todo.tmp`:
-   ```
-   [ ] app/models/user.rb
-   [ ] app/models/post.rb
-   [ ] app/services/auth_service.rb
-   ```
-
-2. **Process files one by one**:
-   - Take the next pending `[ ]` entry
-   - Complete all steps (1-6) for that file
-   - Mark as processed `[x]`
-   - Save the tracking file
-   - Continue to next pending entry
-
-3. **Cleanup**: Remove the tracking file after all files are processed:
-   ```bash
-   rm .rbs-generation-todo.tmp
-   ```
-
-If interrupted, the tracking file allows resuming from where you left off.
 
 ## 1. Analyze the Ruby Source
 

@@ -1,6 +1,6 @@
 ---
 name: task-analyzer
-description: Performs metacognitive task analysis and skill selection. Use when determining task complexity, selecting appropriate skills, or estimating work scale. Returns skills with confidence scores and metadata.
+description: Analyzes task essence and selects appropriate skills. Returns scale estimates and metadata. Use when starting tasks or selecting skills.
 ---
 
 # Task Analyzer
@@ -45,11 +45,11 @@ Identify the fundamental purpose beyond surface-level work:
 
 | Type | Characteristics | Key Skills |
 |------|-----------------|------------|
-| Implementation | New code, features | coding-principles, testing-principles |
-| Fix | Bug resolution | ai-development-guide, testing-principles |
-| Refactoring | Structure improvement | coding-principles, ai-development-guide |
+| Implementation | New code, features | coding-standards, typescript-testing |
+| Fix | Bug resolution | coding-standards, typescript-testing |
+| Refactoring | Structure improvement | coding-standards, implementation-approach |
 | Design | Architecture decisions | documentation-criteria, implementation-approach |
-| Quality | Testing, review | testing-principles, integration-e2e-testing |
+| Quality | Testing, review | typescript-testing, integration-e2e-testing |
 
 ### 4. Tag-Based Skill Matching
 
@@ -59,9 +59,9 @@ Extract relevant tags from task description and match against skills-index.yaml:
 Task: "Implement user authentication with tests"
 Extracted tags: [implementation, testing, security]
 Matched skills:
-  - coding-principles (implementation, security)
-  - testing-principles (testing)
-  - ai-development-guide (implementation)
+  - coding-standards (implementation, security)
+  - typescript-testing (testing)
+  - typescript-rules (implementation)
 ```
 
 ### 5. Implicit Relationships
@@ -99,7 +99,7 @@ selectedSkills:
     sections: [...]  # All sections from yaml, unfiltered
 ```
 
-**Note**: Section selection (choosing which sections are relevant) is done after reading the actual SKILL.md files.
+**Note**: Section selection (choosing which sections are relevant) is done separately after reading the actual SKILL.md files.
 
 ## Skill Selection Priority
 

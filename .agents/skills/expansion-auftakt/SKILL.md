@@ -1,24 +1,30 @@
 ---
 name: expansion-auftakt
-description: "Startet die Planung einer Neueinstellung in einem weiteren Bundesland oder einem neuen Zielland — erhebt die relevanten Eckdaten, rahmt die Entscheidung AÜG-Modell / EOR / eigene Gesellschaft, entwirft abteilungsübergreifende Fragen und legt einen persistenten Tracker an. Lädt, wenn jemand sagt „wir stellen in [Land/Region] ein\", „Expansion nach [Land]\" oder „erste Einstellung in [Land]\"."
+description: "Startet die Planung einer Neueinstellung in einem weiteren Bundesland oder einem neuen Zielland — erhebt die relevanten Eckdaten, rahmt die Entscheidung AÜG-Modell / EOR / eigene Gesellschaft, entwirft abteilungsübergreifende Fragen und legt einen persisten..."
 ---
 
-# Expansions-Kickoff (Arbeitsrecht)
+# Startet die Planung einer Neueinstellung in einem weiteren Bundesland oder einem neuen Zielland — erhebt die relevanten Eckdaten, rahmt die Entscheidung AÜG-Modell / EOR / eigene Gesellschaft, entwirft abteilungsübergreifende Fragen und legt einen persistenten Tracker an
 
-## Zweck
 
-Diese Skill startet ein strukturiertes Expansionsprojekt für eine neue
-Einstellungsregion oder ein neues Land. Sie erhebt alle relevanten Ausgangsdaten,
-erarbeitet die Entscheidungsgrundlage zwischen AÜG-Lösung/EOR und eigener
-rechtlicher Einheit, formuliert die richtigen Fragen für Steuerberatung, Finanzen,
-HR und externe Arbeitsrechtler und legt eine persistente Trackerdate an.
+## Arbeitsweg
 
-Die Skill setzt voraus, dass die Expansionsentscheidung grundsätzlich gefallen ist.
-Sie ist kein Entscheidungsrahmen für „sollen wir überhaupt expandieren?".
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: die im Plugin-Kontext einschlägigen Normen über gesetze-im-internet.de, dejure.org, eur-lex.europa.eu und die amtlichen Bundes-/Landesportale live prüfen — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
 
-Lädt, wenn eine Einstellung in einer neuen Jurisdiktion begonnen wird — typische
-Auslöser: „erste Einstellung in Spanien", „Expansion nach Polen",
-„brauchen wir eine GmbH in den Niederlanden?".
+**Fokus:** Startet die Planung einer Neueinstellung in einem weiteren Bundesland oder einem neuen Zielland — erhebt die relevanten Eckdaten, rahmt die Entscheidung AÜG-Modell / EOR / eigene Gesellschaft, entwirft abteilungsübergreifende Fragen und legt einen persistenten Tracker an. Lädt, wenn jemand sagt "wir stellen in [Land/Region] ein", "Expansion nach [Land]" oder "erste Einstellung in [Land]".
+
+### Expansions-Kickoff (Arbeitsrecht)
+
+## Fachlicher Kern — Arbeitsrecht
+- **Problemfokus dieses Skills:** Bleibe beim konkreten Titel `Expansions-Kickoff (Arbeitsrecht)` und löse die dort angelegte Fachfrage; arbeite mit konkreten Tatbestandsmerkmalen, Beweisfragen und dem unmittelbar benötigten Arbeitsprodukt. Routingfragen bleiben Hilfsmittel, wenn Frist, Zuständigkeit oder Verfahrensart offen sind.
+- **Normenradar:** BGB §§ 611a, 613a, 615, 623; KSchG §§ 1, 4, 7; TzBfG §§ 14, 15, 16; AGG §§ 1, 3, 7, 15, 22; EntgTranspG §§ 3, 5, 7; BUrlG §§ 1, 3, 7; BetrVG §§ 87, 99, 102; ArbZG; NachwG; SGB IX §§ 164, 167, 168.
+- **Verifizierte Anker:** BAG, Urteil vom 23.10.2025 - 8 AZR 300/24 (Entgeltgleichheit, Paarvergleich, Beweislast, bundesarbeitsgericht.de); BAG, Urteil vom 03.06.2025 - 9 AZR 104/24 (kein Verzicht auf gesetzlichen Mindesturlaub im bestehenden Arbeitsverhältnis); bei Kündigungszugang immer § 623 BGB, Zugang nach § 130 BGB, Dreiwochenfrist §§ 4, 7 KSchG und Beweis des konkreten Umschlags trennen.
+- **Arbeitsmodus:** Zuerst Status, Zugang, Frist, Beteiligungsrechte, Sonderkündigungsschutz, Beweislast und prozessualen nächsten Schritt sichern; dann erst Materiellrecht vertiefen.
+- **Outputpflicht:** Fristenblatt, Zugangsmatrix, Beweisangebot, Mandantenmail, Betriebsrats-/Gegnerbrief oder Klage-/Erwiderungsbaustein.
+- **Fehlerbremse:** Tragende Normen/Entscheidungen live oder aus der Akte verifizieren; Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei prüfbarer Quelle. Keine BeckRS-, juris-, Kommentar- oder Aufsatz-Blindzitate aus Modellwissen.
 
 ## Eingaben
 
@@ -43,16 +49,14 @@ Auslöser: „erste Einstellung in Spanien", „Expansion nach Polen",
 
 **Leitentscheidungen:**
 
-- BAG, Urt. v. 20.09.2016 – 9 AZR 735/15, NZA 2017, 34: Abgrenzung Arbeitnehmer / freier Mitarbeiter; Indizien für Weisungsgebundenheit und Eingliederung; wirtschaftliche Abhängigkeit als Scheinkriterium
-- BAG, Urt. v. 02.06.2010 – 7 AZR 946/08, NZA 2010, 1289 Rn. 18 ff.: Rechtsfolgen fehlender AÜG-Erlaubnis — Zustandekommen eines Arbeitsverhältnisses zum Entleiher kraft Gesetzes (§ 10 Abs. 1 AÜG a.F.)
-- BSG, Urt. v. 29.03.2022 – B 12 KR 2/20 R, NZA 2022, 1254: Statusfeststellung nach § 7a SGB IV bei divergierenden Merkmalen — Gesamtbetrachtung der tatsächlichen Durchführung
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
-**Kommentarliteratur:**
+- Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen zitieren. Literatur nur nutzen, wenn der Nutzer die Quelle bereitstellt oder ein lizenzierter Live-Zugriff sie verifiziert.
 
-- Erfurter Kommentar/Wank, 24. Aufl. 2024, § 611a BGB Rn. 1 ff.: Arbeitnehmerbegriff, Weisungsgebundenheit als zentrales Merkmal
-- Schüren/Hamann, AÜG, 5. Aufl. 2022, § 1 Rn. 50 ff.: Erlaubnispflicht und Folgen unerlaubter Arbeitnehmerüberlassung
-- Thüsing, Leiharbeitsrecht, 4. Aufl. 2023, § 8 AÜG Rn. 12 ff.: Equal-Pay-Grundsatz und Ausnahmen durch TV
-- Rieble/Junker (Hrsg.), Münchener Handbuch zum Arbeitsrecht, Bd. 1, 5. Aufl. 2021, § 19 Rn. 5 ff.: Grenzüberschreitende Arbeitsverhältnisse
+- Arbeitnehmerstatus: § 611a BGB, § 7a SGB IV und frei verifizierte BAG-/BSG-Rechtsprechung; keine Kommentarzitate aus Modellwissen.
+- AÜG: Erlaubnispflicht, Höchstüberlassungsdauer und Equal Pay nach Gesetz, Tariftext und frei verifizierter Rechtsprechung prüfen.
+- AÜG/Equal Pay: Gesetz, Tariftext und freie Rechtsprechung nutzen; Fachliteratur nur mit Nutzerquelle.
+- Grenzüberschreitende Arbeitsverhältnisse: Art. 8 Rom I-VO, AÜG, Entsende-/SV-Regeln und amtliche Quellen prüfen; keine Handbuchzitate aus Modellwissen.
 
 ## Ablauf
 
@@ -64,7 +68,7 @@ Eskalationstabelle, bestehende Expansionsnotizen.
 **Schritt 2 — Prüfung bestehender Tracker**
 
 Existiert bereits eine Tracker-Datei `expansion-[slug].yaml` für dieses Land?
-Falls ja: „Für [Land] existiert bereits ein Expansions-Tracker. Nutzen Sie
+Falls ja: "Für [Land] existiert bereits ein Expansions-Tracker. Nutzen Sie
 `/arbeitsrecht:expansion-aktualisierung [Land]` für eine Aktualisierung oder bestätigen
 Sie den Neustart."
 
@@ -77,7 +81,7 @@ Frage alle nachfolgenden Punkte in einem einzigen Block ab:
 > **Die Expansion**
 > - Welches Land / welches Bundesland?
 > - Welche Rollen? (Stellenprofil ist entscheidend — ein Vertriebsmitarbeiter
->   mit Abschlussvollmacht erzeugt anderes Risiko als eine Entwicklerstelle)
+> mit Abschlussvollmacht erzeugt anderes Risiko als eine Entwicklerstelle)
 > - Wie viele Einstellungen im 12-Monats-Horizont?
 > - Wann soll die erste Person starten?
 >
@@ -100,25 +104,6 @@ Ablauf aus (Schritte 2–5).
 
 Lege `expansion-[slug].yaml` an und bestätige die Erstellung.
 
-## Ausgabeformat
-
-```
-Expansions-Kickoff: [Land] — [Datum]
-
-Erste Einstellung angestrebt: [Datum]
-Headcount (12 Monate): [N]
-Rollen: [Liste]
-Tracker: expansion-[slug].yaml
-
-EOR vs. Gesellschaft: [Einschätzung mit Fragen für Steuer/Finance]
-Scheinselbständigkeitsrisiko: [Flag wenn zutreffend]
-
-Offene Punkte ([N] gesamt):
-| # | Punkt | Verantwortung | Status |
-|---|---|---|---|
-| 1 | ... | ... | Offen |
-```
-
 ## Beispiel
 
 ```
@@ -139,21 +124,21 @@ Ausgabe bei Einstellung von zwei Vertriebsmitarbeitern in Polen:
 ## Risiken und typische Fehler
 
 - **Scheinselbständigkeit § 7 SGB IV**: Freie Mitarbeiter im Ausland, die
-  faktisch weisungsgebunden und eingegliedert sind, gelten als Arbeitnehmer.
-  Nachzahlungsrisiko Sozialversicherung bis zu vier Jahre rückwirkend.
+ faktisch weisungsgebunden und eingegliedert sind, gelten als Arbeitnehmer.
+ Nachzahlungsrisiko Sozialversicherung bis zu vier Jahre rückwirkend.
 - **AÜG-Falle bei EOR**: Wird ein EOR ohne AÜG-Erlaubnis genutzt und liegt
-  echte Arbeitnehmerüberlassung vor, kann kraft Gesetzes ein Arbeitsverhältnis
-  zum Entleiher entstehen (§ 10 Abs. 1 AÜG).
+ echte Arbeitnehmerüberlassung vor, kann kraft Gesetzes ein Arbeitsverhältnis
+ zum Entleiher entstehen (§ 10 Abs. 1 AÜG).
 - **18-Monats-Grenze**: Die gesetzliche Höchstüberlassungsdauer beträgt
-  18 Monate (§ 1 Abs. 1b AÜG). Überschreitung ohne tarifvertragliche Ausnahme
-  ist bußgeldbewehrt.
+ 18 Monate (§ 1 Abs. 1b AÜG). Überschreitung ohne tarifvertragliche Ausnahme
+ ist bußgeldbewehrt.
 - **Fehlende Vorabklärung Betriebsstättenrisiko**: Vertriebsmitarbeiter mit
-  Vertretungsmacht können in vielen Ländern steuerlich eine Betriebsstätte
-  begründen — Steuerberatung vor Einstellungsbeginn zwingend.
+ Vertretungsmacht können in vielen Ländern steuerlich eine Betriebsstätte
+ begründen — Steuerberatung vor Einstellungsbeginn zwingend.
 - **Arbeitsvertrag nach dem Recht des Stammlandes**: Art. 8 Rom I-VO schützt
-  Arbeitnehmer vor Abwahl zwingender Schutzvorschriften des
-  Beschäftigungsstaats. Reine Rechtswahl zugunsten deutschen Rechts schützt
-  nicht vor Mindeststandards des Einsatzlandes.
+ Arbeitnehmer vor Abwahl zwingender Schutzvorschriften des
+ Beschäftigungsstaats. Reine Rechtswahl zugunsten deutschen Rechts schützt
+ nicht vor Mindeststandards des Einsatzlandes.
 
 ## Quellenpflicht
 
@@ -161,8 +146,7 @@ Jede Ausgabe dieser Skill muss bei Structural-Empfehlungen zitieren:
 
 - § 7 SGB IV (Scheinselbständigkeit), §§ 1, 8, 10 AÜG
 - Art. 8 Rom I-VO bei grenzüberschreitenden Konstellationen
-- Ggf. BAG, Urt. v. 20.09.2016 – 9 AZR 735/15 (Arbeitnehmereigenschaft)
-- Ggf. BSG, Urt. v. 29.03.2022 – B 12 KR 2/20 R (Statusfeststellung)
-- Schüren/Hamann, AÜG, 5. Aufl. 2022, wenn AÜG-Erlaubnis relevant ist
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+- AÜG: Erlaubnispflicht, Höchstüberlassungsdauer und Equal Pay nach Gesetz, Tariftext und frei verifizierter Rechtsprechung prüfen.
 
 Hinweis: Dieser Skill ersetzt keine anwaltliche Beratung im konkreten Einzelfall.

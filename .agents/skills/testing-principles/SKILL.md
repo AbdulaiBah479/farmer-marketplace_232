@@ -5,13 +5,6 @@ description: Language-agnostic testing principles including TDD, test quality, c
 
 # Language-Agnostic Testing Principles
 
-## Core Testing Philosophy
-
-1. **Tests are First-Class Code**: Maintain test quality equal to production code
-2. **Fast Feedback**: Tests should run quickly and provide immediate feedback
-3. **Reliability**: Tests should be deterministic and reproducible
-4. **Independence**: Each test should run in isolation
-
 ## Test-Driven Development (TDD)
 
 ### The RED-GREEN-REFACTOR Cycle
@@ -25,7 +18,6 @@ description: Language-agnostic testing principles including TDD, test quality, c
 
 2. **GREEN**: Write minimal code to pass
    - Implement just enough to make the test pass
-   - Don't optimize prematurely
    - Focus on making it work
 
 3. **REFACTOR**: Improve code structure
@@ -39,29 +31,22 @@ description: Language-agnostic testing principles including TDD, test quality, c
    - Check for regressions
    - Validate refactoring didn't break anything
 
-### TDD Benefits
-
-- Better design through testability requirements
-- Comprehensive test coverage by default
-- Living documentation of expected behavior
-- Confidence to refactor
-
 ## Quality Requirements
 
 ### Coverage Standards
 
 - **Minimum 80% code coverage** for production code
 - Prioritize critical paths and business logic
-- Don't sacrifice quality for coverage percentage
+- Prioritize meaningful assertions over coverage percentage
 - Use coverage as a guide, not a goal
 
 ### Test Characteristics
 
 All tests must be:
 
-- **Independent**: No dependencies between tests
+- **Independent**: No dependencies between tests (see Test Independence Verification for detailed criteria)
 - **Reproducible**: Same input always produces same output
-- **Fast**: Complete test suite runs in reasonable time
+- **Fast**: Unit tests < 100ms each, integration tests < 1s each, full suite < 10 minutes
 - **Self-checking**: Clear pass/fail without manual verification
 - **Timely**: Written close to the code they test
 
@@ -78,13 +63,6 @@ All tests must be:
 - Mock external services
 - Majority of your test suite
 
-**Example Scope**:
-```
-✓ Test calculateTotal() function
-✓ Test UserValidator class
-✓ Test parseDate() utility
-```
-
 ### Integration Tests
 
 **Purpose**: Test interactions between components
@@ -96,13 +74,6 @@ All tests must be:
 - Verify contracts between modules
 - Smaller portion of test suite
 
-**Example Scope**:
-```
-✓ Test UserService with Database
-✓ Test API endpoint with authentication
-✓ Test file processing pipeline
-```
-
 ### End-to-End (E2E) Tests
 
 **Purpose**: Test complete workflows from user perspective
@@ -113,24 +84,6 @@ All tests must be:
 - Slowest test type
 - Fewest in number
 - Highest confidence level
-
-**Example Scope**:
-```
-✓ Test user registration flow
-✓ Test checkout process
-✓ Test complete report generation
-```
-
-### Test Pyramid
-
-Follow the test pyramid structure:
-```
-    /\    ← Few E2E Tests (High confidence, slow)
-   /  \
-  /    \  ← Some Integration Tests (Medium confidence, medium speed)
- /      \
-/________\ ← Many Unit Tests (Fast, foundational)
-```
 
 ## Test Design Principles
 
@@ -158,17 +111,7 @@ assert(result.isValid == true)
 - Multiple assertions OK if testing single concept
 - Split unrelated assertions into separate tests
 
-**Good**:
-```
-test("validates user email format")
-test("validates user age is positive")
-test("validates required fields are present")
-```
-
-**Bad**:
-```
-test("validates user") // Tests everything at once
-```
+Example: prefer `returns error when email is invalid` over `validates user`.
 
 ### Descriptive Test Names
 
@@ -189,13 +132,6 @@ test("should throw exception when file not found")
 **Adaptation**: Follow your project's naming convention (camelCase, snake_case, describe/it blocks)
 
 ## Test Independence
-
-### Isolation Requirements
-
-- **No shared state**: Each test creates its own data
-- **No execution order dependency**: Tests pass in any order
-- **Clean up after tests**: Reset state, close connections
-- **Avoid global variables**: Use local test data
 
 ### Setup and Teardown
 
@@ -218,15 +154,46 @@ test("should throw exception when file not found")
 - Mock at boundaries, not internally
 - Keep mocks simple and focused
 - Verify mock expectations when relevant
-- Don't mock external libraries/frameworks you don't control (prefer adapters)
+- Wrap external libraries/frameworks behind adapters and mock the adapter
 
-### Types of Test Doubles
+## Data Layer Testing
 
-- **Stub**: Returns predetermined values
-- **Mock**: Verifies it was called correctly
-- **Spy**: Records information about calls
-- **Fake**: Simplified working implementation
-- **Dummy**: Passed but never used
+### Mock Limitations for Data Layer
+
+Mocks validate call patterns but cannot verify data layer correctness. The following pass through undetected with mock-only testing:
+- Schema mismatches (table names, column names, data types)
+- Query correctness (joins, filters, aggregations, grouping)
+- Database constraints (NOT NULL, UNIQUE, foreign keys)
+- Migration drift (schema changes that make code out of sync)
+
+### When Mocks Are Appropriate for Data Access
+
+- Testing business logic that receives data from the data layer (mock the repository, test the service)
+- Testing error handling paths (simulating connection failures, timeouts)
+- Unit tests where data access is a dependency, not the subject under test
+
+### When Mocks Are Insufficient for Data Access
+
+- Testing repository or data access implementations themselves
+- Verifying query correctness (joins, filters, aggregations, grouping)
+- Testing data integrity constraints
+- Testing migration compatibility
+
+### Real Database Testing (Environment-Dependent)
+
+Options for verifying data layer correctness against a real database engine:
+- **Containerized databases** for CI environments
+- **In-memory databases** for fast feedback (note: dialect differences may mask issues)
+- **Dedicated test databases** with seed data
+
+The appropriate approach depends on project environment and CI/CD capabilities.
+
+### AI-Generated Code and Schema Awareness
+
+- AI-generated data access code has heightened schema hallucination risk
+- Generated queries may use correct syntax but reference nonexistent schema elements
+- Mock-based tests pass regardless of schema accuracy
+- Mitigation: Design Docs should include explicit schema references so that documented schemas can be cross-checked against data access code during review
 
 ## Test Quality Practices
 
@@ -236,14 +203,6 @@ test("should throw exception when file not found")
 - **Remove commented-out tests**: Fix them or delete entirely
 - **Keep tests running**: Broken tests lose value quickly
 - **Maintain test suite**: Refactor tests as needed
-
-### Test Code Quality
-
-- Apply same standards as production code
-- Use descriptive variable names
-- Extract test helpers to reduce duplication
-- Keep tests readable and maintainable
-- Review test code thoroughly
 
 ### Test Helpers and Utilities
 
@@ -328,18 +287,12 @@ Each test must:
 
 ### Before Commit
 
-- ✓ All tests pass
-- ✓ No tests skipped or commented
+- ✓ All tests pass — fix failing tests immediately
+- ✓ No tests skipped or commented — delete or fix
 - ✓ No debug code left in tests
 - ✓ Test coverage meets standards
-- ✓ Tests run in reasonable time
-
-### Zero Tolerance Policy
-
-- **Zero failing tests**: Fix immediately
-- **Zero skipped tests**: Delete or fix
-- **Zero flaky tests**: Make deterministic
-- **Zero slow tests**: Optimize or split
+- ✓ No flaky tests — make deterministic
+- ✓ Tests run within performance thresholds
 
 ## Test Organization
 
@@ -350,17 +303,6 @@ Each test must:
   - Examples: `UserService.test.*`, `user_service_test.*`, `test_user_service.*`, `UserServiceTests.*`
 - **Logical grouping**: Group related tests together
 - **Separate test types**: Unit, integration, e2e in separate directories
-
-### Test Suite Organization
-
-```
-tests/
-├── unit/           # Fast, isolated unit tests
-├── integration/    # Integration tests
-├── e2e/            # End-to-end tests
-├── fixtures/       # Test data and fixtures
-└── helpers/        # Shared test utilities
-```
 
 ## Performance Considerations
 
@@ -394,26 +336,23 @@ tests/
 - Identify flaky tests
 - Monitor test trends
 
-## Common Anti-Patterns to Avoid
+## Test Design Guardrails
 
-### Test Smells
+### Every Test Must
 
-- ✗ Tests that test nothing (always pass)
-- ✗ Tests that depend on execution order
-- ✗ Tests that depend on external state
-- ✗ Tests with complex logic (tests shouldn't need tests)
-- ✗ Testing implementation details
-- ✗ Excessive mocking (mocking everything)
-- ✗ Test code duplication
+- Include at least one meaningful assertion
+- Create its own test data and clean up its own state
+- Pass when run in any order and in isolation
+- Test observable behavior through public interfaces
+- Keep test logic simple (no branching, no loops)
+- Mock only external I/O boundaries, use real implementations for internal logic
 
-### Flaky Tests
+### Flaky Test Resolution
 
-Eliminate tests that fail intermittently:
-- Remove timing dependencies
-- Avoid random data in tests
-- Ensure proper cleanup
-- Fix race conditions
-- Make tests deterministic
+- Use deterministic time mocking instead of real clocks
+- Use fixed seed values instead of random data
+- Ensure proper resource cleanup in teardown
+- Resolve race conditions with synchronization primitives
 
 ## Regression Testing
 
@@ -422,7 +361,7 @@ Eliminate tests that fail intermittently:
 - Add test for every bug fix
 - Maintain comprehensive test suite
 - Run full suite regularly
-- Don't delete tests without good reason
+- Keep all tests unless the tested functionality is removed
 
 ### Legacy Code
 
@@ -474,19 +413,3 @@ Eliminate tests that fail intermittently:
 - Include actual vs expected values
 - Add context about what was being tested
 - Make debugging easier
-
-## Continuous Improvement
-
-### Review and Refactor Tests
-
-- Refactor tests as you refactor code
-- Remove obsolete tests
-- Improve test clarity
-- Update tests for new patterns
-
-### Learn from Failures
-
-- Analyze test failures thoroughly
-- Add tests for discovered edge cases
-- Improve test coverage where gaps found
-- Share learnings with team

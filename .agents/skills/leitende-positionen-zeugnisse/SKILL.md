@@ -5,13 +5,11 @@ description: "Analyse von Arbeitszeugnissen für Führungskräfte und leitende A
 
 # Arbeitszeugnisse für leitende Positionen
 
-Zeugnisse für Führungskräfte und leitende Angestellte unterliegen erhöhten inhaltlichen Erwartungen. Zu den allgemeinen Bausteinen (Leistung, Verhalten, Schlussformel) treten positionsspezifische Erwartungsbausteine: Mitarbeiterführung und -entwicklung, strategische Verantwortung, wirtschaftliche Verantwortung (Budget, P&L), Repräsentation nach außen und Unternehmensloyalität auf Führungsebene. Das Fehlen eines solchen Bausteins ist vor allem dann ein starkes rotes Signal, wenn die Führungsverantwortung unstreitig war und im Aufgabenblock selbst genannt wird.
+## Fachlicher Anker
 
-Die Mitarbeiterführungsaussage ist das wichtigste Merkmal des Führungskräfte-Zeugnisses. Formeln wie "führte ihre Mitarbeiter stets motivierend und mit großem Erfolg" (Grün) bis zu "pflegte einen kooperativen Führungsstil" (Orange) bis zum Fehlen jeglicher Führungsaussage (Rot) decken die Bandbreite ab. Besonders abwertend ist das Fehlen einer Aussage zur Führungsleistung kombiniert mit einer allgemeinen Kollegen-Verhaltensaussage — es suggeriert, dass die Führungsaufgabe gar nicht ausgeübt wurde.
-
-Strategische Verantwortung wird durch Formulierungen wie "war maßgeblich an der strategischen Ausrichtung beteiligt", "verantwortete die langfristige Planung des Bereichs" oder "trug wesentlich zur Unternehmensstrategie bei" ausgedrückt. Fehlt eine solche Aussage bei einem leitenden Angestellten, kann das darauf hinweisen, dass strategische Verantwortung tatsächlich nicht übernommen wurde — oder dass der Aussteller dies bewusst verschweigt.
-
-Für Mitglieder der Geschäftsführung oder des Vorstands sind zusätzliche Bausteine relevant: Aufsichtsratskontakte, Eigentümerbeziehungen, Investorenrepräsentation und Unternehmenskultur-Prägung. Das Zeugnis eines Geschäftsführers ohne Aussage zu seiner Wirkung auf das Unternehmen als Ganzes ist unvollständig.
+- **Normen:** §§ 611a, §§ 1, §§ 14.
+- **Entscheidungs-/Quellenanker:** Tragende Rechtsprechung nur mit Gericht, Datum, Aktenzeichen und frei prüfbarer Quelle einsetzen; keine Entscheidung aus Modellwissen erzwingen.
+- **Quellenhygiene:** `references/quellenhygiene.md` und `references/zitierweise.md` beachten.
 
 ## Geheimcode-Regeln
 
@@ -36,10 +34,6 @@ Für Mitglieder der Geschäftsführung oder des Vorstands sind zusätzliche Baus
 
 **Beispiel 5 – Vollständiges GF-Zeugnis (Grün):** Alle Bausteine vorhanden: Führung, Strategie, Budget, Repräsentation, Loyalität, vollständige Schlussformel mit persönlichem Bedauern → Note 1 bis 2.
 
-## Ausgabeformat
-
-Der Skill prüft zunächst, ob es sich um ein Führungskräfte-Zeugnis handelt (anhand der beschriebenen Position). Dann gibt er die Führungskräfte-Checkliste aus (Baustein / vorhanden / Ampel) und integriert die Ergebnisse in die allgemeine Ampeltabelle. Fehlende Führungsbausteine erhalten besonderes Gewicht in der Gesamtnotenberechnung.
-
 ## Rechtliche Einordnung und Normen
 
 - **§ 109 GewO** — Anspruch auf qualifiziertes wohlwollendes Zeugnis; Grundlage aller Bewertungen
@@ -48,3 +42,4 @@ Der Skill prüft zunächst, ob es sich um ein Führungskräfte-Zeugnis handelt (
 ## Aktuelle Rechtsprechung
 
 - Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+

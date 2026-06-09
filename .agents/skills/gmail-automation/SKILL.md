@@ -3,14 +3,11 @@ name: gmail-automation
 description: "Automate Gmail tasks via Rube MCP (Composio): send/reply, search, labels, drafts, attachments. Always search tools first for current schemas."
 requires:
   mcp: [rube]
-category: email
 ---
 
 # Gmail Automation via Rube MCP
 
 Automate Gmail operations through Composio's Gmail toolkit via Rube MCP.
-
-**Toolkit docs**: [composio.dev/toolkits/gmail](https://composio.dev/toolkits/gmail)
 
 ## Prerequisites
 
@@ -271,5 +268,3 @@ Automate Gmail operations through Composio's Gmail toolkit via Rube MCP.
 | Get attachment | GMAIL_GET_ATTACHMENT | message_id, attachment_id |
 | Search contacts | GMAIL_SEARCH_PEOPLE | query |
 | Get profile | GMAIL_GET_PROFILE | (none) |
----
-*Powered by [Composio](https://composio.dev)*

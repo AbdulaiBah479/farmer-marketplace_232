@@ -10,10 +10,8 @@ Structured competitive analysis with research and screenshots via [inference.sh]
 
 ## Quick Start
 
-> Requires inference.sh CLI (`infsh`). Get installation instructions: `npx skills add inference-sh/skills@agent-tools`
-
 ```bash
-infsh login
+curl -fsSL https://cli.inference.sh | sh && infsh login
 
 # Research competitor landscape
 infsh app run tavily/search-assistant --input '{
@@ -27,6 +25,7 @@ infsh app run infsh/agent-browser --input '{
 }'
 ```
 
+> **Install note:** The [install script](https://cli.inference.sh) only detects your OS/architecture, downloads the matching binary from `dist.inference.sh`, and verifies its SHA-256 checksum. No elevated permissions or background processes. [Manual install & verification](https://dist.inference.sh/cli/checksums.txt) available.
 
 ## Teardown Framework
 
@@ -310,4 +309,3 @@ npx skills add inference-sh/skills@prompt-engineering
 ```
 
 Browse all apps: `infsh app list`
-

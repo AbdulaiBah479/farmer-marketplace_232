@@ -1,510 +1,282 @@
 ---
 name: compound-docs
-description: Capture solved problems as categorized documentation with YAML frontmatter for fast lookup
-allowed-tools:
-  - Read # Parse conversation context
-  - Write # Create resolution docs
-  - Bash # Create directories
-  - Grep # Search existing docs
-preconditions:
-  - Problem has been solved (not in-progress)
-  - Solution has been verified working
+description: Capture solved problems as searchable documentation with pattern detection. This skill auto-triggers when users confirm a fix worked ("that worked", "it's fixed", "working now") or manually via /compound command.
+version: 0.1.0-beta
+license: MIT
+compatibility: opencode
 ---
 
-# compound-docs Skill
+# compound-docs
 
-**Purpose:** Automatically document solved problems to build searchable institutional knowledge with category-based organization (enum-validated problem types).
+> Each documented solution compounds your team's knowledge. The first time 
+> you solve a problem takes research. Document it, and the next occurrence 
+> takes minutes. Knowledge compounds.
 
-## Overview
+This skill is inspired by [Every.to's compound-engineering plugin](https://github.com/EveryInc/compound-engineering-plugin).
 
-This skill captures problem solutions immediately after confirmation, creating structured documentation that serves as a searchable knowledge base for future sessions.
+## Auto-Invoke Triggers
 
-**Organization:** Single-file architecture - each problem documented as one markdown file in its symptom category directory (e.g., `docs/solutions/performance-issues/n-plus-one-briefs.md`). Files use YAML frontmatter for metadata and searchability.
-
----
-
-<critical_sequence name="documentation-capture" enforce_order="strict">
-
-## 7-Step Process
-
-<step number="1" required="true">
-### Step 1: Detect Confirmation
-
-**Auto-invoke after phrases:**
-
+This skill auto-triggers when the user says:
 - "that worked"
 - "it's fixed"
 - "working now"
 - "problem solved"
 - "that did it"
 
-**OR manual:** `/doc-fix` command
+Manual command: `/compound`
 
-**Non-trivial problems only:**
+## Workflow
 
-- Multiple investigation attempts needed
-- Tricky debugging that took time
-- Non-obvious solution
-- Future sessions would benefit
+### Step 1: Detect Trigger
 
-**Skip documentation for:**
+When a trigger phrase is detected or `/compound` is invoked:
 
+1. Confirm the problem is actually solved (not still in progress)
+2. Check if the fix is worth documenting
+
+**Skip documentation for trivial fixes:**
 - Simple typos
-- Obvious syntax errors
-- Trivial fixes immediately corrected
-</step>
+- Obvious syntax errors (missing semicolon, bracket)
+- Single-line fixes that were immediately obvious
 
-<step number="2" required="true" depends_on="1">
+If skipping, briefly explain why: "This was a simple typo fix - skipping documentation."
+
 ### Step 2: Gather Context
 
-Extract from conversation history:
+Read [schema.yaml](schema.yaml) to get valid enum values, then extract from the conversation:
 
-**Required information:**
+| Field | Required | Description |
+|-------|----------|-------------|
+| Symptom | Yes | Error message or observable behavior |
+| Category | Yes | From schema.yaml `category.values` (or add new) |
+| Component | No | From schema.yaml `component.values` (or add new) |
+| Root cause | No | From schema.yaml `root_cause.values` (or add new) |
+| Solution | Yes | The fix that worked |
+| Prevention | No | How to avoid this in the future |
 
-- **Module name**: Which module or component had the problem
-- **Symptom**: Observable error/behavior (exact error messages)
-- **Investigation attempts**: What didn't work and why
-- **Root cause**: Technical explanation of actual problem
-- **Solution**: What fixed it (code/config changes)
-- **Prevention**: How to avoid in future
+**If a value doesn't exist in schema.yaml:**
+1. Add the new value to the appropriate enum in `schema.yaml`
+2. If it's a new category, create the directory: `mkdir -p {output_dir}/{new-category}`
 
-**Environment details:**
-
-- Rails version
-- Stage (0-6 or post-implementation)
-- OS version
-- File/line references
-
-**BLOCKING REQUIREMENT:** If critical context is missing (module name, exact error, stage, or resolution steps), ask user and WAIT for response before proceeding to Step 3:
+**If critical info is missing, ask:**
 
 ```
-I need a few details to document this properly:
+To document this fix, I need a few details:
 
-1. Which module had this issue? [ModuleName]
-2. What was the exact error message or symptom?
-3. What stage were you in? (0-6 or post-implementation)
-
-[Continue after user provides details]
+1. Category: What type of issue was this?
+   [list current values from schema.yaml]
+   Or suggest a new category if none fit
 ```
-</step>
 
-<step number="3" required="false" depends_on="2">
-### Step 3: Check Existing Docs
+### Step 3: Check for Similar Issues
 
-Search docs/solutions/ for similar issues:
+Before creating a new doc, search for similar existing issues:
+
+1. **Keyword match** - Search `{output_dir}/` for error message fragments or key symptom phrases
+2. **File path match** - Check if the same files are involved in existing docs
+3. **Import/dependency match** - Check if the same libraries or modules are mentioned
 
 ```bash
-# Search by error message keywords
-grep -r "exact error phrase" docs/solutions/
-
-# Search by symptom category
-ls docs/solutions/[category]/
+# Example searches
+grep -rl "ErrorMessage" docs/solutions/
+grep -l "path/to/file" docs/solutions/**/*.md
 ```
 
-**IF similar issue found:**
-
-THEN present decision options:
+**If potential matches found:**
 
 ```
-Found similar issue: docs/solutions/[path]
+Found potentially related issues:
+- docs/solutions/integration/api-timeout-20250102.md
+- docs/solutions/integration/auth-header-missing-20250105.md
 
-What's next?
-1. Create new doc with cross-reference (recommended)
-2. Update existing doc (only if same root cause)
-3. Other
-
-Choose (1-3): _
+Are any of these the same or related issue? (y/n)
 ```
 
-WAIT for user response, then execute chosen action.
+If related, add to the `related` field in frontmatter.
 
-**ELSE** (no similar issue found):
+### Step 4: Create Documentation
 
-Proceed directly to Step 4 (no user interaction needed).
-</step>
+**Validate against schema.yaml:**
+1. Read schema.yaml for current valid enum values
+2. Ensure all required fields are present
+3. Ensure enum values exist (or add them first)
 
-<step number="4" required="true" depends_on="2">
-### Step 4: Generate Filename
+**Generate filename:**
+- Format: `{sanitized-symptom}-{YYYYMMDD}.md`
+- Sanitize: lowercase, replace spaces with hyphens, remove special chars, truncate to 80 chars
 
-Format: `[sanitized-symptom]-[module]-[YYYYMMDD].md`
+**Create file at:** `{output_dir}/{category}/{filename}`
 
-**Sanitization rules:**
-
-- Lowercase
-- Replace spaces with hyphens
-- Remove special characters except hyphens
-- Truncate to reasonable length (< 80 chars)
-
-**Examples:**
-
-- `missing-include-BriefSystem-20251110.md`
-- `parameter-not-saving-state-EmailProcessing-20251110.md`
-- `webview-crash-on-resize-Assistant-20251110.md`
-</step>
-
-<step number="5" required="true" depends_on="4" blocking="true">
-### Step 5: Validate YAML Schema
-
-**CRITICAL:** All docs require validated YAML frontmatter with enum validation.
-
-<validation_gate name="yaml-schema" blocking="true">
-
-**Validate against schema:**
-Load `schema.yaml` and classify the problem against the enum values defined in [yaml-schema.md](./references/yaml-schema.md). Ensure all required fields are present and match allowed values exactly.
-
-**BLOCK if validation fails:**
-
-```
-❌ YAML validation failed
-
-Errors:
-- problem_type: must be one of schema enums, got "compilation_error"
-- severity: must be one of [critical, high, medium, low], got "invalid"
-- symptoms: must be array with 1-5 items, got string
-
-Please provide corrected values.
-```
-
-**GATE ENFORCEMENT:** Do NOT proceed to Step 6 (Create Documentation) until YAML frontmatter passes all validation rules defined in `schema.yaml`.
-
-</validation_gate>
-</step>
-
-<step number="6" required="true" depends_on="5">
-### Step 6: Create Documentation
-
-**Determine category from problem_type:** Use the category mapping defined in [yaml-schema.md](./references/yaml-schema.md) (lines 49-61).
-
-**Create documentation file:**
-
+**Ensure directory exists:**
 ```bash
-PROBLEM_TYPE="[from validated YAML]"
-CATEGORY="[mapped from problem_type]"
-FILENAME="[generated-filename].md"
-DOC_PATH="docs/solutions/${CATEGORY}/${FILENAME}"
-
-# Create directory if needed
-mkdir -p "docs/solutions/${CATEGORY}"
-
-# Write documentation using template from assets/resolution-template.md
-# (Content populated with Step 2 context and validated YAML frontmatter)
+mkdir -p {output_dir}/{category}
 ```
 
-**Result:**
-- Single file in category directory
-- Enum validation ensures consistent categorization
+**Use the Solution Doc Template below.**
 
-**Create documentation:** Populate the structure from `assets/resolution-template.md` with context gathered in Step 2 and validated YAML frontmatter from Step 5.
-</step>
+### Step 5: Pattern Promotion
 
-<step number="7" required="false" depends_on="6">
-### Step 7: Cross-Reference & Critical Pattern Detection
+After creating the doc, check if this issue has occurred multiple times.
 
-If similar issues found in Step 3:
+**If similar issues >= threshold (default: 2):**
 
-**Update existing doc:**
+```
+This issue has occurred {N} times:
+- {link to issue 1}
+- {link to issue 2}
+- {link to current issue}
 
+Promote to patterns.md? This surfaces it prominently for future sessions.
+1. Yes - Add to patterns
+2. No - Keep as regular doc only
+```
+
+**If yes:** Append to `{output_dir}/patterns.md` using the Pattern Template below.
+
+## Solution Doc Template
+
+```markdown
+---
+date: {YYYY-MM-DD}
+category: {category}
+symptoms:
+  - {symptom 1}
+  - {symptom 2}
+component: {component}
+root_cause: {root_cause}
+tags: [{keyword1}, {keyword2}]
+related: []
+---
+
+# {Problem Title}
+
+## Problem
+
+{1-2 sentence description of what went wrong}
+
+## Symptoms
+
+- {What you observed - error messages, behavior, etc.}
+
+## What Didn't Work
+
+- {Attempted solution 1} - {Why it failed}
+- {Attempted solution 2} - {Why it failed}
+
+## Solution
+
+{Description of the fix}
+
+```{language}
+# Before (broken)
+{code before}
+
+# After (fixed)
+{code after}
+```
+
+## Why This Works
+
+{Technical explanation of the root cause and why the solution addresses it}
+
+## Prevention
+
+{How to avoid this in the future - tests, linting rules, patterns to follow}
+```
+
+## Pattern Template
+
+When adding to `patterns.md`:
+
+```markdown
+## {Pattern Name}
+
+**Occurrences:** {N} times ({link1}, {link2}, ...)
+
+### WRONG
+
+```{language}
+{code that causes the problem}
+```
+
+### CORRECT
+
+```{language}
+{code that fixes it}
+```
+
+**Why:** {Technical explanation}
+
+**When this applies:** {Context or conditions when this pattern is relevant}
+```
+
+## Integration
+
+### Reference in AGENTS.md
+
+Add to your project's AGENTS.md to ensure patterns are checked:
+
+```markdown
+## Required Reading
+
+Before making changes, review known patterns:
+- [Solution Patterns](docs/solutions/patterns.md)
+```
+
+### Consuming Solutions
+
+Other workflows can discover and apply documented solutions:
+
+**Search by keyword:**
 ```bash
-# Add Related Issues link to similar doc
-echo "- See also: [$FILENAME]($REAL_FILE)" >> [similar-doc.md]
+grep -rl "keyword" docs/solutions/
 ```
 
-**Update new doc:**
-Already includes cross-reference from Step 6.
-
-**Update patterns if applicable:**
-
-If this represents a common pattern (3+ similar issues):
-
+**Search by category:**
 ```bash
-# Add to docs/solutions/patterns/common-solutions.md
-cat >> docs/solutions/patterns/common-solutions.md << 'EOF'
-
-## [Pattern Name]
-
-**Common symptom:** [Description]
-**Root cause:** [Technical explanation]
-**Solution pattern:** [General approach]
-
-**Examples:**
-- [Link to doc 1]
-- [Link to doc 2]
-- [Link to doc 3]
-EOF
+ls docs/solutions/deployment/
 ```
 
-**Critical Pattern Detection (Optional Proactive Suggestion):**
-
-If this issue has automatic indicators suggesting it might be critical:
-- Severity: `critical` in YAML
-- Affects multiple modules OR foundational stage (Stage 2 or 3)
-- Non-obvious solution
-
-Then in the decision menu (Step 8), add a note:
-```
-💡 This might be worth adding to Required Reading (Option 2)
+**Search by tag:**
+```bash
+grep -l "tags:.*docker" docs/solutions/**/*.md
 ```
 
-But **NEVER auto-promote**. User decides via decision menu (Option 2).
-
-**Template for critical pattern addition:**
-
-When user selects Option 2 (Add to Required Reading), use the template from `assets/critical-pattern-template.md` to structure the pattern entry. Number it sequentially based on existing patterns in `docs/solutions/patterns/critical-patterns.md`.
-</step>
-
-</critical_sequence>
-
----
-
-<decision_gate name="post-documentation" wait_for_user="true">
-
-## Decision Menu After Capture
-
-After successful documentation, present options and WAIT for user response:
-
-```
-✓ Solution documented
-
-File created:
-- docs/solutions/[category]/[filename].md
-
-What's next?
-1. Continue workflow (recommended)
-2. Add to Required Reading - Promote to critical patterns (critical-patterns.md)
-3. Link related issues - Connect to similar problems
-4. Add to existing skill - Add to a learning skill (e.g., hotwire-native)
-5. Create new skill - Extract into new learning skill
-6. View documentation - See what was captured
-7. Other
-```
-
-**Handle responses:**
-
-**Option 1: Continue workflow**
-
-- Return to calling skill/workflow
-- Documentation is complete
-
-**Option 2: Add to Required Reading** ⭐ PRIMARY PATH FOR CRITICAL PATTERNS
-
-User selects this when:
-- System made this mistake multiple times across different modules
-- Solution is non-obvious but must be followed every time
-- Foundational requirement (Rails, Rails API, threading, etc.)
-
-Action:
-1. Extract pattern from the documentation
-2. Format as ❌ WRONG vs ✅ CORRECT with code examples
-3. Add to `docs/solutions/patterns/critical-patterns.md`
-4. Add cross-reference back to this doc
-5. Confirm: "✓ Added to Required Reading. All subagents will see this pattern before code generation."
-
-**Option 3: Link related issues**
-
-- Prompt: "Which doc to link? (provide filename or describe)"
-- Search docs/solutions/ for the doc
-- Add cross-reference to both docs
-- Confirm: "✓ Cross-reference added"
-
-**Option 4: Add to existing skill**
-
-User selects this when the documented solution relates to an existing learning skill:
-
-Action:
-1. Prompt: "Which skill? (hotwire-native, etc.)"
-2. Determine which reference file to update (resources.md, patterns.md, or examples.md)
-3. Add link and brief description to appropriate section
-4. Confirm: "✓ Added to [skill-name] skill in [file]"
-
-Example: For Hotwire Native Tailwind variants solution:
-- Add to `hotwire-native/references/resources.md` under "Project-Specific Resources"
-- Add to `hotwire-native/references/examples.md` with link to solution doc
-
-**Option 5: Create new skill**
-
-User selects this when the solution represents the start of a new learning domain:
-
-Action:
-1. Prompt: "What should the new skill be called? (e.g., stripe-billing, email-processing)"
-2. Run `python3 .claude/skills/skill-creator/scripts/init_skill.py [skill-name]`
-3. Create initial reference files with this solution as first example
-4. Confirm: "✓ Created new [skill-name] skill with this solution as first example"
-
-**Option 6: View documentation**
-
-- Display the created documentation
-- Present decision menu again
-
-**Option 7: Other**
-
-- Ask what they'd like to do
-
-</decision_gate>
-
----
-
-<integration_protocol>
-
-## Integration Points
-
-**Invoked by:**
-- /compound command (primary interface)
-- Manual invocation in conversation after solution confirmed
-- Can be triggered by detecting confirmation phrases like "that worked", "it's fixed", etc.
-
-**Invokes:**
-- None (terminal skill - does not delegate to other skills)
-
-**Handoff expectations:**
-All context needed for documentation should be present in conversation history before invocation.
-
-</integration_protocol>
-
----
-
-<success_criteria>
-
-## Success Criteria
-
-Documentation is successful when ALL of the following are true:
-
-- ✅ YAML frontmatter validated (all required fields, correct formats)
-- ✅ File created in docs/solutions/[category]/[filename].md
-- ✅ Enum values match schema.yaml exactly
-- ✅ Code examples included in solution section
-- ✅ Cross-references added if related issues found
-- ✅ User presented with decision menu and action confirmed
-
-</success_criteria>
-
----
-
-## Error Handling
-
-**Missing context:**
-
-- Ask user for missing details
-- Don't proceed until critical info provided
-
-**YAML validation failure:**
-
-- Show specific errors
-- Present retry with corrected values
-- BLOCK until valid
-
-**Similar issue ambiguity:**
-
-- Present multiple matches
-- Let user choose: new doc, update existing, or link as duplicate
-
-**Module not in modules documentation:**
-
-- Warn but don't block
-- Proceed with documentation
-- Suggest: "Add [Module] to modules documentation if not there"
-
----
-
-## Execution Guidelines
-
-**MUST do:**
-- Validate YAML frontmatter (BLOCK if invalid per Step 5 validation gate)
-- Extract exact error messages from conversation
-- Include code examples in solution section
-- Create directories before writing files (`mkdir -p`)
-- Ask user and WAIT if critical context missing
-
-**MUST NOT do:**
-- Skip YAML validation (validation gate is blocking)
-- Use vague descriptions (not searchable)
-- Omit code examples or cross-references
-
----
-
-## Quality Guidelines
-
-**Good documentation has:**
-
-- ✅ Exact error messages (copy-paste from output)
-- ✅ Specific file:line references
-- ✅ Observable symptoms (what you saw, not interpretations)
-- ✅ Failed attempts documented (helps avoid wrong paths)
-- ✅ Technical explanation (not just "what" but "why")
-- ✅ Code examples (before/after if applicable)
-- ✅ Prevention guidance (how to catch early)
-- ✅ Cross-references (related issues)
-
-**Avoid:**
-
-- ❌ Vague descriptions ("something was wrong")
-- ❌ Missing technical details ("fixed the code")
-- ❌ No context (which version? which file?)
-- ❌ Just code dumps (explain why it works)
-- ❌ No prevention guidance
-- ❌ No cross-references
-
----
+`patterns.md` is the primary integration point - check it first for critical patterns before making changes.
 
 ## Example Scenario
 
-**User:** "That worked! The N+1 query is fixed."
+**User:** "That worked! The Docker build was failing because of the cache issue."
 
-**Skill activates:**
-
-1. **Detect confirmation:** "That worked!" triggers auto-invoke
-2. **Gather context:**
-   - Module: Brief System
-   - Symptom: Brief generation taking >5 seconds, N+1 query when loading email threads
-   - Failed attempts: Added pagination (didn't help), checked background job performance
-   - Solution: Added eager loading with `includes(:emails)` on Brief model
-   - Root cause: Missing eager loading causing separate database query per email thread
-3. **Check existing:** No similar issue found
-4. **Generate filename:** `n-plus-one-brief-generation-BriefSystem-20251110.md`
-5. **Validate YAML:**
-   ```yaml
-   module: Brief System
-   date: 2025-11-10
-   problem_type: performance_issue
-   component: rails_model
-   symptoms:
-     - "N+1 query when loading email threads"
-     - "Brief generation taking >5 seconds"
-   root_cause: missing_include
-   severity: high
-   tags: [n-plus-one, eager-loading, performance]
-   ```
-   ✅ Valid
-6. **Create documentation:**
-   - `docs/solutions/performance-issues/n-plus-one-brief-generation-BriefSystem-20251110.md`
-7. **Cross-reference:** None needed (no similar issues)
-
-**Output:**
+**Agent response:**
 
 ```
-✓ Solution documented
+Great! Let me document this fix.
 
-File created:
-- docs/solutions/performance-issues/n-plus-one-brief-generation-BriefSystem-20251110.md
+**Reading schema.yaml...**
+Current categories: developer-experience, deployment, ui, integration, performance, testing
+Current components: (none yet)
+Current root_causes: (none yet)
 
-What's next?
-1. Continue workflow (recommended)
-2. Add to Required Reading - Promote to critical patterns (critical-patterns.md)
-3. Link related issues - Connect to similar problems
-4. Add to existing skill - Add to a learning skill (e.g., hotwire-native)
-5. Create new skill - Extract into new learning skill
-6. View documentation - See what was captured
-7. Other
+**Gathering context...**
+
+From our conversation:
+- Symptom: Docker build failing with "layer not found" error
+- Category: deployment
+- Component: docker (adding to schema.yaml)
+- Root cause: stale-cache (adding to schema.yaml)
+- Solution: Added `--no-cache` flag and updated base image tag
+- Prevention: Pin base image versions, use `docker system prune` periodically
+
+**Updating schema.yaml...**
+Added 'docker' to component.values
+Added 'stale-cache' to root_cause.values
+
+**Checking for similar issues...**
+No related issues found.
+
+**Creating documentation...**
+Created: docs/solutions/deployment/docker-layer-not-found-20250106.md
+
+Documentation complete.
 ```
-
----
-
-## Future Enhancements
-
-**Not in Phase 7 scope, but potential:**
-
-- Search by date range
-- Filter by severity
-- Tag-based search interface
-- Metrics (most common issues, resolution time)
-- Export to shareable format (community knowledge sharing)
-- Import community solutions

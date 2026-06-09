@@ -1,19 +1,9 @@
 ---
 name: qiskit
-description: "Qiskit is the world's most popular open-source quantum computing framework with 13M+ downloads. Build quantum circuits, optimize for hardware, execute on simulators or real quantum computers, and analyze results. Supports IBM Quantum (100+ qubit systems), IonQ, Amazon Braket, and other providers."
-license: Apache-2.0 license
-metadata:
-    skill-author: K-Dense Inc.
-risk: unknown
-source: community
+description: Comprehensive quantum computing toolkit for building, optimizing, and executing quantum circuits. Use when working with quantum algorithms, simulations, or quantum hardware including (1) Building quantum circuits with gates and measurements, (2) Running quantum algorithms (VQE, QAOA, Grover), (3) Transpiling/optimizing circuits for hardware, (4) Executing on IBM Quantum or other providers, (5) Quantum chemistry and materials science, (6) Quantum machine learning, (7) Visualizing circuits and results, or (8) Any quantum computing development task.
 ---
 
 # Qiskit
-
-## When to Use
-- You are building or optimizing quantum circuits with Qiskit for simulators or real hardware.
-- You need IBM Quantum-style tooling for transpilation, execution, visualization, or algorithm libraries.
-- You want guidance on moving from a simple circuit prototype to backend-aware execution.
 
 ## Overview
 
@@ -277,8 +267,3 @@ with Session(backend=backend) as session:
 - **Qiskit Textbook**: https://qiskit.org/learn
 - **API Reference**: https://docs.quantum.ibm.com/api/qiskit
 - **Patterns Guide**: https://quantum.cloud.ibm.com/docs/en/guides/intro-to-patterns
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

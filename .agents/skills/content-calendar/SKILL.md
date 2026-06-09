@@ -1,85 +1,66 @@
 ---
 name: content-calendar
-description: Review upcoming content and identify gaps
-role_groups: [marketing]
-jtbd: |
-  Your content pipeline is scattered across files and you're not sure if you have 
-  gaps. This scans 05-Areas/Content/, checks alignment with campaigns and priorities, 
-  identifies gaps in the pipeline, and suggests topics based on recent customer intel.
-time_investment: "10-15 minutes per review"
+description: "Generate a structured content calendar for any brand, product, or creator. Use when asked for a content plan, editorial calendar, social media schedule, or weekly/monthly content strategy. Produces a calendar with topics, formats, channels, and copy hooks."
 ---
 
-## Purpose
+# Content Calendar Skill
 
-Get a comprehensive view of your content pipeline - what's published, what's in progress, what's planned, and where the gaps are.
+This skill generates a structured content calendar from brand inputs. It produces ready-to-use calendar entries with topics, formats, channels, and opening hooks — usable for social media, blogs, newsletters, or multi-channel campaigns.
 
-## Usage
+## Required Inputs
 
-- `/content-calendar` - Full content pipeline review
-- `/content-calendar [timeframe]` - Focus on specific period (e.g., "this month", "Q1")
+Ask the user for these if not provided:
+- **Brand or product name**
+- **Target audience** (who are you trying to reach?)
+- **Primary content goal** (awareness / lead gen / retention / thought leadership)
+- **Channels** (e.g. LinkedIn, Instagram, newsletter, blog, X/Twitter)
+- **Cadence** (daily / 3x per week / weekly / monthly)
+- **Timeframe** (e.g. 4 weeks, Q2)
+- **Brand pillars or themes** (optional — if not provided, derive 3 from the product description)
 
----
+## Output Structure
 
-## Steps
+### 1. Content Pillars (if not provided)
 
-1. **Scan 05-Areas/Content/** for content files
-2. **Extract from each file:**
-   - Content title/topic
-   - Type (blog, video, whitepaper, case study, etc.)
-   - Status (published, in progress, planned, idea)
-   - Publish date (if specified)
-   - Target audience
-   - Campaign/goal alignment
+Derive 3–4 content pillars from the brand/product description. Each pillar = a recurring theme that anchors multiple posts. Label each one clearly (e.g. "Pillar 1: Industry Education", "Pillar 2: Product Stories").
 
-3. **Check alignment:**
-   - Read 01-Quarter_Goals/Quarter_Goals.md (if exists)
-   - Read System/pillars.yaml
-   - Verify content supports strategic priorities
+### 2. Calendar Table
 
-4. **Identify gaps:**
-   - Content types underrepresented
-   - Audience segments not covered
-   - Strategic pillars without content support
-   - Weeks/months without scheduled content
+Produce a weekly table for each week requested. Format:
 
-5. **Generate calendar view with:**
-   - Published content (last 30 days)
-   - In-progress content
-   - Planned content with dates
-   - Gap analysis
-   - Topic suggestions from recent customer intel
+| Date | Pillar | Topic | Format | Channel | Opening Hook |
+|---|---|---|---|---|---|
+| Mon 7 Apr | Education | [Topic title] | Carousel / Article / Short video / Thread | LinkedIn | [First sentence or headline of the post] |
 
----
+Rules:
+- Rotate through all pillars across the week — don't stack the same pillar on consecutive days
+- Match format to channel norms (e.g. carousels for Instagram, long-form for LinkedIn, threads for X)
+- Opening hooks must be specific and scroll-stopping — no generic openers like "Did you know..."
+- Flag 1–2 posts per week as "High Priority" — these are the cornerstone pieces worth boosting or repurposing
 
-## Output Format
+### 3. Repurposing Map
 
-```markdown
-# 📅 Content Calendar
+For each "High Priority" post, add one repurposing suggestion — e.g. "Turn this LinkedIn article into a newsletter section" or "Clip this video for an Instagram Reel."
 
-**Period:** [Timeframe]
-**Content pieces reviewed:** [Count]
+## Quality Checks
 
-## Published (Last 30 Days)
-- [Date] - [Title] ([Type]) - [Audience]
+- [ ] Every week has balanced pillar distribution
+- [ ] No two consecutive posts have the same format on the same channel
+- [ ] Opening hooks are specific (no generic openers)
+- [ ] Formats match platform norms
+- [ ] Repurposing map covers all High Priority posts
 
-## In Progress
-- [Title] ([Type]) - Status: [%/stage] - Due: [Date]
+## Anti-Patterns
 
-## Planned
-- [Week/Date] - [Title] ([Type]) - [Audience]
+- [ ] Do not fill the calendar with generic topic placeholders — every entry must have a specific, usable topic and hook
+- [ ] Do not stack the same pillar or format on consecutive days — variety is required
+- [ ] Do not produce opening hooks that start with "Did you know" or other cliché openers
+- [ ] Do not ignore channel norms — formats must match the platform (no long-form threads for Instagram)
+- [ ] Do not skip the repurposing map for High Priority posts
 
-## Gaps Identified
-1. [Gap description] - Suggested: [Content idea]
-2. [Gap description] - Suggested: [Content idea]
+## Example Trigger Phrases
 
-## Topic Suggestions
-Based on recent customer feedback:
-- [Topic] - Why: [Customer pain point/request]
-```
-
----
-
-## Integration
-
-- Reference `/customer-intel` for topic ideas
-- Link to `/roadmap` for product launch content needs
+- "Build me a 4-week content calendar for [brand]"
+- "Create a social media plan for [product launch]"
+- "Give me a monthly editorial calendar for my newsletter"
+- "Plan my LinkedIn content for the next month"

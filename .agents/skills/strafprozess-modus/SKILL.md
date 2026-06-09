@@ -1,13 +1,21 @@
 ---
 name: strafprozess-modus
-description: "Aktenauszug für StPO-Verfahren erstellen: Anklage Hauptverhandlung Revision §§ 333 ff. StPO Wiederaufnahme. Anklageschrift Eroeffnungsbeschluss Beweisantragsrecht Rechtsmittelfristen. Normen StPO §§ 200 203 333 359 BGH-Leitsaetze StPO. Prüfraster StPO-spezifische Besonderheiten Verfahrenschronologie Rechtsmittel. Output StPO-spezifischer Aktenauszug. Abgrenzung zu zivilprozess-modus (ZPO) und verwaltungsprozess-modus (VwGO)."
+description: "Aktenauszug für StPO-Verfahren erstellen: Anklage Hauptverhandlung Revision §§ 333 ff. StPO Wiederaufnahme. Anklageschrift Eroeffnungsbeschluss Beweisantragsrecht Rechtsmittelfristen. Normen StPO §§ 200 203 333 359 BGH-Leitsaetze StPO. Prüfraster StPO-spezifische Besonderheiten Verfahrenschronolo..."
 ---
 
 # Strafprozess-Modus (StPO)
 
-## Zweck
+## Arbeitsbereich
 
-Dieser Modus-Skill aktiviert die verfahrensspezifischen Einstellungen für Strafverfahren nach der Strafprozessordnung (StPO). Strafakten haben eine andere Struktur als Zivilakten — Ermittlungsakte, Anklageschrift, Hauptverhandlungsprotokoll und Urteil sind die zentralen Dokumente.
+Aktenauszug für StPO-Verfahren erstellen: Anklage Hauptverhandlung Revision §§ 333 ff. StPO Wiederaufnahme. Anklageschrift Eroeffnungsbeschluss Beweisantragsrecht Rechtsmittelfristen. Normen StPO §§ 200 203 333 359 BGH-Leitsaetze StPO. Prüfraster StPO-spezifische Besonderheiten Verfahrenschronologie Rechtsmittel. Output StPO-spezifischer Aktenauszug. Abgrenzung zu zivilprozess-modus (ZPO) und verwaltungsprozess-modus (VwGO). Arbeite entlang dieser konkreten Prüfungslinie und trenne Rolle, Frist, Zuständigkeit, Beweislast und gewünschten Output.
+
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: StPO § 147 Akteneinsicht im Ermittlungsverfahren auf Antrag, § 385 Abs. 3 Nebenkläger, ZPO § 299 jederzeit für Parteien, Bearbeitung i.d.R. 2-4 Wochen.
+- Tragende Normen verifizieren: ZPO §§ 299, 299a, StPO §§ 147, 385, 406e, VwGO § 100, SGG § 120, FamFG § 13, BORA § 19 (Akteneinsicht), Aktenordnung (AktO), AnwGH-Bescheinigungen — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Anwalt, Geschäftsstelle, Verteidiger, Nebenklägervertreter, Beigeordneter, ggf. Sachverständiger.
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Akteneinsichtsantrag, Aktenauszug (chronologisch), Aktenvermerk, Aktenspiegel, Beweismittelübersicht, Zeitachse, Vollmacht — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
 
 ## Triage — kläre vor Aktivierung des Modus
 
@@ -29,17 +37,7 @@ Dieser Modus-Skill aktiviert die verfahrensspezifischen Einstellungen für Straf
 
 ## Rechtsprechung (BGH — Leitsätze Strafprozessrecht)
 
-- BGH, Beschl. v. 08.09.2021 - 1 StR 188/21, BGHSt 66, 185 — Zu den Anforderungen an die Revisionsbegründung nach § 344 Abs. 2 StPO: Verfahrensrüge muss den Mangel so klar beschreiben dass das Revisionsgericht ohne Aktenkenntnis prüfen kann.
-- BGH, Urt. v. 03.03.2022 - 4 StR 410/21, NStZ 2022, 440 — Zur Ablehnung von Beweisanträgen nach § 244 Abs. 3 StPO: gerichtliche Ablehnung wegen Bedeutungslosigkeit setzt voraus dass die unter Beweis gestellte Tatsache selbst dann den Schuldspruch nicht berührt wenn sie wahr ist.
-- BGH, Beschl. v. 11.11.2020 - 1 StR 328/20, NJW 2021, 411 — Zur Untersuchungshaft und dem Verhältnismässigkeitsgrundsatz: bei langer Verfahrensdauer steigen die Anforderungen an die Aufrechterhaltung des Haftbefehls.
-- BGH, Urt. v. 21.07.2021 - 5 StR 420/20, BGHSt 66, 118 — Verwertungsverbote bei rechtswidrig erlangten Beweismitteln: Abwägung nach dem Schweregrad des Strafvorwurfs und der Intensität des Verfahrensverstosses.
-
-## Kommentarliteratur
-
-- Löwe/Rosenberg StPO, § 244 Rn. 1 ff. (Beweisantragsrecht und Aufklärungspflicht)
-- MüKo StPO/Peters § 200 Rn. 1 ff. (Anklageschrift)
-- KK-StPO/Fischer § 341 Rn. 1 ff. (Revisionsfrist)
-- Schönke/Schröder StGB — allgemein bei materiell-rechtlichen Fragen
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
 ## Typischer Verfahrensablauf
 
@@ -100,7 +98,7 @@ Gesondert darzustellen:
 
 ## Besonderheiten im Aktenauszug
 
-- Parteibezeichnungen: „Angeklagter", „Staatsanwaltschaft", „Nebenkläger"
+- Parteibezeichnungen: "Angeklagter", "Staatsanwaltschaft", "Nebenkläger"
 - Keine Schuldvermutung im Aktenauszug
 - Freispruch und Verurteilung neutral darstellen
 - Bei laufender Untersuchungshaft: Haftverlängerungsbeschlüsse und Haftdauer hervorheben

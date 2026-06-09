@@ -1,258 +1,194 @@
 ---
 name: typescript-testing
-description: Frontend testing rules with Vitest, React Testing Library, and MSW. Includes coverage requirements, test design principles, and quality criteria. Use when writing frontend tests or reviewing test quality.
+description: Applies Vitest test design and quality standards. Provides coverage requirements and mock usage guides. Use when writing unit tests.
 ---
 
-# TypeScript Testing Rules (Frontend)
+# TypeScript Testing Rules
 
 ## Test Framework
+
 - **Vitest**: This project uses Vitest
-- **React Testing Library**: For component testing
-- **MSW (Mock Service Worker)**: For API mocking
 - Test imports: `import { describe, it, expect, beforeEach, vi } from 'vitest'`
-- Component test imports: `import { render, screen, fireEvent } from '@testing-library/react'`
 - Mock creation: Use `vi.mock()`
 
 ## Basic Testing Policy
 
 ### Quality Requirements
-- **Coverage**: Unit test coverage must be 60% or higher (Frontend standard 2025)
+- **Coverage**: Unit test coverage must be 70% or higher
 - **Independence**: Each test can run independently without depending on other tests
 - **Reproducibility**: Tests are environment-independent and always return the same results
 - **Readability**: Test code maintains the same quality as production code
 
-### Coverage Requirements (ADR-0002 Compliant)
-**Mandatory**: Unit test coverage must be 60% or higher
-**Component-specific targets**:
-- Atoms (Button, Text, etc.): 70% or higher
-- Molecules (FormField, etc.): 65% or higher
-- Organisms (Header, Footer, etc.): 60% or higher
-- Custom Hooks: 65% or higher
-- Utils: 70% or higher
-
+### Coverage Requirements
+**Mandatory**: Unit test coverage must be 70% or higher
 **Metrics**: Statements, Branches, Functions, Lines
 
 ### Test Types and Scope
-1. **Unit Tests (React Testing Library)**
-   - Verify behavior of individual components or functions
+1. **Unit Tests**
+   - Verify behavior of individual functions or classes
    - Mock all external dependencies
    - Most numerous, implemented with fine granularity
-   - Focus on user-observable behavior
 
-2. **Integration Tests (React Testing Library + MSW)**
+2. **Integration Tests**
    - Verify coordination between multiple components
-   - Mock APIs with MSW (Mock Service Worker)
-   - No actual DB connections (backend manages DB)
+   - Use actual dependencies (DB, API, etc.)
    - Verify major functional flows
 
 3. **Cross-functional Verification in E2E Tests**
    - Mandatory verification of impact on existing features when adding new features
    - Cover integration points with "High" and "Medium" impact levels from Design Doc's "Integration Point Map"
-   - Verification pattern: Existing feature operation → Enable new feature → Verify continuity of existing features
-   - Success criteria: No change in displayed content, rendering time within 5 seconds
+   - Verification pattern: Existing feature operation -> Enable new feature -> Verify continuity of existing features
+   - Success criteria: No change in response content, processing time within 5 seconds
    - Designed for automatic execution in CI/CD pipelines
-
-## Red-Green-Refactor Process (Test-First Development)
-
-**Recommended Principle**: Always start code changes with tests
-
-**Background**:
-- Ensure behavior before changes, prevent regression
-- Clarify expected behavior before implementation
-- Ensure safety during refactoring
-
-**Development Steps**:
-1. **Red**: Write test for expected behavior (it fails)
-2. **Green**: Pass test with minimal implementation
-3. **Refactor**: Improve code while maintaining passing tests
-
-**NG Cases (Test-first not required)**:
-- Pure configuration file changes (vite.config.ts, tailwind.config.js, etc.)
-- Documentation-only updates (README, comments, etc.)
-- Emergency production incident response (post-incident tests mandatory)
-
-## Test Design Principles
-
-### Test Case Structure
-- Tests consist of three stages: "Arrange," "Act," "Assert"
-- Clear naming that shows purpose of each test
-- One test case verifies only one behavior
-
-### Test Data Management
-- Manage test data in dedicated directories or co-located with tests
-- Define test-specific environment variable values
-- Always mock sensitive information
-- Keep test data minimal, using only data directly related to test case verification purposes
-
-### Mock and Stub Usage Policy
-
-✅ **Recommended: Mock external dependencies in unit tests**
-- Merit: Ensures test independence and reproducibility
-- Practice: Mock API calls with MSW, mock external libraries
-
-❌ **Avoid: Actual API connections in unit tests**
-- Reason: Slows test speed and causes environment-dependent problems
-
-### Test Failure Response Decision Criteria
-
-**Fix tests**: Wrong expected values, references to non-existent features, dependence on implementation details, implementation only for tests
-**Fix implementation**: Valid specifications, business logic, important edge cases
-**When in doubt**: Confirm with user
-
-## Test Helper Utilization Rules
-
-### Basic Principles
-Use test helpers to reduce duplication and improve maintainability.
-
-### Decision Criteria
-| Mock Characteristics | Response Policy |
-|---------------------|-----------------|
-| **Simple and stable** | Consolidate in common helpers |
-| **Complex or frequently changing** | Individual implementation |
-| **Duplicated in 3+ places** | Consider consolidation |
-| **Test-specific logic** | Individual implementation |
-
-### Test Helper Usage Examples
-```typescript
-// ✅ Builder pattern for test data
-const testUser = createTestUser({ name: 'Test User', email: 'test@example.com' })
-
-// ✅ Custom render function with providers
-function renderWithProviders(ui: React.ReactElement) {
-  return render(<TestProvider>{ui}</TestProvider>)
-}
-
-// ❌ Individual implementation of duplicate complex mocks
-```
 
 ## Test Implementation Conventions
 
-### Directory Structure (Co-location Principle)
+### Directory Structure
 ```
 src/
-└── components/
-    └── Button/
-        ├── Button.tsx
-        ├── Button.test.tsx  # Co-located with component
-        └── index.ts
+└── application/
+    └── services/
+        ├── __tests__/
+        │   ├── service.test.ts      # Unit tests
+        │   └── service.int.test.ts  # Integration tests
+        └── service.ts
 ```
 
-**Rationale**:
-- React Testing Library best practice
-- ADR-0002 Co-location principle
-- Easy to find and maintain tests alongside implementation
-
 ### Naming Conventions
-- Test files: `{ComponentName}.test.tsx`
-- Integration test files: `{FeatureName}.integration.test.tsx`
-- Test suites: Names describing target components or features
-- Test cases: Names describing expected behavior from user perspective
+- Test files: `{target-file-name}.test.ts`
+- Integration test files: `{target-file-name}.int.test.ts`
+- Test suites: Names describing target features or situations
+- Test cases: Names describing expected behavior
 
 ### Test Code Quality Rules
 
-✅ **Recommended: Keep all tests always active**
+**Recommended: Keep all tests always active**
 - Merit: Guarantees test suite completeness
 - Practice: Fix problematic tests and activate them
 
-❌ **Avoid: test.skip() or commenting out**
+**Avoid: test.skip() or commenting out**
 - Reason: Creates test gaps and incomplete quality checks
 - Solution: Completely delete unnecessary tests
 
-## Test Granularity Principles
-
-### Core Principle: User-Observable Behavior Only
-**MUST Test**: Rendered output, user interactions, accessibility, error states
-**MUST NOT Test**: Component internal state, implementation details, CSS class names
-
-```typescript
-// ✅ Test user-observable behavior
-expect(screen.getByRole('button', { name: 'Submit' })).toBeInTheDocument()
-
-// ❌ Test implementation details
-expect(component.state.count).toBe(0)
-```
-
 ## Test Quality Criteria
 
-These criteria ensure reliable, maintainable tests.
+### Boundary and Error Case Coverage
+Include boundary values and error cases alongside happy paths.
+```typescript
+it('returns 0 for empty array', () => expect(calc([])).toBe(0))
+it('throws on negative price', () => expect(() => calc([{price: -1}])).toThrow())
+```
 
 ### Literal Expected Values
-Use hardcoded literal values for assertions. This ensures independent verification of implementation correctness.
+Use literal values for assertions. Do not replicate implementation logic.
+**Valid test**: Expected value != Mock return value (implementation transforms/processes data)
 ```typescript
-expect(formatPrice(1000)).toBe('¥1,000')
-expect(calculateTax(100)).toBe(10)
-expect(user.role).toBe('admin')
+expect(calcTax(100)).toBe(10)  // not: 100 * TAX_RATE
 ```
 
 ### Result-Based Verification
-Verify final results and outcomes. Use `toHaveBeenCalledWith` for argument verification.
+Verify results, not invocation order or count.
 ```typescript
-expect(mockOnSubmit).toHaveBeenCalledWith({ name: 'test' })
-expect(result).toEqual({ id: '1', status: 'success' })
-expect(screen.getByText('Submitted')).toBeInTheDocument()
+expect(mock).toHaveBeenCalledWith('a')  // not: toHaveBeenNthCalledWith
 ```
 
 ### Meaningful Assertions
-Every test must include at least one `expect()` that validates observable behavior.
+Each test must include at least one verification.
 ```typescript
-it('displays error message on invalid input', () => {
-  render(<Form />)
-  fireEvent.click(screen.getByRole('button', { name: 'Submit' }))
-  expect(screen.getByText('Required field')).toBeInTheDocument()
+it('creates user', async () => {
+  const user = await createUser({name: 'test'})
+  expect(user.id).toBeDefined()
 })
 ```
 
 ### Appropriate Mock Scope
-Mock only direct external I/O dependencies (API clients, database connections). Internal utilities should use real implementations.
+Mock only direct external I/O dependencies. Use real implementations for indirect dependencies.
 ```typescript
-vi.mock('./api/userApi')  // External API - mock
-vi.mock('./lib/database') // External I/O - mock
-// Internal utils like validators/formatters - use real implementations
+vi.mock('./database')  // external I/O only
 ```
+
+### Property-based Testing (fast-check)
+Use fast-check when verifying invariants or properties.
+```typescript
+import fc from 'fast-check'
+
+it('reverses twice equals original', () => {
+  fc.assert(fc.property(fc.array(fc.integer()), (arr) => {
+    return JSON.stringify(arr.reverse().reverse()) === JSON.stringify(arr)
+  }))
+})
+```
+
+**Usage condition**: Use when Property annotations are assigned to ACs in Design Doc.
 
 ## Mock Type Safety Enforcement
 
-### MSW (Mock Service Worker) Setup
+### Minimal Type Definition Requirements
 ```typescript
-// ✅ Type-safe MSW handler
-import { rest } from 'msw'
-
-const handlers = [
-  rest.get('/api/users/:id', (req, res, ctx) => {
-    return res(ctx.json({ id: '1', name: 'John' } satisfies User))
-  })
-]
-```
-
-### Component Mock Type Safety
-```typescript
-// ✅ Only required parts
-type TestProps = Pick<ButtonProps, 'label' | 'onClick'>
-const mockProps: TestProps = { label: 'Click', onClick: vi.fn() }
+// Only required parts
+type TestRepo = Pick<Repository, 'find' | 'save'>
+const mock: TestRepo = { find: vi.fn(), save: vi.fn() }
 
 // Only when absolutely necessary, with clear justification
-const mockRouter = {
-  push: vi.fn()
-} as unknown as Router // Complex router type structure
+const sdkMock = {
+  call: vi.fn()
+} as unknown as ExternalSDK // Complex external SDK type structure
 ```
 
-## Continuity Test Scope
+## Data Layer Testing
 
-Limited to verifying existing feature impact when adding new features. Long-term operations and performance testing are infrastructure responsibilities, not test scope.
+### Mock Limitations for Data Layer
 
-## Basic React Testing Library Example
+Mocks validate call patterns but cannot verify data layer correctness. The following pass through undetected with mock-only testing:
+- Schema mismatches (table names, column names, data types)
+- Query correctness (joins, filters, aggregations, grouping)
+- Database constraints (NOT NULL, UNIQUE, foreign keys)
+- Migration drift (schema changes that make code out of sync)
+
+### When Mocks Are Appropriate for Data Access
+
+- Testing business logic that receives data from the data layer (mock the repository, test the service)
+- Testing error handling paths (simulating connection failures, timeouts)
+- Unit tests where data access is a dependency, not the subject under test
+
+### When Mocks Are Insufficient for Data Access
+
+- Testing repository or data access implementations themselves
+- Verifying query correctness (joins, filters, aggregations, grouping)
+- Testing data integrity constraints
+- Testing migration compatibility
+
+### Real Database Testing (Environment-Dependent)
+
+Options for verifying data layer correctness against a real database engine:
+- **Containerized databases** for CI environments
+- **In-memory databases** for fast feedback (note: dialect differences may mask issues)
+- **Dedicated test databases** with seed data
+
+The appropriate approach depends on project environment and CI/CD capabilities.
+
+### AI-Generated Code and Schema Awareness
+
+- AI-generated data access code has heightened schema hallucination risk
+- Generated queries may use correct syntax but reference nonexistent schema elements
+- Mock-based tests pass regardless of schema accuracy
+- Mitigation: Design Docs should include explicit schema references so that documented schemas can be cross-checked against data access code during review
+
+## Basic Vitest Example
 
 ```typescript
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
-import { Button } from './Button'
 
-describe('Button', () => {
-  it('should call onClick when clicked', () => {
-    const onClick = vi.fn()
-    render(<Button label="Click me" onClick={onClick} />)
-    fireEvent.click(screen.getByRole('button', { name: 'Click me' }))
-    expect(onClick).toHaveBeenCalledOnce()
+vi.mock('./userService', () => ({
+  getUserById: vi.fn(),
+  updateUser: vi.fn()
+}))
+
+describe('ComponentName', () => {
+  it('should follow AAA pattern', () => {
+    const input = 'test'
+    const result = someFunction(input)
+    expect(result).toBe('expected')
   })
 })
 ```

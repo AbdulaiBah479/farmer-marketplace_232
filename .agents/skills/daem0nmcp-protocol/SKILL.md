@@ -16,15 +16,17 @@ When Daem0nMCP memory tools are available, you MUST follow this protocol. Memory
 First, verify Daem0nMCP tools are available:
 
 ```
-Look for these 8 workflow tools in your available tools:
-- mcp__daem0nmcp__commune      (session start & status)
-- mcp__daem0nmcp__consult      (pre-action intelligence)
-- mcp__daem0nmcp__inscribe     (memory writing & linking)
-- mcp__daem0nmcp__reflect      (outcomes & verification)
-- mcp__daem0nmcp__understand   (code comprehension)
-- mcp__daem0nmcp__govern       (rules & triggers)
-- mcp__daem0nmcp__explore      (graph & discovery)
-- mcp__daem0nmcp__maintain     (housekeeping & federation)
+Look for these tools in your available tools:
+- mcp__daem0nmcp__get_briefing
+- mcp__daem0nmcp__context_check
+- mcp__daem0nmcp__remember
+- mcp__daem0nmcp__record_outcome
+- mcp__daem0nmcp__link_memories
+- mcp__daem0nmcp__trace_chain
+- mcp__daem0nmcp__get_graph
+- mcp__daem0nmcp__find_code
+- mcp__daem0nmcp__analyze_impact
+- mcp__daem0nmcp__index_project
 ```
 
 **If tools are NOT available:** This skill does not apply. Proceed normally.
@@ -38,7 +40,7 @@ Look for these 8 workflow tools in your available tools:
 ```
 IMMEDIATELY when you have daem0nmcp tools:
 
-mcp__daem0nmcp__commune(action="briefing")
+mcp__daem0nmcp__get_briefing()
 
 DO NOT:
 - Ask user what they want first
@@ -57,14 +59,14 @@ The briefing loads:
 ```
 BEFORE touching any file:
 
-mcp__daem0nmcp__consult(action="preflight", description="what you're about to do")
+mcp__daem0nmcp__context_check(description="what you're about to do")
 
 OR for specific files:
 
-mcp__daem0nmcp__consult(action="recall_file", file_path="path/to/file")
+mcp__daem0nmcp__recall_for_file(file_path="path/to/file")
 ```
 
-**If preflight returns:**
+**If context_check returns:**
 - **WARNING:** You MUST acknowledge it to the user
 - **FAILED APPROACH:** Explain how your approach differs
 - **must_not:** These are HARD CONSTRAINTS - do not violate
@@ -74,8 +76,7 @@ mcp__daem0nmcp__consult(action="recall_file", file_path="path/to/file")
 ```
 AFTER every significant decision:
 
-memory_result = mcp__daem0nmcp__inscribe(
-    action="remember",
+memory_result = mcp__daem0nmcp__remember(
     category="decision",  # or "pattern", "warning", "learning"
     content="What you decided",
     rationale="Why you decided it",
@@ -83,7 +84,7 @@ memory_result = mcp__daem0nmcp__inscribe(
     tags=["relevant", "tags"]
 )
 
-SAVE THE MEMORY ID - you need it for reflect(action="outcome")
+SAVE THE MEMORY ID - you need it for record_outcome
 ```
 
 **Category Guide:**
@@ -99,10 +100,9 @@ SAVE THE MEMORY ID - you need it for reflect(action="outcome")
 ```
 AFTER implementing and testing:
 
-mcp__daem0nmcp__reflect(
-    action="outcome",
-    memory_id=<id from inscribe>,
-    outcome_text="What actually happened",
+mcp__daem0nmcp__record_outcome(
+    memory_id=<id from remember>,
+    outcome="What actually happened",
     worked=true  # or false
 )
 ```
@@ -114,10 +114,10 @@ mcp__daem0nmcp__reflect(
 
 ## Red Flags - STOP
 
-- About to edit a file without calling `consult(action="recall_file")`
-- Making a significant decision without calling `inscribe(action="remember")`
-- Implementation complete but no `reflect(action="outcome")` called
-- Preflight returned WARNING but you didn't acknowledge it
+- About to edit a file without calling `recall_for_file`
+- Making a significant decision without calling `remember`
+- Implementation complete but no `record_outcome` called
+- Context check returned WARNING but you didn't acknowledge it
 - Repeating an approach that previously failed
 
 ## Rationalization Prevention
@@ -136,50 +136,52 @@ The Sacred Covenant is now ENFORCED, not advisory:
 
 ### What Happens If You Skip Steps
 
-1. **Skip `commune(action="briefing")`**: ALL tools return `COMMUNION_REQUIRED` block
-2. **Skip `consult(action="preflight")`**: Mutating tools return `COUNSEL_REQUIRED` block
+1. **Skip get_briefing()**: ALL tools return `COMMUNION_REQUIRED` block
+2. **Skip context_check()**: Mutating tools return `COUNSEL_REQUIRED` block
 3. **Each block includes a `remedy`**: The exact tool call to fix it
 
-### Enforcement
+### Enforcement Decorators
 
-Workflow actions are classified:
-- **Requires counsel**: `inscribe(action="remember")`, `inscribe(action="remember_batch")`, `govern(action="add_rule")`, `govern(action="update_rule")`, `maintain(action="prune")`, `maintain(action="cleanup")`, `maintain(action="compact")`, `maintain(action="export")`, `maintain(action="import_data")`, `inscribe(action="ingest")`
-- **Requires communion**: All other actions except briefing and health
-- **Exempt**: `commune(action="briefing")`, `commune(action="health")`
+Tools are classified:
+- **@requires_counsel**: remember, remember_batch, add_rule, update_rule, prune_memories, cleanup_memories, compact_memories, export_data, import_data, ingest_doc
+- **@requires_communion**: All other tools except get_briefing and health
+- **Exempt**: get_briefing, health
 
 ### Preflight Token
 
-After `consult(action="preflight")`, you receive a `preflight_token` in the response.
+After `context_check()`, you receive a `preflight_token` in the response.
 This is cryptographic proof you consulted the Daem0n.
 Token is valid for 5 minutes.
 
 ### Parallel Preflight
 
-Before file edits, run these IN PARALLEL for maximum efficiency:
-- `consult(action="preflight")` + `consult(action="recall_file")` + `understand(action="impact")`
+Before file edits, use the parallel-preflight skill to run:
+- context_check + recall_for_file + analyze_impact
+
+IN PARALLEL for maximum efficiency.
 
 ## Workflow Summary
 
 ```
 SESSION START
-    └─> commune(action="briefing")
+    └─> get_briefing()
 
 BEFORE CHANGES
-    └─> consult(action="preflight", description="what you're doing")
-    └─> consult(action="recall_file", file_path="path") for specific files
+    └─> context_check("what you're doing")
+    └─> recall_for_file("path") for specific files
     └─> ACKNOWLEDGE any warnings
 
 AFTER DECISIONS
-    └─> inscribe(action="remember", category=..., content=..., rationale=...)
+    └─> remember(category, content, rationale)
     └─> SAVE the memory_id
-    └─> inscribe(action="link") if causally related to other decisions
+    └─> link_memories() if causally related to other decisions
 
 AFTER IMPLEMENTATION
-    └─> reflect(action="outcome", memory_id=..., outcome_text=..., worked=...)
+    └─> record_outcome(memory_id, outcome, worked)
 
 INVESTIGATING CONTEXT
-    └─> explore(action="chain") to understand decision history
-    └─> explore(action="graph") to visualize relationships
+    └─> trace_chain() to understand decision history
+    └─> get_graph() to visualize relationships
 ```
 
 ## Why This Matters
@@ -215,8 +217,7 @@ Memories can be explicitly linked to create a knowledge graph. Use these when de
 ### Link Memories
 
 ```
-mcp__daem0nmcp__inscribe(
-    action="link",
+mcp__daem0nmcp__link_memories(
     source_id=<memory_id>,
     target_id=<other_memory_id>,
     relationship="led_to",
@@ -232,8 +233,7 @@ mcp__daem0nmcp__inscribe(
 ### Trace Causal Chains
 
 ```
-mcp__daem0nmcp__explore(
-    action="related",
+mcp__daem0nmcp__trace_chain(
     memory_id=<id>,
     direction="backward",  # "forward", "backward", or "both"
     max_depth=5
@@ -248,8 +248,7 @@ mcp__daem0nmcp__explore(
 ### Visualize the Graph
 
 ```
-mcp__daem0nmcp__explore(
-    action="graph",
+mcp__daem0nmcp__get_graph(
     memory_ids=[1, 2, 3],  # OR
     topic="authentication",
     format="mermaid"  # or "json"
@@ -261,8 +260,7 @@ Returns a mermaid diagram or JSON structure showing nodes and edges.
 ### Remove Links
 
 ```
-mcp__daem0nmcp__inscribe(
-    action="unlink",
+mcp__daem0nmcp__unlink_memories(
     source_id=<id>,
     target_id=<id>,
     relationship="led_to"
@@ -298,7 +296,7 @@ You don't need to manually tag common patterns.
 For projects with many memories, use condensed recall:
 
 ```
-mcp__daem0nmcp__consult(action="recall", topic="authentication", condensed=True)
+mcp__daem0nmcp__recall(topic="authentication", condensed=True)
 ```
 
 Returns compressed output (~75% token reduction):
@@ -310,17 +308,17 @@ Returns compressed output (~75% token reduction):
 
 **Index your codebase:**
 ```
-mcp__daem0nmcp__understand(action="index")  # Index all code entities
+mcp__daem0nmcp__index_project()  # Index all code entities
 ```
 
 **Search code semantically:**
 ```
-mcp__daem0nmcp__understand(action="find", query="user authentication")
+mcp__daem0nmcp__find_code(query="user authentication")
 ```
 
 **Analyze change impact:**
 ```
-mcp__daem0nmcp__understand(action="impact", entity_name="UserService.authenticate")
+mcp__daem0nmcp__analyze_impact(entity_name="UserService.authenticate")
 ```
 
 ### Incremental Indexing
@@ -333,7 +331,7 @@ Only re-indexes changed files:
 ### Enhanced Health Monitoring
 
 ```
-mcp__daem0nmcp__commune(action="health")
+mcp__daem0nmcp__health()
 ```
 
 Now returns:

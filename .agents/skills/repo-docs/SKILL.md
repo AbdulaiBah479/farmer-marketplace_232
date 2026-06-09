@@ -1,157 +1,241 @@
 ---
 name: repo-docs
-description: Update and maintain core repository documentation files (README.md, CHANGELOG.md, LICENSE, CONTRIBUTING.md) before commits or releases. Use when users need to update documentation to reflect code changes, prepare for releases, or ensure documentation consistency.
+description: This skill should be used when the user asks to "generate repository documentation", "create a README", "document API", "write architecture docs", "add CONTRIBUTING guide", "update repo docs", "document codebase", or mentions repository documentation, codebase analysis, or cross-repository integration documentation.
+version: 1.0.0
 ---
 
-# Repository Documentation Updates
+# Repository Documentation
 
-This skill helps update core repository documentation files before committing changes or creating releases.
+Generate comprehensive, self-contained documentation for code repositories with awareness of cross-repository integration points and dependencies.
 
-## When to Use This Skill
+## Purpose
 
-Use this skill when:
-- Preparing to commit changes and need to update documentation
-- Creating a release and need to update CHANGELOG
-- Documentation is out of sync with code changes
-- Need to add or update core repository files (README, CHANGELOG, LICENSE, CONTRIBUTING)
+Create and maintain repository documentation that includes README files, API documentation, contributing guides, and architecture documents. Each generated document is self-contained while explicitly documenting how the repository interacts with other repositories, services, and external dependencies.
 
-## Core Documentation Files
+## When to Use
+
+Trigger this skill when:
+- User asks to "generate documentation for this repo"
+- User mentions "create/update README", "document API", "write architecture docs"
+- User asks about "how this repo connects to other repos"
+- User requests "CONTRIBUTING guide" or "setup documentation"
+- User wants to document integration points with other repositories
+
+## Documentation Workflow
+
+### Phase 1: Repository Analysis
+
+Before generating documentation, analyze the codebase to understand:
+
+1. **Repository Structure**
+   - Use `Glob` to discover key files: `README.md`, `package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`, `pom.xml`, etc.
+   - Identify main source directories (`src/`, `lib/`, `app/`, `internal/`, etc.)
+   - Find configuration files (`.env.example`, `docker/`, `k8s/`, etc.)
+   - Locate existing documentation (`docs/`, `*.md` files)
+
+2. **Cross-Repository Integration Discovery**
+   - Search for imports/requires referencing other repos (use `Grep` for common patterns)
+   - Look for API client libraries pointing to internal services
+   - Find shared dependencies or monorepo references
+   - Identify external service integrations (databases, APIs, message queues)
+   - Check for `.gitmodules`, `workspace` declarations, or subpackage references
+
+3. **Technology Detection**
+   - Identify primary programming language(s)
+   - Find frameworks and major dependencies
+   - Detect build systems and tooling
+   - Note testing frameworks and CI/CD configuration
+
+### Phase 2: Document Generation
+
+For each document type, follow the structured templates in `examples/`. Templates contain:
+- Section headers with placeholder content
+- Specific placeholders for integration points
+- Cross-repository dependency sections
+
+**Key Principle:** Every generated document must include an "Integrations" or "Related Repositories" section that explicitly documents:
+- Which other repositories this repo depends on
+- How this repo is consumed by other repositories
+- External services and dependencies
+- Data flow between repositories
+
+### Phase 3: Existing Document Updates
+
+When updating existing documentation:
+1. Read the current document using `Read`
+2. Compare against current codebase state
+3. Identify gaps (missing features, outdated integrations, stale dependencies)
+4. Use `Edit` to update specific sections
+5. Preserve existing voice and formatting where appropriate
+6. Add newly discovered integration points
+
+## Document Types
 
 ### README.md
-Primary documentation file covering:
-- Project overview and purpose
-- Setup and installation instructions
-- Basic usage examples
-- Development guidelines
-- Links to additional documentation
 
-**Common updates:**
-- Add new features or capabilities
-- Update installation steps
-- Revise configuration instructions
-- Add or update examples
+The primary entry point for the repository. Use `examples/README-template.md` as a starting point.
 
-### CHANGELOG.md
-Chronological record of changes following [Keep a Changelog](https://keepachangelog.com/) format.
+Required sections:
+- Project title and brief description
+- Integration points with other repositories
+- Quick start / Installation
+- Usage examples
+- API/CLI reference (link to detailed docs if separate)
+- Contributing (link to CONTRIBUTING.md)
+- License
 
-**Structure:**
-```markdown
-# Changelog
+### API Documentation
 
-## [Unreleased]
-### Added
-- New features not yet released
+Document public APIs, functions, classes, and endpoints. Use `examples/API-template.md`.
 
-### Changed
-- Changes to existing functionality
-
-### Fixed
-- Bug fixes
-
-## [X.Y.Z] - YYYY-MM-DD
-### Added
-- Feature descriptions
-
-### Changed
-- Modification descriptions
-
-### Fixed
-- Bug fix descriptions
-```
-
-**Common updates:**
-- Move items from Unreleased to new version section
-- Add new version entry with date
-- Document new features, changes, and fixes
-- Add version comparison links at bottom
-
-### LICENSE
-Legal terms for code usage and distribution.
-
-**Common updates:**
-- Update copyright year
-- Change license type (requires project decision)
-- Update copyright holder
+Required sections:
+- Overview
+- Authentication/Authorization
+- Endpoints/Functions with signatures
+- Request/response examples
+- Error handling
+- Rate limits (if applicable)
+- Integration points with other services
 
 ### CONTRIBUTING.md
-Guidelines for contributors.
 
-**Typical sections:**
-- How to report issues
-- Development workflow
-- Code submission process
-- Testing requirements
-- Communication channels
+Guide for contributors. Use `examples/CONTRIBUTING-template.md`.
 
-**Common updates:**
-- Update workflow steps
-- Revise standards or requirements
-- Update contact information
-- Add new guidelines
+Required sections:
+- Prerequisites (other repos to clone, tools to install)
+- Development setup
+- Running tests
+- Code style guidelines
+- Pull request process
+- Related repositories and their roles
 
-## Workflow for Release Preparation
+### ARCHITECTURE.md
 
-When preparing a release:
+High-level design and integration documentation. Use `examples/ARCHITECTURE-template.md`.
 
-1. **Review changes since last release**
-   - Check git log or PR history
-   - Identify user-facing changes
-   - Note breaking changes or deprecations
+Required sections:
+- System overview
+- Component diagram (describe verbally or use Mermaid)
+- Cross-repository architecture
+- Data flow between repositories
+- Design decisions and rationale
+- Scaling considerations
 
-2. **Update CHANGELOG.md**
-   - Create new version section: `[X.Y.Z] - YYYY-MM-DD`
-   - Move items from Unreleased to new version
-   - Categorize: Added, Changed, Deprecated, Removed, Fixed, Security
-   - Add version comparison link
+### INTEGRATIONS.md (Optional but Recommended)
 
-3. **Update README.md if needed**
-   - Add new features to overview
-   - Update version numbers
-   - Revise examples if API changed
-   - Update dependencies list
+Dedicated document for cross-repository relationships. Use `examples/INTEGRATIONS-template.md`.
 
-4. **Update LICENSE if needed**
-   - Update copyright year
-   - Verify copyright holder
+Sections:
+- Upstream dependencies (repos/services this depends on)
+- Downstream consumers (repos/services that depend on this)
+- Sibling repositories (related repos in the same ecosystem)
+- External services
+- Communication protocols between services
 
-5. **Review CONTRIBUTING.md**
-   - Ensure workflow is current
-   - Update any changed processes
+## Integration Discovery Guidelines
 
-## Workflow for Regular Commits
+When scanning for integration points, search for:
 
-Before committing changes:
+| Pattern | Indicates |
+|---------|-----------|
+| `from @org/` | Internal package/repo imports (JS/TS) |
+| `import.*internal` | Internal imports (Python/Java) |
+| `github.com/org/` | Go module references to other repos |
+| `client.*[Aa]pi` | API clients to other services |
+| `restTemplate` | REST client usage (Java) |
+| `fetch(` or `axios` | HTTP calls to external services |
+| `messaging:` | Spring Cloud/Sidecar integrations |
+| `pom.xml` `<artifactId>` | Maven dependencies |
 
-1. **Identify documentation impact**
-   - Does change affect usage?
-   - Are there new features?
-   - Did configuration change?
-   - Are there breaking changes?
+Use `scripts/find-integration-points.py` to automate discovery.
 
-2. **Update CHANGELOG.md Unreleased section**
-   - Add to appropriate category (Added/Changed/Fixed)
-   - Be specific and user-focused
-   - Note if breaking change
+## Writing Guidelines
 
-3. **Update README.md if needed**
-   - Add new features
-   - Update examples
-   - Revise configuration steps
+### 1. Be Specific About Integrations
+- Name the repositories explicitly: "Depends on `user-service` repo for authentication"
+- Explain the relationship: "This repo consumes events from `event-bus` via Kafka"
+- Link to the actual repositories when possible
 
-## Best Practices
+### 2. Self-Contained Yet Connected
+- Each document should stand alone
+- Cross-reference other documents and repositories explicitly
+- Include enough context for someone new to the broader ecosystem
 
-- **Keep CHANGELOG current** - Update with each change, not at release time
-- **Be specific** - "Added user authentication" not "Made improvements"
-- **User perspective** - Document what users see, not internal refactoring
-- **Version format** - Follow Semantic Versioning (MAJOR.MINOR.PATCH)
-- **Date format** - Use ISO 8601 (YYYY-MM-DD)
-- **Categorize correctly** - Use standard categories (Added, Changed, Fixed, etc.)
-- **Link commits** - Reference commit SHAs or PR numbers when helpful
+### 3. Concise and Scannable
+- **Use bullet points** over paragraphs for lists and procedures
+- **Lead with the essential** - put most important information first
+- **Use tables** for reference material (configs, commands, options)
+- **Code over prose** - show examples instead of lengthy explanations
+- **Collapse details** - use collapsible sections or "expand to read more" for depth
+- **One concept per section** - avoid mixing multiple topics
+- **Link, don't duplicate** - reference existing docs instead of repeating
+- **Target reading time** - a README should take ~3-5 minutes to scan
 
-## Output Format
+### 4. Keep Examples Current
+- Use actual code snippets from the repository
+- Verify commands work before including them
+- Update version numbers and dependency references
+- Keep examples minimal - show only what's needed to understand
 
-Generate updated documentation files directly in `/mnt/user-data/outputs/` with:
-- Proper markdown formatting
-- Consistent structure
-- Current information
-- Clear, concise descriptions
+### 5. Progressive Detail
+- Lead with high-level overview
+- Link to detailed documentation
+- Provide quick paths to "just make it work" and deep dives
+
+## Tools and Utilities
+
+### Scripts
+
+Use scripts in `scripts/` for automation:
+
+- **`find-integration-points.py`** - Scan codebase for references to other repositories
+- **`analyze-repo-structure.py`** - Generate summary of repository structure and dependencies
+
+Execute scripts without reading into context:
+```bash
+python skills/repo-docs/scripts/find-integration-points.py /path/to/repo
+```
+
+### References
+
+Consult `references/` for detailed guidance:
+- **`references/best-practices.md`** - Repository documentation standards
+- **`references/integration-patterns.md`** - Common integration patterns and how to document them
+- **`references/tech-detection.md`** - Technology detection patterns
+
+## Additional Resources
+
+### Reference Files
+
+For detailed guidance beyond this core workflow:
+- **`references/best-practices.md`** - Industry standards for repository documentation
+- **`references/integration-patterns.md`** - Documenting microservices, monorepos, and distributed systems
+- **`references/tech-detection.md`** - Patterns for identifying technologies and frameworks
+
+### Example Templates
+
+Templates in `examples/` provide starting points:
+- **`examples/README-template.md`** - Standard README structure with integrations section
+- **`examples/API-template.md`** - API documentation template
+- **`examples/CONTRIBUTING-template.md`** - Contributor guide template
+- **`examples/ARCHITECTURE-template.md`** - Architecture documentation template
+- **`examples/INTEGRATIONS-template.md`** - Dedicated integrations document
+
+### Scripts
+
+Utilities in `scripts/`:
+- **`scripts/find-integration-points.py`** - Automated integration discovery
+- **`scripts/analyze-repo-structure.py`** - Repository structure analysis
+
+## Quality Checklist
+
+Before finalizing documentation, verify:
+
+- [ ] All cross-repository dependencies are documented
+- [ ] Integration points are explicitly named and described
+- [ ] Quick start instructions actually work
+- [ ] Code examples are from the actual codebase
+- [ ] Links to other repos are included where applicable
+- [ ] External service dependencies are listed
+- [ ] Setup instructions include dependencies on other repos
+- [ ] Document is readable without access to other repositories

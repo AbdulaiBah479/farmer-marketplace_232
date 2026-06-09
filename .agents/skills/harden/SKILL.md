@@ -1,323 +1,358 @@
 ---
 name: harden
-description: Applies NIST/CWE security hardening to Python and Rust code. Use when auditing code for vulnerabilities or proposing concrete security remediations.
-globs: "**/*.{py,rs,toml,yaml,yml,sh}"
-alwaysApply: false
-category: security
-tags:
-- security
-- hardening
-- nist
-- supply-chain
-- python
-- rust
-- cwe
-tools: []
-provides:
-  governance:
-  - hardening-report
-  - remediation-proposal
-  security:
-  - vuln-detection
-  - hardening-posture
-usage_patterns:
-- security-hardening
-- quarterly-posture-audit
-- pre-release-security-gate
-complexity: advanced
-model_hint: deep
-estimated_tokens: 1100
-progressive_loading: true
-dependencies:
-- pensive:safety-critical-patterns
-- pensive:rust-review
-- pensive:bug-review
-- pensive:tiered-audit
-- pensive:blast-radius
-- leyline:supply-chain-advisory
-- leyline:authentication-patterns
-- leyline:content-sanitization
-- abstract:hook-authoring
-- imbue:proof-of-work
-- imbue:review-core
-- imbue:structured-output
-modules:
-- modules/nist-controls.md
-- modules/python-checks.md
-- modules/rust-checks.md
-- modules/cross-cutting.md
-- modules/frontier-checks.md
-- modules/proposal-shape.md
+description: Improve interface resilience through better error handling, i18n support, text overflow handling, and edge case management. Makes interfaces robust and production-ready.
+args:
+  - name: target
+    description: The feature or area to harden (optional)
+    required: false
+user-invokable: true
 ---
 
-# Harden Codebase Skill
+Strengthen interfaces against edge cases, errors, internationalization issues, and real-world usage scenarios that break idealized designs.
 
-Active security hardening: scan the existing repository for
-vulnerabilities and forward-facing threats, then propose concrete
-remediations the user can approve, defer, or file.
+## Assess Hardening Needs
 
-This skill is the engine behind `/harden`. It complements the
-Claude Code built-in `/security-review` (which scans the pending
-diff) by sweeping the whole repository against citation-backed
-checks rather than line-level review of in-flight code.
+Identify weaknesses and edge cases:
 
-## When To Use
+1. **Test with extreme inputs**:
+   - Very long text (names, descriptions, titles)
+   - Very short text (empty, single character)
+   - Special characters (emoji, RTL text, accents)
+   - Large numbers (millions, billions)
+   - Many items (1000+ list items, 50+ options)
+   - No data (empty states)
 
-- Quarterly security-posture audits.
-- Before tagging a release that touches sensitive code paths.
-- After a published advisory affects the language ecosystem.
-- When onboarding a new repository and want a baseline.
-- After integrating a new dependency or upstream service.
+2. **Test error scenarios**:
+   - Network failures (offline, slow, timeout)
+   - API errors (400, 401, 403, 404, 500)
+   - Validation errors
+   - Permission errors
+   - Rate limiting
+   - Concurrent operations
 
-## When NOT To Use
+3. **Test internationalization**:
+   - Long translations (German is often 30% longer than English)
+   - RTL languages (Arabic, Hebrew)
+   - Character sets (Chinese, Japanese, Korean, emoji)
+   - Date/time formats
+   - Number formats (1,000 vs 1.000)
+   - Currency symbols
 
-- Pending-diff review on a single PR. Use `/security-review`.
-- Architecture-level threat modeling. Use `attune:war-room`
-  with a security-focused panel.
-- Cryptographic protocol review. The skill flags suspect crypto
-  but does not propose protocol fixes (specialist work).
-- One-off bug hunting. Use `pensive:bug-review`.
+**CRITICAL**: Designs that only work with perfect data aren't production-ready. Harden against reality.
 
-## Required TodoWrite Items
+## Hardening Dimensions
 
-1. `harden:discovery`: inventory languages, build files, hooks,
-   CI workflows
-2. `harden:scan-python`: run python-checks.md detectors when
-   Python is present
-3. `harden:scan-rust`: run rust-checks.md detectors when Rust
-   is present
-4. `harden:scan-cross-cutting`: run cross-cutting.md detectors
-   (deps, secrets, SBOM, CI)
-5. `harden:scan-frontier`: run frontier-checks.md (PQC, LLM
-   supply chain, sandboxing)
-6. `harden:nist-mapping`: map findings to NIST SSDF practices
-7. `harden:proposals`: for each finding above the threshold,
-   draft a concrete remediation per `modules/proposal-shape.md`
-8. `harden:approval-gate`: present proposals to the user for
-   apply / file / defer / reject
-9. `harden:apply-and-validate`: apply approved proposals as
-   discrete commits, re-run gates, capture evidence
-10. `harden:findings-verified`: citations confirmed by
-    `citation_verifier.py`
-11. `harden:report`: write `reviews/harden-<date>.md` and
-    optionally post to Discussions
+Systematically improve resilience:
 
-## Progressive Loading
+### Text Overflow & Wrapping
 
-Load modules based on what the discovery step finds.
+**Long text handling**:
+```css
+/* Single line with ellipsis */
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
-| Detected | Load |
-|----------|------|
-| Python files (`*.py`, `pyproject.toml`) | `modules/python-checks.md` |
-| Rust files (`*.rs`, `Cargo.toml`) | `modules/rust-checks.md` |
-| Any | `modules/nist-controls.md` (citation backbone) |
-| Any | `modules/cross-cutting.md` (deps, secrets, CI) |
-| LLM SDK use (`anthropic`, `openai`), MCP server, post-quantum surface | `modules/frontier-checks.md` |
-| Any with proposals enabled | `modules/proposal-shape.md` |
+/* Multi-line with clamp */
+.line-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 
-The module hub keeps the SKILL.md itself under the
-`estimated_tokens: 1100` budget. Detail lives in the modules.
-
-## Core Workflow
-
-### Phase 1: Discovery
-
-Inventory the repo without modifying anything:
-
-```bash
-# Languages and build files
-find . -type f \( -name '*.py' -o -name '*.rs' -o -name '*.sh' \) \
-  | head -200 > /tmp/harden-langs.txt
-
-# Build manifests
-ls pyproject.toml Cargo.toml package.json go.mod 2>/dev/null
-
-# CI workflows and pre-commit
-ls .github/workflows/ .pre-commit-config.yaml 2>/dev/null
-
-# Hooks and Dockerfiles
-find . -path ./node_modules -prune -o -type f \
-  \( -name 'hooks.json' -o -name 'Dockerfile*' \) -print
+/* Allow wrapping */
+.wrap {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
 ```
 
-Dispatch `/discovery-prefilter` if the repo has > 5000 source files
-to bound the scan.
+**Flex/Grid overflow**:
+```css
+/* Prevent flex items from overflowing */
+.flex-item {
+  min-width: 0; /* Allow shrinking below content size */
+  overflow: hidden;
+}
 
-### Phase 2: Citation-backed scan
-
-For each detected language, load the matching module and run its
-detector list. Each detector outputs findings with the schema
-defined in `modules/proposal-shape.md`. The citation column is
-mandatory: a finding without a NIST/CWE reference is downgraded
-to "advisory" and not eligible for active proposal.
-
-### Phase 3: NIST mapping
-
-Group findings by SSDF practice (PW.4, PW.8, RV.1, etc.) and CWE
-ID. The mapping table lives in `modules/nist-controls.md`. The
-report's executive summary references SSDF practice coverage so
-the audit is comparable across runs.
-
-### Phase 4: Proposal generation
-
-For each finding above the configured severity threshold, draft a
-concrete remediation per `modules/proposal-shape.md`:
-
-- Specific files and lines touched
-- Diff or config snippet (not "consider doing X")
-- Blast-radius assessment via `pensive:blast-radius`
-- Reversal plan: how to revert if the change breaks behavior
-- Test that should pass after the change
-
-### Phase 5: Approval gate
-
-Present proposals one at a time via `AskUserQuestion`. Default
-options: **apply**, **file as issue**, **defer to backlog**,
-**reject**. Auto-apply is opt-in via the `--auto-apply` flag and
-respects a per-finding severity threshold.
-
-### Phase 6: Apply and validate
-
-Apply each approved proposal as a discrete commit:
-
-```bash
-git add <touched files>
-git commit -m "harden: <finding-id> <one-line summary>"
+/* Prevent grid items from overflowing */
+.grid-item {
+  min-width: 0;
+  min-height: 0;
+}
 ```
 
-After each apply, re-run the project gates:
+**Responsive text sizing**:
+- Use `clamp()` for fluid typography
+- Set minimum readable sizes (14px on mobile)
+- Test text scaling (zoom to 200%)
+- Ensure containers expand with text
 
-```bash
-make test --quiet && make lint && make type-check
+### Internationalization (i18n)
+
+**Text expansion**:
+- Add 30-40% space budget for translations
+- Use flexbox/grid that adapts to content
+- Test with longest language (usually German)
+- Avoid fixed widths on text containers
+
+```jsx
+// ❌ Bad: Assumes short English text
+<button className="w-24">Submit</button>
+
+// ✅ Good: Adapts to content
+<button className="px-4 py-2">Submit</button>
 ```
 
-If a gate fails, revert the commit (`git revert HEAD --no-edit`)
-and downgrade the finding to "needs human design."
+**RTL (Right-to-Left) support**:
+```css
+/* Use logical properties */
+margin-inline-start: 1rem; /* Not margin-left */
+padding-inline: 1rem; /* Not padding-left/right */
+border-inline-end: 1px solid; /* Not border-right */
 
-### Phase 7: Report
-
-Write `reviews/harden-<date>.md` with:
-
-- Executive summary (SSDF practice coverage, CWE distribution)
-- Findings table grouped by severity
-- Per-finding detail: detection signal, citation, proposal, status
-- Disposition table (applied / filed / deferred / rejected)
-- Re-run instructions
-
-If running inside a PR context, post the executive summary as a
-comment via `abstract:post_review_insights`.
-
-## Severity Classification
-
-| Severity | Definition | Default disposition |
-|----------|------------|---------------------|
-| **CRITICAL** | Active exploit path, RCE, credential leak | apply or file immediately |
-| **HIGH** | Plausible exploit, missing defense-in-depth on attack surface | propose for apply |
-| **MEDIUM** | Best-practice gap, hardening opportunity | propose for apply with `--auto-apply medium` |
-| **LOW** | Style/documentation gap with security flavor | file as issue |
-| **ADVISORY** | Pattern detected without exploit narrative | report only |
-
-## Output Format
-
-```markdown
-# Hardening Report — <date>
-
-## Executive Summary
-
-- Codebase: <repo> @ <sha>
-- Languages scanned: Python (X files), Rust (Y files)
-- NIST SSDF practices covered: PW.4, PW.7, PW.8, RV.1, RV.2
-- CWE Top 25 hits: <count> across <distinct CWEs>
-- Disposition: <N> applied, <N> filed, <N> deferred, <N> rejected
-
-## Findings
-
-| ID | Severity | Citation | File:Line | Disposition |
-|----|----------|----------|-----------|-------------|
-| H1 | CRITICAL | CWE-502, NIST SSDF PW.7 | `src/x.py:45` | applied (commit abc123) |
-| H2 | HIGH | CWE-89, NIST SSDF PW.4 | `src/y.py:120` | filed (#456) |
-
-## Per-finding detail
-
-### H1 — Unsafe deserialization
-
-**Citation:** CWE-502 (Deserialization of Untrusted Data),
-NIST SSDF PW.7 (Review and analyze human-readable code).
-
-**Detection signal:**
-- File: `src/x.py:45`
-- Anchor: `data = pickle.loads(user_supplied_input)`
-- Pattern: <module>.loads(user_supplied_input)
-- Reachability: untrusted, comes from request body
-
-**Proposal:** ...
-
-**Blast radius:** ...
-
-**Reversal plan:** ...
+/* Or use dir attribute */
+[dir="rtl"] .arrow { transform: scaleX(-1); }
 ```
 
-## Safety Rails
+**Character set support**:
+- Use UTF-8 encoding everywhere
+- Test with Chinese/Japanese/Korean (CJK) characters
+- Test with emoji (they can be 2-4 bytes)
+- Handle different scripts (Latin, Cyrillic, Arabic, etc.)
 
-- **Never apply without approval.** Even with `--auto-apply`,
-  CRITICAL findings always prompt.
-- **One finding per commit.** Reversals are per-finding, not
-  per-batch.
-- **Re-run gates after each apply.** A gate failure reverts the
-  commit and downgrades the finding.
-- **Citation is mandatory.** Findings without a NIST/CWE/RustSec
-  reference are advisory only and skip the apply phase.
-- **Read-only on first run.** First invocation defaults to
-  `--report-only` until the user has reviewed at least one
-  report and explicitly opts into proposals.
+**Date/Time formatting**:
+```javascript
+// ✅ Use Intl API for proper formatting
+new Intl.DateTimeFormat('en-US').format(date); // 1/15/2024
+new Intl.DateTimeFormat('de-DE').format(date); // 15.1.2024
 
-## Integration
-
-The skill composes (rather than re-implements):
-
-- `pensive:rust-review`: full Rust audit when Rust is present
-- `pensive:bug-review`: bug-hunting backbone
-- `pensive:safety-critical-patterns`: NASA Power-of-10 adapted
-- `pensive:tiered-audit`: three-tier discipline (`--tier 1/2/3`)
-- `pensive:blast-radius`: change-impact assessment for proposals
-- `leyline:supply-chain-advisory`: dependency posture
-- `leyline:authentication-patterns`: auth/credential review
-- `leyline:content-sanitization`: input handling
-- `abstract:hook-authoring`: hook-event security
-- `imbue:proof-of-work`: evidence discipline for findings
-
-### Verify Findings Are Grounded (`harden:findings-verified`)
-
-Every finding must cite a real location and a verbatim anchor. Write
-findings to `.review/findings.json` and confirm each citation resolves:
-
-```bash
-python plugins/imbue/scripts/citation_verifier.py \
-  --findings .review/findings.json --repo-root .
+new Intl.NumberFormat('en-US', { 
+  style: 'currency', 
+  currency: 'USD' 
+}).format(1234.56); // $1,234.56
 ```
 
-Drop or label `UNVERIFIED` any finding the verifier fails (exit `1`); only
-verified findings enter the report. See `Skill(imbue:review-core)` Step 5
-and `Skill(imbue:structured-output)` for the schema.
+**Pluralization**:
+```javascript
+// ❌ Bad: Assumes English pluralization
+`${count} item${count !== 1 ? 's' : ''}`
 
-## Exit Criteria
+// ✅ Good: Use proper i18n library
+t('items', { count }) // Handles complex plural rules
+```
 
-- [ ] Discovery output lists every language and build manifest
-      detected in the repo.
-- [ ] Each finding carries a CWE or NIST SSDF citation; the
-      report executive summary lists the SSDF practice coverage.
-- [ ] Each finding above the severity threshold has a concrete
-      proposal (file, diff or config snippet, blast radius,
-      reversal plan, expected-passing test).
-- [ ] No proposal was applied without explicit user approval
-      (or without an `--auto-apply` flag covering its severity).
-- [ ] Each applied proposal is its own commit, reversal-friendly.
-- [ ] After every apply, the project gates were re-run; any
-      gate failure reverted the commit and downgraded the
-      finding.
-- [ ] `reviews/harden-<date>.md` exists and lists every finding
-      with a disposition (applied / filed / deferred / rejected /
-      advisory).
-- [ ] Every reported finding carries a `Location` + verbatim `Anchor`
-      confirmed by `citation_verifier.py` (exit `0`), or unverified
-      findings were dropped or labeled `UNVERIFIED`.
+### Error Handling
+
+**Network errors**:
+- Show clear error messages
+- Provide retry button
+- Explain what happened
+- Offer offline mode (if applicable)
+- Handle timeout scenarios
+
+```jsx
+// Error states with recovery
+{error && (
+  <ErrorMessage>
+    <p>Failed to load data. {error.message}</p>
+    <button onClick={retry}>Try again</button>
+  </ErrorMessage>
+)}
+```
+
+**Form validation errors**:
+- Inline errors near fields
+- Clear, specific messages
+- Suggest corrections
+- Don't block submission unnecessarily
+- Preserve user input on error
+
+**API errors**:
+- Handle each status code appropriately
+  - 400: Show validation errors
+  - 401: Redirect to login
+  - 403: Show permission error
+  - 404: Show not found state
+  - 429: Show rate limit message
+  - 500: Show generic error, offer support
+
+**Graceful degradation**:
+- Core functionality works without JavaScript
+- Images have alt text
+- Progressive enhancement
+- Fallbacks for unsupported features
+
+### Edge Cases & Boundary Conditions
+
+**Empty states**:
+- No items in list
+- No search results
+- No notifications
+- No data to display
+- Provide clear next action
+
+**Loading states**:
+- Initial load
+- Pagination load
+- Refresh
+- Show what's loading ("Loading your projects...")
+- Time estimates for long operations
+
+**Large datasets**:
+- Pagination or virtual scrolling
+- Search/filter capabilities
+- Performance optimization
+- Don't load all 10,000 items at once
+
+**Concurrent operations**:
+- Prevent double-submission (disable button while loading)
+- Handle race conditions
+- Optimistic updates with rollback
+- Conflict resolution
+
+**Permission states**:
+- No permission to view
+- No permission to edit
+- Read-only mode
+- Clear explanation of why
+
+**Browser compatibility**:
+- Polyfills for modern features
+- Fallbacks for unsupported CSS
+- Feature detection (not browser detection)
+- Test in target browsers
+
+### Input Validation & Sanitization
+
+**Client-side validation**:
+- Required fields
+- Format validation (email, phone, URL)
+- Length limits
+- Pattern matching
+- Custom validation rules
+
+**Server-side validation** (always):
+- Never trust client-side only
+- Validate and sanitize all inputs
+- Protect against injection attacks
+- Rate limiting
+
+**Constraint handling**:
+```html
+<!-- Set clear constraints -->
+<input 
+  type="text"
+  maxlength="100"
+  pattern="[A-Za-z0-9]+"
+  required
+  aria-describedby="username-hint"
+/>
+<small id="username-hint">
+  Letters and numbers only, up to 100 characters
+</small>
+```
+
+### Accessibility Resilience
+
+**Keyboard navigation**:
+- All functionality accessible via keyboard
+- Logical tab order
+- Focus management in modals
+- Skip links for long content
+
+**Screen reader support**:
+- Proper ARIA labels
+- Announce dynamic changes (live regions)
+- Descriptive alt text
+- Semantic HTML
+
+**Motion sensitivity**:
+```css
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+```
+
+**High contrast mode**:
+- Test in Windows high contrast mode
+- Don't rely only on color
+- Provide alternative visual cues
+
+### Performance Resilience
+
+**Slow connections**:
+- Progressive image loading
+- Skeleton screens
+- Optimistic UI updates
+- Offline support (service workers)
+
+**Memory leaks**:
+- Clean up event listeners
+- Cancel subscriptions
+- Clear timers/intervals
+- Abort pending requests on unmount
+
+**Throttling & Debouncing**:
+```javascript
+// Debounce search input
+const debouncedSearch = debounce(handleSearch, 300);
+
+// Throttle scroll handler
+const throttledScroll = throttle(handleScroll, 100);
+```
+
+## Testing Strategies
+
+**Manual testing**:
+- Test with extreme data (very long, very short, empty)
+- Test in different languages
+- Test offline
+- Test slow connection (throttle to 3G)
+- Test with screen reader
+- Test keyboard-only navigation
+- Test on old browsers
+
+**Automated testing**:
+- Unit tests for edge cases
+- Integration tests for error scenarios
+- E2E tests for critical paths
+- Visual regression tests
+- Accessibility tests (axe, WAVE)
+
+**IMPORTANT**: Hardening is about expecting the unexpected. Real users will do things you never imagined.
+
+**NEVER**:
+- Assume perfect input (validate everything)
+- Ignore internationalization (design for global)
+- Leave error messages generic ("Error occurred")
+- Forget offline scenarios
+- Trust client-side validation alone
+- Use fixed widths for text
+- Assume English-length text
+- Block entire interface when one component errors
+
+## Verify Hardening
+
+Test thoroughly with edge cases:
+
+- **Long text**: Try names with 100+ characters
+- **Emoji**: Use emoji in all text fields
+- **RTL**: Test with Arabic or Hebrew
+- **CJK**: Test with Chinese/Japanese/Korean
+- **Network issues**: Disable internet, throttle connection
+- **Large datasets**: Test with 1000+ items
+- **Concurrent actions**: Click submit 10 times rapidly
+- **Errors**: Force API errors, test all error states
+- **Empty**: Remove all data, test empty states
+
+Remember: You're hardening for production reality, not demo perfection. Expect users to input weird data, lose connection mid-flow, and use your product in unexpected ways. Build resilience into every component.
+

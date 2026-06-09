@@ -1,9 +1,30 @@
 ---
 name: kueschk-anwendbarkeit-kschg-pruefen
-description: "Prüft Anwendbarkeit des Kündigungsschutzgesetzes: Wartezeit sechs Monate nach § 1 Abs. 1 KSchG; Schwellenwert zehn Arbeitnehmer nach § 23 KSchG; Berechnung von Teilzeitkraeften und Auszubildenden; allgemeiner Kündigungsschutz bei Nichtanwendbarkeit."
+description: "Prüft Anwendbarkeit des Kündigungsschutzgesetzes: Wartezeit sechs Monate nach § 1 Abs: 1 KSchG; Schwellenwert zehn Arbeitnehmer nach § 23 KSchG; Berechnung von Teilzeitkr..."
 ---
 
-# KSchG-Anwendbarkeit prüfen
+# Prüft Anwendbarkeit des Kündigungsschutzgesetzes: Wartezeit sechs Monate nach § 1 Abs
+
+
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: die im Plugin-Kontext einschlägigen Normen über gesetze-im-internet.de, dejure.org, eur-lex.europa.eu und die amtlichen Bundes-/Landesportale live prüfen — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+**Fokus:** Prüft Anwendbarkeit des Kündigungsschutzgesetzes: Wartezeit sechs Monate nach § 1 Abs. 1 KSchG; Schwellenwert zehn Arbeitnehmer nach § 23 KSchG; Berechnung von Teilzeitkraeften und Auszubildenden; allgemeiner Kündigungsschutz bei Nichtanwendbarkeit.
+
+### KSchG-Anwendbarkeit prüfen
+
+## Fachlicher Kern — Arbeitsrecht
+- **Problemfokus dieses Skills:** Bleibe beim konkreten Titel `KSchG-Anwendbarkeit prüfen` und löse die dort angelegte Fachfrage; arbeite mit konkreten Tatbestandsmerkmalen, Beweisfragen und dem unmittelbar benötigten Arbeitsprodukt. Routingfragen bleiben Hilfsmittel, wenn Frist, Zuständigkeit oder Verfahrensart offen sind.
+- **Normenradar:** BGB §§ 611a, 613a, 615, 623; KSchG §§ 1, 4, 7; TzBfG §§ 14, 15, 16; AGG §§ 1, 3, 7, 15, 22; EntgTranspG §§ 3, 5, 7; BUrlG §§ 1, 3, 7; BetrVG §§ 87, 99, 102; ArbZG; NachwG; SGB IX §§ 164, 167, 168.
+- **Verifizierte Anker:** BAG, Urteil vom 23.10.2025 - 8 AZR 300/24 (Entgeltgleichheit, Paarvergleich, Beweislast, bundesarbeitsgericht.de); BAG, Urteil vom 03.06.2025 - 9 AZR 104/24 (kein Verzicht auf gesetzlichen Mindesturlaub im bestehenden Arbeitsverhältnis); bei Kündigungszugang immer § 623 BGB, Zugang nach § 130 BGB, Dreiwochenfrist §§ 4, 7 KSchG und Beweis des konkreten Umschlags trennen.
+- **Arbeitsmodus:** Zuerst Status, Zugang, Frist, Beteiligungsrechte, Sonderkündigungsschutz, Beweislast und prozessualen nächsten Schritt sichern; dann erst Materiellrecht vertiefen.
+- **Outputpflicht:** Fristenblatt, Zugangsmatrix, Beweisangebot, Mandantenmail, Betriebsrats-/Gegnerbrief oder Klage-/Erwiderungsbaustein.
+- **Fehlerbremse:** Tragende Normen/Entscheidungen live oder aus der Akte verifizieren; Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei prüfbarer Quelle. Keine BeckRS-, juris-, Kommentar- oder Aufsatz-Blindzitate aus Modellwissen.
 
 ## Triage zu Beginn — kläre sofort
 
@@ -24,17 +45,7 @@ description: "Prüft Anwendbarkeit des Kündigungsschutzgesetzes: Wartezeit sech
 
 ## Aktuelle Rechtsprechung
 
-- BAG, Urt. v. 21.02.2001 – 2 AZR 15/00, NZA 2001, 833 — Im Kleinbetrieb (KSchG nicht anwendbar) gilt ein durch Art. 12 GG vermittelter Grundkündigungsschutz; eine Kündigung ist unwirksam, wenn sie ein „verkapptes Diskriminierungsmittel" ist oder auf sachfremden Motiven beruht.
-- BVerfG, Beschl. v. 27.01.1998 – 1 BvL 15/87, NJW 1998, 1475 — Der Ausschluss des KSchG für Kleinbetriebe ist verfassungsrechtlich zulässig; der allgemeine Gleichheitssatz (Art. 3 GG) und die Berufsfreiheit (Art. 12 GG) werden durch die Eigenheiten des Kleinbetriebs gerechtfertigt.
-- BAG, Urt. v. 18.10.2012 – 6 AZR 86/11, NZA 2013, 98 — Bei der Berechnung des Schwellenwerts nach § 23 KSchG kommt es auf die „regelmäßige" Beschäftigtenzahl an; saisonale Schwankungen und vorübergehende Personalveränderungen sind entsprechend zu berücksichtigen.
-- BAG, Urt. v. 26.06.2008 – 2 AZR 264/07, NZA 2009, 36 — Für die 6-Monats-Wartezeit des § 1 Abs. 1 KSchG werden frühere Beschäftigungszeiten beim selben Arbeitgeber angerechnet, wenn zwischen den Beschäftigungen kein wesentlicher Unterbrechungszeitraum bestand und derselbe Tätigkeitsbereich vorliegt.
-
-## Kommentarliteratur
-
-- ErfK/Preis, 25. Aufl. 2025, § 23 KSchG Rn. 1 ff. (Schwellenwert, Berechnungsmethode)
-- ErfK/Preis, § 1 KSchG Rn. 1 ff. (Wartezeit und Geltungsbereich)
-- Schaub Arbeitsrechts-Handbuch, 20. Aufl. 2023, § 129 Rn. 1 ff. (Anwendungsbereich KSchG)
-- HWK/Quecke, 11. Aufl. 2024, § 23 KSchG Rn. 1 ff.
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
 ## Schritt-für-Schritt-Prüfung
 
@@ -51,8 +62,8 @@ Das KSchG gilt nur bei Arbeitsverhältnis **länger als 6 Monate** ohne Unterbre
 Arbeitsverhältnis ab: [DATUM]
 Kündigung zugegangen: [DATUM]
 Dauer: [MONATE]
-  ≤ 6 Monate → KSchG nicht anwendbar
-  > 6 Monate → weiter zu Schritt 2
+ ≤ 6 Monate → KSchG nicht anwendbar
+ > 6 Monate → weiter zu Schritt 2
 ```
 
 ### Schritt 2: Betriebsgröße § 23 Abs. 1 KSchG

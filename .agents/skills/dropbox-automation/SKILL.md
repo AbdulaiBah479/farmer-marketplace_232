@@ -1,16 +1,13 @@
 ---
 name: dropbox-automation
-description: Automate Dropbox file management, sharing, search, uploads, downloads, and folder operations via Rube MCP (Composio). Always search tools first for current schemas.
+description: "Automate Dropbox file management, sharing, search, uploads, downloads, and folder operations via Rube MCP (Composio). Always search tools first for current schemas."
 requires:
   mcp: [rube]
-category: storage-docs
 ---
 
 # Dropbox Automation via Rube MCP
 
 Automate Dropbox operations including file upload/download, search, folder management, sharing links, batch operations, and metadata retrieval through Composio's Dropbox toolkit.
-
-**Toolkit docs**: [composio.dev/toolkits/dropbox](https://composio.dev/toolkits/dropbox)
 
 ## Prerequisites
 
@@ -231,6 +228,3 @@ Several Dropbox operations run asynchronously:
 | Delete batch | `DROPBOX_DELETE_BATCH` | `entries` |
 | Copy file/folder | `DROPBOX_COPY_FILE_OR_FOLDER` | `from_path`, `to_path` |
 | Check batch status | `DROPBOX_CHECK_MOVE_BATCH` | `async_job_id` |
-
----
-*Powered by [Composio](https://composio.dev)*

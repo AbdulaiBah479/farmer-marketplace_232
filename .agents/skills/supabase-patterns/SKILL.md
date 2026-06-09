@@ -1,259 +1,242 @@
 ---
 name: supabase-patterns
-description: Patterns for Supabase integration in Battery. Use this skill when working with database schemas, row-level security policies, edge functions, or Supabase client usage in Next.js.
+description: "Generic Supabase best practices for Row Level Security, realtime subscriptions, storage, and edge functions. Framework-agnostic."
 ---
 
-# Supabase Patterns
+# Supabase Patterns Skill
 
-## Database Schema Conventions
+Universal patterns for working with Supabase in any project. Covers RLS policies, realtime, storage, edge functions, and migrations.
 
-### Naming
+## Design Principle
 
-- Tables: `snake_case`, plural (e.g., `organizations`, `deployed_apps`)
-- Columns: `snake_case`
-- Primary keys: `id` (UUID)
-- Foreign keys: `{table_singular}_id`
+This skill is **framework-generic**. It provides universal Supabase patterns:
+- NOT tailored to Book-Vetting, ocr-service, or any specific project
+- Covers common patterns applicable across all Supabase projects
+- Project-specific configurations go in project-specific skills
 
-### Standard Columns
+## Variables
 
-Every table should include:
+| Variable | Default | Description |
+|----------|---------|-------------|
+| SUPABASE_DIR | supabase | Directory for Supabase config |
+| ENFORCE_RLS | true | Require RLS on all tables |
+| REALTIME_ENABLED | auto | Auto-detect realtime tables |
 
-```sql
-CREATE TABLE deployed_apps (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  -- domain columns here
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
+## Instructions
 
--- Auto-update updated_at
-CREATE TRIGGER update_deployed_apps_updated_at
-  BEFORE UPDATE ON deployed_apps
-  FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column();
-```
+**MANDATORY** - Follow the Workflow steps below in order.
 
-### Update Trigger Function
+1. Check Supabase project configuration
+2. Review existing RLS policies
+3. Follow security-first patterns
+4. Keep migrations organized
 
-```sql
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = now();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-```
+## Red Flags - STOP and Reconsider
 
-## Row-Level Security (RLS)
+If you're about to:
+- Create a table without RLS policies
+- Use service role key in client-side code
+- Skip migrations for schema changes
+- Expose sensitive data in realtime
 
-### Enable RLS
+**STOP** -> Add RLS policies -> Use appropriate keys -> Then proceed
 
-```sql
-ALTER TABLE deployed_apps ENABLE ROW LEVEL SECURITY;
-```
+## Cookbook
 
-### Organization-Based Access
+### RLS Policies
+- IF: Creating or modifying RLS policies
+- THEN: Read and execute `./cookbook/rls-policies.md`
 
-Battery uses organizations for multi-tenancy:
+### Realtime Subscriptions
+- IF: Setting up realtime features
+- THEN: Read and execute `./cookbook/realtime-subscriptions.md`
 
-```sql
--- Users can only see apps in their organization
-CREATE POLICY "Users can view org apps"
-  ON deployed_apps
-  FOR SELECT
-  USING (
-    org_id IN (
-      SELECT org_id FROM org_members WHERE user_id = auth.uid()
-    )
-  );
+### Storage Patterns
+- IF: Working with Supabase Storage
+- THEN: Read and execute `./cookbook/storage-patterns.md`
 
--- Only admins can delete apps
-CREATE POLICY "Admins can delete org apps"
-  ON deployed_apps
-  FOR DELETE
-  USING (
-    EXISTS (
-      SELECT 1 FROM org_members
-      WHERE user_id = auth.uid()
-        AND org_id = deployed_apps.org_id
-        AND role = 'admin'
-    )
-  );
-```
+## Quick Reference
 
-### Service Role Bypass
-
-For server-side operations that need to bypass RLS:
-
-```typescript
-import { createClient } from '@supabase/supabase-js'
-
-// Use service role key (server-side only!)
-const supabaseAdmin = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
-// This bypasses RLS
-await supabaseAdmin.from('deployed_apps').insert({ ... })
-```
-
-## Client Usage in Next.js
-
-### Server Components
-
-```typescript
-// lib/supabase/server.ts
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-
-export async function createClient() {
-  const cookieStore = await cookies()
-
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options)
-          })
-        },
-      },
-    }
-  )
-}
-```
-
-### Client Components
-
-```typescript
-// lib/supabase/client.ts
-import { createBrowserClient } from '@supabase/ssr'
-
-export function createClient() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-}
-```
-
-### Route Handlers
-
-```typescript
-// app/api/apps/route.ts
-import { createClient } from '@/lib/supabase/server'
-import { NextResponse } from 'next/server'
-
-export async function GET() {
-  const supabase = await createClient()
-
-  const { data, error } = await supabase
-    .from('deployed_apps')
-    .select('*')
-    .order('created_at', { ascending: false })
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
-  }
-
-  return NextResponse.json(data)
-}
-```
-
-## Edge Functions
-
-### Structure
+### Project Structure
 
 ```
 supabase/
-  functions/
-    deploy-webhook/
-      index.ts
-    scan-credentials/
-      index.ts
+├── config.toml           # Project config
+├── migrations/           # SQL migrations
+│   ├── 20231201000000_initial.sql
+│   └── 20231202000000_add_users.sql
+├── seed.sql             # Seed data
+└── functions/           # Edge functions
+    └── hello/
+        └── index.ts
 ```
 
-### Basic Edge Function
-
-```typescript
-// supabase/functions/deploy-webhook/index.ts
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-serve(async (req) => {
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  )
-
-  const { deployment_id, status } = await req.json()
-
-  const { error } = await supabase
-    .from('deployments')
-    .update({ status })
-    .eq('id', deployment_id)
-
-  if (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    })
-  }
-
-  return new Response(JSON.stringify({ success: true }), {
-    headers: { 'Content-Type': 'application/json' },
-  })
-})
-```
-
-## Type Generation
-
-Generate TypeScript types from your schema:
+### Key Commands
 
 ```bash
-pnpm supabase gen types typescript --project-id $PROJECT_ID > lib/database.types.ts
+# Initialize project
+supabase init
+
+# Start local development
+supabase start
+
+# Generate migration
+supabase migration new my_migration
+
+# Push to remote
+supabase db push
+
+# Generate types
+supabase gen types typescript --local > types/supabase.ts
 ```
 
-### Using Generated Types
-
-```typescript
-import { Database } from '@/lib/database.types'
-
-type DeployedApp = Database['public']['Tables']['deployed_apps']['Row']
-type InsertApp = Database['public']['Tables']['deployed_apps']['Insert']
-
-// Typed client
-const supabase = createClient<Database>(url, key)
-
-const { data } = await supabase
-  .from('deployed_apps')
-  .select('id, name, status')
-  .returns<Pick<DeployedApp, 'id' | 'name' | 'status'>[]>()
-```
-
-## Vault for Credentials
-
-Battery stores extracted credentials in Supabase Vault:
+### RLS Policy Patterns
 
 ```sql
--- Store a secret
-SELECT vault.create_secret('snowflake_password', 'secret_value', 'Snowflake password for app X');
+-- Enable RLS
+ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
 
--- Retrieve a secret (in edge function or with service role)
-SELECT vault.decrypted_secrets WHERE name = 'snowflake_password';
+-- User owns row
+CREATE POLICY "Users can view own posts"
+  ON posts FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- User can insert own
+CREATE POLICY "Users can create posts"
+  ON posts FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+-- Public read
+CREATE POLICY "Public read"
+  ON posts FOR SELECT
+  USING (is_public = true);
 ```
 
-## Patterns to Follow
+### Client Patterns
 
-1. **Always enable RLS** on tables with user data
-2. **Use server components** for initial data fetching
-3. **Type everything** with generated types
-4. **Use transactions** for multi-table operations
-5. **Service role** only on server, never expose to client
+```typescript
+// Initialize client
+import { createClient } from '@supabase/supabase-js';
+import type { Database } from './types/supabase';
+
+const supabase = createClient<Database>(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_ANON_KEY!
+);
+
+// Query with types
+const { data, error } = await supabase
+  .from('posts')
+  .select('*')
+  .eq('user_id', userId);
+
+// Insert
+const { data, error } = await supabase
+  .from('posts')
+  .insert({ title, content, user_id: userId })
+  .select()
+  .single();
+```
+
+### Realtime Pattern
+
+```typescript
+// Subscribe to changes
+const subscription = supabase
+  .channel('posts')
+  .on(
+    'postgres_changes',
+    { event: '*', schema: 'public', table: 'posts' },
+    (payload) => {
+      console.log('Change:', payload);
+    }
+  )
+  .subscribe();
+
+// Cleanup
+subscription.unsubscribe();
+```
+
+### Storage Pattern
+
+```typescript
+// Upload file
+const { data, error } = await supabase.storage
+  .from('avatars')
+  .upload(`${userId}/avatar.png`, file, {
+    upsert: true,
+    contentType: 'image/png'
+  });
+
+// Get public URL
+const { data: { publicUrl } } = supabase.storage
+  .from('avatars')
+  .getPublicUrl(`${userId}/avatar.png`);
+```
+
+## Security Checklist
+
+### Before Production
+
+- [ ] RLS enabled on ALL tables
+- [ ] Service role key NOT in client code
+- [ ] Anon key for public operations only
+- [ ] Storage buckets have policies
+- [ ] Sensitive columns excluded from realtime
+- [ ] API rate limiting configured
+- [ ] CORS properly configured
+
+### RLS Checklist
+
+- [ ] Every table has RLS enabled
+- [ ] SELECT policies defined
+- [ ] INSERT/UPDATE/DELETE policies defined
+- [ ] Policies tested with different roles
+- [ ] No overly permissive policies
+
+## Integration
+
+### With Schema Alignment
+
+Supabase migrations should align with ORM models:
+
+```sql
+-- supabase/migrations/20231201000000_users.sql
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT UNIQUE NOT NULL,
+  name TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+```
+
+Should match:
+
+```python
+# SQLAlchemy model
+class User(Base):
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    email: Mapped[str] = mapped_column(unique=True)
+    name: Mapped[str | None]
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+```
+
+### Type Generation
+
+```bash
+# Generate TypeScript types from local schema
+supabase gen types typescript --local > types/supabase.ts
+
+# Use in client
+import type { Database } from './types/supabase';
+type Post = Database['public']['Tables']['posts']['Row'];
+```
+
+## Best Practices
+
+1. **RLS first**: Always add RLS policies when creating tables
+2. **Migrations for everything**: Never modify schema directly
+3. **Type safety**: Generate and use TypeScript types
+4. **Key hygiene**: Use anon key client-side, service key server-side only
+5. **Test policies**: Test RLS with actual user contexts
+6. **Realtime carefully**: Only enable for tables that need it

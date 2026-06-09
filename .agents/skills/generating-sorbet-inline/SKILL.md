@@ -1,11 +1,11 @@
 ---
 name: generating-sorbet-inline
-description: Generates or updates Sorbet inline type signatures directly in Ruby source files using sig blocks. Triggers when creating, updating, or maintaining inline type signatures for Ruby source files.
+description: Generates Sorbet inline type signatures using sig blocks directly in Ruby source files. Triggers when adding Sorbet types, annotating Ruby methods with sig syntax, or generating type signatures for Sorbet-typed projects.
 ---
 
 # Sorbet Inline Generation Skill
 
-Generate or update Sorbet type signatures using `sig {}` blocks directly in Ruby source files. Supports both full generation from scratch and partial updates for individual changed files. Sorbet signatures are valid Ruby code that enable both static and runtime type checking.
+Generate Sorbet type signatures using `sig {}` blocks directly in Ruby source files. Sorbet signatures are valid Ruby code that enable both static and runtime type checking.
 
 # Instructions
 
@@ -35,32 +35,6 @@ Sorbet Inline Generation Progress:
 - You MUST focus on method signatures only. Skip local variables, intermediate expressions, and other non-method annotations.
 - You MUST NOT use or generate `.rbi` files. This skill is for inline signatures only.
 - You MUST preserve the existing `# typed:` sigil level if one exists. Do not upgrade or change strictness without explicit user consent.
-- You MUST use the tracking file when processing multiple files to ensure no files are missed.
-
-## Multi-File Processing
-
-When processing multiple Ruby files, create a tracking file to ensure all files are covered:
-
-1. **Create tracking file** `.sorbet-inline-generation-todo.tmp`:
-   ```
-   [ ] app/models/user.rb
-   [ ] app/models/post.rb
-   [ ] app/services/auth_service.rb
-   ```
-
-2. **Process files one by one**:
-   - Take the next pending `[ ]` entry
-   - Complete all steps (1-5) for that file
-   - Mark as processed `[x]`
-   - Save the tracking file
-   - Continue to next pending entry
-
-3. **Cleanup**: Remove the tracking file after all files are processed:
-   ```bash
-   rm .sorbet-inline-generation-todo.tmp
-   ```
-
-If interrupted, the tracking file allows resuming from where you left off.
 
 ## 1. Analyze the Ruby Source
 

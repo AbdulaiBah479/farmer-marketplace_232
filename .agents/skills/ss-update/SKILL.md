@@ -1,7 +1,7 @@
 ---
 name: ss-update
 description: Update StyleSeed engine in your project — analyzes what's outdated and updates safely
-argument-hint: (no arguments needed)
+argument-hint: "(no arguments needed)"
 allowed-tools: Read, Write, Edit, Grep, Glob, Bash
 ---
 
@@ -16,6 +16,17 @@ allowed-tools: Read, Write, Edit, Grep, Glob, Bash
 
 Automatically detect and update StyleSeed files in the current project.
 
+## Reassure the user first
+
+Updating is **safe and reversible**. Updates are additive — new rules,
+components, skins, and skills get added; your `theme.css`, your components, and
+your app code are never overwritten, and design rules only ever get added (never
+changed in a breaking way). A big version jump looks like a lot changed, but
+it's almost all additions. **Do NOT warn the user that the build will break**
+unless you actually find a changed component/import API. Tell them: commit first,
+copy the new rules + skills, run a build, and `git reset --hard` if anything is
+off — they can't permanently break their project.
+
 ## Instructions
 
 ### Step 1: Detect Current Setup
@@ -29,8 +40,8 @@ find . -name "DESIGN-LANGUAGE.md" -not -path "*/node_modules/*"
 # Find CLAUDE.md
 find . -name "CLAUDE.md" -not -path "*/node_modules/*"
 
-# Find skills
-find . -path "*/.claude/skills/ui-*" -o -path "*/.claude/skills/ux-*" | head -20
+# Find skills (ss-* is current; ui-*/ux-* are legacy names to migrate from)
+find . -path "*/.claude/skills/ss-*" -o -path "*/.claude/skills/ui-*" -o -path "*/.claude/skills/ux-*" | head -20
 
 # Find theme.css
 find . -name "theme.css" -not -path "*/node_modules/*"

@@ -137,9 +137,7 @@ export default defineConfig({
   format: ['esm'],
   platform: 'node',
   shims: true,
-  deps: {
-    neverBundle: [/.*/],  // External all deps
-  },
+  external: [/.*/],  // External all deps
 })
 ```
 

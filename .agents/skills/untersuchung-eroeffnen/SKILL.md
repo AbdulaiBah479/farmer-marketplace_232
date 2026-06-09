@@ -1,24 +1,35 @@
 ---
 name: untersuchung-eroeffnen
-description: "Eröffnet eine neue interne Untersuchungssache — führt die Sachverhaltserfassung durch, generiert die Quellencheckliste und legt das persistente Untersuchungsprotokoll an. Lädt, wenn eine Beschwerde oder ein Hinweis eingeht und ein vertraulicher Untersuchungsarbeitsbereich eingerichtet werden soll."
+description: "Eröffnet eine neue interne Untersuchungssache — führt die Sachverhaltserfassung durch, generiert die Quellencheckliste und legt das persistente Untersuchungsprotokoll an: Eröffnet eine neue interne Untersuchungssache — führt die Sachverhaltserfassung durch,..."
 ---
 
-# Untersuchungseröffnung (Arbeitsrecht)
+# Eröffnet eine neue interne Untersuchungssache — führt die Sachverhaltserfassung durch, generiert die Quellencheckliste und legt das persistente Untersuchungsprotokoll an
 
-## Zweck
 
-Eröffnet eine neue interne Untersuchungssache — führt die strukturierte
-Sachverhaltserfassung durch, generiert die auf den Untersuchungstyp
-zugeschnittene Quellencheckliste und legt das persistente
-Untersuchungsprotokoll an.
+## Arbeitsweg
 
-Lädt, wenn eine Beschwerde oder ein Hinweis vorliegt und ein strukturierter,
-vertraulicher Untersuchungsarbeitsbereich eingerichtet werden soll.
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: die im Plugin-Kontext einschlägigen Normen über gesetze-im-internet.de, dejure.org, eur-lex.europa.eu und die amtlichen Bundes-/Landesportale live prüfen — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+**Fokus:** Eröffnet eine neue interne Untersuchungssache — führt die Sachverhaltserfassung durch, generiert die Quellencheckliste und legt das persistente Untersuchungsprotokoll an. Lädt, wenn eine Beschwerde oder ein Hinweis eingeht und ein vertraulicher Untersuchungsarbeitsbereich eingerichtet werden soll.
+
+### Untersuchungseröffnung (Arbeitsrecht)
+
+## Fachlicher Kern — Arbeitsrecht
+- **Problemfokus dieses Skills:** Bleibe beim konkreten Titel `Untersuchungseröffnung (Arbeitsrecht)` und löse die dort angelegte Fachfrage; arbeite mit konkreten Tatbestandsmerkmalen, Beweisfragen und dem unmittelbar benötigten Arbeitsprodukt. Routingfragen bleiben Hilfsmittel, wenn Frist, Zuständigkeit oder Verfahrensart offen sind.
+- **Normenradar:** BGB §§ 611a, 613a, 615, 623; KSchG §§ 1, 4, 7; TzBfG §§ 14, 15, 16; AGG §§ 1, 3, 7, 15, 22; EntgTranspG §§ 3, 5, 7; BUrlG §§ 1, 3, 7; BetrVG §§ 87, 99, 102; ArbZG; NachwG; SGB IX §§ 164, 167, 168.
+- **Verifizierte Anker:** BAG, Urteil vom 23.10.2025 - 8 AZR 300/24 (Entgeltgleichheit, Paarvergleich, Beweislast, bundesarbeitsgericht.de); BAG, Urteil vom 03.06.2025 - 9 AZR 104/24 (kein Verzicht auf gesetzlichen Mindesturlaub im bestehenden Arbeitsverhältnis); bei Kündigungszugang immer § 623 BGB, Zugang nach § 130 BGB, Dreiwochenfrist §§ 4, 7 KSchG und Beweis des konkreten Umschlags trennen.
+- **Arbeitsmodus:** Zuerst Status, Zugang, Frist, Beteiligungsrechte, Sonderkündigungsschutz, Beweislast und prozessualen nächsten Schritt sichern; dann erst Materiellrecht vertiefen.
+- **Outputpflicht:** Fristenblatt, Zugangsmatrix, Beweisangebot, Mandantenmail, Betriebsrats-/Gegnerbrief oder Klage-/Erwiderungsbaustein.
+- **Fehlerbremse:** Tragende Normen/Entscheidungen live oder aus der Akte verifizieren; Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei prüfbarer Quelle. Keine BeckRS-, juris-, Kommentar- oder Aufsatz-Blindzitate aus Modellwissen.
 
 ## Eingaben
 
 - Kurzbeschreibung des Vorwurfs oder der Besorgnis (kann nach Sachverhaltserfassung
-  verfeinert werden)
+ verfeinert werden)
 - Ist die Untersuchung anwaltsgeleitet? (Beeinflusst Schutzstatus der Unterlagen)
 
 ## Rechtlicher Rahmen
@@ -26,46 +37,41 @@ vertraulicher Untersuchungsarbeitsbereich eingerichtet werden soll.
 **Kernvorschriften:**
 
 - § 26 BDSG: Verarbeitung von Beschäftigtendaten zur Aufdeckung von
-  Straftaten oder schwerwiegenden Pflichtverletzungen — Erforderlichkeit
-  und Verhältnismäßigkeit als Voraussetzung; Protokolldaten sind
-  Beschäftigtendaten
+ Straftaten oder schwerwiegenden Pflichtverletzungen — Erforderlichkeit
+ und Verhältnismäßigkeit als Voraussetzung; Protokolldaten sind
+ Beschäftigtendaten
 - §§ 34, 36, 37 HinSchG: Hinweisgeberschutzgesetz — Vertraulichkeit der
-  Identität der hinweisgebenden Person; Verbot von Repressalien; interne
-  Meldestelle; Dokumentationspflichten
+ Identität der hinweisgebenden Person; Verbot von Repressalien; interne
+ Meldestelle; Dokumentationspflichten
 - § 87 Abs. 1 Nr. 6 BetrVG: Mitbestimmung bei technischen
-  Überwachungseinrichtungen — vor Kommunikationsauswertungen klären
+ Überwachungseinrichtungen — vor Kommunikationsauswertungen klären
 - § 82 Abs. 2 BetrVG: Recht des Arbeitnehmers, ein Betriebsratsmitglied
-  zu Besprechungen über Beschwerden hinzuzuziehen
+ zu Besprechungen über Beschwerden hinzuzuziehen
 - §§ 84, 85 BetrVG: Beschwerderecht des Arbeitnehmers; Behandlung durch
-  den Betriebsrat
+ den Betriebsrat
 - § 626 Abs. 2 BGB: Zwei-Wochen-Frist — Dokumentation des ersten
-  Kenntniszeitpunkts ab Eröffnung kritisch
+ Kenntniszeitpunkts ab Eröffnung kritisch
 - §§ 3 ff. AGG: Diskriminierungsverbote — bei AGG-relevantem Sachverhalt
-  strukturierte Untersuchung als Enthaftungsvoraussetzung
+ strukturierte Untersuchung als Enthaftungsvoraussetzung
 
 **Leitentscheidungen:**
 
-- BAG, Urt. v. 20.06.2013 – 2 AZR 546/12, NZA 2014, 143 Rn. 14 ff.:
-  Verdachtskündigung — umfassende Sachaufklärung vor Kündigung zwingend;
-  Untersuchungspflicht des Arbeitgebers; Dokumentationsanforderungen
-- BAG, Urt. v. 29.06.2017 – 2 AZR 597/16, NZA 2017, 1179 Rn. 22 ff.:
-  Beginn der Zwei-Wochen-Frist des § 626 Abs. 2 BGB — Fristbeginn erst
-  nach ausreichender Sachaufklärung; Pflicht, Ermittlungen zügig zu führen;
-  mutwillige Verzögerung kann Verwirkung begründen
-- BAG, Urt. v. 23.08.2018 – 2 AZR 133/18, NZA 2018, 1329 Rn. 29 ff.:
-  Inhaltliche Anforderungen an die Anhörung der beschuldigten Person vor
-  Verdachtskündigung; Frage und Antwortrecht; Protokollierungspflicht
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+ Verdachtskündigung — umfassende Sachaufklärung vor Kündigung zwingend;
+ Untersuchungspflicht des Arbeitgebers; Dokumentationsanforderungen
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+ Beginn der Zwei-Wochen-Frist des § 626 Abs. 2 BGB — Fristbeginn erst
+ nach ausreichender Sachaufklärung; Pflicht, Ermittlungen zügig zu führen;
+ mutwillige Verzögerung kann Verwirkung begründen
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+ Inhaltliche Anforderungen an die Anhörung der beschuldigten Person vor
+ Verdachtskündigung; Frage und Antwortrecht; Protokollierungspflicht
 
-**Kommentarliteratur:**
+- Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen zitieren. Literatur nur nutzen, wenn der Nutzer die Quelle bereitstellt oder ein lizenzierter Live-Zugriff sie verifiziert.
 
-- Gola/Heckmann/Schomerus, BDSG, 13. Aufl. 2022, § 26 Rn. 100 ff.:
-  Grundvoraussetzungen der Datenzulässigkeit bei interner Untersuchung;
-  Dokumentationspflichten; Betriebsvereinbarung als Rechtsgrundlage
-- Erfurter Kommentar/Müller-Glöge, 24. Aufl. 2024, § 626 BGB Rn. 230 ff.:
-  Zwei-Wochen-Frist; Fristbeginn; Aufklärungsobliegenheit des Arbeitgebers
-- Bauer/Krieger/Günther, AGG, 5. Aufl. 2022, § 12 Rn. 30 ff.:
-  Untersuchungspflicht des Arbeitgebers bei Diskriminierungsbeschwerde;
-  Enthaftung bei ordnungsgemäßer Untersuchung
+- Beschäftigtendatenschutz: § 26 BDSG, Art. 5 und 6 DSGVO; Fachliteratur nur mit Nutzerquelle oder verifiziertem Live-Zugriff.
+- § 626 BGB: Zwei-Wochen-Frist, Verdachtskündigung und Anhörung nur mit verifizierter BAG-Rechtsprechung oder Nutzerquelle vertiefen.
+- AGG: §§ 12, 15, 22 AGG anhand Gesetz, Nutzerquelle und frei verifizierter Rechtsprechung prüfen.
 
 ## Ablauf
 
@@ -109,25 +115,7 @@ Datum und Uhrzeit der Eröffnung im Protokoll festhalten. Dies ist bei
 einer eventuellen Verdachtskündigung der Ausgangszeitpunkt für die
 Fristberechnung nach § 626 Abs. 2 BGB (Frist beginnt mit sicherer
 Kenntnis, nicht mit bloßem Verdacht — aber Aufklärung ist zügig
-zu führen, BAG, Urt. v. 29.06.2017 – 2 AZR 597/16).
-
-## Ausgabeformat
-
-Vertraulichkeitsprüfung, dann strukturierte Sachverhaltserfassungs-Abfrage
-in einem Block, dann Quellencheckliste zur Bestätigung durch den Anwalt,
-dann Bestätigung der angelegten Protokolldateien:
-
-```
-Untersuchung eröffnet — [Sachebezeichnung] — [ISO-Datum]
-Protokolldatei: investigation-[slug]/log.yaml
-Quellencheckliste: investigation-[slug]/quellen-checkliste.yaml
-Dokumentenprotokoll: investigation-[slug]/dokumente-geprueft.yaml
-
-Nächste Schritte:
-  /arbeitsrecht:untersuchung-ergänzen [slug] — Daten hinzufügen
-  /arbeitsrecht:untersuchung-abfrage [slug] — Protokoll abfragen
-  /arbeitsrecht:untersuchungs-memo [slug] — Vermerk entwerfen
-```
+Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
 ## Beispiel
 
@@ -151,20 +139,20 @@ Beispiel-Ausgabe nach Sachverhaltserfassung (Betriebsrat-Flag):
 ## Risiken und typische Fehler
 
 - **Anwaltsleitung unklar**: Ohne klare Anwaltsleitung ist der Schutzstatus
-  der Untersuchungsunterlagen fraglich. Vor Anlegen der ersten Datei klären.
+ der Untersuchungsunterlagen fraglich. Vor Anlegen der ersten Datei klären.
 - **§ 626 Abs. 2 BGB-Uhr läuft**: Die Frist beginnt bei sicherer Kenntnis.
-  Mutwillige Verzögerung der Untersuchung kann dazu führen, dass die
-  außerordentliche Kündigung verfristet ist (BAG, Urt. v. 29.06.2017 –
-  2 AZR 597/16). Zügiges Vorgehen dokumentieren.
+ Mutwillige Verzögerung der Untersuchung kann dazu führen, dass die
+ Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+ Rechtsprechung live prüfen: Keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über amtliche oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 - **§ 82 Abs. 2 BetrVG versäumt**: Wenn dem Arbeitnehmer das Recht auf
-  Hinzuziehung eines Betriebsratsmitglieds nicht mitgeteilt wird, kann
-  dies das Verfahren belasten.
+ Hinzuziehung eines Betriebsratsmitglieds nicht mitgeteilt wird, kann
+ dies das Verfahren belasten.
 - **HinSchG-Vertraulichkeit**: Bei Hinweisgebersachen ist die Identität der
-  hinweisgebenden Person streng vertraulich zu halten (§ 8 Abs. 1 HinSchG).
-  Protokolleinträge so gestalten, dass die Identität nicht für Unbefugte
-  erkennbar ist.
+ hinweisgebenden Person streng vertraulich zu halten (§ 8 Abs. 1 HinSchG).
+ Protokolleinträge so gestalten, dass die Identität nicht für Unbefugte
+ erkennbar ist.
 - **Betriebsrat-Sonderstatus**: Beschuldigte Betriebsratsmitglieder
-  genießen besonderen Schutz (§ 103 BetrVG). Früh klären.
+ genießen besonderen Schutz (§ 103 BetrVG). Früh klären.
 
 ## Quellenpflicht
 
@@ -173,12 +161,23 @@ Bei jeder Eröffnung zitieren:
 - §§ 34, 36, 37 HinSchG (bei Hinweisgebersachen)
 - § 82 Abs. 2, §§ 84, 85 BetrVG (Betriebsratsrechte)
 - § 626 Abs. 2 BGB (Fristbeginn-Dokumentation)
-- BAG, Urt. v. 20.06.2013 – 2 AZR 546/12, NZA 2014, 143 (Sachaufklärungspflicht)
-- BAG, Urt. v. 29.06.2017 – 2 AZR 597/16, NZA 2017, 1179 (Fristbeginn)
-- Gola/Heckmann/Schomerus, BDSG, 13. Aufl. 2022, § 26 Rn. 100 ff.
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+- Beschäftigtendatenschutz: § 26 BDSG, Art. 5 und 6 DSGVO; Fachliteratur nur mit Nutzerquelle oder verifiziertem Live-Zugriff.
 
 Detaillierte Sachverhaltserfassung, Quellenchecklisten-Vorlagen und
 Protokolldateiformate befinden sich in der Referenz-Skill
 `interne-untersuchung` — diese vor inhaltlicher Arbeit laden.
 
 Hinweis: Dieser Skill ersetzt keine anwaltliche Beratung im konkreten Einzelfall.
+
+## Ergänzende Rechtsprechung (v14.2)
+
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+
+## Triage — vor der Eröffnung klären
+
+1. Ist die Untersuchung anwaltsgeleitet? (→ legal privilege, Schutzstatus klären)
+2. Handelt es sich um einen HinSchG-Sachverhalt? (→ § 8 HinSchG Vertraulichkeit)
+3. Liegt ein Betriebsratsmitglied als Beschuldigte/r vor? (→ § 103 BetrVG beachten)
+4. Schwerbehindert? Werdende Mutter? (→ besonderer Kündigungsschutz)
+5. § 626 Abs. 2 BGB-Uhr: Datum/Uhrzeit der Eröffnung festhalten

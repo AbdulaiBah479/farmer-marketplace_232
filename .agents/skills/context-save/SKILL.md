@@ -1,165 +1,139 @@
 ---
 name: context-save
-description: Save decision, bet, or learning to the context registry
-argument-hint: [decision-record | strategic-bet | learning]
+description: 当用户发送"换窗口处理-"时调用。总结当前窗口的上下文信息、已完成任务、未完成任务，保存到 docs/context-sessions/ 目录，便于新窗口恢复。
 ---
 
-Save a **decision record**, **strategic bet**, or **learning** to the persistent context registry.
+# 上下文保存指南
 
-## V2V Phase
+## 触发条件
 
-**Phase 6: Learning & Adaptation** - This skill persists organizational knowledge for future use.
+当用户发送 `换窗口处理-` 时，调用此 Skill。
 
-**Prerequisites**: Decision record, strategic bet, or learning created
-**Outputs used by**: All phases (enables organizational memory)
+---
 
-## Auto-Initialization
+## 执行步骤
 
-**Before saving, ensure the context folder structure exists.** If any required folder or file is missing, create it:
+### Step 1: 分析当前上下文
 
-1. Check if `context/` folder exists - if not, inform user to run `/setup` first OR create the basic structure:
-   - `context/decisions/index.md`
-   - `context/bets/index.md`
-   - `context/assumptions/registry.md`
-   - `context/portfolio/active-bets.md`
-   - `context/learnings/index.md`
+回顾当前会话，提取以下信息：
 
-2. When creating year folders (`context/decisions/2026/`), create them automatically.
+1. **核心任务** - 用户最初的请求是什么
+2. **已完成任务** - 本次会话中完成了哪些工作
+3. **未完成任务** - 还有哪些工作待完成
+4. **关键文件** - 正在操作或需要关注的文件
+5. **技术要点** - 重要的技术决策、踩过的坑
+6. **下一步行动** - 建议新窗口首先做什么
 
-## Purpose
+### Step 2: 生成 Session 文件
 
-The context registry provides organizational memory. This skill extracts key information from documents and saves them to the appropriate index, enabling future recall and cross-referencing.
+**文件命名规则**: `{YYYYMMDD}-{HHMM}-{简短描述}.md`
 
-## When to Use
+示例: `20251128-1430-实现用户登录功能.md`
 
-Invoke `/context-save` after:
-- Creating a decision record with `/decision-record`
-- Formulating a strategic bet with `/strategic-bet`
-- Completing a retrospective with `/retrospective`
-- Completing an outcome review with `/outcome-review`
-- Completing a decision quality audit with `/decision-quality-audit`
+**文件位置**: `docs/context-sessions/`
 
-## Process
+### Step 3: 写入标准格式
 
-### 1. Identify What to Save
-
-Ask the user what they want to save:
-- **Decision Record** → Extract to `context/decisions/`
-- **Strategic Bet** → Extract to `context/bets/` and `context/portfolio/`
-- **Learning** → Extract to `context/learnings/`
-- **Assumptions** → Extract to `context/assumptions/registry.md`
-
-### 2. Extract Key Information
-
-#### For Decision Records
-Extract and save:
 ```markdown
-| ID | Title | Date | Owner | Product | Status | Tags |
-```
-- Include Product field if specified (for multi-product organizations)
-- Generate tags from content (3-5 relevant keywords)
-- Link related decisions if mentioned
-- Extract assumptions to assumption registry
+# Session: {简短描述}
 
-#### For Strategic Bets
-Extract and save:
+## 元信息
+- **创建时间**: {当前时间}
+- **状态**: 进行中
+
+## 上下文摘要
+{简洁描述当前正在做什么、背景信息、关键决策}
+
+## 已完成任务
+- [x] 任务1描述
+- [x] 任务2描述
+
+## 未完成任务
+- [ ] 🔴 高优先级: {任务描述}
+- [ ] 🟡 中优先级: {任务描述}
+- [ ] 🟢 低优先级: {任务描述}
+
+## 关键文件
+- `{文件路径}` - {说明}
+- `{文件路径}` - {说明}
+
+## 注意事项
+{需要注意的技术细节、已知问题、踩过的坑}
+
+## 下一步行动
+{建议新窗口首先执行的操作}
+```
+
+### Step 4: 告知用户
+
+保存完成后，输出：
+
+```
+✅ 上下文已保存到: docs/context-sessions/{文件名}
+
+新窗口恢复方法:
+1. 调用 skill: context-resume
+2. 选择对应的 session 文件
+
+未完成任务数: {数量}
+```
+
+---
+
+## 优先级标记说明
+
+| 标记 | 含义 | 使用场景 |
+|------|------|---------|
+| 🔴 | 高优先级 | 阻塞性任务、核心功能 |
+| 🟡 | 中优先级 | 重要但不紧急 |
+| 🟢 | 低优先级 | 优化、可选功能 |
+
+---
+
+## 示例输出
+
 ```markdown
-| ID | Title | Date | Owner | Product | Status | Key Assumption |
-```
-- Include Product field if specified (for multi-product organizations)
-- Add to `context/portfolio/active-bets.md` if status is Active
-- Extract ALL explicit assumptions to `context/assumptions/registry.md`
-- Note upcoming checkpoints
+# Session: 实现微信公众号发布功能
 
-#### For Learnings
-Extract and save:
-```markdown
-| ID | Learning | Source | Date | Product | Tags | Confidence |
-```
-- Include Product field if applicable (for multi-product organizations)
-- Categorize by type (Strategy, Product, GTM, Customer, Process)
-- Link to source document
+## 元信息
+- **创建时间**: 2025-11-28 14:30
+- **状态**: 进行中
 
-#### For Assumptions
-Extract and save:
-```markdown
-| ID | Assumption | Source | Confidence | Validation Method | Status | Outcome |
-```
-- Generate assumption ID (A-NNN, sequential)
-- Link back to source decision/bet
-- Set initial status to "Pending"
+## 上下文摘要
+用户需要实现微信公众号的自动发布功能。已完成登录态获取和 Cookie 管理，正在实现文章发布 API 对接。
 
-### 3. Update Index Files
+## 已完成任务
+- [x] 创建 WechatPublisher 基础类结构
+- [x] 实现 Cookie 存储和读取
+- [x] 完成登录检测逻辑
 
-1. Read the current index file
-2. Add the new entry to the appropriate table
-3. Update "Last updated" timestamp
-4. Update quick filters/categories
-5. Write the updated index
+## 未完成任务
+- [ ] 🔴 高优先级: 实现 publishArticle 方法
+- [ ] 🔴 高优先级: 处理图片上传到微信服务器
+- [ ] 🟡 中优先级: 添加发布结果回调
+- [ ] 🟢 低优先级: 添加草稿箱功能
 
-### 4. Save Full Record
+## 关键文件
+- `electron/services/publish/publishers/wechat.publisher.ts` - 主要开发文件
+- `electron/services/core/cookie.service.ts` - Cookie 管理
+- `shared/types/publish.types.ts` - 类型定义
 
-For decisions and bets, also save the full record:
-- Create year folder if needed: `context/[type]/[YYYY]/`
-- Save full document as `[ID].md`
+## 注意事项
+- 微信 API 有频率限制，需要添加请求间隔
+- 图片需要先上传到微信素材库获取 media_id
+- 登录态 24 小时过期，需要定期刷新
 
-### 5. Update JSON Index
-
-**Also update `context/index.json` for fast retrieval:**
-
-1. Read `context/index.json`
-2. Add entry to the `entries` array:
-   ```json
-   {
-     "id": "DR-2026-001",
-     "title": "API Versioning Strategy",
-     "type": "decision",
-     "path": "context/decisions/2026/DR-2026-001.md",
-     "topics": ["api", "versioning", "compatibility"],
-     "phase": "phase2",
-     "created": "2026-01-25",
-     "lastAccessed": "2026-01-25"
-   }
-   ```
-3. Update `topicIndex` - add ID to each topic array
-4. Update `typeIndex` - add ID to the type array (decision, bet, learning)
-5. Update `phaseIndex` - add ID to the appropriate phase array
-6. Update `lastUpdated` timestamp
-7. Write updated JSON
-
-**Topic extraction:**
-- Use tags from the document
-- Extract key terms from title
-- Include product name if multi-product org
-
-### 6. Confirm Save
-
-Report what was saved:
-```
-Saved to context registry:
-- Decision DR-2026-001 added to decisions/index.md
-- 3 assumptions extracted to assumptions/registry.md
-- Full record saved to decisions/2026/DR-2026-001.md
-- JSON index updated (topics: api, versioning, compatibility)
+## 下一步行动
+1. 先读取 wechat.publisher.ts 了解当前进度
+2. 继续实现 publishArticle 方法
+3. 参考 xiaohongshu.publisher.ts 的图片上传实现
 ```
 
-## Instructions
+---
 
-1. Ask what type of content to save (or detect from recent conversation)
-2. If the content was just created, extract from it directly
-3. If content is in a file, read it using @path/to/file.md syntax
-4. Extract metadata following the formats above
-5. Read current index files before updating
-6. Preserve existing entries when adding new ones
-7. Generate sequential IDs based on existing entries
-8. Update all affected index files
-9. Report what was saved and where
+## 注意事项
 
-## ID Generation
-
-- **Decisions**: `DR-[YYYY]-[NNN]` (e.g., DR-2026-001)
-- **Bets**: `SB-[YYYY]-[NNN]` (e.g., SB-2026-003)
-- **Assumptions**: `A-[NNN]` (e.g., A-015) - sequential across all assumptions
-- **Learnings**: `L-[NNN]` (e.g., L-042) - sequential across all learnings
-
-Check existing indexes to determine next available number.
+1. **精炼总结** - 只保留关键信息，避免冗余
+2. **可执行性** - 未完成任务要具体、可操作
+3. **文件路径准确** - 确保关键文件路径正确
+4. **优先级合理** - 帮助新窗口快速确定工作重点

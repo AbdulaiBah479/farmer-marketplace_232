@@ -1,5 +1,5 @@
 ---
-name: AI Maestro Code Graph Query
+name: ai-maestro-code-graph-query
 description: PROACTIVELY query the code graph database to understand relationships and impact of changes. Use this skill WHEN READING any file to understand context, when searching for files, when exploring the codebase, or when you need to understand what depends on a component. This is your primary tool for understanding code structure and avoiding breaking changes.
 allowed-tools: Bash
 ---
@@ -142,7 +142,7 @@ Use with `graph-find-by-type.sh`:
 - If not found, run: `./install-graph-tools.sh`
 
 **API connection fails:**
-- Ensure AI Maestro is running: `curl http://127.0.0.1:23000/api/hosts/identity`
+- Ensure AI Maestro is running: `curl http://localhost:23000/api/agents`
 - Ensure your agent is registered (scripts auto-detect from tmux session)
 - Check exact component names (case-sensitive)
 

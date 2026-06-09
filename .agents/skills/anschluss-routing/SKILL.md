@@ -1,42 +1,39 @@
 ---
 name: anschluss-routing
-description: "Anschluss-Routing: Einstieg und Routing; klärt Rolle, Ziel, Frist, Aktenlage und den passenden nächsten Fachpfad."
+description: "Anschluss-Routing für Strafrechtliche Aktenaufbereitung: wählt den nächsten Spezial-Skill nach Engpass (Anklage-Erwiderungsfrist, Ermittlungsakte, Anklageschrift, Hauptverhandlungsprotokoll), dokumentiert Router-Entscheidung mit Begründung."
 ---
 
 # Anschluss-Routing
 
 ## Einsatzlage
 
-Dieses Anschluss-Routing für **Mietrecht** wählt nach dem ersten Ergebnis die passende Vertiefung, Eskalation, Fristensicherung oder Dokumentenerstellung.
+Dieses Anschluss-Routing für **Aktenaufbereiter Strafrecht** wählt nach dem ersten Ergebnis die passende Vertiefung, Eskalation, Fristensicherung oder Dokumentenerstellung.
 
 ## Fachlandkarte dieses Plugins
 
-- `allgemein-workflow-chronologie-workflow-fristen` — Allgemein Chronologie Fristen
-- `amtlichen-amtsgericht-sonderfall-ausschliesslich` — Amtlichen Amtsgericht Sonderfall Ausschliesslich
-- `bundesland-datenerhebung-grossstadt-mietspiegel` — Bundesland Datenerhebung Grossstadt Mietspiegel
-- `klageentwurf-amtsgericht-miet-gewerbemiete-mietvertrag-bauleiter` — Klageentwurf Amtsgericht Miet Gewerbemiete Mietvertrag Bauleiter
-- `lage-ausstattung-mahnung-zahlungsverzug-mandat-triage` — Lage Ausstattung Mahnung Zahlungsverzug Mandat Triage
-- `miet-kuendigungsschutz-miet-mietminderung-mieteranfragen` — Miet Kuendigungsschutz Miet Mietminderung Mieteranfragen
-- `mieter-mieteranfragen-mandantenentscheidung-mieterhoehungs` — Mieter Mieteranfragen Mandantenentscheidung Mieterhoehungs
-- `mieterhoehung-widersprechen-mieterhoehungsverlangen-erstellen` — Mieterhoehung Widersprechen Mieterhoehungsverlangen Erstellen
-- `mietpreisueberhoehung-wistrg-mietsenkungsverlangen-mietspiegel` — Mietpreisueberhoehung Wistrg Mietsenkungsverlangen Mietspiegel
-- `mietrecht-mietsenkungsverlangen-international-mietspiegel` — Mietrecht Mietsenkungsverlangen International Mietspiegel
-- `mr-betriebskostenabrechnung-mr-kuendigungsschutz-mr` — Mr Betriebskostenabrechnung Mr Kuendigungsschutz Mr
-- `mr-einfuehrung-klageentwurf-beweislast-eigenbedarfskuendigung` — Mr Einfuehrung Klageentwurf Beweislast Eigenbedarfskuendigung
-- `nebenkostenabrechnung-erstellen-faktenbank` — Nebenkostenabrechnung Erstellen Faktenbank
-- `nebenkostenpruefung-prozessstrategie-mieterhoehung-quellen` — Nebenkostenpruefung Prozessstrategie Mieterhoehung Quellen
+- `aktenaufbereiter-erstpruefung-und-mandatsziel` — Aktenaufbereiter Erstpruefung und Mandatsziel
+- `aktenaufbereiter-strafrecht` — Aktenaufbereiter Strafrecht
+- `akteneinsicht-uebersicht-aktenvorblatt` — Akteneinsicht Uebersicht Aktenvorblatt
+- `aktenlektuere-fristennotiz-und-naechster-schritt` — Aktenlektuere Fristennotiz und Naechster Schritt
+- `aktenvorblatt-erstellen` — Aktenvorblatt Erstellen
+- `aktenvorblatt-schriftsatz-brief-und-memo-bausteine` — Aktenvorblatt Schriftsatz Brief und Memo Bausteine
+- `anklageschrift-zerlegen` — Anklageschrift Zerlegen
+- `aussageanalyse-aussagepsychologie` — Aussageanalyse Aussagepsychologie
+- `beweismittel-katalog-beweisverwertungsverbote` — Beweismittel Katalog Beweisverwertungsverbote
+- `beweisverwertungsverbote-pruefen` — Beweisverwertungsverbote Pruefen
+- `beziehungen-spezial-chronologie-ergaenzbar` — Beziehungen Spezial Chronologie Ergaenzbar
+- `beziehungsmatrix-personen-taten` — Beziehungsmatrix Personen Taten
+- `chronologie-compliance-dokumentation-und-akte` — Chronologie Compliance Dokumentation und Akte
+- `dokumente-intake` — Dokumente Intake
+- `einstieg-routing` — Einstieg Routing
 
 ## Arbeitsweg
 
-- Ergebnis sichten: Welche Mietrecht und WEG-Recht-Fragen sind nach diesem Skill beantwortet, welche bleiben offen oder neu entstehen?
-- Anschlussweichen identifizieren: drohende Frist (§ 573c BGB Kündigung 3 Monate, § 558b BGB Zustimmung Mieterhöhung Ende 2. Folgemonat, § 24 Abs. 4 WEG Ladung 3 Wochen, § 556 BGB Nebenkostenabrechnung 12 Monate), notwendige Dokumente (Mietvertrag, Mieterhöhungsverlangen, Mietspiegel, Nebenkostenabrechnung, Kündigungsschreiben, Modernisierungsankündigung, WEG-Protokoll, Beschlusssammlung), nächste Verfahrensstufe oder Sachgebiet.
+- Ergebnis sichten: Welche Aktenaufbereiter Strafrecht-Fragen sind nach diesem Skill beantwortet, welche bleiben offen oder neu entstehen?
+- Anschlussweichen identifizieren: drohende Frist (die im Fachgebiet einschlägigen Verfahrens- und materiellen Fristen pflichtmäßig vorab markieren und nicht aus Modellwissen finalisieren), notwendige Dokumente (Vertragsurkunden, Schriftsätze, Verwaltungsakte, Protokolle, Bescheide und externe Beweismittel des Fachgebiets), nächste Verfahrensstufe oder Sachgebiet.
 - Konkreten Folge-Skill aus der Fachlandkarte oben benennen — nicht generisch "weitermachen", sondern Skill-Slug nennen.
-- Eskalation an Vermieter, Mieter, Hausverwaltung, WEG-Verwaltung, Amtsgericht der Belegenheit, Mieterverein, Eigentümergemeinschaft oder Spezialisten klären, wenn der Vorgang die Skill-Grenze überschreitet.
+- Eskalation an Mandant, Gegner, zuständiges Gericht oder Behörde, etwaige Sachverständige oder beauftragte Stellen oder Spezialisten klären, wenn der Vorgang die Skill-Grenze überschreitet.
 - Mandantenkommunikation vorbereiten: Was muss der Mandant tun, bis wann, welche Unterlagen bringen, welche Risiken sind offen?
-
-## Output
-
-Routing-Entscheidung mit Anschluss-Skill, Reihenfolge, Abbruchkriterien und nächster Aktion innerhalb von Mietrecht (Wohnraum/Gewerbe).
 
 ## Qualitätsanker
 

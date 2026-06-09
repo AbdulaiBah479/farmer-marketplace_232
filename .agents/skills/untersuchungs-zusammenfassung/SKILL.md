@@ -1,60 +1,70 @@
 ---
 name: untersuchungs-zusammenfassung
-description: "Entwirft eine zielgruppengerechte Zusammenfassung aus dem vertraulichen Untersuchungsvermerk — für HR, Geschäftsführung/Aufsichtsrat oder externe Bevollmächtigte. Lädt, wenn ein Untersuchungsvermerk für eine Zielgruppe aufbereitet werden soll, die nicht den vollständigen vertraulichen Inhalt erhalten darf oder soll."
+description: "Entwirft eine zielgruppengerechte Zusammenfassung aus dem vertraulichen Untersuchungsvermerk — für HR, Geschäftsführung/Aufsichtsrat oder externe Bevollmächtigte: Entwirft eine zielgruppengerechte Zusammenfassung aus dem vertraulichen Untersuchungsvermerk —..."
 ---
 
-# Untersuchungs-Zusammenfassung für Zielgruppen (Arbeitsrecht)
+# Entwirft eine zielgruppengerechte Zusammenfassung aus dem vertraulichen Untersuchungsvermerk — für HR, Geschäftsführung/Aufsichtsrat oder externe Bevollmächtigte
 
-## Zweck
 
-Entwirft eine auf die jeweilige Zielgruppe zugeschnittene Zusammenfassung
-aus dem vertraulichen Untersuchungsvermerk. HR-Zusammenfassungen enthalten
-keine anwaltliche Analyse. Zusammenfassungen für Geschäftsführung und
-Aufsichtsrat bleiben auf hohem Niveau. Briefings an externe Bevollmächtigte
-umfassen den vollständigen Kontext.
+## Arbeitsweg
 
-Lädt, wenn ein Untersuchungsergebnis an eine Zielgruppe kommuniziert werden
-soll, die nicht den vollständigen Vermerk erhalten darf oder soll.
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: die im Plugin-Kontext einschlägigen Normen über gesetze-im-internet.de, dejure.org, eur-lex.europa.eu und die amtlichen Bundes-/Landesportale live prüfen — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+**Fokus:** Entwirft eine zielgruppengerechte Zusammenfassung aus dem vertraulichen Untersuchungsvermerk — für HR, Geschäftsführung/Aufsichtsrat oder externe Bevollmächtigte. Lädt, wenn ein Untersuchungsvermerk für eine Zielgruppe aufbereitet werden soll, die nicht den vollständigen vertraulichen Inhalt erhalten darf oder soll.
+
+### Untersuchungs-Zusammenfassung für Zielgruppen (Arbeitsrecht)
+
+## Fachlicher Kern — Arbeitsrecht
+- **Problemfokus dieses Skills:** Bleibe beim konkreten Titel `Untersuchungs-Zusammenfassung für Zielgruppen (Arbeitsrecht)` und löse die dort angelegte Fachfrage; arbeite mit konkreten Tatbestandsmerkmalen, Beweisfragen und dem unmittelbar benötigten Arbeitsprodukt. Routingfragen bleiben Hilfsmittel, wenn Frist, Zuständigkeit oder Verfahrensart offen sind.
+- **Normenradar:** BGB §§ 611a, 613a, 615, 623; KSchG §§ 1, 4, 7; TzBfG §§ 14, 15, 16; AGG §§ 1, 3, 7, 15, 22; EntgTranspG §§ 3, 5, 7; BUrlG §§ 1, 3, 7; BetrVG §§ 87, 99, 102; ArbZG; NachwG; SGB IX §§ 164, 167, 168.
+- **Verifizierte Anker:** BAG, Urteil vom 23.10.2025 - 8 AZR 300/24 (Entgeltgleichheit, Paarvergleich, Beweislast, bundesarbeitsgericht.de); BAG, Urteil vom 03.06.2025 - 9 AZR 104/24 (kein Verzicht auf gesetzlichen Mindesturlaub im bestehenden Arbeitsverhältnis); bei Kündigungszugang immer § 623 BGB, Zugang nach § 130 BGB, Dreiwochenfrist §§ 4, 7 KSchG und Beweis des konkreten Umschlags trennen.
+- **Arbeitsmodus:** Zuerst Status, Zugang, Frist, Beteiligungsrechte, Sonderkündigungsschutz, Beweislast und prozessualen nächsten Schritt sichern; dann erst Materiellrecht vertiefen.
+- **Outputpflicht:** Fristenblatt, Zugangsmatrix, Beweisangebot, Mandantenmail, Betriebsrats-/Gegnerbrief oder Klage-/Erwiderungsbaustein.
+- **Fehlerbremse:** Tragende Normen/Entscheidungen live oder aus der Akte verifizieren; Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei prüfbarer Quelle. Keine BeckRS-, juris-, Kommentar- oder Aufsatz-Blindzitate aus Modellwissen.
 
 ## Eingaben
 
 - Bezeichnung der Untersuchungssache
 - Zielgruppe: `hr` / `geschaeftsfuehrung` / `externe-ar`
 - Zweck der Zusammenfassung (welche Entscheidung oder Maßnahme soll sie
-  unterstützen?)
+ unterstützen?)
 
 ## Rechtlicher Rahmen
 
 **Kernvorschriften:**
 
 - § 26 BDSG: Zweckbindung bei Beschäftigtendaten — Weitergabe von
-  Untersuchungsdaten nur soweit für den jeweiligen Zweck erforderlich;
-  bei HR-Zusammenfassungen Datenminimierung nach Art. 5 Abs. 1 lit. c DSGVO
+ Untersuchungsdaten nur soweit für den jeweiligen Zweck erforderlich;
+ bei HR-Zusammenfassungen Datenminimierung nach Art. 5 Abs. 1 lit. c DSGVO
 - § 102 BetrVG: Anhörung des Betriebsrats vor Kündigung — HR-Zusammenfassung
-  stellt oft die Tatsachengrundlage für die BR-Anhörung; Vollständigkeit
-  und Richtigkeit entscheidend (Theorie der subjektiven Determinierung)
+ stellt oft die Tatsachengrundlage für die BR-Anhörung; Vollständigkeit
+ und Richtigkeit entscheidend (Theorie der subjektiven Determinierung)
 - § 22 AGG: Beweislastverteilung — bei AGG-Sachverhalt muss die
-  Zusammenfassung für den Arbeitgeber verwertbare Ergebnisse zur
-  Enthaftung dokumentieren
+ Zusammenfassung für den Arbeitgeber verwertbare Ergebnisse zur
+ Enthaftung dokumentieren
 - §§ 93, 116 AktG / § 43 GmbHG: Informationspflichten und Haftung der
-  Geschäftsleitung — bei der Aufsichtsrats-/GF-Zusammenfassung muss der
-  Informationsgehalt ausreichen, um informierte Governance-Entscheidungen
-  zu ermöglichen
+ Geschäftsleitung — bei der Aufsichtsrats-/GF-Zusammenfassung muss der
+ Informationsgehalt ausreichen, um informierte Governance-Entscheidungen
+ zu ermöglichen
 - §§ 34, 37 HinSchG: Bei Hinweisgebersachen muss die Zusammenfassung
-  die Identität der hinweisgebenden Person schützen; keine Rückschlüsse
+ die Identität der hinweisgebenden Person schützen; keine Rückschlüsse
 
 **Leitentscheidungen:**
 
 - Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
-  Inhalt der BR-Anhörung — die Anhörung muss den Sachverhalt vollständig
-  und richtig wiedergeben; fehlerhafte Grundlage (z. B. aus unvollständiger
-  HR-Zusammenfassung) macht die Kündigung unwirksam
+ Inhalt der BR-Anhörung — die Anhörung muss den Sachverhalt vollständig
+ und richtig wiedergeben; fehlerhafte Grundlage (z. B. aus unvollständiger
+ HR-Zusammenfassung) macht die Kündigung unwirksam
 - Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
-  Verdachtskündigung — Ergebnisse müssen auf objektiven Tatsachen beruhen,
-  die auch in einer HR-Kommunikation lückenlos nachvollziehbar sind
+ Verdachtskündigung — Ergebnisse müssen auf objektiven Tatsachen beruhen,
+ die auch in einer HR-Kommunikation lückenlos nachvollziehbar sind
 - Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
-  Informationspflichten der Geschäftsleitung gegenüber dem Aufsichtsrat bei
-  laufenden Untersuchungen; Dokumentationspflicht für Governance-Entscheidungen
+ Informationspflichten der Geschäftsleitung gegenüber dem Aufsichtsrat bei
+ laufenden Untersuchungen; Dokumentationspflicht für Governance-Entscheidungen
 
 - Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen zitieren. Literatur nur nutzen, wenn der Nutzer die Quelle bereitstellt oder ein lizenzierter Live-Zugriff sie verifiziert.
 
@@ -85,7 +95,7 @@ Maßnahme soll sie unterstützen?
 
 Inhalt:
 - Was ist passiert (Sachverhaltsdarstellung in klarer Sprache, keine
-  Rechtsanalyse)
+ Rechtsanalyse)
 - Ergebnis zu jedem Vorwurf (Bestätigt / Nicht bestätigt / Unklar)
 - Empfohlene Maßnahme
 - Verweis auf noch offene Ermittlungsstränge (falls vorhanden)
@@ -109,7 +119,7 @@ Inhalt:
 - Vorwurf und Untersuchungsumfang (ein Abschnitt)
 - Wesentliche Ergebnisse
 - Unternehmensrelevanz und Expositionseinschätzung
-  (nur grob — keine Detailrechtsanalyse)
+ (nur grob — keine Detailrechtsanalyse)
 - Ergriffene und geplante Maßnahmen
 
 Kopfzeile: "Vertraulich — Interne Untersuchung — Geschäftsleitung"
@@ -134,12 +144,6 @@ Kopfzeile: "Vertraulich — Interne Untersuchung"
 In allen Zielgruppen-Zusammenfassungen: Identität der hinweisgebenden
 Person darf nicht erkennbar sein (§§ 8, 37 HinSchG). Zusammenfassung
 vor Weitergabe auf Rückschlüsse prüfen.
-
-## Ausgabeformat
-
-Zielgruppengerechte Zusammenfassung mit Kopfzeile, Sachverhaltsdarstellung,
-Ergebnistabelle und (falls HR) Handlungsempfehlung. HR-Zusammenfassungen
-ohne Eintrags-IDs, Rechtsanalyse und Glaubwürdigkeitsbewertung.
 
 ## Beispiel
 
@@ -180,21 +184,21 @@ Empfehlung:
 ## Risiken und typische Fehler
 
 - **HR-Zusammenfassung zu reichhaltig**: Anwaltliche Analyse, Credibility-
-  Bewertung und Haftungseinschätzung in der HR-Zusammenfassung können
-  den vertraulichen Charakter der Untersuchungsunterlagen gefährden
-  und müssen dort nicht stehen.
+ Bewertung und Haftungseinschätzung in der HR-Zusammenfassung können
+ den vertraulichen Charakter der Untersuchungsunterlagen gefährden
+ und müssen dort nicht stehen.
 - **BR-Anhörungsgrundlage lückenhaft**: Wenn die HR-Zusammenfassung
-  der BR-Anhörung als Tatsachengrundlage dient und unvollständig ist,
-  ist die Kündigung unwirksam.
+ der BR-Anhörung als Tatsachengrundlage dient und unvollständig ist,
+ ist die Kündigung unwirksam.
 - **HinSchG-Identitätsschutz verletzt**: Rückschlüsse auf die hinweisgebende
-  Person in der Zusammenfassung können Repressalie nach § 36 HinSchG
-  begründen.
+ Person in der Zusammenfassung können Repressalie nach § 36 HinSchG
+ begründen.
 - **Geschäftsleitung unterinformiert**: Eine zu knappe GF/AR-Zusammenfassung
-  kann die Grundlage für informierte Governance-Entscheidungen nehmen
-  und Geschäftsleiterhaftung auslösen.
+ kann die Grundlage für informierte Governance-Entscheidungen nehmen
+ und Geschäftsleiterhaftung auslösen.
 - **Externe Bevollmächtigte ohne Prozessrelevanz**: Das Briefing für externe
-  AR muss die für Prozessführung wesentlichen offenen Stränge und
-  Dokumentenrisiken enthalten — ohne diese ist das Mandat unzureichend.
+ AR muss die für Prozessführung wesentlichen offenen Stränge und
+ Dokumentenrisiken enthalten — ohne diese ist das Mandat unzureichend.
 
 ## Quellenpflicht
 
@@ -204,7 +208,7 @@ Bei allen Ausgaben zitieren (zielgruppenspezifisch):
 - Bei AGG-relevantem Sachverhalt: § 22 AGG und frei verifizierte BAG-Rechtsprechung
 - Bei Hinweisgebersachen: §§ 8, 37 HinSchG
 - Bei GF/AR-Briefing: §§ 93, 116 AktG / § 43 GmbHG;
-  Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+ Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 - § 26 BDSG (Zweckbindung, Datenminimierung)
 
 Detaillierte Zielgruppen-Stripping-Regeln und Zusammenfassungs-Templates

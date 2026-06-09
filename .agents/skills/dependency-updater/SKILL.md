@@ -1,491 +1,144 @@
 ---
 name: dependency-updater
-description: Smart dependency management for any language. Auto-detects project type, applies safe updates automatically, prompts for major versions, diagnoses and fixes dependency issues.
-license: MIT
-metadata:
-  version: 1.0.0
+description: Smart dependency update checker with changelog summaries and breaking change detection.
 ---
 
-# Dependency Updater
+# Dependency Updater Skill
 
-Smart dependency management for any language with automatic detection and safe updates.
+Smart dependency update checker with changelog summaries and breaking change detection.
 
----
+## Instructions
 
-## Quick Start
+You are a dependency management expert. When invoked:
+
+1. **Scan Dependencies**: Identify outdated dependencies:
+   - Check package.json (npm/yarn/pnpm)
+   - Check requirements.txt or pyproject.toml (Python)
+   - Check go.mod (Go)
+   - Check Cargo.toml (Rust)
+   - Check pom.xml or build.gradle (Java)
+
+2. **Categorize Updates**:
+   - **Patch** (1.2.3 → 1.2.4): Bug fixes, safe to update
+   - **Minor** (1.2.3 → 1.3.0): New features, usually safe
+   - **Major** (1.2.3 → 2.0.0): Breaking changes, needs review
+
+3. **Analyze Changes**: For each update:
+   - Fetch changelog or release notes
+   - Identify breaking changes
+   - Note new features
+   - Check security fixes
+   - Assess update priority (critical/high/medium/low)
+
+4. **Security Check**: Identify dependencies with:
+   - Known vulnerabilities (CVEs)
+   - Security advisories
+   - Deprecated packages
+
+5. **Generate Report**: Provide summary with:
+   - List of outdated dependencies
+   - Version changes (current → latest)
+   - Breaking changes summary
+   - Recommended update order
+   - Estimated risk level
+
+## Update Priority Levels
+
+### Critical (Update Immediately)
+- Security vulnerabilities
+- Critical bug fixes affecting functionality
+- Dependencies with active exploits
+
+### High (Update Soon)
+- Major security improvements
+- Important bug fixes
+- Deprecated packages with replacements
+- Performance improvements
+
+### Medium (Update When Convenient)
+- Minor version updates with new features
+- Non-critical bug fixes
+- Improved developer experience
+
+### Low (Optional)
+- Patch updates with minor fixes
+- Documentation improvements
+- Internal refactoring
+
+## Usage Examples
 
 ```
-update my dependencies
+@dependency-updater
+@dependency-updater --security-only
+@dependency-updater --major
+@dependency-updater package.json
+@dependency-updater --dry-run
 ```
 
-The skill auto-detects your project type and handles the rest.
+## Update Strategy
 
----
+1. **Review First**: Always check changelogs before updating
+2. **Test After**: Run full test suite after updates
+3. **Update Incrementally**: Don't update everything at once
+4. **Pin Versions**: Consider pinning major versions for stability
+5. **Update Lockfiles**: Ensure package-lock.json/yarn.lock are updated
+6. **Check CI**: Verify CI passes after updates
 
-## Triggers
+## Report Format
 
-| Trigger | Example |
-|---------|---------|
-| Update dependencies | "update dependencies", "update deps" |
-| Check outdated | "check for outdated packages" |
-| Fix dependency issues | "fix my dependency problems" |
-| Security audit | "audit dependencies for vulnerabilities" |
-| Diagnose deps | "diagnose dependency issues" |
+```markdown
+## Dependency Update Report
 
----
+### Critical Updates (3)
+- **express**: 4.17.1 → 4.18.2
+  - Security: Fixes CVE-2022-XXXX (path traversal)
+  - Breaking: None
+  - Priority: CRITICAL
 
-## Supported Languages
+### High Priority Updates (5)
+- **react**: 17.0.2 → 18.2.0
+  - Breaking: Automatic batching, new rendering behavior
+  - Features: Concurrent rendering, suspense improvements
+  - Priority: HIGH
+  - Migration: https://react.dev/blog/2022/03/08/react-18-upgrade-guide
 
-| Language | Package File | Update Tool | Audit Tool |
-|----------|--------------|-------------|------------|
-| **Node.js** | package.json | `taze` | `npm audit` |
-| **Python** | requirements.txt, pyproject.toml | `pip-review` | `safety`, `pip-audit` |
-| **Go** | go.mod | `go get -u` | `govulncheck` |
-| **Rust** | Cargo.toml | `cargo update` | `cargo audit` |
-| **Ruby** | Gemfile | `bundle update` | `bundle audit` |
-| **Java** | pom.xml, build.gradle | `mvn versions:*` | `mvn dependency:*` |
-| **.NET** | *.csproj | `dotnet outdated` | `dotnet list package --vulnerable` |
+### Medium Priority Updates (12)
+- **lodash**: 4.17.20 → 4.17.21
+  - Fixes: Minor bug fixes
+  - Priority: MEDIUM
 
----
-
-## Quick Reference
-
-| Update Type | Version Change | Action |
-|-------------|----------------|--------|
-| **Fixed** | No `^` or `~` | Skip (intentionally pinned) |
-| **PATCH** | `x.y.z` → `x.y.Z` | Auto-apply |
-| **MINOR** | `x.y.z` → `x.Y.0` | Auto-apply |
-| **MAJOR** | `x.y.z` → `X.0.0` | Prompt user individually |
-
----
-
-## Workflow
-
-```
-User Request
-    │
-    ▼
-┌─────────────────────────────────────────────────────┐
-│ Step 1: DETECT PROJECT TYPE                         │
-│ • Scan for package files (package.json, go.mod...) │
-│ • Identify package manager                          │
-├─────────────────────────────────────────────────────┤
-│ Step 2: CHECK PREREQUISITES                         │
-│ • Verify required tools are installed               │
-│ • Suggest installation if missing                   │
-├─────────────────────────────────────────────────────┤
-│ Step 3: SCAN FOR UPDATES                            │
-│ • Run language-specific outdated check              │
-│ • Categorize: MAJOR / MINOR / PATCH / Fixed         │
-├─────────────────────────────────────────────────────┤
-│ Step 4: AUTO-APPLY SAFE UPDATES                     │
-│ • Apply MINOR and PATCH automatically               │
-│ • Report what was updated                           │
-├─────────────────────────────────────────────────────┤
-│ Step 5: PROMPT FOR MAJOR UPDATES                    │
-│ • AskUserQuestion for each MAJOR update             │
-│ • Show current → new version                        │
-├─────────────────────────────────────────────────────┤
-│ Step 6: APPLY APPROVED MAJORS                       │
-│ • Update only approved packages                     │
-├─────────────────────────────────────────────────────┤
-│ Step 7: FINALIZE                                    │
-│ • Run install command                               │
-│ • Run security audit                                │
-└─────────────────────────────────────────────────────┘
+### Recommended Update Order:
+1. express (security fix)
+2. other critical updates
+3. test suite verification
+4. react (major update, requires testing)
+5. remaining minor updates
 ```
 
----
-
-## Commands by Language
-
-### Node.js (npm/yarn/pnpm)
-
-```bash
-# Check prerequisites
-scripts/check-tool.sh taze "npm install -g taze"
-
-# Scan for updates
-taze
-
-# Apply minor/patch
-taze minor --write
-
-# Apply specific majors
-taze major --write --include pkg1,pkg2
-
-# Monorepo support
-taze -r  # recursive
-
-# Security
-npm audit
-npm audit fix
-```
-
-### Python
-
-```bash
-# Check outdated
-pip list --outdated
-
-# Update all (careful!)
-pip-review --auto
-
-# Update specific
-pip install --upgrade package-name
-
-# Security
-pip-audit
-safety check
-```
-
-### Go
-
-```bash
-# Check outdated
-go list -m -u all
-
-# Update all
-go get -u ./...
-
-# Tidy up
-go mod tidy
-
-# Security
-govulncheck ./...
-```
-
-### Rust
-
-```bash
-# Check outdated
-cargo outdated
-
-# Update within semver
-cargo update
-
-# Security
-cargo audit
-```
-
-### Ruby
-
-```bash
-# Check outdated
-bundle outdated
-
-# Update all
-bundle update
-
-# Update specific
-bundle update --conservative gem-name
-
-# Security
-bundle audit
-```
-
-### Java (Maven)
-
-```bash
-# Check outdated
-mvn versions:display-dependency-updates
-
-# Update to latest
-mvn versions:use-latest-releases
-
-# Security
-mvn dependency:tree
-mvn dependency-check:check
-```
-
-### .NET
-
-```bash
-# Check outdated
-dotnet list package --outdated
-
-# Update specific
-dotnet add package PackageName
-
-# Security
-dotnet list package --vulnerable
-```
-
----
-
-## Diagnosis Mode
-
-When dependencies are broken, run diagnosis:
-
-### Common Issues & Fixes
-
-| Issue | Symptoms | Fix |
-|-------|----------|-----|
-| **Version Conflict** | "Cannot resolve dependency tree" | Clean install, use overrides/resolutions |
-| **Peer Dependency** | "Peer dependency not satisfied" | Install required peer version |
-| **Security Vuln** | `npm audit` shows issues | `npm audit fix` or manual update |
-| **Unused Deps** | Bloated bundle | Run `depcheck` (Node) or equivalent |
-| **Duplicate Deps** | Multiple versions installed | Run `npm dedupe` or equivalent |
-
-### Emergency Fixes
-
-```bash
-# Node.js - Nuclear reset
-rm -rf node_modules package-lock.json
-npm cache clean --force
-npm install
-
-# Python - Clean virtualenv
-rm -rf venv
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-
-# Go - Reset modules
-rm go.sum
-go mod tidy
-```
-
----
-
-## Security Audit
-
-Run security checks for any project:
-
-```bash
-# Node.js
-npm audit
-npm audit --json | jq '.metadata.vulnerabilities'
-
-# Python
-pip-audit
-safety check
-
-# Go
-govulncheck ./...
-
-# Rust
-cargo audit
-
-# Ruby
-bundle audit
-
-# .NET
-dotnet list package --vulnerable
-```
-
-### Severity Response
-
-| Severity | Action |
-|----------|--------|
-| **Critical** | Fix immediately |
-| **High** | Fix within 24h |
-| **Moderate** | Fix within 1 week |
-| **Low** | Fix in next release |
-
----
-
-## Anti-Patterns
-
-| Avoid | Why | Instead |
-|-------|-----|---------|
-| Update fixed versions | Intentionally pinned | Skip them |
-| Auto-apply MAJOR | Breaking changes | Prompt user |
-| Batch MAJOR prompts | Loses context | Prompt individually |
-| Skip lock file | Irreproducible builds | Always commit lock files |
-| Ignore security alerts | Vulnerabilities | Address by severity |
-
----
-
-## Verification Checklist
-
-After updates:
-
-- [ ] Updates scanned without errors
-- [ ] MINOR/PATCH auto-applied
-- [ ] MAJOR updates prompted individually
-- [ ] Fixed versions untouched
-- [ ] Lock file updated
-- [ ] Install command ran
-- [ ] Security audit passed (or issues noted)
-
----
-
-<details>
-<summary><strong>Deep Dive: Project Detection</strong></summary>
-
-The skill auto-detects project type by scanning for package files:
-
-| File Found | Language | Package Manager |
-|------------|----------|-----------------|
-| `package.json` | Node.js | npm/yarn/pnpm |
-| `requirements.txt` | Python | pip |
-| `pyproject.toml` | Python | pip/poetry |
-| `Pipfile` | Python | pipenv |
-| `go.mod` | Go | go modules |
-| `Cargo.toml` | Rust | cargo |
-| `Gemfile` | Ruby | bundler |
-| `pom.xml` | Java | Maven |
-| `build.gradle` | Java/Kotlin | Gradle |
-| `*.csproj` | .NET | dotnet |
-
-**Detection order matters for monorepos:**
-1. Check current directory first
-2. Then check for workspace/monorepo patterns
-3. Offer to run recursively if applicable
-
-</details>
-
-<details>
-<summary><strong>Deep Dive: Node.js with taze</strong></summary>
-
-### Prerequisites
-
-```bash
-# Install taze globally (recommended)
-npm install -g taze
-
-# Or use npx
-npx taze
-```
-
-### Smart Update Flow
-
-```bash
-# 1. Scan all updates
-taze
-
-# 2. Apply safe updates (minor + patch)
-taze minor --write
-
-# 3. For each major, prompt user:
-#    "Update @types/node from ^20.0.0 to ^22.0.0?"
-#    If yes, add to approved list
-
-# 4. Apply approved majors
-taze major --write --include approved-pkg1,approved-pkg2
-
-# 5. Install
-npm install  # or pnpm install / yarn
-```
-
-### Auto-Approve List
-
-Some packages have frequent major bumps but are backward-compatible:
-
-| Package | Reason |
-|---------|--------|
-| `lucide-react` | Icon library, majors are additive |
-| `@types/*` | Type definitions, usually safe |
-
-</details>
-
-<details>
-<summary><strong>Deep Dive: Version Strategies</strong></summary>
-
-### Semantic Versioning
-
-```
-MAJOR.MINOR.PATCH (e.g., 2.3.1)
-
-MAJOR: Breaking changes - requires code changes
-MINOR: New features - backward compatible
-PATCH: Bug fixes - backward compatible
-```
-
-### Range Specifiers
-
-| Specifier | Meaning | Example |
-|-----------|---------|---------|
-| `^1.2.3` | Minor + Patch OK | `>=1.2.3 <2.0.0` |
-| `~1.2.3` | Patch only | `>=1.2.3 <1.3.0` |
-| `1.2.3` | Exact (fixed) | Only `1.2.3` |
-| `>=1.2.3` | At least | Any `>=1.2.3` |
-| `*` | Any | Latest (dangerous) |
-
-### Recommended Strategy
-
-```json
-{
-  "dependencies": {
-    "critical-lib": "1.2.3",      // Exact for critical
-    "stable-lib": "~1.2.3",       // Patch only for stable
-    "modern-lib": "^1.2.3"        // Minor OK for active
-  }
-}
-```
-
-</details>
-
-<details>
-<summary><strong>Deep Dive: Conflict Resolution</strong></summary>
-
-### Node.js Conflicts
-
-**Diagnosis:**
-```bash
-npm ls package-name      # See dependency tree
-npm explain package-name # Why installed
-yarn why package-name    # Yarn equivalent
-```
-
-**Resolution with overrides:**
-```json
-// package.json
-{
-  "overrides": {
-    "lodash": "^4.18.0"
-  }
-}
-```
-
-**Resolution with resolutions (Yarn):**
-```json
-{
-  "resolutions": {
-    "lodash": "^4.18.0"
-  }
-}
-```
-
-### Python Conflicts
-
-**Diagnosis:**
-```bash
-pip check
-pipdeptree -p package-name
-```
-
-**Resolution:**
-```bash
-# Use virtual environment
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-
-# Or use constraints
-pip install -c constraints.txt -r requirements.txt
-```
-
-</details>
-
----
-
-## Script Reference
-
-| Script | Purpose |
-|--------|---------|
-| `scripts/check-tool.sh` | Verify tool is installed |
-| `scripts/run-taze.sh` | Run taze with proper flags |
-
----
-
-## Related Tools
-
-| Tool | Language | Purpose |
-|------|----------|---------|
-| [taze](https://github.com/antfu-collective/taze) | Node.js | Smart dependency updates |
-| [npm-check-updates](https://github.com/raineorshine/npm-check-updates) | Node.js | Alternative to taze |
-| [pip-review](https://github.com/jgonggrijp/pip-review) | Python | Interactive pip updates |
-| [cargo-edit](https://github.com/killercup/cargo-edit) | Rust | Cargo dependency management |
-| [bundler-audit](https://github.com/rubysec/bundler-audit) | Ruby | Security auditing |
+## Compatibility Checks
+
+- **Node.js version**: Check if updates require newer Node.js
+- **Peer dependencies**: Verify peer dependency compatibility
+- **Breaking changes**: Review migration guides
+- **TypeScript**: Check if type definitions are updated
+- **Build tools**: Ensure build config supports new versions
+
+## Best Practices
+
+- Update dependencies regularly (weekly or bi-weekly)
+- Read changelogs and migration guides
+- Update lockfiles after changes
+- Test thoroughly after major updates
+- Keep a separate branch for dependency updates
+- Update dev dependencies separately from production
+- Document any required code changes
+- Consider using Dependabot or Renovate for automation
+
+## Notes
+
+- Always backup before major updates
+- Check for deprecation warnings in console
+- Review bundle size impact for frontend dependencies
+- Test in staging environment before production
+- Keep track of which updates caused issues
+- Maintain a dependency update log

@@ -1,5 +1,5 @@
 ---
-name: Create New Skills
+name: create-new-skills
 description: Creates new Agent Skills for Claude Code following best practices and documentation. Use when the user wants to create a new skill, extend Claude's capabilities, or package domain expertise into a reusable skill.
 ---
 
@@ -15,7 +15,6 @@ This skill helps you create new Agent Skills for Claude Code. Before starting, r
 1. [docs/claude_code_agent_skills.md](docs/claude_code_agent_skills.md) - Complete guide to creating and managing skills
 2. [docs/claude_code_agent_skills_overview.md](docs/claude_code_agent_skills_overview.md) - Architecture and how skills work
 3. [docs/blog_equipping_agents_with_skills.md](docs/blog_equipping_agents_with_skills.md) - Design principles and best practices
-4. **[docs/multi_file_skill_patterns.md](docs/multi_file_skill_patterns.md)** - **CRITICAL**: Multi-file skill structures and file type guidelines
 
 ### Understanding Skills
 
@@ -31,8 +30,6 @@ This skill helps you create new Agent Skills for Claude Code. Before starting, r
 3. **Resources** (loaded as needed): Additional files, scripts, templates
 
 **Key Principle:** Only relevant content enters the context window at any time.
-
-**Multiple File Types:** Skills can use multiple file types (`.md`, `.yaml`, `.json`, `.sh`, `.py`, `.ts`, `.js`, `.sql`, etc.) - see [docs/multi_file_skill_patterns.md](docs/multi_file_skill_patterns.md) for complete guidance.
 
 ### Skill Creation Workflow
 
@@ -150,49 +147,25 @@ You would:
 4. Final result
 ```
 
-#### Step 6: Add Supporting Files (Required for Complex Skills)
+#### Step 6: Add Supporting Files (Optional)
 
-**CRITICAL**: Skills can and should use multiple file types. This is a key strength of the skill system.
-
-**Read the complete guide**: [docs/multi_file_skill_patterns.md](docs/multi_file_skill_patterns.md)
+If the skill needs additional context:
+1. Create files alongside SKILL.md
+2. Reference them from instructions: `[forms.md](forms.md)`
+3. Use progressive disclosure - split by topic/scenario
 
 **Common supporting file types:**
-- **Markdown** (`.md`, `.mdx`) - Documentation, examples, troubleshooting
-- **YAML/JSON** (`.yaml`, `.yml`, `.json`) - Configuration, schemas, data
-- **Scripts** (`.sh`, `.py`, `.ts`, `.js`) - Executable utilities
-- **Templates** (`.txt`, `.md`, `.ts`, `.yaml`) - Reusable templates
-- **SQL** (`.sql`) - Database queries and migrations
-- **Data** (`.csv`, `.json`) - Reference data and examples
-
-**Recommended structure:**
-```
-skill-name/
-├── SKILL.md                    # Main instructions (REQUIRED)
-├── REFERENCE.md                 # Detailed reference
-├── EXAMPLES.md                  # Usage examples
-├── TROUBLESHOOTING.md           # Common issues
-├── config/
-│   └── schema.yaml              # Configuration schemas
-├── scripts/
-│   ├── validate.sh              # Shell scripts
-│   └── process.py               # Python/TS utilities
-└── templates/
-    └── template.md              # Reusable templates
-```
-
-**Key principles:**
-1. **Use multiple file types** - Match file type to purpose
-2. **Progressive disclosure** - Load only what's needed
-3. **Reference files** - Link instead of duplicating: `[REFERENCE.md](REFERENCE.md)`
-4. **Make scripts executable**: `chmod +x scripts/*.sh scripts/*.py`
-5. **Document file purposes** - Explain relationships in SKILL.md
+- Additional instructions (e.g., `advanced_usage.md`)
+- Reference documentation (e.g., `api_reference.md`)
+- Scripts in `scripts/` directory
+- Templates in `templates/` directory
+- Configuration examples
 
 **Script guidelines:**
-- Make executable: `chmod +x scripts/*.py scripts/*.sh`
+- Make executable: `chmod +x scripts/*.py`
 - Add PEP 723 inline dependencies for Python scripts
 - Include usage instructions in SKILL.md
 - Return clear output for Claude to parse
-- Use full paths from skill root: `bash scripts/validate.sh`
 
 #### Step 7: Test the Skill
 
@@ -238,7 +211,6 @@ git push
 - Keep main instructions focused (under 5k tokens ideal)
 - Split complex content into linked files
 - Use progressive disclosure for optional/advanced content
-- **Use multiple file types** - See [docs/multi_file_skill_patterns.md](docs/multi_file_skill_patterns.md)
 
 **Skill scope:**
 - One skill = one capability or workflow
@@ -249,9 +221,6 @@ git push
 - Use relative paths: `[file.md](file.md)` not absolute paths
 - Reference scripts with full path from skill root
 - Make it clear when Claude should read vs execute files
-
-**Quick Checklist:**
-- For creating skills aligned with the Claude Code Development Ecosystem PRD, see [docs/skill_structure_checklist.md](docs/skill_structure_checklist.md)
 
 ### Common Patterns from Existing Skills
 
@@ -361,43 +330,32 @@ Create a skill for writing technical documentation with our company's style guid
 ```
 
 You would:
-1. Read documentation files, especially [docs/multi_file_skill_patterns.md](docs/multi_file_skill_patterns.md)
+1. Read documentation files
 2. Gather requirements:
    - Get company style guide document
    - What types of docs? (API, user guides, architecture?)
    - Any templates or examples?
-3. Create comprehensive structure with multiple file types:
+3. Create comprehensive structure:
    ```bash
-   mkdir -p .claude/skills/tech-docs/{templates,examples,guidelines,scripts,config}
+   mkdir -p .claude/skills/tech-docs/{templates,examples,guidelines}
    ```
-4. Organize content using multiple file types:
-   - `SKILL.md` - Overview and workflow (markdown)
-   - `REFERENCE.md` - Complete API reference (markdown)
-   - `EXAMPLES.md` - Usage examples (markdown)
-   - `guidelines/style_guide.md` - Company style rules (markdown)
-   - `guidelines/api_docs.md` - API documentation specifics (markdown)
-   - `guidelines/user_guides.md` - User guide standards (markdown)
-   - `config/schema.yaml` - Documentation schema (YAML)
-   - `templates/api_template.md` - API doc template (markdown)
-   - `templates/guide_template.md` - User guide template (markdown)
-   - `scripts/validate.sh` - Validation script (shell)
-   - `scripts/lint-docs.py` - Documentation linter (Python)
-   - `examples/` - Sample documentation (markdown)
+4. Organize content:
+   - `SKILL.md` - Overview and workflow
+   - `guidelines/style_guide.md` - Company style rules
+   - `guidelines/api_docs.md` - API documentation specifics
+   - `guidelines/user_guides.md` - User guide standards
+   - `templates/api_template.md` - API doc template
+   - `templates/guide_template.md` - User guide template
+   - `examples/` - Sample documentation
 5. Write SKILL.md that:
    - References guidelines by doc type
    - Uses progressive disclosure (only load needed guidelines)
    - Provides workflow for each doc type
-   - Links to scripts: `bash scripts/validate.sh doc.md`
-   - References config: `See [config/schema.yaml](config/schema.yaml)`
 6. Add examples for:
    - API endpoint documentation
    - User guide creation
    - Architecture decision records
-7. Make scripts executable:
-   ```bash
-   chmod +x scripts/*.sh scripts/*.py
-   ```
-8. Test with various documentation requests
+7. Test with various documentation requests
 
 ### Example 4: Extending an Existing Skill
 

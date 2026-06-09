@@ -1,518 +1,202 @@
 ---
 name: uml-modeling
-description: UML diagram generation including class, sequence, activity, use case, and state diagrams
-allowed-tools: Read, Glob, Grep, Write, Edit
+description: Design, critique, and revise UML diagrams from a modeling and communication perspective. Use when Codex is asked to create or improve UML; when the user asks for a graphical representation, diagram, schema, visual model, process map, state view, architecture view, or system representation of software/system behavior or structure; when the user does not explicitly choose UML but needs a model-like visual explanation; when Codex must autonomously choose the right UML diagram type or split across multiple UML diagrams. Use for reasoning about diagram form, abstraction level, boundaries, grouping, lifecycle/state design, behavior vs structure, interaction design, or diagnosing why a diagram feels wrong at the modeling level. This skill treats notation as the final representation, not as the core task.
 ---
 
-# UML Modeling Skill
-
-## When to Use This Skill
-
-Use this skill when:
-
-- **Uml Modeling tasks** - Working on uml diagram generation including class, sequence, activity, use case, and state diagrams
-- **Planning or design** - Need guidance on Uml Modeling approaches
-- **Best practices** - Want to follow established patterns and standards
-
-## Overview
-
-Create UML diagrams using PlantUML and Mermaid notation for software design documentation.
-
-## MANDATORY: Documentation-First Approach
-
-Before creating UML diagrams:
-
-1. **Invoke `docs-management` skill** for UML standards guidance
-2. **Verify diagram syntax** using appropriate notation (PlantUML/Mermaid)
-3. **Base all guidance on UML 2.5 specification**
-
-## UML Diagram Types
-
-### Structural Diagrams
-
-| Diagram | Purpose | When to Use |
-|---------|---------|-------------|
-| Class | Show classes, attributes, methods, relationships | Domain modeling, design |
-| Component | Show components and dependencies | Architecture documentation |
-| Deployment | Show physical deployment | Infrastructure planning |
-| Object | Show object instances | Specific scenarios |
-| Package | Show namespaces/modules | Code organization |
-
-### Behavioral Diagrams
-
-| Diagram | Purpose | When to Use |
-|---------|---------|-------------|
-| Use Case | Show actor-system interactions | Requirements |
-| Sequence | Show message flow over time | API design, protocols |
-| Activity | Show workflows and processes | Business processes |
-| State Machine | Show state transitions | Lifecycle modeling |
-| Communication | Show object interactions | Design patterns |
-
-## Class Diagram
-
-### PlantUML Syntax
-
-```plantuml
-@startuml
-skinparam classAttributeIconSize 0
-
-abstract class Entity {
-  +Id: Guid
-  +CreatedAt: DateTimeOffset
-  +UpdatedAt: DateTimeOffset
-}
-
-class Order extends Entity {
-  -_lineItems: List<LineItem>
-  +CustomerId: Guid
-  +Status: OrderStatus
-  +Total: Money
-  --
-  +AddItem(product: Product, quantity: int): Result<LineItem>
-  +RemoveItem(lineItemId: Guid): Result
-  +Submit(): Result
-  +Cancel(): Result
-}
-
-class LineItem extends Entity {
-  +ProductId: Guid
-  +ProductName: string
-  +Quantity: int
-  +UnitPrice: Money
-  +LineTotal: Money
-}
-
-enum OrderStatus {
-  Draft
-  Submitted
-  Paid
-  Shipped
-  Delivered
-  Cancelled
-}
-
-class Money <<value object>> {
-  +Amount: decimal
-  +Currency: string
-  +{static} Zero: Money
-  +Add(other: Money): Money
-  +Multiply(factor: decimal): Money
-}
-
-Order "1" *-- "0..*" LineItem : contains
-Order --> OrderStatus
-Order --> Money
-LineItem --> Money
-
-@enduml
-```
-
-### Mermaid Class Diagram
-
-```mermaid
-classDiagram
-    class Entity {
-        <<abstract>>
-        +Guid Id
-        +DateTimeOffset CreatedAt
-        +DateTimeOffset UpdatedAt
-    }
-
-    class Order {
-        -List~LineItem~ _lineItems
-        +Guid CustomerId
-        +OrderStatus Status
-        +Money Total
-        +AddItem(Product, int) Result~LineItem~
-        +RemoveItem(Guid) Result
-        +Submit() Result
-        +Cancel() Result
-    }
-
-    class LineItem {
-        +Guid ProductId
-        +string ProductName
-        +int Quantity
-        +Money UnitPrice
-        +Money LineTotal
-    }
-
-    class OrderStatus {
-        <<enumeration>>
-        Draft
-        Submitted
-        Paid
-        Shipped
-        Delivered
-        Cancelled
-    }
-
-    Entity <|-- Order
-    Entity <|-- LineItem
-    Order "1" *-- "0..*" LineItem : contains
-    Order --> OrderStatus
-```
-
-### Relationship Types
-
-```csharp
-// UML Relationship Reference
-public static class UMLRelationships
-{
-    // Association: uses, knows about
-    // Customer --> Order (Customer uses Order)
-
-    // Aggregation: has-a (shared ownership)
-    // Team o-- Player (Team has Players, Players can exist independently)
-
-    // Composition: contains (exclusive ownership)
-    // Order *-- LineItem (Order contains LineItems, LineItems cannot exist without Order)
-
-    // Inheritance: is-a
-    // Dog --|> Animal (Dog extends Animal)
-
-    // Implementation: implements
-    // UserService ..|> IUserService (UserService implements IUserService)
-
-    // Dependency: depends on
-    // Controller ..> Service (Controller depends on Service)
-}
-```
-
-## Sequence Diagram
-
-### PlantUML Syntax
-
-```plantuml
-@startuml
-title Order Submission Flow
-
-actor Customer
-participant "API Gateway" as API
-participant "Order Service" as Orders
-participant "Payment Service" as Payment
-participant "Notification Service" as Notify
-database "Order DB" as DB
-queue "Message Bus" as Bus
-
-Customer -> API: POST /orders/{id}/submit
-activate API
-
-API -> Orders: SubmitOrder(orderId)
-activate Orders
-
-Orders -> DB: GetOrder(orderId)
-activate DB
-DB --> Orders: Order
-deactivate DB
-
-alt Order is valid
-    Orders -> Payment: ProcessPayment(order)
-    activate Payment
-
-    Payment --> Orders: PaymentResult
-    deactivate Payment
-
-    alt Payment successful
-        Orders -> DB: UpdateStatus(Paid)
-        Orders -> Bus: Publish(OrderSubmitted)
-        Bus -> Notify: OrderSubmitted
-        activate Notify
-        Notify -> Notify: SendConfirmation()
-        deactivate Notify
-
-        Orders --> API: Success
-        API --> Customer: 200 OK
-    else Payment failed
-        Orders --> API: PaymentFailed
-        API --> Customer: 402 Payment Required
-    end
-else Order invalid
-    Orders --> API: ValidationError
-    API --> Customer: 400 Bad Request
-end
-
-deactivate Orders
-deactivate API
-
-@enduml
-```
-
-### Mermaid Sequence Diagram
-
-```mermaid
-sequenceDiagram
-    participant C as Customer
-    participant A as API Gateway
-    participant O as Order Service
-    participant P as Payment Service
-    participant D as Database
-
-    C->>A: POST /orders/{id}/submit
-    activate A
-    A->>O: SubmitOrder(orderId)
-    activate O
-    O->>D: GetOrder(orderId)
-    D-->>O: Order
-
-    alt Order valid
-        O->>P: ProcessPayment(order)
-        P-->>O: PaymentResult
-
-        alt Payment successful
-            O->>D: UpdateStatus(Paid)
-            O-->>A: Success
-            A-->>C: 200 OK
-        else Payment failed
-            O-->>A: PaymentFailed
-            A-->>C: 402 Payment Required
-        end
-    else Order invalid
-        O-->>A: ValidationError
-        A-->>C: 400 Bad Request
-    end
-
-    deactivate O
-    deactivate A
-```
-
-## Activity Diagram
-
-### PlantUML Syntax
-
-```plantuml
-@startuml
-title Order Processing Workflow
-
-start
-
-:Customer submits order;
-
-:Validate order;
-
-if (Order valid?) then (yes)
-  :Calculate totals;
-  :Reserve inventory;
-
-  fork
-    :Process payment;
-  fork again
-    :Send confirmation email;
-  end fork
-
-  if (Payment successful?) then (yes)
-    :Confirm inventory;
-    :Create shipment;
-    :Update order status;
-    stop
-  else (no)
-    :Release inventory;
-    :Notify customer;
-    stop
-  endif
-else (no)
-  :Return validation errors;
-  stop
-endif
-
-@enduml
-```
-
-## Use Case Diagram
-
-### PlantUML Syntax
-
-```plantuml
-@startuml
-left to right direction
-
-actor Customer
-actor "Warehouse Staff" as Warehouse
-actor Admin
-
-rectangle "E-Commerce System" {
-  usecase "Browse Products" as UC1
-  usecase "Add to Cart" as UC2
-  usecase "Checkout" as UC3
-  usecase "Track Order" as UC4
-  usecase "Process Refund" as UC5
-  usecase "Manage Inventory" as UC6
-  usecase "Fulfill Order" as UC7
-  usecase "Generate Reports" as UC8
-
-  Customer --> UC1
-  Customer --> UC2
-  Customer --> UC3
-  Customer --> UC4
-  Customer --> UC5
-
-  Warehouse --> UC6
-  Warehouse --> UC7
-
-  Admin --> UC6
-  Admin --> UC8
-
-  UC3 ..> UC2 : <<include>>
-  UC5 ..> UC4 : <<extend>>
-}
-
-@enduml
-```
-
-## State Machine Diagram
-
-### PlantUML Syntax
-
-```plantuml
-@startuml
-title Order State Machine
-
-[*] --> Draft : Create
-
-Draft --> Submitted : Submit
-Draft --> Cancelled : Cancel
-
-Submitted --> Paid : PaymentReceived
-Submitted --> Cancelled : Cancel
-Submitted --> Draft : RequiresChanges
-
-Paid --> Shipped : Ship
-Paid --> Refunded : Refund
-
-Shipped --> Delivered : Deliver
-Shipped --> Returned : Return
-
-Delivered --> Completed : Finalize
-Delivered --> Returned : Return
-
-Returned --> Refunded : ProcessReturn
-
-Completed --> [*]
-Refunded --> [*]
-Cancelled --> [*]
-
-@enduml
-```
-
-### Mermaid State Diagram
-
-```mermaid
-stateDiagram-v2
-    [*] --> Draft : Create
-
-    Draft --> Submitted : Submit
-    Draft --> Cancelled : Cancel
-
-    Submitted --> Paid : PaymentReceived
-    Submitted --> Cancelled : Cancel
-    Submitted --> Draft : RequiresChanges
-
-    Paid --> Shipped : Ship
-    Paid --> Refunded : Refund
-
-    Shipped --> Delivered : Deliver
-    Shipped --> Returned : Return
-
-    Delivered --> Completed : Finalize
-    Delivered --> Returned : Return
-
-    Returned --> Refunded : ProcessReturn
-
-    Completed --> [*]
-    Refunded --> [*]
-    Cancelled --> [*]
-```
-
-## Component Diagram
-
-### PlantUML Syntax
-
-```plantuml
-@startuml
-title System Components
-
-package "Presentation Layer" {
-  [Web Application] as Web
-  [Mobile App] as Mobile
-}
-
-package "API Layer" {
-  [API Gateway] as Gateway
-  [GraphQL Server] as GraphQL
-}
-
-package "Business Layer" {
-  [Order Service] as Orders
-  [Payment Service] as Payment
-  [Notification Service] as Notify
-  [User Service] as Users
-}
-
-package "Data Layer" {
-  database "Order DB" as OrderDB
-  database "User DB" as UserDB
-  queue "Message Bus" as Bus
-}
-
-package "External" {
-  [Payment Provider] as PaymentExt
-  [Email Service] as EmailExt
-}
-
-Web --> Gateway
-Mobile --> Gateway
-Gateway --> GraphQL
-Gateway --> Orders
-Gateway --> Users
-
-Orders --> OrderDB
-Orders --> Bus
-Users --> UserDB
-
-Payment --> PaymentExt
-Notify --> EmailExt
-Notify --> Bus
-
-@enduml
-```
-
-## Best Practices
-
-### General Guidelines
-
-1. **Keep diagrams focused**: One concept per diagram
-2. **Use consistent notation**: Choose PlantUML or Mermaid per project
-3. **Add meaningful names**: Clear, descriptive labels
-4. **Include legends**: For complex diagrams
-5. **Version control**: Store in repository with code
-
-### Diagram Selection Guide
-
-| Need | Diagram Type |
-|------|--------------|
-| Data structures, domain model | Class Diagram |
-| API flow, protocols | Sequence Diagram |
-| Business processes | Activity Diagram |
-| Actor interactions | Use Case Diagram |
-| Lifecycle, state transitions | State Machine |
-| System structure | Component Diagram |
-| Infrastructure | Deployment Diagram |
-
-## Workflow
-
-When creating UML diagrams:
-
-1. **Identify purpose**: What question does the diagram answer?
-2. **Select diagram type**: Choose most appropriate type
-3. **Draft in text**: Use PlantUML or Mermaid notation
-4. **Review for accuracy**: Verify against code/requirements
-5. **Add context**: Title, notes, legend as needed
-6. **Render and verify**: Ensure diagram renders correctly
-
-## References
-
-For detailed notation guides:
-
----
-
-**Last Updated:** 2025-12-26
+# UML Modeling
+
+## Purpose
+
+Use this skill to design UML, not merely to emit diagram text. The goal is a model that is semantically correct, visually legible, audience-appropriate, and useful for the decision the user needs to make.
+
+Also use this skill when the user asks generically for a graphical representation, schema, diagram, or visual explanation of a software/system concern and does not name UML. In that case, infer whether UML is appropriate and choose the UML diagram type autonomously.
+
+Treat UML as a modeling language with forms of thought:
+
+- structural form: what exists and how it is organized;
+- behavioral form: what happens and how behavior is constrained;
+- interaction form: who communicates with whom, in what order or timing;
+- extension form: how the modeling language is tailored.
+
+Only after the model is conceptually right should you choose a notation or documentation format.
+
+## Non-Negotiable: Self-Contained UML, No Meta Leakage
+
+Every UML diagram must stand on its own for an external reader who has no prior knowledge of the project, conversation, source files, or user request.
+
+This is mandatory for every diagram:
+
+- Do not include meta-information about the prompt, conversation, requester, repository, task history, uncertainty, or how the diagram was produced.
+- Do not leak user-request wording into titles, notes, labels, legends, or diagram comments.
+- Do not use labels that only make sense to someone who already knows the project.
+- Do not rely on implicit context, hidden assumptions, unexplained acronyms, unnamed boundaries, or unnamed external systems.
+- Do not write labels such as `as requested`, `current project`, `existing code`, `the user`, `this service`, `same as above`, `TODO`, `unknown`, or `assumed`.
+- Make the modeled subject, scope, boundary, actors/participants, external systems, and important constraints explicit inside the model when they are needed for understanding.
+- If a fact is necessary to understand the UML and cannot be inferred safely, ask for clarification before finalizing or use a neutral, explicit domain name such as `External Service`, `Authorization Provider`, or `Data Store`.
+
+UML is not a transcript of the request. It is a standalone model of the subject.
+
+## Knowledge Priority
+
+Use the bundled references as the operational knowledge base:
+
+1. Treat the reference files in this skill as the already-digested UML modeling guidance.
+2. Prefer the specific diagram deep dive over the general catalog when working on one diagram type.
+3. Prefer `modeling-foundations.md` when the problem is semantic: subject, viewpoint, state vs action, structure vs behavior, boundaries, or abstraction level.
+4. Use external official UML material only when maintaining or updating this skill, or when the bundled references are insufficient for a specific unresolved semantic conflict.
+5. Use notation/tool documentation only after the UML form is chosen.
+
+Read references as needed:
+
+- `references/modeling-foundations.md`: semantic foundations extracted from the official UML specification and converted into modeling rules.
+- `references/uml-form-and-design.md`: modeling method and form principles.
+- `references/diagram-design-catalog.md`: complete UML diagram catalog and selection guidance.
+- `references/diagram-type-playbooks.md`: index of the per-diagram deep dives.
+- `references/state-machines.md`: state machine design, lifecycle modeling, composite states, anti-patterns.
+- `references/activities.md`: activity diagram design, control/object flow, decisions, partitions.
+- `references/interactions.md`: sequence, communication, timing, and interaction overview design.
+- `references/structure-diagrams.md`: class, object, package, component, composite structure, deployment, profile design.
+- `references/use-cases.md`: actor-goal modeling and system boundaries.
+- `references/review-rubric.md`: semantic review checklist and repair workflow.
+
+For a specific diagram type, load only the matching deep dive:
+
+- `references/class-diagram.md`
+- `references/object-diagram.md`
+- `references/package-diagram.md`
+- `references/component-diagram.md`
+- `references/composite-structure-diagram.md`
+- `references/deployment-diagram.md`
+- `references/profile-diagram.md`
+- `references/use-case-diagram.md`
+- `references/activity-diagram.md`
+- `references/state-machine-diagram.md`
+- `references/sequence-diagram.md`
+- `references/communication-diagram.md`
+- `references/timing-diagram.md`
+- `references/interaction-overview-diagram.md`
+
+## Mandatory Workflow
+
+### 0. Recognize Implicit Diagram Requests
+
+Recognize intent categories, not exact phrases. Treat a request as a possible UML modeling request even when the word "UML" is absent if the user asks to:
+
+- create a diagram, schema, graphical representation, or visual model;
+- represent states, modes, lifecycle, availability, validity, or expiration;
+- explain a flow, process, procedure, algorithm, or sequence of steps;
+- draw architecture, topology, modules, components, packages, or deployment;
+- map relationships, dependencies, ownership, containment, or interfaces;
+- visualize interactions, messages, timing, actors, or responsibilities.
+
+Apply this recognition regardless of the user's language. Do not rely on locale-specific phrase matching.
+
+Use UML when the subject is software, architecture, state, workflow, interaction, deployment, domain structure, or system behavior. If the user asks for a purely decorative image, infographic, chart, or non-model visual, do not force UML.
+
+When UML is appropriate and the user did not specify a type, choose the type yourself. Ask a clarification only when two materially different interpretations would produce different, risky models.
+
+### 1. Frame The Modeling Problem
+
+Before drawing, identify:
+
+- the diagram's audience: developer, architect, analyst, product owner, tester, operator;
+- the question the diagram must answer;
+- the subject being modeled;
+- the boundary of the system or element;
+- the abstraction level: conceptual, logical, implementation, runtime, physical;
+- whether the model describes structure, behavior, interaction, or deployment.
+
+If the user asks for a diagram type that does not match the intent, say so briefly and choose the correct type. If the user did not name a type, do not ask them to choose one unless the modeling subject is ambiguous.
+
+### 2. Choose The UML Form Autonomously
+
+Choose one primary diagram type. Do not blend diagram types just to include everything.
+
+Use this quick decision tree:
+
+- "What are the types/modules/components/nodes and relationships?" -> structure diagram.
+- "What is the lifecycle of one thing?" -> state machine diagram.
+- "What steps happen in a workflow?" -> activity diagram.
+- "What messages happen over time?" -> sequence diagram.
+- "What user goals exist at the system boundary?" -> use case diagram.
+- "Where does software run?" -> deployment diagram.
+- "How do runtime instances look at one moment?" -> object diagram.
+- "How should UML be extended for this domain?" -> profile diagram.
+
+Use more than one UML diagram only when the user is really asking more than one modeling question. For example, a stateful subsystem may need a state machine for lifecycle and a sequence diagram for external calls, but those should be separate diagrams with separate purposes.
+
+### 3. Model Semantics Before Layout
+
+Draft the semantic inventory first:
+
+- elements;
+- relationships;
+- events and transitions;
+- actions/activities;
+- actors and system boundary;
+- messages and ordering;
+- nodes/artifacts;
+- constraints and notes.
+
+Then remove anything that does not answer the diagram's main question.
+
+### 4. Design The Form
+
+Apply visual/form rules:
+
+- the diagram must be understandable without the surrounding chat, documentation, or source files;
+- one diagram, one main question;
+- one abstraction level per diagram;
+- group by semantic containment, not decoration;
+- prefer fewer stronger labels over many long labels;
+- place stable/static things before dynamic annotations;
+- avoid crossing lines by reorganizing responsibility, not only by spacing;
+- use notes for explanation, not to compensate for wrong modeling;
+- use legends for compressed labels;
+- split when the diagram needs two different grammars.
+
+### 5. Validate Against UML Semantics
+
+Use the relevant checklist from `references/review-rubric.md`.
+
+Examples:
+
+- In a state machine, a state is a condition that can persist. "Validate request" is normally an activity/action, not a state.
+- In an activity diagram, nodes are actions and control/object flows. "Order approved" is normally a state/condition, not an action.
+- In a use case diagram, use cases are user goals, not buttons, pages, or internal functions.
+- In a sequence diagram, messages are ordered interactions, not dependencies.
+- In a class diagram, composition implies strong whole-part lifetime ownership, not just "has a reference".
+
+### 6. Notation Last
+
+Only after the model is correct, choose notation:
+
+- a textual diagram notation when the repository or user asks for one;
+- Markdown tables or prose when UML would overcomplicate;
+- a split set of diagrams when one notation surface would distort the model.
+
+Notation is subordinate to modeling. If a requested notation pushes the model into a wrong shape, change the notation, split the diagram, or explicitly tell the user that the requested representation is distorting the UML form.
+
+## When Fixing A Bad Diagram
+
+Use this order:
+
+1. Identify the intended question.
+2. Identify the actual diagram type and the diagram type it should be.
+3. Name the semantic errors first.
+4. Redesign the model form.
+5. Only then repair notation/layout.
+
+Do not keep polishing a diagram that is the wrong UML type.
+
+## Completion Standard
+
+A finished UML answer should usually include:
+
+- the chosen UML diagram type and why;
+- the diagram;
+- a short legend only if labels were intentionally compressed;
+- explicit model boundaries and domain constraints needed to understand the diagram;
+- a note when a requested diagram type was changed for semantic correctness.
+
+For documentation edits, preserve the surrounding language and style, but improve the modeling quality even if that means replacing the diagram rather than tweaking it.

@@ -1,99 +1,108 @@
 ---
 name: proposal-writer
-description: "Write technical project proposals or specific sections of proposals for research grants, technology development, and innovation projects. Use when the user asks to write, draft, or create a project proposal, grant proposal, research proposal, technical proposal, or any section thereof (e.g., abstract, objectives, methodology, work packages, budget justification, impact statement, Gantt chart). Also triggers on requests mentioning proposal-related terms like 'deliverables', 'milestones', 'work plan', 'state of the art', or 'expected outcomes'. Supports EU Horizon, NSF, TUBITAK, ERC, and generic proposal formats. Outputs via docx or pdf skills. Does NOT handle market research reports or business plans."
+description: "Write a structured sales proposal or commercial proposal for any deal. Use when asked to write a proposal, sales proposal, commercial proposal, statement of work, or quote document. Produces a complete proposal with problem statement, solution, investment, and next steps."
 ---
 
-# Technical Project Proposal Writer
+# Proposal Writer Skill
 
-Write technical project proposals for research, technology development, and innovation funding calls. Produce either complete proposals or individual sections based on user request.
+Writes commercial proposals that win business — structured around the prospect problem, not the product.
 
-## Workflow
+## Required Inputs
+- **Prospect company and contact**
+- **Their problem or goal** (from discovery — be specific)
+- **Your proposed solution**
+- **Commercial terms** (pricing, payment terms, contract length)
+- **Timeline**
+- **Key stakeholders** who will read this
+- **Tone** (formal / conversational / technical)
 
-### 1. Understand Scope
-
-Determine what the user needs:
-
-**Full proposal?** → Follow "Full Proposal Workflow" below
-**Specific section(s)?** → Follow "Section Workflow" below
-
-Ask the user to clarify if ambiguous:
-- Target funding body / call (e.g., Horizon Europe, NSF, TUBITAK, ERC, internal)
-- Project topic and domain
-- Consortium partners (if any)
-- Duration and approximate budget
-- Output format preference (docx or pdf) — default to **docx**
-
-### 2. Research the Topic
-
-Before writing, conduct complementary research to strengthen the proposal. Prioritize user-provided information, but augment with:
-
-- **State of the art**: Search for recent publications from top venues (CVPR, ICCV, ECCV, ICRA, RSS, SIGGRAPH, ICML, ICLR, NeurIPS, etc.) using the `citation-management` skill
-- **Competing/related projects**: Search for funded projects in the same domain
-- **Technology readiness**: Identify TRL levels of relevant technologies
-- **Market context**: Brief landscape if the call requires innovation/exploitation plans
-
-Use web search and citation-management to gather reliable sources. Record key references for the bibliography.
-
-### 3. Write Content
-
-Follow the structure in [references/proposal_structure.md](references/proposal_structure.md) for full proposals. For individual sections, use the appropriate section guidance from that reference.
-
-**Writing principles:**
-- Be specific and quantitative — avoid vague claims
-- Ground claims in citations from reputable venues
-- Use active voice and direct language
-- Match the tone to the funding body (EU calls: formal and structured; NSF: narrative and compelling)
-- Clearly distinguish what is novel from what is state of the art
-- Every objective must map to measurable deliverables
-- Include risk mitigation — do not present an overly optimistic picture
-
-### 4. Generate Output
-
-Use the `docx` skill (default) or `pdf` skill based on user preference to produce the final document.
-
-**Output location:** `data/output/` unless the user specifies otherwise.
-
-**Naming convention:** `proposal_<short_topic>_<section_or_full>_<YYYYMMDD>.docx`
-
-Example: `proposal_robot_perception_full_20260216.docx`
-
-### 5. Self-Review Before Delivery
-
-Before delivering the final output, perform a quick self-review using the checklist in [references/review_checklist.md](references/review_checklist.md). Fix any issues found. For a deeper review, invoke the `proposal-reviewer` skill.
+## Output Structure
 
 ---
 
-## Full Proposal Workflow
-
-1. Clarify scope, funding body, and format with the user
-2. Research the topic (state of the art, related projects, key references)
-3. Draft all sections per [references/proposal_structure.md](references/proposal_structure.md)
-4. Ensure consistency across sections (objectives ↔ work packages ↔ deliverables ↔ budget)
-5. Run self-review checklist
-6. Generate output document
-
-## Section Workflow
-
-1. Identify which section(s) the user needs
-2. Ask for any missing context required for that section
-3. Research if the section demands it (e.g., state of the art, impact)
-4. Draft the section(s)
-5. Run relevant items from the review checklist
-6. Generate output document
+# Proposal: [Brief description of what you are solving]
+**Prepared for:** [Contact, Title] | [Company]
+**Prepared by:** [Name] | [Your Company]
+**Date:** [Date] | **Valid until:** [Date]
 
 ---
 
-## Integration with Other Skills
+### Understanding Your Situation
+[2-3 paragraphs. Demonstrate you listened. Describe their situation, problem, and impact of not solving it in their words. This section should make them think "yes, exactly." Generic boilerplate here = proposal goes in the bin.]
 
-- **docx**: Primary output format for proposals
-- **pdf**: Alternative output format
-- **citation-management**: Find and validate references for state-of-the-art sections
-- **read-arxiv-paper**: Deep-read specific papers for literature review
-- **proposal-reviewer**: Post-writing review for overpromises and legal risk
+**The key challenge:** [One sentence — the core problem]
+**The impact:** [What this costs them]
+**What you have tried:** [Acknowledge prior attempts]
 
 ---
 
-## Reference Files
+### Our Proposed Approach
 
-- **[references/proposal_structure.md](references/proposal_structure.md)**: Complete section-by-section structure guide with content requirements for each section
-- **[references/review_checklist.md](references/review_checklist.md)**: Quick self-review checklist to run before delivery
+**What we will do** (3-5 deliverables or phases)
+
+**Phase 1: [Name]** (Timeline: [Weeks 1-2])
+[What happens, what is delivered, what customer input is needed]
+
+**Phase 2: [Name]** (Timeline: [Weeks 3-6])
+
+**What you will get** (outcomes, not features)
+- [Outcome 1]
+- [Outcome 2]
+
+**What success looks like**
+[How both parties know this worked]
+
+---
+
+### Why [Your Company]
+[3-4 sentences. Specific to their situation. Reference similar customers. Generic "why us" sections are skipped.]
+
+---
+
+### Investment
+
+| Item | Description | Investment |
+|---|---|---|
+| [Component 1] | [Description] | £[amount] |
+| **Total** | | **£[total]** |
+
+**Payment terms:** [Terms]
+**Included:** [What is in]
+**Not included:** [What is out — prevents scope disputes]
+
+---
+
+### Timeline
+| Milestone | Date |
+|---|---|
+| Contract signed | [Date] |
+| Kickoff | [Date] |
+| Delivery | [Date] |
+
+---
+
+### Next Steps
+1. [Sign / reply / schedule] by [date]
+2. We will send contract and confirm kickoff
+3. [Any immediate action]
+
+## Quality Checks
+
+- [ ] "Understanding Your Situation" reflects what was learned in discovery (not generic)
+- [ ] Outcomes are listed (not just deliverables or features)
+- [ ] "Not included" section is explicit to prevent scope disputes later
+- [ ] Next steps include a specific date and named action
+- [ ] "Valid until" date is included to create urgency
+
+## Anti-Patterns
+
+- [ ] Do not lead with the solution before establishing that the problem is understood — the proposal must demonstrate problem comprehension first
+- [ ] Do not use vague investment language like "competitive pricing" — every proposal must state a specific price or range
+- [ ] Do not omit a "not included" section — undefined scope leads to disputes after the proposal is accepted
+- [ ] Do not forget a "valid until" date — proposals without expiry create awkward situations and stale pricing
+- [ ] Do not list next steps without naming who is responsible for each and what the expected timeline is
+
+## Example Trigger Phrases
+- "Write a proposal for [prospect] to [solve their problem]"
+- "Draft a statement of work for [project]"
+- "Turn my discovery notes into a proposal"

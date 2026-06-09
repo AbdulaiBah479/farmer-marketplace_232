@@ -1,21 +1,30 @@
 ---
 name: handbuch-aktualisierung
-description: 'Prüft eine geplante Änderung des Personalhandbuchs auf Folgewirkungen — andere betroffene Regelungen, standortspezifische Besonderheiten nach Tarifvertrag oder Betriebsvereinbarung, Mitbestimmungsrechte des Betriebsrats und die Frage, ob ein bestehendes Leistungsversprechen beschnitten wird. Lädt, wenn jemand sagt "Handbuch aktualisieren", "neue Regelung einpflegen" oder "Richtlinie ändern".'
-
+description: "Prüft eine geplante Änderung des Personalhandbuchs auf Folgewirkungen — andere betroffene Regelungen, standortspezifische Besonderheiten nach Tarifvertrag oder Betriebsvereinbarung, Mitbestimmungsrechte des Betriebsrats und die Frage, ob ein bestehendes Lei..."
 ---
 
-# Personalhandbuch-Aktualisierung (Arbeitsrecht)
+# Prüft eine geplante Änderung des Personalhandbuchs auf Folgewirkungen — andere betroffene Regelungen, standortspezifische Besonderheiten nach Tarifvertrag oder Betriebsvereinbarung, Mitbestimmungsrechte des Betriebsrats und die Frage, ob ein bestehendes Leistungsversprechen beschnitten wird
 
-## Zweck
 
-Änderungen am Personalhandbuch haben Folgewirkungen. Eine geänderte
-Urlaubsregelung betrifft die Berechnung der Urlaubsabgeltung bei Beendigung,
-die Verweisklauseln in anderen Abschnitten und ggf. bestehende
-Betriebsvereinbarungen zum Thema. Diese Skill findet die Folgewirkungen,
-bevor sie zu Widersprüchen werden.
+## Arbeitsweg
 
-Lädt, wenn eine Regelungsänderung im Personalhandbuch vorbereitet wird und
-Folgewirkungen systematisch geprüft werden sollen.
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: die im Plugin-Kontext einschlägigen Normen über gesetze-im-internet.de, dejure.org, eur-lex.europa.eu und die amtlichen Bundes-/Landesportale live prüfen — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+**Fokus:** Prüft eine geplante Änderung des Personalhandbuchs auf Folgewirkungen — andere betroffene Regelungen, standortspezifische Besonderheiten nach Tarifvertrag oder Betriebsvereinbarung, Mitbestimmungsrechte des Betriebsrats und die Frage, ob ein bestehendes Leistungsversprechen beschnitten wird. Lädt, wenn jemand sagt "Handbuch aktualisieren", "neue Regelung einpflegen" oder "Richtlinie ändern".
+
+### Personalhandbuch-Aktualisierung (Arbeitsrecht)
+
+## Fachlicher Kern — Arbeitsrecht
+- **Problemfokus dieses Skills:** Bleibe beim konkreten Titel `Personalhandbuch-Aktualisierung (Arbeitsrecht)` und löse die dort angelegte Fachfrage; arbeite mit konkreten Tatbestandsmerkmalen, Beweisfragen und dem unmittelbar benötigten Arbeitsprodukt. Routingfragen bleiben Hilfsmittel, wenn Frist, Zuständigkeit oder Verfahrensart offen sind.
+- **Normenradar:** BGB §§ 611a, 613a, 615, 623; KSchG §§ 1, 4, 7; TzBfG §§ 14, 15, 16; AGG §§ 1, 3, 7, 15, 22; EntgTranspG §§ 3, 5, 7; BUrlG §§ 1, 3, 7; BetrVG §§ 87, 99, 102; ArbZG; NachwG; SGB IX §§ 164, 167, 168.
+- **Verifizierte Anker:** BAG, Urteil vom 23.10.2025 - 8 AZR 300/24 (Entgeltgleichheit, Paarvergleich, Beweislast, bundesarbeitsgericht.de); BAG, Urteil vom 03.06.2025 - 9 AZR 104/24 (kein Verzicht auf gesetzlichen Mindesturlaub im bestehenden Arbeitsverhältnis); bei Kündigungszugang immer § 623 BGB, Zugang nach § 130 BGB, Dreiwochenfrist §§ 4, 7 KSchG und Beweis des konkreten Umschlags trennen.
+- **Arbeitsmodus:** Zuerst Status, Zugang, Frist, Beteiligungsrechte, Sonderkündigungsschutz, Beweislast und prozessualen nächsten Schritt sichern; dann erst Materiellrecht vertiefen.
+- **Outputpflicht:** Fristenblatt, Zugangsmatrix, Beweisangebot, Mandantenmail, Betriebsrats-/Gegnerbrief oder Klage-/Erwiderungsbaustein.
+- **Fehlerbremse:** Tragende Normen/Entscheidungen live oder aus der Akte verifizieren; Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei prüfbarer Quelle. Keine BeckRS-, juris-, Kommentar- oder Aufsatz-Blindzitate aus Modellwissen.
 
 ## Eingaben
 
@@ -30,44 +39,44 @@ Folgewirkungen systematisch geprüft werden sollen.
 **Kernvorschriften:**
 
 - § 87 BetrVG: Erzwingbares Mitbestimmungsrecht des Betriebsrats bei
-  Ordnung des Betriebs, Arbeitszeit, Urlaub, betrieblichem Datenschutz u. a.
-  — Handbuchänderungen in diesen Bereichen erfordern Betriebsratszustimmung
-  oder Einigungsstellenverfahren
+ Ordnung des Betriebs, Arbeitszeit, Urlaub, betrieblichem Datenschutz u. a.
+ — Handbuchänderungen in diesen Bereichen erfordern Betriebsratszustimmung
+ oder Einigungsstellenverfahren
 - § 77 BetrVG: Betriebsvereinbarungen — Vorrang und Ablösung;
-  Nachwirkung gekündigter Betriebsvereinbarungen (§ 77 Abs. 6 BetrVG)
+ Nachwirkung gekündigter Betriebsvereinbarungen (§ 77 Abs. 6 BetrVG)
 - §§ 305 ff. BGB: AGB-Kontrolle für vorformulierte Arbeitsbedingungen;
-  Inhaltskontrolle nach § 307 BGB; Transparenzgebot § 307 Abs. 1 S. 2 BGB
+ Inhaltskontrolle nach § 307 BGB; Transparenzgebot § 307 Abs. 1 S. 2 BGB
 - § 2 NachwG: Nachweispflicht wesentlicher Arbeitsbedingungen;
-  Änderungen sind dem Arbeitnehmer spätestens am ersten Tag nach Wirksamwerden
-  schriftlich mitzuteilen
+ Änderungen sind dem Arbeitnehmer spätestens am ersten Tag nach Wirksamwerden
+ schriftlich mitzuteilen
 - §§ 611a, 613 BGB: Arbeitsvertragliche Einbindung von Handbuchregelungen
-  durch Bezugnahmeklauseln
+ durch Bezugnahmeklauseln
 
 **Leitentscheidungen:**
 
 - Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
-  Wirksame Einbeziehung von Personalhandbuch-Regelungen durch Bezugnahmeklausel
-  im Arbeitsvertrag; AGB-Kontrolle; Maßstab der überraschenden Klausel
-  nach § 305c Abs. 1 BGB
+ Wirksame Einbeziehung von Personalhandbuch-Regelungen durch Bezugnahmeklausel
+ im Arbeitsvertrag; AGB-Kontrolle; Maßstab der überraschenden Klausel
+ nach § 305c Abs. 1 BGB
 - Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
-  Verschlechterung einer durch betriebliche Übung entstandenen
-  Leistungsverpflichtung — einseitige Abänderung unwirksam; Änderungskündigung
-  als richtiger Weg; Vertrauensschutz der Arbeitnehmer
+ Verschlechterung einer durch betriebliche Übung entstandenen
+ Leistungsverpflichtung — einseitige Abänderung unwirksam; Änderungskündigung
+ als richtiger Weg; Vertrauensschutz der Arbeitnehmer
 - Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
-  Mitbestimmung des Betriebsrats bei einseitiger Änderung betrieblicher
-  Regelungen, die in den Bereich des § 87 BetrVG fallen; Einigungsstellenverfahren
+ Mitbestimmung des Betriebsrats bei einseitiger Änderung betrieblicher
+ Regelungen, die in den Bereich des § 87 BetrVG fallen; Einigungsstellenverfahren
 
 - Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen zitieren. Literatur nur nutzen, wenn der Nutzer die Quelle bereitstellt oder ein lizenzierter Live-Zugriff sie verifiziert.
 
 - Quellenregel: Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff; keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen.
-  Katalog erzwingbarer Mitbestimmungsrechte; Reichweite der Mitbestimmung
-  bei Regelungsänderungen
+ Katalog erzwingbarer Mitbestimmungsrechte; Reichweite der Mitbestimmung
+ bei Regelungsänderungen
 - Quellenregel: Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff; keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen.
-  AGB-Kontrolle vorformulierter Arbeitsbedingungen; Inhaltskontrolle
-  und Transparenzgebot im Arbeitsverhältnis
+ AGB-Kontrolle vorformulierter Arbeitsbedingungen; Inhaltskontrolle
+ und Transparenzgebot im Arbeitsverhältnis
 - Quellenregel: Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff; keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen.
-  Nachweispflicht bei Änderungen wesentlicher Arbeitsbedingungen,
-  Formerfordernis und Folgen der Verletzung
+ Nachweispflicht bei Änderungen wesentlicher Arbeitsbedingungen,
+ Formerfordernis und Folgen der Verletzung
 
 ## Ablauf
 
@@ -91,10 +100,10 @@ Zeige den Vergleich:
 Durchsuche das Personalhandbuch nach Bezügen auf den geänderten Abschnitt:
 
 - Andere Regelungen, die auf diesen Abschnitt verweisen
-  ("zur Urlaubsabgeltung siehe Abschnitt …")
+ ("zur Urlaubsabgeltung siehe Abschnitt …")
 - Definierte Begriffe, die dieser Abschnitt verwendet oder definiert
 - Standort- oder tarifvertragliche Sonderregelungen, die diesen Abschnitt
-  modifizieren
+ modifizieren
 
 Für jeden Querverweis: Gilt er nach der Änderung noch unverändert?
 Wird er durch die Änderung falsch oder unvollständig? Kennzeichne Konflikte.
@@ -116,7 +125,7 @@ Entlohnungsgrundsätze). Falls ja:
 Prüfe für jeden Standort im Fußabdruck:
 - Modifiziert eine bestehende Betriebsvereinbarung diesen Bereich?
 - Macht die Änderung eine bestehende Betriebsvereinbarung obsolet, falsch
-  oder unvollständig?
+ oder unvollständig?
 - Entsteht für einen Standort erstmals Anpassungsbedarf?
 
 **Schritt 6 — Leistungsversprechen-Check**
@@ -135,9 +144,6 @@ Prüfe, ob die geänderte Regelung eine "wesentliche Arbeitsbedingung" i. S. d.
 § 2 Abs. 1 NachwG darstellt. Falls ja: Informationspflicht gegenüber den
 betroffenen Arbeitnehmern spätestens am Tag nach Wirksamwerden.
 
-## Ausgabeformat
-
-```markdown
 ## Handbuchänderung: [Abschnitt]
 
 ### Änderung
@@ -192,16 +198,16 @@ Ausgabe der Skill:
 ## Risiken und typische Fehler
 
 - **Mitbestimmung vergessen**: Änderungen in Bereichen des § 87 BetrVG
-  ohne Betriebsratsinhaber sind unwirksam — auch wenn sie sachlich gerechtfertigt sind.
+ ohne Betriebsratsinhaber sind unwirksam — auch wenn sie sachlich gerechtfertigt sind.
 - **Betriebliche Übung unterschätzt**: Was über Jahre konsistent gewährt wurde,
-  kann bindend sein — auch ohne ausdrücklichen Vertrag.
+ kann bindend sein — auch ohne ausdrücklichen Vertrag.
 - **NachwG-Frist versäumt**: Änderungen wesentlicher Arbeitsbedingungen müssen
-  spätestens am nächsten Arbeitstag schriftlich mitgeteilt werden.
+ spätestens am nächsten Arbeitstag schriftlich mitgeteilt werden.
 - **AGB-Kontrolle nicht geprüft**: Vorformulierte Handbuchklauseln unterliegen
-  §§ 305 ff. BGB; überraschende oder unangemessen belastende Klauseln sind
-  unwirksam.
+ §§ 305 ff. BGB; überraschende oder unangemessen belastende Klauseln sind
+ unwirksam.
 - **Standortspezifika übersehen**: Betriebsvereinbarungen an einzelnen
-  Standorten können bundesweite Handbuchregelungen einschränken oder erweitern.
+ Standorten können bundesweite Handbuchregelungen einschränken oder erweitern.
 
 ## Quellenpflicht
 

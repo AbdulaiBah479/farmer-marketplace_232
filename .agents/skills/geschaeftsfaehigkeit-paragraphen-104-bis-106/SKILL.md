@@ -1,51 +1,75 @@
 ---
 name: geschaeftsfaehigkeit-paragraphen-104-bis-106
-description: "Prüfung von Geschäftsunfähigkeit und beschränkter Geschäftsfähigkeit nach §§ 104 bis 106 BGB mit Altersgrenzen, natürlicher Einsichtsfähigkeit und Rechtsfolge für Willenserklärungen."
+description: "Klausurfall zu Geschäftsfähigkeit nach §§ 104 bis 106 BGB: Geschäftsunfähigkeit unter sieben Jahren und bei dauerhafter Bewusstseinsabwesenheit, beschränkte Geschäftsfähigkeit von sieben bis siebzehn Jahren und Abgrenzungsfragen."
 ---
 
-# Geschaeftsfaehigkeit Paragraphen 104 Bis 106
+# Geschäftsfähigkeit — §§ 104 bis 106 BGB
 
-## Zweck
+## Mandantenfall
 
-Geschäftsfähigkeit im Zeitpunkt der konkreten Erklärung prüfen.
+- Mandant fragt, ob der Vertrag mit einem neunjährigen Kind wirksam ist.
+- Erblasser war zum Zeitpunkt der Testamentserrichtung möglicherweise nicht geschäftsfähig — wie prüfen?
+- Klausurkonstellation: Volljähriger unter vorübergehendem Ausschluss des freien Willens — § 105 Abs. 2 BGB.
 
-## Normanker
+## Erste Schritte
 
-§§ 104-106 BGB
+1. Alter der Person bestimmen: Unter sieben, sieben bis siebzehn oder volljährig.
+2. § 104 BGB: Geschäftsunfähigkeit — unter sieben Jahre alt oder geisteskranker Zustand.
+3. § 105 Abs. 2 BGB: Willenserklärung im Zustand vorübergehender Bewusstseinsabwesenheit nichtig.
+4. § 106 BGB: Beschränkte Geschäftsfähigkeit von sieben bis siebzehn Jahren.
+5. Vollständige Beweislage: Wer trägt Beweislast für Geschäftsunfähigkeit?
+6. Rechtsfolge: Nichtige Willenserklärung (§ 105 Abs. 1 BGB) oder schwebend unwirksamer Vertrag.
 
-## Intake
+## Rechtsrahmen
 
-- Welche Rolle hat die Nutzerin oder der Nutzer: Kanzlei, Rechtsabteilung, Ausbildung, Gerichtsvorbereitung oder Selbststudium?
-- Was ist das konkrete Arbeitsziel: Anspruchsprüfung, Memo, Klausurlösung, Schriftsatzbaustein, Fristenvermerk oder Rückfragenkatalog?
-- Welche Tatsachen sind belegt, welche sind nur Behauptung, welche fehlen noch?
-- Welche Daten, Uhrzeiten, Erklärungen, Vollmachten, Formvorgaben und Fristen sind im Sachverhalt erkennbar?
+- § 104 BGB: Geschäftsunfähig ist, wer noch nicht sieben Jahre alt ist oder dauerhaft bewusstseinsgestört ist.
+- § 105 Abs. 1 BGB: Willenserklärung des Geschäftsunfähigen ist nichtig.
+- § 105 Abs. 2 BGB: Willenserklärung im Zustand vorübergehender Bewusstseinsabwesenheit ist nichtig.
+- § 106 BGB: Beschränkte Geschäftsfähigkeit — wer das siebente Lebensjahr vollendet hat und noch nicht achtzehn ist.
+- § 131 BGB: Empfangszuständigkeit bei Geschäftsunfähigkeit — WE an Geschäftsunfähigen nur wirksam, wenn gesetzlichem Vertreter zugegangen.
 
 ## Prüfraster
 
-1. Alter und Zustand im Erklärungszeitpunkt feststellen
-2. unter sieben Jahre, sieben bis siebzehn Jahre und Volljährigkeit trennen
-3. krankheitsbedingte Geschäftsunfähigkeit tatsachennah prüfen
-4. Rechtsfolge nur für die konkrete Erklärung ziehen
-5. Ergebnis mit Norm, Tatbestandsmerkmal, Subsumtion und Rechtsfolge festhalten.
-6. Offene Tatsachen als Rückfrage formulieren und nicht durch Vermutung ersetzen.
+1. Alter: Unter sieben, sieben bis siebzehn oder volljährig?
+2. Dauerhafter Bewusstseinsmangel nach § 104 Nr. 2 BGB: ärztliche Diagnose, Betreuung?
+3. Vorübergehende Bewusstseinsabwesenheit nach § 105 Abs. 2 BGB beim Zeitpunkt der Erklärung?
+4. Nichtige oder schwebend unwirksame Erklärung nach Ergebnis von 1 bis 3.
+5. Beweislast: Wer muss Geschäftsunfähigkeit beweisen — in der Regel der, der sie behauptet.
+6. Empfangszuständigkeit nach § 131 BGB: War gesetzlicher Vertreter zugangszuständig?
+7. Heilung: Bei Geschäftsunfähigkeit keine Heilung möglich.
 
-## Output
+## Typische Fallstricke
 
-- Kurztriage mit Ampel und nächstem Schritt
-- Prüfung im Gutachtenstil oder als praxisnahes Mandatsmemo
-- Anspruchs- oder Erklärungsmatrix mit Beweisankern
-- Rückfragenliste und optionaler Entwurfsbaustein
+- Vorübergehende Bewusstseinsabwesenheit (§ 105 Abs. 2 BGB) erfasst auch Trunkenheit oder Drogeneinfluss.
+- Beweislast für Geschäftsunfähigkeit liegt beim Beweisführer; In-dubio-Grundsatz gilt.
+- Beschränkte Geschäftsfähigkeit führt nicht zur Nichtigkeit, sondern zur schwebenden Unwirksamkeit.
+- Heilung bei Geschäftsunfähigkeit ist nicht möglich — anders als bei beschränkter Geschäftsfähigkeit.
 
-## Qualitätsregeln
+## Quellen
 
-- BGB-AT-Fragen immer an der passenden Stelle im Anspruchsaufbau prüfen.
-- Auslegung geht regelmäßig vor Anfechtung, Dissens oder Lückenschließung.
-- Keine erfundenen Rechtsprechungs- oder Literaturzitate verwenden; bei Zitaten Primärquelle prüfen.
-- Bei Fristen den Rechenweg sichtbar machen.
-- Bei Wertungen die tragenden Tatsachen ausdrücklich nennen.
+- [§ 104 BGB — gesetze-im-internet.de](https://www.gesetze-im-internet.de/bgb/__104.html)
+- [§ 105 BGB — gesetze-im-internet.de](https://www.gesetze-im-internet.de/bgb/__105.html)
+- [§ 106 BGB — gesetze-im-internet.de](https://www.gesetze-im-internet.de/bgb/__106.html)
+- [dejure.org § 104 BGB](https://dejure.org/gesetze/BGB/104.html)
+- [§ 131 BGB — gesetze-im-internet.de](https://www.gesetze-im-internet.de/bgb/__131.html)
 
-## Anschluss-Skills
+## Vertiefung
 
-- allgemein
-- anspruchsaufbau-zivilrecht-bgb-at
-- bgb-at-output-gutachten-memo-schriftsatz
+### Stufenmodell der Geschäftsfähigkeit
+
+BGB-System: (1) Volle Geschäftsfähigkeit ab 18 Jahren (§ 2 BGB), (2) Beschränkte Geschäftsfähigkeit
+von 7 bis 17 Jahren (§ 106 BGB), (3) Geschäftsunfähigkeit unter 7 Jahren (§ 104 Nr. 1 BGB) und
+bei dauernder krankhafter Störung der Geistestätigkeit (§ 104 Nr. 2 BGB).
+
+### Vorübergehende Störung
+
+§ 105 Abs. 2 BGB: Erklärungen in einem Zustand vorübergehender Störung der Geistestätigkeit sind
+nichtig. Dies betrifft Trunkenheit, Drogeneinfluss, Hypnose oder akute psychische Ausnahmesituation.
+
+### Klausur-Checkliste Geschäftsfähigkeit
+
+- Alter des Handelnden genau festgestellt?
+- § 104 Nr. 2 BGB: Dauerhafte krankhafte Störung — gerichtliche Feststellung vorhanden?
+- § 105 Abs. 2 BGB: Vorübergehende Störung — Zustand zum Zeitpunkt der Erklärung?
+- Rechtsfolge der Geschäftsunfähigkeit: § 105 Abs. 1 BGB — Nichtigkeit (nicht schwebende Unwirksamkeit)?
+- Beschränkte Geschäftsfähigkeit: Einwilligung, Genehmigung oder Ausnahme nach §§ 107-113 BGB?

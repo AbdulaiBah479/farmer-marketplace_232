@@ -1,274 +1,856 @@
 ---
 name: deep-research
-description: '深度调研的多Agent编排工作流：把一个调研目标拆成可并行子目标，用 Claude Code 非交互模式（`claude -p`）运行子进程；联网与采集优先使用已安装的 skills，其次使用 MCP 工具；用脚本聚合子结果并分章精修，最终交付"成品报告文件路径 + 关键结论/建议摘要"。用于：系统性网页/资料调研、竞品/行业分析、批量链接/数据集分片检索、长文写作与证据整合，或用户提及"深度调研/Deep Research/Wide Research/多 Agent 并行调研/多进程调研"等场景。'
-allowed-tools: Read, Write, Edit, Bash, Glob, Grep, WebFetch, WebSearch, TodoWrite, mcp__firecrawl__firecrawl_scrape, mcp__firecrawl__firecrawl_search, mcp__firecrawl__firecrawl_map, mcp__firecrawl__firecrawl_crawl, mcp__firecrawl__firecrawl_extract, mcp__firecrawl__firecrawl_agent, mcp__plugin_claude-code-settings_exa__web_search_exa, mcp__plugin_claude-code-settings_exa__get_code_context_exa
+description: Conduct enterprise-grade research with multi-source synthesis, citation tracking, and verification. Use when user needs comprehensive analysis requiring 10+ sources, verified claims, or comparison of approaches. Triggers include "deep research", "comprehensive analysis", "research report", "compare X vs Y", or "analyze trends". Do NOT use for simple lookups, debugging, or questions answerable with 1-2 searches.
 ---
 
-# Deep Research（深度调研编排工作流）
+# Deep Research
 
-把"深度调研"当作一个可复用、可并行的生产流程来执行：主控负责澄清目标、拆解子目标、调度子进程、聚合与精修；子进程负责采集/抽取/局部分析并输出结构化 Markdown 素材；最终交付物必须是独立成品文件而不是聊天贴文。
+<!-- STATIC CONTEXT BLOCK START - Optimized for prompt caching -->
+<!-- All static instructions, methodology, and templates below this line -->
+<!-- Dynamic content (user queries, results) added after this block -->
 
-**关键约束（必须遵守）**
+## Core System Instructions
 
-- **保持默认模型与配置不变**：不要显式覆盖模型或用额外参数覆写默认模型/推理设置；只有在用户明确授权时才调整相关配置。
-- **默认最小权限**：子进程通过 `--allowedTools` 控制可用工具；仅在必要时启用网络等权限。
-- **联网优先走 skills，其次 MCP**：优先使用已安装 skills；若必须使用 MCP，则优先 `firecrawl`，其次 `exa`；确实无法满足时再考虑 WebFetch/WebSearch。
-- **非交互式友好**：子进程不使用 plan 工具，不与用户"等确认/等反馈"式互动；以文件落地、日志可追溯为主。
-- **文件交付优先**：最终交付物必须落地为独立文件，禁止在聊天中贴出完整成稿。
-- **每一步输出决策与进度日志**：尤其在拆分、调度、聚合、精修、交付前。
-- **任务规模判断门槛**：子目标数量 ≥3 时必须启动 `claude -p` 子进程；<3 个子目标时可由主进程直接执行，但仍需记录完整目录结构和原始数据。
-- **必须等待用户确认**：摸底完成后，必须明确询问用户"是否开始执行？"，在用户回复"执行/开始/go/yes"等肯定词前不得进入下一步。
+**Purpose:** Deliver citation-backed, verified research reports through 8-phase pipeline (Scope → Plan → Retrieve → Triangulate → Synthesize → Critique → Refine → Package) with source credibility scoring and progressive context management.
 
-## 任务目标
+**Context Strategy:** This skill uses 2025 context engineering best practices:
+- Static instructions cached (this section)
+- Progressive disclosure (load references only when needed)
+- Avoid "loss in the middle" (critical info at start/end, not buried)
+- Explicit section markers for context navigation
 
-1. 从用户的高层目标推导出可并行的子目标集合（如链接清单、数据分片、模块列表、时间切片等）。
-2. 为每个子目标启动独立的 `claude -p` 子进程，并为其分配合适权限（通过 `--allowedTools` 参数）。
-3. 并行执行并产出子报告（自然语言 Markdown，可含小节/表格/列表）；失败时输出带原因的错误说明与后续建议。
-4. 用脚本按顺序聚合子输出，生成统一的基础稿。
-5. 对基础稿做理智检查与**最小化修复**，然后给出最终 artefact 路径与关键发现摘要。
+---
 
-## 交付标准
+## Decision Tree (Execute First)
 
-- 交付物必须是**结构化、洞察驱动**的整体成品；禁止把子任务 Markdown 直接拼接当作最终稿。
-- 需要保留子任务原文时，将其另存为内部文件（例如 `.research/<name>/aggregated_raw.md`），在成品中仅吸收关键洞察/证据。
-- 润色与修订要**按章节逐段迭代**，不得整篇删除后一次性重写；每次修改后核对引用、数据与上下文，保证可追溯。
-- 默认交付详实、深入的分析型报告。
-- 交付前做"双重体检质检"：
-  1) 检查是否真的是"分章节、多轮整合"产出；若只是一次性生成，退回按章节重写。
-  2) 评估是否足够细致；若偏单薄，先判断是"子任务素材不足"还是"统稿时压缩过度"：前者驱动补充/追加调研，后者在既有素材上继续扩展润色，直至达到详细标准。
+```
+Request Analysis
+├─ Simple lookup? → STOP: Use WebSearch, not this skill
+├─ Debugging? → STOP: Use standard tools, not this skill
+└─ Complex analysis needed? → CONTINUE
 
-## 任务规模分级与执行路径
+Mode Selection
+├─ Initial exploration? → quick (3 phases, 2-5 min)
+├─ Standard research? → standard (6 phases, 5-10 min) [DEFAULT]
+├─ Critical decision? → deep (8 phases, 10-20 min)
+└─ Comprehensive review? → ultradeep (8+ phases, 20-45 min)
 
-根据子目标数量选择执行路径：
+Execution Loop (per phase)
+├─ Load phase instructions from [methodology](./reference/methodology.md#phase-N)
+├─ Execute phase tasks
+├─ Spawn parallel agents if applicable
+└─ Update progress
 
-| 规模 | 子目标数 | 执行方式 | 目录要求 |
-|------|----------|----------|----------|
-| **微型** | 1-2 | 主进程直接执行 | 仍需 `raw/`、`logs/`、`final_report.md` |
-| **小型** | 3-5 | 启动子进程，串行或少量并行 | 完整目录结构 |
-| **中型** | 6-15 | 并行子进程（默认 8 并发） | 完整目录结构 + 调度脚本 |
-| **大型** | >15 | GNU Parallel + 分批调度 | 完整目录结构 + 多阶段调度 |
-
-**注意**：即使是微型任务，也必须：
-1. 将原始搜索结果保存到 `raw/` 目录
-2. 记录执行日志到 `logs/dispatcher.log`
-3. 等待用户确认后再执行（除非用户明确说"直接执行"）
-
-## 端到端流程（严格按序执行）
-
-0. **预执行规划与摸底（必做；主控亲自完成）**
-   - 先澄清目标、风险、资源/权限约束，并识别后续扩散依赖的核心维度（主题簇、人物/组织、地域、时间切片等）。
-   - 若存在公开目录/索引（标签页、API 列表等），用最小化方式抓取缓存并统计条目；若不存在，做"案头调研"获取真实样本（新闻、资料、数据集等），记录来源/时间/要点作为证据。
-   - 形成清单前至少展示一次真实检索或浏览的代表样本；只靠经验推测不算完成摸底。
-   - 摸底阶段必须至少通过一次"可追溯的工具链"拿到真实样本并记录引用：优先使用已安装 skills；若需要 MCP，则优先 `firecrawl`，其次 `exa`；若都不可用，记录原因并选择替代方案（必要时再降级到 WebFetch/WebSearch）。
-   - 输出初步（或草拟）清单：列出发现的维度、各维度已掌握的选项及样本、规模估算，并标注不确定性/缺口。若尚未获得真实样本，先补齐调研，禁止进入下一步。
-   - 依据上述结构补全可执行计划（拆分、脚本/工具、输出格式、权限、超时策略等），用用户语言汇报维度统计与计划内容；在得到明确"执行/开始"回应前保持等待。
-
-1. **初始化与总体规划**
-   - 明确目标、预期输出格式与评价标准。
-   - 根据当前任务生成一个语义化且不重复的名字 `name`（建议：`<YYYYMMDD>-<短题>-<随机后缀>`，全小写、短横线分隔、无空格）。
-   - 创建运行目录 `.research/<name>/`，并把**所有**产物都保存到该目录下（子目录如 `prompts/`、`logs/`、`child_outputs/`、`raw/`、`cache/`、`tmp/`）。
-   - 保持默认模型与配置不变；需要调整任何模型/推理/权限相关设置时先征得用户同意，并在日志中注明变更原因与影响范围。
-
-2. **子目标识别**
-   - 通过脚本/命令提取或构造子目标列表。
-   - 源数据不足时（例如页面只给两个主链接），如实记录原因，然后由主进程直接接手完成剩余工作。
-
-3. **生成调度脚本**
-   - 创建调度脚本（例如 `.research/<name>/run_children.sh`），要求：
-     - 接收子目标列表（可存 JSON/CSV）并逐项调度。
-     - 为每个子目标构造 `claude -p` 调用，推荐要点：
-       - 推荐形式：`claude -p "prompt" --allowedTools "Read,Write,Edit,Bash,WebFetch,WebSearch,mcp__firecrawl__*"`（以 `claude --help` 为准）。
-       - 在 prompt 中声明：一切联网需求优先使用已安装 skills（技能优先）；若必须走 MCP，则优先 `firecrawl`，其次 `exa`；确实没办法才用 WebFetch/WebSearch；不使用 plan 工具与"人工交互等待"。
-       - 非经用户要求不传模型参数。
-       - 为子输出指定落盘路径（例如 `.research/<name>/child_outputs/<id>.md`）。
-       - 可引用如下调用模板（仅演示参数，不涉及并行）：
-         ```bash
-         timeout 600 claude -p "$(cat "$prompt_file")" \
-            --allowedTools "Read,Write,Edit,Bash,Glob,Grep,WebFetch,WebSearch,mcp__firecrawl__firecrawl_scrape,mcp__firecrawl__firecrawl_search" \
-            --output-format json \
-            > "$output_file" 2>&1
-         ```
-       - 若需要让子进程执行更多工具，在 `--allowedTools` 中追加对应工具名。
-       - 依据任务规模设置超时：小任务先给 5 分钟（`timeout 300`），较大任务可放宽到最多 15 分钟（`timeout 900`），通过外部 `timeout` 命令兜底。首次命中 5 分钟超时时，结合任务实际判断是否拆分/改参数再重试；15 分钟仍未完成则视为 prompt 或流程需要排查。
-       - 小规模任务（<8 个）用循环 + 后台任务（或队列控制）实现并行，避免命令行长度限制导致失败；大规模任务用 `xargs`/GNU Parallel，但必须先用小规模验证参数展开。默认并行 8 个，可按硬件或配额调整。
-       - 不要用"串行一个个跑"来替代并行；也不要用"主进程随便搜搜"等方式绕过既定流程。
-       - 捕获每个子进程退出码并写日志到运行目录；用 `stdbuf -oL -eL claude -p … 2>&1 | tee .research/<name>/logs/<id>.log` 等方式保证实时刷新，便于 `tail -f` 观察进度。
-   - 数据量足够时，主控尽量不亲自承担下载/解析等重活；把这些工作交给子进程完成，主控专注于 prompt、模板与环境准备。
-
-4. **设计子进程 Prompt**
-   - 动态生成 prompt 模板，至少包含：
-     - 子目标描述、输入数据、约束边界。
-     - 规划阶段限制联网检索/抽取的总轮数不超过 X（按复杂度选择；通常建议 10），信息足够就收敛结束；工具优先级：skills → MCP（`firecrawl` → `exa`）→ WebFetch/WebSearch。
-     - 结果输出为自然语言 Markdown：包含结论、关键证据列表、引用链接；出现错误时给出 Markdown 形式的错误说明与后续建议。
-     - 生成实际 prompt 文件时，优先用 `printf`/逐行写入注入变量，避免 Bash 3.2 在多字节字符场景下 `cat <<EOF` 截断变量的已知问题。
-   - 将模板写入文件（例如 `.research/<name>/child_prompt_template.md`）以便审计与复用。
-   - 在启动调度脚本前，逐一快速审阅生成的 prompt 文件（例如 `cat .research/<name>/prompts/<id>.md`），确认变量替换正确、指令完整后再派发任务。
-
-5. **并行执行与监控**
-   - 运行调度脚本。
-   - 记录每个子进程的开始/结束时间、耗时与状态。
-   - 对失败/超时子进程做明确决策：标记、重试、或在最终报告中说明；触及 15 分钟超时上限时记录 prompt/流程待排查。长任务执行中可提示用户用 `tail -f .research/<name>/logs/<id>.log` 追踪实时输出。
-
-6. **程序化聚合（生成基础稿）**
-   - 用脚本（例如 `.research/<name>/aggregate.py`）读取 `.research/<name>/child_outputs/` 下所有 Markdown，按预设顺序聚合为初版主文档（例如 `.research/<name>/final_report.md`）。
-
-7. **解读聚合结果并设计结构**
-   - 通读 `.research/<name>/final_report.md` 与关键子输出。
-   - 设计精修报告章节大纲与"素材映射"（例如 `.research/<name>/polish_outline.md`），明确目标受众、章节顺序与每章核心论点。
-
-8. **分章精修与出稿**
-   - 新建精修稿（例如 `.research/<name>/polished_report.md`），按大纲逐章撰写；每写完一章立刻自查事实、引用与语言要求，必要时回溯子稿核实。
-   - 避免一次性全篇重写；坚持"按章迭代"以维持一致性并降低遗漏风险，同时记录每章亮点、问题与处理方式。
-   - 对重复信息、引用格式、待确认条目做统一整理，同时保留核心事实与量化数据。
-
-9. **落地交付**
-   - 确认精修稿满足交付标准（结构完整、语气统一、引用准确），以该成品作为对外报告。
-   - 最终交付物必须落地为独立文件（位于 `.research/<name>/`）；通过提供文件路径与必要摘要向用户回报，禁止在聊天中贴出完整成稿。
-   - 在最终答复中概述核心结论与可执行建议；必要时补充待确认事项的跟进方式。
-   - 不对外附带中间稿或内部笔记，确保用户看到的是高质量成品。
-
-## 注意事项
-
-- 保持流程幂等：每次运行都生成新的 `.research/<name>/`，避免覆盖旧文件。
-- 所有结构化输出必须是合法 UTF-8 文本。
-- 仅在得到授权或确有必要时提升权限；避免滥用权限。
-- 清理临时资源时保持谨慎，确保日志与输出可追溯。
-- 对失败流程给出可降级的说明：抓取类任务至少尝试两次；仍失败则在 Markdown 中新增"失败原因/后续建议"小节，避免聚合阶段出现空白。
-- **缓存优先**：通过 skills/MCP 获取的原始资料，先写入 `.research/<name>/raw/` 等缓存目录，后续处理优先读取本地缓存以减少重复请求。
-- **先完整理解再总结**：总结/提炼前先处理完整原文，不得机械截取固定长度（例如前 500 字符）。可写脚本做全文解析、提取关键句或生成要点，但不得依赖"硬截断"。
-- **临时目录隔离**：中间产物（脚本日志、解析结果、缓存、调试输出等）放在 `.research/<name>/tmp/`、`.research/<name>/raw/`、`.research/<name>/cache/` 等子目录，必要时在流程结束后按需清理。
-- **搜索服务优先级**：联网操作优先使用已安装 skills；若需要 MCP，先查看可用 MCP 工具，并优先选择 `firecrawl`，其次 `exa`；缺少 MCP 时再退回 WebFetch/WebSearch。
-- **MCP 参数与输出控制**：对返回可能过大的工具，避免请求"原始全文"类字段导致响应膨胀；必要时分段抽取、先列目录后按需深入。
-- **图像检索**：若 MCP 支持图像搜索/描述，除非用户明确要求"仅纯文本"，否则开启并将图像线索与文本证据一起呈现。
-
-## Claude Code 非交互模式参考
-
-### 基本用法
-
-```bash
-# 基本非交互调用
-claude -p "Your prompt here"
-
-# 指定允许的工具（无需人工确认）
-claude -p "Your prompt" --allowedTools "Read,Write,Edit,Bash"
-
-# JSON 格式输出（便于脚本解析）
-claude -p "Your prompt" --output-format json
-
-# 流式 JSON 输出
-claude -p "Your prompt" --output-format stream-json
-
-# 继续上一次对话
-claude -p "Follow up question" --continue
-
-# 继续指定会话
-claude -p "Follow up" --resume <session_id>
+Validation Gate
+├─ Run `python scripts/validate_report.py --report [path]`
+├─ Pass? → Deliver
+└─ Fail? → Fix (max 2 attempts) → Still fails? → Escalate
 ```
 
-### 子进程调度模板
+---
 
-```bash
-#!/bin/bash
-# 子进程调度示例
+## Workflow (Clarify → Plan → Act → Verify → Report)
 
-prompt_file="$1"
-output_file="$2"
-log_file="$3"
+**AUTONOMY PRINCIPLE:** This skill operates independently. Infer assumptions from query context. Only stop for critical errors or incomprehensible queries.
 
-# 读取 prompt 并执行
-timeout 600 claude -p "$(cat "$prompt_file")" \
-    --allowedTools "Read,Write,Edit,Bash,Glob,Grep,WebFetch,WebSearch,mcp__firecrawl__firecrawl_scrape,mcp__firecrawl__firecrawl_search,mcp__firecrawl__firecrawl_map" \
-    --output-format json \
-    2>&1 | tee "$log_file" > "$output_file"
+### 1. Clarify (Rarely Needed - Prefer Autonomy)
 
-exit_code=${PIPESTATUS[0]}
-echo "Exit code: $exit_code" >> "$log_file"
+**DEFAULT: Proceed autonomously. Derive assumptions from query signals.**
+
+**ONLY ask if CRITICALLY ambiguous:**
+- Query is incomprehensible (e.g., "research the thing")
+- Contradictory requirements (e.g., "quick 50-source ultradeep analysis")
+
+**When in doubt: PROCEED with standard mode. User will redirect if incorrect.**
+
+**Default assumptions:**
+- Technical query → Assume technical audience
+- Comparison query → Assume balanced perspective needed
+- Trend query → Assume recent 1-2 years unless specified
+- Standard mode is default for most queries
+
+---
+
+### 2. Plan
+
+**Mode selection criteria:**
+- **Quick** (2-5 min): Exploration, broad overview, time-sensitive
+- **Standard** (5-10 min): Most use cases, balanced depth/speed [DEFAULT]
+- **Deep** (10-20 min): Important decisions, need thorough verification
+- **UltraDeep** (20-45 min): Critical analysis, maximum rigor
+
+**Announce plan and execute:**
+- Briefly state: selected mode, estimated time, number of sources
+- Example: "Starting standard mode research (5-10 min, 15-30 sources)"
+- Proceed without waiting for approval
+
+---
+
+### 3. Act (Phase Execution)
+
+**All modes execute:**
+- Phase 1: SCOPE - Define boundaries ([method](./reference/methodology.md#phase-1-scope))
+- Phase 3: RETRIEVE - Parallel search execution (5-10 concurrent searches + agents) ([method](./reference/methodology.md#phase-3-retrieve---parallel-information-gathering))
+- Phase 8: PACKAGE - Generate report using [template](./templates/report_template.md)
+
+**Standard/Deep/UltraDeep execute:**
+- Phase 2: PLAN - Strategy formulation
+- Phase 4: TRIANGULATE - Verify 3+ sources per claim
+- Phase 4.5: OUTLINE REFINEMENT - Adapt structure based on evidence (WebWeaver 2025) ([method](./reference/methodology.md#phase-45-outline-refinement---dynamic-evolution-webweaver-2025))
+- Phase 5: SYNTHESIZE - Generate novel insights
+
+**Deep/UltraDeep execute:**
+- Phase 6: CRITIQUE - Red-team analysis
+- Phase 7: REFINE - Address gaps
+
+**Critical: Avoid "Loss in the Middle"**
+- Place key findings at START and END of sections, not buried
+- Use explicit headers and markers
+- Structure: Summary → Details → Conclusion (not Details sandwiched)
+
+**Progressive Context Loading:**
+- Load [methodology](./reference/methodology.md) sections on-demand
+- Load [template](./templates/report_template.md) only for Phase 8
+- Do not inline everything - reference external files
+
+**Anti-Hallucination Protocol (CRITICAL):**
+- **Source grounding**: Every factual claim MUST cite a specific source immediately [N]
+- **Clear boundaries**: Distinguish between FACTS (from sources) and SYNTHESIS (your analysis)
+- **Explicit markers**: Use "According to [1]..." or "[1] reports..." for source-grounded statements
+- **No speculation without labeling**: Mark inferences as "This suggests..." not "Research shows..."
+- **Verify before citing**: If unsure whether source actually says X, do NOT fabricate citation
+- **When uncertain**: Say "No sources found for X" rather than inventing references
+
+**Parallel Execution Requirements (CRITICAL for Speed):**
+
+**Phase 3 RETRIEVE - Mandatory Parallel Search:**
+1. **Decompose query** into 5-10 independent search angles before ANY searches
+2. **Launch ALL searches in single message** with multiple tool calls (NOT sequential)
+3. **Quality threshold monitoring** for FFS pattern:
+   - Track source count and avg credibility score
+   - Proceed when threshold reached (mode-specific, see methodology)
+   - Continue background searches for additional depth
+4. **Spawn 3-5 parallel agents** using Task tool for deep-dive investigations
+
+**Example correct execution:**
+```
+[Single message with 8+ parallel tool calls]
+WebSearch #1: Core topic semantic
+WebSearch #2: Technical keywords
+WebSearch #3: Recent 2024-2025 filtered
+WebSearch #4: Academic domains
+WebSearch #5: Critical analysis
+WebSearch #6: Industry trends
+Task agent #1: Academic paper analysis
+Task agent #2: Technical documentation deep dive
 ```
 
-### 并行执行示例
-
-```bash
-#!/bin/bash
-# 并行执行多个子任务
-
-max_parallel=8
-research_dir=".research/$name"
-
-# 使用 GNU Parallel（推荐）
-cat "$research_dir/tasks.txt" | parallel -j $max_parallel \
-    "timeout 600 claude -p \"\$(cat $research_dir/prompts/{}.md)\" \
-    --allowedTools 'Read,Write,Edit,Bash,WebFetch,WebSearch' \
-    --output-format json > $research_dir/child_outputs/{}.json 2>&1"
-
-# 或使用后台任务
-for task_id in $(cat "$research_dir/task_ids.txt"); do
-    (
-        timeout 600 claude -p "$(cat "$research_dir/prompts/$task_id.md")" \
-            --allowedTools "Read,Write,Edit,Bash,WebFetch,WebSearch" \
-            --output-format json \
-            > "$research_dir/child_outputs/$task_id.json" 2>&1
-    ) &
-
-    # 控制并行数量
-    while [ $(jobs -r | wc -l) -ge $max_parallel ]; do
-        sleep 1
-    done
-done
-
-wait  # 等待所有后台任务完成
+**❌ WRONG (sequential execution):**
+```
+WebSearch #1 → wait for results → WebSearch #2 → wait → WebSearch #3...
 ```
 
-## 通用经验与最佳实践
+**✅ RIGHT (parallel execution):**
+```
+All searches + agents launched simultaneously in one message
+```
 
-- **先验证环境假设**：写调度脚本前用 `realpath`/`test -d` 等确认关键路径（如 `venv`、资源目录）存在；必要时用 `dirname "$0"` 推导仓库根路径并通过参数传入，避免硬编码。
-- **让提取逻辑可配置**：不要假设网页共享同一 DOM；解析脚本提供可配置选择器/边界条件/可读性解析器，跨站点复用时只需改配置。
-- **先小规模跑通再并行**：全面并行前先串行跑 1–2 个子目标验证 agent 配置、skills/MCP 工具链与输出路径；确认链路稳定后再提高并发，避免"起飞后看不清错误"。
-- **分层日志便于追溯**：调度器写 `.research/<name>/dispatcher.log`；子任务单独写 `.research/<name>/logs/<id>.log`，失败时直接 `tail` 对应日志定位 MCP/调用细节。
-- **失败隔离与重试**：并行失败时先记录失败 ID 与日志，优先对单个失败任务重试；可维护 `failed_ids` 列表并在收尾阶段统一提示后续建议。
-- **避免重复抓取**：重试前先检查 `.research/<name>/child_outputs/<id>.md` 是否已合法存在；存在则跳过，减少配额消耗与重复访问。
-- **终审与润色**：交付前必须审阅聚合与精修稿是否满足语言要求（例如要求中文则全程中文），并核对引用与数据点与源文件一致；润色时不丢失关键事实与量化信息，让成品具备洞察而非堆事实。
-- **引用就地呈现**：每条要点后直接用 Markdown 链接给来源（例如 `[来源](https://example.com)`），避免把链接集中到段尾，便于即时查证。
-- **覆盖率校验脚本**：批量生成后用轻量脚本统计缺失条目、空字段或标签数量，确保问题在报告前被发现并补救。
-- **对子进程做边界约束**：在子 prompt 中明确可访问范围（仅指定 URL/目录）与可用工具，降低越界与重复抓取风险，让流程在任意站点都安全可控。
+---
 
-## 思考与写作指南
+### 4. Verify (Always Execute)
 
-先思考再动手：追求有深度、有独立思考、超出预期的洞见（但不要在回答里提到"惊喜"）；揣摩用户为什么会问这个问题、背后的假设是什么、有没有更本质的问法；同时明确你的答案应满足的成功标准，再围绕标准组织内容。
+**Step 1: Citation Verification (Catches Fabricated Sources)**
 
-保持协作：你的目标不是机械执行指令、也不是在信息不足时强行给出确定答案；而是与用户共同推进，逐步逼近更好的问题与更可靠的结论。
+```bash
+python scripts/verify_citations.py --report [path]
+```
 
-写作风格要求：
+**Checks:**
+- DOI resolution (verifies citation actually exists)
+- Title/year matching (detects mismatched metadata)
+- Flags suspicious entries (2024+ without DOI, no URL, failed verification)
 
-- 不滥用 bullet points，把它们尽量限制在 top level；能用自然语言段落就用段落。
-- 除非直接引用，否则不使用引号。
-- 写作时保持亲切、深入浅出、理性克制的语气。
+**If suspicious citations found:**
+- Review flagged entries manually
+- Remove or replace fabricated sources
+- Re-run until clean
 
-执行本技能时，在每一步输出清晰的决策与进度日志。
+**Step 2: Structure & Quality Validation**
 
-## 交付前自检清单
+```bash
+python scripts/validate_report.py --report [path]
+```
 
-在提交最终报告前，必须核对以下清单：
+**8 automated checks:**
+1. Executive summary length (50-250 words)
+2. Required sections present (+ recommended: Claims table, Counterevidence)
+3. Citations formatted [1], [2], [3]
+4. Bibliography matches citations
+5. No placeholder text (TBD, TODO)
+6. Word count reasonable (500-10000)
+7. Minimum 10 sources
+8. No broken internal links
 
-### 目录结构检查
-- [ ] `.research/<name>/` 目录已创建
-- [ ] `logs/dispatcher.log` 包含完整执行记录（非事后补写）
-- [ ] `raw/` 目录包含原始搜索/抓取结果
-- [ ] 子目标 ≥3 时：`prompts/`、`child_outputs/` 目录存在且有内容
+**If fails:**
+- Attempt 1: Auto-fix formatting/links
+- Attempt 2: Manual review + correction
+- After 2 failures: **STOP** → Report issues → Ask user
 
-### 流程合规检查
-- [ ] 摸底阶段展示了真实样本（非凭经验推测）
-- [ ] 用户明确确认后才开始执行（除非用户说"直接执行"）
-- [ ] 子目标 ≥3 时启动了 `claude -p` 子进程
-- [ ] 日志实时记录，而非事后补写
+---
 
-### 报告质量检查
-- [ ] 报告是"分章节、多轮整合"产出，非一次性生成
-- [ ] 每条关键结论有可追溯的引用来源
-- [ ] 引用链接实际访问过（非搜索结果推测）
-- [ ] 报告已落地为独立文件，未在聊天中贴出完整成稿
+### 5. Report
 
-### 快速失败检查
-如有以下情况，应在报告中明确说明：
-- [ ] 部分子任务失败/超时：记录失败 ID 和原因
-- [ ] 数据源受限/不可访问：记录尝试过的替代方案
-- [ ] 信息不完整：标注待确认事项和跟进建议
+**CRITICAL: Generate COMPREHENSIVE, DETAILED markdown reports**
+
+**File Organization (CRITICAL - Clean Accessibility):**
+
+**1. Create Organized Folder in Documents:**
+- ALWAYS create dedicated folder: `~/Documents/[TopicName]_Research_[YYYYMMDD]/`
+- Extract clean topic name from research question (remove special chars, use underscores/CamelCase)
+- Examples:
+  - "psilocybin research 2025" → `~/Documents/Psilocybin_Research_20251104/`
+  - "compare React vs Vue" → `~/Documents/React_vs_Vue_Research_20251104/`
+  - "AI safety trends" → `~/Documents/AI_Safety_Trends_Research_20251104/`
+- If folder exists, use it; if not, create it
+- This ensures clean organization and easy accessibility
+
+**2. Save All Formats to Same Folder:**
+
+**Markdown (Primary Source):**
+- Save to: `[Documents folder]/research_report_[YYYYMMDD]_[topic_slug].md`
+- Also save copy to: `~/.claude/research_output/` (internal tracking)
+- Full detailed report with all findings
+
+**HTML (McKinsey Style - ALWAYS GENERATE):**
+- Save to: `[Documents folder]/research_report_[YYYYMMDD]_[topic_slug].html`
+- Use McKinsey template: [mckinsey_template](./templates/mckinsey_report_template.html)
+- Design principles: Sharp corners (NO border-radius), muted corporate colors (navy #003d5c, gray #f8f9fa), ultra-compact layout, info-first structure
+- Place critical metrics dashboard at top (extract 3-4 key quantitative findings)
+- Use data tables for dense information presentation
+- 14px base font, compact spacing, no decorative gradients or colors
+- **Attribution Gradients (2025):** Wrap each citation [N] in `<span class="citation">` with nested tooltip div showing source details
+- OPEN in browser automatically after generation
+
+**PDF (Professional Print - ALWAYS GENERATE):**
+- Save to: `[Documents folder]/research_report_[YYYYMMDD]_[topic_slug].pdf`
+- Use generating-pdf skill (via Task tool with general-purpose agent)
+- Professional formatting with headers, page numbers
+- OPEN in default PDF viewer after generation
+
+**3. File Naming Convention:**
+All files use same base name for easy matching:
+- `research_report_20251104_psilocybin_2025.md`
+- `research_report_20251104_psilocybin_2025.html`
+- `research_report_20251104_psilocybin_2025.pdf`
+
+**Length Requirements (UNLIMITED with Progressive Assembly):**
+- Quick mode: 2,000+ words (baseline quality threshold)
+- Standard mode: 4,000+ words (comprehensive analysis)
+- Deep mode: 6,000+ words (thorough investigation)
+- UltraDeep mode: 10,000-50,000+ words (NO UPPER LIMIT - as comprehensive as evidence warrants)
+
+**How Unlimited Length Works:**
+Progressive file assembly allows ANY report length by generating section-by-section.
+Each section is written to file immediately (avoiding output token limits).
+Complex topics with many findings? Generate 20, 30, 50+ findings - no constraint!
+
+**Content Requirements:**
+- Use [template](./templates/report_template.md) as exact structure
+- Generate each section to APPROPRIATE depth (determined by evidence, not word targets)
+- Include specific data, statistics, dates, numbers (not vague statements)
+- Multiple paragraphs per finding with evidence (as many as needed)
+- Each section gets focused generation attention
+- DO NOT write summaries - write FULL analysis
+
+**Writing Standards:**
+- **Narrative-driven**: Write in flowing prose. Each finding tells a story with beginning (context), middle (evidence), end (implications)
+- **Precision**: Every word deliberately chosen, carries intention
+- **Economy**: No fluff, eliminate fancy grammar, unnecessary modifiers
+- **Clarity**: Exact numbers embedded in sentences ("The study demonstrated a 23% reduction in mortality"), not isolated in bullets
+- **Directness**: State findings without embellishment
+- **High signal-to-noise**: Dense information, respect reader's time
+
+**Bullet Point Policy (Anti-Fatigue Enforcement):**
+- Use bullets SPARINGLY: Only for distinct lists (product names, company roster, enumerated steps)
+- NEVER use bullets as primary content delivery - they fragment thinking
+- Each findings section requires substantive prose paragraphs (3-5+ paragraphs minimum)
+- Example: Instead of "• Market size: $2.4B" write "The global market reached $2.4 billion in 2023, driven by increasing consumer demand and regulatory tailwinds [1]."
+
+**Anti-Fatigue Quality Check (Apply to EVERY Section):**
+Before considering a section complete, verify:
+- [ ] **Paragraph count**: ≥3 paragraphs for major sections (## headings)
+- [ ] **Prose-first**: <20% of content is bullet points (≥80% must be flowing prose)
+- [ ] **No placeholders**: Zero instances of "Content continues", "Due to length", "[Sections X-Y]"
+- [ ] **Evidence-rich**: Specific data points, statistics, quotes (not vague statements)
+- [ ] **Citation density**: Major claims cited within same sentence
+
+**If ANY check fails:** Regenerate the section before moving to next.
+
+**Source Attribution Standards (Critical for Preventing Fabrication):**
+- **Immediate citation**: Every factual claim followed by [N] citation in same sentence
+- **Quote sources directly**: Use "According to [1]..." or "[1] reports..." for factual statements
+- **Distinguish fact from synthesis**:
+  - ✅ GOOD: "Mortality decreased 23% (p<0.01) in the treatment group [1]."
+  - ❌ BAD: "Studies show mortality improved significantly."
+- **No vague attributions**:
+  - ❌ NEVER: "Research suggests...", "Studies show...", "Experts believe..."
+  - ✅ ALWAYS: "Smith et al. (2024) found..." [1], "According to FDA data..." [2]
+- **Label speculation explicitly**:
+  - ✅ GOOD: "This suggests a potential mechanism..." (analysis, not fact)
+  - ❌ BAD: "The mechanism is..." (presented as fact without citation)
+- **Admit uncertainty**:
+  - ✅ GOOD: "No sources found addressing X directly."
+  - ❌ BAD: Fabricating a citation to fill the gap
+- **Template pattern**: "[Specific claim with numbers/data] [Citation]. [Analysis/implication]."
+
+**Deliver to user:**
+1. Executive summary (inline in chat)
+2. Organized folder path (e.g., "All files saved to: ~/Documents/Psilocybin_Research_20251104/")
+3. Confirmation of all three formats generated:
+   - Markdown (source)
+   - HTML (McKinsey-style, opened in browser)
+   - PDF (professional print, opened in viewer)
+4. Source quality assessment summary (source count)
+5. Next steps (if relevant)
+
+**Generation Workflow: Progressive File Assembly (Unlimited Length)**
+
+**Phase 8.1: Setup**
+```bash
+# Extract topic slug from research question
+# Create folder: ~/Documents/[TopicName]_Research_[YYYYMMDD]/
+mkdir -p ~/Documents/[folder_name]
+
+# Create initial markdown file with frontmatter
+# File path: [folder]/research_report_[YYYYMMDD]_[slug].md
+```
+
+**Phase 8.2: Progressive Section Generation**
+
+**CRITICAL STRATEGY:** Generate and write each section individually to file using Write/Edit tools.
+This allows unlimited report length while keeping each generation manageable.
+
+**OUTPUT TOKEN LIMIT SAFEGUARD (CRITICAL - Claude Code Default: 32K):**
+
+Claude Code default limit: 32,000 output tokens (≈24,000 words total per skill execution)
+This is a HARD LIMIT and cannot be changed within the skill.
+
+**What this means:**
+- Total output (your text + all tool call content) must be <32,000 tokens
+- 32,000 tokens ≈ 24,000 words max
+- Leave safety margin: Target ≤20,000 words total output
+
+**Realistic report sizes per mode:**
+- Quick mode: 2,000-4,000 words ✅ (well under limit)
+- Standard mode: 4,000-8,000 words ✅ (comfortably under limit)
+- Deep mode: 8,000-15,000 words ✅ (achievable with care)
+- UltraDeep mode: 15,000-20,000 words ⚠️ (at limit, monitor closely)
+
+**For reports >20,000 words:**
+User must run skill multiple times:
+- Run 1: "Generate Part 1 (sections 1-6)" → saves to part1.md
+- Run 2: "Generate Part 2 (sections 7-12)" → saves to part2.md
+- User manually combines or asks Claude to merge files
+
+**Auto-Continuation Strategy (TRUE Unlimited Length):**
+
+When report exceeds 18,000 words in single run:
+1. Generate sections 1-10 (stay under 18K words)
+2. Save continuation state file with context preservation
+3. Spawn continuation agent via Task tool
+4. Continuation agent: Reads state → Generates next batch → Spawns next agent if needed
+5. Chain continues recursively until complete
+
+This achieves UNLIMITED length while respecting 32K limit per agent
+
+**Initialize Citation Tracking:**
+```
+citations_used = []  # Maintain this list in working memory throughout
+```
+
+**Section Generation Loop:**
+
+**Pattern:** Generate section content → Use Write/Edit tool with that content → Move to next section
+Each Write/Edit call contains ONE section (≤2,000 words per call)
+
+1. **Executive Summary** (200-400 words)
+   - Generate section content
+   - Tool: Write(file, content=frontmatter + Executive Summary)
+   - Track citations used
+   - Progress: "✓ Executive Summary"
+
+2. **Introduction** (400-800 words)
+   - Generate section content
+   - Tool: Edit(file, old=last_line, new=old + Introduction section)
+   - Track citations used
+   - Progress: "✓ Introduction"
+
+3. **Finding 1** (600-2,000 words)
+   - Generate complete finding
+   - Tool: Edit(file, append Finding 1)
+   - Track citations used
+   - Progress: "✓ Finding 1"
+
+4. **Finding 2** (600-2,000 words)
+   - Generate complete finding
+   - Tool: Edit(file, append Finding 2)
+   - Track citations used
+   - Progress: "✓ Finding 2"
+
+... Continue for ALL findings (each finding = one Edit tool call, ≤2,000 words)
+
+**CRITICAL:** If you have 10 findings × 1,500 words each = 15,000 words of findings
+This is OKAY because each Edit call is only 1,500 words (under 2,000 word limit per tool call)
+The FILE grows to 15,000 words, but no single tool call exceeds limits
+
+4. **Synthesis & Insights**
+   - Generate: Novel insights beyond source statements (as long as needed for synthesis)
+   - Tool: Edit (append to file)
+   - Track: Extract citations, append to citations_used
+   - Progress: "Generated Synthesis ✓"
+
+5. **Limitations & Caveats**
+   - Generate: Counterevidence, gaps, uncertainties (appropriate depth)
+   - Tool: Edit (append to file)
+   - Track: Extract citations, append to citations_used
+   - Progress: "Generated Limitations ✓"
+
+6. **Recommendations**
+   - Generate: Immediate actions, next steps, research needs (appropriate depth)
+   - Tool: Edit (append to file)
+   - Track: Extract citations, append to citations_used
+   - Progress: "Generated Recommendations ✓"
+
+7. **Bibliography (CRITICAL - ALL Citations)**
+   - Generate: COMPLETE bibliography with EVERY citation from citations_used list
+   - Format: [1], [2], [3]... [N] - each citation gets full entry
+   - Verification: Check citations_used list - if list contains [1] through [73], generate all 73 entries
+   - NO ranges ([1-50]), NO placeholders ("Additional citations"), NO truncation
+   - Tool: Edit (append to file)
+   - Progress: "Generated Bibliography ✓ (N citations)"
+
+8. **Methodology Appendix**
+   - Generate: Research process, verification approach (appropriate depth)
+   - Tool: Edit (append to file)
+   - Progress: "Generated Methodology ✓"
+
+**Phase 8.3: Auto-Continuation Decision Point**
+
+After generating sections, check word count:
+
+**If total output ≤18,000 words:** Complete normally
+- Generate Bibliography (all citations)
+- Generate Methodology
+- Verify complete report
+- Save copy to ~/.claude/research_output/
+- Done! ✓
+
+**If total output will exceed 18,000 words:** Auto-Continuation Protocol
+
+**Step 1: Save Continuation State**
+Create file: `~/.claude/research_output/continuation_state_[report_id].json`
+
+```json
+{
+  "version": "2.1.1",
+  "report_id": "[unique_id]",
+  "file_path": "[absolute_path_to_report.md]",
+  "mode": "[quick|standard|deep|ultradeep]",
+
+  "progress": {
+    "sections_completed": [list of section IDs done],
+    "total_planned_sections": [total count],
+    "word_count_so_far": [current word count],
+    "continuation_count": [which continuation this is, starts at 1]
+  },
+
+  "citations": {
+    "used": [1, 2, 3, ..., N],
+    "next_number": [N+1],
+    "bibliography_entries": [
+      "[1] Full citation entry",
+      "[2] Full citation entry",
+      ...
+    ]
+  },
+
+  "research_context": {
+    "research_question": "[original question]",
+    "key_themes": ["theme1", "theme2", "theme3"],
+    "main_findings_summary": [
+      "Finding 1: [100-word summary]",
+      "Finding 2: [100-word summary]",
+      ...
+    ],
+    "narrative_arc": "[Current position in story: beginning/middle/conclusion]"
+  },
+
+  "quality_metrics": {
+    "avg_words_per_finding": [calculated average],
+    "citation_density": [citations per 1000 words],
+    "prose_vs_bullets_ratio": [e.g., "85% prose"],
+    "writing_style": "technical-precise-data-driven"
+  },
+
+  "next_sections": [
+    {"id": N, "type": "finding", "title": "Finding X", "target_words": 1500},
+    {"id": N+1, "type": "synthesis", "title": "Synthesis", "target_words": 1000},
+    ...
+  ]
+}
+```
+
+**Step 2: Spawn Continuation Agent**
+
+Use Task tool with general-purpose agent:
+
+```
+Task(
+  subagent_type="general-purpose",
+  description="Continue deep-research report generation",
+  prompt="""
+CONTINUATION TASK: You are continuing an existing deep-research report.
+
+CRITICAL INSTRUCTIONS:
+1. Read continuation state file: ~/.claude/research_output/continuation_state_[report_id].json
+2. Read existing report to understand context: [file_path from state]
+3. Read LAST 3 completed sections to understand flow and style
+4. Load research context: themes, narrative arc, writing style from state
+5. Continue citation numbering from state.citations.next_number
+6. Maintain quality metrics from state (avg words, citation density, prose ratio)
+
+CONTEXT PRESERVATION:
+- Research question: [from state]
+- Key themes established: [from state]
+- Findings so far: [summaries from state]
+- Narrative position: [from state]
+- Writing style: [from state]
+
+YOUR TASK:
+Generate next batch of sections (stay under 18,000 words):
+[List next_sections from state]
+
+Use Write/Edit tools to append to existing file: [file_path]
+
+QUALITY GATES (verify before each section):
+- Words per section: Within ±20% of [avg_words_per_finding]
+- Citation density: Match [citation_density] ±0.5 per 1K words
+- Prose ratio: Maintain ≥80% prose (not bullets)
+- Theme alignment: Section ties to key_themes
+- Style consistency: Match [writing_style]
+
+After generating sections:
+- If more sections remain: Update state, spawn next continuation agent
+- If final sections: Generate complete bibliography, verify report, cleanup state file
+
+HANDOFF PROTOCOL (if spawning next agent):
+1. Update continuation_state.json with new progress
+2. Add new citations to state
+3. Add summaries of new findings to state
+4. Update quality metrics
+5. Spawn next agent with same instructions
+"""
+)
+```
+
+**Step 3: Report Continuation Status**
+Tell user:
+```
+📊 Report Generation: Part 1 Complete (N sections, X words)
+🔄 Auto-continuing via spawned agent...
+   Next batch: [section list]
+   Progress: [X%] complete
+```
+
+**Phase 8.4: Continuation Agent Quality Protocol**
+
+When continuation agent starts:
+
+**Context Loading (CRITICAL):**
+1. Read continuation_state.json → Load ALL context
+2. Read existing report file → Review last 3 sections
+3. Extract patterns:
+   - Sentence structure complexity
+   - Technical terminology used
+   - Citation placement patterns
+   - Paragraph transition style
+
+**Pre-Generation Checklist:**
+- [ ] Loaded research context (themes, question, narrative arc)
+- [ ] Reviewed previous sections for flow
+- [ ] Loaded citation numbering (start from N+1)
+- [ ] Loaded quality targets (words, density, style)
+- [ ] Understand where in narrative arc (beginning/middle/end)
+
+**Per-Section Generation:**
+1. Generate section content
+2. Quality checks:
+   - Word count: Within target ±20%
+   - Citation density: Matches established rate
+   - Prose ratio: ≥80% prose
+   - Theme connection: Ties to key_themes
+   - Style match: Consistent with quality_metrics.writing_style
+3. If ANY check fails: Regenerate section
+4. If passes: Write to file, update state
+
+**Handoff Decision:**
+- Calculate: Current word count + remaining sections × avg_words_per_section
+- If total < 18K: Generate all remaining sections + finish
+- If total > 18K: Generate partial batch, update state, spawn next agent
+
+**Final Agent Responsibilities:**
+- Generate final content sections
+- Generate COMPLETE bibliography using ALL citations from state.citations.bibliography_entries
+- Read entire assembled report
+- Run validation: python scripts/validate_report.py --report [path]
+- Delete continuation_state.json (cleanup)
+- Report complete to user with metrics
+
+**Anti-Fatigue Built-In:**
+Each agent generates manageable chunks (≤18K words), maintaining quality.
+Context preservation ensures coherence across continuation boundaries.
+
+**Generate HTML (McKinsey Style)**
+1. Read McKinsey template from `./templates/mckinsey_report_template.html`
+2. Extract 3-4 key quantitative metrics from findings for dashboard
+3. **Use Python script for MD to HTML conversion:**
+
+   ```bash
+   cd ~/.claude/skills/deep-research
+   python scripts/md_to_html.py [markdown_report_path]
+   ```
+
+   The script returns two parts:
+   - **Part A ({{CONTENT}}):** All sections except Bibliography, properly converted to HTML
+   - **Part B ({{BIBLIOGRAPHY}}):** Bibliography section only, formatted as HTML
+
+   **CRITICAL:** The script handles ALL conversion automatically:
+   - Headers: ## → `<div class="section"><h2 class="section-title">`, ### → `<h3 class="subsection-title">`
+   - Lists: Markdown bullets → `<ul><li>` with proper nesting
+   - Tables: Markdown tables → `<table>` with thead/tbody
+   - Paragraphs: Text wrapped in `<p>` tags
+   - Bold/italic: **text** → `<strong>`, *text* → `<em>`
+   - Citations: [N] preserved for tooltip conversion in step 4
+
+4. **Add Citation Tooltips (Attribution Gradients):**
+   For each [N] citation in {{CONTENT}} (not bibliography), optionally add interactive tooltips:
+   ```html
+   <span class="citation">[N]
+     <span class="citation-tooltip">
+       <div class="tooltip-title">[Source Title]</div>
+       <div class="tooltip-source">[Author/Publisher]</div>
+       <div class="tooltip-claim">
+         <div class="tooltip-claim-label">Supports Claim:</div>
+         [Extract sentence with this citation]
+       </div>
+     </span>
+   </span>
+   ```
+   NOTE: This step is optional for speed. Basic [N] citations are sufficient.
+
+5. Replace placeholders in template:
+   - {{TITLE}} - Report title (extract from first ## heading in MD)
+   - {{DATE}} - Generation date (YYYY-MM-DD format)
+   - {{SOURCE_COUNT}} - Number of unique sources
+   - {{METRICS_DASHBOARD}} - Metrics HTML from step 2
+   - {{CONTENT}} - HTML from Part A (script output)
+   - {{BIBLIOGRAPHY}} - HTML from Part B (script output)
+
+6. **CRITICAL: NO EMOJIS** - Remove any emoji characters from final HTML
+
+7. Save to: `[folder]/research_report_[YYYYMMDD]_[slug].html`
+
+8. **Verify HTML (MANDATORY):**
+   ```bash
+   python scripts/verify_html.py --html [html_path] --md [md_path]
+   ```
+   - Check passes: Proceed to step 9
+   - Check fails: Fix errors and re-run verification
+
+9. Open in browser: `open [html_path]`
+
+**Generate PDF**
+1. Use Task tool with general-purpose agent
+2. Invoke generating-pdf skill with markdown as input
+3. Save to: `[folder]/research_report_[YYYYMMDD]_[slug].pdf`
+4. PDF will auto-open when complete
+
+---
+
+## Output Contract
+
+**Format:** Comprehensive markdown report following [template](./templates/report_template.md) EXACTLY
+
+**Required sections (all must be detailed):**
+- Executive Summary (2-3 concise paragraphs, 50-250 words)
+- Introduction (2-3 paragraphs: question, scope, methodology, assumptions)
+- Main Analysis (4-8 findings, each 300-500 words with citations [1], [2], [3])
+- Synthesis & Insights (500-1000 words: patterns, novel insights, implications)
+- Limitations & Caveats (2-3 paragraphs: gaps, assumptions, uncertainties)
+- Recommendations (3-5 immediate actions, 3-5 next steps, 3-5 further research)
+- **Bibliography (CRITICAL - see rules below)**
+- Methodology Appendix (2-3 paragraphs: process, sources, verification)
+
+**Bibliography Requirements (ZERO TOLERANCE - Report is UNUSABLE without complete bibliography):**
+- ✅ MUST include EVERY citation [N] used in report body (if report has [1]-[50], write all 50 entries)
+- ✅ Format: [N] Author/Org (Year). "Title". Publication. URL (Retrieved: Date)
+- ✅ Each entry on its own line, complete with all metadata
+- ❌ NO placeholders: NEVER use "[8-75] Additional citations", "...continue...", "etc.", "[Continue with sources...]"
+- ❌ NO ranges: Write [3], [4], [5]... individually, NOT "[3-50]"
+- ❌ NO truncation: If 30 sources cited, write all 30 entries in full
+- ⚠️ Validation WILL FAIL if bibliography contains placeholders or missing citations
+- ⚠️ Report is GARBAGE without complete bibliography - no way to verify claims
+
+**Strictly Prohibited:**
+- Placeholder text (TBD, TODO, [citation needed])
+- Uncited major claims
+- Broken links
+- Missing required sections
+- **Short summaries instead of detailed analysis**
+- **Vague statements without specific evidence**
+
+**Writing Standards (Critical):**
+- **Narrative-driven**: Write in flowing prose with complete sentences that build understanding progressively
+- **Precision**: Choose each word deliberately - every word must carry intention
+- **Economy**: Eliminate fluff, unnecessary adjectives, fancy grammar
+- **Clarity**: Use precise technical terms, avoid ambiguity. Embed exact numbers in sentences, not bullets
+- **Directness**: State findings clearly without embellishment
+- **Signal-to-noise**: High information density, respect reader's time
+- **Bullet discipline**: Use bullets only for distinct lists (products, companies, steps). Default to prose paragraphs
+- **Examples of precision**:
+  - Bad: "significantly improved outcomes" → Good: "reduced mortality 23% (p<0.01)"
+  - Bad: "several studies suggest" → Good: "5 RCTs (n=1,847) show"
+  - Bad: "potentially beneficial" → Good: "increased biomarker X by 15%"
+  - Bad: "• Market: $2.4B" → Good: "The market reached $2.4 billion in 2023, driven by consumer demand [1]."
+
+**Quality gates (enforced by validator):**
+- Minimum 2,000 words (standard mode)
+- Average credibility score >60/100
+- 3+ sources per major claim
+- Clear facts vs. analysis distinction
+- All sections present and detailed
+
+---
+
+## Error Handling & Stop Rules
+
+**Stop immediately if:**
+- 2 validation failures on same error → Pause, report, ask user
+- <5 sources after exhaustive search → Report limitation, request direction
+- User interrupts/changes scope → Confirm new direction
+
+**Graceful degradation:**
+- 5-10 sources → Note in limitations, proceed with extra verification
+- Time constraint reached → Package partial results, document gaps
+- High-priority critique issue → Address immediately
+
+**Error format:**
+```
+⚠️ Issue: [Description]
+📊 Context: [What was attempted]
+🔍 Tried: [Resolution attempts]
+💡 Options:
+   1. [Option 1]
+   2. [Option 2]
+   3. [Option 3]
+```
+
+---
+
+## Quality Standards (Always Enforce)
+
+Every report must:
+- 10+ sources (document if fewer)
+- 3+ sources per major claim
+- Executive summary <250 words
+- Full citations with URLs
+- Credibility assessment
+- Limitations section
+- Methodology documented
+- No placeholders
+
+**Priority:** Thoroughness over speed. Quality > speed.
+
+---
+
+## Inputs & Assumptions
+
+**Required:**
+- Research question (string)
+
+**Optional:**
+- Mode (quick/standard/deep/ultradeep)
+- Time constraints
+- Required perspectives/sources
+- Output format
+
+**Assumptions:**
+- User requires verified, citation-backed information
+- 10-50 sources available on topic
+- Time investment: 5-45 minutes
+
+---
+
+## When to Use / NOT Use
+
+**Use when:**
+- Comprehensive analysis (10+ sources needed)
+- Comparing technologies/approaches/strategies
+- State-of-the-art reviews
+- Multi-perspective investigation
+- Technical decisions
+- Market/trend analysis
+
+**Do NOT use:**
+- Simple lookups (use WebSearch)
+- Debugging (use standard tools)
+- 1-2 search answers
+- Time-sensitive quick answers
+
+---
+
+## Scripts (Offline, Python stdlib only)
+
+**Location:** `./scripts/`
+
+- **research_engine.py** - Orchestration engine
+- **validate_report.py** - Quality validation (8 checks)
+- **citation_manager.py** - Citation tracking
+- **source_evaluator.py** - Credibility scoring (0-100)
+
+**No external dependencies required.**
+
+---
+
+## Progressive References (Load On-Demand)
+
+**Do not inline these - reference only:**
+- [Complete Methodology](./reference/methodology.md) - 8-phase details
+- [Report Template](./templates/report_template.md) - Output structure
+- [README](./README.md) - Usage docs
+- [Quick Start](./QUICK_START.md) - Fast reference
+- [Competitive Analysis](./COMPETITIVE_ANALYSIS.md) - vs OpenAI/Gemini
+
+**Context Management:** Load files on-demand for current phase only. Do not preload all content.
+
+---
+
+<!-- STATIC CONTEXT BLOCK END -->
+<!-- ⚡ Above content is cacheable (>1024 tokens, static) -->
+<!-- 📝 Below: Dynamic content (user queries, retrieved data, generated reports) -->
+<!-- This structure enables 85% latency reduction via prompt caching -->
+
+---
+
+## Dynamic Execution Zone
+
+**User Query Processing:**
+[User research question will be inserted here during execution]
+
+**Retrieved Information:**
+[Search results and sources will be accumulated here]
+
+**Generated Analysis:**
+[Findings, synthesis, and report content generated here]
+
+**Note:** This section remains empty in the skill definition. Content populated during runtime only.

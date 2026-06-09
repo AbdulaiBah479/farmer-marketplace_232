@@ -1,138 +1,301 @@
 ---
 name: drizzle-orm-patterns
-description: Provides comprehensive Drizzle ORM patterns for schema definition, CRUD operations, relations, queries, transactions, and migrations. Proactively use for any Drizzle ORM development including defining database schemas, writing type-safe queries, implementing relations, managing transactions, and setting up migrations with Drizzle Kit. Supports PostgreSQL, MySQL, SQLite, MSSQL, and CockroachDB.
-allowed-tools: Read, Write, Edit, Bash, Grep, Glob
+description: This skill provides comprehensive Drizzle ORM patterns for PostgreSQL with Vercel Edge Runtime support. Drizzle is Quetrex's chosen ORM because it's edge-first, type-safe, and supports all deployme...
 ---
 
-# Drizzle ORM Patterns
+# Drizzle ORM Patterns - Complete PostgreSQL Reference
+
+**Use when:** Working with database operations, schema design, migrations, or queries in Quetrex.
 
 ## Overview
 
-Expert guide for building type-safe database applications with Drizzle ORM. Covers schema definition, relations, queries, transactions, and migrations for all supported databases.
+This skill provides comprehensive Drizzle ORM patterns for PostgreSQL with Vercel Edge Runtime support. Drizzle is Quetrex's chosen ORM because it's edge-first, type-safe, and supports all deployment targets.
 
-## When to Use
+## Why Drizzle?
 
-- Defining database schemas with tables, columns, and constraints
-- Creating relations between tables (one-to-one, one-to-many, many-to-many)
-- Writing type-safe CRUD queries
-- Implementing complex joins and aggregations
-- Managing database transactions with rollback
-- Setting up migrations with Drizzle Kit
-- Working with PostgreSQL, MySQL, SQLite, MSSQL, or CockroachDB
+- **Edge Runtime Compatible**: Works with Vercel Edge Functions, Cloudflare Workers
+- **Type-Safe**: Full TypeScript inference without code generation
+- **Zero Dependencies**: No heavy Node.js runtime requirements
+- **SQL-Like API**: Familiar to developers who know SQL
+- **Lightweight**: ~7.4kb minified (vs Prisma's ~300kb)
 
-## Quick Reference
+## Skill Structure
 
-| Database | Table Function | Import |
-|----------|---------------|--------|
-| PostgreSQL | `pgTable()` | `drizzle-orm/pg-core` |
-| MySQL | `mysqlTable()` | `drizzle-orm/mysql-core` |
-| SQLite | `sqliteTable()` | `drizzle-orm/sqlite-core` |
-| MSSQL | `mssqlTable()` | `drizzle-orm/mssql-core` |
+This skill is organized into focused modules:
 
-| Operation | Method | Example |
-|-----------|--------|---------|
-| Insert | `db.insert()` | `db.insert(users).values({...})` |
-| Select | `db.select()` | `db.select().from(users).where(eq(...))` |
-| Update | `db.update()` | `db.update(users).set({...}).where(...)` |
-| Delete | `db.delete()` | `db.delete(users).where(...)` |
-| Transaction | `db.transaction()` | `db.transaction(async (tx) => {...})` |
+### 1. [queries-complete.md](./queries-complete.md)
+Complete query patterns: select, insert, update, delete, joins, pagination, filtering, aggregations, subqueries, CTEs.
 
-## Instructions
+**When to use:**
+- Building any database query
+- Fetching data with filters
+- Inserting/updating/deleting records
+- Pagination or sorting
+- Aggregating data (count, sum, avg)
+- Complex joins or subqueries
 
-1. **Identify your database dialect** - Choose PostgreSQL, MySQL, SQLite, MSSQL, or CockroachDB
-2. **Define your schema** - Use the appropriate table function (pgTable, mysqlTable, etc.)
-3. **Set up relations** - Define relations using `relations()` or `defineRelations()`
-4. **Initialize the database client** - Create your Drizzle client with proper credentials
-5. **Write queries** - Use the query builder for type-safe CRUD operations
-6. **Handle transactions** - Wrap multi-step operations in transactions when needed
-7. **Set up migrations** - Configure Drizzle Kit for schema management
+### 2. [transactions.md](./transactions.md)
+Transaction patterns: isolation levels, rollback, nested transactions, error handling, deadlock prevention.
 
-## Examples
+**When to use:**
+- Multiple operations that must succeed together
+- Financial operations (payments, transfers)
+- Data consistency requirements
+- Race condition prevention
+- Complex multi-step workflows
 
-### Example 1: Basic Schema and Query
+### 3. [relations.md](./relations.md)
+Relationship patterns: one-to-one, one-to-many, many-to-many, self-referencing, cascading deletes, nested queries.
+
+**When to use:**
+- Defining schema relationships
+- Querying related data
+- Setting up cascading operations
+- Working with hierarchical data
+- Optimizing related data fetching
+
+### 4. [migrations.md](./migrations.md)
+Migration patterns: schema evolution, data migrations, zero-downtime deployments, rollback strategies.
+
+**When to use:**
+- Adding/modifying database schema
+- Migrating data between schemas
+- Deploying schema changes
+- Rolling back problematic migrations
+- Renaming tables/columns safely
+
+### 5. [edge-runtime.md](./edge-runtime.md)
+Edge deployment patterns: Vercel Edge Functions, Neon serverless, connection pooling, HTTP-based connections.
+
+**When to use:**
+- Deploying to Vercel Edge Runtime
+- Using Neon serverless PostgreSQL
+- Optimizing edge function performance
+- Configuring connection pooling
+- Understanding edge limitations
+
+### 6. [performance.md](./performance.md)
+Performance patterns: indexing, query optimization, N+1 prevention, batch operations, caching.
+
+**When to use:**
+- Slow queries
+- High database load
+- N+1 query problems
+- Large data sets
+- Performance optimization needed
+
+### 7. [type-inference.md](./type-inference.md)
+TypeScript inference patterns: InferModel, InferSelect, InferInsert, schema types, custom types.
+
+**When to use:**
+- Defining TypeScript types from schema
+- Creating API types
+- Type-safe query builders
+- Custom type mappers
+- Ensuring type safety
+
+### 8. [common-mistakes.md](./common-mistakes.md)
+Common pitfalls and fixes: SQL injection risks, N+1 queries, missing indexes, transaction deadlocks, type errors.
+
+**When to use:**
+- Debugging database issues
+- Code review
+- Learning best practices
+- Avoiding common errors
+- Security audits
+
+### 9. [validate-queries.py](./validate-queries.py)
+Python script to validate Drizzle queries for common security and performance issues.
+
+**When to use:**
+- Pre-commit validation
+- Security audits
+- Performance reviews
+- Finding SQL injection risks
+- Detecting N+1 patterns
+
+## Quick Start
+
+### Installation
+
+```bash
+# Core packages
+npm install drizzle-orm @neondatabase/serverless
+
+# Development tools
+npm install -D drizzle-kit
+```
+
+### Basic Setup
 
 ```typescript
-import { pgTable, serial, text } from 'drizzle-orm/pg-core';
-import { drizzle } from 'drizzle-orm/node-postgres';
-import { eq } from 'drizzle-orm';
+// src/lib/db.ts
+import { drizzle } from 'drizzle-orm/neon-http';
+import { neon } from '@neondatabase/serverless';
+
+const sql = neon(process.env.DATABASE_URL!);
+export const db = drizzle(sql);
+```
+
+### Define Schema
+
+```typescript
+// src/lib/schema.ts
+import { pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core';
 
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
-  name: text('name').notNull(),
   email: text('email').notNull().unique(),
+  name: text('name').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
 });
-
-const db = drizzle(process.env.DATABASE_URL);
-
-const [user] = await db.select().from(users).where(eq(users.id, 1));
 ```
 
-### Example 2: CRUD Operations
+### Basic Query
 
 ```typescript
+// src/services/user-service.ts
+import { db } from '@/lib/db';
+import { users } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
 
-// Insert
-const [newUser] = await db.insert(users).values({
-  name: 'John',
-  email: 'john@example.com',
-}).returning();
-
-// Update
-await db.update(users)
-  .set({ name: 'John Updated' })
-  .where(eq(users.id, 1));
-
-// Delete
-await db.delete(users).where(eq(users.id, 1));
+export async function getUserByEmail(email: string) {
+  return await db.select().from(users).where(eq(users.email, email)).limit(1);
+}
 ```
 
-### Example 3: Transaction with Rollback
+## Common Patterns
+
+### 1. Select with Filter
+
+```typescript
+import { db } from '@/lib/db';
+import { users } from '@/lib/schema';
+import { eq, and, gte } from 'drizzle-orm';
+
+const activeUsers = await db
+  .select()
+  .from(users)
+  .where(
+    and(
+      eq(users.status, 'active'),
+      gte(users.createdAt, new Date('2024-01-01'))
+    )
+  );
+```
+
+### 2. Insert with Returning
+
+```typescript
+const [newUser] = await db
+  .insert(users)
+  .values({
+    email: 'test@example.com',
+    name: 'Test User',
+  })
+  .returning();
+```
+
+### 3. Update with Returning
+
+```typescript
+const [updatedUser] = await db
+  .update(users)
+  .set({ name: 'Updated Name' })
+  .where(eq(users.id, 1))
+  .returning();
+```
+
+### 4. Transaction
 
 ```typescript
 await db.transaction(async (tx) => {
-  const [from] = await tx.select().from(accounts)
-    .where(eq(accounts.userId, fromId));
-
-  if (from.balance < amount) {
-    tx.rollback();
-  }
-
-  await tx.update(accounts)
-    .set({ balance: sql`${accounts.balance} - ${amount}` })
-    .where(eq(accounts.userId, fromId));
+  const [user] = await tx.insert(users).values({ email, name }).returning();
+  await tx.insert(profiles).values({ userId: user.id, bio });
 });
 ```
 
-See [references/transactions.md](references/transactions.md) for advanced transaction patterns.
+### 5. Join Query
 
-## Best Practices
+```typescript
+const usersWithProfiles = await db
+  .select({
+    userId: users.id,
+    userName: users.name,
+    bio: profiles.bio,
+  })
+  .from(users)
+  .leftJoin(profiles, eq(users.id, profiles.userId));
+```
 
-1. **Type Safety**: Always use TypeScript and leverage `$inferInsert` / `$inferSelect`
-2. **Relations**: Define relations using the relations() API for nested queries
-3. **Transactions**: Use transactions for multi-step operations that must succeed together
-4. **Migrations**: Use `generate` + `migrate` in production, `push` for development
-5. **Indexes**: Add indexes on frequently queried columns and foreign keys
-6. **Soft Deletes**: Use `deletedAt` timestamp instead of hard deletes when possible
-7. **Pagination**: Use cursor-based pagination for large datasets
-8. **Query Optimization**: Use `.limit()` and `.where()` to fetch only needed data
+## Testing Requirements
 
-## Constraints and Warnings
+All database code must have:
+- Unit tests with mocked database (90%+ coverage)
+- Integration tests with test database
+- Transaction rollback tests
+- Error handling tests
+- Type safety validation
 
-- **Foreign Key Constraints**: Always define references using arrow functions `() => table.column` to avoid circular dependency issues
-- **Transaction Rollback**: Calling `tx.rollback()` throws an exception - use try/catch if needed
-- **Returning Clauses**: Not all databases support `.returning()` - check your dialect compatibility
-- **Batch Operations**: Large batch inserts may hit database limits - chunk into smaller batches
-- **Migrations in Production**: Always test migrations in staging before applying to production
+## Security Checklist
 
-## References
+Before committing database code:
+- [ ] No raw SQL with string interpolation
+- [ ] All user input uses parameterized queries
+- [ ] Proper indexes on foreign keys
+- [ ] No `select *` in production code
+- [ ] Run `python validate-queries.py` on changed files
+- [ ] Transaction isolation level appropriate for use case
+- [ ] Input validation before database operations
 
-### Core Concepts
-- **[references/schema-definition.md](references/schema-definition.md)** - Complete schema definition for all databases (PostgreSQL, MySQL, SQLite), column types, indexes, and constraints
-- **[references/relations.md](references/relations.md)** - One-to-one, one-to-many, many-to-many relations with v1 and v2 syntax
-- **[references/queries-joins-aggregations.md](references/queries-joins-aggregations.md)** - CRUD operations, query operators, joins, aggregations, and pagination
+## Performance Checklist
 
-### Advanced Topics
-- **[references/transactions.md](references/transactions.md)** - Transaction patterns, rollback handling, nested transactions
-- **[references/migrations.md](references/migrations.md)** - Drizzle Kit configuration, CLI commands, migration workflow
-- **[references/common-patterns.md](references/common-patterns.md)** - Soft delete, upsert, batch operations, full-text search, audit trails
+Before committing database code:
+- [ ] Select only needed fields (avoid `select *`)
+- [ ] Indexes on all foreign keys
+- [ ] Indexes on frequently queried columns
+- [ ] No N+1 queries (use joins or batch loading)
+- [ ] Batch operations for multiple inserts
+- [ ] Connection pooling configured
+- [ ] Query explain analysis for complex queries
+
+## Official Resources
+
+- **Drizzle ORM Docs**: https://orm.drizzle.team/
+- **Drizzle Kit Docs**: https://orm.drizzle.team/kit-docs/overview
+- **PostgreSQL Docs**: https://www.postgresql.org/docs/
+- **Neon Docs**: https://neon.tech/docs/
+- **Vercel Postgres**: https://vercel.com/docs/storage/vercel-postgres
+
+## Migration from Prisma
+
+If you're migrating from Prisma, see the [ADR-002-DRIZZLE-ORM-MIGRATION.md](../../../docs/decisions/ADR-002-DRIZZLE-ORM-MIGRATION.md) decision record.
+
+Key differences:
+- No client generation step (types inferred from schema)
+- SQL-like query builder (not Prisma's fluent API)
+- Edge Runtime compatible (Prisma 6.19.0 is not)
+- Manual relation queries (no automatic includes)
+
+## Next Steps
+
+1. Read [queries-complete.md](./queries-complete.md) for all query patterns
+2. Read [transactions.md](./transactions.md) for transaction safety
+3. Read [relations.md](./relations.md) for relationship patterns
+4. Run [validate-queries.py](./validate-queries.py) on your code
+5. Review [common-mistakes.md](./common-mistakes.md) for pitfalls
+
+## Support
+
+For Drizzle-specific questions:
+- GitHub Issues: https://github.com/drizzle-team/drizzle-orm/issues
+- Discord: https://discord.gg/drizzle
+
+For Quetrex-specific questions:
+- Check CLAUDE.md project documentation
+- Review architecture docs in `/docs/architecture/`
+- Ask in team Slack channel
+
+---
+
+**Last Updated**: 2025-11-23 by Glen Barnhardt with help from Claude Code

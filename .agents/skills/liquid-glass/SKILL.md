@@ -1,191 +1,160 @@
 ---
 name: liquid-glass
-description: iOS 26 Liquid Glass expert. Use when user asks about Liquid Glass implementation, SwiftUI glassEffect, migration from iOS 17/18, morphing animations, GlassEffectContainer, or wants to generate glass-style UI components. Covers code generation, troubleshooting, HIG compliance, accessibility, performance optimization, and cross-platform differences.
+description: Implement, review, or improve SwiftUI features using the iOS 26+ Liquid Glass API. Use when asked to adopt Liquid Glass in SwiftUI UI, refactor to Liquid Glass, or review Liquid Glass usage.
 ---
 
-# Liquid Glass Expert for iOS 26
+# SwiftUI Liquid Glass
 
-You are an expert in Apple's Liquid Glass design system introduced in iOS 26 at WWDC 2025. Help developers implement, migrate, and troubleshoot Liquid Glass UI in SwiftUI.
+## Overview
 
-## Reference Documentation
+Liquid Glass is a dynamic material in iOS 26+ that combines optical glass properties with fluidity. It blurs content, reflects surrounding color and light, and reacts to touch interactions in real time.
 
-This skill includes comprehensive reference files in the `references/` directory:
+## Workflow Decision Tree
 
-| File | Description |
-|------|-------------|
-| `core-concepts.md` | Fundamental principles, navigation layer rule, variants |
-| `glass-struct.md` | Glass struct API: `.regular`, `.clear`, `.identity`, `.tint()`, `.interactive()` |
-| `glass-effect-modifier.md` | `glassEffect(_:in:isEnabled:)` modifier reference |
-| `glass-effect-container.md` | `GlassEffectContainer` for grouping and morphing |
-| `morphing-animations.md` | `@Namespace`, `glassEffectID`, `glassEffectUnion` |
-| `button-styles.md` | `.buttonStyle(.glass)`, `.buttonStyle(.glassProminent)` |
-| `system-components.md` | Sheets, alerts, pickers, toolbars, tab views |
-| `migration-guide.md` | iOS 17/18 materials to iOS 26 Liquid Glass |
-| `accessibility.md` | Reduce Transparency, VoiceOver, Dynamic Type |
-| `performance.md` | Optimization strategies, profiling tips |
-| `best-practices.md` | Five golden rules, design patterns |
-| `troubleshooting.md` | Common issues and solutions |
-| `backward-compatibility.md` | Supporting iOS 17/18 alongside iOS 26 |
-| `platform-differences.md` | iOS, macOS, watchOS, tvOS, visionOS differences |
+### 1) Review an existing feature
+- Inspect where Liquid Glass should/shouldn't be used
+- Verify correct modifier order, shape usage, container placement
+- Check for iOS 26+ availability handling and fallbacks
 
-## Component Implementation Guides
+### 2) Improve a feature using Liquid Glass
+- Identify target components (surfaces, chips, buttons, cards)
+- Refactor to use `GlassEffectContainer` for multiple glass elements
+- Add interactive glass only for tappable/focusable elements
 
-**When user asks about implementing specific UI components with Liquid Glass, consult the `components/` directory for detailed implementation patterns and code examples.**
+### 3) Implement a new feature using Liquid Glass
+- Design glass surfaces and interactions first (shape, prominence, grouping)
+- Add glass modifiers after layout/appearance modifiers
+- Add morphing transitions only when view hierarchy changes with animation
 
-| File | Description |
-|------|-------------|
-| `toolbar.md` | Toolbar glass styling, grouping, dynamic toolbars |
-| `tab-bar.md` | Tab bar glass, minimize behavior, alignment |
-| `sheet.md` | Sheet presentations with glass backgrounds |
-| `search.md` | Searchable views with glass styling |
-| `picker.md` | Segmented, menu, wheel, color pickers |
-| `scroll-edge.md` | Floating headers/footers, scroll blur effects |
-| `system-alerts.md` | Alerts, dialogs, menus, context menus, sliders |
-| `glass-overlap.md` | Overlapping glass, zIndex, depth effects |
-| `material-hierarchy.md` | ultraThin, thin, regular, thick materials |
-| `animations.md` | Expanding, rotating, merging, pulse animations |
+## Core Guidelines
 
-## Quick Reference
+- Prefer native Liquid Glass APIs over custom blurs
+- Use `GlassEffectContainer` when multiple glass elements coexist
+- Apply `.glassEffect(...)` after layout and visual modifiers
+- Use `.interactive()` for elements that respond to touch/pointer
+- Keep shapes consistent across related elements
+- Gate with `#available(iOS 26, *)` and provide non-glass fallback
 
-### Core API
+## Review Checklist
 
+- [ ] **Availability**: `#available(iOS 26, *)` present with fallback UI
+- [ ] **Composition**: Multiple glass views wrapped in `GlassEffectContainer`
+- [ ] **Modifier order**: `glassEffect` applied after layout/appearance modifiers
+- [ ] **Interactivity**: `interactive()` only where user interaction exists
+- [ ] **Transitions**: `glassEffectID` used with `@Namespace` for morphing
+- [ ] **Consistency**: Shapes, tinting, and spacing align across feature
+
+## Implementation Checklist
+
+- [ ] Define target elements and desired glass prominence
+- [ ] Wrap grouped glass elements in `GlassEffectContainer` with spacing
+- [ ] Use `.glassEffect(.regular.tint(...).interactive(), in: .rect(cornerRadius: ...))` as needed
+- [ ] Use `.buttonStyle(.glass)` / `.buttonStyle(.glassProminent)` for actions
+- [ ] Add morphing transitions with `glassEffectID` when hierarchy changes
+- [ ] Provide fallback materials for earlier iOS versions
+
+## Quick Snippets
+
+### Basic Glass Effect with Fallback
 ```swift
-// Basic glass effect
-.glassEffect()
-.glassEffect(.regular)
-.glassEffect(.clear)         // For media backgrounds
-.glassEffect(.identity)      // Disabled state
-
-// With shape
-.glassEffect(in: .capsule)
-.glassEffect(in: .circle)
-.glassEffect(in: .rect(cornerRadius: 16))
-
-// Modifiers
-.glassEffect(.regular.tint(.blue))
-.glassEffect(.regular.interactive())  // iOS only
-.glassEffect(.regular.tint(.blue).interactive())
-
-// Button styles
-.buttonStyle(.glass)
-.buttonStyle(.glassProminent)
+if #available(iOS 26, *) {
+    Text("Hello")
+        .padding()
+        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 16))
+} else {
+    Text("Hello")
+        .padding()
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+}
 ```
 
-### GlassEffectContainer
-
+### Multiple Glass Elements
 ```swift
-GlassEffectContainer {
-    HStack {
-        Button("A") { }.glassEffect()
-        Button("B") { }.glassEffect()
+GlassEffectContainer(spacing: 24) {
+    HStack(spacing: 24) {
+        Image(systemName: "scribble.variable")
+            .frame(width: 72, height: 72)
+            .font(.system(size: 32))
+            .glassEffect()
+        Image(systemName: "eraser.fill")
+            .frame(width: 72, height: 72)
+            .font(.system(size: 32))
+            .glassEffect()
     }
 }
 ```
 
-### Morphing Animations
-
+### Glass Buttons
 ```swift
-@Namespace private var namespace
+Button("Confirm") { }
+    .buttonStyle(.glassProminent)
 
-GlassEffectContainer {
-    Button("Toggle") { }
-        .glassEffect()
-        .glassEffectID("btn", in: namespace)
-}
+Button("Cancel") { }
+    .buttonStyle(.glass)
 ```
 
-## The Five Golden Rules
-
-1. **Navigation Layer Only** - Glass for toolbars, FABs, tab bars. NOT for content.
-2. **No Glass on Glass** - Use `GlassEffectContainer` for multiple elements.
-3. **Don't Mix Variants** - Use same variant (`.regular` or `.clear`) throughout.
-4. **Tint for Meaning Only** - Tint conveys semantic meaning, not decoration.
-5. **Trust Automatic Accessibility** - System handles Reduce Transparency automatically.
-
-## Common Patterns
-
-### Floating Action Button
+### Morphing Transitions
 ```swift
-Button(action: add) {
-    Image(systemName: "plus")
-        .font(.title2)
-        .padding(18)
-}
-.glassEffect(.regular.tint(.blue).interactive(), in: .circle)
-```
-
-### Expandable Toolbar
-```swift
-@Namespace private var namespace
 @State private var isExpanded = false
+@Namespace private var namespace
 
-GlassEffectContainer {
-    HStack(spacing: 12) {
-        Button {
-            withAnimation(.bouncy) { isExpanded.toggle() }
-        } label: {
-            Image(systemName: isExpanded ? "xmark" : "plus")
-                .padding(16)
-        }
-        .glassEffect(.regular.interactive())
-        .glassEffectID("toggle", in: namespace)
+GlassEffectContainer(spacing: 40) {
+    HStack(spacing: 40) {
+        Image(systemName: "pencil")
+            .frame(width: 80, height: 80)
+            .glassEffect()
+            .glassEffectID("pencil", in: namespace)
 
         if isExpanded {
-            ForEach(["star", "heart", "bookmark"], id: \.self) { icon in
-                Button { } label: {
-                    Image(systemName: icon)
-                        .padding(16)
-                }
-                .glassEffect(.regular.interactive())
-                .glassEffectID(icon, in: namespace)
-            }
+            Image(systemName: "eraser")
+                .frame(width: 80, height: 80)
+                .glassEffect()
+                .glassEffectID("eraser", in: namespace)
+        }
+    }
+}
+
+Button("Toggle") {
+    withAnimation {
+        isExpanded.toggle()
+    }
+}
+.buttonStyle(.glass)
+```
+
+### Customizing Glass
+```swift
+Text("Tinted Glass")
+    .padding()
+    .glassEffect(.regular.tint(.orange).interactive(), in: .capsule)
+```
+
+### Uniting Glass Effects
+```swift
+@Namespace private var namespace
+
+GlassEffectContainer(spacing: 20) {
+    HStack(spacing: 20) {
+        ForEach(items.indices, id: \.self) { index in
+            ItemView(item: items[index])
+                .glassEffect()
+                .glassEffectUnion(id: index < 2 ? "group1" : "group2", namespace: namespace)
         }
     }
 }
 ```
 
-### Migration from iOS 17/18
-```swift
-// BEFORE (iOS 17/18)
-Button("Action") { }
-    .padding()
-    .background(.ultraThinMaterial)
-    .clipShape(Capsule())
+## Shape Options
 
-// AFTER (iOS 26)
-Button("Action") { }
-    .padding()
-    .glassEffect(in: .capsule)
-```
+- `.capsule` (default)
+- `.rect(cornerRadius: CGFloat)`
+- `.circle`
 
-## When to Consult References
+## Best Practices
 
-**For API & Concepts** (references/):
-- **API details** → `glass-struct.md`, `glass-effect-modifier.md`
-- **Multiple glass elements** → `glass-effect-container.md`
-- **Animations** → `morphing-animations.md`
-- **System components** → `system-components.md`
-- **Migrating old code** → `migration-guide.md`
-- **Performance issues** → `performance.md`
-- **Something not working** → `troubleshooting.md`
-- **Cross-platform** → `platform-differences.md`
-- **Supporting older iOS** → `backward-compatibility.md`
-
-**For Component Implementation** (components/):
-- **Toolbar implementation** → `components/toolbar.md`
-- **Tab bar customization** → `components/tab-bar.md`
-- **Sheet with glass** → `components/sheet.md`
-- **Search UI** → `components/search.md`
-- **Picker styling** → `components/picker.md`
-- **Scroll edge effects** → `components/scroll-edge.md`
-- **Alerts, menus, dialogs** → `components/system-alerts.md`
-- **Overlapping glass** → `components/glass-overlap.md`
-- **Material levels** → `components/material-hierarchy.md`
-- **Glass animations** → `components/animations.md`
-
-## Resources
-
-- [WWDC25 Session 323: Build a SwiftUI app with the new design](https://developer.apple.com/videos/play/wwdc2025/323/)
-- [WWDC25 Session 219: Meet Liquid Glass](https://developer.apple.com/videos/play/wwdc2025/219/)
-- [Applying Liquid Glass to custom views](https://developer.apple.com/documentation/SwiftUI/Applying-Liquid-Glass-to-custom-views)
-- [Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines/)
+1. **Container Usage**: Always use `GlassEffectContainer` for multiple glass views
+2. **Modifier Order**: Apply `.glassEffect()` after appearance modifiers
+3. **Spacing**: Choose spacing values carefully to control effect merging
+4. **Animation**: Use animations when changing view hierarchies for smooth morphing
+5. **Interactivity**: Add `.interactive()` only to touchable elements
+6. **Consistency**: Maintain consistent shapes and styles across your app

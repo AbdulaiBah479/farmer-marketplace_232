@@ -1,19 +1,15 @@
 ---
 name: schlussformel-bewertung
-description: "Workflow-Skill zu schlussformel bewertung. Nutzt Normtext, Nutzerangaben und verifizierte Quellen; Rechtsprechung nur nach Live-Pruefung mit Gericht, Datum und Aktenzeichen."
+description: "Prüfungslinie für schlussformel bewertung im Arbeitszeugnis-Analyse."
 ---
 
 # Schlussformel-Bewertung
 
-Die Schlussformel ist das letzte, was ein potenzieller neuer Arbeitgeber im Zeugnis liest. Sie prägt deshalb den Ton des gesamten Dokuments. Eine warme Schlussformel besteht typischerweise aus drei Elementen: (1) Bedauern über das Ausscheiden, (2) Dank für die geleistete Arbeit und (3) Wünsche für die Zukunft.
+## Fachlicher Anker
 
-Rechtsprechung live prüfen: Keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über amtliche oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
-
-Das Bedauern signalisiert, dass der Arbeitgeber den Verlust als schmerzhaft empfindet. Formeln wie "Wir bedauern es sehr, Herrn Müller zu verlieren" oder "Wir hätten Frau Weber gerne gehalten" sind starke Signale. Schwächere Varianten wie "Wir nehmen Abschied von Herrn Fischer" oder das vollständige Fehlen eines Bedauerns sind Distanzsignale. Das bloße "Das Arbeitsverhältnis endet auf eigenen Wunsch" ohne weitere Wertung ist nicht automatisch rechtswidrig, kann aber den guten Leistungsteil abkühlen.
-
-Der Dank bezieht sich auf die geleisteten Beiträge. "Wir danken ihr herzlich für ihre engagierte und erfolgreiche Arbeit" ist stark. "Wir danken für die geleistete Arbeit" ist schwächer — der fehlende Superlativ und das fehlende Adverb senken den Ton erheblich.
-
-Die Zukunftswünsche sollten persönlich und nicht-generisch klingen. "Wir wünschen ihr für ihre berufliche und private Zukunft alles Gute und weiterhin viel Erfolg" ist eine warme Standardformel. "Wir wünschen ihr Erfolg auf ihrem weiteren Lebensweg" klingt sachlich und kühl. Völlig fehlende Zukunftswünsche sind vor allem dann auffällig, wenn der übrige Zeugnistext sehr positiv ist oder frühere Zwischenzeugnisse deutlich wärmer formuliert waren.
+- **Normen:** §§ 611a, §§ 1, §§ 14.
+- **Entscheidungs-/Quellenanker:** Tragende Rechtsprechung nur mit Gericht, Datum, Aktenzeichen und frei prüfbarer Quelle einsetzen; keine Entscheidung aus Modellwissen erzwingen.
+- **Quellenhygiene:** `references/quellenhygiene.md` und `references/zitierweise.md` beachten.
 
 ## Geheimcode-Regeln
 
@@ -39,10 +35,6 @@ Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über 
 
 **Beispiel 5 – Orange (kühle Formulierung):** "Das Arbeitsverhältnis endet auf Wunsch von Herrn Bauer. Wir wünschen ihm für die Zukunft alles Gute." — Sachliche Distanz durch Passivformulierung, fehlendes Bedauern.
 
-## Ausgabeformat
-
-Der Skill gibt die erkannten Schlussformel-Elemente einzeln aus (Bedauern: ja/nein/schwach; Dank: ja/nein/schwach; Wunsch: ja/nein/schwach), bewertet die Signalwirkung mit Ampelfarbe und trennt davon die rechtliche Durchsetzbarkeit. Danach folgt eine Empfehlung: akzeptieren, nachverhandeln, in Vergleich aufnehmen oder nur als Kontextargument verwenden.
-
 ## Rechtliche Einordnung und Normen
 
 - **§ 109 GewO** — Anspruch auf qualifiziertes wohlwollendes Zeugnis
@@ -51,3 +43,4 @@ Der Skill gibt die erkannten Schlussformel-Elemente einzeln aus (Bedauern: ja/ne
 ## Aktuelle Rechtsprechung
 
 - Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+

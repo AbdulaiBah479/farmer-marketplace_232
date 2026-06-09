@@ -1,156 +1,113 @@
 ---
 name: implementation-review
-description: Use after implementing a plan to verify completeness, correctness, and merge safety - the post-implementation gate
+description: Automatically trigger review agents after task completion. Use when strategic-planner finishes planning tasks (calls plan-consultant) or when main agent completes coding tasks in /implement workflow (calls code-reviewer). Triggers on phrases like "plan complete", "implementation done", "coding finished", "ready for review".
 ---
 
-# Implementation Review
+# Implementation Review Skill
 
-## Overview
+## Purpose
 
-Verify implementation is complete, correct, and safe to merge. This is the merge readiness gate.
+This skill ensures quality gates are enforced during the EPIC workflow by automatically invoking the appropriate review agents after task completion.
 
-**Core principle:** Catch issues before merge, not after.
+## Review Triggers
 
-**Announce at start:** "I'm using the implementation-review skill to audit this implementation."
+### 1. Plan Review (Strategic-Planner Completion)
 
-**Plan location:** `plans/active/{plan-name}/`
+**Trigger Conditions:**
+- `strategic-planner` agent has completed its planning tasks
+- A strategy or implementation plan has been generated
+- Keywords: "plan complete", "strategy ready", "planning done", "roadmap finalized"
 
-## The Process
+**Action:** Delegate to `plan-consultant` agent for plan review
 
-### Step 1: Load Context
+**Review Focus:**
+- Plan completeness and feasibility
+- Risk identification
+- Alternative approaches consideration
+- Alignment with project goals
 
-1. Read original plan from `plans/active/{plan-name}/`
-2. Get current branch name
-3. Find base branch (main/master)
+### 2. Code Review (Main Agent Implementation Completion)
 
-```bash
-git branch --show-current
-git merge-base HEAD main 2>/dev/null || git merge-base HEAD master
-```
+**Trigger Conditions:**
+- Main agent has completed coding tasks in `/implement` workflow
+- Implementation code has been written (after TDD Green phase)
+- Keywords: "implementation complete", "coding done", "feature implemented", "code ready"
 
-### Step 2: Gather Implementation Data
+**Action:** Delegate to `code-reviewer` agent for code review
 
-Get all commits since diverging from base:
+**Review Focus:**
+- Code quality and maintainability
+- Security vulnerabilities
+- Performance considerations
+- Adherence to project standards
 
-```bash
-git log --oneline $(git merge-base HEAD main)..HEAD
-```
-
-Get all changed files:
-
-```bash
-git diff --name-only $(git merge-base HEAD main)..HEAD
-```
-
-### Step 3: Evaluate Against Criteria
-
-**Correctness:**
-- [ ] Implementation matches plan intent?
-- [ ] Any drift from plan (features added/removed)?
-- [ ] All tasks from plan completed?
-
-**Completeness:**
-- [ ] Success criteria from plan met?
-- [ ] All expected files exist?
-- [ ] Nothing half-done or TODO'd?
-
-**Quality:**
-- [ ] Code follows project patterns?
-- [ ] No obvious bugs?
-- [ ] Error handling present where needed?
-
-**Safety:**
-- [ ] Tests passing?
-- [ ] No regressions in existing tests?
-- [ ] No security issues introduced?
-- [ ] No debug code left (console.log, print, etc.)?
-
-### Step 4: Run Checks
-
-Run test suite:
-```bash
-# Detect and run appropriate test command
-npm test || cargo test || pytest || go test ./...
-```
-
-Check for debug code:
-```bash
-git diff $(git merge-base HEAD main)..HEAD | grep -E "(console\.log|print\(|debugger|TODO|FIXME)" || echo "None found"
-```
-
-### Step 5: Produce Verdict
-
-Output this format:
+## Workflow Integration
 
 ```
-## Implementation Review: {plan-name}
+EPIC Workflow with Reviews:
 
-### Verdict: MERGE READY | NEEDS FIXES | MAJOR ISSUES
-
-### Plan Compliance
-- [X] Task 1: [Description] - Implemented correctly
-- [X] Task 2: [Description] - Implemented correctly
-- [ ] Task 3: [Description] - Partial/Missing [reason]
-
-### Test Results
-- Suite: {X}/{Y} passing
-- Coverage: {Z}% (if available)
-
-### Quality Checks
-- [X] No debug code (console.log, print, etc.)
-- [X] Follows project patterns
-- [X] Error handling present
-
-### Issues Found
-- **[Severity: blocker|major|minor]**: [Description]
-  - Location: [file:line]
-  - Suggested fix: [How to address]
-
-### Recommendation
-[Ready to merge / Fix these N issues first]
+[Explore] -> [Plan] -> PLAN REVIEW -> [Implement] -> CODE REVIEW -> [Commit]
+                           |                              |
+                    plan-consultant               code-reviewer
 ```
 
-## Verdict Meanings
+## Instructions
 
-| Verdict | Meaning | Next Step |
-|---------|---------|-----------|
-| **MERGE READY** | Safe to merge | Finish branch (merge/PR) |
-| **NEEDS FIXES** | Minor issues to address | Fix, re-review |
-| **MAJOR ISSUES** | Significant problems | May need plan revision |
+### When Strategic-Planner Completes:
 
-## Issue Severity
+1. Detect completion signal from strategic-planner agent
+2. Collect the generated plan/strategy document
+3. Invoke `plan-consultant` agent with the plan for review
+4. Report review findings back to main workflow
+5. If critical issues found, flag for plan revision before proceeding
 
-| Severity | Meaning |
-|----------|---------|
-| **blocker** | Cannot merge until fixed (test failure, security issue) |
-| **major** | Should fix before merge (missing functionality, bad pattern) |
-| **minor** | Nice to fix but not blocking (style, minor improvements) |
+### When Main Agent Completes Coding:
 
-## Red Flags
+1. Detect completion of implementation tasks (TDD Green phase complete)
+2. Identify all files modified during implementation
+3. Invoke `code-reviewer` agent with the changed files
+4. Report review findings back to main workflow
+5. If critical issues found, flag for code revision before commit
 
-**Never:**
-- Approve with failing tests
-- Skip debug code check
-- Ignore plan drift without noting it
+## Agent Delegation
 
-**Always:**
-- Run actual test suite
-- Compare against original plan
-- Check for leftover debug artifacts
+| Completion Event | Review Agent | Purpose |
+|-----------------|--------------|---------|
+| `strategic-planner` done | `plan-consultant` | Validate implementation strategy |
+| Main agent coding done | `code-reviewer` | Validate code quality |
 
-## Integration
+## Review Report Format
 
-**Invoked by:**
-- **gremlins:worktree-workflow** (audit phase) - Post-implementation gate
-- Standalone for any implementation review
+After each review, expect a structured report:
 
-**Follows:**
-- **gremlins:executing-plans** - Reviews output of implementation
+```markdown
+## Review Summary
+- **Reviewer:** [agent-name]
+- **Rating:** [1-10]
+- **Status:** [APPROVED / NEEDS REVISION / BLOCKED]
 
-**Leads to:**
-- **gremlins:finishing-a-development-branch** - When MERGE READY
-- **gremlins:reach-opportunities** - When user opts in after passing
+## Findings
+- [Finding 1]
+- [Finding 2]
 
-**vs verification-before-completion:**
-- Use **implementation-review** as the workflow gate (comprehensive, plan-aware)
-- Use **verification-before-completion** for quick ad-hoc checks outside workflow
+## Recommendations
+- [Recommendation 1]
+- [Recommendation 2]
+
+## Action Items
+- [ ] [Required action if any]
+```
+
+## Constraints
+
+- DO NOT skip reviews - they are mandatory quality gates
+- DO NOT proceed to next EPIC phase if review status is BLOCKED
+- DO NOT modify code during review - only report findings
+- Reviews should complete within reasonable time to not block workflow
+
+## Examples
+
+### Example 1: Plan Review Trigger
+
+```
+User: The strategic-planner has completed the implementation strategy for T001.

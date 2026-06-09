@@ -5,13 +5,11 @@ description: "Formuliert konkrete Verbesserungsvorschläge für orange und rote 
 
 # Verbesserungsvorschläge formulieren
 
-Dieser Skill wandelt identifizierte orange und rote Zeugnisformulierungen in bessere, verhandelbare Alternativen um. Er liefert konkrete Textentwürfe, die der Arbeitnehmer oder die Kanzlei dem Arbeitgeber vorschlagen kann. Wichtig ist: Nicht jeder Wunschtext ist einklagbar. Der Skill formuliert deshalb zu jeder Änderung auch, warum sie sprachlich sinnvoll und tatsächlich belegbar ist.
+## Fachlicher Anker
 
-Das Grundprinzip der Aufwertung ist immer dasselbe: (1) Abwertende Adverbien entfernen oder durch Steigerungsadverbien ersetzen. (2) Einschränkende Qualifizierer löschen. (3) Bewertungsadjektive in Superlative überführen. (4) Fehlende Steigerungen ergänzen. (5) Passive oder distanzierte Formulierungen durch aktive, engagierte Formulierungen ersetzen. Diese fünf Operationen decken den Großteil aller Zeugnisaufwertungen ab.
-
-Bei der Zufriedenheitsformel ist die Aufwertung präzise vorhersagbar: Aus "zur Zufriedenheit" wird durch Hinzufügen von "stets" und "vollen" zunächst "stets zur vollen Zufriedenheit" (Note 2). Ein weiteres "st" (Superlativ) ergibt "stets zur vollsten Zufriedenheit" (Note 1). Der Unterschied sind zwei Silben — aber die Wirkung ist eine Note.
-
-Bei der Schlussformel sind Verbesserungen durch Ergänzung fehlender Elemente möglich: Fehlt das Bedauern, wird ein Satz des Bedauerns vorgeschlagen; fehlt der Dank, wird ein Danksatz formuliert; schwache Wünsche werden wärmer gefasst. Dabei muss der Skill aber klar sagen, ob es sich um einen sicheren Berichtigungspunkt, einen Vergleichsvorschlag oder nur um einen Ton-Wunsch handelt.
+- **Normen:** §§ 611a, §§ 1, §§ 14.
+- **Entscheidungs-/Quellenanker:** Tragende Rechtsprechung nur mit Gericht, Datum, Aktenzeichen und frei prüfbarer Quelle einsetzen; keine Entscheidung aus Modellwissen erzwingen.
+- **Quellenhygiene:** `references/quellenhygiene.md` und `references/zitierweise.md` beachten.
 
 ## Geheimcode-Regeln
 
@@ -71,10 +69,6 @@ Original: "Herr Beispiel war in der Lage, Konflikte erfolgreich zu bewältigen."
 Vorschlag: "Herr Beispiel löste Konflikte stets souverän, mit Augenmaß und zur Zufriedenheit aller Beteiligten."
 Begründung: "war in der Lage" (theoretische Fähigkeit) wird zu "löste" (tatsächliche Handlung); Steigerer "stets" plus drei Qualifizierer.
 
-## Ausgabeformat
-
-Der Skill gibt eine Gegenüberstellungstabelle aus: Original-Formulierung | Problem | Verbesserungsoperation | Vorschlag | Zielnote | Belegbedarf | Durchsetzbarkeit. Darunter folgt ein aufgewerteter Zeugnis-Entwurf als Fließtext. Der Entwurf darf nicht wie eine Fantasie-Bestnote wirken, sondern muss zum Lebenssachverhalt und zu vorhandenen Belegen passen.
-
 ## Rechtliche Einordnung und Normen
 
 - **§ 109 GewO** — Anspruch auf qualifiziertes wohlwollendes Zeugnis
@@ -83,3 +77,4 @@ Der Skill gibt eine Gegenüberstellungstabelle aus: Original-Formulierung | Prob
 ## Aktuelle Rechtsprechung
 
 - Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+

@@ -1,113 +1,411 @@
 ---
 name: skill-writer
-description: Create and improve agent skills following the Agent Skills specification. Use when asked to create, write, or update skills.
-risk: unknown
-source: community
+description: Guide users through creating Agent Skills for Claude Code. Use when the user wants to create, write, author, or design a new Skill, or needs help with SKILL.md files, frontmatter, or skill structure.
 ---
 
 # Skill Writer
 
-Use this as the single canonical workflow for skill creation and improvement.
-Primary success condition: maximize high-value input coverage before authoring so the resulting skill has minimal blind spots.
+This Skill helps you create well-structured Agent Skills for Claude Code that follow best practices and validation requirements.
 
-Load only the path(s) required for the task:
+## When to use this Skill
 
-| Task | Read |
-|------|------|
-| Set skill class and required dimensions | `references/mode-selection.md` |
-| Apply writing constraints for depth vs concision | `references/design-principles.md` |
-| Select structure pattern for this skill | `references/skill-patterns.md` |
-| Select workflow orchestration pattern for process-heavy skills | `references/workflow-patterns.md` |
-| Select output format pattern for deterministic quality | `references/output-patterns.md` |
-| Choose workflow path and required outputs | `references/mode-selection.md` |
-| Load representative synthesis examples by skill type | `references/examples/*.md` |
-| Synthesize external/local sources with depth gates | `references/synthesis-path.md` |
-| Author or update SKILL.md and supporting files | `references/authoring-path.md` |
-| Optimize skill description and trigger precision | `references/description-optimization.md` |
-| Iterate using positive/negative/fix examples | `references/iteration-path.md` |
-| Evaluate behavior and compare baseline vs with-skill (opt-in quantitative) | `references/evaluation-path.md` |
-| Register and validate skill changes | `references/registration-validation.md` |
+Use this Skill when:
 
-## Step 1: Resolve target and path
+- Creating a new Agent Skill
+- Writing or updating SKILL.md files
+- Designing skill structure and frontmatter
+- Troubleshooting skill discovery issues
+- Converting existing prompts or workflows into Skills
 
-1. Resolve target skill path and intended operation (`create`, `update`, `synthesize`, `iterate`).
-2. Read `references/mode-selection.md` and select the required path(s).
-3. Classify the skill (`workflow-process`, `integration-documentation`, `security-review`, `skill-authoring`, `generic`).
-4. Ask one direct question if class or depth requirements are ambiguous; otherwise state explicit assumptions.
+## Instructions
 
-## Step 2: Run synthesis when needed
+### Step 1: Determine Skill scope
 
-Read `references/synthesis-path.md`.
+First, understand what the Skill should do:
 
-1. Collect and score relevant sources with provenance.
-2. Apply trust and safety rules when ingesting external content.
-3. Produce source-backed decisions and coverage/gap status.
-4. Load one or more profiles from `references/examples/*.md` when the skill is hybrid.
-5. Enforce baseline source pack for skill-authoring workflows.
-6. Enforce depth gates before moving to authoring.
+1. **Ask clarifying questions**:
 
-## Step 3: Run iteration first when improving from outcomes/examples
+   - What specific capability should this Skill provide?
+   - When should Claude use this Skill?
+   - What tools or resources does it need?
+   - Is this for personal use or team sharing?
 
-Read `references/iteration-path.md` first when selected path includes `iteration` (for example operation `iterate`).
+2. **Keep it focused**: One Skill = one capability
+   - Good: "PDF form filling", "Excel data analysis"
+   - Too broad: "Document processing", "Data tools"
 
-1. Capture and anonymize examples with provenance.
-2. Re-evaluate skill behavior against working and holdout slices.
-3. Propose improvements from positive/negative/fix evidence.
-4. Carry concrete behavior deltas into authoring.
+### Step 2: Choose Skill location
 
-Skip this step when selected path does not include `iteration`.
+Determine where to create the Skill:
 
-## Step 4: Author or update skill artifacts
+**Personal Skills** (`~/.claude/skills/`):
 
-Read `references/authoring-path.md`.
+- Individual workflows and preferences
+- Experimental Skills
+- Personal productivity tools
 
-1. Write or update `SKILL.md` in imperative voice with trigger-rich description.
-2. Create focused reference files and scripts only when justified.
-3. Follow `references/skill-patterns.md`, `references/workflow-patterns.md`, and
-   `references/output-patterns.md` for structure and output determinism.
-4. For authoring/generator skills, include transformed examples in references:
-   - happy-path
-   - secure/robust variant
-   - anti-pattern + corrected version
+**Project Skills** (`.claude/skills/`):
 
-## Step 5: Optimize description quality
+- Team workflows and conventions
+- Project-specific expertise
+- Shared utilities (committed to git)
 
-Read `references/description-optimization.md`.
+### Step 3: Create Skill structure
 
-1. Validate should-trigger and should-not-trigger query sets.
-2. Reduce false positives and false negatives with targeted description edits.
-3. Keep trigger language generic across Codex and Claude.
+Create the directory and files:
 
-## Step 6: Evaluate outcomes
+```bash
+# Personal
+mkdir -p ~/.claude/skills/skill-name
 
-Read `references/evaluation-path.md`.
+# Project
+mkdir -p .claude/skills/skill-name
+```
 
-1. Run a lightweight qualitative check by default (recommended).
-2. For integration/documentation and skill-authoring skills, include the concise depth rubric from `references/evaluation-path.md`.
-3. Run deeper eval playbook and quantitative baseline-vs-with-skill only when requested or risk warrants it.
-4. Record outcomes and unresolved risks.
+For multi-file Skills:
 
-## Step 7: Register and validate
+```
+skill-name/
+├── SKILL.md (required)
+├── reference.md (optional)
+├── examples.md (optional)
+├── scripts/
+│   └── helper.py (optional)
+└── templates/
+    └── template.txt (optional)
+```
 
-Read `references/registration-validation.md`.
+### Step 4: Write SKILL.md frontmatter
 
-1. Apply repository registration steps.
-2. Run quick validation with strict depth gates.
-3. Reject shallow outputs that fail depth gates or required artifact checks.
+Create YAML frontmatter with required fields:
+
+```yaml
+---
+name: skill-name
+description: Brief description of what this does and when to use it
+---
+```
+
+**Field requirements**:
+
+- **name**:
+
+  - Lowercase letters, numbers, hyphens only
+  - Max 64 characters
+  - Must match directory name
+  - Good: `pdf-processor`, `git-commit-helper`
+  - Bad: `PDF_Processor`, `Git Commits!`
+
+- **description**:
+  - Max 1024 characters
+  - Include BOTH what it does AND when to use it
+  - Use specific trigger words users would say
+  - Mention file types, operations, and context
+
+**Optional frontmatter fields**:
+
+- **allowed-tools**: Restrict tool access (comma-separated list)
+  ```yaml
+  allowed-tools: Read, Grep, Glob
+  ```
+  Use for:
+  - Read-only Skills
+  - Security-sensitive workflows
+  - Limited-scope operations
+
+### Step 5: Write effective descriptions
+
+The description is critical for Claude to discover your Skill.
+
+**Formula**: `[What it does] + [When to use it] + [Key triggers]`
+
+**Examples**:
+
+✅ **Good**:
+
+```yaml
+description: Extract text and tables from PDF files, fill forms, merge documents. Use when working with PDF files or when the user mentions PDFs, forms, or document extraction.
+```
+
+✅ **Good**:
+
+```yaml
+description: Analyze Excel spreadsheets, create pivot tables, and generate charts. Use when working with Excel files, spreadsheets, or analyzing tabular data in .xlsx format.
+```
+
+❌ **Too vague**:
+
+```yaml
+description: Helps with documents
+description: For data analysis
+```
+
+**Tips**:
+
+- Include specific file extensions (.pdf, .xlsx, .json)
+- Mention common user phrases ("analyze", "extract", "generate")
+- List concrete operations (not generic verbs)
+- Add context clues ("Use when...", "For...")
+
+### Step 6: Structure the Skill content
+
+Use clear Markdown sections:
+
+````markdown
+# Skill Name
+
+Brief overview of what this Skill does.
+
+## Quick start
+
+Provide a simple example to get started immediately.
+
+## Instructions
+
+Step-by-step guidance for Claude:
+
+1. First step with clear action
+2. Second step with expected outcome
+3. Handle edge cases
+
+## Examples
+
+Show concrete usage examples with code or commands.
+
+## Best practices
+
+- Key conventions to follow
+- Common pitfalls to avoid
+- When to use vs. not use
+
+## Requirements
+
+List any dependencies or prerequisites:
+
+```bash
+pip install package-name
+```
+````
+
+## Advanced usage
+
+For complex scenarios, see [reference.md](reference.md).
+
+````
+
+### Step 7: Add supporting files (optional)
+
+Create additional files for progressive disclosure:
+
+**reference.md**: Detailed API docs, advanced options
+**examples.md**: Extended examples and use cases
+**scripts/**: Helper scripts and utilities
+**templates/**: File templates or boilerplate
+
+Reference them from SKILL.md:
+```markdown
+For advanced usage, see [reference.md](reference.md).
+
+Run the helper script:
+\`\`\`bash
+python scripts/helper.py input.txt
+\`\`\`
+````
+
+### Step 8: Validate the Skill
+
+Check these requirements:
+
+✅ **File structure**:
+
+- [ ] SKILL.md exists in correct location
+- [ ] Directory name matches frontmatter `name`
+
+✅ **YAML frontmatter**:
+
+- [ ] Opening `---` on line 1
+- [ ] Closing `---` before content
+- [ ] Valid YAML (no tabs, correct indentation)
+- [ ] `name` follows naming rules
+- [ ] `description` is specific and < 1024 chars
+
+✅ **Content quality**:
+
+- [ ] Clear instructions for Claude
+- [ ] Concrete examples provided
+- [ ] Edge cases handled
+- [ ] Dependencies listed (if any)
+
+✅ **Testing**:
+
+- [ ] Description matches user questions
+- [ ] Skill activates on relevant queries
+- [ ] Instructions are clear and actionable
+
+### Step 9: Test the Skill
+
+1. **Restart Claude Code** (if running) to load the Skill
+
+2. **Ask relevant questions** that match the description:
+
+   ```
+   Can you help me extract text from this PDF?
+   ```
+
+3. **Verify activation**: Claude should use the Skill automatically
+
+4. **Check behavior**: Confirm Claude follows the instructions correctly
+
+### Step 10: Debug if needed
+
+If Claude doesn't use the Skill:
+
+1. **Make description more specific**:
+
+   - Add trigger words
+   - Include file types
+   - Mention common user phrases
+
+2. **Check file location**:
+
+   ```bash
+   ls ~/.claude/skills/skill-name/SKILL.md
+   ls .claude/skills/skill-name/SKILL.md
+   ```
+
+3. **Validate YAML**:
+
+   ```bash
+   cat SKILL.md | head -n 10
+   ```
+
+4. **Run debug mode**:
+   ```bash
+   claude --debug
+   ```
+
+## Common patterns
+
+### Read-only Skill
+
+```yaml
+---
+name: code-reader
+description: Read and analyze code without making changes. Use for code review, understanding codebases, or documentation.
+allowed-tools: Read, Grep, Glob
+---
+```
+
+### Script-based Skill
+
+```yaml
+---
+name: data-processor
+description: Process CSV and JSON data files with Python scripts. Use when analyzing data files or transforming datasets.
+---
+
+# Data Processor
+
+## Instructions
+
+1. Use the processing script:
+\`\`\`bash
+python scripts/process.py input.csv --output results.json
+\`\`\`
+
+2. Validate output with:
+\`\`\`bash
+python scripts/validate.py results.json
+\`\`\`
+```
+
+### Multi-file Skill with progressive disclosure
+
+```yaml
+---
+name: api-designer
+description: Design REST APIs following best practices. Use when creating API endpoints, designing routes, or planning API architecture.
+---
+
+# API Designer
+
+Quick start: See [examples.md](examples.md)
+
+Detailed reference: See [reference.md](reference.md)
+
+## Instructions
+
+1. Gather requirements
+2. Design endpoints (see examples.md)
+3. Document with OpenAPI spec
+4. Review against best practices (see reference.md)
+```
+
+## Best practices for Skill authors
+
+1. **One Skill, one purpose**: Don't create mega-Skills
+2. **Specific descriptions**: Include trigger words users will say
+3. **Clear instructions**: Write for Claude, not humans
+4. **Concrete examples**: Show real code, not pseudocode
+5. **List dependencies**: Mention required packages in description
+6. **Test with teammates**: Verify activation and clarity
+7. **Version your Skills**: Document changes in content
+8. **Use progressive disclosure**: Put advanced details in separate files
+
+## Validation checklist
+
+Before finalizing a Skill, verify:
+
+- [ ] Name is lowercase, hyphens only, max 64 chars
+- [ ] Description is specific and < 1024 chars
+- [ ] Description includes "what" and "when"
+- [ ] YAML frontmatter is valid
+- [ ] Instructions are step-by-step
+- [ ] Examples are concrete and realistic
+- [ ] Dependencies are documented
+- [ ] File paths use forward slashes
+- [ ] Skill activates on relevant queries
+- [ ] Claude follows instructions correctly
+
+## Troubleshooting
+
+**Skill doesn't activate**:
+
+- Make description more specific with trigger words
+- Include file types and operations in description
+- Add "Use when..." clause with user phrases
+
+**Multiple Skills conflict**:
+
+- Make descriptions more distinct
+- Use different trigger words
+- Narrow the scope of each Skill
+
+**Skill has errors**:
+
+- Check YAML syntax (no tabs, proper indentation)
+- Verify file paths (use forward slashes)
+- Ensure scripts have execute permissions
+- List all dependencies
+
+## Examples
+
+See the documentation for complete examples:
+
+- Simple single-file Skill (commit-helper)
+- Skill with tool permissions (code-reviewer)
+- Multi-file Skill (pdf-processing)
 
 ## Output format
 
-Return:
+When creating a Skill, I will:
 
-1. `Summary`
-2. `Changes Made`
-3. `Validation Results`
-4. `Open Gaps`
+1. Ask clarifying questions about scope and requirements
+2. Suggest a Skill name and location
+3. Create the SKILL.md file with proper frontmatter
+4. Include clear instructions and examples
+5. Add supporting files if needed
+6. Provide testing instructions
+7. Validate against all requirements
 
-## When to Use
-Use this skill when tackling tasks related to its primary domain or functionality as described above.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
+The result will be a complete, working Skill that follows all best practices and validation rules.

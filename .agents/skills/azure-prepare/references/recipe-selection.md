@@ -2,16 +2,6 @@
 
 Choose the deployment recipe based on project needs and existing tooling.
 
-## ⛔ Special Cases: Detect First
-
-**Before selecting a recipe, check for these special project types:**
-
-| Project Type | Detection | Recipe Selection |
-|--------------|-----------|------------------|
-| **.NET Aspire** | `*.AppHost.csproj` or `Aspire.Hosting` package | **AZD (auto via `azd init --from-code`)** → [aspire.md](aspire.md) |
-
-> 💡 **Tip:** .NET Aspire projects always use AZD recipe with auto-generated configuration. Do not manually select recipe or create artifacts.
-
 ## Quick Decision
 
 **Default: AZD** unless specific requirements indicate otherwise.
@@ -54,7 +44,7 @@ Choose the deployment recipe based on project needs and existing tooling.
 
 ## Record Selection
 
-Document in `.azure/deployment-plan.md`:
+Document in `.azure/plan.md`:
 
 ```markdown
 ## Recipe: AZD (Terraform)

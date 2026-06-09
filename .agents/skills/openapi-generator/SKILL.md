@@ -1,359 +1,524 @@
 ---
 name: openapi-generator
-description: Generates OpenAPI 3.0/3.1 specifications from Express, Next.js, Fastify, Hono, or NestJS routes. Creates complete specs with schemas, examples, and documentation that can be imported into Postman, Insomnia, or used with Swagger UI. Use when users request "generate openapi", "create swagger spec", "openapi documentation", or "api specification".
+description: Generate comprehensive OpenAPI/Swagger specifications from existing code and APIs.
 ---
 
-# OpenAPI Generator
+# OpenAPI Generator Skill
 
-Generate OpenAPI 3.0/3.1 specifications from your API codebase automatically.
+Generate comprehensive OpenAPI/Swagger specifications from existing code and APIs.
 
-## Core Workflow
+## Instructions
 
-1. **Scan routes**: Find all API route definitions
-2. **Extract schemas**: Types, request/response bodies, params
-3. **Build paths**: Convert routes to OpenAPI path objects
-4. **Generate schemas**: Create component schemas from types
-5. **Add documentation**: Descriptions, examples, tags
-6. **Export spec**: YAML or JSON format
+You are an OpenAPI/Swagger specification expert. When invoked:
 
-## OpenAPI 3.1 Base Template
+1. **Generate OpenAPI Specs**:
+   - Analyze existing API code
+   - Extract endpoints, methods, and parameters
+   - Document request/response schemas
+   - Generate OpenAPI 3.0+ compliant specs
+   - Include authentication schemes
 
+2. **Enhance Specifications**:
+   - Add detailed descriptions
+   - Include example values
+   - Document error responses
+   - Add validation rules
+   - Include deprecation warnings
+
+3. **Generate Documentation**:
+   - Create interactive API docs
+   - Generate client SDKs
+   - Create API reference guides
+   - Export to various formats
+
+4. **Validate Specifications**:
+   - Check OpenAPI compliance
+   - Validate schema definitions
+   - Ensure consistency
+   - Verify examples
+
+## Usage Examples
+
+```
+@openapi-generator
+@openapi-generator --from-code
+@openapi-generator --validate
+@openapi-generator --generate-docs
+@openapi-generator --format yaml
+```
+
+## OpenAPI 3.0 Specification
+
+### Basic Structure
 ```yaml
-openapi: 3.1.0
+openapi: 3.0.3
 info:
-  title: API Title
+  title: User Management API
+  description: API for managing users and authentication
   version: 1.0.0
-  description: API description
   contact:
-    email: api@example.com
+    name: API Support
+    email: support@example.com
+    url: https://example.com/support
   license:
-    name: MIT
-    url: https://opensource.org/licenses/MIT
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
 
 servers:
-  - url: http://localhost:3000/api
-    description: Development
-  - url: https://api.example.com
-    description: Production
+  - url: https://api.example.com/v1
+    description: Production server
+  - url: https://staging-api.example.com/v1
+    description: Staging server
+  - url: http://localhost:3000/v1
+    description: Development server
 
 tags:
   - name: Users
-    description: User management endpoints
-  - name: Products
-    description: Product catalog endpoints
+    description: User management operations
+  - name: Authentication
+    description: Authentication and authorization
 
-paths: {}
+paths:
+  /users:
+    get:
+      summary: Get all users
+      description: Retrieve a paginated list of users
+      operationId: getUsers
+      tags:
+        - Users
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Number of items per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: sort
+          in: query
+          description: Sort field and direction
+          required: false
+          schema:
+            type: string
+            enum: [created_at, name, email]
+            default: created_at
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+              examples:
+                success:
+                  value:
+                    data:
+                      - id: "123"
+                        name: "John Doe"
+                        email: "john@example.com"
+                        role: "user"
+                        createdAt: "2024-01-15T10:30:00Z"
+                    meta:
+                      page: 1
+                      limit: 10
+                      total: 42
+                      totalPages: 5
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+        - bearerAuth: []
 
-components:
-  schemas: {}
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-    apiKey:
-      type: apiKey
-      in: header
-      name: X-API-Key
+    post:
+      summary: Create new user
+      description: Create a new user account
+      operationId: createUser
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+            examples:
+              user:
+                value:
+                  name: "John Doe"
+                  email: "john@example.com"
+                  password: "SecurePass123!"
+                  role: "user"
+      responses:
+        '201':
+          description: User created successfully
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL of the created user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+              examples:
+                created:
+                  value:
+                    id: "123"
+                    name: "John Doe"
+                    email: "john@example.com"
+                    role: "user"
+                    createdAt: "2024-01-15T10:30:00Z"
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '409':
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                duplicate:
+                  value:
+                    code: "DUPLICATE_EMAIL"
+                    message: "User with this email already exists"
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+      security:
+        - bearerAuth: []
 
-security:
-  - bearerAuth: []
-```
+  /users/{userId}:
+    get:
+      summary: Get user by ID
+      description: Retrieve a specific user by their ID
+      operationId: getUserById
+      tags:
+        - Users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+      security:
+        - bearerAuth: []
 
-## TypeScript to OpenAPI Schema Converter
+    put:
+      summary: Update user
+      description: Update an existing user (full update)
+      operationId: updateUser
+      tags:
+        - Users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      security:
+        - bearerAuth: []
 
-```typescript
-// scripts/type-to-schema.ts
-import * as ts from "typescript";
+    patch:
+      summary: Partially update user
+      description: Update specific fields of a user
+      operationId: patchUser
+      tags:
+        - Users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchUserRequest'
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+      security:
+        - bearerAuth: []
 
-interface OpenAPISchema {
-  type?: string;
-  properties?: Record<string, OpenAPISchema>;
-  required?: string[];
-  items?: OpenAPISchema;
-  $ref?: string;
-  enum?: string[];
-  format?: string;
-  description?: string;
-  example?: unknown;
-}
+    delete:
+      summary: Delete user
+      description: Delete a user account
+      operationId: deleteUser
+      tags:
+        - Users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: User deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+      security:
+        - bearerAuth: []
 
-function typeToOpenAPISchema(
-  checker: ts.TypeChecker,
-  type: ts.Type
-): OpenAPISchema {
-  // Handle primitives
-  if (type.flags & ts.TypeFlags.String) {
-    return { type: "string" };
-  }
-  if (type.flags & ts.TypeFlags.Number) {
-    return { type: "number" };
-  }
-  if (type.flags & ts.TypeFlags.Boolean) {
-    return { type: "boolean" };
-  }
+  /auth/login:
+    post:
+      summary: Login
+      description: Authenticate user and receive access token
+      operationId: login
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+            examples:
+              credentials:
+                value:
+                  email: "user@example.com"
+                  password: "password123"
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                  refreshToken:
+                    type: string
+                  expiresIn:
+                    type: integer
+                  tokenType:
+                    type: string
+              examples:
+                success:
+                  value:
+                    accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    refreshToken: "refresh-token-here"
+                    expiresIn: 3600
+                    tokenType: "Bearer"
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
-  // Handle arrays
-  if (checker.isArrayType(type)) {
-    const elementType = (type as ts.TypeReference).typeArguments?.[0];
-    return {
-      type: "array",
-      items: elementType ? typeToOpenAPISchema(checker, elementType) : {},
-    };
-  }
+  /auth/refresh:
+    post:
+      summary: Refresh token
+      description: Get new access token using refresh token
+      operationId: refreshToken
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                  expiresIn:
+                    type: integer
 
-  // Handle object types
-  if (type.flags & ts.TypeFlags.Object) {
-    const properties: Record<string, OpenAPISchema> = {};
-    const required: string[] = [];
-
-    type.getProperties().forEach((prop) => {
-      const propType = checker.getTypeOfSymbolAtLocation(
-        prop,
-        prop.valueDeclaration!
-      );
-      properties[prop.name] = typeToOpenAPISchema(checker, propType);
-
-      // Check if required (no ? modifier)
-      if (!(prop.flags & ts.SymbolFlags.Optional)) {
-        required.push(prop.name);
-      }
-    });
-
-    return {
-      type: "object",
-      properties,
-      required: required.length > 0 ? required : undefined,
-    };
-  }
-
-  // Handle union types (enums)
-  if (type.isUnion()) {
-    const enumValues = type.types
-      .filter((t) => t.isStringLiteral())
-      .map((t) => (t as ts.StringLiteralType).value);
-
-    if (enumValues.length > 0) {
-      return { type: "string", enum: enumValues };
-    }
-  }
-
-  return {};
-}
-```
-
-## Express Route Scanner with JSDoc
-
-```typescript
-// scripts/express-openapi.ts
-import * as fs from "fs";
-import * as path from "path";
-import { parse } from "@babel/parser";
-import traverse from "@babel/traverse";
-
-interface RouteMetadata {
-  method: string;
-  path: string;
-  summary?: string;
-  description?: string;
-  tags?: string[];
-  requestBody?: object;
-  responses?: Record<string, object>;
-  parameters?: object[];
-  security?: object[];
-}
-
-function extractJSDocMetadata(comments: string): Partial<RouteMetadata> {
-  const metadata: Partial<RouteMetadata> = {};
-
-  // @summary
-  const summaryMatch = comments.match(/@summary\s+(.+)/);
-  if (summaryMatch) metadata.summary = summaryMatch[1].trim();
-
-  // @description
-  const descMatch = comments.match(/@description\s+(.+)/);
-  if (descMatch) metadata.description = descMatch[1].trim();
-
-  // @tags
-  const tagsMatch = comments.match(/@tags\s+(.+)/);
-  if (tagsMatch) metadata.tags = tagsMatch[1].split(",").map((t) => t.trim());
-
-  return metadata;
-}
-
-function scanExpressWithOpenAPI(sourceDir: string): RouteMetadata[] {
-  const routes: RouteMetadata[] = [];
-
-  // Implementation: traverse files and extract routes with JSDoc comments
-  // Similar to postman generator but with OpenAPI-specific metadata
-
-  return routes;
-}
-```
-
-## OpenAPI Path Generator
-
-```typescript
-// scripts/generate-openapi.ts
-import * as yaml from "js-yaml";
-
-interface OpenAPISpec {
-  openapi: string;
-  info: object;
-  servers: object[];
-  paths: Record<string, object>;
-  components: {
-    schemas: Record<string, object>;
-    securitySchemes?: object;
-  };
-  tags?: object[];
-  security?: object[];
-}
-
-function generateOpenAPISpec(
-  routes: RouteMetadata[],
-  options: {
-    title: string;
-    version: string;
-    description?: string;
-    servers: { url: string; description: string }[];
-  }
-): OpenAPISpec {
-  const spec: OpenAPISpec = {
-    openapi: "3.1.0",
-    info: {
-      title: options.title,
-      version: options.version,
-      description: options.description,
-    },
-    servers: options.servers,
-    paths: {},
-    components: {
-      schemas: {},
-      securitySchemes: {
-        bearerAuth: {
-          type: "http",
-          scheme: "bearer",
-          bearerFormat: "JWT",
-        },
-      },
-    },
-    tags: [],
-  };
-
-  // Collect unique tags
-  const tagSet = new Set<string>();
-
-  // Generate paths
-  for (const route of routes) {
-    const openAPIPath = route.path.replace(/:(\w+)/g, "{$1}");
-
-    if (!spec.paths[openAPIPath]) {
-      spec.paths[openAPIPath] = {};
-    }
-
-    spec.paths[openAPIPath][route.method.toLowerCase()] = {
-      summary: route.summary || `${route.method} ${route.path}`,
-      description: route.description,
-      tags: route.tags || [extractResourceTag(route.path)],
-      parameters: generateParameters(route),
-      requestBody: route.requestBody,
-      responses: route.responses || generateDefaultResponses(route.method),
-      security: route.security,
-    };
-
-    // Collect tags
-    (route.tags || [extractResourceTag(route.path)]).forEach((t) =>
-      tagSet.add(t)
-    );
-  }
-
-  // Add tags to spec
-  spec.tags = Array.from(tagSet).map((name) => ({ name }));
-
-  return spec;
-}
-
-function generateParameters(route: RouteMetadata): object[] {
-  const params: object[] = [];
-
-  // Extract path parameters
-  const pathParamRegex = /:(\w+)/g;
-  let match;
-
-  while ((match = pathParamRegex.exec(route.path)) !== null) {
-    params.push({
-      name: match[1],
-      in: "path",
-      required: true,
-      schema: { type: "string" },
-      description: `${match[1]} parameter`,
-    });
-  }
-
-  return params;
-}
-
-function generateDefaultResponses(method: string): object {
-  const responses: Record<string, object> = {
-    "200": {
-      description: "Successful response",
-      content: {
-        "application/json": {
-          schema: { type: "object" },
-        },
-      },
-    },
-    "400": {
-      description: "Bad request",
-      content: {
-        "application/json": {
-          schema: { $ref: "#/components/schemas/Error" },
-        },
-      },
-    },
-    "401": {
-      description: "Unauthorized",
-    },
-    "404": {
-      description: "Not found",
-    },
-    "500": {
-      description: "Internal server error",
-    },
-  };
-
-  if (method === "POST") {
-    responses["201"] = {
-      description: "Created successfully",
-      content: {
-        "application/json": {
-          schema: { type: "object" },
-        },
-      },
-    };
-  }
-
-  if (method === "DELETE") {
-    responses["204"] = {
-      description: "Deleted successfully",
-    };
-  }
-
-  return responses;
-}
-
-function extractResourceTag(path: string): string {
-  const parts = path.split("/").filter(Boolean);
-  return parts[0] || "default";
-}
-```
-
-## Common Schema Components
-
-```yaml
 components:
   schemas:
+    User:
+      type: object
+      required:
+        - id
+        - name
+        - email
+        - role
+      properties:
+        id:
+          type: string
+          description: Unique user identifier
+          example: "123"
+        name:
+          type: string
+          description: User's full name
+          minLength: 2
+          maxLength: 100
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "john@example.com"
+        role:
+          type: string
+          enum: [user, admin, moderator]
+          description: User role
+          example: "user"
+        createdAt:
+          type: string
+          format: date-time
+          description: Account creation timestamp
+          example: "2024-01-15T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: "2024-01-15T10:30:00Z"
+
+    CreateUserRequest:
+      type: object
+      required:
+        - name
+        - email
+        - password
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+          minLength: 8
+        role:
+          type: string
+          enum: [user, admin, moderator]
+          default: user
+
+    UpdateUserRequest:
+      type: object
+      required:
+        - name
+        - email
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [user, admin, moderator]
+
+    PatchUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [user, admin, moderator]
+      minProperties: 1
+
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 1
+        limit:
+          type: integer
+          minimum: 1
+        total:
+          type: integer
+          minimum: 0
+        totalPages:
+          type: integer
+          minimum: 0
+
     Error:
       type: object
       required:
@@ -362,262 +527,470 @@ components:
       properties:
         code:
           type: string
-          example: "VALIDATION_ERROR"
+          description: Error code
         message:
           type: string
-          example: "Invalid request data"
+          description: Error message
         details:
           type: object
-          additionalProperties:
-            type: array
-            items:
-              type: string
+          description: Additional error details
 
-    Pagination:
-      type: object
-      properties:
-        page:
-          type: integer
-          minimum: 1
-          example: 1
-        limit:
-          type: integer
-          minimum: 1
-          maximum: 100
-          example: 10
-        total:
-          type: integer
-          example: 156
-        total_pages:
-          type: integer
-          example: 16
+  responses:
+    UnauthorizedError:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            unauthorized:
+              value:
+                code: "UNAUTHORIZED"
+                message: "Authentication required"
 
-    PaginatedResponse:
-      type: object
-      properties:
-        success:
-          type: boolean
-          example: true
-        data:
-          type: array
-          items: {}
-        meta:
-          $ref: "#/components/schemas/Pagination"
+    BadRequestError:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            validation:
+              value:
+                code: "VALIDATION_ERROR"
+                message: "Invalid request data"
+                details:
+                  email: "Invalid email format"
 
-    User:
-      type: object
-      required:
-        - id
-        - email
-        - name
-      properties:
-        id:
-          type: string
-          format: uuid
-          example: "123e4567-e89b-12d3-a456-426614174000"
-        email:
-          type: string
-          format: email
-          example: "user@example.com"
-        name:
-          type: string
-          example: "John Doe"
-        created_at:
-          type: string
-          format: date-time
-          example: "2024-01-15T10:30:00Z"
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            notFound:
+              value:
+                code: "NOT_FOUND"
+                message: "Resource not found"
 
-    CreateUserRequest:
-      type: object
-      required:
-        - email
-        - name
-        - password
-      properties:
-        email:
-          type: string
-          format: email
-        name:
-          type: string
-          minLength: 2
-          maxLength: 100
-        password:
-          type: string
-          format: password
-          minLength: 8
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            error:
+              value:
+                code: "INTERNAL_ERROR"
+                message: "An unexpected error occurred"
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT authentication token
+
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authentication
+
+    oauth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://oauth.example.com/authorize
+          tokenUrl: https://oauth.example.com/token
+          scopes:
+            read:users: Read user information
+            write:users: Modify user information
+            admin: Administrative access
+
+security:
+  - bearerAuth: []
 ```
 
-## Fastify Integration
+## Generating from Code
 
-```typescript
-// Fastify with @fastify/swagger
-import Fastify from "fastify";
-import swagger from "@fastify/swagger";
-import swaggerUi from "@fastify/swagger-ui";
+### Express.js (Node.js)
+```javascript
+// Using swagger-jsdoc
+const swaggerJsdoc = require('swagger-jsdoc');
 
-const fastify = Fastify({ logger: true });
-
-await fastify.register(swagger, {
-  openapi: {
+const options = {
+  definition: {
+    openapi: '3.0.0',
     info: {
-      title: "My API",
-      version: "1.0.0",
-    },
-    servers: [{ url: "http://localhost:3000" }],
-  },
-});
-
-await fastify.register(swaggerUi, {
-  routePrefix: "/docs",
-});
-
-// Routes with schema
-fastify.get(
-  "/users/:id",
-  {
-    schema: {
-      params: {
-        type: "object",
-        properties: {
-          id: { type: "string", format: "uuid" },
-        },
-        required: ["id"],
-      },
-      response: {
-        200: {
-          type: "object",
-          properties: {
-            id: { type: "string" },
-            name: { type: "string" },
-            email: { type: "string" },
-          },
-        },
-      },
+      title: 'User API',
+      version: '1.0.0',
     },
   },
-  async (request, reply) => {
-    // Handler
-  }
-);
+  apis: ['./routes/*.js'],
+};
+
+const openapiSpecification = swaggerJsdoc(options);
+
+// routes/users.js
+/**
+ * @openapi
+ * /api/users:
+ *   get:
+ *     summary: Get all users
+ *     tags: [Users]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/User'
+ */
+router.get('/users', async (req, res) => {
+  // Implementation
+});
+
+/**
+ * @openapi
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       required:
+ *         - id
+ *         - name
+ *         - email
+ *       properties:
+ *         id:
+ *           type: string
+ *         name:
+ *           type: string
+ *         email:
+ *           type: string
+ *           format: email
+ */
 ```
 
-## NestJS Integration
+### FastAPI (Python)
+```python
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, EmailStr
+from typing import List, Optional
 
-```typescript
-// NestJS with @nestjs/swagger
-import { Controller, Get, Post, Body, Param } from "@nestjs/common";
-import { ApiTags, ApiOperation, ApiResponse, ApiBody } from "@nestjs/swagger";
+app = FastAPI(
+    title="User API",
+    description="API for managing users",
+    version="1.0.0"
+)
 
-@ApiTags("users")
-@Controller("users")
-export class UsersController {
-  @Get()
-  @ApiOperation({ summary: "Get all users" })
-  @ApiResponse({ status: 200, description: "List of users", type: [UserDto] })
-  findAll() {
-    // Implementation
-  }
+class User(BaseModel):
+    id: str
+    name: str
+    email: EmailStr
+    role: str = "user"
 
-  @Get(":id")
-  @ApiOperation({ summary: "Get user by ID" })
-  @ApiResponse({ status: 200, description: "User found", type: UserDto })
-  @ApiResponse({ status: 404, description: "User not found" })
-  findOne(@Param("id") id: string) {
-    // Implementation
-  }
+    class Config:
+        schema_extra = {
+            "example": {
+                "id": "123",
+                "name": "John Doe",
+                "email": "john@example.com",
+                "role": "user"
+            }
+        }
 
-  @Post()
-  @ApiOperation({ summary: "Create new user" })
-  @ApiBody({ type: CreateUserDto })
-  @ApiResponse({ status: 201, description: "User created", type: UserDto })
-  create(@Body() createUserDto: CreateUserDto) {
-    // Implementation
-  }
-}
+class CreateUserRequest(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
+    role: Optional[str] = "user"
+
+@app.get(
+    "/api/users",
+    response_model=List[User],
+    summary="Get all users",
+    description="Retrieve a paginated list of users",
+    tags=["Users"]
+)
+async def get_users(
+    page: int = 1,
+    limit: int = 10
+):
+    """
+    Get all users with pagination.
+
+    - **page**: Page number (default: 1)
+    - **limit**: Items per page (default: 10)
+    """
+    # Implementation
+    return []
+
+@app.post(
+    "/api/users",
+    response_model=User,
+    status_code=201,
+    summary="Create new user",
+    tags=["Users"]
+)
+async def create_user(user: CreateUserRequest):
+    """
+    Create a new user account.
+
+    - **name**: User's full name
+    - **email**: User's email address
+    - **password**: Account password (min 8 characters)
+    - **role**: User role (default: user)
+    """
+    # Implementation
+    return {}
+
+# Auto-generated OpenAPI spec at /docs and /redoc
 ```
 
-## CLI Script
+### Go (using go-swagger)
+```go
+// Package api User API
+//
+// API for managing users
+//
+//     Schemes: https
+//     Host: api.example.com
+//     BasePath: /v1
+//     Version: 1.0.0
+//
+//     Consumes:
+//     - application/json
+//
+//     Produces:
+//     - application/json
+//
+//     Security:
+//     - bearer:
+//
+//     SecurityDefinitions:
+//     bearer:
+//       type: apiKey
+//       name: Authorization
+//       in: header
+//
+// swagger:meta
+package api
 
-```typescript
-#!/usr/bin/env node
-// scripts/openapi-gen.ts
-import * as fs from "fs";
-import * as yaml from "js-yaml";
-import { program } from "commander";
+// User represents a user account
+// swagger:model User
+type User struct {
+    // User ID
+    // required: true
+    // example: 123
+    ID string `json:"id"`
 
-program
-  .name("openapi-gen")
-  .description("Generate OpenAPI specification from API routes")
-  .option("-f, --framework <type>", "Framework (express|nextjs|fastify)", "express")
-  .option("-s, --source <path>", "Source directory", "./src")
-  .option("-o, --output <path>", "Output file", "./openapi.yaml")
-  .option("-t, --title <name>", "API title", "My API")
-  .option("-v, --version <version>", "API version", "1.0.0")
-  .option("--json", "Output as JSON instead of YAML")
-  .parse();
+    // User's name
+    // required: true
+    // min length: 2
+    // max length: 100
+    Name string `json:"name"`
 
-const options = program.opts();
+    // User's email
+    // required: true
+    // format: email
+    Email string `json:"email"`
 
-async function main() {
-  const routes = await scanRoutes(options.framework, options.source);
-
-  const spec = generateOpenAPISpec(routes, {
-    title: options.title,
-    version: options.version,
-    servers: [
-      { url: "http://localhost:3000/api", description: "Development" },
-    ],
-  });
-
-  const output = options.json
-    ? JSON.stringify(spec, null, 2)
-    : yaml.dump(spec, { lineWidth: -1 });
-
-  fs.writeFileSync(options.output, output);
-  console.log(`Generated ${options.output} with ${routes.length} endpoints`);
+    // User role
+    // required: true
+    // enum: user,admin,moderator
+    Role string `json:"role"`
 }
 
-main();
+// swagger:route GET /api/users users getUsers
+//
+// Get all users
+//
+// Retrieve a paginated list of users
+//
+//     Produces:
+//     - application/json
+//
+//     Parameters:
+//       + name: page
+//         in: query
+//         type: integer
+//         description: Page number
+//       + name: limit
+//         in: query
+//         type: integer
+//         description: Items per page
+//
+//     Responses:
+//       200: UsersResponse
+//       401: UnauthorizedError
+//       500: InternalServerError
 ```
 
-## Validation Script
+## Tools and Commands
 
-```typescript
-// scripts/validate-openapi.ts
-import SwaggerParser from "@apidevtools/swagger-parser";
+### Swagger UI
+```javascript
+// Serve interactive docs with Express
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./openapi.json');
 
-async function validateSpec(specPath: string): Promise<void> {
-  try {
-    const api = await SwaggerParser.validate(specPath);
-    console.log(`API name: ${api.info.title}, Version: ${api.info.version}`);
-    console.log("OpenAPI specification is valid!");
-  } catch (err) {
-    console.error("Validation failed:", err.message);
-    process.exit(1);
-  }
-}
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+```
+
+### OpenAPI Generator CLI
+```bash
+# Install
+npm install -g @openapitools/openapi-generator-cli
+
+# Generate client SDK (TypeScript)
+openapi-generator-cli generate \
+  -i openapi.yaml \
+  -g typescript-axios \
+  -o ./generated/client
+
+# Generate server stub (Node.js)
+openapi-generator-cli generate \
+  -i openapi.yaml \
+  -g nodejs-express-server \
+  -o ./generated/server
+
+# Generate documentation
+openapi-generator-cli generate \
+  -i openapi.yaml \
+  -g html2 \
+  -o ./docs
+```
+
+### Validation
+```bash
+# Using Spectral
+npm install -g @stoplight/spectral-cli
+
+# Validate OpenAPI spec
+spectral lint openapi.yaml
+
+# With custom rules
+spectral lint openapi.yaml --ruleset .spectral.yaml
+```
+
+### Convert YAML to JSON
+```bash
+# Using yq
+yq eval -o=json openapi.yaml > openapi.json
+
+# Using js-yaml
+npx js-yaml openapi.yaml > openapi.json
+```
+
+## GraphQL to OpenAPI
+
+### Converting GraphQL Schema
+```javascript
+const { printSchema } = require('graphql');
+const { createSchema } = require('graphql-yoga');
+
+// GraphQL schema
+const schema = createSchema({
+  typeDefs: `
+    type User {
+      id: ID!
+      name: String!
+      email: String!
+    }
+
+    type Query {
+      users: [User!]!
+      user(id: ID!): User
+    }
+
+    type Mutation {
+      createUser(name: String!, email: String!): User!
+    }
+  `
+});
+
+// Convert to OpenAPI
+// Manual mapping or use tools like graphql-to-rest
 ```
 
 ## Best Practices
 
-1. **Use $ref**: Reference shared schemas to avoid duplication
-2. **Add examples**: Include realistic examples for all schemas
-3. **Document errors**: Define all possible error responses
-4. **Use tags**: Organize endpoints by resource/feature
-5. **Version control**: Commit spec to repository
-6. **Validate**: Run validation before publishing
-7. **Generate SDKs**: Use openapi-generator for client SDKs
-8. **Serve UI**: Host Swagger UI or Redoc for documentation
+### Documentation Quality
+- Write clear, concise descriptions
+- Include meaningful examples
+- Document all error responses
+- Specify validation rules
+- Add deprecation warnings when needed
 
-## Output Checklist
+### Schema Design
+- Use consistent naming conventions
+- Reuse components with $ref
+- Define common response types
+- Use appropriate data types and formats
+- Include validation constraints
 
-- [ ] All routes converted to OpenAPI paths
-- [ ] Path parameters use {param} syntax
-- [ ] Request bodies defined with schemas
-- [ ] Response schemas for all status codes
-- [ ] Common schemas in components/schemas
-- [ ] Security schemes configured
-- [ ] Tags applied to all endpoints
-- [ ] Examples included for schemas
-- [ ] Spec validates without errors
-- [ ] YAML/JSON exported successfully
+### Examples
+- Provide realistic example values
+- Include edge cases
+- Show error response examples
+- Demonstrate authentication
+- Cover all major use cases
+
+### Versioning
+- Version your API in the URL (/v1, /v2)
+- Document breaking changes
+- Maintain backwards compatibility
+- Provide migration guides
+- Support multiple versions
+
+### Security
+- Document authentication methods
+- Specify required scopes/permissions
+- Include security examples
+- Document rate limits
+- Mention HTTPS requirement
+
+## Auto-Generation Tools
+
+### Swagger Editor
+- Online: https://editor.swagger.io
+- Desktop: https://github.com/swagger-api/swagger-editor
+
+### Stoplight Studio
+- Visual OpenAPI editor
+- Auto-generate from examples
+- Built-in validation
+
+### Postman
+- Generate OpenAPI from collections
+- Import/export OpenAPI specs
+- Auto-sync with API
+
+### ReadMe
+- API documentation platform
+- Import OpenAPI specs
+- Interactive API explorer
+
+## Notes
+
+- Keep specifications up-to-date with code changes
+- Automate spec generation in CI/CD
+- Use linting tools to enforce standards
+- Version control your OpenAPI specs
+- Generate client SDKs automatically
+- Test generated code thoroughly
+- Include OpenAPI spec in API responses (/openapi.json)
+- Use tags to organize endpoints
+- Provide comprehensive examples
+- Document rate limits and quotas

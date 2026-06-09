@@ -1,51 +1,77 @@
 ---
 name: privatautonomie-trennungs-abstraktionsprinzip
-description: "Grundlagen-Skill zu Privatautonomie, Rechtsgeschäft, Verpflichtung und Verfügung, Trennungs- und Abstraktionsprinzip; ordnet BGB-AT-Fragen in Vertrag, Verfügung und Rückabwicklung ein."
+description: "Klausurfall zu Privatautonomie, Trennungs- und Abstraktionsprinzip im BGB: Verpflichtungsgeschäft und Verfügungsgeschäft als rechtlich selbständige Akte, Kausalität und Abstraktion, Fehleridentität als Ausnahme, Kondiktion nach § 812 BGB bei fehlerhaftem Grundgeschäft."
 ---
 
-# Privatautonomie Trennungs Abstraktionsprinzip
+# Privatautonomie, Trennungs- und Abstraktionsprinzip
 
-## Zweck
+## Mandantenfall
 
-Verpflichtungs- und Verfügungsebene auseinanderhalten.
+- Kaufvertrag wegen Irrtums angefochten — Eigentumsübergang bereits erfolgt; gilt der Eigentumswechsel trotzdem?
+- Schenkungsversprechen formnichtig — Übereignung bereits vollzogen; Kondiktion nach § 812 BGB möglich?
+- Klausurkonstellation: Kaufvertrag und Übereignung unter verschiedenen Mängeln — Fehleridentität prüfen.
 
-## Normanker
+## Erste Schritte
 
-BGB-Systematik
+1. Verpflichtungsgeschäft identifizieren: Kaufvertrag, Schenkungsversprechen, Werkvertrag — schuldrechtlich.
+2. Verfügungsgeschäft identifizieren: Übereignung (§§ 929 ff. BGB), Abtretung (§ 398 BGB) — dingliches Recht.
+3. Trennungsprinzip: Beide Geschäfte rechtlich selbständig beurteilen.
+4. Abstraktionsprinzip: Wirksamkeit des Verfügungsgeschäfts unabhängig vom Verpflichtungsgeschäft.
+5. Fehleridentität als Ausnahme: Derselbe Mangel erfasst beide Geschäfte — Ausnahme vom Abstraktionsprinzip.
+6. Rechtsfolge bei fehlerhaftem Grundgeschäft: § 812 BGB Kondiktionsanspruch.
 
-## Intake
+## Rechtsrahmen
 
-- Welche Rolle hat die Nutzerin oder der Nutzer: Kanzlei, Rechtsabteilung, Ausbildung, Gerichtsvorbereitung oder Selbststudium?
-- Was ist das konkrete Arbeitsziel: Anspruchsprüfung, Memo, Klausurlösung, Schriftsatzbaustein, Fristenvermerk oder Rückfragenkatalog?
-- Welche Tatsachen sind belegt, welche sind nur Behauptung, welche fehlen noch?
-- Welche Daten, Uhrzeiten, Erklärungen, Vollmachten, Formvorgaben und Fristen sind im Sachverhalt erkennbar?
+- §§ 929 ff. BGB: Übereignung beweglicher Sachen — Verfügungsgeschäft.
+- § 398 BGB: Abtretung — Verfügung über Forderung.
+- § 812 BGB: Ungerechtfertigte Bereicherung — Kondiktion bei fehlerhaftem Grundgeschäft.
+- § 119 BGB: Anfechtung des Verpflichtungsgeschäfts berührt Verfügung grundsätzlich nicht.
+- § 138 BGB: Sittenwidrigkeit — Fehleridentität erfasst beide Geschäfte.
 
 ## Prüfraster
 
-1. Verpflichtungsgeschäft, Verfügungsgeschäft und Realakt trennen
-2. Mängel für jede Ebene eigenständig prüfen
-3. Rückabwicklung nur nach betroffener Ebene ableiten
-4. § 185 BGB bei Verfügungsmacht gesondert prüfen
-5. Ergebnis mit Norm, Tatbestandsmerkmal, Subsumtion und Rechtsfolge festhalten.
-6. Offene Tatsachen als Rückfrage formulieren und nicht durch Vermutung ersetzen.
+1. Verpflichtungsgeschäft identifiziert und auf Wirksamkeit geprüft?
+2. Verfügungsgeschäft identifiziert und auf eigene Wirksamkeit geprüft?
+3. Trennungsprinzip: Beide Geschäfte separat subsumiert?
+4. Abstraktionsprinzip: Unwirksamkeit des Verpflichtungsgeschäfts berührt Verfügung nicht?
+5. Fehleridentität: Erfasst derselbe Mangel beide Geschäfte — Ausnahme begründet?
+6. Kondiktion nach § 812 BGB: Leistungskondiktion bei unwirksamem Grundgeschäft prüfen.
+7. Privatautonomie: Parteien wollten gerade dieses Ergebnis — subjektive Elemente beachten?
 
-## Output
+## Typische Fallstricke
 
-- Kurztriage mit Ampel und nächstem Schritt
-- Prüfung im Gutachtenstil oder als praxisnahes Mandatsmemo
-- Anspruchs- oder Erklärungsmatrix mit Beweisankern
-- Rückfragenliste und optionaler Entwurfsbaustein
+- Abstraktionsprinzip bedeutet nicht Unwirksamkeit der Anfechtung — das Verfügungsgeschäft bleibt wirksam, aber Kondiktion entsteht.
+- Fehleridentität ist eine enge Ausnahme — nur wenn identischer Mangel beide Geschäfte erfasst.
+- § 812 BGB ist die Rechtsfolge, nicht das Mittel zur Direktkorrektur des Eigentumsübergangs.
+- Trennungsprinzip und Abstraktionsprinzip werden oft verwechselt — Trennungsprinzip ist die Selbständigkeit, Abstraktionsprinzip die Unabhängigkeit der Wirksamkeit.
 
-## Qualitätsregeln
+## Quellen
 
-- BGB-AT-Fragen immer an der passenden Stelle im Anspruchsaufbau prüfen.
-- Auslegung geht regelmäßig vor Anfechtung, Dissens oder Lückenschließung.
-- Keine erfundenen Rechtsprechungs- oder Literaturzitate verwenden; bei Zitaten Primärquelle prüfen.
-- Bei Fristen den Rechenweg sichtbar machen.
-- Bei Wertungen die tragenden Tatsachen ausdrücklich nennen.
+- [§ 929 BGB — gesetze-im-internet.de](https://www.gesetze-im-internet.de/bgb/__929.html)
+- [§ 812 BGB — gesetze-im-internet.de](https://www.gesetze-im-internet.de/bgb/__812.html)
+- [§ 398 BGB — gesetze-im-internet.de](https://www.gesetze-im-internet.de/bgb/__398.html)
+- [dejure.org § 929 BGB](https://dejure.org/gesetze/BGB/929.html)
+- [dejure.org § 812 BGB](https://dejure.org/gesetze/BGB/812.html)
 
-## Anschluss-Skills
+## Vertiefung
 
-- allgemein
-- anspruchsaufbau-zivilrecht-bgb-at
-- bgb-at-output-gutachten-memo-schriftsatz
+### Bedeutung für den Rechtsverkehr
+
+Das Abstraktionsprinzip schützt den Rechtsverkehr: Der Erwerber einer Sache muss nicht prüfen,
+ob das zugrunde liegende Kausalgeschäft wirksam ist. Nur bei Fehleridentität oder Nichtigkeitsgründen,
+die beide Geschäfte erfassen, geht das Eigentum nicht über.
+
+### Praktische Auswirkungen
+
+Wenn ein Kaufvertrag angefochten wird: Das Eigentum ist bereits übergegangen (Verfügungsgeschäft
+wirksam). Der Verkäufer hat nur einen Kondiktionsanspruch (§ 812 BGB). Er kann nicht direkt
+Herausgabe verlangen, weil der Käufer (Nicht-mehr-Eigentümer-wegen-Anfechtung) nein — der
+Kaufvertrag ist nichtig, aber die Übereignung ist es nicht.
+
+### Klausur-Checkliste Abstraktion
+
+- Verpflichtungsgeschäft identifiziert und auf Wirksamkeit geprüft?
+- Verfügungsgeschäft separat auf eigene Wirksamkeit geprüft?
+- Abstraktionsprinzip: Nichtigkeitsgründe des Verpflichtungsgeschäfts berühren Verfügung nicht?
+- Fehleridentität: Dieselbe Nichtigkeitsursache erfasst beide Geschäfte?
+- Kondiktion nach § 812 BGB als Rechtsfolge bei wirksamer Verfügung und nichtigem Kausalgeschäft?

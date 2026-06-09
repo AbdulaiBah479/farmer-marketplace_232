@@ -3,117 +3,148 @@ name: tools-ui
 description: "Tool lifecycle UI components for React/Next.js from ui.inference.sh. Display tool calls: pending, progress, approval required, results. Capabilities: tool status, progress indicators, approval flows, results display. Use for: showing agent tool calls, human-in-the-loop approvals, tool output. Triggers: tool ui, tool calls, tool status, tool approval, tool results, agent tools, mcp tools ui, function calling ui, tool lifecycle, tool pending"
 ---
 
-# Chat UI Components
+# Tool UI Components
 
-Chat building blocks from [ui.inference.sh](https://ui.inference.sh).
+Tool lifecycle components from [ui.inference.sh](https://ui.inference.sh).
 
-![Chat UI Components](https://cloud.inference.sh/app/files/u/4mg21r6ta37mpaz6ktzwtt8krr/01kgvftp7hb8wby7z66fvs9asd.jpeg)
+![Tool UI Components](https://cloud.inference.sh/app/files/u/4mg21r6ta37mpaz6ktzwtt8krr/01kgjw8atdxgkrsr8a2t5peq7b.jpeg)
 
 ## Quick Start
 
 ```bash
-# Install chat components
-npx shadcn@latest add https://ui.inference.sh/r/chat.json
+npx shadcn@latest add https://ui.inference.sh/r/tools.json
 ```
+
+## Tool States
+
+| State | Description |
+|-------|-------------|
+| `pending` | Tool call requested, waiting to execute |
+| `running` | Tool is currently executing |
+| `approval` | Requires human approval before execution |
+| `success` | Tool completed successfully |
+| `error` | Tool execution failed |
 
 ## Components
 
-### Chat Container
+### Tool Call Display
 
 ```tsx
-import { ChatContainer } from "@/registry/blocks/chat/chat-container"
+import { ToolCall } from "@/registry/blocks/tools/tool-call"
 
-<ChatContainer>
-  {/* messages go here */}
-</ChatContainer>
-```
-
-### Messages
-
-```tsx
-import { ChatMessage } from "@/registry/blocks/chat/chat-message"
-
-<ChatMessage
-  role="user"
-  content="Hello, how can you help me?"
-/>
-
-<ChatMessage
-  role="assistant"
-  content="I can help you with many things!"
+<ToolCall
+  name="search_web"
+  args={{ query: "latest AI news" }}
+  status="running"
 />
 ```
 
-### Chat Input
+### Tool Result
 
 ```tsx
-import { ChatInput } from "@/registry/blocks/chat/chat-input"
+import { ToolResult } from "@/registry/blocks/tools/tool-result"
 
-<ChatInput
-  onSubmit={(message) => handleSend(message)}
-  placeholder="Type a message..."
-  disabled={isLoading}
+<ToolResult
+  name="search_web"
+  result={{ results: [...] }}
+  status="success"
 />
 ```
 
-### Typing Indicator
+### Tool Approval
 
 ```tsx
-import { TypingIndicator } from "@/registry/blocks/chat/typing-indicator"
+import { ToolApproval } from "@/registry/blocks/tools/tool-approval"
 
-{isTyping && <TypingIndicator />}
+<ToolApproval
+  name="send_email"
+  args={{ to: "user@example.com", subject: "Hello" }}
+  onApprove={() => executeTool()}
+  onDeny={() => cancelTool()}
+/>
 ```
 
 ## Full Example
 
 ```tsx
-import {
-  ChatContainer,
-  ChatMessage,
-  ChatInput,
-  TypingIndicator,
-} from "@/registry/blocks/chat"
+import { ToolCall, ToolResult, ToolApproval } from "@/registry/blocks/tools"
 
-export function Chat() {
-  const [messages, setMessages] = useState([])
-  const [isLoading, setIsLoading] = useState(false)
+function ToolDisplay({ tool }) {
+  if (tool.status === 'approval') {
+    return (
+      <ToolApproval
+        name={tool.name}
+        args={tool.args}
+        onApprove={tool.approve}
+        onDeny={tool.deny}
+      />
+    )
+  }
 
-  const handleSend = async (content: string) => {
-    setMessages(prev => [...prev, { role: 'user', content }])
-    setIsLoading(true)
-    // Send to API...
-    setIsLoading(false)
+  if (tool.result) {
+    return (
+      <ToolResult
+        name={tool.name}
+        result={tool.result}
+        status={tool.status}
+      />
+    )
   }
 
   return (
-    <ChatContainer>
-      {messages.map((msg, i) => (
-        <ChatMessage key={i} role={msg.role} content={msg.content} />
-      ))}
-      {isLoading && <TypingIndicator />}
-      <ChatInput onSubmit={handleSend} disabled={isLoading} />
-    </ChatContainer>
+    <ToolCall
+      name={tool.name}
+      args={tool.args}
+      status={tool.status}
+    />
   )
 }
 ```
 
-## Message Variants
-
-| Role | Description |
-|------|-------------|
-| `user` | User messages (right-aligned) |
-| `assistant` | AI responses (left-aligned) |
-| `system` | System messages (centered) |
-
-## Styling
-
-Components use Tailwind CSS and shadcn/ui design tokens:
+## Styling Tool Cards
 
 ```tsx
-<ChatMessage
-  role="assistant"
-  content="Hello!"
-  className="bg-muted"
+<ToolCall
+  name="read_file"
+  args={{ path: "/src/index.ts" }}
+  status="running"
+  className="border-blue-500"
+/>
+```
+
+## Tool Icons
+
+Tools automatically get icons based on their name:
+
+| Pattern | Icon |
+|---------|------|
+| `search*`, `find*` | Search |
+| `read*`, `get*` | File |
+| `write*`, `create*` | Pencil |
+| `delete*`, `remove*` | Trash |
+| `send*`, `email*` | Mail |
+| Default | Wrench |
+
+## With Agent Component
+
+The Agent component handles tool lifecycle automatically:
+
+```tsx
+import { Agent } from "@/registry/blocks/agent/agent"
+
+<Agent
+  proxyUrl="/api/inference/proxy"
+  config={{
+    core_app: { ref: 'openrouter/claude-sonnet-45@0fkg6xwb' },
+    tools: [
+      {
+        name: 'search_web',
+        description: 'Search the web',
+        parameters: { query: { type: 'string' } },
+        requiresApproval: true, // Enable approval flow
+      },
+    ],
+  }}
 />
 ```
 
@@ -123,17 +154,18 @@ Components use Tailwind CSS and shadcn/ui design tokens:
 # Full agent component (recommended)
 npx skills add inference-sh/skills@agent-ui
 
-# Declarative widgets
-npx skills add inference-sh/skills@widgets-ui
+# Chat UI blocks
+npx skills add inference-sh/skills@chat-ui
 
-# Markdown rendering
-npx skills add inference-sh/skills@markdown-ui
+# Widgets for tool results
+npx skills add inference-sh/skills@widgets-ui
 ```
 
 ## Documentation
 
-- [Chatting with Agents](https://inference.sh/docs/agents/chatting) - Building chat interfaces
-- [Agent UX Patterns](https://inference.sh/blog/ux/agent-ux-patterns) - Chat UX best practices
-- [Real-Time Streaming](https://inference.sh/blog/observability/streaming) - Streaming responses
+- [Adding Tools to Agents](https://inference.sh/docs/agents/adding-tools) - Equip agents with tools
+- [Human-in-the-Loop](https://inference.sh/docs/runtime/human-in-the-loop) - Approval flows
+- [Tool Approval Gates](https://inference.sh/blog/tools/approval-gates) - Implementing approvals
 
-Component docs: [ui.inference.sh/blocks/chat](https://ui.inference.sh/blocks/chat)
+Component docs: [ui.inference.sh/blocks/tools](https://ui.inference.sh/blocks/tools)
+

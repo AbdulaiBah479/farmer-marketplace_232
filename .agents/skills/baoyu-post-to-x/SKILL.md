@@ -1,11 +1,11 @@
 ---
 name: baoyu-post-to-x
-description: Posts content and articles to X (Twitter). Supports regular posts with images/videos and X Articles (long-form Markdown). Uses real Chrome with CDP to bypass anti-automation. Use when user asks to "post to X", "tweet", "publish to Twitter", or "share on X".
+description: Post content and articles to X (Twitter). Supports regular posts with images and X Articles (long-form Markdown). Uses real Chrome with CDP to bypass anti-automation.
 ---
 
 # Post to X (Twitter)
 
-Posts text, images, videos, and long-form articles to X via real Chrome browser (bypasses anti-bot detection).
+Post content, images, and long-form articles to X using real Chrome browser (bypasses anti-bot detection).
 
 ## Script Directory
 
@@ -20,48 +20,16 @@ Posts text, images, videos, and long-form articles to X via real Chrome browser 
 | Script | Purpose |
 |--------|---------|
 | `scripts/x-browser.ts` | Regular posts (text + images) |
-| `scripts/x-video.ts` | Video posts (text + video) |
-| `scripts/x-quote.ts` | Quote tweet with comment |
 | `scripts/x-article.ts` | Long-form article publishing (Markdown) |
 | `scripts/md-to-html.ts` | Markdown → HTML conversion |
 | `scripts/copy-to-clipboard.ts` | Copy content to clipboard |
 | `scripts/paste-from-clipboard.ts` | Send real paste keystroke |
 
-## Preferences (EXTEND.md)
-
-Use Bash to check EXTEND.md existence (priority order):
-
-```bash
-# Check project-level first
-test -f .baoyu-skills/baoyu-post-to-x/EXTEND.md && echo "project"
-
-# Then user-level (cross-platform: $HOME works on macOS/Linux/WSL)
-test -f "$HOME/.baoyu-skills/baoyu-post-to-x/EXTEND.md" && echo "user"
-```
-
-┌──────────────────────────────────────────────────┬───────────────────┐
-│                       Path                       │     Location      │
-├──────────────────────────────────────────────────┼───────────────────┤
-│ .baoyu-skills/baoyu-post-to-x/EXTEND.md          │ Project directory │
-├──────────────────────────────────────────────────┼───────────────────┤
-│ $HOME/.baoyu-skills/baoyu-post-to-x/EXTEND.md    │ User home         │
-└──────────────────────────────────────────────────┴───────────────────┘
-
-┌───────────┬───────────────────────────────────────────────────────────────────────────┐
-│  Result   │                                  Action                                   │
-├───────────┼───────────────────────────────────────────────────────────────────────────┤
-│ Found     │ Read, parse, apply settings                                               │
-├───────────┼───────────────────────────────────────────────────────────────────────────┤
-│ Not found │ Use defaults                                                              │
-└───────────┴───────────────────────────────────────────────────────────────────────────┘
-
-**EXTEND.md Supports**: Default Chrome profile | Auto-submit preference
-
 ## Prerequisites
 
-- Google Chrome or Chromium
-- `bun` runtime
-- First run: log in to X manually (session saved)
+- Google Chrome or Chromium installed
+- `bun` installed (for running scripts)
+- First run: log in to X in the opened browser window
 
 ## References
 
@@ -75,57 +43,22 @@ test -f "$HOME/.baoyu-skills/baoyu-post-to-x/EXTEND.md" && echo "user"
 Text + up to 4 images.
 
 ```bash
-npx -y bun ${SKILL_DIR}/scripts/x-browser.ts "Hello!" --image ./photo.png          # Preview
-npx -y bun ${SKILL_DIR}/scripts/x-browser.ts "Hello!" --image ./photo.png --submit  # Post
+# Preview mode (doesn't post)
+npx -y bun ${SKILL_DIR}/scripts/x-browser.ts "Hello from Claude!" --image ./screenshot.png
+
+# Actually post
+npx -y bun ${SKILL_DIR}/scripts/x-browser.ts "Hello!" --image ./photo.png --submit
 ```
+
+> **Note**: `${SKILL_DIR}` represents this skill's installation directory. Agent replaces with actual path at runtime.
 
 **Parameters**:
 | Parameter | Description |
 |-----------|-------------|
-| `<text>` | Post content (positional) |
-| `--image <path>` | Image file (repeatable, max 4) |
-| `--submit` | Post (default: preview) |
-| `--profile <dir>` | Custom Chrome profile |
-
----
-
-## Video Posts
-
-Text + video file.
-
-```bash
-npx -y bun ${SKILL_DIR}/scripts/x-video.ts "Check this out!" --video ./clip.mp4          # Preview
-npx -y bun ${SKILL_DIR}/scripts/x-video.ts "Amazing content" --video ./demo.mp4 --submit  # Post
-```
-
-**Parameters**:
-| Parameter | Description |
-|-----------|-------------|
-| `<text>` | Post content (positional) |
-| `--video <path>` | Video file (MP4, MOV, WebM) |
-| `--submit` | Post (default: preview) |
-| `--profile <dir>` | Custom Chrome profile |
-
-**Limits**: Regular 140s max, Premium 60min. Processing: 30-60s.
-
----
-
-## Quote Tweets
-
-Quote an existing tweet with comment.
-
-```bash
-npx -y bun ${SKILL_DIR}/scripts/x-quote.ts https://x.com/user/status/123 "Great insight!"          # Preview
-npx -y bun ${SKILL_DIR}/scripts/x-quote.ts https://x.com/user/status/123 "I agree!" --submit       # Post
-```
-
-**Parameters**:
-| Parameter | Description |
-|-----------|-------------|
-| `<tweet-url>` | URL to quote (positional) |
-| `<comment>` | Comment text (positional, optional) |
-| `--submit` | Post (default: preview) |
-| `--profile <dir>` | Custom Chrome profile |
+| `<text>` | Post content (positional argument) |
+| `--image <path>` | Image file path (can be repeated, max 4) |
+| `--submit` | Actually post (default: preview only) |
+| `--profile <dir>` | Custom Chrome profile directory |
 
 ---
 
@@ -134,29 +67,37 @@ npx -y bun ${SKILL_DIR}/scripts/x-quote.ts https://x.com/user/status/123 "I agre
 Long-form Markdown articles (requires X Premium).
 
 ```bash
-npx -y bun ${SKILL_DIR}/scripts/x-article.ts article.md                        # Preview
-npx -y bun ${SKILL_DIR}/scripts/x-article.ts article.md --cover ./cover.jpg    # With cover
-npx -y bun ${SKILL_DIR}/scripts/x-article.ts article.md --submit               # Publish
+# Preview mode
+npx -y bun ${SKILL_DIR}/scripts/x-article.ts article.md
+
+# With cover image
+npx -y bun ${SKILL_DIR}/scripts/x-article.ts article.md --cover ./cover.jpg
+
+# Publish
+npx -y bun ${SKILL_DIR}/scripts/x-article.ts article.md --submit
 ```
 
 **Parameters**:
 | Parameter | Description |
 |-----------|-------------|
-| `<markdown>` | Markdown file (positional) |
-| `--cover <path>` | Cover image |
-| `--title <text>` | Override title |
-| `--submit` | Publish (default: preview) |
+| `<markdown>` | Markdown file path (positional argument) |
+| `--cover <path>` | Cover image path |
+| `--title <text>` | Override article title |
+| `--submit` | Actually publish (default: preview only) |
 
-**Frontmatter**: `title`, `cover_image` supported in YAML front matter.
+**Frontmatter** (optional):
+```yaml
+---
+title: My Article Title
+cover_image: /path/to/cover.jpg
+---
+```
 
 ---
 
 ## Notes
 
-- First run: manual login required (session persists)
-- Always preview before `--submit`
-- Cross-platform: macOS, Linux, Windows
-
-## Extension Support
-
-Custom configurations via EXTEND.md. See **Preferences** section for paths and supported options.
+- First run requires manual login (session is saved)
+- Always preview before using `--submit`
+- Browser closes automatically after operation
+- Supports macOS, Linux, and Windows

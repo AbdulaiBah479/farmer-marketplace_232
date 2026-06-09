@@ -1,298 +1,188 @@
 ---
-# ═══════════════════════════════════════════════════════════════════════════
-# SKILL: Cloud Infrastructure
-# Version: 2.0.0 | Updated: 2025-01
-# ═══════════════════════════════════════════════════════════════════════════
 name: cloud-infrastructure
-description: Cloud platforms (AWS, Cloudflare, GCP, Azure), containerization (Docker), Kubernetes, Infrastructure as Code (Terraform), CI/CD, and observability.
-
-# ACTIVATION TRIGGERS
-triggers:
-  - aws
-  - kubernetes
-  - docker
-  - cloud
-  - terraform
-  - devops
-  - ci-cd
-  - cloudflare
-  - gcp
-  - azure
-
-# SKILL PARAMETERS
-parameters:
-  platform:
-    type: string
-    enum: [aws, gcp, azure, cloudflare, multi-cloud]
-    required: true
-  focus:
-    type: string
-    enum: [compute, containers, iac, cicd, monitoring]
-    required: false
-
-# OUTPUT SPECIFICATION
-outputs:
-  architecture:
-    type: object
-  services:
-    type: array
-  learning_path:
-    type: array
-
-# RELIABILITY
-retry:
-  max_attempts: 3
-  backoff: exponential
-
-# OBSERVABILITY
-observability:
-  log_level: info
-
-level: advanced
-prerequisites:
-  - linux-basics
-  - networking-basics
-
-sasmp_version: "1.3.0"
-bonded_agent: 01-core-paths
-bond_type: PRIMARY_BOND
+description: Cloud infrastructure design and deployment patterns for AWS, Azure, and
+  GCP. Use when designing cloud architectures, implementing IaC with Terraform, optimizing
+  costs, or setting up multi-region deployments.
+author: Joseph OBrien
+status: unpublished
+updated: '2025-12-23'
+version: 1.0.1
+tag: skill
+type: skill
 ---
 
-# Cloud Infrastructure Skill
+# Cloud Infrastructure
 
-## Quick Reference
+Comprehensive cloud infrastructure skill covering multi-cloud architecture, Infrastructure as Code, cost optimization, and production deployment patterns.
 
-| Platform | Market | Best For | Learning |
-|----------|--------|----------|----------|
-| **AWS** | 32% | Everything | 3-6 mo |
-| **Azure** | 24% | Microsoft stack | 3-6 mo |
-| **GCP** | 11% | Data, ML | 3-6 mo |
-| **Cloudflare** | Edge | CDN, Workers | 2-4 wk |
+## When to Use This Skill
 
----
+- Designing cloud architecture for new applications
+- Implementing Infrastructure as Code (Terraform, CloudFormation, Pulumi)
+- Cost optimization and resource right-sizing
+- Multi-region and high-availability deployments
+- Cloud migration planning
+- Security and compliance implementation
+- Auto-scaling and performance optimization
 
-## Learning Paths
+## Cloud Architecture Patterns
 
-### AWS
-```
-[1] IAM + VPC (1-2 wk)
- │  └─ Roles, policies, networking
- │
- ▼
-[2] Compute: EC2, Lambda (2-3 wk)
- │
- ▼
-[3] Storage: S3, EBS (1-2 wk)
- │
- ▼
-[4] Database: RDS, DynamoDB (2-3 wk)
- │
- ▼
-[5] Containers: ECS, EKS (3-4 wk)
- │
- ▼
-[6] Monitoring: CloudWatch (1-2 wk)
-```
+### Compute Patterns
 
-### Docker & Containers
-```
-[1] Docker Basics (1 wk)
- │  └─ Images, containers, Dockerfile
- │
- ▼
-[2] Multi-stage Builds (1 wk)
- │  └─ Optimization, layer caching
- │
- ▼
-[3] Docker Compose (1 wk)
- │  └─ Multi-container apps
- │
- ▼
-[4] Registry & Security (1 wk)
-    └─ Push/pull, scanning, non-root
-```
+| Pattern | AWS | Azure | GCP | Use Case |
+|---------|-----|-------|-----|----------|
+| Serverless | Lambda | Functions | Cloud Functions | Event-driven, variable load |
+| Containers | ECS/EKS | AKS | GKE | Microservices, consistent env |
+| VMs | EC2 | Virtual Machines | Compute Engine | Legacy apps, full control |
+| Batch | Batch | Batch | Batch | Large-scale processing |
 
-### Kubernetes
-```
-[1] Pods & Deployments (2 wk)
- │
- ▼
-[2] Services & Networking (1-2 wk)
- │
- ▼
-[3] ConfigMaps & Secrets (1 wk)
- │
- ▼
-[4] Helm Charts (2 wk)
- │
- ▼
-[5] Production Patterns (ongoing)
-    └─ HPA, PDB, resource limits
-```
+### Storage Patterns
 
-### Terraform (IaC)
-```
-[1] Resources & State (1 wk)
- │
- ▼
-[2] Variables & Outputs (1 wk)
- │
- ▼
-[3] Modules (1-2 wk)
- │
- ▼
-[4] Remote State (1 wk)
- │
- ▼
-[5] Workspaces & Environments (1 wk)
-```
+| Type | AWS | Azure | GCP | Use Case |
+|------|-----|-------|-----|----------|
+| Object | S3 | Blob Storage | Cloud Storage | Static files, backups |
+| Block | EBS | Managed Disks | Persistent Disk | Database storage |
+| File | EFS | Azure Files | Filestore | Shared file systems |
+| Archive | Glacier | Archive | Coldline | Long-term retention |
 
----
+### Database Patterns
 
-## Kubernetes Quick Reference
+| Type | AWS | Azure | GCP | Use Case |
+|------|-----|-------|-----|----------|
+| Relational | RDS, Aurora | SQL Database | Cloud SQL | ACID transactions |
+| NoSQL | DynamoDB | Cosmos DB | Firestore | Flexible schema |
+| Cache | ElastiCache | Cache for Redis | Memorystore | Session, caching |
+| Data Warehouse | Redshift | Synapse | BigQuery | Analytics |
 
-| Resource | Purpose | Example |
-|----------|---------|---------|
-| **Pod** | Smallest unit | Single container |
-| **Deployment** | Manage replicas | Web app |
-| **Service** | Network access | ClusterIP, LoadBalancer |
-| **Ingress** | HTTP routing | Path-based routing |
-| **ConfigMap** | Configuration | Environment variables |
-| **Secret** | Sensitive data | Credentials |
-| **StatefulSet** | Stateful apps | Databases |
+## Infrastructure as Code
 
----
+### Terraform Best Practices
 
-## Terraform Structure
+**Project Structure:**
 
 ```
-project/
-├── main.tf           # Resources
-├── variables.tf      # Inputs
-├── outputs.tf        # Outputs
-├── providers.tf      # Provider config
-├── versions.tf       # Version constraints
+infrastructure/
 ├── modules/
-│   ├── vpc/
-│   ├── eks/
-│   └── rds/
-└── environments/
-    ├── dev.tfvars
-    ├── staging.tfvars
-    └── prod.tfvars
+│   ├── networking/
+│   ├── compute/
+│   └── database/
+├── environments/
+│   ├── dev/
+│   ├── staging/
+│   └── prod/
+├── main.tf
+├── variables.tf
+├── outputs.tf
+└── versions.tf
 ```
 
----
+**State Management:**
 
-## CI/CD Pipeline Template
+- Use remote state (S3, Azure Blob, GCS)
+- Enable state locking (DynamoDB, Blob lease)
+- Separate state per environment
+- Never commit state files
 
-```yaml
-# GitHub Actions
-name: CI/CD
-on:
-  push:
-    branches: [main]
-jobs:
-  build-test-deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build
-        run: docker build -t app .
-      - name: Test
-        run: docker run app pytest
-      - name: Push
-        run: docker push registry/app:${{ github.sha }}
-      - name: Deploy
-        if: github.ref == 'refs/heads/main'
-        run: kubectl set image deployment/app app=registry/app:${{ github.sha }}
-```
+**Module Design:**
 
----
+- Single responsibility per module
+- Expose minimal required variables
+- Document inputs/outputs
+- Version modules with git tags
 
-## Monitoring Stack
+### Cost Optimization
 
-```
-┌─────────────────────────────────────────┐
-│         OBSERVABILITY STACK              │
-├─────────────────────────────────────────┤
-│  Metrics:  Prometheus → Grafana         │
-│  Logs:     Loki / ELK                   │
-│  Traces:   Jaeger / Tempo               │
-│  Alerts:   Alertmanager → PagerDuty     │
-└─────────────────────────────────────────┘
-```
+**Compute Savings:**
 
----
+- Reserved Instances (1-3 year commitment): 30-60% savings
+- Spot/Preemptible instances: 60-90% savings for interruptible workloads
+- Right-sizing: Match instance size to actual usage
+- Auto-scaling: Scale down during low usage
 
-## Troubleshooting
+**Storage Savings:**
 
-```
-Container not starting?
-├─► docker logs <container>
-├─► Check port conflicts
-├─► Check image name/tag
-└─► Check resource limits
+- Lifecycle policies: Auto-transition to cheaper tiers
+- Compression: Reduce storage footprint
+- Deduplication: Eliminate redundant data
+- Delete unused resources: Orphaned volumes, snapshots
 
-Pod in CrashLoopBackOff?
-├─► kubectl describe pod <name>
-├─► kubectl logs <pod>
-├─► Check resource limits
-├─► Check probes configuration
-└─► Check image pull secrets
+**Network Savings:**
 
-Terraform apply fails?
-├─► terraform plan first
-├─► Check state lock
-├─► terraform import existing
-└─► Restore state from backup
+- Use CDN for static content
+- Optimize data transfer paths
+- Use private endpoints
+- Compress API responses
 
-High cloud bill?
-├─► Enable cost alerts
-├─► Right-size instances
-├─► Use spot instances
-├─► Delete unused resources
-└─► Storage lifecycle policies
-```
+## High Availability Patterns
 
----
+### Multi-AZ Deployment
 
-## Common Failure Modes
+- Deploy across 2-3 availability zones
+- Use load balancers for distribution
+- Database replication across AZs
+- Automatic failover configuration
 
-| Symptom | Root Cause | Recovery |
-|---------|------------|----------|
-| Pod CrashLoopBackOff | App error or OOM | Check logs, increase limits |
-| ImagePullBackOff | Wrong image or auth | Verify image, check secrets |
-| Terraform drift | Manual changes | Import or terraform apply |
-| Slow deploys | Large images | Multi-stage builds, layer caching |
+### Multi-Region Deployment
 
----
+- Active-active or active-passive
+- DNS-based routing (Route53, Traffic Manager)
+- Data replication strategy
+- Disaster recovery procedures
 
-## Best Practices
+### Resilience Patterns
 
-### Docker
-- Use multi-stage builds
-- Run as non-root user
-- Use .dockerignore
-- Pin base image versions
-- Scan for vulnerabilities
+- Circuit breakers for external dependencies
+- Retry with exponential backoff
+- Bulkhead isolation
+- Graceful degradation
 
-### Kubernetes
-- Set resource requests/limits
-- Use readiness/liveness probes
-- Store config in ConfigMaps
-- Use namespaces for isolation
-- Enable network policies
+## Security Best Practices
 
-### Terraform
-- Use remote state (S3, GCS)
-- Lock state file
-- Use modules for reuse
-- Plan before apply
-- Tag all resources
+### Identity & Access
 
----
+- Principle of least privilege
+- Use IAM roles, not long-term credentials
+- Enable MFA for privileged accounts
+- Regular access reviews
 
-## Next Actions
+### Network Security
 
-Specify your cloud platform and focus area for detailed guidance.
+- VPC/VNet isolation
+- Security groups as firewalls
+- Private subnets for backend services
+- VPN/Direct Connect for hybrid
+
+### Data Protection
+
+- Encryption at rest (KMS)
+- Encryption in transit (TLS)
+- Key rotation policies
+- Backup and recovery testing
+
+## Monitoring & Observability
+
+### Key Metrics
+
+- CPU, Memory, Disk utilization
+- Network throughput and latency
+- Error rates and types
+- Cost per service/team
+
+### Alerting Strategy
+
+- Set thresholds based on baselines
+- Alert on symptoms, not causes
+- Runbooks for each alert
+- Escalation paths defined
+
+## Reference Files
+
+- **`references/terraform_patterns.md`** - IaC patterns and examples
+- **`references/cost_optimization.md`** - Detailed cost reduction strategies
+
+## Integration with Other Skills
+
+- **security-engineering** - For security architecture
+- **network-engineering** - For network design
+- **performance** - For optimization strategies
+- **devops-runbooks** - For operational procedures

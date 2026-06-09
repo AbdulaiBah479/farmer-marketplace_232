@@ -1,51 +1,77 @@
 ---
 name: cic-vorvertragliche-pflichten-schnittstelle
-description: "Schnittstellen-Skill zur culpa in contrahendo: vorvertragliches Schuldverhältnis, Schutzpflichten, Aufklärung, Abbruch von Verhandlungen und Abgrenzung zu BGB-AT-Wirksamkeitsfragen."
+description: "Klausurfall zu culpa in contrahendo nach §§ 280 Abs. 1 und 311 Abs. 2 BGB: Aufnahme von Vertragsverhandlungen, vorvertragliche Aufklärungs- und Schutzpflichten, Verschulden bei Vertragsschluss und Schadensersatz bei Abbruch oder Täuschung."
 ---
 
-# Cic Vorvertragliche Pflichten Schnittstelle
+# Culpa in contrahendo — Vorvertragliche Pflichten §§ 280 und 311 BGB
 
-## Zweck
+## Mandantenfall
 
-Vorvertragliche Haftung erkennen, ohne BGB-AT-Wirksamkeit zu vermischen.
+- Mandant hat auf Grund falscher Angaben des Vertragspartners in Verhandlungen einen nachteiligen Vertrag geschlossen — cic-Anspruch?
+- Verhandlungen wurden kurz vor Abschluss abgebrochen — kann Mandant Aufwendungsersatz fordern?
+- Klausurkonstellation: Aufklärungspflichtverletzung bei Grundstückskauf neben kaufrechtlichem Gewährleistungsanspruch.
 
-## Normanker
+## Erste Schritte
 
-§§ 241 Abs. 2, 280 Abs. 1 und 311 Abs. 2 BGB
+1. Schuldverhältnis nach § 311 Abs. 2 BGB: Aufnahme von Vertragsverhandlungen oder ähnlicher Geschäftskontakt?
+2. Pflichtverletzung bestimmen: Aufklärungspflichtverletzung, Täuschung, Abbruch ohne triftigen Grund?
+3. Verschulden des Schuldners nach § 276 BGB (Vorsatz oder Fahrlässigkeit).
+4. Schaden: Welche Aufwendungen hat der Gläubiger im Vertrauen auf Vertragsschluss gemacht?
+5. Kausalität: Hätte der Gläubiger bei ordnungsgemäßer Aufklärung anders gehandelt?
+6. Schadensersatz: negatives Interesse (Vertrauensschaden), nicht positives Interesse (Erfüllungsschaden).
 
-## Intake
+## Rechtsrahmen
 
-- Welche Rolle hat die Nutzerin oder der Nutzer: Kanzlei, Rechtsabteilung, Ausbildung, Gerichtsvorbereitung oder Selbststudium?
-- Was ist das konkrete Arbeitsziel: Anspruchsprüfung, Memo, Klausurlösung, Schriftsatzbaustein, Fristenvermerk oder Rückfragenkatalog?
-- Welche Tatsachen sind belegt, welche sind nur Behauptung, welche fehlen noch?
-- Welche Daten, Uhrzeiten, Erklärungen, Vollmachten, Formvorgaben und Fristen sind im Sachverhalt erkennbar?
+- § 311 Abs. 2 BGB: Schuldverhältnis durch Aufnahme von Vertragsverhandlungen.
+- § 311 Abs. 3 BGB: Schuldverhältnis mit Dritten, die besonderes Vertrauen in Anspruch nehmen.
+- § 280 Abs. 1 BGB: Schadensersatz wegen Pflichtverletzung des Schuldverhältnisses.
+- § 241 Abs. 2 BGB: Schutz- und Rücksichtspflichten im Schuldverhältnis.
+- § 123 BGB: arglistige Täuschung — cic tritt neben Anfechtungsrecht.
+- § 249 BGB: Schadensersatz in Natur oder Geldersatz.
 
 ## Prüfraster
 
-1. Vertragsanbahnung oder besonderes Vertrauen feststellen
-2. Pflichtverletzung und Vertretenmüssen prüfen
-3. Vertrauensschaden und Erfüllungsinteresse trennen
-4. BGB-AT-Fragen als Vorfragen ausweisen
-5. Ergebnis mit Norm, Tatbestandsmerkmal, Subsumtion und Rechtsfolge festhalten.
-6. Offene Tatsachen als Rückfrage formulieren und nicht durch Vermutung ersetzen.
+1. Vorvertragliches Schuldverhältnis nach § 311 Abs. 2 BGB entstanden?
+2. Welche Pflicht nach § 241 Abs. 2 BGB wurde verletzt (Aufklärung, Schutz, Rücksicht)?
+3. Verschulden: Vorsatz oder Fahrlässigkeit des Schuldners?
+4. Schaden: Vertrauensschaden (Aufwendungen, entgangene Alternativgeschäfte)?
+5. Kausalität zwischen Pflichtverletzung und Schaden?
+6. Verhältnis zu § 123 BGB: cic und Anfechtung nebeneinander möglich?
+7. Abbruch der Verhandlungen: triftiger Grund oder treuwidriger Abbruch?
 
-## Output
+## Typische Fallstricke
 
-- Kurztriage mit Ampel und nächstem Schritt
-- Prüfung im Gutachtenstil oder als praxisnahes Mandatsmemo
-- Anspruchs- oder Erklärungsmatrix mit Beweisankern
-- Rückfragenliste und optionaler Entwurfsbaustein
+- cic ist kein Ersatz für kaufrechtliche Gewährleistung — Anspruchskonkurrenz klären.
+- Vertrauensschaden umfasst nur negatives Interesse, nicht das Erfüllungsinteresse.
+- § 311 Abs. 3 BGB erfordert besondere Vertrauensinanspruchnahme eines Dritten.
+- Abbruch von Vertragsverhandlungen ist grundsätzlich erlaubt — nur treuwidriger Abbruch begründet cic.
 
-## Qualitätsregeln
+## Quellen
 
-- BGB-AT-Fragen immer an der passenden Stelle im Anspruchsaufbau prüfen.
-- Auslegung geht regelmäßig vor Anfechtung, Dissens oder Lückenschließung.
-- Keine erfundenen Rechtsprechungs- oder Literaturzitate verwenden; bei Zitaten Primärquelle prüfen.
-- Bei Fristen den Rechenweg sichtbar machen.
-- Bei Wertungen die tragenden Tatsachen ausdrücklich nennen.
+- [§ 311 BGB — gesetze-im-internet.de](https://www.gesetze-im-internet.de/bgb/__311.html)
+- [§ 280 BGB — gesetze-im-internet.de](https://www.gesetze-im-internet.de/bgb/__280.html)
+- [§ 241 BGB — gesetze-im-internet.de](https://www.gesetze-im-internet.de/bgb/__241.html)
+- [dejure.org § 311 BGB](https://dejure.org/gesetze/BGB/311.html)
+- [dejure.org § 280 BGB](https://dejure.org/gesetze/BGB/280.html)
 
-## Anschluss-Skills
+## Vertiefung
 
-- allgemein
-- anspruchsaufbau-zivilrecht-bgb-at
-- bgb-at-output-gutachten-memo-schriftsatz
+### Systematik der cic
+
+Die culpa in contrahendo (§§ 311 Abs. 2 und 241 Abs. 2 BGB) begründet ein vorvertragliches
+Schuldverhältnis. Verletzt ein Beteiligter seine Rücksichtspflichten (§ 241 Abs. 2 BGB) bei
+Vertragsanbahnung, entsteht ein Schadensersatzanspruch nach § 280 Abs. 1 BGB.
+
+### Hauptfälle der cic
+
+(1) Abbruch von Vertragsverhandlungen ohne triftigen Grund nach weit fortgeschrittenem Stadium,
+(2) Pflichtverletzung durch fehlerhafte vorvertragliche Aufklärung,
+(3) Verletzung von Schutzpflichten bei Anbahnung (Körperschäden im Geschäft des Vertragspartners).
+
+### Klausur-Checkliste cic
+
+- Vorvertragliches Schuldverhältnis nach § 311 Abs. 2 BGB begründet?
+- Pflichtverletzung nach § 241 Abs. 2 BGB konkret benannt?
+- Verschulden des Schädigers nach § 276 BGB (Fahrlässigkeit ausreichend)?
+- Schaden: negatives oder positives Interesse — was verlangt der Geschädigte?
+- Abgrenzung zur Anfechtung nach § 123 BGB: Beide Wege möglich?

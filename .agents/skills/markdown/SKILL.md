@@ -1,534 +1,268 @@
 ---
 name: markdown
-description: "Plain text formatting that's readable raw AND rendered"
-license: MIT
-tier: 1
-protocol: MARKDOWN
-allowed-tools:
-  - read_file
-  - write_file
-origin: "John Gruber — Markdown (2004)"
-lineage:
-  - "John Gruber — Markdown (2004)"
-  - "Aaron Swartz — Beta tester, refinement"
-  - "Dean Allen — Textile (prior art)"
-  - "GitHub — GFM, widespread adoption"
-  - "Anil Dash — 'How Markdown Took Over the World' (2025)"
-related: [plain-text, yaml-jazz, session-log, soul-chat, research-notebook, sniffable-python, k-lines]
-tags: [moollm, format, documentation, session-log, readme, plain-text]
+description: >
+  Markdown linting and automated fixing using markdownlint-cli2. Use when Claude needs to: (1) Check markdown files for style issues, (2) Fix markdown formatting problems, (3) Ensure markdown follows best practices, (4) Validate markdown documents, or (5) Apply consistent markdown styling
 ---
 
-# Markdown
+# Markdown Lint
 
-> *"The source is the destination. Readable raw AND rendered."*
+Automated markdown validation and fixing using markdownlint-cli2.
 
----
+## Workflow Overview
 
-## What Is It?
+```text
+1. Run auto-fix     → markdownlint-cli2 --fix <file>
+2. Check remaining  → markdownlint-cli2 <file>
+3. Fix manually     → str_replace for structural issues
+4. Verify           → markdownlint-cli2 <file> (should show 0 errors)
+```
 
-**Markdown** is the plain text format that powers MOOLLM's human-readable files. It's not just formatting — it's a philosophy:
+**Expected results**: Auto-fix resolves 70-90% of issues. Remaining 3-5
+issues require manual correction.
 
-- **Readable without rendering** — Open SESSION.md in any editor, understand it instantly
-- **Readable when rendered** — GitHub, Obsidian, browsers enhance but don't transform
-- **LLM-native** — Models are trained on billions of Markdown files; they speak it fluently
-- **Git-friendly** — Diffs are meaningful, merges work, history is readable
-- **No lock-in** — Plain text survives every platform, every decade
+## Basic Commands
 
----
+```bash
+# Auto-fix single file
+markdownlint-cli2 --fix document.md
 
-## Why Markdown Won
+# Check file
+markdownlint-cli2 document.md
 
-From Anil Dash's "[How Markdown Took Over the World](https://anildash.com/2025/01/09/how-markdown-took-over-the-world/)" (January 2025):
+# Multiple files
+markdownlint-cli2 --fix file1.md file2.md
 
-### The 10 Technical Reasons
+# All markdown in directory
+markdownlint-cli2 --fix "**/*.md"
 
-| Reason | Explanation | MOOLLM Parallel |
-|--------|-------------|-----------------|
-| **1. Great brand** | "Markdown" = opposite of "markup" | YAML Jazz, SOUL-CHAT, K-lines |
-| **2. Solved a real problem** | HTML too verbose for blogging | YAML too rigid; comments add soul |
-| **3. Built on existing behaviors** | Email formatting conventions | Indentation, `#` headers already intuitive |
-| **4. Mirrored RSS in origin** | Curmudgeonly creators, blog platforms | Open source, community-driven |
-| **5. Community ready to help** | Dean Allen (Textile), Aaron Swartz | Skill contributions, open protocols |
-| **6. Flavors for context** | GFM, CommonMark, etc. | Adventure YAML vs. session markdown |
-| **7. Time of behavior change** | Blogging era = new habits | LLM era = new habits |
-| **8. Build tool era** | Markdown → HTML in pipelines | YAML → JSON → Browser |
-| **9. Works with "view source"** | Inspectable source | Files as state, transparent |
-| **10. No IP encumbrance** | Free, no patents | MIT license everywhere |
+# With custom config
+markdownlint-cli2 --config .markdownlint.json document.md
+```
 
-### The Key Insight
+## File Paths
 
-> *"If mark**up** is complicated, then the opposite of that complexity must be... mark**down**."*
-> — Anil Dash
+```bash
+# Uploaded files
+markdownlint-cli2 --fix /mnt/user-data/uploads/document.md
 
----
+# Working directory
+markdownlint-cli2 --fix /home/claude/document.md
 
-## Markdown in MOOLLM
+# Output to user
+cp /path/to/fixed.md /mnt/user-data/outputs/
+```
 
-### Session Logs
+## Manual Fixes Required
+
+Auto-fix cannot resolve these issues - they need Claude's judgment:
+
+### MD025 - Multiple H1 Headers
+
+**Why**: Requires understanding document hierarchy  
+**Fix**: Convert extra H1s to appropriate level
 
 ```markdown
-# Session: Adventure Uplift
+# Main Title
 
-## 📑 Index
-1. [Overview](#1-overview)
-2. [Decisions](#2-decisions)
-
----
-
-## 1. Overview
-
-<details open>
-<summary><strong>🎯 Mission</strong></summary>
-
-Build `adventure.py` to compile adventures to web apps.
-
-</details>
-
-<details>
-<summary><strong>📋 Technical Details</strong></summary>
-
-Architecture decisions go here...
-
-</details>
+# Second Title → Change to: ## Second Title
 ```
 
-### READMEs
+### MD036 - Emphasis as Header
+
+**Why**: Requires determining author intent  
+**Fix**: Replace bold/italic with proper header
 
 ```markdown
-# Skill Name
-
-> *"One-liner that captures the essence"*
-
-## What Is It?
-Brief explanation.
-
-## When to Use
-- Scenario 1
-- Scenario 2
-
-## Dovetails With
-- [related-skill/](../related-skill/)
+**Section Title** → Change to: ## Section Title
 ```
 
-### Embedded Data
+### MD013 - Line Too Long
 
-Markdown + YAML code blocks = structured data in narrative:
+**Why**: Requires deciding where to break content  
+**Fix**: Wrap at natural points (spaces, punctuation)
 
 ```markdown
-Here's the configuration:
-
-​```yaml
-rooms:
-  - start
-  - maze
-  - end
-​```
-
-And the reasoning behind it...
+This is a very long line exceeding 80 characters that needs wrapping.
+↓
+This is a very long line exceeding 80 characters that needs
+wrapping.
 ```
 
----
+**Exception**: URLs typically exempt
 
-## GitHub-Flavored Markdown (GFM)
+### MD041 - Missing First Line Header
 
-MOOLLM session logs use GFM extensions:
+**Why**: Requires structural decision  
+**Fix**: Add H1 at start or restructure
 
-### Tables
+## Execution Pattern
 
-```markdown
-| Feature | Status |
-|---------|--------|
-| Navigation | ✅ Done |
-| Inventory | 🚧 WIP |
+### For Uploaded Files
+
+```bash
+# 1. Auto-fix
+markdownlint-cli2 --fix /mnt/user-data/uploads/document.md
+
+# 2. Check remaining
+markdownlint-cli2 /mnt/user-data/uploads/document.md
+# Output: "Summary: 3 error(s)"
+# Lists specific errors like "MD025/single-title Multiple top-level headings"
+
+# 3. Manual fixes (example)
+str_replace "# Extra Title" → "## Extra Title"
+
+# 4. Verify
+markdownlint-cli2 /mnt/user-data/uploads/document.md
+# Output: "Summary: 0 error(s)"
+
+# 5. Output
+cp /mnt/user-data/uploads/document.md /mnt/user-data/outputs/
 ```
 
-### Task Lists
+### For New Content
 
-```markdown
-- [x] Define schema
-- [ ] Build linter
-- [ ] Compile to JSON
+```bash
+create_file /home/claude/doc.md "content..."
+markdownlint-cli2 --fix /home/claude/doc.md
+markdownlint-cli2 /home/claude/doc.md
+# Fix remaining issues if any
+cp /home/claude/doc.md /mnt/user-data/outputs/
 ```
 
-### Collapsible Sections
+## Configuration
 
-```html
-<details>
-<summary>Click to expand</summary>
+Create `.markdownlint.json` to customize rules:
 
-Hidden content goes here.
-
-</details>
+```json
+{
+  "default": true,
+  "MD013": { "line_length": 120 },
+  "MD033": false
+}
 ```
 
-### Syntax Highlighting
+**Common adjustments**:
 
-```markdown
-​```python
-def hello():
-    print("Hello, world!")
-​```
+- `"MD013": false` - Disable line length checking
+- `"MD013": { "line_length": 120 }` - Increase limit to 120
+- `"MD013": { "code_blocks": false }` - Exclude code blocks
+- `"MD033": false` - Allow HTML
+- `"MD041": false` - Don't require first line header
+
+**Config file search order**:
+
+1. `.markdownlint-cli2.jsonc`
+2. `.markdownlint-cli2.yaml`
+3. `.markdownlint.jsonc` / `.markdownlint.json`
+4. `.markdownlint.yaml` / `.markdownlint.yml`
+
+## Reporting to User
+
+Provide clear summary of fixes:
+
+```text
+✅ Markdown linting complete!
+
+Initial: 18 errors
+After auto-fix: 4 errors
+Manual fixes:
+  • MD025: Converted 2 H1 headers to H2
+  • MD036: Replaced bold with proper header
+  • MD013: Wrapped long line
+
+Final: 0 errors
 ```
 
-### Alerts (GitHub-specific)
+## Error Count Interpretation
 
-```markdown
-> [!NOTE]
-> Useful information.
+**Before auto-fix**:
 
-> [!WARNING]
-> Critical information.
+- 0-5: Minor issues
+- 6-15: Moderate issues
+- 16+: Significant issues
+
+**After auto-fix**:
+
+- 0-2: Excellent
+- 3-5: Typical
+- 6+: Check if config needed
+
+## Common Fix Patterns
+
+```bash
+# Multiple H1s - analyze structure first
+# If sections: convert to H2
+str_replace "# Introduction" → "## Introduction"
+
+# If subsections: convert to H3
+str_replace "# Details" → "### Details"
+
+# Emphasis as headers - determine appropriate level
+str_replace "**Important**" → "## Important"
+str_replace "_Note_" → "### Note"
+
+# Long lines - break at natural points
+# After conjunctions: and, but, or
+# After punctuation: , . ;
+# Preserve URLs on single line
 ```
 
-### Mermaid Diagrams
+## Troubleshooting
 
-GitHub renders Mermaid diagrams natively! Perfect for:
-- Flowcharts
-- Sequence diagrams
-- State machines
-- Entity relationships
-- Architecture diagrams
+**Auto-fix not working**:
 
-```markdown
-​```mermaid
-flowchart TD
-    YAML[YAML Microworld] --> Python[Python Loader]
-    Python --> JSON[adventure.json]
-    JSON --> Browser[Browser Engine]
-    Browser --> Player[Player Experience]
-​```
+```bash
+# Check file exists
+view /path/to/file.md
+
+# Verify permissions
+ls -l /path/to/file.md
+
+# Use absolute path
+markdownlint-cli2 --fix /full/path/to/file.md
 ```
 
-Renders as:
+**Too many errors after auto-fix**:
 
-```mermaid
-flowchart TD
-    YAML[YAML Microworld] --> Python[Python Loader]
-    Python --> JSON[adventure.json]
-    JSON --> Browser[Browser Engine]
-    Browser --> Player[Player Experience]
+```bash
+# Create relaxed config
+echo '{"MD013": false, "MD041": false}' > .markdownlint.json
+markdownlint-cli2 --config .markdownlint.json --fix file.md
 ```
 
-#### Common Mermaid Patterns
+**Specific rule causing issues**:
 
-**Flowchart (process flow):**
-```mermaid
-flowchart LR
-    A[Start] --> B{Decision}
-    B -->|Yes| C[Action 1]
-    B -->|No| D[Action 2]
-    C --> E[End]
-    D --> E
-```
+- Disable in config: `"MD013": false`
+- Or adjust parameters: `"MD013": { "line_length": 120 }`
 
-**Sequence diagram (interactions):**
-```mermaid
-sequenceDiagram
-    Player->>Room: LOOK
-    Room->>Objects: Query visible
-    Objects-->>Room: [lamp, key]
-    Room-->>Player: Description + objects
-```
+## When NOT to Lint
 
-**State diagram (room states):**
-```mermaid
-stateDiagram-v2
-    [*] --> start
-    start --> maze: GO NORTH
-    maze --> end: SOLVE PUZZLE
-    maze --> maze: WANDER
-    end --> [*]
-```
+Skip linting when:
 
-**Entity relationship (data model):**
-```mermaid
-erDiagram
-    ROOM ||--o{ OBJECT : contains
-    ROOM ||--o{ EXIT : has
-    CHARACTER ||--o{ OBJECT : carries
-    EXIT }o--|| ROOM : leads_to
-```
+- Code examples intentionally violate rules
+- Embedded HTML/JSX required (disable MD033)
+- Generated docs with different conventions
+- Legacy docs where changes break references
 
----
+Use custom config to disable problematic rules.
 
-## LLMs and Markdown
+## Quick Rule Reference
 
-From Hacker News discussion (January 2025):
+Most common rules Claude will encounter:
 
-> *"It's fundamentally text. No format/vendor lock-in and very amenable to living in a git repo. I can tell an LLM to look at the code in this repo and make me an API_documentation.md and it'll grasp that I want a text-based summary."*
-> — @Havoc
+- **MD001** - Header increment by one level
+- **MD004** - Consistent list markers
+- **MD009** - No trailing spaces
+- **MD010** - No hard tabs
+- **MD012** - No multiple blank lines
+- **MD013** - Line length (default: 80)
+- **MD018** - Space after # in headers
+- **MD022** - Blank lines around headers
+- **MD025** - Single H1 only
+- **MD031** - Blank lines around code
+- **MD032** - Blank lines around lists
+- **MD034** - Bare URLs in <>
+- **MD036** - No emphasis as headers
+- **MD040** - Language for code blocks
 
-### Why LLMs Prefer Markdown
-
-| Property | Benefit |
-|----------|---------|
-| **Training data** | Billions of .md files in training corpus |
-| **Structure** | Headers, lists, code blocks = clear semantics |
-| **Low overhead** | No bracket matching (unlike JSON) |
-| **Comments in code blocks** | Context preserved |
-| **Human-readable** | Model can "think out loud" naturally |
-
-### LLM Output Patterns
-
-LLMs naturally output:
-- `#` headers for sections
-- `-` bullets for lists
-- ``` code blocks for code
-- `**bold**` for emphasis
-- Tables for structured comparisons
-
-**Match this in your prompts** — write instructions in Markdown, get Markdown back.
-
----
-
-## The "Source is Destination" Principle
-
-Markdown's power: **it's both the source AND the readable output**.
-
-| Format | Source | Destination | Gap |
-|--------|--------|-------------|-----|
-| LaTeX | `.tex` | PDF | Large |
-| HTML | `.html` | Browser | Medium |
-| **Markdown** | `.md` | `.md` (or rendered) | **None** |
-
-This is why YAML Jazz matters: 
-
-```yaml
-# This comment is readable in the source
-# AND visible to the LLM
-# AND preserved in the file
-config:
-  setting: value
-```
-
-The source IS the documentation. The documentation IS the source.
-
----
-
-## Best Practices for MOOLLM
-
-### 1. Indexes at Top
-
-Long documents need navigation:
-
-```markdown
-## 📑 Index
-
-1. [Section One](#section-one)
-2. [Section Two](#section-two)
-
----
-
-## Section One
-...
-```
-
-### 2. Collapsible Details (CRITICAL!)
-
-**This is one of Markdown's superpowers.** Hide complexity, show structure. Let readers scan summaries without drowning in details.
-
-```html
-<details open>
-<summary><strong>🎯 Important Section — Open by Default</strong></summary>
-
-Critical content that readers need to see immediately.
-
-</details>
-
-<details>
-<summary><strong>📋 Technical Details — Collapsed by Default</strong></summary>
-
-Dense content that only some readers need.
-Click to expand when curious.
-
-</details>
-```
-
-#### LLM-Generated Summaries in `<summary>` Tags
-
-**Key insight:** The `<summary>` tag should contain a **descriptive summary** that tells readers what's inside WITHOUT opening. LLMs are great at generating these!
-
-**Bad:**
-```html
-<details>
-<summary>Click to see more</summary>
-...content...
-</details>
-```
-
-**Good:**
-```html
-<details>
-<summary><strong>🎤 Gary Drescher's Talk — Schema Mechanism + LLM = Flight</strong></summary>
-
-Full transcript of Gary explaining how LLMs complete what Made-Up Minds started...
-
-</details>
-```
-
-**Even better — with key points in summary:**
-```html
-<details>
-<summary><strong>🏗️ Architecture Decisions</strong> — YAML source, JSON compile, SPA output, staged development</summary>
-
-Detailed architecture documentation...
-
-</details>
-```
-
-#### Nesting Collapsibles
-
-For complex documents, nest sections:
-
-```html
-<details open>
-<summary><strong>📚 Part 1: The Gathering</strong></summary>
-
-Overview of who attended...
-
-<details>
-<summary>Living Legends (25 people)</summary>
-
-Full list with bios...
-
-</details>
-
-<details>
-<summary>Memorial Candles (10 people)</summary>
-
-Those speaking through memory...
-
-</details>
-
-</details>
-```
-
-#### When to Use Each Pattern
-
-| Pattern | Use When |
-|---------|----------|
-| `<details open>` | Main content, must-read sections |
-| `<details>` (closed) | Supporting details, optional depth |
-| Nested `<details>` | Hierarchical information (parts > chapters > sections) |
-| Summary with key points | Reader can decide without opening |
-| Summary with just title | Section is self-explanatory |
-
-#### The Session Log Pattern
-
-MOOLLM session logs use this extensively:
-
-```html
-## 5. Free-For-All Q&A
-
-<details>
-<summary><strong>🎤 Highlights from the Chaos</strong> — Scott on 16KB, Will on distributed AI, Hofstadter on strange loops</summary>
-
-### On Distributed Intelligence
-
-**SCOTT ADAMS:** "Wait — schemas are literally what I fit in sixteen kilobytes in 1978!"
-
-**WILL WRIGHT:** "We distributed intelligence INTO THE OBJECTS..."
-
-...full transcript...
-
-</details>
-```
-
-The reader sees:
-- Section title
-- Key topics covered
-- Can skip if not interested, or expand for full content
-
-**This is why session logs are readable even at 7000+ lines!**
-
-### 3. Tables for Structured Data
-
-When you have parallel information:
-
-```markdown
-| Room | Objects | Exits |
-|------|---------|-------|
-| start | lamp, key | north |
-| maze | torch | north, south, east |
-```
-
-### 4. Code Blocks for Examples
-
-Always use fenced code blocks with language hints:
-
-```markdown
-​```yaml
-name: example
-​```
-
-​```python
-def example():
-    pass
-​```
-```
-
-### 5. Blockquotes for Quotes/Emphasis
-
-```markdown
-> *"The filesystem IS the microworld."*
-> — MOOLLM Constitution
-```
-
----
-
-## Anti-Patterns
-
-❌ **Over-nesting headers** — More than 4 levels is confusing  
-❌ **Inline HTML everywhere** — Defeats plain-text readability  
-❌ **No structure** — Wall of text without headers/sections  
-❌ **Proprietary extensions** — Stick to GFM for portability  
-❌ **Rendered-only thinking** — If it's unreadable raw, rethink it
-
----
-
-## The Durability Argument
-
-From HN:
-
-> *"I don't want to worry about whatever cursed format OneNote uses still being something I can extract in 2035."*
-> — @Havoc
-
-Markdown files from 2004 are still readable today. They'll be readable in 2045. **Plain text is forever.**
-
-MOOLLM session logs, skill files, and READMEs will outlive any proprietary format.
-
----
-
-## Dovetails With
-
-- [yaml-jazz/](../yaml-jazz/) — YAML is the data; Markdown is the prose
-- [session-log/](../session-log/) — Session logs are Markdown documents
-- [plain-text/](../plain-text/) — The broader philosophy
-- [soul-chat/](../soul-chat/) — Markdown with embedded YAML
-- [postel/](../postel/) — Be liberal in accepting Markdown variants
-
----
-
-## Protocol Symbol
-
-```
-MARKDOWN
-```
-
-Invoke when: Writing documentation, session logs, READMEs, or any human-readable prose.
-
----
-
-## Credits
-
-- **John Gruber** — Creator of Markdown (2004)
-- **Aaron Swartz** — Beta tester, helped refine the format
-- **Dean Allen** — Textile (prior art, inspiration)
-- **GitHub** — GFM, mass adoption
-- **Anil Dash** — "[How Markdown Took Over the World](https://anildash.com/2025/01/09/how-markdown-took-over-the-world/)" (2025)
-- **CommonMark** — Standardization effort
-
----
-
-> *"The trillion-dollar AI industry's system for controlling their most advanced platforms is a plain text format one guy made up for his blog and then bounced off of a 17-year-old kid before sharing it with the world for free."*
-> — Anil Dash
+Full rule documentation: <https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md>

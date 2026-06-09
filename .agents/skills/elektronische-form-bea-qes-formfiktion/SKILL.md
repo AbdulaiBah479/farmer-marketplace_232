@@ -1,13 +1,9 @@
 ---
 name: elektronische-form-bea-qes-formfiktion
-description: "Workflow-Skill zu elektronische form bea qes formfiktion. Nutzt Normtext, Nutzerangaben und verifizierte Quellen; Rechtsprechung nur nach Live-Pruefung mit Gericht, Datum und Aktenzeichen."
+description: "Prüfungslinie für elektronische form bea qes formfiktion im BGB AT."
 ---
 
 # Elektronische Form BeA QES Formfiktion
-
-## Zweck
-
-Dieser Skill verbindet BGB AT, Schriftform und elektronischen Rechtsverkehr. Er prüft, ob eine empfangsbedürftige Willenserklärung, die Schriftform oder elektronische Form verlangt, durch qES, beA-Einreichung, gerichtliche Zustellung oder die neue Formfiktion formwirksam zugegangen ist.
 
 ## Normanker
 
@@ -73,14 +69,6 @@ Ein aus dem eigenen beA versandter und einfach signierter Schriftsatz kann § 13
 - Kurzvermerk, ob § 126a BGB direkt erfüllt ist oder nur § 130e ZPO bzw. § 46h ArbGG trägt
 - Risikoliste zu Vollmacht, § 174 BGB, Klarerkennbarkeit, Zustellung und Beweis
 - konkrete Empfehlung: Papieroriginal, qES-Direktversand, beA-Schriftsatz mit Formfiktion oder Neuerklärung
-
-## Qualitätsregeln
-
-- Immer zwischen prozessualer Einreichungsform und materieller Form der Willenserklärung trennen.
-- beA-sicherer Übermittlungsweg ist nicht dasselbe wie qualifizierte elektronische Signatur.
-- Zugang ist bei empfangsbedürftigen Erklärungen ein eigenes Tatbestandsmerkmal.
-- § 130e ZPO und § 46h ArbGG erst ab ihrem Inkrafttreten anwenden.
-- Keine Parallelvorschrift in anderen Prozessordnungen erfinden.
 
 ## Anschluss-Skills
 

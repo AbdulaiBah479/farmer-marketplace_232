@@ -1,9 +1,30 @@
 ---
 name: kueschk-abfindung-faustformel-und-spannweite
-description: "Abfindung Kündigungsschutzklage: Faustformel halbes Bruttomonatsgehalt pro Beschaeftigungsjahr; Spannweite von einem Viertel bis zu einem ganzen Bruttomonatsgehalt; Einflussfaktoren; steuerliche Behandlung Fuenftel-Regelung § 34 EStG; keine gesetzliche Abfindungspflicht außer §§ 1a und 9 KSchG."
+description: "Abfindung Kündigungsschutzklage: Faustformel halbes Bruttomonatsgehalt pro Beschaeftigungsjahr: Spannweite von einem Viertel bis zu einem ganzen Bruttomonatsgeha..."
 ---
 
-# Abfindung: Faustformel und Spannweite
+# Abfindung Kündigungsschutzklage: Faustformel halbes Bruttomonatsgehalt pro Beschaeftigungsjahr
+
+
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: die im Plugin-Kontext einschlägigen Normen über gesetze-im-internet.de, dejure.org, eur-lex.europa.eu und die amtlichen Bundes-/Landesportale live prüfen — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+**Fokus:** Abfindung Kündigungsschutzklage: Faustformel halbes Bruttomonatsgehalt pro Beschaeftigungsjahr; Spannweite von einem Viertel bis zu einem ganzen Bruttomonatsgehalt; Einflussfaktoren; steuerliche Behandlung Fuenftel-Regelung § 34 EStG; keine gesetzliche Abfindungspflicht außer §§ 1a und 9 KSchG.
+
+### Abfindung: Faustformel und Spannweite
+
+## Fachlicher Kern — Arbeitsrecht
+- **Problemfokus dieses Skills:** Bleibe beim konkreten Titel `Abfindung: Faustformel und Spannweite` und löse die dort angelegte Fachfrage; arbeite mit konkreten Tatbestandsmerkmalen, Beweisfragen und dem unmittelbar benötigten Arbeitsprodukt. Routingfragen bleiben Hilfsmittel, wenn Frist, Zuständigkeit oder Verfahrensart offen sind.
+- **Normenradar:** BGB §§ 611a, 613a, 615, 623; KSchG §§ 1, 4, 7; TzBfG §§ 14, 15, 16; AGG §§ 1, 3, 7, 15, 22; EntgTranspG §§ 3, 5, 7; BUrlG §§ 1, 3, 7; BetrVG §§ 87, 99, 102; ArbZG; NachwG; SGB IX §§ 164, 167, 168.
+- **Verifizierte Anker:** BAG, Urteil vom 23.10.2025 - 8 AZR 300/24 (Entgeltgleichheit, Paarvergleich, Beweislast, bundesarbeitsgericht.de); BAG, Urteil vom 03.06.2025 - 9 AZR 104/24 (kein Verzicht auf gesetzlichen Mindesturlaub im bestehenden Arbeitsverhältnis); bei Kündigungszugang immer § 623 BGB, Zugang nach § 130 BGB, Dreiwochenfrist §§ 4, 7 KSchG und Beweis des konkreten Umschlags trennen.
+- **Arbeitsmodus:** Zuerst Status, Zugang, Frist, Beteiligungsrechte, Sonderkündigungsschutz, Beweislast und prozessualen nächsten Schritt sichern; dann erst Materiellrecht vertiefen.
+- **Outputpflicht:** Fristenblatt, Zugangsmatrix, Beweisangebot, Mandantenmail, Betriebsrats-/Gegnerbrief oder Klage-/Erwiderungsbaustein.
+- **Fehlerbremse:** Tragende Normen/Entscheidungen live oder aus der Akte verifizieren; Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei prüfbarer Quelle. Keine BeckRS-, juris-, Kommentar- oder Aufsatz-Blindzitate aus Modellwissen.
 
 ## Triage zu Beginn — kläre vor der Abfindungsberechnung
 
@@ -26,9 +47,6 @@ description: "Abfindung Kündigungsschutzklage: Faustformel halbes Bruttomonatsg
 
 - Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
-## Quellenregel
-
-Quellenregel: Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen; Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff.
 ## Die Faustformel
 
 Die in der Praxis häufig verwendete Faustformel lautet:
@@ -94,10 +112,10 @@ Faustformel (0.5 × Monatslohn × Dienstjahre):
 [ZAHL] × 0.5 × [BETRAG] = [ERGEBNIS] Euro brutto
 
 Empfohlene Verhandlungsspanne:
-  Untere Grenze (0.25): [BETRAG] Euro brutto
-  Faustformel (0.50): [BETRAG] Euro brutto
-  Obere Grenze (0.75): [BETRAG] Euro brutto
-  (falls starke Rechtsposition: bis [BETRAG] Euro brutto)
+ Untere Grenze (0.25): [BETRAG] Euro brutto
+ Faustformel (0.50): [BETRAG] Euro brutto
+ Obere Grenze (0.75): [BETRAG] Euro brutto
+ (falls starke Rechtsposition: bis [BETRAG] Euro brutto)
 
 Steuerhinweis: Fünftel-Regelung § 34 EStG prüfen (Steuerberater einbinden)
 Sperrzeit-Hinweis: § 158-159 SGB III prüfen (Agentur für Arbeit informieren)

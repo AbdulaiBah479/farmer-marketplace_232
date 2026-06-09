@@ -1,365 +1,170 @@
 ---
 name: database-migration-helper
-description: Creates database migrations with proper schema changes, data migrations, and rollback support for various ORMs (Prisma, TypeORM, Alembic, etc.). Use when managing database schema changes.
+description: Creates database migration files following project conventions for Prisma, Sequelize, Alembic, Knex, TypeORM, and other ORMs. Use when adding tables, modifying schemas, or when user mentions database changes.
+allowed-tools: Read, Grep, Glob, Write, Bash
 ---
 
-# Database Migration Helper Skill
-
-Expert at creating safe, reversible database migrations across different frameworks and tools.
-
-## When to Activate
-
-- "create database migration for [change]"
-- "generate migration to add [table/column]"
-- "write data migration for [transformation]"
-
-## Prisma Migrations
-
-```prisma
-// prisma/schema.prisma
-model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String
-  role      Role     @default(USER)
-  posts     Post[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([email])
-  @@map("users")
-}
-
-model Post {
-  id          Int       @id @default(autoincrement())
-  title       String
-  slug        String    @unique
-  content     String    @db.Text
-  published   Boolean   @default(false)
-  authorId    Int
-  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  publishedAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  @@index([slug])
-  @@index([authorId, publishedAt])
-  @@map("posts")
-}
-
-enum Role {
-  USER
-  ADMIN
-  MODERATOR
-}
-```
-
-```bash
-# Create migration
-npx prisma migrate dev --name add_user_role
-
-# Apply migrations
-npx prisma migrate deploy
-
-# Reset database (development only)
-npx prisma migrate reset
-
-# Create migration without applying
-npx prisma migrate dev --create-only
-```
-
-## TypeORM Migrations
-
-```typescript
-// migrations/1234567890-AddUserRole.ts
-import { MigrationInterface, QueryRunner, TableColumn } from 'typeorm';
-
-export class AddUserRole1234567890 implements MigrationInterface {
-  name = 'AddUserRole1234567890';
-
-  public async up(queryRunner: QueryRunner): Promise<void> {
-    // Add role column
-    await queryRunner.addColumn(
-      'users',
-      new TableColumn({
-        name: 'role',
-        type: 'enum',
-        enum: ['user', 'admin', 'moderator'],
-        default: "'user'",
-      })
-    );
-
-    // Create index
-    await queryRunner.createIndex(
-      'users',
-      new Index({
-        name: 'IDX_USERS_ROLE',
-        columnNames: ['role'],
-      })
-    );
-
-    // Data migration - set existing users to 'user' role
-    await queryRunner.query(
-      `UPDATE users SET role = 'user' WHERE role IS NULL`
-    );
-  }
-
-  public async down(queryRunner: QueryRunner): Promise<void> {
-    // Remove index
-    await queryRunner.dropIndex('users', 'IDX_USERS_ROLE');
+# Database Migration Helper
 
-    // Remove column
-    await queryRunner.dropColumn('users', 'role');
-  }
-}
-```
+This skill helps you create database migration files that follow your project's ORM conventions and naming patterns.
 
-```bash
-# Generate migration from entity changes
-npm run typeorm migration:generate -- -n AddUserRole
+## When to Use This Skill
 
-# Create empty migration
-npm run typeorm migration:create -- -n DataMigration
+- User requests to create a database migration
+- Adding new tables or columns to the database
+- Modifying existing database schema
+- Creating indexes, constraints, or relationships
+- User mentions "migration", "schema change", or "database update"
 
-# Run migrations
-npm run typeorm migration:run
+## Instructions
 
-# Revert last migration
-npm run typeorm migration:revert
-```
+### 1. Detect the ORM/Migration Tool
 
-## Alembic (Python) Migrations
-
-```python
-# alembic/versions/001_add_user_role.py
-"""add user role
-
-Revision ID: 001
-Revises:
-Create Date: 2024-01-01 12:00:00
-
-"""
-from alembic import op
-import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
-
-# revision identifiers
-revision = '001'
-down_revision = None
-branch_labels = None
-depends_on = None
-
-
-def upgrade():
-    # Create enum type
-    role_enum = postgresql.ENUM('user', 'admin', 'moderator', name='role')
-    role_enum.create(op.get_bind())
-
-    # Add column
-    op.add_column(
-        'users',
-        sa.Column('role', role_enum, nullable=False, server_default='user')
-    )
-
-    # Create index
-    op.create_index('ix_users_role', 'users', ['role'])
-
-    # Data migration
-    op.execute("""
-        UPDATE users
-        SET role = 'admin'
-        WHERE email IN (SELECT email FROM admin_emails)
-    """)
-
-
-def downgrade():
-    # Remove index
-    op.drop_index('ix_users_role', table_name='users')
-
-    # Remove column
-    op.drop_column('users', 'role')
-
-    # Drop enum
-    op.execute('DROP TYPE role')
-```
+First, identify which ORM or migration tool the project uses:
 
-```bash
-# Create migration
-alembic revision -m "add user role"
+- **Prisma**: Look for `prisma/schema.prisma` or `@prisma/client` in package.json
+- **Sequelize**: Look for `.sequelizerc` or `sequelize-cli` in package.json
+- **Knex**: Look for `knexfile.js` or `knex` in package.json
+- **TypeORM**: Look for `ormconfig.json` or `typeorm` in package.json
+- **Alembic** (Python): Look for `alembic.ini` or `alembic/` directory
+- **Django**: Look for `manage.py` and Django migrations in `*/migrations/`
+- **Active Record** (Rails): Look for `db/migrate/` directory
+- **Flyway**: Look for `flyway.conf` or `db/migration/`
+- **Liquibase**: Look for `liquibase.properties` or changelog files
 
-# Auto-generate migration from models
-alembic revision --autogenerate -m "add user role"
+Use Glob to search for these indicator files.
 
-# Run migrations
-alembic upgrade head
-
-# Rollback one migration
-alembic downgrade -1
-
-# Show current version
-alembic current
-```
-
-## Sequelize Migrations (Node.js)
-
-```javascript
-// migrations/20240101120000-add-user-role.js
-'use strict';
-
-module.exports = {
-  up: async (queryInterface, Sequelize) => {
-    // Add column
-    await queryInterface.addColumn('users', 'role', {
-      type: Sequelize.ENUM('user', 'admin', 'moderator'),
-      allowNull: false,
-      defaultValue: 'user',
-    });
-
-    // Add index
-    await queryInterface.addIndex('users', ['role'], {
-      name: 'users_role_idx',
-    });
-
-    // Data migration using raw SQL
-    await queryInterface.sequelize.query(`
-      UPDATE users
-      SET role = 'admin'
-      WHERE is_admin = true
-    `);
-
-    // Remove old column
-    await queryInterface.removeColumn('users', 'is_admin');
-  },
-
-  down: async (queryInterface, Sequelize) => {
-    // Re-add old column
-    await queryInterface.addColumn('users', 'is_admin', {
-      type: Sequelize.BOOLEAN,
-      defaultValue: false,
-    });
-
-    // Reverse data migration
-    await queryInterface.sequelize.query(`
-      UPDATE users
-      SET is_admin = true
-      WHERE role = 'admin'
-    `);
-
-    // Remove index
-    await queryInterface.removeIndex('users', 'users_role_idx');
-
-    // Remove column and enum
-    await queryInterface.removeColumn('users', 'role');
-    await queryInterface.sequelize.query('DROP TYPE IF EXISTS "enum_users_role"');
-  },
-};
-```
-
-## Raw SQL Migration Template
-
-```sql
--- Up Migration
--- migrations/001_add_user_role_up.sql
-
--- Add enum type (PostgreSQL)
-CREATE TYPE user_role AS ENUM ('user', 'admin', 'moderator');
-
--- Add column
-ALTER TABLE users ADD COLUMN role user_role NOT NULL DEFAULT 'user';
-
--- Create index
-CREATE INDEX idx_users_role ON users(role);
-
--- Data migration
-UPDATE users SET role = 'admin' WHERE id IN (1, 2, 3);
-
--- Down Migration
--- migrations/001_add_user_role_down.sql
-
--- Remove index
-DROP INDEX IF EXISTS idx_users_role;
-
--- Remove column
-ALTER TABLE users DROP COLUMN IF EXISTS role;
-
--- Drop type
-DROP TYPE IF EXISTS user_role;
-```
-
-## Complex Data Migration Example
-
-```typescript
-// Data transformation migration
-export class MigrateUserData1234567890 implements MigrationInterface {
-  public async up(queryRunner: QueryRunner): Promise<void> {
-    // 1. Create new table structure
-    await queryRunner.query(`
-      CREATE TABLE users_new (
-        id SERIAL PRIMARY KEY,
-        email VARCHAR(255) UNIQUE NOT NULL,
-        profile JSONB NOT NULL,
-        created_at TIMESTAMP DEFAULT NOW()
-      )
-    `);
-
-    // 2. Migrate data with transformation
-    await queryRunner.query(`
-      INSERT INTO users_new (id, email, profile, created_at)
-      SELECT
-        id,
-        email,
-        jsonb_build_object(
-          'firstName', first_name,
-          'lastName', last_name,
-          'phone', phone,
-          'address', jsonb_build_object(
-            'street', address_street,
-            'city', address_city,
-            'zip', address_zip
-          )
-        ) as profile,
-        created_at
-      FROM users_old
-    `);
-
-    // 3. Drop old table
-    await queryRunner.query(`DROP TABLE users_old`);
-
-    // 4. Rename new table
-    await queryRunner.query(`ALTER TABLE users_new RENAME TO users`);
-  }
-
-  public async down(queryRunner: QueryRunner): Promise<void> {
-    // Reverse migration
-    // ... implementation
-  }
-}
-```
+### 2. Examine Existing Migrations
+
+Read existing migration files to understand:
+
+- Naming conventions (timestamp format, description format)
+- Directory structure
+- Migration file format (SQL, JavaScript, TypeScript, Python, etc.)
+- Coding patterns (up/down functions, forwards/rollback, etc.)
+
+Use Grep to find recent migrations: look in common directories like:
+- `prisma/migrations/`
+- `db/migrate/`
+- `migrations/` or `database/migrations/`
+- `alembic/versions/`
+
+### 3. Generate Migration File
+
+Based on the detected ORM, create an appropriate migration file:
+
+#### Prisma
+- Run `npx prisma migrate dev --name <description>` OR
+- Manually create migration SQL in `prisma/migrations/<timestamp>_<name>/migration.sql`
+
+#### Sequelize
+- Generate: `npx sequelize-cli migration:generate --name <description>`
+- Then fill in the up/down functions with the schema changes
+
+#### Knex
+- Generate: `npx knex migrate:make <description>`
+- Fill in exports.up and exports.down functions
+
+#### TypeORM
+- Generate: `npm run typeorm migration:create src/migrations/<Name>`
+- Implement up() and down() methods
+
+#### Alembic
+- Generate: `alembic revision -m "<description>"`
+- Fill in upgrade() and downgrade() functions
+
+#### Django
+- Run: `python manage.py makemigrations`
+- Or manually create migration in `<app>/migrations/`
+
+#### Rails
+- Generate: `rails generate migration <ClassName>`
+- Fill in the change method (or up/down for complex migrations)
+
+### 4. Follow Naming Conventions
+
+Use consistent, descriptive names:
+
+- **Good**: `add_user_email_index`, `create_products_table`, `add_payment_status_to_orders`
+- **Bad**: `migration1`, `update`, `fix`
+
+Format based on project patterns:
+- Timestamp prefix: `20231215120000_add_email_to_users`
+- Sequential: `001_create_users`, `002_add_indexes`
+
+### 5. Include Both Up and Down/Rollback
+
+Always provide both directions when supported:
+
+- **Up/Upgrade/Forward**: Apply the schema change
+- **Down/Downgrade/Rollback**: Revert the schema change
+
+For ORMs that use reversible operations (Rails, some Sequelize), a single `change` method may be sufficient.
+
+### 6. Migration Content Guidelines
+
+**Creating Tables:**
+- Define all columns with appropriate types
+- Set NOT NULL constraints where appropriate
+- Add primary keys
+- Include timestamps (created_at, updated_at) if project uses them
+- Add foreign keys and indexes in the same migration or separate if project prefers
+
+**Altering Tables:**
+- Be specific: `ADD COLUMN`, `DROP COLUMN`, `MODIFY COLUMN`
+- Handle existing data appropriately (defaults, backfills)
+- Consider backwards compatibility
+
+**Adding Indexes:**
+- Name indexes clearly: `idx_users_email`, `idx_orders_user_id_created_at`
+- Use appropriate index types (B-tree, Hash, GIN, etc.)
+- Consider partial indexes for large tables
+
+**Data Migrations:**
+- Separate schema migrations from data migrations if possible
+- Be cautious with large datasets (batch operations)
+- Test rollback with realistic data volumes
+
+### 7. Validate Migration Safety
+
+Before finalizing, check:
+
+- **Reversibility**: Can the migration be rolled back?
+- **Data loss**: Will any data be lost? Warn the user!
+- **Downtime**: Will this lock tables? Consider online migrations for large tables
+- **Dependencies**: Are there dependent migrations that must run first?
+
+### 8. Testing Recommendations
+
+Suggest to the user:
+- Run migration on a development database first
+- Test rollback functionality
+- For production: test on a staging environment
+- Review generated SQL (for ORMs that auto-generate)
+
+## ORM-Specific Templates
+
+Reference the templates in `templates/` directory:
+
+- `prisma-migration.sql` - Prisma migration example
+- `sequelize-migration.js` - Sequelize migration example
+- `knex-migration.js` - Knex migration example
+- `typeorm-migration.ts` - TypeORM migration example
+- `alembic-migration.py` - Alembic migration example
+- `rails-migration.rb` - Rails migration example
 
 ## Best Practices
 
-- Always include both `up` and `down` migrations
-- Test migrations on copy of production data
-- Use transactions for data migrations
-- Add indexes after data insertion for large tables
-- Version control all migrations
-- Never modify existing migrations after deployment
-- Use descriptive migration names
-- Add comments explaining complex migrations
-- Test rollback procedures
-- Back up database before major migrations
-- Use batching for large data migrations
-- Monitor migration execution time
-- Handle NULL values properly
-- Validate data after migration
+1. **One purpose per migration**: Don't mix unrelated changes
+2. **Descriptive names**: Names should explain what the migration does
+3. **Timestamps**: Use the ORM's timestamp format for ordering
+4. **Idempotent when possible**: Safe to run multiple times
+5. **Test rollbacks**: Ensure down/rollback works correctly
+6. **Document complex logic**: Add comments for non-obvious operations
+7. **Batch large operations**: For data migrations affecting many rows
+8. **Use transactions**: Wrap operations in transactions when supported
 
-## Output Checklist
+## Supporting Files
 
-- ✅ Migration file created
-- ✅ Up migration implemented
-- ✅ Down migration implemented
-- ✅ Indexes added
-- ✅ Data migration (if needed)
-- ✅ Constraints added
-- ✅ Tested on sample data
-- 📝 Migration notes documented
+- `templates/`: Migration templates for various ORMs
+- `reference.md`: Naming conventions and migration patterns

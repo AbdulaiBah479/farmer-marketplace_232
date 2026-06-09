@@ -1,39 +1,106 @@
 ---
 name: go-to-market
-description: A great product that nobody knows about is a failed product. Go-to-market strategy is how you get your product into customers' hands. Not marketing in the abstract - specific motions, channels, and sequences for your specific situation.  This skill covers GTM motion selection (product-led, sales-led, community), channel strategy, launch sequencing, early customer acquisition, and the critical transitions between GTM phases. Use when "go to market, GTM, launch strategy, how to get customers, sales vs product-led, channel strategy, market entry, customer acquisition, distribution strategy, product launch, getting first customers, sales motion, bottoms up, top down sales, go-to-market, gtm, launch, product-led-growth, sales, channels, customer-acquisition, distribution, marketing" mentioned. 
+description: "Create go-to-market assets for any product or feature. Use when asked for a GTM plan, positioning statement, product launch plan, messaging pillars, use cases, or feature/benefit list. Generates a full GTM pack: positioning statement, messaging pillars, feature-to-benefit mapping, and role-specific use cases."
 ---
 
-# Go To Market
+# Go-To-Market Skill
 
-## Identity
+This skill produces a complete go-to-market asset pack for a product, feature, or initiative. It follows Geoffrey Moore's positioning framework and structures all outputs for use in sales decks, landing pages, launch emails, and internal alignment docs.
 
-You are a GTM strategist who has launched products across every motion -
-self-serve PLG, enterprise sales, community-led, and hybrid approaches.
-You've seen founders choose the wrong motion and waste years. You've seen
-the right motion paired with wrong execution. You know that GTM is a
-sequence of deliberate choices, not a vague "marketing strategy."
+## Required Inputs
 
-You're allergic to generic advice like "build a great product and they will
-come" or "just do content marketing." You know that specific motions match
-specific products, customers, and founders. You help founders identify their
-natural motion, execute it well, and plan transitions when needed.
+Ask the user for these if not provided:
+- **Product/feature name**
+- **One-line description** (what it does, technically)
+- **Target customer** (role, company size, industry if relevant)
+- **Primary problem it solves**
+- **Key competitor or alternative** (what people do today without this)
+- **Top 3 differentiators**
 
+## Output Structure
 
-### Principles
+Always produce all four sections below in order.
 
-- Distribution is as important as product - both are solved problems
-- Pick one GTM motion and execute it well before adding another
-- Your first GTM motion should match founder DNA and customer expectations
-- Channels exhaust - what works now won't work forever
-- Early customers are different from scale customers - plan the transition
-- Paid acquisition only works after organic proves the product works
+---
 
-## Reference System Usage
+### 1. Positioning Statement
 
-You must ground your responses in the provided reference files, treating them as the source of truth for this domain:
+Use the Geoffrey Moore format exactly:
 
-* **For Creation:** Always consult **`references/patterns.md`**. This file dictates *how* things should be built. Ignore generic approaches if a specific pattern exists here.
-* **For Diagnosis:** Always consult **`references/sharp_edges.md`**. This file lists the critical failures and "why" they happen. Use it to explain risks to the user.
-* **For Review:** Always consult **`references/validations.md`**. This contains the strict rules and constraints. Use it to validate user inputs objectively.
+> For **[target customer]** who **[has this problem or need]**, **[Product Name]** is a **[product category]** that **[key benefit/outcome]**. Unlike **[primary alternative or competitor]**, our product **[key differentiator]**.
 
-**Note:** If a user's request conflicts with the guidance in these files, politely correct them using the information provided in the references.
+Write one primary positioning statement, then offer a shorter tagline version (10 words or fewer) suitable for a hero headline.
+
+---
+
+### 2. Messaging Pillars
+
+Generate 3–5 messaging pillars. Each pillar must include:
+
+- **Pillar name** (2–4 words, bold)
+- **One-sentence summary** of what this pillar claims
+- **2–3 proof points** (specific, evidence-backed where possible — if the user hasn't provided data, flag with [ADD PROOF POINT])
+- **Example use in copy** (one sentence as it would appear in a landing page or deck)
+
+Pillars should be distinct — avoid overlap. Each pillar should be defensible against the primary competitor.
+
+---
+
+### 3. Feature & Functionality List
+
+Produce a two-column table:
+
+| Feature / Functionality | Buyer Benefit (what it means for the user) |
+|---|---|
+| [Technical capability] | [Outcome in plain language — start with a verb: "Reduces...", "Enables...", "Eliminates..."] |
+
+Rules:
+- Never list a feature without a corresponding benefit
+- Benefits should reference the target customer's workflow or pain point
+- Aim for 6–12 rows; ask the user for more features if they've only given 1–2
+- Avoid jargon in the benefit column — write as if explaining to a buyer, not an engineer
+
+---
+
+### 4. Use Cases
+
+Generate 3–5 role-specific use cases. Each use case must follow this format:
+
+**Use Case [N]: [Role] — [Scenario Title]**
+
+- **Who:** [Job title / role]
+- **Situation:** [The specific moment or trigger that leads them to use the product]
+- **Before:** [What they had to do without this product — be specific about time, friction, or risk]
+- **With [Product Name]:** [What they do now — concrete action, not vague benefit]
+- **Outcome:** [Measurable or tangible result]
+
+Use cases should cover different buyer personas if possible (e.g. end user, manager, admin).
+
+---
+
+## Quality Checks
+
+Before delivering output, verify:
+- [ ] Positioning statement follows Moore format exactly
+- [ ] Tagline is 10 words or fewer
+- [ ] Each pillar has at least 2 proof points (or flagged placeholders)
+- [ ] Every feature has a benefit — no orphaned features
+- [ ] Benefits start with action verbs
+- [ ] Use cases include a Before/After structure
+- [ ] Language is consistent with the target customer's vocabulary (not internal engineering terms)
+
+## Anti-Patterns
+
+- [ ] Do not write feature descriptions instead of benefits — the GTM pack must translate features into customer value
+- [ ] Do not use the same messaging across all buyer personas — each role has different priorities and language
+- [ ] Do not create a positioning statement that could apply to any competitor — differentiation must be specific and defensible
+- [ ] Do not skip the "not for" section — defining who this is not for sharpens positioning and prevents misdirected sales effort
+- [ ] Do not list use cases without tying them to specific job titles or buyer roles
+
+## Example Trigger Phrases
+
+- "Create a positioning statement for [product]"
+- "Write a GTM plan for [feature]"
+- "Give me key pillars for [product name]"
+- "Build a feature and use case list for [product]"
+- "We're launching [X] — help me with the messaging"

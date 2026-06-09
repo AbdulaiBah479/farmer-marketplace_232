@@ -5,13 +5,19 @@ description: "Sortiert Bescheide, Beurteilungen, Ausschreibungen, Auswahlvermerk
 
 # Aktenstruktur Und Dokumentenintake
 
-## Aufgabe
+## Aktenstart statt Formularstart
 
-Sortiert Bescheide, Beurteilungen, Ausschreibungen, Auswahlvermerke, Personalaktenauszüge, ärztliche Gutachten, Beihilfebescheide und Disziplinarakten.
+Wenn zu **Aktenstruktur Und Dokumentenintake** bereits Unterlagen, ein Ordner, ein ZIP, ein PDF-Buendel, E-Mails, Screenshots, Tabellen oder Entwuerfe vorliegen, lies diese zuerst aus. Bilde fuer **Beamtenrecht** eine Arbeitshypothese zu Beteiligten, Rolle des Nutzers, Verfahrensstand, Fristen, Betrags-/Datumslogik, Belegen und naechstem sinnvollen Output. Frage nicht routinemaessig nach Angaben, die sich aus der Akte ergeben.
 
-## Arbeitsweise
+Starte dann mit einer knappen Rueckmeldung:
 
-Baue aus Uploads eine Aktenmatrix: Dokument, Datum, Aussteller, Zugang, Rechtsbehelfsbelehrung, Streitpunkt, fehlende Anlage. Kennzeichne Lücken und fordere gezielt Personalakte, Beurteilungsbeiträge, Auswahlvermerk, amtsärztliches Gutachten oder Berechnungsblatt an.
+```text
+Ich habe aus der Akte vorlaeufig erkannt: [...]
+Unsicher sind noch: [...]
+Als naechsten Schritt schlage ich vor: [...]
+```
+
+Stelle danach hoechstens drei Rueckfragen und nur zu echten Luecken oder Widerspruechen. Wenn keine Akte vorliegt, bitte zuerst um Upload der wichtigsten Unterlagen statt ein langes Interview zu beginnen.
 
 ## Pflichtfragen
 
@@ -29,10 +35,31 @@ Baue aus Uploads eine Aktenmatrix: Dokument, Datum, Aussteller, Zugang, Rechtsbe
 4. **Verfahren:** Anhörung, Akteneinsicht, Frist, Widerspruch, Klageart, Eilrechtsschutz und Glaubhaftmachung klären.
 5. **Output:** Eine klare Handlungsempfehlung, einen Entwurf oder eine Risikomatrix erzeugen.
 
-## Ausgabeformat
+## Normen und Rechtsprechung
 
-- Kurzantwort in drei Sätzen.
-- Checkliste der fehlenden Tatsachen.
-- Rechtliche Einordnung mit passenden Normgruppen.
-- Nächste Schritte mit Fristen und Anlagen.
-- Quellenhygiene: keine nicht überprüfbaren Fundstellen, keine Kommentar- oder Aufsatzblindzitate.
+### Kuratierte Normen-Bibliothek
+
+- Art. 33 GG (hergebrachte Grundsätze des Berufsbeamtentums)
+- §§ 7, 8 BeamtStG / § 12 BBG (Ernennung, Voraussetzungen)
+- § 31 BeamtStG / § 28 BBG (Probezeit)
+- §§ 33-37 BeamtStG (Grundpflichten)
+- §§ 47 ff. BeamtStG, BDG (Dienstvergehen, Disziplinarverfahren)
+- BBesG (Besoldung)
+- BeamtVG (Versorgung)
+- § 78 BBG (Fürsorgepflicht)
+- VwGO §§ 42, 75, 113 (Verpflichtungsklage, Untätigkeit)
+- BLV (Laufbahnverordnung)
+
+### Leitentscheidungen
+
+- BVerfG 2 BvR 1738/12 (Beamtenstreikverbot)
+- BVerwG 2 C 32.10 (amtsangemessene Alimentation)
+- BVerfG 2 BvL 4/18 (Richterbesoldung)
+- BVerwG 2 C 33.20 (Disziplinarmaßnahme Verhältnismäßigkeit)
+- BVerwG 2 C 4.18 (Konkurrentenstreitverfahren)
+
+### Anwendung im Skill
+
+- Amtsangemessene Alimentation nach BVerfG 2 BvL 4/18 als verfassungsrechtlicher Mindeststandard.
+- Disziplinarmassnahme nach BDG/LDG am Verhaeltnismaessigkeitsgrundsatz messen; Entfernung erfordert schwere Verfehlung.
+- Konkurrentenstreitverfahren BVerwG 2 C 4.18: Bewerbungsverfahrensanspruch Art. 33 Abs. 2 GG sichern, vor Ernennung.

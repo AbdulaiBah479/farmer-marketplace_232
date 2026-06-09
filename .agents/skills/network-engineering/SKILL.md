@@ -1,9 +1,5 @@
 ---
 name: network-engineering
-<<<<<<< HEAD
-description: "Enterprise networking: routing protocols, switching, SD-WAN, QoS, and network design."
-category: telecom
-=======
 description: Network architecture, troubleshooting, and infrastructure patterns. Use
   when designing network topologies, debugging connectivity issues, configuring load
   balancers, DNS, or implementing network security.
@@ -13,14 +9,10 @@ updated: '2025-12-23'
 version: 1.0.1
 tag: skill
 type: skill
->>>>>>> 4b9d09d6dab9a725d3e3c3e2f77c256484dc8d8b
 ---
 
 # Network Engineering
 
-<<<<<<< HEAD
-Enterprise networking: routing protocols, switching, SD-WAN, QoS, and network design.
-=======
 Comprehensive network engineering skill covering network design, troubleshooting, load balancing, DNS, and network security.
 
 ## When to Use This Skill
@@ -259,4 +251,3 @@ tcpdump -i eth0 port 443
 - **cloud-infrastructure** - For cloud networking
 - **security-engineering** - For network security
 - **performance** - For network optimization
->>>>>>> 4b9d09d6dab9a725d3e3c3e2f77c256484dc8d8b

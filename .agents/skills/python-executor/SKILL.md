@@ -12,7 +12,7 @@ Execute Python code in a safe, sandboxed environment with 100+ pre-installed lib
 
 ## Quick Start
 
-> Requires inference.sh CLI (`infsh`). Get installation instructions: `npx skills add inference-sh/skills@agent-tools`
+> Requires inference.sh CLI (`infsh`). [Install instructions](https://raw.githubusercontent.com/inference-sh/skills/refs/heads/main/cli-install.md)
 
 ```bash
 infsh login

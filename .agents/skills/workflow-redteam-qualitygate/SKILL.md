@@ -1,15 +1,20 @@
 ---
 name: workflow-redteam-qualitygate
-description: "Red-Team Qualitygate im Plugin common-law-kompass: prüft das Ergebnis auf Halluzinationen, Fristenfehler, Zuständigkeit, Quellen, Beweise und Ton."
+description: "Red-Team Qualitygate: prüft das Ergebnis auf Halluzinationen, Fristenfehler, Zuständigkeit, Quellen, Beweise und Ton im Strafrechts-Aktenaufbereiter."
 ---
 
 # Red-Team Qualitygate
 
-## Aufgabe
-Dieser Workflow-Skill für `common-law-kompass` Red-Team Qualitygate im Plugin common-law-kompass: prüft das Ergebnis auf Halluzinationen, Fristenfehler, Zuständigkeit, Quellen, Beweise und Ton.. Er ist dazu da, den Nutzer schneller und sicherer in die richtige Bearbeitung zu führen.
+## Arbeitsweg
 
-## Kaltstart
-Wenn Material vorliegt, arbeite zuerst mit dem Material. Stelle nur Rückfragen, die für die nächste Weiche nötig sind:
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: StPO § 147 Akteneinsicht im Ermittlungsverfahren, § 199 Schlussvermerk, § 201 Erklärung 2 Wochen, § 273 Protokollierung sofort.
+- Tragende Normen verifizieren: StPO §§ 147, 199, 200, 273 (Protokoll), 261, 264, 265, 267 (Beweiswürdigung/Urteil), 273 (HV-Protokoll), AktO, RiStBV Nr. 1, Akteneinsichtsrichtlinien — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Verteidiger, Mandant, Staatsanwaltschaft, Vorsitzender, Geschäftsstelle, Sachverständiger, Polizei.
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Aktenspiegel (chronologisch und thematisch), Beweismittelübersicht, Vernehmungsprotokoll, Spurenakte, Beiakte, Telefonüberwachungsprotokoll, Gutachten — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+## Einstieg
+Prüfe zuerst das vorhandene Material. Stelle nur Rückfragen, die die nächste fachliche Weiche verändern:
 
 1. Wer fragt in welcher Rolle?
 2. Was ist das gewünschte Ergebnis?
@@ -19,26 +24,14 @@ Wenn Material vorliegt, arbeite zuerst mit dem Material. Stelle nur Rückfragen,
 ## Arbeitsworkflow
 1. Rolle, Ziel, Frist und Unterlagenlage in höchstens fünf Fragen klären.
 2. Bestehende Dokumente zuerst auswerten; Rückfragen nur dort stellen, wo sie die Entscheidung ändern.
-3. Passende Spezialskills aus diesem Plugin vorschlagen und begründen.
+3. Passende Fachmodule aus diesem Plugin vorschlagen und begründen.
 4. Ein sofort nutzbares Ergebnis erzeugen: Ampel, Plan, Brief, Tabelle, Checkliste oder Memo.
 
-## Red-Team-Checks für Common-Law-Berührung
-
-- **False Friends:** "Indemnity" ist keine Schadensersatzhaftung deutschen Stils, sondern eine vertragliche Freistellung, oft unabhängig vom Verschulden — Abgrenzung zu § 280 BGB klären.
-- **Consideration:** Keine Vertragsbindung ohne consideration im US/UK-Recht (ausgenommen deed/seal-Konstruktionen); deutsche Verträge erfüllen das oft nicht ausdrücklich, aber als implied bargain.
-- **Discovery (US Federal: FRCP 26–37):** Erheblich weiter als deutsche Beweiserhebung (§§ 142, 144 ZPO, § 810 BGB); "fishing expedition"-Verbot beachten; § 1782 USC für Hilfe aus US-Gerichten an ausländische Verfahren.
-- **Verbot der Präjudizienbindungs-Übertragung:** Deutsche Anwälte dürfen "binding precedent" nicht in deutsche Argumentation überspielen — in Deutschland gibt es keine stare-decisis-Wirkung (Ausnahme § 31 BVerfGG).
-- **Keine erfundenen Aktenzeichen:** US-Federal-Cite-Format (z. B. "_F.3d_") nur bei verifizierter Reporter-Fundstelle; Neutral-Citation (z. B. [2023] UKSC 12) auf bailii prüfen.
-- **Rechtsdienstleistungsverbot:** Beratung zu US/UK-Recht durch deutsche Anwälte ohne Zulassung dort grds. unzulässig — local counsel hinzuziehen (§ 4 EuRAG, RDG-Restrisiko).
-
-## Output-Standard
-- Kurzbild: worum es geht, was gesichert ist, was offen ist.
-- Prüf- oder Bearbeitungsmatrix mit den entscheidenden Punkten.
-- Konkreter nächster Schritt mit Frist, Zuständigkeit und Unterlagen.
-- Bei Außenkommunikation: knapper, sachlicher Textbaustein ohne unnötige Nebenangaben.
-
-## Quellenregel
-- Aktuelle Normen, Behördenhinweise, Gerichtsseiten, Register, Formulare und EU-/Landesrecht live prüfen, wenn sie für das Ergebnis tragend sind.
-- Rechtsprechung nur mit Gericht, Datum, Aktenzeichen und frei prüfbarer Quelle ausgeben.
-- Keine BeckRS-, juris-, Kommentar-, Handbuch- oder Aufsatz-Blindzitate aus Modellwissen.
-- Unsicherheiten und Annahmen ausdrücklich markieren.
+## Strafakte-Red-Team-Checks
+- **Halluzinations-Check:** Keine erfundenen BGH-/BVerfG-Az; Fundstellen mit Datum, Gericht und Az pruefen oder als "staendige Rspr."/"BGH-Linie" markieren.
+- **Frist-Re-Check:** Berufung § 314 StPO (1 Woche), Revision §§ 341, 345 StPO (1 Woche / 1 Monat), Strafbefehl-Einspruch § 410 StPO (2 Wochen), Wiedereinsetzung § 44 StPO (1 Woche ab Wegfall); Postzustellungsdatum verifizieren.
+- **Zuständigkeits-Re-Check:** GVG - Strafrichter § 25 (bis 2 Jahre Freiheitsstrafe), Schoeffengericht § 28 (bis 4 Jahre), Schwurgericht § 74 GVG (Toetungsdelikte), grosse Strafkammer § 76 GVG (ueber 4 Jahre, schwere Wirtschaftskriminalitaet). Verfahrenshandlung Falschadressiert?
+- **Belehrungs-Check** § 136 StPO (Beschuldigtenrechte), § 52 StPO (Zeugnisverweigerung Angehoeriger), § 55 StPO (Auskunftsverweigerung wegen Selbstbelastung): in der Akte protokolliert?
+- **Beweisverwertungs-Check:** § 136a StPO (verbotene Vernehmungsmethoden), § 252 StPO (Aussageverweigerung Hauptverhandlung), § 261 StPO Beweiswuerdigungslueckchen, Belehrungsfehler in Beschuldigtenvernehmung.
+- **Ton-/Stil-Check:** keine wertende Vorverurteilung; klare Trennung Fakten / Bewertung; Mandantengeheimnis § 43a Abs. 2 BRAO, § 203 StGB.
+- **Vollstaendigkeits-Check Anklageschrift § 200 StPO:** Beschuldigter, Tat (Zeit, Ort, gesetzliche Merkmale), Beweismittel, anzuwendende Strafvorschriften.

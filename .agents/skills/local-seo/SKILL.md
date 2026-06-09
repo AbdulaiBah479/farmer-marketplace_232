@@ -1,211 +1,73 @@
 ---
 name: local-seo
-description: Local SEO dominance system for UK service businesses. FAIL/PASS enforcement. GBP + area pages + reviews.
+description: When the user wants to optimize for local search, set up Google Business Profile, or build local citations. Also use when the user mentions "local SEO," "Google Business Profile," "Google Maps," "NAP," "citations," "local search," "local business," or "service area." For location pages, use programmatic-seo.
+metadata:
+  version: 1.0.1
 ---
 
-# Local SEO Skill
+# SEO: Local
 
-## Primary Objective
+Guides local SEO: Google Business Profile, NAP consistency, and citation building. Businesses with accurate NAP across 40+ authoritative sites see ~19% higher visibility in Google Maps. Use this skill when optimizing for local search, setting up GBP, or auditing citations.
 
-**Dominate local pack + service area organic results.**
+**When invoking**: On **first use**, if helpful, open with 1–2 sentences on what this skill covers and why it matters, then provide the main output. On **subsequent use** or when the user asks to skip, go directly to the main output.
 
-## Scope
+## Initial Assessment
 
-| ✅ Supported | ❌ Out of Scope |
-|-------------|----------------|
-| Single-location UK business | Multi-branch franchises |
-| Service-area business | E-commerce / SaaS |
+**Check for project context first:** If `.claude/project-context.md` or `.cursor/project-context.md` exists, read Sections 4 (Audience), 5 (Website).
 
-## Skill Output
+Identify:
+1. **Business type**: Storefront vs service-area
+2. **Location**: Single or multiple
+3. **Current listings**: Existing GBP, directories
 
-```yaml
-local_seo:
-  primary_money_page: "/services/house-removals"
-  nap_record: {...}
-  services_canonical: [...]
-  area_weights: {...}
-  keyword_ownership: {...}
-  state: PASS | WARN | FAIL
-  blocking_issues: []
-```
+## NAP Consistency
 
-## Primary Money Page
+**NAP** = Name, Address, Phone. Critical for local rankings.
 
-**One page gets priority.** All local SEO decisions strengthen this first.
+| Rule | Guideline |
+|------|-----------|
+| **Exact match** | "Street" vs "St." or "LLC" inconsistency = Google may treat as different entities |
+| **Fix first** | Audit and fix inconsistencies before adding new citations |
+| **Tools** | BrightLocal, Whitespark, Moz Local for audit |
 
-```yaml
-primary_money_page: "/services/house-removals"
-```
+## Google Business Profile
 
-Links, reviews, GBP focus → this page first.
+| Element | Guideline |
+|---------|-----------|
+| **Address** | Physical address; no P.O. boxes |
+| **Description** | 750 chars; primary keywords in first 100 |
+| **Hours** | Accurate; seasonal availability |
+| **Category** | Primary category matches business type |
+| **Service-area** | Hide address if no storefront; define service areas |
 
-## Services Canonical List
+## Citation Building
 
-**Single source of truth.** Must match everywhere.
+**Targeted precision** over submitting to every directory.
 
-```yaml
-services_canonical:
-  - "House Removals"
-  - "Office Removals"
-  - "Packing Service"
-```
+**Priority order**:
+1. Google Business Profile
+2. Apple Maps
+3. Yelp, Bing Places, Facebook
+4. Better Business Bureau, Foursquare, Nextdoor
+5. Niche directories (Healthgrades, Angi, etc.)
 
-**Rule:** If not in this list → not on GBP, not on website, not in schema.
+## Citation Audit
 
-## Area Revenue Weights
+- Incorrect or outdated data
+- Duplicate entries
+- Missing listings on key directories
 
-`area_weights: { bristol: 1.0, bath: 0.7, gloucester: 0.4, weston: 0.2 }`
+Fix before adding; compounding errors harm rankings.
 
-Low-weight areas get fewer links, less review focus.
+## Output Format
 
-## Keyword Ownership
+- **NAP** (exact format for consistency)
+- **GBP** optimization checklist
+- **Citation** priority list
+- **Audit** findings (if applicable)
 
-**1 keyword = 1 page. Hard lock.**
+## Related Skills
 
-| Keyword | Page |
-|---------|------|
-| "house removals bristol" | `/` |
-| "removals bath" | `/areas/bath` |
-| "office removals bristol" | `/services/office-removals` |
-
-**FAIL if:** Same keyword in H1 on multiple pages.
-
-## NAP Standard
-
-`[Business Name] / [Street Address] / [City], [Postcode] / [+44 Phone]`
-
-**Identical on:** website footer, GBP, all citations. **FAIL if mismatch.**
-
-## GBP ↔ Website Parity
-
-Services, Address, Phone must match exactly: GBP = Website = Schema. **FAIL if mismatch.**
-
-## GBP Primary Category Lock
-
-```yaml
-gbp_primary_category: "House removal service"  # LOCKED
-```
-
-**Primary category cannot change.** Keyword-chasing category changes = FAIL.
-
-## GBP → Area Page Mapping
-
-```yaml
-gbp_area_mapping:
-  bath: "/areas/bath"
-  gloucester: "/areas/gloucester"
-```
-
-**Every GBP service area must have matching website page.** Mismatch = FAIL.
-
-## Review Velocity
-
-| Metric | Requirement |
-|--------|-------------|
-| Minimum total | 10 |
-| Per 30 days | 1+ |
-| Max gap | 30 days |
-| Response rate | 100% |
-
-**FAIL if:** Gap >30 days OR 0 reviews OR unresponded.
-
-## Local Proof Density
-
-**Min 2 per area page.** Types: review snippet, street name, postcode, landmark.
-
-**FAIL if:** Area page has <2 local proofs.
-
-## Area Page Minimums
-
-| Requirement | Threshold |
-|-------------|-----------|
-| Words | 600+ |
-| Unique | 30%+ |
-| Proofs | 2+ |
-
-## GBP Posts
-
-Weekly rotation: job → offer → review → team. Mix ranking posts (jobs, service) with conversion (offers, CTAs).
-
-## SERP Feature Targets
-
-| Page | Targets |
-|------|---------|
-| Homepage | local_pack, review_stars |
-| Service | faq_rich, review_stars |
-| Area | local_pack, faq_rich |
-
-## Citation Limits
-
-Tier 1 (all): GBP, Bing, Apple, Yell → Tier 2 (max 5): Industry specific → **STOP.**
-
-## Geo-Modifier Cap
-
-| Location | Max |
-|----------|-----|
-| H1 | 1 |
-| H2+H3 total | 2 |
-| Body per 500w | 2 |
-
-**Over = spam risk → WARN.**
-
-## FAIL States (Deploy Blocked)
-
-| Condition | State |
-|-----------|-------|
-| No GBP claimed | ❌ |
-| NAP inconsistent | ❌ |
-| GBP ≠ Website services | ❌ |
-| GBP primary category changed | ❌ |
-| GBP area ≠ website area page | ❌ |
-| No LocalBusiness schema | ❌ |
-| 0 reviews | ❌ |
-| Review gap >30 days | ❌ |
-| Area page <600w / <30% unique / <2 proofs | ❌ |
-| Photos without geo-tag | ❌ |
-| Phone not clickable (mobile) | ❌ |
-| Same keyword in H1 on 2+ pages | ❌ |
-
-## WARN States (Deploy Allowed, Flagged)
-
-| Condition |
-|-----------|
-| <10 total reviews |
-| No GBP post in 7 days |
-| Missing Tier 1 citation |
-| No FAQ schema |
-| Geo-modifier over cap |
-
-## Health State
-
-```yaml
-local_seo_state: PASS | WARN | FAIL
-blocking_issues: []
-```
-
-## Deployment Gate
-
-```yaml
-deployment_gate:
-  block_on_fail: true
-  warn_on_warn: true
-```
-
-**FAIL → production deploy blocked. No exceptions.**
-
-## References
-
-- [gbp-checklist.md](references/gbp-checklist.md)
-- [area-page-template.md](references/area-page-template.md)
-- [citations-uk.md](references/citations-uk.md)
-- [review-templates.md](references/review-templates.md)
-- [competitive-edge.md](references/competitive-edge.md) — 32 advanced tactics
-
-## Definition of Done
-
-- [ ] primary_money_page + services_canonical + keyword_ownership defined
-- [ ] NAP identical everywhere, GBP verified
-- [ ] 10+ reviews, no 30-day gap, all responded
-- [ ] Area pages: 600w / 30% unique / 2 proofs
-- [ ] Tier 1 citations complete
-- [ ] local_seo_state = PASS
+- **geo**: GEO for AI search; local + AI overlap
+- **localization-strategy**: Multilingual; local + i18n
+- **directory-submission**: Directory listings; different from local citations

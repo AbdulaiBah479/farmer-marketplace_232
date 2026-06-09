@@ -3,14 +3,11 @@ name: coda-automation
 description: "Automate Coda tasks via Rube MCP (Composio): manage docs, pages, tables, rows, formulas, permissions, and publishing. Always search tools first for current schemas."
 requires:
   mcp: [rube]
-category: project-management
 ---
 
 # Coda Automation via Rube MCP
 
 Automate Coda document and data operations through Composio's Coda toolkit via Rube MCP.
-
-**Toolkit docs**: [composio.dev/toolkits/coda](https://composio.dev/toolkits/coda)
 
 ## Prerequisites
 
@@ -242,6 +239,3 @@ Automate Coda document and data operations through Composio's Coda toolkit via R
 | Publish doc | CODA_PUBLISH_DOC | docId, slug |
 | Unpublish doc | CODA_UNPUBLISH_DOC | docId |
 | List packs | CODA_LIST_PACKS | (none) |
-
----
-*Powered by [Composio](https://composio.dev)*

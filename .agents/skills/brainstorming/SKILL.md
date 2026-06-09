@@ -1,165 +1,156 @@
 ---
 name: brainstorming
-description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation."
+description: Use when creating or developing anything, before writing code or implementation plans - refines rough ideas into fully-formed designs through structured Socratic questioning, alternative exploration, and incremental validation
 ---
 
 # Brainstorming Ideas Into Designs
 
-Help turn ideas into fully formed designs and specs through natural collaborative dialogue.
+## Overview
 
-**Announce at start:** "Brainstorming skill activated."
+Transform rough ideas into fully-formed designs through structured questioning and alternative exploration.
 
-Start by understanding the current project context, then ask questions one at a time to refine the idea. Once you understand what you're building, present the design and get user approval.
+**Core principle:** Ask questions to understand, explore alternatives, present design incrementally for validation.
 
-<HARD-GATE>
-Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity.
-</HARD-GATE>
+**Announce skill usage at start of session.**
 
-## Anti-Pattern: "This Is Too Simple To Need A Design"
+## When to Use This Skill
 
-Every project goes through this process. A todo list, a single-function utility, a config change — all of them. "Simple" projects are where unexamined assumptions cause the most wasted work. The design can be short (a few sentences for truly simple projects), but you MUST present it and get approval.
+Activate this skill when:
+- Request contains "I have an idea for..." or "I want to build..."
+- User asks "help me design..." or "what's the best approach for..."
+- Requirements are vague or high-level
+- Multiple approaches might work
+- Before writing any code or implementation plans
 
-## Checklist
+## The Three-Phase Process
 
-You MUST create a task for each of these items and complete them in order:
+| Phase | Key Activities | Tool Usage | Output |
+|-------|----------------|------------|--------|
+| **1. Understanding** | Ask questions (one at a time) | AskUserQuestion for choices | Purpose, constraints, criteria |
+| **2. Exploration** | Propose 2-3 approaches | AskUserQuestion for approach selection | Architecture options with trade-offs |
+| **3. Design Presentation** | Present in 200-300 word sections | Open-ended questions | Complete design with validation |
 
-1. **Explore project context** — check files, docs, recent commits
-2. **Offer visual companion** (if topic will involve visual questions) — this is its own message, not combined with a clarifying question. See the Visual Companion section below.
-3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
-4. **Propose 2-3 approaches** — with trade-offs and your recommendation
-5. **Present design** — in sections scaled to their complexity, get user approval after each section
-6. **Write design doc** — save to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and commit
-7. **Spec review loop** — dispatch spec-document-reviewer subagent with precisely crafted review context (never your session history); fix issues and re-dispatch until approved (max 5 iterations, then surface to human)
-8. **User reviews written spec** — ask user to review the spec file before proceeding
-9. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+### Phase 1: Understanding
 
-## Process Flow
+**Goal:** Gather purpose, constraints, and success criteria.
 
-```dot
-digraph brainstorming {
-    "Explore project context" [shape=box];
-    "Visual questions ahead?" [shape=diamond];
-    "Offer Visual Companion\n(own message, no other content)" [shape=box];
-    "Ask clarifying questions" [shape=box];
-    "Propose 2-3 approaches" [shape=box];
-    "Present design sections" [shape=box];
-    "User approves design?" [shape=diamond];
-    "Write design doc" [shape=box];
-    "Spec review loop" [shape=box];
-    "Spec review passed?" [shape=diamond];
-    "User reviews spec?" [shape=diamond];
-    "Invoke writing-plans skill" [shape=doublecircle];
+**Process:**
+- Check current project state in working directory
+- Ask ONE question at a time to refine the idea
+- Use AskUserQuestion tool when presenting multiple choice options
+- Gather: Purpose, constraints, success criteria
 
-    "Explore project context" -> "Visual questions ahead?";
-    "Visual questions ahead?" -> "Offer Visual Companion\n(own message, no other content)" [label="yes"];
-    "Visual questions ahead?" -> "Ask clarifying questions" [label="no"];
-    "Offer Visual Companion\n(own message, no other content)" -> "Ask clarifying questions";
-    "Ask clarifying questions" -> "Propose 2-3 approaches";
-    "Propose 2-3 approaches" -> "Present design sections";
-    "Present design sections" -> "User approves design?";
-    "User approves design?" -> "Present design sections" [label="no, revise"];
-    "User approves design?" -> "Write design doc" [label="yes"];
-    "Write design doc" -> "Spec review loop";
-    "Spec review loop" -> "Spec review passed?";
-    "Spec review passed?" -> "Spec review loop" [label="issues found,\nfix and re-dispatch"];
-    "Spec review passed?" -> "User reviews spec?" [label="approved"];
-    "User reviews spec?" -> "Write design doc" [label="changes requested"];
-    "User reviews spec?" -> "Invoke writing-plans skill" [label="approved"];
-}
-```
+**Tool Usage:**
+Use AskUserQuestion for clarifying questions with 2-4 clear options.
 
-**The terminal state is invoking writing-plans.** Do NOT invoke frontend-design, mcp-builder, or any other implementation skill. The ONLY skill you invoke after brainstorming is writing-plans.
+Example: "Where should the authentication data be stored?" with options for Session storage, Local storage, Cookies, each with trade-off descriptions.
 
-## The Process
+See `references/example-session-auth.md` for complete Phase 1 example.
 
-**Understanding the idea:**
+### Phase 2: Exploration
 
-- Check out the current project state first (files, docs, recent commits)
-- Before asking detailed questions, assess scope: if the request describes multiple independent subsystems (e.g., "build a platform with chat, file storage, billing, and analytics"), flag this immediately. Don't spend questions refining details of a project that needs to be decomposed first.
-- If the project is too large for a single spec, help the user decompose into sub-projects: what are the independent pieces, how do they relate, what order should they be built? Then brainstorm the first sub-project through the normal design flow. Each sub-project gets its own spec → plan → implementation cycle.
-- For appropriately-scoped projects, ask questions one at a time to refine the idea
-- Prefer multiple choice questions when possible, but open-ended is fine too
-- Only one question per message - if a topic needs more exploration, break it into multiple questions
-- Focus on understanding: purpose, constraints, success criteria
+**Goal:** Propose 2-3 different architectural approaches with explicit trade-offs.
 
-**Exploring approaches:**
+**Process:**
+- Propose 2-3 different approaches
+- For each: Core architecture, trade-offs, complexity assessment
+- Use AskUserQuestion tool to present approaches as structured choices
+- Include trade-off comparison table when helpful
 
-- Propose 2-3 different approaches with trade-offs
-- Present options conversationally with your recommendation and reasoning
-- Lead with your recommended option and explain why
+**Trade-off Format:**
 
-**Presenting the design:**
+| Approach | Pros | Cons | Complexity |
+|----------|------|------|------------|
+| Option 1 | Benefits | Drawbacks | Low/Med/High |
+| Option 2 | Benefits | Drawbacks | Low/Med/High |
+| Option 3 | Benefits | Drawbacks | Low/Med/High |
 
-- Once you believe you understand what you're building, present the design
-- Scale each section to its complexity: a few sentences if straightforward, up to 200-300 words if nuanced
-- Ask after each section whether it looks right so far
-- Cover: architecture, components, data flow, error handling, testing
-- Be ready to go back and clarify if something doesn't make sense
+See `references/example-session-dashboard.md` for complete Phase 2 example with SSE vs WebSockets vs Polling comparison.
 
-**Design for isolation and clarity:**
+### Phase 3: Design Presentation
 
-- Break the system into smaller units that each have one clear purpose, communicate through well-defined interfaces, and can be understood and tested independently
-- For each unit, you should be able to answer: what does it do, how do you use it, and what does it depend on?
-- Can someone understand what a unit does without reading its internals? Can you change the internals without breaking consumers? If not, the boundaries need work.
-- Smaller, well-bounded units are also easier for you to work with - you reason better about code you can hold in context at once, and your edits are more reliable when files are focused. When a file grows large, that's often a signal that it's doing too much.
+**Goal:** Present complete design incrementally, validating each section.
 
-**Working in existing codebases:**
+**Process:**
+- Present in 200-300 word sections
+- Cover: Architecture, components, data flow, error handling, testing
+- Ask after each section: "Does this look right so far?"
+- Use open-ended questions to allow freeform feedback
 
-- Explore the current structure before proposing changes. Follow existing patterns.
-- Where existing code has problems that affect the work (e.g., a file that's grown too large, unclear boundaries, tangled responsibilities), include targeted improvements as part of the design - the way a good developer improves code they're working in.
-- Don't propose unrelated refactoring. Stay focused on what serves the current goal.
+**Typical Sections:**
+1. Architecture overview
+2. Component details
+3. Data flow
+4. Error handling
+5. Security considerations
+6. Implementation priorities
 
-## After the Design
+**Validation Pattern:**
+After each section, pause for feedback before proceeding to next section.
 
-**Documentation:**
+## Tool Usage Guidelines
 
-- Write the validated design (spec) to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
-  - (User preferences for spec location override this default)
-- Commit the design document to git
+### Use AskUserQuestion Tool For:
+- Phase 1: Clarifying questions with 2-4 clear options
+- Phase 2: Architectural approach selection (2-3 alternatives)
+- Any decision with distinct, mutually exclusive choices
+- When options have clear trade-offs to explain
 
-**Spec Review Loop:**
-After writing the spec document:
+**Benefits:**
+- Structured presentation of options with descriptions
+- Clear trade-off visibility
+- Forces explicit choice (prevents vague "maybe both" responses)
 
-1. Dispatch spec-document-reviewer subagent (see spec-document-reviewer-prompt.md)
-2. If Issues Found: fix, re-dispatch, repeat until Approved
-3. If loop exceeds 5 iterations, surface to human for guidance
+### Use Open-Ended Questions For:
+- Phase 3: Design validation
+- When detailed feedback or explanation is needed
+- When the user should describe their own requirements
+- When structured options would limit creative input
 
-**User Review Gate:**
-After the spec review loop passes, ask the user to review the written spec before proceeding:
+## Non-Linear Progression
 
-> "Spec written and committed to `<path>`. Please review it and let me know if you want to make any changes before we start writing out the implementation plan."
+**Flexibility is key.** Go backward when needed - don't force linear progression.
 
-Wait for the user's response. If they request changes, make them and re-run the spec review loop. Only proceed once the user approves.
+**Return to Phase 1 when:**
+- User reveals new constraint during Phase 2 or 3
+- Validation shows fundamental gap in requirements
+- Something doesn't make sense
 
-**Implementation:**
+**Return to Phase 2 when:**
+- User questions the chosen approach during Phase 3
+- New information suggests a different approach would be better
 
-- Invoke the writing-plans skill to create a detailed implementation plan
-- Do NOT invoke any other skill. writing-plans is the next step.
+**Continue forward when:**
+- All requirements are clear
+- Chosen approach is validated
+- No new constraints emerge
 
 ## Key Principles
 
-- **One question at a time** - Don't overwhelm with multiple questions
-- **Multiple choice preferred** - Easier to answer than open-ended when possible
-- **YAGNI ruthlessly** - Remove unnecessary features from all designs
-- **Explore alternatives** - Always propose 2-3 approaches before settling
-- **Incremental validation** - Present design, get approval before moving on
-- **Be flexible** - Go back and clarify when something doesn't make sense
+| Principle | Application |
+|-----------|-------------|
+| **One question at a time** | Phase 1: Single question per message, use AskUserQuestion for choices |
+| **Structured choices** | Use AskUserQuestion tool for 2-4 options with trade-offs |
+| **YAGNI ruthlessly** | Remove unnecessary features from all designs |
+| **Explore alternatives** | Always propose 2-3 approaches before settling |
+| **Incremental validation** | Present design in sections, validate each |
+| **Flexible progression** | Go backward when needed - flexibility > rigidity |
 
-## Visual Companion
+## After Brainstorming Completes
 
-A browser-based companion for showing mockups, diagrams, and visual options during brainstorming. Available as a tool — not a mode. Accepting the companion means it's available for questions that benefit from visual treatment; it does NOT mean every question goes through the browser.
+Consider these optional next steps:
+- Document the design in project's design documentation
+- Break down the design into actionable implementation tasks
+- Create a git branch or workspace for isolated development
 
-**Offering the companion:** When you anticipate that upcoming questions will involve visual content (mockups, layouts, diagrams), offer it once for consent:
-> "Some of what we're working on might be easier to explain if I can show it to you in a web browser. I can put together mockups, diagrams, comparisons, and other visuals as we go. This feature is still new and can be token-intensive. Want to try it? (Requires opening a local URL)"
+Use templates in `assets/design-doc-template.md` and `assets/decision-matrix-template.md` for structured documentation.
 
-**This offer MUST be its own message.** Do not combine it with clarifying questions, context summaries, or any other content. The message should contain ONLY the offer above and nothing else. Wait for the user's response before continuing. If they decline, proceed with text-only brainstorming.
+## Examples
 
-**Per-question decision:** Even after the user accepts, decide FOR EACH QUESTION whether to use the browser or the terminal. The test: **would the user understand this better by seeing it than reading it?**
+**Complete brainstorming sessions:**
+- `references/example-session-auth.md` - Authentication storage design (JWT vs Session vs Cookies)
+- `references/example-session-dashboard.md` - Real-time dashboard design (SSE vs WebSockets vs Polling)
 
-- **Use the browser** for content that IS visual — mockups, wireframes, layout comparisons, architecture diagrams, side-by-side visual designs
-- **Use the terminal** for content that is text — requirements questions, conceptual choices, tradeoff lists, A/B/C/D text options, scope decisions
-
-A question about a UI topic is not automatically a visual question. "What does personality mean in this context?" is a conceptual question — use the terminal. "Which wizard layout works better?" is a visual question — use the browser.
-
-If they agree to the companion, read the detailed guide before proceeding:
-`skills/brainstorming/visual-companion.md`
+**Output templates:**
+- `assets/design-doc-template.md` - Structured design document format
+- `assets/decision-matrix-template.md` - Weighted decision comparison format

@@ -1,69 +1,81 @@
 ---
 name: to-issues
-description: Decompose a plan, PRD, or spec into independently-grabbable vertical-slice issues (markdown file by default, GitHub issues via flag). Trigger when the user wants implementation tickets, work decomposition, or to convert an implementation plan into parallelizable work. Takes a plan file and emits atomic vertical slices.
-# auto-invoke: explicitly permitted — model invocation explicitly required and documented
+description: Break a plan, spec, or PRD into independently-grabbable issues on the project issue tracker using tracer-bullet vertical slices. Use when user wants to convert a plan into issues, create implementation tickets, or break down work into issues.
 ---
 
-Break a plan into **tracer-bullet vertical slices**. Each slice cuts end-to-end through every layer (schema, API, UI, tests) and is independently demoable. Reject horizontal layer-slices — they create blocked queues.
+# To Issues
 
-## Emission Modes [LOCKED]
+Break a plan into independently-grabbable issues using vertical slices (tracer bullets).
 
-**Default (file mode):** Write to `<project-root>/docs/issues/<feature>-slices.md` as a numbered list of slices with the issue template per entry. Rerun-idempotent.
-
-**Flag mode (`--emit-issue`):** After approval, create issues via `gh issue create` in dependency order so blocker references resolve to real numbers. Print URLs.
+The issue tracker and triage label vocabulary should have been provided to you — run `/setup-matt-pocock-skills` if not.
 
 ## Process
 
 ### 1. Gather context
 
-Read the source plan or PRD. If user passes a GitHub issue: `gh issue view <number> --comments`. If a plan file path: `bat -P -p -n <path>`. Otherwise work from active conversation.
+Work from whatever is already in the conversation context. If the user passes an issue reference (issue number, URL, or path) as an argument, fetch it from the issue tracker and read its full body and comments.
 
-### 2. Explore (if not already primed)
+### 2. Explore the codebase (optional)
 
-If the codebase is unfamiliar, dispatch an Explore agent. Trace integration layers: schema → service → API → UI → tests.
+If you have not already explored the codebase, do so to understand the current state of the code. Issue titles and descriptions should use the project's domain glossary vocabulary, and respect ADRs in the area you're touching.
 
 ### 3. Draft vertical slices
 
-Each slice MUST:
-- Cut through every relevant layer
-- Be demoable or verifiable on its own
-- Be either **AFK** (no human needed) or **HITL** (decision/review required) — prefer AFK
-- Be small enough that one engineer ships it in <2 days
+Break the plan into **tracer bullet** issues. Each issue is a thin vertical slice that cuts through ALL integration layers end-to-end, NOT a horizontal slice of one layer.
 
-Reject any slice that is "schema only" or "wire up later" — those are queue-blockers.
+Slices may be 'HITL' or 'AFK'. HITL slices require human interaction, such as an architectural decision or a design review. AFK slices can be implemented and merged without human interaction. Prefer AFK over HITL where possible.
+
+<vertical-slice-rules>
+- Each slice delivers a narrow but COMPLETE path through every layer (schema, API, UI, tests)
+- A completed slice is demoable or verifiable on its own
+- Prefer many thin slices over few thick ones
+</vertical-slice-rules>
 
 ### 4. Quiz the user
 
-Present the slate via a clarifying-question protocol. Show per slice: title, AFK/HITL, blocked-by references, user-stories covered. Ask: granularity correct? dependency edges correct? merge/split needed? AFK/HITL labels honest?
+Present the proposed breakdown as a numbered list. For each slice, show:
 
-### 5. Emit
+- **Title**: short descriptive name
+- **Type**: HITL / AFK
+- **Blocked by**: which other slices (if any) must complete first
+- **User stories covered**: which user stories this addresses (if the source material has them)
 
-**File mode:** Write the approved slice list to `docs/issues/<feature>-slices.md`. Reference blockers by slice index. Commit.
+Ask the user:
 
-**Flag mode:** `gh issue create` per slice in topological order. Capture each new issue number; backfill `Blocked by` with real numbers.
+- Does the granularity feel right? (too coarse / too fine)
+- Are the dependency relationships correct?
+- Should any slices be merged or split further?
+- Are the correct slices marked as HITL and AFK?
 
-## Issue Template
+Iterate until the user approves the breakdown.
 
-```
+### 5. Publish the issues to the issue tracker
+
+For each approved slice, publish a new issue to the issue tracker. Use the issue body template below. Apply the `needs-triage` triage label so each issue enters the normal triage flow.
+
+Publish issues in dependency order (blockers first) so you can reference real issue identifiers in the "Blocked by" field.
+
+<issue-template>
 ## Parent
-#<parent-issue-number-or-PRD-path-or-omit>
+
+A reference to the parent issue on the issue tracker (if the source was an existing issue, otherwise omit this section).
 
 ## What to build
-Concise end-to-end behavior description. Demoable outcome, not layer-by-layer mechanics.
+
+A concise description of this vertical slice. Describe the end-to-end behavior, not layer-by-layer implementation.
 
 ## Acceptance criteria
-- [ ] Observable criterion 1
-- [ ] Observable criterion 2
+
+- [ ] Criterion 1
+- [ ] Criterion 2
+- [ ] Criterion 3
 
 ## Blocked by
-- #<issue-or-slice-number>   (or "None — start immediately")
 
-## User stories covered
-- US-1, US-3
-```
+- A reference to the blocking ticket (if any)
 
-## Slice Examples Across Stacks
+Or "None - can start immediately" if no blockers.
 
-- **Rust + Postgres API:** "Add `GET /accounts/{id}/balance` returning JSON; includes sqlx migration, handler, integration test against testcontainer Postgres." — one slice, all layers.
-- **TypeScript + React frontend:** "Render account balance with optimistic refresh; includes Zod response schema, TanStack Query hook, component, Vitest test." — one slice, all layers.
-- **CLI tool (any language):** "Add `--dry-run` flag to the migrate subcommand; includes flag parsing, no-op execution path, unit test." — one slice, all layers.
+</issue-template>
+
+Do NOT close or modify any parent issue.

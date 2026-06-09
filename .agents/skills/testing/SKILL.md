@@ -1,28 +1,25 @@
 ---
-name: Testing
-description: Standards for Component Test Harnesses and TestBed.
-metadata:
-  labels: [angular, testing, harness, testbed]
-  triggers:
-    files: ['**/*.spec.ts']
-    keywords: [TestBed, ComponentFixture, TestHarness, provideHttpClientTesting]
+name: testing
+description: Guide for testing practices and frameworks
 ---
 
-# Testing
+# Testing Skill
 
-## **Priority: P1 (HIGH)**
+This skill provides a guide for testing practices and frameworks.
 
-## Principles
+## Testing frameworks
 
-- **Harnesses**: Always use `ComponentTestHarness` (Angular Material Harnesses) to interact with components. Avoid querying DOM/CSS selectors directly.
-- **Provider Mocks**: Use `provideHttpClientTesting()` instead of mocking `HttpClient` manually.
-- **Signal Testing**: Signals update synchronously. No need for `fakeAsync` usually.
+- Use Deno's built-in testing framework for writing and running tests
 
-## Guidelines
+## Writing Tests
 
-- **Avoid logic**: Tests should just assert inputs and outputs.
-- **Spectator**: Consider using libraries like `@ngneat/spectator` for cleaner boilerplate if allowed.
+- Write tests in separate files with the `.test.ts` extension in the same
+  directory as the code being tested
+- All public functions and methods must have corresponding tests
+- Use descriptive names for test cases to clearly indicate their purpose
+- Should cover edge cases and error handling in tests
 
-## References
+## Running Tests
 
-- [Harness Pattern](references/harness-pattern.md)
+- Use the command `mise run test` to run all tests in the project
+- Run tests before committing code changes to ensure no tests are failing

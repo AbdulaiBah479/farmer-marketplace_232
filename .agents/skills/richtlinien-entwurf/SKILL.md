@@ -1,26 +1,35 @@
 ---
 name: richtlinien-entwurf
-description: "Entwirft eine betriebliche Regelung (Richtlinie, Betriebsordnung, Policy) mit standortspezifischen Ergänzungen, wo das Recht oder Tarifverträge abweichende Regeln erfordern. Prüft Mitbestimmungsrechte des Betriebsrats und ob bestehende Leistungsversprechen berührt werden. Lädt, wenn jemand sagt „Richtlinie entwerfen zu [Thema]\", „wir brauchen eine Regelung zu\" oder eine Regelungslücke benennt."
+description: "Entwirft eine betriebliche Regelung (Richtlinie, Betriebsordnung, Policy) mit standortspezifischen Ergänzungen, wo das Recht oder Tarifverträge abweichende Regeln erfordern: Entwirft eine betriebliche Regelung (Richtlinie, Betriebsordnung, Policy) mit stand..."
 ---
 
-# Richtlinien-Entwurf (Arbeitsrecht)
+# Entwirft eine betriebliche Regelung (Richtlinie, Betriebsordnung, Policy) mit standortspezifischen Ergänzungen, wo das Recht oder Tarifverträge abweichende Regeln erfordern
 
-## Zweck
 
-Eine Regelung, die für München passt, kann in Frankfurt falsch sein — nicht
-wegen des Landes, sondern wegen des Tarifvertrags, der Betriebsvereinbarung
-oder der Konzernstruktur. Diese Skill entwirft eine Kernregelung und erstellt
-standortspezifische Ergänzungen, wo der Betrieb, ein Tarifvertrag oder eine
-bestehende Betriebsvereinbarung abweichende Anforderungen stellt.
+## Arbeitsweg
 
-Lädt, wenn eine neue oder geänderte Arbeitsregelung für ein oder mehrere
-Unternehmen / Standorte benötigt wird und die Folgewirkungen auf Betriebsrat,
-Tarifvertrag und bestehende Zusagen geprüft werden sollen.
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: die im Plugin-Kontext einschlägigen Normen über gesetze-im-internet.de, dejure.org, eur-lex.europa.eu und die amtlichen Bundes-/Landesportale live prüfen — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+**Fokus:** Entwirft eine betriebliche Regelung (Richtlinie, Betriebsordnung, Policy) mit standortspezifischen Ergänzungen, wo das Recht oder Tarifverträge abweichende Regeln erfordern. Prüft Mitbestimmungsrechte des Betriebsrats und ob bestehende Leistungsversprechen berührt werden. Lädt, wenn jemand sagt "Richtlinie entwerfen zu [Thema]", "wir brauchen eine Regelung zu" oder eine Regelungslücke benennt.
+
+### Richtlinien-Entwurf (Arbeitsrecht)
+
+## Fachlicher Kern — Arbeitsrecht
+- **Problemfokus dieses Skills:** Bleibe beim konkreten Titel `Richtlinien-Entwurf (Arbeitsrecht)` und löse die dort angelegte Fachfrage; arbeite mit konkreten Tatbestandsmerkmalen, Beweisfragen und dem unmittelbar benötigten Arbeitsprodukt. Routingfragen bleiben Hilfsmittel, wenn Frist, Zuständigkeit oder Verfahrensart offen sind.
+- **Normenradar:** BGB §§ 611a, 613a, 615, 623; KSchG §§ 1, 4, 7; TzBfG §§ 14, 15, 16; AGG §§ 1, 3, 7, 15, 22; EntgTranspG §§ 3, 5, 7; BUrlG §§ 1, 3, 7; BetrVG §§ 87, 99, 102; ArbZG; NachwG; SGB IX §§ 164, 167, 168.
+- **Verifizierte Anker:** BAG, Urteil vom 23.10.2025 - 8 AZR 300/24 (Entgeltgleichheit, Paarvergleich, Beweislast, bundesarbeitsgericht.de); BAG, Urteil vom 03.06.2025 - 9 AZR 104/24 (kein Verzicht auf gesetzlichen Mindesturlaub im bestehenden Arbeitsverhältnis); bei Kündigungszugang immer § 623 BGB, Zugang nach § 130 BGB, Dreiwochenfrist §§ 4, 7 KSchG und Beweis des konkreten Umschlags trennen.
+- **Arbeitsmodus:** Zuerst Status, Zugang, Frist, Beteiligungsrechte, Sonderkündigungsschutz, Beweislast und prozessualen nächsten Schritt sichern; dann erst Materiellrecht vertiefen.
+- **Outputpflicht:** Fristenblatt, Zugangsmatrix, Beweisangebot, Mandantenmail, Betriebsrats-/Gegnerbrief oder Klage-/Erwiderungsbaustein.
+- **Fehlerbremse:** Tragende Normen/Entscheidungen live oder aus der Akte verifizieren; Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei prüfbarer Quelle. Keine BeckRS-, juris-, Kommentar- oder Aufsatz-Blindzitate aus Modellwissen.
 
 ## Eingaben
 
 - Thema der Regelung (z. B. Mobile Arbeit, Elternzeit-Ergänzung, Spesen,
-  Social Media, Datenschutz am Arbeitsplatz)
+ Social Media, Datenschutz am Arbeitsplatz)
 - Anlass (gesetzliche Anforderung, Unternehmensinitiative, Regelungslücke)
 - Geltungsbereich (alle Arbeitnehmer / bestimmte Rollen / bestimmte Standorte)
 - Bestehende Betriebsvereinbarungen und Tarifbindung (falls bekannt)
@@ -31,52 +40,47 @@ Tarifvertrag und bestehende Zusagen geprüft werden sollen.
 **Kernvorschriften:**
 
 - § 87 BetrVG: Erzwingbares Mitbestimmungsrecht des Betriebsrats —
-  Regelungen in den Bereichen § 87 Abs. 1 Nr. 1–13 (u. a. Ordnung des
-  Betriebs, Arbeitszeit, Urlaub, Datenschutz, Vergütungsgrundsätze)
-  können nicht ohne Zustimmung des Betriebsrats eingeführt werden
+ Regelungen in den Bereichen § 87 Abs. 1 Nr. 1–13 (u. a. Ordnung des
+ Betriebs, Arbeitszeit, Urlaub, Datenschutz, Vergütungsgrundsätze)
+ können nicht ohne Zustimmung des Betriebsrats eingeführt werden
 - § 77 BetrVG: Betriebsvereinbarungen — Vorrang und Ablöseprinzip;
-  Nachwirkung (§ 77 Abs. 6 BetrVG); günstigerer Tarifvertrag geht vor
+ Nachwirkung (§ 77 Abs. 6 BetrVG); günstigerer Tarifvertrag geht vor
 - §§ 305 ff. BGB: AGB-Kontrolle für vorformulierte Arbeitsbedingungen;
-  § 305c Abs. 1 BGB: Verbot überraschender Klauseln; § 307 BGB:
-  Inhaltskontrolle; Transparenzgebot
+ § 305c Abs. 1 BGB: Verbot überraschender Klauseln; § 307 BGB:
+ Inhaltskontrolle; Transparenzgebot
 - § 2 NachwG: Schriftliche Mitteilung wesentlicher Arbeitsbedingungen
-  bei erstmaliger Vereinbarung und bei Änderungen
+ bei erstmaliger Vereinbarung und bei Änderungen
 - §§ 3 ff. AGG: Diskriminierungsverbote — Regelungen dürfen keine
-  unmittelbaren oder mittelbaren Benachteiligungen wegen geschützter
-  Merkmale enthalten oder bewirken
+ unmittelbaren oder mittelbaren Benachteiligungen wegen geschützter
+ Merkmale enthalten oder bewirken
 - ArbZG: Arbeitszeitgesetz — Regelungen zur Arbeitszeit dürfen
-  gesetzliche Höchstgrenzen (§ 3 ArbZG: 8 Stunden täglich, maximal
-  10 Stunden) und Ruhezeiten (§ 5 ArbZG) nicht unterschreiten
+ gesetzliche Höchstgrenzen (§ 3 ArbZG: 8 Stunden täglich, maximal
+ 10 Stunden) und Ruhezeiten (§ 5 ArbZG) nicht unterschreiten
 - § 26 BDSG / Art. 88 DSGVO: Beschäftigtendatenschutz — Regelungen zur
-  Überwachung, Zugriffsrechten oder Kommunikation erfordern
-  Datenschutzprüfung und ggf. Betriebsvereinbarung nach § 26 BDSG
+ Überwachung, Zugriffsrechten oder Kommunikation erfordern
+ Datenschutzprüfung und ggf. Betriebsvereinbarung nach § 26 BDSG
 
 **Leitentscheidungen:**
 
-- BAG, Urt. v. 11.04.2006 – 9 AZR 557/05, NZA 2006, 1149 Rn. 20 ff.:
-  AGB-Kontrolle von Handbuchregelungen, die durch Bezugnahmeklausel
-  einbezogen wurden; überraschende Klauseln nach § 305c BGB;
-  Transparenzgebot nach § 307 Abs. 1 S. 2 BGB; Reichweite der
-  Inhaltskontrolle bei Arbeitsregelungen
-- BAG, Urt. v. 12.01.2005 – 5 AZR 364/04, NZA 2005, 465 Rn. 31:
-  Betriebliche Übung als Anspruchsgrundlage; einseitige Verschlechterung
-  einer durch betriebliche Übung entstandenen Leistungspflicht unwirksam;
-  Änderungskündigung als erforderliches Instrument
-- BAG, Urt. v. 23.01.2018 – 1 AZR 65/17, NZA 2018, 735 Rn. 16 ff.:
-  Mitbestimmungspflicht bei einseitiger Änderung betrieblicher Regelungen
-  in § 87 BetrVG-Bereichen; Einigungsstellenverfahren bei Scheitern der
-  Einigung
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+ Betriebliche Übung als Anspruchsgrundlage; einseitige Verschlechterung
+ einer durch betriebliche Übung entstandenen Leistungspflicht unwirksam;
+ Änderungskündigung als erforderliches Instrument
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+ Mitbestimmungspflicht bei einseitiger Änderung betrieblicher Regelungen
+ in § 87 BetrVG-Bereichen; Einigungsstellenverfahren bei Scheitern der
+ Einigung
 
-**Kommentarliteratur:**
+- Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen zitieren. Literatur nur nutzen, wenn der Nutzer die Quelle bereitstellt oder ein lizenzierter Live-Zugriff sie verifiziert.
 
-- Kania, in: ErfK, 25. Aufl. 2025, § 87 BetrVG Rn. 1:
-  Katalog der erzwingbaren Mitbestimmungsrechte; Reichweite bei einzelnen
-  Themenfeldern (Homeoffice, Datenschutz, Zeiterfassung)
-- Wurmnest, in: MüKoBGB, 9. Aufl. 2022, § 307 Rn. 200:
-  AGB-Kontrolle vorformulierter Arbeitsbedingungen; Inhaltskontrolle;
-  Transparenzgebot im Arbeitsrecht
-- Thüsing, in: HWK, 11. Aufl. 2024, § 2 NachwG Rn. 1:
-  Nachweispflicht; schriftliche Mitteilung bei Änderungen; Folgen
+- Quellenregel: Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff; keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen.
+ Katalog der erzwingbaren Mitbestimmungsrechte; Reichweite bei einzelnen
+ Themenfeldern (Homeoffice, Datenschutz, Zeiterfassung)
+- Quellenregel: Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff; keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen.
+ AGB-Kontrolle vorformulierter Arbeitsbedingungen; Inhaltskontrolle;
+ Transparenzgebot im Arbeitsrecht
+- Quellenregel: Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff; keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen.
+ Nachweispflicht; schriftliche Mitteilung bei Änderungen; Folgen
 
 ## Ablauf
 
@@ -143,7 +147,7 @@ Struktur:
 - Verfahren (wie beantragen, wer genehmigt, was passiert bei Verstoß)
 - Ansprechpartner (an wen wenden bei Fragen)
 
-Vermeiden: „unbeschadet", „vorbehaltlich", verschachtelte Ausnahmen.
+Vermeiden: "unbeschadet", "vorbehaltlich", verschachtelte Ausnahmen.
 Das ist eine Betriebsregelung, kein Vertrag.
 
 **Datenschutzprüfung:** Falls die Regelung die Verarbeitung von
@@ -172,17 +176,12 @@ Ergänzungen knapp halten — nur Abweichendes; Kernregelung nicht wiederholen.
 
 - Kollidiert diese Regelung mit einer bestehenden Regelung im Handbuch?
 - Verspricht sie mehr, als das Unternehmen liefern will? (Eine Regelung ist
-  ein Versprechen — Gerichte halten Arbeitgeber an Handbuchzusagen.)
+ ein Versprechen — Gerichte halten Arbeitgeber an Handbuchzusagen.)
 - Enthält sie unabsichtlich eine vertragliche Bindung? (Betriebliche Übung
-  nach drei gleichförmigen Wiederholungen — Disclaimer-Klausel wenn nötig,
-  aber als eigenständigen Abschnitt, nicht als Fußnote.)
+ nach drei gleichförmigen Wiederholungen — Disclaimer-Klausel wenn nötig,
+ aber als eigenständigen Abschnitt, nicht als Fußnote.)
 - AGG-Konformität: Enthält die Regelung mittelbare Benachteiligungen wegen
-  geschützter Merkmale nach § 1 AGG?
-
-## Ausgabeformat
-
-```markdown
-# [Regelungsname]
+ geschützter Merkmale nach § 1 AGG?
 
 ## Kernregelung
 
@@ -250,23 +249,23 @@ Ausgabe (Auszug Entwurfsnotizen):
 ## Risiken und typische Fehler
 
 - **Mitbestimmung übergangen**: Eine in § 87 BetrVG-Bereichen eingeführte
-  Regelung ohne Betriebsratszustimmung ist unwirksam, auch wenn der Inhalt
-  sachlich gerechtfertigt ist.
+ Regelung ohne Betriebsratszustimmung ist unwirksam, auch wenn der Inhalt
+ sachlich gerechtfertigt ist.
 - **Betriebliche Übung**: Was dreimal gleichförmig gewährt wurde, kann
-  bindend werden. Neuregelungen, die bisher praxisübliche Leistungen
-  einschränken, brauchen entweder individuelle Zustimmung oder
-  Änderungskündigung.
+ bindend werden. Neuregelungen, die bisher praxisübliche Leistungen
+ einschränken, brauchen entweder individuelle Zustimmung oder
+ Änderungskündigung.
 - **AGB-Falle**: Vorformulierte Arbeitsbedingungen unterliegen § 307 BGB.
-  Überraschende oder unverhältnismäßig belastende Klauseln sind unwirksam.
+ Überraschende oder unverhältnismäßig belastende Klauseln sind unwirksam.
 - **NachwG versäumt**: Wenn die Regelung wesentliche Arbeitsbedingungen
-  ändert, ist schriftliche Mitteilung an die betroffenen Arbeitnehmer
-  nach § 2 NachwG erforderlich.
+ ändert, ist schriftliche Mitteilung an die betroffenen Arbeitnehmer
+ nach § 2 NachwG erforderlich.
 - **AGG-Konformität nicht geprüft**: Regelungen können mittelbar
-  diskriminierend wirken (z. B. Teilzeitausschlüsse, die überwiegend
-  Frauen treffen). § 3 Abs. 2 AGG beachten.
+ diskriminierend wirken (z. B. Teilzeitausschlüsse, die überwiegend
+ Frauen treffen). § 3 Abs. 2 AGG beachten.
 - **Datenschutz nicht eingeplant**: Technische Überwachungsmaßnahmen
-  ohne Betriebsvereinbarung und DSFA können nach § 26 BDSG und
-  § 87 Abs. 1 Nr. 6 BetrVG unzulässig sein.
+ ohne Betriebsvereinbarung und DSFA können nach § 26 BDSG und
+ § 87 Abs. 1 Nr. 6 BetrVG unzulässig sein.
 
 ## Quellenpflicht
 
@@ -276,10 +275,8 @@ Jede Ausgabe dieser Skill zitiert je nach Relevanz:
 - §§ 305 ff. BGB (AGB-Kontrolle), § 307 BGB (Inhaltskontrolle)
 - § 2 NachwG (Nachweispflicht)
 - § 26 BDSG, Art. 88 DSGVO (Beschäftigtendatenschutz)
-- BAG, Urt. v. 11.04.2006 – 9 AZR 557/05, NZA 2006, 1149 (AGB-Kontrolle)
-- BAG, Urt. v. 12.01.2005 – 5 AZR 364/04, NZA 2005, 465 (betriebliche Übung)
-- BAG, Urt. v. 23.01.2018 – 1 AZR 65/17, NZA 2018, 735 (Mitbestimmung)
-- Erfurter Kommentar/Kania, 24. Aufl. 2024, § 87 BetrVG Rn. 1 ff.
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+- § 87 Abs. 1 Nr. 6 BetrVG: Mitbestimmung bei technischen Überwachungseinrichtungen; Rechtsprechung nur frei verifiziert zitieren.
 
 > **Entwurf, keine geltende Regelung.** Dieser Entwurf ist ein Arbeitsdokument
 > für die anwaltliche Überprüfung. Eine Betriebsregelung oder Richtlinie, die
@@ -301,4 +298,12 @@ Anpassungsbedarf.
 - Regelungen genehmigen — das ist Aufgabe von HR-Leitung und Rechtsabteilung.
 - Regelungen kommunizieren — Mitarbeiterinformation ist HR-Aufgabe.
 - Alle denkbaren Jurisdiktionen abdecken — nur den konfigurierten Fußabdruck.
-  Bei Erweiterung des Fußabdrucks neu prüfen.
+ Bei Erweiterung des Fußabdrucks neu prüfen.
+
+## Ergänzende Rechtsprechung (v14.2)
+
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+
+<!-- AUDIT 27.05.2026
+Halluzinations-Reparatur Bundle 014:
+-->

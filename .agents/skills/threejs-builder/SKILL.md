@@ -10,20 +10,6 @@ description: >
 
 A focused skill for creating simple, performant Three.js web applications using modern ES module patterns.
 
-## Reference Files
-
-> **Important**: Read the appropriate reference file when working on specific topics.
-
-| Topic | File | Use When |
-|-------|------|----------|
-| **FBX Models** | [fbx-loading-guide.md](references/fbx-loading-guide.md) | Loading, caching, cloning 3D models, SkeletonUtils |
-| **Reference Frames** | [reference-frame-contract.md](references/reference-frame-contract.md) | Calibration, anchoring, axis correctness, debugging |
-| **Game Development** | [game-patterns.md](references/game-patterns.md) | State machines, animation switching, parallax, object pooling |
-| **Advanced Topics** | [advanced-topics.md](references/advanced-topics.md) | Post-processing, shaders, physics, instancing |
-| **Calibration Helpers** | [scripts/README.md](scripts/README.md) | FBX calibration helper installation and usage |
-
----
-
 ## Philosophy: The Scene Graph Mental Model
 
 Three.js is built on the **scene graph**—a hierarchical tree of objects where parent transformations affect children. Understanding this mental model is key to effective 3D web development.
@@ -40,100 +26,6 @@ Three.js is built on the **scene graph**—a hierarchical tree of objects where 
 2. **Primitives as Building Blocks**: Built-in geometries (Box, Sphere, Torus) cover 80% of simple use cases.
 3. **Animation as Transformation**: Change position/rotation/scale over time using `requestAnimationFrame` or `renderer.setAnimationLoop`.
 4. **Performance Through Simplicity**: Fewer objects, fewer draw calls, reusable geometries/materials.
-
----
-
-## Three.js Coordinate System (CRITICAL)
-
-Understanding Three.js's right-handed coordinate system is **essential** to avoid inverted movement, wrong-facing models, and broken collision detection.
-
-### The Axes
-
-```
-      +Y (up)
-       |
-       |
-       |_______ +X (right)
-      /
-     /
-    +Z (toward camera/viewer)
-```
-
-**Memory aid**: Point your thumb (+X), index finger (+Y), middle finger (+Z) - that's right-handed coordinates.
-
-| Axis | Direction | Common Usage |
-|------|-----------|--------------|
-| +X   | Right     | Strafe right, spawn right |
-| -X   | Left      | Strafe left, spawn left |
-| +Y   | Up        | Jump, height |
-| -Y   | Down      | Fall, gravity |
-| +Z   | Toward camera | Approach viewer, "forward" in many setups |
-| -Z   | Away from camera | Retreat, **glTF models face -Z by default (FBX typically +Z)** |
-
-### Model Default Orientation
-
-**CRITICAL**: The default forward direction depends on the model format:
-- **FBX models** (from Blender/Maya): Typically face **+Z** (toward viewer) by default
-- **glTF models**: Face **-Z** (into the screen) by default
-
-**Always calibrate** using the reference frame contract to confirm forward direction for your specific asset pack.
-
-```javascript
-// For glTF models (face -Z), to face +Z (toward camera):
-model.rotation.y = Math.PI;  // 180° rotation
-
-// For FBX models (typically face +Z), may not need rotation
-// Always verify with calibration!
-
-// To face +X (right):
-model.rotation.y = -Math.PI / 2;  // -90°
-
-// To face -X (left):
-model.rotation.y = Math.PI / 2;   // +90°
-```
-
-### Camera-Relative Movement (CRITICAL for Games)
-
-**PROBLEM**: When camera is at an angle (e.g., isometric view), raw WASD input moves wrong!
-
-```javascript
-// ❌ WRONG - Input is world-axis relative, not camera-relative
-if (keyW) player.position.z -= speed;  // Moves toward -Z, not "forward" from player's view
-if (keyD) player.position.x += speed;  // Moves +X, not "right" from camera's view
-
-// ✓ CORRECT - Calculate camera-relative directions
-function updateMovement(deltaTime) {
-    // Get camera's forward direction, projected onto ground (XZ plane)
-    const forward = new THREE.Vector3();
-    camera.getWorldDirection(forward);
-    forward.y = 0;
-    forward.normalize();
-
-    // Calculate right vector (cross product of forward and world up)
-    const right = new THREE.Vector3();
-    right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
-
-    // Apply input relative to camera orientation
-    const velocity = new THREE.Vector3();
-    if (inputState.up) velocity.add(forward);
-    if (inputState.down) velocity.sub(forward);
-    if (inputState.right) velocity.add(right);
-    if (inputState.left) velocity.sub(right);
-
-    if (velocity.length() > 0) {
-        velocity.normalize().multiplyScalar(speed * deltaTime);
-        player.position.add(velocity);
-
-        // Face movement direction
-        player.rotation.y = Math.atan2(velocity.x, velocity.z);
-    }
-}
-```
-
-**Why this matters**: With camera at `(8, 11, -6)` looking at `(0, 1, 3)`:
-- "Forward" visually is NOT `-Z`, it's roughly `+Z`
-- "Right" visually is NOT `+X`, it's roughly `-X + Z`
-- Raw axis input feels completely inverted to players
 
 ---
 
@@ -487,6 +379,6 @@ Effective Three.js apps:
 
 **Modern Three.js (r150+) uses ES modules from `three` package or CDN.** CommonJS patterns and global `THREE` variable are legacy.
 
-**Claude is capable of creating elegant, performant 3D web experiences. These patterns guide the way—they don't limit the result.**
+For advanced topics (GLTF models, shaders, post-processing), see references/advanced-topics.md.
 
-For specific topics, see the **Reference Files** table at the top of this document.
+**Claude is capable of creating elegant, performant 3D web experiences. These patterns guide the way—they don't limit the result.**

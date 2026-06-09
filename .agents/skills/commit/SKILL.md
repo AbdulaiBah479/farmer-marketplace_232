@@ -1,51 +1,133 @@
 ---
+argument-hint: '[--all] [--deep] [--push] [--close <issue_numbers>]'
+disable-model-invocation: false
+effort: medium
 name: commit
-description: Create git commits with user approval and no Claude attribution
+user-invocable: true
+description: 'This skill should be used when the user asks to commit changes, craft a commit message, or run a commit workflow. Creates atomic git commits with conventional-commit formatting and optional deep analysis or push. Flags: --all, --deep, --close, --push.'
 ---
 
-# Commit Changes
+# Git Commit
 
-You are tasked with creating git commits for the changes made during this session.
+Create atomic commits by staging the right files, analyzing the staged diff, composing a conventional commit message, and optionally pushing.
 
-## Process:
+## Workflow
 
-1. **Think about what changed:**
-   - Review the conversation history and understand what was accomplished
-   - Run `git status` to see current changes
-   - Run `git diff` to understand the modifications
-   - Consider whether changes should be one commit or multiple logical commits
+### 1) Pre-flight + context (single call)
 
-2. **Plan your commit(s):**
-   - Identify which files belong together
-   - Draft clear, descriptive commit messages
-   - Use imperative mood in commit messages
-   - Focus on why the changes were made, not just what
+Run all checks and context collection in one bash call:
 
-3. **Present your plan to the user:**
-   - List the files you plan to add for each commit
-   - Show the commit message(s) you'll use
-   - Ask: "I plan to create [N] commit(s) with these changes. Shall I proceed?"
+```bash
+git rev-parse --is-inside-work-tree \
+  && ! test -d "$(git rev-parse --git-dir)/rebase-merge" \
+  && ! test -f "$(git rev-parse --git-dir)/MERGE_HEAD" \
+  && ! test -f "$(git rev-parse --git-dir)/CHERRY_PICK_HEAD" \
+  && git symbolic-ref HEAD \
+  && git status --short --branch
+```
 
-4. **Execute upon confirmation:**
-   - Use `git add` with specific files (never use `-A` or `.`)
-   - Create commits with your planned messages
-   - Show the result with `git log --oneline -n [number]`
+If any check fails, stop with a clear error and suggested fix.
 
-5. **Generate reasoning (after each commit):**
-   - Run: `bash "$CLAUDE_PROJECT_DIR/.claude/scripts/generate-reasoning.sh" <commit-hash> "<commit-message>"`
-   - This captures what was tried during development (build failures, fixes)
-   - The reasoning file helps future sessions understand past decisions
-   - Stored in `.git/claude/commits/<hash>/reasoning.md`
+Arguments: `$ARGUMENTS`
 
-## Important:
-- **NEVER add co-author information or Claude attribution**
-- Commits should be authored solely by the user
-- Do not include any "Generated with Claude" messages
-- Do not add "Co-Authored-By" lines
-- Write commit messages as if the user wrote them
+### 2) Parse arguments
 
-## Remember:
-- You have the full context of what was done in this session
-- Group related changes together
-- Keep commits focused and atomic when possible
-- The user trusts your judgment - they asked you to commit
+- Flags:
+  - `--all` commit all changes
+  - `--deep` deep analysis, breaking changes, concise body
+  - `--push` push after commit
+  - `--close <issue_numbers>` append `Closes #N` trailers for listed issues (comma/space-separated)
+- Value arguments:
+  - Type keyword (any conventional type) overrides inferred type
+  - Quoted text overrides inferred description
+
+### 3) Stage + read diff
+
+- If `--all`:
+  - If no changes at all: error "No changes to commit"
+  - If unstaged changes exist: `git add -A`
+  - If already staged: proceed
+- Otherwise (atomic commits):
+  - Session-modified files = files edited in this session
+  - Currently staged files: `git diff --cached --name-only`
+  - For staged files NOT in session-modified set: `git restore --staged <file>`
+  - For session-modified files with changes: `git add <file>`
+  - If none: error "No files modified in this session"
+- **Unrelated changes**: session-modified files may contain pre-existing uncommitted changes (hunks not from this session). Include the entire file—partial staging is impractical. Never revert, discard, or `git checkout` unrelated changes.
+- Read the staged diff once: `git diff --cached`
+- Log staged files with status (A/M/D)
+
+### 4) Analyze + compose message
+
+Read the staged diff and produce the commit message in a single pass.
+
+**Type inference** — infer the type from the dominant user-visible intent, not the largest file diff or the presence of
+dependency/config churn.
+
+Choose the highest-signal behavior that explains why the commit exists:
+
+- If a dependency bump is only the enabler for a migration/refactor/fix, use the migration/refactor/fix type instead of
+  `chore(deps)`.
+- If changed tooling/scripts/config are required to keep existing behavior working after a code migration, include them in
+  the same type as the migration.
+- Use `chore` only for maintenance that does not fit a more specific behavioral category.
+- Use `chore(deps)` only for dependency-only updates or dependency updates whose main purpose is routine maintenance.
+
+| Behavior                                            | Type          |
+| --------------------------------------------------- | ------------- |
+| New functionality                                   | `feat`        |
+| Bug fix / error handling                            | `fix`         |
+| Code migration or API adaptation without new UX/API | `refactor`    |
+| Code reorganization, no behavior change             | `refactor`    |
+| Documentation                                       | `docs`        |
+| Tests                                               | `test`        |
+| Build system (webpack, vite, esbuild)               | `build`       |
+| CI/CD pipelines                                     | `ci`          |
+| Dependency-only maintenance                         | `chore(deps)` |
+| Formatting / whitespace only                        | `style`       |
+| Performance                                         | `perf`        |
+| Reverting previous commit                           | `revert`      |
+| AI config (CLAUDE.md, .claude/, .gemini/, .codex/)  | `ai`          |
+| Other maintenance                                   | `chore`       |
+
+Explicit type keyword in arguments takes precedence over inference.
+
+**Scope** — infer only when path makes it obvious (lowercase).
+
+**Unrelated hunks** — ignore pre-existing changes when determining type/scope/description. If unrelated changes are in the same file as session changes, they are included in the commit scope but should not influence the message.
+
+**Message format:**
+
+- Subject line (\<= 50 chars): `type(scope): description` or `type: description`
+- Imperative mood ("add" not "added"), lowercase, no period
+- Describe what the change does, not which files changed
+- Body: hyphenated lines for distinct changes; skip for trivial changes
+
+**Issue linking** — scan the chat transcript for GitHub issue references (e.g. `#123`, `owner/repo#123`, issue URLs) that the current changes resolve. For each match, append a `Closes #N` trailer. Skip issues merely mentioned in passing; include only ones the commit actually closes.
+
+**If `--deep`:**
+
+- Deep semantic analysis; detect breaking changes
+- Infer scope from code structure even when path isn't clear
+- Body: 2-3 hyphenated lines max, focus on WHY
+- Breaking change: `BREAKING CHANGE:` + one-line migration note
+
+**If `--close`:**
+
+- Append a `Closes #N` line for each issue number provided
+- Multiple issues: one `Closes #N` per line in the body/trailer
+- Merge with transcript-scanned issues; de-duplicate
+
+### 5) Commit
+
+- Use `git commit -m "subject"` (add `-m "body"` only if body is non-empty)
+- Output exactly: commit hash, subject, and `N files changed` summary. Nothing else.
+- Do not report branch ahead/behind counts, unpushed commits, push availability, unrelated tree state, staging steps, or pre-commit hook activity unless a command failed.
+- If failed: show error + suggest fix
+- **Pre-commit hook failure:** if the hook fails on unrelated/pre-existing changes (not this session's changes), retry automatically with `git commit --no-verify` — do not ask. Report the bypass in one line, noting the failure was unrelated to the staged changes. Never bypass hooks for failures caused by the session's own changes; fix those or surface the error instead.
+
+### 6) Push (if `--push`)
+
+- If upstream exists: `git push`
+- If no upstream: `git push -u origin HEAD`
+- If failed: show error + suggest fix (pull/rebase first, set upstream, check auth)

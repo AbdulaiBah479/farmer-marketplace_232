@@ -1,54 +1,72 @@
 ---
 name: word
-description: Create, read, edit, and manipulate Microsoft Word documents (.docx files). Use when users ask to work with Word files, create documents, read .docx files, or format text documents.
-allowed-tools: Read, Write, Bash
+description: "Bereitet Word-, PDF- und Scan-Anlagen für Gerichts- oder Behördenwege vor: Konvertierung, Lesezeichen, PDF/A, Dateiname, Deckblatt."
 ---
 
-# Word Document Tool
+# Word/PDF-Umwandlung für Gericht und Behörden
 
-This skill allows you to work with Microsoft Word documents using Node.js tools.
+## Normenanker
 
-## Capabilities
+Arbeitsfokus: **Word/PDF-Umwandlung für Gericht und Behörden**. Prüfe diese Anker am Sachverhalt; ergänze nur Normen, die denselben Output, dieselbe Frist oder dieselbe Beweisfrage tragen:
 
-- **Read** existing Word documents and extract text content
-- **Create** new Word documents with formatted text, headings, paragraphs, and tables
-- **Modify** existing documents by appending content
-- **Extract** document structure and formatting
+- `§ 130 Nr. 6 ZPO` — Schriftsatzanforderungen.
+- `§ 130a Abs. 1 ZPO` — elektronisches Dokument.
+- `§ 131 Abs. 1 ZPO` — Beifügung von Abschriften/Anlagen.
+- `§ 133 Abs. 1 ZPO` — Abschriften für Zustellung.
+- `§ 138 Abs. 1 ZPO` — Tatsachenvortrag.
+- `§ 253 Abs. 2 ZPO` — Klageinhalt.
+- `§ 299 Abs. 1 ZPO` — Akteneinsicht.
+- `§ 371 Abs. 1 ZPO` — Augenschein.
 
-## When to Use
+Rechtsprechung nur ergänzen, wenn Gericht, Datum, Aktenzeichen und eine frei prüfbare Quelle vorliegen; keine BeckRS-/juris-Blindzitate verwenden.
 
-Invoke this skill when the user:
-- Mentions Word documents, .docx files, or document creation
-- Asks to read, create, modify, or format text documents
-- Needs to generate reports, letters, or formatted documents
-- Wants to extract text from existing Word files
+## Mindestinput
 
-## How to Use
+- DOCX/PDF/Scan.
+- Zielweg.
+- Nummernkreis.
 
-The Word tool is implemented as a TypeScript script at `src/tools/word-tool.ts`. You can invoke it using the Bash tool:
+## Arbeitsablauf
 
-### Reading a Document
-```bash
-ts-node src/tools/word-tool.ts read "/path/to/document.docx"
-```
+1. Entscheide Zielformat.
+2. Prüfe Umwandlungsrisiken.
+3. Erzeuge Dateiname und Deckblatt.
 
-### Creating a Document
-```bash
-ts-node src/tools/word-tool.ts create "/path/to/new-document.docx" '{"title":"My Document","paragraphs":["First paragraph","Second paragraph"]}'
-```
+## Ausgabe
 
-## JSON Structure for Creating Documents
+- Konvertierungsanweisung.
+- Kontrollvermerk.
+- Dateinamensliste.
 
-When creating documents, use this JSON format:
-```json
-{
-  "title": "Document Title",
-  "paragraphs": ["Paragraph 1", "Paragraph 2"],
-  "headings": [{"text": "Section 1", "level": 1}],
-  "tables": [{"headers": ["Col1", "Col2"], "rows": [["A", "B"]]}]
-}
-```
+## Typische Fehler, die du aktiv suchst
 
-## Implementation
+- Unklare Anlagenfunktion: Die Datei existiert, aber niemand sagt, welche Tatsache sie beweist.
+- Nummerierung folgt dem Ordner, nicht dem Schriftsatz.
+- Der Schriftsatz versteckt entscheidenden Vortrag in der Anlage.
+- Dateiname, Stempel oder Anlagenverzeichnis widersprechen einander.
 
-Uses the `docx` and `mammoth` npm libraries for reading and writing Word documents.
+## Anschluss-Skills
+
+- `anlagen-zu-schriftsaetzen` für den Hauptworkflow.
+- `anlagen-qualitygate-finalcheck` vor Versand.
+- `schriftsatz-anlagen-mapping` für Belegmatrix und Lückenliste.
+
+## Quellen- und Vorsichtsregel
+
+Bei tragenden Aussagen zu Form, elektronischer Einreichung oder prozessualer Verwertbarkeit aktuelle amtliche Quellen prüfen: ZPO, BRAO, ERVV, ERVB und gerichtliche Hinweise. Keine BeckRS-/juris-/Literatur-Blindzitate. Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei prüfbarer Quelle nennen.
+
+## Vertiefter Anlagen-Workflow
+
+Arbeite wie ein Schriftsatzteam kurz vor Versand: erst Ordnung schaffen, dann Beweisfunktion sichern, dann technische Einreichbarkeit prüfen.
+
+1. **Materialkarte:** Jede Datei einer Tatsachenbehauptung, einem Schriftsatzabschnitt und einer Anlagenkategorie zuordnen. Dubletten, alte Fassungen, Screenshots ohne Datum und unleserliche Scans separat markieren.
+2. **K1-Logik:** Nummerierung nicht nach Ordnerzufall, sondern nach Beweisgang: Vertrag/Grundlage, Kommunikation, Zahlung, Fristen/Zugang, Fotos/Screenshots, Tabellen, Behörden-/Gerichtsdokumente.
+3. **Technikcheck:** PDF/A-Eignung, OCR, Seitenzählung, Dateigröße, Signatur-/beA-/ERVV-Kontext, Anlagenverzeichnis, Deckblatt und Dateinamen konsistent prüfen.
+4. **Prozessrisiko:** Nichts Entscheidendes nur in der Anlage verstecken. Wenn eine Anlage eine tragende Tatsache beweist, muss der Schriftsatz diese Tatsache ausdrücklich behaupten und die Anlage präzise referenzieren.
+5. **Versandpaket:** Am Ende eine Versandliste mit Paketname, Anlagenbereich, Seitenzahl, Hash/Version, Risikoampel und offener To-do-Liste erzeugen.
+
+## Ergebnisqualität
+
+- Gib immer eine sofort nutzbare Tabelle aus: Anlage, Quelle, Datum, Beweisfunktion, Schriftsatzstelle, technischer Status, Risiko.
+- Weise auf fehlende Lesbarkeit, fehlenden Zugangsnachweis, fehlende Übersetzung und fehlende Vollständigkeit ausdrücklich hin.
+- Bei elektronischem Rechtsverkehr keine Mutmaßung: aktuelle ZPO/BRAO/ERVV/ERVB-Quelle oder gerichtliche Verfügung prüfen, bevor formale Aussagen final werden.

@@ -1,63 +1,79 @@
 ---
 name: zugang-paragraph-130
-description: "Prüft Zugang empfangsbedürftiger Willenserklärungen nach § 130 BGB: Machtbereich, gewöhnliche Kenntnisnahmemöglichkeit, Widerruf, Empfangsbote und digitale Postfächer."
+description: "Klausurfall zum Zugang empfangsbedürftiger Willenserklärungen nach § 130 BGB: Machtbereich des Empfängers, gewöhnliche Kenntnisnahmemöglichkeit, Widerruf vor oder gleichzeitig mit Zugang, Empfangsbote, digitale Postfächer und Zugangsvereitelung. Prüfraster für Examen."
 ---
 
-# Zugang Paragraph 130
+# Zugang — § 130 BGB
 
-## Zweck
+## Mandantenfall
 
-Zugang zeitlich und beweisfest aufarbeiten.
+- Kündigung in den Briefkasten eingeworfen um 23 Uhr — Zugang an diesem oder am nächsten Tag?
+- E-Mail-Kündigung außerhalb der Geschäftszeiten eingegangen — Zugang wann?
+- Klausurkonstellation: Empfänger lässt bewusst Briefkasten nicht leeren — Zugangsvereitelung.
 
-## Normanker
+## Erste Schritte
 
-§ 130 BGB
+1. Empfangsbedürftigkeit der Willenserklärung feststellen.
+2. Machtbereich des Empfängers bestimmen: Briefkasten, E-Mail-Postfach, Empfangsbote.
+3. Zeitpunkt der Kenntnisnahmemöglichkeit: Wann konnte ein verständiger Empfänger von der Erklärung Kenntnis nehmen?
+4. Widerruf prüfen: Ging der Widerruf vor oder gleichzeitig mit der Erklärung zu (§ 130 Abs. 1 S. 2 BGB)?
+5. Sonderfall Zugangsvereitelung: Empfänger verhindert bewusst den Zugang — § 242 BGB greift.
+6. Digitale Erklärungen: E-Mail ins Postfach des Empfängers — Zugang nach Abbruch der Übertragung?
 
-## Intake
+## Rechtsrahmen
 
-- Welche Rolle hat die Nutzerin oder der Nutzer: Kanzlei, Rechtsabteilung, Ausbildung, Gerichtsvorbereitung oder Selbststudium?
-- Was ist das konkrete Arbeitsziel: Anspruchsprüfung, Memo, Klausurlösung, Schriftsatzbaustein, Fristenvermerk oder Rückfragenkatalog?
-- Welche Tatsachen sind belegt, welche sind nur Behauptung, welche fehlen noch?
-- Welche Daten, Uhrzeiten, Erklärungen, Vollmachten, Formvorgaben und Fristen sind im Sachverhalt erkennbar?
+- § 130 Abs. 1 S. 1 BGB: Zugang unter Abwesenden — Wirksamkeit mit Eintritt in Machtbereich.
+- § 130 Abs. 1 S. 2 BGB: Widerruf vor oder gleichzeitig mit der Erklärung — kein Zugang.
+- § 130 Abs. 2 BGB: Tod oder Geschäftsunfähigkeit nach Abgabe ohne Einfluss auf Wirksamkeit.
+- § 242 BGB: Treu und Glauben — Zugangsvereitelung führt zu fiktivem Zugang.
+- § 164 BGB: Empfangsbote — Zugang beim Empfangsboten löst Zugang beim Empfänger aus.
 
 ## Prüfraster
 
-1. Machtbereich des Empfängers bestimmen
-2. gewöhnliche Kenntnisnahmemöglichkeit bewerten
-3. Widerruf vor oder gleichzeitig mit Zugang prüfen
-4. Empfangsbote, Vertreter und Organisation trennen
-5. bei formbedürftigen elektronischen Erklärungen prüfen, ob die Form beim Zugang noch prüfbar gewahrt ist
-6. gerichtliche Zustellung, Mitteilung, eEB und Transfervermerk als Beweis- und Formfragen getrennt bewerten
-7. Ergebnis mit Norm, Tatbestandsmerkmal, Subsumtion und Rechtsfolge festhalten.
-8. Offene Tatsachen als Rückfrage formulieren und nicht durch Vermutung ersetzen.
+1. Empfangsbedürftige Willenserklärung: Muss die Erklärung zugehen?
+2. Eintritt in den Machtbereich: Briefkasten, E-Mail-Postfach, Empfangsbote des Empfängers?
+3. Gewöhnliche Kenntnisnahmemöglichkeit: Verständiger Empfänger hätte Kenntnis nehmen können?
+4. Tageszeit und Geschäftszeiten: Zugang am selben oder nächsten Werktag?
+5. Widerruf nach § 130 Abs. 1 S. 2 BGB: Zeitgleich oder vor der Erklärung zugegangen?
+6. Zugangsvereitelung nach § 242 BGB: Empfänger hat Zugang absichtlich verhindert?
+7. Empfangsbote: Zugang beim Empfangsboten gilt als Zugang beim Empfänger zu angemessener Zeit?
 
-## Output
+## Typische Fallstricke
 
-- Kurztriage mit Ampel und nächstem Schritt
-- Prüfung im Gutachtenstil oder als praxisnahes Mandatsmemo
-- Anspruchs- oder Erklärungsmatrix mit Beweisankern
-- Rückfragenliste und optionaler Entwurfsbaustein
+- Zugang setzt nicht voraus, dass der Empfänger tatsächlich Kenntnis genommen hat — nur Möglichkeit.
+- Abendlicher Briefkasteneinwurf: BGH-Rechtsprechung zu spätabendlichem Einwurf und Zugang am Folgetag.
+- E-Mail außerhalb der Geschäftszeiten: Im B2B-Bereich Zugang erst am nächsten Werktag nach h.M.
+- Zugangsvereitelung führt zu fiktivem Zugang nach § 242 BGB — Treu und Glauben.
 
-## Qualitätsregeln
+## Quellen
 
-- BGB-AT-Fragen immer an der passenden Stelle im Anspruchsaufbau prüfen.
-- Auslegung geht regelmäßig vor Anfechtung, Dissens oder Lückenschließung.
-- Keine erfundenen Rechtsprechungs- oder Literaturzitate verwenden; bei Zitaten Primärquelle prüfen.
-- Bei Fristen den Rechenweg sichtbar machen.
-- Bei Wertungen die tragenden Tatsachen ausdrücklich nennen.
+- [§ 130 BGB — gesetze-im-internet.de](https://www.gesetze-im-internet.de/bgb/__130.html)
+- [§ 242 BGB — gesetze-im-internet.de](https://www.gesetze-im-internet.de/bgb/__242.html)
+- [dejure.org § 130 BGB](https://dejure.org/gesetze/BGB/130.html)
+- [dejure.org § 131 BGB](https://dejure.org/gesetze/BGB/131.html)
+- [gesetze-im-internet.de BGB §§ 116-144](https://www.gesetze-im-internet.de/bgb/BJNR001950896.html#BJNR001950896BJNG001602377)
 
-## Anschluss-Skills
+## Vertiefung
 
-- allgemein
-- anspruchsaufbau-zivilrecht-bgb-at
-- elektronische-form-bea-qes-formfiktion
-- bgb-at-output-gutachten-memo-schriftsatz
+### BGH-Rechtsprechung zum Zugangszeitpunkt
 
+BGH NJW 2004/1320: Bei Briefkasten-Einwurf nach der üblichen Leerungszeit (regelmäßig zwischen
+8 und 13 Uhr) wird Zugang erst am nächsten Werktag angenommen. Betriebliche Besonderheiten
+können die Empfangsbereitschaft verlängern (z.B. Nachtshop).
 
-## Qualitäts-Hardening
+BGH zur E-Mail: Im unternehmerischen Verkehr muss die E-Mail-Infrastruktur betrieblich bereit
+sein. Zugang tritt ein, wenn die E-Mail in das Postfach des Empfängers gelangt und ein verständiger
+Empfänger Kenntnis nehmen kann.
 
-- Arbeite aktennah: Tatsachen, Belege, Fristen, Zuständigkeit und gewünschtes Arbeitsprodukt zuerst klären.
-- Keine Rechtsprechung aus Modellwissen zitieren. Jede Entscheidung vor Ausgabe mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei oder amtlich prüfbarer Quelle absichern.
-- Keine BeckRS-, juris-, Kommentar-, Handbuch- oder Aufsatz-Blindzitate. Literatur nur verwenden, wenn der Nutzer sie bereitstellt oder ein lizenzierter Live-Zugriff im konkreten Arbeitsschritt dokumentiert ist.
-- Wenn eine Quelle, Randnummer, Behördenpraxis oder Frist nicht sicher geprüft ist, sichtbar als Prüfpunkt markieren und keine Scheinpräzision erzeugen.
-- Ergebnisse so liefern, dass sie sofort weiterverwendbar sind: Kurzbild, Prüfpfad, Risikoampel, Lückenliste und konkrete nächste Schritte.
+### Besonderheiten bei Behörden
+
+§ 130 Abs. 3 BGB: Bei Behörden gilt § 41 VwVfG für Verwaltungsakte. Im Zivilrecht nach § 130
+BGB ist der Zugang beim zuständigen Bediensteten oder in der Poststelle maßgeblich.
+
+### Klausur-Checkliste § 130 BGB
+
+- Eintritt in den Machtbereich: Briefkasten, E-Mail-Postfach, Empfangsbote?
+- Zeitpunkt der Kenntnisnahmemöglichkeit: Werktag/Wochenende, Tageszeit?
+- Widerruf nach § 130 Abs. 1 S. 2 BGB: Gleichzeitig oder vor der Erklärung zugegangen?
+- Zugangsvereitelung: Aktives Verhindern des Zugangs — § 242 BGB?
+- Tod des Erklärenden nach Abgabe: § 130 Abs. 2 BGB — Wirksamkeit bleibt?

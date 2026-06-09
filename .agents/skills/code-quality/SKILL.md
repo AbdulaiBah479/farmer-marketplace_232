@@ -1,108 +1,182 @@
 ---
 name: code-quality
-description: 执行代码质量门禁检查（测试通过→覆盖率→Lint→GOAL追溯→可提交），验证单元测试覆盖率≥80%、集成测试通过率≥95%、代码规范零错误。当完成代码实现、准备提交代码、需要质量验证、进行提交前自检时使用。确保代码可合并。
-stage: EXECSPEC_FULFILL
-level_supported: [L1-STREAMLINED]
+description: Expert at TypeScript strict mode, linting, formatting, code review standards. Use when checking code quality, fixing type errors, or enforcing standards.
+allowed-tools: Read, Bash, Grep, Glob
 ---
 
-# Code Quality Skill
+# Code Quality Specialist
 
-> **Scope**: EXECSPEC_FULFILL — Fulfill ExecSpec（落实 ExecSpec）
->
-> **版本**: 0.1.0（占位）| **创建日期**: 2025-11-27
+You are an expert at maintaining high code quality in TypeScript/React projects.
 
----
+## When To Use
 
-## 概述
+Claude should automatically use this skill when:
+- User asks to check or improve code quality
+- Fixing TypeScript errors or warnings
+- Reviewing code for best practices
+- Enforcing consistent patterns
 
-Code Quality 是代码提交前的质量门禁：
+## TypeScript Standards
 
-```
-┌─────────────────────────────────────────────────────┐
-│              ✅ Code Quality Gates                  │
-├─────────────────────────────────────────────────────┤
-│  测试通过 → 覆盖率 → Lint → GOAL追溯 → 可提交     │
-│  (Tests)   (Coverage) (Style) (Trace)  (Commit)   │
-└─────────────────────────────────────────────────────┘
-```
+### Strict Mode Requirements
+- `strict: true` in tsconfig.json
+- No `any` types (use `unknown` instead)
+- Explicit return types on exported functions
+- Null checks with optional chaining
 
-**核心职责**：
-- 质量门禁检查（覆盖率、集成测试）
-- 代码规范验证（lint、format）
-- GOAL 追溯完整性
-- 提交前自检
+### Type Safety Patterns
+```typescript
+// Good - explicit types
+function processData(data: UserData): ProcessedResult {
+  return { ... };
+}
 
----
+// Bad - implicit any
+function processData(data) {
+  return { ... };
+}
 
-## L1-STREAMLINED
+// Good - null handling
+const value = obj?.property ?? defaultValue;
 
-### 质量门禁阈值
-
-| 指标 | L1 阈值 |
-|------|---------|
-| 单元测试覆盖率 | ≥ 80% |
-| 集成测试通过率 | ≥ 95% |
-| Lint 错误 | 0 |
-| GOAL 覆盖 | 100% |
-
-### 检查清单
-
-- [ ] 所有测试通过（无红色）
-- [ ] 覆盖率达标（≥80%）
-- [ ] 无 lint 错误
-- [ ] GOAL 注释完整
-
-### 通过标准
-
-- 4 项全部通过（100%）
-
----
-
-## >> 命令
-
-```
->>quality_gate_l1      # 执行质量门禁检查
->>pre_commit_l1        # 提交前自检
+// Bad - unchecked access
+const value = obj.property;
 ```
 
----
+## Code Patterns
 
-## Commit Message 规范
+### Component Structure
+```typescript
+// Props interface above component
+interface ComponentNameProps {
+  /** Description of prop */
+  propName: string;
+  /** Optional prop with default */
+  optional?: boolean;
+}
 
+// Explicit function component
+export function ComponentName({ propName, optional = false }: ComponentNameProps) {
+  // Hooks first
+  const [state, setState] = useState<StateType>(initial);
+
+  // Derived values
+  const derived = useMemo(() => compute(state), [state]);
+
+  // Callbacks
+  const handleClick = useCallback(() => {
+    // ...
+  }, [dependencies]);
+
+  // Render
+  return <div>...</div>;
+}
 ```
-<type>(<scope>): <subject>
 
-<body>
+### Hook Structure
+```typescript
+interface UseHookNameOptions {
+  /** Required option */
+  required: string;
+  /** Optional with default */
+  optional?: number;
+}
 
-GOAL: GOAL-XXX-001
+interface UseHookNameReturn {
+  /** Current state */
+  value: string;
+  /** Update function */
+  setValue: (value: string) => void;
+}
+
+export function useHookName(options: UseHookNameOptions): UseHookNameReturn {
+  const { required, optional = 10 } = options;
+  // ...
+}
 ```
 
-**Type 类型**：
-- `feat`: 新功能
-- `fix`: Bug 修复
-- `refactor`: 重构
-- `test`: 测试
-- `docs`: 文档
+## Quality Checks
 
-**示例**：
-```
-feat(auth): 实现用户登录功能
-
-- 添加登录表单验证
-- 集成 JWT token 生成
-- 添加单元测试
-
-GOAL: GOAL-AUTH-001
+### Type Check
+```bash
+pnpm tsc --noEmit
 ```
 
----
+### Common Issues
 
-## 相关 Skills
+| Issue | Fix |
+|-------|-----|
+| `Type 'X' is not assignable to type 'Y'` | Check type compatibility, add type guard |
+| `Object is possibly 'undefined'` | Add null check or optional chaining |
+| `Parameter 'x' implicitly has an 'any' type` | Add explicit type annotation |
+| `Property 'x' does not exist on type 'Y'` | Add property to interface or use type assertion |
 
-- **前置**: tdd-cycle（TDD 循环中）
-- **原则**: principle-solid, principle-dry
-- **后续**: progress-tracking（更新进度）
+## Anti-Patterns to Avoid
 
----
+### Don't Do
+```typescript
+// Type assertions to escape type system
+const value = data as any;
 
-**TODO**: 待细化质量门禁脚本和自动化检查流程
+// Ignoring errors
+// @ts-ignore
+const broken = thing.property;
+
+// Unused variables
+const unused = 'never used';
+
+// Console logs in production
+console.log('debug');
+```
+
+### Do Instead
+```typescript
+// Type guards for runtime checks
+function isValidData(data: unknown): data is ValidData {
+  return typeof data === 'object' && data !== null && 'id' in data;
+}
+
+// Explicit error handling
+if (!data) {
+  throw new Error('Data is required');
+}
+
+// Remove unused code
+// Delete it entirely
+
+// Use proper logging
+if (process.env.NODE_ENV === 'development') {
+  console.log('debug');
+}
+```
+
+## Project-Specific Rules
+
+### Platform Abstraction
+- All platform code goes through `getPlatformAdapter()`
+- Never import platform-specific modules directly
+- Use `isNative()`, `isTauri()`, `isCapacitor()` for checks
+
+### Component Rules
+- Every component needs a Storybook story
+- Props must have TSDoc comments
+- Use `useCallback` for event handlers passed to children
+- Use `useMemo` for expensive computations
+
+### Hook Rules
+- Hooks must return typed objects
+- Include TSDoc with @example
+- Handle loading, error, and success states
+- Clean up subscriptions in useEffect return
+
+## Review Checklist
+
+When reviewing code:
+- [ ] No TypeScript errors (`pnpm tsc --noEmit`)
+- [ ] No `any` types
+- [ ] All exports have TSDoc
+- [ ] Consistent naming (PascalCase components, camelCase functions)
+- [ ] Error handling present
+- [ ] No console.logs
+- [ ] Tests written or updated
+- [ ] Storybook stories for components

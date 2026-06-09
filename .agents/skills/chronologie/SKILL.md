@@ -1,77 +1,56 @@
 ---
 name: chronologie
-description: "Aufbau oder Aktualisierung einer Sachverhalts-Chronologie aus Dokumentenquellen und Uploads – datierte Ereignisse werden extrahiert, dedupliziert und nach Bedeutung für die Mandatstheorie markiert. Verwenden, wenn der Nutzer eine Chronologie oder einen Zeitstrahl aus einer Produktion oder Mandatsakte erstellen möchte, „Chronologie aus den Unterlagen\" oder „was ist wann passiert\" sagt oder einen Arbeits-, Sachverhaltdarstellungs- oder Zeugen-Zeitstrahl benötigt."
+description: "Gesellschaftsrechtliche Treuepflicht: Chronologie; konkretisierter Spezialmodul mit Prüfachsen, Red Flags, Varianten, Quellenhygiene und verwertbarem Output im Gesellschaftsrechtliche Treuepflicht."
 ---
 
-# Sachverhalts-Chronologie
+# Chronologie
 
-## Zweck
+## Arbeitsweg
 
-Aufbau einer mandatsbezogenen Sachverhalts-Chronologie aus vorliegenden Dokumenten, Schriftsätzen, Verträgen, E-Mails und Anlagen. Die Chronologie dient als Grundlage für Sachverhaltsdarstellungen im Schriftsatz (§ 253 Abs. 2 Nr. 1 ZPO), Zeugenvernehmungsvorbereitung (§§ 373 ff. ZPO), Berufungsbegründung (§ 520 Abs. 3 ZPO) und interne Mandatsbriefings.
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: StaRUG §§ 1, 29, 31, 39, 49-55, 84, 102, IDW S 6, IDW S 11, InsO § 270; GmbHG §§ 13, 43, AktG §§ 76, 93, 116, BGB §§ 705 ff., HGB §§ 109 ff., BGH II ZR 240/13 (Lux-Treuepflicht) — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
 
-Drei Modi:
-- **Arbeitschronologie** – intern, vollständig, mit Lückenmarkierungen
-- **Sachverhaltsdarstellungs-Chronologie** – aufbereitet für den Schriftsatz, urteilsstilgerecht
-- **Zeugenchronologie** – gefiltert auf einen bestimmten Zeugen für Vernehmungsvorbereitung
+## Fachlicher Kern — Gesellschaftsrecht und Corporate Law
+- **Problemfokus dieses Skills:** Bleibe beim konkreten Titel `Chronologie` und löse die dort angelegte Fachfrage; arbeite mit konkreten Tatbestandsmerkmalen, Beweisfragen und dem unmittelbar benötigten Arbeitsprodukt. Routingfragen bleiben Hilfsmittel, wenn Frist, Zuständigkeit oder Verfahrensart offen sind.
+- **Normenradar:** GmbHG §§ 3, 5, 13, 15, 16, 30, 34, 35, 40, 43, 46, 47, 49 ff.; AktG §§ 76, 93, 111, 119, 130, 243 ff.; HGB §§ 105 ff., 161 ff.; MoPeG/GesRÄndG-Folgen; UmwG; FamFG/Registerrecht; GWB/Fusionskontrolle bei Transaktionen.
+- **Verifizierte Anker:** BGH, Urteil vom 08.11.2022 - II ZR 91/21 (zutreffende Gesellschafterliste/Listenstreit); BGH, Beschluss vom 18.03.2025 - II ZB 11/24 (Registerordner/Gesellschafterliste, Prüfungsumfang); BGH, Urteil vom 11.12.2006 - II ZR 166/05 und Urteil vom 12.04.2016 - II ZR 275/14 (Treuepflicht, Zustimmungspflichten); BGH, Urteil vom 30.09.2025 - II ZR 154/23 (Drittvergleich/verdeckte Vermögenszuwendung, Organ-/Beschlusskontrolle).
+- **Arbeitsmodus:** Erst Gesellschaftsform, Organ, Beschlussweg, Vertretung, Registerlage, wirtschaftliches Ziel und Minderheitenposition sortieren; dann Treuepflicht, Kapitalerhaltung, Haftung, Transaktions-Closing und Beweis-/Vollzugsrisiko prüfen.
+- **Outputpflicht:** Beschluss-/Listenmatrix, Register-To-do, Board-/Beiratsvorlage, Closing-CP-Liste, Treuepflicht-Red-Team, Geschäftsführerhaftungsmemo oder Mandanten-Decision-Paper.
+- **Fehlerbremse:** Tragende Normen/Entscheidungen live oder aus der Akte verifizieren; Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei prüfbarer Quelle. Keine BeckRS-, juris-, Kommentar- oder Aufsatz-Blindzitate aus Modellwissen.
 
-## Eingaben
+## Fachkern: Chronologie
+- **Normen-/Quellenanker:** GmbHG, AktG, HGB, BGB, Satzung/Gesellschaftsvertrag, Treuepflicht, Stimmrechtsbindung, Minderheitenschutz, Organhaftung und Beschlussmängelrecht.
+- **Entscheidende Weiche:** Unterscheide harte Pflichtverletzung, legitime Interessenwahrnehmung, Machtmissbrauch, Informationsdefizit, Stimmverbot und Rechtsfolge.
 
-- Aktives Mandat (Slug)
-- Hochgeladene Dokumente: Verträge, Korrespondenz, E-Mails, Protokolle, Rechnungen, Sachverständigengutachten, Gerichtsentscheidungen
-- Wahl des Modus: `--arbeits` | `--sachverhalt` | `--zeuge=[Name]`
-- Optional: bekannte Schlüsseldaten (z. B. Vertragsschluss, Fälligkeitsdatum, Kündigungserklärung)
+## Kaltstart-Fragen
 
-## Ablauf
+Frage nur nach, wenn es die rechtliche Weiche wirklich verändert:
 
-1. **Dokumente parsen:** Alle hochgeladenen Dateien auf datierte Ereignisse scannen. Datum, Uhrzeit (soweit angegeben), Ereignisbeschreibung, Quelle (Dokumentenbezeichnung, Anlage-Nr.) und beteiligte Personen extrahieren.
+1. Wer handelt, in welcher Rolle, und welches Ergebnis wird gebraucht?
+2. Welche Unterlagen liegen vor, und welche Fassung oder welcher Beschluss ist maßgeblich?
+3. Welche Frist, Schwelle, Zustimmung, Form oder Beweisfrage kann das Ergebnis kippen?
+4. Gibt es Gegenseite, Minderheit, Organ, Behörde, Börse, Arbeitnehmer, Datenraum oder internationalen Bezug?
+5. Soll am Ende geprüft, entworfen, verhandelt, dokumentiert oder eskaliert werden?
 
-2. **Deduplizierung:** Gleiche Ereignisse aus verschiedenen Quellen zusammenführen; Widersprüche markieren als `[WIDERSPRUCH: Quelle A gibt X an, Quelle B gibt Y an]`.
+## Spezifische Prüfachse
 
-3. **Mandatstheorien-Tagging:** Jedes Ereignis nach Relevanz für die Mandatstheorie markieren:
-   - 🔑 Kernereig­nis (unmittelbar anspruchsbegründend oder -ausschließend)
-   - ⚠️ Risikopunkt (könnte gegen Mandantin sprechen)
-   - 📎 Hintergrundinformation
-   - ❓ Ungeklärt / Beleg fehlt
+- Übersetze den Slug in einen Konflikt zwischen Mitgliedschaftsrecht und gesellschaftlicher Rücksichtnahmepflicht.
+- Prüfe Rolle, Pflichtquelle, legitimes Eigeninteresse, Schädigungsnähe, Rechtfertigung, Beweis und Rechtsfolge.
+- Formuliere sowohl Angriffs- als auch Verteidigungslinie.
 
-4. **Lücken identifizieren:** Zeiträume ohne belegte Ereignisse und inhaltliche Lücken (z. B. fehlende Zugangsbestätigung, unklare Übergabe) als `[LÜCKE: Zeitraum MM/JJJJ bis MM/JJJJ – kein Beleg]` markieren.
+## Arbeitsmodus
 
-5. **Modus anwenden:**
-   - *Arbeitschronologie:* Vollständige Liste mit Quellenangaben und Anmerkungen.
-   - *Sachverhaltsdarstellung:* Fließtext im Urteilsstil, Ereignisse in der dritten Person, Beweisquellen als Fußnoten.
-   - *Zeugenchronologie:* Nur Ereignisse mit Beteiligung des Zeugen; Ergänzung um mögliche Wissenslücken des Zeugen.
+1. **Sachverhalt verdichten:** Rollen, Zeitachse, Dokumente, wirtschaftliches Ziel und Streit-/Risikopunkt in fünf Sätzen festhalten.
+2. **Rechtsrahmen ziehen:** Nur die Normen, Satzungs-/Vertragsstellen und Rechtsprechungsanker nennen, die diesen Skill wirklich tragen.
+3. **Varianten bilden:** konservativ, verhandlungsstark, pragmatisch und prozessfest getrennt ausgeben.
+4. **Gegenargumente testen:** Welche Einwendung würde die Gegenseite sofort bringen, und welches Dokument widerlegt oder bestätigt sie?
+5. **Anschluss vorschlagen:** Zwei bis vier passende weitere Skills aus demselben Plugin nennen, wenn der Fall dadurch besser geführt wird.
 
-6. **Versionierung:** Neue Chronologien als `chronology-v[N].md` im Mandatsordner speichern.
+## Quellenhygiene
 
-## Quellen und Zitierweise
+Arbeite primär mit: BGB §§ 241 Abs. 2, 242, 705 ff.; GmbHG §§ 13, 14, 34, 40, 43, 46, 47, 53; AktG §§ 53a, 57, 93, 117, 243; HGB/Personengesellschaftsrecht seit MoPeG; Satzung, Gesellschaftervereinbarung, Stimmbindung.
 
-Verbindlich: `../references/zitierweise.md`.
-
-- Greger, in: Zöller, ZPO, 35. Aufl. 2024, § 253 Rn. 8 (Sachverhaltsdarstellung in der Klageschrift: vollständig, geordnet, widerspruchsfrei).
-- BGH, Urt. v. 11.01.2023 – VIII ZR 153/21, NJW 2023, 843 Rn. 20 (Schlüssigkeit der Klageschrift erfordert vollständigen Sachvortrag aller anspruchsbegründenden Tatsachen).
-- BGH, Urt. v. 07.03.2001 – X ZR 160/99, NJW 2001, 2398 Rn. 11 (Zeitstrahl als Hilfe bei komplexen Sachverhalten).
-- Grüneberg, in: Grüneberg, BGB, 84. Aufl. 2025, § 286 Rn. 14 (Verzugseintritt: Datum des Zugangs der Mahnung entscheidend – Chronologie muss Zugang belegen).
-- Koch, in: Musielak/Voit, ZPO, 21. Aufl. 2024, § 286 Rn. 5 ff. (Beweismaß und Beweiswürdigung bei zeitlichen Abläufen).
-
-## Ausgabeformat
-
-### Arbeitschronologie (Tabelle)
-
-| Datum | Ereignis | Quelle / Anlage | Beteiligte | Tag | Anmerkung |
-|---|---|---|---|---|---|
-| 12.03.2022 | Abschluss Werkvertrag | Anlage K1 (Vertrag v. 12.03.2022) | Kl., Bekl. | 🔑 | Unterschriften vorhanden |
-| 15.04.2022 | Fristsetzung Mängelbeseitigung (Schreiben Kl.) | Anlage K3 | Kl. → Bekl. | 🔑 | Zugang streitig |
-| [LÜCKE] | Zeitraum 16.04. – 30.05.2022 | – | – | ❓ | Keine Korrespondenz vorhanden |
-
-### Sachverhaltsdarstellung (Fließtext-Modus)
-
-> Am 12. März 2022 schlossen die Parteien einen Werkvertrag über die Erstellung einer Software (Anlage K1). Mit Schreiben vom 15. April 2022, dem Beklagten zugegangen am 17. April 2022 (Anlage K2: Rückschein), setzte die Klägerin eine Nachfrist zur Mängelbeseitigung bis zum 1. Mai 2022.
->
-> *Beweis für Zugang: Zeugnis des Herrn Anton Mayer, [Anschrift]; Anlage K2 (Zustellungsnachweis).*
-
-## Risiken / typische Fehler
-
-- **Unklarer Zugangszeitpunkt:** Zugangsnachweis für Mahnungen und Fristsetzungen ist entscheidend für Verzugsbeginn (§ 286 Abs. 1 BGB); fehlende Belege zwingend als Lücke markieren.
-- **Fehlende Chronologie im Schriftsatz:** Eine ungeordnete Sachverhaltsdarstellung kann zur Unschlüssigkeit führen; der BGH verlangt vollständigen, widerspruchsfreien Sachvortrag (BGH, Urt. v. 11.01.2023 – VIII ZR 153/21, NJW 2023, 843 Rn. 20).
-- **Veraltete Chronologie:** Nach jedem Mandat-Update (`/mandat-update`) die Chronologie ergänzen; veraltete Versionen archivieren.
-- **Zeugenchronologie zu weit gefasst:** Nur mandatsrelevante Ereignisse einbeziehen; nicht alle Ereignisse, an denen der Zeuge beteiligt war.
-- **Datenschutz:** Personenbezogene Daten Dritter nur soweit erforderlich; DSGVO-Minimierungsgrundsatz (Art. 5 Abs. 1 lit. c DSGVO) beachten.
+Keine BeckRS-, juris-, Kommentar- oder Aufsatz-Blindzitate aus Modellwissen. Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen, tragender Aussage und frei prüfbarer Quelle ausgeben. Wenn keine freie Quelle gefunden wird, als unverified markieren und nicht als tragenden Beleg verwenden.

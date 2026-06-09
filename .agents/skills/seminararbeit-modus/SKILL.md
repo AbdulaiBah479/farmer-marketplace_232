@@ -1,16 +1,23 @@
 ---
 name: seminararbeit-modus
-description: "Student schreibt Seminararbeit mit persoenlicher Lekture durch Lehrkraft: Forschungsfrage Literaturschau eigene These Disputation. Unterschied zur Hausarbeit hoehere Eigenständigkeit wissenschaftliche Tiefe Vortragspflicht. Normen Wissenschaftsfreiheit Art. 5 GG. Prüfraster Forschungsfrage These Argumentation Disputation-Vorbereitung. Output Seminararbeit-Struktur Forschungsfragen-Entwurf. Abgrenzung zu hausarbeit-workflow-start (Standard-Hausarbeit)."
+description: "Student schreibt Seminararbeit mit persönlicher Lekture durch Lehrkraft: Forschungsfrage Literaturschau eigene These Disputation. Unterschied zur Hausarbeit hoehere Eigenständigkeit wissenschaftliche Tiefe Vortragspflicht. Normen Wissenschaftsfreiheit Art. 5 GG. Prüfraster Forschungsfrage These A..."
 ---
 
 # Seminararbeit-Modus
 
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: Hausarbeitsfrist i.d.R. 4-6 Wochen, kein Abgabeaufschub, JAG-Wiederholung pro Klausur, Promotionsverfahren landesrechtlich.
+- Tragende Normen verifizieren: JAG/JAPO Land (Pflicht-Hausarbeit), HRG, Studien-/Prüfungsordnung, GG Art. 5 Abs. 3, UrhG §§ 51, 51a (Zitatrecht), Promotionsordnung — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Studierende, Korrektor (Lehrstuhl/Justizprüfungsamt), Bibliothek, juris/Beck-Online (Recherche), Plagiats-Software.
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Gutachten-Hausarbeit, Sachverhalt, Lösungsskizze, Literaturverzeichnis, Plagiatsbericht, Korrekturanmerkungen, Notenbescheid — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
 
 ## Triage zu Beginn
 1. Wie lautet die genaue Forschungsfrage oder das Seminar-Thema?
 2. Welchen wissenschaftlichen Standpunkt oder welche These soll die Arbeit entwickeln?
 3. Gibt es Pflicht-Literaturquellen, die vom Lehrstuhl vorgegeben wurden?
-4. In welchem Format soll der Vortrag erfolgen und wie viel Zeit steht fuer Disputation zur Verfügung?
+4. In welchem Format soll der Vortrag erfolgen und wie viel Zeit steht für Disputation zur Verfügung?
 
 ## Aktuelle Rechtsprechung und Methodik
 - Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
@@ -20,13 +27,6 @@ description: "Student schreibt Seminararbeit mit persoenlicher Lekture durch Leh
 - § 1 Abs. 1 BRAO — Anwaltliche Unabhaengigkeit als Ausbildungsziel
 - §§ 133, 157 BGB — Auslegungs-Methoden als inhaltlicher Massstab
 - § 242 BGB — Treu und Glauben: auch wissenschaftliche Auseinandersetzung muss fair und vollstaendig sein
-
-## Quellenregel
-
-Quellenregel: Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen; Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff.
-## Zweck
-
-Eine Seminararbeit unterscheidet sich von einer Hausarbeit wesentlich — in Erwartung, Tiefe, Form und Adressat. Dieser Skill schaltet das Plugin in den **Seminararbeit-Modus**, wenn Du nicht eine Falllösung, sondern eine **wissenschaftliche Auseinandersetzung** schreibst.
 
 ## Schritt 1 — Was ist eine Seminararbeit?
 
@@ -82,19 +82,19 @@ Wenn die Lehrkraft Auffassung A vertritt:
 
 ```
 A. Einleitung
-   I. Problemstellung
-   II. Forschungsfrage
-   III. Gang der Untersuchung
+ I. Problemstellung
+ II. Forschungsfrage
+ III. Gang der Untersuchung
 
 B. Hauptteil
-   I. Grundlagen / Definitionen
-   II. Streit-Stand (h.M., a.A., Differenzierungen)
-   III. Eigene These und Begründung
-   IV. Anwendung auf praktische Fragen
+ I. Grundlagen / Definitionen
+ II. Streit-Stand (h.M., a.A., Differenzierungen)
+ III. Eigene These und Begründung
+ IV. Anwendung auf praktische Fragen
 
 C. Schluss
-   I. Zusammenfassung der Ergebnisse
-   II. Ausblick / offene Fragen
+ I. Zusammenfassung der Ergebnisse
+ II. Ausblick / offene Fragen
 ```
 
 ### Charakteristisch für Seminararbeit

@@ -1,16 +1,40 @@
 ---
 name: schriftliche-beschlussfassung
-description: 'Entwirft Beschlüsse im schriftlichen Verfahren (§ 48 Abs. 2 GmbHG) oder Umlaufbeschlüsse im Hausstil mit Präzedenzsuche im Beschlussarchiv. Bei der AG: Hinweis, dass HV-Beschlüsse Präsenz oder virtuelle HV (§ 118a AktG) erfordern und notariell beurkundet werden (§ 130 AktG); Umlaufverfahren bei AG nur für Aufsichtsrat (§ 108 Abs. 4 AktG) und Vorstand (§ 77 AktG). Behandelt Stimmverbote (§ 47 Abs. 4 GmbHG), Mehrheitserfordernisse und Unterzeichner-Tracking. Lädt bei "Umlaufbeschluss", "schriftlicher Beschluss", "Gesellschafterbeschluss" oder Beschreibung einer zustimmungspflichtigen Maßnahme ohne Versammlung.'
-
+description: "Entwirft Beschlüsse im schriftlichen Verfahren (§ 48 Abs. 2 GmbHG) oder Umlaufbeschlüsse im Hausstil mit Präzedenzsuche im Beschlussarchiv. Bei der AG: Hinweis, dass HV-Beschlüsse Präsenz oder virtuelle HV (§ 118a AktG) erfordern und notariell beurkundet werden (§ 130 AktG); Umlaufverfahren bei A..."
 ---
 
 # Beschluss im schriftlichen Verfahren / Umlaufbeschluss
+
+## Arbeitsbereich
+
+Entwirft Beschlüsse im schriftlichen Verfahren (§ 48 Abs. 2 GmbHG) oder Umlaufbeschlüsse im Hausstil mit Präzedenzsuche im Beschlussarchiv. Bei der AG: Hinweis, dass HV-Beschlüsse Präsenz oder virtuelle HV (§ 118a AktG) erfordern und notariell beurkundet werden (§ 130 AktG); Umlaufverfahren bei AG nur für Aufsichtsrat (§ 108 Abs. 4 AktG) und Vorstand (§ 77 AktG). Behandelt Stimmverbote (§ 47 Abs. 4 GmbHG), Mehrheitserfordernisse und Unterzeichner-Tracking. Lädt bei "Umlaufbeschluss", "schriftlicher Beschluss", "Gesellschafterbeschluss" oder Beschreibung einer zustimmungspflichtigen Maßnahme ohne Versammlung. Arbeite entlang dieser konkreten Prüfungslinie und trenne Rolle, Frist, Zuständigkeit, Beweislast und gewünschten Output.
+
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: die im Plugin-Kontext einschlägigen Normen über gesetze-im-internet.de, dejure.org, eur-lex.europa.eu und die amtlichen Bundes-/Landesportale live prüfen — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+## Fachlicher Kern — Gesellschaftsrecht und Corporate Law
+- **Problemfokus dieses Skills:** Bleibe beim konkreten Titel `Beschluss im schriftlichen Verfahren / Umlaufbeschluss` und löse die dort angelegte Fachfrage; arbeite mit konkreten Tatbestandsmerkmalen, Beweisfragen und dem unmittelbar benötigten Arbeitsprodukt. Routingfragen bleiben Hilfsmittel, wenn Frist, Zuständigkeit oder Verfahrensart offen sind.
+- **Normenradar:** GmbHG §§ 3, 5, 13, 15, 16, 30, 34, 35, 40, 43, 46, 47, 49 ff.; AktG §§ 76, 93, 111, 119, 130, 243 ff.; HGB §§ 105 ff., 161 ff.; MoPeG/GesRÄndG-Folgen; UmwG; FamFG/Registerrecht; GWB/Fusionskontrolle bei Transaktionen.
+- **Verifizierte Anker:** BGH, Urteil vom 08.11.2022 - II ZR 91/21 (zutreffende Gesellschafterliste/Listenstreit); BGH, Beschluss vom 18.03.2025 - II ZB 11/24 (Registerordner/Gesellschafterliste, Prüfungsumfang); BGH, Urteil vom 11.12.2006 - II ZR 166/05 und Urteil vom 12.04.2016 - II ZR 275/14 (Treuepflicht, Zustimmungspflichten); BGH, Urteil vom 30.09.2025 - II ZR 154/23 (Drittvergleich/verdeckte Vermögenszuwendung, Organ-/Beschlusskontrolle).
+- **Arbeitsmodus:** Erst Gesellschaftsform, Organ, Beschlussweg, Vertretung, Registerlage, wirtschaftliches Ziel und Minderheitenposition sortieren; dann Treuepflicht, Kapitalerhaltung, Haftung, Transaktions-Closing und Beweis-/Vollzugsrisiko prüfen.
+- **Outputpflicht:** Beschluss-/Listenmatrix, Register-To-do, Board-/Beiratsvorlage, Closing-CP-Liste, Treuepflicht-Red-Team, Geschäftsführerhaftungsmemo oder Mandanten-Decision-Paper.
+- **Fehlerbremse:** Tragende Normen/Entscheidungen live oder aus der Akte verifizieren; Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei prüfbarer Quelle. Keine BeckRS-, juris-, Kommentar- oder Aufsatz-Blindzitate aus Modellwissen.
+
+## Fachkern: Beschluss im schriftlichen Verfahren / Umlaufbeschluss
+- **Normen-/Quellenanker:** GmbHG, AktG, HGB, BGB, UmwG, MoPeG, FamFG/Registerrecht, Gesellschafterliste, Beschlussmängel, Treuepflicht und Organhaftung.
+- **Entscheidende Weiche:** Gesellschaftsform, Organrolle, Beschluss/Vertrag, Registerwirkung, Minderheitenschutz, Haftung und Frist getrennt prüfen.
+- **Arbeitsprodukt:** Erzeuge eine konkrete Prüf- oder Entscheidungsmatrix mit Norm, Tatbestand, Beleg, Einwand, Risikoampel und nächstem Schritt; Anschluss-Skills nur bei echter Vertiefung nennen.
 
 ## Triage zu Beginn
 
 Vor dem Beschlussentwurf klaeren:
 
-1. **Rechtsform:** GmbH / UG (schriftliches Verfahren § 48 Abs. 2 GmbHG) oder AG (Umlaufbeschluss nur fuer AR § 108 Abs. 4 AktG und Vorstand)? Bei AG-HV: Praesenz-HV oder virtuelle HV (§ 118a AktG) erforderlich.
+1. **Rechtsform:** GmbH / UG (schriftliches Verfahren § 48 Abs. 2 GmbHG) oder AG (Umlaufbeschluss nur für AR § 108 Abs. 4 AktG und Vorstand)? Bei AG-HV: Praesenz-HV oder virtuelle HV (§ 118a AktG) erforderlich.
 2. **Einverstaendnis aller Gesellschafter?** § 48 Abs. 2 GmbHG setzt nach h.M. voraus, dass alle Gesellschafter dem schriftlichen Verfahren zustimmen (oder der Gesellschaftsvertrag das Verfahren explizit zulaesst). Ist das sichergestellt?
 3. **Massnahme-Typ:** Routine (Geschaeftsfuehrer, Prokura, Jahresabschluss) oder wesentlich (M&A, Satzungsaenderung, Liquidation)? → Bei wesentlichen Massnahmen: Anwaltliche Pruefung vor Unterzeichnung.
 4. **Stimmverbot?** Ist ein Gesellschafter von der Abstimmung ausgeschlossen (§ 47 Abs. 4 GmbHG)? Insbesondere bei Eigenbestellung zum Geschaeftsfuehrer (str.)
@@ -39,7 +63,7 @@ Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über 
 
 **AG/SE:** § 108 Abs. 4 AktG (Aufsichtsratumlaufbeschluss); § 118a AktG (virtuelle HV); § 130 AktG (notarielle Niederschrift HV-Beschlüsse).
 
-**Personengesellschaften (MoPeG ab 01.01.2024):** § 714 BGB n.F. (GbR-Beschlussfassung): https://www.gesetze-im-internet.de/bgb/__714.html ; §§ 105, 110 HGB (OHG); § 163 HGB (KG-Stimmrechte). Neues Beschlussmaengelrecht §§ 110-115 HGB n.F. (Anfechtungsmodell, Klage gegen die Gesellschaft, Frist drei Monate, Cram-down moeglich) — gilt fuer OHG/KG, auf GbR analog soweit Gesellschaftsvertrag dies vorsieht (vgl. BGH "Schiedsfaehigkeit IV", Beschl. v. 23.09.2021 — I ZB 13/21, fuer Schiedsklauseln-Anpassungsbedarf): https://dejure.org/dienste/vernetzung/rechtsprechung?Gericht=BGH&Datum=23.09.2021&Aktenzeichen=I+ZB+13/21
+**Personengesellschaften (MoPeG ab 01.01.2024):** § 714 BGB n.F. (GbR-Beschlussfassung): https://www.gesetze-im-internet.de/bgb/__714.html ; §§ 105, 110 HGB (OHG); § 163 HGB (KG-Stimmrechte). Neues Beschlussmaengelrecht §§ 110-115 HGB n.F. (Anfechtungsmodell, Klage gegen die Gesellschaft, Frist drei Monate, Cram-down moeglich) — gilt für OHG/KG, auf GbR analog soweit Gesellschaftsvertrag dies vorsieht (vgl. BGH "Schiedsfaehigkeit IV", Beschl. v. 23.09.2021 — I ZB 13/21, für Schiedsklauseln-Anpassungsbedarf): https://dejure.org/dienste/vernetzung/rechtsprechung?Gericht=BGH&Datum=23.09.2021&Aktenzeichen=I+ZB+13/21
 
 - Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen zitieren. Literatur nur nutzen, wenn der Nutzer die Quelle bereitstellt oder ein lizenzierter Live-Zugriff sie verifiziert.
 
@@ -103,7 +127,7 @@ Dieser Beschluss wird wirksam mit Eingang der Zustimmungserklärungen aller
 Gesellschafter [oder der satzungsmäßig erforderlichen Mehrheit].
 
 _______________________________
-[Gesellschaftername]  |  [Anteil %]  |  Datum: _______________
+[Gesellschaftername] | [Anteil %] | Datum: _______________
 [Für jeden weiteren Gesellschafter wiederholen]
 ```
 
@@ -123,10 +147,6 @@ Formhinweise: Präzise formulieren (keine Vagen Formulierungen); bevollmächtigt
 2. **Unterzeichner-Checkliste** mit Stimmverbot-Flag, Mehrheitserfordernis, Notarerfordernis.
 3. **Prüf-Checkliste** (Präzision der Formulierung, Anlagen, Gesellschaftsvertrag, § 47 Abs. 4, Handelsregister).
 4. **Entwurfs-Hinweis** (vor Unterzeichnung zu entfernen): "Dies ist ein Entwurf zur anwaltlichen Prüfung. Die Unterzeichnung begründet rechtswirksame Gesellschafterbeschlüsse — ein zugelassener Rechtsanwalt prüft, bevor der Beschluss zirkuliert wird."
-
-## Ausgabeformat
-
-Beschlussentwurf + Unterzeichner-Checkliste + Pruef-Checkliste + Entwurfs-Hinweis. Arbeitsergebnis-Kopfzeile auf Pruef-Unterlagen.
 
 ## Output-Template
 

@@ -1,9 +1,30 @@
 ---
 name: gesellschafts-compliance
-description: "Gesellschafts-Compliance-Tracker – Initialisierung, Fälligkeitsbericht, Status-Update, Gesundheits-Audit, Export. Pflegt eine compliance-tracker.yaml aus der Gesellschaftstabelle, berechnet Einreichungsfristen nach Rechtsträger und Rechtsordnung und zeigt auf, was in den nächsten 30/60/90 Tagen fällig ist. Trigger: „Gesellschafts-Compliance\", „Einreichungsfristen\", „Bilanzpublizität\", „Transparenzregister\", „Jahresabschluss einreichen\", „was ist fällig\"."
+description: "Gesellschafts-Compliance-Tracker – Initialisierung, Fälligkeitsbericht, Status-Update, Gesundheits-Audit, Export. Pflegt eine compliance-tracker.yaml aus der Gesellschaftstabelle, berechnet Einreichungsfristen nach Rechtsträger und Rechtsordnung und zeigt auf, was in den nächsten 30/60/90 Tagen f..."
 ---
 
 # Gesellschafts-Compliance (§ 325 HGB Bilanzpublizität; § 20 GwG Transparenzregister)
+
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: die im Plugin-Kontext einschlägigen Normen über gesetze-im-internet.de, dejure.org, eur-lex.europa.eu und die amtlichen Bundes-/Landesportale live prüfen — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+## Fachlicher Kern — Gesellschaftsrecht und Corporate Law
+- **Problemfokus dieses Skills:** Bleibe beim konkreten Titel `Gesellschafts-Compliance (§ 325 HGB Bilanzpublizität; § 20 GwG Transparenzregister)` und löse die dort angelegte Fachfrage; arbeite mit konkreten Tatbestandsmerkmalen, Beweisfragen und dem unmittelbar benötigten Arbeitsprodukt. Routingfragen bleiben Hilfsmittel, wenn Frist, Zuständigkeit oder Verfahrensart offen sind.
+- **Normenradar:** GmbHG §§ 3, 5, 13, 15, 16, 30, 34, 35, 40, 43, 46, 47, 49 ff.; AktG §§ 76, 93, 111, 119, 130, 243 ff.; HGB §§ 105 ff., 161 ff.; MoPeG/GesRÄndG-Folgen; UmwG; FamFG/Registerrecht; GWB/Fusionskontrolle bei Transaktionen.
+- **Verifizierte Anker:** BGH, Urteil vom 08.11.2022 - II ZR 91/21 (zutreffende Gesellschafterliste/Listenstreit); BGH, Beschluss vom 18.03.2025 - II ZB 11/24 (Registerordner/Gesellschafterliste, Prüfungsumfang); BGH, Urteil vom 11.12.2006 - II ZR 166/05 und Urteil vom 12.04.2016 - II ZR 275/14 (Treuepflicht, Zustimmungspflichten); BGH, Urteil vom 30.09.2025 - II ZR 154/23 (Drittvergleich/verdeckte Vermögenszuwendung, Organ-/Beschlusskontrolle).
+- **Arbeitsmodus:** Erst Gesellschaftsform, Organ, Beschlussweg, Vertretung, Registerlage, wirtschaftliches Ziel und Minderheitenposition sortieren; dann Treuepflicht, Kapitalerhaltung, Haftung, Transaktions-Closing und Beweis-/Vollzugsrisiko prüfen.
+- **Outputpflicht:** Beschluss-/Listenmatrix, Register-To-do, Board-/Beiratsvorlage, Closing-CP-Liste, Treuepflicht-Red-Team, Geschäftsführerhaftungsmemo oder Mandanten-Decision-Paper.
+- **Fehlerbremse:** Tragende Normen/Entscheidungen live oder aus der Akte verifizieren; Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei prüfbarer Quelle. Keine BeckRS-, juris-, Kommentar- oder Aufsatz-Blindzitate aus Modellwissen.
+
+## Fachkern: Gesellschafts-Compliance (§ 325 HGB Bilanzpublizität; § 20 GwG Transparenzregister)
+- **Normen-/Quellenanker:** GmbHG, AktG, HGB, BGB, UmwG, MoPeG, FamFG/Registerrecht, Gesellschafterliste, Beschlussmängel, Treuepflicht und Organhaftung.
+- **Entscheidende Weiche:** Gesellschaftsform, Organrolle, Beschluss/Vertrag, Registerwirkung, Minderheitenschutz, Haftung und Frist getrennt prüfen.
+- **Arbeitsprodukt:** Erzeuge eine konkrete Prüf- oder Entscheidungsmatrix mit Norm, Tatbestand, Beleg, Einwand, Risikoampel und nächstem Schritt; Anschluss-Skills nur bei echter Vertiefung nennen.
 
 ## Kernsachverhalt
 
@@ -23,14 +44,14 @@ Vor der Tracker-Initialisierung sind folgende Angaben erforderlich:
 6. **Ruhende oder aufzulösende Gesellschaften:** Sind Gesellschaften betrieblich inaktiv? Sollen sie aufgelöst werden (§ 65 GmbHG, §§ 264 ff. AktG)?
 7. **Ausländische Tochtergesellschaften:** Gibt es § 325a HGB-Pflichten für ausländische Tochtergesellschaften?
 8. **Berichtszeitraum:** 30, 60 oder 90 Tage für den Fälligkeitsbericht?
-- **Was will der Mandant wirklich erreichen?** (Nicht: was steht im Standardweg, sondern: welches Ergebnis ist fuer den Mandanten persoenlich/wirtschaftlich das beste? Manchmal ist der schnellere Vergleich besser als der formal "richtige" Weg.)
+- **Was will der Mandant wirklich erreichen?** (Nicht: was steht im Standardweg, sondern: welches Ergebnis ist für den Mandanten persoenlich/wirtschaftlich das beste? Manchmal ist der schnellere Vergleich besser als der formal "richtige" Weg.)
 
 ## Rechtlicher Rahmen
 
 ### Normtexte mit Auszügen
 
 **§ 325 Abs. 1 HGB — Bilanzpublizität (Offenlegungspflicht)**
-> „Die gesetzlichen Vertreter von Kapitalgesellschaften haben [...] den Jahresabschluss und den Lagebericht [...] beim Betreiber des Bundesanzeigers elektronisch einzureichen."
+> "Die gesetzlichen Vertreter von Kapitalgesellschaften haben [...] den Jahresabschluss und den Lagebericht [...] beim Betreiber des Bundesanzeigers elektronisch einzureichen."
 
 Frist: § 325 Abs. 1a HGB — spätestens 12 Monate nach Ende des Geschäftsjahres. Kleine Kapitalgesellschaften (§ 267 Abs. 1 HGB) können vereinfachte Unterlagen einreichen; nur Bilanz und Anhang, kein GuV-Ausweis.
 
@@ -38,14 +59,14 @@ Frist: § 325 Abs. 1a HGB — spätestens 12 Monate nach Ende des Geschäftsjahr
 > Wer § 325 HGB verletzt, kann vom Bundesamt für Justiz (BfJ) zur Einreichung angehalten und mit Ordnungsgeld belegt werden. Mindestordnungsgeld: 2.500 EUR; Maximum: 25.000 EUR je Verstoß. Verfahren beginnt von Amts wegen, sobald fristgerecht keine Einreichung erfolgt.
 
 **§ 40 GmbHG — Gesellschafterliste**
-> „Notare, die in Angelegenheiten der Gesellschaft tätig werden, haben [...] eine von ihnen unterschriebene, aktualisierte Gesellschafterliste [...] zum Handelsregister einzureichen."
+> "Notare, die in Angelegenheiten der Gesellschaft tätig werden, haben [...] eine von ihnen unterschriebene, aktualisierte Gesellschafterliste [...] zum Handelsregister einzureichen."
 
 Frist: unverzüglich nach jeder Änderung (Abtretung, Kapitalerhöhung, Erbfolge). Pflicht des Notars bei notarieller Beurkundung; sonst Geschäftsführer (§ 40 Abs. 2 GmbHG). Konsequenz veralteter Liste: Gutgläubiger Erwerb nach § 16 Abs. 3 GmbHG kann zustande kommen, wenn Erwerber auf die unrichtige Liste vertraut.
 
 **§ 16 Abs. 3 GmbHG — Gutgläubiger Erwerb**
-> „Ist die im Handelsregister eingetragene Gesellschafterliste unrichtig, so kann ein Erwerber, der auf die Richtigkeit der Liste vertraut, gutgläubig Anteile erwerben."
+> "Ist die im Handelsregister eingetragene Gesellschafterliste unrichtig, so kann ein Erwerber, der auf die Richtigkeit der Liste vertraut, gutgläubig Anteile erwerben."
 
-Voraussetzung: Liste muss seit mindestens 3 Jahren unrichtig sein; Erwerber muss gutgläubig sein (keine Kenntnis oder grob fahrlässige Unkenntnis). BGH, Urt. v. 02.07.2019 – II ZR 406/17, NJW 2019, 2774: gutgläubiger Erwerb bei unrichtiger Gesellschafterliste.
+Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
 **§§ 18 ff., 20 GwG — Transparenzregister**
 > § 20 GwG verpflichtet juristische Personen des Privatrechts und eingetragene Personengesellschaften, die wirtschaftlich Berechtigten (§ 3 GwG) beim Transparenzregister anzumelden.
@@ -63,12 +84,12 @@ Frist: 2 Wochen nach Änderung der Beteiligungsverhältnisse. Ausnahme: § 20 Ab
 Zwei von drei Merkmalen müssen an zwei aufeinanderfolgenden Abschlussstichtagen erfüllt sein (§ 267 Abs. 4 HGB). `[Modellwissen — Schwellenwerte beim BfJ/Unternehmensregister bestätigen]`
 
 **§ 316 HGB — Prüfungspflicht**
-> „Der Jahresabschluss und der Lagebericht von Kapitalgesellschaften, die nicht kleine Kapitalgesellschaften sind, sind durch einen Abschlussprüfer zu prüfen."
+> "Der Jahresabschluss und der Lagebericht von Kapitalgesellschaften, die nicht kleine Kapitalgesellschaften sind, sind durch einen Abschlussprüfer zu prüfen."
 
 Gilt für alle AG (keine Größenklassenausnahme). GmbH: Prüfungspflicht ab mittelgroß. Ohne Testierung darf der Abschluss nicht festgestellt werden.
 
 **§ 290 HGB — Konzernabschlusspflicht**
-> „Die gesetzlichen Vertreter einer Kapitalgesellschaft haben einen Konzernabschluss und einen Konzernlagebericht aufzustellen, wenn diese Kapitalgesellschaft auf eine andere Gesellschaft einen beherrschenden Einfluss ausüben kann."
+> "Die gesetzlichen Vertreter einer Kapitalgesellschaft haben einen Konzernabschluss und einen Konzernlagebericht aufzustellen, wenn diese Kapitalgesellschaft auf eine andere Gesellschaft einen beherrschenden Einfluss ausüben kann."
 
 **§ 325a HGB — Zweigniederlassungen ausländischer Gesellschaften**
 > Bestimmte ausländische Gesellschaften mit Zweigniederlassung in Deutschland müssen Jahresabschlüsse in Deutschland offenlegen.
@@ -77,16 +98,11 @@ Gilt für alle AG (keine Größenklassenausnahme). GmbH: Prüfungspflicht ab mit
 
 | Gericht | Aktenzeichen | Fundstelle | Relevanz |
 |---|---|---|---|
-| BGH | II ZR 406/17 | NJW 2019, 2774 | Gutgläubiger Erwerb bei unrichtiger Gesellschafterliste (§ 16 Abs. 3 GmbHG); 3-Jahres-Frist beginnt mit letzter richtiger Eintragung |
-| BGH | II ZR 300/17 | NZG 2019, 581 | Anforderungen an Gesellschafterliste; inhaltliche Richtigkeit als Voraussetzung für gutgläubigen Erwerb |
-| BFH | IV R 40/16 | BFH/NV 2019, 321 | Abgrenzung Jahresabschlusspflicht und steuerliche Pflichten; keine Übertragung steuerlicher Fristen auf § 325 HGB |
-| OLG Düsseldorf | I-3 Wx 214/18 | NZG 2019, 235 | Ordnungsgeldverfahren BfJ; Wiederholung bei fortgesetztem Verstoß |
-| OLG München | 31 Wx 286/18 | NZG 2019, 112 | Inhalt der Gesellschafterliste; Beteiligungsverhältnisse sind vollständig darzustellen |
+| Rechtsprechung live prüfen | Live-Verifikation erforderlich | - | keine Entscheidung aus Modellwissen zitieren; vor Ausgabe offizielle oder frei zugängliche Quelle mit Gericht, Datum, Aktenzeichen und Aussage protokollieren |
 
 ## Prüfschema: Compliance-Initialisierung und laufender Betrieb
 
-
-**Vorab:** Der untenstehende Workflow ist die typische Standardlinie. Wenn die Mandantenlage abweicht (siehe "Strategische Optionen" oben), sind die Schritte entsprechend zu verkuerzen, umzustellen oder durch ein anderes Skill zu ersetzen — der Workflow ist Leitfaden, nicht Pflichtprogramm.
+**Vorab:** Der untenstehende ist die typische Standardlinie. Wenn die Mandantenlage abweicht (siehe "Strategische Optionen" oben), sind die Schritte entsprechend zu verkuerzen, umzustellen oder durch ein anderes Skill zu ersetzen — der ist Leitfaden, nicht Pflichtprogramm.
 
 | Schritt | Prüfungspunkt | Inhalt | Ergebnis |
 |---|---|---|---|
@@ -148,12 +164,11 @@ Bevor das Template eins-zu-eins gefuellt wird, ist zu pruefen welche Variante zu
 | Konstellation | Empfohlener Weg |
 |---|---|
 | Standard — Compliance-Programm initialisierten oder pruefen | Compliance-Schema nach Checkliste; Template unten |
-| Variante A — Kleines Unternehmen kein Budget fuer umfangreiches Programm | Minimalanforderungen-Compliance-Set statt Vollprogramm |
+| Variante A — Kleines Unternehmen kein Budget für umfangreiches Programm | Minimalanforderungen-Compliance-Set statt Vollprogramm |
 | Variante B — Branchenspezifische Anforderungen GwG DSGVO | Branchen-spezifisches Compliance-Modul einsetzen |
-| Variante C — Bereits Ermittlungsverfahren laeuft | Compliance-Untersuchung als Verteidigung; Kooperation mit Behoerden |
+| Variante C — Bereits Ermittlungsverfahren laeuft | Compliance-Untersuchung als Verteidigung; Kooperation mit Behörden |
 
 Wenn die Mandantenkonstellation **nicht** ins Standardschema passt, ist das Template anzupassen oder durch ein anderes Skill abzuloesen — nicht das Mandat in das Schema zu pressen.
-
 
 ## Schriftsatzbausteine
 
@@ -180,7 +195,7 @@ wir vertreten die [Gesellschaft], [HR-Nummer], [Anschrift], in der oben bezeichn
 Angelegenheit. Gegen den Ordnungsgeldbescheid vom [Datum], der unserer Mandantin am
 [Datum] zugegangen ist, legen wir hiermit
 
-                              W i d e r s p r u c h
+ W i d e r s p r u c h
 
 ein.
 
@@ -242,67 +257,66 @@ Mit freundlichen Grüßen
 3. Sind Anschlusswege erwuenscht? [Mediation / Direktgesprach / Einigung vor Fristablauf]
 
 Schlussabsatz Variante A (kooperativ):
-Wir regen eine guetliche Einigung an und stehen fuer ein klaerenden Gesprach zur Verfuegung. Eine einvernehmliche Loesung erspart beiden Seiten Zeit und Kosten.
+Wir regen eine guetliche Einigung an und stehen für ein klaerenden Gesprach zur Verfuegung. Eine einvernehmliche Loesung erspart beiden Seiten Zeit und Kosten.
 
 Schlussabsatz Variante B (formal-streng):
 Eine aussergerichtliche Einigung kommt nur in Betracht wenn die Gegenseite innerhalb von [X] Tagen einen akzeptablen Vorschlag unterbreitet. Anderenfalls werden wir alle rechtlichen Schritte einleiten.
 
-
 ### Baustein 3: Gesellschafts-Compliance-Tracker YAML (vollständig)
 
 ```yaml
-# Gesellschafts-Compliance-Tracker
-# Erstellt: [JJJJ-MM-TT]
-# Zuletzt aktualisiert: [JJJJ-MM-TT]
-# HINWEIS: Fristen sind nur Referenz — beim Bundesanzeiger/HR/TR bestätigen
+### Gesellschafts-Compliance-Tracker
+### Erstellt: [JJJJ-MM-TT]
+### Zuletzt aktualisiert: [JJJJ-MM-TT]
+### HINWEIS: Fristen sind nur Referenz — beim Bundesanzeiger/HR/TR bestätigen
 
 metadaten:
-  unternehmen: "[Konzern- / Mandantenname]"
-  erstellt: "[Datum]"
-  zuletzt_aktualisiert: "[Datum]"
-  letztes_audit: null
+ unternehmen: "[Konzern- / Mandantenname]"
+ erstellt: "[Datum]"
+ zuletzt_aktualisiert: "[Datum]"
+ letztes_audit: null
 
 gesellschaften:
-  - name: "Alpha GmbH"
-    typ: "GmbH"
-    handelsregisternummer: "HRB 12345"
-    registergericht: "Amtsgericht München"
-    gruendungsdatum: "2015-01-10"
-    status: "aktiv"
-    groessenklasse: "mittelgroß § 267 Abs. 2 HGB"
-    geschaeftsjahr_ende: "12-31"
-    abschlusspruefung_pflicht: "ja"
-    gesellschafter_liste_aktuell: "2025-11-15"
-    notizen: "Abtretung März 2026 noch nicht eingetragen"
+ - name: "Alpha GmbH"
+ typ: "GmbH"
+ handelsregisternummer: "HRB 12345"
+ registergericht: "Amtsgericht München"
+ gruendungsdatum: "2015-01-10"
+ status: "aktiv"
+ groessenklasse: "mittelgroß § 267 Abs. 2 HGB"
+ geschaeftsjahr_ende: "12-31"
+ abschlusspruefung_pflicht: "ja"
+ gesellschafter_liste_aktuell: "2025-11-15"
+ notizen: "Abtretung März 2026 noch nicht eingetragen"
 
-    pflichten:
-      - typ: "Jahresabschluss § 325 HGB"
-        faellig: "2026-12-31"
-        faelligkeits_grundlage: "GJ-Ende 31.12.2025 + 12 Monate"
-        zuletzt_eingereicht: "2025-10-15"
-        status: "aktuell"
-        notizen: "GJ 2025 bis 31.12.2026 einzureichen"
+ pflichten:
+ - typ: "Jahresabschluss § 325 HGB"
+ faellig: "2026-12-31"
+ faelligkeits_grundlage: "GJ-Ende 31.12.2025 + 12 Monate"
+ zuletzt_eingereicht: "2025-10-15"
+ status: "aktuell"
+ notizen: "GJ 2025 bis 31.12.2026 einzureichen"
 
-      - typ: "Gesellschafterliste § 40 GmbHG"
-        faellig: "2026-04-05"
-        faelligkeits_grundlage: "Unverzüglich nach Abtretung März 2026"
-        zuletzt_eingereicht: "2025-11-15"
-        status: "überfällig"
-        notizen: "Abtretung v. 20.03.2026 noch nicht eingetragen; GF aufgefordert"
+ - typ: "Gesellschafterliste § 40 GmbHG"
+ faellig: "2026-04-05"
+ faelligkeits_grundlage: "Unverzüglich nach Abtretung März 2026"
+ zuletzt_eingereicht: "2025-11-15"
+ status: "überfällig"
+ notizen: "Abtretung v. 20.03.2026 noch nicht eingetragen; GF aufgefordert"
 
-      - typ: "Transparenzregister § 20 GwG"
-        faellig: "2026-04-03"
-        faelligkeits_grundlage: "Änderung wirtschaftlich Berechtigter März 2026 + 2 Wochen"
-        zuletzt_eingereicht: "2025-11-15"
-        status: "überfällig"
-        notizen: "Neuer wirtschaftlich Berechtigter nach Abtretung"
+ - typ: "Transparenzregister § 20 GwG"
+ faellig: "2026-04-03"
+ faelligkeits_grundlage: "Änderung wirtschaftlich Berechtigter März 2026 + 2 Wochen"
+ zuletzt_eingereicht: "2025-11-15"
+ status: "überfällig"
+ notizen: "Neuer wirtschaftlich Berechtigter nach Abtretung"
 
-      - typ: "Jahresabschlussprüfung § 316 HGB"
-        faellig: "2026-05-31"
-        faelligkeits_grundlage: "Vor Feststellung und Offenlegung GJ 2025"
-        zuletzt_eingereicht: null
-        status: "bald_fällig"
-        notizen: "Prüfungsauftrag an KPMG erteilt 01.02.2026"
+ - typ: "Jahresabschlussprüfung § 316 HGB"
+ faellig: "2026-05-31"
+ faelligkeits_grundlage: "Vor Feststellung und Offenlegung GJ 2025"
+ zuletzt_eingereicht: null
+ status: "bald_fällig"
+ notizen: "Prüfungsauftrag an KPMG erteilt 01.02.2026"
 ```
 
 ## Tracker-Datei (technische Beschreibung)
@@ -362,21 +376,21 @@ GESELLSCHAFTS-COMPLIANCE-BERICHT — [Datum]
 [Unternehmensname]
 
 ÜBERFÄLLIG ([N]):
-  [Gesellschaft] / [Pflicht] — war fällig am [Datum]
+ [Gesellschaft] / [Pflicht] — war fällig am [Datum]
 
 FÄLLIG INNERHALB [N] TAGE ([N]):
-  [Gesellschaft] / [Pflicht] — fällig [Datum]
+ [Gesellschaft] / [Pflicht] — fällig [Datum]
 
 KÜRZLICH EINGEREICHT ([N] in letzten 90 Tagen):
-  [Gesellschaft] / [Pflicht] — eingereicht [Datum]
+ [Gesellschaft] / [Pflicht] — eingereicht [Datum]
 
 UNBEKANNTER STATUS ([N]):
-  [Gesellschaft] / [Pflicht] — keine Information; direkt beim Registerführer bestätigen
+ [Gesellschaft] / [Pflicht] — keine Information; direkt beim Registerführer bestätigen
 
 TRANSPARENZREGISTER:
-  Zuletzt geprüft: [Datum]
-  Gesellschaften mit aktueller Eintragung: [N] von [N]
-  Gesellschaften ohne Prüfung in letzten 12 Monaten: [Liste]
+ Zuletzt geprüft: [Datum]
+ Gesellschaften mit aktueller Eintragung: [N] von [N]
+ Gesellschaften ohne Prüfung in letzten 12 Monaten: [Liste]
 ```
 
 ## Modus 3: Update
@@ -387,7 +401,7 @@ Falls Rolle **Nichtjurist**:
 > Eine Jahresabschluss-Einreichung beim Bundesanzeiger oder eine Handelsregistereintragung hat rechtliche Konsequenzen. Vor Einreichung mit einem Rechtsanwalt oder Steuerberater besprechen. `[Prüfen]`
 
 Manuelles Update:
-> „Jahresabschluss der Alpha GmbH zum 31.12.2025 am 05.03.2026 beim Bundesanzeiger eingereicht."
+> "Jahresabschluss der Alpha GmbH zum 31.12.2025 am 05.03.2026 beim Bundesanzeiger eingereicht."
 
 Massen-Update: Wirtschaftsprüfer-Bericht oder HR-Auszug hochladen; Matching-Gesellschaften automatisch aktualisieren.
 
@@ -414,22 +428,22 @@ Massen-Update: Wirtschaftsprüfer-Bericht oder HR-Auszug hochladen; Matching-Ges
 GESELLSCHAFTS-GESUNDHEITS-AUDIT — [Datum]
 
 EINREICHUNGS-COMPLIANCE
-  Überfällig: [N]
-  Unbekannter Status: [N]
+ Überfällig: [N]
+ Unbekannter Status: [N]
 
 RUHENDE GESELLSCHAFTEN ([N])
-  [Liste mit Alter und jährlichen Tragekosten]
+ [Liste mit Alter und jährlichen Tragekosten]
 
 TRANSPARENZREGISTER
-  Nicht eingetragen / geprüft: [N] Gesellschaften
+ Nicht eingetragen / geprüft: [N] Gesellschaften
 
 BILANZPUBLIZITÄT § 325 HGB
-  Überfällig (>12 Monate): [N] Gesellschaften
-  Ordnungsgeldgefahr BfJ: [Liste]
+ Überfällig (>12 Monate): [N] Gesellschaften
+ Ordnungsgeldgefahr BfJ: [Liste]
 
 EMPFOHLENE MASSNAHMEN
-  1. [Höchste Priorität]
-  2. [etc.]
+ 1. [Höchste Priorität]
+ 2. [etc.]
 ```
 
 ## Modus 5: Export
@@ -541,11 +555,11 @@ Status: [AKTUELL / AENDERUNG ERFORDERLICH bis TT.MM.JJJJ]
 
 Zitierweise nach `../../references/zitierweise.md`.
 
-Kommentarliteratur:
-- MüKoHGB/Störk/Leuz, 4. Aufl. 2020, § 325 Rn. 5 ff. (Bilanzpublizität).
+Quellenregel: Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen; Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff.
+- Quellenregel: Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff; keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen.
 - Scholz, GmbHG, 12. Aufl. 2018, § 40 Rn. 3 ff. (Gesellschafterliste).
-- Roth/Altmeppen, GmbHG, 10. Aufl. 2021, § 16 Rn. 25 ff. (Gutgläubiger Erwerb).
-- BGH, Urt. v. 02.07.2019 – II ZR 406/17, NJW 2019, 2774 (gutgläubiger Erwerb bei unrichtiger Gesellschafterliste).
+- Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen zitieren. Literatur nur nutzen, wenn der Nutzer die Quelle bereitstellt oder ein lizenzierter Live-Zugriff sie verifiziert.
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
 ## Was dieser Skill nicht tut
 

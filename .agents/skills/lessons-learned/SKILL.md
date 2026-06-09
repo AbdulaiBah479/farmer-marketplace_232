@@ -1,121 +1,56 @@
 ---
 name: lessons-learned
-description: Use when capturing discoveries after phase completion, before shipping, or when reflecting on completed work to extract reusable patterns
+description: "Gesellschaftsrechtliche Treuepflicht: Lessons Learned; konkretisierter Spezialmodul mit Prüfachsen, Red Flags, Varianten, Quellenhygiene und verwertbarem Output im Gesellschaftsrechtliche Treuepflicht."
 ---
-
-<!-- TOKEN BUDGET: 150 lines / ~450 tokens -->
 
 # Lessons Learned
 
-## Overview
+## Arbeitsweg
 
-The lessons-learned system captures discoveries, patterns, and pitfalls found during implementation and feeds them back into project memory. Lessons are stored in `.shipyard/LESSONS.md` and optionally surfaced in `CLAUDE.md` so future agents benefit from past experience.
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: StaRUG §§ 1, 29, 31, 39, 49-55, 84, 102, IDW S 6, IDW S 11, InsO § 270; GmbHG §§ 13, 43, AktG §§ 76, 93, 116, BGB §§ 705 ff., HGB §§ 109 ff., BGH II ZR 240/13 (Lux-Treuepflicht) — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
 
-## When to Use
+## Fachlicher Kern — Gesellschaftsrecht und Corporate Law
+- **Problemfokus dieses Skills:** Bleibe beim konkreten Titel `Lessons Learned` und löse die dort angelegte Fachfrage; arbeite mit konkreten Tatbestandsmerkmalen, Beweisfragen und dem unmittelbar benötigten Arbeitsprodukt. Routingfragen bleiben Hilfsmittel, wenn Frist, Zuständigkeit oder Verfahrensart offen sind.
+- **Normenradar:** GmbHG §§ 3, 5, 13, 15, 16, 30, 34, 35, 40, 43, 46, 47, 49 ff.; AktG §§ 76, 93, 111, 119, 130, 243 ff.; HGB §§ 105 ff., 161 ff.; MoPeG/GesRÄndG-Folgen; UmwG; FamFG/Registerrecht; GWB/Fusionskontrolle bei Transaktionen.
+- **Verifizierte Anker:** BGH, Urteil vom 08.11.2022 - II ZR 91/21 (zutreffende Gesellschafterliste/Listenstreit); BGH, Beschluss vom 18.03.2025 - II ZB 11/24 (Registerordner/Gesellschafterliste, Prüfungsumfang); BGH, Urteil vom 11.12.2006 - II ZR 166/05 und Urteil vom 12.04.2016 - II ZR 275/14 (Treuepflicht, Zustimmungspflichten); BGH, Urteil vom 30.09.2025 - II ZR 154/23 (Drittvergleich/verdeckte Vermögenszuwendung, Organ-/Beschlusskontrolle).
+- **Arbeitsmodus:** Erst Gesellschaftsform, Organ, Beschlussweg, Vertretung, Registerlage, wirtschaftliches Ziel und Minderheitenposition sortieren; dann Treuepflicht, Kapitalerhaltung, Haftung, Transaktions-Closing und Beweis-/Vollzugsrisiko prüfen.
+- **Outputpflicht:** Beschluss-/Listenmatrix, Register-To-do, Board-/Beiratsvorlage, Closing-CP-Liste, Treuepflicht-Red-Team, Geschäftsführerhaftungsmemo oder Mandanten-Decision-Paper.
+- **Fehlerbremse:** Tragende Normen/Entscheidungen live oder aus der Akte verifizieren; Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei prüfbarer Quelle. Keine BeckRS-, juris-, Kommentar- oder Aufsatz-Blindzitate aus Modellwissen.
 
-- After phase completion during `/shipyard:ship` (Step 3a)
-- When reflecting on completed work to extract reusable knowledge
-- When a build summary contains notable discoveries worth preserving
+## Fachkern: Lessons Learned
+- **Normen-/Quellenanker:** GmbHG, AktG, HGB, BGB, Satzung/Gesellschaftsvertrag, Treuepflicht, Stimmrechtsbindung, Minderheitenschutz, Organhaftung und Beschlussmängelrecht.
+- **Entscheidende Weiche:** Unterscheide harte Pflichtverletzung, legitime Interessenwahrnehmung, Machtmissbrauch, Informationsdefizit, Stimmverbot und Rechtsfolge.
 
-## LESSONS.md Format
+## Kaltstart-Fragen
 
-Store lessons in `.shipyard/LESSONS.md` using this exact structure:
+Frage nur nach, wenn es die rechtliche Weiche wirklich verändert:
 
-```markdown
-# Shipyard Lessons Learned
+1. Wer handelt, in welcher Rolle, und welches Ergebnis wird gebraucht?
+2. Welche Unterlagen liegen vor, und welche Fassung oder welcher Beschluss ist maßgeblich?
+3. Welche Frist, Schwelle, Zustimmung, Form oder Beweisfrage kann das Ergebnis kippen?
+4. Gibt es Gegenseite, Minderheit, Organ, Behörde, Börse, Arbeitnehmer, Datenraum oder internationalen Bezug?
+5. Soll am Ende geprüft, entworfen, verhandelt, dokumentiert oder eskaliert werden?
 
-## [YYYY-MM-DD] Phase N: {Phase Name}
+## Spezifische Prüfachse
 
-### What Went Well
-- {Bullet point}
+- Übersetze den Slug in einen Konflikt zwischen Mitgliedschaftsrecht und gesellschaftlicher Rücksichtnahmepflicht.
+- Prüfe Rolle, Pflichtquelle, legitimes Eigeninteresse, Schädigungsnähe, Rechtfertigung, Beweis und Rechtsfolge.
+- Formuliere sowohl Angriffs- als auch Verteidigungslinie.
 
-### Surprises / Discoveries
-- {Pattern discovered}
+## Arbeitsmodus
 
-### Pitfalls to Avoid
-- {Anti-pattern encountered}
+1. **Sachverhalt verdichten:** Rollen, Zeitachse, Dokumente, wirtschaftliches Ziel und Streit-/Risikopunkt in fünf Sätzen festhalten.
+2. **Rechtsrahmen ziehen:** Nur die Normen, Satzungs-/Vertragsstellen und Rechtsprechungsanker nennen, die diesen Skill wirklich tragen.
+3. **Varianten bilden:** konservativ, verhandlungsstark, pragmatisch und prozessfest getrennt ausgeben.
+4. **Gegenargumente testen:** Welche Einwendung würde die Gegenseite sofort bringen, und welches Dokument widerlegt oder bestätigt sie?
+5. **Anschluss vorschlagen:** Zwei bis vier passende weitere Skills aus demselben Plugin nennen, wenn der Fall dadurch besser geführt wird.
 
-### Process Improvements
-- {Workflow enhancement}
+## Quellenhygiene
 
----
-```
+Arbeite primär mit: BGB §§ 241 Abs. 2, 242, 705 ff.; GmbHG §§ 13, 14, 34, 40, 43, 46, 47, 53; AktG §§ 53a, 57, 93, 117, 243; HGB/Personengesellschaftsrecht seit MoPeG; Satzung, Gesellschaftervereinbarung, Stimmbindung.
 
-New entries are prepended after the `# Shipyard Lessons Learned` heading so the most recent phase appears first. Each phase gets its own dated section with all four subsections.
-
-## Structured Prompts
-
-Present these four questions to the user during lesson capture:
-
-1. **What went well in this phase?** -- Patterns, tools, or approaches that worked effectively.
-2. **What surprised you or what did you learn?** -- Unexpected behaviors, new techniques, or revised assumptions.
-3. **What should future work avoid?** -- Anti-patterns, dead ends, or approaches that caused problems.
-4. **Any process improvements discovered?** -- Workflow changes, tooling suggestions, or efficiency gains.
-
-Pre-populate suggested answers from build artifacts before asking (see Pre-Population below).
-
-## Pre-Population
-
-Before presenting prompts, extract candidate lessons from completed build summaries:
-
-1. Read all `SUMMARY-*.md` files in `.shipyard/phases/{N}/results/`.
-2. Extract entries from **"Issues Encountered"** sections -- these often contain workarounds and edge cases.
-3. Extract entries from **"Decisions Made"** sections -- these capture rationale worth preserving.
-4. Present extracted items as pre-populated suggestions the user can accept, edit, or discard.
-
-This reduces friction and ensures discoveries documented during building are not lost.
-
-## Memory Enrichment
-
-If the `shipyard:memory` skill is available and memory is enabled:
-
-1. Search memory for the milestone's date range and project path.
-2. Use Haiku to extract insights about:
-   - Debugging struggles and resolutions
-   - Rejected approaches and why they failed
-   - Key decisions and their rationale
-3. Add memory-derived insights to candidates (marked separately from summary-derived).
-
-Memory captures implicit knowledge from conversation context that may not appear in formal SUMMARY.md files.
-
-## CLAUDE.md Integration
-
-After the user approves lessons, optionally append a summary to the project's `CLAUDE.md`:
-
-1. **Check for CLAUDE.md** -- If no `CLAUDE.md` exists in the project root, skip this step entirely.
-2. **Find existing section** -- Look for a `## Lessons Learned` heading in `CLAUDE.md`.
-3. **Append if exists** -- Add new bullet points under the existing `## Lessons Learned` section.
-4. **Create if missing** -- If `CLAUDE.md` exists but has no `## Lessons Learned` section, append the section at the end of the file.
-5. **Format for CLAUDE.md** -- Use concise single-line bullets. Omit phase dates; focus on actionable guidance:
-   ```markdown
-   ## Lessons Learned
-   - Bash `set -e` interacts poorly with pipelines -- use explicit error checks after pipes
-   - jq `.field // "default"` prevents null propagation in optional config values
-   ```
-
-## Quality Standards
-
-Lessons must be **specific, actionable, and reusable**. Apply these filters:
-
-**Good lessons** (specific, transferable):
-- "Bash `set -e` interacts poorly with pipelines -- use explicit error checks after pipes"
-- "jq `.field // \"default\"` prevents null propagation in optional config values"
-- "bats-core `run` captures exit code but swallows stderr -- use `2>&1` to capture both"
-
-**Bad lessons** (too vague or too specific):
-- "Tests are important" -- too generic, not actionable
-- "Fixed a bug on line 47" -- too specific, not transferable
-- "Code should be clean" -- vague platitude
-- "Changed variable name from x to y" -- implementation detail, not a lesson
-
-**Anti-Patterns to reject:**
-- Lessons that duplicate existing entries in LESSONS.md
-- Lessons that reference specific line numbers or ephemeral file locations
-- Lessons that are generic truisms rather than discovered knowledge
-- Lessons longer than two sentences -- split or summarize
-
-## Integration
-
-**Referenced by:** `commands/ship.md` Step 3a for post-phase lesson capture.
-
-**Pairs with:** `shipyard:shipyard-verification` for validating lesson quality before persisting.
+Keine BeckRS-, juris-, Kommentar- oder Aufsatz-Blindzitate aus Modellwissen. Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen, tragender Aussage und frei prüfbarer Quelle ausgeben. Wenn keine freie Quelle gefunden wird, als unverified markieren und nicht als tragenden Beleg verwenden.

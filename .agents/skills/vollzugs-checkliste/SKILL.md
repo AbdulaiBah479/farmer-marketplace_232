@@ -1,10 +1,30 @@
 ---
 name: vollzugs-checkliste
-description: 'Vollzugscheckliste für M&A-Transaktionen nach deutschem Recht – was blockiert den Vollzug (Closing), kritischer Pfad, Tage bis Vollzug. Selbstaktualisierend: nimmt neue Einträge aus DD-Findings und Anlage-Erstellung auf. Trigger: "Vollzugscheckliste", "Closing-Checkliste", "was fehlt noch zum Closing", "Checklisten-Status", "zur Checkliste hinzufügen".'
-
+description: "Vollzugscheckliste für M&A-Transaktionen nach deutschem Recht – was blockiert den Vollzug (Closing), kritischer Pfad, Tage bis Vollzug. Selbstaktualisierend: nimmt neue Einträge aus DD-Findings und Anlage-Erstellung auf. Trigger: Vollzugscheckliste, Closing-Checkliste, was fehlt noch zum Closing,..."
 ---
 
 # Vollzugscheckliste M&A
+
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: die im Plugin-Kontext einschlägigen Normen über gesetze-im-internet.de, dejure.org, eur-lex.europa.eu und die amtlichen Bundes-/Landesportale live prüfen — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+## Fachlicher Kern — Gesellschaftsrecht und Corporate Law
+- **Problemfokus dieses Skills:** Bleibe beim konkreten Titel `Vollzugscheckliste M&A` und löse die dort angelegte Fachfrage; arbeite mit konkreten Tatbestandsmerkmalen, Beweisfragen und dem unmittelbar benötigten Arbeitsprodukt. Routingfragen bleiben Hilfsmittel, wenn Frist, Zuständigkeit oder Verfahrensart offen sind.
+- **Normenradar:** GmbHG §§ 3, 5, 13, 15, 16, 30, 34, 35, 40, 43, 46, 47, 49 ff.; AktG §§ 76, 93, 111, 119, 130, 243 ff.; HGB §§ 105 ff., 161 ff.; MoPeG/GesRÄndG-Folgen; UmwG; FamFG/Registerrecht; GWB/Fusionskontrolle bei Transaktionen.
+- **Verifizierte Anker:** BGH, Urteil vom 08.11.2022 - II ZR 91/21 (zutreffende Gesellschafterliste/Listenstreit); BGH, Beschluss vom 18.03.2025 - II ZB 11/24 (Registerordner/Gesellschafterliste, Prüfungsumfang); BGH, Urteil vom 11.12.2006 - II ZR 166/05 und Urteil vom 12.04.2016 - II ZR 275/14 (Treuepflicht, Zustimmungspflichten); BGH, Urteil vom 30.09.2025 - II ZR 154/23 (Drittvergleich/verdeckte Vermögenszuwendung, Organ-/Beschlusskontrolle).
+- **Arbeitsmodus:** Erst Gesellschaftsform, Organ, Beschlussweg, Vertretung, Registerlage, wirtschaftliches Ziel und Minderheitenposition sortieren; dann Treuepflicht, Kapitalerhaltung, Haftung, Transaktions-Closing und Beweis-/Vollzugsrisiko prüfen.
+- **Outputpflicht:** Beschluss-/Listenmatrix, Register-To-do, Board-/Beiratsvorlage, Closing-CP-Liste, Treuepflicht-Red-Team, Geschäftsführerhaftungsmemo oder Mandanten-Decision-Paper.
+- **Fehlerbremse:** Tragende Normen/Entscheidungen live oder aus der Akte verifizieren; Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei prüfbarer Quelle. Keine BeckRS-, juris-, Kommentar- oder Aufsatz-Blindzitate aus Modellwissen.
+
+## Fachkern: Vollzugscheckliste M&A
+- **Normen-/Quellenanker:** GmbHG, AktG, HGB, BGB, UmwG, MoPeG, FamFG/Registerrecht, Gesellschafterliste, Beschlussmängel, Treuepflicht und Organhaftung.
+- **Entscheidende Weiche:** Gesellschaftsform, Organrolle, Beschluss/Vertrag, Registerwirkung, Minderheitenschutz, Haftung und Frist getrennt prüfen.
+- **Arbeitsprodukt:** Erzeuge eine konkrete Prüf- oder Entscheidungsmatrix mit Norm, Tatbestand, Beleg, Einwand, Risikoampel und nächstem Schritt; Anschluss-Skills nur bei echter Vertiefung nennen.
 
 ## Kernsachverhalt
 
@@ -27,7 +47,7 @@ Vor der Initialisierung sind folgende Angaben erforderlich:
 7. **Gesellschafterbeschlüsse:** § 179a AktG-Beschluss erforderlich? Sonstige Gesellschafter-/Aufsichtsrats-Zustimmungen?
 8. **MAC-Klausel:** Enthält das SPA eine MAC-Definition (Material Adverse Change / wesentliche nachteilige Veränderung)? Auslösetatbestände?
 9. **Verantwortliche:** Wer ist Deal-Koordinator auf Käufer- und Verkäuferseite? Welche Kanzleien sind beteiligt?
-- **Was will der Mandant wirklich erreichen?** (Nicht: was steht im Standardweg, sondern: welches Ergebnis ist fuer den Mandanten persoenlich/wirtschaftlich das beste? Manchmal ist der schnellere Vergleich besser als der formal "richtige" Weg.)
+- **Was will der Mandant wirklich erreichen?** (Nicht: was steht im Standardweg, sondern: welches Ergebnis ist für den Mandanten persoenlich/wirtschaftlich das beste? Manchmal ist der schnellere Vergleich besser als der formal "richtige" Weg.)
 
 ## Rechtlicher Rahmen
 
@@ -72,8 +92,7 @@ In deutschen SPA-Formulierungen wird MAC häufig als "wesentliche nachteilige Ve
 
 ## Prüfschema: Vollzugscheckliste
 
-
-**Vorab:** Der untenstehende Workflow ist die typische Standardlinie. Wenn die Mandantenlage abweicht (siehe "Strategische Optionen" oben), sind die Schritte entsprechend zu verkuerzen, umzustellen oder durch ein anderes Skill zu ersetzen — der Workflow ist Leitfaden, nicht Pflichtprogramm.
+**Vorab:** Der untenstehende ist die typische Standardlinie. Wenn die Mandantenlage abweicht (siehe "Strategische Optionen" oben), sind die Schritte entsprechend zu verkuerzen, umzustellen oder durch ein anderes Skill zu ersetzen — der ist Leitfaden, nicht Pflichtprogramm.
 
 | Schritt | Prüfungspunkt | Inhalt | Ergebnis |
 |---|---|---|---|
@@ -139,7 +158,6 @@ Bevor das Template eins-zu-eins gefuellt wird, ist zu pruefen welche Variante zu
 
 Wenn die Mandantenkonstellation **nicht** ins Standardschema passt, ist das Template anzupassen oder durch ein anderes Skill abzuloesen — nicht das Mandat in das Schema zu pressen.
 
-
 ## Schriftsatzbausteine
 
 ### Baustein 1: VB-Statusbericht für Deal-Team
@@ -156,11 +174,10 @@ Wenn die Mandantenkonstellation **nicht** ins Standardschema passt, ist das Temp
 3. Sind Anschlusswege erwuenscht? [Mediation / Direktgesprach / Einigung vor Fristablauf]
 
 Schlussabsatz Variante A (kooperativ):
-Wir regen eine guetliche Einigung an und stehen fuer ein klaerenden Gesprach zur Verfuegung. Eine einvernehmliche Loesung erspart beiden Seiten Zeit und Kosten.
+Wir regen eine guetliche Einigung an und stehen für ein klaerenden Gesprach zur Verfuegung. Eine einvernehmliche Loesung erspart beiden Seiten Zeit und Kosten.
 
 Schlussabsatz Variante B (formal-streng):
 Eine aussergerichtliche Einigung kommt nur in Betracht wenn die Gegenseite innerhalb von [X] Tagen einen akzeptablen Vorschlag unterbreitet. Anderenfalls werden wir alle rechtlichen Schritte einleiten.
-
 
 ## Vollzugschecklisten-Status — [Deal-Code] — [Datum]
 
@@ -241,56 +258,56 @@ signing_datum: "2026-03-01"
 zuletzt_aktualisiert: "2026-05-26"
 
 vollzugsbedingungen:
-  - id: VB-001
-    punkt: "Kartellrechtliche Freigabe Bundeskartellamt"
-    kategorie: "Behördliche Genehmigung"
-    verantwortlich: "Käufer-Anwalt (Kanzlei XY)"
-    faellig: "2026-06-15"
-    status: "Angemeldet 01.04.2026; Wartefrist Phase I läuft (§ 40 Abs. 1 GWB: 1 Monat)"
-    blockierend: true
-    quelle: "SPA § 7.1(a)"
-    geschaetzte_restdauer_tage: 20
+ - id: VB-001
+ punkt: "Kartellrechtliche Freigabe Bundeskartellamt"
+ kategorie: "Behördliche Genehmigung"
+ verantwortlich: "Käufer-Anwalt (Kanzlei XY)"
+ faellig: "2026-06-15"
+ status: "Angemeldet 01.04.2026; Wartefrist Phase I läuft (§ 40 Abs. 1 GWB: 1 Monat)"
+ blockierend: true
+ quelle: "SPA § 7.1(a)"
+ geschaetzte_restdauer_tage: 20
 
-  - id: VB-002
-    punkt: "Zustimmung Acme GmbH — Change-of-Control § 14 Rahmenvertrag"
-    kategorie: "Zustimmung Dritter"
-    verantwortlich: "Zielgesellschaft — Frau Schmitt"
-    faellig: "2026-06-20"
-    status: "Anfrage versandt 15.04.2026; keine Antwort — ESKALATION erforderlich"
-    blockierend: true
-    quelle: "DD-Finding VB-002; Anlage 4.3(a) Nr. 7; Rahmenvertrag § 14"
-    geschaetzte_restdauer_tage: 30
+ - id: VB-002
+ punkt: "Zustimmung Acme GmbH — Change-of-Control § 14 Rahmenvertrag"
+ kategorie: "Zustimmung Dritter"
+ verantwortlich: "Zielgesellschaft — Frau Schmitt"
+ faellig: "2026-06-20"
+ status: "Anfrage versandt 15.04.2026; keine Antwort — ESKALATION erforderlich"
+ blockierend: true
+ quelle: "DD-Finding VB-002; Anlage 4.3(a) Nr. 7; Rahmenvertrag § 14"
+ geschaetzte_restdauer_tage: 30
 
 vollzugslieferungen:
-  - id: VL-001
-    punkt: "Handelsregister-Gesellschafterliste (aktuell, § 40 GmbHG)"
-    kategorie: "Gesellschaftsrechtlich"
-    verantwortlich: "Ziel-Anwalt"
-    faellig: "2026-06-28"
-    status: "Notar beauftragt 20.05.2026; Termin 10.06.2026"
-    blockierend: true
-    quelle: "SPA § 2.3(b)(iv)"
-    geschaetzte_restdauer_tage: 15
+ - id: VL-001
+ punkt: "Handelsregister-Gesellschafterliste (aktuell, § 40 GmbHG)"
+ kategorie: "Gesellschaftsrechtlich"
+ verantwortlich: "Ziel-Anwalt"
+ faellig: "2026-06-28"
+ status: "Notar beauftragt 20.05.2026; Termin 10.06.2026"
+ blockierend: true
+ quelle: "SPA § 2.3(b)(iv)"
+ geschaetzte_restdauer_tage: 15
 
-  - id: VL-002
-    punkt: "Freigabe Gesellschafterdarlehen / Sicherheiten (§ 30 GmbHG)"
-    kategorie: "Kapital / Darlehen"
-    verantwortlich: "Ziel-Anwalt"
-    faellig: "2026-06-25"
-    status: "In Bearbeitung; Darlehensgeber zugestimmt 20.05.2026"
-    blockierend: true
-    quelle: "SPA § 5.3(c)"
-    geschaetzte_restdauer_tage: 10
+ - id: VL-002
+ punkt: "Freigabe Gesellschafterdarlehen / Sicherheiten (§ 30 GmbHG)"
+ kategorie: "Kapital / Darlehen"
+ verantwortlich: "Ziel-Anwalt"
+ faellig: "2026-06-25"
+ status: "In Bearbeitung; Darlehensgeber zugestimmt 20.05.2026"
+ blockierend: true
+ quelle: "SPA § 5.3(c)"
+ geschaetzte_restdauer_tage: 10
 
-  - id: VL-003
-    punkt: "Bestätigungsschreiben Hausbank (CoC-Darlehensvertrag)"
-    kategorie: "Fremdfinanzierung"
-    verantwortlich: "Käufer-Anwalt"
-    faellig: "2026-05-15"
-    status: "ERLEDIGT — erhalten 2026-05-15"
-    blockierend: false
-    quelle: "SPA § 7.2(c)"
-    geschaetzte_restdauer_tage: 0
+ - id: VL-003
+ punkt: "Bestätigungsschreiben Hausbank (CoC-Darlehensvertrag)"
+ kategorie: "Fremdfinanzierung"
+ verantwortlich: "Käufer-Anwalt"
+ faellig: "2026-05-15"
+ status: "ERLEDIGT — erhalten 2026-05-15"
+ blockierend: false
+ quelle: "SPA § 7.2(c)"
+ geschaetzte_restdauer_tage: 0
 ```
 
 ## Checklisten-Datei (technische Beschreibung)
@@ -320,14 +337,14 @@ Modus 2 wird ausgelöst, wenn ein vorgelagerter Skill ein Finding mit einer Voll
 
 ```yaml
 übergabe:
-  punkt: "[Gegenpartei oder Handlung]"
-  kategorie: "[Zustimmung Dritter | Gesellschafter-/Organentscheidung | Behördliche Einreichung | Ablösung | Vollzugslieferung]"
-  quelle: "[Vertragsname / Norm / VDR-Pfad]"
-  blockierend: true
-  gegenpartei: "[z.B. Acme GmbH]"
-  ankuendigungsfrist: "[z.B. 30 Tage vor Vollzug]"
-  geschaetzte_dauer: "[z.B. 30 Tage]"
-  muss_erfolgen_vor: "[Vollzug | Signing | Ende Wartepflicht]"
+ punkt: "[Gegenpartei oder Handlung]"
+ kategorie: "[Zustimmung Dritter | Gesellschafter-/Organentscheidung | Behördliche Einreichung | Ablösung | Vollzugslieferung]"
+ quelle: "[Vertragsname / Norm / VDR-Pfad]"
+ blockierend: true
+ gegenpartei: "[z.B. Acme GmbH]"
+ ankuendigungsfrist: "[z.B. 30 Tage vor Vollzug]"
+ geschaetzte_dauer: "[z.B. 30 Tage]"
+ muss_erfolgen_vor: "[Vollzug | Signing | Ende Wartepflicht]"
 ```
 
 ### Modus 3: Status-Update

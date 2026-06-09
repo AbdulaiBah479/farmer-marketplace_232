@@ -1,107 +1,53 @@
 ---
 name: executive-summary
-description: "Write an executive summary for any document, report, or proposal. Use when asked to write an executive summary, management summary, briefing paper, or one-pager for senior stakeholders. Produces a structured summary that busy executives can read in under 3 minutes and act on."
+description: "Executive Summary und Onepager für Board, Investment Committee und Partner: verdichtet komplexe M&A-Befunde in klare, entscheidbare, nicht ueberverkaufte Kurzformate."
 ---
 
-# Executive Summary Skill
+# Executive Summary Onepager
 
-Writes executive summaries that busy decision-makers actually read — front-loaded with conclusions, structured for skimming, ruthless about what to include.
+## Fachlicher Anker
 
-## Required Inputs
-- **Source document or topic** (paste or describe)
-- **Audience** (CEO / board / investor / minister / client / committee)
-- **Decision or action needed** (what should the reader do after reading?)
-- **Length limit** (1 page / 2 pages / 500 words)
-- **Format** (formal report / slide / email / briefing paper)
+- **Normen:** §§ 3, §§ 76, §§ 105.
+- **Entscheidungs-/Quellenanker:** Tragende Rechtsprechung nur mit Gericht, Datum, Aktenzeichen und frei prüfbarer Quelle einsetzen; keine Entscheidung aus Modellwissen erzwingen.
+- **Quellenhygiene:** `references/quellenhygiene.md` und `references/zitierweise.md` beachten.
 
-## Core Principle
+## Fachkern: Executive Summary Onepager
+- **Normen-/Quellenanker:** GmbHG, AktG, HGB, UmwG, WpHG/MAR, GWB/FKVO, AWG/AWV, LMA-Finanzierung, Beirats-/Organregeln, SPA/SHA/Term-Sheet-Praxis.
+- **Entscheidende Weiche:** Dealphase, Mandantenrolle, CP/Consent, Haftung, Disclosure, Signing/Closing, Notar/Register, Beirat/Organ und Verhandlungstaktik trennen.
+- **Arbeitsprodukt:** Liefere eine fallbezogene `Norm / Tatsache / Beleg / Wertung / Gegenargument / nächster Schritt`-Matrix und einen direkt nutzbaren Textbaustein, wenn der Nutzer einen Entwurf braucht.
 
-An executive summary is NOT a summary of the document. It is a standalone document that:
-- States the conclusion upfront — not at the end
-- Contains only what the reader needs to make a decision
-- Can be understood without reading anything else
-- Recommends a specific action
+## Intake
+Frage nicht breit, sondern dealpraktisch. Wenn Material schon vorliegt, extrahiere die Antworten selbst und markiere nur echte Luecken.
 
-## Output Structure
+| Feld | Worum es geht |
+| --- | --- |
+| Deal-Perspektive | Buy-side, Sell-side, Target, Vorstand/Geschaeftsfuehrung, Bank, Investor, W&I-Versicherer oder Local Counsel. |
+| Phase | Screening, NDA, Term Sheet, Datenraum, DD, SPA/APA, Signing, Closing, PMI, Streit oder Post-Mortem. |
+| Material | Adressat, Entscheidung, Deal-Wert, Risiken, Optionen, Empfehlung, No-Go-Punkte, gewuenschte Laenge. |
+| Frist | Signing, Closing, Q&A, Filing, Board, Beurkundung, Angebotsfrist, CP-Deadline oder keine Eile erkennbar. |
+| Ziel-Output | Onepager mit These, Ampel, Top-5-Risiken, Entscheidungsvorschlag, offenen Annahmen und konkretem Ask. |
 
----
+## Padlet- und Tabellen-Ausgabe
+Biete bei komplexen Aufgaben eine visuelle Arbeitsflaeche an:
 
-### [Title]
-**Executive Summary**
-*Prepared for: [Audience] | Date: [Date] | Author: [Name]*
+| Karte/Spalte | Inhalt | Status | Owner | Quelle | Naechster Schritt |
+| --- | --- | --- | --- | --- | --- |
+| Issue | Konkretes Thema oder Dokument | offen / in Pruefung / entschieden | Person oder Workstream | Datenraum, Register, Vertrag, Call | konkrete Aktion |
 
----
+Fuer Tabellen nie nur Ueberschriften liefern. Jede Zeile braucht mindestens: Befund, rechtliche Bedeutung, wirtschaftliche Bedeutung, Evidenz, Risikoampel und Follow-up.
 
-**Bottom line up front:**
-[The most important thing. The recommendation or finding. 2-3 sentences. A reader who only reads this should know what you are asking or telling them.]
+## Standard-Deliverables
+- Kurzbild für Partner oder Mandant.
+- Workstream-Tabelle mit Ampel und Owner.
+- Issue-/Risk-Liste mit Priorisierung.
+- Entwurf oder Textbausteine, soweit der Input reicht.
+- Offene Punkte mit genauem Nachforderungswortlaut.
 
----
+## Quality Gate
+Vor Ausgabe immer pruefen:
 
-**Background (why this matters):**
-[2-3 sentences. Minimum context to understand the bottom line. Not the history — just what the reader needs now.]
-
----
-
-**Key findings / analysis:**
-- **[Finding 1]:** [One sentence — specific and evidence-based]
-- **[Finding 2]:** [One sentence]
-- **[Finding 3]:** [One sentence]
-
----
-
-**Options considered:** (include only if a decision is being presented)
-
-| Option | Benefit | Risk | Recommendation |
-|---|---|---|---|
-| [Option A] | [Benefit] | [Risk] | Recommended |
-| [Option B] | [Benefit] | [Risk] | Not recommended |
-
----
-
-**Recommendation:**
-[Specific. "We recommend [action] because [reason]. This will [outcome]." Not "we suggest consideration of options."]
-
----
-
-**Immediate next steps:**
-- [Action 1 — specific, with owner and date]
-- [Action 2]
-
----
-
-**Risks of inaction:** [What happens if the reader does nothing]
-
-**Full report:** [Reference to where the full document can be found]
-
----
-
-## Adapting for Different Audiences
-
-**CEO/MD:** Lead with financial or strategic impact. 1 page. Make the decision binary. Ask in sentence one.
-**Board:** Lead with governance or risk. Frame against organisational objectives. State specifically what you need from them.
-**Investor:** Lead with return or opportunity. Specific numbers. 1 page. Anticipate "why now."
-**Minister/senior public sector:** Lead with public benefit or policy alignment. Include cost-benefit framing.
-**Client:** Lead with their problem. Show you understand before presenting recommendation.
-
-## Quality Checks
-
-- [ ] Bottom line in first 3 sentences
-- [ ] Standalone — no need to read full document
-- [ ] Recommendation is specific
-- [ ] Fits length limit
-- [ ] Written for audience priorities not author priorities
-- [ ] Next steps have owners and dates
-
-## Anti-Patterns
-
-- [ ] Do not summarise the document chronologically — an executive summary that follows the structure of the source document is not an executive summary, it is an abstract
-- [ ] Do not bury the recommendation at the end — executives read the first paragraph and skim the rest; the ask must be in sentence one or two
-- [ ] Do not use the same summary for different audiences — a CEO and a board member have different decision contexts and require different framing
-- [ ] Do not include background that the reader already knows — every sentence of background must earn its place by making the bottom line more actionable
-- [ ] Do not leave the "risks of inaction" section vague — a summary that does not quantify what happens if the reader does nothing removes the urgency needed for a decision
-
-## Example Trigger Phrases
-- "Write an executive summary of this report: [paste]"
-- "Summarise this document for the board: [paste]"
-- "Create a one-pager from this proposal for the CEO"
-- "Turn these findings into an exec summary"
+- Ist die Partei-Perspektive klar?
+- Sind alle Fristen und Vollzugsrisiken markiert?
+- Sind Annahmen von gesicherten Tatsachen getrennt?
+- Gibt es mindestens einen konkreten naechsten Schritt?
+- Sind Tabellen, Klauseln oder Memos so formatiert, dass ein Deal-Team sofort weiterarbeiten kann?

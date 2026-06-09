@@ -1,414 +1,431 @@
 ---
 name: market-research
-description: "Conduct comprehensive market research including competitive analysis, customer persona development, market sizing (TAM/SAM/SOM), survey design, and trend analysis. Synthesize insights for strategic decision-making."
+description: Deep market analysis for iOS/macOS apps including market sizing (TAM/SAM/SOM), growth trends, market maturity, entry barriers, distribution channels, and revenue potential. Use when user asks for market research, market size, market opportunity, growth potential, TAM/SAM/SOM, or market trends.
+allowed-tools: Bash(product-agent:*), Read, WebSearch, WebFetch
 ---
 
-# Market Research
+# Market Research Skill
 
-## Overview
-The Market Research skill enables marketers to gather, analyze, and synthesize data about markets, competitors, customers, and trends. It provides frameworks for understanding market opportunity, competitive positioning, and customer needs to inform strategy.
+Performs deep market research for iOS/macOS app ideas. Provides market sizing, growth analysis, and opportunity assessment.
 
 ## When to Use This Skill
-- Evaluating new market or product opportunity
-- Developing customer personas and segments
-- Understanding competitive landscape
-- Sizing market opportunity
-- Validating customer assumptions
-- Planning product positioning and messaging
-- Understanding industry trends and shifts
 
-## Competitive Analysis Framework
+Use this Skill when the user wants to:
+- Understand market size and potential
+- Analyze market growth trends
+- Calculate TAM/SAM/SOM
+- Assess market maturity
+- Identify entry barriers
+- Understand distribution channels
+- Estimate revenue potential
+- Deep-dive after initial problem discovery
 
-### Competitive Landscape Mapping
+**This is a follow-up to product-agent discovery** - use this when you need market depth.
 
-**Step 1: Identify Competitors**
+## What This Skill Does
 
-**Direct Competitors** (Same product, same market)
-- Head-to-head competition
-- Similar feature sets and pricing
-- Fighting for same customers
-- Example: "Slack vs. Microsoft Teams"
+### 1. Market Sizing (TAM/SAM/SOM)
 
-**Indirect Competitors** (Different product, same need)
-- Alternative solutions to same problem
-- Different approach or technology
-- Broader competitive threat
-- Example: "Slack vs. email"
+- **TAM (Total Addressable Market):** Total revenue opportunity if you captured 100% of the market
+- **SAM (Serviceable Available Market):** Segment of TAM you can reach with your product/distribution
+- **SOM (Serviceable Obtainable Market):** Realistic share you can capture in near term (1-3 years)
 
-**Emerging Competitors** (New/growing threats)
-- Recently funded startups
-- Companies entering your space
-- Potential disruption risk
-- Example: "AI-powered alternatives"
+### 2. Growth Analysis
+- Historical growth rates
+- Future projections (3-5 years)
+- Growth drivers
+- Market trends
 
-**Substitutes** (Workarounds)
-- DIY solutions
-- Generic tools repurposed
-- Lower-cost alternatives
-- Example: "Slack vs. WhatsApp groups"
+### 3. Market Maturity Assessment
+- Stage: Emerging, Growing, Mature, or Declining
+- Market lifecycle position
+- Implications for new entrants
 
-### Competitive Positioning Matrix
+### 4. Entry Barriers
+- Technical barriers
+- Brand/network effects
+- Regulatory requirements
+- Capital requirements
+- Customer acquisition costs
 
-| Competitor | Price | Features | Ease of Use | Customer Support | Market Position |
-|------------|-------|----------|------------|------------------|-----------------|
-| [Competitor 1] | $$$$ | ★★★★ | ★★ | ★★★ | Premium |
-| [Competitor 2] | $$ | ★★★ | ★★★★ | ★★ | Value |
-| [Competitor 3] | $ | ★★ | ★★★ | ★★★★ | Budget |
-| Our Product | $$$ | ★★★★★ | ★★★★ | ★★★★ | [Target] |
+### 5. Distribution Channels
+- How apps in this category reach users
+- App Store dynamics
+- Alternative channels (web, enterprise, etc.)
 
-### Detailed Competitor Analysis Template
+### 6. Revenue Potential
+- Average revenue per user (ARPU)
+- Conversion rates
+- LTV (Lifetime Value)
+- Revenue models in use
 
-**Competitor Name:** [Company]
+## Output Structure
 
-**Company Overview:**
-- Founded: [Year]
-- Headquarters: [Location]
-- Funding: [Total raised, stage]
-- Team size: [Number]
-- Website traffic: [Estimate]
+```json
+{
+  "market_category": "Task Management",
+  "market_sizing": {
+    "tam": {
+      "value": "$4.5B",
+      "description": "Global productivity software market",
+      "methodology": "Total potential revenue if product served all users globally"
+    },
+    "sam": {
+      "value": "$900M",
+      "description": "iOS/macOS task management apps (20% of TAM)",
+      "methodology": "Addressable via App Store distribution on Apple platforms"
+    },
+    "som": {
+      "value": "$45M",
+      "description": "Realistic 3-year capture (5% of SAM)",
+      "methodology": "Based on typical indie app market share penetration"
+    }
+  },
+  "market_growth": {
+    "historical_growth": "12% CAGR (2021-2025)",
+    "projected_growth": "10% CAGR (2026-2030)",
+    "growth_drivers": [
+      "Remote work adoption",
+      "Increased digital task management",
+      "Mobile-first workflows"
+    ],
+    "headwinds": [
+      "Market saturation",
+      "Consolidation toward major players"
+    ]
+  },
+  "market_maturity": {
+    "stage": "Mature",
+    "characteristics": [
+      "Established leaders (Todoist, Things)",
+      "Clear product categories",
+      "Slowing growth rate",
+      "Focus on feature differentiation"
+    ],
+    "implications": "Differentiation critical. Hard to compete on basics. Must have unique angle."
+  },
+  "entry_barriers": {
+    "low": [
+      "Technical implementation (task management is straightforward)"
+    ],
+    "medium": [
+      "Building user base in crowded market",
+      "Achieving reliable sync across devices"
+    ],
+    "high": [
+      "Brand recognition (Todoist, Things have 10+ years)",
+      "Network effects (team collaboration features)",
+      "Customer switching costs (data lock-in)"
+    ],
+    "overall_assessment": "Medium-High - Technical execution is achievable, but market position is difficult"
+  },
+  "distribution_channels": {
+    "primary": {
+      "channel": "App Store",
+      "percentage": "75%",
+      "dynamics": "Discoverability challenging. ASO critical. Top charts dominated by established apps."
+    },
+    "secondary": [
+      {
+        "channel": "Direct website",
+        "percentage": "15%",
+        "dynamics": "For power users. Allows higher pricing. Better for subscription retention."
+      },
+      {
+        "channel": "Word of mouth / Communities",
+        "percentage": "10%",
+        "dynamics": "Productivity communities, Reddit, Twitter. High-intent users."
+      }
+    ]
+  },
+  "revenue_potential": {
+    "arpu": {
+      "freemium": "$12/year (5% convert at $20/year)",
+      "paid_only": "$30-40/year",
+      "premium": "$60-100/year"
+    },
+    "conversion_rates": {
+      "free_to_paid": "3-7% industry average",
+      "trial_to_paid": "15-25% with 14-day trial"
+    },
+    "ltv": "$150-300 (2-5 year user lifecycle)",
+    "realistic_year_1": "$50K-200K (1K-5K users at $40 ARPU)",
+    "realistic_year_3": "$500K-2M (10K-50K users with growth)",
+    "path_to_scale": "Requires strong differentiation, word-of-mouth growth, and retention >85%"
+  },
+  "market_opportunity_score": "6/10 - Moderate",
+  "reasoning": "Large market with growth, but mature and competitive. Success requires clear differentiation and excellent execution. Not a 'gold rush' market, but sustainable business possible for well-positioned product."
+}
+```
 
-**Product/Service:**
-- Core offering: [Description]
-- Key features: [Top 5-7 features]
-- Pricing model: [Free/freemium/paid/enterprise]
-- Price point: [Base to premium tier]
-- Target customer: [Persona/segment]
+## How to Perform Market Research
 
-**Market Position:**
-- Market share: [Estimated percentage]
-- Key customers: [Notable customers/logos]
-- Strengths: [Top 3-4 competitive advantages]
-- Weaknesses: [Areas of vulnerability]
-- Growth signals: [Recent hires, funding, product launches]
+### Step 1: Define Market Scope
 
-**Go-to-Market Strategy:**
-- Sales model: [Direct, self-serve, partnership]
-- Marketing channels: [Primary acquisition channels]
-- Messaging: [Core positioning]
-- Brand voice: [Tone and personality]
+```
+Question: What exact market are you analyzing?
+- "Task management apps" (broad)
+- "iOS task management apps" (narrower)
+- "AI-powered task management for Apple users" (specific)
 
-**Strategic Implications for Us:**
-- Opportunities to differentiate: [Specific areas]
-- Threats to monitor: [What could impact us]
-- Positioning recommendations: [How we should position against them]
+Start specific for better analysis.
+```
 
-## Customer Persona Development
+### Step 2: Size the Market (TAM/SAM/SOM)
 
-### Persona Research Methodology
+**TAM Calculation:**
+```
+Method 1: Top-down
+- Global productivity software market: $50B
+- Task management segment: ~10% = $5B TAM
 
-**Step 1: Gather Data** (Combine multiple sources)
-- Customer interviews (8-12 depth interviews)
-- Surveys (50-100 responses minimum)
-- Sales team insights (actual customer interactions)
-- Support tickets (pain points revealed)
-- Analytics data (behavior patterns)
-- Market research reports (industry standards)
+Method 2: Bottom-up
+- Potential users globally: 500M knowledge workers
+- Willing to pay for task management: 20% = 100M
+- Average spend: $50/year
+- TAM = 100M × $50 = $5B
+```
 
-**Step 2: Identify Patterns**
-- Job titles and roles across customers
-- Common challenges and objectives
-- Buying decision criteria
-- Success metrics they care about
-- Information sources and preferences
+**SAM Calculation:**
+```
+Filter TAM by what you can reach:
+- TAM: $5B global
+- Your distribution: iOS/macOS App Store only
+- Apple users: ~30% of market = $1.5B
+- Addressable via App Store: 60% = $900M SAM
+```
 
-**Step 3: Create Personas**
-- Develop 3-5 primary personas
-- Make them realistic and specific
-- Include quantitative and qualitative data
-- Create narrative to make them memorable
+**SOM Calculation:**
+```
+Realistic capture in 3 years:
+- SAM: $900M
+- New entrant market share: 0.5-2% realistic
+- With strong differentiation: 5% optimistic
+- SOM = $900M × 1-5% = $9M-45M
+```
 
-### Detailed Persona Template
+### Step 3: Assess Growth
 
-**Persona Name:** [Memorable name reflecting archetype]
-**Title/Role:** [Specific job title, potential alt titles]
-**Organization:** [Company size, industry, revenue]
+Use WebSearch to find:
+- Market research reports
+- Growth rate data
+- Trend articles
 
-**Demographics:**
-- Age: [Range, typical]
-- Gender: [If relevant]
-- Geographic location: [If relevant]
-- Education: [Degree, field]
-- Experience level: [Years in role]
+**Key searches:**
+```
+"[category] market size 2026"
+"[category] growth rate"
+"[category] market trends 2026"
+```
 
-**Responsibilities:**
-- Primary job duties: [Main activities]
-- Team/reporting: [Who they manage, who they report to]
-- Budget authority: [Annual budget, approval authority]
-- Cross-functional dependencies: [Who they work with]
+### Step 4: Determine Maturity
 
-**Goals (Professional):**
-- Primary goal 1: [What they want to achieve]
-- Primary goal 2: [Next priority]
-- Success metrics: [How they measure success]
-- Success criteria: [Qualitative and quantitative]
+**Indicators:**
 
-**Pain Points (Challenges):**
-- Pain 1: [Specific problem]
-  - Frequency: [How often]
-  - Impact: [Business consequence]
-- Pain 2: [Second major problem]
-- Pain 3: [Third frustration]
+**Emerging** (Good for new entrants):
+- High growth (>20% CAGR)
+- No clear leaders
+- Rapid innovation
+- Unclear best practices
 
-**Barriers to Adoption:**
-- Technical: [Systems integration, learning curve]
-- Organizational: [Change management, budget approval]
-- Personal: [Risk aversion, job security concerns]
+**Growing** (Good opportunity):
+- Strong growth (10-20% CAGR)
+- Leaders emerging
+- Product-market fit established
+- Room for differentiation
 
-**Information Preferences:**
-- Primary sources: [Where they get information]
-- Content types: [Articles, videos, webinars, podcasts]
-- Engagement style: [Self-serve vs. direct contact]
-- Decision-making: [Data-driven, peer influence, expert opinion]
+**Mature** (Differentiation required):
+- Moderate growth (5-10% CAGR)
+- Clear leaders
+- Established patterns
+- Compete on specific niches
 
-**Key Quote (From actual interviews):**
-"[Representative quote that captures their perspective]"
+**Declining** (Avoid):
+- Negative or flat growth
+- Consolidation
+- Commoditization
 
-**Example Persona - Persona A: Enterprise Sophia**
+### Step 5: Identify Barriers
 
-Title: VP of Marketing, B2B SaaS Company
-Organization: 200-1000 person tech company
-Age: 35-45
+**Low barriers → Easier entry but more competition**
+**High barriers → Harder entry but better moat if you succeed**
 
-Goals:
-- Increase lead generation by 30% YoY
-- Reduce customer acquisition cost
-- Improve marketing team efficiency
-- Demonstrate marketing ROI to C-suite
+Assess:
+- Technical complexity
+- Brand importance
+- Network effects
+- Switching costs
+- Capital needs
 
-Pain Points:
-- Scattered data across 12+ marketing tools
-- Manual reporting taking 40 hours/month
-- Team frustrated with tool complexity
-- Missing attribution data for budget decisions
+### Step 6: Map Distribution
 
-Barriers:
-- 6-month vendor evaluation cycle
-- IT security requirements
-- Multiple budget approvers
-- Fear of team learning curve
+**For iOS/macOS apps:**
+- App Store (primary) - understand ranking factors
+- TestFlight (beta)
+- Direct website (for pro users)
+- SetApp / Bundle services
+- Enterprise/B2B channels
 
-## Market Sizing (TAM/SAM/SOM)
+### Step 7: Estimate Revenue
 
-### TAM (Total Addressable Market)
+**Key metrics to research:**
+- Industry ARPU
+- Typical conversion rates
+- Churn rates
+- User acquisition costs
 
-**Definition:** Total possible revenue in ideal scenario with 100% market penetration
+**Reality check:**
+```
+Year 1: 1K-5K users (realistic for indie)
+Year 2: 5K-20K users (with growth)
+Year 3: 20K-100K users (if successful)
 
-**Calculation Methods:**
+At $40 ARPU:
+Year 1: $40K-200K
+Year 2: $200K-800K
+Year 3: $800K-4M
+```
+
+## Common Questions
+
+### "How do I calculate TAM without market reports?"
 
 **Bottom-up approach:**
+1. Estimate target user count (e.g., "iOS users who manage tasks")
+2. Research willingness to pay (look at competitor pricing)
+3. Multiply: TAM = Users × Average Spend
+
+**Proxy approach:**
+1. Find similar market (e.g., "Calendar apps")
+2. Adjust for your market differences
+3. Validate with multiple sources
+
+### "What's a 'good' market size?"
+
+**For indie developers:**
+- **SOM > $5M:** Good opportunity
+- **SOM $1-5M:** Viable if low competition
+- **SOM < $1M:** Likely too small unless niche/passion project
+
+**Remember:** $1M SOM = ~25K users at $40 ARPU (achievable!)
+
+### "How mature is too mature?"
+
+**Mature markets CAN work if:**
+- You have clear differentiation
+- Targeting underserved niche
+- Better execution than incumbents
+- Novel business model
+
+**Avoid if:**
+- No differentiation angle
+- Dominant players with network effects
+- Declining growth
+- Your idea is "me too"
+
+## Integration with Other Skills
+
+Use market-research **after** initial discovery:
+
 ```
-Identified target segment size × Average selling price = TAM
-Example:
-- 100,000 potential companies × $10,000 avg contract value = $1B TAM
+1. product-agent discover → Problem validation
+2. market-research → Market opportunity sizing
+3. competitive-analysis → Understand players
+4. → Decision: Build vs. Don't Build
 ```
 
-**Top-down approach:**
-```
-Global market size × Relevant percentage = TAM
-Example:
-- $500B enterprise software market × 20% applicable = $100B TAM
-```
+## Example Research Flow
 
-**Value-based approach:**
-```
-Estimated annual value created × potential penetration = TAM
-Example:
-- Annual time saved (2,000 hours) × labor cost ($50/hr) × 100K companies = $10B TAM
-```
+**User asks:** "Research the market for habit tracking apps"
 
-### SAM (Serviceable Addressable Market)
+**You do:**
 
-**Definition:** Market segment you can realistically target and serve
+1. **Define scope:**
+   - "iOS habit tracking apps targeting personal development users"
 
-**Considerations:**
-- Geographic limitations (US only, specific regions)
-- Company size focus (SMB vs. enterprise)
-- Industry vertical focus (Finance, healthcare, tech)
-- Language and regulatory requirements
-- Sales and support delivery model
+2. **Calculate TAM/SAM/SOM:**
+   - TAM: Personal development app market $3B
+   - SAM: iOS habit tracking apps $300M (10%)
+   - SOM: Realistic 3-year capture $15M (5%)
 
-**Example:**
-- TAM: $1B global market
-- Geographic limitation: US only (50% of market)
-- Company size: Mid-market focus only (30% of US market)
-- SAM: $1B × 50% × 30% = $150M
+3. **Growth analysis (WebSearch):**
+   - Search: "habit tracking app market growth 2026"
+   - Result: 15% CAGR, driven by wellness trends
 
-### SOM (Serviceable Obtainable Market)
+4. **Maturity:**
+   - Stage: Growing (strong leaders emerging but room for innovation)
+   - Key players: Streaks, Habitica, Way of Life
 
-**Definition:** Realistic market share you can capture in 5-year period
+5. **Barriers:**
+   - Low: Technical (habit tracking is simple)
+   - Medium: Building habit formation psychology
+   - High: Established apps have user data (switching cost)
 
-**Realistic targets by stage:**
-- Seed stage: 0.5-1% of SAM
-- Series A: 1-2% of SAM
-- Series B+: 2-5% of SAM
-- Mature company: 5-10% of SAM
+6. **Distribution:**
+   - App Store: 80% (ASO critical)
+   - Wellness communities: 15%
+   - Influencer partnerships: 5%
 
-**Example:**
-- SAM: $150M
-- Target year-5 market share: 3% (aggressive but realistic)
-- SOM: $150M × 3% = $4.5M annual revenue
+7. **Revenue potential:**
+   - ARPU: $20/year (mix of $2.99 one-time and $5/mo subscriptions)
+   - Year 3 realistic: $300K (15K users)
 
-**Market Size Table Template:**
+8. **Present findings:**
+   ```
+   Market Research: Habit Tracking Apps
 
-| Market Segment | Company Count | Avg Contract Value | TAM | Penetration Target | SOM Year 5 |
-|---|---|---|---|---|---|
-| Enterprise (1000+) | 1,000 | $50,000 | $50M | 2% | $1M |
-| Mid-market (250-1000) | 5,000 | $20,000 | $100M | 3% | $3M |
-| SMB (50-250) | 15,000 | $5,000 | $75M | 1% | $0.75M |
-| **TOTAL** | **21,000** | | **$225M** | | **$4.75M** |
+   Market Size:
+   - TAM: $3B (personal development apps)
+   - SAM: $300M (iOS habit tracking)
+   - SOM: $15M (5% realistic 3-year capture)
 
-## Survey Design and Analysis
+   Growth: 15% CAGR (wellness trend-driven)
+   Maturity: Growing (opportunity for innovation)
 
-### Survey Objectives and Design
+   Opportunity Score: 7/10 - Good
 
-**Survey Goals (Choose 1-2 primary):**
-- Validate customer assumptions
-- Understand feature priorities
-- Test messaging or positioning
-- Assess competitive alternatives
-- Gather pricing sensitivity
-- Measure satisfaction/NPS
+   Reasoning: Growing market with room for differentiation.
+   Not overcrowded like task management. Wellness trend tailwind.
+   Success depends on unique habit formation approach and
+   strong retention (>70%).
 
-**Survey Structure:**
+   Revenue Potential:
+   - Year 1: $20K-100K
+   - Year 3: $200K-1M
+   - Requires: Good ASO, word-of-mouth, community building
+   ```
 
-**Section 1: Qualification (3-5 questions)**
-- Confirm they're target audience
-- Assess job role and company size
-- Determine decision-making authority
-- Gate to ensure quality responses
+## Tips for Accurate Research
 
-**Section 2: Problem Validation (4-6 questions)**
-- Current pain points (multi-select)
-- Problem severity/frequency
-- Current solution approach
-- Budget allocated to solving
+1. **Use Multiple Sources:** Don't rely on one number
+2. **Be Conservative:** Better to underestimate than over
+3. **Validate with Proxies:** Compare to similar successful apps
+4. **Check App Annie/Sensor Tower:** For actual app market data
+5. **Read Financial Reports:** Public companies disclose market data
 
-**Section 3: Solution Exploration (4-6 questions)**
-- Feature importance ranking
-- Pricing sensitivity
-- Competitive alternatives awareness
-- Must-have vs. nice-to-have features
+## When to Run This Analysis
 
-**Section 4: Messaging Testing (3-5 questions)**
-- Message resonance rating
-- Message clarity assessment
-- Preferred benefit focus
-- Brand perception
+**Perfect timing:**
+- After discovery shows potential
+- Before committing to development
+- When seeking funding (investors want market size)
+- When setting revenue goals
 
-**Section 5: Demographics (4-5 questions)**
-- Company size and industry
-- Job title and department
-- Time in role
-- Budget authority level
+**Skip if:**
+- Discovery showed "DON'T BUILD"
+- Just experimenting/learning
+- Building for personal use only
 
-### Survey Question Templates
+## Output File Location
 
-**Open-ended Problem Question:**
-"What is your biggest challenge with [current solution area]?"
+Save market research results to one of these locations:
+- `market-research.md` (project root)
+- `docs/market-research.md` (if docs folder exists)
 
-**Ranked Priority Question:**
-"Rank these features by importance to you:
-1. Feature A
-2. Feature B
-3. Feature C"
+**Format**: Use the JSON structure in the Output Structure section, wrapped in a markdown code block with context and summary.
 
-**Pricing Sensitivity Question:**
-"What price point would be too expensive? $ __
-What price would be too cheap? $ __
-What would be fair price? $ __"
+**Integration**: The PRD generator skill will automatically look for this file and integrate the insights into the PRD's Market Context section (TAM/SAM/SOM, growth trends, entry barriers, revenue expectations).
 
-**Messaging Test Question:**
-"Which message resonates most with you?
-A) [Value proposition 1]
-B) [Value proposition 2]
-C) [Value proposition 3]"
+---
 
-**NPS (Net Promoter Score) Question:**
-"How likely are you to recommend [solution] to a colleague?
-0 (Not likely) --- 10 (Extremely likely)"
-
-## Trend Analysis Framework
-
-### Industry Trend Research
-
-**Sources:**
-- Industry analyst reports (Gartner, Forrester, IDC)
-- Trade publications and newsletters
-- Startup funding data (Crunchbase, PitchBook)
-- Patent filings and research papers
-- Social listening and mentions
-- Conference keynotes and panels
-
-### Trend Evaluation Matrix
-
-| Trend | Hype Level | Market Impact | Adoption Timeline | Opportunity | Risk |
-|-------|-----------|---------------|------------------|------------|------|
-| AI/ML integration | Very High | High | 1-2 years | High | Medium |
-| Remote work tools | Medium | Medium | Established | Medium | Low |
-| Zero-trust security | High | Very High | 2-3 years | Very High | Medium |
-| Automation | High | High | 1-2 years | High | Low |
-
-### Emerging Trend Assessment
-
-**Trend Name:** [What trend are we evaluating]
-**Current Hype Level:** [Nascent, mainstream, mature]
-**Market Maturity:** [Early adopters, early majority, mainstream]
-
-**Why it matters:**
-- Customer expectations shifting: [How expectations changing]
-- Competitive pressure: [How competitors responding]
-- New use cases enabled: [Possibilities created]
-- Regulatory implications: [Compliance considerations]
-
-**How to respond:**
-- Timing: [Wait, monitor, start experimenting, commit]
-- Investment required: [Low, medium, high]
-- Resource allocation: [% of R&D budget]
-- Success metric: [How we'll know if right]
-
-## Research Output and Recommendations
-
-### Synthesis Process
-
-1. **Gather all research** - Consolidate findings from all sources
-2. **Identify patterns** - Look for themes across interviews, surveys, data
-3. **Validate findings** - Cross-reference insights across multiple sources
-4. **Develop implications** - What do these insights mean for strategy?
-5. **Create recommendations** - Specific actions based on learnings
-
-### Research Deliverables
-
-- **Competitive Analysis Report** - Market landscape and positioning recommendations
-- **Customer Personas** - 3-5 detailed personas with supporting data
-- **Market Sizing Analysis** - TAM/SAM/SOM with justification
-- **Survey Report** - Findings, visualizations, conclusions
-- **Trend Analysis** - Implications and recommended responses
-- **Strategic Recommendations** - Specific actions based on research
-- **Data Visualizations** - Charts, heat maps, positioning matrices
-- **Detailed Source Document** - Bibliography and data sources
-
-## Market Research Checklist
-
-- [ ] Competitive landscape identified and analyzed
-- [ ] 3-5 customer personas developed with research support
-- [ ] Customer interviews completed (8-12 minimum)
-- [ ] Survey designed and distributed (50+ responses)
-- [ ] TAM/SAM/SOM calculated with methodology documented
-- [ ] Industry trends identified and evaluated
-- [ ] Key findings synthesized and validated
-- [ ] Strategic recommendations developed
-- [ ] All data sources documented
-- [ ] Visual deliverables created (matrices, charts)
-- [ ] Stakeholder presentation prepared
-- [ ] Research archived for future reference
-
-## Output Deliverables
-
-1. **Competitive Analysis Report** - Landscape, positioning, opportunities
-2. **Customer Personas Document** - 3-5 detailed personas with data
-3. **Market Sizing Analysis** - TAM/SAM/SOM calculations
-4. **Survey Report** - Methodology, findings, conclusions
-5. **Trend Analysis** - Emerging trends and implications
-6. **Strategic Recommendations** - Action items by priority
-7. **Data Visualization Deck** - Charts and matrices
-8. **Research Database** - All raw data and source materials
+**Remember:** Market research informs GO/NO-GO decisions. A big market with competition beats a tiny market with no competition (usually).

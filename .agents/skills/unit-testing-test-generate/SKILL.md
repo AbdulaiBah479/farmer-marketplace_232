@@ -1,9 +1,6 @@
 ---
 name: unit-testing-test-generate
-description: "Generate comprehensive, maintainable unit tests across languages with strong coverage and edge case focus."
-risk: unknown
-source: community
-date_added: "2026-02-27"
+description: "Generate comprehensive, maintainable unit tests across languages with strong coverage and edge case focus. Use when writing test suites or improving test coverage."
 ---
 
 # Automated Unit Test Generation
@@ -320,8 +317,3 @@ def generate_mock_objects(self, dependencies: List[str]) -> str:
 5. **CI Integration**: Commands to run tests in pipeline
 
 Focus on generating maintainable, comprehensive tests that catch bugs early and provide confidence in code changes.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

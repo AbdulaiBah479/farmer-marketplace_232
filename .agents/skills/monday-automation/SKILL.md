@@ -1,9 +1,10 @@
 ---
 name: monday-automation
 description: "Automate Monday.com work management including boards, items, columns, groups, subitems, and updates via Rube MCP (Composio). Always search tools first for current schemas."
-risk: critical
+requires:
+  mcp: [rube]
+risk: unknown
 source: community
-date_added: "2026-02-27"
 ---
 
 # Monday.com Automation via Rube MCP
@@ -19,6 +20,7 @@ Automate Monday.com work management workflows including board creation, item man
 ## Setup
 
 **Get Rube MCP**: Add `https://rube.app/mcp` as an MCP server in your client configuration. No API keys needed — just add the endpoint and it works.
+
 
 1. Verify Rube MCP is available by confirming `RUBE_SEARCH_TOOLS` responds
 2. Call `RUBE_MANAGE_CONNECTIONS` with toolkit `monday`
@@ -234,8 +236,3 @@ Different column types require different value formats:
 
 ## When to Use
 This skill is applicable to execute the workflow or actions described in the overview.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

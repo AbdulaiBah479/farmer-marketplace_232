@@ -1,153 +1,354 @@
 ---
 name: zabbix
-description: |
-  Zabbix integration. Manage data, records, and automate workflows. Use when the user wants to interact with Zabbix data.
-compatibility: Requires network access and a valid Membrane account (Free tier supported).
+description: "Zabbix monitoring system automation via API and Python. Use when: (1) Managing hosts, templates, items, triggers, or host groups, (2) Automating monitoring configuration, (3) Sending data via Zabbix trapper/sender, (4) Querying historical data or events, (5) Bulk operations on Zabbix objects, (6) Maintenance window management, (7) User/permission management"
 license: MIT
-homepage: https://getmembrane.com
-repository: https://github.com/membranedev/application-skills
-metadata:
-  author: membrane
-  version: "1.0"
-  categories: ""
 ---
 
-# Zabbix
+# Zabbix Automation Skill
 
-Zabbix is an open-source monitoring solution for networks, servers, VMs, applications, and cloud services. It's used by IT professionals and DevOps engineers to track performance and availability.
+## Overview
 
-Official docs: https://www.zabbix.com/documentation/current/en/
+This skill provides guidance for automating Zabbix monitoring operations via the API and official Python library `zabbix_utils`.
 
-## Zabbix Overview
+## Quick Start
 
-- **Host**
-  - **Item**
-- **Problem**
-
-Use action names and parameters as needed.
-
-## Working with Zabbix
-
-This skill uses the Membrane CLI to interact with Zabbix. Membrane handles authentication and credentials refresh automatically — so you can focus on the integration logic rather than auth plumbing.
-
-### Install the CLI
-
-Install the Membrane CLI so you can run `membrane` from the terminal:
+### Installation
 
 ```bash
-npm install -g @membranehq/cli@latest
+pip install zabbix-utils --break-system-packages
 ```
 
 ### Authentication
 
-```bash
-membrane login --tenant --clientName=<agentType>
+```python
+from zabbix_utils import ZabbixAPI
+
+# Option 1: Username/password
+api = ZabbixAPI(url="https://zabbix.example.com")
+api.login(user="Admin", password="zabbix")
+
+# Option 2: API token (Zabbix 5.4+, preferred)
+api = ZabbixAPI(url="https://zabbix.example.com")
+api.login(token="your_api_token")
+
+# Verify connection
+print(api.api_version())
 ```
 
-This will either open a browser for authentication or print an authorization URL to the console, depending on whether interactive mode is available.
+### Environment Variables Pattern
 
-**Headless environments:** The command will print an authorization URL. Ask the user to open it in a browser. When they see a code after completing login, finish with:
+```python
+import os
+from zabbix_utils import ZabbixAPI
 
-```bash
-membrane login complete <code>
+api = ZabbixAPI(url=os.environ.get("ZABBIX_URL", "http://localhost/zabbix"))
+api.login(token=os.environ["ZABBIX_TOKEN"])
 ```
 
-Add `--json` to any command for machine-readable JSON output.
+## Core API Methods
 
-**Agent Types** : claude, openclaw, codex, warp, windsurf, etc. Those will be used to adjust tooling to be used best with your harness
+All APIs follow pattern: `api.<object>.<method>()` with methods: `get`, `create`, `update`, `delete`.
 
-### Connecting to Zabbix
+### Host Operations
 
-Use `membrane connection ensure` to find or create a connection by app URL or domain:
+```python
+# Get hosts
+hosts = api.host.get(output=["hostid", "host", "name"],
+                     selectInterfaces=["ip"])
 
-```bash
-membrane connection ensure "https://zabbix.com" --json
-```
-The user completes authentication in the browser. The output contains the new connection id.
+# Create host
+api.host.create(
+    host="server01",
+    groups=[{"groupid": "2"}],  # Linux servers
+    interfaces=[{
+        "type": 1,  # 1=agent, 2=SNMP, 3=IPMI, 4=JMX
+        "main": 1,
+        "useip": 1,
+        "ip": "192.168.1.100",
+        "dns": "",
+        "port": "10050"
+    }],
+    templates=[{"templateid": "10001"}]
+)
 
-This is the fastest way to get a connection. The URL is normalized to a domain and matched against known apps. If no app is found, one is created and a connector is built automatically.
+# Update host
+api.host.update(hostid="10084", status=0)  # 0=enabled, 1=disabled
 
-If the returned connection has `state: "READY"`, skip to **Step 2**.
-
-#### 1b. Wait for the connection to be ready
-
-If the connection is in `BUILDING` state, poll until it's ready:
-
-```bash
-npx @membranehq/cli connection get <id> --wait --json
-```
-
-The `--wait` flag long-polls (up to `--timeout` seconds, default 30) until the state changes. Keep polling until `state` is no longer `BUILDING`.
-
-The resulting state tells you what to do next:
-
-- **`READY`** — connection is fully set up. Skip to **Step 2**.
-- **`CLIENT_ACTION_REQUIRED`** — the user or agent needs to do something. The `clientAction` object describes the required action:
-  - `clientAction.type` — the kind of action needed:
-    - `"connect"` — user needs to authenticate (OAuth, API key, etc.). This covers initial authentication and re-authentication for disconnected connections.
-    - `"provide-input"` — more information is needed (e.g. which app to connect to).
-  - `clientAction.description` — human-readable explanation of what's needed.
-  - `clientAction.uiUrl` (optional) — URL to a pre-built UI where the user can complete the action. Show this to the user when present.
-  - `clientAction.agentInstructions` (optional) — instructions for the AI agent on how to proceed programmatically.
-
-  After the user completes the action (e.g. authenticates in the browser), poll again with `membrane connection get <id> --json` to check if the state moved to `READY`.
-
-- **`CONFIGURATION_ERROR`** or **`SETUP_FAILED`** — something went wrong. Check the `error` field for details.
-
-### Searching for actions
-
-Search using a natural language description of what you want to do:
-
-```bash
-membrane action list --connectionId=CONNECTION_ID --intent "QUERY" --limit 10 --json
+# Delete host
+api.host.delete("10084")
 ```
 
-You should always search for actions in the context of a specific connection.
+### Template Operations
 
-Each result includes `id`, `name`, `description`, `inputSchema` (what parameters the action accepts), and `outputSchema` (what it returns).
+```python
+# Get templates
+templates = api.template.get(output=["templateid", "host", "name"],
+                             selectHosts=["hostid", "name"])
 
-## Popular actions
+# Link template to host
+api.host.update(hostid="10084",
+                templates=[{"templateid": "10001"}])
 
-Use `npx @membranehq/cli@latest action list --intent=QUERY --connectionId=CONNECTION_ID --json` to discover available actions.
-
-### Running actions
-
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --json
+# Import template from XML
+with open("template.xml") as f:
+    api.configuration.import_(
+        source=f.read(),
+        format="xml",
+        rules={
+            "templates": {"createMissing": True, "updateExisting": True},
+            "items": {"createMissing": True, "updateExisting": True},
+            "triggers": {"createMissing": True, "updateExisting": True}
+        }
+    )
 ```
 
-To pass JSON parameters:
+### Item Operations
 
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --input '{"key": "value"}' --json
+```python
+# Get items
+items = api.item.get(hostids="10084",
+                     output=["itemid", "name", "key_"],
+                     search={"key_": "system.cpu"})
+
+# Create item
+api.item.create(
+    name="CPU Load",
+    key_="system.cpu.load[percpu,avg1]",
+    hostid="10084",
+    type=0,  # 0=Zabbix agent
+    value_type=0,  # 0=float, 3=integer, 4=text
+    delay="30s",
+    interfaceid="1"
+)
 ```
 
-The result is in the `output` field of the response.
+### Trigger Operations
 
+```python
+# Get triggers
+triggers = api.trigger.get(hostids="10084",
+                          output=["triggerid", "description", "priority"],
+                          selectFunctions="extend")
 
-### Proxy requests
-
-When the available actions don't cover your use case, you can send requests directly to the Zabbix API through Membrane's proxy. Membrane automatically appends the base URL to the path you provide and injects the correct authentication headers — including transparent credential refresh if they expire.
-
-```bash
-membrane request CONNECTION_ID /path/to/endpoint
+# Create trigger
+api.trigger.create(
+    description="High CPU on {HOST.NAME}",
+    expression="last(/server01/system.cpu.load[percpu,avg1])>5",
+    priority=3  # 0=not classified, 1=info, 2=warning, 3=average, 4=high, 5=disaster
+)
 ```
 
-Common options:
+### Host Group Operations
 
-| Flag | Description |
-|------|-------------|
-| `-X, --method` | HTTP method (GET, POST, PUT, PATCH, DELETE). Defaults to GET |
-| `-H, --header` | Add a request header (repeatable), e.g. `-H "Accept: application/json"` |
-| `-d, --data` | Request body (string) |
-| `--json` | Shorthand to send a JSON body and set `Content-Type: application/json` |
-| `--rawData` | Send the body as-is without any processing |
-| `--query` | Query-string parameter (repeatable), e.g. `--query "limit=10"` |
-| `--pathParam` | Path parameter (repeatable), e.g. `--pathParam "id=123"` |
+```python
+# Get groups
+groups = api.hostgroup.get(output=["groupid", "name"])
 
+# Create group
+api.hostgroup.create(name="Production/Web Servers")
 
-## Best practices
+# Add hosts to group
+api.hostgroup.massadd(groups=[{"groupid": "5"}],
+                      hosts=[{"hostid": "10084"}])
+```
 
-- **Always prefer Membrane to talk with external apps** — Membrane provides pre-built actions with built-in auth, pagination, and error handling. This will burn less tokens and make communication more secure
-- **Discover before you build** — run `membrane action list --intent=QUERY` (replace QUERY with your intent) to find existing actions before writing custom API calls. Pre-built actions handle pagination, field mapping, and edge cases that raw API calls miss.
-- **Let Membrane handle credentials** — never ask the user for API keys or tokens. Create a connection instead; Membrane manages the full Auth lifecycle server-side with no local secrets.
+### Maintenance Windows
+
+```python
+import time
+
+# Create maintenance
+api.maintenance.create(
+    name="Server Maintenance",
+    active_since=int(time.time()),
+    active_till=int(time.time()) + 3600,  # 1 hour
+    hostids=["10084"],
+    timeperiods=[{
+        "timeperiod_type": 0,  # One-time
+        "period": 3600
+    }]
+)
+```
+
+### Events and Problems
+
+```python
+# Get current problems
+problems = api.problem.get(output=["eventid", "name", "severity"],
+                          recent=True)
+
+# Get events
+events = api.event.get(hostids="10084",
+                       time_from=int(time.time()) - 86400,
+                       output="extend")
+```
+
+### History Data
+
+```python
+# Get history (value_type must match item's value_type)
+# 0=float, 1=character, 2=log, 3=integer, 4=text
+history = api.history.get(
+    itemids="28269",
+    history=0,  # float
+    time_from=int(time.time()) - 3600,
+    output="extend",
+    sortfield="clock",
+    sortorder="DESC"
+)
+```
+
+## Zabbix Sender (Trapper Items)
+
+```python
+from zabbix_utils import Sender
+
+sender = Sender(server="zabbix.example.com", port=10051)
+
+# Send single value
+response = sender.send_value("hostname", "trap.key", "value123")
+print(response)  # {"processed": 1, "failed": 0, "total": 1}
+
+# Send multiple values
+from zabbix_utils import ItemValue
+values = [
+    ItemValue("host1", "key1", "value1"),
+    ItemValue("host2", "key2", 42),
+]
+response = sender.send(values)
+```
+
+## Zabbix Getter (Agent Query)
+
+```python
+from zabbix_utils import Getter
+
+agent = Getter(host="192.168.1.100", port=10050)
+response = agent.get("system.uname")
+print(response.value)
+```
+
+## Common Patterns
+
+### Bulk Host Creation from CSV
+
+```python
+import csv
+from zabbix_utils import ZabbixAPI
+
+api = ZabbixAPI(url="https://zabbix.example.com")
+api.login(token="your_token")
+
+with open("hosts.csv") as f:
+    for row in csv.DictReader(f):
+        try:
+            api.host.create(
+                host=row["hostname"],
+                groups=[{"groupid": row["groupid"]}],
+                interfaces=[{
+                    "type": 1, "main": 1, "useip": 1,
+                    "ip": row["ip"], "dns": "", "port": "10050"
+                }]
+            )
+            print(f"Created: {row['hostname']}")
+        except Exception as e:
+            print(f"Failed {row['hostname']}: {e}")
+```
+
+### Find Hosts Without Template
+
+```python
+# Get all hosts
+all_hosts = api.host.get(output=["hostid", "host"],
+                         selectParentTemplates=["templateid"])
+
+# Filter hosts without specific template
+template_id = "10001"
+hosts_without = [h for h in all_hosts
+                 if not any(t["templateid"] == template_id
+                           for t in h.get("parentTemplates", []))]
+```
+
+### Disable Triggers by Pattern
+
+```python
+triggers = api.trigger.get(
+    search={"description": "test"},
+    output=["triggerid"]
+)
+for t in triggers:
+    api.trigger.update(triggerid=t["triggerid"], status=1)  # 1=disabled
+```
+
+## Item Types Reference
+
+| Type | Value | Description |
+|------|-------|-------------|
+| Zabbix agent | 0 | Active checks |
+| Zabbix trapper | 2 | Passive, data pushed via sender |
+| Simple check | 3 | ICMP, TCP, etc. |
+| Zabbix internal | 5 | Server internal metrics |
+| Zabbix agent (active) | 7 | Agent-initiated |
+| HTTP agent | 19 | HTTP/REST API monitoring |
+| Dependent item | 18 | Derived from master item |
+| Script | 21 | Custom scripts |
+
+## Value Types Reference
+
+| Type | Value | Description |
+|------|-------|-------------|
+| Float | 0 | Numeric (float) |
+| Character | 1 | Character string |
+| Log | 2 | Log file |
+| Unsigned | 3 | Numeric (integer) |
+| Text | 4 | Text |
+
+## Trigger Severity Reference
+
+| Severity | Value | Color |
+|----------|-------|-------|
+| Not classified | 0 | Gray |
+| Information | 1 | Light blue |
+| Warning | 2 | Yellow |
+| Average | 3 | Orange |
+| High | 4 | Light red |
+| Disaster | 5 | Red |
+
+## Error Handling
+
+```python
+from zabbix_utils import ZabbixAPI
+from zabbix_utils.exceptions import APIRequestError
+
+try:
+    api.host.create(host="duplicate_host", groups=[{"groupid": "2"}])
+except APIRequestError as e:
+    print(f"API Error: {e.message}")
+    print(f"Code: {e.code}")
+```
+
+## Debugging
+
+```python
+import logging
+logging.basicConfig(level=logging.DEBUG)
+# Now all API calls will be logged
+```
+
+## Scripts Reference
+
+See `scripts/` directory for ready-to-use automation:
+
+- `zabbix-bulk-hosts.py` - Bulk host management from CSV
+- `zabbix-maintenance.py` - Create/manage maintenance windows
+- `zabbix-export.py` - Export hosts/templates to JSON/XML
+
+## Best Practices
+
+1. **Use API tokens** over username/password when possible
+2. **Limit output fields** - Always specify `output=["field1", "field2"]` instead of `output="extend"`
+3. **Use search/filter** - Never fetch all objects and filter in Python
+4. **Handle pagination** - Large result sets may need `limit` and `offset`
+5. **Batch operations** - Use `massadd`, `massupdate` for bulk changes
+6. **Error handling** - Always wrap API calls in try/except
+7. **Idempotency** - Check if object exists before creating

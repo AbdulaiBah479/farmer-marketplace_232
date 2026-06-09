@@ -3,9 +3,7 @@ name: data-report
 zh_name: "数据可视化报告"
 en_name: "Data Visualization Report"
 emoji: "📊"
-description: "Turns CSV, Excel, or JSON data into a polished visual report page."
-zh_description: "把 CSV/Excel/JSON 数据转成漂亮的可视化报告页"
-en_description: "Turns CSV, Excel, or JSON data into a polished visual report page."
+description: "把 CSV/Excel/JSON 数据转成漂亮的可视化报告页"
 category: data
 scenario: finance
 aspect_hint: "桌面长页面"
@@ -16,21 +14,6 @@ example_name: "数据报告 · 周报"
 example_format: csv
 example_tagline: "KPI 卡 + Chart.js 图表 + 表格"
 example_desc: "9 个月增长数据自动渲染成可视化报告, 内联 Chart.js"
-od:
-  mode: prototype
-  surface: web
-  platform: desktop
-  scenario: finance
-  upstream: "https://github.com/nexu-io/html-anything"
-  preview:
-    type: html
-    entry: index.html
-    reload: debounce-100
-  design_system:
-    requires: false
-  example_prompt: "Use the Data Visualization Report template to turn my CSV, Excel, or JSON data into a polished visual report page. Preserve the template's visual signature, use real content and data, and avoid lorem ipsum or placeholder images."
-  example_prompt_i18n:
-    zh-CN: "用「数据可视化报告」模板把我的内容做成一份「把 CSV/Excel/JSON 数据转成漂亮的可视化报告页」。保持模板的视觉签名，使用真实内容和数据，避免 lorem ipsum 和占位图片。"
 ---
 
 【模板: 数据可视化报告】

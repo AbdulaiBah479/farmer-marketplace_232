@@ -20,8 +20,8 @@ import pennylane as qml
 # Basic initialization
 dev = qml.device('default.qubit', wires=4)
 
-# For sampling mode, set shots on the QNode with qml.set_shots
-dev = qml.device('default.qubit', wires=4)
+# With shots (sampling mode)
+dev = qml.device('default.qubit', wires=4, shots=1000)
 
 # Specify wire labels
 dev = qml.device('default.qubit', wires=['a', 'b', 'c', 'd'])
@@ -50,18 +50,19 @@ def noisy_circuit():
     return qml.expval(qml.PauliZ(0))
 ```
 
-### Machine Learning Interfaces
+### default.qubit.torch, default.qubit.tf, default.qubit.jax
 
-Use `default.qubit` with the QNode interface for PyTorch or JAX. The old interface-specific device names are not needed in current PennyLane examples, and TensorFlow support is no longer maintained as of PennyLane v0.44.
+Framework-specific simulators with better integration:
 
 ```python
 # PyTorch
-dev = qml.device('default.qubit', wires=4)
+dev = qml.device('default.qubit.torch', wires=4)
 
-@qml.qnode(dev, interface="torch")
-def torch_circuit(weights):
-    qml.RX(weights[0], wires=0)
-    return qml.expval(qml.Z(0))
+# TensorFlow
+dev = qml.device('default.qubit.tf', wires=4)
+
+# JAX
+dev = qml.device('default.qubit.jax', wires=4)
 ```
 
 ### lightning.qubit
@@ -108,7 +109,7 @@ def clifford_circuit():
 
 ```bash
 # Install plugin
-uv pip install "pennylane-qiskit==0.45.0"
+uv pip install pennylane-qiskit
 ```
 
 ```python
@@ -118,14 +119,19 @@ import pennylane as qml
 dev = qml.device('qiskit.aer', wires=2)
 
 # Use IBM quantum hardware
-from qiskit_ibm_runtime import QiskitRuntimeService
-
-service = QiskitRuntimeService()
-backend = service.least_busy(operational=True, simulator=False, min_num_qubits=2)
 dev = qml.device(
-    'qiskit.remote',
-    wires=backend.num_qubits,
-    backend=backend,
+    'qiskit.ibmq',
+    wires=2,
+    backend='ibmq_manila',  # Specify backend
+    shots=1024
+)
+
+# With API token
+dev = qml.device(
+    'qiskit.ibmq',
+    wires=2,
+    backend='ibmq_manila',
+    ibmqx_token='YOUR_API_TOKEN'
 )
 
 @qml.qnode(dev)
@@ -133,15 +139,13 @@ def circuit():
     qml.Hadamard(wires=0)
     qml.CNOT(wires=[0, 1])
     return qml.expval(qml.PauliZ(0))
-
-sampled_circuit = qml.set_shots(circuit, shots=1024)
 ```
 
 ### Amazon Braket
 
 ```bash
 # Install plugin
-uv pip install "amazon-braket-pennylane-plugin==1.34.1"
+uv pip install amazon-braket-pennylane-plugin
 ```
 
 ```python
@@ -164,6 +168,7 @@ dev = qml.device(
     'braket.aws.qubit',
     device_arn='arn:aws:braket:us-east-1::device/qpu/ionq/Harmony',
     wires=11,
+    shots=1000,
     s3_destination_folder=('amazon-braket-outputs', 'outputs')
 )
 ```
@@ -172,7 +177,7 @@ dev = qml.device(
 
 ```bash
 # Install plugin
-uv pip install "pennylane-cirq==0.44.0"
+uv pip install pennylane-cirq
 ```
 
 ```python
@@ -187,6 +192,7 @@ dev = qml.device(
     'cirq.pasqal',
     wires=2,
     device='rainbow',
+    shots=1000
 )
 ```
 
@@ -194,22 +200,50 @@ dev = qml.device(
 
 ```bash
 # Install plugin
-uv pip install "pennylane-rigetti==0.40.0"
+uv pip install pennylane-rigetti
 ```
 
 ```python
 # Use QVM (Quantum Virtual Machine)
-dev = qml.device('rigetti.qvm', device='4q-qvm')
+dev = qml.device('rigetti.qvm', device='4q-qvm', shots=1000)
 
 # Use Rigetti QPU
-dev = qml.device('rigetti.qpu', device='Aspen-M-3')
+dev = qml.device('rigetti.qpu', device='Aspen-M-3', shots=1000)
+```
+
+### Microsoft Azure Quantum
+
+```bash
+# Install plugin
+uv pip install pennylane-azure
+```
+
+```python
+# Use Azure simulators
+dev = qml.device(
+    'azure.simulator',
+    wires=4,
+    workspace='your-workspace',
+    resource_group='your-resource-group',
+    subscription_id='your-subscription-id'
+)
+
+# Use IonQ on Azure
+dev = qml.device(
+    'azure.ionq',
+    wires=11,
+    workspace='your-workspace',
+    resource_group='your-resource-group',
+    subscription_id='your-subscription-id',
+    shots=500
+)
 ```
 
 ### IonQ
 
 ```bash
 # Install plugin
-uv pip install "pennylane-ionq==0.45.0"
+uv pip install pennylane-ionq
 ```
 
 ```python
@@ -217,6 +251,7 @@ uv pip install "pennylane-ionq==0.45.0"
 dev = qml.device(
     'ionq.simulator',  # or 'ionq.qpu'
     wires=11,
+    shots=1024,
     api_key='your_api_key'
 )
 ```
@@ -228,6 +263,7 @@ dev = qml.device(
 dev = qml.device(
     'strawberryfields.remote',
     backend='borealis',
+    shots=10000
 )
 ```
 
@@ -242,9 +278,9 @@ def select_device(n_qubits, use_hardware=False, noise_model=None):
     if use_hardware:
         # Use real quantum hardware
         if n_qubits <= 11:
-            return qml.device('ionq.qpu', wires=n_qubits)
+            return qml.device('ionq.qpu', wires=n_qubits, shots=1000)
         elif n_qubits <= 127:
-            raise ValueError("Pass a qiskit.remote backend object for IBM hardware")
+            return qml.device('qiskit.ibmq', wires=n_qubits, shots=1024)
         else:
             raise ValueError(f"No hardware available for {n_qubits} qubits")
 
@@ -296,9 +332,8 @@ def exact_circuit():
 result = exact_circuit()  # Returns exact expectation
 
 # Sampling mode (with shots)
-dev_sampled = qml.device('default.qubit', wires=2)
+dev_sampled = qml.device('default.qubit', wires=2, shots=1000)
 
-@qml.set_shots(1000)
 @qml.qnode(dev_sampled)
 def sampled_circuit():
     qml.Hadamard(wires=0)
@@ -319,9 +354,9 @@ def circuit():
     return qml.expval(qml.PauliZ(0))
 
 # Different shot numbers
-result_100 = qml.set_shots(circuit, shots=100)()
-result_1000 = qml.set_shots(circuit, shots=1000)()
-result_exact = qml.set_shots(circuit, shots=None)()  # Exact
+result_100 = circuit(shots=100)
+result_1000 = circuit(shots=1000)
+result_exact = circuit(shots=None)  # Exact
 ```
 
 ### Analytic Mode vs Finite Shots
@@ -329,7 +364,7 @@ result_exact = qml.set_shots(circuit, shots=None)()  # Exact
 ```python
 # Compare analytic vs sampled
 dev_analytic = qml.device('default.qubit', wires=2)
-dev_sampled = qml.device('default.qubit', wires=2)
+dev_sampled = qml.device('default.qubit', wires=2, shots=1000)
 
 @qml.qnode(dev_analytic)
 def circuit_analytic(x):
@@ -345,7 +380,7 @@ import numpy as np
 x = np.pi / 4
 
 print(f"Analytic: {circuit_analytic(x)}")
-print(f"Sampled: {qml.set_shots(circuit_sampled, shots=1000)(x)}")
+print(f"Sampled: {circuit_sampled(x)}")
 print(f"Exact value: {np.cos(x)}")
 ```
 
@@ -353,9 +388,8 @@ print(f"Exact value: {np.cos(x)}")
 
 ```python
 # Set random seed
-dev = qml.device('default.qubit', wires=2, seed=42)
+dev = qml.device('default.qubit', wires=2, shots=1000, seed=42)
 
-@qml.set_shots(1000)
 @qml.qnode(dev)
 def circuit():
     qml.Hadamard(wires=0)
@@ -472,7 +506,7 @@ dev2 = get_device(4)  # Returns same device
 
 ```python
 # Install Catalyst
-# uv pip install "pennylane-catalyst==0.15.0"
+# uv pip install pennylane-catalyst
 
 import pennylane as qml
 from catalyst import qjit
@@ -520,7 +554,7 @@ with Pool(processes=4) as pool:
 # Use GPU-accelerated devices if available
 try:
     dev = qml.device('lightning.gpu', wires=20)
-except Exception:
+except:
     dev = qml.device('lightning.qubit', wires=20)
 
 @qml.qnode(dev)

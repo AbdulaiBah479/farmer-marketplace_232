@@ -1,9 +1,11 @@
 ---
+version: 4.1.0-fractal
 name: seo-structure-architect
-description: Analyzes and optimizes content structure including header hierarchy, suggests schema markup, and internal linking opportunities. Creates search-friendly content organization.
-risk: unknown
-source: community
-date_added: '2026-02-27'
+description: Analyzes and optimizes content structure including header
+  hierarchy, suggests schema markup, and internal linking opportunities. Creates
+  search-friendly content organization. Use PROACTIVELY for content structuring.
+metadata:
+  model: haiku
 ---
 
 ## Use this skill when
@@ -105,8 +107,3 @@ H1: Primary Keyword Focus
 - Step-by-step for processes
 
 Focus on logical flow and scannable content. Create clear information hierarchy for users and search engines.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

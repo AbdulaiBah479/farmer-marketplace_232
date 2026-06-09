@@ -1,154 +1,159 @@
 ---
 name: napkin
-description: 'Visual whiteboard collaboration for Copilot CLI. Creates an interactive whiteboard that opens in your browser — draw, sketch, add sticky notes, then share everything back with Copilot. Copilot sees your drawings and text, and responds with analysis, suggestions, and ideas.'
+description: |
+  Maintain a per-repo napkin file that tracks mistakes, corrections, and
+  what works. Activates EVERY session, unconditionally. Read the napkin
+  before doing anything. Write to it continuously as you work — not just at
+  session boundaries. Log your own mistakes, not just user corrections. The
+  napkin lives in the repo at `.opencode/napkin.md`.
+version: 1.0.0
+date: 2026-02-06
 ---
 
-# Napkin — Visual Whiteboard for Copilot CLI
+# Napkin
 
-Napkin gives users a browser-based whiteboard where they can draw, sketch, and add sticky notes to think through ideas visually. The agent reads back the whiteboard contents (via a PNG snapshot and optional JSON data) and responds conversationally with analysis, suggestions, and next steps.
+You maintain a per-repo markdown file that tracks mistakes, corrections, and
+patterns that work or don't. You read it before doing anything and update it
+continuously as you work — whenever you learn something worth recording.
 
-The target audience is lawyers, PMs, and business stakeholders — not software developers. Keep everything approachable and jargon-free.
+**This skill is always active. Every session. No trigger required.**
 
----
+## Session Start: Read Your Notes
 
-## Activation
+First thing, every session — read `.opencode/napkin.md` before doing anything
+else. Internalize what's there and apply it silently. Don't announce that you
+read it. Just apply what you know.
 
-When the user invokes this skill — saying things like "let's napkin," "open a napkin," "start a whiteboard," or using the slash command — do the following:
+If no napkin exists yet, create one at `.opencode/napkin.md`:
 
-1. **Copy the bundled HTML template** from the skill assets to the user's Desktop.
-   - The template lives at `assets/napkin.html` relative to this SKILL.md file.
-   - Copy it to `~/Desktop/napkin.html`.
-   - If `~/Desktop/napkin.html` already exists, ask the user whether they want to open the existing one or start fresh before overwriting.
+```markdown
+# Napkin
 
-2. **Open it in the default browser:**
-   - macOS: `open ~/Desktop/napkin.html`
-   - Linux: `xdg-open ~/Desktop/napkin.html`
-   - Windows: `start ~/Desktop/napkin.html`
+## Corrections
+| Date | Source | What Went Wrong | What To Do Instead |
+|------|--------|----------------|-------------------|
 
-3. **Tell the user what to do next.** Say something warm and simple:
+## User Preferences
+- (accumulate here as you learn them)
 
-   ```
-   Your napkin is open in your browser!
+## Patterns That Work
+- (approaches that succeeded)
 
-   Draw, sketch, or add sticky notes — whatever helps you think through your idea.
+## Patterns That Don't Work
+- (approaches that failed and why)
 
-   When you're ready for my input, click the green "Share with Copilot" button on the whiteboard, then come back here and say "check the napkin."
-   ```
-
----
-
-## Reading the Napkin
-
-When the user says "check the napkin," "look at the napkin," "what do you think," "read my napkin," or anything similar, follow these steps:
-
-### Step 1 — Read the PNG snapshot (primary)
-
-Look for a PNG file called `napkin-snapshot.png`. Check these locations in order (the browser saves it to the user's default download folder, which varies):
-
-1. `~/Downloads/napkin-snapshot.png`
-2. `~/Desktop/napkin-snapshot.png`
-
-Use the `view` tool to read the PNG. This sends the image as base64-encoded data to the model, which can visually interpret it. The PNG is the **primary** way the agent understands what the user drew — it captures freehand sketches, arrows, spatial layout, annotations, circled or crossed-out items, and anything else on the canvas.
-
-If the PNG is not found in either location, do NOT silently skip it. Instead, tell the user:
-
-```
-I don't see a snapshot from your napkin yet. Here's what to do:
-
-1. Go to your whiteboard in the browser
-2. Click the green "Share with Copilot" button
-3. Come back here and say "check the napkin" again
-
-The button saves a screenshot that I can look at.
+## Domain Notes
+- (project/domain context that matters)
 ```
 
-### Step 2 — Read the clipboard for structured JSON (supplementary)
+Adapt the sections to fit the repo's domain. Design something you can usefully
+consume.
 
-Also try to grab structured JSON data from the system clipboard. The whiteboard copies this automatically alongside the PNG.
+## Continuous Updates
 
-- macOS: `pbpaste`
-- Linux: `xclip -selection clipboard -o`
-- Windows: `powershell -command "Get-Clipboard"`
+Update the napkin as you work, not just at session start and end. However,
+**never write to the napkin directly from the main session.** Instead,
+delegate all writes through the `Task` tool. This keeps napkin housekeeping
+out of your main context window.
 
-The JSON contains the exact text content of sticky notes and text labels, their positions, and their colors. This supplements the PNG by giving you precise text that might be hard to read from a screenshot.
-
-If the clipboard doesn't contain JSON data, that's fine — the PNG alone gives the model plenty to work with. Do not treat a missing clipboard as an error.
-
-### Step 3 — Interpret both sources together
-
-Synthesize the visual snapshot and the structured text into a coherent understanding of what the user is thinking or planning:
-
-- **From the PNG:** Describe what you see — sketches, diagrams, flowcharts, groupings, arrows, spatial layout, annotations, circled items, crossed-out items, emphasis marks.
-- **From the JSON:** Read the exact text content of sticky notes and labels, noting their positions and colors.
-- **Combine both** into a single, conversational interpretation.
-
-### Step 4 — Respond conversationally
-
-Do not dump raw data or a technical summary. Respond as a collaborator who looked at someone's whiteboard sketch. Examples:
-
-- "I can see you've sketched out a three-stage process — it looks like you're thinking about [X] flowing into [Y] and then [Z]. The sticky note in the corner says '[text]' — is that a concern you want me to address?"
-- "It looks like you've grouped these four ideas together on the left side and separated them from the two items on the right. Are you thinking of these as two different categories?"
-- "I see you drew arrows connecting [A] to [B] to [C] — is this the workflow you're envisioning?"
-
-### Step 5 — Ask what's next
-
-Always end by offering a next step:
-
-- "Want me to build on this?"
-- "Should I turn this into a structured document?"
-- "Want me to add my suggestions to the napkin?"
-
----
-
-## Responding on the Napkin
-
-When the user wants the agent to add content back to the whiteboard:
-
-- The agent **cannot** directly modify the HTML file's canvas state — that's managed by JavaScript running in the browser.
-- Instead, offer practical alternatives:
-  - Provide the response right here in the CLI, and suggest the user add it to the napkin manually.
-  - Offer to create a separate document (markdown, memo, checklist, etc.) based on what was interpreted from the napkin.
-  - If it makes sense, create an updated copy of `napkin.html` with pre-loaded content.
-
----
-
-## Tone and Style
-
-- Use the same approachable, non-technical tone as the noob-mode skill.
-- Never use developer jargon without explaining it in plain English.
-- Treat the napkin as a creative, collaborative space — not a formal input mechanism.
-- Be encouraging about the user's sketches regardless of artistic quality.
-- Frame responses as "building on your thinking," not "analyzing your input."
-
----
-
-## Error Handling
-
-**PNG snapshot not found:**
+When you learn something worth recording, use the Task tool like this:
 
 ```
-I don't see a snapshot from your napkin yet. Here's what to do:
+Task(
+  description="Update napkin",
+  prompt="Read `.opencode/napkin.md` and apply the following update.
 
-1. Go to your whiteboard in the browser
-2. Click the green "Share with Copilot" button
-3. Come back here and say "check the napkin" again
+Section: <one of: Corrections | User Preferences | Patterns That Work | Patterns That Don't Work | Domain Notes>
 
-The button saves a screenshot that I can look at.
+Entry to add:
+<provide the full entry content — for Corrections, use the table format:
+| <date> | <source: self or user> | <what went wrong> | <what to do instead> |
+For other sections, use a bullet point with specific, actionable detail.>
+
+After updating, check if the file exceeds 150 lines. If so, consolidate:
+merge redundant entries, promote repeated corrections to preferences,
+remove already-captured items, archive outdated notes. Keep under 200 lines.
+
+Return only a one-line confirmation of what was added or changed."
+)
 ```
 
-**Whiteboard file doesn't exist on Desktop:**
+**You are responsible for composing the prompt with all the details.** The
+task worker has no prior context — it only knows what you put in the prompt.
+Include the date, source, what happened, and what to do instead. Be specific.
+
+Triggers for writing — fire the `Task` tool whenever:
+
+- **You hit an error and figure out why.** Log it immediately. Don't wait.
+- **The user corrects you.** Log what you did and what they wanted instead.
+- **You catch your own mistake.** Log it. Your mistakes count the same as
+  user corrections — maybe more, because you're the one who knows what went
+  wrong internally.
+- **You try something and it fails.** Log the approach and why it didn't work
+  so you don't repeat it.
+- **You try something and it works well.** Log the pattern.
+
+You can still **re-read the napkin mid-task** directly when you're about to do
+something you've gotten wrong before. Reading is fine in the main session —
+only writes get delegated.
+
+The napkin is a living document. Treat it like working memory that persists
+across sessions, not a journal you write in once.
+
+## What to Log
+
+Log anything that would change your behavior if you read it next session:
+
+- **Your own mistakes**: wrong assumptions, bad approaches, misread code,
+  failed commands, incorrect fixes you had to redo.
+- **User corrections**: anything the user told you to do differently.
+- **Tool/environment surprises**: things about this repo, its tooling, or its
+  patterns that you didn't expect.
+- **Preferences**: how the user likes things done — style, structure, process.
+- **What worked**: approaches that succeeded, especially non-obvious ones.
+
+Be specific. "Made an error" is useless. "Assumed the API returns a list but
+it returns a paginated object with `.items`" is actionable.
+
+## Napkin Maintenance
+
+Maintenance is handled by the task worker as part of each write. The Task tool
+prompt above instructs the task worker to consolidate when the file exceeds 150
+lines. You do not need to do maintenance yourself.
+
+If you notice the napkin is getting noisy during a session-start read, you
+can fire a dedicated maintenance Task:
 
 ```
-It looks like we haven't started a napkin yet. Want me to open one for you?
+Task(
+  description="Consolidate napkin",
+  prompt="Read `.opencode/napkin.md` and consolidate it:
+- Merge redundant entries into single rules.
+- Promote repeated corrections to User Preferences.
+- Remove entries now captured as top-level rules.
+- Archive resolved or outdated notes.
+- Keep total length under 200 lines of high-signal content.
+
+Return a one-line summary of what changed."
+)
 ```
 
----
+A 50-line napkin of hard-won rules beats a 500-line log of raw entries.
 
-## Important Notes
+## Example
 
-- The PNG interpretation is the **primary** channel. Multimodal models can read and interpret the base64 image data returned by the `view` tool.
-- The JSON clipboard data is **supplementary** — it provides precise text but does not capture freehand drawings.
-- Always check for the PNG first. If it isn't found, prompt the user to click "Share with Copilot."
-- If the clipboard doesn't have JSON data, proceed with the PNG alone.
-- The HTML template is located at `assets/napkin.html` relative to this SKILL.md file.
-- If the noob-mode skill is also active, use its risk indicator format (green/yellow/red) when requesting file or bash permissions.
+**Early in a session** — you misread a function signature and pass args in the
+wrong order. You catch it yourself. Log it:
+
+```markdown
+| 2026-02-06 | self | Passed (name, id) to createUser but signature is (id, name) | Check function signatures before calling, this codebase doesn't follow conventional arg ordering |
+```
+
+**Mid-session** — user corrects your import style. Log it:
+
+```markdown
+| 2026-02-06 | user | Used relative imports | This repo uses absolute imports from `src/` — always |
+```
+
+**Later** — you re-read the napkin before editing another file and use
+absolute imports without being told. That's the loop working.

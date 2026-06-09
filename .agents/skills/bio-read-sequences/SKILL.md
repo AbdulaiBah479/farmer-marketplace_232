@@ -5,34 +5,19 @@ tool_type: python
 primary_tool: Bio.SeqIO
 ---
 
-## Version Compatibility
-
-Reference examples tested with: BioPython 1.83+
-
-Before using code patterns, verify installed versions match. If versions differ:
-- Python: `pip show biopython` then `help(module.function)` to check signatures
-
-If code throws ImportError, AttributeError, or TypeError, introspect the installed
-package and adapt the example to match the actual API rather than retrying.
-
 # Read Sequences
 
 Read biological sequence data from files using Biopython's Bio.SeqIO module.
 
-**"Read sequences from a file"** → Parse file into a collection of SeqRecord objects with IDs, sequences, and annotations accessible.
-- Python: `SeqIO.parse()` or `SeqIO.read()` (BioPython)
-- R: `readDNAStringSet()` or `readAAStringSet()` (Biostrings)
-
 ## Required Import
 
-#### Core import
 ```python
 from Bio import SeqIO
 ```
 
 ## Core Functions
 
-### SeqIO.parse() - Multiple Records
+### SeqIO.parse() - Multiple Records (Iterator)
 Use for files with one or more sequences. Returns an iterator of SeqRecord objects.
 
 ```python
@@ -42,7 +27,7 @@ for record in SeqIO.parse('sequences.fasta', 'fasta'):
 
 **Important:** Always specify the format explicitly as the second argument.
 
-### SeqIO.read() - Single Record
+### SeqIO.read() - Single Record Only
 Use when file contains exactly one sequence. Raises error if zero or multiple records.
 
 ```python
@@ -58,7 +43,7 @@ seq = records['sequence_id'].seq
 ```
 
 ### SeqIO.index() - Large File Random Access
-Use for large files when random access is needed without loading everything into memory.
+Use for large files when you need random access without loading everything into memory.
 
 ```python
 records = SeqIO.index('large.fasta', 'fasta')
@@ -94,11 +79,6 @@ For maximum throughput on large files, use low-level parsers (3-6x faster than S
 
 ### SimpleFastaParser
 
-**Goal:** Parse large FASTA files at maximum speed without SeqRecord overhead.
-
-**Approach:** Use low-level tuple-based parser returning (title, sequence) strings.
-
-**Reference (BioPython 1.83+):**
 ```python
 from Bio.SeqIO.FastaIO import SimpleFastaParser
 
@@ -112,11 +92,6 @@ Returns `(title, sequence)` tuples as strings (no SeqRecord overhead).
 
 ### FastqGeneralIterator
 
-**Goal:** Parse large FASTQ files at maximum speed.
-
-**Approach:** Use low-level tuple-based parser returning (title, sequence, quality_string) strings.
-
-**Reference (BioPython 1.83+):**
 ```python
 from Bio.SeqIO.QualityIO import FastqGeneralIterator
 

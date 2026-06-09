@@ -1,166 +1,183 @@
 ---
 name: linkedin-profile-optimizer
-description: "High-intent expert for LinkedIn profile checks, authority building, and SEO optimization. Invoke to audit, rewrite, and enhance profiles for top 1% positioning."
-category: growth
-risk: safe
-source: self
-source_type: self
-date_added: "2026-04-13"
-author: WHOISABHISHEKADHIKARI
-tags: [linkedin, branding, career, growth, personal-brand]
-tools: [claude, cursor, gemini, antigravity]
+description: Optimize LinkedIn profile sections for maximum impact and conversions. Use when the user wants to improve their LinkedIn headline, about section, experience descriptions, or overall profile strategy.
 ---
 
-# LinkedIn Profile Optimizer & Authority Builder
+# LinkedIn Profile Optimizer
 
-## Overview
+Optimize all sections of a LinkedIn profile to attract ideal clients, establish authority, and drive conversions.
 
-Act as a **global LinkedIn strategist, profile optimizer, and career coach**. Your goal is to perform deep **profile checks and optimizations**, transforming local "CV-style" lists into international authority profiles that rank in the top 1% of their niche.
+## Before Optimizing
 
-This skill helps professionals (founders, lecturers, IT experts, and agritech builders) align their core identity, remove brand confusion, and attract global opportunities by synthesizing information from multiple sources like portfolios, CVs, and existing profile links.
+1. **Read context profiles**:
+   - `/context/voice-dna.json` - Maintain authentic voice
+   - `/context/icp.json` - Speak to target audience
+   - `/context/business-profile.json` - Understand offerings and positioning
 
-## When to Use This Skill
+2. **Ask for current profile** if not provided
 
-- Use when a user needs to optimize their **LinkedIn Profile** (Headline, About, Experience).
-- Use when a user needs a **Personal Brand Audit** or "roast" to identify weak credibility or generic wording.
-- Use when a user wants to **Rewrite Experience** sections with measurable impact and global standards.
-- Use when a user needs a **Content & Growth Strategy** to build authority and visibility.
-- Use when the user provides a **Portfolio Link** or **CV PDF** to enhance their professional presence.
+## Profile Sections to Optimize
 
-## Input Types
+### 1. Headline (220 characters max)
 
-This skill accepts and can process:
-- **LinkedIn Profile Links / Usernames**: Analyzing public profile data and positioning from full URLs or unique handles (e.g., `whoisabhishekadhikari`).
-- **CV / Resume (PDF/Text/Hosted)**: Converting traditional or hosted resumes into authority-driven LinkedIn profiles.
-- **Portfolio Links**: Extracting projects, visual proof, and technical skills from personal websites, GitHub, or Behance.
-- **Multiple Sources**: Synthesizing information from one or more links (e.g., LinkedIn + Portfolio + CV).
-- **Profile Content**: Enhancing existing "About" sections, headlines, or experience descriptions.
+**Formula Options:**
 
-## How It Works
+```
+[ROLE] | I help [WHO] achieve [RESULT] | [CREDIBILITY MARKER]
+```
 
-### Phase 0: Input Analysis & Enhancement
+```
+[RESULT YOU DELIVER] for [WHO] | [UNIQUE METHOD] | [SOCIAL PROOF]
+```
 
-Before proceeding to context gathering, analyze the provided input:
-- **If a LinkedIn Link or Username is provided**: Identify current headline and positioning.
-    - **Hallucination Prevention**: If only a username/handle is provided, you **MUST** verify you can access the profile using your browsing tool. If the profile is private, inaccessible, or your browsing tool is disabled, you must ask the user to provide the profile text or a full URL before proceeding with the audit.
-- **If a CV (PDF/Hosted) is provided**: Extract key roles, measurable achievements, and core skills.
-- **If a Portfolio Link is provided**: Identify core projects, technical stacks, and visual/creative authority.
-- **If Multiple Sources are provided**: Cross-reference data to ensure consistency and highlight the "Red Thread."
+```
+[IDENTITY] → [WHAT YOU DO] → [FOR WHOM]
+```
 
-### Phase 1: Context & Identity Gathering
+**Guidelines:**
+- Lead with value, not job title
+- Include keywords for search
+- Speak to your ICP's desires
+- Avoid buzzwords (ninja, guru, rockstar)
 
-Before optimizing, you must identify the user's **Core Identity**.
-If the user has multiple roles (e.g., Founder + Lecturer + IT Professional), you must determine the primary focus to avoid "brand confusion."
+**Examples:**
+- "Helping SaaS founders scale content without hiring | 500+ newsletters written | AI Writing Systems"
+- "Founder → $2M ARR | Now teaching what I learned | Subscribe to my newsletter ↓"
+- "I turn experts into thought leaders through content | Ghost Writer | 50M+ views"
 
-**Ask the user:**
-1. What is your primary career goal or "Mission"?
-2. Who is your target audience (Recruiters, Investors, Clients, Students)?
-3. What is your primary niche or industry focus (e.g., Agritech, IT Infrastructure)?
+### 2. About Section (2,600 characters max)
 
-### Phase 2: Profile Audit & "Roast"
+**Structure:**
 
-Critically evaluate the existing profile like a global recruiter, high-level investor, or potential high-ticket client.
+```
+[HOOK - First 2 lines are crucial, visible before "see more"]
 
-**Identify and point out:**
-- **Weak Credibility & Social Proof**: Lack of measurable results, generic praise in recommendations, or zero recent activity.
-- **Generic Wording**: Words like "passionate," "hardworking," or "expert" without verifiable evidence.
-- **Brand Confusion (Anchor Identity)**: Mixing too many unrelated roles (e.g., "DJ & Software Engineer") without a unifying narrative.
-- **Education/Experience Gaps**: Unexplained transitions or skills that don't match the reported experience levels.
-- **Conversion Drain (CTA Audit)**: Identifying profiles that fail to tell the visitor what to do next (e.g., no link in top card, no clear "Work with me" in About).
-- **Visual Brand Inconsistency**: Profile/Banner images that are low-quality, outdated, or don't align with the professional level claimed.
-- **Mobile Readability Check**: Headlines that cut off on mobile or paragraphs in "About" that are too dense for small screens.
-- **SEO & Searchability**: Identifying missing industry keywords in the Headline and About sections.
-- **Contact Info & Hygiene**: Identifying inactive emails, old website links, or missing contact methods.
+[THE PROBLEM - What your ICP struggles with]
 
-### Phase 3: Profile Optimization
+[YOUR STORY - Brief background that builds credibility]
 
-#### 1. Headline & About Section
-- **Headline**: Move from "Job Title at Company" → "Authority Statement + Value Proposition + Keywords."
-- **About**: Write a compelling narrative (hook, problem-solving, proof, call-to-action). 
-    - **SEO Intent Check**: Ensure primary keywords are in the first 2-3 lines.
-    - **Authenticity**: Avoid the "third person" style; keep it human and action-oriented.
+[YOUR SOLUTION - How you help]
 
-#### 2. Featured Section (Portfolio & Proof)
-- **Mandatory Call-to-Action**: Instruct the user to add their best work to the "Featured" section.
-- **Link & Post Integration**: 
-    - **Broken Link Check**: Ensure every link in the "Featured" section is active and leads to the correct destination.
-    - Add links to Portfolio, GitHub, or Case Studies.
-    - Feature high-performing LinkedIn posts that demonstrate authority or "Red Thread" identity.
-    - Ensure every featured item has a clear, descriptive title and thumbnail.
+[RESULTS/PROOF - What you've achieved for others]
 
-#### 3. Experience Section (The Global Standard)
-- Rewrite roles with **Action-Result** bullet points using the formula: **[Action Verb] [Metric/Task] to achieve [Impact/Result]**.
-- **Lecturers**: Focus on curriculum innovation, student impact, and research authority.
-- **Organization Leaders (President/VP)**: Highlight leadership, strategic vision, and ecosystem impact (e.g., CAN Federation, Jaycees).
-- **Technical Roles (Support/IT)**: Focus on problem-solving, system uptime, and scalability.
+[CTA - Clear next step]
 
-#### 4. Skills & SEO
-- **Identify Bulk Skills**: Remove generic fillers (e.g., "Teamwork", "Microsoft Office", "Communication") that add no competitive edge.
-- **Merge Low-Scope Skills**: Identify fragmented skills and merge them into high-authority clusters.
-    - *Example*: Merge "Data Entry" + "Excel" + "Admin" → **Operations & Data Strategy**.
-    - *Example*: Merge "HTML" + "CSS" + "JS" → **Full-Stack Engineering / UI Development**.
-- **Top 5 Strategic Skills**: Prioritize skills that align with the "Mission" and "Red Thread."
-- **Keyword Optimization**: Add high-intent keywords naturally to improve LinkedIn search visibility.
+[KEYWORDS - Natural keyword inclusion for search]
+```
 
+**Guidelines:**
+- First-person voice ("I" not "He/She")
+- Short paragraphs (2-3 lines)
+- Include specific numbers
+- Tell a story, not a resume
+- End with clear CTA
 
+### 3. Featured Section
 
-### Phase 4: Engagement & Content Strategy
+**Recommended order:**
+1. Lead magnet or newsletter signup
+2. Best-performing content
+3. Case study or testimonial
+4. Key product/service
 
-#### 1. Content Pillars
-- Suggest 3 core topics (pillars) the user should post about weekly to build **Authority, Credibility, and Trust**.
+**For each item:**
+- Custom image (1200x627px works best)
+- Compelling title
+- Clear value proposition
 
-#### 2. Strategic Engagement
-- Generate engagement responses in three styles:
-    - **Professional**: Insightful and value-driven.
-    - **Gen-Z / Impactful**: Short, punchy, and modern.
-    - **Osho-style / Reflective**: Calm, deep, and insightful.
+### 4. Experience Section
 
-## Examples
+**For each role:**
 
-### Example 1: Profile Verification Gate (Handle Only)
+```
+[COMPANY NAME] - [Headline that shows value]
 
-**Input**: `whoisabhishekadhikari`
+[1-2 sentence overview of role]
 
-**Agent Response**:
-> "I recognize the LinkedIn handle `whoisabhishekadhikari`. Before I perform an audit, I need to verify your current profile data. I have attempted to fetch your public profile [Link]. **However, if your profile is private or if you have made recent updates, please paste your 'About' section and your current headline here so I can ensure 100% accuracy and avoid hallucinating your details.**"
+Key achievements:
+• [Result with number]
+• [Result with number]
+• [Result with number]
 
-### Example 2: Full Profile Audit (With Provided Text)
+[Skills demonstrated]
+```
 
-**Input**: Handle `whoisabhishekadhikari` + the following profile text: "[User pastes About section describing roles as Founder, Lecturer, and IT Professional]"
+**Guidelines:**
+- Focus on outcomes, not responsibilities
+- Use numbers wherever possible
+- Include relevant keywords
+- Show progression and growth
 
-**Audit Analysis**:
-- **Identity**: Multi-faceted (Founder, Lecturer, IT Professional). Needs a "Red Thread" to unify these roles.
-- **Headline Recommendation**: *"IT Strategist & Agritech Founder | Transforming Agricultural Systems with Scalable Tech | Lecturer in Computer Science"*
+### 5. Skills Section
 
-### Example 3: Before (Local CV Style)
-> "Lecturer at ABC College. Teaching IT subjects. Interested in agriculture."
+**Strategy:**
+- Lead with most searchable/valuable skills
+- Get endorsements for top 3 skills
+- Remove irrelevant skills
+- Order matters for search
 
-### Example 4: After (Global Authority)
-> "IT Strategist & Agritech Founder | Transforming Agricultural Systems with Scalable Tech | Lecturer in Computer Science"
-> *Result: Clear authority, multiple roles unified by tech/agritech focus, keyword-optimized.*
+### 6. Recommendations
 
-## Best Practices
+**Provide templates for requesting:**
 
-- ✅ **Quantify Impact**: Use numbers, percentages, and dollar amounts wherever possible.
-- ✅ **Unify the Brand**: Find the "Red Thread" that connects diverse roles.
-- ✅ **Focus on CTA**: Every profile optimization should lead to a clear call-to-action.
-- ❌ **Avoid Buzzwords**: Don't use generic words like "passionate" or "expert" without proof.
+```
+Hey [Name],
 
-## Common Pitfalls
+I'm updating my LinkedIn and would love a recommendation from you.
 
-- **Problem**: "Brand Overlap" (User looks like a 'Jack of all trades, master of none').
-- **Solution**: Create a primary "Anchor Identity" and position secondary roles as "Supporting Expertise."
-- **Problem**: "Bulk Skill Dumping" (Listing 50+ generic, low-scope skills like "Teamwork" or "PowerPoint").
-- **Solution**: Identify and merge low-scope skills into high-authority clusters. Curate a focused list of 10-15 strategic skills.
+If you're willing, it would be helpful if you could mention:
+- [Specific project or result]
+- [How we worked together]
+- [Any transformation or outcome]
 
-## Limitations
+No pressure if you're busy - I appreciate you either way!
 
-- **Live Data**: This skill cannot browse the live, private LinkedIn backend; it relies on text provided, public URLs, or PDF uploads.
-- **Direct Messaging**: This skill provides strategy for outreach but cannot send messages on behalf of the user.
-- **Visual Design**: While it provides brand guidance, it does not generate profile/banner images directly (suggest using an AI image generation tool or professional designer).
+[Your name]
+```
 
-## Related Skills
+## Optimization Process
 
-- `@copywriting` - For deep narrative writing and conversion-focused text.
-- `@jobgpt` - For specific job application workflows and interview prep.
-- `@content-creator` - For advanced content scheduling and ideation across platforms.
+### Step 1: Gather Information
+
+Ask:
+1. "What's your current headline and about section?"
+2. "What's the main action you want profile visitors to take?"
+3. "What's your biggest credibility marker or achievement?"
+4. "What keywords should you rank for?"
+
+### Step 2: Create Optimized Versions
+
+For each section:
+- Write optimized version
+- Explain strategic choices
+- Offer alternatives
+
+### Step 3: Review Checklist
+
+- [ ] Headline communicates value in < 220 characters
+- [ ] About section hooks in first 2 lines
+- [ ] Clear CTA present
+- [ ] Keywords included naturally
+- [ ] Voice matches voice DNA
+- [ ] Speaks directly to ICP
+- [ ] Social proof included
+- [ ] Featured section utilized
+
+## Output Format
+
+Present each optimized section with:
+
+1. **The optimized content** (ready to copy)
+2. **Why these choices** (strategic reasoning)
+3. **Alternative options** (2-3 variations)
+
+## Common Mistakes to Fix
+
+- Leading with job title instead of value
+- Writing in third person
+- No clear CTA
+- Walls of text
+- Missing keywords
+- Generic descriptions
+- No social proof
+- Outdated information

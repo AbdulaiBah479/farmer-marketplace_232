@@ -1,193 +1,210 @@
 ---
-name: chief-customer-officer-advisor
-description: >
-  Customer leadership advisor for Chief Customer Officers on customer
-  experience strategy, retention and expansion, voice-of-customer programs,
-  CX organizational design, and customer outcomes accountability. Use when
-  defining a CX strategy, scoring CX maturity, planning churn interventions,
-  designing a VoC program, or preparing the customer section of a board update.
-license: MIT + Commons Clause
+name: "chief-customer-officer-advisor"
+description: "Chief Customer Officer advisory for startups: retention decomposition (gross retention vs NRR honesty, churn root-cause taxonomy), customer segmentation strategy (differential investment across tiers + ICP fit scoring), CS team coverage model (pooled vs named CSM thresholds + ratio math), and CS team org evolution (CS vs Support vs AM distinctions). Use when designing retention strategy, segmenting customers for differential investment, sizing CS team, or sequencing CS hires. Strategic only — does not duplicate engineering/business-growth tactical skills."
+license: MIT
 metadata:
   version: 1.0.0
-  author: borghei
-  category: executive-leadership
-  domain: c-level-advisor
-  updated: 2026-05-27
-  tags: [customer-experience, retention, expansion, voc, csm, churn, nps]
+  author: Alireza Rezvani
+  category: c-level
+  domain: chief-customer-officer-leadership
+  updated: 2026-05-13
+  python-tools: retention_decomposition_analyzer.py, customer_segmentation_designer.py, cs_coverage_calculator.py
+  frameworks: retention-decomposition, customer-segmentation, cs-coverage-model, cs-team-org
 ---
 
 # Chief Customer Officer Advisor
 
-The agent acts as a fractional Chief Customer Officer, providing customer
-strategy, retention/expansion, and voice-of-customer guidance grounded in
-SaaS retention benchmarks, modern CX program patterns, and the operational
-realities of post-sale teams.
+Strategic customer leadership for startup CCOs and founders without one. **Four decisions, no generic CS survey:**
 
-## When to use this skill
+1. **What's our retention architecture — and is gross retention vs NRR honest?** — decomposition into gross retention, contraction, expansion + churn root-cause taxonomy
+2. **How do we segment customers for differential investment?** — tier design + ICP fit scoring + investment-per-segment math
+3. **What's the CS team's coverage model — and when do we go pooled vs named?** — coverage ratio calculator + transition thresholds
+4. **What CS role do we hire next?** — stage-to-role map (CS ≠ Support ≠ AM ≠ Implementation)
 
-- Defining the **CX strategy** for the next 12–24 months (segments, outcomes, scorecards)
-- Designing the **CX operating model** (Sales / CS / Support / Services boundaries)
-- Scoring **CX maturity** across strategy, segmentation, journey, voice, ops, talent
-- Planning **churn interventions** for a portfolio of at-risk accounts
-- Designing or refreshing the **voice-of-customer (VoC) program**
-- Defining the **net revenue retention (NRR)** thesis and the activities behind it
-- Preparing the **customer section of the board deck** (NRR, NPS, GRR, churn drivers, asks)
+This skill does **not** cover tactical CS implementation. For health-score tooling, CRM workflows, NPS survey infrastructure, or onboarding automation, see `business-growth/customer-success-management/` and adjacent tactical skills.
 
-## Inputs the advisor expects
+## Keywords
 
-- Company stage, ARR, segment mix (Enterprise / Mid-Market / SMB), motion (PLG / sales-led)
-- Trailing 12-month NRR, GRR, logo churn, expansion rate by segment
-- Existing CS structure: CSM ratios, books, comp model, scope (technical, commercial)
-- Existing health-score model and pipeline of at-risk accounts
-- VoC instruments in place (NPS, CSAT, CES, in-app surveys, win/loss, churn interviews)
-- Top frictions: from CEO, GTM partner (CRO), product, support, customers
+CCO, chief customer officer, customer success, retention strategy, gross retention, net retention, NRR, GRR, logo retention, dollar retention, churn, contraction, expansion, downsell, customer lifetime value, CLV, LTV, time-to-value, TTV, time-to-first-value, customer health score, NPS, CSAT, customer effort score, segmentation, ICP fit, tier design, low-touch, high-touch, tech-touch, pooled CSM, named CSM, customer success manager, account manager, AM, implementation manager, IM, customer success operations, CS ops, book of business, ratio, ARR-per-CSM, customer marketing, advocacy, expansion playbook, voice of customer, VoC
+
+## Quick Start
+
+```bash
+# Decision A: Decompose retention honestly
+python scripts/retention_decomposition_analyzer.py                          # embedded B2B SaaS sample
+python scripts/retention_decomposition_analyzer.py path/to/cohorts.json
+
+# Decision B: Design customer segmentation + differential investment
+python scripts/customer_segmentation_designer.py                            # embedded 4-tier sample
+python scripts/customer_segmentation_designer.py path/to/customers.json
+
+# Decision C: Calculate CS team coverage model
+python scripts/cs_coverage_calculator.py                                    # embedded 350-customer sample
+python scripts/cs_coverage_calculator.py path/to/book.json
+```
+
+## Key Questions (ask these first)
+
+- **What's your GROSS retention rate?** (Not NRR — NRR hides churn behind expansion. Ask gross first.)
+- **What's the #1 reason customers leave?** (If you can't name it, you don't understand churn.)
+- **What's the median time-to-value (TTV) by segment?** (Long TTV in low tier = misfit; long TTV in high tier = onboarding broken.)
+- **Which customer would you fire today?** (If "none" — your segmentation is broken; some accounts cost more than they earn.)
+- **What's your ARR-per-CSM ratio, and what's the model — pooled or named?** (Stage and ACV determine the right answer.)
+- **Is CS in your comp plan, and how is it different from Sales comp?** (CS comp on retention; misalignment is a leading indicator of failure.)
+
+## Core Responsibilities
+
+### 1. Retention Decomposition
+
+**The trap:** "Our NRR is 115%, retention is great."
+
+The truth: NRR = Gross Retention − Contraction + Expansion. A 115% NRR with 85% gross retention is a leaky bucket masked by upsells. A 115% NRR with 98% gross retention is a healthy product.
+
+**Mandatory decomposition every quarter:**
+
+| Metric | What it measures | Health threshold (B2B SaaS) |
+|---|---|---|
+| **Gross Retention (GRR)** | $ from existing customers minus churn + contraction | ≥ 90% at growth stage; ≥ 95% at scale |
+| **Logo Retention** | % of customers who renewed | ≥ 85% at growth; ≥ 90% at scale |
+| **Net Revenue Retention (NRR)** | GRR + expansion | ≥ 110% at growth; ≥ 120% at scale |
+| **Contraction** | $ from existing customers reducing seats/usage | < 5% annually |
+| **Expansion** | $ from existing customers growing | 15-25% annually at healthy |
+
+**Run** `retention_decomposition_analyzer.py` with cohort data for honest decomposition + churn root-cause categorization.
+
+See `references/retention_decomposition.md` for the 7-category churn taxonomy + leading indicator playbook.
+
+### 2. Customer Segmentation
+
+**The trap:** "Every customer is important."
+
+The reality: customers exist on a spectrum of ICP fit × strategic value. Treating them identically wastes CS capacity and ignores expansion opportunity.
+
+**4-tier framework (B2B SaaS baseline):**
+
+| Tier | ARR range | Coverage | Investment per account/yr |
+|---|---|---|---|
+| **Strategic** | Top 5%, often $100K+ | Named CSM + executive sponsor | $20K-50K |
+| **Enterprise** | Next 15-20%, $20K-100K | Named CSM | $5K-15K |
+| **Mid-market** | Next 30-40%, $5K-20K | Pooled CSM + automation | $1K-3K |
+| **SMB / Long-tail** | Bottom 40-50%, <$5K | Tech-touch + self-serve | $50-500 |
+
+**Run** `customer_segmentation_designer.py` to design segmentation tiers + differential investment + ICP fit scoring.
+
+See `references/customer_segmentation_strategy.md` for ICP fit framework, tier transition triggers, and the kill list (customers below the investment floor).
+
+### 3. CS Team Coverage Model
+
+**The trap:** "Hire one CSM per X customers" with a single ratio across all segments.
+
+The reality: coverage model depends on segment, ACV, and complexity. Pooled CSM works for low-touch; named CSM is required for strategic accounts.
+
+**Coverage models:**
+
+| Model | Best for | Ratio (ARR-per-CSM) | Trade-offs |
+|---|---|---|---|
+| **Tech-touch (no human)** | SMB, low ACV | $5M-15M+ | Automation cost; cannot save high-stakes deals |
+| **Pooled CSM** | Mid-market | $2M-5M | Lower cost; less account intimacy |
+| **Named CSM** | Enterprise | $500K-2M | Higher cost; deeper relationships |
+| **Named CSM + exec sponsor** | Strategic | $300K-1M | Highest cost; reserved for top accounts |
+
+**Run** `cs_coverage_calculator.py` with book characteristics to calculate required CSM headcount and identify transition thresholds.
+
+See `references/cs_coverage_model.md` for ratios, ramp curves, and the "when to add a manager" trigger.
+
+### 4. CS Team Org Evolution
+
+**The wrong question:** "Should we hire a CSM or a Support engineer?"
+**The right question:** "What's the next customer outcome we're failing to deliver, and what role unblocks that?"
+
+**Critical distinctions (founders confuse these):**
+
+| Role | Owns | Does NOT own |
+|---|---|---|
+| Customer Support | Reactive issue resolution (ticket queue) | Renewal, expansion, success outcomes |
+| Customer Success Manager | Proactive value realization + renewal + expansion lead | Day-to-day tickets, implementation |
+| Account Manager | Commercial relationship + expansion close | Day-to-day success, technical depth |
+| Implementation Manager | Onboarding + go-live | Ongoing success after launch |
+| CS Operations | Tooling, data, analytics, playbooks | Direct customer relationships |
+| Customer Marketing | Advocacy, case studies, references | 1:1 customer relationships |
+
+See `references/cs_team_org_evolution.md` for stage-to-role map (seed → late-stage) + the AM-vs-CSM split decision.
 
 ## Workflows
 
-### Workflow 1 — Score CX maturity
-
-1. Pull current CX state across 6 dimensions (strategy, segmentation, journey,
-   voice, operations, talent).
-2. Run `cx_maturity_scorer.py` against the populated JSON.
-3. Translate prioritized gaps into a quarterly CX OKR.
+### Workflow 1: Quarterly Retention Review (4 hours)
+**Goal:** Decompose retention honestly + identify top-3 churn drivers.
 
 ```bash
-python3 chief-customer-officer-advisor/scripts/cx_maturity_scorer.py \
-  --input cx_state.json --format markdown
+# 1. Pull cohort data: closed/won by quarter for last 8 quarters
+python scripts/retention_decomposition_analyzer.py cohorts.json
+# 2. Review GRR / NRR / contraction / expansion separately
+# 3. For each cohort showing GRR < 90%: identify churn root cause (7-category taxonomy)
+# 4. Cross-check with cs-cro-advisor: does the expansion math add up?
+# 5. Cross-check with cs-cpo-advisor: are product gaps driving churn?
+# 6. Output: top-3 leakage points + 90-day mitigation plan
 ```
 
-### Workflow 2 — Plan churn interventions for the portfolio
-
-1. Pull at-risk account list with health, ARR, segment, risk drivers, last touch.
-2. Run `churn_intervention_planner.py` to prioritize and assign interventions
-   matched to risk type and tier.
-3. Use output for the weekly save-room and the CSM dashboards.
+### Workflow 2: Customer Segmentation Audit (1 day)
+**Goal:** Re-segment customer base + reset differential investment.
 
 ```bash
-python3 chief-customer-officer-advisor/scripts/churn_intervention_planner.py \
-  --input at_risk_accounts.json --format markdown
+# 1. Build customers.json with ARR, tenure, ICP fit signals
+python scripts/customer_segmentation_designer.py customers.json
+# 2. Identify segment migration (mid-market → enterprise upgrades, downsells)
+# 3. Identify kill list (customers below investment floor)
+# 4. Output: new tier assignment + investment-per-tier + kill list for sales review
 ```
 
-### Workflow 3 — Design or refresh the VoC program
-
-1. Capture the current state of feedback instruments, cadences, owners, action loops.
-2. Run `voc_program_designer.py` to recommend a target VoC architecture and a
-   12-month rollout sequence.
-3. Use output to align CX, product, marketing, and support on a shared VoC plan.
+### Workflow 3: CS Team Sizing (1 week)
+**Goal:** Size the CS team aligned to book composition + coverage model.
 
 ```bash
-python3 chief-customer-officer-advisor/scripts/voc_program_designer.py \
-  --input voc_state.json --format markdown
+# 1. Build book.json with current customer base + planned acquisition
+python scripts/cs_coverage_calculator.py book.json
+# 2. Calculate required CSM headcount by segment
+# 3. Compare to current team; identify gaps
+# 4. Cross-check with cs-chro-advisor on comp + leveling
+# 5. Cross-check with cs-cfo-advisor on the cost
+# 6. Output: 12-month hiring plan + role sequence
 ```
 
-## Decision frameworks
+### Workflow 4: CS Team Roadmap (1 week)
+**Goal:** Sequence next 18 months of CS hires aligned to customer outcomes.
 
-### What does the CCO own?
+1. List top 5 customer outcomes the company is failing to deliver
+2. Map each outcome to the role that unblocks it (CSM / AM / IM / Support / CS Ops)
+3. Sequence hires; respect prerequisite order
+4. Cross-check with cs-chro-advisor
 
-Pick clearly. Most CCO scope debates stem from ambiguous ownership.
+## Output Standards
 
-| Function | Default ownership |
-|----------|-------------------|
-| Customer Success | CCO |
-| Support / Customer Support | CCO (or VP Support reporting in) |
-| Onboarding / Services | CCO (or separate Services GM in larger orgs) |
-| Renewals | Usually CCO; sometimes CRO |
-| Expansion (cross-sell / upsell) | Split: CCO on usage-driven; CRO on net-new product lines |
-| VoC program | CCO |
-| Customer marketing (advocacy, references, community) | Often CCO; sometimes CMO |
-| Customer Education / Training | CCO |
+```
+**Bottom Line:** [one sentence — decision and rationale]
+**The Decision:** [one of: retention | segmentation | coverage | next hire]
+**The Evidence:** [numbers from the tool, not adjectives]
+**How to Act:** [3 concrete next steps]
+**Your Decision:** [the call only the founder can make]
+```
 
-When the CRO and CCO both report to CEO, the renewals + expansion question
-is the friction point. Resolve it explicitly; don't leave it to a quarterly
-food fight.
+## Adjacent Skills
 
-### Segmentation that earns its keep
-
-A useful segmentation is one your motion actually differentiates on:
-
-- **Enterprise:** named CSM, technical CSM, executive sponsor, quarterly business review
-- **Mid-Market:** pooled CSM, scheduled check-ins, customer scorecard
-- **SMB / PLG:** digital-first; in-product activation; periodic outreach on milestones
-
-If you've defined "Enterprise" but you treat all customers identically,
-your segmentation is theater. Tie segments to:
-- CSM coverage model + ratio
-- Engagement cadence
-- Services package
-- Health-score sensitivity
-
-### The right CSM coverage ratio
-
-A rough guide (highly company-dependent):
-
-| Segment | ARR per CSM (USD) | Accounts per CSM |
-|---------|-------------------|------------------|
-| Enterprise high-touch | $4M–$10M | 10–25 |
-| Mid-Market | $2M–$5M | 30–80 |
-| SMB / Pooled | $1M–$2M | 200–500 |
-| PLG / Tech-touch | $5M+ | 1000+ |
-
-If your ratio is far above the band, expect churn to creep up; far below,
-your CS unit economics will hurt margin. Either way, name the choice
-explicitly.
-
-### What drives NRR (and what doesn't)
-
-NRR is the single most predictive metric of long-term outcomes. Drivers:
-
-- **Onboarding-to-first-value time** (every week of delay = ~1–2% NRR drag at scale)
-- **Adoption depth** in the first 90 days
-- **Feature/usage-driven expansion paths**
-- **Pricing model alignment with value** (per-seat works when seats grow; consumption when usage grows)
-- **Executive engagement** (top 20% of customers)
-- **Renewal motion discipline** (90/60/30 day playbook, not last-minute fire drill)
-
-Things often credited for NRR that don't move the needle:
-- One-off save offers (mask the issue, don't fix it)
-- NPS surveys without action loops
-- More CSM headcount without better book design
-
-## Common engagements
-
-### "Help me make the case for a separate CS org under CCO"
-1. Quantify the current friction: cycle time on renewals, churn-driver concentration, customer NPS gap by stage.
-2. Show the cost of inaction (NRR trajectory) and the expected delta.
-3. Propose the new operating model with RACI for the Sales–CS–Support handoff.
-4. Stage the rollout: pilot in 1 segment for 1 quarter; expand based on results.
-
-### "Our NPS is fine but churn is rising"
-1. Investigate the NPS sampling: who responded? who didn't? exec sponsors vs daily users?
-2. Look at usage and adoption — drop in active users almost always precedes churn.
-3. Pull the last 20 churn interviews; tag the drivers; concentrate on the top 3.
-4. Pilot a save program targeting the most common driver before expanding.
-
-### "Help me build the CCO board section"
-1. NRR / GRR for the trailing quarter + 4-quarter trend.
-2. NPS (relationship + transactional) with segment breakdown.
-3. Top 3 churn drivers, with a counter-action and an owner.
-4. Top 3 expansion drivers and their adoption rate.
-5. Asks: one budgetary, one organizational, one priority alignment.
-
-## Anti-patterns to avoid
-
-- **Customer-first as a slogan.** Without scorecards and consequences, it's marketing copy.
-- **CSM as the universal solvent.** CSMs are not free; pair them to the right segment, not every customer.
-- **Health-score voodoo.** A 17-component health score that no one understands rots. Start with 4–6 components; tune.
-- **VoC without action loops.** Surveying customers without closing the loop trains them not to respond.
-- **Renewals as a finance task.** Renewals are a strategic moment; insist on a 90/60/30 motion.
-- **Expansion as cross-sell-only.** Usage-driven expansion is durable; cross-sell is volatile.
+- `../cro-advisor/` — Revenue math, NRR, expansion comp (CCO owns customer experience; CRO owns revenue math; clean split)
+- `../cpo-advisor/` — Product strategy, JTBD (CCO surfaces product gaps; CPO decides roadmap)
+- `../cmo-advisor/` — Customer marketing, advocacy, references
+- `../cfo-advisor/` — CS team cost, retention-impact-on-revenue math
+- `../chro-advisor/` — CS team hiring + leveling
+- `../../../business-growth/` — Tactical CS execution: health scores, CRM workflows, onboarding tooling
 
 ## References
 
-- `references/customer-experience-strategy.md` — CX strategy framing, segmentation, scorecards
-- `references/retention-and-expansion-frameworks.md` — NRR thesis, save programs, expansion motions
-- `references/voice-of-customer-program.md` — VoC architecture, action loops, instruments
+- [retention_decomposition.md](references/retention_decomposition.md) — GRR vs NRR honest math + 7-category churn taxonomy + leading indicator playbook
+- [customer_segmentation_strategy.md](references/customer_segmentation_strategy.md) — 4-tier framework + ICP fit scoring + tier transition triggers + kill list criteria
+- [cs_coverage_model.md](references/cs_coverage_model.md) — Coverage model decision (tech-touch / pooled / named / named+exec) + ratio benchmarks + manager-trigger
+- [cs_team_org_evolution.md](references/cs_team_org_evolution.md) — Stage-to-role map + 6-role definition table (CSM ≠ Support ≠ AM ≠ IM ≠ CS Ops ≠ Customer Marketing) + AM-vs-CSM split decision + anti-patterns
 
-## Related skills
+---
 
-- `business-growth/customer-success-manager` — operational CSM tactics
-- `business-growth/churn-prevention` — execution of save programs
-- `c-level-advisor/cmo-advisor` — customer marketing alignment
-- `c-level-advisor/cro-advisor` — renewals + expansion boundary
-- `c-level-advisor/cpo-advisor` — feedback loop to product
-- `product-team/user-research` — interview frameworks for churn / expansion
+**Version:** 1.0.0
+**Status:** Production Ready
+**Disclaimer:** Retention benchmarks vary significantly by ACV, segment, and industry. This skill provides B2B SaaS-baseline guidance; consumer SaaS, marketplaces, and hardware all have materially different retention math.

@@ -1,283 +1,298 @@
 ---
 name: contract-review
-description: >
-  Contract review assistant analyzing agreements against playbooks.
-  GREEN/YELLOW/RED severity. Use when reviewing vendor contracts,
-  SaaS agreements, service agreements, or generating redline suggestions.
-license: MIT + Commons Clause
+description: Analyze and red-flag contracts systematically, identifying risks, unfavorable terms, and negotiation opportunities
+license: MIT
 metadata:
+  author: ClawFu
   version: 1.0.0
-  author: The Glass Room
-  category: legal
-  domain: contract-analysis
-  updated: 2026-04-10
-  tags: [contract-review, redline, negotiation, risk-assessment, legal]
+  mcp-server: "@clawfu/mcp-skills"
 ---
-> **⚠️ EXPERIMENTAL** — This skill is provided for educational and informational purposes only. It does NOT constitute legal advice. All responsibility for usage rests with the user. Consult qualified legal professionals before acting on any output.
 
 # Contract Review
 
-Automated contract review tools that analyze agreements against organizational playbooks, classify clause risk with GREEN/YELLOW/RED severity, and generate prioritized redline suggestions with fallback positions.
+> Systematically analyze contracts to identify risks, unfavorable clauses, and negotiation opportunities before signing.
 
----
+## When to Use This Skill
 
-## Table of Contents
+- Reviewing vendor/SaaS contracts
+- Analyzing partnership agreements
+- Evaluating client service agreements
+- Reviewing employment contracts
+- Due diligence on M&A documents
 
-- [Tools](#tools)
-  - [Contract Analyzer](#contract-analyzer)
-  - [Redline Generator](#redline-generator)
-- [Reference Guides](#reference-guides)
-- [Workflows](#workflows)
-  - [Standard Contract Review](#standard-contract-review)
-  - [Rapid Risk Triage](#rapid-risk-triage)
-- [Troubleshooting](#troubleshooting)
-- [Success Criteria](#success-criteria)
-- [Scope & Limitations](#scope--limitations)
-- [Anti-Patterns](#anti-patterns)
-- [Tool Reference](#tool-reference)
+## Methodology Foundation
 
----
+Based on **legal contract analysis frameworks** combined with:
+- Risk assessment matrices
+- Common clause libraries
+- Industry-standard benchmarks
+- Negotiation leverage analysis
 
-## Tools
+## What Claude Does vs What You Decide
 
-### Contract Analyzer
+| Claude Does | You Decide |
+|-------------|------------|
+| Identifies risky clauses | Risk tolerance level |
+| Flags unusual terms | What to negotiate |
+| Compares to standards | Final accept/reject |
+| Suggests alternatives | Business trade-offs |
+| Summarizes obligations | Legal counsel needs |
 
-Analyzes contract text files for clause types, missing standard clauses, and risk indicators.
+## Instructions
 
-```bash
-# Analyze a contract file
-python scripts/contract_analyzer.py contract.txt
+### Step 1: Contract Overview
 
-# JSON output for pipeline integration
-python scripts/contract_analyzer.py agreement.md --json
+**Initial Assessment:**
+| Element | What to Capture |
+|---------|-----------------|
+| Parties | Who's bound |
+| Type | Service, license, partnership |
+| Term | Duration, renewal |
+| Value | Total commitment |
+| Jurisdiction | Governing law |
 
-# Save analysis to file
-python scripts/contract_analyzer.py contract.txt --output analysis.json --json
+### Step 2: Risk Categories
+
+**Clause Risk Matrix:**
+| Category | Low Risk | Medium Risk | High Risk |
+|----------|----------|-------------|-----------|
+| **Liability** | Mutual caps | Uncapped | Unlimited indemnity |
+| **Term** | Monthly | Annual | Multi-year auto-renew |
+| **Data** | Standard DPA | Custom terms | Broad usage rights |
+| **IP** | License only | Work for hire | Assignment |
+| **Termination** | 30-day notice | For cause only | Penalties |
+
+### Step 3: Clause-by-Clause Analysis
+
+**Key Clauses to Review:**
+
+**Payment Terms:**
+- Net terms (30/60/90)
+- Late payment penalties
+- Price escalation clauses
+- Audit rights
+
+**Liability & Indemnification:**
+- Cap on liability (multiple of fees)
+- Carve-outs (willful misconduct, IP)
+- Indemnification scope
+- Insurance requirements
+
+**Termination:**
+- For convenience vs. for cause
+- Notice periods
+- Transition assistance
+- Data return/destruction
+
+**IP & Data:**
+- Ownership of deliverables
+- License scope
+- Data usage rights
+- Confidentiality obligations
+
+### Step 4: Benchmarking
+
+**Industry Standards:**
+| Clause | Typical | Favorable | Unfavorable |
+|--------|---------|-----------|-------------|
+| Liability cap | 12 mo fees | 24 mo fees | Uncapped |
+| Payment | Net 30 | Net 45 | Net 15 |
+| Termination | 30 days | 60 days | 90+ days |
+| Auto-renewal | 30-day opt-out | 60-day opt-out | 90-day opt-out |
+
+### Step 5: Generate Recommendations
+
+**Output Structure:**
+1. Executive summary (2-3 sentences)
+2. Risk rating (Low/Medium/High/Critical)
+3. Red flags (must address)
+4. Yellow flags (should negotiate)
+5. Green flags (acceptable)
+6. Recommended redlines
+7. Questions for counsel
+
+## Examples
+
+### Example 1: SaaS Vendor Contract Review
+
+**Input:**
+```
+Review this SaaS contract summary:
+- 3-year term with 90-day auto-renewal notice
+- Unlimited liability for data breaches
+- Vendor can change pricing with 30-day notice
+- Data can be used for "service improvement"
+- Termination only for material breach
 ```
 
-**What it detects:**
-- Clause types: Limitation of Liability, Indemnification, IP, Data Protection, Term & Termination, Governing Law, Reps & Warranties, Force Majeure, Confidentiality, Payment Terms
-- Missing standard clauses against a baseline checklist
-- Risk indicators: uncapped liability, perpetual terms, unilateral indemnification, automatic renewal without opt-out, broad IP assignment, unlimited audit rights
+**Output:**
+```
+## Contract Review: SaaS Vendor Agreement
 
-**Risk Classification:**
-
-| Level | Meaning | Action |
-|-------|---------|--------|
-| RED | Deal-breaker risk | Must negotiate before signing |
-| YELLOW | Material concern | Should negotiate, may accept with mitigation |
-| GREEN | Standard or favorable | Acceptable as-is |
+### Risk Rating: HIGH
 
 ---
 
-### Redline Generator
+### Executive Summary
 
-Takes contract analysis JSON and generates formatted redline suggestions with priority tiers.
+This contract heavily favors the vendor with limited termination rights, uncapped liability exposure for you, and one-sided price increase provisions. Recommend significant negotiation before signing.
 
-```bash
-# Generate redlines from analysis
-python scripts/contract_analyzer.py contract.txt --json --output analysis.json
-python scripts/redline_generator.py analysis.json
+---
 
-# JSON output
-python scripts/redline_generator.py analysis.json --json
+### Red Flags (Must Address)
 
-# Save redlines to file
-python scripts/redline_generator.py analysis.json --output redlines.md
+| Clause | Issue | Risk | Recommendation |
+|--------|-------|------|----------------|
+| **Auto-Renewal** | 90-day notice for 3-year contract | Lock-in risk | Reduce to 30-60 days |
+| **Pricing** | Vendor can change with 30-day notice | Budget risk | Cap increases at 5%/year or CPI |
+| **Termination** | Material breach only | Lock-in risk | Add termination for convenience with notice |
+| **Liability** | Unlimited for data breaches | Financial risk | Cap at 24 months of fees |
+
+---
+
+### Yellow Flags (Should Negotiate)
+
+| Clause | Issue | Recommendation |
+|--------|-------|----------------|
+| **Data Usage** | "Service improvement" is vague | Define scope, exclude training AI |
+| **Term Length** | 3 years is long | Request 1-year with renewal option |
+| **SLA** | None mentioned | Require 99.9% uptime with credits |
+
+---
+
+### Green Flags (Acceptable)
+
+- Standard confidentiality provisions
+- Reasonable IP license terms
+- Clear support response times
+
+---
+
+### Recommended Redlines
+
+**Priority 1 (Deal Breakers):**
+```
+Section 8.2: Change "90 days" to "30 days"
+Section 12.1: Add "and termination for convenience
+              with 60 days written notice"
+Section 14.3: Add "not to exceed 24 months of fees
+              paid under this Agreement"
 ```
 
-**Output includes:**
-- Priority tier (Must-Have / Should-Have / Nice-to-Have)
-- Preferred redline language
-- Rationale for each change
-- Fallback position if counterparty rejects
-- Negotiation notes
-
-**Priority Tiers:**
-
-| Tier | Label | Description |
-|------|-------|-------------|
-| 1 | Must-Have | Deal-breakers; walk away if rejected |
-| 2 | Should-Have | Strong preferences; push hard but negotiable |
-| 3 | Nice-to-Have | Concession candidates; trade for Tier 1-2 wins |
-
----
-
-## Reference Guides
-
-### Clause Analysis Guide
-`references/clause_analysis_guide.md`
-
-Deep reference covering 8+ clause types:
-- Limitation of Liability (cap types, carveouts, consequential damages)
-- Indemnification (mutuality, scope, procedure)
-- IP (ownership, licenses, work-for-hire, feedback)
-- Data Protection (DPA, sub-processors, breach notification, transfers)
-- Term & Termination (auto-renewal, cure periods, transition)
-- Governing Law (jurisdiction, arbitration, jury waiver)
-- Representations & Warranties
-- Force Majeure
-
-### Negotiation Playbook
-`references/negotiation_playbook.md`
-
-Negotiation priority framework with:
-- Tier 1 deal-breakers and walkaway criteria
-- Tier 2 strong preferences with trading strategies
-- Tier 3 concession candidates for strategic give-backs
-- Redline format template
-- Common negotiation pitfalls
-
----
-
-## Workflows
-
-### Standard Contract Review
-
-1. **Ingest** -- Save contract as `.txt` or `.md` file
-2. **Analyze** -- Run `contract_analyzer.py` with `--json` flag
-3. **Review findings** -- Check RED items first, then YELLOW
-4. **Generate redlines** -- Run `redline_generator.py` on analysis output
-5. **Prioritize** -- Focus on Must-Have redlines, prepare fallbacks for Should-Have
-6. **Send to counsel** -- Attach analysis and redlines for final review
-
-### Rapid Risk Triage
-
-1. Run `contract_analyzer.py` in text mode for quick scan
-2. If any RED findings: escalate immediately to legal counsel
-3. If YELLOW only: schedule review within 48 hours
-4. If all GREEN: proceed with standard approval workflow
-
----
-
-## Troubleshooting
-
-| Problem | Cause | Solution |
-|---------|-------|----------|
-| `Error: File not found` | Contract file path is incorrect or file does not exist | Verify the file path; use absolute paths if relative paths fail |
-| No clauses detected | Contract uses unusual formatting or non-standard clause headers | Ensure contract is plain text; strip PDF artifacts before analysis |
-| All clauses marked GREEN | Contract is genuinely favorable, or text extraction missed key sections | Manually verify critical clauses (liability, indemnification, IP) are present in the input file |
-| Redline generator produces empty output | Analysis JSON has no YELLOW or RED findings | Confirm analysis JSON is valid; re-run analyzer if contract was updated |
-| False positive on uncapped liability | Liability section references a cap elsewhere in the document | Review the full Limitation of Liability section; the tool scans for cap keywords within each clause boundary |
-| Missing clause false positive | Clause exists but uses non-standard heading (e.g., "Damages Cap" instead of "Limitation of Liability") | The analyzer checks multiple heading variants; add custom aliases if your organization uses unique terminology |
-
----
-
-## Success Criteria
-
-- **Contract review time reduced by 50%:** Automated clause identification and risk classification eliminates manual scanning.
-- **Zero missed RED-severity clauses:** Every uncapped liability, unilateral indemnification, and broad IP assignment is flagged before human review.
-- **Redline generation under 2 minutes:** From analysis JSON to prioritized redline document.
-- **Consistent risk classification across reviewers:** GREEN/YELLOW/RED framework eliminates subjective assessments.
-- **100% of contracts reviewed with structured output:** Every agreement gets a clause inventory and risk report before negotiation begins.
-- **Negotiation success rate above 80% on Must-Have items:** Tier 1 redlines with prepared fallbacks improve negotiation outcomes.
-
----
-
-## Scope & Limitations
-
-**Covers:**
-- Static text analysis of contract clauses using keyword and pattern matching
-- Clause type identification across 10+ standard commercial contract categories
-- Risk indicator detection: uncapped liability, perpetual terms, unilateral obligations, auto-renewal traps
-- Missing clause detection against a standard commercial contract baseline
-- Prioritized redline generation with fallback positions
-
-**Does NOT cover:**
-- **Legal advice** -- this tool supports review, it does not replace qualified legal counsel
-- **Jurisdiction-specific compliance** -- use `ra-qm-team` skills for regulatory compliance (GDPR, SOC 2, etc.)
-- **Contract execution or e-signature workflows** -- out of scope
-- **Multi-document cross-reference** (e.g., checking SOW against MSA) -- analyze each document separately
-- **Non-English contracts** -- pattern matching is English-language only
-
----
-
-## Anti-Patterns
-
-| Anti-Pattern | Why It Fails | Better Approach |
-|-------------|-------------|-----------------|
-| Signing contracts with only GREEN findings and no human review | Automated analysis cannot catch context-dependent risks, ambiguous language, or business-specific concerns | Always have qualified counsel review before execution, even on all-GREEN contracts |
-| Treating all RED findings as equal | Some RED items are structural deal-breakers while others may be resolvable with a single word change | Use the redline generator to assess effort and fallback positions for each RED finding |
-| Skipping the redline fallback positions | Entering negotiation with only preferred positions leaves no room for strategic concession | Always prepare Must-Have fallbacks and identify Nice-to-Have items to trade away |
-| Running analysis on poorly extracted text | PDF-to-text conversion artifacts break clause detection patterns | Clean the text file before analysis: remove headers, footers, page numbers, and formatting artifacts |
-
----
-
-## Tool Reference
-
-### contract_analyzer.py
-
-**Purpose:** Analyzes contract text files for clause types, identifies missing standard clauses, and flags risk indicators with GREEN/YELLOW/RED severity classification.
-
-**Usage:**
-
-```bash
-python scripts/contract_analyzer.py <contract_file> [--json] [--output FILE]
+**Priority 2 (Strongly Preferred):**
 ```
-
-**Flags:**
-
-| Flag | Short | Default | Description |
-|------|-------|---------|-------------|
-| `contract_file` | *(positional)* | | Path to contract text file (.txt or .md) |
-| `--json` | | off | Output in JSON format |
-| `--output` | `-o` | *(stdout)* | Write output to file |
-
-**Example Output (JSON):**
-
-```json
-{
-  "file": "vendor_agreement.txt",
-  "clauses_found": [
-    {
-      "type": "limitation_of_liability",
-      "severity": "RED",
-      "text_snippet": "...liability shall not be limited...",
-      "risk_flags": ["uncapped_liability"],
-      "notes": "No liability cap found; uncapped exposure"
-    }
-  ],
-  "missing_clauses": ["force_majeure", "data_protection"],
-  "risk_summary": {"RED": 2, "YELLOW": 3, "GREEN": 5},
-  "overall_risk": "RED"
-}
+Section 5.1: Add "Price increases shall not exceed
+              5% annually"
+Section 9.4: Change "service improvement" to
+              "providing and improving the Service
+              for Customer"
 ```
 
 ---
 
-### redline_generator.py
+### Questions for Legal Counsel
 
-**Purpose:** Takes contract analysis JSON and generates formatted redline suggestions with priority tiers, rationale, and fallback positions.
+1. Is unlimited data breach liability acceptable given our cyber insurance coverage?
+2. What's our exposure if we need to exit before term completion?
+3. Are there regulatory implications for the data usage clause?
 
-**Usage:**
+---
 
-```bash
-python scripts/redline_generator.py <analysis_json> [--json] [--output FILE]
+### Negotiation Leverage
+
+**Your Position:** First-year customer, significant deal size
+
+**Their Likely Flex:**
+- Auto-renewal notice period
+- Liability caps
+- Pricing caps
+
+**Their Likely Firm:**
+- Base term length
+- Core data usage rights
 ```
 
-**Flags:**
+### Example 2: Quick Risk Assessment
 
-| Flag | Short | Default | Description |
-|------|-------|---------|-------------|
-| `analysis_json` | *(positional)* | | Path to contract analysis JSON file |
-| `--json` | | off | Output in JSON format |
-| `--output` | `-o` | *(stdout)* | Write output to file |
-
-**Example Output:**
-
+**Input:**
 ```
-REDLINE SUGGESTIONS
-===================
-
-[MUST-HAVE] Limitation of Liability — Uncapped Liability
-  Severity: RED
-  Preferred: "Aggregate liability shall not exceed 12 months of fees paid."
-  Rationale: Uncapped liability creates unlimited financial exposure.
-  Fallback: "Aggregate liability shall not exceed 24 months of fees paid."
-
-[SHOULD-HAVE] Indemnification — Unilateral Indemnification
-  Severity: YELLOW
-  Preferred: "Each party shall indemnify the other for breaches of this Agreement."
-  Rationale: Mutual indemnification balances risk between parties.
-  Fallback: "Indemnification obligations shall be subject to the liability cap."
+Quick review - key concerns only:
+- Unlimited indemnification for IP claims
+- 2x annual fees liability cap
+- Net 45 payment terms
+- 60-day termination notice
+- Standard DPA included
 ```
+
+**Output:**
+```
+## Quick Risk Assessment
+
+### Overall: MEDIUM RISK
+
+| Clause | Rating | Note |
+|--------|--------|------|
+| Indemnification | HIGH | Unlimited IP indemnity is risky |
+| Liability Cap | GREEN | 2x is standard |
+| Payment | GREEN | Net 45 is favorable |
+| Termination | GREEN | 60 days is reasonable |
+| Data Protection | GREEN | Standard DPA |
+
+### Priority Action
+
+**Address Indemnification:**
+- Request mutual cap on IP indemnity
+- Propose "lesser of [amount] or 12 months fees"
+- Alternative: carve out for willful infringement only
+
+**Everything Else:** Acceptable, proceed if IP indemnity resolved.
+```
+
+## Skill Boundaries
+
+### What This Skill Does Well
+- Identifying common risk patterns
+- Comparing to industry benchmarks
+- Structuring negotiation priorities
+- Flagging unusual clauses
+
+### What This Skill Cannot Do
+- Provide legal advice
+- Know jurisdiction-specific requirements
+- Assess strategic business importance
+- Replace qualified legal counsel
+
+### When to Escalate to Human
+- Contracts over $100K annual value
+- Non-standard or heavily negotiated terms
+- Any regulated industry requirements
+- Indemnification or liability questions
+
+## Iteration Guide
+
+**Follow-up Prompts:**
+- "What's the worst-case scenario for the liability clause?"
+- "Draft redline language for [specific clause]"
+- "How does this compare to [competitor] contracts?"
+- "What should we ask for in return if we accept [term]?"
+
+## References
+
+- ACC (Association of Corporate Counsel) Contract Guidelines
+- IACCM Contract Terms Benchmarking
+- Tech Contract Negotiation Best Practices
+- Standard SaaS Agreement Templates
+
+## Related Skills
+
+- `rfp-response` - Creating proposals
+- `nda-generator` - Confidentiality agreements
+- `terms-analyzer` - Terms of service review
+
+## Skill Metadata
+
+- **Domain**: Legal
+- **Complexity**: Intermediate
+- **Mode**: centaur
+- **Time to Value**: 30-60 min per contract
+- **Prerequisites**: Contract access, business context

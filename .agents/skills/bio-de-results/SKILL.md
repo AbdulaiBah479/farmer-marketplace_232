@@ -5,16 +5,6 @@ tool_type: r
 primary_tool: DESeq2
 ---
 
-## Version Compatibility
-
-Reference examples tested with: DESeq2 1.42+, edgeR 4.0+
-
-Before using code patterns, verify installed versions match. If versions differ:
-- R: `packageVersion('<pkg>')` then `?function_name` to verify parameters
-
-If code throws ImportError, AttributeError, or TypeError, introspect the installed
-package and adapt the example to match the actual API rather than retrying.
-
 # DE Results
 
 Extract, filter, and export differential expression results.
@@ -27,10 +17,6 @@ library(dplyr)   # For data manipulation
 ```
 
 ## Extracting DESeq2 Results
-
-**Goal:** Retrieve DE statistics from a fitted DESeq2 model as a usable data frame.
-
-**Approach:** Call results() with optional shrinkage, then convert to a data frame with gene identifiers.
 
 ```r
 # Basic results
@@ -49,10 +35,6 @@ res_df$gene <- rownames(res_df)
 
 ## Extracting edgeR Results
 
-**Goal:** Retrieve DE statistics from a fitted edgeR model as a data frame.
-
-**Approach:** Use topTags with n=Inf to extract all gene-level results.
-
 ```r
 # Get all results
 results <- topTags(qlf, n = Inf)$table
@@ -62,12 +44,6 @@ results$gene <- rownames(results)
 ```
 
 ## Filtering Significant Genes
-
-**Goal:** Identify genes meeting statistical significance and biological effect size criteria.
-
-**Approach:** Subset results by adjusted p-value, fold change magnitude, and expression level thresholds.
-
-**"Get the significant differentially expressed genes"** → Filter DE results by adjusted p-value and fold change cutoffs to produce up- and down-regulated gene lists.
 
 ### By Adjusted P-value
 
@@ -110,10 +86,6 @@ sig_genes <- res_df %>%
 
 ## Ordering Results
 
-**Goal:** Rank DE genes by statistical significance or biological effect size.
-
-**Approach:** Sort results by adjusted p-value, absolute fold change, or mean expression.
-
 ```r
 # By adjusted p-value (most significant first)
 res_ordered <- res[order(res$padj), ]
@@ -131,10 +103,6 @@ sig_ordered <- res_df %>%
 ```
 
 ## Summary Statistics
-
-**Goal:** Quantify the number of up- and down-regulated genes at chosen thresholds.
-
-**Approach:** Count genes passing significance filters and report directional breakdown.
 
 ```r
 # DESeq2 summary
@@ -156,12 +124,6 @@ summary(decideTests(qlf))
 ```
 
 ## Adding Gene Annotations
-
-**Goal:** Enrich DE results with gene symbols, descriptions, and cross-database identifiers.
-
-**Approach:** Map Ensembl or Entrez IDs to human-readable annotations using org.db, biomaRt, or custom files.
-
-**"Add gene names to my DE results"** → Map gene identifiers to symbols and descriptions using annotation databases, then merge with the results table.
 
 ### From Bioconductor Annotation Package
 
@@ -220,10 +182,6 @@ res_annotated <- merge(res_df, gene_info, by = 'gene', all.x = TRUE)
 
 ## Exporting Results
 
-**Goal:** Save DE results in formats suitable for sharing, publication, or downstream tools.
-
-**Approach:** Write filtered and annotated results to CSV, Excel workbooks, or ranked gene lists for pathway analysis.
-
 ### To CSV
 
 ```r
@@ -277,10 +235,6 @@ write.table(gsea_input, file = 'gsea_input.rnk',
 
 ## Comparing Results Between Methods
 
-**Goal:** Assess concordance between DESeq2 and edgeR results to identify robust DE genes.
-
-**Approach:** Compute set overlaps and visualize with a Venn diagram.
-
 ```r
 # Get significant genes from both methods
 deseq2_sig <- rownames(subset(deseq2_res, padj < 0.05))
@@ -308,10 +262,6 @@ venn.diagram(
 
 ## Multiple Testing Correction
 
-**Goal:** Apply or compare multiple testing correction methods for DE p-values.
-
-**Approach:** Use Benjamini-Hochberg (default), Bonferroni, or IHW for adjusted p-values.
-
 ```r
 # DESeq2 uses Benjamini-Hochberg by default
 # To use different methods:
@@ -327,10 +277,6 @@ res_df$padj_fdr <- p.adjust(res_df$pvalue, method = 'fdr')
 ```
 
 ## Handling NA Values
-
-**Goal:** Understand and handle missing values in DE results caused by filtering or outlier detection.
-
-**Approach:** Identify the source of NAs (zero counts, independent filtering, outliers) and remove or investigate them.
 
 ```r
 # Count NAs

@@ -1,396 +1,210 @@
 ---
 name: langchain-rag
-description: "INVOKE THIS SKILL when building ANY retrieval-augmented generation (RAG) system. Covers document loaders, RecursiveCharacterTextSplitter, embeddings (OpenAI), and vector stores (Chroma, FAISS, Pinecone)."
+description: Build Retrieval Augmented Generation (RAG) systems with LangChain - includes embeddings, vector stores, retrievers, document loaders, and text splitting
+language: js
 ---
 
-<overview>
-Retrieval Augmented Generation (RAG) enhances LLM responses by fetching relevant context from external knowledge sources.
+# langchain-rag (JavaScript/TypeScript)
 
-**Pipeline:**
-1. **Index**: Load → Split → Embed → Store
-2. **Retrieve**: Query → Embed → Search → Return docs
-3. **Generate**: Docs + Query → LLM → Response
+## 概述
 
-**Key Components:**
-- **Document Loaders**: Ingest data from files, web, databases
-- **Text Splitters**: Break documents into chunks
-- **Embeddings**: Convert text to vectors
-- **Vector Stores**: Store and search embeddings
-</overview>
+检索增强生成（RAG）通过从外部知识源获取相关上下文来增强 LLM 响应。RAG 系统在查询时检索文档并使用它们来生成响应，而不是仅依赖训练数据。
 
-<vectorstore-selection>
+**核心概念：**
+- **文档加载器（Document Loaders）**：从文件、Web、数据库摄取数据
+- **文本分割器（Text Splitters）**：将文档分解为块
+- **嵌入（Embeddings）**：将文本转换为向量
+- **向量存储（Vector Stores）**：存储和搜索嵌入
+- **检索器（Retrievers）**：为查询获取相关文档
 
-| Vector Store | Use Case | Persistence |
-|--------------|----------|-------------|
-| **InMemory** | Testing | Memory only |
-| **FAISS** | Local, high performance | Disk |
-| **Chroma** | Development | Disk |
-| **Pinecone** | Production, managed | Cloud |
+## RAG 流水线
 
-</vectorstore-selection>
+1. **索引**：加载 → 分割 → 嵌入 → 存储
+2. **检索**：查询 → 嵌入 → 搜索 → 返回文档
+3. **生成**：文档 + 查询 → LLM → 响应
 
----
+## 决策表
 
-## Complete RAG Pipeline
+### 向量存储选择
 
-<ex-basic-rag-setup>
-<python>
-End-to-end RAG pipeline: load documents, split into chunks, embed, store, retrieve, and generate a response.
+| 存储 | 何时使用 | 原因 |
+|-------|-------------|-----|
+| MemoryVectorStore | 开发、测试 | 内存中、快速、临时 |
+| Chroma | 本地生产环境 | 持久化、开源 |
+| Pinecone | 云端、可扩展 | 托管、快速、可扩展 |
+| Faiss | 高性能 | 快速相似性搜索 |
 
-```python
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain_community.vectorstores import InMemoryVectorStore
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_core.documents import Document
+### 嵌入模型选择
 
-# 1. Load documents
-docs = [
-    Document(page_content="LangChain is a framework for LLM apps.", metadata={}),
-    Document(page_content="RAG = Retrieval Augmented Generation.", metadata={}),
-]
+| 模型 | 何时使用 | 维度 |
+|-------|-------------|-----------|
+| text-embedding-3-small | 成本效益 | 1536 |
+| text-embedding-3-large | 最佳质量 | 3072 |
+| text-embedding-ada-002 | 旧版 | 1536 |
 
-# 2. Split documents
-splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
-splits = splitter.split_documents(docs)
+## 代码示例
 
-# 3. Create embeddings and store
-embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-vectorstore = InMemoryVectorStore.from_documents(splits, embeddings)
-
-# 4. Create retriever
-retriever = vectorstore.as_retriever(search_kwargs={"k": 4})
-
-# 5. Use in RAG
-model = ChatOpenAI(model="gpt-4.1")
-query = "What is RAG?"
-relevant_docs = retriever.invoke(query)
-
-context = "\n\n".join([doc.page_content for doc in relevant_docs])
-response = model.invoke([
-    {"role": "system", "content": f"Use this context:\n\n{context}"},
-    {"role": "user", "content": query},
-])
-```
-</python>
-<typescript>
-End-to-end RAG pipeline: load documents, split into chunks, embed, store, retrieve, and generate a response.
+### 基本 RAG 设置
 
 ```typescript
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-import { Document } from "@langchain/core/documents";
 
-// 1. Load documents
+// 1. 加载文档（示例：内存中文本）
 const docs = [
-  new Document({ pageContent: "LangChain is a framework for LLM apps.", metadata: {} }),
-  new Document({ pageContent: "RAG = Retrieval Augmented Generation.", metadata: {} }),
+  { pageContent: "LangChain 是一个用于构建 LLM 应用程序的框架。", metadata: {} },
+  { pageContent: "RAG 代表检索增强生成。", metadata: {} },
 ];
 
-// 2. Split documents
-const splitter = new RecursiveCharacterTextSplitter({ chunkSize: 500, chunkOverlap: 50 });
+// 2. 分割文档
+const splitter = new RecursiveCharacterTextSplitter({
+  chunkSize: 500,
+  chunkOverlap: 50,
+});
 const splits = await splitter.splitDocuments(docs);
 
-// 3. Create embeddings and store
-const embeddings = new OpenAIEmbeddings({ model: "text-embedding-3-small" });
-const vectorstore = await MemoryVectorStore.fromDocuments(splits, embeddings);
+// 3. 创建嵌入并存储
+const embeddings = new OpenAIEmbeddings({
+  model: "text-embedding-3-small",
+});
 
-// 4. Create retriever
-const retriever = vectorstore.asRetriever({ k: 4 });
+const vectorStore = await MemoryVectorStore.fromDocuments(splits, embeddings);
 
-// 5. Use in RAG
+// 4. 创建检索器
+const retriever = vectorStore.asRetriever(4); // 前 4 个结果
+
+// 5. 在 RAG 中使用
 const model = new ChatOpenAI({ model: "gpt-4.1" });
-const query = "What is RAG?";
+
+const query = "什么是 RAG？";
 const relevantDocs = await retriever.invoke(query);
 
 const context = relevantDocs.map(doc => doc.pageContent).join("\n\n");
 const response = await model.invoke([
-  { role: "system", content: `Use this context:\n\n${context}` },
+  { role: "system", content: `使用以下上下文回答问题：\n\n${context}` },
   { role: "user", content: query },
 ]);
+
+console.log(response.content);
 ```
-</typescript>
-</ex-basic-rag-setup>
 
----
+### 加载网页
 
-## Document Loaders
+```typescript
+import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/cheerio";
 
-<ex-loading-pdf>
-<python>
-Load a PDF file and extract each page as a separate document.
+const loader = new CheerioWebBaseLoader(
+  "https://docs.langchain.com/oss/javascript/langchain/agents"
+);
 
-```python
-from langchain_community.document_loaders import PyPDFLoader
-
-loader = PyPDFLoader("./document.pdf")
-docs = loader.load()
-print(f"Loaded {len(docs)} pages")
+const docs = await loader.load();
+console.log(`已加载 ${docs.length} 个文档`);
 ```
-</python>
-<typescript>
-Load a PDF file and extract each page as a separate document.
+
+### 加载 PDF 文件
 
 ```typescript
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 
 const loader = new PDFLoader("./document.pdf");
 const docs = await loader.load();
-console.log(`Loaded ${docs.length} pages`);
 ```
-</typescript>
-</ex-loading-pdf>
 
-<ex-loading-web-pages>
-<python>
-Fetch and parse content from a web URL into a document.
-
-```python
-from langchain_community.document_loaders import WebBaseLoader
-
-loader = WebBaseLoader("https://docs.langchain.com")
-docs = loader.load()
-```
-</python>
-<typescript>
-Fetch and parse content from a web URL into a document using Cheerio.
+### 高级文本分割
 
 ```typescript
-import { CheerioWebBaseLoader } from "@langchain/community/document_loaders/web/cheerio";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 
-const loader = new CheerioWebBaseLoader("https://docs.langchain.com");
-const docs = await loader.load();
+const splitter = new RecursiveCharacterTextSplitter({
+  chunkSize: 1000,        // 每个块的字符数
+  chunkOverlap: 200,      // 上下文连续性的重叠
+  separators: ["\n\n", "\n", " ", ""],  // 分割层次结构
+});
+
+const splits = await splitter.splitDocuments(docs);
 ```
-</typescript>
-</ex-loading-web-pages>
 
-<ex-loading-directory>
-<python>
-Load all text files from a directory using a glob pattern.
-
-```python
-from langchain_community.document_loaders import DirectoryLoader, TextLoader
-
-# Load all text files from directory
-loader = DirectoryLoader(
-    "path/to/documents",
-    glob="**/*.txt",  # Pattern for files to load
-    loader_cls=TextLoader
-)
-docs = loader.load()
-```
-</python>
-</ex-loading-directory>
-
----
-
-## Text Splitting
-
-<ex-text-splitting>
-<python>
-Split documents into chunks using RecursiveCharacterTextSplitter with configurable size and overlap.
-
-```python
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-
-splitter = RecursiveCharacterTextSplitter(
-    chunk_size=1000,        # Characters per chunk
-    chunk_overlap=200,      # Overlap for context continuity
-    separators=["\n\n", "\n", " ", ""],  # Split hierarchy
-)
-
-splits = splitter.split_documents(docs)
-```
-</python>
-</ex-text-splitting>
-
----
-
-## Vector Stores
-
-<ex-chroma-vectorstore>
-<python>
-Create a persistent Chroma vector store and reload it from disk.
-
-```python
-from langchain_chroma import Chroma
-from langchain_openai import OpenAIEmbeddings
-
-vectorstore = Chroma.from_documents(
-    documents=splits,
-    embedding=OpenAIEmbeddings(),
-    persist_directory="./chroma_db",
-    collection_name="my-collection",
-)
-
-# Load existing
-vectorstore = Chroma(
-    persist_directory="./chroma_db",
-    embedding_function=OpenAIEmbeddings(),
-    collection_name="my-collection",
-)
-```
-</python>
-<typescript>
-Create a Chroma vector store connected to a running Chroma server.
+### 使用 Chroma（持久化）
 
 ```typescript
 import { Chroma } from "@langchain/community/vectorstores/chroma";
 import { OpenAIEmbeddings } from "@langchain/openai";
 
-const vectorstore = await Chroma.fromDocuments(
+const embeddings = new OpenAIEmbeddings();
+
+// 创建并填充
+const vectorStore = await Chroma.fromDocuments(
   splits,
-  new OpenAIEmbeddings(),
-  { collectionName: "my-collection", url: "http://localhost:8000" }
+  embeddings,
+  { collectionName: "my-docs" }
+);
+
+// 后续：加载现有的
+const vectorStore2 = await Chroma.fromExistingCollection(
+  embeddings,
+  { collectionName: "my-docs" }
 );
 ```
-</typescript>
-</ex-chroma-vectorstore>
 
-<ex-faiss-vectorstore>
-<python>
-Create a FAISS vector store, save it to disk, and reload it.
-
-```python
-from langchain_community.vectorstores import FAISS
-
-vectorstore = FAISS.from_documents(splits, embeddings)
-vectorstore.save_local("./faiss_index")
-
-# Load (requires allow_dangerous_deserialization)
-loaded = FAISS.load_local(
-    "./faiss_index",
-    embeddings,
-    allow_dangerous_deserialization=True
-)
-```
-</python>
-<typescript>
-Create a FAISS vector store, save it to disk, and reload it.
+### 高级检索
 
 ```typescript
-import { FaissStore } from "@langchain/community/vectorstores/faiss";
-
-const vectorstore = await FaissStore.fromDocuments(splits, embeddings);
-await vectorstore.save("./faiss_index");
-
-const loaded = await FaissStore.load("./faiss_index", embeddings);
-```
-</typescript>
-</ex-faiss-vectorstore>
-
----
-
-## Retrieval
-
-<ex-similarity-search>
-<python>
-Perform similarity search and retrieve results with relevance scores.
-
-```python
-# Basic search
-results = vectorstore.similarity_search(query, k=5)
-
-# With scores
-results_with_score = vectorstore.similarity_search_with_score(query, k=5)
-for doc, score in results_with_score:
-    print(f"Score: {score}, Content: {doc.page_content}")
-```
-</python>
-<typescript>
-Perform similarity search and retrieve results with relevance scores.
-
-```typescript
-// Basic search
-const results = await vectorstore.similaritySearch(query, 5);
-
-// With scores
-const resultsWithScore = await vectorstore.similaritySearchWithScore(query, 5);
-for (const [doc, score] of resultsWithScore) {
-  console.log(`Score: ${score}, Content: ${doc.pageContent}`);
+// 带分数的相似性搜索
+const results = await vectorStore.similaritySearchWithScore(query, 5);
+for (const [doc, score] of results) {
+  console.log(`分数：${score}, 内容：${doc.pageContent}`);
 }
+
+// MMR（最大边际相关性）以增加多样性
+const retriever = vectorStore.asRetriever({
+  searchType: "mmr",
+  searchKwargs: { fetchK: 20, lambda: 0.5 },
+  k: 5,
+});
 ```
-</typescript>
-</ex-similarity-search>
 
-<ex-mmr-search>
-<python>
-Use MMR (Maximal Marginal Relevance) to balance relevance and diversity in search results.
+### 元数据过滤
 
-```python
-# MMR balances relevance and diversity
-retriever = vectorstore.as_retriever(
-    search_type="mmr",
-    search_kwargs={"fetch_k": 20, "lambda_mult": 0.5, "k": 5},
-)
+```typescript
+// 在创建文档时添加元数据
+const docs = [
+  {
+    pageContent: "Python 编程指南",
+    metadata: { language: "python", topic: "programming" }
+  },
+  {
+    pageContent: "JavaScript 教程",
+    metadata: { language: "javascript", topic: "programming" }
+  },
+];
+
+// 使用过滤器搜索
+const results = await vectorStore.similaritySearch(
+  "programming",
+  5,
+  { language: "python" }  // 仅 Python 文档
+);
 ```
-</python>
-</ex-mmr-search>
 
-<ex-metadata-filtering>
-<python>
-Add metadata to documents and filter search results by metadata properties.
-
-```python
-# Add metadata when creating documents
-docs = [
-    Document(
-        page_content="Python programming guide",
-        metadata={"language": "python", "topic": "programming"}
-    ),
-]
-
-# Search with filter
-results = vectorstore.similarity_search(
-    "programming",
-    k=5,
-    filter={"language": "python"}  # Only Python docs
-)
-```
-</python>
-</ex-metadata-filtering>
-
-<ex-rag-with-agent>
-<python>
-Create an agent that uses RAG as a tool for answering questions.
-
-```python
-from langchain.agents import create_agent
-from langchain.tools import tool
-
-@tool
-def search_docs(query: str) -> str:
-    """Search documentation for relevant information."""
-    docs = retriever.invoke(query)
-    return "\n\n".join([d.page_content for d in docs])
-
-agent = create_agent(
-    model="gpt-4.1",
-    tools=[search_docs],
-)
-
-result = agent.invoke({
-    "messages": [{"role": "user", "content": "How do I create an agent?"}]
-})
-```
-</python>
-<typescript>
-Create an agent that uses RAG as a tool for answering questions.
+### RAG 与代理
 
 ```typescript
 import { createAgent } from "langchain";
-import { tool } from "@langchain/core/tools";
+import { tool } from "langchain";
 import { z } from "zod";
 
 const searchDocs = tool(
-  async (input) => {
-    const docs = await retriever.invoke(input.query);
+  async ({ query }) => {
+    const docs = await retriever.invoke(query);
     return docs.map(d => d.pageContent).join("\n\n");
   },
   {
     name: "search_docs",
-    description: "Search documentation for relevant information.",
-    schema: z.object({ query: z.string() }),
+    description: "搜索文档以获取相关信息",
+    schema: z.object({
+      query: z.string().describe("搜索查询"),
+    }),
   }
 );
 
@@ -400,145 +214,115 @@ const agent = createAgent({
 });
 
 const result = await agent.invoke({
-  messages: [{ role: "user", content: "How do I create an agent?" }],
+  messages: [{ role: "user", content: "如何创建代理？" }],
 });
 ```
-</typescript>
-</ex-rag-with-agent>
 
-<boundaries>
-### What You CAN Configure
-
-- Chunk size/overlap
-- Embedding model
-- Number of results (k)
-- Metadata filters
-- Search algorithms: Similarity, MMR
-
-### What You CANNOT Configure
-
-- Embedding dimensions (per model)
-- Mix embeddings from different models in same store
-</boundaries>
-
-<fix-chunk-size>
-<python>
-Chunk size 500-1500 is typically good.
-
-```python
-# WRONG: Too small (loses context) or too large (hits limits)
-splitter = RecursiveCharacterTextSplitter(chunk_size=50)
-splitter = RecursiveCharacterTextSplitter(chunk_size=10000)
-
-# CORRECT
-splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-```
-</python>
-<typescript>
-Chunk size 500-1500 is typically good.
+### 混合搜索（关键词 + 语义）
 
 ```typescript
-// WRONG: Too small or too large
+// 结合关键词和向量搜索
+import { similarity } from "ml-distance";
+
+async function hybridSearch(query: string, k: number = 5) {
+  // 向量搜索
+  const vectorResults = await vectorStore.similaritySearch(query, k);
+
+  // 关键词搜索（简单示例）
+  const allDocs = await vectorStore.getAllDocuments();
+  const keywordResults = allDocs.filter(doc =>
+    doc.pageContent.toLowerCase().includes(query.toLowerCase())
+  );
+
+  // 结合和去重
+  const combined = [...vectorResults, ...keywordResults];
+  const unique = Array.from(new Set(combined.map(d => d.pageContent)))
+    .map(content => combined.find(d => d.pageContent === content));
+
+  return unique.slice(0, k);
+}
+```
+
+## 边界
+
+### 您可以配置什么
+
+✅ **块大小/重叠**：控制文档分割
+✅ **嵌入模型**：选择质量与成本
+✅ **结果数量**：Top-k 检索
+✅ **元数据过滤器**：按文档属性过滤
+✅ **搜索算法**：相似性、MMR、混合
+
+### 您不能配置什么
+
+❌ **嵌入维度**（每个模型）：由模型固定
+❌ **完美的检索**：语义搜索有局限性
+❌ **实时文档更新**：需要重新索引
+
+## 注意事项
+
+### 1. 忘记分割文档
+
+```typescript
+// ❌ 问题：整个文档太大
+await vectorStore.addDocuments(largeDocs);  // 可能达到 token 限制
+
+// ✅ 解决方案：始终先分割
+const splits = await splitter.splitDocuments(largeDocs);
+await vectorStore.addDocuments(splits);
+```
+
+### 2. 块大小太小/太大
+
+```typescript
+// ❌ 问题：太小 - 失去上下文
 const splitter = new RecursiveCharacterTextSplitter({ chunkSize: 50 });
 
-// CORRECT
-const splitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000, chunkOverlap: 200 });
+// ❌ 问题：太大 - 达到限制
+const splitter = new RecursiveCharacterTextSplitter({ chunkSize: 10000 });
+
+// ✅ 解决方案：平衡（500-1500 通常很好）
+const splitter = new RecursiveCharacterTextSplitter({
+  chunkSize: 1000,
+  chunkOverlap: 200,
+});
 ```
-</typescript>
-</fix-chunk-size>
 
-<fix-chunk-overlap>
-<python>
-Use overlap (10-20% of chunk size) to maintain context at boundaries.
-
-```python
-# WRONG: No overlap - context breaks at boundaries
-splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-
-# CORRECT: 10-20% overlap
-splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-```
-</python>
-</fix-chunk-overlap>
-
-<fix-persist-vectorstore>
-<python>
-Use persistent vector store instead of in-memory to avoid data loss.
-
-```python
-# WRONG: InMemory - lost on restart
-vectorstore = InMemoryVectorStore.from_documents(docs, embeddings)
-
-# CORRECT
-vectorstore = Chroma.from_documents(docs, embeddings, persist_directory="./chroma_db")
-```
-</python>
-<typescript>
-Use persistent vector store instead of in-memory to avoid data loss.
+### 3. 没有重叠
 
 ```typescript
-// WRONG: Memory - lost on restart
-const vectorstore = await MemoryVectorStore.fromDocuments(docs, embeddings);
+// ❌ 问题：没有重叠 - 上下文在边界处中断
+const splitter = new RecursiveCharacterTextSplitter({
+  chunkSize: 1000,
+  chunkOverlap: 0,  // 不好！
+});
 
-// CORRECT
-const vectorstore = await Chroma.fromDocuments(docs, embeddings, { collectionName: "my-collection" });
+// ✅ 解决方案：使用重叠（块大小的 10-20%）
+const splitter = new RecursiveCharacterTextSplitter({
+  chunkSize: 1000,
+  chunkOverlap: 200,  // 20%
+});
 ```
-</typescript>
-</fix-persist-vectorstore>
 
-<fix-consistent-embeddings>
-<python>
-Use the same embedding model for indexing and querying.
-
-```python
-# WRONG: Different embeddings for index and query - incompatible!
-vectorstore = Chroma.from_documents(docs, OpenAIEmbeddings(model="text-embedding-3-small"))
-retriever = vectorstore.as_retriever(embeddings=OpenAIEmbeddings(model="text-embedding-3-large"))
-
-# CORRECT: Same model
-embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-vectorstore = Chroma.from_documents(docs, embeddings)
-retriever = vectorstore.as_retriever()  # Uses same embeddings
-```
-</python>
-<typescript>
-Use the same embedding model for indexing and querying.
+### 4. 不持久化向量存储
 
 ```typescript
-const embeddings = new OpenAIEmbeddings({ model: "text-embedding-3-small" });
-const vectorstore = await Chroma.fromDocuments(docs, embeddings);
-const retriever = vectorstore.asRetriever();  // Uses same embeddings
+// ❌ 问题：在生产环境中使用 MemoryVectorStore
+const vectorStore = await MemoryVectorStore.fromDocuments(docs, embeddings);
+// 重启后丢失！
+
+// ✅ 解决方案：使用持久化存储
+const vectorStore = await Chroma.fromDocuments(
+  docs,
+  embeddings,
+  { collectionName: "prod-docs" }
+);
 ```
-</typescript>
-</fix-consistent-embeddings>
 
-<fix-faiss-deserialization>
-<python>
-Explicitly allow deserialization when loading FAISS indexes.
+## 文档链接
 
-```python
-# WRONG: Will raise error
-loaded_store = FAISS.load_local("./faiss_index", embeddings)
-
-# CORRECT
-loaded_store = FAISS.load_local("./faiss_index", embeddings, allow_dangerous_deserialization=True)
-```
-</python>
-</fix-faiss-deserialization>
-
-<fix-dimension-mismatch>
-<python>
-Ensure embedding dimensions match the vector store index dimensions.
-
-```python
-# WRONG: Index has 1536 dimensions but using 512-dim embeddings
-pc.create_index(name="idx", dimension=1536, metric="cosine")
-vectorstore = PineconeVectorStore.from_documents(
-    docs, OpenAIEmbeddings(model="text-embedding-3-small", dimensions=512), index=pc.Index("idx")
-)  # Error: dimension mismatch!
-
-# CORRECT: Match dimensions
-embeddings = OpenAIEmbeddings()  # Default 1536
-```
-</python>
-</fix-dimension-mismatch>
+- [RAG 教程](https://docs.langchain.com/oss/javascript/langchain/rag)
+- [文档加载器](https://docs.langchain.com/oss/javascript/integrations/document_loaders/index)
+- [文本分割器](https://docs.langchain.com/oss/javascript/integrations/splitters/index)
+- [向量存储](https://docs.langchain.com/oss/javascript/integrations/vectorstores/index)
+- [嵌入](https://docs.langchain.com/oss/javascript/integrations/text_embedding/openai)

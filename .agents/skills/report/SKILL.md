@@ -1,126 +1,109 @@
 ---
-name: "report"
-description: >-
-  Generate test report. Use when user says "test report", "results summary",
-  "test status", "show results", "test dashboard", or "how did tests go".
+name: report
+description: Create structured reports for technical findings, test results, and analysis.
+argument-hint: "<topic>"
 ---
 
-# Smart Test Reporting
+# Report Skill
 
-Generate test reports that plug into the user's existing workflow. Zero new tools.
+Create technical reports with Discord-friendly summaries for sharing findings.
 
-## Steps
+## Arguments
 
-### 1. Run Tests (If Not Already Run)
-
-Check if recent test results exist:
-
-```bash
-ls -la test-results/ playwright-report/ 2>/dev/null
-```
-
-If no recent results, run tests:
-
-```bash
-npx playwright test --reporter=json,html,list 2>&1 | tee test-output.log
-```
-
-### 2. Parse Results
-
-Read the JSON report:
-
-```bash
-npx playwright test --reporter=json 2> /dev/null
-```
-
-Extract:
-- Total tests, passed, failed, skipped, flaky
-- Duration per test and total
-- Failed test names with error messages
-- Flaky tests (passed on retry)
-
-### 3. Detect Report Destination
-
-Check what's configured and route automatically:
-
-| Check | If found | Action |
-|---|---|---|
-| `TESTRAIL_URL` env var | TestRail configured | Push results via `/pw:testrail push` |
-| `SLACK_WEBHOOK_URL` env var | Slack configured | Post summary to Slack |
-| `.github/workflows/` | GitHub Actions | Results go to PR comment via artifacts |
-| `playwright-report/` | HTML reporter | Open or serve the report |
-| None of the above | Default | Generate markdown report |
-
-### 4. Generate Report
-
-#### Markdown Report (Always Generated)
-
-```markdown
-# Test Results — {{date}}
-
-## Summary
-- ✅ Passed: {{passed}}
-- ❌ Failed: {{failed}}
-- ⏭️ Skipped: {{skipped}}
-- 🔄 Flaky: {{flaky}}
-- ⏱️ Duration: {{duration}}
-
-## Failed Tests
-| Test | Error | File |
-|---|---|---|
-| {{name}} | {{error}} | {{file}}:{{line}} |
-
-## Flaky Tests
-| Test | Retries | File |
-|---|---|---|
-| {{name}} | {{retries}} | {{file}} |
-
-## By Project
-| Browser | Passed | Failed | Duration |
-|---|---|---|---|
-| Chromium | X | Y | Zs |
-| Firefox | X | Y | Zs |
-| WebKit | X | Y | Zs |
-```
-
-Save to `test-reports/{{date}}-report.md`.
-
-#### Slack Summary (If Webhook Configured)
-
-```bash
-curl -X POST "$SLACK_WEBHOOK_URL" \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "text": "🧪 Test Results: ✅ {{passed}} | ❌ {{failed}} | ⏱️ {{duration}}\n{{failed_details}}"
-  }'
-```
-
-#### TestRail Push (If Configured)
-
-Invoke `/pw:testrail push` with the JSON results.
-
-#### HTML Report
-
-```bash
-npx playwright show-report
-```
-
-Or if in CI:
-```bash
-echo "HTML report available at: playwright-report/index.html"
-```
-
-### 5. Trend Analysis (If Historical Data Exists)
-
-If previous reports exist in `test-reports/`:
-- Compare pass rate over time
-- Identify tests that became flaky recently
-- Highlight new failures vs. recurring failures
+- `<topic>`: Brief description of what the report covers (e.g., "CREATE2 collision resolution")
 
 ## Output
 
-- Summary with pass/fail/skip/flaky counts
-- Failed test details with error messages
-- Report destination confirmation
-- Trend comparison (if historical data available)
-- Next action recommendation (fix failures or celebrate green)
+Reports are saved to `reports/YYMMDD_SLUG.md` where:
+- `YYMMDD` is the current date (e.g., 260130 for 2026-01-30)
+- `SLUG` is a brief descriptive name in SCREAMING_SNAKE_CASE
+
+## Report Structure
+
+Every report has two parts:
+
+### 1. Discord Summary (top of file)
+
+Wrapped in HTML comment markers for easy copy-paste. Must follow these rules:
+
+**Character Limit:** Maximum 1900 characters (buffer under Discord's 2000 limit)
+
+**Formatting Rules:**
+- NO TABLES - Discord doesn't render markdown tables
+- Use code blocks for tabular data instead
+- Use `**bold**` for emphasis
+- Use `### Headings` for sections
+- Wrap URLs in angle brackets: `<https://example.com>`
+
+**Required Sections:**
+1. Title with key metric
+2. Metadata line (client, suite, counts)
+3. Brief summary (1-2 sentences)
+4. Key findings in code block format
+5. Analysis (root cause in 2-3 sentences)
+6. Impact assessment
+7. Next steps (numbered list)
+8. Link to full report
+
+**Template:**
+
+```markdown
+<!-- DISCORD SUMMARY (paste everything between the markers) -->
+## [Title]: [Key Metric]
+
+**[Context]:** [value] | **[Metric]:** [numbers]
+
+[1-2 sentence summary]
+
+### [Section Name]
+
+```
+[Data in code block - NOT a table]
+```
+
+### Analysis
+
+**Root cause:** [Brief explanation]
+
+### Impact
+
+**[Severity] for [context]** - [Practical implications]
+
+### Next Steps
+1. [Action item]
+2. [Action item]
+
+**Full report:** <[URL]>
+<!-- END DISCORD SUMMARY -->
+```
+
+### 2. Full Report (below the summary)
+
+After a horizontal rule (`---`), include the detailed report:
+
+**Required Sections:**
+1. Title and metadata (date, test suite, client version)
+2. Executive summary
+3. Context (why this report exists)
+4. Detailed findings (tables, logs, specifics)
+5. Root cause analysis
+6. Impact assessment
+7. Recommendations (short/medium/long-term)
+8. References (links to specs, repos)
+9. Appendix (log locations, raw data)
+
+**Formatting:**
+- Tables are fine in full report (GitHub renders them)
+- Include code blocks for log excerpts
+- Link to specific files with `file:line` notation
+- Reference external specs with full URLs
+
+## Workflow
+
+1. Gather all relevant data (logs, test results, metrics)
+2. Analyze root cause and impact
+3. Draft Discord summary first (ensures conciseness)
+4. Verify Discord summary is under 1900 characters
+5. Write full report with complete details
+6. Save to `reports/YYMMDD_SLUG.md`
+7. Output the Discord summary for easy copy-paste

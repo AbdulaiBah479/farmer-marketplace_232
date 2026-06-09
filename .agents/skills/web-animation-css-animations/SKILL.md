@@ -1,11 +1,11 @@
 ---
 name: web-animation-css-animations
-description: CSS Animation patterns - transitions, keyframes, scroll-driven animations, @property, GPU-accelerated properties, accessibility with prefers-reduced-motion
+description: CSS Animation patterns - transitions, keyframes, scroll-driven animations, View Transitions API, GPU-accelerated properties, accessibility with prefers-reduced-motion
 ---
 
 # CSS Animation Patterns
 
-> **Quick Guide:** Use CSS transitions for state changes (hover, focus), `@keyframes` for autonomous/looping animations, scroll-driven animations for scroll-linked effects. Animate only `transform` and `opacity` for 60fps. Always respect `prefers-reduced-motion`.
+> **Quick Guide:** Use CSS transitions for state changes (hover, focus), CSS animations with @keyframes for autonomous/looping animations, scroll-driven animations for scroll-linked effects, and View Transitions API for page/view transitions. Animate only `transform` and `opacity` for 60fps performance.
 
 ---
 
@@ -17,11 +17,11 @@ description: CSS Animation patterns - transitions, keyframes, scroll-driven anim
 
 **(You MUST animate ONLY transform and opacity for GPU-accelerated 60fps performance)**
 
-**(You MUST respect prefers-reduced-motion using @media (prefers-reduced-motion: no-preference) for opt-in or @media (prefers-reduced-motion: reduce) for opt-out)**
+**(You MUST respect prefers-reduced-motion using media queries or @media (prefers-reduced-motion: no-preference))**
 
-**(You MUST use CSS custom properties for ALL timing values - NO magic numbers like `0.3s`)**
+**(You MUST use named constants (CSS custom properties) for ALL timing values - NO magic numbers)**
 
-**(You MUST use ease-out for enter animations and ease-in for exit animations - NEVER linear for UI transitions)**
+**(You MUST use ease-out for enter animations and ease-in for exit animations - NEVER linear for UI)**
 
 **(You MUST remove will-change after animation completes - permanent will-change wastes GPU memory)**
 
@@ -29,28 +29,38 @@ description: CSS Animation patterns - transitions, keyframes, scroll-driven anim
 
 ---
 
-**Auto-detection:** CSS animation, CSS transition, @keyframes, transform, opacity, transition-duration, animation-duration, prefers-reduced-motion, scroll-timeline, animation-timeline, will-change, cubic-bezier, ease-out, ease-in, @property
+**Auto-detection:** CSS animation, CSS transition, @keyframes, transform, opacity, transition-duration, animation-duration, prefers-reduced-motion, scroll-timeline, view-transition, animation-timeline, will-change, cubic-bezier, ease-out, ease-in
 
 **When to use:**
 
 - Simple state change animations (hover, focus, active states)
 - Autonomous looping animations (spinners, pulses, attention grabbers)
 - Scroll-linked animations and parallax effects
+- Page/view transitions between routes
 - Micro-interactions that don't need JavaScript control
+
+**Key patterns covered:**
+
+- CSS transitions for state-triggered animations
+- CSS @keyframes for multi-step and looping animations
+- GPU-accelerated properties (transform, opacity)
+- Animation timing tokens and custom properties
+- prefers-reduced-motion accessibility patterns
+- Scroll-driven animations (animation-timeline: scroll/view)
+- View Transitions API for page transitions
+- will-change optimization and cleanup
 
 **When NOT to use:**
 
-- Animations requiring JavaScript control (pause, reverse, seek) -- use Web Animations API
-- Complex orchestrated animations with staggered timing -- use your animation library
-- Physics-based spring animations -- use your animation library
-- Drag-and-drop or gesture-driven animations -- use your animation library
+- Animations requiring JavaScript control (pause, reverse, seek) - consider Web Animations API
+- Complex orchestrated animations with staggered timing - consider your animation library
+- Physics-based spring animations - consider your animation library
+- Drag-and-drop animations - consider your animation library
 
 **Detailed Resources:**
 
-- [examples/core.md](examples/core.md) - Token system, interactive states, shadows, loading, reduced motion
-- [examples/transitions.md](examples/transitions.md) - Multi-property transitions, accordions, color, links
-- [examples/keyframes.md](examples/keyframes.md) - Scroll-driven, @property gradients, typewriter, stagger, shapes
-- [reference.md](reference.md) - Decision frameworks, timing reference, browser support
+- For code examples, see [examples/](examples/) folder
+- For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---
 
@@ -65,7 +75,7 @@ CSS animations leverage the browser's compositor thread for smooth, 60fps animat
 1. **Performance first** - Animate only `transform` and `opacity` to avoid layout/paint triggers
 2. **Accessibility built-in** - Always respect `prefers-reduced-motion` user preferences
 3. **Transitions for state changes** - Use CSS transitions for hover, focus, and state-driven animations
-4. **Keyframes for autonomous motion** - Use `@keyframes` for animations that loop, auto-play, or have multiple steps
+4. **Keyframes for autonomous motion** - Use @keyframes for animations that loop, auto-play, or have multiple steps
 5. **Design tokens for consistency** - Use CSS custom properties for durations, easings, and distances
 
 </philosophy>
@@ -76,110 +86,198 @@ CSS animations leverage the browser's compositor thread for smooth, 60fps animat
 
 ## Core Patterns
 
-### Pattern 1: Animation Token System
+### Pattern 1: CSS Transitions for State Changes
 
-Define timing, easing, and distance tokens as CSS custom properties for consistency. See [examples/core.md](examples/core.md) for the full token setup.
+CSS transitions animate property changes between two states. Use for hover effects, focus states, and interactive feedback.
+
+#### Duration Tokens
 
 ```css
 :root {
+  /* Duration tokens */
   --duration-instant: 100ms;
   --duration-fast: 150ms;
   --duration-normal: 250ms;
   --duration-slow: 400ms;
+  --duration-slower: 600ms;
 
-  --ease-out: cubic-bezier(0, 0, 0.2, 1); /* Enter */
-  --ease-in: cubic-bezier(0.4, 0, 1, 1); /* Exit */
-  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1); /* Symmetric */
-  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy */
+  /* Easing tokens */
+  --ease-default: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
+  /* Distance tokens */
   --lift-sm: -2px;
   --lift-md: -4px;
+  --lift-lg: -8px;
 }
 ```
 
-**Why tokens matter:** Consistent timing across application, easy to adjust globally, semantic naming communicates intent
-
----
-
-### Pattern 2: GPU-Accelerated Transitions
-
-Only animate `transform` and `opacity`. Never animate layout properties like `width`, `height`, `top`, `left`, `margin`, or `padding`.
+#### Implementation
 
 ```css
-/* CORRECT - GPU-accelerated */
+/* Good Example - GPU-accelerated hover effect */
 .card {
   transition:
     transform var(--duration-fast) var(--ease-out),
     opacity var(--duration-fast) var(--ease-out);
 }
+
 .card:hover {
   transform: translateY(var(--lift-md)) scale(1.02);
 }
+
+.card:active {
+  transform: translateY(0) scale(0.98);
+}
 ```
 
+**Why good:** Only animates transform (GPU-accelerated), uses design tokens for timing, provides tactile feedback on both hover and active states
+
 ```css
-/* WRONG - triggers layout recalculation every frame */
+/* Bad Example - Layout-triggering properties */
 .card {
   transition: all 0.3s linear;
 }
+
 .card:hover {
   top: -8px;
   margin-top: -8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
 }
 ```
 
-**Transform mapping:** Use `translate()` instead of `top/left`, `scale()` instead of `width/height`, pseudo-element opacity instead of `box-shadow`.
-
-See [examples/core.md](examples/core.md) for button states, card hover effects, and the pseudo-element shadow technique.
+**Why bad:** `top` and `margin-top` trigger expensive layout recalculations every frame, `all` transitions unnecessary properties, `linear` feels robotic, magic number `0.3s`
 
 ---
 
-### Pattern 3: Prefers-Reduced-Motion
+### Pattern 2: CSS @keyframes for Autonomous Animations
 
-Every animation must respect user motion preferences. Two strategies:
+Use @keyframes for animations that loop, auto-play on mount, or have more than two states.
 
-#### Progressive Enhancement (Recommended)
+#### Loading Spinner
 
 ```css
-/* Base: no motion */
-.element {
+/* Good Example - Looping spinner */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  --spinner-duration: 1s;
+
+  animation: spin var(--spinner-duration) linear infinite;
+}
+```
+
+**Why good:** Uses transform (GPU-accelerated), `linear` is appropriate for continuous rotation, duration is a named token
+
+#### Pulse Animation
+
+```css
+/* Good Example - Attention-grabbing pulse */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.notification-dot {
+  --pulse-duration: 1.5s;
+
+  animation: pulse var(--pulse-duration) ease-in-out infinite;
+}
+```
+
+**Why good:** Only animates opacity (GPU-accelerated), uses ease-in-out for smooth oscillation
+
+#### Slide-In Animation
+
+```css
+/* Good Example - Enter animation */
+@keyframes slide-in {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.modal {
+  --modal-enter-duration: 300ms;
+
+  animation: slide-in var(--modal-enter-duration) var(--ease-out) forwards;
+}
+```
+
+**Why good:** Uses `forwards` to retain final state, ease-out for enter animation, combines transform and opacity
+
+---
+
+### Pattern 3: GPU-Accelerated Shadow Animation
+
+Animating `box-shadow` triggers expensive repaints. Use a pseudo-element with animated opacity instead.
+
+#### Implementation
+
+```css
+/* Good Example - Pseudo-element shadow technique */
+.card {
+  position: relative;
+}
+
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-out);
+  pointer-events: none;
+}
+
+.card:hover::after {
   opacity: 1;
-  transform: translateY(0);
-}
-
-/* Opt-in to motion */
-@media (prefers-reduced-motion: no-preference) {
-  .element {
-    animation: fade-slide-in var(--duration-normal) var(--ease-out);
-  }
 }
 ```
 
-#### Graceful Degradation
+**Why good:** Shadow is always rendered on pseudo-element, only opacity is animated (GPU-accelerated), no repaint on every frame
 
 ```css
-.notification {
-  animation: slide-in-bounce var(--notification-duration) var(--ease-spring);
+/* Bad Example - Direct shadow animation */
+.card {
+  transition: box-shadow 0.3s;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .notification {
-    animation: fade-in calc(var(--notification-duration) * 0.5) var(--ease-out);
-  }
+.card:hover {
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
 }
 ```
 
-**Key insight:** Reduced motion does not mean no animation. Opacity fades are generally safe. Replace spatial movement with opacity-only alternatives.
-
-See [examples/core.md](examples/core.md) for the complete reduced motion pattern.
+**Why bad:** box-shadow animation triggers repaint on every frame, causing jank on complex pages
 
 ---
 
-### Pattern 4: CSS @keyframes
+### Pattern 4: Staggered List Animations
 
-Use `@keyframes` for animations that loop, auto-play on mount, or have more than two states.
+Use CSS custom properties with `animation-delay` for staggered effects without JavaScript.
+
+#### Implementation
 
 ```css
+/* Good Example - CSS-only stagger */
 @keyframes fade-slide-in {
   from {
     opacity: 0;
@@ -191,79 +289,167 @@ Use `@keyframes` for animations that loop, auto-play on mount, or have more than
   }
 }
 
-.modal {
-  --modal-enter-duration: 300ms;
-  animation: fade-slide-in var(--modal-enter-duration) var(--ease-out) forwards;
+.list-item {
+  --stagger-delay: 50ms;
+  --item-duration: 300ms;
+
+  animation: fade-slide-in var(--item-duration) var(--ease-out) backwards;
+  animation-delay: calc(var(--index) * var(--stagger-delay));
 }
 ```
 
-**Key details:**
+```html
+<!-- Set index via inline style or data attribute -->
+<li class="list-item" style="--index: 0">First</li>
+<li class="list-item" style="--index: 1">Second</li>
+<li class="list-item" style="--index: 2">Third</li>
+```
 
-- Use `forwards` fill mode to retain final state after animation
-- Use `backwards` fill mode to show initial state during `animation-delay`
-- Use `ease-out` for enter, `ease-in` for exit
-- `linear` is only appropriate for continuous rotation (spinners)
-
-See [examples/core.md](examples/core.md) for spinners, pulses, skeleton loaders, and toast animations. See [examples/keyframes.md](examples/keyframes.md) for scroll-driven animations, @property gradients, and complex sequences.
+**Why good:** `backwards` fill mode shows initial state before animation starts, CSS handles timing cascade, minimal JavaScript (just setting index)
 
 ---
 
-### Pattern 5: Will-Change Optimization
+### Pattern 5: Prefers-Reduced-Motion Accessibility
 
-`will-change` creates a GPU layer (~307KB per 320x240px element). Apply only when needed, remove after.
+Always respect user motion preferences. Two approaches: remove motion or provide safe alternatives.
+
+#### Approach 1: Progressive Enhancement (Recommended)
 
 ```css
-/* CORRECT - only during interaction */
-.card:hover {
-  will-change: transform;
+/* Good Example - Motion opt-in approach */
+.element {
+  /* Base state - no animation */
+  opacity: 1;
+  transform: translateY(0);
 }
 
-/* WRONG - permanent GPU layer on every element */
-* {
-  will-change: transform;
+/* Only apply motion when user has no preference */
+@media (prefers-reduced-motion: no-preference) {
+  .element {
+    animation: fade-slide-in var(--duration-normal) var(--ease-out);
+  }
 }
 ```
 
-Never apply `will-change` permanently. Each element with `will-change` creates a separate compositing layer that consumes GPU memory. On mobile devices, this can crash the browser.
+**Why good:** Motion is opt-in, users who prefer reduced motion see static content immediately
 
----
-
-### Pattern 6: Scroll-Driven Animations
-
-CSS `animation-timeline` allows scroll-linked animations without JavaScript.
+#### Approach 2: Global Disable
 
 ```css
-.progress-bar {
-  animation: grow-width linear;
-  animation-timeline: scroll();
+/* Alternative - Disable all motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+```
+
+**Why good:** Nuclear option that catches all animations, useful as a fallback
+
+#### Approach 3: Safe Alternative Animations
+
+```css
+/* Good Example - Provide alternative */
+.notification {
+  --notification-duration: 400ms;
 }
 
-@keyframes grow-width {
+/* Full motion experience */
+@media (prefers-reduced-motion: no-preference) {
+  .notification {
+    animation: slide-in-bounce var(--notification-duration) var(--ease-spring);
+  }
+}
+
+/* Reduced motion alternative - fade only */
+@media (prefers-reduced-motion: reduce) {
+  .notification {
+    animation: fade-in calc(var(--notification-duration) * 0.5) var(--ease-out);
+  }
+}
+
+@keyframes slide-in-bounce {
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  70% {
+    transform: translateX(-10px);
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in {
   from {
-    transform: scaleX(0);
+    opacity: 0;
   }
   to {
-    transform: scaleX(1);
+    opacity: 1;
   }
 }
 ```
 
-**Two timeline types:**
-
-- `scroll()` -- progress based on scroll container position
-- `view()` -- progress based on element visibility in viewport
-
-**Browser support:** Chrome/Edge 115+, Safari 26+, Firefox behind flag
-
-See [examples/keyframes.md](examples/keyframes.md) for scroll progress, viewport reveal, and parallax patterns.
+**Why good:** Provides graceful degradation with meaningful visual feedback, reduced motion users still see the notification appear
 
 ---
 
-### Pattern 7: @property for Custom Property Animation
+### Pattern 6: Will-Change Optimization
 
-CSS Houdini's `@property` enables animating custom properties like gradient angles that CSS cannot normally interpolate.
+Use `will-change` sparingly and remove it after animation completes.
+
+#### Correct Usage
 
 ```css
+/* Good Example - Apply only when needed */
+.card {
+  /* No will-change by default */
+}
+
+.card:hover {
+  will-change: transform;
+  transform: scale(1.05);
+}
+
+/* Or use a class for animation state */
+.card.is-animating {
+  will-change: transform, opacity;
+}
+```
+
+**Why good:** will-change creates GPU layer only when needed, removed after hover ends
+
+```css
+/* Bad Example - Permanent will-change */
+.card {
+  will-change: transform, opacity; /* Always active */
+}
+
+/* Worse - Global will-change */
+* {
+  will-change: transform; /* Memory disaster */
+}
+```
+
+**Why bad:** Each element with will-change creates a GPU layer (~307KB per 320x240px element), permanent will-change wastes GPU memory, can crash mobile browsers
+
+---
+
+### Pattern 7: @property for Animating Custom Properties
+
+Use CSS Houdini's @property to animate custom properties like gradient angles.
+
+#### Implementation
+
+```css
+/* Good Example - Animated gradient */
 @property --gradient-angle {
   syntax: "<angle>";
   initial-value: 0deg;
@@ -271,8 +457,10 @@ CSS Houdini's `@property` enables animating custom properties like gradient angl
 }
 
 .gradient-border {
+  --gradient-duration: 3s;
+
   background: linear-gradient(var(--gradient-angle), #ff0080, #7928ca);
-  animation: rotate-gradient 3s linear infinite;
+  animation: rotate-gradient var(--gradient-duration) linear infinite;
 }
 
 @keyframes rotate-gradient {
@@ -282,7 +470,9 @@ CSS Houdini's `@property` enables animating custom properties like gradient angl
 }
 ```
 
-**Browser support:** Chrome/Edge 85+, Safari 16.4+, Firefox 128+
+**Why good:** @property allows CSS to understand the type and interpolate correctly, enables effects previously requiring JavaScript
+
+**Browser support:** Chrome 85+, Edge 85+, Safari 15.4+, Firefox 128+
 
 </patterns>
 
@@ -290,11 +480,13 @@ CSS Houdini's `@property` enables animating custom properties like gradient angl
 
 <performance>
 
-## Performance
+## Performance Optimization
 
 ### The 16.67ms Budget
 
 For 60fps, each frame must complete in 16.67ms. Layout-triggering animations often exceed this budget.
+
+### Properties by Performance Impact
 
 | Category                   | Properties                                | Impact                               |
 | -------------------------- | ----------------------------------------- | ------------------------------------ |
@@ -306,19 +498,20 @@ For 60fps, each frame must complete in 16.67ms. Layout-triggering animations oft
 
 | Animation Type     | Duration   | Reason                    |
 | ------------------ | ---------- | ------------------------- |
-| Micro-interactions | 100-150ms  | Feels instant             |
+| Micro-interactions | 100-200ms  | Feels instant             |
 | UI transitions     | 200-300ms  | Sweet spot for perception |
-| Page transitions   | 300-500ms  | Major context change      |
+| Page transitions   | 300-500ms  | Noticeable but not slow   |
 | Complex sequences  | 500-1000ms | Story-telling moments     |
 
 ### Transform Mapping
 
-| Instead of...       | Use...                          |
-| ------------------- | ------------------------------- |
-| `top`, `left`       | `translate(x, y)`               |
-| `width`, `height`   | `scale()`                       |
-| `box-shadow`        | Pseudo-element with opacity     |
-| `margin`, `padding` | `translate()` with layout space |
+Instead of animating layout properties, use equivalent transforms:
+
+| Instead of...       | Use...                            |
+| ------------------- | --------------------------------- |
+| `top`, `left`       | `translate(x, y)`                 |
+| `width`, `height`   | `scale()`                         |
+| `margin`, `padding` | `translate()` or layout animation |
 
 </performance>
 
@@ -328,83 +521,71 @@ For 60fps, each frame must complete in 16.67ms. Layout-triggering animations oft
 
 ## Decision Framework
 
-### Transitions vs @keyframes
+### When to Use Transitions vs Animations
 
 ```
-Is the animation triggered by user interaction (hover, focus, class toggle)?
-├─ YES → Is it a simple A->B state change?
-│   ├─ YES -> CSS Transition
-│   └─ NO -> Does it need multiple steps?
-│       ├─ YES -> CSS @keyframes
-│       └─ NO -> CSS Transition is fine
-└─ NO -> Does it auto-play or loop?
-    ├─ YES -> CSS @keyframes
-    └─ NO -> CSS Transition (triggered by class toggle)
+Is the animation triggered by user interaction?
+├─ YES → Is it a simple A→B state change?
+│   ├─ YES → CSS Transition ✓
+│   └─ NO → Does it need multiple steps?
+│       ├─ YES → CSS Animation with @keyframes
+│       └─ NO → CSS Transition is fine
+└─ NO → Does it auto-play or loop?
+    ├─ YES → CSS Animation with @keyframes ✓
+    └─ NO → CSS Transition (triggered by class toggle)
 ```
 
-### Easing Selection
+### When to Use which Easing
 
 ```
 What type of motion?
-├─ Element entering -> ease-out (fast start, slow end)
-├─ Element exiting -> ease-in (slow start, fast end)
-├─ Symmetric motion -> ease-in-out
-├─ Continuous rotation -> linear
-├─ Playful/bouncy -> custom cubic-bezier with overshoot
-└─ Default UI -> ease-out
-
-Never use:
-├─ linear for UI transitions (feels robotic)
-└─ ease (browser default) for production (too generic)
+├─ Element entering → ease-out (fast start, slow end) ✓
+├─ Element exiting → ease-in (slow start, fast end) ✓
+├─ Symmetric motion → ease-in-out
+├─ Continuous rotation → linear ✓
+├─ Playful/bouncy → custom cubic-bezier with overshoot
+└─ Default UI → ease-out ✓
 ```
 
-### CSS vs JavaScript Animation
+### Which Property to Animate
 
 ```
-Does the animation need...
-├─ Pause/play/reverse/seek control? -> JavaScript (Web Animations API)
-├─ Dynamic values calculated at runtime? -> JavaScript or CSS custom properties
-├─ Physics-based springs? -> Your animation library
-├─ Orchestrated staggering across many elements? -> JavaScript for complex, CSS for simple
-├─ Scroll-linked progress? -> CSS scroll-driven animations
-├─ Page/view transitions? -> See the View Transitions skill
-└─ Simple state transitions? -> CSS Transitions
+Need movement?
+├─ Position change → transform: translate()
+├─ Grow/shrink → transform: scale()
+├─ Rotation → transform: rotate()
+└─ Visibility → opacity
+
+Need to avoid?
+├─ Size change → Never animate width/height (use scale)
+├─ Position → Never animate top/left (use translate)
+└─ Shadow → Use pseudo-element opacity technique
 ```
 
 </decision_framework>
 
 ---
 
-<red_flags>
+<integration>
 
-## RED FLAGS
+## Integration Guide
 
-### High Priority
+**CSS animations are framework-agnostic.** They work with any styling solution and component architecture.
 
-- **Animating layout properties** (`width`, `height`, `top`, `left`, `margin`, `padding`) -- triggers expensive reflows every frame; use `transform` instead
-- **Magic numbers for timing** (`0.3s`, `300ms` inline) -- all durations must be CSS custom properties
-- **Missing `prefers-reduced-motion`** -- every animation must respect user preferences
-- **Linear easing for UI transitions** -- `linear` feels robotic; use `ease-out` for enter, `ease-in` for exit
-- **Permanent `will-change`** -- creates GPU layers permanently, wasting memory; apply only during animation
+**Works with:**
 
-### Medium Priority
+- **Any component framework**: Apply via className or style attribute
+- **CSS Modules**: Animation classes compose naturally
+- **Utility CSS**: Combine with utility classes
+- **Design systems**: Animation tokens integrate into token systems
 
-- **Using `transition: all`** -- transitions unnecessary properties, causes surprises when new properties are added
-- **Animating `box-shadow` directly** -- causes repaint every frame; use pseudo-element with opacity
-- **Missing `forwards` on enter animations** -- element snaps back to initial state
-- **Very long durations (>1s)** -- users perceive as slow; rarely appropriate outside special effects
+**CSS animations complement JavaScript animation libraries:**
 
-### Gotchas & Edge Cases
+- Use CSS for simple state transitions
+- Use your animation library for complex orchestration
+- Both can coexist in the same application
 
-- **`transform` + `position: fixed`** -- transform creates new containing block, breaking fixed positioning relative to viewport
-- **`will-change` creates stacking context** -- can affect z-index behavior unexpectedly
-- **Cannot animate `display: none`** -- use `opacity` + `visibility` or `grid-template-rows: 0fr`
-- **`fill-mode: backwards` needed for delayed animations** -- without it, element shows in final state during delay
-- **SVG uses different properties** -- animate `stroke-dashoffset` and `stroke-dasharray`, not `transform` for path drawing
-- **Scroll-driven animations need scrollable container** -- `overflow: hidden` parent breaks `scroll-timeline`
-- **Print media** -- animations don't print; ensure content is visible without animation
-
-</red_flags>
+</integration>
 
 ---
 
@@ -416,11 +597,11 @@ Does the animation need...
 
 **(You MUST animate ONLY transform and opacity for GPU-accelerated 60fps performance)**
 
-**(You MUST respect prefers-reduced-motion using @media (prefers-reduced-motion: no-preference) for opt-in or @media (prefers-reduced-motion: reduce) for opt-out)**
+**(You MUST respect prefers-reduced-motion using media queries or @media (prefers-reduced-motion: no-preference))**
 
-**(You MUST use CSS custom properties for ALL timing values - NO magic numbers like `0.3s`)**
+**(You MUST use named constants (CSS custom properties) for ALL timing values - NO magic numbers)**
 
-**(You MUST use ease-out for enter animations and ease-in for exit animations - NEVER linear for UI transitions)**
+**(You MUST use ease-out for enter animations and ease-in for exit animations - NEVER linear for UI)**
 
 **(You MUST remove will-change after animation completes - permanent will-change wastes GPU memory)**
 

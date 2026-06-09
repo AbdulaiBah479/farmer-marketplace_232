@@ -1,8 +1,6 @@
 ---
 name: filesystem-context
-description: Use for file-based context management, dynamic context discovery, and reducing context window bloat. Offload context to files for just-in-time loading.
-risk: unknown
-source: community
+description: This skill should be used when the user asks to "offload context to files", "implement dynamic context discovery", "use filesystem for agent memory", "reduce context window bloat", or mentions file-based context management, tool output persistence, agent scratch pads, or just-in-time context loading.
 ---
 
 # Filesystem-Based Context Engineering
@@ -11,7 +9,8 @@ The filesystem provides a single interface through which agents can flexibly sto
 
 The core insight is that files enable dynamic context discovery: agents pull relevant context on demand rather than carrying everything in the context window. This contrasts with static context, which is always included regardless of relevance.
 
-## When to Use
+## When to Activate
+
 Activate this skill when:
 - Tool outputs are bloating the context window
 - Agents need to persist state across long trajectories
@@ -299,7 +298,7 @@ This skill connects to:
 ## References
 
 Internal reference:
-- Implementation Patterns - Detailed pattern implementations
+- [Implementation Patterns](./references/implementation-patterns.md) - Detailed pattern implementations
 
 Related skills in this collection:
 - context-optimization - Token reduction techniques
@@ -320,7 +319,3 @@ External resources:
 **Author**: Agent Skills for Context Engineering Contributors
 **Version**: 1.0.0
 
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

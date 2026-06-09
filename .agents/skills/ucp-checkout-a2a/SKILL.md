@@ -1,9 +1,7 @@
 ---
 name: ucp-checkout-a2a
-description: >
-  Implement UCP Checkout over the A2A (Agent-to-Agent) binding — enable
-  autonomous agent-to-agent commerce using Agent Cards and structured message
-  parts. Use when building agent-to-agent commerce flows.
+description: Implement UCP Checkout over the A2A (Agent-to-Agent) binding — enable autonomous agent-to-agent commerce using Agent Cards and structured message parts. Use when building agent-to-agent commerce flows.
+allowed-tools: Read, Write, Edit, Bash, Grep, Glob, WebSearch, WebFetch
 ---
 
 # UCP Checkout — A2A Binding

@@ -1,11 +1,11 @@
 ---
 name: ux-review
-description: Multi-perspective UX review combining usability heuristics, WCAG accessibility checks, and interaction design analysis. Use when reviewing UI components before release, evaluating user flows for usability issues, conducting design critiques, or auditing accessibility compliance.
-tags:
+description: Multi-perspective UX review combining usability, accessibility, and interaction design analysis.
+keywords:
   - ux
   - usability
-  - accessibility
-  - design-review
+  - user experience
+  - design review
   - heuristics
 triggers:
   - ux review
@@ -13,114 +13,102 @@ triggers:
   - design critique
   - user experience analysis
   - heuristic evaluation
-keywords:
-  - UX review
-  - usability review
-  - accessibility audit
-  - review
 ---
 
-# UX Review
+# UX Review Skill
 
-Comprehensive user experience review that coordinates usability, accessibility, and interaction design perspectives for thorough analysis of components, flows, or features.
+Comprehensive user experience review that coordinates multiple UX perspectives for thorough analysis of components, flows, or features.
 
 ## When to Use This Skill
 
 - Reviewing new components or features before release
 - Evaluating existing flows for usability issues
-- PR reviews that touch UI/UX code
+- PR reviews that touch UI/UX
 - Design system component reviews
-- Onboarding flow or checkout flow optimization
-- Avoid using for purely visual/aesthetic reviews — use `ui-design-aesthetics` instead
+- Onboarding flow optimization
+- Form and checkout flow analysis
 
-## Workflow
+## Review Framework
 
-### Step 1: Gather Context
+### Phase 1: Initial Assessment
 
-Answer these questions before reviewing:
-
+**Context Gathering**:
 1. What is the user trying to accomplish?
-2. What is this component's role in the larger flow?
-3. Who are the target users (personas, skill level)?
+2. What is the component's role in the larger flow?
+3. Who are the target users?
 4. What are the success criteria?
 
-### Step 2: Run Heuristic Scan (Nielsen's 10)
+**Heuristic Scan** (Nielsen's 10):
+- Visibility of system status
+- Match between system and real world
+- User control and freedom
+- Consistency and standards
+- Error prevention
+- Recognition rather than recall
+- Flexibility and efficiency of use
+- Aesthetic and minimalist design
+- Help users recognize and recover from errors
+- Help and documentation
 
-Evaluate the interface against each heuristic:
+### Phase 2: Multi-Perspective Analysis
 
-| Heuristic | Check |
-|-----------|-------|
-| Visibility of system status | Does the user always know what's happening? |
-| Match with real world | Does it use familiar language and concepts? |
-| User control and freedom | Can users undo, go back, escape? |
-| Consistency and standards | Does it follow platform conventions? |
-| Error prevention | Are mistakes prevented before they happen? |
-| Recognition over recall | Is information visible rather than memorized? |
-| Flexibility and efficiency | Are there shortcuts for expert users? |
-| Aesthetic and minimalist design | Is every element necessary? |
-| Error recovery | Are error messages helpful and actionable? |
-| Help and documentation | Is guidance available when needed? |
+#### UX Designer Perspective
 
-### Step 3: Multi-Perspective Analysis
+| Category | Key Questions |
+|----------|---------------|
+| User Flow | Is the path to completion clear and efficient? |
+| Information Architecture | Is content organized logically? |
+| Cognitive Load | Is the interface overwhelming? |
+| Error Prevention | Are mistakes prevented before they happen? |
+| Mental Models | Does it work like users expect? |
 
-#### Usability Perspective
+#### Accessibility Expert Perspective
 
-- **User flow**: Is the path to completion clear and efficient?
-- **Information architecture**: Is content organized logically?
-- **Cognitive load**: Is the interface overwhelming?
-- **Mental models**: Does it work like users expect?
+| Category | Key Questions |
+|----------|---------------|
+| WCAG 2.1 AA | Does it meet basic compliance? |
+| Keyboard Navigation | Can everything be done without a mouse? |
+| Screen Reader | Is the experience equivalent? |
+| Color Contrast | Are all text/UI elements visible? |
+| Focus Management | Is focus handled correctly? |
 
-#### Accessibility Perspective (WCAG 2.1 AA)
+#### Interaction Designer Perspective
 
-- **Keyboard navigation**: Can everything be done without a mouse?
-- **Screen reader**: Is the experience equivalent for assistive tech users?
-- **Color contrast**: Do all text/UI elements meet 4.5:1 ratio?
-- **Focus management**: Is focus order logical, visible, and never trapped?
+| Category | Key Questions |
+|----------|---------------|
+| State Coverage | Are all states handled (loading, empty, error, success)? |
+| Feedback | Does the user know their action worked? |
+| Micro-interactions | Are small details polished? |
+| Transitions | Are animations purposeful and smooth? |
+| Progressive Disclosure | Is complexity revealed appropriately? |
 
-```html
-<!-- Example: Accessible button with proper ARIA -->
-<button aria-label="Close dialog" aria-describedby="close-hint">
-  <svg aria-hidden="true"><!-- icon --></svg>
-</button>
-<span id="close-hint" class="sr-only">Press Escape to close</span>
-```
+### Phase 3: Synthesis & Recommendations
 
-#### Interaction Design Perspective
+Categorize findings by priority:
 
-- **State coverage**: Are all states handled (loading, empty, error, success)?
-- **Feedback**: Does the user know their action worked?
-- **Transitions**: Are animations purposeful and under 300ms?
-- **Progressive disclosure**: Is complexity revealed appropriately?
+1. **Critical Issues**: Must fix for usability/accessibility
+2. **High Priority**: Significantly impacts user experience
+3. **Enhancements**: Would improve delight and efficiency
+4. **Future Considerations**: Long-term improvements
 
-### Step 4: Prioritize Findings
-
-Categorize every finding:
-
-| Priority | Criteria | Action |
-|----------|----------|--------|
-| **Critical** | Blocks usability or fails WCAG AA | Must fix before release |
-| **High** | Significantly degrades experience | Fix in current sprint |
-| **Enhancement** | Improves delight and efficiency | Backlog for next iteration |
-| **Future** | Long-term improvements | Track in roadmap |
-
-### Step 5: Produce Review Report
+## Output Template
 
 ```markdown
 ## UX Review: [Component/Flow Name]
 
 ### Summary
-[2-3 sentence executive summary]
+[2-3 sentence executive summary of overall UX quality and key findings]
 
 ### Critical Issues
-- [ ] Issue 1: [Description, impact, WCAG criterion if applicable]
-- [ ] Issue 2: [Description, impact]
+- [ ] Issue 1: [Description and impact]
+- [ ] Issue 2: [Description and impact]
 
 ### Recommendations by Category
 
 #### Usability
 | Finding | Impact | Recommendation |
 |---------|--------|----------------|
-| [Issue] | High/Med/Low | [Fix] |
+| [Issue] | [High/Medium/Low] | [Fix] |
 
 #### Accessibility
 | Finding | WCAG Criterion | Recommendation |
@@ -130,26 +118,47 @@ Categorize every finding:
 #### Interaction Design
 | Finding | Impact | Recommendation |
 |---------|--------|----------------|
-| [Issue] | High/Med/Low | [Fix] |
+| [Issue] | [High/Medium/Low] | [Fix] |
+
+### Implementation Priority
+1. **Critical fixes** (do first): [List]
+2. **High-priority improvements**: [List]
+3. **Enhancement opportunities**: [List]
 
 ### Next Steps
-1. Create issues for critical findings
+1. Create issues/tasks for critical findings
 2. Add accessibility requirements to acceptance criteria
-3. Schedule follow-up review after fixes
+3. Update component documentation with UX guidelines
+4. Schedule follow-up review after fixes
 ```
 
 ## Focus Area Deep Dives
 
-Use `--focus` to narrow the review scope:
+### Usability Focus (`--focus=ux`)
+- User flow mapping and optimization
+- Task completion efficiency
+- Error recovery patterns
+- Learnability assessment
+- Memory load reduction
 
-- **`--focus=ux`**: User flow mapping, task efficiency, error recovery, learnability
-- **`--focus=a11y`**: WCAG 2.1 AA audit, keyboard nav, screen reader, contrast, focus management
-- **`--focus=interaction`**: State coverage, feedback timing, micro-interactions, animation review
+### Accessibility Focus (`--focus=a11y`)
+- WCAG 2.1 AA compliance audit
+- Keyboard navigation testing
+- Screen reader compatibility
+- Color contrast verification
+- Focus management review
 
-## Best Practices
+### Interaction Focus (`--focus=interaction`)
+- State coverage audit
+- Feedback timing analysis
+- Micro-interaction opportunities
+- Animation review
+- Progressive disclosure evaluation
 
-- **Test with real content** — Lorem ipsum hides information architecture problems
-- **Check all states** — Empty, loading, error, success, and edge-case states
-- **Verify keyboard flow** — Tab through the entire component without a mouse
-- **Use browser dev tools** — Lighthouse accessibility audit catches low-hanging fruit
-- **Prioritize ruthlessly** — A focused list of critical fixes beats a wall of suggestions
+## Success Indicators
+
+- All critical usability issues identified
+- Accessibility compliance gaps documented
+- Interaction design improvements suggested
+- Clear prioritization of fixes
+- Actionable recommendations provided

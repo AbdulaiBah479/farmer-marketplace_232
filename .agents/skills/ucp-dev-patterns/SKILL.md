@@ -1,10 +1,7 @@
 ---
 name: ucp-dev-patterns
-description: >
-  UCP development patterns — capability negotiation algorithms, idempotency
-  implementation, error resolution loops, multi-binding servers, and production
-  architecture. Use when designing the internal architecture of a UCP
-  implementation or solving cross-cutting concerns.
+description: UCP development patterns — capability negotiation algorithms, idempotency implementation, error resolution loops, multi-binding servers, and production architecture. Use when designing the internal architecture of a UCP implementation or solving cross-cutting concerns.
+allowed-tools: Read, Write, Edit, Bash, Grep, Glob, WebSearch, WebFetch
 ---
 
 # UCP Development Patterns

@@ -1,52 +1,35 @@
 ---
-name: "OpenAI Image Gen"
-slug: "openai-image-gen"
-description: "Batch-generate images through the OpenAI Images API with a prompt sampler and gallery output."
-github_stars: 10942
-verification: "security_reviewed"
-source: "https://github.com/openai/openai-node"
-author: "OpenAI"
-publisher_type: "open_source_collective"
-category: "Image & Creative Automation"
-framework: "OpenClaw"
-tool_ecosystem:
-  github_repo: "openai/openai-node"
-  github_stars: 10942
-  npm_package: "openai"
-  npm_weekly_downloads: 24753917
+name: openai-image-gen
+description: Batch-generate images via OpenAI Images API. Random prompt sampler + `index.html` gallery.
 ---
 
 # OpenAI Image Gen
 
-Batch-generate images through the OpenAI Images API with a prompt sampler and gallery output.
+Generate a handful of “random but structured” prompts and render them via OpenAI Images API.
 
-## Prerequisites
+## Setup
 
-Node.js, npm
+- Needs env: `OPENAI_API_KEY`
 
-## Installation
+## Run
 
-Use the upstream install or setup path that matches your environment:
-- npm install openai
-- npx jsr add @openai/openai
+From any directory (outputs to `~/Projects/tmp/...` when present; else `./tmp/...`):
 
-Requirements and caveats from upstream:
-- The full API of this library can be found in [api.md file](api.md) along with many [code examples](https://github.com/openai/openai-node/tree/master/examples).
-- // If you have access to Node fs we recommend using fs.createReadStream():
-- await client.chat.completions.create({ messages: [{ role: 'user', content: 'How can I list all files in a directory using Python?' }], model: 'gpt-5.2' }, {
+```bash
+python3 ~/Projects/agent-scripts/skills/openai-image-gen/scripts/gen.py
+open ~/Projects/tmp/openai-image-gen-*/index.html
+```
 
-Basic usage or getting-started notes:
-- sh
-- deno add jsr:@openai/openai
-- These commands will make the module importable from the @openai/openai scope. You can also [import directly from JSR](https://jsr.io/docs/using-packages#importing-with-jsr-specifiers) without an install step if you're...
+Useful flags:
 
-- Source: https://github.com/openai/openai-node
-- Extracted from upstream docs: https://raw.githubusercontent.com/openai/openai-node/HEAD/README.md
+```bash
+python3 ~/Projects/agent-scripts/skills/openai-image-gen/scripts/gen.py --count 16 --model gpt-image-1.5
+python3 ~/Projects/agent-scripts/skills/openai-image-gen/scripts/gen.py --prompt "ultra-detailed studio photo of a lobster astronaut" --count 4
+python3 ~/Projects/agent-scripts/skills/openai-image-gen/scripts/gen.py --size 1536x1024 --quality high --out-dir ./out/images
+```
 
-## Documentation
+## Output
 
-- https://platform.openai.com/docs/api-reference
-
-## Source
-
-- [Agent Skill Exchange](https://agentskillexchange.com/skills/openai-image-gen/)
+- `*.png` images
+- `prompts.json` (prompt ↔ file mapping)
+- `index.html` (thumbnail gallery)

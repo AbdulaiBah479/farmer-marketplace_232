@@ -1,122 +1,151 @@
 ---
 name: make-interfaces-feel-better
-description: Design engineering principles for making interfaces feel polished. Use when building UI components, reviewing frontend code, implementing animations, hover states, shadows, borders, typography, micro-interactions, enter/exit animations, or any visual detail work. Triggers on UI polish, design details, "make it feel better", "feels off", stagger animations, border radius, optical alignment, font smoothing, tabular numbers, image outlines, box shadows.
+description: Apply concrete design-engineering details that make interfaces feel polished. Use when reviewing or improving UI spacing, typography, borders, shadows, motion, hit areas, icons, text wrapping, and interaction states.
+origin: community
 ---
 
-# Details that make interfaces feel better
+# Make Interfaces Feel Better
 
-Great interfaces rarely come from a single thing. It's usually a collection of small details that compound into a great experience. Apply these principles when building or reviewing UI code.
+Use this skill for the small design-engineering details that compound into a
+more polished interface.
 
-## Quick Reference
+Source: salvaged from stale community PR #1659 by `linus707`.
 
-| Category | When to Use |
-| --- | --- |
-| [Typography](typography.md) | Text wrapping, font smoothing, tabular numbers |
-| [Surfaces](surfaces.md) | Border radius, optical alignment, shadows, image outlines, hit areas |
-| [Animations](animations.md) | Interruptible animations, enter/exit transitions, icon animations, scale on press |
-| [Performance](performance.md) | Transition specificity, `will-change` usage |
+## When to Use
+
+- The user says the UI feels off, flat, generic, cramped, jumpy, or unfinished.
+- You are building controls, cards, lists, dashboards, navigation, forms, or
+  toolbars.
+- A component needs hover, active, focus, enter, exit, loading, or empty states.
+- A frontend review needs specific before/after recommendations.
 
 ## Core Principles
 
-### 1. Concentric Border Radius
+### Concentric Radius
 
-Outer radius = inner radius + padding. Mismatched radii on nested elements is the most common thing that makes interfaces feel off.
+For nearby nested rounded surfaces:
 
-### 2. Optical Over Geometric Alignment
+```text
+outer radius = inner radius + padding
+```
 
-When geometric centering looks off, align optically. Buttons with icons, play triangles, and asymmetric icons all need manual adjustment.
+If padding is large, treat layers as separate surfaces instead of forcing the
+math. The point is optical coherence, not formula worship.
 
-### 3. Shadows Over Borders
+### Optical Alignment
 
-Layer multiple transparent `box-shadow` values for natural depth. Shadows adapt to any background; solid borders don't.
+Geometric centering is not always visual centering. Icon buttons, play
+triangles, arrows, stars, and asymmetric icons often need a small offset. Fix the
+SVG when possible; otherwise adjust with a pixel-level margin or padding change.
 
-### 4. Interruptible Animations
+### Shadows And Borders
 
-Use CSS transitions for interactive state changes — they can be interrupted mid-animation. Reserve keyframes for staged sequences that run once.
+Use borders for separation and focus rings. Use layered shadows when a card,
+button, dropdown, or popover needs depth. Shadows should be transparent and
+subtle enough to work across backgrounds.
 
-### 5. Split and Stagger Enter Animations
+### Text Wrapping
 
-Don't animate a single container. Break content into semantic chunks and stagger each with ~100ms delay.
+- Use `text-wrap: balance` on headings and short titles.
+- Use `text-wrap: pretty` on short-to-medium body text, captions, descriptions,
+  and list items.
+- Avoid both on long prose, code, and preformatted content.
+- Use `font-variant-numeric: tabular-nums` for counters, timers, prices, tables,
+  and other updating numbers.
 
-### 6. Subtle Exit Animations
+### Font Smoothing
 
-Use a small fixed `translateY` instead of full height. Exits should be softer than enters.
+On macOS, apply antialiased font smoothing at the root layout when the project
+does not already do so:
 
-### 7. Contextual Icon Animations
+```css
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+```
 
-Animate icons with `opacity`, `scale`, and `blur` instead of toggling visibility. Use exactly these values: scale from `0.25` to `1`, opacity from `0` to `1`, blur from `4px` to `0px`. If the project has `motion` or `framer-motion` in `package.json`, use `transition: { type: "spring", duration: 0.3, bounce: 0 }` — bounce must always be `0`. If no motion library is installed, keep both icons in the DOM (one absolute-positioned) and cross-fade with CSS transitions using `cubic-bezier(0.2, 0, 0, 1)` — this gives both enter and exit animations without any dependency.
+### Image Outlines
 
-### 8. Font Smoothing
+Images often need a subtle inset outline so their edges do not blur into the
+surface.
 
-Apply `-webkit-font-smoothing: antialiased` to the root layout on macOS for crisper text.
+```css
+img {
+  outline: 1px solid rgba(0, 0, 0, 0.1);
+  outline-offset: -1px;
+}
 
-### 9. Tabular Numbers
+@media (prefers-color-scheme: dark) {
+  img {
+    outline-color: rgba(255, 255, 255, 0.1);
+  }
+}
+```
 
-Use `font-variant-numeric: tabular-nums` for any dynamically updating numbers to prevent layout shift.
+Use neutral black or white alpha outlines. Do not tint image outlines with the
+brand palette.
 
-### 10. Text Wrapping
+### Motion
 
-Use `text-wrap: balance` on headings. Use `text-wrap: pretty` for body text to avoid orphans.
+Use CSS transitions for interactive state changes because they can retarget
+when the user changes intent mid-motion. Reserve keyframes for staged
+one-shot entrances or loading sequences.
 
-### 11. Image Outlines
+Good motion defaults:
 
-Add a subtle `1px` outline with low opacity to images for consistent depth.
+- Enter: combine opacity, small `translateY`, and optionally blur.
+- Exit: shorter and quieter than enter, usually 150ms.
+- Press: `scale(0.96)` for tactile buttons, with a way to disable it when the
+  movement distracts.
+- Icon swaps: cross-fade with opacity, scale, and blur instead of instant
+  visibility toggles.
 
-### 12. Scale on Press
+### Transition Scope
 
-A subtle `scale(0.96)` on click gives buttons tactile feedback. Always use `0.96`. Never use a value smaller than `0.95` — anything below feels exaggerated. Add a `static` prop to disable it when motion would be distracting.
+Never use `transition: all`. Specify the changed properties:
 
-### 13. Skip Animation on Page Load
+```css
+.button {
+  transition-property: transform, background-color, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+```
 
-Use `initial={false}` on `AnimatePresence` to prevent enter animations on first render. Verify it doesn't break intentional entrance animations.
+Use `will-change` only for first-frame stutter on compositor-friendly
+properties such as `transform`, `opacity`, and `filter`. Never use
+`will-change: all`.
 
-### 14. Never Use `transition: all`
+### Hit Areas
 
-Always specify exact properties: `transition-property: scale, opacity`. Tailwind's `transition-transform` covers `transform, translate, scale, rotate`.
+Interactive controls should have at least a 40x40px hit area, ideally 44x44px
+where the layout allows it. Expand with a pseudo-element when the visible icon
+is smaller, but do not let expanded hit areas overlap.
 
-### 15. Use `will-change` Sparingly
+## Review Output
 
-Only for `transform`, `opacity`, `filter` — properties the GPU can composite. Never use `will-change: all`. Only add when you notice first-frame stutter.
+When reviewing a UI polish pass, report concrete changes in before/after rows:
 
-### 16. Minimum Hit Area
+| Principle | Before | After |
+| --- | --- | --- |
+| Concentric radius | Same radius on parent and child | Parent radius accounts for padding |
+| Tabular numbers | Counter shifts as digits change | Counter uses `tabular-nums` |
+| Transition scope | `transition: all` | Explicit transition properties |
 
-Interactive elements need at least 40×40px hit area. Extend with a pseudo-element if the visible element is smaller. Never let hit areas of two elements overlap.
+Include file paths and properties when they are not obvious from the snippets.
+Omit principles that you checked but did not change.
 
-## Common Mistakes
+## Checklist
 
-| Mistake | Fix |
-| --- | --- |
-| Same border radius on parent and child | Calculate `outerRadius = innerRadius + padding` |
-| Icons look off-center | Adjust optically with padding or fix SVG directly |
-| Hard borders between sections | Use layered `box-shadow` with transparency |
-| Jarring enter/exit animations | Split, stagger, and keep exits subtle |
-| Numbers cause layout shift | Apply `tabular-nums` |
-| Heavy text on macOS | Apply `antialiased` to root |
-| Animation plays on page load | Add `initial={false}` to `AnimatePresence` |
-| `transition: all` on elements | Specify exact properties |
-| First-frame animation stutter | Add `will-change: transform` (sparingly) |
-| Tiny hit areas on small controls | Extend with pseudo-element to 40×40px |
-
-## Review Checklist
-
-- [ ] Nested rounded elements use concentric border radius
-- [ ] Icons are optically centered, not just geometrically
-- [ ] Shadows used instead of borders where appropriate
-- [ ] Enter animations are split and staggered
-- [ ] Exit animations are subtle
-- [ ] Dynamic numbers use tabular-nums
-- [ ] Font smoothing is applied
-- [ ] Headings use text-wrap: balance
-- [ ] Images have subtle outlines
-- [ ] Buttons use scale on press where appropriate
-- [ ] AnimatePresence uses `initial={false}` for default-state elements
-- [ ] No `transition: all` — only specific properties
-- [ ] `will-change` only on transform/opacity/filter, never `all`
-- [ ] Interactive elements have at least 40×40px hit area
-
-## Reference Files
-
-- [typography.md](typography.md) — Text wrapping, font smoothing, tabular numbers
-- [surfaces.md](surfaces.md) — Border radius, optical alignment, shadows, image outlines
-- [animations.md](animations.md) — Interruptible animations, enter/exit transitions, icon animations, scale on press
-- [performance.md](performance.md) — Transition specificity, `will-change` usage
+- Nested rounded elements are optically coherent.
+- Icons are visually centered.
+- Buttons, cards, and popovers use borders or shadows for the right reason.
+- Headings and short text avoid awkward wrapping.
+- Dynamic numbers use tabular numerals.
+- Images have neutral outlines where needed.
+- Enter and exit animations are split, subtle, and interruptible where
+  appropriate.
+- Buttons have tactile active states without exaggerated motion.
+- `transition: all` and `will-change: all` are absent.
+- Small controls still have usable hit areas.

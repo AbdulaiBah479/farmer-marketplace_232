@@ -1,102 +1,286 @@
 ---
 name: process-mapper
-description: Use when a BizOps lead, COO, or process-improvement owner needs to document an end-to-end business process (procurement, employee onboarding, incident handoff, customer-onboarding, claims adjudication) in BPMN-style notation, measure cycle times by stage, surface where work spends most of its time waiting vs. being worked, and quantify the gap between processing time and total elapsed time. Pairs Lean / Six Sigma / Theory-of-Constraints canon with deterministic stdlib-only Python tools to produce a process map, a ranked bottleneck list (with severity + root-cause hypothesis), and a cycle-time analysis (P50, P90, value-add ratio, Little's-Law throughput). Distinct from sales-pipeline, system-reliability (SLO), and strategic-OKR work — this is tactical process documentation for internal operations.
-version: 2.8.0
-author: claude-code-skills
-license: MIT
-tags: [bizops, process, bpmn, bottleneck, cycle-time, lean, six-sigma, value-stream]
-compatible_tools: [claude-code, codex-cli, cursor, antigravity, opencode, gemini-cli]
+description: Map workflows, extract SOPs, and identify automation opportunities through systematic process capture and AI tractability assessment. Use when documenting workflows, creating SOPs, conducting process discovery interviews, or analyzing automation opportunities. Grounds the SOP-first doctrine in tacit knowledge documentation and structured analysis.
+license: Complete terms in LICENSE.txt
 ---
 
-# process-mapper
+# Process Mapper Skill
 
-BPMN-style business process documentation, bottleneck detection, and cycle-time analysis for internal-operations leaders.
+Systematic workflow for discovering, documenting, and analyzing processes. Implements user's SOP-first doctrine: **"You can't automate what you can't see."**
 
-## Purpose
+## Core Philosophy
 
-Internal-operations work suffers from three recurring failure modes:
+**From user's work:**
+> "When I sit with a person or team to start working through how they can work out where and how to apply AI into their job, I often like to start with a common task or value stream, and talk through—or more often than not, document—the SOP for that value stream."
 
-1. **Implicit process** — the steps exist only in tribal knowledge, so handoffs drop and onboarding takes weeks.
-2. **Invisible waiting** — most of the elapsed time on any business process is queue / wait / approval time, not actual work; teams optimize the wrong stage.
-3. **Local optimization** — Goldratt's Theory of Constraints is ignored; resources are added to non-constraint stages, gaining nothing.
+**Three truths:**
+1. **Shadow processes are real processes** (what actually happens ≠ org chart)
+2. **Tacit knowledge is documentable** (capture decision *points*, not decision *logic*)
+3. **Structure enables automation** (visibility → AI opportunities)
 
-This skill produces a documented process map, identifies where work waits, and points the constraint out by name with deterministic logic — not LLM intuition.
+---
 
-## When to use
+## Core Workflow
 
-- Documenting a new business process (procurement intake, vendor onboarding, employee onboarding, incident handoff, expense reimbursement, customer onboarding, claims adjudication).
-- An existing process is "too slow" but nobody can name the bottleneck.
-- Cycle time is being measured but value-add ratio is not — so the team can't tell whether the process is healthy or waste-heavy.
-- Cross-functional handoffs are dropping work and root cause is unclear.
+### 1. Diagnostic: Assess Current State
 
-## Workflow
+**Determine SOP state:**
 
-Five-step deterministic flow:
+Load `references/discovery-methodology.md` for framework
 
-1. **Intake.** Capture the process as a JSON file with one entry per stage: `name`, `owner`, `type` (`value-add` | `wait` | `rework`), `duration_minutes_p50`, `duration_minutes_p90`. Use `assets/process_template.md` and its JSON skeleton.
-2. **Map stages.** Run `process_documenter.py` to produce an ASCII swim-lane diagram + a normalized JSON artifact. The swim-lane separates lanes by owner so cross-functional handoffs become visible.
-3. **Measure cycle time.** Run `cycle_time_analyzer.py` to compute total P50, total P90, value-add ratio (VA%), and a Little's-Law throughput estimate. Verdict: VA% > 25% = HEALTHY, 10–25% = TYPICAL, < 10% = WASTE-HEAVY.
-4. **Detect bottlenecks.** Run `bottleneck_detector.py` with the appropriate `--profile` (saas / services / manufacturing / healthcare). Output is a ranked list with severity (CRITICAL / HIGH / MEDIUM), root-cause hypothesis, and one recommended action per finding.
-5. **Recommend.** Pair the bottleneck list with the cycle-time verdict; recommend a single constraint-focused intervention per Goldratt's "subordinate everything to the constraint" rule. Don't recommend optimization of a non-constraint stage.
+**State 1: Fiction**
+- SOPs exist but nobody follows them
+- Beautiful docs, zero usage
+- Aspirational not actual
 
-## Scripts
+**State 2: Nonexistent**
+- No documentation
+- Tribal knowledge
+- "Just ask Sarah"
 
-**`scripts/process_documenter.py`** — Reads a process JSON, validates it, and emits a text-based BPMN-style swim-lane diagram in Markdown (lanes by owner, stages annotated with type + duration). Also outputs a normalized JSON artifact for downstream tools. Stdlib only. `--sample` prints a 6-stage procurement-intake example.
+**State 3: Accurate**
+- Docs match reality
+- Referenced regularly
+- Updated when process changes
 
-**`scripts/bottleneck_detector.py`** — Applies three deterministic detection rules: (a) stage P50 > 2× mean of value-add stages, (b) wait-state % > 40% of total cycle, (c) rework % > 15%. Thresholds adjust by `--profile` because SaaS, services, manufacturing, and healthcare have different "normal" wait ratios. Output is a ranked list with severity, hypothesis, action.
+**Action by state:**
+- Fiction → Archive and start fresh
+- Nonexistent → Begin discovery (most common)
+- Accurate → Use for automation analysis
 
-**`scripts/cycle_time_analyzer.py`** — Computes total P50 and P90 cycle time, value-add ratio (VA%), wait %, rework %, and a Little's-Law throughput estimate (WIP / cycle time). Per Lean canon: VA% > 25% = HEALTHY, 10–25% = TYPICAL (most non-manufacturing processes land here), < 10% = WASTE-HEAVY.
+---
 
-## References
+### 2. Process Discovery Interview
 
-- `references/lean_six_sigma_canon.md` — TIMWOOD wastes, value-stream mapping, Theory of Constraints, Kanban WIP, Little's Law. Cites Womack & Jones, Rother & Shook, Goldratt, Ohno, Liker, Pyzdek, Anderson.
-- `references/bpmn_essentials.md` — Pools, lanes, gateways, events, message flows, common notation mistakes. Cites the OMG BPMN 2.0 spec, Silver, Allweyer, Freund/Rücker, OASIS, ISO/IEC 19510:2013.
-- `references/bottleneck_anti_patterns.md` — Seven specific anti-patterns drawn from Goldratt, Kim et al., Spear, DORA, Deming, and process-mining research.
+**If starting from State 2 (Nonexistent), conduct discovery:**
 
-## Assumptions
+**Setup:**
+- Identify process owner (person who actually does this)
+- Secure 45-90 minutes uninterrupted
+- Frame: "Show me what actually happens, not what should happen"
+- Get screen access to tools they use
 
-1. The user can provide stage-level cycle-time data (even rough P50 / P90 estimates). If they cannot, the first step is to instrument the process — not to map it.
-2. "Process" here means a repeatable business workflow with discrete stages, not a one-off project.
-3. The user has authority to act on bottlenecks (or can route findings to someone who does). Without that, the output is academic.
-4. Stage `type` is honest: a "value-add" stage labeled as such by the user really does change the work product from the customer's perspective. Mis-labelling waiting as value-add is the most common data-quality failure.
+**Five-round interview sequence:**
 
-## Anti-patterns
+Load `references/discovery-methodology.md` for detailed questions. Brief framework:
 
-- **Mapping every process at once.** Pick one. Goldratt: the constraint is a single point.
-- **Optimizing the non-constraint.** If stage 4 is the bottleneck, speeding up stage 2 just builds inventory in front of stage 4. Subordinate everything to the constraint.
-- **Mistaking total cycle time for processing time.** They are almost never the same; VA% reveals the gap.
-- **Adding people to a wait-bound process.** Wait time is not solved by more headcount; it's solved by removing the handoff or batch.
-- **Treating rework as a separate problem.** Rework loops belong in the process map. Hiding them understates true cycle time.
+**Round 1: High-Level Flow** - Get end-to-end sequence (5-10 major steps, trigger, endpoint, duration)
 
-## Distinct from
+**Round 2: Step Decomposition** - Break into substeps (inputs, tools, transformations). Look for copy-paste, manual entry, system switching.
 
-- **business-growth skills** — external sales motion, lead-funnel conversion, customer-success retention. Process-mapper is *internal* operations.
-- **engineering/slo-architect** — system-reliability SLOs / error budgets / burn-rate alerts. Process-mapper is *business-process* cycle time, not system uptime.
-- **c-level-advisor (COO / CEO)** — strategic prioritization of which processes to fix. Process-mapper is the tactical instrument used after that prioritization decision.
-- **project-management skills** — Jira / Confluence ticket workflow tooling. Process-mapper is process *design*, not ticket *tracking*.
+**Round 3: Decision Points** - Identify where judgment is required. Distinguish explicit rules from tacit judgment (labeled black box pattern).
 
-## Forcing-question library (Matt Pocock grill discipline)
+**Round 4: Edge Cases & Exceptions** - Understand failure modes, workarounds, frequency. High exceptions = process might be wrong.
 
-Before invoking the tools, the orchestrator (or `/cs:grill-bizops`) walks the user through these questions **one at a time, with a recommended answer + canon citation**. Never bundled.
+**Round 5: Context Dependencies** - Identify tacit knowledge (domain knowledge, institutional knowledge, relationships). Reveals automation tractability.
 
-1. **"Do you have measured cycle times for the top-3 longest stages, or only estimates?"**
-   Recommended: insist on measured data.
-   Canon: Goldratt 1984 (*The Goal*) — optimizing estimated bottlenecks reliably attacks the wrong constraint.
+---
 
-2. **"Are you mapping the *current* process (as-is) or the *intended* process (to-be)?"**
-   Recommended: map as-is first. To-be after bottleneck is identified.
-   Canon: Rother & Shook 1999 (*Learning to See*) — value-stream mapping starts with the current state, always.
+### 3. Process Documentation
 
-3. **"Where do handoffs occur between teams, and how long does each handoff wait?"**
-   Recommended: log every handoff with median wait time.
-   Canon: Reinertsen 2009 (*Principles of Product Development Flow*) — wait time at handoffs is the largest invisible cost.
+**Choose format based on process characteristics:**
 
-4. **"What's your batch size at each stage?"**
-   Recommended: drive batch size toward 1 wherever possible.
-   Canon: Anderson 2010 (*Kanban*) — batch size correlates 1:1 with cycle time variance.
+**Format 1: Linear SOP** (≤10 steps, minimal branching)
+- Sequential steps with actions/tools/inputs
+- Quality checks
+- Common issues
 
-5. **"What's the rework rate per stage?"**
-   Recommended: surface it explicitly; rework loops belong in the map.
-   Canon: Pyzdek (*Six Sigma Handbook*) — hidden rework drives 30-50% of total cycle time in service processes.
+**Format 2: Decision Tree** (multiple paths, branching logic)
+- Entry conditions
+- Path A/B/C with criteria
+- Decision matrix
 
-Walk depth-first. Don't open question 4 before 1-3 are answered. After all 5 are locked, invoke `process_documenter.py` → `bottleneck_detector.py` → `cycle_time_analyzer.py` in sequence.
+**Format 3: Swimlane** (multi-role, handoffs important)
+- Who does what when
+- Handoff points
+- Role responsibilities
+
+**Format 4: Visual Diagram** (complex flows)
+- Mermaid flowchart
+- System integrations
+- Exception paths
+
+Load `assets/visual-templates.md` for specific templates
+
+**Documentation principles:**
+- Capture **actual** current state (not aspirational)
+- Mark tacit knowledge points with ⚡
+- Note context dependencies with 🧠
+- Flag frequent failures with ⚠️
+- Include frequency/volume data
+- Validate with process owner
+
+---
+
+### 4. Complexity Classification
+
+**Map each process step to Tractability Grid (9 zones):**
+
+Load `references/automation-framework.md` for full framework and detailed assessment criteria.
+
+**Two dimensions:**
+1. **Context Dependence:** Low (algorithmic, no expertise) → High (tacit judgment, relationships)
+2. **Task Complexity:** Simple (≤5 steps, single system) → Complex (15+ steps, multiple systems)
+
+**Assessment questions:** Could intern do this with instructions? How many steps/systems/decisions?
+
+---
+
+### 5. Automation Opportunity Analysis
+
+**Plot each step on 9-zone grid** (see `references/automation-framework.md` for visual):
+- **Zones 1-2 (Green):** High automation (85-75% success) - RPA, quick wins
+- **Zones 3-5 (Yellow):** Medium (60-40%) - AI copilots, human-in-loop
+- **Zones 6-9 (Red):** Low (<25%) - Avoid core automation, support tasks only
+
+### 6. Prioritization & ROI
+
+**Priority quadrants** (Pain × Feasibility):
+- **P1 - Quick Wins:** High pain, easy (Zones 1-2) - Do immediately
+- **P2 - Strategic:** High pain, hard (Zones 3-5) - Worth investment
+- **P3 - Efficiency:** Low pain, easy - Do when capacity available
+- **P4 - Avoid:** Low pain, hard (Zones 6-9) - Not worth effort
+
+**ROI:** Payback Period = Cost / (Hours Saved × Rate + Error Reduction)
+
+### 7. Output Delivery
+
+**Standard deliverables:** Process Map (visual), SOP Document (written), Automation Analysis (zone classifications, priorities, ROI), Implementation Roadmap (phased plan)
+
+**Optional:** Interview transcript, validation notes, comparative analysis, metrics dashboard
+
+---
+
+## The Labeled Black Box Pattern
+
+**Critical technique:** Document THAT a decision exists, not HOW it's made (when tacit).
+
+Load `references/documentation-patterns.md` for detailed examples and template.
+
+**Core principle:** Name decision points even when logic is tacit. Enables process visibility, appropriate handoffs, training focus, and future automation planning.
+
+---
+
+## Movement Strategy
+
+**Key insight:** Can't automate high-context zones directly. Build infrastructure to move problems to lower zones.
+
+Load `references/documentation-patterns.md` for case study (Air India: Zone 8 → Zone 2, 97% accuracy).
+
+**Infrastructure path:** Zone 8→5 (frameworks), Zone 5→2 (explicit logic), Zone 2→1 (eliminate manual steps)
+
+---
+
+## Quality Signals
+
+**Good process map has:**
+- [ ] Actual current state (not aspirational)
+- [ ] All decision points identified
+- [ ] Tacit knowledge points marked (⚡)
+- [ ] Context dependencies noted (🧠)
+- [ ] Exception paths included
+- [ ] Validated by process owner
+- [ ] Frequency/volume data
+- [ ] Pain points documented
+- [ ] Clear start and end
+- [ ] Realistic time estimates
+
+**Red flags:**
+- Too neat (probably fictional)
+- No exceptions (incomplete)
+- No pain points (not real discovery)
+- No tacit knowledge points (missed shadow process)
+- Can't estimate frequency (no data)
+- Process owner says "that's not quite right"
+
+---
+
+## Integration Points
+
+**With `concept-forge`:**
+- Test automation hypotheses dialectically
+- Challenge zone classifications
+- Refine through multiple perspectives
+
+**With `strategy-to-artifact`:**
+- Process map → Presentation deck
+- Automation roadmap → Executive one-pager
+- Business case → Slide deck
+
+**With `research-to-essay`:**
+- Process patterns → Substack post on SOP doctrine
+- Case studies → Long-form analysis
+
+**With user's voice (from `research-to-essay`):**
+- Use dialogue structure in documentation
+- Employ concrete examples (Air India vs Air Canada)
+- Include practitioner stance ("In my experience...")
+- Show recursive refinement ("Let me be more precise...")
+
+---
+
+## Common Process Types
+
+**Approval Workflows:** Zones 1-2 (rule-based) or 4-5 (judgment). High automation potential for rules.
+
+**Data Processing:** Zones 1-3. Very high automation if algorithmic.
+
+**Customer Service:** Zones 4-8. Medium automation (copilot model).
+
+**Reporting:** Zones 1-3 (structured) or 5-7 (insights). High for gathering, medium for analysis.
+
+**Coordination:** Zones 4-9 (relationship-dependent). Low for core, high for supporting tasks.
+
+---
+
+## Anti-Patterns
+
+**Don't:**
+- Map aspirational process (document what actually happens)
+- Skip validation with process owner (will be wrong)
+- Try to capture tacit HOW (use labeled black box)
+- Force Zone 8-9 into automation (will fail)
+- Ignore shadow processes (they're the real process)
+- Over-document (keep it actionable)
+- Create one-time map (processes evolve, keep updated)
+
+**Do:**
+- Start with actual current state
+- Validate iteratively
+- Document decision points even when logic is tacit
+- Acknowledge complexity honestly
+- Focus on high-ROI opportunities
+- Build movement infrastructure
+- Update as process changes
+
+---
+
+## Success Metrics
+
+**Process mapping succeeds when:**
+- Process owner says "Yes, that's exactly what we do"
+- New team members can follow documented process
+- Automation opportunities clearly identified
+- ROI estimates are validated
+- Quick wins deliver promised value
+- Documentation is referenced regularly (not ignored)
+
+**Automation analysis succeeds when:**
+- Zone classifications match reality
+- Prioritization aligns with business value
+- Implementation follows plan
+- Expected savings materialize
+- User adoption high (not forced)
+
+---
+
+## Example Triggers
+
+- "Map our customer onboarding process"
+- "Document how we handle support tickets"
+- "Where can we apply AI to our workflow?"
+- "Create SOP for expense approval"
+- "Show me where automation makes sense"
+- "Why does this process keep breaking?"
+- "Help me understand what my team actually does"
+- "Walk me through your typical day"

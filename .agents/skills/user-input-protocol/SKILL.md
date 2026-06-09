@@ -1,28 +1,18 @@
 ---
 name: user-input-protocol
 description: >-
-  Structured AWAITING_USER_INPUT checkpoint format for requesting human
-  decisions. When hitting a decision point, stop, present context, show 2-4
-  labeled options with implications, state a recommendation, and wait. Groups
-  related decisions into single multi-question checkpoints. Includes subagent
-  state-save-before-pause and resume-without-redoing-work patterns, plus
-  factory-mode urgency classification (blocking/next-review/informational).
-  Use when encountering business rule ambiguities, architecture trade-offs,
-  scope questions, destructive actions, or any point requiring human judgment.
-  Triggers on: "should I use X or Y", "which approach", "need a decision",
-  "before I proceed", "confirm this action", "trade-off", "destructive
-  change". Also activates when delegating to subagents that may hit decision
-  points. NOT for: implementation details with one correct answer, or
-  style choices covered by project conventions.
+  Structured checkpoint format for requesting human input. When an agent
+  needs a decision, it must stop, present context, show options, and wait.
+  Activate when delegating to subagents, running background tasks, or
+  hitting any decision point that requires human judgment.
 license: CC0-1.0
 metadata:
   author: jwilger
-  version: "1.2.1"
+  version: "1.0"
   requires: []
   context: []
   phase: build
   standalone: true
-effort: low
 ---
 
 # User Input Protocol
@@ -136,47 +126,6 @@ resumption instant.
 **Do not:**
 - "Let me re-analyze the codebase to understand the email validation..."
 
-### Batch Decisions in Factory Mode
-
-When running inside a pipeline or factory workflow, avoid blocking the
-pipeline on every decision. Classify each decision and route accordingly:
-
-- **Gate-resolvable:** Never ask the human. Quality gates provide the
-  answer (test pass/fail, mutation score, CI status). These are fully
-  automated.
-- **Judgment-required:** Batch for the next human review cycle. Examples:
-  design trade-offs that surfaced during review, non-blocking review
-  findings that need prioritization, retrospective suggestions.
-- **Blocking:** Pause the pipeline immediately. Examples: security concern
-  raised during review, unrecoverable gate failure after 3 rework cycles,
-  ambiguous requirements that affect correctness.
-
-Gate-resolvable decisions never appear in AWAITING_USER_INPUT checkpoints.
-Judgment-required decisions are collected and presented as a single grouped
-checkpoint during the human review phase. Blocking decisions use the
-standard AWAITING_USER_INPUT format immediately.
-
-When emitting AWAITING_USER_INPUT in factory mode, include an `urgency`
-field after the separator:
-
-```
-AWAITING_USER_INPUT
----
-Urgency: blocking | next-review | informational
-Context: ...
-Decision needed: ...
-Options: ...
-Recommendation: ...
----
-```
-
-- `blocking` -- pipeline is halted, needs immediate attention
-- `next-review` -- batched for next scheduled human review
-- `informational` -- no action needed, for awareness only
-
-Standalone users can ignore the urgency field; the checkpoint format
-remains backward compatible.
-
 ### Handle Multi-Question Checkpoints
 
 When multiple related decisions are needed, group them in one checkpoint
@@ -202,25 +151,13 @@ Decisions needed:
 
 ## Enforcement Note
 
-- **Standalone mode**: Advisory. The agent self-enforces pause discipline.
-- **Pipeline mode**: Structural. AWAITING_USER_INPUT writes pipeline state
-  to disk and halts the current agent.
-
-**Hard constraints:**
-- Human input required for judgment decisions: `[RP]`
-
-## Constraints
-
-- **"Stop immediately, do not guess"**: "Stop" means stop the decision
-  path, not necessarily stop all work. If other unrelated work can proceed,
-  proceed with it. But do not make progress on the path that requires the
-  decision -- not even "preparing" code that assumes one option. Preparing
-  IS deciding.
-- **"2-4 specific options"**: Options must be genuinely distinct
-  alternatives, not variations of the same approach. "Use library A," "Use
-  library A with option X," "Use library A with option Y" is one option
-  with configuration choices, not three options. Each option should
-  represent a meaningfully different path.
+This skill is advisory. It instructs agents to pause at decision points
+and use structured checkpoints. On harnesses with plugin support, enforcement
+hooks can detect when an agent makes assumptions without pausing. On harnesses
+without enforcement, the agent follows these practices by convention. If you
+observe the agent making decisions it should have asked about, point it out.
+For available enforcement plugins, see the
+[Harness Plugin Availability](../../README.md#harness-plugin-availability) table.
 
 ## Verification
 
@@ -237,12 +174,11 @@ After applying this skill, verify:
 
 This skill works standalone. For enhanced workflows, it integrates with:
 
-- **tdd:** When test requirements are ambiguous, pause and clarify acceptance
-  criteria. In automated mode, the orchestrator detects paused subagents and
-  relays questions to the user.
+- **orchestration:** Main orchestrator detects paused subagents and relays questions to the user
+- **tdd-cycle:** When test requirements are ambiguous, pause and clarify acceptance criteria
 - **debugging-protocol:** When debugging reveals ambiguous root causes, pause and ask
 
 Missing a dependency? Install with:
 ```
-npx skills add jwilger/agent-skills --skill tdd
+npx skills add jwilger/agent-skills --skill orchestration
 ```

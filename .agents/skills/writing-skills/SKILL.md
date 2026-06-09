@@ -1,6 +1,9 @@
 ---
-name: writing-skills
-description: Use when creating new skills, editing existing skills, or verifying skills work before deployment
+name: Writing Skills
+description: TDD for process documentation - test with subagents before writing, iterate until bulletproof
+when_to_use: When you discover a technique, pattern, or tool worth documenting for reuse. When editing existing skills. When asked to modify skill documentation. When you've written a skill and need to verify it works before deploying.
+version: 5.0.0
+languages: all
 ---
 
 # Writing Skills
@@ -8,16 +11,15 @@ description: Use when creating new skills, editing existing skills, or verifying
 ## Overview
 
 **Writing skills IS Test-Driven Development applied to process documentation.**
+**Flat namespace** - all skills in one searchable location
 
-**Personal skills live in agent-specific directories (`~/.claude/skills` for Claude Code, `~/.agents/skills/` for Codex)** 
+You edit skills in your local branch of this repository.
 
 You write test cases (pressure scenarios with subagents), watch them fail (baseline behavior), write the skill (documentation), watch tests pass (agents comply), and refactor (close loopholes).
 
 **Core principle:** If you didn't watch an agent fail without the skill, you don't know if the skill teaches the right thing.
 
-**REQUIRED BACKGROUND:** You MUST understand superpowers:test-driven-development before using this skill. That skill defines the fundamental RED-GREEN-REFACTOR cycle. This skill adapts TDD to documentation.
-
-**Official guidance:** For Anthropic's official skill authoring best practices, see anthropic-best-practices.md. This document provides additional patterns and guidelines that complement the TDD-focused approach in this skill.
+See skills/testing/test-driven-development for the fundamental RED-GREEN-REFACTOR cycle. This skill adapts TDD to documentation.
 
 ## What is a Skill?
 
@@ -44,8 +46,6 @@ A **skill** is a reference guide for proven techniques, patterns, or tools. Skil
 
 The entire skill creation process follows RED-GREEN-REFACTOR.
 
-## When to Create a Skill
-
 **Create when:**
 - Technique wasn't intuitively obvious to you
 - You'd reference this again across projects
@@ -56,7 +56,6 @@ The entire skill creation process follows RED-GREEN-REFACTOR.
 - One-off solutions
 - Standard practices well-documented elsewhere
 - Project-specific conventions (put in CLAUDE.md)
-- Mechanical constraints (if it's enforceable with regex/validation, automate it—save documentation for judgment calls)
 
 ## Skill Types
 
@@ -69,17 +68,7 @@ Way of thinking about problems (flatten-with-flags, test-invariants)
 ### Reference
 API docs, syntax guides, tool documentation (office docs)
 
-## Directory Structure
-
-
-```
-skills/
-  skill-name/
-    SKILL.md              # Main reference (required)
-    supporting-file.*     # Only if needed
-```
-
-**Flat namespace** - all skills in one searchable namespace
+## When to Create a Skill
 
 **Separate files for:**
 1. **Heavy reference** (100+ lines) - API docs, comprehensive syntax
@@ -92,20 +81,14 @@ skills/
 
 ## SKILL.md Structure
 
-**Frontmatter (YAML):**
-- Only two fields supported: `name` and `description`
-- Max 1024 characters total
-- `name`: Use letters, numbers, and hyphens only (no parentheses, special chars)
-- `description`: Third-person, describes ONLY when to use (NOT what it does)
-  - Start with "Use when..." to focus on triggering conditions
-  - Include specific symptoms, situations, and contexts
-  - **NEVER summarize the skill's process or workflow** (see CSO section for why)
-  - Keep under 500 characters if possible
-
 ```markdown
 ---
-name: Skill-Name-With-Hyphens
-description: Use when [specific triggering conditions and symptoms]
+name: Human-Readable Name
+description: One-line summary of what this does
+when_to_use: Symptoms and situations when you need this (CSO-critical)
+version: 1.0.0
+languages: all | [typescript, python] | etc
+dependencies: (optional) Required tools/libraries
 ---
 
 # Skill Name
@@ -127,7 +110,7 @@ Table or bullets for scanning common operations
 
 ## Implementation
 Inline code for simple patterns
-Link to file for heavy reference or reusable tools
+@link to file for heavy reference or reusable tools
 
 ## Common Mistakes
 What goes wrong + fixes
@@ -136,64 +119,21 @@ What goes wrong + fixes
 Concrete results
 ```
 
-
 ## Claude Search Optimization (CSO)
 
 **Critical for discovery:** Future Claude needs to FIND your skill
 
-### 1. Rich Description Field
+### 1. Rich when_to_use
 
-**Purpose:** Claude reads description to decide which skills to load for a given task. Make it answer: "Should I read this skill right now?"
-
-**Format:** Start with "Use when..." to focus on triggering conditions
-
-**CRITICAL: Description = When to Use, NOT What the Skill Does**
-
-The description should ONLY describe triggering conditions. Do NOT summarize the skill's process or workflow in the description.
-
-**Why this matters:** Testing revealed that when a description summarizes the skill's workflow, Claude may follow the description instead of reading the full skill content. A description saying "code review between tasks" caused Claude to do ONE review, even though the skill's flowchart clearly showed TWO reviews (spec compliance then code quality).
-
-When the description was changed to just "Use when executing implementation plans with independent tasks" (no workflow summary), Claude correctly read the flowchart and followed the two-stage review process.
-
-**The trap:** Descriptions that summarize workflow create a shortcut Claude will take. The skill body becomes documentation Claude skips.
+Include SYMPTOMS not just abstract use cases:
 
 ```yaml
-# ❌ BAD: Summarizes workflow - Claude may follow this instead of reading skill
-description: Use when executing plans - dispatches subagent per task with code review between tasks
+# ❌ BAD: Too abstract
+when_to_use: For async testing
 
-# ❌ BAD: Too much process detail
-description: Use for TDD - write test first, watch it fail, write minimal code, refactor
-
-# ✅ GOOD: Just triggering conditions, no workflow summary
-description: Use when executing implementation plans with independent tasks in the current session
-
-# ✅ GOOD: Triggering conditions only
-description: Use when implementing any feature or bugfix, before writing implementation code
-```
-
-**Content:**
-- Use concrete triggers, symptoms, and situations that signal this skill applies
-- Describe the *problem* (race conditions, inconsistent behavior) not *language-specific symptoms* (setTimeout, sleep)
-- Keep triggers technology-agnostic unless the skill itself is technology-specific
-- If skill is technology-specific, make that explicit in the trigger
-- Write in third person (injected into system prompt)
-- **NEVER summarize the skill's process or workflow**
-
-```yaml
-# ❌ BAD: Too abstract, vague, doesn't include when to use
-description: For async testing
-
-# ❌ BAD: First person
-description: I can help you with async tests when they're flaky
-
-# ❌ BAD: Mentions technology but skill isn't specific to it
-description: Use when tests use setTimeout/sleep and are flaky
-
-# ✅ GOOD: Starts with "Use when", describes problem, no workflow
-description: Use when tests have race conditions, timing dependencies, or pass/fail inconsistently
-
-# ✅ GOOD: Technology-specific skill with explicit trigger
-description: Use when using React Router and handling authentication redirects
+# ✅ GOOD: Symptoms and context
+when_to_use: When tests use setTimeout/sleep and are flaky, timing-dependent,
+  pass locally but fail in CI, or timeout when run in parallel
 ```
 
 ### 2. Keyword Coverage
@@ -208,7 +148,7 @@ Use words Claude would search for:
 
 **Use active voice, verb-first:**
 - ✅ `creating-skills` not `skill-creation`
-- ✅ `condition-based-waiting` not `async-test-helpers`
+- ✅ `testing-skills-with-subagents` not `subagent-skill-testing`
 
 ### 4. Token Efficiency (Critical)
 
@@ -237,7 +177,7 @@ When searching, dispatch subagent with template...
 [20 lines of repeated instructions]
 
 # ✅ GOOD: Reference other skill
-Always use subagents (50-100x context savings). REQUIRED: Use [other-skill-name] for workflow.
+Always use subagents (50-100x context savings). See skills/getting-started for workflow.
 ```
 
 **Compress examples:**
@@ -260,7 +200,7 @@ You: Searching...
 
 **Verification:**
 ```bash
-wc -w skills/path/SKILL.md
+wc -w .claude/skills/path/SKILL.md
 # getting-started workflows: aim for <150 each
 # Other frequently-loaded: aim for <200 total
 ```
@@ -275,17 +215,28 @@ wc -w skills/path/SKILL.md
 - `creating-skills`, `testing-skills`, `debugging-with-logs`
 - Active, describes the action you're taking
 
-### 4. Cross-Referencing Other Skills
+### 5. Content Repetition
+
+Mention key concepts multiple times:
+- In description
+- In when_to_use
+- In overview
+- In section headers
+
+Grep hits from multiple places = easier discovery
+
+### 6. Cross-Referencing Other Skills
 
 **When writing documentation that references other skills:**
 
-Use skill name only, with explicit requirement markers:
-- ✅ Good: `**REQUIRED SUB-SKILL:** Use superpowers:test-driven-development`
-- ✅ Good: `**REQUIRED BACKGROUND:** You MUST understand superpowers:systematic-debugging`
-- ❌ Bad: `See skills/testing/test-driven-development` (unclear if required)
-- ❌ Bad: `@skills/testing/test-driven-development/SKILL.md` (force-loads, burns context)
+Use path format without `@` prefix or `/SKILL.md` suffix:
+- ✅ Good: `.claude/skills/testing/test-driven-development`
+- ✅ Good: `.claude/skills/debugging/systematic-debugging`
+- ❌ Bad: `@.claude/skills/testing/test-driven-development/SKILL.md` (force-loads, burns context)
 
 **Why no @ links:** `@` syntax force-loads files immediately, consuming 200k+ context before you need them.
+
+**To read a skill reference:** Use Read tool on `.claude/skills/category/skill-name/SKILL.md`
 
 ## Flowchart Usage
 
@@ -313,13 +264,7 @@ digraph when_flowchart {
 - Linear instructions → Numbered lists
 - Labels without semantic meaning (step1, helper2)
 
-See @graphviz-conventions.dot for graphviz style rules.
-
-**Visualizing for your human partner:** Use `render-graphs.js` in this directory to render a skill's flowcharts to SVG:
-```bash
-./render-graphs.js ../some-skill           # Each diagram separately
-./render-graphs.js ../some-skill --combine # All diagrams in one SVG
-```
+See `.claude/skills/reference/graphviz-conventions.dot` for graphviz style rules.
 
 ## Code Examples
 
@@ -390,7 +335,7 @@ Edit skill without testing? Same violation.
 - Don't "adapt" while running tests
 - Delete means delete
 
-**REQUIRED BACKGROUND:** The superpowers:test-driven-development skill explains why this matters. Same principles apply to documentation.
+See `.claude/skills/testing/test-driven-development` for why this matters. Same principles apply to documentation.
 
 ## Testing All Skill Types
 
@@ -460,7 +405,7 @@ Different skill types need different test approaches:
 
 Skills that enforce discipline (like TDD) need to resist rationalization. Agents are smart and will find loopholes when under pressure.
 
-**Psychology note:** Understanding WHY persuasion techniques work helps you apply them systematically. See persuasion-principles.md for research foundation (Cialdini, 2021; Meincke et al., 2025) on authority, commitment, scarcity, social proof, and unity principles.
+**Psychology note:** Understanding WHY persuasion techniques work helps you apply them systematically. See `.claude/skills/reference/persuasion-principles.md` for research foundation (Cialdini, 2021; Meincke et al., 2025) on authority, commitment, scarcity, social proof, and unity principles.
 
 ### Close Every Loophole Explicitly
 
@@ -524,10 +469,11 @@ Make it easy for agents to self-check when rationalizing:
 
 ### Update CSO for Violation Symptoms
 
-Add to description: symptoms of when you're ABOUT to violate the rule:
+Add to when_to_use: symptoms of when you're ABOUT to violate the rule:
 
 ```yaml
-description: use when implementing any feature or bugfix, before writing implementation code
+when_to_use: Every feature and bugfix. When you wrote code before tests.
+  When you're tempted to test after. When manually testing seems faster.
 ```
 
 ## RED-GREEN-REFACTOR for Skills
@@ -553,7 +499,7 @@ Run same scenarios WITH skill. Agent should now comply.
 
 Agent found new rationalization? Add explicit counter. Re-test until bulletproof.
 
-**Testing methodology:** See @testing-skills-with-subagents.md for the complete testing methodology:
+**See `.claude/skills/testing-skills-with-subagents` for:**
 - How to write pressure scenarios
 - Pressure types (time, sunk cost, authority, exhaustion)
 - Plugging holes systematically
@@ -603,14 +549,12 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 - [ ] Identify patterns in rationalizations/failures
 
 **GREEN Phase - Write Minimal Skill:**
-- [ ] Name uses only letters, numbers, hyphens (no parentheses/special chars)
-- [ ] YAML frontmatter with only name and description (max 1024 chars)
-- [ ] Description starts with "Use when..." and includes specific triggers/symptoms
-- [ ] Description written in third person
+- [ ] Name describes what you DO or core insight
+- [ ] YAML frontmatter with rich when_to_use (include symptoms!)
 - [ ] Keywords throughout for search (errors, symptoms, tools)
 - [ ] Clear overview with core principle
 - [ ] Address specific baseline failures identified in RED
-- [ ] Code inline OR link to separate file
+- [ ] Code inline OR @link to separate file
 - [ ] One excellent example (not multi-language)
 - [ ] Run scenarios WITH skill - verify agents now comply
 
@@ -637,7 +581,8 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 How future Claude finds your skill:
 
 1. **Encounters problem** ("tests are flaky")
-3. **Finds SKILL** (description matches)
+2. **Searches skills** using `find-skills` tool (searches skills repository)
+3. **Finds SKILL.md** (rich when_to_use matches)
 4. **Scans overview** (is this relevant?)
 5. **Reads patterns** (quick reference table)
 6. **Loads example** (only when implementing)

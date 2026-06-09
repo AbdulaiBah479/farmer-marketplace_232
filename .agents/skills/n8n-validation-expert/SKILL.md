@@ -1,18 +1,11 @@
 ---
 name: n8n-validation-expert
-description: "Expert guide for interpreting and fixing n8n validation errors."
-risk: unknown
-source: community
+description: Interpret validation errors and guide fixing them. Use when encountering validation errors, validation warnings, false positives, operator structure issues, or need help understanding validation results. Also use when asking about validation profiles, error types, or the validation loop process.
 ---
 
 # n8n Validation Expert
 
 Expert guide for interpreting and fixing n8n validation errors.
-
-## When to Use
-- You need to interpret or fix validation errors in an n8n workflow.
-- The task involves `missing_required`, `invalid_value`, expression failures, or iterative validate-fix loops.
-- You want concrete remediation guidance for workflow validation output.
 
 ---
 
@@ -86,13 +79,13 @@ Validation is typically iterative:
 ```
 1. Configure node
    ↓
-2. validate_node (23 seconds thinking about errors)
+2. validate_node_operation (23 seconds thinking about errors)
    ↓
 3. Read error messages carefully
    ↓
 4. Fix errors
    ↓
-5. validate_node again (58 seconds fixing)
+5. validate_node_operation again (58 seconds fixing)
    ↓
 6. Repeat until valid (usually 2-3 iterations)
 ```
@@ -105,7 +98,7 @@ let config = {
   operation: "create"
 };
 
-const result1 = validate_node({
+const result1 = validate_node_operation({
   nodeType: "nodes-base.slack",
   config,
   profile: "runtime"
@@ -117,7 +110,7 @@ const result1 = validate_node({
 // Iteration 2
 config.name = "general";
 
-const result2 = validate_node({
+const result2 = validate_node_operation({
   nodeType: "nodes-base.slack",
   config,
   profile: "runtime"
@@ -129,7 +122,7 @@ const result2 = validate_node({
 // Iteration 3
 config.text = "Hello!";
 
-const result3 = validate_node({
+const result3 = validate_node_operation({
   nodeType: "nodes-base.slack",
   config,
   profile: "runtime"
@@ -200,7 +193,7 @@ Choose the right profile for your stage:
 **What it means**: A required field is not provided
 
 **How to fix**:
-1. Use `get_node` to see required fields
+1. Use `get_node_essentials` to see required fields
 2. Add the missing field to your configuration
 3. Provide an appropriate value
 
@@ -222,7 +215,7 @@ config.channel = "#general";
 
 **How to fix**:
 1. Check error message for allowed values
-2. Use `get_node` to see options
+2. Use `get_node_essentials` to see options
 3. Update to a valid value
 
 **Example**:
@@ -437,7 +430,7 @@ Validation warnings that are technically "wrong" but acceptable in your use case
 
 **Use `ai-friendly` profile**:
 ```javascript
-validate_node({
+validate_node_operation({
   nodeType: "nodes-base.slack",
   config: {...},
   profile: "ai-friendly"  // Fewer false positives
@@ -592,7 +585,7 @@ validate_workflow({
 **When**: Configuration is severely broken
 
 **Steps**:
-1. Note required fields from `get_node`
+1. Note required fields from `get_node_essentials`
 2. Create minimal valid configuration
 3. Add features incrementally
 4. Validate after each addition
@@ -649,7 +642,7 @@ n8n_autofix_workflow({
 - Use `runtime` profile for pre-deployment
 - Check `valid` field before assuming success
 - Trust auto-sanitization for operator issues
-- Use `get_node` when unclear about requirements
+- Use `get_node_essentials` when unclear about requirements
 - Document false positives you accept
 
 ### ❌ Don't
@@ -669,8 +662,8 @@ n8n_autofix_workflow({
 
 For comprehensive error catalogs and false positive examples:
 
-- **ERROR_CATALOG.md** - Complete list of error types with examples
-- **FALSE_POSITIVES.md** - When warnings are acceptable
+- **[ERROR_CATALOG.md](ERROR_CATALOG.md)** - Complete list of error types with examples
+- **[FALSE_POSITIVES.md](FALSE_POSITIVES.md)** - When warnings are acceptable
 
 ---
 
@@ -694,8 +687,3 @@ For comprehensive error catalogs and false positive examples:
 - n8n MCP Tools Expert - Use validation tools correctly
 - n8n Expression Syntax - Fix expression errors
 - n8n Node Configuration - Understand required fields
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

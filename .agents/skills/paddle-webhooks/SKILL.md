@@ -20,54 +20,113 @@ metadata:
 - Understanding Paddle event types and payloads
 - Handling subscription, transaction, or customer events
 
-## Verification (core)
+## Essential Code (USE THIS)
 
-Paddle signs every webhook with HMAC-SHA256 over `timestamp:rawBody`. The `Paddle-Signature` header is `ts=<unix>;h1=<hex>` (multiple `h1=` values appear during secret rotation). Pass the **raw** request body — don't `JSON.parse` first.
-
-The official `@paddle/paddle-node-sdk` exposes `paddle.webhooks.unmarshal(rawBody, secretKey, signature)` which verifies and parses in one call. For Python (or when not using the SDK), verify manually:
-
-Node:
+### Express Webhook Handler
 
 ```javascript
+const express = require('express');
 const crypto = require('crypto');
 
-function verifyPaddleSignature(rawBody, signatureHeader, secret) {
-  const parts = signatureHeader.split(';');
-  const ts = parts.find(p => p.startsWith('ts='))?.slice(3);
-  const signatures = parts.filter(p => p.startsWith('h1=')).map(p => p.slice(3));
-  if (!ts || signatures.length === 0) return false;
+const app = express();
 
-  const expected = crypto
+// CRITICAL: Use express.raw() for webhook endpoint - Paddle needs raw body
+app.post('/webhooks/paddle',
+  express.raw({ type: 'application/json' }),
+  async (req, res) => {
+    const signature = req.headers['paddle-signature'];
+    
+    if (!signature) {
+      return res.status(400).send('Missing Paddle-Signature header');
+    }
+
+    // Verify signature
+    const isValid = verifyPaddleSignature(
+      req.body.toString(),
+      signature,
+      process.env.PADDLE_WEBHOOK_SECRET  // From Paddle dashboard
+    );
+
+    if (!isValid) {
+      console.error('Paddle signature verification failed');
+      return res.status(400).send('Invalid signature');
+    }
+
+    const event = JSON.parse(req.body.toString());
+
+    // Handle the event
+    switch (event.event_type) {
+      case 'subscription.created':
+        console.log('Subscription created:', event.data.id);
+        break;
+      case 'subscription.canceled':
+        console.log('Subscription canceled:', event.data.id);
+        break;
+      case 'transaction.completed':
+        console.log('Transaction completed:', event.data.id);
+        break;
+      default:
+        console.log('Unhandled event:', event.event_type);
+    }
+
+    // IMPORTANT: Respond within 5 seconds
+    res.json({ received: true });
+  }
+);
+
+function verifyPaddleSignature(payload, signature, secret) {
+  const parts = signature.split(';');
+  const ts = parts.find(p => p.startsWith('ts=')).slice(3);
+  const h1 = parts.find(p => p.startsWith('h1=')).slice(3);
+
+  const signedPayload = `${ts}:${payload}`;
+  const expectedSignature = crypto
     .createHmac('sha256', secret)
-    .update(`${ts}:${rawBody}`)
+    .update(signedPayload)
     .digest('hex');
 
-  return signatures.some(sig =>
-    crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))
+  return crypto.timingSafeEqual(
+    Buffer.from(h1),
+    Buffer.from(expectedSignature)
   );
 }
 ```
 
-Python:
+### Python (FastAPI) Webhook Handler
 
 ```python
-import hmac, hashlib
+import hmac
+import hashlib
+from fastapi import FastAPI, Request, HTTPException
 
-def verify_paddle_signature(raw_body: str, signature_header: str, secret: str) -> bool:
-    parts = signature_header.split(';')
-    ts = next((p[3:] for p in parts if p.startswith('ts=')), None)
-    signatures = [p[3:] for p in parts if p.startswith('h1=')]
-    if not ts or not signatures:
-        return False
+app = FastAPI()
+webhook_secret = os.environ.get("PADDLE_WEBHOOK_SECRET")
 
+@app.post("/webhooks/paddle")
+async def paddle_webhook(request: Request):
+    payload = await request.body()
+    signature = request.headers.get("paddle-signature")
+    
+    if not signature:
+        raise HTTPException(status_code=400, detail="Missing signature")
+    
+    if not verify_paddle_signature(payload.decode(), signature, webhook_secret):
+        raise HTTPException(status_code=400, detail="Invalid signature")
+    
+    event = await request.json()
+    # Handle event...
+    return {"received": True}
+
+def verify_paddle_signature(payload, signature, secret):
+    parts = dict(p.split('=') for p in signature.split(';'))
+    signed_payload = f"{parts['ts']}:{payload}"
     expected = hmac.new(
-        secret.encode(), f"{ts}:{raw_body}".encode(), hashlib.sha256
+        secret.encode(), signed_payload.encode(), hashlib.sha256
     ).hexdigest()
-
-    return any(hmac.compare_digest(sig, expected) for sig in signatures)
+    return hmac.compare_digest(parts['h1'], expected)
 ```
 
-> **For complete handlers with route wiring, event dispatch, and tests**, see:
+> **For complete working examples with tests**, see:
 > - [examples/express/](examples/express/) - Full Express implementation
 > - [examples/nextjs/](examples/nextjs/) - Next.js App Router implementation  
 > - [examples/fastapi/](examples/fastapi/) - Python FastAPI implementation
@@ -97,8 +156,14 @@ PADDLE_WEBHOOK_SECRET=pdl_ntfset_xxxxx_xxxxx   # From notification destination s
 ## Local Development
 
 ```bash
+# Install Hookdeck CLI for local webhook testing
+brew install hookdeck/hookdeck/hookdeck
+
+# Or via NPM
+npm install -g hookdeck-cli
+
 # Start tunnel (no account needed)
-npx hookdeck-cli listen 3000 paddle --path /webhooks/paddle
+hookdeck listen 3000 --path /webhooks/paddle
 ```
 
 ## Reference Materials
@@ -136,4 +201,4 @@ We recommend installing the [webhook-handler-patterns](https://github.com/hookde
 - [elevenlabs-webhooks](https://github.com/hookdeck/webhook-skills/tree/main/skills/elevenlabs-webhooks) - ElevenLabs webhook handling
 - [openai-webhooks](https://github.com/hookdeck/webhook-skills/tree/main/skills/openai-webhooks) - OpenAI webhook handling
 - [webhook-handler-patterns](https://github.com/hookdeck/webhook-skills/tree/main/skills/webhook-handler-patterns) - Handler sequence, idempotency, error handling, retry logic
-- [hookdeck-event-gateway](https://github.com/hookdeck/webhook-skills/tree/main/skills/hookdeck-event-gateway) - Webhook infrastructure that replaces your queue — guaranteed delivery, automatic retries, replay, rate limiting, and observability for your webhook handlers
+- [hookdeck-event-gateway](https://github.com/hookdeck/webhook-skills/tree/main/skills/hookdeck-event-gateway) - Production webhook infrastructure (routing, replay, monitoring)

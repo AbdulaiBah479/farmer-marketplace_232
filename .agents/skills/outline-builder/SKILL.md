@@ -1,152 +1,161 @@
 ---
 name: outline-builder
-description: >
-  Build or extend a course outline in your format, from class notes and
-  casebook. Scaffolds — it does not write the outline for you. Use when the
-  user says "outline [subject]", "add to my outline", "build an outline
-  from", or points at class materials.
-argument-hint: "[subject, or point at class notes/casebook section]"
+description: |
+  Convert a taxonomy (`outline/taxonomy.yml`) into a bullet-only outline (`outline/outline.yml`) with sections/subsections.
+  **Trigger**: outline builder, bullet outline, outline.yml, 大纲生成, bullets-only.
+  **Use when**: structure 阶段（NO PROSE），已有 taxonomy，需要生成可映射/可写作的章节与小节骨架（每小节≥3 bullets）。
+  **Skip if**: 已经有批准过且可映射的 outline（避免无意义 churn）。
+  **Network**: none.
+  **Guardrail**: bullets-only；移除 TODO/模板语句；每小节至少 3 个可检查 bullets。
 ---
 
-# /outline-builder
+# Outline Builder
 
-1. Load `~/.claude/plugins/config/claude-for-legal/law-student/CLAUDE.md` → outline preferences, existing outlines.
-2. Apply the workflow below.
-3. Build in student's format. If extending an existing outline, match its structure exactly.
+Convert a taxonomy into a **checkable, mappable outline** (bullets only).
 
----
+Bullets should describe *what the section must cover*, not draft prose.
 
-## Purpose
+## Role cards (prompt-level guidance)
 
-The outline is the thing you study from. **Building it is half the studying** — that's a literal claim, not a throwaway. An outline you didn't build is an outline you won't know on the exam. This skill helps you build — it does not build for you.
+Use these roles explicitly while drafting the outline. They guide decisions, not phrasing; avoid producing copyable prose sentences.
 
-## The "don't write it for me" rule (hard rule)
+- **Outline Architect**
+  - Mission: design a paper-like ToC (few, thick chapters) that a reader would expect.
+  - Do: budget H2/H3 counts; ensure each H3 is writeable (has a real comparison lens + evaluation angle).
+  - Avoid: H3 explosion (many tiny buckets) and generic axis lists repeated everywhere.
 
-This is a learning-mode skill. Other tools will cheerfully generate a full outline from a casebook or syllabus and hand it over. This one refuses.
+- **Writer Proxy**
+  - Mission: simulate the downstream writer and ask: “Could I draft this H3 without guessing?”
+  - Do: make each H3’s bullets encode tension + contrasts + evaluation anchors + failure modes.
+  - Avoid: bullets that sound like narration (“This subsection…”) or slide transitions (“Next, we…”).
 
-**What this skill will do:**
-- Read your syllabus, casebook excerpts, class notes, or existing outline and match your format precisely.
-- Build the **scaffold** — the topic structure, sub-topic headings, case-slot placeholders, where exceptions should go.
-- Ask you Socratic questions on each topic as you build: "what's the rule here?", "which case did the professor use?", "what's the exception the casebook hinted at?"
-- Point out gaps: places where your notes are thin, where a topic on the syllabus isn't in the outline yet, where an exception is mentioned but not explained.
-- When you paste in rules from your own notes or from a source, integrate them verbatim into the scaffold.
-- Flag thin or confused spots and ask you to go back to your notes or casebook.
+- **Scope Guardian**
+  - Mission: prevent silent scope drift.
+  - Do: make in/out scope cues explicit in bullets (especially for boundaries like single-agent vs multi-agent, tool use vs RAG, etc.).
+  - Avoid: leaving scope implicit and hoping the writer fixes it in prose.
 
-**What this skill will not do, even if asked:**
-- Fill in the rule statement, case holding, or analysis from AI knowledge just because you asked it to. If you say "just write this section for me," the answer is no — the skill explains why and offers to scaffold that section with questions instead.
-- Build an entire outline from "the syllabus" without your notes or casebook inputs. A scaffolded topic tree, yes. Populated rules and cases, no — that's the learning work.
-- Invent rules to avoid leaving a gap. A `[GAP — fill from class notes]` marker is the correct answer when source material is missing.
 
-**Exception** (the only one): if the student is **extending** an existing outline and pastes casebook text or their own notes, the skill extracts rules and cases from that source text. That is not writing-for-you; that is formatting what you provided.
+## When to use
 
-If the student asks the skill to cross the line, respond:
+- You have a taxonomy and need an outline for mapping papers and building evidence.
+- You want each subsection to have concrete “coverage requirements” (axes, comparisons, evaluation).
 
-> I'm not going to fill in [topic] from my own knowledge — that defeats the point of building the outline. Two options:
->
-> 1. **Scaffold mode** (default): I'll put the headings, sub-headings, and case slots in place, and ask you Socratic questions as we build. You write the rules.
-> 2. **Source-extract mode:** paste your class notes, the casebook section, or a case brief. I'll extract the rule from that text and slot it in.
->
-> Which one?
+## When not to use
 
-## Confidence discipline
+- You already have an approved outline (don’t rewrite for style).
 
-An outline is a rule library. Wrong rules are worse than missing rules because you study from them without re-checking. The rule for this skill:
+## Input
 
-- **If building from the student's class notes, casebook sections, or case briefs they paste:** I extract from what's in front of me. Confident. Rules stated in the source are the rules I write.
-- **If the student asks me to fill in a topic without source material:** the default is no — I leave a `[GAP — fill from class notes]` marker and ask Socratic questions to help them fill it from their own notes. The student learns nothing from reading a rule I wrote; they learn from writing it themselves. Only if the student explicitly overrides ("I know, I just want a reference, write it anyway") do I state a majority rule, and every line I'm not fully confident on gets `[UNCERTAIN]` or `[VERIFY]`. Default to the gap.
-- **Every rule statement in the outline carries a provenance cue:** from the student's notes (no marker); from casebook they uploaded (no marker); from my knowledge with confidence (no marker); from my knowledge with uncertainty (`[VERIFY]` or `[UNCERTAIN]`).
+- `outline/taxonomy.yml`
+- Optional style references (paper-like section sizing):
+  - `ref/agent-surveys/STYLE_REPORT.md`
+  - `ref/agent-surveys/text/`
 
-The outline is only as trustworthy as what's in it. Err toward gaps over guesses.
+## Output
 
-**Narrow carve-out — rule contradiction within the student's own materials.** The "don't write it for me" rule has one exception: when the student states a rule (in-session, or in an outline entry they're extending) that **contradicts their own uploaded notes, case brief, casebook excerpt, or earlier outline section**, surface the conflict without filling in the answer. Say:
+- `outline/outline.yml`
 
-> "That doesn't match what you wrote at [file / outline section / case brief]. Your earlier note says [exact quote]. Which is right?"
+## Workflow (heuristic)
+Uses: `outline/taxonomy.yml`.
 
-This is not writing for the student — it is pointing the student at two things they already have and asking them to reconcile. A 1L who puts a wrong rule into an outline and studies from it is the failure mode this skill exists to prevent. Apply this only when:
+Optional style calibration (recommended for paper-like structure):
+- Read `ref/agent-surveys/STYLE_REPORT.md` to sanity-check top-level section counts and typical subsection sizing.
+- Skim 1–2 examples under `ref/agent-surveys/text/` to imitate *structure* (not wording).
+  - Target final ToC: ~6–8 H2 sections.
+  - Note: this pipeline appends `Discussion` + `Conclusion` as global sections in C5 merge, so keep the **outline itself** <=6 H2 sections (often 5–6 including Intro+Related).
 
-1. The student has actually uploaded or written materials the skill can cite (seed materials in `~/.claude/plugins/config/claude-for-legal/law-student/CLAUDE.md` → Seed materials, or an earlier section of the outline being extended), and
-2. The stated rule and the student's own material disagree on a specific substantive point — not phrasing, not level of detail.
+1. Translate taxonomy nodes into section headings that read like a survey structure.
+2. For each H3 subsection, write bullets using the **Stage A contract** (verifiable, no prose paragraphs).
+   - Minimum required bullets (first 4):
+     - `Intent:` what the reader should learn (subsection-specific).
+     - `RQ:` the question this subsection answers (1 line).
+     - `Evidence needs:` what kinds of evidence must appear later (benchmarks/metrics/protocols/failure modes).
+     - `Expected cites:` expected cite density / cite types (avoid placeholders like TBD/TODO).
+   - Then add 2–6 subsection-specific bullets (comparisons/axes/eval anchors/failure modes).
+3. For each subsection, ensure bullets are:
+   - topic-specific (names of mechanisms, tasks, benchmarks, failure modes)
+   - checkable (someone can verify whether the subsection covered it)
+   - useful for mapping (papers can be assigned to each bullet/axis)
+4. Prefer bullets that force synthesis later:
+   - “Compare X vs Y along axes A/B/C”
+   - “What evaluation setups are standard, and what they miss”
+   - “Where methods fail (latency, tool errors, jailbreaks, reward hacking…)”
 
-Do not volunteer the correction from your own knowledge. Do not cite the casebook unless the student uploaded it. Only quote the student's own materials back to them. The goal is to train the student to trust and verify their own work, not to deliver the right answer.
 
-## Load context
+## Quality checklist
 
-`~/.claude/plugins/config/claude-for-legal/law-student/CLAUDE.md` → outline preferences (format, depth, existing outlines location).
+- [ ] `outline/outline.yml` exists and is bullets-only (no paragraphs).
+- [ ] Every subsection has the Stage A bullets: `Intent:` / `RQ:` / `Evidence needs:` / `Expected cites:`.
+- [ ] Every subsection has ≥3 additional non-generic bullets after the Stage A fields.
+- [ ] Bullets are not copy-pasted templates across subsections.
 
-If existing outlines exist: read one. Match its structure exactly. Headings, depth, how cases are integrated, whether there are hypos.
+## Common failure modes (and fixes)
 
-## Workflow
+- **Template bullets everywhere** → replace with domain terms + evaluation axes specific to that subsection.
+- **Bullets too vague** (“Discuss limitations”) → name *which* limitations and *how to test* them.
+- **Outline too flat/too deep** → aim for a paper-like ToC (final ~6–8 H2) with fewer, thicker H3s.
+- **Too many H3 subsections** → merge adjacent H3s and write fewer, thicker subsections (paper-like default; budget depends on queries.md draft_profile: lite<=8, survey<=10, deep<=12).
+- **Missing Stage A fields** → add `Intent/RQ/Evidence needs/Expected cites` bullets so later mapping/evidence drafting can be audited.
 
-### Step 1: Inputs
+## Helper script (optional)
 
-What are we building from?
-- Class notes
-- Casebook sections
-- Case briefs (from case-brief skill or the student's own)
-- Syllabus (for structure)
-- Existing partial outline (extending, not starting fresh)
+### Quick Start
 
-### Step 2: Structure
+- `python .codex/skills/outline-builder/scripts/run.py --help`
+- `python .codex/skills/outline-builder/scripts/run.py --workspace <workspace_dir>`
 
-Syllabus gives the structure. Major topics → subtopics → rules → cases illustrating rules.
+### All Options
 
-If extending: match the existing outline's structure precisely. Don't impose a different organization.
+- See `--help` (this helper is intentionally minimal)
 
-### Step 3: Build — scaffold first, content from sources
+### Examples
 
-**The scaffold gets built from the syllabus and any existing outline.** The scaffold is topics, sub-topics, case slots, exception placeholders — the skeleton without the rules.
+- Generate a baseline bullets-only outline, then refine bullets:
+  - Run the helper once, then replace every generic bullet / `TODO` with topic-specific, checkable bullets.
 
-**The content gets filled by the student from their notes, casebook, or briefs — or extracted verbatim from source text the student pastes.** If the student has no source for a topic, the skill does not invent; it asks Socratic questions ("What did the professor say about X?", "Which case illustrates this rule?") and leaves a `[GAP]` marker.
+### Notes
 
-Never skip the scaffold step and just generate a populated outline. That is the failure mode this skill exists to prevent.
+- The script generates a baseline bullets-only outline and never overwrites non-placeholder work.
+- Paper-like default: it inserts `Introduction` and `Related Work` as fixed H2 sections before taxonomy-driven chapters.
+- In `pipeline.py --strict` it will be blocked only if placeholder markers (TODO/TBD/FIXME/(placeholder)) remain.
 
-Per the student's format. Common formats:
+### Refinement marker (recommended; completion signal)
 
-**Traditional outline:**
-```
-I. [Major topic]
-   A. [Subtopic]
-      1. Rule: [statement]
-         a. [Case name]: [how it illustrates the rule]
-         b. [Exception or limitation]
-      2. [Next rule]
-```
+When you are satisfied with the outline (and after C2 approval if applicable), create:
+- `outline/outline.refined.ok`
 
-**Rules-only (bar prep style):**
-```
-## [Topic]
-- [Rule]. [Case cite].
-- Exception: [rule]. [Case cite].
-```
+This is an explicit "I reviewed/refined this" signal:
+- makes it harder for a scaffold-y outline to silently pass in strict runs
+- documents that bullets were rewritten into subsection-specific, checkable requirements
 
-**Flowchart-adjacent:**
-```
-[Topic] → Is [element 1] met?
-  YES → Is [element 2] met?
-    YES → [Result]
-    NO → [Different result]
-  NO → [No claim]
-```
+## Troubleshooting
 
-Match theirs.
+### Common Issues
 
-### Step 4: Gaps
+#### Issue: Outline still has `TODO` / scaffold bullets
 
-Mark where the outline is thin:
-- `[NEEDS CASES — rule stated but no illustrating case]`
-- `[CHECK CLASS NOTES — professor may have emphasized something here]`
-- `[EXCEPTION UNCLEAR — casebook mentions an exception, find the rule]`
+**Symptom**:
+- Quality gate blocks `outline_scaffold`.
 
-## Citation check
+**Causes**:
+- Helper script generated a scaffold; bullets were not rewritten.
 
-Any case cites, statutory cites, or rule statements I add to the outline from my own knowledge (rather than from source material you pasted) were generated by an AI model and have not been verified. Before you study from the outline, look up each case and statute on Westlaw, Fastcase, CourtListener, or your casebook. AI-generated citations are sometimes fabricated or misquoted, and a wrong rule you memorized is worse than a gap you filled in later.
+**Solutions**:
+- Replace every generic bullet with topic-specific, checkable bullets (axes, comparisons, evaluation setups, failure modes).
+- Keep bullets-only (no prose paragraphs).
 
-## Drill-me integration
+#### Issue: Outline bullets are mostly generic templates
 
-In drill-me mode, after building a section: "Okay, close the outline. [Subject] question: [hypo]." Test whether the outline got into their head or just onto paper.
+**Symptom**:
+- Quality gate blocks `outline_template_bullets`.
 
-## What this skill does not do
+**Causes**:
+- Too many “Define problem…/Benchmarks…/Open problems…” template bullets.
 
-- Replace the student's own synthesis. An outline you didn't build is an outline you won't know. This skill *helps* build — the student should be driving.
-- Guarantee exam coverage. Outline the whole syllabus; the professor will test whatever they want.
-- **Invent rules to fill gaps.** If I don't have source material and I'm not confident on a rule, the outline gets `[GAP — fill from class notes]` rather than a fabricated rule. Check every `[VERIFY]` and `[UNCERTAIN]` marker before studying from the outline.
+**Solutions**:
+- Add concrete terms, datasets, evaluation metrics, and known failure modes per subsection.
+
+### Recovery Checklist
+
+- [ ] Every subsection has ≥3 non-template bullets.
+- [ ] No `TODO`/`(placeholder)` remains.

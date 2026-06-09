@@ -1,359 +1,570 @@
 ---
-name: financial-analyst
-description: >
-  Performs financial ratio analysis, DCF valuation, budget variance analysis,
-  and rolling forecast construction for strategic decision-making
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: borghei
-  category: finance
-  domain: financial-analysis
-  updated: 2026-03-31
-  tags: [financial-analysis, dcf, budgeting, forecasting, ratios]
+name: Financial Analyst
+slug: financial-analyst
+description: Analyze financial data, build models, evaluate investments, and provide data-driven financial recommendations
+category: research
+complexity: complex
+version: "1.0.0"
+author: "ID8Labs"
+triggers:
+  - "financial analysis"
+  - "analyze financials"
+  - "financial model"
+  - "investment analysis"
+tags:
+  - financial-analysis
+  - modeling
+  - valuation
+  - investment-analysis
+  - metrics
 ---
-# Financial Analyst Skill
 
-## Overview
+# Financial Analyst
 
-Production-ready financial analysis toolkit providing ratio analysis, DCF valuation, budget variance analysis, and rolling forecast construction. Designed for financial analysts with 3-6 years experience performing financial modeling, forecasting & budgeting, management reporting, business performance analysis, and investment analysis.
+Expert financial analysis agent that analyzes financial statements, builds financial models, evaluates investments, and provides data-driven recommendations. Specializes in ratio analysis, valuation, scenario modeling, budget analysis, and financial forecasting.
 
-## Use when
+This skill applies rigorous financial analysis frameworks, accounting principles, and valuation methodologies to support investment decisions, strategic planning, and financial health assessment. Perfect for due diligence, financial planning, investment evaluation, and business performance analysis.
 
-- The user asks to "run financial ratios", "build a DCF", "analyze budget variance", or "build a forecast"
-- A valuation range is needed for an acquisition, fundraise, or board presentation
-- Actuals vs budget needs investigation (which variances are material, favorable/unfavorable, department breakdown)
-- A rolling 13-week cash flow or driver-based revenue forecast needs construction
-- Sensitivity analysis is required to stress-test valuation or forecast assumptions
-- The user asks about profitability, liquidity, leverage, efficiency, or valuation metrics with industry context
+## Core Workflows
 
-## 5-Phase Workflow
+### Workflow 1: Financial Statement Analysis
 
-### Phase 1: Scoping
-- Define analysis objectives and stakeholder requirements
-- Identify data sources and time periods
-- Establish materiality thresholds and accuracy targets
-- Select appropriate analytical frameworks
-- *Validate:* materiality threshold is explicit (absolute $ or %), accuracy target is a number, and the decision the analysis supports is named
+**Objective:** Comprehensive analysis of company financial health and performance
 
-### Phase 2: Data Analysis & Modeling
-- Collect and validate financial data (income statement, balance sheet, cash flow)
-- Calculate financial ratios across 5 categories (profitability, liquidity, leverage, efficiency, valuation)
-- Build DCF models with WACC and terminal value calculations
-- Construct budget variance analyses with favorable/unfavorable classification
-- Develop driver-based forecasts with scenario modeling
-- *Validate:* input JSON conforms to the expected schema (no missing statements, no mixed periods); WACC inputs sourced within the last quarter; terminal growth rate ≤ long-run GDP growth
+**Steps:**
+1. **Data Gathering**
+   - Income statement (P&L)
+   - Balance sheet
+   - Cash flow statement
+   - Notes to financial statements
+   - Historical data (3-5 years preferred)
+   - Industry benchmarks
+   - Sources: SEC EDGAR (public companies), company reports, databases
 
-### Phase 3: Insight Generation
-- Interpret ratio trends and benchmark against industry standards
-- Identify material variances and root causes
-- Assess valuation ranges through sensitivity analysis
-- Evaluate forecast scenarios (base/bull/bear) for decision support
-- *Validate:* every material variance has a root-cause hypothesis; DCF sensitivity range is wider than ±15% on WACC and terminal growth
+2. **Income Statement Analysis**
+   - Revenue growth rate (YoY, CAGR)
+   - Gross margin and trends
+   - Operating margin and trends
+   - Net profit margin
+   - EBITDA and EBITDA margin
+   - Earnings per share (EPS)
+   - Revenue composition and diversification
 
-### Phase 4: Reporting
-- Generate executive summaries with key findings
-- Produce detailed variance reports by department and category
-- Deliver DCF valuation reports with sensitivity tables
-- Present rolling forecasts with trend analysis
-- *Validate:* executive summary leads with the decision-relevant conclusion, not the method; assumptions appendix lists source + last-reviewed date for each
+3. **Balance Sheet Analysis**
+   - Asset composition (current vs. non-current)
+   - Liability structure (short-term vs. long-term)
+   - Equity and retained earnings
+   - Working capital
+   - Debt levels and structure
+   - Asset quality and impairments
+   - Off-balance sheet items
 
-### Phase 5: Follow-up
-- Track forecast accuracy (target: +/-5% revenue, +/-3% expenses)
-- Monitor report delivery timeliness (target: 100% on time)
-- Update models with actuals as they become available
-- Refine assumptions based on variance analysis
+4. **Cash Flow Analysis**
+   - Operating cash flow (OCF)
+   - Free cash flow (FCF = OCF - CapEx)
+   - Investing cash flow (CapEx, acquisitions)
+   - Financing cash flow (debt, dividends, buybacks)
+   - Cash conversion cycle
+   - Cash runway (for unprofitable companies)
 
-## Tools
+5. **Financial Ratio Analysis**
+   - **Profitability Ratios:**
+     - Return on Assets (ROA) = Net Income / Total Assets
+     - Return on Equity (ROE) = Net Income / Shareholder Equity
+     - Gross Profit Margin = Gross Profit / Revenue
+     - Operating Margin = Operating Income / Revenue
+     - Net Profit Margin = Net Income / Revenue
 
-### 1. Ratio Calculator (`scripts/ratio_calculator.py`)
+   - **Liquidity Ratios:**
+     - Current Ratio = Current Assets / Current Liabilities
+     - Quick Ratio = (Current Assets - Inventory) / Current Liabilities
+     - Cash Ratio = Cash / Current Liabilities
 
-Calculate and interpret financial ratios from financial statement data.
+   - **Efficiency Ratios:**
+     - Asset Turnover = Revenue / Total Assets
+     - Inventory Turnover = COGS / Average Inventory
+     - Days Sales Outstanding = (Accounts Receivable / Revenue) × 365
+     - Cash Conversion Cycle = DSO + DIO - DPO
 
-**Ratio Categories:**
-- **Profitability:** ROE, ROA, Gross Margin, Operating Margin, Net Margin
-- **Liquidity:** Current Ratio, Quick Ratio, Cash Ratio
-- **Leverage:** Debt-to-Equity, Interest Coverage, DSCR
-- **Efficiency:** Asset Turnover, Inventory Turnover, Receivables Turnover, DSO
-- **Valuation:** P/E, P/B, P/S, EV/EBITDA, PEG Ratio
+   - **Leverage Ratios:**
+     - Debt-to-Equity = Total Debt / Total Equity
+     - Debt-to-Assets = Total Debt / Total Assets
+     - Interest Coverage = EBIT / Interest Expense
+     - Debt Service Coverage = OCF / Debt Service
 
-```bash
-python scripts/ratio_calculator.py sample_financial_data.json
-python scripts/ratio_calculator.py sample_financial_data.json --format json
-python scripts/ratio_calculator.py sample_financial_data.json --category profitability
+6. **Trend & Comparative Analysis**
+   - 3-5 year trend analysis for key metrics
+   - Quarter-over-quarter trends
+   - Compare to industry benchmarks
+   - Compare to key competitors
+   - Identify inflection points and anomalies
+
+7. **Financial Health Assessment**
+   - Overall financial health rating (Strong/Adequate/Weak)
+   - Key strengths
+   - Key weaknesses and risks
+   - Red flags (deteriorating metrics, accounting irregularities)
+   - Going concern assessment
+
+**Deliverable:** Financial analysis report with ratios, trends, benchmarks, and health assessment
+
+### Workflow 2: Valuation Analysis
+
+**Objective:** Determine fair value of a company or asset
+
+**Steps:**
+1. **Gather Valuation Inputs**
+   - Financial statements (historical and projected)
+   - Market data (stock price, market cap, comps)
+   - Industry data (growth rates, multiples)
+   - Macroeconomic data (risk-free rate, market risk premium)
+   - Company-specific information (strategy, competitive position)
+
+2. **Comparable Company Analysis (Comps)**
+   - Identify comparable public companies (same industry, size, geography)
+   - Gather trading multiples:
+     - EV/Revenue
+     - EV/EBITDA
+     - P/E ratio
+     - P/B ratio
+     - PEG ratio (P/E to Growth)
+   - Calculate median and mean multiples
+   - Apply multiples to target company metrics
+   - Adjust for differences (growth, margins, risk)
+
+3. **Precedent Transaction Analysis**
+   - Identify comparable M&A transactions
+   - Gather transaction multiples (EV/Revenue, EV/EBITDA)
+   - Adjust for market conditions and deal structure
+   - Apply to target company
+
+4. **Discounted Cash Flow (DCF) Analysis**
+   - **Project Free Cash Flows (5-10 years):**
+     - Revenue projections (growth assumptions)
+     - Margin assumptions (EBITDA, operating)
+     - CapEx and working capital needs
+     - Tax rate assumptions
+     - Calculate FCF = NOPAT + D&A - CapEx - Δ Working Capital
+
+   - **Terminal Value:**
+     - Perpetuity Growth Method: TV = FCF(final year) × (1 + g) / (WACC - g)
+     - Exit Multiple Method: TV = EBITDA(final year) × Exit Multiple
+
+   - **Discount Rate (WACC):**
+     - Cost of Equity = Risk-Free Rate + Beta × Market Risk Premium
+     - Cost of Debt = Interest Rate × (1 - Tax Rate)
+     - WACC = (E/V × Cost of Equity) + (D/V × Cost of Debt)
+
+   - **Calculate Enterprise Value:**
+     - EV = PV(projected FCFs) + PV(Terminal Value)
+
+   - **Calculate Equity Value:**
+     - Equity Value = EV - Net Debt + Non-Operating Assets
+
+5. **Valuation Summary & Reconciliation**
+   - Compare results from all methods
+   - Weight methodologies based on reliability
+   - Determine valuation range
+   - Implied valuation per share (if applicable)
+   - Sensitivity analysis (key assumptions)
+
+6. **Investment Recommendation**
+   - Fair value vs. current price/valuation
+   - Upside/downside potential
+   - Risk factors
+   - Catalysts for value realization
+   - Rating (Buy/Hold/Sell or Strong Buy/Buy/Hold/Sell/Strong Sell)
+
+**Deliverable:** Valuation report with multiple methodologies, fair value range, and recommendation
+
+### Workflow 3: Budget Analysis & Variance Reporting
+
+**Objective:** Compare actual performance to budget and explain variances
+
+**Steps:**
+1. **Budget vs. Actual Setup**
+   - Gather budget/forecast data
+   - Gather actual results
+   - Ensure comparable periods and formats
+   - Organize by department, product line, or cost center
+
+2. **Variance Calculation**
+   - Absolute variance = Actual - Budget
+   - Percentage variance = (Actual - Budget) / Budget × 100%
+   - Identify significant variances (>10% or material amount)
+   - Separate favorable vs. unfavorable variances
+
+3. **Revenue Variance Analysis**
+   - Volume variance: Change due to units sold
+   - Price variance: Change due to pricing
+   - Mix variance: Change due to product/customer mix
+   - Explain drivers of revenue variances
+
+4. **Expense Variance Analysis**
+   - Variable vs. fixed cost analysis
+   - Volume-driven variances
+   - Rate/price variances
+   - Efficiency variances
+   - One-time or non-recurring items
+   - Explain drivers of expense variances
+
+5. **Profitability Variance**
+   - Gross margin variance
+   - Operating margin variance
+   - Net margin variance
+   - Bridge analysis (waterfall chart showing variance drivers)
+
+6. **Root Cause Analysis**
+   - Operational drivers (volume, efficiency, pricing)
+   - External factors (market conditions, competition)
+   - One-time events (expenses, delays)
+   - Timing differences (early/late recognition)
+
+7. **Forecast Implications**
+   - Are variances temporary or ongoing?
+   - Update forecast based on variances
+   - Identify risks to achieving targets
+   - Recommended actions to close gaps
+
+**Deliverable:** Variance analysis report with explanations and forecast updates
+
+### Workflow 4: Financial Modeling & Forecasting
+
+**Objective:** Build robust financial model to project future performance
+
+**Steps:**
+1. **Model Structure Setup**
+   - Historical period (3-5 years)
+   - Forecast period (3-5 years, sometimes 10)
+   - Three-statement integration (P&L, Balance Sheet, Cash Flow)
+   - Assumption dashboard
+   - Scenario capability
+
+2. **Revenue Modeling**
+   - **Driver-Based Approach:**
+     - Identify revenue drivers (users, pricing, volume, etc.)
+     - Project each driver
+     - Revenue = Drivers × Metrics
+   - **Top-Down Approach:**
+     - Market size × market share × growth rate
+   - **Bottom-Up Approach:**
+     - Sum of product lines or customer segments
+   - Include seasonality if applicable
+
+3. **Expense Modeling**
+   - **Variable Costs:**
+     - As % of revenue (COGS, sales commissions)
+     - Project margin assumptions
+   - **Fixed Costs:**
+     - Absolute dollar amounts
+     - Step functions (hiring plans)
+   - **Semi-Variable Costs:**
+     - Fixed component + variable component
+   - Include inflation assumptions
+
+4. **Working Capital Modeling**
+   - Days Sales Outstanding (DSO) → Accounts Receivable
+   - Days Inventory Outstanding (DIO) → Inventory
+   - Days Payable Outstanding (DPO) → Accounts Payable
+   - Working Capital = AR + Inventory - AP
+   - Project changes in working capital
+
+5. **Capital Expenditures & Depreciation**
+   - CapEx as % of revenue or absolute amounts
+   - Asset schedule (track additions and depreciation)
+   - Depreciation expense flows to P&L
+   - Net PP&E on balance sheet
+
+6. **Debt & Interest Modeling**
+   - Debt schedule (draws, repayments, interest)
+   - Interest expense = Debt Balance × Interest Rate
+   - Debt covenants and constraints
+
+7. **Integration & Checks**
+   - P&L → Net Income flows to Equity (Balance Sheet) and OCF (Cash Flow)
+   - Balance Sheet must balance (Assets = Liabilities + Equity)
+   - Cash Flow → Change in Cash flows to Balance Sheet
+   - Circular references resolved (interest on cash, debt)
+   - Error checks and validation formulas
+
+8. **Scenario & Sensitivity Analysis**
+   - Base case, upside case, downside case
+   - Sensitivity tables (vary key assumptions)
+   - Monte Carlo simulation (if sophisticated)
+   - Identify key value drivers and risks
+
+**Deliverable:** Integrated financial model with scenarios and sensitivity analysis
+
+### Workflow 5: Investment Analysis & Due Diligence
+
+**Objective:** Evaluate investment opportunity and assess risks
+
+**Steps:**
+1. **Investment Opportunity Overview**
+   - Investment thesis
+   - Type of investment (equity, debt, convertible, etc.)
+   - Amount and terms
+   - Expected return and timeline
+   - Exit strategy
+
+2. **Business & Strategic Analysis**
+   - Business model and revenue streams
+   - Market opportunity and competitive position
+   - Management team and governance
+   - Growth strategy and execution capability
+   - Unique value proposition
+
+3. **Financial Due Diligence**
+   - Historical financial performance analysis
+   - Quality of earnings (recurring vs. one-time)
+   - Revenue concentration and customer contracts
+   - Working capital management
+   - Debt structure and covenants
+   - Off-balance sheet liabilities
+   - Accounting policy review
+
+4. **Valuation & Return Analysis**
+   - Pre-money and post-money valuation
+   - Ownership percentage
+   - Expected return scenarios (IRR, MOIC)
+   - Comparable transaction analysis
+   - DCF valuation
+   - Liquidation preference and other terms
+
+5. **Risk Assessment**
+   - **Business Risks:**
+     - Market risk, competitive risk, execution risk
+   - **Financial Risks:**
+     - Liquidity risk, leverage risk, burn rate
+   - **Legal/Regulatory Risks:**
+     - Compliance, IP, litigation
+   - **Team Risks:**
+     - Key person dependency, culture
+   - Risk mitigation strategies
+
+6. **Deal Structure Analysis**
+   - Valuation and pricing
+   - Investment terms (liquidation preference, anti-dilution, etc.)
+   - Board seats and governance rights
+   - Information rights and reporting
+   - Exit rights and drag-along provisions
+
+7. **Investment Recommendation**
+   - Investment decision (Invest/Pass)
+   - Recommended terms or modifications
+   - Expected return and risk-adjusted return
+   - Key conditions and contingencies
+   - Ongoing monitoring plan
+
+**Deliverable:** Investment memo with recommendation, valuation, and risk assessment
+
+## Quick Reference
+
+| Action | Command/Trigger |
+|--------|-----------------|
+| Analyze financials | "Analyze financial statements for [company]" |
+| Calculate ratios | "Calculate key financial ratios" |
+| Build model | "Build financial model for [company/project]" |
+| Valuation | "Value [company] using DCF and comps" |
+| Budget variance | "Analyze budget vs actual variances" |
+| Investment analysis | "Analyze this investment opportunity" |
+
+## Key Financial Metrics
+
+### Profitability Metrics
+- **Gross Margin:** (Revenue - COGS) / Revenue
+- **Operating Margin:** Operating Income / Revenue
+- **Net Margin:** Net Income / Revenue
+- **EBITDA Margin:** EBITDA / Revenue
+- **Return on Assets (ROA):** Net Income / Total Assets
+- **Return on Equity (ROE):** Net Income / Shareholder Equity
+- **Return on Invested Capital (ROIC):** NOPAT / Invested Capital
+
+### Liquidity Metrics
+- **Current Ratio:** Current Assets / Current Liabilities (>1 is healthy)
+- **Quick Ratio:** (Current Assets - Inventory) / Current Liabilities
+- **Cash Ratio:** Cash / Current Liabilities
+- **Working Capital:** Current Assets - Current Liabilities
+
+### Efficiency Metrics
+- **Asset Turnover:** Revenue / Total Assets
+- **Inventory Turnover:** COGS / Average Inventory
+- **Receivables Turnover:** Revenue / Average AR
+- **Days Sales Outstanding:** (AR / Revenue) × 365
+- **Cash Conversion Cycle:** DSO + DIO - DPO
+
+### Leverage Metrics
+- **Debt-to-Equity:** Total Debt / Total Equity
+- **Debt-to-Assets:** Total Debt / Total Assets
+- **Interest Coverage:** EBIT / Interest Expense
+- **Debt Service Coverage:** OCF / Total Debt Service
+
+### Valuation Metrics
+- **P/E Ratio:** Price per Share / EPS
+- **EV/EBITDA:** Enterprise Value / EBITDA
+- **EV/Revenue:** Enterprise Value / Revenue
+- **Price-to-Book:** Market Cap / Book Value of Equity
+- **PEG Ratio:** P/E / Earnings Growth Rate
+
+## Financial Modeling Best Practices
+
+### Structure
+- Separate inputs, calculations, and outputs clearly
+- Use consistent formatting and color coding
+- One formula per row (easy to audit)
+- Avoid hardcoded numbers in formulas
+- Use named ranges for key inputs
+
+### Assumptions
+- Document all assumptions explicitly
+- Source assumptions where possible
+- Make assumptions easily adjustable
+- Sensitivity test key assumptions
+
+### Formulas
+- Keep formulas simple and transparent
+- Avoid circular references (or handle explicitly)
+- Use consistent sign conventions (cash in = positive)
+- Include error checks
+
+### Scenarios
+- Build base case, upside, downside
+- Use scenario manager or data tables
+- Clearly label which scenario is active
+
+### Documentation
+- Include executive summary tab
+- Document methodology and sources
+- Version control and change log
+- Assumptions and key drivers summary
+
+## Best Practices
+
+- **Use multiple methodologies:** No single valuation method is perfect
+- **Sanity check results:** Do the numbers make sense vs. reality?
+- **Document assumptions:** Be transparent about what drives the model
+- **Sensitivity analysis:** Understand impact of key assumptions
+- **Benchmark rigorously:** Compare to peers and industry standards
+- **Quality of earnings:** Adjust for one-time items and accounting policies
+- **Look beyond numbers:** Context and qualitative factors matter
+- **Update regularly:** Financial analysis is a snapshot; refresh periodically
+- **Reconcile sources:** Different databases may have different numbers
+- **Understand limitations:** Models are only as good as assumptions
+
+## Financial Analysis Report Template
+
+```markdown
+# Financial Analysis: [Company Name]
+
+**Date:** [Analysis Date]
+**Analyst:** Claude Financial Analyst
+**Ticker:** [if public] | **Industry:** [Industry]
+
+## Executive Summary
+- Company overview
+- Financial health: [Strong/Adequate/Weak]
+- Key strengths (top 3)
+- Key risks (top 3)
+- Recommendation
+
+## Company Overview
+- Business model
+- Revenue streams
+- Market position
+- Recent developments
+
+## Financial Performance
+
+### Income Statement Highlights
+| Metric | Current Year | Prior Year | YoY Change |
+|--------|--------------|------------|------------|
+| Revenue | $XXX | $XXX | +X% |
+| Gross Profit | $XXX | $XXX | +X% |
+| Operating Income | $XXX | $XXX | +X% |
+| Net Income | $XXX | $XXX | +X% |
+
+**Key Observations:**
+- [Insight 1]
+- [Insight 2]
+
+### Balance Sheet Highlights
+| Metric | Current | Prior | Change |
+|--------|---------|-------|--------|
+| Total Assets | $XXX | $XXX | +X% |
+| Total Liabilities | $XXX | $XXX | +X% |
+| Shareholder Equity | $XXX | $XXX | +X% |
+
+**Key Observations:**
+- [Insight 1]
+- [Insight 2]
+
+### Cash Flow Highlights
+| Metric | Current Year | Prior Year |
+|--------|--------------|------------|
+| Operating Cash Flow | $XXX | $XXX |
+| Free Cash Flow | $XXX | $XXX |
+| CapEx | $XXX | $XXX |
+
+**Key Observations:**
+- [Insight 1]
+- [Insight 2]
+
+## Financial Ratio Analysis
+
+### Profitability
+| Ratio | Company | Industry Avg | Assessment |
+|-------|---------|--------------|------------|
+| Gross Margin | X% | X% | [Above/Below/In-line] |
+| Operating Margin | X% | X% | [Above/Below/In-line] |
+| ROE | X% | X% | [Above/Below/In-line] |
+
+### Liquidity
+| Ratio | Company | Benchmark | Assessment |
+|-------|---------|-----------|------------|
+| Current Ratio | X.X | >1.0 | [Adequate/Weak] |
+| Quick Ratio | X.X | >0.5 | [Adequate/Weak] |
+
+### Leverage
+| Ratio | Company | Benchmark | Assessment |
+|-------|---------|-----------|------------|
+| Debt/Equity | X.X | Industry avg | [High/Moderate/Low] |
+| Interest Coverage | X.X | >2.0 | [Adequate/Weak] |
+
+## Strengths & Weaknesses
+
+### Strengths
+1. [Strength 1 with supporting data]
+2. [Strength 2 with supporting data]
+
+### Weaknesses
+1. [Weakness 1 with supporting data]
+2. [Weakness 2 with supporting data]
+
+## Risks & Considerations
+- Risk 1
+- Risk 2
+
+## Conclusion & Recommendation
+[Summary of financial health and recommendation]
 ```
 
-### 2. DCF Valuation (`scripts/dcf_valuation.py`)
+## Integration with Other Skills
 
-Discounted Cash Flow enterprise and equity valuation with sensitivity analysis.
+- **Use with `market-research-analyst`:** Market sizing for financial projections
+- **Use with `competitive-intelligence`:** Competitor financial benchmarking
+- **Use with `data-analyzer`:** Advanced statistical analysis of financial data
+- **Use with `trend-spotter`:** Identify financial performance trends
+- **Use with `industry-expert`:** Deep industry context for financial analysis
 
-**Features:**
-- WACC calculation via CAPM
-- Revenue and free cash flow projections (5-year default)
-- Terminal value via perpetuity growth and exit multiple methods
-- Enterprise value and equity value derivation
-- Two-way sensitivity analysis (discount rate vs growth rate)
+## Common Pitfalls to Avoid
 
-```bash
-python scripts/dcf_valuation.py valuation_data.json
-python scripts/dcf_valuation.py valuation_data.json --format json
-python scripts/dcf_valuation.py valuation_data.json --projection-years 7
-```
-
-### 3. Budget Variance Analyzer (`scripts/budget_variance_analyzer.py`)
-
-Analyze actual vs budget vs prior year performance with materiality filtering.
-
-**Features:**
-- Dollar and percentage variance calculation
-- Materiality threshold filtering (default: 10% or $50K)
-- Favorable/unfavorable classification with revenue/expense logic
-- Department and category breakdown
-- Executive summary generation
-
-```bash
-python scripts/budget_variance_analyzer.py budget_data.json
-python scripts/budget_variance_analyzer.py budget_data.json --format json
-python scripts/budget_variance_analyzer.py budget_data.json --threshold-pct 5 --threshold-amt 25000
-```
-
-### 4. Forecast Builder (`scripts/forecast_builder.py`)
-
-Driver-based revenue forecasting with rolling cash flow projection and scenario modeling.
-
-**Features:**
-- Driver-based revenue forecast model
-- 13-week rolling cash flow projection
-- Scenario modeling (base/bull/bear cases)
-- Trend analysis using simple linear regression (standard library)
-
-```bash
-python scripts/forecast_builder.py forecast_data.json
-python scripts/forecast_builder.py forecast_data.json --format json
-python scripts/forecast_builder.py forecast_data.json --scenarios base,bull,bear
-```
-
-## Knowledge Bases
-
-| Reference | Purpose |
-|-----------|---------|
-| `references/financial-ratios-guide.md` | Ratio formulas, interpretation, industry benchmarks |
-| `references/valuation-methodology.md` | DCF methodology, WACC, terminal value, comps |
-| `references/forecasting-best-practices.md` | Driver-based forecasting, rolling forecasts, accuracy |
-
-## Templates
-
-| Template | Purpose |
-|----------|---------|
-| `assets/variance_report_template.md` | Budget variance report template |
-| `assets/dcf_analysis_template.md` | DCF valuation analysis template |
-| `assets/forecast_report_template.md` | Revenue forecast report template |
-
-## Industry Adaptations
-
-### SaaS
-- Key metrics: MRR, ARR, CAC, LTV, Churn Rate, Net Revenue Retention
-- Revenue recognition: subscription-based, deferred revenue tracking
-- Unit economics: CAC payback period, LTV/CAC ratio
-- Cohort analysis for retention and expansion revenue
-
-### Retail
-- Key metrics: Same-store sales, Revenue per square foot, Inventory turnover
-- Seasonal adjustment factors in forecasting
-- Gross margin analysis by product category
-- Working capital cycle optimization
-
-### Manufacturing
-- Key metrics: Gross margin by product line, Capacity utilization, COGS breakdown
-- Bill of materials cost analysis
-- Absorption vs variable costing impact
-- Capital expenditure planning and ROI
-
-### Financial Services
-- Key metrics: Net Interest Margin, Efficiency Ratio, ROA, Tier 1 Capital
-- Regulatory capital requirements
-- Credit loss provisioning and reserves
-- Fee income analysis and diversification
-
-### Healthcare
-- Key metrics: Revenue per patient, Payer mix, Days in A/R, Operating margin
-- Reimbursement rate analysis by payer
-- Case mix index impact on revenue
-- Compliance cost allocation
-
-## Key Metrics & Targets
-
-| Metric | Target |
-|--------|--------|
-| Forecast accuracy (revenue) | +/-5% |
-| Forecast accuracy (expenses) | +/-3% |
-| Report delivery | 100% on time |
-| Model documentation | Complete for all assumptions |
-| Variance explanation | 100% of material variances |
-
-## Input Data Format
-
-All scripts accept JSON input files. See `assets/sample_financial_data.json` for the complete input schema covering all four tools.
-
-## Dependencies
-
-**None** - All scripts use Python standard library only (`math`, `statistics`, `json`, `argparse`, `datetime`). No numpy, pandas, or scipy required.
-
-## Troubleshooting
-
-| Problem | Cause | Solution |
-|---------|-------|----------|
-| All ratios return 0.00 | Missing or zeroed financial statement fields in input JSON | Verify `income_statement`, `balance_sheet`, and `cash_flow` keys are populated with non-zero values; check field names match expected schema |
-| DCF yields negative equity value | Net debt exceeds enterprise value, or WACC is set lower than terminal growth rate | Confirm `net_debt` is accurate; ensure `terminal_growth_rate` < WACC (typically 2-3% vs 8-12%); review capital structure assumptions |
-| Sensitivity table shows "N/A" across entire row | WACC value in that row is less than or equal to every terminal growth rate in the range | Widen the gap between WACC and terminal growth; raise WACC inputs or lower the growth range in `assumptions.terminal_growth_rate` |
-| Budget variance analyzer flags every line as material | Materiality thresholds set too low relative to the data scale | Increase `--threshold-pct` (e.g., from 5 to 10) and `--threshold-amt` (e.g., from 25000 to 100000) to match organizational materiality policy |
-| Forecast builder produces flat projections | Historical data has fewer than 2 periods, or `revenue_growth_rate` is set to 0 | Provide at least 3-4 historical periods in `historical_periods`; set a non-zero `revenue_growth_rate` in `assumptions` |
-| JSON parsing error on script execution | Malformed JSON input file (trailing commas, unquoted keys, encoding issues) | Validate input with `python -m json.tool input_file.json`; ensure UTF-8 encoding; remove trailing commas and comments |
-| Valuation ratios all show "Insufficient data" | Missing `market_data` section in input JSON (share price, shares outstanding) | Add the `market_data` object with `share_price`, `shares_outstanding`, and `earnings_growth_rate` fields to the input file |
-
-## Success Criteria
-
-- **Forecast Accuracy**: Revenue forecasts land within +/-5% of actuals; expense forecasts within +/-3% over rolling 12-month periods
-- **Variance Coverage**: 100% of material variances (exceeding threshold) include documented root-cause explanations and corrective action plans
-- **Valuation Confidence**: DCF-derived equity value falls within 15% of comparable-company and precedent-transaction benchmarks, validated through sensitivity analysis
-- **Report Timeliness**: All financial analysis deliverables (ratio reports, variance analyses, forecast updates) published within agreed SLA -- target 100% on-time delivery
-- **Model Integrity**: Every assumption in DCF and forecast models is documented with source, rationale, and last-reviewed date; WACC inputs refresh quarterly against market data
-- **Stakeholder Adoption**: Financial models and dashboards referenced in at least 80% of executive budget reviews, board presentations, and investment committee decisions
-- **Analytical Efficiency**: End-to-end analysis cycle time (data collection through report delivery) reduced by 40%+ compared to manual spreadsheet workflows, measured per reporting period
-
-## Scope & Limitations
-
-**This skill covers:**
-- Quantitative financial ratio analysis across profitability, liquidity, leverage, efficiency, and valuation categories with built-in industry benchmarking
-- Discounted Cash Flow (DCF) enterprise and equity valuation using CAPM-based WACC, perpetuity growth and exit multiple terminal value methods, and two-way sensitivity analysis
-- Budget variance analysis with materiality filtering, favorable/unfavorable classification, department and category breakdowns, and executive summary generation
-- Driver-based revenue forecasting with 13-week rolling cash flow projection, base/bull/bear scenario modeling, and linear regression trend analysis
-
-**This skill does NOT cover:**
-- Real-time market data feeds, live stock price retrieval, or automated data ingestion from ERP/accounting systems (all input is via static JSON files)
-- Qualitative analysis such as management quality assessment, competitive moat evaluation, ESG scoring, or regulatory risk judgment
-- Tax optimization, transfer pricing, multi-entity consolidation, or jurisdiction-specific accounting treatments (IFRS vs GAAP reconciliation)
-- Monte Carlo simulation, options pricing (Black-Scholes), credit risk modeling, or any analysis requiring external libraries beyond the Python standard library
-
-## Anti-patterns
-
-| Anti-pattern | Failure mode | Fix |
-|--------------|--------------|-----|
-| Building a DCF on a single-scenario forecast | False precision; one number presented as a target price | Always run base/bull/bear; present valuation as a range with sensitivity tables |
-| Terminal growth rate ≥ long-run GDP growth | Valuation dominated by terminal value assuming perpetual above-economy growth | Cap terminal growth at 2-3% (long-run GDP proxy); if comps justify higher, flag explicitly |
-| WACC inputs more than a quarter old | Rate environment moved; discount rate is wrong; valuation wrong | Refresh risk-free rate, ERP, and beta quarterly; document "last reviewed" date per input |
-| Benchmarking ratios against a generic "industry average" | Peer set is wrong; conclusions are wrong | Use a specific comparable-company set (size, geography, business model) — see industry benchmarks in `references/financial-ratios-guide.md` |
-| Reporting every variance instead of filtering by materiality | Stakeholders tune out; real issues buried | Apply a materiality threshold (absolute $ or % of budget); below threshold goes into an appendix, not the report |
-| Favorable variance = "good"; unfavorable = "bad" | Misses revenue shortfalls masked by expense underspend; misses over-delivery hiding scope cuts | Always pair the classification with a root-cause note — direction alone is not insight |
-| Mixing forecast periods (quarterly actuals against annual budget) | Variances that don't reconcile; trust collapses | Run the tools on matched periods only; if a period is partial, annotate and use period-adjusted comparisons |
-| Treating model output as the answer | Model is a reasoning aid, not a decision | Lead the executive summary with the decision; put the model outputs in support |
-
-## Integration Points
-
-| Related Skill | Domain | Integration Use Case |
-|---------------|--------|---------------------|
-| `c-level-advisor/ceo-advisor` | C-Level Advisory | Feed DCF valuation outputs and scenario comparisons into CEO strategic investment decisions and board-ready presentations |
-| `c-level-advisor/cto-advisor` | C-Level Advisory | Provide technology investment ROI analysis and CapEx forecasts to support build-vs-buy and infrastructure scaling decisions |
-| `business-growth/revenue-operations` | Business & Growth | Connect revenue forecasts and unit-economics metrics (CAC, LTV, payback period) to pipeline and go-to-market planning |
-| `product-team/product-manager` | Product Team | Supply budget variance data and RICE-weighted financial projections for feature prioritization and resource allocation |
-| `data-analytics/data-analyst` | Data Analytics | Export ratio analysis and forecast outputs as structured JSON for BI dashboard integration and trend visualization |
-| `project-management/project-financial-management` | Project Management | Align budget variance analysis with project-level cost tracking, earned value management, and milestone-based funding releases |
-
-## Tool Reference
-
-### `scripts/ratio_calculator.py`
-
-Calculate and interpret financial ratios across 5 categories with industry benchmarking.
-
-```
-usage: ratio_calculator.py [-h] [--format {text,json}]
-                           [--category {profitability,liquidity,leverage,efficiency,valuation}]
-                           input_file
-
-positional arguments:
-  input_file            Path to JSON file with financial statement data
-                        (must contain income_statement, balance_sheet,
-                        cash_flow, and optionally market_data objects)
-
-options:
-  -h, --help            Show help message and exit
-  --format {text,json}  Output format (default: text)
-  --category {profitability,liquidity,leverage,efficiency,valuation}
-                        Calculate only a specific ratio category;
-                        omit to calculate all 5 categories (20 ratios)
-```
-
-**Ratios computed:** ROE, ROA, Gross Margin, Operating Margin, Net Margin, Current Ratio, Quick Ratio, Cash Ratio, Debt-to-Equity, Interest Coverage, DSCR, Asset Turnover, Inventory Turnover, Receivables Turnover, DSO, P/E, P/B, P/S, EV/EBITDA, PEG Ratio.
-
-### `scripts/dcf_valuation.py`
-
-Discounted Cash Flow enterprise and equity valuation with WACC calculation and sensitivity analysis.
-
-```
-usage: dcf_valuation.py [-h] [--format {text,json}]
-                        [--projection-years PROJECTION_YEARS]
-                        input_file
-
-positional arguments:
-  input_file            Path to JSON file with valuation data
-                        (must contain historical and assumptions objects)
-
-options:
-  -h, --help            Show help message and exit
-  --format {text,json}  Output format (default: text)
-  --projection-years PROJECTION_YEARS
-                        Number of projection years; overrides the value
-                        in the input file (default: 5)
-```
-
-**Outputs:** WACC (CAPM), projected revenue and FCF, terminal value (perpetuity growth + exit multiple), enterprise value, equity value, value per share, and a two-way sensitivity table (WACC vs terminal growth rate).
-
-### `scripts/budget_variance_analyzer.py`
-
-Analyze actual vs budget vs prior year performance with materiality filtering and executive summaries.
-
-```
-usage: budget_variance_analyzer.py [-h] [--format {text,json}]
-                                   [--threshold-pct THRESHOLD_PCT]
-                                   [--threshold-amt THRESHOLD_AMT]
-                                   input_file
-
-positional arguments:
-  input_file            Path to JSON file with budget data
-                        (must contain line_items array with actual,
-                        budget, and optionally prior_year values)
-
-options:
-  -h, --help            Show help message and exit
-  --format {text,json}  Output format (default: text)
-  --threshold-pct THRESHOLD_PCT
-                        Materiality threshold as percentage (default: 10.0)
-  --threshold-amt THRESHOLD_AMT
-                        Materiality threshold as dollar amount (default: 50000.0)
-```
-
-**Outputs:** Executive summary (revenue/expense/net impact), all variances with favorability classification, material variances filtered by threshold, department summary, and category summary.
-
-### `scripts/forecast_builder.py`
-
-Driver-based revenue forecasting with rolling cash flow projection and multi-scenario modeling.
-
-```
-usage: forecast_builder.py [-h] [--format {text,json}]
-                           [--scenarios SCENARIOS]
-                           input_file
-
-positional arguments:
-  input_file            Path to JSON file with forecast data
-                        (must contain historical_periods, drivers,
-                        assumptions, cash_flow_inputs, and scenarios objects)
-
-options:
-  -h, --help            Show help message and exit
-  --format {text,json}  Output format (default: text)
-  --scenarios SCENARIOS
-                        Comma-separated list of scenarios to model
-                        (default: base,bull,bear)
-```
-
-**Outputs:** Trend analysis (linear regression, growth rates, seasonality index), scenario comparison table, per-period forecast detail (revenue, COGS, gross profit, OpEx, operating income), and 13-week rolling cash flow projection with runway calculation.
+- **Garbage in, garbage out:** Verify data quality before analysis
+- **Ignoring context:** Numbers without business context are meaningless
+- **Overreliance on historical data:** Past performance ≠ future results
+- **Ignoring cash flow:** Profits don't pay bills, cash does
+- **Aggressive assumptions:** Be realistic, not optimistic, in projections
+- **Not adjusting for one-time items:** Normalize for recurring performance
+- **Ignoring qualitative factors:** Management quality, culture, etc. matter
+- **Analysis paralysis:** Don't let perfect be the enemy of good
+- **Forgetting macro context:** Economic cycles affect all companies
+- **Overlooking red flags:** Deteriorating metrics, accounting irregularities

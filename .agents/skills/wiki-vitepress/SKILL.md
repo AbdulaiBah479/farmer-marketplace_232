@@ -1,6 +1,6 @@
 ---
 name: wiki-vitepress
-description: "Transform generated wiki Markdown files into a polished VitePress static site with dark theme and interactive Mermaid diagrams. Use when user asks to \"build a site\" or \"package as VitePress\", user runs the /deep-wiki, or user wants a browsable HTML output from generated wiki pages."
+description: "Packages generated wiki Markdown into a VitePress static site with dark theme, dark-mode Mermaid diagrams with click-to-zoom, and production build output. Use when the user wants to create a browsa..."
 risk: unknown
 source: community
 date_added: "2026-02-27"
@@ -10,7 +10,8 @@ date_added: "2026-02-27"
 
 Transform generated wiki Markdown files into a polished VitePress static site with dark theme and interactive Mermaid diagrams.
 
-## When to Use
+## When to Activate
+
 - User asks to "build a site" or "package as VitePress"
 - User runs the `/deep-wiki:build` command
 - User wants a browsable HTML output from generated wiki pages
@@ -149,10 +150,5 @@ Output goes to `wiki-site/.vitepress/dist/`.
 - Node text in Mermaid uses inline `style` with highest specificity — CSS alone won't fix it
 - `enhanceApp()` runs during SSR where `document` doesn't exist — use `setup()` only
 
-### When to Use
+## When to Use
 This skill is applicable to execute the workflow or actions described in the overview.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

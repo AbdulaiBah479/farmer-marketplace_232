@@ -1,6 +1,6 @@
 ---
 name: prior-auth-review-skill
-description: Automate payer review of prior authorization (PA) requests. This skill should be used when users say "Review this PA request", "Process prior authorization for [procedure]", "Assess medical necessity", "Generate PA decision", or when processing clinical documentation for coverage policy validation and authorization decisions.
+description: "Automate payer review of prior authorization (PA) requests. This skill should be used when users say \"Review this PA request\", \"Process prior authorization for [procedure]\", \"Assess medical necessity\", \"Generate PA decision\", or when processing clinical documentation for coverage policy validation and authorization decisions."
 ---
 
 # Prior Authorization Review Skill

@@ -1,93 +1,98 @@
 ---
 name: pr-submission
-description: PR title format, commit conventions, and pre-PR checklist for SkillHub. Use when preparing or reviewing pull requests.
-license: Apache-2.0
+description: Automatically submit pull requests with full autonomous workflow. Use when the user mentions creating a PR, submitting a PR, merging changes, opening a pull request, or wants to get their changes reviewed. Also use when code changes are complete and ready for review.
 ---
 
 # PR Submission Skill
 
-## Workflow
+This skill automatically triggers the `/submit-pr` command to handle the complete pull request lifecycle autonomously.
 
-1. Identify the scope of your change (feature, bug fix, docs, test, refactor, chore)
-2. Format PR title and commits using the conventions below
-3. Run the pre-PR checklist commands
-4. Open the PR with a descriptive body
+## When to use this skill
 
-## PR Title Format
+Use this skill when the user:
+- Says "create a PR" or "submit a PR"
+- Says "open a pull request" or "make a pull request"
+- Says "merge this" or "merge my changes"
+- Says "ready for review" or "get this reviewed"
+- Mentions wanting to push changes upstream
+- Asks about submitting code for review
+- Has completed work and wants to submit it
 
-Use conventional commit style:
+## What this skill does
 
-```
-<type>(<scope>): <description>
-```
+When activated, this skill invokes the `/submit-pr` command, which:
 
-**Types:**
+1. **Automatically creates a feature branch** (if on main/master)
+2. **Commits any uncommitted changes** with smart commit messages
+3. **Ensures documentation compliance** by discovering and following repository standards
+4. **Pushes changes to remote**
+5. **Creates the pull request** with proper title and description
+6. **Enables GitHub auto-merge** immediately
+7. **Continuously monitors** CI/CD checks and review status (every 30 seconds)
+8. **Autonomously fixes issues** if CI fails or changes are requested (up to 3 attempts)
+9. **Waits for GitHub to auto-merge** when approved and checks pass
+10. **Cleans up local branches** automatically
 
-| Type | When to Use |
-|------|-------------|
-| `feat` | New feature or capability |
-| `fix` | Bug fix |
-| `docs` | Documentation changes only |
-| `test` | Adding or updating tests |
-| `refactor` | Code restructuring with no behavior change |
-| `chore` | Build, CI, tooling, or maintenance tasks |
+## Instructions
 
-**Scopes:** Use module or domain names: `auth`, `search`, `publish`, `review`, `namespace`, `governance`, `deploy`, `ci`, `frontend`, `scanner`
+When the user requests creating or submitting a PR:
 
-**Examples:**
-```
-feat(auth): add local account login with password reset
-fix(publish): resolve null pointer when skill metadata is missing name
-docs(deploy): clarify runtime image usage
-test(namespace): add membership service edge case tests
-refactor(review): extract query repository for governance list
-chore(ci): add parallel workflow scripts for multi-agent development
-```
+1. **Trigger the command immediately**:
+   ```
+   /git:submit-pr
+   ```
 
-## Commit Message Format
+2. **Do NOT ask for confirmation** - the command is fully autonomous and handles everything
 
-Same convention as PR titles. One logical change per commit.
+3. **Inform the user** that the process has started:
+   ```
+   Starting fully autonomous PR submission workflow...
+   This will handle everything from commit to merge automatically.
+   ```
 
-**Types:**
+4. **Let the command run** - it will:
+   - Show progress updates automatically
+   - Handle any issues that arise
+   - Merge when ready
+   - Report completion
 
-- **feat**: A new feature for the user
-- **fix**: A bug fix for the user
-- **docs**: Documentation changes only
-- **test**: Adding or updating tests
-- **refactor**: Code change that neither fixes a bug nor adds a feature
-- **chore**: Changes to build process, CI, or maintenance tasks
+## Examples
 
-**Examples:**
-```
-fix(auth): resolve session cookie conflict in device flow
-feat(publish): support security scan before review submission
-docs(skill-protocol): add nested SKILL.md discovery rules
-test(search): verify jieba analysis with Chinese skill descriptions
-refactor(storage): simplify LocalFile path normalization
-```
+**User**: "Create a PR for these changes"
+**Action**: Immediately run `/git:submit-pr`
 
-## Pre-PR Checklist
+**User**: "Let's merge this"
+**Action**: Immediately run `/git:submit-pr`
 
-- [ ] Backend tests pass: `make test-backend-app`
-- [ ] Frontend typecheck passes: `make typecheck-web`
-- [ ] If API changed: `make generate-api` was run and `web/src/api/generated/schema.d.ts` is committed
-- [ ] Smoke test passes: `make staging`
-- [ ] Follow existing module boundaries and dependency direction
-- [ ] Add/update tests for new behavior
-- [ ] Update design docs when APIs, auth flows, deployment, or operator workflows change
+**User**: "Submit this for review"
+**Action**: Immediately run `/git:submit-pr`
 
-## PR Body Structure
+**User**: "I'm done, can you open a pull request?"
+**Action**: Immediately run `/git:submit-pr`
 
-When creating a PR, include:
+**User**: "Ready to push this upstream"
+**Action**: Immediately run `/git:submit-pr`
 
-1. **What** — Summary of the change
-2. **Why** — Motivation (link to issue if applicable)
-3. **How** — Key implementation details (especially for non-obvious decisions)
-4. **Testing** — How to verify the change works
-5. **Impact** — Breaking changes, migration notes, or rollout considerations
+## Important notes
 
-## Review Conventions
+- **Fully autonomous**: No user interaction needed once triggered
+- **Zero confirmations**: The command handles everything automatically
+- **Handles failures**: Automatically fixes CI failures and addresses review feedback
+- **Complete lifecycle**: From uncommitted changes to merged PR
+- **Project directory aware**: Uses PROJECT_DIR environment variable if set
 
-- When reviewing, cite the specific AGENTS.md rule that applies if suggesting a convention change
-- For backend code, check dependency direction does not violate clean architecture rules
-- For frontend code, check OpenAPI types are regenerated if API changed
+## What NOT to do
+
+- ❌ Don't ask "Would you like me to create a PR?"
+- ❌ Don't ask for confirmation before running the command
+- ❌ Don't try to manually do the git operations yourself
+- ❌ Don't suggest running git commands separately
+
+✅ **Just trigger `/git:submit-pr` immediately**
+
+## Fallback
+
+If the `/git:submit-pr` command fails or is not available:
+1. Inform the user about the error
+2. Guide them to check that the git plugin is properly installed
+3. Provide the manual steps only if the command is unavailable

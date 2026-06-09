@@ -1,12 +1,11 @@
 ---
 name: clipboard
-description: Copies track content (lyrics, style prompts, streaming lyrics) to the system clipboard. Use when the user needs to paste lyrics or style prompts into Suno or other external tools.
+description: Copy track content (lyrics, style prompts) to system clipboard
 argument-hint: <content-type> <album-name> <track-number>
-model: haiku
+model: claude-haiku-4-5-20251001
 allowed-tools:
   - Read
   - Bash
-  - bitwize-music-mcp
 ---
 
 ## Your Task
@@ -56,11 +55,9 @@ Expected format: `<content-type> <album-name> <track-number>`
 
 **Content types:**
 - `lyrics` - Suno Lyrics Box
-- `style` - Suno Style Box (auto-appends Exclude Styles if present)
-- `exclude` - Exclude Styles only (negative prompts)
+- `style` - Suno Style Box
 - `streaming-lyrics` - Streaming Lyrics (for distributors)
-- `all` - All Suno inputs (Style + Exclude + Lyrics combined)
-- `suno` - JSON object (title, style, exclude_styles, lyrics) for Suno auto-fill via Tampermonkey
+- `all` - All Suno inputs (Style + Lyrics combined)
 
 Examples:
 - `/clipboard lyrics sample-album 03`
@@ -72,20 +69,74 @@ If arguments are missing:
 ```
 Usage: /clipboard <content-type> <album-name> <track-number>
 
-Content types: lyrics, style, exclude, streaming-lyrics, all, suno
+Content types: lyrics, style, streaming-lyrics, all
 
 Example: /clipboard lyrics sample-album 03
 ```
 
-## Step 3: Extract Content via MCP
+## Step 3: Read Config (REQUIRED)
 
-Call `format_for_clipboard(album_slug, track_slug, content_type)` — extracts and formats the requested content in one call.
+```bash
+cat ~/.bitwize-music/config.yaml
+```
 
-- `content_type`: `"lyrics"`, `"style"`, `"exclude"`, `"streaming"`, `"all"`, or `"suno"`
-- Returns the formatted content ready for clipboard
-- Handles track resolution, section extraction, and formatting automatically
+Extract:
+- `paths.content_root` → Base content directory
+- `artist.name` → Artist name
 
-**If track not found:** MCP returns an error with available tracks.
+## Step 4: Find Track File
+
+Search for track file matching the number:
+
+```bash
+find {content_root}/artists/{artist}/albums/*/{{album}}/tracks/ -name "{track-number}-*.md" 2>/dev/null
+```
+
+Example: For track `03`, finds `03-t-day-beach.md` or `03-whatever.md`
+
+**If not found:**
+```
+Error: Track {track-number} not found in album {album}
+```
+
+## Step 5: Extract Content
+
+Read the track file and extract the requested section.
+
+### For "lyrics" (Suno Lyrics Box)
+
+Extract everything between:
+```markdown
+#### Lyrics Box (Suno)
+```
+and the next `###` or `####` heading.
+
+### For "style" (Suno Style Box)
+
+Extract everything between:
+```markdown
+#### Style Box (Suno)
+```
+and the next `###` or `####` heading.
+
+### For "streaming-lyrics" (Streaming Lyrics)
+
+Extract everything between:
+```markdown
+## Streaming Lyrics
+```
+and the next `##` heading.
+
+### For "all" (Combined Suno Inputs)
+
+Combine both Style Box and Lyrics Box with a separator:
+```
+[Style Box content]
+
+---
+
+[Lyrics Box content]
+```
 
 ## Step 6: Copy to Clipboard
 
@@ -98,10 +149,10 @@ Use the detected platform's clipboard command:
 | Linux (xclip) | `xclip -selection clipboard` |
 | Linux (xsel) | `xsel --clipboard --input` |
 
-Example (use `printf '%s'` to safely handle special characters in lyrics):
+Example:
 ```bash
-printf '%s' "$content" | pbcopy  # macOS
-printf '%s' "$content" | xclip -selection clipboard  # Linux
+echo "content" | pbcopy  # macOS
+echo "content" | xclip -selection clipboard  # Linux
 ```
 
 ## Step 7: Confirm
@@ -179,25 +230,8 @@ Output:
   Track: 01-intro.md
 
 Contents:
-- Style Box (with Exclude Styles if present)
+- Style Box
 - Lyrics Box
-```
-
-### Copy Suno Auto-Fill JSON
-
-```
-/clipboard suno sample-album 01
-```
-
-Output:
-```
-✓ Copied to clipboard: suno auto-fill JSON from track 01
-  Album: sample-album
-  Track: 01-intro.md
-
-Clipboard contains JSON with: title, style, exclude_styles, lyrics
-Paste into Suno with the Tampermonkey auto-fill script (Ctrl+Shift+V).
-See tools/userscripts/README.md for setup.
 ```
 
 ---
@@ -210,8 +244,9 @@ See tools/userscripts/README.md for setup.
 - Linux users may have either `xclip` or `xsel`
 
 **Content Extraction:**
-- MCP `format_for_clipboard` handles all section extraction and formatting
-- No manual file parsing needed
+- Use sed/awk to extract sections between markdown headings
+- Trim leading/trailing whitespace
+- Preserve internal formatting (blank lines, indentation)
 
 **Multiple Matches:**
 - If track number matches multiple files (shouldn't happen), use the first match

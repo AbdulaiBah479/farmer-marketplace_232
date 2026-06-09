@@ -1,164 +1,122 @@
 ---
 name: openapi-specification
-description: OpenAPI 3.x specification design, schema patterns, and validation for REST API contracts. Use when creating or maintaining API specifications, generating documentation, or validating API contracts.
-tags:
-  - openapi
-  - swagger
-  - api
-  - documentation
-  - rest
-triggers:
-  - openapi spec
-  - swagger definition
-  - api contract
-  - api specification
-  - oas design
-keywords:
-  - OpenAPI
-  - API spec
-  - REST contract
-  - specification
-  - openapi specification
+description: |
+  OpenAPI仕様の専門スキル。
+  API定義、スキーマ設計、ドキュメント生成を提供します。
+
+  Anchors:
+  • 『OpenAPI Specification』（Linux Foundation） / 適用: API仕様設計 / 目的: REST API標準化
+  • 『RESTful API設計のベストプラクティス』（複数出典） / 適用: エンドポイント設計 / 目的: 一貫性確保
+
+  Trigger:
+  OpenAPI仕様書作成時、API定義ドキュメント作成時、Swagger仕様設計時に使用
+allowed-tools:
+  - Read
+  - Write
+  - Edit
+  - Bash
+  - Glob
+  - Grep
 ---
 
-# OpenAPI Specification
+# OpenAPI Specification スキル
 
-Design, validate, and maintain OpenAPI 3.x specifications for REST API contracts.
-Covers schema patterns, security schemes, versioning, and code generation integration.
+## 概要
 
-## When to Use This Skill
+OpenAPI 3.x仕様に準拠したAPI仕様書の設計と作成を専門とするスキル。RESTful APIの設計原則に基づいて、セキュアで保守性の高いAPI仕様書を作成します。エンドポイント設計、スキーマ定義、認証・認可設定、エラーハンドリング、およびドキュメント生成を統合的に実施します。
 
-- Creating a new OpenAPI specification from scratch
-- Adding endpoints or schemas to an existing spec
-- Reviewing or validating an API contract for correctness
-- Setting up code generation from OpenAPI definitions
-- Designing reusable schema components for large APIs
-- Implementing security schemes in API specifications
-- Managing API versioning and deprecation
+詳細な手順や背景は `references/` ディレクトリを参照してください。
 
-## Quick Reference
+## ワークフロー
 
-| Resource | Purpose | Load when |
-|----------|---------|-----------|
-| `references/spec-patterns.md` | Schema patterns, security schemes, validation, versioning, reusable components | Designing or reviewing specs |
+### Phase 1: 要件定義
 
----
+**目的**: API仕様の要件を明確化
 
-## Workflow
+**アクション**:
 
-```
-Phase 1: Design       → Define API overview, resources, and operations
-Phase 2: Schema       → Build data models with reusable components
-Phase 3: Validate     → Lint and verify the spec for correctness
-Phase 4: Integrate    → Generate docs, SDKs, and contract tests
-```
+1. `references/basics.md` でOpenAPI基本構造を確認
+2. エンドポイント数、認証方式、レート制限を定義
+3. 既存API仕様の有無を確認（更新か新規作成か判定）
 
----
+### Phase 2: 仕様設計
 
-## Phase 1: API Design
+**目的**: OpenAPI仕様書を設計・作成
 
-Start with a high-level design before writing the spec:
+**アクション**:
 
-1. **Identify resources** -- what nouns does this API expose?
-2. **Map operations** -- what CRUD and custom actions apply to each resource?
-3. **Define relationships** -- how do resources reference each other?
-4. **Plan authentication** -- what security schemes are needed?
-5. **Set conventions** -- naming style, pagination, error format
+1. `agents/design-api.md` を参照して設計を実施
+2. `assets/openapi-base-template.yaml` をベースに仕様書を作成
+3. `references/schema-design-patterns.md` でスキーマ設計
+4. `references/security-schemes.md` でセキュリティ構成
 
-### Spec Skeleton
+**Task**: `agents/design-api.md` を参照
 
-```yaml
-openapi: 3.1.0
-info:
-  title: [API Name]
-  version: 1.0.0
-  description: [What this API does]
-paths:
-  /resources:
-    get:
-      summary: List resources
-      operationId: listResources
-    post:
-      summary: Create a resource
-      operationId: createResource
-  /resources/{id}:
-    get:
-      summary: Get a resource
-      operationId: getResource
-components:
-  schemas: {}
-  securitySchemes: {}
-```
+### Phase 3: 検証
 
----
+**目的**: 仕様書の検証と記録
 
-## Phase 2: Schema Design
+**アクション**:
 
-Build data models using `components/schemas` for reuse:
+1. `agents/validate-spec.md` を参照して検証を実施
+2. `scripts/validate-openapi.mjs` で構文チェック
+3. セキュリティ設定とベストプラクティスを確認
 
-- Use `$ref` to reference shared schemas -- never duplicate definitions
-- Apply `allOf` for composition, `oneOf` / `anyOf` for polymorphism
-- Add `example` values to every schema and property
-- Use `required` arrays explicitly -- don't rely on implicit behavior
-- Document nullable fields with `type: [string, "null"]` (3.1) or `nullable: true` (3.0)
+**Task**: `agents/validate-spec.md` を参照
 
----
+## Task仕様（ナビゲーション）
 
-## Phase 3: Validate
+| Task          | 起動タイミング | 入力           | 出力           |
+| ------------- | -------------- | -------------- | -------------- |
+| design-api    | Phase 2開始時  | API要件        | 仕様書ドラフト |
+| validate-spec | Phase 3開始時  | 仕様書ドラフト | 検証済み仕様書 |
 
-Run validation before committing any spec changes:
+**詳細仕様**: 各Taskの詳細は `agents/` ディレクトリの対応ファイルを参照
 
-```bash
-# Spectral (recommended)
-spectral lint openapi.yaml
+## ベストプラクティス
 
-# Redocly
-redocly lint openapi.yaml
+### すべきこと
 
-# swagger-cli
-swagger-cli validate openapi.yaml
-```
+- **新規OpenAPI仕様書を作成する時**: `openapi-base-template.yaml` をテンプレートとして使用し、info、servers、paths、componentsの全セクションを網羅する
+- **既存OpenAPI仕様書を更新する時**: 変更前後の仕様差異を明確にし、破壊的変更がないか検証する
+- **エンドポイントやスキーマを設計する時**: `schema-design-patterns.md` と `openapi-structure.md` を参照して一貫性を保つ
+- **OpenAPI構文エラーを解決する時**: `validate-openapi.mjs` で具体的なエラー箇所を特定してから修正する
+- **セキュリティスキームを設定する時**: `security-schemes.md` のベストプラクティスを遵守し、全エンドポイントに適切な認証を適用する
+- **Level別の学習**: 基礎（Level1）→実務（Level2）→応用（Level3）→専門（Level4）の順で進める
+- **版管理**: API仕様の更新履歴をCHANGELOG.mdで記録し、ユーザーに影響を通知する
 
-### Common Validation Issues
+### 避けるべきこと
 
-| Issue | Fix |
-|-------|-----|
-| Missing `operationId` | Add unique operationId to every operation |
-| Unused schema | Remove from components or add a `$ref` |
-| Missing response `description` | Add description to every response code |
-| Path parameter not in path | Match `{param}` in path with parameter definition |
-| No `2xx` response defined | Add at least one success response per operation |
+- アンチパターンや注意点を確認せずに進めることを避ける
+- セキュリティスキーム設定を後付けしない（設計段階から組み込む）
+- 複数のエンドポイント間で不一貫なスキーマ定義を避ける
+- エラーレスポンスの定義をスキップしない
+- `required` フィールドの指定を曖昧にしない
+- セキュリティ関連の設定をハードコード化しない（環境ごとに切り替え可能にする）
+- OpenAPI仕様の検証をスキップして本番環境にデプロイしない
 
----
+## リソース参照
 
-## Phase 4: Integrate
+### references/（詳細知識）
 
-Use the validated spec to generate downstream artifacts:
+| リソース         | パス                                                                             | 用途             |
+| ---------------- | -------------------------------------------------------------------------------- | ---------------- |
+| 基礎知識         | See [references/basics.md](references/basics.md)                                 | OpenAPI基本構造  |
+| 構造ガイド       | See [references/openapi-structure.md](references/openapi-structure.md)           | 全セクション仕様 |
+| スキーマパターン | See [references/schema-design-patterns.md](references/schema-design-patterns.md) | スキーマ設計     |
+| セキュリティ     | See [references/security-schemes.md](references/security-schemes.md)             | 認証・認可設定   |
 
-- **Documentation**: Redoc, Swagger UI, Stoplight
-- **Client SDKs**: openapi-generator, autorest, orval
-- **Server stubs**: openapi-generator with server templates
-- **Contract tests**: Schemathesis, Dredd, Prism
+### assets/（テンプレート）
 
----
+| リソース           | パス                                | 用途         |
+| ------------------ | ----------------------------------- | ------------ |
+| ベーステンプレート | `assets/openapi-base-template.yaml` | 仕様書ベース |
+| エンドポイント     | `assets/endpoint-template.yaml`     | 個別パス定義 |
 
-## Quality Checklist
+## 変更履歴
 
-- [ ] All paths have operationIds
-- [ ] HTTP methods match resource actions (GET reads, POST creates, etc.)
-- [ ] Every response has a description and schema
-- [ ] Security requirements defined at operation or global level
-- [ ] Examples provided for request and response bodies
-- [ ] Consistent naming conventions (camelCase, snake_case -- pick one)
-- [ ] Deprecation fields set on sunset endpoints
-- [ ] Spec passes linter with zero errors
-
----
-
-## Anti-Patterns
-
-- Do not inline schemas -- use `$ref` to `components/schemas` for anything reused
-- Do not mix API versions in a single spec file
-- Do not use `200 OK` for create operations -- use `201 Created`
-- Do not omit error response schemas -- document `4xx` and `5xx` consistently
-- Do not use `additionalProperties: true` without clear justification
+| Version | Date       | Changes                      |
+| ------- | ---------- | ---------------------------- |
+| 1.2.0   | 2026-01-02 | agents/追加、Level構造を統合 |
+| 1.1.0   | 2025-12-31 | 18-skills.md仕様に準拠       |
+| 1.0.0   | 2025-12-24 | 初期実装                     |

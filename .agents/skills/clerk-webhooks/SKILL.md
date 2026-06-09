@@ -24,49 +24,88 @@ metadata:
 
 ### Express Webhook Handler
 
-Clerk uses the [Standard Webhooks](https://www.standardwebhooks.com/) protocol (Clerk sends `svix-*` headers; same format). Use the `standardwebhooks` npm package:
-
 ```javascript
 const express = require('express');
-const { Webhook } = require('standardwebhooks');
+const crypto = require('crypto');
 
 const app = express();
 
-// CRITICAL: Use express.raw() for webhook endpoint - verification needs raw body
+// CRITICAL: Use express.raw() for webhook endpoint - Clerk needs raw body
 app.post('/webhooks/clerk',
   express.raw({ type: 'application/json' }),
   async (req, res) => {
-    const secret = process.env.CLERK_WEBHOOK_SECRET || process.env.CLERK_WEBHOOK_SIGNING_SECRET;
-    if (!secret || !secret.startsWith('whsec_')) {
-      return res.status(500).json({ error: 'Server configuration error' });
-    }
+    // Get Svix headers
     const svixId = req.headers['svix-id'];
     const svixTimestamp = req.headers['svix-timestamp'];
     const svixSignature = req.headers['svix-signature'];
+
+    // Verify we have required headers
     if (!svixId || !svixTimestamp || !svixSignature) {
-      return res.status(400).json({ error: 'Missing required webhook headers' });
+      return res.status(400).json({ error: 'Missing required Svix headers' });
     }
-    // standardwebhooks expects webhook-* header names; Clerk sends svix-* (same protocol)
-    const headers = {
-      'webhook-id': svixId,
-      'webhook-timestamp': svixTimestamp,
-      'webhook-signature': svixSignature
-    };
+
+    // Manual signature verification (recommended approach)
+    const secret = process.env.CLERK_WEBHOOK_SECRET; // whsec_xxxxx from Clerk dashboard
+    const signedContent = `${svixId}.${svixTimestamp}.${req.body}`;
+
     try {
-      const wh = new Webhook(secret);
-      const event = wh.verify(req.body, headers);
-      if (!event) return res.status(400).json({ error: 'Invalid payload' });
-      switch (event.type) {
-        case 'user.created': console.log('User created:', event.data.id); break;
-        case 'user.updated': console.log('User updated:', event.data.id); break;
-        case 'session.created': console.log('Session created:', event.data.user_id); break;
-        case 'organization.created': console.log('Organization created:', event.data.id); break;
-        default: console.log('Unhandled:', event.type);
+      // Extract base64 secret after 'whsec_' prefix
+      const secretBytes = Buffer.from(secret.split('_')[1], 'base64');
+      const expectedSignature = crypto
+        .createHmac('sha256', secretBytes)
+        .update(signedContent)
+        .digest('base64');
+
+      // Svix can send multiple signatures, check each one
+      const signatures = svixSignature.split(' ').map(sig => sig.split(',')[1]);
+      const isValid = signatures.some(sig => {
+        try {
+          return crypto.timingSafeEqual(
+            Buffer.from(sig),
+            Buffer.from(expectedSignature)
+          );
+        } catch {
+          return false; // Different lengths = invalid
+        }
+      });
+
+      if (!isValid) {
+        return res.status(400).json({ error: 'Invalid signature' });
       }
-      res.status(200).json({ success: true });
+
+      // Check timestamp to prevent replay attacks (5-minute window)
+      const timestamp = parseInt(svixTimestamp, 10);
+      const currentTime = Math.floor(Date.now() / 1000);
+      if (currentTime - timestamp > 300) {
+        return res.status(400).json({ error: 'Timestamp too old' });
+      }
     } catch (err) {
-      res.status(400).json({ error: err.name === 'WebhookVerificationError' ? err.message : 'Webhook verification failed' });
+      console.error('Signature verification error:', err);
+      return res.status(400).json({ error: 'Invalid signature' });
     }
+
+    // Parse the verified webhook body
+    const event = JSON.parse(req.body.toString());
+
+    // Handle the event
+    switch (event.type) {
+      case 'user.created':
+        console.log('User created:', event.data.id);
+        break;
+      case 'user.updated':
+        console.log('User updated:', event.data.id);
+        break;
+      case 'session.created':
+        console.log('Session created:', event.data.user_id);
+        break;
+      case 'organization.created':
+        console.log('Organization created:', event.data.id);
+        break;
+      default:
+        console.log('Unhandled event:', event.type);
+    }
+
+    res.status(200).json({ success: true });
   }
 );
 ```
@@ -137,37 +176,30 @@ async def clerk_webhook(request: Request):
 | `organization.created` | New organization created |
 | `organization.updated` | Organization settings updated |
 | `organizationMembership.created` | User added to organization |
-| `organizationInvitation.created` | Invite sent to join organization |
 
-> **For full event reference**, see [Clerk Webhook Events](https://clerk.com/docs/integrations/webhooks/overview#event-types) and [Dashboard → Webhooks → Event Catalog](https://dashboard.clerk.com/~/webhooks).
+> **For full event reference**, see [Clerk Webhook Events](https://clerk.com/docs/integrations/webhooks/overview#event-types)
 
 ## Environment Variables
 
 ```bash
-# Official name (used by @clerk/nextjs and Clerk docs)
-CLERK_WEBHOOK_SIGNING_SECRET=whsec_xxxxx
-
-# Alternative name (used in this skill's examples)
-CLERK_WEBHOOK_SECRET=whsec_xxxxx
+CLERK_WEBHOOK_SECRET=whsec_xxxxx    # From webhook endpoint settings in Clerk Dashboard
 ```
-
-From Clerk Dashboard → Webhooks → your endpoint → Signing Secret.
 
 ## Local Development
 
 ```bash
-# Start tunnel (no account needed)
-npx hookdeck-cli listen 3000 clerk --path /webhooks/clerk
-```
+# Install Hookdeck CLI for local webhook testing
+brew install hookdeck/hookdeck/hookdeck
 
-Use the tunnel URL in Clerk Dashboard when adding your endpoint. For production, set your live URL and copy the signing secret to production env vars.
+# Start tunnel (no account needed)
+hookdeck listen 3000 --path /webhooks/clerk
+```
 
 ## Reference Materials
 
 - [references/overview.md](references/overview.md) - Clerk webhook concepts
 - [references/setup.md](references/setup.md) - Dashboard configuration
 - [references/verification.md](references/verification.md) - Signature verification details
-- [references/patterns.md](references/patterns.md) - Quick start, when to sync, key patterns, common pitfalls
 
 ## Attribution
 
@@ -198,4 +230,4 @@ We recommend installing the [webhook-handler-patterns](https://github.com/hookde
 - [openai-webhooks](https://github.com/hookdeck/webhook-skills/tree/main/skills/openai-webhooks) - OpenAI webhook handling
 - [paddle-webhooks](https://github.com/hookdeck/webhook-skills/tree/main/skills/paddle-webhooks) - Paddle billing webhook handling
 - [webhook-handler-patterns](https://github.com/hookdeck/webhook-skills/tree/main/skills/webhook-handler-patterns) - Handler sequence, idempotency, error handling, retry logic
-- [hookdeck-event-gateway](https://github.com/hookdeck/webhook-skills/tree/main/skills/hookdeck-event-gateway) - Webhook infrastructure that replaces your queue — guaranteed delivery, automatic retries, replay, rate limiting, and observability for your webhook handlers
+- [hookdeck-event-gateway](https://github.com/hookdeck/webhook-skills/tree/main/skills/hookdeck-event-gateway) - Production webhook infrastructure (routing, replay, monitoring)

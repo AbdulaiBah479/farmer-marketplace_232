@@ -1,157 +1,139 @@
 ---
 name: content-creation
-description: Draft marketing content across channels — blog posts, social media, email newsletters, landing pages, press releases, and case studies. Use when writing any marketing content, when you need channel-specific formatting, SEO-optimized copy, headline options, or calls to action.
-user-invocable: false
+description: Content creation tools, AI content generators, image generation workflows, copywriting patterns, page content optimization, blog authoring patterns, content research workflows, and SEO content sync procedures. Use when creating page content, blog posts, generating visuals with AI tools, writing conversion copy, optimizing landing pages, integrating external content services, or synchronizing content across metadata and structured data. Provides tool guides, prompt templates, content brief templates, and quality checklists.
+user-invocable: true
 ---
 
-# Content Creation Skill
+# Content Creation
 
-Guidelines and frameworks for creating effective marketing content across channels.
+Systematic content creation skill with AI tool integration guides, copywriting templates, visual content workflows, and quality gates. Produces high-converting, brand-consistent page content using modern tools and services.
 
-## Content Type Templates
+## When to Use
 
-### Blog Post Structure
-1. **Headline** — clear, benefit-driven, includes primary keyword (aim for 60 characters or less for SEO)
-2. **Introduction** (100-150 words) — hook the reader with a question, statistic, bold claim, or relatable scenario. State what the post will cover. Include primary keyword.
-3. **Body sections** (3-5 sections) — each with a descriptive subheading (H2). Use H3 for subsections. One core idea per section with supporting evidence, examples, or data.
-4. **Conclusion** (75-100 words) — summarize key takeaways, reinforce the main message, include a call to action.
-5. **Meta description** — under 160 characters, includes primary keyword, compels the click.
+- Creating page content (headlines, body copy, CTAs, feature descriptions)
+- Writing blog posts (research, content brief, authoring, cross-linking)
+- Generating visual content with AI tools (Midjourney, DALL-E, Stable Diffusion)
+- Writing landing page copy optimized for conversion
+- Integrating external content generation services
+- Optimizing existing page content for engagement and conversion
+- Synchronizing content changes across visible text, SEO metadata, and JSON-LD structured data
+- Creating content briefs for designers and copywriters
 
-### Social Media Post Structure
-- **Hook** — first line grabs attention (question, bold statement, number)
-- **Body** — 2-4 concise points or a short narrative
-- **CTA** — what should the reader do next (comment, click, share, tag)
-- **Hashtags** — 3-5 relevant hashtags (platform-dependent)
+## When NOT to Use
 
-### Email Newsletter Structure
-- **Subject line** — under 50 characters, creates curiosity or states clear value
-- **Preview text** — complements the subject line, does not repeat it
-- **Header/hero** — visual anchor and one-line value statement
-- **Body sections** — 2-3 content blocks, each scannable with a bold intro sentence
-- **Primary CTA** — one clear action per email
-- **Footer** — unsubscribe link, company info, social links
+- Designing UI components or layouts (use `ui-ux-design` skill)
+- Writing technical documentation (use `Agent(content-writer)` role)
+- Conducting SEO audits (use `/seo-review` workflow)
+- Implementing frontend code (use `Agent(frontend-engineer)` role)
 
-### Landing Page Structure
-- **Headline** — primary benefit in under 10 words
-- **Subheadline** — elaborates on the headline with supporting context
-- **Hero section** — headline, subheadline, primary CTA, supporting image or video
-- **Value propositions** — 3-4 benefit-driven sections with icons or images
-- **Social proof** — testimonials, logos, stats, case study snippets
-- **Objection handling** — FAQ or trust signals
-- **Final CTA** — repeat the primary call to action
+## AI Content Generation Tools
 
-### Press Release Structure
-- **Headline** — factual, newsworthy, under 80 characters
-- **Subheadline** — optional, adds context
-- **Dateline** — city, state, date
-- **Lead paragraph** — who, what, when, where, why in 2-3 sentences
-- **Body paragraphs** — supporting details, quotes, context
-- **Boilerplate** — company description (standardized)
-- **Media contact** — name, email, phone
+### Text Generation
 
-### Case Study Structure
-- **Title** — "[Customer] achieves [result] with [product]"
-- **Snapshot** — customer name, industry, company size, product used, key result (sidebar or callout box)
-- **Challenge** — what problem the customer faced
-- **Solution** — what was implemented and how
-- **Results** — quantified outcomes with specific metrics
-- **Quote** — customer testimonial
-- **CTA** — learn more, get a demo, read more case studies
+| Tool | Best For | Integration |
+|---|---|---|
+| **ChatGPT (GPT-4o)** | Long-form copy, creative writing, brainstorming | API or web UI |
+| **Claude** | Nuanced writing, analysis, brand voice adherence | API or web UI |
+| **Gemini** | Multimodal content (text + image analysis) | API or web UI |
+| **Jasper** | Marketing copy, ad copy, email sequences | SaaS platform |
+| **Copy.ai** | Short-form copy, social media, product descriptions | SaaS platform |
 
-## Writing Best Practices by Channel
+### Image Generation
 
-### Blog
-- Write at an 8th-grade reading level for broad audiences; adjust up for technical audiences
-- Use short paragraphs (2-4 sentences)
-- Include subheadings every 200-300 words
-- Use bullet points and numbered lists to break up text
-- Include at least one data point, example, or quote per section
-- Write in active voice
-- Front-load key information in each section
+| Tool | Best For | Output Quality |
+|---|---|---|
+| **Midjourney** | Photorealistic images, artistic illustrations, brand visuals | Highest quality, best aesthetics |
+| **DALL-E 3** | Quick concept images, illustrations, diagrams | Good quality, natural language prompts |
+| **Stable Diffusion** | Custom fine-tuned models, batch generation, full control | Varies, highest flexibility |
+| **Flux** | Fast generation, good quality, open source | High quality, fast |
+| **Ideogram** | Text in images, logos, typography-heavy visuals | Best for text rendering |
+| **Leonardo.ai** | Game assets, consistent characters, style transfer | Good for series/consistency |
 
-### Social Media
-- **LinkedIn**: professional but human, paragraph breaks for readability, personal stories and lessons perform well, 1,300 characters is the sweet spot before "see more"
-- **Twitter/X**: concise and punchy, strong opening words, threads for longer narratives, engage with replies
-- **Instagram**: visual-first captions, storytelling hooks, line breaks for readability, hashtags in first comment or at end
-- **Facebook**: conversational tone, questions drive comments, shorter posts (under 80 characters) get more engagement for links
+### Stock and Asset Services
 
-### Email
-- Write subject lines that create urgency, curiosity, or state clear value
-- Personalize where possible (name, company, behavior)
-- One primary CTA per email — make it visually distinct
-- Keep body copy scannable: bold key phrases, short paragraphs, bullet points
-- Test everything: subject lines, send times, CTA copy, layout
-- Mobile-first: most email is read on mobile
+| Service | Content Type | License |
+|---|---|---|
+| **Unsplash** | Photography | Free commercial use |
+| **Pexels** | Photography + Video | Free commercial use |
+| **Undraw** | SVG illustrations | Free, customizable colors |
+| **Storyset** | Animated illustrations | Free with attribution |
+| **Lottie / LottieFiles** | Micro-animations | Free + premium |
+| **Noun Project** | Icons | CC or paid license |
+| **Envato Elements** | All creative assets | Subscription license |
 
-### Web (Landing Pages, Product Pages)
-- Lead with benefits, not features
-- Use "you" language — speak to the reader directly
-- Minimize jargon unless the audience expects it
-- Every section should answer "so what?" from the reader's perspective
-- Reduce friction: fewer form fields, clear next steps, trust signals near CTAs
+### Video and Animation
 
-## SEO Fundamentals for Content
+| Tool | Best For |
+|---|---|
+| **Loom** | Quick product demos, walkthroughs |
+| **Synthesia** | AI avatar videos, explainers |
+| **Runway** | AI video generation, editing |
+| **Rive** | Interactive animations for web |
+| **Spline** | 3D web experiences |
 
-### Keyword Strategy
-- Identify one primary keyword and 2-3 secondary keywords per piece
-- Use the primary keyword in: headline, first paragraph, one subheading, meta description, URL slug
-- Use secondary keywords naturally in body copy and subheadings
-- Do not keyword-stuff — write for humans first
+## Content Quality Gates
 
-### On-Page SEO Checklist
-- Title tag: under 60 characters, includes primary keyword
-- Meta description: under 160 characters, includes primary keyword, compels click
-- URL slug: short, descriptive, includes primary keyword
-- H1: one per page, matches or closely reflects the title tag
-- H2/H3: descriptive, include secondary keywords where natural
-- Image alt text: descriptive, includes keyword where relevant
-- Internal links: 2-3 links to related content on your site
-- External links: 1-2 links to authoritative sources
+Every piece of content must pass these gates before publication:
 
-### Content-SEO Integration
-- Aim for comprehensive coverage of the topic (search engines reward depth)
-- Answer related questions (check "People Also Ask" for ideas)
-- Update and refresh high-performing content regularly
-- Structure content for featured snippets: definition paragraphs, numbered lists, tables
+### Gate 1: Accuracy
+- [ ] All product claims are verifiable
+- [ ] Statistics cite sources
+- [ ] Screenshots match current product version
+- [ ] Pricing information is current
+- [ ] Legal claims reviewed (guarantees, SLA, compliance)
 
-## Headline and Hook Formulas
+### Gate 2: Brand Alignment
+- [ ] Voice matches brand guidelines
+- [ ] Tone appropriate for context and audience
+- [ ] Terminology consistent with existing content
+- [ ] Visual style matches brand identity
+- [ ] No off-brand humor, slang, or references
 
-### Headline Formulas
-- **How to [achieve result] [without common obstacle]** — "How to Double Your Email Open Rates Without Sending More Emails"
-- **[Number] [adjective] ways to [achieve result]** — "7 Proven Ways to Reduce Customer Churn"
-- **Why [common belief] is wrong (and what to do instead)** — "Why More Content Is Not the Answer (And What to Do Instead)"
-- **The [adjective] guide to [topic]** — "The Complete Guide to B2B Content Marketing"
-- **[Do this], not [that]** — "Build a Community, Not Just an Audience"
-- **What [impressive result] taught us about [topic]** — "What 10,000 A/B Tests Taught Us About Email Subject Lines"
-- **[topic]: what [audience] needs to know in [year]** — "SEO: What Marketers Need to Know in 2025"
+### Gate 3: Conversion Optimization
+- [ ] Clear value proposition above the fold
+- [ ] Single primary CTA per section
+- [ ] Benefits-focused (not feature-focused)
+- [ ] Social proof near decision points
+- [ ] Friction minimized (short forms, clear next steps)
 
-### Hook Formulas (Opening Lines)
-- **Surprising statistic**: "73% of marketers say their biggest challenge is not budget — it is focus."
-- **Contrarian statement**: "The best marketing campaigns start with saying no to most channels."
-- **Question**: "When was the last time a marketing email actually changed what you bought?"
-- **Scenario**: "Imagine launching a campaign and knowing, before it goes live, which messages will land."
-- **Bold claim**: "Most landing pages lose half their visitors in the first three seconds."
-- **Story opening**: "Last quarter, our team was spending 20 hours a week on reporting. Here is what we did about it."
+### Gate 4: Accessibility
+- [ ] All images have descriptive alt text
+- [ ] Video has captions
+- [ ] Text meets contrast requirements (4.5:1)
+- [ ] Content readable at 200% zoom
+- [ ] No information conveyed by color alone
 
-## Call-to-Action Best Practices
+### Gate 5: SEO and Content Sync
+- [ ] Unique title tag with primary keyword
+- [ ] Unique meta description
+- [ ] Heading hierarchy (H1→H2→H3)
+- [ ] Internal links with descriptive anchors
+- [ ] Structured data where applicable
+- [ ] All content surfaces in sync (see `seo-content-sync-checklist.md`)
 
-### CTA Principles
-- Use action verbs: "Get", "Start", "Download", "Join", "Try", "See"
-- Be specific about what happens next: "Start your free trial" is better than "Submit"
-- Create urgency when genuine: "Join 500 teams already using this" or "Limited spots available"
-- Reduce risk: "No credit card required", "Cancel anytime", "Free for 14 days"
-- One primary CTA per page or email — too many choices reduce conversions
+### Gate 6: Legal and Ethics
+- [ ] No fabricated testimonials or reviews
+- [ ] No misleading before/after claims
+- [ ] AI-generated images reviewed for artifacts and bias
+- [ ] Proper attribution for third-party content
+- [ ] License compliance for stock assets
+- [ ] No dark patterns in copy
 
-### CTA Examples by Context
-- **Blog post**: "Read our complete guide to [topic]" / "Subscribe for weekly insights"
-- **Landing page**: "Start free trial" / "Get a demo" / "See pricing"
-- **Email**: "Read the full story" / "Claim your spot" / "Reply and tell us"
-- **Social media**: "Drop a comment if you agree" / "Save this for later" / "Link in bio"
-- **Case study**: "See how [product] can work for your team" / "Talk to our team"
+### Gate 7: Humanization (mandatory)
+- [ ] Text scanned for AI writing patterns using `@humanizer` skill
+- [ ] No AI vocabulary words (delve, foster, landscape, tapestry, underscore, vibrant, pivotal)
+- [ ] No promotional inflation (nestled, groundbreaking, stunning, renowned)
+- [ ] No chatbot artifacts or sycophantic tone
+- [ ] No em dash overuse, emoji decoration, or bold-header lists
+- [ ] No filler phrases, excessive hedging, or generic positive conclusions
+- [ ] Anti-AI audit performed for text longer than 2 paragraphs
+- [ ] Text sounds natural when read aloud
 
-### CTA Placement
-- Above the fold on landing pages (do not make users scroll to act)
-- After establishing value in emails (not in the first sentence)
-- At the end of blog posts (after you have earned the reader's trust)
-- In-line within content when contextually relevant (e.g., a related guide mention)
-- Repeat the primary CTA at the bottom of long-form pages
+See `content-tools-guide.md` for detailed AI prompting workflows and `page-content-patterns.md` for proven page structure templates.
+
+## Integration
+
+- **Follows rules**: `Agent(content-designer)` (content strategy, conversion copy), `Agent(ui-ux-designer)` (visual direction), `humanize-content` rule (enforces AI pattern removal)
+- **Used by workflows**: `/blog-post` (blog authoring), `/ui-ux-design` (content phase), `/docs` (public-facing content)
+- **Skills**: `@humanizer` (Gate 7 — AI writing pattern removal)
+- **Companion resources**: `content-tools-guide.md`, `page-content-patterns.md`, `seo-content-sync-checklist.md`

@@ -1,140 +1,177 @@
 ---
-name: skill-writing
-description: Designs and writes high-quality Agent Skills (SKILL.md + optional reference files/scripts). Use when asked to create a new Skill, rewrite an existing Skill, improve Skill structure/metadata, or generate templates/evaluations for Skills.
+name: Skill Writing
+description: Creates effective Claude Code skills following best practices. Use when the user asks to create a skill, write a SKILL.md, or needs help authoring agent instructions.
 ---
 
 # Skill Writing
 
-## Goal
-Produce a usable Skill package: **SKILL.md** (always) + optional **reference files** and **scripts** (when helpful). Optimize for: discoverability, correctness, concision, testability.
+## Quick Start
 
-## Output contract
-When triggered, deliver:
-1) **SKILL.md** with valid YAML frontmatter (`name`, `description`)
-2) If needed: suggested folder layout + filenames + brief contents for each extra file (do NOT bloat SKILL.md)
-3) 3+ **evaluation prompts** to test activation + behavior
-
-## Workflow (do in order)
-### 1) Extract requirements
-Capture (infer if missing):
-- **Primary job**: what the Skill reliably accomplishes
-- **Triggers**: phrases/users requests that should activate it
-- **Inputs**: files/types/tools needed (pdf/docx/xlsx/pptx, repos, APIs, etc.)
-- **Constraints**: tone, formatting, compliance, latency, determinism
-- **Failure modes**: common mistakes to guardrail
-
-### 2) Design information architecture
-Use progressive disclosure:
-- Keep **SKILL.md short** (prefer <300 lines)
-- Push long content into one-level-deep files:
-  - `REFERENCE.md` (APIs/schemas)
-  - `WORKFLOWS.md` (multi-step procedures)
-  - `EXAMPLES.md` (I/O pairs)
-  - `CHECKLISTS.md` (validation rubrics)
-- Prefer **scripts** for deterministic transforms/validation; document how to run them.
-
-### 3) Write frontmatter (strict)
-- `name`: lowercase letters/numbers/hyphens only; <=64 chars; no reserved words
-- `description`: 3rd-person; states *what* + *when to use*; <=1024 chars; non-empty
-
-### 4) Write SKILL.md body (minimum necessary)
-Include only what improves success:
-- **Goal**
-- **When to use / When not to use**
-- **Default approach** (1 best path)
-- **Decision points** (few, explicit)
-- **Templates** (copy/pasteable)
-- **Validation loop** (draft → check → fix → finalize)
-- **Examples** (at least 2)
-
-### 5) Add evaluations
-Create at least 3 tests:
-- **Activation test** (should trigger)
-- **Non-activation test** (should not trigger)
-- **Edge case** (most likely failure mode)
-
-## Templates
-
-### Frontmatter template
-```yaml
----
-name: <lowercase-hyphen-name>
-description: <does X. Use when Y.>
----
-````
-
-### SKILL.md skeleton (recommended)
+Every skill needs a `SKILL.md` file with YAML frontmatter and markdown body:
 
 ```markdown
-# <Skill Title>
+---
+name: Task Name (gerund form preferred)
+description: What it does and when to use it (third person, specific)
+---
 
-## Goal
-...
+# Task Name
 
-## When to use
-- ...
-## When not to use
-- ...
-
-## Inputs
-- ...
-## Outputs
-- ...
-
-## Default workflow
-1) ...
-2) ...
-3) ...
-
-## Validation checklist
-- [ ] ...
-- [ ] ...
-
-## Examples
-### Example 1
-Input: ...
-Output: ...
+[Concise instructions here]
 ```
 
-### “High-level + references” pattern
+## Core Workflow
 
-In SKILL.md, link (one level deep):
+Copy and track your progress:
 
-* `REFERENCE.md` for details
-* `WORKFLOWS.md` for complex steps
-* `EXAMPLES.md` for many examples
-  Avoid SKILL.md → advanced.md → details.md chains.
+```
+Skill Creation:
+- [ ] Step 1: Identify the reusable pattern
+- [ ] Step 2: Draft concise instructions
+- [ ] Step 3: Add metadata (name, description)
+- [ ] Step 4: Test with target model(s)
+- [ ] Step 5: Iterate based on usage
+```
 
-## Writing rules (hard)
+**Step 1: Identify the reusable pattern**
 
-* One primary approach; alternatives only as fallback
-* No time-sensitive branching (“before/after date”); instead: “Current method” + “Legacy (deprecated)” section
-* Consistent terminology (pick one term per concept)
-* No Windows paths; use forward slashes
-* If scripts exist: specify exact commands + expected outputs
-* Always include a validator/checklist step for fragile tasks
+What context do you repeatedly provide? What procedural knowledge is needed?
 
-## Common anti-patterns
+**Step 2: Draft concise instructions**
 
-* Vague description (“helps with documents”)
-* Too many options (“use A/B/C/D…”)
-* Long tutorials Claude already knows
-* Deeply nested references
-* “Just figure it out” steps without verification
+Start minimal. Claude is already smart - only add what Claude doesn't know.
 
-## Evaluation pack (copy/paste)
+Challenge each piece of information:
+- Does Claude really need this explanation?
+- Can I assume Claude knows this?
+- Does this paragraph justify its token cost?
 
-Write 3+ prompts like:
+**Step 3: Add metadata**
 
-1. “Create a Skill that … (include triggers + constraints). Return SKILL.md.”
-2. “User asks for adjacent task that should NOT trigger; respond normally.”
-3. “Edge case: missing inputs or conflicting constraints; infer defaults and still produce SKILL.md.”
+Write description in third person, including:
+- What the skill does
+- When to use it (key terms and triggers)
 
-## Done criteria
+```yaml
+description: Extract text from PDFs, fill forms, merge documents. Use when working with PDF files or when the user mentions PDFs, forms, or document extraction.
+```
 
-* Frontmatter validates
-* SKILL.md under 500 lines
-* Clear activation triggers in description + “When to use”
-* Includes checklist + examples + evaluations
+**Step 4: Test with target model(s)**
 
+- Haiku: Does it provide enough guidance?
+- Sonnet: Is it clear and efficient?
+- Opus: Does it avoid over-explaining?
 
+**Step 5: Iterate based on usage**
+
+Observe how Claude uses the skill. Watch for:
+- Unexpected exploration paths
+- Missed connections
+- Overreliance on certain sections
+- Ignored content
+
+## Set Appropriate Degrees of Freedom
+
+Match specificity to task fragility:
+
+**High freedom** (text instructions): Multiple approaches valid, context-dependent
+**Medium freedom** (pseudocode/templates): Preferred pattern exists, variation acceptable
+**Low freedom** (exact scripts): Operations fragile, consistency critical
+
+## Progressive Disclosure
+
+Keep SKILL.md body under 500 lines. Split into separate files:
+
+```markdown
+# SKILL.md
+
+## Quick start
+[Basic usage here]
+
+## Advanced features
+**Form filling**: See [FORMS.md](FORMS.md)
+**API reference**: See [REFERENCE.md](REFERENCE.md)
+```
+
+Important:
+- Keep references one level deep from SKILL.md
+- Use forward slashes in paths (not backslashes)
+- Add table of contents for files >100 lines
+
+## Common Patterns
+
+**Workflow pattern** (complex tasks):
+```markdown
+## Workflow
+Copy this checklist:
+- [ ] Step 1: Do first thing
+- [ ] Step 2: Do second thing
+[Detailed steps below]
+```
+
+**Feedback loop** (quality-critical):
+```markdown
+1. Create output
+2. Validate: `python scripts/validate.py`
+3. If validation fails, fix and repeat
+4. Only proceed when validation passes
+```
+
+**Template pattern** (consistent output):
+```markdown
+ALWAYS use this exact structure:
+[Template here]
+```
+
+## Anti-Patterns to Avoid
+
+❌ Windows-style paths (`scripts\\helper.py`)
+✓ Unix-style paths (`scripts/helper.py`)
+
+❌ Too many options ("You can use X, or Y, or Z...")
+✓ Provide default with escape hatch ("Use X. For special case, use Y instead.")
+
+❌ Time-sensitive info ("Before August 2025...")
+✓ Use "Current method" and "Old patterns" sections
+
+❌ Inconsistent terminology (mix "field", "box", "element")
+✓ Choose one term, use consistently
+
+❌ Deeply nested references (SKILL.md → advanced.md → details.md)
+✓ One level deep (SKILL.md → details.md)
+
+## For Skills with Code
+
+**Utility scripts**: Provide pre-made scripts rather than having Claude write them
+- More reliable than generated code
+- Save tokens and time
+- Ensure consistency
+
+**Package dependencies**: List required packages and verify availability
+
+**Visual analysis**: Convert to images for Claude to analyze layouts
+
+**Verifiable outputs**: Create plan files that get validated before execution
+
+## Quick Reference
+
+**Naming**: Use gerund form ("Processing PDFs", "Analyzing Data")
+
+**Description**: Third person, specific, includes when to use
+
+**File limit**: Keep SKILL.md under 500 lines
+
+**Structure**: YAML frontmatter + markdown body
+
+**Testing**: Test with all target models
+
+**Conciseness**: Assume Claude is smart, only add what's needed
+
+## Detailed Reference
+
+For comprehensive guidance, see [specs/skills-best-practices.md](../../specs/skills-best-practices.md):
+- Complete examples for all patterns
+- Advanced progressive disclosure techniques
+- Evaluation-driven development
+- Runtime environment details
+- MCP tool references

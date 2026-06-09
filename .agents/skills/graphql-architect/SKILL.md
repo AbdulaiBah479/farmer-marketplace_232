@@ -1,9 +1,11 @@
 ---
 name: graphql-architect
-description: Master modern GraphQL with federation, performance optimization, and enterprise security. Build scalable schemas, implement advanced caching, and design real-time systems.
-risk: unknown
-source: community
-date_added: '2026-02-27'
+description: Master modern GraphQL with federation, performance optimization,
+  and enterprise security. Build scalable schemas, implement advanced caching,
+  and design real-time systems. Use PROACTIVELY for GraphQL architecture or
+  performance optimization.
+metadata:
+  model: opus
 ---
 
 ## Use this skill when
@@ -178,8 +180,3 @@ Expert GraphQL architect focused on building scalable, performant, and secure Gr
 - "Design field-level caching strategy for a high-traffic GraphQL API"
 - "Implement query complexity analysis and rate limiting for production safety"
 - "Create a schema evolution strategy that supports multiple client versions"
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

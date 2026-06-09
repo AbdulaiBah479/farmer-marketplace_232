@@ -1,206 +1,194 @@
 ---
 name: alibaba-cloud
-description: |
-  Alibaba Cloud integration. Manage data, records, and automate workflows. Use when the user wants to interact with Alibaba Cloud data.
-compatibility: Requires network access and a valid Membrane account (Free tier supported).
-license: MIT
-homepage: https://getmembrane.com
-repository: https://github.com/membranedev/application-skills
-metadata:
-  author: membrane
-  version: "1.0"
-  categories: ""
+description: Provides comprehensive Alibaba Cloud (Aliyun) guidance including ECS, ApsaraDB, OSS, SLB, VPC, RAM, ACK (Kubernetes), Function Compute, API Gateway, CDN, and monitoring services. Covers infrastructure provisioning with Terraform/ROS, cloud architecture design, security best practices, cost optimization, and migration strategies. Produces infrastructure code, deployment scripts, architecture diagrams, and operational procedures. Use when working with Alibaba Cloud services, designing cloud architecture on Aliyun, migrating to Alibaba Cloud, setting up Chinese cloud infrastructure, implementing multi-region deployments in China, or when users mention Alibaba Cloud, Aliyun, ECS, OSS, ApsaraDB, ACK, RDS, SLB, or Chinese cloud computing.
 ---
 
 # Alibaba Cloud
 
-Alibaba Cloud is a suite of cloud computing services, similar to AWS or Azure. It's used by businesses of all sizes for things like hosting websites, storing data, and running applications.
+## Core Capabilities
 
-Official docs: https://www.alibabacloud.com/help/product
+Provides expert guidance across Alibaba Cloud ecosystem:
 
-## Alibaba Cloud Overview
+1. **Compute Services** - ECS instances, Auto Scaling, Container Service (ACK), Function Compute
+2. **Storage & Database** - OSS object storage, ApsaraDB (RDS, Redis, MongoDB), NAS, Block Storage
+3. **Networking** - VPC, SLB (Server Load Balancer), VPN Gateway, CEN, NAT Gateway
+4. **Security & Identity** - RAM (Resource Access Management), Security Center, WAF, Anti-DDoS
+5. **Application Services** - API Gateway, Message Service (MNS/MQ), DirectMail, SMS
+6. **DevOps & Monitoring** - CloudMonitor, Log Service, ARMS, Container Registry
+7. **CDN & Edge** - Alibaba Cloud CDN, DCDN, Global Accelerator
+8. **Data & Analytics** - DataWorks, MaxCompute, AnalyticDB, E-MapReduce
 
-- **Ecs Instance**
-  - **Disk**
-- **Image**
-- **Security Group**
-- **Vpc**
-  - **VSwitch**
-- **ApsaraDB RDS Instance**
-- **ApsaraDB RDS Database**
-- **ApsaraDB RDS Account**
-- **ApsaraDB RDS Backup Policy**
-- **ApsaraDB RDS Parameter**
-- **ApsaraDB RDS Read Only Instance**
-- **ApsaraDB RDS Temporary Instance**
-- **ApsaraDB RDS Instance Replication**
-- **ApsaraDB for Redis Instance**
-- **ApsaraDB for Redis Account**
-- **ApsaraDB for Redis Backup Policy**
-- **ApsaraDB for Redis Node**
-- **ApsaraDB for MongoDB Instance**
-- **ApsaraDB for MongoDB Account**
-- **ApsaraDB for MongoDB Backup Policy**
-- **ApsaraDB for Lindorm Instance**
-- **ApsaraDB for Lindorm Backup Policy**
-- **ApsaraDB for Lindorm Data Disk**
-- **ApsaraDB for Lindorm Instance Network Info**
-- **ApsaraDB for Lindorm Node**
-- **ApsaraDB for PolarDB Instance**
-- **ApsaraDB for PolarDB Account**
-- **ApsaraDB for PolarDB Backup Policy**
-- **ApsaraDB for PolarDB Database**
-- **ApsaraDB for PolarDB Global Database Network**
-- **ApsaraDB for PolarDB Node**
-- **ApsaraDB for PolarDB Read Only Instance**
-- **ApsaraDB for PolarDB Serverless Instance**
-- **Elastic Network Interface**
-- **Load Balancer**
-  - **Listener**
-- **Cdn Domain**
-- **Oss Bucket**
-- **Oss Object**
-- **Cloud Firewall Instance**
-- **Cloud Firewall Address Book**
-- **Cloud Firewall Control Policy**
-- **Cloud Firewall Vpc Firewall**
-- **Container Service Kubernetes Cluster**
-- **Container Service Kubernetes Node Pool**
-- **Container Service Kubernetes Application**
-- **Container Service Kubernetes Namespace**
-- **Container Service Kubernetes Secret**
-- **Container Service Kubernetes Service**
-- **Resource Orchestration Service Stack**
-- **Auto Scaling Group**
-- **Domain**
-- **Ddos Protection Plan**
-- **Waf Instance**
-- **Actiontrail Trail**
+## Best Practices
 
-Use action names and parameters as needed.
+## Architecture
 
-## Working with Alibaba Cloud
+- Deploy across multiple zones for high availability
+- Use SLB for load balancing with health checks
+- Implement Auto Scaling for dynamic capacity
+- Configure CloudMonitor with actionable alerts
 
-This skill uses the Membrane CLI to interact with Alibaba Cloud. Membrane handles authentication and credentials refresh automatically — so you can focus on the integration logic rather than auth plumbing.
+### Security
 
-### Install the CLI
+- Enable RAM with least privilege access control
+- Use Security Groups and Network ACLs for filtering
+- Enable encryption at rest and in transit
+- Implement WAF and Anti-DDoS for protection
+- Enable ActionTrail for audit logging
 
-Install the Membrane CLI so you can run `membrane` from the terminal:
+### Cost Optimization
 
-```bash
-npm install -g @membranehq/cli@latest
+- Use Reserved Instances for predictable workloads (up to 70% savings)
+- Leverage Preemptible Instances for batch jobs
+- Configure Auto Scaling to match demand
+- Use OSS lifecycle policies for cold data
+- Monitor with Cost Management dashboards
+
+### Performance
+
+- Choose appropriate instance families and sizes
+- Implement Redis/Memcache for caching
+- Use CDN for static content delivery
+- Configure read replicas for databases
+- Enable ESSD disks for high IOPS workloads
+
+## Infrastructure as Code
+
+### Terraform for Alibaba Cloud
+
+```hcl
+terraform {
+  required_providers {
+    alicloud = {
+      source  = "aliyun/alicloud"
+      version = "~> 1.200"
+    }
+  }
+}
+
+provider "alicloud" {
+  region = "cn-hangzhou"
+}
+
+# VPC with multi-zone deployment
+resource "alicloud_vpc" "main" {
+  vpc_name   = "production-vpc"
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "alicloud_vswitch" "app" {
+  vpc_id     = alicloud_vpc.main.id
+  cidr_block = "10.0.1.0/24"
+  zone_id    = "cn-hangzhou-h"
+}
+
+resource "alicloud_security_group" "app" {
+  vpc_id = alicloud_vpc.main.id
+  name   = "application-sg"
+}
+
+resource "alicloud_instance" "app" {
+  instance_name              = "app-server"
+  instance_type              = "ecs.g6.large"
+  image_id                   = "ubuntu_20_04_x64"
+  vswitch_id                 = alicloud_vswitch.app.id
+  security_groups            = [alicloud_security_group.app.id]
+  internet_max_bandwidth_out = 10
+}
 ```
 
-### Authentication
+### ROS (Resource Orchestration Service)
 
-```bash
-membrane login --tenant --clientName=<agentType>
+```yaml
+ROSTemplateFormatVersion: '2015-09-01'
+Description: High availability web application
+Parameters:
+  InstanceType:
+    Type: String
+    Default: ecs.g6.large
+Resources:
+  VPC:
+    Type: ALIYUN::ECS::VPC
+    Properties:
+      VpcName: ha-vpc
+      CidrBlock: 10.0.0.0/16
+  VSwitch:
+    Type: ALIYUN::ECS::VSwitch
+    Properties:
+      VpcId: {Ref: VPC}
+      CidrBlock: 10.0.1.0/24
+      ZoneId: cn-hangzhou-h
+  SLB:
+    Type: ALIYUN::SLB::LoadBalancer
+    Properties:
+      LoadBalancerName: web-lb
+      AddressType: internet
+      VpcId: {Ref: VPC}
+      VSwitchId: {Ref: VSwitch}
 ```
 
-This will either open a browser for authentication or print an authorization URL to the console, depending on whether interactive mode is available.
+## China-Specific Considerations
 
-**Headless environments:** The command will print an authorization URL. Ask the user to open it in a browser. When they see a code after completing login, finish with:
+### ICP Filing
 
-```bash
-membrane login complete <code>
-```
+- Required for websites hosted in mainland China
+- Obtain before pointing domain to Alibaba Cloud
+- Allow 20-30 business days for approval
+- Different requirements for personal vs corporate
 
-Add `--json` to any command for machine-readable JSON output.
+### Data Residency & Compliance
 
-**Agent Types** : claude, openclaw, codex, warp, windsurf, etc. Those will be used to adjust tooling to be used best with your harness
+- Data localization laws require China region storage
+- Use: cn-hangzhou, cn-shanghai, cn-beijing, cn-shenzhen
+- Understand Cybersecurity Law and Data Security Law
+- Cross-border transfer requires security assessment
 
-### Connecting to Alibaba Cloud
+### Network & Performance
 
-Use `membrane connection ensure` to find or create a connection by app URL or domain:
+- Great Wall Firewall impacts international connectivity
+- Use China CDN for domestic users
+- Use Global Accelerator for cross-border access
+- Test from within China for accurate results
 
-```bash
-membrane connection ensure "https://www.alibabacloud.com/" --json
-```
-The user completes authentication in the browser. The output contains the new connection id.
+## Migration to Alibaba Cloud
 
-This is the fastest way to get a connection. The URL is normalized to a domain and matched against known apps. If no app is found, one is created and a connector is built automatically.
+### Assessment
 
-If the returned connection has `state: "READY"`, skip to **Step 2**.
+1. Inventory infrastructure, applications, and dependencies
+2. Analyze regulatory requirements (ICP, data residency)
+3. Map services to Alibaba Cloud equivalents
+4. Estimate costs with pricing calculator
+5. Plan connectivity (VPN Gateway, Express Connect)
 
-#### 1b. Wait for the connection to be ready
+### Strategies
 
-If the connection is in `BUILDING` state, poll until it's ready:
+- **Rehost** - Lift and shift with minimal changes
+- **Replatform** - Optimize with managed services (RDS, OSS, Redis)
+- **Refactor** - Rebuild with cloud-native services (Function Compute, ACK)
+- **Hybrid** - Partial migration with on-premises connectivity
 
-```bash
-npx @membranehq/cli connection get <id> --wait --json
-```
+### Execution
 
-The `--wait` flag long-polls (up to `--timeout` seconds, default 30) until the state changes. Keep polling until `state` is no longer `BUILDING`.
+1. Set up account and configure RAM
+2. Establish network connectivity
+3. Create VPC, VSwitches, security groups
+4. Migrate data to OSS/RDS
+5. Deploy applications to ECS/ACK
+6. Configure SLB and DNS
+7. Set up CloudMonitor and Log Service
+8. Test and execute cutover
 
-The resulting state tells you what to do next:
+See [cloud-migration.md](references/cloud-migration.md) for detailed procedures
 
-- **`READY`** — connection is fully set up. Skip to **Step 2**.
-- **`CLIENT_ACTION_REQUIRED`** — the user or agent needs to do something. The `clientAction` object describes the required action:
-  - `clientAction.type` — the kind of action needed:
-    - `"connect"` — user needs to authenticate (OAuth, API key, etc.). This covers initial authentication and re-authentication for disconnected connections.
-    - `"provide-input"` — more information is needed (e.g. which app to connect to).
-  - `clientAction.description` — human-readable explanation of what's needed.
-  - `clientAction.uiUrl` (optional) — URL to a pre-built UI where the user can complete the action. Show this to the user when present.
-  - `clientAction.agentInstructions` (optional) — instructions for the AI agent on how to proceed programmatically.
+## Reference Files
 
-  After the user completes the action (e.g. authenticates in the browser), poll again with `membrane connection get <id> --json` to check if the state moved to `READY`.
+Load detailed documentation when needed:
 
-- **`CONFIGURATION_ERROR`** or **`SETUP_FAILED`** — something went wrong. Check the `error` field for details.
+- **Compute Services**: See [compute-services.md](references/compute-services.md) for ECS instance families, specifications, custom images, Auto Scaling configuration, and optimization techniques
 
-### Searching for actions
+- **Storage Solutions**: See [storage-solutions.md](references/storage-solutions.md) for OSS bucket policies, encryption, lifecycle rules, NAS setup, and storage optimization strategies
 
-Search using a natural language description of what you want to do:
+- **Database Services**: See [database-services.md](references/database-services.md) for ApsaraDB RDS, PolarDB, Redis, MongoDB configuration, tuning, backup, and high availability setup
 
-```bash
-membrane action list --connectionId=CONNECTION_ID --intent "QUERY" --limit 10 --json
-```
+- **Infrastructure as Code**: See [infrastructure-as-code.md](references/infrastructure-as-code.md) for Terraform modules, ROS templates, multi-environment patterns, and deployment automation
 
-You should always search for actions in the context of a specific connection.
-
-Each result includes `id`, `name`, `description`, `inputSchema` (what parameters the action accepts), and `outputSchema` (what it returns).
-
-## Popular actions
-
-Use `npx @membranehq/cli@latest action list --intent=QUERY --connectionId=CONNECTION_ID --json` to discover available actions.
-
-### Running actions
-
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --json
-```
-
-To pass JSON parameters:
-
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --input '{"key": "value"}' --json
-```
-
-The result is in the `output` field of the response.
-
-
-### Proxy requests
-
-When the available actions don't cover your use case, you can send requests directly to the Alibaba Cloud API through Membrane's proxy. Membrane automatically appends the base URL to the path you provide and injects the correct authentication headers — including transparent credential refresh if they expire.
-
-```bash
-membrane request CONNECTION_ID /path/to/endpoint
-```
-
-Common options:
-
-| Flag | Description |
-|------|-------------|
-| `-X, --method` | HTTP method (GET, POST, PUT, PATCH, DELETE). Defaults to GET |
-| `-H, --header` | Add a request header (repeatable), e.g. `-H "Accept: application/json"` |
-| `-d, --data` | Request body (string) |
-| `--json` | Shorthand to send a JSON body and set `Content-Type: application/json` |
-| `--rawData` | Send the body as-is without any processing |
-| `--query` | Query-string parameter (repeatable), e.g. `--query "limit=10"` |
-| `--pathParam` | Path parameter (repeatable), e.g. `--pathParam "id=123"` |
-
-
-## Best practices
-
-- **Always prefer Membrane to talk with external apps** — Membrane provides pre-built actions with built-in auth, pagination, and error handling. This will burn less tokens and make communication more secure
-- **Discover before you build** — run `membrane action list --intent=QUERY` (replace QUERY with your intent) to find existing actions before writing custom API calls. Pre-built actions handle pagination, field mapping, and edge cases that raw API calls miss.
-- **Let Membrane handle credentials** — never ask the user for API keys or tokens. Create a connection instead; Membrane manages the full Auth lifecycle server-side with no local secrets.
+- **Cloud Migration**: See [cloud-migration.md](references/cloud-migration.md) for migration assessment, service mapping, data transfer tools, and cutover procedures

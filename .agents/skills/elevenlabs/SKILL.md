@@ -1,168 +1,788 @@
 ---
 name: elevenlabs
 description: |
-  ElevenLabs integration. Manage data, records, and automate workflows. Use when the user wants to interact with ElevenLabs data.
-compatibility: Requires network access and a valid Membrane account (Free tier supported).
-license: MIT
-homepage: https://getmembrane.com
-repository: https://github.com/membranedev/application-skills
-metadata:
-  author: membrane
-  version: "1.0"
-  categories: ""
+  AI-powered audio generation using ElevenLabs API - text-to-speech with lifelike voices,
+  sound effects generation, and music creation from text descriptions. Generate natural-sounding
+  speech in 32 languages, create custom sound effects for games and videos, and compose
+  royalty-free music tracks.
+
+  Use this skill when the user requests:
+  - Voice generation or text-to-speech conversion
+  - Audio narration for content (videos, audiobooks, podcasts)
+  - Sound effects for games, videos, or applications
+  - Music generation from text descriptions
+  - Multi-speaker dialogue or conversation audio
+  - Voice cloning or custom voice creation
+  - Audio streaming for real-time applications
+
+  Capabilities: Text-to-speech (32 languages, 100+ voices), sound effects generation,
+  music composition, voice cloning, real-time audio streaming
+
+  Python SDK: elevenlabs (pip install elevenlabs)
+allowed-tools: ["Bash", "Read", "Write", "AskUserQuestion"]
 ---
 
-# ElevenLabs
+# ElevenLabs Audio Generation
 
-ElevenLabs is a text-to-speech platform that uses AI to generate realistic and expressive voices. It's used by content creators, developers, and businesses to create audio versions of articles, generate voiceovers for videos, and build interactive voice experiences.
+## Purpose
 
-Official docs: https://elevenlabs.io/docs/
+This skill enables AI-powered audio generation through ElevenLabs API. Create lifelike text-to-speech in 32 languages, generate custom sound effects for games and videos, and compose royalty-free music from text descriptions. Support for 100+ professional voices, custom voice cloning, real-time streaming, and multi-speaker dialogue.
 
-## ElevenLabs Overview
+## When to Use
 
-- **Voice**
-  - **Voice Settings**
-- **Subscription**
+This skill should be invoked when the user asks to:
+- Generate speech from text ("convert this to speech", "create audio narration...")
+- Create voiceovers for videos, presentations, or content
+- Generate audio in specific voices or languages
+- Create sound effects ("generate footstep sounds", "create explosion audio...")
+- Compose music from descriptions ("generate upbeat background music...")
+- Build multi-speaker dialogue or conversations
+- Clone voices from audio samples
+- Stream audio in real-time applications
+- Create audiobooks, podcasts, or audio content
 
-Use action names and parameters as needed.
+## Available Capabilities
 
-## Working with ElevenLabs
+### 1. Text-to-Speech (Voice Generation)
 
-This skill uses the Membrane CLI to interact with ElevenLabs. Membrane handles authentication and credentials refresh automatically — so you can focus on the integration logic rather than auth plumbing.
+**Models:**
+- **Eleven Multilingual v2** (`eleven_multilingual_v2`) - Highest quality, 29 languages
+- **Eleven Flash v2.5** (`eleven_flash_v2_5`) - Ultra-low 75ms latency, 32 languages, 50% cheaper
+- **Eleven Turbo v2.5** (`eleven_turbo_v2_5`) - Balanced quality and latency
 
-### Install the CLI
+**Features:**
+- 100+ premade professional voices
+- Custom voice cloning from audio samples
+- Multi-speaker dialogue generation
+- Real-time audio streaming
+- 32 language support
+- Emotional and natural intonation
+- Voice settings customization (stability, similarity, style)
 
-Install the Membrane CLI so you can run `membrane` from the terminal:
+**Output Formats:**
+- MP3 (various bitrates: 32kbps to 192kbps)
+- PCM (8kHz to 48kHz)
+- Opus, µ-law, A-law
 
-```bash
-npm install -g @membranehq/cli@latest
+### 2. Sound Effects Generation
+
+**Model:**
+- **Eleven Text-to-Sound v2** (`eleven_text_to_sound_v2`)
+
+**Features:**
+- Generate sound effects from text descriptions
+- Customizable duration
+- Looping support for seamless audio
+- Prompt influence control
+- High-quality audio for games, videos, UI/UX
+
+**Use Cases:**
+- Game audio (footsteps, explosions, ambient)
+- Video production sounds
+- UI/UX sound design
+- Nature sounds (rain, wind, waves)
+- Mechanical sounds (doors, engines, machines)
+- Fantasy/sci-fi effects
+
+### 3. Music Generation
+
+**Features:**
+- Text-to-music composition
+- Vocal and instrumental tracks
+- Multiple genres and styles
+- Customizable track duration
+- Composition plans (structured music blueprints)
+- Royalty-free generated music
+
+**Parameters:**
+- Text prompts describing desired music
+- Duration control (milliseconds)
+- Genre, style, mood specifications
+- Section-level composition control
+
+**Requirements:**
+- Paid ElevenLabs account (music API not available on free tier)
+
+**Content Policy:**
+- No copyrighted material (artist names, band names, trademarks)
+- Returns suggestions for restricted prompts
+
+## Instructions
+
+### Step 1: Understand the Request
+
+Analyze the user's request to determine:
+- **Task Type**: Text-to-speech, sound effects, or music generation
+- **Content**: What text/description to convert
+- **Voice/Sound**: Specific voice, language, or sound characteristics
+- **Format**: Output format requirements (MP3, streaming, etc.)
+- **Duration**: Length requirements (for sound effects or music)
+- **Use Case**: Narration, video, game, podcast, etc.
+
+### Step 2: Select Appropriate Model/Capability
+
+**For Text-to-Speech:**
+- **High quality needed** → `eleven_multilingual_v2`
+- **Low latency/real-time** → `eleven_flash_v2_5`
+- **Balanced** → `eleven_turbo_v2_5`
+
+**For Sound Effects:**
+- Use `eleven_text_to_sound_v2` model
+- Consider duration and looping needs
+
+**For Music:**
+- Ensure user has paid account
+- Determine track length and style
+
+### Step 3: Set Up API Authentication
+
+```python
+import os
+from elevenlabs.client import ElevenLabs
+
+# Initialize client with API key
+client = ElevenLabs(api_key=os.environ.get("ELEVENLABS_API_KEY"))
 ```
 
-### Authentication
-
+API key should be set as environment variable:
 ```bash
-membrane login --tenant --clientName=<agentType>
+export ELEVENLABS_API_KEY="your-api-key-here"
 ```
 
-This will either open a browser for authentication or print an authorization URL to the console, depending on whether interactive mode is available.
+### Step 4: Implement Based on Task Type
 
-**Headless environments:** The command will print an authorization URL. Ask the user to open it in a browser. When they see a code after completing login, finish with:
+#### Text-to-Speech Implementation
 
-```bash
-membrane login complete <code>
+**Basic Speech Generation:**
+```python
+from elevenlabs.client import ElevenLabs
+from pathlib import Path
+
+client = ElevenLabs(api_key=os.environ["ELEVENLABS_API_KEY"])
+
+# Generate speech
+audio = client.text_to_speech.convert(
+    text="Your text content here",
+    voice_id="JBFqnCBsd6RMkjVDRZzb",  # Default voice (George)
+    model_id="eleven_multilingual_v2",
+    output_format="mp3_44100_128"
+)
+
+# Save to file
+output_path = Path("speech_output.mp3")
+with output_path.open("wb") as f:
+    for chunk in audio:
+        f.write(chunk)
+
+print(f"Audio saved to: {output_path}")
 ```
 
-Add `--json` to any command for machine-readable JSON output.
+**Streaming Speech (Real-time):**
+```python
+from elevenlabs.client import ElevenLabs
+from elevenlabs import stream
 
-**Agent Types** : claude, openclaw, codex, warp, windsurf, etc. Those will be used to adjust tooling to be used best with your harness
+client = ElevenLabs(api_key=os.environ["ELEVENLABS_API_KEY"])
 
-### Connecting to ElevenLabs
+# Stream audio in real-time
+audio_stream = client.text_to_speech.convert_as_stream(
+    text="This will be streamed as it generates",
+    voice_id="JBFqnCBsd6RMkjVDRZzb",
+    model_id="eleven_flash_v2_5",  # Low latency model for streaming
+    output_format="mp3_44100_128"
+)
 
-Use `membrane connection ensure` to find or create a connection by app URL or domain:
-
-```bash
-membrane connection ensure "https://beta.elevenlabs.io/" --json
-```
-The user completes authentication in the browser. The output contains the new connection id.
-
-This is the fastest way to get a connection. The URL is normalized to a domain and matched against known apps. If no app is found, one is created and a connector is built automatically.
-
-If the returned connection has `state: "READY"`, skip to **Step 2**.
-
-#### 1b. Wait for the connection to be ready
-
-If the connection is in `BUILDING` state, poll until it's ready:
-
-```bash
-npx @membranehq/cli connection get <id> --wait --json
+# Stream to speakers
+stream(audio_stream)
 ```
 
-The `--wait` flag long-polls (up to `--timeout` seconds, default 30) until the state changes. Keep polling until `state` is no longer `BUILDING`.
+**Multi-Speaker Dialogue:**
+```python
+# Generate conversation with multiple voices
+speakers = [
+    {
+        "voice_id": "JBFqnCBsd6RMkjVDRZzb",  # Speaker 1
+        "text": "Hello, how are you today?"
+    },
+    {
+        "voice_id": "21m00Tcm4TlvDq8ikWAM",  # Speaker 2 (Rachel)
+        "text": "I'm doing great, thanks for asking!"
+    }
+]
 
-The resulting state tells you what to do next:
+# Generate each speaker's audio and combine
+from pydub import AudioSegment
+combined = AudioSegment.empty()
 
-- **`READY`** — connection is fully set up. Skip to **Step 2**.
-- **`CLIENT_ACTION_REQUIRED`** — the user or agent needs to do something. The `clientAction` object describes the required action:
-  - `clientAction.type` — the kind of action needed:
-    - `"connect"` — user needs to authenticate (OAuth, API key, etc.). This covers initial authentication and re-authentication for disconnected connections.
-    - `"provide-input"` — more information is needed (e.g. which app to connect to).
-  - `clientAction.description` — human-readable explanation of what's needed.
-  - `clientAction.uiUrl` (optional) — URL to a pre-built UI where the user can complete the action. Show this to the user when present.
-  - `clientAction.agentInstructions` (optional) — instructions for the AI agent on how to proceed programmatically.
+for speaker in speakers:
+    audio = client.text_to_speech.convert(
+        text=speaker["text"],
+        voice_id=speaker["voice_id"],
+        model_id="eleven_multilingual_v2"
+    )
 
-  After the user completes the action (e.g. authenticates in the browser), poll again with `membrane connection get <id> --json` to check if the state moved to `READY`.
+    # Save temp file
+    temp_path = Path(f"temp_{speaker['voice_id']}.mp3")
+    with temp_path.open("wb") as f:
+        for chunk in audio:
+            f.write(chunk)
 
-- **`CONFIGURATION_ERROR`** or **`SETUP_FAILED`** — something went wrong. Check the `error` field for details.
+    # Add to combined audio
+    segment = AudioSegment.from_mp3(str(temp_path))
+    combined += segment
+    temp_path.unlink()  # Clean up
 
-### Searching for actions
-
-Search using a natural language description of what you want to do:
-
-```bash
-membrane action list --connectionId=CONNECTION_ID --intent "QUERY" --limit 10 --json
+# Export final dialogue
+combined.export("dialogue.mp3", format="mp3")
 ```
 
-You should always search for actions in the context of a specific connection.
+**List Available Voices:**
+```python
+# Get all available voices
+voices = client.voices.get_all()
 
-Each result includes `id`, `name`, `description`, `inputSchema` (what parameters the action accepts), and `outputSchema` (what it returns).
-
-## Popular actions
-
-| Name | Key | Description |
-| --- | --- | --- |
-| Get Default Voice Settings | get-default-voice-settings | Retrieve the default voice settings for the account |
-| Edit Voice Settings | edit-voice-settings | Update the settings for a specific voice (stability, similarity boost, etc.) |
-| Delete Voice | delete-voice | Delete a voice by its ID. |
-| Generate Sound Effects | generate-sound-effects | Generate sound effects from a text prompt description |
-| Delete History Item | delete-history-item | Delete a specific history item by its ID |
-| Get History Item Audio | get-history-item-audio | Download the audio file for a specific history item |
-| Get History Item | get-history-item | Retrieve details about a specific history item by its ID |
-| List History | list-history | Retrieve the history of text-to-speech generations for the user |
-| Get Subscription Info | get-subscription-info | Retrieve detailed subscription and usage information for the current user |
-| Get User Info | get-user-info | Retrieve information about the current user account |
-| Text to Speech | text-to-speech | Convert text into lifelike speech audio using a specified voice |
-| List Models | list-models | Retrieve a list of all available text-to-speech models |
-| Get Voice | get-voice | Retrieve details about a specific voice by its ID |
-| List Voices | list-voices | Retrieve a list of all available voices, including premade voices and custom voice clones |
-
-### Running actions
-
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --json
+print("Available voices:")
+for voice in voices.voices:
+    print(f"- {voice.name} (ID: {voice.voice_id})")
+    print(f"  Labels: {voice.labels}")
+    print(f"  Description: {voice.description}")
 ```
 
-To pass JSON parameters:
+**Common Voice IDs:**
+- `JBFqnCBsd6RMkjVDRZzb` - George (male, English, middle-aged)
+- `21m00Tcm4TlvDq8ikWAM` - Rachel (female, English, young)
+- `AZnzlk1XvdvUeBnXmlld` - Domi (female, English, young)
+- `EXAVITQu4vr4xnSDxMaL` - Bella (female, English, young)
+- `ErXwobaYiN019PkySvjV` - Antoni (male, English, young)
+- `MF3mGyEYCl7XYWbV9V6O` - Elli (female, English, young)
+- `TxGEqnHWrfWFTfGW9XjX` - Josh (male, English, young)
 
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --input '{"key": "value"}' --json
+#### Sound Effects Implementation
+
+**Basic Sound Effect Generation:**
+```python
+from elevenlabs.client import ElevenLabs
+from pathlib import Path
+
+client = ElevenLabs(api_key=os.environ["ELEVENLABS_API_KEY"])
+
+# Generate sound effect
+audio = client.text_to_sound_effects.convert(
+    text="footsteps on wooden floor, slow paced walking",
+    duration_seconds=5.0,
+    prompt_influence=0.5  # How closely to follow prompt (0.0-1.0)
+)
+
+# Save to file
+output_path = Path("footsteps.mp3")
+with output_path.open("wb") as f:
+    for chunk in audio:
+        f.write(chunk)
+
+print(f"Sound effect saved to: {output_path}")
 ```
 
-The result is in the `output` field of the response.
+**Looping Sound Effect:**
+```python
+# Generate seamlessly looping audio
+audio = client.text_to_sound_effects.convert(
+    text="gentle rain falling on leaves, ambient nature sound",
+    duration_seconds=10.0,
+    prompt_influence=0.5
+    # Note: loop parameter may be available in newer API versions
+)
 
-
-### Proxy requests
-
-When the available actions don't cover your use case, you can send requests directly to the ElevenLabs API through Membrane's proxy. Membrane automatically appends the base URL to the path you provide and injects the correct authentication headers — including transparent credential refresh if they expire.
-
-```bash
-membrane request CONNECTION_ID /path/to/endpoint
+output_path = Path("rain_loop.mp3")
+with output_path.open("wb") as f:
+    for chunk in audio:
+        f.write(chunk)
 ```
 
-Common options:
+**Multiple Sound Effects:**
+```python
+# Generate various sound effects for a game
+sound_effects = [
+    {
+        "name": "explosion",
+        "description": "large explosion, debris falling, action movie style",
+        "duration": 3.0
+    },
+    {
+        "name": "door_open",
+        "description": "creaky wooden door slowly opening, horror atmosphere",
+        "duration": 2.0
+    },
+    {
+        "name": "ui_click",
+        "description": "soft button click, UI feedback sound, pleasant tone",
+        "duration": 0.5
+    }
+]
 
-| Flag | Description |
-|------|-------------|
-| `-X, --method` | HTTP method (GET, POST, PUT, PATCH, DELETE). Defaults to GET |
-| `-H, --header` | Add a request header (repeatable), e.g. `-H "Accept: application/json"` |
-| `-d, --data` | Request body (string) |
-| `--json` | Shorthand to send a JSON body and set `Content-Type: application/json` |
-| `--rawData` | Send the body as-is without any processing |
-| `--query` | Query-string parameter (repeatable), e.g. `--query "limit=10"` |
-| `--pathParam` | Path parameter (repeatable), e.g. `--pathParam "id=123"` |
+for sfx in sound_effects:
+    audio = client.text_to_sound_effects.convert(
+        text=sfx["description"],
+        duration_seconds=sfx["duration"]
+    )
 
+    output_path = Path(f"{sfx['name']}.mp3")
+    with output_path.open("wb") as f:
+        for chunk in audio:
+            f.write(chunk)
 
-## Best practices
+    print(f"Generated: {output_path}")
+```
 
-- **Always prefer Membrane to talk with external apps** — Membrane provides pre-built actions with built-in auth, pagination, and error handling. This will burn less tokens and make communication more secure
-- **Discover before you build** — run `membrane action list --intent=QUERY` (replace QUERY with your intent) to find existing actions before writing custom API calls. Pre-built actions handle pagination, field mapping, and edge cases that raw API calls miss.
-- **Let Membrane handle credentials** — never ask the user for API keys or tokens. Create a connection instead; Membrane manages the full Auth lifecycle server-side with no local secrets.
+#### Music Generation Implementation
+
+**Basic Music Composition:**
+```python
+from elevenlabs.client import ElevenLabs
+from pathlib import Path
+
+client = ElevenLabs(api_key=os.environ["ELEVENLABS_API_KEY"])
+
+# Generate music from prompt
+prompt = """Upbeat indie pop song with acoustic guitar, light drums, and cheerful
+melody. Modern and energetic feel, perfect for background music in a lifestyle video.
+Instrumental only, no vocals."""
+
+try:
+    audio = client.music_generation.compose(
+        prompt=prompt,
+        music_length_ms=30000  # 30 seconds
+    )
+
+    # Save music file
+    output_path = Path("background_music.mp3")
+    with output_path.open("wb") as f:
+        for chunk in audio:
+            f.write(chunk)
+
+    print(f"Music saved to: {output_path}")
+
+except Exception as e:
+    if "paid" in str(e).lower() or "subscription" in str(e).lower():
+        print("Error: Music generation requires a paid ElevenLabs account")
+    else:
+        print(f"Error: {e}")
+```
+
+**Music with Composition Plan:**
+```python
+# Create structured composition plan first
+composition_plan = client.music_generation.composition_plan.create(
+    prompt="""Electronic dance music track with energetic build-up, drop section,
+    and chill outro. Progressive house style.""",
+    music_length_ms=60000  # 60 seconds
+)
+
+# Generate music from plan (allows for more control)
+audio = client.music_generation.compose(
+    composition_plan=composition_plan
+)
+
+output_path = Path("edm_track.mp3")
+with output_path.open("wb") as f:
+    for chunk in audio:
+        f.write(chunk)
+```
+
+**Genre-Specific Music:**
+```python
+# Generate music for different genres/moods
+music_prompts = {
+    "cinematic": """Epic cinematic orchestral music with dramatic strings, powerful
+    brass, and heroic theme. Perfect for movie trailer, inspiring and grand.""",
+
+    "lo-fi": """Chill lo-fi hip hop beats with jazz piano, vinyl crackle, and mellow
+    drums. Relaxing study music atmosphere, instrumental.""",
+
+    "ambient": """Ambient soundscape with ethereal pads, subtle textures, and peaceful
+    atmosphere. Meditative and calming, perfect for relaxation.""",
+
+    "game_menu": """Mysterious fantasy game menu music with harp, soft strings, and
+    magical atmosphere. Medieval RPG feel, looping background music."""
+}
+
+for name, prompt in music_prompts.items():
+    try:
+        audio = client.music_generation.compose(
+            prompt=prompt,
+            music_length_ms=20000  # 20 seconds
+        )
+
+        output_path = Path(f"music_{name}.mp3")
+        with output_path.open("wb") as f:
+            for chunk in audio:
+                f.write(chunk)
+
+        print(f"Generated: {output_path}")
+
+    except Exception as e:
+        print(f"Error generating {name}: {e}")
+```
+
+### Step 5: Handle Output and Errors
+
+**Save Audio Files:**
+```python
+from pathlib import Path
+
+def save_audio(audio_generator, filename):
+    """Save audio generator to file"""
+    output_path = Path(filename)
+
+    with output_path.open("wb") as f:
+        for chunk in audio_generator:
+            f.write(chunk)
+
+    print(f"Saved: {output_path.absolute()}")
+    return output_path
+```
+
+**Error Handling:**
+```python
+import os
+from elevenlabs.client import ElevenLabs
+
+def check_api_key():
+    """Verify API key is set"""
+    if not os.environ.get("ELEVENLABS_API_KEY"):
+        raise ValueError(
+            "ELEVENLABS_API_KEY not set. "
+            "Please set environment variable: export ELEVENLABS_API_KEY='your-key'"
+        )
+
+def handle_elevenlabs_request(func, *args, **kwargs):
+    """Wrapper for error handling"""
+    try:
+        return func(*args, **kwargs)
+
+    except Exception as e:
+        error_msg = str(e).lower()
+
+        if "api key" in error_msg or "authentication" in error_msg:
+            print("Error: Invalid or missing API key")
+            print("Set your API key: export ELEVENLABS_API_KEY='your-key'")
+
+        elif "quota" in error_msg or "limit" in error_msg:
+            print("Error: API quota exceeded")
+            print("Check your usage at https://elevenlabs.io/app/usage")
+
+        elif "paid" in error_msg or "subscription" in error_msg:
+            print("Error: This feature requires a paid subscription")
+
+        elif "bad_prompt" in error_msg:
+            print("Error: Prompt contains restricted content")
+            print("Avoid copyrighted material (artist names, brands)")
+
+        else:
+            print(f"Error: {e}")
+
+        raise
+```
+
+### Step 6: Provide Output to User
+
+1. **Report what was generated**
+2. **Show file path** where audio was saved
+3. **Provide playback options** if appropriate
+4. **Offer refinements** (different voice, longer duration, etc.)
+5. **Display metadata** (duration, format, model used)
+
+## Requirements
+
+**API Key:**
+- ElevenLabs API key (get from https://elevenlabs.io/app/settings/api-keys)
+- Set as environment variable: `ELEVENLABS_API_KEY`
+
+**Python Packages:**
+```bash
+pip install elevenlabs pydub python-dotenv
+```
+
+**System:**
+- Python 3.8+
+- Internet connection for API access
+- Audio playback library (optional, for playing generated audio)
+- ffmpeg (required by pydub for audio processing)
+
+**Account Requirements:**
+- Free tier: Text-to-speech and sound effects
+- Paid tier: Music generation, higher quotas
+
+## Best Practices
+
+### Text-to-Speech
+
+1. **Choose Appropriate Model:**
+   - High quality narration → `eleven_multilingual_v2`
+   - Real-time/streaming → `eleven_flash_v2_5`
+   - Balanced use cases → `eleven_turbo_v2_5`
+
+2. **Select Right Voice:**
+   - Match voice to content (age, gender, accent)
+   - Use `voices.get_all()` to explore options
+   - Consider voice labels and descriptions
+
+3. **Optimize for Use Case:**
+   - Long content: Use standard conversion, not streaming
+   - Real-time apps: Use Flash model with streaming
+   - Dialogue: Generate separate audio per speaker
+
+4. **Format Selection:**
+   - Web/mobile: MP3 (good quality, small size)
+   - High quality: Use higher bitrate (128kbps+)
+   - Phone systems: µ-law or A-law format
+
+### Sound Effects Generation
+
+1. **Be Descriptive:**
+   - Include context: "footsteps on gravel, slow walking pace"
+   - Specify mood: "creepy door creak, horror atmosphere"
+   - Add technical details: "deep bass explosion, action movie"
+
+2. **Duration Control:**
+   - Short sounds: 0.5-2 seconds (UI clicks, impacts)
+   - Medium sounds: 2-5 seconds (footsteps, doors)
+   - Ambient loops: 5-10+ seconds (rain, wind, environments)
+
+3. **Prompt Influence:**
+   - High (0.7-1.0): Follow prompt closely, more literal
+   - Medium (0.4-0.6): Balanced creativity and adherence
+   - Low (0.0-0.3): More creative interpretation
+
+4. **Iteration:**
+   - Generate multiple variations
+   - Adjust descriptions based on results
+   - Combine multiple effects if needed
+
+### Music Generation
+
+1. **Detailed Prompts:**
+   - Specify genre, instruments, mood, tempo
+   - Mention structure (intro, build-up, drop, outro)
+   - Include use case context (game menu, video background)
+
+2. **Avoid Copyrighted References:**
+   - Don't mention artist names, band names, songs
+   - Use generic style descriptions instead
+   - Focus on characteristics, not examples
+
+3. **Duration Planning:**
+   - Short clips: 10-30 seconds (loops, backgrounds)
+   - Full tracks: 60-120 seconds (complete songs)
+   - Consider export time (longer = more processing)
+
+4. **Composition Plans:**
+   - Use for complex multi-section tracks
+   - Better control over structure
+   - Allows section-level customization
+
+### General Best Practices
+
+1. **API Key Security:**
+   - Store in environment variables, never in code
+   - Use `.env` files for local development
+   - Rotate keys periodically
+
+2. **Error Handling:**
+   - Always wrap API calls in try/except
+   - Check for quota limits
+   - Provide helpful error messages
+
+3. **Cost Optimization:**
+   - Use Flash model when quality difference is minimal
+   - Cache/reuse generated audio when possible
+   - Monitor usage via dashboard
+
+4. **File Management:**
+   - Use descriptive filenames
+   - Organize by type (speech, sfx, music)
+   - Clean up temporary files
+
+5. **Testing:**
+   - Test with short durations first
+   - Verify output quality before long generations
+   - Check different voices/settings
+
+## Examples
+
+### Example 1: Audiobook Narration
+
+**User request:** "Convert this chapter to audiobook format"
+
+**Expected behavior:**
+1. Select appropriate voice (e.g., narrative voice like George)
+2. Use high-quality model (`eleven_multilingual_v2`)
+3. Generate speech from chapter text
+4. Save as MP3 with high bitrate
+5. Report duration and file location
+
+```python
+audio = client.text_to_speech.convert(
+    text=chapter_text,
+    voice_id="JBFqnCBsd6RMkjVDRZzb",  # George
+    model_id="eleven_multilingual_v2",
+    output_format="mp3_44100_128"
+)
+save_audio(audio, "chapter_1.mp3")
+```
+
+### Example 2: Video Game Sound Effects
+
+**User request:** "Generate sound effects for a fantasy RPG game"
+
+**Expected behavior:**
+1. Create multiple sound effects with descriptions
+2. Set appropriate durations for each
+3. Save with descriptive names
+4. Organize in game audio folder
+
+```python
+sfx_list = [
+    ("sword_swing", "sword whooshing through air, fantasy combat", 1.0),
+    ("potion_drink", "drinking magical potion, gulp sound, RPG game", 0.8),
+    ("spell_cast", "magical spell casting, ethereal whoosh, fantasy magic", 1.5),
+    ("footsteps_stone", "footsteps on stone dungeon floor, echoing", 2.0)
+]
+
+for name, description, duration in sfx_list:
+    audio = client.text_to_sound_effects.convert(
+        text=description,
+        duration_seconds=duration
+    )
+    save_audio(audio, f"sfx_{name}.mp3")
+```
+
+### Example 3: Podcast Intro with Music
+
+**User request:** "Create a podcast intro with voice and background music"
+
+**Expected behavior:**
+1. Generate intro speech
+2. Generate background music
+3. Note that mixing would need external tools (pydub)
+4. Provide both audio files
+
+```python
+# Generate intro speech
+intro_text = "Welcome to the Tech Talk podcast, where we discuss the latest in technology and innovation."
+speech = client.text_to_speech.convert(
+    text=intro_text,
+    voice_id="TxGEqnHWrfWFTfGW9XjX",  # Josh (energetic)
+    model_id="eleven_flash_v2_5"
+)
+save_audio(speech, "podcast_intro_voice.mp3")
+
+# Generate background music (requires paid account)
+music = client.music_generation.compose(
+    prompt="Upbeat tech podcast intro music, electronic beats, modern and energetic",
+    music_length_ms=10000  # 10 seconds
+)
+save_audio(music, "podcast_intro_music.mp3")
+
+print("Use audio editing software to mix voice and music")
+```
+
+### Example 4: Multilingual Content
+
+**User request:** "Create welcome messages in English, Spanish, and French"
+
+**Expected behavior:**
+1. Generate speech in each language
+2. Use multilingual model
+3. Select appropriate voices for each language
+4. Save with language-specific filenames
+
+```python
+messages = {
+    "english": ("Hello and welcome!", "JBFqnCBsd6RMkjVDRZzb"),
+    "spanish": ("¡Hola y bienvenido!", "ThT5KcBeYPX3keUQqHPh"),  # Spanish voice
+    "french": ("Bonjour et bienvenue!", "XB0fDUnXU5powFXDhCwa")   # French voice
+}
+
+for lang, (text, voice_id) in messages.items():
+    audio = client.text_to_speech.convert(
+        text=text,
+        voice_id=voice_id,
+        model_id="eleven_multilingual_v2"
+    )
+    save_audio(audio, f"welcome_{lang}.mp3")
+```
+
+### Example 5: Real-time Voice Streaming
+
+**User request:** "Stream this news article as audio"
+
+**Expected behavior:**
+1. Use Flash model for low latency
+2. Stream audio as it generates
+3. Provide real-time playback or save incrementally
+
+```python
+from elevenlabs import stream
+
+audio_stream = client.text_to_speech.convert_as_stream(
+    text=news_article_text,
+    voice_id="21m00Tcm4TlvDq8ikWAM",  # Rachel
+    model_id="eleven_flash_v2_5",
+    output_format="mp3_44100_128"
+)
+
+# Stream to speakers in real-time
+stream(audio_stream)
+```
+
+## Limitations
+
+1. **Music Generation:**
+   - Requires paid subscription
+   - No copyrighted material allowed
+   - Processing time increases with duration
+
+2. **API Quotas:**
+   - Character limits per month (tier-dependent)
+   - Rate limits on requests
+   - Different limits for free vs paid tiers
+
+3. **Voice Cloning:**
+   - Not covered in Tier 1 implementation
+   - Requires voice samples and additional setup
+
+4. **Audio Quality:**
+   - Output format affects quality and file size
+   - Higher quality formats may require paid tier
+   - Streaming has slightly lower quality than standard
+
+5. **Language Support:**
+   - 32 languages supported but quality varies
+   - Some voices are language-specific
+   - Multilingual model recommended for non-English
+
+6. **Sound Effects:**
+   - Limited to description-based generation
+   - No editing of generated effects via API
+   - Duration limitations (typically under 22 seconds)
+
+7. **Content Policy:**
+   - No harmful or copyrighted content
+   - Music generation rejects artist/band names
+   - Strict content moderation on all endpoints
+
+## Related Skills
+
+- `image-generation` - For visual content creation
+- `python-plotting` - For visualizing audio data
+- `scientific-writing` - For generating narration text
+- `python-best-practices` - For writing clean audio processing code
+
+## Additional Resources
+
+- **ElevenLabs Documentation**: https://elevenlabs.io/docs
+- **Python SDK**: https://github.com/elevenlabs/elevenlabs-python
+- **API Reference**: https://elevenlabs.io/docs/api-reference/introduction
+- **Voice Library**: https://elevenlabs.io/voice-library
+- **Pricing**: https://elevenlabs.io/pricing
+- **Usage Dashboard**: https://elevenlabs.io/app/usage

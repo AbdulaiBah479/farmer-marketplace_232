@@ -1,12 +1,12 @@
 ---
 name: AnnualReports
-description: Aggregate and analyze annual security reports from major vendors — extract trends, compare threat landscapes year-over-year, produce synthesized threat intelligence summaries. Fetch, list, and update report sources. USE WHEN annual reports, security reports, threat reports, industry reports, vendor reports, threat landscape, fetch report, list sources, update sources.
+description: Annual security report aggregation and analysis. USE WHEN annual reports, security reports, threat reports, industry reports, update reports, analyze reports, vendor reports, threat landscape.
 ---
 
 ## Customization
 
 **Before executing, check for user customizations at:**
-`~/.claude/PAI/USER/SKILLCUSTOMIZATIONS/AnnualReports/`
+`~/.claude/skills/PAI/USER/SKILLCUSTOMIZATIONS/AnnualReports/`
 
 If this directory exists, load and apply any PREFERENCES.md, configurations, or resources found there. These override default behavior. If the directory does not exist, proceed with skill defaults.
 
@@ -38,21 +38,21 @@ Aggregates and analyzes annual security reports from 570+ sources across the cyb
 
 ## Workflow Routing
 
-- **UPDATE** - Fetch latest report sources from GitHub (use `Tools/UpdateSources.ts`)
-- **ANALYZE** - Analyze reports for trends and insights (use `Tools/ListSources.ts` + content analysis)
-- **FETCH** - Download specific reports (use `Tools/FetchReport.ts`)
+- **UPDATE** - Fetch latest report sources from GitHub → `Workflows/Update.md`
+- **ANALYZE** - Analyze reports for trends and insights → `Workflows/Analyze.md`
+- **FETCH** - Download specific reports → `Workflows/Fetch.md`
 
 ## Quick Reference
 
 ```bash
 # Update sources from GitHub
-bun run ~/.claude/skills/Security/AnnualReports/Tools/UpdateSources.ts
+bun run ~/.claude/skills/AnnualReports/Tools/UpdateSources.ts
 
 # List all sources
-bun run ~/.claude/skills/Security/AnnualReports/Tools/ListSources.ts [category]
+bun run ~/.claude/skills/AnnualReports/Tools/ListSources.ts [category]
 
 # Fetch a specific report
-bun run ~/.claude/skills/Security/AnnualReports/Tools/FetchReport.ts <vendor> <report-name>
+bun run ~/.claude/skills/AnnualReports/Tools/FetchReport.ts <vendor> <report-name>
 ```
 
 ## Categories

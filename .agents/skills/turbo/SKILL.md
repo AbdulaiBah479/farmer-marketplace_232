@@ -1,72 +1,22 @@
 ---
 name: turbo
-description: "Turborepo (turbo) orchestration for monorepos: pipeline caching, task orchestration, and workspace scripts. Guidance for CI, caching, and integrating with Bun and workspace scripts."
-metadata:
-  author: "Tuan Duc Tran"
-  version: "1.0.0"
+description: Fix and update Turborepo (Turbo) configuration and task setup. Use for turbo.json errors, schema updates (pipeline -> tasks), and package-level config issues like missing extends.
 ---
 
-# Turborepo (turbo) overview
+# Turbo Config Skill
 
-Turborepo (`turbo`) is a high-performance build system and task orchestrator for monorepos. It provides task pipelines, remote/local caching, and parallel execution to speed builds and tests across workspaces.
+## Core workflow
 
-## When to use Turborepo
+- Read the error output and identify whether it references root or package config.
+- If a package-level `turbo.json` exists (inside a workspace package), ensure it includes `extends: ["//"]` to inherit the root configuration.
+- Update deprecated keys: rename `pipeline` to `tasks` for Turbo 2+ configs.
 
-- Use `turbo` in monorepos to coordinate tasks across packages (build, test, lint, sync).
-- Use it to speed CI by leveraging cache layers and selective task execution.
-- Use `turbo` when you need consistent task orchestration across packages and reproducible pipelines.
+## Tip/lesson (package-level config)
 
-## What turbo provides
+If Turbo reports `No "extends" key found` for a package-level `turbo.json`, add:
 
-- Task orchestration via `turbo run <task>` with fine-grained filters
-- Local and remote caching for build and test artifacts
-- Parallel execution and pipeline graph visualization
-
-## Integration with this repository
-
-- This repository uses Turborepo to run package-level scripts from the root `package.json`. Common commands include:
-
-```bash
-# run build across packages
-bun run build
-
-# validate all skills (hr-skills-build validates SKILL.md files)
-bun run validate
-
-# sync metadata after adding/removing a skill
-bun run sync
-
-# regenerate skills catalog
-bun run catalog
-
-# package distributable skill zips
-bun run zip
+```
+extends: ["//"]
 ```
 
-- Package-level scripts in `packages/hr-skills-build/package.json` map to `bun` commands that turbo orchestrates (for example `validate`, `sync`, `catalog`).
-
-## CI recommendations
-
-- Cache `~/.bun` and `node_modules` where appropriate, plus `turbo` cache directories to speed repeated runs.
-- Run `bun install --frozen-lockfile` then `bun run typecheck` and `bun run validate` early in CI to fail fast on critical errors.
-- Upload and restore `turbo` cache between CI runs when using remote caching.
-
-## Examples
-
-Run a filtered task for the build package only:
-
-```bash
-turbo run build --filter=packages/hr-skills-build
-```
-
-Run validate across the workspace (root `package.json` delegates to turbo):
-
-```bash
-bun run validate
-```
-
-## Tips
-
-- Keep task definitions small and composable so `turbo` can optimize execution.
-- Ensure tasks that produce cacheable outputs declare explicit outputs so caching is effective.
-- Use `--filter` to constrain runs during development to specific packages.
+This is required for package configurations to inherit the root config.

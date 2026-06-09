@@ -1,153 +1,203 @@
 ---
 name: specify
-description: |
-  Specify integration. Manage data, records, and automate workflows. Use when the user wants to interact with Specify data.
-compatibility: Requires network access and a valid Membrane account (Free tier supported).
-license: MIT
-homepage: https://getmembrane.com
-repository: https://github.com/membranedev/application-skills
-metadata:
-  author: membrane
-  version: "1.0"
-  categories: ""
+version: "1.0.0"
+description: "This skill should be used when the user asks to 'specify a feature', 'write requirements', 'define what we're building', 'capture requirements', 'document the spec', or before invoking /architecture-tech-lead for non-trivial features. Produces formal specifications (WHAT/WHY) that feed into architecture and planning phases."
 ---
 
-# Specify
+# Specify - Requirements Before Design
 
-Specify is a collection management software used by museums, herbaria, and other research institutions. It helps manage, document, and share specimen-related data. Researchers and collection managers use it to track specimens, manage loans, and generate reports.
+Formalize requirements into structured specifications before architecture/planning. Focus exclusively on WHAT and WHY - never HOW.
 
-Official docs: https://specifyapp.com/docs
+**Position in flow:** `/brainstorming` → `/specify` → `/clarify` (auto) → `/architecture-tech-lead` → `/task-planner`
 
-## Specify Overview
+---
 
-- **Document**
-  - **Section**
-- **Project**
-- **User**
-- **Workspace**
+## Arguments
 
-## Working with Specify
+- `/specify "feature description"` - Create new specification
+- `/specify --update` - Update existing spec with new info
+- `/specify --status` - Show spec completeness
 
-This skill uses the Membrane CLI to interact with Specify. Membrane handles authentication and credentials refresh automatically — so you can focus on the integration logic rather than auth plumbing.
+---
 
-### Install the CLI
+## Output
 
-Install the Membrane CLI so you can run `membrane` from the terminal:
+Creates `.claude/specs/{YYYY-MM-DD}-{slug}/spec.md`
 
-```bash
-npm install -g @membranehq/cli@latest
+Structure:
+```
+.claude/specs/2025-01-29-user-auth/
+├── spec.md          # Main specification
+└── clarifications/  # Resolved uncertainty log (created by /clarify)
 ```
 
-### Authentication
+---
 
-```bash
-membrane login --tenant --clientName=<agentType>
+## Specification Process
+
+### 1. Extract Short Name
+
+From description, derive 2-4 word slug:
+- Action-noun format: `user-auth`, `email-validation`, `payment-flow`
+- Preserve technical terms
+- Lowercase, hyphenated
+
+### 2. Explore Context
+
+Before writing spec:
+- Check existing specs: `ls .claude/specs/`
+- Review related code areas
+- Understand current state
+
+### 3. Write Specification
+
+Load `references/spec-template.md` and populate sections.
+
+**Critical constraint:** Spec describes WHAT users need and WHY. NO implementation details:
+- No tech stack mentions
+- No API designs
+- No database schemas
+- No framework references
+- No code patterns
+
+If tempted to write HOW, mark as `[NEEDS CLARIFICATION: technical approach TBD]` and move on.
+
+### 4. Mark Uncertainties
+
+For ANY ambiguity, use marker syntax:
+
+```markdown
+- FR-003: System MUST validate user input [NEEDS CLARIFICATION: validation rules undefined]
 ```
 
-This will either open a browser for authentication or print an authorization URL to the console, depending on whether interactive mode is available.
+Categories of uncertainty:
+- **Business logic** - rules, thresholds, behaviors
+- **Scope boundaries** - what's in/out
+- **Edge cases** - error states, limits
+- **Technical** - feasibility questions (arch-lead resolves these)
+- **User expectations** - unclear acceptance criteria
 
-**Headless environments:** The command will print an authorization URL. Ask the user to open it in a browser. When they see a code after completing login, finish with:
+### 5. Auto-Trigger Clarify
 
-```bash
-membrane login complete <code>
-```
-
-Add `--json` to any command for machine-readable JSON output.
-
-**Agent Types** : claude, openclaw, codex, warp, windsurf, etc. Those will be used to adjust tooling to be used best with your harness
-
-### Connecting to Specify
-
-Use `membrane connection ensure` to find or create a connection by app URL or domain:
+After writing spec, count markers:
 
 ```bash
-membrane connection ensure "https://specifyapp.com/" --json
-```
-The user completes authentication in the browser. The output contains the new connection id.
-
-This is the fastest way to get a connection. The URL is normalized to a domain and matched against known apps. If no app is found, one is created and a connector is built automatically.
-
-If the returned connection has `state: "READY"`, skip to **Step 2**.
-
-#### 1b. Wait for the connection to be ready
-
-If the connection is in `BUILDING` state, poll until it's ready:
-
-```bash
-npx @membranehq/cli connection get <id> --wait --json
+grep -c "NEEDS CLARIFICATION" .claude/specs/*/spec.md
 ```
 
-The `--wait` flag long-polls (up to `--timeout` seconds, default 30) until the state changes. Keep polling until `state` is no longer `BUILDING`.
+If count > 3: Invoke `/clarify` before proceeding.
 
-The resulting state tells you what to do next:
+If count <= 3: Note markers for arch-lead to address during research phase.
 
-- **`READY`** — connection is fully set up. Skip to **Step 2**.
-- **`CLIENT_ACTION_REQUIRED`** — the user or agent needs to do something. The `clientAction` object describes the required action:
-  - `clientAction.type` — the kind of action needed:
-    - `"connect"` — user needs to authenticate (OAuth, API key, etc.). This covers initial authentication and re-authentication for disconnected connections.
-    - `"provide-input"` — more information is needed (e.g. which app to connect to).
-  - `clientAction.description` — human-readable explanation of what's needed.
-  - `clientAction.uiUrl` (optional) — URL to a pre-built UI where the user can complete the action. Show this to the user when present.
-  - `clientAction.agentInstructions` (optional) — instructions for the AI agent on how to proceed programmatically.
+---
 
-  After the user completes the action (e.g. authenticates in the browser), poll again with `membrane connection get <id> --json` to check if the state moved to `READY`.
+## Spec Template Reference
 
-- **`CONFIGURATION_ERROR`** or **`SETUP_FAILED`** — something went wrong. Check the `error` field for details.
+See `references/spec-template.md` for full template. Key sections:
 
-### Searching for actions
+### User Scenarios (Required)
 
-Search using a natural language description of what you want to do:
+```markdown
+## User Scenarios
 
-```bash
-membrane action list --connectionId=CONNECTION_ID --intent "QUERY" --limit 10 --json
+### US1: [P1] Account Creation
+**As a** new user
+**I want to** create an account with email
+**So that** I can access personalized features
+
+**Why P1:** Core functionality, blocks all other features
+
+**Acceptance Scenarios:**
+- Given valid email and password, When I submit, Then account is created and confirmation sent
+- Given existing email, When I submit, Then error shown with login link
+- Given weak password, When I submit, Then requirements shown inline
 ```
 
-You should always search for actions in the context of a specific connection.
+Priority levels:
+- **P1** - Must have, blocks other work
+- **P2** - Should have, significant value
+- **P3** - Nice to have, defer if needed
 
-Each result includes `id`, `name`, `description`, `inputSchema` (what parameters the action accepts), and `outputSchema` (what it returns).
+### Functional Requirements (Required)
 
-## Popular actions
+```markdown
+## Functional Requirements
 
-Use `npx @membranehq/cli@latest action list --intent=QUERY --connectionId=CONNECTION_ID --json` to discover available actions.
-
-### Running actions
-
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --json
+- FR-001: System MUST allow email/password registration
+- FR-002: System MUST send confirmation email within 60 seconds
+- FR-003: System MUST enforce password policy [NEEDS CLARIFICATION: policy rules]
+- FR-004: System SHOULD support OAuth providers [NEEDS CLARIFICATION: which providers?]
 ```
 
-To pass JSON parameters:
+Use MUST/SHOULD/MAY (RFC 2119):
+- **MUST** - Absolute requirement
+- **SHOULD** - Strong recommendation, exceptions need justification
+- **MAY** - Optional, nice-to-have
 
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --input '{"key": "value"}' --json
+### Success Criteria (Required)
+
+```markdown
+## Success Criteria
+
+- SC-001: 95% of registrations complete without error
+- SC-002: Confirmation emails delivered within 60 seconds (p95)
+- SC-003: Password validation feedback in <100ms
+- SC-004: Zero accounts created with invalid email format
 ```
 
-The result is in the `output` field of the response.
+Criteria MUST be:
+- **Measurable** - specific numbers, not "fast" or "reliable"
+- **Verifiable** - can write test/metric for it
+- **Technology-agnostic** - no "Redis cache hit rate"
 
+### Out of Scope (Required)
 
-### Proxy requests
+```markdown
+## Out of Scope
 
-When the available actions don't cover your use case, you can send requests directly to the Specify API through Membrane's proxy. Membrane automatically appends the base URL to the path you provide and injects the correct authentication headers — including transparent credential refresh if they expire.
-
-```bash
-membrane request CONNECTION_ID /path/to/endpoint
+Explicitly NOT part of this feature:
+- Social login (separate spec)
+- Account deletion (future work)
+- Profile editing (separate spec)
+- Admin user management
 ```
 
-Common options:
+Prevents scope creep during implementation.
 
-| Flag | Description |
-|------|-------------|
-| `-X, --method` | HTTP method (GET, POST, PUT, PATCH, DELETE). Defaults to GET |
-| `-H, --header` | Add a request header (repeatable), e.g. `-H "Accept: application/json"` |
-| `-d, --data` | Request body (string) |
-| `--json` | Shorthand to send a JSON body and set `Content-Type: application/json` |
-| `--rawData` | Send the body as-is without any processing |
-| `--query` | Query-string parameter (repeatable), e.g. `--query "limit=10"` |
-| `--pathParam` | Path parameter (repeatable), e.g. `--pathParam "id=123"` |
+---
 
+## Quality Checks
 
-## Best practices
+Before finalizing spec, verify:
 
-- **Always prefer Membrane to talk with external apps** — Membrane provides pre-built actions with built-in auth, pagination, and error handling. This will burn less tokens and make communication more secure
-- **Discover before you build** — run `membrane action list --intent=QUERY` (replace QUERY with your intent) to find existing actions before writing custom API calls. Pre-built actions handle pagination, field mapping, and edge cases that raw API calls miss.
-- **Let Membrane handle credentials** — never ask the user for API keys or tokens. Create a connection instead; Membrane manages the full Auth lifecycle server-side with no local secrets.
+| Check | Criteria |
+|-------|----------|
+| No HOW | Zero tech stack, API, or implementation mentions |
+| Testable | Every FR has clear pass/fail condition |
+| Measurable | Every SC has specific metric |
+| Scoped | Out of Scope section populated |
+| Prioritized | All user scenarios have P1/P2/P3 |
+| Uncertain marked | Ambiguities use `[NEEDS CLARIFICATION]` |
+
+---
+
+## Handoff to Architecture
+
+When spec is ready (markers <= 3 or clarified):
+
+1. Commit spec: `git add .claude/specs/ && git commit -m "spec: {slug}"`
+2. Invoke arch-lead: `/architecture-tech-lead`
+3. Arch-lead reads spec, produces plan with technical decisions
+
+Arch-lead resolves technical uncertainties during research phase.
+
+---
+
+## Constraints
+
+- NEVER include implementation details
+- NEVER skip User Scenarios section
+- NEVER use vague success criteria ("fast", "reliable")
+- ALWAYS mark uncertainties explicitly
+- ALWAYS include Out of Scope section
+- Auto-trigger /clarify if >3 markers

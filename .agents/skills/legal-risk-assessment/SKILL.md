@@ -1,264 +1,275 @@
 ---
 name: legal-risk-assessment
-description: >
-  Structured legal risk assessment with 5x5 Severity x Likelihood matrix. Use
-  for risk scoring, risk registers, escalation decisions, and risk memos.
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: The Glass Room
-  category: legal
-  domain: risk-management
-  updated: 2026-04-10
-  tags: [legal-risk, risk-matrix, risk-register, escalation, compliance]
----
-> **⚠️ EXPERIMENTAL** — This skill is provided for educational and informational purposes only. It does NOT constitute legal advice. All responsibility for usage rests with the user. Consult qualified legal professionals before acting on any output.
-
-# Legal Risk Assessment
-
-Structured legal risk assessment using a quantitative 5x5 Severity x Likelihood matrix. Scores risks, maintains registers, generates assessment memos, and guides escalation decisions.
-
+description: "Assess and classify legal risks using a severity-by-likelihood framework with escalation criteria"
+version: 1.0.0
+category: legal
+last_updated: 2026-02-03
+source: https://github.com/anthropics/knowledge-work-plugins
+related_skills:
+  - contract-review
+  - nda-triage
+  - compliance
+  - canned-responses
+  - meeting-briefing
 ---
 
-## Table of Contents
+# Legal Risk Assessment Skill
 
-- [Tools](#tools)
-  - [Risk Scorer](#risk-scorer)
-  - [Risk Report Generator](#risk-report-generator)
-- [Reference Guides](#reference-guides)
-- [Workflows](#workflows)
-- [Troubleshooting](#troubleshooting)
-- [Success Criteria](#success-criteria)
-- [Scope & Limitations](#scope--limitations)
-- [Anti-Patterns](#anti-patterns)
-- [Tool Reference](#tool-reference)
+You are a legal risk assessment assistant for an in-house legal team. You help evaluate, classify, and document legal risks using a structured framework based on severity and likelihood.
 
----
+**Important**: You assist with legal workflows but do not provide legal advice. Risk assessments should be reviewed by qualified legal professionals. The framework provided is a starting point that organizations should customize to their specific risk appetite and industry context.
 
-## Tools
+## Risk Assessment Framework
 
-### Risk Scorer
+### Severity x Likelihood Matrix
 
-Calculates risk scores from severity and likelihood inputs, assigns color-coded risk levels, and generates summary statistics.
+Legal risks are assessed on two dimensions:
 
-```bash
-# Score a single risk
-python scripts/risk_scorer.py --severity 4 --likelihood 3 \
-  --category "Contract" --description "Vendor SLA non-compliance"
+**Severity** (impact if the risk materializes):
 
-# JSON output
-python scripts/risk_scorer.py --severity 4 --likelihood 3 \
-  --category "Contract" --description "Vendor SLA breach" --json
+| Level | Label | Description |
+|---|---|---|
+| 1 | **Negligible** | Minor inconvenience; no material financial, operational, or reputational impact. Can be handled within normal operations. |
+| 2 | **Low** | Limited impact; minor financial exposure (< 1% of relevant contract/deal value); minor operational disruption; no public attention. |
+| 3 | **Moderate** | Meaningful impact; material financial exposure (1-5% of relevant value); noticeable operational disruption; potential for limited public attention. |
+| 4 | **High** | Significant impact; substantial financial exposure (5-25% of relevant value); significant operational disruption; likely public attention; potential regulatory scrutiny. |
+| 5 | **Critical** | Severe impact; major financial exposure (> 25% of relevant value); fundamental business disruption; significant reputational damage; regulatory action likely; potential personal liability for officers/directors. |
 
-# Batch mode from risk register file
-python scripts/risk_scorer.py --input risks.json --json
+**Likelihood** (probability the risk materializes):
 
-# Batch mode with human-readable output
-python scripts/risk_scorer.py --input risks.json
-```
+| Level | Label | Description |
+|---|---|---|
+| 1 | **Remote** | Highly unlikely to occur; no known precedent in similar situations; would require exceptional circumstances. |
+| 2 | **Unlikely** | Could occur but not expected; limited precedent; would require specific triggering events. |
+| 3 | **Possible** | May occur; some precedent exists; triggering events are foreseeable. |
+| 4 | **Likely** | Probably will occur; clear precedent; triggering events are common in similar situations. |
+| 5 | **Almost Certain** | Expected to occur; strong precedent or pattern; triggering events are present or imminent. |
 
-**Input JSON format (batch mode):**
-```json
-{
-  "risks": [
-    {"severity": 4, "likelihood": 3, "category": "Contract", "description": "Vendor SLA breach"},
-    {"severity": 2, "likelihood": 2, "category": "Regulatory", "description": "Minor filing delay"}
-  ]
-}
-```
+### Risk Score Calculation
 
-**Output includes:**
-- Risk score (Severity x Likelihood)
-- Color-coded level (GREEN / YELLOW / ORANGE / RED)
-- Recommended action (Accept / Monitor / Mitigate / Escalate)
-- Batch summary statistics (count per level, average score)
+**Risk Score = Severity x Likelihood**
 
----
+| Score Range | Risk Level | Color |
+|---|---|---|
+| 1-4 | **Low Risk** | GREEN |
+| 5-9 | **Medium Risk** | YELLOW |
+| 10-15 | **High Risk** | ORANGE |
+| 16-25 | **Critical Risk** | RED |
 
-### Risk Report Generator
-
-Generates a formatted risk assessment memo in markdown from a risk register JSON file.
-
-```bash
-# Generate memo from risk register
-python scripts/risk_report_generator.py --input risk_register.json
-
-# Save to file
-python scripts/risk_report_generator.py --input risk_register.json --output memo.md
-
-# JSON metadata output
-python scripts/risk_report_generator.py --input risk_register.json --json
-```
-
-**Report includes:**
-- ASCII risk matrix visualization
-- Risk distribution summary (counts and percentages per level)
-- Top risks ranked by score
-- Recommended actions per risk with owner assignments
-- Monitoring plan suggestions
-- Escalation recommendations
-
----
-
-## Reference Guides
-
-### Risk Framework
-`references/risk_framework.md`
-
-Complete Severity x Likelihood matrix reference:
-- Severity levels 1-5 with financial exposure percentages
-- Likelihood levels 1-5 with probability ranges
-- Risk matrix visualization
-- Risk classification (GREEN/YELLOW/ORANGE/RED) with actions
-- Documentation standards for memos and register entries
-
-### Escalation Guide
-`references/escalation_guide.md`
-
-When to engage outside counsel:
-- Mandatory engagement triggers (litigation, investigation, criminal)
-- Strongly recommended scenarios (novel issues, material exposure)
-- Consider scenarios (complex disputes, employment, data incidents)
-- Risk category definitions and contributing/mitigating factors
-
----
-
-## Workflows
-
-### Workflow 1: New Risk Assessment
+### Risk Matrix Visualization
 
 ```
-Step 1: Identify risk category and description
-        → Use references/risk_framework.md category definitions
-
-Step 2: Score severity (1-5) and likelihood (1-5)
-        → python scripts/risk_scorer.py --severity N --likelihood N \
-          --category "Category" --description "Description"
-
-Step 3: Review risk level and recommended action
-        → GREEN: Accept and document
-        → YELLOW: Assign owner and monitor
-        → ORANGE: Escalate to senior counsel
-        → RED: Immediate escalation, crisis management
-
-Step 4: Determine outside counsel need
-        → Consult references/escalation_guide.md
-
-Step 5: Document in risk register
-        → Add entry to register JSON file
+                    LIKELIHOOD
+                Remote  Unlikely  Possible  Likely  Almost Certain
+                  (1)     (2)       (3)      (4)        (5)
+SEVERITY
+Critical (5)  |   5    |   10   |   15   |   20   |     25     |
+High     (4)  |   4    |    8   |   12   |   16   |     20     |
+Moderate (3)  |   3    |    6   |    9   |   12   |     15     |
+Low      (2)  |   2    |    4   |    6   |    8   |     10     |
+Negligible(1) |   1    |    2   |    3   |    4   |      5     |
 ```
 
-### Workflow 2: Periodic Risk Register Review
+## Risk Classification Levels with Recommended Actions
+
+### GREEN -- Low Risk (Score 1-4)
+
+**Characteristics**:
+- Minor issues that are unlikely to materialize
+- Standard business risks within normal operating parameters
+- Well-understood risks with established mitigations in place
+
+**Recommended Actions**:
+- **Accept**: Acknowledge the risk and proceed with standard controls
+- **Document**: Record in the risk register for tracking
+- **Monitor**: Include in periodic reviews (quarterly or annually)
+- **No escalation required**: Can be managed by the responsible team member
+
+**Examples**:
+- Vendor contract with minor deviation from standard terms in a non-critical area
+- Routine NDA with a well-known counterparty in a standard jurisdiction
+- Minor administrative compliance task with clear deadline and owner
+
+### YELLOW -- Medium Risk (Score 5-9)
+
+**Characteristics**:
+- Moderate issues that could materialize under foreseeable circumstances
+- Risks that warrant attention but do not require immediate action
+- Issues with established precedent for management
+
+**Recommended Actions**:
+- **Mitigate**: Implement specific controls or negotiate to reduce exposure
+- **Monitor actively**: Review at regular intervals (monthly or as triggers occur)
+- **Document thoroughly**: Record risk, mitigations, and rationale in risk register
+- **Assign owner**: Ensure a specific person is responsible for monitoring and mitigation
+- **Brief stakeholders**: Inform relevant business stakeholders of the risk and mitigation plan
+- **Escalate if conditions change**: Define trigger events that would elevate the risk level
+
+**Examples**:
+- Contract with liability cap below standard but within negotiable range
+- Vendor processing personal data in a jurisdiction without clear adequacy determination
+- Regulatory development that may affect a business activity in the medium term
+- IP provision that is broader than preferred but common in the market
+
+### ORANGE -- High Risk (Score 10-15)
+
+**Characteristics**:
+- Significant issues with meaningful probability of materializing
+- Risks that could result in substantial financial, operational, or reputational impact
+- Issues that require senior attention and dedicated mitigation efforts
+
+**Recommended Actions**:
+- **Escalate to senior counsel**: Brief the head of legal or designated senior counsel
+- **Develop mitigation plan**: Create a specific, actionable plan to reduce the risk
+- **Brief leadership**: Inform relevant business leaders of the risk and recommended approach
+- **Set review cadence**: Review weekly or at defined milestones
+- **Consider outside counsel**: Engage outside counsel for specialized advice if needed
+- **Document in detail**: Full risk memo with analysis, options, and recommendations
+- **Define contingency plan**: What will the organization do if the risk materializes?
+
+**Examples**:
+- Contract with uncapped indemnification in a material area
+- Data processing activity that may violate a regulatory requirement if not restructured
+- Threatened litigation from a significant counterparty
+- IP infringement allegation with colorable basis
+- Regulatory inquiry or audit request
+
+### RED -- Critical Risk (Score 16-25)
+
+**Characteristics**:
+- Severe issues that are likely or certain to materialize
+- Risks that could fundamentally impact the business, its officers, or its stakeholders
+- Issues requiring immediate executive attention and rapid response
+
+**Recommended Actions**:
+- **Immediate escalation**: Brief General Counsel, C-suite, and/or Board as appropriate
+- **Engage outside counsel**: Retain specialized outside counsel immediately
+- **Establish response team**: Dedicated team to manage the risk with clear roles
+- **Consider insurance notification**: Notify insurers if applicable
+- **Crisis management**: Activate crisis management protocols if reputational risk is involved
+- **Preserve evidence**: Implement litigation hold if legal proceedings are possible
+- **Daily or more frequent review**: Active management until the risk is resolved or reduced
+- **Board reporting**: Include in board risk reporting as appropriate
+- **Regulatory notifications**: Make any required regulatory notifications
+
+**Examples**:
+- Active litigation with significant exposure
+- Data breach affecting regulated personal data
+- Regulatory enforcement action
+- Material contract breach by or against the organization
+- Government investigation
+- Credible IP infringement claim against a core product or service
+
+## Documentation Standards for Risk Assessments
+
+### Risk Assessment Memo Format
+
+Every formal risk assessment should be documented using the following structure:
 
 ```
-Step 1: Load current risk register
-        → python scripts/risk_scorer.py --input register.json
+## Legal Risk Assessment
 
-Step 2: Generate assessment memo
-        → python scripts/risk_report_generator.py --input register.json --output memo.md
+**Date**: [assessment date]
+**Assessor**: [person conducting assessment]
+**Matter**: [description of the matter being assessed]
+**Privileged**: [Yes/No - mark as attorney-client privileged if applicable]
 
-Step 3: Review top risks and distribution
-        → Focus on ORANGE and RED risks first
+### 1. Risk Description
+[Clear, concise description of the legal risk]
 
-Step 4: Update severity/likelihood for changed risks
-        → Re-score and regenerate report
+### 2. Background and Context
+[Relevant facts, history, and business context]
 
-Step 5: Distribute memo to stakeholders
+### 3. Risk Analysis
+
+#### Severity Assessment: [1-5] - [Label]
+[Rationale for severity rating, including potential financial exposure, operational impact, and reputational considerations]
+
+#### Likelihood Assessment: [1-5] - [Label]
+[Rationale for likelihood rating, including precedent, triggering events, and current conditions]
+
+#### Risk Score: [Score] - [GREEN/YELLOW/ORANGE/RED]
+
+### 4. Contributing Factors
+[What factors increase the risk]
+
+### 5. Mitigating Factors
+[What factors decrease the risk or limit exposure]
+
+### 6. Mitigation Options
+
+| Option | Effectiveness | Cost/Effort | Recommended? |
+|---|---|---|---|
+| [Option 1] | [High/Med/Low] | [High/Med/Low] | [Yes/No] |
+| [Option 2] | [High/Med/Low] | [High/Med/Low] | [Yes/No] |
+
+### 7. Recommended Approach
+[Specific recommended course of action with rationale]
+
+### 8. Residual Risk
+[Expected risk level after implementing recommended mitigations]
+
+### 9. Monitoring Plan
+[How and how often the risk will be monitored; trigger events for re-assessment]
+
+### 10. Next Steps
+1. [Action item 1 - Owner - Deadline]
+2. [Action item 2 - Owner - Deadline]
 ```
 
-### Workflow 3: Escalation Decision
+### Risk Register Entry
 
-```
-Step 1: Score the risk
-        → python scripts/risk_scorer.py --severity N --likelihood N \
-          --category "Category" --description "Description"
+For tracking in the team's risk register:
 
-Step 2: Check escalation triggers
-        → Mandatory: active litigation, government investigation, criminal exposure
-        → Strongly Recommended: novel issues, jurisdictional complexity, material exposure
-        → Consider: complex disputes, employment matters, data incidents
+| Field | Content |
+|---|---|
+| Risk ID | Unique identifier |
+| Date Identified | When the risk was first identified |
+| Description | Brief description |
+| Category | Contract, Regulatory, Litigation, IP, Data Privacy, Employment, Corporate, Other |
+| Severity | 1-5 with label |
+| Likelihood | 1-5 with label |
+| Risk Score | Calculated score |
+| Risk Level | GREEN / YELLOW / ORANGE / RED |
+| Owner | Person responsible for monitoring |
+| Mitigations | Current controls in place |
+| Status | Open / Mitigated / Accepted / Closed |
+| Review Date | Next scheduled review |
+| Notes | Additional context |
 
-Step 3: Document escalation rationale
-        → Include risk score, level, and specific trigger in memo
+## When to Escalate to Outside Counsel
 
-Step 4: Select outside counsel if needed
-        → See references/escalation_guide.md criteria
-```
+Engage outside counsel when:
 
----
+### Mandatory Engagement
+- **Active litigation**: Any lawsuit filed against or by the organization
+- **Government investigation**: Any inquiry from a government agency, regulator, or law enforcement
+- **Criminal exposure**: Any matter with potential criminal liability for the organization or its personnel
+- **Securities issues**: Any matter that could affect securities disclosures or filings
+- **Board-level matters**: Any matter requiring board notification or approval
 
-## Troubleshooting
+### Strongly Recommended Engagement
+- **Novel legal issues**: Questions of first impression or unsettled law where the organization's position could set precedent
+- **Jurisdictional complexity**: Matters involving unfamiliar jurisdictions or conflicting legal requirements across jurisdictions
+- **Material financial exposure**: Risks with potential exposure exceeding the organization's risk tolerance thresholds
+- **Specialized expertise needed**: Matters requiring deep domain expertise not available in-house (antitrust, FCPA, patent prosecution, etc.)
+- **Regulatory changes**: New regulations that materially affect the business and require compliance program development
+- **M&A transactions**: Due diligence, deal structuring, and regulatory approvals for significant transactions
 
-| Problem | Possible Cause | Resolution |
-|---------|---------------|------------|
-| Risk score seems too low for a serious matter | Severity or likelihood underestimated; qualitative factors not captured | Review severity descriptions in risk_framework.md; consider worst-case financial exposure; add contributing factors to description |
-| Multiple risks in same category but different scores | Risks have different severity/likelihood combinations | This is expected; each risk is independent; review category-level trends in report |
-| Batch mode fails on input file | Malformed JSON or missing required fields | Verify JSON structure matches expected format; ensure each risk has severity, likelihood, category, description |
-| Report generator produces empty matrix | No risks in input file or all risks have invalid scores | Check that input JSON contains valid risks with severity 1-5 and likelihood 1-5 |
-| Escalation guide suggests outside counsel but budget is constrained | Risk score indicates material exposure | Document the budget constraint and residual risk acceptance; consider limited-scope engagement |
-| Risk register grows unwieldy | Risks not being closed or consolidated | Archive resolved risks; consolidate related risks; review register quarterly |
+### Consider Engagement
+- **Complex contract disputes**: Significant disagreements over contract interpretation with material counterparties
+- **Employment matters**: Claims or potential claims involving discrimination, harassment, wrongful termination, or whistleblower protections
+- **Data incidents**: Potential data breaches that may trigger notification obligations
+- **IP disputes**: Infringement allegations (received or contemplated) involving material products or services
+- **Insurance coverage disputes**: Disagreements with insurers over coverage for material claims
 
----
+### Selecting Outside Counsel
 
-## Success Criteria
-
-- **All identified legal risks scored and documented** -- every risk has severity, likelihood, category, description, and recommended action in the register
-- **Risk distribution reviewed quarterly** -- memo generated and distributed to stakeholders with trend analysis
-- **ORANGE and RED risks have assigned owners and mitigation plans** -- no high-severity risk without accountability
-- **Escalation decisions documented with rationale** -- outside counsel engagement triggers clearly recorded
-- **Risk register maintained as living document** -- risks updated, resolved, or archived as status changes
-
----
-
-## Scope & Limitations
-
-**In Scope:**
-- Quantitative risk scoring using 5x5 Severity x Likelihood matrix
-- Risk register management and batch processing
-- Risk assessment memo generation with matrix visualization
-- Escalation guidance for outside counsel engagement
-- Risk categorization (Contract, Regulatory, Litigation, IP, Data Privacy, Employment, Corporate)
-
-**Out of Scope:**
-- Legal advice on specific risk mitigation strategies -- consult legal counsel
-- Insurance coverage analysis or actuarial calculations
-- Regulatory filing or submission preparation
-- Contract drafting or review
-- Litigation strategy or case management
-
----
-
-## Anti-Patterns
-
-- **Scoring by committee consensus without criteria** -- use the defined severity and likelihood scales consistently; do not negotiate scores to make stakeholders comfortable; a risk scored as 4 severity should match the framework definition
-- **Treating the risk register as a one-time exercise** -- risk registers are living documents; risks change as circumstances evolve; schedule quarterly reviews and update scores accordingly
-- **Escalating everything to outside counsel** -- the escalation guide defines specific triggers; not every YELLOW risk needs external counsel; over-escalation wastes budget and creates dependency
-- **Ignoring GREEN risks entirely** -- GREEN risks still require documentation and periodic monitoring; a GREEN risk can escalate to YELLOW or ORANGE if circumstances change
-- **Using risk scores as the sole decision factor** -- scores are inputs to judgment, not substitutes; qualitative factors like reputational impact or strategic importance may warrant action beyond what the score suggests
-
----
-
-## Tool Reference
-
-### risk_scorer.py
-
-Calculates risk scores and assigns color-coded risk levels with recommended actions.
-
-| Flag | Required | Description |
-|------|----------|-------------|
-| `--severity <1-5>` | Yes (single mode) | Severity rating: 1=Negligible, 2=Minor, 3=Moderate, 4=Major, 5=Critical |
-| `--likelihood <1-5>` | Yes (single mode) | Likelihood rating: 1=Remote, 2=Unlikely, 3=Possible, 4=Likely, 5=Almost Certain |
-| `--category <text>` | Yes (single mode) | Risk category: Contract, Regulatory, Litigation, IP, Data Privacy, Employment, Corporate |
-| `--description <text>` | Yes (single mode) | Risk description |
-| `--input <file>` | Yes (batch mode) | Path to JSON file containing multiple risks |
-| `--json` | No | Output results in JSON format |
-
-### risk_report_generator.py
-
-Generates formatted risk assessment memo from a risk register JSON file.
-
-| Flag | Required | Description |
-|------|----------|-------------|
-| `--input <file>` | Yes | Path to risk register JSON file |
-| `--output <file>` | No | Save memo to specified file path (markdown format) |
-| `--json` | No | Output report metadata in JSON format |
+When recommending outside counsel engagement, suggest the user consider:
+- Relevant subject matter expertise
+- Experience in the applicable jurisdiction
+- Understanding of the organization's industry
+- Conflict of interest clearance
+- Budget expectations and fee arrangements (hourly, fixed fee, blended rates, success fees)
+- Diversity and inclusion considerations
+- Existing relationships (panel firms, prior engagements)

@@ -1,83 +1,90 @@
 ---
-name: "spawn"
-description: "Launch N parallel subagents in isolated git worktrees to compete on the session task."
-command: /hub:spawn
+name: spawn
+description: "Skills for spawning external processes - AI coding agents and generic CLI commands in new terminal windows. Parent skill category for agent and terminal spawning."
+type: category
 ---
 
-# /hub:spawn — Launch Parallel Agents
+# Spawn Skills
 
-Spawn N subagents that work on the same task in parallel, each in an isolated git worktree.
+This directory contains skills for spawning external processes in new terminal windows.
 
-## Usage
+## Overview
 
-```
-/hub:spawn                                    # Spawn agents for the latest session
-/hub:spawn 20260317-143022                    # Spawn agents for a specific session
-/hub:spawn --template optimizer               # Use optimizer template for dispatch prompts
-/hub:spawn --template refactorer              # Use refactorer template
-```
+Spawn skills enable Claude Code to launch external processes:
+- **AI coding agents** (Claude, Codex, Gemini, Cursor, OpenCode, Copilot)
+- **Generic CLI commands** (ffmpeg, curl, python, npm, etc.)
 
-## Templates
+Both use the `fork_terminal` utility to create isolated terminal sessions.
 
-When `--template <name>` is provided, use the dispatch prompt from `references/agent-templates.md` instead of the default prompt below. Available templates:
+## Child Skills
 
-| Template | Pattern | Use Case |
-|----------|---------|----------|
-| `optimizer` | Edit → eval → keep/discard → repeat x10 | Performance, latency, size reduction |
-| `refactorer` | Restructure → test → iterate until green | Code quality, tech debt |
-| `test-writer` | Write tests → measure coverage → repeat | Test coverage gaps |
-| `bug-fixer` | Reproduce → diagnose → fix → verify | Bug fix with competing approaches |
+| Skill | Description | Use Case |
+|-------|-------------|----------|
+| [agent](./agent/SKILL.md) | Spawn AI coding agents | Multi-provider orchestration |
+| [terminal](./terminal/SKILL.md) | Spawn generic CLI commands | Non-AI command execution |
 
-When using a template, replace all `{variables}` with values from the session config. Assign each agent a **different strategy** appropriate to the template and task — diverse strategies maximize the value of parallel exploration.
+## When to Use
 
-## What It Does
+### Use spawn:agent when:
+- Delegating tasks to external AI providers
+- Need interactive CLI sessions with AI agents
+- Browser-based authentication is required
+- Real-time streaming output needed
 
-1. Load session config from `.agenthub/sessions/{session-id}/config.yaml`
-2. For each agent 1..N:
-   - Write task assignment to `.agenthub/board/dispatch/`
-   - Build agent prompt with task, constraints, and board write instructions
-3. Launch ALL agents in a **single message** with multiple Agent tool calls:
+### Use spawn:terminal when:
+- Running non-AI CLI commands (ffmpeg, curl, etc.)
+- Need interactive terminal for user input
+- Long-running processes that shouldn't block Claude
 
-```
-Agent(
-  prompt: "You are agent-{i} in hub session {session-id}.
+### Use orchestration:native-invoke instead when:
+- Automating multi-provider tasks
+- Need parallel execution across providers
+- Clean result collection is important
+- No interactive/TTY requirements
 
-Your task: {task}
+## Core Utility
 
-Read your full assignment at .agenthub/board/dispatch/{seq}-agent-{i}.md
+Both skills use the `fork_terminal` Python utility:
 
-Instructions:
-1. Work in your worktree — make changes, run tests, iterate
-2. Commit all changes with descriptive messages
-3. Write your result summary to .agenthub/board/results/agent-{i}-result.md
-   Include: approach taken, files changed, metric if available, confidence level
-4. Exit when done
+```python
+# Located at: ./agent/fork_terminal.py
+from fork_terminal import fork_terminal
 
-Constraints:
-- Do NOT read or modify other agents' work
-- Do NOT access .agenthub/board/results/ for other agents
-- Commit early and often with descriptive messages
-- If you hit a dead end, commit what you have and explain in your result",
-  isolation: "worktree"
-)
+# Basic usage
+result = fork_terminal("command", capture=True)
+
+# With logging
+result = fork_terminal("command", log_to_file=True, log_agent_output=True)
 ```
 
-4. Update session state to `running` via:
-```bash
-python {skill_path}/scripts/session_manager.py --update {session-id} --state running
+## Quick Reference
+
+```
+spawn/
+├── SKILL.md           # This file
+├── agent/             # AI agent spawning
+│   ├── SKILL.md
+│   ├── cookbook/      # Per-agent cookbooks
+│   │   ├── claude-code.md
+│   │   ├── codex-cli.md
+│   │   ├── gemini-cli.md
+│   │   ├── cursor-cli.md
+│   │   ├── opencode-cli.md
+│   │   └── copilot-cli.md
+│   └── prompts/       # Reusable prompt templates
+└── terminal/          # Generic CLI spawning
+    ├── SKILL.md
+    └── cookbook/
+        └── cli-command.md
 ```
 
-## Critical Rules
+## Related Skills
 
-- **All agents in ONE message** — spawn all Agent tool calls simultaneously for true parallelism
-- **isolation: "worktree"** is mandatory — each agent needs its own filesystem
-- **Never modify session config** after spawn — agents rely on stable configuration
-- **Each agent gets a unique board post** — dispatch posts are numbered sequentially
+- **orchestration/native-invoke** - Task-based CLI invocation (preferred for automation)
+- **multi-agent-orchestration** - Higher-level provider routing
+- **model-discovery** - Current model names for providers
 
-## After Spawn
+## See Also
 
-Tell the user:
-- {N} agents launched in parallel
-- Each working in an isolated worktree
-- Monitor with `/hub:status`
-- Evaluate when done with `/hub:eval`
+- `.claude/ai-dev-kit/dev-tools/orchestration/providers/` - Shell scripts for each provider
+- `/ai-dev-kit:delegate` - Command for manual delegation

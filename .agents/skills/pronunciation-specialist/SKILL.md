@@ -2,8 +2,7 @@
 name: pronunciation-specialist
 description: Scans lyrics for pronunciation risks and prevents Suno mispronunciations. Use when writing lyrics with proper nouns, technical terms, homographs, or non-English words.
 argument-hint: <track-file-path or paste lyrics to scan>
-model: sonnet
-effort: medium
+model: claude-sonnet-4-6
 prerequisites:
   - lyric-writer
 allowed-tools:

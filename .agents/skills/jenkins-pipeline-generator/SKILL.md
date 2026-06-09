@@ -1,35 +1,23 @@
 ---
-name: "Jenkins Pipeline Generator"
-slug: "jenkins-pipeline-generator"
-description: "Generates declarative Jenkins pipeline scripts using the Jenkins Pipeline Syntax reference and shared library patterns. Integrates with the Jenkins REST API (/api/json) for job configuration and the Blue Ocean API for pipeline visualization."
-github_stars: 25189
-verification: "security_reviewed"
-source: "https://github.com/jenkinsci/jenkins"
-category: "CI/CD Integrations"
-framework: "Custom Agents"
-tool_ecosystem:
-  github_repo: "jenkinsci/jenkins"
-  github_stars: 25189
+name: jenkins-pipeline-generator
+description: Generate Jenkins pipeline files (Jenkinsfile) with declarative or scripted syntax. Triggers on "create jenkinsfile", "generate jenkins pipeline", "jenkins ci config", "jenkins build pipeline".
 ---
 
 # Jenkins Pipeline Generator
 
-Generates declarative Jenkins pipeline scripts using the Jenkins Pipeline Syntax reference and shared library patterns. Integrates with the Jenkins REST API (/api/json) for job configuration and the Blue Ocean API for pipeline visualization.
+Generate Jenkins pipeline files with declarative or scripted syntax.
 
-## Installation
+## Output Requirements
 
-Requirements and caveats from upstream:
-- [![Docker Pulls](https://img.shields.io/docker/pulls/jenkins/jenkins.svg)](https://hub.docker.com/r/jenkins/jenkins/)
-- The Jenkins project provides official distributions as WAR files, Docker images, native packages and installers for platforms including several Linux distributions and Windows.
+**File Output:** `Jenkinsfile`
+**Format:** Valid Jenkins pipeline syntax
+**Standards:** Jenkins Pipeline 2.x
 
-Basic usage or getting-started notes:
-- For more information on setting up your development environment, contributing, and working with Jenkins internals, check the [contributing guide](CONTRIBUTING.md) and the [Jenkins Developer Documentation](https://www....
-- # Source
-- Our latest and greatest source of Jenkins can be found on [GitHub](https://github.com/jenkinsci/jenkins). Fork us!
+## When Invoked
 
-- Source: https://github.com/jenkinsci/jenkins
-- Extracted from upstream docs: https://raw.githubusercontent.com/jenkinsci/jenkins/HEAD/README.md
+Immediately generate a complete Jenkinsfile with stages and deployment.
 
-## Source
+## Example Invocations
 
-- [Agent Skill Exchange](https://agentskillexchange.com/skills/jenkins-pipeline-generator/)
+**Prompt:** "Create Jenkinsfile for Node.js with Docker"
+**Output:** Complete `Jenkinsfile` with build, test, and deploy stages.

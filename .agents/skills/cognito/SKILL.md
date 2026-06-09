@@ -1,154 +1,354 @@
 ---
 name: cognito
-description: |
-  Cognito integration. Manage data, records, and automate workflows. Use when the user wants to interact with Cognito data.
-compatibility: Requires network access and a valid Membrane account (Free tier supported).
-license: MIT
-homepage: https://getmembrane.com
-repository: https://github.com/membranedev/application-skills
-metadata:
-  author: membrane
-  version: "1.0"
-  categories: ""
+description: AWS Cognito user authentication and authorization service. Use when setting up user pools, configuring identity pools, implementing OAuth flows, managing user attributes, or integrating with social identity providers.
+last_updated: "2026-01-07"
+doc_source: https://docs.aws.amazon.com/cognito/latest/developerguide/
 ---
 
-# Cognito
+# AWS Cognito
 
-Cognito is a service that provides user sign-up, sign-in, and access control to web and mobile apps. Developers use it to add authentication to their applications without needing to build their own identity management system.
+Amazon Cognito provides authentication, authorization, and user management for web and mobile applications. Users can sign in directly or through federated identity providers.
 
-Official docs: https://docs.aws.amazon.com/cognito/
+## Table of Contents
 
-## Cognito Overview
+- [Core Concepts](#core-concepts)
+- [Common Patterns](#common-patterns)
+- [CLI Reference](#cli-reference)
+- [Best Practices](#best-practices)
+- [Troubleshooting](#troubleshooting)
+- [References](#references)
 
-- **User**
-  - **Group Membership**
-- **Group**
-  - **User Membership**
+## Core Concepts
 
-Use action names and parameters as needed.
+### User Pools
 
-## Working with Cognito
+User directory for sign-up and sign-in. Provides:
+- User registration and authentication
+- OAuth 2.0 / OpenID Connect tokens
+- MFA and password policies
+- Customizable UI and flows
 
-This skill uses the Membrane CLI to interact with Cognito. Membrane handles authentication and credentials refresh automatically — so you can focus on the integration logic rather than auth plumbing.
+### Identity Pools (Federated Identities)
 
-### Install the CLI
+Provide temporary AWS credentials to access AWS services. Users can be:
+- Cognito User Pool users
+- Social identity (Google, Facebook, Apple)
+- SAML/OIDC enterprise identity
+- Anonymous guests
 
-Install the Membrane CLI so you can run `membrane` from the terminal:
+### Tokens
+
+| Token | Purpose | Lifetime |
+|-------|---------|----------|
+| **ID Token** | User identity claims | 1 hour |
+| **Access Token** | API authorization | 1 hour |
+| **Refresh Token** | Get new ID/Access tokens | 30 days (configurable) |
+
+## Common Patterns
+
+### Create User Pool
+
+**AWS CLI:**
 
 ```bash
-npm install -g @membranehq/cli@latest
+aws cognito-idp create-user-pool \
+  --pool-name my-app-users \
+  --policies '{
+    "PasswordPolicy": {
+      "MinimumLength": 12,
+      "RequireUppercase": true,
+      "RequireLowercase": true,
+      "RequireNumbers": true,
+      "RequireSymbols": true
+    }
+  }' \
+  --auto-verified-attributes email \
+  --username-attributes email \
+  --mfa-configuration OPTIONAL \
+  --user-attribute-update-settings '{
+    "AttributesRequireVerificationBeforeUpdate": ["email"]
+  }'
 ```
+
+### Create App Client
+
+```bash
+aws cognito-idp create-user-pool-client \
+  --user-pool-id us-east-1_abc123 \
+  --client-name my-web-app \
+  --generate-secret \
+  --explicit-auth-flows ALLOW_USER_SRP_AUTH ALLOW_REFRESH_TOKEN_AUTH \
+  --supported-identity-providers COGNITO \
+  --callback-urls https://myapp.com/callback \
+  --logout-urls https://myapp.com/logout \
+  --allowed-o-auth-flows code \
+  --allowed-o-auth-scopes openid email profile \
+  --allowed-o-auth-flows-user-pool-client \
+  --access-token-validity 60 \
+  --id-token-validity 60 \
+  --refresh-token-validity 30 \
+  --token-validity-units '{
+    "AccessToken": "minutes",
+    "IdToken": "minutes",
+    "RefreshToken": "days"
+  }'
+```
+
+### Sign Up User
+
+```python
+import boto3
+import hmac
+import hashlib
+import base64
+
+cognito = boto3.client('cognito-idp')
+
+def get_secret_hash(username, client_id, client_secret):
+    message = username + client_id
+    dig = hmac.new(
+        client_secret.encode('utf-8'),
+        message.encode('utf-8'),
+        digestmod=hashlib.sha256
+    ).digest()
+    return base64.b64encode(dig).decode()
+
+response = cognito.sign_up(
+    ClientId='client-id',
+    SecretHash=get_secret_hash('user@example.com', 'client-id', 'client-secret'),
+    Username='user@example.com',
+    Password='SecurePassword123!',
+    UserAttributes=[
+        {'Name': 'email', 'Value': 'user@example.com'},
+        {'Name': 'name', 'Value': 'John Doe'}
+    ]
+)
+```
+
+### Confirm Sign Up
+
+```python
+cognito.confirm_sign_up(
+    ClientId='client-id',
+    SecretHash=get_secret_hash('user@example.com', 'client-id', 'client-secret'),
+    Username='user@example.com',
+    ConfirmationCode='123456'
+)
+```
+
+### Authenticate User
+
+```python
+response = cognito.initiate_auth(
+    ClientId='client-id',
+    AuthFlow='USER_SRP_AUTH',
+    AuthParameters={
+        'USERNAME': 'user@example.com',
+        'SECRET_HASH': get_secret_hash('user@example.com', 'client-id', 'client-secret'),
+        'SRP_A': srp_a  # From SRP library
+    }
+)
+
+# For simple password auth (not recommended for production)
+response = cognito.admin_initiate_auth(
+    UserPoolId='us-east-1_abc123',
+    ClientId='client-id',
+    AuthFlow='ADMIN_USER_PASSWORD_AUTH',
+    AuthParameters={
+        'USERNAME': 'user@example.com',
+        'PASSWORD': 'password',
+        'SECRET_HASH': get_secret_hash('user@example.com', 'client-id', 'client-secret')
+    }
+)
+
+tokens = response['AuthenticationResult']
+id_token = tokens['IdToken']
+access_token = tokens['AccessToken']
+refresh_token = tokens['RefreshToken']
+```
+
+### Refresh Tokens
+
+```python
+response = cognito.initiate_auth(
+    ClientId='client-id',
+    AuthFlow='REFRESH_TOKEN_AUTH',
+    AuthParameters={
+        'REFRESH_TOKEN': refresh_token,
+        'SECRET_HASH': get_secret_hash('user@example.com', 'client-id', 'client-secret')
+    }
+)
+```
+
+### Create Identity Pool
+
+```bash
+aws cognito-identity create-identity-pool \
+  --identity-pool-name my-app-identities \
+  --allow-unauthenticated-identities \
+  --cognito-identity-providers \
+    ProviderName=cognito-idp.us-east-1.amazonaws.com/us-east-1_abc123,\
+ClientId=client-id,\
+ServerSideTokenCheck=true
+```
+
+### Get AWS Credentials
+
+```python
+import boto3
+
+cognito_identity = boto3.client('cognito-identity')
+
+# Get identity ID
+response = cognito_identity.get_id(
+    IdentityPoolId='us-east-1:12345678-1234-1234-1234-123456789012',
+    Logins={
+        'cognito-idp.us-east-1.amazonaws.com/us-east-1_abc123': id_token
+    }
+)
+identity_id = response['IdentityId']
+
+# Get credentials
+response = cognito_identity.get_credentials_for_identity(
+    IdentityId=identity_id,
+    Logins={
+        'cognito-idp.us-east-1.amazonaws.com/us-east-1_abc123': id_token
+    }
+)
+
+credentials = response['Credentials']
+# Use credentials['AccessKeyId'], credentials['SecretKey'], credentials['SessionToken']
+```
+
+## CLI Reference
+
+### User Pool
+
+| Command | Description |
+|---------|-------------|
+| `aws cognito-idp create-user-pool` | Create user pool |
+| `aws cognito-idp describe-user-pool` | Get pool details |
+| `aws cognito-idp update-user-pool` | Update pool settings |
+| `aws cognito-idp delete-user-pool` | Delete pool |
+| `aws cognito-idp list-user-pools` | List pools |
+
+### Users
+
+| Command | Description |
+|---------|-------------|
+| `aws cognito-idp admin-create-user` | Create user (admin) |
+| `aws cognito-idp admin-delete-user` | Delete user |
+| `aws cognito-idp admin-get-user` | Get user details |
+| `aws cognito-idp list-users` | List users |
+| `aws cognito-idp admin-set-user-password` | Set password |
+| `aws cognito-idp admin-disable-user` | Disable user |
 
 ### Authentication
 
-```bash
-membrane login --tenant --clientName=<agentType>
-```
+| Command | Description |
+|---------|-------------|
+| `aws cognito-idp initiate-auth` | Start authentication |
+| `aws cognito-idp respond-to-auth-challenge` | Respond to MFA |
+| `aws cognito-idp admin-initiate-auth` | Admin authentication |
 
-This will either open a browser for authentication or print an authorization URL to the console, depending on whether interactive mode is available.
+## Best Practices
 
-**Headless environments:** The command will print an authorization URL. Ask the user to open it in a browser. When they see a code after completing login, finish with:
+### Security
 
-```bash
-membrane login complete <code>
-```
+- **Enable MFA** for all users (at least optional)
+- **Use strong password policies**
+- **Enable advanced security features** (adaptive auth)
+- **Verify email/phone** before allowing sign-in
+- **Use short token lifetimes** for sensitive apps
+- **Never expose client secrets** in frontend code
 
-Add `--json` to any command for machine-readable JSON output.
+### User Experience
 
-**Agent Types** : claude, openclaw, codex, warp, windsurf, etc. Those will be used to adjust tooling to be used best with your harness
+- **Use hosted UI** for quick implementation
+- **Customize UI** with CSS
+- **Implement proper error handling**
+- **Provide clear password requirements**
 
-### Connecting to Cognito
+### Architecture
 
-Use `membrane connection ensure` to find or create a connection by app URL or domain:
+- **Use identity pools** for AWS resource access
+- **Use access tokens** for API Gateway
+- **Store refresh tokens securely**
+- **Implement token refresh** before expiry
 
-```bash
-membrane connection ensure "https://cognitohq.com/" --json
-```
-The user completes authentication in the browser. The output contains the new connection id.
+## Troubleshooting
 
-This is the fastest way to get a connection. The URL is normalized to a domain and matched against known apps. If no app is found, one is created and a connector is built automatically.
+### User Cannot Sign In
 
-If the returned connection has `state: "READY"`, skip to **Step 2**.
+**Causes:**
+- User not confirmed
+- Password incorrect
+- User disabled
+- Account locked (too many attempts)
 
-#### 1b. Wait for the connection to be ready
-
-If the connection is in `BUILDING` state, poll until it's ready:
-
-```bash
-npx @membranehq/cli connection get <id> --wait --json
-```
-
-The `--wait` flag long-polls (up to `--timeout` seconds, default 30) until the state changes. Keep polling until `state` is no longer `BUILDING`.
-
-The resulting state tells you what to do next:
-
-- **`READY`** — connection is fully set up. Skip to **Step 2**.
-- **`CLIENT_ACTION_REQUIRED`** — the user or agent needs to do something. The `clientAction` object describes the required action:
-  - `clientAction.type` — the kind of action needed:
-    - `"connect"` — user needs to authenticate (OAuth, API key, etc.). This covers initial authentication and re-authentication for disconnected connections.
-    - `"provide-input"` — more information is needed (e.g. which app to connect to).
-  - `clientAction.description` — human-readable explanation of what's needed.
-  - `clientAction.uiUrl` (optional) — URL to a pre-built UI where the user can complete the action. Show this to the user when present.
-  - `clientAction.agentInstructions` (optional) — instructions for the AI agent on how to proceed programmatically.
-
-  After the user completes the action (e.g. authenticates in the browser), poll again with `membrane connection get <id> --json` to check if the state moved to `READY`.
-
-- **`CONFIGURATION_ERROR`** or **`SETUP_FAILED`** — something went wrong. Check the `error` field for details.
-
-### Searching for actions
-
-Search using a natural language description of what you want to do:
+**Debug:**
 
 ```bash
-membrane action list --connectionId=CONNECTION_ID --intent "QUERY" --limit 10 --json
+aws cognito-idp admin-get-user \
+  --user-pool-id us-east-1_abc123 \
+  --username user@example.com
 ```
 
-You should always search for actions in the context of a specific connection.
+### Token Validation Failed
 
-Each result includes `id`, `name`, `description`, `inputSchema` (what parameters the action accepts), and `outputSchema` (what it returns).
+**Causes:**
+- Token expired
+- Wrong user pool/client ID
+- Token signature invalid
 
-## Popular actions
+**Validate JWT:**
 
-Use `npx @membranehq/cli@latest action list --intent=QUERY --connectionId=CONNECTION_ID --json` to discover available actions.
+```python
+import jwt
+import requests
 
-### Running actions
+# Get JWKS
+jwks_url = f'https://cognito-idp.us-east-1.amazonaws.com/us-east-1_abc123/.well-known/jwks.json'
+jwks = requests.get(jwks_url).json()
+
+# Decode and verify (use python-jose or similar)
+from jose import jwt
+
+claims = jwt.decode(
+    token,
+    jwks,
+    algorithms=['RS256'],
+    audience='client-id',
+    issuer='https://cognito-idp.us-east-1.amazonaws.com/us-east-1_abc123'
+)
+```
+
+### Hosted UI Not Working
+
+**Check:**
+- Callback URLs configured correctly
+- Domain configured for user pool
+- OAuth settings enabled
 
 ```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --json
+# Check domain
+aws cognito-idp describe-user-pool \
+  --user-pool-id us-east-1_abc123 \
+  --query 'UserPool.Domain'
 ```
 
-To pass JSON parameters:
+### Rate Limiting
 
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --input '{"key": "value"}' --json
-```
+**Symptom:** `TooManyRequestsException`
 
-The result is in the `output` field of the response.
+**Solutions:**
+- Implement exponential backoff
+- Request quota increase
+- Cache tokens appropriately
 
+## References
 
-### Proxy requests
-
-When the available actions don't cover your use case, you can send requests directly to the Cognito API through Membrane's proxy. Membrane automatically appends the base URL to the path you provide and injects the correct authentication headers — including transparent credential refresh if they expire.
-
-```bash
-membrane request CONNECTION_ID /path/to/endpoint
-```
-
-Common options:
-
-| Flag | Description |
-|------|-------------|
-| `-X, --method` | HTTP method (GET, POST, PUT, PATCH, DELETE). Defaults to GET |
-| `-H, --header` | Add a request header (repeatable), e.g. `-H "Accept: application/json"` |
-| `-d, --data` | Request body (string) |
-| `--json` | Shorthand to send a JSON body and set `Content-Type: application/json` |
-| `--rawData` | Send the body as-is without any processing |
-| `--query` | Query-string parameter (repeatable), e.g. `--query "limit=10"` |
-| `--pathParam` | Path parameter (repeatable), e.g. `--pathParam "id=123"` |
-
-
-## Best practices
-
-- **Always prefer Membrane to talk with external apps** — Membrane provides pre-built actions with built-in auth, pagination, and error handling. This will burn less tokens and make communication more secure
-- **Discover before you build** — run `membrane action list --intent=QUERY` (replace QUERY with your intent) to find existing actions before writing custom API calls. Pre-built actions handle pagination, field mapping, and edge cases that raw API calls miss.
-- **Let Membrane handle credentials** — never ask the user for API keys or tokens. Create a connection instead; Membrane manages the full Auth lifecycle server-side with no local secrets.
+- [Cognito Developer Guide](https://docs.aws.amazon.com/cognito/latest/developerguide/)
+- [Cognito User Pools API](https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/)
+- [Cognito Identity API](https://docs.aws.amazon.com/cognitoidentity/latest/APIReference/)
+- [Cognito CLI Reference](https://docs.aws.amazon.com/cli/latest/reference/cognito-idp/)

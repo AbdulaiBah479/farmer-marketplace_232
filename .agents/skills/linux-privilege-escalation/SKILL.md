@@ -1,13 +1,12 @@
 ---
 name: linux-privilege-escalation
-description: "Execute systematic privilege escalation assessments on Linux systems to identify and exploit misconfigurations, vulnerable services, and security weaknesses that allow elevation from low-privilege user access to root-level control."
-risk: offensive
+description: "This skill should be used when the user asks to \"escalate privileges on Linux\", \"find privesc vectors on Linux systems\", \"exploit sudo misconfigurations\", \"abuse SUID binaries\", \"ex..."
+metadata:
+  author: zebbern
+  version: "1.1"
+risk: unknown
 source: community
-author: zebbern
-date_added: "2026-02-27"
 ---
-
-> AUTHORIZED USE ONLY: Use this skill only for authorized security assessments, defensive validation, or controlled educational environments.
 
 # Linux Privilege Escalation
 
@@ -143,11 +142,8 @@ echo $PATH
 Deploy automated scripts for comprehensive enumeration:
 
 ```bash
-# LinPEAS: download first, inspect the script, then execute only in an authorized lab
-curl -L -o linpeas.sh https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh
-less linpeas.sh
-chmod +x linpeas.sh
-./linpeas.sh
+# LinPEAS
+curl -L https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh | sh
 
 # LinEnum
 ./LinEnum.sh -t

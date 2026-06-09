@@ -1,6 +1,11 @@
 ---
 name: aussie-business-english
-description: "Australian business English writing style for professional communications — warm, direct, EN-AU spelling (colour, organise, centre). Use whenever the user is writing for an Australian audience: emails, chat messages, proposals, client communications, blog posts, web copy, or any business writing. Apply to drafting, editing, and tone-checking professional text."
+description: >
+  Australian business English writing style for professional communications.
+  Warm, direct, EN-AU spelling. Use when writing emails, chat messages,
+  proposals, client communications, or any business writing for Australian
+  SME audiences. Applies to drafting, editing, and tone-checking any
+  professional text.
 ---
 
 # Aussie Business English
@@ -120,7 +125,7 @@ Avoid in written professional comms:
 > Next up is the contact form and booking system, which we'll have ready by end of next week. I'll send through a preview link once it's live on the staging site.
 >
 > Cheers,
-> [Your name]
+> Jez
 
 ### Delivering a quote
 
@@ -137,7 +142,7 @@ Avoid in written professional comms:
 > Happy to jump on a call if you've got any questions.
 >
 > Cheers,
-> [Your name]
+> Jez
 
 ### Saying no to a request
 
@@ -155,7 +160,7 @@ Avoid in written professional comms:
 > If timing works, we'd be happy to look at it in April. Otherwise, I can recommend a couple of people who might be able to help sooner.
 >
 > Cheers,
-> [Your name]
+> Jez
 
 ## Context Rules
 

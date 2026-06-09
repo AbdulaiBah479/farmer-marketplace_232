@@ -297,27 +297,27 @@ def enforce_mfa():
     """Identify users without MFA"""
     users = iam.list_users()['Users']
     no_mfa = []
-    
+
     for user in users:
         mfa_devices = iam.list_mfa_devices(
             UserName=user['UserName']
         )['MFADevices']
-        
+
         if not mfa_devices:
             no_mfa.append(user['UserName'])
-    
+
     return no_mfa
 
 def rotate_old_keys():
     """Find access keys older than 90 days"""
     users = iam.list_users()['Users']
     old_keys = []
-    
+
     for user in users:
         keys = iam.list_access_keys(
             UserName=user['UserName']
         )['AccessKeyMetadata']
-        
+
         for key in keys:
             age = datetime.now(key['CreateDate'].tzinfo) - key['CreateDate']
             if age.days > 90:
@@ -326,40 +326,40 @@ def rotate_old_keys():
                     'key_id': key['AccessKeyId'],
                     'age_days': age.days
                 })
-    
+
     return old_keys
 
 def find_overpermissive_policies():
     """Find policies with wildcard actions"""
     policies = iam.list_policies(Scope='Local')['Policies']
     overpermissive = []
-    
+
     for policy in policies:
         version = iam.get_policy_version(
             PolicyArn=policy['Arn'],
             VersionId=policy['DefaultVersionId']
         )
-        
+
         doc = version['PolicyVersion']['Document']
         for statement in doc.get('Statement', []):
             if statement.get('Action') == '*':
                 overpermissive.append(policy['PolicyName'])
                 break
-    
+
     return overpermissive
 
 if __name__ == "__main__":
     print("IAM Hardening Report")
     print("=" * 50)
-    
+
     print("\nUsers without MFA:")
     for user in enforce_mfa():
         print(f"  - {user}")
-    
+
     print("\nOld access keys (>90 days):")
     for key in rotate_old_keys():
         print(f"  - {key['user']}: {key['age_days']} days")
-    
+
     print("\nOverpermissive policies:")
     for policy in find_overpermissive_policies():
         print(f"  - {policy}")

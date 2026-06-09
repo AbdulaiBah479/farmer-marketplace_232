@@ -1,98 +1,77 @@
 ---
-name: "coverage"
-description: >-
-  Analyze test coverage gaps. Use when user says "test coverage",
-  "what's not tested", "coverage gaps", "missing tests", "coverage report",
-  or "what needs testing".
+name: coverage
+description: Coverage policy - 90% requirement and exclusion rules
 ---
 
-# Analyze Test Coverage Gaps
+# Coverage Policy
 
-Map all testable surfaces in the application and identify what's tested vs. what's missing.
+## The Requirement
 
-## Steps
+**90% coverage of Lines, Functions, and Branches for the ENTIRE codebase.**
 
-### 1. Map Application Surface
+- 90% of ALL code, not just new code
+- A single uncovered line or branch in ANY file blocks ALL commits
+- Fix ALL gaps before committing
 
-Use the `Explore` subagent to catalog:
+## Decision Framework
 
-**Routes/Pages:**
-- Scan route definitions (Next.js `app/`, React Router config, Vue Router, etc.)
-- List all user-facing pages with their paths
-
-**Components:**
-- Identify interactive components (forms, modals, dropdowns, tables)
-- Note components with complex state logic
-
-**API Endpoints:**
-- Scan API route files or backend controllers
-- List all endpoints with their methods
-
-**User Flows:**
-- Identify critical paths: auth, checkout, onboarding, core features
-- Map multi-step workflows
-
-### 2. Map Existing Tests
-
-Scan all `*.spec.ts` / `*.spec.js` files:
-
-- Extract which pages/routes are covered (by `page.goto()` calls)
-- Extract which components are tested (by locator usage)
-- Extract which API endpoints are mocked or hit
-- Count tests per area
-
-### 3. Generate Coverage Matrix
+When you encounter uncovered code:
 
 ```
-## Coverage Matrix
-
-| Area | Route | Tests | Status |
-|---|---|---|---|
-| Auth | /login | 5 | ✅ Covered |
-| Auth | /register | 0 | ❌ Missing |
-| Auth | /forgot-password | 0 | ❌ Missing |
-| Dashboard | /dashboard | 3 | ⚠️ Partial (no error states) |
-| Settings | /settings | 0 | ❌ Missing |
-| Checkout | /checkout | 8 | ✅ Covered |
+Can this code path execute in production?
+├─ No → ACCEPT exclusion (assert/PANIC only)
+└─ Yes
+   └─ What triggers it?
+      ├─ User input / External data → MUST TEST
+      ├─ Environment / IO failure → WRAP AND MOCK (see mocking skill)
+      ├─ Vendor library error → WRAP AND MOCK
+      ├─ OOM condition → REFACTOR to PANIC (see testability skill)
+      ├─ Function can never fail → REFACTOR res_t to void
+      └─ Broken invariant → REFACTOR to PANIC
 ```
 
-### 4. Prioritize Gaps
+## Exclusion Policy
 
-Rank uncovered areas by business impact:
+### Allowed (LCOV_EXCL_BR_LINE only)
 
-1. **Critical** — auth, payment, core features → test first
-2. **High** — user-facing CRUD, search, navigation
-3. **Medium** — settings, preferences, edge cases
-4. **Low** — static pages, about, terms
+1. **`assert()`** - Compiled out in release builds
+2. **`PANIC()`** - Invariant violations that terminate
 
-### 5. Suggest Test Plan
+Must be single-line. Multi-line blocks require refactoring.
 
-For each gap, recommend:
-- Number of tests needed
-- Which template from `templates/` to use
-- Estimated effort (quick/medium/complex)
+### Never Exclude
 
+- Defensive programming checks (test them)
+- Library error returns (wrap and mock)
+- System call failures (wrap and mock)
+- "Should never happen" branches (PANIC if truly impossible)
+- Any code reachable at runtime
+
+**If it can execute in production, it must be tested.**
+
+## Critical Rules
+
+1. Never use exclusions without explicit user permission
+2. Never change LCOV_EXCL_COVERAGE in Makefile without permission
+3. Never generate HTML coverage reports (slow, unnecessary)
+
+## Incremental Progress
+
+While 90% is the goal, progress toward 90% is valid work:
+- Easy wins first
+- Commit incrementally
+- Respect context limits
+
+## Verification
+
+```bash
+make check-coverage
 ```
-## Recommended Test Plan
 
-### Priority 1: Critical
-1. /register (4 tests) — use auth/registration template — quick
-2. /forgot-password (3 tests) — use auth/password-reset template — quick
+All three metrics must show 90%.
 
-### Priority 2: High
-3. /settings (4 tests) — use settings/ templates — medium
-4. Dashboard error states (2 tests) — use dashboard/data-loading template — quick
-```
+## Related Skills
 
-### 6. Auto-Generate (Optional)
-
-Ask user: "Generate tests for the top N gaps? [Yes/No/Pick specific]"
-
-If yes, invoke `/pw:generate` for each gap with the recommended template.
-
-## Output
-
-- Coverage matrix (table format)
-- Coverage percentage estimate
-- Prioritized gap list with effort estimates
-- Option to auto-generate missing tests
+- `lcov` - Finding gaps, reading coverage files, marker syntax
+- `testability` - Refactoring patterns for hard-to-test code
+- `mocking` - Testing external dependencies

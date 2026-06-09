@@ -1,169 +1,268 @@
 ---
 name: openrouter
-description: |
-  OpenRouter integration. Manage data, records, and automate workflows. Use when the user wants to interact with OpenRouter data.
-compatibility: Requires network access and a valid Membrane account (Free tier supported).
-license: MIT
-homepage: https://getmembrane.com
-repository: https://github.com/membranedev/application-skills
-metadata:
-  author: membrane
-  version: "1.0"
-  categories: ""
+description: Access 100+ AI models via OpenRouter. Route between providers, manage costs, and use fallbacks. Use for multi-model AI applications, cost optimization, and LLM provider abstraction.
 ---
 
 # OpenRouter
 
-OpenRouter is an aggregator for various large language model APIs, providing a single endpoint to access models from multiple providers. Developers use it to easily switch between models like GPT-4, Claude, and others, optimizing for cost, performance, or availability.
+Expert guidance for multi-provider AI model access.
 
-Official docs: https://openrouter.ai/docs
-
-## OpenRouter Overview
-
-- **Models**
-  - **Completions** — Generate text completions from a prompt.
-- **Chat Completions** — Start and manage conversations with AI models.
-- **Images** — Generate images from a text prompt.
-- **Audio**
-  - **Speech** — Synthesize speech from text.
-  - **Transcriptions** — Transcribe audio into text.
-- **Fine-tuning Jobs** — Manage fine-tuning jobs for custom models.
-- **Accounts** — Manage account details and API keys.
-
-## Working with OpenRouter
-
-This skill uses the Membrane CLI to interact with OpenRouter. Membrane handles authentication and credentials refresh automatically — so you can focus on the integration logic rather than auth plumbing.
-
-### Install the CLI
-
-Install the Membrane CLI so you can run `membrane` from the terminal:
+## Installation
 
 ```bash
-npm install -g @membranehq/cli@latest
+pip install openai  # Uses OpenAI-compatible API
 ```
 
-### Authentication
+## Quick Start
 
-```bash
-membrane login --tenant --clientName=<agentType>
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://openrouter.ai/api/v1",
+    api_key="your-openrouter-key"
+)
+
+response = client.chat.completions.create(
+    model="anthropic/claude-3.5-sonnet",
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+
+print(response.choices[0].message.content)
 ```
 
-This will either open a browser for authentication or print an authorization URL to the console, depending on whether interactive mode is available.
+## Available Models
 
-**Headless environments:** The command will print an authorization URL. Ask the user to open it in a browser. When they see a code after completing login, finish with:
+```python
+# Anthropic
+model = "anthropic/claude-3.5-sonnet"
+model = "anthropic/claude-3-opus"
+model = "anthropic/claude-3-haiku"
 
-```bash
-membrane login complete <code>
+# OpenAI
+model = "openai/gpt-4o"
+model = "openai/gpt-4-turbo"
+model = "openai/gpt-3.5-turbo"
+
+# Google
+model = "google/gemini-pro-1.5"
+model = "google/gemini-flash-1.5"
+
+# Meta
+model = "meta-llama/llama-3.1-405b-instruct"
+model = "meta-llama/llama-3.1-70b-instruct"
+
+# Mistral
+model = "mistralai/mistral-large"
+model = "mistralai/mixtral-8x7b-instruct"
+
+# Free models (rate limited)
+model = "meta-llama/llama-3.1-8b-instruct:free"
 ```
 
-Add `--json` to any command for machine-readable JSON output.
+## Request Headers
 
-**Agent Types** : claude, openclaw, codex, warp, windsurf, etc. Those will be used to adjust tooling to be used best with your harness
-
-### Connecting to OpenRouter
-
-Use `membrane connection ensure` to find or create a connection by app URL or domain:
-
-```bash
-membrane connection ensure "https://openrouter.ai/" --json
-```
-The user completes authentication in the browser. The output contains the new connection id.
-
-This is the fastest way to get a connection. The URL is normalized to a domain and matched against known apps. If no app is found, one is created and a connector is built automatically.
-
-If the returned connection has `state: "READY"`, skip to **Step 2**.
-
-#### 1b. Wait for the connection to be ready
-
-If the connection is in `BUILDING` state, poll until it's ready:
-
-```bash
-npx @membranehq/cli connection get <id> --wait --json
+```python
+response = client.chat.completions.create(
+    model="anthropic/claude-3.5-sonnet",
+    messages=[{"role": "user", "content": "Hello!"}],
+    extra_headers={
+        "HTTP-Referer": "https://your-app.com",  # For rankings
+        "X-Title": "Your App Name"  # For identification
+    }
+)
 ```
 
-The `--wait` flag long-polls (up to `--timeout` seconds, default 30) until the state changes. Keep polling until `state` is no longer `BUILDING`.
+## Streaming
 
-The resulting state tells you what to do next:
+```python
+stream = client.chat.completions.create(
+    model="anthropic/claude-3.5-sonnet",
+    messages=[{"role": "user", "content": "Tell me a story"}],
+    stream=True
+)
 
-- **`READY`** — connection is fully set up. Skip to **Step 2**.
-- **`CLIENT_ACTION_REQUIRED`** — the user or agent needs to do something. The `clientAction` object describes the required action:
-  - `clientAction.type` — the kind of action needed:
-    - `"connect"` — user needs to authenticate (OAuth, API key, etc.). This covers initial authentication and re-authentication for disconnected connections.
-    - `"provide-input"` — more information is needed (e.g. which app to connect to).
-  - `clientAction.description` — human-readable explanation of what's needed.
-  - `clientAction.uiUrl` (optional) — URL to a pre-built UI where the user can complete the action. Show this to the user when present.
-  - `clientAction.agentInstructions` (optional) — instructions for the AI agent on how to proceed programmatically.
-
-  After the user completes the action (e.g. authenticates in the browser), poll again with `membrane connection get <id> --json` to check if the state moved to `READY`.
-
-- **`CONFIGURATION_ERROR`** or **`SETUP_FAILED`** — something went wrong. Check the `error` field for details.
-
-### Searching for actions
-
-Search using a natural language description of what you want to do:
-
-```bash
-membrane action list --connectionId=CONNECTION_ID --intent "QUERY" --limit 10 --json
+for chunk in stream:
+    if chunk.choices[0].delta.content:
+        print(chunk.choices[0].delta.content, end="")
 ```
 
-You should always search for actions in the context of a specific connection.
+## Function Calling
 
-Each result includes `id`, `name`, `description`, `inputSchema` (what parameters the action accepts), and `outputSchema` (what it returns).
+```python
+tools = [{
+    "type": "function",
+    "function": {
+        "name": "get_weather",
+        "description": "Get weather for a city",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "city": {"type": "string"}
+            },
+            "required": ["city"]
+        }
+    }
+}]
 
-## Popular actions
+response = client.chat.completions.create(
+    model="openai/gpt-4o",
+    messages=[{"role": "user", "content": "Weather in Paris?"}],
+    tools=tools,
+    tool_choice="auto"
+)
 
-| Name | Key | Description |
-| --- | --- | --- |
-| Get User Activity | get-user-activity |  |
-| Get Model Endpoints | get-model-endpoints |  |
-| Get Models Count | get-models-count |  |
-| Get Generation | get-generation |  |
-| Get Current API Key | get-current-api-key |  |
-| Get Credits | get-credits |  |
-| List Providers | list-providers |  |
-| List Embedding Models | list-embedding-models |  |
-| List Models | list-models |  |
-| Create Embeddings | create-embeddings |  |
-| Create Chat Completion | create-chat-completion |  |
-
-### Running actions
-
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --json
+if response.choices[0].message.tool_calls:
+    for call in response.choices[0].message.tool_calls:
+        print(f"Function: {call.function.name}")
+        print(f"Args: {call.function.arguments}")
 ```
 
-To pass JSON parameters:
+## Provider Routing
 
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --input '{"key": "value"}' --json
+```python
+# Route to specific provider
+response = client.chat.completions.create(
+    model="openai/gpt-4o",  # Explicit provider
+    messages=[{"role": "user", "content": "Hello"}]
+)
+
+# Let OpenRouter choose best provider
+response = client.chat.completions.create(
+    model="gpt-4o",  # OpenRouter routes automatically
+    messages=[{"role": "user", "content": "Hello"}],
+    extra_body={
+        "provider": {
+            "order": ["Azure", "OpenAI"],  # Preferred order
+            "allow_fallbacks": True
+        }
+    }
+)
 ```
 
-The result is in the `output` field of the response.
+## Cost Control
 
+```python
+# Set spending limit per request
+response = client.chat.completions.create(
+    model="anthropic/claude-3.5-sonnet",
+    messages=[{"role": "user", "content": "Hello"}],
+    extra_body={
+        "max_price": {
+            "prompt": 0.01,      # Max $/1K prompt tokens
+            "completion": 0.03   # Max $/1K completion tokens
+        }
+    }
+)
 
-### Proxy requests
-
-When the available actions don't cover your use case, you can send requests directly to the OpenRouter API through Membrane's proxy. Membrane automatically appends the base URL to the path you provide and injects the correct authentication headers — including transparent credential refresh if they expire.
-
-```bash
-membrane request CONNECTION_ID /path/to/endpoint
+# Check usage
+print(f"Prompt tokens: {response.usage.prompt_tokens}")
+print(f"Completion tokens: {response.usage.completion_tokens}")
 ```
 
-Common options:
+## Fallbacks
 
-| Flag | Description |
-|------|-------------|
-| `-X, --method` | HTTP method (GET, POST, PUT, PATCH, DELETE). Defaults to GET |
-| `-H, --header` | Add a request header (repeatable), e.g. `-H "Accept: application/json"` |
-| `-d, --data` | Request body (string) |
-| `--json` | Shorthand to send a JSON body and set `Content-Type: application/json` |
-| `--rawData` | Send the body as-is without any processing |
-| `--query` | Query-string parameter (repeatable), e.g. `--query "limit=10"` |
-| `--pathParam` | Path parameter (repeatable), e.g. `--pathParam "id=123"` |
+```python
+# Define fallback models
+response = client.chat.completions.create(
+    model="anthropic/claude-3.5-sonnet",
+    messages=[{"role": "user", "content": "Hello"}],
+    extra_body={
+        "route": "fallback",
+        "models": [
+            "anthropic/claude-3.5-sonnet",
+            "openai/gpt-4o",
+            "google/gemini-pro-1.5"
+        ]
+    }
+)
+```
 
+## Transforms
 
-## Best practices
+```python
+# Enable prompt transforms for better compatibility
+response = client.chat.completions.create(
+    model="anthropic/claude-3.5-sonnet",
+    messages=[{"role": "user", "content": "Hello"}],
+    extra_body={
+        "transforms": ["middle-out"]  # Compress long prompts
+    }
+)
+```
 
-- **Always prefer Membrane to talk with external apps** — Membrane provides pre-built actions with built-in auth, pagination, and error handling. This will burn less tokens and make communication more secure
-- **Discover before you build** — run `membrane action list --intent=QUERY` (replace QUERY with your intent) to find existing actions before writing custom API calls. Pre-built actions handle pagination, field mapping, and edge cases that raw API calls miss.
-- **Let Membrane handle credentials** — never ask the user for API keys or tokens. Create a connection instead; Membrane manages the full Auth lifecycle server-side with no local secrets.
+## Get Model Info
+
+```python
+import requests
+
+# List all models
+response = requests.get(
+    "https://openrouter.ai/api/v1/models",
+    headers={"Authorization": f"Bearer {api_key}"}
+)
+
+models = response.json()["data"]
+for model in models[:5]:
+    print(f"{model['id']}: ${model['pricing']['prompt']}/1K tokens")
+```
+
+## Check Credits
+
+```python
+import requests
+
+response = requests.get(
+    "https://openrouter.ai/api/v1/auth/key",
+    headers={"Authorization": f"Bearer {api_key}"}
+)
+
+info = response.json()
+print(f"Credits remaining: ${info['data']['limit'] - info['data']['usage']}")
+```
+
+## Async Usage
+
+```python
+import asyncio
+from openai import AsyncOpenAI
+
+async def main():
+    client = AsyncOpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key="your-key"
+    )
+
+    response = await client.chat.completions.create(
+        model="anthropic/claude-3.5-sonnet",
+        messages=[{"role": "user", "content": "Hello!"}]
+    )
+    print(response.choices[0].message.content)
+
+asyncio.run(main())
+```
+
+## LangChain Integration
+
+```python
+from langchain_openai import ChatOpenAI
+
+llm = ChatOpenAI(
+    model="anthropic/claude-3.5-sonnet",
+    openai_api_base="https://openrouter.ai/api/v1",
+    openai_api_key="your-openrouter-key",
+    model_kwargs={
+        "extra_headers": {
+            "HTTP-Referer": "https://your-app.com"
+        }
+    }
+)
+
+response = llm.invoke("Hello!")
+```
+
+## Resources
+
+- [OpenRouter Documentation](https://openrouter.ai/docs)
+- [Model List](https://openrouter.ai/models)
+- [API Reference](https://openrouter.ai/docs/api-reference)

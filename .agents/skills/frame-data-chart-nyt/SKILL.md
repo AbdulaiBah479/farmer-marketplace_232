@@ -3,9 +3,7 @@ name: frame-data-chart-nyt
 zh_name: "NYT 风数据图表帧"
 en_name: "NYT-Style Data Chart Frame"
 emoji: "📈"
-description: "NYT-newsroom typography, staggered reveal animation, and editorial-grade charts (line, bar, or range band)."
-zh_description: "NYT-newsroom 排版 + 错峰揭示动画 + 编辑级图表 (折线/柱/范围带)"
-en_description: "NYT-newsroom typography, staggered reveal animation, and editorial-grade charts (line, bar, or range band)."
+description: "NYT-newsroom 排版 + 错峰揭示动画 + 编辑级图表 (折线/柱/范围带)"
 category: video
 scenario: video
 aspect_hint: "1920×1080 (16:9)"
@@ -18,20 +16,6 @@ example_tagline: "编辑级图表 + 错峰揭示"
 example_desc: "8 年周活跃用户折线 + NYT red accent + 注释 mono"
 example_source_url: "https://hyperframes.heygen.com/catalog"
 example_source_label: "hyperframes · data-chart"
-od:
-  mode: video
-  surface: video
-  scenario: video
-  upstream: "https://github.com/nexu-io/html-anything"
-  preview:
-    type: html
-    entry: index.html
-    reload: debounce-100
-  design_system:
-    requires: false
-  example_prompt: "Use the NYT-Style Data Chart Frame template to turn my content into a frame with NYT-newsroom typography, staggered reveal animation, and editorial-grade charts. Preserve the template's visual signature, use real content and data, and avoid lorem ipsum or placeholder images."
-  example_prompt_i18n:
-    zh-CN: "用「NYT 风数据图表帧」模板把我的内容做成一段「NYT-newsroom 排版 + 错峰揭示动画 + 编辑级图表 (折线/柱/范围带)」。保持模板的视觉签名，使用真实内容和数据，避免 lorem ipsum 和占位图片。"
 ---
 
 【模板: NYT 风数据图表帧】

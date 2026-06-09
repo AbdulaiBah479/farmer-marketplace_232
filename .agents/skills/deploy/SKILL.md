@@ -1,58 +1,45 @@
 ---
 name: deploy
-description: Builds and deploys a Power Apps code app to Power Platform. Use when deploying changes, redeploying an existing app, or pushing updates.
-user-invocable: true
-allowed-tools: Read, Edit, Write, Grep, Glob, Bash
+description: Deploy workflow for Vercel and Supabase Edge Functions
+allowed-tools: Bash
 model: sonnet
+user-invocable: false
 ---
 
-**📋 Shared Instructions: [shared-instructions.md](${CLAUDE_PLUGIN_ROOT}/shared/shared-instructions.md)** - Cross-cutting concerns.
+# Deploy Workflow
 
-# Deploy
+## Pre-deploy Checklist
+1. `npm run typecheck` - passes
+2. `npm run build` - passes
+3. `npm run test` - passes (if available)
+4. No `console.log` in production code
+5. Environment variables set in hosting platform
 
-Builds and deploys the app in the current directory to Power Platform.
+## Vercel
 
-## Workflow
-
-1. Check Memory Bank → 2. Build → 3. Deploy → 4. Update Memory Bank
-
----
-
-### Step 1: Check Memory Bank
-
-Check for `memory-bank.md` in the project root. If found, read it for the project name and environment. If not found, proceed — the project may have been created without the plugin.
-
-### Step 2: Build
-
+**Preview:**
 ```bash
-npm run build
+npx vercel --yes
 ```
 
-If the build fails:
-
-- **TS6133 (unused import)**: Remove the unused import and retry.
-- **Other TypeScript errors**: Report the error with the file and line number and stop. Do not deploy a broken build.
-
-Verify `dist/` exists with `index.html` before continuing.
-
-### Step 3: Deploy
-
-Ask the user: _"Ready to deploy to [environment name]? This will update the live app."_ Wait for explicit confirmation before proceeding.
-
+**Production:**
 ```bash
-npx power-apps push
+npx vercel --prod --yes
 ```
 
-Capture the app URL from the output if present.
+## Supabase Edge Functions
 
-If deploy fails, report the error and stop — do not retry silently. Common fixes:
+**Single function:**
+```bash
+supabase functions deploy [name] --project-ref [ref]
+```
 
-- Auth error / token expired → `npx power-apps logout`, then retry — the CLI will re-prompt browser login.
-- Environment mismatch → update `environmentId` in `power.config.json` to the correct value and retry.
+**All functions:**
+```bash
+supabase functions deploy --project-ref [ref]
+```
 
-### Step 4: Update Memory Bank
-
-If `memory-bank.md` exists, update:
-
-- Last deployed timestamp
-- App URL (if captured)
+## Post-deploy
+1. Verify production URL loads
+2. Test critical user flows
+3. Monitor error logs for 5 minutes

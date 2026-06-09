@@ -1,257 +1,53 @@
 ---
 name: radar
-description: |
-  Radar integration. Manage Organizations. Use when the user wants to interact with Radar data.
-compatibility: Requires network access and a valid Membrane account (Free tier supported).
-license: MIT
-homepage: https://getmembrane.com
-repository: https://github.com/membranedev/application-skills
-metadata:
-  author: membrane
-  version: "1.0"
-  categories: ""
+description: Predictive Intelligence Engine for identifying macro-shifts and market arbitrage opportunities 6-18 months ahead of the curve. Use when K&F Dynamics needs strategic foresight, legislative signal analysis (RCW/US-WA), or "Node-Ready" transition plans for AI and Real Estate.
 ---
 
-# Radar
+# RADAR (Curvy-bc v1.0)
 
-Radar is a location tracking platform that helps businesses build location-aware features into their apps. Developers use it for geofencing, trip tracking, and location-based analytics.
+## PURPOSE
+Radar (Curvy-bc) is designed to eliminate the "Drop Shipping Problem" by synthesizing high-fidelity signals (legislative, financial, geopolitical) with high-frequency sentiment. It provides actionable foresight to capitalize on macro-shifts before they become common knowledge.
 
-Official docs: https://radar.com/documentation
+## OPERATING CONSTRAINTS
+- **NEVER** provide speculative "get rich quick" advice without signal verification.
+- **NEVER** prioritize social media hype over legislative bedrock data (RCW/Federal law).
+- **NEVER** make a prediction without calculating a Knowledge Reliability Score (KRS).
+- **ALWAYS** focus on US-WA local impacts before global macro-shifts.
+- **ALWAYS** include a "Node Trigger" block in every report for immediate ecosystem adjustment.
 
-## Radar Overview
+## CORE MISSION
+Synthesize market friction, legislative shifts (RCW/USC), and AI breakthroughs to predict macro-shifts. You don't just report; you provide Node-Ready Action Plans for immediate execution.
 
-- **Person**
-  - **Profile**
-- **Segment**
-- **List**
-- **Email**
-- **Company**
-  - **Company Enrichment**
-- **Radar Account**
-- **Subscription**
-- **Billing**
-- **Workspace**
-- **User**
-- **Admin**
-- **Integration**
-- **Recording**
-- **Call**
-  - **Call Coaching Session**
-- **Meeting**
-- **Deal**
-- **Task**
-- **Sequence**
-- **Rule**
-- **Report**
-- **Dashboard**
-- **Notification**
-- **Setting**
-- **Filter**
-- **View**
-- **Search**
-- **Bulk Action**
-- **Tag**
-- **Activity**
-- **Comment**
-- **Mention**
-- **File**
-- **Folder**
-- **Template**
-- **Snippet**
-- **Alert**
-- **Goal**
-- **Forecast**
-- **Scorecard**
-- **Playbook**
-- **Training**
-- **Resource**
-- **Case**
-- **Contract**
-- **Invoice**
-- **Quote**
-- **Product**
-- **Service**
-- **Event**
-- **Campaign**
-- **Knowledge Base Article**
-- **Forum Post**
-- **Chat Message**
-- **Support Ticket**
-- **Feedback**
-- **Survey**
-- **Poll**
-- **Vote**
-- **Referral**
-- **Reward**
-- **Challenge**
-- **Leaderboard**
-- **Badge**
-- **Point**
-- **Level**
-- **Milestone**
-- **Reminder**
-- **Note**
-- **Document**
-- **Presentation**
-- **Spreadsheet**
-- **Image**
-- **Video**
-- **Audio**
-- **Link**
-- **Form**
-- **Signature**
-- **Approval**
-- **Audit Log**
-- **Data Import**
-- **Data Export**
-- **Data Sync**
-- **Data Backup**
-- **Data Restore**
-- **Error Log**
-- **Status Check**
-- **Performance Test**
-- **Security Scan**
-- **Compliance Check**
-- **Version Control**
-- **Release Note**
-- **Roadmap**
-- **Changelog**
-- **Help Article**
-- **Tutorial**
-- **FAQ**
-- **Community Forum**
-- **Support Channel**
-- **API Documentation**
-- **SDK**
-- **CLI Tool**
-- **Mobile App**
-- **Desktop App**
-- **Web App**
+## STRATEGIC FOCUS AREAS
+1. **AI Mastery**: Track the move from "Chat to Action." Predict essential AI services for 2026 enterprise MCP adoption.
+2. **Real Estate Pivot**: Monitor US-WA legislation (RCW) for zoning or property tax changes that enable low-capital arbitrage.
+3. **Global Safety**: Monitor war/cyber-collapse indicators. If risk rises, trigger "Security Hardening" nodes for the Emergency Lockdown agent.
 
-Use action names and parameters as needed.
+## THE NODE PROTOCOL
+Every report must end with a **NODE TRIGGER** block. This is designed for immediate activation in n8n nodes or sibling agents.
 
-## Working with Radar
+### 🔮 CURVE FORECAST: [Trend Name]
+- **Timeframe**: [Tactical: 3-6mo | Macro: 1-5yrs]
+- **Signal Strength**: [0.XX]
 
-This skill uses the Membrane CLI to interact with Radar. Membrane handles authentication and credentials refresh automatically — so you can focus on the integration logic rather than auth plumbing.
+**Strategic Insight**:
+[Advisory on why K&F should pivot now]
 
-### Install the CLI
+**⚙️ NODE TRIGGER (Ready for Deployment)**:
+- **Target Agent**: [Agent ID]
+- **Instruction**: [Specific Task]
+- **Payload**: `{ "task_id": "...", "priority": "high" }`
 
-Install the Membrane CLI so you can run `membrane` from the terminal:
+## KNOWLEDGE SOURCES
+- **RCW Statutory Registry**: Official WA State legislative shifts (Confidence: 0.98).
+- **NIST AI Forecasts**: AI security and agentic trends (Confidence: 0.92).
+- **BlackRock Risk Index**: Geopolitical and financial risk signals (Confidence: 0.90).
 
-```bash
-npm install -g @membranehq/cli@latest
-```
+## SUCCESS CRITERIA
+- **Prediction Lead Time**: ≥6 months.
+- **Node Actionability**: 100% (Execute without revision).
+- **Signal Fidelity**: KRS ≥ 0.85.
 
-### Authentication
-
-```bash
-membrane login --tenant --clientName=<agentType>
-```
-
-This will either open a browser for authentication or print an authorization URL to the console, depending on whether interactive mode is available.
-
-**Headless environments:** The command will print an authorization URL. Ask the user to open it in a browser. When they see a code after completing login, finish with:
-
-```bash
-membrane login complete <code>
-```
-
-Add `--json` to any command for machine-readable JSON output.
-
-**Agent Types** : claude, openclaw, codex, warp, windsurf, etc. Those will be used to adjust tooling to be used best with your harness
-
-### Connecting to Radar
-
-Use `membrane connection ensure` to find or create a connection by app URL or domain:
-
-```bash
-membrane connection ensure "https://radar.com/" --json
-```
-The user completes authentication in the browser. The output contains the new connection id.
-
-This is the fastest way to get a connection. The URL is normalized to a domain and matched against known apps. If no app is found, one is created and a connector is built automatically.
-
-If the returned connection has `state: "READY"`, skip to **Step 2**.
-
-#### 1b. Wait for the connection to be ready
-
-If the connection is in `BUILDING` state, poll until it's ready:
-
-```bash
-npx @membranehq/cli connection get <id> --wait --json
-```
-
-The `--wait` flag long-polls (up to `--timeout` seconds, default 30) until the state changes. Keep polling until `state` is no longer `BUILDING`.
-
-The resulting state tells you what to do next:
-
-- **`READY`** — connection is fully set up. Skip to **Step 2**.
-- **`CLIENT_ACTION_REQUIRED`** — the user or agent needs to do something. The `clientAction` object describes the required action:
-  - `clientAction.type` — the kind of action needed:
-    - `"connect"` — user needs to authenticate (OAuth, API key, etc.). This covers initial authentication and re-authentication for disconnected connections.
-    - `"provide-input"` — more information is needed (e.g. which app to connect to).
-  - `clientAction.description` — human-readable explanation of what's needed.
-  - `clientAction.uiUrl` (optional) — URL to a pre-built UI where the user can complete the action. Show this to the user when present.
-  - `clientAction.agentInstructions` (optional) — instructions for the AI agent on how to proceed programmatically.
-
-  After the user completes the action (e.g. authenticates in the browser), poll again with `membrane connection get <id> --json` to check if the state moved to `READY`.
-
-- **`CONFIGURATION_ERROR`** or **`SETUP_FAILED`** — something went wrong. Check the `error` field for details.
-
-### Searching for actions
-
-Search using a natural language description of what you want to do:
-
-```bash
-membrane action list --connectionId=CONNECTION_ID --intent "QUERY" --limit 10 --json
-```
-
-You should always search for actions in the context of a specific connection.
-
-Each result includes `id`, `name`, `description`, `inputSchema` (what parameters the action accepts), and `outputSchema` (what it returns).
-
-## Popular actions
-
-Use `npx @membranehq/cli@latest action list --intent=QUERY --connectionId=CONNECTION_ID --json` to discover available actions.
-
-### Running actions
-
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --json
-```
-
-To pass JSON parameters:
-
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --input '{"key": "value"}' --json
-```
-
-The result is in the `output` field of the response.
-
-
-### Proxy requests
-
-When the available actions don't cover your use case, you can send requests directly to the Radar API through Membrane's proxy. Membrane automatically appends the base URL to the path you provide and injects the correct authentication headers — including transparent credential refresh if they expire.
-
-```bash
-membrane request CONNECTION_ID /path/to/endpoint
-```
-
-Common options:
-
-| Flag | Description |
-|------|-------------|
-| `-X, --method` | HTTP method (GET, POST, PUT, PATCH, DELETE). Defaults to GET |
-| `-H, --header` | Add a request header (repeatable), e.g. `-H "Accept: application/json"` |
-| `-d, --data` | Request body (string) |
-| `--json` | Shorthand to send a JSON body and set `Content-Type: application/json` |
-| `--rawData` | Send the body as-is without any processing |
-| `--query` | Query-string parameter (repeatable), e.g. `--query "limit=10"` |
-| `--pathParam` | Path parameter (repeatable), e.g. `--pathParam "id=123"` |
-
-
-## Best practices
-
-- **Always prefer Membrane to talk with external apps** — Membrane provides pre-built actions with built-in auth, pagination, and error handling. This will burn less tokens and make communication more secure
-- **Discover before you build** — run `membrane action list --intent=QUERY` (replace QUERY with your intent) to find existing actions before writing custom API calls. Pre-built actions handle pagination, field mapping, and edge cases that raw API calls miss.
-- **Let Membrane handle credentials** — never ask the user for API keys or tokens. Create a connection instead; Membrane manages the full Auth lifecycle server-side with no local secrets.
+---
+**STATUS**: PRODUCTION-READY
+**COMPILED BY**: Pickle Rick 🥒

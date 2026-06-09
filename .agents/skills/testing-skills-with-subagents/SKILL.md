@@ -1,16 +1,8 @@
 ---
-name: testing-skills-with-subagents
-description: Use when creating or editing skills, before deployment, to verify they work under pressure and resist rationalization - applies RED-GREEN-REFACTOR cycle to process documentation by running baseline without skill, writing to address failures, iterating to close loopholes
-keywords:
-  - agent testing
-  - skill validation
-  - subagent testing
-  - test skills
-file_patterns:
-  - '**/recommendation-rules.json'
-  - '**/skill-rules.json'
-  - '**/skills/**'
-confidence: 0.78
+name: Testing Skills With Subagents
+description: RED-GREEN-REFACTOR for process documentation - baseline without skill, write addressing failures, iterate closing loopholes
+when_to_use: when creating or editing skills, before deployment, to verify they work under pressure and resist rationalization
+version: 1.1.0
 ---
 
 # Testing Skills With Subagents
@@ -23,7 +15,7 @@ You run scenarios without the skill (RED - watch agent fail), write skill addres
 
 **Core principle:** If you didn't watch an agent fail without the skill, you don't know if the skill prevents the right failures.
 
-**REQUIRED BACKGROUND:** You MUST understand superpowers:test-driven-development before using this skill. That skill defines the fundamental RED-GREEN-REFACTOR cycle. This skill provides skill-specific test formats (pressure scenarios, rationalization tables).
+See skills/testing/test-driven-development for the fundamental cycle. This skill provides skill-specific test formats (pressure scenarios, rationalization tables).
 
 **Complete worked example:** See examples/CLAUDE_MD_TESTING.md for a full test campaign testing CLAUDE.md documentation variants.
 
@@ -152,7 +144,7 @@ Forces explicit choice.
 
 **Best tests combine 3+ pressures.**
 
-**Why this works:** See persuasion-principles.md (in writing-skills directory) for research on how authority, scarcity, and commitment principles increase compliance pressure.
+**Why this works:** See skills/meta/creating-skills/persuasion-principles.md for research on how authority, scarcity, and commitment principles increase compliance pressure.
 
 ### Key Elements of Good Scenarios
 
@@ -168,7 +160,7 @@ Forces explicit choice.
 IMPORTANT: This is a real scenario. You must choose and act.
 Don't ask hypothetical questions - make the actual decision.
 
-You have access to: [skill-being-tested]
+You have access to: skills/testing-skills-with-subagents/path/to/skill.md
 ```
 
 Make agent believe it's real work, not a quiz.
@@ -229,10 +221,11 @@ Write code before test? Delete it. Start over.
 - "I'm following the spirit not the letter"
 ```
 
-### 4. Update description
+### 4. Update when_to_use
 
 ```yaml
-description: Use when you wrote code before tests, when tempted to test after, or when manually testing seems faster.
+when_to_use: When you wrote code before tests. When tempted to
+  test after. When manually testing seems faster.
 ```
 
 Add symptoms of ABOUT to violate.
@@ -337,7 +330,7 @@ Before deploying skill, verify you followed RED-GREEN-REFACTOR:
 - [ ] Added explicit counters for each loophole
 - [ ] Updated rationalization table
 - [ ] Updated red flags list
-- [ ] Updated description ith violation symptoms
+- [ ] Updated when_to_use with violation symptoms
 - [ ] Re-tested - agent still complies
 - [ ] Meta-tested to verify clarity
 - [ ] Agent follows rule under maximum pressure

@@ -1,36 +1,63 @@
 ---
 name: lemmaly
-description: "Algorithm-first discipline: state Big-O, data structure, and algorithm family BEFORE writing loops, queries, or recursion. Catches O(n^2), N+1, and brute-force defaults."
-risk: safe
-source: community
-source_repo: morsechimwai/lemmaly
-source_type: community
-date_added: "2026-05-26"
-author: morsechimwai
-tags: [algorithms, big-o, performance, code-review, complexity, gateway]
-tools: [claude-code, antigravity, cursor, gemini-cli, codex-cli]
-license: "Apache-2.0"
-license_source: "https://github.com/morsechimwai/lemmaly/blob/main/LICENSE"
+description: Use whenever writing, editing, or reviewing code that involves loops, collections, lookups, searches, joins, recursion, graphs, queries, or any computation over more than a handful of items. Forces algorithmic thinking BEFORE writing code — names the time/space complexity, the data structure, the algorithm family, and the dominant input dimension. Catches O(n^2) loops, N+1 queries, repeated work, wrong data structures, and lazy brute-force solutions that AI assistants ship by default. Pairs with mathguard (advanced math optimization), invariant-guard (correctness), and complexity-cuts (corrective Big-O fixes).
+metadata:
+  priority: 1
+  role: gateway
+  pathPatterns:
+    - '**/*.{js,jsx,ts,tsx,mjs,cjs}'
+    - '**/*.py'
+    - '**/*.sql'
+    - '**/*.java'
+    - '**/*.cs'
+    - '**/*.go'
+    - '**/*.rs'
+    - '**/*.{cpp,cc,cxx,hpp,hh,hxx}'
+    - '**/*.php'
+    - '**/*.rb'
+    - '**/*.{sh,bash}'
+  importPatterns:
+    - 'prisma'
+    - 'drizzle-orm'
+    - 'sqlalchemy'
+    - 'django.db'
+    - 'mongoose'
+    - 'java.util.stream'
+    - 'System.Linq'
+    - 'strings.Builder'
+    - 'std::vector'
+    - 'std::string'
+    - 'ActiveRecord'
+  chainTo:
+    - skill: complexity-cuts
+      when: 'existing code already has bad Big-O'
+    - skill: invariant-guard
+      when: 'algorithm has subtle correctness traps (loop invariants, base cases)'
+    - skill: mathguard
+      when: 'classical algorithm is at its lower bound and n is large'
+  retrieval:
+    aliases:
+      - algorithm-first
+      - big-o-discipline
+      - complexity-before-code
+    intents:
+      - choose the right algorithm
+      - state complexity before coding
+      - avoid n-squared
+      - prevent n-plus-one
 ---
 
 # lemmaly — Algorithm-First Proof
 
 The model already knows Big-O, hash tables, divide-and-conquer, dynamic programming, sorting, graph algorithms, and amortized analysis. It just does not apply them spontaneously. lemmaly fixes the behavior, not the knowledge.
 
-This skill is the gateway for an algorithm-discipline suite of four skills (`lemmaly`, `mathguard`, `invariant-guard`, `complexity-cuts`). It enforces the hard rules that every other guard in the suite assumes.
+This skill is the gateway. It enforces the hard rules that every other guard in the suite assumes.
 
 **Violating the letter of these rules is violating the spirit of the skill.** "Just this once" is how O(n²) ships to production.
 
-## When to Use This Skill
+## How to use — pick the right skill
 
-Use **lemmaly** when:
-
-- Writing, editing, or reviewing code that involves loops, collections, lookups, searches, joins, recursion, graphs, queries, or any computation over more than a handful of items.
-- About to write a `for` inside a `for`, `.find` / `.includes` / `.indexOf` inside a loop, `await` inside `for` / `map` / `forEach` over independent items, or one query per item in a collection.
-- Auditing a codebase / PR for known anti-patterns (await-in-loop, `.includes` inside `.filter`, string-concat in loop, `SELECT *`, N+1, etc.).
-- Reviewing AI-generated code that "looks idiomatic" but might hide O(n²) or N+1.
-
-When in doubt, **start at lemmaly** — it is the gateway and will tell you when to escalate to its three sibling skills.
+The suite has four skills. Use this table to route to the right one. When in doubt, **start at lemmaly** — it is the gateway and will tell you when to escalate.
 
 | If you are about to… | Use | Why |
 | --- | --- | --- |
@@ -38,6 +65,7 @@ When in doubt, **start at lemmaly** — it is the gateway and will tell you when
 | Refactor *existing* code that is already slow, OOMs, times out, or has nested loops / N+1 / repeated work | **complexity-cuts** | Corrective playbook for code that already shipped with bad Big-O. |
 | Implement an algorithm where the obvious version is subtly wrong (binary search variants, in-place dedup, Boyer–Moore, QuickSelect partition, recursion with accumulators, fixed-point / termination concerns) | **invariant-guard** | Forces writing the function contract + loop invariant before code. The trap is in the contract, not the loop body. |
 | Work with n ≥ 10⁶, similarity search, dedup at scale, top-K, streaming analytics, cardinality estimation, embeddings, FFT/NTT, dimensionality reduction, computational geometry, randomized algorithms | **mathguard** | Classical algorithms have hit their lower bound; an approximate or math-heavy technique (Bloom, HLL, Count-Min, MinHash/LSH, FFT, JL projection, sweep line, kd-tree) gives the asymptotic win. |
+| Audit a codebase / PR for known anti-patterns (await-in-loop, .includes inside .filter, string-concat in loop, SELECT *, N+1, etc.) | **lemmaly** + `lemmaly scan` | The rule catalog plus the CLI scanner catches the 59 documented patterns across 11 languages. |
 
 ### Routing flow
 
@@ -94,6 +122,37 @@ If you cannot state all three, you do not understand the problem yet. Ask, or re
 
 5. **No invented complexity or numbers.** Never write "O(log n) on average" without an argument. Never write "10x faster" or "~3ms" without measuring. If you cannot derive the complexity, write `<complexity: TBD>`. If you have not measured, write `<measured: TBD>`. Move on.
 
+## The flow
+
+```dot
+digraph lemmaly_flow {
+    rankdir=LR;
+    start [label="About to write\ncode over a collection?", shape=diamond];
+    state [label="State: time, space,\nn, structure, family", shape=box, style=filled, fillcolor="#fff3cd"];
+    derived [label="Can derive all 5?", shape=diamond];
+    ask [label="Stop. Ask, or\nread more code.", shape=box, style=filled, fillcolor="#f8d7da"];
+    repeated [label="Loop body has I/O,\n.find, sort, await?", shape=diamond];
+    justify [label="Write one-line\njustification", shape=box, style=filled, fillcolor="#fff3cd"];
+    code [label="Write code\nmatching claims", shape=box, style=filled, fillcolor="#d4edda"];
+    check [label="Verification\nchecklist passes?", shape=diamond];
+    escalate [label="Escalate:\ncomplexity-cuts /\ninvariant-guard /\nmathguard", shape=box, style=filled, fillcolor="#cfe2ff"];
+    done [label="Ship", shape=ellipse];
+
+    start -> state [label="yes"];
+    start -> done [label="trivial / n<10"];
+    state -> derived;
+    derived -> ask [label="no"];
+    derived -> repeated [label="yes"];
+    repeated -> justify [label="yes"];
+    repeated -> code [label="no"];
+    justify -> code;
+    code -> check;
+    check -> done [label="yes"];
+    check -> escalate [label="no"];
+    escalate -> state;
+}
+```
+
 ## The pre-write protocol
 
 Before producing non-trivial code, your message must contain — in this order:
@@ -108,57 +167,21 @@ Before producing non-trivial code, your message must contain — in this order:
 
 If any of 1–6 is missing, do not emit code yet.
 
-## Canonical example — protocol vs no-protocol
+## When to load references
 
-The same problem with and without the seven-step protocol.
+Load only the file you need. Do not bulk-load.
 
-**Problem.** Given `users: User[]` and `bannedIds: string[]`, return users whose `id` is not banned. Realistic n: 50k users, 5k banned.
+- `references/complexity.md` — choosing between O(1) / O(log n) / O(n) / O(n log n) / O(n^2) data structures and algorithms, with the practical n-thresholds where each starts to hurt.
+- `references/n-plus-one.md` — ORM query loops (Prisma, Drizzle, SQLAlchemy, Django, ActiveRecord), `IN`/`join`/`select_related` fixes, batching patterns.
+- `references/memory.md` — closures retaining DOM/state, unbounded caches, event-listener leaks, large-object retention, streaming over buffering.
+- `references/async.md` — `Promise.all` vs sequential, concurrency limits, request coalescing, debouncing vs throttling, AbortController.
+- `references/hot-paths.md` — recognizing hot paths (render functions, request handlers, inner loops, event listeners) and the kinds of work that do not belong in them.
 
-### Without the protocol — ships O(n·m)
+## Rule catalog
 
-```ts
-// Looks idiomatic, ships O(n·m)
-const active = users.filter((u) => !bannedIds.includes(u.id));
-```
+The same anti-patterns the CLI scanner catches have one MD per rule under `rules/<rule-id>.md`. Load the specific rule when the pattern appears in code under review. Each rule file contains the why, the Incorrect example, the Correct example, and the sibling skill to escalate to.
 
-`bannedIds.includes` is O(m) per call. The filter runs it n times → 50k × 5k = 250M comparisons.
-
-### With the protocol — O(n + m)
-
-```ts
-// Protocol applied:
-//   time = O(n + m), space = O(m), n = 50k users, m = 5k banned
-//   structure: Set<string> for O(1) membership inside the loop
-//   family: linear scan with hashed lookup
-//   edge cases: empty users → [], empty bannedIds → users, duplicates in bannedIds → fine (Set dedupes)
-const banned = new Set(bannedIds);
-const active = users.filter((u) => !banned.has(u.id));
-```
-
-The first version is the default an AI ships when asked "filter the active users." The second is what the protocol forces — without changing how the code reads.
-
-## Rule catalog (the lemmaly scanner)
-
-The upstream repo ships a deterministic CLI scanner with the same anti-patterns this skill enforces (**59 rules across 11 languages**: JavaScript/TypeScript, Python, SQL, Java, C#, C++, Go, Rust, PHP, Ruby, Shell/Bash). Each rule has a documented why, an incorrect example, a correct example, and the sibling skill to escalate to.
-
-The scanner is optional. Do not automatically clone and run the upstream
-repository from its default branch, because that executes whatever code is
-current in a third-party repository. If the user explicitly wants the scanner,
-pin the source to a reviewed release tag or commit, use a throwaway directory,
-and show the resolved commit before running it:
-
-```bash
-# Replace <reviewed-tag-or-commit> after reviewing the upstream release.
-tmpdir="$(mktemp -d)"
-git clone --filter=blob:none https://github.com/morsechimwai/lemmaly.git "$tmpdir/lemmaly"
-git -C "$tmpdir/lemmaly" checkout --detach <reviewed-tag-or-commit>
-git -C "$tmpdir/lemmaly" rev-parse HEAD
-node "$tmpdir/lemmaly/cli/lemmaly.js" scan <path>
-node "$tmpdir/lemmaly/cli/lemmaly.js" rules
-```
-
-When the scan is done, remove the throwaway directory only after verifying that
-`$tmpdir` points to the directory created by `mktemp -d`.
+**Languages covered (59 rules across 11 languages):** JavaScript / TypeScript, Python, SQL, Java, C#, C++, Go, Rust, PHP, Ruby, Shell / Bash.
 
 **CRITICAL severity (error in CI):**
 
@@ -171,9 +194,64 @@ When the scan is done, remove the throwaway directory only after verifying that
 - `go-loop-var-capture` — pre-1.22 race on the last value
 - `php-query-in-loop` — N+1 against the database
 
-**HIGH severity (warning in CI):** `js-deep-clone-via-json`, `js-useeffect-missing-deps`, `js-inline-object-jsx-prop`, `js-anonymous-handler-jsx`, `js-spread-in-reduce`, `js-unique-via-indexof`, `js-helper-call-in-iterator`, `py-string-concat-in-loop`, `py-django-loop-without-eager`, `py-bare-except`, `sql-select-star`, `sql-leading-wildcard-like`, `sql-not-in-subquery`, `java-string-concat-in-loop`, `java-list-contains-in-loop`, `java-bare-catch-exception`, `cs-string-concat-in-loop`, `cs-list-contains-in-loop`, `cs-disposable-no-using`, `go-string-concat-in-loop`, `go-defer-in-loop`, `go-err-not-checked`, `rs-unwrap-in-prod`, `cpp-string-concat-in-loop`, `cpp-raw-new`, `php-count-in-for-condition`, `php-in-array-in-loop`, `rb-include-in-iterator`, `rb-n-plus-one-activerecord`, `rb-bare-rescue`, `sh-set-e-no-pipefail`, `sh-unquoted-var`, `sh-for-ls`.
+**HIGH severity (warning in CI):**
 
-**MEDIUM severity (info in CI):** `js-nested-for-loops`, `js-includes-in-iterator`, `js-array-key-index`, `py-range-len`, `py-in-list-literal`, `py-open-without-with`, `sql-select-no-limit`, `sql-or-in-where`, `go-slice-append-no-cap`, `rs-clone-in-loop`, `rs-vec-push-no-capacity`, `rs-string-push-no-capacity`, `cpp-vector-push-no-reserve`, `cpp-range-loop-copy`, `cpp-map-double-lookup`, `php-loose-equality`, `rb-string-concat-in-loop`, `sh-useless-cat-pipe`.
+- `js-deep-clone-via-json` — slow; loses Dates/Maps/undefined
+- `js-useeffect-missing-deps` — runs every render
+- `js-inline-object-jsx-prop` — new ref every render
+- `js-anonymous-handler-jsx` — breaks `React.memo`
+- `js-spread-in-reduce` — O(n²) accumulator copies
+- `js-unique-via-indexof` — O(n²) dedupe
+- `js-helper-call-in-iterator` — N round-trips
+- `py-string-concat-in-loop` — O(n²) string build
+- `py-django-loop-without-eager` — N+1 in Django ORM
+- `py-bare-except` — hides timeouts, OOM, Ctrl-C
+- `sql-select-star` — defeats index-only scans
+- `sql-leading-wildcard-like` — cannot use B-tree index
+- `sql-not-in-subquery` — null-unsafe
+- `java-string-concat-in-loop` — O(n²); use StringBuilder
+- `java-list-contains-in-loop` — O(n·m); use HashSet
+- `java-bare-catch-exception` — swallows root cause
+- `cs-string-concat-in-loop` — O(n²); use StringBuilder
+- `cs-list-contains-in-loop` — O(n·m); use HashSet
+- `cs-disposable-no-using` — leak on exception
+- `go-string-concat-in-loop` — O(n²); use strings.Builder
+- `go-defer-in-loop` — defers accumulate to function exit
+- `go-err-not-checked` — silent failures
+- `rs-unwrap-in-prod` — panics on None/Err
+- `cpp-string-concat-in-loop` — O(n²) without reserve
+- `cpp-raw-new` — manual delete; exception-unsafe
+- `php-count-in-for-condition` — recomputed every iteration
+- `php-in-array-in-loop` — O(n·m); use array_flip + isset
+- `rb-include-in-iterator` — O(n·m); use Set
+- `rb-n-plus-one-activerecord` — eager-load with `includes`
+- `rb-bare-rescue` — catches StandardError; hides bugs
+- `sh-set-e-no-pipefail` — pipe failures masked
+- `sh-unquoted-var` — word splitting / glob expansion
+- `sh-for-ls` — breaks on spaces / newlines in filenames
+
+**MEDIUM severity (info in CI):**
+
+- `js-nested-for-loops` — O(n·m); hash one side
+- `js-includes-in-iterator` — O(n·m); use a Set
+- `js-array-key-index` — breaks identity for reorderable lists
+- `py-range-len` — un-Pythonic; use `enumerate`
+- `py-in-list-literal` — O(n) membership; use a `set`
+- `py-open-without-with` — leaked file descriptors
+- `sql-select-no-limit` — unbounded result set
+- `sql-or-in-where` — can prevent index use
+- `go-slice-append-no-cap` — repeated reallocation
+- `rs-clone-in-loop` — borrow instead
+- `rs-vec-push-no-capacity` — preallocate
+- `rs-string-push-no-capacity` — preallocate / join
+- `cpp-vector-push-no-reserve` — call reserve(n)
+- `cpp-range-loop-copy` — use `const auto&`
+- `cpp-map-double-lookup` — `find` once
+- `php-loose-equality` — use `===`
+- `rb-string-concat-in-loop` — O(n²) with `+=`
+- `sh-useless-cat-pipe` — pass file directly
+
+Run `lemmaly rules` for the same list from the CLI. Run `node cli/lemmaly.js scan <path>` to flag instances.
 
 ## When to escalate to sibling skills
 
@@ -182,6 +260,48 @@ lemmaly handles classical, day-to-day algorithmic discipline. Escalate when:
 - **Math-level optimization** (probabilistic data structures, FFT, dimensionality reduction, approximation algorithms, computational geometry) — load **mathguard**.
 - **Algorithm correctness** (loop invariants, termination, recursion base cases, edge cases that tests miss) — load **invariant-guard**.
 - **Existing code with bad complexity that already shipped** — load **complexity-cuts** for the corrective transformation playbook.
+
+## Canonical example — protocol vs no-protocol
+
+The same problem with and without the seven-step protocol.
+
+**Problem.** Given `users: User[]` and `bannedIds: string[]`, return users whose `id` is not banned. Realistic n: 50k users, 5k banned.
+
+<Bad>
+
+```ts
+// No protocol — looks idiomatic, ships O(n·m)
+const active = users.filter((u) => !bannedIds.includes(u.id));
+```
+
+`bannedIds.includes` is O(m) per call. The filter runs it n times → 50k × 5k = 250M comparisons.
+
+</Bad>
+
+<Good>
+
+```ts
+// Protocol applied:
+//   time = O(n + m), space = O(m), n = 50k users, m = 5k banned
+//   structure: Set<string> for O(1) membership inside the loop
+//   family: linear scan with hashed lookup
+//   edge cases: empty users → [], empty bannedIds → users, duplicates in bannedIds → fine (Set dedupes)
+const banned = new Set(bannedIds);
+const active = users.filter((u) => !banned.has(u.id));
+```
+
+</Good>
+
+The Bad version is the default an AI ships when asked "filter the active users." The Good version is what the protocol forces — without changing how the code reads.
+
+## Output discipline
+
+Code you emit must:
+
+- Be preceded by the seven-step pre-write protocol above.
+- Use the data structures you named.
+- Match the complexity you claimed (if it does not, you lied — go back).
+- Handle the edge cases you listed.
 
 ## Rationalizations to watch for
 
@@ -225,21 +345,21 @@ Before claiming the implementation is done:
 
 Cannot check every box? You did not run the protocol. Restart from step 1.
 
-## Limitations
+## Real-world impact
 
-- **Not a substitute for profiling.** lemmaly forces asymptotic reasoning, not measurement. For constant-factor wins, latency tails, or I/O bottlenecks you still need a profiler.
-- **Reasoning gate, not a code generator.** This skill changes how the model thinks before writing; it does not auto-rewrite existing code (use `complexity-cuts` for that).
-- **English-language enforcement.** The rule catalog and prompts are English-only.
-- **n < ~10 is exempt.** The protocol explicitly accepts trivial collections and one-shot setup code; do not waste time stating complexity for `for i in range(3)`.
-- **Cannot prevent intentional brute force.** If the author writes a one-line justification ("n ≤ 100 in practice; readability matters more"), brute force ships. The skill only requires the justification, not its absence.
-- **CLI scanner is separate.** The 59 rules are enforced by `lemmaly scan` in the upstream repo, not by this SKILL.md alone.
+Measured on the `examples/before-after/` reference pair shipped with this repo (same component, default AI output vs protocol-applied output):
+
+| Metric | Without protocol (`bad.jsx`) | With protocol (`good.jsx`) |
+|---|---|---|
+| CLI scan findings | **2 errors, 5 warnings, 3 info** (10 total) | **0 errors, 1 warning, 0 info** |
+| Asymptotic complexity of hot path | `O(n·m)` lookup inside render | `O(n+m)` with hoisted index |
+| Async pattern | `await` inside `for` over independent items | `Promise.all` with bulk fetch |
+| Reproduce | `node cli/lemmaly.js scan examples/before-after/bad.jsx` | `…/good.jsx` |
+
+The one remaining warning on the good file (`js-anonymous-handler-jsx`) is an inline handler the protocol explicitly accepts when the child is not `React.memo` — it is documented in the example, not an oversight.
+
+These are the same anti-patterns the four skills catch before code is written.
 
 ## The thesis, in one line
 
 > **AI ships algorithmically lazy code by default. lemmaly makes it think first.**
-
-## Related Skills
-
-- `mathguard` — escalation for n ≥ 10⁶ where classical O(n log n) is the floor and probabilistic / math-heavy techniques win.
-- `invariant-guard` — correctness layer for algorithms whose obvious version is subtly wrong.
-- `complexity-cuts` — corrective playbook for code that already shipped with bad Big-O.

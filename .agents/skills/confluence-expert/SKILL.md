@@ -1,22 +1,236 @@
 ---
+
+# === CORE IDENTITY ===
 name: confluence-expert
-description: >
-  Atlassian Confluence expert for creating and managing spaces, knowledge bases,
-  documentation, planning, product discovery, page layouts, macros, templates,
-  and all Confluence features. Use for documentation strategy, space
-  architecture, content organization, and collaborative knowledge management.
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: borghei
-  category: project-management
-  domain: atlassian
-  updated: 2026-03-31
-  tags: [confluence, knowledge-management, wiki, documentation]
+title: Confluence Expert Skill Package
+description: Atlassian Confluence expert for creating and managing spaces, knowledge bases, documentation, planning, product discovery, page layouts, macros, templates, and all Confluence features. Use for documentation strategy, space architecture, content organization, and collaborative knowledge management.
+domain: delivery
+subdomain: delivery-tools
+
+# === WEBSITE DISPLAY ===
+difficulty: intermediate
+time-saved: "TODO: Quantify time savings"
+frequency: "TODO: Estimate usage frequency"
+use-cases:
+  - Primary workflow for Confluence Expert
+  - Analysis and recommendations for confluence expert tasks
+  - Best practices implementation for confluence expert
+  - Integration with related skills and workflows
+
+# === RELATIONSHIPS ===
+related-agents: []
+related-skills: []
+related-commands: []
+orchestrated-by: []
+
+# === TECHNICAL ===
+dependencies:
+  scripts: []
+  references: []
+  assets: []
+compatibility:
+  python-version: 3.8+
+  platforms: [macos, linux, windows]
+tech-stack: [Python 3.8+]
+
+# === EXAMPLES ===
+examples:
+  -
+    title: Example Usage
+    input: "TODO: Add example input for confluence-expert"
+    output: "TODO: Add expected output"
+
+# === ANALYTICS ===
+stats:
+  downloads: 0
+  stars: 0
+  rating: 0.0
+  reviews: 0
+
+# === VERSIONING ===
+version: v1.0.0
+author: Claude Skills Team
+contributors: []
+created: 2025-10-21
+updated: 2025-11-23
+license: MIT
+
+# === DISCOVERABILITY ===
+tags: [architecture, confluence, delivery, expert, product]
+featured: false
+verified: true
 ---
+
+
 # Atlassian Confluence Expert
 
-Master-level expertise in Confluence space management, documentation architecture, content creation, macros, templates, and collaborative knowledge management.
+## Overview
+
+This skill provides comprehensive Confluence expertise for creating and managing documentation spaces, knowledge bases, team collaboration areas, and strategic documentation architecture. It includes advanced macro usage, template creation, content governance frameworks, and integration patterns with Jira and other Atlassian tools through the Atlassian MCP server.
+
+Target users include documentation specialists, knowledge managers, team leads, project managers, technical writers, and Scrum Masters who need to structure and maintain high-quality documentation in Confluence. This skill is essential for teams implementing documentation strategies, creating self-service knowledge bases, or establishing collaborative workspaces for agile teams.
+
+**Core Value:** Reduce documentation creation time by 50% through templates and macros, improve content findability by 40% through proper space architecture, and increase team documentation adoption by 60% through best practices and governance frameworks.
+
+## Core Capabilities
+
+- **Space Architecture & Design** - Create hierarchical space structures with optimal taxonomy, navigation, permission schemes for teams, projects, and knowledge bases
+- **Content Creation & Templates** - Build reusable page templates with macros, structured layouts, and dynamic content for consistent documentation across teams
+- **Macro Mastery** - Leverage advanced Confluence macros (Jira charts, task lists, status indicators, content includes, dynamic queries) for rich, interactive documentation
+- **Documentation Governance** - Implement content lifecycle management, review cycles, archiving strategies, and quality standards for sustainable documentation ecosystems
+- **Atlassian MCP Integration** - Direct Confluence operations via MCP server for automated page creation, space management, content synchronization, and Jira integration
+
+## Quick Start
+
+### Common Confluence Operations
+
+This skill provides Confluence expertise through knowledge frameworks, templates, and macros. Actual Confluence operations are performed through the Atlassian MCP server configured in Claude Code settings.
+
+### Access Documentation Resources
+
+- **Macro reference:** See Essential Macros section for commonly used Confluence macros with examples
+- **Template library:** See Templates Library section for ready-to-use page templates (meeting notes, project overviews, decision logs, retrospectives)
+- **Best practices:** See Best Practices section for writing style, organization, maintenance, and content governance standards
+- **Space architecture:** See Page Architecture section for recommended space structures and hierarchies
+
+### Key Workflows to Start With
+
+1. **Create Team Documentation Space** - Set up a complete team space with structure and templates (45 minutes)
+2. **Set Up Sprint Ceremony Documentation** - Implement sprint planning, standup, review, and retrospective templates (1 hour)
+3. **Create Executive Reporting Page** - Build live dashboard with Jira integration for stakeholder visibility (1.5 hours)
+
+## Key Workflows
+
+### 1. Create Team Documentation Space
+
+**Time:** 45 minutes
+
+**Steps:**
+1. **Determine space type and structure** - Identify if this is a Team, Project, or Knowledge Base space based on documentation goals
+   - Team spaces: Ongoing team operations and meetings
+   - Project spaces: Single-project centered docs
+   - Knowledge Base: Cross-team reference materials
+2. **Create space with naming convention** - Create space in Confluence using clear, consistent naming (e.g., "TEAM-Engineering" or "PROJ-ProductLaunch")
+   - Set description, category, and initial permissions
+   - Enable space shortcuts for key pages
+3. **Set up initial page structure** - Create space homepage and primary navigation pages
+   ```
+   Space Home (Overview & Getting Started)
+   ├── Team Information (Members, Roles, Communication)
+   ├── Processes & Workflows (How we work)
+   ├── Meeting Notes (Archive of ceremonies)
+   └── Resources & References (External links)
+   ```
+4. **Configure space permissions** - Set View, Edit, Create, Delete, and Admin access for appropriate groups
+5. **Create templates for consistency** - Add space templates for recurring page types (meeting notes, project overviews, retrospectives)
+
+**Expected Output:** A fully operational team documentation space with clear structure, functional templates, and appropriate access controls ready for team population.
+
+See [Page Architecture](#page-architecture) section for detailed space structure patterns and best practices.
+
+### 2. Set Up Sprint Ceremony Documentation
+
+**Time:** 1 hour
+
+**Steps:**
+1. **Create Sprint Planning template** - Use template pattern from Templates Library section with agenda, attendees, and decisions
+   - Include acceptance criteria review section
+   - Add story point estimation placeholder
+   - Link to sprint backlog in Jira
+2. **Create Daily Standup capture page** - Simple daily page for status tracking
+   - Format: What we completed | What's next | Blockers
+   - Use task list macro to track impediments
+   - Link to sprint board
+3. **Create Sprint Retrospective template** - What went well, what didn't, action items
+   - Use info/warning macros for positive/negative callouts
+   - Link to previous retrospectives for trend analysis
+   - Assign owners to improvement actions
+4. **Create Sprint Review template** - Stakeholder-facing ceremony documentation
+   - Demo checklist for completed stories
+   - Feedback capture section
+   - Decisions and next steps
+5. **Link all templates to Jira sprint** - Connect Confluence pages to Jira sprint epic using Jira embed macros
+
+**Expected Output:** Complete sprint ceremony documentation system with linked templates, ready for team to use in upcoming sprint cycle. Ceremonies will have consistent structure and documented artifacts.
+
+See [Confluence MCP Integration](#atlassian-mcp-integration) for linking pages to Jira issues.
+
+### 3. Create Executive Reporting Page
+
+**Time:** 1.5 hours
+
+**Steps:**
+1. **Design report layout** - Create page structure for executive visibility
+   - Executive summary at top (status, key metrics, risks)
+   - Detailed sections for each project/team
+   - Timeline and upcoming milestones
+2. **Add project status panels** - Create one panel per active project using Panel macro
+   ```
+   {panel:title=Project Name|borderColor=#0052CC}
+   Status: {status:colour=Green|title=On Track}
+   Owner: @pm-name
+   Key Metrics: Velocity trend, delivery rate
+   {panel}
+   ```
+3. **Embed Jira reports** - Use Jira Chart and Filter Results macros
+   - Sprint velocity chart
+   - Issue breakdown by status
+   - Overdue items query
+4. **Document key risks and decisions** - Create risk register and decision log sections
+   - Link to detailed risk register page
+   - Recent important decisions with rationale
+5. **Set up automated content updates** - Configure "Recently Updated" and "Content by Label" macros to pull relevant data
+
+**Expected Output:** Live executive dashboard page in Confluence that provides stakeholder visibility into project health, metrics, and decisions. Dashboard updates automatically as team creates content and updates Jira.
+
+### 4. Implement Documentation Governance Process
+
+**Time:** 2 hours (setup) + ongoing maintenance
+
+**Steps:**
+1. **Define documentation standards** - Create style guide and quality checklist
+   - Writing style: active voice, scannable content
+   - Naming conventions for pages and spaces
+   - Metadata requirements (owner, last updated, review date)
+   - See Content Quality Checklist in Best Practices section
+2. **Create content review schedule** - Establish review cycles by content type
+   - Critical docs: Monthly review
+   - Standard docs: Quarterly review
+   - Archive docs: Annual retention review
+3. **Set up labeling system** - Create labels for organization and filtering
+   - Status labels: outdated, reviewed, needs-update
+   - Team labels: backend, frontend, product
+   - Type labels: how-to, reference, decision, meeting-notes
+4. **Create archiving workflow** - Move outdated content to Archive space with date labels
+   - Maintain archive for 2 years
+   - Link archived docs to replacements
+   - Keep audit trail of changes
+5. **Schedule quarterly documentation audit** - Review orphaned pages, broken links, content gaps
+   - Use Confluence analytics to find unused pages
+   - Identify pages without owners
+   - Consolidate duplicate content
+
+**Expected Output:** Established documentation governance system with clear standards, review schedule, and archiving process. Team has framework for maintaining documentation quality over time.
+
+See Content Governance section for archiving strategy and quality checklist.
+
+## Python Tools
+
+This skill does not include Python automation tools. Confluence operations are performed directly through the Atlassian MCP server, which provides native integration for:
+
+- Creating and managing spaces
+- Creating, updating, and deleting pages
+- Applying templates and macros
+- Managing page hierarchies
+- Configuring permissions
+- Searching content
+- Extracting documentation for analysis
+
+See the Atlassian MCP Integration section below for detailed integration patterns and capabilities.
+
+## Reference Documentation
+
+The following sections provide comprehensive frameworks, templates, and best practices for Confluence expertise:
 
 ## Core Competencies
 
@@ -507,44 +721,3 @@ Expected outcomes and impacts
 - Support Scrum Master with ceremony templates
 - Link to Jira issues for Jira Expert
 - Provide templates for Template Creator
-
-## Troubleshooting
-
-| Problem | Likely Cause | Resolution |
-|---------|-------------|------------|
-| Users cannot find existing documentation | Poor space/page hierarchy, missing labels, or unclear page titles | Restructure to max 3 levels deep; enforce descriptive naming conventions; add labels to all pages and use `contentbylabel` macro for discovery |
-| Confluence search returns irrelevant results | Page titles are generic, content lacks keywords, or spaces have too many orphaned pages | Use specific, descriptive titles; add excerpt macros for search snippets; audit and remove orphaned pages quarterly |
-| Pages become stale with outdated information | No content ownership model, no review cadence, or no visible "last updated" date | Assign a page owner to every active page; set quarterly review reminders; add `{date}` macro to show last update prominently |
-| Space permissions are too permissive or too restrictive | Ad-hoc permission changes without a governance model; individual permissions used instead of groups | Reset to group-based permissions; define 3-4 standard permission schemes; audit permissions quarterly |
-| Jira macros embedded in pages show errors or no data | JQL references deleted projects, or the viewer lacks Jira permissions for the referenced project | Verify JQL validity; ensure Confluence viewers also have Jira browse permissions for referenced projects |
-| Content duplication across multiple spaces | No single source of truth policy; teams copy content instead of linking | Implement excerpt-include pattern for shared content; establish content ownership map; use cross-space linking instead of copying |
-| Page tree becomes too deep (>5 levels) creating navigation fatigue | Organic growth without architectural review; no archiving strategy | Flatten hierarchy to max 3 levels; archive completed project pages; use labels and search instead of deep nesting |
-
-## Success Criteria
-
-- 90%+ of active pages have a designated owner and a review date within the past 6 months
-- Orphaned pages (no parent, no links, no views in 90 days) represent less than 5% of total content
-- New team members can find onboarding documentation within 3 clicks from the space homepage
-- Content duplication rate stays below 10% (measured by duplicate title or excerpt analysis)
-- All spaces follow the standardized page architecture template (overview, team info, projects, processes, resources)
-- Confluence adoption measured by monthly active editors exceeds 60% of licensed users
-- Knowledge base articles resolve 40%+ of common questions without escalation to a person
-
-## Scope & Limitations
-
-**In Scope:** Space creation and architecture, page hierarchy design, template creation and management, content governance (review cycles, archiving, quality standards), macro usage and dynamic content, documentation strategy, knowledge base management, Jira-Confluence integration, content analytics.
-
-**Out of Scope:** Global Atlassian administration (hand off to `atlassian-admin/`), Jira project configuration (hand off to `jira-expert/`), template design and governance (hand off to `atlassian-templates/`), sprint execution artifacts (hand off to `scrum-master/`).
-
-**Limitations:** Confluence Cloud has storage limits per plan tier that affect attachment-heavy spaces. Advanced analytics (page view trends, contributor activity) require Confluence Premium or marketplace apps. Space-level permissions cannot override more restrictive org-wide security policies set by `atlassian-admin/`. Content migration between spaces can break internal links and require manual fixup.
-
-## Integration Points
-
-| Integration | Direction | What Flows |
-|-------------|-----------|------------|
-| `jira-expert/` | Bidirectional | Jira macros in Confluence pages; Confluence page links in Jira issue descriptions |
-| `atlassian-admin/` | Admin -> Confluence | Global templates, space permission schemes, blueprint configuration |
-| `atlassian-templates/` | Templates -> Confluence | Designed templates deployed to spaces; template usage guidelines |
-| `scrum-master/` | SM -> Confluence | Sprint ceremony documentation needs, team working agreement pages |
-| `senior-pm/` | PM -> Confluence | Executive report pages, portfolio documentation, stakeholder communication |
-| `delivery-manager/` | DM -> Confluence | Post-mortem documentation, runbooks, release notes pages |

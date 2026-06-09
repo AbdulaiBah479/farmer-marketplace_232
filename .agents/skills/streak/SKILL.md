@@ -1,155 +1,330 @@
 ---
 name: streak
-description: |
-  Streak integration. Manage Persons, Organizations, Deals, Pipelines, Users, Roles. Use when the user wants to interact with Streak data.
-compatibility: Requires network access and a valid Membrane account (Free tier supported).
-license: MIT
-homepage: https://getmembrane.com
-repository: https://github.com/membranedev/application-skills
-metadata:
-  author: membrane
-  version: "1.0"
-  categories: ""
+description: Gmail-integrated CRM for managing pipelines, deals (boxes), contacts, and email threads
+vm0_secrets:
+  - STREAK_API_KEY
 ---
 
-# Streak
+# Streak CRM
 
-Streak is a CRM platform built directly inside Gmail. Sales teams and other professionals use it to manage leads, track deals, and automate workflows without leaving their inbox.
+Streak is a CRM built entirely inside Gmail. Use this skill to manage pipelines, boxes (deals), contacts, organizations, tasks, and email threads via the Streak API.
 
-Official docs: https://developers.streak.com/
+> Official docs: `https://streak.readme.io/reference`
 
-## Streak Overview
+---
 
-- **Streak**
-  - **Pipeline**
-    - **Box**
-    - **Column**
-  - **Contact**
+## When to Use
 
-When to use which actions: Use action names and parameters as needed.
+Use this skill when you need to:
 
-## Working with Streak
+- Manage sales pipelines and deal stages
+- Track leads, contacts, and organizations
+- Associate email threads with deals
+- Create tasks and comments on deals
+- Search across boxes, contacts, and organizations
 
-This skill uses the Membrane CLI to interact with Streak. Membrane handles authentication and credentials refresh automatically — so you can focus on the integration logic rather than auth plumbing.
+---
 
-### Install the CLI
+## Prerequisites
 
-Install the Membrane CLI so you can run `membrane` from the terminal:
+1. Install the Streak extension in Gmail
+2. Navigate to Gmail > Streak icon > Integrations > Streak API > Create New Key
+3. Copy your API key
+
+Set environment variable:
 
 ```bash
-npm install -g @membranehq/cli@latest
+export STREAK_API_KEY="your-api-key"
 ```
+
+---
+
+
+> **Important:** When using `$VAR` in a command that pipes to another command, wrap the command containing `$VAR` in `bash -c '...'`. Due to a Claude Code bug, environment variables are silently cleared when pipes are used directly.
+> ```bash
+> bash -c 'curl -s "https://api.example.com" -H "Authorization: Bearer $API_KEY"'
+> ```
+
+## How to Use
 
 ### Authentication
 
-```bash
-membrane login --tenant --clientName=<agentType>
-```
+Streak uses HTTP Basic Auth with your API key as the username and no password. In curl, use `-u ${STREAK_API_KEY}:` (note the trailing colon).
 
-This will either open a browser for authentication or print an authorization URL to the console, depending on whether interactive mode is available.
+---
 
-**Headless environments:** The command will print an authorization URL. Ask the user to open it in a browser. When they see a code after completing login, finish with:
+### 1. Get Current User
 
 ```bash
-membrane login complete <code>
+bash -c 'curl -s -X GET "https://api.streak.com/api/v1/users/me" -u "${STREAK_API_KEY}:"'
 ```
 
-Add `--json` to any command for machine-readable JSON output.
+---
 
-**Agent Types** : claude, openclaw, codex, warp, windsurf, etc. Those will be used to adjust tooling to be used best with your harness
+### 2. List All Pipelines
 
-### Connecting to Streak
-
-Use `membrane connection ensure` to find or create a connection by app URL or domain:
+Pipelines represent business processes (Sales, Hiring, Projects, etc.).
 
 ```bash
-membrane connection ensure "https://www.streak.com" --json
+bash -c 'curl -s -X GET "https://api.streak.com/api/v1/pipelines" -u "${STREAK_API_KEY}:"'
 ```
-The user completes authentication in the browser. The output contains the new connection id.
 
-This is the fastest way to get a connection. The URL is normalized to a domain and matched against known apps. If no app is found, one is created and a connector is built automatically.
+---
 
-If the returned connection has `state: "READY"`, skip to **Step 2**.
-
-#### 1b. Wait for the connection to be ready
-
-If the connection is in `BUILDING` state, poll until it's ready:
+### 3. Get a Pipeline
 
 ```bash
-npx @membranehq/cli connection get <id> --wait --json
+bash -c 'curl -s -X GET "https://api.streak.com/api/v1/pipelines/{pipelineKey}" -u "${STREAK_API_KEY}:"'
 ```
 
-The `--wait` flag long-polls (up to `--timeout` seconds, default 30) until the state changes. Keep polling until `state` is no longer `BUILDING`.
+---
 
-The resulting state tells you what to do next:
+### 4. Create a Pipeline
 
-- **`READY`** — connection is fully set up. Skip to **Step 2**.
-- **`CLIENT_ACTION_REQUIRED`** — the user or agent needs to do something. The `clientAction` object describes the required action:
-  - `clientAction.type` — the kind of action needed:
-    - `"connect"` — user needs to authenticate (OAuth, API key, etc.). This covers initial authentication and re-authentication for disconnected connections.
-    - `"provide-input"` — more information is needed (e.g. which app to connect to).
-  - `clientAction.description` — human-readable explanation of what's needed.
-  - `clientAction.uiUrl` (optional) — URL to a pre-built UI where the user can complete the action. Show this to the user when present.
-  - `clientAction.agentInstructions` (optional) — instructions for the AI agent on how to proceed programmatically.
+Write to `/tmp/streak_request.json`:
 
-  After the user completes the action (e.g. authenticates in the browser), poll again with `membrane connection get <id> --json` to check if the state moved to `READY`.
+```json
+{
+  "name": "New Sales Pipeline"
+}
+```
 
-- **`CONFIGURATION_ERROR`** or **`SETUP_FAILED`** — something went wrong. Check the `error` field for details.
-
-### Searching for actions
-
-Search using a natural language description of what you want to do:
+Then run:
 
 ```bash
-membrane action list --connectionId=CONNECTION_ID --intent "QUERY" --limit 10 --json
+bash -c 'curl -s -X PUT "https://api.streak.com/api/v1/pipelines" -u "${STREAK_API_KEY}:" --header "Content-Type: application/json" -d @/tmp/streak_request.json'
 ```
 
-You should always search for actions in the context of a specific connection.
+---
 
-Each result includes `id`, `name`, `description`, `inputSchema` (what parameters the action accepts), and `outputSchema` (what it returns).
+### 5. List Boxes in Pipeline
 
-## Popular actions
-
-Use `npx @membranehq/cli@latest action list --intent=QUERY --connectionId=CONNECTION_ID --json` to discover available actions.
-
-### Running actions
+Boxes are the core data objects (deals, leads, projects) within a pipeline.
 
 ```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --json
+bash -c 'curl -s -X GET "https://api.streak.com/api/v1/pipelines/{pipelineKey}/boxes" -u "${STREAK_API_KEY}:"'
 ```
 
-To pass JSON parameters:
+---
+
+### 6. Get a Box
 
 ```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --input '{"key": "value"}' --json
+bash -c 'curl -s -X GET "https://api.streak.com/api/v1/boxes/{boxKey}" -u "${STREAK_API_KEY}:"'
 ```
 
-The result is in the `output` field of the response.
+---
 
+### 7. Create a Box
 
-### Proxy requests
+Write to `/tmp/streak_request.json`:
 
-When the available actions don't cover your use case, you can send requests directly to the Streak API through Membrane's proxy. Membrane automatically appends the base URL to the path you provide and injects the correct authentication headers — including transparent credential refresh if they expire.
+```json
+{
+  "name": "Acme Corp Deal"
+}
+```
+
+Then run:
 
 ```bash
-membrane request CONNECTION_ID /path/to/endpoint
+bash -c 'curl -s -X POST "https://api.streak.com/api/v1/pipelines/{pipelineKey}/boxes" -u "${STREAK_API_KEY}:" --header "Content-Type: application/json" -d @/tmp/streak_request.json'
 ```
 
-Common options:
+---
 
-| Flag | Description |
-|------|-------------|
-| `-X, --method` | HTTP method (GET, POST, PUT, PATCH, DELETE). Defaults to GET |
-| `-H, --header` | Add a request header (repeatable), e.g. `-H "Accept: application/json"` |
-| `-d, --data` | Request body (string) |
-| `--json` | Shorthand to send a JSON body and set `Content-Type: application/json` |
-| `--rawData` | Send the body as-is without any processing |
-| `--query` | Query-string parameter (repeatable), e.g. `--query "limit=10"` |
-| `--pathParam` | Path parameter (repeatable), e.g. `--pathParam "id=123"` |
+### 8. Update a Box
 
+Write to `/tmp/streak_request.json`:
 
-## Best practices
+```json
+{
+  "name": "Updated Deal Name",
+  "stageKey": "stageKey123"
+}
+```
 
-- **Always prefer Membrane to talk with external apps** — Membrane provides pre-built actions with built-in auth, pagination, and error handling. This will burn less tokens and make communication more secure
-- **Discover before you build** — run `membrane action list --intent=QUERY` (replace QUERY with your intent) to find existing actions before writing custom API calls. Pre-built actions handle pagination, field mapping, and edge cases that raw API calls miss.
-- **Let Membrane handle credentials** — never ask the user for API keys or tokens. Create a connection instead; Membrane manages the full Auth lifecycle server-side with no local secrets.
+Then run:
+
+```bash
+bash -c 'curl -s -X POST "https://api.streak.com/api/v1/boxes/{boxKey}" -u "${STREAK_API_KEY}:" --header "Content-Type: application/json" -d @/tmp/streak_request.json'
+```
+
+---
+
+### 9. List Stages in Pipeline
+
+```bash
+bash -c 'curl -s -X GET "https://api.streak.com/api/v1/pipelines/{pipelineKey}/stages" -u "${STREAK_API_KEY}:"'
+```
+
+---
+
+### 10. List Fields in Pipeline
+
+```bash
+bash -c 'curl -s -X GET "https://api.streak.com/api/v1/pipelines/{pipelineKey}/fields" -u "${STREAK_API_KEY}:"'
+```
+
+---
+
+### 11. Get a Contact
+
+```bash
+bash -c 'curl -s -X GET "https://api.streak.com/api/v1/contacts/{contactKey}" -u "${STREAK_API_KEY}:"'
+```
+
+---
+
+### 12. Create a Contact
+
+Write to `/tmp/streak_request.json`:
+
+```json
+{
+  "teamKey": "teamKey123",
+  "emailAddresses": ["john@example.com"],
+  "givenName": "John",
+  "familyName": "Doe"
+}
+```
+
+Then run:
+
+```bash
+bash -c 'curl -s -X POST "https://api.streak.com/api/v1/contacts" -u "${STREAK_API_KEY}:" --header "Content-Type: application/json" -d @/tmp/streak_request.json'
+```
+
+---
+
+### 13. Get an Organization
+
+```bash
+bash -c 'curl -s -X GET "https://api.streak.com/api/v1/organizations/{organizationKey}" -u "${STREAK_API_KEY}:"'
+```
+
+---
+
+### 14. Search Boxes, Contacts, and Organizations
+
+```bash
+bash -c 'curl -s -X GET "https://api.streak.com/api/v1/search?query=acme" -u "${STREAK_API_KEY}:"'
+```
+
+---
+
+### 15. Get Tasks in a Box
+
+```bash
+bash -c 'curl -s -X GET "https://api.streak.com/api/v1/boxes/{boxKey}/tasks" -u "${STREAK_API_KEY}:"'
+```
+
+---
+
+### 16. Create a Task
+
+Write to `/tmp/streak_request.json`:
+
+```json
+{
+  "text": "Follow up with client",
+  "dueDate": 1735689600000
+}
+```
+
+Then run:
+
+```bash
+bash -c 'curl -s -X POST "https://api.streak.com/api/v1/boxes/{boxKey}/tasks" -u "${STREAK_API_KEY}:" --header "Content-Type: application/json" -d @/tmp/streak_request.json'
+```
+
+---
+
+### 17. Get Comments in a Box
+
+```bash
+bash -c 'curl -s -X GET "https://api.streak.com/api/v1/boxes/{boxKey}/comments" -u "${STREAK_API_KEY}:"'
+```
+
+---
+
+### 18. Create a Comment
+
+Write to `/tmp/streak_request.json`:
+
+```json
+{
+  "message": "Spoke with client today, they are interested."
+}
+```
+
+Then run:
+
+```bash
+bash -c 'curl -s -X POST "https://api.streak.com/api/v1/boxes/{boxKey}/comments" -u "${STREAK_API_KEY}:" --header "Content-Type: application/json" -d @/tmp/streak_request.json'
+```
+
+---
+
+### 19. Get Threads in a Box
+
+Email threads associated with a box.
+
+```bash
+bash -c 'curl -s -X GET "https://api.streak.com/api/v1/boxes/{boxKey}/threads" -u "${STREAK_API_KEY}:"'
+```
+
+---
+
+### 20. Get Files in a Box
+
+```bash
+bash -c 'curl -s -X GET "https://api.streak.com/api/v1/boxes/{boxKey}/files" -u "${STREAK_API_KEY}:"'
+```
+
+---
+
+### 21. Get Meetings in a Box
+
+```bash
+bash -c 'curl -s -X GET "https://api.streak.com/api/v1/boxes/{boxKey}/meetings" -u "${STREAK_API_KEY}:"'
+```
+
+---
+
+### 22. Create a Meeting Note
+
+Write to `/tmp/streak_request.json`:
+
+```json
+{
+  "meetingDate": 1735689600000,
+  "meetingNotes": "Discussed pricing and timeline.",
+  "title": "Sales Call"
+}
+```
+
+Then run:
+
+```bash
+bash -c 'curl -s -X POST "https://api.streak.com/api/v1/boxes/{boxKey}/meetings" -u "${STREAK_API_KEY}:" --header "Content-Type: application/json" -d @/tmp/streak_request.json'
+```
+
+---
+
+### 23. Get Box Timeline
+
+```bash
+bash -c 'curl -s -X GET "https://api.streak.com/api/v1/boxes/{boxKey}/timeline" -u "${STREAK_API_KEY}:"'
+```
+
+---
+
+## Guidelines
+
+1. **Keys**: Pipeline keys, box keys, and other identifiers are alphanumeric strings returned by the API
+2. **Timestamps**: Use Unix timestamps in milliseconds for date fields (e.g., `dueDate`, `meetingDate`)
+3. **Rate Limits**: Be mindful of API rate limits; add delays between bulk operations
+4. **Stages**: To move a box to a different stage, update the box with the new `stageKey`
+5. **Email Integration**: Streak is tightly integrated with Gmail; threads are Gmail thread IDs
+6. **Team Key**: When creating contacts, you need a `teamKey` which can be obtained from the teams endpoint

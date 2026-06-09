@@ -1,78 +1,185 @@
 ---
-name: browser-automation
-description: >
-  This skill should be used when the user asks to "build web automation scripts",
-  "check browser automation for detection", "generate web scraping code",
-  "create form filling automation", or "build anti-detection browser scripts".
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: borghei
-  category: engineering
-  domain: web-automation
-  updated: 2026-04-02
-  tags: [browser-automation, web-scraping, anti-detection, form-automation, selenium]
+name: Browser Automation
+description: Automate web browser interactions, scraping, testing, and workflow automation with Puppeteer/Playwright
+version: 1.0.0
+author: Claude Office Skills
+category: automation
+tags:
+  - browser
+  - puppeteer
+  - playwright
+  - scraping
+  - testing
+department: engineering
+models:
+  - claude-3-opus
+  - claude-3-sonnet
+  - gpt-4
+mcp:
+  server: browser-mcp
+  tools:
+    - browser_navigate
+    - browser_click
+    - browser_type
+    - browser_screenshot
+capabilities:
+  - Page navigation
+  - Element interaction
+  - Data extraction
+  - Screenshot capture
+input:
+  - URLs
+  - Selectors
+  - Actions
+  - Scripts
+output:
+  - Extracted data
+  - Screenshots
+  - Test results
+  - Automation logs
+languages:
+  - en
+related_skills:
+  - web-search
+  - deep-research
+  - etl-pipeline
 ---
 
 # Browser Automation
 
-> **Category:** Engineering
-> **Domain:** Web Automation
+Automate web browser interactions for scraping, testing, and workflow automation.
 
-## Overview
+## Core Capabilities
 
-The **Browser Automation** skill provides tools for building robust web automation, checking scripts for bot detection signatures, generating form automation code, and creating web scraping solutions with rate limiting and best practices.
-
-## Quick Start
-
-```bash
-# Check automation script for detection signatures
-python scripts/anti_detection_checker.py --file ./my_scraper.py
-
-# Generate form automation code from HTML
-python scripts/form_automation_builder.py --url https://example.com/form --output form_script.py
-
-# Generate scraping code with rate limiting
-python scripts/scraping_toolkit.py --url https://example.com --strategy polite --output scraper.py
+### Navigation
+```yaml
+navigation:
+  goto:
+    url: "https://example.com"
+    wait_until: "networkidle"
+    timeout: 30000
+    
+  actions:
+    - wait_for_selector: ".content"
+    - scroll_to_bottom: true
+    - wait_for_navigation: true
 ```
 
-## Tools Overview
+### Element Interaction
+```yaml
+interactions:
+  click:
+    selector: "button.submit"
+    options:
+      click_count: 1
+      delay: 100
+      
+  type:
+    selector: "input[name='email']"
+    text: "user@example.com"
+    options:
+      delay: 50  # Human-like typing
+      
+  select:
+    selector: "select#country"
+    value: "US"
+    
+  file_upload:
+    selector: "input[type='file']"
+    files: ["document.pdf"]
+```
 
-| Tool | Purpose | Key Flags |
-|------|---------|-----------|
-| `anti_detection_checker.py` | Audit automation code for bot detection signatures | `--file`, `--format` |
-| `form_automation_builder.py` | Generate form filling scripts from HTML analysis | `--url`, `--html-file`, `--output` |
-| `scraping_toolkit.py` | Generate web scraping code with rate limiting | `--url`, `--strategy`, `--output` |
+### Data Extraction
+```yaml
+scraping:
+  extract_text:
+    selector: ".article-content"
+    
+  extract_all:
+    selector: ".product-card"
+    fields:
+      name: ".product-name"
+      price: ".price"
+      url:
+        selector: "a"
+        attribute: "href"
+        
+  extract_table:
+    selector: "table.data"
+    output: json
+```
 
-## Workflows
+### Screenshots & PDF
+```yaml
+capture:
+  screenshot:
+    path: "screenshot.png"
+    full_page: true
+    type: "png"
+    
+  pdf:
+    path: "page.pdf"
+    format: "A4"
+    print_background: true
+```
 
-### Build Reliable Scraper
-1. Analyze target with `scraping_toolkit.py` to generate base code
-2. Check generated code with `anti_detection_checker.py`
-3. Address any detection signatures found
-4. Test with progressive rate limiting
+## Workflow Examples
 
-### Automate Form Submission
-1. Provide form HTML to `form_automation_builder.py`
-2. Review generated script for field mappings
-3. Customize data sources and validation
-4. Run anti-detection check on final script
+### Form Automation
+```javascript
+// Login and fill form
+await page.goto('https://app.example.com/login');
+await page.fill('#email', 'user@example.com');
+await page.fill('#password', 'securepass');
+await page.click('button[type="submit"]');
+await page.waitForNavigation();
 
-## Reference Documentation
+// Navigate to form
+await page.click('a[href="/new-entry"]');
+await page.fill('#title', 'Automated Entry');
+await page.fill('#description', 'Created via automation');
+await page.click('button.submit');
+```
 
-- [Browser Automation Guide](references/browser-automation-guide.md) - Anti-detection techniques, rate limiting strategies, ethical scraping practices
+### Web Scraping
+```yaml
+scraping_workflow:
+  - navigate: "https://news.example.com"
+  - wait: ".article-list"
+  - extract_all:
+      selector: ".article"
+      fields:
+        title: "h2"
+        summary: ".excerpt"
+        link:
+          selector: "a"
+          attribute: "href"
+  - paginate:
+      next_button: ".pagination .next"
+      max_pages: 10
+  - output: "articles.json"
+```
 
-## Common Patterns
+### E2E Testing
+```yaml
+test_workflow:
+  - name: "User Registration"
+    steps:
+      - goto: "/register"
+      - fill:
+          "#email": "test@example.com"
+          "#password": "Test123!"
+      - click: "button[type='submit']"
+      - assert:
+          selector: ".success-message"
+          text_contains: "Welcome"
+```
 
-### Polite Scraping
-- Respect robots.txt directives
-- Implement exponential backoff on errors
-- Use 2-5 second delays between requests
-- Identify your bot with a descriptive User-Agent
-- Cache responses to minimize repeat requests
+## Best Practices
 
-### Anti-Detection Best Practices
-- Rotate User-Agent strings realistically
-- Randomize request timing (avoid fixed intervals)
-- Handle cookies and sessions properly
-- Avoid headless browser fingerprinting tells
+1. **Wait Strategies**: Use proper waits
+2. **Error Handling**: Catch navigation failures
+3. **Rate Limiting**: Be respectful to servers
+4. **Headless Mode**: Use for production
+5. **Selectors**: Prefer data-testid attributes
+6. **Screenshots**: Capture on failures

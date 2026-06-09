@@ -1,124 +1,94 @@
 ---
-name: "onboard"
-description: "/cs:onboard — Founder interview that populates ~/.claude/company-context.md. The first command to run when starting with c-level-agents."
+name: onboard
+description: Use at session start to detect available skills, load active context, and enforce skill usage discipline for the current session.
+effort: medium
+argument-hint: 
 ---
 
-# /cs:onboard — Founder Interview
 
-**Command:** `/cs:onboard`
 
-The first command to run when adopting c-level-agents. A structured founder interview that produces `~/.claude/company-context.md` — the file every cs-* advisor reads before responding. Without this, the advisors are guessing.
+# Onboard
 
-## What This Produces
+## Purpose
 
-`~/.claude/company-context.md` — a single file with the durable facts about the company. Read by:
-- `cs-chief-of-staff` (routing decisions)
-- Every cs-* advisor (context for any question)
-- `/cs:brief` (assumptions in any new decision)
+Framework bootstrap and enforcement. Detects available skills, loads active context (spec, tasks, decisions), presents quick status, and enforces skill usage discipline. Prevents agents from bypassing skills with rationalizations.
 
-## The Interview (12 Questions)
+## Trigger
 
-### Company Basics
-1. **Company name and one-sentence pitch.**
-2. **Stage:** pre-seed / seed / Series A / Series B / Series C+ / public
-3. **Headcount:** total, by function (eng / product / GTM / ops / G&A)
-4. **Geographic distribution:** HQ + remote split, key countries
+- Auto-triggered via SessionStart hook
+- Manual: `/ai-onboard`
+- Context: beginning of any non-trivial session.
 
-### Business Model
-5. **Revenue model:** SaaS subscription / usage / transaction / marketplace / hardware / services
-6. **ICP:** name one real customer and describe what they have in common with others
-7. **ACV:** median and range; deal count last 12 months
-8. **Growth rate:** ARR YoY; if pre-revenue, leading metric (users, MAU, etc.)
+## Procedure
 
-### Financial Posture
-9. **Runway:** months of cash at current burn; bear-case months
-10. **Last raise:** amount, valuation, lead investor, date
+1. **Detect skills** -- scan `.agents/skills/` for available SKILL.md files. Build a capability map.
 
-### Strategic Context
-11. **Top 3 priorities for the current quarter** (in plain language)
-12. **Top 3 risks the founder loses sleep over** (be specific)
+2. **Load active context**:
+   - Read `.ai-engineering/specs/spec.md` -- current spec
+   - Read `.ai-engineering/specs/plan.md` -- current tasks
+   - Read `.ai-engineering/state/decision-store.json` -- active decisions and risk acceptances
+   - Read `.ai-engineering/contexts/team/lessons.md` -- accumulated rules and patterns
 
-## Output Format
+3. **Present status** -- concise summary to user:
+   ```
+   Active spec: spec-054 (Hooks, Security, Observability)
+   Tasks: 12/18 complete, 2 blocked
+   Decisions: 3 active, 1 expiring in 5 days
+   Skills: 29 loaded
+   ```
 
-Saved to `~/.claude/company-context.md`:
+4. **Enforce skill discipline** -- install the following rule for the session:
 
-```markdown
-# Company Context
-**Generated:** YYYY-MM-DD
-**Last updated:** YYYY-MM-DD
+   > **If a skill applies to the current task, you MUST use it.** No exceptions. No "this is too simple" shortcuts.
 
-## Identity
-- **Company:** <name>
-- **Pitch:** <one sentence>
-- **Stage:** <stage>
-- **HQ + remote:** <distribution>
+## Red Flags Table
 
-## Business
-- **Model:** <type>
-- **ICP:** <description + named customer>
-- **ACV:** $<median> (range $<low> - $<high>)
-- **Deal count (LTM):** N
-- **ARR growth (YoY):** X%
+Rationalization patterns agents use to skip skills. Every one of these is wrong.
 
-## Financial
-- **Cash on hand:** $<amount>
-- **Net burn (monthly):** $<amount>
-- **Runway base:** N months
-- **Runway bear:** N months
-- **Last raise:** $<amount> at $<post> in <month YYYY>, led by <investor>
+| # | Rationalization | Why it is wrong | Correct action |
+|---|----------------|-----------------|----------------|
+| 1 | "This is too simple for planning" | Simple tasks still need scope definition | Use `/ai-plan` (trivial pipeline) |
+| 2 | "I'll just make a quick fix" | Quick fixes skip root cause analysis | Use `/ai-debug` |
+| 3 | "Tests aren't needed for this change" | Every behavioral change needs verification | Use `/ai-test` |
+| 4 | "I already know the answer" | Confidence without verification is the #1 source of bugs | Use `/ai-explore` first |
+| 5 | "The user is in a hurry" | Skipping process creates more delay from rework | Follow the process faster, do not skip steps |
+| 6 | "This is just a config change" | Config changes affect runtime behavior | Use `/ai-test` to verify |
+| 7 | "I'll add tests later" | Later never comes; RED before GREEN | TDD protocol: tests first |
+| 8 | "The existing tests cover this" | Assumption without verification | Run tests, check coverage |
+| 9 | "This doesn't need a spec" | Every pipeline requires a spec, even trivial | Use `/ai-brainstorm` |
+| 10 | "I'll clean up the commit message later" | Commit messages are permanent documentation | Use `/ai-commit` |
+| 11 | "Security scanning would slow us down" | A leaked secret takes hours to rotate | Gitleaks runs in seconds |
+| 12 | "This refactor is obvious" | Obvious refactors still need test verification | Use `/ai-simplify` |
 
-## Team
-- **Total headcount:** N
-- **Eng:** N | Product: N | GTM: N | Ops: N | G&A: N
+## Detection Rules
 
-## Quarter
-- **Top priorities (Q<X> YYYY):**
-  1. <priority>
-  2. <priority>
-  3. <priority>
+When the user's request matches these patterns, enforce the corresponding skill:
 
-- **Top risks:**
-  1. <risk>
-  2. <risk>
-  3. <risk>
+| User intent pattern | Required skill |
+|-------------------|----------------|
+| "implement", "build", "add feature" | `/ai-plan` then `/ai-dispatch` |
+| "fix", "bug", "broken", "not working" | `/ai-debug` |
+| "test", "coverage", "verify" | `/ai-test` |
+| "refactor", "restructure", "move" | `/ai-simplify` |
+| "explain", "how does", "what is" | `/ai-explain` |
+| "commit", "push", "save" | `/ai-commit` |
+| "PR", "pull request", "review" | `/ai-pr` |
+| "deploy", "release", "publish" | `/ai-release` |
+| "conflict", "merge conflict" | `/ai-resolve-conflicts` |
+| "incident", "outage", "postmortem" | `/ai-postmortem` |
 
-## Routing Hints
-[Optional: any role the founder wants to use sparingly or rely on heavily]
+## Quick Reference
+
+```
+/ai-onboard     # manual bootstrap (usually auto-triggered)
 ```
 
-## Workflow
+No arguments. Reads project state and configures the session.
 
-1. Walk the founder through all 12 questions
-2. Quote founder's own words wherever possible (don't paraphrase the ICP)
-3. Save to `~/.claude/company-context.md`
-4. (Optional) If llm-wiki bridge is configured: symlink to vault
-   ```bash
-   ln -sf ~/company-vault/00-meta/company-context.md ~/.claude/company-context.md
-   ```
-5. Confirm with founder: read the file back, ask "anything missing?"
+## Boundaries
 
-## When to Re-Run
+- Onboard is read-only -- it does not modify project files
+- It does not execute tasks -- it configures the session for correct execution
+- If no active spec exists, report it but do not block the session
 
-- After a fundraise (numbers change)
-- After a major pivot or product launch
-- After 6+ months (most facts have drifted)
-- After a major hire (team distribution changes)
-- Always before a `/cs:boardroom` for a high-stakes decision
-
-## Persistence
-
-By default, `~/.claude/company-context.md` is local to the founder's machine. To make it persistent across machines / shareable:
-
-- **Markdown vault (recommended):** see [`../../references/llm-wiki-bridge.md`](../../references/llm-wiki-bridge.md)
-- **Encrypted dotfile sync:** age + git
-- **Shared team:** keep in a private repo, symlink from `~/.claude/`
-
-## Related
-
-- Skill: [`cs-onboard`](../../../skills/cs-onboard/SKILL.md) — the underlying interview protocol
-- Skill: [`context-engine`](../../../skills/context-engine/SKILL.md) — reads this file
-- Reference: [`../../references/llm-wiki-bridge.md`](../../references/llm-wiki-bridge.md)
-
----
-
-**Version:** 1.0.0
+$ARGUMENTS

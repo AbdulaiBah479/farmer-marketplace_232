@@ -1,217 +1,294 @@
 ---
 name: image-processing
-description: "Process images for web development — resize, crop, trim whitespace, convert formats (PNG/WebP/JPG), optimise file size, generate thumbnails, create OG card images. Uses Pillow (Python) — no ImageMagick needed. Trigger with 'resize image', 'convert to webp', 'trim logo', 'optimise images', 'make thumbnail', 'create OG image', 'crop whitespace', 'process image', or 'image too large'."
-compatibility: claude-code-only
+description: Image decoding, encoding, and manipulation using the `image` crate
 ---
 
-# Image Processing
+# image-processing
 
-Use `img-process` (shipped in `bin/`) for common operations. For complex or custom workflows, generate a Pillow script adapted to the user's environment.
+The `image` crate provides native Rust implementations for image encoding/decoding. In script-kit-gpui, it's used for PNG encoding/decoding for app icons and clipboard images.
 
-## Quick Reference — img-process CLI
+**Crate version**: `0.25` with features `["png"]` only (no default features for minimal binary size)
 
-```bash
-img-process resize hero.png --width 1920
-img-process convert logo.png --format webp
-img-process trim logo-raw.jpg -o logo-clean.png --padding 10
-img-process thumbnail photo.jpg --size 200
-img-process optimise hero.jpg --quality 85 --max-width 1920
-img-process og-card -o og.png --title "My App" --subtitle "Built for speed"
-img-process batch ./images --action convert --format webp -o ./optimised
+## Key Types
+
+### DynamicImage
+Enum over supported buffer formats with automatic format conversion:
+```rust
+let img = image::load_from_memory(png_data)?;        // -> DynamicImage
+let rgba = img.to_rgba8();                           // -> RgbaImage (ImageBuffer<Rgba<u8>>)
+let (width, height) = img.dimensions();              // GenericImageView trait
 ```
 
-**Use `img-process` when**: the operation is standard (resize, convert, trim, thumbnail, optimise, OG card, batch). This is faster and avoids generating a script each time.
+### RgbaImage (ImageBuffer<Rgba<u8>, Vec<u8>>)
+Fixed-format buffer for RGBA pixels:
+```rust
+// Create from raw bytes (must be exactly width * height * 4 bytes)
+let buffer = image::RgbaImage::from_raw(width, height, rgba_bytes)
+    .expect("Invalid dimensions or byte count");
 
-**Generate a custom script when**: the operation needs logic `img-process` doesn't cover (compositing multiple images, watermarks, complex text layouts, conditional processing).
-
-## Prerequisites
-
-Pillow is required for both `img-process` and custom scripts:
-
-```bash
-pip install Pillow
+// Create new empty
+let mut img = image::RgbaImage::new(width, height);
 ```
 
-If Pillow is unavailable, use alternatives:
-
-| Alternative | Platform | Install | Best for |
-|-------------|----------|---------|----------|
-| `sips` | macOS (built-in) | None | Resize, convert (no trim/OG) |
-| `sharp` | Node.js | `npm install sharp` | Full feature set, high performance |
-| `ffmpeg` | Cross-platform | `brew install ffmpeg` | Resize, convert |
-
-## Output Format Guide
-
-| Use case | Format | Why |
-|----------|--------|-----|
-| Photos, hero images | WebP | Best compression, wide browser support |
-| Logos, icons (need transparency) | PNG | Lossless, supports alpha |
-| Fallback for older browsers | JPG | Universal support |
-| Thumbnails | WebP or JPG | Small file size priority |
-| OG cards | PNG | Social platforms handle PNG best |
-
-## Core Patterns
-
-### Save with Format-Specific Quality
-
-Different formats need different save parameters. Always handle RGBA-to-JPG compositing — JPG does not support transparency, so composite onto a white background first.
-
-```python
-from PIL import Image
-import os
-
-def save_image(img, output_path, quality=None):
-    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
-    kwargs = {}
-    ext = output_path.lower().rsplit(".", 1)[-1]
-
-    if ext == "webp":
-        kwargs = {"quality": quality or 85, "method": 6}
-    elif ext in ("jpg", "jpeg"):
-        kwargs = {"quality": quality or 90, "optimize": True}
-        # RGBA → RGB: composite onto white background
-        if img.mode == "RGBA":
-            bg = Image.new("RGB", img.size, (255, 255, 255))
-            bg.paste(img, mask=img.split()[3])
-            img = bg
-    elif ext == "png":
-        kwargs = {"optimize": True}
-
-    img.save(output_path, **kwargs)
+### Frame
+Animation frame wrapper used by GPUI's RenderImage:
+```rust
+let frame = image::Frame::new(rgba_image);
+let render_image = RenderImage::new(smallvec![frame]);
 ```
 
-### Resize with Aspect Ratio
-
-When only width or height is given, calculate the other from aspect ratio. Use `Image.LANCZOS` for high-quality downscaling.
-
-```python
-def resize_image(img, width=None, height=None):
-    if width and height:
-        return img.resize((width, height), Image.LANCZOS)
-    elif width:
-        ratio = width / img.width
-        return img.resize((width, int(img.height * ratio)), Image.LANCZOS)
-    elif height:
-        ratio = height / img.height
-        return img.resize((int(img.width * ratio), height), Image.LANCZOS)
-    return img
+### Pixel Types
+```rust
+image::Rgba([255, 0, 0, 255])  // Red pixel
+image::Rgb([255, 255, 255])    // White pixel (no alpha)
+image::Luma([128])             // Grayscale
 ```
 
-### Trim Whitespace (Auto-Crop)
+## Usage in script-kit-gpui
 
-Remove surrounding whitespace from logos and icons. Convert to RGBA first, then use `getbbox()` to find content bounds.
-
-```python
-img = Image.open(input_path)
-if img.mode != "RGBA":
-    img = img.convert("RGBA")
-bbox = img.getbbox()  # Bounding box of non-zero pixels
-if bbox:
-    img = img.crop(bbox)
+### PNG Decoding for App Icons (`list_item.rs`)
+```rust
+pub fn decode_png_to_render_image(png_data: &[u8]) -> Result<Arc<RenderImage>, image::ImageError> {
+    use image::GenericImageView;
+    
+    let img = image::load_from_memory(png_data)?;
+    let mut rgba = img.to_rgba8();
+    let (width, height) = img.dimensions();
+    
+    // IMPORTANT: GPUI/Metal expects BGRA format
+    // Must swap R and B channels when creating RenderImage directly
+    for pixel in rgba.chunks_exact_mut(4) {
+        pixel.swap(0, 2); // RGBA -> BGRA
+    }
+    
+    let buffer = image::RgbaImage::from_raw(width, height, rgba.into_raw())
+        .expect("Failed to create image buffer");
+    let frame = image::Frame::new(buffer);
+    
+    Ok(Arc::new(RenderImage::new(SmallVec::from_elem(frame, 1))))
+}
 ```
 
-### Thumbnail
+### PNG Encoding for Screenshots (`platform.rs`)
+```rust
+use image::codecs::png::PngEncoder;
+use image::ImageEncoder;
 
-Fit within max dimensions while maintaining aspect ratio:
-
-```python
-img.thumbnail((size, size), Image.LANCZOS)
+let mut png_data = Vec::new();
+let encoder = PngEncoder::new(&mut png_data);
+encoder.write_image(
+    &final_image,           // &[u8] or ImageBuffer
+    width, 
+    height, 
+    image::ExtendedColorType::Rgba8
+)?;
 ```
 
-### Optimise for Web
+### Clipboard Image Handling (`clipboard_history/image.rs`)
+```rust
+// Encode clipboard to PNG
+let rgba_image = image::RgbaImage::from_raw(
+    image.width as u32,
+    image.height as u32,
+    image.bytes.to_vec(),
+).context("Failed to create RGBA image")?;
 
-Resize + compress in one step. Convert to WebP for best compression. Typical settings: width 1920, quality 85.
+let mut png_data = Vec::new();
+rgba_image.write_to(&mut Cursor::new(&mut png_data), image::ImageFormat::Png)?;
 
-### Cross-Platform Font Discovery
-
-System font paths differ by OS. Try multiple paths, fall back to Pillow's default. On Linux, `fc-list` can discover fonts dynamically.
-
-```python
-from PIL import ImageFont
-
-def get_font(size):
-    font_paths = [
-        # macOS
-        "/System/Library/Fonts/Helvetica.ttc",
-        "/System/Library/Fonts/SFNSText.ttf",
-        # Linux
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-        "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
-        # Windows
-        "C:/Windows/Fonts/arial.ttf",
-    ]
-    for path in font_paths:
-        if os.path.exists(path):
-            try:
-                return ImageFont.truetype(path, size)
-            except Exception:
-                continue
-    return ImageFont.load_default()
+// Decode PNG to clipboard format
+let img = image::load_from_memory_with_format(&png_bytes, image::ImageFormat::Png)?;
+let rgba = img.to_rgba8();
 ```
 
-### OG Card Generation (1200x630)
-
-Composite text on a background image or solid colour. Apply semi-transparent overlay for text readability. Centre text horizontally.
-
-```python
-from PIL import Image, ImageDraw, ImageFont
-
-width, height = 1200, 630
-
-# Background: image or solid colour
-if background_path:
-    img = Image.open(background_path).resize((width, height), Image.LANCZOS)
-else:
-    img = Image.new("RGB", (width, height), bg_color or "#1a1a2e")
-
-# Semi-transparent overlay for text readability
-overlay = Image.new("RGBA", (width, height), (0, 0, 0, 128))
-img = img.convert("RGBA")
-img = Image.alpha_composite(img, overlay)
-
-draw = ImageDraw.Draw(img)
-font_title = get_font(48)
-font_sub = get_font(24)
-
-# Centre title
-if title:
-    bbox = draw.textbbox((0, 0), title, font=font_title)
-    tw = bbox[2] - bbox[0]
-    draw.text(((width - tw) // 2, height // 2 - 60), title, fill="white", font=font_title)
-
-img = img.convert("RGB")
+### Image Resizing for Screenshots
+```rust
+let resized = image::imageops::resize(
+    &image,
+    new_width,
+    new_height,
+    image::imageops::FilterType::Lanczos3,  // High-quality downscaling
+);
 ```
 
-## Common Workflows
+## Loading Images
 
-### Logo Cleanup (client-supplied JPG with white background)
-
-```bash
-img-process trim logo-raw.jpg -o logo-trimmed.png --padding 10
-img-process thumbnail logo-trimmed.png --size 512 -o favicon-512.png
+### From File
+```rust
+let img = image::open("path/to/image.png")?;  // Auto-detects format
 ```
 
-### Prepare Hero Image for Production
+### From Bytes (Most Common in script-kit-gpui)
+```rust
+// Auto-detect format
+let img = image::load_from_memory(bytes)?;
 
-```bash
-img-process optimise hero.jpg --max-width 1920 --quality 85
-# Outputs hero.webp — resized and compressed
+// Explicit format (faster, no guessing)
+let img = image::load_from_memory_with_format(bytes, image::ImageFormat::Png)?;
 ```
 
-### Batch Process
-
-```bash
-img-process batch ./raw-images --action convert --format webp --quality 85 -o ./optimised
-img-process batch ./photos --action resize --width 800 -o ./thumbnails
+### Dimensions Only (No Full Decode)
+```rust
+let cursor = std::io::Cursor::new(&png_bytes);
+let reader = image::ImageReader::with_format(cursor, image::ImageFormat::Png);
+let (width, height) = reader.into_dimensions()?;  // Fast header-only parse
 ```
 
-### Pipeline with Gemini Image Gen
+## Pixel Access
 
-Generate images with the gemini-image-gen skill, then process them:
+### Reading Pixels
+```rust
+use image::GenericImageView;
 
-```bash
-# After generating with Gemini (raw PNG output):
-img-process optimise generated-image.png --max-width 1920 --quality 85
-# Or batch process all generated images:
-img-process batch ./generated --action optimise -o ./production
+let pixel = img.get_pixel(x, y);  // Returns Rgba<u8> or similar
+let (r, g, b, a) = (pixel[0], pixel[1], pixel[2], pixel[3]);
 ```
+
+### Writing Pixels
+```rust
+use image::GenericImage;
+
+img.put_pixel(x, y, image::Rgba([255, 0, 0, 255]));
+```
+
+### Iterating All Pixels
+```rust
+// Immutable iteration
+for (x, y, pixel) in img.pixels() {
+    // pixel is Rgba<u8>
+}
+
+// Direct buffer access (fastest)
+for pixel in rgba.chunks_exact_mut(4) {
+    pixel.swap(0, 2);  // Swap R and B
+}
+```
+
+## Format Support
+
+Features enabled in script-kit-gpui: **`png` only**
+
+```toml
+image = { version = "0.25", default-features = false, features = ["png"] }
+```
+
+Available formats (require feature flags):
+- `png` - PNG decoding/encoding
+- `jpeg` - JPEG decoding/encoding  
+- `gif` - GIF decoding/encoding
+- `webp` - WebP decoding/encoding
+- `bmp`, `ico`, `tiff`, etc.
+
+Default features include many formats - disable for smaller binaries.
+
+## Memory Considerations
+
+### Large Image Safety
+```rust
+// RgbaImage::from_raw returns None if dimensions don't match byte count
+let buffer = image::RgbaImage::from_raw(width, height, bytes)
+    .context("Dimension mismatch")?;
+
+// Validate dimensions before allocation
+let expected_bytes = (width as usize) * (height as usize) * 4;
+if bytes.len() != expected_bytes {
+    return Err(anyhow!("Invalid byte count"));
+}
+```
+
+### Avoiding Copies with SmallVec
+```rust
+// BAD: SmallVec::from_elem clones the frame buffer
+let render_image = RenderImage::new(SmallVec::from_elem(frame, 1));
+
+// GOOD: Use smallvec! macro - no clone
+use smallvec::smallvec;
+let render_image = RenderImage::new(smallvec![frame]);
+```
+
+### Decode Once, Cache Forever
+```rust
+// WRONG: Decoding during render (called 60fps!)
+fn render(&mut self, cx: &mut ViewContext<Self>) {
+    let img = decode_png_to_render_image(&self.png_data);  // Slow!
+}
+
+// RIGHT: Decode once, store Arc<RenderImage>
+fn new(png_data: &[u8]) -> Self {
+    Self {
+        cached_image: decode_png_to_render_image(png_data).ok(),
+    }
+}
+```
+
+## Anti-patterns
+
+### Forgetting BGRA Conversion for Metal/GPUI
+```rust
+// WRONG: Assumes RGBA works
+let frame = image::Frame::new(rgba_image);
+let render_image = RenderImage::new(smallvec![frame]);  // Colors wrong!
+
+// RIGHT: Convert RGBA -> BGRA for Metal
+for pixel in rgba.chunks_exact_mut(4) {
+    pixel.swap(0, 2);
+}
+```
+
+### Not Validating Byte Length
+```rust
+// WRONG: Panics on invalid input
+let img = image::RgbaImage::from_raw(w, h, bytes).unwrap();
+
+// RIGHT: Handle gracefully
+let img = image::RgbaImage::from_raw(w, h, bytes)
+    .context("Invalid dimensions or corrupt data")?;
+```
+
+### Loading Same Image Multiple Times
+```rust
+// WRONG: Decodes same icon for every list item
+for item in items {
+    let icon = decode_png(&item.icon_path);  // N decodes!
+}
+
+// RIGHT: Cache decoded images by path/hash
+let icon_cache: HashMap<String, Arc<RenderImage>> = HashMap::new();
+```
+
+### Using Default Features
+```rust
+# WRONG: Pulls in all decoders, huge binary
+image = "0.25"
+
+# RIGHT: Only what you need
+image = { version = "0.25", default-features = false, features = ["png"] }
+```
+
+## Error Handling
+
+All decode operations return `Result<_, image::ImageError>`:
+```rust
+use image::ImageError;
+
+match image::load_from_memory(bytes) {
+    Ok(img) => // success
+    Err(ImageError::Decoding(_)) => // corrupt/invalid format
+    Err(ImageError::IoError(_)) => // read failure
+    Err(ImageError::Limits(_)) => // image too large
+    Err(e) => // other error
+}
+```
+
+## Quick Reference
+
+| Operation | Code |
+|-----------|------|
+| Load PNG from bytes | `image::load_from_memory_with_format(bytes, ImageFormat::Png)?` |
+| Convert to RGBA | `img.to_rgba8()` |
+| Get dimensions | `img.dimensions()` or `(img.width(), img.height())` |
+| Create from raw | `RgbaImage::from_raw(w, h, bytes)?` |
+| Encode to PNG | `img.write_to(&mut cursor, ImageFormat::Png)?` |
+| Resize | `imageops::resize(&img, w, h, FilterType::Lanczos3)` |
+| Create Frame | `Frame::new(rgba_image)` |
+| Dimensions only | `ImageReader::with_format(cursor, fmt).into_dimensions()?` |

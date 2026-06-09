@@ -5,19 +5,7 @@ description: WCAG, ARIA, keyboard navigation
 
 # Accessibility
 
-> **Quick Guide:** All interactive elements keyboard accessible. Use headless component libraries for ARIA patterns. WCAG AA minimum (4.5:1 text contrast). Proper form labels and error handling. Combine automated axe-core checks with manual keyboard and screen reader testing.
-
-**Detailed Resources:**
-
-- [examples/core.md](examples/core.md) - Skip links, semantic HTML, landmarks, button vs link
-- [examples/forms.md](examples/forms.md) - Form validation, error handling, accessible select
-- [examples/focus.md](examples/focus.md) - Modal dialogs, focus indicators
-- [examples/color.md](examples/color.md) - Contrast, color-independent indicators, tokens
-- [examples/tables.md](examples/tables.md) - Sortable data tables
-- [examples/touch-targets.md](examples/touch-targets.md) - Touch target sizing
-- [examples/screen-reader.md](examples/screen-reader.md) - sr-only, hiding decorative content
-- [examples/testing.md](examples/testing.md) - Accessibility testing with axe-core
-- [reference.md](reference.md) - Decision frameworks, anti-patterns, WCAG quick reference
+> **Quick Guide:** All interactive elements keyboard accessible. Use Radix UI for ARIA patterns. WCAG AA minimum (4.5:1 text contrast). Proper form labels and error handling. Test with axe DevTools and screen readers.
 
 ---
 
@@ -29,7 +17,7 @@ description: WCAG, ARIA, keyboard navigation
 
 **(You MUST ensure all interactive elements are keyboard accessible with visible focus indicators)**
 
-**(You MUST use headless component libraries for complex ARIA patterns instead of manual implementation)**
+**(You MUST use Radix UI components for built-in ARIA patterns instead of manual implementation)**
 
 **(You MUST maintain WCAG AA minimum contrast ratios - 4.5:1 for text, 3:1 for UI components)**
 
@@ -39,16 +27,16 @@ description: WCAG, ARIA, keyboard navigation
 
 ---
 
-**Auto-detection:** Accessibility (a11y), WCAG compliance, ARIA patterns, keyboard navigation, screen reader support, focus management, aria-label, aria-live, role attribute, skip link
+**Auto-detection:** Accessibility (a11y), WCAG compliance, ARIA patterns, keyboard navigation, screen reader support, Radix UI, focus management
 
 **When to use:**
 
 - Implementing keyboard navigation and focus management
+- Using Radix UI for accessible component patterns (built-in a11y)
 - Ensuring WCAG AA color contrast (4.5:1 text, 3:1 UI components)
-- Building interactive components (buttons, forms, modals, tables) with proper ARIA
+- Testing with axe DevTools and screen readers
+- Building interactive components (buttons, forms, modals, tables)
 - Adding dynamic content updates (live regions, status messages)
-- Implementing skip links, landmarks, and semantic HTML structure
-- Handling motion preferences with `prefers-reduced-motion`
 
 **When NOT to use:**
 
@@ -59,18 +47,38 @@ description: WCAG, ARIA, keyboard navigation
 
 **Target:** WCAG 2.2 Level AA compliance (minimum), AAA where feasible
 
+**Key patterns covered:**
+
+- Keyboard navigation standards (tab order, focus management, skip links, Escape to close)
+- ARIA patterns with Radix UI components (prefer Radix for built-in accessibility)
+- WCAG 2.2 AA compliance minimum (contrast ratios, semantic HTML, touch targets 24x24px minimum)
+- Screen reader support (role-based queries, hidden content, live regions)
+
+**Detailed Resources:**
+
+- For code examples, see [examples/](examples/) directory:
+  - [core.md](examples/core.md) - Skip links, semantic HTML, landmarks, button vs link
+  - [forms.md](examples/forms.md) - Form validation, error handling, Radix select
+  - [focus.md](examples/focus.md) - Modal dialogs, focus indicators
+  - [color.md](examples/color.md) - Contrast, color-independent indicators, tokens
+  - [tables.md](examples/tables.md) - Sortable data tables
+  - [touch-targets.md](examples/touch-targets.md) - Touch target sizing
+  - [screen-reader.md](examples/screen-reader.md) - sr-only, hiding decorative content
+  - [testing.md](examples/testing.md) - Role queries, jest-axe, Lighthouse CI
+- For decision frameworks and anti-patterns, see [reference.md](reference.md)
+
 ---
 
 <philosophy>
 
 ## Philosophy
 
-Accessibility ensures digital products are usable by everyone, including users with disabilities. **Accessibility is a requirement, not a feature** - it should be built in from the start, not retrofitted.
+Accessibility ensures digital products are usable by everyone, including users with disabilities. This skill applies the principle that **accessibility is a requirement, not a feature** - it should be built in from the start, not retrofitted.
 
 Key philosophy:
 
 - **Semantic HTML first** - Use native elements for built-in accessibility
-- **Headless components for complex patterns** - Leverage tested, accessible component primitives from your component library
+- **Radix UI for complex patterns** - Leverage tested, accessible component primitives
 - **Progressive enhancement** - Start with keyboard, add mouse interactions on top
 - **WCAG as baseline** - Meet AA minimum, aim for AAA where feasible
 
@@ -101,7 +109,7 @@ Key philosophy:
 - **Visible focus indicators** - Always show clear focus state (never `outline: none` without replacement)
 - **Focus on open** - When opening modals/dialogs, move focus to first interactive element or close button
 - **Focus on close** - Restore focus to trigger element when closing modals/dialogs
-- **Focus trapping** - Trap focus inside modals using your headless component library or manual implementation
+- **Focus trapping** - Trap focus inside modals using Radix UI or manual implementation
 - **Programmatic focus** - Use `element.focus()` for dynamic content (search results, error messages)
 
 #### Keyboard Shortcuts
@@ -115,26 +123,24 @@ Key philosophy:
 
 #### Skip Links
 
-**MANDATORY for pages with navigation** - place as first focusable element, visually hidden until focused.
+**MANDATORY for pages with navigation**
 
-```typescript
-// components/skip-link.tsx
-export function SkipLink({ className }: { className?: string }) {
-  return (
-    <a href="#main-content" className={className}>
-      Skip to main content
-    </a>
-  );
-}
-```
-
-See [examples/core.md](examples/core.md) for full skip link implementation with styling.
+- Place skip link as first focusable element
+- Visually hidden until focused
+- Allow users to skip navigation and jump to main content
+- Multiple skip links for complex layouts (skip to navigation, skip to sidebar, etc.)
 
 ---
 
-### ARIA Patterns
+### ARIA with Radix UI
 
-**Use headless component libraries** - they handle ARIA automatically for complex patterns like dialogs, selects, tabs, tooltips, and popovers.
+**Prefer Radix UI components** - They handle ARIA automatically:
+
+- `Dialog` - focus trapping, Escape to close, aria-modal
+- `Select` - keyboard navigation, aria-selected, listbox pattern
+- `Tabs` - arrow key navigation, aria-selected
+- `Tooltip` - proper timing, keyboard support
+- `Popover` - focus management, click outside to close
 
 #### Component-Specific ARIA
 
@@ -209,8 +215,6 @@ See [examples/core.md](examples/core.md) for full skip link implementation with 
 - Provide patterns/textures in charts
 - Underline links in body text
 
-See [examples/color.md](examples/color.md) for contrast examples and design tokens.
-
 ---
 
 ### Semantic HTML
@@ -239,7 +243,7 @@ See [examples/color.md](examples/color.md) for contrast examples and design toke
 
 **Label Associations:**
 
-- Always use proper `<label>` with `htmlFor` attribute
+- Always use proper `<label>` with `for` attribute
 - Or wrap input inside label element
 
 **Error Handling:**
@@ -250,7 +254,20 @@ See [examples/color.md](examples/color.md) for contrast examples and design toke
 - Visual error indicators (icons, border color)
 - Error summary at top of form for multiple errors
 
-See [examples/forms.md](examples/forms.md) for complete form validation and error handling patterns.
+**Required Fields:**
+
+- `required` attribute for browser validation
+- `aria-required="true"` for screen readers
+- Visual indicator (asterisk, "required" text)
+- Legend/description explaining required fields
+
+**Input Types:**
+
+- `type="email"` - Email keyboard
+- `type="tel"` - Phone keyboard
+- `type="number"` - Number keyboard
+- `type="date"` - Date picker
+- `type="search"` - Search keyboard
 
 ---
 
@@ -265,15 +282,8 @@ See [examples/forms.md](examples/forms.md) for complete form validation and erro
 
 **Use `:focus-visible` for better UX:**
 
-```css
-/* Shows only for keyboard navigation, not mouse clicks */
-button:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-```
-
-See [examples/focus.md](examples/focus.md) for full focus indicator patterns.
+- `:focus` - Shows on mouse click (annoying)
+- `:focus-visible` - Shows only for keyboard navigation (better)
 
 ---
 
@@ -281,22 +291,43 @@ See [examples/focus.md](examples/focus.md) for full focus indicator patterns.
 
 **WCAG 2.2 Target Size Requirements:**
 
-- **Level AA (2.5.8):** 24x24 CSS pixels minimum, or adequate spacing (24px between targets)
-- **Level AAA (2.5.5):** 44x44 CSS pixels (recommended for best UX)
+**Level AA (2.5.8 Target Size Minimum):**
+
+- Minimum: 24x24 CSS pixels
+- OR adequate spacing from adjacent targets (24px between closest points)
 - Exceptions: inline text links, user agent controls, essential designs
 
-See [examples/touch-targets.md](examples/touch-targets.md) for sizing and spacing examples.
+**Level AAA (2.5.5 Target Size Enhanced):**
+
+- Minimum: 44x44 CSS pixels (recommended for best UX)
+
+**Interactive elements:**
+
+- Buttons: 24x24px minimum (44x44px recommended)
+- Links in text: Inline exemption applies, but increase padding where feasible
+- Form inputs: 24px height minimum (44px recommended)
+- Icons: 24x24px minimum touch target
+
+**Spacing:**
+
+- 8px minimum between adjacent touch targets
+- More spacing on mobile (12-16px recommended)
+- Alternative: 24px spacing allows smaller targets
 
 ---
 
 ### Screen Reader Support
 
+**Visually Hidden Content:**
+
 - Use `.sr-only` class for screen reader only text
 - Use `aria-label` for icon-only buttons
 - Use empty `alt=""` for decorative images
-- Use `aria-hidden="true"` for decorative content (but never on focusable elements)
 
-See [examples/screen-reader.md](examples/screen-reader.md) for sr-only and hiding patterns.
+**Hidden from Screen Readers:**
+
+- `aria-hidden="true"` for decorative content
+- Empty `alt=""` for decorative images
 
 ---
 
@@ -304,10 +335,23 @@ See [examples/screen-reader.md](examples/screen-reader.md) for sr-only and hidin
 
 **WCAG 2.3.3 Animation from Interactions (AAA):**
 
-Motion can cause nausea, dizziness, or vestibular disorders (affects 70+ million people). Use `prefers-reduced-motion` to respect user preferences:
+Motion can cause nausea, dizziness, or vestibular disorders for some users. Provide motion alternatives:
+
+**Use `prefers-reduced-motion` media query:**
 
 ```css
-/* Only animate when user has no motion preference */
+/* Approach 1: Disable animations when user prefers reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Approach 2: Only animate when user has no preference */
 @media (prefers-reduced-motion: no-preference) {
   .animated-element {
     animation: slide-in 300ms ease-out;
@@ -326,7 +370,7 @@ Motion can cause nausea, dizziness, or vestibular disorders (affects 70+ million
 
 ### WCAG 2.2 New Success Criteria
 
-**WCAG 2.2** (W3C Recommendation October 2023, ISO/IEC 40500:2025 as of October 2025) added 9 new success criteria. Key ones for developers:
+**WCAG 2.2** (October 2023) added 9 new success criteria. Key ones for developers:
 
 **Level A:**
 
@@ -354,13 +398,34 @@ Motion can cause nausea, dizziness, or vestibular disorders (affects 70+ million
 
 ---
 
-## Testing Accessibility
+<testing>
 
-**Multi-layered approach required** - automated tools catch ~57% of WCAG issues. Always combine with manual testing.
+## Testing Approach
 
-**Automated:** Use axe-core based tools in your test runner for automated WCAG checks. See [examples/testing.md](examples/testing.md) for axe integration patterns.
+**RECOMMENDED: Multi-layered testing strategy**
 
-**Manual keyboard checklist:**
+### Automated Testing
+
+**Use Testing Library's role-based queries:**
+
+```typescript
+const button = screen.getByRole("button", { name: "Submit" });
+const switchElement = within(feature).getByRole("switch");
+```
+
+**Additional tools:**
+
+- **jest-axe** - Automated accessibility testing in Jest unit tests
+- **vitest-axe** - Same API as jest-axe, but for Vitest projects
+- **cypress-axe** - E2E accessibility testing with Cypress
+- **axe-core** - Runtime accessibility testing (v4.10+ supports WCAG 2.2)
+- **eslint-plugin-jsx-a11y** - Lint-time accessibility checks
+
+**Note:** axe-core finds ~57% of WCAG issues automatically. Always combine with manual testing.
+
+### Manual Testing Checklist
+
+**Keyboard navigation:**
 
 - [ ] Tab through all interactive elements in logical order
 - [ ] Activate buttons with Enter/Space
@@ -369,57 +434,36 @@ Motion can cause nausea, dizziness, or vestibular disorders (affects 70+ million
 - [ ] No keyboard traps
 - [ ] Focus indicators visible on all elements
 
-**Manual screen reader checklist:**
+**Screen reader:**
 
 - [ ] All images have alt text (or alt="" if decorative)
 - [ ] Form inputs have labels
 - [ ] Error messages are announced
+- [ ] Button purposes are clear
 - [ ] Headings create logical outline
 - [ ] Landmarks are labeled
 - [ ] Live regions announce updates
+- [ ] Tables have proper headers
 
-**Manual visual checklist:**
+**Visual:**
 
 - [ ] Color contrast meets WCAG AA (4.5:1 text, 3:1 UI)
 - [ ] Information not conveyed by color alone
 - [ ] Text resizable to 200% without horizontal scroll
-- [ ] Touch targets meet 24x24px minimum (AA)
+- [ ] Touch targets meet 24x24px minimum (AA) or 44x44px (AAA recommended)
 - [ ] Focus indicators have 3:1 contrast
 - [ ] Animations respect prefers-reduced-motion
 
-**Screen readers to test with:** NVDA (Windows, free), JAWS (Windows, paid), VoiceOver (macOS/iOS, built-in), TalkBack (Android, built-in)
+### Screen Reader Testing
 
----
+**Test with multiple screen readers:**
 
-<red_flags>
+- **NVDA** (Windows) - Free, most popular
+- **JAWS** (Windows) - Industry standard
+- **VoiceOver** (macOS/iOS) - Built-in
+- **TalkBack** (Android) - Built-in
 
-## RED FLAGS
-
-**High Priority Issues:**
-
-- Removing focus outlines without replacement - keyboard users can't navigate, violates WCAG 2.4.7
-- Using `div` or `span` for buttons/links - no semantic meaning, no keyboard support
-- Click handlers on non-interactive elements without role/keyboard support - violates WCAG 2.1.1
-- Form inputs without labels - screen readers can't announce purpose, violates WCAG 1.3.1
-
-**Medium Priority Issues:**
-
-- Color-only error indicators - color-blind users can't distinguish
-- Placeholder text as label replacement - disappears on input
-- Auto-playing audio/video without controls - violates WCAG 1.4.2
-
-**Gotchas & Edge Cases:**
-
-- `:focus` vs `:focus-visible` - use `:focus-visible` to avoid focus rings on mouse clicks
-- Empty `alt=""` is correct for decorative images - don't skip the alt attribute entirely
-- `aria-hidden="true"` also hides from keyboard - don't use on focusable elements
-- `role="button"` on `<div>` doesn't add keyboard support - still need Enter/Space handlers
-- `prefers-reduced-motion: reduce` means minimize, not eliminate - essential animations can remain
-- Live regions announce ALL content - keep messages concise to avoid spam
-
-See [reference.md](reference.md) for full anti-patterns with code examples.
-
-</red_flags>
+</testing>
 
 ---
 
@@ -430,12 +474,27 @@ See [reference.md](reference.md) for full anti-patterns with code examples.
 - WCAG 2.2 Guidelines: https://www.w3.org/WAI/WCAG22/quickref/
 - What's New in WCAG 2.2: https://www.w3.org/WAI/standards-guidelines/wcag/new-in-22/
 - WAI-ARIA Authoring Practices: https://www.w3.org/WAI/ARIA/apg/
+- WAI-ARIA 1.3 Draft (new roles: suggestion, comment, mark): https://w3c.github.io/aria/
+
+**Note:** WAI-ARIA 1.3 is still in draft (as of January 2024). New roles like `suggestion`, `comment`, and `mark` are not yet widely supported by browsers and assistive technologies.
 
 **Tools:**
 
 - axe DevTools: https://www.deque.com/axe/devtools/
+- axe-core API: https://github.com/dequelabs/axe-core/blob/develop/doc/API.md
 - WAVE: https://wave.webaim.org/
 - WebAIM Contrast Checker: https://webaim.org/resources/contrastchecker/
+
+**Testing libraries:**
+
+- jest-axe: https://github.com/nickcolley/jest-axe
+- vitest-axe: https://github.com/chaance/vitest-axe
+- cypress-axe: https://github.com/component-driven/cypress-axe
+
+**Screen readers:**
+
+- NVDA Screen Reader: https://www.nvaccess.org/
+- Keyboard Navigation Guide: https://webaim.org/articles/keyboard/
 
 ---
 
@@ -447,7 +506,7 @@ See [reference.md](reference.md) for full anti-patterns with code examples.
 
 **(You MUST ensure all interactive elements are keyboard accessible with visible focus indicators)**
 
-**(You MUST use headless component libraries for complex ARIA patterns instead of manual implementation)**
+**(You MUST use Radix UI components for built-in ARIA patterns instead of manual implementation)**
 
 **(You MUST maintain WCAG AA minimum contrast ratios - 4.5:1 for text, 3:1 for UI components)**
 

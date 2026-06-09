@@ -20,44 +20,107 @@ metadata:
 - Understanding GitHub event types and payloads
 - Handling push, pull request, or issue events
 
-## Verification (core)
+## Essential Code (USE THIS)
 
-GitHub signs the raw body with HMAC-SHA256 keyed on your webhook secret and sends the digest in `X-Hub-Signature-256` formatted as `sha256=<hex>`. Use `X-Hub-Signature-256` (not the legacy SHA-1 `X-Hub-Signature`), pass the **raw** body, and compare timing-safe.
-
-Node:
+### GitHub Signature Verification (JavaScript)
 
 ```javascript
 const crypto = require('crypto');
 
-function verify(rawBody, signatureHeader, secret) {
-  const [algo, sig] = (signatureHeader || '').split('=');
-  if (algo !== 'sha256' || !sig) return false;
-  const expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
+function verifyGitHubWebhook(rawBody, signatureHeader, secret) {
+  if (!signatureHeader || !secret) return false;
+  
+  // GitHub sends: sha256=xxxx
+  const [algorithm, signature] = signatureHeader.split('=');
+  if (algorithm !== 'sha256') return false;
+  
+  const expected = crypto
+    .createHmac('sha256', secret)
+    .update(rawBody)
+    .digest('hex');
+  
   try {
-    return crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected));
+    return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
   } catch {
     return false;
   }
 }
 ```
 
-Python:
+### Express Webhook Handler
 
-```python
-import hmac, hashlib
+```javascript
+const express = require('express');
+const app = express();
 
-def verify(raw_body: bytes, signature_header: str, secret: str) -> bool:
-    algo, _, sig = (signature_header or "").partition("=")
-    if algo != "sha256" or not sig:
-        return False
-    expected = hmac.new(secret.encode(), raw_body, hashlib.sha256).hexdigest()
-    return hmac.compare_digest(sig, expected)
+// CRITICAL: Use express.raw() - GitHub requires raw body for signature verification
+app.post('/webhooks/github',
+  express.raw({ type: 'application/json' }),
+  (req, res) => {
+    const signature = req.headers['x-hub-signature-256'];  // Use sha256, not sha1
+    const event = req.headers['x-github-event'];
+    const delivery = req.headers['x-github-delivery'];
+    
+    // Verify signature
+    if (!verifyGitHubWebhook(req.body, signature, process.env.GITHUB_WEBHOOK_SECRET)) {
+      console.error('GitHub signature verification failed');
+      return res.status(401).send('Invalid signature');
+    }
+    
+    // Parse payload after verification
+    const payload = JSON.parse(req.body.toString());
+    
+    console.log(`Received ${event} (delivery: ${delivery})`);
+    
+    // Handle by event type
+    switch (event) {
+      case 'push':
+        console.log(`Push to ${payload.ref}:`, payload.head_commit?.message);
+        break;
+      case 'pull_request':
+        console.log(`PR #${payload.number} ${payload.action}:`, payload.pull_request?.title);
+        break;
+      case 'issues':
+        console.log(`Issue #${payload.issue?.number} ${payload.action}:`, payload.issue?.title);
+        break;
+      case 'ping':
+        console.log('Ping:', payload.zen);
+        break;
+      default:
+        console.log('Received event:', event);
+    }
+    
+    res.json({ received: true });
+  }
+);
 ```
 
-> **For complete handlers with route wiring, event dispatch, and tests**, see:
-> - [examples/express/](examples/express/)
-> - [examples/nextjs/](examples/nextjs/)
-> - [examples/fastapi/](examples/fastapi/)
+### Python Signature Verification (FastAPI)
+
+```python
+import hmac
+import hashlib
+
+def verify_github_webhook(raw_body: bytes, signature_header: str, secret: str) -> bool:
+    if not signature_header or not secret:
+        return False
+    
+    # GitHub sends: sha256=xxxx
+    try:
+        algorithm, signature = signature_header.split('=')
+        if algorithm != 'sha256':
+            return False
+    except ValueError:
+        return False
+    
+    expected = hmac.new(secret.encode(), raw_body, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(signature, expected)
+```
+
+> **For complete working examples with tests**, see:
+> - [examples/express/](examples/express/) - Full Express implementation
+> - [examples/nextjs/](examples/nextjs/) - Next.js App Router implementation
+> - [examples/fastapi/](examples/fastapi/) - Python FastAPI implementation
 
 ## Common Event Types
 
@@ -89,8 +152,11 @@ GITHUB_WEBHOOK_SECRET=your_webhook_secret   # Set when creating webhook in GitHu
 ## Local Development
 
 ```bash
+# Install Hookdeck CLI for local webhook testing
+brew install hookdeck/hookdeck/hookdeck
+
 # Start tunnel (no account needed)
-npx hookdeck-cli listen 3000 github --path /webhooks/github
+hookdeck listen 3000 --path /webhooks/github
 ```
 
 ## Reference Materials
@@ -128,4 +194,4 @@ We recommend installing the [webhook-handler-patterns](https://github.com/hookde
 - [openai-webhooks](https://github.com/hookdeck/webhook-skills/tree/main/skills/openai-webhooks) - OpenAI webhook handling
 - [paddle-webhooks](https://github.com/hookdeck/webhook-skills/tree/main/skills/paddle-webhooks) - Paddle billing webhook handling
 - [webhook-handler-patterns](https://github.com/hookdeck/webhook-skills/tree/main/skills/webhook-handler-patterns) - Handler sequence, idempotency, error handling, retry logic
-- [hookdeck-event-gateway](https://github.com/hookdeck/webhook-skills/tree/main/skills/hookdeck-event-gateway) - Webhook infrastructure that replaces your queue — guaranteed delivery, automatic retries, replay, rate limiting, and observability for your webhook handlers
+- [hookdeck-event-gateway](https://github.com/hookdeck/webhook-skills/tree/main/skills/hookdeck-event-gateway) - Production webhook infrastructure (routing, replay, monitoring)

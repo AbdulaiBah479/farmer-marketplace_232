@@ -1,32 +1,59 @@
 ---
 name: my-skill-name
-description: A clear description of what this skill does and when to use it
+description: Brief description of what this skill does and when to use it. Be specific about capabilities and use cases to help agents decide when to load this skill.
+license: MIT
+compatibility: TypeScript/JavaScript, Python
+metadata:
+  category: category-name
+  time: Xh
+  source: drift-masterguide
 ---
 
-# My Skill Name
+# Skill Title
 
-Instructions for Claude to follow when this skill is activated.
+One-line description of what this skill enables.
 
-## Overview
+## When to Use This Skill
 
-Describe what this skill helps accomplish.
+- Use case 1
+- Use case 2
+- Use case 3
 
-## Instructions
+## Core Concepts
 
-1. Step-by-step instructions
-2. That Claude should follow
-3. When executing this skill
+Explain the key concepts the agent needs to understand.
 
-## Examples
+## Implementation
 
-- Example usage pattern 1
-- Example usage pattern 2
+### TypeScript
 
-## Guidelines
+```typescript
+// Your TypeScript implementation
+```
 
-- Constraint or best practice 1
-- Constraint or best practice 2
+### Python
 
-## Notes
+```python
+# Your Python implementation
+```
 
-Any additional context or edge cases to handle.
+## Usage Examples
+
+Show how to use the implementation in real scenarios.
+
+## Best Practices
+
+1. Best practice 1
+2. Best practice 2
+3. Best practice 3
+
+## Common Mistakes
+
+- Mistake 1
+- Mistake 2
+- Mistake 3
+
+## Related Patterns
+
+- Related skill 1
+- Related skill 2

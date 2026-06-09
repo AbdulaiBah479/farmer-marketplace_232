@@ -1,157 +1,210 @@
 ---
 name: command-creator
-description: Guide for creating custom Claude Code slash commands. Use when user wants to create a new command (or update an existing command) that provides a reusable prompt snippet, workflow, or automation. Triggers on requests to create /commands, slash commands, custom commands, or when user wants to define frequently-used prompts as reusable commands.
+description: This skill should be used when creating a Claude Code slash command. Use when users ask to "create a command", "make a slash command", "add a command", or want to document a workflow as a reusable command. Essential for creating optimized, agent-executable slash commands with proper structure and best practices.
 ---
 
 # Command Creator
 
-Create custom slash commands for Claude Code. Commands are Markdown files that define reusable prompts with support for arguments, bash execution, file references, and tool permissions.
+This skill guides the creation of Claude Code slash commands - reusable workflows that can be invoked with `/command-name` in Claude Code conversations.
 
-## Command Locations
+## About Slash Commands
 
-| Type | Location | Scope |
-|------|----------|-------|
-| Project | `.claude/commands/` | Shared with team via git |
-| Personal | `~/.claude/commands/` | Available across all projects |
+Slash commands are markdown files stored in `.claude/commands/` (project-level) or `~/.claude/commands/` (global/user-level) that get expanded into prompts when invoked. They're ideal for:
 
-Project commands take precedence over personal commands with the same name.
+- Repetitive workflows (code review, PR submission, CI fixing)
+- Multi-step processes that need consistency
+- Agent delegation patterns
+- Project-specific automation
 
-## Basic Structure
+## When to Use This Skill
 
-```markdown
----
-description: Brief description shown in /help
----
+Invoke this skill when users:
 
-Your prompt instructions here.
-```
+- Ask to "create a command" or "make a slash command"
+- Want to automate a repetitive workflow
+- Need to document a consistent process for reuse
+- Say "I keep doing X, can we make a command for it?"
+- Want to create project-specific or global commands
 
-Filename becomes the command name: `review.md` → `/review`
+## Bundled Resources
 
-## Frontmatter Options
+This skill includes reference documentation for detailed guidance:
 
-| Field | Purpose | Default |
-|-------|---------|---------|
-| `description` | Brief description for /help | First line of prompt |
-| `allowed-tools` | Tools the command can use | Inherits from conversation |
-| `argument-hint` | Shows usage hint in autocomplete | None |
-| `model` | Specific model to use | Inherits from conversation |
-| `disable-model-invocation` | Prevent Skill tool from calling this | false |
-| `hooks` | Command-scoped hooks (PreToolUse, PostToolUse, Stop) | None |
+- **references/patterns.md** - Command patterns (workflow automation, iterative fixing, agent delegation, simple execution)
+- **references/examples.md** - Real command examples with full source (submit-stack, ensure-ci, create-implementation-plan)
+- **references/best-practices.md** - Quality checklist, common pitfalls, writing guidelines, template structure
 
-## Arguments
+Load these references as needed when creating commands to understand patterns, see examples, or ensure quality.
 
-### All arguments: `$ARGUMENTS`
+## Command Structure Overview
+
+Every slash command is a markdown file with:
 
 ```markdown
 ---
-description: Fix an issue
+description: Brief description shown in /help (required)
+argument-hint: <placeholder> (optional, if command takes arguments)
 ---
-Fix issue #$ARGUMENTS following our coding standards
+
+# Command Title
+
+[Detailed instructions for the agent to execute autonomously]
 ```
 
-Usage: `/fix-issue 123 high-priority` → `$ARGUMENTS` = "123 high-priority"
+## Command Creation Workflow
 
-### Positional: `$1`, `$2`, etc.
+### Step 1: Determine Location
 
-```markdown
----
-argument-hint: [pr-number] [priority] [assignee]
-description: Review pull request
----
-Review PR #$1 with priority $2 and assign to $3.
-```
+**Auto-detect the appropriate location:**
 
-Usage: `/review-pr 456 high alice`
+1. Check git repository status: `git rev-parse --is-inside-work-tree 2>/dev/null`
+2. Default location:
+   - If in git repo → Project-level: `.claude/commands/`
+   - If not in git repo → Global: `~/.claude/commands/`
+3. Allow user override:
+   - If user explicitly mentions "global" or "user-level" → Use `~/.claude/commands/`
+   - If user explicitly mentions "project" or "project-level" → Use `.claude/commands/`
 
-## Bash Execution
+Report the chosen location to the user before proceeding.
 
-Execute bash before the command runs using the exclamation mark prefix. Output is included in context.
+### Step 2: Show Command Patterns
 
-```markdown
----
-allowed-tools: Bash(git add:*), Bash(git status:*), Bash(git commit:*)
-description: Create a git commit
----
+Help the user understand different command types. Load **references/patterns.md** to see available patterns:
 
-## Context
-- Current git status: !\`git status\`
-- Current git diff: !\`git diff HEAD\`
-- Current branch: !\`git branch --show-current\`
-- Recent commits: !\`git log --oneline -10\`
+- **Workflow Automation** - Analyze → Act → Report (e.g., submit-stack)
+- **Iterative Fixing** - Run → Parse → Fix → Repeat (e.g., ensure-ci)
+- **Agent Delegation** - Context → Delegate → Iterate (e.g., create-implementation-plan)
+- **Simple Execution** - Run command with args (e.g., codex-review)
 
-## Task
-Create a git commit based on the above changes.
-```
+Ask the user: "Which pattern is closest to what you want to create?" This helps frame the conversation.
 
-**Required**: Include `allowed-tools` with the Bash tool when using bang execution (the exclamation mark prefix).
+### Step 3: Gather Command Information
 
-## File References
+Ask the user for key information:
 
-Include file contents using the `@` prefix:
+#### A. Command Name and Purpose
 
-```markdown
-Review the implementation in @src/utils/helpers.js
-Compare @src/old-version.js with @src/new-version.js
-```
+Ask:
 
-## Namespacing
+- "What should the command be called?" (for filename)
+- "What does this command do?" (for description field)
 
-Subdirectories group related commands. The subdirectory appears in the description:
+Guidelines:
 
-- `.claude/commands/frontend/component.md` → `/component` (project:frontend)
-- `.claude/commands/backend/test.md` → `/test` (project:backend)
+- Command names MUST be kebab-case (hyphens, NOT underscores)
+  - ✅ CORRECT: `submit-stack`, `ensure-ci`, `create-from-plan`
+  - ❌ WRONG: `submit_stack`, `ensure_ci`, `create_from_plan`
+- File names match command names: `my-command.md` → invoked as `/my-command`
+- Description should be concise, action-oriented (appears in `/help` output)
 
-Commands in different subdirectories can share names.
+#### B. Arguments
 
-## Example: Complete Command
+Ask:
 
-~~~markdown
----
-allowed-tools: Bash(npm:*), Bash(git:*), Read, Edit, Write
-argument-hint: [component-name]
-description: Create a new React component with tests
-model: claude-sonnet-4-20250514
----
+- "Does this command take any arguments?"
+- "Are arguments required or optional?"
+- "What should arguments represent?"
 
-## Context
-- Existing components: !\`ls src/components/\`
-- Project structure: !\`ls -la src/\`
+If command takes arguments:
 
-## Task
-Create a new React component named $1:
-1. Create component file at @src/components/$1.tsx
-2. Create test file at @src/components/$1.test.tsx
-3. Export from @src/components/index.ts
-4. Follow patterns in existing components
-~~~
+- Add `argument-hint: <placeholder>` to frontmatter
+- Use `<angle-brackets>` for required arguments
+- Use `[square-brackets]` for optional arguments
 
-## Hooks in Commands
+#### C. Workflow Steps
 
-Define command-scoped hooks that run during execution:
+Ask:
 
-```markdown
----
-description: Deploy with validation
-hooks:
-  PreToolUse:
-    - matcher: "Bash"
-      hooks:
-        - type: command
-          command: "./scripts/validate.sh"
-          once: true
----
+- "What are the specific steps this command should follow?"
+- "What order should they happen in?"
+- "What tools or commands should be used?"
 
-Deploy to staging environment.
-```
+Gather details about:
 
-The `once: true` option runs the hook only once per session.
+- Initial analysis or checks to perform
+- Main actions to take
+- How to handle results
+- Success criteria
+- Error handling approach
 
-## Best Practices
+#### D. Tool Restrictions and Guidance
 
-1. **Keep prompts concise** - Claude is smart; don't over-explain
-2. **Use bash execution for context** - Gather relevant state before the task
-3. **Specify allowed-tools** - Limit to what the command needs
-4. **Add argument-hint** - Help users understand expected arguments
-5. **Use file references** - Point to relevant files with `@`
-6. **Namespace related commands** - Use subdirectories for organization
+Ask:
+
+- "Should this command use any specific agents or tools?"
+- "Are there any tools or operations it should avoid?"
+- "Should it read any specific files for context?"
+
+### Step 4: Generate Optimized Command
+
+Create the command file with agent-optimized instructions. Load **references/best-practices.md** for:
+
+- Template structure
+- Best practices for agent execution
+- Writing style guidelines
+- Quality checklist
+
+Key principles:
+
+- Use imperative/infinitive form (verb-first instructions)
+- Be explicit and specific
+- Include expected outcomes
+- Provide concrete examples
+- Define clear error handling
+
+### Step 5: Create the Command File
+
+1. Determine full file path:
+   - Project: `.claude/commands/[command-name].md`
+   - Global: `~/.claude/commands/[command-name].md`
+
+2. Ensure directory exists:
+
+   ```bash
+   mkdir -p [directory-path]
+   ```
+
+3. Write the command file using the Write tool
+
+4. Confirm with user:
+   - Report the file location
+   - Summarize what the command does
+   - Explain how to use it: `/command-name [arguments]`
+
+### Step 6: Test and Iterate (Optional)
+
+If the user wants to test:
+
+1. Suggest testing: `You can test this command by running: /command-name [arguments]`
+2. Be ready to iterate based on feedback
+3. Update the file with improvements as needed
+
+## Quick Tips
+
+**For detailed guidance, load the bundled references:**
+
+- Load **references/patterns.md** when designing the command workflow
+- Load **references/examples.md** to see how existing commands are structured
+- Load **references/best-practices.md** before finalizing to ensure quality
+
+**Common patterns to remember:**
+
+- Use Bash tool for `pytest`, `pyright`, `ruff`, `prettier`, `make`, `gt` commands
+- Use Task tool to invoke subagents for specialized tasks
+- Check for specific files first (e.g., `.PLAN.md`) before proceeding
+- Mark todos complete immediately, not in batches
+- Include explicit error handling instructions
+- Define clear success criteria
+
+## Summary
+
+When creating a command:
+
+1. **Detect location** (project vs global)
+2. **Show patterns** to frame the conversation
+3. **Gather information** (name, purpose, arguments, steps, tools)
+4. **Generate optimized command** with agent-executable instructions
+5. **Create file** at appropriate location
+6. **Confirm and iterate** as needed
+
+Focus on creating commands that agents can execute autonomously, with clear steps, explicit tool usage, and proper error handling.

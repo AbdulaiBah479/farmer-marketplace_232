@@ -1,6 +1,6 @@
 ---
 name: scientific-problem-selection
-description: This skill should be used when scientists need help with research problem selection, project ideation, troubleshooting stuck projects, or strategic scientific decisions. Use this skill when users ask to pitch a new research idea, work through a project problem, evaluate project risks, plan research strategy, navigate decision trees, or get help choosing what scientific problem to work on. Typical requests include "I have an idea for a project", "I'm stuck on my research", "help me evaluate this project", "what should I work on", or "I need strategic advice about my research".
+description: This skill should be used when researchers need help with research problem selection, project ideation, troubleshooting stuck projects, or strategic research decisions. Use this skill when users ask to pitch a new research idea, work through a project problem, evaluate project risks, plan research strategy, navigate decision trees, or get help choosing what research problem to work on. Typical requests include "I have an idea for a project", "I'm stuck on my research", "help me evaluate this project", "what should I work on", or "I need strategic advice about my research".
 ---
 
 # Scientific Problem Selection Skills
@@ -17,7 +17,7 @@ Present users with three entry points:
 
 **3) Ask a strategic question** — to navigate the decision tree together
 
-This conversational entry meets scientists where they are and establishes a collaborative tone.
+This conversational entry meets researchers where they are and establishes a collaborative tone.
 
 ---
 
@@ -106,7 +106,7 @@ See the complete reference materials in the `references/` folder.
 Even brilliant execution of a mediocre problem yields incremental impact. Good execution of an important problem yields substantial impact.
 
 ### The Time Paradox
-Scientists typically spend:
+Researchers typically spend:
 - **Days** choosing a problem
 - **Years** solving it
 
@@ -190,7 +190,7 @@ SKILL 9: Meta-Skill
 
 1. **Conversational Entry** - Meet users where they are with three clear starting points
 2. **Thoughtful Interaction** - Ask clarifying questions; low confidence prompts additional input
-3. **Literature Integration** - Use PubMed searches at strategic points for validation
+3. **Literature Integration** - Use academic database searches at strategic points for validation
 4. **Concrete Outputs** - Every skill produces tangible 1-2 page documents
 5. **Building Specificity** - Progressive detail emerges through targeted questions
 6. **Flexibility** - Skills work independently, sequentially, or iteratively

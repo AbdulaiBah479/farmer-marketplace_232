@@ -1,178 +1,143 @@
 ---
 name: llm-wiki
-description: Use when building or maintaining a persistent personal knowledge base (second brain) in Obsidian where an LLM incrementally ingests sources, updates entity/concept pages, maintains cross-references, and keeps a synthesis current. Triggers include "second brain", "Obsidian wiki", "personal knowledge management", "ingest this paper/article/book", "build a research wiki", "compound knowledge", "Memex", or whenever the user wants knowledge to accumulate across sessions instead of being re-derived by RAG on every query.
-context: fork
-version: 2.9.0
-author: claude-code-skills
-license: MIT
-tags: [knowledge-management, obsidian, second-brain, pkm, rag-alternative, wiki, karpathy, memex]
-compatible_tools: [claude-code, codex-cli, cursor, antigravity, opencode, gemini-cli]
+version: "1.0.0"
+updated: 2026-04-10
+description: "Karpathy 风格 LLM Wiki / markdown knowledge base 工作流。用于 ingest、query、lint 持久化知识库；先做 orientation，再按 analysis -> generation 维护 wiki。"
 ---
+用于维护 **Karpathy 风格的 LLM Wiki**：把长期有价值的知识编译进一个可持续更新的 markdown wiki，而不是每次查询都从原始材料重做检索。
 
-# LLM Wiki — Second Brain for Claude Code + Obsidian
+这个 skill 只定义**共享流程**，不绑定具体 Vault、taxonomy、目录名或项目路径。项目现场规则必须继续从 wiki 自身读取。
 
-Inspired by Andrej Karpathy's LLM Wiki pattern ([gist](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)). This skill turns Claude Code (or any agent CLI) into a disciplined wiki maintainer that **incrementally builds and maintains** a persistent, interlinked Obsidian vault as you feed it sources. The knowledge compounds — cross-references, contradictions, and synthesis are already there when you query.
+# 何时使用
 
-## Core principle
+当用户出现以下意图时使用本 skill：
 
-Most LLM+docs workflows are **RAG**: retrieve fragments at query time, synthesize from scratch, forget. The wiki is **compounding**: sources are read once, integrated into a persistent markdown knowledge base, and kept current. You curate and ask; the LLM reads, files, cross-references, and maintains.
+- 明确提到 `llm wiki`、`wiki`、`knowledge base`、`知识库`
+- 要求 `ingest` / `query` / `lint` 一个 markdown wiki
+- 要把文章、推文、笔记、论文吸收到现有 wiki
+- 要基于已有 wiki 回答问题，而不是直接临时总结
+- 要检查 wiki 的断链、孤儿页、索引遗漏、重复页或证据漂移
 
-> Obsidian is the IDE. The LLM is the programmer. The wiki is the codebase.
+若当前环境存在 `orbit-os`、`bird-twitter` 等 skill，可与本 skill 协作：
 
-## When to use
+- Obsidian / Vault 结构约束：先读 `orbit-os`
+- X/Twitter 来源采集：先用 `bird-twitter` 获取原文或桥接 source，再回到 wiki ingest
 
-- **Personal**: track goals, health, psychology, journaling, self-improvement
-- **Research**: deep dives over weeks on a topic — papers, articles, reports, evolving thesis
-- **Book companion**: file chapters as you read; build a fan-wiki-style companion for characters, themes, plot threads
-- **Business/team**: internal wiki fed by Slack, meeting notes, calls — LLM does maintenance nobody else wants to do
-- **Competitive analysis, due diligence, trip planning, course notes, hobby deep-dives**
+# 会话起步（每次都做）
 
-**Do NOT use when:** you need one-shot Q&A over a fixed document (use RAG), you don't plan to add sources over time, or you don't want Obsidian in the loop.
+在 ingest / query / lint 之前，先定位 wiki 根目录，然后做 orientation。
 
-## Architecture (three layers)
+wiki 路径优先级：
 
-```
-vault/
-├── raw/                    # Layer 1 — IMMUTABLE source of truth
-│   ├── <source files>      # Articles, papers, PDFs, images, data
-│   └── assets/             # Downloaded images from clipped articles
-├── wiki/                   # Layer 2 — LLM-owned knowledge base
-│   ├── index.md            # Content catalog (LLM updates every ingest)
-│   ├── log.md              # Append-only timeline (## [YYYY-MM-DD] <op> | <title>)
-│   ├── entities/           # Person/Org/Place pages
-│   ├── concepts/           # Ideas, theories, frameworks
-│   ├── sources/            # One summary page per ingested source
-│   ├── comparisons/        # Cross-source analysis pages
-│   └── synthesis/          # High-level syntheses, theses, overviews
-├── CLAUDE.md               # Schema + conventions (Claude Code)
-└── AGENTS.md               # Same content, for Codex/Cursor/Antigravity
-```
+1. 用户显式给出的路径
+2. 当前仓库或工作区内明显存在的 wiki 目录
+3. 若仍不明确，再问用户
 
-- **Layer 1 (raw/)** — you own. LLM only reads; never writes.
-- **Layer 2 (wiki/)** — LLM owns. It creates, updates, and cross-references pages. You read it.
-- **Layer 3 (CLAUDE.md / AGENTS.md)** — the *schema*. Conventions, workflows, frontmatter rules. Co-evolved by you and the LLM.
+orientation 顺序：
 
-## Three core operations
+1. 读 `SCHEMA.md`
+2. 若存在，读 `purpose.md`
+3. 读 `index.md`
+4. 扫描最近 `log.md`
+5. 若 wiki 根目录有 `AGENTS.md` 或 `_meta/quickstart-prompts.md`，把它们视为项目现场补充规则
 
-1. **Ingest** — LLM reads a source, discusses takeaways with you, writes a source summary, updates 10-15 relevant pages, updates index, appends to log. See `references/ingest-workflow.md`.
-2. **Query** — LLM reads `index.md` first, drills into relevant pages, synthesizes with citations. Good answers get **filed back into the wiki** so explorations compound. See `references/query-workflow.md`.
-3. **Lint** — Health check: contradictions, stale claims, orphan pages, missing cross-refs, concepts mentioned but lacking their own page, data gaps to fill with web search. See `references/lint-workflow.md`.
+只有完成 orientation 后，才能决定是否新建页面、更新页面或回答 query。
 
-## Quick start
+# 核心操作
 
-```bash
-# 1. Initialize a vault (in Obsidian's vault directory)
-python scripts/init_vault.py --path ~/vaults/research --topic "LLM interpretability"
+## Ingest
 
-# 2. Drop a source into raw/, then ingest
-/wiki-ingest ~/vaults/research/raw/anthropic-monosemanticity.pdf
+默认采用 **analysis -> generation** 两步，而不是直接写页面。
 
-# 3. Ask questions (answers can be re-filed into the wiki)
-/wiki-query "how does monosemanticity compare to mechanistic interpretability?"
+analysis 阶段至少要回答：
 
-# 4. Periodic health check
-/wiki-lint
+- 这条 source 的核心信息是什么
+- 它与现有 wiki 哪些页面重合
+- 应更新哪些已有页面
+- 是否值得新建页面；如果值得，页类型是什么
+- 是否存在冲突、证据补强或范围外信息
+- 是否应使用 source bridge，而不是把外部 canonical 路径直接塞进 frontmatter
 
-# 5. See the timeline
-/wiki-log --last 10
-```
+如果 wiki 已经定义 `_meta/ingest-analysis/` 或等价目录，先把 analysis 落到该目录；如果没有，就先在回复里给出 analysis 摘要，再执行 generation。
 
-## Slash commands (this plugin ships)
+generation 阶段要求：
 
-| Command | Purpose |
-|---|---|
-| `/wiki-init` | Bootstrap a fresh vault with schema files + starter structure |
-| `/wiki-ingest <path>` | Read a source, discuss, update wiki, log it |
-| `/wiki-query <question>` | Search wiki, synthesize answer, offer to file back |
-| `/wiki-lint` | Run health check — contradictions, orphans, stale claims, gaps |
-| `/wiki-log` | Show recent log entries (uses unix tools on `log.md`) |
+- 遵守本地 `SCHEMA.md` / `purpose.md`
+- 优先更新已有页面，再决定是否新建页面
+- 更新 `updated` 字段
+- 补上必要的 `[[wikilinks]]`
+- 把新页或变更同步进 `index.md`
+- 把动作记录进 `log.md`
+- `raw/` 视为原始层，默认不重写既有 source
 
-## Sub-agents (this plugin ships)
+除非用户明确要求“跳过 analysis”或本地规则明确允许，否则不要直接一把写入 wiki。
 
-| Agent | When dispatched |
-|---|---|
-| `wiki-ingestor` | Delegated ingest flow — reads source, proposes updates, applies after your approval |
-| `wiki-linter` | Runs the health-check workflow independently, reports findings |
-| `wiki-librarian` | Answers queries using index-first search, synthesizes with citations |
+## Query
 
-## Python tools (`scripts/`)
+query 不是普通聊天，先判断它是否属于 wiki 的长期主题范围。
 
-All tools are **standard library only** (no pip installs). Run with `python scripts/<tool>.py --help`.
+步骤：
 
-| Script | Purpose |
-|---|---|
-| `init_vault.py` | Create folder structure + seed CLAUDE.md, AGENTS.md, index.md, log.md |
-| `ingest_source.py` | Helper: extract text/frontmatter from a source file, ready for LLM review |
-| `update_index.py` | Regenerate `index.md` from wiki page frontmatter (category, date, source count) |
-| `append_log.py` | Append a standardized log entry `## [YYYY-MM-DD] <op> \| <title>` |
-| `wiki_search.py` | BM25 search over wiki pages (standalone fallback when index.md isn't enough) |
-| `lint_wiki.py` | Find orphans (no inbound links), stale pages, missing cross-refs, broken links |
-| `graph_analyzer.py` | Compute link graph stats — hubs, orphans, clusters, disconnected components |
-| `export_marp.py` | Render a wiki page (or subtree) to a Marp slide deck |
+1. 先看 `purpose.md` 是否覆盖当前问题
+2. 再从 `index.md` 和相关页面定位已有知识
+3. 优先基于现有 wiki 回答，而不是重新从外部材料发挥
+4. 如果答案具有长期价值，再决定是否沉淀到 `queries/` 或回写现有页面
 
-## Cross-tool compatibility
+当 wiki 规模变大时，可使用轻量 relevance 扩展：
 
-The vault's **schema** lives in CLAUDE.md (Claude Code) or AGENTS.md (Codex/Cursor/Antigravity/OpenCode). The same content works in both. This plugin ships both templates. For per-tool setup instructions see `references/cross-tool-setup.md`.
+- 标题命中
+- wikilink 邻居页
+- source overlap
+- 最近更新页
 
-```
-CLAUDE.md       → Claude Code
-AGENTS.md       → Codex CLI, Cursor, Antigravity, OpenCode, Gemini CLI
-.cursorrules    → legacy Cursor (pre-AGENTS.md)
-```
+但不要在没有本地约束的情况下，擅自发明复杂 graph ranking。
 
-The scripts are pure Python stdlib → run identically everywhere. Only the loader file changes per tool.
+## Lint
 
-## Obsidian setup (recommended)
+lint 关注结构健康，而不是重写内容。
 
-- **Obsidian Web Clipper** — browser extension; converts web articles to markdown and drops them in `raw/`
-- **Download images locally** — Settings → Files and links → Attachment folder path = `raw/assets/`. Settings → Hotkeys → bind "Download attachments for current file" to `Ctrl+Shift+D`
-- **Graph view** — see hubs/orphans; essential for spotting structural problems
-- **Marp plugin** — Markdown-based slide decks directly from wiki pages
-- **Dataview plugin** — dynamic tables/lists over page frontmatter (tags, dates, source counts)
-- **Git** — the vault is a plain markdown repo; version it
+至少检查：
 
-Full setup walkthrough: `references/obsidian-setup.md`
+- `index.md` 是否漏页
+- 是否存在孤儿页
+- 是否存在断开的 wikilink
+- frontmatter 是否缺关键字段
+- 最近 source 是否已真正消化进知识层
+- 是否出现重复页或明显分页失衡
+- 冲突结论是否被标记，而不是被静默覆盖
 
-## Why this works (vs plain RAG)
+lint 的产出默认是问题清单和建议动作；除非用户要求，不要在 lint 阶段顺手大改内容。
 
-| Plain RAG | LLM Wiki |
-|---|---|
-| Rediscover knowledge each query | Knowledge accumulates |
-| Cross-references re-computed every time | Cross-references pre-written and maintained |
-| Contradictions surface only if you ask | Contradictions flagged during ingest |
-| Exploration disappears into chat history | Good answers re-filed as new pages |
-| Scales by embeddings infrastructure | Scales by markdown + `index.md` + optional local search |
+# 可选模式
 
-At ~100 sources / hundreds of pages, `index.md` + filesystem search is enough. Past that, layer in a local search tool like [qmd](https://github.com/tobi/qmd) or use `scripts/wiki_search.py`.
+## Source Bridge
 
-## Related skills (chains via `context: fork`)
+如果 canonical 原文位于 wiki 外部的知识库或归档系统，优先在 wiki 的 `raw/` 层写一份桥接 source，再把 frontmatter 指向桥接文件。这样可以避免源路径频繁漂移。
 
-This skill is marked `context: fork` so other skills can chain into it:
+## 瘦 Frontmatter
 
-- **`para-memory-files`** — PARA-method memory; complementary as long-term personal memory that feeds sources into the wiki
-- **`obsidian-vault`** (mattpocock) — lightweight Obsidian note helper; this skill is the maintained-wiki layer on top
-- **`rag-design`** — when wiki outgrows ~500 pages, use rag-design to bolt on a retrieval layer
-- **`mcp-design`** — expose the wiki as an MCP tool
-- **`agent-communication`** — for multi-agent wiki maintenance (ingestor + linter + librarian)
+如果页面 `sources` 过长，可采用“瘦头部”策略：
 
-## Reference docs
+- frontmatter 只保留少量核心来源
+- 完整来源列表放入页面内或独立 registry
+- 若本地 schema 允许，可增加 `source_count`
 
-- `references/wiki-schema.md` — full vault layout, page frontmatter, naming conventions
-- `references/page-formats.md` — entity, concept, source, comparison, synthesis templates
-- `references/ingest-workflow.md` — the detailed ingest flow the wiki-ingestor agent follows
-- `references/query-workflow.md` — query patterns, citation format, re-filing answers
-- `references/lint-workflow.md` — health-check heuristics
-- `references/obsidian-setup.md` — Obsidian plugins, hotkeys, vault config
-- `references/cross-tool-setup.md` — per-tool setup (Codex, Cursor, Antigravity, etc.)
-- `references/memex-principles.md` — Bush's Memex, why the LLM changes the maintenance math
+不要在没有本地 schema 支持的情况下强行改写。
 
-## Templates (`assets/`)
+# 不要做的事
 
-- `CLAUDE.md.template`, `AGENTS.md.template`, `.cursorrules.template` — schema loaders per tool
-- `index.md.template`, `log.md.template` — starter index and log
-- `page-templates/` — entity, concept, source-summary, comparison, synthesis
-- `example-vault/` — small worked example you can study or copy
+- 不要把具体 Vault 路径、项目 taxonomy、目录命名习惯硬编码进共享 skill
+- 不要假设所有 wiki 都有 `purpose.md`、`_meta/ingest-analysis/` 或相同目录结构
+- 不要绕过本地 `SCHEMA.md` 自创结构
+- 不要把临时聊天结论默认当成长期知识入库
+- 不要把 Hermes / Claude / Codex 的运行态 patch 直接当作 wiki 规则
 
-## Iron rule
+# 成功标准
 
-**The LLM never edits files in `raw/`.** Ever. Sources are immutable. All LLM writes go to `wiki/`. If you need to correct a source, do it in `raw/` yourself — then re-ingest.
+一次合格的 wiki 操作，至少满足：
+
+- 先 orientation，再行动
+- 写入遵循本地规则，不污染项目现场
+- ingest 有 analysis 痕迹
+- query 优先复用现有知识
+- lint 输出的是结构问题，不是随意重写

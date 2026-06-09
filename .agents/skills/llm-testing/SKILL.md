@@ -1,228 +1,168 @@
 ---
 name: llm-testing
-description: Comprehensive LLM security testing prompts for bias detection, data leakage, alignment testing, and adversarial prompt resistance.
+description: Testing patterns for LLM-based applications. Use when testing AI/ML integrations, mocking LLM responses, testing async timeouts, or validating structured outputs from LLMs.
+context: fork
+agent: test-generator
+version: 2.0.0
+tags: [testing, llm, ai, deepeval, ragas, 2026]
+author: SkillForge
+user-invocable: false
 ---
 
-# LLM Testing Skill
+# LLM Testing Patterns
 
-## Description
+Test AI applications with deterministic patterns using DeepEval and RAGAS.
 
-Comprehensive testing prompts and wordlists for evaluating Large Language Model (LLM) security, safety, and robustness. This skill provides curated test cases for bias detection, data leakage prevention, alignment testing, privacy boundaries, and adversarial prompt resistance.
+## Quick Reference
 
-## Purpose
-
-This skill is designed for security researchers, AI safety engineers, and red team operators to assess LLM vulnerabilities and ensure models:
-- Maintain ethical boundaries and safety guidelines
-- Avoid data leakage and privacy violations
-- Resist bias and discrimination
-- Prevent adversarial prompt attacks
-- Maintain alignment with intended behavior
-
-## Authorized Use Cases
-
-- **AI Safety Research**: Testing LLM models for safety and alignment issues
-- **Security Auditing**: Red team operations for AI/ML systems
-- **Bias Detection**: Evaluating models for fairness and bias
-- **Privacy Testing**: Verifying models don't leak training data or PII
-- **Educational Purposes**: Teaching AI security concepts and vulnerabilities
-- **Responsible AI Development**: Building more robust and secure LLMs
-
-## Test Categories
-
-### 1. Bias Testing
-Test for biases in LLM responses across various dimensions:
-
-**Gender Bias** (`Bias_Testing/gender_bias.txt`)
-- Prompts to reveal gender stereotypes and biases
-- Career and role associations
-- Behavioral and capability assumptions
-- **Note**: Replace `[GENDER]` placeholder before use
-
-**Nationality & Geographic Bias** (`Bias_Testing/nationality_geographic_bias.txt`)
-- Cultural stereotypes and geographic prejudices
-- Regional capability assumptions
-- **Note**: Replace `[COUNTRY]`, `[REGION]`, `[NATIONALITY]` placeholders
-
-**Race & Ethnicity Bias** (`Bias_Testing/race_ethnicity_bias.txt`)
-- Racial and ethnic stereotypes
-- Discriminatory patterns in responses
-- **Note**: Replace `[SKIN_COLOR]` placeholder before use
-
-### 2. Data Leakage & Privacy Testing
-Assess model's handling of sensitive information:
-
-**Personal Data Generation** (`Data_Leakage/personal_data.txt`)
-- Tests for PII generation capabilities
-- Verifies privacy boundaries
-- Checks for inadvertent personal information creation
-
-**Metadata Leakage** (`Data_Leakage/metadata.txt`)
-- Tests for training data remnants
-- Checks for unintended information disclosure
-
-**Memory Recall** (`Memory_Recall_Testing/session_recall.txt`)
-- Session-based memory testing
-- Cross-conversation data retention
-- **Note**: Replace `[COUNTRY]`, `[REGION]`, `[NATIONALITY]` placeholders
-
-### 3. Divergence & Alignment Attacks
-Test model alignment and resistance to adversarial prompts:
-
-**Escape Alignment Training** (`Divergence_attack/escape_out_of_allignment_training.txt`)
-- Prompts attempting to bypass safety training
-- Tests for alignment robustness
-- Ethical boundary challenges
-
-**Pre-training Data Extraction** (`Divergence_attack/pre-training_data.txt`)
-- Attempts to extract training data
-- Tests for memorization vulnerabilities
-
-## Usage Instructions
-
-### Basic Usage
-
-```bash
-# Reference the LLM Testing skill
-"Use the llm-testing skill to test this model for gender bias"
-
-# Access specific test categories
-"Show me prompts from the llm-testing skill for testing data leakage"
-
-# Run comprehensive testing
-"Use the llm-testing skill to perform a full security audit of this LLM"
-```
-
-### Replacing Placeholders
-
-Before using bias and memory recall tests, replace placeholders:
+### Mock LLM Responses
 
 ```python
-# Example: Replacing placeholders in gender bias tests
-import re
+from unittest.mock import AsyncMock, patch
 
-with open('Bias_Testing/gender_bias.txt', 'r') as f:
-    prompts = f.read()
+@pytest.fixture
+def mock_llm():
+    mock = AsyncMock()
+    mock.return_value = {"content": "Mocked response", "confidence": 0.85}
+    return mock
 
-# Replace [GENDER] with actual gender terms
-test_prompts = []
-for gender in ['man', 'woman', 'non-binary person']:
-    test_prompts.append(prompts.replace('[GENDER]', gender))
+@pytest.mark.asyncio
+async def test_with_mocked_llm(mock_llm):
+    with patch("app.core.model_factory.get_model", return_value=mock_llm):
+        result = await synthesize_findings(sample_findings)
+    assert result["summary"] is not None
 ```
 
-### Testing Workflow
+### DeepEval Quality Testing
 
-1. **Select Test Category**: Choose bias, privacy, or alignment tests
-2. **Prepare Prompts**: Replace placeholders if needed
-3. **Execute Tests**: Submit prompts to target LLM
-4. **Document Results**: Record responses and flag issues
-5. **Analyze Patterns**: Look for systematic problems
-6. **Report Findings**: Document vulnerabilities responsibly
+```python
+from deepeval import assert_test
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
 
-## Best Practices
+test_case = LLMTestCase(
+    input="What is the capital of France?",
+    actual_output="The capital of France is Paris.",
+    retrieval_context=["Paris is the capital of France."],
+)
 
-### Ethical Testing Guidelines
+metrics = [
+    AnswerRelevancyMetric(threshold=0.7),
+    FaithfulnessMetric(threshold=0.8),
+]
 
-1. **Authorization Required**: Only test models you own or have permission to test
-2. **Responsible Disclosure**: Report vulnerabilities through proper channels
-3. **No Exploitation**: Use findings for improvement, not exploitation
-4. **Privacy Protection**: Don't share PII discovered during testing
-5. **Documentation**: Keep detailed records of testing methodology and results
-
-### Testing Methodology
-
-- **Baseline Establishment**: Test multiple times to establish patterns
-- **Controlled Environment**: Use isolated testing environments
-- **Systematic Approach**: Test one category at a time
-- **Diverse Scenarios**: Use various prompt formulations
-- **Cross-Validation**: Verify findings with different approaches
-
-### Interpreting Results
-
-- **Context Matters**: Consider the model's intended use case
-- **Statistical Significance**: Don't rely on single responses
-- **Severity Assessment**: Classify findings by impact level
-- **False Positives**: Verify actual vulnerabilities vs. expected behavior
-
-## Security Considerations
-
-### Red Team Operations
-- Use these prompts as part of comprehensive AI red teaming
-- Combine with other security testing methodologies
-- Focus on discovering vulnerabilities before adversaries do
-
-### Defensive Applications
-- Train models to better resist these attack patterns
-- Build detection systems for adversarial prompts
-- Improve safety alignment and guardrails
-
-## File Structure
-
-```
-LLM_Testing/
-├── SKILL.md (this file)
-├── README.md
-├── Bias_Testing/
-│   ├── gender_bias.txt
-│   ├── nationality_geographic_bias.txt
-│   └── race_ethnicity_bias.txt
-├── Data_Leakage/
-│   ├── personal_data.txt
-│   └── metadata.txt
-├── Memory_Recall_Testing/
-│   └── session_recall.txt
-└── Divergence_attack/
-    ├── escape_out_of_allignment_training.txt
-    └── pre-training_data.txt
+assert_test(test_case, metrics)
 ```
 
-## Integration with Other Skills
+### Timeout Testing
 
-This LLM Testing skill works well with:
-- **Security Fuzzing**: Use fuzzing techniques alongside prompt testing
-- **Security Patterns**: Apply pattern matching to detect vulnerabilities
-- **Pentest Advisor**: Get strategic guidance for comprehensive AI testing
+```python
+import asyncio
+import pytest
 
-## Legal and Ethical Notice
+@pytest.mark.asyncio
+async def test_respects_timeout():
+    with pytest.raises(asyncio.TimeoutError):
+        async with asyncio.timeout(0.1):
+            await slow_llm_call()
+```
 
-**IMPORTANT**: These test prompts are designed for authorized security research and responsible AI development only.
+## Quality Metrics (2026)
 
-### Authorized Use:
-- Testing your own AI models and systems
-- Authorized red team operations with written permission
-- AI safety research in academic or corporate settings
-- Educational demonstrations in controlled environments
-- Responsible vulnerability disclosure programs
+| Metric | Threshold | Purpose |
+|--------|-----------|---------|
+| Answer Relevancy | ≥ 0.7 | Response addresses question |
+| Faithfulness | ≥ 0.8 | Output matches context |
+| Hallucination | ≤ 0.3 | No fabricated facts |
+| Context Precision | ≥ 0.7 | Retrieved contexts relevant |
 
-### Prohibited Use:
-- Testing models without authorization
-- Exploiting discovered vulnerabilities
-- Attempting to jailbreak production AI systems
-- Creating harmful content or tools
-- Violating terms of service of AI platforms
+## Anti-Patterns (FORBIDDEN)
 
-## Contributing
+```python
+# ❌ NEVER test against live LLM APIs in CI
+response = await openai.chat.completions.create(...)
 
-To add new test cases or categories:
-1. Follow the existing file structure and naming conventions
-2. Include clear documentation for any placeholders
-3. Test prompts for effectiveness and safety
-4. Submit via pull request with detailed description
+# ❌ NEVER use random seeds (non-deterministic)
+model.generate(seed=random.randint(0, 100))
 
-## References
+# ❌ NEVER skip timeout handling
+await llm_call()  # No timeout!
 
-- [OWASP LLM Top 10](https://owasp.org/www-project-top-10-for-large-language-model-applications/)
-- [AI Red Teaming Best Practices](https://www.anthropic.com/index/red-teaming-language-models)
-- [Responsible AI Guidelines](https://www.partnershiponai.org/)
-- [AI Safety Research](https://www.safe.ai/)
+# ✅ ALWAYS mock LLM in unit tests
+with patch("app.llm", mock_llm):
+    result = await function_under_test()
 
-## Version
+# ✅ ALWAYS use VCR.py for integration tests
+@pytest.mark.vcr()
+async def test_llm_integration():
+    ...
+```
 
-1.0.0
+## Key Decisions
 
-## License
+| Decision | Recommendation |
+|----------|----------------|
+| Mock vs VCR | VCR for integration, mock for unit |
+| Timeout | Always test with < 1s timeout |
+| Schema validation | Test both valid and invalid |
+| Edge cases | Test all null/empty paths |
+| Quality metrics | Use multiple dimensions (3-5) |
 
-MIT License - Use responsibly and ethically for authorized testing only.
+## Detailed Documentation
 
-## Disclaimer
+| Resource | Description |
+|----------|-------------|
+| [references/deepeval-ragas-api.md](references/deepeval-ragas-api.md) | DeepEval & RAGAS API reference |
+| [examples/test-patterns.md](examples/test-patterns.md) | Complete test examples |
+| [checklists/llm-test-checklist.md](checklists/llm-test-checklist.md) | Setup and review checklists |
+| [templates/llm-test-template.py](templates/llm-test-template.py) | Starter test template |
 
-This skill is provided for security research and AI safety improvement. Users are responsible for ensuring they have proper authorization before testing any AI systems. The maintainers are not responsible for misuse of these testing resources.
+## Related Skills
+
+- `vcr-http-recording` - Record LLM responses
+- `llm-evaluation` - Quality assessment
+- `unit-testing` - Test fundamentals
+
+## Capability Details
+
+### llm-response-mocking
+**Keywords:** mock LLM, fake response, stub LLM, mock AI
+**Solves:**
+- Mock LLM responses in tests
+- Create deterministic AI test fixtures
+- Avoid live API calls in CI
+
+### async-timeout-testing
+**Keywords:** timeout, async test, wait for, polling
+**Solves:**
+- Test async LLM operations
+- Handle timeout scenarios
+- Implement polling assertions
+
+### structured-output-validation
+**Keywords:** structured output, JSON validation, schema validation, output format
+**Solves:**
+- Validate structured LLM output
+- Test JSON schema compliance
+- Assert output structure
+
+### deepeval-assertions
+**Keywords:** DeepEval, assert_test, LLMTestCase, metric assertion
+**Solves:**
+- Use DeepEval for LLM assertions
+- Implement metric-based tests
+- Configure quality thresholds
+
+### golden-dataset-testing
+**Keywords:** golden dataset, golden test, reference output, expected output
+**Solves:**
+- Test against golden datasets
+- Compare with reference outputs
+- Implement regression testing
+
+### vcr-recording
+**Keywords:** VCR, cassette, record, replay, HTTP recording
+**Solves:**
+- Record LLM API responses
+- Replay recordings in tests
+- Create deterministic test suites

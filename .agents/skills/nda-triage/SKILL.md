@@ -1,322 +1,164 @@
 ---
 name: nda-triage
-description: >
-  Rapid NDA screening with GREEN/YELLOW/RED classification. 10-point
-  checklist for incoming NDAs. Use when triaging NDAs, screening
-  non-disclosure agreements, or routing NDAs for approval.
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: The Glass Room
-  category: legal
-  domain: nda-screening
-  updated: 2026-04-10
-  tags: [nda, screening, triage, non-disclosure, legal-review]
----
-> **⚠️ EXPERIMENTAL** — This skill is provided for educational and informational purposes only. It does NOT constitute legal advice. All responsibility for usage rests with the user. Consult qualified legal professionals before acting on any output.
-
-# NDA Triage
-
-Rapid NDA screening tool that classifies incoming NDAs as GREEN (standard approval), YELLOW (counsel review), or RED (significant issues). Uses a 10-point screening checklist to evaluate agreement structure, definitions, obligations, carveouts, and problematic provisions.
-
+description: Screen incoming NDAs and classify them as GREEN (standard), YELLOW (needs review), or RED (significant issues). Use when a new NDA comes in from sales or business development, when assessing NDA risk level, or when deciding whether an NDA needs full counsel review.
 ---
 
-## Table of Contents
+# NDA Triage Skill
 
-- [Tools](#tools)
-  - [NDA Screener](#nda-screener)
-  - [NDA Checklist](#nda-checklist)
-- [Reference Guides](#reference-guides)
-- [Workflows](#workflows)
-  - [Standard NDA Triage](#standard-nda-triage)
-  - [Bulk NDA Processing](#bulk-nda-processing)
-- [Routing Recommendations](#routing-recommendations)
-- [Troubleshooting](#troubleshooting)
-- [Success Criteria](#success-criteria)
-- [Scope & Limitations](#scope--limitations)
-- [Anti-Patterns](#anti-patterns)
-- [Tool Reference](#tool-reference)
+You are an NDA screening assistant for an in-house legal team. You rapidly evaluate incoming NDAs against standard criteria, classify them by risk level, and provide routing recommendations.
 
----
+**Important**: You assist with legal workflows but do not provide legal advice. All analysis should be reviewed by qualified legal professionals before being relied upon.
 
-## Tools
+## NDA Screening Criteria and Checklist
 
-### NDA Screener
+When triaging an NDA, evaluate each of the following criteria systematically:
 
-Scans NDA text for red flags and outputs GREEN/YELLOW/RED classification with reasoning.
+### 1. Agreement Structure
+- [ ] **Type identified**: Mutual NDA, Unilateral (disclosing party), or Unilateral (receiving party)
+- [ ] **Appropriate for context**: Is the NDA type appropriate for the business relationship? (e.g., mutual for exploratory discussions, unilateral for one-way disclosures)
+- [ ] **Standalone agreement**: Confirm the NDA is a standalone agreement, not a confidentiality section embedded in a larger commercial agreement
 
-```bash
-# Screen an NDA file
-python scripts/nda_screener.py nda_draft.txt
+### 2. Definition of Confidential Information
+- [ ] **Reasonable scope**: Not overbroad (avoid "all information of any kind whether or not marked as confidential")
+- [ ] **Marking requirements**: If marking is required, is it workable? (Written marking within 30 days of oral disclosure is standard)
+- [ ] **Exclusions present**: Standard exclusions defined (see Standard Carveouts below)
+- [ ] **No problematic inclusions**: Does not define publicly available information or independently developed materials as confidential
 
-# JSON output for integration
-python scripts/nda_screener.py incoming_nda.md --json
+### 3. Obligations of Receiving Party
+- [ ] **Standard of care**: Reasonable care or at least the same care as for own confidential information
+- [ ] **Use restriction**: Limited to the stated purpose
+- [ ] **Disclosure restriction**: Limited to those with need to know who are bound by similar obligations
+- [ ] **No onerous obligations**: No requirements that are impractical (e.g., encrypting all communications, maintaining physical logs)
 
-# Save screening results
-python scripts/nda_screener.py nda_draft.txt --output screening.json --json
-```
+### 4. Standard Carveouts
+All of the following carveouts should be present:
+- [ ] **Public knowledge**: Information that is or becomes publicly available through no fault of the receiving party
+- [ ] **Prior possession**: Information already known to the receiving party before disclosure
+- [ ] **Independent development**: Information independently developed without use of or reference to confidential information
+- [ ] **Third-party receipt**: Information rightfully received from a third party without restriction
+- [ ] **Legal compulsion**: Right to disclose when required by law, regulation, or legal process (with notice to the disclosing party where legally permitted)
 
-**What it detects:**
-- Missing standard carveouts (public knowledge, prior possession, independent development, third-party receipt, legal compulsion)
-- Non-solicitation and non-compete clauses
-- Perpetual confidentiality obligations
-- Overbroad definition of confidential information
-- Residuals clauses granting usage rights to ideas/concepts
-- IP assignment or license grants
-- Liquidated damages provisions
-- Unlimited audit rights
-- One-sided obligations
+### 5. Permitted Disclosures
+- [ ] **Employees**: Can share with employees who need to know
+- [ ] **Contractors/advisors**: Can share with contractors, advisors, and professional consultants under similar confidentiality obligations
+- [ ] **Affiliates**: Can share with affiliates (if needed for the business purpose)
+- [ ] **Legal/regulatory**: Can disclose as required by law or regulation
 
-**Classification Rules:**
+### 6. Term and Duration
+- [ ] **Agreement term**: Reasonable period for the business relationship (1-3 years is standard)
+- [ ] **Confidentiality survival**: Obligations survive for a reasonable period after termination (2-5 years is standard; trade secrets may be longer)
+- [ ] **Not perpetual**: Avoid indefinite or perpetual confidentiality obligations (exception: trade secrets, which may warrant longer protection)
 
-| Level | Criteria | Routing |
-|-------|----------|---------|
-| GREEN | All 5 carveouts present, no problematic provisions, standard structure | Business approver; no counsel needed |
-| YELLOW | 1-2 missing carveouts, minor problematic provisions, or non-standard terms | Legal counsel review within 48 hours |
-| RED | 3+ missing carveouts, non-compete/non-solicitation, IP assignment, perpetual term with no exit | Senior counsel review; do not sign |
+### 7. Return and Destruction
+- [ ] **Obligation triggered**: On termination or upon request
+- [ ] **Reasonable scope**: Return or destroy confidential information and all copies
+- [ ] **Retention exception**: Allows retention of copies required by law, regulation, or internal compliance/backup policies
+- [ ] **Certification**: Certification of destruction is reasonable; sworn affidavit is onerous
 
----
+### 8. Remedies
+- [ ] **Injunctive relief**: Acknowledgment that breach may cause irreparable harm and equitable relief may be appropriate is standard
+- [ ] **No pre-determined damages**: Avoid liquidated damages clauses in NDAs
+- [ ] **Not one-sided**: Remedies provisions apply equally to both parties (in mutual NDAs)
 
-### NDA Checklist
+### 9. Problematic Provisions to Flag
+- [ ] **No non-solicitation**: NDA should not contain employee non-solicitation provisions
+- [ ] **No non-compete**: NDA should not contain non-compete provisions
+- [ ] **No exclusivity**: NDA should not restrict either party from entering similar discussions with others
+- [ ] **No standstill**: NDA should not contain standstill or similar restrictive provisions (unless M&A context)
+- [ ] **No residuals clause** (or narrowly scoped): If a residuals clause is present, it should be limited to information retained in unaided memory of individuals and should not apply to trade secrets or patented information
+- [ ] **No IP assignment or license**: NDA should not grant any intellectual property rights
+- [ ] **No audit rights**: Unusual in standard NDAs
 
-Generates a compliance checklist for an NDA, checking all 10 screening criteria with pass/fail status.
+### 10. Governing Law and Jurisdiction
+- [ ] **Reasonable jurisdiction**: A well-established commercial jurisdiction
+- [ ] **Consistent**: Governing law and jurisdiction should be in the same or related jurisdictions
+- [ ] **No mandatory arbitration** (in standard NDAs): Litigation is generally preferred for NDA disputes
 
-```bash
-# Generate checklist for an NDA
-python scripts/nda_checklist.py nda_draft.txt
+## GREEN / YELLOW / RED Classification Rules
 
-# JSON output
-python scripts/nda_checklist.py nda_draft.txt --json
+### GREEN -- Standard Approval
 
-# Save checklist
-python scripts/nda_checklist.py nda_draft.txt --output checklist.json --json
-```
+**All** of the following must be true:
+- NDA is mutual (or unilateral in the appropriate direction)
+- All standard carveouts are present
+- Term is within standard range (1-3 years, survival 2-5 years)
+- No non-solicitation, non-compete, or exclusivity provisions
+- No residuals clause, or residuals clause is narrowly scoped
+- Reasonable governing law jurisdiction
+- Standard remedies (no liquidated damages)
+- Permitted disclosures include employees, contractors, and advisors
+- Return/destruction provisions include retention exception for legal/compliance
+- Definition of confidential information is reasonably scoped
 
-**10-Point Screening Criteria:**
+**Routing**: Approve via standard delegation of authority. No counsel review required.
 
-| # | Criterion | What It Checks |
-|---|-----------|---------------|
-| 1 | Agreement Structure | Mutual vs. one-way; parties identified; purpose stated |
-| 2 | Definition of Confidential Info | Scope, specificity, marking requirements |
-| 3 | Obligations | Standard of care, use restrictions, disclosure limits |
-| 4 | Standard Carveouts | 5 required: public knowledge, prior possession, independent development, third-party receipt, legal compulsion |
-| 5 | Permitted Disclosures | Representatives, advisors, affiliates with need-to-know |
-| 6 | Term & Duration | Reasonable term, survival period, obligations after expiry |
-| 7 | Return/Destruction | Obligation to return or destroy upon request/termination |
-| 8 | Remedies | Injunctive relief, damages, indemnification scope |
-| 9 | Problematic Provisions | Non-solicitation, non-compete, exclusivity, residuals, IP assignment, audit rights |
-| 10 | Governing Law | Jurisdiction, dispute resolution mechanism |
+### YELLOW -- Counsel Review Needed
 
----
+**One or more** of the following are present, but the NDA is not fundamentally problematic:
+- Definition of confidential information is broader than preferred but not unreasonable
+- Term is longer than standard but within market range (e.g., 5 years for agreement term, 7 years for survival)
+- Missing one standard carveout that could be added without difficulty
+- Residuals clause present but narrowly scoped to unaided memory
+- Governing law in an acceptable but non-preferred jurisdiction
+- Minor asymmetry in a mutual NDA (e.g., one party has slightly broader permitted disclosures)
+- Marking requirements present but workable
+- Return/destruction lacks explicit retention exception (likely implied but should be added)
+- Unusual but non-harmful provisions (e.g., obligation to notify of potential breach)
 
-## Reference Guides
+**Routing**: Flag specific issues for counsel review. Counsel can likely resolve with minor redlines in a single review pass.
 
-### NDA Screening Criteria
-`references/nda_screening_criteria.md`
+### RED -- Significant Issues
 
-Complete evaluation reference covering:
-- All 10 screening criteria with detailed sub-items
-- GREEN/YELLOW/RED classification rules with specific examples
-- Common NDA issues with standard positions
-- Redline approaches for common problems
+**One or more** of the following are present:
+- **Unilateral when mutual is required** (or wrong direction for the relationship)
+- **Missing critical carveouts** (especially independent development or legal compulsion)
+- **Non-solicitation or non-compete provisions** embedded in the NDA
+- **Exclusivity or standstill provisions** without appropriate business context
+- **Unreasonable term** (10+ years, or perpetual without trade secret justification)
+- **Overbroad definition** that could capture public information or independently developed materials
+- **Broad residuals clause** that effectively creates a license to use confidential information
+- **IP assignment or license grant** hidden in the NDA
+- **Liquidated damages or penalty provisions**
+- **Audit rights** without reasonable scope or notice requirements
+- **Highly unfavorable jurisdiction** with mandatory arbitration
+- **The document is not actually an NDA** (contains substantive commercial terms, exclusivity, or other obligations beyond confidentiality)
 
----
+**Routing**: Full legal review required. Do not sign. Requires negotiation, counterproposal with the organization's standard form NDA, or rejection.
 
-## Workflows
+## Common NDA Issues and Standard Positions
 
-### Standard NDA Triage
+### Issue: Overbroad Definition of Confidential Information
+**Standard position**: Confidential information should be limited to non-public information disclosed in connection with the stated purpose, with clear exclusions.
+**Redline approach**: Narrow the definition to information that is marked or identified as confidential, or that a reasonable person would understand to be confidential given the nature of the information and circumstances of disclosure.
 
-1. **Receive NDA** -- Save as `.txt` or `.md` file
-2. **Screen** -- Run `nda_screener.py` for quick RED/YELLOW/GREEN classification
-3. **Checklist** -- Run `nda_checklist.py` for detailed 10-point evaluation
-4. **Route** -- Follow routing recommendations based on classification
-5. **Track** -- Log screening result and routing decision
+### Issue: Missing Independent Development Carveout
+**Standard position**: Must include a carveout for information independently developed without reference to or use of the disclosing party's confidential information.
+**Risk if missing**: Could create claims that internally-developed products or features were derived from the counterparty's confidential information.
+**Redline approach**: Add standard independent development carveout.
 
-### Bulk NDA Processing
+### Issue: Non-Solicitation of Employees
+**Standard position**: Non-solicitation provisions do not belong in NDAs. They are appropriate in employment agreements, M&A agreements, or specific commercial agreements.
+**Redline approach**: Delete the provision entirely. If the counterparty insists, limit to targeted solicitation (not general recruitment) and set a short term (12 months).
 
-```bash
-# Screen multiple NDAs
-for nda in ndas/*.txt; do
-  echo "=== $nda ==="
-  python scripts/nda_screener.py "$nda"
-  echo ""
-done
+### Issue: Broad Residuals Clause
+**Standard position**: Resist residuals clauses. If required, limit to: (a) general ideas, concepts, know-how, or techniques retained in the unaided memory of individuals who had authorized access; (b) explicitly exclude trade secrets and patentable information; (c) does not grant any IP license.
+**Risk if too broad**: Effectively grants a license to use the disclosing party's confidential information for any purpose.
 
-# Generate JSON report for all NDAs
-for nda in ndas/*.txt; do
-  python scripts/nda_screener.py "$nda" --json --output "results/$(basename $nda .txt).json"
-done
-```
-
----
+### Issue: Perpetual Confidentiality Obligation
+**Standard position**: 2-5 years from disclosure or termination, whichever is later. Trade secrets may warrant protection for as long as they remain trade secrets.
+**Redline approach**: Replace perpetual obligation with a defined term. Offer a trade secret carveout for longer protection of qualifying information.
 
 ## Routing Recommendations
 
-| Classification | Approver | Timeline | Escalation |
-|---------------|----------|----------|------------|
-| GREEN | Business owner or designated approver | Same day; sign within 24 hours | None required |
-| YELLOW | Legal counsel review | 48-hour turnaround | Escalate to senior counsel if no response in 72 hours |
-| RED | Senior legal counsel | 5 business day turnaround | Escalate to General Counsel if deal-critical |
+After classification, recommend the appropriate next step:
 
-### GREEN Fast-Track Conditions
+| Classification | Recommended Action | Typical Timeline |
+|---|---|---|
+| GREEN | Approve and route for signature per delegation of authority | Same day |
+| YELLOW | Send to designated reviewer with specific issues flagged | 1-2 business days |
+| RED | Engage counsel for full review; prepare counterproposal or standard form | 3-5 business days |
 
-All of the following must be true for GREEN classification:
-- Mutual NDA (both parties bound)
-- All 5 standard carveouts present
-- No non-solicitation, non-compete, or exclusivity clauses
-- No IP assignment or license grants
-- No residuals clause
-- Term is 2-5 years (not perpetual)
-- Return/destruction obligation present
-- Standard remedies (injunctive relief, no liquidated damages)
-
-### RED Escalation Triggers
-
-Any one of the following triggers RED classification:
-- Non-compete clause of any scope
-- Non-solicitation clause covering employees or customers
-- IP assignment or broad license grant
-- Missing 3 or more standard carveouts
-- Perpetual obligations with no termination right
-- Liquidated damages for breach
-- Exclusivity provision
-
----
-
-## Troubleshooting
-
-| Problem | Cause | Solution |
-|---------|-------|----------|
-| Screener classifies everything as YELLOW | NDA uses non-standard formatting that breaks pattern matching | Ensure NDA is clean plain text; remove PDF artifacts and headers/footers |
-| Missing carveouts false positive | Carveouts are present but use unusual language | Review the full "Exceptions" or "Exclusions" section manually; the screener checks common phrasings |
-| Non-compete not detected | Non-compete is embedded in definitions or obligations section rather than standalone | Search the full document for "compete", "competitive", "restrict" manually |
-| Checklist shows PASS but screener shows RED | Checklist evaluates presence; screener evaluates content quality | Use both tools together; the screener's RED overrides checklist PASS |
-| Script errors on large files | NDA text exceeds expected size (>100KB) | Ensure the file contains only the NDA text, not appendices or exhibits |
-
----
-
-## Success Criteria
-
-- **NDA triage under 5 minutes:** Automated screening replaces 30-minute manual review.
-- **Zero missed RED-severity issues:** Every non-compete, IP assignment, and missing carveout is flagged.
-- **GREEN NDAs signed within 24 hours:** Fast-track routing eliminates bottleneck for standard agreements.
-- **YELLOW NDAs resolved within 48 hours:** Counsel review turnaround meets SLA.
-- **Consistent classification across reviewers:** 10-point checklist eliminates subjective "looks fine" approvals.
-- **100% of NDAs screened before routing:** No NDA reaches an approver without automated triage.
-
----
-
-## Scope & Limitations
-
-**Covers:**
-- Pattern-based screening of NDA text for structural issues and problematic provisions
-- 10-point compliance checklist against standard NDA requirements
-- GREEN/YELLOW/RED classification with routing recommendations
-- Detection of non-solicitation, non-compete, IP assignment, residuals, and other problematic clauses
-- Missing carveout identification
-
-**Does NOT cover:**
-- **Legal advice** -- classification is a screening aid, not a legal opinion
-- **Negotiation or redlining** -- use `nda-review` for deep clause analysis and redline generation
-- **Multi-party NDAs** -- optimized for bilateral (two-party) agreements
-- **Industry-specific NDA requirements** (healthcare, defense, government) -- patterns target commercial NDAs
-- **Non-English NDAs** -- pattern matching is English-language only
-
----
-
-## Anti-Patterns
-
-| Anti-Pattern | Why It Fails | Better Approach |
-|-------------|-------------|-----------------|
-| Signing GREEN-classified NDAs without any human review | Automated screening cannot catch business-context risks (e.g., NDA with a direct competitor) | GREEN classification means low legal risk, not zero risk; business approver must still review |
-| Using triage as a substitute for deep NDA review on complex deals | Triage checks structure and red flags, not clause quality or negotiation position | Run `nda-review` skill for M&A, joint venture, or high-value partnership NDAs |
-| Ignoring YELLOW classifications because "it's just an NDA" | YELLOW items like missing carveouts or residuals clauses create real legal exposure | Route all YELLOW NDAs to counsel; missing independent development carveout alone can cost millions |
-| Treating all NDAs as equal regardless of counterparty relationship | NDA with a startup partner requires different scrutiny than NDA with a Fortune 500 vendor | Adjust review depth based on counterparty, deal value, and information sensitivity |
-
----
-
-## Tool Reference
-
-### nda_screener.py
-
-**Purpose:** Scans NDA text for red flags and problematic provisions. Outputs GREEN/YELLOW/RED classification with detailed reasoning.
-
-**Usage:**
-
-```bash
-python scripts/nda_screener.py <nda_file> [--json] [--output FILE]
-```
-
-**Flags:**
-
-| Flag | Short | Default | Description |
-|------|-------|---------|-------------|
-| `nda_file` | *(positional)* | | Path to NDA text file (.txt or .md) |
-| `--json` | | off | Output in JSON format |
-| `--output` | `-o` | *(stdout)* | Write output to file |
-
-**Example Output (JSON):**
-
-```json
-{
-  "file": "vendor_nda.txt",
-  "classification": "YELLOW",
-  "red_flags": [
-    {
-      "id": "missing_carveout_independent_development",
-      "severity": "YELLOW",
-      "description": "Missing independent development carveout",
-      "recommendation": "Add standard independent development exception"
-    }
-  ],
-  "carveouts": {
-    "public_knowledge": true,
-    "prior_possession": true,
-    "independent_development": false,
-    "third_party_receipt": true,
-    "legal_compulsion": true
-  },
-  "summary": "1 missing carveout; no critical issues. Route to counsel for review."
-}
-```
-
----
-
-### nda_checklist.py
-
-**Purpose:** Generates a 10-point compliance checklist for an NDA, evaluating each screening criterion as PASS/FAIL with notes.
-
-**Usage:**
-
-```bash
-python scripts/nda_checklist.py <nda_file> [--json] [--output FILE]
-```
-
-**Flags:**
-
-| Flag | Short | Default | Description |
-|------|-------|---------|-------------|
-| `nda_file` | *(positional)* | | Path to NDA text file (.txt or .md) |
-| `--json` | | off | Output in JSON format |
-| `--output` | `-o` | *(stdout)* | Write output to file |
-
-**Example Output:**
-
-```
-NDA COMPLIANCE CHECKLIST
-========================
-File: vendor_nda.txt
-Overall: YELLOW (8/10 PASS)
-
- #  Criterion                    Status  Notes
- 1  Agreement Structure          PASS    Mutual NDA; both parties identified
- 2  Definition of Confidential   PASS    Reasonably scoped with marking requirement
- 3  Obligations                  PASS    Standard of care; use restrictions present
- 4  Standard Carveouts           FAIL    Missing: independent development
- 5  Permitted Disclosures        PASS    Representatives and advisors covered
- 6  Term & Duration              PASS    3-year term with 2-year survival
- 7  Return/Destruction           PASS    Return or destroy within 30 days
- 8  Remedies                     PASS    Injunctive relief; no liquidated damages
- 9  Problematic Provisions       FAIL    Residuals clause detected
-10  Governing Law                PASS    Delaware law; state courts
-```
+For YELLOW and RED classifications:
+- Identify the specific person or role that should review (if the organization has defined routing rules)
+- Include a brief summary of issues suitable for the reviewer to quickly understand the key points
+- If the organization has a standard form NDA, recommend sending it as a counterproposal for RED-classified NDAs

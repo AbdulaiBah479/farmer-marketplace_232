@@ -1,498 +1,423 @@
 ---
 name: cto-advisor
-description: >
-  Technical leadership guidance for engineering teams, architecture decisions,
-  and technology strategy. Includes tech debt analyzer, team scaling calculator,
-  engineering metrics frameworks, technology evaluation tools, and ADR
-  templates. Use when assessing technical debt, scaling engineering teams,
-  evaluating technologies, making architecture decisions, establishing
-  engineering metrics, or when user mentions CTO, tech debt, technical debt,
-  team scaling, architecture decisions, technology evaluation, engineering
-  metrics, DORA metrics, or technology strategy.
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: borghei
-  category: c-level
-  domain: cto-leadership
-  updated: 2025-10-20
-  python-tools: tech_debt_analyzer.py, team_scaling_calculator.py
-  tech-stack: engineering-management, team-organization
-  frameworks: DORA-metrics, architecture-decision-records, engineering-metrics
+description: CTO-level advisory - build vs buy decisions, tech debt quantification, team scaling, ADRs, technology evaluation (RICE), budget planning, TCO, vendor management, DORA/SPACE metrics
 ---
+
 # CTO Advisor
 
-Strategic frameworks and tools for technology leadership, team scaling, and engineering excellence.
+## Build vs Buy Decision Framework
 
-## Keywords
-CTO, chief technology officer, technical leadership, tech debt, technical debt, engineering team, team scaling, architecture decisions, technology evaluation, engineering metrics, DORA metrics, ADR, architecture decision records, technology strategy, engineering leadership, engineering organization, team structure, hiring plan, technical strategy, vendor evaluation, technology selection
+### Decision Matrix
 
-## Quick Start
+```markdown
+## Build vs Buy Analysis: [Feature/System Name]
 
-### For Technical Debt Assessment
-```bash
-python scripts/tech_debt_analyzer.py
-```
-Analyzes system architecture and provides prioritized debt reduction plan.
+### Scoring (1-5 each)
 
-### For Team Scaling Planning
-```bash
-python scripts/team_scaling_calculator.py
-```
-Calculates optimal hiring plan and team structure for growth.
+| Factor | Build | Buy | Weight |
+|--------|-------|-----|--------|
+| Core competency alignment | [1-5] | [1-5] | 3x |
+| Time to market | [1-5] | [1-5] | 2x |
+| Total cost (3 year) | [1-5] | [1-5] | 2x |
+| Customization needs | [1-5] | [1-5] | 2x |
+| Maintenance burden | [1-5] | [1-5] | 1x |
+| Data control | [1-5] | [1-5] | 1x |
+| Integration complexity | [1-5] | [1-5] | 1x |
+| Vendor risk | [1-5] | [1-5] | 1x |
+| **Weighted Total** | [sum] | [sum] | |
 
-### For Architecture Decisions
-Review `references/architecture_decision_records.md` for ADR templates and examples.
-
-### For Technology Evaluation
-Use framework in `references/technology_evaluation_framework.md` for vendor selection.
-
-### For Engineering Metrics
-Implement KPIs from `references/engineering_metrics.md` for team performance tracking.
-
-## Core Responsibilities
-
-### 1. Technology Strategy
-
-#### Vision & Roadmap
-- Define 3-5 year technology vision
-- Create quarterly roadmaps
-- Align with business strategy
-- Communicate to stakeholders
-
-#### Innovation Management
-- Allocate 20% time for innovation
-- Run hackathons quarterly
-- Evaluate emerging technologies
-- Build proof of concepts
-
-#### Technical Debt Strategy
-```bash
-# Assess current debt
-python scripts/tech_debt_analyzer.py
-
-# Allocate capacity
-- Critical debt: 40% capacity
-- High debt: 25% capacity  
-- Medium debt: 15% capacity
-- Low debt: Ongoing maintenance
+### Decision: BUILD / BUY / HYBRID
 ```
 
-### 2. Team Leadership
+### Decision Rules
 
-#### Scaling Engineering
-```bash
-# Calculate scaling needs
-python scripts/team_scaling_calculator.py
+| Condition | Recommendation |
+|-----------|---------------|
+| Core differentiator | BUILD (competitive advantage) |
+| Commodity capability | BUY (focus on core) |
+| Strict compliance / data sovereignty | BUILD (control) |
+| Team has no domain expertise | BUY (faster, less risk) |
+| Vendor lock-in risk > 7/10 | BUILD or multi-vendor |
+| Time to market < 3 months | BUY (speed) |
+| Budget constrained, long-term | BUILD (lower TCO) |
 
-# Key ratios to maintain:
-- Manager:Engineer = 1:8
-- Senior:Mid:Junior = 3:4:2
-- Product:Engineering = 1:10
-- QA:Engineering = 1.5:10
+### Build vs Buy Anti-Patterns
+
+| Anti-Pattern | Neden Yanlis | Dogru Yol |
+|-------------|-------------|-----------|
+| "Not invented here" | Wasted engineering time | Evaluate vendors objectively |
+| "We'll build it in 2 weeks" | Always takes 5x longer | Realistic estimation with buffer |
+| Buying everything | No differentiation | Build core, buy commodity |
+| Ignoring maintenance cost | Build looks cheaper initially | Include 3-5 year maintenance TCO |
+| No exit strategy from vendor | Lock-in trap | Evaluate migration cost upfront |
+
+## Tech Debt Quantification & Prioritization
+
+### Tech Debt Classification
+
+| Type | Description | Impact | Example |
+|------|-------------|--------|---------|
+| **Code debt** | Poor code quality | Developer velocity | No types, huge functions, no tests |
+| **Architecture debt** | Wrong architectural decisions | Scalability | Monolith that should be microservice |
+| **Test debt** | Insufficient test coverage | Reliability | No integration tests, flaky tests |
+| **Dependency debt** | Outdated dependencies | Security | 3 major versions behind, CVEs |
+| **Documentation debt** | Missing/outdated docs | Onboarding | No API docs, stale README |
+| **Infrastructure debt** | Manual processes, legacy infra | Reliability | No CI/CD, manual deployments |
+| **Design debt** | UX inconsistencies | User experience | 5 different button styles |
+
+### Tech Debt Scorecard
+
+```markdown
+## Tech Debt Assessment: [Project Name]
+
+| Area | Score (1-10) | Trend | Priority |
+|------|-------------|-------|----------|
+| Code quality | [X] | [up/down/flat] | [H/M/L] |
+| Test coverage | [X%] | [up/down/flat] | [H/M/L] |
+| Dependency freshness | [X] | [up/down/flat] | [H/M/L] |
+| Build/deploy time | [X min] | [up/down/flat] | [H/M/L] |
+| Documentation | [X] | [up/down/flat] | [H/M/L] |
+| Security posture | [X] | [up/down/flat] | [H/M/L] |
+
+### Cost of Delay
+[If we don't address debt area X, what happens in 6 months?]
+
+### Investment Request
+| Initiative | Effort | Impact | ROI Period |
+|-----------|--------|--------|------------|
+| [debt 1] | [weeks] | [description] | [months] |
+| [debt 2] | [weeks] | [description] | [months] |
 ```
 
-#### Performance Management
-- Set clear OKRs quarterly
-- Conduct 1:1s weekly
-- Review performance quarterly
-- Provide growth opportunities
+### Prioritization Formula
 
-#### Culture Building
-- Define engineering values
-- Establish coding standards
-- Create learning programs
-- Foster collaboration
-
-### 3. Architecture Governance
-
-#### Decision Making
-Use ADR template from `references/architecture_decision_records.md`:
-1. Document context and problem
-2. List all options considered
-3. Record decision and rationale
-4. Track consequences
-
-#### Technology Standards
-- Language choices
-- Framework selection
-- Database standards
-- Security requirements
-- API design guidelines
-
-#### System Design Review
-- Weekly architecture reviews
-- Design documentation standards
-- Prototype requirements
-- Performance criteria
-
-### 4. Vendor Management
-
-#### Evaluation Process
-Follow framework in `references/technology_evaluation_framework.md`:
-1. Gather requirements (Week 1)
-2. Market research (Week 1-2)
-3. Deep evaluation (Week 2-4)
-4. Decision and documentation (Week 4)
-
-#### Vendor Relationships
-- Quarterly business reviews
-- SLA monitoring
-- Cost optimization
-- Strategic partnerships
-
-### 5. Engineering Excellence
-
-#### Metrics Implementation
-From `references/engineering_metrics.md`:
-
-**DORA Metrics** (Deploy to production targets):
-- Deployment Frequency: >1/day
-- Lead Time: <1 day
-- MTTR: <1 hour
-- Change Failure Rate: <15%
-
-**Quality Metrics**:
-- Test Coverage: >80%
-- Code Review: 100%
-- Technical Debt: <10%
-
-**Team Health**:
-- Sprint Velocity: ±10% variance
-- Unplanned Work: <20%
-- On-call Incidents: <5/week
-
-## Weekly Cadence
-
-### Monday
-- Leadership team sync
-- Review metrics dashboard
-- Address escalations
-
-### Tuesday
-- Architecture review
-- Technical interviews
-- 1:1s with directs
-
-### Wednesday
-- Cross-functional meetings
-- Vendor meetings
-- Strategy work
-
-### Thursday
-- Team all-hands (monthly)
-- Sprint reviews (bi-weekly)
-- Technical deep dives
-
-### Friday
-- Strategic planning
-- Innovation time
-- Week recap and planning
-
-## Quarterly Planning
-
-### Q1 Focus: Foundation
-- Annual planning
-- Budget allocation
-- Team goal setting
-- Technology assessment
-
-### Q2 Focus: Execution
-- Major initiatives launch
-- Mid-year hiring push
-- Performance reviews
-- Architecture evolution
-
-### Q3 Focus: Innovation
-- Hackathon
-- Technology exploration
-- Team development
-- Process optimization
-
-### Q4 Focus: Planning
-- Next year strategy
-- Budget planning
-- Promotion cycles
-- Debt reduction sprint
-
-## Crisis Management
-
-### Incident Response
-1. **Immediate** (0-15 min):
-   - Assess severity
-   - Activate incident team
-   - Begin communication
-
-2. **Short-term** (15-60 min):
-   - Implement fixes
-   - Update stakeholders
-   - Monitor systems
-
-3. **Resolution** (1-24 hours):
-   - Verify fix
-   - Document timeline
-   - Customer communication
-
-4. **Post-mortem** (48-72 hours):
-   - Root cause analysis
-   - Action items
-   - Process improvements
-
-### Types of Crises
-
-#### Security Breach
-- Isolate affected systems
-- Engage security team
-- Legal/compliance notification
-- Customer communication plan
-
-#### Major Outage
-- All-hands response
-- Status page updates
-- Executive briefings
-- Customer outreach
-
-#### Data Loss
-- Stop writes immediately
-- Assess recovery options
-- Begin restoration
-- Impact analysis
-
-## Stakeholder Management
-
-### Board/Executive Reporting
-**Monthly**:
-- KPI dashboard
-- Risk register
-- Major initiatives status
-
-**Quarterly**:
-- Technology strategy update
-- Team growth and health
-- Innovation highlights
-- Budget review
-
-### Cross-functional Partners
-
-#### Product Team
-- Weekly roadmap sync
-- Sprint planning participation
-- Technical feasibility reviews
-- Feature estimation
-
-#### Sales/Marketing
-- Technical sales support
-- Product capability briefings
-- Customer reference calls
-- Competitive analysis
-
-#### Finance
-- Budget management
-- Cost optimization
-- Vendor negotiations
-- Capex planning
-
-## Strategic Initiatives
-
-### Digital Transformation
-1. Assess current state
-2. Define target architecture
-3. Create migration plan
-4. Execute in phases
-5. Measure and adjust
-
-### Cloud Migration
-1. Application assessment
-2. Migration strategy (7Rs)
-3. Pilot applications
-4. Full migration
-5. Optimization
-
-### Platform Engineering
-1. Define platform vision
-2. Build core services
-3. Create self-service tools
-4. Enable team adoption
-5. Measure efficiency
-
-### AI/ML Integration
-1. Identify use cases
-2. Build data infrastructure
-3. Develop models
-4. Deploy and monitor
-5. Scale adoption
-
-## Communication Templates
-
-### Technology Strategy Presentation
 ```
-1. Executive Summary (1 slide)
-2. Current State Assessment (2 slides)
-3. Vision & Strategy (2 slides)
-4. Roadmap & Milestones (3 slides)
-5. Investment Required (1 slide)
-6. Risks & Mitigation (1 slide)
-7. Success Metrics (1 slide)
+Priority Score = (Impact * Urgency * Spread) / Effort
+
+Impact (1-5):    How much does it slow the team?
+Urgency (1-5):   How quickly will it get worse?
+Spread (1-5):    How many areas does it affect?
+Effort (1-5):    How hard is it to fix? (inverse: 1=hard, 5=easy)
 ```
 
-### Team All-hands
+### Tech Debt Budget Rule
+
 ```
-1. Wins & Recognition (5 min)
-2. Metrics Review (5 min)
-3. Strategic Updates (10 min)
-4. Demo/Deep Dive (15 min)
-5. Q&A (10 min)
-```
+RULE: 20% of sprint capacity reserved for tech debt reduction
 
-### Board Update Email
-```
-Subject: Engineering Update - [Month]
-
-Highlights:
-• [Major achievement]
-• [Key metric improvement]
-• [Strategic progress]
-
-Challenges:
-• [Issue and mitigation]
-
-Next Month:
-• [Priority 1]
-• [Priority 2]
-
-Detailed metrics attached.
+Sprint capacity: 10 story points
+├── 8 points: Feature work
+└── 2 points: Tech debt reduction (ZORUNLU, negotiable degil)
 ```
 
-## Tools & Resources
+## Team Scaling Strategies
 
-### Essential Tools
-- **Architecture**: Draw.io, Lucidchart, C4 Model
-- **Metrics**: DataDog, Grafana, LinearB
-- **Planning**: Jira, Confluence, Notion
-- **Communication**: Slack, Zoom, Loom
-- **Development**: GitHub, GitLab, Bitbucket
+### Hiring Framework
 
-### Key Resources
-- **Books**: 
-  - "The Manager's Path" - Camille Fournier
-  - "Accelerate" - Nicole Forsgren
-  - "Team Topologies" - Skelton & Pais
-  
-- **Frameworks**:
-  - DORA metrics
-  - SPACE framework
-  - Team Topologies
-  
-- **Communities**:
-  - CTO Craft
-  - Engineering Leadership Slack
-  - LeadDev community
+```markdown
+## Hiring Plan: [Quarter/Year]
 
-## Success Indicators
+### Current State
+| Role | Headcount | Capacity | Gap |
+|------|-----------|----------|-----|
+| Backend | [X] | [Y features/quarter] | [shortfall] |
+| Frontend | [X] | [Y features/quarter] | [shortfall] |
+| DevOps | [X] | [Y deploys/week] | [shortfall] |
+| QA | [X] | [Y tests/sprint] | [shortfall] |
 
-✅ **Technical Excellence**
-- System uptime >99.9%
-- Deploy multiple times daily
-- Technical debt <10% capacity
-- Security incidents = 0
+### Ratios
+- Engineer : Manager = 6-8 : 1
+- Senior : Mid : Junior = 2 : 3 : 1
+- Backend : Frontend = project-dependent
+- Engineer : QA = 4-6 : 1
 
-✅ **Team Success**
-- Team satisfaction >8/10
-- Attrition <10%
-- Filled positions >90%
-- Diversity improving
-
-✅ **Business Impact**
-- Features on-time >80%
-- Engineering enables revenue
-- Cost per transaction decreasing
-- Innovation driving growth
-
-## Red Flags to Watch
-
-⚠️ Increasing technical debt  
-⚠️ Rising attrition rate  
-⚠️ Slowing velocity  
-⚠️ Growing incidents  
-⚠️ Team morale declining  
-⚠️ Budget overruns  
-⚠️ Vendor dependencies
-⚠️ Security vulnerabilities
-
----
-
-## Tool Reference
-
-### 1. tech_debt_analyzer.py
-
-Analyzes system architecture for technical debt across 5 categories (architecture, code quality, infrastructure, security, performance). Calculates weighted debt scores, prioritizes reduction actions, estimates effort, and assesses risk levels.
-
-```bash
-python scripts/tech_debt_analyzer.py --input system_config.json --json
-python scripts/tech_debt_analyzer.py --input system_config.json
+### Onboarding Milestones
+| Day | Milestone |
+|-----|-----------|
+| 1 | Dev environment running, first commit |
+| 7 | First PR merged |
+| 14 | First feature shipped to staging |
+| 30 | Independent task completion |
+| 60 | Contributing to architecture discussions |
+| 90 | Fully productive, mentoring others |
 ```
 
-| Flag | Type | Description |
-|------|------|-------------|
-| `--input` | optional | Path to JSON file with system configuration (category indicators scored 0-100, team size, criticality, business context). Uses built-in example if omitted |
-| `--json` | optional | Output in JSON format instead of human-readable text |
+### Team Topology Patterns
 
-### 2. team_scaling_calculator.py
+| Pattern | When to Use | Size |
+|---------|-------------|------|
+| Stream-aligned | Product features | 5-8 people |
+| Platform | Internal tooling, infrastructure | 3-5 people |
+| Enabling | Coach other teams, remove blockers | 2-3 people |
+| Complicated subsystem | Deep expertise (ML, security) | 2-4 people |
 
-Calculates optimal engineering team scaling plans including hiring timeline, role distribution, team structure design, budget projections, and risk assessment. Applies Brooks' Law and Conway's Law factors.
+## Architecture Decision Records (ADR)
 
-```bash
-python scripts/team_scaling_calculator.py --input team_data.json --json
-python scripts/team_scaling_calculator.py --input team_data.json
+### ADR Template
+
+```markdown
+# ADR-[number]: [decision title]
+
+## Status
+[Proposed | Accepted | Deprecated | Superseded by ADR-XXX]
+
+## Context
+[What is the issue? What forces are at play?]
+[Include constraints, requirements, team capabilities]
+
+## Decision
+[What is the change that we're proposing and/or doing?]
+
+## Alternatives Considered
+### Option A: [name]
+- Pros: [list]
+- Cons: [list]
+
+### Option B: [name]
+- Pros: [list]
+- Cons: [list]
+
+## Consequences
+### Positive
+- [benefit 1]
+- [benefit 2]
+
+### Negative
+- [tradeoff 1]
+- [tradeoff 2]
+
+### Risks
+- [risk 1]: [mitigation]
+- [risk 2]: [mitigation]
+
+## Decision Date
+[YYYY-MM-DD]
+
+## Decision Makers
+[names/roles]
 ```
 
-| Flag | Type | Description |
-|------|------|-------------|
-| `--input` | optional | Path to JSON file with current state (headcount, roles, velocity) and growth targets (target headcount, timeline). Uses built-in example if omitted |
-| `--json` | optional | Output in JSON format instead of human-readable text |
+### ADR Index
 
----
+```markdown
+## Architecture Decision Log
 
-## Troubleshooting
+| # | Decision | Status | Date | Impact |
+|---|---------|--------|------|--------|
+| 001 | Use PostgreSQL over MongoDB | Accepted | 2025-01-15 | High |
+| 002 | Adopt microservices for billing | Accepted | 2025-02-01 | High |
+| 003 | Use React over Vue | Accepted | 2025-02-15 | Medium |
+| 004 | Monolith-first for MVP | Deprecated | 2025-03-01 | High |
+```
 
-| Problem | Likely Cause | Resolution |
-|---------|-------------|------------|
-| Tech debt score increasing despite dedicated sprints | Debt reduction not keeping pace with new debt creation | Implement debt prevention gates (code review, architecture review); track debt creation rate alongside reduction rate |
-| DORA metrics improving but customer satisfaction declining | Shipping faster but not shipping the right things | Add customer-impact metrics alongside DORA; review feature adoption rates; reconnect with product team on priorities |
-| Team scaling plan keeps missing hiring targets | Unrealistic timeline, insufficient recruiting capacity, or poor employer brand | Adjust timeline using 25% max quarterly growth rate; add recruiting resources (1 per 50 annual hires); invest in employer brand |
-| Architecture decisions not documented or followed | No ADR process or ADRs created but not referenced | Implement lightweight ADR template; make ADR review part of design review; link ADRs to relevant code |
-| Engineering team morale declining during rapid growth | Culture dilution, unclear expectations, or insufficient onboarding | Implement structured onboarding; maintain 1:8 manager ratio; run quarterly team health surveys |
-| Vendor lock-in creating strategic risk | No evaluation framework or over-reliance on single vendor | Run technology evaluation for critical vendors; implement abstraction layers; maintain exit strategies |
+## Technology Evaluation Framework
 
----
+### RICE Scoring
 
-## Success Criteria
+```markdown
+## Technology Evaluation: [Technology Name]
 
-- Tech debt score below 40 (Medium-Low) across all categories
-- DORA metrics at "High" or "Elite" performance tier (deployment frequency > weekly, lead time < 1 week, MTTR < 1 day, change failure rate < 15%)
-- Team balance score above 70/100 with appropriate role ratios maintained
-- Architecture decisions documented via ADRs for all significant technical choices
-- System uptime exceeds 99.9% for production systems
-- Engineering team satisfaction above 8/10 with attrition below 10%
-- Innovation time (hackathons, exploration) maintained at 15-20% of engineering capacity
+### RICE Score
 
----
+| Factor | Score | Weight | Weighted |
+|--------|-------|--------|----------|
+| **Reach** (how many people/teams affected) | [1-10] | 1x | [X] |
+| **Impact** (how much improvement per person) | [1-3: minimal/medium/massive] | 2x | [X] |
+| **Confidence** (how sure are we) | [50-100%] | 1x | [X] |
+| **Effort** (person-months) | [X] | divisor | [X] |
 
-## Scope & Limitations
+**RICE Score = (Reach * Impact * Confidence) / Effort = [score]**
+```
 
-**In scope:** Technology strategy and vision, technical debt assessment and reduction planning, engineering team scaling and structure design, architecture governance (ADRs, design reviews), vendor management and evaluation, engineering metrics (DORA, quality, team health), crisis management (incident response, security breach, data loss), stakeholder management and board reporting, and strategic initiatives (cloud migration, platform engineering, AI/ML integration).
+### Weighted Scoring Matrix
 
-**Out of scope:** Hands-on coding or code review (use engineering/ skills), product feature prioritization (use cpo-advisor), security architecture and compliance (use ciso-advisor or ra-qm-team/), HR policy and compensation design (use chro-advisor or hr-operations/), and financial planning for engineering budget (use cfo-advisor). Tools analyze engineering data snapshots; continuous metrics tracking requires integration with DevOps platforms.
+```markdown
+## Vendor/Technology Comparison
 
-**Limitations:** Tech debt scoring depends on self-reported indicator data; automated code analysis tools provide more objective measures. Team scaling budget projections use average salary bands that vary significantly by location, seniority mix, and market conditions. DORA benchmarks assume standard software delivery practices; hardware or embedded systems teams may need different targets.
+| Criteria | Weight | Option A | Option B | Option C |
+|----------|--------|----------|----------|----------|
+| Performance | 20% | [1-5] | [1-5] | [1-5] |
+| Community/support | 15% | [1-5] | [1-5] | [1-5] |
+| Learning curve | 15% | [1-5] | [1-5] | [1-5] |
+| Cost | 15% | [1-5] | [1-5] | [1-5] |
+| Scalability | 10% | [1-5] | [1-5] | [1-5] |
+| Security | 10% | [1-5] | [1-5] | [1-5] |
+| Integration | 10% | [1-5] | [1-5] | [1-5] |
+| Maturity | 5% | [1-5] | [1-5] | [1-5] |
+| **Weighted Total** | | [sum] | [sum] | [sum] |
 
----
+### Recommendation: [Option X]
+### Reasoning: [1-2 sentences]
+```
 
-## Integration Points
+### Technology Evaluation Anti-Patterns
 
-- **ceo-advisor** -- Technology strategy aligns with business direction; engineering capacity enables or constrains strategic bets
-- **cpo-advisor** -- Technical feasibility co-owned with CPO; features vs platform trade-offs require joint decision-making
-- **cfo-advisor** -- Engineering budget, headcount costs, and vendor spend feed financial planning
-- **coo-advisor** -- System reliability and incident response intersect with operational excellence
-- **ciso-advisor** -- Security architecture, vulnerability management, and compliance require CISO partnership
-- **engineering/** -- CTO strategy cascades to engineering team execution; architecture decisions guide implementation
+| Anti-Pattern | Risk | Dogru Yol |
+|-------------|------|-----------|
+| Resume-driven development | Wrong tool for the job | Evaluate against actual needs |
+| Hype-driven adoption | Immature ecosystem | Wait for version 2.0+ |
+| Single vendor evaluation | No comparison baseline | Always evaluate 3+ options |
+| Ignoring exit cost | Future lock-in | Calculate migration cost |
+| No POC/prototype | Unknown unknowns | Build spike before committing |
+
+## Budget Planning & TCO Analysis
+
+### TCO Template (3-Year)
+
+```markdown
+## Total Cost of Ownership: [System/Technology]
+
+### Year 1 (Setup + Operations)
+| Category | Cost |
+|----------|------|
+| Licenses/subscriptions | $[X] |
+| Infrastructure (cloud/hardware) | $[X] |
+| Implementation/migration | $[X] |
+| Training | $[X] |
+| Integration development | $[X] |
+| **Year 1 Total** | **$[X]** |
+
+### Year 2-3 (Ongoing)
+| Category | Annual Cost |
+|----------|------------|
+| Licenses/subscriptions (+ annual increase) | $[X] |
+| Infrastructure | $[X] |
+| Maintenance engineering (FTE fraction) | $[X] |
+| Support contracts | $[X] |
+| Upgrades/patches | $[X] |
+| **Annual Ongoing** | **$[X]** |
+
+### 3-Year TCO: $[Year 1 + Year 2 + Year 3]
+
+### Hidden Costs (often missed)
+- Context switching overhead
+- On-call/incident response time
+- Documentation maintenance
+- Vendor management overhead
+- Compliance/audit costs
+```
+
+## Vendor Management
+
+### Vendor Assessment Checklist
+
+- [ ] Financial stability (will they exist in 3 years?)
+- [ ] Security certifications (SOC2, ISO 27001)
+- [ ] SLA guarantees (uptime, response time)
+- [ ] Data portability (can you export everything?)
+- [ ] API quality (documentation, versioning, reliability)
+- [ ] Support quality (response time, escalation path)
+- [ ] Pricing transparency (no surprise costs)
+- [ ] Contract flexibility (monthly vs annual, exit clause)
+- [ ] Reference customers (talk to existing users)
+- [ ] Roadmap alignment (are they building what you need?)
+
+### Vendor Risk Matrix
+
+| Risk | Likelihood | Impact | Mitigation |
+|------|-----------|--------|------------|
+| Vendor acquired/shutdown | Low | Critical | Data export procedure, backup vendor |
+| Price increase > 30% | Medium | High | Multi-year contract, alternative evaluation |
+| SLA breach | Medium | High | Credits, contractual remedies |
+| Data breach at vendor | Low | Critical | Encryption, contractual liability |
+| Feature deprecation | Medium | Medium | API abstraction layer |
+
+## Engineering Metrics
+
+### DORA Metrics
+
+| Metric | Elite | High | Medium | Low |
+|--------|-------|------|--------|-----|
+| **Deployment Frequency** | On-demand (multiple/day) | Daily-weekly | Weekly-monthly | Monthly-6monthly |
+| **Lead Time for Changes** | < 1 hour | 1 day - 1 week | 1 week - 1 month | 1 - 6 months |
+| **Change Failure Rate** | 0-15% | 16-30% | 16-30% | 16-30% |
+| **Mean Time to Recovery** | < 1 hour | < 1 day | 1 day - 1 week | > 1 week |
+
+### SPACE Framework
+
+| Dimension | Metrics | How to Measure |
+|-----------|---------|---------------|
+| **S**atisfaction | Developer satisfaction survey | Quarterly survey (1-5 scale) |
+| **P**erformance | Code review turnaround, incident resolution | Tooling metrics |
+| **A**ctivity | PRs merged, deploys, commits | Git/CI data (NOT for evaluation) |
+| **C**ommunication | Knowledge sharing, documentation | Survey + doc metrics |
+| **E**fficiency | Dev environment setup time, build time | Measure and track |
+
+### Engineering Health Dashboard
+
+```markdown
+## Engineering Health: [Quarter]
+
+### DORA Metrics
+| Metric | Target | Actual | Status |
+|--------|--------|--------|--------|
+| Deploy frequency | Daily | [X/week] | [on/off track] |
+| Lead time | < 1 day | [X hours] | [on/off track] |
+| Change failure rate | < 15% | [X%] | [on/off track] |
+| MTTR | < 1 hour | [X min] | [on/off track] |
+
+### Team Health
+| Area | Score (1-10) | Trend |
+|------|-------------|-------|
+| Developer satisfaction | [X] | [up/down/flat] |
+| On-call burden | [X] | [up/down/flat] |
+| Tech debt sentiment | [X] | [up/down/flat] |
+| Tooling satisfaction | [X] | [up/down/flat] |
+
+### Actionable Insights
+1. [Insight + recommended action]
+2. [Insight + recommended action]
+```
+
+## Board/Investor Technical Reporting
+
+### Quarterly Tech Report Template
+
+```markdown
+## Technology Report: Q[X] [Year]
+
+### Executive Summary
+[2-3 sentences: key wins, risks, requests]
+
+### Key Metrics
+| Metric | Q-1 | Q0 | Target | Trend |
+|--------|-----|-----|--------|-------|
+| Uptime | [X%] | [X%] | 99.9% | [arrow] |
+| Page load time | [Xs] | [Xs] | < 2s | [arrow] |
+| Active users | [X] | [X] | [target] | [arrow] |
+| Deploy frequency | [X/mo] | [X/mo] | Daily | [arrow] |
+
+### Achievements
+1. [Milestone/launch/improvement]
+2. [Milestone/launch/improvement]
+
+### Risks & Challenges
+| Risk | Severity | Mitigation | Status |
+|------|----------|-----------|--------|
+| [risk] | [H/M/L] | [plan] | [active/mitigated] |
+
+### Budget
+| Category | Budget | Actual | Variance |
+|----------|--------|--------|----------|
+| Infrastructure | $[X] | $[X] | [+/-X%] |
+| Licenses | $[X] | $[X] | [+/-X%] |
+| Headcount | $[X] | $[X] | [+/-X%] |
+
+### Next Quarter Focus
+1. [Priority 1]
+2. [Priority 2]
+3. [Priority 3]
+
+### Resource Request
+[If applicable: what do we need and why]
+```
+
+### Board Communication Anti-Patterns
+
+| Anti-Pattern | Neden Yanlis | Dogru Yol |
+|-------------|-------------|-----------|
+| Too much jargon | Board members aren't engineers | Translate to business impact |
+| Only good news | Erodes trust | Honest + solution-oriented |
+| No metrics | Unverifiable | Data-driven with trends |
+| Feature list only | No business context | Connect features to revenue/growth |
+| Asking for budget without ROI | Unlikely approval | Show expected return |

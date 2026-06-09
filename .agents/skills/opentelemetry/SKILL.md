@@ -1,427 +1,338 @@
 ---
 name: opentelemetry
-license: Apache-2.0
-description: >
-  OpenTelemetry with Grafana stack. Covers OTel SDK instrumentation for Go/Java/Python/Node.js/.NET,
-  OTLP protocol and endpoint configuration, sending telemetry to Grafana Cloud via OTLP endpoint,
-  Grafana Alloy as OTel collector, sampling strategies, Kubernetes OTel Operator, and migration
-  from other observability tools. Use when instrumenting apps with OTel, configuring OTLP endpoints,
-  setting up collectors, or migrating to OpenTelemetry.
+description: OpenTelemetry observability - use for distributed tracing, metrics, instrumentation, Sentry integration, and monitoring
 ---
 
-# OpenTelemetry with Grafana
+# OpenTelemetry Patterns
 
-## Overview
+## Spring Boot Configuration
 
-OpenTelemetry (OTel) is a vendor-neutral framework for collecting observability data (metrics, logs,
-traces, profiles). Grafana Labs integrates it as a core strategy, offering a full stack to collect,
-ingest, store, analyze, and visualize telemetry data.
+```kotlin
+// build.gradle.kts
+dependencies {
+    implementation(platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom:2.15.0"))
+    implementation("io.opentelemetry.instrumentation:opentelemetry-spring-boot-starter")
+    implementation("io.micrometer:micrometer-tracing-bridge-otel")
+    implementation("io.opentelemetry:opentelemetry-exporter-zipkin")
 
-### Four-Step Implementation Model
-
-1. **Instrument** - Add telemetry using Grafana SDKs, Beyla (eBPF), or upstream OTel SDKs
-2. **Pipeline** - Build processing infrastructure with Grafana Alloy or OTel Collector
-3. **Ingest** - Route data to Grafana Cloud OTLP endpoint or self-managed backends
-4. **Analyze** - Dashboards, alerts, Application Observability, Drilldown apps
-
-### Grafana Backends
-
-| Signal | Backend |
-|--------|---------|
-| Metrics | Grafana Mimir |
-| Logs | Grafana Loki |
-| Traces | Grafana Tempo |
-| Profiles | Grafana Pyroscope |
-
----
-
-## OTLP Endpoint and Authentication
-
-### Grafana Cloud OTLP Endpoint
-
-Grafana Cloud exposes a managed OTLP gateway endpoint:
-
+    // Sentry integration
+    implementation("io.sentry:sentry-spring-boot-starter-jakarta:8.26.0")
+    implementation("io.sentry:sentry-logback:8.26.0")
+}
 ```
-https://otlp-gateway-<region>.grafana.net/otlp
-```
-
-Example regions: `prod-us-east-0`, `prod-eu-west-0`, `prod-ap-southeast-0`
-
-Full example:
-```
-https://otlp-gateway-prod-us-east-0.grafana.net/otlp
-```
-
-### Authentication - Basic Auth
-
-Grafana Cloud OTLP uses **HTTP Basic Auth**:
-- **Username**: Grafana Cloud Instance ID (numeric, e.g. `123456`)
-- **Password**: Grafana Cloud API token (with MetricsPublisher, LogsPublisher, TracesPublisher roles)
-
-#### Via environment variable (recommended)
-
-```bash
-# Base64-encode "instanceID:apiToken"
-export OTEL_EXPORTER_OTLP_HEADERS="Authorization=Basic $(echo -n '123456:glc_eyJ...' | base64)"
-```
-
-#### Via Alloy environment variables
-
-```bash
-export GRAFANA_CLOUD_INSTANCE_ID=123456
-export GRAFANA_CLOUD_API_KEY=glc_eyJ...
-export GRAFANA_CLOUD_OTLP_ENDPOINT=https://otlp-gateway-prod-us-east-0.grafana.net/otlp
-```
-
-### Direct Send (no collector) - Environment Variables
-
-```bash
-export OTEL_EXPORTER_OTLP_ENDPOINT=https://otlp-gateway-prod-us-east-0.grafana.net/otlp
-export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
-export OTEL_EXPORTER_OTLP_HEADERS="Authorization=Basic <base64(instanceID:apiToken)>"
-export OTEL_RESOURCE_ATTRIBUTES="service.name=myapp,service.namespace=myteam,deployment.environment=production"
-```
-
----
-
-## Instrumentation by Language
-
-### Go
-
-**Requirements:** Go 1.22+
-
-**Install packages:**
-```bash
-go get "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp" \
-  "go.opentelemetry.io/contrib/instrumentation/runtime" \
-  "go.opentelemetry.io/otel" \
-  "go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp" \
-  "go.opentelemetry.io/otel/exporters/otlp/otlptrace" \
-  "go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp" \
-  "go.opentelemetry.io/otel/sdk" \
-  "go.opentelemetry.io/otel/sdk/metric"
-```
-
-**Run with environment variables:**
-```bash
-OTEL_RESOURCE_ATTRIBUTES="service.name=myapp,service.namespace=myteam,deployment.environment=prod" \
-OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317 \
-OTEL_EXPORTER_OTLP_HEADERS="Authorization=Basic <base64>" \
-go run .
-```
-
-See `references/instrumentation.md` for full Go code example.
-
----
-
-### Java (Grafana Distribution - JVM Agent)
-
-**Requirements:** JDK 8+
-
-**Download:** `grafana-opentelemetry-java.jar` from https://github.com/grafana/grafana-opentelemetry-java/releases
-
-**Run:**
-```bash
-OTEL_RESOURCE_ATTRIBUTES="service.name=shoppingcart,service.namespace=ecommerce,deployment.environment=production" \
-OTEL_EXPORTER_OTLP_ENDPOINT=https://otlp-gateway-prod-us-east-0.grafana.net/otlp \
-OTEL_EXPORTER_OTLP_PROTOCOL="http/protobuf" \
-OTEL_EXPORTER_OTLP_HEADERS="Authorization=Basic <base64>" \
-java -javaagent:/path/to/grafana-opentelemetry-java.jar -jar myapp.jar
-```
-
-**Optional: Data saver mode** (reduces metric cardinality):
-```bash
-export GRAFANA_OTEL_APPLICATION_OBSERVABILITY_METRICS=true
-```
-
-**Debug:**
-```bash
-export OTEL_JAVAAGENT_DEBUG=true
-# Enable console output alongside OTLP
-export OTEL_TRACES_EXPORTER=otlp,console
-export OTEL_METRICS_EXPORTER=otlp,console
-export OTEL_LOGS_EXPORTER=otlp,console
-```
-
----
-
-### Node.js
-
-**Install:**
-```bash
-npm install --save @opentelemetry/api
-npm install --save @opentelemetry/auto-instrumentations-node
-```
-
-**Run:**
-```bash
-OTEL_TRACES_EXPORTER="otlp" \
-OTEL_METRICS_EXPORTER="otlp" \
-OTEL_LOGS_EXPORTER="otlp" \
-OTEL_NODE_RESOURCE_DETECTORS="env,host,os" \
-OTEL_RESOURCE_ATTRIBUTES="service.name=myapp,service.namespace=myteam,deployment.environment=prod" \
-OTEL_EXPORTER_OTLP_ENDPOINT=https://otlp-gateway-prod-us-east-0.grafana.net/otlp \
-OTEL_EXPORTER_OTLP_HEADERS="Authorization=Basic <base64>" \
-NODE_OPTIONS="--require @opentelemetry/auto-instrumentations-node/register" \
-node app.js
-```
-
-**Warning:** Bundlers like `@vercel/ncc` can break auto-instrumentation hooks.
-
-See `references/instrumentation.md` for manual SDK setup example.
-
----
-
-### Python
-
-**Install:**
-```bash
-pip install "opentelemetry-distro[otlp]"
-opentelemetry-bootstrap -a install
-```
-
-**Run:**
-```bash
-OTEL_RESOURCE_ATTRIBUTES="service.name=myapp,service.namespace=myteam,deployment.environment=prod" \
-OTEL_EXPORTER_OTLP_ENDPOINT=https://otlp-gateway-prod-us-east-0.grafana.net/otlp \
-OTEL_EXPORTER_OTLP_PROTOCOL="http/protobuf" \
-OTEL_EXPORTER_OTLP_HEADERS="Authorization=Basic <base64>" \
-opentelemetry-instrument python app.py
-```
-
-**Multi-process servers** (Gunicorn, uWSGI): implement post-fork hooks to reinitialize OTel providers per worker.
-
----
-
-### .NET (Grafana Distribution)
-
-**Install NuGet:**
-```bash
-dotnet add package Grafana.OpenTelemetry
-```
-
-**ASP.NET Core setup:**
-```csharp
-using Grafana.OpenTelemetry;
-
-var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddOpenTelemetry()
-    .WithTracing(configure => configure.UseGrafana())
-    .WithMetrics(configure => configure.UseGrafana());
-builder.Logging.AddOpenTelemetry(options => options.UseGrafana());
-```
-
-**Run:**
-```bash
-OTEL_RESOURCE_ATTRIBUTES="service.name=myapp,service.namespace=myteam,deployment.environment=prod" \
-OTEL_EXPORTER_OTLP_ENDPOINT=https://otlp-gateway-prod-us-east-0.grafana.net/otlp \
-OTEL_EXPORTER_OTLP_PROTOCOL="http/protobuf" \
-OTEL_EXPORTER_OTLP_HEADERS="Authorization=Basic <base64>" \
-dotnet run
-```
-
-**Requirements:** .NET 6+ or .NET Framework 4.6.2+
-
-See `references/instrumentation.md` for full .NET examples.
-
----
-
-### Beyla (eBPF - Language Agnostic)
-
-Grafana Beyla instruments at the network layer - no code changes required, works with any language.
-
-```bash
-# Docker
-docker run --rm -it \
-  --privileged \
-  -e BEYLA_SERVICE_NAME=myapp \
-  -e OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317 \
-  -v /sys/kernel/security:/sys/kernel/security \
-  grafana/beyla
-```
-
-Verify with: `curl http://localhost:9090/metrics`
-
-Full docs: https://grafana.com/docs/beyla/
-
----
-
-## Grafana Alloy Collector
-
-Grafana Alloy is the recommended OTel Collector distribution. It combines upstream OTel Collector
-components with Prometheus exporters for infrastructure + application observability correlation.
-
-### Why Use a Collector?
-
-- **Cost control**: Aggregate, sample, and drop data before sending
-- **Reliability**: Buffer and retry on connection failures
-- **Enrichment**: Add resource attributes, transform, redact, and route data
-
-### Alloy Ports
-
-| Port | Protocol | Purpose |
-|------|----------|---------|
-| 4317 | gRPC | OTLP gRPC receiver |
-| 4318 | HTTP | OTLP HTTP/protobuf receiver |
-
-### Application -> Alloy -> Grafana Cloud
-
-**Application env vars** (point to local Alloy):
-```bash
-export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
-export OTEL_EXPORTER_OTLP_PROTOCOL=grpc
-```
-
-**Alloy config env vars** (Alloy -> Grafana Cloud):
-```bash
-export GRAFANA_CLOUD_OTLP_ENDPOINT=https://otlp-gateway-prod-us-east-0.grafana.net/otlp
-export GRAFANA_CLOUD_INSTANCE_ID=123456
-export GRAFANA_CLOUD_API_KEY=glc_eyJ...
-```
-
-See `references/collector-config.md` for full Alloy configuration.
-
----
-
-## Kubernetes Setup
-
-### Option 1: Grafana Kubernetes Monitoring Helm Chart (recommended)
-
-The Grafana Kubernetes Monitoring Helm chart deploys Alloy with OTLP receivers pre-configured.
-
-1. Enable "OTLP Receivers" in the Cluster Configuration tab
-2. Get gRPC/HTTP endpoints from "Configure Application Instrumentation" section
-3. Point apps to the in-cluster Alloy endpoint:
-
-```bash
-export OTEL_EXPORTER_OTLP_ENDPOINT=<GRPC_ENDPOINT_FROM_HELM>
-export OTEL_EXPORTER_OTLP_PROTOCOL=grpc
-```
-
-### Option 2: OpenTelemetry Operator
-
-Install via official docs, then use `Instrumentation` CR for auto-injection:
 
 ```yaml
-apiVersion: opentelemetry.io/v1alpha1
-kind: Instrumentation
-metadata:
-  name: my-instrumentation
-spec:
+# application.yaml
+spring:
+  application:
+    name: orca-facade
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0  # 100% in dev, lower in prod
+  otlp:
+    tracing:
+      endpoint: http://localhost:4318/v1/traces
+
+otel:
   exporter:
-    endpoint: http://otelcol:4317
-  propagators:
-    - tracecontext
-    - baggage
-  java:
-    # Use Grafana distribution image
-    image: us-docker.pkg.dev/grafanalabs-global/docker-grafana-opentelemetry-java-prod/grafana-opentelemetry-java:2.3.0-beta.1
-  nodejs: {}
-  python: {}
+    otlp:
+      endpoint: http://otel-collector:4317
+  service:
+    name: orca-facade
+  resource:
+    attributes:
+      deployment.environment: ${ENVIRONMENT:dev}
+      service.version: ${APP_VERSION:unknown}
+
+sentry:
+  dsn: ${SENTRY_DSN:}
+  environment: ${ENVIRONMENT:dev}
+  traces-sample-rate: 1.0
 ```
 
-**Inject into pods** with annotation:
+## Custom Span Creation
+
+```kotlin
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.api.trace.Tracer
+import io.opentelemetry.context.Context
+import org.springframework.stereotype.Component
+
+@Component
+class TracingService(
+    private val tracer: Tracer
+) {
+
+    fun <T> withSpan(
+        spanName: String,
+        attributes: Map<String, String> = emptyMap(),
+        block: () -> T
+    ): T {
+        val span = tracer.spanBuilder(spanName)
+            .setParent(Context.current())
+            .startSpan()
+
+        attributes.forEach { (key, value) ->
+            span.setAttribute(key, value)
+        }
+
+        return try {
+            span.makeCurrent().use {
+                block()
+            }
+        } catch (e: Exception) {
+            span.recordException(e)
+            span.setStatus(io.opentelemetry.api.trace.StatusCode.ERROR, e.message ?: "Error")
+            throw e
+        } finally {
+            span.end()
+        }
+    }
+}
+
+// Usage
+@Service
+class EnvironmentService(
+    private val tracingService: TracingService,
+    private val repository: EnvironmentRepository
+) {
+
+    fun createEnvironment(request: CreateRequest): Environment {
+        return tracingService.withSpan(
+            "EnvironmentService.createEnvironment",
+            mapOf(
+                "environment.name" to request.name,
+                "user.id" to request.userId
+            )
+        ) {
+            // Add events
+            Span.current().addEvent("Validating request")
+            validateRequest(request)
+
+            Span.current().addEvent("Saving to database")
+            repository.save(request.toEntity())
+        }
+    }
+}
+```
+
+## Annotation-Based Tracing
+
+```kotlin
+import io.micrometer.tracing.annotation.NewSpan
+import io.micrometer.tracing.annotation.SpanTag
+
+@Service
+class ComputeService {
+
+    @NewSpan("compute.createInstance")
+    fun createInstance(
+        @SpanTag("instance.type") type: String,
+        @SpanTag("instance.region") region: String
+    ): Instance {
+        // Automatically traced
+        return computeClient.create(type, region)
+    }
+}
+```
+
+## Baggage Propagation
+
+```kotlin
+import io.opentelemetry.api.baggage.Baggage
+
+// Set baggage (propagates across services)
+fun setUserContext(userId: String, tenantId: String) {
+    Baggage.current()
+        .toBuilder()
+        .put("user.id", userId)
+        .put("tenant.id", tenantId)
+        .build()
+        .makeCurrent()
+}
+
+// Read baggage
+fun getCurrentUserId(): String? {
+    return Baggage.current().getEntryValue("user.id")
+}
+```
+
+## Next.js / Node.js Setup
+
+```typescript
+// instrumentation.ts (Next.js)
+import { NodeSDK } from '@opentelemetry/sdk-node'
+import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node'
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
+import { Resource } from '@opentelemetry/resources'
+import { SEMRESATTRS_SERVICE_NAME, SEMRESATTRS_SERVICE_VERSION } from '@opentelemetry/semantic-conventions'
+
+export async function register() {
+  if (process.env.NEXT_RUNTIME === 'nodejs') {
+    const sdk = new NodeSDK({
+      resource: new Resource({
+        [SEMRESATTRS_SERVICE_NAME]: 'orca-lab',
+        [SEMRESATTRS_SERVICE_VERSION]: process.env.npm_package_version || 'unknown',
+      }),
+      traceExporter: new OTLPTraceExporter({
+        url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4318/v1/traces',
+      }),
+      instrumentations: [
+        getNodeAutoInstrumentations({
+          '@opentelemetry/instrumentation-fs': { enabled: false },
+        }),
+      ],
+    })
+
+    sdk.start()
+  }
+}
+```
+
+```typescript
+// lib/tracing.ts
+import { trace, SpanStatusCode, context } from '@opentelemetry/api'
+
+const tracer = trace.getTracer('orca-lab')
+
+export async function withSpan<T>(
+  name: string,
+  attributes: Record<string, string>,
+  fn: () => Promise<T>
+): Promise<T> {
+  return tracer.startActiveSpan(name, async (span) => {
+    try {
+      Object.entries(attributes).forEach(([key, value]) => {
+        span.setAttribute(key, value)
+      })
+
+      const result = await fn()
+      span.setStatus({ code: SpanStatusCode.OK })
+      return result
+    } catch (error) {
+      span.setStatus({
+        code: SpanStatusCode.ERROR,
+        message: error instanceof Error ? error.message : 'Unknown error',
+      })
+      span.recordException(error as Error)
+      throw error
+    } finally {
+      span.end()
+    }
+  })
+}
+
+// Usage
+export async function createEnvironment(data: CreateEnvInput) {
+  return withSpan(
+    'createEnvironment',
+    { 'environment.name': data.name },
+    async () => {
+      const response = await fetch('/api/environments', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      })
+      return response.json()
+    }
+  )
+}
+```
+
+## Metrics
+
+```kotlin
+// Kotlin/Spring Boot
+import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.Timer
+
+@Component
+class MetricsService(
+    private val registry: MeterRegistry
+) {
+
+    private val environmentCreatedCounter = registry.counter(
+        "orca.environment.created",
+        "type", "standard"
+    )
+
+    private val environmentCreationTimer = Timer.builder("orca.environment.creation.duration")
+        .description("Time to create an environment")
+        .register(registry)
+
+    fun recordEnvironmentCreated(type: String) {
+        registry.counter("orca.environment.created", "type", type).increment()
+    }
+
+    fun <T> timeEnvironmentCreation(block: () -> T): T {
+        return environmentCreationTimer.recordCallable(block)!!
+    }
+}
+```
+
+## Sentry Integration
+
+```kotlin
+// Error reporting with Sentry
+import io.sentry.Sentry
+import io.sentry.SentryLevel
+
+@ControllerAdvice
+class GlobalExceptionHandler {
+
+    @ExceptionHandler(Exception::class)
+    fun handleException(e: Exception): ResponseEntity<ErrorResponse> {
+        // Report to Sentry with context
+        Sentry.withScope { scope ->
+            scope.setTag("error.type", e.javaClass.simpleName)
+            scope.setLevel(SentryLevel.ERROR)
+            scope.setContexts("request", mapOf(
+                "path" to getCurrentRequestPath(),
+                "method" to getCurrentRequestMethod()
+            ))
+            Sentry.captureException(e)
+        }
+
+        return ResponseEntity.status(500)
+            .body(ErrorResponse("Internal server error"))
+    }
+}
+```
+
+## OpenTelemetry Collector Config
+
 ```yaml
-metadata:
-  annotations:
-    instrumentation.opentelemetry.io/inject-java: "true"
-    # or: inject-nodejs, inject-python, inject-dotnet
+# otel-collector-config.yaml
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+exporters:
+  zipkin:
+    endpoint: http://zipkin:9411/api/v2/spans
+  prometheus:
+    endpoint: 0.0.0.0:8889
+  logging:
+    loglevel: debug
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [zipkin, logging]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheus]
 ```
-
-See `references/collector-config.md` for Kubernetes Alloy Helm values and OTel Collector YAML.
-
----
-
-## Sampling Strategies
-
-### Head-Based Sampling
-
-Decision made at trace start - low overhead, may miss rare errors.
-
-**Environment variable (probability sampler):**
-```bash
-export OTEL_TRACES_SAMPLER=parentbased_traceidratio
-export OTEL_TRACES_SAMPLER_ARG=0.1   # 10% of traces
-```
-
-**Alloy head sampling config:**
-```alloy
-otelcol.processor.probabilistic_sampler "default" {
-  sampling_percentage = 10
-  output {
-    traces = [otelcol.exporter.otlphttp.grafana_cloud.input]
-  }
-}
-```
-
-### Tail-Based Sampling
-
-Decision made after all spans collected - can sample based on outcome (e.g. keep all errors).
-
-**Alloy tail sampling config:**
-```alloy
-otelcol.processor.tail_sampling "default" {
-  decision_wait            = "10s"
-  num_traces               = 100000
-  expected_new_traces_per_sec = 10
-
-  policy {
-    name = "keep-errors"
-    type = "status_code"
-    status_code {
-      status_codes = ["ERROR"]
-    }
-  }
-
-  policy {
-    name = "probabilistic-sample"
-    type = "probabilistic"
-    probabilistic {
-      sampling_percentage = 10
-    }
-  }
-
-  output {
-    traces = [otelcol.exporter.otlphttp.grafana_cloud.input]
-  }
-}
-```
-
----
-
-## Key Environment Variables Reference
-
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | OTLP receiver URL | `https://otlp-gateway-prod-us-east-0.grafana.net/otlp` |
-| `OTEL_EXPORTER_OTLP_PROTOCOL` | Transport protocol | `grpc` or `http/protobuf` |
-| `OTEL_EXPORTER_OTLP_HEADERS` | Auth headers | `Authorization=Basic <base64>` |
-| `OTEL_RESOURCE_ATTRIBUTES` | Service metadata | `service.name=myapp,service.namespace=team,deployment.environment=prod` |
-| `OTEL_TRACES_EXPORTER` | Trace exporter type | `otlp` |
-| `OTEL_METRICS_EXPORTER` | Metrics exporter type | `otlp` |
-| `OTEL_LOGS_EXPORTER` | Logs exporter type | `otlp` |
-| `OTEL_SERVICE_NAME` | Service name (shorthand) | `myapp` |
-| `OTEL_TRACES_SAMPLER` | Sampler type | `parentbased_traceidratio` |
-| `OTEL_TRACES_SAMPLER_ARG` | Sampler argument | `0.1` (10%) |
-
-### Key Resource Attributes
-
-| Attribute | Purpose | Example |
-|-----------|---------|---------|
-| `service.name` | Service identifier | `shoppingcart` |
-| `service.namespace` | Groups related services | `ecommerce` |
-| `deployment.environment` | Environment tier | `production`, `staging` |
-| `service.version` | App version | `1.2.3` |
-
----
-
-## Useful Links
-
-- Grafana OTel docs: https://grafana.com/docs/opentelemetry/
-- Grafana Cloud OTLP: https://grafana.com/docs/grafana-cloud/send-data/otlp/
-- Grafana Java Agent: https://github.com/grafana/grafana-opentelemetry-java
-- Grafana .NET SDK: https://github.com/grafana/grafana-opentelemetry-dotnet
-- Grafana Alloy: https://grafana.com/docs/alloy/
-- Grafana Beyla: https://grafana.com/docs/beyla/
-- OTel Collector: https://opentelemetry.io/docs/collector/
-- OTel Operator: https://opentelemetry.io/docs/kubernetes/operator/

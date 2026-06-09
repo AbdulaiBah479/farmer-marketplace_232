@@ -1,6 +1,6 @@
 # Two of Pentacles
 
-**Suit**: Pentacles | **Rank**: 2
+**Suit**: Pentacles | **Rank**: Two
 
 ## Upright
 Balance, adaptability, and juggling priorities. Multiple demands compete for

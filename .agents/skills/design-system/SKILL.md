@@ -1,229 +1,293 @@
 ---
 name: design-system
-description: "Extract a complete design system from an existing website or screenshot into a DESIGN.md file. Analyses colours, typography, component styles, spacing, and atmosphere through browser automation and HTML inspection. Produces a semantic design system document optimised for consistent page generation. Triggers: 'extract design system', 'design system', 'create DESIGN.md', 'analyse the design', 'what design does this site use', 'extract styles from', 'reverse engineer the design'."
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Bash
-  - Glob
-  - Grep
-compatibility: claude-code-only
+description: Apply and manage the AI-powered design system with 50+ curated styles
+triggers:
+  - 'apply * style'
+  - 'design system'
+  - 'style tokens'
+  - 'make it look *'
+  - 'blend * with *'
+  - 'generate * component'
+  - 'create styled *'
 ---
 
-# Design System Extractor
+# AI Design System Skill
 
-Analyse an existing website, HTML file, or screenshot and synthesise a semantic design system into a `DESIGN.md` file. The output is optimised for use with the `design-loop` skill and general page generation.
+You have access to an AI-powered design system with 50+ professionally curated visual styles. This skill enables you to apply cohesive, distinctive aesthetics to components and interfaces while avoiding generic "AI slop" patterns.
 
-## When to Use
+## Core Capabilities
 
-- Starting a new project based on an existing site's visual language
-- Documenting a site's design system that was never formally written down
-- Preparing `.design/DESIGN.md` before running the design loop
-- Extracting brand guidelines from a client's existing website
-- Creating consistency documentation for a multi-page project
-- Extracting design tokens from a Google Stitch project
+### 1. Style Application
 
-## Workflow
+Apply any of 50+ curated styles to components:
 
-### Step 1: Identify the Source
-
-Ask the user for one of:
-
-| Source | Method |
-|--------|--------|
-| **Live URL** | Browse via Playwright CLI or scraper, screenshot + extract HTML |
-| **Local HTML file** | Read the file directly |
-| **Screenshot image** | Analyse visually (limited — no exact hex extraction) |
-| **Existing project** | Scan `site/public/` for HTML files to analyse |
-| **Stitch project** | Use `@google/stitch-sdk` to fetch screen HTML + design theme |
-
-### Step 2: Extract Raw Design Data
-
-#### From a Live URL
-
-1. **Browse the site** using Playwright CLI:
-   ```
-   playwright-cli -s=design open {url}
-   playwright-cli -s=design screenshot --filename=.design/screenshots/source-desktop.png
-   ```
-
-2. **Extract the full HTML** — either via scraper MCP or by reading the page source
-
-3. **Resize and screenshot mobile** (375px):
-   ```
-   playwright-cli -s=design resize 375 812
-   playwright-cli -s=design screenshot --filename=.design/screenshots/source-mobile.png
-   ```
-
-4. Close the session: `playwright-cli -s=design close`
-
-#### From a Local HTML File
-
-Read the file directly and extract design tokens from the source.
-
-#### From a Screenshot Only
-
-Analyse the image visually. Note: colour extraction will be approximate without HTML source. Flag this limitation in the output.
-
-#### From a Google Stitch Project
-
-If `@google/stitch-sdk` is installed and `STITCH_API_KEY` is set:
-
-```typescript
-import { stitch } from "@google/stitch-sdk";
-
-// List projects to find the target
-const projects = await stitch.projects();
-
-// Get project details (includes designTheme)
-const project = stitch.project(projectId);
-const screens = await project.screens();
-
-// Get HTML from the main screen
-const screen = screens[0]; // or find by title
-const htmlUrl = await screen.getHtml();
-const imageUrl = await screen.getImage();
+```
+"apply art-deco style"
+"use brutalist aesthetic"
+"make it look cyberpunk"
 ```
 
-The Stitch `designTheme` object provides structured tokens directly:
+### 2. Style Blending
 
-```json
-{
-  "colorMode": "DARK",
-  "font": "INTER",
-  "roundness": "ROUND_EIGHT",
-  "customColor": "#40baf7",
-  "saturation": 3
-}
+Combine multiple styles with weighted blending:
+
+```
+"blend japandi with scandinavian 80/20"
+"mix brutalist with glassmorphism 60/40"
+"combine art-deco with cyberpunk 50/50"
 ```
 
-Map these to DESIGN.md sections:
-- `colorMode` → Theme (Light/Dark)
-- `font` → Typography font family
-- `roundness` → Component border-radius (`ROUND_EIGHT` = 8px, `ROUND_SIXTEEN` = 16px, etc.)
-- `customColor` → Primary brand colour
-- `saturation` → Colour vibrancy (1-5 scale)
+### 3. Component Generation
 
-Then also download and analyse the HTML for the full palette (Stitch's theme object only has the primary colour — the full palette is in the generated CSS).
+Generate styled components with current active style:
 
-### Step 3: Analyse Design Tokens
+```
+"create button with current style"
+"generate card component in art-deco style"
+"build navigation bar using brutalist tokens"
+```
 
-Extract these from the HTML/CSS source:
+### 4. Token Management
 
-#### Colours
+Access and apply design tokens:
 
-Look in these locations (priority order):
+```
+"show available tokens for art-deco"
+"list all minimalist styles"
+"what colors are in cyberpunk theme?"
+```
 
-1. **CSS custom properties** — `:root { --primary: #hex; }` or `@theme` blocks
-2. **Tailwind config** — `<script>` block with `tailwind.config` or `@theme` in `<style>`
-3. **Inline styles** — `style="color: #hex"` or `style="background: #hex"`
-4. **Tailwind classes** — `bg-blue-600`, `text-gray-900` (map to palette)
-5. **Computed from screenshot** — last resort, approximate
+## Style Categories (50+ Styles)
 
-For each colour found, determine its **role**:
+### 1. Minimalist & Modern (5 styles)
 
-| Role | How to identify |
-|------|-----------------|
-| Primary | Buttons, links, active states, brand elements |
-| Background | `<body>` or `<html>` background |
-| Surface | Cards, containers, elevated elements |
-| Text Primary | `<h1>`, `<h2>`, main body text |
-| Text Secondary | Captions, metadata, muted text |
-| Border | Dividers, input borders, card borders |
-| Accent | Badges, notifications, highlights |
+- **minimalist**: Pure simplicity, maximum white space, subtle interactions
+- **brutalist**: Raw HTML aesthetic, stark typography, intentional "broken" design
+- **scandinavian**: Light woods, soft colors, cozy functionality
+- **japandi**: Japanese minimalism meets Scandinavian warmth
+- **swiss**: Grid-based, sans-serif typography, asymmetric layouts
 
-#### Typography
+### 2. Historical & Classical (5 styles)
 
-Extract:
+- **art-deco**: Geometric patterns, gold accents, luxury materials
+- **art-nouveau**: Organic curves, nature motifs, ornamental typography
+- **baroque**: Ornate details, dramatic contrasts, rich embellishments
+- **victorian**: Decorative borders, serif typography, vintage colors
+- **renaissance**: Classical proportions, balanced compositions, refined details
 
-| Token | Where to find |
-|-------|---------------|
-| Font families | Google Fonts `<link>`, `@import`, `font-family` in CSS |
-| Heading weights | `font-bold`, `font-semibold`, or explicit `font-weight` |
-| Body size | Base `font-size` on `<body>` or root |
-| Line height | `leading-*` classes or `line-height` CSS |
-| Letter spacing | `tracking-*` classes or `letter-spacing` CSS |
+### 3. Retro & Nostalgic (5 styles)
 
-#### Components
+- **retro-80s**: Neon colors, geometric shapes, synthwave vibes
+- **retro-90s**: Bold gradients, CD-ROM aesthetics, early web nostalgia
+- **vaporwave**: Pastel pinks/blues, glitch effects, surreal imagery
+- **y2k**: Metallic finishes, bubble letters, early 2000s tech aesthetic
+- **mid-century**: Atomic age design, bold colors, organic shapes
 
-Identify patterns for:
+### 4. Digital UI (5 styles)
 
-- **Buttons** — shape (rounded-full, rounded-lg), colours, padding, hover states
-- **Cards** — background, border, shadow, border-radius, padding
-- **Navigation** — sticky/static, background treatment, active indicator
-- **Forms** — input style, focus ring, label positioning
-- **Hero sections** — layout pattern, overlay treatment, CTA placement
+- **glassmorphism**: Frosted glass effects, backdrop blur, transparency layers
+- **neumorphism**: Soft shadows, subtle depth, tactile surfaces
+- **material-design**: Elevation system, bold colors, motion principles
+- **fluent-design**: Acrylic materials, depth layers, light/shadow
+- **skeuomorphic**: Real-world textures, dimensional shadows, tactile metaphors
 
-#### Spacing & Layout
+### 5. Futuristic & Sci-Fi (5 styles)
 
-- **Max content width** — look for `max-w-*` or explicit `max-width`
-- **Section padding** — typical vertical padding between sections
-- **Grid system** — column count, gap values
-- **Whitespace philosophy** — tight, balanced, generous, or dramatic
+- **cyberpunk**: Neon against dark, tech grunge, high contrast
+- **cybernetic**: Chrome finishes, holographic elements, tech interfaces
+- **space-age**: Cosmic colors, star fields, futuristic typography
+- **dystopian**: Industrial grays, worn textures, utilitarian design
+- **solarpunk**: Eco-futurism, green technology, optimistic sustainability
 
-### Step 4: Synthesise into Natural Language
+### 6. Nature-Inspired (5 styles)
 
-**Critical**: The DESIGN.md should describe the design in **semantic, natural language** supported by exact values. This is not a CSS dump — it's a document a designer or AI can read to understand and reproduce the visual language.
+- **organic**: Natural forms, earth tones, flowing shapes
+- **botanical**: Plant motifs, green palettes, growth patterns
+- **coastal**: Ocean blues, sandy neutrals, weathered textures
+- **desert**: Warm sands, terracotta, minimalist landscapes
+- **forest**: Deep greens, wood textures, layered canopy effects
 
-| Don't write | Write instead |
-|-------------|---------------|
-| `rounded-xl` | "Softly rounded corners (12px)" |
-| `shadow-md` | "Subtle elevation with diffused shadow" |
-| `#1E40AF` | "Deep Ocean Blue (#1E40AF) for primary actions" |
-| `py-16` | "Generous section spacing with breathing room" |
+### 7. Bold & Expressive (5 styles)
 
-### Step 5: Write DESIGN.md
+- **maximalist**: Pattern overload, color clashing, intentional chaos
+- **pop-art**: Bold colors, halftone patterns, comic book aesthetics
+- **psychedelic**: Swirling patterns, kaleidoscopic colors, optical effects
+- **graffiti**: Urban textures, spray paint effects, street art energy
+- **punk**: DIY aesthetic, collage style, rebellious typography
 
-Output the file to `.design/DESIGN.md` (or user-specified path).
+### 8. Illustration & Artistic (5 styles)
 
-Follow the structure from the `design-loop` skill's `references/site-template.md` — specifically the DESIGN.md Template section. The key sections are:
+- **hand-drawn**: Sketchy lines, imperfect shapes, human touch
+- **watercolor**: Soft washes, color bleeding, organic textures
+- **flat-illustration**: Vector art, solid colors, simplified shapes
+- **isometric**: 3D perspective, technical illustration, game-like views
+- **line-art**: Minimal strokes, monochrome, elegant simplicity
 
-1. **Visual Theme & Atmosphere** — mood, vibe, philosophy
-2. **Colour Palette & Roles** — table with role, name, hex, usage
-3. **Typography** — font families, weights, sizes, line heights
-4. **Component Styles** — buttons, cards, nav, forms
-5. **Layout Principles** — max width, spacing, grid, whitespace
-6. **Design System Notes for Generation** — the copy-paste block for baton prompts
+### 9. Cultural & Regional (5 styles)
 
-### Step 6: Verify Accuracy
+- **mediterranean**: Warm blues, terracotta, sun-bleached aesthetics
+- **nordic**: Cool tones, minimalist patterns, functional beauty
+- **asian-zen**: Balance, negative space, natural materials
+- **tribal**: Geometric patterns, earth pigments, cultural motifs
+- **moroccan**: Rich colors, intricate patterns, ornamental details
 
-If browser automation is available:
+### 10. Special Purpose & Emerging (5 styles)
 
-1. Generate a small test section (e.g. a card + button + heading) using the extracted design system
-2. Screenshot it alongside the original
-3. Compare visually — adjust any values that don't match
+- **dark-mode**: True blacks, OLED optimization, reduced eye strain
+- **high-contrast**: WCAG AAA compliance, accessibility-first, clear hierarchy
+- **print-inspired**: Newspaper layouts, editorial typography, ink textures
+- **terminal**: Monospace fonts, CLI aesthetics, hacker green or amber
+- **low-fi**: Intentional degradation, pixel art, retro computing
 
-### Step 7: Report to User
+## Token Reference Structure
 
-Present:
-- Summary of extracted tokens (colour count, fonts, component patterns)
-- The generated DESIGN.md location
-- Any tokens that were approximate (flagged with ⚠️)
-- Suggestions for manual review (colours from screenshots, ambiguous typography)
+Design tokens are organized hierarchically:
 
-## Handling Multiple Pages
+```
+src/design-system/
+  tokens/
+    styles/
+      {style-name}.json          # Complete style definition
+    core/
+      colors.json                # Base color palette
+      typography.json            # Font definitions
+      spacing.json               # Spacing scale
+      shadows.json               # Shadow tokens
+      animations.json            # Motion tokens
+```
 
-If the site has multiple pages with different styles:
+Each style token file includes:
 
-1. Analyse the **homepage first** — it usually has the most complete design language
-2. Spot-check 2-3 inner pages for consistency
-3. Note any **page-specific overrides** in the Component Styles section
-4. If pages are wildly different, ask the user which page to use as the canonical source
+- **colors**: Primary, secondary, accent, surface, text
+- **typography**: Font families, sizes, weights, line heights
+- **spacing**: Margin, padding, gap scales
+- **borders**: Radius, width, styles
+- **shadows**: Elevation levels, focus states
+- **animations**: Transitions, durations, easings
 
-## Tips
+## Usage Guidelines
 
-- **Tailwind sites are easiest** — the config block has everything
-- **Google Fonts links are gold** — they specify exact families and weights
-- **CSS custom properties are reliable** — they represent intentional design tokens
-- **Inline Tailwind classes need interpretation** — `bg-slate-900` needs mapping to a role
-- **Screenshots are last resort** — accurate hex extraction from images is unreliable
-- **Dark mode**: Check for `.dark` class overrides or `prefers-color-scheme` media queries
+### Anti-AI-Slop Principles
 
-## Common Pitfalls
+**NEVER use these generic patterns:**
 
-- ❌ Listing raw CSS values without semantic description
-- ❌ Missing the dark mode palette (check for `.dark` class or media query)
-- ❌ Ignoring component patterns (just listing colours isn't enough)
-- ❌ Not including Section 6 (the copy-paste generation block)
-- ❌ Approximate colours from screenshots without flagging the uncertainty
+- Inter, Roboto, Arial, or Helvetica as primary fonts
+- Purple/blue gradients on white backgrounds (#667eea → #764ba2)
+- Generic rounded corners (border-radius: 8px everywhere)
+- Cookie-cutter card layouts with drop shadows
+- Overused emoji in UI (🚀 ✨ 🎉)
+- Generic "modern" spacing (gap: 1rem)
+
+**ALWAYS follow these rules:**
+
+1. **Commit fully** to a chosen aesthetic - no half measures
+2. **Use design tokens** for ALL values - no magic numbers
+3. **Define hover states** - every interactive element needs feedback
+4. **Consider dark mode** - design for both light and dark from the start
+5. **Test accessibility** - maintain WCAG AA contrast minimum
+6. **Use distinctive fonts** - choose typefaces that match the style
+7. **Add personality** - each style should feel unique and intentional
+
+### Style Application Workflow
+
+1. **Select Style**: Choose from 50+ styles or blend multiple
+2. **Load Tokens**: Reference token files for the selected style(s)
+3. **Apply Systematically**: Use tokens for colors, typography, spacing
+4. **Add Interactions**: Define hover, focus, active, disabled states
+5. **Test Cohesion**: Ensure all components feel unified
+6. **Document Usage**: Note which styles are applied where
+
+### Component Generation Best Practices
+
+When generating components:
+
+1. Start with semantic HTML structure
+2. Apply style tokens, not hardcoded values
+3. Include all interactive states (hover, focus, active, disabled)
+4. Add ARIA attributes for accessibility
+5. Provide variants (sizes, colors, states)
+6. Include usage examples and documentation
+
+### Blending Formula
+
+When blending styles with ratios (e.g., 80/20):
+
+- **Dominant style (80%)**: Core colors, primary typography, main spacing
+- **Accent style (20%)**: Secondary colors, accent fonts, decorative elements
+
+Example blend:
+
+```
+"blend art-deco with cyberpunk 70/30"
+→ Art-deco base with cyberpunk accent colors and occasional neon highlights
+```
+
+## Integration with Development Workflow
+
+### With Coder Agent
+
+```
+"Hey coder, apply brutalist style to the dashboard components"
+→ Coder applies brutalist tokens systematically
+```
+
+### With Reviewer Agent
+
+```
+"Reviewer, check if components follow art-deco style guide"
+→ Reviewer validates token usage and style consistency
+```
+
+### With Planner Agent
+
+```
+"Planner, create a style migration plan from material to glassmorphism"
+→ Planner breaks down token replacement strategy
+```
+
+## Quick Reference Commands
+
+### Inspect Styles
+
+- `"list all available styles"` - Show all 50+ styles
+- `"describe {style-name}"` - Get detailed style info
+- `"show {style-name} tokens"` - Display token values
+
+### Apply Styles
+
+- `"apply {style-name}"` - Set active style
+- `"use {style-name} for {component}"` - Style specific component
+- `"restyle {component} as {style-name}"` - Convert existing component
+
+### Blend Styles
+
+- `"blend {style-a} with {style-b}"` - 50/50 blend
+- `"blend {style-a} with {style-b} {ratio}"` - Custom ratio
+- `"what would {style-a} + {style-b} look like?"` - Preview blend
+
+### Generate Components
+
+- `"create {component} in {style-name}"` - New styled component
+- `"generate {component-set} using current style"` - Multiple components
+- `"build {layout} with {style-name} tokens"` - Complex layouts
+
+## Tips for Success
+
+1. **Be Specific**: "Apply art-deco style" is better than "make it fancy"
+2. **Stay Consistent**: Use one style (or blend) per project section
+3. **Trust the Tokens**: Don't override token values without good reason
+4. **Test Early**: Apply styles early in development, not as afterthought
+5. **Document Choices**: Note which styles and why in commit messages
+6. **Embrace Constraints**: Limitations drive better design decisions
+
+## Resources
+
+- **Style Guide**: `@references/style-guide.md` - Detailed aesthetic rules
+- **Prompt Templates**: `@references/prompt-templates.md` - Ready-to-use prompts
+- **Token Schema**: `@references/token-schema.md` - Token structure reference
+
+---
+
+_Last Updated: 2025-12-03_
+_Version: 1.0.0_
+_Styles Available: 50+_

@@ -1,11 +1,16 @@
 ---
 name: bash-scripting
-description: "Bash scripting workflow for creating production-ready shell scripts with defensive patterns, error handling, and testing."
+description: Bash scripting workflow for creating production-ready shell scripts with
+  defensive patterns, error handling, and testing.
 category: granular-workflow-bundle
 risk: safe
 source: personal
-date_added: "2026-02-27"
+date_added: '2026-02-27'
+license: MIT
 ---
+
+
+
 
 # Bash Scripting Workflow
 
@@ -194,8 +199,3 @@ main "$@"
 - `os-scripting` - OS scripting
 - `linux-troubleshooting` - Linux troubleshooting
 - `cloud-devops` - DevOps automation
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

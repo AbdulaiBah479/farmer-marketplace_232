@@ -1,172 +1,325 @@
 #!/usr/bin/env python3
-"""
-channel_mix_optimizer.py — Analyze channel mix and recommend rebalancing.
+"""channel_mix_optimizer.py
 
-Reads a CSV of revenue + cost per channel per period; emits:
-  - Revenue share by channel
-  - Contribution margin share by channel
-  - ROI per channel (contribution / investment)
-  - Rebalancing recommendations
+Computes per-channel effective LTV, payback period, and efficiency ratio
+(LTV/CAC), then recommends a channel mix that maximizes effective ARR
+subject to constraints (min direct %, max partner concentration %).
 
-Stdlib only. Markdown or JSON output.
+Includes a sensitivity table: what happens if direct CAC rises 20%, partner
+discount widens 5 points, or retention drops 3 points?
+
+Stdlib-only. Deterministic. No external solver — uses a discrete grid search
+over feasible mixes, which is sufficient for 2-6 channel problems.
 
 Usage:
-    python3 channel_mix_optimizer.py --revenue revenue.csv
-    python3 channel_mix_optimizer.py --revenue revenue.csv --format json
-
-CSV format (header required):
-    channel,period,revenue,partner_margin,sales_cost,marketing_cost,other_cost
-    direct,2026-Q1,2000000,0,500000,200000,150000
-    reseller,2026-Q1,800000,200000,40000,50000,40000
-    marketplace,2026-Q1,500000,15000,40000,25000,15000
-    ...
+    python channel_mix_optimizer.py --sample
+    python channel_mix_optimizer.py --input mix.json --profile saas --output markdown
 """
-
 from __future__ import annotations
 
 import argparse
-import csv
 import json
 import sys
-from collections import defaultdict
-from dataclasses import dataclass, asdict
-from pathlib import Path
 from typing import Any
 
-
-@dataclass
-class ChannelSnapshot:
-    channel: str
-    revenue: float
-    partner_margin: float
-    sales_cost: float
-    marketing_cost: float
-    other_cost: float
-    contribution: float
-    contribution_pct: float
-    investment: float  # sales + marketing + other (cost of running the channel)
-    roi: float
+# Industry profiles tune assumed gross-margin-to-monthly conversion and
+# benchmark payback targets (months).
+PROFILES = {
+    "saas": {"payback_target_months": 12, "ltv_cac_floor": 3.0},
+    "api": {"payback_target_months": 9, "ltv_cac_floor": 4.0},
+    "enterprise-software": {"payback_target_months": 18, "ltv_cac_floor": 3.0},
+    "marketplace": {"payback_target_months": 6, "ltv_cac_floor": 2.5},
+    "hardware": {"payback_target_months": 24, "ltv_cac_floor": 2.0},
+}
 
 
-def load_csv(path: Path) -> list[dict[str, str]]:
-    with open(path, newline="") as f:
-        return list(csv.DictReader(f))
+def _num(v: Any, default: float = 0.0) -> float:
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return default
 
 
-def aggregate_by_channel(rows: list[dict[str, str]]) -> dict[str, dict[str, float]]:
-    by_channel: dict[str, dict[str, float]] = defaultdict(lambda: {
-        "revenue": 0.0, "partner_margin": 0.0, "sales_cost": 0.0,
-        "marketing_cost": 0.0, "other_cost": 0.0,
-    })
-    for r in rows:
-        c = r["channel"]
-        for key in ("revenue", "partner_margin", "sales_cost", "marketing_cost", "other_cost"):
-            try:
-                by_channel[c][key] += float(r.get(key, 0) or 0)
-            except ValueError:
-                pass
-    return by_channel
+def compute_channel_metrics(ch: dict, profile_cfg: dict) -> dict:
+    name = ch.get("name", "unnamed")
+    deal_count = _num(ch.get("deal_count_ttm"))
+    arr_ttm = _num(ch.get("arr_ttm"))
+    avg_deal = _num(ch.get("avg_deal_size"))
+    gm_pct = _num(ch.get("gross_margin_pct"), 70.0)
+    cac = _num(ch.get("cac"))
+    cycle_days = _num(ch.get("sales_cycle_days"), 60)
+    retention = _num(ch.get("retention_rate"), 0.85)
+    expansion = _num(ch.get("expansion_rate"), 1.05)
+    partner_discount = _num(ch.get("partner_discount_pct"), 0)
+
+    if avg_deal <= 0 or cac <= 0:
+        return {"name": name, "error": "avg_deal_size and cac must both be > 0"}
+
+    # Effective margin after partner discount
+    effective_margin_pct = gm_pct * (1.0 - partner_discount / 100.0)
+
+    # Effective LTV — geometric-series approximation:
+    # LTV = avg_deal * (effective_margin/100) * expansion / (1 - retention)
+    # If retention >= 1.0, cap denominator at 0.05 to avoid blowup (means
+    # "indefinite retention" — we don't reward unrealistically).
+    denom = max(1.0 - retention, 0.05)
+    effective_ltv = avg_deal * (effective_margin_pct / 100.0) * expansion / denom
+
+    # Payback period: months to recoup CAC at monthly gross margin
+    monthly_gross_margin = (avg_deal / 12.0) * (effective_margin_pct / 100.0)
+    payback_months = cac / monthly_gross_margin if monthly_gross_margin > 0 else float("inf")
+
+    # Efficiency ratio
+    ltv_cac = effective_ltv / cac if cac > 0 else 0.0
+
+    return {
+        "name": name,
+        "deal_count_ttm": deal_count,
+        "arr_ttm": arr_ttm,
+        "avg_deal_size": avg_deal,
+        "gross_margin_pct": gm_pct,
+        "effective_margin_pct": round(effective_margin_pct, 2),
+        "cac": cac,
+        "sales_cycle_days": cycle_days,
+        "retention_rate": retention,
+        "expansion_rate": expansion,
+        "partner_discount_pct": partner_discount,
+        "effective_ltv": round(effective_ltv, 2),
+        "payback_months": round(payback_months, 2),
+        "ltv_cac": round(ltv_cac, 2),
+        "meets_payback_target": payback_months <= profile_cfg["payback_target_months"],
+        "meets_ltv_cac_floor": ltv_cac >= profile_cfg["ltv_cac_floor"],
+    }
 
 
-def build_snapshots(agg: dict[str, dict[str, float]]) -> list[ChannelSnapshot]:
-    out: list[ChannelSnapshot] = []
-    for ch, vals in agg.items():
-        contribution = vals["revenue"] - vals["partner_margin"] - vals["sales_cost"] - vals["marketing_cost"] - vals["other_cost"]
-        contribution_pct = round(100 * contribution / vals["revenue"], 1) if vals["revenue"] else 0
-        investment = vals["sales_cost"] + vals["marketing_cost"] + vals["other_cost"]
-        roi = round(contribution / investment, 2) if investment > 0 else 0
-        out.append(ChannelSnapshot(
-            channel=ch,
-            revenue=round(vals["revenue"], 2),
-            partner_margin=round(vals["partner_margin"], 2),
-            sales_cost=round(vals["sales_cost"], 2),
-            marketing_cost=round(vals["marketing_cost"], 2),
-            other_cost=round(vals["other_cost"], 2),
-            contribution=round(contribution, 2),
-            contribution_pct=contribution_pct,
-            investment=round(investment, 2),
-            roi=roi,
-        ))
-    return out
+def _is_partner_channel(name: str) -> bool:
+    n = name.lower()
+    return any(tag in n for tag in ("partner", "reseller", "channel", "oem", "marketplace"))
 
 
-def recommendations(snapshots: list[ChannelSnapshot]) -> list[str]:
-    recs: list[str] = []
-    total_rev = sum(s.revenue for s in snapshots)
-    total_contrib = sum(s.contribution for s in snapshots)
-    sorted_by_roi = sorted(snapshots, key=lambda s: -s.roi)
-    for s in snapshots:
-        rev_share = round(100 * s.revenue / total_rev, 1) if total_rev else 0
-        contrib_share = round(100 * s.contribution / total_contrib, 1) if total_contrib else 0
-        if rev_share > contrib_share + 10:
-            recs.append(f"[REBALANCE] `{s.channel}` is {rev_share}% of revenue but only {contrib_share}% of contribution — reduce investment or improve channel efficiency.")
-        elif contrib_share > rev_share + 10:
-            recs.append(f"[INVEST] `{s.channel}` is {contrib_share}% of contribution but only {rev_share}% of revenue — consider increasing investment.")
-        if s.roi < 1 and s.investment > 100000:
-            recs.append(f"[REVIEW] `{s.channel}` has ROI {s.roi} — investment exceeds contribution; investigate or wind down.")
-        elif s.roi > 5:
-            recs.append(f"[ACCELERATE] `{s.channel}` has ROI {s.roi} — highest-leverage channel; scale investment.")
-    if not recs:
-        recs.append("Channel mix appears balanced. No major rebalancing recommended.")
-    return recs
+def _is_direct_channel(name: str) -> bool:
+    return "direct" in name.lower() or "inside" in name.lower() or "outbound" in name.lower()
 
 
-def render_markdown(snapshots: list[ChannelSnapshot]) -> str:
-    out = ["# Channel Mix Analysis", ""]
-    total_rev = sum(s.revenue for s in snapshots)
-    total_contrib = sum(s.contribution for s in snapshots)
-    out.append(f"_Total revenue: ${total_rev:,.0f}_  ")
-    out.append(f"_Total contribution: ${total_contrib:,.0f} ({round(100*total_contrib/total_rev,1) if total_rev else 0}%)_")
-    out.append("")
-    out.append("## Per-Channel Summary")
-    out.append("")
-    out.append("| Channel | Revenue | Rev Share | Contribution | Contrib Share | Contrib % | Investment | ROI |")
-    out.append("|---------|---------|-----------|--------------|---------------|-----------|------------|-----|")
-    for s in sorted(snapshots, key=lambda x: -x.revenue):
-        rs = round(100 * s.revenue / total_rev, 1) if total_rev else 0
-        cs = round(100 * s.contribution / total_contrib, 1) if total_contrib else 0
-        out.append(f"| {s.channel} | ${s.revenue:,.0f} | {rs}% | ${s.contribution:,.0f} | {cs}% | {s.contribution_pct}% | ${s.investment:,.0f} | {s.roi}x |")
-    out.append("")
-    out.append("## Recommendations")
-    out.append("")
-    for r in recommendations(snapshots):
-        out.append(f"- {r}")
-    return "\n".join(out)
+def optimize_mix(metrics: list, constraints: dict) -> dict:
+    """Discrete grid search over channel-mix percentages (5% increments)."""
+    n = len(metrics)
+    if n == 0:
+        return {"error": "no channels provided"}
+
+    min_direct = _num(constraints.get("min_direct_pct"), 0)
+    max_partner_conc = _num(constraints.get("max_partner_concentration_pct"), 100)
+
+    # Score = effective_ltv / cac (use LTV/CAC as the per-$-CAC efficiency).
+    # We allocate a normalized 100 "investment units" across channels and maximize
+    # sum(units_i * ltv_cac_i) subject to constraints.
+    best_score = -1.0
+    best_mix = None
+
+    step = 5
+    # generate compositions of 100 over n channels in 5% steps
+    def gen(remaining: int, slots: int):
+        if slots == 1:
+            yield (remaining,)
+            return
+        for v in range(0, remaining + 1, step):
+            for tail in gen(remaining - v, slots - 1):
+                yield (v,) + tail
+
+    for mix in gen(100, n):
+        # constraint checks
+        direct_share = sum(mix[i] for i, m in enumerate(metrics) if _is_direct_channel(m["name"]))
+        partner_share_max = max(
+            (mix[i] for i, m in enumerate(metrics) if _is_partner_channel(m["name"])),
+            default=0,
+        )
+        if direct_share < min_direct:
+            continue
+        if partner_share_max > max_partner_conc:
+            continue
+        score = sum(mix[i] * metrics[i].get("ltv_cac", 0) for i in range(n))
+        if score > best_score:
+            best_score = score
+            best_mix = mix
+
+    if best_mix is None:
+        return {"error": "no feasible mix under given constraints"}
+    return {
+        "best_mix_pct": {metrics[i]["name"]: best_mix[i] for i in range(n)},
+        "score": round(best_score, 2),
+    }
 
 
-def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(
-        description="Analyze channel mix and recommend rebalancing",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=__doc__,
-    )
-    p.add_argument("--revenue", required=True, help="CSV of channel revenue + costs")
-    p.add_argument("--format", choices=["markdown", "json"], default="markdown")
-    p.add_argument("--output", help="Output file path")
-    return p.parse_args()
+def sensitivity_scenarios(channels: list, profile_cfg: dict, constraints: dict) -> list:
+    """Re-run optimization under perturbed inputs."""
+    scenarios = []
+
+    def perturb(perturbation_fn, label: str):
+        perturbed = []
+        for c in channels:
+            cc = dict(c)
+            perturbation_fn(cc)
+            perturbed.append(cc)
+        ms = [compute_channel_metrics(c, profile_cfg) for c in perturbed]
+        ms = [m for m in ms if "error" not in m]
+        opt = optimize_mix(ms, constraints)
+        scenarios.append({"scenario": label, "mix": opt.get("best_mix_pct"), "note": opt.get("error")})
+
+    def bump_direct_cac(c):
+        if _is_direct_channel(c.get("name", "")):
+            c["cac"] = _num(c.get("cac")) * 1.20
+
+    def widen_partner_discount(c):
+        if _is_partner_channel(c.get("name", "")):
+            c["partner_discount_pct"] = _num(c.get("partner_discount_pct")) + 5
+
+    def drop_retention(c):
+        c["retention_rate"] = max(0.0, _num(c.get("retention_rate"), 0.85) - 0.03)
+
+    perturb(bump_direct_cac, "Direct CAC +20%")
+    perturb(widen_partner_discount, "Partner discount +5pts")
+    perturb(drop_retention, "All retention -3pts")
+    return scenarios
+
+
+def render_markdown(report: dict, profile: str) -> str:
+    lines = [
+        f"# Channel Mix Optimization — profile: `{profile}`",
+        "",
+        "## Per-channel economics",
+        "| Channel | Avg deal | Eff margin | CAC | Payback (mo) | LTV | LTV/CAC | Meets bar? |",
+        "|---|---:|---:|---:|---:|---:|---:|---|",
+    ]
+    for m in report["metrics"]:
+        if "error" in m:
+            lines.append(f"| {m['name']} | — | — | — | — | — | — | ERROR: {m['error']} |")
+            continue
+        bar = (
+            "PASS"
+            if m["meets_payback_target"] and m["meets_ltv_cac_floor"]
+            else ("PARTIAL" if m["meets_payback_target"] or m["meets_ltv_cac_floor"] else "FAIL")
+        )
+        lines.append(
+            f"| {m['name']} | ${m['avg_deal_size']:,.0f} | {m['effective_margin_pct']:.1f}% | "
+            f"${m['cac']:,.0f} | {m['payback_months']:.1f} | ${m['effective_ltv']:,.0f} | "
+            f"{m['ltv_cac']:.2f}x | {bar} |"
+        )
+    lines.append("")
+
+    if "best_mix" in report and report["best_mix"].get("best_mix_pct"):
+        lines += ["## Recommended mix (subject to constraints)", "| Channel | Recommended share |", "|---|---:|"]
+        for k, v in report["best_mix"]["best_mix_pct"].items():
+            lines.append(f"| {k} | {v}% |")
+        lines.append("")
+    elif "best_mix" in report and report["best_mix"].get("error"):
+        lines += [f"## Mix optimization", f"**{report['best_mix']['error']}**", ""]
+
+    if report.get("sensitivity"):
+        lines += ["## Sensitivity scenarios", "| Scenario | Recommended mix |", "|---|---|"]
+        for s in report["sensitivity"]:
+            if s.get("mix"):
+                mix_str = ", ".join(f"{k}: {v}%" for k, v in s["mix"].items())
+                lines.append(f"| {s['scenario']} | {mix_str} |")
+            else:
+                lines.append(f"| {s['scenario']} | {s.get('note') or 'no feasible mix'} |")
+        lines.append("")
+
+    lines += [
+        "## Notes",
+        f"- Profile `{profile}` payback target: "
+        f"{PROFILES[profile]['payback_target_months']} months; LTV/CAC floor: "
+        f"{PROFILES[profile]['ltv_cac_floor']:.1f}x.",
+        "- Optimizer maximizes effective-ARR-weighted LTV/CAC across channels, in 5% steps.",
+        "- Constraint floors / ceilings are HARD constraints — infeasible mixes are reported as errors.",
+    ]
+    return "\n".join(lines)
+
+
+SAMPLE = {
+    "profile": "saas",
+    "channels": [
+        {
+            "name": "direct",
+            "deal_count_ttm": 120,
+            "arr_ttm": 6_000_000,
+            "avg_deal_size": 50_000,
+            "gross_margin_pct": 75,
+            "cac": 18_000,
+            "sales_cycle_days": 75,
+            "retention_rate": 0.92,
+            "expansion_rate": 1.18,
+            "partner_discount_pct": 0,
+        },
+        {
+            "name": "partner-led",
+            "deal_count_ttm": 80,
+            "arr_ttm": 4_000_000,
+            "avg_deal_size": 50_000,
+            "gross_margin_pct": 75,
+            "cac": 10_000,
+            "sales_cycle_days": 90,
+            "retention_rate": 0.86,
+            "expansion_rate": 1.08,
+            "partner_discount_pct": 20,
+        },
+        {
+            "name": "marketplace",
+            "deal_count_ttm": 200,
+            "arr_ttm": 1_000_000,
+            "avg_deal_size": 5_000,
+            "gross_margin_pct": 70,
+            "cac": 1_500,
+            "sales_cycle_days": 14,
+            "retention_rate": 0.78,
+            "expansion_rate": 1.02,
+            "partner_discount_pct": 15,
+        },
+    ],
+    "constraints": {"min_direct_pct": 30, "max_partner_concentration_pct": 50},
+}
 
 
 def main() -> int:
-    args = parse_args()
-    try:
-        rows = load_csv(Path(args.revenue))
-    except OSError as e:
-        print(f"error: {e}", file=sys.stderr)
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--input")
+    ap.add_argument("--output", choices=["json", "markdown"], default="markdown")
+    ap.add_argument(
+        "--profile",
+        choices=list(PROFILES.keys()),
+        default="saas",
+    )
+    ap.add_argument("--sample", action="store_true")
+    args = ap.parse_args()
+
+    if args.sample:
+        payload = SAMPLE
+    elif args.input:
+        with open(args.input) as f:
+            payload = json.load(f)
+    else:
+        ap.print_help()
+        return 0
+
+    profile = payload.get("profile", args.profile)
+    if profile not in PROFILES:
+        print(f"Unknown profile: {profile}", file=sys.stderr)
         return 2
-    agg = aggregate_by_channel(rows)
-    snapshots = build_snapshots(agg)
-    if args.format == "json":
-        out = json.dumps(
-            {"snapshots": [asdict(s) for s in snapshots], "recommendations": recommendations(snapshots)},
-            indent=2,
-        )
+    profile_cfg = PROFILES[profile]
+
+    channels = payload.get("channels", [])
+    constraints = payload.get("constraints", {}) or {}
+
+    metrics = [compute_channel_metrics(c, profile_cfg) for c in channels]
+    valid_metrics = [m for m in metrics if "error" not in m]
+    best = optimize_mix(valid_metrics, constraints)
+    sens = sensitivity_scenarios(channels, profile_cfg, constraints) if channels else []
+
+    report = {"profile": profile, "metrics": metrics, "best_mix": best, "sensitivity": sens}
+
+    if args.output == "json":
+        print(json.dumps(report, indent=2))
     else:
-        out = render_markdown(snapshots)
-    if args.output:
-        Path(args.output).write_text(out)
-        print(f"wrote {args.output}", file=sys.stderr)
-    else:
-        print(out)
+        print(render_markdown(report, profile))
     return 0
 
 

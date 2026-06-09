@@ -1,228 +1,372 @@
 ---
 name: nextjs-patterns
-description: Build with Next.js for BigCommerce — App Router, Server/Client Components, data fetching, ISR, middleware, API routes, and Catalyst patterns. Use when building headless BigCommerce storefronts with Next.js.
-allowed-tools: Read, Write, Edit, Bash, Grep, Glob, WebSearch, WebFetch
+description: Next.js 15 App Router patterns - use for frontend pages, API routes, server components, client components, and middleware
 ---
 
-# Next.js Patterns for BigCommerce
+# Next.js 15 App Router Patterns
 
-## Before writing code
-
-**Fetch live docs**:
-1. Fetch `https://nextjs.org/docs` for Next.js documentation
-2. Fetch `https://www.catalyst.dev/` for Catalyst-specific patterns
-3. Web-search `nextjs app router data fetching patterns` for current best practices
-
-## App Router Fundamentals
-
-### File-Based Routing
+## File Structure
 
 ```
 app/
-├── page.tsx                   # /
-├── layout.tsx                 # Root layout
-├── products/
-│   ├── page.tsx               # /products
-│   └── [slug]/
-│       └── page.tsx           # /products/:slug
-├── cart/
-│   └── page.tsx               # /cart
+├── layout.tsx              # Root layout (required)
+├── page.tsx                # Home page (/)
+├── loading.tsx             # Loading UI
+├── error.tsx               # Error boundary
+├── not-found.tsx           # 404 page
+├── globals.css             # Global styles
+├── environments/
+│   ├── page.tsx            # /environments
+│   ├── [id]/
+│   │   ├── page.tsx        # /environments/[id]
+│   │   └── loading.tsx     # Loading for this route
+│   └── new/
+│       └── page.tsx        # /environments/new
 ├── api/
-│   └── webhooks/
-│       └── route.ts           # /api/webhooks (API route)
-└── not-found.tsx              # 404 page
+│   └── environments/
+│       ├── route.ts        # GET/POST /api/environments
+│       └── [id]/
+│           └── route.ts    # GET/PUT/DELETE /api/environments/[id]
+└── (auth)/                 # Route group (no URL impact)
+    ├── login/
+    │   └── page.tsx
+    └── layout.tsx          # Shared auth layout
 ```
 
-### Special Files
+## Server Components (Default)
 
-| File | Purpose |
-|------|---------|
-| `page.tsx` | Route component |
-| `layout.tsx` | Shared layout (persists across navigation) |
-| `loading.tsx` | Loading UI (Suspense boundary) |
-| `error.tsx` | Error boundary |
-| `not-found.tsx` | 404 page |
-| `route.ts` | API route handler |
-| `template.tsx` | Re-rendered layout (no persistence) |
+```tsx
+// app/environments/page.tsx
+// Server Component - can use async/await directly
+import { getEnvironments } from '@/lib/api'
 
-## Server vs Client Components
+export default async function EnvironmentsPage() {
+  const environments = await getEnvironments()
 
-### Server Components (Default)
-
-- Run on the server only — no JS sent to client
-- Can `await` async operations directly
-- Access server-only resources (DB, API tokens, env vars)
-- Cannot use hooks, browser APIs, or event handlers
-
-### Client Components
-
-Mark with `'use client'` directive:
-- Run in the browser
-- Use React hooks (`useState`, `useEffect`, etc.)
-- Handle user interactions (onClick, onChange)
-- Access browser APIs
-
-### Pattern for BigCommerce
-
-```typescript
-// Server Component — fetches data
-async function ProductPage({ params }: { params: { slug: string } }) {
-  const product = await getProduct(params.slug); // Server-side fetch
   return (
-    <div>
-      <h1>{product.name}</h1>
-      <AddToCartButton productId={product.id} /> {/* Client component */}
-    </div>
-  );
+    <main className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Environments</h1>
+      <EnvironmentList environments={environments} />
+    </main>
+  )
 }
 
-// Client Component — handles interactivity
-'use client';
-function AddToCartButton({ productId }: { productId: number }) {
-  const [loading, setLoading] = useState(false);
-  const handleClick = async () => { /* add to cart */ };
-  return <button onClick={handleClick}>Add to Cart</button>;
-}
-```
+// With search params
+export default async function EnvironmentsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string; page?: string }>
+}) {
+  const params = await searchParams
+  const environments = await getEnvironments({
+    status: params.status,
+    page: parseInt(params.page || '1'),
+  })
 
-## Data Fetching
-
-### Server Component Fetching
-
-```typescript
-async function ProductsPage() {
-  const products = await fetch(`${STORE_URL}/graphql`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${STOREFRONT_TOKEN}` },
-    body: JSON.stringify({ query: PRODUCTS_QUERY }),
-    next: { revalidate: 300 }, // ISR: revalidate every 5 minutes
-  }).then(r => r.json());
-  return <ProductGrid products={products.data.site.products} />;
+  return <EnvironmentList environments={environments} />
 }
 ```
 
-### Caching & Revalidation
+## Client Components
 
-| Strategy | Use Case | Config |
-|----------|----------|--------|
-| **Static** | Rarely changing data | `{ cache: 'force-cache' }` |
-| **ISR** | Product/category pages | `{ next: { revalidate: 300 } }` |
-| **Dynamic** | Cart, checkout, account | `{ cache: 'no-store' }` |
-| **On-Demand** | After webhook events | `revalidateTag('products')` |
+```tsx
+// components/EnvironmentActions.tsx
+'use client'
 
-### On-Demand Revalidation
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
-Trigger revalidation from webhooks:
-```typescript
-// app/api/webhooks/route.ts
-export async function POST(request: Request) {
-  const body = await request.json();
-  if (body.scope === 'store/product/updated') {
-    revalidateTag('products');
+export function EnvironmentActions({ id }: { id: string }) {
+  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
+
+  async function handleDelete() {
+    setIsLoading(true)
+    try {
+      await fetch(`/api/environments/${id}`, { method: 'DELETE' })
+      router.refresh() // Refresh server components
+    } finally {
+      setIsLoading(false)
+    }
   }
-  return Response.json({ revalidated: true });
+
+  return (
+    <button
+      onClick={handleDelete}
+      disabled={isLoading}
+      className="btn btn-danger"
+    >
+      {isLoading ? 'Deleting...' : 'Delete'}
+    </button>
+  )
 }
 ```
 
-## API Routes
+## API Route Handlers
 
-### Webhook Handlers
+```tsx
+// app/api/environments/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 
-```typescript
-// app/api/webhooks/orders/route.ts
-export async function POST(request: Request) {
-  const body = await request.json();
-  // Verify webhook authenticity
-  // Process order event
-  return Response.json({ received: true });
+const CreateEnvironmentSchema = z.object({
+  name: z.string().min(1).max(100),
+  description: z.string().optional(),
+})
+
+// GET /api/environments
+export async function GET(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams
+  const status = searchParams.get('status')
+
+  const environments = await prisma.environment.findMany({
+    where: status ? { status } : undefined,
+    orderBy: { createdAt: 'desc' },
+  })
+
+  return NextResponse.json(environments)
 }
-```
 
-### Proxy Routes
+// POST /api/environments
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const data = CreateEnvironmentSchema.parse(body)
 
-Proxy BigCommerce API calls to hide credentials:
-```typescript
-// app/api/products/route.ts
-export async function GET() {
-  const response = await fetch(`${BC_API_URL}/v3/catalog/products`, {
-    headers: { 'X-Auth-Token': process.env.BC_ACCESS_TOKEN! },
-  });
-  const data = await response.json();
-  return Response.json(data);
+    const environment = await prisma.environment.create({
+      data: {
+        name: data.name,
+        description: data.description,
+        status: 'PENDING',
+      },
+    })
+
+    return NextResponse.json(environment, { status: 201 })
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: error.errors },
+        { status: 400 }
+      )
+    }
+    throw error
+  }
+}
+
+// app/api/environments/[id]/route.ts
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params
+
+  const environment = await prisma.environment.findUnique({
+    where: { id },
+  })
+
+  if (!environment) {
+    return NextResponse.json(
+      { error: 'Environment not found' },
+      { status: 404 }
+    )
+  }
+
+  return NextResponse.json(environment)
 }
 ```
 
 ## Middleware
 
-### Authentication
-
-```typescript
+```tsx
 // middleware.ts
-export function middleware(request: NextRequest) {
-  const token = request.cookies.get('auth_token');
-  if (request.nextUrl.pathname.startsWith('/account') && !token) {
-    return NextResponse.redirect(new URL('/login', request.url));
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { getToken } from 'next-auth/jwt'
+
+export async function middleware(request: NextRequest) {
+  const token = await getToken({ req: request })
+  const isAuthPage = request.nextUrl.pathname.startsWith('/login')
+
+  // Redirect authenticated users away from auth pages
+  if (isAuthPage && token) {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
   }
-  return NextResponse.next();
+
+  // Protect dashboard routes
+  if (request.nextUrl.pathname.startsWith('/dashboard') && !token) {
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
+
+  return NextResponse.next()
+}
+
+export const config = {
+  matcher: ['/dashboard/:path*', '/login'],
 }
 ```
 
-### Geolocation / Channel Routing
+## NextAuth.js Integration
 
-Route users to the correct channel based on locale or region.
+```tsx
+// lib/auth.ts
+import NextAuth from 'next-auth'
+import GoogleProvider from 'next-auth/providers/google'
+import { PrismaAdapter } from '@auth/prisma-adapter'
+import { prisma } from '@/lib/prisma'
 
-## Image Optimization
+export const { handlers, auth, signIn, signOut } = NextAuth({
+  adapter: PrismaAdapter(prisma),
+  providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
+  ],
+  callbacks: {
+    session({ session, user }) {
+      session.user.id = user.id
+      return session
+    },
+  },
+})
 
-```typescript
-import Image from 'next/image';
-
-<Image
-  src={product.imageUrl}
-  alt={product.name}
-  width={500}
-  height={500}
-  priority={isAboveFold} // Preload for LCP images
-/>
+// app/api/auth/[...nextauth]/route.ts
+import { handlers } from '@/lib/auth'
+export const { GET, POST } = handlers
 ```
 
-Configure `remotePatterns` in `next.config.js` for BigCommerce CDN domains.
+## Server Actions
 
-## Environment Variables
+```tsx
+// app/environments/actions.ts
+'use server'
 
+import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
+import { z } from 'zod'
+
+const CreateSchema = z.object({
+  name: z.string().min(1),
+})
+
+export async function createEnvironment(formData: FormData) {
+  const data = CreateSchema.parse({
+    name: formData.get('name'),
+  })
+
+  await prisma.environment.create({
+    data: { name: data.name, status: 'PENDING' },
+  })
+
+  revalidatePath('/environments')
+  redirect('/environments')
+}
+
+// Usage in component
+import { createEnvironment } from './actions'
+
+export function CreateForm() {
+  return (
+    <form action={createEnvironment}>
+      <input name="name" required />
+      <button type="submit">Create</button>
+    </form>
+  )
+}
 ```
-# .env.local
-BIGCOMMERCE_STORE_HASH=abc123
-BIGCOMMERCE_ACCESS_TOKEN=xxx        # Server-only (no NEXT_PUBLIC_ prefix)
-NEXT_PUBLIC_STORE_URL=https://...   # Available in browser
-BIGCOMMERCE_STOREFRONT_TOKEN=yyy    # Client-side GraphQL
+
+## Loading & Error States
+
+```tsx
+// app/environments/loading.tsx
+export default function Loading() {
+  return (
+    <div className="animate-pulse">
+      <div className="h-8 bg-gray-200 rounded w-1/4 mb-4" />
+      <div className="space-y-3">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="h-16 bg-gray-200 rounded" />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// app/environments/error.tsx
+'use client'
+
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string }
+  reset: () => void
+}) {
+  return (
+    <div className="text-center p-8">
+      <h2 className="text-xl font-bold text-red-600">Something went wrong!</h2>
+      <p className="text-gray-600 mt-2">{error.message}</p>
+      <button
+        onClick={reset}
+        className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
+      >
+        Try again
+      </button>
+    </div>
+  )
+}
 ```
 
-## Catalyst-Specific Patterns
+## Data Fetching Patterns
 
-### GraphQL Client
+```tsx
+// lib/api.ts
+const API_URL = process.env.FACADE_URL || 'http://localhost:1337'
 
-Catalyst includes a typed GraphQL client:
-- Queries in `client/queries/` directory
-- Mutations in `client/mutations/` directory
-- Auto-generated types from GraphQL schema
+export async function getEnvironments() {
+  const res = await fetch(`${API_URL}/api/v1/environments`, {
+    next: { revalidate: 60 }, // ISR: revalidate every 60 seconds
+  })
 
-### Component Library
+  if (!res.ok) {
+    throw new Error('Failed to fetch environments')
+  }
 
-Catalyst provides pre-built components:
-- Product cards, galleries, options
-- Cart drawer, cart page
-- Navigation, breadcrumbs, search
-- Customer account pages
+  return res.json()
+}
 
-## Best Practices
+export async function getEnvironment(id: string) {
+  const res = await fetch(`${API_URL}/api/v1/environments/${id}`, {
+    cache: 'no-store', // Always fresh
+  })
 
-- Use Server Components by default — add `'use client'` only when needed
-- Fetch data in Server Components — pass data down to Client Components as props
-- Use ISR for product/category pages — balance freshness and build speed
-- Use on-demand revalidation with BigCommerce webhooks
-- Keep API tokens server-side — never expose via `NEXT_PUBLIC_` prefix
-- Use `next/image` for automatic optimization
-- Implement loading states with `loading.tsx` or Suspense
-- Handle errors gracefully with `error.tsx` boundaries
+  if (!res.ok) {
+    if (res.status === 404) return null
+    throw new Error('Failed to fetch environment')
+  }
 
-Fetch the Next.js documentation and Catalyst source for exact API, configuration options, and current patterns before implementing.
+  return res.json()
+}
+```
+
+## Parallel Data Fetching
+
+```tsx
+// app/dashboard/page.tsx
+export default async function DashboardPage() {
+  // Fetch in parallel
+  const [environments, users, metrics] = await Promise.all([
+    getEnvironments(),
+    getUsers(),
+    getMetrics(),
+  ])
+
+  return (
+    <Dashboard
+      environments={environments}
+      users={users}
+      metrics={metrics}
+    />
+  )
+}
+```

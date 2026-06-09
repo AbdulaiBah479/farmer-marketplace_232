@@ -1,289 +1,211 @@
 ---
 name: second-opinion
-description: "Runs external LLM code reviews (OpenAI Codex or Google Gemini CLI) on uncommitted changes, branch diffs, or specific commits. Use when the user asks for a second opinion, external review, codex review, gemini review, or mentions /second-opinion."
-allowed-tools: Bash Read Glob Grep AskUserQuestion
+description: "Cross-validate code, architecture or design decisions using a second model. Use for critical decisions, complex refactoring, security reviews."
+allowed-tools: Read, Grep, Glob
 ---
 
-# Second Opinion
+# Second Opinion 二次审查
 
-Shell out to external LLM CLIs for an independent code review powered by
-a separate model. Supports OpenAI Codex CLI and Google Gemini CLI.
+## 概述
 
-## When to Use
+在以下场景使用二次审查：
 
-- Getting a second opinion on code changes from a different model
-- Reviewing branch diffs before opening a PR
-- Checking uncommitted work for issues before committing
-- Running a focused review (security, performance, error handling)
-- Comparing review output from multiple models
+- **架构决策**：重大技术选型、系统设计
+- **安全审查**：认证、授权、数据处理逻辑
+- **复杂重构**：跨模块重构、API 变更
+- **疑难调试**：长时间无法解决的问题
 
-## When NOT to Use
+## 方法一：使用 Oracle CLI（推荐）
 
-- Neither Codex CLI nor Gemini CLI is installed
-- No API key or subscription configured for either tool
-- Reviewing non-code files (documentation, config)
-- You want Claude's own review (just ask Claude directly)
+[Oracle](https://github.com/steipete/oracle) 是一个专门用于此目的的工具。
 
-## Safety Note
-
-Gemini CLI is invoked with `--yolo`, which auto-approves all
-tool calls without confirmation. This is required for headless
-(non-interactive) operation but means Gemini will execute any
-tool actions its extensions request without prompting.
-
-## Quick Reference
-
-```
-# Codex (headless exec with structured JSON output)
-codex exec --sandbox read-only --ephemeral \
-  --output-schema codex-review-schema.json \
-  -o "$output_file" - < "$prompt_file"
-
-# Gemini (code review extension)
-gemini -p "/code-review" --yolo -e code-review
-# Gemini (headless with diff — see references/ for full pattern)
-git diff HEAD > /tmp/review-diff.txt
-{ printf '%s\n\n' 'Review this diff for issues.'; cat /tmp/review-diff.txt; } \
-  | gemini -p - --yolo -m gemini-3.1-pro-preview
-```
-
-## Invocation
-
-### 1. Gather context interactively
-
-Use `AskUserQuestion` to collect review parameters in one shot.
-Adapt the questions based on what the user already provided
-in their invocation (skip questions they already answered).
-
-Combine all applicable questions into a single `AskUserQuestion`
-call (max 4 questions).
-
-**Question 1 — Tool** (skip if user already specified):
-
-```
-header: "Review tool"
-question: "Which tool should run the review?"
-options:
-  - "Both Codex and Gemini (Recommended)" → run both in parallel
-  - "Codex only"                          → codex exec
-  - "Gemini only"                         → gemini CLI
-```
-
-**Question 2 — Scope** (skip if user already specified):
-
-```
-header: "Review scope"
-question: "What should be reviewed?"
-options:
-  - "Uncommitted changes" → git diff HEAD + untracked files
-  - "Branch diff vs main" → git diff <branch>...HEAD (auto-detect default branch)
-  - "Specific commit"     → git diff <sha>~1..<sha> (follow up for SHA)
-```
-
-**Question 3 — Project context** (skip if neither CLAUDE.md nor AGENTS.md exists):
-
-Check for CLAUDE.md first, then AGENTS.md in the repo root.
-Only show this question if at least one exists.
-
-```
-header: "Project context"
-question: "Include project conventions file so the review
-  checks against your standards?"
-options:
-  - "Yes, include it"
-  - "No, standard review"
-```
-
-**Question 4 — Review focus** (always ask):
-
-```
-header: "Review focus"
-question: "Any specific focus areas for the review?"
-options:
-  - "General review"    → no custom prompt
-  - "Security & auth"   → security-focused prompt
-  - "Performance"       → performance-focused prompt
-  - "Error handling"    → error handling-focused prompt
-```
-
-### 2. Run the tool directly
-
-Do not pre-check tool availability. Run the selected tool
-immediately. If the command fails with "command not found" or
-an extension is missing, report the install command from the
-Error Handling table below and skip that tool (if "Both" was
-selected, run only the available one).
-
-## Diff Preview
-
-After collecting answers, show the diff stats:
+### 安装
 
 ```bash
-# For uncommitted (tracked + untracked):
-git diff --stat HEAD
-git ls-files --others --exclude-standard
-
-# For branch diff:
-git diff --stat <branch>...HEAD
-
-# For specific commit:
-git diff --stat <sha>~1..<sha>
+# 不需要安装，使用 npx 直接运行
+npx -y @steipete/oracle --help
 ```
 
-If the diff is empty, stop and tell the user.
-
-If the diff is very large (>2000 lines changed), warn the user
-and ask whether to proceed or narrow the scope.
-
-## Skipping Inapplicable Checks
-
-After determining the diff scope, skip checks that don't apply
-to the files actually changed.
-
-### Dependency Scanning
-
-Only run `/security:scan-deps` when the diff touches dependency
-manifest files. Check with:
+### 基本用法
 
 ```bash
-git diff --name-only <scope> \
-  | grep -qiE '(package\.json|package-lock|yarn\.lock|pnpm-lock|Gemfile|\.gemspec|requirements\.txt|setup\.py|setup\.cfg|pyproject\.toml|poetry\.lock|uv\.lock|Cargo\.toml|Cargo\.lock|go\.mod|go\.sum|composer\.json|composer\.lock|Pipfile)'
+# 预览（不消耗 token）
+npx -y @steipete/oracle --dry-run summary \
+  -p "审查这个认证模块的安全性" \
+  --file "src/auth/**"
+
+# 浏览器模式（推荐，使用 ChatGPT）
+npx -y @steipete/oracle --engine browser --model gpt-5.2-pro \
+  -p "审查架构决策是否合理" \
+  --file "src/**" --file "!**/*.test.*"
+
+# API 模式（需要 OPENAI_API_KEY）
+npx -y @steipete/oracle --engine api \
+  -p "分析这个重构方案的风险" \
+  --file "src/core/**"
 ```
 
-If no dependency files are in the diff, skip the scan even when
-security focus is selected. The scan analyzes the entire project's
-dependency tree regardless of diff scope, so it adds significant
-time for zero value when dependencies weren't touched.
-
-## Auto-detect Default Branch
-
-For branch diff scope, detect the default branch name:
+### 文件选择技巧
 
 ```bash
-git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null \
-  | sed 's@^refs/remotes/origin/@@' || echo main
+# 包含特定目录
+--file "src/auth/**"
+--file "src/api/**"
+
+# 排除测试和快照
+--file "src/**" --file "!**/*.test.*" --file "!**/*.snap"
+
+# 包含配置文件
+--file "package.json" --file "tsconfig.json"
 ```
 
-## Codex Invocation
+## 方法二：手动二次审查
 
-See [references/codex-invocation.md](references/codex-invocation.md)
-for full details on command syntax, prompt assembly, and the
-structured output schema.
+如果不使用 Oracle，可以手动进行二次审查：
 
-Summary:
-- Uses `codex exec` (not `codex review`) for headless operation
-- Model: `gpt-5.3-codex`, reasoning: `xhigh`
-- Uses OpenAI's published code review prompt (fine-tuned into the model)
-- Diff is generated manually and piped via stdin with the prompt
-- `--output-schema` produces structured JSON findings
-- `-o` captures only the final message (no thinking/exec noise)
-- All three scopes (uncommitted, branch, commit) support project
-  context and focus instructions (no limitations)
-- Falls back to `gpt-5.2-codex` on auth errors
-- Output is clean JSON — parse and present findings by priority
-- Set `timeout: 600000` on the Bash call
+### 1. 准备审查包
 
-## Gemini Invocation
+```markdown
+# 审查请求
 
-See [references/gemini-invocation.md](references/gemini-invocation.md)
-for full details on flags, scope mapping, and extension usage.
+## 项目背景
 
-Summary:
-- Model: `gemini-3.1-pro-preview`, flags: `--yolo`, `-e`, `-m`
-- For uncommitted general review: `gemini -p "/code-review" --yolo -e code-review`
-- For branch/commit diffs: pipe `git diff` into `gemini -p`
-- Security extension name is `gemini-cli-security` (not `security`)
-- `/security:analyze` is interactive-only — use `-p` with a
-  security prompt instead
-- Run `/security:scan-deps` only when security focus is selected
-  AND the diff touches dependency manifest files (see Diff-Aware
-  Optimizations)
-- Set `timeout: 600000` on the Bash call
+- 技术栈：[描述]
+- 构建命令：[描述]
+- 关键约束：[描述]
 
-**Scope mapping for `git diff`** (Gemini has no built-in scope flags):
+## 审查目标
 
-| Scope | Diff command |
-|-------|-------------|
-| Uncommitted | `git diff HEAD` + untracked (see codex-invocation.md) |
-| Branch diff | `git diff <branch>...HEAD` |
-| Specific commit | `git diff <sha>~1..<sha>` |
+[具体问题或决策]
 
-## Running Both
+## 相关代码
 
-When the user picks "Both" (the default):
+[粘贴关键代码片段]
 
-1. Run Codex and Gemini in parallel — issue both Bash tool
-   calls in a single response. Both commands are read-only
-   (they review diffs via external APIs) so there is no
-   shared state or git lock contention.
-2. Collect both results, then present with clear headers:
+## 已尝试的方案
 
-```
-## Codex Review (gpt-5.3-codex)
-<codex output>
+[描述之前的尝试]
 
-## Gemini Review (gemini-3.1-pro-preview)
-<gemini output>
+## 期望输出
+
+- 风险评估
+- 改进建议
+- 替代方案
 ```
 
-Summarize where the two reviews agree and differ.
+### 2. 选择审查模型
 
-## Error Handling
+| 模型        | 适用场景           | 特点               |
+| ----------- | ------------------ | ------------------ |
+| GPT-4/5     | 通用审查、架构分析 | 广泛知识、推理强   |
+| Claude Opus | 复杂推理、代码分析 | 深度思考、上下文长 |
+| Gemini Pro  | 多模态、大规模代码 | 长上下文、快速     |
 
-| Error | Action |
-|-------|--------|
-| `codex: command not found` | Tell user: `npm i -g @openai/codex` |
-| `gemini: command not found` | Tell user: `npm i -g @google/gemini-cli` |
-| Gemini `code-review` extension missing | Tell user: `gemini extensions install https://github.com/gemini-cli-extensions/code-review` |
-| Gemini `gemini-cli-security` extension missing | Tell user: `gemini extensions install https://github.com/gemini-cli-extensions/security` |
-| Model auth error (Codex) | Retry with `gpt-5.2-codex` |
-| Empty diff | Tell user there are no changes to review |
-| Timeout | Inform user and suggest narrowing the diff scope |
-| Tool partially unavailable | Run only the available tool, note the skip |
+### 3. 审查清单
 
-## Examples
+- [ ] 提供足够的项目背景
+- [ ] 包含关键代码文件
+- [ ] 明确审查目标
+- [ ] 描述约束条件
+- [ ] 指定期望输出格式
 
-**Both tools (default):**
+## Prompt 模板
+
+### 架构审查
+
 ```
-User: /second-opinion
-Claude: [asks 4 questions: tool, scope, context, focus]
-User: picks "Both", "Branch diff", "Yes include CLAUDE.md", "Security"
-Claude: [detects default branch = main]
-Claude: [shows diff --stat: 6 files, +103 -15]
-Claude: [assembles prompt with review instructions + CLAUDE.md + security focus + diff]
-Claude: [runs codex exec and gemini in parallel]
-Claude: [reads codex output file, parses structured findings]
-Claude: [presents both reviews, highlights agreements/differences]
-```
+我需要你审查以下架构决策：
 
-**Codex only with inline args:**
-```
-User: /second-opinion check uncommitted changes for bugs
-Claude: [scope known: uncommitted, focus known: custom]
-Claude: [asks 2 questions: tool, project context]
-User: picks "Codex only", "No context"
-Claude: [shows diff --stat: 3 files, +45 -10]
-Claude: [writes prompt file with review instructions + diff]
-Claude: [runs codex exec, reads structured JSON output]
-Claude: [presents findings by priority with file:line refs]
-```
+## 项目背景
+[技术栈、规模、团队情况]
 
-**Gemini only:**
-```
-User: /second-opinion
-Claude: [asks 4 questions]
-User: picks "Gemini only", "Uncommitted", "No", "General"
-Claude: [shows diff --stat: 2 files, +20 -5]
-Claude: [runs gemini -p "/code-review" --yolo -e code-review]
-Claude: [presents review]
+## 当前方案
+[描述架构设计]
+
+## 备选方案
+[其他考虑过的方案]
+
+## 关注点
+- 可扩展性
+- 维护成本
+- 团队技能匹配度
+
+请提供：
+1. 当前方案的优缺点分析
+2. 潜在风险和缓解措施
+3. 是否有更好的替代方案
 ```
 
-**Large diff warning:**
+### 安全审查
+
 ```
-User: /second-opinion
-Claude: [asks questions] → user picks "Both", "Uncommitted", "General"
-Claude: [shows diff --stat: 45 files, +3200 -890]
-Claude: "Large diff (3200+ lines). Proceed, or narrow the scope?"
-User: "proceed"
-Claude: [runs both reviews]
+请对以下代码进行安全审查：
+
+## 代码功能
+[描述功能]
+
+## 代码
+[粘贴代码]
+
+## 关注点
+- OWASP Top 10
+- 认证/授权逻辑
+- 输入验证
+- 敏感数据处理
+
+请指出：
+1. 安全漏洞（按严重程度排序）
+2. 修复建议
+3. 最佳实践建议
 ```
+
+### 调试协助
+
+```
+我遇到了一个难以解决的问题：
+
+## 症状
+[描述问题表现]
+
+## 重现步骤
+[详细步骤]
+
+## 已尝试
+[之前的调试尝试]
+
+## 相关代码
+[粘贴代码]
+
+## 错误信息
+[完整错误信息]
+
+请帮我：
+1. 分析可能的根本原因
+2. 建议调试方向
+3. 提供可能的解决方案
+```
+
+## 最佳实践
+
+### DO ✅
+
+- 提供完整的项目上下文
+- 明确指定审查目标
+- 包含约束和限制条件
+- 要求结构化的输出
+
+### DON'T ❌
+
+- 不要包含敏感信息（密钥、凭证）
+- 不要一次审查太多代码（< 200KB）
+- 不要期望 100% 正确（验证输出）
+- 不要忽略审查建议的局限性
+
+## 输出验证
+
+二次审查的结果应当：
+
+1. **交叉验证**：与项目实际情况对比
+2. **测试验证**：关键建议应编写测试验证
+3. **渐进采纳**：逐步采纳建议，而非全盘接受
+4. **记录决策**：记录采纳或拒绝建议的原因

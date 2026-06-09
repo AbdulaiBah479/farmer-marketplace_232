@@ -1,235 +1,327 @@
 ---
 name: github-automation
-description: "Automate GitHub repositories, issues, pull requests, branches, CI/CD, and permissions via Rube MCP (Composio). Manage code workflows, review PRs, search code, and handle deployments programmatically."
-risk: critical
-source: community
-date_added: "2026-02-27"
+description: 自动化 GitHub 操作。当用户需要管理仓库、创建 PR、处理 Issue、自动化 CI/CD 或进行代码审查时使用此技能。
+allowed-tools: mcp__github__*, Bash, Read, Write, Edit
 ---
 
-# GitHub Automation via Rube MCP
+# GitHub 自动化操作
 
-Automate GitHub repository management, issue tracking, pull request workflows, branch operations, and CI/CD through Composio's GitHub toolkit.
+## 功能说明
+此技能专门用于自动化 GitHub 平台的各种操作，包括：
+- 仓库管理和文件操作
+- Pull Request 创建和审查
+- Issue 管理和追踪
+- 分支管理和合并
+- CI/CD 工作流自动化
+- 代码搜索和分析
 
-## Prerequisites
+## 使用场景
+- "创建一个新的 GitHub 仓库"
+- "提交代码并创建 Pull Request"
+- "批量处理 GitHub Issues"
+- "自动化代码审查流程"
+- "搜索代码库中的特定代码"
+- "管理 GitHub Actions 工作流"
 
-- Rube MCP must be connected (RUBE_SEARCH_TOOLS available)
-- Active GitHub connection via `RUBE_MANAGE_CONNECTIONS` with toolkit `github`
-- Always call `RUBE_SEARCH_TOOLS` first to get current tool schemas
+## 核心功能模块
 
-## Setup
+### 1. 仓库管理
+- **创建仓库**：创建新的公开或私有仓库
+- **Fork 仓库**：Fork 其他仓库到自己账户
+- **搜索仓库**：按关键词搜索仓库
+- **文件操作**：读取、创建、更新文件
+- **批量提交**：一次提交多个文件
 
-**Get Rube MCP**: Add `https://rube.app/mcp` as an MCP server in your client configuration. No API keys needed — just add the endpoint and it works.
+### 2. Pull Request 管理
+- **创建 PR**：从分支创建 Pull Request
+- **审查 PR**：添加评论和审查意见
+- **合并 PR**：合并 Pull Request
+- **查看变更**：获取 PR 的文件变更
+- **状态检查**：查看 CI/CD 状态
 
-1. Verify Rube MCP is available by confirming `RUBE_SEARCH_TOOLS` responds
-2. Call `RUBE_MANAGE_CONNECTIONS` with toolkit `github`
-3. If connection is not ACTIVE, follow the returned auth link to complete GitHub OAuth
-4. Confirm connection status shows ACTIVE before running any workflows
+### 3. Issue 管理
+- **创建 Issue**：创建新的问题或任务
+- **更新 Issue**：修改状态、标签、负责人
+- **搜索 Issue**：按条件筛选 Issue
+- **添加评论**：在 Issue 中添加讨论
+- **批量操作**：批量处理多个 Issue
 
-## Core Workflows
+### 4. 分支管理
+- **创建分支**：从指定分支创建新分支
+- **查看提交**：列出分支的提交历史
+- **分支保护**：配置分支保护规则
+- **合并策略**：选择合并方式（merge、squash、rebase）
 
-### 1. Create and Manage Issues
+### 5. 代码搜索
+- **搜索代码**：在仓库中搜索代码片段
+- **搜索 Issue**：搜索问题和 PR
+- **搜索用户**：查找 GitHub 用户
+- **高级查询**：使用 GitHub 搜索语法
 
-**When to use**: User wants to create, list, or manage GitHub issues
+## 工作流程
 
-**Tool sequence**:
-1. `GITHUB_LIST_REPOSITORIES_FOR_THE_AUTHENTICATED_USER` - Find target repo if unknown [Prerequisite]
-2. `GITHUB_LIST_REPOSITORY_ISSUES` - List existing issues (includes PRs) [Required]
-3. `GITHUB_CREATE_AN_ISSUE` - Create a new issue [Required]
-4. `GITHUB_CREATE_AN_ISSUE_COMMENT` - Add comments to an issue [Optional]
-5. `GITHUB_SEARCH_ISSUES_AND_PULL_REQUESTS` - Search across repos by keyword [Optional]
+### 标准开发流程
+1. **创建分支**：从 main 创建功能分支
+2. **开发代码**：编写和测试代码
+3. **提交变更**：提交文件到分支
+4. **创建 PR**：创建 Pull Request
+5. **代码审查**：团队审查代码
+6. **合并代码**：合并到主分支
 
-**Key parameters**:
-- `owner`: Repository owner (username or org), case-insensitive
-- `repo`: Repository name without .git extension
-- `title`: Issue title (required for creation)
-- `body`: Issue description (supports Markdown)
-- `labels`: Array of label names
-- `assignees`: Array of GitHub usernames
-- `state`: 'open', 'closed', or 'all' for filtering
+### 自动化发布流程
+1. **监听事件**：监听 push 或 tag 事件
+2. **运行测试**：执行自动化测试
+3. **构建项目**：编译和打包
+4. **创建 Release**：发布新版本
+5. **部署应用**：自动部署到生产环境
 
-**Pitfalls**:
-- `GITHUB_LIST_REPOSITORY_ISSUES` returns both issues AND pull requests; check `pull_request` field to distinguish
-- Only users with push access can set assignees, labels, and milestones; they are silently dropped otherwise
-- Pagination: `per_page` max 100; iterate pages until empty
+### Issue 管理流程
+1. **创建 Issue**：报告问题或需求
+2. **分配任务**：指定负责人
+3. **添加标签**：分类和优先级
+4. **跟踪进度**：更新状态
+5. **关闭 Issue**：完成后关闭
 
-### 2. Manage Pull Requests
+## 最佳实践
 
-**When to use**: User wants to create, review, or merge pull requests
+### 提交规范
+- 使用清晰的提交信息
+- 遵循 Conventional Commits 规范
+- 一次提交解决一个问题
+- 包含必要的测试和文档
 
-**Tool sequence**:
-1. `GITHUB_FIND_PULL_REQUESTS` - Search and filter PRs [Required]
-2. `GITHUB_GET_A_PULL_REQUEST` - Get detailed PR info including mergeable status [Required]
-3. `GITHUB_LIST_PULL_REQUESTS_FILES` - Review changed files [Optional]
-4. `GITHUB_CREATE_A_PULL_REQUEST` - Create a new PR [Required]
-5. `GITHUB_CREATE_AN_ISSUE_COMMENT` - Post review comments [Optional]
-6. `GITHUB_LIST_CHECK_RUNS_FOR_A_REF` - Verify CI status before merge [Optional]
-7. `GITHUB_MERGE_A_PULL_REQUEST` - Merge after explicit user approval [Required]
+### PR 规范
+- 提供详细的 PR 描述
+- 关联相关的 Issue
+- 确保 CI 检查通过
+- 及时响应审查意见
+- 保持 PR 大小适中
 
-**Key parameters**:
-- `head`: Source branch with changes (must exist; for cross-repo: 'username:branch')
-- `base`: Target branch to merge into (e.g., 'main')
-- `title`: PR title (required unless `issue` number provided)
-- `merge_method`: 'merge', 'squash', or 'rebase'
-- `state`: 'open', 'closed', or 'all'
+### 分支策略
+- 使用 Git Flow 或 GitHub Flow
+- 保护主分支
+- 定期同步上游分支
+- 及时删除已合并的分支
 
-**Pitfalls**:
-- `GITHUB_CREATE_A_PULL_REQUEST` fails with 422 if base/head are invalid, identical, or already merged
-- `GITHUB_MERGE_A_PULL_REQUEST` can be rejected if PR is draft, closed, or branch protection applies
-- Always verify mergeable status with `GITHUB_GET_A_PULL_REQUEST` immediately before merging
-- Require explicit user confirmation before calling MERGE
+### 安全实践
+- 不提交敏感信息
+- 使用 GitHub Secrets 管理密钥
+- 启用双因素认证
+- 定期审查权限设置
 
-### 3. Manage Repositories and Branches
+## 常用代码示例
 
-**When to use**: User wants to create repos, manage branches, or update repo settings
+### 1. 创建仓库并提交文件
+```javascript
+// 创建仓库
+const repo = await createRepository({
+  name: "my-project",
+  description: "项目描述",
+  private: false,
+  autoInit: true
+});
 
-**Tool sequence**:
-1. `GITHUB_LIST_REPOSITORIES_FOR_THE_AUTHENTICATED_USER` - List user's repos [Required]
-2. `GITHUB_GET_A_REPOSITORY` - Get detailed repo info [Optional]
-3. `GITHUB_CREATE_A_REPOSITORY_FOR_THE_AUTHENTICATED_USER` - Create personal repo [Required]
-4. `GITHUB_CREATE_AN_ORGANIZATION_REPOSITORY` - Create org repo [Alternative]
-5. `GITHUB_LIST_BRANCHES` - List branches [Required]
-6. `GITHUB_CREATE_A_REFERENCE` - Create new branch from SHA [Required]
-7. `GITHUB_UPDATE_A_REPOSITORY` - Update repo settings [Optional]
+// 批量提交文件
+await pushFiles({
+  owner: "username",
+  repo: "my-project",
+  branch: "main",
+  files: [
+    {
+      path: "README.md",
+      content: "# My Project\n\n项目说明"
+    },
+    {
+      path: "src/index.js",
+      content: "console.log('Hello World');"
+    }
+  ],
+  message: "Initial commit"
+});
+```
 
-**Key parameters**:
-- `name`: Repository name
-- `private`: Boolean for visibility
-- `ref`: Full reference path (e.g., 'refs/heads/new-branch')
-- `sha`: Commit SHA to point the new reference to
-- `default_branch`: Default branch name
+### 2. 创建分支和 Pull Request
+```javascript
+// 创建新分支
+await createBranch({
+  owner: "username",
+  repo: "my-project",
+  branch: "feature/new-feature",
+  from_branch: "main"
+});
 
-**Pitfalls**:
-- `GITHUB_CREATE_A_REFERENCE` only creates NEW references; use `GITHUB_UPDATE_A_REFERENCE` for existing ones
-- `ref` must start with 'refs/' and contain at least two slashes
-- `GITHUB_LIST_BRANCHES` paginates via `page`/`per_page`; iterate until empty page
-- `GITHUB_DELETE_A_REPOSITORY` is permanent and irreversible; requires admin privileges
+// 提交代码到新分支
+await createOrUpdateFile({
+  owner: "username",
+  repo: "my-project",
+  path: "src/feature.js",
+  content: "// 新功能代码",
+  message: "Add new feature",
+  branch: "feature/new-feature"
+});
 
-### 4. Search Code and Commits
+// 创建 Pull Request
+await createPullRequest({
+  owner: "username",
+  repo: "my-project",
+  title: "添加新功能",
+  head: "feature/new-feature",
+  base: "main",
+  body: "## 变更说明\n- 添加了新功能\n- 更新了文档"
+});
+```
 
-**When to use**: User wants to find code, files, or commits across repositories
+### 3. Issue 管理
+```javascript
+// 创建 Issue
+const issue = await createIssue({
+  owner: "username",
+  repo: "my-project",
+  title: "修复登录问题",
+  body: "## 问题描述\n用户无法登录\n\n## 复现步骤\n1. 打开登录页面\n2. 输入凭证\n3. 点击登录",
+  labels: ["bug", "high-priority"],
+  assignees: ["developer1"]
+});
 
-**Tool sequence**:
-1. `GITHUB_SEARCH_CODE` - Search file contents and paths [Required]
-2. `GITHUB_SEARCH_CODE_ALL_PAGES` - Multi-page code search [Alternative]
-3. `GITHUB_SEARCH_COMMITS_BY_AUTHOR` - Search commits by author/date/org [Required]
-4. `GITHUB_LIST_COMMITS` - List commits for a specific repo [Alternative]
-5. `GITHUB_GET_A_COMMIT` - Get detailed commit info [Optional]
-6. `GITHUB_GET_REPOSITORY_CONTENT` - Get file content [Optional]
+// 添加评论
+await addIssueComment({
+  owner: "username",
+  repo: "my-project",
+  issue_number: issue.number,
+  body: "正在调查此问题"
+});
 
-**Key parameters**:
-- `q`: Search query with qualifiers (`language:python`, `repo:owner/repo`, `extension:js`)
-- `owner`/`repo`: For repo-specific commit listing
-- `author`: Filter by commit author
-- `since`/`until`: ISO 8601 date range for commits
+// 更新 Issue
+await updateIssue({
+  owner: "username",
+  repo: "my-project",
+  issue_number: issue.number,
+  state: "closed",
+  labels: ["bug", "fixed"]
+});
+```
 
-**Pitfalls**:
-- Code search only indexes files under 384KB on default branch
-- Maximum 1000 results returned from code search
-- `GITHUB_SEARCH_COMMITS_BY_AUTHOR` requires keywords in addition to qualifiers; qualifier-only queries are not allowed
-- `GITHUB_LIST_COMMITS` returns 409 on empty repos
+### 4. 代码审查
+```javascript
+// 获取 PR 详情
+const pr = await getPullRequest({
+  owner: "username",
+  repo: "my-project",
+  pull_number: 123
+});
 
-### 5. Manage CI/CD and Deployments
+// 获取 PR 文件变更
+const files = await getPullRequestFiles({
+  owner: "username",
+  repo: "my-project",
+  pull_number: 123
+});
 
-**When to use**: User wants to view workflows, check CI status, or manage deployments
+// 创建审查
+await createPullRequestReview({
+  owner: "username",
+  repo: "my-project",
+  pull_number: 123,
+  body: "代码看起来不错，有几点建议",
+  event: "COMMENT",
+  comments: [
+    {
+      path: "src/index.js",
+      line: 10,
+      body: "建议添加错误处理"
+    }
+  ]
+});
 
-**Tool sequence**:
-1. `GITHUB_LIST_REPOSITORY_WORKFLOWS` - List GitHub Actions workflows [Required]
-2. `GITHUB_GET_A_WORKFLOW` - Get workflow details by ID or filename [Optional]
-3. `GITHUB_CREATE_A_WORKFLOW_DISPATCH_EVENT` - Manually trigger a workflow [Required]
-4. `GITHUB_LIST_CHECK_RUNS_FOR_A_REF` - Check CI status for a commit/branch [Required]
-5. `GITHUB_LIST_DEPLOYMENTS` - List deployments [Optional]
-6. `GITHUB_GET_A_DEPLOYMENT_STATUS` - Get deployment status [Optional]
+// 合并 PR
+await mergePullRequest({
+  owner: "username",
+  repo: "my-project",
+  pull_number: 123,
+  merge_method: "squash",
+  commit_title: "feat: 添加新功能"
+});
+```
 
-**Key parameters**:
-- `workflow_id`: Numeric ID or filename (e.g., 'ci.yml')
-- `ref`: Git reference (branch/tag) for workflow dispatch
-- `inputs`: JSON string of workflow inputs matching `on.workflow_dispatch.inputs`
-- `environment`: Filter deployments by environment name
+### 5. 搜索和查询
+```javascript
+// 搜索代码
+const codeResults = await searchCode({
+  q: "function login repo:username/my-project"
+});
 
-**Pitfalls**:
-- `GITHUB_CREATE_A_WORKFLOW_DISPATCH_EVENT` requires the workflow to have `workflow_dispatch` trigger configured
-- Full path `.github/workflows/main.yml` is auto-stripped to just `main.yml`
-- Inputs max 10 key-value pairs; must match workflow's `on.workflow_dispatch.inputs` definitions
+// 搜索 Issue
+const issueResults = await searchIssues({
+  q: "is:open label:bug repo:username/my-project",
+  sort: "created",
+  order: "desc"
+});
 
-### 6. Manage Users and Permissions
+// 搜索仓库
+const repoResults = await searchRepositories({
+  query: "react stars:>1000 language:javascript"
+});
+```
 
-**When to use**: User wants to check collaborators, permissions, or branch protection
+## GitHub Actions 集成
 
-**Tool sequence**:
-1. `GITHUB_LIST_REPOSITORY_COLLABORATORS` - List repo collaborators [Required]
-2. `GITHUB_GET_REPOSITORY_PERMISSIONS_FOR_A_USER` - Check specific user's access [Optional]
-3. `GITHUB_GET_BRANCH_PROTECTION` - Inspect branch protection rules [Required]
-4. `GITHUB_UPDATE_BRANCH_PROTECTION` - Update protection settings [Optional]
-5. `GITHUB_ADD_A_REPOSITORY_COLLABORATOR` - Add/update collaborator [Optional]
+### 自动化测试
+```yaml
+name: CI
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run: npm test
+```
 
-**Key parameters**:
-- `affiliation`: 'outside', 'direct', or 'all' for collaborator filtering
-- `permission`: Filter by 'pull', 'triage', 'push', 'maintain', 'admin'
-- `branch`: Branch name for protection rules
-- `enforce_admins`: Whether protection applies to admins
+### 自动化部署
+```yaml
+name: Deploy
+on:
+  push:
+    branches: [main]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Deploy
+        run: ./deploy.sh
+```
 
-**Pitfalls**:
-- `GITHUB_GET_BRANCH_PROTECTION` returns 404 for unprotected branches; treat as no protection rules
-- Determine push ability from `permissions.push` or `role_name`, not display labels
-- `GITHUB_LIST_REPOSITORY_COLLABORATORS` paginates; iterate all pages
-- `GITHUB_GET_REPOSITORY_PERMISSIONS_FOR_A_USER` may be inconclusive for non-collaborators
+## 集成场景
 
-## Common Patterns
+### 1. 自动化代码审查
+- 监听 PR 创建事件
+- 运行代码质量检查
+- 自动添加审查评论
+- 标记需要改进的地方
 
-### ID Resolution
-- **Repo name -> owner/repo**: `GITHUB_LIST_REPOSITORIES_FOR_THE_AUTHENTICATED_USER`
-- **PR number -> PR details**: `GITHUB_FIND_PULL_REQUESTS` then `GITHUB_GET_A_PULL_REQUEST`
-- **Branch name -> SHA**: `GITHUB_GET_A_BRANCH`
-- **Workflow name -> ID**: `GITHUB_LIST_REPOSITORY_WORKFLOWS`
+### 2. Issue 自动分类
+- 监听 Issue 创建
+- 分析 Issue 内容
+- 自动添加标签
+- 分配给合适的人员
 
-### Pagination
-All list endpoints use page-based pagination:
-- `page`: Page number (starts at 1)
-- `per_page`: Results per page (max 100)
-- Iterate until response returns fewer results than `per_page`
+### 3. 发布管理
+- 监听版本标签
+- 生成变更日志
+- 创建 GitHub Release
+- 通知团队成员
 
-### Safety
-- Always verify PR mergeable status before merge
-- Require explicit user confirmation for destructive operations (merge, delete)
-- Check CI status with `GITHUB_LIST_CHECK_RUNS_FOR_A_REF` before merging
+### 4. 依赖更新
+- 定期检查依赖更新
+- 创建更新 PR
+- 运行测试验证
+- 自动合并安全更新
 
-## Known Pitfalls
-
-- **Issues vs PRs**: `GITHUB_LIST_REPOSITORY_ISSUES` returns both; check `pull_request` field
-- **Pagination limits**: `per_page` max 100; always iterate pages until empty
-- **Branch creation**: `GITHUB_CREATE_A_REFERENCE` fails with 422 if reference already exists
-- **Merge guards**: Merge can fail due to branch protection, failing checks, or draft status
-- **Code search limits**: Only files <384KB on default branch; max 1000 results
-- **Commit search**: Requires search text keywords alongside qualifiers
-- **Destructive actions**: Repo deletion is irreversible; merge cannot be undone
-- **Silent permission drops**: Labels, assignees, milestones silently dropped without push access
-
-## Quick Reference
-
-| Task | Tool Slug | Key Params |
-|------|-----------|------------|
-| List repos | `GITHUB_LIST_REPOSITORIES_FOR_THE_AUTHENTICATED_USER` | `type`, `sort`, `per_page` |
-| Get repo | `GITHUB_GET_A_REPOSITORY` | `owner`, `repo` |
-| Create issue | `GITHUB_CREATE_AN_ISSUE` | `owner`, `repo`, `title`, `body` |
-| List issues | `GITHUB_LIST_REPOSITORY_ISSUES` | `owner`, `repo`, `state` |
-| Find PRs | `GITHUB_FIND_PULL_REQUESTS` | `repo`, `state`, `author` |
-| Create PR | `GITHUB_CREATE_A_PULL_REQUEST` | `owner`, `repo`, `head`, `base`, `title` |
-| Merge PR | `GITHUB_MERGE_A_PULL_REQUEST` | `owner`, `repo`, `pull_number`, `merge_method` |
-| List branches | `GITHUB_LIST_BRANCHES` | `owner`, `repo` |
-| Create branch | `GITHUB_CREATE_A_REFERENCE` | `owner`, `repo`, `ref`, `sha` |
-| Search code | `GITHUB_SEARCH_CODE` | `q` |
-| List commits | `GITHUB_LIST_COMMITS` | `owner`, `repo`, `author`, `since` |
-| Search commits | `GITHUB_SEARCH_COMMITS_BY_AUTHOR` | `q` |
-| List workflows | `GITHUB_LIST_REPOSITORY_WORKFLOWS` | `owner`, `repo` |
-| Trigger workflow | `GITHUB_CREATE_A_WORKFLOW_DISPATCH_EVENT` | `owner`, `repo`, `workflow_id`, `ref` |
-| Check CI | `GITHUB_LIST_CHECK_RUNS_FOR_A_REF` | `owner`, `repo`, ref |
-| List collaborators | `GITHUB_LIST_REPOSITORY_COLLABORATORS` | `owner`, `repo` |
-| Branch protection | `GITHUB_GET_BRANCH_PROTECTION` | `owner`, `repo`, `branch` |
-
-## When to Use
-This skill is applicable to execute the workflow or actions described in the overview.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
+## 注意事项
+- 遵守 GitHub API 速率限制
+- 使用 Personal Access Token 认证
+- 正确处理 API 错误和重试
+- 保护敏感信息和密钥
+- 遵循开源项目贡献指南

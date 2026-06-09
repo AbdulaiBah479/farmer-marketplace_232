@@ -1,695 +1,118 @@
 ---
-name: firebase
-description: Firebase gives you a complete backend in minutes - auth, database,
-  storage, functions, hosting. But the ease of setup hides real complexity.
-  Security rules are your last line of defense, and they're often wrong.
-risk: unknown
-source: vibeship-spawner-skills (Apache 2.0)
-date_added: 2026-02-27
+name: Firebase
+description: Google's mobile and web application development platform.
 ---
 
-# Firebase
+# Firebase Skill
 
-Firebase gives you a complete backend in minutes - auth, database, storage,
-functions, hosting. But the ease of setup hides real complexity. Security rules
-are your last line of defense, and they're often wrong. Firestore queries are
-limited, and you learn this after you've designed your data model.
+Google's mobile and web application development platform., generated from official documentation.
 
-This skill covers Firebase Authentication, Firestore, Realtime Database, Cloud
-Functions, Cloud Storage, and Firebase Hosting. Key insight: Firebase is
-optimized for read-heavy, denormalized data. If you're thinking relationally,
-you're thinking wrong.
+## When to Use This Skill
 
-2025 lesson: Firestore pricing can surprise you. Reads are cheap until they're
-not. A poorly designed listener can cost more than a dedicated database. Plan
-your data model for your query patterns, not your data relationships.
+This skill should be triggered when:
+- Working with Firebase
+- Asking about Firebase features or APIs
+- Implementing Firebase solutions
+- Debugging Firebase code
+- Learning Firebase best practices
 
-## Principles
+## Quick Reference
 
-- Design data for queries, not relationships
-- Security rules are mandatory, not optional
-- Denormalize aggressively - duplication is cheap, joins are expensive
-- Batch writes and transactions for consistency
-- Use offline persistence wisely - it's not free
-- Cloud Functions for what clients shouldn't do
-- Environment-based config, never hardcode keys in client
+### Common Patterns
 
-## Capabilities
+**Pattern 1:** Firebase Local Emulator Suite provides a rich user interface that includes support for viewing emulator logs. You can filter logs in the Emulator Suite UI using the query syntax described on this page. The logs query language supports exact comparisons and and operations. Other operations are not currently supported. Quotes are generally optional, except when using spaces or newlines. Note this query syntax is available in Emulator Suite UI only. Emulators output additional logs in the *-debug.log files in your project directory (e.g., firestore-debug.log). // Find only info logs. level=info //Find logs for the sayHelloWorld function metadata.emulator.name=functions metadata.function.name=sayHelloWorld //Find any log mentioning "hello world" hello world // turns into search="hello world" internally //Return any Hosting POST requests metadata.emulator.name=hosting search=POST Keywords level Log level. One of warn, info, error. search Text to match in a fuzzy search. For example, search=abc returns logs with the text "abc". Use the search keyword to combine fuzzy searches with other keyword searches using the and operator. metadata Query on a specific emulator or on a function name. metadata.emulator.name Query logs from a specified emulator. One of firestore, functions, database, pubsub, hosting, storage. metadata.function.name The function name as defined in user app code. user Any JSON data the user logged from in-app code, for example: console.log(JSON.stringify({hello: world})) The above log output can be queried with user.hello.
 
-- firebase-auth
-- firestore
-- firebase-realtime-database
-- firebase-cloud-functions
-- firebase-storage
-- firebase-hosting
-- firebase-security-rules
-- firebase-admin-sdk
-- firebase-emulators
+```
+and
+```
 
-## Scope
+**Pattern 2:** Any JSON data the user logged from in-app code, for example:
 
-- general-backend-architecture -> backend
-- payment-processing -> stripe
-- email-sending -> email
-- advanced-auth-flows -> authentication-oauth
-- kubernetes-deployment -> devops
+```
+console.log(JSON.stringify({hello: world}))
+```
 
-## Tooling
+**Pattern 3:** Schema @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *) public final class Schema : Sendable extension Schema: Encodable A Schema object allows the definition of input and output data types. These types can be objects, but also primitives and arrays. Represents a select subset of an OpenAPI 3.0 schema object. StringFormat Modifiers describing the expected format of a string Schema. Declaration Swift @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *) public struct StringFormat : EncodableProtoEnum IntegerFormat Modifiers describing the expected format of an integer Schema. Declaration Swift @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *) public struct IntegerFormat : EncodableProtoEnum, Sendable type The data type. Declaration Swift public var type: String { get } format The format of the data. Declaration Swift public let format: String? description A human-readable explanation of the purpose of the schema or property. While not strictly enforced on the value itself, good descriptions significantly help the model understand the context and generate more relevant and accurate output. Declaration Swift public let description: String? title A human-readable name/summary for the schema or a specific property. This helps document the schema’s purpose but doesn’t typically constrain the generated value. It can subtly guide the model by clarifying the intent of a field. Declaration Swift public let title: String? nullable Indicates if the value may be null. Declaration Swift public let nullable: Bool? enumValues Possible values of the element of type “STRING” with “enum” format. Declaration Swift public let enumValues: [String]? items Defines the schema for the elements within the "ARRAY". All items in the generated array must conform to this schema definition. This can be a simple type (like .string) or a complex nested object schema. Declaration Swift public let items: Schema? minItems An integer specifying the minimum number of items the generated "ARRAY" must contain. Declaration Swift public let minItems: Int? maxItems An integer specifying the maximum number of items the generated "ARRAY" must contain. Declaration Swift public let maxItems: Int? minimum The minimum value of a numeric type. Declaration Swift public let minimum: Double? maximum The maximum value of a numeric type. Declaration Swift public let maximum: Double? properties Defines the members (key-value pairs) expected within an object. It’s a dictionary where keys are the property names (strings) and values are nested Schema definitions describing each property’s type and constraints. Declaration Swift public let properties: [String : Schema]? anyOf An array of Schema objects. The generated data must be valid against any (one or more) of the schemas listed in this array. This allows specifying multiple possible structures or types for a single field. For example, a value could be either a String or an Integer: Schema.anyOf(schemas: [.string(), .integer()]) Declaration Swift public let anyOf: [Schema]? requiredProperties An array of strings, where each string is the name of a property defined in the properties dictionary that must be present in the generated object. If a property is listed here, the model must include it in the output. Declaration Swift public let requiredProperties: [String]? propertyOrdering A specific hint provided to the Gemini model, suggesting the order in which the keys should appear in the generated JSON string. Important: Standard JSON objects are inherently unordered collections of key-value pairs. While the model will try to respect propertyOrdering in its textual JSON output, subsequent parsing into native Swift objects (like Dictionaries or Structs) might not preserve this order. This parameter primarily affects the raw JSON string serialization. Declaration Swift public let propertyOrdering: [String]? string(description:title:nullable:format:) Returns a Schema representing a string value. This schema instructs the model to produce data of type "STRING", which is suitable for decoding into a Swift String (or String?, if nullable is set to true). Tip If a specific set of string values should be generated by the model (for example, “north”, “south”, “east”, or “west”), use enumeration(values:description:nullable:) instead to constrain the generated values. Declaration Swift public static func string(description: String? = nil, title: String? = nil, nullable: Bool = false, format: StringFormat? = nil) -> Schema Parameters description An optional description of what the string should contain or represent; may use Markdown format. title An optional human-readable name/summary for the schema. nullable If true, instructs the model that it may generate null instead of a string; defaults to false, enforcing that a string value is generated. format An optional modifier describing the expected format of the string. Currently no formats are officially supported for strings but custom values may be specified using custom(_:), for example .custom("email") or .custom("byte"); these provide additional hints for how the model should respond but are not guaranteed to be adhered to. enumeration(values:description:title:nullable:) Returns a Schema representing an enumeration of string values. This schema instructs the model to produce data of type "STRING" with the format "enum". This data is suitable for decoding into a Swift String (or String?, if nullable is set to true), or an enum with strings as raw values. Example: The values ["north", "south", "east", "west"] for an enumeration of directions. enum Direction: String, Decodable { case north, south, east, west } Declaration Swift public static func enumeration(values: [String], description: String? = nil, title: String? = nil, nullable: Bool = false) -> Schema Parameters values The list of string values that may be generated by the model. description An optional description of what the values contain or represent; may use Markdown format. title An optional human-readable name/summary for the schema. nullable If true, instructs the model that it may generate null instead of one of the strings specified in values; defaults to false, enforcing that one of the string values is generated. float(description:title:nullable:minimum:maximum:) Returns a Schema representing a single-precision floating-point number. This schema instructs the model to produce data of type "NUMBER" with the format "float", which is suitable for decoding into a Swift Float (or Float?, if nullable is set to true). Important This Schema provides a hint to the model that it should generate a single-precision floating-point number, a float, but only guarantees that the value will be a number. Declaration Swift public static func float(description: String? = nil, title: String? = nil, nullable: Bool = false, minimum: Float? = nil, maximum: Float? = nil) -> Schema Parameters description An optional description of what the number should contain or represent; may use Markdown format. title An optional human-readable name/summary for the schema. nullable If true, instructs the model that it may generate null instead of a number; defaults to false, enforcing that a number is generated. minimum If specified, instructs the model that the value should be greater than or equal to the specified minimum. maximum If specified, instructs the model that the value should be less than or equal to the specified maximum. double(description:title:nullable:minimum:maximum:) Returns a Schema representing a floating-point number. This schema instructs the model to produce data of type "NUMBER", which is suitable for decoding into a Swift Double (or Double?, if nullable is set to true). Declaration Swift public static func double(description: String? = nil, title: String? = nil, nullable: Bool = false, minimum: Double? = nil, maximum: Double? = nil) -> Schema Parameters description An optional description of what the number should contain or represent; may use Markdown format. title An optional human-readable name/summary for the schema. nullable If true, instructs the model that it may return null instead of a number; defaults to false, enforcing that a number is returned. minimum If specified, instructs the model that the value should be greater than or equal to the specified minimum. maximum If specified, instructs the model that the value should be less than or equal to the specified maximum. integer(description:title:nullable:format:minimum:maximum:) Returns a Schema representing an integer value. This schema instructs the model to produce data of type "INTEGER", which is suitable for decoding into a Swift Int (or Int?, if nullable is set to true) or other integer types (such as Int32) based on the expected size of values being generated. Important If a format of int32 or int64 is specified, this provides a hint to the model that it should generate 32-bit or 64-bit integers but this Schema only guarantees that the value will be an integer. Therefore, it is possible that decoding into an Int32 could overflow even if a format of int32 is specified. Declaration Swift public static func integer(description: String? = nil, title: String? = nil, nullable: Bool = false, format: IntegerFormat? = nil, minimum: Int? = nil, maximum: Int? = nil) -> Schema Parameters description An optional description of what the integer should contain or represent; may use Markdown format. title An optional human-readable name/summary for the schema. nullable If true, instructs the model that it may return null instead of an integer; defaults to false, enforcing that an integer is returned. format An optional modifier describing the expected format of the integer. Currently the formats int32 and int64 are supported; custom values may be specified using custom(_:) but may be ignored by the model. minimum If specified, instructs the model that the value should be greater than or equal to the specified minimum. maximum If specified, instructs the model that the value should be less than or equal to the specified maximum. boolean(description:title:nullable:) Returns a Schema representing a boolean value. This schema instructs the model to produce data of type "BOOLEAN", which is suitable for decoding into a Swift Bool (or Bool?, if nullable is set to true). Declaration Swift public static func boolean(description: String? = nil, title: String? = nil, nullable: Bool = false) -> Schema Parameters description An optional description of what the boolean should contain or represent; may use Markdown format. title An optional human-readable name/summary for the schema. nullable If true, instructs the model that it may return null instead of a boolean; defaults to false, enforcing that a boolean is returned. array(items:description:title:nullable:minItems:maxItems:) Returns a Schema representing an array. This schema instructs the model to produce data of type "ARRAY", which has elements of any other data type (including nested "ARRAY"s). This data is suitable for decoding into many Swift collection types, including Array, holding elements of types suitable for decoding from the respective items type. Declaration Swift public static func array(items: Schema, description: String? = nil, title: String? = nil, nullable: Bool = false, minItems: Int? = nil, maxItems: Int? = nil) -> Schema Parameters items The Schema of the elements that the array will hold. description An optional description of what the array should contain or represent; may use Markdown format. title An optional human-readable name/summary for the schema. nullable If true, instructs the model that it may return null instead of an array; defaults to false, enforcing that an array is returned. minItems Instructs the model to produce at least the specified minimum number of elements in the array; defaults to nil, meaning any number. maxItems Instructs the model to produce at most the specified maximum number of elements in the array. object(properties:optionalProperties:propertyOrdering:description:title:nullable:) Returns a Schema representing an object. This schema instructs the model to produce data of type "OBJECT", which has keys of type "STRING" and values of any other data type (including nested "OBJECT"s). This data is suitable for decoding into Swift keyed collection types, including Dictionary, or other custom struct or class types. Example: A City could be represented with the following object Schema. Schema.object(properties: [ "name" : .string(), "population": .integer() ]) The generated data could be decoded into a Swift native type: struct City: Decodable { let name: String let population: Int } Declaration Swift public static func object(properties: [String: Schema], optionalProperties: [String] = [], propertyOrdering: [String]? = nil, description: String? = nil, title: String? = nil, nullable: Bool = false) -> Schema Parameters properties A dictionary containing the object’s property names as keys and their respective Schemas as values. optionalProperties A list of property names that may be be omitted in objects generated by the model; these names must correspond to the keys provided in the properties dictionary and may be an empty list. propertyOrdering An optional hint to the model suggesting the order for keys in the generated JSON string. See propertyOrdering for details. description An optional description of what the object should contain or represent; may use Markdown format. title An optional human-readable name/summary for the schema. nullable If true, instructs the model that it may return null instead of an object; defaults to false, enforcing that an object is returned. anyOf(schemas:) Returns a Schema representing a value that must conform to any (one or more) of the provided sub-schemas. This schema instructs the model to produce data that is valid against at least one of the schemas listed in the schemas array. This is useful when a field can accept multiple distinct types or structures. Example: A field that can hold either a simple user ID (integer) or a detailed user object. Schema.anyOf(schemas: [ .integer(description: "User ID"), .object(properties: [ "userId": .integer(), "userName": .string() ], description: "Detailed User Object") ]) The generated data could be decoded based on which schema it matches. Declaration Swift public static func anyOf(schemas: [Schema]) -> Schema Parameters schemas An array of Schema objects. The generated data must be valid against at least one of these schemas. The array must not be empty.
 
-### Core
+```
+@available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
+public final class Schema : Sendable
+```
 
-- firebase - When: Client-side SDK Note: Modular SDK - tree-shakeable
-- firebase-admin - When: Server-side / Cloud Functions Note: Full access, bypasses security rules
-- firebase-functions - When: Cloud Functions v2 Note: v2 functions are recommended
+**Pattern 4:** StringFormat Modifiers describing the expected format of a string Schema. Declaration Swift @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *) public struct StringFormat : EncodableProtoEnum IntegerFormat Modifiers describing the expected format of an integer Schema. Declaration Swift @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *) public struct IntegerFormat : EncodableProtoEnum, Sendable type The data type. Declaration Swift public var type: String { get } format The format of the data. Declaration Swift public let format: String? description A human-readable explanation of the purpose of the schema or property. While not strictly enforced on the value itself, good descriptions significantly help the model understand the context and generate more relevant and accurate output. Declaration Swift public let description: String? title A human-readable name/summary for the schema or a specific property. This helps document the schema’s purpose but doesn’t typically constrain the generated value. It can subtly guide the model by clarifying the intent of a field. Declaration Swift public let title: String? nullable Indicates if the value may be null. Declaration Swift public let nullable: Bool? enumValues Possible values of the element of type “STRING” with “enum” format. Declaration Swift public let enumValues: [String]? items Defines the schema for the elements within the "ARRAY". All items in the generated array must conform to this schema definition. This can be a simple type (like .string) or a complex nested object schema. Declaration Swift public let items: Schema? minItems An integer specifying the minimum number of items the generated "ARRAY" must contain. Declaration Swift public let minItems: Int? maxItems An integer specifying the maximum number of items the generated "ARRAY" must contain. Declaration Swift public let maxItems: Int? minimum The minimum value of a numeric type. Declaration Swift public let minimum: Double? maximum The maximum value of a numeric type. Declaration Swift public let maximum: Double? properties Defines the members (key-value pairs) expected within an object. It’s a dictionary where keys are the property names (strings) and values are nested Schema definitions describing each property’s type and constraints. Declaration Swift public let properties: [String : Schema]? anyOf An array of Schema objects. The generated data must be valid against any (one or more) of the schemas listed in this array. This allows specifying multiple possible structures or types for a single field. For example, a value could be either a String or an Integer: Schema.anyOf(schemas: [.string(), .integer()]) Declaration Swift public let anyOf: [Schema]? requiredProperties An array of strings, where each string is the name of a property defined in the properties dictionary that must be present in the generated object. If a property is listed here, the model must include it in the output. Declaration Swift public let requiredProperties: [String]? propertyOrdering A specific hint provided to the Gemini model, suggesting the order in which the keys should appear in the generated JSON string. Important: Standard JSON objects are inherently unordered collections of key-value pairs. While the model will try to respect propertyOrdering in its textual JSON output, subsequent parsing into native Swift objects (like Dictionaries or Structs) might not preserve this order. This parameter primarily affects the raw JSON string serialization. Declaration Swift public let propertyOrdering: [String]? string(description:title:nullable:format:) Returns a Schema representing a string value. This schema instructs the model to produce data of type "STRING", which is suitable for decoding into a Swift String (or String?, if nullable is set to true). Tip If a specific set of string values should be generated by the model (for example, “north”, “south”, “east”, or “west”), use enumeration(values:description:nullable:) instead to constrain the generated values. Declaration Swift public static func string(description: String? = nil, title: String? = nil, nullable: Bool = false, format: StringFormat? = nil) -> Schema Parameters description An optional description of what the string should contain or represent; may use Markdown format. title An optional human-readable name/summary for the schema. nullable If true, instructs the model that it may generate null instead of a string; defaults to false, enforcing that a string value is generated. format An optional modifier describing the expected format of the string. Currently no formats are officially supported for strings but custom values may be specified using custom(_:), for example .custom("email") or .custom("byte"); these provide additional hints for how the model should respond but are not guaranteed to be adhered to. enumeration(values:description:title:nullable:) Returns a Schema representing an enumeration of string values. This schema instructs the model to produce data of type "STRING" with the format "enum". This data is suitable for decoding into a Swift String (or String?, if nullable is set to true), or an enum with strings as raw values. Example: The values ["north", "south", "east", "west"] for an enumeration of directions. enum Direction: String, Decodable { case north, south, east, west } Declaration Swift public static func enumeration(values: [String], description: String? = nil, title: String? = nil, nullable: Bool = false) -> Schema Parameters values The list of string values that may be generated by the model. description An optional description of what the values contain or represent; may use Markdown format. title An optional human-readable name/summary for the schema. nullable If true, instructs the model that it may generate null instead of one of the strings specified in values; defaults to false, enforcing that one of the string values is generated. float(description:title:nullable:minimum:maximum:) Returns a Schema representing a single-precision floating-point number. This schema instructs the model to produce data of type "NUMBER" with the format "float", which is suitable for decoding into a Swift Float (or Float?, if nullable is set to true). Important This Schema provides a hint to the model that it should generate a single-precision floating-point number, a float, but only guarantees that the value will be a number. Declaration Swift public static func float(description: String? = nil, title: String? = nil, nullable: Bool = false, minimum: Float? = nil, maximum: Float? = nil) -> Schema Parameters description An optional description of what the number should contain or represent; may use Markdown format. title An optional human-readable name/summary for the schema. nullable If true, instructs the model that it may generate null instead of a number; defaults to false, enforcing that a number is generated. minimum If specified, instructs the model that the value should be greater than or equal to the specified minimum. maximum If specified, instructs the model that the value should be less than or equal to the specified maximum. double(description:title:nullable:minimum:maximum:) Returns a Schema representing a floating-point number. This schema instructs the model to produce data of type "NUMBER", which is suitable for decoding into a Swift Double (or Double?, if nullable is set to true). Declaration Swift public static func double(description: String? = nil, title: String? = nil, nullable: Bool = false, minimum: Double? = nil, maximum: Double? = nil) -> Schema Parameters description An optional description of what the number should contain or represent; may use Markdown format. title An optional human-readable name/summary for the schema. nullable If true, instructs the model that it may return null instead of a number; defaults to false, enforcing that a number is returned. minimum If specified, instructs the model that the value should be greater than or equal to the specified minimum. maximum If specified, instructs the model that the value should be less than or equal to the specified maximum. integer(description:title:nullable:format:minimum:maximum:) Returns a Schema representing an integer value. This schema instructs the model to produce data of type "INTEGER", which is suitable for decoding into a Swift Int (or Int?, if nullable is set to true) or other integer types (such as Int32) based on the expected size of values being generated. Important If a format of int32 or int64 is specified, this provides a hint to the model that it should generate 32-bit or 64-bit integers but this Schema only guarantees that the value will be an integer. Therefore, it is possible that decoding into an Int32 could overflow even if a format of int32 is specified. Declaration Swift public static func integer(description: String? = nil, title: String? = nil, nullable: Bool = false, format: IntegerFormat? = nil, minimum: Int? = nil, maximum: Int? = nil) -> Schema Parameters description An optional description of what the integer should contain or represent; may use Markdown format. title An optional human-readable name/summary for the schema. nullable If true, instructs the model that it may return null instead of an integer; defaults to false, enforcing that an integer is returned. format An optional modifier describing the expected format of the integer. Currently the formats int32 and int64 are supported; custom values may be specified using custom(_:) but may be ignored by the model. minimum If specified, instructs the model that the value should be greater than or equal to the specified minimum. maximum If specified, instructs the model that the value should be less than or equal to the specified maximum. boolean(description:title:nullable:) Returns a Schema representing a boolean value. This schema instructs the model to produce data of type "BOOLEAN", which is suitable for decoding into a Swift Bool (or Bool?, if nullable is set to true). Declaration Swift public static func boolean(description: String? = nil, title: String? = nil, nullable: Bool = false) -> Schema Parameters description An optional description of what the boolean should contain or represent; may use Markdown format. title An optional human-readable name/summary for the schema. nullable If true, instructs the model that it may return null instead of a boolean; defaults to false, enforcing that a boolean is returned. array(items:description:title:nullable:minItems:maxItems:) Returns a Schema representing an array. This schema instructs the model to produce data of type "ARRAY", which has elements of any other data type (including nested "ARRAY"s). This data is suitable for decoding into many Swift collection types, including Array, holding elements of types suitable for decoding from the respective items type. Declaration Swift public static func array(items: Schema, description: String? = nil, title: String? = nil, nullable: Bool = false, minItems: Int? = nil, maxItems: Int? = nil) -> Schema Parameters items The Schema of the elements that the array will hold. description An optional description of what the array should contain or represent; may use Markdown format. title An optional human-readable name/summary for the schema. nullable If true, instructs the model that it may return null instead of an array; defaults to false, enforcing that an array is returned. minItems Instructs the model to produce at least the specified minimum number of elements in the array; defaults to nil, meaning any number. maxItems Instructs the model to produce at most the specified maximum number of elements in the array. object(properties:optionalProperties:propertyOrdering:description:title:nullable:) Returns a Schema representing an object. This schema instructs the model to produce data of type "OBJECT", which has keys of type "STRING" and values of any other data type (including nested "OBJECT"s). This data is suitable for decoding into Swift keyed collection types, including Dictionary, or other custom struct or class types. Example: A City could be represented with the following object Schema. Schema.object(properties: [ "name" : .string(), "population": .integer() ]) The generated data could be decoded into a Swift native type: struct City: Decodable { let name: String let population: Int } Declaration Swift public static func object(properties: [String: Schema], optionalProperties: [String] = [], propertyOrdering: [String]? = nil, description: String? = nil, title: String? = nil, nullable: Bool = false) -> Schema Parameters properties A dictionary containing the object’s property names as keys and their respective Schemas as values. optionalProperties A list of property names that may be be omitted in objects generated by the model; these names must correspond to the keys provided in the properties dictionary and may be an empty list. propertyOrdering An optional hint to the model suggesting the order for keys in the generated JSON string. See propertyOrdering for details. description An optional description of what the object should contain or represent; may use Markdown format. title An optional human-readable name/summary for the schema. nullable If true, instructs the model that it may return null instead of an object; defaults to false, enforcing that an object is returned. anyOf(schemas:) Returns a Schema representing a value that must conform to any (one or more) of the provided sub-schemas. This schema instructs the model to produce data that is valid against at least one of the schemas listed in the schemas array. This is useful when a field can accept multiple distinct types or structures. Example: A field that can hold either a simple user ID (integer) or a detailed user object. Schema.anyOf(schemas: [ .integer(description: "User ID"), .object(properties: [ "userId": .integer(), "userName": .string() ], description: "Detailed User Object") ]) The generated data could be decoded based on which schema it matches. Declaration Swift public static func anyOf(schemas: [Schema]) -> Schema Parameters schemas An array of Schema objects. The generated data must be valid against at least one of these schemas. The array must not be empty.
 
-### Testing
+```
+StringFormat
+```
 
-- @firebase/rules-unit-testing - When: Testing security rules Note: Essential - rules bugs are security bugs
-- firebase-tools - When: Emulator suite Note: Local development without hitting production
+**Pattern 5:** Returns a Schema representing an enumeration of string values. This schema instructs the model to produce data of type "STRING" with the format "enum". This data is suitable for decoding into a Swift String (or String?, if nullable is set to true), or an enum with strings as raw values. Example: The values ["north", "south", "east", "west"] for an enumeration of directions. enum Direction: String, Decodable { case north, south, east, west } Declaration Swift public static func enumeration(values: [String], description: String? = nil, title: String? = nil, nullable: Bool = false) -> Schema Parameters values The list of string values that may be generated by the model. description An optional description of what the values contain or represent; may use Markdown format. title An optional human-readable name/summary for the schema. nullable If true, instructs the model that it may generate null instead of one of the strings specified in values; defaults to false, enforcing that one of the string values is generated.
 
-### Frameworks
+```
+Schema
+```
 
-- reactfire - When: React + Firebase Note: Hooks-based, handles subscriptions
-- vuefire - When: Vue + Firebase Note: Vue-specific bindings
-- angularfire - When: Angular + Firebase Note: Official Angular bindings
+**Pattern 6:** Cloud Firestore automatically creates indexes to support the most common types of queries, but allows you to define custom indexes and index overrides as described in the Cloud Firestore guides. You can create, modify and deploy custom indexes in the Firebase console, or using the CLI. From the CLI, edit your index configuration file, with default filename firestore.indexes.json, and deploy using the firebase deploy command. You can export indexes with the CLI using firebase firestore:indexes. An index configuration file defines one object containing an indexes array and an optional fieldOverrides array. Here's an example: { // Required, specify compound and vector indexes indexes: [ { collectionGroup: "posts", queryScope: "COLLECTION", fields: [ { fieldPath: "author", arrayConfig: "CONTAINS" }, { fieldPath: "timestamp", order: "DESCENDING" } ] }, { collectionGroup: "coffee-beans", queryScope: "COLLECTION", fields: [ { fieldPath: "embedding_field", vectorConfig: { dimension: 256, flat: {} } } ] } ], // Optional, disable indexes or enable single-field collection group indexes fieldOverrides: [ { collectionGroup: "posts", fieldPath: "myBigMapField", // We want to disable indexing on our big map field, and so empty the indexes array indexes: [] } ] } Deploy an index configuration Deploy your index configuration with the firebase deploy command. If you only want to deploy indexes for the databases configured in your project, add the --only firestore flag. See the options reference for this command. To list deployed indexes, run the firebase firestore:indexes command. Add the --database=<databaseID> flag to list indexes for a database other than your project's default database. If you make edits to the indexes using the Firebase console, make sure you also update your local indexes file. For more on managing indexes, see the Cloud Firestore guides. JSON format Indexes The schema for one object in the indexes array is as follows. Optional properties are identified with the ? character. Note that Cloud Firestore document fields can only be indexed in one mode, thus a field object can only contain one of the order, arrayConfig, and vectorConfig properties. While there are fields and properties that are specific to Cloud Firestore editions, some fields are shared as well. Standard edition collectionGroup: string // Labeled "Collection ID" in the Firebase console queryScope: string // One of "COLLECTION", "COLLECTION_GROUP" apiScope: string // "ANY_API" (the default) is the only acceptable value. Optional. density: string // "SPARSE_ALL" is the only acceptable value. Optional. fields: array fieldPath: string order?: string // One of "ASCENDING", "DESCENDING"; excludes arrayConfig and vectorConfig properties arrayConfig?: string // If this parameter used, must be "CONTAINS"; excludes order and vectorConfig properties vectorConfig?: object // Indicates that this is a vector index; excludes order and arrayConfig properties dimension: number // The resulting index will only include vectors of this dimension flat: {} // Indicates the vector index is a flat index Enterprise edition collectionGroup: string // Labeled "Collection ID" in the Firebase console queryScope: string // One of "COLLECTION", "COLLECTION_GROUP" apiScope: string // "MONGODB_COMPATIBLE_API" is the only acceptable value multikey: boolean // Indicates if this is a multikey index density: string // One of "SPARSE_ANY" or "DENSE" fields: array fieldPath: string order?: string // One of "ASCENDING", "DESCENDING"; excludes arrayConfig and vectorConfig properties arrayConfig?: string // If this parameter used, must be "CONTAINS"; excludes order and vectorConfig properties vectorConfig?: object // Indicates that this is a vector index; excludes order and arrayConfig properties dimension: number // The resulting index will only include vectors of this dimension flat: {} // Indicates the vector index is a flat index FieldOverrides The schema for one object in the fieldOverrides array is as follows. Optional properties are identified with the ? character. Note that Cloud Firestore document fields can only be indexed in one mode, thus a field object cannot contain both the order and arrayConfig properties. collectionGroup: string // Labeled "Collection ID" in the Firebase console fieldPath: string ttl?: boolean // Set specified field to have TTL policy and be eligible for deletion indexes: array // Use an empty array to disable indexes on this collectionGroup + fieldPath queryScope: string // One of "COLLECTION", "COLLECTION_GROUP" order?: string // One of "ASCENDING", "DESCENDING"; excludes arrayConfig property arrayConfig?: string // If this parameter used, must be "CONTAINS"; excludes order property TTL Policy A TTL policy can be enabled or disabled using the fieldOverrides array as follows: // Optional, disable index single-field collection group indexes fieldOverrides: [ { collectionGroup: "posts", fieldPath: "ttlField", ttl: "true", // Explicitly enable TTL on this Field. // Disable indexing so empty the indexes array indexes: [] } ] To keep the default indexing in the field and enable a TTL policy: { "fieldOverrides": [ { "collectionGroup": "yourCollectionGroup", "fieldPath": "yourFieldPath", "ttl": true, "indexes": [ { "order": "ASCENDING", "queryScope": "COLLECTION_GROUP" }, { "order": "DESCENDING", "queryScope": "COLLECTION_GROUP" }, { "arrayConfig": "CONTAINS", "queryScope": "COLLECTION_GROUP" } ] } ] } For more information about time-to-live (TTL) policies review the official documentation.
 
-## Patterns
+```
+firestore.indexes.json
+```
 
-### Modular SDK Import
+**Pattern 7:** An index configuration file defines one object containing an indexes array and an optional fieldOverrides array. Here's an example:
 
-Import only what you need for smaller bundles
+```
+indexes
+```
 
-**When to use**: Client-side Firebase usage
+**Pattern 8:** FirebaseOptions class FirebaseOptions : NSObject, NSCopying This class provides constant fields of Google APIs. defaultOptions() Returns the default options. The first time this is called it synchronously reads GoogleService-Info.plist from disk. Declaration Swift class func defaultOptions() -> FirebaseOptions? apiKey An API key used for authenticating requests from your Apple app, e.g. The key must begin with “A” and contain exactly 39 alphanumeric characters, used to identify your app to Google servers. Declaration Swift var apiKey: String? { get set } bundleID The bundle ID for the application. Defaults to Bundle.main.bundleIdentifier when not set manually or in a plist. Declaration Swift var bundleID: String { get set } clientID The OAuth2 client ID for Apple applications used to authenticate Google users, for example @“12345.apps.googleusercontent.com”, used for signing in with Google. Declaration Swift var clientID: String? { get set } gcmSenderID The Project Number from the Google Developer’s console, for example @“012345678901”, used to configure Firebase Cloud Messaging. Declaration Swift var gcmSenderID: String { get set } projectID The Project ID from the Firebase console, for example @“abc-xyz-123”. Declaration Swift var projectID: String? { get set } googleAppID The Google App ID that is used to uniquely identify an instance of an app. Declaration Swift var googleAppID: String { get set } databaseURL The database root URL, e.g. @“http://abc-xyz-123.firebaseio.com”. Declaration Swift var databaseURL: String? { get set } storageBucket The Google Cloud Storage bucket name, e.g. @“abc-xyz-123.storage.firebase.com”. Declaration Swift var storageBucket: String? { get set } appGroupID The App Group identifier to share data between the application and the application extensions. The App Group must be configured in the application and on the Apple Developer Portal. Default value nil. Declaration Swift var appGroupID: String? { get set } init(contentsOfFile:) Initializes a customized instance of FirebaseOptions from the file at the given plist file path. This will read the file synchronously from disk. For example: if let path = Bundle.main.path(forResource:"GoogleService-Info", ofType:"plist") { let options = FirebaseOptions(contentsOfFile: path) } Note that it is not possible to customize FirebaseOptions for Firebase Analytics which expects a static file named GoogleService-Info.plist - https://github.com/firebase/firebase-ios-sdk/issues/230. Returns nil if the plist file does not exist or is invalid. Declaration Swift init?(contentsOfFile plistPath: String) init(googleAppID:gcmSenderID:) Initializes a customized instance of FirebaseOptions with required fields. Use the mutable properties to modify fields for configuring specific services. Note that it is not possible to customize FirebaseOptions for Firebase Analytics which expects a static file named GoogleServices-Info.plist - https://github.com/firebase/firebase-ios-sdk/issues/230. Declaration Swift init(googleAppID: String, gcmSenderID GCMSenderID: String) -init Unavailable Unavailable. Please use init(contentsOfFile:) or init(googleAppID:gcmSenderID:) instead.
 
-# MODULAR IMPORTS:
+```
+class FirebaseOptions : NSObject, NSCopying
+```
 
-"""
-Firebase v9+ uses modular SDK. Import only what you need.
-This enables tree-shaking and smaller bundles.
-"""
+## Reference Files
 
-// WRONG: v8-compat style (larger bundle)
-import firebase from 'firebase/compat/app';
-import 'firebase/compat/firestore';
-const db = firebase.firestore();
+This skill includes comprehensive documentation in `references/`:
 
-// RIGHT: v9+ modular (tree-shakeable)
-import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, doc, getDoc } from 'firebase/firestore';
+- **other.md** - Other documentation
+- **reference.md** - Reference documentation
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+Use `view` to read specific reference files when detailed information is needed.
 
-// Get a document
-const docRef = doc(db, 'users', 'userId');
-const docSnap = await getDoc(docRef);
+## Working with This Skill
 
-if (docSnap.exists()) {
-  console.log(docSnap.data());
-}
+### For Beginners
+Start with the getting_started or tutorials reference files for foundational concepts.
 
-// Query with constraints
-import { query, where, orderBy, limit } from 'firebase/firestore';
-
-const q = query(
-  collection(db, 'posts'),
-  where('published', '==', true),
-  orderBy('createdAt', 'desc'),
-  limit(10)
-);
-
-### Security Rules Design
-
-Secure your data with proper rules from day one
-
-**When to use**: Any Firestore database
-
-# FIRESTORE SECURITY RULES:
-
-"""
-Rules are your last line of defense. Every read and write
-goes through them. Get them wrong, and your data is exposed.
-"""
-
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-
-    // Helper functions
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
-
-    function isAdmin() {
-      return request.auth.token.admin == true;
-    }
-
-    // Users collection
-    match /users/{userId} {
-      // Anyone can read public profile
-      allow read: if true;
-
-      // Only owner can write their own data
-      allow write: if isOwner(userId);
+### For Specific Features
+Use the appropriate category reference file (api, guides, etc.) for detailed information.
 
-      // Private subcollection
-      match /private/{document=**} {
-        allow read, write: if isOwner(userId);
-      }
-    }
-
-    // Posts collection
-    match /posts/{postId} {
-      // Anyone can read published posts
-      allow read: if resource.data.published == true
-                  || isOwner(resource.data.authorId);
-
-      // Only authenticated users can create
-      allow create: if isSignedIn()
-                    && request.resource.data.authorId == request.auth.uid;
-
-      // Only author can update/delete
-      allow update, delete: if isOwner(resource.data.authorId);
-    }
-
-    // Admin-only collection
-    match /admin/{document=**} {
-      allow read, write: if isAdmin();
-    }
-  }
-}
-
-### Data Modeling for Queries
-
-Design Firestore data structure around query patterns
-
-**When to use**: Designing Firestore schema
-
-# FIRESTORE DATA MODELING:
-
-"""
-Firestore is NOT relational. You can't JOIN.
-Design your data for how you'll QUERY it, not how it relates.
-"""
-
-// WRONG: Normalized (SQL thinking)
-// users/{userId}
-// posts/{postId} with authorId field
-// To get "posts by user" - need to query posts collection
-
-// RIGHT: Denormalized for queries
-// users/{userId}/posts/{postId} - subcollection
-// OR
-// posts/{postId} with embedded author data
-
-// Document structure for a post
-const post = {
-  id: 'post123',
-  title: 'My Post',
-  content: '...',
-
-  // Embed frequently-needed author data
-  author: {
-    id: 'user456',
-    name: 'Jane Doe',
-    avatarUrl: '...'
-  },
-
-  // Arrays for IN queries (max 30 items for 'in')
-  tags: ['javascript', 'firebase'],
-
-  // Maps for compound queries
-  stats: {
-    likes: 42,
-    comments: 7,
-    views: 1000
-  },
-
-  // Timestamps
-  createdAt: serverTimestamp(),
-  updatedAt: serverTimestamp(),
-
-  // Booleans for filtering
-  published: true,
-  featured: false
-};
-
-// Query patterns this enables:
-// - Get post with author info: 1 read (no join needed)
-// - Posts by tag: where('tags', 'array-contains', 'javascript')
-// - Featured posts: where('featured', '==', true)
-// - Recent posts: orderBy('createdAt', 'desc')
-
-// When author updates their name, update all their posts
-// This is the tradeoff: writes are more complex, reads are fast
-
-### Real-time Listeners
-
-Subscribe to data changes with proper cleanup
-
-**When to use**: Real-time features
-
-# REAL-TIME LISTENERS:
-
-"""
-onSnapshot creates a persistent connection. Always unsubscribe
-when component unmounts to prevent memory leaks and extra reads.
-"""
-
-// React hook for real-time document
-function useDocument(path) {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const docRef = doc(db, path);
-
-    // Subscribe to document
-    const unsubscribe = onSnapshot(
-      docRef,
-      (snapshot) => {
-        if (snapshot.exists()) {
-          setData({ id: snapshot.id, ...snapshot.data() });
-        } else {
-          setData(null);
-        }
-        setLoading(false);
-      },
-      (err) => {
-        setError(err);
-        setLoading(false);
-      }
-    );
-
-    // Cleanup on unmount
-    return () => unsubscribe();
-  }, [path]);
-
-  return { data, loading, error };
-}
-
-// Usage
-function UserProfile({ userId }) {
-  const { data: user, loading } = useDocument(`users/${userId}`);
-
-  if (loading) return <Spinner />;
-  return <div>{user?.name}</div>;
-}
-
-// Collection with query
-function usePosts(limit = 10) {
-  const [posts, setPosts] = useState([]);
-
-  useEffect(() => {
-    const q = query(
-      collection(db, 'posts'),
-      where('published', '==', true),
-      orderBy('createdAt', 'desc'),
-      limit(limit)
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const results = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setPosts(results);
-    });
-
-    return () => unsubscribe();
-  }, [limit]);
-
-  return posts;
-}
-
-### Cloud Functions Patterns
-
-Server-side logic with Cloud Functions v2
-
-**When to use**: Backend logic, triggers, scheduled tasks
-
-# CLOUD FUNCTIONS V2:
-
-"""
-Cloud Functions run server-side code triggered by events.
-V2 uses more standard Node.js patterns and better scaling.
-"""
-
-import { onRequest } from 'firebase-functions/v2/https';
-import { onDocumentCreated } from 'firebase-functions/v2/firestore';
-import { onSchedule } from 'firebase-functions/v2/scheduler';
-import { getFirestore } from 'firebase-admin/firestore';
-import { initializeApp } from 'firebase-admin/app';
-
-initializeApp();
-const db = getFirestore();
-
-// HTTP function
-export const api = onRequest(
-  { cors: true, region: 'us-central1' },
-  async (req, res) => {
-    // Verify auth token
-    const token = req.headers.authorization?.split('Bearer ')[1];
-    if (!token) {
-      res.status(401).json({ error: 'Unauthorized' });
-      return;
-    }
-
-    try {
-      const decoded = await getAuth().verifyIdToken(token);
-      // Process request with decoded.uid
-      res.json({ userId: decoded.uid });
-    } catch (error) {
-      res.status(401).json({ error: 'Invalid token' });
-    }
-  }
-);
-
-// Firestore trigger - on document create
-export const onUserCreated = onDocumentCreated(
-  'users/{userId}',
-  async (event) => {
-    const snapshot = event.data;
-    const userId = event.params.userId;
-
-    if (!snapshot) return;
-
-    const userData = snapshot.data();
-
-    // Send welcome email, create related documents, etc.
-    await db.collection('notifications').add({
-      userId,
-      type: 'welcome',
-      message: `Welcome, ${userData.name}!`,
-      createdAt: FieldValue.serverTimestamp()
-    });
-  }
-);
-
-// Scheduled function (every day at midnight)
-export const dailyCleanup = onSchedule(
-  { schedule: '0 0 * * *', timeZone: 'UTC' },
-  async (event) => {
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - 30);
-
-    // Delete old documents
-    const oldDocs = await db.collection('logs')
-      .where('createdAt', '<', cutoff)
-      .limit(500)
-      .get();
-
-    const batch = db.batch();
-    oldDocs.docs.forEach(doc => batch.delete(doc.ref));
-    await batch.commit();
-
-    console.log(`Deleted ${oldDocs.size} old logs`);
-  }
-);
-
-### Batch Operations
-
-Atomic writes and transactions for consistency
-
-**When to use**: Multiple document updates that must succeed together
-
-# BATCH WRITES AND TRANSACTIONS:
-
-"""
-Batches: Multiple writes that all succeed or all fail.
-Transactions: Read-then-write operations with consistency.
-Max 500 operations per batch/transaction.
-"""
-
-import {
-  writeBatch, runTransaction, doc, getDoc,
-  increment, serverTimestamp
-} from 'firebase/firestore';
-
-// Batch write - no reads, just writes
-async function createPostWithTags(post, tags) {
-  const batch = writeBatch(db);
-
-  // Create post
-  const postRef = doc(collection(db, 'posts'));
-  batch.set(postRef, {
-    ...post,
-    createdAt: serverTimestamp()
-  });
-
-  // Update tag counts
-  for (const tag of tags) {
-    const tagRef = doc(db, 'tags', tag);
-    batch.set(tagRef, {
-      count: increment(1),
-      lastUsed: serverTimestamp()
-    }, { merge: true });
-  }
-
-  await batch.commit();
-  return postRef.id;
-}
-
-// Transaction - read and write atomically
-async function likePost(postId, userId) {
-  return runTransaction(db, async (transaction) => {
-    const postRef = doc(db, 'posts', postId);
-    const likeRef = doc(db, 'posts', postId, 'likes', userId);
-
-    const postSnap = await transaction.get(postRef);
-    if (!postSnap.exists()) {
-      throw new Error('Post not found');
-    }
-
-    const likeSnap = await transaction.get(likeRef);
-    if (likeSnap.exists()) {
-      throw new Error('Already liked');
-    }
-
-    // Increment like count and add like document
-    transaction.update(postRef, {
-      likeCount: increment(1)
-    });
-
-    transaction.set(likeRef, {
-      userId,
-      createdAt: serverTimestamp()
-    });
-
-    return postSnap.data().likeCount + 1;
-  });
-}
-
-### Social Login (Google, GitHub, etc.)
-
-OAuth provider setup and authentication flows
-
-**When to use**: Social login implementation
-
-# SOCIAL LOGIN WITH FIREBASE AUTH
-
-import {
-  getAuth, signInWithPopup, signInWithRedirect,
-  GoogleAuthProvider, GithubAuthProvider, OAuthProvider
-} from "firebase/auth";
-
-const auth = getAuth();
-
-// GOOGLE
-const googleProvider = new GoogleAuthProvider();
-googleProvider.addScope("email");
-googleProvider.setCustomParameters({ prompt: "select_account" });
-
-async function signInWithGoogle() {
-  try {
-    const result = await signInWithPopup(auth, googleProvider);
-    return result.user;
-  } catch (error) {
-    if (error.code === "auth/account-exists-with-different-credential") {
-      return handleAccountConflict(error);
-    }
-    throw error;
-  }
-}
-
-// GITHUB
-const githubProvider = new GithubAuthProvider();
-githubProvider.addScope("read:user");
-
-// APPLE (Required for iOS apps!)
-const appleProvider = new OAuthProvider("apple.com");
-appleProvider.addScope("email");
-appleProvider.addScope("name");
-
-### Popup vs Redirect Auth
-
-When to use popup vs redirect for OAuth
-
-**When to use**: Choosing authentication flow
-
-# Popup: Desktop, SPA (simpler, can be blocked)
-# Redirect: Mobile, iOS Safari (always works)
-
-async function signIn(provider) {
-  if (/iPhone|iPad|Android/i.test(navigator.userAgent)) {
-    return signInWithRedirect(auth, provider);
-  }
-  try {
-    return await signInWithPopup(auth, provider);
-  } catch (e) {
-    if (e.code === "auth/popup-blocked") {
-      return signInWithRedirect(auth, provider);
-    }
-    throw e;
-  }
-}
-
-// Check redirect result on page load
-useEffect(() => {
-  getRedirectResult(auth).then(r => r && setUser(r.user));
-}, []);
-
-### Account Linking
-
-Link multiple providers to one account
-
-**When to use**: User has accounts with different providers
-
-import { fetchSignInMethodsForEmail, linkWithCredential } from "firebase/auth";
-
-async function handleAccountConflict(error) {
-  const email = error.customData?.email;
-  const pendingCred = OAuthProvider.credentialFromError(error);
-  const methods = await fetchSignInMethodsForEmail(auth, email);
-
-  if (methods.includes("google.com")) {
-    alert("Sign in with Google to link accounts");
-    const result = await signInWithPopup(auth, new GoogleAuthProvider());
-    await linkWithCredential(result.user, pendingCred);
-    return result.user;
-  }
-}
-
-// Link new provider
-await linkWithPopup(auth.currentUser, new GithubAuthProvider());
-
-// Unlink provider (keep at least one!)
-await unlink(auth.currentUser, "github.com");
-
-### Auth State Persistence
-
-Control session lifetime
-
-**When to use**: Managing user sessions
-
-import { setPersistence, browserLocalPersistence, browserSessionPersistence } from "firebase/auth";
-
-// LOCAL: survives browser close (default)
-// SESSION: cleared on tab close
-
-async function signInWithRememberMe(email, pass, remember) {
-  await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
-  return signInWithEmailAndPassword(auth, email, pass);
-}
-
-// React auth hook
-function useAuth() {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  useEffect(() => onAuthStateChanged(auth, u => { setUser(u); setLoading(false); }), []);
-  return { user, loading };
-}
-
-### Email Verification and Password Reset
-
-Complete email auth flow
-
-**When to use**: Email/password authentication
-
-import { sendEmailVerification, sendPasswordResetEmail, reauthenticateWithCredential } from "firebase/auth";
-
-// Sign up with verification
-async function signUp(email, password) {
-  const result = await createUserWithEmailAndPassword(auth, email, password);
-  await sendEmailVerification(result.user);
-  return result.user;
-}
-
-// Password reset
-await sendPasswordResetEmail(auth, email);
-
-// Change password (requires recent auth)
-const cred = EmailAuthProvider.credential(user.email, currentPass);
-await reauthenticateWithCredential(user, cred);
-await updatePassword(user, newPass);
-
-### Token Management for APIs
-
-Handle ID tokens for backend calls
-
-**When to use**: Authenticating with backend APIs
-
-import { getIdToken, onIdTokenChanged } from "firebase/auth";
-
-// Get token (auto-refreshes if expired)
-const token = await getIdToken(auth.currentUser);
-
-// API helper with auto-retry
-async function apiCall(url, opts = {}) {
-  const token = await getIdToken(auth.currentUser);
-  const res = await fetch(url, {
-    ...opts,
-    headers: { ...opts.headers, Authorization: "Bearer " + token }
-  });
-  if (res.status === 401) {
-    const newToken = await getIdToken(auth.currentUser, true);
-    return fetch(url, { ...opts, headers: { ...opts.headers, Authorization: "Bearer " + newToken }});
-  }
-  return res;
-}
-
-// Sync to cookie for SSR
-onIdTokenChanged(auth, async u => {
-  document.cookie = u ? "__session=" + await u.getIdToken() : "__session=; max-age=0";
-});
-
-// Check admin claim
-const { claims } = await auth.currentUser.getIdTokenResult();
-const isAdmin = claims.admin === true;
-
-## Collaboration
-
-### Delegation Triggers
-
-- user needs complex OAuth flow -> authentication-oauth (Firebase Auth handles basics, complex flows need OAuth skill)
-- user needs payment integration -> stripe (Firebase + Stripe common pattern)
-- user needs email functionality -> email (Firebase doesn't include email - use SendGrid, Resend, etc.)
-- user needs container deployment -> devops (Beyond Firebase Hosting - Kubernetes, Docker)
-- user needs relational data model -> postgres-wizard (Firestore is wrong choice for highly relational data)
-- user needs full-text search -> elasticsearch-search (Firestore doesn't support full-text search - use Algolia/Elastic)
-
-## Related Skills
-
-Works well with: `nextjs-app-router`, `react-patterns`, `authentication-oauth`, `stripe`
-
-## When to Use
-- User mentions or implies: firebase
-- User mentions or implies: firestore
-- User mentions or implies: firebase auth
-- User mentions or implies: cloud functions
-- User mentions or implies: firebase storage
-- User mentions or implies: realtime database
-- User mentions or implies: firebase hosting
-- User mentions or implies: firebase emulator
-- User mentions or implies: security rules
-- User mentions or implies: firebase admin
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
+### For Code Examples
+The quick reference section above contains common patterns extracted from the official docs.
+
+## Resources
+
+### references/
+Organized documentation extracted from official sources. These files contain:
+- Detailed explanations
+- Code examples with language annotations
+- Links to original documentation
+- Table of contents for quick navigation
+
+### scripts/
+Add helper scripts here for common automation tasks.
+
+### assets/
+Add templates, boilerplate, or example projects here.
+
+## Notes
+
+- This skill was automatically generated from official documentation
+- Reference files preserve the structure and examples from source docs
+- Code examples include language detection for better syntax highlighting
+- Quick reference patterns are extracted from common usage examples in the docs
+
+## Updating
+
+To refresh this skill with updated documentation:
+1. Re-run the scraper with the same configuration
+2. The skill will be rebuilt with the latest information

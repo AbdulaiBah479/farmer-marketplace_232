@@ -1,163 +1,324 @@
 ---
-name: Sales
-description: "Transforms product documentation into sales-ready narrative packages combining story explanation, charcoal gestural sketch art, and talking points. Pipeline: extract narrative arc → determine emotional register (wonder, determination, hope) → derive visual scene → generate assets. Three workflows: CreateSalesPackage (full pipeline — narrative + charcoal sketch visual + key talking points), CreateNarrative (story only, 8-24 numbered points in first-person conversational voice, captures why-it-matters not what-it-does), CreateVisual (charcoal gestural sketch with transparent background for presentation versatility). Charcoal gestural sketch is the mandatory visual style — minimalist composition with breathing space. Output is tied directly to what's being sold — clear, succinct, effective. Integrates StoryExplanation (for narrative arc extraction) and Art essay-art workflow (for visual generation) internally. USE WHEN: sales, proposal, pitch deck, value proposition, sales narrative, sales deck, sales package, turn this into a pitch, create a sales story, sales materials, product pitch, transform docs to sales, sales script. NOT FOR Hormozi $100M frameworks, value equation, irresistible offer, or VOC mining (use _SALESHORMOZI). NOT FOR standalone diagrams or illustrations (use Art)."
-effort: medium
+name: sales
+description: Sales strategy expertise for sales methodologies (MEDDIC, SPIN, Challenger), sales forecasting, account management, pipeline management, sales enablement, and revenue operations. Use when building sales processes, qualifying deals, managing pipelines, or improving close rates.
 ---
 
-## Customization
+# Sales Strategy Expert
 
-**Before executing, check for user customizations at:**
-`~/.claude/PAI/USER/SKILLCUSTOMIZATIONS/Sales/`
+Comprehensive sales frameworks for deal qualification, pipeline management, and revenue growth.
 
-If this directory exists, load and apply any PREFERENCES.md, configurations, or resources found there. These override default behavior. If the directory does not exist, proceed with skill defaults.
+## Sales Methodologies
 
+### Quick Reference
 
-## 🚨 MANDATORY: Voice Notification (REQUIRED BEFORE ANY ACTION)
+| Methodology          | Core Focus               | Best For            |
+| -------------------- | ------------------------ | ------------------- |
+| **MEDDIC**           | Deal qualification rigor | Enterprise sales    |
+| **SPIN**             | Question-based discovery | Complex solutions   |
+| **Challenger**       | Insight-led selling      | Competitive markets |
+| **Solution Selling** | Problem-solving approach | Value-based sales   |
 
-**You MUST send this notification BEFORE doing anything else when this skill is invoked.**
+For detailed methodology frameworks (MEDDIC, SPIN, Challenger, Solution Selling), see [Sales Methodologies Reference](references/sales-methodologies.md).
 
-1. **Send voice notification**:
-   ```bash
-   curl -s -X POST http://localhost:31337/notify \
-     -H "Content-Type: application/json" \
-     -d '{"message": "Running the WORKFLOWNAME workflow in the Sales skill to ACTION"}' \
-     > /dev/null 2>&1 &
-   ```
+## Pipeline Management
 
-2. **Output text notification**:
-   ```
-   Running the **WorkflowName** workflow in the **Sales** skill to ACTION...
-   ```
+### Pipeline Metrics
 
-**This is not optional. Execute this curl command immediately upon skill invocation.**
+| Metric                | Formula                          | Benchmark         |
+| --------------------- | -------------------------------- | ----------------- |
+| **Pipeline Coverage** | Pipeline / Quota                 | 3-4x              |
+| **Win Rate**          | Won / (Won + Lost)               | 20-30%            |
+| **Average Deal Size** | Revenue / Deals                  | Industry specific |
+| **Sales Cycle**       | Days from lead to close          | Industry specific |
+| **Pipeline Velocity** | (Opps x Win% x ACV) / Cycle Days | Increasing        |
+| **Conversion Rates**  | By stage                         | Stage specific    |
 
-# Sales Skill
+### Pipeline Stages
 
-**Transform product documentation into compelling sales narratives and visual assets.**
+| Stage             | Definition             | Exit Criteria                       | Probability |
+| ----------------- | ---------------------- | ----------------------------------- | ----------- |
+| **Qualification** | Initial fit assessment | BANT qualified                      | 10%         |
+| **Discovery**     | Deep dive on needs     | Pain confirmed, stakeholders mapped | 20%         |
+| **Solution**      | Present solution       | Technical win                       | 40%         |
+| **Proposal**      | Formal proposal        | Budget confirmed                    | 60%         |
+| **Negotiation**   | Terms discussion       | Verbal commitment                   | 80%         |
+| **Closed Won**    | Contract signed        | Revenue booked                      | 100%        |
 
-Takes technical documentation, product information, or feature descriptions and produces:
-1. **Sales Narratives** - Story explanations that capture the value proposition
-2. **Visual Assets** - Charcoal sketch art that conveys the concept visually
-3. **Scripts** - Clear, succinct, effective messaging tied to what you're selling
-
----
-
-## The Pipeline
+### Pipeline Review Framework
 
 ```
-PRODUCT DOCUMENTATION
-        ↓
-[1] STORY EXPLANATION — Extract the narrative arc (what's the real value?)
-        ↓
-[2] EMOTIONAL REGISTER — What feeling should this evoke? (wonder, determination, hope, etc.)
-        ↓
-[3] VISUAL CONCEPT — Derive scene from narrative + emotion
-        ↓
-[4] GENERATE ASSETS — Create visual + narrative package
-        ↓
-SALES-READY OUTPUT
+WEEKLY PIPELINE REVIEW:
+
+OPPORTUNITIES TO REVIEW:
+- Closing this period
+- Slipped deals
+- Large opportunities
+- At-risk deals
+- Newly created
+
+QUESTIONS TO ASK:
+1. What changed since last week?
+2. What's the next step? When?
+3. Who is the champion? Economic buyer?
+4. What's the compelling event?
+5. What could stop this deal?
+6. What help do you need?
+
+DEAL HEALTH INDICATORS:
+Green: On track, strong champion, clear next steps
+Yellow: Some concerns, requires attention
+Red: Significant risk, may need intervention or removal
 ```
 
----
+## Sales Forecasting
 
+### Forecasting Methods
 
-## Workflows
+| Method                | Approach                          | Best For          |
+| --------------------- | --------------------------------- | ----------------- |
+| **Weighted Pipeline** | Sum of (Deal value x Probability) | Standard forecast |
+| **Stage-Based**       | Historical conversion by stage    | Mature sales orgs |
+| **Judgment-Based**    | Rep/manager assessment            | New markets       |
+| **AI/ML**             | Predictive models                 | Large datasets    |
+| **Hybrid**            | Multiple methods combined         | Most accurate     |
 
-### Full Sales Package → `Workflows/CreateSalesPackage.md`
-**The complete pipeline.** Takes product docs and produces:
-- Sales narrative (story explanation)
-- Visual asset (charcoal sketch)
-- Key talking points
+### Forecast Categories
 
-### Sales Narrative Only → `Workflows/CreateNarrative.md`
-**Just the story.** Converts technical docs into compelling narrative.
+| Category      | Definition                          | Confidence |
+| ------------- | ----------------------------------- | ---------- |
+| **Closed**    | Contract signed                     | 100%       |
+| **Commit**    | Will close this period              | 90%+       |
+| **Best Case** | Could close if everything goes well | 50-70%     |
+| **Pipeline**  | In qualification stages             | 10-40%     |
+| **Upside**    | Potential but not forecasted        | <10%       |
 
-### Visual Asset Only → `Workflows/CreateVisual.md`
-**Just the visual.** Creates charcoal sketch art for existing narrative.
+### Forecast Accuracy
 
----
-
-## Output Format
-
-### Sales Narrative
-- 8-24 point story explanation
-- First person, conversational
-- Captures the "why this matters" not just "what it does"
-- Ready for sales scripts, presentations, pitches
-
-### Visual Asset
-- Charcoal gestural sketch aesthetic
-- Minimalist composition with breathing space
-- Transparent background for versatility
-- Captures the emotional core of the value proposition
-
----
-
-## Example
-
-**Input:** Technical documentation about AI code review tool
-
-**Output:**
-- **Narrative:** "This tool doesn't just find bugs—it understands your codebase like a senior engineer who's been there for years. It catches the subtle issues that slip through PR reviews..."
-- **Visual:** Gestural sketch of human developer and AI figure collaborating, both examining the same code output
-- **Talking Points:**
-  1. Senior engineer understanding, not just pattern matching
-  2. Catches what humans miss in PR reviews
-  3. Learns your specific codebase patterns
-
----
-
-## Integration
-
-This skill combines:
-- **storyexplanation skill** - For narrative extraction
-- **art skill (essay-art workflow)** - For visual generation
-- **Sales-specific framing** - Value proposition focus
-
----
-
-**The goal:** Sales teams get materials that are highly tied to what they're selling, clear, succinct, and effective.
-
----
-
-## Examples
-
-**Example 1: Full sales package from docs**
 ```
-User: "create a sales package for this product" [provides docs]
-→ Extracts narrative arc using storyexplanation
-→ Determines emotional register (wonder, determination, hope)
-→ Generates charcoal sketch visual + narrative + talking points
+ACCURACY METRICS:
+
+Forecast Accuracy = 1 - |Actual - Forecast| / Forecast
+
+TRACKING:
+- By rep, team, region
+- By forecast category
+- Over time (trend)
+- By deal size
+
+IMPROVEMENT TACTICS:
+- Deal inspection rigor
+- Stage definitions clarity
+- Consistent methodology
+- Historical data analysis
+- AI-assisted predictions
 ```
 
-**Example 2: Sales narrative only**
+## Account Management
+
+### Account Segmentation
+
+| Tier           | Criteria                  | Coverage Model                |
+| -------------- | ------------------------- | ----------------------------- |
+| **Strategic**  | Highest revenue/potential | Named rep, dedicated CSM      |
+| **Enterprise** | Large accounts            | Territory rep, shared CSM     |
+| **Mid-Market** | Growth accounts           | Pool coverage, tech-touch CSM |
+| **SMB**        | Volume accounts           | Inside sales, self-service    |
+
+### Account Planning Template
+
 ```
-User: "turn this technical doc into a sales pitch"
-→ Reads documentation and extracts value proposition
-→ Creates 8-24 point story explanation in first person
-→ Returns conversational narrative ready for sales scripts
+ACCOUNT PLAN:
+
+ACCOUNT OVERVIEW:
+- Company profile
+- Industry/market position
+- Financial health
+- Strategic priorities
+
+RELATIONSHIP MAP:
+- Organizational chart
+- Key stakeholders
+- Champions and detractors
+- Influence map
+
+BUSINESS UNDERSTANDING:
+- Their strategic initiatives
+- Pain points and challenges
+- Competitive landscape
+- Technology environment
+
+OPPORTUNITY ASSESSMENT:
+- Current spend with us
+- Whitespace analysis
+- Competitive presence
+- Growth potential
+
+STRATEGY:
+- Account objectives
+- Key initiatives
+- Resource requirements
+- Risk mitigation
+
+ACTION PLAN:
+| Initiative | Owner | Timeline | Status |
+|------------|-------|----------|--------|
+| | | | |
 ```
 
-**Example 3: Visual asset for existing narrative**
+### Land and Expand Strategy
+
 ```
-User: "create a visual for this sales story"
-→ Analyzes narrative for emotional core
-→ Derives scene concept from story + emotion
-→ Generates charcoal gestural sketch with transparent background
+LAND:
+- Entry point identification
+- Low-friction starting point
+- Prove value quickly
+- Build relationships
+
+EXPAND:
+- Cross-sell opportunities
+- Upsell pathways
+- Geographic expansion
+- Departmental expansion
+
+EXPANSION TRIGGERS:
+- New executive hire
+- Budget cycle timing
+- Company growth/expansion
+- Competitive displacement
+- Contract renewal
+- New initiatives announced
 ```
 
-## Gotchas
+## Revenue Operations
 
-- **Charcoal sketch art is the visual style for sales assets.** Don't use other art styles unless explicitly asked.
-- **Pitch decks must tell a STORY, not list features.** Narrative arc matters more than bullet points.
-- **NOT for Hormozi frameworks** — use _SALESHORMOZI for $100M Offers/Leads methodology.
+### RevOps Framework
 
-## Execution Log
+```
+REVOPS PILLARS:
 
-After completing any workflow, append a single JSONL entry:
+PROCESS:
+- Lead management
+- Opportunity management
+- Account management
+- Renewal management
 
-```bash
-echo '{"ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","skill":"Sales","workflow":"WORKFLOW_USED","input":"8_WORD_SUMMARY","status":"ok|error","duration_s":SECONDS}' >> ~/.claude/PAI/MEMORY/SKILLS/execution.jsonl
+SYSTEMS:
+- CRM administration
+- Marketing automation
+- Sales tools
+- Analytics platforms
+
+DATA:
+- Data quality
+- Reporting and analytics
+- Dashboards
+- Forecasting
+
+STRATEGY:
+- Go-to-market alignment
+- Territory design
+- Compensation design
+- Performance management
 ```
 
-Replace `WORKFLOW_USED` with the workflow executed, `8_WORD_SUMMARY` with a brief input description, and `SECONDS` with approximate wall-clock time. Log `status: "error"` if the workflow failed.
+### Sales Compensation
+
+```
+COMP PLAN DESIGN:
+
+TARGET EARNINGS:
+Base Salary + Variable (OTE)
+
+TYPICAL MIX:
+| Role | Base | Variable |
+|------|------|----------|
+| AE (Enterprise) | 50% | 50% |
+| AE (Mid-Market) | 50% | 50% |
+| SDR | 70% | 30% |
+| AM/CSM | 70% | 30% |
+
+VARIABLE COMPONENTS:
+- Quota attainment (primary)
+- Accelerators (above quota)
+- SPIFs (special incentives)
+- MBOs (objectives)
+
+QUOTA SETTING:
+- Top-down: Company target → Rep quotas
+- Bottom-up: Territory potential → Rep quotas
+- Hybrid: Balanced approach
+```
+
+### Territory Design
+
+```
+TERRITORY PRINCIPLES:
+
+BALANCE:
+- Equal opportunity
+- Similar workload
+- Fair distribution
+
+COVERAGE:
+- No gaps
+- Minimal overlap
+- Clear boundaries
+
+EFFICIENCY:
+- Geographic logic
+- Account alignment
+- Growth potential
+
+TERRITORY METRICS:
+- Accounts per rep
+- Revenue per territory
+- Quota achievement variance
+- Win rate variance
+```
+
+## Sales Analytics
+
+### Sales Dashboard KPIs
+
+| Category         | Metrics                               |
+| ---------------- | ------------------------------------- |
+| **Activity**     | Calls, meetings, emails, proposals    |
+| **Pipeline**     | Created, coverage, velocity           |
+| **Performance**  | Quota attainment, win rate, deal size |
+| **Productivity** | Revenue per rep, time to productivity |
+| **Customer**     | Retention, expansion, NPS             |
+
+### Rep Performance Analysis
+
+```
+PERFORMANCE METRICS:
+
+LEADING INDICATORS:
+- Activity volume
+- Pipeline creation
+- Meeting conversion
+- Proposal volume
+
+LAGGING INDICATORS:
+- Revenue closed
+- Quota attainment
+- Win rate
+- Average deal size
+
+DIAGNOSTIC ANALYSIS:
+If low activity → Motivation, time management
+If low conversion → Skills, messaging
+If low win rate → Qualification, competition
+If low deal size → Targeting, value selling
+```
+
+## References
+
+- [Sales Methodologies Reference](references/sales-methodologies.md) - MEDDIC, SPIN, Challenger, Solution Selling details
+- [Sales Enablement Reference](references/sales-enablement.md) - Content framework, playbooks, training curriculum
+
+## See Also
+
+- [Fortune 50 Marketing](../fortune50-marketing/SKILL.md)
+- [Fortune 50 Product Management](../fortune50-product-management/SKILL.md)
+- [Fortune 50 Finance](../fortune50-finance/SKILL.md)

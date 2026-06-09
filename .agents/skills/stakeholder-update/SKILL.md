@@ -1,352 +1,236 @@
 ---
 name: stakeholder-update
-description: Generate a stakeholder update tailored to audience and cadence. Use when writing a weekly or monthly status for leadership, announcing a launch, escalating a risk or blocker, or translating the same progress into exec-brief, engineering-detail, or customer-facing versions.
-argument-hint: "<update type and audience>"
+description: "Create concise executive stakeholder updates using the BLUF (Bottom Line Up Front) framework. Use when asked to write a status update, progress report, project communication, or executive briefing for leadership or stakeholders. Produces a BLUF-led update with status, key metrics, risks, upcoming milestones, and decisions needed — readable in under 2 minutes."
 ---
 
-# Stakeholder Update
+# Stakeholder Update Skill
 
-> If you see unfamiliar placeholders or need to check which tools are connected, see [CONNECTORS.md](../../CONNECTORS.md).
+This skill creates effective status updates for executives and stakeholders following the BLUF (Bottom Line Up Front) principle.
 
-Generate a stakeholder update tailored to the audience and cadence.
+## Required Inputs
 
-## Usage
+Ask the user for these if not provided:
+- **Project or product being reported on**
+- **Audience** (CEO, board, cross-functional leads, investors — changes depth and format)
+- **Period** (this week / this sprint / this month)
+- **Current status** (on track / at risk / blocked)
+- **Key metrics** and their current values vs. targets
 
-```
-/stakeholder-update $ARGUMENTS
-```
+## Update Structure
 
-## Workflow
+### 1. BLUF (Bottom Line Up Front)
+Start with the most important information:
+- **Status**: 🟢 On track / 🟡 At risk / 🔴 Blocked / ✅ Complete
+- **Key Takeaway**: One sentence summary of current state
+- **Action Needed**: What you need from stakeholders (if anything)
 
-### 1. Determine Update Type
+### 2. Progress Summary
+Brief overview of accomplishments:
+- What shipped this period
+- Milestones achieved
+- Key metrics movement
 
-Ask the user what kind of update:
-- **Weekly**: Regular cadence update on progress, blockers, and next steps
-- **Monthly**: Higher-level summary with trends, milestones, and strategic alignment
-- **Launch**: Announcement of a feature or product launch with details and impact
-- **Ad-hoc**: One-off update for a specific situation (escalation, pivot, major decision)
+Keep to 3-5 bullet points maximum.
 
-### 2. Determine Audience
+### 3. Metrics Dashboard
 
-Ask who the update is for:
-- **Executives / leadership**: High-level, outcome-focused, strategic framing, brief
-- **Engineering team**: Technical detail, implementation context, blockers, decisions needed
-- **Cross-functional partners**: Context-appropriate detail, focus on shared goals and dependencies
-- **Customers / external**: Benefits-focused, clear timelines, no internal jargon
-- **Board**: Metrics-driven, strategic, risk-focused, very concise
+**Key Metrics**
+| Metric | Current | Target | Trend | Status |
+|--------|---------|--------|-------|--------|
+| [Metric name] | [Value] | [Target] | ↑/→/↓ | 🟢/🟡/🔴 |
 
-### 3. Pull Context from Connected Tools
+Include 3-5 most important metrics only.
 
-If **~~project tracker** is connected:
-- Pull status of roadmap items and milestones
-- Identify completed items since last update
-- Surface items that are at risk or blocked
-- Pull sprint or iteration progress
+### 4. Risks & Blockers
 
-If **~~chat** is connected:
-- Search for relevant team discussions and decisions
-- Find blockers or issues raised in channels
-- Identify key decisions made asynchronously
+**High Priority Issues:**
+- **Issue**: Brief description
+- **Impact**: What's at stake
+- **Mitigation**: What you're doing about it
+- **Help Needed**: What stakeholders can do (if applicable)
 
-If **~~meeting transcription** is connected:
-- Pull recent meeting notes and discussion summaries
-- Find decisions and action items from relevant meetings
+Only include issues that matter at executive level.
 
-If **~~knowledge base** is connected:
-- Search for recent meeting notes
-- Find decision documents or design reviews
+### 5. Upcoming Milestones
 
-If no tools are connected, ask the user to provide:
-- What was accomplished since the last update
-- Current blockers or risks
-- Key decisions made or needed
-- What is coming next
+**Next 30 Days:**
+- Milestone (expected date)
+- Milestone (expected date)
 
-### 4. Generate the Update
+**Next 90 Days:**
+- Major milestone (month)
+- Major milestone (month)
 
-Structure the update for the target audience using the templates and frameworks below.
+### 6. Decisions Needed (if applicable)
+- **Decision**: Clear description
+- **Options**: 2-3 options with pros/cons
+- **Recommendation**: What you recommend and why
+- **Timeline**: When decision is needed
 
-**For executives**: TL;DR, status color (G/Y/R), key progress tied to goals, decisions made, risks with mitigation, specific asks, and next milestones. Keep it under 300 words.
+## Writing Guidelines
 
-**For engineering**: What shipped (with links), what is in progress (with owners), blockers, decisions needed (with options and recommendation), and what is coming next.
+**Tone**: Professional, concise, action-oriented
+**Length**: Keep under 1 page (or 2 minutes reading time)
+**Frequency**: Weekly for active projects, bi-weekly for maintenance
 
-**For cross-functional partners**: What is coming that affects them, what you need from them (with deadlines), decisions that impact their team, and areas open for input.
+**Executive Communication Principles:**
 
-**For customers**: What is new (framed as benefits), what is coming soon, known issues with workarounds, and how to provide feedback. No internal jargon.
+1. **Lead with conclusions, not process**
+   - ❌ "We ran 5 experiments this week and analyzed the data..."
+   - ✅ "Conversion rate increased 15% from optimization work"
 
-**For launch announcements**: What launched, why it matters, key details (scope, availability, limitations), success metrics, rollout plan, and feedback channels.
+2. **Focus on impact, not activities**
+   - ❌ "Held 12 customer interviews"
+   - ✅ "Identified #1 barrier to adoption (complexity of setup)"
 
-### 5. Review and Deliver
+3. **Make problems visible early**
+   - Don't sugarcoat risks
+   - Propose solutions, not just problems
+   - Be specific about help needed
 
-After generating the update:
-- Ask if the user wants to adjust tone, detail level, or emphasis
-- Offer to format for the delivery channel (email, chat post, doc, slides)
-- If **~~chat** is connected, offer to draft the message for sending
+4. **Use data to tell story**
+   - Quantify whenever possible
+   - Show trends, not just snapshots
+   - Connect metrics to business outcomes
 
-## Update Templates by Audience
+5. **Make it scannable**
+   - Use headers and bullet points
+   - Bold key information
+   - Use visual indicators (🟢🟡🔴, ↑→↓)
 
-### Executive / Leadership Update
-Executives want: strategic context, progress against goals, risks that need their help, decisions that need their input.
+## Status Guidelines
 
-**Format**:
-```
-Status: [Green / Yellow / Red]
+**🟢 On Track**: Meeting all targets, no significant risks
+**🟡 At Risk**: Potential issues that could impact delivery
+**🔴 Blocked**: Critical issues preventing progress, needs intervention
 
-TL;DR: [One sentence — the most important thing to know]
-
-Progress:
-- [Outcome achieved, tied to goal/OKR]
-- [Milestone reached, with impact]
-- [Key metric movement]
-
-Risks:
-- [Risk]: [Mitigation plan]. [Ask if needed].
-
-Decisions needed:
-- [Decision]: [Options with recommendation]. Need by [date].
-
-Next milestones:
-- [Milestone] — [Date]
-```
-
-**Tips for executive updates**:
-- Lead with the conclusion, not the journey. Executives want "we shipped X and it moved Y metric" not "we had 14 standups and resolved 23 tickets."
-- Keep it under 200 words. If they want more, they will ask.
-- Status color should reflect YOUR genuine assessment, not what you think they want to hear. Yellow is not a failure — it is good risk management.
-- Only include risks you want help with. Do not list risks you are already handling unless they need to know.
-- Asks must be specific: "Decision on X by Friday" not "support needed."
-
-### Engineering Team Update
-Engineers want: clear priorities, technical context, blockers resolved, decisions that affect their work.
-
-**Format**:
-```
-Shipped:
-- [Feature/fix] — [Link to PR/ticket]. [Impact if notable].
-
-In progress:
-- [Item] — [Owner]. [Expected completion]. [Blockers if any].
-
-Decisions:
-- [Decision made]: [Rationale]. [Link to ADR if exists].
-- [Decision needed]: [Context]. [Options]. [Recommendation].
-
-Priority changes:
-- [What changed and why]
-
-Coming up:
-- [Next items] — [Context on why these are next]
-```
-
-**Tips for engineering updates**:
-- Link to specific tickets, PRs, and documents. Engineers want to click through for details.
-- When priorities change, explain why. Engineers are more bought in when they understand the reason.
-- Be explicit about what is blocking them and what you are doing to unblock it.
-- Do not waste their time with information that does not affect their work.
-
-### Cross-Functional Partner Update
-Partners (design, marketing, sales, support) want: what is coming that affects them, what they need to prepare for, how to give input.
-
-**Format**:
-```
-What's coming:
-- [Feature/launch] — [Date]. [What this means for your team].
-
-What we need from you:
-- [Specific ask] — [Context]. By [date].
-
-Decisions made:
-- [Decision] — [How it affects your team].
-
-Open for input:
-- [Topic we'd love feedback on] — [How to provide it].
-```
-
-### Customer / External Update
-Customers want: what is new, what is coming, how it benefits them, how to get started.
-
-**Format**:
-```
-What's new:
-- [Feature] — [Benefit in customer terms]. [How to use it / link].
-
-Coming soon:
-- [Feature] — [Expected timing]. [Why it matters to you].
-
-Known issues:
-- [Issue] — [Status]. [Workaround if available].
-
-Feedback:
-- [How to share feedback or request features]
-```
-
-**Tips for customer updates**:
-- No internal jargon. No ticket numbers. No technical implementation details.
-- Frame everything in terms of what the customer can now DO, not what you built.
-- Be honest about timelines but do not overcommit. "Later this quarter" is better than a date you might miss.
-- Only mention known issues if they are customer-impacting and you have a resolution plan.
-
-## Status Reporting Framework
-
-### Green / Yellow / Red Status
-
-**Green** (On Track):
-- Progressing as planned
-- No significant risks or blockers
-- On track to meet commitments and deadlines
-- Use Green when things are genuinely going well — not as a default
-
-**Yellow** (At Risk):
-- Progress is slower than planned, or a risk has materialized
-- Mitigation is underway but outcome is uncertain
-- May miss commitments without intervention or scope adjustment
-- Use Yellow proactively — the earlier you flag risk, the more options you have
-
-**Red** (Off Track):
-- Significantly behind plan
-- Major blocker or risk without clear mitigation
-- Will miss commitments without significant intervention (scope cut, resource addition, timeline extension)
-- Use Red when you genuinely need help. Do not wait until it is too late.
-
-### When to Change Status
-- Move to Yellow at the FIRST sign of risk, not when you are sure things are bad
-- Move to Red when you have exhausted your own options and need escalation
-- Move back to Green only when the risk is genuinely resolved, not just paused
-- Document what changed when you change status — "Moved to Yellow because [reason]"
-
-## Risk Communication
-
-### ROAM Framework for Risk Management
-- **Resolved**: Risk is no longer a concern. Document how it was resolved.
-- **Owned**: Risk is acknowledged and someone is actively managing it. State the owner and the mitigation plan.
-- **Accepted**: Risk is known but we are choosing to proceed without mitigation. Document the rationale.
-- **Mitigated**: Actions have reduced the risk to an acceptable level. Document what was done.
-
-### Communicating Risks Effectively
-1. **State the risk clearly**: "There is a risk that [thing] happens because [reason]"
-2. **Quantify the impact**: "If this happens, the consequence is [impact]"
-3. **State the likelihood**: "This is [likely/possible/unlikely] because [evidence]"
-4. **Present the mitigation**: "We are managing this by [actions]"
-5. **Make the ask**: "We need [specific help] to further reduce this risk"
-
-### Common Mistakes in Risk Communication
-- Burying risks in good news. Lead with risks when they are important.
-- Being vague: "There might be some delays" — specify what, how long, and why.
-- Presenting risks without mitigations. Every risk should come with a plan.
-- Waiting too long. A risk communicated early is a planning input. A risk communicated late is a fire drill.
-
-## Decision Documentation (ADRs)
-
-### Architecture Decision Record Format
-Document important decisions for future reference:
+## Example Update
 
 ```
-# [Decision Title]
+# Product Update: Customer Onboarding Redesign
+**Week of Jan 20, 2026**
 
-## Status
-[Proposed / Accepted / Deprecated / Superseded by ADR-XXX]
+## BLUF
+**Status**: 🟡 At Risk  
+**Key Takeaway**: New onboarding flow is performing well in tests (+35% completion), but launch delayed one week due to integration issues with billing system.  
+**Action Needed**: Decision needed on whether to launch onboarding separately or wait for billing integration fix.
 
-## Context
-What is the situation that requires a decision? What forces are at play?
+## Progress Summary
+- Completed user testing with 24 participants (94% positive feedback)
+- Implemented first-time user experience improvements
+- Resolved 12 of 15 bugs identified in QA
+- Engineering allocated resources to billing integration fix
 
-## Decision
-What did we decide? State the decision clearly and directly.
+## Key Metrics
+| Metric | Current | Target | Trend | Status |
+|--------|---------|--------|-------|--------|
+| Onboarding Completion | 45% | 60% | → | 🟡 |
+| Time to First Value | 4.2 min | 3.0 min | ↓ | 🟢 |
+| Setup Support Tickets | 45/week | <30/week | ↓ | 🟢 |
+| User Activation Rate | 52% | 65% | → | 🟡 |
 
-## Consequences
-What are the implications of this decision?
-- Positive consequences
-- Negative consequences or tradeoffs accepted
-- What this enables or prevents in the future
+## Risks & Blockers
 
-## Alternatives Considered
-What other options were evaluated?
-For each: what was it, why was it rejected?
+**HIGH: Billing System Integration Delay**
+- **Impact**: Prevents users from completing onboarding flow; delays launch by 1-2 weeks
+- **Root Cause**: API deprecation by payment processor, requires code rewrite
+- **Mitigation**: Engineering team reallocated resources, fix ETA Feb 3
+- **Decision Needed**: Launch onboarding without payment integration or wait for fix? (See below)
+
+**MEDIUM: Mobile Testing Coverage**
+- **Impact**: Some edge cases on older Android devices not tested
+- **Mitigation**: Partnering with QA to expand test matrix; running beta with internal users on diverse devices
+
+## Upcoming Milestones
+
+**Next 30 Days:**
+- Resolve billing integration (Feb 3)
+- Launch onboarding redesign (Feb 5 or Feb 12 depending on decision)
+- Begin measuring impact on conversion (Feb 12)
+
+**Next 90 Days:**
+- Iterate based on production data (March)
+- Extend to mobile app (April)
+- Launch advanced features (May)
+
+## Decision Needed
+
+**Should we launch onboarding separately from billing integration?**
+
+**Option A: Launch Now (Recommended)**
+- Pros: Get 35% completion rate improvement to users immediately, gather production data, maintain momentum
+- Cons: Users need to complete payment in old flow, slightly disjointed experience
+- Timeline: Launch Feb 5
+
+**Option B: Wait for Billing Fix**
+- Pros: Fully integrated experience from day one, no technical debt
+- Cons: Delays benefits by 2 weeks, Q1 metric targets at risk, team momentum lost
+- Timeline: Launch Feb 12
+
+**Recommendation**: Option A. The onboarding improvements are valuable independently, and the old payment flow works fine. Waiting risks missing Q1 targets and delays validated improvements from reaching users.
+
+**Timeline**: Need decision by Jan 22 for Feb 5 launch.
+
+---
+
+**Questions?** Reply to this email or ping me on Slack.
 ```
 
-### When to Write an ADR
-- Strategic product decisions (which market segment to target, which platform to support)
-- Significant technical decisions (architecture choices, vendor selection, build vs buy)
-- Controversial decisions where people disagreed (document the rationale for future reference)
-- Decisions that constrain future options (choosing a technology, signing a partnership)
-- Decisions you expect people to question later (capture the context while it is fresh)
+## Frequency Guidance
 
-### Tips for Decision Documentation
-- Write ADRs close to when the decision is made, not weeks later
-- Include who was involved in the decision and who made the final call
-- Document the context generously — future readers will not have today's context
-- It is okay to document decisions that were wrong in hindsight — add a "superseded by" link
-- Keep them short. One page is better than five.
+**Daily standups**: 
+- Ultra-brief (3 bullets)
+- What shipped yesterday
+- What's shipping today
+- Blockers
 
-## Meeting Facilitation
+**Weekly updates**:
+- Use full template above
+- Focus on progress and risks
+- Keep to 1 page
 
-### Stand-up / Daily Sync
-**Purpose**: Surface blockers, coordinate work, maintain momentum.
-**Format**: Each person shares:
-- What they accomplished since last sync
-- What they are working on next
-- What is blocking them
+**Monthly reviews**:
+- Deeper metrics analysis
+- Strategic reflections
+- Quarterly goal progress
+- Longer format (2-3 pages) acceptable
 
-**Facilitation tips**:
-- Keep it to 15 minutes. If discussions emerge, take them offline.
-- Focus on blockers — this is the highest-value part of standup
-- Track blockers and follow up on resolution
-- Cancel standup if there is nothing to sync on. Respect people's time.
+**Quarterly business reviews**:
+- Comprehensive analysis
+- Trends over time
+- Strategic recommendations
+- Presentation format
 
-### Sprint / Iteration Planning
-**Purpose**: Commit to work for the next sprint. Align on priorities and scope.
-**Format**:
-1. Review: what shipped last sprint, what carried over, what was cut
-2. Priorities: what are the most important things to accomplish this sprint
-3. Capacity: how much can the team take on (account for PTO, on-call, meetings)
-4. Commitment: select items from the backlog that fit capacity and priorities
-5. Dependencies: flag any cross-team or external dependencies
+## Adaptation by Audience
 
-**Facilitation tips**:
-- Come with a proposed priority order. Do not ask the team to prioritize from scratch.
-- Push back on overcommitment. It is better to commit to less and deliver reliably.
-- Ensure every item has a clear owner and clear acceptance criteria.
-- Flag items that are underscoped or have hidden complexity.
+### For C-Suite
+- Lead with business impact
+- Connect to company OKRs
+- Focus on strategy and outcomes
+- Minimize technical details
 
-### Retrospective
-**Purpose**: Reflect on what went well, what did not, and what to change.
-**Format**:
-1. Set the stage: remind the team of the goal and create psychological safety
-2. Gather data: what went well, what did not go well, what was confusing
-3. Generate insights: identify patterns and root causes
-4. Decide actions: pick 1-3 specific improvements to try next sprint
-5. Close: thank people for honest feedback
+### For Product/Engineering Leadership
+- Include technical context
+- Show sprint/milestone progress
+- Discuss architecture implications
+- Reference technical debt
 
-**Facilitation tips**:
-- Create psychological safety. People must feel safe to be honest.
-- Focus on systems and processes, not individuals.
-- Limit to 1-3 action items. More than that and nothing changes.
-- Follow up on previous retro action items. If you never follow up, people stop engaging.
-- Vary the retro format occasionally to prevent staleness.
+### For Cross-Functional Teams
+- Balance technical and business context
+- Highlight dependencies
+- Call out collaboration needs
+- Make asks explicit
 
-### Stakeholder Review / Demo
-**Purpose**: Show progress, gather feedback, build alignment.
-**Format**:
-1. Context: remind stakeholders of the goal and what they saw last time
-2. Demo: show what was built. Use real product, not slides.
-3. Metrics: share any early data or feedback
-4. Feedback: structured time for questions and input
-5. Next steps: what is coming next and when the next review will be
+### For Board/Investors
+- Focus on metrics and traction
+- Competitive positioning
+- Market opportunities
+- Financial implications
 
-**Facilitation tips**:
-- Demo the real product whenever possible. Slides are not demos.
-- Frame feedback collection: "What feedback do you have on X?" is better than "Any thoughts?"
-- Capture feedback visibly and commit to addressing it (or explaining why not)
-- Set expectations about what kind of feedback is actionable at this stage
+## Quality Checks
 
-## Output Format
-
-Keep updates scannable. Use bold for key points, bullets for lists. Executive updates should be under 300 words. Engineering updates can be longer but should still be structured for skimming.
-
-## Tips
-
-- The most common mistake in stakeholder updates is burying the lead. Start with the most important thing.
-- Status colors (Green/Yellow/Red) should reflect reality, not optimism. Yellow is not a failure — it is good risk communication.
-- Asks should be specific and actionable. "We need help" is not an ask. "We need a decision on X by Friday" is.
-- For executives, frame everything in terms of outcomes and goals, not activities and tasks.
-- If there is bad news, lead with it. Do not hide it after good news.
-- Match the length to the audience's attention. Executives get a few bullets. Engineering gets the details they need.
+- [ ] Update leads with BLUF — status, key takeaway, and action needed before any detail
+- [ ] Every metric has a target comparison (not just a raw number)
+- [ ] Every risk has a mitigation and a "help needed" flag if stakeholder action is required
+- [ ] Decisions needed have specific options and a clear recommendation
+- [ ] Total length is under 1 page / 2 minutes reading time

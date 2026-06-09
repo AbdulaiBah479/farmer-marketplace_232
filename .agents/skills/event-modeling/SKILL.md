@@ -1,263 +1,387 @@
 ---
 name: event-modeling
-description: >-
-  Event modeling facilitation for discovering and designing event-sourced
-  systems using a structured 9-step workflow. Use when modeling domain
-  workflows, designing event-sourced systems, writing Given/When/Then
-  scenarios for commands or views, validating event models, or discussing
-  event sourcing and domain-driven design. Triggers on: "model this workflow",
-  "event model", "event sourcing", "what events do we need", "write GWT
-  scenarios", "Given/When/Then", "validate the event model", "decompose into
-  slices", "map this domain", "brainstorm events". Also activates for
-  discovering domain actors, identifying automations, mapping integrations,
-  or decomposing workflows into vertical slices. NOT for: implementing event
-  store infrastructure, choosing databases, or writing application code.
-license: CC0-1.0
-metadata:
-  author: jwilger
-  version: "1.2.1"
-  requires: []
-  context: [event-model]
-  phase: understand
-  standalone: true
-effort: high
+description: Adam Dymitruk's Event Modeling methodology with swimlanes
+allowed-tools: Read, Glob, Grep, Write, Edit
 ---
 
-# Event Modeling
+# Event Modeling Skill
 
-**Value:** Communication -- event modeling is a structured conversation that
-surfaces hidden domain knowledge and creates shared understanding between
-humans and agents before any code is written.
+## When to Use This Skill
 
-## Purpose
+Use this skill when:
 
-Teaches the agent to facilitate event modeling sessions following Martin
-Dilger's "Understanding Eventsourcing" methodology. Produces a complete
-event model (actors, events, commands, read models, automations, slices)
-that drives all downstream implementation. The model lives in
-`docs/event_model/`.
+- **Event Modeling tasks** - Working on adam dymitruk's event modeling methodology with swimlanes
+- **Planning or design** - Need guidance on Event Modeling approaches
+- **Best practices** - Want to follow established patterns and standards
 
-## Practices
+## Overview
 
-### Two-Phase Process: Discovery Then Design
+Create Event Models using Adam Dymitruk's visual methodology for designing event-driven systems.
 
-Never jump into detailed workflow design without broad domain understanding
-first. Phase 1 maps the territory; Phase 2 explores each region.
+## MANDATORY: Documentation-First Approach
 
-**Phase 1 -- Domain Discovery.** Identify what the business does, who the
-actors are, what major processes exist, what external systems integrate, and
-which workflows to model. Ask these questions of the user; do not assume
-answers. Output: `docs/event_model/domain/overview.md`.
+Before creating Event Models:
 
-**Phase 2 -- Workflow Design.** For each workflow, follow the 9-step
-process. You MUST follow `references/nine-steps.md` for the full methodology. Design
-one workflow at a time. Complete all 9 steps before starting the next
-workflow. Output: `docs/event_model/workflows/<name>/overview.md` plus
-individual slice files in `slices/`.
+1. **Invoke `docs-management` skill** for Event Modeling patterns
+2. **Verify methodology** via MCP servers (perplexity, eventmodeling.org)
+3. **Base guidance on Adam Dymitruk's original methodology**
 
-### The Prime Directive: Not Losing Information
+## Event Modeling Fundamentals
 
-Store what happened (events), not just current state. Events are immutable
-past-tense facts in business language. Every read model field must trace
-back to an event. If a field has no source event, something is missing from
-the model.
+```text
+Event Modeling Structure:
 
-### Event Design Rules
+TIME FLOWS LEFT TO RIGHT ───────────────────────────────────────────►
 
-1. Name events in past tense using business language: `OrderPlaced`, not
-   `PlaceOrder` or `CreateOrderDTO`
-2. Events are immutable facts -- never modify or delete
-3. Include relevant data: what happened, when, who/what caused it
-4. Find the right granularity -- not `DataUpdated` (too broad) and not
-   `FieldXChanged` (too narrow)
-5. Commands depend on user inputs and the event stream, not read models.
-   Read models serve views and automations only.
-6. Events record domain facts (true on any machine). Runtime context
-   (file paths, hostnames, PIDs, working directories) does not belong
-   in event data.
-
-### The Four Patterns
-
-Every event-sourced system uses these patterns. Each pattern maps to one
-vertical slice.
-
-1. **State Change:** Command -> Event. The only way to modify state. A
-   command may produce multiple events as part of a single operation.
-2. **State View:** Events -> Read Model. How the system answers queries.
-   When the domain supports concurrent instances, use collection types
-   in read model fields, not singular values.
-   Commands derive their inputs from user-provided data and the event
-   stream — never from read models. No `ReadModel → Command` edges
-   should appear in diagrams. If a command needs to check whether
-   something already happened (e.g., idempotency), it checks the event
-   stream, not a read model.
-   Read models represent meaningful domain projections. Infrastructure
-   preconditions ("does directory exist?", "is service running?") that
-   are implicit in the command's execution context do not need their own
-   read model.
-3. **Automation:** Event -> Read Model (todo list) -> Process -> Command
-   -> Event. Background work triggered by events. Requires all four
-   components: triggering event, read model consulted, conditional
-   process logic, and resulting command. If there is no read model and
-   no conditional logic, it is NOT an automation — it is a command
-   producing multiple events. Must have clear termination conditions.
-4. **Translation:** External Data -> Internal Event. Anti-corruption layer
-   for workflow-specific external integrations. Generic infrastructure
-   shared by all workflows (event persistence, message transport) is NOT
-   a Translation — it is cross-cutting infrastructure that belongs
-   outside the event model.
-
-### Required Layers Per Slice Pattern
-
-Each slice pattern implies a minimum set of architectural layers. A slice is not complete until all required layers are implemented and wired together.
-
-- **State View**: infrastructure (read events/data from store) + domain (projection/query logic) + presentation (render or return result to caller) + application wiring (connect layers end-to-end)
-- **State Change**: presentation (accept user input or external request) + domain (command validation and business rules) + infrastructure (persist resulting events/data) + application wiring (connect layers end-to-end)
-- **Automation**: infrastructure (detect triggering condition — timer, external event, threshold) + domain (policy/decision logic) + infrastructure (execute resulting action — send message, write data, call service) + application wiring (connect trigger to policy to action)
-- **Translation**: infrastructure (receive from external system) + domain (mapping/transformation logic) + infrastructure (deliver to target system) + application wiring (connect inbound adapter to mapper to outbound adapter)
-
-When decomposing a slice, verify that your acceptance criteria and task breakdown cover every required layer. A slice that only implements domain logic without presentation or infrastructure is incomplete — it is a component, not a vertical slice.
-
-### GWT Scenarios
-
-After workflow design, generate Given/When/Then scenarios for each slice.
-These become acceptance criteria for implementation.
-
-**Command scenarios:** Given = prior events establishing state. When = the
-command with concrete data. Then = events produced OR an error (never both).
-
-**View scenarios:** Given = current projection state. When = one new event.
-Then = resulting projection state. Views cannot reject events.
-
-**Critical distinction:** GWT scenarios test business rules (state-dependent
-policies), not data validation (format/structure checks that belong in the
-type system). If the type system can make the invalid state unrepresentable,
-it is not a GWT scenario.
-
-You MUST use `references/gwt-template.md` for the full scenario format and examples.
-
-### Application-Boundary Acceptance Scenarios
-
-Every vertical slice MUST include at least one GWT scenario defined at the application boundary:
-
-- **Given**: The system is in a known state (prior events, seed data, configuration)
-- **When**: A user (or external caller) interacts through the application's external interface — the specific interface depends on the project (HTTP endpoint, CLI command, message queue consumer, UI action, etc.)
-- **Then**: The result is observable at that same boundary — a response, output, rendered state change, emitted event, etc.
-
-A GWT scenario that can be satisfied entirely by calling an internal function in a unit test describes a unit-level specification, not a slice acceptance criterion. Slice acceptance criteria must exercise the path from external input to observable output.
-
-### Acceptance Test Strategy
-
-Where the application boundary is programmatically testable — HTTP endpoints, CLI output parsing, headless browser automation, message queue assertions, API contract tests, etc. — write automated acceptance tests that exercise the full GWT scenario from external input to observable output. These tests provide fast feedback and serve as living documentation of slice behavior.
-
-Where automated boundary testing is not feasible (complex GUI interactions, hardware-dependent behavior, visual/aesthetic verification), document what the human should manually verify: the specific steps to perform and the expected observable result. This manual verification checklist becomes part of the slice's definition of done.
-
-### Slice Independence
-
-Slices sharing an event schema are independent. The event schema is the
-shared contract. Command slices test by asserting on produced events; view
-slices test with synthetic event fixtures. Neither needs the other to be
-implemented first. No artificial dependency chains between slices.
-
-### Model Validation
-
-After GWT scenarios are written, validate the model for completeness:
-
-1. Every read model field traces to an event
-2. Every event has a triggering command, automation, or translation
-3. Every command has documented rejection conditions (business rules)
-4. Every automation has a termination condition
-5. GWT Given/When/Then clauses do not reference undefined elements
-
-When gaps are found, ask the user to clarify, create the missing element,
-and re-validate. Do not proceed with gaps remaining.
-
-### Facilitation Mindset
-
-You are a facilitator, not a stenographer. Ask probing questions. Challenge
-assumptions. Keep asking "And then what happens?" after every event, every
-command, every answer. Use business language, not technical jargon. Do not
-discuss databases, APIs, frameworks, or implementation during event modeling.
-The only exception: note mandatory third-party integrations by name and
-purpose.
-
-**Do:**
-- Follow all steps in order -- the process reveals understanding
-- Ask "And then what happens?" relentlessly
-- Use concrete, realistic data in all examples and scenarios
-- Design one workflow at a time
-- Ensure information completeness before proceeding
-- Ask "Can there be more than one of these at the same time?" for read model fields
-- Verify automations have all four components before labeling them as such
-
-**Do not:**
-- Skip steps because you think you know enough
-- Make architecture or implementation decisions during modeling
-- Write GWT scenarios for data validation (use the type system)
-- Design multiple workflows simultaneously
-- Proceed with gaps in the model
-
-## Enforcement Note
-
-- **Standalone mode**: Advisory. The agent follows the nine-step methodology
-  by convention.
-- **Pipeline mode**: Gating. Incomplete models (missing GWT scenarios,
-  undefined automations) block slice decomposition.
-
-**Hard constraints:**
-- Do not proceed with gaps in the model: `[RP]`
-
-## Constraints
-
-- **"MUST follow nine-steps.md"**: Following the nine steps means executing
-  each step's specific activities and producing its specific outputs. It does
-  not mean reading the reference and claiming "I followed the spirit." Each
-  step has defined outputs -- produce them.
-- **"Do not design multiple workflows simultaneously"**: This includes
-  starting "discovery" for Workflow 2 while Workflow 1's steps are incomplete.
-  Discovery IS design. If you're gathering information about a future
-  workflow, you're designing it.
-- **Facilitation vs. stenography**: Facilitation means asking questions that
-  help the domain expert discover things they haven't articulated yet. It
-  does not mean asking leading questions that guide toward your preferred
-  answer. The test: could the expert's answer genuinely surprise you? If not,
-  you're leading, not facilitating.
-
-## Verification
-
-After completing event modeling work, verify:
-
-- [ ] Domain overview exists at `docs/event_model/domain/overview.md` with
-      actors, workflows, external integrations, and recommended starting
-      workflow
-- [ ] Each designed workflow has `docs/event_model/workflows/<name>/overview.md`
-      with all 9 steps completed
-- [ ] All events are past tense, business language, immutable facts
-- [ ] Every read model field traces to a source event
-- [ ] Every event has a trigger (command, automation, or translation)
-- [ ] Automations have all four components (event, read model, conditional logic, command)
-- [ ] Read model fields use collection types when domain supports concurrent instances
-- [ ] No cross-cutting infrastructure modeled as Translation slices
-- [ ] GWT scenarios exist for each slice (inline in `docs/event_model/workflows/<name>/slices/*.md`) with concrete data
-- [ ] GWT error scenarios test business rules only, not data validation
-- [ ] Slices sharing an event schema are independently testable (no
-      artificial dependency chains)
-- [ ] No gaps remain in the model after validation
-
-If any criterion is not met, revisit the relevant practice before proceeding.
-
-## Dependencies
-
-This skill works standalone. For enhanced workflows, it integrates with:
-
-- **domain-modeling:** Events reveal domain types (Email, Money, OrderStatus)
-  that the domain modeling skill refines
-- **tdd:** Each vertical slice maps to one TDD cycle
-- **architecture-decisions:** Event model informs architecture; ADRs should
-  not be written during event modeling itself
-- **task-management:** Workflows map to epics, slices map to tasks
-
-Missing a dependency? Install with:
+┌─────────────────────────────────────────────────────────────────────┐
+│ BLUE: UI / Commands / External Triggers                            │
+│ ┌──────────┐  ┌──────────┐  ┌──────────┐                           │
+│ │ Screen/  │  │ Button   │  │ API      │                           │
+│ │ Wireframe│  │ Click    │  │ Call     │                           │
+│ └────┬─────┘  └────┬─────┘  └────┬─────┘                           │
+├──────┼─────────────┼─────────────┼──────────────────────────────────┤
+│      ▼             ▼             ▼                                  │
+│ ORANGE: Domain Events (State Changes)                              │
+│ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐                 │
+│ │ OrderPlaced  │ │ OrderPaid    │ │ OrderShipped │                 │
+│ └──────────────┘ └──────────────┘ └──────────────┘                 │
+│      │                 │               │                            │
+├──────┼─────────────────┼───────────────┼────────────────────────────┤
+│      ▼                 ▼               ▼                            │
+│ GREEN: Read Models / Projections                                   │
+│ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐                 │
+│ │ Order List   │ │ Payment      │ │ Shipping     │                 │
+│ │ View         │ │ Status       │ │ Dashboard    │                 │
+│ └──────────────┘ └──────────────┘ └──────────────┘                 │
+└─────────────────────────────────────────────────────────────────────┘
 ```
-npx skills add jwilger/agent-skills --skill domain-modeling
+
+## Four Types of Specifications
+
+### 1. Commands (Blue Lane - Top)
+
+```text
+Commands: User intentions that may cause state changes
+
+CHARACTERISTICS:
+- Represent user actions or external triggers
+- May succeed or fail (validation)
+- Produce one or more events on success
+- Include wireframes/mockups for UI commands
+
+EXAMPLES:
+┌─────────────────────────────┐
+│ PlaceOrder                  │
+├─────────────────────────────┤
+│ • Customer ID               │
+│ • Items: [ProductId, Qty]   │
+│ • Shipping Address          │
+│ • Payment Method            │
+└─────────────────────────────┘
 ```
+
+### 2. Events (Orange Lane - Middle)
+
+```text
+Events: Facts that have happened (past tense, immutable)
+
+CHARACTERISTICS:
+- Past tense naming (OrderPlaced, not PlaceOrder)
+- Immutable once recorded
+- Capture what happened and when
+- Single source of truth
+
+NAMING CONVENTION:
+✓ OrderPlaced
+✓ PaymentReceived
+✓ ShipmentDispatched
+✗ PlaceOrder (command, not event)
+✗ OrderUpdate (too vague)
+
+EXAMPLE:
+┌─────────────────────────────┐
+│ OrderPlaced                 │
+├─────────────────────────────┤
+│ • OrderId: guid             │
+│ • CustomerId: guid          │
+│ • Items: [...]              │
+│ • PlacedAt: timestamp       │
+│ • TotalAmount: decimal      │
+└─────────────────────────────┘
+```
+
+### 3. Read Models (Green Lane - Bottom)
+
+```text
+Read Models: Projections optimized for queries
+
+CHARACTERISTICS:
+- Built from events
+- Optimized for specific query patterns
+- Can be rebuilt from event stream
+- Eventually consistent
+
+TYPES:
+- List views (showing multiple items)
+- Detail views (single item details)
+- Dashboards (aggregations)
+- Search indexes
+
+EXAMPLE:
+┌─────────────────────────────┐
+│ OrderSummaryView            │
+├─────────────────────────────┤
+│ • OrderId                   │
+│ • CustomerName              │
+│ • Status (derived)          │
+│ • ItemCount                 │
+│ • TotalAmount               │
+│ • LastUpdated               │
+└─────────────────────────────┘
+```
+
+### 4. Automations (Policies/Reactions)
+
+```text
+Automations: Processes triggered by events
+
+CHARACTERISTICS:
+- React to events automatically
+- May produce commands or integrate external systems
+- Represent business policies
+- Handle async processing
+
+NOTATION:
+┌─────────────────────────────┐
+│ ⚡ PaymentReceivedPolicy    │
+├─────────────────────────────┤
+│ WHEN: PaymentReceived       │
+│ THEN: InitiateShipment      │
+└─────────────────────────────┘
+```
+
+## Event Modeling Process
+
+### Step 1: Brain Dump Events
+
+```text
+Brainstorm all domain events (orange stickies):
+
+1. Gather stakeholders
+2. Ask: "What happens in this process?"
+3. Write events in past tense
+4. Don't worry about order yet
+5. Include all significant state changes
+
+Example Output:
+- OrderPlaced
+- OrderConfirmed
+- PaymentReceived
+- PaymentFailed
+- InventoryReserved
+- ShipmentCreated
+- ShipmentDispatched
+- OrderDelivered
+```
+
+### Step 2: Arrange Timeline
+
+```text
+Organize events chronologically:
+
+1. Find the "happy path" events
+2. Arrange left to right
+3. Group related events vertically
+4. Identify parallel flows
+5. Note temporal dependencies
+
+Timeline:
+OrderPlaced → OrderConfirmed → PaymentReceived → InventoryReserved → ShipmentCreated → ShipmentDispatched → OrderDelivered
+                                   │
+                                   └→ PaymentFailed → OrderCancelled
+```
+
+### Step 3: Add Commands (Blue)
+
+```text
+What triggers each event?
+
+For each event, ask:
+- What user action caused this?
+- What external system triggered it?
+- Is there a UI screen involved?
+
+Add commands above events they produce:
+[PlaceOrder] → OrderPlaced
+[ProcessPayment] → PaymentReceived
+[DispatchShipment] → ShipmentDispatched
+```
+
+### Step 4: Add Read Models (Green)
+
+```text
+What information is needed for each command?
+
+For each command, ask:
+- What data does the user need to see?
+- What validation data is required?
+- What views enable this action?
+
+Add read models below events that populate them:
+OrderPlaced → [OrderConfirmationView]
+ShipmentDispatched → [TrackingDashboard]
+```
+
+### Step 5: Identify Automations
+
+```text
+What happens automatically?
+
+Look for:
+- Events that trigger other events
+- Integration with external systems
+- Time-based rules
+- Business policies
+
+Example:
+PaymentReceived → ⚡ ReserveInventoryPolicy → InventoryReserved
+```
+
+## Event Model Template
+
+```markdown
+# Event Model: [Process Name]
+
+## Overview
+[What this process accomplishes]
+
+## Actors
+- [User type 1]
+- [User type 2]
+- [External system]
+
+## Event Model Diagram
+
+```text
+TIME ──────────────────────────────────────────────────────────────►
+
+COMMANDS (Blue)
+┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐
+│ Cmd 1   │    │ Cmd 2   │    │ Cmd 3   │    │ Cmd 4   │
+└────┬────┘    └────┬────┘    └────┬────┘    └────┬────┘
+     │              │              │              │
+     ▼              ▼              ▼              ▼
+EVENTS (Orange)
+┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐
+│ Event1  │───►│ Event2  │───►│ Event3  │───►│ Event4  │
+└─────────┘    └─────────┘    └─────────┘    └─────────┘
+     │              │              │              │
+     ▼              ▼              ▼              ▼
+READ MODELS (Green)
+┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐
+│ View 1  │    │ View 2  │    │ View 3  │    │ View 4  │
+└─────────┘    └─────────┘    └─────────┘    └─────────┘
+```
+
+## Commands Detail
+
+| Command | Input | Produces Events | Read Model Needed |
+|---------|-------|-----------------|-------------------|
+| [Name] | [Data] | [Events] | [View] |
+
+## Events Detail
+
+| Event | Data | Triggered By | Updates |
+|-------|------|--------------|---------|
+| [Name] | [Fields] | [Command/Automation] | [Read Models] |
+
+## Read Models Detail
+
+| Read Model | Purpose | Updated By Events |
+|------------|---------|-------------------|
+| [Name] | [Query it answers] | [Events list] |
+
+## Automations
+
+| Automation | Trigger Event | Action | Produces |
+|------------|---------------|--------|----------|
+| [Name] | [Event] | [What it does] | [Events/Side effects] |
+
+```text
+
+```
+
+## Patterns and Guidelines
+
+### Given/When/Then Specifications
+
+```text
+Each slice can be expressed as:
+
+GIVEN: [Read Model State / Context]
+WHEN: [Command is executed]
+THEN: [Events are produced]
+  AND: [Read Models are updated]
+
+Example:
+GIVEN: Cart exists with items
+WHEN: PlaceOrder command executed
+THEN: OrderPlaced event recorded
+  AND: OrderSummaryView updated
+  AND: InventoryReservationRequested event triggered
+```
+
+### Slices (Vertical Features)
+
+```text
+A slice includes everything for one feature:
+
+┌─────────────────────────────┐
+│         SLICE 1             │
+│  ┌─────────────────────┐    │
+│  │ Command: PlaceOrder │    │
+│  └─────────────────────┘    │
+│  ┌─────────────────────┐    │
+│  │ Event: OrderPlaced  │    │
+│  └─────────────────────┘    │
+│  ┌─────────────────────┐    │
+│  │ View: OrderSummary  │    │
+│  └─────────────────────┘    │
+└─────────────────────────────┘
+
+Each slice is independently implementable and testable.
+```
+
+### Blue Print (Implementation Guide)
+
+```text
+Event Model becomes implementation blueprint:
+
+1. Commands → API Endpoints / UI Components
+2. Events → Event Store Schema
+3. Read Models → Database Tables / Views
+4. Automations → Event Handlers / Policies
+
+Each slice maps directly to code.
+```
+
+## Workflow
+
+When creating Event Models:
+
+1. **Define Scope**: What process are we modeling?
+2. **Brain Dump Events**: List all state changes
+3. **Arrange Timeline**: Order events chronologically
+4. **Add Commands**: What triggers each event?
+5. **Add Read Models**: What data supports each command?
+6. **Identify Automations**: What happens automatically?
+7. **Validate with Stakeholders**: Does this match reality?
+8. **Define Slices**: Group into implementable features
+
+## References
+
+For detailed guidance:
+
+---
+
+**Last Updated:** 2025-12-26

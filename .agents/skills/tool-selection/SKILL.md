@@ -1,48 +1,53 @@
 ---
 name: tool-selection
-description: Use when selecting between MCP tools based on task complexity and requirements - provides a structured selection workflow and decision rationale.
-keywords:
-  - capability matching
-  - codanna
-  - mcp tool selection
-  - morphllm
-  - tool routing
-  - tool selection
-file_patterns:
-  - '**/mcp/**'
-  - '**/tools/**'
-confidence: 0.72
+description: "CLI-first tool selection policy for Claude Code. Use when choosing between CLI tools and MCP servers, designing new agents, or reviewing agent tool configurations. Do NOT use for executing commands or running tools -- this is for tool selection decisions during agent/config design only."
+durability: encoded-preference
 ---
 
-# Tool Selection
+# Tool Selection Policy
 
-## Overview
-Select the optimal MCP tool by evaluating task complexity, accuracy needs, and performance trade-offs.
+## CLI-First Principle
 
-## When to Use
-- Choosing between Codanna and Morphllm
-- Routing tasks based on complexity
-- Explaining tool selection rationale
+Prefer CLI tools over MCP servers when a CLI equivalent exists. CLI tools are more token-efficient and avoid MCP server startup overhead.
 
-Avoid when:
-- The tool is explicitly specified by the user
+| Tool Need | CLI (Preferred) | MCP (When CLI Insufficient) |
+|-----------|----------------|----------------------------|
+| Screenshots & screen analysis | `peekaboo` CLI via Bash | N/A (removed) |
+| Web research | WebSearch, WebFetch (built-in) | N/A |
+| Library API docs | See web-research skill | context7 MCP (see web-research skill) |
+| Interactive browser control | N/A | Playwright MCP |
+| E2E testing | Playwright CLI (`npx playwright test`) | N/A |
+| Slack communication | N/A | Slack MCP (no CLI substitute) |
+| Confluence wiki | N/A | Confluence MCP (no CLI substitute) |
 
-## Quick Reference
+## Playwright MCP vs CLI
 
-| Task | Load reference |
-| --- | --- |
-| Tool selection | `skills/tool-selection/references/select.md` |
+**Use Playwright MCP** (`mcp__playwright__*`) ONLY for:
+- Interactive browser inspection (snapshots, clicking, form filling)
+- Live debugging of web pages
+- Visual verification requiring human-in-the-loop
 
-## Workflow
-1. Parse the operation requirements.
-2. Load the tool selection reference.
-3. Apply the scoring and decision matrix.
-4. Report the chosen tool and rationale.
+**Use Playwright CLI** for:
+- E2E test execution (`npx playwright test`)
+- Test report generation
+- CI/CD pipeline testing
 
-## Output
-- Selected tool and confidence
-- Rationale and trade-offs
+## Playwright MCP Output Management
 
-## Common Mistakes
-- Ignoring explicit user tool preferences
-- Overweighting speed vs accuracy without justification
+The `.playwright-mcp/` directory in the project root is gitignored. All Playwright MCP artifacts belong there.
+
+- **Screenshots**: Use `.playwright-mcp/` prefix in the filename parameter (e.g., `.playwright-mcp/screenshot.png`). Without a filename, screenshots go to `.playwright-mcp/` automatically via `--output-dir`. With a filename, the path is resolved relative to cwd, so the prefix is required
+- **Cleanup**: Delete `.playwright-mcp/` when Playwright MCP work is complete for the session
+- **Never commit**: `.playwright-mcp/` is gitignored
+
+## MCP Graceful Degradation
+
+If an MCP server is unavailable, do not fail the workflow. Fall back to CLI alternatives or skip the MCP-dependent step with a note to the user.
+
+## Anti-Patterns
+
+| Anti-Pattern | Correct Approach |
+|-------------|------------------|
+| Using MCP when CLI exists | Use CLI — lower token cost, no server overhead |
+| Adding MCP tools to agent frontmatter when CLI works | Use Bash tool with CLI commands |
+| Proposing new MCP servers without CLI evaluation | Always check for CLI alternative first |

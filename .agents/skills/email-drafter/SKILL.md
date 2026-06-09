@@ -1,208 +1,397 @@
 ---
 name: email-drafter
-description: 'Use this skill when drafting professional or personal emails—cold outreach, follow-ups, internal memos, client communication, or any message that needs to be clear and effective. Trigger phrases: ''write an email to'', ''draft a follow-up'', ''help me email''. Do NOT use for mass marketing email campaigns (use copywriter skill) or legal/formal notices requiring specific language.'
 version: 1.0.0
-author: community
-tags:
-  - writing
-  - email
-  - communication
-  - professional
-license: MIT
-keywords:
-  - write email
-  - draft email
-  - cold outreach
-  - follow-up
-  - email
-  - drafter
-  - email drafter
+description: |
+  Generates professional emails from bullet points or conversation summaries.
+  Use when you need to draft emails quickly with consistent style and tone.
+  Supports multiple tones: formal, casual, technical
+  Supports contexts: status updates, requests, announcements, follow-ups
 ---
 
-# Email Drafter
+# Email Drafter Skill
 
-## Overview
-This skill produces clear, purposeful emails calibrated to the right tone, length, and structure for the situation—whether you're reaching out cold to a potential partner, nudging a slow-to-respond client, or delivering difficult feedback to a colleague. It applies proven subject line formulas, places calls to action where they land hardest, and keeps emails as short as they need to be and no shorter. The goal is emails that get opened, read, and acted on.
+Generate professional, well-structured emails from bullet points or conversation summaries with consistent tone and formatting.
 
-## When to Use
-- Cold outreach to prospects, journalists, collaborators, or employers
-- Follow-up emails after meetings, proposals, or no-reply situations
-- Internal communication: project updates, feedback, requests
-- Client-facing messages: onboarding, status updates, difficult news
-- Professional introduction or networking emails
-- Declining requests or delivering bad news diplomatically
-- Responding to complaints or sensitive situations
+## Use Cases
 
-## When NOT to Use
-- Bulk email marketing sequences (use `copywriter` skill for campaign copy)
-- Legal notices, contracts, or compliance communications requiring specific phrasing
-- Transactional system emails (order confirmations, password resets)
-- Personal/casual texts or messages to close friends
+- Convert meeting notes into status update emails
+- Draft professional requests or proposals
+- Create announcements to teams or stakeholders
+- Write follow-up emails after conversations
+- Respond to inquiries professionally
+- Draft meeting recaps and action items
 
-## Quick Reference
-| Task | Approach |
-|------|----------|
-| Subject line | Keep under 50 chars; use personalization, numbers, or questions |
-| Formal tone | Full sentences, no contractions, "Dear [Name]", sign with full name |
-| Casual tone | Contractions ok, first name greeting, conversational sign-off |
-| Length | Cold email: 75–125 words; follow-up: 50–75 words; detailed request: up to 200 words |
-| CTA | One CTA per email; make it specific and low-friction |
-| Reply email | Acknowledge their last point before making your ask |
-| Opener | Never start with "I hope this finds you well" |
+## How to Use This Skill
 
-## Instructions
+Provide Claude with:
+1. **Content**: Bullet points, notes, or conversation summary
+2. **Tone**: One of (formal, casual, technical)
+3. **Context**: One of (status_update, request, announcement, follow_up, response, recap)
+4. **Optional**: Recipient name/title, any specific requirements
 
-1. **Clarify the email's single purpose.** Every email should do exactly one thing: make an ask, share information, confirm something, or respond to something. If you have two asks, send two emails. Identify: who is the recipient, what is the relationship, and what is the single desired outcome?
+Claude will transform the input into a polished, professional email with:
+- Appropriate greeting and sign-off
+- Clear structure and flow
+- Consistent tone throughout
+- Professional formatting
+- Proper punctuation and grammar
 
-2. **Write the subject line.** The subject line determines whether the email gets opened.
-   - **Personalized:** "Quick question about [their company/project]"
-   - **Benefit-led:** "How we helped [similar company] cut onboarding time by 40%"
-   - **Direct ask:** "30-minute call this week?"
-   - **Re: trick for follow-ups:** "Re: [original topic]" (implies conversation continuity)
-   - **Numbers:** "3 ideas for your Q4 content calendar"
-   - Avoid: "Following up", "Checking in", "Just wanted to…"
+## Supported Tones
 
-3. **Choose the right tone.**
-   - **Formal:** C-suite executives, legal/finance contexts, first contact in conservative industries. Use "Dear [Full Name]", avoid contractions, use complete sentences.
-   - **Professional-casual:** Most business contexts. Use first name, contractions fine, conversational but precise.
-   - **Casual:** Colleagues you know, creative industries, startups. Use first name, relaxed language, emojis if culturally appropriate.
+### Formal
+- Professional business language
+- Complete sentences and formal grammar
+- Respectful and courteous
+- Suitable for: executives, external stakeholders, important announcements
+- Example phrases: "I would like to...", "Thank you for your consideration...", "Please find attached..."
 
-4. **Structure the email.**
-   - **Opener:** Something real (not "hope you're well"). Reference a shared connection, recent event, or their work.
-   - **Body:** State your purpose in the first or second sentence. Give just enough context. Don't bury the ask.
-   - **CTA:** One clear, specific, low-friction action. "Reply with a yes or no" beats "Let me know your thoughts."
-   - **Sign-off:** Match the tone. "Best," or "Thanks," for professional; "Cheers," or "Talk soon," for casual.
+### Casual
+- Friendly and approachable tone
+- Conversational language
+- Professional but relaxed
+- Suitable for: teammates, internal communications, collaborative contexts
+- Example phrases: "Just wanted to let you know...", "Feel free to reach out...", "Let's connect..."
 
-5. **Calibrate length.**
-   - Cold outreach: 75–125 words (shorter = higher response rate)
-   - Follow-up: 50–75 words (shorter than the original)
-   - Meeting recap or detailed request: 150–250 words max
-   - If it needs more than 250 words, consider whether an attachment or a call is better
+### Technical
+- Precise and detailed
+- Uses domain-specific terminology
+- Direct and clear
+- Suitable for: technical teams, system documentation, architecture discussions
+- Example phrases: "The implementation includes...", "The system parameters are configured to...", "Technical specifications..."
 
-6. **For reply emails:** Start by briefly acknowledging their message—one sentence. Then make your point or ask. Don't restate everything they said.
+## Supported Contexts
 
-7. **For difficult or sensitive emails:** State the situation factually. Acknowledge impact. Offer a path forward. Avoid over-apologizing (it undermines the message) and avoid defensiveness.
+### Status Update
+**Purpose**: Inform recipients about current progress, completed work, and next steps
 
-8. **Proofread for these specifics:** Correct recipient name (check spelling), accurate subject line, working links if included, no "sent from my phone" auto-signatures if the email is formal.
+**Structure**:
+1. Opening: What period/project this covers
+2. Completed items: What was accomplished
+3. In-progress items: Current work
+4. Upcoming items: What's next
+5. Blockers/Issues: Any challenges (if applicable)
+6. Closing: Invitation for questions/discussion
+
+**Best for**: Weekly updates, sprint reviews, project progress reports
+
+### Request
+**Purpose**: Ask for action, approval, resources, or input from recipients
+
+**Structure**:
+1. Context: Why this request is important
+2. What's being asked: Clear, specific request
+3. Why it matters: Benefits or urgency
+4. Timeline: When needed
+5. Next steps: How to respond
+6. Closing: Appreciation and contact info
+
+**Best for**: Budget requests, time off, resources, approvals, feedback
+
+### Announcement
+**Purpose**: Communicate news, changes, or information to a team or stakeholder group
+
+**Structure**:
+1. Hook: Lead with the announcement
+2. Context: Why this change/news matters
+3. Details: Specific information
+4. Impact: How it affects recipients
+5. Next steps: What recipients should know/do
+6. Closing: Point of contact for questions
+
+**Best for**: Product launches, policy changes, team updates, organizational changes
+
+### Follow-up
+**Purpose**: Continue a conversation, remind about commitments, or move items forward
+
+**Structure**:
+1. Reference: What previous conversation/commitment this relates to
+2. Update: What's happened since
+3. Call to action: What's needed next
+4. Offer to help: Your contribution/availability
+5. Closing: Clear next steps
+
+**Best for**: After meetings, checking on decisions, ensuring progress
+
+### Response
+**Purpose**: Reply to an inquiry, offer, or question
+
+**Structure**:
+1. Appreciation: Thank them for reaching out
+2. Answer: Direct response to their question/request
+3. Details: Additional relevant information
+4. Next steps: How to proceed
+5. Closing: Reaffirm helpfulness
+
+**Best for**: Replying to inquiries, addressing questions, responding to proposals
+
+### Recap
+**Purpose**: Summarize a meeting, conversation, or decision for the record
+
+**Structure**:
+1. Opening: What was discussed
+2. Key decisions: What was decided
+3. Action items: Who's doing what by when
+4. Outstanding issues: What still needs resolution
+5. Closing: Confirmation and next meeting
+
+**Best for**: Meeting summaries, decision documentation, action item tracking
 
 ## Examples
 
-### Example 1: Cold Outreach Email
+### Example 1: Status Update (Formal Tone)
 
-**Input:** "Write a cold email to a product manager at Stripe asking for 20 minutes to discuss a UX research tool I'm building. I don't know them personally. Keep it short and genuine."
+**Input**:
+- Tone: formal
+- Context: status_update
+- Bullet points:
+  - Completed authentication module implementation
+  - Unit tests at 94% coverage
+  - Performance benchmarks show 15% improvement
+  - Database migration testing in progress
+  - Need approval on API schema changes
+  - Team meeting scheduled for Thursday
 
-**Output:**
+**Output**:
+```
+Dear Team,
 
----
+I am writing to provide a status update on the authentication module project for the week of November 4-8.
 
-**Subject:** Quick question about Stripe's onboarding UX
+Completed Items:
+The authentication module implementation has been completed and is ready for integration testing. Unit test coverage has reached 94%, demonstrating comprehensive code validation. Performance benchmarks indicate a 15% improvement over the previous implementation.
 
-Hi [Name],
+In Progress:
+Database migration testing is currently underway to ensure data integrity during the transition. We anticipate completion by end of day Friday.
 
-I came across your talk at Config 2024 on reducing payment friction—the friction-mapping framework you described is exactly the kind of thinking I'm trying to support with a tool I'm building.
+Upcoming:
+The team will gather on Thursday to discuss and potentially approve the proposed API schema changes. Your input on this matter would be greatly appreciated.
 
-I'm developing a lightweight UX research platform that helps PM teams track friction points across user flows without drowning in session recordings. Given your focus on onboarding, I thought you'd either find it interesting or immediately tell me why it's a bad idea—either would be valuable.
+Please let me know if you have any questions or concerns regarding this update.
 
-Would you have 20 minutes in the next two weeks for a quick call?
-
-Thanks for considering it,
+Best regards,
 [Your Name]
+```
 
----
+### Example 2: Request (Casual Tone)
 
-**Why it works:**
-- Subject is specific and doesn't oversell
-- Opens with genuine reference to their actual work
-- States the tool's value in one sentence
-- Frames the ask as low-stakes (willing to hear "no")
-- Single CTA with timeframe
-- Under 100 words
+**Input**:
+- Tone: casual
+- Context: request
+- Recipient: Engineering Manager
+- Bullet points:
+  - Need to attend conference next month
+  - Will present technical talk on distributed systems
+  - Conference dates March 15-17
+  - Budget needed for travel and registration
+  - Will share updates with team while there
 
----
+**Output**:
+```
+Hi [Manager Name],
 
-### Example 2: Follow-Up Email (No Reply After First Outreach)
+I wanted to reach out about an opportunity I'd like to pursue. I've been selected to give a talk on distributed systems architecture at the upcoming tech conference on March 15-17. It's a great chance to represent the company and share what we've learned.
 
-**Input:** "I sent a proposal to a client last week and haven't heard back. Write a follow-up that's not annoying or pushy."
+Here's what I'd need:
+- Travel and lodging budget (I'll keep it reasonable)
+- Time off for the conference dates
+- Conference registration fee
 
-**Output:**
+I'll definitely share key learnings and insights with the team when I get back, so we can all benefit from the experience. I'm happy to discuss this further if you have any questions.
 
----
-
-**Subject:** Re: Proposal for Q4 Campaign
-
-Hi Sarah,
-
-Just wanted to resurface this in case it got buried—no worries if the timing isn't right.
-
-I'm happy to adjust the scope, timeline, or budget if anything in the proposal gave you pause. Otherwise, if you're still reviewing, I'll check back in another week.
+Let me know what you think!
 
 Thanks,
 [Your Name]
+```
 
----
+### Example 3: Announcement (Formal Tone)
 
-**Why it works:**
-- Extremely short—respects their time
-- "No worries" immediately lowers pressure
-- Offers a concrete reason they might not have responded (objections)
-- Sets a clear next touchpoint
-- Zero guilt-tripping or passive aggression
+**Input**:
+- Tone: formal
+- Context: announcement
+- Bullet points:
+  - New deployment pipeline going live
+  - Reduces deployment time from 2 hours to 15 minutes
+  - All teams can self-serve deployments
+  - Training session Thursday
+  - FAQ document shared in wiki
+  - Questions? Contact DevOps team
 
----
+**Output**:
+```
+Subject: New Deployment Pipeline Now Available
 
-### Example 3: Internal Feedback Email
+Dear Team,
 
-**Input:** "Write an email to a junior team member letting them know their last report had unclear structure and needs revision. Be direct but kind."
+We are pleased to announce the launch of our new automated deployment pipeline, effective immediately. This infrastructure improvement represents a significant operational enhancement for our entire organization.
 
-**Output:**
+Key Benefits:
+Deployment time has been reduced from 2 hours to approximately 15 minutes, enabling more frequent and reliable releases. Additionally, all development teams now have self-service deployment capabilities, reducing dependency on centralized operations.
 
----
+What You Need to Know:
+A comprehensive training session will be held on Thursday at 2:00 PM to walk through the new process. A detailed FAQ document has been posted to our internal wiki for reference.
 
-**Subject:** Feedback on the Q3 Market Analysis Report
+Next Steps:
+Please plan to attend the training session or review the documentation at your earliest convenience. If you have questions or encounter any issues, please reach out to the DevOps team.
 
-Hi Jamie,
+We are confident this will improve our development velocity and system reliability.
 
-Thanks for getting the Q3 report in on time—I know the data collection was a heavy lift.
+Best regards,
+Platform Operations Team
+```
 
-I want to give you some direct feedback before we share it with the wider team: the current structure makes it hard to follow the main argument. Specifically, the executive summary doesn't match the conclusion, and the methodology section appears before context that would help readers understand why it matters.
+### Example 4: Follow-up (Casual Tone)
 
-I'd suggest:
-1. Rewrite the executive summary to reflect the report's actual findings
-2. Move the methodology section to an appendix or after the key findings
-3. Add a one-paragraph "so what" to each major section
+**Input**:
+- Tone: casual
+- Context: follow_up
+- Bullet points:
+  - Follow-up from Tuesday design review meeting
+  - Discussed new dashboard mockups
+  - Agreed to implement three-column layout
+  - Need design system updates for new components
+  - Developer assignments: James (chart widgets), Sarah (data table)
+  - Next review in two weeks
 
-Happy to walk through it together if that's helpful—just let me know. Revised version needed by Thursday EOD.
+**Output**:
+```
+Hi everyone,
 
-Thanks,
+Just wanted to follow up on our design review from Tuesday. We got some great feedback on the dashboard mockups and made some solid decisions moving forward.
+
+Here's where we landed:
+We're going with the three-column layout design, which the team felt was the cleanest option. This will require some updates to our design system for the new component types we're using.
+
+Who's doing what:
+James will take point on the chart widgets, and Sarah will handle the data table component. I'll coordinate the design system updates to support both.
+
+Next steps:
+We'll reconvene in two weeks for the next design review. If anyone spots issues before then, just ping the group.
+
+Thanks for the great collaboration!
+
 [Your Name]
+```
 
----
+### Example 5: Response (Technical Tone)
 
-## Best Practices
-- Write the CTA before writing the rest of the email—it keeps the whole message focused
-- Use the recipient's name once in the greeting; more than once feels like a sales script
-- Avoid hedging phrases: "just wanted to", "I was wondering if maybe", "sorry to bother you"
-- Front-load key information—assume they may only read the first two sentences
-- Match the formality of the context, not your own preference
-- For important emails, wait 10 minutes before sending—re-read once cold
+**Input**:
+- Tone: technical
+- Context: response
+- Bullet points:
+  - Question: How does caching layer work?
+  - Answer: Redis-based distributed cache
+  - TTL configuration: 1 hour default, configurable per endpoint
+  - Cache invalidation: Event-driven and time-based
+  - Performance: 95th percentile latency reduced by 40%
+  - Code examples available in repository
 
-## Common Mistakes
-- **Weak subject lines:** "Following up" or "Checking in" are open-rate killers
-- **Multiple asks in one email:** Pick one. Everything else goes in a separate email.
-- **Starting with "I":** Opens that center yourself before the reader disengage faster
-- **Over-explaining:** If you need three paragraphs of context, the email may need to be a call instead
-- **No CTA:** "Let me know what you think" is not a CTA. "Can we schedule 15 minutes this week?" is.
-- **Passive-aggressive follow-ups:** "Just circling back for the third time…" damages relationships
+**Output**:
+```
+Thank you for your inquiry regarding our caching architecture.
 
-## Tips & Tricks
-- The best time to send cold emails is Tuesday–Thursday, 8–10 a.m. recipient's local time
-- For negotiation emails, always end with a question—it forces a response
-- Use "I" sparingly in cold emails; more "you"-focused language feels less self-serving
-- Preview text (the snippet after the subject) is your second subject line—don't waste it
-- If the email chain is getting long, it's time for a call—say so in the email
-- For follow-ups, 3 touches max before letting go: initial email, 1-week follow-up, 2-week final
+The caching layer is implemented using a Redis-based distributed cache with the following specifications:
 
-## Related Skills
-- [copywriter](../../writing/copywriter/SKILL.md)
-- [cover-letter](../../writing/cover-letter/SKILL.md)
-- [proofreader](../../writing/proofreader/SKILL.md)
+Configuration:
+- Default TTL: 3600 seconds (1 hour)
+- TTL is configurable per endpoint via the cache_ttl decorator
+- Cache key format: namespace:resource_id:version_hash
+- Compression enabled for values exceeding 1KB
+
+Invalidation Strategy:
+The system employs a hybrid invalidation approach:
+- Event-driven invalidation triggered by data mutation operations
+- Time-based expiration using the configured TTL
+- Manual invalidation available via administrative interface
+
+Performance Characteristics:
+Implementation of this caching strategy has resulted in a 40% reduction in 95th percentile latency for read-heavy operations.
+
+Implementation Details:
+Complete code examples and configuration documentation are available in the repository under /docs/caching-architecture. The cache client library provides both synchronous and asynchronous interfaces.
+
+Please reach out if you require additional technical details or have further questions.
+
+Best regards,
+[Your Name]
+```
+
+### Example 6: Recap (Formal Tone)
+
+**Input**:
+- Tone: formal
+- Context: recap
+- Meeting: Q4 Planning Session
+- Attendees: Leadership team
+- Bullet points:
+  - Decided to prioritize platform stability over new features
+  - Moving API gateway migration to Q1
+  - Budget approved for third-party vendor assessment
+  - Alex leading architecture review
+  - Next planning meeting December 1
+  - Action items: vendor proposals due Nov 20, architecture plan due Nov 25
+
+**Output**:
+```
+Subject: Q4 Planning Session - Summary and Action Items
+
+Dear Team,
+
+This message summarizes the key outcomes and decisions from our Q4 Planning Session held today.
+
+Key Decisions:
+1. Platform stability has been prioritized over the addition of new features for Q4
+2. The API gateway migration initiative has been rescheduled for Q1 to align with resource availability
+3. Budget has been approved for a third-party vendor assessment to evaluate infrastructure options
+
+Assigned Responsibilities:
+- Alex Chen will lead the comprehensive architecture review
+- All team leads will provide vendor proposals by November 20
+- Architecture recommendations document is due November 25
+
+Next Steps:
+The next planning meeting is scheduled for December 1 at 10:00 AM. Please come prepared with your respective departmental updates and any outstanding questions.
+
+Should you require clarification on any of the decisions or action items outlined above, please do not hesitate to contact me.
+
+Best regards,
+[Your Name]
+```
+
+## Key Features
+
+### Tone Consistency
+Each email maintains consistent tone throughout, avoiding jarring switches in formality or language level.
+
+### Contextual Structure
+Each context type follows an appropriate structure that guides readers through the information logically.
+
+### Professional Formatting
+- Clear paragraph breaks
+- Appropriate use of lists and bullet points
+- Proper salutations and closings
+- Subject lines when appropriate
+
+### Grammar and Clarity
+- Correct punctuation and spelling
+- Clear, concise language
+- Active voice preferred
+- Removes redundancy
+
+## Tips for Best Results
+
+1. **Be Specific**: Provide concrete details rather than vague summaries
+2. **Include Priorities**: Highlight what matters most if information is extensive
+3. **Clarify Action Items**: Specify who should do what and by when
+4. **Provide Context**: Help Claude understand why this information matters
+5. **Specify Recipients**: Mention if email is for executives, teammates, or external parties
+
+## What This Skill Does NOT Do
+
+- Send emails on your behalf
+- Change the meaning of your content
+- Add information not provided
+- Override the tone you requested
+- Generate inappropriate content
+
+Always review generated emails before sending. You remain responsible for final content and accuracy.

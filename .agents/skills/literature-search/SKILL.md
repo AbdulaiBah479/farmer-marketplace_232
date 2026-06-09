@@ -1,214 +1,119 @@
 ---
 name: literature-search
-description: Comprehensive scientific literature search across PubMed, arXiv, bioRxiv, medRxiv. Natural language queries powered by Valyu semantic search.
-keywords:
-  - literature-search
-  - scientific-literature
-  - multi-source-search
-  - comprehensive-search
-  - research-aggregation
-  - semantic-search
-license: MIT
+description: |
+  Search and retrieve academic literature from multiple databases.
+  LOAD THIS SKILL WHEN: User says "搜尋文獻", "search literature", "find papers", "PubMed", "學術搜尋" | needs to find research articles | starting literature review.
+  CAPABILITIES: PubMed search, MeSH term expansion, citation metrics, batch retrieval.
 ---
 
+# 文獻搜尋技能 (Literature Search)
 
-# Literature Search
+## 描述
 
-Search across all major scientific literature databases (PubMed, arXiv, bioRxiv, medRxiv) simultaneously using natural language queries powered by Valyu's semantic search API.
+使用多種 MCP Tools 搜尋學術文獻，支援關鍵字搜尋、MeSH 詞彙擴展、引用指標排序。
 
-## Why This Skill is Powerful
+## 觸發條件
 
-- **No API Parameter Parsing**: Just pass natural language queries directly - no need to construct complex search parameters
-- **Semantic Search**: Understands the meaning of your query, not just keyword matching
-- **Full-Text Access**: Returns complete article content, not just abstracts
-- **Image Links**: Includes figures and images from papers
-- **Comprehensive Coverage**: Search across PubMed, arXiv, bioRxiv, and medRxiv simultaneously
-- **Unified Results**: Get results from all sources in a single query
+- 「搜尋文獻」「找論文」「PubMed 搜尋」
+- "search papers", "find articles", "literature search"
+- 開始文獻回顧或系統性評讀
 
-## Requirements
+## 可用 Tools
 
-1. Node.js 18+ (uses built-in fetch)
-2. Valyu API key from https://platform.valyu.ai ($10 free credits)
+### MCP Tools (pubmed-search)
 
-## CRITICAL: Script Path Resolution
+| Tool | 用途 | 參數 |
+|------|------|------|
+| `search_literature` | 基本搜尋 | query, limit, min_year, article_type |
+| `generate_search_queries` | MeSH 詞彙擴展 | topic |
+| `merge_search_results` | 合併多次搜尋結果 | results_json |
+| `get_citation_metrics` | 取得引用指標 (RCR) | pmids, sort_by |
+| `fetch_article_details` | 取得文章詳細資訊 | pmids |
 
-The `scripts/search` commands in this documentation are relative to this skill's installation directory.
+### MCP Tools (zotero-keeper)
 
-Before running any command, locate the script using:
+| Tool | 用途 | 參數 |
+|------|------|------|
+| `check_articles_owned` | 檢查是否已收藏 | pmids |
+| `batch_import_from_pubmed` | 批次匯入到 Zotero | pmids, collection_name |
 
-```bash
-LITERATURE_SCRIPT=$(find ~/.claude/plugins/cache -name "search" -path "*/literature-search/*/scripts/*" -type f 2>/dev/null | head -1)
-```
+## 執行流程
 
-Then use the full path for all commands:
-```bash
-$LITERATURE_SCRIPT "CRISPR gene editing advances" 15
-```
-
-## API Key Setup Flow
-
-When you run a search and receive `"setup_required": true`, follow this flow:
-
-1. **Ask the user for their API key:**
-   "To search scientific literature, I need your Valyu API key. Get one free ($10 credits) at https://platform.valyu.ai"
-
-2. **Once the user provides the key, run:**
-   ```bash
-   scripts/search setup <api-key>
-   ```
-
-3. **Retry the original search.**
-
-## When to Use This Skill
-
-- Comprehensive literature reviews across all domains
-- Finding all relevant research on a topic
-- Cross-domain scientific discovery
-- Combining biomedical, physics, and preprint literature
-- Emerging research across disciplines
-## Output Format
-
-```json
-{
-  "success": true,
-  "type": "literature_search",
-  "query": "CRISPR gene editing advances",
-  "result_count": 15,
-  "results": [
-    {
-      "title": "Article Title",
-      "url": "https://...",
-      "content": "Full article text with figures...",
-      "source": "pubmed|arxiv|biorxiv|medrxiv",
-      "relevance_score": 0.95,
-      "images": ["https://example.com/figure1.jpg"]
-    }
-  ],
-  "cost": 0.025
-}
-```
-
-## Processing Results
-
-### With jq
-
-```bash
-# Get article titles
-scripts/search "query" 20 | jq -r '.results[].title'
-
-# Get URLs
-scripts/search "query" 20 | jq -r '.results[].url'
-
-# Extract full content
-scripts/search "query" 20 | jq -r '.results[].content'
-
-# Filter by source
-scripts/search "query" 20 | jq -r '.results[] | select(.source == "arxiv") | .title'
-```
-
-## Common Use Cases
-
-### Comprehensive Literature Review
-
-```bash
-# Search across all sources for thorough review
-scripts/search "mechanisms of cellular senescence" 100
-```
-
-### Cross-Disciplinary Research
-
-```bash
-# Find papers spanning multiple fields
-scripts/search "quantum computing applications in drug discovery" 50
-```
-
-### Recent Developments
-
-```bash
-# Get latest preprints and publications
-scripts/search "foundation models for protein folding" 30
-```
-
-### Medical Research
-
-```bash
-# Search biomedical literature comprehensively
-scripts/search "immunotherapy checkpoint inhibitors resistance" 40
-```
-
-
-## Error Handling
-
-All commands return JSON with `success` field:
-
-```json
-{
-  "success": false,
-  "error": "Error message"
-}
-```
-
-Exit codes:
-- `0` - Success
-- `1` - Error (check JSON for details)
-
-## API Endpoint
-
-- Base URL: `https://api.valyu.ai/v1`
-- Endpoint: `/search`
-- Authentication: X-API-Key header
-
-## Architecture
+### 1. 快速搜尋模式
 
 ```
-scripts/
-├── search          # Bash wrapper
-└── search.mjs      # Node.js CLI
+用戶提供關鍵字
+    ↓
+search_literature(query, limit=20)
+    ↓
+返回 PMID 清單 + 摘要
 ```
 
-Direct API calls using Node.js built-in `fetch()`, zero external dependencies.
+### 2. 精確搜尋模式 (推薦用於系統性回顧)
 
-## Adding to Your Project
+```
+用戶提供主題
+    ↓
+generate_search_queries(topic)  ← 取得 MeSH 詞彙
+    ↓
+選擇最佳搜尋策略
+    ↓
+search_literature(query=MeSH_query)
+    ↓
+get_citation_metrics(pmids, sort_by="relative_citation_ratio")
+    ↓
+返回按 RCR 排序的結果
+```
 
-If you're building an AI project and want to integrate Literature Search directly into your application, use the Valyu SDK:
-
-### Python Integration
+### 3. 多策略合併模式
 
 ```python
-from valyu import Valyu
+# 並行執行多個搜尋策略
+results = []
+results.append(search_literature(query="keyword1"))
+results.append(search_literature(query="keyword2"))
+results.append(search_literature(query="MeSH[Mesh]"))
 
-client = Valyu(api_key="your-api-key")
-
-response = client.search(
-    query="your search query here",
-    included_sources=["valyu/valyu-pubmed", "valyu/valyu-arxiv", "valyu/valyu-biorxiv", "valyu/valyu-medrxiv"],
-    max_results=20
-)
-
-for result in response["results"]:
-    print(f"Title: {result['title']}")
-    print(f"URL: {result['url']}")
-    print(f"Content: {result['content'][:500]}...")
+# 合併並去重
+merged = merge_search_results(results)
+# high_relevance_pmids = 出現在多個搜尋結果中的文章
 ```
 
-### TypeScript Integration
+## 輸出格式
 
-```typescript
-import { Valyu } from "valyu-js";
+```markdown
+## 搜尋結果摘要
 
-const client = new Valyu("your-api-key");
+- **搜尋策略**: [描述使用的策略]
+- **總筆數**: N 篇
+- **高相關性**: M 篇 (出現在多個搜尋中)
 
-const response = await client.search({
-  query: "your search query here",
-  includedSources: ["valyu/valyu-pubmed", "valyu/valyu-arxiv", "valyu/valyu-biorxiv", "valyu/valyu-medrxiv"],
-  maxResults: 20
-});
+### 文獻清單
 
-response.results.forEach((result) => {
-  console.log(`Title: ${result.title}`);
-  console.log(`URL: ${result.url}`);
-  console.log(`Content: ${result.content.substring(0, 500)}...`);
-});
+| # | PMID | 標題 | 年份 | RCR | 
+|---|------|------|------|-----|
+| 1 | 12345678 | Title... | 2024 | 2.5 |
+| 2 | ... | ... | ... | ... |
 ```
 
-See the [Valyu docs](https://docs.valyu.ai) for full integration examples and SDK reference.
+## 使用範例
+
+**範例 1：快速搜尋**
+```
+用戶：「搜尋 remimazolam 在 ICU 的應用」
+執行：search_literature(query="remimazolam ICU", limit=15)
+```
+
+**範例 2：精確搜尋**
+```
+用戶：「我要做 AI 麻醉的系統性回顧」
+執行：
+1. generate_search_queries("artificial intelligence anesthesiology")
+2. search_literature(query='"Artificial Intelligence"[MeSH] AND "Anesthesiology"[MeSH]')
+3. get_citation_metrics(pmids="last", sort_by="relative_citation_ratio")
+```
+
+## 相關技能
+
+- `literature-filter` - 過濾與確認文獻
+- `literature-retrieval` - 組合技能：搜尋 + 過濾

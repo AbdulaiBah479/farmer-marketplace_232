@@ -10,7 +10,7 @@ model: opus
 
 **References:**
 
-- [dataverse-reference.md](./references/dataverse-reference.md) - Picklist fields, virtual fields, lookups, file/image columns, form patterns (CRITICAL)
+- [dataverse-reference.md](./references/dataverse-reference.md) - Picklist fields, virtual fields, lookups, form patterns (CRITICAL)
 - [api-authentication-reference.md](./references/api-authentication-reference.md) - Dataverse API auth, token, publisher prefix
 - [table-management-reference.md](./references/table-management-reference.md) - Query, create, extend tables and columns
 - [data-architecture-reference.md](./references/data-architecture-reference.md) - Relationship types, dependency tiers
@@ -48,11 +48,7 @@ See [api-authentication-reference.md](./references/api-authentication-reference.
 
 ```powershell
 az account show   # Verify Azure CLI logged in
-
-# Find your Dataverse environment URL:
-# In make.powerapps.com → Settings → Developer resources → Web API endpoint
-# It looks like: https://<org-name>.crm.dynamics.com/api/data/v9.2/
-# Use the base URL: https://<org-name>.crm.dynamics.com
+pwsh -NoProfile -Command "pac org who"       # Get environment URL
 
 $api = Initialize-DataverseApi -EnvironmentUrl "https://<org>.crm.dynamics.com"
 $headers = $api.Headers
@@ -97,7 +93,7 @@ Use safe functions from [table-management-reference.md](./references/table-manag
 For each table:
 
 ```bash
-npx power-apps add-data-source -a dataverse -t <table-logical-name>
+pwsh -NoProfile -Command "pac code add-data-source -a dataverse -t <table-logical-name>"
 ```
 
 Can add multiple tables by running the command for each one.
@@ -106,8 +102,8 @@ Can add multiple tables by running the command for each one.
 
 The command generates:
 
-- `src/generated/models/{Table}Model.ts` -- TypeScript interfaces, plus `{Table}FileColumnName`, `{Table}ImageColumnName`, `{Table}UploadColumnName` union types if the table has file/image columns
-- `src/generated/services/{Table}Service.ts` -- CRUD methods (create, get, getAll, update, delete) plus `upload`, `downloadFile`, `downloadImage`, `deleteFileOrImage` if file/image columns exist
+- `src/generated/models/{Table}Model.ts` -- TypeScript interfaces
+- `src/generated/services/{Table}Service.ts` -- CRUD methods (create, get, getAll, update, delete)
 
 Show the user a usage example:
 
@@ -128,11 +124,11 @@ const accounts = result.data || [];
 - Use generated services (e.g., `AccountsService.getAll()`), not fetch/axios
 - Check `result.data` for actual data
 - Don't edit generated files unless needed
-- **Read [dataverse-reference.md](./references/dataverse-reference.md) before writing any Dataverse code** -- picklist fields, virtual fields, lookups, and file/image columns all have critical gotchas
+- **Read [dataverse-reference.md](./references/dataverse-reference.md) before writing any Dataverse code** -- picklist fields, virtual fields, and lookups have critical gotchas
 
 ### Step 7: Build
 
-```bash
+```powershell
 npm run build
 ```
 

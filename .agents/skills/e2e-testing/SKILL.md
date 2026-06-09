@@ -1,170 +1,237 @@
 ---
 name: e2e-testing
-description: "End-to-end testing workflow with Playwright for browser automation, visual regression, cross-browser testing, and CI/CD integration."
-category: granular-workflow-bundle
-risk: safe
-source: personal
-date_added: "2026-02-27"
+description: End-to-end testing expert for Playwright, Cypress, visual regression (Percy, Chromatic), and UI testing. Use for E2E tests, browser automation, visual diffs, or debugging flaky tests.
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep
+model: opus
+context: fork
 ---
 
-# E2E Testing Workflow
+# E2E Testing Expert - Playwright, Visual Regression, UI Testing
 
-## Overview
+## Core Expertise
 
-Specialized workflow for end-to-end testing using Playwright including browser automation, visual regression testing, cross-browser testing, and CI/CD integration.
+- **Playwright/Cypress** for browser automation
+- **Visual regression** with Percy, Chromatic, BackstopJS
+- **UI testing** with Testing Library patterns
+- **Accessibility testing** with axe-core
+- **Mobile emulation** and device testing
 
-## When to Use This Workflow
+## Playwright Fundamentals
 
-Use this workflow when:
-- Setting up E2E testing
-- Automating browser tests
-- Implementing visual regression
-- Testing across browsers
-- Integrating tests with CI/CD
+### Test Structure
 
-## Workflow Phases
+```typescript
+import { test, expect } from '@playwright/test';
 
-### Phase 1: Test Setup
+test.describe('Authentication', () => {
+  test('should login successfully', async ({ page }) => {
+    await page.goto('/login');
+    await page.getByLabel('Email').fill('user@example.com');
+    await page.getByLabel('Password').fill('password123');
+    await page.getByRole('button', { name: 'Login' }).click();
 
-#### Skills to Invoke
-- `playwright-skill` - Playwright setup
-- `e2e-testing-patterns` - E2E patterns
-
-#### Actions
-1. Install Playwright
-2. Configure test framework
-3. Set up test directory
-4. Configure browsers
-5. Create base test setup
-
-#### Copy-Paste Prompts
-```
-Use @playwright-skill to set up Playwright testing
+    await expect(page).toHaveURL('/dashboard');
+    await expect(page.getByText('Welcome')).toBeVisible();
+  });
+});
 ```
 
-### Phase 2: Test Design
+### Page Object Model
 
-#### Skills to Invoke
-- `e2e-testing-patterns` - Test patterns
-- `test-automator` - Test automation
+```typescript
+// pages/LoginPage.ts
+export class LoginPage {
+  constructor(private page: Page) {}
 
-#### Actions
-1. Identify critical flows
-2. Design test scenarios
-3. Plan test data
-4. Create page objects
-5. Set up fixtures
+  readonly emailInput = this.page.getByLabel('Email');
+  readonly passwordInput = this.page.getByLabel('Password');
+  readonly loginButton = this.page.getByRole('button', { name: 'Login' });
 
-#### Copy-Paste Prompts
-```
-Use @e2e-testing-patterns to design E2E test strategy
-```
-
-### Phase 3: Test Implementation
-
-#### Skills to Invoke
-- `playwright-skill` - Playwright tests
-- `webapp-testing` - Web app testing
-
-#### Actions
-1. Write test scripts
-2. Add assertions
-3. Implement waits
-4. Handle dynamic content
-5. Add error handling
-
-#### Copy-Paste Prompts
-```
-Use @playwright-skill to write E2E test scripts
+  async login(email: string, password: string) {
+    await this.emailInput.fill(email);
+    await this.passwordInput.fill(password);
+    await this.loginButton.click();
+  }
+}
 ```
 
-### Phase 4: Browser Automation
+### Fixtures
 
-#### Skills to Invoke
-- `browser-automation` - Browser automation
-- `playwright-skill` - Playwright features
+```typescript
+import { test as base } from '@playwright/test';
+import { LoginPage } from './pages/LoginPage';
 
-#### Actions
-1. Configure headless mode
-2. Set up screenshots
-3. Implement video recording
-4. Add trace collection
-5. Configure mobile emulation
-
-#### Copy-Paste Prompts
-```
-Use @browser-automation to automate browser interactions
+export const test = base.extend<{ loginPage: LoginPage }>({
+  loginPage: async ({ page }, use) => {
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
+    await use(loginPage);
+  },
+});
 ```
 
-### Phase 5: Visual Regression
+## Visual Regression
 
-#### Skills to Invoke
-- `playwright-skill` - Visual testing
-- `ui-visual-validator` - Visual validation
+### Playwright Screenshots
 
-#### Actions
-1. Set up visual testing
-2. Create baseline images
-3. Add visual assertions
-4. Configure thresholds
-5. Review differences
+```typescript
+test('homepage matches baseline', async ({ page }) => {
+  await page.goto('/');
+  await expect(page).toHaveScreenshot('homepage.png', {
+    fullPage: true,
+    animations: 'disabled',
+  });
+});
 
-#### Copy-Paste Prompts
-```
-Use @playwright-skill to implement visual regression testing
-```
+// Responsive screenshots
+await page.setViewportSize({ width: 1920, height: 1080 });
+await expect(page).toHaveScreenshot('desktop.png');
 
-### Phase 6: Cross-Browser Testing
-
-#### Skills to Invoke
-- `playwright-skill` - Multi-browser
-- `webapp-testing` - Browser testing
-
-#### Actions
-1. Configure Chromium
-2. Add Firefox tests
-3. Add WebKit tests
-4. Test mobile browsers
-5. Compare results
-
-#### Copy-Paste Prompts
-```
-Use @playwright-skill to run cross-browser tests
+await page.setViewportSize({ width: 375, height: 667 });
+await expect(page).toHaveScreenshot('mobile.png');
 ```
 
-### Phase 7: CI/CD Integration
+### Percy Integration
 
-#### Skills to Invoke
-- `github-actions-templates` - GitHub Actions
-- `cicd-automation-workflow-automate` - CI/CD
+```typescript
+import { percySnapshot } from '@percy/playwright';
 
-#### Actions
-1. Create CI workflow
-2. Configure parallel execution
-3. Set up artifacts
-4. Add reporting
-5. Configure notifications
-
-#### Copy-Paste Prompts
-```
-Use @github-actions-templates to integrate E2E tests with CI
+test('visual diff with Percy', async ({ page }) => {
+  await page.goto('/dashboard');
+  await percySnapshot(page, 'Dashboard');
+});
 ```
 
-## Quality Gates
+### Chromatic (Storybook)
 
-- [ ] Tests passing
-- [ ] Coverage adequate
-- [ ] Visual tests stable
-- [ ] Cross-browser verified
-- [ ] CI integration working
+```json
+// package.json
+{
+  "scripts": {
+    "chromatic": "chromatic --project-token=$CHROMATIC_PROJECT_TOKEN"
+  }
+}
+```
 
-## Related Workflow Bundles
+## Accessibility Testing
 
-- `testing-qa` - Testing workflow
-- `development` - Development
-- `web-performance-optimization` - Performance
+```typescript
+import AxeBuilder from '@axe-core/playwright';
 
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
+test('accessibility audit', async ({ page }) => {
+  await page.goto('/');
+
+  const results = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa'])
+    .analyze();
+
+  expect(results.violations).toEqual([]);
+});
+
+// Keyboard navigation
+test('keyboard navigation', async ({ page }) => {
+  await page.goto('/form');
+  await page.keyboard.press('Tab');
+  await expect(page.getByLabel('Email')).toBeFocused();
+});
+```
+
+## Mobile Testing
+
+```typescript
+import { devices } from '@playwright/test';
+
+test.use(devices['iPhone 13 Pro']);
+
+test('mobile navigation', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: 'Menu' })).toBeVisible();
+});
+```
+
+## Network Mocking
+
+```typescript
+test('mock API response', async ({ page }) => {
+  await page.route('/api/users', async (route) => {
+    await route.fulfill({
+      status: 200,
+      body: JSON.stringify([{ id: 1, name: 'John' }]),
+    });
+  });
+
+  await page.goto('/users');
+  await expect(page.getByText('John')).toBeVisible();
+});
+```
+
+## Debugging Flaky Tests
+
+```typescript
+// Proper waiting (NOT setTimeout)
+await page.waitForLoadState('networkidle');
+await page.waitForSelector('.content', { state: 'visible' });
+
+// Retry configuration
+export default defineConfig({
+  retries: process.env.CI ? 2 : 0,
+  use: {
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
+  },
+});
+```
+
+## CI/CD Configuration
+
+```yaml
+# .github/workflows/e2e.yml
+name: E2E Tests
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: npx playwright install --with-deps
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+```
+
+## Best Practices
+
+1. **Use stable locators** (roles, labels, test IDs)
+2. **Page Object Model** for maintainability
+3. **Wait for conditions**, not timeouts
+4. **Isolate test data** per test
+5. **Mock external APIs** to reduce flakiness
+6. **Disable animations** for visual tests
+7. **Run parallel** in CI for speed
+8. **Save traces/screenshots** on failure
+
+## Test Organization
+
+```
+e2e/
+├── fixtures/
+│   └── auth.fixture.ts
+├── pages/
+│   ├── LoginPage.ts
+│   └── DashboardPage.ts
+├── tests/
+│   ├── auth.spec.ts
+│   └── dashboard.spec.ts
+└── playwright.config.ts
+```
+
+## Related Skills
+
+- `qa-engineer` - Overall test strategy
+- `unit-testing` - Unit and integration tests

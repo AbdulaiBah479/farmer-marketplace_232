@@ -10,6 +10,8 @@ tags: [security, audit, skills, bundles, cross-platform]
 tools: [claude, gemini, gpt, llama, mistral, etc]
 ---
 
+<!-- security-allowlist: curl-pipe-bash -->
+
 # Audit Skills (Premium Universal Security)
 
 ## Overview
@@ -77,7 +79,7 @@ Analyzes code for platform-specific security issues across Windows, macOS, Linux
 #### 8. Obfuscation & Persistence
 - **Encoding**: `Base64`, `Hex`, `XOR` loops, `atob()`.
 - **Persistence**: `reg add` (Run keys), `schtasks`, `crontab`, `launchctl` (macOS), `systemd` units.
-- **Remote script piping**: network fetch commands that stream directly into a shell or PowerShell evaluator.
+- **Tubes**: `curl ... | bash`, `iwr ... | iex`.
 
 #### 9. Legitimacy & Scope (Universal)
 - **Registry Alignment**: Cross-reference with `CATALOG.md`.
@@ -126,8 +128,3 @@ Generates a security report with a score (0-10), platform target identification,
 ## Related Skills
 
 - `@security-scanner` - Additional security scanning capabilities
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

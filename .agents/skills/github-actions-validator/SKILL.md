@@ -1,573 +1,162 @@
 ---
 name: github-actions-validator
-description: Validate, lint, audit, fix GitHub Actions workflows (.github/workflows).
+type: standard
+depth: full
+description: >-
+  Validates GitHub Actions workflows via actionlint, act dry-run, and 11 security checks.
+  Use when auditing CI/CD security, checking supply chain compliance (SHA pinning, harden-runner,
+  OIDC), or validating workflow output. NOT for generation -- route to github-actions-generator.
 ---
 
-# GitHub Actions Validator
-
-## Overview
-
-Validate and test GitHub Actions workflows, custom actions, and public actions using industry-standard tools (actionlint and act). This skill provides comprehensive validation including syntax checking, static analysis, local workflow execution testing, and action verification with version-aware documentation lookup.
-
-## Trigger Phrases
-
-Use this skill when the request includes phrases like:
-- "validate this GitHub Actions workflow"
-- "check my `.github/workflows/*.yml` file"
-- "debug actionlint errors"
-- "test this workflow locally with act"
-- "verify GitHub Action versions or deprecations"
-
-## When to Use This Skill
-
-Use this skill when:
-- **Validating workflow files**: Checking `.github/workflows/*.yml` for syntax errors and best practices
-- **Testing workflows locally**: Running workflows with `act` before pushing to GitHub
-- **Debugging workflow failures**: Identifying issues in workflow configuration
-- **Validating custom actions**: Checking composite, Docker, or JavaScript actions
-- **Verifying public actions**: Validating usage of actions from GitHub Marketplace
-- **Pre-commit validation**: Ensuring workflows are valid before committing
-
-## Required Execution Flow
-
-Every validation run should follow these steps in order.
-
-### Step 1: Set Skill Path and Run Validation
-
-Run commands from the repository root that contains `.github/workflows/`.
-
-```bash
-SKILL_DIR="devops-skills-plugin/skills/github-actions-validator"
-bash "$SKILL_DIR/scripts/validate_workflow.sh" <workflow-file-or-directory>
-```
-
-### Step 2: Map Each Error to a Reference
-
-For each actionlint/act error, consult the mapping table below, then extract the matching fix pattern.
-
-### Step 3: Apply Minimal-Quote Policy
-
-For each issue:
-1. Include the exact error line from tool output.
-2. Quote only the smallest useful snippet from `references/` (prefer <=8 lines).
-3. Paraphrase the rest and cite the source file/section.
-4. Show corrected workflow code.
-
-### Step 4: Handle Unmapped Errors Explicitly
-
-If an error does not match any mapping:
-1. Label it as `UNMAPPED`.
-2. Capture exact tool output, workflow file, and line number (if available).
-3. Check `references/common_errors.md` general sections first.
-4. If still unresolved, search official docs with the exact error string.
-5. Mark the fix as `provisional` until post-fix rerun passes.
-
-### Step 5: Verify Public Action Versions
-
-For each `uses: owner/action@version`:
-1. Check `references/action_versions.md`.
-2. For unknown actions, verify against official docs.
-3. Confirm required inputs and deprecations.
-
-Offline mode behavior:
-- If network/doc lookup is unavailable, rely on `references/action_versions.md` only.
-- Mark unknown actions as `UNVERIFIED-OFFLINE`.
-- Do not claim "latest" version without an online verification pass.
-
-### Step 6: Mandatory Post-Fix Rerun
-
-After applying fixes, rerun validation before finalizing:
-
-```bash
-SKILL_DIR="devops-skills-plugin/skills/github-actions-validator"
-bash "$SKILL_DIR/scripts/validate_workflow.sh" <workflow-file-or-directory>
-```
-
-### Step 7: Provide Final Summary
-
-Final output should include:
-- Issues found and fixes applied
-- Any `UNMAPPED` or `UNVERIFIED-OFFLINE` items
-- Post-fix rerun command and result
-- Remaining warnings/risk notes
-
-### Error Type to Reference File Mapping
-
-| Error Pattern in Output | Reference File to Read | Section to Quote |
-|------------------------|----------------------|------------------|
-| `runs-on:`, `runner`, `ubuntu`, `macos`, `windows` | `references/runners.md` | Runner labels |
-| `cron`, `schedule` | `references/common_errors.md` | Schedule Errors |
-| `${{`, `expression`, `if:` | `references/common_errors.md` | Expression Errors |
-| `needs:`, `job`, `dependency` | `references/common_errors.md` | Job Configuration Errors |
-| `uses:`, `action`, `input` | `references/common_errors.md` | Action Errors |
-| `untrusted`, `injection`, `security` | `references/common_errors.md` | Script Injection section |
-| `syntax`, `yaml`, `unexpected` | `references/common_errors.md` | Syntax Errors |
-| `docker`, `container` | `references/act_usage.md` | Troubleshooting |
-| `@v3`, `@v4`, `deprecated`, `outdated` | `references/action_versions.md` | Version table |
-| `workflow_call`, `reusable`, `oidc` | `references/modern_features.md` | Relevant section |
-| `glob`, `path`, `paths:`, `pattern` | `references/common_errors.md` | Path Filter Errors |
-
-### Example: Complete Error Handling Workflow
-
-**User's workflow has this error:**
-```
-runs-on: ubuntu-lastest
-```
-
-**Step 1 - Script output:**
-```
-label "ubuntu-lastest" is unknown
-```
-
-**Step 2 - Read `references/runners.md` or `references/common_errors.md`:**
-Find the "Invalid Runner Label" section.
-
-**Step 3 - Quote the fix to user:**
-
-> **Error:** `label "ubuntu-lastest" is unknown`
->
-> **Cause:** Typo in runner label (from `references/common_errors.md`):
-> ```yaml
-> # Bad
-> runs-on: ubuntu-lastest  # Typo
-> ```
->
-> **Fix** (from `references/common_errors.md`):
-> ```yaml
-> # Good
-> runs-on: ubuntu-latest
-> ```
->
-> **Valid runner labels** (from `references/runners.md`):
-> - `ubuntu-latest`, `ubuntu-24.04`, `ubuntu-22.04`
-> - `windows-latest`, `windows-2025`, `windows-2022`
-> - `macos-latest`, `macos-15`, `macos-14`
-
-**Step 4 - Provide corrected code:**
-```yaml
-runs-on: ubuntu-latest
-```
-
-## Quick Start
-
-Set once per shell session:
-
-```bash
-SKILL_DIR="devops-skills-plugin/skills/github-actions-validator"
-```
-
-### Initial Setup
-
-```bash
-bash "$SKILL_DIR/scripts/install_tools.sh"
-```
-
-This installs **act** (local workflow execution) and **actionlint** (static analysis) to `scripts/.tools/`.
-
-### Basic Validation
-
-```bash
-# Validate a single workflow
-bash "$SKILL_DIR/scripts/validate_workflow.sh" .github/workflows/ci.yml
-
-# Validate all workflows
-bash "$SKILL_DIR/scripts/validate_workflow.sh" .github/workflows/
-
-# Lint-only (fastest)
-bash "$SKILL_DIR/scripts/validate_workflow.sh" --lint-only .github/workflows/ci.yml
-
-# Test-only with act (requires Docker)
-bash "$SKILL_DIR/scripts/validate_workflow.sh" --test-only .github/workflows/
-```
-
-## Core Validation Workflow
-
-### 1. Static Analysis with actionlint
-
-Start with static analysis to catch syntax errors and common issues:
-
-```bash
-bash "$SKILL_DIR/scripts/validate_workflow.sh" --lint-only .github/workflows/ci.yml
-```
-
-**What actionlint checks:** YAML syntax, schema compliance, expression syntax, runner labels, action inputs/outputs, job dependencies, CRON syntax, glob patterns, shell scripts, security vulnerabilities.
-
-### 2. Local Testing with act
-
-After passing static analysis, test workflow execution:
-
-```bash
-bash "$SKILL_DIR/scripts/validate_workflow.sh" --test-only .github/workflows/
-```
-
-**Note:** act has limitations - see `references/act_usage.md`.
-
-### 3. Full Validation
-
-```bash
-bash "$SKILL_DIR/scripts/validate_workflow.sh" .github/workflows/ci.yml
-```
-
-Default behavior if tools/runtime are unavailable:
-- If `act` is missing, full validation falls back to actionlint-only.
-- If Docker is unavailable, full validation skips act and continues with actionlint.
-- `--check-versions` works in offline/local mode using `references/action_versions.md`.
-
-## Validating Resource Types
-
-### Workflows
-
-```bash
-# Single workflow
-bash "$SKILL_DIR/scripts/validate_workflow.sh" .github/workflows/ci.yml
-
-# All workflows
-bash "$SKILL_DIR/scripts/validate_workflow.sh" .github/workflows/
-```
-
-**Key validation points:** triggers, job configurations, runner labels, environment variables, secrets, conditionals, matrix strategies.
-
-### Custom Local Actions
-
-Create a test workflow that uses the custom action, then validate:
-
-```bash
-bash "$SKILL_DIR/scripts/validate_workflow.sh" .github/workflows/test-custom-action.yml
-```
-
-### Public Actions
-
-When workflows use public actions (e.g., `actions/checkout@v6`):
-
-1. Check `references/action_versions.md` first
-2. Use official docs (or web search) for unknown actions
-3. Verify required inputs and version
-4. Check for deprecation warnings
-5. Run validation script
-
-If offline:
-- Mark unknown versions as `UNVERIFIED-OFFLINE`
-- Avoid "latest/current" claims until online verification is possible
-
-**Search format:** `"[action-name] [version] github action documentation"`
-
-## Reference File Consultation Guide
-
-### Mandatory Reference Consultation
-
-| Situation | Reference File | Action |
-|-----------|---------------|--------|
-| actionlint reports any mapped error | `references/common_errors.md` | Find matching error and apply minimal quote policy |
-| actionlint reports unmapped error | `references/common_errors.md` + official docs | Label as `UNMAPPED`, capture exact output and verify by rerun |
-| act fails with Docker/runtime error | `references/act_usage.md` | Check Troubleshooting section |
-| act fails but workflow works on GitHub | `references/act_usage.md` | Read Limitations section |
-| User asks about actionlint config | `references/actionlint_usage.md` | Provide examples |
-| User asks about act options | `references/act_usage.md` | Read Advanced Options |
-| Security vulnerability detected | `references/common_errors.md` | Quote minimal safe fix snippet |
-| Validating action versions | `references/action_versions.md` | Check version table and offline note |
-| Using modern features | `references/modern_features.md` | Check syntax examples |
-| Runner questions/errors | `references/runners.md` | Check labels and availability |
-
-### Script Output to Reference Mapping
-
-| Output Pattern | Reference File |
-|----------------|----------------|
-| `[syntax-check]`, parse, YAML errors | `common_errors.md` - Syntax Errors |
-| `[expression]`, `${{`, condition parsing | `common_errors.md` - Expression Errors |
-| `[action]`, `uses:`, input/output mismatch | `common_errors.md` - Action Errors |
-| `[events]` with CRON/schedule text | `common_errors.md` - Schedule Errors |
-| `potentially untrusted`, injection warnings | `common_errors.md` - Security section |
-| `[runner-label]` or unknown `runs-on` label | `runners.md` |
-| `[job-needs]` dependency errors | `common_errors.md` - Job Configuration Errors |
-| `[glob]`, `paths`, pattern errors | `common_errors.md` - Path Filter Errors |
-| Docker/pull/image errors from act | `act_usage.md` - Troubleshooting |
-| No pattern match | `common_errors.md` + official docs (label `UNMAPPED`) |
-
-## Reference Files Summary
-
-| File | Content |
-|------|---------|
-| `references/act_usage.md` | Act tool usage, commands, options, limitations, troubleshooting |
-| `references/actionlint_usage.md` | Actionlint validation categories, configuration, integration |
-| `references/common_errors.md` | Common errors catalog with fixes |
-| `references/action_versions.md` | Current action versions, deprecation timeline, SHA pinning |
-| `references/modern_features.md` | Reusable workflows, SBOM, OIDC, environments, containers |
-| `references/runners.md` | GitHub-hosted runners (ARM64, GPU, M2 Pro, deprecations) |
-
-## Troubleshooting
-
-| Issue | Solution |
-|-------|----------|
-| "Tools not found" | Run `bash "$SKILL_DIR/scripts/install_tools.sh"` |
-| "Docker daemon not running" | Start Docker or use `--lint-only` |
-| "Permission denied" | Run `chmod +x "$SKILL_DIR"/scripts/*.sh` |
-| act fails but GitHub works | See `references/act_usage.md` Limitations |
-
-### Debug Mode
-
-```bash
-actionlint -verbose .github/workflows/ci.yml  # Verbose actionlint
-act -v                                         # Verbose act
-act -n                                         # Dry-run (no execution)
-```
-
-## Best Practices
-
-1. **Always validate locally first** - Catch errors before pushing
-2. **Use actionlint in CI/CD** - Automate validation in pipelines
-3. **Pin action versions** - Use `@v6` not `@main` for stability; SHA pinning for security
-4. **Keep tools updated** - Regularly update actionlint and act
-5. **Use official docs for unknown actions** - Verify usage and versions
-6. **Check version compatibility** - See `references/action_versions.md`
-7. **Enable shellcheck** - Catch shell script issues early
-8. **Review security warnings** - Address script injection issues
-
-## Limitations
-
-- **act limitations**: Not all GitHub Actions features work locally
-- **Docker requirement**: act requires Docker to be running
-- **Network actions**: Some GitHub API actions may fail locally
-- **Private actions**: Cannot validate without access
-- **Runtime behavior**: Static analysis cannot catch all issues
-- **File location**: act can only validate workflows in `.github/workflows/` directory; files outside (like `examples/`) can only be validated with actionlint
-
-## Quick Examples
-
-### Example 1: Pre-commit Validation
-
-```bash
-SKILL_DIR="devops-skills-plugin/skills/github-actions-validator"
-bash "$SKILL_DIR/scripts/validate_workflow.sh" .github/workflows/
-git add .github/workflows/ && git commit -m "Update workflows"
-```
-
-### Example 2: Debug Failing Workflow
-
-```bash
-bash "$SKILL_DIR/scripts/validate_workflow.sh" --lint-only .github/workflows/failing.yml
-# Fix issues
-bash "$SKILL_DIR/scripts/validate_workflow.sh" .github/workflows/failing.yml
-```
-
-## Complete Worked Example: Multi-Error Workflow
-
-This example demonstrates the **full assistant workflow** for handling multiple errors.
-
-### User's Problematic Workflow
-
-```yaml
-name: Broken CI
-on:
-  schedule:
-    - cron: '0 0 * * 8'  # ERROR 1
-jobs:
-  build:
-    runs-on: ubuntu-lastest  # ERROR 2
-    steps:
-      - uses: actions/checkout@v3  # ERROR 3 (outdated)
-      - run: echo ${{ github.event.issue.title }}  # ERROR 4 (security)
-  deploy:
-    needs: biuld  # ERROR 5 (typo)
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "Deploying"
-```
-
-### Step 1: Run Validation
-
-```bash
-bash "$SKILL_DIR/scripts/validate_workflow.sh" --lint-only workflow.yml
-```
-
-**Output:**
-```
-[ERROR] invalid CRON format "0 0 * * 8"
-[ERROR] label "ubuntu-lastest" is unknown
-[WARN] "github.event.issue.title" is potentially untrusted
-[ERROR] job "deploy" needs job "biuld" which does not exist
-```
-
-### Step 2-3: Consult References and Quote Fixes
+# [H1][GITHUB-ACTIONS-VALIDATOR]
+>**Dictum:** *Validation gates prevent non-compliant workflow deployment.*
+
+<br>
+
+Validate GitHub Actions workflows for syntax, security, and best practices. Companion to `github-actions-generator` -- validates what the generator produces.
+
+**Tasks:**
+1. Run validation on target file or directory.
+2. For each error -- consult matching reference, extract fix.
+3. Quote the fix -- error message, cause, applied remediation.
+4. Verify public actions via version discovery protocol.
+5. Provide summary -- fixes, warnings, best practice recommendations.
 
 ---
+## [1][VALIDATION_PIPELINE]
+>**Dictum:** *Three-stage pipeline ensures complete coverage.*
 
-**Error 1: Invalid CRON Expression**
+<br>
 
-*From `references/common_errors.md` - Schedule Errors:*
-
-> **Cause:** Day of week 8 doesn't exist (valid: 0-6, where 0 = Sunday)
->
-> ```yaml
-> # Bad
-> schedule:
->   - cron: '0 0 * * 8'  # Day 8 doesn't exist
->
-> # Good
-> schedule:
->   - cron: '0 0 * * 0'  # Sunday
-> ```
->
-> **CRON format:** `minute hour day month weekday`
-> - Weekday: 0-6 (0 = Sunday)
-
-**Fix:** Change `8` to `0` (Sunday) or `1-6` for Monday-Saturday.
-
----
-
-**Error 2: Invalid Runner Label**
-
-*From `references/common_errors.md` - Job Configuration Errors and `references/runners.md`:*
-
-> **Cause:** Typo in runner label
->
-> ```yaml
-> # Bad
-> runs-on: ubuntu-lastest  # Typo
->
-> # Good
-> runs-on: ubuntu-latest
-> ```
->
-> **Valid labels (from `references/runners.md`):**
-> - `ubuntu-latest` (Ubuntu 24.04)
-> - `ubuntu-24.04`, `ubuntu-22.04`
-> - `macos-latest` (macOS 15)
-> - `windows-latest` (Windows Server 2022)
-
-**Fix:** Change `ubuntu-lastest` to `ubuntu-latest`.
-
----
-
-**Error 3: Outdated Action Version**
-
-*From `references/action_versions.md`:*
-
-> | Action | Current Version | Minimum Supported |
-> |--------|----------------|-------------------|
-> | `actions/checkout` | **v6** | v4 |
->
-> **SHA Pinning Best Practice:**
-> ```yaml
-> # Recommended: SHA pinning with version comment
-> - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6.0.0
-> ```
-
-**Fix:** Update from `@v3` to `@v6` (or SHA-pinned version).
-
----
-
-**Error 4: Security Vulnerability (Script Injection)**
-
-*From `references/common_errors.md` - Expression Errors:*
-
-> **Warning:** Potential script injection via untrusted input
->
-> ```yaml
-> # Bad - vulnerable to injection
-> run: echo ${{ github.event.issue.title }}
->
-> # Good - use environment variables
-> env:
->   TITLE: ${{ github.event.issue.title }}
-> run: echo "$TITLE"
-> ```
->
-> **Why:** Untrusted input (issue titles, PR bodies, commit messages) can contain malicious commands. Using environment variables sanitizes the input.
-
-**Fix:** Pass untrusted input through environment variable.
-
----
-
-**Error 5: Undefined Job Dependency**
-
-*From `references/common_errors.md` - Job Configuration Errors:*
-
-> **Error:** Job 'deploy' depends on job 'biuld' which does not exist
->
-> ```yaml
-> # Bad
-> jobs:
->   build:
->     runs-on: ubuntu-latest
->   deploy:
->     needs: biuld  # Typo
->
-> # Good
-> jobs:
->   build:
->     runs-on: ubuntu-latest
->   deploy:
->     needs: build
-> ```
-
-**Fix:** Change `biuld` to `build`.
-
----
-
-### Step 4: Provide Corrected Workflow
-
-```yaml
-name: Fixed CI
-on:
-  schedule:
-    - cron: '0 0 * * 0'  # Fixed: Sunday (0-6 valid)
-jobs:
-  build:
-    runs-on: ubuntu-latest  # Fixed: typo corrected
-    steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6.0.0 - Fixed: updated version
-      - name: Process issue
-        env:
-          TITLE: ${{ github.event.issue.title }}  # Fixed: use env var
-        run: echo "$TITLE"
-  deploy:
-    needs: build  # Fixed: typo corrected
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "Deploying"
-```
-
-### Step 5: Mandatory Rerun
+**Setup:** `bash .claude/skills/github-actions-validator/scripts/install_tools.sh`
 
 ```bash
-bash "$SKILL_DIR/scripts/validate_workflow.sh" --lint-only workflow.yml
+# Full validation (actionlint + best practices + act dry-run)
+bash .claude/skills/github-actions-validator/scripts/validate_workflow.sh <path>
+
+# Selective validation
+bash .claude/skills/github-actions-validator/scripts/validate_workflow.sh --lint-only <path>
+bash .claude/skills/github-actions-validator/scripts/validate_workflow.sh --check-best-practices <path>
+bash .claude/skills/github-actions-validator/scripts/validate_workflow.sh --test-only <path>
 ```
 
-Expected rerun result:
-- No previous errors reproduced
-- Remaining warnings, if any, are documented explicitly
+| [INDEX] | [STAGE]              | [TOOL]                     | [VALIDATES]                                                        |
+| :-----: | -------------------- | -------------------------- | ------------------------------------------------------------------ |
+|   [1]   | **Static Analysis**  | actionlint 1.7.10          | YAML syntax, expressions, runner labels, action inputs, CRON, globs. |
+|   [2]   | **Best Practices**   | `best_practice_checks.sh`  | 11 security/performance checks (see table below).                  |
+|   [3]   | **Local Execution**  | act v0.2.84                | Dry-run validation against Docker images (requires Docker).        |
 
-### Step 6: Summary
+---
+## [2][BEST_PRACTICE_CHECKS]
+>**Dictum:** *Automated checks enforce security and performance baselines aligned with generator standards.*
 
-| Error | Type | Fix Applied |
-|-------|------|-------------|
-| CRON `0 0 * * 8` | Schedule | Changed to `0 0 * * 0` |
-| `ubuntu-lastest` | Runner | Changed to `ubuntu-latest` |
-| `checkout@v3` | Outdated Action | Updated to `@v6.0.0` (SHA-pinned) |
-| Direct `${{ }}` in run | Security | Wrapped in environment variable |
-| `needs: biuld` | Job Dependency | Changed to `needs: build` |
+<br>
 
-**Recommendations:**
-- Run `bash "$SKILL_DIR/scripts/validate_workflow.sh" --check-versions` regularly
-- Use SHA pinning for all actions in production workflows
-- Always pass untrusted input through environment variables
+| [INDEX] | [CHECK]                    | [TAG]              | [DETECTS]                                                    |
+| :-----: | -------------------------- | ------------------ | ------------------------------------------------------------ |
+|   [1]   | **Deprecated commands**    | `[DEPRECATED-CMD]` | `::set-output`, `::save-state`, `::set-env`, `::add-path`.  |
+|   [2]   | **Missing permissions**    | `[PERMISSIONS]`    | No top-level `permissions: {}` deny-all default.             |
+|   [3]   | **Unpinned actions**       | `[UNPINNED]`       | Mutable tags (`@v1`, `@main`), abbreviated SHAs.             |
+|   [4]   | **SHA without comment**    | `[SHA-NO-COMMENT]` | SHA-pinned but missing `# vX.Y.Z` version comment.          |
+|   [5]   | **Missing timeout**        | `[TIMEOUT]`        | Jobs without `timeout-minutes:` (default is 6 hours).        |
+|   [6]   | **Deprecated runners**     | `[RUNNER]`         | `ubuntu-20.04`, `macos-12`, `macos-13`, `windows-2019`.      |
+|   [7]   | **Missing concurrency**    | `[CONCURRENCY]`    | No `concurrency:` group or missing `cancel-in-progress`.     |
+|   [8]   | **PAT usage**              | `[APP-TOKEN]`      | PATs for cross-repo ops (use `create-github-app-token`).     |
+|   [9]   | **No harden-runner**       | `[HARDEN]`         | Missing or not first step in job (CVE-2025-30066 detection). |
+|  [10]   | **Expression injection**   | `[INJECTION]`      | Direct `${{ github.event.* }}` in `run:` blocks.             |
+|  [11]   | **Immutable actions**      | `[IMMUTABLE]`      | Action publishing without immutable OCI (informational).     |
 
-## Done Criteria
+---
+## [3][ACTIONLINT_RULES]
+>**Dictum:** *Static analysis rule names enable targeted suppression.*
 
-Validation work is complete when all are true:
-- Trigger matched and correct validation mode selected.
-- Each mapped error includes source reference and minimal quote.
-- Each unmapped error is labeled `UNMAPPED` with exact output captured.
-- Public action versions are verified, or marked `UNVERIFIED-OFFLINE`.
-- Post-fix rerun executed and result reported.
+<br>
 
-## Summary
+| [INDEX] | [RULE]                    | [CHECKS]                                                   |
+| :-----: | ------------------------- | ---------------------------------------------------------- |
+|   [1]   | **`syntax-check`**        | Workflow structure, YAML schema, missing keys.             |
+|   [2]   | **`expression`**          | `${{ }}` type checking, function calls, context access.    |
+|   [3]   | **`action`**              | Action inputs/outputs, required inputs, deprecated inputs. |
+|   [4]   | **`runner-label`**        | Valid runner labels, `-arm` vs `-arm64` suffix.             |
+|   [5]   | **`glob`**                | Glob patterns in paths/branches filters.                   |
+|   [6]   | **`job-needs`**           | Job dependency graph, circular `needs:`.                   |
+|   [7]   | **`workflow-call`**       | Reusable workflow inputs/outputs/secrets.                  |
+|   [8]   | **`events`**              | Trigger event validation, CRON field ranges.               |
+|   [9]   | **`credentials`**         | Hard-coded credentials detection.                          |
+|  [10]   | **`permissions`**         | GITHUB_TOKEN permission scopes, `models`, `artifact-metadata`. |
+|  [11]   | **`deprecated-commands`** | `set-output`, `save-state` usage.                          |
+|  [12]   | **`shellcheck`**          | Shell script linting in `run:` blocks.                     |
+|  [13]   | **`if-cond`**             | Constant `if: true`/`if: false` conditions.                |
 
-1. **Setup**: Install tools with `install_tools.sh`
-2. **Validate**: Run `validate_workflow.sh` on workflow files
-3. **Fix**: Address issues using reference documentation
-4. **Rerun**: Verify fixes with a mandatory post-fix validation run
-5. **Search**: Use official docs to verify unknown actions
-6. **Commit**: Push validated workflows with confidence
+---
+## [4][ERROR_ROUTING]
+>**Dictum:** *Error patterns map to specific reference files for resolution.*
 
-For detailed information, consult the appropriate reference file in `references/`.
+<br>
+
+| [INDEX] | [PATTERN]                           | [REFERENCE]                                 |
+| :-----: | ----------------------------------- | ------------------------------------------- |
+|   [1]   | **`runs-on`, runner labels**        | `runners.md`                                |
+|   [2]   | **`cron`, `schedule`**              | `common_errors.md` -- Schedule Errors       |
+|   [3]   | **`${{`, `expression`, `if:`**      | `common_errors.md` -- Expression Errors     |
+|   [4]   | **`needs:`, job dependency**        | `common_errors.md` -- Job Configuration     |
+|   [5]   | **`uses:`, action, input**          | `common_errors.md` -- Action Errors         |
+|   [6]   | **`set-output`, `save-state`**      | `common_errors.md` -- Deprecated Commands   |
+|   [7]   | **`workflow_call`, reusable**       | `modern_features.md` -- Reusable Workflows  |
+|   [8]   | **SLSA, attestation, cosign, SBOM** | `supply_chain.md` -- SBOM/Provenance        |
+|   [9]   | **OIDC, keyless, cloud auth**       | `supply_chain.md` -- OIDC Federation        |
+|  [10]   | **immutable, OCI, GHCR action**     | `supply_chain.md` -- Immutable Actions      |
+|  [11]   | **app token, PAT, cross-repo**      | `supply_chain.md` -- App Tokens             |
+|  [12]   | **harden-runner, egress**           | `supply_chain.md` -- Harden Runner          |
+|  [13]   | **node20, node24, runtime**         | `modern_features.md` -- Node.js Runtime     |
+|  [14]   | **concurrency, cancel-in-progress** | `modern_features.md` -- Concurrency Control |
+|  [15]   | **YAML anchor, alias, `<<:`**       | `modern_features.md` -- YAML Anchors        |
+|  [16]   | **matrix, fail-fast**               | `modern_features.md` -- Matrix Strategy     |
+|  [17]   | **permission scope**                | `common_errors.md` -- Permissions Errors    |
+
+---
+## [5][REFERENCE_FILES]
+>**Dictum:** *Reference files provide authoritative error resolution.*
+
+<br>
+
+| [INDEX] | [FILE]                              | [CONTENT]                                                    |
+| :-----: | ----------------------------------- | ------------------------------------------------------------ |
+|   [1]   | **`references/act_usage.md`**       | Actionlint 1.7.10 + act v0.2.84 usage, rules, limitations.  |
+|   [2]   | **`references/common_errors.md`**   | Error catalog: syntax, expression, action, job, deprecated.  |
+|   [3]   | **`references/modern_features.md`** | Reusable workflows, concurrency, YAML anchors, matrix, Node. |
+|   [4]   | **`references/runners.md`**         | Runner labels, deprecations, ARM64, GPU, self-hosted.        |
+|   [5]   | **`references/supply_chain.md`**    | SHA pinning, OIDC, SBOM, harden-runner, tokens, dep review.  |
+
+---
+## [6][EXAMPLES]
+>**Dictum:** *Examples validate the validation pipeline itself.*
+
+<br>
+
+| [INDEX] | [FILE]                  | [PURPOSE]                                       |
+| :-----: | ----------------------- | ----------------------------------------------- |
+|   [1]   | `valid-ci.yml`          | Passes all checks with zero warnings.           |
+|   [2]   | `with-errors.yml`       | Triggers every best practice check (11 hits).   |
+|   [3]   | `outdated-versions.yml` | Stale tags, deprecated commands, legacy Node.    |
+
+---
+## [7][TROUBLESHOOTING]
+>**Dictum:** *Common issues have known resolutions.*
+
+<br>
+
+| [INDEX] | [ISSUE]                     | [SOLUTION]                                   |
+| :-----: | --------------------------- | -------------------------------------------- |
+|   [1]   | **Tools not found**         | `bash scripts/install_tools.sh`              |
+|   [2]   | **Docker not running**      | Start Docker or use `--lint-only`.           |
+|   [3]   | **Permission denied**       | `chmod +x scripts/*.sh`                      |
+|   [4]   | **act fails, GitHub works** | See `act_usage.md` -- Limitations.           |
+|   [5]   | **ARM Mac arch mismatch**   | Add `--container-architecture linux/amd64`.  |
+|   [6]   | **Custom runner labels**    | Declare in `.github/actionlint.yaml`.        |
+
+[VERIFY] Completion:
+- [ ] All errors resolved with reference-backed fixes.
+- [ ] Action versions verified via discovery protocol or generator examples.
+- [ ] Best practice checks pass or warnings documented.
+- [ ] Summary provided with fixes, warnings, and recommendations.

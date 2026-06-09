@@ -1,223 +1,519 @@
 ---
 name: push-notifications
-description: "Send browser push notifications for price drops, back-in-stock alerts, and cart reminders to bring shoppers back without needing their email"
-category: marketing-growth
-risk: safe
-source: curated
-date_added: "2026-03-12"
-tags: [push-notifications, web-push, pwa, vapid, service-worker, back-in-stock, price-drop, cart-reminder]
-triggers: ["web push notifications", "push notifications", "browser push", "back in stock notification", "price drop alert", "push notification setup"]
-tools: [claude-code, cursor, gemini-cli, copilot, codex-cli, kiro, opencode]
-platforms: [shopify, woocommerce, bigcommerce, custom]
-difficulty: beginner
+description: Multi-platform push notification skill for implementing APNs (iOS), FCM (Android), and cross-platform notification systems with rich media, deep linking, and background processing capabilities.
+allowed-tools: Read, Grep, Write, Bash, Edit, Glob, WebFetch
 ---
 
-# Push Notifications
+# Push Notifications Skill
+
+Comprehensive push notification implementation for iOS (APNs) and Android (FCM), including rich notifications, deep linking, and background processing.
 
 ## Overview
 
-Web push notifications deliver timely messages to subscribers even when they are not on your site — for back-in-stock alerts, price drops, and cart reminders. Push requires explicit browser permission, making the opt-in prompt timing critical. For Shopify, WooCommerce, and BigCommerce, dedicated push notification apps (PushOwl, OneSignal) handle all the subscriber management, triggering logic, and delivery without custom service worker code.
+This skill provides capabilities for implementing push notifications across iOS and Android platforms, covering certificate/key configuration, notification payload design, rich media attachments, deep linking, and background notification handling.
 
-## When to Use This Skill
+## Capabilities
 
-- When adding back-in-stock notifications to replace static "notify me" email forms
-- When recovering abandoned carts via a browser push channel alongside email
-- When building a price-watch feature for wishlisted items
-- When email deliverability is poor and a supplemental channel is needed
-- When targeting mobile-first markets where push opt-in rates exceed email opt-in
+### APNs Configuration (iOS)
+- Configure APNs certificates and keys (.p8, .p12)
+- Set up App ID and push entitlements
+- Configure development vs production environments
+- Implement UNUserNotificationCenter delegate
+- Handle notification permission requests
 
-## Core Instructions
+### FCM Configuration (Android)
+- Set up Firebase project and google-services.json
+- Configure notification channels (Android 8.0+)
+- Implement FirebaseMessagingService
+- Handle FCM token registration
+- Configure notification priority and visibility
 
-### Step 1: Choose the right push notification platform
+### Rich Notifications
+- Design notification payloads with custom data
+- Implement image and media attachments
+- Configure notification actions and categories
+- Create interactive notification buttons
+- Handle notification grouping and threading
 
-| Platform | Best For | Shopify | WooCommerce | BigCommerce | Price |
-|----------|---------|---------|-------------|-------------|-------|
-| **PushOwl** | Shopify-native, back-in-stock + abandonment | App Store | — | — | Free tier; $19+/mo |
-| **OneSignal** | All platforms, free tier, highly configurable | Via JS tag | Plugin | Via JS tag | Free tier; $9+/mo |
-| **Klaviyo Web Push** | Already using Klaviyo for email | App Store | Plugin | App Marketplace | Included in Klaviyo |
-| **PushEngage** | WooCommerce + segmented campaigns | — | Plugin | Via JS tag | Free tier; $9+/mo |
+### Deep Linking
+- Implement notification-to-screen navigation
+- Configure universal links from notifications
+- Handle app state (foreground, background, terminated)
+- Pass custom data through deep links
+- Track notification tap attribution
 
-**Shopify recommendation:** Use **PushOwl** — it's the most integrated Shopify push app with built-in back-in-stock, cart abandonment, and shipping alerts.
+### Background Processing
+- Handle silent/background notifications
+- Implement content-available processing
+- Configure background fetch capabilities
+- Manage notification state persistence
+- Handle notification delivery reports
 
-**WooCommerce recommendation:** Use **PushEngage** or **OneSignal** — both have WordPress plugins and handle subscriber management automatically.
+## Prerequisites
 
-### Step 2: Set up push notifications
+### iOS Development
+```bash
+# Ensure push notification entitlement is enabled
+# In Xcode: Signing & Capabilities > + Capability > Push Notifications
 
----
+# APNs Key (.p8) from Apple Developer Portal
+# Or APNs Certificate (.p12) - less preferred
+```
 
-#### Shopify with PushOwl
+### Android Development
+```groovy
+// build.gradle (project)
+classpath 'com.google.gms:google-services:4.4.0'
 
-1. Install **PushOwl** from the Shopify App Store
-2. Go to **PushOwl → Settings → Opt-in Prompt** and configure:
-   - Delay the prompt: set it to trigger after a customer views 2+ pages or adds an item to cart
-   - Opt-in message: "Get notified when items are back in stock and for price drops"
-3. Go to **PushOwl → Automations → Back in Stock** and enable it — PushOwl automatically adds a "Notify Me" button to out-of-stock products and fires the push when inventory is replenished
-4. Go to **PushOwl → Automations → Cart Abandonment** and enable it:
-   - Set timing: 1 hour after abandonment, then 24 hours
-   - Customize the notification message and the cart recovery URL
-5. Go to **PushOwl → Campaigns** to send broadcast push notifications for sales, new arrivals, or flash discounts
+// build.gradle (app)
+plugins {
+    id 'com.google.gms.google-services'
+}
 
----
+dependencies {
+    implementation platform('com.google.firebase:firebase-bom:32.7.0')
+    implementation 'com.google.firebase:firebase-messaging'
+}
+```
 
-#### WooCommerce with PushEngage
+### Server Requirements
+```bash
+# Node.js server for sending notifications
+npm install firebase-admin @parse/node-apn
+```
 
-1. Install **PushEngage** from the WordPress plugin directory (free tier available)
-2. Go to **PushEngage → Settings → Subscription Prompt** and configure the opt-in dialog
-3. Enable automated campaigns:
-   - Go to **PushEngage → Automation → Cart Abandonment** and set the timing and message
-   - Go to **PushEngage → Automation → Back in Stock** and enable it (requires WooCommerce stock event integration)
-4. For price drop alerts: go to **PushEngage → Automation → Price Drop Alert** and enable subscriber opt-in per product
-5. Use **PushEngage → Broadcast** to send manual push campaigns to all subscribers
+## Usage Patterns
 
----
+### iOS Push Registration (SwiftUI)
+```swift
+import SwiftUI
+import UserNotifications
 
-#### BigCommerce with OneSignal
+@main
+struct MyApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
-1. Sign up for **OneSignal** at onesignal.com and create a Web Push app
-2. Go to **OneSignal → Settings → Web Push → Setup** and follow the HTTPS domain verification
-3. Add the OneSignal JavaScript snippet to your BigCommerce store via **Storefront → Script Manager**:
-   ```javascript
-   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-   <script>
-     window.OneSignalDeferred = window.OneSignalDeferred || [];
-     OneSignalDeferred.push(async function(OneSignal) {
-       await OneSignal.init({ appId: "YOUR_APP_ID" });
-     });
-   </script>
-   ```
-4. For back-in-stock: use BigCommerce webhooks to trigger a OneSignal API call when product stock transitions from 0 to available
-5. For cart abandonment: use BigCommerce's Abandoned Cart webhook + OneSignal REST API to send cart recovery pushes
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+    }
+}
 
----
+class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
 
-#### Custom / Headless
+    func application(_ application: UIApplication,
+                     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        UNUserNotificationCenter.current().delegate = self
+        registerForPushNotifications()
+        return true
+    }
 
-For headless stores, implement push using the Web Push API directly:
+    func registerForPushNotifications() {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+            guard granted else { return }
+            DispatchQueue.main.async {
+                UIApplication.shared.registerForRemoteNotifications()
+            }
+        }
+    }
 
+    func application(_ application: UIApplication,
+                     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        let token = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
+        print("APNs Token: \(token)")
+        // Send token to your server
+    }
+
+    func application(_ application: UIApplication,
+                     didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        print("Failed to register for notifications: \(error)")
+    }
+
+    // Handle notification when app is in foreground
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                willPresent notification: UNNotification,
+                                withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        completionHandler([.banner, .sound, .badge])
+    }
+
+    // Handle notification tap
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                didReceive response: UNNotificationResponse,
+                                withCompletionHandler completionHandler: @escaping () -> Void) {
+        let userInfo = response.notification.request.content.userInfo
+        handleNotificationTap(userInfo: userInfo)
+        completionHandler()
+    }
+
+    func handleNotificationTap(userInfo: [AnyHashable: Any]) {
+        if let deepLink = userInfo["deep_link"] as? String {
+            // Navigate to deep link destination
+            NotificationCenter.default.post(name: .handleDeepLink, object: nil, userInfo: ["url": deepLink])
+        }
+    }
+}
+
+extension Notification.Name {
+    static let handleDeepLink = Notification.Name("handleDeepLink")
+}
+```
+
+### Android FCM Implementation (Kotlin)
+```kotlin
+import com.google.firebase.messaging.FirebaseMessagingService
+import com.google.firebase.messaging.RemoteMessage
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Intent
+import android.os.Build
+import androidx.core.app.NotificationCompat
+
+class MyFirebaseMessagingService : FirebaseMessagingService() {
+
+    override fun onNewToken(token: String) {
+        super.onNewToken(token)
+        // Send token to your server
+        sendTokenToServer(token)
+    }
+
+    override fun onMessageReceived(remoteMessage: RemoteMessage) {
+        super.onMessageReceived(remoteMessage)
+
+        // Handle data payload
+        remoteMessage.data.isNotEmpty().let {
+            handleDataPayload(remoteMessage.data)
+        }
+
+        // Handle notification payload (when app in foreground)
+        remoteMessage.notification?.let {
+            showNotification(it.title, it.body, remoteMessage.data)
+        }
+    }
+
+    private fun handleDataPayload(data: Map<String, String>) {
+        val deepLink = data["deep_link"]
+        val customData = data["custom_data"]
+        // Process data payload
+    }
+
+    private fun showNotification(title: String?, body: String?, data: Map<String, String>) {
+        val channelId = "default_channel"
+        createNotificationChannel(channelId)
+
+        val intent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            data.forEach { (key, value) -> putExtra(key, value) }
+        }
+
+        val pendingIntent = PendingIntent.getActivity(
+            this, 0, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle(title)
+            .setContentText(body)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .build()
+
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify(System.currentTimeMillis().toInt(), notification)
+    }
+
+    private fun createNotificationChannel(channelId: String) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                channelId,
+                "Default Notifications",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Default notification channel"
+                enableLights(true)
+                enableVibration(true)
+            }
+
+            val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+    private fun sendTokenToServer(token: String) {
+        // API call to register token with backend
+    }
+}
+```
+
+### Rich Notification with Image (iOS)
+```swift
+import UserNotifications
+
+class NotificationService: UNNotificationServiceExtension {
+
+    var contentHandler: ((UNNotificationContent) -> Void)?
+    var bestAttemptContent: UNMutableNotificationContent?
+
+    override func didReceive(_ request: UNNotificationRequest,
+                            withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void) {
+        self.contentHandler = contentHandler
+        bestAttemptContent = (request.content.mutableCopy() as? UNMutableNotificationContent)
+
+        if let bestAttemptContent = bestAttemptContent {
+            // Handle rich media attachment
+            if let imageURLString = request.content.userInfo["image_url"] as? String,
+               let imageURL = URL(string: imageURLString) {
+                downloadImage(from: imageURL) { attachment in
+                    if let attachment = attachment {
+                        bestAttemptContent.attachments = [attachment]
+                    }
+                    contentHandler(bestAttemptContent)
+                }
+            } else {
+                contentHandler(bestAttemptContent)
+            }
+        }
+    }
+
+    private func downloadImage(from url: URL, completion: @escaping (UNNotificationAttachment?) -> Void) {
+        let task = URLSession.shared.downloadTask(with: url) { localURL, _, error in
+            guard let localURL = localURL, error == nil else {
+                completion(nil)
+                return
+            }
+
+            let tmpDirectory = FileManager.default.temporaryDirectory
+            let tmpFile = tmpDirectory.appendingPathComponent(url.lastPathComponent)
+
+            try? FileManager.default.moveItem(at: localURL, to: tmpFile)
+
+            if let attachment = try? UNNotificationAttachment(identifier: "", url: tmpFile, options: nil) {
+                completion(attachment)
+            } else {
+                completion(nil)
+            }
+        }
+        task.resume()
+    }
+
+    override func serviceExtensionTimeWillExpire() {
+        if let contentHandler = contentHandler, let bestAttemptContent = bestAttemptContent {
+            contentHandler(bestAttemptContent)
+        }
+    }
+}
+```
+
+### Server-Side Notification Sending (Node.js)
 ```javascript
-// Service worker — save as /sw.js in your public directory
-self.addEventListener('push', (event) => {
-  const data = event.data?.json() ?? {};
-  event.waitUntil(
-    self.registration.showNotification(data.title, {
-      body: data.body,
-      icon: data.icon ?? '/icons/icon-192.png',
-      image: data.image,
-      data: { url: data.url },
-      actions: data.actions ?? [],
-    })
-  );
+// Using Firebase Admin SDK for FCM
+const admin = require('firebase-admin');
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
 });
 
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-  event.waitUntil(clients.openWindow(event.notification.data?.url ?? '/'));
+async function sendPushNotification(token, title, body, data) {
+  const message = {
+    notification: {
+      title,
+      body
+    },
+    data: {
+      deep_link: data.deepLink || '',
+      custom_data: JSON.stringify(data.custom || {})
+    },
+    android: {
+      priority: 'high',
+      notification: {
+        channelId: 'default_channel',
+        imageUrl: data.imageUrl
+      }
+    },
+    apns: {
+      payload: {
+        aps: {
+          'mutable-content': 1,
+          sound: 'default'
+        }
+      },
+      fcmOptions: {
+        imageUrl: data.imageUrl
+      }
+    },
+    token
+  };
+
+  try {
+    const response = await admin.messaging().send(message);
+    console.log('Successfully sent message:', response);
+    return response;
+  } catch (error) {
+    console.error('Error sending message:', error);
+    throw error;
+  }
+}
+
+// Using node-apn for direct APNs
+const apn = require('@parse/node-apn');
+
+const apnProvider = new apn.Provider({
+  token: {
+    key: './AuthKey_XXXXXXXXXX.p8',
+    keyId: 'XXXXXXXXXX',
+    teamId: 'YYYYYYYYYY'
+  },
+  production: false // true for production
+});
+
+async function sendAPNsNotification(deviceToken, title, body, data) {
+  const notification = new apn.Notification();
+
+  notification.expiry = Math.floor(Date.now() / 1000) + 3600;
+  notification.badge = 1;
+  notification.sound = 'default';
+  notification.alert = { title, body };
+  notification.payload = { deep_link: data.deepLink, ...data.custom };
+  notification.topic = 'com.example.app';
+  notification.mutableContent = true;
+
+  if (data.imageUrl) {
+    notification.payload.image_url = data.imageUrl;
+  }
+
+  try {
+    const result = await apnProvider.send(notification, deviceToken);
+    console.log('APNs result:', result);
+    return result;
+  } catch (error) {
+    console.error('APNs error:', error);
+    throw error;
+  }
+}
+```
+
+## Integration with Babysitter SDK
+
+### Task Definition Example
+```javascript
+const pushNotificationTask = defineTask({
+  name: 'push-notification-setup',
+  description: 'Configure push notifications for mobile app',
+
+  inputs: {
+    platform: { type: 'string', required: true, enum: ['ios', 'android', 'both'] },
+    projectPath: { type: 'string', required: true },
+    features: {
+      type: 'array',
+      items: { type: 'string', enum: ['rich_media', 'deep_linking', 'silent_push', 'notification_actions'] }
+    }
+  },
+
+  outputs: {
+    configuredPlatforms: { type: 'array' },
+    tokenRegistrationCode: { type: 'string' },
+    serverIntegrationGuide: { type: 'string' }
+  },
+
+  async run(inputs, taskCtx) {
+    return {
+      kind: 'skill',
+      title: `Configure push notifications for ${inputs.platform}`,
+      skill: {
+        name: 'push-notifications',
+        context: {
+          operation: 'configure',
+          platform: inputs.platform,
+          projectPath: inputs.projectPath,
+          features: inputs.features
+        }
+      },
+      io: {
+        inputJsonPath: `tasks/${taskCtx.effectId}/input.json`,
+        outputJsonPath: `tasks/${taskCtx.effectId}/result.json`
+      }
+    };
+  }
 });
 ```
 
-```typescript
-// Server-side push sending using the web-push library
-import webpush from 'web-push';
+## Notification Payload Reference
 
-webpush.setVapidDetails(
-  'mailto:admin@yourstore.com',
-  process.env.VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-);
+### APNs Payload Structure
+```json
+{
+  "aps": {
+    "alert": {
+      "title": "New Message",
+      "subtitle": "From John",
+      "body": "Hey, how are you?"
+    },
+    "badge": 1,
+    "sound": "default",
+    "mutable-content": 1,
+    "category": "MESSAGE_CATEGORY",
+    "thread-id": "conversation-123"
+  },
+  "deep_link": "myapp://messages/123",
+  "image_url": "https://example.com/image.jpg",
+  "custom_data": {
+    "message_id": "msg-456",
+    "sender_id": "user-789"
+  }
+}
+```
 
-// Generate VAPID keys once: npx web-push generate-vapid-keys
-
-async function sendPushNotification(subscription: PushSubscription, payload: {
-  title: string;
-  body: string;
-  url: string;
-  icon?: string;
-}) {
-  try {
-    await webpush.sendNotification(subscription, JSON.stringify(payload));
-  } catch (err: any) {
-    if (err.statusCode === 410) {
-      // Subscription expired — remove from database
-      await db.pushSubscriptions.deleteByEndpoint(subscription.endpoint);
+### FCM Payload Structure
+```json
+{
+  "message": {
+    "token": "device_fcm_token",
+    "notification": {
+      "title": "New Message",
+      "body": "Hey, how are you?",
+      "image": "https://example.com/image.jpg"
+    },
+    "data": {
+      "deep_link": "myapp://messages/123",
+      "message_id": "msg-456",
+      "sender_id": "user-789"
+    },
+    "android": {
+      "priority": "high",
+      "notification": {
+        "channel_id": "messages",
+        "tag": "message-123",
+        "click_action": "OPEN_MESSAGE"
+      }
+    },
+    "apns": {
+      "payload": {
+        "aps": {
+          "mutable-content": 1,
+          "category": "MESSAGE_CATEGORY"
+        }
+      }
     }
   }
 }
-
-// Triggered when inventory transitions from 0 to > 0
-async function notifyBackInStock(productId: string) {
-  const product = await db.products.findById(productId);
-  const waitlist = await db.pushWaitlist.findByProduct(productId);
-
-  for (const entry of waitlist) {
-    const sub = await db.pushSubscriptions.findByUserId(entry.userId);
-    if (!sub) continue;
-    await sendPushNotification(sub, {
-      title: 'Back in stock!',
-      body: `${product.name} is available again`,
-      url: `${process.env.STORE_URL}/products/${product.slug}`,
-      icon: product.images[0]?.url,
-    });
-  }
-}
 ```
-
-### Step 3: Optimize opt-in timing
-
-The most critical factor for push notification effectiveness is **when** you show the permission prompt. Never ask on the first page load.
-
-**Best triggers for the opt-in prompt:**
-- After the visitor has viewed 3+ products
-- Immediately after a customer adds an item to cart
-- When a customer views an out-of-stock product (context: "Get notified when it's back")
-- On the order confirmation page ("Get shipping updates and deals via browser push")
-
-In PushOwl: go to **Settings → Opt-in Prompt → Advanced** and set the trigger condition.
-In PushEngage: go to **Subscription Prompt → Display Rules** and set page view count or cart event triggers.
-
-### Step 4: Set up the highest-converting push campaigns
-
-**Priority order by conversion rate:**
-
-1. **Back-in-stock alerts** — highest CTR (15–25%); customers opted in specifically for this product
-2. **Cart abandonment** — set for 1 hour and 24 hours after abandonment; use urgency in the second push ("Your cart expires soon")
-3. **Price drop alerts** — customers watching a specific product convert at 10–20% when notified of their target price
-4. **Shipping updates** — low-friction way to grow push subscribers (capture at order confirmation); keeps brand top-of-mind
-
-**In PushOwl:** all four are available as pre-built automations under **Automations** — enable them and customize the message.
-
-### Step 5: Measure push performance
-
-| Metric | Healthy Target | Where to Find |
-|--------|----------------|---------------|
-| Opt-in rate | 5–15% of new visitors | App dashboard |
-| Back-in-stock click rate | 15–25% | PushOwl/PushEngage analytics |
-| Cart abandonment recovery rate | 2–5% | App analytics |
-| Unsubscribe rate per campaign | < 2% | App analytics |
-
-If unsubscribe rate is above 2%, reduce push frequency or improve message relevance.
 
 ## Best Practices
 
-- **Never request permission on first page load** — acceptance rates jump from ~5% to ~25% when shown after a user action like adding to cart
-- **Limit to 2 push notifications per day per user maximum** — excessive frequency is the top driver of opt-out
-- **Set a TTL on time-sensitive notifications** — flash sale pushes should expire when the sale ends; PushOwl and PushEngage both support notification expiry
-- **Keep notification body under 100 characters** — longer bodies are truncated on Android; test on mobile before deploying
-- **Use "Notify me" at the product level for out-of-stock** — this captures high-intent subscribers with context; generic sitewide opt-ins perform worse
+1. **Request Permission Appropriately**: Ask for notification permission at the right moment
+2. **Use Notification Channels**: Create meaningful channels for Android 8.0+
+3. **Handle All App States**: Test notifications in foreground, background, and terminated states
+4. **Implement Token Refresh**: Handle FCM token refresh and APNs token changes
+5. **Design Clear Deep Links**: Create consistent deep linking scheme
+6. **Test Rich Media**: Verify image downloads and display
+7. **Monitor Delivery**: Track notification delivery and tap rates
 
-## Common Pitfalls
+## References
 
-| Problem | Solution |
-|---------|----------|
-| Low opt-in rate | Move the permission prompt to after add-to-cart or product view #3; never show on first load |
-| iOS users not receiving push | Web push on iOS requires iOS 16.4+ and the user must install the site as a PWA (Add to Home Screen); this is a browser limitation |
-| Push notifications not firing for back-in-stock | Verify the inventory webhook is connected in PushOwl/PushEngage settings; check the app's automation logs |
-| High unsubscribe rate | Reduce push frequency; add preference management so subscribers can choose which notification types they receive |
-| Duplicate subscriptions in the database | For custom implementations, use `upsert` keyed on `(userId, endpoint)` |
-
-## Related Skills
-
-- @email-marketing-automation
-- @cart-abandonment-recovery
-- @sms-marketing
-- @exit-intent-popups
-- @customer-retention-engine
+- [Apple Push Notification Service](https://developer.apple.com/documentation/usernotifications)
+- [Firebase Cloud Messaging](https://firebase.google.com/docs/cloud-messaging)
+- [APNs Provider API](https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server)
+- [FCM HTTP v1 API](https://firebase.google.com/docs/reference/fcm/rest/v1/projects.messages)

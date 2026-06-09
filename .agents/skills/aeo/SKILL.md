@@ -1,241 +1,277 @@
 ---
 name: aeo
 description: >
-  Answer Engine Optimization (AEO): optimize content to be cited by LLMs
-  (ChatGPT, Claude, Perplexity, Gemini, Copilot) when they answer user
-  questions. Use when designing content strategy for the LLM-citation era,
-  auditing existing content for LLM citability, structuring Q&A schema for
-  AI surfaces, tracking which content gets cited and where, or measuring
-  AEO performance against competitors. Distinct from our `ai-seo` skill —
-  that one is about ranking in AI search results (Perplexity, Google AI
-  Overviews); this one is about being the source LLMs cite in their answers.
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: borghei
-  category: marketing
-  domain: marketing
-  updated: 2026-05-27
-  tags: [aeo, answer-engine-optimization, llm-citation, generative-search, ai-content, schema-qa, geo, llm-seo]
+  Check and improve your brand's visibility across AI search engines (ChatGPT, Perplexity, Gemini, Grok, Claude, DeepSeek).
+  Set up tracking, run visibility analyses, audit your website for AI readability, and get actionable recommendations.
+  Uses the npx goose-aeo@latest CLI.
+tags: [seo]
 ---
 
-# Answer Engine Optimization (AEO)
+You are helping a user check and improve their brand's Answer Engine Optimization (AEO) — how visible they are across AI search engines like ChatGPT, Perplexity, Gemini, Grok, Claude, and DeepSeek.
 
-End-to-end practice of optimizing content to be cited by LLMs when they generate answers. Covers the technical foundations (how LLMs select sources), content structuring patterns (Q&A schema, citation-worthy patterns), measurement (which content gets cited, by which LLM, how often), and the strategic positioning that differentiates AEO from traditional SEO and from AI-SEO.
+You use the `npx goose-aeo@latest` CLI to do everything. Always use `--json` for machine-readable output — never rely on interactive prompts.
 
-This skill is provider-aware but provider-agnostic: works for content optimized for ChatGPT, Claude, Perplexity, Gemini, Copilot, and emerging AI surfaces.
+## Auto-Detect: What Does the User Need?
 
----
+Before doing anything, check the current state:
 
-## When to use this skill
-
-| Situation | Skill applies |
-|-----------|---------------|
-| Designing content strategy that targets LLM citation | Yes — start with **AEO fundamentals** |
-| Auditing existing content for LLM citability | Yes — `scripts/aeo_content_auditor.py` |
-| Adding Q&A schema to content | Yes — `scripts/schema_qa_generator.py` |
-| Tracking which content gets cited by LLMs | Yes — `scripts/citation_extractor.py` |
-| Choosing between AEO and traditional SEO investment | Yes — see **AEO vs SEO vs AI-SEO** |
-| Ranking in Perplexity / Google AI Overviews | Use `marketing/ai-seo` |
-| Traditional SEO (rank in Google search results) | Use `marketing/seo-specialist` |
-
----
-
-## AEO vs SEO vs AI-SEO
-
-Three distinct (but overlapping) practices. Confusing them leads to wasted investment.
-
-| Practice | Optimizes for | Surface | Success metric |
-|----------|---------------|---------|----------------|
-| **Traditional SEO** | Google / Bing rankings | SERPs (organic blue links) | Position, clicks |
-| **AI-SEO** | AI search engines | Perplexity, Google AI Overviews, You.com | Position in AI search results, traffic from citations |
-| **AEO (this skill)** | LLM citation in answers | ChatGPT, Claude, Gemini, Copilot answers | Citation rate, brand mention in LLM outputs |
-
-### Strategic positioning
-
-For most B2B brands:
-- **Traditional SEO**: still 50-70% of organic traffic. Don't abandon.
-- **AI-SEO**: emerging 10-20% of search-driven engagement. Growing fast.
-- **AEO**: 5-15% of LLM-mediated user discovery. Largest growth potential.
-
-Optimize content for all three simultaneously; the techniques substantially overlap.
-
----
-
-## The AEO funnel
-
-Users find brands through LLMs in a different funnel than search:
-
-```
-Traditional search:           AEO funnel:
-1. User types query           1. User asks LLM a question
-2. SERPs show ~10 results     2. LLM generates answer
-3. User clicks one            3. LLM cites N sources (1-10)
-4. User reads page            4. User reads answer; may click cited source
-5. User converts              5. User attributes answer to LLM (less so to cited brand)
+```bash
+cat .goose-aeo.yml 2>/dev/null || echo "NOT_FOUND"
 ```
 
-Key implications:
-- **Citation is the new click.** When LLM cites your content, you don't always get a visit — but you get attribution.
-- **Brand-as-source becomes the goal.** Even without click, being cited builds brand association.
-- **Quality > volume.** LLMs cite a small number of sources; quality of citation matters more than ranking position.
-- **Trust signals matter more.** LLMs avoid citing low-authority sources.
+Then route based on state and what the user asked:
 
-See [references/aeo-fundamentals.md](references/aeo-fundamentals.md) for the deep mechanics of how LLMs select sources, the citation models per provider, and the trust signals that drive selection.
+| State | User says | Action |
+|-------|-----------|--------|
+| No `.goose-aeo.yml` | Anything AEO-related | Start with **Setup** |
+| Config exists, no runs | "run", "check", "analyze" | Go to **Run Analysis** |
+| Config exists, has runs | "run", "check" | Go to **Run Analysis** |
+| Config exists, has runs | "audit", "score my site" | Go to **Website Audit** |
+| Config exists, has runs | "recommend", "what should I do" | Go to **Recommendations** |
+| Config exists, has runs | General AEO request | Show status summary, offer all options |
+
+If in doubt, run `npx goose-aeo@latest status --json` to see the full picture (company name, query count, previous runs) and ask the user what they'd like to do.
 
 ---
 
-## The 5 content patterns that get cited
+## Setup
 
-After analysis of LLM citation behavior, five content patterns dominate:
+Set up AEO tracking for a domain. Have a natural conversation with the user to gather what's needed.
 
-### Pattern 1: Definitional content with clear claims
+### Gather Information
 
-LLMs cite sources for definitions, facts, and short claims. Pages that answer "What is X?" with a clean 2-3 sentence definition followed by elaboration get cited often.
+Ask the user for:
+- **Company domain** (e.g., `athina.ai`) — required
+- **Company name** (e.g., "Athina AI") — if not provided, derive from domain
+- **A few competitors** — ask "Who are your main competitors?" If they're not sure, say you'll auto-discover them.
+- **Which AI engines to monitor** — default is Perplexity, OpenAI, and Gemini. Ask if they want to add Grok, Claude, or DeepSeek. More providers = higher cost per run.
 
-**Structure:**
+Do NOT proceed until you have at least the company domain.
+
+### Check Prerequisites
+
+Check which API keys are available:
+
+```bash
+node -e "
+const keys = {
+  GOOSE_AEO_PERPLEXITY_API_KEY: !!process.env.GOOSE_AEO_PERPLEXITY_API_KEY,
+  GOOSE_AEO_OPENAI_API_KEY: !!process.env.GOOSE_AEO_OPENAI_API_KEY,
+  GOOSE_AEO_GEMINI_API_KEY: !!process.env.GOOSE_AEO_GEMINI_API_KEY,
+  GOOSE_AEO_GROK_API_KEY: !!process.env.GOOSE_AEO_GROK_API_KEY,
+  GOOSE_AEO_CLAUDE_API_KEY: !!process.env.GOOSE_AEO_CLAUDE_API_KEY,
+  GOOSE_AEO_DEEPSEEK_API_KEY: !!process.env.GOOSE_AEO_DEEPSEEK_API_KEY,
+  GOOSE_AEO_FIRECRAWL_API_KEY: !!process.env.GOOSE_AEO_FIRECRAWL_API_KEY,
+};
+console.log(JSON.stringify(keys, null, 2));
+"
 ```
-[Term] is [crisp definition in 1-2 sentences].
 
-[Elaboration with context and nuance — 1-3 paragraphs].
+Tell the user which keys are set and which are missing for their chosen providers. If keys are missing, ask them to provide the values. When they do, write them to `.env`:
 
-[Related concepts / scope / boundaries — optional].
+```bash
+echo 'GOOSE_AEO_PERPLEXITY_API_KEY=pplx-...' >> .env
 ```
 
-### Pattern 2: Comparative tables
+The `GOOSE_AEO_OPENAI_API_KEY` is also needed for query generation and analysis (not just as a monitored provider). Make sure the user knows this.
 
-LLMs use tables to extract comparisons. Markdown tables in published content (or HTML equivalents) get cited when users ask "X vs Y."
+### Run Init
 
-```markdown
-| Feature | Product A | Product B |
-|---------|-----------|-----------|
-| Price | $X | $Y |
-| Speed | Z ms | W ms |
-| Support | 24/7 | Business hours |
+Build the flags from what the user told you:
+
+```bash
+npx goose-aeo@latest init \
+  --domain <domain> \
+  --name "<company name>" \
+  --providers <comma-separated-providers> \
+  --competitors "<comma-separated-competitor-domains>" \
+  --json
 ```
 
-### Pattern 3: Step-by-step procedural content
+If the user didn't provide competitors, the tool will auto-discover them using Perplexity (if the API key is set).
 
-"How to [task]" content with explicit numbered steps. LLMs reproduce procedural steps; the cited source becomes the authoritative reference.
+Show the user the competitors and providers configured. Ask: "Do these competitors look right? Want to add or remove any?"
 
-### Pattern 4: Statistics + data with sources
+If the user wants changes, edit `.goose-aeo.yml` directly — do NOT re-run init.
 
-LLMs cite content that provides numerical facts with attribution. "According to [your study], X% of [thing] does Y" is repeatable and citable.
+### Generate Queries
 
-### Pattern 5: Lists with explanations
+Generate a small batch for review:
 
-"Top N approaches to X" with each item explained gets cited when users ask comparative or enumeration questions.
+```bash
+npx goose-aeo@latest queries generate --limit 10 --dry-run --json
+```
 
-See [references/llm-content-structuring.md](references/llm-content-structuring.md) for deep patterns including FAQ schema, citation hooks, voice-search optimization, and LLM-readable structure markers.
+Show the queries in a readable numbered list. Ask: "Do these look like the kind of things your potential customers would search for?"
 
----
+If queries are off-topic, update the company description in `.goose-aeo.yml` and re-generate. To add specific queries: `npx goose-aeo@latest queries add "<query text>" --json`. To remove: `npx goose-aeo@latest queries remove <id> --json`.
 
-## Quick start
+Once approved, generate the full set:
 
-1. **Audit existing content**: `python3 scripts/aeo_content_auditor.py --path ./content`
-2. **Add Q&A schema to high-value pages**: `python3 scripts/schema_qa_generator.py --content article.md`
-3. **Track citations from competitors**: `python3 scripts/citation_extractor.py --query "What is X?" --brand "Your Brand"`
-4. **Iterate**: monthly content review with AEO scoring
+```bash
+npx goose-aeo@latest queries generate --limit 50 --json
+```
 
----
+### Hand Off
 
-## End-to-end workflows
-
-### Workflow: AEO content strategy from scratch
-
-1. **Identify target queries** — what questions do potential customers ask LLMs about your category?
-2. **Audit competitor citations** — which brands get cited for those queries? `scripts/citation_extractor.py`
-3. **Audit your existing content** — score current content for AEO patterns: `scripts/aeo_content_auditor.py`
-4. **Prioritize 10-20 high-value pages** — those that should be the canonical source
-5. **Restructure per AEO patterns** — definitional content, tables, step-by-step, statistics
-6. **Add structured data** — `scripts/schema_qa_generator.py` generates FAQ schema
-7. **Build authority signals** — backlinks, citations, mentions
-8. **Monitor monthly** — track citation rate trend
-
-### Workflow: Audit individual content piece
-
-1. Run `scripts/aeo_content_auditor.py --path article.md --format markdown`
-2. Review per-pattern scoring (5 patterns above)
-3. Identify gaps: missing definition, no table, no clear steps, no stats, no list
-4. Restructure to add 2-3 missing patterns
-5. Add FAQ schema with `scripts/schema_qa_generator.py`
-6. Re-audit to confirm improvements
-
-### Workflow: Competitive citation analysis
-
-1. Identify 10-20 key queries in your category
-2. Query each LLM (ChatGPT, Claude, Perplexity, Gemini) with those questions
-3. Record citations + brands mentioned
-4. Analyze: which brands dominate? what content do they have?
-5. Identify white-space queries (no clear dominant source yet)
-6. Prioritize content creation for white-space queries
-
-### Workflow: Measure AEO performance
-
-1. **Citation rate**: % of queries where your brand is cited (target: 30%+ for category leaders)
-2. **Brand mention rate**: % of queries where your brand is mentioned (cited or not)
-3. **Source quality**: are you cited as primary source or supporting?
-4. **Click-through from citations**: traffic attributable to LLM citations (requires source tracking)
-5. **Voice tracking**: how is your brand characterized (positive / neutral / negative attributes)
-
-See [references/citation-tracking-and-measurement.md](references/citation-tracking-and-measurement.md) for measurement methodologies, attribution challenges, and competitive benchmarking.
+Tell the user setup is complete and offer to run their first analysis right away. Mention approximate cost: 50 queries x 3 providers ~ $2-5 per run.
 
 ---
 
-## Common AEO failures
+## Run Analysis
 
-- **Optimizing only for Google SERP**: misses the LLM citation surface entirely
-- **Generic content without specific claims**: LLMs prefer specific, factual content over generic explanation
-- **No structure markers** (headings, lists, tables): LLMs can't extract specific information
-- **No FAQ schema**: missed opportunity for Q&A surfacing in AI Overviews
-- **Stuffed keyword content**: LLMs prefer natural language with clear meaning
-- **No authority signals**: LLMs avoid citing low-trust sources
-- **Outdated content**: LLMs prefer recent, current content
-- **Hidden behind paywalls**: LLMs can't cite what they can't access
-- **No structured data**: missed opportunity for richer extraction
-- **Brand-first content**: LLMs prefer informational content over promotional
+Execute queries against AI search engines and generate a visibility report.
+
+### Pre-Flight
+
+```bash
+npx goose-aeo@latest status --json
+```
+
+Show: company name, number of queries, number of previous runs.
+
+### Cost Estimate
+
+```bash
+npx goose-aeo@latest run --dry-run --json
+```
+
+Tell the user: number of queries, which providers, total API calls, estimated cost. Ask for confirmation before proceeding.
+
+### Execute
+
+```bash
+npx goose-aeo@latest run --confirm --json
+```
+
+This may take several minutes. Tell the user it's running.
+
+### Analyze
+
+```bash
+npx goose-aeo@latest analyze --json
+```
+
+Note how many responses were analyzed, analysis cost, and any alerts from metric drops.
+
+### Report
+
+```bash
+npx goose-aeo@latest report --json
+```
+
+Present a **conversational summary** — do NOT dump raw numbers:
+
+- **Overall visibility:** mention rate, prominence score, share of voice
+- **By provider:** mention rate per engine
+- **Key insights:** best/worst provider, competitor comparison, any alerts
+- **Recommendations:** 2-3 actionable suggestions based on results
+
+### Next Steps
+
+Offer:
+1. **"See the dashboard"** — `npx goose-aeo@latest dashboard`
+2. **"Audit my website"** — run a website readability audit
+3. **"Get recommendations"** — detailed improvement recommendations
+4. **"Compare with previous run"** — if 2+ runs exist, run a diff
 
 ---
 
-## LLM-by-LLM citation behavior
+## Website Audit
 
-Different LLMs have different citation behaviors:
+Scrape website pages and score each for AI search readability across 6 dimensions.
 
-| LLM | Citation style | What gets cited |
-|-----|----------------|-----------------|
-| ChatGPT | Inline citations (when web-enabled); fewer otherwise | Recent, authoritative sources |
-| Claude | Citations when grounding enabled (tools); generally avoids unsupported claims | High-quality sources, evidence-based |
-| Perplexity | Always cites sources prominently | Recent + authoritative sources |
-| Google Gemini / AI Overviews | Cites in AI Overviews + Gemini responses | High-ranking pages + structured data |
-| Copilot (Microsoft) | Cites sources prominently | Sources varied |
-| Meta AI | Lighter citation | Limited transparency |
+### Pre-Flight
 
-Optimize content with structure markers (headings, lists, tables) and authority signals (links, citations, expert attribution) — works across all of these.
+```bash
+npx goose-aeo@latest status --json
+```
+
+If not set up, direct the user to setup first.
+
+### Run Audit
+
+```bash
+npx goose-aeo@latest audit --json
+```
+
+This may take a minute or two as it scrapes pages and scores each one.
+
+### Present Results
+
+**Overall score:** "Your site scores X.X / 10 for AI search readability"
+- >= 7: well-optimized
+- 4-7: room for improvement
+- < 4: needs significant work
+
+**Per-page highlights:** Best and worst scoring pages.
+
+**Dimension breakdown** — explain which are strongest and weakest:
+- **Positioning Clarity**: Does your site clearly explain what you do upfront?
+- **Structured Content**: Do pages use headings, lists, FAQs that AI can parse?
+- **Query Alignment**: Does your content match what people ask AI engines?
+- **Technical Signals**: Schema markup, meta descriptions, clean HTML?
+- **Content Depth**: Enough detail for AI to form a meaningful citation?
+- **Comparison Content**: Do you compare yourself to alternatives?
+
+**Recommendations:** Present as numbered actionable items.
+
+### Offer to Fix
+
+Based on lowest-scoring dimensions, offer specific actions:
+- Low structuredContent: "Want me to add FAQ sections to your key pages?"
+- Low comparisonContent: "Want me to create a comparison page?"
+- Low queryAlignment: "Want me to create content pages that answer your tracked queries?"
+- Low technicalSignals: "Want me to improve meta descriptions and add schema markup?"
+- Low positioningClarity: "Want me to rewrite your homepage intro?"
+- Low contentDepth: "Want me to expand content on your thinnest pages?"
 
 ---
 
-## Tooling
+## Recommendations
 
-| Script | Purpose |
-|--------|---------|
-| `scripts/aeo_content_auditor.py` | Score content for AEO patterns (definition, table, steps, stats, list, structure markers) |
-| `scripts/citation_extractor.py` | Parse LLM responses (saved transcripts) for brand citations + competitive analysis |
-| `scripts/schema_qa_generator.py` | Generate JSON-LD FAQ schema from content (FAQPage / QAPage / HowTo) |
+Analyze latest run data and produce actionable visibility improvement recommendations.
+
+### Pre-Flight
+
+```bash
+npx goose-aeo@latest status --json
+```
+
+If no runs exist, tell the user to run an analysis first.
+
+### Generate
+
+```bash
+npx goose-aeo@latest recommend --json
+```
+
+### Present Results
+
+**Overall summary:** Big picture of the brand's AI visibility position.
+
+**Visibility gaps:** For each gap — the topic, affected queries, which competitors are mentioned instead, and the specific recommendation.
+
+**Source opportunities:** Domains frequently cited by AI engines, how often, and how to get featured there.
+
+**Competitor insights:** Who's outperforming, on which queries, and what they might be doing differently.
+
+### Offer Next Steps
+
+1. **"Draft content for gaps"** — create blog posts, landing pages, or FAQ content for visibility gaps
+2. **"Create a comparison page"** — draft a vs/comparison page if competitors are being mentioned instead
+3. **"Write a guest post pitch"** — draft outreach for source opportunity domains
+4. **"Update queries"** — add new query angles the recommendations suggest
+5. **"See the dashboard"** — `npx goose-aeo@latest dashboard` for visual exploration
 
 ---
 
-## References
+## Error Handling
 
-- [aeo-fundamentals.md](references/aeo-fundamentals.md) — how LLMs select sources; citation mechanisms per provider; trust signals
-- [llm-content-structuring.md](references/llm-content-structuring.md) — content patterns; Q&A schema; voice-search; structure markers
-- [citation-tracking-and-measurement.md](references/citation-tracking-and-measurement.md) — measurement methodologies; attribution; benchmarking
-
----
-
-## Related skills
-
-- `marketing/ai-seo` — AI search engine ranking (Perplexity, Google AI Overviews); complementary to AEO
-- `marketing/seo-specialist` — traditional SEO (Google rankings); foundational; still 50-70% of organic
-- `marketing/seo-audit` — technical SEO audit
-- `marketing/programmatic-seo` — scaled content production with SEO patterns
-- `c-level-advisor/cs-cmo-advisor` — strategic AEO investment decisions
+- **"No company found" / no `.goose-aeo.yml`**: Run setup first.
+- **"GOOSE_AEO_OPENAI_API_KEY is required"**: Tell the user to set the env var — it's needed for query generation, analysis, and recommendations.
+- **Provider API key missing**: Tell the user which key is needed and how to set it.
+- **No pages scraped during audit**: Check the domain in `.goose-aeo.yml` and whether the site is publicly accessible.
+- **All-zero visibility**: Explain this means AI engines aren't mentioning the brand yet — this is the baseline to improve from.
+- **Partial run failure**: Some providers may have succeeded. Check error count and report which failed.
+- Never silently swallow errors — always show them and suggest a fix.

@@ -1,81 +1,41 @@
 ---
-name: "codex"
-description: "A radically minimal, blank-canvas interface built as a pure edge-to-edge surface, with almost no color and typography carrying the visual weight. Black serves as the only filled color, the only divider, and the sole surface tone cards."
-metadata:
-  author: typeui.sh
+name: codex
+description: Use when the user asks to run Codex CLI (codex exec, codex resume) or references OpenAI Codex for code analysis, refactoring, or automated editing
 ---
 
-<!-- TYPEUI_SH_MANAGED_START -->
-# Open Design System Skill (Universal)
+# Codex Skill Guide
 
-## Mission
-You are an expert design-system guideline author for Codex.
-Create practical, implementation-ready guidance that can be directly used by engineers and designers.
+## Running a Task
+1. **Do NOT specify a model by default.** The Codex CLI is configured with a ChatGPT account, and explicit model flags (`-m gpt-5-codex`, `-m gpt-5`, `-m o4-mini`) all fail with "not supported when using Codex with a ChatGPT account." Omitting `-m` lets Codex use its default model, which works. Only add `-m` if the user explicitly requests a specific model.
+2. Select the sandbox mode required for the task; default to `--sandbox read-only` unless edits or network access are necessary.
+3. Assemble the command with the appropriate options:
+   - `--sandbox <read-only|workspace-write|danger-full-access>`
+   - `--full-auto`
+   - `-C, --cd <DIR>`
+   - `--skip-git-repo-check`
+   - `-m, --model <MODEL>` (only if user explicitly requests)
+   - `--config model_reasoning_effort="<high|medium|low>"` (only if user explicitly requests)
+4. Always use --skip-git-repo-check.
+5. When continuing a previous session, use `codex exec --skip-git-repo-check resume --last` via stdin. When resuming don't use any configuration flags unless explicitly requested by the user. Resume syntax: `echo "your prompt here" | codex exec --skip-git-repo-check resume --last 2>/dev/null`. All flags have to be inserted between exec and resume.
+6. **IMPORTANT**: By default, append `2>/dev/null` to all `codex exec` commands to suppress thinking tokens (stderr). Only show stderr if the user explicitly requests to see thinking tokens or if debugging is needed.
+7. Run the command, capture stdout/stderr (filtered as appropriate), and summarize the outcome for the user.
+8. **After Codex completes**, inform the user: "You can resume this Codex session at any time by saying 'codex resume' or asking me to continue with additional analysis or changes."
 
-## Brand
-A radically minimal, blank-canvas interface built as a pure edge-to-edge surface, with almost no color and typography carrying the visual weight. Black serves as the only filled color, the only divider, and the sole surface tone for cards layered above the page. All interactive elements use pill-shaped geometry to create a soft, conversational feel, while image-based cards apply a precise radius that adds a subtle, near-flat contrast. There are no shadows, no gradients in the UI, and no decorative illustrations—color appears only through editorial photography.
+### Quick Reference
+| Use case | Sandbox mode | Key flags |
+| --- | --- | --- |
+| Read-only review or analysis | `read-only` | `--sandbox read-only 2>/dev/null` |
+| Apply local edits | `workspace-write` | `--sandbox workspace-write --full-auto 2>/dev/null` |
+| Permit network or broad access | `danger-full-access` | `--sandbox danger-full-access --full-auto 2>/dev/null` |
+| Resume recent session | Inherited from original | `echo "prompt" \| codex exec --skip-git-repo-check resume --last 2>/dev/null` (no flags allowed) |
+| Run from another directory | Match task needs | `-C <DIR>` plus other flags `2>/dev/null` |
 
-## Style Foundations
-- Visual style: modern, minimal, clean
-- Typography scale: 12/14/16/20/24/32 | Fonts: primary=Open Sans, display=Open Sans, mono=JetBrains Mono | weights=100, 200, 300, 400, 500, 600, 700, 800, 900
-- Color palette: primary, secondary, neutral, success, warning, danger | Tokens: primary=#000000, secondary=#ffffff, success=#16A34A, warning=#D97706, danger=#DC2626, surface=#FFFFFF, text=#111827
-- Spacing scale: 4/8/12/16/24/32
+## Following Up
+- After every `codex` command, immediately use `AskUserQuestion` to confirm next steps, collect clarifications, or decide whether to resume with `codex exec resume --last`.
+- When resuming, pipe the new prompt via stdin: `echo "new prompt" | codex exec resume --last 2>/dev/null`. The resumed session automatically uses the same model, reasoning effort, and sandbox mode from the original session.
+- Restate the chosen model, reasoning effort, and sandbox mode when proposing follow-up actions.
 
-## Accessibility
-WCAG 2.2 AA, keyboard-first interactions, visible focus states
-
-## Writing Tone
-concise, confident, helpful
-
-## Rules: Do
-- prefer semantic tokens over raw values
-- preserve visual hierarchy
-- keep interaction states explicit
-
-## Rules: Don't
-- avoid low contrast text
-- avoid inconsistent spacing rhythm
-- avoid ambiguous labels
-
-## Expected Behavior
-- Follow the foundations first, then component consistency.
-- When uncertain, prioritize accessibility and clarity over novelty.
-- Provide concrete defaults and explain trade-offs when alternatives are possible.
-- Keep guidance opinionated, concise, and implementation-focused.
-
-## Guideline Authoring Workflow
-1. Restate the design intent in one sentence before proposing rules.
-2. Define tokens and foundational constraints before component-level guidance.
-3. Specify component anatomy, states, variants, and interaction behavior.
-4. Include accessibility acceptance criteria and content-writing expectations.
-5. Add anti-patterns and migration notes for existing inconsistent UI.
-6. End with a QA checklist that can be executed in code review.
-
-## Required Output Structure
-When generating design-system guidance, use this structure:
-- Context and goals
-- Design tokens and foundations
-- Component-level rules (anatomy, variants, states, responsive behavior)
-- Accessibility requirements and testable acceptance criteria
-- Content and tone standards with examples
-- Anti-patterns and prohibited implementations
-- QA checklist
-
-## Component Rule Expectations
-- Define required states: default, hover, focus-visible, active, disabled, loading, error (as relevant).
-- Describe interaction behavior for keyboard, pointer, and touch.
-- State spacing, typography, and color-token usage explicitly.
-- Include responsive behavior and edge cases (long labels, empty states, overflow).
-
-## Quality Gates
-- No rule should depend on ambiguous adjectives alone; anchor each rule to a token, threshold, or example.
-- Every accessibility statement must be testable in implementation.
-- Prefer system consistency over one-off local optimizations.
-- Flag conflicts between aesthetics and accessibility, then prioritize accessibility.
-
-## Example Constraint Language
-- Use "must" for non-negotiable rules and "should" for recommendations.
-- Pair every do-rule with at least one concrete don't-example.
-- If introducing a new pattern, include migration guidance for existing components.
-
-<!-- TYPEUI_SH_MANAGED_END -->
+## Error Handling
+- Stop and report failures whenever `codex --version` or a `codex exec` command exits non-zero; request direction before retrying.
+- Before you use high-impact flags (`--full-auto`, `--sandbox danger-full-access`, `--skip-git-repo-check`) ask the user for permission using AskUserQuestion unless it was already given.
+- When output includes warnings or partial results, summarize them and ask how to adjust using `AskUserQuestion`.

@@ -1,32 +1,17 @@
 ---
 name: prometheus-configuration
-description: "Complete guide to Prometheus setup, metric collection, scrape configuration, and recording rules."
-risk: unknown
-source: community
-date_added: "2026-02-27"
+description: Set up Prometheus for comprehensive metric collection, storage, and monitoring of infrastructure and applications. Use when implementing metrics collection, setting up monitoring infrastructure, or configuring alerting systems.
 ---
 
 # Prometheus Configuration
 
 Complete guide to Prometheus setup, metric collection, scrape configuration, and recording rules.
 
-## Do not use this skill when
-
-- The task is unrelated to prometheus configuration
-- You need a different domain or tool outside this scope
-
-## Instructions
-
-- Clarify goals, constraints, and required inputs.
-- Apply relevant best practices and validate outcomes.
-- Provide actionable steps and verification.
-- If detailed examples are required, open `resources/implementation-playbook.md`.
-
 ## Purpose
 
 Configure Prometheus for comprehensive metric collection, alerting, and monitoring of infrastructure and applications.
 
-## Use this skill when
+## When to Use
 
 - Set up Prometheus monitoring
 - Configure metric scraping
@@ -405,8 +390,3 @@ curl 'http://localhost:9090/api/v1/query?query=up'
 - `grafana-dashboards` - For visualization
 - `slo-implementation` - For SLO monitoring
 - `distributed-tracing` - For request tracing
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

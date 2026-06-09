@@ -1,271 +1,467 @@
 ---
 name: skill-optimizer
-description: "Diagnose and optimize Agent Skills (SKILL.md) with real session data and research-backed static analysis. Works with Claude Code, Codex, and any Agent Skills-compatible agent."
-risk: safe
-source: hqhq1025/skill-optimizer (MIT)
-date_added: "2026-04-11"
+description: Optimize Claude Code skills for token efficiency using progressive disclosure and content loading order. Use when optimizing skills, reducing token usage, restructuring skill content, improving skill performance, analyzing skill size, applying 500-line rule, implementing progressive disclosure, organizing reference files, optimizing YAML frontmatter, reducing context consumption, improving skill architecture, analyzing token costs, splitting large skills, or working with skill content loading. Covers Level 1 (metadata), Level 2 (instructions), Level 3 (resources) loading optimization.
 ---
 
-## When to Use This Skill
+# Skill Optimizer
 
-- Use when skills are not triggering as expected or seem broken
-- Use when you want to audit and improve your skill library's quality
-- Use when you want to understand which skills are underperforming or wasting context tokens
+## Purpose
 
-## Rules
+Optimize existing Claude Code skills to minimize token consumption by leveraging the three-level content loading architecture and progressive disclosure patterns.
 
-- **Read-only**: never modify skill files. Only output report.
-- **All 8 dimensions**: do not skip any. If data is insufficient, report "N/A — insufficient session data" rather than omitting.
-- **Quantify**: "you had 12 research tasks last week but the skill never triggered" beats "you often do research".
-- **Suggest, don't prescribe**: give specific wording suggestions for description improvements, but frame as suggestions.
-- **Show evidence**: for undertrigger claims, quote the actual user message that should have triggered the skill.
-- **Evidence-based suggestions**: when suggesting description rewrites, cite the specific research finding that motivates the change (e.g., "front-load trigger keywords — MCP study shows 3.6x selection rate improvement").
+## When to Use
 
-## Overview
+Use this skill when:
+- Analyzing existing skills for optimization opportunities
+- Skills are too large (approaching or exceeding 500 lines)
+- Need to reduce context consumption
+- Restructuring skills for progressive disclosure
+- Converting monolithic skills to multi-file architecture
+- Optimizing YAML frontmatter for better discovery
+- Improving skill performance and load times
+- Auditing skills for token efficiency
+- Creating new skills with optimization in mind
 
-Analyze skills using **historical session data + static quality checks**, output a diagnostic report with P0/P1/P2 prioritized fixes. Scores each skill on a 5-point composite scale across 8 dimensions.
+---
 
-CSO (Claude/Agent Search Optimization) = writing skill descriptions so agents select the right skill at the right time. This skill checks for CSO violations.
+## Content Loading Architecture
 
-## Usage
+### Three-Level Loading System
 
-- `/optimize-skill` → scan all skills
-- `/optimize-skill my-skill` → single skill
-- `/optimize-skill skill-a skill-b` → multiple specified skills
+**Level 1: Metadata (Always Loaded - ~100 tokens/skill)**
+- YAML frontmatter in SKILL.md
+- Loaded at startup into system prompt
+- Enables skill discovery without context overhead
+- **Optimization Target**: Description field (max 1024 chars)
 
-## Data Sources
+**Level 2: Instructions (Loaded When Triggered - <5,000 tokens)**
+- Main SKILL.md content
+- Loads dynamically when skill is relevant
+- Contains workflows, best practices, guidance
+- **Optimization Target**: Keep under 500 lines
 
-Auto-detect the current agent platform and scan the corresponding paths:
+**Level 3: Resources (Loaded As Needed - Variable)**
+- Additional markdown files (REFERENCE.md, EXAMPLES.md, etc.)
+- Code scripts in scripts/ directory
+- Templates, schemas, documentation
+- **Optimization Target**: No penalty until accessed
 
-| Source | Claude Code | Codex | Shared |
-|--------|------------|-------|--------|
-| Session transcripts | `~/.claude/projects/**/*.jsonl` | `~/.codex/sessions/**/*.jsonl` | — |
-| Skill files | `~/.claude/skills/*/SKILL.md` | `~/.codex/skills/*/SKILL.md` | `~/.agents/skills/*/SKILL.md` |
+### Key Principle
 
-**Platform detection:** Check which directories exist. Scan all available sources — a user may have both Claude Code and Codex installed.
+**"Files don't consume context until accessed"** - Bundle comprehensive documentation in reference files without context penalty.
 
-## Workflow
+---
 
+## Quick Optimization Workflow
+
+### 1. Analyze Current State
+
+**Check skill size:**
+```bash
+wc -l .claude/skills/skill-name/SKILL.md
 ```
-Identify target skills
-        ↓
-Collect session data (python3 scripts scan JSONL transcripts)
-        ↓
-Run 8 analysis dimensions
-        ↓
-Compute composite scores
-        ↓
-Output report with P0/P1/P2
+
+**Identify optimization opportunities:**
+- [ ] SKILL.md > 500 lines?
+- [ ] Detailed API docs in main file?
+- [ ] Extensive examples in main file?
+- [ ] Long reference tables or schemas?
+- [ ] Code snippets that could be scripts?
+- [ ] Multiple distinct topics/sections?
+
+### 2. Apply 500-Line Rule
+
+**If SKILL.md > 500 lines:**
+
+✅ **Keep in main file:**
+- Purpose and when to use
+- Quick start / common workflows
+- Critical best practices
+- Brief examples (5-10 lines)
+- Cross-references to detailed files
+
+❌ **Move to reference files:**
+- Comprehensive API documentation
+- Extensive code examples (>20 lines)
+- Detailed troubleshooting guides
+- Pattern libraries
+- Schema definitions
+- Long reference tables
+
+### 3. Structure Reference Files
+
+**Create organized reference hierarchy:**
+```
+skill-name/
+├── SKILL.md              # <500 lines, workflows & quick ref
+├── REFERENCE.md          # Comprehensive documentation
+├── EXAMPLES.md           # Detailed code examples
+├── PATTERNS.md           # Pattern library
+├── TROUBLESHOOTING.md    # Debug guide
+└── scripts/              # Executable utilities
+    └── helper.sh
 ```
 
-### Step 1: Identify Target Skills
+**Add table of contents to files >100 lines**
 
-Scan skill directories in order: `~/.claude/skills/`, `~/.codex/skills/`, `~/.agents/skills/`. Deduplicate by skill name (same name in multiple locations = same skill). For each, read `SKILL.md` and extract:
-- name, description (from YAML frontmatter)
-- trigger keywords (from description field)
-- defined workflow steps (Step 1/2/3... or ### sections under Workflow)
-- word count
+### 4. Optimize YAML Frontmatter
 
-If user specified skill names, filter to only those.
+**Description optimization (max 1024 chars):**
 
-### Step 2: Collect Session Data
+✅ **Include:**
+- All trigger keywords and phrases
+- Use cases and scenarios
+- File types and technologies
+- Common action verbs
+- Related concepts
 
-Use python3 scripts via Bash to scan session JSONL files. Extract:
+❌ **Avoid:**
+- Generic descriptions
+- Missing key terms
+- Overly verbose explanations
 
-**Claude Code sessions** (`~/.claude/projects/**/*.jsonl`):
-- `Skill` tool_use calls (which skills were invoked)
-- User messages (full text)
-- Assistant messages after skill invocation (for workflow tracking)
-- User messages after skill invocation (for reaction analysis)
+**Example:**
+```yaml
+---
+name: database-development
+description: Database development guidance for PostgreSQL including schema design, migrations, RLS policies, indexing strategies, privacy-preserving patterns, query optimization, and Prisma ORM. Use when working with tables, columns, indexes, migrations, RLS, Row-Level Security, database schema, SQL queries, Prisma schema, database optimization, privacy architecture, or PostgreSQL best practices.
+---
+```
 
-**Codex sessions** (`~/.codex/sessions/**/*.jsonl`):
-- `session_meta` events → extract `base_instructions` for skill loading evidence
-- `response_item` events → assistant outputs (workflow tracking)
-- `event_msg` events → tool execution and skill-related events
-- User messages from `turn_context` events (for reaction analysis)
+### 5. Implement Progressive Disclosure
 
-**Note:** Codex injects skills via context rather than explicit `Skill` tool calls. Skill loading (present in `base_instructions`) does NOT equal active invocation. To detect actual use, search for skill-specific workflow markers (step headers, output formats) in `response_item` content within that session. A skill is "invoked" only if the agent produced output following the skill's defined workflow.
-
-**Aggregated:**
-- Per-skill: invocation count, trigger keyword match count
-- Per-skill: user reaction sentiment after invocation
-- Per-skill: workflow step completion markers
-
-### Step 3: Run 8 Analysis Dimensions
-
-**You MUST run ALL 8 dimensions.** The baseline behavior without this skill is to skip dimensions 4.2, 4.3, 4.5b, and 4.8. These are the most valuable dimensions — do not skip them.
-
-#### 4.1 Trigger Rate
-
-Count how many times each skill was actually invoked vs how many times its trigger keywords appeared in user messages.
-
-**Claude Code:** count `Skill` tool_use calls in transcripts.
-**Codex:** count sessions where the agent produced output following the skill's workflow markers (not merely loaded in context).
-
-**Diagnose:**
-- Never triggered → skill may be useless or trigger words wrong
-- Keywords match >> actual invocations → undertrigger problem, description needs work
-- High frequency → core skill, worth optimizing
-
-#### 4.2 Post-Invocation User Reaction
-
-**This dimension is critical and easy to skip. Do not skip it.**
-
-After a skill is invoked in a session, read the user's next 3 messages. Classify:
-- **Negative**: "no", "wrong", "never mind", "not what I wanted", user interrupts
-- **Correction**: user re-describes their intent, manually overrides skill output
-- **Positive**: "good", "ok", "continue", "nice", user follows the workflow
-- **Silent switch**: user changes topic entirely (likely false positive trigger)
-
-Report per-skill satisfaction rate.
-
-#### 4.3 Workflow Completion Rate
-
-**This dimension is critical and easy to skip. Do not skip it.**
-
-For each skill invocation found in session data:
-1. Extract the skill's defined steps from SKILL.md
-2. Search the assistant messages in that session for step markers (Step N, specific output formats defined in the skill)
-3. Calculate: how far did execution get?
-
-Report: `{skill-name} (N steps): avg completed Step X/N (Y%)`
-
-If a specific step is frequently where execution stops, flag it.
-
-#### 4.4 Static Quality Analysis
-
-Check each SKILL.md against these 14 rules:
-
-| Check | Pass Criteria |
-|-------|--------------|
-| Frontmatter format | Only `name` + `description`, total < 1024 chars |
-| Name format | Letters, numbers, hyphens only |
-| Description trigger | Starts with "Use when..." or has explicit trigger conditions |
-| Description workflow leak | Description does NOT summarize the skill's workflow steps (CSO violation) |
-| Description pushiness | Description actively claims scenarios where it should be used, not just passive |
-| Overview section | Present |
-| Rules section | Present |
-| MUST/NEVER density | Count ALL-CAPS directive words; >5 per 100 words = flag |
-| Word count | < 500 words (flag if over) |
-| Narrative anti-pattern | No "In session X, we found..." storytelling |
-| YAML quoting safety | description containing `: ` must be wrapped in double quotes |
-| Critical info position | Core trigger conditions and primary actions must be in the first 20% of SKILL.md |
-| Description 250-char check | Primary trigger keywords must appear within the first 250 characters of description |
-| Trigger condition count | ≤ 2 trigger conditions in description is ideal |
-
-#### 4.5a False Positive Rate (Overtrigger)
-
-Skill was invoked but user immediately rejected or ignored it.
-
-#### 4.5b Undertrigger Detection
-
-**This is the highest-value dimension.** For each skill, extract its **capability keywords** (not just trigger keywords — what the skill CAN do). Then scan user messages for tasks that match those capabilities but where the skill was NOT invoked.
-
-Report: which user messages SHOULD have triggered the skill but didn't, and suggest description improvements.
-
-**Compounding Risk Assessment:**
-For skills with chronic undertriggering (0 triggers across 5+ sessions where relevant tasks appeared), flag as "compounding risk" — undertriggered skills cannot self-improve through usage feedback, causing the gap to widen over time. Recommend immediate description rewrite as P0.
-
-#### 4.6 Cross-Skill Conflicts
-
-Compare all skill pairs:
-- Trigger keyword overlap (same keywords in two descriptions)
-- Workflow overlap (two skills teach similar processes)
-- Contradictory guidance
-
-#### 4.7 Environment Consistency
-
-For each skill, extract referenced:
-- File paths → check if they exist (`test -e`)
-- CLI tools → check if installed (`which`)
-- Directories → check if they exist
-
-Flag any broken references.
-
-#### 4.8 Token Economics
-
-**This dimension is critical and easy to skip. Do not skip it.**
-
-For each skill:
-- Word count (from Step 1)
-- Trigger frequency (from 4.1)
-- Cost-effectiveness = trigger count / word count
-- Flag: large + never-triggered skills as candidates for removal or compression
-
-**Progressive Disclosure Tier Check:**
-Evaluate each skill against the 3-tier loading model:
-- Tier 1 (frontmatter): ~100 tokens. Check: is description ≤ 1024 chars?
-- Tier 2 (SKILL.md body): <500 lines recommended. Check: word count.
-- Tier 3 (reference files): loaded on demand. Check: does skill use reference files for detailed content, or cram everything into SKILL.md?
-
-Flag skills that put 500+ words in SKILL.md without using reference files as "poor progressive disclosure".
-
-### Step 4: Composite Score
-
-Rate each skill on a 5-point scale:
-
-| Score | Meaning |
-|-------|---------|
-| 5 | Healthy: high trigger rate, positive reactions, complete workflows, clean static |
-| 4 | Good: minor issues in 1-2 dimensions |
-| 3 | Needs attention: significant gap in 1 dimension or minor gaps in 3+ |
-| 2 | Problematic: never triggered, or negative user reactions, or major static issues |
-| 1 | Broken: doesn't work, references missing, or fundamentally misaligned |
-
-**Scored dimensions** (weighted average):
-- Trigger rate: 25%
-- User reaction: 20%
-- Workflow completion: 15%
-- Static quality: 15%
-- Undertrigger: 15%
-- Token economics: 10%
-
-**Qualitative dimensions** (reported but not scored):
-- 4.5a Overtrigger: reported as count + examples
-- 4.6 Cross-Skill Conflicts: reported as conflict pairs
-- 4.7 Environment Consistency: reported as pass/fail per reference
-
-## Report Format
-
+**Pattern:**
 ```markdown
-# Skill Optimization Report
-**Date**: {date}
-**Scope**: {all / specified skills}
-**Session data**: {N} sessions, {date range}
+## Topic Overview
 
-## Overview
-| Skill | Triggers | Reaction | Completion | Static | Undertrigger | Token | Score |
-|-------|----------|----------|------------|--------|--------------|-------|-------|
-| example-skill | 2 | 100% | 86% | B+ | 1 miss | 486w | 4/5 |
+Brief explanation (2-3 sentences).
 
-## P0 Fixes (blocking usage)
-1. ...
+**Key Points:**
+- Important consideration 1
+- Important consideration 2
 
-## P1 Improvements (better experience)
-1. ...
+**For detailed information**: [REFERENCE.md](REFERENCE.md#topic-details)
 
-## P2 Optional Optimizations
-1. ...
+**Quick Example:**
+\`\`\`typescript
+// Minimal working example (5-10 lines)
+\`\`\`
 
-## Per-Skill Diagnostics
-### {skill-name}
-#### 4.1 Trigger Rate
-...
-#### 4.2 User Reaction
-...
-(all 8 dimensions)
+**For more examples**: [EXAMPLES.md](EXAMPLES.md#topic-examples)
 ```
 
-## Research Background
+---
 
-The analysis dimensions in this report are grounded in the following research:
-- **Undertrigger detection**: Memento-Skills (arXiv:2603.18743) — skills as structured files require accurate routing; unrouted skills cannot self-improve via the read-write learning loop
-- **Description quality**: MCP Description Quality (arXiv:2602.18914) — well-written descriptions achieve 72% tool selection rate vs. 20% random baseline (3.6x improvement)
-- **Information position**: Lost in the Middle (Liu et al., TACL 2024) — U-shaped LLM attention curve
-- **Format impact**: He et al. (arXiv:2411.10541) — format changes alone can cause 9-40% performance variance
-- **Instruction compliance**: IFEval (arXiv:2311.07911) — LLMs struggle with multi-constraint prompts
+## Optimization Patterns Summary
 
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
+### Pattern 1: Extract API Documentation
+
+**Strategy**: Move detailed API docs to REFERENCE.md
+
+**Before**: 80+ lines of API documentation in SKILL.md
+**After**: 10-line summary with link to complete docs
+**Savings**: ~70 lines (~1,400 tokens)
+
+**For complete pattern details**: [REFERENCE.md](REFERENCE.md#pattern-1-extract-api-documentation)
+
+### Pattern 2: Extract Pattern Libraries
+
+**Strategy**: Move code patterns to PATTERNS.md
+
+**Before**: 200+ lines of pattern code in SKILL.md
+**After**: 18-line summary with quick example
+**Savings**: ~182 lines (~3,640 tokens)
+
+**For complete pattern details**: [REFERENCE.md](REFERENCE.md#pattern-2-extract-pattern-libraries)
+
+### Pattern 3: Extract Troubleshooting
+
+**Strategy**: Move debug guides to TROUBLESHOOTING.md
+
+**Before**: 300+ lines of troubleshooting in SKILL.md
+**After**: 18-line summary with quick diagnostics
+**Savings**: ~282 lines (~5,640 tokens)
+
+**For complete pattern details**: [REFERENCE.md](REFERENCE.md#pattern-3-extract-troubleshooting)
+
+### Pattern 4: Convert Code to Scripts
+
+**Strategy**: Move executable code to scripts/ directory
+
+**Before**: 55+ lines of bash script in SKILL.md
+**After**: 7-line reference to executable script
+**Savings**: ~48 lines (~960 tokens) + script code never enters context
+
+**For complete pattern details**: [REFERENCE.md](REFERENCE.md#pattern-4-convert-code-to-scripts)
+
+---
+
+## Common Anti-Patterns
+
+Avoid these common mistakes when creating or optimizing skills:
+
+❌ **Anti-Pattern 1: Monolithic Skills**
+- Single SKILL.md with 1000+ lines
+- Solution: Split into main + reference files
+
+❌ **Anti-Pattern 2: Incomplete References**
+- Reference files exist but not linked
+- Solution: Link all reference files from SKILL.md
+
+❌ **Anti-Pattern 3: Nested References**
+- References pointing to other references (>1 level)
+- Solution: Keep hierarchy flat (max 1 level)
+
+❌ **Anti-Pattern 4: Sparse Frontmatter**
+- Minimal YAML description missing keywords
+- Solution: Rich description with all triggers
+
+❌ **Anti-Pattern 5: Code as Documentation**
+- 100+ line scripts embedded in markdown
+- Solution: Move to scripts/ directory
+
+**For detailed anti-patterns and solutions**: [REFERENCE.md](REFERENCE.md#common-anti-patterns)
+
+---
+
+## Migration Workflow
+
+### Quick Migration Steps
+
+**Phase 1: Discovery**
+```bash
+# Check skill size
+wc -l .claude/skills/skill-name/SKILL.md
+
+# Identify sections to extract
+grep "^##" .claude/skills/skill-name/SKILL.md
+```
+
+**Phase 2: Planning**
+- Design file hierarchy (SKILL.md + reference files)
+- Plan content distribution
+- Identify scripts to extract
+
+**Phase 3: Implementation**
+```bash
+# Create reference files
+touch REFERENCE.md EXAMPLES.md
+mkdir -p scripts
+
+# Extract content systematically
+# 1. Copy section to reference file
+# 2. Replace in SKILL.md with summary + link
+# 3. Verify link works
+# 4. Remove detailed content from SKILL.md
+```
+
+**Phase 4: Optimization**
+- Trim remaining content
+- Optimize frontmatter with trigger keywords
+- Add navigation aids (table of contents)
+
+**Phase 5: Validation**
+```bash
+# Verify under 500 lines
+wc -l .claude/skills/skill-name/SKILL.md
+
+# Test links work
+grep -o '\[.*\](.*\.md#.*)' SKILL.md
+```
+
+**For complete migration workflow**: [REFERENCE.md](REFERENCE.md#complete-migration-workflow)
+
+---
+
+## Advanced Techniques
+
+Quick reference to advanced optimization strategies:
+
+**Technique 1: Conditional Content Loading**
+- Structure content so advanced sections load only when needed
+- Benefits: Most users don't load advanced content
+
+**Technique 2: Layered Examples**
+- Progressive complexity: minimal → production → enterprise
+- Benefits: Beginners see simple examples, advanced users access complex ones
+
+**Technique 3: Executable Documentation**
+- Scripts that both execute and document
+- Benefits: Zero token cost, self-documenting output
+
+**Technique 4: Tabular Compression**
+- Use tables to compress structured data
+- Benefits: 60%+ space reduction for configurations/options
+
+**Technique 5: Smart Chunking**
+- Group related small sections instead of individual extraction
+- Benefits: Better narrative flow, fewer cross-references
+
+**For detailed advanced techniques**: [REFERENCE.md](REFERENCE.md#advanced-optimization-techniques)
+
+---
+
+## Optimization Checklist
+
+When optimizing a skill, verify:
+
+### Content Structure
+- [ ] SKILL.md is under 500 lines
+- [ ] Main file contains quick reference only
+- [ ] Detailed docs moved to reference files
+- [ ] Reference files have table of contents (if >100 lines)
+- [ ] Cross-references use relative links
+- [ ] No deeply nested references (max 1 level)
+
+### YAML Frontmatter
+- [ ] Description includes all trigger keywords
+- [ ] Description is under 1024 characters
+- [ ] Description covers use cases and scenarios
+- [ ] Description mentions file types/technologies
+- [ ] Name follows kebab-case convention
+
+### Progressive Disclosure
+- [ ] Overview → Details pattern used
+- [ ] Quick examples in main file (5-10 lines)
+- [ ] Extensive examples in EXAMPLES.md
+- [ ] Brief summaries with references to details
+- [ ] Common workflows highlighted in main file
+
+### File Organization
+- [ ] Reference files named clearly
+- [ ] Scripts in scripts/ directory
+- [ ] Scripts are executable (chmod +x)
+- [ ] No redundant content across files
+- [ ] Each file has single, clear purpose
+
+### Token Efficiency
+- [ ] Eliminated verbose explanations
+- [ ] Removed duplicate information
+- [ ] Used bullet points vs paragraphs
+- [ ] Moved large code blocks to reference files
+- [ ] Converted reusable code to scripts
+
+---
+
+## Measurement & Validation
+
+### Token Estimation
+
+**Quick estimate:**
+```bash
+lines=$(wc -l < SKILL.md)
+tokens=$((lines * 20))  # Conservative: 20 tokens/line
+echo "Estimated tokens: ~$tokens"
+```
+
+**Target**: Keep SKILL.md under 10,000 tokens (~500 lines)
+
+### Before/After Comparison
+
+```bash
+# Calculate savings
+BEFORE=850  # lines before optimization
+AFTER=420   # lines after optimization
+SAVINGS=$((BEFORE - AFTER))
+TOKEN_SAVINGS=$((SAVINGS * 20))
+
+echo "Reduced by $SAVINGS lines"
+echo "Estimated token savings: ~$TOKEN_SAVINGS tokens"
+```
+
+### Quality Checks
+
+- [ ] All original information preserved
+- [ ] Links work correctly
+- [ ] Main file comprehensive for common cases
+- [ ] Reference files well-organized
+- [ ] Navigation intuitive
+
+**For detailed measurement methods**: [REFERENCE.md](REFERENCE.md#measurement--validation)
+
+---
+
+## Best Practices Summary
+
+✅ **DO:**
+- Keep SKILL.md minimum but use other reference files to keep the full and detailed knowledge base
+- Use progressive disclosure (overview → details)
+- Include all trigger keywords in description
+- Create clear cross-references to detailed docs
+- Add table of contents to reference files >100 lines
+- Convert reusable code to scripts
+- Test optimization with real usage
+
+❌ **DON'T:**
+- Exceed 500 lines in SKILL.md
+- Nest references more than 1 level deep
+- Include API docs in main file
+- Embed long code examples in main file
+- Create reference files without linking them
+- Use sparse YAML descriptions
+- Optimize without preserving critical info
+
+---
+
+## Quick Reference
+
+**File size limits:**
+- SKILL.md: <500 lines (strict)
+- Reference files: No limit (loaded on-demand)
+- YAML description: 1024 chars max
+
+**Optimization priority:**
+1. Apply 500-line rule to SKILL.md
+2. Extract API docs to REFERENCE.md
+3. Move examples to EXAMPLES.md or PATTERNS.md
+4. Convert scripts to scripts/ directory
+5. Enrich YAML frontmatter description
+
+**Common extractions:**
+- API documentation → REFERENCE.md
+- Code examples → EXAMPLES.md
+- Troubleshooting → TROUBLESHOOTING.md
+- Pattern library → PATTERNS.md
+- Scripts → scripts/ directory
+
+**Typical token savings:**
+- API extraction: ~1,400 tokens
+- Pattern library: ~3,640 tokens
+- Troubleshooting: ~5,640 tokens
+- Scripts: ~960 tokens + no code in context
+
+**For comprehensive optimization patterns and detailed workflows**: [REFERENCE.md](REFERENCE.md)
+
+---
+
+## Real-World Example
+
+**Before optimization:**
+```
+skill-example/
+└── SKILL.md  (850 lines, ~17,000 tokens)
+```
+
+**After optimization:**
+```
+skill-example/
+├── SKILL.md              (420 lines, ~8,400 tokens)
+├── REFERENCE.md          (350 lines, loaded on-demand)
+├── EXAMPLES.md           (180 lines, loaded on-demand)
+└── scripts/
+    ├── validate.sh       (code never enters context)
+    └── setup.sh          (code never enters context)
+```
+
+**Result**: 50% token reduction on initial load, comprehensive docs still available on-demand
+
+---
+
+**Next Steps**:
+1. Audit existing skills: `wc -l .claude/skills/*/SKILL.md`
+2. Identify candidates for optimization (>500 lines)
+3. Apply optimization workflow
+4. Measure token savings
+5. Validate with real usage
+
+**For detailed guidance**: See [REFERENCE.md](REFERENCE.md) for complete optimization patterns, anti-patterns, migration workflows, and advanced techniques.

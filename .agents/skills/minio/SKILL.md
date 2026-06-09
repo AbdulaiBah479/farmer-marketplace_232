@@ -1,154 +1,321 @@
 ---
 name: minio
-description: |
-  MinIO integration. Manage data, records, and automate workflows. Use when the user wants to interact with MinIO data.
-compatibility: Requires network access and a valid Membrane account (Free tier supported).
-license: MIT
-homepage: https://getmembrane.com
-repository: https://github.com/membranedev/application-skills
-metadata:
-  author: membrane
-  version: "1.0"
-  categories: ""
+description: MinIO S3-compatible object storage API. Use this skill for file upload, download, bucket management, and pre-signed URL generation.
+vm0_secrets:
+  - MINIO_ACCESS_KEY
+  - MINIO_SECRET_KEY
+vm0_vars:
+  - MINIO_ENDPOINT
 ---
 
-# MinIO
+# MinIO Object Storage
 
-MinIO is a high-performance, distributed object storage system. It's designed for large-scale data storage and is often used by developers and DevOps engineers for cloud-native applications, AI/ML workloads, and backup/archiving. It's compatible with Amazon S3.
+Use the MinIO API via `mc` (MinIO Client) or `curl` to manage **S3-compatible object storage** for file uploads, downloads, and bucket operations.
 
-Official docs: https://min.io/docs/minio/kubernetes/upstream/index.html
+> Official docs: `https://min.io/docs/minio/linux/reference/minio-mc.html`
 
-## MinIO Overview
+---
 
-- **Bucket**
-  - **Object**
-- **Policy**
-- **User**
-- **Group**
-- **Service Account**
+## When to Use
 
-## Working with MinIO
+Use this skill when you need to:
 
-This skill uses the Membrane CLI to interact with MinIO. Membrane handles authentication and credentials refresh automatically — so you can focus on the integration logic rather than auth plumbing.
+- **Upload/download files** to S3-compatible storage
+- **Manage buckets** (create, list, delete)
+- **Generate pre-signed URLs** for temporary file access
+- **List and search objects** in storage
+- **Mirror/sync directories** between local and remote
 
-### Install the CLI
+---
 
-Install the Membrane CLI so you can run `membrane` from the terminal:
+## Prerequisites
 
-```bash
-npm install -g @membranehq/cli@latest
-```
+1. Deploy MinIO server or use MinIO Play (public test server)
+2. Get access credentials (Access Key and Secret Key)
+3. Install MinIO Client (`mc`)
 
-### Authentication
-
-```bash
-membrane login --tenant --clientName=<agentType>
-```
-
-This will either open a browser for authentication or print an authorization URL to the console, depending on whether interactive mode is available.
-
-**Headless environments:** The command will print an authorization URL. Ask the user to open it in a browser. When they see a code after completing login, finish with:
+### Install MinIO Client
 
 ```bash
-membrane login complete <code>
+# macOS
+brew install minio/stable/mc
+
+# Linux (amd64)
+curl -O https://dl.min.io/client/mc/release/linux-amd64/mc
+chmod +x mc && sudo mv mc /usr/local/bin/
+
+# Verify installation
+mc --version
 ```
 
-Add `--json` to any command for machine-readable JSON output.
-
-**Agent Types** : claude, openclaw, codex, warp, windsurf, etc. Those will be used to adjust tooling to be used best with your harness
-
-### Connecting to MinIO
-
-Use `membrane connection ensure` to find or create a connection by app URL or domain:
+### Set Environment Variables
 
 ```bash
-membrane connection ensure "https://min.io/" --json
+export MINIO_ENDPOINT="play.min.io"
+export MINIO_ACCESS_KEY="your-access-key"
+export MINIO_SECRET_KEY="your-secret-key"
 ```
-The user completes authentication in the browser. The output contains the new connection id.
 
-This is the fastest way to get a connection. The URL is normalized to a domain and matched against known apps. If no app is found, one is created and a connector is built automatically.
-
-If the returned connection has `state: "READY"`, skip to **Step 2**.
-
-#### 1b. Wait for the connection to be ready
-
-If the connection is in `BUILDING` state, poll until it's ready:
+For testing, use MinIO Play (public sandbox):
 
 ```bash
-npx @membranehq/cli connection get <id> --wait --json
+export MINIO_ENDPOINT="play.min.io"
+export MINIO_ACCESS_KEY="Q3AM3UQ867SPQQA43P2F"
+export MINIO_SECRET_KEY="zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG"
 ```
 
-The `--wait` flag long-polls (up to `--timeout` seconds, default 30) until the state changes. Keep polling until `state` is no longer `BUILDING`.
-
-The resulting state tells you what to do next:
-
-- **`READY`** — connection is fully set up. Skip to **Step 2**.
-- **`CLIENT_ACTION_REQUIRED`** — the user or agent needs to do something. The `clientAction` object describes the required action:
-  - `clientAction.type` — the kind of action needed:
-    - `"connect"` — user needs to authenticate (OAuth, API key, etc.). This covers initial authentication and re-authentication for disconnected connections.
-    - `"provide-input"` — more information is needed (e.g. which app to connect to).
-  - `clientAction.description` — human-readable explanation of what's needed.
-  - `clientAction.uiUrl` (optional) — URL to a pre-built UI where the user can complete the action. Show this to the user when present.
-  - `clientAction.agentInstructions` (optional) — instructions for the AI agent on how to proceed programmatically.
-
-  After the user completes the action (e.g. authenticates in the browser), poll again with `membrane connection get <id> --json` to check if the state moved to `READY`.
-
-- **`CONFIGURATION_ERROR`** or **`SETUP_FAILED`** — something went wrong. Check the `error` field for details.
-
-### Searching for actions
-
-Search using a natural language description of what you want to do:
+### Configure mc Alias
 
 ```bash
-membrane action list --connectionId=CONNECTION_ID --intent "QUERY" --limit 10 --json
+mc alias set myminio https://${MINIO_ENDPOINT} ${MINIO_ACCESS_KEY} ${MINIO_SECRET_KEY}
 ```
 
-You should always search for actions in the context of a specific connection.
+---
 
-Each result includes `id`, `name`, `description`, `inputSchema` (what parameters the action accepts), and `outputSchema` (what it returns).
 
-## Popular actions
+> **Important:** When using `$VAR` in a command that pipes to another command, wrap the command containing `$VAR` in `bash -c '...'`. Due to a Claude Code bug, environment variables are silently cleared when pipes are used directly.
+> ```bash
+> bash -c 'curl -s "https://api.example.com" -H "Authorization: Bearer $API_KEY"' | jq .
+> ```
 
-Use `npx @membranehq/cli@latest action list --intent=QUERY --connectionId=CONNECTION_ID --json` to discover available actions.
+## How to Use
 
-### Running actions
+### 1. List Buckets
 
 ```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --json
+mc ls myminio
 ```
 
-To pass JSON parameters:
+### 2. Create a Bucket
 
 ```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --input '{"key": "value"}' --json
+mc mb myminio/my-bucket
 ```
 
-The result is in the `output` field of the response.
-
-
-### Proxy requests
-
-When the available actions don't cover your use case, you can send requests directly to the MinIO API through Membrane's proxy. Membrane automatically appends the base URL to the path you provide and injects the correct authentication headers — including transparent credential refresh if they expire.
+### 3. Upload a File
 
 ```bash
-membrane request CONNECTION_ID /path/to/endpoint
+# Upload single file
+mc cp /path/to/file.txt myminio/my-bucket/
+
+# Upload with custom name
+mc cp /path/to/file.txt myminio/my-bucket/custom-name.txt
+
+# Upload directory recursively
+mc cp --recursive /path/to/folder/ myminio/my-bucket/folder/
 ```
 
-Common options:
+### 4. Download a File
 
-| Flag | Description |
-|------|-------------|
-| `-X, --method` | HTTP method (GET, POST, PUT, PATCH, DELETE). Defaults to GET |
-| `-H, --header` | Add a request header (repeatable), e.g. `-H "Accept: application/json"` |
-| `-d, --data` | Request body (string) |
-| `--json` | Shorthand to send a JSON body and set `Content-Type: application/json` |
-| `--rawData` | Send the body as-is without any processing |
-| `--query` | Query-string parameter (repeatable), e.g. `--query "limit=10"` |
-| `--pathParam` | Path parameter (repeatable), e.g. `--pathParam "id=123"` |
+```bash
+# Download single file
+mc cp myminio/my-bucket/file.txt /local/path/
 
+# Download entire bucket
+mc cp --recursive myminio/my-bucket/ /local/path/
+```
 
-## Best practices
+### 5. List Objects in Bucket
 
-- **Always prefer Membrane to talk with external apps** — Membrane provides pre-built actions with built-in auth, pagination, and error handling. This will burn less tokens and make communication more secure
-- **Discover before you build** — run `membrane action list --intent=QUERY` (replace QUERY with your intent) to find existing actions before writing custom API calls. Pre-built actions handle pagination, field mapping, and edge cases that raw API calls miss.
-- **Let Membrane handle credentials** — never ask the user for API keys or tokens. Create a connection instead; Membrane manages the full Auth lifecycle server-side with no local secrets.
+```bash
+# List all objects
+mc ls myminio/my-bucket
+
+# List recursively with details
+mc ls --recursive --summarize myminio/my-bucket
+```
+
+### 6. Delete Objects
+
+```bash
+# Delete single file
+mc rm myminio/my-bucket/file.txt
+
+# Delete all objects in bucket
+mc rm --recursive --force myminio/my-bucket/
+
+# Delete bucket (must be empty)
+mc rb myminio/my-bucket
+```
+
+### 7. Generate Pre-signed URL
+
+Create temporary shareable links:
+
+```bash
+# Download URL (expires in 7 days by default)
+mc share download myminio/my-bucket/file.txt
+
+# Download URL with custom expiry (max 7 days)
+mc share download --expire 2h myminio/my-bucket/file.txt
+
+# Upload URL (for external uploads)
+mc share upload myminio/my-bucket/uploads/
+```
+
+### 8. Mirror/Sync Directories
+
+```bash
+# One-way sync local to remote
+mc mirror /local/folder/ myminio/my-bucket/folder/
+
+# One-way sync remote to local
+mc mirror myminio/my-bucket/folder/ /local/folder/
+
+# Watch and sync changes continuously
+mc mirror --watch /local/folder/ myminio/my-bucket/folder/
+```
+
+### 9. Get Object Info
+
+```bash
+# Get file metadata
+mc stat myminio/my-bucket/file.txt
+
+# Get bucket info
+mc stat myminio/my-bucket
+```
+
+### 10. Search Objects
+
+```bash
+# Find by name pattern
+mc find myminio/my-bucket --name "*.txt"
+
+# Find files larger than 10MB
+mc find myminio/my-bucket --larger 10MB
+
+# Find files modified in last 7 days
+mc find myminio/my-bucket --newer-than 7d
+```
+
+---
+
+## Using curl with Pre-signed URLs
+
+For environments without `mc`, use pre-signed URLs with curl:
+
+### Upload with Pre-signed URL
+
+```bash
+# First, generate upload URL with mc
+UPLOAD_URL=$(bash -c 'mc share upload --json myminio/my-bucket/file.txt' | jq -r '.share')
+
+# Then upload with curl
+curl -X PUT --upload-file /path/to/file.txt "$UPLOAD_URL"
+```
+
+### Download with Pre-signed URL
+
+```bash
+# Generate download URL
+DOWNLOAD_URL=$(bash -c 'mc share download --json myminio/my-bucket/file.txt' | jq -r '.share')
+
+# Download with curl
+curl -o /local/path/file.txt "$DOWNLOAD_URL"
+```
+
+---
+
+## Using curl with AWS Signature V2
+
+For direct API access without mc (simple authentication):
+
+```bash
+#!/bin/bash
+# minio-upload.sh - Upload file to MinIO
+
+bucket="$1"
+file="$2"
+host="${MINIO_ENDPOINT}"
+s3_key="${MINIO_ACCESS_KEY}"
+s3_secret="${MINIO_SECRET_KEY}"
+
+resource="/${bucket}/${file}"
+content_type="application/octet-stream"
+date=$(date -R)
+signature_string="PUT\n\n${content_type}\n${date}\n${resource}"
+signature=$(echo -en "${signature_string}" | openssl sha1 -hmac "${s3_secret}" -binary | base64)
+
+curl -X PUT -T "${file}" --header "Host: ${host}" --header "Date: ${date}" --header "Content-Type: ${content_type}" --header "Authorization: AWS ${s3_key}:${signature}" "https://${host}${resource}"
+```
+
+Usage:
+
+```bash
+chmod +x minio-upload.sh
+./minio-upload.sh my-bucket myfile.txt
+```
+
+---
+
+## Using AWS CLI
+
+MinIO is fully compatible with AWS CLI:
+
+```bash
+# Configure AWS CLI for MinIO
+aws configure set aws_access_key_id "${MINIO_ACCESS_KEY}"
+aws configure set aws_secret_access_key "${MINIO_SECRET_KEY}"
+aws configure set default.s3.signature_version s3v4
+
+# List buckets
+aws --endpoint-url "https://${MINIO_ENDPOINT}" s3 ls
+
+# Upload file
+aws --endpoint-url "https://${MINIO_ENDPOINT}" s3 cp file.txt s3://my-bucket/
+
+# Download file
+aws --endpoint-url "https://${MINIO_ENDPOINT}" s3 cp s3://my-bucket/file.txt ./
+
+# List objects
+aws --endpoint-url "https://${MINIO_ENDPOINT}" s3 ls s3://my-bucket/
+```
+
+---
+
+## Bucket Policies
+
+### Set Bucket to Public Read
+
+```bash
+mc anonymous set download myminio/my-bucket
+```
+
+### Set Bucket to Private
+
+```bash
+mc anonymous set none myminio/my-bucket
+```
+
+### Apply Custom Policy
+
+```bash
+# Create policy.json
+cat > /tmp/policy.json << 'EOF'
+{
+  "Version": "2012-10-17",
+  "Statement": [
+  {
+  "Effect": "Allow",
+  "Principal": {"AWS": ["*"]},
+  "Action": ["s3:GetObject"],
+  "Resource": ["arn:aws:s3:::my-bucket/public/*"]
+  }
+  ]
+}
+EOF
+
+mc anonymous set-json /tmp/policy.json myminio/my-bucket
+```
+
+---
+
+## Guidelines
+
+1. **Use mc for most operations** - It handles authentication and signing automatically
+2. **Pre-signed URLs for external access** - Share files without exposing credentials
+3. **Use port 9000 for API** - Port 9001 is typically the web console
+4. **Set appropriate expiry** - Pre-signed URLs should expire as soon as practical (max 7 days)
+5. **Use mirror for backups** - `mc mirror --watch` for continuous sync
+6. **Bucket naming rules** - Lowercase, 3-63 characters, no underscores or consecutive dots

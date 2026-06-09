@@ -1,253 +1,539 @@
 ---
 name: email-service-integration
-description: "Send reliable transactional emails (order confirmations, shipping updates) via SendGrid, SES, or Postmark with templates and deliverability best practices"
-category: integrations-apis
-risk: safe
-source: curated
-date_added: "2026-03-12"
-tags: [email, sendgrid, ses, postmark, transactional-email, templates, deliverability, spf, dkim, dmarc]
-triggers: ["transactional email", "sendgrid integration", "ses email", "postmark email", "email templates", "order confirmation email", "email deliverability"]
-tools: [claude-code, cursor, gemini-cli, copilot, codex-cli, kiro, opencode]
-platforms: [shopify, woocommerce, bigcommerce, custom]
-difficulty: beginner
+description: Integrate email services with backends using SMTP, third-party providers, templates, and asynchronous sending. Use when implementing email functionality, sending transactional emails, and managing email workflows.
 ---
 
 # Email Service Integration
 
 ## Overview
 
-Transactional emails — order confirmations, shipping notifications, password resets, and account alerts — are critical customer touchpoints that must arrive instantly and reliably. This skill covers setting up email delivery on each platform and integrating dedicated transactional services (SendGrid, Amazon SES, Postmark) with SPF/DKIM/DMARC DNS records for deliverability, reusable templates, and bounce/complaint handling.
+Build comprehensive email systems with SMTP integration, third-party email providers (SendGrid, Mailgun, AWS SES), HTML templates, email validation, retry mechanisms, and proper error handling.
 
-## When to Use This Skill
+## When to Use
 
-- When setting up transactional email for a new e-commerce store
-- When emails are landing in spam due to missing SPF, DKIM, or DMARC records
-- When migrating from a platform's built-in email to a dedicated transactional service
-- When building custom email templates that match your brand identity
-- When tracking email delivery, open rates, and bounces for transactional emails
+- Sending transactional emails
+- Implementing welcome/confirmation emails
+- Creating password reset flows
+- Sending notification emails
+- Building email templates
+- Managing bulk email campaigns
 
-## Core Instructions
+## Instructions
 
-### Step 1: Determine your platform and recommended approach
+### 1. **Python/Flask with SMTP**
 
-| Platform | Default Email | Recommended Upgrade |
-|----------|--------------|-------------------|
-| **Shopify** | Shopify Email (built-in, branded templates, free up to 10K/month) | Customize templates in **Settings → Notifications**; for high volume or advanced flows use **Klaviyo** or **Omnisend** |
-| **WooCommerce** | WordPress sends via your hosting server (poor deliverability) | Install **FluentSMTP** (free) to route via SendGrid/SES/Postmark; use **WooCommerce Email Customizer** ($49) for branded templates |
-| **BigCommerce** | BigCommerce built-in transactional email (basic templates) | Customize templates in **Marketing → Transactional Emails**; for advanced templates use **Klaviyo BigCommerce integration** |
-| **Custom / Headless** | None — you build it | Integrate SendGrid, Postmark, or Amazon SES directly; build templates with React Email; see implementation below |
+```python
+# config.py
+import os
 
-### Step 2: Platform-specific email setup
+class EmailConfig:
+    MAIL_SERVER = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
+    MAIL_PORT = int(os.getenv('MAIL_PORT', 587))
+    MAIL_USE_TLS = os.getenv('MAIL_USE_TLS', True)
+    MAIL_USERNAME = os.getenv('MAIL_USERNAME')
+    MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
+    MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER', 'noreply@example.com')
 
----
+# email_service.py
+from flask_mail import Mail, Message
+from flask import render_template_string
+import logging
+from datetime import datetime
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
-#### Shopify
+logger = logging.getLogger(__name__)
+mail = Mail()
 
-**Customize built-in transactional emails:**
+class EmailService:
+    def __init__(self, app=None):
+        self.app = app
+        if app:
+            mail.init_app(app)
 
-1. Go to **Settings → Notifications** in your Shopify admin
-2. Click any notification type (Order Confirmation, Shipping Notification, etc.) to open the editor
-3. Edit the HTML/Liquid template directly — Shopify provides liquid variables for order data
-4. Upload your logo in **Online Store → Themes → Customize → Theme settings → Logo** — it appears automatically in notification emails
-5. In **Settings → General**, set your sender email — Shopify authenticates it automatically via SPF/DKIM
+    def send_email(self, recipient, subject, text_body=None, html_body=None):
+        """Send email using Flask-Mail"""
+        try:
+            msg = Message(
+                subject=subject,
+                recipients=[recipient] if isinstance(recipient, str) else recipient
+            )
 
-**Set up Shopify Email for marketing flows:**
+            if text_body:
+                msg.body = text_body
+            if html_body:
+                msg.html = html_body
 
-1. Go to **Apps → Shopify Email** (free, included with all plans up to 10,000 emails/month)
-2. Build order confirmation, shipping, and post-purchase flows with the drag-and-drop editor
-3. For advanced automations (abandoned cart sequences, win-back flows) upgrade to **Klaviyo** (free up to 500 contacts) which has a pre-built Shopify integration
+            mail.send(msg)
+            logger.info(f"Email sent to {recipient}: {subject}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to send email to {recipient}: {str(e)}")
+            return False
 
----
+    def send_welcome_email(self, user_email, user_name):
+        """Send welcome email"""
+        subject = "Welcome to Our Platform!"
+        html_body = render_template_string(
+            '''
+            <h1>Welcome, {{ name }}!</h1>
+            <p>Thank you for joining us. Start exploring now!</p>
+            <a href="https://example.com/dashboard">Go to Dashboard</a>
+            ''',
+            name=user_name
+        )
+        return self.send_email(user_email, subject, html_body=html_body)
 
-#### WooCommerce
+    def send_password_reset_email(self, user_email, reset_token):
+        """Send password reset email"""
+        subject = "Reset Your Password"
+        reset_url = f"https://example.com/reset-password?token={reset_token}"
+        html_body = render_template_string(
+            '''
+            <h1>Reset Your Password</h1>
+            <p>Click the link below to reset your password:</p>
+            <a href="{{ reset_url }}">Reset Password</a>
+            <p>This link expires in 24 hours.</p>
+            ''',
+            reset_url=reset_url
+        )
+        return self.send_email(user_email, subject, html_body=html_body)
 
-**Fix email deliverability with FluentSMTP:**
+    def send_verification_email(self, user_email, verification_token):
+        """Send email verification"""
+        subject = "Verify Your Email"
+        verify_url = f"https://example.com/verify-email?token={verification_token}"
+        html_body = render_template_string(
+            '''
+            <h1>Verify Your Email Address</h1>
+            <p>Click the link below to verify your email:</p>
+            <a href="{{ verify_url }}">Verify Email</a>
+            ''',
+            verify_url=verify_url
+        )
+        return self.send_email(user_email, subject, html_body=html_body)
 
-1. Install **FluentSMTP** (free, wordpress.org) — this replaces WordPress's built-in PHP mail with a dedicated SMTP or API provider
-2. Go to **FluentSMTP → Settings → Add New Connection**
-3. Choose your provider: **SendGrid** (free tier: 100 emails/day), **Mailgun** (free tier: 1,000 emails/month), or **Amazon SES** ($0.10/1,000 emails)
-4. Enter your API key and set **From Name** and **From Email** to match your domain
-5. Send a test email from FluentSMTP to verify delivery
+    def send_notification_email(self, user_email, notification_data):
+        """Send notification email"""
+        subject = notification_data.get('subject', 'Notification')
+        html_body = render_template_string(
+            '''
+            <h1>{{ title }}</h1>
+            <p>{{ message }}</p>
+            {{ content|safe }}
+            ''',
+            title=notification_data.get('title'),
+            message=notification_data.get('message'),
+            content=notification_data.get('html_content', '')
+        )
+        return self.send_email(user_email, subject, html_body=html_body)
 
-**Set up SPF and DKIM for your sending domain:**
+# routes.py
+from flask import Blueprint, request, jsonify
+from email_service import EmailService
 
-Most providers give you specific DNS records to add. For SendGrid:
-- Add the two CNAME records SendGrid provides to your DNS (usually in your domain registrar or Cloudflare)
-- In SendGrid, verify the domain — this takes up to 48 hours to propagate
-- After verification, emails show "via yourdomain.com" in Gmail, not "via sendgrid.net"
+email_bp = Blueprint('email', __name__)
+email_service = EmailService()
 
-**Customize WooCommerce email templates:**
+@email_bp.route('/api/auth/send-verification', methods=['POST'])
+def send_verification():
+    """Send verification email"""
+    data = request.json
+    user_email = data.get('email')
+    verification_token = generate_token()
 
-1. Install **Email Customizer for WooCommerce** by ThemeHigh (free tier; Pro from $49)
-2. Go to **WooCommerce → Email Customizer** to drag-and-drop your logo, colors, and footer into each email type
-3. Or install **Kadence WooCommerce Email Designer** (free) for a live preview editor
+    success = email_service.send_verification_email(user_email, verification_token)
 
----
+    if success:
+        # Store token in database
+        VerificationToken.create(email=user_email, token=verification_token)
+        return jsonify({'message': 'Verification email sent'}), 200
+    else:
+        return jsonify({'error': 'Failed to send email'}), 500
 
-#### BigCommerce
+@email_bp.route('/api/auth/send-reset', methods=['POST'])
+def send_reset():
+    """Send password reset email"""
+    data = request.json
+    user = User.query.filter_by(email=data['email']).first()
 
-**Customize transactional email templates:**
+    if not user:
+        # Don't reveal if email exists
+        return jsonify({'message': 'If email exists, reset link sent'}), 200
 
-1. Go to **Marketing → Transactional Emails** in your BigCommerce admin
-2. Click any email type (Order Confirmation, Shipment Notification, etc.) and click **Edit Template**
-3. Edit the HTML template using BigCommerce's template variables (e.g., `%%ORDER_NUMBER%%`, `%%TOTAL_COST%%`)
-4. In **Store Setup → Store Profile**, set your sending name and reply-to address
+    reset_token = generate_token()
+    success = email_service.send_password_reset_email(user.email, reset_token)
 
-**Connect Klaviyo for advanced flows:**
-
-1. Install the **Klaviyo** app from the BigCommerce App Marketplace (free to install)
-2. Klaviyo syncs your BigCommerce order and customer data automatically
-3. Use Klaviyo's pre-built BigCommerce flows for order confirmation, shipping, and abandoned cart emails
-
----
-
-#### Custom / Headless
-
-**Configure DNS for deliverability first** — SPF, DKIM, and DMARC are mandatory before any emails reach inboxes:
-
-```dns
-; SPF — authorize SendGrid to send on behalf of your domain
-mystore.com.  IN TXT  "v=spf1 include:sendgrid.net ~all"
-
-; DKIM — SendGrid provides two CNAME records:
-s1._domainkey.mystore.com  IN CNAME  s1.domainkey.u12345.wl.sendgrid.net.
-s2._domainkey.mystore.com  IN CNAME  s2.domainkey.u12345.wl.sendgrid.net.
-
-; DMARC — start with p=none to monitor, then escalate to p=quarantine
-_dmarc.mystore.com  IN TXT  "v=DMARC1; p=none; rua=mailto:dmarc@mystore.com"
+    if success:
+        ResetToken.create(user_id=user.id, token=reset_token)
+        return jsonify({'message': 'Reset email sent'}), 200
+    else:
+        return jsonify({'error': 'Failed to send email'}), 500
 ```
 
-Verify with [mxtoolbox.com/SuperTool.aspx](https://mxtoolbox.com/SuperTool.aspx) before sending.
+### 2. **Node.js with SendGrid**
 
-**SendGrid API integration:**
+```javascript
+// email-service.js
+const sgMail = require('@sendgrid/mail');
+const logger = require('./logger');
 
-```typescript
-// lib/email/sendgrid.ts
-import sgMail from '@sendgrid/mail';
-sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-export async function sendEmail(params: {
-  to: string;
-  subject: string;
-  html: string;
-  text: string;
-}) {
-  await sgMail.send({
-    to: params.to,
-    from: { email: 'orders@mystore.com', name: 'My Store' },
-    subject: params.subject,
-    html: params.html,
-    text: params.text,
-    trackingSettings: {
-      clickTracking: { enable: false },  // Don't wrap links in transactional emails
-      openTracking: { enable: true },
-    },
-  });
-}
-```
+class EmailService {
+    async sendEmail(to, subject, htmlContent, textContent = null) {
+        try {
+            const msg = {
+                to: Array.isArray(to) ? to : [to],
+                from: process.env.MAIL_FROM || 'noreply@example.com',
+                subject: subject,
+                html: htmlContent,
+                ...(textContent && { text: textContent })
+            };
 
-**Build templates with React Email** (`npm install @react-email/components`):
-
-```tsx
-// emails/order-confirmation.tsx
-import { Body, Container, Heading, Html, Img, Preview, Section, Text, Row, Column } from '@react-email/components';
-
-export function OrderConfirmationEmail({ orderNumber, customerName, items, total, trackingUrl }) {
-  return (
-    <Html>
-      <Preview>Your order #{orderNumber} is confirmed</Preview>
-      <Body style={{ backgroundColor: '#f4f4f4', fontFamily: 'Arial, sans-serif' }}>
-        <Container style={{ maxWidth: '600px', margin: '0 auto', backgroundColor: '#fff', padding: '20px' }}>
-          <Heading>Order Confirmed</Heading>
-          <Text>Hi {customerName}, your order #{orderNumber} has been received.</Text>
-          {items.map((item, i) => (
-            <Row key={i} style={{ borderBottom: '1px solid #eee', padding: '10px 0' }}>
-              <Column style={{ width: '60px' }}>
-                <Img src={item.imageUrl} width={50} height={50} alt={item.name} />
-              </Column>
-              <Column>
-                <Text style={{ margin: 0, fontWeight: 'bold' }}>{item.name}</Text>
-                <Text style={{ margin: 0, color: '#666' }}>Qty: {item.quantity}</Text>
-              </Column>
-              <Column style={{ textAlign: 'right' }}>
-                <Text style={{ margin: 0 }}>{item.price}</Text>
-              </Column>
-            </Row>
-          ))}
-          <Section style={{ marginTop: '20px' }}>
-            <Text style={{ fontWeight: 'bold', fontSize: '18px' }}>Total: {total}</Text>
-          </Section>
-        </Container>
-      </Body>
-    </Html>
-  );
-}
-```
-
-**Render and send:**
-
-```typescript
-import { render } from '@react-email/render';
-import { OrderConfirmationEmail } from '../../emails/order-confirmation';
-import { sendEmail } from './sendgrid';
-
-export async function sendOrderConfirmation(order: Order) {
-  const html = await render(OrderConfirmationEmail({ ...orderData }));
-  const text = await render(OrderConfirmationEmail({ ...orderData }), { plainText: true });
-
-  await sendEmail({
-    to: order.customer.email,
-    subject: `Your order #${order.number} is confirmed`,
-    html,
-    text,
-  });
-}
-```
-
-**Handle bounces and complaints via webhook:**
-
-```typescript
-// POST /api/webhooks/sendgrid
-export async function POST(req: NextRequest) {
-  const events = await req.json();
-  for (const event of events) {
-    if (event.event === 'bounce') {
-      await db.emailSuppressions.upsert({ email: event.email, type: 'hard_bounce' });
+            const result = await sgMail.send(msg);
+            logger.info(`Email sent to ${to}: ${subject}`);
+            return { success: true, messageId: result[0].headers['x-message-id'] };
+        } catch (error) {
+            logger.error(`Failed to send email: ${error.message}`);
+            return { success: false, error: error.message };
+        }
     }
-    if (event.event === 'spamreport') {
-      await db.emailSuppressions.upsert({ email: event.email, type: 'spam_complaint' });
+
+    async sendWelcomeEmail(to, userName) {
+        const htmlContent = `
+            <h1>Welcome, ${userName}!</h1>
+            <p>Thank you for joining us.</p>
+            <a href="https://example.com/dashboard">Start Exploring</a>
+        `;
+
+        return this.sendEmail(to, 'Welcome to Our Platform!', htmlContent);
     }
-  }
-  return NextResponse.json({ received: true });
+
+    async sendPasswordResetEmail(to, resetToken) {
+        const resetUrl = `https://example.com/reset-password?token=${resetToken}`;
+        const htmlContent = `
+            <h1>Reset Your Password</h1>
+            <p>Click the link below to reset your password:</p>
+            <a href="${resetUrl}">Reset Password</a>
+            <p>This link expires in 24 hours.</p>
+        `;
+
+        return this.sendEmail(to, 'Reset Your Password', htmlContent);
+    }
+
+    async sendVerificationEmail(to, verificationToken) {
+        const verifyUrl = `https://example.com/verify-email?token=${verificationToken}`;
+        const htmlContent = `
+            <h1>Verify Your Email</h1>
+            <p>Click the link below to verify your email:</p>
+            <a href="${verifyUrl}">Verify Email</a>
+        `;
+
+        return this.sendEmail(to, 'Verify Your Email', htmlContent);
+    }
+
+    async sendBulkEmails(recipients, subject, htmlContent) {
+        try {
+            const personalizations = recipients.map(recipient => ({
+                to: [{ email: recipient.email }],
+                substitutions: {
+                    '-name-': recipient.name
+                }
+            }));
+
+            const msg = {
+                personalizations: personalizations,
+                from: process.env.MAIL_FROM || 'noreply@example.com',
+                subject: subject,
+                html: htmlContent
+            };
+
+            const result = await sgMail.send(msg);
+            logger.info(`Bulk email sent to ${recipients.length} recipients`);
+            return { success: true, sent: recipients.length };
+        } catch (error) {
+            logger.error(`Bulk email failed: ${error.message}`);
+            return { success: false, error: error.message };
+        }
+    }
 }
 
-// Check suppression list before every send
-export async function canSendEmail(email: string): Promise<boolean> {
-  const suppression = await db.emailSuppressions.findByEmail(email.toLowerCase());
-  return !suppression; // Never send to hard bounced or spam-complaint addresses
-}
+module.exports = new EmailService();
+
+// routes.js
+const express = require('express');
+const emailService = require('../services/email-service');
+const { generateToken } = require('../utils/token');
+
+const router = express.Router();
+
+router.post('/send-verification', async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ error: 'Email required' });
+        }
+
+        const verificationToken = generateToken();
+        const result = await emailService.sendVerificationEmail(email, verificationToken);
+
+        if (result.success) {
+            // Store token in database
+            await VerificationToken.create({ email, token: verificationToken });
+            return res.json({ message: 'Verification email sent' });
+        } else {
+            return res.status(500).json({ error: 'Failed to send email' });
+        }
+    } catch (error) {
+        logger.error(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+router.post('/send-reset', async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        const user = await User.findOne({ where: { email } });
+        if (!user) {
+            return res.json({ message: 'If email exists, reset link sent' });
+        }
+
+        const resetToken = generateToken();
+        const result = await emailService.sendPasswordResetEmail(email, resetToken);
+
+        if (result.success) {
+            await ResetToken.create({ userId: user.id, token: resetToken });
+            return res.json({ message: 'Reset email sent' });
+        } else {
+            return res.status(500).json({ error: 'Failed to send email' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+module.exports = router;
+```
+
+### 3. **Email Templates with Mjml**
+
+```html
+<!-- templates/welcome.mjml -->
+<mjml>
+  <mj-body>
+    <mj-container>
+      <mj-section>
+        <mj-column>
+          <mj-image width="100px" src="https://example.com/logo.png"></mj-image>
+        </mj-column>
+      </mj-section>
+
+      <mj-section background-color="#f4f4f4">
+        <mj-column>
+          <mj-text font-size="24px" align="center" color="#333">
+            Welcome, {{ userName }}!
+          </mj-text>
+          <mj-text align="center" color="#666">
+            Thank you for joining us. Let's get started!
+          </mj-text>
+        </mj-column>
+      </mj-section>
+
+      <mj-section>
+        <mj-column>
+          <mj-button href="https://example.com/dashboard" background-color="#007bff">
+            Go to Dashboard
+          </mj-button>
+        </mj-column>
+      </mj-section>
+
+      <mj-section>
+        <mj-column>
+          <mj-text font-size="12px" align="center" color="#999">
+            © 2024 Example Inc. All rights reserved.
+          </mj-text>
+        </mj-column>
+      </mj-section>
+    </mj-container>
+  </mj-body>
+</mjml>
+
+<!-- Python template compilation -->
+# email_templates.py
+from mjml import mjml_to_html
+
+def get_welcome_template(user_name):
+    with open('templates/welcome.mjml', 'r') as f:
+        mjml_content = f.read()
+
+    mjml_content = mjml_content.replace('{{ userName }}', user_name)
+    html = mjml_to_html(mjml_content)
+    return html
+```
+
+### 4. **FastAPI Email with Background Tasks**
+
+```python
+# email_service.py
+from fastapi import BackgroundTasks
+from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
+
+conf = ConnectionConfig(
+    mail_server=os.getenv("MAIL_SERVER"),
+    mail_port=int(os.getenv("MAIL_PORT")),
+    mail_from=os.getenv("MAIL_FROM"),
+    mail_password=os.getenv("MAIL_PASSWORD"),
+    mail_from_name=os.getenv("MAIL_FROM_NAME", "Example App"),
+    use_credentials=True,
+    validate_certs=True
+)
+
+fm = FastMail(conf)
+
+class EmailService:
+    @staticmethod
+    async def send_email(
+        recipients: list,
+        subject: str,
+        body: str,
+        background_tasks: BackgroundTasks = None
+    ):
+        message = MessageSchema(
+            subject=subject,
+            recipients=recipients,
+            body=body,
+            subtype="html"
+        )
+
+        if background_tasks:
+            background_tasks.add_task(fm.send_message, message)
+        else:
+            await fm.send_message(message)
+
+    @staticmethod
+    async def send_welcome_email(
+        email: str,
+        name: str,
+        background_tasks: BackgroundTasks
+    ):
+        html_body = f"""
+        <h1>Welcome, {name}!</h1>
+        <p>Thank you for joining us.</p>
+        <a href="https://example.com/dashboard">Start Exploring</a>
+        """
+
+        await EmailService.send_email(
+            recipients=[email],
+            subject="Welcome to Our Platform!",
+            body=html_body,
+            background_tasks=background_tasks
+        )
+
+# routes.py
+from fastapi import BackgroundTasks
+from email_service import EmailService
+
+@app.post("/api/send-email")
+async def send_email(
+    email: str,
+    background_tasks: BackgroundTasks
+):
+    await EmailService.send_welcome_email(email, "User", background_tasks)
+    return {"message": "Email queued for sending"}
+```
+
+### 5. **Email Validation and Verification**
+
+```python
+# email_validator.py
+import re
+from email_validator import validate_email, EmailNotValidError
+import dns.resolver
+
+class EmailValidator:
+    @staticmethod
+    def validate_format(email: str) -> tuple:
+        """Validate email format"""
+        try:
+            valid = validate_email(email)
+            return True, valid.email
+        except EmailNotValidError as e:
+            return False, str(e)
+
+    @staticmethod
+    def check_mx_records(email: str) -> bool:
+        """Check MX records for domain"""
+        try:
+            domain = email.split('@')[1]
+            mx_records = dns.resolver.resolve(domain, 'MX')
+            return len(mx_records) > 0
+        except Exception:
+            return False
+
+    @staticmethod
+    def validate_email_comprehensive(email: str) -> dict:
+        """Comprehensive email validation"""
+        # Format validation
+        is_valid, message = EmailValidator.validate_format(email)
+        if not is_valid:
+            return {'valid': False, 'reason': 'Invalid format'}
+
+        # MX record check
+        has_mx = EmailValidator.check_mx_records(email)
+        if not has_mx:
+            return {'valid': False, 'reason': 'Domain has no MX records'}
+
+        return {'valid': True, 'email': email}
 ```
 
 ## Best Practices
 
-- **Use separate sending domains for transactional and marketing emails** — bounces and spam complaints from marketing campaigns should not affect your transactional domain reputation
-- **Always include a plain-text version** — missing plain text can trigger spam filters; React Email renders it automatically with `{ plainText: true }`
-- **Suppress hard bounced addresses immediately** — sending to non-existent addresses harms your sender reputation; store and check suppressions before every send
-- **Never track clicks in transactional emails** — link tracking wraps URLs in redirects, which can look suspicious in password reset and order confirmation emails
-- **Test rendering across email clients** — Outlook, Gmail, and Apple Mail render HTML very differently; use **Litmus** or **Email on Acid** to validate before deploying templates
+### ✅ DO
+- Use transactional email providers for reliability
+- Implement email templates for consistency
+- Add unsubscribe links (required by law)
+- Use background tasks for email sending
+- Implement proper error handling and retries
+- Validate email addresses before sending
+- Add rate limiting to prevent abuse
+- Monitor email delivery and bounces
+- Use SMTP authentication
+- Test emails in development environment
 
-## Common Pitfalls
+### ❌ DON'T
+- Send emails synchronously in request handlers
+- Store passwords in code
+- Send sensitive information in emails
+- Use generic email addresses for sensitive operations
+- Skip email validation
+- Ignore bounce and complaint notifications
+- Use HTML email with inline styles excessively
+- Forget to handle failed email deliveries
+- Send emails without proper templates
+- Store email addresses without consent
 
-| Problem | Solution |
-|---------|----------|
-| WooCommerce emails going to spam | Install FluentSMTP to send via SendGrid or SES; WordPress's default PHP mail has no SPF/DKIM and almost always gets marked as spam |
-| SES sandbox blocking delivery | New AWS accounts start in SES sandbox mode — request production access via AWS Support before going live |
-| Duplicate order confirmation emails | Implement idempotent sending: `emailId = hash(orderId + 'order-confirmation')` and check before sending |
-| Emails landing in spam despite SPF/DKIM | Check DMARC alignment; your `From:` domain must match the domain in the DKIM `d=` tag |
-| React Email CSS broken in Outlook | Use inline styles for everything; Outlook ignores `<style>` blocks; `@react-email/components` handles this for built-in components |
+## Complete Example
 
-## Related Skills
+```python
+@app.post("/register")
+async def register(
+    email: str,
+    password: str,
+    background_tasks: BackgroundTasks
+):
+    user = User(email=email, password=hash_password(password))
+    db.add(user)
+    db.commit()
 
-- @gdpr-ecommerce
-- @webhook-architecture
-- @analytics-integration
+    background_tasks.add_task(
+        send_verification_email,
+        email=user.email,
+        token=generate_token()
+    )
+
+    return {"message": "User registered. Check email to verify."}
+```

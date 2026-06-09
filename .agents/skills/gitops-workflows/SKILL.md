@@ -1,178 +1,403 @@
 ---
 name: gitops-workflows
-description: GitOps workflows and patterns using ArgoCD and Flux for declarative Kubernetes deployments. Use when implementing CI/CD for Kubernetes, managing multi-environment deployments, or adopting declarative infrastructure practices.
-keywords:
-  - ArgoCD
-  - Flux
-  - GitOps
-  - GitOps automation
-  - continuous deployment
-  - declarative deployment
-  - deployment workflow
-  - git-based deployment
-  - infrastructure as code
-  - reconciliation
-file_patterns:
-  - '**/*.tf'
-  - '**/*deployment*.yaml'
-  - '**/.gitlab-ci.yml'
-  - '**/cd/**'
-  - '**/charts/**'
-  - '**/ci/**'
-  - '**/helm/**'
-  - '**/k8s/**'
-  - '**/kubernetes/**'
-  - '**/terraform/**'
-  - .github/workflows/*.yml
-confidence: 0.82
+description: "GitOps deployment patterns with ArgoCD and Flux. Use when implementing Git-based infrastructure management, continuous deployment, or declarative operations."
 ---
 
 # GitOps Workflows
 
-Expert guidance for implementing production-grade GitOps workflows using ArgoCD and Flux CD, covering declarative deployment patterns, progressive delivery strategies, multi-environment management, and secure secret handling for Kubernetes infrastructure.
+Git as the single source of truth for declarative infrastructure and applications.
 
-## When to Use This Skill
+## When to Use
 
-- Implementing GitOps principles for Kubernetes deployments
-- Automating continuous delivery from Git repositories
-- Managing multi-cluster or multi-environment deployments
-- Implementing progressive delivery (canary, blue-green) strategies
-- Configuring automated sync policies and reconciliation
-- Managing secrets securely in GitOps workflows
-- Setting up environment promotion workflows
-- Designing repository structures for GitOps (monorepo vs multi-repo)
-- Implementing rollback strategies and disaster recovery
-- Establishing compliance and audit trails through Git
+- Implementing continuous deployment to Kubernetes
+- Managing infrastructure changes through Git
+- Setting up ArgoCD or Flux
+- Designing promotion workflows (dev → staging → prod)
+- Implementing drift detection and remediation
 
-## Core Concepts
+## Core Principles
 
-### The Four Principles
+| Principle | Description |
+|-----------|-------------|
+| Declarative | Desired state described in Git |
+| Versioned | Full history of changes |
+| Automated | Changes applied automatically |
+| Auditable | Git commits = audit trail |
 
-1. **Declarative**: Entire system state expressed in code
-2. **Versioned**: Canonical state stored in Git with full history
-3. **Pulled Automatically**: Agents pull desired state (no push to prod)
-4. **Continuously Reconciled**: Automatic drift detection and correction
+## Repository Structure
 
-### Key Benefits
+### Monorepo Pattern
 
-- Complete deployment history and audit trail
-- Fast rollback via Git operations
-- Enhanced security (no cluster credentials in CI)
-- Self-healing infrastructure
-- Multi-cluster consistency
-- Familiar Git workflows for infrastructure changes
+```
+gitops-repo/
+├── apps/
+│   ├── base/                    # Base manifests
+│   │   └── myapp/
+│   │       ├── deployment.yaml
+│   │       ├── service.yaml
+│   │       └── kustomization.yaml
+│   └── overlays/
+│       ├── development/
+│       │   └── kustomization.yaml
+│       ├── staging/
+│       │   └── kustomization.yaml
+│       └── production/
+│           └── kustomization.yaml
+│
+├── infrastructure/
+│   ├── base/
+│   │   ├── cert-manager/
+│   │   ├── ingress-nginx/
+│   │   └── monitoring/
+│   └── overlays/
+│       └── production/
+│
+└── clusters/
+    ├── development/
+    │   └── apps.yaml            # ArgoCD Application
+    ├── staging/
+    └── production/
+```
 
-## Quick Reference
+## ArgoCD
 
-| Task | Load reference |
-| --- | --- |
-| GitOps principles and benefits | `skills/gitops-workflows/references/core-principles.md` |
-| Repository structure patterns (monorepo, multi-repo, branches) | `skills/gitops-workflows/references/repository-structures.md` |
-| ArgoCD setup, Applications, ApplicationSets | `skills/gitops-workflows/references/argocd-implementation.md` |
-| Flux bootstrap, sources, Kustomizations, HelmReleases | `skills/gitops-workflows/references/flux-implementation.md` |
-| Environment promotion strategies | `skills/gitops-workflows/references/environment-promotion.md` |
-| Secret management (Sealed Secrets, ESO, SOPS) | `skills/gitops-workflows/references/secret-management.md` |
-| Progressive delivery (canary, blue-green) | `skills/gitops-workflows/references/progressive-delivery.md` |
-| Rollback strategies and disaster recovery | `skills/gitops-workflows/references/rollback-strategies.md` |
-| Best practices and patterns | `skills/gitops-workflows/references/best-practices.md` |
+### Installation
 
-## Workflow Steps
+```bash
+kubectl create namespace argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+```
 
-### 1. Choose Repository Structure
+### Application Definition
 
-**Decision factors:**
-- Team size and organization structure
-- Application coupling and dependencies
-- Access control requirements
-- Deployment frequency and independence
+```yaml
+# clusters/production/myapp.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: myapp
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
 
-**Options:**
-- **Monorepo**: Single repo, unified platform teams, shared infrastructure
-- **Multi-repo**: Separate repos per app/team, independent release cycles
-- **Environment branches**: Git flow style, simple mental model
+  source:
+    repoURL: https://github.com/org/gitops-repo.git
+    targetRevision: main
+    path: apps/overlays/production
 
-### 2. Select GitOps Tool
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: myapp
 
-**ArgoCD:**
-- UI-focused with visual application management
-- App of Apps pattern for hierarchical deployments
-- ApplicationSets for multi-cluster deployments
-- Strong RBAC and project isolation
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
 
-**Flux:**
-- CLI-first, GitOps Toolkit architecture
-- Native Kustomize and Helm support
-- Automated image updates
-- Lighter weight, cloud-native
+  # Health checks
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas  # Ignore HPA changes
+```
 
-### 3. Configure Secret Management
+### ApplicationSet (Multi-Environment)
 
-**Never commit unencrypted secrets to Git**
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: myapp
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - cluster: development
+            url: https://dev-cluster.example.com
+          - cluster: staging
+            url: https://staging-cluster.example.com
+          - cluster: production
+            url: https://prod-cluster.example.com
 
-**Options:**
-- **Sealed Secrets**: Client-side encryption, simple workflow
-- **External Secrets Operator**: Sync from external secret stores (AWS, Vault, GCP)
-- **SOPS**: File-based encryption with age or cloud KMS
+  template:
+    metadata:
+      name: 'myapp-{{cluster}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/org/gitops-repo.git
+        targetRevision: main
+        path: 'apps/overlays/{{cluster}}'
+      destination:
+        server: '{{url}}'
+        namespace: myapp
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+```
 
-### 4. Implement Sync Policies
+## Flux
 
-**Non-production environments:**
-- Automated sync with `prune` and `selfHeal`
-- Frequent reconciliation (1-5 minutes)
-- Fail fast with immediate feedback
+### Installation
 
-**Production environments:**
-- Manual approval or gated automation
-- Health checks and wait conditions
-- Progressive delivery for high-risk changes
-- Sync windows for maintenance periods
+```bash
+flux bootstrap github \
+  --owner=my-org \
+  --repository=gitops-repo \
+  --branch=main \
+  --path=clusters/production \
+  --personal
+```
 
-### 5. Set Up Environment Promotion
+### GitRepository Source
 
-**Promotion strategies:**
-- **Git-based**: Tag or branch promotion with Git operations
-- **Kustomize overlays**: Update image tags in environment-specific overlays
-- **Automated updates**: Flux ImageUpdateAutomation for semver policies
+```yaml
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: gitops-repo
+  namespace: flux-system
+spec:
+  interval: 1m
+  url: https://github.com/org/gitops-repo
+  ref:
+    branch: main
+  secretRef:
+    name: github-token
+```
 
-### 6. Configure Progressive Delivery
+### Kustomization
 
-**For high-risk changes:**
-- **ArgoCD Rollouts**: Canary deployments with automated analysis
-- **Flagger**: Progressive delivery with metric-based promotion
-- Traffic shifting with Istio or other service mesh
-- Automated rollback on failed analysis
+```yaml
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: myapp
+  namespace: flux-system
+spec:
+  interval: 10m
+  targetNamespace: myapp
+  sourceRef:
+    kind: GitRepository
+    name: gitops-repo
+  path: ./apps/overlays/production
+  prune: true
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: myapp
+      namespace: myapp
+  timeout: 2m
+```
 
-### 7. Establish Rollback Procedures
+### HelmRelease
 
-**Git rollback:**
-- `git revert` for specific commits
-- Tag-based rollback by updating targetRevision
-- Fast and declarative
+```yaml
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: myapp
+  namespace: myapp
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: myapp
+      version: "1.x"
+      sourceRef:
+        kind: HelmRepository
+        name: myrepo
+        namespace: flux-system
+  values:
+    replicas: 3
+    image:
+      tag: v1.0.0
+  valuesFrom:
+    - kind: ConfigMap
+      name: myapp-values
+```
 
-**Tool-specific:**
-- ArgoCD: `argocd app rollback` with revision history
-- Flux: Suspend automation, manual rollback, resume
+## Promotion Strategies
 
-## Common Mistakes
+### Environment Promotion
 
-1. **Committing unencrypted secrets** - Always use secret management solution
-2. **No automated sync in non-prod** - Slows development feedback
-3. **Automated sync in production without gates** - High risk of breaking changes
-4. **Ignoring drift detection** - Manual changes should be reconciled or alerted
-5. **No health checks** - Sync succeeds but app is unhealthy
-6. **Missing dependency ordering** - Apps deploy before infrastructure ready
-7. **No rollback testing** - Discover issues during actual incidents
-8. **Inconsistent environments** - Staging differs too much from production
-9. **No promotion testing** - Manual errors during environment promotion
-10. **Weak RBAC** - Too many permissions for GitOps service accounts
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│ Development │────▶│   Staging   │────▶│ Production  │
+│             │     │             │     │             │
+│  Auto-sync  │     │  Auto-sync  │     │ Manual/Gate │
+│  on commit  │     │  on merge   │     │  approval   │
+└─────────────┘     └─────────────┘     └─────────────┘
+```
 
-## Resources
+### Image Update Automation (Flux)
 
-- **OpenGitOps**: https://opengitops.dev/
-- **ArgoCD Documentation**: https://argo-cd.readthedocs.io/
-- **Flux Documentation**: https://fluxcd.io/docs/
-- **ArgoCD Rollouts**: https://argoproj.github.io/argo-rollouts/
-- **Flagger**: https://docs.flagger.app/
-- **External Secrets Operator**: https://external-secrets.io/
-- **Sealed Secrets**: https://github.com/bitnami-labs/sealed-secrets
-- **SOPS**: https://github.com/mozilla/sops
+```yaml
+apiVersion: image.toolkit.fluxcd.io/v1beta1
+kind: ImageRepository
+metadata:
+  name: myapp
+  namespace: flux-system
+spec:
+  image: registry.example.com/myapp
+  interval: 1m
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta1
+kind: ImagePolicy
+metadata:
+  name: myapp
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: myapp
+  policy:
+    semver:
+      range: 1.x
+---
+apiVersion: image.toolkit.fluxcd.io/v1beta1
+kind: ImageUpdateAutomation
+metadata:
+  name: myapp
+  namespace: flux-system
+spec:
+  interval: 1m
+  sourceRef:
+    kind: GitRepository
+    name: gitops-repo
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        email: flux@example.com
+        name: Flux
+      messageTemplate: 'Update {{.AutomationObject.Name}} to {{.NewVersion}}'
+    push:
+      branch: main
+  update:
+    path: ./apps/overlays/production
+    strategy: Setters
+```
+
+## Kustomize Overlays
+
+### Base Deployment
+
+```yaml
+# apps/base/myapp/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+        - name: myapp
+          image: myapp:latest
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+```
+
+### Production Overlay
+
+```yaml
+# apps/overlays/production/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: myapp-prod
+
+resources:
+  - ../../base/myapp
+
+replicas:
+  - name: myapp
+    count: 5
+
+images:
+  - name: myapp
+    newTag: v1.2.3
+
+patches:
+  - patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources
+        value:
+          requests:
+            cpu: 500m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+    target:
+      kind: Deployment
+      name: myapp
+
+configMapGenerator:
+  - name: myapp-config
+    literals:
+      - LOG_LEVEL=info
+      - ENV=production
+```
+
+## Best Practices
+
+1. **Separate app and infra repos** for different change velocities
+2. **Use sealed-secrets or external-secrets** for secrets in Git
+3. **Implement branch protection** on GitOps repos
+4. **Use PR reviews** for production changes
+5. **Set up notifications** for sync failures
+6. **Implement rollback procedures** via Git revert
+
+## Troubleshooting
+
+```bash
+# ArgoCD
+argocd app list
+argocd app get myapp
+argocd app sync myapp
+argocd app history myapp
+argocd app rollback myapp <revision>
+
+# Flux
+flux get all
+flux reconcile kustomization myapp
+flux logs --follow
+flux events
+```
+
+## Integration
+
+Works with:
+- `/k8s` - Kubernetes manifests
+- `/terraform` - Infrastructure provisioning
+- `/devops` - CI/CD pipelines
+- `policy-as-code` skill - Pre-commit validation

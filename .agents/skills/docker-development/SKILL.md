@@ -1,142 +1,257 @@
 ---
 name: docker-development
-description: >
-  This skill should be used when the user asks to "analyze a Dockerfile",
-  "optimize Docker layers", "validate docker-compose", "check container
-  best practices", or "audit Docker configurations".
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: borghei
-  category: engineering
-  domain: containers
-  updated: 2026-04-02
-  tags: [docker, containers, devops, compose, dockerfile]
+description: Local Docker development workflow for the Orient. Use when asked to build Docker images, run containers locally, debug container issues, optimize builds, use docker-compose, or troubleshoot containerization problems. Covers per-package Dockerfiles, compose layering, build optimization, and local debugging.
 ---
+
 # Docker Development
 
-> **Category:** Engineering
-> **Domain:** Container Development & Optimization
-
-## Overview
-
-The **Docker Development** skill provides automated analysis of Dockerfiles and docker-compose configurations. It identifies layer optimization opportunities, security issues, best practice violations, and compose service misconfigurations. Use this skill to enforce container standards across your team and catch issues before they reach production.
-
-## Quick Start
+## Quick Reference
 
 ```bash
-# Analyze a Dockerfile for best practices
-python scripts/dockerfile_analyzer.py --file Dockerfile
+# Development mode (hot-reload, uses local code)
+./run.sh dev              # Start dev environment
+./run.sh dev stop         # Stop services
+./run.sh dev logs         # View logs
+./run.sh dev status       # Show service status
 
-# Analyze with JSON output
-python scripts/dockerfile_analyzer.py --file Dockerfile --format json
-
-# Validate a docker-compose file
-python scripts/compose_validator.py --file docker-compose.yml
-
-# Check for port conflicts across compose files
-python scripts/compose_validator.py --file docker-compose.yml --check-ports
+# Testing mode (full Docker stack)
+./run.sh test             # Build and start containers
+./run.sh test pull        # Use pre-built images
+./run.sh test status      # Check health
+./run.sh test stop        # Stop containers
+./run.sh test clean       # Remove volumes (fresh start)
 ```
 
-## Tools Overview
+## Instance Naming Conventions
 
-### dockerfile_analyzer.py
+| Mode             | Container Names | Ports            |
+| ---------------- | --------------- | ---------------- |
+| Dev (instance 0) | `orienter-*-0`  | 80, 9000, 9001   |
+| Test             | `orienter-*`    | 80, 9000, 9001   |
+| Instance N       | `orienter-*-N`  | 80+N\*1000, etc. |
 
-Analyzes Dockerfiles for best practices, security issues, and optimization opportunities.
-
-| Feature | Description |
-|---------|-------------|
-| Layer optimization | Detects unnecessary layers, recommends combining RUN statements |
-| Multi-stage analysis | Validates multi-stage build patterns and final image size |
-| Security scanning | Flags running as root, use of latest tags, exposed secrets |
-| Base image checks | Recommends smaller base images (alpine, distroless, slim) |
-| Cache optimization | Identifies poor layer ordering that breaks Docker cache |
+## Compose File Layering
 
 ```bash
-# Full analysis
-python scripts/dockerfile_analyzer.py --file Dockerfile
+# Base configuration
+docker-compose.v2.yml           # Service definitions
 
-# Security-focused scan
-python scripts/dockerfile_analyzer.py --file Dockerfile --security-only
+# Environment overlays
+docker-compose.local.yml        # Local builds
+docker-compose.prod.yml         # Production images
+docker-compose.staging.yml      # Staging config
 
-# JSON output for CI integration
-python scripts/dockerfile_analyzer.py --file Dockerfile --format json
+# Usage
+docker compose -f docker-compose.v2.yml -f docker-compose.local.yml up
 ```
 
-### compose_validator.py
+## Database: SQLite (File-Based)
 
-Validates docker-compose files for correctness, dependency issues, and port conflicts.
+The Orient uses SQLite for all database operations. No separate database container is needed.
 
-| Feature | Description |
-|---------|-------------|
-| Schema validation | Checks compose file structure and syntax |
-| Dependency graph | Validates depends_on chains for circular dependencies |
-| Port conflict detection | Identifies duplicate host port bindings |
-| Volume mount checks | Validates volume paths and mount configurations |
-| Network analysis | Checks network definitions and service connectivity |
+**Database location:**
+
+- Dev mode: `.dev-data/instance-N/orient.db`
+- Docker: `/app/data/orient.db` (volume-mounted)
+
+**Environment variables:**
 
 ```bash
-# Full validation
-python scripts/compose_validator.py --file docker-compose.yml
-
-# Check port conflicts only
-python scripts/compose_validator.py --file docker-compose.yml --check-ports
-
-# JSON output
-python scripts/compose_validator.py --file docker-compose.yml --format json
+DATABASE_TYPE=sqlite
+SQLITE_DATABASE=/app/data/orient.db
 ```
 
-## Workflows
+## Container Lifecycle
 
-### Dockerfile Review Workflow
+### Starting Containers
 
-1. **Analyze** - Run dockerfile_analyzer.py against the target Dockerfile
-2. **Review findings** - Address critical security issues first (root user, secrets)
-3. **Optimize layers** - Combine RUN statements, reorder for cache efficiency
-4. **Validate base images** - Switch to minimal base images where possible
-5. **Re-analyze** - Confirm improvements and verify no regressions
+```bash
+# With build (slow, may hang on metadata)
+docker compose --env-file ../.env -f docker-compose.v2.yml -f docker-compose.local.yml --profile slack up -d
 
-### Compose Validation Workflow
-
-1. **Validate structure** - Run compose_validator.py for syntax and schema checks
-2. **Check dependencies** - Review service dependency graph for circular refs
-3. **Audit ports** - Ensure no host port conflicts across services
-4. **Review volumes** - Confirm volume mounts are correct and necessary
-5. **Network review** - Verify service isolation and connectivity
-
-### CI Integration Workflow
-
-```yaml
-# Example GitHub Actions step
-- name: Docker Lint
-  run: |
-    python scripts/dockerfile_analyzer.py --file Dockerfile --format json > results.json
-    python scripts/compose_validator.py --file docker-compose.yml --format json >> results.json
+# Without build (use existing images)
+docker compose --env-file ../.env -f docker-compose.v2.yml -f docker-compose.local.yml --profile slack up -d --no-build
 ```
 
-## Reference Documentation
+### Stopping Containers
 
-- [Docker Best Practices](references/docker-best-practices.md) - Comprehensive guide to Dockerfile and Compose patterns
+```bash
+# Stop test stack
+./run.sh test stop
 
-## Common Patterns Quick Reference
+# Stop specific containers (dev instance 0)
+docker stop orienter-nginx-0 orienter-minio-0
+docker rm orienter-nginx-0 orienter-minio-0
+```
 
-| Pattern | Good | Bad |
-|---------|------|-----|
-| Base image | `FROM python:3.12-slim` | `FROM python:latest` |
-| User | `USER appuser` | Running as root |
-| Layer combining | `RUN apt-get update && apt-get install -y pkg` | Separate RUN for update and install |
-| COPY ordering | Copy requirements first, then code | Copy everything at once |
-| Multi-stage | Use builder stage + minimal runtime | Single stage with build tools |
-| Secrets | Use build secrets or env at runtime | `COPY .env .` or `ENV SECRET=value` |
-| Health checks | `HEALTHCHECK CMD curl -f http://localhost/` | No health check defined |
-| .dockerignore | Include node_modules, .git, etc. | No .dockerignore file |
+### Viewing Logs
 
-### Compose Patterns
+```bash
+docker logs orienter-opencode --tail 100 -f    # Follow logs
+docker logs orienter-bot-slack 2>&1 | tail -50 # Last 50 lines
+```
 
-| Pattern | Good | Bad |
-|---------|------|-----|
-| Restart policy | `restart: unless-stopped` | No restart policy |
-| Resource limits | `deploy.resources.limits` set | Unlimited resources |
-| Named volumes | `volumes: [db-data:/var/lib/postgresql]` | Anonymous volumes |
-| Networks | Explicit network definitions | Default bridge only |
-| Environment | `env_file: .env` | Inline secrets in compose |
+### Health Checks
+
+```bash
+./run.sh test status    # Quick health overview
+docker ps               # Container status
+docker inspect --format='{{.State.Health.Status}}' orienter-opencode
+```
+
+## Common Issues
+
+### 1. Port Conflicts
+
+**Symptom**: `Bind for 0.0.0.0:9000 failed: port is already allocated`
+
+**Fix**: Stop conflicting containers:
+
+```bash
+# Find what's using the port
+lsof -i :9000
+
+# Stop dev containers before starting test
+docker stop orienter-nginx-0 orienter-minio-0
+docker rm orienter-nginx-0 orienter-minio-0
+```
+
+### 2. Build Hangs on Metadata Loading (macOS)
+
+**Symptom**: `./run.sh test` hangs at "load metadata for docker.io/library/node:20-alpine"
+
+**Cause**: Docker buildx slow to fetch from Docker Hub.
+
+**Workarounds**:
+
+```bash
+# Option 1: Pre-pull images
+docker pull node:20-alpine
+docker pull node:20-slim
+
+# Option 2: Use existing local images
+docker compose ... up -d --no-build
+
+# Option 3: Use ghcr.io images (requires auth)
+./run.sh test pull
+```
+
+### 3. ECONNRESET During Tests
+
+**Symptom**: E2E tests fail with `fetch failed` / `ECONNRESET`
+
+**Cause**: Container crashed or restarted during test run.
+
+**Debug**:
+
+```bash
+# Check container status
+docker ps -a | grep opencode
+
+# Check if recently restarted
+# Look for "Up X seconds" when tests ran for minutes
+
+# View crash logs
+docker logs orienter-opencode 2>&1 | tail -100
+```
+
+### 4. Container Won't Start
+
+**Debug steps**:
+
+```bash
+# Check exit code
+docker ps -a --filter "name=orienter-opencode"
+
+# Check logs for errors
+docker logs orienter-opencode 2>&1
+
+# Check if image exists
+docker images | grep docker-opencode
+
+# Rebuild single service
+docker compose ... build opencode
+```
+
+### 5. ghcr.io Authentication
+
+**Symptom**: `./run.sh test pull` fails with 401 Unauthorized
+
+**Fix**:
+
+```bash
+# Authenticate to GitHub Container Registry
+echo $GITHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
+```
+
+### 6. SQLite Database Issues
+
+**Symptom**: Database not persisting or permission errors
+
+**Fix**:
+
+```bash
+# Check volume mount
+docker inspect orienter-dashboard | grep -A 5 Mounts
+
+# Ensure data directory exists with correct permissions
+mkdir -p .dev-data/instance-0
+chmod 755 .dev-data/instance-0
+
+# Verify database schema
+sqlite3 .dev-data/instance-0/orient.db ".tables"
+```
+
+## Switching Between Stacks
+
+**Always stop one stack before starting another:**
+
+```bash
+# From dev to test
+./run.sh dev stop
+./run.sh test
+
+# From test to dev
+./run.sh test stop
+./run.sh dev
+```
+
+## Building Images
+
+```bash
+# Build all services
+docker compose -f docker-compose.v2.yml -f docker-compose.local.yml build
+
+# Build single service
+docker compose -f docker-compose.v2.yml -f docker-compose.local.yml build dashboard
+
+# Build with no cache
+docker compose ... build --no-cache opencode
+
+# Build with progress output
+docker compose ... build dashboard --progress=plain
+```
+
+## Environment Variables
+
+Compose files use `--env-file ../.env` to load environment. Required vars:
+
+- `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD`
+- `ANTHROPIC_API_KEY`
+- `DASHBOARD_JWT_SECRET`
+- `ORIENT_MASTER_KEY`
+- `SLACK_BOT_TOKEN`, `SLACK_SIGNING_SECRET` (for Slack profile)
+
+## Services Architecture
+
+The Docker stack includes:
+
+| Service   | Purpose                         | Port(s)    |
+| --------- | ------------------------------- | ---------- |
+| dashboard | Dashboard API + WhatsApp routes | 4098       |
+| opencode  | OpenCode API                    | 4099       |
+| bot-slack | Slack bot (profile-activated)   | -          |
+| minio     | Object storage                  | 9000, 9001 |
+| nginx     | Reverse proxy                   | 80         |
+
+**Note:** WhatsApp functionality is integrated into the Dashboard service (single port 4098).

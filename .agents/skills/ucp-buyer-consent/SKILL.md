@@ -1,10 +1,7 @@
 ---
 name: ucp-buyer-consent
-description: >
-  Implement the UCP Buyer Consent extension — GDPR/CCPA consent collection,
-  consent fields in checkout sessions, and privacy-compliant consent management.
-  Use when adding consent flows, privacy compliance, or data processing
-  agreements to UCP checkout.
+description: Implement the UCP Buyer Consent extension — GDPR/CCPA consent collection, consent fields in checkout sessions, and privacy-compliant consent management. Use when adding consent flows, privacy compliance, or data processing agreements to UCP checkout.
+allowed-tools: Read, Write, Edit, Bash, Grep, Glob, WebSearch, WebFetch
 ---
 
 # UCP Buyer Consent Extension

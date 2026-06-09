@@ -1,33 +1,13 @@
 ---
 name: bio-proteomics-dia-analysis
-description: Data-independent acquisition (DIA) proteomics analysis with DIA-NN and other tools. Use when analyzing DIA mass spectrometry data with library-free or library-based workflows for deep proteome profiling.
+description: Data-independent acquisition (DIA) proteomics analysis with DIA-NN and other tools. Covers library-free and library-based workflows for deep proteome profiling.
 tool_type: cli
 primary_tool: diann
 ---
 
-## Version Compatibility
-
-Reference examples tested with: numpy 1.26+, pandas 2.2+
-
-Before using code patterns, verify installed versions match. If versions differ:
-- Python: `pip show <package>` then `help(module.function)` to check signatures
-- R: `packageVersion('<pkg>')` then `?function_name` to verify parameters
-- CLI: `<tool> --version` then `<tool> --help` to confirm flags
-
-If code throws ImportError, AttributeError, or TypeError, introspect the installed
-package and adapt the example to match the actual API rather than retrying.
-
 # DIA Proteomics Analysis
 
-**"Analyze my DIA proteomics data"** → Process data-independent acquisition MS data to identify and quantify proteins using library-free or library-based workflows.
-- CLI: `diann` for end-to-end DIA analysis with neural network scoring
-- CLI: `EncyclopeDIA` for chromatogram library-based quantification
-
 ## DIA-NN Library-Free Analysis
-
-**Goal:** Run DIA proteomics analysis without a pre-built spectral library, generating one from the data itself.
-
-**Approach:** Use DIA-NN in library-free mode with FASTA-based in silico digestion and deep learning prediction.
 
 ```bash
 # Library-free mode (generates library from data)
@@ -65,10 +45,6 @@ diann \
 
 ## DIA-NN with Spectral Library
 
-**Goal:** Analyze DIA data using a pre-built or predicted spectral library for targeted extraction.
-
-**Approach:** Supply an existing spectral library to DIA-NN for guided peptide detection and quantification.
-
 ```bash
 # Use pre-built or predicted library
 diann \
@@ -97,10 +73,6 @@ generated_lib.tsv             # Generated spectral library (if requested)
 
 ## Load DIA-NN Results in R
 
-**Goal:** Import DIA-NN quantification output into R for downstream statistical analysis.
-
-**Approach:** Read the protein group matrix, convert to numeric matrix, and log2-transform raw intensities.
-
 ```r
 library(tidyverse)
 
@@ -123,10 +95,6 @@ log2_matrix[is.infinite(log2_matrix)] <- NA
 
 ## Load DIA-NN Results in Python
 
-**Goal:** Import DIA-NN quantification output into Python for downstream analysis.
-
-**Approach:** Read the protein group matrix with pandas and log2-transform, replacing zeros with NaN.
-
 ```python
 import pandas as pd
 import numpy as np
@@ -143,10 +111,6 @@ log2_proteins = np.log2(proteins.replace(0, np.nan))
 ```
 
 ## MSFragger-DIA Analysis
-
-**Goal:** Perform DIA analysis using MSFragger as an alternative to DIA-NN.
-
-**Approach:** Generate a predicted spectral library with EasyPQP from search results, then convert to the desired format.
 
 ```bash
 # MSFragger for DIA (alternative to DIA-NN)
@@ -168,10 +132,6 @@ easypqp convert \
 
 ## Spectronaut Export Processing
 
-**Goal:** Convert Spectronaut long-format report into a protein-level quantification matrix.
-
-**Approach:** Pivot the Spectronaut output from long to wide format using protein group quantities.
-
 ```r
 # Load Spectronaut report
 spectronaut <- read_tsv('spectronaut_report.tsv')
@@ -184,10 +144,6 @@ protein_matrix <- spectronaut %>%
 ```
 
 ## DIA Quality Metrics
-
-**Goal:** Assess DIA data quality by summarizing identification counts and missing value rates per run.
-
-**Approach:** Count unique precursors, proteins, and genes per run, then calculate missing value percentages from the protein matrix.
 
 ```r
 library(tidyverse)
@@ -210,10 +166,6 @@ missing_pct <- colSums(protein_values == 0 | is.na(protein_values)) / nrow(prote
 ```
 
 ## Match Between Runs
-
-**Goal:** Transfer peptide identifications between runs to reduce missing values.
-
-**Approach:** Enable DIA-NN's two-pass reanalysis with the --reanalyse flag for automatic match-between-runs.
 
 ```bash
 # DIA-NN MBR is automatic with --reanalyse flag
@@ -240,7 +192,7 @@ diann \
 
 ## Related Skills
 
-- data-import - Load raw MS data
-- spectral-libraries - Build and use spectral libraries
-- quantification - Normalization methods
-- differential-abundance - Statistical testing
+- **data-import** - Load raw MS data
+- **spectral-libraries** - Build and use spectral libraries
+- **quantification** - Normalization methods
+- **differential-abundance** - Statistical testing

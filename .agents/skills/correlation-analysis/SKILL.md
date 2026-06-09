@@ -1,275 +1,225 @@
 ---
-name: correlation-analysis
-description: Cross-asset correlation analysis including rolling correlation, hierarchical clustering, tail dependence, and regime-dependent correlation
+name: Correlation Analysis
+description: Measure relationships between variables using correlation coefficients, correlation matrices, and association tests for correlation measurement, relationship analysis, and multicollinearity detection
 ---
 
 # Correlation Analysis
 
-Cross-asset correlation analysis for diversification assessment, risk management, pairs trading signal generation, and portfolio construction.
+## Overview
 
-## Why Correlation Matters
+Correlation analysis measures the strength and direction of relationships between variables, helping identify which features are related and detect multicollinearity.
 
-Correlation measures how assets move together. In crypto markets this is critical for:
+## When to Use
 
-- **Diversification**: holding correlated assets provides no diversification benefit — you are effectively holding one concentrated position
-- **Risk management**: portfolio risk depends on the correlation structure, not just individual asset volatility
-- **Pairs trading**: highly correlated assets that temporarily diverge create mean-reversion opportunities
-- **Portfolio construction**: optimal allocation requires accurate correlation estimates
-- **Crash protection**: understanding tail dependence reveals whether assets crash together
+- Identifying relationships between numerical variables
+- Detecting multicollinearity before regression modeling
+- Exploratory data analysis to understand feature dependencies
+- Feature selection and dimensionality reduction
+- Validating assumptions about variable relationships
+- Comparing linear and non-linear associations
 
-## Correlation Methods
+## Correlation Types
 
-### Pearson Correlation
+- **Pearson**: Linear correlation (continuous variables)
+- **Spearman**: Rank-based correlation (ordinal/non-linear)
+- **Kendall**: Rank correlation (robust alternative)
+- **Cramér's V**: Association for categorical variables
+- **Mutual Information**: Non-linear dependencies
 
-Linear correlation assuming normality. Most common but least robust for crypto.
+## Key Concepts
+
+- **Correlation Coefficient**: Ranges from -1 to +1
+- **Positive Correlation**: Variables move together
+- **Negative Correlation**: Variables move oppositely
+- **Multicollinearity**: High correlations between predictors
+
+## Implementation with Python
 
 ```python
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from scipy.stats import pearsonr, spearmanr, kendalltau
 
-# Always compute on returns, never on prices
-returns_a = prices_a.pct_change().dropna()
-returns_b = prices_b.pct_change().dropna()
+# Sample data
+np.random.seed(42)
+n = 200
+age = np.random.uniform(20, 70, n)
+income = age * 2000 + np.random.normal(0, 10000, n)
+education_years = age / 2 + np.random.normal(0, 3, n)
+satisfaction = income / 50000 + np.random.normal(0, 0.5, n)
 
-pearson_corr = returns_a.corr(returns_b)  # default is Pearson
-```
-
-- **Range**: -1 (perfect inverse) to +1 (perfect co-movement)
-- **Assumes**: linear relationship, normally distributed returns, no outliers
-- **Limitation**: crypto returns are heavy-tailed — Pearson underestimates extreme co-movement
-
-### Spearman Rank Correlation
-
-Converts values to ranks, then computes Pearson on ranks. Captures monotonic (not just linear) relationships.
-
-```python
-spearman_corr = returns_a.corr(returns_b, method='spearman')
-```
-
-- More robust to outliers and non-linear relationships
-- Better for crypto due to heavy-tailed return distributions
-- Slightly lower power than Pearson when normality holds
-
-### Kendall Tau Correlation
-
-Counts concordant vs discordant pairs. Most robust to outliers.
-
-```python
-kendall_corr = returns_a.corr(returns_b, method='kendall')
-```
-
-- Most robust to outliers of the three methods
-- Computationally slower on large datasets
-- Best for small samples or heavily skewed data
-
-## Rolling Correlation
-
-Static correlation hides regime changes. Rolling correlation reveals how relationships evolve.
-
-### Window-Based Rolling Correlation
-
-```python
-# Rolling Pearson correlation
-rolling_corr = returns_a.rolling(window=60).corr(returns_b)
-
-# Multiple windows for different time horizons
-windows = {
-    'short': 20,    # ~1 month of trading days
-    'medium': 60,   # ~3 months
-    'long': 120,    # ~6 months
-}
-for label, w in windows.items():
-    df[f'corr_{label}'] = returns_a.rolling(w).corr(returns_b)
-```
-
-### EWMA Correlation
-
-Exponentially weighted — more responsive to recent changes.
-
-```python
-def ewma_correlation(x: pd.Series, y: pd.Series, span: int = 60) -> pd.Series:
-    """Compute EWMA correlation between two return series."""
-    cov_xy = x.mul(y).ewm(span=span).mean() - x.ewm(span=span).mean() * y.ewm(span=span).mean()
-    std_x = x.ewm(span=span).std()
-    std_y = y.ewm(span=span).std()
-    return cov_xy / (std_x * std_y)
-```
-
-### Typical Windows
-
-| Window | Days | Use Case |
-|--------|------|----------|
-| Short  | 20   | Tactical trading, pairs entry/exit |
-| Medium | 60   | Strategy allocation, regime detection |
-| Long   | 120  | Portfolio construction, strategic allocation |
-
-## Correlation Matrix Analysis
-
-### Computing the Full Matrix
-
-```python
-# Build return matrix for multiple assets
-returns = pd.DataFrame({
-    'BTC': btc_returns,
-    'ETH': eth_returns,
-    'SOL': sol_returns,
-    'AVAX': avax_returns,
+df = pd.DataFrame({
+    'age': age,
+    'income': income,
+    'education_years': education_years,
+    'satisfaction': satisfaction,
+    'years_employed': age - education_years - 6
 })
 
-# Correlation matrix (Pearson)
-corr_matrix = returns.corr()
+# Pearson correlation (linear)
+corr_matrix = df.corr(method='pearson')
+print("Pearson Correlation Matrix:")
+print(corr_matrix)
 
-# Spearman (better for crypto)
-spearman_matrix = returns.corr(method='spearman')
+# Individual correlation with p-value
+corr_coef, p_value = pearsonr(df['age'], df['income'])
+print(f"\nPearson correlation (age vs income): r={corr_coef:.4f}, p-value={p_value:.4f}")
+
+# Spearman correlation (rank-based)
+spearman_matrix = df.corr(method='spearman')
+print("\nSpearman Correlation Matrix:")
+print(spearman_matrix)
+
+spearman_coef, p_value = spearmanr(df['age'], df['income'])
+print(f"Spearman correlation (age vs income): rho={spearman_coef:.4f}, p-value={p_value:.4f}")
+
+# Kendall tau correlation
+kendall_coef, p_value = kendalltau(df['age'], df['income'])
+print(f"Kendall correlation (age vs income): tau={kendall_coef:.4f}, p-value={p_value:.4f}")
+
+# Correlation heatmap
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+# Pearson heatmap
+sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', center=0,
+            square=True, ax=axes[0], vmin=-1, vmax=1)
+axes[0].set_title('Pearson Correlation Heatmap')
+
+# Spearman heatmap
+sns.heatmap(spearman_matrix, annot=True, cmap='coolwarm', center=0,
+            square=True, ax=axes[1], vmin=-1, vmax=1)
+axes[1].set_title('Spearman Correlation Heatmap')
+
+plt.tight_layout()
+plt.show()
+
+# Correlation with significance testing
+def correlation_with_pvalue(df):
+    rows, cols = [], []
+    for col1 in df.columns:
+        for col2 in df.columns:
+            if col1 < col2:  # Avoid duplicates
+                r, p = pearsonr(df[col1], df[col2])
+                rows.append({
+                    'Variable 1': col1,
+                    'Variable 2': col2,
+                    'Correlation': r,
+                    'P-value': p,
+                    'Significant': 'Yes' if p < 0.05 else 'No'
+                })
+    return pd.DataFrame(rows)
+
+corr_table = correlation_with_pvalue(df)
+print("\nCorrelation with P-values:")
+print(corr_table)
+
+# Scatter plots with regression lines
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+pairs = [('age', 'income'), ('age', 'education_years'),
+         ('income', 'satisfaction'), ('education_years', 'years_employed')]
+
+for idx, (var1, var2) in enumerate(pairs):
+    ax = axes[idx // 2, idx % 2]
+    ax.scatter(df[var1], df[var2], alpha=0.5)
+
+    # Add regression line
+    z = np.polyfit(df[var1], df[var2], 1)
+    p = np.poly1d(z)
+    x_line = np.linspace(df[var1].min(), df[var1].max(), 100)
+    ax.plot(x_line, p(x_line), "r--", linewidth=2)
+
+    r, p_val = pearsonr(df[var1], df[var2])
+    ax.set_title(f'{var1} vs {var2}\nr={r:.4f}, p={p_val:.4f}')
+    ax.set_xlabel(var1)
+    ax.set_ylabel(var2)
+    ax.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.show()
+
+# Multicollinearity detection (VIF)
+from statsmodels.stats.outliers_influence import variance_inflation_factor
+
+X = df[['age', 'education_years', 'years_employed']]
+vif_data = pd.DataFrame()
+vif_data['Variable'] = X.columns
+vif_data['VIF'] = [variance_inflation_factor(X.values, i) for i in range(X.shape[1])]
+
+print("\nVariance Inflation Factor (VIF):")
+print(vif_data)
+print("\nVIF > 10: High multicollinearity")
+print("VIF > 5: Moderate multicollinearity")
+
+# Partial correlation (controlling for confounding)
+def partial_correlation(df, x, y, control_vars):
+    from scipy.stats import linregress
+
+    # Residuals of x after removing control variables
+    x_residuals = df[x] - np.poly1d(
+        np.polyfit(df[control_vars].values, df[x], deg=1)
+    )(df[control_vars].values)
+
+    # Residuals of y after removing control variables
+    y_residuals = df[y] - np.poly1d(
+        np.polyfit(df[control_vars].values, df[y], deg=1)
+    )(df[control_vars].values)
+
+    return pearsonr(x_residuals, y_residuals)[0]
+
+partial_corr = partial_correlation(df, 'income', 'satisfaction', ['age'])
+print(f"\nPartial correlation (income vs satisfaction, controlling for age): {partial_corr:.4f}")
+
+# Distance correlation (non-linear relationships)
+try:
+    from dcor import distance_correlation
+    dist_corr = distance_correlation(df['age'], df['income'])
+    print(f"Distance correlation (age vs income): {dist_corr:.4f}")
+except ImportError:
+    print("dcor library not installed for distance correlation")
+
+# Correlation stability over time
+fig, ax = plt.subplots(figsize=(12, 5))
+
+rolling_corr = df['age'].rolling(window=50).corr(df['income'])
+ax.plot(rolling_corr.index, rolling_corr.values)
+ax.set_title('Rolling Correlation (age vs income, window=50)')
+ax.set_ylabel('Correlation Coefficient')
+ax.grid(True, alpha=0.3)
+plt.show()
 ```
 
-### Eigenvalue Decomposition
+## Interpretation Guidelines
 
-Decompose the correlation matrix to identify driving factors.
+- **|r| = 0.0-0.3**: Weak correlation
+- **|r| = 0.3-0.7**: Moderate correlation
+- **|r| = 0.7-1.0**: Strong correlation
+- **p < 0.05**: Statistically significant
+- **High VIF (>10)**: Multicollinearity problem
 
-```python
-eigenvalues, eigenvectors = np.linalg.eigh(corr_matrix.values)
+## Important Notes
 
-# Sort descending
-idx = eigenvalues.argsort()[::-1]
-eigenvalues = eigenvalues[idx]
-eigenvectors = eigenvectors[:, idx]
+- Correlation ≠ Causation
+- Non-linear relationships missed by Pearson
+- Outliers can distort correlations
+- Sample size affects significance
+- Temporal trends can create spurious correlations
 
-# First eigenvalue = market factor (explains most variance)
-# Subsequent eigenvalues = sector/style factors
-market_factor_pct = eigenvalues[0] / eigenvalues.sum() * 100
-```
+## Visualization Strategies
 
-- **First eigenvector**: the market factor — when this dominates (>60% variance), everything moves together
-- **Subsequent eigenvectors**: sector or style factors
-- **Small eigenvalues**: noise / idiosyncratic risk
+- Heatmaps for overview
+- Scatter plots for relationships
+- Pair plots for multivariate analysis
+- Rolling correlations for time-varying relationships
 
-### Minimum Variance Portfolio
+## Deliverables
 
-```python
-from numpy.linalg import inv
-
-cov_matrix = returns.cov()
-ones = np.ones(len(cov_matrix))
-inv_cov = inv(cov_matrix.values)
-
-# Minimum variance weights
-weights = inv_cov @ ones / (ones @ inv_cov @ ones)
-```
-
-## Hierarchical Clustering
-
-Group assets by correlation similarity to identify natural clusters.
-
-```python
-from scipy.cluster.hierarchy import linkage, fcluster
-from scipy.spatial.distance import squareform
-
-# Convert correlation to distance
-dist_matrix = np.sqrt(2 * (1 - corr_matrix.values))
-np.fill_diagonal(dist_matrix, 0)
-
-# Hierarchical clustering
-condensed = squareform(dist_matrix)
-linkage_matrix = linkage(condensed, method='ward')
-
-# Cut at threshold to get clusters
-clusters = fcluster(linkage_matrix, t=1.0, criterion='distance')
-```
-
-**Applications**:
-- **Sector detection**: assets in the same cluster behave similarly
-- **Diversification**: select one asset per cluster for maximum diversification
-- **Risk allocation**: allocate risk budget across clusters, not individual assets
-
-## Tail Dependence
-
-Normal correlation understates co-movement during crashes. Tail dependence measures how often assets experience extreme returns simultaneously.
-
-### Lower Tail Dependence
-
-```python
-def tail_dependence(x: pd.Series, y: pd.Series, quantile: float = 0.05) -> float:
-    """Estimate lower tail dependence coefficient.
-
-    Measures P(Y < q | X < q) for quantile q.
-    Higher values mean assets crash together more often.
-    """
-    threshold_x = x.quantile(quantile)
-    threshold_y = y.quantile(quantile)
-    joint_extreme = ((x < threshold_x) & (y < threshold_y)).sum()
-    marginal_extreme = (x < threshold_x).sum()
-    return joint_extreme / marginal_extreme if marginal_extreme > 0 else 0.0
-```
-
-### Crypto-Specific Tail Behavior
-
-In crypto markets, tail dependence typically exceeds normal correlation:
-- **Normal correlation** of 0.6 between two altcoins might have **tail dependence** of 0.8
-- During market panics, correlations spike toward 1.0 across all risk assets
-- This means diversification benefits disappear exactly when needed most
-
-## Regime-Dependent Correlation
-
-Correlation is not constant — it changes with market regime.
-
-| Regime | Typical Correlation | Implication |
-|--------|-------------------|-------------|
-| Bull (trending up) | 0.4–0.7 | Moderate — some diversification works |
-| Range-bound | 0.2–0.5 | Lower — best diversification environment |
-| Bear (crash) | 0.8–0.95 | Very high — diversification fails |
-| Recovery | 0.5–0.7 | Declining from crash highs |
-
-### Detecting Correlation Regime Shifts
-
-```python
-def correlation_zscore(rolling_corr: pd.Series, lookback: int = 252) -> pd.Series:
-    """Z-score of rolling correlation vs its own history."""
-    mean = rolling_corr.rolling(lookback).mean()
-    std = rolling_corr.rolling(lookback).std()
-    return (rolling_corr - mean) / std
-
-# Flag regime shift when z-score exceeds threshold
-zscore = correlation_zscore(rolling_corr_60d)
-regime_shift = zscore.abs() > 2.0
-```
-
-## Crypto-Specific Correlation Patterns
-
-### Typical Correlation Ranges
-
-| Pair | Normal Range | Notes |
-|------|-------------|-------|
-| BTC / ETH | 0.7–0.9 | Highest among majors |
-| BTC / SOL | 0.6–0.85 | SOL more volatile, slightly less correlated |
-| BTC / Altcoin | 0.5–0.8 | Varies by market cap and sector |
-| Meme / BTC | 0.2–0.5 | Lower normal correlation |
-| Meme / Meme | 0.1–0.4 | Low normal but high tail dependence |
-| Stablecoin / BTC | -0.1–0.1 | Should be near zero |
-
-### Key Observations
-
-- Most altcoins are highly correlated with BTC (0.6–0.9) — the market factor dominates
-- Meme and PumpFun tokens show lower normal correlation but higher tail dependence
-- SOL ecosystem tokens correlate strongly with SOL price
-- Stablecoins should be uncorrelated with risk assets — if correlation appears, investigate (depeg risk)
-- Correlation tends to increase during high-volatility regimes
-- New token launches may show temporarily low correlation until price discovery stabilizes
-
-## Integration with Other Skills
-
-- **risk-management**: use correlation to compute portfolio-level VaR and stress scenarios
-- **portfolio-analytics**: correlation matrix feeds optimal allocation algorithms
-- **regime-detection**: correlation regime shifts are an input to regime classification
-- **cointegration-analysis**: pairs with high correlation are candidates for cointegration testing
-- **position-sizing**: correlation-adjusted sizing prevents correlated concentration
-
-## Files
-
-### References
-- `references/methodology.md` — Correlation formulas, statistical tests, estimation methods
-- `references/portfolio_applications.md` — Diversification metrics, pairs trading, risk decomposition
-
-### Scripts
-- `scripts/correlation_matrix.py` — Multi-asset correlation matrix, clustering, diversification metrics
-- `scripts/rolling_correlation.py` — Rolling correlation, regime detection, tail dependence analysis
+- Correlation matrices (Pearson, Spearman)
+- Correlation heatmaps with annotations
+- Statistical significance table
+- Scatter plots with regression lines
+- Multicollinearity assessment (VIF)
+- Partial correlation analysis
+- Relationship interpretation report

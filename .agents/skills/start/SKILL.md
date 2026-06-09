@@ -1,158 +1,360 @@
 ---
 name: start
-description: Initialize the productivity system and open the dashboard. Use when setting up the plugin for the first time, bootstrapping working memory from your existing task list, or decoding the shorthand (nicknames, acronyms, project codenames) you use in your todos.
+description: Use when starting reverse engineering on an unfamiliar codebase to identify layers, patterns, and structure before detailed analysis
+allowed-tools:
+  - Read
+  - Grep
+  - Glob
+  - Bash(git:*, mkdir:*, ls:*)
+  - Write(docs/unwind/**)
+  - Edit(docs/unwind/**)
 ---
 
-# Start Command
+# Discovering Architecture
 
-> If you see unfamiliar placeholders or need to check which tools are connected, see [CONNECTORS.md](../../CONNECTORS.md).
+## Overview
 
-Initialize the task and memory systems, then open the unified dashboard.
+Dispatch a subagent to systematically explore a codebase and identify its architectural layers, technology choices, and structure. The subagent produces a machine-parseable architecture document that drives downstream layer-by-layer analysis.
 
-## Instructions
+**Output:** `docs/unwind/architecture.md`
 
-### 1. Check What Exists
+## When to Use
 
-Check the working directory for:
-- `TASKS.md` — task list
-- `CLAUDE.md` — working memory
-- `memory/` — deep memory directory
-- `dashboard.html` — the visual UI
+- Starting work on an unfamiliar codebase
+- Onboarding to a new project
+- Before planning a migration or major refactor
+- Beginning a security audit or code review
 
-### 2. Create What's Missing
+## The Process
 
-**If `TASKS.md` doesn't exist:** Create it with the standard template (see task-management skill). Place it in the current working directory.
+### Step 1: Gather Repository Information
 
-**If `dashboard.html` doesn't exist:** Copy it from `${CLAUDE_PLUGIN_ROOT}/skills/dashboard.html` to the current working directory.
+**Run these commands FIRST** to get git info for source linking:
 
-**If `CLAUDE.md` and `memory/` don't exist:** This is a fresh setup — after opening the dashboard, begin the memory bootstrap workflow (see below). Place these in the current working directory.
-
-### 3. Open the Dashboard
-
-Do NOT use `open` or `xdg-open` — in Cowork, the agent runs in a VM and shell open commands won't reach the user's browser. Instead, tell the user: "Dashboard is ready at `dashboard.html`. Open it from your file browser to get started."
-
-### 4. Orient the User
-
-If everything was already initialized:
-```
-Dashboard open. Your tasks and memory are both loaded.
-- /productivity:update to sync tasks and check memory
-- /productivity:update --comprehensive for a deep scan of all activity
+```bash
+git remote get-url origin 2>/dev/null
+git branch --show-current 2>/dev/null
 ```
 
-If memory hasn't been bootstrapped yet, continue to step 5.
+Parse the remote URL:
+- SSH format: `git@github.com:owner/repo.git` → `https://github.com/owner/repo`
+- HTTPS format: `https://github.com/owner/repo.git` → `https://github.com/owner/repo`
+- If no remote: use `local` type with null URL
 
-### 5. Bootstrap Memory (First Run Only)
-
-Only do this if `CLAUDE.md` and `memory/` don't exist yet.
-
-The best source of workplace language is the user's actual task list. Real tasks = real shorthand.
-
-**Ask the user:**
-```
-Where do you keep your todos or task list? This could be:
-- A local file (e.g., TASKS.md, todo.txt)
-- An app (e.g. Asana, Linear, Jira, Notion, Todoist)
-- A notes file
-
-I'll use your tasks to learn your workplace shorthand.
+Build the repository info block:
+```yaml
+repository:
+  type: github|gitlab|bitbucket|local
+  url: https://github.com/owner/repo  # or null if local
+  branch: main                         # or null if local
+  link_format: https://github.com/owner/repo/blob/main/{path}#L{start}-L{end}
 ```
 
-**Once you have access to the task list:**
+### Step 2: Check for Existing Documentation
 
-For each task item, analyze it for potential shorthand:
-- Names that might be nicknames
-- Acronyms or abbreviations
-- Project references or codenames
-- Internal terms or jargon
-
-**For each item, decode it interactively:**
+Check if `docs/unwind/architecture.md` exists:
 
 ```
-Task: "Send PSR to Todd re: Phoenix blockers"
-
-I see some terms I want to make sure I understand:
-
-1. **PSR** - What does this stand for?
-2. **Todd** - Who is Todd? (full name, role)
-3. **Phoenix** - Is this a project codename? What's it about?
+Glob: docs/unwind/architecture.md
 ```
 
-Continue through each task, asking only about terms you haven't already decoded.
+- If exists: Pass to subagent as "previous analysis" for refresh mode
+- If not: Fresh discovery
 
-### 6. Optional Comprehensive Scan
+### Step 3: Dispatch Discovery Subagent
 
-After task list decoding, offer:
+Dispatch an **Explore** subagent for fast codebase analysis. Note: Explore cannot write files, so you will write the output in Step 4.
+
+**Include the repository info from Step 1 in the prompt:**
+
 ```
-Do you want me to do a comprehensive scan of your messages, emails, and documents?
-This takes longer but builds much richer context about the people, projects, and terms in your work.
+Task(subagent_type="Explore")
+  description: "Discover codebase architecture"
+  prompt: |
+    [See Subagent Prompt below]
 
-Or we can stick with what we have and add context later.
+    ## Repository Information (already gathered)
+    [paste the repository yaml block from Step 1]
 ```
 
-**If they choose comprehensive scan:**
+The Explore agent should return the complete architecture document content as its output.
 
-Gather data from available MCP sources:
-- **Chat:** Recent messages, channels, DMs
-- **Email:** Sent messages, recipients
-- **Documents:** Recent docs, collaborators
-- **Calendar:** Meetings, attendees
+### Step 4: Write the Architecture Document
 
-Build a braindump of people, projects, and terms found. Present findings grouped by confidence:
-- **Ready to add** (high confidence) — offer to add directly
-- **Needs clarification** — ask the user
-- **Low frequency / unclear** — note for later
+When the Explore subagent completes with the document content:
 
-### 7. Write Memory Files
+1. Create the output directory:
+   ```bash
+   mkdir -p docs/unwind
+   ```
 
-From everything gathered, create:
+2. Write the content to `docs/unwind/architecture.md` using the Write tool
 
-**CLAUDE.md** (working memory, ~50-80 lines):
+3. Verify the file was created
+
+### Step 5: Present Results and Prompt User
+
+After the subagent completes, present the results to the user:
+
+```
+## Architecture Discovery Complete
+
+I've analyzed the codebase and created the architecture document.
+
+**Output:** `docs/unwind/architecture.md`
+
+### Summary
+[Include the summary from the subagent - framework, layers detected, etc.]
+
+### Detected Layers
+[List layers with their confidence levels]
+
+### Next Steps
+
+Would you like me to:
+1. **Continue with layer analysis** - Run `unwind:unwinding-codebase` to dispatch specialist subagents for each layer
+2. **Review the architecture document first** - Open `docs/unwind/architecture.md` to verify the detection is accurate
+
+[Use AskUserQuestion to let them choose]
+```
+
+**Important:** Always give the user the option to review before proceeding. The architecture document drives all subsequent analysis, so accuracy matters.
+
+---
+
+## Subagent Prompt
+
+Use this prompt when dispatching the discovery subagent:
+
+```
+Explore this codebase to identify its architectural layers and structure.
+
+## Your Task
+
+Systematically explore the codebase and return the architecture document content. The main agent will write the file.
+
+**Repository information has already been gathered and will be provided to you.** Use the provided `repository.link_format` for all source links.
+
+## Phase 1: Project Identification
+
+Identify the technology stack by looking for:
+
+**Build System:**
+- `package.json` → Node.js/JavaScript
+- `pom.xml` / `build.gradle` → Java
+- `requirements.txt` / `pyproject.toml` → Python
+- `go.mod` → Go
+- `Cargo.toml` → Rust
+- `*.csproj` → .NET
+
+**Framework:** Check dependencies for Spring Boot, Django, Express, Rails, Next.js, etc.
+
+**Database:** Look for connection strings, ORM config, migration directories.
+
+## Phase 2: Directory Mapping
+
+Scan source directories and map to layers:
+
+| Directory Pattern | Likely Layer |
+|-------------------|--------------|
+| `repository/`, `dao/`, `data/` | Database |
+| `model/`, `entity/`, `domain/` | Domain Model |
+| `service/`, `usecase/`, `application/` | Service Layer |
+| `controller/`, `api/`, `rest/`, `graphql/` | API Layer |
+| `messaging/`, `events/`, `queue/`, `kafka/` | Messaging |
+| `components/`, `pages/`, `views/`, `ui/` | Frontend |
+
+## Phase 3: Confidence Assessment
+
+For each layer, assess confidence:
+- **High**: Clear directory structure, multiple files, consistent naming
+- **Medium**: Some indicators but mixed patterns
+- **Low**: Minimal evidence
+- **Not Detected**: No evidence found
+
+## Phase 4: Cross-Cutting Concerns
+
+Identify aspects spanning multiple layers:
+- Authentication/Authorization
+- Logging
+- Error Handling
+- Caching
+- Validation
+
+## Phase 5: Return Architecture Document
+
+**DO NOT attempt to write the file** - you don't have write permissions. Instead, return the complete architecture document content in your response. The main agent will write it to `docs/unwind/architecture.md`.
+
+Return the document in this exact format:
+
 ```markdown
-# Memory
+# Architecture Discovery: [Project Name]
 
-## Me
-[Name], [Role] on [Team].
+> **For Claude:** REQUIRED SUB-SKILL: Use unwind:unwinding-codebase to analyze each layer.
 
-## People
-| Who | Role |
-|-----|------|
-| **[Nickname]** | [Full Name], [role] |
+## Discovery Metadata
 
-## Terms
-| Term | Meaning |
-|------|---------|
-| [acronym] | [expansion] |
+- **Generated:** [ISO timestamp]
+- **Project Root:** [path]
+- **Framework:** [detected framework]
+- **Language:** [primary language]
 
-## Projects
-| Name | What |
-|------|------|
-| **[Codename]** | [description] |
+## Repository Information
 
-## Preferences
-- [preferences discovered]
+```yaml
+repository:
+  type: github|gitlab|bitbucket|local
+  url: https://github.com/owner/repo  # or null if local
+  branch: main                         # or null if local
+  link_format: https://github.com/owner/repo/blob/main/{path}#L{start}-L{end}
 ```
 
-**memory/** directory:
-- `memory/glossary.md` — full decoder ring (acronyms, terms, nicknames, codenames)
-- `memory/people/{name}.md` — individual profiles
-- `memory/projects/{name}.md` — project details
-- `memory/context/company.md` — teams, tools, processes
+**For all downstream agents:** Use `link_format` to create source links. Replace `{path}`, `{start}`, `{end}` with actual values.
 
-### 8. Report Results
+## Layer Configuration
+
+```yaml
+layers:
+  database:
+    status: detected|not_detected
+    confidence: high|medium|low
+    entry_points:
+      - path/to/data/layer/
+    dependencies: []
+
+  domain_model:
+    status: detected|not_detected
+    confidence: high|medium|low
+    entry_points:
+      - path/to/domain/
+    dependencies: [database]
+
+  service_layer:
+    status: detected|not_detected
+    confidence: high|medium|low
+    entry_points:
+      - path/to/services/
+    dependencies: [domain_model]
+
+  api:
+    status: detected|not_detected
+    confidence: high|medium|low
+    entry_points:
+      - path/to/controllers/
+    dependencies: [service_layer]
+
+  messaging:
+    status: detected|not_detected
+    confidence: high|medium|low
+    entry_points: []
+    dependencies: [service_layer]
+
+  frontend:
+    status: detected|not_detected
+    confidence: high|medium|low
+    entry_points: []
+    dependencies: [api]
+
+cross_cutting:
+  authentication:
+    touches: [api, service_layer]
+    entry_points:
+      - path/to/security/
+```
+
+## Database Layer
+
+**Status:** [Detected/Not Detected] | **Confidence:** [High/Medium/Low]
+
+**Entry Points:**
+- [directories/files]
+
+**Initial Observations:**
+- [What you found - technology, patterns, notable aspects]
+
+---
+
+[Repeat for each layer with status != not_detected]
+
+---
+
+## Cross-Cutting Concerns
+
+### Authentication
+**Touches:** [layers]
+[Observations]
+
+### [Other concerns...]
+
+---
+
+## Discovery Notes
+
+- [Unknowns, questions, areas needing clarification]
+```
+
+{REFRESH_CONTEXT}
+
+## Output
+
+After creating the architecture document, provide a brief summary:
+- Project type and framework
+- Which layers were detected (with confidence)
+- Any notable findings or concerns
+```
+
+---
+
+## Refresh Mode Context
+
+If previous architecture.md exists, add this to the subagent prompt:
 
 ```
-Productivity system ready:
-- Tasks: TASKS.md (X items)
-- Memory: X people, X terms, X projects
-- Dashboard: open in browser
+## Previous Analysis
 
-Use /productivity:update to keep things current (add --comprehensive for a deep scan).
+A previous architecture analysis exists. Compare the current codebase state to this previous analysis and:
+
+1. Note any changes in the `## Changes Since Last Discovery` section
+2. Update layer status/confidence if changed
+3. Add new entry points discovered
+4. Remove entry points that no longer exist
+5. Update the `last_analyzed` timestamp
+
+Previous analysis:
+[CONTENTS OF EXISTING architecture.md]
 ```
 
-## Notes
+---
 
-- If memory is already initialized, this just opens the dashboard
-- Nicknames are critical — always capture how people are actually referred to
-- If a source isn't available, skip it and note the gap
-- Memory grows organically through natural conversation after bootstrap
+## Layer Detection Reference
+
+### Database Layer Indicators
+- Directories: `repository/`, `dao/`, `data/`, `persistence/`
+- Files: `*Repository.java`, `*_repository.py`, `*.repo.ts`
+- ORM: Hibernate, SQLAlchemy, Prisma, TypeORM, Sequelize
+- Migrations: Flyway, Liquibase, Alembic, Prisma migrations
+
+### Domain Model Indicators
+- Directories: `domain/`, `model/`, `entity/`, `entities/`
+- Files: `*Entity.java`, `models.py`, `*.entity.ts`
+- Patterns: `@Entity`, `class Model`, aggregates, value objects
+
+### Service Layer Indicators
+- Directories: `service/`, `services/`, `usecase/`, `application/`
+- Files: `*Service.java`, `*_service.py`, `*.service.ts`
+- Patterns: `@Service`, `@Transactional`, business logic methods
+
+### API Layer Indicators
+- Directories: `controller/`, `api/`, `rest/`, `routes/`, `graphql/`
+- Files: `*Controller.java`, `views.py`, `*.controller.ts`
+- Patterns: `@RestController`, `@router`, route definitions
+
+### Messaging Layer Indicators
+- Directories: `messaging/`, `events/`, `queue/`, `kafka/`, `rabbitmq/`
+- Files: `*Listener.java`, `*Consumer.py`, `*.handler.ts`
+- Configs: Kafka, RabbitMQ, SQS configuration
+
+### Frontend Layer Indicators
+- Directories: `components/`, `pages/`, `views/`, `ui/`, `src/app/`
+- Files: `*.tsx`, `*.vue`, `*.component.ts`
+- Configs: React, Vue, Angular, Next.js, Nuxt

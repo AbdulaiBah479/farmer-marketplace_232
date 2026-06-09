@@ -17,20 +17,14 @@ Systematic approach to backtesting trading strategies based on professional meth
 
 Use this skill when:
 - Developing or validating systematic trading strategies
-- Evaluating whether a trading idea is robust enough for live implementation
+- Evaluating whether a trading idea is robust enough for live implementation  
 - Troubleshooting why a backtest might be misleading
 - Learning proper backtesting methodology
 - Avoiding common pitfalls (curve-fitting, look-ahead bias, survivorship bias)
 - Assessing parameter sensitivity and regime dependence
 - Setting realistic expectations for slippage and execution costs
 
-## Prerequisites
-
-- Python 3.9+ (for evaluation script)
-- No API keys required
-- No external data dependencies — metrics are user-provided
-
-## Workflow
+## Backtesting Workflow
 
 ### 1. State the Hypothesis
 
@@ -66,7 +60,7 @@ This is where 80% of testing time should be spent.
 
 **Parameter sensitivity**:
 - Test stop loss at 50%, 75%, 100%, 125%, 150% of baseline
-- Test profit target at 80%, 90%, 100%, 110%, 120% of baseline
+- Test profit target at 80%, 90%, 100%, 110%, 120% of baseline  
 - Vary entry/exit timing by ±15-30 minutes
 - Look for "plateaus" of stable performance, not narrow spikes
 
@@ -114,23 +108,6 @@ This is where 80% of testing time should be spent.
 - 🔄 **Refine**: Core logic sound but needs parameter adjustment
 - ❌ **Abandon**: Fails stress tests or relies on fragile assumptions
 
-Use the evaluation script for a structured, quantitative assessment:
-
-```bash
-python3 skills/backtest-expert/scripts/evaluate_backtest.py \
-  --total-trades 150 \
-  --win-rate 62 \
-  --avg-win-pct 1.8 \
-  --avg-loss-pct 1.2 \
-  --max-drawdown-pct 15 \
-  --years-tested 8 \
-  --num-parameters 3 \
-  --slippage-tested \
-  --output-dir reports/
-```
-
-The script scores across 5 dimensions (Sample Size, Expectancy, Risk Management, Robustness, Execution Realism), detects red flags, and outputs a Deploy/Refine/Abandon verdict.
-
 ## Key Testing Principles
 
 ### Punish the Strategy
@@ -172,7 +149,7 @@ Never let attachment to an idea influence interpretation of test results.
 Recognize these patterns early to save time:
 
 1. **Parameter sensitivity**: Only works with exact parameter values
-2. **Regime-specific**: Great in some years, terrible in others
+2. **Regime-specific**: Great in some years, terrible in others  
 3. **Slippage sensitivity**: Unprofitable when realistic costs added
 4. **Small sample**: Too few trades for statistical confidence
 5. **Look-ahead bias**: "Too good to be true" results
@@ -180,12 +157,7 @@ Recognize these patterns early to save time:
 
 See `references/failed_tests.md` for detailed examples and diagnostic framework.
 
-## Output
-
-- `reports/backtest_eval_<timestamp>.json` — structured evaluation with per-dimension scores, red flags, and verdict
-- `reports/backtest_eval_<timestamp>.md` — human-readable report with dimension table, key metrics, and red flag details
-
-## Resources
+## Available Reference Documentation
 
 ### Methodology Reference
 **File**: `references/methodology.md`
@@ -194,7 +166,7 @@ See `references/failed_tests.md` for detailed examples and diagnostic framework.
 
 **Contents**:
 - Stress testing methods
-- Parameter sensitivity analysis
+- Parameter sensitivity analysis  
 - Slippage and friction modeling
 - Sample size requirements
 - Market regime classification
@@ -227,7 +199,7 @@ See `references/failed_tests.md` for detailed examples and diagnostic framework.
 
 This skill focuses on **systematic/quantitative** backtesting where:
 - All rules are codified in advance
-- No discretion or "feel" in execution
+- No discretion or "feel" in execution  
 - Testing happens on all historical examples, not cherry-picked cases
 - Context (news, macro) is deliberately stripped out
 

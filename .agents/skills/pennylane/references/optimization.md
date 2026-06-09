@@ -230,9 +230,8 @@ def vqe(hamiltonian, ansatz, n_qubits):
 from pennylane import qchem
 
 symbols = ['H', 'H']
-geometry = np.array([[0.0, 0.0, -0.66140414], [0.0, 0.0, 0.66140414]])
-molecule = qchem.Molecule(symbols, geometry)
-H, n_qubits = qchem.molecular_hamiltonian(molecule)
+coords = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.74])
+H, n_qubits = qchem.molecular_hamiltonian(symbols, coords)
 
 def simple_ansatz(params, wires):
     qml.BasisState(qchem.hf_state(2, n_qubits), wires=wires)
@@ -298,14 +297,16 @@ for i in range(100):
 
 ```python
 from pennylane import qaoa
-import networkx as nx
 
 # Define problem: MaxCut on a graph
 edges = [(0, 1), (1, 2), (2, 0)]
-graph = nx.Graph(edges)
+graph = [(edge[0], edge[1], 1.0) for edge in edges]
 
-# Cost and mixer Hamiltonians
-cost_h, mixer_h = qaoa.maxcut(graph)
+# Cost Hamiltonian
+cost_h = qaoa.maxcut(graph)
+
+# Mixer Hamiltonian
+mixer_h = qaoa.x_mixer(range(3))
 
 # QAOA circuit
 def qaoa_layer(gamma, alpha):

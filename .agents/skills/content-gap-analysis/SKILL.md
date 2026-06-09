@@ -1,47 +1,35 @@
 ---
 name: content-gap-analysis
-description: 'Use when the user asks to "find content gaps", "竞品写了什么", or "还应该写什么"; builds a competitor-relative coverage map of missing topics, keyword gaps, and editorial-calendar opportunities. Not for raw keyword demand discovery — use keyword-research. 内容缺口/选题规划'
-version: "9.9.10"
-license: Apache-2.0
-compatibility: "Claude Code and compatible agent-skill hosts"
-homepage: "https://github.com/aaron-he-zhu/seo-geo-claude-skills"
-when_to_use: "Use when finding content gaps between two domains, discovering missing topics, or identifying coverage holes versus competitors."
-argument-hint: "<your domain> <competitor domain>"
-metadata:
-  author: aaron-he-zhu
-  version: "9.9.10"
-  geo-relevance: "medium"
-  tags:
-    - seo
-    - geo
-    - content-gaps
-    - topic-analysis
-    - content-strategy
-    - editorial-calendar
-    - competitive-gap
-    - content-opportunities
-    - 内容缺口
-    - コンテンツギャップ
-    - 콘텐츠갭
-    - brechas-contenido
-  triggers:
-    - "content opportunities"
-    - "editorial calendar"
-    - "what do competitors write about"
-    - "what should I cover next"
-    - "they cover this but I don't"
-    - "what topics am I missing"
-    - "内容缺口分析"
-    - "竞品话题"
-    - "缺什么内容"
-    - "コンテンツギャップ"
+description: Identifies content opportunities by finding topics and keywords your competitors cover that you don't. Reveals untapped content potential and strategic gaps in your content strategy.
 ---
 
 # Content Gap Analysis
 
-Identifies content opportunities by comparing your site against competitors and scoring the gaps worth closing first.
+This skill identifies content opportunities by analyzing gaps between your content and competitors'. Find topics you're missing, keywords you could target, and content formats you should create.
 
-## Quick Start
+## When to Use This Skill
+
+- Planning content strategy and editorial calendar
+- Finding quick-win content opportunities
+- Understanding where competitors outperform you
+- Identifying underserved topics in your niche
+- Expanding into adjacent topic areas
+- Prioritizing content creation efforts
+- Finding GEO opportunities competitors miss
+
+## What This Skill Does
+
+1. **Keyword Gap Analysis**: Finds keywords competitors rank for that you don't
+2. **Topic Coverage Mapping**: Identifies topic areas needing more content
+3. **Content Format Gaps**: Reveals missing content types (videos, tools, guides)
+4. **Audience Need Mapping**: Matches gaps to audience journey stages
+5. **GEO Opportunity Detection**: Finds AI-answerable topics you're missing
+6. **Priority Scoring**: Ranks gaps by impact and effort
+7. **Content Calendar Creation**: Plans gap-filling content schedule
+
+## How to Use
+
+### Basic Gap Analysis
 
 ```
 Find content gaps between my site [URL] and [competitor URLs]
@@ -51,56 +39,416 @@ Find content gaps between my site [URL] and [competitor URLs]
 What content am I missing compared to my top 3 competitors?
 ```
 
-## Skill Contract
+### Topic-Specific Analysis
 
-**Expected output**: a prioritized gap brief plus the standard handoff summary for `memory/research/`.
+```
+Find content gaps in [topic area] compared to industry leaders
+```
 
-- **Reads**: your domain, competitor domains, topic/content-type focus, audience, business goals, and any user-provided or tool content inventory.
-- **Writes**: a user-facing analysis and reusable summary.
-- **Promotes**: durable keyword priorities, competitor facts, and pending strategy decisions to `memory/hot-cache.md`, `memory/open-loops.md`, and `memory/research/`.
-- **Done when**: each prioritized gap names the competitor(s) that cover it and you don't; gaps are bucketed into Quick Wins / Strategic Builds / Long-term; and the deliverable includes a dated content calendar entry per Quick Win.
-- **Primary next skill**: [seo-content-writer](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/build/seo-content-writer/SKILL.md) when the prioritized gap list is approved.
+```
+What [content type] do competitors have that I don't?
+```
 
-### Handoff Summary
+### Audience-Focused
 
-> Emit the standard shape from [skill-contract.md §Handoff Summary Format](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/references/skill-contract.md).
-
-## Data Sources
-
-Optional integrations: ~~SEO tool, ~~search console, ~~analytics, ~~AI monitor. Without tools, ask for site URL, content inventory, competitor URLs, and business goals. See [CONNECTORS.md](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/CONNECTORS.md).
-
-## Decision Gates
-
-**Stop and ask** — gap analysis is competitor-relative and cannot run on demand alone:
-
-1. No competitor domains given and none inferable from `CLAUDE.md` or prior research → ask the user to name 1-3 competitors, OR offer to switch to [keyword-research](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/research/keyword-research/SKILL.md) for demand-side discovery instead.
-2. Your own domain/content inventory is unavailable and cannot be fetched → ask for the site URL or a content list, since "gap" requires knowing current coverage.
-
-**Continue silently** — do not stop for: which 3-5 named competitors to deep-dive (pick the closest); missing optional tool data (mark Estimated/N/A and proceed); ambiguous topic scope (analyze the full overlap and flag the broadest clusters).
+```
+What content gaps exist for [audience segment] in my niche?
+```
 
 ## Instructions
 
 When a user requests content gap analysis:
 
-1. **Define Analysis Scope** — confirm your site, competitors, topic focus, content types, audience, and business goals.
-2. **Audit Your Existing Content** — map indexed pages, content types, topic clusters, winners, and weaknesses.
-3. **Analyze Competitor Content** — compare content volume, traffic, type mix, topic coverage, and unique assets.
-4. **Identify Keyword Gaps** — group gaps into High Priority, Quick Wins, and Long-term based on volume, difficulty, and relevance.
-5. **Map Topic Gaps** — compare topic-cluster coverage and recommend pillar / cluster approaches for missing themes.
-6. **Identify Content Format Gaps** — compare guides, tutorials, comparisons, case studies, tools, templates, video, and research.
-7. **Analyze GEO / AI Gaps** — identify missing Q&A, definition, and comparison content that competitors get cited for.
-8. **Map to Audience Journey** — compare Awareness, Consideration, Decision, and Retention coverage.
-9. **Prioritize and Create Action Plan** — deliver an Executive Summary, Prioritized Gap List (Quick Wins / Strategic Builds / Long-term), Content Calendar, and Success Metrics.
+1. **Define Analysis Scope**
 
-Label every metric **Measured** (tool/export), **User-provided**, or **Estimated** (model inference); never present an estimate as measured; if a required metric is unavailable, mark it N/A — do not invent it.
+   Clarify parameters:
+   
+   ```markdown
+   ### Analysis Parameters
+   
+   **Your Site**: [URL]
+   **Competitors to Analyze**: [URLs or "identify for me"]
+   **Topic Focus**: [specific area or "all"]
+   **Content Types**: [blogs, guides, tools, videos, or "all"]
+   **Audience**: [target audience]
+   **Business Goals**: [traffic, leads, authority, etc.]
+   ```
 
-**Quality bar**: every gap names the competitor that covers it, its volume or traffic estimate, and why it is worth closing — never list a bare topic without that evidence.
+2. **Audit Your Existing Content**
 
-> **Reference**: See [Analysis Templates](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/research/content-gap-analysis/references/analysis-templates.md) for the compact templates used in each step.
+   ```markdown
+   ## Your Content Inventory
+   
+   **Total Indexed Pages**: [X]
+   **Content by Type**:
+   - Blog posts: [X]
+   - Landing pages: [X]
+   - Resource pages: [X]
+   - Tools/calculators: [X]
+   - Case studies: [X]
+   
+   **Content by Topic Cluster**:
+   
+   | Topic | Articles | Keywords Ranking | Traffic |
+   |-------|----------|------------------|---------|
+   | [topic 1] | [X] | [X] | [X] |
+   | [topic 2] | [X] | [X] | [X] |
+   | [topic 3] | [X] | [X] | [X] |
+   
+   **Top Performing Content**:
+   1. [Title] - [traffic] visits - [keywords] keywords
+   2. [Title] - [traffic] visits - [keywords] keywords
+   3. [Title] - [traffic] visits - [keywords] keywords
+   
+   **Content Strengths**:
+   - [Strength 1]
+   - [Strength 2]
+   
+   **Content Weaknesses**:
+   - [Weakness 1]
+   - [Weakness 2]
+   ```
+
+3. **Analyze Competitor Content**
+
+   ```markdown
+   ## Competitor Content Analysis
+   
+   ### Competitor 1: [Name/URL]
+   
+   **Content Volume**: [X] pages
+   **Monthly Traffic**: [X] visits
+   
+   **Content Distribution**:
+   | Type | Count | Est. Traffic |
+   |------|-------|--------------|
+   | Blog posts | [X] | [X] |
+   | Guides | [X] | [X] |
+   | Tools | [X] | [X] |
+   | Videos | [X] | [X] |
+   
+   **Topic Coverage**:
+   | Topic | Articles | Your Coverage |
+   |-------|----------|---------------|
+   | [topic] | [X] | [X or "None"] |
+   
+   **Unique Content They Have**:
+   1. [Content piece] - [traffic] - [why it works]
+   2. [Content piece] - [traffic] - [why it works]
+   
+   [Repeat for each competitor]
+   ```
+
+4. **Identify Keyword Gaps**
+
+   ```markdown
+   ## Keyword Gap Analysis
+   
+   ### Keywords Competitors Rank For (You Don't)
+   
+   **High Priority Gaps** (High volume, achievable difficulty)
+   
+   | Keyword | Volume | Difficulty | Competitor | Their Position |
+   |---------|--------|------------|------------|----------------|
+   | [kw 1] | [vol] | [diff] | [comp] | [pos] |
+   | [kw 2] | [vol] | [diff] | [comp] | [pos] |
+   | [kw 3] | [vol] | [diff] | [comp] | [pos] |
+   
+   **Quick Win Gaps** (Lower volume, low difficulty)
+   
+   | Keyword | Volume | Difficulty | Competitor | Their Position |
+   |---------|--------|------------|------------|----------------|
+   | [kw 1] | [vol] | [diff] | [comp] | [pos] |
+   
+   **Long-term Gaps** (High volume, high difficulty)
+   
+   | Keyword | Volume | Difficulty | Competitor | Their Position |
+   |---------|--------|------------|------------|----------------|
+   | [kw 1] | [vol] | [diff] | [comp] | [pos] |
+   
+   ### Keyword Overlap Analysis
+   
+   ```
+   Venn Diagram Representation:
+   
+        You          Competitor 1
+         ○               ○
+        / \             / \
+       /   \           /   \
+      /  A  \ B       / C   \
+     /       \       /       \
+    ○─────────○─────○─────────○
+              Competitor 2
+   
+   A: Keywords only you rank for: [X]
+   B: Overlap with Comp 1: [X]
+   C: Keywords all competitors share: [X]
+   Gap: Keywords they all have, you don't: [X]
+   ```
+   
+   **Unique Keywords (Your Advantage)**:
+   | Keyword | Your Position | Volume |
+   |---------|---------------|--------|
+   | [kw] | [pos] | [vol] |
+   ```
+
+5. **Map Topic Gaps**
+
+   ```markdown
+   ## Topic Gap Analysis
+   
+   ### Topic Coverage Comparison
+   
+   | Topic Area | You | Comp 1 | Comp 2 | Comp 3 | Gap? |
+   |------------|-----|--------|--------|--------|------|
+   | [Topic 1] | ✅ [X] | ✅ [X] | ✅ [X] | ✅ [X] | No |
+   | [Topic 2] | ❌ 0 | ✅ [X] | ✅ [X] | ✅ [X] | **Yes** |
+   | [Topic 3] | ✅ [X] | ✅ [X] | ❌ 0 | ✅ [X] | Partial |
+   | [Topic 4] | ❌ 0 | ✅ [X] | ✅ [X] | ❌ 0 | **Yes** |
+   
+   ### Missing Topic Clusters
+   
+   #### Gap 1: [Topic Area]
+   
+   **Why it matters**: [Business relevance]
+   **Competitor coverage**: [Who covers it and how]
+   **Opportunity size**: [Traffic/keyword potential]
+   
+   **Sub-topics to cover**:
+   1. [Sub-topic] - [X] search volume
+   2. [Sub-topic] - [X] search volume
+   3. [Sub-topic] - [X] search volume
+   
+   **Recommended approach**:
+   - Pillar content: [topic]
+   - Cluster articles: [list]
+   - Supporting content: [list]
+   ```
+
+6. **Identify Content Format Gaps**
+
+   ```markdown
+   ## Content Format Gap Analysis
+   
+   ### Format Distribution Comparison
+   
+   | Format | You | Comp 1 | Comp 2 | Industry Avg |
+   |--------|-----|--------|--------|--------------|
+   | Long-form guides | [X] | [X] | [X] | [X] |
+   | Tutorials | [X] | [X] | [X] | [X] |
+   | Comparison posts | [X] | [X] | [X] | [X] |
+   | Case studies | [X] | [X] | [X] | [X] |
+   | Tools/calculators | [X] | [X] | [X] | [X] |
+   | Templates | [X] | [X] | [X] | [X] |
+   | Video content | [X] | [X] | [X] | [X] |
+   | Infographics | [X] | [X] | [X] | [X] |
+   | Original research | [X] | [X] | [X] | [X] |
+   
+   ### Format Gaps to Fill
+   
+   #### Gap: [Format Type]
+   
+   **Current state**: You have [X], competitors average [Y]
+   **Best examples**: [Competitor content examples]
+   **Opportunity**: [Description]
+   **Effort to create**: [Low/Medium/High]
+   **Expected impact**: [Low/Medium/High]
+   
+   **Recommended first project**:
+   [Specific content idea]
+   ```
+
+7. **Analyze GEO/AI Gaps**
+
+   ```markdown
+   ## GEO Content Gap Analysis
+   
+   ### AI-Answerable Topics Assessment
+   
+   **Topics where competitors get AI citations (you don't)**:
+   
+   | Topic | AI Cites | Why They're Cited | Your Gap |
+   |-------|----------|-------------------|----------|
+   | [topic 1] | [Comp] | [reason] | [what you need] |
+   | [topic 2] | [Comp] | [reason] | [what you need] |
+   
+   ### GEO-Optimized Content Gaps
+   
+   **Missing Q&A Content**:
+   | Question | Search Volume | Currently Answered By |
+   |----------|---------------|----------------------|
+   | [question] | [vol] | [competitor] |
+   
+   **Missing Definition/Explanation Content**:
+   | Term | Search Volume | Best Current Source |
+   |------|---------------|---------------------|
+   | [term] | [vol] | [source] |
+   
+   **Missing Comparison Content**:
+   | Comparison | Search Volume | Best Current Source |
+   |------------|---------------|---------------------|
+   | [A vs B] | [vol] | [source] |
+   
+   ### GEO Opportunity Score
+   
+   | Topic | Traditional SEO Value | GEO Value | Combined Priority |
+   |-------|----------------------|-----------|-------------------|
+   | [topic] | [score] | [score] | [priority] |
+   ```
+
+8. **Map to Audience Journey**
+
+   ```markdown
+   ## Audience Journey Gap Analysis
+   
+   ### Funnel Stage Coverage
+   
+   | Stage | Your Content | Competitor Avg | Gap |
+   |-------|--------------|----------------|-----|
+   | Awareness | [X] articles | [X] articles | [+/-X] |
+   | Consideration | [X] articles | [X] articles | [+/-X] |
+   | Decision | [X] articles | [X] articles | [+/-X] |
+   | Retention | [X] articles | [X] articles | [+/-X] |
+   
+   ### Journey Gap Details
+   
+   #### Awareness Stage Gaps
+   - Missing: [topics/content]
+   - Opportunity: [description]
+   
+   #### Consideration Stage Gaps
+   - Missing: [topics/content]
+   - Opportunity: [description]
+   
+   #### Decision Stage Gaps
+   - Missing: [topics/content]
+   - Opportunity: [description]
+   ```
+
+9. **Prioritize and Create Action Plan**
+
+   ```markdown
+   # Content Gap Analysis Report
+   
+   ## Executive Summary
+   
+   **Analysis Date**: [Date]
+   **Sites Analyzed**: [Your site] vs [Competitors]
+   
+   **Key Findings**:
+   1. [Most significant gap]
+   2. [Second significant gap]
+   3. [Third significant gap]
+   
+   **Total Opportunity**:
+   - Keywords gaps identified: [X]
+   - Estimated traffic opportunity: [X]/month
+   - Quick wins available: [X] pieces
+   
+   ---
+   
+   ## Prioritized Gap List
+   
+   ### Tier 1: Quick Wins (Do Now)
+   
+   | Content to Create | Target Keyword | Volume | Difficulty | Impact |
+   |-------------------|----------------|--------|------------|--------|
+   | [Title idea] | [keyword] | [vol] | [diff] | High |
+   | [Title idea] | [keyword] | [vol] | [diff] | High |
+   
+   **Why prioritize**: Low effort, immediate ranking potential
+   
+   ### Tier 2: Strategic Builds (This Quarter)
+   
+   | Content to Create | Target Keyword | Volume | Difficulty | Impact |
+   |-------------------|----------------|--------|------------|--------|
+   | [Title idea] | [keyword] | [vol] | [diff] | High |
+   
+   **Why prioritize**: High value, requires more resources
+   
+   ### Tier 3: Long-term Investments (This Year)
+   
+   | Content to Create | Target Keyword | Volume | Difficulty | Impact |
+   |-------------------|----------------|--------|------------|--------|
+   | [Title idea] | [keyword] | [vol] | [diff] | High |
+   
+   **Why prioritize**: Builds authority, competitive differentiator
+   
+   ---
+   
+   ## Content Calendar Recommendation
+   
+   ### Month 1
+   | Week | Content | Type | Target Keyword | Status |
+   |------|---------|------|----------------|--------|
+   | 1 | [Title] | [Type] | [Keyword] | Planned |
+   | 2 | [Title] | [Type] | [Keyword] | Planned |
+   | 3 | [Title] | [Type] | [Keyword] | Planned |
+   | 4 | [Title] | [Type] | [Keyword] | Planned |
+   
+   ### Month 2
+   [Continue...]
+   
+   ### Month 3
+   [Continue...]
+   
+   ---
+   
+   ## Success Metrics
+   
+   Track these to measure gap-filling success:
+   
+   | Metric | Current | 3-Month Target | 6-Month Target |
+   |--------|---------|----------------|----------------|
+   | Keyword coverage | [X] | [X] | [X] |
+   | Topic clusters complete | [X] | [X] | [X] |
+   | Traffic from new content | [X] | [X] | [X] |
+   | AI citations | [X] | [X] | [X] |
+   ```
 
 ## Example
 
-See [references/example-report.md](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/research/content-gap-analysis/references/example-report.md) for a full SaaS marketing sample.
+**User**: "Find content gaps for my SaaS marketing blog compared to HubSpot and Drift"
+
+**Output**:
+
+```markdown
+# Content Gap Analysis: SaaS Marketing Blog
+
+## Executive Summary
+
+Compared to HubSpot and Drift, your blog has significant gaps in:
+1. **Interactive tools** - They have 15+, you have 0
+2. **Comparison content** - Missing "[Your Tool] vs [Competitor]" pages
+3. **GEO-optimized definitions** - No glossary or term definitions
+
+Total opportunity: ~25,000 monthly visits from 45 keyword gaps
+
+## Top Keyword Gaps
+
+### Quick Wins (Difficulty <40)
+
+| Keyword | Volume | Difficulty | Who Ranks |
+|---------|--------|------------|-----------|
+| saas marketing metrics | 1,200 | 32 | HubSpot #3 |
+| b2b email sequences | 890 | 28 | Drift #5 |
+| saas onboarding emails | 720 | 25 | Neither! |
+| marketing qualified lead definition | 1,800 | 35 | HubSpot #1 |
+
+### Content Format Gaps
+
+**You're missing**:
+- [ ] Interactive ROI calculator (HubSpot gets 15k visits/mo from theirs)
+- [ ] Email template library (Drift's gets 8k visits/mo)
+- [ ] Marketing glossary (HubSpot's definition pages rank for 500+ keywords)
+
+## Recommended Content Calendar
+
+**Week 1**: "SaaS Marketing Metrics: Complete Guide" (Quick win)
+**Week 2**: "What is a Marketing Qualified Lead?" (GEO opportunity)
+**Week 3**: "B2B Email Sequence Templates" (Format gap)
+**Week 4**: "[Your Tool] vs HubSpot" (Comparison gap)
+```
 
 ## Advanced Analysis
 
@@ -124,18 +472,17 @@ Find gaps in our [commercial/informational] intent content
 
 ## Tips for Success
 
-Focus on actionable gaps, respect execution constraints, and include GEO opportunities instead of only traditional search gaps.
+1. **Focus on actionable gaps** - Not all gaps are worth filling
+2. **Consider your resources** - Prioritize based on ability to execute
+3. **Quality over quantity** - Better to fill 5 gaps well than 20 poorly
+4. **Track what works** - Measure gap-filling success
+5. **Update regularly** - Gaps change as competitors publish
+6. **Include GEO opportunities** - Don't just optimize for traditional search
 
-### Save Results
+## Related Skills
 
-Write path: `memory/research/content-gap-analysis/YYYY-MM-DD-<topic>.md`; promote durable gap priorities and competitor facts to `memory/hot-cache.md`. See [Skill Contract](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/references/skill-contract.md) §Save Results Template.
+- [keyword-research](../keyword-research/) - Deep-dive on gap keywords
+- [competitor-analysis](../competitor-analysis/) - Understand competitor strategies
+- [seo-content-writer](../../build/seo-content-writer/) - Create gap-filling content
+- [content-refresher](../../optimize/content-refresher/) - Improve existing content
 
-## Reference Materials
-
-- [Analysis Templates](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/research/content-gap-analysis/references/analysis-templates.md) — Gap-analysis templates
-- [Gap Analysis Frameworks](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/research/content-gap-analysis/references/gap-analysis-frameworks.md) — Audit and prioritization frameworks
-- [Example Report](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/research/content-gap-analysis/references/example-report.md) — Worked sample
-
-## Next Best Skill
-
-Primary: [seo-content-writer](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/build/seo-content-writer/SKILL.md).

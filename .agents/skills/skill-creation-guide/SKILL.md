@@ -1,102 +1,123 @@
 ---
 name: skill-creation-guide
-description: "Guide for creating Agent Skills: structure, best practices, and SKILL.md format for Claude Code, Codex, Gemini CLI, and other AI agents."
+description: Complete comprehensive guide for creating, managing, and optimizing Claude Code Skills. Reference documentation covering structure, API usage, examples, best practices, and troubleshooting.
+version: 1.0.0
 ---
 
-# Skill Creation Guide
+# Claude Code Skills Creation Guide
 
-## Scope
+Complete reference documentation for creating, managing, and optimizing Claude Code Skills.
 
-Use this skill when:
+## What are Claude Code Skills?
 
-- Creating new Agent Skills
-- Understanding SKILL.md format and conventions
-- Learning best practices for skill authoring
+Skills are modular capabilities that extend Claude's functionality through organized folders containing instructions, scripts, and resources. They allow you to teach Claude your specific workflows, patterns, and domain expertise in a repeatable, efficient way.
 
-## Skill Structure
+**Key Benefits:**
+- Autonomous activation based on context
+- Token-efficient with progressive disclosure
+- Reusable across projects
+- Shareable with teams
+- Version controllable
 
+## Documentation Structure
+
+This guide is modularized for easy reference:
+
+### **getting-started.md**
+First steps for creating your first skill
+- Installation and setup
+- Using skill-creator for interactive creation
+- Manual skill creation
+- Testing your first skill
+
+### **structure.md**
+Technical specifications and file organization
+- Directory structure patterns
+- SKILL.md format and YAML frontmatter
+- REFERENCE.md for supplemental content
+- Resources and scripts organization
+- Progressive disclosure architecture
+
+### **api-usage.md**
+Programmatic access and team integration
+- Messages API integration
+- /v1/skills endpoint usage
+- Team sharing strategies
+- Version management
+- Enterprise deployment
+
+### **examples.md**
+Real-world use cases and implementations
+- Official Anthropic skills repository examples
+- Document processing (PDF, Excel, Word, PowerPoint)
+- Brand guidelines enforcement
+- Workflow automation
+- Community examples
+
+### **best-practices.md**
+Performance optimization and efficiency
+- Token usage optimization
+- Description writing guidelines
+- Context management
+- When to split content into multiple files
+- Security considerations
+
+### **troubleshooting.md**
+Common issues and solutions
+- Installation problems
+- Skill not activating
+- Testing and debugging
+- Performance issues
+- Reloading skills
+
+## Quick Reference
+
+**Installation Locations:**
+- Personal Skills: `~/.claude/skills/` (all projects)
+- Project Skills: `.claude/skills/` (team shared)
+
+**Activation:**
+- Automatic based on description match
+- No manual invocation required
+- Up to 8 skills per request (API)
+
+**Reload Skills:**
+```bash
+/reload-skills
 ```
-skill-name/
-├── SKILL.md          # Required: Instructions and metadata
-├── scripts/          # Optional: Helper scripts
-├── templates/        # Optional: Document templates
-└── resources/        # Optional: Reference files
-```
 
-## SKILL.md Format
+**Official Resources:**
+- GitHub: https://github.com/anthropics/skills
+- Docs: https://docs.claude.com/en/docs/claude-code/skills
+- API: https://docs.claude.com/en/api/skills-guide
 
-### Required Frontmatter
+## Minimum Requirements
 
-```yaml
----
-name: my-skill-name
-description: A clear description of what this skill does and when to use it.
----
-```
-
-### Body Structure
+A skill requires only:
+1. A directory with your skill name
+2. A `SKILL.md` file with YAML frontmatter:
 
 ```markdown
-# Skill Name
+---
+name: your-skill-name
+description: What it does and when to use it
+---
 
-Detailed description of the skill's purpose.
+# Your Skill Name
 
-## When to Use This Skill
-
-- Use case 1
-- Use case 2
-
-## Instructions
-
-[Detailed instructions for the agent]
-
-## Examples
-
-[Real-world examples]
+[Your instructions here]
 ```
 
-## Best Practices
+## Next Steps
 
-1. **Keep descriptions exhaustive**: The frontmatter description helps agents decide when to trigger the skill.
-2. **Focus on execution**: The body should contain clear, actionable steps.
-3. **Use progressive disclosure**: Put detailed references in `references/` folder.
-4. **Include scripts for automation**: Use helper scripts for deterministic operations.
-5. **Keep SKILL.md under 500 lines**: For optimal performance.
-6. **Test across platforms**: Verify skills work with Claude Code, Codex, etc.
+1. **New to Skills?** Start with `getting-started.md`
+2. **Creating Custom Skills?** Review `structure.md`
+3. **Team Deployment?** Check `api-usage.md`
+4. **Need Examples?** Browse `examples.md`
+5. **Optimizing Performance?** Read `best-practices.md`
+6. **Troubleshooting?** See `troubleshooting.md`
 
-## Token Efficiency
+---
 
-Skills employ progressive disclosure architecture:
-
-1. **Metadata loading** (~100 tokens): Agent scans available skills
-2. **Full instructions** (<5k tokens): Load when skill is activated
-3. **Bundled resources**: Only load as needed
-
-## Platform-Specific Paths
-
-| Platform | Project Path | Global Path |
-|----------|--------------|-------------|
-| Claude Code | `.claude/skills/` | `~/.claude/skills/` |
-| Codex | `.codex/skills/` | `~/.codex/skills/` |
-| Cursor | `.cursor/skills/` | `~/.cursor/skills/` |
-| Gemini CLI | `.gemini/skills/` | `~/.gemini/skills/` |
-| GitHub Copilot | `.github/skills/` | `~/.copilot/skills/` |
-
-## Quality Checklist
-
-- [ ] Clear, actionable instructions
-- [ ] Includes real-world examples
-- [ ] Written for AI agents, not end users
-- [ ] Documents prerequisites and dependencies
-- [ ] Includes error handling guidance
-- [ ] Tested on target platform(s)
-
-## Full Resource List
-
-For more detailed skill creation resources, complete link lists, or the latest information, use WebFetch to retrieve the full README.md:
-
-```
-https://raw.githubusercontent.com/gmh5225/awesome-skills/refs/heads/main/README.md
-```
-
-The README.md contains the complete categorized resource list with all links.
+*Last Updated: 2025-10-21*
+*Based on official Anthropic documentation and community best practices*

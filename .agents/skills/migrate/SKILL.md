@@ -1,172 +1,137 @@
 ---
-name: Migrate
-description: "Intakes existing content from external sources, classifies each chunk against the PAI destination taxonomy, and commits approved chunks with provenance. Sources: .md/.markdown/.txt, stdin, PAI TELOS/MEMORY/KNOWLEDGE dirs, CLAUDE.md/.cursorrules/OpenAI Custom Instructions, Obsidian/Notion/Apple Notes exports, journal dumps. MigrateScan.ts chunks and classifies, producing a routing table with per-target counts and confidence %. MigrateApprove.ts approval loop: --approve-all, --approve-target, --review, --dry-run. UNCLEAR never bulk-approved. Phase 6 delivers summary and /interview recommendation for sparse areas. Confidence: ≥70% auto-approve; 40-70% confirm; <40% walk-through. Destinations: TELOS (MISSION/GOALS/PROBLEMS/STRATEGIES/CHALLENGES/BELIEFS/WISDOM/MODELS/FRAMES/NARRATIVES/SPARKS), IDEAL_STATE (per-dimension explicit call), preferences (BOOKS/AUTHORS/MOVIES/BANDS/RESTAURANTS/FOOD_PREFERENCES/LEARNING/MEETUPS/CIVIC), Identity (PRINCIPAL_IDENTITY.md — always prompts), Knowledge (MEMORY/KNOWLEDGE/{Ideas,People,Companies,Research}), AI rules (memory/feedback_*.md — new file per chunk), UNCLEAR. Provenance HTML comment on every commit. Dedup via substring match. USE WHEN /migrate, migrate content, import from other PAI, bring in old notes, import Cursor rules, import CLAUDE.md, import Custom Instructions, bulk import, Obsidian/Notion/Apple Notes import. NOT FOR single-file edits (use Telos Update), conversational interviews (use Interview), Knowledge Archive (use Knowledge), identity edits (use _PROFILE)."
+name: migrate
+description: |
+  Interactive cleanup of broken tests and code after a new feature lands. Use this skill
+  when: (1) TDD is complete but the full test suite has failures, (2) the user says
+  "migrate" or "fix broken tests", (3) preparing a branch for PR after feature work.
 ---
 
-# Migrate — external-content intake and classification
+# Migrate
 
-## 🚨 MANDATORY: Voice Notification
+Interactive cleanup after TDD execution. You run the suite, surface breakage, and
+the user decides what to do about each failure. You execute their decisions.
 
-```bash
-curl -s -X POST http://localhost:31337/notify \
-  -H "Content-Type: application/json" \
-  -d '{"message": "Starting the migration. Scanning source and classifying chunks."}' \
-  > /dev/null 2>&1 &
-```
+## Prerequisites
 
-## What this skill does
+- TDD execution is complete (new feature tests pass)
+- Full test suite has not been verified green yet
 
-Migrates content into the PAI structure from external sources. Unlike `/interview` (which asks the user questions to fill gaps), `/migrate` **already has the content** — it just needs to classify each chunk and route it to the right PAI destination.
+## Process
 
-### Sources supported in V1
+### 0. Environment Setup
 
-- **Files:** `.md`, `.markdown`, `.txt` (single file or directory recursion)
-- **Stdin:** piped content or pasted directly
-- **Other PAI installs:** point at their `USER/TELOS/` or `MEMORY/KNOWLEDGE/` directories
-- **Agent-harness rule files:** `CLAUDE.md`, `.cursorrules`, OpenAI Custom Instructions export
-- **Exports:** Obsidian vaults (markdown), Notion exports (markdown), Apple Notes exports (.txt), raw journal dumps
-
-### What it classifies chunks into
-
-| Category | Destinations |
-|---|---|
-| **Foundational TELOS** | MISSION, GOALS, PROBLEMS, STRATEGIES, CHALLENGES, BELIEFS, WISDOM, MODELS, FRAMES, NARRATIVES, SPARKS |
-| **IDEAL_STATE dimensions** | HEALTH, MONEY, FREEDOM, RELATIONSHIPS, CREATIVE, RHYTHMS |
-| **Preference files** | BOOKS, AUTHORS, MOVIES, BANDS, RESTAURANTS, FOOD_PREFERENCES, LEARNING, MEETUPS, CIVIC |
-| **Identity** | USER/PRINCIPAL_IDENTITY.md |
-| **Knowledge** | MEMORY/KNOWLEDGE/{Ideas,People,Companies,Research} |
-| **AI collaboration rules** | `memory/feedback_*.md` (for "always do X", "never Y" patterns) |
-| **Unclear** | Flagged for the user's manual routing |
-
-## Workflow
-
-### Phase 1 — Identify the source
-
-Ask the user what he wants to migrate:
-
-- "Paste the content here and I'll work from stdin"
-- "Point me at a file path"
-- "Point me at a directory and I'll scan everything inside"
-- "I have a Cursor rules file at ~/Projects/X/.cursorrules"
-- "My old PAI install has TELOS at ~/old-claude/TELOS/"
-
-Collect the source path. If content is pasted, write it to a temp file first.
-
-### Phase 2 — Scan
-
-Run the scanner:
+Activate virtual environments and verify infrastructure before running tests:
 
 ```bash
-bun ~/.claude/PAI/TOOLS/MigrateScan.ts --source <path>
-# or
-echo "$CONTENT" | bun ~/.claude/PAI/TOOLS/MigrateScan.ts --stdin
+# Backend: activate venv (NEVER claim "pytest unavailable" without checking)
+cd backend && source venv/bin/activate && python -m pytest --version
+
+# Frontend: verify node_modules
+cd frontend && ls node_modules/.bin/vitest
+
+# E2E: start servers if needed for E2E tests
+cd backend && source venv/bin/activate && uvicorn app.main:app --port 8001 &
+cd frontend && npm run dev -- --port 5174 &
 ```
 
-Scanner output includes:
-- Total chunks found
-- Proposed routing table (how many chunks per target)
-- Average classification confidence
-- Count of UNCLEAR chunks
-- Count of low-confidence (<40%) chunks
+If venv or node_modules don't exist, install dependencies first (`pip install -r requirements.txt` / `npm install`).
 
-### Phase 3 — Present routing summary
+### 1. Run Full Suite
 
-Show the user the routing proposal in a scannable format:
+Run all test layers (with venv activated for backend):
 
+```bash
+cd backend && source venv/bin/activate && python -m pytest
+cd frontend && npm test -- --run
+cd e2e && npx playwright test
 ```
-Found 47 chunks from 3 files. Proposed routing:
 
-  📂 TELOS/GOALS.md              12 chunks  (78% avg confidence)
-  📂 TELOS/WISDOM.md              8 chunks  (65% avg confidence)
-  📂 TELOS/BELIEFS.md             6 chunks  (71% avg confidence)
-  📂 MEMORY/KNOWLEDGE/Ideas      15 chunks  (52% avg confidence)
-  🧠 memory/feedback              4 chunks  (85% avg confidence)
-  ❓ UNCLEAR                      2 chunks  (needs your call)
+Collect all failures.
+
+### 2. Categorize Failures
+
+Separate failures into:
+
+| Category | Meaning | Action |
+|----------|---------|--------|
+| New feature tests failing | Bug in the feature | Flag — TDD didn't complete cleanly |
+| Existing tests failing | Cascade from new behavior | Present to user for decision |
+
+All failures are caused by this branch — main is always green.
+
+### 3. Present Each Failure
+
+For each existing test failure caused by the new feature, use `AskUserQuestion`:
+
+Present:
+- Test name and file
+- What it asserts (the old behavior)
+- Why it fails (the new behavior)
+- Relevant code diff if helpful
 
 Options:
-  - Approve everything trusted (confidence ≥60%)?
-  - Walk through the low-confidence and UNCLEAR chunks one by one?
-  - Review specific categories?
-  - Review everything?
-```
+- **Update test** — modify assertions to reflect new correct behavior
+- **Remove test** — this scenario no longer applies
+- **This is a bug** — the feature broke something it shouldn't have; needs fixing
+- **Skip for now** — revisit later
 
-### Phase 4 — Approval loop
+Group related failures by topic when possible (e.g., "These 4 tests all assert
+the old response format for GET /recipes").
 
-Based on the user's preference:
+### 4. Execute Decisions
 
-**Fast path** (he says "approve all trusted"):
-```bash
-bun ~/.claude/PAI/TOOLS/MigrateApprove.ts --approve-all
-```
-Commits everything non-UNCLEAR. Then walk through UNCLEAR chunks conversationally.
+For each decision:
 
-**Category path** (he says "approve goals and wisdom, skip knowledge"):
-```bash
-bun ~/.claude/PAI/TOOLS/MigrateApprove.ts --approve-target TELOS/GOALS.md
-bun ~/.claude/PAI/TOOLS/MigrateApprove.ts --approve-target TELOS/WISDOM.md
-```
+- **Update test**: Modify the test to assert new behavior. Run it to confirm it passes.
+- **Remove test**: Delete the test. If it was the only test for that behavior, ask
+  if replacement coverage is needed.
+- **Bug**: Create a LEARNING task noting the regression. Do not fix in migration —
+  this goes back to the feature implementation.
+- **Skip**: Leave as-is, note it for later.
 
-**Walk-through path** (he wants careful review):
-```bash
-bun ~/.claude/PAI/TOOLS/MigrateApprove.ts --review
-```
-Show each pending chunk. For each:
-- Show preview + proposed target + confidence + alternatives
-- Ask: approve / modify target / reject
-- Commit decision
+### 5. Database Migrations
 
-### Phase 5 — Handle UNCLEAR chunks
+Evaluate code changes in this branch for database impact:
 
-UNCLEAR chunks are ones where no classification rule matched strongly. For each:
-- Display full content (not just preview)
-- Ask the user: "This one's unclear — what is it? Could be X, Y, Z, or maybe Knowledge/Ideas as a catch-all?"
-- the user chooses → commit via `--modify <id> --target <chosen>`
+- Check for new/modified models, schema changes, or new fields
+- Check for changed relationships or constraints
+- Check for renamed or removed columns/tables
 
-### Phase 6 — Completion summary
+If database changes are detected, present to user via `AskUserQuestion`:
+- What changed (model/field/relationship)
+- Whether a migration is needed (new table, altered column, etc.)
+- Suggested migration approach (e.g., Alembic revision, data backfill, nullable transition)
 
-After approval pass:
-- Report total chunks committed, per-target count
-- Flag any remaining UNCLEAR
-- Recommend next step: run `/interview` to interview around anything the migration left sparse
+For each migration needed:
+- **Generate migration**: Create the migration file, run it, verify it applies cleanly
+- **Data backfill**: If existing rows need default values, suggest and confirm approach
+- **Destructive changes**: Flag column/table removals — confirm data loss is acceptable
 
-## Rules
+If no database changes detected, skip this step.
 
-- **Every commit carries provenance.** The committed content includes an HTML comment noting source file + section + timestamp. Nothing gets dropped into TELOS without attribution.
-- **Never bulk-approve UNCLEAR.** Those require the user's explicit routing.
-- **Confidence thresholds:** ≥70% = trusted (auto-approve eligible). 40-70% = medium (show for confirmation). <40% = low (walk-through required).
-- **Ask before touching identity.** PRINCIPAL_IDENTITY.md commits always prompt — that file is load-bearing.
-- **Don't duplicate.** If the same content already exists in the target (substring match), flag it and ask before appending.
-- **Respect private paths.** Never migrate content into IDEAL_STATE/ without the user's per-dimension call (Decision #3: IDEAL_STATE is fully private and curated).
-- **Feedback memories get new files.** Each `memory/feedback` chunk becomes its own `feedback_migrated_<slug>_<id>.md` file — not appended to an existing memory.
-- **Knowledge gets new files too.** Each `MEMORY/KNOWLEDGE/*` chunk becomes a new typed note with source metadata.
+### 6. Verify
 
-## Examples
+After all decisions are executed:
+- Run full suite again
+- If new failures appear (from the fixes), repeat from step 3
+- Continue until suite is green or only skipped/bug items remain
 
-### User: `/migrate ~/old-claude/TELOS/`
+### 7. Summary
 
-the DA scans the old TELOS directory, classifies every chunk, presents the routing summary, offers fast-path vs. walk-through approval.
+Present final state:
+- Tests updated: [count and list]
+- Tests removed: [count and list]
+- Migrations created: [count and list]
+- Bugs found: [count and list — these need attention]
+- Skipped: [count and list]
+- Suite status: GREEN / remaining failures
 
-### User: `/migrate` (then pastes CLAUDE.md content)
+Tell the user: "Migration complete. Run `/code-review` to verify against the plan
+before PR."
 
-the DA reads from stdin, classifies the rules as `memory/feedback` (most) plus maybe PRINCIPAL_IDENTITY (if identity lines are mixed in), walks through approval.
+## Principles
 
-### User: "migrate my Cursor rules at ~/.cursor/rules"
-
-the DA scans the rules dir, surfaces likely-feedback classifications, walks through with extra care (Cursor rules often have tool-specific stuff that doesn't translate to PAI).
-
-### User: "import the stuff I dumped in /tmp/journal.md"
-
-the DA scans the journal, expects a lot of UNCLEAR + WISDOM, walks through each section.
-
-## Related
-
-- `/interview` — fills gaps by asking questions (not by intaking existing content)
-- `/Telos` Update workflow — edit a single TELOS file directly
-- `/Knowledge` — manage the Knowledge Archive
-- `/_PROFILE` — manage PRINCIPAL_IDENTITY
-
-## Troubleshooting
-
-- **Low average confidence (<40%):** the source is probably genre-mismatched (e.g., code comments, logs, raw data). Consider pre-filtering to remove non-prose chunks before scanning.
-- **Everything goes to UNCLEAR:** the source probably has no recognizable PAI-taxonomy patterns. Either add the content manually via `/Telos` or write it as general Knowledge notes.
-- **Duplicate content warnings:** the scanner doesn't dedupe against existing files yet. Run `--dry-run` first to preview before committing.
+- **User decides** — never update or remove a test without explicit approval
+- **Group related failures** — don't ask about 10 tests one at a time if they're the same issue
+- **Bugs go back** — if the feature broke something unintentionally, that's a bug, not a migration
+- **Green suite before PR** — the goal is a clean test suite

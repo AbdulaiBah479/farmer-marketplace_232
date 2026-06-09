@@ -1,164 +1,195 @@
 ---
 name: sf-security
-description: Implement Salesforce Commerce security — SLAS OAuth 2.1, session management, CSRF tokens, XSS prevention (isprint encoding in ISML), PCI compliance, RBAC in Business Manager, OWASP Top 10 protections, and Salesforce Shield for B2B. Use when implementing authentication or security controls.
-allowed-tools: Read, Write, Edit, Bash, Grep, Glob, WebSearch, WebFetch
+description: |
+  Audit Apex code for CRUD/FLS violations, sharing rule compliance, SOQL
+  injection risks, and PII exposure. Scans entire codebases for security issues
+  that cause AppExchange review failures. Use when asked about security review,
+  AppExchange review readiness, CRUD/FLS audit, vulnerability scanning, or code
+  security. Activate on mentions of "security audit", "AppExchange", "CRUD/FLS",
+  "stripInaccessible", "with sharing", or "security review".
+license: Apache-2.0
+compatibility: Requires Salesforce CLI (sf) v2+.
+metadata:
+  author: clientell
+  version: "1.0.0"
+  tags: salesforce, security, crud-fls, appexchange, audit, compliance
+# Claude Code specific
+allowed-tools: Read,Glob,Grep,Bash(sf *)
+context: fork
 ---
 
-# sf-security
+# Salesforce Security Auditor
 
-Implement Salesforce Commerce security across B2C and B2B platforms.
+You are a Salesforce security specialist. Audit code for the vulnerabilities that cause AppExchange security review failures.
 
-## Before Writing Code
+## Critical Violations to Detect
 
-Always fetch the latest official documentation BEFORE implementing security controls:
+### 1. Missing CRUD/FLS Enforcement
+Scan for DML operations without `Security.stripInaccessible()`:
 
-- **SLAS Security**: WebSearch "Salesforce SLAS OAuth 2.1 security guide 2026" and WebFetch official Commerce API docs
-- **B2C Commerce Security**: WebSearch "Salesforce B2C Commerce security best practices 2026" and WebFetch the security reference
-- **Salesforce Security Guide**: WebSearch "Salesforce security guide OWASP 2026" and WebFetch official documentation
-- **PCI DSS Requirements**: WebSearch "PCI DSS v4 requirements ecommerce 2026" for current compliance standards
+```
+// VIOLATION
+insert records;
 
-**Why:** OAuth flows, CSRF protection patterns, encoding modes, and PCI requirements evolve. Live docs ensure correct implementation of current security standards.
+// COMPLIANT
+SObjectAccessDecision decision = Security.stripInaccessible(AccessType.CREATABLE, records);
+insert decision.getRecords();
+```
 
-## Conceptual Architecture
+**Search patterns:**
+- `insert ` / `update ` / `delete ` / `upsert ` without preceding `stripInaccessible`
+- `Database.insert` / `Database.update` without `AccessLevel.USER_MODE`
 
-### Authentication
+### 2. Missing WITH USER_MODE in SOQL
+Scan for SOQL queries without `WITH USER_MODE`:
 
-**SLAS (B2C Commerce) -- OAuth 2.1 with PKCE:**
+```
+// VIOLATION
+[SELECT Id FROM Account WHERE Name = :name]
 
-| Client Type | Flow | Use Case |
-|-------------|------|----------|
-| Public (browser/PWA Kit) | `authorization_code_pkce` | Guest and registered users |
-| Private (server-side) | `client_credentials` | Guest sessions |
-| Private (server-side) | `authorization_code` | Registered users |
-| Any | Refresh token | Session extension |
+// COMPLIANT
+[SELECT Id FROM Account WHERE Name = :name WITH USER_MODE]
+```
 
-PKCE (Proof Key for Code Exchange) is required for all public client flows. Guest tokens enable anonymous shopping before login.
+### 3. Missing `with sharing`
+All classes should declare sharing model explicitly:
 
-**Salesforce OAuth (B2B Commerce):**
+```
+// VIOLATION
+public class MyClass { }
 
-| Flow | Use Case |
-|------|----------|
-| Connected Apps | OAuth application registration |
-| JWT Bearer | Server-to-server authentication |
-| Web Server Flow | User authorization with redirect |
+// COMPLIANT
+public with sharing class MyClass { }
+```
 
-**Session Management:**
-- Secure, random, unpredictable session IDs
-- Token expiration with renewal handling
-- Secure cookies: HttpOnly, Secure, SameSite attributes
-- Session invalidation on logout, timeout, or security events
+Only use `without sharing` when explicitly needed (e.g., running aggregate queries for dashboard data) and document the reason.
 
-**Token Lifecycle:**
+### 4. SOQL Injection
+Scan for string concatenation in dynamic SOQL:
 
-| Token | Typical TTL | Storage |
-|-------|-------------|---------|
-| Access Token | 30 minutes | Memory or httpOnly cookie |
-| Refresh Token | 30 days | httpOnly cookie (never localStorage) |
-| CSRF Token | Per request | Hidden form field or custom header |
+```
+// VIOLATION — injection risk
+String query = 'SELECT Id FROM Account WHERE Name = \'' + userInput + '\'';
 
-### XSS Prevention
+// COMPLIANT — use bind variable
+String query = 'SELECT Id FROM Account WHERE Name = :userInput';
 
-**B2C Commerce (ISML):**
+// COMPLIANT — use escapeSingleQuotes for truly dynamic queries
+String safeName = String.escapeSingleQuotes(userInput);
+```
 
-| Encoding Mode | Context |
-|---------------|---------|
-| `htmlcontent` | HTML body text |
-| `htmlsinglequote` / `htmldoublequote` | HTML attributes |
-| `jshtml` | JavaScript strings in HTML |
-| `jsonvalue` | JSON data |
-| `uricomponent` | URL parameters |
+### 5. PII/Sensitive Data in Debug Logs
+Scan for debug statements that might expose sensitive data:
 
-Always use `<isprint>` with explicit encoding. Never use raw `${variable}` for user-controlled data. Set Content Security Policy headers to restrict script sources.
+```
+// VIOLATION
+System.debug('User SSN: ' + contact.SSN__c);
+System.debug('Credit Card: ' + payment.CardNumber__c);
+System.debug(JSON.serialize(sensitiveRecord));
 
-**B2B Commerce (LWC):**
-- Automatic encoding in Lightning template expressions
-- Lightning Web Security (LWS) replaces Locker Service (Spring '23+)
-- Use `textContent` instead of `innerHTML` in JavaScript
-- Use `lightning-formatted-*` components for safe rendering
+// COMPLIANT — debug ID only
+System.debug('Processing contact: ' + contact.Id);
+```
 
-### Content Security Policy
+### 6. Hardcoded Credentials
+Scan for:
+- Hardcoded URLs, API keys, passwords, tokens
+- Credentials in string literals instead of Named Credentials or Custom Metadata
 
-| Directive | Purpose |
-|-----------|---------|
-| `default-src` | Fallback for all resource types |
-| `script-src` | Allowed script sources (restrict to self and trusted CDNs) |
-| `style-src` | Allowed stylesheet sources |
-| `img-src` | Allowed image sources |
-| `connect-src` | Allowed API/fetch targets |
-| `frame-ancestors` | Clickjacking protection |
+### 7. Cross-Site Scripting (XSS) in Visualforce
+Scan `.page` files for unescaped output:
+- `{!variable}` without `JSENCODE`, `HTMLENCODE`, or `URLENCODE`
+- `<apex:outputText escape="false">`
 
-Configure CSP headers in Business Manager or via server configuration. Use `nonce` or `hash` for inline scripts rather than `unsafe-inline`.
+### 8. FLS Schema API Checks
+Pre-check permissions before CRUD using Schema Describe:
+```apex
+if (!Schema.sObjectType.Account.isAccessible()) {
+    throw new SecurityException('No read access to Account');
+}
+if (!Schema.sObjectType.Account.fields.Name.getDescribe().isUpdateable()) {
+    throw new SecurityException('Cannot update Account.Name');
+}
+```
 
-### CSRF Protection
+### 9. Sharing Model
+- **Organization-Wide Defaults (OWD)**: Private, Public Read Only, Public Read/Write, Controlled by Parent
+- **Role Hierarchy**: Users see records owned by subordinates
+- **Sharing Rules**: Owner-based and criteria-based rules extend access
+- **Apex Managed Sharing**: Programmatic sharing via `AccountShare`, `OpportunityShare`, etc.
+- Check sharing with `Schema.sObjectType.Account.isAccessible()` at object level
 
-**B2C Commerce:** Validate tokens with `CSRFProtection.validateRequest()` in controllers. Generate tokens with `CSRFProtection.generateToken()`. Include hidden token fields in all state-changing forms. Use double-submit cookie pattern for AJAX.
+### 10. Custom Permission Checks
+```apex
+if (FeatureManagement.checkPermission('MyCustomPermission')) {
+    // User has the custom permission
+}
+```
 
-**B2B Commerce:** Built-in Salesforce CSRF protection. `<lightning-input>` includes tokens automatically. `@AuraEnabled` Apex methods have CSRF protection.
+### 11. WITH SECURITY_ENFORCED vs WITH USER_MODE
+| Feature | SECURITY_ENFORCED | USER_MODE |
+|---------|-------------------|-----------|
+| On FLS violation | Throws exception | Silently strips fields |
+| WHERE clause | Not enforced | Enforced |
+| Recommendation | Legacy | **Preferred** |
 
-### Input Validation
+## Audit Workflow
 
-| Layer | Technique |
-|-------|-----------|
-| Client-side | HTML5 validation, JavaScript checks (UX only, not security) |
-| Server-side | Whitelist validation, type checking, length limits |
-| Form definitions | SFCC XML form definitions with validation rules |
-| Query API | Parameterized queries -- never string concatenation |
+1. **Scan all Apex classes:**
+   ```
+   Glob: force-app/**/*.cls
+   ```
 
-Always validate on the server. Client-side validation is a convenience, not a security measure.
+2. **Check each file for violations** using Grep patterns:
+   - Classes without `with sharing`: `^public\s+(virtual\s+|abstract\s+|global\s+)?class`
+   - SOQL without USER_MODE: `\[SELECT.*FROM.*(?!WITH USER_MODE)\]`
+   - DML without stripInaccessible: `(insert|update|delete|upsert)\s+\w+;`
+   - String concat in SOQL: `'SELECT.*'\s*\+`
+   - Debug with sensitive fields: `System\.debug.*\.(SSN|Password|Secret|Token|CardNumber)`
 
-### PCI Compliance
+3. **Generate report** with:
+   - File path and line number for each violation
+   - Severity (Critical / High / Medium / Low)
+   - Recommended fix
+   - Code snippet showing the fix
 
-| Requirement | Implementation |
-|-------------|---------------|
-| Tokenization | Never store raw card numbers; use tokenized payment methods |
-| SAQ-A Scope | Use hosted payment fields to minimize PCI scope |
-| TLS 1.2+ | Enforce for all API communication and payment processing |
-| Log Masking | No card data in application logs |
-| Gateway | Use Salesforce Commerce Payments or validated third-party processors |
+4. **Severity Classification:**
+   - **Critical**: SOQL injection, missing CRUD/FLS on DML, hardcoded credentials
+   - **High**: Missing `with sharing`, missing USER_MODE, XSS in Visualforce
+   - **Medium**: PII in debug logs, overly permissive sharing
+   - **Low**: Missing null checks, non-bulkified patterns
 
-### RBAC (Role-Based Access Control)
+## Gotchas
+- `WITH SECURITY_ENFORCED` throws an exception on FLS violation — `WITH USER_MODE` silently strips inaccessible fields
+- Apex runs in **system mode** by default — security is NOT enforced unless you explicitly add it
+- Custom permission checks are cached — recent permission set changes may not reflect immediately
+- `without sharing` code ignores ALL sharing rules — records visible regardless of OWD
+- Debug logs are accessible to anyone with View Setup permission — never log sensitive data
+- `Security.stripInaccessible()` returns a NEW list — the original list is unchanged
+- String concatenation in dynamic SOQL bypasses bind variable protection even with `USER_MODE`
 
-**B2C Commerce:** Business Manager roles (Admin, Merchant, Content) with granular, site-specific permissions. Custom roles for organization-specific needs.
+## Output Format
+```
+## Security Audit Report
 
-**B2B Commerce:** Salesforce profiles and permission sets. Buyer permissions control ordering (browse, cart, checkout, approve). Account hierarchy restricts visibility based on relationships.
+### Critical Issues (X found)
+| # | File | Line | Issue | Fix |
+|---|------|------|-------|-----|
+| 1 | AccountService.cls | 45 | DML without CRUD check | Add Security.stripInaccessible() |
 
-**B2B Sharing Rules:**
-- Organization-wide defaults set baseline visibility
-- Sharing rules grant additional access to specific groups
-- Account hierarchies provide implicit sharing up the chain
-- Manual sharing for ad-hoc access grants
+### High Issues (X found)
+...
 
-### OWASP Top 10 Protections
+### Summary
+- Total files scanned: X
+- Critical: X | High: X | Medium: X | Low: X
+- Recommendation: [PASS/FAIL for AppExchange review]
+```
 
-| Threat | Mitigation |
-|--------|------------|
-| Injection | Parameterized queries via Query API; input whitelisting |
-| Broken Auth | SLAS/OAuth best practices; MFA where available; strong password policies |
-| Sensitive Data Exposure | Salesforce Shield encryption at rest (B2B); TLS in transit; log masking |
-| Security Misconfiguration | Disable dev features in production; change default credentials; suppress stack traces |
-| Access Control | Authorization checks on every request; least privilege principle |
-| Monitoring | Log authentication events, failed logins, suspicious activity |
+## References
+- [Security Patterns](references/security-patterns.md) — CRUD/FLS enforcement, sharing model, SOQL injection prevention, XSS, managed sharing, custom permissions
+- [Security Reference](references/security-reference.md) — FLS Schema APIs, sharing deep dive, Shield encryption, OAuth, event monitoring, CSRF, compliance, AppExchange checklist
+- [Governor Limits](../../references/governor-limits.md) — per-transaction limits reference
 
-## Best Practices
-
-### Implementation
-- Always encode output using the correct mode for context (HTML, JS, URL, JSON).
-- Validate input at the boundary -- whitelist acceptable values, reject everything else.
-- Implement CSRF protection on all state-changing operations.
-- Enforce TLS 1.2+ for all communications.
-
-### Credentials and Access
-- Rotate API keys, client secrets, and certificates on a regular schedule.
-- Grant minimum necessary permissions (least privilege).
-- Restrict customer data access to authorized users and systems only.
-- Store credentials in Business Manager services or Salesforce Named Credentials, never in code.
-
-### Operations
-- Log authentication events, failed login attempts, and suspicious activity.
-- Audit code for security issues regularly; conduct penetration testing.
-- Keep dependencies updated; scan for known vulnerabilities.
-- Maintain an incident response plan for security breaches.
-
----
-
-Fetch the SLAS OAuth 2.1 guide, B2C Commerce security reference, and Salesforce OWASP documentation for exact token flows, encoding specifications, and compliance requirements before implementing.
+## Scripts
+- [Security Scan](scripts/security-scan.sh) — quick automated scan for common Apex vulnerabilities

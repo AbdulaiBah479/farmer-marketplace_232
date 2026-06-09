@@ -1,77 +1,155 @@
 ---
 name: secrets-vault-manager
-description: >
-  This skill should be used when the user asks to "generate Vault configurations",
-  "plan secret rotation", "analyze vault audit logs", "manage secrets lifecycle",
-  or "set up HashiCorp Vault".
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: borghei
-  category: engineering
-  domain: secrets-management
-  updated: 2026-04-02
-  tags: [secrets, vault, hashicorp, rotation, audit, security]
+description: "Handle SOPS + Age secrets for ONE_SHOT projects. Manages encrypted secrets, decryption, and secret rotation. Use when user mentions 'secrets', 'API keys', 'environment variables', '.env', or 'SOPS'."
+allowed-tools: Bash, Read, Write, Edit
 ---
 
 # Secrets Vault Manager
 
-> **Category:** Engineering
-> **Domain:** Secrets Management & Security
+You are an expert at managing secrets with SOPS + Age encryption.
 
-## Overview
+## When To Use
 
-The **Secrets Vault Manager** skill provides tools for generating HashiCorp Vault configurations, planning and scheduling secret rotation cycles, and analyzing vault audit logs for suspicious access patterns. Essential for teams managing secrets at scale.
+- Project needs API keys / secrets
+- User mentions "Set up secrets-vault"
+- User asks to "Decrypt / refresh secrets"
+- User wants to "Add a new secret"
 
-## Quick Start
+## Philosophy
+
+One Age key in 1Password → ALL secrets.
+
+## Setup (One-Time)
 
 ```bash
-# Generate Vault configuration
-python scripts/vault_config_generator.py --env production --secrets-engines kv,database,transit
+# Install
+sudo apt install age sops  # Ubuntu
+brew install age sops      # Mac
 
-# Plan secret rotation schedule
-python scripts/rotation_planner.py --inventory secrets_inventory.json
+# Generate key
+mkdir -p ~/.age
+age-keygen -o ~/.age/key.txt
+# Save public key (age1...) to 1Password
 
-# Analyze vault audit logs
-python scripts/audit_log_analyzer.py --log-file vault_audit.log --format json
+# Secrets are in the oneshot repo
+# If not cloned: git clone git@github.com:Khamel83/oneshot.git ~/github/oneshot
 ```
 
-## Tools Overview
+## Create .sops.yaml
 
-| Tool | Purpose | Key Flags |
-|------|---------|-----------|
-| `vault_config_generator.py` | Generate HashiCorp Vault configurations | `--env`, `--secrets-engines`, `--auth-methods` |
-| `rotation_planner.py` | Plan and schedule secret rotation cycles | `--inventory`, `--policy`, `--format` |
-| `audit_log_analyzer.py` | Analyze vault audit logs for anomalies | `--log-file`, `--time-range`, `--format` |
+```yaml
+creation_rules:
+  - path_regex: .*\.encrypted$
+    age: 'age1your_public_key_here'
+```
 
-## Workflows
+## Daily Usage
 
-### Initial Vault Setup
-1. Define environment and required secrets engines
-2. Run `vault_config_generator.py` to generate HCL configs
-3. Review and customize generated configurations
-4. Apply via Terraform or Vault CLI
+```bash
+# Decrypt to project
+sops --decrypt ~/github/oneshot/secrets/secrets.env.encrypted > .env
+source .env
 
-### Secret Rotation Planning
-1. Create secrets inventory (JSON)
-2. Run `rotation_planner.py` to generate schedule
-3. Review rotation plan and adjust frequencies
-4. Implement automated rotation where possible
+# Update secrets
+sops ~/github/oneshot/secrets/secrets.env.encrypted
+# Edit, save, auto-encrypted
+cd ~/github/oneshot && git add . && git commit -m "Update secrets" && git push
+```
 
-### Audit Log Investigation
-1. Export vault audit logs
-2. Run `audit_log_analyzer.py` for anomaly detection
-3. Review flagged events
-4. Investigate suspicious access patterns
+## Common Operations
 
-## Reference Documentation
+### Decrypt for Local Use
 
-- [Secrets Management Guide](references/secrets-management-guide.md) - Best practices, rotation policies, and compliance requirements
+```bash
+sops --decrypt ~/github/oneshot/secrets/secrets.env.encrypted > .env
+```
 
-## Common Patterns
+Verify `.env` is gitignored!
 
-### Secret Classification
-- **Critical**: Database credentials, API master keys, encryption keys
-- **High**: Service account tokens, OAuth secrets, TLS certificates
-- **Medium**: Third-party API keys, webhook secrets
-- **Low**: Public API keys, non-sensitive configuration
+### Add New Secret
+
+```bash
+sops ~/github/oneshot/secrets/secrets.env.encrypted
+# Add: NEW_SECRET=value
+# Save and exit
+cd ~/github/oneshot && git add . && git commit -m "Add NEW_SECRET" && git push
+```
+
+### Refresh Secrets
+
+```bash
+sops --decrypt ~/github/oneshot/secrets/secrets.env.encrypted > .env
+```
+
+### Per-Project SOPS (Alternative)
+
+If not using central vault:
+
+```bash
+mkdir -p .sops
+age-keygen -o .sops/key.txt
+
+cat > .sops.yaml << 'EOF'
+creation_rules:
+  - path_regex: \.encrypted$
+    age: 'age1your_key'
+EOF
+
+sops secrets.env.encrypted
+sops --decrypt secrets.env.encrypted > .env
+```
+
+## .gitignore Template
+
+```gitignore
+# Secrets (NEVER commit)
+.env
+.env.local
+secrets.env
+*.key
+key.txt
+.age/
+
+# Allow examples
+!.env.example
+
+# SOPS encrypted ARE safe
+!*.encrypted
+```
+
+## Document in README
+
+Add to project README:
+
+```markdown
+## Secrets
+
+This project uses SOPS + Age for secrets management.
+
+\`\`\`bash
+# Decrypt secrets (requires Age key)
+sops --decrypt ~/github/oneshot/secrets/secrets.env.encrypted > .env
+source .env
+\`\`\`
+```
+
+## Outputs
+
+- `.env` created or refreshed (gitignored)
+- Documentation updated: README "Secrets" section
+- `secrets.env.encrypted` updated in vault when adding new secrets
+
+## Anti-Patterns
+
+- Ever committing `.env` or raw secrets
+- Decrypting into tracked files
+- Sharing Age private key outside 1Password
+- Storing secrets in code or comments
+
+## Related Skills
+
+- `secrets-sync`: Two-way sync between vault and projects, namespacing, project labels
+
+## Keywords
+
+secrets, API keys, environment variables, .env, SOPS, Age, encrypt, decrypt, vault

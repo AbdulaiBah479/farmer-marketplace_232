@@ -1,32 +1,17 @@
 ---
 name: hybrid-cloud-networking
-description: "Configure secure, high-performance connectivity between on-premises and cloud environments using VPN, Direct Connect, and ExpressRoute."
-risk: safe
-source: community
-date_added: "2026-02-27"
+description: Configure secure, high-performance connectivity between on-premises infrastructure and cloud platforms using VPN and dedicated connections. Use when building hybrid cloud architectures, connecting data centers to cloud, or implementing secure cross-premises networking.
 ---
 
 # Hybrid Cloud Networking
 
 Configure secure, high-performance connectivity between on-premises and cloud environments using VPN, Direct Connect, and ExpressRoute.
 
-## Do not use this skill when
-
-- The task is unrelated to hybrid cloud networking
-- You need a different domain or tool outside this scope
-
-## Instructions
-
-- Clarify goals, constraints, and required inputs.
-- Apply relevant best practices and validate outcomes.
-- Provide actionable steps and verification.
-- If detailed examples are required, open `resources/implementation-playbook.md`.
-
 ## Purpose
 
 Establish secure, reliable network connectivity between on-premises data centers and cloud providers (AWS, Azure, GCP).
 
-## Use this skill when
+## When to Use
 
 - Connect on-premises to cloud
 - Extend datacenter to cloud
@@ -239,8 +224,3 @@ az network vpn-connection show-device-config-script
 
 - `multi-cloud-architecture` - For architecture decisions
 - `terraform-module-library` - For IaC implementation
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

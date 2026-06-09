@@ -1,8 +1,6 @@
 ---
 name: fixing-accessibility
-description: Audit and fix HTML accessibility issues including ARIA labels, keyboard navigation, focus management, color contrast, and form errors. Use when adding interactive controls, forms, dialogs, or reviewing WCAG compliance.
-risk: unknown
-source: community
+description: Fix accessibility issues.
 ---
 
 # fixing-accessibility
@@ -22,7 +20,8 @@ Fix accessibility issues.
 
 Do not rewrite large parts of the UI. Prefer minimal, targeted fixes.
 
-## When to Use
+## when to apply
+
 Reference these guidelines when:
 - adding or changing buttons, links, inputs, menus, dialogs, tabs, dropdowns
 - building forms, validation, error states, helper text
@@ -113,30 +112,9 @@ Reference these guidelines when:
 - do not add aria when native semantics already solve the problem
 - do not migrate UI libraries unless requested
 
-## common fixes
-
-```html
-<!-- icon-only button: add aria-label -->
-<!-- before --> <button><svg>...</svg></button>
-<!-- after -->  <button aria-label="Close"><svg aria-hidden="true">...</svg></button>
-
-<!-- div as button: use native element -->
-<!-- before --> <div onclick="save()">Save</div>
-<!-- after -->  <button onclick="save()">Save</button>
-
-<!-- form error: link with aria-describedby -->
-<!-- before --> <input id="email" /> <span>Invalid email</span>
-<!-- after -->  <input id="email" aria-describedby="email-err" aria-invalid="true" /> <span id="email-err">Invalid email</span>
-```
-
 ## review guidance
 
 - fix critical issues first (names, keyboard, focus, tool boundaries)
 - prefer native HTML before adding aria
 - quote the exact snippet, state the failure, propose a small fix
 - for complex widgets (menu, dialog, combobox), prefer established accessible primitives over custom behavior
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

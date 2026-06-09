@@ -5,7 +5,7 @@ description: Apollo Client GraphQL patterns - useQuery, useMutation, cache manag
 
 # Apollo Client GraphQL Patterns
 
-> **Quick Guide:** Use Apollo Client for GraphQL APIs. Provides automatic normalized caching, optimistic updates, and real-time subscriptions. Always use GraphQL Codegen for type safety. Configure `keyFields` on every entity type for proper cache normalization. Use `errorPolicy: "all"` for graceful degradation. **v3.9+** adds Suspense hooks; **v4.0** moves React imports to `@apollo/client/react` and adds `dataState` for type-safe query state.
+> **Quick Guide:** Use Apollo Client for GraphQL APIs. Provides automatic caching, optimistic updates, and real-time subscriptions. Use GraphQL Codegen for type safety. **v3.9+** adds Suspense hooks (`useSuspenseQuery`, `useLoadableQuery`); **v4.0** moves React imports to `@apollo/client/react`.
 
 ---
 
@@ -17,9 +17,11 @@ description: Apollo Client GraphQL patterns - useQuery, useMutation, cache manag
 
 **(You MUST include `__typename` and `id` in all optimistic responses for cache normalization)**
 
-**(You MUST configure type policies with appropriate `keyFields` for every entity type)**
+**(You MUST configure type policies with appropriate `keyFields` for cache identification)**
 
 **(You MUST use named constants for ALL timeout, retry, and polling values - NO magic numbers)**
+
+**(You MUST use named exports only - NO default exports)**
 
 </critical_requirements>
 
@@ -33,7 +35,7 @@ description: Apollo Client GraphQL patterns - useQuery, useMutation, cache manag
 - Real-time updates with GraphQL subscriptions
 - Complex cache management with normalized data
 - Optimistic UI updates for mutations
-- Applications already using a GraphQL server
+- Applications already using GraphQL server
 
 **When NOT to use:**
 
@@ -44,24 +46,22 @@ description: Apollo Client GraphQL patterns - useQuery, useMutation, cache manag
 **Key patterns covered:**
 
 - Client setup with InMemoryCache and type policies
-- useQuery / useLazyQuery for queries with loading, error, and data states
-- useMutation with optimistic updates, cache.modify, and cache.evict
+- useQuery for queries with loading, error, and data states
+- useMutation with optimistic updates and cache modification
 - useSubscription for real-time WebSocket data
 - Pagination with fetchMore and relayStylePagination
-- Fragment colocation and useFragment
-- Reactive variables for local client state
-- Suspense hooks: useSuspenseQuery, useLoadableQuery, useBackgroundQuery, createQueryPreloader
+- Fragment colocation with useFragment
+- GraphQL Codegen integration for type safety
+- Local state with reactive variables
+- **v3.9+**: useSuspenseQuery, useLoadableQuery, useBackgroundQuery for Suspense
+- **v3.9+**: createQueryPreloader for preloading outside React
+- **v3.10+**: Schema-based testing with createTestSchema
 
 **Detailed Resources:**
 
-- [examples/core.md](examples/core.md) - Client setup, useQuery, useMutation with cache updates
-- [examples/pagination.md](examples/pagination.md) - Infinite scroll, relay pagination type policies
-- [examples/fragments.md](examples/fragments.md) - Fragment definitions, composition, colocation
-- [examples/error-handling.md](examples/error-handling.md) - Component-level and global error handling
-- [examples/subscriptions.md](examples/subscriptions.md) - WebSocket link setup, useSubscription with cache updates
-- [examples/testing.md](examples/testing.md) - MockedProvider, component tests, schema-based testing
-- [examples/suspense.md](examples/suspense.md) - v3.9+ Suspense hooks (useSuspenseQuery, useLoadableQuery, useBackgroundQuery)
-- [reference.md](reference.md) - Decision frameworks, API reference tables, anti-patterns
+- For code examples, see [examples/core.md](examples/core.md)
+- For v3.9+ Suspense patterns, see [examples/suspense.md](examples/suspense.md)
+- For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---
 
@@ -69,22 +69,22 @@ description: Apollo Client GraphQL patterns - useQuery, useMutation, cache manag
 
 ## Philosophy
 
-Apollo Client is a comprehensive GraphQL client that provides intelligent normalized caching, reducing redundant network requests and keeping your UI consistent across components.
+Apollo Client is a comprehensive state management library for JavaScript that enables you to manage both local and remote data with GraphQL. It provides intelligent caching that normalizes your data, reducing redundant network requests and keeping your UI consistent.
 
 **Core Principles:**
 
-1. **Normalized Cache**: Data is stored once by type and ID, referenced everywhere - update in one place, UI reflects everywhere
-2. **Declarative Data Fetching**: Components declare what data they need via GraphQL, Apollo handles caching, deduplication, and network
-3. **Optimistic UI**: Show expected results immediately, rollback automatically on server error
-4. **Type Safety**: GraphQL Codegen generates TypeScript types from your schema - never write response types manually
+1. **Normalized Cache**: Data is stored once by type and ID, referenced everywhere
+2. **Declarative Data Fetching**: Components declare what data they need, Apollo handles the how
+3. **Optimistic UI**: Show expected results immediately, rollback on server error
+4. **Type Safety**: Use GraphQL Codegen to generate TypeScript types from your schema
 
-**Data Flow:**
+**Apollo Client's Data Flow:**
 
 1. Component requests data via useQuery/useMutation
-2. Apollo checks InMemoryCache (normalized by `__typename` + `keyFields`)
+2. Apollo checks InMemoryCache first
 3. If cache miss or stale, fetches from network
 4. Response is normalized and stored in cache
-5. All components watching that data re-render automatically
+5. All components watching that data re-render
 
 </philosophy>
 
@@ -96,150 +96,499 @@ Apollo Client is a comprehensive GraphQL client that provides intelligent normal
 
 ### Pattern 1: Client Setup and Configuration
 
-Configure ApolloClient with InMemoryCache, type policies for cache normalization, and link chain for error handling and auth. Environment variables should use your framework's convention for the GraphQL endpoint.
+Configure ApolloClient with InMemoryCache and appropriate type policies for cache normalization.
+
+#### Constants
 
 ```typescript
+const GRAPHQL_ENDPOINT =
+  process.env.NEXT_PUBLIC_GRAPHQL_URL || "http://localhost:4000/graphql";
+const DEFAULT_POLL_INTERVAL_MS = 30 * 1000;
+```
+
+#### Implementation
+
+```typescript
+// lib/apollo-client.ts
+import { ApolloClient, InMemoryCache, HttpLink, from } from "@apollo/client";
+import { onError } from "@apollo/client/link/error";
+
+const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_GRAPHQL_URL || "";
+
+// Error handling link
+const errorLink = onError(({ graphQLErrors, networkError }) => {
+  if (graphQLErrors) {
+    graphQLErrors.forEach(({ message, locations, path }) => {
+      console.error(
+        `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`,
+      );
+    });
+  }
+  if (networkError) {
+    console.error(`[Network error]: ${networkError}`);
+  }
+});
+
+// HTTP link
+const httpLink = new HttpLink({
+  uri: GRAPHQL_ENDPOINT,
+  credentials: "include",
+});
+
+// Cache with type policies
 const cache = new InMemoryCache({
   typePolicies: {
-    User: { keyFields: ["id"] },
-    Product: { keyFields: ["sku"] }, // Non-default identifier
-    CartItem: { keyFields: false }, // Embed in parent, don't normalize
     Query: {
       fields: {
-        usersConnection: relayStylePagination(["filter"]),
+        // Merge paginated results
+        users: {
+          keyArgs: ["filter"],
+          merge(existing = [], incoming) {
+            return [...existing, ...incoming];
+          },
+        },
       },
+    },
+    User: {
+      // Identify users by their ID
+      keyFields: ["id"],
+    },
+    Product: {
+      // Identify products by SKU (not default id)
+      keyFields: ["sku"],
     },
   },
 });
+
+const apolloClient = new ApolloClient({
+  link: from([errorLink, httpLink]),
+  cache,
+  defaultOptions: {
+    watchQuery: {
+      fetchPolicy: "cache-and-network",
+      errorPolicy: "all",
+    },
+    query: {
+      fetchPolicy: "cache-first",
+      errorPolicy: "all",
+    },
+    mutate: {
+      errorPolicy: "all",
+    },
+  },
+});
+
+export { apolloClient };
 ```
 
-**Key decisions:** `keyFields` determines how entities are identified in cache. Use `["id"]` (default), custom field like `["sku"]`, composite `["authorId", "postId"]`, or `false` for embedded types.
-
-See [examples/core.md](examples/core.md) Pattern 1 for complete client setup with auth link, error link, and codegen configuration.
+**Why good:** Environment variables enable different GraphQL endpoints per environment, type policies ensure proper cache normalization, error link provides centralized error handling, named exports enable tree-shaking
 
 ---
 
 ### Pattern 2: useQuery for Data Fetching
 
-Declare data requirements with `useQuery`. Always handle loading, error, and empty states. Use `cache-and-network` for stale-while-revalidate behavior.
+Use useQuery to fetch data declaratively with loading, error, and data states.
+
+#### Implementation
 
 ```typescript
-const { data, loading, error, refetch } = useQuery<GetUsersQuery, GetUsersQueryVariables>(
-  GET_USERS,
-  {
-    variables: { limit: DEFAULT_PAGE_SIZE },
-    fetchPolicy: "cache-and-network",
-    skip: !shouldFetch,
-  }
-);
+// components/user-list.tsx
+import { useQuery, gql } from "@apollo/client";
+import type { GetUsersQuery, GetUsersQueryVariables } from "@/generated/graphql";
 
-if (loading && !data) return <Skeleton />;
-if (error) return <Error message={error.message} onRetry={() => refetch()} />;
-if (!data?.users?.length) return <EmptyState />;
+const GET_USERS = gql`
+  query GetUsers($limit: Int!, $offset: Int) {
+    users(limit: $limit, offset: $offset) {
+      id
+      name
+      email
+      avatar
+    }
+  }
+`;
+
+const DEFAULT_PAGE_SIZE = 20;
+const INITIAL_OFFSET = 0;
+
+function UserList() {
+  const { data, loading, error, refetch } = useQuery<GetUsersQuery, GetUsersQueryVariables>(
+    GET_USERS,
+    {
+      variables: {
+        limit: DEFAULT_PAGE_SIZE,
+        offset: INITIAL_OFFSET,
+      },
+      // Control fetch behavior
+      fetchPolicy: "cache-and-network",
+      // Notify on network status changes
+      notifyOnNetworkStatusChange: true,
+    }
+  );
+
+  if (loading && !data) {
+    return <Skeleton />;
+  }
+
+  if (error) {
+    return <Error message={error.message} onRetry={() => refetch()} />;
+  }
+
+  if (!data?.users?.length) {
+    return <EmptyState message="No users found" />;
+  }
+
+  return (
+    <ul>
+      {data.users.map((user) => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  );
+}
+
+export { UserList };
 ```
 
-**Why this pattern:** `loading && !data` shows skeleton only on initial load (not background refetch). `cache-and-network` shows cached data immediately while refreshing from network.
-
-See [examples/core.md](examples/core.md) Pattern 2 for complete useQuery and useLazyQuery examples.
+**Why good:** TypeScript generics provide full type safety, named constants make pagination configurable, refetch enables user-triggered refresh, cache-and-network shows cached data while fetching fresh
 
 ---
 
-### Pattern 3: useMutation with Optimistic Updates and Cache Updates
+### Pattern 3: useMutation with Optimistic Updates
 
-For mutations, decide between three cache update strategies: optimistic response (instant UI), `update` callback with `cache.modify` (manual cache update), or `refetchQueries` (simple but costs a network request).
+Use useMutation for data modifications with optimistic UI for instant feedback.
+
+#### Implementation
 
 ```typescript
-const [createPost] = useMutation(CREATE_POST, {
-  optimisticResponse: {
-    createPost: {
-      __typename: "Post", // REQUIRED for normalization
-      id: `temp-${Date.now()}`, // Temporary ID, replaced by server response
-      title,
-      content,
-    },
-  },
-  update(cache, { data }) {
-    cache.modify({
-      fields: {
-        posts(existing = [], { toReference }) {
-          return [toReference(data.createPost), ...existing];
+// components/add-comment.tsx
+import { useState } from "react";
+import type { FormEvent } from "react";
+import { useMutation, gql } from "@apollo/client";
+import type { AddCommentMutation, AddCommentMutationVariables } from "@/generated/graphql";
+
+const ADD_COMMENT = gql`
+  mutation AddComment($postId: ID!, $content: String!) {
+    addComment(postId: $postId, content: $content) {
+      id
+      content
+      author {
+        id
+        name
+      }
+      createdAt
+    }
+  }
+`;
+
+const GET_POST_COMMENTS = gql`
+  query GetPostComments($postId: ID!) {
+    post(id: $postId) {
+      id
+      comments {
+        id
+        content
+        author {
+          id
+          name
+        }
+        createdAt
+      }
+    }
+  }
+`;
+
+interface AddCommentFormProps {
+  postId: string;
+  currentUser: { id: string; name: string };
+}
+
+function AddCommentForm({ postId, currentUser }: AddCommentFormProps) {
+  const [content, setContent] = useState("");
+
+  const [addComment, { loading }] = useMutation<AddCommentMutation, AddCommentMutationVariables>(
+    ADD_COMMENT,
+    {
+      // Optimistic response for instant UI update
+      optimisticResponse: {
+        addComment: {
+          __typename: "Comment",
+          id: `temp-${Date.now()}`,
+          content,
+          author: {
+            __typename: "User",
+            id: currentUser.id,
+            name: currentUser.name,
+          },
+          createdAt: new Date().toISOString(),
         },
       },
-    });
-  },
-});
+      // Update cache after mutation
+      update(cache, { data }) {
+        if (!data?.addComment) return;
+
+        // Read existing comments
+        const existing = cache.readQuery({
+          query: GET_POST_COMMENTS,
+          variables: { postId },
+        });
+
+        // Write new comment to cache
+        cache.writeQuery({
+          query: GET_POST_COMMENTS,
+          variables: { postId },
+          data: {
+            post: {
+              ...existing?.post,
+              comments: [...(existing?.post?.comments || []), data.addComment],
+            },
+          },
+        });
+      },
+      onError(error) {
+        console.error("Failed to add comment:", error);
+        toast.error("Failed to add comment. Please try again.");
+      },
+    }
+  );
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!content.trim()) return;
+
+    await addComment({ variables: { postId, content } });
+    setContent("");
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <textarea
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        placeholder="Write a comment..."
+        disabled={loading}
+      />
+      <button type="submit" disabled={loading || !content.trim()}>
+        {loading ? "Posting..." : "Post Comment"}
+      </button>
+    </form>
+  );
+}
+
+export { AddCommentForm };
 ```
 
-**Critical:** Always include `__typename` and `id` in optimistic responses. For deletes, use `cache.evict()` + `cache.gc()`. For simple cases, `refetchQueries` is fine.
-
-See [examples/core.md](examples/core.md) Pattern 3 for create, update, and delete mutation examples.
+**Why good:** Optimistic response includes `__typename` and `id` for proper cache normalization, update callback manually updates related queries, onError provides user feedback on failure, UI remains responsive during network request
 
 ---
 
 ### Pattern 4: Cache Type Policies
 
-Type policies control how Apollo normalizes and retrieves cached data. This is where you configure cache identifiers, computed fields, pagination merging, and local state.
+Configure type policies for proper cache normalization and custom field behaviors.
+
+#### Implementation
 
 ```typescript
-typePolicies: {
-  User: {
-    keyFields: ["id"],
-    fields: {
-      fullName: {
-        read(_, { readField }) {
-          return `${readField("firstName")} ${readField("lastName")}`;
+// lib/apollo-cache.ts
+import { InMemoryCache, Reference, makeVar } from "@apollo/client";
+import { relayStylePagination } from "@apollo/client/utilities";
+
+// Reactive variable for local state
+const isLoggedInVar = makeVar<boolean>(false);
+const cartItemsVar = makeVar<string[]>([]);
+
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        // Relay-style pagination for connections
+        usersConnection: relayStylePagination(["filter", "sortBy"]),
+
+        // Custom read for local state
+        isLoggedIn: {
+          read() {
+            return isLoggedInVar();
+          },
+        },
+
+        // Singleton pattern (no keyArgs needed)
+        currentUser: {
+          merge(existing, incoming) {
+            return incoming;
+          },
         },
       },
     },
-  },
-  Query: {
-    fields: {
-      isLoggedIn: { read() { return isLoggedInVar(); } },
+
+    User: {
+      // Default cache key is id, this is explicit
+      keyFields: ["id"],
+      fields: {
+        // Computed field
+        fullName: {
+          read(_, { readField }) {
+            const firstName = readField<string>("firstName");
+            const lastName = readField<string>("lastName");
+            return `${firstName} ${lastName}`;
+          },
+        },
+      },
+    },
+
+    Product: {
+      // Use SKU instead of id for cache key
+      keyFields: ["sku"],
+    },
+
+    CartItem: {
+      // Don't normalize (embed in parent)
+      keyFields: false,
+    },
+
+    // Interface-level policy (applies to all implementing types)
+    Node: {
+      keyFields: ["id"],
     },
   },
-}
+});
+
+export { cache, isLoggedInVar, cartItemsVar };
 ```
 
-**Key patterns:** `keyFields` for identification, `merge` for pagination, `read` for computed/local fields, `keyArgs` for separating cache entries per filter.
-
-See [examples/core.md](examples/core.md) Pattern 1 and [examples/pagination.md](examples/pagination.md) for type policy examples.
+**Why good:** relayStylePagination handles cursor-based pagination automatically, keyFields configure proper cache identification, read functions enable computed and local state fields, keyFields: false prevents unnecessary normalization for embedded types
 
 ---
 
 ### Pattern 5: Pagination with fetchMore
 
-Two approaches: **Relay-style** (cursor-based, use `relayStylePagination`) and **offset-based** (custom merge/read functions). Both require type policies for merging.
+Implement cursor-based pagination using fetchMore and type policies.
+
+#### Implementation
 
 ```typescript
-const { data, fetchMore } = useQuery(GET_USERS_CONNECTION, {
-  variables: { first: PAGE_SIZE },
-});
+// components/paginated-users.tsx
+import { useQuery, gql } from "@apollo/client";
 
-const loadMore = () =>
-  fetchMore({
-    variables: { after: data.usersConnection.pageInfo.endCursor },
+const GET_USERS_CONNECTION = gql`
+  query GetUsersConnection($first: Int!, $after: String) {
+    usersConnection(first: $first, after: $after) {
+      edges {
+        cursor
+        node {
+          id
+          name
+          email
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+`;
+
+const PAGE_SIZE = 20;
+
+function PaginatedUserList() {
+  const { data, loading, error, fetchMore } = useQuery(GET_USERS_CONNECTION, {
+    variables: { first: PAGE_SIZE },
+    notifyOnNetworkStatusChange: true,
   });
+
+  const loadMore = () => {
+    if (!data?.usersConnection?.pageInfo?.hasNextPage) return;
+
+    fetchMore({
+      variables: {
+        after: data.usersConnection.pageInfo.endCursor,
+      },
+      // Type policy handles merging automatically with relayStylePagination
+    });
+  };
+
+  if (loading && !data) {
+    return <Skeleton />;
+  }
+
+  if (error) {
+    return <Error message={error.message} />;
+  }
+
+  const users = data?.usersConnection?.edges?.map((edge) => edge.node) || [];
+  const hasNextPage = data?.usersConnection?.pageInfo?.hasNextPage || false;
+
+  return (
+    <div>
+      <ul>
+        {users.map((user) => (
+          <li key={user.id}>{user.name}</li>
+        ))}
+      </ul>
+      {hasNextPage && (
+        <button onClick={loadMore} disabled={loading}>
+          {loading ? "Loading..." : "Load More"}
+        </button>
+      )}
+    </div>
+  );
+}
+
+export { PaginatedUserList };
 ```
 
-**Key requirement:** `keyArgs` must be set to separate cache entries per filter. Without it, different filtered queries overwrite each other.
-
-See [examples/pagination.md](examples/pagination.md) for infinite scroll with IntersectionObserver and custom offset pagination type policies.
+**Why good:** fetchMore appends new data to existing cache, relayStylePagination type policy handles merge automatically, hasNextPage prevents unnecessary requests, loading state during fetch prevents double-clicks
 
 ---
 
 ### Pattern 6: Fragment Colocation
 
-Colocate data requirements with components using fragments. Parent queries include child fragments, so component changes don't require updating parent queries.
+Colocate data requirements with components using fragments.
+
+#### Implementation
 
 ```typescript
+// components/user-card.tsx
+import { gql } from "@apollo/client";
+import type { UserCardFragment } from "@/generated/graphql";
+
+// Colocated fragment - defines component's data needs
 const USER_CARD_FRAGMENT = gql`
   fragment UserCard on User {
     id
     name
     email
     avatar
+    role
   }
 `;
+
+interface UserCardProps {
+  user: UserCardFragment;
+}
+
+function UserCard({ user }: UserCardProps) {
+  return (
+    <div className="user-card">
+      <img src={user.avatar} alt={user.name} />
+      <h3>{user.name}</h3>
+      <p>{user.email}</p>
+      <span>{user.role}</span>
+    </div>
+  );
+}
+
+// Attach fragment to component for parent queries
+UserCard.fragments = {
+  user: USER_CARD_FRAGMENT,
+};
+
+export { UserCard };
+```
+
+```typescript
+// components/user-list.tsx
+import { useQuery, gql } from "@apollo/client";
+import { UserCard } from "./user-card";
 
 // Parent query includes child fragment
 const GET_USERS = gql`
@@ -250,83 +599,294 @@ const GET_USERS = gql`
   }
   ${UserCard.fragments.user}
 `;
+
+function UserListPage() {
+  const { data, loading, error } = useQuery(GET_USERS);
+
+  if (loading) return <Skeleton />;
+  if (error) return <Error message={error.message} />;
+
+  return (
+    <div>
+      {data?.users?.map((user) => (
+        <UserCard key={user.id} user={user} />
+      ))}
+    </div>
+  );
+}
+
+export { UserListPage };
 ```
 
-See [examples/fragments.md](examples/fragments.md) for fragment composition and [examples/core.md](examples/core.md) Pattern 2 for fragments in queries.
+**Why good:** Fragment colocation keeps data requirements close to components, parent queries automatically include child data needs, TypeScript types generated for fragments ensure type safety, component changes don't require updating parent queries
 
 ---
 
-### Pattern 7: Subscriptions for Real-Time Data
+### Pattern 7: useSubscription for Real-Time Data
 
-Requires split link configuration: WebSocket for subscriptions, HTTP for queries/mutations. Use `graphql-ws` (not the deprecated `subscriptions-transport-ws`).
+Set up WebSocket subscriptions for real-time updates.
+
+#### Link Configuration
 
 ```typescript
+// lib/apollo-client.ts
+import { ApolloClient, InMemoryCache, HttpLink, split } from "@apollo/client";
+import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
+import { createClient } from "graphql-ws";
+import { getMainDefinition } from "@apollo/client/utilities";
+
+const GRAPHQL_HTTP_URL = process.env.NEXT_PUBLIC_GRAPHQL_URL || "";
+const GRAPHQL_WS_URL = process.env.NEXT_PUBLIC_GRAPHQL_WS_URL || "";
+
+const httpLink = new HttpLink({
+  uri: GRAPHQL_HTTP_URL,
+});
+
+const wsLink = new GraphQLWsLink(
+  createClient({
+    url: GRAPHQL_WS_URL,
+    connectionParams: () => ({
+      // Add auth token if needed
+      authToken: localStorage.getItem("token"),
+    }),
+  }),
+);
+
+// Split traffic between WebSocket (subscriptions) and HTTP (queries/mutations)
 const splitLink = split(
   ({ query }) => {
-    const def = getMainDefinition(query);
+    const definition = getMainDefinition(query);
     return (
-      def.kind === "OperationDefinition" && def.operation === "subscription"
+      definition.kind === "OperationDefinition" &&
+      definition.operation === "subscription"
     );
   },
   wsLink,
   httpLink,
 );
+
+const apolloClient = new ApolloClient({
+  link: splitLink,
+  cache: new InMemoryCache(),
+});
+
+export { apolloClient };
 ```
 
-**Important:** Only create `wsLink` on the client side (`typeof window !== "undefined"`). Update cache in `onData` callback.
+#### Subscription Usage
 
-See [examples/subscriptions.md](examples/subscriptions.md) for complete WebSocket setup and useSubscription with cache updates.
+```typescript
+// components/live-comments.tsx
+import { useSubscription, gql } from "@apollo/client";
+
+const COMMENT_ADDED = gql`
+  subscription OnCommentAdded($postId: ID!) {
+    commentAdded(postId: $postId) {
+      id
+      content
+      author {
+        id
+        name
+      }
+      createdAt
+    }
+  }
+`;
+
+interface LiveCommentsProps {
+  postId: string;
+}
+
+function LiveComments({ postId }: LiveCommentsProps) {
+  const { data, loading, error } = useSubscription(COMMENT_ADDED, {
+    variables: { postId },
+    onData({ data }) {
+      // Handle new comment (e.g., play sound, show notification)
+      console.log("New comment received:", data.data?.commentAdded);
+    },
+    onError(error) {
+      console.error("Subscription error:", error);
+    },
+  });
+
+  if (error) {
+    return <div>Subscription error: {error.message}</div>;
+  }
+
+  return (
+    <div>
+      {loading && <span>Listening for new comments...</span>}
+      {data?.commentAdded && (
+        <div className="new-comment">
+          <strong>{data.commentAdded.author.name}:</strong>
+          <p>{data.commentAdded.content}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export { LiveComments };
+```
+
+**Why good:** Link splitting routes subscriptions to WebSocket and queries/mutations to HTTP, connectionParams enables authenticated subscriptions, onData callback handles side effects for new data
 
 ---
 
 ### Pattern 8: Local State with Reactive Variables
 
-Use `makeVar` for simple client-side state that integrates with Apollo's reactivity system. Suitable for theme, auth status, cart items - not complex state.
+Use reactive variables for client-side state that needs to integrate with Apollo queries.
+
+#### Implementation
 
 ```typescript
-const cartItemsVar = makeVar<string[]>([]);
-const addToCart = (id: string) => cartItemsVar([...cartItemsVar(), id]);
+// lib/local-state.ts
+import { makeVar } from "@apollo/client";
 
-// Component reacts automatically
-const cartItems = useReactiveVar(cartItemsVar);
+// Theme preference
+const themeVar = makeVar<"light" | "dark">("light");
+
+// Shopping cart items
+const cartItemsVar = makeVar<string[]>([]);
+
+// Auth state
+const isAuthenticatedVar = makeVar<boolean>(false);
+
+// Helpers for cart operations
+const addToCart = (productId: string) => {
+  const current = cartItemsVar();
+  if (!current.includes(productId)) {
+    cartItemsVar([...current, productId]);
+  }
+};
+
+const removeFromCart = (productId: string) => {
+  const current = cartItemsVar();
+  cartItemsVar(current.filter((id) => id !== productId));
+};
+
+const clearCart = () => {
+  cartItemsVar([]);
+};
+
+export {
+  themeVar,
+  cartItemsVar,
+  isAuthenticatedVar,
+  addToCart,
+  removeFromCart,
+  clearCart,
+};
 ```
 
-**When to use reactive vars vs external state management:** Reactive vars for simple Apollo-integrated state. For complex non-GraphQL state, use your client state management solution.
+```typescript
+// components/cart-badge.tsx
+import { useReactiveVar } from "@apollo/client";
+import { cartItemsVar } from "@/lib/local-state";
+
+function CartBadge() {
+  // Re-renders automatically when cartItemsVar changes
+  const cartItems = useReactiveVar(cartItemsVar);
+
+  return (
+    <div className="cart-badge">
+      <span>Cart</span>
+      {cartItems.length > 0 && (
+        <span className="badge">{cartItems.length}</span>
+      )}
+    </div>
+  );
+}
+
+export { CartBadge };
+```
+
+**Why good:** Reactive variables provide simple local state without Redux complexity, useReactiveVar hook triggers re-renders on changes, can be queried via type policies if needed, helper functions encapsulate state mutations
 
 ---
 
-### Pattern 9: Suspense Hooks (v3.9+)
+### Pattern 9: Suspense with useSuspenseQuery (v3.9+)
 
-Four Suspense-enabled hooks for different loading patterns:
+Use `useSuspenseQuery` for Suspense-enabled data fetching that integrates with React's concurrent features.
 
-| Hook                   | Trigger          | Use Case                     |
-| ---------------------- | ---------------- | ---------------------------- |
-| `useSuspenseQuery`     | Component mount  | Standard data loading        |
-| `useLoadableQuery`     | User interaction | Hover/click prefetch         |
-| `useBackgroundQuery`   | Parent mount     | Parent triggers, child reads |
-| `createQueryPreloader` | Route transition | Router loader integration    |
+See [examples/suspense.md](examples/suspense.md) for complete implementation patterns including:
 
-**Key difference from useQuery:** No `loading` state - component suspends instead. Errors throw to Error Boundary.
-
-See [examples/suspense.md](examples/suspense.md) for complete examples of all four patterns.
+- `useSuspenseQuery` for component-level Suspense
+- `useLoadableQuery` for user-interaction triggered loading
+- `useBackgroundQuery` + `useReadQuery` for background loading
+- `createQueryPreloader` for preloading outside React (router integration)
 
 ---
 
 ### Pattern 10: useFragment for Data Masking (v3.8+)
 
-Read fragment data directly from cache with automatic updates. Useful for components that only need a subset of cached entity data.
+Use `useFragment` to read fragment data directly from the cache with automatic updates.
 
 ```typescript
-const { data: user, complete } = useFragment({
-  fragment: USER_CARD_FRAGMENT,
-  from: userRef,
-});
-if (!complete) return <Skeleton />;
+// components/user-card.tsx
+import { useFragment, gql } from "@apollo/client";
+import type { FragmentType, useFragment as useFragmentType } from "@/generated/graphql";
+
+const USER_CARD_FRAGMENT = gql`
+  fragment UserCardFragment on User {
+    id
+    name
+    avatar
+    email
+  }
+`;
+
+interface UserCardProps {
+  userRef: FragmentType<typeof USER_CARD_FRAGMENT>;
+}
+
+function UserCard({ userRef }: UserCardProps) {
+  // Reads fragment data from cache, updates automatically
+  const { data: user, complete } = useFragment({
+    fragment: USER_CARD_FRAGMENT,
+    from: userRef,
+  });
+
+  if (!complete) {
+    return <UserCardSkeleton />;
+  }
+
+  return (
+    <div className="user-card">
+      <img src={user.avatar} alt={user.name} />
+      <h3>{user.name}</h3>
+      <p>{user.email}</p>
+    </div>
+  );
+}
+
+export { UserCard, USER_CARD_FRAGMENT };
 ```
 
-**Why useful:** Reads directly from cache without additional queries, `complete` flag indicates if all fragment fields are available.
+**Why good:** useFragment reads directly from cache without additional queries, `complete` flag indicates if all fragment fields are available, automatic re-render when fragment data updates in cache
 
 </patterns>
+
+---
+
+<integration>
+
+## Integration Guide
+
+**Works with:**
+
+- **GraphQL Codegen**: Generate TypeScript types from GraphQL schema and operations for full type safety
+- **React**: useQuery, useMutation, useSubscription hooks integrate with React component lifecycle
+- **WebSocket libraries (graphql-ws)**: Enable real-time subscriptions via WebSocket transport
+- **Error tracking solutions**: onError link integrates with error reporting services
+
+**Domain boundaries:**
+
+- **Server-side GraphQL schema**: Defer to backend skills for schema design, resolvers, and server setup
+- **REST APIs**: Use your REST data fetching solution instead - Apollo Client is for GraphQL only
+- **Global client state**: Use your client state management solution for complex non-GraphQL state; reactive variables work for simple cases
+
+</integration>
 
 ---
 
@@ -334,102 +894,93 @@ if (!complete) return <Skeleton />;
 
 ## Apollo Client v4 Migration Notes
 
-**Apollo Client v4** (released September 2025, latest v4.1.6) introduces significant breaking changes. A codemod handles most mechanical changes: `npx @apollo/client-codemod-migrate-3-to-4`
+**Apollo Client v4** (released September 2025) introduces significant breaking changes. If upgrading from v3, review:
 
-### Breaking Changes Summary
-
-| Change                        | v3                    | v4                                                         |
-| ----------------------------- | --------------------- | ---------------------------------------------------------- |
-| React hook imports            | `@apollo/client`      | `@apollo/client/react`                                     |
-| Client `uri` option           | Allowed directly      | Must use explicit `HttpLink`                               |
-| `name`/`version`              | Top-level on client   | `clientAwareness: { name, version }`                       |
-| `notifyOnNetworkStatusChange` | Default `false`       | Default `true`                                             |
-| Error classes                 | `ApolloError`         | `CombinedGraphQLErrors`, `ServerError`, `ServerParseError` |
-| Observable library            | `zen-observable`      | `rxjs` (peer dependency)                                   |
-| Link creation                 | `createHttpLink()`    | `new HttpLink()` (class-based)                             |
-| `from()`/`concat()`/`split()` | Standalone functions  | `ApolloLink.from()` static methods                         |
-| `connectToDevTools`           | Client option         | Replaced by `devtools: { enabled: true }`                  |
-| Local resolvers               | `resolvers` on client | Explicit `LocalState` class                                |
-
-### New: `dataState` Property (v4)
+### Import Path Changes (CRITICAL)
 
 ```typescript
+// v3 imports (DEPRECATED in v4)
+import { useQuery, useMutation, ApolloProvider } from "@apollo/client";
+
+// v4 imports (REQUIRED)
+import { ApolloClient, InMemoryCache } from "@apollo/client";
+import { useQuery, useMutation, ApolloProvider } from "@apollo/client/react";
+```
+
+### New `dataState` Property (v4)
+
+```typescript
+// v4: Use dataState for TypeScript-safe state checking
 const { data, dataState } = useQuery(GET_USER);
-// dataState: "empty" | "partial" | "streaming" | "complete"
+
+// dataState values: "empty" | "partial" | "streaming" | "complete"
 if (dataState === "complete") {
   // TypeScript knows data is fully populated
+  return <UserCard user={data.user} />;
 }
 ```
 
-### New: Error Type Guards (v4)
+### Error Handling Changes (v4)
 
 ```typescript
-import { CombinedGraphQLErrors, ServerError } from "@apollo/client";
+// v3: Single ApolloError class
+import { ApolloError } from "@apollo/client";
+if (error instanceof ApolloError) { ... }
 
-if (CombinedGraphQLErrors.is(error)) {
-  error.errors.forEach(({ message }) => console.error(message));
-}
-if (ServerError.is(error)) {
-  console.error(`Server responded with ${error.statusCode}`);
-}
+// v4: Specific error classes
+import { CombinedGraphQLErrors, ServerError, ServerParseError } from "@apollo/client";
+if (CombinedGraphQLErrors.is(error)) { ... }
+if (ServerError.is(error)) { ... }
 ```
+
+### RxJS Dependency (v4)
+
+```bash
+# v4 requires rxjs as peer dependency
+npm install rxjs
+```
+
+### Client Initialization (v4)
+
+```typescript
+// v3: uri option on ApolloClient (DEPRECATED)
+const client = new ApolloClient({
+  uri: "https://api.example.com/graphql",
+  name: "my-app",
+  version: "1.0.0",
+  cache: new InMemoryCache(),
+});
+
+// v4: Explicit HttpLink + clientAwareness (REQUIRED)
+import { HttpLink } from "@apollo/client/link/http";
+const client = new ApolloClient({
+  link: new HttpLink({ uri: "https://api.example.com/graphql" }),
+  cache: new InMemoryCache(),
+  clientAwareness: {
+    name: "my-app",
+    version: "1.0.0",
+  },
+});
+```
+
+### notifyOnNetworkStatusChange Default (v4)
+
+```typescript
+// v3: Defaults to false
+useQuery(GET_USER); // notifyOnNetworkStatusChange: false
+
+// v4: Defaults to true (BREAKING CHANGE)
+useQuery(GET_USER); // notifyOnNetworkStatusChange: true
+
+// Explicitly set to false in v4 if you want v3 behavior
+useQuery(GET_USER, { notifyOnNetworkStatusChange: false });
+```
+
+**Codemod available:** `npx @apollo/client-codemod-migrate-3-to-4`
 
 See [Apollo Client 4 Migration Guide](https://www.apollographql.com/docs/react/migrating/apollo-client-4-migration) for complete details.
 
 </version_migration>
-
----
-
-<red_flags>
-
-## RED FLAGS
-
-**High Priority Issues:**
-
-- **Manual GraphQL type definitions** - Use GraphQL Codegen; manual types drift from schema causing runtime errors
-- **Missing `__typename` in optimistic responses** - Cache normalization fails silently
-- **Missing `id` in query responses** - Apollo cannot normalize data without identifiers
-- **Missing `keyArgs` in paginated type policies** - Different filters overwrite each other in cache
-- **(v4) Importing React hooks from `@apollo/client`** - Must use `@apollo/client/react` in v4
-- **(v4) Using `uri` option directly on ApolloClient** - Must use explicit `HttpLink` in v4
-
-**Medium Priority Issues:**
-
-- **Not using `errorPolicy: "all"`** - Partial data is often better UX than complete failure
-- **`refetchQueries` for simple updates** - Direct cache updates with `cache.modify` are more efficient
-- **`network-only` for all queries** - `cache-and-network` provides better UX (stale-while-revalidate)
-- **Not typing `useQuery`/`useMutation` generics** - Loses type safety benefits
-- **Missing loading/error state handling** - Causes crashes when data is undefined and poor UX
-
-**Common Mistakes:**
-
-- Forgetting to run `graphql-codegen` after schema changes
-- Not including all required fields in optimistic responses (every field the mutation returns must be present)
-- Using `cache.writeQuery` when `cache.modify` is more appropriate (writeQuery replaces entire query result)
-- Mixing up `update` callback (for cache updates) with `onCompleted` callback (for side effects like navigation)
-- Not using `notifyOnNetworkStatusChange` when showing refetch/fetchMore loading states
-
-**Gotchas & Edge Cases:**
-
-- `fetchMore` pagination requires type policy merge functions - without them, new data replaces old
-- `cache.evict` must be followed by `cache.gc()` to clean up orphaned references
-- `readField` in type policies is safer than direct property access (handles References)
-- Optimistic responses are discarded automatically on error - no manual rollback needed
-- `refetchQueries` runs after `update` callback, not before
-- `pollInterval: 0` disables polling; omit the option entirely for no polling
-- Type policies with `keyFields: false` embed objects in parent (no separate cache entry)
-- Subscriptions require separate WebSocket link with `split` - queries/mutations stay on HTTP
-- `useSuspenseQuery` has no `loading` state - it suspends; errors throw to Error Boundary
-- `queryRef` from `useLoadableQuery` must be passed to `useReadQuery` inside a Suspense boundary
-- `createQueryPreloader` must be called outside the React tree (e.g., router loaders)
-- (v4) `notifyOnNetworkStatusChange` defaults to `true` - may cause unexpected re-renders
-- (v4) `rxjs` is a required peer dependency - must install explicitly
-- (v4) `ApolloError` class removed - use `CombinedGraphQLErrors.is()` and `ServerError.is()` for type-checking
-- (v4) `from()`, `concat()`, `split()` are static methods on `ApolloLink`, not standalone functions
-- (v4) `createHttpLink()` removed - use `new HttpLink()` constructor instead
-- (v4) `useMutation` types now enforce required variables at the call site
-
-</red_flags>
 
 ---
 
@@ -441,9 +992,11 @@ See [Apollo Client 4 Migration Guide](https://www.apollographql.com/docs/react/m
 
 **(You MUST include `__typename` and `id` in all optimistic responses for cache normalization)**
 
-**(You MUST configure type policies with appropriate `keyFields` for every entity type)**
+**(You MUST configure type policies with appropriate `keyFields` for cache identification)**
 
 **(You MUST use named constants for ALL timeout, retry, and polling values - NO magic numbers)**
+
+**(You MUST use named exports only - NO default exports)**
 
 **(For v4: You MUST import React hooks from `@apollo/client/react` - NOT from `@apollo/client`)**
 

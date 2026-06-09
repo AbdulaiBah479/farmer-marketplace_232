@@ -1,252 +1,385 @@
 ---
 name: design-brief
-description: |
-  Parse a structured design brief written in I-Lang protocol format into a
-  concrete design spec. Eliminates ambiguity from vague requests like
-  "make it professional" by requiring explicit dimensions: palette, typography,
-  layout, mood, density, and constraints.
-  Trigger keywords: "design brief", "create a design brief", "ilang brief", "structured brief".
-triggers:
-  - "design brief"
-  - "create a design brief"
-  - "ilang brief"
-  - "structured brief"
-od:
-  mode: design-system
-  platform: desktop
-  scenario: planning
-  preview:
-    type: html
-    entry: brief-preview.html
-    reload: debounce-100
-  design_system:
-    requires: false
-    generates: true
-    sections: [visual-theme, color-palette, typography, component-stylings, layout, depth-elevation, dos-and-donts, responsive, agent-prompt-guide]
-  inputs:
-    - name: brief
-      type: string
-      required: true
-      description: "I-Lang formatted design brief or natural language description"
-  outputs:
-    primary: DESIGN.md
-    secondary: brief-preview.html
-  capabilities_required:
-    - file_write
+description: Creates contextual design briefs before any visual work begins. Establishes product purpose, user specificity, design principles, and anti-goals. Prevents generic "template" design by requiring specific context.
 ---
 
-# Design Brief Skill
+# Contextual Design Brief Skill
 
-Parse a structured design brief into a concrete DESIGN.md and optional visual preview. Agent, follow this workflow exactly.
+You are operating with design brief capabilities. This skill ensures that NO design work begins without a thorough understanding of context. Generic designs happen when context is missing — this skill prevents that.
 
-## Background
+## Core Philosophy
 
-The 8 dimensions in this skill are derived from analysis of the 71 design systems bundled with Open Design. Every DESIGN.md in `design-systems/` resolves at minimum: color palette, accent, typography, display font, layout model, and component style. We distilled these into 8 orthogonal dimensions that cover the decisions a designer makes before any pixel is placed. Mood and density were added because they are the two most common sources of ambiguity in natural language briefs ("make it clean" means different things to different people).
+> "I think people get too focused on the different frameworks and processes, and you start to forget, what are you actually doing?" — Karri Saarinen, Linear
 
-Dimensions intentionally excluded from the brief level: animation timing, responsive strategy, and accessibility contrast. These are enforced at the template level by individual skills (e.g., `saas-landing` handles its own responsive logic), though the generated DESIGN.md includes sensible breakpoint defaults for downstream consumption.
+Design without context produces generic output. This skill forces the creation of a design brief that grounds all subsequent decisions in the specific product, users, and goals.
 
-## 1. Accept input
+## When to Invoke This Skill
 
-The user provides a design brief in one of two formats:
+**ALWAYS** invoke before:
+- Creating a design system
+- Generating logos or brand assets
+- Building UI components
+- Designing layouts or wireframes
+- Any visual design work
 
-### Option A: I-Lang structured brief
+**Skip ONLY when:**
+- A complete design brief already exists
+- Extending an existing, well-documented design system
 
+## Phase 1: Product Definition
+
+Do not accept vague descriptions. Drill down to specifics:
+
+<product_questions>
+**The Basics:**
+1. What is the product name?
+2. What does it DO? (Specific function, not category)
+3. What problem does it solve that isn't already solved?
+4. What exists today that people use instead?
+
+**The Differentiation:**
+5. Why would someone choose this over alternatives?
+6. What is this product's "unfair advantage"?
+7. What does this product do that competitors refuse to do?
+
+**The Constraints:**
+8. What platforms must this run on?
+9. What technical constraints exist?
+10. What brand constraints exist (if any)?
+</product_questions>
+
+<product_definition_output>
+```xml
+<product_definition>
+  <identity>
+    <name>Product name</name>
+    <tagline>One-sentence description</tagline>
+    <category>Market category (for context only)</category>
+  </identity>
+
+  <function>
+    <primary_action>The main thing users do with this</primary_action>
+    <secondary_actions>Other things users can do</secondary_actions>
+    <problem_solved>The specific pain point addressed</problem_solved>
+  </function>
+
+  <differentiation>
+    <vs_competitors>
+      <competitor name="competitor-name">
+        <their_approach>How they solve the problem</their_approach>
+        <our_difference>How we differ</our_difference>
+      </competitor>
+    </vs_competitors>
+    <unfair_advantage>What we do that's hard to copy</unfair_advantage>
+  </differentiation>
+
+  <constraints>
+    <platforms>Web, iOS, Android, Desktop, CLI, etc.</platforms>
+    <technical>Performance requirements, offline needs, etc.</technical>
+    <brand>Existing brand elements that must be respected</brand>
+  </constraints>
+</product_definition>
 ```
-[PLAN:@DESIGN|type=saas_landing]
-  |palette=navy_and_white|accent=coral
-  |typography=inter|display=space_grotesk
-  |layout=single_column|max_width=1200px
-  |mood=professional_minimal
-  |density=spacious|section_gap=96px
-  |hero=headline+subhead+cta
-  |sections=features,pricing,testimonials,footer
-  |exclude=animations,parallax,gradients
-  |responsive=mobile_first
+</product_definition_output>
+
+## Phase 2: User Specificity
+
+Generic user descriptions produce generic designs. Be ruthlessly specific:
+
+<user_questions>
+**Demographics (surface level):**
+1. Job title or role?
+2. Industry or domain?
+3. Technical expertise level?
+
+**Psychographics (deeper):**
+4. What do they value in tools? (Speed? Power? Simplicity?)
+5. What frustrates them about current solutions?
+6. Are they choosing this tool, or is it chosen for them?
+
+**Context of Use:**
+7. When do they use this? (Daily driver vs. occasional)
+8. Where do they use this? (Office, mobile, field)
+9. How much attention can they give? (Focused vs. distracted)
+10. What else are they doing while using this?
+
+**Expertise Gradient:**
+11. What does a beginner need?
+12. What does a power user need?
+13. How do people progress from beginner to power user?
+</user_questions>
+
+<user_definition_output>
+```xml
+<user_definition>
+  <primary_user>
+    <identity>
+      <title>Specific job title or role</title>
+      <domain>Industry or field</domain>
+      <technical_level>novice/intermediate/expert</technical_level>
+    </identity>
+
+    <values>
+      <primary_value>What they care most about</primary_value>
+      <secondary_values>Other things they value</secondary_values>
+      <anti_values>What they actively dislike</anti_values>
+    </values>
+
+    <context>
+      <frequency>How often they use this</frequency>
+      <environment>Where they use it</environment>
+      <attention_level>focused/partial/distracted</attention_level>
+      <concurrent_tasks>What else they're doing</concurrent_tasks>
+    </context>
+
+    <journey>
+      <entry_point>How they discover/start using this</entry_point>
+      <beginner_needs>What novices require</beginner_needs>
+      <power_user_needs>What experts require</power_user_needs>
+      <progression_path>How users level up</progression_path>
+    </journey>
+  </primary_user>
+
+  <secondary_users>
+    <!-- Additional user types if applicable -->
+  </secondary_users>
+</user_definition>
 ```
+</user_definition_output>
 
-### Option B: Natural language
+## Phase 3: Design Principles
 
-> "I need a landing page for a developer tool. Clean, minimal, dark mode. Inter font. No flashy animations."
+Not generic principles — principles specific to THIS product and THESE users:
 
-If the user provides Option B, convert it to the structured format using the mapping table below, then proceed. Identify every dimension explicitly stated and flag dimensions that were left unspecified.
+<principle_guidelines>
+**Good Principles:**
+- "Professional to engineers" (Linear) — specific audience, specific tone
+- "Simplicity, minimalism, speed" (Vercel) — specific values
+- "Developer-centric" (Stripe) — specific audience
 
-### Natural language → I-Lang mapping
+**Bad Principles:**
+- "User-friendly" — too vague, applies to everything
+- "Modern design" — meaningless
+- "Clean and intuitive" — every product claims this
 
-For each sentence in the natural language input, identify dimension keywords and map to the closest structured value:
+**Principle Test:**
+A good principle helps you make decisions. If it doesn't rule anything out, it's not useful.
+</principle_guidelines>
 
-| Natural language phrase | Dimension | I-Lang value |
-|------------------------|-----------|-------------|
-| "dark mode", "dark theme" | palette | `monochrome_dark` |
-| "light", "white background" | palette | `light_clean` |
-| "earthy", "warm tones" | palette | `earth_tones` |
-| "pop of color", "vibrant" | accent | `electric_blue` (default) or `coral` |
-| "subtle accent" | accent | `muted_sage` (default) or `slate` |
-| "clean", "minimal", "simple" | mood | `professional_minimal` |
-| "playful", "fun", "friendly" | mood | `playful` |
-| "bold", "brutalist", "raw" | mood | `brutalist` |
-| "editorial", "magazine-like" | mood | `editorial` |
-| "spacious", "lots of whitespace" | density | `spacious` |
-| "compact", "dense", "information-rich" | density | `compact` |
-| "Inter", "system font" | typography | `inter` (default) or `system_ui` |
-| "serif", "traditional" | typography | `georgia` (default) or `playfair` |
-| "monospace", "code-like" | typography | `jetbrains_mono` |
-| "no animations", "static" | exclude | `animations` |
-| "no gradients" | exclude | `gradients` |
-| "no stock photos" | exclude | `stock_photos` |
-| "single page" | layout | `single_column` |
-| "two columns", "sidebar" | layout | `two_column` |
-| "mobile first" | responsive | `mobile_first` |
+<principles_output>
+```xml
+<design_principles>
+  <principle name="principle-name" priority="1">
+    <statement>The principle in one sentence</statement>
+    <meaning>What this actually means in practice</meaning>
+    <example_decision>A design decision this would guide</example_decision>
+    <rules_out>What this principle says NO to</rules_out>
+  </principle>
 
-When a phrase maps to multiple dimensions (e.g. "clean dark landing page" → mood=professional_minimal + palette=monochrome_dark + layout=single_column), resolve each dimension independently. When multiple values are listed for a single mapping, the first is the default; the agent may select the alternative only if surrounding context strongly favors it.
+  <principle name="principle-name" priority="2">
+    <!-- ... -->
+  </principle>
 
-## 2. Validate dimensions
-
-Every design brief must resolve these 8 dimensions. If any are missing from the input, select sensible defaults using the rules in Section 2.2.
-
-The values listed below form a closed vocabulary. Only values in this table have concrete token mappings in Section 2.1. If the user provides a value not listed here, the agent must prompt for clarification rather than guessing.
-
-| # | Dimension | Key | Example values |
-|---|-----------|-----|---------------|
-| 1 | Color palette | `palette` | navy_and_white, earth_tones, monochrome_dark, light_clean |
-| 2 | Accent color | `accent` | coral, electric_blue, emerald, muted_sage |
-| 3 | Body typography | `typography` | inter, system_ui, dm_sans, georgia |
-| 4 | Display typography | `display` | space_grotesk, clash_display, same_as_body, playfair |
-| 5 | Layout model | `layout` | single_column, two_column, asymmetric |
-| 6 | Mood | `mood` | professional_minimal, playful, brutalist, editorial |
-| 7 | Density | `density` | compact, balanced, spacious |
-| 8 | Constraints | `exclude` | animations, gradients, stock_photos, carousel |
-
-### 2.1 Symbolic → concrete token resolution
-
-Each symbolic value maps to concrete design tokens. The agent must resolve these before writing DESIGN.md:
-
-| Symbolic value | Concrete tokens |
-|---------------|----------------|
-| `palette=navy_and_white` | Background: #0F172A, Surface: #1E293B, Text: #F8FAFC, Secondary: #94A3B8 |
-| `palette=monochrome_dark` | Background: #09090B, Surface: #18181B, Text: #FAFAFA, Secondary: #A1A1AA |
-| `palette=light_clean` | Background: #FFFFFF, Surface: #F8FAFC, Text: #0F172A, Secondary: #64748B |
-| `palette=earth_tones` | Background: #FFFBEB, Surface: #FEF3C7, Text: #451A03, Secondary: #92400E |
-| `accent=coral` | Accent: #F97316, Hover: #EA580C |
-| `accent=electric_blue` | Accent: #3B82F6, Hover: #2563EB |
-| `accent=emerald` | Accent: #10B981, Hover: #059669 |
-| `accent=muted_sage` | Accent: #84A98C, Hover: #6B8F73 |
-| `accent=slate` | Accent: #64748B, Hover: #475569 |
-| `typography=inter` | Body: Inter, 400, 1rem/1.6 |
-| `typography=system_ui` | Body: system-ui, 400, 1rem/1.6 |
-| `typography=dm_sans` | Body: DM Sans, 400, 1rem/1.6 |
-| `typography=georgia` | Body: Georgia, 400, 1.125rem/1.7 |
-| `display=space_grotesk` | Display: Space Grotesk, 700, clamp(2rem, 5vw, 3.5rem) |
-| `display=clash_display` | Display: Clash Display, 700, clamp(2rem, 5vw, 3.5rem) |
-| `display=playfair` | Display: Playfair Display, 700, clamp(2rem, 5vw, 3.5rem) |
-| `display=same_as_body` | Display inherits body font family, weight 600 |
-| `density=compact` | Section spacing: 48px, Content padding: 16px/24px |
-| `density=balanced` | Section spacing: 72px, Content padding: 24px/40px |
-| `density=spacious` | Section spacing: 96px, Content padding: 24px/48px |
-
-Symbolic values not in this table are not valid. If the user provides an unrecognized value (e.g., `palette=ocean_blue`), the agent must prompt for clarification: "I don't recognize `palette=ocean_blue`. Did you mean `navy_and_white`, `monochrome_dark`, `light_clean`, or `earth_tones`?"
-
-### 2.2 Default resolution rules
-
-When a dimension is unspecified, defaults are selected based on mood compatibility:
-
-| Unspecified dimension | Default rule |
-|----------------------|-------------|
-| `palette` | If mood=editorial → `light_clean`. If mood=brutalist → `monochrome_dark`. Otherwise → `light_clean`. |
-| `accent` | If palette is dark → `coral`. If palette is light → `electric_blue`. |
-| `typography` | Always → `inter` (highest cross-platform legibility). |
-| `display` | If mood=editorial → `playfair`. If mood=brutalist → `space_grotesk`. Otherwise → `same_as_body`. |
-| `layout` | Always → `single_column` (safest responsive default). |
-| `mood` | Always → `professional_minimal` (least opinionated). |
-| `density` | Always → `balanced`. |
-| `exclude` | Always → none (no constraints unless specified). |
-
-If mood is also unspecified, all defaults fall back to the safe neutral set: `palette=light_clean`, `accent=electric_blue`, `typography=inter`, `display=same_as_body`, `layout=single_column`, `mood=professional_minimal`, `density=balanced`, `exclude=none`.
-
-## 3. Generate DESIGN.md
-
-This skill generates a new DESIGN.md from scratch based on the resolved brief dimensions. If a DESIGN.md already exists in the working directory, the agent should ask the user whether to overwrite or skip.
-
-Produce a DESIGN.md following Open Design's 9-section convention. All color hex values, font stacks, and spacing values must come from the resolved tokens in Section 2.1 — do not invent values outside the resolution table.
-
-```markdown
-# [Project Name] Design System
-
-## Visual Theme & Atmosphere
-- Mood: [resolved from mood]
-- Feel: [derived from mood — e.g., professional_minimal → "Clean, confident, restrained"]
-- References: [if mood=editorial → "Magazine layouts, Monocle, Cereal"; if mood=brutalist → "Exposed structure, raw typography"]
-
-## Color Palette & Roles
-- Background: [resolved from palette]
-- Surface: [resolved from palette]
-- Text primary: [resolved from palette]
-- Text secondary: [resolved from palette]
-- Accent: [resolved from accent]
-- Accent hover: [resolved from accent]
-
-## Typography Rules
-- Display: [resolved from display], 700, clamp(2rem, 5vw, 3.5rem)
-- Body: [resolved from typography], 400, 1rem/1.6
-- Mono: JetBrains Mono, 400, 0.875rem
-
-## Component Stylings
-- Buttons: [if mood=playful → "rounded-full", otherwise → "rounded-md"], accent bg, contrast text
-- Cards: surface bg, subtle border, 12px radius
-- Inputs: [if mood=brutalist → "thick border", otherwise → "transparent bg, bottom border"]
-
-## Layout Principles
-- Max width: 1200px
-- Grid: [resolved from layout]
-- Section spacing: [resolved from density]
-- Content padding: [resolved from density]
-
-## Depth & Elevation
-- Shadows: [if mood=brutalist → "hard 4px offset", if mood=professional_minimal → "none", otherwise → "subtle sm"]
-- Borders: 1px solid [derived from palette, 8% opacity of text color]
-
-## Do's and Don'ts
-- DO use the declared color tokens exclusively.
-- DO maintain consistent section spacing.
-- DO ensure all text meets WCAG AA contrast ratio.
-- DON'T invent colors outside the palette.
-- DON'T add decorative shadows unless Depth & Elevation allows them.
-- DON'T use more than 2 display/body typefaces (monospace is a utility face for code and data — it does not count toward this limit).
-
-## Responsive Behavior
-- Breakpoints: 640px (sm), 768px (md), 1024px (lg), 1280px (xl)
-- Mobile: single column, stack all sections vertically
-- Tablet: allow 2-column feature grids
-- Desktop: full layout with max-width constraint
-- Images: fluid, max-width 100%, maintain aspect ratio
-
-## Agent Prompt Guide
-- Do NOT invent colors outside this palette.
-- Do NOT add box-shadows unless specified above.
-- Accent color appears maximum 3 times per viewport.
-- All interactive elements need :focus-visible outline.
-- [if exclude contains items → list each as "Do NOT use {item}."]
+  <principle name="principle-name" priority="3">
+    <!-- ... -->
+  </principle>
+</design_principles>
 ```
+</principles_output>
 
-## 4. Generate brief-preview.html
+## Phase 4: Emotional Targets
 
-Create a single HTML file that visually renders the resolved design tokens. The preview must contain these 4 sections in order:
+Define the emotional response the design should evoke:
 
-1. **Color palette swatches** — A horizontal row of rectangles, each showing one color from the Color section. Label each with its role (Background, Surface, Text, Accent) and hex code.
-2. **Typography specimens** — Three text blocks showing Display, Body, and Mono fonts at their declared sizes. Use a sample sentence ("The quick brown fox...") for each.
-3. **Spacing ruler** — A visual ruler or stacked bars showing section spacing and content padding values, labeled with their px values.
-4. **Component preview** — Render 2–3 live components (a primary button, a card with title/body, a text input) using the resolved tokens. These should be functional HTML/CSS, not screenshots.
+<emotional_spectrum>
+For each dimension, place where this product should land:
 
-Style the preview itself with the resolved design system tokens (background color, font, spacing). The preview should look like a design system documentation page.
-
-## 5. Report unspecified dimensions
-
-At the end of output, list any dimensions the user did not specify and the defaults that were applied, including the rule that selected each default:
-
+**Tone Spectrum:**
 ```
-Dimensions resolved from defaults:
-- display: set to "same_as_body" (rule: mood=professional_minimal → same_as_body)
-- density: set to "balanced" (rule: static fallback, no spacing preference given)
-- exclude: set to "none" (rule: no constraints unless specified)
+Playful ←————————————→ Serious
+Casual ←————————————→ Professional
+Friendly ←————————————→ Authoritative
+Warm ←————————————→ Cool
 ```
 
-This transparency prevents silent assumptions from propagating into the final design.
+**Energy Spectrum:**
+```
+Calm ←————————————→ Energetic
+Minimal ←————————————→ Dense
+Subtle ←————————————→ Bold
+Quiet ←————————————→ Loud
+```
+
+**Complexity Spectrum:**
+```
+Simple ←————————————→ Powerful
+Guided ←————————————→ Flexible
+Opinionated ←————————————→ Customizable
+```
+</emotional_spectrum>
+
+<emotional_output>
+```xml
+<emotional_targets>
+  <should_feel>
+    <emotion name="emotion-1" intensity="high/medium/low">
+      <why>Why this emotion serves our users</why>
+    </emotion>
+  </should_feel>
+
+  <should_never_feel>
+    <emotion name="emotion-1">
+      <why>Why this would be wrong for our product</why>
+    </emotion>
+  </should_never_feel>
+
+  <spectrum_positions>
+    <dimension name="playful-serious" position="0.8">Lean serious</dimension>
+    <dimension name="casual-professional" position="0.9">Very professional</dimension>
+    <!-- ... -->
+  </spectrum_positions>
+</emotional_targets>
+```
+</emotional_output>
+
+## Phase 5: Reference Audit
+
+Study real products — but extract principles, don't copy aesthetics:
+
+<reference_guidelines>
+**Good Reference Usage:**
+- "Linear uses dark mode because their users (engineers) prefer coding environments"
+- "Stripe's documentation is exemplary because developers need to scan quickly"
+
+**Bad Reference Usage:**
+- "Let's do dark mode like Linear" (copying without understanding)
+- "Make it look like Stripe" (aesthetic theft)
+
+**Reference Selection Criteria:**
+- Serves similar users (not just same industry)
+- Solves similar problems (not just looks nice)
+- Has documented design reasoning (not just pretty)
+</reference_guidelines>
+
+<reference_output>
+```xml
+<reference_audit>
+  <reference name="Product Name">
+    <why_relevant>Why this is a good reference for us</why_relevant>
+    <serves_similar_users>How their users overlap with ours</serves_similar_users>
+
+    <principles_to_extract>
+      <principle>What principle they demonstrate</principle>
+      <how_they_execute>How they implement it</how_they_execute>
+      <how_we_might_apply>How we could apply this (differently)</how_we_might_apply>
+    </principles_to_extract>
+
+    <what_not_to_copy>
+      <element>What we should NOT copy</element>
+      <why>Why it wouldn't work for us</why>
+    </what_not_to_copy>
+  </reference>
+</reference_audit>
+```
+</reference_output>
+
+## Phase 6: Anti-Goals
+
+What this design should explicitly NOT be:
+
+<anti_goals_guidelines>
+Anti-goals prevent scope creep and maintain focus. They should be specific and sometimes controversial.
+
+**Good Anti-Goals:**
+- "Not for beginners" — accepts expertise requirement
+- "Not customizable" — values opinion over flexibility
+- "Not visually flashy" — substance over style
+
+**Bad Anti-Goals:**
+- "Not ugly" — too obvious
+- "Not bad" — not specific
+</anti_goals_guidelines>
+
+<anti_goals_output>
+```xml
+<anti_goals>
+  <anti_goal>
+    <statement>What we explicitly will NOT do</statement>
+    <why>Why this constraint helps us</why>
+    <trade_off>What we're giving up (and why it's worth it)</trade_off>
+  </anti_goal>
+</anti_goals>
+```
+</anti_goals_output>
+
+## Complete Design Brief Output
+
+<complete_brief_format>
+```xml
+<design_brief>
+  <metadata>
+    <created>Date</created>
+    <version>1.0</version>
+    <author>Who created this</author>
+  </metadata>
+
+  <product_definition>
+    <!-- From Phase 1 -->
+  </product_definition>
+
+  <user_definition>
+    <!-- From Phase 2 -->
+  </user_definition>
+
+  <design_principles>
+    <!-- From Phase 3 -->
+  </design_principles>
+
+  <emotional_targets>
+    <!-- From Phase 4 -->
+  </emotional_targets>
+
+  <reference_audit>
+    <!-- From Phase 5 -->
+  </reference_audit>
+
+  <anti_goals>
+    <!-- From Phase 6 -->
+  </anti_goals>
+
+  <decision_framework>
+    <when_in_doubt>
+      When facing a design decision, ask:
+      1. Does this serve [primary user]'s [primary goal]?
+      2. Does this align with principle [highest priority principle]?
+      3. Does this feel [target emotion]?
+      4. Would [reference product] do this? Why or why not?
+    </when_in_doubt>
+  </decision_framework>
+</design_brief>
+```
+</complete_brief_format>
+
+## Validation Checklist
+
+Before considering the brief complete:
+
+<validation_checklist>
+- [ ] Product definition is specific enough to differentiate from competitors
+- [ ] User definition describes a real person, not a demographic segment
+- [ ] Each design principle rules something out (not just describes good design)
+- [ ] Emotional targets create a clear personality (not "professional yet friendly")
+- [ ] References are analyzed for principles, not just aesthetics
+- [ ] Anti-goals are genuinely controversial (someone might disagree)
+- [ ] The decision framework actually helps make decisions
+</validation_checklist>
+
+## Using the Brief
+
+Once complete, this brief should be:
+1. **Referenced in every design decision** — "Per the brief, our users value X, so..."
+2. **Updated when assumptions change** — Briefs are living documents
+3. **Shared with all contributors** — Everyone should know the context
+4. **Used in critiques** — "Does this align with principle #2?"
+
+The brief is not bureaucracy — it's the foundation that makes intentional design possible.

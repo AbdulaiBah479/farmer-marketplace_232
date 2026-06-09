@@ -1,128 +1,91 @@
 ---
 name: linear-cli
-description: Manages Linear issues via CLI. Use when user wants to view, start, create, or update Linear issues, create PRs from issues, or configure Linear integration.
+description: Manage Linear issues from the command line using the linear cli. This skill allows automating linear management.
+allowed-tools: Bash(linear:*), Bash(curl:*)
 ---
 
 # Linear CLI
 
-## Goal
-Help users manage Linear issues from the terminal—view current work, start issues, create branches, open PRs, and stay in flow.
-
-## When to use
-- User asks about their Linear issues or current issue
-- User wants to start working on a Linear issue
-- User wants to create a PR for a Linear issue
-- User needs to create, update, or comment on issues
-- User wants to configure Linear CLI for a project
-
-## When not to use
-- User is asking about Linear the company or product (not CLI usage)
-- User wants Linear API integration in code (point them to Linear SDK)
-- User needs Jira, GitHub Issues, or other trackers
+A CLI to manage Linear issues from the command line, with git and jj integration.
 
 ## Prerequisites
-- `linear` CLI installed (`brew install schpet/tap/linear`)
-- `LINEAR_API_KEY` environment variable set (from linear.app/settings/account/security)
-- For PR creation: GitHub CLI (`gh`) installed and authenticated
 
-## Default workflow
+The `linear` command must be available on PATH. To check:
 
-### 1) Check current context
 ```bash
-linear issue view        # See current issue (detected from branch)
-linear issue id          # Just the issue ID
+linear --version
 ```
 
-### 2) Start an issue
-```bash
-linear issue list        # Show your unstarted issues
-linear issue start       # Interactive: pick issue, creates branch
-linear issue start ABC-123  # Start specific issue directly
+If not installed, follow the instructions at:\
+https://github.com/schpet/linear-cli?tab=readme-ov-file#install
+
+## Available Commands
+
+```
+linear issue      # Manage issues (list, view, create, start, update, delete, comment)
+linear team       # Manage teams (list, members, create, autolinks)
+linear project    # Manage projects (list, view)
+linear config     # Configure the CLI for the current repo
+linear auth       # Manage authentication (token, whoami)
+linear schema     # Print the GraphQL schema (SDL or JSON)
 ```
 
-### 3) Create PR when ready
+## Discovering Options
+
+To see available subcommands and flags, run `--help` on any command:
+
 ```bash
-linear issue pr          # Creates GitHub PR with title/description prefilled
+linear --help
+linear issue --help
+linear issue list --help
+linear issue create --help
 ```
 
-## Common commands
+Each command has detailed help output describing all available flags and options.
 
-| Task | Command |
-|------|---------|
-| View current issue | `linear issue view` |
-| View in browser | `linear issue view -w` |
-| List my issues | `linear issue list` |
-| List all unstarted | `linear issue list -A` |
-| Start issue | `linear issue start` or `linear issue start ABC-123` |
-| Create PR | `linear issue pr` |
-| Create issue | `linear issue create -t "Title" -d "Description"` |
-| Add comment | `linear issue comment add` |
-| List teams | `linear team list` |
-| Configure | `linear config` |
+## Using the Linear GraphQL API Directly
 
-## Configuration
+**Prefer the CLI for all supported operations.** Direct API calls via curl are slower and should only be used as a fallback for advanced queries not covered by the CLI. For complex queries involving multiple calls, write and execute a script.
 
-Run `linear config` to generate `.linear.toml` in your repo. Key settings:
+To make direct API calls, use `linear schema` and `linear auth token`:
 
-```toml
-api_key = "lin_api_..."      # Or use LINEAR_API_KEY env var
-team_id = "TEAM_abc123"      # Default team for new issues
-workspace = "mycompany"      # Your Linear workspace slug
-issue_sort = "priority"      # Or "manual"
-vcs = "git"                  # Or "jj" for Jujutsu
+### 1. Check the schema for available types and fields
+
+Write the schema to a tempfile, then search it:
+
+```bash
+# Write schema to a tempfile (cross-platform)
+linear schema -o "${TMPDIR:-/tmp}/linear-schema.graphql"
+
+# Search for specific types or fields
+grep -i "cycle" "${TMPDIR:-/tmp}/linear-schema.graphql"
+grep -A 30 "^type Issue " "${TMPDIR:-/tmp}/linear-schema.graphql"
+
+# View filter options
+grep -A 50 "^input IssueFilter" "${TMPDIR:-/tmp}/linear-schema.graphql"
 ```
 
-Config file locations (checked in order):
-1. `./.linear.toml` (project root)
-2. `~/.config/linear/linear.toml` (global)
+### 2. Get the auth token
 
-## Validation checklist
-- [ ] `linear --version` runs (CLI installed)
-- [ ] `linear issue list` works (API key valid)
-- [ ] `linear team list` shows teams (workspace configured)
-- [ ] Branch naming matches Linear's pattern for auto-detection
-
-## Troubleshooting
-
-**"No issue found for current branch"**
-- Branch name must contain issue ID (e.g., `feat/abc-123-description`)
-- Or specify issue: `linear issue view ABC-123`
-
-**"Unauthorized" errors**
-- Check `LINEAR_API_KEY` is set and valid
-- Regenerate key at linear.app/settings/account/security
-
-**PR creation fails**
-- Ensure `gh` CLI is installed and authenticated (`gh auth status`)
-- Must be on a branch with a Linear issue
-
-## Examples
-
-### Example 1: Start morning work
 ```bash
-$ linear issue list
-# Shows unstarted issues assigned to you
-
-$ linear issue start
-# Interactive picker → selects issue → creates branch → switches to it
-
-$ linear issue view
-# Confirms you're on the right issue
+linear auth token
 ```
 
-### Example 2: Create PR for completed work
-```bash
-$ linear issue view
-# Review issue details
+### 3. Make a curl request
 
-$ linear issue pr
-# Opens GitHub PR with:
-#   - Title: "ABC-123: Issue title"
-#   - Description: Issue description + Linear link
+```bash
+curl -s -X POST https://api.linear.app/graphql \
+  -H "Content-Type: application/json" \
+  -H "Authorization: $(linear auth token)" \
+  -d '{"query": "{ issues(filter: { team: { key: { eq: \"CLI\" } } }, first: 5) { nodes { identifier title state { name } } } }"}'
 ```
 
-### Example 3: Quick issue creation
+### Example queries
+
 ```bash
-$ linear issue create -t "Fix login timeout" -d "Users report 30s timeout on slow connections"
-# Creates issue, outputs issue ID
+# Get issues assigned to current user
+curl -s -X POST https://api.linear.app/graphql \
+  -H "Content-Type: application/json" \
+  -H "Authorization: $(linear auth token)" \
+  -d '{"query": "{ viewer { assignedIssues(first: 10) { nodes { identifier title state { name } } } } }"}'
 ```

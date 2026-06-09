@@ -1,45 +1,21 @@
 ---
 name: sast-configuration
-description: "Static Application Security Testing (SAST) tool setup, configuration, and custom rule creation for comprehensive security scanning across multiple programming languages."
-risk: unknown
-source: community
-date_added: "2026-02-27"
+description: Configure Static Application Security Testing (SAST) tools for automated vulnerability detection in application code. Use when setting up security scanning, implementing DevSecOps practices, or automating code vulnerability detection.
 ---
 
 # SAST Configuration
 
 Static Application Security Testing (SAST) tool setup, configuration, and custom rule creation for comprehensive security scanning across multiple programming languages.
 
-## Use this skill when
+## Overview
+
+This skill provides comprehensive guidance for setting up and configuring SAST tools including Semgrep, SonarQube, and CodeQL. Use this skill when you need to:
 
 - Set up SAST scanning in CI/CD pipelines
 - Create custom security rules for your codebase
 - Configure quality gates and compliance policies
 - Optimize scan performance and reduce false positives
 - Integrate multiple SAST tools for defense-in-depth
-
-## Do not use this skill when
-
-- You only need DAST or manual penetration testing guidance
-- You cannot access source code or CI/CD pipelines
-- You need organizational policy decisions rather than tooling setup
-
-## Instructions
-
-1. Identify languages, repos, and compliance requirements.
-2. Choose tools and define a baseline policy.
-3. Integrate scans into CI/CD with gating thresholds.
-4. Tune rules and suppressions based on false positives.
-5. Track remediation and verify fixes.
-
-## Safety
-
-- Avoid scanning sensitive repos with third-party services without approval.
-- Prevent leaks of secrets in scan artifacts and logs.
-
-## Overview
-
-This skill provides comprehensive guidance for setting up and configuring SAST tools including Semgrep, SonarQube, and CodeQL.
 
 ## Core Capabilities
 
@@ -88,15 +64,15 @@ codeql database create mydb --language=python
 
 ## Reference Documentation
 
-- Semgrep Rule Creation - Pattern-based security rule development
-- SonarQube Configuration - Quality gates and profiles
-- CodeQL Setup Guide - Query development and workflows
+- [Semgrep Rule Creation](references/semgrep-rules.md) - Pattern-based security rule development
+- [SonarQube Configuration](references/sonarqube-config.md) - Quality gates and profiles
+- [CodeQL Setup Guide](references/codeql-setup.md) - Query development and workflows
 
 ## Templates & Assets
 
-- semgrep-config.yml - Production-ready Semgrep configuration
-- sonarqube-settings.xml - SonarQube quality profile template
-- run-sast.sh - Automated SAST execution script
+- [semgrep-config.yml](assets/semgrep-config.yml) - Production-ready Semgrep configuration
+- [sonarqube-settings.xml](assets/sonarqube-settings.xml) - SonarQube quality profile template
+- [run-sast.sh](scripts/run-sast.sh) - Automated SAST execution script
 
 ## Integration Patterns
 
@@ -193,9 +169,9 @@ semgrep --config p/pci-dss --json -o pci-scan-results.json
 
 ## Related Skills
 
-- OWASP Top 10 Checklist
-- Container Security
-- Dependency Scanning
+- [OWASP Top 10 Checklist](../owasp-top10-checklist/SKILL.md)
+- [Container Security](../container-security/SKILL.md)
+- [Dependency Scanning](../dependency-scanning/SKILL.md)
 
 ## Tool Comparison
 
@@ -213,8 +189,3 @@ semgrep --config p/pci-dss --json -o pci-scan-results.json
 4. Integrate into CI/CD pipeline
 5. Establish security gate policies
 6. Train development team on findings and remediation
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

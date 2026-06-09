@@ -1,338 +1,223 @@
 ---
 name: k8s-debug
-description: Diagnose and fix Kubernetes pods, CrashLoopBackOff, Pending, DNS, networking, storage, and rollout failures with kubectl.
+type: complex
+depth: extended
+description: >-
+  Diagnoses Kubernetes pod failures, network connectivity, deployment rollouts,
+  HPA scaling, and EKS cluster issues. Use when debugging CrashLoopBackOff,
+  ImagePullBackOff, Pending pods, service endpoints, ingress/Gateway API routing,
+  sidecar containers, in-place resize, node pressure, VPC CNI, IRSA, or observability
+  stack. Covers K8s 1.32-1.35 GA features: sidecars, DRA, ValidatingAdmissionPolicy.
 ---
 
-# Kubernetes Debugging Skill
+# [H1][K8S-DEBUG]
+>**Dictum:** *Systematic diagnosis eliminates guesswork.*
 
-## Overview
+<br>
 
-Systematic toolkit for debugging Kubernetes clusters, workloads, networking, and storage with a deterministic, safety-first workflow.
+Cloud mode (EKS/K8s 1.32+) only. Selfhosted uses Docker containers -- see docker-gen/docker-val skills.
 
-## Trigger Phrases
+**K8s:** 1.32-1.35 | Stable APIs: sidecar containers GA (1.33), DRA GA (1.33), in-place pod resize GA (1.35), fine-grained supplemental groups GA (1.35), topology-aware routing GA (1.34), VolumeAttributesClass GA (1.34), `kubectl events --for` (1.32+), `kubectl debug --copy-to` (1.32+), ValidatingAdmissionPolicy GA (1.30+), Gateway API v1.4 (1.35+) | **Canonical:** `infrastructure/src/deploy.ts` (207 LOC)
 
-Use this skill when requests resemble:
-- "My pod is in `CrashLoopBackOff`; help me find the root cause."
-- "Service DNS works in one pod but not another."
-- "Deployment rollout is stuck."
-- "Pods are `Pending` and not scheduling."
-- "Cluster health looks degraded after a change."
-- "PVC is pending and pods cannot mount storage."
+**Tasks:**
+1. Identify pod status from decision tree below.
+2. Follow the matching workflow branch.
+3. Read `references/troubleshooting_pods.md` for pod/networking workflows or `references/troubleshooting_cluster.md` for cluster/operational workflows.
+4. Read `references/common_issues.md` for detailed diagnostic tables.
+5. Use scripts for automated data collection (see Scripts section).
+6. Follow escalation checklist if unresolved.
 
-## Prerequisites
+---
+## [1][RESOURCE_MAP]
+>**Dictum:** *deploy.ts resources are the debugging targets.*
 
-Run from the skill directory (`devops-skills-plugin/skills/k8s-debug`) so relative script paths work as written.
+<br>
 
-### Required
-- `kubectl` installed and configured.
-- An active cluster context.
-- Read access to namespaces, pods, events, services, and nodes.
+| [INDEX] | [CATEGORY]    | [RESOURCE]        | [KIND]                | [KEY_DETAILS]                                            |
+| :-----: | ------------- | ----------------- | --------------------- | -------------------------------------------------------- |
+|   [1]   | **Namespace** | `parametric-ns`   | Namespace             | `metadata.name: parametric`.                             |
+|   [2]   | **Compute**   | `compute-deploy`  | Deployment            | Container `api`, label `app: parametric-api`, port 4000. |
+|   [3]   | **Compute**   | `compute-svc`     | Service (ClusterIP)   | Port 4000/TCP, selector `app: parametric-api`.           |
+|   [4]   | **Compute**   | `compute-hpa`     | HPA (autoscaling/v2)  | CPU + memory targets, env-driven min/max.                |
+|   [5]   | **Compute**   | `compute-ingress` | Ingress (nginx class) | TLS `compute-tls`, ssl-redirect, proxy-body-size 50m.    |
+|   [6]   | **Compute**   | `compute-config`  | ConfigMap             | API_BASE_URL, POSTGRES_HOST, REDIS_HOST, OTEL_*.         |
+|   [7]   | **Compute**   | `compute-secret`  | Secret                | POSTGRES_PASSWORD, REDIS_PASSWORD.                       |
+|   [8]   | **Observe**   | `observe-alloy`   | DaemonSet             | Alloy OTLP: gRPC :4317, HTTP :4318, metrics :12345.      |
+|   [9]   | **Observe**   | `prometheus`      | Deployment            | Port 9090, PVC `/prometheus`, scrape interval 15s.       |
+|  [10]   | **Observe**   | `grafana`         | Deployment            | Port 3000, PVC `/var/lib/grafana`.                       |
 
-Quick preflight:
+**Probes** (`_CONFIG.k8s.probes`, deploy.ts:19): Startup 150s window (5s x 30), Liveness 30s (10s x 3), Readiness 15s (5s x 3). `terminationGracePeriodSeconds: 30`.
 
-```bash
-kubectl config current-context
-kubectl auth can-i get pods -A
-kubectl auth can-i get events -A
-kubectl get ns
-```
-
-### Optional but Recommended
-- `jq` for more precise filtering in `./scripts/cluster_health.sh`.
-- Metrics API (`metrics-server`) for `kubectl top`.
-- In-container debug tools (`nslookup`, `getent`, `curl`, `wget`, `ip`) for deep network tests.
-
-Fallback behavior:
-- If optional tools are missing, scripts continue and print warnings with reduced output.
-- If `kubectl top` is unavailable, continue with `kubectl describe` and events.
-
-## When to Use This Skill
-
-Use this skill for:
-- Pod failures (CrashLoopBackOff, ImagePullBackOff, Pending, OOMKilled)
-- Service connectivity or DNS resolution issues
-- Network policy or ingress problems
-- Volume and storage mount failures
-- Deployment rollout issues
-- Cluster health or performance degradation
-- Resource exhaustion (CPU/memory)
-- Configuration problems (ConfigMaps, Secrets, RBAC)
-
-## Safety Rules for Disruptive Commands
-
-Default mode is read-only diagnosis first. Only execute disruptive commands after confirming blast radius and rollback.
-
-Commands requiring explicit confirmation:
-- `kubectl delete pod ... --force --grace-period=0`
-- `kubectl drain ...`
-- `kubectl rollout restart ...`
-- `kubectl rollout undo ...`
-- `kubectl debug ... --copy-to=...`
-
-Before disruptive actions:
-```bash
-# Snapshot current state for rollback and incident notes
-kubectl get deploy,rs,pod,svc -n <namespace> -o wide
-kubectl get pod <pod-name> -n <namespace> -o yaml > before-<pod-name>.yaml
-kubectl get events -n <namespace> --sort-by='.lastTimestamp' > before-events.txt
-```
-
-## Reference Navigation Map
-
-Load only the section needed for the observed symptom.
-
-| Symptom / Need | Open | Start section |
-| --- | --- | --- |
-| You need an end-to-end diagnosis path | `./references/troubleshooting_workflow.md` | `General Debugging Workflow` |
-| Pod state is `Pending`, `CrashLoopBackOff`, or `ImagePullBackOff` | `./references/troubleshooting_workflow.md` | `Pod Lifecycle Troubleshooting` |
-| Service reachability or DNS failure | `./references/troubleshooting_workflow.md` | `Network Troubleshooting Workflow` |
-| Node pressure or performance regression | `./references/troubleshooting_workflow.md` | `Resource and Performance Workflow` |
-| PVC / PV / storage class issues | `./references/troubleshooting_workflow.md` | `Storage Troubleshooting Workflow` |
-| Quick symptom-to-fix lookup | `./references/common_issues.md` | matching issue heading |
-| Post-mortem fix options for known issues | `./references/common_issues.md` | `Solutions` sections |
-
-## Scripts Overview
-
-| Script | Purpose | Required args | Optional args | Output | Fallback behavior |
-| --- | --- | --- | --- | --- | --- |
-| `./scripts/cluster_health.sh` | Cluster-wide health snapshot (nodes, workloads, events, common failure states) | None | `--strict`, `K8S_REQUEST_TIMEOUT` env var | Sectioned report to stdout | Continues on check failures, tracks them in summary and exit code |
-| `./scripts/network_debug.sh` | Pod-centric network and DNS diagnostics | `<pod-name>` (`<namespace>` defaults to `default`) | `--strict`, `--insecure`, `K8S_REQUEST_TIMEOUT` env var | Sectioned report to stdout | Uses secure API probe by default; insecure TLS requires explicit `--insecure` |
-| `./scripts/pod_diagnostics.py` | Deep pod diagnostics (status, describe, YAML, events, per-container logs, node context) | `<pod-name>` | `-n/--namespace`, `-o/--output` | Sectioned report to stdout or file | Fails fast on missing access; skips optional metrics/log blocks with clear messages |
-
-### Script Exit Codes
-
-`./scripts/cluster_health.sh` and `./scripts/network_debug.sh` share the same contract:
-
-- `0`: checks completed with no check failures (warnings allowed unless `--strict` is set).
-- `1`: one or more checks failed, or warnings occurred in `--strict` mode.
-- `2`: blocked preconditions (for example: missing `kubectl`, no active context, inaccessible namespace/pod).
-
-## Deterministic Debugging Workflow
-
-Follow this systematic approach for any Kubernetes issue:
-
-### 1. Preflight and Scope
+**Labels:** Compute: `app: parametric-api`. Observe: `app: <name>, stack: parametric, tier: observe`. Metadata: `component: <name>, stack: parametric, tier: observe`.
 
 ```bash
-kubectl config current-context
-kubectl get ns
-kubectl auth can-i get pods -n <namespace>
+# Quick status for all project resources
+kubectl get deploy,ds,svc,hpa,ingress,configmap,secret -n parametric
+kubectl get pods -n parametric -o wide
+kubectl top pods -n parametric --containers
 ```
 
-If preflight fails, stop and fix access/context first.
+---
+## [2][DECISION_TREE]
+>**Dictum:** *Pod status determines the diagnostic path.*
 
-### 2. Identify the Problem Layer
+<br>
 
-Categorize the issue:
-- **Application Layer**: Application crashes, errors, bugs
-- **Pod Layer**: Pod not starting, restarting, or pending
-- **Service Layer**: Network connectivity, DNS issues
-- **Node Layer**: Node not ready, resource exhaustion
-- **Cluster Layer**: Control plane issues, API problems
-- **Storage Layer**: Volume mount failures, PVC issues
-- **Configuration Layer**: ConfigMap, Secret, RBAC issues
+```
+START: What is the pod status?
+|
++-- Pending --------> [SCHEDULING]
+|   +-- "Insufficient cpu/memory" --> kubectl top nodes --> add nodes or free resources
+|   +-- "didn't match node affinity" --> check nodeSelector --> adjust constraint
+|   +-- Taints block scheduling --> add tolerations or remove taint
+|   +-- "unbound PersistentVolumeClaims" --> kubectl get pvc -n parametric --> fix PVC binding
+|
++-- CrashLoopBackOff --> [APPLICATION CRASH]
+|   +-- kubectl logs <pod> -n parametric -c api --previous
+|   |   +-- Stack trace --> fix app code, redeploy
+|   |   +-- "Error: connect ECONNREFUSED" --> verify DB/Redis/deps running
+|   |   +-- Missing env var --> check compute-config and compute-secret
+|   +-- kubectl describe pod <pod> -n parametric
+|       +-- "OOMKilled" (exit 137) --> increase memory limits (deploy.ts:168)
+|       +-- "Startup probe failed" --> boot > 150s; increase failureThreshold
+|       +-- "Liveness probe failed" --> app hung; check /api/health/liveness
+|
++-- ImagePullBackOff --> [IMAGE PULL]
+|   +-- "manifest unknown" --> verify image:tag exists in registry
+|   +-- "unauthorized" --> create/update imagePullSecrets
+|
++-- Running but broken --> [SERVICE/NETWORK]
+|   +-- kubectl get endpoints compute-svc -n parametric
+|   |   +-- ENDPOINTS empty --> selector mismatch (must be app: parametric-api)
+|   |   +-- ENDPOINTS has IPs --> test connectivity from debug pod
+|   +-- Ingress 502/503 --> check pod readiness + ingress controller
+|   +-- TLS handshake error --> check compute-tls secret + cert expiry
+|
++-- Error / Unknown --> [NODE/CLUSTER]
+    +-- kubectl describe node <node>
+    +-- MemoryPressure/DiskPressure --> evict pods, clean disk, add nodes
+    +-- NetworkUnavailable --> check CNI plugin (aws-node on EKS)
+```
 
-### 3. Gather Diagnostics with the Right Script
+---
+## [3][ESSENTIAL_COMMANDS]
+>**Dictum:** *Structured queries replace grep-based debugging.*
 
-Use the appropriate diagnostic script based on scope:
-
-#### Pod-Level Diagnostics
-Use `./scripts/pod_diagnostics.py` for comprehensive pod analysis:
+<br>
 
 ```bash
-python3 ./scripts/pod_diagnostics.py <pod-name> -n <namespace>
+# --- Pod Lifecycle ---
+kubectl get pods -n parametric -o wide
+kubectl describe pod <pod> -n parametric
+kubectl logs <pod> -n parametric -c api [--previous] [--tail=100]
+kubectl exec <pod> -n parametric -c api -it -- /bin/sh
+kubectl top pod <pod> -n parametric --containers
+kubectl events --for pod/<pod> -n parametric
+
+# --- Structured Queries (jsonpath) ---
+kubectl get pod <pod> -n parametric -o jsonpath='{.status.containerStatuses[*].state}'
+kubectl get pod <pod> -n parametric -o jsonpath='{.status.containerStatuses[?(@.name=="api")].restartCount}'
+kubectl get deploy compute-deploy -n parametric -o jsonpath='{.status.conditions[?(@.type=="Available")].status}'
+
+# --- Service / Network ---
+kubectl get svc,endpoints -n parametric
+kubectl run tmp-shell --rm -i --tty --image nicolaka/netshoot -- /bin/bash
+kubectl exec <pod> -n parametric -- nslookup compute-svc.parametric.svc.cluster.local
+
+# --- Ingress (nginx) / Gateway API ---
+kubectl describe ingress compute-ingress -n parametric
+kubectl logs -n ingress-nginx -l app.kubernetes.io/name=ingress-nginx --tail=50
+kubectl get gateways,httproutes,grpcroutes -n parametric
+kubectl get httproute <route> -n parametric -o jsonpath='{.status.parents[*].conditions}'
+
+# --- HPA / Observability ---
+kubectl describe hpa compute-hpa -n parametric
+kubectl get pods -n parametric -l tier=observe
+kubectl logs -n parametric -l app=alloy --tail=50
+
+# --- Debug Containers (stable 1.25+) ---
+kubectl debug <pod> -n parametric -it --image=nicolaka/netshoot --target=api
+kubectl debug <pod> -it --copy-to=debug-pod --share-processes --container=api -- /bin/sh
+kubectl debug node/<node> -it --image=ubuntu
+
+# --- Sidecar Containers (GA 1.33+) ---
+kubectl get pod <pod> -n parametric -o jsonpath='{.spec.initContainers[?(@.restartPolicy=="Always")]}'
+kubectl get pod <pod> -n parametric -o jsonpath='{.status.initContainerStatuses[*].name}'
+
+# --- In-Place Pod Resize (GA 1.35+) ---
+kubectl patch pod <pod> -n parametric --subresource resize --type merge -p \
+  '{"spec":{"containers":[{"name":"api","resources":{"requests":{"cpu":"500m","memory":"512Mi"},"limits":{"cpu":"1000m","memory":"1Gi"}}}]}}'
+# > [IMPORTANT] kubectl patch --subresource resize is temporary. Update deploy.ts resource specs + pulumi up.
+kubectl get pod <pod> -n parametric -o jsonpath='{.status.resize}'
+
+# --- ValidatingAdmissionPolicy (GA 1.30+) ---
+kubectl get validatingadmissionpolicies
+kubectl get events --field-selector reason=ValidatingAdmissionPolicyRejection -n parametric
+
+# --- Wait / Condition-Based ---
+kubectl wait --for=condition=ready pod -l app=parametric-api -n parametric --timeout=120s
+kubectl wait --for=condition=available deployment/compute-deploy -n parametric --timeout=300s
+
+# --- ConfigMap / Secret Verification ---
+kubectl get configmap compute-config -n parametric -o yaml
+kubectl get secret compute-secret -n parametric -o jsonpath='{.data}' | jq 'keys'
+
+# --- EKS-Specific ---
+aws eks describe-cluster --name <cluster>
+kubectl get pods -n kube-system -l k8s-app=aws-node
+kubectl logs -n kube-system -l k8s-app=aws-node --tail=50
+
+# --- Emergency (IaC-first: all state-modifying commands below are temporary) ---
+kubectl rollout restart deployment/compute-deploy -n parametric
+# > [IMPORTANT] Temporary fix. Update deploy.ts image tag or config for permanent resolution via pulumi up.
+kubectl rollout undo deployment/compute-deploy -n parametric
+# > [IMPORTANT] Temporary rollback. Fix root cause in deploy.ts and redeploy via pulumi up.
+kubectl delete pod <pod> -n parametric --force --grace-period=0
+# > [IMPORTANT] Temporary. Investigate root cause in deployment config (deploy.ts).
+kubectl drain <node> --ignore-daemonsets --delete-emptydir-data
+# > [CRITICAL] Bypasses Pulumi state. Coordinate with Pulumi node group config. Run pulumi refresh after.
+kubectl scale deployment/compute-deploy -n parametric --replicas=N
+# > [IMPORTANT] Temporary. Update HPA/deployment replica specs in Pulumi for permanent resolution via pulumi up.
+kubectl taint nodes <node> <key>:<effect>-
+# > [CRITICAL] Bypasses Pulumi state. Update deploy.ts toleration/taint config + pulumi up.
 ```
 
-This script gathers:
-- Pod status and description
-- Pod events
-- Container logs (current and previous)
-- Resource usage
-- Node information
-- YAML configuration
+---
+## [4][EKS_DEBUGGING]
+>**Dictum:** *EKS-specific issues require AWS-level diagnostics.*
 
-Output can be saved for analysis:
+<br>
 
-```bash
-python3 ./scripts/pod_diagnostics.py <pod-name> -n <namespace> -o diagnostics.txt
-```
+| [INDEX] | [SYMPTOM]                         | [DIAGNOSTIC]                                                                         | [FIX]                                                                   |
+| :-----: | --------------------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
+|   [1]   | **Pod stuck `ContainerCreating`** | `kubectl logs -n kube-system -l k8s-app=aws-node --tail=50`                          | VPC CNI IP exhaustion: scale nodes, prefix delegation, larger instance. |
+|   [2]   | **Pod cannot reach AWS APIs**     | `kubectl describe sa <sa> -n parametric`                                             | IRSA: annotate SA with `eks.amazonaws.com/role-arn`.                    |
+|   [3]   | **Node cannot join cluster**      | `aws eks describe-nodegroup --cluster-name <c> --nodegroup-name <ng>`                | Attach EKS node IAM policies.                                           |
+|   [4]   | **Add-on unhealthy**              | `aws eks describe-addon --cluster-name <c> --addon-name <name>`                      | `aws eks update-addon --addon-version <latest>`.                        |
+|   [5]   | **CoreDNS CrashLoop on EKS**      | `kubectl logs -n kube-system -l k8s-app=kube-dns`                                    | Add Fargate profile or patch compute type.                              |
+|   [6]   | **ALB not routing**               | `kubectl logs -n kube-system -l app.kubernetes.io/name=aws-load-balancer-controller` | Check subnet tags + IAM policy (project uses nginx, not ALB).           |
 
-#### Cluster-Level Health Check
-Use `./scripts/cluster_health.sh` for overall cluster diagnostics:
+---
+## [5][SCRIPTS]
+>**Dictum:** *Automated collection prevents missed diagnostics.*
 
-```bash
-./scripts/cluster_health.sh > cluster-health-$(date +%Y%m%d-%H%M%S).txt
-```
+| [INDEX] | [SCRIPT]                         | [SCOPE]               | [USAGE]                                                                            |
+| :-----: | -------------------------------- | --------------------- | ---------------------------------------------------------------------------------- |
+|   [1]   | **`scripts/pod_diagnostics.py`** | Single pod deep-dive  | `python3 scripts/pod_diagnostics.py <pod> -n parametric [-c api] [-o report.txt]`. |
+|   [2]   | **`scripts/_collectors.py`**     | Diagnostic collectors | Imported by `pod_diagnostics.py` (not run directly).                               |
+|   [3]   | **`scripts/cluster_health.sh`**  | Cluster-wide overview | `./scripts/cluster_health.sh`.                                                     |
+|   [4]   | **`scripts/network_debug.sh`**   | Network connectivity  | `./scripts/network_debug.sh parametric <pod>`.                                     |
 
-This script checks:
-- Cluster info and version
-- Node status and resources
-- Pods across all namespaces
-- Failed/pending pods
-- Recent events
-- Deployments, services, statefulsets, daemonsets
-- PVCs and PVs
-- Component health
-- Common error states (CrashLoopBackOff, ImagePullBackOff)
+---
+## [6][ESCALATION_CHECKLIST]
+>**Dictum:** *Systematic escalation prevents missed root causes.*
 
-#### Network Diagnostics
-Use `./scripts/network_debug.sh` for connectivity issues:
-
-```bash
-./scripts/network_debug.sh <namespace> <pod-name>
-# or force warning sensitivity / insecure TLS only when explicitly needed:
-./scripts/network_debug.sh --strict <namespace> <pod-name>
-./scripts/network_debug.sh --insecure <namespace> <pod-name>
-```
-
-This script analyzes:
-- Pod network configuration
-- DNS setup and resolution
-- Service endpoints
-- Network policies
-- Connectivity tests
-- CoreDNS logs
-
-### 4. Follow Issue-Specific Reference Workflow
-
-Based on the identified issue, consult `./references/troubleshooting_workflow.md`:
-
-- **Pod Pending**: Resource/scheduling workflow
-- **CrashLoopBackOff**: Application crash workflow
-- **ImagePullBackOff**: Image pull workflow
-- **Service issues**: Network connectivity workflow
-- **DNS failures**: DNS troubleshooting workflow
-- **Resource exhaustion**: Performance investigation workflow
-- **Storage issues**: PVC binding workflow
-- **Deployment stuck**: Rollout workflow
-
-### 5. Apply Targeted Fixes
-
-Refer to `./references/common_issues.md` for symptom-specific fixes.
-
-### 6. Verify and Close
-
-Run final verification:
-
-```bash
-kubectl get pods -n <namespace> -o wide
-kubectl get events -n <namespace> --sort-by='.lastTimestamp' | tail -20
-kubectl rollout status deployment/<name> -n <namespace>
-```
-
-Issue is done when user-visible behavior is healthy and no new critical warning events appear.
-
-## Example Flows
-
-### Example 1: CrashLoopBackOff in `payments` Namespace
-
-```bash
-python3 ./scripts/pod_diagnostics.py payments-api-7c97f95dfb-q9l7k -n payments -o payments-diagnostics.txt
-kubectl logs payments-api-7c97f95dfb-q9l7k -n payments --previous --tail=100
-kubectl get deploy payments-api -n payments -o yaml | grep -A 8 livenessProbe
-```
-
-Then open `./references/common_issues.md` and apply the `CrashLoopBackOff` solutions.
-
-### Example 2: Service DNS/Connectivity Failure
-
-```bash
-./scripts/network_debug.sh checkout checkout-api-75f49c9d8f-z6qtm
-kubectl get svc checkout-api -n checkout
-kubectl get endpoints checkout-api -n checkout
-kubectl get networkpolicies -n checkout
-```
-
-Then follow `Service Connectivity Workflow` in `./references/troubleshooting_workflow.md`.
-
-## Essential Manual Commands
-
-### Pod Debugging
-
-```bash
-# View pod status
-kubectl get pods -n <namespace> -o wide
-
-# Detailed pod information
-kubectl describe pod <pod-name> -n <namespace>
-
-# View logs
-kubectl logs <pod-name> -n <namespace>
-kubectl logs <pod-name> -n <namespace> --previous  # Previous container
-kubectl logs <pod-name> -n <namespace> -c <container>  # Specific container
-
-# Execute commands in pod
-kubectl exec <pod-name> -n <namespace> -it -- /bin/sh
-
-# Get pod YAML
-kubectl get pod <pod-name> -n <namespace> -o yaml
-```
-
-### Service and Network Debugging
-
-```bash
-# Check services
-kubectl get svc -n <namespace>
-kubectl describe svc <service-name> -n <namespace>
-
-# Check endpoints
-kubectl get endpoints -n <namespace>
-
-# Test DNS
-kubectl exec <pod-name> -n <namespace> -- nslookup kubernetes.default
-
-# View events
-kubectl get events -n <namespace> --sort-by='.lastTimestamp'
-```
-
-### Resource Monitoring
-
-```bash
-# Node resources
-kubectl top nodes
-kubectl describe nodes
-
-# Pod resources
-kubectl top pods -n <namespace>
-kubectl top pod <pod-name> -n <namespace> --containers
-```
-
-### Emergency Operations
-
-```bash
-# Restart deployment
-kubectl rollout restart deployment/<name> -n <namespace>
-
-# Rollback deployment
-kubectl rollout undo deployment/<name> -n <namespace>
-
-# Force delete stuck pod
-kubectl delete pod <pod-name> -n <namespace> --force --grace-period=0
-
-# Drain node (maintenance)
-kubectl drain <node-name> --ignore-daemonsets --delete-emptydir-data
-
-# Cordon node (prevent scheduling)
-kubectl cordon <node-name>
-```
-
-## Completion Criteria
-
-Troubleshooting session is complete when all are true:
-- [ ] Cluster context and namespace are confirmed.
-- [ ] Relevant diagnostic script output is captured.
-- [ ] Root cause is identified and tied to evidence (events/logs/config/state).
-- [ ] Any disruptive action was preceded by snapshot and rollback plan.
-- [ ] Fix verification commands show healthy state.
-- [ ] Reference path used (`./references/troubleshooting_workflow.md` or `./references/common_issues.md`) is documented in notes.
-
-## Related Tools
-
-Useful additional tools for Kubernetes debugging:
-- **kubectl-debug**: Advanced debugging plugin
-- **stern**: Multi-pod log tailing
-- **kubectx/kubens**: Context and namespace switching
-- **k9s**: Terminal UI for Kubernetes
-- **lens**: Desktop IDE for Kubernetes
-- **Prometheus/Grafana**: Monitoring and alerting
-- **Jaeger/Zipkin**: Distributed tracing
+- [ ] Pod events + current/previous logs.
+- [ ] Startup (150s) vs liveness (30s) probe failure distinguished.
+- [ ] Node resources: `kubectl top nodes`.
+- [ ] Image tag exists in registry.
+- [ ] Service selector matches labels (`app: parametric-api`) + DNS resolves.
+- [ ] NetworkPolicies not blocking + ConfigMap/Secret/env vars present.
+- [ ] HPA status + Ingress/TLS healthy.
+- [ ] Sidecar containers (1.33+) + in-place resize status (1.35+).
+- [ ] (EKS) VPC CNI health + IRSA annotation.

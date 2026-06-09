@@ -1,100 +1,158 @@
 ---
 name: fundamentals
-description: Get fundamental financial data including financials, earnings, and key metrics. Use when user asks about financials, earnings, revenue, profit, balance sheet, income statement, or company fundamentals.
-dependencies: ["trading-skills"]
+description: Core JavaScript fundamentals including variables, data types, operators, control flow, and basic syntax. Essential foundation for all JavaScript development.
+sasmp_version: "1.3.0"
+bonded_agent: 01-javascript-fundamentals
+bond_type: PRIMARY_BOND
+
+# Production-Grade Configuration
+skill_type: reference
+response_format: code_first
+max_tokens: 1500
+
+parameter_validation:
+  required: [topic]
+  optional: [depth, examples]
+
+retry_logic:
+  on_ambiguity: ask_clarification
+  fallback: provide_basics_first
+
+observability:
+  entry_log: "Fundamentals skill activated"
+  exit_log: "Fundamentals reference provided"
 ---
 
-# Fundamentals
+# JavaScript Fundamentals Skill
 
-Fetch fundamental financial data from Yahoo Finance.
+## Quick Reference Card
 
-## Instructions
-
-> **Note:** If `uv` is not installed or `pyproject.toml` is not found, replace `uv run python` with `python` in all commands below.
-
-```bash
-uv run python scripts/fundamentals.py SYMBOL [--type TYPE]
+### Variable Declaration
+```javascript
+const PI = 3.14159;     // Immutable binding (preferred)
+let count = 0;          // Reassignable
+var legacy = "avoid";   // Function-scoped (avoid)
 ```
 
-## Arguments
+### 8 Data Types
+| Type | Example | typeof |
+|------|---------|--------|
+| String | `"hello"` | `"string"` |
+| Number | `42`, `3.14`, `NaN` | `"number"` |
+| Boolean | `true`, `false` | `"boolean"` |
+| Null | `null` | `"object"` |
+| Undefined | `undefined` | `"undefined"` |
+| Symbol | `Symbol('id')` | `"symbol"` |
+| BigInt | `9007199254740991n` | `"bigint"` |
+| Object | `{}`, `[]`, `fn` | `"object"` |
 
-- `SYMBOL` - Ticker symbol
-- `--type` - Data type: all, financials, earnings, info (default: all)
+### Operators Cheat Sheet
+```javascript
+// Arithmetic
++ - * / % **
 
-## Output
+// Comparison (always use strict)
+=== !== > < >= <=
 
-Returns JSON with:
-- `info` - Key metrics (market cap, PE, EPS, dividend, etc.)
-- `financials` - Recent quarterly/annual income statement data
-- `earnings` - Historical and estimated earnings
+// Logical
+&& || !
 
-Present key metrics clearly. Compare actual vs estimated earnings if relevant.
+// Nullish
+?? ?.
 
----
-
-## Piotroski F-Score
-
-Calculate Piotroski's F-Score to evaluate a company's financial strength using 9 fundamental criteria.
-
-### Instructions
-
-```bash
-uv run python scripts/piotroski.py SYMBOL
+// Assignment
+= += -= *= /= ??= ||= &&=
 ```
 
-### What is Piotroski F-Score?
+### Control Flow Patterns
+```javascript
+// Early return (preferred)
+function validate(input) {
+  if (!input) return { error: 'Required' };
+  if (input.length < 3) return { error: 'Too short' };
+  return { valid: true };
+}
 
-Piotroski's F-Score is a fundamental analysis tool developed by Joseph Piotroski that evaluates a company's financial strength using 9 criteria. Each criterion scores 1 point if passed, 0 if failed, for a maximum score of 9.
+// Switch with exhaustive handling
+function getColor(status) {
+  switch (status) {
+    case 'success': return 'green';
+    case 'warning': return 'yellow';
+    case 'error': return 'red';
+    default: return 'gray';
+  }
+}
+```
 
-### The 9 Criteria
+### Type Coercion Rules
+```javascript
+// Explicit conversion (preferred)
+Number('42')     // 42
+String(42)       // "42"
+Boolean(1)       // true
 
-1. **Positive Net Income** - Company is profitable
-2. **Positive ROA** - Assets are generating returns
-3. **Positive Operating Cash Flow** - Company generates cash from operations
-4. **Cash Flow > Net Income** - High-quality earnings (cash exceeds accounting profit)
-5. **Lower Long-Term Debt** - Decreasing leverage (improving financial position)
-6. **Higher Current Ratio** - Improving liquidity
-7. **No New Shares Issued** - No dilution (or share buybacks)
-8. **Higher Gross Margin** - Improving profitability efficiency
-9. **Higher Asset Turnover** - More efficient use of assets
+// Truthy values: non-zero numbers, non-empty strings, objects
+// Falsy values: 0, "", null, undefined, NaN, false
+```
 
-### Score Interpretation
+### Modern Operators
+```javascript
+// Nullish coalescing
+const name = input ?? 'Guest';     // Only null/undefined
 
-- **8-9:** Excellent - Very strong financial health
-- **6-7:** Good - Strong financial health
-- **4-5:** Fair - Moderate financial health
-- **0-3:** Poor - Weak financial health
+// Optional chaining
+const city = user?.address?.city;  // Safe navigation
 
-### Output
+// Logical assignment
+config.debug ??= false;            // Assign if nullish
+```
 
-Returns JSON with:
-- `score` - F-Score (0-9)
-- `max_score` - Maximum possible score (9)
-- `criteria` - Detailed breakdown of each criterion with pass/fail status and values
-- `interpretation` - Text description of financial health level
-- `data_available` - Boolean indicating if year-over-year comparison data is available for criteria 5-9
+## Troubleshooting
 
-### Implementation Details
+### Common Issues
 
-- Criteria 1-4 use quarterly financial data (most recent year)
-- Criteria 5-9 use annual financial data for year-over-year comparisons
-- Compares most recent fiscal year vs previous fiscal year
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `ReferenceError: x is not defined` | Variable not declared | Check spelling, scope |
+| `TypeError: Cannot read property` | Accessing null/undefined | Use optional chaining `?.` |
+| `NaN` result | Invalid number operation | Validate input types |
+| Unexpected `true`/`false` | Loose equality `==` | Use strict `===` |
 
-### Use Cases
+### Debug Checklist
+```javascript
+// 1. Check type
+console.log(typeof variable);
 
-Use Piotroski F-Score when:
-- Evaluating fundamental financial strength
-- Screening for value stocks with improving fundamentals
-- Assessing financial health trends
-- Comparing financial strength across companies
-- Identifying companies with strong fundamentals but undervalued prices
+// 2. Check value
+console.log(JSON.stringify(variable));
 
-## Dependencies
+// 3. Check for null/undefined
+console.log(variable === null, variable === undefined);
 
-- `pandas`
-- `yfinance`
+// 4. Use debugger
+debugger;
+```
 
+## Production Patterns
 
-## Timezone
+### Input Validation
+```javascript
+function processNumber(value) {
+  if (typeof value !== 'number' || Number.isNaN(value)) {
+    throw new TypeError('Expected a valid number');
+  }
+  return value * 2;
+}
+```
 
-All timestamps and time-based calculations must use the `America/New_York` timezone. All JSON output must include `generated_at` (NY time string) and `data_delay` fields.
+### Safe Property Access
+```javascript
+const city = user?.address?.city ?? 'Unknown';
+const callback = options.onComplete?.();
+```
+
+## Related
+
+- **Agent 01**: JavaScript Fundamentals (detailed learning)
+- **Skill: functions**: Function patterns
+- **Skill: data-structures**: Objects and arrays

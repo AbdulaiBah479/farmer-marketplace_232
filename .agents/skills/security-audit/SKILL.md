@@ -1,222 +1,127 @@
 ---
 name: security-audit
-description: "Comprehensive security auditing workflow covering web application testing, API security, penetration testing, vulnerability scanning, and security hardening."
-category: workflow-bundle
-risk: safe
-source: personal
-date_added: "2026-02-27"
+description: "Comprehensive security audit of codebase using multiple security-auditor agents. Use before production deployments or after major features."
+model: claude-sonnet-4-20250514
+allowed-tools: Read, Write, Glob, Grep, Task
 ---
 
-# Security Auditing Workflow Bundle
+# /security-audit
 
-## Overview
+Multi-agent security audit with findings saved to timestamped report.
 
-Comprehensive security auditing workflow for web applications, APIs, and infrastructure. This bundle orchestrates skills for penetration testing, vulnerability assessment, security scanning, and remediation.
+## Usage
 
-## When to Use This Workflow
-
-Use this workflow when:
-- Performing security audits on web applications
-- Testing API security
-- Conducting penetration tests
-- Scanning for vulnerabilities
-- Hardening application security
-- Compliance security assessments
-
-## Workflow Phases
-
-### Phase 1: Reconnaissance
-
-#### Skills to Invoke
-- `scanning-tools` - Security scanning
-- `shodan-reconnaissance` - Shodan searches
-- `top-web-vulnerabilities` - OWASP Top 10
-
-#### Actions
-1. Identify target scope
-2. Gather intelligence
-3. Map attack surface
-4. Identify technologies
-5. Document findings
-
-#### Copy-Paste Prompts
-```
-Use @scanning-tools to perform initial reconnaissance
+```bash
+/security-audit yourbench           # Full security review
+/security-audit coordinatr          # Audit specific project
 ```
 
-```
-Use @shodan-reconnaissance to find exposed services
-```
+## Audit Dimensions
 
-### Phase 2: Vulnerability Scanning
+Five security-auditor agents run in parallel:
 
-#### Skills to Invoke
-- `vulnerability-scanner` - Vulnerability analysis
-- `security-scanning-security-sast` - Static analysis
-- `security-scanning-security-dependencies` - Dependency scanning
+| Agent | Focus Area | Checks |
+|-------|------------|--------|
+| **Agent 1: Auth & Access** | Authentication, Authorization | JWT handling, session management, RBAC, privilege escalation |
+| **Agent 2: Input & Data** | Injection, Validation | SQL injection, XSS, command injection, input sanitization |
+| **Agent 3: Crypto & Secrets** | Cryptography, Secrets | Hardcoded credentials, weak crypto, key management, PII |
+| **Agent 4: Config & Deploy** | Configuration, Infrastructure | CORS, CSRF, security headers, exposed endpoints, debug mode |
+| **Agent 5: Dependencies** | Supply Chain, Libraries | Vulnerable packages, outdated deps, license issues |
 
-#### Actions
-1. Run automated scanners
-2. Perform static analysis
-3. Scan dependencies
-4. Identify misconfigurations
-5. Document vulnerabilities
+## OWASP Top 10 Coverage
 
-#### Copy-Paste Prompts
-```
-Use @vulnerability-scanner to scan for OWASP Top 10 vulnerabilities
-```
+| OWASP Risk | Coverage |
+|------------|----------|
+| A01 Broken Access Control | Agent 1 |
+| A02 Cryptographic Failures | Agent 3 |
+| A03 Injection | Agent 2 |
+| A04 Insecure Design | Agents 1, 4 |
+| A05 Security Misconfiguration | Agent 4 |
+| A06 Vulnerable Components | Agent 5 |
+| A07 Auth Failures | Agent 1 |
+| A08 Data Integrity Failures | Agents 2, 3 |
+| A09 Logging Failures | Agent 4 |
+| A10 SSRF | Agent 2 |
 
-```
-Use @security-scanning-security-dependencies to audit dependencies
-```
+## Execution Flow
 
-### Phase 3: Web Application Testing
-
-#### Skills to Invoke
-- `top-web-vulnerabilities` - OWASP vulnerabilities
-- `sql-injection-testing` - SQL injection
-- `xss-html-injection` - XSS testing
-- `broken-authentication` - Authentication testing
-- `idor-testing` - IDOR testing
-- `file-path-traversal` - Path traversal
-- `burp-suite-testing` - Burp Suite testing
-
-#### Actions
-1. Test for injection flaws
-2. Test authentication mechanisms
-3. Test session management
-4. Test access controls
-5. Test input validation
-6. Test security headers
-
-#### Copy-Paste Prompts
-```
-Use @sql-injection-testing to test for SQL injection vulnerabilities
+### 1. Validate Project
+```bash
+ls spaces/[project]/
 ```
 
-```
-Use @xss-html-injection to test for cross-site scripting
-```
+### 2. Launch Parallel Audits
+5 security-auditor agents run concurrently with focused prompts.
 
-```
-Use @broken-authentication to test authentication security
-```
+### 3. Consolidate Findings
+Aggregate by:
+- **Severity**: Critical, High, Medium, Low, Info
+- **Category**: OWASP classification
+- **Location**: File path + line number
+- **Remediation**: Specific fix guidance
 
-### Phase 4: API Security Testing
-
-#### Skills to Invoke
-- `api-fuzzing-bug-bounty` - API fuzzing
-- `api-security-best-practices` - API security
-
-#### Actions
-1. Enumerate API endpoints
-2. Test authentication/authorization
-3. Test rate limiting
-4. Test input validation
-5. Test error handling
-6. Document API vulnerabilities
-
-#### Copy-Paste Prompts
-```
-Use @api-fuzzing-bug-bounty to fuzz API endpoints
+### 4. Generate Report
+```bash
+Write: .claude/temp/security-audit-[project]-[timestamp].md
 ```
 
-### Phase 5: Penetration Testing
+## Report Structure
 
-#### Skills to Invoke
-- `pentest-commands` - Penetration testing commands
-- `pentest-checklist` - Pentest planning
-- `ethical-hacking-methodology` - Ethical hacking
-- `metasploit-framework` - Metasploit
+```markdown
+# Security Audit: [Project Name]
+**Date**: YYYY-MM-DD HH:MM:SS
 
-#### Actions
-1. Plan penetration test
-2. Execute attack scenarios
-3. Exploit vulnerabilities
-4. Document proof of concept
-5. Assess impact
+## Executive Summary
+- Critical issues: X
+- High severity: Y
+- Total findings: Z
 
-#### Copy-Paste Prompts
-```
-Use @pentest-checklist to plan penetration test
-```
+## Critical Issues
+### [Issue Title]
+- **Severity**: Critical
+- **Category**: SQL Injection (CWE-89)
+- **Location**: src/api/users.py:42
+- **Description**: [What's wrong]
+- **Impact**: [What could happen]
+- **Remediation**: [How to fix]
 
-```
-Use @pentest-commands to execute penetration testing
-```
+## High Severity Issues
+[...]
 
-### Phase 6: Security Hardening
+## Recommendations
+- Priority actions
+- Long-term improvements
 
-#### Skills to Invoke
-- `security-scanning-security-hardening` - Security hardening
-- `auth-implementation-patterns` - Authentication
-- `api-security-best-practices` - API security
-
-#### Actions
-1. Implement security controls
-2. Configure security headers
-3. Set up authentication
-4. Implement authorization
-5. Configure logging
-6. Apply patches
-
-#### Copy-Paste Prompts
-```
-Use @security-scanning-security-hardening to harden application security
+## Scan Coverage
+- Files scanned: X
+- Technologies: Z
 ```
 
-### Phase 7: Reporting
+## When to Use
 
-#### Skills to Invoke
-- `reporting-standards` - Security reporting
+- Before production deployments
+- After major feature additions
+- Monthly security reviews
+- Before external security audits
+- After dependency updates
 
-#### Actions
-1. Document findings
-2. Assess risk levels
-3. Provide remediation steps
-4. Create executive summary
-5. Generate technical report
+## Output Location
 
-## Security Testing Checklist
+```
+.claude/temp/security-audit-yourbench-2026-01-08-143022.md
+```
 
-### OWASP Top 10
-- [ ] Injection (SQL, NoSQL, OS, LDAP)
-- [ ] Broken Authentication
-- [ ] Sensitive Data Exposure
-- [ ] XML External Entities (XXE)
-- [ ] Broken Access Control
-- [ ] Security Misconfiguration
-- [ ] Cross-Site Scripting (XSS)
-- [ ] Insecure Deserialization
-- [ ] Using Components with Known Vulnerabilities
-- [ ] Insufficient Logging & Monitoring
+Reports saved to `.claude/temp/` (gitignored) for review.
 
-### API Security
-- [ ] Authentication mechanisms
-- [ ] Authorization checks
-- [ ] Rate limiting
-- [ ] Input validation
-- [ ] Error handling
-- [ ] Security headers
+## Notes
 
-## Quality Gates
+- **Read-only**: No code changes made
+- **Non-blocking**: Doesn't prevent commits
+- **Parallel execution**: Agents run concurrently
+- **False positives possible**: Manual review recommended
 
-- [ ] All planned tests executed
-- [ ] Vulnerabilities documented
-- [ ] Proof of concepts captured
-- [ ] Risk assessments completed
-- [ ] Remediation steps provided
-- [ ] Report generated
+## Integration
 
-## Related Workflow Bundles
-
-- `development` - Secure development practices
-- `wordpress` - WordPress security
-- `cloud-devops` - Cloud security
-- `testing-qa` - Security testing
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
+```
+Implement security feature → /security-audit → Fix issues → /commit
+```

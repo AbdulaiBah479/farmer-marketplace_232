@@ -25,7 +25,6 @@ Build production agents using `create_agent()`, middleware patterns, and the `@t
 
 <ex-basic-agent>
 <python>
-
 ```python
 from langchain.agents import create_agent
 from langchain_core.tools import tool
@@ -52,7 +51,6 @@ print(result["messages"][-1].content)
 ```
 </python>
 <typescript>
-
 ```typescript
 import { createAgent } from "langchain";
 import { tool } from "@langchain/core/tools";
@@ -84,7 +82,6 @@ console.log(result.messages[result.messages.length - 1].content);
 <ex-agent-with-persistence>
 <python>
 Add MemorySaver checkpointer to maintain conversation state across invocations.
-
 ```python
 from langchain.agents import create_agent
 from langgraph.checkpoint.memory import MemorySaver
@@ -105,7 +102,6 @@ result = agent.invoke({"messages": [{"role": "user", "content": "What's my name?
 </python>
 <typescript>
 Add MemorySaver checkpointer to maintain conversation state across invocations.
-
 ```typescript
 import { createAgent } from "langchain";
 import { MemorySaver } from "@langchain/langgraph";
@@ -134,35 +130,31 @@ Tools are functions that agents can call. Use the `@tool` decorator (Python) or 
 
 <ex-basic-tool>
 <python>
-
 ```python
 from langchain_core.tools import tool
 
 @tool
-def add(a: float, b: float) -> float:
-    """Add two numbers.
+def calculate(expression: str) -> str:
+    """Evaluate a mathematical expression.
 
     Args:
-        a: First number
-        b: Second number
+        expression: Math expression like "2 + 2" or "10 * 5"
     """
-    return a + b
+    return str(eval(expression))
 ```
 </python>
 <typescript>
-
 ```typescript
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 
-const add = tool(
-  async ({ a, b }) => a + b,
+const calculate = tool(
+  async ({ expression }) => String(eval(expression)),
   {
-    name: "add",
-    description: "Add two numbers.",
+    name: "calculate",
+    description: "Evaluate a mathematical expression.",
     schema: z.object({
-      a: z.number().describe("First number"),
-      b: z.number().describe("Second number"),
+      expression: z.string().describe("Math expression like '2 + 2' or '10 * 5'"),
     }),
   }
 );
@@ -176,11 +168,9 @@ const add = tool(
 Middleware intercepts the agent loop to add human approval, error handling, logging, and more. A deep understanding of middleware is essential for production agents — use `HumanInTheLoopMiddleware` (Python) / `humanInTheLoopMiddleware` (TypeScript) for approval workflows, and `@wrap_tool_call` (Python) / `createMiddleware` (TypeScript) for custom hooks.
 
 Key imports:
-
 ```python
 from langchain.agents.middleware import HumanInTheLoopMiddleware, wrap_tool_call
 ```
-
 ```typescript
 import { humanInTheLoopMiddleware, createMiddleware } from "langchain";
 ```
@@ -197,7 +187,6 @@ Key patterns:
 Get typed, validated responses from agents using `response_format` or `with_structured_output()`.
 
 <python>
-
 ```python
 from langchain.agents import create_agent
 from pydantic import BaseModel, Field
@@ -221,7 +210,6 @@ response = structured_model.invoke("Extract: John, john@example.com, 555-1234")
 ```
 </python>
 <typescript>
-
 ```typescript
 import { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
@@ -256,7 +244,6 @@ agent = create_agent(model=ChatAnthropic(model="claude-sonnet-4-5", temperature=
 <fix-missing-tool-description>
 <python>
 Clear descriptions help the agent know when to use each tool.
-
 ```python
 # WRONG: Vague or missing description
 @tool
@@ -279,7 +266,6 @@ def search(query: str) -> str:
 </python>
 <typescript>
 Clear descriptions help the agent know when to use each tool.
-
 ```typescript
 // WRONG: Vague description
 const badTool = tool(async ({ input }) => "result", {
@@ -303,7 +289,6 @@ const search = tool(async ({ query }) => webSearch(query), {
 <fix-no-checkpointer>
 <python>
 Add checkpointer and thread_id for conversation memory across invocations.
-
 ```python
 # WRONG: No persistence - agent forgets between calls
 agent = create_agent(model="anthropic:claude-sonnet-4-5", tools=[search])
@@ -327,7 +312,6 @@ agent.invoke({"messages": [{"role": "user", "content": "What's my name?"}]}, con
 </python>
 <typescript>
 Add checkpointer and thread_id for conversation memory across invocations.
-
 ```typescript
 // WRONG: No persistence
 const agent = createAgent({ model: "anthropic:claude-sonnet-4-5", tools: [search] });
@@ -354,7 +338,6 @@ await agent.invoke({ messages: [{ role: "user", content: "What's my name?" }] },
 <fix-infinite-loop>
 <python>
 Set recursion_limit in the invoke config to prevent runaway agent loops.
-
 ```python
 # WRONG: No iteration limit - could loop forever
 result = agent.invoke({"messages": [("user", "Do research")]})
@@ -368,7 +351,6 @@ result = agent.invoke(
 </python>
 <typescript>
 Set recursionLimit in the invoke config to prevent runaway agent loops.
-
 ```typescript
 // WRONG: No iteration limit
 const result = await agent.invoke({ messages: [["user", "Do research"]] });
@@ -385,7 +367,6 @@ const result = await agent.invoke(
 <fix-accessing-result-wrong>
 <python>
 Access the messages array from the result, not result.content directly.
-
 ```python
 # WRONG: Trying to access result.content directly
 result = agent.invoke({"messages": [{"role": "user", "content": "Hello"}]})
@@ -398,7 +379,6 @@ print(result["messages"][-1].content)  # Last message content
 </python>
 <typescript>
 Access the messages array from the result, not result.content directly.
-
 ```typescript
 // WRONG: Trying to access result.content directly
 const result = await agent.invoke({ messages: [{ role: "user", content: "Hello" }] });

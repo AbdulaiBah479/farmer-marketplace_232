@@ -1,340 +1,521 @@
 ---
-name: stripe-payments
-description: "Add Stripe payments to a web app — Checkout Sessions, Payment Intents, subscriptions, webhooks, customer portal, and pricing pages. Covers the decision of which Stripe API to use, produces working integration code, and handles webhook verification. No MCP server needed — uses Stripe npm package directly. Triggers: 'add payments', 'stripe', 'checkout', 'subscription', 'payment form', 'pricing page', 'billing', 'accept payments', 'stripe webhook', 'customer portal'."
-compatibility: claude-code-only
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Bash
-  - Glob
-  - Grep
+name: Stripe Payments
+description: Automate Stripe payment processing, subscription management, invoicing, and financial reporting
+version: 1.0.0
+author: Claude Office Skills
+category: payments
+tags:
+  - stripe
+  - payments
+  - subscriptions
+  - billing
+  - fintech
+department: finance
+models:
+  - claude-3-opus
+  - claude-3-sonnet
+  - gpt-4
+mcp:
+  server: payments-mcp
+  tools:
+    - stripe_charges
+    - stripe_customers
+    - stripe_subscriptions
+    - stripe_invoices
+capabilities:
+  - Payment processing
+  - Subscription lifecycle
+  - Invoice management
+  - Revenue analytics
+input:
+  - Payment details
+  - Customer data
+  - Subscription plans
+  - Invoice configurations
+output:
+  - Payment confirmations
+  - Subscription status
+  - Financial reports
+  - Webhook events
+languages:
+  - en
+related_skills:
+  - subscription-management
+  - invoice-automation
+  - saas-metrics
 ---
 
 # Stripe Payments
 
-Add Stripe payments to a web app. Covers the common patterns — one-time payments, subscriptions, webhooks, customer portal — with working code. No MCP server needed.
+Comprehensive skill for automating Stripe payment processing and subscription management.
 
-## Which Stripe API Do I Need?
+## Core Workflows
 
-| You want to... | Use | Complexity |
-|----------------|-----|-----------|
-| Accept a one-time payment | Checkout Sessions | Low — Stripe hosts the payment page |
-| Embed a payment form in your UI | Payment Element + Payment Intents | Medium — you build the form, Stripe handles the card |
-| Recurring billing / subscriptions | Checkout Sessions (subscription mode) | Low-Medium |
-| Save a card for later | Setup Intents | Low |
-| Marketplace / platform payments | Stripe Connect | High |
-| Let customers manage billing | Customer Portal | Low — Stripe hosts it |
+### 1. Payment Flow
 
-**Default recommendation**: Start with Checkout Sessions. It's the fastest path to accepting money. You can always add embedded forms later.
-
-## Setup
-
-### Install
-
-```bash
-npm install stripe @stripe/stripe-js
+```
+STRIPE PAYMENT FLOW:
+┌─────────────────┐
+│    Customer     │
+│  Payment Intent │
+└────────┬────────┘
+         ▼
+┌─────────────────┐
+│    Checkout     │
+│  - Card Input   │
+│  - Validation   │
+└────────┬────────┘
+         ▼
+┌─────────────────┐
+│   Processing    │
+│  - Auth         │
+│  - Capture      │
+└────────┬────────┘
+         ▼
+┌─────────────────┐
+│   Confirmation  │
+│  - Receipt      │
+│  - Webhook      │
+└─────────────────┘
 ```
 
-### API Keys
+### 2. Webhook Events
 
-```bash
-# Get keys from: https://dashboard.stripe.com/apikeys
-# Test keys start with sk_test_ and pk_test_
-# Live keys start with sk_live_ and pk_live_
-
-# For Cloudflare Workers — store as secrets:
-npx wrangler secret put STRIPE_SECRET_KEY
-npx wrangler secret put STRIPE_WEBHOOK_SECRET
-
-# For local dev — .dev.vars:
-STRIPE_SECRET_KEY=sk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-STRIPE_PUBLISHABLE_KEY=pk_test_...
+```yaml
+webhook_handlers:
+  payment_intent.succeeded:
+    actions:
+      - fulfill_order
+      - send_receipt
+      - update_crm
+      
+  payment_intent.payment_failed:
+    actions:
+      - notify_customer
+      - retry_payment
+      - log_failure
+      
+  customer.subscription.created:
+    actions:
+      - provision_access
+      - send_welcome_email
+      - update_metrics
+      
+  customer.subscription.deleted:
+    actions:
+      - revoke_access
+      - send_offboarding_email
+      - trigger_retention_flow
+      
+  invoice.payment_failed:
+    actions:
+      - send_dunning_email
+      - update_subscription_status
+      - create_support_ticket
 ```
 
-### Server-Side Client
+## Subscription Management
 
-```typescript
-import Stripe from 'stripe';
+### Plan Configuration
 
-// Cloudflare Workers
-const stripe = new Stripe(c.env.STRIPE_SECRET_KEY);
-
-// Node.js
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+```yaml
+subscription_plans:
+  - name: Starter
+    id: plan_starter
+    price: 29
+    currency: usd
+    interval: month
+    features:
+      - "5 users"
+      - "10GB storage"
+      - "Email support"
+    metadata:
+      tier: 1
+      
+  - name: Growth
+    id: plan_growth
+    price: 79
+    currency: usd
+    interval: month
+    features:
+      - "25 users"
+      - "100GB storage"
+      - "Priority support"
+    metadata:
+      tier: 2
+      
+  - name: Enterprise
+    id: plan_enterprise
+    price: custom
+    interval: month
+    features:
+      - "Unlimited users"
+      - "Unlimited storage"
+      - "24/7 support"
+      - "Custom integrations"
+    metadata:
+      tier: 3
 ```
 
-## One-Time Payment (Checkout Sessions)
+### Subscription Lifecycle
 
-The fastest way to accept payment. Stripe hosts the entire checkout page.
-
-### Create a Checkout Session (Server)
-
-```typescript
-app.post('/api/checkout', async (c) => {
-  const { priceId, successUrl, cancelUrl } = await c.req.json();
-
-  const session = await stripe.checkout.sessions.create({
-    mode: 'payment',
-    line_items: [{ price: priceId, quantity: 1 }],
-    success_url: successUrl || `${new URL(c.req.url).origin}/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: cancelUrl || `${new URL(c.req.url).origin}/pricing`,
-  });
-
-  return c.json({ url: session.url });
-});
+```yaml
+subscription_automation:
+  on_create:
+    - provision_service
+    - send_welcome_email
+    - create_customer_record
+    - schedule_onboarding_call
+    
+  on_upgrade:
+    - adjust_limits
+    - prorate_billing
+    - send_upgrade_confirmation
+    - unlock_features
+    
+  on_downgrade:
+    - schedule_limit_reduction
+    - send_downgrade_notice
+    - offer_retention_discount
+    
+  on_cancel:
+    - schedule_access_revocation
+    - send_exit_survey
+    - trigger_win_back_campaign
+    
+  on_renewal:
+    - send_renewal_receipt
+    - update_usage_quotas
+    - check_plan_eligibility
 ```
 
-### Redirect to Checkout (Client)
+## Invoice Management
 
-```typescript
-async function handleCheckout(priceId: string) {
-  const res = await fetch('/api/checkout', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ priceId }),
-  });
-  const { url } = await res.json();
-  window.location.href = url;
-}
+### Invoice Automation
+
+```yaml
+invoice_settings:
+  defaults:
+    auto_advance: true
+    collection_method: charge_automatically
+    days_until_due: 30
+    
+  templates:
+    header:
+      company_name: "{{company}}"
+      logo: "{{logo_url}}"
+      
+    footer:
+      payment_terms: "Net 30"
+      thank_you: "Thank you for your business!"
+      
+  automation:
+    - event: invoice.created
+      actions:
+        - add_line_items
+        - apply_discounts
+        - calculate_tax
+        
+    - event: invoice.finalized
+      actions:
+        - send_to_customer
+        - log_to_accounting
+        
+    - event: invoice.paid
+      actions:
+        - send_receipt
+        - update_revenue
 ```
 
-### Create Products and Prices
+### Dunning Management
 
-```bash
-# Via Stripe CLI (recommended for setup)
-stripe products create --name="Pro Plan" --description="Full access"
-stripe prices create --product=prod_XXX --unit-amount=2900 --currency=aud --recurring[interval]=month
-
-# Or via Dashboard: https://dashboard.stripe.com/products
+```yaml
+dunning_sequence:
+  - day: 0
+    event: payment_failed
+    actions:
+      - retry_payment
+      - email_template: payment_failed_1
+      
+  - day: 3
+    actions:
+      - retry_payment
+      - email_template: payment_failed_2
+      - sms_reminder
+      
+  - day: 7
+    actions:
+      - retry_payment
+      - email_template: payment_failed_3
+      - mark_at_risk
+      
+  - day: 14
+    actions:
+      - final_retry
+      - email_template: final_notice
+      - pause_subscription
+      
+  - day: 30
+    actions:
+      - cancel_subscription
+      - email_template: cancellation
+      - revoke_access
 ```
 
-**Hardcode price IDs** in your code (they don't change):
-```typescript
-const PRICES = {
-  pro_monthly: 'price_1234567890',
-  pro_yearly: 'price_0987654321',
-} as const;
-```
+## Checkout Integration
 
-## Subscriptions
+### Checkout Session
 
-Same as one-time but with `mode: 'subscription'`:
-
-```typescript
+```javascript
+// Create Checkout Session
 const session = await stripe.checkout.sessions.create({
   mode: 'subscription',
-  line_items: [{ price: PRICES.pro_monthly, quantity: 1 }],
-  success_url: `${origin}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
-  cancel_url: `${origin}/pricing`,
-  // Link to existing customer if known:
-  customer: customerId, // or customer_email: 'user@example.com'
+  payment_method_types: ['card'],
+  line_items: [{
+    price: 'price_xxx',
+    quantity: 1,
+  }],
+  success_url: 'https://example.com/success?session_id={CHECKOUT_SESSION_ID}',
+  cancel_url: 'https://example.com/cancel',
+  customer_email: 'customer@example.com',
+  subscription_data: {
+    trial_period_days: 14,
+    metadata: {
+      plan_tier: 'growth'
+    }
+  },
+  allow_promotion_codes: true,
 });
 ```
 
-### Check Subscription Status
+### Payment Elements
 
-```typescript
-async function hasActiveSubscription(customerId: string): Promise<boolean> {
-  const subs = await stripe.subscriptions.list({
-    customer: customerId,
-    status: 'active',
-    limit: 1,
-  });
-  return subs.data.length > 0;
-}
-```
-
-## Webhooks
-
-Stripe sends events to your server when things happen (payment succeeded, subscription cancelled, etc.). **You must verify the webhook signature.**
-
-### Webhook Handler (Cloudflare Workers / Hono)
-
-```typescript
-app.post('/api/webhooks/stripe', async (c) => {
-  const body = await c.req.text();
-  const sig = c.req.header('stripe-signature')!;
-
-  let event: Stripe.Event;
-  try {
-    // Use constructEventAsync for Workers (no Node crypto)
-    event = await stripe.webhooks.constructEventAsync(
-      body,
-      sig,
-      c.env.STRIPE_WEBHOOK_SECRET
-    );
-  } catch (err) {
-    console.error('Webhook signature verification failed:', err);
-    return c.json({ error: 'Invalid signature' }, 400);
+```javascript
+// Create Payment Intent
+const paymentIntent = await stripe.paymentIntents.create({
+  amount: 2000,
+  currency: 'usd',
+  customer: 'cus_xxx',
+  payment_method_types: ['card'],
+  metadata: {
+    order_id: '12345'
   }
-
-  switch (event.type) {
-    case 'checkout.session.completed': {
-      const session = event.data.object as Stripe.Checkout.Session;
-      // Fulfill the order — update database, send email, grant access
-      await handleCheckoutComplete(session);
-      break;
-    }
-    case 'customer.subscription.updated': {
-      const sub = event.data.object as Stripe.Subscription;
-      await handleSubscriptionChange(sub);
-      break;
-    }
-    case 'customer.subscription.deleted': {
-      const sub = event.data.object as Stripe.Subscription;
-      await handleSubscriptionCancelled(sub);
-      break;
-    }
-    case 'invoice.payment_failed': {
-      const invoice = event.data.object as Stripe.Invoice;
-      await handlePaymentFailed(invoice);
-      break;
-    }
-  }
-
-  return c.json({ received: true });
 });
+
+// Confirm Payment
+const result = await stripe.confirmCardPayment(
+  paymentIntent.client_secret,
+  {
+    payment_method: {
+      card: cardElement,
+      billing_details: {
+        name: 'John Doe'
+      }
+    }
+  }
+);
 ```
 
-### Register Webhook
+## Revenue Analytics
 
-```bash
-# Local testing with Stripe CLI:
-stripe listen --forward-to http://localhost:8787/api/webhooks/stripe
+### Dashboard Metrics
 
-# Production — register via Dashboard:
-# https://dashboard.stripe.com/webhooks
-# URL: https://yourapp.com/api/webhooks/stripe
-# Events: checkout.session.completed, customer.subscription.updated,
-#          customer.subscription.deleted, invoice.payment_failed
+```
+STRIPE REVENUE DASHBOARD
+═══════════════════════════════════════
+
+MRR:          $125,450 (+8.5%)
+ARR:          $1,505,400
+New MRR:      $12,340
+Churned MRR:  $4,120
+Net MRR:      +$8,220
+
+SUBSCRIPTION BREAKDOWN:
+Active:       892
+Trialing:     156
+Past Due:     23
+Cancelled:    45 (this month)
+
+BY PLAN:
+Starter    ████████░░░░░░░░ 45%  │ $28,500
+Growth     ██████████░░░░░░ 38%  │ $47,600
+Enterprise ██████░░░░░░░░░░ 17%  │ $49,350
+
+CHURN ANALYSIS:
+Monthly Churn Rate:  4.2%
+MRR Churn:          $4,120
+Reasons:
+- Price             ████████░░░░ 35%
+- Competitor        ██████░░░░░░ 25%
+- No longer needed  ████░░░░░░░░ 20%
+- Support issues    ███░░░░░░░░░ 12%
+- Other             ██░░░░░░░░░░ 8%
 ```
 
-### Cloudflare Workers Gotcha
+### Cohort Analysis
 
-`constructEvent` (synchronous) uses Node.js `crypto` which doesn't exist in Workers. Use `constructEventAsync` instead — it uses the Web Crypto API.
+```yaml
+cohort_metrics:
+  - cohort: "2024-01"
+    customers: 150
+    month_1_retention: 95%
+    month_3_retention: 82%
+    month_6_retention: 71%
+    ltv_estimate: $890
+    
+  - cohort: "2024-02"
+    customers: 180
+    month_1_retention: 93%
+    month_3_retention: 79%
+    ltv_estimate: $820
+```
+
+## Fraud Prevention
+
+### Risk Rules
+
+```yaml
+radar_rules:
+  - name: block_high_risk
+    condition: "risk_level = 'highest'"
+    action: block
+    
+  - name: review_elevated_risk
+    condition: "risk_level = 'elevated'"
+    action: review
+    
+  - name: block_disposable_email
+    condition: "email_domain in @disposable_domains"
+    action: block
+    
+  - name: velocity_check
+    condition: "card_country != ip_country"
+    action: review
+    
+  - name: amount_threshold
+    condition: "amount > 100000"  # $1000
+    action: review
+```
 
 ## Customer Portal
 
-Let customers manage their own subscriptions (upgrade, downgrade, cancel, update payment method):
+### Portal Configuration
 
-```typescript
-app.post('/api/billing/portal', async (c) => {
-  const { customerId } = await c.req.json();
+```yaml
+customer_portal:
+  features:
+    subscription_update:
+      enabled: true
+      products:
+        - product_starter
+        - product_growth
+        - product_enterprise
+      proration_behavior: create_prorations
+      
+    subscription_cancel:
+      enabled: true
+      mode: at_period_end
+      cancellation_reason:
+        enabled: true
+        options:
+          - "Too expensive"
+          - "Missing features"
+          - "Switched to competitor"
+          - "No longer needed"
+          - "Other"
+          
+    payment_method_update:
+      enabled: true
+      
+    invoice_history:
+      enabled: true
+      
+  branding:
+    colors:
+      primary: "#5469d4"
+    icon: "{{company_icon}}"
+```
 
-  const session = await stripe.billingPortal.sessions.create({
-    customer: customerId,
-    return_url: `${new URL(c.req.url).origin}/dashboard`,
-  });
+## Reporting Automation
 
-  return c.json({ url: session.url });
+### Scheduled Reports
+
+```yaml
+reports:
+  - name: daily_revenue
+    schedule: "0 9 * * *"
+    metrics:
+      - gross_volume
+      - net_volume
+      - new_customers
+      - failed_payments
+    destination: slack_finance
+    
+  - name: weekly_mrr
+    schedule: "0 9 * * 1"
+    metrics:
+      - mrr
+      - arr
+      - churn_rate
+      - expansion_revenue
+    destination: email_leadership
+    
+  - name: monthly_reconciliation
+    schedule: "0 9 1 * *"
+    metrics:
+      - total_revenue
+      - fees
+      - refunds
+      - payouts
+    destination: accounting_system
+```
+
+## API Examples
+
+### Common Operations
+
+```javascript
+// Create Customer
+const customer = await stripe.customers.create({
+  email: 'customer@example.com',
+  name: 'John Doe',
+  metadata: {
+    user_id: '12345'
+  }
+});
+
+// Create Subscription
+const subscription = await stripe.subscriptions.create({
+  customer: customer.id,
+  items: [{ price: 'price_xxx' }],
+  trial_period_days: 14,
+  payment_behavior: 'default_incomplete',
+  expand: ['latest_invoice.payment_intent']
+});
+
+// Update Subscription
+await stripe.subscriptions.update(subscription.id, {
+  items: [{
+    id: subscription.items.data[0].id,
+    price: 'price_new_xxx'
+  }],
+  proration_behavior: 'create_prorations'
+});
+
+// Issue Refund
+const refund = await stripe.refunds.create({
+  payment_intent: 'pi_xxx',
+  amount: 1000  // Partial refund
 });
 ```
 
-Configure the portal in Dashboard: https://dashboard.stripe.com/settings/billing/portal
+## Best Practices
 
-## Pricing Page Pattern
-
-Generate a pricing page that reads from Stripe products:
-
-```typescript
-// Server: fetch products and prices
-app.get('/api/pricing', async (c) => {
-  const prices = await stripe.prices.list({
-    active: true,
-    expand: ['data.product'],
-    type: 'recurring',
-  });
-
-  return c.json(prices.data.map(price => ({
-    id: price.id,
-    name: (price.product as Stripe.Product).name,
-    description: (price.product as Stripe.Product).description,
-    amount: price.unit_amount,
-    currency: price.currency,
-    interval: price.recurring?.interval,
-  })));
-});
-```
-
-Or hardcode if you only have 2-3 plans — simpler and no API call on every page load.
-
-## Stripe CLI (Local Development)
-
-```bash
-# Install
-brew install stripe/stripe-cli/stripe
-
-# Login
-stripe login
-
-# Listen for webhooks locally
-stripe listen --forward-to http://localhost:8787/api/webhooks/stripe
-
-# Trigger test events
-stripe trigger checkout.session.completed
-stripe trigger customer.subscription.created
-stripe trigger invoice.payment_failed
-```
-
-## Common Patterns
-
-### Link Stripe Customer to Your User
-
-```typescript
-// On first checkout, create or find customer:
-const session = await stripe.checkout.sessions.create({
-  customer_email: user.email,  // Creates new customer if none exists
-  // OR
-  customer: user.stripeCustomerId,  // Use existing
-  metadata: { userId: user.id },  // Link back to your user
-  // ...
-});
-
-// In webhook, save the customer ID:
-case 'checkout.session.completed': {
-  const session = event.data.object;
-  await db.update(users)
-    .set({ stripeCustomerId: session.customer as string })
-    .where(eq(users.id, session.metadata.userId));
-}
-```
-
-### Free Trial
-
-```typescript
-const session = await stripe.checkout.sessions.create({
-  mode: 'subscription',
-  line_items: [{ price: PRICES.pro_monthly, quantity: 1 }],
-  subscription_data: {
-    trial_period_days: 14,
-  },
-  // ...
-});
-```
-
-### Australian Dollars
-
-```typescript
-// Set currency when creating prices
-const price = await stripe.prices.create({
-  product: 'prod_XXX',
-  unit_amount: 2900,  // $29.00 in cents
-  currency: 'aud',
-  recurring: { interval: 'month' },
-});
-```
-
-## Gotchas
-
-| Gotcha | Fix |
-|--------|-----|
-| `constructEvent` fails on Workers | Use `constructEventAsync` (Web Crypto API) |
-| Webhook fires but handler not called | Check the endpoint URL matches exactly (trailing slash matters) |
-| Test mode payments not appearing | Make sure you're using `sk_test_` key, not `sk_live_` |
-| Price amounts are in cents | `2900` = $29.00. Always divide by 100 for display |
-| Customer email doesn't match user | Use `customer` (existing ID) not `customer_email` for returning users |
-| Subscription status stale | Don't cache — check via API or trust webhook events |
-| Webhook retries | Stripe retries failed webhooks for up to 3 days. Return 200 quickly. |
-| CORS on checkout redirect | Checkout URL is on stripe.com — use `window.location.href`, not fetch |
+1. **Use Webhooks**: Don't rely on redirect alone
+2. **Idempotency Keys**: Prevent duplicate charges
+3. **Error Handling**: Graceful failure recovery
+4. **PCI Compliance**: Use Stripe Elements
+5. **Test Mode**: Validate before production
+6. **Monitor Disputes**: Respond promptly
+7. **Dunning Strategy**: Recover failed payments
+8. **Revenue Recognition**: Track MRR properly

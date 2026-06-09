@@ -1,127 +1,457 @@
 ---
 name: rank-tracker
-description: 'Use when the user asks to "track rankings" or "查排名"; measures keyword and SERP-position deltas over time from provided exports or connected tools, including AI-response checks. Not for multi-metric stakeholder reports — use performance-reporter; not for setting alerts — use alert-manager. 排名追踪/SERP监控'
-version: "9.9.10"
-license: Apache-2.0
-compatibility: "Claude Code and compatible agent-skill hosts"
-homepage: "https://github.com/aaron-he-zhu/seo-geo-claude-skills"
-when_to_use: "Use when tracking keyword rankings, monitoring position changes, comparing ranking snapshots, or detecting ranking drops."
-argument-hint: "<domain> [keyword list]"
-allowed-tools: WebFetch
-metadata:
-  author: aaron-he-zhu
-  version: "9.9.10"
-  geo-relevance: "medium"
-  tags:
-    - seo
-    - geo
-    - rank-tracking
-    - keyword-rankings
-    - serp-positions
-    - ranking-changes
-    - position-tracking
-    - 排名追踪
-    - ランキング追跡
-    - 순위추적
-    - seguimiento-rankings
-  triggers:
-    - "check keyword positions"
-    - "did my rankings change"
-    - "where do I rank now"
-    - "compare ranking snapshots"
-    - "SERP position delta"
-    - "how am I ranking"
-    - "我排第几"
-    - "排名变了吗"
+description: Tracks and analyzes keyword ranking positions over time for both traditional search results and AI-generated responses. Monitors ranking changes, identifies trends, and alerts on significant movements.
 ---
 
 # Rank Tracker
 
-Tracks keyword positions, SERP feature ownership, and AI visibility over time.
+This skill helps you track, analyze, and report on keyword ranking positions over time. It monitors both traditional SERP rankings and AI/GEO visibility to provide comprehensive search performance insights.
 
-## Quick Start
+## When to Use This Skill
+
+- Setting up ranking tracking for new campaigns
+- Monitoring keyword position changes
+- Analyzing ranking trends over time
+- Comparing rankings against competitors
+- Tracking SERP feature appearances
+- Monitoring AI Overview inclusions
+- Creating ranking reports for stakeholders
+
+## What This Skill Does
+
+1. **Position Tracking**: Records and tracks keyword rankings
+2. **Trend Analysis**: Identifies ranking patterns over time
+3. **Movement Detection**: Flags significant position changes
+4. **Competitor Comparison**: Benchmarks against competitors
+5. **SERP Feature Tracking**: Monitors featured snippets, PAA
+6. **GEO Visibility Tracking**: Tracks AI citation appearances
+7. **Report Generation**: Creates ranking performance reports
+
+## How to Use
+
+### Set Up Tracking
 
 ```
 Set up rank tracking for [domain] targeting these keywords: [keyword list]
 ```
 
+### Analyze Rankings
+
 ```
 Analyze ranking changes for [domain] over the past [time period]
 ```
 
-## Skill Contract
+### Compare to Competitors
 
-**Expected output**: a ranking report or delta summary plus the standard handoff summary for `memory/monitoring/`.
+```
+Compare my rankings to [competitor] for [keywords]
+```
 
-- **Reads**: current rankings, prior baselines, target keyword list, market/device, and any user-provided or tool metrics.
-- **Writes**: a user-facing monitoring deliverable and reusable summary.
-- **Promotes**: significant changes, confirmed anomalies, follow-up actions, and pending decisions to `memory/open-loops.md`.
-- **Done when**: every tracked keyword shows current position vs baseline with a labeled delta (or N/A); each position cites its source (tool export / user-provided / estimated); and biggest movers and likely causes are named.
-- **Primary next skill**: [alert-manager](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/monitor/alert-manager/SKILL.md) when recurring monitoring should become automated.
+### Generate Reports
 
-### Handoff Summary
-
-> Emit the standard shape from [skill-contract.md §Handoff Summary Format](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/references/skill-contract.md).
-
-## Data Sources
-
-All integrations optional (see [CONNECTORS.md](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/CONNECTORS.md)). With tools, pull rankings from ~~SEO tool, impressions from ~~search console, traffic from ~~analytics, and AI citations from ~~AI monitor. Without tools, ask for positions, volumes, competitor data, and SERP feature status.
-
-## Decision Gates
-
-**Stop and ask the user when:**
-- No target keywords are provided and none can be inferred from `CLAUDE.md` or prior monitoring records — offer: (1) supply a keyword list, (2) track the domain's top known terms, (3) cancel.
-
-**Continue silently (never stop for):**
-- No prior baseline exists — record the current run as the baseline, label all positions as the first snapshot, and proceed (do not invent a "previous" position).
-- Missing optional tool data (SERP features, AI citations) — mark N/A and proceed.
+```
+Create a ranking report for [domain/campaign]
+```
 
 ## Instructions
 
 When a user requests rank tracking or analysis:
 
-1. **Set Up Keyword Tracking** — configure domain, market, device, language, update frequency, priorities, and competitor watchlist.
-2. **Record Current Rankings** — output a position table where every row cites its source (tool export / user-provided / estimated), with position ranges, ranking URLs, feature ownership, and movement vs baseline.
-3. **Analyze Ranking Changes** — highlight biggest wins, declines, stable terms, new rankings, lost rankings, likely causes, and recovery ideas; each delta labeled against its baseline.
-4. **Track SERP Features** — compare ownership of snippets, PAA, image/video packs, local packs, and related feature shifts.
-5. **Track GEO / AI Visibility** — monitor AI Overview presence, citation rate, citation position, and trend; mark each value Measured (from an ~~AI monitor) or N/A if unobserved.
-6. **Compare Against Competitors** — report share of voice, head-to-head comparisons, and threat levels.
-7. **Generate Ranking Report** — output overall trend, key wins, concerns, opportunities, SERP feature changes, GEO visibility, and recommendations, with each metric carrying its source tag.
+1. **Set Up Keyword Tracking**
 
-Label every metric **Measured** (tool/export), **User-provided**, or **Estimated** (model inference); never present an estimate as measured; if a required metric is unavailable, mark it N/A — do not invent it.
+   ```markdown
+   ## Rank Tracking Setup
+   
+   ### Tracking Configuration
+   
+   **Domain**: [domain]
+   **Tracking Location**: [country/city]
+   **Device**: [Mobile/Desktop/Both]
+   **Language**: [language]
+   **Update Frequency**: [Daily/Weekly/Monthly]
+   
+   ### Keywords to Track
+   
+   | Keyword | Volume | Current Rank | Type | Priority |
+   |---------|--------|--------------|------|----------|
+   | [keyword 1] | [vol] | [rank] | Primary | High |
+   | [keyword 2] | [vol] | [rank] | Primary | High |
+   | [keyword 3] | [vol] | [rank] | Secondary | Medium |
+   | [keyword 4] | [vol] | [rank] | Long-tail | Medium |
+   | [keyword 5] | [vol] | [rank] | Brand | High |
+   
+   ### Competitor Tracking
+   
+   Track these competitors for benchmark:
+   1. [Competitor 1] - [domain]
+   2. [Competitor 2] - [domain]
+   3. [Competitor 3] - [domain]
+   
+   ### Tracking Categories
+   
+   | Category | Keywords | Description |
+   |----------|----------|-------------|
+   | Brand | [X] | Brand name variations |
+   | Product | [X] | Product-related terms |
+   | Informational | [X] | Educational queries |
+   | Commercial | [X] | Buying intent terms |
+   ```
 
-> **Reference**: See [Ranking Analysis Templates](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/monitor/rank-tracker/references/ranking-analysis-templates.md) for the complete output templates for all seven steps.
+2. **Record Current Rankings**
+
+   ```markdown
+   ## Current Ranking Snapshot
+   
+   **Date**: [date]
+   **Domain**: [domain]
+   
+   ### Ranking Overview
+   
+   | Position Range | Keyword Count | % of Total |
+   |----------------|---------------|------------|
+   | #1 | [X] | [X]% |
+   | #2-3 | [X] | [X]% |
+   | #4-10 | [X] | [X]% |
+   | #11-20 | [X] | [X]% |
+   | #21-50 | [X] | [X]% |
+   | #51-100 | [X] | [X]% |
+   | Not ranking | [X] | [X]% |
+   
+   ### Position Distribution
+   
+   ```
+   Position 1:     ████████ [X] keywords
+   Position 2-3:   ██████ [X] keywords
+   Position 4-10:  ████████████████ [X] keywords
+   Position 11-20: ████████████ [X] keywords
+   Position 21+:   ██████████ [X] keywords
+   ```
+   
+   ### Detailed Rankings
+   
+   | Keyword | Position | URL | SERP Features | Change |
+   |---------|----------|-----|---------------|--------|
+   | [kw 1] | 3 | [url] | Featured Snippet | +2 ↑ |
+   | [kw 2] | 7 | [url] | PAA | -1 ↓ |
+   | [kw 3] | 12 | [url] | None | New |
+   | [kw 4] | 1 | [url] | Featured Snippet | — |
+   ```
+
+3. **Analyze Ranking Changes**
+
+   ```markdown
+   ## Ranking Change Analysis
+   
+   **Period**: [start date] to [end date]
+   
+   ### Overall Movement
+   
+   | Metric | Start | End | Change |
+   |--------|-------|-----|--------|
+   | Avg Position | [X] | [Y] | [+/-Z] |
+   | Keywords in Top 10 | [X] | [Y] | [+/-Z] |
+   | Keywords in Top 3 | [X] | [Y] | [+/-Z] |
+   | Keywords #1 | [X] | [Y] | [+/-Z] |
+   
+   ### Biggest Improvements 📈
+   
+   | Keyword | Old Rank | New Rank | Change | Est. Traffic Impact |
+   |---------|----------|----------|--------|---------------------|
+   | [kw 1] | 15 | 4 | +11 | +[X] visits/mo |
+   | [kw 2] | 25 | 9 | +16 | +[X] visits/mo |
+   | [kw 3] | 8 | 2 | +6 | +[X] visits/mo |
+   
+   **Why improved**:
+   - [kw 1]: [reason - e.g., content update, new backlinks]
+   - [kw 2]: [reason]
+   
+   ### Biggest Declines 📉
+   
+   | Keyword | Old Rank | New Rank | Change | Est. Traffic Impact |
+   |---------|----------|----------|--------|---------------------|
+   | [kw 1] | 3 | 12 | -9 | -[X] visits/mo |
+   | [kw 2] | 7 | 18 | -11 | -[X] visits/mo |
+   
+   **Why declined**:
+   - [kw 1]: [reason - e.g., competitor update, algo change]
+   - [kw 2]: [reason]
+   
+   **Recommended actions**:
+   - [kw 1]: [action to recover]
+   - [kw 2]: [action to recover]
+   
+   ### Stable Keywords
+   
+   [X] keywords remained within ±3 positions (stable)
+   
+   ### New Rankings
+   
+   | Keyword | Position | URL | Notes |
+   |---------|----------|-----|-------|
+   | [kw 1] | [pos] | [url] | [notes] |
+   
+   ### Lost Rankings
+   
+   | Keyword | Last Position | URL | Action |
+   |---------|---------------|-----|--------|
+   | [kw 1] | [pos] | [url] | [investigate/refresh] |
+   ```
+
+4. **Track SERP Features**
+
+   ```markdown
+   ## SERP Feature Tracking
+   
+   ### Feature Ownership
+   
+   | Feature | Your Count | Competitor Avg | Opportunity |
+   |---------|------------|----------------|-------------|
+   | Featured Snippets | [X] | [Y] | [+/-Z] |
+   | People Also Ask | [X] | [Y] | [+/-Z] |
+   | Image Pack | [X] | [Y] | [+/-Z] |
+   | Video Results | [X] | [Y] | [+/-Z] |
+   | Local Pack | [X] | [Y] | [+/-Z] |
+   
+   ### Featured Snippet Status
+   
+   | Keyword | You Own? | Current Owner | Winnable? |
+   |---------|----------|---------------|-----------|
+   | [kw 1] | ✅ Yes | You | Maintain |
+   | [kw 2] | ❌ No | [Competitor] | High |
+   | [kw 3] | ❌ No | [Competitor] | Medium |
+   
+   ### PAA Appearances
+   
+   | Question | Your Answer? | Position | Action |
+   |----------|--------------|----------|--------|
+   | [Question 1] | ✅/❌ | [pos] | [action] |
+   | [Question 2] | ✅/❌ | [pos] | [action] |
+   ```
+
+5. **Track GEO/AI Visibility**
+
+   ```markdown
+   ## AI/GEO Visibility Tracking
+   
+   ### AI Overview Presence
+   
+   | Keyword | AI Overview | You Cited? | Citation Position |
+   |---------|-------------|------------|-------------------|
+   | [kw 1] | Yes | ✅ | 1st source |
+   | [kw 2] | Yes | ✅ | 3rd source |
+   | [kw 3] | Yes | ❌ | Not cited |
+   | [kw 4] | No | N/A | N/A |
+   
+   ### AI Citation Rate
+   
+   | Metric | Value |
+   |--------|-------|
+   | Keywords with AI Overview | [X]/[Total] ([Y]%) |
+   | Your citations in AI Overview | [X]/[Y] ([Z]%) |
+   | Avg citation position | [X] |
+   
+   ### GEO Performance Trend
+   
+   | Period | AI Overviews Tracked | Your Citations | Rate |
+   |--------|---------------------|----------------|------|
+   | Last week | [X] | [Y] | [Z]% |
+   | 2 weeks ago | [X] | [Y] | [Z]% |
+   | Month ago | [X] | [Y] | [Z]% |
+   
+   ### GEO Improvement Opportunities
+   
+   | Keyword | Has AI Overview | You Cited? | Content Gap |
+   |---------|-----------------|------------|-------------|
+   | [kw 1] | Yes | No | Need clearer definition |
+   | [kw 2] | Yes | No | Missing quotable stats |
+   ```
+
+6. **Compare Against Competitors**
+
+   ```markdown
+   ## Competitor Ranking Comparison
+   
+   ### Share of Voice
+   
+   | Domain | Keywords Ranked | Avg Position | Visibility |
+   |--------|-----------------|--------------|------------|
+   | [Your site] | [X] | [Y] | [Z]% |
+   | [Competitor 1] | [X] | [Y] | [Z]% |
+   | [Competitor 2] | [X] | [Y] | [Z]% |
+   | [Competitor 3] | [X] | [Y] | [Z]% |
+   
+   ### Head-to-Head Comparison
+   
+   **You vs [Competitor 1]**:
+   
+   | Keyword | Your Rank | Their Rank | Winner |
+   |---------|-----------|------------|--------|
+   | [kw 1] | 3 | 7 | You ✅ |
+   | [kw 2] | 12 | 5 | Them ❌ |
+   | [kw 3] | 1 | 4 | You ✅ |
+   
+   **Summary**: You win [X]/[Y] keywords vs [Competitor 1]
+   
+   ### Competitor Movement Alerts
+   
+   | Competitor | Keyword | Their Change | Threat Level |
+   |------------|---------|--------------|--------------|
+   | [Comp 1] | [kw] | +15 positions | 🔴 High |
+   | [Comp 2] | [kw] | +8 positions | 🟡 Medium |
+   ```
+
+7. **Generate Ranking Report**
+
+   ```markdown
+   # Ranking Performance Report
+   
+   **Domain**: [domain]
+   **Report Period**: [start] to [end]
+   **Generated**: [date]
+   
+   ## Executive Summary
+   
+   **Overall Trend**: [Improving/Stable/Declining]
+   
+   | Metric | Value | vs Last Period | Status |
+   |--------|-------|----------------|--------|
+   | Total keywords tracked | [X] | [+/-Y] | [status] |
+   | Keywords in top 10 | [X] | [+/-Y] | [status] |
+   | Keywords in top 3 | [X] | [+/-Y] | [status] |
+   | Average position | [X] | [+/-Y] | [status] |
+   | Estimated traffic | [X] | [+/-Y]% | [status] |
+   
+   ## Position Distribution
+   
+   ```
+   Position 1:     ████████████ [X]%
+   Position 2-3:   ████████ [X]%
+   Position 4-10:  ████████████████ [X]%
+   Position 11-20: ██████████ [X]%
+   Position 21+:   ████ [X]%
+   ```
+   
+   ## Key Highlights
+   
+   ### Wins 🎉
+   - [Achievement 1]
+   - [Achievement 2]
+   - [Achievement 3]
+   
+   ### Concerns ⚠️
+   - [Issue 1]
+   - [Issue 2]
+   
+   ### Opportunities 💡
+   - [Opportunity 1]
+   - [Opportunity 2]
+   
+   ## Detailed Analysis
+   
+   ### Top Performing Keywords
+   
+   | Keyword | Position | Change | Traffic | Notes |
+   |---------|----------|--------|---------|-------|
+   | [kw 1] | 1 | — | [X] | Stable leader |
+   | [kw 2] | 2 | +3 | [X] | Growing |
+   | [kw 3] | 3 | +5 | [X] | Big improvement |
+   
+   ### Keywords Needing Attention
+   
+   | Keyword | Position | Change | Issue | Recommended Action |
+   |---------|----------|--------|-------|-------------------|
+   | [kw 1] | 15 | -8 | Dropped | Refresh content |
+   | [kw 2] | 22 | -5 | Competitor surge | Analyze competitor |
+   
+   ## SERP Feature Report
+   
+   | Feature | Count | Change | Competitor Avg |
+   |---------|-------|--------|----------------|
+   | Featured Snippets | [X] | [+/-Y] | [Z] |
+   | PAA | [X] | [+/-Y] | [Z] |
+   
+   ## GEO/AI Visibility Report
+   
+   | Metric | This Period | Last Period | Trend |
+   |--------|-------------|-------------|-------|
+   | AI Overview appearances | [X] | [Y] | [↑/↓] |
+   | Your citations | [X] | [Y] | [↑/↓] |
+   | Citation rate | [X]% | [Y]% | [↑/↓] |
+   
+   ## Competitive Position
+   
+   **Share of Voice Ranking**: #[X] of [Y] competitors
+   
+   | Rank | Domain | Visibility |
+   |------|--------|------------|
+   | 1 | [domain] | [X]% |
+   | 2 | [domain] | [X]% |
+   | 3 | [domain] | [X]% |
+   
+   ## Recommendations
+   
+   ### Immediate Actions
+   1. [Action] for [keyword] - [expected impact]
+   2. [Action] for [keyword] - [expected impact]
+   
+   ### This Month
+   1. [Action]
+   2. [Action]
+   
+   ### Next Quarter
+   1. [Strategic action]
+   2. [Strategic action]
+   
+   ## Next Report
+   
+   Scheduled: [date]
+   Focus areas: [areas to monitor]
+   ```
 
 ## Example
 
-Sample outcome: average position improves from 15.3 to 12.8, top-10 keywords rise from 12 to 17, and the report highlights the biggest winners, biggest drops, and next actions.
+**User**: "Analyze my ranking changes for the past month"
 
-## Tips for Success
+**Output**:
 
-Track consistently, segment by intent, watch competitors, and include SERP feature plus GEO signals.
+```markdown
+# Ranking Analysis: December 2024
 
-## Rank Change Quick Reference
+## Summary
 
-### Response Protocol
+Your average position improved from 15.3 to 12.8 (-2.5 positions = better)
+Keywords in top 10 increased from 12 to 17 (+5)
 
-| Change | Timeframe | Action |
-|--------|-----------|--------|
-| Drop 1-3 positions | Wait 1-2 weeks | Monitor — may be normal fluctuation |
-| Drop 3-5 positions | Investigate within 1 week | Check technical issues and competitor changes |
-| Drop 5-10 positions | Investigate immediately | Run a full diagnostic: technical, content, links |
-| Drop off page 1 | Emergency response | Comprehensive audit + recovery plan |
-| Position gained | Document and learn | Identify what worked and replicate |
+## Biggest Wins
 
-> **Reference**: See [Tracking Setup Guide](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/monitor/rank-tracker/references/tracking-setup-guide.md) for tracking setup, root-cause taxonomy, CTR benchmarks, SERP feature impact, and algorithm-update assessment.
+| Keyword | Old | New | Change | Why |
+|---------|-----|-----|--------|-----|
+| email marketing tips | 18 | 5 | +13 | Content refresh worked |
+| best crm software | 24 | 11 | +13 | New backlinks acquired |
+| sales automation | 15 | 7 | +8 | Schema markup added |
 
-### Save Results
+## Needs Attention
 
-Ask "Save these results?" If yes, write to `memory/monitoring/` — see [Skill Contract](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/references/skill-contract.md) §Save Results Template.
+| Keyword | Old | New | Change | Action |
+|---------|-----|-----|--------|--------|
+| marketing automation | 4 | 12 | -8 | Competitor HubSpot published new guide |
 
-## Reference Materials
+**Recommended**: Update your marketing automation guide with 2024 statistics and examples.
+```
 
-- [Tracking Setup Guide](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/monitor/rank-tracker/references/tracking-setup-guide.md) — Setup rules, feature tracking, and interpretation guidance
+## Tracking Best Practices
 
-## Next Best Skill
+1. **Track consistently** - Same time, same device, same location
+2. **Include enough keywords** - 50-200 for meaningful data
+3. **Segment by intent** - Track brand, commercial, informational separately
+4. **Monitor competitors** - Context makes your data meaningful
+5. **Track SERP features** - Position 1 without snippet may lose to position 4 with snippet
+6. **Include GEO metrics** - AI visibility increasingly important
 
-Initial setup (no baseline) → [alert-manager](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/monitor/alert-manager/SKILL.md). Subsequent runs (baseline exists) → Terminal. Visited-set rule applies per [skill-contract.md](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/references/skill-contract.md).
+## Related Skills
+
+- [keyword-research](../../research/keyword-research/) - Find keywords to track
+- [serp-analysis](../../research/serp-analysis/) - Understand SERP composition
+- [alert-manager](../alert-manager/) - Set up ranking alerts
+- [performance-reporter](../performance-reporter/) - Comprehensive reporting
+

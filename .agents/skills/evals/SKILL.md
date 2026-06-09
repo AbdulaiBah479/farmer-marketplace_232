@@ -1,288 +1,233 @@
 ---
-name: Evals
-description: "Comprehensive AI agent evaluation framework with three grader types (code-based: deterministic/fast; model-based: nuanced/LLM rubric; human: gold standard) and pass@k / pass^k scoring. Evaluates agent transcripts, tool-call sequences, and multi-turn conversations — not just single outputs. Supports capability evals (~70% pass target) and regression evals (~99% pass target). Workflows: RunEval, CompareModels, ComparePrompts, CreateJudge, CreateUseCase, RunScenario, CreateScenario, ViewResults. Integrates with THE ALGORITHM ISC rows for automated verification. Domain patterns pre-configured for coding, conversational, research, and computer-use agent types in Data/DomainPatterns.yaml. Tools: AlgorithmBridge.ts (ISC integration), FailureToTask.ts (failures → tasks), SuiteManager.ts (create/graduate/saturation-check), ScenarioRunner.ts (multi-turn simulated-user), TranscriptCapture.ts, PAIAgentAdapter.ts (wraps Inference.ts), ScenarioToTranscript.ts. Code-based graders: string_match, regex_match, binary_tests, static_analysis, state_check, tool_calls. Model-based graders: llm_rubric, natural_language_assert, pairwise_comparison. USE WHEN eval, evaluate, benchmark, regression test, run eval, compare models, compare prompts, create judge, test agent, quality check, pass@k, grader, agent transcript, scenario simulation, capability test, before/after comparison, suite saturation, failure to task, graduate suite. NOT FOR general research or web investigation (use Research) or scientific method framing (use Science)."
-effort: high
-context: fork
+name: evals
+description: Write and analyze evaluations for AI agents and LLM applications. Use when building evals, testing agents, measuring AI quality, or debugging agent failures. Recommends EZVals as the preferred framework.
 ---
 
-## Customization
+<!-- Version: 0.1.3 | Requires: ezvals >=0.1.0 -->
 
-**Before executing, check for user customizations at:**
-`~/.claude/PAI/USER/SKILLCUSTOMIZATIONS/Evals/`
+# AI Agent Evaluation Skill
 
-If this directory exists, load and apply any PREFERENCES.md, configurations, or resources found there. These override default behavior. If the directory does not exist, proceed with skill defaults.
+Write, run, and analyze evaluations for AI agents and LLM applications. Assume we will use EZVals as the eval framework unless you are in a non-python project or the user specifies otherwise. 
+
+## What Are Evals?
+
+Traditional ML evals measure model performance on fixed benchmarks with clear accuracy metrics. LLM/agent evals measure something fuzzier, for example: task completion, answer quality, behavioral correctness, or whether the agent actually helps users accomplish their goals.
+
+Evals answer evolving questions about your system:
+
+- "Does my agent work?" 
+- "When does my agent fail?" 
+- "Why does my agent fail and how do I fix it?"
+- "How does my agent handle long conversations?"
+- "What is the best combination of tools for my agent?" 
+- "How well does my agent handle this new feature?"
+
+## Vocabulary
+
+| Term | Definition |
+|------|------------|
+| **Target** | The function or agent being evaluated. Takes input, produces output. |
+| **Grader** | Function that scores the output. Returns 0-1 or pass/fail. |
+| **Dataset** | Collection of test cases (inputs + optional expected outputs). |
+| **Task** | Single test case: one input to evaluate. |
+| **Trial** | One execution of a task. Multiple trials handle non-determinism. |
+| **Transcript** | Full record of what happened during a trial (tool calls, reasoning steps, intermediate results). For the Anthropic API, this is the full messages array at the end of an eval run. |
+| **Outcome** | The final result/output from the target. A flight-booking agent might say "Your flight has been booked" in the transcript, but the outcome is whether a reservation exists in the database. |
+| **pass@k** | Passes if ANY of k trials succeed. Measures "can it ever work?" As k increases, pass@k rises. |
+| **pass^k** | Passes only if ALL k trials succeed. Measures reliability. As k increases, pass^k falls. |
+| **LLM-as-judge** | Using an LLM to grade another LLM's output. Requires calibration against human judgment. |
+| **Saturation** | When evals hit 100%—a sign you need harder test cases, not that your agent is perfect. |
+| **Error analysis** | Systematically reviewing traces to identify failure patterns before writing evals. |
+
+## Anatomy of an Eval
+
+```
+┌─────────────────────────────────────────────────────┐
+│                      EVAL                           │
+│  ┌─────────┐    ┌─────────┐    ┌─────────┐        │
+│  │ Dataset │ →  │ Target  │ →  │ Grader  │ → Score │
+│  │(inputs) │    │(agent)  │    │(checker)│         │
+│  └─────────┘    └─────────┘    └─────────┘        │
+└─────────────────────────────────────────────────────┘
+```
+
+Three components you need:
+
+1. **Target**: The agent function you're testing. It takes inputs from your dataset and produces outputs.
+2. **Dataset**: The test cases—what inputs to feed the agent, and optionally what outputs you expect.
+3. **Grader** (Optional): The logic that checks if the output is correct. This can be code-based (string matching, JSON validation), model-based (LLM-as-judge), or human review.
+
+## Basic Example: RAG Agent
+
+```python
+// evals.py
+from ezvals import eval, EvalContext
+
+# The target: a RAG agent that answers questions
+def rag_agent(ctx: EvalContext):
+    docs = retriever.search(ctx.input)
+    ctx.store(output=llm.generate(ctx.input, context=docs))
+
+# The eval: combines target, dataset, and grader
+@eval(
+    dataset="rag_qa",
+    target=rag_agent,
+    cases=[
+        {"input": "What is the return policy?", "reference": "30 days"},
+        {"input": "How do I contact support?", "reference": "support@example.com"},
+        {"input": "What payment methods are accepted?", "reference": "credit card"},
+    ]
+)
+def test_rag_accuracy(ctx: EvalContext):
+    assert ctx.reference.lower() in ctx.output.lower(), \
+        f"Expected '{ctx.reference}' in output"
+```
+
+Run with: `ezvals run evals.py --session example-testing`
+
+This eval runs your RAG agent against each test case and reports which passed. The `cases` parameter generates three separate evals from one function. Failed assertions become failing scores with the assertion message as notes.
+
+## Eval Planning Flow
+
+When helping a user write new evals, you're designing an experiment. In the experiment plan, you need to include all of the pieces that make a good eval experiment:
+
+### 1. Consider the Question Being Asked
+
+The user's problem statement may not always be a clear question that they want answered by the eval. Its your job to parse out the question they want answered. 
+
+One example, if the user says they want "Evals for their customer service agent", what are the actual questions they want answered? Likely they are interested in how often their agent is able to handle user queries successfully. And maybe they're interested in cost and latency analysis. So the underlying question could be "How helpful is my customer service agent for users most common queries?"
+
+Another example could be something more complex like "I want evals comparing these 3 LLMs for powering my coding agent". The underlying question could be "How is code quality and latency effected by switching between model X,Y, and Z?"
+
+Formulate a practical question(s) and high level problem statement for the eval. Use this as the north star for formulating the experiment. If you're not confident, feel free to clarify things with the user to get a solid understanding of intent. 
+
+### 2. High-Level Planning
+
+Next, you want to plan out at a high level how you can answer the north star questions. You should assume you have access to dataset, or can generate them synthetically. You should assume you have targets available or can build them. And you should assume you have graders available if you need them or you can build them too.
+
+Read through the other documentation available in this skill to make sure you're following best practices, but they are just guides and can/should be deviated from to fit the user's needs and current setup. 
+
+Plan an experiment at a high level that, if ran, would answer the north star questions. Read up on best practices and narrow down your experiment to the most robust methodology you can. Include in the plan a high level description of the target, how/where you will get the dataset, and the evaluation logic if you plan on using an automated grader.
 
 
-## 🚨 MANDATORY: Voice Notification (REQUIRED BEFORE ANY ACTION)
+### 3. Take Inventory
 
-**You MUST send this notification BEFORE doing anything else when this skill is invoked.**
+Next, you want to see what the current codebase has for evals to see if theres anything you can reuse or expand. If they already have evals, you may find targets, graders, and maybe even datasets you can reuse. If they don't have evals, look around core functionality of the project and make decisions on what a good target may be. 
 
-1. **Send voice notification**:
-   ```bash
-   curl -s -X POST http://localhost:31337/notify \
-     -H "Content-Type: application/json" \
-     -d '{"message": "Running the WORKFLOWNAME workflow in the Evals skill to ACTION"}' \
-     > /dev/null 2>&1 &
-   ```
+Put together an inventory with a description of what and why you chose: Target(s), Dataset, and optionally Graders
 
-2. **Output text notification**:
-   ```
-   Running the **WorkflowName** workflow in the **Evals** skill to ACTION...
-   ```
+### 4. Check Environment and Dependencies
 
-**This is not optional. Execute this curl command immediately upon skill invocation.**
-
-# Evals - AI Agent Evaluation Framework
-
-Comprehensive agent evaluation system based on Anthropic's "Demystifying Evals for AI Agents" (Jan 2026).
-
-**Key differentiator:** Evaluates agent *workflows* (transcripts, tool calls, multi-turn conversations), not just single outputs.
-
----
-
-## When to Activate
-
-- "run evals", "test this agent", "evaluate", "check quality", "benchmark"
-- "regression test", "capability test"
-- "run scenario", "multi-turn eval", "simulated user test"
-- "create scenario", "simulate conversation"
-- Compare agent behaviors across changes
-- Validate agent workflows before deployment
-- Verify ALGORITHM ISC rows
-- Create new evaluation tasks from failures
-
----
-
-## Core Concepts
-
-### Three Grader Types
-
-| Type | Strengths | Weaknesses | Use For |
-|------|-----------|------------|---------|
-| **Code-based** | Fast, cheap, deterministic, reproducible | Brittle, lacks nuance | Tests, state checks, tool verification |
-| **Model-based** | Flexible, captures nuance, scalable | Non-deterministic, expensive | Quality rubrics, assertions, comparisons |
-| **Human** | Gold standard, handles subjectivity | Expensive, slow | Calibration, spot checks, A/B testing |
-
-### Evaluation Types
-
-| Type | Pass Target | Purpose |
-|------|-------------|---------|
-| **Capability** | ~70% | Stretch goals, measuring improvement potential |
-| **Regression** | ~99% | Quality gates, detecting backsliding |
-
-### Key Metrics
-
-- **pass@k**: Probability of at least 1 success in k trials (measures capability)
-- **pass^k**: Probability all k trials succeed (measures consistency/reliability)
-
----
-
-## Workflow Routing
-
-| Request Pattern | Route To |
-|---|---|
-| Run eval, evaluate suite, run tests, benchmark | `Workflows/RunEval.md` |
-| Compare models, model comparison, A/B test models | `Workflows/CompareModels.md` |
-| Compare prompts, prompt comparison, test prompts | `Workflows/ComparePrompts.md` |
-| Create judge, model grader, evaluation judge | `Workflows/CreateJudge.md` |
-| Create use case, new eval, test case, create suite | `Workflows/CreateUseCase.md` |
-| Run scenario, multi-turn eval, simulated user test | `Workflows/RunScenario.md` |
-| Create scenario, new multi-turn eval, simulate conversation | `Workflows/CreateScenario.md` |
-| View results, eval results, scores, pass rate | `Workflows/ViewResults.md` |
-
-### CLI Quick Reference
-
-| Trigger | Tool |
-|---------|------|
-| Run suite | `Tools/AlgorithmBridge.ts` |
-| Log failure | `Tools/FailureToTask.ts log` |
-| Convert failures | `Tools/FailureToTask.ts convert-all` |
-| Create suite | `Tools/SuiteManager.ts create` |
-| Check saturation | `Tools/SuiteManager.ts check-saturation` |
-| Run scenario | `Tools/ScenarioRunner.ts --scenario <path>` |
-
----
-
-## Quick Reference
-
-### CLI Commands
+First, verify EZVals is available:
 
 ```bash
-# Run an eval suite
-bun run ${CLAUDE_SKILL_DIR}/Tools/AlgorithmBridge.ts -s <suite>
-
-# Log a failure for later conversion
-bun run ${CLAUDE_SKILL_DIR}/Tools/FailureToTask.ts log "description" -c category -s severity
-
-# Convert failures to test tasks
-bun run ${CLAUDE_SKILL_DIR}/Tools/FailureToTask.ts convert-all
-
-# Manage suites
-bun run ${CLAUDE_SKILL_DIR}/Tools/SuiteManager.ts create <name> -t capability -d "description"
-bun run ${CLAUDE_SKILL_DIR}/Tools/SuiteManager.ts list
-bun run ${CLAUDE_SKILL_DIR}/Tools/SuiteManager.ts check-saturation <name>
-bun run ${CLAUDE_SKILL_DIR}/Tools/SuiteManager.ts graduate <name>
+pip show ezvals
 ```
 
-### ALGORITHM Integration
+If not, include installation in the plan. Are there any external dependencies you may need to get started? Like API keys, Public Datasets, or libs to install. Include those in the plan. 
 
-Evals is a verification method for THE ALGORITHM ISC rows:
+### 5. Produce Plan
+
+You should have everything you need to plan a good eval from here. 
+
+## Guides
+
+### [targets.md](targets.md)
+**When to read:** Writing or wrapping your agent/function as an eval target
+
+- Target function pattern with EZVals
+- Test outputs, not paths
+- Capturing metadata (sources, tool calls)
+- Common target patterns
+
+### [datasets.md](datasets.md)
+**When to read:** Building test cases, sourcing data
+
+- Error analysis first principle
+- Dataset sizing (iteration vs analysis vs regression)
+- Sourcing test cases (manual, production, failure analysis)
+- Using EZVals `cases=` and `input_loader`
+- Building balanced datasets
+- Avoiding saturation
+
+### [synthetic-data.md](synthetic-data.md)
+**When to read:** Generating synthetic test cases for the user
+
+- When to generate directly vs. suggest a script
+- Dimension-based generation for variety
+- Validation and mixing with real data
+
+### [graders.md](graders.md)
+**When to read:** Scoring outputs, choosing grader types, calibrating LLM judges
+
+- Code vs model vs human graders
+- Assertions and `ctx.store(scores=...)`
+- LLM-as-judge patterns and calibration
+- Combining graders
+- Reducing flakiness
+
+### [running.md](running.md)
+**When to read:** Running evals, managing sessions, serving results for review
+
+- `ezvals run` vs `ezvals serve`
+- Session and run naming best practices
+- Serving results for user review
+- Comparing runs and exporting results
+
+## Use Cases
+
+### [use-cases/rag-agents.md](use-cases/rag-agents.md)
+**When to read:** Evaluating RAG systems, checking groundedness and retrieval quality
+
+- Hallucination detection
+- Correctness and coverage verification
+- Source quality checks
+- Full RAG eval example
+
+### [use-cases/coding-agents.md](use-cases/coding-agents.md)
+**When to read:** Evaluating agents that write or modify code
+
+- Unit tests on generated code
+- Fail-to-pass tests for bug fixes
+- Static analysis (linting, types, security)
+- Handling non-determinism (pass@k, pass^k)
+
+### [use-cases/testing-internals.md](use-cases/testing-internals.md)
+**When to read:** Testing tools, multi-agents, workflow nodes
+
+- When to test internals (and when not to)
+- Tool call verification
+- Multi-agent coordination
+- State verification
+- Environment isolation
+
+## Reference
+
+### [ezvals-docs/](ezvals-docs/)
+**When to read:** EZVals API reference—decorators, scoring, CLI, web UI
+
+- quickstart.mdx - Getting started
+- decorators.mdx - The @eval decorator options
+- eval-context.mdx - EvalContext API
+- scoring.mdx - Scoring with assertions and ctx.store()
+- patterns.mdx - Common eval patterns
+- cli.mdx - Command line interface
+- web-ui.mdx - Interactive results exploration
+
+## Running Evals
 
 ```bash
-# Run eval and update ISC row
-bun run ${CLAUDE_SKILL_DIR}/Tools/AlgorithmBridge.ts -s regression-core -r 3 -u
+# Run evals headlessly
+ezvals run evals/ --session my-experiment --run-name baseline
+
+# Serve results for user to review in browser
+ezvals serve evals/ --session my-experiment
 ```
 
-ISC rows can specify eval verification:
-```
-| # | What Ideal Looks Like | Verify |
-|---|----------------------|--------|
-| 1 | Auth bypass fixed | eval:auth-security |
-| 2 | Tests all pass | eval:regression |
-```
+See [running.md](running.md) for session management, run naming best practices, and detailed CLI options.
 
----
+## Resources
 
-## Available Graders
-
-### Code-Based (Fast, Deterministic)
-
-| Grader | Use Case |
-|--------|----------|
-| `string_match` | Exact substring matching |
-| `regex_match` | Pattern matching |
-| `binary_tests` | Run test files |
-| `static_analysis` | Lint, type-check, security scan |
-| `state_check` | Verify system state after execution |
-| `tool_calls` | Verify specific tools were called |
-
-### Model-Based (Nuanced)
-
-| Grader | Use Case |
-|--------|----------|
-| `llm_rubric` | Score against detailed rubric |
-| `natural_language_assert` | Check assertions are true |
-| `pairwise_comparison` | Compare to reference with position swap |
-
----
-
-## Domain Patterns
-
-Pre-configured grader stacks for common agent types:
-
-| Domain | Primary Graders |
-|--------|-----------------|
-| `coding` | binary_tests + static_analysis + tool_calls + llm_rubric |
-| `conversational` | llm_rubric + natural_language_assert + state_check |
-| `research` | llm_rubric + natural_language_assert + tool_calls |
-| `computer_use` | state_check + tool_calls + llm_rubric |
-
-See `Data/DomainPatterns.yaml` for full configurations.
-
----
-
-## Task Schema (YAML)
-
-```yaml
-task:
-  id: "fix-auth-bypass_1"
-  description: "Fix authentication bypass when password is empty"
-  type: regression  # or capability
-  domain: coding
-
-  graders:
-    - type: binary_tests
-      required: [test_empty_pw.py]
-      weight: 0.30
-
-    - type: tool_calls
-      weight: 0.20
-      params:
-        sequence: [read_file, edit_file, run_tests]
-
-    - type: llm_rubric
-      weight: 0.50
-      params:
-        rubric: prompts/security_review.md
-
-  trials: 3
-  pass_threshold: 0.75
-```
-
----
-
-## Resource Index
-
-| Resource | Purpose |
-|----------|---------|
-| `Types/index.ts` | Core type definitions |
-| `Graders/CodeBased/` | Deterministic graders |
-| `Graders/ModelBased/` | LLM-powered graders |
-| `Tools/TranscriptCapture.ts` | Capture agent trajectories |
-| `Tools/TrialRunner.ts` | Multi-trial execution with pass@k |
-| `Tools/SuiteManager.ts` | Suite management and saturation |
-| `Tools/FailureToTask.ts` | Convert failures to test tasks |
-| `Tools/AlgorithmBridge.ts` | ALGORITHM integration |
-| `Tools/ScenarioRunner.ts` | Multi-turn scenario runner (langwatch/scenario) |
-| `Tools/PAIAgentAdapter.ts` | Wraps PAI Inference.ts as scenario AgentAdapter |
-| `Tools/ScenarioToTranscript.ts` | Scenario result → Evals Transcript/Trial/GraderResult |
-| `Scenarios/` | Authored multi-turn scenarios (`.scenario.ts`) |
-| `Data/DomainPatterns.yaml` | Domain-specific grader configs |
-
----
-
-## Key Principles (from Anthropic)
-
-1. **Start with 20-50 real failures** - Don't overthink, capture what actually broke
-2. **Unambiguous tasks** - Two experts should reach identical verdicts
-3. **Balanced problem sets** - Test both "should do" AND "should NOT do"
-4. **Grade outputs, not paths** - Don't penalize valid creative solutions
-5. **Calibrate LLM judges** - Against human expert judgment
-6. **Check transcripts regularly** - Verify graders work correctly
-7. **Monitor saturation** - Graduate to regression when hitting 95%+
-8. **Build infrastructure early** - Evals shape how quickly you can adopt new models
-
----
-
-## Related
-
-- **ALGORITHM**: Evals is a verification method
-- **Science**: Evals implements scientific method
-- **Browser**: For visual verification graders
-
-## Gotchas
-
-- **Choose the right grader type:** Code-based for deterministic checks (fast, cheap). Model-based for nuanced quality (flexible, expensive). Human for calibration (gold standard, slow).
-- **pass@k scoring requires multiple runs.** A single run doesn't give statistical significance. Default to pass@3 minimum.
-- **Transcript capture must be enabled BEFORE the test run.** Can't retroactively capture transcripts.
-- **Eval results go to the current work directory** — not a global location. Tie evals to the work item.
-- **Don't evaluate skills with trivial prompts.** Simple one-liners may not trigger skill usage. Test prompts must be substantive.
-
-## Examples
-
-**Example 1: Compare two prompts**
-```
-User: "evaluate which prompt produces better summaries"
-→ Creates eval suite with 3+ test cases
-→ Runs both prompts against test cases
-→ Model-based grader scores quality
-→ Reports pass@k and comparative analysis
-```
-
-**Example 2: Regression test a skill change**
-```
-User: "run evals on the Research skill after the update"
-→ Uses existing test fixtures for Research
-→ Before/after comparison
-→ Reports any quality regressions
-```
-
-## Execution Log
-
-After completing any workflow, append a single JSONL entry:
-
-```bash
-echo '{"ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","skill":"Evals","workflow":"WORKFLOW_USED","input":"8_WORD_SUMMARY","status":"ok|error","duration_s":SECONDS}' >> ~/.claude/PAI/MEMORY/SKILLS/execution.jsonl
-```
-
-Replace `WORKFLOW_USED` with the workflow executed, `8_WORD_SUMMARY` with a brief input description, and `SECONDS` with approximate wall-clock time. Log `status: "error"` if the workflow failed.
+- [Anthropic: Demystifying Evals for AI Agents](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents)
+- [Hamel Husain: LLM Evals FAQ](https://hamel.dev/blog/posts/evals-faq/)
+- [EZVals GitHub](https://github.com/camronh/EZVals)

@@ -1,263 +1,98 @@
 ---
 name: daily-briefing
-description: Start your day with a prioritized sales briefing. Works standalone when you tell me your meetings and priorities, supercharged when you connect your calendar, CRM, and email. Trigger with "morning briefing", "daily brief", "what's on my plate today", "prep my day", or "start my day".
+description: Generate a comprehensive daily briefing combining calendar events, email inbox status, and reminders. Use when the user asks to plan their day, get a morning briefing, or wants an overview of their schedule and tasks. This orchestrates multiple skills together.
+allowed-tools: Bash
 ---
 
-# Daily Sales Briefing
+# Daily Briefing
 
-Get a clear view of what matters most today. This skill works with whatever you tell me, and gets richer when you connect your tools.
+Comprehensive morning briefing that combines your schedule, emails, and tasks into an actionable daily plan.
 
-## How It Works
+## When to Use
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                      DAILY BRIEFING                              │
-├─────────────────────────────────────────────────────────────────┤
-│  ALWAYS (works standalone)                                       │
-│  ✓ You tell me: today's meetings, key deals, priorities         │
-│  ✓ I organize: prioritized action plan for your day             │
-│  ✓ Output: scannable 2-minute briefing                          │
-├─────────────────────────────────────────────────────────────────┤
-│  SUPERCHARGED (when you connect your tools)                      │
-│  + Calendar: auto-pull today's meetings with attendees          │
-│  + CRM: pipeline alerts, tasks, deal health                     │
-│  + Email: unread from key accounts, waiting on replies          │
-│  + Enrichment: overnight signals on your accounts               │
-└─────────────────────────────────────────────────────────────────┘
+- "Plan my day"
+- "Give me my morning briefing"
+- "What's my day look like?"
+- "Help me organize my day"
+- "What should I focus on today?"
+
+## Requirements
+
+This skill requires `icalBuddy` for accurate calendar data with recurring events:
+```bash
+brew install ical-buddy
 ```
 
----
+## Instructions
 
-## Getting Started
+### Step 1: Gather Data
 
-When you run this skill, I'll ask for what I need:
+Run all three data-gathering commands in parallel:
 
-**If no calendar connected:**
-> "What meetings do you have today? (Just paste your calendar or list them)"
-
-**If no CRM connected:**
-> "What deals are you focused on this week? Any that need attention?"
-
-**If you have connectors:**
-I'll pull everything automatically and just show you the briefing.
-
----
-
-## Connectors (Optional)
-
-Connect your tools to supercharge this skill:
-
-| Connector | What It Adds |
-|-----------|--------------|
-| **Calendar** | Today's meetings with attendees, times, and context |
-| **CRM** | Open pipeline, deals closing soon, overdue tasks, stale deals |
-| **Email** | Unread from opportunity contacts, emails waiting on replies |
-| **Enrichment** | Overnight signals: funding, hiring, news on your accounts |
-
-> **No connectors?** No problem. Tell me your meetings and deals, and I'll create your briefing.
-
----
-
-## Output Format
-
-```markdown
-# Daily Briefing | [Day, Month Date]
-
----
-
-## #1 Priority
-
-**[Most important thing to do today]**
-[Why it matters and what to do about it]
-
----
-
-## Today's Numbers
-
-| Open Pipeline | Closing This Month | Meetings Today | Action Items |
-|---------------|-------------------|----------------|--------------|
-| $[X] | $[X] | [N] | [N] |
-
----
-
-## Today's Meetings
-
-### [Time] — [Company] ([Meeting Type])
-**Attendees:** [Names]
-**Context:** [One-line: deal status, last touch, what's at stake]
-**Prep:** [Quick action before this meeting]
-
-### [Time] — [Company] ([Meeting Type])
-**Attendees:** [Names]
-**Context:** [One-line context]
-**Prep:** [Quick action]
-
-*Run `call-prep [company]` for detailed meeting prep*
-
----
-
-## Pipeline Alerts
-
-### Needs Attention
-| Deal | Stage | Amount | Alert | Action |
-|------|-------|--------|-------|--------|
-| [Deal] | [Stage] | $[X] | [Why flagged] | [What to do] |
-
-### Closing This Week
-| Deal | Close Date | Amount | Confidence | Blocker |
-|------|------------|--------|------------|---------|
-| [Deal] | [Date] | $[X] | [H/M/L] | [If any] |
-
----
-
-## Email Priorities
-
-### Needs Response
-| From | Subject | Received |
-|------|---------|----------|
-| [Name @ Company] | [Subject] | [Time] |
-
-### Waiting On Reply
-| To | Subject | Sent | Days Waiting |
-|----|---------|------|--------------|
-| [Name @ Company] | [Subject] | [Date] | [N] |
-
----
-
-## Suggested Actions
-
-1. **[Action]** — [Why now]
-2. **[Action]** — [Why now]
-3. **[Action]** — [Why now]
-
----
-
-*Run `call-prep [company]` before your meetings*
-*Run `call-follow-up` after each call*
+1. **Check Calendar** (using icalBuddy for recurring events):
+```bash
+TODAY=$(date +%Y-%m-%d)
+icalBuddy -n -iep "title,datetime,location" -df "%Y-%m-%d" -tf "%H:%M" eventsFrom:"$TODAY" to:"$TODAY"
 ```
 
----
-
-## Execution Flow
-
-### Step 1: Gather Context
-
-**If connectors available:**
-```
-1. Calendar → Get today's events
-   - Filter to external meetings (non-company attendees)
-   - Pull: time, title, attendees, description
-
-2. CRM → Query your pipeline
-   - Open opportunities owned by you
-   - Flag: closing this week, no activity 7+ days, slipped dates
-   - Get: overdue tasks, upcoming tasks
-
-3. Email → Check priority messages
-   - Unread from opportunity contact domains
-   - Sent messages with no reply (3+ days)
-
-4. Enrichment → Check signals (if available)
-   - Funding, hiring, news on open accounts
+2. **Check Email**:
+```bash
+osascript .claude/skills/scan-inbox/scripts/scan_inbox.scpt 24 false
 ```
 
-**If no connectors:**
-```
-Ask user:
-1. "What meetings do you have today?"
-2. "What deals are you focused on? Any closing soon or needing attention?"
-3. "Anything urgent I should know about?"
-
-Work with whatever they provide.
+3. **Check Reminders**:
+```bash
+osascript .claude/skills/list-reminders/scripts/list_tasks.scpt
 ```
 
-### Step 2: Prioritize
+### Step 2: Analyze and Synthesize
 
-```
-Priority ranking:
-1. URGENT: Deal closing today/tomorrow not yet won
-2. HIGH: Meeting today with high-value opportunity
-3. HIGH: Unread email from decision-maker
-4. MEDIUM: Deal closing this week
-5. MEDIUM: Stale deal (7+ days no activity)
-6. LOW: Tasks due this week
-
-Select #1 Priority:
-- If meeting with >$50K deal today → prep that
-- If deal closing today → focus on close
-- If urgent email from buyer → respond first
-- Else → highest-value stale deal
-```
+Cross-reference the data:
+- Match calendar events with related tasks
+- Identify time blocks for task completion
+- Highlight urgent items from email
+- Flag scheduling conflicts
 
 ### Step 3: Generate Briefing
 
+Present in this format:
+
 ```
-Assemble sections based on available data:
+🌅 Good Morning! Here's Your Day (October 26, 2025)
 
-1. #1 Priority — Always include (even if simple)
-2. Today's Numbers — If CRM connected, otherwise skip
-3. Today's Meetings — From calendar or user input
-4. Pipeline Alerts — If CRM connected
-5. Email Priorities — If email connected
-6. Suggested Actions — Always include top 3 actions
-```
+📅 CALENDAR (0 events)
+• No meetings scheduled
+• Full day available for focused work
 
----
+📬 INBOX (38 unread, 24h)
+• 0 urgent/actionable items
+• Newsletters can be batch-processed later
 
-## Quick Mode
+✅ TASKS (X incomplete)
+• Overdue: X items - PRIORITY
+• Today: X items
+• Total pending: X items
 
-Say "quick brief" or "tldr my day" for abbreviated version:
+⏰ RECOMMENDED SCHEDULE
+• 9:00-12:00: Deep work on [high-priority task]
+• 12:00-13:00: Lunch + email triage
+• 13:00-16:00: [Task completion]
+• 16:00-17:00: Tomorrow prep + inbox zero
 
-```markdown
-# Quick Brief | [Date]
+💡 FOCUS FOR TODAY
+1. [Most important task]
+2. [Second priority]
+3. [Third priority]
 
-**#1:** [Priority action]
-
-**Meetings:** [N] — [Company 1], [Company 2], [Company 3]
-
-**Alerts:**
-- [Alert 1]
-- [Alert 2]
-
-**Do Now:** [Single most important action]
-```
-
----
-
-## End of Day Mode
-
-Say "wrap up my day" or "end of day summary" after your last meeting:
-
-```markdown
-# End of Day | [Date]
-
-**Completed:**
-- [Meeting 1] — [Outcome]
-- [Meeting 2] — [Outcome]
-
-**Pipeline Changes:**
-- [Deal] moved to [Stage]
-
-**Tomorrow's Focus:**
-- [Priority 1]
-- [Priority 2]
-
-**Open Loops:**
-- [ ] [Unfinished item needing follow-up]
+🎯 You have a clear day - make it count!
 ```
 
----
+### Step 4: Offer Follow-up
 
-## Tips
+Ask if the user wants to:
+- Block time for specific tasks
+- Dive deeper into any category
+- Create reminders from emails
+- Reschedule anything
 
-1. **Connect your calendar first** — Biggest time saver
-2. **Add CRM second** — Unlocks pipeline alerts
-3. **Even without connectors** — Just tell me your meetings and I'll help prioritize
-
----
-
-## Related Skills
-
-- **call-prep** — Deep prep for any specific meeting
-- **call-follow-up** — Process notes after calls
-- **account-research** — Research a company before first meeting
+For examples, see [examples.md](examples.md).

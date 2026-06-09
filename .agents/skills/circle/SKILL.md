@@ -1,175 +1,705 @@
 ---
 name: circle
-description: |
-  Circle integration. Manage data, records, and automate workflows. Use when the user wants to interact with Circle data.
-compatibility: Requires network access and a valid Membrane account (Free tier supported).
-license: MIT
-homepage: https://getmembrane.com
-repository: https://github.com/membranedev/application-skills
-metadata:
-  author: membrane
-  version: "1.0"
-  categories: ""
+description: Create circle geometry figures with center, radius, sectors, arcs, chords, and angles. Use when rendering circles, circumferences, or sectors in mini-lessons or geometry questions.
 ---
 
-# Circle
+# Circle Figure Skill
 
-Circle is a community platform that helps creators and brands build online communities. It's used by businesses and individuals looking to foster discussions, share content, and connect with their audience in a centralized space.
+This skill guides you through creating circle visualizations using the `CircleFigure` component.
 
-Official docs: https://developers.circle.com/
+## When to Use This Skill
 
-## Circle Overview
+Invoke this skill when:
+- Creating geometry mini-lessons involving circles or circumferences
+- Rendering circles, sectors, or arcs in practice questions
+- Visualizing circle properties (radius, diameter, chords, angles)
+- Building interactive circle explorations
+- Demonstrating area, circumference, sectors, central angles, inscribed angles, etc.
 
-- **Circles**
-  - **Members**
-- **Posts**
-- **Direct Messages**
-- **Files**
-- **Events**
+## Quick Start
 
-## Working with Circle
+### Circunferencia simple
 
-This skill uses the Membrane CLI to interact with Circle. Membrane handles authentication and credentials refresh automatically — so you can focus on the integration logic rather than auth plumbing.
+```tsx
+import { CircleFigure } from '@/components/figures/CircleFigure';
 
-### Install the CLI
-
-Install the Membrane CLI so you can run `membrane` from the terminal:
-
-```bash
-npm install -g @membranehq/cli@latest
+// Circunferencia con centro visible
+<CircleFigure
+  center={{ x: 200, y: 150, label: 'O' }}
+  radius={80}
+  mode="circunferencia"
+  showCenter
+/>
 ```
 
-### Authentication
+### Circulo relleno (default)
 
-```bash
-membrane login --tenant --clientName=<agentType>
+```tsx
+// Circulo con relleno azul semitransparente
+<CircleFigure
+  center={{ x: 200, y: 150, label: 'O' }}
+  radius={80}
+  showCenter
+  showRadius={{ toAngle: 45, label: 'r' }}
+/>
 ```
 
-This will either open a browser for authentication or print an authorization URL to the console, depending on whether interactive mode is available.
+### Arco con angulo (API unificada - recomendada)
 
-**Headless environments:** The command will print an authorization URL. Ask the user to open it in a browser. When they see a code after completing login, finish with:
-
-```bash
-membrane login complete <code>
+```tsx
+// Arco con angulo central y sector - todo en una configuracion
+<CircleFigure
+  center={{ x: 200, y: 150, label: 'O' }}
+  radius={80}
+  showCenter
+  arcs={[{
+    startAngle: 0,
+    endAngle: 90,
+    showAngle: true,      // Muestra arco del angulo central
+    showDegrees: true,    // Muestra valor en grados
+    showSector: true,     // Muestra sector relleno
+    showRadii: true,      // Muestra lineas de radio
+  }]}
+/>
 ```
 
-Add `--json` to any command for machine-readable JSON output.
+### Multiples arcos
 
-**Agent Types** : claude, openclaw, codex, warp, windsurf, etc. Those will be used to adjust tooling to be used best with your harness
-
-### Connecting to Circle
-
-Use `membrane connection ensure` to find or create a connection by app URL or domain:
-
-```bash
-membrane connection ensure "https://circle.so/" --json
-```
-The user completes authentication in the browser. The output contains the new connection id.
-
-This is the fastest way to get a connection. The URL is normalized to a domain and matched against known apps. If no app is found, one is created and a connector is built automatically.
-
-If the returned connection has `state: "READY"`, skip to **Step 2**.
-
-#### 1b. Wait for the connection to be ready
-
-If the connection is in `BUILDING` state, poll until it's ready:
-
-```bash
-npx @membranehq/cli connection get <id> --wait --json
+```tsx
+// Varios arcos con diferentes colores
+<CircleFigure
+  center={{ x: 200, y: 150, label: 'O' }}
+  radius={80}
+  showCenter
+  arcs={[
+    { startAngle: 0, endAngle: 90, showAngle: true, showDegrees: true },
+    { startAngle: 120, endAngle: 180, showSector: true, showRadii: true },
+  ]}
+/>
 ```
 
-The `--wait` flag long-polls (up to `--timeout` seconds, default 30) until the state changes. Keep polling until `state` is no longer `BUILDING`.
+### Sector circular (API legacy)
 
-The resulting state tells you what to do next:
-
-- **`READY`** — connection is fully set up. Skip to **Step 2**.
-- **`CLIENT_ACTION_REQUIRED`** — the user or agent needs to do something. The `clientAction` object describes the required action:
-  - `clientAction.type` — the kind of action needed:
-    - `"connect"` — user needs to authenticate (OAuth, API key, etc.). This covers initial authentication and re-authentication for disconnected connections.
-    - `"provide-input"` — more information is needed (e.g. which app to connect to).
-  - `clientAction.description` — human-readable explanation of what's needed.
-  - `clientAction.uiUrl` (optional) — URL to a pre-built UI where the user can complete the action. Show this to the user when present.
-  - `clientAction.agentInstructions` (optional) — instructions for the AI agent on how to proceed programmatically.
-
-  After the user completes the action (e.g. authenticates in the browser), poll again with `membrane connection get <id> --json` to check if the state moved to `READY`.
-
-- **`CONFIGURATION_ERROR`** or **`SETUP_FAILED`** — something went wrong. Check the `error` field for details.
-
-### Searching for actions
-
-Search using a natural language description of what you want to do:
-
-```bash
-membrane action list --connectionId=CONNECTION_ID --intent "QUERY" --limit 10 --json
+```tsx
+// Sector de 90 grados (cuarto de circulo)
+<CircleFigure
+  center={{ x: 200, y: 150, label: 'O' }}
+  radius={80}
+  showCenter
+  sector={{ startAngle: 0, endAngle: 90, showRadii: true }}
+/>
 ```
 
-You should always search for actions in the context of a specific connection.
+### Arco resaltado (API legacy)
 
-Each result includes `id`, `name`, `description`, `inputSchema` (what parameters the action accepts), and `outputSchema` (what it returns).
-
-## Popular actions
-
-| Name | Key | Description |
-| --- | --- | --- |
-| List Members | list-members | Lists members of a community with pagination and sorting options |
-| List Spaces | list-spaces | Lists all spaces in a community |
-| List Space Groups | list-space-groups | Lists all space groups in a community |
-| List Posts | list-posts | Lists posts in a community or space with filtering options |
-| List Topics | list-topics | Lists topics in a community |
-| List Events | list-events | Lists events in a community |
-| List Comments | list-comments | Lists comments on a post |
-| Get Member | get-member | Gets details of a specific community member by ID |
-| Get Space | get-space | Gets details of a specific space |
-| Get Space Group | get-space-group | Gets details of a specific space group |
-| Get Post | get-post | Gets details of a specific post |
-| Get Comment | get-comment | Gets details of a specific comment |
-| Get Community | get-community | Gets details of a specific community by ID or slug |
-| Create Post | create-post | Creates a new post in a space |
-| Create Space | create-space | Creates a new space in a community |
-| Create Topic | create-topic | Creates a new topic in a community |
-| Create Event | create-event | Creates a new event in a space |
-| Create Comment | create-comment | Creates a new comment on a post |
-| Update Member | update-member | Updates a community member's profile information |
-| Delete Post | delete-post | Deletes a post |
-
-### Running actions
-
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --json
+```tsx
+// Arco de 120 grados
+<CircleFigure
+  center={{ x: 200, y: 150, label: 'O' }}
+  radius={80}
+  arc={{ startAngle: 30, endAngle: 150, strokeWidth: 4 }}
+/>
 ```
 
-To pass JSON parameters:
+### Angulo central (API legacy)
 
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --input '{"key": "value"}' --json
+```tsx
+// Angulo central con medida en grados
+<CircleFigure
+  center={{ x: 200, y: 150, label: 'O' }}
+  radius={80}
+  showCenter
+  centralAngle={{
+    startAngle: 0,
+    endAngle: 60,
+    showDegrees: true,
+  }}
+/>
 ```
 
-The result is in the `output` field of the response.
+### Cuerda
 
-
-### Proxy requests
-
-When the available actions don't cover your use case, you can send requests directly to the Circle API through Membrane's proxy. Membrane automatically appends the base URL to the path you provide and injects the correct authentication headers — including transparent credential refresh if they expire.
-
-```bash
-membrane request CONNECTION_ID /path/to/endpoint
+```tsx
+// Cuerda entre dos puntos de la circunferencia
+<CircleFigure
+  center={{ x: 200, y: 150, label: 'O' }}
+  radius={80}
+  chords={[
+    { fromAngle: 30, toAngle: 150, showEndpoints: true },
+  ]}
+/>
 ```
 
-Common options:
+### Con grid de fondo
 
-| Flag | Description |
-|------|-------------|
-| `-X, --method` | HTTP method (GET, POST, PUT, PATCH, DELETE). Defaults to GET |
-| `-H, --header` | Add a request header (repeatable), e.g. `-H "Accept: application/json"` |
-| `-d, --data` | Request body (string) |
-| `--json` | Shorthand to send a JSON body and set `Content-Type: application/json` |
-| `--rawData` | Send the body as-is without any processing |
-| `--query` | Query-string parameter (repeatable), e.g. `--query "limit=10"` |
-| `--pathParam` | Path parameter (repeatable), e.g. `--pathParam "id=123"` |
+```tsx
+<CircleFigure
+  center={{ x: 200, y: 150, label: 'O' }}
+  radius={80}
+  showCenter
+  showGrid
+/>
+```
 
+---
 
-## Best practices
+## Props Reference
 
-- **Always prefer Membrane to talk with external apps** — Membrane provides pre-built actions with built-in auth, pagination, and error handling. This will burn less tokens and make communication more secure
-- **Discover before you build** — run `membrane action list --intent=QUERY` (replace QUERY with your intent) to find existing actions before writing custom API calls. Pre-built actions handle pagination, field mapping, and edge cases that raw API calls miss.
-- **Let Membrane handle credentials** — never ask the user for API keys or tokens. Create a connection instead; Membrane manages the full Auth lifecycle server-side with no local secrets.
+### Required Props
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `center` | `LabeledPoint` | Centro del circulo con coordenadas y etiqueta opcional |
+| `radius` | `number` | Radio en pixeles SVG |
+
+### LabeledPoint
+
+```typescript
+interface LabeledPoint {
+  x: number;          // Coordenada X
+  y: number;          // Coordenada Y
+  label?: string;     // Etiqueta del punto (ej: 'O')
+  labelOffset?: { x: number; y: number };  // Ajuste de posicion del label
+}
+```
+
+### Display Mode
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `standalone` | `boolean` | `true` | `true`: renderiza `<svg>`, `false`: renderiza `<g>` para uso en CartesianPlane |
+| `mode` | `'circunferencia' \| 'circulo'` | `'circulo'` | `circunferencia`: solo borde, `circulo`: con relleno |
+
+### Center and Lines
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `showCenter` | `boolean` | `false` | Mostrar punto del centro |
+| `showRadius` | `boolean \| RadiusConfig` | `false` | Mostrar linea del radio |
+| `showDiameter` | `boolean \| DiameterConfig` | `false` | Mostrar linea del diametro |
+
+### RadiusConfig
+
+```typescript
+interface RadiusConfig {
+  toAngle?: number;        // Angulo en grados (0 = derecha, aumenta en sentido horario)
+  label?: string;          // Etiqueta (ej: 'r', '5 cm')
+  color?: string;          // Color personalizado
+  strokeStyle?: 'solid' | 'dashed' | 'dotted';
+  showMeasurement?: boolean;
+}
+```
+
+### DiameterConfig
+
+```typescript
+interface DiameterConfig {
+  angle?: number;          // Angulo del diametro (0 = horizontal)
+  label?: string;          // Etiqueta (ej: 'd', '10 cm')
+  color?: string;
+  strokeStyle?: 'solid' | 'dashed' | 'dotted';
+  endpointLabels?: [string, string];  // Labels para los extremos
+}
+```
+
+### Unified Arcs (API Recomendada)
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `arcs` | `UnifiedArcConfig[]` | Array de arcos con configuracion unificada (preferido sobre sector/arc/centralAngle separados) |
+
+### UnifiedArcConfig
+
+```typescript
+interface UnifiedArcConfig {
+  startAngle: number;        // Angulo de inicio (grados)
+  endAngle: number;          // Angulo de fin (grados)
+
+  // Apariencia del arco
+  strokeWidth?: number;      // Ancho del trazo (default: 4)
+  color?: string;            // Color del arco y elementos relacionados
+
+  // Opciones unificadas - combina lo que antes eran 3 configs separadas
+  showAngle?: boolean;       // Mostrar arco del angulo central en el centro
+  showDegrees?: boolean;     // Mostrar valor en grados
+  angleLabel?: string;       // Etiqueta personalizada (ej: 'theta', 'alpha')
+  angleArcRadius?: number;   // Radio del arco del angulo (default: 25)
+  showSector?: boolean;      // Mostrar sector relleno (pie slice)
+  sectorFill?: string;       // Color del relleno del sector
+  sectorOpacity?: number;    // Opacidad del sector (0-1, default: 0.3)
+  showRadii?: boolean;       // Mostrar lineas de radio en los bordes
+}
+```
+
+**Ventajas de la API unificada:**
+- Una sola configuracion en lugar de tres props separadas
+- Soporte para multiples arcos con un array
+- Menos codigo repetitivo (no hay que especificar los mismos angulos 3 veces)
+
+### Sector and Arc (API Legacy)
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `sector` | `SectorConfig` | Configuracion del sector circular (legacy) |
+| `arc` | `ArcConfig` | Configuracion del arco resaltado (legacy) |
+
+### SectorConfig
+
+```typescript
+interface SectorConfig {
+  startAngle: number;      // Angulo de inicio (grados)
+  endAngle: number;        // Angulo de fin (grados)
+  fill?: string;           // Color de relleno
+  fillOpacity?: number;    // Opacidad (0-1)
+  stroke?: string;         // Color del borde
+  showRadii?: boolean;     // Mostrar lineas de radio en los bordes
+}
+```
+
+### ArcConfig
+
+```typescript
+interface ArcConfig {
+  startAngle: number;      // Angulo de inicio (grados)
+  endAngle: number;        // Angulo de fin (grados)
+  strokeWidth?: number;    // Ancho del trazo
+  color?: string;          // Color del arco
+  showLength?: boolean;    // Mostrar longitud del arco
+}
+```
+
+### Angles
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `centralAngle` | `CentralAngleConfig` | Angulo central |
+| `inscribedAngle` | `InscribedAngleConfig` | Angulo inscrito |
+
+### CentralAngleConfig
+
+```typescript
+interface CentralAngleConfig {
+  startAngle: number;      // Angulo de inicio (grados)
+  endAngle: number;        // Angulo de fin (grados)
+  showDegrees?: boolean;   // Mostrar valor en grados
+  label?: string;          // Etiqueta personalizada (ej: 'theta', 'alpha')
+  arcRadius?: number;      // Radio del arco de visualizacion
+  color?: string;
+}
+```
+
+### InscribedAngleConfig
+
+```typescript
+interface InscribedAngleConfig {
+  vertex: LabeledPoint | number;  // Vertice en la circunferencia (punto o angulo)
+  arcStart: number;        // Inicio del arco subtendido
+  arcEnd: number;          // Fin del arco subtendido
+  showDegrees?: boolean;
+  label?: string;
+  color?: string;
+  arcRadius?: number;
+}
+```
+
+### Chords
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `chords` | `ChordConfig[]` | Array de configuraciones de cuerdas |
+
+### ChordConfig
+
+```typescript
+interface ChordConfig {
+  fromAngle: number;       // Punto de inicio (angulo en grados)
+  toAngle: number;         // Punto de fin (angulo en grados)
+  label?: string;          // Etiqueta de la cuerda
+  color?: string;
+  strokeStyle?: 'solid' | 'dashed' | 'dotted';
+  showEndpoints?: boolean; // Mostrar marcadores en los extremos
+}
+```
+
+### Points on Circle
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `points` | `PointOnCircleConfig[]` | Puntos a marcar en la circunferencia |
+
+### PointOnCircleConfig
+
+```typescript
+interface PointOnCircleConfig {
+  angle: number;           // Angulo en grados (0 = derecha)
+  label?: string;          // Etiqueta del punto
+  radius?: number;         // Radio del marcador en pixeles
+  color?: string;
+}
+```
+
+### Visual Styling
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `fill` | `string` | `'rgba(59,130,246,0.15)'` | Color de relleno (modo circulo) |
+| `fillOpacity` | `number` | - | Opacidad del relleno |
+| `stroke` | `string` | `'rgb(59,130,246)'` | Color del borde |
+| `strokeWidth` | `number` | `2` | Ancho del borde |
+
+### Grid and Background
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `showGrid` | `boolean` | `false` | Mostrar cuadricula |
+| `gridSize` | `number` | `20` | Tamano de celda |
+| `gridColor` | `string` | `'rgb(229,231,235)'` | Color de la cuadricula |
+
+### SVG Options
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `width` | `number` | auto | Ancho del SVG |
+| `height` | `number` | auto | Alto del SVG |
+| `viewBox` | `string` | auto | ViewBox personalizado |
+| `padding` | `number` | `40` | Padding alrededor del circulo |
+| `className` | `string` | - | Clases CSS adicionales |
+| `ariaLabel` | `string` | - | Label para accesibilidad |
+
+---
+
+## Common Patterns
+
+### Area del Circulo
+
+```tsx
+<CircleFigure
+  center={{ x: 200, y: 150, label: 'O' }}
+  radius={80}
+  mode="circulo"
+  showCenter
+  showRadius={{ toAngle: 0, label: 'r' }}
+  showGrid
+/>
+// Area = pi * r^2
+```
+
+### Longitud de la Circunferencia
+
+```tsx
+<CircleFigure
+  center={{ x: 200, y: 150, label: 'O' }}
+  radius={80}
+  mode="circunferencia"
+  showCenter
+  showRadius={{ toAngle: 0, label: 'r' }}
+/>
+// Circunferencia = 2 * pi * r
+```
+
+### Area del Sector (API unificada)
+
+```tsx
+// Con la API unificada, todo en un solo arco
+<CircleFigure
+  center={{ x: 200, y: 150, label: 'O' }}
+  radius={80}
+  showCenter
+  arcs={[{
+    startAngle: 0,
+    endAngle: 90,
+    showSector: true,
+    showRadii: true,
+    showAngle: true,
+    showDegrees: true,
+  }]}
+/>
+// Area sector = (angulo/360) * pi * r^2
+```
+
+### Longitud del Arco (API unificada)
+
+```tsx
+// Arco con angulo central - todo en una configuracion
+<CircleFigure
+  center={{ x: 200, y: 150, label: 'O' }}
+  radius={80}
+  showCenter
+  arcs={[{
+    startAngle: 30,
+    endAngle: 150,
+    showAngle: true,
+    showDegrees: true,
+  }]}
+/>
+// Longitud arco = (angulo/360) * 2 * pi * r
+```
+
+### Angulo Inscrito
+
+```tsx
+// El angulo inscrito es la mitad del angulo central
+<CircleFigure
+  center={{ x: 200, y: 150, label: 'O' }}
+  radius={80}
+  inscribedAngle={{
+    vertex: 180,  // Vertice en la circunferencia (angulo 180 grados)
+    arcStart: 60,
+    arcEnd: 120,
+    showDegrees: true,
+  }}
+  centralAngle={{
+    startAngle: 60,
+    endAngle: 120,
+    showDegrees: true,
+  }}
+/>
+// Angulo inscrito = angulo central / 2
+```
+
+### Radio y Diametro
+
+```tsx
+<CircleFigure
+  center={{ x: 200, y: 150, label: 'O' }}
+  radius={80}
+  showCenter
+  showRadius={{ toAngle: 45, label: 'r' }}
+  showDiameter={{ angle: 0, label: 'd' }}
+/>
+// d = 2r
+```
+
+### Cuerda y su Relacion con el Radio
+
+```tsx
+<CircleFigure
+  center={{ x: 200, y: 150, label: 'O' }}
+  radius={80}
+  showCenter
+  chords={[
+    { fromAngle: 30, toAngle: 150, label: 'c', showEndpoints: true },
+  ]}
+  showRadius={{ toAngle: 30, label: 'r' }}
+/>
+```
+
+### Semicirculo
+
+```tsx
+<CircleFigure
+  center={{ x: 200, y: 150, label: 'O' }}
+  radius={80}
+  showCenter
+  sector={{
+    startAngle: 0,
+    endAngle: 180,
+    showRadii: true,
+  }}
+/>
+```
+
+---
+
+## Color Palette
+
+| Elemento | Light Mode | Dark Mode |
+|----------|-----------|-----------|
+| Circle fill | `rgba(59,130,246,0.15)` | `rgba(59,130,246,0.3)` |
+| Circle stroke | `rgb(59,130,246)` | `rgb(96,165,250)` |
+| Center point | `rgb(239,68,68)` | `rgb(248,113,113)` |
+| Radius/Diameter | `rgb(168,85,247)` | `rgb(192,132,252)` |
+| Sector fill | `rgba(168,85,247,0.3)` | `rgba(168,85,247,0.4)` |
+| Arc | `rgb(245,158,11)` | `rgb(251,191,36)` |
+| Angle arc | `rgb(245,158,11)` | `rgb(251,191,36)` |
+| Chord | `rgb(16,185,129)` | `rgb(52,211,153)` |
+| Grid | `rgb(229,231,235)` | `rgb(75,85,99)` |
+| Labels | `rgb(17,24,39)` | `rgb(255,255,255)` |
+
+---
+
+## Debug Page
+
+Para experimentar interactivamente con todas las opciones:
+
+**URL:** `/admin/figure-debug`
+
+Selecciona "Circunferencia" en el selector de tipo de figura.
+
+La pagina de debug permite:
+- Seleccionar modo (circulo vs circunferencia)
+- Ajustar posicion del centro y radio con sliders
+- Activar/desactivar opciones visuales (centro, radio, diametro, grid)
+- **Agregar/eliminar arcos con la API unificada** (sector + angulo + arco en uno)
+- Configurar cada arco con: angulos, mostrar angulo, mostrar grados, mostrar sector, mostrar radios
+- Agregar/eliminar cuerdas con angulos personalizados
+- Seleccionar presets (circulo basico, circunferencia, sector 90, semicirculo)
+- Ver propiedades calculadas (circunferencia, area, longitud de arcos)
+- Copiar el codigo generado con la API unificada
+
+---
+
+## Integration with Mini-Lessons
+
+### In Step Components
+
+```tsx
+// En Step2Explore.tsx
+import { CircleFigure } from '@/components/figures/CircleFigure';
+
+export default function Step2Explore({ isActive }: LessonStepProps) {
+  const [showSector, setShowSector] = useState(false);
+  const [sectorAngle, setSectorAngle] = useState(90);
+
+  return (
+    <div className="flex flex-col items-center">
+      <CircleFigure
+        center={{ x: 200, y: 150, label: 'O' }}
+        radius={80}
+        showCenter
+        sector={showSector ? {
+          startAngle: 0,
+          endAngle: sectorAngle,
+          showRadii: true,
+        } : undefined}
+      />
+
+      <div className="mt-4 space-y-2">
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={showSector}
+            onChange={(e) => setShowSector(e.target.checked)}
+          />
+          Mostrar sector
+        </label>
+
+        {showSector && (
+          <input
+            type="range"
+            min="10"
+            max="360"
+            value={sectorAngle}
+            onChange={(e) => setSectorAngle(Number(e.target.value))}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+```
+
+### With Animation
+
+```tsx
+import { motion } from 'framer-motion';
+
+// Wrap CircleFigure in motion.div for animations
+<motion.div
+  initial={{ opacity: 0, scale: 0.8 }}
+  animate={{ opacity: 1, scale: 1 }}
+  transition={{ duration: 0.5 }}
+>
+  <CircleFigure
+    center={{ x: 200, y: 150, label: 'O' }}
+    radius={80}
+    showCenter
+  />
+</motion.div>
+```
+
+### Inside CartesianPlane
+
+```tsx
+import { CartesianPlane } from '@/components/figures/CartesianPlane';
+import { CircleFigure } from '@/components/figures/CircleFigure';
+
+// Circulo centrado en el origen del plano cartesiano
+<CartesianPlane xRange={[-5, 5]} yRange={[-5, 5]} scale={30} showAxes showGrid>
+  <CircleFigure
+    standalone={false}  // Importante: renderiza <g> en lugar de <svg>
+    center={{ x: 0, y: 0, label: 'O' }}
+    radius={90}  // En coordenadas del plano (90px = 3 unidades con scale=30)
+    showCenter
+    showRadius={{ toAngle: 0, label: 'r = 3' }}
+  />
+</CartesianPlane>
+```
+
+---
+
+## Utility Functions
+
+Las funciones matematicas estan disponibles en `@/lib/geometry/circleUtils`:
+
+```typescript
+import {
+  // Calculos basicos
+  circumference,           // Circunferencia = 2 * pi * r
+  area,                    // Area = pi * r^2
+  arcLength,               // Longitud de arco
+  sectorArea,              // Area de sector
+  chordLength,             // Longitud de cuerda
+
+  // Conversiones de coordenadas
+  polarToCartesian,        // Polar a Cartesiano (convencion SVG)
+  cartesianToPolar,        // Cartesiano a Polar
+  pointOnCircle,           // Punto en la circunferencia
+
+  // Generacion de paths SVG
+  circlePath,              // Path completo del circulo
+  describeArc,             // Path de un arco
+  describeSector,          // Path de un sector
+
+  // Posicionamiento de labels
+  calculateCenterLabelPosition,
+  calculateCircumferenceLabelPosition,
+  calculateRadiusLabelPosition,
+  calculateChordLabelPosition,
+  calculateAngleLabelPosition,
+
+  // Validacion
+  validateCircle,          // Valida centro y radio
+  validateSector,          // Valida angulos del sector
+  validateChord,           // Valida angulos de la cuerda
+
+  // Utilidades de angulos
+  normalizeAngle,          // Normaliza a 0-360
+  angleDifference,         // Diferencia entre angulos
+  inscribedAngleFromCentral, // Angulo inscrito = central / 2
+} from '@/lib/geometry/circleUtils';
+```
+
+### Example Usage
+
+```typescript
+import { circumference, area, arcLength, sectorArea } from '@/lib/geometry/circleUtils';
+
+const radius = 5;
+
+console.log('Circunferencia:', circumference(radius));  // 31.416...
+console.log('Area:', area(radius));                     // 78.54...
+console.log('Longitud arco 90°:', arcLength(radius, 90));  // 7.854...
+console.log('Area sector 90°:', sectorArea(radius, 90));   // 19.635...
+```
+
+---
+
+## Angle Convention
+
+Los angulos en CircleFigure siguen la convencion SVG:
+- **0 grados** = derecha (posicion 3 en un reloj)
+- **Los angulos aumentan en sentido horario**
+- **90 grados** = abajo
+- **180 grados** = izquierda
+- **270 grados** = arriba
+
+```
+        270°
+         |
+  180° --O-- 0°
+         |
+        90°
+```
+
+Esto es diferente a la convencion matematica estandar donde los angulos aumentan en sentido antihorario. La convencion SVG se usa porque el eje Y esta invertido en SVG (Y aumenta hacia abajo).

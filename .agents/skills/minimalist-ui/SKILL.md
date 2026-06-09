@@ -1,32 +1,7 @@
 ---
 name: minimalist-ui
-description: |
-  Clean editorial-style interfaces. Warm monochrome palette, typographic contrast, flat bento grids, muted pastels. No gradients, no heavy shadows.
-triggers:
-  - "minimalist ui"
-  - "editorial product UI"
-  - "linear style"
-  - "warm monochrome"
-od:
-  mode: prototype
-  surface: web
-  platform: desktop
-  scenario: design
-  category: creative-direction
-  upstream: "https://github.com/Leonxlnx/taste-skill"
-  preview:
-    type: html
-  design_system:
-    requires: true
-  craft:
-    requires:
-      - typography
-      - color
-      - anti-ai-slop
-  example_prompt: |
-    Design a minimalist editorial product interface with warm monochrome color, crisp typography, flat structure, and no decorative excess.
+description: Clean editorial-style interfaces. Warm monochrome palette, typographic contrast, flat bento grids, muted pastels. No gradients, no heavy shadows.
 ---
-
 
 # Protocol: Premium Utilitarian Minimalism UI Architect
 
@@ -71,8 +46,8 @@ Color is a scarce resource, utilized only for semantic meaning or subtle accents
   - Border-radius must be crisp: `8px` or `12px` maximum.
   - Internal padding must be generous (e.g., `24px` to `40px`).
 - Primary Call-To-Action (Buttons):
-  - Solid background `#111111`, text `#FFFFFF`.
-  - Slight border-radius (`4px` to `6px`). No box-shadow.
+  - Solid background `#111111`, text `#FFFFFF`. 
+  - Slight border-radius (`4px` to `6px`). No box-shadow. 
   - Hover state should be a subtle color shift to `#333333` or a micro-scale `transform: scale(0.98)`.
 - Tags & Status Badges:
   - Pill-shaped (`border-radius: 9999px`), very small typography (`text-xs`), uppercase with wide tracking (`letter-spacing: 0.05em`).

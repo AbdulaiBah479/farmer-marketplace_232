@@ -1,55 +1,33 @@
 ---
 name: setup-api-key
-description: Guides users through setting up an ElevenLabs API key for ElevenLabs MCP tools. Use when the user needs to configure an ElevenLabs API key, when ElevenLabs tools fail due to missing API key, or when the user mentions needing access to ElevenLabs. First checks whether ELEVENLABS_API_KEY is already configured and valid, and only runs full setup when needed.
+description: Guide users through obtaining and configuring a Vapi API key. Use when the user needs to set up Vapi, when API calls fail due to missing keys, or when the user mentions needing access to Vapi's voice AI platform.
 license: MIT
-compatibility: Requires internet access to elevenlabs.io and api.elevenlabs.io.
+compatibility: Requires internet access to vapi.ai and api.vapi.ai.
+metadata:
+  author: vapi
+  version: "1.0"
 ---
 
-# ElevenLabs API Key Setup
+# Vapi API Key Setup
 
-Guide the user through obtaining and configuring an ElevenLabs API key.
+Guide the user through obtaining and configuring a Vapi API key for the voice AI platform.
 
 ## Workflow
-
-### Step 0: Check for an existing API key first
-
-Before asking the user for a key, check for an existing `ELEVENLABS_API_KEY`:
-
-1. Check whether `ELEVENLABS_API_KEY` exists in the current environment.
-2. If it's not in the environment, check `.env` for `ELEVENLABS_API_KEY=<value>`.
-3. If an existing key is found, **validate it**:
-   ```
-   GET https://api.elevenlabs.io/v1/user
-   Header: xi-api-key: <existing-api-key>
-   ```
-4. **If existing key validation succeeds:**
-   - Tell the user ElevenLabs is already configured and working
-   - Skip the setup flow
-   - Ask whether they want to replace/rotate the key; if not, stop
-5. **If existing key validation fails:**
-   - Tell the user the existing key appears invalid or expired
-   - Continue to Step 1
 
 ### Step 1: Request the API key
 
 Tell the user:
 
-> To set up ElevenLabs, open the API keys page: https://elevenlabs.io/app/settings/api-keys
+> To set up Vapi, open the API keys page in the Vapi Dashboard: https://dashboard.vapi.ai/org/api-keys
 >
-> (Need an account? Create one at https://elevenlabs.io/app/sign-up first)
+> (Need an account? Create one at https://dashboard.vapi.ai/signup first)
 >
 > If you don't have an API key yet:
-> 1. Click "Create key"
-> 2. Name it (or use the default)
-> 3. Set permission for your key. If you provide a key with "User" permission set to "Read" this skill will automatically verify if your key works
-> 4. Click "Create key" to confirm
-> 5. **Copy the key immediately** - it's only shown once!
+> 1. Click **"Create Key"**
+> 2. Name your key (e.g., "development")
+> 3. Copy the key immediately — it is only shown once
 >
 > Paste your API key here when ready.
-
-For service account keys, optionally restrict usage to trusted IP addresses or CIDR ranges with
-`allowed_ips`. Omitting it or setting it to `null` allows all IPs; when editing a service account
-key, use `clear` to remove the allowlist or omit the field to leave it unchanged.
 
 Then wait for the user's next message which should contain the API key.
 
@@ -58,24 +36,59 @@ Then wait for the user's next message which should contain the API key.
 Once the user provides the API key:
 
 1. **Validate the key** by making a request:
-   ```
-   GET https://api.elevenlabs.io/v1/user
-   Header: xi-api-key: <the-api-key>
+   ```bash
+   curl -s -o /dev/null -w "%{http_code}" https://api.vapi.ai/assistant \
+     -H "Authorization: Bearer <the-api-key>"
    ```
 
-2. **If validation fails:**
+2. **If validation fails** (non-200 response):
    - Tell the user the API key appears to be invalid
-   - Ask them to try again
-   - Remind them of the URL: https://elevenlabs.io/app/settings/api-keys
-   - If it fails a second time, display an error and exit
+   - Ask them to double-check and try again
+   - Remind them of the URL: https://dashboard.vapi.ai/org/api-keys
 
-3. **If validation succeeds**, save the API key in a `.env` file:
+3. **If validation succeeds** (200 response), save the API key:
+
+   Check if a `.env` file exists. If so, append to it. If not, create one:
    ```
-   ELEVENLABS_API_KEY=<the-api-key>
+   VAPI_API_KEY=<the-api-key>
    ```
-   - If `.env` already has `ELEVENLABS_API_KEY=...`, replace that line
-   - Otherwise add a new line for `ELEVENLABS_API_KEY`
 
 4. **Confirm success:**
-   > Done! Your key is stored as an environment variable in .env
-   > Keep the key safe! Don't share it with anyone!
+   > Your Vapi API key is configured and stored in `.env` as `VAPI_API_KEY`.
+   >
+   > You can now use Vapi's API to create assistants, make calls, and build voice AI agents.
+   >
+   > Keep this key safe — do not commit it to version control.
+
+### Step 3: Verify .gitignore
+
+Check if `.gitignore` exists and contains `.env`. If not, add it:
+```
+.env
+```
+
+## Environment Variable
+
+All Vapi skills expect the API key in the `VAPI_API_KEY` environment variable. The base URL for all API requests is:
+
+```
+https://api.vapi.ai
+```
+
+Authentication is via Bearer token:
+```
+Authorization: Bearer $VAPI_API_KEY
+```
+
+## Additional Resources
+
+This skills repository includes a **Vapi documentation MCP server** (`vapi-docs`) that gives your AI agent access to the full Vapi knowledge base. Use the `searchDocs` tool to look up anything beyond what this skill covers — advanced configuration, troubleshooting, SDK details, and more.
+
+**Auto-configured:** If you cloned or installed these skills, the MCP server is already configured via `.mcp.json` (Claude Code), `.cursor/mcp.json` (Cursor), or `.vscode/mcp.json` (VS Code Copilot).
+
+**Manual setup:** If your agent doesn't auto-detect the config, run:
+```bash
+claude mcp add vapi-docs -- npx -y mcp-remote https://docs.vapi.ai/_mcp/server
+```
+
+See the [README](../README.md#vapi-documentation-server-mcp) for full setup instructions across all supported agents.

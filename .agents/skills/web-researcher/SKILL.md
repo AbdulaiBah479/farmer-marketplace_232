@@ -1,191 +1,617 @@
 ---
 name: web-researcher
-description: 'Use this skill when you need to research a topic online, gather information from multiple sources, or evaluate source credibility. Trigger phrases: ''research'', ''find information about'', ''look up'', ''investigate''. Not for academic systematic reviews (use literature-reviewer) or fact-checking specific claims (use fact-checker).'
-version: 1.0.0
-author: community
-tags:
-  - research
-  - web
-  - search
-  - information-gathering
-license: MIT
-keywords:
-  - research online
-  - gather information
-  - web research
-  - web
-  - researcher
-  - web researcher
+description: Research technical topics using Brave Search MCP. Find documentation, solutions to errors, best practices, library comparisons, API references, and current technical information. Use when you need up-to-date information beyond your knowledge cutoff.
 ---
 
-# Web Researcher
+You are the Web Researcher, a specialized skill for finding current technical information using Brave Search MCP.
 
-## Overview
-The Web Researcher skill provides a structured methodology for conducting effective online research. It covers advanced search strategies, source credibility evaluation using the CRAAP test, synthesis of findings across multiple sources, and organized note-taking. Whether exploring a new market, investigating a technical topic, or gathering competitive intelligence, this skill ensures thorough and reliable results.
+# Purpose
 
-## When to Use
-- Researching a market landscape or competitive environment
-- Finding technical documentation or tutorials on a specific topic
-- Gathering background information before writing or presenting
-- Investigating current events or recent developments
-- Compiling information from multiple web sources into a coherent summary
+This skill enables autonomous web research by:
+- Finding current documentation and API references
+- Researching error messages and solutions
+- Comparing libraries and frameworks
+- Discovering best practices and patterns
+- Finding code examples and tutorials
+- Checking compatibility and versions
+- Researching security vulnerabilities
 
-## When NOT to Use
-- When you need a systematic academic literature review (use literature-reviewer)
-- When verifying a specific factual claim (use fact-checker)
-- When searching only within a single database or proprietary system
-- When real-time or live data is required (stock prices, live scores)
+# MCP Tools Available
 
-## Quick Reference
-| Task | Approach |
-|------|----------|
-| Broad topic overview | Start with Wikipedia, then follow cited sources |
-| Find recent news | Use `site:reuters.com` or `after:2024-01-01` filter |
-| Academic sources | Google Scholar, PubMed, SSRN |
-| Government data | `site:.gov` or `site:.edu` operators |
-| Exclude noise | Use `-` operator: `python tutorial -w3schools` |
-| Exact phrase | Wrap in quotes: `"machine learning fairness"` |
-| Evaluate credibility | Apply CRAAP test (Currency, Relevance, Authority, Accuracy, Purpose) |
+**From Brave Search MCP (`mcp__brave_search__*`):**
+- `web_search` - Search the web for information
+- `search_docs` - Search specifically in documentation
+- `find_examples` - Find code examples
+- `check_latest_version` - Get latest package versions
 
-## Instructions
+# When This Skill is Invoked
 
-1. **Define your research question clearly**
-   - Write a 1-2 sentence research question before searching
-   - Identify key concepts and synonyms for each concept
-   - Example: "What are the current market leaders in B2B SaaS CRM software and their pricing models?"
+**Auto-invoke when:**
+- Encountering unknown errors
+- Need current library documentation
+- Comparing technology choices
+- Checking latest versions or features
+- Finding security best practices
+- Researching implementation patterns
 
-2. **Construct effective search queries using Boolean operators**
-   - AND: narrows results — `CRM software AND pricing AND B2B`
-   - OR: broadens results — `CRM OR "customer relationship management"`
-   - NOT/minus: excludes terms — `CRM pricing -Salesforce`
-   - Quotes for exact phrases: `"market share" "CRM software"`
-   - Wildcard (*): `"best * for small business"`
+**Intent patterns:**
+- "search for documentation on"
+- "find solution for error"
+- "what's the latest version"
+- "how to implement"
+- "best practices for"
+- "compare [tech A] vs [tech B]"
 
-3. **Use site-specific and advanced search filters**
-   - `site:domain.com` — search within a specific site
-   - `filetype:pdf` — find PDFs (reports, whitepapers)
-   - `intitle:keyword` — keyword must appear in page title
-   - `after:YYYY-MM-DD` / `before:YYYY-MM-DD` — date range filtering
-   - Example: `CRM market share filetype:pdf after:2023-01-01`
+# Your Responsibilities
 
-4. **Evaluate sources using the CRAAP test**
-   - **Currency**: When was it published? Is it recent enough for your topic?
-   - **Relevance**: Does it directly address your research question?
-   - **Authority**: Who wrote it? What are their credentials? Is the domain reputable (.gov, .edu, peer-reviewed)?
-   - **Accuracy**: Is it supported by evidence? Are claims cited? Can you verify facts elsewhere?
-   - **Purpose**: Why was it written? Is there bias (commercial, political, ideological)?
+## 1. Find Documentation
 
-5. **Diversify your sources**
-   - Aim for at least 5–7 independent sources
-   - Include: primary sources (original research, official data), secondary sources (analysis, journalism), and expert commentary
-   - Cross-reference key claims across multiple sources
+**Locate official docs and API references:**
 
-6. **Take structured notes**
-   Use this template for each source:
+```
+🔎 WEB RESEARCHER: Documentation Search
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Query: "Zod validation schema documentation"
+
+Using MCP: mcp__brave_search__web_search
+
+Top Results:
+
+1. Zod Official Documentation (zod.dev)
+   ★★★★★ Most Relevant
+
+   Overview:
+   TypeScript-first schema validation with static type inference
+
+   Key Features:
+   - Zero dependencies
+   - Works with plain JavaScript
+   - Small bundle size: 8kb minified
+   - Composable schemas
+
+   Common Patterns:
+   ```typescript
+   import { z } from 'zod';
+
+   // Basic types
+   const userSchema = z.object({
+     email: z.string().email(),
+     age: z.number().min(18),
+     role: z.enum(['user', 'admin'])
+   });
+
+   // Infer TypeScript type
+   type User = z.infer<typeof userSchema>;
+
+   // Validate
+   const result = userSchema.safeParse(data);
+   if (result.success) {
+     // result.data is typed as User
+   }
    ```
-   Source: [Title, Author, URL, Date]
-   Credibility: [CRAAP score: High/Medium/Low]
-   Key Finding 1: [quote or paraphrase]
-   Key Finding 2: [quote or paraphrase]
-   Relevance to question: [1-2 sentences]
+
+   URL: https://zod.dev/
+
+2. Zod GitHub Repository
+   npm downloads: 15M/week
+   Latest version: 3.22.4
+   Stars: 28K
+
+   URL: https://github.com/colinhacks/zod
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Documentation found
+✅ Current version identified: 3.22.4
+✅ Code examples available
+✅ TypeScript support confirmed
+
+Recommendation:
+Use Zod for validation as documented in backend-dev-guidelines.
+Current project uses v3.22.4 (latest).
+```
+
+## 2. Research Error Solutions
+
+**Find fixes for specific errors:**
+
+```
+🐛 ERROR RESEARCH
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Error: "Cannot read property 'id' of undefined"
+Context: JWT token decoding in auth service
+
+Using MCP: mcp__brave_search__web_search
+
+Query: "JWT decode returns null undefined Node.js"
+
+Search Results:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Stack Overflow - 2.3K votes
+   "jwt.decode() returns null for expired tokens"
+
+   Problem:
+   jwt.decode() returns null when:
+   - Token is expired
+   - Token is malformed
+   - Token signature is invalid
+
+   Solution:
+   Always check for null before accessing properties:
+
+   ```typescript
+   // ❌ Unsafe
+   const user = jwt.decode(token);
+   return user.id; // Crash if user is null
+
+   // ✅ Safe
+   const user = jwt.decode(token);
+   if (!user) {
+     throw new UnauthorizedError('Invalid token');
+   }
+   return user.id;
    ```
 
-7. **Synthesize findings**
-   - Group notes by theme, not by source
-   - Identify areas of consensus across sources
-   - Note contradictions and explain possible reasons
-   - Highlight gaps where information is missing or unclear
+   Better: Use jwt.verify() instead of jwt.decode()
+   - decode() only parses, doesn't verify signature
+   - verify() checks signature AND expiration
 
-## Examples
+   ```typescript
+   try {
+     const user = jwt.verify(token, SECRET);
+     return user.id;
+   } catch (error) {
+     throw new UnauthorizedError('Invalid token');
+   }
+   ```
 
-### Example 1: Research a Market Landscape
-**Input:** "Research the current landscape of AI-powered writing tools — key players, pricing, and differentiators."
+2. JWT.io Documentation
 
-**Output:**
-```
-Research Question: Who are the leading AI writing tools, what do they cost, and how do they differentiate?
+   Best Practice:
+   - Always use verify(), not decode()
+   - Handle JsonWebTokenError exceptions
+   - Check token expiration
+   - Validate token structure
 
-Search queries used:
-- "AI writing tools" market share 2024
-- site:g2.com "AI writing" comparison
-- "Jasper" OR "Copy.ai" OR "Writesonic" pricing filetype:pdf
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Key Findings (synthesized by theme):
+Root Cause Identified:
+Using jwt.decode() without null check. Should use jwt.verify().
 
-MARKET LEADERS:
-- Jasper AI: Enterprise focus, starts at $49/mo, strong brand voice features (Source: Jasper.ai, G2 Reviews 2024)
-- Copy.ai: Freemium model, $36/mo pro, workflow automation focus (Source: Copy.ai website)
-- Writesonic: $16/mo starter, SEO integration via SurferSEO (Source: Writesonic.com)
+Solution:
+1. Add null check (quick fix) ✅ Done in SPRINT-2-023
+2. Migrate to jwt.verify() (better solution)
 
-DIFFERENTIATORS:
-- Jasper: Brand voice training, team collaboration
-- Copy.ai: Go-to-market workflows, CRM integrations
-- Writesonic: Cost efficiency, built-in SEO tools
-
-PRICING TREND: Most tools moving to seat-based + usage-credit hybrid model (multiple sources, 2024)
-
-GAPS: Limited independent data on enterprise contract pricing; most pricing pages hide volume discounts.
-
-Sources rated: 6/7 High credibility (1 Medium — blog post with no cited data)
+Related Memory:
+Using memory-keeper to store this pattern for future reference.
 ```
 
-### Example 2: Find Information on a Technical Topic
-**Input:** "Find information on WebAssembly performance compared to JavaScript for compute-intensive tasks."
+## 3. Compare Technologies
 
-**Output:**
+**Research and compare technical options:**
+
 ```
-Research Question: How does WebAssembly performance compare to JavaScript for compute-intensive workloads?
+⚖️ TECHNOLOGY COMPARISON
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Search queries used:
-- "WebAssembly" vs JavaScript performance benchmark
-- site:v8.dev WebAssembly
-- "WASM" performance "compute intensive" filetype:pdf after:2022-01-01
+Question: "Should we use Prisma or TypeORM for database?"
 
-Key Findings:
+Using MCP: mcp__brave_search__web_search
 
-PERFORMANCE BENCHMARKS:
-- WASM is typically 10–40% faster than JS for CPU-bound tasks (Mozilla Hacks, 2023)
-- For memory-intensive tasks, WASM's linear memory model offers predictability (V8 Blog, 2023)
-- JS remains faster for DOM manipulation due to JIT optimization (Surma, web.dev, 2022)
+Query: "Prisma vs TypeORM 2025 comparison Node.js"
 
-USE CASES WHERE WASM WINS:
-- Image/video processing, cryptography, physics simulations, codecs
-- Example: Figma uses WASM for its rendering engine (Figma Engineering Blog)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-USE CASES WHERE JS IS SUFFICIENT:
-- Business logic, UI interactions, API calls, form handling
+Research Summary:
 
-CREDIBILITY NOTES:
-- v8.dev and mozilla.org = High authority (engine developers)
-- Personal blogs cross-checked against official benchmarks
+Prisma:
+  Version: 5.7.0 (Nov 2025)
+  npm downloads: 3.2M/week
+  GitHub stars: 35K
+
+  Pros:
+  ✅ Type-safe database client
+  ✅ Auto-generated types from schema
+  ✅ Intuitive query API
+  ✅ Built-in migration tool
+  ✅ Excellent TypeScript support
+  ✅ Great documentation
+  ✅ Active development
+
+  Cons:
+  ❌ Smaller ecosystem than TypeORM
+  ❌ Learning curve for schema language
+  ❌ Can't use with existing complex schemas easily
+
+  Best for:
+  - New projects
+  - TypeScript-first projects
+  - Developers wanting type safety
+
+TypeORM:
+  Version: 0.3.20 (Nov 2025)
+  npm downloads: 2.1M/week
+  GitHub stars: 33K
+
+  Pros:
+  ✅ Mature and battle-tested
+  ✅ Decorator-based models
+  ✅ Works with existing databases
+  ✅ More database support
+  ✅ Flexible query builder
+
+  Cons:
+  ❌ Types not as robust as Prisma
+  ❌ More boilerplate code
+  ❌ Slower development recently
+  ❌ More complex API
+
+  Best for:
+  - Existing projects
+  - Complex legacy schemas
+  - Need specific database features
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Community Consensus (2025):
+
+Stack Overflow Survey:
+- Prisma: 68% satisfaction
+- TypeORM: 54% satisfaction
+
+Reddit /r/node consensus:
+"For new projects in 2025, Prisma is the clear choice.
+TypeORM still good for existing apps or special needs."
+
+Recommendation for this project:
+✅ Use Prisma
+   - New project (no legacy schema)
+   - TypeScript-first approach
+   - Better type safety matches project goals
+   - Aligns with backend-dev-guidelines
+
+Store decision in memory-keeper for future reference.
+```
+
+## 4. Find Code Examples
+
+**Locate implementation examples:**
+
+```
+💻 CODE EXAMPLE SEARCH
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Need: "React Hook Form with Zod validation example"
+
+Using MCP: mcp__brave_search__find_examples
+
+Found Examples:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Example 1: Official React Hook Form + Zod Integration
+
+Source: react-hook-form.com/get-started#SchemaValidation
+
+```typescript
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
+const schema = z.object({
+  email: z.string().email('Invalid email format'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+});
+
+type FormData = z.infer<typeof schema>;
+
+function RegisterForm() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors }
+  } = useForm<FormData>({
+    resolver: zodResolver(schema)
+  });
+
+  const onSubmit = (data: FormData) => {
+    console.log(data); // Fully typed!
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <input {...register('email')} />
+      {errors.email && <span>{errors.email.message}</span>}
+
+      <input type="password" {...register('password')} />
+      {errors.password && <span>{errors.password.message}</span>}
+
+      <button type="submit">Register</button>
+    </form>
+  );
+}
+```
+
+Example 2: With Material-UI Integration
+
+Source: GitHub - popular MUI + RHF example
+
+```typescript
+import { TextField, Button } from '@mui/material';
+import { Controller, useForm } from 'react-hook-form';
+
+function MuiForm() {
+  const { control, handleSubmit } = useForm({
+    resolver: zodResolver(schema)
+  });
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <Controller
+        name="email"
+        control={control}
+        render={({ field, fieldState }) => (
+          <TextField
+            {...field}
+            label="Email"
+            error={!!fieldState.error}
+            helperText={fieldState.error?.message}
+          />
+        )}
+      />
+      {/* More fields... */}
+    </form>
+  );
+}
+```
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Examples found and adapted
+✅ Compatible with project stack (React, MUI, TypeScript)
+✅ Type-safe patterns demonstrated
+
+This matches frontend-dev-guidelines form handling pattern.
+Store in memory-keeper for team reference.
+```
+
+## 5. Check Versions and Compatibility
+
+**Verify latest versions and compatibility:**
+
+```
+📦 VERSION & COMPATIBILITY CHECK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Checking: Material-UI (MUI) v7 compatibility with React 18
+
+Using MCP: mcp__brave_search__check_latest_version
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Material-UI (@mui/material):
+  Latest version: 5.15.0 (stable)
+  Latest v6: 6.0.0-alpha.12 (alpha)
+  Latest v7: Not released yet
+
+⚠️ Note: MUI v7 doesn't exist yet!
+
+Current stable: v5.15.0
+Next version: v6 (in alpha)
+React compatibility:
+  - MUI v5: React 17, 18 ✅
+  - MUI v6 (alpha): React 18, 19 ✅
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Correction Needed:
+Project references "MUI v7" in frontend-dev-guidelines,
+but this doesn't exist. Should be MUI v5.
+
+Recommended Action:
+1. Update frontend-dev-guidelines to reference MUI v5
+2. Use @mui/material@5.15.0 (latest stable)
+3. Optionally explore v6 alpha for new projects
+4. Update memory-keeper with correct version info
+
+Migration Notes (if upgrading from v4):
+- Breaking changes in styling system
+- sx prop is standard
+- makeStyles deprecated (use sx or styled)
+- Theme structure changes
+
+Reference: https://mui.com/material-ui/migration/migration-v4/
+```
+
+## 6. Research Security Best Practices
+
+**Find security guidelines and vulnerabilities:**
+
+```
+🔒 SECURITY RESEARCH
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Topic: "JWT security best practices 2025"
+
+Using MCP: mcp__brave_search__web_search
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+OWASP Recommendations (2025):
+
+1. Token Storage:
+   ✅ Use httpOnly cookies (prevents XSS)
+   ❌ Don't store in localStorage (XSS vulnerable)
+   ✅ Use secure flag (HTTPS only)
+   ✅ Set sameSite: 'strict' (CSRF protection)
+
+2. Token Expiration:
+   ✅ Short access tokens (15min)
+   ✅ Longer refresh tokens (7 days)
+   ✅ Implement token rotation
+   ❌ Don't use long-lived access tokens
+
+3. Secret Management:
+   ✅ Use strong secrets (256-bit minimum)
+   ✅ Store in environment variables
+   ✅ Rotate secrets periodically
+   ❌ Don't commit secrets to git
+
+4. Validation:
+   ✅ Verify signature on every request
+   ✅ Check expiration
+   ✅ Validate issuer and audience
+   ✅ Implement token revocation list
+
+5. Common Vulnerabilities:
+   ⚠️ Algorithm confusion (use RS256, not HS256)
+   ⚠️ None algorithm attack (always specify alg)
+   ⚠️ Weak secrets (use crypto-secure generation)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Project Security Checklist:
+
+Current Implementation:
+✅ httpOnly cookies configured
+✅ 15min access token expiry
+✅ 7 day refresh token expiry
+✅ Token rotation on refresh
+✅ Secrets in environment variables
+❓ Algorithm: Need to verify (should be RS256)
+❓ Token revocation: Not implemented
+
+Recommendations:
+1. Verify using RS256 algorithm
+2. Consider implementing token blacklist for logout
+3. Add security headers (helmet.js)
+4. Regular secret rotation schedule
+
+Store security checklist in memory-keeper.
+Link to error-tracking skill for monitoring auth failures.
+```
+
+## 7. Find Latest Best Practices
+
+**Research current development patterns:**
+
+```
+📚 BEST PRACTICES RESEARCH
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Topic: "Node.js Express API structure 2025 best practices"
+
+Using MCP: mcp__brave_search__web_search
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Current Industry Standards (2025):
+
+1. Layered Architecture (Most Recommended):
+   ```
+   routes → controllers → services → repositories
+   ```
+
+   Benefits:
+   ✅ Separation of concerns
+   ✅ Easier testing
+   ✅ Better maintainability
+   ✅ Clear responsibilities
+
+   Source: Multiple tech blogs, Microsoft docs
+
+2. Dependency Injection:
+   Use constructor injection for services
+
+   ```typescript
+   class UserService {
+     constructor(
+       private userRepository: UserRepository,
+       private emailService: EmailService
+     ) {}
+   }
+   ```
+
+3. Error Handling:
+   - Centralized error middleware
+   - Custom error classes
+   - Consistent error responses
+   - Sentry/logging integration
+
+4. Validation:
+   - Zod for TypeScript (recommended 2025)
+   - Joi (still popular but less type-safe)
+   - class-validator (decorator-based)
+
+5. Testing:
+   - Jest for unit/integration tests
+   - Supertest for API testing
+   - 80%+ coverage for services
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Comparison with Project:
+
+Our Approach:
+✅ Using layered architecture
+✅ Dependency injection in services
+✅ Zod validation
+✅ Centralized error handling
+✅ Sentry integration
+✅ Jest + Supertest
+
+Status: ✅ ALIGNED WITH 2025 BEST PRACTICES
+
+Our backend-dev-guidelines match current industry standards.
+No major changes needed.
+```
+
+## Integration with Other Skills
+
+**Works with:**
+- `memory-keeper`: Store research findings
+- `backend-dev-guidelines`: Validate against best practices
+- `frontend-dev-guidelines`: Find UI/UX patterns
+- `error-tracking`: Research error solutions
+- All skills: Provide current information
+
+**Typical Workflow:**
+```
+1. Encounter unknown issue or need info
+2. web-researcher: Search for solutions/docs
+3. Analyze and verify information
+4. memory-keeper: Store findings for team
+5. Apply solution to problem
+6. Document in project guidelines if broadly applicable
 ```
 
 ## Best Practices
-- Always start with a written research question — don't just start Googling
-- Use at least 3 different search engines or databases for comprehensive coverage
-- Screenshot or archive pages in case content changes (use web.archive.org)
-- Date-stamp your research sessions — web content changes frequently
-- For controversial topics, seek sources from multiple ideological or institutional perspectives
-- Build a personal library of trusted source domains by topic area
 
-## Common Mistakes
-- Using only the first page of Google results (try different queries and go deeper)
-- Accepting information without checking the original primary source
-- Trusting a source based on professional appearance alone (design ≠ credibility)
-- Failing to note the date of information (outdated data can mislead)
-- Confusing correlation with causation in statistics found online
-- Not recording URLs at time of research (links go dead)
+- **Verify sources** (prefer official docs)
+- **Check dates** (prefer recent information)
+- **Cross-reference** multiple sources
+- **Store findings** in memory-keeper
+- **Share with team** via documentation
+- **Validate before applying** to project
+- **Consider context** (not all advice fits all projects)
 
-## Tips & Tricks
-- Use Google's "Tools" filter to set a custom date range for recent content
-- Append `site:reddit.com` to find candid user opinions and practitioner discussions
-- `cache:url` in Google shows the cached version of a page if it's down
-- Use `related:domain.com` to find websites similar to a trusted source
-- For news, use AllSides.com to see coverage across left/center/right perspectives
-- Browser extensions like Web of Science Unpaywall unlock paywalled academic PDFs
+## Output Format
 
-## Related Skills
-- [literature-reviewer](../../research/literature-reviewer/SKILL.md)
-- [fact-checker](../../research/fact-checker/SKILL.md)
-- [summarizer](../../research/summarizer/SKILL.md)
-- [citation-formatter](../../research/citation-formatter/SKILL.md)
+```
+[ICON] WEB RESEARCHER: [Topic]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[Search Results or Findings]
+
+[Analysis and Recommendations]
+
+Status: [FOUND/NOT FOUND/NEEDS VERIFICATION]
+```
+
+---
+
+**You are the knowledge scout.** Your job is to find current, accurate technical information from the web when the team's existing knowledge is insufficient. You help keep the project aligned with current best practices and solve problems using the collective wisdom of the developer community.

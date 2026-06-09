@@ -1,6 +1,6 @@
 ---
 name: using-agent-skills
-description: Discovers and invokes agent skills. Use when starting a session or when you need to discover which skill applies to the current task. This is the meta-skill that governs how all other skills are discovered and invoked.
+description: Use when starting a session or when you need to discover which skill applies to the current task. This is the meta-skill that governs how all other skills are discovered and invoked.
 ---
 
 # Using Agent Skills
@@ -16,26 +16,21 @@ When a task arrives, identify the development phase and apply the corresponding 
 ```
 Task arrives
     │
-    ├── Don't know what you want yet? ──────→ interview-me
-    ├── Have a rough concept, need variants? → idea-refine
+    ├── Vague idea/need refinement? ──→ idea-refine
     ├── New project/feature/change? ──→ spec-driven-development
     ├── Have a spec, need tasks? ──────→ planning-and-task-breakdown
     ├── Implementing code? ────────────→ incremental-implementation
     │   ├── UI work? ─────────────────→ frontend-ui-engineering
     │   ├── API work? ────────────────→ api-and-interface-design
-    │   ├── Need better context? ─────→ context-engineering
-    │   ├── Need doc-verified code? ───→ source-driven-development
-    │   └── Stakes high / unfamiliar code? ──→ doubt-driven-development
+    │   └── Need better context? ─────→ context-engineering
     ├── Writing/running tests? ────────→ test-driven-development
     │   └── Browser-based? ───────────→ browser-testing-with-devtools
     ├── Something broke? ──────────────→ debugging-and-error-recovery
     ├── Reviewing code? ───────────────→ code-review-and-quality
-    │   ├── Too complex? ─────────────→ code-simplification
     │   ├── Security concerns? ───────→ security-and-hardening
     │   └── Performance concerns? ────→ performance-optimization
     ├── Committing/branching? ─────────→ git-workflow-and-versioning
     ├── CI/CD pipeline work? ──────────→ ci-cd-and-automation
-    ├── Deprecating/migrating? ────────→ deprecation-and-migration
     ├── Writing docs/ADRs? ───────────→ documentation-and-adrs
     └── Deploying/launching? ─────────→ shipping-and-launch
 ```
@@ -56,7 +51,7 @@ ASSUMPTIONS I'M MAKING:
 → Correct me now or I'll proceed with these.
 ```
 
-Don't silently fill in ambiguous requirements. The most common failure mode is making wrong assumptions and running with them unchecked. Surface uncertainty early — it's cheaper than rework.
+Never silently fill in ambiguous requirements. The most common failure mode is making wrong assumptions and running with them unchecked. Surface uncertainty early — it's cheaper than rework.
 
 ### 2. Manage Confusion Actively
 
@@ -126,11 +121,11 @@ These are the subtle errors that look like productivity but create problems:
 
 ## Skill Rules
 
-1. **Check for an applicable skill before starting work.** Skills encode processes that prevent common mistakes.
+1. **Always check for an applicable skill before starting work.** Skills encode processes that prevent common mistakes.
 
 2. **Skills are workflows, not suggestions.** Follow the steps in order. Don't skip verification steps.
 
-3. **Multiple skills can apply.** A feature implementation might involve `idea-refine` → `spec-driven-development` → `planning-and-task-breakdown` → `incremental-implementation` → `test-driven-development` → `code-review-and-quality` → `code-simplification` → `shipping-and-launch` in sequence.
+3. **Multiple skills can apply.** A feature implementation might involve `idea-refine` → `spec-driven-development` → `planning-and-task-breakdown` → `incremental-implementation` → `test-driven-development` → `code-review-and-quality` → `shipping-and-launch` in sequence.
 
 4. **When in doubt, start with a spec.** If the task is non-trivial and there's no spec, begin with `spec-driven-development`.
 
@@ -139,21 +134,16 @@ These are the subtle errors that look like productivity but create problems:
 For a complete feature, the typical skill sequence is:
 
 ```
-1.  interview-me                → Extract what the user actually wants
-2.  idea-refine                 → Refine vague ideas
-3.  spec-driven-development     → Define what we're building
-4.  planning-and-task-breakdown → Break into verifiable chunks
-5.  context-engineering         → Load the right context
-6.  source-driven-development   → Verify against official docs
-7.  incremental-implementation  → Build slice by slice
-8.  doubt-driven-development    → Cross-examine non-trivial decisions in-flight
-9.  test-driven-development     → Prove each slice works
-10. code-review-and-quality     → Review before merge
-11. code-simplification         → Reduce unnecessary complexity while preserving behavior
-12. git-workflow-and-versioning → Clean commit history
-13. documentation-and-adrs      → Document decisions
-14. deprecation-and-migration   → Retire old systems and move users safely when needed
-15. shipping-and-launch         → Deploy safely
+1. idea-refine                 → Refine vague ideas
+2. spec-driven-development     → Define what we're building
+3. planning-and-task-breakdown → Break into verifiable chunks
+4. context-engineering         → Load the right context
+5. incremental-implementation  → Build slice by slice
+6. test-driven-development     → Prove each slice works
+7. code-review-and-quality     → Review before merge
+8. git-workflow-and-versioning → Clean commit history
+9. documentation-and-adrs      → Document decisions
+10. shipping-and-launch        → Deploy safely
 ```
 
 Not every task needs every skill. A bug fix might only need: `debugging-and-error-recovery` → `test-driven-development` → `code-review-and-quality`.
@@ -162,13 +152,10 @@ Not every task needs every skill. A bug fix might only need: `debugging-and-erro
 
 | Phase | Skill | One-Line Summary |
 |-------|-------|-----------------|
-| Define | interview-me | Surface what the user actually wants before any plan, spec, or code exists |
 | Define | idea-refine | Refine ideas through structured divergent and convergent thinking |
 | Define | spec-driven-development | Requirements and acceptance criteria before code |
 | Plan | planning-and-task-breakdown | Decompose into small, verifiable tasks |
 | Build | incremental-implementation | Thin vertical slices, test each before expanding |
-| Build | source-driven-development | Verify against official docs before implementing |
-| Build | doubt-driven-development | Adversarial fresh-context review of every non-trivial decision |
 | Build | context-engineering | Right context at the right time |
 | Build | frontend-ui-engineering | Production-quality UI with accessibility |
 | Build | api-and-interface-design | Stable interfaces with clear contracts |
@@ -176,11 +163,9 @@ Not every task needs every skill. A bug fix might only need: `debugging-and-erro
 | Verify | browser-testing-with-devtools | Chrome DevTools MCP for runtime verification |
 | Verify | debugging-and-error-recovery | Reproduce → localize → fix → guard |
 | Review | code-review-and-quality | Five-axis review with quality gates |
-| Review | code-simplification | Preserve behavior while reducing unnecessary complexity |
 | Review | security-and-hardening | OWASP prevention, input validation, least privilege |
 | Review | performance-optimization | Measure first, optimize only what matters |
 | Ship | git-workflow-and-versioning | Atomic commits, clean history |
 | Ship | ci-cd-and-automation | Automated quality gates on every change |
-| Ship | deprecation-and-migration | Remove old systems and migrate users safely |
 | Ship | documentation-and-adrs | Document the why, not just the what |
 | Ship | shipping-and-launch | Pre-launch checklist, monitoring, rollback plan |

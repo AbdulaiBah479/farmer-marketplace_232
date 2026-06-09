@@ -1,176 +1,161 @@
 ---
 name: linkedin-post
-description: Create and schedule LinkedIn posts with text, images, videos, and documents via Publora MCP
+description: Create engaging LinkedIn posts that drive engagement and build authority. Use when the user wants to write LinkedIn content, needs posts for their LinkedIn strategy, or wants to repurpose content for LinkedIn.
 ---
 
-# LinkedIn Post
+# LinkedIn Post Generator
 
-Create and schedule LinkedIn posts using the Publora MCP server. Supports text posts, single images, multi-image posts (grid layout), videos, and PDF documents.
+Create high-performing LinkedIn posts that match your voice, resonate with your audience, and drive meaningful engagement.
 
-## Prerequisites
+## Before Writing
 
-**Plans:** Starter (free), Pro, Premium - LinkedIn is available on all plans including free.
+1. **Read context profiles**:
+   - `/context/voice-dna.json` - Match the user's voice
+   - `/context/icp.json` - Write for the target audience
+   - `/context/business-profile.json` - Reference offerings when relevant
 
-### Getting Started
+2. **Check for source material** in `/knowledge/` if repurposing content
 
-1. **Create account** at [publora.com/register](https://publora.com/register) (free)
-2. **Connect LinkedIn** via OAuth in [Publora Dashboard](https://publora.com/dashboard)
-3. **Get API key** at [publora.com/settings/api](https://publora.com/settings/api)
-4. **Configure MCP** in Claude Desktop (`~/.claude/claude_desktop_config.json`):
+## LinkedIn Post Frameworks
 
-```json
-{
-  "mcpServers": {
-    "publora": {
-      "type": "http",
-      "url": "https://mcp.publora.com",
-      "headers": {
-        "Authorization": "Bearer YOUR_API_KEY"
-      }
-    }
-  }
-}
-```
-
-### REST API Fallback
-
-If the MCP server is unavailable or returns errors, use the REST API directly:
-
-**Base URL:** `https://api.publora.com/api/v1`
-
-**Authentication:** Use `x-publora-key` header (NOT `Authorization: Bearer`):
-
-```bash
-# Get your connected platforms
-curl -X GET "https://api.publora.com/api/v1/platform-connections" \
-  -H "x-publora-key: sk_your_api_key"
-
-# Create a post
-curl -X POST "https://api.publora.com/api/v1/create-post" \
-  -H "x-publora-key: sk_your_api_key" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "platforms": ["linkedin-Tz9W5i6ZYG"],
-    "content": "Your post content here",
-    "scheduledTime": "2026-03-25T10:00:00Z"
-  }'
-```
-
-**Platform ID Format:** `linkedin-{id}` where `{id}` is from `/platform-connections` response.
-
-Example IDs: `linkedin-Tz9W5i6ZYG`, `linkedin-abc123xyz`
-
-📖 **Full API documentation:** [docs.publora.com](https://docs.publora.com)
-
-### Plan Limits
-
-| Plan | Posts/month | Price |
-|------|-------------|-------|
-| Starter | 15 | Free |
-| Pro | 100/account | $2.99/account/month |
-| Premium | 500/account | $9.99/account/month |
-
-## Platform Limits
-
-| Feature | Limit |
-|---------|-------|
-| Characters | 3,000 max |
-| Visible before "see more" | First 210 characters |
-| Images | Up to 10 (grid layout, not swipeable carousel) |
-| Image size | 5 MB max |
-| Image formats | JPEG, PNG, GIF, WebP (WebP auto-converted) |
-| Video duration | 30 minutes |
-| Video size | 500 MB max |
-| Video format | MP4 only |
-
-## Available Tools
-
-### create_post
-Create a new LinkedIn post or schedule for later.
-
-**Parameters:**
-- `platforms`: Array including your LinkedIn connection ID (e.g., `["linkedin-abc123"]`)
-- `content`: Post text (up to 3,000 characters)
-- `scheduledTime`: ISO 8601 datetime (**required** - for immediate posting, use current time + 1 minute)
-
-### get_upload_url
-Get a presigned URL to upload media.
-
-**Parameters:**
-- `postGroupId`: The post ID to attach media to
-- `fileName`: File name (e.g., "chart.png")
-- `contentType`: MIME type (e.g., "image/jpeg", "video/mp4", "application/pdf")
-- `type`: "image" or "video"
-
-### list_posts / update_post / delete_post
-Manage your scheduled and draft posts.
-
-## Mentioning People and Companies
-
-LinkedIn posts support @mentions using URN syntax:
+### Framework 1: Hook → Story → Lesson → CTA
 
 ```
-@{urn:li:person:MEMBER_ID|Display Name}       # Mention a person
-@{urn:li:organization:ORG_ID|Company Name}    # Mention a company
+[HOOK - Stop the scroll, 1-2 lines]
+
+[STORY - Personal experience or observation, 3-5 short paragraphs]
+
+[LESSON - Key takeaway, 1-2 lines]
+
+[CTA - Engagement question or action]
 ```
 
-**Example:**
+### Framework 2: Contrarian Take
+
 ```
-Great insights from @{urn:li:person:4986615|Serge Bulaev} at @{urn:li:organization:107107343|Creative Content Crafts Inc}!
-```
+[CONTROVERSIAL STATEMENT]
 
-**Important:** The display name must exactly match the LinkedIn profile name (case-sensitive), including company suffixes like "Inc", "LLC", etc.
+[WHY MOST PEOPLE ARE WRONG]
 
-## Important API Restrictions
+[THE REAL TRUTH]
 
-1. **No organic carousels**: Swipeable multi-image carousels are NOT available via API (only for sponsored content). Multi-image posts appear as a grid layout.
+[WHAT TO DO INSTEAD]
 
-2. **No mixed media**: Cannot combine images with videos or documents in the same post.
-
-3. **No rich text**: LinkedIn API does not support bold, italic, or other formatting. Use plain text or Unicode characters for emphasis.
-
-4. **PDF alternative for carousels**: To share multi-page swipeable content, upload a PDF document instead.
-
-## Examples
-
-### Simple Text Post
-```
-Schedule a LinkedIn post for tomorrow at 9 AM:
-"We're thrilled to announce the release of our AI writing assistant. After 18 months of development, we're ready to help teams write better content faster."
+[CTA]
 ```
 
-### Post with Mention
+### Framework 3: List Post
+
 ```
-Create a LinkedIn post mentioning our CEO:
-"Excited to share insights from @{urn:li:person:4986615|Serge Bulaev} on the future of AI in content creation."
+[HOOK - Promise of value]
+
+[NUMBER] things I learned about [TOPIC]:
+
+1. [Point + brief explanation]
+2. [Point + brief explanation]
+3. [Point + brief explanation]
+...
+
+[CLOSING THOUGHT]
+
+[CTA]
 ```
 
-### Multi-Image Post
+### Framework 4: Before/After Transformation
+
 ```
-Create a LinkedIn post with 4 product screenshots showing our new dashboard features.
+[TIME PERIOD] ago, I [OLD STATE].
+
+Today, I [NEW STATE].
+
+Here's what changed:
+
+[KEY CHANGES - 3-5 points]
+
+[LESSON FOR READER]
+
+[CTA]
 ```
-Note: Images will appear in a grid layout, not as a swipeable carousel.
 
-### PDF Document Post
+### Framework 5: How-To Post
+
 ```
-Share our Q4 report as a PDF on LinkedIn with a summary caption.
+How to [ACHIEVE RESULT] (without [COMMON OBSTACLE]):
+
+Step 1: [Action]
+Step 2: [Action]
+Step 3: [Action]
+
+[WHY THIS WORKS]
+
+[CTA]
 ```
-This is the best way to share multi-page carousel-like content.
 
-## Best Practices
+## Writing Guidelines
 
-1. **First line matters**: First 210 characters appear before "see more" - make them compelling
-2. **Optimal length**: Posts under 1,300 characters tend to perform better
-3. **Posting times**: Tuesday-Thursday, 8-10 AM in your audience's timezone
-4. **Hashtags**: Use 3-5 relevant hashtags - they're supported as plain text
-5. **Engagement**: End with a question to encourage comments
+### Hook Rules (First 1-2 lines)
+- Must stop the scroll
+- Create curiosity or tension
+- Avoid clickbait that doesn't deliver
+- Options:
+  - Bold statement
+  - Surprising statistic
+  - Contrarian opinion
+  - Relatable problem
+  - Intriguing question
 
-## Troubleshooting
+### Formatting Rules
+- Short paragraphs (1-3 lines max)
+- Plenty of white space
+- Use line breaks liberally
+- Avoid walls of text
+- Bold sparingly for emphasis
 
-| Error | Cause | Solution |
-|-------|-------|----------|
-| "Account not connected" | LinkedIn OAuth expired | Reconnect in Publora dashboard |
-| "MEDIA_ASSET_PROCESSING_FAILED" | File too large or wrong format | Check: images < 5 MB, videos < 500 MB MP4 |
-| "Rate limited" (429) | Too many API calls | Wait and retry with backoff |
-| "Cannot mix media types" | Images + video in same post | Use only one media type per post |
-| MCP unavailable | Server issue | Use REST API fallback (see above) |
+### Engagement Drivers
+- End with a question when possible
+- Share genuine opinions (not generic advice)
+- Include specific numbers and examples
+- Tell stories, not lectures
+- Show vulnerability when appropriate
+
+### What to Avoid
+- Generic motivational content
+- Obvious humblebrags
+- Fake engagement tactics
+- Overused phrases ("I'm excited to announce...")
+- Pure self-promotion without value
+
+## Output Format
+
+When creating a LinkedIn post:
+
+1. Present the post with proper formatting
+2. Note which framework was used
+3. Explain why certain choices were made for voice/audience
+4. Offer 2-3 alternative hooks if requested
+
+## Character Guidelines
+
+- **Ideal length**: 1,200-1,500 characters
+- **Maximum**: 3,000 characters (LinkedIn limit)
+- **Hook**: Under 150 characters (visible before "see more")
+
+## Examples of Strong Hooks
+
+- "I lost $50,000 on my first business. Here's the lesson that was worth every penny:"
+- "Most LinkedIn advice is garbage. Here's what actually works:"
+- "I used to work 80 hours a week. Now I work 25 and make 3x more."
+- "The best career advice I ever got was from someone I almost didn't listen to."
+- "Unpopular opinion: [contrarian take on industry norm]"
+
+## Post-Creation Checklist
+
+Before delivering the post, verify:
+
+- [ ] Hook creates curiosity (would you click "see more"?)
+- [ ] Voice matches the user's voice DNA
+- [ ] Content provides genuine value
+- [ ] Formatted for easy scanning
+- [ ] Has clear CTA or engagement prompt
+- [ ] Not overly promotional
+- [ ] Specific, not generic

@@ -1,15 +1,10 @@
 ---
 name: bash-pro
-description: 'Master of defensive Bash scripting for production automation, CI/CD
-
+description: Master of defensive Bash scripting for production automation, CI/CD
   pipelines, and system utilities. Expert in safe, portable, and testable shell
-
   scripts.
-
-  '
-risk: critical
-source: community
-date_added: '2026-02-27'
+metadata:
+  model: sonnet
 ---
 ## Use this skill when
 
@@ -313,8 +308,3 @@ date_added: '2026-02-27'
 - [Bash Security Best Practices](https://github.com/carlospolop/PEASS-ng) - Security-focused shell script patterns
 - [Awesome Bash](https://github.com/awesome-lists/awesome-bash) - Curated list of Bash resources and tools
 - [Pure Bash Bible](https://github.com/dylanaraps/pure-bash-bible) - Collection of pure bash alternatives to external commands
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

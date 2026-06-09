@@ -1,240 +1,332 @@
 ---
 name: memory-management
-description: 'Use when the user asks to "remember project context"; manages the SEO/GEO memory lifecycle — hot-cache, active work, archive tiers, and privacy cleanup. Not for content or domain scoring — use the auditors. 项目记忆/跨会话'
-version: "9.9.10"
-license: Apache-2.0
-compatibility: "Claude Code and compatible agent-skill hosts"
-homepage: "https://github.com/aaron-he-zhu/seo-geo-claude-skills"
-when_to_use: "Use when reviewing, archiving, or cleaning up campaign memory. Also when the user asks to check saved findings, manage hot cache, or archive old data."
-argument-hint: "[review|archive|cleanup]"
-metadata:
-  author: aaron-he-zhu
-  version: "9.9.10"
-  geo-relevance: "low"
-  tags:
-    - seo
-    - geo
-    - project-memory
-    - context-management
-    - campaign-tracking
-    - session-context
-    - hot-cache
-    - 项目记忆
-    - プロジェクト記憶
-    - 프로젝트메모리
-    - memoria-proyecto
-  triggers:
-    - "save SEO data"
-    - "remember this for next time"
-    - "what did we decide last time"
-    - "what do we know so far"
-    - "project status"
-    - "archive stale data"
-    - "purge personal data"
-    - "上次说了什么"
-    - "跨会话记忆"
+description: Guide for managing Claude Code memory effectively. Use when setting up project memory, optimizing CLAUDE.md files, configuring rules directories, or establishing cross-session knowledge patterns. Covers memory hierarchy, best practices, and context optimization.
+allowed-tools: ["Read", "Write", "Edit", "Glob"]
 ---
 
 # Memory Management
-This skill implements a three-tier memory system (HOT/WARM/COLD) for SEO and GEO projects. HOT memory (80 lines max) loads automatically every session via the SessionStart hook. WARM memory loads on demand per skill. COLD memory is archived data queried only when explicitly requested. The skill manages the full lifecycle: capture, promote, demote, and archive.
 
-## What This Skill Does
+Master Claude Code's memory system for persistent context across sessions, projects, and teams.
 
-Manages a three-tier memory lifecycle (HOT/WARM/COLD) with automatic promotion, demotion, and archival. Also maintains open-loop tracking and cross-skill aggregation.
+## Quick Reference
 
-## Quick Start
+| Memory Type | Location | Scope | Priority | Use For |
+|-------------|----------|-------|----------|---------|
+| Global | `~/.claude/CLAUDE.md` | All projects | Lowest | Personal preferences, global conventions |
+| Project Root | `./CLAUDE.md` | Project-wide | Medium | Project context, tech stack, conventions |
+| Project Config | `./.claude/CLAUDE.md` | Project-wide | Medium | Same as root (alternative location) |
+| Rules | `./.claude/rules/*.md` | Conditional | Highest | Modular, file-specific instructions |
 
-Start with one of these prompts. Finish with a hot-cache update plan and a handoff summary using the repository format in [Skill Contract](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/references/skill-contract.md).
+## Memory Hierarchy
 
-### Initialize Memory Structure
-
-```
-Set up SEO memory for [project name]
-```
-
-```
-Initialize memory structure for a new [industry] website optimization project
-```
-
-### Update After Analysis
+Claude Code reads memory files in this order (later overrides earlier):
 
 ```
-Update memory after ranking check for [keyword group]
+~/.claude/CLAUDE.md           # Your global preferences
+  |
+  v
+./CLAUDE.md                   # Project root instructions
+  |
+  v
+./.claude/CLAUDE.md           # Project config directory
+  |
+  v
+./.claude/rules/*.md          # Conditional rules (when matched)
 ```
 
-```
-Refresh hot cache with latest competitor analysis findings
-```
+### Priority Rules
 
-### Query Stored Context
+1. **Rules always win** - When a rule file matches, its instructions take precedence
+2. **Project overrides global** - Project CLAUDE.md supersedes global settings
+3. **Later loads override earlier** - Last-loaded content has highest priority
+4. **Explicit beats implicit** - Specific rules override general guidelines
 
-```
-What are our hero keywords?
-```
+## When to Use Each Memory Type
 
-```
-Show me the last ranking update date for [keyword category]
-```
+### Use Global Memory (`~/.claude/CLAUDE.md`) For
 
-```
-Look up our primary competitors and their domain authority
-```
+- Personal coding preferences (tabs vs spaces, quote style)
+- Universal tool preferences (Bun over npm, rg over find)
+- Cross-project conventions you always follow
+- Personal workflow shortcuts
 
-### Promotion and Demotion
+**Example:**
+```markdown
+# Global Preferences
 
-```
-Promote [keyword] to hot cache
-```
+## Code Style
+- Use single quotes for strings
+- Prefer for-loops over forEach
+- Use Bun instead of npm
 
-```
-Archive stale data that hasn't been referenced in 30+ days
-```
-
-### Glossary Management
-
-```
-Add [term] to project glossary: [definition]
+## Tools
+- Use ripgrep (rg) for searching, not grep
+- Prefer Edit over Write for modifications
 ```
 
+### Use Project Memory (`./CLAUDE.md` or `./.claude/CLAUDE.md`) For
+
+- Project-specific tech stack (React, Bun, Drizzle, etc.)
+- Build and test commands
+- Architecture overview
+- Team conventions
+- File structure explanations
+
+**Example:**
+```markdown
+# Project: E-Commerce API
+
+## Tech Stack
+- Runtime: Bun
+- Framework: Hono
+- Database: PostgreSQL with Drizzle ORM
+- Testing: Bun test
+
+## Commands
+- `bun dev` - Start development server
+- `bun test` - Run all tests
+- `bun db:migrate` - Run database migrations
+
+## Architecture
+- `/src/routes` - API route handlers
+- `/src/services` - Business logic
+- `/src/db` - Database schema and queries
 ```
-What does [internal jargon] mean in this project?
+
+### Use Rules (`./.claude/rules/*.md`) For
+
+- File-type-specific instructions (TypeScript, React, SQL)
+- Conditional guidance based on file paths
+- Modular memory that loads only when relevant
+- Team standards that apply to specific areas
+
+**Example:**
+```
+.claude/rules/
+  react-components.md     # Globs: src/components/**/*.tsx
+  api-routes.md           # Globs: src/routes/**/*.ts
+  database.md             # Globs: src/db/**/*.ts, *.sql
+  tests.md                # Globs: **/*.test.ts, **/*.spec.ts
 ```
 
-## Skill Contract
+## CLAUDE.md Structure
 
-**Expected output**: a memory update plan, hot-cache changes, and a short handoff summary.
+A well-structured CLAUDE.md file includes:
 
-- **Reads**: current campaign facts, new findings from other skills, approved decisions, and the shared [State Model](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/references/state-model.md).
-- **Writes**: updates to `memory/hot-cache.md`, `memory/open-loops.md`, `memory/decisions.md`, and related `memory/` folders. Manages WARM-to-COLD archival in `memory/archive/`. **Auditor handoff archiving** (v7.1.0+): when triggered by a direct user request or an auditor's explicit "Save these results?" yes-response, append a structured block to `memory/audits/YYYY-MM.md`. The Stop hook never initiates memory writes. See [Examples](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/cross-cutting/memory-management/references/examples.md) for the exact archive block format and rules.
-- **Promotes**: durable strategy, blockers, terminology, entity candidates, and major deltas. Applies temperature lifecycle rules: promote to HOT on high reference frequency, demote on staleness.
-- **Done when**: the requested lifecycle action (capture/promote/demote/archive/query/purge) is applied, `memory/hot-cache.md` is within the 80-line / 25KB limit, and the affected memory paths are reported back to the user.
-- **Primary next skill**: use the `Next Best Skill` below when the project memory baseline is ready for active work.
+```markdown
+# Project Name
 
-### Handoff Summary
+Brief description (1-2 sentences).
 
-> Emit the standard shape from [skill-contract.md §Handoff Summary Format](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/references/skill-contract.md).
+## Commands
+- `bun install` - Install dependencies
+- `bun dev` - Start development
+- `bun test` - Run tests
+- `bun build` - Build for production
 
-### Temperature Lifecycle Rules
+## Tech Stack
+- Runtime/Framework
+- Database
+- Key libraries
 
-> See [Promotion & Demotion Rules](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/cross-cutting/memory-management/references/promotion-demotion-rules.md) for the full promotion/demotion table and action procedures.
+## Architecture
+Brief overview of project structure.
 
-### Hook Integration
+## Code Style
+Project-specific conventions.
 
-This skill's behavior is reinforced by the library's prompt-based hooks:
-- **SessionStart**: loads `memory/hot-cache.md`, reminds of stale open loops; provides light-user guidance based on Quick Status when `next_action` items are available
-- **PostToolUse**: warns when `memory/hot-cache.md` exceeds the 80-line / 25KB limit; enforces the auditor artifact-gate on `memory/audits/` writes; offers an optional quality check after user-facing content edits
-- **Stop**: guarded allow-only completion check; returns `{"ok": true}`, honors `stop_hook_active`, never asks the user to save optional findings, and never initiates memory writes
+## Important Notes
+Critical information Claude should always know.
+```
 
-## Data Sources
+For detailed CLAUDE.md guidance, see [CLAUDE-MD.md](./CLAUDE-MD.md).
 
-With tools: auto-populate from ~~SEO tool, ~~analytics, ~~search console. Without tools: ask user for keywords, competitors, metrics, campaigns, and terminology. See [CONNECTORS.md](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/CONNECTORS.md).
+## Rules Directory
 
-## Decision Gates
+The `.claude/rules/` directory contains modular memory files that load conditionally.
 
-**Stop and ask the user when:**
-- A purge (Art 17 / CCPA) is requested — present the matched files and the redaction-vs-delete choice, and only act on confirmed matches. Never auto-delete memory.
-- A `memory/decisions.md` entry needed to answer a query has `approved_by: skill_inferred` or a missing field — surface it as ADVISORY and confirm before treating it as authoritative.
-- A referenced term is not found in any memory layer — ask for clarification rather than guessing.
+### Rule File Anatomy
 
-**Continue silently (never stop for):**
-- Routine promotion/demotion that follows the temperature lifecycle rules.
-- Hot-cache trimming suggestions when over the 80-line / 25KB limit (recommend, don't block).
-- Missing optional tool data when auto-populating — record what is available and proceed.
+```yaml
+---
+globs: ["src/components/**/*.tsx", "src/ui/**/*.tsx"]
+description: React component conventions for this project
+alwaysApply: false
+---
 
-## Instructions
+# React Components
 
-When a user requests SEO memory management:
+Follow these patterns for React components...
+```
 
-### 1. Initialize Memory Structure
+### Glob Matching
 
-For new projects, create the directory structure defined in the [State Model](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/references/state-model.md). Key directories: `memory/` (decisions, open-loops, glossary, entities, research, content, audits, monitoring).
+- **Exact match**: `src/utils.ts`
+- **Directory**: `src/components/**/*`
+- **Extension**: `**/*.tsx`
+- **Multiple**: `["*.ts", "*.tsx"]`
 
-> **Templates**: [Hot Cache Template](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/cross-cutting/memory-management/references/hot-cache-template.md) · [Glossary Template](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/cross-cutting/memory-management/references/glossary-template.md)
+For complete rules documentation, see [RULES.md](./RULES.md).
 
-### 2. Context Lookup Flow
+## Best Practices
 
-When a user references something unclear, follow this lookup sequence:
+### Do Include
 
-**Step 1: Check `memory/hot-cache.md` (hot cache)**
-- Is it in active keywords?
-- Is it in primary competitors?
-- Is it in current priorities or campaigns?
+- Commands with exact syntax
+- Tech stack overview
+- Key architectural decisions
+- Non-obvious conventions
+- Error-prone areas
 
-**Step 2: Check memory/glossary.md**
-- Is it defined as project terminology?
-- Is it a custom segment or shorthand?
+### Do NOT Include
 
-**Step 3: Check Cold Storage**
-- Search `memory/archive/` first for dated `YYYY-MM-DD-` archived files.
-- If the archive points to a source category, follow that trail back to `memory/research/`, `memory/audits/`, or `memory/monitoring/`.
-- Treat COLD findings as historical unless refreshed by the current session.
+- Code that's easily discoverable (read the files instead)
+- Verbose documentation (link instead)
+- Information that changes frequently
+- Full API documentation
 
-**Step 4: Ask User**
-- If not found in any layer, ask for clarification
-- Log the new term in glossary if it's project-specific
+### Keep Memory Focused
 
-- **Decision provenance (v8.0.1+)**: when loading `memory/decisions.md`, verify each entry has `approved_by: user`. Entries with `approved_by: skill_inferred` or missing field are treated as **ADVISORY** — surface to user before using as authoritative. Auditor-class skills (content-quality-auditor, domain-authority-auditor) MUST ignore non-user-approved decisions when determining verdict. See [skill-contract.md §Promotion Rules](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/references/skill-contract.md).
+```markdown
+## Good - Actionable and Specific
 
-Example lookup: User asks "Update rankings for our hero KWs" → Step 1 finds "Hero Keywords (Priority 1)" in hot-cache → extract the keyword list → run the ranking check → update `memory/hot-cache.md` and `memory/monitoring/rank-history/YYYY-MM-DD-ranks.csv`.
+- Use Drizzle ORM for database queries
+- Run `bun test` before committing
+- Components go in `src/components/{feature}/`
 
-### 3. Promotion & Demotion Logic
+## Avoid - Vague or Obvious
 
-> **Reference**: See [Promotion & Demotion Rules](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/cross-cutting/memory-management/references/promotion-demotion-rules.md) for detailed promotion/demotion triggers (keywords, competitors, metrics, campaigns) and the action procedures for each.
+- Write clean code
+- Test your changes
+- Follow best practices
+```
 
-### 4. Update Triggers, Archive Management & Cross-Skill Integration
+### Reference, Don't Duplicate
 
-> **Reference**: See [Update Triggers & Integration](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/cross-cutting/memory-management/references/update-triggers-integration.md) for the complete update procedures after ranking checks, competitor analyses, audits, and reports; monthly/quarterly archive routines; and integration points with all 8 connected skills (keyword-research, rank-tracker, competitor-analysis, content-gap-analysis, seo-content-writer, content-quality-auditor, domain-authority-auditor).
+```markdown
+## Good - Reference External Docs
 
-### 5. Memory Hygiene Checks
+See API documentation at `docs/api.md`.
+Architecture diagrams in `docs/architecture/`.
 
-When invoked for review or cleanup:
+## Avoid - Duplicating Content
 
-1. **Line count check**: Count lines in `memory/hot-cache.md`. If >80, list oldest entries for archival.
-2. **Byte check**: If hot-cache exceeds 25KB, warn and recommend trimming long entries.
-3. **Staleness scan**: List memory files older than 30 days that have not been referenced. Recommend archival for files >90 days.
-4. **Frontmatter audit**: Check that all memory files (except hot-cache.md) have `name`, `description`, and `type` in their frontmatter. Report any missing fields.
+[Pasting entire API documentation here]
+```
 
-### 6. Save Results
+## Memory Strategies
 
-Ask "Save these results for future sessions?" — if yes, write `YYYY-MM-DD-<topic>.md` to `memory/`. Add veto issues to `memory/hot-cache.md` only from auditor handoff or explicit user approval.
+### Project Onboarding
 
-## Examples, Advanced Features & Practical Limitations
+When starting with a new project:
 
-> **Reference**: See [Examples](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/cross-cutting/memory-management/references/examples.md) for three complete examples (hero keyword rankings, glossary lookup, e-commerce project init), advanced features (smart context loading, memory health check, bulk promotion/demotion, memory snapshot, cross-project memory), and practical limitations (concurrent access, cold storage retrieval, data freshness).
+1. **Create minimal CLAUDE.md** with commands and tech stack
+2. **Add rules** for the main file types you work with
+3. **Expand gradually** as you discover project quirks
+4. **Update regularly** when conventions change
 
-## GDPR / Privacy Compliance
+### Team Conventions
 
-`memory/` may store third-party personal data — entity names, founder bios, LinkedIn profiles, author/journalist names surfaced by `entity-optimizer` or research skills. Under GDPR Art 4(1) (applies to **processing of personal data of EU/EEA/UK residents** regardless of where the controller is located), these qualify as "personal data". The user is the data controller. Non-EU users without EU/EEA/UK data subjects may still face analogous obligations under CCPA/CPRA (California), PIPEDA (Canada), LGPD (Brazil), or other national regimes. **Not legal advice.**
+For team projects:
 
-### Retention policy
-- WARM files: archive to `memory/archive/` after 90 days unreferenced (default lifecycle)
-- COLD archive: never auto-deleted, but eligible for Art 17 erasure requests
-- All files: user MUST honor Art 17 requests from data subjects (individuals named in memory)
+1. **Commit CLAUDE.md** and `.claude/rules/` to version control
+2. **Keep personal preferences** in `~/.claude/CLAUDE.md`
+3. **Document decisions** in rules files, not code comments
+4. **Review memory files** during onboarding
 
-### Deletion flow (Art 17 / CCPA §1798.105)
-Invoke: `memory-management purge <entity-name-or-slug>`
+### Cross-Session Continuity
 
-This skill then:
-1. Greps all files under `memory/` (including `memory/archive/`) for the entity name, slug, or domain
-2. Presents matches to user for confirmation
-3. Deletes or anonymizes confirmed matches across all surfaces:
-   - **Canonical**: `memory/hot-cache.md`, WARM notes, COLD/archive files, `memory/entities/<slug>.md`, `memory/entities/candidates.md`, audit aggregates, open loops
-   - **Archive body scan**: run `grep -F "<entity-name>" memory/archive/*.md` to catch the entity name regardless of frontmatter integrity (legacy or manually-moved files may lack clean frontmatter). If a malformed archive is touched by the purge, log it explicitly to `memory/audits/gdpr-purges.md` so a compliance audit can verify scope.
-4. Writes a tombstone to `memory/privacy/tombstones.md` with redacted label, salted non-reversible fingerprint, date, scope, and `reingest_blocked: true`; never store the raw subject
-5. Logs the purge to `memory/audits/gdpr-purges.md` per the canonical schema in [GDPR Purge Log Template](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/cross-cutting/memory-management/references/gdpr-purge-log-template.md) (v9.9.9+) — required fields: `purge_id`, `date`, `redacted_label`, `fingerprint`, `scope.{canonical,archive}`, `action`, `action_detail`, `legal_basis`, `proof.{grep_count_before,grep_count_after}`, `reingest_blocked: true`, `audit_signature`. Auditor-verifiable structure: never raw subject; mechanical grep-count proof; cross-referenced to tombstone fingerprint.
-6. For auditor archives, redact subject identifiers while preserving score/status/proof metadata required for audit integrity
+To maintain context across sessions:
 
-### Lawful basis reminder
-Before writing a third-party person to `memory/entities/`, the user must have one lawful basis per GDPR Art 6 (where GDPR applies — see scope note above): `consent`, `legitimate_interest`, `contract`, or equivalent. Advisory — this skill does not enforce, and does not substitute for legal review.
+1. **Session hooks** can inject recent context at start
+2. **Weave framework** captures learnings for future sessions
+3. **Project memory** persists architectural decisions
+4. **Rules files** encode learned patterns
 
-## Reference Materials
+For advanced memory strategies, see [STRATEGIES.md](./STRATEGIES.md).
 
-- [Examples](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/cross-cutting/memory-management/references/examples.md) — Worked examples, advanced features, practical limitations, and the auditor handoff archive block format & rules
-- [Promotion & Demotion Rules](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/cross-cutting/memory-management/references/promotion-demotion-rules.md) — Full promotion/demotion table and action procedures
-- [Update Triggers & Integration](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/cross-cutting/memory-management/references/update-triggers-integration.md) — Update procedures, archive routines, and cross-skill integration points
-- [CORE-EEAT Content Benchmark](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/references/core-eeat-benchmark.md) — Content quality scoring stored in memory
-- [CITE Domain Rating](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/references/cite-domain-rating.md) — Domain authority scoring stored in memory
+## Common Patterns
 
-## Next Best Skill
+### Monorepo Pattern
 
-Primary: [keyword-research](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/research/keyword-research/SKILL.md) — seed or refresh campaign strategy with current demand signals.
+```
+project/
+  CLAUDE.md                    # Shared conventions
+  .claude/
+    rules/
+      frontend.md              # Globs: apps/web/**/*
+      backend.md               # Globs: apps/api/**/*
+      packages.md              # Globs: packages/**/*
+  apps/
+    web/
+      CLAUDE.md                # Web-specific context
+    api/
+      CLAUDE.md                # API-specific context
+```
+
+### Feature Flag Pattern
+
+```markdown
+# .claude/rules/feature-flags.md
+---
+globs: ["src/**/*.ts", "src/**/*.tsx"]
+---
+
+## Feature Flags
+
+Active flags:
+- `ENABLE_NEW_CHECKOUT` - New checkout flow (enabled in staging)
+- `DARK_MODE` - Dark mode support (enabled everywhere)
+
+Check flags with: `useFeatureFlag('FLAG_NAME')`
+```
+
+### Migration Pattern
+
+```markdown
+# .claude/rules/migrations.md
+---
+globs: ["src/db/migrations/**/*.ts"]
+---
+
+## Database Migrations
+
+1. Generate: `bun db:generate`
+2. Run: `bun db:migrate`
+3. Rollback: `bun db:rollback`
+
+Naming: `NNNN_description.ts`
+Always include down migration.
+```
+
+## Reference Files
+
+| File | Contents |
+|------|----------|
+| [CLAUDE-MD.md](./CLAUDE-MD.md) | Deep dive on CLAUDE.md structure and content |
+| [RULES.md](./RULES.md) | Complete rules directory documentation |
+| [STRATEGIES.md](./STRATEGIES.md) | Advanced memory strategies |
+
+## Validation Checklist
+
+Before finalizing memory setup:
+
+- [ ] Global preferences in `~/.claude/CLAUDE.md`
+- [ ] Project context in `./CLAUDE.md` or `./.claude/CLAUDE.md`
+- [ ] Modular rules for file-specific guidance
+- [ ] Commands section with exact syntax
+- [ ] Tech stack clearly documented
+- [ ] No duplicated documentation
+- [ ] Rules have appropriate glob patterns
+- [ ] Memory files committed to version control
+
+## Common Mistakes
+
+| Mistake | Fix |
+|---------|-----|
+| Putting everything in global | Use project memory for project-specific content |
+| Giant CLAUDE.md files | Split into rules files for modular loading |
+| Duplicating docs | Reference external documentation instead |
+| Vague instructions | Be specific and actionable |
+| Stale content | Review and update memory periodically |
+| Missing commands | Always include build/test/run commands |

@@ -1,219 +1,190 @@
 ---
 name: presentation-creator
-description: Create data-driven presentation slides using React, Vite, and Recharts with Sentry branding. Use when asked to "create a presentation", "build slides", "make a deck", "create a data presentation", "build a Sentry presentation". Scaffolds a complete slide-based app with charts, animations, and single-file HTML output.
+description: Marpを使用した提案資料・比較検討資料の作成スキル。課題提示、複数案の比較検討、メリット・デメリット整理を含む資料を作成する。使用場面：(1) 技術選定や方式比較の検討資料、(2) 提案書・企画書、(3) 問題解決策の提示、(4) 意思決定を支援するドキュメント。作成完了後は必ずサブエージェントでレビューを実施する。
 ---
 
-# Sentry Presentation Builder
+# Presentation Creator
 
-Create interactive, data-driven presentation slides using React + Vite + Recharts, styled with the Sentry design system and built as a single distributable HTML file.
+技術選定、方式比較、提案書作成のための構造化されたMarp資料を作成する。
+課題提示、複数案の比較検討、メリット・デメリット整理を含む意思決定支援資料に特化。
 
-## Step 1: Gather Requirements
-
-Ask the user:
-1. What is the presentation topic?
-2. How many slides (typically 5-8)?
-3. What data/charts are needed? (time series, comparisons, diagrams, zone charts)
-4. What is the narrative arc? (problem → solution, before → after, technical deep-dive)
-
-### Data Assessment (CRITICAL)
-
-Before designing any slides, assess whether the source content contains **real quantitative data** (numbers, percentages, measurements, time series, costs, metrics). Only create Recharts visualizations for slides where real data exists. Do NOT fabricate, estimate, or invent data to fill charts.
-
-- **Has real data** → use a Recharts chart (bar, area, line, etc.)
-- **Has no data** → use text-based layouts: cards, tables, bullet columns, diagrams, or quote blocks. Do NOT create a chart with made-up numbers.
-
-If the source content is purely qualitative (narrative, opinions, strategy, process descriptions), the presentation should use zero charts. Recharts and `Charts.jsx` should only be included in the project if at least one slide has real data to visualize.
-
-## Step 2: Scaffold the Project
-
-Create the project structure:
+## ワークフロー
 
 ```
-<project-name>/
-├── index.html
-├── package.json
-├── vite.config.js
-└── src/
-    ├── main.jsx
-    ├── App.jsx
-    ├── App.css
-    └── Charts.jsx
+1. 要件確認 → 2. 構成設計 → 3. 資料作成 → 4. SVG図作成 → 5. レビュー実施
 ```
 
-### index.html
+### 1. 要件確認
 
-```html
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet" />
-    <title>TITLE</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
-</html>
+ユーザーから以下を確認：
+- 課題・背景は何か
+- 比較する案は何か
+- 想定読者は誰か
+- 意思決定のゴールは何か
+
+### 2. 構成設計
+
+**標準構成（技術選定・方式比較）：**
+
+```
+1. タイトル
+2. 課題・背景（なぜ今これを検討するのか）
+3. 検討の観点（どの軸で比較するか）
+4. 案の概要（各案を簡潔に説明）
+5. 比較表（観点×案のマトリクス）
+6. メリット・デメリット整理（各案ごと）
+7. 推奨案と理由
+8. 次のステップ
 ```
 
-### package.json
+**代替構成（状況に応じて選択）：**
 
-```json
-{
-  "name": "PROJECT_NAME",
-  "private": true,
-  "type": "module",
-  "scripts": { "dev": "vite", "build": "vite build", "preview": "vite preview" },
-  "dependencies": { "react": "^18.3.1", "react-dom": "^18.3.1", "recharts": "^2.15.3" },
-  "devDependencies": { "@vitejs/plugin-react": "^4.3.4", "vite": "^6.0.0", "vite-plugin-singlefile": "^2.3.0" }
-}
+| 用途 | 構成 |
+|------|------|
+| RFP提案 | 課題→提案ソリューション→実装計画→コスト→リスク管理 |
+| 予算承認 | 背景→ROI分析→コスト詳細→リスク→承認事項 |
+| 技術導入 | 現状課題→技術概要→移行計画→教育計画→ロードマップ |
+| 障害報告 | 概要→影響範囲→原因→対応→再発防止策 |
+
+ユーザー要件に応じて柔軟に調整する。
+
+### 3. 資料作成
+
+`assets/template.md` をベースに作成。出力先はプロジェクトルートまたはユーザー指定パス。
+
+#### Marp記法の基本
+
+```markdown
+---
+marp: true
+theme: default
+paginate: true
+---
+
+# タイトル
+
+---
+
+## スライドタイトル
+
+- 箇条書き項目
+
+---
 ```
 
-### vite.config.js
+#### スタイルガイドライン
 
-```javascript
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { viteSingleFile } from 'vite-plugin-singlefile'
+- 1スライド1メッセージ
+- 箇条書きは3-5項目まで
+- 文字サイズは最小24pt相当を維持
+- 色使いは3色以内
 
-export default defineConfig({ plugins: [react(), viteSingleFile()] })
+### 4. SVG図の作成
+
+図示が効果的な箇所にはSVGを使用。`references/svg-patterns.md` を参照。
+
+#### SVG配置ルール
+
+- SVGファイルはスライドと同じディレクトリに配置
+- 相対パスで参照：`![図の説明](./diagram.svg)`
+- ファイル名は内容を表す命名：`architecture.svg`, `comparison-flow.svg`
+
+#### パターン選択ガイド
+
+| ユースケース | 推奨パターン |
+|------------|------------|
+| 技術選定プロセス | フロー図（分岐） |
+| 2-3案の比較 | 比較図 |
+| システム構成説明 | アーキテクチャ図 |
+| コストvs効果分析 | マトリクス図 |
+| 導入ロードマップ | タイムライン図 |
+
+### 5. レビュー実施（必須）
+
+資料作成完了後、必ずサブエージェントでレビューを実施する。
+
+**レビュー観点：**
+- 課題が読者に十分伝わるか
+- 比較観点は適切か（漏れ・偏りがないか、MECE性）
+- メリット・デメリットの整理は正確か（偏りがないか）
+- 図表は分かりやすいか（1スライド1メッセージ原則）
+- Marpで正しく表示されるか
+
+**レビュー実行方法：**
+
+Task toolでcode-quality-reviewerサブエージェントを起動：
+
+```
+subagent_type: "code-quality-reviewer"
+prompt: |
+  作成したMarp資料をレビューしてください。
+  ファイル: [作成したMarpファイルパス]
+
+  レビュー観点:
+  1. 課題が読者に明確に伝わるか
+  2. 比較観点は適切か（MECE性を確認）
+  3. メリット・デメリットの整理に偏りがないか
+  4. 図表は情報過多でないか
+  5. Marp構文エラーがないか
 ```
 
-### main.jsx
+## 比較表の書き方
 
-```jsx
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App'
-import './App.css'
+`assets/template.md` の比較表セクションを参照。
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App />)
+**記号の意味：** ○ 優れている / △ 普通 / × 課題あり
+
+```markdown
+| 観点 | 案A | 案B | 案C |
+|------|-----|-----|-----|
+| コスト | ○ 低い | △ 中程度 | × 高い |
+| 導入期間 | × 3ヶ月 | ○ 1ヶ月 | △ 2ヶ月 |
 ```
 
-## Step 3: Build the Slide System
+## メリット・デメリットの書き方
 
-Read `references/design-system.md` for the complete Sentry color palette, typography, CSS variables, layout utilities, and animation system.
+シンプルな絵文字記法を使用：
 
-### App.jsx Structure
+```markdown
+### 案A: [案の名前]
 
-Define slides as an array of functions returning JSX:
+**メリット**
+- ✅ 具体的なメリット1
+- ✅ 具体的なメリット2
 
-```jsx
-const SLIDES = [
-  () => ( /* Slide 0: Title */ ),
-  () => ( /* Slide 1: Context */ ),
-  // ...
-];
+**デメリット**
+- ❌ 具体的なデメリット1
+- ❌ 具体的なデメリット2
+
+**適している場面**
+- この案が最適なケース
 ```
 
-Each slide function returns a `<div className="slide-content">` with:
-1. An `<h2>` heading
-2. Optional subtitle paragraph
-3. Main content (charts, cards, diagrams, tables)
-4. Animation classes: `.anim`, `.d1`, `.d2`, `.d3` for staggered fade-in
+## トラブルシューティング
 
-Do NOT add category tag pills/badges above headings (e.g., "BACKGROUND", "EXPERIMENTS"). They look generic and add no value. Let the heading speak for itself.
+### Marp CLIが利用できない場合
 
-### Navigation
+1. オンラインエディタを使用: https://marp.app/
+2. ユーザーにインストールを案内:
+   ```bash
+   npm install -g @marp-team/marp-cli
+   ```
 
-Implement keyboard navigation (ArrowRight/Space = next, ArrowLeft = prev) and a bottom nav overlay with prev/next buttons, dot indicators, and slide number. The nav has **no border or background** — it floats transparently. A small low-contrast Sentry glyph watermark sits fixed in the top-left corner of every slide.
+### SVG画像が表示されない場合
 
-```jsx
-function App() {
-  const [cur, setCur] = useState(0);
-  const go = useCallback((d) => setCur(c => Math.max(0, Math.min(SLIDES.length - 1, c + d))), []);
+- **原因**: 相対パス参照エラー
+- **対処**: SVGファイルをMarkdownと同じディレクトリに配置
+- **検証**: `marp --preview presentation.md` で確認
 
-  useEffect(() => {
-    const h = (e) => {
-      if (e.target.tagName === 'INPUT') return;
-      if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); go(1); }
-      if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); }
-    };
-    window.addEventListener('keydown', h);
-    return () => window.removeEventListener('keydown', h);
-  }, [go]);
+### 日本語フォントが表示されない場合
 
-  return (
-    <>
-      {cur > 0 && <div className="glyph-watermark"><SentryGlyph size={50} /><span className="watermark-title">TITLE</span></div>}
-      <div className="progress" style={{ width: `${((cur + 1) / SLIDES.length) * 100}%` }} />
-      {SLIDES.map((S, i) => (
-        <div key={i} className={`slide ${i === cur ? 'active' : ''}`}>
-          <div className={`slide-content${i === cur ? ' anim' : ''}`}>
-            <S />
-          </div>
-        </div>
-      ))}
-      <Nav cur={cur} total={SLIDES.length} go={go} setCur={setCur} />
-    </>
-  );
-}
-```
+- **原因**: システムにMeiryo/Hiragino Sansがない
+- **対処**: style定義のfont-familyにfallbackを追加
+  ```css
+  font-family: 'Meiryo', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  ```
 
-## Step 4: Create Charts (Only When Data Exists)
+## リソース
 
-**IMPORTANT: Only create charts for slides backed by real, concrete data from the source content.** If a slide's content is qualitative (strategies, learnings, process descriptions, opinions), use text-based layouts instead (cards, tables, bullet lists, columns). Never invent numbers, fabricate percentages, or generate synthetic data to populate a chart. If you are unsure whether data is real or inferred, do NOT create a chart.
-
-If NO slides require charts, skip this step entirely — do not create `Charts.jsx` or import Recharts.
-
-When real data IS available, read `references/chart-patterns.md` for Recharts component patterns including axis configuration, color constants, chart types, and data generation techniques.
-
-Put all chart components in `Charts.jsx`. Key patterns:
-
-- Use `ResponsiveContainer` with explicit height
-- Wrap in `.chart-wrap` div with max-width 920px
-- Use `useMemo` for data generation
-- **Color rule**: Use the Tableau-inspired categorical palette (`CAT[]`) for distinguishing data series and groups. Only use semantic colors (`SEM_GREEN`, `SEM_RED`, `SEM_AMBER`) when the color itself carries meaning (good/bad, success/failure, warning).
-- Common charts: `ComposedChart` with stacked `Area`/`Line`, `BarChart`, custom SVG diagrams
-- **Every data point in a chart must come from the source content.** Do not interpolate, extrapolate, or round numbers to make charts look better.
-
-## Step 5: Style with Sentry Design System
-
-Apply the complete CSS from the design system reference. Key elements:
-
-- **Font**: Rubik from Google Fonts
-- **Colors**: CSS variables for UI chrome (`--purple`, `--dark`, `--muted`). Semantic CSS variables (`--semantic-green`, `--semantic-red`, `--semantic-amber`) only where color conveys meaning. Categorical palette (`CAT[]`) for all other data visualization.
-- **Slides**: Absolute positioned, opacity transitions
-- **Animations**: `fadeUp` keyframe with staggered delays
-- **Layout**: `.cols` flex rows, `.cards` grid, `.chart-wrap` containers
-- **Tags**: `.tag-purple`, `.tag-red`, `.tag-green`, `.tag-amber` for slide labels
-- **Logo**: Read the official SVG from `references/sentry-logo.svg` (full wordmark) or `references/sentry-glyph.svg` (glyph only). Do NOT hardcode an approximation — always use the exact SVG paths from these files.
-
-## Step 6: Common Slide Patterns
-
-### Title Slide
-Logo (from `references/sentry-logo.svg` or `references/sentry-glyph.svg`) + h1 + subtitle + author/date info.
-
-### Problem/Context Slide
-Tag + heading + 2-column card grid with icon headers.
-
-### Data Comparison Slide
-Tag + heading + side-by-side charts or before/after comparison table.
-
-### Technical Deep-Dive Slide
-Tag + heading + full-width chart + annotation bullets below.
-
-### Summary/Decision Slide
-Tag + heading + 3-column layout with category headers and bullet lists.
-
-## Step 7: Iterate and Refine
-
-After initial scaffolding:
-1. Run `npm install && npm run dev` to start the dev server
-2. Iterate on chart data models and visual design
-3. Adjust animations, colors, and layout spacing
-4. Build final output: `npm run build` produces a single HTML file in `dist/`
-
-## Output Expectations
-
-A working React + Vite project that:
-- Renders as a keyboard-navigable slide deck
-- Uses Sentry branding (colors, fonts, icons)
-- Contains Recharts visualizations **only for slides with real quantitative data** from the source content — no fabricated data
-- Omits `Charts.jsx` and the Recharts dependency entirely if no slides have real data
-- Builds to a single distributable HTML file
-- Has smooth fade-in animations on slide transitions
+- `assets/template.md` - Marp資料のベーステンプレート
+- `references/svg-patterns.md` - SVG図示パターン集（アクセシビリティガイドライン含む）

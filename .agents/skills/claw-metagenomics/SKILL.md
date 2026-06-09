@@ -1,30 +1,43 @@
 ---
 name: claw-metagenomics
-version: 0.1.0
 description: Shotgun metagenomics profiling — taxonomy, resistome, and functional pathways
-author: Manuel Corpas
 license: MIT
-tags:
+metadata:
+  version: 0.1.0
+  author: Manuel Corpas
+  tags:
   - metagenomics
   - antimicrobial-resistance
   - taxonomy
   - functional-profiling
   - environmental
   - WHO-critical-ARGs
-inputs:
+  inputs:
   - name: r1
     type: file
-    format: [fastq, fastq.gz, fq, fq.gz]
+    format:
+    - fastq
+    - fastq.gz
+    - fq
+    - fq.gz
     description: Forward reads (paired-end FASTQ R1)
   - name: r2
     type: file
-    format: [fastq, fastq.gz, fq, fq.gz]
+    format:
+    - fastq
+    - fastq.gz
+    - fq
+    - fq.gz
     description: Reverse reads (paired-end FASTQ R2)
   - name: input
     type: file
-    format: [fastq, fastq.gz, fq, fq.gz]
+    format:
+    - fastq
+    - fastq.gz
+    - fq
+    - fq.gz
     description: Single concatenated or interleaved FASTQ (alternative to R1+R2)
-outputs:
+  outputs:
   - name: taxonomy_report
     type: file
     format: tsv
@@ -39,28 +52,37 @@ outputs:
     description: HUMAnN3 pathway abundance table (MetaCyc/UniRef)
   - name: figures
     type: directory
-    format: [png, pdf]
+    format:
+    - png
+    - pdf
     description: Publication-quality figures (taxonomy bar chart, resistome heatmap, WHO-critical ARG summary)
   - name: reproducibility
     type: directory
     description: commands.sh, environment.yml, checksums.sha256
-metadata:
   openclaw:
     category: bioinformatics
+    emoji: 🦠
     homepage: https://github.com/ClawBio/ClawBio
-    min_python: "3.9"
+    os:
+    - darwin
+    - linux
+    min_python: '3.9'
     dependencies:
-      - pandas
-      - numpy
-      - matplotlib
-      - seaborn
-      - scipy
-      - biopython
+    - pandas
+    - numpy
+    - matplotlib
+    - seaborn
+    - scipy
+    - biopython
     system_dependencies:
-      - kraken2
-      - bracken
-      - rgi
-      - humann
+    - kraken2
+    - bracken
+    - rgi
+    - humann
+    requires:
+      bins:
+      - python3
+    always: false
 ---
 
 # Shotgun Metagenomics Profiler
@@ -75,11 +97,17 @@ Comprehensive shotgun metagenomics analysis combining taxonomic classification, 
 4. Detects antimicrobial resistance genes with **RGI** against the **CARD** database
 5. Classifies detected ARGs by **WHO critical priority pathogen** association
 6. Optionally runs **HUMAnN3** for functional pathway profiling (MetaCyc + UniRef)
-7. Generates three publication-quality figures:
-   - **Figure 1**: Taxonomy bar chart — top 20 species by relative abundance
-   - **Figure 2**: Resistome heatmap — ARG families by drug class with abundance
-   - **Figure 3**: WHO-critical ARG summary — priority-tier breakdown of detected resistance genes
-8. Produces a full reproducibility bundle (commands.sh, environment.yml, checksums.sha256)
+7. Calculates **alpha diversity metrics** from Bracken-adjusted species abundances:
+   - **Shannon diversity index**: H = -sum(p_i * ln(p_i)), where p_i is the proportion of classified reads assigned to species i
+   - **Simpson diversity index**: D = 1 - sum(p_i^2)
+   - **Pielou evenness**: J = H / ln(S), where S is the number of species detected
+   - **Species richness**: S = number of distinct species with at least 1 assigned read
+8. Generates four publication-quality figures:
+   - **Figure 1**: Taxonomy bar chart, top 20 species by relative abundance
+   - **Figure 2**: Resistome heatmap, ARG families by drug class with abundance
+   - **Figure 3**: WHO-critical ARG summary, priority-tier breakdown of detected resistance genes
+   - **Figure 4**: Alpha diversity summary (Shannon, Simpson, Pielou in a panel)
+9. Produces a full reproducibility bundle (commands.sh, environment.yml, checksums.sha256)
 
 ## Why this exists
 
@@ -89,6 +117,7 @@ If you ask a general AI to "analyse a metagenome," it will:
 - Miss the connection between detected ARGs and WHO priority pathogen lists
 - Skip HUMAnN3 entirely (or misconfigure its database paths)
 - Produce a single bar chart with no resistance context
+- Skip diversity metric calculations (Shannon, Simpson, Pielou)
 - Not provide a reproducibility bundle
 
 This skill encodes the correct methodological decisions:
@@ -176,6 +205,12 @@ Taxonomy (Kraken2 + Bracken):
   Total classified: 94.2%
   Top species: Escherichia coli (12.3%), Klebsiella pneumoniae (8.7%),
                Pseudomonas aeruginosa (5.1%), Acinetobacter baumannii (3.9%)
+
+Alpha Diversity:
+  Shannon index: 2.847
+  Simpson index: 0.912
+  Pielou evenness: 0.734
+  Species richness: 48
 
 Resistome (RGI/CARD):
   Total ARG hits: 247 (Perfect: 89, Strict: 158)

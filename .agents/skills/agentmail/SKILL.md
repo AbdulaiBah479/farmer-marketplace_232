@@ -1,257 +1,126 @@
 ---
 name: agentmail
-description: Email infrastructure for AI agents. Create accounts, send/receive emails, manage webhooks, and check karma balance via the AgentMail API.
-risk: safe
-source: community
+description: Inter-agent communication for tmux sessions. Send and receive messages between AI agents.
+version: 1.0.0
+author: Konstantin Tumalevich
+license: MIT
 ---
 
-# AgentMail — Email for AI Agents
+# AgentMail Skill
 
-AgentMail gives AI agents real email addresses (`@theagentmail.net`) with a REST API. Agents can send and receive email, sign up for services (GitHub, AWS, Slack, etc.), and get verification codes. A karma system prevents spam and keeps the shared domain's reputation high.
+AgentMail enables communication between AI agents running in different tmux windows through a simple file-based mail system.
 
-Base URL: `https://api.theagentmail.net`
+## Overview
 
-## When to Use
-- An AI agent needs a real inbox/outbox for signups, verification flows, or transactional communication.
-- You need to provision AgentMail accounts, send messages, read inbox contents, or register inbound webhooks.
-- You need to monitor karma usage or wire email events into agent automation.
+AgentMail is a CLI tool for inter-agent communication within tmux sessions. Messages are stored in `.agentmail/mailboxes/` as JSONL files, providing persistent, file-locked message queues for each agent.
 
-## Quick start
+## Prerequisites
 
-All requests require `Authorization: Bearer am_...` header (API key from dashboard).
+- Must be running inside a tmux session
+- AgentMail CLI must be installed and available in PATH
+- Messages stored in `.agentmail/` directory
 
-### Create an email account (-10 karma)
+## Core Commands
 
-```bash
-curl -X POST https://api.theagentmail.net/v1/accounts \
-  -H "Authorization: Bearer am_..." \
-  -H "Content-Type: application/json" \
-  -d '{"address": "my-agent@theagentmail.net"}'
-```
-
-Response: `{"data": {"id": "...", "address": "my-agent@theagentmail.net", "displayName": null, "createdAt": 123}}`
-
-### Send email (-1 karma)
+### Send a Message
 
 ```bash
-curl -X POST https://api.theagentmail.net/v1/accounts/{accountId}/messages \
-  -H "Authorization: Bearer am_..." \
-  -H "Content-Type: application/json" \
-  -d '{
-    "to": ["recipient@example.com"],
-    "subject": "Hello from my agent",
-    "text": "Plain text body",
-    "html": "<p>Optional HTML body</p>"
-  }'
+agentmail send <recipient> "<message>"
 ```
 
-Optional fields: `cc`, `bcc` (string arrays), `inReplyTo`, `references` (strings for threading), `attachments` (array of `{filename, contentType, content}` where content is base64).
+Send a message to another agent. The recipient must be a valid tmux window name.
 
-### Read inbox
+**Examples:**
+```bash
+agentmail send agent2 "Can you review the changes in src/api?"
+agentmail send -r worker -m "Task completed"
+echo "Build succeeded" | agentmail send agent2
+```
+
+### Receive Messages
 
 ```bash
-# List messages
-curl https://api.theagentmail.net/v1/accounts/{accountId}/messages \
-  -H "Authorization: Bearer am_..."
-
-# Get full message (with body and attachments)
-curl https://api.theagentmail.net/v1/accounts/{accountId}/messages/{messageId} \
-  -H "Authorization: Bearer am_..."
+agentmail receive
 ```
 
-### Check karma
+Read the oldest unread message from your mailbox. Messages are delivered in FIFO order and marked as read after display.
+
+### List Recipients
 
 ```bash
-curl https://api.theagentmail.net/v1/karma \
-  -H "Authorization: Bearer am_..."
+agentmail recipients
 ```
 
-Response: `{"data": {"balance": 90, "events": [...]}}`
+List all tmux windows that can receive messages. Your current window is marked with `[you]`.
 
-### Register webhook (real-time inbound)
+### Set Status
 
 ```bash
-curl -X POST https://api.theagentmail.net/v1/accounts/{accountId}/webhooks \
-  -H "Authorization: Bearer am_..." \
-  -H "Content-Type: application/json" \
-  -d '{"url": "https://my-agent.example.com/inbox"}'
+agentmail status <ready|work|offline>
 ```
 
-Webhook deliveries include two security headers:
-- `X-AgentMail-Signature` -- HMAC-SHA256 hex digest of the request body, signed with the webhook secret
-- `X-AgentMail-Timestamp` -- millisecond timestamp of when the delivery was sent
+Set your availability status:
+- `ready` - Available to receive messages and notifications
+- `work` - Busy working (suppresses notifications)
+- `offline` - Not available (suppresses notifications)
 
-Verify the signature and reject requests with timestamps older than 5 minutes to prevent replay attacks:
+## Workflow
 
-```typescript
-import { createHmac } from "crypto";
+### Checking for Messages
 
-const verifyWebhook = (body: string, signature: string, timestamp: string, secret: string) => {
-  if (Date.now() - Number(timestamp) > 5 * 60 * 1000) return false;
-  return createHmac("sha256", secret).update(body).digest("hex") === signature;
-};
-```
+1. Run `agentmail receive` to check for new messages
+2. If a message is available, read and process it
+3. Optionally reply using `agentmail send`
 
-### Download attachment
+### Sending Messages
 
-```bash
-curl https://api.theagentmail.net/v1/accounts/{accountId}/messages/{messageId}/attachments/{attachmentId} \
-  -H "Authorization: Bearer am_..."
-```
+1. Run `agentmail recipients` to see available agents
+2. Send your message: `agentmail send <recipient> "<message>"`
+3. Confirm delivery via the returned message ID
 
-Returns `{"data": {"url": "https://signed-download-url..."}}`.
+### Status Management
 
-## Full API reference
+The plugin automatically manages your status:
+- **Session start**: Status set to `ready`
+- **Session end**: Status set to `offline`
+- **End of turn (Stop)**: Status set to `ready`, checks for new messages
 
-| Method | Path | Description | Karma |
-|--------|------|-------------|-------|
-| POST | `/v1/accounts` | Create email account | -10 |
-| GET | `/v1/accounts` | List all accounts | |
-| GET | `/v1/accounts/:id` | Get account details | |
-| DELETE | `/v1/accounts/:id` | Delete account | +10 |
-| POST | `/v1/accounts/:id/messages` | Send email | -1 |
-| GET | `/v1/accounts/:id/messages` | List messages | |
-| GET | `/v1/accounts/:id/messages/:msgId` | Get full message | |
-| GET | `/v1/accounts/:id/messages/:msgId/attachments/:attId` | Get attachment URL | |
-| POST | `/v1/accounts/:id/webhooks` | Register webhook | |
-| GET | `/v1/accounts/:id/webhooks` | List webhooks | |
-| DELETE | `/v1/accounts/:id/webhooks/:whId` | Delete webhook | |
-| GET | `/v1/karma` | Get balance + events | |
+## Message Format
 
-## Karma system
+Messages include:
+- **ID**: Unique 8-character base62 identifier (a-z, A-Z, 0-9)
+- **From**: Sender's tmux window name
+- **To**: Recipient's tmux window name
+- **Content**: Message body
 
-Every action has a karma cost or reward:
+## Best Practices
 
-| Event | Karma | Why |
-|---|---|---|
-| `money_paid` | +100 | Purchase credits |
-| `email_received` | +2 | Someone replied from a trusted domain |
-| `account_deleted` | +10 | Karma refunded when you delete an address |
-| `email_sent` | -1 | Sending costs karma |
-| `account_created` | -10 | Creating addresses costs karma |
+1. **Check messages regularly** - Use `agentmail receive` to stay informed
+2. **Keep messages concise** - Focus on actionable information
+3. **Include context** - Reference files, line numbers, or specific details
+4. **Respond promptly** - Other agents may be waiting for your input
+5. **Use status appropriately** - Set `work` when focusing on complex tasks
 
-**Important rules:**
-- Karma is only awarded for inbound emails from trusted providers (Gmail, Outlook, Yahoo, iCloud, ProtonMail, Fastmail, Hey, etc.). Emails from unknown/throwaway domains don't earn karma.
-- You only earn karma once per sender until the agent replies. If sender X emails you 5 times without a reply, only the first earns karma. Reply to X, and the next email from X earns karma again.
-- Deleting an account refunds the 10 karma it cost to create.
+## Integration with Claude Code
 
-When karma reaches 0, sends and account creation return HTTP 402. Always check balance before operations that cost karma.
+This plugin integrates with Claude Code hooks:
 
-## TypeScript SDK
+- **SessionStart**: Automatically sets status to `ready` and runs onboarding
+- **SessionEnd**: Automatically sets status to `offline`
+- **Stop**: Sets status to `ready` and checks for new messages
 
-```typescript
-import { createClient } from "@agentmail/sdk";
+The hooks ensure agents are properly registered and can receive notifications from the mailman daemon.
 
-const mail = createClient({ apiKey: "am_..." });
+## Troubleshooting
 
-// Create account
-const account = await mail.accounts.create({
-  address: "my-agent@theagentmail.net",
-});
+### "Not in a tmux session"
+AgentMail requires tmux. Start a tmux session first.
 
-// Send email
-await mail.messages.send(account.id, {
-  to: ["human@example.com"],
-  subject: "Hello",
-  text: "Sent by an AI agent.",
-});
+### "Recipient not found"
+The recipient window doesn't exist. Check available windows with `agentmail recipients`.
 
-// Read inbox
-const messages = await mail.messages.list(account.id);
-const detail = await mail.messages.get(account.id, messages[0].id);
+### "No unread messages"
+Your mailbox is empty. Other agents haven't sent you messages yet.
 
-// Attachments
-const att = await mail.attachments.getUrl(accountId, messageId, attachmentId);
-// att.url is a signed download URL
-
-// Webhooks
-await mail.webhooks.create(account.id, {
-  url: "https://my-agent.example.com/inbox",
-});
-
-// Karma
-const karma = await mail.karma.getBalance();
-console.log(karma.balance);
-```
-
-## Error handling
-
-```typescript
-import { AgentMailError } from "@agentmail/sdk";
-
-try {
-  await mail.messages.send(accountId, { to: ["a@b.com"], subject: "Hi", text: "Hey" });
-} catch (e) {
-  if (e instanceof AgentMailError) {
-    console.log(e.status);   // 402, 404, 401, etc.
-    console.log(e.code);     // "INSUFFICIENT_KARMA", "NOT_FOUND", etc.
-    console.log(e.message);
-  }
-}
-```
-
-## Common patterns
-
-### Sign up for a service and read verification email
-
-```typescript
-const account = await mail.accounts.create({
-  address: "signup-bot@theagentmail.net",
-});
-
-// Use the address to sign up (browser automation, API, etc.)
-
-// Poll for verification email
-for (let i = 0; i < 30; i++) {
-  const messages = await mail.messages.list(account.id);
-  const verification = messages.find(m =>
-    m.subject.toLowerCase().includes("verify") ||
-    m.subject.toLowerCase().includes("confirm")
-  );
-  if (verification) {
-    const detail = await mail.messages.get(account.id, verification.id);
-    // Parse verification link/code from detail.bodyText or detail.bodyHtml
-    break;
-  }
-  await new Promise(r => setTimeout(r, 2000));
-}
-```
-
-### Send email and wait for reply
-
-```typescript
-const sent = await mail.messages.send(account.id, {
-  to: ["human@company.com"],
-  subject: "Question about order #12345",
-  text: "Can you check the status?",
-});
-
-for (let i = 0; i < 60; i++) {
-  const messages = await mail.messages.list(account.id);
-  const reply = messages.find(m =>
-    m.direction === "inbound" && m.timestamp > sent.timestamp
-  );
-  if (reply) {
-    const detail = await mail.messages.get(account.id, reply.id);
-    // Process reply
-    break;
-  }
-  await new Promise(r => setTimeout(r, 5000));
-}
-```
-
-## Types
-
-```typescript
-type Account = { id: string; address: string; displayName: string | null; createdAt: number };
-type Message = { id: string; from: string; to: string[]; subject: string; direction: "inbound" | "outbound"; status: string; timestamp: number };
-type MessageDetail = Message & { cc: string[] | null; bcc: string[] | null; bodyText: string | null; bodyHtml: string | null; inReplyTo: string | null; references: string | null; attachments: AttachmentMeta[] };
-type AttachmentMeta = { id: string; filename: string; contentType: string; size: number };
-type KarmaBalance = { balance: number; events: KarmaEvent[] };
-type KarmaEvent = { id: string; type: string; amount: number; timestamp: number; metadata?: Record<string, unknown> };
-```
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
+### Messages not being delivered
+Ensure the mailman daemon is running: `agentmail mailman --daemon`

@@ -2,8 +2,7 @@
 name: verify-sources
 description: Captures human source verification for tracks, timestamps it, and updates track files. Use when sources need human review before generation.
 argument-hint: <album-name>
-model: sonnet
-effort: low
+model: claude-sonnet-4-6
 allowed-tools:
   - Read
   - Edit

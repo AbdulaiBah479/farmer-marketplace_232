@@ -1,313 +1,481 @@
 ---
+# ═══════════════════════════════════════════════════════════════════════════════
+# CLAUDE OFFICE SKILL - Enhanced Metadata v2.0
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Basic Information
 name: excel-automation
-description: Create, parse, and control Excel files on macOS. Professional formatting with openpyxl, complex xlsm parsing with stdlib zipfile+xml for investment bank financial models, and Excel window control via AppleScript. Use when creating formatted Excel reports, parsing financial models that openpyxl cannot handle, or automating Excel on macOS.
+description: ">"
+version: "1.0"
+author: claude-office-skills
+license: MIT
+
+# Categorization
+category: spreadsheet
+tags:
+  - excel
+  - automation
+  - macro
+  - workflow
+department: All
+
+# AI Model Compatibility
+models:
+  recommended:
+    - claude-sonnet-4
+    - claude-opus-4
+  compatible:
+    - claude-3-5-sonnet
+    - gpt-4
+    - gpt-4o
+
+# MCP Tools Integration
+mcp:
+  server: office-mcp
+  tools:
+    - read_xlsx
+    - create_xlsx
+    - apply_formula
+    - pivot_table
+
+# Skill Capabilities
+capabilities:
+  - automation
+  - data_processing
+  - reporting
+
+# Language Support
+languages:
+  - en
+  - zh
 ---
 
-# Excel Automation
-
-Create professional Excel files, parse complex financial models, and control Excel on macOS.
-
-## Quick Start
-
-```bash
-# Create a formatted Excel report
-uv run --with openpyxl scripts/create_formatted_excel.py output.xlsx
-
-# Parse a complex xlsm that openpyxl can't handle
-uv run scripts/parse_complex_excel.py model.xlsm              # List sheets
-uv run scripts/parse_complex_excel.py model.xlsm "DCF"        # Extract a sheet
-uv run scripts/parse_complex_excel.py model.xlsm --fix        # Fix corrupted names
-
-# Control Excel via AppleScript (with timeout to prevent hangs)
-timeout 5 osascript -e 'tell application "Microsoft Excel" to activate'
-```
+# Excel Automation Skill
 
 ## Overview
 
-Three capabilities:
+This skill enables advanced Excel automation using **xlwings** - a library that can interact with live Excel instances. Unlike openpyxl (file-only), xlwings can control Excel in real-time, execute VBA, update dashboards, and automate complex workflows.
 
-| Capability | Tool | When to Use |
-|-----------|------|-------------|
-| **Create** formatted Excel | `openpyxl` | Reports, mockups, dashboards |
-| **Parse** complex xlsm/xlsx | `zipfile` + `xml.etree` | Financial models, VBA workbooks, >1MB files |
-| **Control** Excel window | AppleScript (`osascript`) | Zoom, scroll, select cells programmatically |
+## How to Use
 
-## Tool Selection Decision Tree
+1. Describe the Excel automation task you need
+2. Specify if you need live Excel interaction or file processing
+3. I'll generate xlwings code and execute it
 
-```
-Is the file simple (data export, no VBA, <1MB)?
-├─ YES → openpyxl or pandas
-└─ NO
-   ├─ Is it .xlsm or from investment bank / >1MB?
-   │   └─ YES → zipfile + xml.etree.ElementTree (stdlib)
-   └─ Is it truly .xls (BIFF format)?
-       └─ YES → xlrd
-```
+**Example prompts:**
+- "Update this live Excel dashboard with new data"
+- "Run this VBA macro and get the results"
+- "Create an Excel add-in for data validation"
+- "Automate monthly report generation with live charts"
 
-**Signals of "complex" Excel**: file >1MB, `.xlsm` extension, from investment bank/broker, contains VBA macros.
+## Domain Knowledge
 
-**IMPORTANT**: Always run `file <path>` first — extensions lie. A `.xls` file may actually be a ZIP-based xlsx.
+### xlwings vs openpyxl
 
-## Creating Excel Files (openpyxl)
+| Feature | xlwings | openpyxl |
+|---------|---------|----------|
+| Requires Excel | Yes | No |
+| Live interaction | Yes | No |
+| VBA execution | Yes | No |
+| Speed (large files) | Fast | Slow |
+| Server deployment | Limited | Easy |
 
-### Professional Color Convention (Investment Banking Standard)
-
-| Color | RGB Code | Meaning |
-|-------|----------|---------|
-| Blue | `0000FF` | User input / assumption |
-| Black | `000000` | Calculated value |
-| Green | `008000` | Cross-sheet reference |
-| White on dark blue | `FFFFFF` on `4472C4` | Section headers |
-| Dark blue text | `1F4E79` | Title |
-
-### Core Formatting Patterns
+### xlwings Fundamentals
 
 ```python
-from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
+import xlwings as xw
 
-# Fonts
-BLUE_FONT = Font(color="0000FF", size=10, name="Calibri")
-BLACK_FONT_BOLD = Font(color="000000", size=10, name="Calibri", bold=True)
-GREEN_FONT = Font(color="008000", size=10, name="Calibri")
-HEADER_FONT = Font(color="FFFFFF", size=12, name="Calibri", bold=True)
+# Connect to active Excel workbook
+wb = xw.Book.caller()  # From Excel add-in
+wb = xw.books.active   # Active workbook
 
-# Fills
-DARK_BLUE_FILL = PatternFill("solid", fgColor="4472C4")
-LIGHT_BLUE_FILL = PatternFill("solid", fgColor="D9E1F2")
-INPUT_GREEN_FILL = PatternFill("solid", fgColor="E2EFDA")
-LIGHT_GRAY_FILL = PatternFill("solid", fgColor="F2F2F2")
+# Open specific file
+wb = xw.Book('path/to/file.xlsx')
 
-# Borders
-THIN_BORDER = Border(bottom=Side(style="thin", color="B2B2B2"))
-BOTTOM_DOUBLE = Border(bottom=Side(style="double", color="000000"))
+# Create new workbook
+wb = xw.Book()
+
+# Get sheet
+sheet = wb.sheets['Sheet1']
+sheet = wb.sheets[0]
 ```
 
-### Number Format Codes
+### Working with Ranges
 
-| Format | Code | Example |
-|--------|------|---------|
-| Currency | `'$#,##0'` | $1,234 |
-| Currency with decimals | `'$#,##0.00'` | $1,234.56 |
-| Percentage | `'0.0%'` | 12.3% |
-| Percentage (2 decimal) | `'0.00%'` | 12.34% |
-| Number with commas | `'#,##0'` | 1,234 |
-| Multiplier | `'0.0x'` | 1.5x |
-
-### Conditional Formatting (Sensitivity Tables)
-
-Red-to-green gradient for sensitivity analysis:
-
+#### Reading and Writing
 ```python
-from openpyxl.formatting.rule import ColorScaleRule
+# Single cell
+sheet['A1'].value = 'Hello'
+value = sheet['A1'].value
 
-rule = ColorScaleRule(
-    start_type="min", start_color="F8696B",   # Red (low)
-    mid_type="percentile", mid_value=50, mid_color="FFEB84",  # Yellow (mid)
-    end_type="max", end_color="63BE7B"         # Green (high)
-)
-ws.conditional_formatting.add(f"B2:F6", rule)
+# Range
+sheet['A1:C3'].value = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+data = sheet['A1:C3'].value  # Returns list of lists
+
+# Named range
+sheet['MyRange'].value = 'Named data'
+
+# Expand range (detect data boundaries)
+sheet['A1'].expand().value  # All connected data
+sheet['A1'].expand('table').value  # Table format
 ```
 
-### Execution
-
-```bash
-uv run --with openpyxl scripts/create_formatted_excel.py
-```
-
-Full template script: See `scripts/create_formatted_excel.py`
-
-## Parsing Complex Excel (zipfile + xml)
-
-When openpyxl fails on complex xlsm files (corrupted DefinedNames, complex VBA), use stdlib directly.
-
-### XLSX Internal ZIP Structure
-
-```
-file.xlsx (ZIP archive)
-├── [Content_Types].xml
-├── xl/
-│   ├── workbook.xml          ← Sheet names + order
-│   ├── sharedStrings.xml     ← All text values (lookup table)
-│   ├── worksheets/
-│   │   ├── sheet1.xml        ← Cell data for sheet 1
-│   │   ├── sheet2.xml        ← Cell data for sheet 2
-│   │   └── ...
-│   └── _rels/
-│       └── workbook.xml.rels ← Maps rId → sheetN.xml
-└── _rels/.rels
-```
-
-### Sheet Name Resolution (Two-Step)
-
-Sheet names in `workbook.xml` link to physical files via `_rels/workbook.xml.rels`:
-
+#### Dynamic Ranges
 ```python
-import zipfile
-import xml.etree.ElementTree as ET
+# Current region (like Ctrl+Shift+End)
+data = sheet['A1'].current_region.value
 
-MAIN_NS = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'
-REL_NS = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
-RELS_NS = 'http://schemas.openxmlformats.org/package/2006/relationships'
+# Used range
+used = sheet.used_range.value
 
-def get_sheet_path(zf, sheet_name):
-    """Resolve sheet name to physical XML file path inside ZIP."""
-    # Step 1: workbook.xml → find rId for the sheet name
-    wb_xml = ET.fromstring(zf.read('xl/workbook.xml'))
-    sheets = wb_xml.findall(f'.//{{{MAIN_NS}}}sheet')
-    rid = None
-    for s in sheets:
-        if s.get('name') == sheet_name:
-            rid = s.get(f'{{{REL_NS}}}id')
-            break
-    if not rid:
-        raise ValueError(f"Sheet '{sheet_name}' not found")
+# Last row with data
+last_row = sheet['A1'].end('down').row
 
-    # Step 2: workbook.xml.rels → map rId to file path
-    rels_xml = ET.fromstring(zf.read('xl/_rels/workbook.xml.rels'))
-    for rel in rels_xml.findall(f'{{{RELS_NS}}}Relationship'):
-        if rel.get('Id') == rid:
-            return 'xl/' + rel.get('Target')
-
-    raise ValueError(f"No file mapping for {rid}")
+# Resize range
+rng = sheet['A1'].resize(10, 5)  # 10 rows, 5 columns
 ```
 
-### Cell Data Extraction
-
+### Formatting
 ```python
-def extract_cells(zf, sheet_path):
-    """Extract all cell values from a sheet XML."""
-    # Build shared strings lookup
-    shared = []
+# Font
+sheet['A1'].font.bold = True
+sheet['A1'].font.size = 14
+sheet['A1'].font.color = (255, 0, 0)  # RGB red
+
+# Fill
+sheet['A1'].color = (255, 255, 0)  # Yellow background
+
+# Number format
+sheet['B1'].number_format = '$#,##0.00'
+
+# Column width
+sheet['A:A'].column_width = 20
+
+# Row height
+sheet['1:1'].row_height = 30
+
+# Autofit
+sheet['A:D'].autofit()
+```
+
+### Excel Features
+
+#### Charts
+```python
+# Add chart
+chart = sheet.charts.add(left=100, top=100, width=400, height=250)
+chart.set_source_data(sheet['A1:B10'])
+chart.chart_type = 'column_clustered'
+chart.name = 'Sales Chart'
+
+# Modify existing chart
+chart = sheet.charts['Sales Chart']
+chart.chart_type = 'line'
+```
+
+#### Tables
+```python
+# Create Excel Table
+rng = sheet['A1'].expand()
+table = sheet.tables.add(source=rng, name='SalesTable')
+
+# Refresh table
+table.refresh()
+
+# Access table data
+table_data = table.data_body_range.value
+```
+
+#### Pictures
+```python
+# Add picture
+sheet.pictures.add('logo.png', left=10, top=10, width=100, height=50)
+
+# Update picture from matplotlib
+import matplotlib.pyplot as plt
+fig, ax = plt.subplots()
+ax.plot([1, 2, 3], [1, 4, 9])
+sheet.pictures.add(fig, name='MyPlot', update=True)
+```
+
+### VBA Integration
+```python
+# Run VBA macro
+wb.macro('MacroName')()
+
+# With arguments
+wb.macro('MyMacro')('arg1', 'arg2')
+
+# Get return value
+result = wb.macro('CalculateTotal')(100, 200)
+
+# Access VBA module
+vb_code = wb.api.VBProject.VBComponents('Module1').CodeModule.Lines(1, 10)
+```
+
+### User Defined Functions (UDFs)
+```python
+# Define a UDF (in Python file)
+import xlwings as xw
+
+@xw.func
+def my_sum(x, y):
+    """Add two numbers"""
+    return x + y
+
+@xw.func
+@xw.arg('data', ndim=2)
+def my_array_func(data):
+    """Process array data"""
+    import numpy as np
+    return np.sum(data)
+
+# These become Excel functions: =my_sum(A1, B1)
+```
+
+### Application Control
+```python
+# Excel application settings
+app = xw.apps.active
+app.screen_updating = False  # Speed up
+app.calculation = 'manual'   # Manual calc
+app.display_alerts = False   # Suppress dialogs
+
+# Perform operations...
+
+# Restore
+app.screen_updating = True
+app.calculation = 'automatic'
+app.display_alerts = True
+```
+
+## Best Practices
+
+1. **Disable Screen Updating**: For batch operations
+2. **Use Arrays**: Read/write entire ranges, not cell-by-cell
+3. **Manual Calculation**: Turn off auto-calc during data loading
+4. **Close Connections**: Properly close workbooks when done
+5. **Error Handling**: Handle Excel not being installed
+
+## Common Patterns
+
+### Performance Optimization
+```python
+import xlwings as xw
+
+def batch_update(data, workbook_path):
+    app = xw.App(visible=False)
     try:
-        ss_xml = ET.fromstring(zf.read('xl/sharedStrings.xml'))
-        for si in ss_xml.findall(f'{{{MAIN_NS}}}si'):
-            texts = si.itertext()
-            shared.append(''.join(texts))
-    except KeyError:
-        pass  # No shared strings
-
-    # Parse sheet cells
-    sheet_xml = ET.fromstring(zf.read(sheet_path))
-    rows = sheet_xml.findall(f'.//{{{MAIN_NS}}}row')
-
-    data = {}
-    for row in rows:
-        for cell in row.findall(f'{{{MAIN_NS}}}c'):
-            ref = cell.get('r')         # e.g., "A1"
-            cell_type = cell.get('t')   # "s" = shared string, None = number
-            val_el = cell.find(f'{{{MAIN_NS}}}v')
-
-            if val_el is not None and val_el.text:
-                if cell_type == 's':
-                    data[ref] = shared[int(val_el.text)]
-                else:
-                    try:
-                        data[ref] = float(val_el.text)
-                    except ValueError:
-                        data[ref] = val_el.text
-    return data
+        app.screen_updating = False
+        app.calculation = 'manual'
+        
+        wb = app.books.open(workbook_path)
+        sheet = wb.sheets['Data']
+        
+        # Write all data at once
+        sheet['A1'].value = data
+        
+        app.calculation = 'automatic'
+        wb.save()
+    finally:
+        wb.close()
+        app.quit()
 ```
 
-### Fixing Corrupted DefinedNames
-
-Investment bank xlsm files often have corrupted `<definedName>` entries containing "Formula removed":
-
+### Dashboard Update
 ```python
-def fix_defined_names(zf_in_path, zf_out_path):
-    """Remove corrupted DefinedNames and repackage."""
-    import shutil, tempfile
-    with tempfile.TemporaryDirectory() as tmp:
-        tmp = Path(tmp)
-        with zipfile.ZipFile(zf_in_path, 'r') as zf:
-            zf.extractall(tmp)
-
-        wb_xml_path = tmp / 'xl' / 'workbook.xml'
-        tree = ET.parse(wb_xml_path)
-        root = tree.getroot()
-
-        ns = {'main': MAIN_NS}
-        defined_names = root.find('.//main:definedNames', ns)
-        if defined_names is not None:
-            for name in list(defined_names):
-                if name.text and "Formula removed" in name.text:
-                    defined_names.remove(name)
-
-        tree.write(wb_xml_path, encoding='utf-8', xml_declaration=True)
-
-        with zipfile.ZipFile(zf_out_path, 'w', zipfile.ZIP_DEFLATED) as zf:
-            for fp in tmp.rglob('*'):
-                if fp.is_file():
-                    zf.write(fp, fp.relative_to(tmp))
+def update_dashboard(data_dict):
+    wb = xw.books.active
+    
+    # Update data sheet
+    data_sheet = wb.sheets['Data']
+    for name, values in data_dict.items():
+        data_sheet[name].value = values
+    
+    # Refresh all charts
+    dashboard = wb.sheets['Dashboard']
+    for chart in dashboard.charts:
+        chart.refresh()
+    
+    # Update timestamp
+    from datetime import datetime
+    dashboard['A1'].value = f'Last Updated: {datetime.now()}'
 ```
 
-Full template script: See `scripts/parse_complex_excel.py`
+### Report Generator
+```python
+def generate_monthly_report(month, data):
+    template = xw.Book('template.xlsx')
+    
+    # Fill data
+    sheet = template.sheets['Report']
+    sheet['B2'].value = month
+    sheet['A5'].value = data
+    
+    # Run calculations
+    template.app.calculate()
+    
+    # Export to PDF
+    sheet.api.ExportAsFixedFormat(0, f'report_{month}.pdf')
+    
+    template.save(f'report_{month}.xlsx')
+```
 
-## Controlling Excel on macOS (AppleScript)
+## Examples
 
-All commands verified on macOS with Microsoft Excel.
+### Example 1: Live Dashboard Update
+```python
+import xlwings as xw
+import pandas as pd
+from datetime import datetime
 
-### Verified Commands
+# Connect to running Excel
+wb = xw.books.active
+dashboard = wb.sheets['Dashboard']
+data_sheet = wb.sheets['Data']
+
+# Fetch new data (simulated)
+new_data = pd.DataFrame({
+    'Date': pd.date_range('2024-01-01', periods=30),
+    'Sales': [1000 + i*50 for i in range(30)],
+    'Costs': [600 + i*30 for i in range(30)]
+})
+
+# Update data sheet
+data_sheet['A1'].value = new_data
+
+# Calculate profit
+data_sheet['D1'].value = 'Profit'
+data_sheet['D2'].value = '=B2-C2'
+data_sheet['D2'].expand('down').value = data_sheet['D2'].formula
+
+# Update KPIs on dashboard
+dashboard['B2'].value = new_data['Sales'].sum()
+dashboard['B3'].value = new_data['Costs'].sum()
+dashboard['B4'].value = new_data['Sales'].sum() - new_data['Costs'].sum()
+dashboard['A1'].value = f'Updated: {datetime.now().strftime("%Y-%m-%d %H:%M")}'
+
+# Refresh charts
+for chart in dashboard.charts:
+    chart.api.Refresh()
+
+print("Dashboard updated!")
+```
+
+### Example 2: Batch Processing Multiple Files
+```python
+import xlwings as xw
+from pathlib import Path
+
+def process_sales_files(folder_path, output_path):
+    """Consolidate multiple Excel files into one summary."""
+    
+    app = xw.App(visible=False)
+    app.screen_updating = False
+    
+    try:
+        # Create summary workbook
+        summary_wb = xw.Book()
+        summary_sheet = summary_wb.sheets[0]
+        summary_sheet.name = 'Consolidated'
+        
+        headers = ['File', 'Total Sales', 'Total Units', 'Avg Price']
+        summary_sheet['A1'].value = headers
+        
+        row = 2
+        for file in Path(folder_path).glob('*.xlsx'):
+            wb = app.books.open(str(file))
+            data_sheet = wb.sheets['Sales']
+            
+            # Extract summary
+            total_sales = data_sheet['B:B'].api.SpecialCells(11).Value  # xlCellTypeConstants
+            total_units = data_sheet['C:C'].api.SpecialCells(11).Value
+            
+            # Calculate and write
+            summary_sheet[f'A{row}'].value = file.name
+            summary_sheet[f'B{row}'].value = sum(total_sales) if isinstance(total_sales, (list, tuple)) else total_sales
+            summary_sheet[f'C{row}'].value = sum(total_units) if isinstance(total_units, (list, tuple)) else total_units
+            summary_sheet[f'D{row}'].value = f'=B{row}/C{row}'
+            
+            wb.close()
+            row += 1
+        
+        # Format summary
+        summary_sheet['A1:D1'].font.bold = True
+        summary_sheet['B:D'].number_format = '$#,##0.00'
+        summary_sheet['A:D'].autofit()
+        
+        summary_wb.save(output_path)
+        
+    finally:
+        app.quit()
+    
+    print(f"Consolidated {row-2} files to {output_path}")
+
+# Usage
+process_sales_files('/path/to/sales/', 'consolidated_sales.xlsx')
+```
+
+### Example 3: Excel Add-in with UDFs
+```python
+# myudfs.py - Place in xlwings project
+
+import xlwings as xw
+import numpy as np
+
+@xw.func
+@xw.arg('data', pd.DataFrame, index=False, header=False)
+@xw.ret(expand='table')
+def GROWTH_RATE(data):
+    """Calculate period-over-period growth rate"""
+    values = data.iloc[:, 0].values
+    growth = np.diff(values) / values[:-1] * 100
+    return [['Growth %']] + [[g] for g in growth]
+
+@xw.func
+@xw.arg('range1', np.array, ndim=2)
+@xw.arg('range2', np.array, ndim=2)
+def CORRELATION(range1, range2):
+    """Calculate correlation between two ranges"""
+    return np.corrcoef(range1.flatten(), range2.flatten())[0, 1]
+
+@xw.func
+def SENTIMENT(text):
+    """Basic sentiment analysis (placeholder)"""
+    positive = ['good', 'great', 'excellent', 'amazing']
+    negative = ['bad', 'poor', 'terrible', 'awful']
+    
+    text_lower = text.lower()
+    pos_count = sum(word in text_lower for word in positive)
+    neg_count = sum(word in text_lower for word in negative)
+    
+    if pos_count > neg_count:
+        return 'Positive'
+    elif neg_count > pos_count:
+        return 'Negative'
+    return 'Neutral'
+```
+
+## Limitations
+
+- Requires Excel to be installed
+- Limited support on macOS for some features
+- Not suitable for server-side processing
+- VBA features require trust settings
+- Performance varies with Excel version
+
+## Installation
 
 ```bash
-# Activate Excel (bring to front)
-osascript -e 'tell application "Microsoft Excel" to activate'
+pip install xlwings
 
-# Open a file
-osascript -e 'tell application "Microsoft Excel" to open POSIX file "/path/to/file.xlsx"'
-
-# Set zoom level (percentage)
-osascript -e 'tell application "Microsoft Excel"
-    set zoom of active window to 120
-end tell'
-
-# Scroll to specific row
-osascript -e 'tell application "Microsoft Excel"
-    set scroll row of active window to 45
-end tell'
-
-# Scroll to specific column
-osascript -e 'tell application "Microsoft Excel"
-    set scroll column of active window to 3
-end tell'
-
-# Select a cell range
-osascript -e 'tell application "Microsoft Excel"
-    select range "A1" of active sheet
-end tell'
-
-# Select a specific sheet by name
-osascript -e 'tell application "Microsoft Excel"
-    activate object sheet "DCF" of active workbook
-end tell'
+# For add-in functionality
+xlwings addin install
 ```
 
-### Timing and Timeout
+## Resources
 
-Always add `sleep 1` between AppleScript commands and subsequent operations (e.g., screenshot) to allow UI rendering.
-
-**IMPORTANT**: `osascript` will hang indefinitely if Excel is not running or not responding. Always wrap with `timeout`:
-
-```bash
-# Safe pattern: 5-second timeout
-timeout 5 osascript -e 'tell application "Microsoft Excel" to activate'
-
-# Check exit code: 124 = timed out
-if [ $? -eq 124 ]; then
-    echo "Excel not responding — is it running?"
-fi
-```
-
-## Common Mistakes
-
-| Mistake | Correction |
-|---------|-----------|
-| openpyxl fails on complex xlsm → try monkey-patching | Switch to `zipfile` + `xml.etree` immediately |
-| Count Chinese characters with `wc -c` | Use `wc -m` (chars, not bytes; Chinese = 3 bytes/char) |
-| Trust file extension | Run `file <path>` first to confirm actual format |
-| openpyxl `load_workbook` hangs on large xlsm | Use `zipfile` for targeted extraction instead of loading entire workbook |
-
-## Important Notes
-
-- Execute Python scripts with `uv run --with openpyxl` (never use system Python)
-- LibreOffice (`soffice --headless`) can convert formats and recalculate formulas
-- Detailed formatting reference: See `references/formatting-reference.md`
+- [xlwings Documentation](https://docs.xlwings.org/)
+- [GitHub Repository](https://github.com/xlwings/xlwings)
+- [UDF Tutorial](https://docs.xlwings.org/en/stable/udfs.html)
+- [Excel VBA Reference](https://docs.microsoft.com/en-us/office/vba/api/overview/excel)

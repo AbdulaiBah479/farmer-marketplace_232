@@ -1,258 +1,423 @@
 ---
 name: call-prep
-description: Prepare for a sales call with account context, attendee research, and suggested agenda. Works standalone with user input and web research, supercharged when you connect your CRM, email, chat, or transcripts. Trigger with "prep me for my call with [company]", "I'm meeting with [company] prep me", "call prep [company]", or "get me ready for [meeting]".
+description: Prepare for upcoming call with full context
+role_groups: [sales, customer_success]
+jtbd: |
+  You have a call coming up and need to quickly get context on the person or account. 
+  This pulls their person page, account history, recent interactions, and open items 
+  so you walk into the call prepared and never ask "remind me where we left off?"
+time_investment: "3-5 minutes per call"
 ---
 
-# Call Prep
+## Purpose
 
-Get fully prepared for any sales call in minutes. This skill works with whatever context you provide, and gets significantly better when you connect your sales tools.
+Quickly gather all relevant context before a call - recent conversations, open action items, account status, and suggested talking points.
 
-## How It Works
+## Usage
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        CALL PREP                                 │
-├─────────────────────────────────────────────────────────────────┤
-│  ALWAYS (works standalone)                                       │
-│  ✓ You tell me: company, meeting type, attendees                │
-│  ✓ Web search: recent news, funding, leadership changes         │
-│  ✓ Company research: what they do, size, industry               │
-│  ✓ Output: prep brief with agenda and questions                 │
-├─────────────────────────────────────────────────────────────────┤
-│  SUPERCHARGED (when you connect your tools)                      │
-│  + CRM: account history, contacts, opportunities, activities    │
-│  + Email: recent threads, open questions, commitments           │
-│  + Chat: internal discussions, colleague insights               │
-│  + Transcripts: prior call recordings, key moments              │
-│  + Calendar: auto-find meeting, pull attendees                  │
-└─────────────────────────────────────────────────────────────────┘
-```
+- `/call-prep [person-name]` - Prep for call with specific person
+- `/call-prep [company-name]` - Prep for call with company (general)
 
 ---
 
-## Getting Started
+## Step 1: Identify the Person/Account
 
-When you run this skill, I'll ask for what I need:
-
-**Required:**
-- Company or contact name
-- Meeting type (discovery, demo, negotiation, check-in, etc.)
-
-**Helpful if you have it:**
-- Who's attending (names and titles)
-- Any context you want me to know (paste prior notes, emails, etc.)
-
-If you've connected your CRM, email, or other tools, I'll pull context automatically and skip the questions.
+1. Search People/ directory for person page
+2. If company name provided, search for:
+   - Company pages in 05-Areas/Companies/
+   - Related person pages in 05-Areas/People/
+   - Deal files in 04-Projects/
 
 ---
 
-## Connectors (Optional)
+## Step 2: Gather Context
 
-Connect your tools to supercharge this skill:
+### Person Context (if person specified)
+- Read person page completely
+- Extract:
+  - Role and responsibilities
+  - Key interests/priorities
+  - Relationship notes
+  - Communication preferences
 
-| Connector | What It Adds |
-|-----------|--------------|
-| **CRM** | Account details, contact history, open deals, recent activities |
-| **Email** | Recent threads with the company, open questions, attachments shared |
-| **Chat** | Internal chat discussions (e.g. Slack) about the account, colleague insights |
-| **Transcripts** | Prior call recordings, topics covered, competitor mentions |
-| **Calendar** | Auto-find the meeting, pull attendees and description |
+### Recent Interactions
+- Search 00-Inbox/Meetings/ for meetings with this person/company (last 60 days)
+- Extract most recent 2-3 conversations:
+  - Date
+  - Key topics
+  - Decisions made
+  - Their concerns/questions
 
-> **No connectors?** No problem. Just tell me about the meeting and paste any context you have. I'll research the rest.
+### Open Action Items
+- Search for tasks involving this person/company
+- Check 03-Tasks/Tasks.md for related items
+- Flag overdue items (past promised date)
+
+### Account Status
+- Current deal stage (if active deal)
+- Account health (if existing customer)
+- Recent wins or issues
+- Stakeholder map (if available)
 
 ---
 
-## Output Format
+## Step 3: Check for Signals
+
+Search for:
+- Competitive mentions
+- Budget discussions
+- Timeline pressures
+- Pain points expressed
+- Feature requests
+- Positive feedback
+
+---
+
+## Step 4: Generate Call Prep Brief
 
 ```markdown
-# Call Prep: [Company Name]
+# 📞 Call Prep: [Person Name] ([Company])
 
-**Meeting:** [Type] — [Date/Time if known]
-**Attendees:** [Names with titles]
-**Your Goal:** [What you want to accomplish]
-
----
-
-## Account Snapshot
-
-| Field | Value |
-|-------|-------|
-| **Company** | [Name] |
-| **Industry** | [Industry] |
-| **Size** | [Employees / Revenue if known] |
-| **Status** | [New prospect / Active opportunity / Customer] |
-| **Last Touch** | [Date and summary] |
+**Call date:** [Today or scheduled date]
+**Their role:** [Title]
+**Relationship:** [Strong/Moderate/New]
+**Call type:** [Discovery/Demo/Follow-up/Check-in/Negotiation]
 
 ---
 
-## Who You're Meeting
+## 🎯 Call Objective
 
-### [Name] — [Title]
-- **Background:** [Career history, education if found]
-- **LinkedIn:** [URL]
-- **Role in Deal:** [Decision maker / Champion / Evaluator / etc.]
-- **Last Interaction:** [Summary if known]
-- **Talking Point:** [Something personal/professional to reference]
-
-[Repeat for each attendee]
+**Primary goal:** [What you want to accomplish]
+**Secondary goals:**
+- [Goal 2]
+- [Goal 3]
 
 ---
 
-## Context & History
+## 👤 Person Profile
 
-**What's happened so far:**
-- [Key point from prior interactions]
-- [Open commitments or action items]
-- [Any concerns or objections raised]
+**[Name] - [Title]**
 
-**Recent news about [Company]:**
-- [News item 1 — why it matters]
-- [News item 2 — why it matters]
+**What they care about:**
+- [Interest 1]
+- [Interest 2]
+- [Interest 3]
 
----
+**Communication style:** [Direct/Analytical/Relationship-focused/etc]
 
-## Suggested Agenda
-
-1. **Open** — [Reference last conversation or trigger event]
-2. **[Topic 1]** — [Discovery question or value discussion]
-3. **[Topic 2]** — [Address known concern or explore priority]
-4. **[Topic 3]** — [Demo section / Proposal review / etc.]
-5. **Next Steps** — [Propose clear follow-up with timeline]
+**Context:**
+- [Key relationship notes from person page]
+- [Their current priorities]
 
 ---
 
-## Discovery Questions
+## 📝 Recent Interactions
 
-Ask these to fill gaps in your understanding:
+### Last Meeting: [Date]
+**Topic:** [What was discussed]
+**Key points:**
+- [Point 1]
+- [Point 2]
 
-1. [Question about their current situation]
-2. [Question about pain points or priorities]
-3. [Question about decision process and timeline]
-4. [Question about success criteria]
-5. [Question about other stakeholders]
+**Their concerns:**
+- [Concern raised]
 
----
+**Our commitments:**
+- [What we promised to do]
 
-## Potential Objections
-
-| Objection | Suggested Response |
-|-----------|-------------------|
-| [Likely objection based on context] | [How to address it] |
-| [Common objection for this stage] | [How to address it] |
-
----
-
-## Internal Notes
-
-[Any internal chat context (e.g. Slack), colleague insights, or competitive intel]
+### Previous Meeting: [Date]
+**Topic:** [What was discussed]
+[Brief summary]
 
 ---
 
-## After the Call
+## ✅ Open Items
 
-Run **call-follow-up** to:
-- Extract action items
-- Update your CRM
-- Draft follow-up email
+**Our commitments to them:**
+- [ ] [Action item 1] - [Status: Done/In progress/Overdue]
+- [ ] [Action item 2] - [Status]
+
+**Their commitments to us:**
+- [ ] [Action item 1] - [Status]
+
+**⚠️ Overdue items:** [Flag any overdue commitments]
+
+---
+
+## 📊 Account Status
+
+**Current state:** [New prospect/Active deal/Existing customer]
+**Deal stage:** [If applicable]
+**Account health:** [If existing customer - Green/Yellow/Red]
+
+**Recent developments:**
+- [Development 1]
+- [Development 2]
+
+---
+
+## 💡 Key Discussion Points
+
+**Topics to cover:**
+1. [Topic 1] - [Why important]
+2. [Topic 2] - [Why important]
+3. [Topic 3] - [Why important]
+
+**Questions to ask:**
+- [Question 1 - discovery/clarification]
+- [Question 2]
+- [Question 3]
+
+**Things to mention:**
+- [Relevant product update/capability]
+- [Reference to their pain point]
+- [Competitive differentiator if relevant]
+
+---
+
+## 🚨 Watch For
+
+**Signals to listen for:**
+- [Signal 1 - e.g., budget constraints]
+- [Signal 2 - e.g., timeline pressure]
+- [Signal 3 - e.g., competitor mention]
+
+**Potential objections:**
+- [Objection 1] - Response: [How to address]
+- [Objection 2] - Response: [How to address]
+
+---
+
+## 🎯 Desired Outcome
+
+**Best case:**
+- [Ideal outcome]
+
+**Acceptable:**
+- [Minimum acceptable outcome]
+
+**Next steps to propose:**
+- [Next step 1]
+- [Next step 2]
+
+---
+
+## 📎 Quick Links
+
+**Relevant files:**
+- [Link to person page]
+- [Link to account plan if exists]
+- [Link to recent meeting notes]
+- [Link to active deal if exists]
+
+---
+
+## ⏰ Post-Call Actions
+
+After the call, remember to:
+- [ ] Update person page with new context
+- [ ] Log action items in 03-Tasks/Tasks.md
+- [ ] Update deal status if applicable
+- [ ] Send follow-up within 24 hours
 ```
 
 ---
 
-## Execution Flow
+## Step 5: Offer Preparation Help
 
-### Step 1: Gather Context
+After presenting prep brief, ask:
 
-**If connectors available:**
-```
-1. Calendar → Find upcoming meeting matching company name
-   - Pull: title, time, attendees, description, attachments
-
-2. CRM → Query account
-   - Pull: account details, all contacts, open opportunities
-   - Pull: last 10 activities, any account notes
-
-3. Email → Search recent threads
-   - Query: emails with company domain (last 30 days)
-   - Extract: key topics, open questions, commitments
-
-4. Chat → Search internal discussions
-   - Query: company name mentions (last 30 days)
-   - Extract: colleague insights, competitive intel
-
-5. Transcripts → Find prior calls
-   - Pull: call recordings with this account
-   - Extract: key moments, objections raised, topics covered
-```
-
-**If no connectors:**
-```
-1. Ask user:
-   - "What company are you meeting with?"
-   - "What type of meeting is this?"
-   - "Who's attending? (names and titles if you know)"
-   - "Any context you want me to know? (paste notes, emails, etc.)"
-
-2. Accept whatever they provide and work with it
-```
-
-### Step 2: Research Supplement
-
-**Always run (web search):**
-```
-1. "[Company] news" — last 30 days
-2. "[Company] funding" — recent announcements
-3. "[Company] leadership" — executive changes
-4. "[Company] + [industry] trends" — relevant context
-5. Attendee LinkedIn profiles — background research
-```
-
-### Step 3: Synthesize & Generate
-
-```
-1. Combine all sources into unified context
-2. Identify gaps in understanding → generate discovery questions
-3. Anticipate objections based on stage and history
-4. Create suggested agenda tailored to meeting type
-5. Output formatted prep brief
-```
+> "Need me to:
+> 1. Draft talking points or demo script?
+> 2. Pull competitive positioning if they mentioned competitors?
+> 3. Check if we have mutual connections?
+> 4. Remind you 30 min before the call?"
 
 ---
 
-## Meeting Type Variations
+## Company-Level Prep
 
-### Discovery Call
-- Focus on: Understanding their world, pain points, priorities
-- Agenda emphasis: Questions > Talking
-- Key output: Qualification signals, next step proposal
+When company name provided (not specific person):
 
-### Demo / Presentation
-- Focus on: Their specific use case, tailored examples
-- Agenda emphasis: Show relevant features, get feedback
-- Key output: Technical requirements, decision timeline
-
-### Negotiation / Proposal Review
-- Focus on: Addressing concerns, justifying value
-- Agenda emphasis: Handle objections, close gaps
-- Key output: Path to agreement, clear next steps
-
-### Check-in / QBR
-- Focus on: Value delivered, expansion opportunities
-- Agenda emphasis: Review wins, surface new needs
-- Key output: Renewal confidence, upsell pipeline
+1. Pull account plan if exists
+2. List all stakeholders at company
+3. Suggest who should be on the call
+4. Provide company-level context vs individual
 
 ---
 
-## Tips for Better Prep
+## Integration with Other Skills
 
-1. **More context = better prep** — Paste emails, notes, anything you have
-2. **Name the attendees** — Even just titles help me research
-3. **State your goal** — "I want to get them to agree to a pilot"
-4. **Flag concerns** — "They mentioned budget is tight"
+- **Before calling:** Run this command
+- **After calling:** Suggest updating person page
+- **For strategic accounts:** Reference `/account-plan` for deeper context
+- **For at-risk deals:** Reference `/deal-review` insights
 
 ---
 
-## Related Skills
+## Example Output
 
-- **account-research** — Deep dive on a company before first contact
-- **call-follow-up** — Process call notes and execute post-call workflow
-- **draft-outreach** — Write personalized outreach after research
+```markdown
+# 📞 Call Prep: Sarah Chen (Acme Corp)
+
+**Call date:** Tomorrow (Jan 29, 10am)
+**Their role:** VP Product
+**Relationship:** Strong (key champion)
+**Call type:** Demo (Real-time Dashboards feature)
+
+---
+
+## 🎯 Call Objective
+
+**Primary goal:** Demo real-time dashboards to address reporting pain point, get buy-in for Analytics upgrade
+**Secondary goals:**
+- Gauge interest in Engineering expansion
+- Get Jennifer (CTO) intro confirmed
+- Schedule follow-up with CFO Tom
+
+---
+
+## 👤 Person Profile
+
+**Sarah Chen - VP Product**
+
+**What they care about:**
+- Data-driven product decisions
+- Customer insights
+- Team efficiency
+- Strategic alignment
+
+**Communication style:** Direct, data-focused, loves seeing demos, asks great questions
+
+**Context:**
+- Our strongest champion at Acme
+- Participated in case study willingly
+- Has referred 2 prospects this quarter
+- Reports to CEO, peer to CTO Jennifer
+
+---
+
+## 📝 Recent Interactions
+
+### Last Meeting: Yesterday (Jan 27)
+**Topic:** Contract review call for renewal prep
+**Key points:**
+- Renewal discussions going well
+- She's pushing for engineering team expansion internally
+- Confirmed intro to Jennifer (CTO) for Feb 2
+
+**Their concerns:**
+- Reporting still taking too long for her team
+- Wants to see real-time dashboard solution
+
+**Our commitments:**
+- Show real-time dashboard demo (this call!)
+- Coffee with Jennifer scheduled (Feb 2)
+
+### Previous Meeting: Jan 24 (Quarterly Review)
+**Topic:** Q4 review, roadmap preview
+- Positive feedback on product
+- Expressed frustration: "Takes 2 days/month to compile reports manually"
+- Asked about real-time capabilities
+
+---
+
+## ✅ Open Items
+
+**Our commitments to them:**
+- [x] Schedule dashboard demo - DONE (this call)
+- [ ] Intro to Jennifer confirmed - Feb 2
+- [ ] Q1 roadmap summary - Send by Feb 1
+
+**Their commitments to us:**
+- [x] Intro to Jennifer - DONE
+- [ ] Internal champion for engineering expansion - In progress
+
+**⚠️ No overdue items**
+
+---
+
+## 📊 Account Status
+
+**Current state:** Strategic customer (18-month relationship)
+**Deal stage:** Planning expansion (Engineering team)
+**Account health:** Green (high engagement, vocal advocate)
+
+**Recent developments:**
+- Exploring 2x ARR expansion (Engineering adoption)
+- Analytics upgrade opportunity ($36K/year)
+- Contract renewal in 6 months (July)
+
+---
+
+## 💡 Key Discussion Points
+
+**Topics to cover:**
+1. **Real-time dashboard demo** - Directly addresses "2 days/month" pain
+2. **ROI for Analytics upgrade** - Time savings quantified
+3. **Jennifer meeting prep** - Ensure she knows what we're discussing with CTO
+4. **CFO engagement** - Float idea of Tom joining next call for ROI discussion
+
+**Questions to ask:**
+- "Does this dashboard view solve the reporting pain your team mentioned?"
+- "What questions will Jennifer have about engineering use cases?"
+- "Would it help to have Tom (CFO) see the ROI case for Analytics upgrade?"
+
+**Things to mention:**
+- 3 other customers have requested this exact dashboard capability
+- We've prioritized real-time features based on her feedback
+- Engineering package can integrate with their GitHub/Jira (if she asks)
+
+---
+
+## 🚨 Watch For
+
+**Signals to listen for:**
+- Pricing concerns for Analytics upgrade
+- Timeline pressure for engineering expansion
+- Budget availability (CFO Tom's mindset)
+- Any new pain points or frustrations
+
+**Potential objections:**
+- "Cost of upgrade" - Response: Show time savings ROI, pays for itself in 3 months
+- "Implementation time" - Response: 2-week rollout, minimal disruption
+
+---
+
+## 🎯 Desired Outcome
+
+**Best case:**
+- She loves the dashboard demo
+- Commits to Analytics upgrade verbally
+- Confirms she'll advocate for engineering expansion internally
+
+**Acceptable:**
+- Positive feedback on demo
+- Agrees to present to Tom (CFO) for budget approval
+- Timeline for decision clear
+
+**Next steps to propose:**
+- CFO presentation (Feb 12) to approve Analytics upgrade
+- Engineering technical demo with Jennifer (Feb 9)
+- Proposal for both upgrades by Feb 16
+
+---
+
+## 📎 Quick Links
+
+**Relevant files:**
+- 05-Areas/People/External/Sarah_Chen_Acme.md
+- 05-Areas/Companies/Acme_Corp_Account_Plan.md
+- 00-Inbox/Meetings/2026-01-27_Acme_Contract_Review.md
+- 04-Projects/Acme_Engineering_Expansion_Opportunity.md
+
+---
+
+## ⏰ Post-Call Actions
+
+After the call, remember to:
+- [ ] Update Sarah's person page with demo feedback
+- [ ] Log next steps in 03-Tasks/Tasks.md (CFO presentation, Jennifer demo)
+- [ ] Update Acme account plan with progress
+- [ ] Send proposal for Analytics upgrade within 48 hours
+```

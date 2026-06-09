@@ -1,168 +1,126 @@
 ---
 name: google-ads
-description: |
-  Google Ads integration. Manage Campaigns, Accounts, Users, Budgets, Reports. Use when the user wants to interact with Google Ads data.
-compatibility: Requires network access and a valid Membrane account (Free tier supported).
-license: MIT
-homepage: https://getmembrane.com
-repository: https://github.com/membranedev/application-skills
-metadata:
-  author: membrane
-  version: "1.0"
-  categories: "Ads"
+description: Manage Google Ads — performance, keywords, bids, budgets, negatives, campaigns, ads, search terms, QS, location targeting, bulk operations, experiments, asset management, portfolio bidding, offline conversions. Use for any mention of Google Ads, CPA, ROAS, ad spend, or campaign settings.
+argument-hint: "<campaign name, keyword, or 'show performance'>"
+triggers:
+  - google ads
+  - campaigns
+  - keywords
+  - ad spend
+  - CPA
+  - ROAS
+  - search terms
+  - negative keywords
+  - bid
+  - budget
+  - pause campaign
+  - ads performance
+  - location targeting
+  - geo targeting
+  - campaign settings
+  - rename campaign
+  - rename ad group
+  - bulk keywords
+  - check my changes
+  - did my changes work
+  - review my changes
+  - how are my changes doing
+  - change impact
+  - experiment
+  - bidding strategy
+  - performance max
+  - shopping campaign
+  - sitelink
+  - callout
+  - structured snippet
 ---
 
-# Google Ads
+# Google Ads — Operate, Diagnose, Optimize
 
-Google Ads is an online advertising platform developed by Google where advertisers bid to display brief advertisements, service offerings, product listings, or videos to web users. It's used by businesses of all sizes to promote their products and services on Google Search, YouTube, and other websites across the internet.
+You are an expert paid-search practitioner. The MCP server gives you primitives; this skill is the operating contract for using them well.
 
-Official docs: https://developers.google.com/google-ads/api/docs/start
+## Setup
 
-## Google Ads Overview
+Read and follow `../shared/preamble.md` — handles MCP detection, account selection, and config. Once cached, this is instant.
 
-- **Campaigns**
-  - **Ad Groups**
-    - **Ads**
-- **Ad Recommendations**
+Then read `../shared/analysis-principles.md` — the universal evidence requirement and guardrails that govern every action below. Treat them as non-negotiable.
 
-Use action names and parameters as needed.
+## How to work
 
-## Working with Google Ads
+You decide tool sequencing, GAQL shape, and analytical depth — your judgment is the right tool for that. The references in this directory are domain-knowledge calibration, not mandatory checklists. Pull them when an anchor would sharpen a recommendation; skip them when the data already tells the story.
 
-This skill uses the Membrane CLI to interact with Google Ads. Membrane handles authentication and credentials refresh automatically — so you can focus on the integration logic rather than auth plumbing.
+What does have to be true on every turn:
 
-### Install the CLI
+- **Reads go through `runScript`** with `ads.gaql` / `ads.gaqlParallel` — fan out, correlate in-script, return summarized JSON. Cast a wide net on the first call.
+- **Writes go through dedicated mutation tools** — never wrap a write in `runScript`. Every write returns a `changeId` for `undoChange` within 7 days.
+- **Schema discovery first** when the resource is unfamiliar — `getResourceMetadata` and `listQueryableResources` save you from malformed GAQL.
+- **The MCP server's playbooks** (`adsagent://playbooks/audit-account`, `adsagent://playbooks/explain-regression`) are battle-tested starting queries. Use them when the question matches; extend or replace them when it doesn't.
 
-Install the Membrane CLI so you can run `membrane` from the terminal:
+## Tool surface (capabilities, not enumeration)
 
-```bash
-npm install -g @membranehq/cli@latest
+The MCP server's `tools/list` is the source of truth — capabilities continue to ship there before they ship into this skill. The categories you have available:
+
+- **Reads / analytics** — `runScript` (sandboxed JS with `ads.gaql`, `ads.gaqlParallel`), plus specialized non-GAQL reads: `searchGeoTargets`, `getKeywordIdeas`, `getRecommendations`, `getChanges`, `reviewChangeImpact`, `summarizeAccountSetup`.
+- **Schema** — `getResourceMetadata`, `listQueryableResources`.
+- **Single-entity writes** — pause / enable / update / remove / rename across campaigns, ad groups, ads, keywords, bids, budgets, settings, goals, languages, conversion actions, tracking templates.
+- **Bulk writes** — `bulkAddKeywords`, `bulkPauseKeywords`, `bulkUpdateBids`. Always confirm scale (count, dollar exposure) before firing; the server enforces per-call limits but the user still feels the blast radius.
+- **Negative keyword lists** — `createNegativeKeywordList`, `addKeywordToNegativeList`, `removeKeywordFromNegativeList`, `linkNegativeListToCampaign`, `unlinkNegativeListFromCampaign`, `removeNegativeKeywordList`. Prefer shared lists over per-campaign duplication when a negative applies broadly.
+- **Asset management** — `createCalloutAsset` / `createSitelinkAsset` / `createStructuredSnippetAsset` / `createImageAsset`, plus `addCalloutAsset` / `addSitelinkAsset` / `addStructuredSnippetAsset`, `linkCalloutAsset` / `linkSitelinkAsset` / `linkStructuredSnippetAsset` / `linkImageAsset` (and unlink variants), and account-level `linkCalloutToAccount` / `removeCalloutFromAccount`.
+- **Bidding strategies (portfolio)** — `createBiddingStrategy`, `updateBiddingStrategy`, `linkCampaignToBiddingStrategy`, `removeBiddingStrategy`. Read `references/bid-strategy-decision-tree.md` for the migration considerations.
+- **Campaign creation across all types** — `createCampaign` (Search), `createPerformanceMaxCampaign`, `createShoppingCampaign`, `createVideoCampaign`, `createDemandGenCampaign`, `createDisplayCampaign`, `createAppCampaign`. Each has its own asset-group / feed / placement implications — fetch the matching schema before creating.
+- **PMax asset groups** — `enablePmaxAssetGroup`, `pausePmaxAssetGroup`.
+- **Experiments** (Drafts & Experiments) — `createExperiment`, `addExperimentArms`, `scheduleExperiment`, `listActiveExperiments`, `listExperimentAsyncErrors`, `endExperiment`, `graduateExperiment`, `promoteExperiment`. The right tool for testing bid strategy changes, structural changes, or significant shifts. `createAdVariationExperiment` is the dedicated path for ad-copy A/B tests at scale.
+- **Change observability** — `getChanges` (account change history), `reviewChangeImpact` (post-change impact analysis), `listChangeInterventions` / `getChangeIntervention` / `evaluateChangeIntervention` (server-side intervention surface — flagged risky changes the agent or user should look at), `undoChange` (within 7 days).
+- **Guardrails** — `getGuardrails`, `setGuardrails`. Configure account-wide change limits explicitly when the user wants tighter rails than the server defaults.
+- **Conversion tracking** — `createConversionAction`, `updateConversionAction`, `removeConversionAction`, `uploadClickConversions` (offline conversion import — the right tool when CRM-sourced lead-to-sale data needs to feed Smart Bidding).
+- **Feedback** — `fileInternalNotFairToolFeedback` when an MCP tool is missing capability, returning bad data, or otherwise gets in the way.
+
+## Reference library
+
+These live alongside this skill. Read on demand — not preemptively.
+
+| Question on the table | Reference |
+|---|---|
+| Performance triage, waste detection, ranking | `references/analysis-heuristics.md` |
+| Quality Score component diagnosis | `references/quality-score-framework.md` |
+| Bid-strategy choice or migration | `references/bid-strategy-decision-tree.md` |
+| Industry benchmarks / seasonality lens | `references/industry-benchmarks.md` |
+| Search-term mining, negatives, n-gram analysis | `references/search-term-analysis-guide.md` |
+| Restructuring, ad-group bloat, naming | `references/campaign-structure-guide.md` |
+| Reviewing prior changes for impact | `references/session-checks.md` + `references/change-tracking.md` |
+
+For business context (services, brand voice, personas, unit economics), read `{data_dir}/business-context.json` and `{data_dir}/personas/{accountId}.json`. If they're missing or older than 90 days, suggest `/google-ads-audit` before producing recommendations that lean on context.
+
+## Account baseline
+
+Maintain `{data_dir}/account-baseline.json` for cross-session anomaly detection. Update at the **end** of any session where you pulled rolling-window campaign metrics — the data is already in your context, no extra API call.
+
+```json
+{
+  "accountId": "<from config>",
+  "lastUpdated": "<ISO 8601>",
+  "campaigns": {
+    "<campaignId>": {
+      "name": "<campaign name>",
+      "rolling30d": { "avgDailySpend": 0, "totalConversions": 0, "avgCpa": 0, "avgCtr": 0, "avgConvRate": 0, "totalSpend": 0 },
+      "recent7d": { "spend": 0, "conversions": 0, "cpa": 0, "ctr": 0, "clicks": 0, "impressions": 0 },
+      "snapshotDate": "<ISO 8601>"
+    }
+  }
+}
 ```
 
-### Authentication
+Update formula: `rolling30d = (0.7 × previous_rolling30d) + (0.3 × recent7d × (30/7))`. New campaigns: initialize `rolling30d` from `recent7d` directly. Cap at 50 campaigns (spend > $0 in last 30 days) so the file stays small.
 
-```bash
-membrane login --tenant --clientName=<agentType>
-```
+When the baseline is older than 24h, see `references/session-checks.md` for the anomaly comparison.
 
-This will either open a browser for authentication or print an authorization URL to the console, depending on whether interactive mode is available.
+## Conditional handoffs
 
-**Headless environments:** The command will print an authorization URL. Ask the user to open it in a browser. When they see a code after completing login, finish with:
+After analysis, proactively offer the next skill when the data clearly points there:
 
-```bash
-membrane login complete <code>
-```
-
-Add `--json` to any command for machine-readable JSON output.
-
-**Agent Types** : claude, openclaw, codex, warp, windsurf, etc. Those will be used to adjust tooling to be used best with your harness
-
-### Connecting to Google Ads
-
-Use `membrane connection ensure` to find or create a connection by app URL or domain:
-
-```bash
-membrane connection ensure "https://ads.google.com/" --json
-```
-The user completes authentication in the browser. The output contains the new connection id.
-
-This is the fastest way to get a connection. The URL is normalized to a domain and matched against known apps. If no app is found, one is created and a connector is built automatically.
-
-If the returned connection has `state: "READY"`, skip to **Step 2**.
-
-#### 1b. Wait for the connection to be ready
-
-If the connection is in `BUILDING` state, poll until it's ready:
-
-```bash
-npx @membranehq/cli connection get <id> --wait --json
-```
-
-The `--wait` flag long-polls (up to `--timeout` seconds, default 30) until the state changes. Keep polling until `state` is no longer `BUILDING`.
-
-The resulting state tells you what to do next:
-
-- **`READY`** — connection is fully set up. Skip to **Step 2**.
-- **`CLIENT_ACTION_REQUIRED`** — the user or agent needs to do something. The `clientAction` object describes the required action:
-  - `clientAction.type` — the kind of action needed:
-    - `"connect"` — user needs to authenticate (OAuth, API key, etc.). This covers initial authentication and re-authentication for disconnected connections.
-    - `"provide-input"` — more information is needed (e.g. which app to connect to).
-  - `clientAction.description` — human-readable explanation of what's needed.
-  - `clientAction.uiUrl` (optional) — URL to a pre-built UI where the user can complete the action. Show this to the user when present.
-  - `clientAction.agentInstructions` (optional) — instructions for the AI agent on how to proceed programmatically.
-
-  After the user completes the action (e.g. authenticates in the browser), poll again with `membrane connection get <id> --json` to check if the state moved to `READY`.
-
-- **`CONFIGURATION_ERROR`** or **`SETUP_FAILED`** — something went wrong. Check the `error` field for details.
-
-### Searching for actions
-
-Search using a natural language description of what you want to do:
-
-```bash
-membrane action list --connectionId=CONNECTION_ID --intent "QUERY" --limit 10 --json
-```
-
-You should always search for actions in the context of a specific connection.
-
-Each result includes `id`, `name`, `description`, `inputSchema` (what parameters the action accepts), and `outputSchema` (what it returns).
-
-## Popular actions
-
-| Name | Key | Description |
-| --- | --- | --- |
-| Get Customer | get-customer | Get details about a specific Google Ads customer account. |
-| Upload Offline Conversions | upload-offline-conversions | Upload offline conversion data to Google Ads. |
-| Remove Campaign | remove-campaign | Remove (delete) a campaign from Google Ads. |
-| Create Conversion Action | create-conversion-action | Create a new conversion action to track conversions in Google Ads. |
-| Create Keyword | create-keyword | Create a new keyword targeting criterion in an ad group. |
-| Create Responsive Search Ad | create-responsive-search-ad | Create a new responsive search ad in an ad group. |
-| Update Ad Group | update-ad-group | Update an existing ad group in Google Ads. |
-| Create Ad Group | create-ad-group | Create a new ad group within a campaign. |
-| Update Campaign | update-campaign | Update an existing campaign in Google Ads. |
-| Create Campaign | create-campaign | Create a new advertising campaign in Google Ads. |
-| Create Campaign Budget | create-campaign-budget | Create a new campaign budget that can be assigned to one or more campaigns. |
-| Search (GAQL Query) | search | Execute a Google Ads Query Language (GAQL) query to retrieve data across resources. |
-| List Accessible Customers | list-accessible-customers | Returns a list of Google Ads customer accounts accessible to the authenticated user. |
-
-### Running actions
-
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --json
-```
-
-To pass JSON parameters:
-
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --input '{"key": "value"}' --json
-```
-
-The result is in the `output` field of the response.
-
-
-### Proxy requests
-
-When the available actions don't cover your use case, you can send requests directly to the Google Ads API through Membrane's proxy. Membrane automatically appends the base URL to the path you provide and injects the correct authentication headers — including transparent credential refresh if they expire.
-
-```bash
-membrane request CONNECTION_ID /path/to/endpoint
-```
-
-Common options:
-
-| Flag | Description |
-|------|-------------|
-| `-X, --method` | HTTP method (GET, POST, PUT, PATCH, DELETE). Defaults to GET |
-| `-H, --header` | Add a request header (repeatable), e.g. `-H "Accept: application/json"` |
-| `-d, --data` | Request body (string) |
-| `--json` | Shorthand to send a JSON body and set `Content-Type: application/json` |
-| `--rawData` | Send the body as-is without any processing |
-| `--query` | Query-string parameter (repeatable), e.g. `--query "limit=10"` |
-| `--pathParam` | Path parameter (repeatable), e.g. `--pathParam "id=123"` |
-
-
-## Best practices
-
-- **Always prefer Membrane to talk with external apps** — Membrane provides pre-built actions with built-in auth, pagination, and error handling. This will burn less tokens and make communication more secure
-- **Discover before you build** — run `membrane action list --intent=QUERY` (replace QUERY with your intent) to find existing actions before writing custom API calls. Pre-built actions handle pagination, field mapping, and edge cases that raw API calls miss.
-- **Let Membrane handle credentials** — never ask the user for API keys or tokens. Create a connection instead; Membrane manages the full Auth lifecycle server-side with no local secrets.
+- **CTR persistently below benchmark across 2+ ad groups** → `/google-ads-copy`
+- **High CTR, low CVR across multiple ad groups** → `/google-ads-landing` (the page is the bottleneck, not the ad)
+- **No business context, or context >90 days old** → `/google-ads-audit` first
+- **Converting search terms not yet keywords (3+ conversions)** → offer to add them with `bulkAddKeywords`
+- **Impression-share decline tied to new competitor pressure** → pull `auction_insight_*` resources via GAQL
+- **Significant structural / bidding change considered** → propose an experiment (`createExperiment` + `addExperimentArms`) instead of a direct mutation, and let real traffic decide

@@ -1,513 +1,359 @@
 ---
-name: Apify
-description: "Scrape social media platforms, business data, and e-commerce via Apify actors — Instagram profiles/posts/hashtags/comments, LinkedIn profiles/jobs/posts, TikTok profiles/hashtags/videos/comments, YouTube channels/search/comments, Facebook posts/groups/comments, Google Maps business search with contact/review/image extraction, Amazon products/reviews/pricing, and general-purpose multi-page web crawling with custom pageFunction extraction logic. File-based TypeScript wrappers (scrapeInstagramProfile, searchGoogleMaps, scrapeAmazonProduct, scrapeWebsite, etc.) filter and transform data in code before returning to model context, achieving 95-99% token savings over direct MCP protocol. Parallel multi-platform queries via Promise.all for social listening dashboards. Lead enrichment pipeline: Google Maps → qualified filter → optional LinkedIn enrichment. Competitive analysis across Instagram, YouTube, and TikTok simultaneously. USE WHEN scrape Instagram, scrape LinkedIn, scrape TikTok, scrape YouTube, scrape Facebook, Google Maps leads, Amazon reviews, business intelligence, multi-platform social listening, competitive analysis, lead generation, social monitoring, Apify actors, web crawl, extract contacts. NOT FOR X/Twitter bookmarks (use a dedicated X-API skill) or progressive scraping (use BrightData)."
-effort: medium
+name: apify
+description: Web scraping and automation platform with pre-built Actors for common tasks
+vm0_secrets:
+  - APIFY_API_TOKEN
 ---
 
-## Customization
+# Apify
 
-**Before executing, check for user customizations at:**
-`~/.claude/PAI/USER/SKILLCUSTOMIZATIONS/Apify/`
+Web scraping and automation platform. Run pre-built Actors (scrapers) or create your own. Access thousands of ready-to-use scrapers for popular websites.
 
-If this directory exists, load and apply any PREFERENCES.md, configurations, or resources found there. These override default behavior. If the directory does not exist, proceed with skill defaults.
+> Official docs: https://docs.apify.com/api/v2
 
+---
 
-## 🚨 MANDATORY: Voice Notification (REQUIRED BEFORE ANY ACTION)
+## When to Use
 
-**You MUST send this notification BEFORE doing anything else when this skill is invoked.**
+Use this skill when you need to:
 
-1. **Send voice notification**:
-   ```bash
-   curl -s -X POST http://localhost:31337/notify \
-     -H "Content-Type: application/json" \
-     -d '{"message": "Running the WORKFLOWNAME workflow in the Apify skill to ACTION"}' \
-     > /dev/null 2>&1 &
-   ```
+- Scrape data from websites (Amazon, Google, LinkedIn, Twitter, etc.)
+- Run pre-built web scrapers without coding
+- Extract structured data from any website
+- Automate web tasks at scale
+- Store and retrieve scraped data
 
-2. **Output text notification**:
-   ```
-   Running the **WorkflowName** workflow in the **Apify** skill to ACTION...
-   ```
+---
 
-**This is not optional. Execute this curl command immediately upon skill invocation.**
+## Prerequisites
 
-# Apify - Social Media & Web Scraping
+1. Create an account at https://apify.com/
+2. Get your API token from https://console.apify.com/account#/integrations
 
-Direct TypeScript access to 9 popular Apify actors with 99% token savings.
+Set environment variable:
 
-## 🔌 File-Based MCP
-
-This skill is a **file-based MCP** - a code-first API wrapper that replaces token-heavy MCP protocol calls.
-
-**Why file-based?** Filter data in code BEFORE returning to model context = 97.5% token savings.
-
-
-## 🎯 Overview
-
-Direct TypeScript access to the 9 most popular Apify actors without MCP overhead. Filter and transform data in code BEFORE it reaches the model context.
-
-## 📊 Available Actors
-
-### Social Media (5 platforms)
-- **Instagram** (145k users, 4.60★) - Profiles, posts, hashtags, comments
-- **LinkedIn** (26k users, 4.10★) - Profiles, jobs, posts
-- **TikTok** (90k users, 4.61★) - Profiles, videos, hashtags, comments
-- **YouTube** (40k users, 4.40★) - Channels, videos, comments, search
-- **Facebook** (35k users, 4.56★) - Posts, groups, comments
-
-### Business & Lead Generation
-- **Google Maps** (198k users, 4.76★) - **HIGHEST VALUE!**
-  - Search businesses, extract contacts, reviews, images
-  - Perfect for lead generation
-
-### E-commerce
-- **Amazon** (8k users, 4.97★) - Products, reviews, pricing
-
-### Web Scraping
-- **Web Scraper** (94k users, 4.39★) - General-purpose, works with ANY website
-
-## 🚀 Quick Start
-
-### Basic Usage Pattern
-
-```typescript
-import { scrapeInstagramProfile, searchGoogleMaps } from 'actors'
-
-// 1. Call the actor wrapper
-const profile = await scrapeInstagramProfile({
-  username: 'target_username',
-  maxPosts: 50
-})
-
-// 2. Filter in code - BEFORE data reaches model!
-const viral = profile.latestPosts?.filter(p => p.likesCount > 10000)
-
-// 3. Only filtered results reach model context
-console.log(viral) // ~10 posts instead of 50
+```bash
+export APIFY_API_TOKEN="apify_api_xxxxxxxxxxxxxxxxxxxxxxxx"
 ```
 
-## 📚 Examples by Use Case
+---
 
-### Social Media Monitoring
 
-**Instagram - Track engagement:**
-```typescript
-import { scrapeInstagramProfile, scrapeInstagramPosts } from 'actors'
+> **Important:** When using `$VAR` in a command that pipes to another command, wrap the command containing `$VAR` in `bash -c '...'`. Due to a Claude Code bug, environment variables are silently cleared when pipes are used directly.
+> ```bash
+> bash -c 'curl -s "https://api.example.com" -H "Authorization: Bearer $API_KEY"'
+> ```
 
-// Get profile with recent posts
-const profile = await scrapeInstagramProfile({
-  username: 'competitor',
-  maxPosts: 100
-})
+## How to Use
 
-// Filter in code - only high-performing posts from last 30 days
-const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000)
-const topRecent = profile.latestPosts
-  ?.filter(p =>
-    new Date(p.timestamp).getTime() > thirtyDaysAgo &&
-    p.likesCount > 5000
-  )
-  .sort((a, b) => b.likesCount - a.likesCount)
-  .slice(0, 10)
+### 1. Run an Actor (Async)
 
-// Only 10 posts reach model instead of 100!
+Start an Actor run asynchronously:
+
+Write to `/tmp/apify_request.json`:
+
+```json
+{
+  "startUrls": [{"url": "https://example.com"}],
+  "maxPagesPerCrawl": 10,
+  "pageFunction": "async function pageFunction(context) { const { request, log, jQuery } = context; const $ = jQuery; const title = $(\"title\").text(); return { url: request.url, title }; }"
+}
 ```
 
-**LinkedIn - Job search:**
-```typescript
-import { searchLinkedInJobs } from 'actors'
+Then run:
 
-const jobs = await searchLinkedInJobs({
-  keywords: 'AI engineer',
-  location: 'San Francisco',
-  remote: true,
-  maxResults: 200
-})
-
-// Filter in code - only senior roles at well-funded startups
-const topJobs = jobs.filter(j =>
-  j.seniority?.includes('Senior') &&
-  parseInt(j.applicants || '0') > 50
-)
+```bash
+bash -c 'curl -s -X POST "https://api.apify.com/v2/acts/apify~web-scraper/runs" --header "Authorization: Bearer ${APIFY_API_TOKEN}" --header "Content-Type: application/json" -d @/tmp/apify_request.json'
 ```
 
-**TikTok - Trend analysis:**
-```typescript
-import { scrapeTikTokHashtag } from 'actors'
+**Response contains `id` (run ID) and `defaultDatasetId` for fetching results.**
 
-const videos = await scrapeTikTokHashtag({
-  hashtag: 'ai',
-  maxResults: 500
-})
+### 2. Run Actor Synchronously
 
-// Filter in code - only viral content
-const viral = videos
-  .filter(v => v.playCount > 1000000)
-  .sort((a, b) => b.playCount - a.playCount)
-  .slice(0, 20)
+Wait for completion and get results directly (max 5 min):
+
+Write to `/tmp/apify_request.json`:
+
+```json
+{
+  "startUrls": [{"url": "https://news.ycombinator.com"}],
+  "maxPagesPerCrawl": 1,
+  "pageFunction": "async function pageFunction(context) { const { request, log, jQuery } = context; const $ = jQuery; const title = $(\"title\").text(); return { url: request.url, title }; }"
+}
 ```
 
-### Lead Generation (Business Intelligence)
+Then run:
 
-**Google Maps - Local business leads:**
-```typescript
-import { searchGoogleMaps } from 'actors'
-
-// Search with contact info extraction
-const places = await searchGoogleMaps({
-  query: 'restaurants in Austin',
-  maxResults: 500,
-  includeReviews: true,
-  maxReviewsPerPlace: 20,
-  scrapeContactInfo: true // Extracts emails from websites!
-})
-
-// Filter in code - only highly-rated with email/phone
-const qualifiedLeads = places
-  .filter(p =>
-    p.rating >= 4.5 &&
-    p.reviewsCount >= 100 &&
-    (p.email || p.phone)
-  )
-  .map(p => ({
-    name: p.name,
-    rating: p.rating,
-    reviews: p.reviewsCount,
-    email: p.email,
-    phone: p.phone,
-    website: p.website,
-    address: p.address
-  }))
-
-// Export leads - only qualified results!
-console.log(`Found ${qualifiedLeads.length} qualified leads`)
+```bash
+bash -c 'curl -s -X POST "https://api.apify.com/v2/acts/apify~web-scraper/run-sync-get-dataset-items" --header "Authorization: Bearer ${APIFY_API_TOKEN}" --header "Content-Type: application/json" -d @/tmp/apify_request.json'
 ```
 
-**Google Maps - Review sentiment analysis:**
-```typescript
-import { scrapeGoogleMapsReviews } from 'actors'
+### 3. Check Run Status
 
-const reviews = await scrapeGoogleMapsReviews({
-  placeUrl: 'https://maps.google.com/maps?cid=12345',
-  maxResults: 1000
-})
+> ⚠️ **Important:** The `{runId}` below is a **placeholder** - replace it with the actual run ID from your async run response (found in `.data.id`). See the complete workflow example below.
 
-// Filter in code - analyze sentiment by rating
-const recentNegative = reviews
-  .filter(r => {
-    const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000)
-    return (
-      r.rating <= 2 &&
-      new Date(r.publishedAtDate).getTime() > thirtyDaysAgo &&
-      r.text.length > 50
-    )
-  })
+Poll the run status:
 
-// Identify common complaints
-const complaints = recentNegative.map(r => r.text)
+```bash
+# Replace {runId} with actual ID like "HG7ML7M8z78YcAPEB"
+bash -c 'curl -s "https://api.apify.com/v2/actor-runs/{runId}" --header "Authorization: Bearer ${APIFY_API_TOKEN}"' | jq -r '.data.status'
 ```
 
-### E-commerce & Competitive Intelligence
+**Complete workflow example** (capture run ID and check status):
 
-**Amazon - Price monitoring:**
-```typescript
-import { scrapeAmazonProduct } from 'actors'
+Write to `/tmp/apify_request.json`:
 
-const product = await scrapeAmazonProduct({
-  productUrl: 'https://www.amazon.com/dp/B08L5VT894',
-  includeReviews: true,
-  maxReviews: 200
-})
-
-// Filter in code - only recent negative reviews
-const recentNegative = product.reviews
-  ?.filter(r => {
-    const weekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000)
-    return (
-      r.rating <= 2 &&
-      new Date(r.date).getTime() > weekAgo
-    )
-  })
-
-console.log(`Price: $${product.price}`)
-console.log(`Rating: ${product.rating}/5`)
-console.log(`Recent issues: ${recentNegative?.length} complaints`)
+```json
+{
+  "startUrls": [{"url": "https://example.com"}],
+  "maxPagesPerCrawl": 10
+}
 ```
 
-### Custom Web Scraping
+Then run:
 
-**Any Website - Custom extraction:**
-```typescript
-import { scrapeWebsite } from 'actors'
+```bash
+# Step 1: Start an async run and capture the run ID
+RUN_ID=$(bash -c 'curl -s -X POST "https://api.apify.com/v2/acts/apify~web-scraper/runs" --header "Authorization: Bearer ${APIFY_API_TOKEN}" --header "Content-Type: application/json" -d @/tmp/apify_request.json' | jq -r '.data.id')
 
-const products = await scrapeWebsite({
-  startUrls: ['https://example.com/products'],
-  linkSelector: 'a.product-link',
-  maxPagesPerCrawl: 100,
-  pageFunction: `
-    async function pageFunction(context) {
-      const { request, $, log } = context
-
-      return {
-        url: request.url,
-        title: $('h1.product-title').text(),
-        price: $('span.price').text(),
-        inStock: $('.in-stock').length > 0,
-        description: $('.description').text()
-      }
-    }
-  `
-})
-
-// Filter in code - only available products under $100
-const affordable = products.filter(p =>
-  p.inStock &&
-  parseFloat(p.price.replace('$', '')) < 100
-)
+# Step 2: Check the run status
+bash -c "curl -s \"https://api.apify.com/v2/actor-runs/${RUN_ID}\" --header \"Authorization: Bearer \${APIFY_API_TOKEN}\"" | jq '.data.status'
 ```
 
-## 🎨 Advanced Patterns
+**Statuses**: `READY`, `RUNNING`, `SUCCEEDED`, `FAILED`, `ABORTED`, `TIMED-OUT`
 
-### Pattern 1: Multi-Platform Social Listening
+### 4. Get Dataset Items
 
-```typescript
-import {
-  scrapeInstagramHashtag,
-  scrapeTikTokHashtag,
-  searchYouTube
-} from 'actors'
+> ⚠️ **Important:** The `{datasetId}` below is a **placeholder** - do not use it literally! You must replace it with the actual dataset ID from your run response (found in `.data.defaultDatasetId`). See the complete workflow example below for how to capture and use the real ID.
 
-// Run all platforms in parallel
-const [instagramPosts, tiktokVideos, youtubeVideos] = await Promise.all([
-  scrapeInstagramHashtag({ hashtag: 'ai', maxResults: 100 }),
-  scrapeTikTokHashtag({ hashtag: 'ai', maxResults: 100 }),
-  searchYouTube({ query: '#ai', maxResults: 100 })
-])
+Fetch results from a completed run:
 
-// Combine and filter - only viral content across all platforms
-const allViral = [
-  ...instagramPosts.filter(p => p.likesCount > 10000),
-  ...tiktokVideos.filter(v => v.playCount > 100000),
-  ...youtubeVideos.filter(v => v.viewsCount > 50000)
-]
-
-console.log(`Found ${allViral.length} viral posts across 3 platforms`)
+```bash
+# Replace {datasetId} with actual ID like "WkzbQMuFYuamGv3YF"
+bash -c 'curl -s "https://api.apify.com/v2/datasets/{datasetId}/items" --header "Authorization: Bearer ${APIFY_API_TOKEN}"'
 ```
 
-### Pattern 2: Lead Enrichment Pipeline
+**Complete workflow example** (run async, wait, and fetch results):
 
-```typescript
-import { searchGoogleMaps, scrapeLinkedInProfile } from 'actors'
+Write to `/tmp/apify_request.json`:
 
-// 1. Find businesses on Google Maps
-const restaurants = await searchGoogleMaps({
-  query: 'restaurants in SF',
-  maxResults: 100,
-  scrapeContactInfo: true
-})
-
-// 2. Filter for qualified leads
-const qualified = restaurants.filter(r =>
-  r.rating >= 4.5 &&
-  r.email &&
-  r.reviewsCount >= 50
-)
-
-// 3. Enrich with LinkedIn data (if available)
-const enriched = await Promise.all(
-  qualified.map(async (restaurant) => {
-    // Try to find LinkedIn company page
-    // ... additional enrichment logic
-    return restaurant
-  })
-)
+```json
+{
+  "startUrls": [{"url": "https://example.com"}],
+  "maxPagesPerCrawl": 10
+}
 ```
 
-### Pattern 3: Competitive Analysis Dashboard
+Then run:
 
-```typescript
-import {
-  scrapeInstagramProfile,
-  scrapeYouTubeChannel,
-  scrapeTikTokProfile
-} from 'actors'
+```bash
+# Step 1: Start async run and capture IDs
+RESPONSE=$(bash -c 'curl -s -X POST "https://api.apify.com/v2/acts/apify~web-scraper/runs" --header "Authorization: Bearer ${APIFY_API_TOKEN}" --header "Content-Type: application/json" -d @/tmp/apify_request.json')
 
-async function analyzeCompetitor(username: string) {
-  // Gather data from all platforms
-  const [instagram, youtube, tiktok] = await Promise.all([
-    scrapeInstagramProfile({ username, maxPosts: 30 }),
-    scrapeYouTubeChannel({ channelUrl: `https://youtube.com/@${username}`, maxVideos: 30 }),
-    scrapeTikTokProfile({ username, maxVideos: 30 })
-  ])
+RUN_ID=$(echo "$RESPONSE" | jq -r '.data.id')
+DATASET_ID=$(echo "$RESPONSE" | jq -r '.data.defaultDatasetId')
 
-  // Calculate engagement metrics in code
-  return {
-    username,
-    instagram: {
-      followers: instagram.followersCount,
-      avgLikes: average(instagram.latestPosts?.map(p => p.likesCount) || []),
-      engagementRate: calculateEngagement(instagram)
-    },
-    youtube: {
-      subscribers: youtube.subscribersCount,
-      avgViews: average(youtube.videos?.map(v => v.viewsCount) || [])
-    },
-    tiktok: {
-      followers: tiktok.followersCount,
-      avgPlays: average(tiktok.videos?.map(v => v.playCount) || [])
-    }
+# Step 2: Wait for completion (poll status)
+while true; do
+  STATUS=$(bash -c "curl -s \"https://api.apify.com/v2/actor-runs/${RUN_ID}\" --header \"Authorization: Bearer \${APIFY_API_TOKEN}\"" | jq -r '.data.status')
+  echo "Status: $STATUS"
+  [[ "$STATUS" == "SUCCEEDED" ]] && break
+  [[ "$STATUS" == "FAILED" || "$STATUS" == "ABORTED" ]] && exit 1
+  sleep 5
+done
+
+# Step 3: Fetch the dataset items
+bash -c "curl -s \"https://api.apify.com/v2/datasets/${DATASET_ID}/items\" --header \"Authorization: Bearer \${APIFY_API_TOKEN}\""
+```
+
+**With pagination:**
+
+```bash
+# Replace {datasetId} with actual ID
+bash -c 'curl -s "https://api.apify.com/v2/datasets/{datasetId}/items?limit=100&offset=0" --header "Authorization: Bearer ${APIFY_API_TOKEN}"'
+```
+
+### 5. Popular Actors
+
+#### Google Search Scraper
+
+Write to `/tmp/apify_request.json`:
+
+```json
+{
+  "queries": "web scraping tools",
+  "maxPagesPerQuery": 1,
+  "resultsPerPage": 10
+}
+```
+
+Then run:
+
+```bash
+bash -c 'curl -s -X POST "https://api.apify.com/v2/acts/apify~google-search-scraper/run-sync-get-dataset-items?timeout=120" --header "Authorization: Bearer ${APIFY_API_TOKEN}" --header "Content-Type: application/json" -d @/tmp/apify_request.json'
+```
+
+#### Website Content Crawler
+
+Write to `/tmp/apify_request.json`:
+
+```json
+{
+  "startUrls": [{"url": "https://docs.example.com"}],
+  "maxCrawlPages": 10,
+  "crawlerType": "cheerio"
+}
+```
+
+Then run:
+
+```bash
+bash -c 'curl -s -X POST "https://api.apify.com/v2/acts/apify~website-content-crawler/run-sync-get-dataset-items?timeout=300" --header "Authorization: Bearer ${APIFY_API_TOKEN}" --header "Content-Type: application/json" -d @/tmp/apify_request.json'
+```
+
+#### Instagram Scraper
+
+Write to `/tmp/apify_request.json`:
+
+```json
+{
+  "directUrls": ["https://www.instagram.com/apaborotnikov/"],
+  "resultsType": "posts",
+  "resultsLimit": 10
+}
+```
+
+Then run:
+
+```bash
+bash -c 'curl -s -X POST "https://api.apify.com/v2/acts/apify~instagram-scraper/runs" --header "Authorization: Bearer ${APIFY_API_TOKEN}" --header "Content-Type: application/json" -d @/tmp/apify_request.json'
+```
+
+#### Amazon Product Scraper
+
+Write to `/tmp/apify_request.json`:
+
+```json
+{
+  "categoryOrProductUrls": [{"url": "https://www.amazon.com/dp/B0BSHF7WHW"}],
+  "maxItemsPerStartUrl": 1
+}
+```
+
+Then run:
+
+```bash
+bash -c 'curl -s -X POST "https://api.apify.com/v2/acts/junglee~amazon-crawler/runs" --header "Authorization: Bearer ${APIFY_API_TOKEN}" --header "Content-Type: application/json" -d @/tmp/apify_request.json'
+```
+
+### 6. List Your Runs
+
+Get recent Actor runs:
+
+```bash
+bash -c 'curl -s "https://api.apify.com/v2/actor-runs?limit=10&desc=true" --header "Authorization: Bearer ${APIFY_API_TOKEN}"' | jq '.data.items[] | {id, actId, status, startedAt}'
+```
+
+### 7. Abort a Run
+
+> ⚠️ **Important:** The `{runId}` below is a **placeholder** - replace it with the actual run ID. See the complete workflow example below.
+
+Stop a running Actor:
+
+```bash
+# Replace {runId} with actual ID like "HG7ML7M8z78YcAPEB"
+bash -c 'curl -s -X POST "https://api.apify.com/v2/actor-runs/{runId}/abort" --header "Authorization: Bearer ${APIFY_API_TOKEN}"'
+```
+
+**Complete workflow example** (start a run and abort it):
+
+Write to `/tmp/apify_request.json`:
+
+```json
+{
+  "startUrls": [{"url": "https://example.com"}],
+  "maxPagesPerCrawl": 100
+}
+```
+
+Then run:
+
+```bash
+# Step 1: Start an async run and capture the run ID
+RUN_ID=$(bash -c 'curl -s -X POST "https://api.apify.com/v2/acts/apify~web-scraper/runs" --header "Authorization: Bearer ${APIFY_API_TOKEN}" --header "Content-Type: application/json" -d @/tmp/apify_request.json' | jq -r '.data.id')
+
+echo "Started run: $RUN_ID"
+
+# Step 2: Abort the run
+bash -c "curl -s -X POST \"https://api.apify.com/v2/actor-runs/${RUN_ID}/abort\" --header \"Authorization: Bearer \${APIFY_API_TOKEN}\""
+```
+
+### 8. List Available Actors
+
+Browse public Actors:
+
+```bash
+bash -c 'curl -s "https://api.apify.com/v2/store?limit=20&category=ECOMMERCE" --header "Authorization: Bearer ${APIFY_API_TOKEN}"' | jq '.data.items[] | {name, username, title}'
+```
+
+---
+
+## Popular Actors Reference
+
+| Actor ID | Description |
+|----------|-------------|
+| `apify/web-scraper` | General web scraper |
+| `apify/website-content-crawler` | Crawl entire websites |
+| `apify/google-search-scraper` | Google search results |
+| `apify/instagram-scraper` | Instagram posts/profiles |
+| `junglee/amazon-crawler` | Amazon products |
+| `apify/twitter-scraper` | Twitter/X posts |
+| `apify/youtube-scraper` | YouTube videos |
+| `apify/linkedin-scraper` | LinkedIn profiles |
+| `lukaskrivka/google-maps` | Google Maps places |
+
+Find more at: https://apify.com/store
+
+---
+
+## Run Options
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `timeout` | number | Run timeout in seconds |
+| `memory` | number | Memory in MB (128, 256, 512, 1024, 2048, 4096) |
+| `maxItems` | number | Max items to return (for sync endpoints) |
+| `build` | string | Actor build tag (default: "latest") |
+| `waitForFinish` | number | Wait time in seconds (for async runs) |
+
+---
+
+## Response Format
+
+**Run object:**
+
+```json
+{
+  "data": {
+  "id": "HG7ML7M8z78YcAPEB",
+  "actId": "HDSasDasz78YcAPEB",
+  "status": "SUCCEEDED",
+  "startedAt": "2024-01-01T00:00:00.000Z",
+  "finishedAt": "2024-01-01T00:01:00.000Z",
+  "defaultDatasetId": "WkzbQMuFYuamGv3YF",
+  "defaultKeyValueStoreId": "tbhFDFDh78YcAPEB"
   }
 }
 ```
 
-## 💰 Token Savings Calculator
-
-**Example: Instagram profile with 100 posts**
-
-**MCP Approach:**
-```
-1. search-actors → 1,000 tokens
-2. call-actor → 1,000 tokens
-3. get-actor-output → 50,000 tokens (100 unfiltered posts)
-TOTAL: ~52,000 tokens
-```
-
-**File-Based Approach:**
-```typescript
-const profile = await scrapeInstagramProfile({
-  username: 'user',
-  maxPosts: 100
-})
-
-// Filter in code - only top 10 posts
-const top = profile.latestPosts
-  ?.sort((a, b) => b.likesCount - a.likesCount)
-  .slice(0, 10)
-
-// TOTAL: ~500 tokens (only 10 filtered posts reach model)
-```
-
-**Savings: 99% reduction (52,000 → 500 tokens)**
-
-## 🔧 Actor Reference
-
-### Social Media
-
-#### Instagram
-- `scrapeInstagramProfile(input)` - Profile + posts
-- `scrapeInstagramPosts(input)` - Posts from user
-- `scrapeInstagramHashtag(input)` - Posts by hashtag
-- `scrapeInstagramComments(input)` - Comments on post
-
-#### LinkedIn
-- `scrapeLinkedInProfile(input)` - Profile + experience + email
-- `searchLinkedInJobs(input)` - Job listings
-- `scrapeLinkedInPosts(input)` - Posts from profile/company
-
-#### TikTok
-- `scrapeTikTokProfile(input)` - Profile + videos
-- `scrapeTikTokHashtag(input)` - Videos by hashtag
-- `scrapeTikTokComments(input)` - Comments on video
-
-#### YouTube
-- `scrapeYouTubeChannel(input)` - Channel + videos
-- `searchYouTube(input)` - Search videos
-- `scrapeYouTubeComments(input)` - Comments on video
-
-#### Facebook
-- `scrapeFacebookPosts(input)` - Posts from pages
-- `scrapeFacebookGroups(input)` - Group posts
-- `scrapeFacebookComments(input)` - Post comments
-
-### Business & Lead Generation
-
-#### Google Maps
-- `searchGoogleMaps(input)` - Search places (with contact extraction!)
-- `scrapeGoogleMapsPlace(input)` - Single place details
-- `scrapeGoogleMapsReviews(input)` - Place reviews
-
-### E-commerce
-
-#### Amazon
-- `scrapeAmazonProduct(input)` - Product details + reviews
-- `scrapeAmazonReviews(input)` - Product reviews only
-
-### Web Scraping
-
-#### General Web
-- `scrapeWebsite(input)` - Custom multi-page crawling
-- `scrapePage(url, pageFunction)` - Single page extraction
-
-## ⚙️ Configuration
-
-**Environment Variables:**
-```bash
-# Required - Get from https://console.apify.com/account/integrations
-APIFY_TOKEN=apify_api_xxxxx...
-```
-
-**Actor Run Options:**
-```typescript
-{
-  memory: 2048,    // MB: 128, 256, 512, 1024, 2048, 4096, 8192
-  timeout: 300,    // seconds
-  build: 'latest'  // or specific build number
-}
-```
-
-## 🎯 When to Use This vs MCP
-
-**Use File-Based (this skill):**
-- ✅ Need to filter large datasets (>100 results)
-- ✅ Want to transform/aggregate data in code
-- ✅ Multiple sequential operations
-- ✅ Control flow (loops, conditionals)
-- ✅ Maximum token efficiency
-
-**Use MCP:**
-- ❌ Simple single operations with small results (<10 items)
-- ❌ One-off exploratory queries
-- ❌ Don't want to write code
-
-## 🔗 Links
-
-- Apify Platform: https://apify.com
-- Actor Store: https://apify.com/store
-- API Docs: https://docs.apify.com/api/v2
-
 ---
 
-**Remember: Filter data in code BEFORE returning to model context. This is where the 99% token savings happen!**
+## Guidelines
 
-## Gotchas
-
-- **Actor selection matters.** Each social platform has specific actors — don't use a generic scraper for Instagram when a dedicated Instagram actor exists.
-- **Rate limits vary by platform and plan.** Check actor documentation for limits before running large scrapes.
-- **Scraped data format varies by actor.** Read the actor's output schema before processing results.
-
-## Examples
-
-**Example 1: Scrape Instagram profile**
-```
-User: "get the recent posts from this Instagram account"
-→ Selects Instagram Profile actor
-→ Runs with target profile URL
-→ Returns structured post data (text, engagement, dates)
-```
-
-**Example 2: LinkedIn company scrape**
-```
-User: "scrape this company's LinkedIn page"
-→ Selects LinkedIn Company actor
-→ Returns company info, employee count, recent posts
-```
-
-## Execution Log
-
-After completing any workflow, append a single JSONL entry:
-
-```bash
-echo '{"ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","skill":"Apify","workflow":"WORKFLOW_USED","input":"8_WORD_SUMMARY","status":"ok|error","duration_s":SECONDS}' >> ~/.claude/PAI/MEMORY/SKILLS/execution.jsonl
-```
-
-Replace `WORKFLOW_USED` with the workflow executed, `8_WORD_SUMMARY` with a brief input description, and `SECONDS` with approximate wall-clock time. Log `status: "error"` if the workflow failed.
+1. **Sync vs Async**: Use `run-sync-get-dataset-items` for quick tasks (<5 min), async for longer jobs
+2. **Rate Limits**: 250,000 requests/min globally, 400/sec per resource
+3. **Memory**: Higher memory = faster execution but more credits
+4. **Timeouts**: Default varies by Actor; set explicit timeout for sync calls
+5. **Pagination**: Use `limit` and `offset` for large datasets
+6. **Actor Input**: Each Actor has different input schema - check Actor's page for details
+7. **Credits**: Check usage at https://console.apify.com/billing

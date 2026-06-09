@@ -5,20 +5,7 @@ tool_type: python
 primary_tool: Bio.SeqIO
 ---
 
-## Version Compatibility
-
-Reference examples tested with: BioPython 1.83+, samtools 1.19+
-
-Before using code patterns, verify installed versions match. If versions differ:
-- Python: `pip show <package>` then `help(module.function)` to check signatures
-
-If code throws ImportError, AttributeError, or TypeError, introspect the installed
-package and adapt the example to match the actual API rather than retrying.
-
 # Sequence Statistics
-
-**"Calculate N50 and other assembly statistics"** → Compute sequence count, length distribution, N50/L50, GC content, and nucleotide composition for FASTA datasets.
-- Python: `SeqIO.parse()`, `gc_fraction()` (BioPython)
 
 Calculate comprehensive statistics for sequence datasets using Biopython.
 
@@ -181,11 +168,6 @@ for p in percentiles:
 
 ## Comprehensive Summary Report
 
-**Goal:** Generate a complete QC summary (counts, lengths, N50, GC) for any FASTA file.
-
-**Approach:** Load all records, compute length and GC arrays, derive N50/L50 from cumulative sorted lengths, and package into a dictionary.
-
-**Reference (BioPython 1.83+):**
 ```python
 from Bio import SeqIO
 from Bio.SeqUtils import gc_fraction
@@ -199,6 +181,7 @@ def sequence_summary(fasta_file):
     sorted_lengths = sorted(lengths, reverse=True)
     total_bp = sum(lengths)
 
+    # Calculate N50
     cumsum = 0
     n50 = 0
     l50 = 0
@@ -235,11 +218,6 @@ print(f'GC: {stats["gc_mean"]:.1%} (+/- {stats["gc_std"]:.1%})')
 
 ## Compare Multiple Assemblies
 
-**Goal:** Generate a side-by-side comparison table of key metrics across multiple assembly files.
-
-**Approach:** Run `sequence_summary` on each file and format results into an aligned table.
-
-**Reference (BioPython 1.83+):**
 ```python
 from pathlib import Path
 

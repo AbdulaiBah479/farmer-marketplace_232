@@ -42,8 +42,9 @@ description: Pino logging, Sentry error tracking, Axiom - structured logging wit
 
 **When NOT to use:**
 
-- Initial project setup and dependency installation (one-time setup; follow official docs)
-- Framework-specific configuration files (follow framework SDK docs)
+- Initial project setup (use `setup/observability.md` instead)
+- Installing dependencies (use `setup/observability.md` instead)
+- Configuring `next.config.js` (use `setup/observability.md` instead)
 
 **Key patterns covered:**
 
@@ -51,7 +52,7 @@ description: Pino logging, Sentry error tracking, Axiom - structured logging wit
 - Structured logging with required fields
 - Correlation IDs: generating, propagating, attaching to logs
 - Custom traces/spans with OpenTelemetry
-- Sentry error boundaries in React
+- Sentry error boundaries in React (App Router compatible)
 - Attaching user context to Sentry after auth
 - Creating Axiom monitors and alerts
 - Filtering noise (expected errors like 404s)
@@ -85,6 +86,8 @@ description: Pino logging, Sentry error tracking, Axiom - structured logging wit
 3. **How do I find it?** (Correlation IDs linking related events)
 
 Logging should be **intentional, not defensive**. Every log statement should answer a specific question you might ask when debugging. Avoid logging "just in case" - it creates noise that makes real issues harder to find.
+
+**This skill covers ongoing usage patterns. For initial setup (dependencies, configuration), see `setup/observability.md`.**
 
 </philosophy>
 
@@ -178,14 +181,14 @@ For code examples, see [examples/tracing.md](examples/tracing.md).
 
 ---
 
-### Pattern 5: Sentry Error Boundaries in React
+### Pattern 5: Sentry Error Boundaries in React (App Router)
 
 Catch and report React component errors with recovery capability.
 
 **Key Components:**
 
 1. **ErrorBoundary** - Class component for catching render errors
-2. **global-error.tsx** - SSR framework global error handler
+2. **global-error.tsx** - App Router global error handler
 3. **Feature-level boundaries** - Wrap feature sections with custom fallbacks
 
 For implementation examples, see [examples/error-boundaries.md](examples/error-boundaries.md).
@@ -262,6 +265,27 @@ How to trace a request through the system when debugging.
 For detailed APL queries and checklist, see [examples/axiom.md](examples/axiom.md#pattern-debugging-guide---tracing-a-request).
 
 </patterns>
+
+---
+
+<integration>
+
+## Integration Guide
+
+**Works with:**
+
+- **setup/observability.md**: Initial configuration this skill builds upon
+- **backend/api.md**: Hono middleware for logging and correlation IDs
+- **backend/database.md**: Drizzle query logging patterns
+- **frontend/react.md**: Error boundary patterns
+
+**Related Patterns:**
+
+- Use correlation ID middleware from Pattern 3 in all Hono routes
+- Use error boundaries from Pattern 5 around feature sections
+- Use performance wrappers from Pattern 9 for external calls
+
+</integration>
 
 ---
 

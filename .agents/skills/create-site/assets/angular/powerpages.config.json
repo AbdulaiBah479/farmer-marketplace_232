@@ -1,6 +1,0 @@
-{
-  "$schema": "https://www.schemastore.org/powerpages.config.json",
-  "siteName": "__SITE_NAME__",
-  "compiledPath": "dist/__SITE_SLUG__/browser",
-  "defaultLandingPage": "index.html"
-}

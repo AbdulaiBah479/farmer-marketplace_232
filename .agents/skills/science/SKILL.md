@@ -1,13 +1,14 @@
 ---
+category: Lifestyle
+id: science
 name: Science
-description: "The scientific method as a universal problem-solving algorithm — goal-first, hypothesis-plural, falsifiable experiments, honest measurement. Seven core workflows: DefineGoal, GenerateHypotheses (minimum 3 required — single-hypothesis testing is confirmation bias), DesignExperiment, MeasureResults, AnalyzeResults, Iterate, and FullCycle. Two diagnostic shortcuts: QuickDiagnosis (15-minute rule for fast debugging) and StructuredInvestigation (complex multi-factor issues). Scales across micro (TDD, minutes), meso (feature validation, hours-days), and macro (MVP launch, weeks-months). Reference files: METHODOLOGY.md (deep dive on each phase), Protocol.md (how other skills invoke Science), Templates.md (goal/hypothesis/experiment/results templates), Examples.md (worked examples across scales). Integrates with Council (hypothesis validation), Evals (measurement), Development (parallel experiment worktrees), and RedTeam (stress-test hypotheses). RootCauseAnalysis applies Science to failure investigation — pair them when investigating incidents. NOT FOR multi-angle lens passes on requirements (use IterativeDepth for pre-build exploration). USE WHEN think about, figure out, experiment, iterate, improve, optimize, hypothesis, science, full cycle, quick diagnosis, structured investigation, what might work, how do we test, what happened, analyze results."
-effort: high
+description: Guidance and answers for science.
 ---
 
 ## Customization
 
 **Before executing, check for user customizations at:**
-`~/.claude/PAI/USER/SKILLCUSTOMIZATIONS/Science/`
+`~/.claude/skills/PAI/USER/SKILLCUSTOMIZATIONS/Science/`
 
 If this directory exists, load and apply any PREFERENCES.md, configurations, or resources found there. These override default behavior. If the directory does not exist, proceed with skill defaults.
 
@@ -18,7 +19,7 @@ If this directory exists, load and apply any PREFERENCES.md, configurations, or 
 
 1. **Send voice notification**:
    ```bash
-   curl -s -X POST http://localhost:31337/notify \
+   curl -s -X POST http://localhost:8888/notify \
      -H "Content-Type: application/json" \
      -d '{"message": "Running the WORKFLOWNAME workflow in the Science skill to ACTION"}' \
      > /dev/null 2>&1 &
@@ -166,42 +167,3 @@ ITERATE --> Adjust hypothesis and repeat
 7. **Iterate** - Adjust and repeat
 
 **The answer emerges from the cycle, not from guessing.**
-
-## Gotchas
-
-- **Hypothesis-test-analyze is the core loop.** Don't skip the hypothesis step — going straight to testing is just trial-and-error, not science.
-- **Minimum 3 hypotheses before testing.** Single-hypothesis testing is confirmation bias.
-- **Measurements must be specific and reproducible.** "It seems better" is not a measurement.
-- **Full cycle is for systematic investigation.** For quick debugging, use quick diagnosis mode.
-
-## Examples
-
-**Example 1: Quick diagnosis**
-```
-User: "figure out why Surface time filters show stale items"
-→ Quick diagnosis mode
-→ Hypothesis: timestamp format mismatch in D1
-→ Test: query D1 for actual stored format
-→ Analyze: compare stored vs expected format
-→ Result: ISO string vs Unix timestamp mismatch
-```
-
-**Example 2: Full systematic investigation**
-```
-User: "experiment with different prompt structures for better output"
-→ Full cycle mode
-→ 3+ hypotheses generated
-→ Controlled experiments with measurements
-→ Analysis identifies winning approach
-→ Iterates until convergence
-```
-
-## Execution Log
-
-After completing any workflow, append a single JSONL entry:
-
-```bash
-echo '{"ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","skill":"Science","workflow":"WORKFLOW_USED","input":"8_WORD_SUMMARY","status":"ok|error","duration_s":SECONDS}' >> ~/.claude/PAI/MEMORY/SKILLS/execution.jsonl
-```
-
-Replace `WORKFLOW_USED` with the workflow executed, `8_WORD_SUMMARY` with a brief input description, and `SECONDS` with approximate wall-clock time. Log `status: "error"` if the workflow failed.

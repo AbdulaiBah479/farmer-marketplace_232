@@ -1,145 +1,194 @@
 ---
 name: product-research
-description: Use when planning and synthesizing product/user research as a method-and-repository discipline — selecting the right method for the goal (generative interviews vs usability test vs concept test vs validation), computing method-based saturation/sample size with an explicit confidence level, or synthesizing coded observations into insights while flagging single-source anecdotes. Never fabricates user insight; an insight requires recurrence across independent participants. Distinct from product-team/ux-researcher-designer (persona/journey artifacts), product-discovery (discovery-sprint planning), and experiment-designer (live A/B) — this is the research-ops method + insight-repository layer.
-version: 2.9.0
-author: claude-code-skills
-license: MIT
-tags: [research-ops, product-research, ux-research, jtbd, usability, saturation, insight-synthesis, research-repository]
-compatible_tools: [claude-code, codex-cli, cursor, antigravity, opencode, gemini-cli]
+description: FF&E product research — receives a brief from the designer, searches the web for matching products, and returns structured candidates to save to the master Google Sheet.
+allowed-tools:
+  - Read
+  - Write
+  - Edit
+  - Bash
+  - Glob
+  - Grep
+  - WebFetch
+  - WebSearch
+  - AskUserQuestion
+  - mcp__google-sheets__get_sheet_data
+  - mcp__google-sheets__update_cells
+  - mcp__google-sheets__list_sheets
 ---
 
-# product-research
+# /product-research — Product Research
 
-Product / user research as an operational discipline: choosing the right method, sizing it honestly, and synthesizing findings into governed insights. The core rule: **method must match the goal**, and **an insight requires recurrence across independent participants** — a single quote is an anecdote.
+Receives a brief from a designer, researches products across the web, and returns a curated shortlist of candidates. Selected products are saved to the master Google Sheet.
 
-## Purpose
+## How It Works
 
-Product researchers, ResearchOps teams, and PMs running discovery need method rigor and an insight repository they can trust. This skill structures three decisions:
-
-Three deterministic tools:
-
-1. `study_designer.py` — Maps (research goal × product stage) to an appropriate method and emits a method-matched plan skeleton (objective, participant criteria, guide structure, success criteria). Redirects live A/B to `product-team/experiment-designer`.
-2. `saturation_planner.py` — Method-based sample guidance with an explicit **confidence label**: Nielsen problem-discovery (5/segment), Guest et al. thematic saturation (~12), and evaluative coverage. Never claims a prevalence rate from a small-n usability test.
-3. `insight_synthesizer.py` — Clusters coded observations by tag, counts distinct participants, ranks by cross-participant recurrence, and flags any candidate below the source threshold as an **ANECDOTE**, never promoting it to an insight.
-
-## When to use
-
-Invoke this skill when:
-
-- You are planning a study and need the method to match the goal (generative vs evaluative vs validation).
-- You need a defensible sample size / saturation rationale with a stated confidence.
-- You have raw coded observations and need to synthesize insights without over-claiming.
-- You are setting up or auditing a research repository and need the insight-vs-observation discipline.
-
-**Do NOT use this skill to**: generate personas / journey maps (use `product-team/ux-researcher-designer`), plan a discovery sprint or validate an opportunity (use `product-team/product-discovery`), design or analyze a live product A/B experiment (use `product-team/experiment-designer`), or do market sizing / surveys (use the `market-research` sibling).
-
-## Workflow
-
-1. **Frame the study** — Fill `assets/research_plan_template.md` (research questions, method rationale, participant criteria, analysis plan, repository tagging scheme).
-2. **Pick the method** — Run `study_designer.py --goal {discovery|evaluative|validation} --stage {concept|prototype|beta|live} --profile {b2b-saas|consumer-app|enterprise|marketplace|hardware|platform}`. Honor the redirect if it routes to experiment-designer.
-3. **Size it** — Run `saturation_planner.py --method {usability|thematic|evaluative-coverage} --segments N`. Record the confidence label and limits.
-4. **Synthesize** — After fielding, code observations and run `insight_synthesizer.py --input observations.json --min-sources 3`. Treat ANECDOTE-flagged clusters as signals to probe, not findings to ship.
-5. **File in the repository** — Tag insights to the atomic schema at synthesis time, with their evidence and confidence.
-
-## Scripts
-
-| Script | Purpose | Profiles |
-|---|---|---|
-| `scripts/study_designer.py` | (goal × stage) → method + plan skeleton | b2b-saas, consumer-app, enterprise, marketplace, hardware, platform |
-| `scripts/saturation_planner.py` | Method-based sample guidance + confidence | n/a (method-driven) |
-| `scripts/insight_synthesizer.py` | Cluster observations, flag anecdotes | n/a (evidence-driven) |
-
-All three: stdlib-only, `--help`, `--sample`, `--output {human,json}`.
-
-## Onboarding & customization
-
-Run the onboarding questionnaire **once before you start** — it captures your defaults so every tool in this skill is pre-configured. Customization is the point: the answers actually change tool behavior (e.g. the insight source-threshold).
-
-```bash
-python3 scripts/onboard.py            # interactive (also: --defaults, --set key=value, --reset)
-python3 scripts/onboard.py --show     # see the questions + current effective config
+```
+Designer gives a brief
+        ↓
+Claude searches the web
+        ↓
+Presents candidates with specs + reasoning
+        ↓
+Designer picks winners
+        ↓
+Saved to master Google Sheet
 ```
 
-Answers are saved to `~/.config/research-ops/product-research.json` (global) or `./.research-ops/product-research.json` (`--scope project`) and are read automatically by `config_loader.py`. They set the default product **profile**, the **insight source-threshold** (how many independent participants make a finding an insight, not an anecdote), the default **saturation method**, and the **high-stakes** flag. CLI flags always override saved config; `RESEARCH_OPS_NO_CONFIG=1` ignores it.
+## Step 1: Take the Brief
 
-**The four questions:** product profile · insight source-threshold · saturation method · high-stakes flag.
+The designer describes what they're looking for. A brief can be loose or specific:
 
-## Optimize with autoresearch (opt-in)
+**Loose:**
+> "I need acoustic panels for a tech office lobby"
 
-This skill ships an **isolated, opt-in** bridge to `engineering/autoresearch-agent`. Only when you ask to "optimize the synthesis" / "run a loop" does an autoresearch experiment iteratively refine the coding/clustering of a fixed evidence set so more cross-participant patterns surface. `scripts/ar_evaluator.py` is the ground-truth evaluator; it prints `validated_insights: <int>` (higher is better). It optimizes the **coding**, never fabricates evidence.
+**Specific:**
+> "Looking for a round dining table, 48-54" diameter, solid wood top (walnut or oak preferred), steel or brass base, under $3,000, needs to be in stock or <6 week lead time"
 
-```bash
-/ar:setup --domain custom --name insight-synthesis \
-  --target observations.json \
-  --eval "python3 ar_evaluator.py --target observations.json" \
-  --metric validated_insights --direction higher
-/ar:loop custom/insight-synthesis
+### What to capture from the brief
+
+Extract as many of these as the designer provides. **Don't ask for fields they didn't mention** — work with what you have.
+
+| Field | Examples |
+|-------|---------|
+| **Category** | Table, seating, lighting, acoustic panel, planter, storage |
+| **Use context** | Office lobby, conference room, outdoor terrace, home office |
+| **Style / aesthetic** | Scandinavian, mid-century, industrial, minimal, warm, bold |
+| **Materials** | Solid wood, marble, steel, fabric, mesh, recycled |
+| **Dimensions** | "48-54 inch diameter", "under 30 inches tall", "fits a 6x4 space" |
+| **Budget** | Under $3,000, $500-$1,000 range, high-end, budget-friendly |
+| **Sustainability** | GREENGUARD, FSC, Cradle to Cradle, recycled content, B Corp |
+| **Lead time** | In stock, under 6 weeks, no rush |
+| **Quantity** | 1 hero piece, 12 for a conference room, 50+ for open office |
+| **Indoor/Outdoor** | Indoor, outdoor, both |
+| **Must-haves** | Stackable, COM available, ADA compliant, weatherproof |
+| **Brands to consider** | "I like Muuto and HAY", "no Herman Miller" |
+| **Brands to avoid** | "Not Ikea", "nothing from Amazon" |
+
+**Don't interview the designer.** If the brief is "acoustic panels for a lobby," that's enough to start searching. You can clarify *after* showing initial results if needed ("I found options in fabric, felt, and wood slat — any preference?").
+
+## Step 2: Research
+
+Search the web for products matching the brief. Use multiple targeted queries to cover different angles:
+
+### Search strategy
+
+For a brief like "round dining table, walnut, under $3,000":
+
+1. **Category + material search**: `round walnut dining table`
+2. **Design-focused search**: `best round wood dining tables architects designers`
+3. **Trade/contract search**: `contract round dining table solid wood specifications` (for commercial projects)
+4. **Specific brand searches** if the designer mentioned preferences: `Muuto round table`, `HAY dining table`
+5. **Sustainability search** if relevant: `FSC certified round dining table`
+
+Run **3-5 searches** depending on brief complexity. Aim for breadth — different price points, brands, styles.
+
+### For each candidate found
+
+Attempt to fetch the product page with WebFetch to extract full specs. If the page is JS-rendered and returns no data:
+- Use whatever info is available from the search result snippet
+- Fill in from general knowledge if the product is well-known
+- Note specs as "unverified" if sourced from search snippets rather than product pages
+
+**Target: 6-10 candidates** that genuinely match the brief. Don't pad the list with weak matches.
+
+## Step 3: Present Candidates
+
+Show results as a numbered shortlist with enough detail to evaluate:
+
+```
+## Product Research: Round Dining Tables (walnut, under $3,000)
+
+### 1. Alle Table Round — Hem
+Designer: Staffan Holm · 59" dia × 29"H
+Materials: Solid oak top, powder-coated steel base
+Price: $2,399 USD · Lead: 8-12 weeks
+Finishes: Natural oak, smoked oak, walnut stain
+Indoor · COM: N/A
+🔗 hem.com/en-us/furniture/tables/alle/30421
+Why: Clean Scandinavian lines, strong scale for a lobby, within budget.
+Walnut stain option available. Hem has good contract pricing.
+
+### 2. Snaregade Round — Menu
+Designer: Norm Architects · 54" dia × 28.5"H
+Materials: Oak veneer top, powder-coated steel base
+Price: $2,195 USD · Lead: 6-8 weeks
+Finishes: Dark stained oak, light oak
+Indoor · COM: N/A
+🔗 menuspace.com/snaregade-round
+Why: Norm Architects pedigree, slightly under budget,
+faster lead time. Veneer top (not solid) — flag if that matters.
+
+### 3. ...
+
+---
+
+## Summary
+
+| # | Product | Brand | Ø | Price | Lead | Material | Notes |
+|---|---------|-------|---|-------|------|----------|-------|
+| 1 | Alle Round | Hem | 59" | $2,399 | 8-12w | Solid oak | Walnut stain ✓ |
+| 2 | Snaregade Round | Menu | 54" | $2,195 | 6-8w | Oak veneer | Not solid wood |
+| 3 | ... | ... | ... | ... | ... | ... | ... |
+
+Which ones should I save to your product library?
 ```
 
-Isolated: no hard dependency — autoresearch runs only on demand, and the loop edits `observations.json`, never the evaluator.
+### Presentation rules
 
-## References
+- **Lead with the summary table** if there are 6+ candidates — designers scan visually
+- **Include "Why"** for each — explain why this product matches the brief, and flag any compromises
+- **Flag trade-offs honestly** — "veneer not solid", "over budget but worth seeing", "long lead time"
+- **Don't oversell** — if a product is a weak match, say so or don't include it
+- **Group by angle** if useful — "Budget options", "Premium picks", "Fastest delivery"
 
-- `references/research_methods_canon.md` — Portigal *Interviewing Users*; Christensen/Ulwick JTBD; Rohrer's UX-research methods landscape (NN/g); Sauro & Lewis *Quantifying the User Experience*; Goodman/Kuniavsky.
-- `references/sampling_and_saturation.md` — Nielsen "test with 5 users"; Guest, Bunce & Johnson saturation; Faulkner on more-than-5; Sauro usability sample size; Braun & Clarke thematic analysis.
-- `references/repository_and_synthesis.md` — ResearchOps / atomic research (Tomer Sharon "Polaris"); insight-vs-observation discipline; repository governance; affinity mapping; democratization guardrails.
+## Step 4: Save to Sheet
 
-## Assumptions
+When the designer picks candidates ("save 1, 3, and 5"), write them to the master Google Sheet.
 
-- Method selection assumes you can name the goal honestly; if the goal is fuzzy, grill it first (the goal drives everything).
-- Saturation guidance is method-based, not a power calculation — usability tests find problems, not prevalence rates.
-- The synthesizer counts evidence you provide; coding quality is upstream of it. Garbage tags → garbage clusters.
-- The insight threshold (`--min-sources`) defaults to 3; raise it for high-stakes or heterogeneous populations.
+### Connecting to the sheet
 
-## Anti-patterns
+If not already connected, ask for the Google Sheet ID or URL. Same sheet used by other product skills.
 
-- **Mismatching method to goal.** A usability test cannot discover unmet needs; an interview cannot measure task success.
-- **Reporting usability problems as percentages.** Small-n tests surface problems, not population rates.
-- **Promoting an anecdote to an insight.** One participant is a signal to probe, not a finding.
-- **Framing interview questions as feature reactions.** Probe the job-to-be-done and recent real behavior, not hypothetical opinions.
-- **Synthesizing without a repository scheme.** Tag at synthesis time, or insights rot unfindable.
+### Row format
 
-## Distinct from
+Write rows to the master product sheet using the 33-column schema. Read `../../schema/product-schema.md` (relative to this SKILL.md) for the full column reference, field formats, and category vocabulary. Read `../../schema/sheet-conventions.md` for CRUD patterns with MCP tools.
 
-| Neighbor | Scope | Difference |
-|---|---|---|
-| `product-team/ux-researcher-designer` | Personas, journey maps, usability frameworks tied to design output | That produces **artifacts**; this is **method + repository discipline** |
-| `product-team/product-discovery` | Opportunity validation, discovery-sprint planning | That plans **discovery sprints**; this designs and synthesizes the **research** |
-| `product-team/experiment-designer` | Live product A/B hypothesis + sample size | That runs **live experiments**; this runs **qualitative/evaluative research** |
-| `market-research` (sibling) | Market sizing, surveys, segmentation | That studies **the market**; this studies **users** |
+Skill-specific column values:
+- **AG (Source):** `research`
+- **AF (Status):** `saved`
+- **AD (Tags):** From brief context (e.g. "lobby-reno, walnut")
+- **AE (Notes):** The "Why" reasoning from the presentation
+- **T (Selected Color/Finish):** Blank (designer hasn't configured yet)
 
-## Quick examples
+### After saving
 
-```bash
-python3 scripts/study_designer.py --sample
-python3 scripts/saturation_planner.py --method thematic --segments 3
-python3 scripts/insight_synthesizer.py --sample --min-sources 3
+```
+✓ Saved 3 products to your library (rows 48-50).
+  Tagged: lobby-reno, walnut
+
+Want me to refine the search? Different style, budget, or materials?
 ```
 
-The synthesizer sample correctly promotes "import-confusion" (3 independent participants) to INSIGHT and flags "wants-slack" (1 participant) as an ANECDOTE.
+## Step 5 (Optional): Iterate
 
-## Forcing-question library (Matt Pocock grill discipline)
+The designer may want to refine:
 
-Walked one at a time by `/cs:grill-research-ops` or the orchestrator. Recommended answer + canon citation per question. Never bundled.
+- **"More like #1 but cheaper"** → Search for alternatives in that style/brand tier
+- **"What about outdoor versions?"** → New search with added constraint
+- **"Can you find the spec sheet PDF for #3?"** → Search for manufacturer cut sheet
+- **"Compare #1 and #3 side by side"** → Detailed comparison
+- **"Any of these have GREENGUARD?"** → Check certifications for the shortlist
 
-1. **"Is this study generative (discover problems) or evaluative (test a solution)?"**
-   Recommended: name it first — the method follows from the goal.
-   Canon: Rohrer, *When to Use Which User-Experience Research Methods* (NN/g).
+Each iteration can add more products to the sheet.
 
-2. **"What's your sample size and saturation rationale — and at what confidence?"**
-   Recommended: method-based n (5/segment usability; ~12 for thematic saturation), state the confidence.
-   Canon: Nielsen; Guest, Bunce & Johnson (2006); Faulkner (2003).
+## Conversation Style
 
-3. **"How many independent participants support each insight — or is it a single-source anecdote?"**
-   Recommended: require recurrence across ≥3 sources before calling it an insight; flag singletons.
-   Canon: atomic research / ResearchOps; Braun & Clarke thematic analysis.
+- **Don't over-ask before searching.** A one-line brief is enough to start.
+- **Show results, then refine.** It's faster to react to real options than to specify everything upfront.
+- **Be opinionated.** The designer wants a knowledgeable research assistant, not a search engine. Flag the best options, note trade-offs, suggest alternatives.
+- **Know the industry.** Reference relevant brands, designers, trade platforms. Understand contract vs. residential, COM/COL, lead times, certifications.
 
-4. **"Are your interview / usability tasks framed as outcomes (jobs) or as feature reactions?"**
-   Recommended: frame around the job-to-be-done and recent real behavior, not hypothetical opinion.
-   Canon: Christensen/Ulwick Jobs-to-be-Done; Portigal *Interviewing Users*.
+## Notes
 
-5. **"Where does this land in the repository, and how is it tagged for reuse?"**
-   Recommended: tag to the atomic schema at synthesis time, not later.
-   Canon: Tomer Sharon, *Polaris* / ResearchOps repository practice.
-
-Walk depth-first. Lock 1-2 before opening 3-5. After all are answered, invoke `study_designer.py` → `saturation_planner.py` → (after fielding) `insight_synthesizer.py`.
+- **JS-rendered product pages** are common (Hem, Muuto, Vitra, etc.). If WebFetch returns no data, use search result snippets + general knowledge. Note when specs are unverified.
+- **The sheet is shared.** Products from this skill live alongside bulk-fetch imports and PDF extractions. The `Source` column ("research") identifies where each row came from.

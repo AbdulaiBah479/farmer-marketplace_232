@@ -1,274 +1,262 @@
 ---
 name: compliance-check
-description: Run a compliance check on a proposed action, product feature, or business initiative, surfacing applicable regulations, required approvals, and risk areas. Use when launching a feature that touches personal data, when marketing or product proposes something with regulatory implications, or when you need to know which approvals and jurisdictional requirements apply before proceeding.
-argument-hint: "<action or initiative to check>"
+description: Review ads and landing pages for compliance issues including FTC disclosure requirements, platform policy compliance, and restricted claims. Use before launching campaigns, when ads get rejected, or when auditing existing creative.
 ---
 
-# /compliance-check -- Compliance Review
+# Compliance Check
 
-> If you see unfamiliar placeholders or need to check which tools are connected, see [CONNECTORS.md](../../CONNECTORS.md).
+Review creative for regulatory and platform compliance.
 
-Run a compliance check on a proposed action, product feature, marketing campaign, or business initiative.
+## Process
 
-**Important**: This command assists with legal workflows but does not provide legal advice. Compliance assessments should be reviewed by qualified legal professionals. Regulatory requirements change frequently; always verify current requirements with authoritative sources.
+### Step 1: Check FTC Disclosure Requirements
 
-## Usage
+**Required Disclosures:**
+- Material connections (paid/sponsored)
+- Affiliate relationships
+- Typical results (if showing testimonials)
+- Paid endorsements
+
+**Disclosure Placement:**
+- Must be clear and conspicuous
+- Close to the claim
+- Same format as claim (video = video disclosure)
+- Mobile-readable size
+
+**Common FTC Issues:**
+- Hidden disclosures in fine print
+- Disclosures that require scrolling
+- "Results not typical" buried at end
+- Influencer posts without #ad
+
+### Step 2: Verify Platform Policy Compliance
+
+**Facebook/Meta Policies:**
+- No before/after images implying unrealistic results
+- No personal attributes targeting ("Are you overweight?")
+- No misleading claims
+- No prohibited content (weapons, adult, etc.)
+- Landing page must match ad claims
+
+**TikTok Policies:**
+- Similar to Meta plus TikTok-specific rules
+- Authenticity requirements
+- No misleading information
+
+**Google/YouTube Policies:**
+- Healthcare restrictions
+- Financial service requirements
+- Destination requirements
+
+**Native Ad Policies:**
+- Varies by network
+- Generally stricter on health claims
+- Editorial-style requirements
+
+### Step 3: Flag Restricted Claims
+
+**Health Claims:**
+- Disease treatment/cure claims
+- Drug-like claims
+- Specific medical outcomes
+- "Clinically proven" without evidence
+
+**Financial Claims:**
+- Income guarantees
+- "Get rich quick" implications
+- Investment returns promises
+
+**Before/After:**
+- Unrealistic transformations
+- Implied guaranteed results
+- Time-specific promises
+
+**Testimonials:**
+- Atypical results presented as typical
+- Fake reviews/testimonials
+- Undisclosed paid testimonials
+
+### Step 4: Suggest Compliant Alternatives
+
+**Reframing Techniques:**
+- "May help support..." vs "Cures..."
+- "Users reported..." vs "You will..."
+- "Individual results vary" disclaimer
+- Opinion-based language
+
+**Safe Phrasing:**
+| Problematic | Compliant Alternative |
+|-------------|----------------------|
+| "Lose 30 lbs in 30 days" | "Supports healthy weight management" |
+| "Cures diabetes" | "Supports healthy blood sugar levels" |
+| "Make $10K/month" | "Income potential varies" |
+| "Guaranteed results" | "Results may vary" |
+
+### Step 5: Output Compliance Report
 
 ```
-/compliance-check $ARGUMENTS
+## COMPLIANCE CHECK: [Creative/Campaign Name]
+
+### REVIEW SUMMARY
+
+**Overall Risk Level:** [Low / Medium / High / Critical]
+**Issues Found:** [#]
+**Platforms Reviewed For:** [FB, TikTok, Google, Native]
+
+---
+
+### FTC COMPLIANCE
+
+**Disclosure Status:** [Compliant / Needs Work / Non-Compliant]
+
+**Required Disclosures:**
+- [ ] Affiliate relationship disclosed
+- [ ] Sponsored content marked
+- [ ] Typical results disclaimer present
+- [ ] Material connections clear
+
+**Issues Found:**
+1. [Issue description]
+   - Location: [Where in creative]
+   - Severity: [Low/Medium/High]
+   - Fix: [Recommended solution]
+
+---
+
+### PLATFORM POLICY COMPLIANCE
+
+**Facebook/Meta:**
+| Policy Area | Status | Issue | Fix |
+|-------------|--------|-------|-----|
+| Personal attributes | [Pass/Fail] | [Issue] | [Fix] |
+| Before/after | [Pass/Fail] | [Issue] | [Fix] |
+| Health claims | [Pass/Fail] | [Issue] | [Fix] |
+| Landing page match | [Pass/Fail] | [Issue] | [Fix] |
+
+**TikTok:**
+| Policy Area | Status | Issue | Fix |
+|-------------|--------|-------|-----|
+| [Area] | [Pass/Fail] | [Issue] | [Fix] |
+
+**[Other Platforms]:**
+...
+
+---
+
+### CLAIM ANALYSIS
+
+**Claims Made:**
+1. "[Claim from creative]"
+   - Type: [Health/Financial/Results]
+   - Status: [Safe / Risky / Prohibited]
+   - Evidence required: [What's needed to support]
+   - Recommendation: [Keep/Modify/Remove]
+
+2. "[Claim from creative]"
+   ...
+
+---
+
+### FLAGGED CONTENT
+
+**HIGH RISK (Must Fix):**
+1. **Issue:** [Description]
+   - Location: [Where]
+   - Why it's a problem: [Explanation]
+   - Compliant alternative: "[Suggested rewording]"
+
+**MEDIUM RISK (Should Fix):**
+1. **Issue:** [Description]
+   ...
+
+**LOW RISK (Consider Fixing):**
+1. **Issue:** [Description]
+   ...
+
+---
+
+### TESTIMONIALS/SOCIAL PROOF
+
+**Testimonials Used:**
+1. [Testimonial description]
+   - Disclosure present: [Yes/No]
+   - Typical results: [Yes/No/Unclear]
+   - Recommendation: [Action needed]
+
+---
+
+### LANDING PAGE COMPLIANCE
+
+**Page:** [URL]
+
+| Element | Status | Issue |
+|---------|--------|-------|
+| Claims match ad | [Pass/Fail] | [Issue] |
+| Disclosures present | [Pass/Fail] | [Issue] |
+| Terms/Privacy linked | [Pass/Fail] | [Issue] |
+| Contact info | [Pass/Fail] | [Issue] |
+
+---
+
+### RECOMMENDED CHANGES
+
+**Critical (Before Launch):**
+1. [ ] [Change required]
+2. [ ] [Change required]
+
+**Important (Soon):**
+1. [ ] [Change recommended]
+
+**Optional (Best Practice):**
+1. [ ] [Enhancement]
+
+---
+
+### COMPLIANT COPY ALTERNATIVES
+
+**Original:** "[Problematic text]"
+**Compliant Version:** "[Rewritten text]"
+**Why:** [Explanation of change]
+
+---
+
+### APPROVAL CHECKLIST
+
+Before launching, confirm:
+- [ ] All high-risk issues resolved
+- [ ] Disclosures in place
+- [ ] Claims substantiated or softened
+- [ ] Landing page matches ad
+- [ ] Platform-specific requirements met
+- [ ] Legal/compliance team approved (if applicable)
+
+---
+
+### RISK ASSESSMENT
+
+**If Launched As-Is:**
+- Ad rejection likelihood: [Low/Medium/High]
+- Account risk: [Low/Medium/High]
+- Legal risk: [Low/Medium/High]
+- Reputation risk: [Low/Medium/High]
 ```
 
-## What I Need From You
+## Compliance Resources
 
-Describe what you're planning to do. Examples:
-- "We want to launch a referral program with cash rewards"
-- "We're adding biometric authentication to our mobile app"
-- "We need to process EU customer data in our US data center"
-- "Marketing wants to use customer testimonials in ads"
+**FTC Guidelines:**
+- Endorsement Guides
+- Health Claims guidance
+- Made in USA rules
 
-## Output
+**Platform Policies:**
+- Meta Advertising Policies
+- TikTok Advertising Policies
+- Google Ads Policies
 
-```markdown
-## Compliance Check: [Initiative]
+**Safe Practices:**
+- When in doubt, soften the claim
+- Document evidence for claims
+- Use "may," "can help," "supports"
+- Always disclose relationships
 
-### Summary
-[Quick assessment: Proceed / Proceed with conditions / Requires further review]
-
-### Applicable Regulations and Policies
-| Regulation/Policy | Relevance | Key Requirements |
-|-------------------|-----------|-----------------|
-| [GDPR / CCPA / HIPAA / etc.] | [How it applies] | [What you need to do] |
-
-### Requirements
-| # | Requirement | Status | Action Needed |
-|---|-------------|--------|---------------|
-| 1 | [Requirement] | [Met / Not Met / Unknown] | [What to do] |
-
-### Risk Areas
-| Risk | Severity | Mitigation |
-|------|----------|------------|
-| [Risk] | [High/Med/Low] | [How to address] |
-
-### Recommended Actions
-1. [Most important action]
-2. [Second priority]
-3. [Third priority]
-
-### Approvals Needed
-| Approver | Why | Status |
-|----------|-----|--------|
-| [Person/Team] | [Reason] | [Pending] |
-
-### Further Review Recommended
-[Areas where outside counsel or specialist review is advised]
-```
-
-## Privacy Regulation Overview
-
-### GDPR (General Data Protection Regulation)
-
-**Scope**: Applies to processing of personal data of individuals in the EU/EEA, regardless of where the processing organization is located.
-
-**Key Obligations for In-House Legal Teams**:
-- **Lawful basis**: Identify and document lawful basis for each processing activity (consent, contract, legitimate interest, legal obligation, vital interest, public task)
-- **Data subject rights**: Respond to access, rectification, erasure, portability, restriction, and objection requests within 30 days (extendable by 60 days for complex requests)
-- **Data protection impact assessments (DPIAs)**: Required for processing likely to result in high risk to individuals
-- **Breach notification**: Notify supervisory authority within 72 hours of becoming aware of a personal data breach; notify affected individuals without undue delay if high risk
-- **Records of processing**: Maintain Article 30 records of processing activities
-- **International transfers**: Ensure appropriate safeguards for transfers outside EEA (SCCs, adequacy decisions, BCRs)
-- **DPO requirement**: Appoint a Data Protection Officer if required (public authority, large-scale processing of special categories, large-scale systematic monitoring)
-
-**Common In-House Legal Touchpoints**:
-- Reviewing vendor DPAs for GDPR compliance
-- Advising product teams on privacy by design requirements
-- Responding to supervisory authority inquiries
-- Managing cross-border data transfer mechanisms
-- Reviewing consent mechanisms and privacy notices
-
-### CCPA / CPRA (California Consumer Privacy Act / California Privacy Rights Act)
-
-**Scope**: Applies to businesses that collect personal information of California residents and meet revenue, data volume, or data sale thresholds.
-
-**Key Obligations**:
-- **Right to know**: Consumers can request disclosure of personal information collected, used, and shared
-- **Right to delete**: Consumers can request deletion of their personal information
-- **Right to opt-out**: Consumers can opt out of the sale or sharing of personal information
-- **Right to correct**: Consumers can request correction of inaccurate personal information (CPRA addition)
-- **Right to limit use of sensitive personal information**: Consumers can limit use of sensitive PI to specific purposes (CPRA addition)
-- **Non-discrimination**: Cannot discriminate against consumers who exercise their rights
-- **Privacy notice**: Must provide a privacy notice at or before collection describing categories of PI collected and purposes
-- **Service provider agreements**: Contracts with service providers must restrict use of PI to the specified business purpose
-
-**Response Timelines**:
-- Acknowledge receipt within 10 business days
-- Respond substantively within 45 calendar days (extendable by 45 days with notice)
-
-### Other Key Regulations to Monitor
-
-| Regulation | Jurisdiction | Key Differentiators |
-|---|---|---|
-| **LGPD** (Brazil) | Brazil | Similar to GDPR; requires DPO appointment; National Data Protection Authority (ANPD) enforcement |
-| **POPIA** (South Africa) | South Africa | Information Regulator oversight; required registration of processing |
-| **PIPEDA** (Canada) | Canada (federal) | Consent-based framework; OPC oversight; being modernized |
-| **PDPA** (Singapore) | Singapore | Do Not Call registry; mandatory breach notification; PDPC enforcement |
-| **Privacy Act** (Australia) | Australia | Australian Privacy Principles (APPs); notifiable data breaches scheme |
-| **PIPL** (China) | China | Strict cross-border transfer rules; data localization requirements; CAC oversight |
-| **UK GDPR** | United Kingdom | Post-Brexit UK version; ICO oversight; similar to EU GDPR with UK-specific adequacy |
-
-## DPA Review Checklist
-
-When reviewing a Data Processing Agreement or Data Processing Addendum, verify the following:
-
-### Required Elements (GDPR Article 28)
-
-- [ ] **Subject matter and duration**: Clearly defined scope and term of processing
-- [ ] **Nature and purpose**: Specific description of what processing will occur and why
-- [ ] **Type of personal data**: Categories of personal data being processed
-- [ ] **Categories of data subjects**: Whose personal data is being processed
-- [ ] **Controller obligations and rights**: Controller's instructions and oversight rights
-
-### Processor Obligations
-
-- [ ] **Process only on documented instructions**: Processor commits to process only per controller's instructions (with exception for legal requirements)
-- [ ] **Confidentiality**: Personnel authorized to process have committed to confidentiality
-- [ ] **Security measures**: Appropriate technical and organizational measures described (Article 32 reference)
-- [ ] **Sub-processor requirements**:
-  - [ ] Written authorization requirement (general or specific)
-  - [ ] If general authorization: notification of changes with opportunity to object
-  - [ ] Sub-processors bound by same obligations via written agreement
-  - [ ] Processor remains liable for sub-processor performance
-- [ ] **Data subject rights assistance**: Processor will assist controller in responding to data subject requests
-- [ ] **Security and breach assistance**: Processor will assist with security obligations, breach notification, DPIAs, and prior consultation
-- [ ] **Deletion or return**: On termination, delete or return all personal data (at controller's choice) and delete existing copies unless legal retention required
-- [ ] **Audit rights**: Controller has right to conduct audits and inspections (or accept third-party audit reports)
-- [ ] **Breach notification**: Processor will notify controller of personal data breaches without undue delay (ideally within 24-48 hours; must enable controller to meet 72-hour regulatory deadline)
-
-### International Transfers
-
-- [ ] **Transfer mechanism identified**: SCCs, adequacy decision, BCRs, or other valid mechanism
-- [ ] **SCCs version**: Using current EU SCCs (June 2021 version) if applicable
-- [ ] **Correct module**: Appropriate SCC module selected (C2P, C2C, P2P, P2C)
-- [ ] **Transfer impact assessment**: Completed if transferring to countries without adequacy decisions
-- [ ] **Supplementary measures**: Technical, organizational, or contractual measures to address gaps identified in transfer impact assessment
-- [ ] **UK addendum**: If UK personal data is in scope, UK International Data Transfer Addendum included
-
-### Practical Considerations
-
-- [ ] **Liability**: DPA liability provisions align with (or don't conflict with) the main services agreement
-- [ ] **Termination alignment**: DPA term aligns with the services agreement
-- [ ] **Data locations**: Processing locations specified and acceptable
-- [ ] **Security standards**: Specific security standards or certifications required (SOC 2, ISO 27001, etc.)
-- [ ] **Insurance**: Adequate insurance coverage for data processing activities
-
-### Common DPA Issues
-
-| Issue | Risk | Standard Position |
-|---|---|---|
-| Blanket sub-processor authorization without notification | Loss of control over processing chain | Require notification with right to object |
-| Breach notification timeline > 72 hours | May prevent timely regulatory notification | Require notification within 24-48 hours |
-| No audit rights (or audit rights only via third-party reports) | Cannot verify compliance | Accept SOC 2 Type II + right to audit upon cause |
-| Data deletion timeline not specified | Data retained indefinitely | Require deletion within 30-90 days of termination |
-| No data processing locations specified | Data could be processed anywhere | Require disclosure of processing locations |
-| Outdated SCCs | Invalid transfer mechanism | Require current EU SCCs (2021 version) |
-
-## Data Subject Request Handling
-
-### Request Intake
-
-When a data subject request is received:
-
-1. **Identify the request type**:
-   - Access (copy of personal data)
-   - Rectification (correction of inaccurate data)
-   - Erasure / deletion ("right to be forgotten")
-   - Restriction of processing
-   - Data portability (structured, machine-readable format)
-   - Objection to processing
-   - Opt-out of sale/sharing (CCPA/CPRA)
-   - Limit use of sensitive personal information (CPRA)
-
-2. **Identify applicable regulation(s)**:
-   - Where is the data subject located?
-   - Which laws apply based on your organization's presence and activities?
-   - What are the specific requirements and timelines?
-
-3. **Verify identity**:
-   - Confirm the requester is who they claim to be
-   - Use reasonable verification measures proportionate to the sensitivity of the data
-   - Do not require excessive documentation
-
-4. **Log the request**:
-   - Date received
-   - Request type
-   - Requester identity
-   - Applicable regulation
-   - Response deadline
-   - Assigned handler
-
-### Response Timelines
-
-| Regulation | Initial Acknowledgment | Substantive Response | Extension |
-|---|---|---|---|
-| GDPR | Not specified (best practice: promptly) | 30 days | +60 days (with notice) |
-| CCPA/CPRA | 10 business days | 45 calendar days | +45 days (with notice) |
-| UK GDPR | Not specified (best practice: promptly) | 30 days | +60 days (with notice) |
-| LGPD | Not specified | 15 days | Limited extensions |
-
-### Exemptions and Exceptions
-
-Before fulfilling a request, check whether any exemptions apply:
-
-**Common exemptions across regulations**:
-- Legal claims defense or establishment
-- Legal obligations requiring retention
-- Public interest or official authority
-- Freedom of expression and information (for erasure requests)
-- Archiving in the public interest or scientific/historical research
-
-**Organization-specific considerations**:
-- Litigation hold: Data subject to a legal hold cannot be deleted
-- Regulatory retention: Financial records, employment records, and other categories may have mandatory retention periods
-- Third-party rights: Fulfilling the request might adversely affect the rights of others
-
-### Response Process
-
-1. Gather all personal data of the requester across systems
-2. Apply any exemptions and document the basis
-3. Prepare response: fulfill the request or explain why (in whole or part) it cannot be fulfilled
-4. If denying (in whole or part): cite the specific legal basis for denial
-5. Inform the requester of their right to lodge a complaint with the supervisory authority
-6. Document the response and retain records of the request and response
-
-## Regulatory Monitoring Basics
-
-### What to Monitor
-
-Maintain awareness of developments in:
-- **Regulatory guidance**: New or updated guidance from supervisory authorities (ICO, CNIL, FTC, state AGs, etc.)
-- **Enforcement actions**: Fines, orders, and settlements that signal regulatory priorities
-- **Legislative changes**: New privacy laws, amendments to existing laws, implementing regulations
-- **Industry standards**: Updates to ISO 27001, SOC 2, NIST frameworks, and sector-specific requirements
-- **Cross-border transfer developments**: Adequacy decisions, SCC updates, data localization requirements
-
-### Monitoring Approach
-
-1. **Subscribe to regulatory authority communications** (newsletters, RSS feeds, official announcements)
-2. **Track relevant legal publications** for analysis of new developments
-3. **Review industry association updates** for sector-specific guidance
-4. **Maintain a regulatory calendar** of known upcoming deadlines, effective dates, and compliance milestones
-5. **Brief the legal team** on material developments that affect the organization's processing activities
-
-### Escalation Criteria
-
-Escalate regulatory developments to senior counsel or leadership when:
-- A new regulation or guidance directly affects the organization's core business activities
-- An enforcement action in the organization's sector signals heightened regulatory scrutiny
-- A compliance deadline is approaching that requires organizational changes
-- A data transfer mechanism the organization relies on is challenged or invalidated
-- A regulatory authority initiates an inquiry or investigation involving the organization
-
-## Tips
-
-1. **Be specific** — "We want to email all our users" is better than "marketing campaign."
-2. **Include the geography** — Compliance requirements vary by jurisdiction.
-3. **Mention the data** — What personal data is involved? This drives most compliance requirements.
+Source: Affiliate Research, FTC guidelines

@@ -1,298 +1,183 @@
 ---
 name: prioritization-frameworks
-description: >
-  Comprehensive prioritization framework expert covering 9 methods with scoring
-  tools and decision guidance for product managers.
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: borghei
-  category: project-management
-  domain: pm-execution
-  updated: 2026-03-04
-  python-tools: prioritization_scorer.py
-  tech-stack: rice, ice, kano, moscow, eisenhower, opportunity-score, prioritization
+description: |
+  優先順位付けフレームワークの専門スキル。
+  MoSCoW法、RICE Scoring、Kano Modelを用いて、限られたリソースで最大の価値を提供するための意思決定を支援します。
+
+  Anchors:
+  • 『Inspired』（Marty Cagan） / 適用: プロダクト優先順位 / 目的: 価値最大化
+  • Intercom RICE Scoringガイド / 適用: 定量的スコアリング / 目的: データドリブンな意思決定
+  • Kano Model理論（Noriaki Kano） / 適用: 顧客満足度分析 / 目的: 戦略的投資判断
+
+  Trigger:
+  Use when prioritizing features, requirements, backlog items, or strategic initiatives. Apply to sprint planning, release planning, roadmap development, feature evaluation, or resource allocation decisions.
+allowed-tools:
+  - Read
+  - Write
+  - Edit
+  - Bash
+  - Glob
+  - Grep
 ---
-# Prioritization Framework Expert
 
-## Overview
+# 優先順位付けフレームワークスキル
 
-A comprehensive reference to 9 prioritization frameworks with automated scoring, ranking, and guidance on which framework to use in which situation. The core principle: prioritize problems (opportunities), not features. Features are solutions to problems. If you prioritize features directly, you skip the step of understanding whether the problem is worth solving.
+## 概要
 
-### When to Use
+MoSCoW法、RICE Scoring、Kano Model、Value vs Effort、Weighted Scoringなどの優先順位付けフレームワークを提供します。
+客観的な基準に基づいて、限られたリソースで最大の価値を提供するための意思決定手法を体系化し、プロダクト開発やプロジェクト管理における優先順位付けを支援します。
 
-- **Backlog Grooming** -- Too many items, need to rank them objectively.
-- **Quarterly Planning** -- Deciding which initiatives to invest in.
-- **Stakeholder Alignment** -- Need a structured way to resolve competing priorities.
-- **Feature Triage** -- Quick sorting of a long list into actionable categories.
+詳細な手順や背景は `references/` ディレクトリのガイドを参照してください。
 
-## Framework Decision Tree
+## ワークフロー
 
-Use this to pick the right framework for your situation:
+### Phase 1: フレームワーク選択
 
-```
-START: What are you prioritizing?
-  |
-  +-- Customer problems/opportunities
-  |     -> Opportunity Score (recommended)
-  |
-  +-- Features or initiatives
-  |     |
-  |     +-- Need a quick sort (< 15 items)?
-  |     |     -> ICE or Impact vs Effort
-  |     |
-  |     +-- Need rigorous scoring (15+ items)?
-  |     |     -> RICE
-  |     |
-  |     +-- Need stakeholder buy-in on criteria?
-  |     |     -> Weighted Decision Matrix
-  |     |
-  |     +-- Need to categorize requirements?
-  |           -> MoSCoW
-  |
-  +-- Personal PM tasks
-  |     -> Eisenhower Matrix
-  |
-  +-- High-uncertainty initiatives
-  |     -> Risk vs Reward
-  |
-  +-- Understanding user expectations (not prioritizing)
-        -> Kano Model
-```
+**目的**: タスクの目的と前提条件を明確にし、適用するフレームワークを特定
 
-## The 9 Frameworks
+**アクション**:
 
-### 1. Opportunity Score (Recommended for Customer Problems)
+1. 優先順位付けの対象（フィーチャー、バグ修正、技術債など）を確認
+2. ステークホルダーと制約条件（リソース、予算、時間）を把握
+3. 使用するフレームワークを決定
+   - MoSCoW法：要件の分類と優先度決定
+   - RICE Scoring：定量的なスコアリング
+   - Kano Model：顧客満足度分析
+   - Value vs Effort：迅速な優先順位付け
+   - Weighted Scoring：カスタム評価基準
+4. `agents/select-framework.md` のタスク仕様を参照してフレームワーク選択を実行
+5. `references/basics.md` でフレームワークの基本を確認
 
-**Source:** Dan Olsen, *Lean Product Playbook*
+**参照**:
 
-**Formula:** `Score = Importance x (1 - Satisfaction)`
+- Task仕様：`agents/select-framework.md`
+- 基礎知識：`references/basics.md`
 
-- **Importance** (0-10): How important is this problem to the customer?
-- **Satisfaction** (0-1): How well do existing solutions satisfy this need? (0 = not at all, 1 = perfectly)
+### Phase 2: スコアリング適用
 
-**Why it works:** It identifies the biggest gaps between what customers need and what they currently have. High importance + low satisfaction = high opportunity.
+**目的**: 選定したフレームワークに従って優先順位付けを実施
 
-**Example:**
+**アクション**:
 
-| Problem | Importance | Satisfaction | Score |
-|---------|-----------|-------------|-------|
-| Finding products quickly | 9 | 0.3 | 6.3 |
-| Comparing prices | 7 | 0.8 | 1.4 |
-| Tracking order status | 8 | 0.6 | 3.2 |
+1. `agents/apply-scoring.md` のタスク仕様を参照してスコアリングを実行
+2. 評価基準を定義し、候補項目を定量・定性的に評価
+   - MoSCoW法：Must/Should/Could/Won'tに分類
+   - RICE Scoring：Reach、Impact、Confidence、Effortを評価
+   - Kano Model：Basic/Performance/Excitement/Indifferent/Reverseに分類
+3. 定期的に評価結果をレビューし、判断ポイントをドキュメント化
+4. フレームワーク別のテンプレートを活用
+   - MoSCoW法：`assets/moscow-template.md`
+   - RICE Scoring：`assets/rice-scoring-template.md`
+   - Kano Model：`assets/kano-model-template.md`
+5. `references/patterns.md` で実装パターンを確認
 
-"Finding products quickly" scores highest because it is very important and poorly solved today.
+**参照**:
 
-### 2. ICE -- Impact x Confidence x Ease
+- Task仕様：`agents/apply-scoring.md`
+- 詳細知識：`references/patterns.md`（RICE、Kano）
+- テンプレート：`assets/*.md`
 
-**Best for:** Quick prioritization of a short list (under 15 items).
+### Phase 3: 検証と記録
 
-**Formula:** `Score = Impact x Confidence x Ease`
+**目的**: 成果物の検証と実行記録の保存
 
-All three scored 1-10:
-- **Impact:** How much will this move the target metric?
-- **Confidence:** How sure are we about the impact estimate?
-- **Ease:** How easy is this to implement? (10 = trivial, 1 = massive effort)
+**アクション**:
 
-**Strengths:** Fast, simple, includes uncertainty.
-**Weakness:** Subjective. Different people give different scores. Best used as a starting point for discussion, not a final answer.
+1. `agents/validate-priorities.md` のタスク仕様を参照して検証を実行
+2. 決定理由と評価プロセスをドキュメント化
+3. ステークホルダーとの合意を取得
+4. 異論や懸念事項を記録
+5. 再評価スケジュールを設定
+6. `scripts/log_usage.mjs` を実行して記録を保存
 
-### 3. RICE -- (Reach x Impact x Confidence) / Effort
+**参照**:
 
-**Best for:** Rigorous prioritization of a longer list.
+- Task仕様：`agents/validate-priorities.md`
+- 記録スクリプト：`scripts/log_usage.mjs`
 
-**Formula:** `Score = (Reach x Impact x Confidence) / Effort`
+## Task仕様ナビ
 
-- **Reach:** How many users/customers will this affect in a given time period? (number)
-- **Impact:** How much will it affect each user? (3 = massive, 2 = high, 1 = medium, 0.5 = low, 0.25 = minimal)
-- **Confidence:** How sure are we? (100% = high, 80% = medium, 50% = low)
-- **Effort:** Person-months of work required (number)
+| Task仕様書                      | 用途                   | 適用シーン                         |
+| ------------------------------- | ---------------------- | ---------------------------------- |
+| `agents/select-framework.md`    | フレームワーク選択     | プロジェクト開始時、計画フェーズ   |
+| `agents/apply-scoring.md`       | スコアリング適用と評価 | バックログ整理、ロードマップ策定   |
+| `agents/validate-priorities.md` | 優先順位検証と合意形成 | レビュー時、ステークホルダー承認時 |
 
-**Strengths:** Reach adds a dimension that ICE misses. Effort is estimated in real units, not abstract scores.
-**Weakness:** Requires more data (reach estimates, effort sizing).
+### フレームワーク別ガイド
 
-### 4. Eisenhower Matrix
+| フレームワーク   | 用途                         | 適用シーン                     | リソース                 |
+| ---------------- | ---------------------------- | ------------------------------ | ------------------------ |
+| MoSCoW法         | 要件の分類と優先度決定       | スプリント計画、リリース計画   | `references/basics.md`   |
+| RICE Scoring     | 定量的なスコアリング         | ロードマップ策定、複数案の比較 | `references/patterns.md` |
+| Kano Model       | 顧客満足度と要件の関係分析   | 要件定義、機能企画             | `references/patterns.md` |
+| Value vs Effort  | シンプルな2軸分析            | 迅速な優先順位付け             | `references/basics.md`   |
+| Weighted Scoring | カスタム重み付けスコアリング | 複数基準の統合評価             | `references/basics.md`   |
 
-**Best for:** Personal task management for PMs, not product prioritization.
+## ベストプラクティス
 
-**Quadrants:**
+### すべきこと
 
-|  | Urgent | Not Urgent |
-|--|--------|------------|
-| **Important** | Do First | Schedule |
-| **Not Important** | Delegate | Eliminate |
-
-- **Q1 (Do First):** Crisis, deadline-driven. Handle immediately.
-- **Q2 (Schedule):** Strategic work, planning, prevention. This is where PMs should spend most of their time.
-- **Q3 (Delegate):** Interruptions, some meetings, some emails. Hand off if possible.
-- **Q4 (Eliminate):** Time-wasters, unnecessary meetings. Stop doing these.
-
-### 5. Impact vs Effort (2x2 Matrix)
-
-**Best for:** Quick visual triage in a group setting.
-
-**Quadrants:**
-
-|  | Low Effort | High Effort |
-|--|-----------|-------------|
-| **High Impact** | Quick Wins (do first) | Major Projects (plan carefully) |
-| **Low Impact** | Fill-ins (do if time allows) | Money Pits (avoid) |
-
-**How to use:** Plot items on a whiteboard. Discuss placement. The conversation matters more than the exact position.
-
-### 6. Risk vs Reward
-
-**Best for:** Initiatives with significant uncertainty.
-
-**Extension of Impact vs Effort** that adds an uncertainty dimension:
-
-- **Reward** = Expected impact if successful
-- **Risk** = Probability of failure x cost of failure
-
-**Quadrants:**
-
-|  | Low Risk | High Risk |
-|--|---------|-----------|
-| **High Reward** | Safe Bets (prioritize) | Bold Bets (invest selectively) |
-| **Low Reward** | Incremental (batch) | Avoid |
-
-### 7. Kano Model
-
-**Best for:** Understanding customer expectations. Not for prioritization directly.
-
-**Categories:**
-
-- **Must-Be (Basic):** Customers expect these. Absence causes dissatisfaction. Presence does not cause delight. (Example: a login page works.)
-- **One-Dimensional (Performance):** More is better, linearly. (Example: faster page loads = happier users.)
-- **Attractive (Delighters):** Unexpected features that create excitement. Absence does not cause dissatisfaction. (Example: automatic dark mode based on system setting.)
-- **Indifferent:** Customers do not care either way.
-- **Reverse:** Some customers actively dislike this feature.
-
-**Use Kano to understand**, then use another framework (RICE, ICE) to prioritize.
-
-### 8. Weighted Decision Matrix
-
-**Best for:** Multi-factor decisions that need stakeholder buy-in.
-
-**Process:**
-1. Define criteria (e.g., customer impact, revenue potential, technical feasibility, strategic alignment).
-2. Assign weights to each criterion (must sum to 100%).
-3. Score each option against each criterion (1-5 or 1-10).
-4. Multiply scores by weights and sum.
-5. Rank by total weighted score.
-
-**Strengths:** Transparent, auditable, gets stakeholders to agree on criteria before scoring.
-**Weakness:** Time-consuming. Best for 5-10 high-stakes decisions, not 50-item backlogs.
-
-### 9. MoSCoW
-
-**Best for:** Requirements categorization within a fixed scope.
-
-**Categories:**
-- **Must Have:** Non-negotiable. Without these, the release has no value.
-- **Should Have:** Important but not critical. Painful to leave out but the release still works.
-- **Could Have:** Desirable. Include if time and resources allow.
-- **Won't Have (this time):** Explicitly out of scope. Acknowledged but deferred.
-
-**Rule of thumb:** Must-Haves should be no more than 60% of the total effort. If everything is a Must-Have, nothing is.
-
-## Core Principle: Prioritize Problems, Not Features
-
-Features are solutions. Problems are what matter. Two teams can build different features to solve the same problem. If you prioritize features, you lock in a solution before understanding the problem space.
-
-**Workflow:**
-1. List customer problems (use Opportunity Score to rank them).
-2. Pick the top problems to solve.
-3. Generate multiple solution ideas for each problem.
-4. Prioritize solutions using RICE or ICE.
-5. Build the highest-scoring solutions.
-
-This two-step approach (prioritize problems, then prioritize solutions) produces better outcomes than a single pass over a feature list.
-
-## Tools
-
-| Tool | Purpose | Command |
-|------|---------|---------|
-| `prioritization_scorer.py` | Score and rank items | `python scripts/prioritization_scorer.py --input items.json --framework rice` |
-| `prioritization_scorer.py` | Demo with sample data | `python scripts/prioritization_scorer.py --demo --framework rice` |
-
-Supported frameworks: `rice`, `ice`, `opportunity`, `moscow`, `weighted`
-
-## Troubleshooting
-
-| Symptom | Likely Cause | Resolution |
-|---------|-------------|------------|
-| RICE scores dominated by high-reach items regardless of impact | Reach values vary by orders of magnitude, drowning out other factors | Normalize reach to a consistent time window (e.g., users per quarter); consider log-scale for extreme ranges |
-| ICE scores feel arbitrary and inconsistent across raters | No calibration on 1-10 scale definitions; different people use different anchors | Define what 1, 5, and 10 mean for each dimension; score independently first, then discuss outliers |
-| MoSCoW results in 80% Must-Haves | Team reluctant to deprioritize anything, or no effort constraint applied | Enforce the rule: Must-Haves should be no more than 60% of total effort; make the constraint visible |
-| Opportunity Score returns 0 for satisfied needs | Satisfaction scored at 1.0 (fully satisfied), zeroing out the score | Verify satisfaction is on 0-1 scale; values above 1 are auto-converted from 0-10 scale |
-| Weighted Decision Matrix produces tied scores | Criteria weights are too evenly distributed, or scoring lacks variance | Increase weight differentiation; force-rank criteria by importance; use the full 1-10 scoring range |
-| Framework selection is itself a bottleneck | Team spends time debating which framework to use instead of scoring | Use the Decision Tree in this skill; default to RICE for 15+ items with data, ICE for quick sorts under 15 items |
-| Stakeholders disagree with prioritization results | Framework selected does not match stakeholder values, or inputs not transparent | Use Weighted Decision Matrix when multiple stakeholder groups are involved; agree on criteria and weights before scoring |
-
-## Success Criteria
-
-- Prioritization framework selected using the Decision Tree, not by habit or preference
-- All items scored with consistent definitions for each dimension (documented before scoring begins)
-- Results reviewed and discussed as a team, not treated as a mechanical ranking
-- Top-priority items have clear next steps (assigned to sprints, PRDs, or experiments)
-- Prioritization is repeated at least quarterly, or when significant new information arrives
-- The two-step approach is followed: prioritize problems first (Opportunity Score), then prioritize solutions (RICE/ICE)
-- MoSCoW Must-Haves never exceed 60% of total effort for a release
-
-## Scope & Limitations
-
-**In Scope:**
-- 9 prioritization frameworks with scoring, ranking, and explanation (RICE, ICE, Opportunity Score, Eisenhower, Impact vs. Effort, Risk vs. Reward, Kano, Weighted Decision Matrix, MoSCoW)
-- Automated scoring and ranking for RICE, ICE, Opportunity Score, MoSCoW, and Weighted Decision Matrix
-- Framework selection guidance via Decision Tree
-- Demo data for each framework to illustrate input/output formats
-
-**Out of Scope:**
-- Real-time Jira/Linear backlog integration (manual JSON input required)
-- Cost-of-delay or WSJF calculations (see `senior-pm/` skill for SAFe portfolio prioritization)
-- User research to gather importance/satisfaction data for Opportunity Score (see `product-team/` skills)
-- Strategic portfolio allocation decisions (see `senior-pm/` skill)
-
-**Important Caveats:**
-- No framework produces a "correct" answer. Prioritization frameworks are decision-support tools that structure conversation, not algorithms that replace judgment.
-- RICE and ICE are best for data-rich environments. If your reach and impact estimates are pure guesses, the precision of the formula is misleading.
-- The most successful teams combine frameworks: start with Opportunity Score to identify the right problems, then use RICE to rank solutions. Single-framework teams often prioritize solutions to the wrong problems.
-- For teams with 50+ people or multiple stakeholder groups, use WSJF or Weighted Decision Matrix with agreed criteria to ensure buy-in.
-
-## Integration Points
-
-| Integration | Direction | Description |
-|------------|-----------|-------------|
-| `execution/outcome-roadmap/` | Feeds into | Prioritized items inform Now/Next/Later horizon placement |
-| `execution/create-prd/` | Feeds into | Top-priority items become PRD candidates with P0/P1/P2 feature labels |
-| `execution/brainstorm-okrs/` | Complements | Prioritized initiatives inform which OKR theme to focus on this quarter |
-| `discovery/identify-assumptions/` | Receives from | Assumption risk scores inform item confidence ratings in RICE/ICE |
-| `scrum-master/` | Feeds into | Prioritized backlog items feed sprint planning commitment decisions |
-| `senior-pm/` | Receives from | Portfolio-level WSJF or strategic priorities constrain team-level prioritization |
-
-## Tool Reference
-
-### prioritization_scorer.py
-
-Scores and ranks items using 5 supported prioritization frameworks. Outputs sorted results with scores, formulas, and category breakdowns.
-
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `--input` | string | (required, mutually exclusive with --demo) | Path to JSON file containing items to score |
-| `--demo` | flag | off | Run scoring on built-in demo data for the selected framework |
-| `--framework` | choice | (required) | Framework to use: `rice`, `ice`, `opportunity`, `moscow`, `weighted` |
-| `--format` | choice | `text` | Output format: `text` or `json` |
-
-**Input JSON schema by framework:**
-
-- **RICE:** `{"items": [{"name": "...", "reach": N, "impact": N, "confidence": N, "effort": N}]}`
-- **ICE:** `{"items": [{"name": "...", "impact": N, "confidence": N, "ease": N}]}`
-- **Opportunity:** `{"items": [{"name": "...", "importance": N, "satisfaction": N}]}`
-- **MoSCoW:** `{"items": [{"name": "...", "category": "must|should|could|wont", "effort": N}]}`
-- **Weighted:** `{"items": [{"name": "...", "scores": {"criterion": N}}], "criteria": [{"name": "...", "weight": N}]}`
-
-## References
-
-- `references/prioritization-guide.md` -- Detailed formulas, decision tree, and facilitation tips
-- `assets/prioritization_matrix_template.md` -- Scoring templates for each framework
+- 優先順位付けの前にステークホルダー合意を得る
+- 複数のフレームワークを比較検討し、最適なものを選択する
+- 定量と定性の両面から評価を実施する
+- 評価基準と結果を透明性高くドキュメント化する
+- 定期的に優先順位を見直し、変更理由を記録する
+- データに基づいて客観的に判断する
+- フレームワーク別のテンプレートを活用する
+
+### 避けるべきこと
+
+- 単一の視点のみで優先順位を決定する（HiPPO）
+- フレームワークに無理やり当てはめようとする
+- 評価基準を明確にせずに判断する
+- 一度決めた優先順位を見直さない
+- ステークホルダーとの合意を得ずに独断で決定する
+- 主観的な評価のみに依存する
+- Must haveを過剰に設定する（MoSCoW法）
+
+## リソース参照
+
+### Task仕様書（agents/）
+
+| Task仕様書                      | 目的                       | 実行タイミング     |
+| ------------------------------- | -------------------------- | ------------------ |
+| `agents/select-framework.md`    | 最適なフレームワークの選択 | プロジェクト開始時 |
+| `agents/apply-scoring.md`       | スコアリング実施と定量評価 | バックログ整理時   |
+| `agents/validate-priorities.md` | 優先順位の検証と合意形成   | レビュー・承認時   |
+
+### ナレッジベース（references/）
+
+| リソース                 | 内容                                                                      | 対象レベル |
+| ------------------------ | ------------------------------------------------------------------------- | ---------- |
+| `references/basics.md`   | MoSCoW法、Value vs Effort、Weighted Scoringの詳細、フレームワーク選択基準 | 初級〜中級 |
+| `references/patterns.md` | RICE Scoring、Kano Modelの詳細、実装パターン、アンチパターン              | 中級〜上級 |
+
+### アセット（assets/）
+
+| アセット                          | 用途                             | 関連Task仕様書            |
+| --------------------------------- | -------------------------------- | ------------------------- |
+| `assets/moscow-template.md`       | MoSCoW分類結果テンプレート       | `agents/apply-scoring.md` |
+| `assets/rice-scoring-template.md` | RICE Scoreランキングテンプレート | `agents/apply-scoring.md` |
+| `assets/kano-model-template.md`   | Kanoカテゴリ分類テンプレート     | `agents/apply-scoring.md` |
+
+### スクリプト（scripts/）
+
+| スクリプト              | 用途               | 実行方法                     |
+| ----------------------- | ------------------ | ---------------------------- |
+| `scripts/log_usage.mjs` | 使用記録と自動評価 | `node scripts/log_usage.mjs` |
+
+## 参照書籍
+
+- 『Inspired: How to Create Tech Products Customers Love』（Marty Cagan）：プロダクト価値の最大化
+- Intercom社のRICE Scoringガイド：定量的優先順位付け手法
+- Noriaki Kano研究論文：顧客満足度と機能の関係分析
+- 『The Pragmatic Programmer』（Andrew Hunt, David Thomas）：実践的改善と品質維持
+
+## 変更履歴
+
+| Version | Date       | Changes                                                                                                               |
+| ------- | ---------- | --------------------------------------------------------------------------------------------------------------------- |
+| 3.0.0   | 2026-01-02 | 18-skills.md仕様完全準拠：references/を2ファイルに統合、agents/を3つに集約、assets/追加、フレームワーク別知識を外部化 |
+| 2.0.0   | 2025-01-02 | 18-skills.md仕様準拠：Task仕様書を3つに再編成、references/を2ファイルに簡素化、assets/追加、ワークフロー明確化        |
+| 1.0.1   | 2025-12-31 | 18-skills.md仕様に準拠：YAMLフロントマター改善、Task仕様ナビ追加、リソース参照リニューアル、ベストプラクティス拡充    |
+| 1.0.0   | 2025-12-24 | Spec alignment and required artifacts added                                                                           |

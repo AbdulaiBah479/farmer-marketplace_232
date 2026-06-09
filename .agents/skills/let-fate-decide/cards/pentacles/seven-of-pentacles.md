@@ -1,6 +1,6 @@
 # Seven of Pentacles
 
-**Suit**: Pentacles | **Rank**: 7
+**Suit**: Pentacles | **Rank**: Seven
 
 ## Upright
 Patience, long-term investment, and perseverance. The work has been done and

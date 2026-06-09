@@ -1,286 +1,229 @@
 ---
 name: senior-data-engineer
-description: >
-  Use when designing data architectures, building batch or streaming pipelines,
-  implementing data quality frameworks, optimizing ETL/ELT performance, working
-  with Airflow/dbt/Spark/Kafka, or troubleshooting data pipeline failures.
-  Provides pipeline generation, data quality validation, and SQL/Spark
-  performance optimization.
-license: MIT + Commons Clause
-metadata:
-  version: 1.1.0
-  author: borghei
-  category: engineering
-  domain: data-engineering
-  updated: 2026-04-02
-  tags: [airflow, spark, data-pipelines, warehousing, etl]
-  python-tools: pipeline_orchestrator.py, data_quality_validator.py, etl_performance_optimizer.py
-  tech-stack: python, sql, spark, airflow, dbt, kafka
+description: World-class data engineering skill for building scalable data pipelines, ETL/ELT systems, and data infrastructure. Expertise in Python, SQL, Spark, Airflow, dbt, Kafka, and modern data stack. Includes data modeling, pipeline orchestration, data quality, and DataOps. Use when designing data architectures, building data pipelines, optimizing data workflows, or implementing data governance.
 ---
+
 # Senior Data Engineer
 
-The agent generates pipeline configurations (Airflow, Prefect, Dagster), validates data quality with profiling and anomaly detection, and optimizes SQL/Spark performance with actionable recommendations.
-
----
+World-class senior data engineer skill for production-grade AI/ML/Data systems.
 
 ## Quick Start
 
-```bash
-# Generate an Airflow DAG for incremental PostgreSQL -> Snowflake
-python scripts/pipeline_orchestrator.py generate \
-  --type airflow --source postgres --destination snowflake \
-  --tables orders,customers --mode incremental --schedule "0 5 * * *"
-
-# Validate data quality against a schema
-python scripts/data_quality_validator.py validate data.csv \
-  --schema schema.json --detect-anomalies --json
-
-# Profile a dataset
-python scripts/data_quality_validator.py profile data.csv --json
-
-# Optimize a slow SQL query
-python scripts/etl_performance_optimizer.py analyze-sql query.sql \
-  --warehouse snowflake --json
-
-# Estimate query cost
-python scripts/etl_performance_optimizer.py estimate-cost query.sql \
-  --warehouse bigquery --stats data_stats.json --json
-```
-
-## Tools Overview
-
-| Tool | Subcommands | Purpose |
-|------|-------------|---------|
-| `pipeline_orchestrator.py` | `generate`, `validate`, `template` | Generate Airflow/Prefect/Dagster pipeline code, validate DAGs |
-| `data_quality_validator.py` | `validate`, `profile`, `generate-suite`, `contract`, `schema` | Schema validation, profiling, anomaly detection, Great Expectations |
-| `etl_performance_optimizer.py` | `analyze-sql`, `analyze-spark`, `optimize-partition`, `estimate-cost`, `template` | SQL/Spark optimization, partition strategy, cost estimation |
-
-All subcommands support `--json` for machine-readable output and `--output` for file writing.
-
----
-
-## Workflow 1: Batch ETL Pipeline (PostgreSQL -> dbt -> Snowflake)
-
-**Step 1 -- Generate extraction config.**
+### Main Capabilities
 
 ```bash
-python scripts/pipeline_orchestrator.py generate \
-  --type airflow --source postgres --tables orders,customers,products \
-  --mode incremental --watermark updated_at --output dags/extract_source.py
+# Core Tool 1
+python scripts/pipeline_orchestrator.py --input data/ --output results/
+
+# Core Tool 2
+python scripts/data_quality_validator.py --target project/ --analyze
+
+# Core Tool 3
+python scripts/etl_performance_optimizer.py --config config.yaml --deploy
 ```
 
-**Step 2 -- Create dbt staging model.**
+## Core Expertise
 
-```sql
--- models/staging/stg_orders.sql
-WITH source AS (
-    SELECT * FROM {{ source('postgres', 'orders') }}
-)
-SELECT order_id, customer_id, order_date, total_amount, status, _extracted_at
-FROM source
-WHERE order_date >= DATEADD(day, -3, CURRENT_DATE)
-```
+This skill covers world-class capabilities in:
 
-**Step 3 -- Create incremental mart model.**
+- Advanced production patterns and architectures
+- Scalable system design and implementation
+- Performance optimization at scale
+- MLOps and DataOps best practices
+- Real-time processing and inference
+- Distributed computing frameworks
+- Model deployment and monitoring
+- Security and compliance
+- Cost optimization
+- Team leadership and mentoring
 
-```sql
--- models/marts/fct_orders.sql
-{{ config(materialized='incremental', unique_key='order_id', cluster_by=['order_date']) }}
+## Tech Stack
 
-SELECT o.order_id, o.customer_id, c.customer_segment, o.order_date, o.total_amount, o.status
-FROM {{ ref('stg_orders') }} o
-LEFT JOIN {{ ref('dim_customers') }} c ON o.customer_id = c.customer_id
-{% if is_incremental() %}
-WHERE o._extracted_at > (SELECT MAX(_extracted_at) FROM {{ this }})
-{% endif %}
-```
+**Languages:** Python, SQL, R, Scala, Go
+**ML Frameworks:** PyTorch, TensorFlow, Scikit-learn, XGBoost
+**Data Tools:** Spark, Airflow, dbt, Kafka, Databricks
+**LLM Frameworks:** LangChain, LlamaIndex, DSPy
+**Deployment:** Docker, Kubernetes, AWS/GCP/Azure
+**Monitoring:** MLflow, Weights & Biases, Prometheus
+**Databases:** PostgreSQL, BigQuery, Snowflake, Pinecone
 
-**Step 4 -- Wire into Airflow DAG.**
+## Reference Documentation
 
-```python
-with DAG('daily_etl', schedule_interval='0 5 * * *', catchup=False, tags=['etl']) as dag:
-    extract = BashOperator(task_id='extract', bash_command='python scripts/extract.py --date {{ ds }}')
-    transform = BashOperator(task_id='dbt_run', bash_command='dbt run --select marts.*')
-    test = BashOperator(task_id='dbt_test', bash_command='dbt test --select marts.*')
-    extract >> transform >> test
-```
+### 1. Data Pipeline Architecture
 
-**Step 5 -- Validate.**
+Comprehensive guide available in `references/data_pipeline_architecture.md` covering:
+
+- Advanced patterns and best practices
+- Production implementation strategies
+- Performance optimization techniques
+- Scalability considerations
+- Security and compliance
+- Real-world case studies
+
+### 2. Data Modeling Patterns
+
+Complete workflow documentation in `references/data_modeling_patterns.md` including:
+
+- Step-by-step processes
+- Architecture design patterns
+- Tool integration guides
+- Performance tuning strategies
+- Troubleshooting procedures
+
+### 3. Dataops Best Practices
+
+Technical reference guide in `references/dataops_best_practices.md` with:
+
+- System design principles
+- Implementation examples
+- Configuration best practices
+- Deployment strategies
+- Monitoring and observability
+
+## Production Patterns
+
+### Pattern 1: Scalable Data Processing
+
+Enterprise-scale data processing with distributed computing:
+
+- Horizontal scaling architecture
+- Fault-tolerant design
+- Real-time and batch processing
+- Data quality validation
+- Performance monitoring
+
+### Pattern 2: ML Model Deployment
+
+Production ML system with high availability:
+
+- Model serving with low latency
+- A/B testing infrastructure
+- Feature store integration
+- Model monitoring and drift detection
+- Automated retraining pipelines
+
+### Pattern 3: Real-Time Inference
+
+High-throughput inference system:
+
+- Batching and caching strategies
+- Load balancing
+- Auto-scaling
+- Latency optimization
+- Cost optimization
+
+## Best Practices
+
+### Development
+
+- Test-driven development
+- Code reviews and pair programming
+- Documentation as code
+- Version control everything
+- Continuous integration
+
+### Production
+
+- Monitor everything critical
+- Automate deployments
+- Feature flags for releases
+- Canary deployments
+- Comprehensive logging
+
+### Team Leadership
+
+- Mentor junior engineers
+- Drive technical decisions
+- Establish coding standards
+- Foster learning culture
+- Cross-functional collaboration
+
+## Performance Targets
+
+**Latency:**
+
+- P50: < 50ms
+- P95: < 100ms
+- P99: < 200ms
+
+**Throughput:**
+
+- Requests/second: > 1000
+- Concurrent users: > 10,000
+
+**Availability:**
+
+- Uptime: 99.9%
+- Error rate: < 0.1%
+
+## Security & Compliance
+
+- Authentication & authorization
+- Data encryption (at rest & in transit)
+- PII handling and anonymization
+- GDPR/CCPA compliance
+- Regular security audits
+- Vulnerability management
+
+## Common Commands
 
 ```bash
-python scripts/data_quality_validator.py validate --table fct_orders --checks all --output report.json
+# Development
+python -m pytest tests/ -v --cov
+python -m black src/
+python -m pylint src/
+
+# Training
+python scripts/train.py --config prod.yaml
+python scripts/evaluate.py --model best.pth
+
+# Deployment
+docker build -t service:v1 .
+kubectl apply -f k8s/
+helm upgrade service ./charts/
+
+# Monitoring
+kubectl logs -f deployment/service
+python scripts/health_check.py
 ```
 
-**Validation checkpoint:** DAG runs end-to-end. Data quality report shows 0 failures on uniqueness, completeness, and freshness.
+## Resources
 
----
+- Advanced Patterns: `references/data_pipeline_architecture.md`
+- Implementation Guide: `references/data_modeling_patterns.md`
+- Technical Reference: `references/dataops_best_practices.md`
+- Automation Scripts: `scripts/` directory
 
-## Workflow 2: Real-Time Streaming (Kafka -> Spark -> Delta Lake)
+## Senior-Level Responsibilities
 
-**Step 1 -- Define event schema and Kafka topic.**
+As a world-class senior professional:
 
-```bash
-kafka-topics.sh --create --bootstrap-server localhost:9092 \
-  --topic user-events --partitions 12 --replication-factor 3 \
-  --config retention.ms=604800000
-```
+1. **Technical Leadership**
+   - Drive architectural decisions
+   - Mentor team members
+   - Establish best practices
+   - Ensure code quality
 
-**Step 2 -- Implement Spark Structured Streaming.**
+2. **Strategic Thinking**
+   - Align with business goals
+   - Evaluate trade-offs
+   - Plan for scale
+   - Manage technical debt
 
-```python
-events_df = spark.readStream.format("kafka") \
-    .option("kafka.bootstrap.servers", "localhost:9092") \
-    .option("subscribe", "user-events") \
-    .option("startingOffsets", "latest").load()
+3. **Collaboration**
+   - Work across teams
+   - Communicate effectively
+   - Build consensus
+   - Share knowledge
 
-parsed_df = events_df.select(from_json(col("value").cast("string"), schema).alias("data")).select("data.*")
+4. **Innovation**
+   - Stay current with research
+   - Experiment with new approaches
+   - Contribute to community
+   - Drive continuous improvement
 
-aggregated_df = parsed_df \
-    .withWatermark("event_timestamp", "10 minutes") \
-    .groupBy(window(col("event_timestamp"), "5 minutes"), col("event_type")) \
-    .agg(count("*").alias("event_count"), approx_count_distinct("user_id").alias("unique_users"))
-
-aggregated_df.writeStream.format("delta").outputMode("append") \
-    .option("checkpointLocation", "/checkpoints/user-events") \
-    .trigger(processingTime="1 minute").start()
-```
-
-**Step 3 -- Handle errors with dead letter queue.**
-
-```python
-def process_with_dlq(batch_df, batch_id):
-    valid_df = batch_df.filter(col("event_id").isNotNull())
-    invalid_df = batch_df.filter(col("event_id").isNull())
-    valid_df.write.format("delta").mode("append").save("/data/lake/user_events")
-    if invalid_df.count() > 0:
-        invalid_df.withColumn("error_reason", lit("missing_event_id")) \
-            .write.format("delta").mode("append").save("/data/lake/dlq/user_events")
-```
-
-**Validation checkpoint:** Consumer lag stays under threshold. DLQ table has < 0.1% of total events.
-
----
-
-## Workflow 3: Data Quality Framework
-
-**Step 1 -- Generate a Great Expectations suite from data.**
-
-```bash
-python scripts/data_quality_validator.py generate-suite data.csv --output expectations.json
-```
-
-**Step 2 -- Validate against a data contract.**
-
-```yaml
-# contracts/orders_contract.yaml
-contract:
-  name: orders_data_contract
-  version: "1.0.0"
-schema:
-  properties:
-    order_id: { type: string, format: uuid }
-    total_amount: { type: decimal, minimum: 0 }
-    status: { type: string, enum: [pending, confirmed, shipped, delivered, cancelled] }
-sla:
-  freshness: { max_delay_hours: 1 }
-  completeness: { min_percentage: 99.9 }
-  accuracy: { duplicate_tolerance: 0.01 }
-```
-
-```bash
-python scripts/data_quality_validator.py contract data.csv --contract orders_contract.yaml --json
-```
-
-**Step 3 -- Add dbt tests for ongoing validation.**
-
-```yaml
-models:
-  - name: fct_orders
-    columns:
-      - name: order_id
-        tests: [unique, not_null]
-      - name: total_amount
-        tests:
-          - not_null
-          - dbt_utils.accepted_range: { min_value: 0, max_value: 1000000 }
-```
-
-**Validation checkpoint:** Quality score >= 95%. Zero duplicates. Freshness under SLA threshold.
-
----
-
-## Architecture Decision Framework
-
-| Question | Batch | Streaming |
-|----------|-------|-----------|
-| Latency requirement | Hours to days | Seconds to minutes |
-| Processing complexity | Complex transforms, ML | Simple aggregations |
-| Cost sensitivity | More cost-effective | Higher infra cost |
-| Error handling | Easy reprocessing | Requires careful DLQ design |
-
-**Decision tree:**
-```
-Real-time insight needed?
-  Yes -> Exactly-once needed?
-    Yes -> Kafka + Flink/Spark Structured Streaming
-    No  -> Kafka + consumer groups
-  No  -> Daily volume > 1TB?
-    Yes -> Spark/Databricks
-    No  -> dbt + warehouse compute
-```
-
-| Feature | Warehouse (Snowflake/BigQuery) | Lakehouse (Delta/Iceberg) |
-|---------|-------------------------------|---------------------------|
-| Best for | BI, SQL analytics | ML, unstructured data |
-| Storage cost | Higher (proprietary) | Lower (open formats) |
-| Flexibility | Schema-on-write | Schema-on-read |
-
----
-
-## Anti-Patterns
-
-1. **Full table reload on every run** -- use incremental loads with watermark columns.
-2. **No dead letter queue** -- failed records silently dropped. Always route failures to a DLQ.
-3. **Timezone mismatch** -- normalize all timestamps to UTC at extraction.
-4. **Missing freshness checks** -- add `dbt source freshness` before transforms start.
-5. **Skipping schema drift detection** -- use `mergeSchema` option or data contracts to catch new columns.
-
----
-
-## Troubleshooting
-
-| Problem | Cause | Solution |
-|---------|-------|----------|
-| Pipeline silently produces zero rows | Timezone mismatch on watermark column | Normalize to UTC; add row-count assertion |
-| Spark shuffle 10x slower than expected | Data skew on join key | Salt the key or broadcast the smaller table |
-| Airflow shows "no tasks to run" | Circular dependency or import error | `airflow dags list-import-errors`; fix import |
-| dbt succeeds but dashboards stale | Source freshness not checked | Add `dbt source freshness` as prerequisite task |
-| Kafka consumer lag grows unbounded | Throughput < producer rate | Increase partitions, scale consumers, batch `max.poll.records` |
-| Quality validator false-positive anomalies | Z-score threshold too tight | Raise threshold or switch to IQR mode |
-
----
-
-## References
-
-| Guide | Path |
-|-------|------|
-| Pipeline Architecture | `references/data_pipeline_architecture.md` |
-| Data Modeling Patterns | `references/data_modeling_patterns.md` |
-| DataOps Best Practices | `references/dataops_best_practices.md` |
-
----
-
-## Integration Points
-
-| Skill | Integration |
-|-------|-------------|
-| `senior-data-scientist` | Feature engineering consumes curated mart data |
-| `senior-ml-engineer` | ML pipelines depend on feature store tables |
-| `senior-devops` | CI/CD for dbt, Airflow deployment, container orchestration |
-| `senior-architect` | Architecture reviews for lakehouse vs warehouse decisions |
-| `code-reviewer` | Pipeline code reviews for DAGs, dbt models, Spark jobs |
-
----
-
-**Last Updated:** April 2026
-**Version:** 1.1.0
+5. **Production Excellence**
+   - Ensure high availability
+   - Monitor proactively
+   - Optimize performance
+   - Respond to incidents

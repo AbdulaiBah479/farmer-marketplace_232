@@ -1,6 +1,12 @@
 ---
 name: task-management
-description: Simple task management using a shared TASKS.md file. Reference this when the user asks about their tasks, wants to add/complete tasks, or needs help tracking commitments.
+description: "Simple task management using a shared TASKS.md file for tracking commitments and action items."
+version: 1.0.0
+category: productivity
+last_updated: 2026-02-03
+source: https://github.com/anthropics/knowledge-work-plugins
+related_skills:
+  - memory-management
 ---
 
 # Task Management

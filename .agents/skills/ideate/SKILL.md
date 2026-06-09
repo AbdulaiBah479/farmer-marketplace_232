@@ -1,266 +1,265 @@
 ---
-name: Ideate
-description: "Evolutionary ideation engine — loop-controlled multi-cycle idea generation through 9 phases (CONSUME, DREAM at noise=0.9, DAYDREAM at noise=0.5, CONTEMPLATE at noise=0.1, STEAL cross-domain borrowing, MATE recombination via Fisher-Yates shuffle, TEST fitness scoring, EVOLVE selection, META-LEARN Lamarckian strategy adjustment). Loop Controller drives adaptive continue/pivot/stop logic with mid-cycle quality checkpoints; strategies evolve across cycles based on what worked. Produces ranked novel solution candidates with full provenance and fitness landscape. Six workflows: FullCycle (all 9 phases adaptive — default), QuickCycle (compressed CONSUME+STEAL+MATE+TEST single cycle), Dream (DREAM phase only), Steal (cross-domain transfer only), Mate (recombination only), Test (fitness evaluation only). Integrates IterativeDepth in CONTEMPLATE, RedTeam in TEST, Council optionally in MATE. NOT FOR quick single-pass brainstorming (use BeCreative). USE WHEN ideate, id8, novel ideas, generate ideas, ideation engine, evolve ideas, dream up solutions, innovate, breakthrough ideas, idea evolution, creative solutions to hard problems, multi-cycle creativity, need genuinely new approaches."
-effort: high
-context: fork
+name: ideate
+description: |
+  아이디어 탐색부터 Epic 생성까지 원스톱 워크플로우. Use when (1) 러프한 아이디어가 있을 때,
+  (2) 새 기능/프로젝트 구상 시, (3) "뭔가 만들고 싶어", (4) 가설 수립 및 검증 필요 시.
+tools: [Read, Write, Edit, Bash, AskUserQuestion]
+location: project
+triggers:
+  - 아이디어가 있는데
+  - 뭔가 만들고 싶어
+  - 이런 거 되나
+  - 새 기능 구상
+  - 프로젝트 시작하고 싶어
+  - 가설 세워보자
+  - 에픽 만들자
+  - 에픽 만들어줘
+  - 에픽 만들어
+  - epic 만들어
+  - Epic 생성해줘
 ---
 
-## Customization
+> **시스템 메시지**: `[SEMO] Skill: ideate 호출 - {아이디어 요약}`
 
-Before executing, check for user customizations at:
-`~/.claude/PAI/USER/SKILLCUSTOMIZATIONS/Ideate/`
+# ideate Skill
 
-# Ideate — The Cognitive Progress Engine
+**Purpose**: 러프한 아이디어를 구조화된 Epic으로 발전시키는 원스톱 워크플로우
 
-A loop-controlled evolutionary creativity engine that mirrors human cognitive processes to generate genuinely novel ideas. **This is NOT BeCreative** — BeCreative is a single-pass diversity tool. Ideate is an evolutionary *system*: multiple cycles of consuming, dreaming, stealing, breeding, and testing ideas over simulated time scales from hours to decades, driven by a first-class Loop Controller and a Lamarckian Meta-Learner.
+## 핵심 원칙
 
-## The Core Insight
+> **Source of Truth**: Epic Issue가 아이디어의 진실 소스 (Design Brief 내용 직접 포함)
+> **Epic 역할**: 팀 협업 허브 (문제 정의, 목표, 사용자 시나리오, 성공 지표)
+> **개발자 체크리스트**: Task Issue로 위임 (Epic에 포함하지 않음)
 
-Human creativity reduces to 5 irreducible functions:
+## Workflow Overview
 
-| Function | What It Does | Human Analog |
-|----------|--------------|--------------|
-| **INGEST** | Gather diverse raw material | Reading, conversations, experiences |
-| **PERTURB** | Recombine inputs with controlled noise | Dreaming, daydreaming, shower thoughts |
-| **CROSS-POLLINATE** | Map patterns from foreign domains | "Stealing" ideas from unrelated fields |
-| **SELECT** | Score against fitness function | Critical thinking, peer review, testing |
-| **ITERATE** | Feed survivors back as inputs | Sleep cycles, weeks of study, years of work |
-
-The 9 workflow phases expand these into a richer human-legible system. DREAM, DAYDREAM, and CONTEMPLATE are PERTURB at different noise levels. MATE is PERTURB on existing ideas. META-LEARN adds the Lamarckian advantage — analyzing WHY ideas worked and steering future generation.
-
-## The 9 Phases (Summary)
-
-| # | Phase | Noise | What it does | Agent |
-|---|-------|-------|--------------|-------|
-| 1 | **CONSUME** | — | Multi-domain research, atomic idea extraction | The Glutton |
-| 2 | **DREAM** | 0.9 | Free-association on random input subsets, no problem awareness | The Dreamer |
-| 3 | **DAYDREAM** | 0.5 | Tangential wandering with the problem held loosely | The Wanderer |
-| 4 | **CONTEMPLATE** | 0.1 | Structured analysis via 4 lenses (mandatory; checkpoint A gates) | The Sage |
-| 5 | **STEAL** | — | Cross-domain pattern borrowing via weighted random domain lottery | The Thief |
-| 6 | **MATE** | — | Genetic recombination via Fisher-Yates shuffle + 8 mutation operations | The Matchmaker |
-| 7 | **TEST** | — | Multi-judge scoring on Feasibility/Novelty/Impact/Elegance (checkpoint B gates) | The Judge |
-| 8 | **EVOLVE** | — | Selection: kill bottom 50%, elite top 10%, mutate the rest, immigrant injection | The Curator |
-| 9 | **META-LEARN** | — | Lamarckian strategy adjustment + next-cycle question generation | The Scientist |
-
-Post-loop: **The Historian** runs the Insight Extractor for cross-cycle pattern analysis.
-
-Full phase mechanics live in `Workflows/FullCycle.md`.
-
-## Workflow Routing
-
-| User says... | Workflow |
-|--------------|----------|
-| "ideate", "id8", "novel ideas for X", "evolve ideas for X", default | `Workflows/FullCycle.md` |
-| "quick novelty for X", "fast brainstorm with scoring" | `Workflows/QuickCycle.md` |
-| "dream on X", "free-associate these inputs", "wild recombinations" | `Workflows/Dream.md` |
-| "steal ideas from biology for X", "cross-pollinate from Y" | `Workflows/Steal.md` |
-| "breed these ideas", "recombine X and Y" | `Workflows/Mate.md` |
-| "score these candidates", "test these ideas against fitness" | `Workflows/Test.md` |
-
-## The Loop Controller
-
-Owns inter-cycle state and makes continue/pivot/stop decisions after each cycle's META-LEARN phase. State tracked:
-
-```json
-{
-  "cycle_count": 0,
-  "max_cycles": null,
-  "budget_seconds_remaining": 600,
-  "fitness_history": [{"cycle": 1, "avg_score": 52.3, "top_score": 68.1, "diversity_index": 0.91}],
-  "stagnation_counter": 0,
-  "strategy_version": 1,
-  "strategy_adjustments": {},
-  "loop_decision_log": []
-}
+```text
+[러프 아이디어]
+      ↓
+Phase 1: Brainstorming (3단계)
+  - 아이디어 이해
+  - 접근 방식 탐색
+  - 디자인 합의 (Epic 본문 구성)
+      ↓
+Phase 2: 기술 검증 (선택)
+  - spike 필요 여부 판단
+  - explore-approach 연계
+      ↓
+Phase 3: Epic Issue 직접 생성
+  - dev-checklist 검증 (Task에 위임할 항목 수집)
+  - Epic Issue 생성 (Design Brief 내용 직접 포함)
+      ↓
+[Speckit으로 진행] → skill:generate-spec
+  - spec.md, plan.md, tasks.md 생성
+  - Task Issues 자동 생성
 ```
 
-**Loop Gate logic:**
-```
-IF budget_seconds_remaining <= 0:        STOP (budget exhausted)
-ELIF stagnation_counter >= 3:
-    IF strategy_pivots_remaining > 0:    PIVOT (shift domains/noise/agents)
-    ELSE:                                STOP (exhausted strategies)
-ELIF diversity_index < 0.3:              PIVOT (collapse — inject immigrants)
-ELIF top_score >= target_score:          STOP (target reached)
-ELSE:                                    CONTINUE
-```
+## Phase 1: Brainstorming
 
-## Structural Randomness Engine
+### Step 1: 아이디어 이해
 
-LLM "temperature" is soft probability redistribution biased toward the training distribution. Ideate uses **structural randomness** at the data level instead:
-
-- **Input subsetting** (DREAM): Fisher-Yates shuffle picks each agent's input subset
-- **Domain lottery** (STEAL): weighted random sampling from the 50+ candidate domain pool
-- **Pairing shuffle** (MATE): Fisher-Yates pairs adjacent items; 20% slots forced cross-phase
-- **Mutation dice** (EVOLVE): roll an 8-sided die, apply that mutation operation:
-  1. Flip one assumption
-  2. Invert the constraint
-  3. Change the scale (10× bigger or smaller)
-  4. Change the time horizon
-  5. Merge with a random killed idea's best element
-  6. Apply a constraint from a random domain
-  7. Remove the most complex component
-  8. Add an adversarial requirement
-
-Implementation: `crypto.getRandomValues()` with seed = cycle number + problem hash.
-
-## External Validation Hooks (TEST extension)
-
-Optional pluggable interface that adds real-world signal to internal scoring:
-
-```typescript
-interface ValidationHook {
-  name: string;
-  validate(idea: Idea, problem: Problem): Promise<{ modifier: number; evidence: string }>;
-}
-```
-
-Built-in hooks: `MarketSearch` (existing implementations), `FeasibilityCheck` (technical blockers), `ExpertPanel` (async human review), `PrototypeSimulation` (generate + test prototype).
-
-## Time-Scale Configuration
-
-| Time scale | Budget | Est. cycles | Agents/phase |
-|------------|--------|-------------|--------------|
-| `hours` | 5 min | 1-2 | 2-3 |
-| `days` | 12 min | 2-4 | 3-4 |
-| `weeks` | 25 min | 3-8 | 4-5 |
-| `months` | 45 min | 5-15 | 5-6 |
-| `years` | 90 min | 8-30 | 6-8 |
-| `decades` | 180 min | 15-50+ | 8-10 |
-
-Loop Controller decides actual cycle count adaptively, not a fixed count.
-
-## State Persistence
-
-Each run persists to `~/.claude/PAI/MEMORY/WORK/{slug}/ideate/`:
-
-```
-ideate/
-  config.json           # Problem, time_scale, domains, hooks
-  loop-state.json       # Loop Controller (fitness_history, strategy, decisions)
-  domain-pool.json      # Weighted domain pool (expanded across cycles)
-  cycle-NNN/            # Per-cycle artifacts: input-pool, dreams, daydreams,
-                        # analyses, checkpoint-a, stolen, offspring, scores,
-                        # checkpoint-b, survivors, meta-learning, summary
-  insights.md           # Insight Extractor output (post-loop)
-  final-output.md       # Ranked candidate list with full provenance
-```
-
-## Idea Data Structure
-
-```json
-{
-  "id": "idea-042",
-  "text": "...",
-  "provenance": {
-    "parents": ["idea-017", "idea-023"],
-    "operation": "crossover",
-    "mutation_type": "scale_change",
-    "mutation_die_roll": 3,
-    "cycle": 3, "phase": "MATE",
-    "source_domains": ["mycology", "distributed-systems"],
-    "randomness_seed": "a7f3c9..."
-  },
-  "scores": {
-    "feasibility": 72, "novelty": 88, "impact": 65, "elegance": 81,
-    "composite": 76.5, "confidence": 0.82, "judge_variance": 8.3,
-    "external_validation": {"market_search": {"modifier": -5, "evidence": "..."}},
-    "adjusted_composite": 74.5
-  },
-  "arguments": {"supporting": "...", "counter": "..."}
-}
-```
-
-## Final Output Format
+**단일 질문 원칙**으로 핵심 파악:
 
 ```markdown
-# Ideate Results: [Problem]
-
-**Time scale:** [scale] | **Budget used:** X of Y min | **Cycles:** N (adaptive)
-**Strategy pivots:** M | **Total ideas:** X | **Survived:** Y | **Kill rate:** Z%
-
-## Top Candidates (ranked by adjusted composite score)
-
-### 1. [Title] — Score: 85.2/100 (confidence: 0.91)
-
-**The idea:** [2-3 sentences]
-**Scores:** Feasibility: 78 | Novelty: 92 | Impact: 84 | Elegance: 87
-**External validation:** [hook results]
-**Provenance:** Born in cycle N from [operation] of [parents]. Mutation: [type].
-**For it:** [supporting argument]
-**Against it:** [counterargument]
-
-## Evolution Summary
-| Cycle | Ideas In | Survived | Top Score | Diversity | Strategy | Decision |
-|-------|----------|----------|-----------|-----------|----------|----------|
-
-## Meta-Learning Trajectory
-- [How strategy evolved across cycles]
-
-## Evolutionary Insights (from The Historian)
-- [Dominant lineages, fertile combinations, fitness landscape, problem revelations]
+💡 한 가지만 여쭤볼게요:
+이 기능으로 사용자가 어떤 문제를 해결하게 되나요?
 ```
 
-## Configuration
+**집중 영역**:
 
-```json
-{
-  "problem": "...",
-  "time_scale": "weeks",
-  "domains": ["primary", "adjacent-1", "adjacent-2"],
-  "scoring_weights": {"feasibility": 1.0, "novelty": 1.0, "impact": 1.0, "elegance": 1.0},
-  "convergence_prevention": {
-    "cross_phase_breeding_min": 0.2,
-    "immigrant_ideas_per_cycle": 3,
-    "kill_threshold": 0.5,
-    "forced_new_domain_per_cycle": true
-  },
-  "loop_control": {
-    "mode": "adaptive",
-    "target_score": null,
-    "max_stagnation_cycles": 3,
-    "max_strategy_pivots": 2,
-    "diversity_floor": 0.3
-  },
-  "external_validation": {"enabled": false, "hooks": ["MarketSearch"]},
-  "randomness": {"seed": null, "subset_ratio": 0.33, "mutation_operations": 8}
-}
+| 영역 | 질문 |
+|------|------|
+| Purpose | 왜 이 기능이 필요한가? |
+| Constraints | 어떤 제한이 있는가? |
+| Success | 어떻게 성공을 측정하는가? |
+
+### Step 2: 접근 방식 탐색
+
+2-3가지 옵션을 **객관식**으로 제시:
+
+```markdown
+🔍 접근 방식 옵션
+
+**A) 최소 구현 (MVP)**
+- 장점: 빠른 검증, 낮은 리스크
+- 단점: 기능 제한
+- 추천: 아이디어 검증 필요 시
+
+**B) 표준 구현** (권장)
+- 장점: 균형잡힌 기능성
+- 단점: 중간 복잡도
+- 추천: 명확한 요구사항 존재 시
+
+**C) 확장 구현**
+- 장점: 완전한 기능 세트
+- 단점: 높은 복잡도
+- 추천: 장기 로드맵 확정 시
+
+어떤 방향으로 진행할까요? (A/B/C)
 ```
 
-## Integration with Other Skills
+### Step 3: 디자인 합의
 
-| Skill | Phase | How |
-|-------|-------|-----|
-| Research | CONSUME, STEAL | Multi-agent parallel research, cross-domain patterns |
-| BeCreative | DREAM, DAYDREAM | MaximumCreativity workflow for high-noise recombination |
-| IterativeDepth | CONTEMPLATE | 4-lens analysis (Literal, Failure, Analogical, Constraint Inversion) |
-| FirstPrinciples | CONTEMPLATE | Decompose to axioms, challenge assumptions |
-| RedTeam | TEST | Adversarial attack on candidates to find fatal flaws |
-| Agents | ALL | ComposeAgent for unique cognitive personalities per phase |
-| Council | MATE (optional) | Debate between ideas before breeding |
+> **📌 Design Brief는 별도 파일로 저장하지 않고, Epic 본문에 직접 포함됩니다.**
 
-## Algorithm Integration
+Brainstorming 결과를 바탕으로 다음 정보를 수집:
 
-When the PAI Algorithm sets `mode: ideate` (via `PAI/ALGORITHM/ideate-loop.md`), it loads this skill and routes to `Workflows/FullCycle.md` by default. Tunable parameters from the algorithm's `parameter-schema.md` map to the configuration above. The Meta-Learner may adjust parameters within bounds; user-explicit overrides are auto-locked.
+| 섹션 | 수집 내용 |
+|------|----------|
+| Problem Statement | 현재 상황, 문제점, 영향 |
+| Goals | Primary/Secondary 목표, Non-goals |
+| User Scenarios | 사용자 행동 → 시스템 응답 → 결과 |
+| Constraints | 기술적/비즈니스/사용자 제약 |
+| Success Metrics | 측정 가능한 지표 |
 
-## Gotchas
+이 정보는 Phase 3에서 Epic 본문으로 직접 변환됩니다.
 
-- **Ideate is for multi-cycle evolutionary ideation — not quick brainstorming.** For fast divergent ideas, use BeCreative.
-- **The Loop Controller manages cycle count — don't override it manually.** Trust the budget-based cycling.
-- **Meta-learner adjustments happen automatically within parameter bounds.** Don't manually tune mid-cycle.
-- **CONTEMPLATE is mandatory.** Skipping it degrades MATE quality because STEAL operates on disconnected material.
-- **Structural randomness defeats LLM bias.** Don't substitute "interesting pairs picked by the LLM" for Fisher-Yates — the bias is the problem.
+## Phase 2: 기술 검증 (선택)
 
-## Citations
+### spike 필요 여부 판단
 
-- The 9-phase decomposition and the path-to-ASI mapping derive from a publicly published essay on cognitive progress and a possible path to ASI by D. {{PRINCIPAL_SURNAME}} (2024). The framework name *Cognitive Progress Workflow* refers to that essay.
-- The Lamarckian advantage framing (Phase 9 META-LEARN) borrows from research on auto-research loops and meta-learning in agent systems (cf. Karpathy auto-research pattern).
-- Structural randomness as a defeat for LLM-bias is empirical — see internal experiments comparing LLM-picked pairings vs Fisher-Yates pairings on diversity metrics.
+**자동 감지 패턴**:
 
-## Execution Log
+| 패턴 | 예시 |
+|------|------|
+| 가능성 불확실 | "이게 가능한지 모르겠어" |
+| 성능 우려 | "성능이 괜찮을지..." |
+| 라이브러리 선택 | "어떤 라이브러리가 좋을지" |
+| 복수 옵션 | 구현 방식 간 선택 기준 부재 |
 
-After completing any workflow, append a single JSONL entry:
+**spike 필요 시**:
+
+```markdown
+⚠️ 기술적 불확실성 감지
+
+다음 사항에 대해 spike가 필요해 보입니다:
+- {불확실한 기술 주제}
+
+A) spike 먼저 진행 → skill:explore-approach 호출
+B) 현재 정보로 계속 → 리스크 인지 후 진행
+```
+
+## Phase 3: Epic Issue 직접 생성
+
+### 🔴 dev-checklist 검증 (Task 위임용)
+
+> **개발자 체크리스트는 Epic에 포함하지 않고, Task Issue 생성 시 위임됩니다.**
+
+개발자 관점 체크리스트를 검증하고 결과를 **내부적으로 기록** (Task 생성 시 활용):
+
+| 카테고리 | 검증 항목 |
+|----------|----------|
+| 데이터 흐름 | 충돌 해결 정책, 멀티플랫폼 동기화, 삭제 정책 |
+| 시간/계산 | 집계 기준, 일할 계산, 타임존 |
+| 플랫폼 제약 | PWA/웹/네이티브 제약 및 대안 |
+| 도메인 지식 | 업계 표준, 엣지 케이스 |
+
+**누락 항목 발견 시**: 사용자에게 추가 정보 요청 후 기록
+
+### Epic 본문 생성
+
+> **📌 Design Brief 내용이 Epic 본문에 직접 포함됩니다.**
 
 ```bash
-echo '{"ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","skill":"Ideate","workflow":"WORKFLOW_USED","input":"8_WORD_SUMMARY","status":"ok|error","duration_s":SECONDS}' >> ~/.claude/PAI/MEMORY/SKILLS/execution.jsonl
+# Epic 본문 (Design Brief 내용 직접 포함)
+EPIC_BODY=$(cat <<'EOF'
+## 📋 {기능명}
+
+## 🎯 Problem Statement
+- **현재 상황**: {현재 사용자 경험}
+- **문제점**: {해결해야 할 핵심 문제}
+- **영향**: {비즈니스/사용자 영향}
+
+## 🎯 Goals
+- **Primary**: {핵심 목표}
+- **Secondary**: {부가 목표}
+- **Non-goals**: {명시적 범위 외}
+
+## 👤 User Scenarios
+1. 사용자가 {action}
+2. 시스템이 {response}
+3. 결과로 {outcome}
+
+## ⚠️ Constraints
+- **기술적**: {기존 스택, 성능}
+- **비즈니스**: {일정, 리소스}
+- **사용자**: {접근성, 호환성}
+
+## 📊 Success Metrics
+- [ ] {측정 가능한 지표 1}
+- [ ] {측정 가능한 지표 2}
+EOF
+)
+
+# Epic Issue 생성
+gh issue create \
+  --repo semicolon-devteam/docs \
+  --title "[Epic] {도메인} · {기능명}" \
+  --body "$EPIC_BODY" \
+  --label "{project_label}"
+
+# GitHub Projects 연동 + Issue Type 설정
+# (create-epic 스킬과 동일한 로직)
 ```
+
+**Epic 본문에 포함되지 않는 항목**:
+- ❌ Design Brief 링크 (내용이 직접 포함되므로 불필요)
+- ❌ 개발자 체크리스트 (Task Issue로 위임)
+
+## Output Format
+
+### Ideation 완료
+
+```markdown
+[SEMO] Skill: ideate 완료
+
+## 🎯 Ideation Summary
+
+### Epic 생성
+- 번호: #{epic_number}
+- URL: {epic_url}
+- 상태: 검수대기
+
+### Epic 본문 포함 내용
+✅ Problem Statement (문제 정의)
+✅ Goals (목표)
+✅ User Scenarios (사용자 시나리오)
+✅ Constraints (제약사항)
+✅ Success Metrics (성공 지표)
+
+### 개발자 체크리스트 (Task 위임 예정)
+- 데이터 흐름: {검증 결과}
+- 시간/계산: {검증 결과}
+- 플랫폼 제약: {검증 결과}
+
+> 💡 개발자 체크리스트는 Task Issue 생성 시 각 Task에 포함됩니다.
+
+### 다음 단계
+1. **Speckit 실행**: "태스크 만들어줘" 또는 `skill:generate-spec`
+   - spec.md, plan.md, tasks.md 생성
+   - Task Issues 자동 생성
+```
+
+## Usage
+
+```javascript
+// 러프한 아이디어
+skill: ideate("사용자 참여를 늘리고 싶은데");
+
+// 명시적 기능 구상
+skill: ideate({ idea: "댓글 기능", domain: "comments" });
+
+// spike 포함 요청
+skill: ideate({ idea: "실시간 알림", spike: true });
+```
+
+## Related Skills
+
+- `explore-approach` - 기술 불확실성 탐색 (spike)
+- `create-epic` - Epic 생성 헬퍼 (GitHub API 로직)
+- `generate-spec` - Speckit 통합 워크플로우 (spec → plan → tasks → Task Issues)
+
+## References
+
+- [Brainstorming Guide](references/brainstorming-guide.md) - 질문 기법, 옵션 설계
+- [Dev Checklist](references/dev-checklist.md) - 개발자 관점 검증 항목 (Task 위임용)

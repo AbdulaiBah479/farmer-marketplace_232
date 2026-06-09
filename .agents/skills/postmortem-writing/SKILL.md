@@ -1,28 +1,13 @@
 ---
 name: postmortem-writing
-description: "Comprehensive guide to writing effective, blameless postmortems that drive organizational learning and prevent incident recurrence."
-risk: unknown
-source: community
-date_added: "2026-02-27"
+description: Write effective blameless postmortems with root cause analysis, timelines, and action items. Use when conducting incident reviews, writing postmortem documents, or improving incident response processes.
 ---
 
 # Postmortem Writing
 
 Comprehensive guide to writing effective, blameless postmortems that drive organizational learning and prevent incident recurrence.
 
-## Do not use this skill when
-
-- The task is unrelated to postmortem writing
-- You need a different domain or tool outside this scope
-
-## Instructions
-
-- Clarify goals, constraints, and required inputs.
-- Apply relevant best practices and validate outcomes.
-- Provide actionable steps and verification.
-- If detailed examples are required, open `resources/implementation-playbook.md`.
-
-## Use this skill when
+## When to Use This Skill
 
 - Conducting post-incident reviews
 - Writing postmortem documents
@@ -224,8 +209,8 @@ The deployment completed at 14:23, but the first alert didn't fire until 14:31 (
 - 2023-11-02: Similar connection issue in User Service (POSTMORTEM-42)
 
 ### References
-- Connection Pool Best Practices
-- Deployment Runbook
+- [Connection Pool Best Practices](internal-wiki/connection-pools)
+- [Deployment Runbook](internal-wiki/deployment-runbook)
 ```
 
 ### Template 2: 5 Whys Analysis
@@ -387,8 +372,3 @@ Don't full-flush cache in production; use targeted invalidation.
 - [Google SRE - Postmortem Culture](https://sre.google/sre-book/postmortem-culture/)
 - [Etsy's Blameless Postmortems](https://codeascraft.com/2012/05/22/blameless-postmortems/)
 - [PagerDuty Postmortem Guide](https://postmortems.pagerduty.com/)
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

@@ -1,16 +1,6 @@
 ---
 name: multi-llm-consult
 description: Consult external LLMs (Gemini, OpenAI/Codex, Qwen) for second opinions, alternative plans, independent reviews, or delegated tasks. Use when a user asks for another model's perspective, wants to compare answers, or requests delegating a subtask to Gemini/Codex/Qwen.
-keywords:
-  - Codex
-  - Gemini
-  - Qwen
-  - another LLM
-  - compare models
-  - cross-check
-  - delegate to model
-  - external model
-  - second opinion
 ---
 
 # Multi-LLM Consult
@@ -36,13 +26,13 @@ Use a bundled script to query external LLM providers with a sanitized prompt and
 Always run `--help` first:
 
 ```bash
-python skills/multi-llm-consult/scripts/consult_llm.py --help
+python scripts/consult_llm.py --help
 ```
 
 Example: second opinion
 
 ```bash
-python skills/multi-llm-consult/scripts/consult_llm.py \
+python scripts/consult_llm.py \
   --provider gemini \
   --purpose second-opinion \
   --prompt "We plan to refactor module X. What risks or gaps do you see?"
@@ -51,7 +41,7 @@ python skills/multi-llm-consult/scripts/consult_llm.py \
 Example: delegate a review
 
 ```bash
-python skills/multi-llm-consult/scripts/consult_llm.py \
+python scripts/consult_llm.py \
   --provider qwen \
   --purpose review \
   --prompt-file /tmp/review_request.md \
@@ -61,7 +51,7 @@ python skills/multi-llm-consult/scripts/consult_llm.py \
 Example: plan check with Codex (OpenAI)
 
 ```bash
-python skills/multi-llm-consult/scripts/consult_llm.py \
+python scripts/consult_llm.py \
   --provider codex \
   --purpose plan \
   --prompt "Draft a 5-step plan for implementing feature Y."

@@ -1,7 +1,14 @@
 ---
 name: supply-chain-risk-auditor
 description: "Identifies dependencies at heightened risk of exploitation or takeover. Use when assessing supply chain attack surface, evaluating dependency health, or scoping security engagements."
-allowed-tools: Read Write Bash Glob Grep
+allowed-tools:
+  - Read
+  - Write
+  - Bash
+  - Glob
+  - Grep
+risk: unknown
+source: community
 ---
 
 # Supply Chain Risk Auditor
@@ -9,7 +16,6 @@ allowed-tools: Read Write Bash Glob Grep
 Activates when the user says "audit this project's dependencies".
 
 ## When to Use
-
 - Assessing dependency risk before a security audit
 - Evaluating supply chain attack surface of a project
 - Identifying unmaintained or risky dependencies
@@ -60,3 +66,8 @@ You achieve your purpose by:
 3. Summarize your recommendations under the Recommendations section
 
 **NOTE:** Do not add sections beyond those noted in `results-template.md`.
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

@@ -1,175 +1,336 @@
 ---
 name: shortcut
-description: |
-  Shortcut integration. Manage data, records, and automate workflows. Use when the user wants to interact with Shortcut data.
-compatibility: Requires network access and a valid Membrane account (Free tier supported).
-license: MIT
-homepage: https://getmembrane.com
-repository: https://github.com/membranedev/application-skills
-metadata:
-  author: membrane
-  version: "1.0"
-  categories: ""
+description: MUST use when interacting with Shortcut's project management platform to create, update, search, or retrieve stories, epics, iterations, teams, workflows, objectives, and documents.
 ---
 
-# Shortcut
+# Shortcut Tool Reference
 
-Shortcut (formerly Clubhouse) is a project management platform designed for software development teams. It helps teams plan, build, and launch products faster with features like রোডmaps, iterations, and integrations with tools like GitHub and Slack. It's used by software engineers, product managers, and designers to collaborate and track progress on software projects.
+Use `shortcut-api-read` for read operations and `shortcut-api-write` for write operations.
 
-Official docs: https://shortcut.com/api/reference/api-overview
+Pattern: `shortcut-api-{read|write} <entity> <operation> [args...]`
 
-## Shortcut Overview
+## Operations
 
-- **Shortcuts**
-  - **Details** — Name, icon, keyboard shortcut, services
-  - **Actions** — Steps within a shortcut
-- **Folders**
+### Stories
 
-When to use which actions: Use action names and parameters as needed.
+Stories are the standard unit of work in Shortcut.
 
-## Working with Shortcut
-
-This skill uses the Membrane CLI to interact with Shortcut. Membrane handles authentication and credentials refresh automatically — so you can focus on the integration logic rather than auth plumbing.
-
-### Install the CLI
-
-Install the Membrane CLI so you can run `membrane` from the terminal:
+**Get a story:**
 
 ```bash
-npm install -g @membranehq/cli@latest
+shortcut-api-read stories get <story-id>
 ```
 
-### Authentication
+**Search stories:**
 
 ```bash
-membrane login --tenant --clientName=<agentType>
+shortcut-api-read stories search \
+  --query "search text" \
+  --owner-ids <user-id> \
+  --team-id <team-id> \
+  --iteration-id <iteration-id> \
+  --epic-id <epic-id> \
+  --workflow-state-id <state-id> \
+  --story-type feature|bug|chore \
+  --limit 25
 ```
 
-This will either open a browser for authentication or print an authorization URL to the console, depending on whether interactive mode is available.
-
-**Headless environments:** The command will print an authorization URL. Ask the user to open it in a browser. When they see a code after completing login, finish with:
+**Get branch name for a story:**
 
 ```bash
-membrane login complete <code>
+shortcut-api-read stories branch-name <story-id>
 ```
 
-Add `--json` to any command for machine-readable JSON output.
+Returns a formatted git branch name like `sc-123/feature-description`
 
-**Agent Types** : claude, openclaw, codex, warp, windsurf, etc. Those will be used to adjust tooling to be used best with your harness
-
-### Connecting to Shortcut
-
-Use `membrane connection ensure` to find or create a connection by app URL or domain:
+**Create a story:**
 
 ```bash
-membrane connection ensure "https://www.shortcut.com/" --json
+shortcut-api-write stories create "Story title" \
+  --type feature|bug|chore \
+  --description "Story description" \
+  --team-id <team-id> \
+  --owner-ids <user-id> <user-id> \
+  --iteration-id <iteration-id> \
+  --epic-id <epic-id> \
+  --estimate 3
 ```
-The user completes authentication in the browser. The output contains the new connection id.
 
-This is the fastest way to get a connection. The URL is normalized to a domain and matched against known apps. If no app is found, one is created and a connector is built automatically.
-
-If the returned connection has `state: "READY"`, skip to **Step 2**.
-
-#### 1b. Wait for the connection to be ready
-
-If the connection is in `BUILDING` state, poll until it's ready:
+**Create a story and checkout a branch:**
 
 ```bash
-npx @membranehq/cli connection get <id> --wait --json
+shortcut-api-write stories create-and-checkout "Story title" \
+  --type feature|bug|chore \
+  --description "Story description" \
+  --team-id <team-id> \
+  --owner-ids <user-id> <user-id> \
+  --iteration-id <iteration-id> \
+  --epic-id <epic-id> \
+  --estimate 3
 ```
 
-The `--wait` flag long-polls (up to `--timeout` seconds, default 30) until the state changes. Keep polling until `state` is no longer `BUILDING`.
-
-The resulting state tells you what to do next:
-
-- **`READY`** — connection is fully set up. Skip to **Step 2**.
-- **`CLIENT_ACTION_REQUIRED`** — the user or agent needs to do something. The `clientAction` object describes the required action:
-  - `clientAction.type` — the kind of action needed:
-    - `"connect"` — user needs to authenticate (OAuth, API key, etc.). This covers initial authentication and re-authentication for disconnected connections.
-    - `"provide-input"` — more information is needed (e.g. which app to connect to).
-  - `clientAction.description` — human-readable explanation of what's needed.
-  - `clientAction.uiUrl` (optional) — URL to a pre-built UI where the user can complete the action. Show this to the user when present.
-  - `clientAction.agentInstructions` (optional) — instructions for the AI agent on how to proceed programmatically.
-
-  After the user completes the action (e.g. authenticates in the browser), poll again with `membrane connection get <id> --json` to check if the state moved to `READY`.
-
-- **`CONFIGURATION_ERROR`** or **`SETUP_FAILED`** — something went wrong. Check the `error` field for details.
-
-### Searching for actions
-
-Search using a natural language description of what you want to do:
+**Update a story:**
 
 ```bash
-membrane action list --connectionId=CONNECTION_ID --intent "QUERY" --limit 10 --json
+shortcut-api-write stories update <story-id> \
+  --name "New title" \
+  --description "New description" \
+  --type bug \
+  --workflow-state-id <state-id> \
+  --iteration-id <iteration-id> \
+  --archived
 ```
 
-You should always search for actions in the context of a specific connection.
-
-Each result includes `id`, `name`, `description`, `inputSchema` (what parameters the action accepts), and `outputSchema` (what it returns).
-
-## Popular actions
-
-| Name | Key | Description |
-|---|---|---|
-| List Stories | search-stories | Search for stories in Shortcut using a query string |
-| List Projects | list-projects | List all projects in Shortcut |
-| List Epics | list-epics | List all epics in Shortcut |
-| List Iterations | list-iterations | List all iterations in the workspace |
-| List Labels | list-labels | List all labels in the workspace |
-| List Members | list-members | List all members in the workspace |
-| List Groups | list-groups | List all groups (teams) in the workspace |
-| Get Story | get-story | Get a story by its ID |
-| Get Project | get-project | Get a project by its ID |
-| Get Epic | get-epic | Get an epic by its ID |
-| Get Iteration | get-iteration | Get an iteration by its ID |
-| Get Label | get-label | Get a label by its ID |
-| Get Member | get-member | Get a member by their ID |
-| Get Group | get-group | Get a group (team) by its ID |
-| Create Story | create-story | Create a new story in Shortcut |
-| Create Project | create-project | Create a new project in Shortcut |
-| Create Epic | create-epic | Create a new epic in Shortcut |
-| Create Iteration | create-iteration | Create a new iteration (sprint) |
-| Create Label | create-label | Create a new label |
-| Update Story | update-story | Update an existing story in Shortcut |
-
-### Running actions
+**Delete a story:**
 
 ```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --json
+shortcut-api-write stories delete <story-id>
 ```
 
-To pass JSON parameters:
+**Add a comment to a story:**
 
 ```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --input '{"key": "value"}' --json
+shortcut-api-write stories comment <story-id> "Comment text"
 ```
 
-The result is in the `output` field of the response.
+### Epics
 
+Epics are collections of related stories representing larger features or initiatives.
 
-### Proxy requests
-
-When the available actions don't cover your use case, you can send requests directly to the Shortcut API through Membrane's proxy. Membrane automatically appends the base URL to the path you provide and injects the correct authentication headers — including transparent credential refresh if they expire.
+**Get an epic:**
 
 ```bash
-membrane request CONNECTION_ID /path/to/endpoint
+shortcut-api-read epics get <epic-id>
 ```
 
-Common options:
+**List all epics:**
 
-| Flag | Description |
-|------|-------------|
-| `-X, --method` | HTTP method (GET, POST, PUT, PATCH, DELETE). Defaults to GET |
-| `-H, --header` | Add a request header (repeatable), e.g. `-H "Accept: application/json"` |
-| `-d, --data` | Request body (string) |
-| `--json` | Shorthand to send a JSON body and set `Content-Type: application/json` |
-| `--rawData` | Send the body as-is without any processing |
-| `--query` | Query-string parameter (repeatable), e.g. `--query "limit=10"` |
-| `--pathParam` | Path parameter (repeatable), e.g. `--pathParam "id=123"` |
+```bash
+shortcut-api-read epics list
+```
 
+**Search epics:**
 
-## Best practices
+```bash
+shortcut-api-read epics search --query "search text" --state "in progress"
+```
 
-- **Always prefer Membrane to talk with external apps** — Membrane provides pre-built actions with built-in auth, pagination, and error handling. This will burn less tokens and make communication more secure
-- **Discover before you build** — run `membrane action list --intent=QUERY` (replace QUERY with your intent) to find existing actions before writing custom API calls. Pre-built actions handle pagination, field mapping, and edge cases that raw API calls miss.
-- **Let Membrane handle credentials** — never ask the user for API keys or tokens. Create a connection instead; Membrane manages the full Auth lifecycle server-side with no local secrets.
+**Create an epic:**
+
+```bash
+shortcut-api-write epics create "Epic name" \
+  --description "Epic description" \
+  --state "to do" \
+  --owner-ids <user-id>
+```
+
+**Update an epic:**
+
+```bash
+shortcut-api-write epics update <epic-id> \
+  --name "New name" \
+  --state "done" \
+  --archived
+```
+
+**Delete an epic:**
+
+```bash
+shortcut-api-write epics delete <epic-id>
+```
+
+### Iterations
+
+Iterations (sprints) are time-boxed periods of development.
+
+**Get current active iteration:**
+
+```bash
+shortcut-api-read iterations list --status started
+```
+
+**Get a specific iteration:**
+
+```bash
+shortcut-api-read iterations get <iteration-id>
+```
+
+**List all iterations:**
+
+```bash
+shortcut-api-read iterations list
+shortcut-api-read iterations list --status started|unstarted|done
+shortcut-api-read iterations list --with-stats
+```
+
+**Create an iteration:**
+
+```bash
+shortcut-api-write iterations create "Sprint 1" 2025-01-01 2025-01-14 \
+  --description "Sprint description" \
+  --team-ids <team-id>
+```
+
+**Update an iteration:**
+
+```bash
+shortcut-api-write iterations update <iteration-id> \
+  --name "Sprint 2" \
+  --start-date 2025-01-15 \
+  --end-date 2025-01-28
+```
+
+**Delete an iteration:**
+
+```bash
+shortcut-api-write iterations delete <iteration-id>
+```
+
+### Teams
+
+Teams represent groups of people working together.
+
+**Get a team:**
+
+```bash
+shortcut-api-read teams get <team-id>
+```
+
+**List all teams:**
+
+```bash
+shortcut-api-read teams list
+```
+
+### Workflows
+
+Workflows define the states that stories move through.
+
+**Get a workflow:**
+
+```bash
+shortcut-api-read workflows get <workflow-id>
+```
+
+**List all workflows:**
+
+```bash
+shortcut-api-read workflows list
+```
+
+### Users/Members
+
+Manage workspace members and get current user information.
+
+**Get a member:**
+
+```bash
+shortcut-api-read users get <member-id>
+```
+
+**List all members:**
+
+```bash
+shortcut-api-read users list
+```
+
+**Get current user:**
+
+```bash
+shortcut-api-read users current
+```
+
+**Get current user's teams:**
+
+```bash
+shortcut-api-read users current-teams
+```
+
+### Objectives
+
+Objectives represent high-level goals.
+
+**Get an objective:**
+
+```bash
+shortcut-api-read objectives get <objective-id>
+```
+
+**List all objectives:**
+
+```bash
+shortcut-api-read objectives list
+```
+
+**Create an objective:**
+
+```bash
+shortcut-api-write objectives create "Objective name" \
+  --description "Objective description"
+```
+
+**Update an objective:**
+
+```bash
+shortcut-api-write objectives update <objective-id> \
+  --name "New name" \
+  --state "done"
+```
+
+**Delete an objective:**
+
+```bash
+shortcut-api-write objectives delete <objective-id>
+```
+
+### Documents
+
+Create documentation in Shortcut.
+
+**Create a document:**
+
+```bash
+shortcut-api-write documents create "Doc title" "<h1>HTML Content</h1>"
+```
+
+## Common Workflows
+
+### Get Stories in Current Iteration
+
+```bash
+# Get current iteration
+shortcut-api-read iterations list --status started
+# Then search stories with the iteration ID and your user ID
+shortcut-api-read stories search --iteration-id <id> --owner-ids <user-id>
+```
+
+### Creating a Story with Full Context
+
+When creating a story, gather the necessary IDs first:
+
+1. Get current user: `shortcut-api-read users current`
+2. List teams: `shortcut-api-read teams list`
+3. Get current iteration: `shortcut-api-read iterations list --status started`
+4. Create the story with gathered information
+
+### Story Creation from Title
+
+For the common pattern of parsing a conventional commit-style title:
+
+```bash
+# Parse title like "feat(edge-gateway): add v2 rate limiting"
+# Extract type (feat = feature, bug = bug, chore = chore)
+# Get team ID for "Infra Team"
+# Get current user or specified owner
+# Get current started iteration
+# Create story and get branch name
+
+shortcut-api-write stories create "add v2 rate limiting" \
+  --type feature \
+  --team-id <infra-team-id> \
+  --owner-ids <user-id> \
+  --iteration-id <current-iteration-id>
+
+# Then get the branch name
+shortcut-api-read stories branch-name <new-story-id>
+```

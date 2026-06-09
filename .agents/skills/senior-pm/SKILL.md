@@ -1,576 +1,440 @@
 ---
+
+# === CORE IDENTITY ===
 name: senior-pm
-description: >
-  Senior Project Manager for enterprise software, SaaS, and digital
-  transformation projects. Specializes in portfolio management, quantitative
-  risk analysis, resource optimization, stakeholder alignment, and executive
-  reporting. Uses advanced methodologies including EMV analysis, Monte Carlo
-  simulation, WSJF prioritization, and multi-dimensional health scoring.
-license: MIT + Commons Clause
-metadata:
-  version: 2.0.0
-  author: borghei
-  category: project-management
-  domain: enterprise-pm
-  updated: 2026-03-04
-  tags: [project-management, stakeholder-management, risk, planning]
-  python-tools: project_health_dashboard.py, risk_matrix_analyzer.py, resource_capacity_planner.py, stakeholder_mapper.py
-  tech-stack: portfolio-management, risk-analysis, stakeholder-mapping, executive-reporting
+title: Senior PM Skill Package
+description: Senior Project Manager for Software, SaaS, and digital web/mobile applications. Use for strategic planning, portfolio management, stakeholder alignment, risk management, roadmap development, budget oversight, cross-functional team leadership, and executive reporting for software products.
+domain: delivery
+subdomain: senior-pm-general
+
+# === WEBSITE DISPLAY ===
+difficulty: advanced
+time-saved: "TODO: Quantify time savings"
+frequency: "TODO: Estimate usage frequency"
+use-cases:
+  - Primary workflow for Senior Pm
+  - Analysis and recommendations for senior pm tasks
+  - Best practices implementation for senior pm
+  - Integration with related skills and workflows
+
+# === RELATIONSHIPS ===
+related-agents: []
+related-skills: []
+related-commands: []
+orchestrated-by: []
+
+# === TECHNICAL ===
+dependencies:
+  scripts: []
+  references: []
+  assets: []
+compatibility:
+  python-version: 3.8+
+  platforms: [macos, linux, windows]
+tech-stack: [Python 3.8+]
+
+# === EXAMPLES ===
+examples:
+  -
+    title: Example Usage
+    input: "TODO: Add example input for senior-pm"
+    output: "TODO: Add expected output"
+
+# === ANALYTICS ===
+stats:
+  downloads: 0
+  stars: 0
+  rating: 0.0
+  reviews: 0
+
+# === VERSIONING ===
+version: v1.0.0
+author: Claude Skills Team
+contributors: []
+created: 2025-10-21
+updated: 2025-11-23
+license: MIT
+
+# === DISCOVERABILITY ===
+tags: [delivery, development, product, senior]
+featured: false
+verified: true
 ---
+
+
 # Senior Project Management Expert
 
 ## Overview
 
-Strategic project management for enterprise software, SaaS, and digital transformation initiatives. This skill provides sophisticated portfolio management capabilities, quantitative analysis tools, and executive-level reporting frameworks for managing complex, multi-million dollar project portfolios.
-
-## Use when
-
-- The user asks to "run a portfolio health review", "build an executive status report", or "do a stakeholder map"
-- Multiple projects need prioritization across WSJF / RICE / ICE / MoSCoW with strategic alignment
-- A board-ready or executive-ready RAG report needs to be produced
-- Risk analysis needs EMV, Monte Carlo, or portfolio risk correlation — beyond a basic probability/impact matrix
-- Resource capacity planning is needed across multiple concurrent projects
-- A quarterly portfolio rebalancing or three-horizons review is being planned
-- The user says "our portfolio is misaligned", "executives don't trust the reports", or "we can't tell which projects are actually healthy"
-
-### Core Expertise Areas
-
-**Portfolio Management & Strategic Alignment**
-- Multi-project portfolio optimization using advanced prioritization models (WSJF, RICE, ICE, MoSCoW)
-- Strategic roadmap development aligned with business objectives and market conditions
-- Resource capacity planning and allocation optimization across portfolio
-- Portfolio health monitoring with multi-dimensional scoring frameworks
-
-**Quantitative Risk Management**
-- Expected Monetary Value (EMV) analysis for financial risk quantification
-- Monte Carlo simulation for schedule risk modeling and confidence intervals
-- Risk appetite framework implementation with enterprise-level thresholds
-- Portfolio risk correlation analysis and diversification strategies
-
-**Executive Communication & Governance**
-- Board-ready executive reports with RAG status and strategic recommendations
-- Stakeholder alignment through sophisticated RACI matrices and escalation paths
-- Financial performance tracking with risk-adjusted ROI and NPV calculations
-- Change management strategies for large-scale digital transformations
-
-## Methodology & Frameworks
-
-### Three-Tier Analysis Approach
-
-**Tier 1: Portfolio Health Assessment**
-Uses `project_health_dashboard.py` to provide comprehensive multi-dimensional scoring:
-
-```bash
-python3 scripts/project_health_dashboard.py assets/sample_project_data.json
-```
-
-**Health Dimensions (Weighted Scoring):**
-- **Timeline Performance** (25% weight): Schedule adherence, milestone achievement, critical path analysis
-- **Budget Management** (25% weight): Spend variance, forecast accuracy, cost efficiency metrics
-- **Scope Delivery** (20% weight): Feature completion rates, requirement satisfaction, change control
-- **Quality Metrics** (20% weight): Code coverage, defect density, technical debt, security posture
-- **Risk Exposure** (10% weight): Risk score, mitigation effectiveness, exposure trends
-
-**RAG Status Calculation:**
-- 🟢 Green: Composite score >80, all dimensions >60
-- 🟡 Amber: Composite score 60-80, or any dimension 40-60
-- 🔴 Red: Composite score <60, or any dimension <40
-
-**Tier 2: Risk Matrix & Mitigation Strategy**
-Leverages `risk_matrix_analyzer.py` for quantitative risk assessment:
-
-```bash
-python3 scripts/risk_matrix_analyzer.py assets/sample_project_data.json
-```
-
-**Risk Quantification Process:**
-1. **Probability Assessment** (1-5 scale): Historical data, expert judgment, Monte Carlo inputs
-2. **Impact Analysis** (1-5 scale): Financial, schedule, quality, and strategic impact vectors
-3. **Category Weighting**: Technical (1.2x), Resource (1.1x), Financial (1.4x), Schedule (1.0x)
-4. **EMV Calculation**: Risk Score = (Probability × Impact × Category Weight)
-
-**Risk Response Strategies:**
-- **Avoid** (>18 score): Eliminate through scope/approach changes
-- **Mitigate** (12-18 score): Reduce probability or impact through active intervention
-- **Transfer** (8-12 score): Insurance, contracts, partnerships
-- **Accept** (<8 score): Monitor with contingency planning
-
-**Tier 3: Resource Capacity Optimization**
-Employs `resource_capacity_planner.py` for portfolio resource analysis:
-
-```bash
-python3 scripts/resource_capacity_planner.py assets/sample_project_data.json
-```
-
-**Capacity Analysis Framework:**
-- **Utilization Optimization**: Target 70-85% for sustainable productivity
-- **Skill Matching**: Algorithm-based resource allocation to maximize efficiency
-- **Bottleneck Identification**: Critical path resource constraints across portfolio
-- **Scenario Planning**: What-if analysis for resource reallocation strategies
-
-### Advanced Prioritization Models
-
-**Weighted Shortest Job First (WSJF) - For Agile Portfolios**
-```
-WSJF Score = (User Value + Time Criticality + Risk Reduction) ÷ Job Size
-
-Application Context:
-- Resource-constrained environments
-- Fast-moving competitive landscapes  
-- Agile/SAFe methodology adoption
-- Clear cost-of-delay quantification available
-```
-
-**RICE Framework - For Product Development**
-```
-RICE Score = (Reach × Impact × Confidence) ÷ Effort
-
-Best for:
-- Customer-facing initiatives
-- Marketing and growth projects
-- When reach metrics are quantifiable
-- Data-driven product decisions
-```
-
-**ICE Scoring - For Rapid Decision Making**
-```  
-ICE Score = (Impact + Confidence + Ease) ÷ 3
-
-Optimal when:
-- Quick prioritization needed
-- Brainstorming and ideation phases
-- Limited analysis time available
-- Cross-functional team alignment required
-```
-
-**Decision Tree for Model Selection:**
-Reference: `references/portfolio-prioritization-models.md`
-
-- **Resource Constrained?** → WSJF
-- **Customer Impact Focus?** → RICE
-- **Need Speed?** → ICE
-- **Multiple Stakeholder Groups?** → MoSCoW
-- **Complex Trade-offs?** → Multi-Criteria Decision Analysis (MCDA)
-
-### Risk Management Framework
-
-**Quantitative Risk Analysis Process:**
-Reference: `references/risk-management-framework.md`
-
-**Step 1: Risk Identification & Classification**
-- Technical risks: Architecture, integration, performance
-- Resource risks: Availability, skills, retention
-- Schedule risks: Dependencies, critical path, external factors
-- Financial risks: Budget overruns, currency, economic factors
-- Business risks: Market changes, competitive pressure, strategic shifts
-
-**Step 2: Probability/Impact Assessment**
-Uses three-point estimation for Monte Carlo simulation:
-```
-Expected Value = (Optimistic + 4×Most Likely + Pessimistic) ÷ 6
-Standard Deviation = (Pessimistic - Optimistic) ÷ 6
-```
-
-**Step 3: Expected Monetary Value (EMV) Calculation**
-```
-EMV = Σ(Probability × Financial Impact) for all risk scenarios
-
-Risk-Adjusted Budget = Base Budget × (1 + Risk Premium)
-Risk Premium = Portfolio Risk Score × Risk Tolerance Factor
-```
-
-**Step 4: Portfolio Risk Correlation Analysis**
-```
-Portfolio Risk = √(Σ Individual Risks² + 2Σ Correlation×Risk1×Risk2)
-```
-
-**Risk Appetite Framework:**
-- **Conservative**: Risk scores 0-8, 25-30% contingency reserves
-- **Moderate**: Risk scores 8-15, 15-20% contingency reserves  
-- **Aggressive**: Risk scores 15+, 10-15% contingency reserves
-
-## Stakeholder Mapping & Engagement
-
-### Power/Interest Grid (Mendelow's Matrix)
-
-Uses `stakeholder_mapper.py` to classify stakeholders and generate communication plans:
-
-```bash
-python3 scripts/stakeholder_mapper.py stakeholders.json
-python3 scripts/stakeholder_mapper.py --demo --format json
-```
-
-**Classification Quadrants (threshold at 5/10):**
-- **Manage Closely** (High Power, High Interest): Weekly 1:1s, steering committee, proactive escalation
-- **Keep Satisfied** (High Power, Low Interest): Monthly executive summary, milestone invites
-- **Keep Informed** (Low Power, High Interest): Bi-weekly newsletter, demo invites, dashboards
-- **Monitor** (Low Power, Low Interest): Quarterly updates, organizational newsletter
-
-**Blocker Engagement Strategy:**
-The tool identifies stakeholders with `attitude: blocker` and generates targeted engagement strategies based on their power level — high-power blockers require urgent 1:1 engagement and potential executive sponsor escalation; low-power blockers need transparency and involvement.
-
-**Integration with OKR Brainstorming:**
-Stakeholder mapping feeds directly into OKR alignment — high-power/high-interest stakeholders shape strategic objectives, while their feedback validates Key Results. Cross-reference with `execution/brainstorm-okrs/` for OKR development workflows.
-
-Reference: `references/stakeholder-engagement-guide.md`
-Template: `assets/stakeholder_map_template.md`
-
-## Assets & Templates
-
-### Project Charter Template
-Reference: `assets/project_charter_template.md`
-
-**Comprehensive 12-section charter including:**
-- Executive summary with strategic alignment
-- Success criteria with KPIs and quality gates
-- RACI matrix with decision authority levels
-- Risk assessment with mitigation strategies
-- Budget breakdown with contingency analysis
-- Timeline with critical path dependencies
-
-**Key Features:**
-- Production-ready for board presentation
-- Integrated stakeholder management framework
-- Risk-adjusted financial projections
-- Change control and governance processes
-
-### Executive Report Template  
-Reference: `assets/executive_report_template.md`
-
-**Board-level portfolio reporting with:**
-- RAG status dashboard with trend analysis
-- Financial performance vs. strategic objectives
-- Risk heat map with mitigation status
-- Resource utilization and capacity analysis
-- Forward-looking recommendations with ROI projections
-
-**Executive Decision Support:**
-- Critical issues requiring immediate action
-- Investment recommendations with business cases
-- Portfolio optimization opportunities
-- Market/competitive intelligence integration
-
-### RACI Matrix Template
-Reference: `assets/raci_matrix_template.md`
-
-**Enterprise-grade responsibility assignment featuring:**
-- Detailed stakeholder roster with decision authority
-- Phase-based RACI assignments (initiation through deployment)
-- Escalation paths with timeline and authority levels
-- Communication protocols and meeting frameworks
-- Conflict resolution processes with governance integration
-
-**Advanced Features:**
-- Decision-making RACI for strategic vs. operational choices
-- Risk and issue management responsibility assignment
-- Performance metrics for RACI effectiveness
-- Template validation checklist and maintenance procedures
-
-### Sample Portfolio Data
-Reference: `assets/sample_project_data.json`
-
-**Realistic multi-project portfolio including:**
-- 4 projects across different phases and priorities
-- Complete financial data (budgets, actuals, forecasts)
-- Resource allocation with utilization metrics
-- Risk register with probability/impact scoring
-- Quality metrics and stakeholder satisfaction data
-- Dependencies and milestone tracking
-
-**Data Completeness:**
-- Works with all three analysis scripts
-- Demonstrates portfolio balance across strategic priorities
-- Includes both successful and at-risk project examples
-- Provides historical trend data for analysis
-
-### Expected Output Examples
-Reference: `assets/expected_output.json`
-
-**Demonstrates script capabilities with:**
-- Portfolio health scores and RAG status
-- Risk matrix visualization and mitigation priorities
-- Resource capacity analysis with optimization recommendations
-- Integration examples showing how outputs complement each other
-
-## Implementation Workflows
-
-### Portfolio Health Review (Weekly)
-
-1. **Data Collection & Validation**
-   ```bash
-   # Update project data from JIRA, financial systems, team surveys
-   python3 scripts/project_health_dashboard.py current_portfolio.json
-   ```
-   - *Validate:* all 5 health dimensions have current-period data; no project missing more than one dimension
-2. **Risk Assessment Update**
-   ```bash
-   # Refresh risk probabilities and impact assessments
-   python3 scripts/risk_matrix_analyzer.py current_portfolio.json
-   ```
-   - *Validate:* every critical/high risk has an active mitigation owner; no risks aged >30 days without update
-3. **Capacity Analysis**
-   ```bash  
-   # Review resource utilization and bottlenecks
-   python3 scripts/resource_capacity_planner.py current_portfolio.json
-   ```
-   - *Validate:* utilization sits in the 70-85% optimal band; hotspots flagged with a named resolution action
-4. **Executive Summary Generation**
-   - Synthesize outputs into executive report format
-   - Highlight critical issues and recommendations
-   - Prepare stakeholder communications
-   - *Validate:* one-page RAG summary fits the audience; every red status has a documented intervention plan inside 48 hours
-
-### Monthly Strategic Review
-
-1. **Portfolio Prioritization Review**
-   - Apply WSJF/RICE/ICE models to evaluate current priorities
-   - Assess strategic alignment with business objectives
-   - Identify optimization opportunities
-
-2. **Risk Portfolio Analysis**
-   - Update risk appetite and tolerance levels
-   - Review portfolio risk correlation and concentration
-   - Adjust risk mitigation investments
-
-3. **Resource Optimization Planning**
-   - Analyze capacity constraints across upcoming quarter
-   - Plan resource reallocation and hiring strategies
-   - Identify skill gaps and training needs
-
-4. **Stakeholder Alignment Session**
-   - Present portfolio health and strategic recommendations
-   - Gather feedback on prioritization and resource allocation
-   - Align on upcoming quarter priorities and investments
-
-### Quarterly Portfolio Optimization
-
-1. **Strategic Alignment Assessment**
-   - Evaluate portfolio contribution to business objectives
-   - Assess market and competitive position changes
-   - Update strategic priorities and success criteria
-
-2. **Financial Performance Review**
-   - Analyze risk-adjusted ROI across portfolio
-   - Review budget performance and forecast accuracy
-   - Optimize investment allocation for maximum value
-
-3. **Capability Gap Analysis**
-   - Identify emerging technology and skill requirements
-   - Plan capability building investments
-   - Assess make vs. buy vs. partner decisions
-
-4. **Portfolio Rebalancing**
-   - Apply three horizons model for innovation balance
-   - Optimize risk-return profile using efficient frontier
-   - Plan new initiatives and sunset decisions
-
-## Integration Strategies
-
-### Atlassian Integration
-- **Jira**: Portfolio dashboards, cross-project metrics, risk tracking
-- **Confluence**: Strategic documentation, executive reports, knowledge management
-- Use MCP integrations to automate data collection and report generation
-
-### Financial Systems Integration
-- **Budget Tracking**: Real-time spend data for variance analysis
-- **Resource Costing**: Hourly rates and utilization for capacity planning
-- **ROI Measurement**: Value realization tracking against projections
-
-### Stakeholder Management
-- **Executive Dashboards**: Real-time portfolio health visualization
-- **Team Scorecards**: Individual project performance metrics
-- **Risk Registers**: Collaborative risk management with automated escalation
+This skill provides comprehensive senior project management expertise for Software, SaaS, and digital application projects (web and mobile). It covers strategic planning, portfolio management, stakeholder alignment, risk management, budget oversight, cross-functional team leadership, and executive reporting. The skill includes frameworks for project initiation, ROI analysis, RACI matrices, communication plans, and integration with Jira and Confluence through the Atlassian MCP server.
+
+Target users include senior project managers, program managers, delivery managers, and project leaders working with software development teams, SaaS products, and digital transformation initiatives. This skill is essential for managing multiple projects simultaneously, aligning technical initiatives with business objectives, communicating with C-suite executives, and ensuring successful project delivery.
+
+**Core Value:** Improve project delivery predictability by 50% through structured frameworks and risk management, increase stakeholder satisfaction by 45% through proactive communication and transparency, and optimize resource utilization by 30% through portfolio-level capacity planning.
+
+## Core Capabilities
+
+- **Strategic Planning & Portfolio Management** - Develop product roadmaps aligned with business objectives, manage multi-project portfolios, prioritize initiatives, align technical work with business goals
+- **Stakeholder Management & Executive Communication** - Executive-level reporting, expectation management across C-suite and departments, facilitate strategic decision-making, build cross-functional consensus
+- **Risk & Budget Management** - Identify and mitigate project risks, budget planning and resource allocation, ROI analysis and business case development, change management and impact assessment
+- **Team Leadership & Coordination** - Cross-functional team coordination, resource capacity planning, conflict resolution and escalation management, foster high-performance team culture
+- **Atlassian MCP Integration** - Use Jira MCP for portfolio dashboards and cross-project reporting, Confluence MCP for strategic documentation and stakeholder reports
+
+## Quick Start
+
+### Common Senior PM Operations
+
+This skill provides Senior PM expertise through strategic frameworks, communication templates, and risk management patterns. Jira and Confluence operations are performed through the Atlassian MCP server configured in Claude Code settings.
+
+### Access Documentation Resources
+
+- **Strategic frameworks:** See Workflows section for project initiation, portfolio management, risk management, and stakeholder reporting
+- **Decision frameworks:** See Decision Framework section for escalation criteria and delegation guidelines
+- **Communication standards:** See Communication Standards section for update cadences and formats
+- **KPIs:** See Key Performance Indicators section for measuring project success
+
+### Key Workflows to Start With
+
+1. **Initiate New Software Project** - Define scope, stakeholders, RACI matrix, project charter, get executive approval (2 hours + 1 week)
+2. **Portfolio Management** - Review active projects, assess resource allocation, prioritize initiatives (ongoing monthly)
+3. **Risk Management** - Conduct risk identification, assess impact, develop mitigation plans (ongoing)
+4. **Stakeholder Reporting** - Create executive summaries with metrics, status, and recommendations (weekly/monthly)
+
+## Key Workflows
+
+### 1. Initiate New Software Project
+
+**Time:** 2 hours (plus 1 week for approval)
+
+**Steps:**
+1. **Gather business requirements** - Meet with stakeholders to define business needs
+   - Why are we building this? (Business objective - revenue, cost savings, risk mitigation)
+   - What problem does it solve? (Problem statement and impact)
+   - Who benefits and how? (Target users and value proposition)
+   - What's the timeline and budget? (Initial estimates)
+   - Success metrics (How will we know this succeeded?)
+2. **Define project scope and objectives** - Create clear boundaries for project
+   - Scope: What's in scope / What's out of scope
+   - Objectives: SMART goals (Specific, Measurable, Achievable, Relevant, Time-bound)
+   - Constraints: Budget, timeline, resource limitations
+   - Deliverables: What are we shipping at the end?
+3. **Identify stakeholders and create RACI matrix** - Map who influences and decides
+   - RACI: Responsible, Accountable, Consulted, Informed
+   - Example: Feature decisions → PM (Responsible), Eng Lead (Accountable), Designers (Consulted), Marketing (Informed)
+   - Identify executive sponsor (accountability)
+   - Communication plan for each group
+4. **Develop project charter** - One-page document with project essentials
+   - Business case and ROI
+   - Success criteria
+   - Timeline and milestones
+   - Budget and resources needed
+   - High-level risks
+5. **Get executive approval** - Present charter to decision-makers
+   - Secure sign-off from CFO (budget), CTO (resources), CEO (strategy alignment)
+   - Secure executive sponsor
+   - Document approval and assumptions
+6. **Handoff to Scrum Master and Jira Expert** - Begin execution phase
+   - Provide project context and success criteria
+   - Confirm team composition
+   - Approve sprint cadence and ceremony schedule
+   - Use Jira Expert to set up project in Jira
+
+**Expected Output:** Approved project charter with clear business case, defined scope, identified stakeholders, allocated resources, and executive sponsorship. Ready for Scrum Master to begin sprint planning.
+
+See [Workflows](#workflows) section for detailed project initiation steps.
+
+### 2. Execute Quarterly Portfolio Review
+
+**Time:** 3 hours (planning) + 2 hours (meeting)
+
+**Steps:**
+1. **Prepare portfolio data** - One week before review meeting
+   - List all active projects and major initiatives
+   - For each project: status (green/yellow/red), % complete, key metrics
+   - Budget tracking: spent vs. allocated vs. forecast
+   - Timeline tracking: on-time vs. slipping milestones
+   - Key risks and issues per project
+   - Use Jira Expert to pull cross-project metrics
+2. **Assess resource allocation** - Analyze if resources are optimal
+   - How are engineers allocated across projects? (%)
+   - Are there bottlenecks (one person on multiple critical projects)?
+   - Are any projects under-resourced?
+   - Do we have bench capacity or are we overallocated?
+3. **Prioritize based on business value and strategic fit** - Evaluate project portfolio
+   - High value + High strategic fit: Accelerate/Invest more
+   - High value + Low strategic fit: Continue but limit expansion
+   - Low value + High strategic fit: Maintain but don't expand
+   - Low value + Low strategic fit: Consider terminating
+4. **Identify cross-project dependencies** - Find risks
+   - Does Project B depend on Project A finishing first?
+   - Are teams waiting for other teams?
+   - Are there shared resources causing contention?
+   - Document dependencies and mitigation plans
+5. **Create executive summary dashboard** - Prepare visualization
+   - Portfolio status (X green, Y yellow, Z red projects)
+   - Overall budget health (% spent, % remaining, forecast accuracy)
+   - Timeline health (on-track vs. at-risk)
+   - Resource utilization (% allocated, % available)
+   - Top 5 risks
+   - Use Confluence Expert to create dashboard page
+6. **Conduct portfolio review meeting** - Present findings with leadership
+   - Review portfolio health and trends
+   - Discuss project prioritization and resource allocation
+   - Make decisions on budget, timeline, or scope changes
+   - Document decisions and communicate to stakeholders
+7. **Communicate outcomes to teams** - Cascade decisions down
+   - Share prioritization decisions
+   - Communicate resource allocation changes
+   - Explain timeline impacts or scope changes
+   - Set expectations for next quarter
+
+**Expected Output:** Clear understanding of portfolio health, optimized resource allocation, confirmed project priorities, and documented decisions on resource investment and timeline changes. Leadership aligned on strategy and resource deployment.
+
+See [Portfolio Management](#workflows) section for detailed methodology.
+
+### 3. Manage Risk and Issues Throughout Project Lifecycle
+
+**Time:** 1 hour per month (ongoing)
+
+**Steps:**
+1. **Conduct risk identification workshops** - Monthly or quarterly (1 hour)
+   - Gather project team in workshop format
+   - Brainstorm potential risks: technical, resource, timeline, stakeholder
+   - Capture risks without dismissing them
+   - Examples: "Key engineer might leave", "Third-party API might be slow", "Executive sponsor changed"
+2. **Assess probability and impact of each risk** - Rate and prioritize
+   - Probability: Low (10%), Medium (50%), High (80%+)
+   - Impact: Low (1 week delay), Medium (2-4 week delay), High (>4 week delay or project failure)
+   - Priority = Probability × Impact
+   - Focus on High probability × High impact risks
+3. **Develop mitigation and contingency plans** - For top risks
+   - Mitigation: How can we prevent or reduce this risk?
+   - Contingency: What's our backup plan if it happens?
+   - Owner: Who's responsible for managing this risk?
+   - Example Risk: "Key engineer leaves" → Mitigation: Knowledge transfer, cross-training → Contingency: Hire contractor
+4. **Track risks in risk register** - Maintain living document
+   - Create in Confluence page or spreadsheet
+   - Update monthly with new/closed risks
+   - Track mitigation progress
+   - Share with stakeholders
+5. **Escalate critical risks to stakeholders** - Real-time alerts
+   - When risk probability changes significantly → Notify sponsor
+   - When risk has realized (became actual issue) → Escalate immediately
+   - Propose mitigation or contingency plan
+   - Get sponsor decision on response
+6. **Close risks** - When mitigated or passed
+   - Document how risk was resolved
+   - Capture lessons learned
+   - Maintain historical record for future projects
+
+**Expected Output:** Comprehensive risk management process identifying threats early, developing mitigation plans, and preventing surprises. Stakeholders are informed and prepared for potential issues.
+
+See [Risk Management](#workflows) section for detailed risk assessment framework.
+
+### 4. Create and Present Stakeholder Status Report
+
+**Time:** 2 hours per reporting cycle
+
+**Steps:**
+1. **Define reporting cadence and KPIs** - Establish expectations
+   - Weekly: Brief team updates (5 mins)
+   - Bi-weekly: Detailed team status (30 mins)
+   - Monthly: Stakeholder business review (1 hour)
+   - Quarterly: Executive strategic review (1.5 hours)
+   - KPIs: What metrics matter to this stakeholder?
+   - Example Executive KPI: Revenue impact, team velocity, on-time delivery
+   - Example Team KPI: Burndown, velocity, bug rate, deployment frequency
+2. **Gather metrics from team** - Collect data from Scrum Master and Jira Expert
+   - From Scrum Master: Velocity trend, sprint completion %, team capacity changes
+   - From Jira Expert: Issue metrics (created, resolved, overdue), velocity, burndown
+   - From Engineering: Code quality, test coverage, deployment frequency
+   - From Product: Feature completion, user impact, customer feedback
+3. **Create executive summary** - 1-2 page executive overview
+   - **Project Status (Red/Yellow/Green):** Is project on track? Why or why not?
+   - **Key Accomplishments:** What did team complete this period?
+   - **Upcoming Milestones:** What's coming next?
+   - **Budget vs Actual:** Are we within budget?
+   - **Timeline:** Are we on schedule? If not, what's the recovery plan?
+   - **Blockers:** What's preventing progress and what's being done?
+   - **Risks:** What could derail us and how are we mitigating?
+4. **Build detailed metrics dashboard** - Multi-page detailed view
+   - Sprint metrics: Velocity trend, burndown, completion %, story breakdown
+   - Timeline: Milestone tracking, dependency status
+   - Budget: Spend tracking, cost per feature, forecast vs actual
+   - Quality: Bug trend, deployment frequency, incident rate
+   - Team: Utilization, capacity changes, turnover risk
+   - Use Confluence Expert to create dashboard page
+5. **Prepare talking points and trade-offs** - Anticipate questions
+   - "Velocity down 15% - why? Answer: Team member out on paternity leave, returning next sprint"
+   - "Timeline at risk - what's the impact? Answer: Could be 2 weeks late, impacting Q4 release"
+   - "Do we need more resources? Answer: Yes, one additional engineer would accelerate delivery by 3 weeks"
+6. **Present to stakeholders with insights** - Not just data, but analysis
+   - Start with business impact: "Revenue impact of 2-week delay is $500K"
+   - Present trends not just snapshots: "Velocity stable for 5 sprints shows we're predictable"
+   - Highlight wins: "Shipped payment feature 1 week early"
+   - Propose actions: "Recommend hiring contractor to reduce timeline risk"
+7. **Document decisions and communicate outcomes** - Record what was decided
+   - Capture any scope changes, budget adjustments, timeline modifications
+   - Communicate decisions to full team
+   - Update risk register if decisions affect risks
+   - File report in Confluence for historical record
+
+**Expected Output:** Stakeholders understand project health, progress toward goals, and upcoming needs. Executives have data for decision-making. Team understands priorities and any changes in direction. Documentation created for reference and historical tracking.
+
+See [Stakeholder Reporting](#workflows) section for detailed reporting format and best practices.
+
+## Python Tools
+
+This skill does not include Python automation tools. Senior PM operations are performed through the Atlassian MCP server, which provides integration for:
+
+- Creating and managing Jira projects for portfolio tracking
+- Generating cross-project reports and dashboards
+- Extracting metrics for executive visibility
+- Creating Confluence pages for documentation and reports
+- Linking issues across projects for dependency tracking
+
+See the Atlassian MCP Integration section below for detailed integration patterns and capabilities.
+
+## Reference Documentation
+
+The following sections provide comprehensive frameworks, templates, and best practices for Senior PM expertise:
+
+Strategic project management for Software, SaaS, and digital applications (web and mobile). Handles portfolio management, executive reporting, stakeholder alignment, risk management, and cross-functional leadership.
+
+## Core Responsibilities
+
+**Strategic Planning**
+- Develop product roadmaps aligned with business objectives
+- Define project scope, objectives, and success criteria
+- Create multi-project portfolio strategies
+- Align technical initiatives with business goals
+
+**Stakeholder Management**
+- Executive-level communication and reporting
+- Manage expectations across C-suite, product, engineering, and sales
+- Facilitate strategic decision-making
+- Build consensus across departments
+
+**Risk & Budget Management**
+- Identify and mitigate project risks
+- Budget planning and resource allocation
+- ROI analysis and business case development
+- Change management and impact assessment
+
+**Team Leadership**
+- Cross-functional team coordination
+- Resource capacity planning
+- Conflict resolution and escalation management
+- Foster high-performance team culture
+
+## Workflows
+
+### Project Initiation
+1. Gather business requirements and objectives
+2. Define project scope, timeline, and budget
+3. Identify stakeholders and create RACI matrix
+4. Develop project charter and get executive approval
+5. **HANDOFF TO**: Scrum Master for sprint planning or Jira Expert for project setup
+
+### Portfolio Management
+1. Review all active projects and initiatives
+2. Assess resource allocation across portfolio
+3. Prioritize projects based on business value and strategic fit
+4. Identify dependencies and potential conflicts
+5. Create executive summary dashboard
+6. **USE**: Jira Expert to pull cross-project metrics
+
+### Risk Management
+1. Conduct risk identification workshops
+2. Assess probability and impact of each risk
+3. Develop mitigation and contingency plans
+4. Track risks in risk register
+5. Escalate critical risks to stakeholders
+6. **USE**: Confluence Expert to document risk register
+
+### Stakeholder Reporting
+1. Define reporting cadence and KPIs
+2. Gather metrics from Scrum Master and Jira Expert
+3. Create executive summaries highlighting:
+   - Project status and health
+   - Budget vs. actual
+   - Key accomplishments and blockers
+   - Upcoming milestones
+   - Risks and mitigation actions
+4. Present to stakeholders with actionable insights
+5. **USE**: Confluence Expert for report templates
+
+## Decision Framework
+
+**When to Escalate**
+- Budget overruns >15%
+- Timeline slippage affecting releases
+- Resource conflicts across multiple projects
+- Strategic pivot requests
+- Critical risk realization
+
+**When to Delegate**
+- Day-to-day sprint management → Scrum Master
+- Technical project setup → Jira Expert
+- Documentation management → Confluence Expert
+- User/permission management → Atlassian Administrator
+- Template creation → Template Creator
+
+## Communication Standards
+
+**Executive Updates**: Weekly summary, monthly deep dive
+**Team Updates**: Bi-weekly all-hands, daily async
+**Stakeholder Reviews**: Monthly business review
+**Risk Reports**: Real-time for critical, weekly for others
 
 ## Handoff Protocols
 
-### TO Scrum Master
-**Context Transfer:**
-- Strategic priorities and success criteria
-- Resource allocation and team composition
-- Risk factors requiring sprint-level attention
-- Quality standards and acceptance criteria
+**TO Scrum Master**:
+- Project scope and objectives defined
+- Initial backlog priorities identified
+- Team composition confirmed
+- Sprint cadence agreed
 
-**Ongoing Collaboration:**
-- Weekly velocity and health metrics review
-- Sprint retrospective insights for portfolio learning
-- Impediment escalation and resolution support
-- Team capacity and utilization feedback
+**TO Jira Expert**:
+- Project structure requirements
+- Workflow and field needs
+- Reporting requirements
+- Integration needs
 
-### TO Product Owner
-**Strategic Context:**
-- Market prioritization and competitive analysis
-- User value frameworks and measurement criteria
-- Feature prioritization aligned with portfolio objectives
-- Resource and timeline constraints
+**TO Confluence Expert**:
+- Documentation requirements
+- Space structure needs
+- Template requirements
+- Knowledge management strategy
 
-**Decision Support:**
-- ROI analysis for feature investments
-- Risk assessment for product decisions
-- Market intelligence and customer feedback integration
-- Strategic roadmap alignment and dependencies
+**FROM Scrum Master**:
+- Sprint health metrics
+- Velocity trends
+- Team capacity issues
+- Blocker escalations
 
-### FROM Executive Team
-**Strategic Direction:**
-- Business objective updates and priority changes
-- Budget allocation and resource approval decisions
-- Risk appetite and tolerance level adjustments
-- Market strategy and competitive response decisions
+**FROM Jira Expert**:
+- Cross-project metrics
+- Issue trends and patterns
+- Workflow bottlenecks
+- Data quality issues
 
-**Performance Expectations:**
-- Portfolio health and value delivery targets
-- Timeline and milestone commitment expectations
-- Quality standards and compliance requirements
-- Stakeholder satisfaction and communication standards
+## Key Performance Indicators
 
-## Success Metrics & KPIs
+- On-time delivery rate
+- Budget variance
+- Stakeholder satisfaction score
+- Team velocity trends
+- Risk mitigation effectiveness
+- Resource utilization rate
 
-### Portfolio Performance Indicators
-- **On-time Delivery Rate**: >80% projects delivered within 10% of planned timeline
-- **Budget Variance**: <5% average variance across portfolio
-- **Quality Score**: >85 composite quality rating across all projects
-- **Risk Mitigation Effectiveness**: >90% risks with active mitigation plans
-- **Resource Utilization**: 75-85% average utilization across teams
+## Atlassian MCP Integration
 
-### Strategic Value Indicators  
-- **ROI Achievement**: >90% projects meeting ROI projections within 12 months
-- **Strategic Alignment**: >95% portfolio investment aligned with business priorities
-- **Innovation Balance**: 70% operational, 20% growth, 10% transformational projects
-- **Stakeholder Satisfaction**: >8.5/10 average satisfaction across executive stakeholders
-- **Value Acceleration**: <6 months average time from completion to value realization
+**Tools Used**:
+- Jira for portfolio dashboards and cross-project reporting
+- Confluence for strategic documentation and stakeholder reports
 
-### Risk Management Indicators
-- **Risk Exposure Level**: Maintain within approved risk appetite ranges
-- **Risk Resolution Time**: <30 days average for medium risks, <7 days for high risks
-- **Mitigation Cost Efficiency**: Mitigation spend <20% of total portfolio risk EMV
-- **Risk Prediction Accuracy**: >70% accuracy in risk probability assessments
-
-## Continuous Improvement Framework
-
-### Portfolio Learning Integration
-- Capture lessons learned from completed projects
-- Update risk probability assessments based on historical data
-- Refine estimation accuracy through retrospective analysis
-- Share best practices across project teams
-
-### Methodology Evolution
-- Regular review of prioritization model effectiveness
-- Update risk frameworks based on industry best practices
-- Integrate new tools and technologies for analysis efficiency
-- Benchmark against industry portfolio performance standards
-
-### Stakeholder Feedback Integration
-- Quarterly stakeholder satisfaction surveys
-- Executive interview feedback on decision support quality
-- Team feedback on process efficiency and effectiveness
-- Customer impact assessment of portfolio decisions
-
-This skill represents the pinnacle of enterprise project management capability, providing both strategic oversight and tactical execution support for complex digital transformation initiatives. The combination of quantitative analysis, sophisticated prioritization, and executive-level communication enables senior project managers to drive significant business value while managing enterprise-level risks and complexities.
-
-## Anti-patterns
-
-| Anti-pattern | Failure mode | Fix |
-|--------------|--------------|-----|
-| RAG status assigned by gut feel, not by dimension scoring | Optimism bias; reds surface too late; executives lose trust in the reports | Use `project_health_dashboard.py` thresholds and calibrate dimension weights with sponsors — don't override without documenting why |
-| Risk register full of "medium" risks | Team avoiding extreme ratings; no actionable signal | Run a calibration workshop with reference incidents; force a distribution across low/medium/high/critical |
-| Portfolio-level decisions made from project-level dashboards | Local optimization; strategic misalignment; hidden dependencies | Aggregate via portfolio view; apply WSJF/RICE across the portfolio, not per project |
-| Capacity planner shows zero gaps while teams complain of overload | Utilization excludes meeting overhead, context-switching, unplanned work | Include 15% meeting overhead and 5% context-switching; validate against team self-reports |
-| Stakeholder map classifies everyone as "Manage Closely" | Thresholds too low or scores inflated; dilutes engagement plan | Use relative ranking within the group; enforce the 4-quadrant split |
-| Executive reports written for the PM, not the executive | Attention drops; decisions delayed; report becomes an artifact not a tool | Lead with RAG + top 3 decisions needed; push dimension detail to an appendix |
-| Treating EMV as a point estimate | Planning against a single number; surprise when variance arrives | Present EMV with a confidence range; layer Monte Carlo for schedule-critical projects |
-| Ignoring risk correlation across projects | Shared dependency fails and multiple projects go red simultaneously | Run portfolio-level correlation analysis quarterly; flag shared vendors, shared teams, shared infra |
-| Rebalancing the portfolio reactively (project-by-project) instead of on a cadence | Whiplash for teams; rebalancing becomes political | Quarterly rebalancing on a fixed cadence using three horizons and efficient-frontier view |
-
-## Troubleshooting
-
-| Symptom | Likely Cause | Resolution |
-|---------|-------------|------------|
-| Portfolio health score does not match stakeholder perception | Dimension weights misaligned with organizational priorities, or data inputs incomplete | Recalibrate HEALTH_DIMENSIONS weights with executive sponsors; ensure all 5 dimensions have data |
-| Risk matrix shows all risks clustered in medium zone | Probability/impact scoring lacks granularity or team avoids extreme ratings | Facilitate risk calibration workshop; use three-point estimation and reference past incidents |
-| Resource capacity planner shows zero gaps despite team complaints | Utilization data does not account for meeting overhead, context-switching, or unplanned work | Verify CAPACITY_FACTORS config; include 15% meeting overhead and 5% context-switching penalty |
-| Stakeholder mapper classifies everyone as "Manage Closely" | Power/interest thresholds too low for your organization, or scores inflated | Adjust POWER_THRESHOLD and INTEREST_THRESHOLD (default: 5); use relative ranking within group |
-| RAG status oscillates between green and amber weekly | Thresholds set too tight, or data updates cause noise | Widen amber band (e.g., 55-80 instead of 60-80); use rolling 2-week average instead of point-in-time |
-| EMV calculations produce unrealistically high risk exposure | Category weights compounding with high probability/impact scores | Review RISK_CATEGORIES weights; cap financial risk weight at 1.4x; validate probability estimates against historical data |
-| Executive reports are too long for stakeholder attention span | Report template includes too many detail sections for the audience | Tailor output to audience using the tone guide; executives need 1-page RAG summary, not full dimension breakdown |
-
-## Success Criteria
-
-- Portfolio average health score maintained above 75/100 across all active projects
-- On-time delivery rate exceeds 80% (within 10% of planned timeline)
-- Budget variance maintained below 5% average across the portfolio
-- Risk mitigation effectiveness above 90% (all critical/high risks have active mitigation plans)
-- Resource utilization consistently in the 70-85% optimal range
-- Stakeholder satisfaction above 8.5/10 as measured by quarterly surveys
-- All projects in red RAG status have documented intervention plans within 48 hours
-
-## Scope & Limitations
-
-**In Scope:**
-- Multi-project portfolio health assessment with weighted composite scoring
-- Quantitative risk analysis using EMV, probability/impact matrices, and category weighting
-- Resource capacity planning with utilization optimization and skill-matching
-- Stakeholder mapping with Mendelow's Matrix and targeted communication plans
-- Executive-level reporting with RAG status dashboards and strategic recommendations
-
-**Out of Scope:**
-- Sprint-level team management (see `scrum-master/` skill)
-- Product backlog management and feature prioritization (see `execution/prioritization-frameworks/`)
-- Agile coaching and team maturity assessment (see `agile-coach/` skill)
-- Financial modeling beyond project-level ROI (see `finance/` domain skills)
-- Contract negotiation and procurement management
-
-**Important Caveats:**
-- Health scores use deterministic formulas, not ML predictions. Calibrate thresholds to your portfolio context.
-- Risk EMV calculations assume independent risks. Portfolio risk correlation analysis (Step 4) provides a more accurate combined view but requires cross-project dependency data.
-- Resource capacity planning models are weekly snapshots; they do not account for intra-week variability or unplanned work spikes.
-
-## Integration Points
-
-| Integration | Direction | Description |
-|------------|-----------|-------------|
-| `scrum-master/` | Receives from | Sprint velocity and health metrics feed portfolio-level health dashboards |
-| `sprint-retrospective/` | Receives from | Retro insights inform stakeholder reports and process improvement tracking |
-| `execution/brainstorm-okrs/` | Feeds into | Portfolio priorities and strategic context shape quarterly OKR themes |
-| `execution/outcome-roadmap/` | Feeds into | Portfolio health data influences roadmap commitment levels (Now/Next/Later) |
-| `discovery/pre-mortem/` | Receives from | Launch-blocking tigers escalate into portfolio risk register |
-| `execution/release-notes/` | Complements | Release notes incorporate stakeholder communication plans from mapper |
-| Jira via Atlassian MCP | Bidirectional | Pull project data for health analysis; push status reports to Confluence |
-| Financial Systems | Receives from | Real-time budget and spend data for variance analysis |
-
-## Tool Reference
-
-### project_health_dashboard.py
-
-Aggregates project metrics across timeline, budget, scope, quality, and risk dimensions. Produces composite health scores and RAG status.
-
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `data_file` | positional | (required) | Path to JSON file containing project portfolio data |
-| `--format` | choice | `text` | Output format: `text` or `json` |
-
-### risk_matrix_analyzer.py
-
-Builds probability/impact matrices, calculates weighted risk scores by category, and suggests mitigation strategies.
-
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `data_file` | positional | (required) | Path to JSON file containing risk register data |
-| `--format` | choice | `text` | Output format: `text` or `json` |
-
-### resource_capacity_planner.py
-
-Models team capacity across projects, identifies utilization imbalances, and provides optimization recommendations.
-
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `data_file` | positional | (required) | Path to JSON file containing resource and project capacity data |
-| `--format` | choice | `text` | Output format: `text` or `json` |
-
-### stakeholder_mapper.py
-
-Classifies stakeholders into Mendelow's Matrix quadrants and generates tailored communication plans with blocker engagement strategies.
-
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `data_file` | positional | (optional) | Path to JSON file with stakeholder data |
-| `--format` | choice | `text` | Output format: `text` or `json` |
-| `--demo` | flag | off | Run with built-in sample data (10 stakeholders) |
+**Key Queries**:
+- Use Jira MCP to aggregate metrics across multiple projects
+- Use Confluence MCP to create and maintain executive report pages
+- Track portfolio health through Jira filters and dashboards

@@ -2,8 +2,7 @@
 name: researchers-legal
 description: Researches court documents, indictments, plea agreements, and sentencing records. Use when the album subject involves legal proceedings or criminal cases.
 argument-hint: <"research [topic]" or track-path to verify>
-model: opus
-effort: high
+model: claude-opus-4-7
 user-invocable: false
 context: fork
 allowed-tools:

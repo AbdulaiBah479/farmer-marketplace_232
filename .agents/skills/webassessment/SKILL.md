@@ -1,12 +1,12 @@
 ---
 name: WebAssessment
-description: Full web app security assessment — app understanding, threat modeling, OWASP testing, ffuf fuzzing, Playwright automation, AI-assisted vuln analysis. Coordinates with Recon and PromptInjection skills. USE WHEN web assessment, pentest, security testing, vulnerability scan, threat model app, understand application, create threat model, vulnerability analysis, Gemini analysis, ffuf, fuzzing, bug bounty, OSINT, browser automation, Playwright.
+description: Web security assessment. USE WHEN web assessment, pentest, security testing, vulnerability scan. SkillSearch('webassessment') for docs.
 ---
 
 ## Customization
 
 **Before executing, check for user customizations at:**
-`~/.claude/PAI/USER/SKILLCUSTOMIZATIONS/WebAssessment/`
+`~/.claude/skills/CORE/USER/SKILLCUSTOMIZATIONS/WebAssessment/`
 
 If this directory exists, load and apply any PREFERENCES.md, configurations, or resources found there. These override default behavior. If the directory does not exist, proceed with skill defaults.
 
@@ -42,10 +42,10 @@ Security assessment infrastructure integrating reconnaissance, threat modeling, 
 | "understand application", "what does this app do", "map the application" | UnderstandApplication |
 | "threat model", "attack scenarios", "how would I attack" | CreateThreatModel |
 | "pentest", "security assessment", "test for vulnerabilities" | Pentest/MasterMethodology |
-| "fuzz with ffuf", "directory fuzzing", "content discovery" | ffuf/FfufGuide |
-| "OSINT", "reconnaissance", "open source intelligence" | osint/MasterGuide |
-| "test web app", "Playwright", "browser automation" | webapp/TestingGuide |
-| "bug bounty", "bounty programs" | bug-bounty/Programs |
+| "fuzz with ffuf", "directory fuzzing", "content discovery" | Ffuf/FfufGuide |
+| "OSINT", "reconnaissance", "open source intelligence" | Osint/MasterGuide |
+| "test web app", "Playwright", "browser automation" | Webapp/TestingGuide |
+| "bug bounty", "bounty programs" | BugBounty/Programs |
 | "vulnerability analysis with AI", "Gemini analysis" | VulnerabilityAnalysisGemini3 |
 
 ## Skill Integration
@@ -79,19 +79,19 @@ WebAssessment uses tools from the Recon skill:
 
 ```bash
 # Corporate structure for scope
-bun ~/.claude/skills/Security/Recon/Tools/CorporateStructure.ts target.com
+bun ~/.claude/skills/Recon/Tools/CorporateStructure.ts target.com
 
 # Subdomain enumeration
-bun ~/.claude/skills/Security/Recon/Tools/SubdomainEnum.ts target.com
+bun ~/.claude/skills/Recon/Tools/SubdomainEnum.ts target.com
 
 # Endpoint discovery from JavaScript
-bun ~/.claude/skills/Security/Recon/Tools/EndpointDiscovery.ts https://target.com
+bun ~/.claude/skills/Recon/Tools/EndpointDiscovery.ts https://target.com
 
 # Port scanning
-bun ~/.claude/skills/Security/Recon/Tools/PortScan.ts target.com
+bun ~/.claude/skills/Recon/Tools/PortScan.ts target.com
 
 # Path discovery
-bun ~/.claude/skills/Security/Recon/Tools/PathDiscovery.ts https://target.com
+bun ~/.claude/skills/Recon/Tools/PathDiscovery.ts https://target.com
 ```
 
 ## UnderstandApplication Output
@@ -149,29 +149,29 @@ Generates prioritized attack plan:
 - `Workflows/CreateThreatModel.md` - Attack scenario generation
 
 **Penetration Testing:**
-- `Workflows/pentest/MasterMethodology.md` - 6-phase methodology
-- `Workflows/pentest/ToolInventory.md` - Security tools reference
-- `Workflows/pentest/Reconnaissance.md` - Asset discovery
-- `Workflows/pentest/Exploitation.md` - Vulnerability testing
+- `Workflows/Pentest/MasterMethodology.md` - 6-phase methodology
+- `Workflows/Pentest/ToolInventory.md` - Security tools reference
+- `Workflows/Pentest/Reconnaissance.md` - Asset discovery
+- `Workflows/Pentest/Exploitation.md` - Vulnerability testing
 
 **Web Fuzzing:**
-- `Workflows/ffuf/FfufGuide.md` - FFUF fuzzing guide
-- `Workflows/ffuf/FfufHelper.md` - Automated fuzzing helper
+- `Workflows/Ffuf/FfufGuide.md` - FFUF fuzzing guide
+- `Workflows/Ffuf/FfufHelper.md` - Automated fuzzing helper
 
 **Bug Bounty:**
-- `Workflows/bug-bounty/Programs.md` - Program tracking
-- `Workflows/bug-bounty/AutomationTool.md` - Bounty automation
+- `Workflows/BugBounty/Programs.md` - Program tracking
+- `Workflows/BugBounty/AutomationTool.md` - Bounty automation
 
 **Web App Testing:**
-- `Workflows/webapp/TestingGuide.md` - Playwright testing
-- `Workflows/webapp/Examples.md` - Testing patterns
+- `Workflows/Webapp/TestingGuide.md` - Playwright testing
+- `Workflows/Webapp/Examples.md` - Testing patterns
 
 **OSINT:**
-- `Workflows/osint/MasterGuide.md` - OSINT methodology
-- `Workflows/osint/Reconnaissance.md` - Domain recon
-- `Workflows/osint/SocialMediaIntel.md` - SOCMINT
-- `Workflows/osint/Automation.md` - SpiderFoot/Maltego
-- `Workflows/osint/MetadataAnalysis.md` - ExifTool analysis
+- `Workflows/Osint/MasterGuide.md` - OSINT methodology
+- `Workflows/Osint/Reconnaissance.md` - Domain recon
+- `Workflows/Osint/SocialMediaIntel.md` - SOCMINT
+- `Workflows/Osint/Automation.md` - SpiderFoot/Maltego
+- `Workflows/Osint/MetadataAnalysis.md` - ExifTool analysis
 
 **AI-Powered:**
 - `Workflows/VulnerabilityAnalysisGemini3.md` - Gemini deep analysis

@@ -1,198 +1,261 @@
 ---
 name: aws-cost-optimizer
-description: "Comprehensive AWS cost analysis and optimization recommendations using AWS CLI and Cost Explorer"
-risk: safe
-source: community
-date_added: "2026-02-27"
+description: Analyze AWS spending across accounts, identify unused resources, recommend Reserved Instances, and generate cost optimization reports.
+version: 1.0.0
+author: Perry
 ---
 
-# AWS Cost Optimizer
+# AWS Cost Optimizer Skill
 
-Analyze AWS spending patterns, identify waste, and provide actionable cost reduction strategies.
+You are an AWS cost optimization specialist. Help Perry analyze spending across his AWS accounts and identify savings opportunities.
 
-## When to Use This Skill
+## Perry's AWS Accounts
 
-Use this skill when you need to analyze AWS spending, identify cost optimization opportunities, or reduce cloud waste.
+| Profile | Account ID | Primary Use |
+|---------|------------|-------------|
+| `default` | {YOUR_AWS_ACCOUNT} | Main account, client sites |
+| `support-forge` | - | Support Forge EC2 hosting |
+| `sweetmeadow` | - | Sweetmeadow Bakery resources |
 
-## Core Capabilities
+## Cost Analysis Workflow
 
-**Cost Analysis**
-- Parse AWS Cost Explorer data for trends and anomalies
-- Break down costs by service, region, and resource tags
-- Identify month-over-month spending increases
+### Step 1: Gather Current Spend
 
-**Resource Optimization**
-- Detect idle EC2 instances (low CPU utilization)
-- Find unattached EBS volumes and old snapshots
-- Identify unused Elastic IPs
-- Locate underutilized RDS instances
-- Find old S3 objects eligible for lifecycle policies
-
-**Savings Recommendations**
-- Suggest Reserved Instance/Savings Plans opportunities
-- Recommend instance rightsizing based on CloudWatch metrics
-- Identify resources in expensive regions
-- Calculate potential savings with specific actions
-
-## AWS CLI Commands
-
-### Get Cost and Usage
 ```bash
-# Last 30 days cost by service
+# Get current month costs by service
 aws ce get-cost-and-usage \
-  --time-period Start=$(date -d '30 days ago' +%Y-%m-%d),End=$(date +%Y-%m-%d) \
+  --time-period Start=$(date -d "$(date +%Y-%m-01)" +%Y-%m-%d),End=$(date +%Y-%m-%d) \
   --granularity MONTHLY \
-  --metrics BlendedCost \
-  --group-by Type=DIMENSION,Key=SERVICE
+  --metrics "UnblendedCost" \
+  --group-by Type=DIMENSION,Key=SERVICE \
+  --profile default
 
-# Daily costs for current month
+# Get daily costs for trending
 aws ce get-cost-and-usage \
-  --time-period Start=$(date +%Y-%m-01),End=$(date +%Y-%m-%d) \
+  --time-period Start=$(date -d "-30 days" +%Y-%m-%d),End=$(date +%Y-%m-%d) \
   --granularity DAILY \
-  --metrics UnblendedCost
+  --metrics "UnblendedCost" \
+  --profile default
 ```
 
-### Find Unused Resources
+### Step 2: Identify Cost Drivers
+
 ```bash
-# Unattached EBS volumes
-aws ec2 describe-volumes \
-  --filters Name=status,Values=available \
-  --query 'Volumes[*].[VolumeId,Size,VolumeType,CreateTime]' \
-  --output table
+# Top 10 most expensive resources
+aws ce get-cost-and-usage \
+  --time-period Start=$(date -d "-30 days" +%Y-%m-%d),End=$(date +%Y-%m-%d) \
+  --granularity MONTHLY \
+  --metrics "UnblendedCost" \
+  --group-by Type=DIMENSION,Key=RESOURCE_ID \
+  --profile default
 
-# Unused Elastic IPs
-aws ec2 describe-addresses \
-  --query 'Addresses[?AssociationId==null].[PublicIp,AllocationId]' \
-  --output table
+# Costs by linked account (if using Organizations)
+aws ce get-cost-and-usage \
+  --time-period Start=$(date -d "-30 days" +%Y-%m-%d),End=$(date +%Y-%m-%d) \
+  --granularity MONTHLY \
+  --metrics "UnblendedCost" \
+  --group-by Type=DIMENSION,Key=LINKED_ACCOUNT \
+  --profile default
+```
 
-# Idle EC2 instances (requires CloudWatch)
+### Step 3: Find Unused Resources
+
+#### EC2 Instances
+
+```bash
+# List all running EC2 instances
+aws ec2 describe-instances \
+  --filters "Name=instance-state-name,Values=running" \
+  --query 'Reservations[*].Instances[*].[InstanceId,InstanceType,LaunchTime,Tags[?Key==`Name`].Value|[0]]' \
+  --output table \
+  --profile default
+
+# Check CPU utilization (look for <10% avg)
 aws cloudwatch get-metric-statistics \
   --namespace AWS/EC2 \
   --metric-name CPUUtilization \
-  --dimensions Name=InstanceId,Value=i-xxxxx \
-  --start-time $(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%S) \
-  --end-time $(date -u +%Y-%m-%dT%H:%M:%S) \
+  --dimensions Name=InstanceId,Value=<instance-id> \
+  --start-time $(date -d "-7 days" -u +%Y-%m-%dT%H:%M:%SZ) \
+  --end-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
   --period 86400 \
-  --statistics Average
+  --statistics Average \
+  --profile default
+```
 
-# Old EBS snapshots (>90 days)
+#### Unattached EBS Volumes
+
+```bash
+# Find unattached volumes (wasting money!)
+aws ec2 describe-volumes \
+  --filters "Name=status,Values=available" \
+  --query 'Volumes[*].[VolumeId,Size,CreateTime]' \
+  --output table \
+  --profile default
+```
+
+#### Old EBS Snapshots
+
+```bash
+# Snapshots older than 90 days
 aws ec2 describe-snapshots \
   --owner-ids self \
-  --query 'Snapshots[?StartTime<=`'$(date -d '90 days ago' --iso-8601)'`].[SnapshotId,StartTime,VolumeSize]' \
-  --output table
+  --query 'Snapshots[?StartTime<=`'$(date -d "-90 days" +%Y-%m-%d)'`].[SnapshotId,VolumeSize,StartTime,Description]' \
+  --output table \
+  --profile default
 ```
 
-### Rightsizing Analysis
-```bash
-# List EC2 instances with their types
-aws ec2 describe-instances \
-  --query 'Reservations[*].Instances[*].[InstanceId,InstanceType,State.Name,Tags[?Key==`Name`].Value|[0]]' \
-  --output table
-
-# Get RDS instance utilization
-aws cloudwatch get-metric-statistics \
-  --namespace AWS/RDS \
-  --metric-name CPUUtilization \
-  --dimensions Name=DBInstanceIdentifier,Value=mydb \
-  --start-time $(date -u -d '30 days ago' +%Y-%m-%dT%H:%M:%S) \
-  --end-time $(date -u +%Y-%m-%dT%H:%M:%S) \
-  --period 86400 \
-  --statistics Average,Maximum
-```
-
-## Optimization Workflow
-
-1. **Baseline Assessment**
-   - Pull 3-6 months of cost data
-   - Identify top 5 spending services
-   - Calculate growth rate
-
-2. **Quick Wins**
-   - Delete unattached EBS volumes
-   - Release unused Elastic IPs
-   - Stop/terminate idle EC2 instances
-   - Delete old snapshots
-
-3. **Strategic Optimization**
-   - Analyze Reserved Instance coverage
-   - Review instance types vs. workload
-   - Implement S3 lifecycle policies
-   - Consider Spot instances for non-critical workloads
-
-4. **Ongoing Monitoring**
-   - Set up AWS Budgets with alerts
-   - Enable Cost Anomaly Detection
-   - Tag resources for cost allocation
-   - Monthly cost review meetings
-
-## Cost Optimization Checklist
-
-- [ ] Enable AWS Cost Explorer
-- [ ] Set up cost allocation tags
-- [ ] Create AWS Budget with alerts
-- [ ] Review and delete unused resources
-- [ ] Analyze Reserved Instance opportunities
-- [ ] Implement S3 Intelligent-Tiering
-- [ ] Review data transfer costs
-- [ ] Optimize Lambda memory allocation
-- [ ] Use CloudWatch Logs retention policies
-- [ ] Consider multi-region cost differences
-
-## Example Prompts
-
-**Analysis**
-- "Show me AWS costs for the last 3 months broken down by service"
-- "What are my top 10 most expensive resources?"
-- "Compare this month's spending to last month"
-
-**Optimization**
-- "Find all unattached EBS volumes and calculate savings"
-- "Identify EC2 instances with <5% CPU utilization"
-- "Suggest Reserved Instance purchases based on usage"
-- "Calculate savings from deleting snapshots older than 90 days"
-
-**Implementation**
-- "Create a script to delete unattached volumes"
-- "Set up a budget alert for $1000/month"
-- "Generate a cost optimization report for leadership"
-
-## Best Practices
-
-- Always test in non-production first
-- Verify resources are truly unused before deletion
-- Document all cost optimization actions
-- Calculate ROI for optimization efforts
-- Automate recurring optimization tasks
-- Use AWS Trusted Advisor recommendations
-- Enable AWS Cost Anomaly Detection
-
-## Integration with Kiro CLI
-
-This skill works seamlessly with Kiro CLI's AWS integration:
+#### Unused Elastic IPs
 
 ```bash
-# Use Kiro to analyze costs
-kiro-cli chat "Use aws-cost-optimizer to analyze my spending"
-
-# Generate optimization report
-kiro-cli chat "Create a cost optimization plan using aws-cost-optimizer"
+# Elastic IPs not attached (charged when unused!)
+aws ec2 describe-addresses \
+  --query 'Addresses[?AssociationId==null].[PublicIp,AllocationId]' \
+  --output table \
+  --profile default
 ```
 
-## Safety Notes
+#### S3 Analysis
 
-- **Risk Level: Low** - Read-only analysis is safe
-- **Deletion Actions: Medium Risk** - Always verify before deleting resources
-- **Production Changes: High Risk** - Test rightsizing in dev/staging first
-- Maintain backups before any deletion
-- Use `--dry-run` flag when available
+```bash
+# Bucket sizes and object counts
+aws s3api list-buckets --query 'Buckets[*].Name' --output text | \
+  xargs -I {} sh -c 'echo "{}:" && aws s3 ls s3://{} --recursive --summarize | tail -2'
 
-## Additional Resources
+# Check for lifecycle policies (are old objects being cleaned up?)
+aws s3api get-bucket-lifecycle-configuration --bucket <bucket-name> --profile default
+```
 
-- [AWS Cost Optimization Best Practices](https://aws.amazon.com/pricing/cost-optimization/)
-- [AWS Well-Architected Framework - Cost Optimization](https://docs.aws.amazon.com/wellarchitected/latest/cost-optimization-pillar/welcome.html)
-- [AWS Cost Explorer API](https://docs.aws.amazon.com/cost-management/latest/APIReference/Welcome.html)
+#### CloudFront Distributions
 
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
+```bash
+# List all distributions
+aws cloudfront list-distributions \
+  --query 'DistributionList.Items[*].[Id,DomainName,Status,Origins.Items[0].DomainName]' \
+  --output table \
+  --profile default
+```
+
+### Step 4: Reserved Instance Recommendations
+
+```bash
+# Get RI recommendations
+aws ce get-reservation-purchase-recommendation \
+  --service "Amazon Elastic Compute Cloud - Compute" \
+  --payment-option NO_UPFRONT \
+  --term-in-years ONE_YEAR \
+  --profile default
+```
+
+### Step 5: Savings Plans Check
+
+```bash
+# Current Savings Plans coverage
+aws ce get-savings-plans-coverage \
+  --time-period Start=$(date -d "-30 days" +%Y-%m-%d),End=$(date +%Y-%m-%d) \
+  --granularity MONTHLY \
+  --profile default
+
+# Savings Plans recommendations
+aws ce get-savings-plans-purchase-recommendation \
+  --savings-plans-type COMPUTE_SP \
+  --term-in-years ONE_YEAR \
+  --payment-option NO_UPFRONT \
+  --lookback-period-in-days SIXTY_DAYS \
+  --profile default
+```
+
+## Cost Report Template
+
+```markdown
+# AWS Cost Optimization Report
+**Generated**: [Date]
+**Period**: [Start] - [End]
+
+## Executive Summary
+- **Total Spend**: $[X]
+- **vs Last Month**: [+/-X%]
+- **Potential Savings**: $[X]/month
+
+## Spend by Service
+| Service | Cost | % of Total |
+|---------|------|------------|
+| EC2 | $X | X% |
+| S3 | $X | X% |
+| CloudFront | $X | X% |
+| RDS | $X | X% |
+| Other | $X | X% |
+
+## Unused Resources Found
+### Immediate Action (Wasting Money Now)
+- [ ] X unattached EBS volumes ($X/month)
+- [ ] X unused Elastic IPs ($X/month)
+- [ ] X idle EC2 instances ($X/month)
+
+### Review Recommended
+- [ ] X old snapshots (>90 days)
+- [ ] X underutilized instances (<10% CPU)
+
+## Optimization Recommendations
+
+### Quick Wins (< 1 hour)
+1. Delete unattached EBS volumes: **Save $X/month**
+2. Release unused Elastic IPs: **Save $X/month**
+3. Delete old snapshots: **Save $X/month**
+
+### Medium Effort
+1. Right-size EC2 instances: **Save $X/month**
+2. Add S3 lifecycle policies: **Save $X/month**
+3. Review CloudFront pricing tiers
+
+### Strategic (Consider)
+1. Reserved Instances for stable workloads
+2. Savings Plans for compute
+3. Spot instances for non-critical workloads
+
+## Account-Specific Notes
+
+### Default Account
+[Notes]
+
+### Support Forge
+[Notes]
+
+### Sweetmeadow
+[Notes]
+```
+
+## Common Cost Traps
+
+### Watch Out For
+1. **Forgotten dev/test resources** - Still running after project ends
+2. **Unattached EBS volumes** - Left behind after instance termination
+3. **Old AMIs and snapshots** - Accumulate over time
+4. **Oversized instances** - t3.large when t3.micro would work
+5. **Data transfer costs** - Often overlooked, can be huge
+6. **Idle load balancers** - $16+/month even with no traffic
+7. **NAT Gateway data processing** - $0.045/GB adds up fast
+
+### Perry's Sites Cost Profile
+
+| Site | Expected Monthly Cost |
+|------|----------------------|
+| Static S3+CloudFront | $1-5 |
+| Amplify (small) | $5-20 |
+| EC2 t3.micro | $8-15 |
+| EC2 t3.small | $15-25 |
+
+## Automation Ideas
+
+```bash
+# Daily cost alert (add to cron)
+COST=$(aws ce get-cost-and-usage \
+  --time-period Start=$(date +%Y-%m-01),End=$(date +%Y-%m-%d) \
+  --granularity MONTHLY \
+  --metrics "UnblendedCost" \
+  --query 'ResultsByTime[0].Total.UnblendedCost.Amount' \
+  --output text)
+
+if (( $(echo "$COST > 100" | bc -l) )); then
+  echo "AWS spend alert: $COST this month" | mail -s "AWS Cost Alert" {YOUR_EMAIL}
+fi
+```

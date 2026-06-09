@@ -1,85 +1,43 @@
 ---
-name: architecture
-description: Create or evaluate an architecture decision record (ADR). Use when choosing between technologies (e.g., Kafka vs SQS), documenting a design decision with trade-offs and consequences, reviewing a system design proposal, or designing a new component from requirements and constraints.
-argument-hint: "<decision or system to design>"
+name: Architecture
+description: Standards for structural design, Clean Architecture, and project layout in Golang.
+metadata:
+  labels: [golang, architecture, clean-arch, project-layout, ddd]
+  triggers:
+    files: ['go.mod', 'internal/**']
+    keywords:
+      [architecture, structure, folder layout, clean arch, dependency injection]
 ---
 
-# /architecture
+# Golang Architecture Standards
 
-> If you see unfamiliar placeholders or need to check which tools are connected, see [CONNECTORS.md](../../CONNECTORS.md).
+## **Priority: P0 (CRITICAL)**
 
-Create an Architecture Decision Record (ADR) or evaluate a system design.
+## Principles
 
-## Usage
+- **Clean Architecture**: Separate concerns. Inner layers (Domain) rely on nothing. Outer layers (Adapters) rely on Inner.
+- **Project Layout**: Follow standard Go project layout (`cmd`, `internal`, `pkg`).
+- **Dependency Injection**: Explicitly pass dependencies via constructors. Avoid global singletons.
+- **Package Oriented Design**: Organize by feature/domain, not by layer (avoid `controllers/`, `services/` at root).
+- **Interface Segregation**: Define interfaces where they are _used_ (Consumer implementation).
 
-```
-/architecture $ARGUMENTS
-```
+## Standard Project Layout
 
-## Modes
+See [Standard Project Layout](references/project-layout.md) for directory tree.
 
-**Create an ADR**: "Should we use Kafka or SQS for our event bus?"
-**Evaluate a design**: "Review this microservices proposal"
-**System design**: "Design the notification system for our app"
+### Layer Rules
 
-See the **system-design** skill for detailed frameworks on requirements gathering, scalability analysis, and trade-off evaluation.
+- **Domain**: Inner-most. No deps.
+- **UseCase**: Depends on Domain.
+- **Adapter**: Outer-most. Depends on UseCase/Domain.
 
-## Output — ADR Format
+## Guidelines
 
-```markdown
-# ADR-[number]: [Title]
+- **Use Constructors**: `NewService(repo Repository) *Service`.
+- **Inversion of Control**: Service depends on `Repository` interface, not `SQLRepository` struct.
+- **Wire up in Main**: Main function composes the dependency graph.
 
-**Status:** Proposed | Accepted | Deprecated | Superseded
-**Date:** [Date]
-**Deciders:** [Who needs to sign off]
+## References
 
-## Context
-[What is the situation? What forces are at play?]
-
-## Decision
-[What is the change we're proposing?]
-
-## Options Considered
-
-### Option A: [Name]
-| Dimension | Assessment |
-|-----------|------------|
-| Complexity | [Low/Med/High] |
-| Cost | [Assessment] |
-| Scalability | [Assessment] |
-| Team familiarity | [Assessment] |
-
-**Pros:** [List]
-**Cons:** [List]
-
-### Option B: [Name]
-[Same format]
-
-## Trade-off Analysis
-[Key trade-offs between options with clear reasoning]
-
-## Consequences
-- [What becomes easier]
-- [What becomes harder]
-- [What we'll need to revisit]
-
-## Action Items
-1. [ ] [Implementation step]
-2. [ ] [Follow-up]
-```
-
-## If Connectors Available
-
-If **~~knowledge base** is connected:
-- Search for prior ADRs and design docs
-- Find relevant technical context
-
-If **~~project tracker** is connected:
-- Link to related epics and tickets
-- Create implementation tasks
-
-## Tips
-
-1. **State constraints upfront** — "We need to ship in 2 weeks" or "Must handle 10K rps" shapes the answer.
-2. **Name your options** — Even if you're leaning one way, I'll give a more balanced analysis with explicit alternatives.
-3. **Include non-functional requirements** — Latency, cost, team expertise, and maintenance burden matter as much as features.
+- [Standard Project Layout](references/project-layout.md)
+- [Clean Architecture Layers](references/clean-arch.md)

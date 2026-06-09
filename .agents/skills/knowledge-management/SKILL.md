@@ -1,276 +1,287 @@
 ---
 name: knowledge-management
-description: Write and maintain knowledge base articles from resolved support issues. Use when a ticket has been resolved and the solution should be documented, when updating existing KB articles, or when creating how-to guides, troubleshooting docs, or FAQ entries.
+description: 4-layer knowledge capture system for development sessions. Use when user says /mem (quick capture), /distill (extract patterns), /td (post-task retrospective with Before/After context), /improve (work on pending items), or /commit (atomic commits via TDG). Manages docs/learnings/, docs/knowledge-base/, and docs/retrospective/ directories.
 ---
 
-# Knowledge Management Skill
-
-You are an expert at creating, organizing, and maintaining support knowledge base content. You write articles that are searchable, scannable, and solve customer problems on the first read. You understand that every good KB article reduces future ticket volume.
-
-## Article Structure and Formatting Standards
-
-### Universal Article Elements
-
-Every KB article should include:
-
-1. **Title**: Clear, searchable, describes the outcome or problem (not internal jargon)
-2. **Overview**: 1-2 sentences explaining what this article covers and who it's for
-3. **Body**: Structured content appropriate to the article type
-4. **Related articles**: Links to relevant companion content
-5. **Metadata**: Category, tags, audience, last updated date
-
-### Formatting Rules
-
-- **Use headers (H2, H3)** to break content into scannable sections
-- **Use numbered lists** for sequential steps
-- **Use bullet lists** for non-sequential items
-- **Use bold** for UI element names, key terms, and emphasis
-- **Use code blocks** for commands, API calls, error messages, and configuration values
-- **Use tables** for comparisons, options, or reference data
-- **Use callouts/notes** for warnings, tips, and important caveats
-- **Keep paragraphs short** — 2-4 sentences max
-- **One idea per section** — if a section covers two topics, split it
-
-## Writing for Searchability
-
-Articles are useless if customers can't find them. Optimize every article for search:
-
-### Title Best Practices
-
-| Good Title | Bad Title | Why |
-|------------|-----------|-----|
-| "How to configure SSO with Okta" | "SSO Setup" | Specific, includes the tool name customers search for |
-| "Fix: Dashboard shows blank page" | "Dashboard Issue" | Includes the symptom customers experience |
-| "API rate limits and quotas" | "API Information" | Includes the specific terms customers search for |
-| "Error: 'Connection refused' when importing data" | "Import Problems" | Includes the exact error message |
-
-### Keyword Optimization
-
-- **Include exact error messages** — customers copy-paste error text into search
-- **Use customer language**, not internal terminology — "can't log in" not "authentication failure"
-- **Include common synonyms** — "delete/remove", "dashboard/home page", "export/download"
-- **Add alternate phrasings** — address the same issue from different angles in the overview
-- **Tag with product areas** — make sure category and tags match how customers think about the product
-
-### Opening Sentence Formula
-
-Start every article with a sentence that restates the problem or task in plain language:
-
-- **How-to**: "This guide shows you how to [accomplish X]."
-- **Troubleshooting**: "If you're seeing [symptom], this article explains how to fix it."
-- **FAQ**: "[Question in the customer's words]? Here's the answer."
-- **Known issue**: "Some users are experiencing [symptom]. Here's what we know and how to work around it."
-
-## Common Article Types
-
-### How-to Articles
-
-**Purpose**: Step-by-step instructions for accomplishing a task.
-
-**Structure**:
-```
-# How to [accomplish task]
-
-[Overview — what this guide covers and when you'd use it]
-
-## Prerequisites
-- [What's needed before starting]
-
-## Steps
-### 1. [Action]
-[Instruction with specific details]
-
-### 2. [Action]
-[Instruction]
-
-## Verify It Worked
-[How to confirm success]
-
-## Common Issues
-- [Issue]: [Fix]
-
-## Related Articles
-- [Links]
-```
-
-**Best practices**:
-- Start each step with a verb
-- Include the specific path: "Go to Settings > Integrations > API Keys"
-- Mention what the user should see after each step ("You should see a green confirmation banner")
-- Test the steps yourself or verify with a recent ticket resolution
-
-### Troubleshooting Articles
-
-**Purpose**: Diagnose and resolve a specific problem.
-
-**Structure**:
-```
-# [Problem description — what the user sees]
-
-## Symptoms
-- [What the user observes]
-
-## Cause
-[Why this happens — brief, non-jargon explanation]
-
-## Solution
-### Option 1: [Primary fix]
-[Steps]
-
-### Option 2: [Alternative if Option 1 doesn't work]
-[Steps]
-
-## Prevention
-[How to avoid this in the future]
-
-## Still Having Issues?
-[How to get help]
-```
-
-**Best practices**:
-- Lead with symptoms, not causes — customers search for what they see
-- Provide multiple solutions when possible (most likely fix first)
-- Include a "Still having issues?" section that points to support
-- If the root cause is complex, keep the customer-facing explanation simple
-
-### FAQ Articles
-
-**Purpose**: Quick answer to a common question.
-
-**Structure**:
-```
-# [Question — in the customer's words]
-
-[Direct answer — 1-3 sentences]
-
-## Details
-[Additional context, nuance, or explanation if needed]
-
-## Related Questions
-- [Link to related FAQ]
-- [Link to related FAQ]
-```
-
-**Best practices**:
-- Answer the question in the first sentence
-- Keep it concise — if the answer needs a walkthrough, it's a how-to, not an FAQ
-- Group related FAQs and link between them
-
-### Known Issue Articles
-
-**Purpose**: Document a known bug or limitation with a workaround.
-
-**Structure**:
-```
-# [Known Issue]: [Brief description]
-
-**Status:** [Investigating / Workaround Available / Fix In Progress / Resolved]
-**Affected:** [Who/what is affected]
-**Last updated:** [Date]
-
-## Symptoms
-[What users experience]
-
-## Workaround
-[Steps to work around the issue, or "No workaround available"]
-
-## Fix Timeline
-[Expected fix date or current status]
-
-## Updates
-- [Date]: [Update]
-```
-
-**Best practices**:
-- Keep the status current — nothing erodes trust faster than a stale known issue article
-- Update the article when the fix ships and mark as resolved
-- If resolved, keep the article live for 30 days for customers still searching the old symptoms
-
-## Review and Maintenance Cadence
-
-Knowledge bases decay without maintenance. Follow this schedule:
-
-| Activity | Frequency | Who |
-|----------|-----------|-----|
-| **New article review** | Before publishing | Peer review + SME for technical content |
-| **Accuracy audit** | Quarterly | Support team reviews top-traffic articles |
-| **Stale content check** | Monthly | Flag articles not updated in 6+ months |
-| **Known issue updates** | Weekly | Update status on all open known issues |
-| **Analytics review** | Monthly | Check which articles have low helpfulness ratings or high bounce rates |
-| **Gap analysis** | Quarterly | Identify top ticket topics without KB articles |
-
-### Article Lifecycle
-
-1. **Draft**: Written, needs review
-2. **Published**: Live and available to customers
-3. **Needs update**: Flagged for revision (product change, feedback, or age)
-4. **Archived**: No longer relevant but preserved for reference
-5. **Retired**: Removed from the knowledge base
-
-### When to Update vs. Create New
-
-**Update existing** when:
-- The product changed and steps need refreshing
-- The article is mostly right but missing a detail
-- Feedback indicates customers are confused by a specific section
-- A better workaround or solution was found
-
-**Create new** when:
-- A new feature or product area needs documentation
-- A resolved ticket reveals a gap — no article exists for this topic
-- The existing article covers too many topics and should be split
-- A different audience needs the same information explained differently
-
-## Linking and Categorization Taxonomy
-
-### Category Structure
-
-Organize articles into a hierarchy that matches how customers think:
+# Knowledge Management System
+
+4-layer system for capturing and organizing development knowledge.
+
+## Commands
+
+| Command | Layer | Output | Trigger |
+|---------|-------|--------|---------|
+| `/mem [topic]` | 1 | `docs/learnings/YYYY-MM/DD/HH.MM_slug.md` | Quick insight capture |
+| `/distill [topic]` | 2 | `docs/knowledge-base/[topic].md` | 3+ learnings on same topic |
+| `/td` | 3 | `docs/retrospective/YYYY-MM/retrospective_*.md` | Task completed |
+| `/improve` | 4 | Implementation | Work on pending items |
+| `/commit` | - | Git commits | Atomic commits via TDG |
+| `/pr-review` | - | Learning doc + PR updates | Handle PR review feedback |
+| `/pr-poll` | - | Notification daemon | Auto PR review notifications |
+| `/example [lang] [name]` | - | `docs/examples/[lang]/[name].[ext]` | Save code snippets |
+| `/summary weekly\|monthly` | - | `docs/summaries/YYYY-MM-weekN.md` | Session summaries |
+| `/search [query]` | - | Search results | Search knowledge index |
+| `/share [file]` | - | `docs/shared-knowledge/[file]` | Cross-project knowledge |
+| `/flow [name]` | - | `docs/flows/[name].md` | Process flow diagrams |
+| `/pattern [name]` | - | `docs/patterns/[name].md` | Design pattern docs |
+| `/cleanup` | - | Archive + cleanup | Retention policy management |
+
+## Flow
 
 ```
-Getting Started
-├── Account setup
-├── First-time configuration
-└── Quick start guides
-
-Features & How-tos
-├── [Feature area 1]
-├── [Feature area 2]
-└── [Feature area 3]
-
-Integrations
-├── [Integration 1]
-├── [Integration 2]
-└── API reference
-
-Troubleshooting
-├── Common errors
-├── Performance issues
-└── Known issues
-
-Billing & Account
-├── Plans and pricing
-├── Billing questions
-└── Account management
+ทำงาน → /mem "insight" → /distill topic → /td → /improve
+         (Layer 1)        (Layer 2)      (Layer 3) (Layer 4)
 ```
 
-### Linking Best Practices
+## Directory Structure
 
-- **Link from troubleshooting to how-to**: "For setup instructions, see [How to configure X]"
-- **Link from how-to to troubleshooting**: "If you encounter errors, see [Troubleshooting X]"
-- **Link from FAQ to detailed articles**: "For a full walkthrough, see [Guide to X]"
-- **Link from known issues to workarounds**: Keep the chain from problem to solution short
-- **Use relative links** within the KB — they survive restructuring better than absolute URLs
-- **Avoid circular links** — if A links to B, B shouldn't link back to A unless both are genuinely useful entry points
+```
+docs/
+├── learnings/           # /mem output
+│   └── YYYY-MM/DD/
+├── knowledge-base/      # /distill output
+├── examples/            # /example output
+│   └── [language]/
+├── summaries/           # /summary output
+├── shared-knowledge/    # /share output (cross-project)
+├── flows/               # /flow output (Mermaid diagrams)
+├── patterns/            # /pattern output (design patterns)
+└── retrospective/       # /td output
+    └── YYYY-MM/
+```
 
-## Using This Skill
+## Setup
 
-When creating and maintaining KB content:
+Run init script to create directory structure:
+```bash
+./scripts/init.sh $PROJECT_ROOT
+```
 
-1. Write for the customer who is frustrated and searching for an answer — be clear, direct, and helpful
-2. Every article should be findable through search using the words a customer would type
-3. Test your articles — follow the steps yourself or have someone unfamiliar with the topic follow them
-4. Keep articles focused — one problem, one solution. Split if an article is growing too long
-5. Maintain aggressively — a wrong article is worse than no article
-6. Track what's missing — every ticket that could have been a KB article is a content gap
-7. Measure impact — articles that don't get traffic or don't reduce tickets need to be improved or retired
+Or manually:
+```bash
+mkdir -p docs/{learnings,knowledge-base,retrospective}
+```
+
+---
+
+## Command: /mem
+
+**Quick knowledge capture** - ใช้ระหว่างทำงานเมื่อพบ insight
+
+```bash
+TZ='Asia/Bangkok' date '+%Y-%m/%d/%H.%M'  # Path format
+```
+
+**Output**: `docs/learnings/YYYY-MM/DD/HH.MM_[slug].md`
+
+**Template**: See `references/mem-template.md`
+
+**Key sections**: Key Insight, What We Learned, Gotchas, Tags
+
+---
+
+## Command: /distill
+
+**Extract patterns** - รวม learnings เป็น reusable patterns
+
+**When**: มี 3+ learnings เรื่องเดียวกัน หรือ weekly review
+
+**Output**: `docs/knowledge-base/[topic-name].md`
+
+**Template**: See `references/distill-template.md`
+
+**Key sections**: Key Insight, The Problem, The Solution (with code), Anti-Patterns, When to Apply
+
+**After**: Mark source learnings as "Distilled"
+
+---
+
+## Command: /td
+
+**Post-task retrospective** with Before/After context
+
+**Output**: `docs/retrospective/YYYY-MM/retrospective_YYYY-MM-DD_hhmmss.md`
+
+**Template**: See `references/td-template.md`
+
+### Type Classification (frontmatter)
+
+| Type | Use When |
+|------|----------|
+| `feature` | New functionality |
+| `bugfix` | Bug fix |
+| `refactor` | Code restructure |
+| `decision` | Architecture decision |
+| `discovery` | Research/learning |
+| `config` | Configuration changes |
+| `docs` | Documentation only |
+
+### Required: Before/After Context
+
+```markdown
+## Context: Before
+- **Problem**: ปัญหาที่เจอ
+- **Existing Behavior**: พฤติกรรมเดิม
+- **Metrics**: ตัวเลขก่อนแก้
+
+## Context: After
+- **Solution**: วิธีแก้
+- **New Behavior**: พฤติกรรมใหม่
+- **Metrics**: ตัวเลขหลังแก้
+```
+
+### Decisions Table
+
+```markdown
+| Decision | Options Considered | Chosen | Rationale |
+|----------|-------------------|--------|-----------|
+```
+
+---
+
+## Command: /commit
+
+**Atomic commits** via TDG plugin
+
+**Delegates to**: `/tdg:atomic-commit` from https://github.com/chanwit/tdg
+
+**What it does**:
+- Analyzes staged/unstaged changes
+- Detects mixed concerns (multiple unrelated changes)
+- Helps create clean, focused atomic commits
+- Each commit is a complete unit of work
+
+**Usage**: Simply run `/commit` and it will invoke TDG's atomic-commit skill.
+
+---
+
+## Command: /improve
+
+**Work on pending items** from all knowledge sources
+
+**Scan order** (priority):
+1. `docs/knowledge-base/` - Patterns to apply
+2. `docs/retrospective/` - Future Improvements (`- [ ]`)
+3. `docs/learnings/` - Gotchas to fix (skip if "Distilled")
+
+**Workflow**:
+1. Extract unchecked items
+2. Present prioritized list
+3. User selects items
+4. Implement & commit
+5. Update source file (`- [ ]` → `- [x]`)
+
+---
+
+## Search Commands
+
+```bash
+# Find by type
+grep -l "type: bugfix" docs/retrospective/**/*.md
+
+# Search content
+grep -r "mongodb" docs/
+
+# Recent learnings
+find docs/learnings -name "*.md" -mtime -7
+```
+
+---
+
+## Command: /pr-poll
+
+**Automatic PR review notifications** - Polling daemon ตรวจสอบ PR reviews
+
+**What it does**:
+- Poll GitHub for user's open PRs
+- Detect new reviews, comments, and review decisions
+- Send macOS notifications with review details
+- Suggest running `/pr-review` to respond
+
+**Usage**:
+```bash
+/pr-poll              # Show daemon status
+/pr-poll start        # Start polling daemon
+/pr-poll stop         # Stop daemon
+/pr-poll check        # Check once without daemon
+```
+
+**Notification sounds**:
+- APPROVED → Glass
+- CHANGES_REQUESTED → Basso
+- COMMENTED → Ping
+
+**Files**:
+- `~/.pr-review-poll.pid` - Daemon PID
+- `~/.pr-review-poll.log` - Daemon logs
+- `~/.pr-review-state.json` - PR state tracking
+
+---
+
+## Command: /cleanup
+
+**Retention policy management** - จัดการไฟล์เก่าด้วย retention policy
+
+**What it does**:
+- Delete old auto-captured files (configurable retention period)
+- Archive old files before deletion (optional)
+- Dry-run mode to preview changes
+- Clean draft learnings that haven't been distilled
+
+**Usage**:
+```bash
+/cleanup                    # Preview (30 days default)
+/cleanup 7                  # Preview with 7 days retention
+/cleanup 14 --archive       # Archive & delete files older than 14 days
+/cleanup --all              # Clean all targets
+```
+
+**Protected directories** (never auto-deleted):
+- `docs/retrospective/` - Permanent records
+- `docs/knowledge-base/` - Distilled knowledge
+
+---
+
+## Auto-Capture
+
+บันทึก session อัตโนมัติเมื่อจบงาน
+
+### Options
+
+| Option | Command | Trigger |
+|--------|---------|---------|
+| Hooks | - | Auto on session stop |
+| Wrapper | `claude` (alias) | Interactive prompt |
+| AI-Powered | `./scripts/ai-capture.sh` | Manual with AI analysis |
+
+### Setup (Hooks - Recommended)
+
+```bash
+# Add to ~/.claude/settings.json
+{
+  "hooks": {
+    "Stop": [{
+      "matcher": "",
+      "hooks": [{
+        "type": "command",
+        "command": "~/.claude/skills/knowledge-management/scripts/auto-capture.sh . 2>/dev/null || true"
+      }]
+    }]
+  }
+}
+```
+
+### Output
+
+`docs/auto-captured/YYYY-MM/DD/HH.MM_session-*.md`
+
+See `AUTO-CAPTURE.md` for full documentation.
+
+---
+
+## References
+
+- `references/mem-template.md` - Full /mem template
+- `references/distill-template.md` - Full /distill template  
+- `references/td-template.md` - Full /td template
+- `references/improve-workflow.md` - /improve detailed workflow

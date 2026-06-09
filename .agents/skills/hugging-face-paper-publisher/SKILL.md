@@ -1,14 +1,9 @@
 ---
-source: "https://github.com/huggingface/skills/tree/main/skills/huggingface-paper-publisher"
 name: hugging-face-paper-publisher
-description: Publish and manage research papers on Hugging Face Hub. Supports creating paper pages, linking papers to models/datasets, claiming authorship, and generating professional markdown-based research articles.
-risk: unknown
+description: "Publish and manage research papers on Hugging Face Hub. Supports creating paper pages, linking papers to models/datasets, claiming authorship, and generating professional markdown-based research articles."
 ---
 
 # Overview
-
-## When to Use
-Use this skill when a user wants to publish, link, index, or manage research papers on the Hugging Face Hub.
 This skill provides comprehensive tools for AI engineers and researchers to publish, manage, and link research papers on the Hugging Face Hub. It streamlines the workflow from paper creation to publication, including integration with arXiv, model/dataset linking, and authorship management.
 
 ## Integration with HF Ecosystem
@@ -22,9 +17,6 @@ This skill provides comprehensive tools for AI engineers and researchers to publ
 1.0.0
 
 # Dependencies
-The included script uses PEP 723 inline dependencies. Prefer `uv run` over
-manual environment setup.
-
 - huggingface_hub>=0.26.0
 - pyyaml>=6.0.3
 - requests>=2.32.5
@@ -63,14 +55,9 @@ manual environment setup.
 The skill includes Python scripts in `scripts/` for paper publishing operations.
 
 ### Prerequisites
-- Run scripts with `uv run` (dependencies are resolved from the script header)
+- Install dependencies: `uv add huggingface_hub pyyaml requests markdown python-dotenv`
 - Set `HF_TOKEN` environment variable with Write-access token
-
-> **All paths are relative to the directory containing this SKILL.md
-file.**
-> Before running any script, first `cd` to that directory or use the full
-path.
-
+- Activate virtual environment: `source .venv/bin/activate`
 
 ### Method 1: Index Paper from arXiv
 
@@ -78,13 +65,13 @@ Add a paper to Hugging Face Paper Pages from arXiv.
 
 **Basic Usage:**
 ```bash
-uv run scripts/paper_manager.py index \
+python scripts/paper_manager.py index \
   --arxiv-id "2301.12345"
 ```
 
 **Check If Paper Exists:**
 ```bash
-uv run scripts/paper_manager.py check \
+python scripts/paper_manager.py check \
   --arxiv-id "2301.12345"
 ```
 
@@ -97,7 +84,7 @@ Add paper references to model or dataset README with proper YAML metadata.
 
 **Add to Model Card:**
 ```bash
-uv run scripts/paper_manager.py link \
+python scripts/paper_manager.py link \
   --repo-id "username/model-name" \
   --repo-type "model" \
   --arxiv-id "2301.12345"
@@ -105,7 +92,7 @@ uv run scripts/paper_manager.py link \
 
 **Add to Dataset Card:**
 ```bash
-uv run scripts/paper_manager.py link \
+python scripts/paper_manager.py link \
   --repo-id "username/dataset-name" \
   --repo-type "dataset" \
   --arxiv-id "2301.12345"
@@ -113,7 +100,7 @@ uv run scripts/paper_manager.py link \
 
 **Add Multiple Papers:**
 ```bash
-uv run scripts/paper_manager.py link \
+python scripts/paper_manager.py link \
   --repo-id "username/model-name" \
   --repo-type "model" \
   --arxiv-ids "2301.12345,2302.67890,2303.11111"
@@ -121,7 +108,7 @@ uv run scripts/paper_manager.py link \
 
 **With Custom Citation:**
 ```bash
-uv run scripts/paper_manager.py link \
+python scripts/paper_manager.py link \
   --repo-id "username/model-name" \
   --repo-type "model" \
   --arxiv-id "2301.12345" \
@@ -143,7 +130,7 @@ Verify your authorship on papers published on Hugging Face.
 
 **Start Claim Process:**
 ```bash
-uv run scripts/paper_manager.py claim \
+python scripts/paper_manager.py claim \
   --arxiv-id "2301.12345" \
   --email "your.email@institution.edu"
 ```
@@ -156,7 +143,7 @@ uv run scripts/paper_manager.py claim \
 
 **Check Authorship Status:**
 ```bash
-uv run scripts/paper_manager.py check-authorship \
+python scripts/paper_manager.py check-authorship \
   --arxiv-id "2301.12345"
 ```
 
@@ -166,12 +153,12 @@ Control which verified papers appear on your public profile.
 
 **List Your Papers:**
 ```bash
-uv run scripts/paper_manager.py list-my-papers
+python scripts/paper_manager.py list-my-papers
 ```
 
 **Toggle Visibility:**
 ```bash
-uv run scripts/paper_manager.py toggle-visibility \
+python scripts/paper_manager.py toggle-visibility \
   --arxiv-id "2301.12345" \
   --show true
 ```
@@ -185,7 +172,7 @@ Generate a professional markdown-based research paper using modern templates.
 
 **Create from Template:**
 ```bash
-uv run scripts/paper_manager.py create \
+python scripts/paper_manager.py create \
   --template "standard" \
   --title "Your Paper Title" \
   --output "paper.md"
@@ -199,7 +186,7 @@ uv run scripts/paper_manager.py create \
 
 **Generate Complete Paper:**
 ```bash
-uv run scripts/paper_manager.py create \
+python scripts/paper_manager.py create \
   --template "modern" \
   --title "Fine-Tuning Large Language Models with LoRA" \
   --authors "Jane Doe, John Smith" \
@@ -209,7 +196,7 @@ uv run scripts/paper_manager.py create \
 
 **Convert to HTML:**
 ```bash
-uv run scripts/paper_manager.py convert \
+python scripts/paper_manager.py convert \
   --input "paper.md" \
   --output "paper.html" \
   --style "modern"
@@ -268,12 +255,12 @@ Summary and future work...
 
 **Index Paper:**
 ```bash
-uv run scripts/paper_manager.py index --arxiv-id "2301.12345"
+python scripts/paper_manager.py index --arxiv-id "2301.12345"
 ```
 
 **Link to Repository:**
 ```bash
-uv run scripts/paper_manager.py link \
+python scripts/paper_manager.py link \
   --repo-id "username/repo-name" \
   --repo-type "model|dataset|space" \
   --arxiv-id "2301.12345" \
@@ -283,21 +270,21 @@ uv run scripts/paper_manager.py link \
 
 **Claim Authorship:**
 ```bash
-uv run scripts/paper_manager.py claim \
+python scripts/paper_manager.py claim \
   --arxiv-id "2301.12345" \
   --email "your.email@edu"
 ```
 
 **Manage Visibility:**
 ```bash
-uv run scripts/paper_manager.py toggle-visibility \
+python scripts/paper_manager.py toggle-visibility \
   --arxiv-id "2301.12345" \
   --show true|false
 ```
 
 **Create Research Article:**
 ```bash
-uv run scripts/paper_manager.py create \
+python scripts/paper_manager.py create \
   --template "standard|modern|arxiv|ml-report" \
   --title "Paper Title" \
   [--authors "Author1, Author2"] \
@@ -307,7 +294,7 @@ uv run scripts/paper_manager.py create \
 
 **Convert Markdown to HTML:**
 ```bash
-uv run scripts/paper_manager.py convert \
+python scripts/paper_manager.py convert \
   --input "paper.md" \
   --output "paper.html" \
   [--style "modern|classic"]
@@ -315,17 +302,17 @@ uv run scripts/paper_manager.py convert \
 
 **Check Paper Status:**
 ```bash
-uv run scripts/paper_manager.py check --arxiv-id "2301.12345"
+python scripts/paper_manager.py check --arxiv-id "2301.12345"
 ```
 
 **List Your Papers:**
 ```bash
-uv run scripts/paper_manager.py list-my-papers
+python scripts/paper_manager.py list-my-papers
 ```
 
 **Search Papers:**
 ```bash
-uv run scripts/paper_manager.py search --query "transformer attention"
+python scripts/paper_manager.py search --query "transformer attention"
 ```
 
 ### YAML Metadata Format
@@ -388,7 +375,7 @@ The Hub automatically extracts arXiv IDs from these links and creates `arxiv:230
 **Workflow 1: Publish New Research**
 ```bash
 # 1. Create research article
-uv run scripts/paper_manager.py create \
+python scripts/paper_manager.py create \
   --template "modern" \
   --title "Novel Fine-Tuning Approach" \
   --output "paper.md"
@@ -399,16 +386,16 @@ uv run scripts/paper_manager.py create \
 # Upload to arxiv.org, get arXiv ID
 
 # 4. Index on Hugging Face
-uv run scripts/paper_manager.py index --arxiv-id "2301.12345"
+python scripts/paper_manager.py index --arxiv-id "2301.12345"
 
 # 5. Link to your model
-uv run scripts/paper_manager.py link \
+python scripts/paper_manager.py link \
   --repo-id "your-username/your-model" \
   --repo-type "model" \
   --arxiv-id "2301.12345"
 
 # 6. Claim authorship
-uv run scripts/paper_manager.py claim \
+python scripts/paper_manager.py claim \
   --arxiv-id "2301.12345" \
   --email "your.email@edu"
 ```
@@ -416,23 +403,23 @@ uv run scripts/paper_manager.py claim \
 **Workflow 2: Link Existing Paper**
 ```bash
 # 1. Check if paper exists
-uv run scripts/paper_manager.py check --arxiv-id "2301.12345"
+python scripts/paper_manager.py check --arxiv-id "2301.12345"
 
 # 2. Index if needed
-uv run scripts/paper_manager.py index --arxiv-id "2301.12345"
+python scripts/paper_manager.py index --arxiv-id "2301.12345"
 
 # 3. Link to multiple repositories
-uv run scripts/paper_manager.py link \
+python scripts/paper_manager.py link \
   --repo-id "username/model-v1" \
   --repo-type "model" \
   --arxiv-id "2301.12345"
 
-uv run scripts/paper_manager.py link \
+python scripts/paper_manager.py link \
   --repo-id "username/training-data" \
   --repo-type "dataset" \
   --arxiv-id "2301.12345"
 
-uv run scripts/paper_manager.py link \
+python scripts/paper_manager.py link \
   --repo-id "username/demo-space" \
   --repo-type "space" \
   --arxiv-id "2301.12345"
@@ -441,10 +428,10 @@ uv run scripts/paper_manager.py link \
 **Workflow 3: Update Model with Paper Reference**
 ```bash
 # 1. Get current README
-hf download username/model-name README.md
+huggingface-cli download username/model-name README.md
 
 # 2. Add paper link
-uv run scripts/paper_manager.py link \
+python scripts/paper_manager.py link \
   --repo-id "username/model-name" \
   --repo-type "model" \
   --arxiv-id "2301.12345" \
@@ -490,7 +477,7 @@ uv run scripts/paper_manager.py link \
 ```bash
 # Link multiple papers to one repository
 for arxiv_id in "2301.12345" "2302.67890" "2303.11111"; do
-  uv run scripts/paper_manager.py link \
+  python scripts/paper_manager.py link \
     --repo-id "username/model-name" \
     --repo-type "model" \
     --arxiv-id "$arxiv_id"
@@ -500,7 +487,7 @@ done
 **Extract Paper Info:**
 ```bash
 # Get paper metadata from arXiv
-uv run scripts/paper_manager.py info \
+python scripts/paper_manager.py info \
   --arxiv-id "2301.12345" \
   --format "json"
 ```
@@ -508,7 +495,7 @@ uv run scripts/paper_manager.py info \
 **Generate Citation:**
 ```bash
 # Create BibTeX citation
-uv run scripts/paper_manager.py citation \
+python scripts/paper_manager.py citation \
   --arxiv-id "2301.12345" \
   --format "bibtex"
 ```
@@ -516,7 +503,7 @@ uv run scripts/paper_manager.py citation \
 **Validate Links:**
 ```bash
 # Check all paper links in a repository
-uv run scripts/paper_manager.py validate \
+python scripts/paper_manager.py validate \
   --repo-id "username/model-name" \
   --repo-type "model"
 ```
@@ -571,26 +558,26 @@ You can use tfrere's template for writing, then use this skill to publish and li
 **Pattern 1: New Paper Publication**
 ```bash
 # Write → Publish → Index → Link
-uv run scripts/paper_manager.py create --template modern --output paper.md
+python scripts/paper_manager.py create --template modern --output paper.md
 # (Submit to arXiv)
-uv run scripts/paper_manager.py index --arxiv-id "2301.12345"
-uv run scripts/paper_manager.py link --repo-id "user/model" --arxiv-id "2301.12345"
+python scripts/paper_manager.py index --arxiv-id "2301.12345"
+python scripts/paper_manager.py link --repo-id "user/model" --arxiv-id "2301.12345"
 ```
 
 **Pattern 2: Existing Paper Discovery**
 ```bash
 # Search → Check → Link
-uv run scripts/paper_manager.py search --query "transformers"
-uv run scripts/paper_manager.py check --arxiv-id "2301.12345"
-uv run scripts/paper_manager.py link --repo-id "user/model" --arxiv-id "2301.12345"
+python scripts/paper_manager.py search --query "transformers"
+python scripts/paper_manager.py check --arxiv-id "2301.12345"
+python scripts/paper_manager.py link --repo-id "user/model" --arxiv-id "2301.12345"
 ```
 
 **Pattern 3: Author Portfolio Management**
 ```bash
 # Claim → Verify → Organize
-uv run scripts/paper_manager.py claim --arxiv-id "2301.12345"
-uv run scripts/paper_manager.py list-my-papers
-uv run scripts/paper_manager.py toggle-visibility --arxiv-id "2301.12345" --show true
+python scripts/paper_manager.py claim --arxiv-id "2301.12345"
+python scripts/paper_manager.py list-my-papers
+python scripts/paper_manager.py toggle-visibility --arxiv-id "2301.12345" --show true
 ```
 
 ### API Integration
@@ -627,8 +614,3 @@ Planned features for future versions:
 - Integration with LaTeX workflows
 - Automated figure and table extraction
 - Paper metrics and impact tracking
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

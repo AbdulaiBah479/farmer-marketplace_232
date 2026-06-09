@@ -1,15 +1,69 @@
 ---
-name: xlsx
-description: "Use this skill any time a spreadsheet file is the primary input or output. This means any task where the user wants to: open, read, edit, or fix an existing .xlsx, .xlsm, .csv, or .tsv file (e.g., adding columns, computing formulas, formatting, charting, cleaning messy data); create a new spreadsheet from scratch or from other data sources; or convert between tabular file formats. Trigger especially when the user references a spreadsheet file by name or path — even casually (like \"the xlsx in my downloads\") — and wants something done to it or produced from it. Also trigger for cleaning or restructuring messy tabular data files (malformed rows, misplaced headers, junk data) into proper spreadsheets. The deliverable must be a spreadsheet file. Do NOT trigger when the primary deliverable is a Word document, HTML report, standalone Python script, database pipeline, or Google Sheets API integration, even if tabular data is involved."
-license: Proprietary. LICENSE.txt has complete terms
+name: Xlsx
+description: Excel file processing. USE WHEN xlsx, Excel, spreadsheet. SkillSearch('xlsx') for docs.
 ---
 
 # Requirements for Outputs
 
-## All Excel files
+## 🎯 Load Full PAI Context
 
-### Professional Font
-- Use a consistent, professional font (e.g., Arial, Times New Roman) for all deliverables unless otherwise instructed by the user
+**Before starting any task with this skill, load complete PAI context:**
+
+`read ~/.claude/skills/PAI/SKILL.md`
+
+This provides access to:
+- Complete contact list (Angela, Bunny, Saša, Greg, team members)
+- Stack preferences (TypeScript>Python, bun>npm, uv>pip)
+- Security rules and repository safety protocols
+- Response format requirements (structured emoji format)
+- Voice IDs for agent routing (ElevenLabs)
+- Personal preferences and operating instructions
+
+## 🔀 When to Use This Sub-Skill
+
+This sub-skill activates when the user's request involves Excel spreadsheets (.xlsx, .xlsm, .csv, .tsv).
+
+### Explicit Triggers
+- User mentions "create spreadsheet", "new Excel file", "Excel workbook"
+- User requests "formulas", "financial model", "financial modeling"
+- User wants to "recalculate" or "recalculate formulas"
+- User says "analyze data in Excel", "read Excel", "Excel data analysis"
+- User mentions .xlsx, .xlsm, .csv, or .tsv files
+
+### Contextual Triggers
+- User provides path to .xlsx/.xlsm file
+- User discusses calculations, projections, or financial data
+- User mentions financial projections, revenue models, or valuations
+- User wants to work with spreadsheet formulas or data
+
+### Workflow Routing
+
+**Creation Workflow (openpyxl):**
+- "Create spreadsheet", "new Excel file", "build financial model"
+- User wants to create new .xlsx files with formulas and formatting
+- Use openpyxl for formula support and Excel-specific features
+
+**Editing Workflow (openpyxl):**
+- "Edit spreadsheet", "modify Excel", "update cells"
+- User wants to modify existing .xlsx files while preserving formulas
+- Use `load_workbook()` to preserve existing formatting and formulas
+
+**Data Analysis Workflow (pandas):**
+- "Analyze data", "read Excel", "data visualization"
+- User wants to analyze or visualize data from Excel files
+- Use pandas for powerful data manipulation and analysis
+
+**Financial Modeling Workflow:**
+- "Financial model", "revenue projections", "valuation model"
+- User wants professional financial models with color coding
+- Follow financial model standards (blue inputs, black formulas, green links)
+
+**Recalculation Workflow:**
+- "Recalculate", "update formula values", "calculate formulas"
+- After creating/editing files with formulas
+- MANDATORY step after using formulas - run `recalc.py` script
+
+## All Excel files
 
 ### Zero Formula Errors
 - Every Excel model MUST be delivered with ZERO formula errors (#REF!, #DIV/0!, #VALUE!, #N/A, #NAME?)
@@ -71,7 +125,7 @@ A user may ask you to create, edit, or analyze the contents of an .xlsx file. Yo
 
 ## Important Requirements
 
-**LibreOffice Required for Formula Recalculation**: You can assume LibreOffice is installed for recalculating formula values using the `scripts/recalc.py` script. The script automatically configures LibreOffice on first run, including in sandboxed environments where Unix sockets are restricted (handled by `scripts/office/soffice.py`)
+**LibreOffice Required for Formula Recalculation**: You can assume LibreOffice is installed for recalculating formula values using the `recalc.py` script. The script automatically configures LibreOffice on first run
 
 ## Reading and analyzing data
 
@@ -134,9 +188,9 @@ This applies to ALL calculations - totals, percentages, ratios, differences, etc
 2. **Create/Load**: Create new workbook or load existing file
 3. **Modify**: Add/edit data, formulas, and formatting
 4. **Save**: Write to file
-5. **Recalculate formulas (MANDATORY IF USING FORMULAS)**: Use the scripts/recalc.py script
+5. **Recalculate formulas (MANDATORY IF USING FORMULAS)**: Use the recalc.py script
    ```bash
-   python scripts/recalc.py output.xlsx
+   python recalc.py output.xlsx
    ```
 6. **Verify and fix any errors**: 
    - The script returns JSON with error details
@@ -206,15 +260,15 @@ wb.save('modified.xlsx')
 
 ## Recalculating formulas
 
-Excel files created or modified by openpyxl contain formulas as strings but not calculated values. Use the provided `scripts/recalc.py` script to recalculate formulas:
+Excel files created or modified by openpyxl contain formulas as strings but not calculated values. Use the provided `recalc.py` script to recalculate formulas:
 
 ```bash
-python scripts/recalc.py <excel_file> [timeout_seconds]
+python recalc.py <excel_file> [timeout_seconds]
 ```
 
 Example:
 ```bash
-python scripts/recalc.py output.xlsx 30
+python recalc.py output.xlsx 30
 ```
 
 The script:
@@ -246,7 +300,7 @@ Quick checks to ensure formulas work correctly:
 - [ ] **Verify dependencies**: Check all cells referenced in formulas exist
 - [ ] **Test edge cases**: Include zero, negative, and very large values
 
-### Interpreting scripts/recalc.py Output
+### Interpreting recalc.py Output
 The script returns JSON with error details:
 ```json
 {
@@ -273,7 +327,7 @@ The script returns JSON with error details:
 - Use `data_only=True` to read calculated values: `load_workbook('file.xlsx', data_only=True)`
 - **Warning**: If opened with `data_only=True` and saved, formulas are replaced with values and permanently lost
 - For large files: Use `read_only=True` for reading or `write_only=True` for writing
-- Formulas are preserved but not evaluated - use scripts/recalc.py to update values
+- Formulas are preserved but not evaluated - use recalc.py to update values
 
 ### Working with pandas
 - Specify data types to avoid inference issues: `pd.read_excel('file.xlsx', dtype={'id': str})`
@@ -290,3 +344,29 @@ The script returns JSON with error details:
 - Add comments to cells with complex formulas or important assumptions
 - Document data sources for hardcoded values
 - Include notes for key calculations and model sections
+
+## Examples
+
+**Example 1: Build a financial model**
+```
+User: "Create a revenue projection model for the next 5 years"
+→ Creates workbook with assumptions sheet + projections
+→ Uses Excel formulas (=SUM, growth rates) not hardcoded values
+→ Applies color coding (blue inputs, black formulas), runs recalc.py
+```
+
+**Example 2: Analyze data from Excel file**
+```
+User: "What are the top 10 customers by revenue in this spreadsheet?"
+→ Reads Excel with pandas
+→ Groups, sorts, and filters data
+→ Returns summary with statistics
+```
+
+**Example 3: Update existing spreadsheet**
+```
+User: "Add a new column with profit margin calculations"
+→ Loads workbook preserving existing formulas
+→ Adds new column with margin formula referencing existing cells
+→ Saves and recalculates to verify no errors
+```

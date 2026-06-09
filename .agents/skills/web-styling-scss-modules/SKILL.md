@@ -23,6 +23,8 @@ description: SCSS Modules, cva, design tokens
 
 **(You MUST use data-attributes for state styling - NOT className toggling)**
 
+**(You MUST use `#### SubsectionName` markdown headers within patterns - NOT separator comments)**
+
 **(You MUST use `@use` for imports - `@import` is deprecated and will be removed in Dart Sass 3.0.0)**
 
 </critical_requirements>
@@ -57,14 +59,8 @@ description: SCSS Modules, cva, design tokens
 
 **Detailed Resources:**
 
-- [examples/core.md](examples/core.md) - Token system, HSL colors, cascade layers
-- [examples/tokens.md](examples/tokens.md) - Spacing and typography systems
-- [examples/theming.md](examples/theming.md) - Dark mode implementation
-- [examples/patterns.md](examples/patterns.md) - Module structure, data-attributes, mixins, global styles, icons
-- [examples/cva.md](examples/cva.md) - cva integration with SCSS Modules
-- [examples/advanced.md](examples/advanced.md) - :has(), :global(), nesting patterns
-- [examples/modules.md](examples/modules.md) - Sass module system (@use and @forward)
-- [reference.md](reference.md) - Decision frameworks and anti-patterns
+- For code examples, see [examples/core.md](examples/core.md)
+- For decision frameworks and anti-patterns, see [reference.md](reference.md)
 
 ---
 
@@ -233,6 +229,8 @@ For complete anti-patterns and red flags, see [reference.md](reference.md#red-fl
 **(You MUST use HSL format for colors with CSS color functions - NO Sass color functions like darken/lighten)**
 
 **(You MUST use data-attributes for state styling - NOT className toggling)**
+
+**(You MUST use `#### SubsectionName` markdown headers within patterns - NOT separator comments)**
 
 **(You MUST use `@use` for imports - `@import` is deprecated and will be removed in Dart Sass 3.0.0)**
 

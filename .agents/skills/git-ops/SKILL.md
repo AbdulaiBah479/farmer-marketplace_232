@@ -1,20 +1,6 @@
 ---
 name: git-ops
 description: Use when performing git operations or generating smart commit messages - provides safe git workflow guidance, validation checks, and conventional commit formatting.
-keywords:
-  - conventional commit
-  - git branch
-  - git commit
-  - git pull
-  - git push
-  - git status
-  - merge conflict
-  - rebase
-  - smart commit
-file_patterns:
-  - '**/.git/worktrees/**'
-  - '**/worktrees/**'
-confidence: 0.72
 ---
 
 # Git Ops
@@ -35,7 +21,6 @@ Avoid when:
 | Task | Load reference |
 | --- | --- |
 | Git operations | `skills/git-ops/references/git.md` |
-| **Branching Strategies** | `skills/git-ops/references/branching-strategies.md` |
 
 ## Workflow
 1. Confirm repository state and intent.

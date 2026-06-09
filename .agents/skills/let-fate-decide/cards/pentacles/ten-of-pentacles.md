@@ -1,6 +1,6 @@
 # Ten of Pentacles
 
-**Suit**: Pentacles | **Rank**: 10
+**Suit**: Pentacles | **Rank**: Ten
 
 ## Upright
 Wealth, inheritance, and legacy. Long-term success that extends beyond the

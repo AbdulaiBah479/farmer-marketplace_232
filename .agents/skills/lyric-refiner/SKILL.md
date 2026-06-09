@@ -2,8 +2,7 @@
 name: lyric-refiner
 description: Autonomous multi-pass lyric refinement for tightening, cohesion, and album unity. Use after lyrics are written to polish a track or entire album through iterative passes.
 argument-hint: <album-name | track-path> [--passes N]
-model: opus
-effort: max
+model: claude-opus-4-7
 prerequisites:
   - lyric-writer
 allowed-tools:

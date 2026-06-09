@@ -1,111 +1,114 @@
 ---
 name: deep-research
-description: Execute autonomous multi-step deep research on any topic. Use when the user asks for comprehensive research, literature reviews, competitive analysis, topic deep-dives, or wants to understand a complex subject from multiple angles. Triggers on "deep research", "research on", "investigate", "literature review", "comprehensive analysis", "what do we know about", "summarize research on".
+description: "Execute autonomous multi-step research using Google Gemini Deep Research Agent. Use for: market analysis, competitive landscaping, literature reviews, technical research, due diligence. Takes 2-10 minutes but produces detailed, cited reports. Costs $2-5 per task."
+source: "https://github.com/sanjay3290/ai-skills/tree/main/skills/deep-research"
+risk: safe
 ---
 
-# Deep Research
+# Gemini Deep Research Skill
 
-Autonomous multi-step research that searches multiple sources, reads full content, synthesizes findings, and produces a structured report.
+Run autonomous research tasks that plan, search, read, and synthesize information into comprehensive reports.
 
-## When to Use
+## When to Use This Skill
 
-- User wants a thorough understanding of a topic (medical condition, drug, treatment, technology)
-- User asks for a literature review or evidence summary
-- User wants competitive or landscape analysis
-- User wants to investigate an open question with multiple angles
-- User asks "what does the research say about X"
+Use this skill when:
+- Performing market analysis
+- Conducting competitive landscaping
+- Creating literature reviews
+- Doing technical research
+- Performing due diligence
+- Need detailed, cited research reports
 
-## Research Strategy
+## Requirements
 
-### Step 1: Query Decomposition
-Break the research question into 3–5 sub-questions covering:
-- Core definition / mechanism
-- Current evidence / state of the art
-- Debates, limitations, or contradictions
-- Clinical / practical implications (if medical)
-- Recent developments (last 1–2 years)
+- Python 3.8+
+- httpx: `pip install -r requirements.txt`
+- GEMINI_API_KEY environment variable
 
-### Step 2: Multi-Source Search
-Run searches across complementary sources using the available search tools:
+## Setup
 
-```python
-# Use multi-search-engine for broad web coverage
-# Use pubmed-search for peer-reviewed medical literature
-# Use agent-browser to read full-text articles and retrieve content blocked by snippets
+1. Get a Gemini API key from [Google AI Studio](https://aistudio.google.com/)
+2. Set the environment variable:
+   ```bash
+   export GEMINI_API_KEY=your-api-key-here
+   ```
+   Or create a `.env` file in the skill directory.
+
+## Usage
+
+### Start a research task
+```bash
+python3 scripts/research.py --query "Research the history of Kubernetes"
 ```
 
-**Search order:**
-1. PubMed (if medical/biomedical topic) — for peer-reviewed evidence
-2. Multi-search-engine (Bing, Google, DuckDuckGo) — for guidelines, reviews, news
-3. Wikipedia — for background and structured overviews
-4. agent-browser — for reading full articles, PDFs, clinical guidelines
-
-### Step 3: Source Evaluation
-For each source note:
-- Publication type (RCT, meta-analysis, guideline, review, news)
-- Date (prefer sources within 5 years for medical topics)
-- Authority (journal impact, organization credibility)
-- Relevance to the specific sub-question
-
-### Step 4: Synthesis
-Synthesize across sources into a coherent narrative. Do NOT just concatenate summaries — identify:
-- Points of consensus
-- Contradictions or conflicting evidence
-- Knowledge gaps
-- Strongest evidence vs. weak/preliminary evidence
-
-### Step 5: Structured Report
-Produce a well-formatted Markdown report with:
-
-```markdown
-# [Topic] — Deep Research Report
-
-## Summary
-2–3 sentence executive summary of the key finding.
-
-## Background
-What is this? Core definitions, mechanisms, or context.
-
-## Current Evidence
-What does the research show? Organized by sub-question or theme.
-
-## Key Debates / Open Questions
-Where do experts disagree? What is still unknown?
-
-## Clinical / Practical Implications
-(For medical topics) What should clinicians or patients know?
-
-## Recent Developments
-Anything notable from the past 12–24 months.
-
-## Sources
-Numbered list of all sources with titles, URLs/DOIs, and dates.
+### With structured output format
+```bash
+python3 scripts/research.py --query "Compare Python web frameworks" \
+  --format "1. Executive Summary\n2. Comparison Table\n3. Recommendations"
 ```
 
-## Medical Research Guidelines
+### Stream progress in real-time
+```bash
+python3 scripts/research.py --query "Analyze EV battery market" --stream
+```
 
-When researching medical topics:
-- **Prioritize evidence hierarchy**: Systematic reviews > RCTs > Cohort studies > Case reports > Expert opinion
-- **Include safety information**: Drug interactions, contraindications, adverse effects
-- **Note population specifics**: Pediatric vs. adult, special populations, comorbidities
-- **Flag regulatory status**: FDA/EMA approval status, off-label use
-- **Cite clinical guidelines**: NICE, AHA, ACC, IDSA, WHO guidelines where relevant
-- **Distinguish mechanistic from clinical evidence**: Lab/animal data ≠ human evidence
+### Start without waiting
+```bash
+python3 scripts/research.py --query "Research topic" --no-wait
+```
 
-## Depth Levels
+### Check status of running research
+```bash
+python3 scripts/research.py --status <interaction_id>
+```
 
-Adapt depth to user request:
-- **Quick overview** (user asks briefly): 3–5 sources, 1-page summary
-- **Standard research** (default): 8–15 sources, full structured report
-- **Comprehensive review** (user asks explicitly): 20+ sources, deep synthesis with evidence grading
+### Wait for completion
+```bash
+python3 scripts/research.py --wait <interaction_id>
+```
 
-## Example Execution
+### Continue from previous research
+```bash
+python3 scripts/research.py --query "Elaborate on point 2" --continue <interaction_id>
+```
 
-**User:** "Research the evidence for metformin use in longevity/anti-aging"
+### List recent research
+```bash
+python3 scripts/research.py --list
+```
 
-1. Decompose: mechanism of action → RCT evidence → observational data → safety profile → current trials
-2. Search PubMed for "metformin longevity aging", "TAME trial metformin"
-3. Search web for "metformin anti-aging clinical trials 2024"
-4. Read key papers with agent-browser
-5. Synthesize: strong mechanistic evidence, TAME trial ongoing, limited long-term human RCT data
-6. Produce structured report with citations
+## Output Formats
+
+- **Default**: Human-readable markdown report
+- **JSON** (`--json`): Structured data for programmatic use
+- **Raw** (`--raw`): Unprocessed API response
+
+## Cost & Time
+
+| Metric | Value |
+|--------|-------|
+| Time | 2-10 minutes per task |
+| Cost | $2-5 per task (varies by complexity) |
+| Token usage | ~250k-900k input, ~60k-80k output |
+
+## Best Use Cases
+
+- Market analysis and competitive landscaping
+- Technical literature reviews
+- Due diligence research
+- Historical research and timelines
+- Comparative analysis (frameworks, products, technologies)
+
+## Workflow
+
+1. User requests research → Run `--query "..."`
+2. Inform user of estimated time (2-10 minutes)
+3. Monitor with `--stream` or poll with `--status`
+4. Return formatted results
+5. Use `--continue` for follow-up questions
+
+## Exit Codes
+
+- **0**: Success
+- **1**: Error (API error, config issue, timeout)
+- **130**: Cancelled by user (Ctrl+C)

@@ -1,358 +1,308 @@
 ---
 name: email-sequence
-description: >
-  Design and write complete email automation sequences for SaaS and B2B
-  products. Covers welcome/onboarding, lead nurture, re-engagement,
-  post-purchase, trial expiration, and sales sequences. Outputs ready-to-send
-  drafts with subject lines, preview text, full body copy, CTAs, timing, and
-  segmentation logic. Use when building drip campaigns, improving trial-to-paid
-  conversion, or designing lifecycle email programs.
-license: MIT + Commons Clause
+description: When the user wants to create or optimize an email sequence, drip campaign, automated email flow, or lifecycle email program. Also use when the user mentions "email sequence," "drip campaign," "nurture sequence," "onboarding emails," "welcome sequence," "re-engagement emails," "email automation," or "lifecycle emails." For in-app onboarding, see onboarding-cro.
 metadata:
   version: 1.0.0
-  author: borghei
-  category: marketing
-  domain: email-marketing
-  updated: 2026-03-09
-  frameworks: email-automation, lifecycle-marketing, drip-campaigns
 ---
+
 # Email Sequence Design
 
-**Category:** Marketing
-**Tags:** email sequences, drip campaigns, nurture flows, onboarding emails, lifecycle marketing, automation
+You are an expert in email marketing and automation. Your goal is to create email sequences that nurture relationships, drive action, and move people toward conversion.
 
-## Overview
+## Initial Assessment
 
-Email Sequence Design creates complete, ready-to-implement email automation flows. Every output includes subject lines, preview text, full body copy, CTAs, send timing, and exit conditions. The goal is sequences that nurture relationships and drive specific conversion actions -- not just "stay top of mind" email noise.
+**Check for product marketing context first:**
+If `.claude/product-marketing-context.md` exists, read it before asking questions. Use that context and only ask for information not already covered or specific to this task.
 
-This skill writes the sequences. For email HTML templates and rendering infrastructure, use email-template-builder. For tracking email performance, use analytics-tracking.
+Before creating a sequence, understand:
+
+1. **Sequence Type**
+   - Welcome/onboarding sequence
+   - Lead nurture sequence
+   - Re-engagement sequence
+   - Post-purchase sequence
+   - Event-based sequence
+   - Educational sequence
+   - Sales sequence
+
+2. **Audience Context**
+   - Who are they?
+   - What triggered them into this sequence?
+   - What do they already know/believe?
+   - What's their current relationship with you?
+
+3. **Goals**
+   - Primary conversion goal
+   - Relationship-building goals
+   - Segmentation goals
+   - What defines success?
 
 ---
 
-## Sequence Types
+## Core Principles
 
-| Type | Trigger | Goal | Typical Length |
-|------|---------|------|---------------|
-| Welcome/Onboarding | New signup | Activate user, show core value | 5-7 emails over 14 days |
-| Trial Expiration | Trial nearing end | Convert to paid | 4-5 emails over 7 days |
-| Lead Nurture | Content download, webinar | Qualify and convert | 6-8 emails over 30 days |
-| Re-engagement | Inactive 30+ days | Bring back or clean list | 3-4 emails over 14 days |
-| Post-Purchase | Subscription start | Reduce churn, expand | 4-6 emails over 30 days |
-| Event-Based | Specific user action | Drive next action | 2-3 emails over 7 days |
-| Sales (Warm) | MQL or PQL signal | Book meeting or start trial | 4-5 emails over 14 days |
+### 1. One Email, One Job
+- Each email has one primary purpose
+- One main CTA per email
+- Don't try to do everything
+
+### 2. Value Before Ask
+- Lead with usefulness
+- Build trust through content
+- Earn the right to sell
+
+### 3. Relevance Over Volume
+- Fewer, better emails win
+- Segment for relevance
+- Quality > frequency
+
+### 4. Clear Path Forward
+- Every email moves them somewhere
+- Links should do something useful
+- Make next steps obvious
 
 ---
 
-## Design Process
+## Email Sequence Strategy
 
-### Step 1: Define Sequence Architecture
+### Sequence Length
+- Welcome: 3-7 emails
+- Lead nurture: 5-10 emails
+- Onboarding: 5-10 emails
+- Re-engagement: 3-5 emails
 
-Before writing any email, define the architecture:
+Depends on:
+- Sales cycle length
+- Product complexity
+- Relationship stage
 
+### Timing/Delays
+- Welcome email: Immediately
+- Early sequence: 1-2 days apart
+- Nurture: 2-4 days apart
+- Long-term: Weekly or bi-weekly
+
+Consider:
+- B2B: Avoid weekends
+- B2C: Test weekends
+- Time zones: Send at local time
+
+### Subject Line Strategy
+- Clear > Clever
+- Specific > Vague
+- Benefit or curiosity-driven
+- 40-60 characters ideal
+- Test emoji (they're polarizing)
+
+**Patterns that work:**
+- Question: "Still struggling with X?"
+- How-to: "How to [achieve outcome] in [timeframe]"
+- Number: "3 ways to [benefit]"
+- Direct: "[First name], your [thing] is ready"
+- Story tease: "The mistake I made with [topic]"
+
+### Preview Text
+- Extends the subject line
+- ~90-140 characters
+- Don't repeat subject line
+- Complete the thought or add intrigue
+
+---
+
+## Sequence Types Overview
+
+### Welcome Sequence (Post-Signup)
+**Length**: 5-7 emails over 12-14 days
+**Goal**: Activate, build trust, convert
+
+Key emails:
+1. Welcome + deliver promised value (immediate)
+2. Quick win (day 1-2)
+3. Story/Why (day 3-4)
+4. Social proof (day 5-6)
+5. Overcome objection (day 7-8)
+6. Core feature highlight (day 9-11)
+7. Conversion (day 12-14)
+
+### Lead Nurture Sequence (Pre-Sale)
+**Length**: 6-8 emails over 2-3 weeks
+**Goal**: Build trust, demonstrate expertise, convert
+
+Key emails:
+1. Deliver lead magnet + intro (immediate)
+2. Expand on topic (day 2-3)
+3. Problem deep-dive (day 4-5)
+4. Solution framework (day 6-8)
+5. Case study (day 9-11)
+6. Differentiation (day 12-14)
+7. Objection handler (day 15-18)
+8. Direct offer (day 19-21)
+
+### Re-Engagement Sequence
+**Length**: 3-4 emails over 2 weeks
+**Trigger**: 30-60 days of inactivity
+**Goal**: Win back or clean list
+
+Key emails:
+1. Check-in (genuine concern)
+2. Value reminder (what's new)
+3. Incentive (special offer)
+4. Last chance (stay or unsubscribe)
+
+### Onboarding Sequence (Product Users)
+**Length**: 5-7 emails over 14 days
+**Goal**: Activate, drive to aha moment, upgrade
+**Note**: Coordinate with in-app onboarding—email supports, doesn't duplicate
+
+Key emails:
+1. Welcome + first step (immediate)
+2. Getting started help (day 1)
+3. Feature highlight (day 2-3)
+4. Success story (day 4-5)
+5. Check-in (day 7)
+6. Advanced tip (day 10-12)
+7. Upgrade/expand (day 14+)
+
+**For detailed templates**: See [references/sequence-templates.md](references/sequence-templates.md)
+
+---
+
+## Email Types by Category
+
+### Onboarding Emails
+- New users series
+- New customers series
+- Key onboarding step reminders
+- New user invites
+
+### Retention Emails
+- Upgrade to paid
+- Upgrade to higher plan
+- Ask for review
+- Proactive support offers
+- Product usage reports
+- NPS survey
+- Referral program
+
+### Billing Emails
+- Switch to annual
+- Failed payment recovery
+- Cancellation survey
+- Upcoming renewal reminders
+
+### Usage Emails
+- Daily/weekly/monthly summaries
+- Key event notifications
+- Milestone celebrations
+
+### Win-Back Emails
+- Expired trials
+- Cancelled customers
+
+### Campaign Emails
+- Monthly roundup / newsletter
+- Seasonal promotions
+- Product updates
+- Industry news roundup
+- Pricing updates
+
+**For detailed email type reference**: See [references/email-types.md](references/email-types.md)
+
+---
+
+## Email Copy Guidelines
+
+### Structure
+1. **Hook**: First line grabs attention
+2. **Context**: Why this matters to them
+3. **Value**: The useful content
+4. **CTA**: What to do next
+5. **Sign-off**: Human, warm close
+
+### Formatting
+- Short paragraphs (1-3 sentences)
+- White space between sections
+- Bullet points for scanability
+- Bold for emphasis (sparingly)
+- Mobile-first (most read on phone)
+
+### Tone
+- Conversational, not formal
+- First-person (I/we) and second-person (you)
+- Active voice
+- Read it out loud—does it sound human?
+
+### Length
+- 50-125 words for transactional
+- 150-300 words for educational
+- 300-500 words for story-driven
+
+### CTA Guidelines
+- Buttons for primary actions
+- Links for secondary actions
+- One clear primary CTA per email
+- Button text: Action + outcome
+
+**For detailed copy, personalization, and testing guidelines**: See [references/copy-guidelines.md](references/copy-guidelines.md)
+
+---
+
+## Output Format
+
+### Sequence Overview
 ```
-Sequence Name:     [Name]
-Trigger:           [What starts the sequence]
-Primary Goal:      [Single conversion action]
-Secondary Goals:   [Relationship building, data collection]
-Length:            [Number of emails]
-Duration:          [Total time span]
-Exit Conditions:   [When they leave the sequence]
-Suppression:       [Other sequences to suppress while active]
+Sequence Name: [Name]
+Trigger: [What starts the sequence]
+Goal: [Primary conversion goal]
+Length: [Number of emails]
+Timing: [Delay between emails]
+Exit Conditions: [When they leave the sequence]
 ```
 
-### Step 2: Map the Emotional Journey
-
-Each email serves a purpose in a progression:
-
-| Email | Emotional State | Purpose | Key Message |
-|-------|----------------|---------|-------------|
-| 1 | Curious, uncertain | Welcome, set expectations | "Here's what to expect" |
-| 2 | Exploring, evaluating | Demonstrate core value | "Here's the one thing to try first" |
-| 3 | Engaged or dropping off | Social proof | "Here's how others succeeded" |
-| 4 | Considering commitment | Remove objections | "Common concerns addressed" |
-| 5 | Ready to decide | Create urgency | "Your trial ends in X days" |
-
-### Step 3: Write Each Email
-
-For every email in the sequence, deliver:
-
+### For Each Email
 ```
 Email [#]: [Name/Purpose]
-Send:     [Timing from trigger or previous email]
-Segment:  [Conditions -- who receives this variant]
-
-Subject:  [Subject line - under 50 characters]
-Preview:  [Preview text - 80-120 characters, complements subject]
-
-Body:
-[Complete copy -- not an outline, not bullets, the actual words]
-
-CTA:      [Button text] → [Destination URL]
-P.S.:     [Optional -- works for urgency or human touch]
+Send: [Timing]
+Subject: [Subject line]
+Preview: [Preview text]
+Body: [Full copy]
+CTA: [Button text] → [Link destination]
+Segment/Conditions: [If applicable]
 ```
 
-### Step 4: Define Branching Logic
-
-Not everyone follows the same path. Define branches:
-
-```
-After Email 2:
-  IF user activated core feature → Skip to Email 4 (post-activation)
-  IF user has not logged in → Send Email 2B (re-engagement variant)
-  IF user unsubscribed → Exit sequence
-
-After Email 4:
-  IF user converted → Exit sequence, enter post-purchase sequence
-  IF user visited pricing 2+ times → Send Email 4B (pricing objection handler)
-  ELSE → Continue to Email 5
-```
+### Metrics Plan
+What to measure and benchmarks
 
 ---
 
-## Sequence Blueprints
+## Task-Specific Questions
 
-### Blueprint: SaaS Welcome/Onboarding (7 emails, 14 days)
-
-| Email | Day | Subject | Purpose |
-|-------|-----|---------|---------|
-| 1 | 0 (immediate) | Welcome to [Product] -- start here | Set expectations, one CTA to activate |
-| 2 | 1 | The one feature that changes everything | Drive to core value action |
-| 3 | 3 | How [Company] got [Result] in [Timeframe] | Social proof, case study |
-| 4 | 5 | Quick question | Check engagement, offer help |
-| 5 | 7 | 3 things you might have missed | Feature discovery, breadth |
-| 6 | 10 | Your trial is halfway done | Progress report, urgency |
-| 7 | 13 | Last day of your trial | Convert or lose access |
-
-**Exit conditions:** User converts to paid at any point, user unsubscribes, user explicitly requests removal.
-
-**Branching:**
-- After Email 2: If user completed core action, skip Email 3, go to Email 4
-- After Email 4: If user has not logged in for 5+ days, switch to re-engagement variant
-- After Email 6: If user visited pricing page, send pricing-focused Email 7 variant
-
-### Blueprint: Lead Nurture (6 emails, 30 days)
-
-| Email | Day | Subject | Purpose |
-|-------|-----|---------|---------|
-| 1 | 0 | Your [resource name] is ready | Deliver promised content |
-| 2 | 3 | The mistake most [role] make with [topic] | Educational, establish authority |
-| 3 | 7 | [Company] went from [problem] to [result] | Case study, social proof |
-| 4 | 14 | The [topic] framework we use internally | Exclusive value, reciprocity |
-| 5 | 21 | Quick question about [their challenge] | Personal, segmentation |
-| 6 | 28 | See if [Product] is right for you | Soft CTA, demo or trial |
-
-**Exit conditions:** Books demo, starts trial, unsubscribes, or completes sequence.
-
-### Blueprint: Re-engagement (4 emails, 14 days)
-
-| Email | Day | Subject | Purpose |
-|-------|-----|---------|---------|
-| 1 | 0 | We noticed you've been away | Acknowledge absence, show value |
-| 2 | 3 | Here's what you missed | Product updates, new features |
-| 3 | 7 | [Exclusive offer or incentive] | Incentivize return |
-| 4 | 14 | Should we stop emailing you? | Clean list, last chance |
-
-**Critical rule:** If no engagement after Email 4, remove from active email list. Sending to unengaged contacts damages sender reputation.
-
-### Blueprint: Trial Expiration (5 emails, 7 days)
-
-| Email | Day Before Expiry | Subject | Purpose |
-|-------|-------------------|---------|---------|
-| 1 | 7 | Your trial ends in one week | Awareness, usage summary |
-| 2 | 3 | Here's what you'll lose access to | Loss aversion, feature list |
-| 3 | 1 | Tomorrow is your last day | Urgency, simple CTA |
-| 4 | 0 | Your trial just ended | Conversion, offer extension option |
-| 5 | +3 | We saved your data for 30 days | Last chance, data retention |
+1. What triggers entry to this sequence?
+2. What's the primary goal/conversion action?
+3. What do they already know about you?
+4. What other emails are they receiving?
+5. What's your current email performance?
 
 ---
 
-## Subject Line Framework
+## Tool Integrations
 
-### Formulas That Work
+For implementation, see the [tools registry](../../tools/REGISTRY.md). Key email tools:
 
-| Formula | Example | Why It Works |
-|---------|---------|-------------|
-| How [company] [achieved result] | "How Stripe reduced churn 23%" | Specific, curiosity, social proof |
-| The [number] [thing] [audience] [needs] | "The 3 metrics every PM tracks" | Specific, relevant, scannable |
-| Quick question about [topic] | "Quick question about your trial" | Personal, non-threatening |
-| [Name], [action-oriented statement] | "Sarah, your dashboard is ready" | Personal, action-oriented |
-| Your [asset] is [status] | "Your free trial ends tomorrow" | Ownership, urgency |
-
-### Subject Line Rules
-
-1. Under 50 characters (mobile truncation happens at 35-45)
-2. No ALL CAPS words
-3. No excessive punctuation (!!!)
-4. No spam trigger words in subject: free, guarantee, limited time, act now
-5. Preview text must complement, not repeat, the subject
-6. A/B test subject lines on every sequence (minimum 3 variants per email)
-
----
-
-## Timing & Cadence
-
-### Optimal Send Times (B2B SaaS)
-
-| Day | Time Window | Notes |
-|-----|-------------|-------|
-| Tuesday | 9-11 AM recipient's timezone | Highest open rates |
-| Wednesday | 9-11 AM | Second best |
-| Thursday | 9-11 AM | Good for follow-ups |
-| Monday | 10 AM-12 PM | After inbox clearing |
-| Friday | Avoid for important emails | Low engagement |
-| Weekend | Avoid for B2B | Exception: consumer products |
-
-### Sequence Spacing Rules
-
-- Welcome email: Immediate (within 5 minutes of trigger)
-- Onboarding emails: Every 1-3 days (maintain momentum)
-- Nurture emails: Every 3-7 days (avoid fatigue)
-- Re-engagement: Every 3-5 days (test urgency vs respect)
-- Trial expiration: Accelerating cadence (7 days, 3 days, 1 day, 0, +3)
-
----
-
-## Metrics & Benchmarks
-
-### Expected Performance by Sequence Type
-
-| Metric | Welcome | Nurture | Re-engagement | Trial Expiration |
-|--------|---------|---------|---------------|------------------|
-| Open rate | 50-70% | 25-40% | 15-25% | 40-60% |
-| Click rate | 10-20% | 3-8% | 2-5% | 8-15% |
-| Conversion rate | 5-15% | 1-3% | 3-8% | 10-25% |
-| Unsubscribe rate | <0.5% | <0.3% | 1-3% | <0.5% |
-
-### Health Indicators
-
-| Signal | Meaning | Action |
-|--------|---------|--------|
-| Open rate declining across sequence | Fatigue or irrelevance | Shorten sequence or improve subject lines |
-| High opens, low clicks | Subject works, body/CTA doesn't | Rewrite body copy, simplify CTA |
-| High click rate, low conversion | Landing page problem | Audit post-click experience |
-| Rising unsubscribes after Email 3 | Too frequent or too salesy | Increase spacing, add more value |
-| Email 1 open rate below 40% | Deliverability issue | Check sender reputation, authentication |
-
----
-
-## Segmentation Strategy
-
-### Behavioral Segments
-
-| Segment | Definition | Sequence Adjustment |
-|---------|-----------|-------------------|
-| Power users | Used core feature 5+ times | Skip beginner content, focus on advanced features |
-| Window shoppers | Signed up, never activated | More hand-holding, simpler first steps |
-| Pricing page visitors | Viewed pricing 2+ times | Address pricing objections directly |
-| Feature explorers | Used 3+ features | Highlight integration and workflow value |
-| Ghost users | No login in 7+ days | Re-engagement sequence |
-
-### Personalization Tiers
-
-| Tier | Effort | Impact | Example |
-|------|--------|--------|---------|
-| 1: Name + company | Low | Moderate | "Hi Sarah, how's the Acme team finding..." |
-| 2: Behavioral | Medium | High | "Since you set up your first project..." |
-| 3: Segment-specific copy | High | Highest | Entirely different email body per segment |
-
----
-
-## Implementation Checklist
-
-- [ ] Sequence architecture documented (trigger, goal, length, exits)
-- [ ] All emails written with subject, preview, body, CTA
-- [ ] Branching logic defined for key decision points
-- [ ] Subject line A/B variants created (minimum 3 per email)
-- [ ] UTM parameters configured for all links
-- [ ] Suppression rules set (no overlapping sequences)
-- [ ] Unsubscribe handling confirmed (one-click, CAN-SPAM compliant)
-- [ ] Plain text version created for each email
-- [ ] Send time optimized for recipient timezone
-- [ ] Metrics dashboard configured (opens, clicks, conversions, unsubs)
-- [ ] 30-day post-launch review scheduled
-
----
-
-## Proactive Triggers
-
-- User mentions low trial-to-paid conversion: ask about trial expiration email sequence before recommending pricing changes
-- User reports high open rates but low clicks: diagnose body copy and CTA before blaming subject lines
-- User wants to "do email marketing": clarify sequence type before writing anything
-- User has a product launch coming: recommend coordinating launch email sequence with in-app messaging
-- User mentions list going cold: suggest re-engagement sequence before recommending acquisition spend
+| Tool | Best For | MCP | Guide |
+|------|----------|:---:|-------|
+| **Customer.io** | Behavior-based automation | - | [customer-io.md](../../tools/integrations/customer-io.md) |
+| **Mailchimp** | SMB email marketing | ✓ | [mailchimp.md](../../tools/integrations/mailchimp.md) |
+| **Resend** | Developer-friendly transactional | ✓ | [resend.md](../../tools/integrations/resend.md) |
+| **SendGrid** | Transactional email at scale | - | [sendgrid.md](../../tools/integrations/sendgrid.md) |
+| **Kit** | Creator/newsletter focused | - | [kit.md](../../tools/integrations/kit.md) |
 
 ---
 
 ## Related Skills
 
-| Skill | Use When |
-|-------|----------|
-| **email-template-builder** | Building HTML email templates and rendering infrastructure |
-| **analytics-tracking** | Setting up email click tracking and UTM attribution |
-| **launch-strategy** | Coordinating email sequences around product launches |
-| **content-creator** | Writing landing page copy that email CTAs point to |
-| **ab-test-setup** | Designing statistically valid email A/B tests |
-
----
-
-## Troubleshooting
-
-| Symptom | Likely Cause | Fix |
-|---------|-------------|-----|
-| Welcome email open rate below 40% | Deliverability issue or weak subject line | Check sender reputation and SPF/DKIM/DMARC. Test subject variants. |
-| Open rates declining across sequence | Fatigue or irrelevance | Shorten sequence, improve subject lines, or add more value per email. |
-| High opens, low clicks | Body copy or CTA is weak | Rewrite body with stronger benefit and simplify CTA to one action. |
-| High click rate, low conversion | Landing page problem | Audit post-click experience: message match, page speed, form friction. |
-| Rising unsubscribes after email 3 | Too frequent or too salesy | Increase spacing between emails and add more educational content. |
-| Emails clipped by Gmail | HTML template over 102KB | Use `render_size_analyzer.py` from email-template-builder to reduce size. |
-| Sequence not triggering | Automation platform misconfiguration | Verify trigger events, check suppression rules for conflicts. |
-
----
-
-## Success Criteria
-
-- Welcome sequence open rate above 50% (benchmark: 50-70%)
-- Nurture sequence click-through rate above 3% (benchmark: 3-8%)
-- Trial expiration conversion rate above 10% (benchmark: 10-25%)
-- Unsubscribe rate below 0.5% per email (below 0.3% for nurture)
-- Every email has 3+ subject line A/B variants tested
-- Branching logic covers at least 2 behavioral segments per sequence
-- Sequence-level conversion rate (total conversions / initial sends) above 5%
-
----
-
-## Scope & Limitations
-
-**In Scope:** Lifecycle email sequence design, copy, timing, branching logic, segmentation, and performance optimization for SaaS/B2B.
-
-**Out of Scope:** Email HTML rendering (use email-template-builder), cold outreach sequences (use cold-email), marketing automation platform setup, transactional email infrastructure.
-
-**Limitations:** Benchmarks are SaaS/B2B focused. Adjust thresholds for e-commerce, consumer, or other verticals.
-
----
-
-## Python Automation Tools
-
-### 1. Subject Line Scorer (`scripts/subject_line_scorer.py`)
-Scores sequence email subject lines for open-rate potential and auto-detects sequence type (welcome, trial, nurture, re-engagement).
-
-```bash
-python scripts/subject_line_scorer.py "Your trial ends tomorrow"
-python scripts/subject_line_scorer.py --file subjects.txt --json
-```
-
-### 2. Sequence Mapper (`scripts/sequence_mapper.py`)
-Generates a visual sequence map with timing, branching logic, and exit conditions from a sequence definition.
-
-```bash
-python scripts/sequence_mapper.py sequence_def.json
-python scripts/sequence_mapper.py --sample --json
-```
-
-### 3. Performance Analyzer (`scripts/performance_analyzer.py`)
-Analyzes email sequence metrics against benchmarks, identifies bottlenecks, and recommends optimizations.
-
-```bash
-python scripts/performance_analyzer.py metrics.json
-python scripts/performance_analyzer.py --sample --json
-```
+- **churn-prevention**: For cancel flows, save offers, and dunning strategy (email supports this)
+- **onboarding-cro**: For in-app onboarding (email supports this)
+- **copywriting**: For landing pages emails link to
+- **ab-test-setup**: For testing email elements
+- **popup-cro**: For email capture popups

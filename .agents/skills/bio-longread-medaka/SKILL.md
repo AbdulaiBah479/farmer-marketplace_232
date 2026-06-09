@@ -5,20 +5,7 @@ tool_type: cli
 primary_tool: medaka
 ---
 
-## Version Compatibility
-
-Reference examples tested with: bcftools 1.19+, minimap2 2.26+, samtools 1.19+
-
-Before using code patterns, verify installed versions match. If versions differ:
-- CLI: `<tool> --version` then `<tool> --help` to confirm flags
-
-If code throws ImportError, AttributeError, or TypeError, introspect the installed
-package and adapt the example to match the actual API rather than retrying.
-
 # Medaka Polishing and Variant Calling
-
-**"Polish my ONT assembly with medaka"** → Use neural networks trained on specific basecaller models to correct assembly errors and call variants from Nanopore data.
-- CLI: `medaka_polisher -i reads.fq -d draft.fa -o polished.fa -m r1041_e82_400bps_sup_v5.0.0`
 
 ## Basic Consensus Polishing
 
@@ -34,7 +21,7 @@ medaka_consensus -i reads.fastq.gz \
 ## Variant Calling (Haploid)
 
 ```bash
-# Call variants against reference
+# Call variants against reference (medaka v2.0+)
 medaka_variant \
     -i reads.fastq.gz \
     -r reference.fa \
@@ -44,11 +31,7 @@ medaka_variant \
 
 Note: Diploid variant calling has been deprecated in medaka v2.0. For diploid samples, use [Clair3](https://github.com/HKU-BAL/Clair3) instead.
 
-## Step-by-Step Workflow
-
-**Goal:** Polish an ONT assembly or call variants using medaka's neural network models with explicit control over each step.
-
-**Approach:** Align reads with minimap2, run medaka neural network inference on the alignment, then generate either a polished consensus or variant calls from the probability output.
+## Step-by-Step Workflow (medaka v2.0+)
 
 ```bash
 # 1. Align reads to reference/draft
@@ -104,7 +87,7 @@ medaka_consensus -m r1041_e82_400bps_hac_v5.0.0 ...
 ## Polish Region Only
 
 ```bash
-# Polish specific region
+# Polish specific region (medaka v2.0+)
 medaka inference aligned.bam consensus.hdf \
     --model r1041_e82_400bps_sup_v5.0.0 \
     --region chr1:1000000-2000000
@@ -123,7 +106,7 @@ medaka_consensus -i reads.fastq.gz -d round1/consensus.fasta -o round2 -m model
 ## Call Variants from Existing BAM
 
 ```bash
-# If you already have aligned BAM
+# If you already have aligned BAM (medaka v2.0+)
 medaka inference aligned.bam consensus.hdf --model r1041_e82_400bps_sup_v5.0.0
 medaka vcf reference.fa consensus.hdf variants.vcf
 ```

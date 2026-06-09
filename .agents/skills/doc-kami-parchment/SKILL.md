@@ -3,9 +3,7 @@ name: doc-kami-parchment
 zh_name: "Kami 羊皮纸文档"
 en_name: "Kami Parchment Document"
 emoji: "📜"
-description: "Warm parchment canvas (#f5f4ed), monochrome ink-blue accent (#1B365D), one serif family, and editorial-grade typography."
-zh_description: "暖羊皮纸底 (#f5f4ed) + 墨蓝单色 accent (#1B365D) + 单一衬线字体, 编辑级排印"
-en_description: "Warm parchment canvas (#f5f4ed), monochrome ink-blue accent (#1B365D), one serif family, and editorial-grade typography."
+description: "暖羊皮纸底 (#f5f4ed) + 墨蓝单色 accent (#1B365D) + 单一衬线字体, 编辑级排印"
 category: doc
 scenario: personal
 aspect_hint: "A4 / Letter 长页"
@@ -19,22 +17,6 @@ example_tagline: "暖羊皮纸 + 墨蓝单色 + 单一衬线"
 example_desc: "一页 Open Design Studio Issue №26 编辑级 one-pager"
 example_source_url: "https://github.com/tw93/kami"
 example_source_label: "tw93/kami"
-od:
-  mode: prototype
-  surface: web
-  platform: desktop
-  scenario: personal
-  featured: 0.04
-  upstream: "https://github.com/nexu-io/html-anything"
-  preview:
-    type: html
-    entry: index.html
-    reload: debounce-100
-  design_system:
-    requires: false
-  example_prompt: "Use the Kami Parchment Document template to turn my content into a warm parchment document with monochrome ink-blue accents, one serif family, and editorial-grade typography. Preserve the template's visual signature, use real content and data, and avoid lorem ipsum or placeholder images."
-  example_prompt_i18n:
-    zh-CN: "用「Kami 羊皮纸文档」模板把我的内容做成一份「暖羊皮纸底 (#f5f4ed) + 墨蓝单色 accent (#1B365D) + 单一衬线字体, 编辑级排印」。保持模板的视觉签名，使用真实内容和数据，避免 lorem ipsum 和占位图片。"
 ---
 
 【模板: Kami 羊皮纸文档】

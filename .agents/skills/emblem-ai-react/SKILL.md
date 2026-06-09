@@ -7,9 +7,7 @@ compatibility: Works on Claude Code, Cursor, Codex, OpenClaw, and other agents f
 metadata:
   author: EmblemAI
   version: "1.0.1"
-  homepage: https://emblemvault.ai
-  docs: https://emblemvault.ai/docs
-  docs-interactive: https://emblemvault.dev
+  homepage: https://emblemvault.dev
 ---
 
 # EmblemAI React

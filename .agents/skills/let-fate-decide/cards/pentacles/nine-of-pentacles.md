@@ -1,6 +1,6 @@
 # Nine of Pentacles
 
-**Suit**: Pentacles | **Rank**: 9
+**Suit**: Pentacles | **Rank**: Nine
 
 ## Upright
 Abundance, luxury, and self-sufficiency. Financial independence earned through

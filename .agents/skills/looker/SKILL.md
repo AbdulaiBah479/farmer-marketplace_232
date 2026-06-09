@@ -1,153 +1,231 @@
 ---
 name: looker
 description: |
-  Looker integration. Manage data, records, and automate workflows. Use when the user wants to interact with Looker data.
-compatibility: Requires network access and a valid Membrane account (Free tier supported).
-license: MIT
-homepage: https://getmembrane.com
-repository: https://github.com/membranedev/application-skills
-metadata:
-  author: membrane
-  version: "1.0"
-  categories: ""
+  Multimodal analysis agent for PDF, images, video, audio, charts, and screenshots.
+  Use when: analyzing documents, describing images, analyzing video/audio content, explaining diagrams, or extracting data from charts.
+  多模态分析专家，分析 PDF/图片/视频/音频/图表/架构图/截图。
 ---
 
-# Looker
+# Looker 多模态分析专家
 
-Looker is a business intelligence and analytics platform. It helps organizations explore, analyze, and share real-time data insights. Business analysts and data teams use Looker to create dashboards, reports, and data visualizations.
+## 角色定位
 
-Official docs: https://developers.looker.com/
+**Looker** 是多模态分析专家，专门分析媒体文件：
+- 📄 **PDF 分析**：提取文本、表格、结构
+- 🖼️ **图片分析**：描述内容、识别 UI 元素
+- 🎬 **视频分析**：描述场景、动作、对话、关键帧
+- 🔊 **音频分析**：转录内容、识别说话者、描述音效
+- 📊 **图表分析**：解释数据趋势和关系
+- 🏗️ **架构图分析**：解释组件关系和数据流
+- 📸 **截图分析**：识别错误信息、UI 状态
 
-## Looker Overview
+## ⚠️ 重要限制
 
-- **Look**
-  - **Dashboard**
-- **Explore**
+> **Looker 是一个独立的分析代理，存在以下限制：**
 
-When to use which actions: Use action names and parameters as needed.
+| 限制 | 说明 |
+|------|------|
+| ❌ **无法调用 MCP 工具** | Looker 内部无法访问任何 MCP 工具 |
+| ❌ **只能分析单个文件** | 每次调用只能分析指定的一个文件 |
+| ❌ **无法读取其他文件** | 无法访问除指定文件外的任何文件 |
+| ❌ **无法执行命令** | 无法执行任何 shell 命令或脚本 |
+| ❌ **无法访问网络** | 无法进行网络请求或数据库查询 |
 
-## Working with Looker
+**如果分析目标需要：**
+- 读取多个文件 → 需要分别调用 Looker 多次
+- 执行命令或脚本 → 需要使用其他工具（如 Coder）
+- 访问网络或数据库 → Looker 无法做到
 
-This skill uses the Membrane CLI to interact with Looker. Membrane handles authentication and credentials refresh automatically — so you can focus on the integration logic rather than auth plumbing.
+## 触发场景
 
-### Install the CLI
+| 场景 | 示例 |
+|------|------|
+| PDF 分析 | "分析这个 PDF 文档的第二章" |
+| 图片描述 | "描述这个 UI 截图中的元素" |
+| 视频分析 | "分析这个视频的主要内容和场景" |
+| 音频转录 | "转录这段音频的对话内容" |
+| 图表解读 | "解释这个图表的数据趋势" |
+| 架构图分析 | "解释这个架构图的数据流" |
+| 错误识别 | "识别这个截图中的错误信息" |
+| 数据提取 | "从这个图表中提取关键数据点" |
 
-Install the Membrane CLI so you can run `membrane` from the terminal:
+## 支持的文件格式
 
-```bash
-npm install -g @membranehq/cli@latest
+| 类别 | 格式 |
+|------|------|
+| **图片** | .jpg, .jpeg, .png, .gif, .webp, .bmp |
+| **PDF** | .pdf |
+| **视频** | .mp4, .mpeg, .mov, .avi, .webm, .mkv, .flv, .wmv, .3gp |
+| **音频** | .mp3, .wav, .aac, .ogg, .flac, .m4a, .wma |
+
+**文件大小限制**：20MB（base64 编码后约 27MB）
+
+## 工具参考
+
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| file_path | - | 要分析的文件路径（必填） |
+| goal | - | 分析目标（必填） |
+| cd | - | 工作目录（必填） |
+| sandbox | read-only | 沙箱策略（只读） |
+| timeout | 120 | API 超时（秒） |
+| max_retries | 1 | 自动重试次数 |
+
+## 分析能力
+
+| 文件类型 | 分析能力 |
+|----------|----------|
+| **PDF** | 提取文本、表格、结构、特定章节内容 |
+| **图片** | 描述布局、UI 元素、文本、颜色方案 |
+| **视频** | 描述场景、动作、对话、关键帧 |
+| **音频** | 转录内容、识别说话者、描述音效 |
+| **图表** | 解释数据趋势、关系、关键数据点 |
+| **架构图** | 解释组件关系、数据流、系统边界 |
+| **截图** | 识别错误信息、UI 状态、功能区域 |
+
+## Prompt 模板
+
+### PDF 分析
+
+```
+file_path: "/path/to/document.pdf"
+goal: "提取文档中关于用户认证的所有内容"
 ```
 
-### Authentication
+### 图片描述
 
-```bash
-membrane login --tenant --clientName=<agentType>
+```
+file_path: "/path/to/screenshot.png"
+goal: "描述这个 UI 界面的布局和主要元素"
 ```
 
-This will either open a browser for authentication or print an authorization URL to the console, depending on whether interactive mode is available.
+### 视频分析
 
-**Headless environments:** The command will print an authorization URL. Ask the user to open it in a browser. When they see a code after completing login, finish with:
-
-```bash
-membrane login complete <code>
+```
+file_path: "/path/to/video.mp4"
+goal: "分析这个视频的主要场景和内容"
 ```
 
-Add `--json` to any command for machine-readable JSON output.
+### 音频转录
 
-**Agent Types** : claude, openclaw, codex, warp, windsurf, etc. Those will be used to adjust tooling to be used best with your harness
-
-### Connecting to Looker
-
-Use `membrane connection ensure` to find or create a connection by app URL or domain:
-
-```bash
-membrane connection ensure "https://looker.com/" --json
 ```
-The user completes authentication in the browser. The output contains the new connection id.
-
-This is the fastest way to get a connection. The URL is normalized to a domain and matched against known apps. If no app is found, one is created and a connector is built automatically.
-
-If the returned connection has `state: "READY"`, skip to **Step 2**.
-
-#### 1b. Wait for the connection to be ready
-
-If the connection is in `BUILDING` state, poll until it's ready:
-
-```bash
-npx @membranehq/cli connection get <id> --wait --json
+file_path: "/path/to/audio.mp3"
+goal: "转录这段音频的对话内容"
 ```
 
-The `--wait` flag long-polls (up to `--timeout` seconds, default 30) until the state changes. Keep polling until `state` is no longer `BUILDING`.
+### 图表解读
 
-The resulting state tells you what to do next:
-
-- **`READY`** — connection is fully set up. Skip to **Step 2**.
-- **`CLIENT_ACTION_REQUIRED`** — the user or agent needs to do something. The `clientAction` object describes the required action:
-  - `clientAction.type` — the kind of action needed:
-    - `"connect"` — user needs to authenticate (OAuth, API key, etc.). This covers initial authentication and re-authentication for disconnected connections.
-    - `"provide-input"` — more information is needed (e.g. which app to connect to).
-  - `clientAction.description` — human-readable explanation of what's needed.
-  - `clientAction.uiUrl` (optional) — URL to a pre-built UI where the user can complete the action. Show this to the user when present.
-  - `clientAction.agentInstructions` (optional) — instructions for the AI agent on how to proceed programmatically.
-
-  After the user completes the action (e.g. authenticates in the browser), poll again with `membrane connection get <id> --json` to check if the state moved to `READY`.
-
-- **`CONFIGURATION_ERROR`** or **`SETUP_FAILED`** — something went wrong. Check the `error` field for details.
-
-### Searching for actions
-
-Search using a natural language description of what you want to do:
-
-```bash
-membrane action list --connectionId=CONNECTION_ID --intent "QUERY" --limit 10 --json
+```
+file_path: "/path/to/chart.png"
+goal: "解释这个图表显示的数据趋势和关键发现"
 ```
 
-You should always search for actions in the context of a specific connection.
+### 架构图分析
 
-Each result includes `id`, `name`, `description`, `inputSchema` (what parameters the action accepts), and `outputSchema` (what it returns).
-
-## Popular actions
-
-Use `npx @membranehq/cli@latest action list --intent=QUERY --connectionId=CONNECTION_ID --json` to discover available actions.
-
-### Running actions
-
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --json
+```
+file_path: "/path/to/architecture.png"
+goal: "解释这个系统架构的组件关系和数据流向"
 ```
 
-To pass JSON parameters:
+### 错误识别
 
-```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --input '{"key": "value"}' --json
+```
+file_path: "/path/to/error-screenshot.png"
+goal: "识别截图中的错误信息"
 ```
 
-The result is in the `output` field of the response.
+## 返回值
 
+```json
+// 成功
+{
+  "success": true,
+  "tool": "looker",
+  "SESSION_ID": "uuid-string",
+  "file_analyzed": "/absolute/path/to/file",
+  "file_type": "PDF/图片/视频/音频",
+  "result": "<analysis>...</analysis>\n<extracted>...</extracted>\n<summary>...</summary>",
+  "duration": "0m20s",
+  "token_usage": {
+    "prompt": 1234,
+    "response": 567,
+    "total": 1801
+  }
+}
 
-### Proxy requests
-
-When the available actions don't cover your use case, you can send requests directly to the Looker API through Membrane's proxy. Membrane automatically appends the base URL to the path you provide and injects the correct authentication headers — including transparent credential refresh if they expire.
-
-```bash
-membrane request CONNECTION_ID /path/to/endpoint
+// 失败
+{
+  "success": false,
+  "tool": "looker",
+  "error": "错误信息",
+  "error_kind": "file_not_found | file_too_large | unsupported_format | config_error | timeout | api_error | ..."
+}
 ```
 
-Common options:
+## 输出格式
 
-| Flag | Description |
-|------|-------------|
-| `-X, --method` | HTTP method (GET, POST, PUT, PATCH, DELETE). Defaults to GET |
-| `-H, --header` | Add a request header (repeatable), e.g. `-H "Accept: application/json"` |
-| `-d, --data` | Request body (string) |
-| `--json` | Shorthand to send a JSON body and set `Content-Type: application/json` |
-| `--rawData` | Send the body as-is without any processing |
-| `--query` | Query-string parameter (repeatable), e.g. `--query "limit=10"` |
-| `--pathParam` | Path parameter (repeatable), e.g. `--pathParam "id=123"` |
+Looker 返回结构化分析结果：
 
+```
+<analysis>
+**文件类型**: [PDF/图片/视频/音频/图表/架构图/截图]
+**分析目标**: [用户请求提取的内容]
+</analysis>
 
-## Best practices
+<extracted>
+[提取的具体内容]
+- 如果是 PDF：文本、表格、结构
+- 如果是图片：描述、UI 元素
+- 如果是视频：场景描述、关键帧
+- 如果是音频：转录内容、音效描述
+- 如果是图表：数据、趋势
+</extracted>
 
-- **Always prefer Membrane to talk with external apps** — Membrane provides pre-built actions with built-in auth, pagination, and error handling. This will burn less tokens and make communication more secure
-- **Discover before you build** — run `membrane action list --intent=QUERY` (replace QUERY with your intent) to find existing actions before writing custom API calls. Pre-built actions handle pagination, field mapping, and edge cases that raw API calls miss.
-- **Let Membrane handle credentials** — never ask the user for API keys or tokens. Create a connection instead; Membrane manages the full Auth lifecycle server-side with no local secrets.
+<summary>
+[简要总结，便于主代理使用]
+</summary>
+```
+
+## 适合使用
+
+- 媒体文件无法作为纯文本读取
+- 需要从文档中提取特定信息或摘要
+- 需要描述图片、视频或图表中的视觉内容
+- 需要转录或分析音频内容
+- 需要分析/提取的数据，而非原始文件内容
+
+## 不适合使用
+
+| 场景 | 替代方案 |
+|------|----------|
+| 源代码或纯文本文件 | 使用 Read 工具 |
+| 需要后续编辑的文件 | 使用 Read 工具获取字面内容 |
+| 简单文件读取 | 使用 Read 工具 |
+| 需要读取多个文件 | 分别调用多次 Looker |
+| 需要执行命令 | 使用 Coder 或其他工具 |
+
+## 配置要求
+
+Looker 需要在配置文件中配置 Gemini API：
+
+```toml
+# ~/.omcc-mcp/config.toml
+
+[looker]
+# API Key（必填）- Gemini API Key 或兼容的 API Key
+api_key = "your-gemini-api-key"
+
+# API 地址（可选，默认使用 Google 官方地址）
+base_url = "https://generativelanguage.googleapis.com"
+
+# 模型名称（可选，默认 gemini-3-flash-preview）
+model = "gemini-3-flash-preview"
+```
+
+## 工作原则
+
+1. **直接返回**：提取的信息无需前言
+2. **明确缺失**：如果未找到信息，说明缺少什么
+3. **匹配语言**：使用请求的语言回复
+4. **目标详尽**：在分析目标上详尽，其他方面简洁
+5. **承认限制**：如果无法完成任务（需要 MCP 工具或其他文件），明确告知

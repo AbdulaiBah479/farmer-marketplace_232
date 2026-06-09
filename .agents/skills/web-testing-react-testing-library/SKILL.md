@@ -68,6 +68,7 @@ description: React Testing Library patterns - query hierarchy, userEvent, async 
   - [examples/custom-render.md](examples/custom-render.md) - Custom render with providers
   - [examples/hooks.md](examples/hooks.md) - renderHook patterns
   - [examples/accessibility.md](examples/accessibility.md) - Accessibility testing patterns
+  - [examples/debugging.md](examples/debugging.md) - Debug utilities and snapshot testing
   - [examples/scoped-queries.md](examples/scoped-queries.md) - within() for scoped queries
   - [examples/configuration.md](examples/configuration.md) - Global configuration options
 - For decision frameworks and anti-patterns, see [reference.md](reference.md)
@@ -271,20 +272,26 @@ Create a custom render function that wraps components with all necessary provide
 import { render, type RenderOptions } from "@testing-library/react";
 import type { ReactElement } from "react";
 
+// Import your providers
+// import { ThemeProvider } from "./theme-context";
+// import { QueryClientProvider } from "@tanstack/react-query";
+
 interface AllProvidersProps {
   children: React.ReactNode;
 }
 
 function AllProviders({ children }: AllProvidersProps) {
-  // Wrap with your app's providers in correct nesting order
+  // Replace with your actual providers
+  return <>{children}</>;
+
+  // Example with providers:
   // return (
   //   <ThemeProvider>
-  //     <AuthProvider>
+  //     <QueryClientProvider client={queryClient}>
   //       {children}
-  //     </AuthProvider>
+  //     </QueryClientProvider>
   //   </ThemeProvider>
   // );
-  return <>{children}</>;
 }
 
 function customRender(
@@ -380,6 +387,8 @@ logTestingPlaygroundURL();
 // Visit the URL to get suggested queries
 ```
 
+See [examples/debugging.md](examples/debugging.md) for complete debug examples.
+
 **When to use debug:**
 
 - Test is failing and you don't understand why
@@ -464,9 +473,9 @@ configure({
 ```typescript
 import userEvent from "@testing-library/user-event";
 
-// With fake timers - pass your test runner's timer advance function
+// With fake timers (Vitest/Jest)
 const user = userEvent.setup({
-  advanceTimers: vi.advanceTimersByTime, // Required when using fake timers
+  advanceTimers: vi.advanceTimersByTime, // Required for fake timers
 });
 
 // Skip pointer events check (for elements with pointer-events: none)
@@ -496,20 +505,20 @@ See [examples/configuration.md](examples/configuration.md) for complete configur
 
 ## Integration Guide
 
-**Test runner setup:**
+**Works with your test runner:**
 
-- Import jest-dom matchers in your test setup file for semantic assertions (`toBeInTheDocument`, `toHaveValue`, etc.)
-- Cleanup happens automatically in modern setups - no manual `afterEach(cleanup)` needed
+- Configure test setup file to import `@testing-library/jest-dom` for semantic matchers
+- Use your test runner's lifecycle hooks for cleanup if not automatic
 
-**Mocking approach:**
+**Works with your mocking solution:**
 
-- Mock data at the network boundary, not at the component level
-- Set up mock responses before rendering, not after
+- Use network-level mocking to test loading/error/success states
+- Mock responses before rendering, not after
 
-**Framework providers:**
+**Works with your React framework:**
 
-- Custom render wraps components with your app's providers (see Pattern 5)
-- SSR frameworks may need additional DOM configuration
+- Custom render wraps with framework-specific providers
+- SSR frameworks may need additional configuration
 
 </integration>
 
@@ -548,9 +557,6 @@ See [examples/configuration.md](examples/configuration.md) for complete configur
 - `findBy*` has default timeout of 1000ms (configurable via options)
 - `result.current` in renderHook is a ref - value updates on each access
 - Empty `waitFor(() => {})` creates fragile timing-dependent tests
-- Prefer targeted assertions over snapshots - large snapshots produce noise, false positives, and don't communicate test intent
-- Snapshot testing is only appropriate for small, stable components with known output (icons, breadcrumbs)
-- Remove `screen.debug()` calls before committing - they are for development only
 
 </red_flags>
 

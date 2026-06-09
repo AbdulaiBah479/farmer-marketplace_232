@@ -58,7 +58,7 @@ Extract files from session history:
 python3 scripts/recover_content.py /path/to/session.jsonl
 ```
 
-Extracts all Write tool calls and saves files to `./recovered_content/`, preserving the original directory structure.
+Extracts all Write tool calls and saves files to `./recovered_content/`.
 
 **Filtering by keywords**:
 
@@ -125,14 +125,14 @@ python3 scripts/recover_content.py session.jsonl -o ./feature_xy_history/
 After recovery, always verify content:
 
 ```bash
-# Check directory structure (files preserved in subdirectories)
-find ./recovered_content/ -type f
+# Check file list
+ls -lh ./recovered_content/
 
-# Read recovery report (shows full output paths)
+# Read recovery report
 cat ./recovered_content/recovery_report.txt
 
-# Spot-check content (use actual path from report)
-head -20 ./recovered_content/src/components/ImportantFile.jsx
+# Spot-check content
+head -20 ./recovered_content/ImportantFile.jsx
 ```
 
 ## Limitations
@@ -200,7 +200,7 @@ Always sanitize before sharing:
 
 ```bash
 # Remove absolute paths
-sed -i '' 's|~/|<home>/|g' file.js
+sed -i '' 's|/Users/[^/]*/|/Users/username/|g' file.js
 
 # Verify no credentials
 grep -i "api_key\|password\|token" recovered_content/*
@@ -209,15 +209,3 @@ grep -i "api_key\|password\|token" recovered_content/*
 ### Safe Storage
 
 Recovered content inherits sensitivity from original sessions. Store securely and follow organizational policies for handling session data.
-
-## Next Step: Resume Interrupted Work
-
-After finding relevant session history, suggest continuing the work:
-
-```
-Found [N] relevant sessions with recoverable context.
-
-Options:
-A) Resume work — run /daymade-claude-code:continue-claude-work to pick up where you left off (Recommended)
-B) Just show me the content — I'll decide what to do with it
-```

@@ -1,43 +1,101 @@
 ---
 name: pr
-description: Create a pull request for the current branch using `gh`.
-disable-model-invocation: true
+description: INVOKE THIS SKILL before creating any PR to ensure compliance with branch naming, changelog requirements, and reviewer assignment.
 ---
 
-# Create Pull Request
+# ActivityPub PR Workflow
 
-Create a pull request for the current branch using `gh`.
+## Branch Naming
 
-## Current State
+| Prefix | Use |
+|--------|-----|
+| `add/{feature}` | New features |
+| `update/{feature}` | Iterating on existing features |
+| `fix/{bug}` | Bug fixes |
+| `try/{idea}` | Experimental ideas |
 
-- Branch: !`git branch --show-current`
-- Commits on branch: !`git log master..HEAD --oneline`
-- Changed files: !`git diff master...HEAD --stat`
+**Reserved:** `release/{X.Y.Z}` (releases only), `trunk` (main branch).
 
-## Steps
+## PR Creation
 
-### 1. Gather context
+**Every PR must:**
+- Assign `@me`
+- Add `Automattic/fediverse` as reviewer
+- Include changelog entry OR "Skip Changelog" label
+- Pass CI checks
+- Merge cleanly with trunk
 
-- Review the commits and changed files above.
-- Check if the branch is associated with a GitHub issue (look at branch name,
-  commit messages, or recent context for an issue number).
+```bash
+# Create PR (includes required assignment/reviewer)
+gh pr create --assignee @me --reviewer Automattic/fediverse
+```
 
-### 2. Push the branch
+**Use the exact template from `.github/PULL_REQUEST_TEMPLATE.md`** — do not create custom formatting.
 
-Run `git push -u origin HEAD`.
+## Changelog
 
-### 3. Create the PR
+End all changelog messages with punctuation:
+```
+✅ Add support for custom post types.
+❌ Add support for custom post types
+```
 
-Use `gh pr create` with:
+Add manually if forgotten:
+```bash
+composer changelog:add
+git add . && git commit -m "Add changelog entry" && git push
+```
 
-- **Title:** Short, direct summary of the change (under 70 chars).
-- **Body:** A brief, factual summary of what changed and why. No filler. If
-  there is an associated issue, include
-  `Fix https://github.com/brave/brave-browser/issues/<number>` on its own line
-  at the top of the body.
+See [release](../release/SKILL.md) for complete changelog details.
 
-Keep the description concise. Just state what was done.
+## Workflow
 
-### 4. Done
+### Create Branch
+```bash
+git checkout trunk && git pull origin trunk
+git checkout -b fix/notification-issue
+```
 
-Print the PR URL for the user.
+### Pre-Push Checks
+```bash
+composer lint         # PHP standards (composer lint:fix to auto-fix)
+npm run lint:js       # If JS changed
+npm run lint:css      # If CSS changed
+npm run env-test      # Run tests
+npm run build         # If assets changed
+```
+
+See [dev](../dev/SKILL.md) for complete commands.
+
+### Keep Branch Updated
+```bash
+git fetch origin
+git rebase origin/trunk
+# Resolve conflicts if any
+git push --force-with-lease
+```
+
+## Special Cases
+
+**Hotfixes:** Branch `fix/critical-issue`, minimal changes, add "Hotfix" label, request expedited review.
+
+**Experimental:** Use `try/` prefix, mark as draft, get early feedback, convert to proper branch type once confirmed.
+
+**Multi-PR features:** Create tracking issue, link all PRs, use consistent naming (`add/feature-part-1`, etc.), merge in order.
+
+## Labels
+
+| Label | Use |
+|-------|-----|
+| `Bug` | Bug fixes |
+| `Enhancement` | New features |
+| `Documentation` | Doc updates |
+| `Code Quality` | Refactoring, cleanup, etc. |
+| `Skip Changelog` | No changelog needed |
+| `Needs Review` | Ready for review |
+| `In Progress` | Still working |
+| `Hotfix` | Urgent fix |
+
+## Reference
+
+See [Pull Request Guide](../../../docs/pull-request.md) for complete workflow details.

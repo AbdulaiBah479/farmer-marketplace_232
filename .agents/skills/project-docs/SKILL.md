@@ -1,211 +1,157 @@
 ---
 name: project-docs
-description: "Generate project documentation from codebase analysis — ARCHITECTURE.md, API_ENDPOINTS.md, DATABASE_SCHEMA.md. Reads source code, schema files, routes, and config to produce accurate, structured docs. Use when starting a project, onboarding contributors, or when docs are missing or stale. Triggers: 'generate docs', 'document architecture', 'create api docs', 'document schema', 'project documentation', 'write architecture doc'."
-allowed-tools:
-  - Read
-  - Write
-  - Edit
-  - Glob
-  - Grep
-  - Bash
-compatibility: claude-code-only
+description: Generate comprehensive, professional project documentation structures including README, ARCHITECTURE, USER_GUIDE, DEVELOPER_GUIDE, and CONTRIBUTING files. Use when the user requests project documentation creation, asks to "document a project", needs standard documentation files, or wants to set up docs for a new repository. Adapts to Python/Go projects and OpenSource/internal contexts.
+license: MIT
+compatibility: opencode
 ---
 
 # Project Documentation Generator
 
-Generate structured project documentation by analysing the codebase. Produces docs that reflect the **actual code**, not aspirational architecture.
+Generate complete, professional documentation structures for software projects. Automatically adapts content and structure based on project language (Python/Go), context (OpenSource/internal), and existing files.
 
-## When to Use
+## Core Documentation Files
 
-- New project needs initial documentation
-- Docs are missing or stale
-- Onboarding someone to the codebase
-- Post-refactor doc refresh
+Always generate these five core files:
+
+1. **README.md** - Project overview, quick start, badges
+2. **ARCHITECTURE.md** - System design, components, data flow
+3. **USER_GUIDE.md** - Usage examples, configuration, troubleshooting
+4. **DEVELOPER_GUIDE.md** - Development setup, testing, contribution workflow
+5. **CONTRIBUTING.md** - Contribution guidelines, code standards, PR process
 
 ## Workflow
 
-### 1. Detect Project Type
+### 1. Context Detection
 
-Scan the project root to determine what kind of project this is:
+Before generating docs, detect:
 
-| Indicator | Project Type |
-|-----------|-------------|
-| `wrangler.jsonc` / `wrangler.toml` | Cloudflare Worker |
-| `vite.config.ts` + `src/App.tsx` | React SPA |
-| `astro.config.mjs` | Astro site |
-| `next.config.js` | Next.js app |
-| `package.json` with `hono` | Hono API |
-| `src/index.ts` with `Hono` | API server |
-| `drizzle.config.ts` | Has database layer |
-| `schema.ts` or `schema/` | Has database schema |
-| `pyproject.toml` / `setup.py` | Python project |
-| `Cargo.toml` | Rust project |
+- **Language**: Scan for `go.mod`, `pyproject.toml`, `requirements.txt`, `setup.py`
+- **Project type**: Check for `Dockerfile`, `terraform/`, `k8s/`, AI/ML indicators
+- **Existing docs**: Identify what already exists to avoid duplication
+- **License**: Detect from LICENSE file or ask user
+- **Context**: Determine if OpenSource or internal based on repo structure
 
-### 2. Ask What to Generate
+### 2. Ask Clarifying Questions
 
-```
-Which docs should I generate?
-1. ARCHITECTURE.md — system overview, stack, directory structure, key flows
-2. API_ENDPOINTS.md — routes, methods, params, response shapes, auth
-3. DATABASE_SCHEMA.md — tables, relationships, migrations, indexes
-4. All of the above
-```
+Ask user ONE question at a time to fill gaps:
 
-Only offer docs that match the project. Don't offer API_ENDPOINTS.md for a static site. Don't offer DATABASE_SCHEMA.md if there's no database.
+- "What's the primary purpose of this project in one sentence?"
+- "Who's the main audience? (developers, ops, end-users, all)"
+- "Is this OpenSource or internal? (affects badges, contact info)"
+- "Any company-specific tooling to mention? (Jira, Slack channels, etc.)"
 
-### 3. Scan the Codebase
+### 3. Content Adaptation
 
-For each requested doc, read the relevant source files:
+Read `references/templates.md` to select appropriate template variants based on detected context.
 
-**ARCHITECTURE.md** — scan:
-- `package.json` / `pyproject.toml` (stack, dependencies)
-- Entry points (`src/index.ts`, `src/main.tsx`, `src/App.tsx`)
-- Config files (`wrangler.jsonc`, `vite.config.ts`, `tsconfig.json`)
-- Directory structure (top 2 levels)
-- Key modules and their exports
+**Language-specific elements:**
 
-**API_ENDPOINTS.md** — scan:
-- Route files (`src/routes/`, `src/api/`, or inline in index)
-- Middleware files (auth, CORS, logging)
-- Request/response types or Zod schemas
-- Error handling patterns
+- Python: Package managers (`uv`, `pip`, `poetry`), testing (`pytest`), linting (`ruff`, `mypy`)
+- Go: Build commands, testing, `golangci-lint`, module structure
 
-**DATABASE_SCHEMA.md** — scan:
-- Drizzle schema files (`src/db/schema.ts`, `src/schema/`)
-- Migration files (`drizzle/`, `migrations/`)
-- Raw SQL files if present
-- Seed files if present
+**Context-specific elements:**
 
-### 4. Generate Documentation
+- OpenSource: Badges, CODE_OF_CONDUCT, security policy, community guidelines
+- Internal: Slack channels, internal tools, compliance requirements, team contacts
 
-Write each doc to `docs/` (create the directory if it doesn't exist). If the project already has docs there, offer to update rather than overwrite.
+**Project type adjustments:**
 
-For small projects with no `docs/` directory, write to the project root instead.
+- AI Agents: MCP architecture, prompt patterns, example interactions
+- Infrastructure: Terraform/K8s setup, deployment procedures, DR plans
+- Microservices: API schemas, service mesh, health checks
+- CLI Tools: Installation methods, command examples, flags
 
-## Document Templates
+### 4. File Generation
 
-### ARCHITECTURE.md
+Generate files in this order:
 
-```markdown
-# Architecture
+1. **README.md** first (most visible, sets tone)
+2. **ARCHITECTURE.md** (technical foundation)
+3. **DEVELOPER_GUIDE.md** (setup and contribution)
+4. **USER_GUIDE.md** (end-user focused)
+5. **CONTRIBUTING.md** (community guidelines)
 
-## Overview
-[One paragraph: what this project does and how it's structured]
+Each file must:
 
-## Stack
-| Layer | Technology | Version |
-|-------|-----------|---------|
-| Runtime | [e.g. Cloudflare Workers] | — |
-| Framework | [e.g. Hono] | [version] |
-| Database | [e.g. D1 (SQLite)] | — |
-| ORM | [e.g. Drizzle] | [version] |
-| Frontend | [e.g. React 19] | [version] |
-| Styling | [e.g. Tailwind v4] | [version] |
+- Use clear headers and structure from templates
+- Include concrete, runnable examples
+- Reference other docs when needed (avoid duplication)
+- Match project's actual structure and commands
 
-## Directory Structure
-[Annotated tree — top 2 levels with purpose comments]
+### 5. Template Application
 
-## Key Flows
-### [Flow 1: e.g. "User Authentication"]
-[Step-by-step: request → middleware → handler → database → response]
+For each file:
 
-### [Flow 2: e.g. "Data Processing Pipeline"]
-[Step-by-step through the system]
+1. Select template variant from `references/templates.md`
+2. Fill in project-specific details
+3. Add context-appropriate sections
+4. Ensure consistency across all files
 
-## Configuration
-[Key config files and what they control]
+### 6. Quality Checks
 
-## Deployment
-[How to deploy, environment variables needed, build commands]
-```
+Before finalizing, verify:
 
-### API_ENDPOINTS.md
+- All code examples are runnable and accurate
+- Commands match detected language/tooling
+- Cross-references between docs are correct
+- No placeholder text remains
+- Tone is consistent (technical/friendly/formal based on context)
 
-```markdown
-# API Endpoints
+### 7. Output
 
-## Base URL
-[e.g. `https://api.example.com` or relative `/api`]
+Place all files in `docs/` and use `present_files` to share with user.
 
-## Authentication
-[Method: Bearer token, session cookie, API key, none]
-[Where tokens come from, how to obtain]
+## Resources
 
-## Endpoints
+### references/templates.md
 
-### [Group: e.g. Users]
+Contains complete documentation templates for all five core files with variants for:
 
-#### `GET /api/users`
-- **Auth**: Required
-- **Params**: `?page=1&limit=20`
-- **Response**: `{ users: User[], total: number }`
+- Python vs Go projects
+- OpenSource vs internal contexts
+- Different project types (agent, service, CLI, infra)
+- Different complexity levels
 
-#### `POST /api/users`
-- **Auth**: Required (admin)
-- **Body**: `{ name: string, email: string }`
-- **Response**: `{ user: User }` (201)
-- **Errors**: 400 (validation), 409 (duplicate email)
+Claude should read this file to select appropriate templates before generating docs.
 
-[Repeat for each endpoint]
+## Special Considerations
 
-## Error Format
-[Standard error response shape]
+**For AI Agent projects:**
 
-## Rate Limits
-[If applicable]
-```
+- Explain MCP server architecture
+- Document tool integrations
+- Show example prompts and interactions
+- Include LLM configuration details
 
-### DATABASE_SCHEMA.md
+**For Infrastructure/DevOps:**
 
-```markdown
-# Database Schema
+- Environment requirements (cloud providers, versions)
+- Deployment runbooks
+- Monitoring setup
+- Disaster recovery procedures
 
-## Engine
-[e.g. Cloudflare D1 (SQLite), PostgreSQL, MySQL]
+**For Microservices:**
 
-## Tables
+- API endpoint documentation
+- Service dependency diagrams
+- Inter-service communication patterns
+- Health check and metrics endpoints
 
-### `users`
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| id | TEXT | PK | UUID |
-| email | TEXT | UNIQUE, NOT NULL | User email |
-| name | TEXT | NOT NULL | Display name |
-| created_at | TEXT | NOT NULL, DEFAULT now | ISO timestamp |
+## Quality Standards
 
-### `posts`
-[Same format]
+Every documentation file must:
 
-## Relationships
-[Foreign keys, join patterns, cascading rules]
+- Have table of contents for files >200 lines
+- Use proper code fences with language tags
+- Include "Quick Start" section at top
+- Show real, tested examples
+- Explain "why" decisions were made
+- Use consistent terminology throughout
 
-## Indexes
-[Non-primary indexes and why they exist]
+## Avoid
 
-## Migrations
-- Generate: `npx drizzle-kit generate`
-- Apply local: `npx wrangler d1 migrations apply DB --local`
-- Apply remote: `npx wrangler d1 migrations apply DB --remote`
-
-## Seed Data
-[Reference to seed script if one exists]
-```
-
-## Quality Rules
-
-1. **Document what exists, not what's planned** — read the actual code, don't invent endpoints or tables
-2. **Include versions** — extract from package.json/lock files, not from memory
-3. **Show real response shapes** — copy from TypeScript types or Zod schemas in the code
-4. **Keep it scannable** — tables over paragraphs, code blocks over prose
-5. **Don't duplicate CLAUDE.md** — if architecture info is already in CLAUDE.md, either move it to ARCHITECTURE.md or reference it
-6. **Flag gaps** — if you find undocumented routes or tables without clear purpose, note them with `<!-- TODO: document purpose -->`
-
-## Updating Existing Docs
-
-If docs already exist:
-1. Read the existing doc
-2. Diff against the current codebase
-3. Show the user what's changed (new endpoints, removed tables, updated stack)
-4. Apply updates preserving any hand-written notes or sections
-
-Never silently overwrite custom content the user has added to their docs.
+- Generic placeholder text like "TODO" or "Coming soon"
+- Outdated technology references
+- Overly complex explanations without examples
+- Duplicating content across multiple files
+- Missing concrete code examples

@@ -5,20 +5,7 @@ tool_type: cli
 primary_tool: manta
 ---
 
-## Version Compatibility
-
-Reference examples tested with: bcftools 1.19+, samtools 1.19+
-
-Before using code patterns, verify installed versions match. If versions differ:
-- CLI: `<tool> --version` then `<tool> --help` to confirm flags
-
-If code throws ImportError, AttributeError, or TypeError, introspect the installed
-package and adapt the example to match the actual API rather than retrying.
-
 # Structural Variant Calling (Short Reads)
-
-**"Call structural variants from my WGS data"** → Detect large genomic rearrangements (deletions, insertions, inversions, duplications, translocations) using split-read and discordant-pair evidence.
-- CLI: `configManta.py` (Manta), `delly call`, `lumpyexpress`/`smoove call`
 
 ## Manta (Recommended)
 
@@ -156,10 +143,6 @@ smoove call \
 ```
 
 ## Merge Multiple Callers
-
-**Goal:** Increase confidence in SV calls by requiring support from multiple callers.
-
-**Approach:** Run 2-3 callers independently, then merge callsets with SURVIVOR requiring agreement on breakpoint proximity and SV type.
 
 ```bash
 # Use SURVIVOR to merge callsets

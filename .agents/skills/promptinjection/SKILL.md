@@ -1,12 +1,12 @@
 ---
 name: PromptInjection
-description: Test LLM applications for prompt injection vulnerabilities — jailbreak attempts, system prompt extraction, context manipulation, guardrail bypass techniques, direct injection, indirect injection, multi-stage attacks, and reconnaissance. USE WHEN prompt injection, jailbreak, LLM security, AI security assessment, pentest AI application, test chatbot, guardrail bypass, direct injection, indirect injection, RAG poisoning, multi-stage attack, complete assessment, reconnaissance.
+description: Prompt injection testing. USE WHEN prompt injection, jailbreak, LLM security, AI security assessment, pentest AI application, test chatbot vulnerabilities.
 ---
 
 ## Customization
 
 **Before executing, check for user customizations at:**
-`~/.claude/PAI/USER/SKILLCUSTOMIZATIONS/PromptInjection/`
+`~/.claude/skills/PAI/USER/SKILLCUSTOMIZATIONS/PromptInjection/`
 
 If this directory exists, load and apply any PREFERENCES.md, configurations, or resources found there. These override default behavior. If the directory does not exist, proceed with skill defaults.
 

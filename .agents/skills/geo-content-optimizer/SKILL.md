@@ -1,120 +1,480 @@
 ---
 name: geo-content-optimizer
-description: 'Use when the user asks to "optimize for AI citations"; improves citation readiness for ChatGPT, Perplexity, AI Overviews, Gemini, and Claude. Not for structural on-page SEO — use on-page-seo-auditor; not for net-new drafting — use seo-content-writer. AI引用优化/GEO优化/AI搜索'
-version: "9.9.10"
-license: Apache-2.0
-compatibility: "Claude Code and compatible agent-skill hosts"
-homepage: "https://github.com/aaron-he-zhu/seo-geo-claude-skills"
-when_to_use: "Use when optimizing content for AI engines like ChatGPT, Perplexity, AI Overviews, Gemini, Claude, or Copilot. Also for AI citation optimization, generative engine visibility, AI引用优化, AI搜索优化, GEO优化, or 让AI引用我."
-argument-hint: "<content URL or text> [target AI engine]"
-metadata:
-  author: aaron-he-zhu
-  version: "9.9.10"
-  geo-relevance: "high"
-  tags:
-    - geo
-    - ai-seo
-    - ai-citations
-    - chatgpt-optimization
-    - perplexity-optimization
-    - google-ai-overview
-    - gemini
-    - generative-engine-optimization
-    - llm-citations
-    - quotable-content
-    - AI引用优化
-    - GEO优化
-    - AI最適化
-    - AI최적화
-    - optimizacion-ia
-  triggers:
-    - "get cited by ChatGPT"
-    - "get cited by AI"
-    - "show up in ChatGPT answers"
-    - "how to appear in AI answers"
-    - "Perplexity optimization"
-    - "AI Overview is eating my clicks"
-    - "让AI引用我"
-    - "AI不提我的品牌"
+description: Optimizes content for Generative Engine Optimization (GEO) to increase chances of being cited by AI systems like ChatGPT, Claude, Perplexity, and Google AI Overviews. Makes content AI-friendly while maintaining SEO value.
 ---
 
 # GEO Content Optimizer
 
-Optimizes content for AI-generated answers and citation surfaces such as ChatGPT, Perplexity, Gemini, Claude, and AI Overviews.
+This skill optimizes content to appear in AI-generated responses. As AI systems increasingly answer user queries directly, getting cited by these systems becomes crucial for visibility.
+
+## When to Use This Skill
+
+- Optimizing existing content for AI citations
+- Creating new content designed for both SEO and GEO
+- Improving chances of appearing in AI Overviews
+- Making content more quotable by AI systems
+- Adding authority signals that AI systems trust
+- Structuring content for AI comprehension
+- Competing for visibility in the AI-first search era
 
 ## What This Skill Does
 
-Improves structure, authority signals, factual density, quotable statements, source attribution, and overall GEO readiness.
+1. **Citation Optimization**: Makes content more likely to be quoted by AI
+2. **Structure Enhancement**: Formats content for AI comprehension
+3. **Authority Building**: Adds signals that AI systems trust
+4. **Factual Enhancement**: Improves accuracy and verifiability
+5. **Quote Creation**: Creates memorable, citeable statements
+6. **Source Attribution**: Adds proper citations that AI can verify
+7. **GEO Scoring**: Evaluates content's AI-friendliness
 
-## Quick Start
+## How to Use
 
-```text
+### Optimize Existing Content
+
+```
 Optimize this content for GEO/AI citations: [content or URL]
-Make this article more likely to be cited by AI systems
-Write content about [topic] optimized for both SEO and GEO
-Audit this content for GEO readiness and suggest improvements
-AI Overview is eating clicks on 12 head queries — build a recovery plan
 ```
 
-See [AI Overview Recovery](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/build/geo-content-optimizer/references/ai-overview-recovery.md) for the 4-phase playbook (measure → diagnose → rewrite → monitor) tailored to recovery scenarios (as opposed to generic GEO optimization).
+```
+Make this article more likely to be cited by AI systems
+```
 
-## Skill Contract
+### Create GEO-Optimized Content
 
-**Expected output**: a ready-to-use asset or implementation-ready transformation plus a short handoff summary ready for `memory/content/`.
+```
+Write content about [topic] optimized for both SEO and GEO
+```
 
-- **Reads**: the brief, target keywords, entity inputs, and quality constraints. **Canonical entity profiles**: if the content mentions a brand / person / product, this skill MUST consult `memory/entities/<slug>.md` (per the [entity-geo handoff schema](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/references/entity-geo-handoff-schema.md)) to populate `display_name`, `description_short`, `ai_resolution_status` and decide whether disambiguation boilerplate is needed. If the profile is missing or stale (>90 days), declare `DONE_WITH_CONCERNS` and recommend `entity-optimizer` as an open loop.
-- **Writes**: a user-facing content, metadata, or schema deliverable plus a reusable summary that can be stored under `memory/content/`.
-- **Promotes**: approved angles, messaging choices, missing evidence, and publish blockers to `memory/hot-cache.md` and `memory/open-loops.md`; propose durable decisions as pending-decision items.
-- **Done when**: each target AI query has a standalone, quotable answer block; a before/after GEO score and AI Query Coverage are reported; and the CORE-EEAT GEO self-check (C02, O03, O05, E01) has no unaddressed Fail.
-- **Primary next skill**: use the `Next Best Skill` below when the asset is ready for review or deployment.
+### GEO Audit
 
-### Handoff Summary
-
-> Emit the standard shape from [skill-contract.md §Handoff Summary Format](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/references/skill-contract.md).
-
-## Data Sources
-
-Use `~~AI monitor` and `~~SEO tool` when connected; otherwise ask for target queries, content, engines, competitor examples, and known AI-citation gaps. See [CONNECTORS.md](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/CONNECTORS.md).
+```
+Audit this content for GEO readiness and suggest improvements
+```
 
 ## Instructions
 
-When a user requests GEO optimization, run these five steps:
+When a user requests GEO optimization:
 
-1. **Load CORE-EEAT GEO-First Targets** — prioritize C02, C09, O03, O05, E01, O02 plus engine-specific preferences.
-2. **Analyze Current Content** — score clear definitions, quotable statements, factual density, source citations, Q&A format, authority signals, freshness, and structure clarity.
-3. **Apply GEO Techniques** — add standalone 25-50 word definitions, sourced quotable statements, expert/source signals, Q&A/tables/lists, specific data, and visible-content-matching FAQ schema.
-4. **Generate GEO Output** — report Changes Made, before/after GEO score, and AI Query Coverage.
-5. **CORE-EEAT GEO Self-Check** — verify C02, C04, C09, O02, O03, O05, O06, R01, R02, R04, R07, E01, Exp10, Ept08 with Pass/Warn/Fail.
+1. **Understand GEO Fundamentals**
 
-Label every metric **Measured** (tool/export), **User-provided**, or **Estimated** (model inference); never present an estimate as measured; if a required metric is unavailable, mark it N/A — do not invent it.
+   ```markdown
+   ### How AI Systems Select Content to Cite
+   
+   AI systems prioritize content that is:
+   
+   **Authoritative**
+   - From recognized experts or trusted sources
+   - Contains proper citations and references
+   - Shows expertise signals (author credentials, original research)
+   
+   **Accurate**
+   - Factually correct and verifiable
+   - Up-to-date information
+   - Consistent with consensus knowledge
+   
+   **Clear**
+   - Well-structured and organized
+   - Contains clear definitions and explanations
+   - Uses unambiguous language
+   
+   **Quotable**
+   - Has standalone statements that answer questions
+   - Contains specific facts, statistics, and data
+   - Includes memorable, concise explanations
+   ```
 
-> **Reference**: See [Instructions Detail](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/build/geo-content-optimizer/references/instructions-detail.md) for the full CORE-EEAT GEO target tables, AI engine preferences, analysis templates, optimization report template, self-check matrix, and examples.
+2. **Analyze Current Content**
+
+   ```markdown
+   ## GEO Analysis: [Content Title]
+   
+   ### Current State Assessment
+   
+   | Factor | Score | Notes |
+   |--------|-------|-------|
+   | Clear definitions | [1-5] | [notes] |
+   | Quotable statements | [1-5] | [notes] |
+   | Factual density | [1-5] | [notes] |
+   | Source citations | [1-5] | [notes] |
+   | Q&A format | [1-5] | [notes] |
+   | Authority signals | [1-5] | [notes] |
+   | Content freshness | [1-5] | [notes] |
+   | Structure clarity | [1-5] | [notes] |
+   
+   **Overall GEO Score**: [X]/40
+   
+   **Primary Weaknesses**:
+   1. [Weakness 1]
+   2. [Weakness 2]
+   3. [Weakness 3]
+   
+   **Quick Wins**:
+   1. [Quick improvement 1]
+   2. [Quick improvement 2]
+   ```
+
+3. **Optimize for Clear Definitions**
+
+   AI systems love clear, quotable definitions.
+
+   ```markdown
+   ### Definition Optimization
+   
+   **Before** (Weak for GEO):
+   > SEO is really important for businesses and involves various 
+   > techniques to improve visibility online through search engines.
+   
+   **After** (Strong for GEO):
+   > **Search Engine Optimization (SEO)** is the practice of optimizing 
+   > websites and content to rank higher in search engine results pages 
+   > (SERPs), increasing organic traffic and visibility.
+   
+   **Definition Template**:
+   "[Term] is [clear category/classification] that [primary function/purpose], 
+   [key characteristic or benefit]."
+   
+   **Checklist for GEO-Optimized Definitions**:
+   - [ ] Starts with the term being defined
+   - [ ] Provides clear category (what type of thing it is)
+   - [ ] Explains primary function or purpose
+   - [ ] Uses precise, unambiguous language
+   - [ ] Can stand alone as a complete answer
+   - [ ] Is 25-50 words for optimal citation length
+   ```
+
+4. **Create Quotable Statements**
+
+   ```markdown
+   ### Quotable Statement Optimization
+   
+   AI systems cite specific, standalone statements. Transform vague 
+   content into quotable facts.
+   
+   **Weak (Not quotable)**:
+   > Email marketing is pretty effective and lots of companies use it.
+   
+   **Strong (Quotable)**:
+   > Email marketing delivers an average ROI of $42 for every $1 spent, 
+   > making it one of the highest-performing digital marketing channels.
+   
+   **Types of Quotable Statements**:
+   
+   1. **Statistics**
+      - Include specific numbers
+      - Cite the source
+      - Add context (timeframe, comparison)
+      
+      Example: "According to [Source], [specific statistic] as of [date]."
+   
+   2. **Facts**
+      - Verifiable information
+      - Unambiguous language
+      - Authoritative source
+      
+      Example: "[Subject] was [fact], according to [authoritative source]."
+   
+   3. **Definitions** (covered above)
+   
+   4. **Comparisons**
+      - Clear comparison structure
+      - Specific differentiators
+      
+      Example: "Unlike [A], [B] [specific difference], which means [implication]."
+   
+   5. **How-to Steps**
+      - Numbered, clear steps
+      - Action-oriented language
+      
+      Example: "To [achieve goal], [step 1], then [step 2], and finally [step 3]."
+   ```
+
+5. **Add Authority Signals**
+
+   ```markdown
+   ### Authority Signal Enhancement
+   
+   **Expert Attribution**
+   
+   Add expert quotes and credentials:
+   
+   > "AI will transform how we search for information," says Dr. Jane Smith, 
+   > AI Research Director at Stanford University.
+   
+   **Source Citations**
+   
+   Properly cite sources that AI can verify:
+   
+   Before:
+   > Studies show that most people prefer video content.
+   
+   After:
+   > According to Wyzowl's 2024 Video Marketing Statistics report, 
+   > 91% of consumers want to see more online video content from brands.
+   
+   **Authority Elements to Add**:
+   - [ ] Author byline with credentials
+   - [ ] Expert quotes with attribution
+   - [ ] Citations to peer-reviewed research
+   - [ ] References to recognized authorities
+   - [ ] Original data or research
+   - [ ] Case studies with named companies
+   - [ ] Industry statistics with sources
+   ```
+
+6. **Optimize Content Structure**
+
+   ```markdown
+   ### Structure Optimization for GEO
+   
+   AI systems parse structured content more effectively.
+   
+   **Q&A Format**
+   
+   Transform content into question-answer pairs:
+   
+   ```html
+   <h2>What is [Topic]?</h2>
+   <p>[Direct answer in 40-60 words]</p>
+   
+   <h2>How does [Topic] work?</h2>
+   <p>[Clear explanation with steps if applicable]</p>
+   
+   <h2>Why is [Topic] important?</h2>
+   <p>[Specific reasons with evidence]</p>
+   ```
+   
+   **Comparison Tables**
+   
+   For comparison queries, use clear tables:
+   
+   | Feature | Option A | Option B |
+   |---------|----------|----------|
+   | [Feature 1] | [Specific value] | [Specific value] |
+   | [Feature 2] | [Specific value] | [Specific value] |
+   | **Best for** | [Use case] | [Use case] |
+   
+   **Numbered Lists**
+   
+   For process or list queries:
+   
+   1. **Step 1: [Action]** - [Brief explanation]
+   2. **Step 2: [Action]** - [Brief explanation]
+   3. **Step 3: [Action]** - [Brief explanation]
+   
+   **Definition Boxes**
+   
+   Highlight key definitions:
+   
+   > **Key Definition**: [Term] refers to [clear definition].
+   ```
+
+7. **Enhance Factual Density**
+
+   ```markdown
+   ### Factual Density Improvement
+   
+   AI systems prefer fact-rich content over opinion-heavy content.
+   
+   **Content Transformation**:
+   
+   **Low factual density**:
+   > Social media marketing is very popular nowadays. Many businesses 
+   > use it and find it helpful for reaching customers.
+   
+   **High factual density**:
+   > Social media marketing reaches 4.9 billion users globally (Statista, 2024). 
+   > Businesses using social media marketing report 66% higher lead generation 
+   > rates compared to non-users (HubSpot State of Marketing Report, 2024). 
+   > The most effective platforms for B2B marketing are LinkedIn (96% usage), 
+   > Twitter (82%), and Facebook (80%).
+   
+   **Factual Enhancement Checklist**:
+   - [ ] Add specific statistics with sources
+   - [ ] Include exact dates, numbers, percentages
+   - [ ] Replace vague claims with verified facts
+   - [ ] Add recent data (within last 2 years)
+   - [ ] Include multiple data points per section
+   - [ ] Cross-reference with authoritative sources
+   ```
+
+8. **Implement FAQ Schema**
+
+   ```markdown
+   ### FAQ Optimization for GEO
+   
+   FAQ sections are highly effective for GEO because:
+   - They match question-based AI queries
+   - They provide concise, structured answers
+   - FAQ schema helps AI understand Q&A pairs
+   
+   **FAQ Structure**:
+   
+   ## Frequently Asked Questions
+   
+   ### [Question matching common query]?
+   
+   [Direct answer: 40-60 words]
+   [Supporting detail or example]
+   
+   ### [Question matching common query]?
+   
+   [Direct answer: 40-60 words]
+   [Supporting detail or example]
+   
+   **FAQ Schema (JSON-LD)**:
+   
+   ```json
+   {
+     "@context": "https://schema.org",
+     "@type": "FAQPage",
+     "mainEntity": [{
+       "@type": "Question",
+       "name": "[Question text]",
+       "acceptedAnswer": {
+         "@type": "Answer",
+         "text": "[Answer text]"
+       }
+     }]
+   }
+   ```
+   ```
+
+9. **Generate GEO-Optimized Output**
+
+   ```markdown
+   ## GEO Optimization Report
+   
+   ### Changes Made
+   
+   **Definitions Added/Improved**:
+   1. [Definition 1] - [location in content]
+   2. [Definition 2] - [location in content]
+   
+   **Quotable Statements Created**:
+   1. "[Statement 1]"
+   2. "[Statement 2]"
+   
+   **Authority Signals Added**:
+   1. [Expert quote/citation]
+   2. [Source attribution]
+   
+   **Structural Improvements**:
+   1. [Change 1]
+   2. [Change 2]
+   
+   ### Before/After GEO Score
+   
+   | Factor | Before | After | Change |
+   |--------|--------|-------|--------|
+   | Clear definitions | [X] | [X] | +[X] |
+   | Quotable statements | [X] | [X] | +[X] |
+   | Factual density | [X] | [X] | +[X] |
+   | Source citations | [X] | [X] | +[X] |
+   | Q&A format | [X] | [X] | +[X] |
+   | Authority signals | [X] | [X] | +[X] |
+   | **Total** | [X]/30 | [X]/30 | +[X] |
+   
+   ### AI Query Coverage
+   
+   This content is now optimized to answer:
+   - "What is [topic]?" ✅
+   - "How does [topic] work?" ✅
+   - "Why is [topic] important?" ✅
+   - "[Topic] vs [alternative]" ✅
+   - "Best [topic] for [use case]" ✅
+   ```
 
 ## Example
 
-**User**: "Optimize this paragraph for GEO: 'Email marketing is a good way to reach customers. It's been around for a while and many businesses use it.'"
+**User**: "Optimize this paragraph for GEO: 'Email marketing is a good way to reach customers. It's been around for a while and many businesses use it. You can send newsletters, promotions, and other messages.'"
 
-**Output** adds a clear definition, dated/source-backed facts, structured list, quotable statements, and a before/after GEO score. See the full pattern in [Instructions Detail — Example](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/build/geo-content-optimizer/references/instructions-detail.md#example).
+**Output**:
+
+```markdown
+## GEO-Optimized Version
+
+**Email marketing** is a digital marketing strategy that uses email to promote 
+products, build customer relationships, and drive conversions. According to 
+the Data & Marketing Association, email marketing delivers an average ROI 
+of $42 for every $1 invested, making it the highest-performing digital 
+marketing channel.
+
+### Key email marketing formats include:
+
+1. **Newsletters**: Regular updates sharing company news, industry insights, 
+   and valuable content to maintain subscriber engagement
+2. **Promotional emails**: Time-sensitive offers, discounts, and product 
+   announcements designed to drive immediate sales
+3. **Transactional emails**: Order confirmations, shipping updates, and 
+   account notifications with 8x higher open rates than marketing emails
+4. **Automated sequences**: Pre-scheduled email series triggered by user 
+   actions, such as welcome series or abandoned cart reminders
+
+> **Key statistic**: 81% of small businesses rely on email as their primary 
+> customer acquisition channel (Emarsys, 2024).
+
+---
+
+### Changes Made:
+
+| Element | Before | After |
+|---------|--------|-------|
+| Definition | None | Clear definition with category |
+| Statistics | None | 2 specific stats with sources |
+| Structure | Single paragraph | Structured list with headers |
+| Authority | None | DMA and Emarsys citations |
+| Quotable statements | 0 | 3 standalone facts |
+
+**GEO Score**: Improved from 1/10 to 8/10
+```
 
 ## GEO Optimization Checklist
 
-> **Reference**: See the GEO Readiness Checklist in [GEO Optimization Techniques](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/build/geo-content-optimizer/references/geo-optimization-techniques.md) for the full checklist covering definitions, quotable content, authority, structure, and technical elements.
+Use this checklist for any content:
+
+```markdown
+### GEO Readiness Checklist
+
+**Definitions & Clarity**
+- [ ] Key terms are clearly defined
+- [ ] Definitions can stand alone as answers
+- [ ] Language is precise and unambiguous
+
+**Quotable Content**
+- [ ] Specific statistics included
+- [ ] Facts have source citations
+- [ ] Memorable statements created
+
+**Authority**
+- [ ] Expert quotes or credentials present
+- [ ] Authoritative sources cited
+- [ ] Original data or research included
+
+**Structure**
+- [ ] Q&A format sections included
+- [ ] Clear headings match common queries
+- [ ] Comparison tables where relevant
+- [ ] Numbered lists for processes
+
+**Technical**
+- [ ] FAQ schema markup added
+- [ ] Content freshness indicated
+- [ ] Sources are verifiable
+```
 
 ## Tips for Success
 
-Answer first, be specific, cite dated sources, stay current, match query format, and build authority. Full list in [Instructions Detail — Tips for Success](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/build/geo-content-optimizer/references/instructions-detail.md#tips-for-success).
+1. **Answer the question first** - Put the answer in the first sentence
+2. **Be specific** - Vague content doesn't get cited
+3. **Cite sources** - AI systems trust verifiable information
+4. **Stay current** - Update statistics and facts regularly
+5. **Match query format** - Questions deserve direct answers
+6. **Build authority** - Expert credentials increase citation likelihood
 
-### Save Results
+## Related Skills
 
-On user confirmation, save to `memory/content/YYYY-MM-DD-<topic>.md` — see [Skill Contract](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/references/skill-contract.md) §Save Results Template.
+- [seo-content-writer](../seo-content-writer/) - Create SEO content to optimize
+- [schema-markup-generator](../schema-markup-generator/) - Add structured data
+- [content-refresher](../../optimize/content-refresher/) - Update content for freshness
+- [serp-analysis](../../research/serp-analysis/) - Analyze AI Overview patterns
 
-## Reference Materials
-
-- [Instructions Detail](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/build/geo-content-optimizer/references/instructions-detail.md) - Full 5-step workflow, CORE-EEAT GEO targets, self-check matrix, worked example, tips
-- [GEO Optimization Techniques](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/build/geo-content-optimizer/references/geo-optimization-techniques.md) - Detailed before/after examples, templates, and checklists for each technique
-- [AI Citation Patterns](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/build/geo-content-optimizer/references/ai-citation-patterns.md) - How Google AI Overviews, ChatGPT, Perplexity, and Claude select and cite sources
-- [Quotable Content Examples](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/build/geo-content-optimizer/references/quotable-content-examples.md) - Before/after examples of content optimized for AI citation
-
-## Next Best Skill
-
-- **Primary**: [content-quality-auditor](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/cross-cutting/content-quality-auditor/SKILL.md) — verify the optimized content is strong enough to ship and cite.

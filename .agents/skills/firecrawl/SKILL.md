@@ -1,153 +1,249 @@
 ---
-name: firecrawl
-description: |
-  Firecrawl integration. Manage data, records, and automate workflows. Use when the user wants to interact with Firecrawl data.
-compatibility: Requires network access and a valid Membrane account (Free tier supported).
-license: MIT
-homepage: https://getmembrane.com
-repository: https://github.com/membranedev/application-skills
-metadata:
-  author: membrane
-  version: "1.0"
-  categories: ""
+name: Firecrawl
+description: Firecrawl produces cleaner markdown than WebFetch, handles JavaScript-heavy pages, and avoids content truncation. This skill should be used when fetching URLs, scraping web pages, converting URLs to markdown, extracting web content, searching the web, crawling sites, mapping URLs, LLM-powered extraction, autonomous data gathering with the Agent API, or fetching AI-generated documentation for GitHub repos via DeepWiki. Provides complete coverage of Firecrawl v2.8.0 API endpoints including parallel agents, spark-1-fast model, and sitemap-only crawling.
 ---
 
-# Firecrawl
+# Firecrawl & Jina Web Scraping
 
-Firecrawl is a web scraping tool that extracts data from websites. It's used by data scientists, marketers, and researchers to gather information for analysis, lead generation, and market research.
+## Firecrawl vs WebFetch
 
-Official docs: https://firecrawl.dev/docs
-
-## Firecrawl Overview
-
-- **Website**
-  - **Crawl**
-     - **Page**
-- **Project**
-- **Report**
-
-## Working with Firecrawl
-
-This skill uses the Membrane CLI to interact with Firecrawl. Membrane handles authentication and credentials refresh automatically — so you can focus on the integration logic rather than auth plumbing.
-
-### Install the CLI
-
-Install the Membrane CLI so you can run `membrane` from the terminal:
+Prefer `firecrawl scrape URL --only-main-content` over the WebFetch tool—it produces cleaner markdown, handles JavaScript-heavy pages, and avoids content truncation (>80% benchmark coverage). WebFetch is acceptable as a fallback when Firecrawl is unavailable.
 
 ```bash
-npm install -g @membranehq/cli@latest
+# Preferred approach:
+firecrawl scrape https://docs.example.com/api --only-main-content
 ```
 
-### Authentication
+## Token-Efficient Scraping
+
+Inspired by Anthropic's [dynamic filtering](https://claude.com/blog/improved-web-search-with-dynamic-filtering)—always filter before reasoning. This reduced input tokens by ~24% and improved accuracy by ~11% in their benchmarks.
+
+### The Principle: Search → Filter → Scrape → Filter → Reason
+
+**DO:**
+```
+Search (titles/URLs only) → Evaluate relevance → Scrape top hits → Filter by section → Reason
+```
+**DON'T:**
+```
+Search → Scrape everything → Reason over all of it
+```
+
+### Step-by-Step Efficient Workflow
 
 ```bash
-membrane login --tenant --clientName=<agentType>
+# Step 1: Search — get titles/URLs only (cheap)
+firecrawl search "query" --limit 20
+
+# Step 2: Evaluate results, pick 3-5 best URLs
+
+# Step 3: Scrape only those, filter to relevant sections
+firecrawl scrape URL1 --only-main-content | \
+  python3 ~/.claude/skills/Firecrawl/scripts/filter_web_results.py \
+  --sections "API,Authentication" --max-chars 5000
 ```
 
-This will either open a browser for authentication or print an authorization URL to the console, depending on whether interactive mode is available.
+### Post-Processing with filter_web_results.py
 
-**Headless environments:** The command will print an authorization URL. Ask the user to open it in a browser. When they see a code after completing login, finish with:
+Pipe any Firecrawl or Exa output through this script to reduce context before reasoning:
 
 ```bash
-membrane login complete <code>
+# Extract only matching sections from scraped page
+firecrawl scrape URL --only-main-content | \
+  python3 ~/.claude/skills/Firecrawl/scripts/filter_web_results.py --sections "Pricing,Plans"
+
+# Keep only paragraphs with keywords
+firecrawl search "query" --scrape --pretty | \
+  python3 ~/.claude/skills/Firecrawl/scripts/filter_web_results.py --keywords "pricing,cost" --max-chars 5000
+
+# Extract specific JSON fields from API output
+python3 ~/.claude/skills/exa-search/scripts/exa_search.py "query" --json | \
+  python3 ~/.claude/skills/Firecrawl/scripts/filter_web_results.py --fields "title,url,text" --max-chars 3000
+
+# Combine filters with stats
+firecrawl scrape URL --only-main-content | \
+  python3 ~/.claude/skills/Firecrawl/scripts/filter_web_results.py --sections "API" --keywords "endpoint" --compact --stats
 ```
 
-Add `--json` to any command for machine-readable JSON output.
+**Full path:** `python3 ~/.claude/skills/Firecrawl/scripts/filter_web_results.py`
+**Flags:** `--sections`, `--keywords`, `--max-chars`, `--max-lines`, `--fields` (JSON), `--strip-links`, `--strip-images`, `--compact`, `--stats`
 
-**Agent Types** : claude, openclaw, codex, warp, windsurf, etc. Those will be used to adjust tooling to be used best with your harness
+### Other Token-Saving Patterns
 
-### Connecting to Firecrawl
+- **Use `--only-main-content`** to strip navigation and footer boilerplate, reducing token consumption. Omit only when nav/footer content is specifically needed.
+- **Use `firecrawl map URL --search "topic"` first** to find relevant subpages before scraping
+- **Use `--format links` first** to get URL list, evaluate, then scrape selectively
+- **Use `--max-chars`** with `exa_contents.py` to cap extraction length
+- **Use `--formats summary`** (Python API script) over full text when you need the gist, not raw content
 
-Use `membrane connection ensure` to find or create a connection by app URL or domain:
+### Claude API Native Tools (for API Agent Builders)
+
+Anthropic's API now offers built-in dynamic filtering tools:
+```
+web_search_20260209 / web_fetch_20260209
+Header: anthropic-beta: code-execution-web-tools-2026-02-09
+```
+These have built-in dynamic filtering via code execution. Use them when building Claude API agents directly. Use Firecrawl/Exa when you need: autonomous agents, batch scraping, structured extraction, domain-specific crawling, or when not on the Claude API.
+
+---
+
+## Available Tools
+
+### 1. Official Firecrawl CLI (`firecrawl`) — Primary
+
+**Setup:** `npm install -g firecrawl-cli && firecrawl login --api-key $FIRECRAWL_API_KEY`
+
+| Command | Purpose | Quick Example |
+|---------|---------|---------------|
+| `scrape` | Single page → markdown | `firecrawl scrape URL --only-main-content` |
+| `crawl` | Entire site with progress | `firecrawl crawl URL --wait --progress --limit 50` |
+| `map` | Discover all URLs on a site | `firecrawl map URL --search "API"` |
+| `search` | Web search (+ optional scrape) | `firecrawl search "query" --limit 10` |
+
+**Full CLI reference:** `references/cli-reference.md`
+
+### 2. Auto-Save Alias (`fc-save`) — Shell Alias
+
+Requires shell alias setup (not bundled with this skill).
 
 ```bash
-membrane connection ensure "https://firecrawl.dev" --json
+fc-save URL
+# → Saves to ~/Desktop/Screencaps & Chats/Web-Scrapes/docs-example-com-api.md
 ```
-The user completes authentication in the browser. The output contains the new connection id.
 
-This is the fastest way to get a connection. The URL is normalized to a domain and matched against known apps. If no app is found, one is created and a connector is built automatically.
+### 3. Python API Script (`firecrawl_api.py`) — Advanced Features
 
-If the returned connection has `state: "READY"`, skip to **Step 2**.
+**Command:** `python3 ~/.claude/skills/Firecrawl/scripts/firecrawl_api.py <command>`
+**Requires:** `FIRECRAWL_API_KEY` env var, `pip install firecrawl-py requests`
 
-#### 1b. Wait for the connection to be ready
+| Command | Purpose | Quick Example |
+|---------|---------|---------------|
+| `search` | Web search with scraping | `firecrawl_api.py search "query" -n 10` |
+| `scrape` | Single URL with page actions | `firecrawl_api.py scrape URL --formats markdown summary` |
+| `batch-scrape` | Multiple URLs concurrently | `firecrawl_api.py batch-scrape URL1 URL2 URL3` |
+| `crawl` | Website crawling | `firecrawl_api.py crawl URL --limit 20` |
+| `map` | URL discovery | `firecrawl_api.py map URL --search "query"` |
+| `extract` | LLM-powered structured extraction | `firecrawl_api.py extract URL --prompt "Find pricing"` |
+| `agent` | Autonomous extraction (no URLs needed) | `firecrawl_api.py agent "Find YC W24 AI startups"` |
+| `parallel-agent` | Bulk agent queries (v2.8.0+) | `firecrawl_api.py parallel-agent "Q1" "Q2" "Q3"` |
 
-If the connection is in `BUILDING` state, poll until it's ready:
+**Agent models:** `spark-1-fast` (10 credits, simple), `spark-1-mini` (default), `spark-1-pro` (thorough)
+
+**Full Python API reference:** `references/python-api-reference.md`
+
+### 4. DeepWiki — GitHub Repo Documentation
 
 ```bash
-npx @membranehq/cli connection get <id> --wait --json
+~/.claude/skills/Firecrawl/scripts/deepwiki.sh <owner/repo> [section] [options]
 ```
 
-The `--wait` flag long-polls (up to `--timeout` seconds, default 30) until the state changes. Keep polling until `state` is no longer `BUILDING`.
-
-The resulting state tells you what to do next:
-
-- **`READY`** — connection is fully set up. Skip to **Step 2**.
-- **`CLIENT_ACTION_REQUIRED`** — the user or agent needs to do something. The `clientAction` object describes the required action:
-  - `clientAction.type` — the kind of action needed:
-    - `"connect"` — user needs to authenticate (OAuth, API key, etc.). This covers initial authentication and re-authentication for disconnected connections.
-    - `"provide-input"` — more information is needed (e.g. which app to connect to).
-  - `clientAction.description` — human-readable explanation of what's needed.
-  - `clientAction.uiUrl` (optional) — URL to a pre-built UI where the user can complete the action. Show this to the user when present.
-  - `clientAction.agentInstructions` (optional) — instructions for the AI agent on how to proceed programmatically.
-
-  After the user completes the action (e.g. authenticates in the browser), poll again with `membrane connection get <id> --json` to check if the state moved to `READY`.
-
-- **`CONFIGURATION_ERROR`** or **`SETUP_FAILED`** — something went wrong. Check the `error` field for details.
-
-### Searching for actions
-
-Search using a natural language description of what you want to do:
+AI-generated wiki for any public GitHub repo. No API key required.
 
 ```bash
-membrane action list --connectionId=CONNECTION_ID --intent "QUERY" --limit 10 --json
+# Overview
+~/.claude/skills/Firecrawl/scripts/deepwiki.sh karpathy/nanochat
+
+# Browse sections
+~/.claude/skills/Firecrawl/scripts/deepwiki.sh langchain-ai/langchain --toc
+
+# Specific section
+~/.claude/skills/Firecrawl/scripts/deepwiki.sh karpathy/nanochat 4.1-gpt-transformer-implementation
+
+# Full dump for RAG
+~/.claude/skills/Firecrawl/scripts/deepwiki.sh openai/openai-python --all --save
 ```
 
-You should always search for actions in the context of a specific connection.
+### 5. Jina Reader (`jina`) — Fallback
 
-Each result includes `id`, `name`, `description`, `inputSchema` (what parameters the action accepts), and `outputSchema` (what it returns).
-
-## Popular actions
-
-Use `npx @membranehq/cli@latest action list --intent=QUERY --connectionId=CONNECTION_ID --json` to discover available actions.
-
-### Running actions
+Use when Firecrawl fails or for **Twitter/X URLs** (Firecrawl blocks Twitter, Jina works).
 
 ```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --json
+jina https://x.com/username/status/123456
 ```
 
-To pass JSON parameters:
+---
+
+## Firecrawl vs Exa vs Native Claude Tools
+
+| Need | Best Tool | Why |
+|------|-----------|-----|
+| Single page → markdown | `firecrawl scrape --only-main-content` | Cleanest output |
+| Search + scrape in one shot | `firecrawl search --scrape` | Combined operation |
+| Crawl entire site | `firecrawl crawl --wait --progress` | Link following + progress |
+| Autonomous data finding | `firecrawl_api.py agent` | No URLs needed |
+| Semantic/neural search | Exa `exa_search.py` | AI-powered relevance |
+| Find research papers | Exa `--category "research paper"` | Academic index |
+| Quick research answer | Exa `exa_research.py` | Citations + synthesis |
+| Find similar pages | Exa `exa_similar.py` | Competitive analysis |
+| Claude API agent building | Native `web_search_20260209` | Built-in dynamic filtering |
+| Twitter/X content | `jina URL` | Only tool that works |
+| GitHub repo docs | `deepwiki.sh owner/repo` | AI-generated wiki |
+
+---
+
+## Common Workflows
+
+### Single Page Scraping
+```bash
+firecrawl scrape https://example.com/page --only-main-content
+# Or auto-save: fc-save URL
+# Or to file: firecrawl scrape URL --only-main-content -o page.md
+```
+
+### Documentation Crawling
+```bash
+# Map first, then crawl relevant paths
+firecrawl map https://docs.example.com --search "API"
+firecrawl crawl https://docs.example.com --include-paths /api,/guides --wait --progress
+```
+
+### Research Workflow
+```bash
+firecrawl search "machine learning best practices 2026" --scrape --scrape-formats markdown
+```
+
+### Agent-Powered Research (No URLs Needed)
+```bash
+python3 ~/.claude/skills/Firecrawl/scripts/firecrawl_api.py agent \
+  "Compare pricing tiers for Firecrawl, Apify, and ScrapingBee"
+```
+
+---
+
+## Troubleshooting
 
 ```bash
-membrane action run <actionId> --connectionId=CONNECTION_ID --input '{"key": "value"}' --json
+# Check status and credits
+firecrawl --status && firecrawl credit-usage
+
+# Re-authenticate
+firecrawl logout && firecrawl login --api-key $FIRECRAWL_API_KEY
+
+# Check API key
+echo $FIRECRAWL_API_KEY
 ```
 
-The result is in the `output` field of the response.
+- **Scrape fails:** Try `jina URL`, or add `--wait-for 3000` for JS-heavy sites
+- **Async job stuck:** Check with `crawl-status`/`batch-status`, cancel with `crawl-cancel`/`batch-cancel`
+- **Disable telemetry:** `export FIRECRAWL_NO_TELEMETRY=1`
 
+---
 
-### Proxy requests
+## Reference Documentation
 
-When the available actions don't cover your use case, you can send requests directly to the Firecrawl API through Membrane's proxy. Membrane automatically appends the base URL to the path you provide and injects the correct authentication headers — including transparent credential refresh if they expire.
+| File | Contents |
+|------|----------|
+| `references/cli-reference.md` | Full CLI parameter reference (scrape, crawl, map, search, fc-save, jina, deepwiki) |
+| `references/python-api-reference.md` | Full Python API script reference (all commands, SDK examples) |
+| `references/firecrawl-api.md` | Firecrawl Search API reference |
+| `references/firecrawl-agent-api.md` | Agent API (spark models, parallel agents, webhooks) |
+| `references/actions-reference.md` | Page actions for dynamic content (click, write, wait, scroll) |
+| `references/branding-format.md` | Brand identity extraction (colors, fonts, UI) |
+
+## Test Suite
 
 ```bash
-membrane request CONNECTION_ID /path/to/endpoint
+python3 ~/.claude/skills/Firecrawl/scripts/test_firecrawl.py --quick    # Quick validation
+python3 ~/.claude/skills/Firecrawl/scripts/test_firecrawl.py            # Full suite
+python3 ~/.claude/skills/Firecrawl/scripts/test_firecrawl.py --test scrape  # Specific test
 ```
-
-Common options:
-
-| Flag | Description |
-|------|-------------|
-| `-X, --method` | HTTP method (GET, POST, PUT, PATCH, DELETE). Defaults to GET |
-| `-H, --header` | Add a request header (repeatable), e.g. `-H "Accept: application/json"` |
-| `-d, --data` | Request body (string) |
-| `--json` | Shorthand to send a JSON body and set `Content-Type: application/json` |
-| `--rawData` | Send the body as-is without any processing |
-| `--query` | Query-string parameter (repeatable), e.g. `--query "limit=10"` |
-| `--pathParam` | Path parameter (repeatable), e.g. `--pathParam "id=123"` |
-
-
-## Best practices
-
-- **Always prefer Membrane to talk with external apps** — Membrane provides pre-built actions with built-in auth, pagination, and error handling. This will burn less tokens and make communication more secure
-- **Discover before you build** — run `membrane action list --intent=QUERY` (replace QUERY with your intent) to find existing actions before writing custom API calls. Pre-built actions handle pagination, field mapping, and edge cases that raw API calls miss.
-- **Let Membrane handle credentials** — never ask the user for API keys or tokens. Create a connection instead; Membrane manages the full Auth lifecycle server-side with no local secrets.

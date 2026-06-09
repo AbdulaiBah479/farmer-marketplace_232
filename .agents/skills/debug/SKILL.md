@@ -1,95 +1,196 @@
 ---
-name: debug
-description: Structured debugging session — reproduce, isolate, diagnose, and fix. Trigger with an error message or stack trace, "this works in staging but not prod", "something broke after the deploy", or when behavior diverges from expected and the cause isn't obvious.
-argument-hint: "<error message or problem description>"
+name: Debug
+description: Conventions and tools for the `debug` npm package. Run tests with debug output.
+allowed-tools:
+  - Bash
 ---
 
-# /debug
+# debug
 
-> If you see unfamiliar placeholders or need to check which tools are connected, see [CONNECTORS.md](../../CONNECTORS.md).
+Conventions for the `debug` npm package.
 
-Run a structured debugging session to find and fix issues systematically.
+## Setup
 
-## Usage
+```typescript
+import createDebug from 'debug';
 
-```
-/debug $ARGUMENTS
-```
+// Server: include app/library name
+const Debug = createDebug('MyApp:ClassName');
 
-## How It Works
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                       DEBUG                                        │
-├─────────────────────────────────────────────────────────────────┤
-│  Step 1: REPRODUCE                                                │
-│  ✓ Understand the expected vs. actual behavior                   │
-│  ✓ Identify exact reproduction steps                             │
-│  ✓ Determine scope (when did it start? who is affected?)        │
-│                                                                    │
-│  Step 2: ISOLATE                                                   │
-│  ✓ Narrow down the component, service, or code path             │
-│  ✓ Check recent changes (deploys, config changes, dependencies) │
-│  ✓ Review logs and error messages                                │
-│                                                                    │
-│  Step 3: DIAGNOSE                                                  │
-│  ✓ Form hypotheses and test them                                 │
-│  ✓ Trace the code path                                           │
-│  ✓ Identify root cause (not just symptoms)                      │
-│                                                                    │
-│  Step 4: FIX                                                       │
-│  ✓ Propose a fix with explanation                                │
-│  ✓ Consider side effects and edge cases                          │
-│  ✓ Suggest tests to prevent regression                           │
-└─────────────────────────────────────────────────────────────────┘
+// Client: class name only
+const Debug = createDebug('ClassName');
 ```
 
-## What I Need From You
+## In Methods
 
-Tell me about the problem. Any of these help:
-- Error message or stack trace
-- Steps to reproduce
-- What changed recently
-- Logs or screenshots
-- Expected vs. actual behavior
+```typescript
+async processOrder(orderId: string, items: Item[]) {
+  const debug = Debug.extend('processOrder');
+  debug('orderId %j', orderId);
+  debug('items.length %j', items.length);  // Don't log large arrays
 
-## Output
+  const result = await this.orderService.create(orderId, items);
+  debug('result %j', result);
 
-```markdown
-## Debug Report: [Issue Summary]
+  return result;
+}
 
-### Reproduction
-- **Expected**: [What should happen]
-- **Actual**: [What happens instead]
-- **Steps**: [How to reproduce]
-
-### Root Cause
-[Explanation of why the bug occurs]
-
-### Fix
-[Code changes or configuration fixes needed]
-
-### Prevention
-- [Test to add]
-- [Guard to put in place]
+// Extend again inside callbacks when needed
+items.forEach((item, index) => {
+  const cbDebug = debug.extend(`item-${index}`);
+  cbDebug('processing %j', item);
+});
 ```
 
-## If Connectors Available
+## Rules
 
-If **~~monitoring** is connected:
-- Pull logs, error rates, and metrics around the time of the issue
-- Show recent deploys and config changes that may correlate
+1. **Blank line after debug statements** - separates logging from logic
+   ```typescript
+   // Good
+   debug('orderId %j', orderId);
+   debug('items.length %j', items.length);
 
-If **~~source control** is connected:
-- Identify recent commits and PRs that touched affected code paths
-- Check if the issue correlates with a specific change
+   const result = await this.process(orderId);
+   debug('result %j', result);
 
-If **~~project tracker** is connected:
-- Search for related bug reports or known issues
-- Create a ticket for the fix once identified
+   return result;
 
-## Tips
+   // Bad - debug mixed with logic
+   debug('orderId %j', orderId);
+   const result = await this.process(orderId);
+   debug('result %j', result);
+   return result;
+   ```
 
-1. **Share error messages exactly** — Don't paraphrase. The exact text matters.
-2. **Mention what changed** — Recent deploys, dependency updates, and config changes are top suspects.
-3. **Include context** — "This works in staging but not prod" or "Only affects large payloads" narrows things fast.
+2. **One item per debug statement**
+   ```typescript
+   // Good
+   debug('this.userId %j', this.userId);
+   debug('this.token %j', this.token);
+
+   // Bad
+   debug('userId=%s token=%s', this.userId, this.token);
+   ```
+
+3. **Keep labels simple** - use variable name, not prose
+   ```typescript
+   // Good
+   debug('order %j', order);
+
+   // Bad
+   debug('The current order is: %j', order);
+   ```
+
+4. **Label must match value** - no transformations
+   ```typescript
+   // Good - label matches value exactly
+   debug('this.maxDate', this.maxDate);
+
+   // Bad - label says maxDate but value is toISO() result
+   debug('this.maxDate', this.maxDate.toISO());
+   ```
+
+5. **Prose-only for flow markers** - when there's no value to log
+   ```typescript
+   debug('initialized');
+   debug('enter pressed');
+   debug('no loader registered');
+   ```
+
+6. **Use %j for Server Side Only** (usually)
+   ```typescript
+   // Server: always use %j
+   debug('config %j', config);
+
+   // Client: don't use %j - browser console lets you inspect objects
+   debug('config', config);
+
+   // Exception: use %j client-side for timing issues where you need
+   // to see object state at multiple points in time (otherwise you
+   // only see the final state when you expand the object)
+   ```
+
+7. **Log length for arrays** - don't flood output
+   ```typescript
+   debug('users.length %j', users.length);
+   ```
+
+8. **Debug early returns** - so you can trace why execution stopped
+   ```typescript
+   if (!date) {
+     debug('date %j', date);
+
+     this.control.setValue(null);
+     return;
+   }
+   ```
+
+9. **Debug inputs and outputs** - trace execution flow
+   ```typescript
+   async getUser(id: string) {
+     const debug = Debug.extend('getUser');
+     debug('id %j', id);
+
+     const user = await this.db.findUser(id);
+     debug('user %j', user);
+
+     return user;
+   }
+   ```
+
+10. **Debug intermediate results** - after each method call
+   ```typescript
+   const user = await this.userService.getUser(id);
+   debug('user %j', user);
+
+   const permissions = await this.authService.getPermissions(user.role);
+   debug('permissions %j', permissions);
+
+   const filtered = permissions.filter(p => p.active);
+   debug('filtered.length %j', filtered.length);
+   ```
+
+11. **Debug loop iterations** when needed
+   ```typescript
+   for (const item of items) {
+     debug('item %j', item);
+     // ... process item
+   }
+   ```
+
+12. **Use console for always-on logging**
+   ```typescript
+   console.log('Server started on port', port);  // Always show
+   console.error('Fatal error:', err);           // Always show
+   debug('request %j', req);                     // Only when DEBUG enabled
+   ```
+
+## Enabling Debug Output
+
+Server-side DEBUG strings can get long. Remember that wildcards work well:
+
+```bash
+# Full namespace
+DEBUG=MyApp:OrderService:processOrder node app.js
+
+# Wildcard - often sufficient
+DEBUG=*processOrder node app.js
+DEBUG=*Order* node app.js
+```
+
+## Running Tests with Debug
+
+Use the debug-test script to run tests with DEBUG output:
+
+```bash
+# Run specific test file with debug output
+bash .claude/skills/debug/scripts/debug-test.sh '*OrderService*' -- src/order.spec.ts
+
+# Run test by name pattern
+bash .claude/skills/debug/scripts/debug-test.sh '*processOrder*' -- -t "should process order"
+
+# Run all tests in a directory with debug
+bash .claude/skills/debug/scripts/debug-test.sh 'MyApp:*' -- src/services/
+```
+
+The script sets the DEBUG environment variable and passes remaining arguments to `npm test`.

@@ -1,79 +1,106 @@
 ---
 name: legacy-modernization
-description: Modernize legacy systems using proven migration patterns like strangler fig, feature flags, and incremental refactoring. Use when planning system migrations, modernizing monoliths, or managing technical debt.
-keywords:
-  - modernize code
-  - strangler fig
-  - framework migration
-  - legacy
-  - modernization
-  - legacy modernization
+description: Modernize legacy applications and codebases. Use for COBOL conversion, framework upgrades, and technical debt reduction.
 ---
 
-# Legacy Modernization
+# 🏗️ Legacy Modernization Skill
 
-Expert guidance for safe, incremental modernization of legacy systems, frameworks, and dependencies using proven migration patterns and risk mitigation strategies.
+## Modernization Patterns
 
-## When to Use This Skill
+### Strangler Fig Pattern
+```
+1. Create new service alongside legacy
+2. Route new features to modern service
+3. Gradually migrate existing features
+4. Eventually retire legacy system
+```
 
-- Planning framework migrations (jQuery to React, Java 8 to 17, Python 2 to 3)
-- Decomposing monoliths into microservices or modular architectures
-- Modernizing databases (stored procedures to ORMs, schema migrations)
-- Reducing technical debt with a phased, low-risk approach
-- Updating outdated dependencies with backward compatibility concerns
-- Establishing test coverage for untested legacy code before refactoring
-- Designing rollback procedures for migration phases
-- Implementing feature flags for gradual rollout of modernized components
+### Anti-Corruption Layer
+```javascript
+// Legacy API returns old format
+const legacyResponse = await legacyApi.getUser(id);
+// { usr_id: 1, usr_nm: 'John', usr_email: 'john@example.com' }
 
-## Quick Reference
+// Transform to modern format
+const modernUser = {
+  id: legacyResponse.usr_id,
+  name: legacyResponse.usr_nm,
+  email: legacyResponse.usr_email
+};
+```
 
-| Task | Load reference |
-| --- | --- |
-| Strangler fig, feature flags, migration checklists, rollback procedures | `skills/legacy-modernization/references/modernization-patterns.md` |
+---
 
-## Workflow
+## Common Modernization Tasks
 
-### 1. Assessment
+### JavaScript Upgrades
+```javascript
+// ES5 → ES6+
+// var → const/let
+var name = 'John';  // ❌
+const name = 'John'; // ✅
 
-Inventory legacy components, risks, and dependencies before changing anything.
+// function → arrow
+function add(a, b) { return a + b; }  // Old
+const add = (a, b) => a + b;          // Modern
 
-- Map the dependency graph and identify high-risk areas
-- Define modernization goals and phased milestones
-- Establish success metrics (test coverage, performance, defect rate)
-- Prioritize based on business value and risk
+// Callback → Promise → Async/Await
+// Callback
+getData(function(err, data) { ... });
+// Promise
+getData().then(data => ...).catch(err => ...);
+// Async/Await
+const data = await getData();
+```
 
-### 2. Safety Net Setup
+### jQuery → Vanilla JS
+```javascript
+// jQuery
+$('.button').click(function() { ... });
+$('#result').html(data);
 
-Establish guardrails before any migration work begins.
+// Vanilla JS
+document.querySelector('.button').addEventListener('click', () => { ... });
+document.getElementById('result').innerHTML = data;
+```
 
-- Add characterization tests for existing behavior
-- Set up feature flags for gradual rollout
-- Create compatibility layers and adapter interfaces
-- Document current behavior and integration points
+### Class → Functional (React)
+```jsx
+// Class Component
+class Counter extends Component {
+  state = { count: 0 };
+  componentDidMount() { ... }
+  render() { return <div>{this.state.count}</div>; }
+}
 
-### 3. Incremental Execution
+// Functional + Hooks
+function Counter() {
+  const [count, setCount] = useState(0);
+  useEffect(() => { ... }, []);
+  return <div>{count}</div>;
+}
+```
 
-Apply the strangler fig pattern: replace components one at a time.
+---
 
-- Route traffic gradually to new implementations
-- Maintain backward compatibility at every step
-- Run old and new paths in parallel where possible
-- Monitor for regressions continuously
+## Database Modernization
 
-### 4. Stabilization
+| From | To | Strategy |
+|------|----|---------| 
+| SQL Server | PostgreSQL | pg_chameleon |
+| MySQL | PostgreSQL | pgloader |
+| Oracle | PostgreSQL | ora2pg |
+| MongoDB → SQL | Prisma | Custom scripts |
 
-Validate the migration and retire legacy paths.
+---
 
-- Run full regression suites against new implementations
-- Monitor adoption metrics and error rates
-- Deprecate and remove legacy code paths
-- Document the new architecture and migration decisions
+## Modernization Checklist
 
-## Common Mistakes
-
-- Attempting big-bang rewrites instead of incremental migration
-- Refactoring without tests covering existing behavior
-- Removing backward compatibility before all consumers migrate
-- Skipping rollback planning for each migration phase
-- Ignoring data migration complexity and state synchronization
-- Not involving stakeholders in deprecation timelines
+- [ ] Document current architecture
+- [ ] Identify pain points
+- [ ] Create incremental plan
+- [ ] Set up parallel testing
+- [ ] Migrate with feature flags
+- [ ] Monitor and validate
+- [ ] Roll back if needed
+- [ ] Decommission legacy

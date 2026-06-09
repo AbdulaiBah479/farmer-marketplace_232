@@ -1,11 +1,18 @@
 ---
 name: claude-settings-audit
 description: Analyze a repository to generate recommended Claude Code settings.json permissions. Use when setting up a new project, auditing existing settings, or determining which read-only bash commands to allow. Detects tech stack, build tools, and monorepo structure.
+risk: unknown
+source: community
 ---
 
 # Claude Settings Audit
 
 Analyze this repository and generate recommended Claude Code `settings.json` permissions for read-only commands.
+
+## When to Use
+- You are setting up or auditing Claude Code `settings.json` permissions for a repository.
+- You need to infer a safe read-only allow list from the repo's tech stack, tooling, and monorepo structure.
+- You want to review or replace an existing Claude permissions baseline with something evidence-based.
 
 ## Phase 1: Detect Tech Stack
 
@@ -150,26 +157,21 @@ If this is a Sentry project (or sentry-skills plugin is installed), include:
   "Skill(sentry-skills:code-simplifier)",
   "Skill(sentry-skills:commit)",
   "Skill(sentry-skills:create-branch)",
+  "Skill(sentry-skills:create-pr)",
   "Skill(sentry-skills:django-access-review)",
   "Skill(sentry-skills:django-perf-review)",
   "Skill(sentry-skills:doc-coauthoring)",
-  "Skill(sentry-skills:document-api-endpoint)",
   "Skill(sentry-skills:find-bugs)",
   "Skill(sentry-skills:gh-review-requests)",
   "Skill(sentry-skills:gha-security-review)",
   "Skill(sentry-skills:iterate-pr)",
-  "Skill(sentry-skills:pr-link-issue)",
   "Skill(sentry-skills:pr-writer)",
-  "Skill(sentry-skills:presentation-creator)",
-  "Skill(sentry-skills:prompt-optimizer)",
-  "Skill(sentry-skills:replay-ux-research)",
   "Skill(sentry-skills:security-review)",
+  "Skill(sentry-skills:skill-creator)",
   "Skill(sentry-skills:skill-scanner)",
   "Skill(sentry-skills:skill-writer)",
   "Skill(sentry-skills:sred-project-organizer)",
-  "Skill(sentry-skills:sred-work-summary)",
-  "Skill(sentry-skills:triage-frontend-issues)",
-  "Skill(sentry-skills:typing-exclusion-worker)"
+  "Skill(sentry-skills:sred-work-summary)"
 ]
 ```
 
@@ -317,3 +319,8 @@ Only include the package manager actually used by the project:
 | `Pipfile.lock`      | pipenv commands | pip, poetry                            |
 
 If multiple lock files exist, include only the commands for each detected manager.
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

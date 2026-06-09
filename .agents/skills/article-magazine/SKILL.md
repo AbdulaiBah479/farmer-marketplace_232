@@ -3,9 +3,7 @@ name: article-magazine
 zh_name: "杂志文章"
 en_name: "Magazine Article"
 emoji: "📖"
-description: "Huashu / huashu-md-html-inspired magazine article layout for turning Markdown or notes into a polished long-form HTML essay."
-zh_description: "Huashu / huashu-md-html 风格杂志文章版式, 将 Markdown 或笔记转成精排长文 HTML。"
-en_description: "Huashu / huashu-md-html-inspired magazine article layout for turning Markdown or notes into a polished long-form HTML essay."
+description: "Substack / Medium 高级感长文排版, 适合公众号、博客发布"
 category: article
 scenario: marketing
 aspect_hint: "A4 / 长页面"
@@ -18,21 +16,6 @@ example_tagline: "灵感来自 @trq212 的推文"
 example_desc: "围绕「AI 时代 HTML > Markdown」的延伸评论, 含原推附注与可点击链接"
 example_source_url: "https://x.com/trq212/status/2052809885763747935"
 example_source_label: "@trq212 / x.com"
-od:
-  mode: prototype
-  surface: web
-  platform: desktop
-  scenario: marketing
-  upstream: "https://github.com/nexu-io/html-anything"
-  preview:
-    type: html
-    entry: index.html
-    reload: debounce-100
-  design_system:
-    requires: false
-  example_prompt: "Use the Magazine Article template to turn my content into a Huashu / huashu-md-html-inspired long-form HTML essay. Preserve the template's visual signature, use real content and data, and avoid lorem ipsum or placeholder images."
-  example_prompt_i18n:
-    zh-CN: "用「杂志文章」模板把我的内容做成一份「Huashu / huashu-md-html-inspired magazine article layout for turning Markdown or notes into a polished long-form HTML essay」。保持模板的视觉签名，使用真实内容和数据，避免 lorem ipsum 和占位图片。"
 ---
 
 【模板: 杂志文章】

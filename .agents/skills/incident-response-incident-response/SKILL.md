@@ -1,27 +1,7 @@
 ---
 name: incident-response-incident-response
 description: "Use when working with incident response incident response"
-risk: unknown
-source: community
-date_added: "2026-02-27"
 ---
-
-## Use this skill when
-
-- Working on incident response incident response tasks or workflows
-- Needing guidance, best practices, or checklists for incident response incident response
-
-## Do not use this skill when
-
-- The task is unrelated to incident response incident response
-- You need a different domain or tool outside this scope
-
-## Instructions
-
-- Clarify goals, constraints, and required inputs.
-- Apply relevant best practices and validate outcomes.
-- Provide actionable steps and verification.
-- If detailed examples are required, open `resources/implementation-playbook.md`.
 
 Orchestrate multi-agent incident response with modern SRE practices for rapid resolution and learning:
 
@@ -169,8 +149,3 @@ Orchestrate multi-agent incident response with modern SRE practices for rapid re
 - Timestamp all significant events
 
 Production incident requiring immediate response: $ARGUMENTS
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

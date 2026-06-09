@@ -1,9 +1,6 @@
 ---
 name: web-performance-optimization
 description: "Optimize website and web application performance including loading speed, Core Web Vitals, bundle size, caching strategies, and runtime performance"
-risk: unknown
-source: community
-date_added: "2026-02-27"
 ---
 
 # Web Performance Optimization
@@ -647,8 +644,3 @@ export async function getStaticProps() {
 ---
 
 **Pro Tip:** Focus on Core Web Vitals (LCP, FID, CLS) first - they have the biggest impact on user experience and SEO rankings!
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

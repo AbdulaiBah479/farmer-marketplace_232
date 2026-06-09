@@ -1,16 +1,12 @@
 ---
 name: ffuf-web-fuzzing
 description: Expert guidance for ffuf web fuzzing during penetration testing, including authenticated fuzzing with raw requests, auto-calibration, and result analysis
-risk: unknown
-source: community
+contributor: Joseph Thacker (@rez0)
 ---
 
 # FFUF (Fuzz Faster U Fool) Skill
 
-## When to Use
-- You are fuzzing web targets with `ffuf` during authorized security testing or penetration testing.
-- The task involves content discovery, subdomain enumeration, parameter fuzzing, or authenticated request fuzzing.
-- You need guidance on wordlists, filtering, calibration, and interpreting ffuf results efficiently.
+> **Contributed by:** [Joseph Thacker (@rez0)](https://twitter.com/rez0__)
 
 ## Overview
 FFUF is a fast web fuzzer written in Go, designed for discovering hidden content, directories, files, subdomains, and testing for vulnerabilities during penetration testing. It's significantly faster than traditional tools like dirb or dirbuster.
@@ -503,8 +499,3 @@ When helping users with ffuf:
     - Look for interesting endpoints: admin, api, backup, config, .git, etc.
     - Flag potential vulnerabilities: error messages, stack traces, version info
     - Suggest follow-up fuzzing on interesting findings
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

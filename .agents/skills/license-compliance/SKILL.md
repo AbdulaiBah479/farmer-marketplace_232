@@ -1,228 +1,187 @@
 ---
 name: license-compliance
-description: Scans project dependencies for license compliance across 9 ecosystems — JS/TS (pnpm/npm/yarn), Rust (cargo), Python (pip/poetry/uv/pipenv), Swift (SPM), Kotlin (Gradle), Dart (pub), Go (modules), C# (NuGet), and Solidity (Foundry). Classifies licenses as permissive, weak copyleft, or restrictive. Supports monorepos, remote GitHub repos, and org-wide scanning with tracker-based resume. Use when checking license compliance, preparing for audits, evaluating new dependencies, or running org-wide license sweeps.
+description: LGPL-3.0 license compliance guidelines
 ---
 
-# License Compliance Check
+# License Compliance
 
-## Goal
+**Purpose**: Guide for ensuring LGPL-3.0 license compliance when developing Chrono Dawn mod.
 
-Scan a project's dependencies and generate a license compliance report, classifying each dependency as permissive (OK), weak copyleft (MEDIUM), or restrictive (HIGH). Supports 9 ecosystems: JS/TS (pnpm/npm/yarn), Rust (cargo), Python (pip/poetry/uv/pipenv), Swift (SPM), Kotlin (Gradle), Dart (pub), Go (modules), C# (NuGet), and Solidity (Foundry).
+**How it works**: This skill is automatically activated when you mention tasks related to:
+- Adding new dependencies to the project
+- Checking license compatibility
+- Preparing for mod distribution
+- Reviewing third-party licenses
+- Adding license headers to source files
 
-## When to use
+Simply describe what you want to do, and Claude will reference the appropriate guidance from this skill.
 
-- Checking license compliance before shipping
-- Evaluating a new dependency or library
-- Preparing for security/legal audits
-- Reviewing a project you don't own (use `--repo` mode)
-- Replacing Snyk license compliance checks
-- Org-wide license sweeps across multiple GitHub orgs (use `--org` mode)
-- Tracking license compliance posture over time
-- Scanning Rust crates for license compliance (via `cargo metadata`)
-- Scanning Python packages for license compliance (via lockfile + PyPI)
+---
 
-## When not to use
+## Project License
 
-- Unsupported ecosystems (Ruby/Bundler, PHP/Composer, Java/Maven, Scala/sbt, Elixir/Mix, etc.)
-- Checking for security vulnerabilities (use `/github-dependabot-report` instead)
+**Project License**: LGPL-3.0 (GNU Lesser General Public License v3.0)
 
-## Inputs
+**CRITICAL**: This project is licensed under LGPL-3.0. All contributions and modifications must comply with LGPL-3.0 terms.
 
-- A project directory with a supported lockfile, OR a GitHub `org/repo` reference
-  - **JS/TS:** `pnpm-lock.yaml`, `package-lock.json`, or `yarn.lock`
-  - **Rust:** `Cargo.lock` or `Cargo.toml`
-  - **Python:** `poetry.lock`, `uv.lock`, `Pipfile.lock`, or `requirements.txt`
-  - **Swift:** `Package.resolved`
-  - **Kotlin:** `gradle/libs.versions.toml` or `build.gradle.kts`
-  - **Dart:** `pubspec.lock` or `pubspec.yaml`
-  - **Go:** `go.sum` or `go.mod`
-  - **C#:** `Directory.Packages.props` or `*.csproj`
-  - **Solidity:** `foundry.toml`
-- Optional: `--prod-only` to skip devDependencies (JS/TS and Python only; Rust treats all deps as prod)
-- Optional: `--repo org/repo` for remote scanning
-- Optional: `--ref branch-name` to scan a specific branch
+---
 
-## Outputs
+## LGPL-3.0 Key Requirements
 
-- Formatted markdown compliance report displayed to user
+### 1. Copyleft
 
-## Default workflow
+Derivative works must remain LGPL-3.0 (or compatible license)
 
-### Step 1: Run the scanner
+### 2. Source Code Availability
 
-The scanner auto-detects the project type based on lockfiles/manifest files present.
+Source code must be made available to users
 
-For a local project:
-```bash
-python3 ~/.claude/skills/license-compliance/scripts/license_check.py --path /path/to/project --verbose 2>/dev/null
+### 3. License Notice
+
+Include LGPL-3.0 license notice in distributions
+
+### 4. Dynamic Linking
+
+Mods using this code via dynamic linking (normal Minecraft mod usage) can use any license
+
+**Example**: A mod that depends on Chrono Dawn as a library can be proprietary
+
+### 5. Static Linking/Modification
+
+Modified versions or statically linked code must be LGPL-3.0
+
+**Example**: Forking Chrono Dawn and modifying source code requires LGPL-3.0 licensing
+
+---
+
+## Adding Dependencies
+
+### License Compatibility Check
+
+When adding dependencies, verify license is LGPL-3.0 compatible:
+
+**Compatible Licenses** (can use):
+- MIT License
+- Apache 2.0 License
+- BSD License (2-clause, 3-clause)
+- LGPL-3.0 or LGPL-2.1
+- Public Domain
+
+**Incompatible Licenses** (avoid):
+- Creative Commons Non-Commercial (CC-BY-NC)
+- Proprietary licenses
+- GPL-3.0 (only if statically linking; dynamic linking is OK)
+
+### Documentation Requirement
+
+Document all third-party licenses in `THIRD_PARTY_LICENSES.md`:
+
+**Required Information**:
+1. Project name
+2. Version
+3. Developer/Organization
+4. License type
+5. Project URL
+6. License URL
+
+**Where to Find License Info**:
+- GitHub repository `LICENSE` file
+- Maven Central / CurseForge / Modrinth project page
+- Project website
+- Source code headers
+
+---
+
+## License Headers in Source Files
+
+**Optional but Recommended**:
+
+Add license headers to core implementation files:
+
+**Files Requiring Headers**:
+- Core implementation files in `common/src/main/java/com/chronodawn/`
+- Platform-specific entry points in `fabric/` and `neoforge/`
+
+**Header Template**:
+
+```java
+/*
+ * This file is part of Chrono Dawn.
+ *
+ * Chrono Dawn is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Chrono Dawn is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Chrono Dawn. If not, see <https://www.gnu.org/licenses/>.
+ */
 ```
 
-For a remote GitHub repo (works for any supported ecosystem):
-```bash
-python3 ~/.claude/skills/license-compliance/scripts/license_check.py --repo org/repo --verbose 2>/dev/null
-```
+**When to Add**:
+- New core class files
+- Significant modifications to existing files
+- Files intended for distribution
 
-For production dependencies only (JS/TS and Python):
-```bash
-python3 ~/.claude/skills/license-compliance/scripts/license_check.py --path /path/to/project --prod-only --verbose 2>/dev/null
-```
+---
 
-**Ecosystem notes:**
-- **JS/TS:** Requires `pnpm`, `npm`, or `yarn` installed. Runs install + `ls --json` to extract licenses.
-- **Rust:** Requires `cargo` installed. Uses `cargo metadata` — no build needed. All deps treated as prod (Rust doesn't distinguish dev deps in metadata).
-- **Python:** No tools required beyond Python. Parses lockfiles directly and looks up licenses via PyPI API.
-- **Swift:** Parses `Package.resolved`, looks up licenses via GitHub API.
-- **Kotlin:** Parses Gradle version catalogs (`libs.versions.toml`), looks up licenses via Maven Central.
-- **Dart:** Parses `pubspec.lock` or `pubspec.yaml`, looks up via pub.dev API + GitHub.
-- **Go:** Parses `go.sum`, maps module paths to GitHub repos for license lookup.
-- **C#:** Parses `.csproj` or `Directory.Packages.props`, looks up licenses via NuGet API.
-- **Solidity:** Parses `.gitmodules` for Foundry submodule deps + npm deps.
+## Distribution Checklist
 
-**Note:** The script outputs JSON to stdout and progress messages to stderr. Use `2>/dev/null` to capture clean JSON, or omit it to see progress.
+Before distributing the mod (CurseForge, Modrinth, GitHub Releases):
 
-### Step 2: Parse the JSON output and format the report
+- [ ] Verify `LICENSE` file contains LGPL-3.0 text
+- [ ] Update `THIRD_PARTY_LICENSES.md` with all dependencies
+- [ ] Check all dependencies are LGPL-3.0 compatible
+- [ ] Confirm source code is publicly available (GitHub repository)
+- [ ] Include license notice in mod metadata (`fabric.mod.json`, `neoforge.mods.toml`)
+- [ ] (Optional) Add license headers to core source files
 
-Read the JSON output from the script. If there's an `error` field, display it and stop.
+---
 
-### Step 3: Display the report
+## License Change History
 
-Format the results as a markdown report using this template:
+**2025-12-27**: Changed from "All Rights Reserved" to LGPL-3.0 (T601-T608)
 
-```markdown
-# License Compliance Report
+**Rationale**: Patchouli dependency removed (T706), enabling FOSS (Free and Open Source Software) licensing
 
-**Project:** /path/to/project
-**Package manager:** pnpm (monorepo, 24 workspaces)
-**Scanned:** 1,847 packages in 3.2s
-**Mode:** all dependencies
+---
 
-| Classification | Count | Status |
-|:---------------|------:|:-------|
-| Permissive     | 1,820 | OK     |
-| Weak Copyleft  |     3 | MEDIUM |
-| Restrictive    |     1 | HIGH   |
-| Unknown        |    23 | Review |
+## Common Questions
 
-## HIGH: Restrictive Licenses
+### Q: Can I use Chrono Dawn as a library in my proprietary mod?
 
-| Package | Version | License | Dev? | Introduced By |
-|:--------|:--------|:--------|:-----|:--------------|
-| some-gpl-pkg | 2.1.0 | GPL-3.0 | No | `wasm-parser` added by Jane Doe on 2024-03-15 ([a1b2c3d](https://github.com/org/repo/commit/a1b2c3d)) |
+**A**: Yes. Dynamic linking (normal Minecraft mod dependency) allows any license. Your mod does not need to be LGPL-3.0.
 
-> Strong copyleft obligations — likely incompatible with commercial use. These packages must be replaced or receive legal approval.
->
-> **Introduced By** shows which direct dependency pulled in the violation, who added it, and when. If the flagged package is itself a direct dependency, just the author/date is shown. If blame data is unavailable (shallow clone, no git history), the column shows "—".
+### Q: Can I fork Chrono Dawn and sell it?
 
-## MEDIUM: Weak Copyleft
+**A**: Yes, but your fork must remain LGPL-3.0. Users have the right to the source code. Selling LGPL software is allowed, but buyers can redistribute it freely.
 
-| Package | Version | License | Dev? |
-|:--------|:--------|:--------|:-----|
-| some-mpl-pkg | 1.0.0 | MPL-2.0 | No |
+### Q: Can I add a GPL-3.0 dependency?
 
-> May be acceptable depending on linking/usage. Flag for review.
+**A**: Yes, if it's dynamically linked (modImplementation). Avoid statically linking (shadowing/bundling) GPL dependencies.
 
-## Unknown Licenses (Manual Review)
+### Q: Do I need to add license headers to every file?
 
-| Package | Version | Raw License |
-|:--------|:--------|:------------|
-| mystery-pkg | 0.3.1 | SEE LICENSE IN LICENSE.md |
+**A**: No, it's optional but recommended for core files. The `LICENSE` file is sufficient for basic compliance.
 
-> These packages have non-standard or missing license declarations. Check their repos manually.
+### Q: Can I contribute to Chrono Dawn without agreeing to LGPL-3.0?
 
-## Action Items
+**A**: No. All contributions must be LGPL-3.0 compatible. By contributing, you agree to license your code under LGPL-3.0.
 
-1. **Replace** restrictive-licensed packages or obtain legal approval
-2. **Review** weak copyleft packages for linking compatibility
-3. **Verify** unknown licenses by checking package repositories
-```
+---
 
-Adapt the template based on actual results:
-- Omit sections with zero entries (e.g., skip "HIGH" section if no restrictive packages)
-- If everything is permissive and no unknowns, display a clean bill of health
-- Note if `--prod-only` was used
-- Include exit code info: exit 0 = clean, exit 2 = HIGH violations found
+## Resources
 
-## Org-wide scanning workflow
+- **LGPL-3.0 Full Text**: https://www.gnu.org/licenses/lgpl-3.0.en.html
+- **GNU Licenses Explained**: https://www.gnu.org/licenses/licenses.html
+- **SPDX License List**: https://spdx.org/licenses/
 
-Use this workflow when the user invokes `/license-compliance --org` or asks for an org-wide license sweep.
+---
 
-### Step 0: Locate or create tracker and report files
-
-Before running the scanner, check if the user already has a tracker file and report:
-
-1. **Search for existing tracker:** Look for `license-tracker.json` in the user's working directory and common locations. If found, confirm: "I found an existing tracker at `<path>` — should I use it?"
-2. **If no tracker exists:** Ask the user where to store both files. Suggest placing them alongside related reports in the same directory.
-3. **Always ask for report path too:** The script generates a markdown report via `--report`. Ask where to write it, or suggest `license-compliance-report.md` next to the tracker.
-
-### Step 1: Run the org scanner
-
-The script takes `--tracker` (JSON state file) and `--report` (markdown output) as separate paths.
-
-First run (discovers + scans all supported repos):
-```bash
-python3 ~/.claude/skills/license-compliance/scripts/org_scanner.py \
-  --orgs reown-com,walletconnect \
-  --tracker <tracker-path>/license-tracker.json \
-  --report <report-path>/license-compliance-report.md 2>/dev/null
-```
-
-Discovery only (no scanning, useful for initial setup):
-```bash
-python3 ~/.claude/skills/license-compliance/scripts/org_scanner.py \
-  --orgs reown-com,walletconnect \
-  --tracker <tracker-path>/license-tracker.json \
-  --report <report-path>/license-compliance-report.md \
-  --discover-only 2>/dev/null
-```
-
-Resume / re-scan stale repos:
-```bash
-python3 ~/.claude/skills/license-compliance/scripts/org_scanner.py \
-  --orgs reown-com,walletconnect \
-  --tracker <tracker-path>/license-tracker.json \
-  --report <report-path>/license-compliance-report.md \
-  --stale-days 30 2>/dev/null
-```
-
-Scan specific repos only:
-```bash
-python3 ~/.claude/skills/license-compliance/scripts/org_scanner.py \
-  --tracker <tracker-path>/license-tracker.json \
-  --report <report-path>/license-compliance-report.md \
-  --only reown-com/appkit,reown-com/web-monorepo 2>/dev/null
-```
-
-**Resume behavior:** When the tracker file already exists and `--orgs` is provided, the scanner discovers new repos and merges them into the existing tracker. It only scans repos that haven't been scanned yet (or are stale per `--stale-days`). Already-scanned repos are skipped. The tracker saves after each repo scan, so interrupted runs resume from where they left off.
-
-### Step 2: Display the report
-
-The `--report` flag generates the markdown report automatically. Read and display it to the user. If `--report` was not used, format the JSON output into a similar report manually.
-
-### Step 3: Handle long-running scans
-
-Org-wide scans can take 30+ minutes for large orgs. The scanner:
-- Saves the tracker after each repo scan (crash-safe resume)
-- Reports progress to stderr
-- Can be interrupted and resumed with the same command
-
-If interrupted, re-running with the same args picks up where it left off.
-
-## Exit codes
-
-- `0` — No restrictive license violations
-- `1` — Script error (missing lockfile, clone failure, etc.)
-- `2` — HIGH severity violations found (restrictive licenses in dependencies)
-
-## License tiers (source of truth)
-
-### Permissive (OK)
-MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, Unlicense, CC0-1.0, 0BSD, BlueOak-1.0.0, Zlib, Artistic-2.0, WTFPL, MIT-0, PSF-2.0, CC-BY-4.0, CC-BY-3.0, BSL-1.0, Unicode-3.0, Unicode-DFS-2016
-
-### Restrictive (HIGH)
-GPL-2.0/3.0 variants, AGPL-3.0 variants, SSPL-1.0, EUPL, OSL-3.0
-
-### Weak Copyleft (MEDIUM)
-LGPL-2.1/3.0 variants, MPL-2.0, EPL-1.0/2.0, CDDL-1.0/1.1
-
-### Dev dependency reduction
-Dev dependencies get severity reduced one level (HIGH→MEDIUM, MEDIUM→LOW).
+**Last Updated**: 2026-01-16
+**Maintained by**: Chrono Dawn Development Team

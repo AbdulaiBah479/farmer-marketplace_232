@@ -1,9 +1,11 @@
 ---
 name: mobile-security-coder
-description: Expert in secure mobile coding practices specializing in input validation, WebView security, and mobile-specific security patterns.
-risk: unknown
-source: community
-date_added: '2026-02-27'
+description: Expert in secure mobile coding practices specializing in input
+  validation, WebView security, and mobile-specific security patterns. Use
+  PROACTIVELY for mobile security implementations or mobile security code
+  reviews.
+metadata:
+  model: sonnet
 ---
 
 ## Use this skill when
@@ -180,8 +182,3 @@ Expert mobile security developer with comprehensive knowledge of mobile security
 - "Configure Flutter platform channel security with message validation"
 - "Set up secure Xamarin native interop with assembly protection"
 - "Implement secure Cordova plugin communication with sandboxing"
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

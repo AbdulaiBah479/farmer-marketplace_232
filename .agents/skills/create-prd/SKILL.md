@@ -1,276 +1,197 @@
 ---
 name: create-prd
-description: >
-  PRD scaffolding expert that generates structured product requirements
-  documents using an 8-section framework.
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: borghei
-  category: project-management
-  domain: pm-execution
-  updated: 2026-03-04
-  python-tools: prd_scaffolder.py
-  tech-stack: prd, product-requirements, documentation
----
-# PRD Scaffolding Expert
-
-## Overview
-
-Structured product requirements document creation using a proven 8-section framework. This skill produces clear, jargon-free PRDs that communicate what to build, why it matters, and how success is measured. Every PRD generated follows a consistent structure that keeps engineering, design, and business stakeholders aligned.
-
-### When to Use
-
-- **New Product Initiative** -- Starting a product from scratch and need a comprehensive spec before development begins.
-- **Feature Expansion** -- Adding significant functionality to an existing product that requires cross-team alignment.
-- **Stakeholder Alignment** -- Need a single document that answers "what are we building and why?" for everyone involved.
-
-## Pre-PRD Techniques
-
-Before writing the PRD, use one or both of these techniques to sharpen the problem definition and align the team on value.
-
-### Technique A: Problem Framing Canvas
-
-Frame the problem from the user's perspective before jumping to solutions. This canvas produces the narrative that feeds directly into PRD Sections 3 (Background) and 5 (Market Segments).
-
-```markdown
-## Problem Framing Canvas
-
-### Problem Framing Narrative
-
-**I am**: [Describe the key persona experiencing the problem]
-- [Key characteristic 1]
-- [Key characteristic 2]
-- [Key characteristic 3]
-
-**Trying to**: [A single sentence listing the desired outcomes]
-
-**But**:
-- [Barrier preventing outcomes 1]
-- [Barrier 2]
-- [Barrier 3]
-
-**Because**: [Root cause explanation in empathetic language]
-
-**Which makes me feel**: [Emotional impact from persona perspective]
-
-### Context & Constraints
-- [Geographic, technological, time-based, organizational constraints]
-
-### Final Problem Statement
-- [Single concise, empathetic summary for stakeholder alignment]
-
-### Assumptions to Validate
-- [Assumption 1]
-- [Assumption 2]
-```
-
-**Next steps:** Generate testable solution hypotheses, convert into a workshop facilitation guide, or create stakeholder-specific variants (Exec, Eng, Design).
-
-### Technique B: Working Backwards Press Release
-
-Write an Amazon-style "future press release" announcing the product as if it already shipped. This forces you to articulate customer value before implementation.
-
-```markdown
-## Working Backwards Press Release
-
-"[Product Name] by [Company] Aims to [Main Purpose/Goal]"
-
-"[City], [Date] --"
-
-"Today, [Company], a [type of organization], announced [product/feature],
-a [brief description]. This [product] is set to [main benefit], addressing
-[key issue or need]."
-
-"[Product] will [what it does/solves]. [Quote from key person]:
-'[customer-outcome-focused quote].' This initiative reflects [Company]'s
-commitment to [core value]."
-
-"In addition to [mentioned features], [product] also [additional benefits].
-According to [source], [relevant data supporting the news]."
-
-**Media Contact:** [Name, Title, Email]
-```
-
-**Writing rules:**
-- Focus on customer outcomes, not feature lists.
-- Avoid hype; favor credible claims and concrete benefits.
-- If you can't write a compelling PR, the product concept needs more work.
-
-**Next steps:** Generate an FAQ, create stakeholder-specific variants, generate objection-handling talking points, or define launch success metrics.
-
+description: This skill should be used when the user asks to "创建PRD", "写产品需求文档", "生成PRD", "新建PRD", "create PRD", "write product requirements document", or mentions "产品需求文档", "PRD模板". Automatically generates comprehensive Chinese PRD documents following 2026 best practices.
+user-invocable: true
+allowed-tools: Read, Write, AskUserQuestion
+version: 0.1.0
 ---
 
-## PRD Framework (8 Sections)
+# PRD 创建助手
 
-### Section 1: Summary
+你是 **PRD 创建助手**，一位资深产品经理，专注于创建符合 2026 年最佳实践的高质量产品需求文档（Product Requirements Document）。按照以下阶段顺序执行，将产品想法转化为完整的中文 PRD。
 
-Write 2-3 sentences that a busy executive can read in 10 seconds and understand the full scope. Answer three questions: What is this? Who is it for? Why are we doing it now?
+## 阶段 1：确定 PRD 类型
 
-Do not use marketing language. State the product, the user, and the expected outcome plainly.
+**目标**：了解用户需求，确定生成完整版还是精简版 PRD。
 
-### Section 2: Contacts
+**操作**：
+1. **询问 PRD 类型**：使用 AskUserQuestion 工具询问用户需要哪种类型的 PRD
+   - **完整版 PRD**（推荐）：包含所有标准章节，适合复杂项目和重要功能
+   - **精简版 PRD**：仅包含核心章节（问题陈述、成功指标、核心功能、时间线），适合小功能快速迭代
 
-A table of people involved in the decision:
+2. **记录选择**：根据用户选择，确定后续生成的章节结构
 
-| Name | Role | Responsibility |
-|------|------|----------------|
-| ... | Product Manager | Final decision on scope |
-| ... | Engineering Lead | Technical feasibility |
-| ... | Design Lead | UX direction |
-| ... | Stakeholder | Business approval |
+**输出**：明确的 PRD 类型选择（完整版或精简版）
 
-Keep this short. Only list people who will actively contribute or approve.
+## 阶段 2：收集信息
 
-### Section 3: Background
+**目标**：通过逐个提问收集生成 PRD 所需的所有信息。
 
-Answer three questions:
+**操作**：按顺序使用 AskUserQuestion 工具询问以下问题，每次只问一个问题，等待用户回答后再继续下一个。
 
-1. **Context** -- What is the current state? What exists today?
-2. **Why now?** -- What changed in the market, technology, or business that makes this urgent?
-3. **What recently became possible?** -- New capabilities, partnerships, data, or insights that enable this initiative.
+### 基础信息（完整版和精简版都需要）
 
-This section sets the stage. A reader who skips every other section should still understand the motivation after reading Background.
+1. **产品/功能名称**
+   - 问题："请提供产品或功能的名称"
+   - 示例回答："智能会议助手"、"用户画像系统 2.0"
 
-### Section 4: Objective
+2. **问题陈述**
+   - 问题："这个产品/功能要解决什么问题？用户目前面临哪些痛点？"
+   - 提示：请具体描述用户场景和痛点
+   - 示例回答："销售团队在会议后需要花费大量时间整理会议纪要和行动项，导致效率低下"
 
-State the business benefit and the customer benefit separately:
+3. **目标用户**
+   - 问题："谁是这个产品/功能的主要用户？请描述用户画像"
+   - 示例回答："B2B SaaS 公司的销售经理，年龄 28-40 岁，需要频繁参加客户会议"
 
-- **Business benefit**: How does this move a business metric? (revenue, retention, cost reduction, market share)
-- **Customer benefit**: How does this improve the user's life? (time saved, friction removed, new capability)
+4. **核心目标**
+   - 问题："这个产品/功能的核心目标是什么？（请尽量具体，符合 SMART 原则）"
+   - 提示：SMART = 具体(Specific)、可衡量(Measurable)、可实现(Achievable)、相关(Relevant)、有时限(Time-bound)
+   - 示例回答："3 个月内将销售团队会议后整理时间从平均 30 分钟降低到 5 分钟"
 
-Then define 2-4 SMART Key Results in OKR format:
+5. **成功指标**
+   - 问题："如何衡量这个产品/功能的成功？请列出关键指标（KPIs）"
+   - 示例回答："会议纪要生成时间、用户满意度评分、每周活跃用户数、行动项完成率"
 
-- **Objective**: [qualitative, inspirational statement]
-- **KR1**: [metric] from [current] to [target] by [date]
-- **KR2**: [metric] from [current] to [target] by [date]
-- **KR3**: [metric] from [current] to [target] by [date]
+6. **核心功能**
+   - 问题："请列出这个产品/功能需要包含的核心功能（3-5 个最重要的）"
+   - 示例回答："实时语音转文字、自动提取行动项、会议摘要生成、与 CRM 集成"
 
-### Section 5: Market Segment(s)
+7. **时间线**
+   - 问题："预期的发布时间线或关键里程碑是什么？"
+   - 示例回答："MVP 开发 2 个月，Beta 测试 1 个月，3 个月后正式发布"
 
-Define segments by the problems they face or jobs they need done -- not by demographics. A segment is a group of people who share a common struggle or desired outcome.
+### 完整版额外信息
 
-Format: "[Segment name]: People who need to [job/problem] because [context]."
+如果用户选择了完整版 PRD，继续询问以下问题：
 
-Bad: "Millennials aged 25-35 in urban areas"
-Good: "Time-constrained professionals who need to coordinate schedules across 3+ tools because their organization lacks a unified calendar system"
+8. **用户故事/场景**
+   - 问题："请描述 2-3 个典型的用户使用场景或用户故事"
+   - 示例回答："场景 1: 销售经理在客户会议后，打开应用自动生成会议纪要并提取下一步行动项"
 
-### Section 6: Value Proposition(s)
+9. **不包含范围**
+   - 问题："有哪些功能或需求明确不在本次范围内？"
+   - 示例回答："不支持视频录制、不包含 AI 分析客户情绪功能"
 
-For each market segment, define:
+10. **干系人**
+    - 问题："谁是这个项目的关键干系人？（产品负责人、开发负责人、设计师等）"
+    - 示例回答："产品负责人：张三、技术负责人：李四、设计师：王五"
 
-1. **Jobs addressed** -- What tasks or goals does this product help accomplish?
-2. **Gains created** -- What positive outcomes does the user experience?
-3. **Pains relieved** -- What frustrations, risks, or obstacles are removed?
-4. **Competitive advantage** -- Why is our approach better than existing alternatives?
+11. **风险与依赖**
+    - 问题："有哪些潜在风险或外部依赖需要注意？"
+    - 示例回答："依赖第三方语音识别 API 的稳定性、需要与现有 CRM 系统集成"
 
-Use the **Value Curve** framework to visualize where you compete, where you exceed, and where you deliberately underinvest relative to alternatives.
+12. **待解决问题**
+    - 问题："目前还有哪些问题或疑问需要进一步讨论？"
+    - 示例回答："需要确认数据隐私合规要求、需要评估多语言支持的优先级"
 
-### Section 7: Solution
+**输出**：结构化的用户输入信息，按照 PRD 章节组织
 
-Break into subsections:
+## 阶段 3：生成 PRD 文档
 
-- **UX / Prototypes** -- Key screens, flows, or interaction patterns. Link to design files.
-- **Key Features** -- Numbered list of features with one-sentence descriptions. Mark each as P0 (must-have), P1 (important), or P2 (nice-to-have).
-- **Technology** (optional) -- Architecture decisions, integrations, or infrastructure requirements that constrain the solution.
-- **Assumptions** -- Explicit list of things you believe to be true but have not validated. Each assumption should have a plan to validate it.
+**目标**：基于收集的信息，生成符合 2026 最佳实践的中文 PRD 文档。
 
-### Section 8: Release
+**操作**：
+1. **选择模板**：根据用户在阶段 1 的选择，使用相应模板
+   - 完整版：参考 `references/prd-template-full.md`
+   - 精简版：参考 `references/prd-template-brief.md`
 
-- **Relative timeline** -- Use T-shirt sizes (S/M/L/XL) or Now/Next/Later rather than specific dates, unless dates are firm.
-- **v1 scope** -- What ships in the first version? Draw a clear line.
-- **Future versions** -- What is explicitly deferred? List it so stakeholders know it was considered but intentionally excluded.
-- **Success criteria** -- When do we know v1 succeeded? Reference the Key Results from Section 4.
+2. **填充内容**：
+   - 使用收集的信息填充每个章节
+   - 确保语言专业、清晰、简洁
+   - 使用中文撰写所有内容
+   - 遵循最佳实践原则（参考 `references/prd-best-practices.md`）
 
-## Writing Principles
+3. **数据驱动**：
+   - 在问题陈述中包含具体数据或研究支持
+   - 在目标中使用 SMART 原则
+   - 在成功指标中明确量化指标
 
-- **Plain language** -- No jargon, no acronyms without definition, no buzzwords.
-- **One idea per sentence** -- If a sentence has "and" connecting two distinct ideas, split it.
-- **Specificity over abstraction** -- "Reduce onboarding from 12 steps to 4" beats "Simplify onboarding."
-- **Saved as**: `PRD-[product-name].md`
+4. **格式规范**：
+   - 使用 Markdown 格式
+   - 清晰的章节标题层次（# ## ###）
+   - 合理使用列表、表格等格式
 
-## Workflow
+**输出**：完整的 PRD Markdown 文档
 
-1. Gather context: product name, target segment, core problem.
-2. Run `scripts/prd_scaffolder.py` to generate the skeleton.
-3. Fill in each section using the guidance above and `references/prd-writing-guide.md`.
-4. Review against the checklist in `references/prd-writing-guide.md`.
-5. Share with stakeholders for feedback.
+## 阶段 4：验证与保存
 
-## Tools
+**目标**：验证 PRD 完整性和质量，保存为文件。
 
-| Tool | Purpose | Command |
-|------|---------|---------|
-| `prd_scaffolder.py` | Generate PRD skeleton | `python scripts/prd_scaffolder.py --product-name "MyProduct" --objective "Short description" --segments "Segment A, Segment B"` |
+**操作**：
 
-## Troubleshooting
+### Step 4.1: 完整性验证
+检查 PRD 是否包含所有必需章节：
+- **精简版必需**：问题陈述、成功指标、核心功能、时间线
+- **完整版必需**：所有精简版章节 + 背景、目标用户、用户故事、不包含范围、干系人、风险依赖、待解决问题
 
-| Symptom | Likely Cause | Resolution |
-|---------|-------------|------------|
-| PRD scaffolder output is too generic | Only product name provided; objective and segments need specificity | Write a 1-2 sentence objective that states the outcome, not just the product category; define segments by jobs-to-be-done, not demographics |
-| Stakeholders skip reading the PRD | Document too long, too jargon-heavy, or lacks a clear Summary section | Ensure Section 1 (Summary) answers What/Who/Why in 3 sentences; cut any section beyond 1 page that is not Section 7 |
-| Engineering team builds the wrong thing | PRD focuses on solution before establishing problem context | Strengthen Section 3 (Background) and Section 5 (Market Segments); ensure problem definition precedes solution |
-| PRD assumptions never validated | Assumptions listed in Section 7 but no validation plan assigned | Add a validation plan column to the Assumptions table; link each assumption to `identify-assumptions/` or `brainstorm-experiments/` |
-| Scope creep after PRD approval | Section 8 (Release) does not clearly separate v1 from future versions | Be explicit about "Explicitly Deferred" items; ensure every stakeholder has seen and acknowledged the deferred list |
-| PRD becomes stale during development | Treated as a static document rather than a living reference | Update after implementation decisions change; archive final state and link to retrospective notes |
-| `--segments` flag parsing fails | Segments not properly comma-separated or contain special characters | Wrap the segments argument in quotes: `--segments "Segment A, Segment B"` |
+### Step 4.2: SMART 目标验证
+验证目标是否符合 SMART 原则：
+- **S (Specific)**: 目标是否具体明确？
+- **M (Measurable)**: 目标是否可量化衡量？
+- **A (Achievable)**: 目标是否可实现？
+- **R (Relevant)**: 目标是否与业务相关？
+- **T (Time-bound)**: 目标是否有明确时间限制？
 
-## Success Criteria
+如果目标不符合 SMART 原则，提供改进建议并询问用户是否采纳。
 
-- PRD passes the "10-second executive test" -- a busy executive understands scope from Section 1 alone
-- All 8 sections are complete before development begins (no placeholder sections remain)
-- Market segments defined by jobs-to-be-done, not demographics
-- Key Results in Section 4 are measurable with baselines, targets, and deadlines
-- Every assumption in Section 7 has a validation plan and owner
-- PRD reviewed by PM, Engineering Lead, Design Lead, and at least one stakeholder before commitment
-- v1 scope in Section 8 draws a clear line between what ships and what is explicitly deferred
+### Step 4.3: 内容质量检查
+检查以下质量要点：
+- 问题陈述是否清晰且有数据支持？
+- 成功指标是否具体可衡量？
+- 功能描述是否完整且可执行？
+- 时间线是否合理？
+- 是否存在明显遗漏或矛盾？
 
-## Scope & Limitations
+如果发现问题，提供具体改进建议。
 
-**In Scope:**
-- 8-section PRD skeleton generation with guided placeholders
-- Section-by-section writing guidance following plain-language, specificity-over-abstraction principles
-- Market segment definition using jobs-to-be-done framework
-- Value proposition mapping with Value Curve competitive analysis
-- Release planning with Now/Next/Later and explicit deferral documentation
+### Step 4.4: 保存文件
+1. **生成文件名**：
+   - 格式：`PRD-[产品名称]-[日期].md`
+   - 示例：`PRD-智能会议助手-20260128.md`
+   - 日期格式：YYYYMMDD
 
-**Out of Scope:**
-- Technical architecture or system design documents (see `engineering/` skills)
-- User story writing and backlog creation (see `execution/job-stories/` and `execution/wwas/`)
-- Detailed UX research or usability testing plans (see `product-team/` skills)
-- Financial business case modeling (see `finance/` domain skills)
+2. **确定保存路径**：
+   - 默认路径：当前工作目录
+   - 如果存在 `docs/` 或 `prd/` 目录，优先保存到这些目录
 
-**Important Caveats:**
-- A PRD is a communication tool, not a contract. Treat it as a living document that evolves with implementation learning.
-- The 8-section framework is a proven structure, but lightweight agile teams may need only sections 1, 3, 4, 7, and 8. Heavyweight compliance contexts (medical devices, regulated industries) may need additional sections.
-- A 2025 Carnegie Mellon SEI study found that effective requirements management eliminates 50-80% of project defects. The investment in a clear PRD pays for itself in reduced rework.
+3. **使用 Write 工具保存**：
+   - 将生成的 PRD 内容写入文件
+   - 使用 UTF-8 编码确保中文正确显示
 
-## Integration Points
+4. **确认保存**：
+   - 向用户报告文件保存路径
+   - 提供文件摘要（章节数、总字数等）
 
-| Integration | Direction | Description |
-|------------|-----------|-------------|
-| `discovery/identify-assumptions/` | Receives from | Validated and "Test Now" assumptions populate PRD Section 7 with evidence |
-| `discovery/brainstorm-experiments/` | Receives from | Experiment results validate or invalidate PRD assumptions |
-| `discovery/pre-mortem/` | Receives from | Tiger mitigations become PRD risk sections |
-| `execution/brainstorm-okrs/` | Feeds into | PRD Key Results (Section 4) align with quarterly OKR targets |
-| `execution/outcome-roadmap/` | Feeds into | PRD release plan (Section 8) maps to roadmap Now/Next/Later horizons |
-| `execution/prioritization-frameworks/` | Receives from | Feature priority (P0/P1/P2) in Section 7 informed by RICE/ICE scoring |
-| `senior-pm/` | Feeds into | PRD stakeholder context feeds stakeholder mapper engagement plans |
+**输出**：保存的 PRD 文件路径和质量验证报告
 
-## Tool Reference
+## 质量原则
 
-### prd_scaffolder.py
+**关键要求**：
+- **数据驱动**：使用具体数据和用户研究支持问题陈述
+- **SMART 目标**：确保目标具体、可衡量、可实现、相关、有时限
+- **简洁清晰**：遵循 2026 年 PRD 简洁趋势，避免冗长内容
+- **可执行性**：功能描述应该足够清晰，开发团队可以直接理解和实施
+- **协作导向**：PRD 是协作工具，不是权威命令，语气应该促进讨论
 
-Generates a complete 8-section PRD markdown skeleton with guided placeholders, market segment sections, and value proposition templates.
+**语言规范**：
+- 使用专业的产品管理术语
+- 使用中文撰写所有内容
+- 避免使用模糊词汇（如"大约"、"可能"、"尽量"）
+- 使用主动语态和明确的动词
 
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `--product-name` | string | (required) | Name of the product (used in title and headers) |
-| `--objective` | string | (required) | Short description of the product objective (1-2 sentences) |
-| `--segments` | string | (required) | Comma-separated list of market segments |
-| `--output` | string | stdout | Output file path; if omitted, prints to stdout |
+## 支持文件
 
-## References
+参考此目录中的以下文件以获取详细规范：
+- `references/prd-template-full.md` — 完整版 PRD 模板结构
+- `references/prd-template-brief.md` — 精简版 PRD 模板结构
+- `references/prd-best-practices.md` — PRD 最佳实践指南（2026）
+- `references/prd-examples.md` — 高质量 PRD 示例
 
-- `references/prd-writing-guide.md` -- Section-by-section writing guide and review checklist
-- `assets/prd_template.md` -- Complete PRD template ready to fill in
+## 注意事项
+
+- 所有 PRD 内容必须使用**中文**撰写
+- 优先使用逐个提问方式收集信息，确保每个问题都得到充分回答
+- 在生成 PRD 前，确保所有必需信息都已收集完整
+- 验证阶段发现问题时，提供具体的改进建议而不是重新生成整个文档
+- 文件名使用中文产品名称，确保与 PRD 内容一致

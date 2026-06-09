@@ -3,9 +3,7 @@ name: frame-glitch-title
 zh_name: "故障艺术标题帧"
 en_name: "Glitch Title Frame"
 emoji: "⚡"
-description: "Digital glitch, chromatic offset, and data-corruption title frame for video transitions or cyberpunk heroes."
-zh_description: "数字故障 / 像散偏移 / 数据腐败标题, 适合视频转场 / cyberpunk hero"
-en_description: "Digital glitch, chromatic offset, and data-corruption title frame for video transitions or cyberpunk heroes."
+description: "数字故障 / 像散偏移 / 数据腐败标题, 适合视频转场 / cyberpunk hero"
 category: video
 scenario: video
 aspect_hint: "1920×1080 (16:9)"
@@ -19,21 +17,6 @@ example_tagline: "cyan / magenta 像散 + CRT 扫描线"
 example_desc: "巨大标题 + 数据腐败伪影 + 角落 ASCII 噪点 chunks"
 example_source_url: "https://hyperframes.heygen.com/catalog"
 example_source_label: "hyperframes · glitch"
-od:
-  mode: video
-  surface: video
-  scenario: video
-  featured: 0.14
-  upstream: "https://github.com/nexu-io/html-anything"
-  preview:
-    type: html
-    entry: index.html
-    reload: debounce-100
-  design_system:
-    requires: false
-  example_prompt: "Use the Glitch Title Frame template to turn my content into a digital-glitch, chromatic-offset, data-corruption title frame for a video transition or cyberpunk hero. Preserve the template's visual signature, use real content and data, and avoid lorem ipsum or placeholder images."
-  example_prompt_i18n:
-    zh-CN: "用「故障艺术标题帧」模板把我的内容做成一段「数字故障 / 像散偏移 / 数据腐败标题, 适合视频转场 / cyberpunk hero」。保持模板的视觉签名，使用真实内容和数据，避免 lorem ipsum 和占位图片。"
 ---
 
 【模板: 故障艺术标题帧 (Glitch Title)】

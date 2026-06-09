@@ -1,495 +1,563 @@
 ---
 name: env-secrets-manager
-description: >
-  Complete environment and secrets management lifecycle. Covers .env file
-  scaffolding, validation scripts, secret leak detection in git history,
-  credential rotation playbooks, and integration with HashiCorp Vault, AWS SSM,
-  1Password CLI, and Doppler. Use when setting up projects, scanning for leaked
-  secrets, or rotating credentials after an incident.
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: borghei
-  category: engineering
-  domain: security-devops
-  tier: POWERFUL
-  updated: 2026-03-09
-  frameworks: vault, aws-ssm, 1password-cli, doppler
+description: Manages environment variables and secrets securely with encryption, rotation, and provider integration. Use when users request "secrets management", "environment variables", "API keys", "credentials storage", or "secret rotation".
 ---
-# Env & Secrets Manager
 
-**Tier:** POWERFUL
-**Category:** Engineering / Security
-**Maintainer:** Claude Skills Team
+# Environment Secrets Manager
 
-## Overview
+Securely manage secrets and environment variables across environments.
 
-Complete environment variable and secrets management lifecycle: .env file structure across dev/staging/production, .env.example auto-generation that strips sensitive values, required-variable validation at startup, secret leak detection in git history, credential rotation playbooks, environment drift detection, and integration with HashiCorp Vault, AWS SSM, 1Password CLI, and Doppler.
+## Core Workflow
 
-## Keywords
+1. **Identify secrets**: Classify sensitive data
+2. **Choose provider**: Select secrets manager
+3. **Configure storage**: Encrypted storage
+4. **Implement access**: Secure retrieval
+5. **Setup rotation**: Automatic key rotation
+6. **Audit access**: Monitor usage
 
-secrets management, environment variables, .env, secret rotation, HashiCorp Vault, AWS SSM, 1Password, Doppler, secret leak detection, credential rotation, environment drift
+## Local Development
 
-## Core Capabilities
-
-### 1. .env Lifecycle Management
-- Structured .env layout with categorized sections
-- Auto-generation of .env.example from .env (strips sensitive values)
-- Environment-specific files (.env.local, .env.staging, .env.production)
-- Validation scripts that fail fast on missing required variables
-
-### 2. Secret Leak Detection
-- Regex scan of git history for exposed credentials
-- Pre-commit hook integration to block secret commits
-- Pattern matching for API keys, tokens, passwords, private keys
-- Working tree and staged file scanning
-
-### 3. Credential Rotation
-- Step-by-step rotation playbooks per secret type
-- Scope analysis (find everywhere a secret is used)
-- Zero-downtime rotation with dual-read period
-- Post-rotation verification and monitoring
-
-### 4. Secret Manager Integration
-- HashiCorp Vault KV v2 with OIDC authentication
-- AWS SSM Parameter Store with KMS encryption
-- 1Password CLI with template injection
-- Doppler with project/config management
-
-## When to Use
-
-- Setting up a new project — scaffold .env.example and validation
-- Before every commit — scan for accidentally staged secrets
-- Post-incident — rotate leaked credentials systematically
-- Onboarding developers — provide complete environment setup
-- Auditing — detect environment drift between staging and production
-- Compliance — demonstrate secret management practices
-
-## .env File Structure
-
-### Canonical Layout
+### Environment Files
 
 ```bash
-# ─── Application ───────────────────────────────────
-APP_NAME=myapp
-APP_ENV=development              # development | staging | production
-APP_PORT=3000
-APP_URL=http://localhost:3000    # REQUIRED: public base URL
-APP_SECRET=                      # REQUIRED: min 32 chars, used for signing
+# .env.example (commit this)
+DATABASE_URL=postgresql://user:password@localhost:5432/mydb
+REDIS_URL=redis://localhost:6379
+API_KEY=your-api-key-here
+JWT_SECRET=your-jwt-secret-here
 
-# ─── Database ──────────────────────────────────────
-DATABASE_URL=                    # REQUIRED: full connection string
-DATABASE_POOL_MIN=2
-DATABASE_POOL_MAX=10
-DATABASE_SSL=false               # true in staging/production
-
-# ─── Authentication ────────────────────────────────
-AUTH_JWT_SECRET=                  # REQUIRED: min 32 chars
-AUTH_JWT_EXPIRY=3600             # seconds
-AUTH_REFRESH_SECRET=             # REQUIRED: min 32 chars
-AUTH_REFRESH_EXPIRY=604800       # 7 days in seconds
-
-# ─── Third-Party Services ─────────────────────────
-STRIPE_SECRET_KEY=               # REQUIRED in production
-STRIPE_WEBHOOK_SECRET=           # REQUIRED in production
-STRIPE_PUBLISHABLE_KEY=          # REQUIRED (public, safe to expose)
-SENDGRID_API_KEY=                # REQUIRED for email features
-SENTRY_DSN=                      # Optional: error tracking
-
-# ─── Storage ───────────────────────────────────────
-AWS_ACCESS_KEY_ID=               # Prefer IAM roles in production
+# AWS
+AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
 AWS_REGION=us-east-1
-S3_BUCKET=
 
-# ─── Monitoring ────────────────────────────────────
-DD_API_KEY=
-LOG_LEVEL=debug                  # debug | info | warn | error
+# Third-party services
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
 ```
 
-### File Hierarchy
-
+```bash
+# .env.local (never commit)
+DATABASE_URL=postgresql://user:actualpassword@localhost:5432/mydb
+JWT_SECRET=super-secret-jwt-key-that-is-long-enough
+STRIPE_SECRET_KEY=sk_test_actual_key
 ```
-.env.example        → Committed to git. Keys only, no values. Safe defaults noted.
-.env                → Local development. NEVER committed. In .gitignore.
-.env.local          → Local overrides. NEVER committed.
-.env.test           → Test environment. May be committed if no secrets.
-.env.staging        → Reference only. Actual values in secret manager.
-.env.production     → NEVER exists on disk. Pulled from secret manager at runtime.
-```
-
-## .gitignore Patterns (Required)
 
 ```gitignore
-# Environment files
+# .gitignore
 .env
 .env.local
 .env.*.local
-.env.development
-.env.staging
 .env.production
-
-# Secret files
 *.pem
 *.key
-*.p12
-*.pfx
-secrets.json
-secrets.yaml
-credentials.json
-service-account*.json
-
-# Cloud credentials
-.aws/credentials
-.gcloud/
-
-# Terraform state (may contain secrets)
-*.tfstate
-*.tfstate.backup
+secrets/
 ```
 
-## Startup Validation Script
+### Environment Validation
 
-```python
-#!/usr/bin/env python3
-"""Validate required environment variables at application startup."""
+```typescript
+// config/env.ts
+import { z } from 'zod';
 
-import os
-import sys
-import re
+const envSchema = z.object({
+  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  PORT: z.coerce.number().default(3000),
 
-REQUIRED_VARS = {
-    "APP_SECRET": {"min_length": 32, "description": "Application signing secret"},
-    "DATABASE_URL": {"pattern": r"^postgres(ql)?://", "description": "PostgreSQL connection string"},
-    "AUTH_JWT_SECRET": {"min_length": 32, "description": "JWT signing secret"},
+  // Database
+  DATABASE_URL: z.string().url(),
+
+  // Redis
+  REDIS_URL: z.string().url().optional(),
+
+  // Authentication
+  JWT_SECRET: z.string().min(32),
+  JWT_EXPIRES_IN: z.string().default('7d'),
+
+  // AWS (optional in development)
+  AWS_ACCESS_KEY_ID: z.string().optional(),
+  AWS_SECRET_ACCESS_KEY: z.string().optional(),
+  AWS_REGION: z.string().default('us-east-1'),
+
+  // External Services
+  STRIPE_SECRET_KEY: z.string().startsWith('sk_'),
+  STRIPE_WEBHOOK_SECRET: z.string().startsWith('whsec_'),
+});
+
+export type Env = z.infer<typeof envSchema>;
+
+function validateEnv(): Env {
+  const result = envSchema.safeParse(process.env);
+
+  if (!result.success) {
+    console.error('❌ Invalid environment variables:');
+    console.error(result.error.format());
+    throw new Error('Invalid environment configuration');
+  }
+
+  return result.data;
 }
 
-REQUIRED_IN_PRODUCTION = {
-    "STRIPE_SECRET_KEY": {"pattern": r"^sk_(live|test)_", "description": "Stripe secret key"},
-    "STRIPE_WEBHOOK_SECRET": {"pattern": r"^whsec_", "description": "Stripe webhook secret"},
-    "SENDGRID_API_KEY": {"pattern": r"^SG\.", "description": "SendGrid API key"},
-    "SENTRY_DSN": {"pattern": r"^https://", "description": "Sentry DSN"},
+export const env = validateEnv();
+```
+
+### T3 Env Pattern
+
+```typescript
+// env.mjs (for Next.js)
+import { createEnv } from '@t3-oss/env-nextjs';
+import { z } from 'zod';
+
+export const env = createEnv({
+  server: {
+    DATABASE_URL: z.string().url(),
+    JWT_SECRET: z.string().min(32),
+    STRIPE_SECRET_KEY: z.string().startsWith('sk_'),
+  },
+  client: {
+    NEXT_PUBLIC_API_URL: z.string().url(),
+    NEXT_PUBLIC_STRIPE_KEY: z.string().startsWith('pk_'),
+  },
+  runtimeEnv: {
+    DATABASE_URL: process.env.DATABASE_URL,
+    JWT_SECRET: process.env.JWT_SECRET,
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+    NEXT_PUBLIC_STRIPE_KEY: process.env.NEXT_PUBLIC_STRIPE_KEY,
+  },
+});
+```
+
+## AWS Secrets Manager
+
+```typescript
+// lib/secrets/aws.ts
+import {
+  SecretsManagerClient,
+  GetSecretValueCommand,
+  CreateSecretCommand,
+  UpdateSecretCommand,
+  RotateSecretCommand,
+} from '@aws-sdk/client-secrets-manager';
+
+const client = new SecretsManagerClient({
+  region: process.env.AWS_REGION,
+});
+
+// Cache for secrets
+const secretsCache = new Map<string, { value: any; expiresAt: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+export async function getSecret<T = Record<string, string>>(
+  secretName: string
+): Promise<T> {
+  // Check cache
+  const cached = secretsCache.get(secretName);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.value as T;
+  }
+
+  try {
+    const command = new GetSecretValueCommand({
+      SecretId: secretName,
+    });
+
+    const response = await client.send(command);
+
+    let secretValue: T;
+
+    if (response.SecretString) {
+      secretValue = JSON.parse(response.SecretString);
+    } else if (response.SecretBinary) {
+      const buff = Buffer.from(response.SecretBinary);
+      secretValue = JSON.parse(buff.toString('utf-8'));
+    } else {
+      throw new Error('Secret has no value');
+    }
+
+    // Update cache
+    secretsCache.set(secretName, {
+      value: secretValue,
+      expiresAt: Date.now() + CACHE_TTL,
+    });
+
+    return secretValue;
+  } catch (error) {
+    console.error(`Failed to retrieve secret ${secretName}:`, error);
+    throw error;
+  }
 }
 
-def validate() -> list[str]:
-    errors = []
-    env = os.environ.get("APP_ENV", "development")
+export async function createSecret(
+  secretName: string,
+  secretValue: Record<string, string>
+): Promise<void> {
+  const command = new CreateSecretCommand({
+    Name: secretName,
+    SecretString: JSON.stringify(secretValue),
+    Tags: [
+      { Key: 'Environment', Value: process.env.NODE_ENV || 'development' },
+      { Key: 'Application', Value: 'my-app' },
+    ],
+  });
 
-    vars_to_check = dict(REQUIRED_VARS)
-    if env == "production":
-        vars_to_check.update(REQUIRED_IN_PRODUCTION)
+  await client.send(command);
+}
 
-    for var_name, rules in vars_to_check.items():
-        value = os.environ.get(var_name, "")
+export async function updateSecret(
+  secretName: string,
+  secretValue: Record<string, string>
+): Promise<void> {
+  const command = new UpdateSecretCommand({
+    SecretId: secretName,
+    SecretString: JSON.stringify(secretValue),
+  });
 
-        if not value:
-            errors.append(f"MISSING: {var_name} — {rules['description']}")
-            continue
+  await client.send(command);
 
-        if "min_length" in rules and len(value) < rules["min_length"]:
-            errors.append(
-                f"TOO SHORT: {var_name} is {len(value)} chars, need {rules['min_length']}+"
-            )
+  // Invalidate cache
+  secretsCache.delete(secretName);
+}
 
-        if "pattern" in rules and not re.match(rules["pattern"], value):
-            errors.append(
-                f"INVALID FORMAT: {var_name} does not match expected pattern"
-            )
+export async function rotateSecret(secretName: string): Promise<void> {
+  const command = new RotateSecretCommand({
+    SecretId: secretName,
+    RotateImmediately: true,
+  });
 
-    return errors
+  await client.send(command);
 
-if __name__ == "__main__":
-    errors = validate()
-    if errors:
-        print("Environment validation FAILED:", file=sys.stderr)
-        for e in errors:
-            print(f"  {e}", file=sys.stderr)
-        sys.exit(1)
-    print("Environment validation passed.")
+  // Invalidate cache
+  secretsCache.delete(secretName);
+}
 ```
 
-## Secret Leak Detection
+### Initialize Secrets on Startup
 
-### Git History Scanner
+```typescript
+// lib/secrets/init.ts
+import { getSecret } from './aws';
 
-```bash
-#!/bin/bash
-# Scan git history for leaked secrets
+interface AppSecrets {
+  database: {
+    url: string;
+    readUrl?: string;
+  };
+  jwt: {
+    secret: string;
+    refreshSecret: string;
+  };
+  stripe: {
+    secretKey: string;
+    webhookSecret: string;
+  };
+}
 
-echo "Scanning git history for potential secrets..."
+let appSecrets: AppSecrets | null = null;
 
-PATTERNS=(
-  'AKIA[0-9A-Z]{16}'                          # AWS Access Key
-  'AIza[0-9A-Za-z\-_]{35}'                    # Google API Key
-  'sk_(live|test)_[0-9a-zA-Z]{24,}'           # Stripe Secret Key
-  'ghp_[0-9a-zA-Z]{36}'                       # GitHub Personal Access Token
-  'glpat-[0-9a-zA-Z\-]{20,}'                  # GitLab Personal Access Token
-  'xoxb-[0-9]{10,}-[0-9]{10,}-[a-zA-Z0-9]{24}' # Slack Bot Token
-  'SG\.[0-9A-Za-z\-_]{22}\.[0-9A-Za-z\-_]{43}' # SendGrid API Key
-  '-----BEGIN (RSA |EC )?PRIVATE KEY-----'      # Private Keys
-  'password\s*=\s*["\x27][^"\x27]{8,}["\x27]'  # Hardcoded passwords
-)
+export async function initializeSecrets(): Promise<AppSecrets> {
+  if (appSecrets) return appSecrets;
 
-FOUND=0
-for pattern in "${PATTERNS[@]}"; do
-  MATCHES=$(git log -p --all -S "$pattern" --format="%H %an %ad %s" 2>/dev/null | head -20)
-  if [ -n "$MATCHES" ]; then
-    echo ""
-    echo "FOUND pattern: $pattern"
-    echo "$MATCHES"
-    FOUND=$((FOUND + 1))
-  fi
-done
+  const [dbSecrets, jwtSecrets, stripeSecrets] = await Promise.all([
+    getSecret<{ url: string; readUrl?: string }>('myapp/production/database'),
+    getSecret<{ secret: string; refreshSecret: string }>('myapp/production/jwt'),
+    getSecret<{ secretKey: string; webhookSecret: string }>('myapp/production/stripe'),
+  ]);
 
-if [ "$FOUND" -gt 0 ]; then
-  echo ""
-  echo "WARNING: Found $FOUND potential secret patterns in git history."
-  echo "Run 'git filter-repo' or BFG Repo-Cleaner to remove them."
-  exit 1
-else
-  echo "No secrets detected in git history."
-fi
+  appSecrets = {
+    database: dbSecrets,
+    jwt: jwtSecrets,
+    stripe: stripeSecrets,
+  };
+
+  return appSecrets;
+}
+
+export function getSecrets(): AppSecrets {
+  if (!appSecrets) {
+    throw new Error('Secrets not initialized. Call initializeSecrets() first.');
+  }
+  return appSecrets;
+}
+
+// Usage in app startup
+async function startApp() {
+  await initializeSecrets();
+  // ... start server
+}
 ```
 
-### Pre-Commit Hook
+## HashiCorp Vault
 
-```bash
-#!/bin/bash
-# .git/hooks/pre-commit — block commits containing secrets
+```typescript
+// lib/secrets/vault.ts
+import vault from 'node-vault';
 
-PATTERNS=(
-  'AKIA[0-9A-Z]{16}'
-  'sk_(live|test)_[0-9a-zA-Z]{24,}'
-  'ghp_[0-9a-zA-Z]{36}'
-  '-----BEGIN (RSA |EC )?PRIVATE KEY-----'
-)
+const vaultClient = vault({
+  apiVersion: 'v1',
+  endpoint: process.env.VAULT_ADDR,
+  token: process.env.VAULT_TOKEN,
+});
 
-FILES=$(git diff --cached --name-only --diff-filter=ACM)
+export async function getSecretFromVault<T>(path: string): Promise<T> {
+  try {
+    const result = await vaultClient.read(`secret/data/${path}`);
+    return result.data.data as T;
+  } catch (error) {
+    console.error(`Failed to read secret from path ${path}:`, error);
+    throw error;
+  }
+}
 
-for file in $FILES; do
-  for pattern in "${PATTERNS[@]}"; do
-    if git diff --cached -- "$file" | grep -qE "$pattern"; then
-      echo "BLOCKED: Potential secret detected in $file"
-      echo "Pattern: $pattern"
-      echo "Remove the secret and try again."
-      exit 1
-    fi
-  done
-done
+export async function writeSecretToVault(
+  path: string,
+  data: Record<string, string>
+): Promise<void> {
+  await vaultClient.write(`secret/data/${path}`, { data });
+}
+
+// Dynamic database credentials
+export async function getDatabaseCredentials(): Promise<{
+  username: string;
+  password: string;
+}> {
+  const result = await vaultClient.read('database/creds/my-role');
+  return {
+    username: result.data.username,
+    password: result.data.password,
+  };
+}
 ```
 
-## Credential Rotation Playbook
+## Doppler Integration
 
-### Step 1: Scope the Secret
+```typescript
+// lib/secrets/doppler.ts
+import { DopplerSDK } from '@dopplerhq/node-sdk';
 
-```bash
-# Find everywhere a secret is referenced
-SECRET_NAME="STRIPE_SECRET_KEY"
+const doppler = new DopplerSDK({
+  accessToken: process.env.DOPPLER_TOKEN,
+});
 
-# In code
-grep -r "$SECRET_NAME" src/ lib/ app/ --include="*.ts" --include="*.py" -l
+export async function fetchSecrets(
+  project: string,
+  config: string
+): Promise<Record<string, string>> {
+  const response = await doppler.secrets.download({
+    project,
+    config,
+    format: 'json',
+  });
 
-# In CI/CD
-grep -r "$SECRET_NAME" .github/ .gitlab-ci.yml docker-compose.yml -l
+  return JSON.parse(response);
+}
 
-# In infrastructure
-grep -r "$SECRET_NAME" terraform/ k8s/ helm/ -l 2>/dev/null
-
-# In secret managers
-vault kv get -field=$SECRET_NAME secret/myapp/prod 2>/dev/null
-aws ssm get-parameter --name "/myapp/prod/$SECRET_NAME" 2>/dev/null
-doppler secrets get $SECRET_NAME --project myapp --config prod 2>/dev/null
+// CLI usage
+// doppler run -- npm start
 ```
 
-### Step 2: Generate New Secret
+## Local Encryption
 
-```bash
-# Generic secret (32 bytes, base64)
-openssl rand -base64 32
+```typescript
+// lib/secrets/local.ts
+import { createCipheriv, createDecipheriv, randomBytes, scrypt } from 'crypto';
+import { promisify } from 'util';
+import fs from 'fs/promises';
 
-# JWT secret (64 bytes for HS256)
-openssl rand -base64 64
+const scryptAsync = promisify(scrypt);
 
-# API key format (alphanumeric)
-openssl rand -hex 32
+const ALGORITHM = 'aes-256-gcm';
+const KEY_LENGTH = 32;
+const IV_LENGTH = 16;
+const AUTH_TAG_LENGTH = 16;
+const SALT_LENGTH = 32;
+
+export async function encrypt(plaintext: string, password: string): Promise<string> {
+  const salt = randomBytes(SALT_LENGTH);
+  const key = (await scryptAsync(password, salt, KEY_LENGTH)) as Buffer;
+  const iv = randomBytes(IV_LENGTH);
+
+  const cipher = createCipheriv(ALGORITHM, key, iv);
+  const encrypted = Buffer.concat([
+    cipher.update(plaintext, 'utf8'),
+    cipher.final(),
+  ]);
+  const authTag = cipher.getAuthTag();
+
+  // Combine: salt + iv + authTag + encrypted
+  const combined = Buffer.concat([salt, iv, authTag, encrypted]);
+  return combined.toString('base64');
+}
+
+export async function decrypt(ciphertext: string, password: string): Promise<string> {
+  const combined = Buffer.from(ciphertext, 'base64');
+
+  const salt = combined.subarray(0, SALT_LENGTH);
+  const iv = combined.subarray(SALT_LENGTH, SALT_LENGTH + IV_LENGTH);
+  const authTag = combined.subarray(
+    SALT_LENGTH + IV_LENGTH,
+    SALT_LENGTH + IV_LENGTH + AUTH_TAG_LENGTH
+  );
+  const encrypted = combined.subarray(SALT_LENGTH + IV_LENGTH + AUTH_TAG_LENGTH);
+
+  const key = (await scryptAsync(password, salt, KEY_LENGTH)) as Buffer;
+
+  const decipher = createDecipheriv(ALGORITHM, key, iv);
+  decipher.setAuthTag(authTag);
+
+  const decrypted = Buffer.concat([
+    decipher.update(encrypted),
+    decipher.final(),
+  ]);
+
+  return decrypted.toString('utf8');
+}
+
+// Encrypted env file
+export async function loadEncryptedEnv(filepath: string, password: string): Promise<void> {
+  const encrypted = await fs.readFile(filepath, 'utf8');
+  const decrypted = await decrypt(encrypted, password);
+
+  const lines = decrypted.split('\n');
+  for (const line of lines) {
+    const [key, ...valueParts] = line.split('=');
+    if (key && valueParts.length > 0) {
+      process.env[key.trim()] = valueParts.join('=').trim();
+    }
+  }
+}
 ```
 
-### Step 3: Dual-Write Period
+## Kubernetes Secrets
 
-```
-Timeline:
-─────────────────────────────────────────────────────
-T+0:   Generate new secret
-T+1:   Deploy code that accepts BOTH old and new secrets
-T+2:   Update secret in ALL locations to new value
-T+3:   Verify all services work with new secret
-T+4:   Deploy code that accepts ONLY new secret
-T+5:   Invalidate/revoke old secret
-T+6:   Monitor for 24 hours for any auth failures
-─────────────────────────────────────────────────────
-```
-
-### Step 4: Verify and Monitor
-
-```bash
-# Check for auth failures in logs (24 hours after rotation)
-# Replace with your actual log query
-grep -i "unauthorized\|auth.*fail\|invalid.*token" /var/log/app/*.log | tail -20
-
-# Verify new credentials work
-curl -s -o /dev/null -w "%{http_code}" \
-  -H "Authorization: Bearer $NEW_TOKEN" \
-  https://api.myapp.com/health
-```
-
-## Secret Manager Integration
-
-### HashiCorp Vault
-
-```bash
-# Authenticate via OIDC
-export VAULT_ADDR="https://vault.company.com"
-vault login -method=oidc
-
-# Store secrets
-vault kv put secret/myapp/prod \
-  DATABASE_URL="postgres://user:pass@host/db" \
-  APP_SECRET="$(openssl rand -base64 32)" \
-  STRIPE_SECRET_KEY="sk_live_..."
-
-# Read secrets into environment
-eval $(vault kv get -format=json secret/myapp/prod | \
-  jq -r '.data.data | to_entries[] | "export \(.key)=\(.value|@sh)"')
-
-# Rotate a single secret
-vault kv patch secret/myapp/prod \
-  APP_SECRET="$(openssl rand -base64 32)"
+```yaml
+# k8s/secrets.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secrets
+  namespace: production
+type: Opaque
+stringData:
+  DATABASE_URL: postgresql://user:password@host:5432/db
+  JWT_SECRET: your-jwt-secret
+  STRIPE_SECRET_KEY: sk_live_...
+---
+# Using External Secrets Operator
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: app-secrets
+  namespace: production
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: aws-secrets-manager
+    kind: ClusterSecretStore
+  target:
+    name: app-secrets
+    creationPolicy: Owner
+  data:
+    - secretKey: DATABASE_URL
+      remoteRef:
+        key: production/myapp/database
+        property: url
+    - secretKey: JWT_SECRET
+      remoteRef:
+        key: production/myapp/auth
+        property: jwtSecret
 ```
 
-### AWS SSM Parameter Store
+```typescript
+// Reading K8s secrets in Node.js
+import fs from 'fs';
 
-```bash
-# Store as encrypted parameter
-aws ssm put-parameter \
-  --name "/myapp/prod/DATABASE_URL" \
-  --value "postgres://..." \
-  --type "SecureString" \
-  --key-id "alias/myapp-secrets" \
-  --overwrite
-
-# Read all parameters for an environment
-aws ssm get-parameters-by-path \
-  --path "/myapp/prod/" \
-  --with-decryption \
-  --query "Parameters[*].[Name,Value]" \
-  --output text
+function getSecretFromVolume(secretName: string): string {
+  const secretPath = `/var/run/secrets/${secretName}`;
+  return fs.readFileSync(secretPath, 'utf8').trim();
+}
 ```
 
-### Doppler
+## Secret Rotation
 
-```bash
-# Set up project
-doppler setup --project myapp --config prod
+```typescript
+// lib/secrets/rotation.ts
+interface RotationConfig {
+  secretName: string;
+  rotationInterval: number; // milliseconds
+  onRotation: (newSecret: string) => Promise<void>;
+}
 
-# Run with secrets injected (recommended for production)
-doppler run -- node server.js
+class SecretRotator {
+  private intervals: Map<string, NodeJS.Timeout> = new Map();
 
-# Download for local dev
-doppler secrets download --no-file --format env > .env.local
+  async startRotation(config: RotationConfig): Promise<void> {
+    // Immediate rotation
+    await this.rotate(config);
+
+    // Schedule recurring rotation
+    const interval = setInterval(
+      () => this.rotate(config),
+      config.rotationInterval
+    );
+
+    this.intervals.set(config.secretName, interval);
+  }
+
+  private async rotate(config: RotationConfig): Promise<void> {
+    try {
+      // Generate new secret
+      const newSecret = this.generateSecret();
+
+      // Update in secrets manager
+      await updateSecret(config.secretName, { value: newSecret });
+
+      // Notify application
+      await config.onRotation(newSecret);
+
+      console.log(`Rotated secret: ${config.secretName}`);
+    } catch (error) {
+      console.error(`Failed to rotate ${config.secretName}:`, error);
+    }
+  }
+
+  private generateSecret(): string {
+    return randomBytes(32).toString('base64');
+  }
+
+  stopRotation(secretName: string): void {
+    const interval = this.intervals.get(secretName);
+    if (interval) {
+      clearInterval(interval);
+      this.intervals.delete(secretName);
+    }
+  }
+}
 ```
-
-## Environment Drift Detection
-
-```bash
-#!/bin/bash
-# Compare environment variable keys between staging and production
-
-STAGING_KEYS=$(doppler secrets --project myapp --config staging --format json | \
-  jq -r 'keys[]' | sort)
-PROD_KEYS=$(doppler secrets --project myapp --config prod --format json | \
-  jq -r 'keys[]' | sort)
-
-ONLY_STAGING=$(comm -23 <(echo "$STAGING_KEYS") <(echo "$PROD_KEYS"))
-ONLY_PROD=$(comm -13 <(echo "$STAGING_KEYS") <(echo "$PROD_KEYS"))
-
-if [ -n "$ONLY_STAGING" ]; then
-  echo "DRIFT: Keys in STAGING but NOT in PROD:"
-  echo "$ONLY_STAGING" | sed 's/^/  /'
-fi
-
-if [ -n "$ONLY_PROD" ]; then
-  echo "DRIFT: Keys in PROD but NOT in STAGING:"
-  echo "$ONLY_PROD" | sed 's/^/  /'
-fi
-
-[ -z "$ONLY_STAGING" ] && [ -z "$ONLY_PROD" ] && echo "No drift detected."
-```
-
-## Common Pitfalls
-
-- **Committing .env to git** — add `.env` to .gitignore on day 1; use pre-commit hooks as a safety net
-- **Echoing secrets in CI logs** — never `echo $SECRET`; mask variables in CI settings
-- **Rotating in only one location** — secrets exist in CI, hosting, Docker, K8s; update ALL locations
-- **Weak secrets** — `APP_SECRET=mysecret` is not a secret; use `openssl rand -base64 32`
-- **Shared secrets across environments** — dev and prod must have different secrets, always
-- **No monitoring after rotation** — watch for auth failures for 24 hours after rotating credentials
-- **.env.example with real values** — example files are public; strip everything sensitive
-- **Long-lived credentials** — prefer short-lived tokens (OIDC, instance roles) over permanent API keys
 
 ## Best Practices
 
-1. **Secret manager is source of truth** — .env files are for local dev only; never in production
-2. **Rotate on a schedule** — quarterly minimum for long-lived keys, not just after incidents
-3. **Principle of least privilege** — each service gets its own API key with minimal permissions
-4. **Validate at startup** — fail fast on missing required variables before serving traffic
-5. **Never log secrets** — add middleware that redacts known secret patterns from log output
-6. **Use short-lived credentials** — prefer OIDC/instance roles over long-lived access keys
-7. **Audit access** — log every secret read in Vault/SSM; alert on anomalous access patterns
-8. **Document rotation playbooks** — write them before an incident, not during one
+1. **Never commit secrets**: Use .gitignore
+2. **Validate on startup**: Fail fast on missing secrets
+3. **Use secret managers**: AWS, Vault, Doppler
+4. **Rotate regularly**: Automate key rotation
+5. **Encrypt at rest**: Even in env files
+6. **Audit access**: Log secret retrieval
+7. **Limit scope**: Minimal permissions
+8. **Different per environment**: Never share production secrets
 
-## Troubleshooting
+## Output Checklist
 
-| Problem | Cause | Solution |
-|---------|-------|----------|
-| Startup validation fails with MISSING for a set variable | Variable is set in `.env` but the app reads from a different file (e.g., `.env.local` overrides it to empty) | Check file hierarchy load order; ensure the correct `.env.*` file is loaded and no override blanks the value |
-| Pre-commit hook passes but CI detects a leaked secret | Pre-commit patterns list is out of date or does not cover the token format CI scans for | Sync the regex pattern list between the pre-commit hook and CI scanner; add the missing pattern |
-| `vault kv get` returns "permission denied" | OIDC token expired or the Vault policy does not grant read access to the target path | Re-authenticate with `vault login -method=oidc` and verify the policy includes `read` capability on the secret path |
-| Environment drift detection shows false positives | One environment uses a prefix convention (e.g., `NEXT_PUBLIC_`) that the other does not | Add an exclusion list of known environment-specific keys to the drift script |
-| Secret rotation causes service outage | Code was deployed without the dual-read period; only the new secret is accepted immediately | Always deploy the dual-read code change first, then update the secret value, then remove old-secret support |
-| `.env.example` accidentally contains real credentials | Developer copied `.env` to `.env.example` without stripping values | Run the auto-generation script to rebuild `.env.example` from `.env` with values stripped; add a CI check that `.env.example` values match safe defaults only |
-| AWS SSM `put-parameter` fails with AccessDeniedException | IAM role lacks `ssm:PutParameter` or `kms:Encrypt` permissions for the target key | Attach the required IAM policy granting `ssm:PutParameter` and `kms:Encrypt` on the KMS key alias used for SecureString |
+Every secrets implementation should include:
 
-## Success Criteria
-
-- **Zero secrets in git history** — secret leak scanner reports 0 findings across all branches
-- **100% startup validation coverage** — every required variable is declared in the validation script; no production deploy starts with missing vars
-- **Rotation completed within SLA** — credential rotation finishes within 4 hours of incident detection, including dual-write period and verification
-- **Environment drift below 5%** — staging and production variable key sets differ by no more than 5% (intentional differences documented)
-- **Pre-commit hook adoption at 100%** — every contributor has the secret-blocking pre-commit hook installed and active
-- **Quarterly rotation compliance** — all long-lived credentials are rotated at least once per quarter with audit trail in the secret manager
-- **Post-rotation monitoring green** — zero authentication failures attributed to stale credentials in the 24-hour window after each rotation
-
-## Scope & Limitations
-
-**This skill covers:**
-- `.env` file scaffolding, hierarchy, and validation for any language/framework
-- Secret leak detection in git history, staged files, and working tree
-- Credential rotation playbooks with zero-downtime dual-read strategy
-- Integration patterns for HashiCorp Vault, AWS SSM, 1Password CLI, and Doppler
-
-**This skill does NOT cover:**
-- Runtime secret injection in Kubernetes (see `engineering/ci-cd-pipeline-builder` for deployment pipeline secrets)
-- Infrastructure-as-code for provisioning Vault clusters or SSM policies (see `engineering/ci-cd-pipeline-builder`)
-- Application-level encryption at rest or in transit (see `engineering/api-design-reviewer` for API security patterns)
-- Identity and access management (IAM) role design or SSO/OIDC provider configuration (see `ra-qm-team/` compliance skills for access control frameworks)
-
-## Integration Points
-
-| Skill | Integration | Data Flow |
-|-------|-------------|-----------|
-| `engineering/ci-cd-pipeline-builder` | Inject secrets from Vault/SSM/Doppler into CI/CD pipeline stages | Rotation playbook outputs feed pipeline secret-update steps |
-| `engineering/dependency-auditor` | Flag dependencies that bundle or require hardcoded credentials | Dependency audit findings trigger secret leak scans on affected repos |
-| `engineering/skill-security-auditor` | Validate that no skill packages ship embedded secrets or credentials | Security audit references this skill's regex patterns for detection |
-| `engineering/codebase-onboarding` | Include `.env.example` setup and secret-manager access in onboarding checklists | Onboarding workflow consumes the `.env` hierarchy and validation script |
-| `engineering/observability-designer` | Monitor authentication failures post-rotation; alert on anomalous secret access | Post-rotation verification metrics flow into observability dashboards |
-| `ra-qm-team/soc2-compliance-auditor` | Demonstrate secret management controls for SOC 2 CC6.1 and CC6.6 criteria | Rotation audit logs and access policies serve as SOC 2 evidence artifacts |
+- [ ] .env.example with placeholders
+- [ ] .gitignore for secret files
+- [ ] Environment validation schema
+- [ ] Secret manager integration
+- [ ] Caching with TTL
+- [ ] Rotation mechanism
+- [ ] Audit logging
+- [ ] Kubernetes/Docker support
+- [ ] Development vs production separation
+- [ ] Documentation for team

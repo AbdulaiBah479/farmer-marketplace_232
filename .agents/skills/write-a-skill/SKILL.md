@@ -1,141 +1,83 @@
 ---
 name: write-a-skill
-description: Create new agent skills with proper structure, progressive disclosure, and bundled resources. Use when user wants to create, write, build, or author a new skill.
-license: MIT
-metadata:
-  derived_from: "https://github.com/mattpocock/skills/tree/main/skills/productivity/write-a-skill"
-  original_author: "Matt Pocock (@mattpocock)"
-  original_license: MIT
-  voice: "Matt Pocock — direct, concrete, imperative, example-driven"
-  version: 1.0.0
+description: Author a single new skill — produce a SKILL.md plus optional bundled references and scripts following Anthropic's progressive-disclosure conventions. Trigger when the user asks to "write a skill", "create a skill", "draft a SKILL.md", or "add a skill" for a specific capability. Distinct from repo onboarding workflows that write AGENTS.md and project conventions.
+disable-model-invocation: true
 ---
 
-# Writing Skills
+Skill authoring loop: gather requirements, draft against the SKILL.md contract, review with the user, refine. One concern per skill; one skill per directory. Apply the `skill-creator:skill-creator` methodology (three-level progressive disclosure, pushy descriptions, evals.json).
 
-> Derived from [Matt Pocock's write-a-skill](https://github.com/mattpocock/skills/tree/main/skills/productivity/write-a-skill) (MIT). Matt's voice and 3-phase workflow preserved verbatim. Additions: validation tools + references + cs-* wrapper (see *Tooling + Companions* below).
+## Scope disambiguation
 
-## Process
+- `write-a-skill` — authors one SKILL.md for one capability inside an existing skills tree.
+- *Repo onboarding* — onboards a whole repository, scaffolds AGENTS.md and project conventions.
+- `skill-creator:skill-creator` — the upstream methodology this skill applies; consult it for the canonical contract.
 
-1. **Gather requirements** - ask user about:
-   - What task/domain does the skill cover?
-   - What specific use cases should it handle?
-   - Does it need executable scripts or just instructions?
-   - Any reference materials to include?
+## Authoring loop
 
-2. **Draft the skill** - create:
-   - SKILL.md with concise instructions
-   - Additional reference files if content exceeds 500 lines
-   - Utility scripts if deterministic operations needed
+1. **Gather requirements** — surface decisions before drafting:
+   - Capability boundary: what task does the skill cover, what does it explicitly not cover?
+   - Trigger phrases: which user phrases or contexts should load it?
+   - Determinism: any operation deterministic enough to live in a script rather than re-generated prose?
+   - Bundled references: docs, schemas, or examples to include?
+   - Static guarantee context: language family (Rust, TypeScript, Python, Kotlin, Go, OCaml, …) — affects testing-charter scope.
 
-3. **Review with user** - present draft and ask:
-   - Does this cover your use cases?
-   - Anything missing or unclear?
-   - Should any section be more/less detailed?
+2. **Draft the SKILL.md** — write to the contract below. Keep body terse and decision-oriented.
 
-## Skill Structure
+3. **Review with the user** — present the draft, surface ambiguous decisions, and refine.
+
+4. **Verify** — run any bundled `evals.json` cases; targeted re-read of the SKILL.md to confirm description triggers and body alignment.
+
+## Directory layout
 
 ```
 skill-name/
-├── SKILL.md           # Main instructions (required)
-├── REFERENCE.md       # Detailed docs (if needed)
-├── EXAMPLES.md        # Usage examples (if needed)
-└── scripts/           # Utility scripts (if needed)
-    └── helper.js
+  SKILL.md              # contract; required
+  references/           # deeper docs loaded on-demand
+    REFERENCE.md
+    EXAMPLES.md
+  scripts/              # deterministic helpers
+    helper.{ts,py,sh}
+  evals.json            # trigger / behavior evals
 ```
 
-## SKILL.md Template
+Reference paths in SKILL.md use `references/X.md`, never `./X.md`.
+
+## SKILL.md contract
 
 ```md
 ---
 name: skill-name
-description: Brief description of capability. Use when [specific triggers].
+description: <what the skill does>. <when to trigger it — concrete phrases or contexts>.
 ---
 
-# Skill Name
+<One-line imperative summary of the skill's posture.>
 
-## Quick start
+## <Section> — terse decision-oriented prose
 
-[Minimal working example]
-
-## Workflows
-
-[Step-by-step processes with checklists for complex tasks]
-
-## Advanced features
-
-[Link to separate files: See [REFERENCE.md](REFERENCE.md)]
+<Body in imperative voice with brief why. ≤200 lines.>
 ```
 
-## Description Requirements
+Frontmatter rules:
 
-The description is **the only thing your agent sees** when deciding which skill to load. It's surfaced in the system prompt alongside all other installed skills. Your agent reads these descriptions and picks the relevant skill based on the user's request.
+- `name` — kebab-case, matches directory.
+- `description` — pushy: name *what* AND *when*. Max 1024 chars. Third person. First sentence states capability; second sentence states triggers.
+- `disable-model-invocation: true` — preserve verbatim from source if present; do not fabricate.
 
-**Goal**: Give your agent just enough info to know:
+## Three-level progressive disclosure
 
-1. What capability this skill provides
-2. When/why to trigger it (specific keywords, contexts, file types)
+1. **Description** (frontmatter) — the only text the harness reads to decide loading. Triggers must be concrete.
+2. **SKILL.md body** — loaded once selected. Keep ≤200 lines; offload depth to references.
+3. **references/** and **scripts/** — loaded on-demand when the body links to them.
 
-**Format**:
+## Pushy description — examples
 
-- Max 1024 chars
-- Write in third person
-- First sentence: what it does
-- Second sentence: "Use when [specific triggers]"
+Weak: *Helps with documents.*
+Strong: *Extract text and tables from PDF files, fill forms, merge documents. Trigger when user mentions PDFs, forms, or document extraction.*
 
-**Good example**:
+## Scripts vs prose
 
-```
-Extract text and tables from PDF files, fill forms, merge documents. Use when working with PDF files or when user mentions PDFs, forms, or document extraction.
-```
+Add a script when the operation is deterministic and the same code would otherwise be regenerated each invocation. Skip scripts when the work is contextual reasoning the model must perform fresh each time.
 
-**Bad example**:
+## Voice and forbidden tooling
 
-```
-Helps with documents.
-```
-
-The bad example gives your agent no way to distinguish this from other document skills.
-
-## When to Add Scripts
-
-Add utility scripts when:
-
-- Operation is deterministic (validation, formatting)
-- Same code would be generated repeatedly
-- Errors need explicit handling
-
-Scripts save tokens and improve reliability vs generated code.
-
-## When to Split Files
-
-Split into separate files when:
-
-- SKILL.md exceeds 100 lines
-- Content has distinct domains (finance vs sales schemas)
-- Advanced features are rarely needed
-
-## Review Checklist
-
-After drafting, verify:
-
-- [ ] Description includes triggers ("Use when...")
-- [ ] SKILL.md under 100 lines
-- [ ] No time-sensitive info
-- [ ] Consistent terminology
-- [ ] Concrete examples included
-- [ ] References one level deep
-
-## Tooling + Companions
-
-Validation tools + cs-* wrapper sit alongside this skill. Run all 6 review-checklist items programmatically:
-
-```
-python scripts/skill_review_checklist_runner.py path/to/skill-folder
-```
-
-See [references/companion_tooling.md](references/companion_tooling.md) for the tool catalogue, cs-skill-author persona agent, and `/cs:write-a-skill` slash command.
-
----
-
-**Version:** 1.0.0
-**Derived:** Matt Pocock (MIT) + this repo's wrapper
+Imperative or third person. No "you/your" addressee. English-mandate: grammatical English, articles preserved. Banned tooling absent: prefer `bat -P -p -n`, `fd`, `git grep`, `ast-grep`, `srgn`, `hyperfine`, `difft`, `eza`, `rip` over their banned counterparts.

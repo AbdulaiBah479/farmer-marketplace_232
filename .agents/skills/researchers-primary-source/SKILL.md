@@ -2,8 +2,7 @@
 name: researchers-primary-source
 description: Researches the subject's own words from tweets, blogs, forums, and chat logs. Use when research needs direct quotes or first-person accounts.
 argument-hint: <"research [topic]" or track-path to verify>
-model: sonnet
-effort: high
+model: claude-sonnet-4-6
 user-invocable: false
 context: fork
 allowed-tools:

@@ -1,253 +1,127 @@
 ---
 name: react-native-best-practices
-description: Provides React Native performance optimization guidelines for FPS, TTI, bundle size, memory leaks, re-renders, and animations. Applies to tasks involving Hermes optimization, JS thread blocking, bridge overhead, FlashList, native modules, or debugging jank and frame drops.
+description: "提供 React Native 性能优化指南，涵盖 FPS、TTI、打包体积、内存泄漏、重渲染与动画。适用于涉及 Hermes 优化、JS 线程阻塞、桥接开销、FlashList、原生模块或调试卡顿与掉帧的任务。"
 license: MIT
-metadata:
-  author: Callstack
-  tags: react-native, expo, performance, optimization, profiling
 ---
 
-# React Native Best Practices
+# React Native 最佳实践
 
-## Overview
+React Native 应用性能优化指南，涵盖 JavaScript/React、原生（iOS/Android）与打包优化。基于 Callstack 的「React Native 优化终极指南」。
 
-Performance optimization guide for React Native applications, covering JavaScript/React, Native (iOS/Android), and bundling optimizations. Based on Callstack's "Ultimate Guide to React Native Optimization".
+## 技能格式
 
-## Skill Format
+每个参考文件遵循混合格式，用于快速查找与深度理解：
+- **快速模式**：错误/正确代码片段用于即时模式匹配
+- **快速命令**：Shell 命令用于流程/度量技能
+- **快速配置**：配置片段用于设置聚焦技能
+- **快速参考**：摘要表用于概念技能
+- **深度探索**：完整上下文，包含何时使用、先决条件、逐步、常见陷阱
 
-Each reference file follows a hybrid format for fast lookup and deep understanding:
+**影响评级**：CRITICAL（立即修复）、HIGH（显著改进）、MEDIUM（值得优化）
 
-- **Quick Pattern**: Incorrect/Correct code snippets for immediate pattern matching
-- **Quick Command**: Shell commands for process/measurement skills
-- **Quick Config**: Configuration snippets for setup-focused skills
-- **Quick Reference**: Summary tables for conceptual skills
-- **Deep Dive**: Full context with When to Use, Prerequisites, Step-by-Step, Common Pitfalls
+## 何时应用
 
-**Impact ratings**: CRITICAL (fix immediately), HIGH (significant improvement), MEDIUM (worthwhile optimization)
+在以下场景参考这些指南：
+- 调试慢/卡顿 UI 或动画
+- 调查内存泄漏（JS 或原生）
+- 优化应用启动时间（TTI）
+- 减少打包或应用大小
+- 编写原生模块（Turbo Modules）
+- 分析 React Native 性能
+- 审查 React Native 代码性能
 
-## When to Apply
+## 优先级排序指南
 
-Reference these guidelines when:
-- Debugging slow/janky UI or animations
-- Investigating memory leaks (JS or native)
-- Optimizing app startup time (TTI)
-- Reducing bundle or app size
-- Writing native modules (Turbo Modules)
-- Profiling React Native performance
-- Reviewing React Native code for performance
+| 优先级 | 类别 | 影响 | 前缀 |
+|--------|------|------|------|
+| 1 | FPS 与重渲染 | 关键 | `js-*` |
+| 2 | 打包体积 | 关键 | `bundle-*` |
+| 3 | TTI 优化 | 高 | `native-*`, `bundle-*` |
+| 4 | 原生性能 | 高 | `native-*` |
+| 5 | 内存管理 | 中高 | `js-*`, `native-*` |
+| 6 | 动画 | 中 | `js-*` |
 
-## Security Notes
+## 速查
 
-- Treat shell commands in these references as local developer operations. Review them before running, prefer version-pinned tooling, and avoid piping remote scripts directly to a shell.
-- Treat third-party libraries and plugins as dependencies that still require normal supply-chain controls: pin versions, verify provenance, and update through your standard review process.
-- Treat Re.Pack code splitting as first-party artifact delivery only. Remote chunks must come from trusted HTTPS origins you control and be pinned to the current app release.
+### 关键：FPS 与重渲染
 
-## Priority-Ordered Guidelines
-
-| Priority | Category | Impact | Prefix |
-|----------|----------|--------|--------|
-| 1 | FPS & Re-renders | CRITICAL | `js-*` |
-| 2 | Bundle Size | CRITICAL | `bundle-*` |
-| 3 | TTI Optimization | HIGH | `native-*`, `bundle-*` |
-| 4 | Native Performance | HIGH | `native-*` |
-| 5 | Memory Management | MEDIUM-HIGH | `js-*`, `native-*` |
-| 6 | Animations | MEDIUM | `js-*` |
-
-## Quick Reference
-
-### Optimization Workflow
-
-Follow this cycle for any performance issue: **Measure → Optimize → Re-measure → Validate**
-
-1. **Measure**: Capture baseline metrics before changes. For runtime issues, prefer commit timeline, re-render counts, slow components, heaviest-commit breakdown, and startup/TTI when available. Component tree depth or count are optional context, not substitutes.
-2. **Optimize**: Apply the targeted fix from the relevant reference
-3. **Re-measure**: Run the same measurement to get updated metrics
-4. **Validate**: Confirm improvement (e.g., FPS 45→60, TTI 3.2s→1.8s, bundle 2.1MB→1.6MB)
-
-If metrics did not improve, revert and try the next suggested fix.
-
-### Review Guardrails
-
-- Check library versions before suggesting API-specific fixes. Example: FlashList v2 deprecates `estimatedItemSize`, so do not flag it as missing there.
-- Do not suggest `useMemo` or `useCallback` dependency changes unless behavior is demonstrably incorrect or profiling shows wasted work tied to that value.
-- Do not report stale closures speculatively. Show the stale read path, a repro, or profiler evidence before calling it out.
-- When profiling a flow, measure the target interaction itself. Do not treat component tree depth or component count as the main performance evidence.
-
-### Critical: FPS & Re-renders
-
-**Profile first:**
+**先分析**：
 ```bash
-# Open React Native DevTools
-# Press 'j' in Metro, or shake device → "Open DevTools"
+# 打开 React Native DevTools
+# 在 Metro 中按 'j'，或摇动设备 → "Open DevTools"
 ```
 
-**Common fixes:**
-- Replace ScrollView with FlatList/FlashList for lists
-- Use React Compiler for automatic memoization
-- Use atomic state (Jotai/Zustand) to reduce re-renders
-- Use `useDeferredValue` for expensive computations
+**常见修复**：
+- 用 FlatList/FlashList 替换 ScrollView 用于列表
+- 使用 React Compiler 进行自动 memoization
+- 使用原子状态（Jotai/Zustand）减少重渲染
+- 对昂贵计算使用 `useDeferredValue`
 
-### Critical: Bundle Size
+### 关键：打包体积
 
-**Analyze bundle:**
+**分析打包**：
 ```bash
 npx react-native bundle \
-  --entry-file index.js \
-  --bundle-output output.js \
-  --platform ios \
-  --sourcemap-output output.js.map \
-  --dev false --minify true
+ --entry-file index.js \
+ --bundle-output output.js \
+ --platform ios \
+ --sourcemap-output output.js.map \
+ --dev false --minify true
 
 npx source-map-explorer output.js --no-border-checks
 ```
 
-**Verify improvement after optimization:**
-```bash
-# Record baseline size before changes
-ls -lh output.js  # e.g., Before: 2.1 MB
+**常见修复**：
+- 避免 barrel 导入（从源直接导入）
+- 移除不必要的 Intl polyfills（Hermes 有原生支持）
+- 启用 tree shaking（Expo SDK 52+ 或 Re.Pack）
+- 为 Android 原生代码启用 R8
 
-# After applying fixes, re-bundle and compare
-npx react-native bundle --entry-file index.js --bundle-output output.js \
-  --platform ios --dev false --minify true
-ls -lh output.js  # e.g., After: 1.6 MB  (24% reduction)
-```
+### 高：TTI 优化
 
-**Common fixes:**
-- Avoid barrel imports (import directly from source)
-- Remove unnecessary Intl polyfills only after checking Hermes API and method coverage
-- Enable tree shaking (Expo SDK 52+ or Re.Pack)
-- Enable R8 for Android native code shrinking
+**度量 TTI**：
+- 使用 `react-native-performance` 用于标记
+- 仅度量冷启动（排除热/预热）
 
-### High: TTI Optimization
+**常见修复**：
+- 在 Android 上禁用 JS 打包压缩（启用 Hermes mmap）
+- 使用原生导航（react-native-screens）
+- 用 `InteractionManager` 延迟非关键工作
 
-**Measure TTI:**
-- Use `react-native-performance` for markers
-- Only measure cold starts (exclude warm/hot/prewarm)
+### 高：原生性能
 
-**Common fixes:**
-- Disable JS bundle compression on Android (enables Hermes mmap)
-- Use native navigation (react-native-screens)
-- Preload commonly-used expensive screens before navigating to them
+**分析原生**：
+- iOS：Xcode Instruments → Time Profiler
+- Android：Android Studio → CPU Profiler
 
-### High: Native Performance
+**常见修复**：
+- 对重型原生工作使用后台线程
+- 优先异步而非同步 Turbo Module 方法
+- 对跨平台性能关键代码使用 C++
 
-**Profile native:**
-- iOS: Xcode Instruments → Time Profiler
-- Android: Android Studio → CPU Profiler
+## 参考
 
-**Common fixes:**
-- Use background threads for heavy native work
-- Prefer async over sync Turbo Module methods
-- Use C++ for cross-platform performance-critical code
+完整文档与代码示例在 `references/`：
 
-## References
+**JavaScript/React (`js-*`)**：js-lists-flatlist-flashlist（CRITICAL：用虚拟化列表替换 ScrollView）、js-profile-react、js-measure-fps、js-memory-leaks、js-atomic-state、js-concurrent-react、js-react-compiler、js-animations-reanimated、js-uncontrolled-components。  
+**原生 (`native-*`)**：native-turbo-modules、native-sdks-over-polyfills、native-measure-tti、native-threading-model、native-profiling、native-platform-setup、native-view-flattening、native-memory-patterns、native-memory-leaks、native-android-16kb-alignment（CRITICAL：第三方库对齐用于 Google Play）。  
+**打包 (`bundle-*`)**：bundle-barrel-exports（CRITICAL：避免 barrel 导入）、bundle-analyze-js（CRITICAL：JS 打包可视化）、bundle-tree-shaking、bundle-analyze-app、bundle-r8-android、bundle-hermes-mmap、bundle-native-assets、bundle-library-size、bundle-code-splitting。
 
-Full documentation with code examples in [references/][references]:
+## 问题 → 技能映射
 
-### JavaScript/React (`js-*`)
+| 问题 | 从...开始 |
+|------|----------|
+| 应用感觉慢/卡顿 | js-measure-fps.md → js-profile-react.md |
+| 太多重渲染 | js-profile-react.md → js-react-compiler.md |
+| 慢启动（TTI） | native-measure-tti.md → bundle-analyze-js.md |
+| 应用体积大 | bundle-analyze-app.md → bundle-r8-android.md |
+| 内存增长 | js-memory-leaks.md 或 native-memory-leaks.md |
+| 动画掉帧 | js-animations-reanimated.md |
+| 列表滚动卡顿 | js-lists-flatlist-flashlist.md |
+| TextInput 延迟 | js-uncontrolled-components.md |
+| 原生模块慢 | native-turbo-modules.md → native-threading-model.md |
+| 原生库对齐问题 | native-android-16kb-alignment.md |
 
-| File | Impact | Description |
-|------|--------|-------------|
-| [js-lists-flatlist-flashlist.md][js-lists-flatlist-flashlist] | CRITICAL | Replace ScrollView with virtualized lists |
-| [js-profile-react.md][js-profile-react] | MEDIUM | React DevTools profiling |
-| [js-measure-fps.md][js-measure-fps] | HIGH | FPS monitoring and measurement |
-| [js-memory-leaks.md][js-memory-leaks] | MEDIUM | JS memory leak hunting |
-| [js-atomic-state.md][js-atomic-state] | HIGH | Jotai/Zustand patterns |
-| [js-concurrent-react.md][js-concurrent-react] | HIGH | useDeferredValue, useTransition |
-| [js-react-compiler.md][js-react-compiler] | HIGH | Automatic memoization |
-| [js-animations-reanimated.md][js-animations-reanimated] | MEDIUM | Reanimated worklets |
-| [js-bottomsheet.md][js-bottomsheet] | HIGH | Bottom sheet optimization |
-| [js-uncontrolled-components.md][js-uncontrolled-components] | HIGH | TextInput optimization |
+## 归因
 
-### Native (`native-*`)
-
-| File | Impact | Description |
-|------|--------|-------------|
-| [native-turbo-modules.md][native-turbo-modules] | HIGH | Building fast native modules |
-| [native-sdks-over-polyfills.md][native-sdks-over-polyfills] | HIGH | Native vs JS libraries |
-| [native-measure-tti.md][native-measure-tti] | HIGH | TTI measurement setup |
-| [native-threading-model.md][native-threading-model] | HIGH | Turbo Module threads |
-| [native-profiling.md][native-profiling] | MEDIUM | Xcode/Android Studio profiling |
-| [native-platform-setup.md][native-platform-setup] | MEDIUM | iOS/Android tooling guide |
-| [native-view-flattening.md][native-view-flattening] | MEDIUM | View hierarchy debugging |
-| [native-memory-patterns.md][native-memory-patterns] | MEDIUM | C++/Swift/Kotlin memory |
-| [native-memory-leaks.md][native-memory-leaks] | MEDIUM | Native memory leak hunting |
-| [native-android-16kb-alignment.md][native-android-16kb-alignment] | CRITICAL | Third-party library alignment for Google Play |
-
-### Bundling (`bundle-*`)
-
-| File | Impact | Description |
-|------|--------|-------------|
-| [bundle-barrel-exports.md][bundle-barrel-exports] | CRITICAL | Avoid barrel imports |
-| [bundle-analyze-js.md][bundle-analyze-js] | CRITICAL | JS bundle visualization |
-| [bundle-tree-shaking.md][bundle-tree-shaking] | HIGH | Dead code elimination |
-| [bundle-analyze-app.md][bundle-analyze-app] | HIGH | App size analysis |
-| [bundle-r8-android.md][bundle-r8-android] | HIGH | Android code shrinking |
-| [bundle-hermes-mmap.md][bundle-hermes-mmap] | HIGH | Disable bundle compression |
-| [bundle-native-assets.md][bundle-native-assets] | HIGH | Asset catalog setup |
-| [bundle-library-size.md][bundle-library-size] | MEDIUM | Evaluate dependencies |
-| [bundle-code-splitting.md][bundle-code-splitting] | MEDIUM | Re.Pack code splitting |
-
-
-## Searching References
-
-```bash
-# Find patterns by keyword
-grep -l "reanimated" references/
-grep -l "flatlist" references/
-grep -l "memory" references/
-grep -l "profil" references/
-grep -l "tti" references/
-grep -l "bundle" references/
-```
-
-## Problem → Skill Mapping
-
-| Problem | Start With |
-|---------|------------|
-| App feels slow/janky | [js-measure-fps.md][js-measure-fps] → [js-profile-react.md][js-profile-react] |
-| Too many re-renders | [js-profile-react.md][js-profile-react] → [js-react-compiler.md][js-react-compiler] |
-| Slow startup (TTI) | [native-measure-tti.md][native-measure-tti] → [bundle-analyze-js.md][bundle-analyze-js] |
-| Large app size | [bundle-analyze-app.md][bundle-analyze-app] → [bundle-r8-android.md][bundle-r8-android] |
-| Memory growing | [js-memory-leaks.md][js-memory-leaks] or [native-memory-leaks.md][native-memory-leaks] |
-| Animation drops frames | [js-animations-reanimated.md][js-animations-reanimated] |
-| Bottom sheet jank/re-renders | [js-bottomsheet.md][js-bottomsheet] → [js-animations-reanimated.md][js-animations-reanimated] |
-| List scroll jank | [js-lists-flatlist-flashlist.md][js-lists-flatlist-flashlist] |
-| TextInput lag | [js-uncontrolled-components.md][js-uncontrolled-components] |
-| Native module slow | [native-turbo-modules.md][native-turbo-modules] → [native-threading-model.md][native-threading-model] |
-| Native library alignment issue | [native-android-16kb-alignment.md][native-android-16kb-alignment] |
-
-[references]: references/
-[js-lists-flatlist-flashlist]: references/js-lists-flatlist-flashlist.md
-[js-profile-react]: references/js-profile-react.md
-[js-measure-fps]: references/js-measure-fps.md
-[js-memory-leaks]: references/js-memory-leaks.md
-[js-atomic-state]: references/js-atomic-state.md
-[js-concurrent-react]: references/js-concurrent-react.md
-[js-react-compiler]: references/js-react-compiler.md
-[js-animations-reanimated]: references/js-animations-reanimated.md
-[js-bottomsheet]: references/js-bottomsheet.md
-[js-uncontrolled-components]: references/js-uncontrolled-components.md
-[native-turbo-modules]: references/native-turbo-modules.md
-[native-sdks-over-polyfills]: references/native-sdks-over-polyfills.md
-[native-measure-tti]: references/native-measure-tti.md
-[native-threading-model]: references/native-threading-model.md
-[native-profiling]: references/native-profiling.md
-[native-platform-setup]: references/native-platform-setup.md
-[native-view-flattening]: references/native-view-flattening.md
-[native-memory-patterns]: references/native-memory-patterns.md
-[native-memory-leaks]: references/native-memory-leaks.md
-[native-android-16kb-alignment]: references/native-android-16kb-alignment.md
-[bundle-barrel-exports]: references/bundle-barrel-exports.md
-[bundle-analyze-js]: references/bundle-analyze-js.md
-[bundle-tree-shaking]: references/bundle-tree-shaking.md
-[bundle-analyze-app]: references/bundle-analyze-app.md
-[bundle-r8-android]: references/bundle-r8-android.md
-[bundle-hermes-mmap]: references/bundle-hermes-mmap.md
-[bundle-native-assets]: references/bundle-native-assets.md
-[bundle-library-size]: references/bundle-library-size.md
-[bundle-code-splitting]: references/bundle-code-splitting.md
-
-## Attribution
-
-Based on "The Ultimate Guide to React Native Optimization" by Callstack.
+基于 Callstack 的「React Native 优化终极指南」。

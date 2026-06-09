@@ -202,7 +202,8 @@ CHARGEBEE_WEBHOOK_PASSWORD=your_webhook_password
 For local webhook testing, use Hookdeck CLI:
 
 ```bash
-npx hookdeck-cli listen 3000 chargebee --path /webhooks/chargebee
+brew install hookdeck/hookdeck/hookdeck
+hookdeck listen 3000 --path /webhooks/chargebee
 ```
 
 No account required. Provides local tunnel + web UI for inspecting requests.
@@ -239,4 +240,4 @@ We recommend installing the [webhook-handler-patterns](https://github.com/hookde
 - [openai-webhooks](https://github.com/hookdeck/webhook-skills/tree/main/skills/openai-webhooks) - OpenAI webhook handling
 - [paddle-webhooks](https://github.com/hookdeck/webhook-skills/tree/main/skills/paddle-webhooks) - Paddle billing webhook handling
 - [webhook-handler-patterns](https://github.com/hookdeck/webhook-skills/tree/main/skills/webhook-handler-patterns) - Handler sequence, idempotency, error handling, retry logic
-- [hookdeck-event-gateway](https://github.com/hookdeck/webhook-skills/tree/main/skills/hookdeck-event-gateway) - Webhook infrastructure that replaces your queue — guaranteed delivery, automatic retries, replay, rate limiting, and observability for your webhook handlers
+- [hookdeck-event-gateway](https://github.com/hookdeck/webhook-skills/tree/main/skills/hookdeck-event-gateway) - Production webhook infrastructure (routing, replay, monitoring)

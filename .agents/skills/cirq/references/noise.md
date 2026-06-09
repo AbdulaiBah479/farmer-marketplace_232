@@ -487,15 +487,16 @@ def mitigate_readout_errors(results, confusion_matrix):
 ### From Google Calibration
 
 ```python
-import os
-import cirq_google as cg
+import cirq_google
 
-engine = cg.Engine(project_id=os.environ['GOOGLE_CLOUD_PROJECT'])
-processor = engine.get_processor('weber')
+# Get calibration data
+processor = cirq_google.get_engine().get_processor('weber')
 noise_props = processor.get_device_specification()
 
-noise_model = cg.NoiseModelFromGoogleNoiseProperties(noise_props)
+# Create noise model from calibration
+noise_model = cirq_google.NoiseModelFromGoogleNoiseProperties(noise_props)
 
+# Simulate with realistic noise
 simulator = cirq.DensityMatrixSimulator(noise=noise_model)
 result = simulator.run(circuit, repetitions=1000)
 ```

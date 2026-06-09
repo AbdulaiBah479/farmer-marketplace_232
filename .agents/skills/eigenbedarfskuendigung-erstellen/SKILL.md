@@ -1,9 +1,29 @@
 ---
 name: eigenbedarfskuendigung-erstellen
-description: Vermietersicht — entwerfe eine ordentliche Kündigung wegen Eigenbedarfs nach § 573 Abs. 2 Nr. 2 BGB. Prüfroutine deckt berechtigtes Interesse (Eigennutzung Familienangehoerige Haushaltsangehoerige) konkrete Begründung im Kündigungsschreiben (§ 573 Abs. 3 BGB) Kündigungsfristen nach § 573c BGB (drei sechs neun Monate je nach Mietdauer) Sperrfristen aus Landesverordnung (drei bis zehn Jahre nach Umwandlung) Sozialklausel des Mieters (§ 574 BGB) und Risiko der Vortaeuschung (Schadensersatz). Erzeugt rechtssicheres Kündigungsschreiben mit Disclaimer.
+description: "Vermietersicht — entwerfe eine ordentliche Kündigung wegen Eigenbedarfs nach § 573 Abs. 2 Nr. 2 BGB. Prüfroutine deckt berechtigtes Interesse (Eigennutzung Familienangehoerige Haushaltsangehoerige) konkrete Begründung im Kündigungsschreiben (§ 573 Abs. 3 BGB) Kündigungsfristen nach § 573c BGB (dr..."
 ---
 
 # Eigenbedarfskündigung erstellen (Vermieter / Hausverwaltung)
+
+## Arbeitsbereich
+
+Vermietersicht — entwerfe eine ordentliche Kündigung wegen Eigenbedarfs nach § 573 Abs. 2 Nr. 2 BGB. Prüfroutine deckt berechtigtes Interesse (Eigennutzung Familienangehoerige Haushaltsangehoerige) konkrete Begründung im Kündigungsschreiben (§ 573 Abs. 3 BGB) Kündigungsfristen nach § 573c BGB (drei sechs neun Monate je nach Mietdauer) Sperrfristen aus Landesverordnung (drei bis zehn Jahre nach Umwandlung) Sozialklausel des Mieters (§ 574 BGB) und Risiko der Vortaeuschung (Schadensersatz). Erzeugt rechtssicheres Kündigungsschreiben mit Disclaimer. Arbeite entlang dieser konkreten Prüfungslinie und trenne Rolle, Frist, Zuständigkeit, Beweislast und gewünschten Output.
+
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: BGB §§ 535-577a, BetrKV, WEG §§ 24, 25, 27, BGB §§ 558, 558a, 558b, 573, 573c — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+## Fachlicher Kern — Miet- und WEG-Recht
+- **Problemfokus dieses Skills:** Bleibe beim konkreten Titel `Eigenbedarfskündigung erstellen (Vermieter / Hausverwaltung)` und löse die dort angelegte Fachfrage; arbeite mit konkreten Tatbestandsmerkmalen, Beweisfragen und dem unmittelbar benötigten Arbeitsprodukt. Routingfragen bleiben Hilfsmittel, wenn Frist, Zuständigkeit oder Verfahrensart offen sind.
+- **Normenradar:** BGB §§ 535 ff., 536, 543, 546a, 548, 556, 556a, 558 ff., 573 ff.; BetrKV; HeizkostenV; WEG §§ 18, 19, 20, 23, 24, 28, 44, 45; GEG; CO2KostAufG.
+- **Verifizierte Anker:** BGH, Urteil vom 20.01.2016 - VIII ZR 93/15 (formelle Betriebskostenabrechnung); BGH, Urteil vom 15.12.2021 - VIII ZR 66/20 (Belegeinsicht Originale/Kopien); BGH, Urteil vom 14.02.2025 - V ZR 128/23 (§ 16 Abs. 2 Satz 2 WEG, Rücklagen/Kostenverteilung); BGH, Urteil vom 14.02.2025 - V ZR 86/24 (§ 20 WEG, bauliche Veränderung, Vorbefassung/Beschlussersetzung).
+- **Arbeitsmodus:** Immer erst Verhältnis Miete/WEG/Gewerbe/Verwaltung trennen, dann Frist, Beschlusskompetenz, Umlagefähigkeit, Belege, Gebrauchsnachteil und Kostenfolge prüfen.
+- **Outputpflicht:** Abrechnungsprüftabelle, Beschlussvorschlag, Anfechtungs-/Beschlussersetzungsskizze, Mietermail, Vermieterschreiben oder Verwalter-To-do-Liste.
+- **Fehlerbremse:** Tragende Normen/Entscheidungen live oder aus der Akte verifizieren; Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei prüfbarer Quelle. Keine BeckRS-, juris-, Kommentar- oder Aufsatz-Blindzitate aus Modellwissen.
 
 ## Disclaimer (Schlüsselstelle, mehrfach)
 
@@ -55,9 +75,11 @@ Der Mieter kann der Kündigung widersprechen wenn:
 
 Der Vermieter muss im Kündigungsschreiben auf das Widerspruchsrecht hinweisen (§ 568 Abs. 2 BGB) — sonst verlängerte Widerspruchsfrist.
 
-### Schritt 6 — Vortaeuschung und Schadensersatz
+### Schritt 6 — Vortaeuschung und Schadensersatz (verifiziert dejure.org)
 
-Faellt der Eigenbedarf nach Kündigung aber vor Auszug weg ist der Vermieter verpflichtet das dem Mieter mitzuteilen (BGH NJW Rspr.). Andernfalls droht **Schadensersatz** für Umzugskosten Mehrmiete am neuen Ort und Maklerkosten. **Vorgetaeuschter Eigenbedarf** kann auch strafrechtlich relevant werden (Betrug § 263 StGB) und führt regelmäßig zu Schadensersatz.
+- **BGH 14.12.2016, VIII ZR 232/15**: Bei Vortaeuschung des Eigenbedarfs haftet der Vermieter dem gekuendigten Mieter auf Schadensersatz nach §§ 280 Abs. 1, 311a Abs. 2 BGB; ersatzfaehig sind Umzugskosten, Maklerkosten, Mehrkosten neuer Mietwohnung und ggf. Anwaltskosten. Quelle: dejure.org/2016,46126 / NJW 2017, 1474.
+- **BGH 10.05.2017, VIII ZR 292/15**: Wegfall des Eigenbedarfs nach Ausspruch der Kuendigung — Vermieter muss den Mieter unverzueglich informieren, sonst Schadensersatzpflicht. Quelle: dejure.org/2017,15097.
+- **BGH 27.06.2007, VIII ZR 271/06**: Eigenbedarf einer GbR (Aussengesellschaft) — Eigenbedarf kann für die Gesellschafter geltend gemacht werden, sofern die GbR Vermieter ist und der Gesellschafter Eigenbedarf hat. Quelle: dejure.org / NJW 2007, 2845.
 
 ### Schritt 7 — Formale Anforderungen (§ 568 Abs. 1 BGB)
 
@@ -83,21 +105,20 @@ Erzeuge ein Kündigungsschreiben mit:
 
 Vor Versand der Eigenbedarfskündigung: fachanwaltliche Prüfung. Risiko: Unwirksamkeit Schadensersatz strafrechtliche Verfolgung bei Vortaeuschung. Sperrfristen aus Landesverordnung prüfen.
 
-## Aktuelle Rechtsprechung Eigenbedarfskündigung
+## Aktuelle Rechtsprechung Eigenbedarfskündigung (Stand 05/2026, verifiziert dejure.org)
 
-- BGH, Urt. v. 04.03.2015 - VIII ZR 166/14, NJW 2015, 1590 Rn. 14 — Die Eigenbedarfskündigung erfordert eine Begründung, die dem Mieter die Beurteilung ermöglicht, ob der geltend gemachte Bedarf tatsächlich besteht; es muss konkret angegeben werden wer die Wohnung benötigt und aus welchem Grund die aktuelle Unterkunft der begünstigten Person unzumutbar ist.
-- BGH, Urt. v. 29.03.2017 - VIII ZR 44/16, NJW 2017, 1891 Rn. 22 — Entfällt der Eigenbedarf nach Zugang der Kündigung aber vor Auszug des Mieters, hat der Vermieter dies unverzüglich mitzuteilen; verletzt er diese Pflicht, ist er dem Mieter zum Schadensersatz nach § 280 Abs. 1 BGB verpflichtet.
-- BGH, Urt. v. 22.05.2019 - VIII ZR 180/18, NJW 2019, 2765 Rn. 26 — Interessenabwägung bei Eigenbedarfskündigung unter Berücksichtigung älterer kranker Mieter (§ 574 BGB Sozialklausel): Tatsacheninstanzen müssen bei substantiiert geltend gemachten schwerwiegenden Gesundheitsgefahren des Mieters regelmäßig ein Sachverständigengutachten einholen; pauschale Kategorisierung nach Alter oder Mietdauer ist unzulässig.
+- BGH, Urt. v. 24.09.2025 – Az. VIII ZR 289/23 — Anforderungen an die Begruendung nach § 573 Abs. 3 BGB sind nicht ueberzogen; Eigenbedarf bleibt wirksam auch wenn der Vermieter zunaechst Eigennutzung waehrend Umbau plant und spaetere Veraeusserung beabsichtigt. Konkretisierung des Massstabs „ernsthafter, vernuenftiger, nachvollziehbarer Eigennutzungswunsch". Quelle: https://dejure.org/dienste/vernetzung/rechtsprechung?Gericht=BGH&Datum=24.09.2025&Aktenzeichen=VIII+ZR+289/23
+- BGH 14.12.2016, VIII ZR 232/15 — Schadensersatz bei vorgetaeuschtem Eigenbedarf (https://dejure.org/2016,46126)
+- BGH 10.05.2017, VIII ZR 292/15 — Mitteilungspflicht bei Wegfall des Eigenbedarfs (https://dejure.org/2017,15097)
+- BGH 22.05.2019, VIII ZR 180/18 — Haerteklausel § 574 BGB; Pflicht zur Abwaegung Vermieter-/Mieterinteressen, alters- oder krankheitsbedingte Haerten substantiiert pruefen (https://dejure.org/2019,12824)
+- BGH 11.12.2019, VIII ZR 144/19 — Haerteklausel: Hochbetagtes Alter und langjaehrige Verwurzelung koennen Vertragsfortsetzung tragen; nur ausnahmsweise unbefristete Fortsetzung (https://dejure.org/2019,49075)
+- BGH 09.05.2012, VIII ZR 238/11 — „Vorratskündigung"-Verbot; Eigenbedarf muss konkret-bevorstehend sein (https://dejure.org/2012,12036)
+
+Weitere Entscheidungen vor Ausgabe per dejure.org / bundesgerichtshof.de mit Datum und Aktenzeichen verifizieren.
 
 ## Paragrafenkette Eigenbedarfskündigung
 
 § 573 Abs. 2 Nr. 2 BGB (berechtigtes Interesse Eigenbedarf) → § 573 Abs. 3 BGB (Begründungspflicht) → § 573c BGB (Kündigungsfristen) → § 568 Abs. 1 BGB (Schriftform) → § 568 Abs. 2 BGB (Widerspruchshinweis) → § 574 BGB (Sozialklausel Widerspruch) → § 574b BGB (Widerspruchsfrist 2 Monate) → § 577a BGB (Sperrfrist nach Umwandlung) → § 280 BGB (Schadensersatz bei vorgetäuschtem Eigenbedarf)
-
-## Kommentarliteratur
-
-- Schmidt-Futterer Mietrecht 15. Aufl., § 573 BGB Rn. 50-150 (Eigenbedarfskündigung vollständig)
-- Staudinger BGB, § 573 Rn. 30-80 (Eigenbedarf berechtigtes Interesse)
-- BeckOK Mietrecht, § 573 BGB Rn. 20-60 (aktuelle Rechtsprechung Eigenbedarf)
 
 ## Triage vor Erstellung Eigenbedarfskündigung
 
@@ -146,7 +167,7 @@ Mit freundlichen Grüßen
 **Hinweis:** Vor Versand fachanwaltliche Prüfung empfohlen.
 
 <!-- AUDIT 27.05.2026
-BGH VIII ZR 180/18 (behauptet: "Uebermässige Begründungspflicht Kuendigungsschreiben"): FALSCH — echtes Thema ist Interessenabwägung bei Eigenbedarfskündigung / Sozialklausel § 574 BGB bei älteren kranken Mietern (Urt. 22.05.2019, NJW 2019, 2765). Beschreibung korrigiert; AZ und Datum sind korrekt.
-BGH VIII ZR 96/09 (behauptet: "Sperrfrist § 577a BGB beginnt mit Veräußerung"): FALSCH — echtes Thema ist fristlose Kündigung § 543 BGB / Mietbegriff Zahlungsrückstand (NJW 2010, 3015); kein Eigenbedarfsbezug. Geloescht (thematisch nicht einschlaegig fuer Eigenbedarfskündigungsskill).
+Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+Rechtsprechung live prüfen: Keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über amtliche oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 Quelle: dejure.org. Prufer: Bundle-005-Audit.
 -->

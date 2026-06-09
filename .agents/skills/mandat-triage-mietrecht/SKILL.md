@@ -1,13 +1,43 @@
 ---
 name: mandat-triage-mietrecht
-description: Strukturierte Eingangs-Abfrage fuer mietrechtliche Mandate. Klaert Mandantenrolle (Vermieter Mieter WEG-Eigentuemer Verwalter) Gegenstandsart (Wohnraum Gewerbe WEG) Sachgebiet (Kuendigung Mieterhoehung Mietminderung Modernisierung Nebenkostenabrechnung Mietkaution-Rueckforderung Eigenbedarf Sanierung Raeumung WEG-Beschluss WEG-Hausgeld-Klage). Fristen-Sofort-Check Kuendigungs-Frist nach § 573c BGB Raeumungs-Frist § 721 ZPO WEG-Klage ein Monat § 45 WEG Modernisierung-Ankuendigung drei Monate vorher Mieterhoehung Zustimmungs-Frist zwei Monate § 558b BGB. Eskalation Telefon-Sofort bei Raeumungstermin laufender Kuendigungs-Frist.
+description: "Strukturierte Eingangs-Abfrage für mietrechtliche Mandate. Klaert Mandantenrolle (Vermieter Mieter WEG-Eigentuemer Verwalter) Gegenstandsart (Wohnraum Gewerbe WEG) Sachgebiet (Kündigung Mieterhoehung Mietminderung Modernisierung Nebenkostenabrechnung Mietkaution-Rückforderung Eigenbedarf Sanierun..."
 ---
 
 # Mandat-Triage Mietrecht
 
-## Zweck
+## Aktenstart statt Formularstart
 
-Mietrechts-Mandate sind heterogen — Wohnraummietrecht (sozial geschützt) Gewerbemietrecht (vertragsdominiert) WEG (eigene Logik). Triage stellt richtige Spur sicher.
+Wenn zu **Mandat Triage Mietrecht** bereits Unterlagen, ein Ordner, ein ZIP, ein PDF-Buendel, E-Mails, Screenshots, Tabellen oder Entwuerfe vorliegen, lies diese zuerst aus. Bilde fuer **Mietrecht** eine Arbeitshypothese zu Beteiligten, Rolle des Nutzers, Verfahrensstand, Fristen, Betrags-/Datumslogik, Belegen und naechstem sinnvollen Output. Frage nicht routinemaessig nach Angaben, die sich aus der Akte ergeben.
+
+Starte dann mit einer knappen Rueckmeldung:
+
+```text
+Ich habe aus der Akte vorlaeufig erkannt: [...]
+Unsicher sind noch: [...]
+Als naechsten Schritt schlage ich vor: [...]
+```
+
+Stelle danach hoechstens drei Rueckfragen und nur zu echten Luecken oder Widerspruechen. Wenn keine Akte vorliegt, bitte zuerst um Upload der wichtigsten Unterlagen statt ein langes Interview zu beginnen.
+
+## Arbeitsbereich
+
+Strukturierte Eingangs-Abfrage für mietrechtliche Mandate. Klaert Mandantenrolle (Vermieter Mieter WEG-Eigentuemer Verwalter) Gegenstandsart (Wohnraum Gewerbe WEG) Sachgebiet (Kündigung Mieterhoehung Mietminderung Modernisierung Nebenkostenabrechnung Mietkaution-Rückforderung Eigenbedarf Sanierung Räumung WEG-Beschluss WEG-Hausgeld-Klage). Fristen-Sofort-Check Kündigungs-Frist nach § 573c BGB Räumungs-Frist § 721 ZPO WEG-Klage ein Monat § 45 WEG Modernisierung-Ankündigung drei Monate vorher Mieterhoehung Zustimmungs-Frist zwei Monate § 558b BGB. Eskalation Telefon-Sofort bei Räumungstermin laufender Kündigungs-Frist. Arbeite entlang dieser konkreten Prüfungslinie und trenne Rolle, Frist, Zuständigkeit, Beweislast und gewünschten Output.
+
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: BGB §§ 535-577a, BetrKV, WEG §§ 24, 25, 27, BGB §§ 558, 558a, 558b, 573, 573c — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+## Fachlicher Kern — Miet- und WEG-Recht
+- **Problemfokus dieses Skills:** Bleibe beim konkreten Titel `Mandat-Triage Mietrecht` und löse die dort angelegte Fachfrage; arbeite mit konkreten Tatbestandsmerkmalen, Beweisfragen und dem unmittelbar benötigten Arbeitsprodukt. Routingfragen bleiben Hilfsmittel, wenn Frist, Zuständigkeit oder Verfahrensart offen sind.
+- **Normenradar:** BGB §§ 535 ff., 536, 543, 546a, 548, 556, 556a, 558 ff., 573 ff.; BetrKV; HeizkostenV; WEG §§ 18, 19, 20, 23, 24, 28, 44, 45; GEG; CO2KostAufG.
+- **Verifizierte Anker:** BGH, Urteil vom 20.01.2016 - VIII ZR 93/15 (formelle Betriebskostenabrechnung); BGH, Urteil vom 15.12.2021 - VIII ZR 66/20 (Belegeinsicht Originale/Kopien); BGH, Urteil vom 14.02.2025 - V ZR 128/23 (§ 16 Abs. 2 Satz 2 WEG, Rücklagen/Kostenverteilung); BGH, Urteil vom 14.02.2025 - V ZR 86/24 (§ 20 WEG, bauliche Veränderung, Vorbefassung/Beschlussersetzung).
+- **Arbeitsmodus:** Immer erst Verhältnis Miete/WEG/Gewerbe/Verwaltung trennen, dann Frist, Beschlusskompetenz, Umlagefähigkeit, Belege, Gebrauchsnachteil und Kostenfolge prüfen.
+- **Outputpflicht:** Abrechnungsprüftabelle, Beschlussvorschlag, Anfechtungs-/Beschlussersetzungsskizze, Mietermail, Vermieterschreiben oder Verwalter-To-do-Liste.
+- **Fehlerbremse:** Tragende Normen/Entscheidungen live oder aus der Akte verifizieren; Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei prüfbarer Quelle. Keine BeckRS-, juris-, Kommentar- oder Aufsatz-Blindzitate aus Modellwissen.
 
 ## Ablauf — sieben Fragen
 
@@ -34,6 +64,7 @@ Mietrechts-Mandate sind heterogen — Wohnraummietrecht (sozial geschützt) Gewe
 - **Kündigung** (ordentlich außerordentlich Eigenbedarf Zahlungsverzug)
 - Räumung
 - **Mieterhöhung** (Vergleichsmiete Modernisierung)
+- **Überhöhte Ausgangsmiete / Mietwucher** (Mietpreisbremse, § 5 WiStrG 1954, § 291 StGB)
 - **Mietminderung** (Mangel)
 - Modernisierung
 - **Nebenkostenabrechnung** (Erstellung Prüfung)
@@ -90,6 +121,7 @@ Mietrechts-Mandate sind heterogen — Wohnraummietrecht (sozial geschützt) Gewe
 | Mieterhöhung — Vermieter | `mieterhoehungsverlangen-erstellen` |
 | Mieterhöhung — Mieter | `mieterhoehung-pruefen-widersprechen` |
 | Mietsenkungsverlangen | `mietsenkungsverlangen` |
+| Mietpreisüberhöhung / Mietwucher | `mietpreisueberhoehung-wistrg-1954-mietwucher` |
 | Nebenkosten erstellen | `nebenkostenabrechnung-erstellen` |
 | Nebenkosten prüfen | `nebenkostenabrechnung-pruefen` |
 | Klage am AG | `klageentwurf-amtsgericht` |
@@ -98,7 +130,7 @@ Mietrechts-Mandate sind heterogen — Wohnraummietrecht (sozial geschützt) Gewe
 | Lage und Ausstattung erheben | `lage-und-ausstattung-erheben` |
 | WEG-Beschluss-Anfechtung | `weg-beschluss-anfechten` |
 | Mietkaution-Rückforderung | (Skill mietkaution-rueckforderung — perspektivisch) |
-| Mietminderung wegen Mangel | (Skill mietminderung-pruefen — perspektivisch) |
+| Mietminderung wegen Mangel | (Skill mietminderung-prüfen — perspektivisch) |
 
 ## Mandatsannahme
 
@@ -127,6 +159,8 @@ Mietrechts-Mandate sind heterogen — Wohnraummietrecht (sozial geschützt) Gewe
 - BGB §§ 535 ff. 558 558b 573c 556
 - WEG §§ 14 19 20 44 45
 - ZPO § 721 (Räumungsfrist)
-- BGH VIII. Zivilsenat V. Zivilsenat
-- Schmidt-Futterer Mietrecht
-- Sternel Mietrecht aktuell
+- BGH VIII. Zivilsenat und V. Zivilsenat nur mit Datum, Aktenzeichen und frei prüfbarer Quelle
+
+## Aktuelle Rechtsprechung — Leitsaetze (Triage-Relevant)
+
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.

@@ -1,9 +1,15 @@
 ---
 name: systematische-auslegung
-description: "Systematische Auslegung im deutschen Zivilrecht. Stellung der Norm im Gesetz (Buch, Abschnitt, Titel, Untertitel). Bezug zu Nachbarnormen und Verweisungen. Auslegung im Lichte von Ueberschriften, Definitionen und Gesetzesarchitektur. Konkordanz mit anderen Gesetzbuechern (HGB, ZPO, GG, Unionsrecht). Konkrete Beispiele zu §§ 280 311 433 823 BGB. Praezises Pruefraster fuer das System-Element."
+description: "Systematische Auslegung im deutschen Zivilrecht. Stellung der Norm im Gesetz (Buch, Abschnitt, Titel, Untertitel). Bezug zu Nachbarnormen und Verweisungen. Auslegung im Lichte von Ueberschriften, Definitionen und Gesetzesarchitektur. Konkordanz mit anderen Gesetzbuechern (HGB, ZPO, GG, Unionsrech..."
 ---
 
 # Systematische Auslegung
+
+## Fachlicher Anker
+
+- **Normen:** § 280 BGB, § 823 BGB, §§ 138.
+- **Entscheidungs-/Quellenanker:** Tragende Rechtsprechung nur mit Gericht, Datum, Aktenzeichen und frei prüfbarer Quelle einsetzen; keine Entscheidung aus Modellwissen erzwingen.
+- **Quellenhygiene:** `references/quellenhygiene.md` und `references/zitierweise.md` beachten.
 
 ## Worum geht es?
 
@@ -30,11 +36,11 @@ Das Argument lautet: Der Gesetzgeber denkt das Gesetz als kohaerentes System. We
 1. **Aeussere Systematik:** Buch, Abschnitt, Titel, Untertitel, Norm-Reihenfolge.
 2. **Innere Systematik:** dogmatische Strukturen (Allgemeiner Teil, Besonderer Teil; Anspruchsgrundlagen, Gegennormen, Einreden).
 3. **Verweisungstechniken:** "entsprechend gelten" (§ 281 BGB iVm § 280 BGB), "unbeschadet" (§ 305 BGB), "soweit" (§ 138 BGB).
-4. **Verhaeltnis zu Nachbargesetzen:** HGB als lex specialis fuer Kaufleute, BGB als Auffanggesetz; ZPO als Verfahrensrecht; spezialgesetzliche Sondernormen (ProdHaftG, StVG, AGG).
+4. **Verhaeltnis zu Nachbargesetzen:** HGB als lex specialis für Kaufleute, BGB als Auffanggesetz; ZPO als Verfahrensrecht; spezialgesetzliche Sondernormen (ProdHaftG, StVG, AGG).
 
 ## Anwendung im deutschen Zivilrecht
 
-**Beispiel § 280 BGB:** Die Norm steht im Buch 2 (Schuldrecht), Abschnitt 1 (Inhalt der Schuldverhaeltnisse), Titel 1 (Verpflichtung zur Leistung). Sie ist Grundnorm fuer Schadensersatzanspruch wegen Pflichtverletzung. Systematische Auslegung verlangt: § 280 BGB ist nicht im allgemeinen Schuldrecht zu lesen, sondern im Allgemeinen Teil des Schuldrechts und im Verbund mit §§ 281 ff. BGB (Schadensersatz statt der Leistung), § 282 BGB (Schadensersatz wegen Verletzung einer Pflicht nach § 241 Abs. 2 BGB), § 283 BGB (Unmoeglichkeit) und § 286 BGB (Verzug).
+**Beispiel § 280 BGB:** Die Norm steht im Buch 2 (Schuldrecht), Abschnitt 1 (Inhalt der Schuldverhaeltnisse), Titel 1 (Verpflichtung zur Leistung). Sie ist Grundnorm für Schadensersatzanspruch wegen Pflichtverletzung. Systematische Auslegung verlangt: § 280 BGB ist nicht im allgemeinen Schuldrecht zu lesen, sondern im Allgemeinen Teil des Schuldrechts und im Verbund mit §§ 281 ff. BGB (Schadensersatz statt der Leistung), § 282 BGB (Schadensersatz wegen Verletzung einer Pflicht nach § 241 Abs. 2 BGB), § 283 BGB (Unmoeglichkeit) und § 286 BGB (Verzug).
 
 **Beispiel § 311 Abs. 2 BGB (c.i.c.):** Die Norm wurde 2002 im Zuge der Schuldrechtsmodernisierung kodifiziert. Sie steht im Allgemeinen Teil des Schuldrechts neben §§ 241, 280 BGB und ist daher als allgemeines vorvertragliches Schuldverhaeltnis zu lesen. Die systematische Stellung neben § 241 Abs. 2 BGB macht klar: c.i.c. ist Schutzpflichtverletzung, nicht Erfuellungspflichtverletzung.
 
@@ -44,7 +50,7 @@ Das Argument lautet: Der Gesetzgeber denkt das Gesetz als kohaerentes System. We
 
 **Beispiel Generalklausel vs. Spezialnorm:** § 242 BGB ist nicht aufrufbar, wenn § 320 BGB (Einrede des nicht erfuellten Vertrags) oder § 273 BGB (Zurueckbehaltungsrecht) speziell sind. Systematisches Argument: Spezialnorm verdraengt Generalklausel.
 
-## Schritt-fuer-Schritt
+## Schritt-für-Schritt
 
 1. **Norm verorten.** Welches Buch, welcher Abschnitt, welcher Titel, welcher Untertitel des BGB? Bei Sondergesetzen analog.
 2. **Nachbarnormen identifizieren.** Direkt vor- und nachstehende Paragraphen lesen.
@@ -64,16 +70,6 @@ Das Argument lautet: Der Gesetzgeber denkt das Gesetz als kohaerentes System. We
 - **System ueber System stellen.** Systematische Auslegung ist nicht der "wahre" Schluessel — sie ist ein Argument neben Wortlaut, Historie und Telos.
 
 Kritik aus der Topik (Theodor Viehweg, "Topik und Jurisprudenz" 1953): Das System ist nicht so geschlossen, wie die Pandektistik glauben machte. Im konkreten Fall siegen Problem- und Wertungsargumente, nicht Systemargumente (siehe Skill `topik-viehweg-vs-systemdenken`).
-
-## Querverweise
-
-- `savigny-vier-auslegungsmethoden` — Einordnung in den Kanon.
-- `wortlaut-grammatikalische-auslegung` — vorgelagertes Element.
-- `historische-auslegung` — wenn die Systematik selbst entstehungsgeschichtlich erklaert werden muss.
-- `teleologische-auslegung` — wenn Systematik und Telos divergieren.
-- `pandekten-und-begriffsjurisprudenz` — historische Wurzeln des Systemdenkens.
-- `wertungsjurisprudenz-larenz-canaris` — modernes Systemverstaendnis.
-- `topik-viehweg-vs-systemdenken` — Gegenposition.
 
 ## Quellen und Stand 05/2026
 

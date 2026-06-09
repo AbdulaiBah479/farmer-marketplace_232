@@ -1,13 +1,17 @@
 ---
 name: methodenlehre-anwenden
-description: "Anwalt oder Rechtsstudent wendet deutsche Methodenlehre im buergerlichen Recht an: Anspruchsgrundlagen-Reihenfolge Vertrag c.i.c. GoA dinglich Delikt Gefaehrdungshaftung Bereicherung. Auslegung §§ 133 157 BGB grammatikalisch systematisch historisch teleologisch verfassungskonform unionsrechtskonform. Lueckenfuellung Analogie teleologische Reduktion. Normen §§ 133 157 241 280 433 812 823 BGB. Prüfraster Gutachtenstil Anspruchsgrundlagen Verjährung Beweislast Generalklauseln §§ 138 242 BGB. Output strukturiertes Rechtsgutachten Prüfungsaufbau. Abgrenzung zu subsumtions-prüfer (mechanische Prüfung) und hausarbeitenmacher (akademisch)."
+description: "Anwalt oder Rechtsstudent wendet deutsche Methodenlehre im buergerlichen Recht an: Anspruchsgrundlagen-Reihenfolge Vertrag c.i.c. GoA dinglich Delikt Gefaehrdungshaftung Bereicherung. Auslegung §§ 133 157 BGB grammatikalisch systematisch historisch teleologisch verfassungskonform unionsrechtskonf..."
 ---
 
 # Methodenlehre und Rechtsanwendung im bürgerlichen Recht (Anwaltsperspektive)
 
-Dieser Skill verkörpert die Methodenlehre und Falllösung im deutschen bürgerlichen Recht **aus Anwaltsperspektive**: Er bildet ab, wie Gerichte tatsächlich entscheiden und wie eine anwaltliche Bewertung daran ausgerichtet wird — nicht eine rein dogmatisch-wissenschaftliche Idealmethodik. Aktiviere ihn für jede juristische Bewertung, jedes Memo, jeden Schriftsatzentwurf, jede Auslegungsentscheidung im bürgerlichen Recht (BGB, HGB, Nebengesetze).
+## Fachlicher Anker
 
-## Wann dieser Skill greift
+- **Normen:** § 138 BGB, § 242 BGB, § 826 BGB.
+- **Entscheidungs-/Quellenanker:** Tragende Rechtsprechung nur mit Gericht, Datum, Aktenzeichen und frei prüfbarer Quelle einsetzen; keine Entscheidung aus Modellwissen erzwingen.
+- **Quellenhygiene:** `references/quellenhygiene.md` und `references/zitierweise.md` beachten.
+
+## Wann dieser Arbeitsgang greift
 
 - Du bewertest eine bürgerlich-rechtliche Frage und musst eine Anspruchsgrundlage prüfen.
 - Du legst eine Norm aus und musst zwischen Wortlaut, Systematik, Historie und Telos abwägen.
@@ -37,7 +41,7 @@ Vier klassische Kanones plus zwei Querschnittskanones. **Eine starre Rangfolge g
 
 1. **Grammatikalisch** — Wortlaut nach allgemeinem oder fachlichem Sprachgebrauch. **Äußere Grenze** der Auslegung; jenseits davon beginnt Rechtsfortbildung.
 2. **Systematisch** — Stellung im Gesetz, Verhältnis zu Nachbarnormen, Gesamtzusammenhang. Beispiel: § 280 Abs. 1 BGB im System der Schuldverhältnisse, abgegrenzt zu § 311 Abs. 2 BGB und § 823 BGB.
-3. **Historisch** — Entstehungsgeschichte, Materialien (BT-Drucks., Ausschussberichte). In der Praxis oft nachgeordnet, weil Materialien lückenhaft oder schwer zugänglich sind; bei jüngeren Reformgesetzen (Schuldrechtsmodernisierung 2002, MoMiG, KapMuG, Verbraucherrechte-RL-Umsetzung) aber regelmäßig tragfähig.
+3. **Historisch** — fachliche Einordnung, Materialien (BT-Drucks., Ausschussberichte). In der Praxis oft nachgeordnet, weil Materialien lückenhaft oder schwer zugänglich sind; bei jüngeren Reformgesetzen (Schuldrechtsmodernisierung 2002, MoMiG, KapMuG, Verbraucherrechte-RL-Umsetzung) aber regelmäßig tragfähig.
 4. **Teleologisch** — Sinn und Zweck (ratio legis). In der **anwaltlichen Praxis** häufig das **stärkste** Auslegungsargument: Gerichte argumentieren ganz überwiegend teleologisch, weil sich damit gerechte Einzelfallergebnisse begründen lassen. Wer in der Praxis ausschließlich historisch argumentiert, läuft am Gericht vorbei.
 
 **Querschnittskanones:**
@@ -110,10 +114,10 @@ Die Konkretisierung einer Generalklausel ist an Grundrechten, Verfassungsprinzip
 2. **Frage(n)**
 3. **Ergebnis in einem Satz** (Kurzantwort)
 4. **Rechtliche Bewertung**
-   - Anspruchsgrundlage / Prüfungsmaßstab
-   - Tatbestandsmerkmale, jeweils mit Subsumtion
-   - Streitstand bei umstrittenen Fragen
-   - Ergebnis je Tatbestandsmerkmal
+ - Anspruchsgrundlage / Prüfungsmaßstab
+ - Tatbestandsmerkmale, jeweils mit Subsumtion
+ - Streitstand bei umstrittenen Fragen
+ - Ergebnis je Tatbestandsmerkmal
 5. **Gesamtergebnis**
 6. **Risiken / offene Punkte**
 7. **Quellenverzeichnis** (nach Hauszitierweise — siehe Plugin `zitierweise-deutsches-recht`)
@@ -148,4 +152,4 @@ Die ausführliche methodische Grundlage einschließlich der Sektionen zu Anspruc
 
 - **`zitierweise-deutsches-recht`** — Jede Aussage wird nach der Hauszitierweise belegt; insbesondere BGH-Zitate mit `Az.`-Marker, Pinpoint mit Rn., Hierarchie der Gerichte.
 - **`bgb-at-pruefer`** — Mechanische BGB-AT-Prüfungen (Vertragsschluss, Anfechtung, Stellvertretung, Form, Verjährung) bauen auf dieser Methodenlehre auf.
-- Alle Rechtsgebiet-Plugins (`fachanwalt-erbrecht`, `fachanwalt-arbeitsrecht`, `fachanwalt-familienrecht`, `arbeitsrecht`, `gesellschaftsrecht-legal-english`, `kanzlei-allgemein` etc.) setzen diese Methodenlehre voraus; sie greifen über relative Pfade auf die Repo-Referenz [`references/methodik-buergerliches-recht.md`](../../references/methodik-buergerliches-recht.md) zu.
+- Alle Rechtsgebiet-Plugins (`fachanwalt-erbrecht`, `fachanwalt-arbeitsrecht`, `kindeswohlgefaehrdung-eilantrag`, `arbeitsrecht`, `gesellschaftsrecht-legal-english`, `kanzlei-allgemein` etc.) setzen diese Methodenlehre voraus; sie greifen über relative Pfade auf die Repo-Referenz [`references/methodik-buergerliches-recht.md`](../../references/methodik-buergerliches-recht.md) zu.

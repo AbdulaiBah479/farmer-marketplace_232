@@ -1,9 +1,22 @@
 ---
 name: anmeldung-strategie-portfolio
-description: "Strategische Markenportfolio-Planung für Luxus-Modehaeuser: Mandant will Marken in DE/EU/international schützen oder Portfolio optimieren. Normen: §§ 32 ff. MarkenG, Art. 32 ff. UMV (EU) 2017/1001, Madrid-Protokoll (WIPO). Prüfraster: Nizza-Klassen (3/14/18/25/35), Multi-Class-Strategie, Prioritaets-Kaskade, Kostenoptimierung, Anmeldezeitpunkt. Output Marken-Portfolio-Plan, Anmelde-Empfehlung je Territorium, Kostenprojektion. Abgrenzung: Einzelne Anmeldung DPMA siehe wortmarke-anmeldung-dpma; Madrid-Protokoll Details siehe madrid-protokoll-und-internationale-registrierung."
+description: "Strategische Markenportfolio-Planung für Luxus-Modehaeuser: Mandant will Marken in DE/EU/international schützen oder Portfolio optimieren. Normen: §§ 32 ff. MarkenG, Art. 32 ff. UMV (EU) 2017/1001, Madrid-Protokoll (WIPO). Prüfraster: Nizza-Klassen (3/14/18/25/35), Multi-Class-Strategie, Priorita..."
 ---
 
 # Anmeldestrategie & Markenportfolio für Luxus-Modehäuser
+
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: MarkenG § 47 Schutzdauer 10 Jahre, § 25 Benutzungsschonfrist 5 Jahre, Widerspruch DPMA 3 Monate, Nichtigkeitsantrag § 50 (10 Jahre Bösgläubigkeit).
+- Tragende Normen verifizieren: MarkenG §§ 4, 8, 9, 14, 15, 24 (Erschöpfung), UMV (VO 2017/1001), MMA, GemmuVO, UrhG §§ 2, 69, UWG §§ 3, 4 Nr. 3, 6, EU-Geoblocking-VO, ZollVO 608/2013 — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Markeninhaber, Lizenznehmer, Distributor, Online-Marktplatz, Zollbehörde, DPMA, EUIPO, LG (Markensenat), Wettbewerber/Fälscher.
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Markenanmeldung, Lizenzvertrag, Selektiv-Vertriebsvertrag, Abmahnung, Zollbeschlagnahme-Antrag, Verletzungsklage, Lookbook, EUIPO-Widerspruch — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+## Fachkern: Anmeldestrategie & Markenportfolio für Luxus-Modehäuser
+- **Normen-/Quellenanker:** MarkenG, UMV, DesignG/GGV, UWG, UrhG, GeschGehG, Zoll-/Grenzbeschlagnahme, DSA/Marketplace, Erschöpfung, Rufausbeutung und Schadensersatz.
+- **Entscheidende Weiche:** Kennzeichen/Design, Priorität, Benutzung, Verwechslungsgefahr, Bekanntheit, Erschöpfung, Plattformbeweis, Auskunft und Vollstreckung getrennt prüfen.
+- **Arbeitsprodukt:** Liefere eine fallbezogene `Norm / Tatsache / Beleg / Wertung / Gegenargument / nächster Schritt`-Matrix und einen direkt nutzbaren Textbaustein, wenn der Nutzer einen Entwurf braucht.
 
 Als Partnerin bei einer der führenden deutschen Markenboutiquen betreue ich das gesamte IP-Portfolio der klôtzzkètté SA, Paris/Mailand. Die Anmeldestrategie für ein Haute-Couture-Label erfordert eine durchdachte Kaskade aus nationalen, europäischen und internationalen Schutzrechten — kein Stein darf unbeachtet bleiben.
 
@@ -21,26 +34,26 @@ Das Portfolio von klôtzzkètté umfasst Wortmarken, Bild- und Wort-Bild-Marken,
 
 1. **Bestandsaufnahme:** Vollständige IP-Inventur aller bestehenden Zeichen, Verfallsdaten, Klassenbelegungen — vgl. Skill `fashion-luxus-kaltstart-interview`
 2. **Territoriale Schutzstrategie:**
-   - DE-Basismarke beim DPMA als Anker (schneller, günstiger, solide Basis)
-   - EU-Unionsmarke (UM) für einheitlichen EU-Schutz via EUIPO
-   - Internationale Registrierung via Madrid-Protokoll für Drittstaaten (CH, UK, US, JP, CN, AE)
+ - DE-Basismarke beim DPMA als Anker (schneller, günstiger, solide Basis)
+ - EU-Unionsmarke (UM) für einheitlichen EU-Schutz via EUIPO
+ - Internationale Registrierung via Madrid-Protokoll für Drittstaaten (CH, UK, US, JP, CN, AE)
 3. **Klassenstrategie für Mode-Luxus:**
-   - Klasse 3: Parfums, Kosmetika, Pflegeprodukte (klôtzzkètté Parfum "Abîme Dorée")
-   - Klasse 14: Schmuck, Uhren, Edelmetalle (klôtzzkètté Bijou)
-   - Klasse 18: Leder, Reiseartikel, Handtaschen (klôtzzkètté Sac)
-   - Klasse 25: Bekleidung, Schuhwerk, Kopfbedeckungen (Kernklasse)
-   - Klasse 35: Einzelhandelsdienstleistungen, Online-Shops (klôtzzkètté.com)
-   - Klasse 40: Schneiderarbeiten, Maßanfertigung (optional, Couture-Atelier)
-   - Klasse 41: Mode-Events, Schauen (Paris Fashion Week)
+ - Klasse 3: Parfums, Kosmetika, Pflegeprodukte (klôtzzkètté Parfum "Abîme Dorée")
+ - Klasse 14: Schmuck, Uhren, Edelmetalle (klôtzzkètté Bijou)
+ - Klasse 18: Leder, Reiseartikel, Handtaschen (klôtzzkètté Sac)
+ - Klasse 25: Bekleidung, Schuhwerk, Kopfbedeckungen (Kernklasse)
+ - Klasse 35: Einzelhandelsdienstleistungen, Online-Shops (klôtzzkètté.com)
+ - Klasse 40: Schneiderarbeiten, Maßanfertigung (optional, Couture-Atelier)
+ - Klasse 41: Mode-Events, Schauen (Paris Fashion Week)
 4. **Kollisionsrecherche:** DPMA-Markenrecherche, EUIPO eSearch plus, WIPO Global Brand Database — vor jeder Anmeldung obligatorisch
 5. **Prioritätskaskade:**
-   - Tag 0: DPMA-Anmeldung Wortmarke + Wort-Bild-Marke
-   - Tag +30: EUIPO-Anmeldung mit Prioritätsanspruch auf DE-Anmeldung (Art. 35 UMV)
-   - Tag +150: Madrid-Protokoll-Anmeldung mit Priorität aus DE- oder EU-Basismarke
+ - Tag 0: DPMA-Anmeldung Wortmarke + Wort-Bild-Marke
+ - Tag +30: EUIPO-Anmeldung mit Prioritätsanspruch auf DE-Anmeldung (Art. 35 UMV)
+ - Tag +150: Madrid-Protokoll-Anmeldung mit Priorität aus DE- oder EU-Basismarke
 6. **Kostenoptimierung:**
-   - Multi-Class-Bundles beim EUIPO (1. Klasse: EUR 850; 2. Klasse: EUR 50 Zuschlag; ab 3. Klasse: EUR 150 je Klasse)
-   - DPMA: EUR 300 für 3 Klassen, je weitere Klasse EUR 100
-   - Vermeidung unnötiger Klassen (Benutzungsnachweis nach 5 Jahren!)
+ - Multi-Class-Bundles beim EUIPO (1. Klasse: EUR 850; 2. Klasse: EUR 50 Zuschlag; ab 3. Klasse: EUR 150 je Klasse)
+ - DPMA: EUR 300 für 3 Klassen, je weitere Klasse EUR 100
+ - Vermeidung unnötiger Klassen (Benutzungsnachweis nach 5 Jahren!)
 
 ## Falltypische Konstellationen
 
@@ -56,13 +69,11 @@ Haushaltstextilien (Klasse 24), Möbel (Klasse 20), Innenausstattung (Klasse 42 
 ### Konstellation 4: Reaktive Verteidigung gegen Brezelmann Discount
 Brezelmann Discount KG (Bad Mergentheim) hat "KLÖTZ-KETTE" in Klasse 25 beim DPMA angemeldet. Prioritätslücke! Sofortiger Widerspruch §§ 42 ff. MarkenG — vgl. Skill `dpma-widerspruch-und-loeschung`.
 
-## Belege & Kommentare
+## Quellen-Hardening
 
-- Ströbele/Hacker/Thiering, MarkenG, 13. Aufl. 2021, §§ 32-40 (Anmeldeverfahren)
-- Ingerl/Rohnke, MarkenG, 3. Aufl. 2010, Vor §§ 3-7 (Markenfähigkeit)
-- Quellenregel: Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff; keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen.
-- EUIPO-Leitlinien zur Prüfung, Teil B: Untersuchung, Abschnitt 1 (Formvoraussetzungen)
-- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+- Keine Kommentar-, Handbuch-, Aufsatz-, BeckRS- oder juris-Blindzitate aus Modellwissen.
+- Registerdaten, Amtsformulare, Fristen, Gebühren und Behördenpraxis live bei DPMA, EUIPO, WIPO, USPTO oder den jeweils zuständigen Stellen prüfen.
+- Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und amtlicher oder frei zugänglicher Quelle ausgeben.
 
 ## Templates
 
@@ -121,3 +132,25 @@ Bevor die Anmeldekaskade gestartet wird, kläre:
 > Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
 > Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+
+## Normen und Rechtsprechung
+
+### Kuratierte Normen-Bibliothek
+
+- § 14 MarkenG
+- § 19 MarkenG
+- Art. 101 AEUV
+- § 8 MarkenG
+- § 49 MarkenG
+- § 66 MarkenG
+- § 18 MarkenG
+- § 107 MarkenG
+- § 42 MarkenG
+- § 25a ZollVG
+- § 1 PatG
+- § 50 MarkenG
+
+### Leitentscheidungen
+
+- BGH I ZB 22/20
+- BGH I ZR 149/14

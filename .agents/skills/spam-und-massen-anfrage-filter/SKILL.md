@@ -1,12 +1,21 @@
 ---
 name: spam-und-massen-anfrage-filter
-description: "Sekretariat hat Anfrage erhalten die verdaechtig ausschaut. Spam-Erkennung Kanzlei-Eingang. Prüfraster: Spam Werbung 419-Scams automatisierte Recruiter-Mails Massen-Mandantenanfragen Phishing. Output: Spam-Einschaetzung mit Empfehlung Aussortierung oder Nachfrage. Abgrenzung zu anfrage-eingang-parser (echte Anfragen) und dringlichkeitsmarker."
+description: "Sekretariat hat Anfrage erhalten die verdaechtig ausschaut. Spam-Erkennung Kanzlei-Eingang. Prüfraster: Spam Werbung 419-Scams automatisierte Recruiter-Mails Massen-Mandantenanfragen Phishing. Output: Spam-Einschaetzung mit Empfehlung Aussortierung oder Nachfrage. Abgrenzung zu anfrage-eingang-pa..."
 ---
 
 # Spam-und-Massen-Anfrage-Filter
 
-Dieser Skill erkennt und kennzeichnet eingehende E-Mails, die keine legitimen Mandantenanfragen sind. Bei positiver Spam-Erkennung wird keine Erstantwort generiert; stattdessen erhält das Sekretariat eine Aussortierungsempfehlung.
+## Arbeitsweg
 
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: BRAO § 44 unverzügliche Annahme/Ablehnung, RVG § 34 Erstberatung max. 190 EUR (Verbraucher), DSGVO Art. 13 Information bei Erhebung.
+- Tragende Normen verifizieren: BRAO §§ 43a, 44, 49b, BORA §§ 2, 11, BGB §§ 145 ff., 280, 627, 675, GwG §§ 10, 11, RVG §§ 1, 4, 34 (Erstberatung), DSGVO Art. 6, 13 — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Anfragender (Interessent), Anwalt, Sekretariat, Compliance-Beauftragter, Mandantenbetreuer.
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Erstkontaktformular, Konfliktscreening, Mandatsvertrag, Vollmacht, Honorarvereinbarung, Mandantendossier, Datenschutzhinweis — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+## Spezialwissen
+
+Dieser Skill erkennt und kennzeichnet eingehende E-Mails, die keine legitimen Mandantenanfragen sind. Bei positiver Spam-Erkennung wird keine Erstantwort generiert; stattdessen erhält das Sekretariat eine Aussortierungsempfehlung.
 
 ## Triage zu Beginn
 1. Zeigt die Anfrage klassische Spam-Muster (419-Scam, automatisierte Masse, Phishing, Werbung)?
@@ -18,14 +27,11 @@ Dieser Skill erkennt und kennzeichnet eingehende E-Mails, die keine legitimen Ma
 - Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
 ## Zentrale Normen
-- Art. 32 DSGVO — TOM: Spam-Filter als Sicherheitsmassnahme fuer Kanzleikommunikation
+- Art. 32 DSGVO — TOM: Spam-Filter als Sicherheitsmassnahme für Kanzleikommunikation
 - § 263 StGB — Betrug: 419-Scam als strafrechtlich relevanter Betrugsversuch; Nichtbearbeitung ist pflichtgemaess
 - § 43 BRAO — Sorgfaltspflicht: Ressourceneinsatz der Kanzlei darf auf legitime Anfragen beschraenkt werden
 - Art. 5 Abs. 1 lit. c DSGVO — Datensparsamkeit: keine Verarbeitung von Spam-Daten
 
-## Quellenregel
-
-Quellenregel: Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen; Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff.
 ## Spam-Muster-Katalog
 
 ### Kategorie 1: Klassischer 419-Scam (Vorschussbetrug)
@@ -97,17 +103,6 @@ Die folgenden Merkmale sprechen gegen Spam:
 - Persönliche Anrede oder Selbstvorstellung
 - Reale Absender-Domain (kein Wegwerf-Mail-Dienst)
 - Anhang mit relevanten Dokumenten (Kündigung, Bescheid, Vertrag)
-
-## Ausgabeformat
-
-```
-SPAM-CHECK ERGEBNIS
-===================
-Status:      [KLAR / VERDÄCHTIG / SPAM — TYP]
-Konfidenz:   [HOCH / MITTEL / NIEDRIG]
-Erkannte Muster: [Liste der erkannten Muster oder "keine"]
-Empfehlung:  [Normale Bearbeitung / Manuelle Prüfung / Aussortieren / IT-Meldung]
-```
 
 ## Verhalten bei SPAM-Erkennung
 

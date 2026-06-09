@@ -1,9 +1,15 @@
 ---
 name: teleologische-auslegung
-description: "Teleologische Auslegung im deutschen Zivilrecht. Sinn und Zweck der Norm (ratio legis). Geltungstheorie vs. Entstehungstheorie. Konkrete BGB-Beispiele zu Schutzzwecknormen (§§ 433 437 823 1004 1626). Verhaeltnis zur historischen Auslegung. Warum die teleologische Auslegung in der BGH-Praxis das staerkste Argument ist und wo ihre Grenzen liegen. Pruefraster Schutzzweck, Normzweck, Funktion, Wertentscheidung."
+description: "Teleologische Auslegung im deutschen Zivilrecht. Sinn und Zweck der Norm (ratio legis). Geltungstheorie vs. Entstehungstheorie. Konkrete BGB-Beispiele zu Schutzzwecknormen (§§ 433 437 823 1004 1626). Verhaeltnis zur historischen Auslegung. Warum die teleologische Auslegung in der BGH-Praxis das s..."
 ---
 
 # Teleologische Auslegung
+
+## Fachlicher Anker
+
+- **Normen:** § 823 Abs. 2 BGB, §§ 138, § 433 Abs. 1 S. 1 BGB.
+- **Entscheidungs-/Quellenanker:** Tragende Rechtsprechung nur mit Gericht, Datum, Aktenzeichen und frei prüfbarer Quelle einsetzen; keine Entscheidung aus Modellwissen erzwingen.
+- **Quellenhygiene:** `references/quellenhygiene.md` und `references/zitierweise.md` beachten.
 
 ## Worum geht es?
 
@@ -40,17 +46,17 @@ BGH-Linie: vermittelnd, gestuetzt auf den "objektivierten Willen des Gesetzgeber
 
 **Beispiel § 433 Abs. 1 S. 1 BGB:** Verschaffung von Eigentum und Besitz. Telos: Synallagma Ware gegen Geld; Erfuellungs- und Gewaehrleistungsfunktion. Schutzzweck primaer der Kaeufer (Erhalt der Kaufsache), sekundaer der Verkaeufer (Erhalt des Kaufpreises).
 
-**Beispiel § 437 BGB (Maengelrechte):** Telos: Schutz des Kaeufers vor mangelhaften Sachen, Erhaltung des aequivalenz-Verhaeltnisses bei Vertragsschluss. Die Rechte sind gestuft (Nacherfuellung als Vorrang, danach Ruecktritt, Minderung, Schadensersatz) — das ist eine teleologische Entscheidung des Gesetzgebers fuer Vertragsfortsetzung.
+**Beispiel § 437 BGB (Maengelrechte):** Telos: Schutz des Kaeufers vor mangelhaften Sachen, Erhaltung des aequivalenz-Verhaeltnisses bei Vertragsschluss. Die Rechte sind gestuft (Nacherfuellung als Vorrang, danach Ruecktritt, Minderung, Schadensersatz) — das ist eine teleologische Entscheidung des Gesetzgebers für Vertragsfortsetzung.
 
 **Beispiel § 823 Abs. 1 BGB (Schutzzweck):** Die Norm schuetzt absolute Rechtsgueter, nicht reine Vermoegensinteressen. Die Begrenzung auf absolute Rechte (Leben, Koerper, Gesundheit, Freiheit, Eigentum) ist eine teleologische Entscheidung: Reines Vermoegen waere ueberbordend zu schuetzen.
 
-**Beispiel § 823 Abs. 2 BGB (Schutzgesetz):** Schutzgesetz ist nicht jede oeffentlich-rechtliche Norm, sondern nur solche, deren Schutzzweck individualschuetzend ist. Beispiel: § 263 StGB (Betrug) ist Schutzgesetz fuer das Vermoegen des Geschaedigten; § 21 StVG (Fahren ohne Fahrerlaubnis) ist nicht Schutzgesetz im klassischen Sinne fuer Dritte, weil der Schutzzweck primaer die oeffentliche Ordnung erfasst.
+**Beispiel § 823 Abs. 2 BGB (Schutzgesetz):** Schutzgesetz ist nicht jede oeffentlich-rechtliche Norm, sondern nur solche, deren Schutzzweck individualschuetzend ist. Beispiel: § 263 StGB (Betrug) ist Schutzgesetz für das Vermoegen des Geschaedigten; § 21 StVG (Fahren ohne Fahrerlaubnis) ist nicht Schutzgesetz im klassischen Sinne für Dritte, weil der Schutzzweck primaer die öffentliche Ordnung erfasst.
 
 **Beispiel § 1004 BGB:** Beseitigungs- und Unterlassungsanspruch. Telos: praeventiver und kurativer Schutz des Eigentums. Aus dem Telos folgt die analoge Anwendung auf andere absolute Rechtsgueter (allgemeines Persoenlichkeitsrecht, Gewerbebetrieb).
 
 **Beispiel § 1626 BGB (elterliche Sorge):** Telos heute: Kindeswohl im Vordergrund (Art. 6 Abs. 2 GG, UN-KRK). Geltungstheorie greift: Die historische Vorstellung von 1900 ist vom Wandel des Familienbilds und der Grundrechtsdogmatik ueberholt.
 
-## Schritt-fuer-Schritt
+## Schritt-für-Schritt
 
 1. **Norm und Tatbestandsmerkmal benennen.** Welches Merkmal genau ist teleologisch streitig?
 2. **Schutzzweck der Norm formulieren.** Wen oder was schuetzt die Norm? In welcher Weise?
@@ -71,17 +77,6 @@ BGH-Linie: vermittelnd, gestuetzt auf den "objektivierten Willen des Gesetzgeber
 Kritik aus der Begriffsjurisprudenz (Puchta, Windscheid): Zweck ist beliebig; nur die Begriffe sind objektiv. Diese Kritik ist heute weitgehend ueberholt, behaelt aber den Hinweis auf die Notwendigkeit, den Zweck konkret zu begruenden.
 
 Kritik aus der Topik (Viehweg): Die teleologische Argumentation ist ein Topos im Diskurs, kein Erkenntnisinstrument. Die Wahrheit liegt im Konsens der Juristen, nicht im "wahren" Zweck.
-
-## Querverweise
-
-- `savigny-vier-auslegungsmethoden` — Einordnung in den Kanon.
-- `wortlaut-grammatikalische-auslegung` — vorgelagert.
-- `systematische-auslegung` — vorgelagert.
-- `historische-auslegung` — Quelle der Telos-Bestimmung.
-- `analogie-und-teleologische-reduktion` — wenn Telos jenseits oder gegen den Wortlaut wirkt.
-- `verfassungs-und-unionsrechtskonforme-auslegung` — Rueckbindung an Verfassungswerte und Unionsrecht.
-- `interessenjurisprudenz-heck` — historische Wurzel der Telos-Lehre.
-- `wertungsjurisprudenz-larenz-canaris` — moderne Verankerung.
 
 ## Quellen und Stand 05/2026
 

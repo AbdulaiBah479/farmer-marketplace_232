@@ -1,469 +1,177 @@
 ---
-name: Asana Automation
-description: Automate Asana project management workflows, task tracking, team collaboration, and reporting
-version: 1.0.0
-author: Claude Office Skills
+name: asana-automation
+description: "Automate Asana tasks via Rube MCP (Composio): tasks, projects, sections, teams, workspaces. Always search tools first for current schemas."
+requires:
+  mcp: [rube]
 category: project-management
-tags:
-  - asana
-  - tasks
-  - project-management
-  - collaboration
-  - automation
-department: operations
-models:
-  - claude-3-opus
-  - claude-3-sonnet
-  - gpt-4
-mcp:
-  server: project-mcp
-  tools:
-    - asana_create_task
-    - asana_update_task
-    - asana_search
-    - asana_sections
-capabilities:
-  - Task creation and management
-  - Project automation
-  - Team workload tracking
-  - Custom field workflows
-input:
-  - Task details
-  - Project configurations
-  - Workflow rules
-  - Team assignments
-output:
-  - Created/updated tasks
-  - Project reports
-  - Workload views
-  - Timeline updates
-languages:
-  - en
-related_skills:
-  - jira-automation
-  - monday-automation
-  - notion-automation
 ---
 
-# Asana Automation
+# Asana Automation via Rube MCP
 
-Comprehensive skill for automating Asana project management and team collaboration.
+Automate Asana operations through Composio's Asana toolkit via Rube MCP.
+
+**Toolkit docs**: [composio.dev/toolkits/asana](https://composio.dev/toolkits/asana)
+
+## Prerequisites
+
+- Rube MCP must be connected (RUBE_SEARCH_TOOLS available)
+- Active Asana connection via `RUBE_MANAGE_CONNECTIONS` with toolkit `asana`
+- Always call `RUBE_SEARCH_TOOLS` first to get current tool schemas
+
+## Setup
+
+**Get Rube MCP**: Add `https://rube.app/mcp` as an MCP server in your client configuration. No API keys needed — just add the endpoint and it works.
+
+
+1. Verify Rube MCP is available by confirming `RUBE_SEARCH_TOOLS` responds
+2. Call `RUBE_MANAGE_CONNECTIONS` with toolkit `asana`
+3. If connection is not ACTIVE, follow the returned auth link to complete Asana OAuth
+4. Confirm connection status shows ACTIVE before running any workflows
 
 ## Core Workflows
 
-### 1. Task Management Pipeline
+### 1. Manage Tasks
 
+**When to use**: User wants to create, search, list, or organize tasks
+
+**Tool sequence**:
+1. `ASANA_GET_MULTIPLE_WORKSPACES` - Get workspace ID [Prerequisite]
+2. `ASANA_SEARCH_TASKS_IN_WORKSPACE` - Search tasks [Optional]
+3. `ASANA_GET_TASKS_FROM_A_PROJECT` - List project tasks [Optional]
+4. `ASANA_CREATE_A_TASK` - Create a new task [Optional]
+5. `ASANA_GET_A_TASK` - Get task details [Optional]
+6. `ASANA_CREATE_SUBTASK` - Create a subtask [Optional]
+7. `ASANA_GET_TASK_SUBTASKS` - List subtasks [Optional]
+
+**Key parameters**:
+- `workspace`: Workspace GID (required for search/creation)
+- `projects`: Array of project GIDs to add task to
+- `name`: Task name
+- `notes`: Task description
+- `assignee`: Assignee (user GID or email)
+- `due_on`: Due date (YYYY-MM-DD)
+
+**Pitfalls**:
+- Workspace GID is required for most operations; get it first
+- Task GIDs are returned as strings, not integers
+- Search is workspace-scoped, not project-scoped
+
+### 2. Manage Projects and Sections
+
+**When to use**: User wants to create projects, manage sections, or organize tasks
+
+**Tool sequence**:
+1. `ASANA_GET_WORKSPACE_PROJECTS` - List workspace projects [Optional]
+2. `ASANA_GET_A_PROJECT` - Get project details [Optional]
+3. `ASANA_CREATE_A_PROJECT` - Create a new project [Optional]
+4. `ASANA_GET_SECTIONS_IN_PROJECT` - List sections [Optional]
+5. `ASANA_CREATE_SECTION_IN_PROJECT` - Create a new section [Optional]
+6. `ASANA_ADD_TASK_TO_SECTION` - Move task to section [Optional]
+7. `ASANA_GET_TASKS_FROM_A_SECTION` - List tasks in section [Optional]
+
+**Key parameters**:
+- `project_gid`: Project GID
+- `name`: Project or section name
+- `workspace`: Workspace GID for creation
+- `task`: Task GID for section assignment
+- `section`: Section GID
+
+**Pitfalls**:
+- Projects belong to workspaces; workspace GID is needed for creation
+- Sections are ordered within a project
+- DUPLICATE_PROJECT creates a copy with optional task inclusion
+
+### 3. Manage Teams and Users
+
+**When to use**: User wants to list teams, team members, or workspace users
+
+**Tool sequence**:
+1. `ASANA_GET_TEAMS_IN_WORKSPACE` - List workspace teams [Optional]
+2. `ASANA_GET_USERS_FOR_TEAM` - List team members [Optional]
+3. `ASANA_GET_USERS_FOR_WORKSPACE` - List all workspace users [Optional]
+4. `ASANA_GET_CURRENT_USER` - Get authenticated user [Optional]
+5. `ASANA_GET_MULTIPLE_USERS` - Get multiple user details [Optional]
+
+**Key parameters**:
+- `workspace_gid`: Workspace GID
+- `team_gid`: Team GID
+
+**Pitfalls**:
+- Users are workspace-scoped
+- Team membership requires the team GID
+
+### 4. Parallel Operations
+
+**When to use**: User needs to perform bulk operations efficiently
+
+**Tool sequence**:
+1. `ASANA_SUBMIT_PARALLEL_REQUESTS` - Execute multiple API calls in parallel [Required]
+
+**Key parameters**:
+- `actions`: Array of action objects with method, path, and data
+
+**Pitfalls**:
+- Each action must be a valid Asana API call
+- Failed individual requests do not roll back successful ones
+
+## Common Patterns
+
+### ID Resolution
+
+**Workspace name -> GID**:
 ```
-TASK LIFECYCLE:
-┌─────────────────┐
-│   New Request   │
-└────────┬────────┘
-         ▼
-┌─────────────────┐
-│   Triage &      │
-│   Prioritize    │
-└────────┬────────┘
-         ▼
-┌─────────────────┐
-│   Assign &      │
-│   Schedule      │
-└────────┬────────┘
-         ▼
-┌─────────────────┐
-│   In Progress   │
-└────────┬────────┘
-         ▼
-┌─────────────────┐
-│   Review        │
-└────────┬────────┘
-         ▼
-┌─────────────────┐
-│   Complete      │
-└─────────────────┘
-```
-
-### 2. Automation Rules
-
-```yaml
-automation_rules:
-  - name: auto_assign_by_section
-    trigger:
-      type: task_moved_to_section
-      section: "Design"
-    action:
-      assign_to: "design_team"
-      add_followers: ["design_lead"]
-      set_custom_field:
-        Department: "Design"
-
-  - name: due_date_reminder
-    trigger:
-      type: due_date_approaching
-      days_before: 2
-    action:
-      add_comment: "@{{assignee}} Reminder: This task is due in 2 days"
-      add_to_project: "Due This Week"
-
-  - name: completion_notification
-    trigger:
-      type: task_completed
-    action:
-      notify_followers: true
-      move_to_section: "Done"
-      add_comment: "✅ Completed on {{completion_date}}"
-
-  - name: subtask_creation
-    trigger:
-      type: task_added_to_project
-      project: "New Features"
-    action:
-      add_subtasks:
-        - "Requirements gathering"
-        - "Design mockups"
-        - "Development"
-        - "Testing"
-        - "Documentation"
-```
-
-## Project Templates
-
-### Feature Launch Template
-
-```yaml
-project_template:
-  name: "Feature Launch - {{feature_name}}"
-  team: "Product"
-  
-  sections:
-    - name: "Planning"
-      tasks:
-        - name: "Define requirements"
-          assignee: "product_manager"
-          subtasks:
-            - "User stories"
-            - "Acceptance criteria"
-            - "Success metrics"
-        - name: "Technical spec"
-          assignee: "tech_lead"
-          
-    - name: "Design"
-      tasks:
-        - name: "UX research"
-          duration: 5
-        - name: "Wireframes"
-          duration: 3
-        - name: "Visual design"
-          duration: 5
-          
-    - name: "Development"
-      tasks:
-        - name: "Backend implementation"
-          duration: 10
-        - name: "Frontend implementation"
-          duration: 10
-        - name: "API integration"
-          duration: 5
-          
-    - name: "Testing"
-      tasks:
-        - name: "QA testing"
-          duration: 5
-        - name: "Bug fixes"
-          duration: 3
-        - name: "UAT"
-          duration: 3
-          
-    - name: "Launch"
-      tasks:
-        - name: "Documentation"
-          duration: 3
-        - name: "Marketing materials"
-          duration: 5
-        - name: "Release notes"
-          duration: 1
-        - name: "Go live"
-          milestone: true
+1. Call ASANA_GET_MULTIPLE_WORKSPACES
+2. Find workspace by name
+3. Extract gid field
 ```
 
-### Sprint Template
-
-```yaml
-sprint_template:
-  name: "Sprint {{number}} - {{dates}}"
-  
-  sections:
-    - "Backlog"
-    - "To Do"
-    - "In Progress"
-    - "Review"
-    - "Done"
-    
-  custom_fields:
-    - name: "Story Points"
-      type: number
-    - name: "Priority"
-      type: dropdown
-      options: ["P0", "P1", "P2", "P3"]
-    - name: "Type"
-      type: dropdown
-      options: ["Feature", "Bug", "Tech Debt", "Research"]
+**Project name -> GID**:
+```
+1. Call ASANA_GET_WORKSPACE_PROJECTS with workspace GID
+2. Find project by name
+3. Extract gid field
 ```
 
-## Custom Fields
+### Pagination
 
-### Field Configurations
+- Asana uses cursor-based pagination with `offset` parameter
+- Check for `next_page` in response
+- Pass `offset` from `next_page.offset` for next request
 
-```yaml
-custom_fields:
-  - name: Priority
-    type: dropdown
-    options:
-      - name: "🔴 Urgent"
-        color: red
-      - name: "🟠 High"
-        color: orange
-      - name: "🟡 Medium"
-        color: yellow
-      - name: "🟢 Low"
-        color: green
-    
-  - name: Status
-    type: dropdown
-    options:
-      - "Not Started"
-      - "In Progress"
-      - "Blocked"
-      - "In Review"
-      - "Complete"
-    
-  - name: Estimated Hours
-    type: number
-    precision: 1
-    
-  - name: Department
-    type: dropdown
-    options:
-      - "Engineering"
-      - "Design"
-      - "Marketing"
-      - "Sales"
-      - "Operations"
-    
-  - name: Due Week
-    type: date
-    format: week
-```
+## Known Pitfalls
 
-## Workload Management
+**GID Format**:
+- All Asana IDs are strings (GIDs), not integers
+- GIDs are globally unique identifiers
 
-### Team Capacity
+**Workspace Scoping**:
+- Most operations require a workspace context
+- Tasks, projects, and users are workspace-scoped
 
-```
-TEAM WORKLOAD - THIS WEEK
-═══════════════════════════════════════
+## Quick Reference
 
-Sarah (Designer)
-██████████████████░░ 85% | 8 tasks
-Capacity: 40 hrs | Assigned: 34 hrs
+| Task | Tool Slug | Key Params |
+|------|-----------|------------|
+| List workspaces | ASANA_GET_MULTIPLE_WORKSPACES | (none) |
+| Search tasks | ASANA_SEARCH_TASKS_IN_WORKSPACE | workspace, text |
+| Create task | ASANA_CREATE_A_TASK | workspace, name, projects |
+| Get task | ASANA_GET_A_TASK | task_gid |
+| Create subtask | ASANA_CREATE_SUBTASK | parent, name |
+| List subtasks | ASANA_GET_TASK_SUBTASKS | task_gid |
+| Project tasks | ASANA_GET_TASKS_FROM_A_PROJECT | project_gid |
+| List projects | ASANA_GET_WORKSPACE_PROJECTS | workspace |
+| Create project | ASANA_CREATE_A_PROJECT | workspace, name |
+| Get project | ASANA_GET_A_PROJECT | project_gid |
+| Duplicate project | ASANA_DUPLICATE_PROJECT | project_gid |
+| List sections | ASANA_GET_SECTIONS_IN_PROJECT | project_gid |
+| Create section | ASANA_CREATE_SECTION_IN_PROJECT | project_gid, name |
+| Add to section | ASANA_ADD_TASK_TO_SECTION | section, task |
+| Section tasks | ASANA_GET_TASKS_FROM_A_SECTION | section_gid |
+| List teams | ASANA_GET_TEAMS_IN_WORKSPACE | workspace_gid |
+| Team members | ASANA_GET_USERS_FOR_TEAM | team_gid |
+| Workspace users | ASANA_GET_USERS_FOR_WORKSPACE | workspace_gid |
+| Current user | ASANA_GET_CURRENT_USER | (none) |
+| Parallel requests | ASANA_SUBMIT_PARALLEL_REQUESTS | actions |
 
-Mike (Engineer)
-████████████████░░░░ 78% | 12 tasks
-Capacity: 40 hrs | Assigned: 31 hrs
-
-Lisa (PM)
-██████████████████████ 110% ⚠️ | 15 tasks
-Capacity: 40 hrs | Assigned: 44 hrs
-
-REBALANCING SUGGESTIONS:
-• Move "API docs" from Lisa to Mike
-• Extend deadline for "Research report"
-• Add resources to "Launch prep"
-```
-
-### Timeline View
-
-```yaml
-timeline_config:
-  view: gantt
-  date_range: "this_quarter"
-  
-  grouping: 
-    primary: project
-    secondary: assignee
-    
-  milestones:
-    show: true
-    style: diamond
-    
-  dependencies:
-    show: true
-    type: finish_to_start
-    
-  color_by: custom_field.priority
-```
-
-## Forms & Intake
-
-### Request Form
-
-```yaml
-intake_form:
-  name: "Work Request"
-  project: "Incoming Requests"
-  
-  fields:
-    - name: "Request Title"
-      type: single_line
-      required: true
-      
-    - name: "Description"
-      type: multi_line
-      required: true
-      
-    - name: "Request Type"
-      type: dropdown
-      options:
-        - "New Feature"
-        - "Bug Fix"
-        - "Content Update"
-        - "Design Request"
-      required: true
-      
-    - name: "Priority"
-      type: dropdown
-      options: ["Low", "Medium", "High", "Urgent"]
-      required: true
-      
-    - name: "Due Date"
-      type: date
-      required: false
-      
-    - name: "Attachments"
-      type: attachment
-      
-  routing:
-    - condition:
-        field: "Request Type"
-        equals: "Design Request"
-      action:
-        assign_to: "design_team"
-        add_to_project: "Design Requests"
-```
-
-## Reporting
-
-### Portfolio Dashboard
-
-```
-PROJECT PORTFOLIO STATUS
-═══════════════════════════════════════
-
-Active Projects: 12
-On Track: 8 (67%)
-At Risk: 3 (25%)
-Off Track: 1 (8%)
-
-BY STATUS:
-┌────────────────────┬────────┬─────────┐
-│ Project            │ Status │ % Done  │
-├────────────────────┼────────┼─────────┤
-│ Website Redesign   │ 🟢     │ 78%     │
-│ Mobile App v2      │ 🟡     │ 45%     │
-│ CRM Integration    │ 🟢     │ 92%     │
-│ Q2 Marketing       │ 🔴     │ 23%     │
-│ Security Audit     │ 🟢     │ 65%     │
-└────────────────────┴────────┴─────────┘
-
-UPCOMING MILESTONES:
-• Jan 25: Website Beta Launch
-• Jan 30: Mobile App QA Complete
-• Feb 5: CRM Go-Live
-```
-
-### Team Metrics
-
-```yaml
-reports:
-  - name: "Weekly Team Report"
-    metrics:
-      - tasks_completed
-      - tasks_created
-      - overdue_tasks
-      - completion_rate
-    group_by: assignee
-    period: last_7_days
-    
-  - name: "Project Progress"
-    metrics:
-      - total_tasks
-      - completed_percentage
-      - days_remaining
-      - blockers_count
-    group_by: project
-    
-  - name: "Burnup Chart"
-    type: chart
-    x_axis: date
-    y_axis:
-      - total_scope
-      - completed_tasks
-    period: current_sprint
-```
-
-## Integration Workflows
-
-### Slack Integration
-
-```yaml
-slack_integration:
-  notifications:
-    - trigger: task_assigned_to_me
-      channel: dm
-      message: "📋 New task assigned: {{task.name}}"
-      
-    - trigger: task_completed
-      channel: "#team-updates"
-      message: "✅ {{user}} completed: {{task.name}}"
-      
-    - trigger: comment_added
-      channel: dm
-      message: "💬 New comment on {{task.name}}"
-      
-  commands:
-    /asana:
-      - create_task
-      - list_my_tasks
-      - mark_complete
-```
-
-### GitHub Integration
-
-```yaml
-github_integration:
-  sync_rules:
-    - github_event: issue_opened
-      asana_action:
-        create_task:
-          project: "GitHub Issues"
-          name: "{{issue.title}}"
-          description: "{{issue.body}}"
-          custom_fields:
-            GitHub_Issue: "{{issue.number}}"
-            
-    - github_event: pr_merged
-      asana_action:
-        complete_task:
-          match_field: "GitHub_PR"
-          value: "{{pr.number}}"
-```
-
-## Best Practices
-
-1. **Clear Task Names**: Use action verbs, be specific
-2. **Single Assignee**: One person accountable per task
-3. **Due Dates**: Always set realistic deadlines
-4. **Subtasks**: Break complex work into smaller pieces
-5. **Custom Fields**: Use consistently across projects
-6. **Templates**: Create reusable project structures
-7. **Regular Reviews**: Weekly project check-ins
-8. **Archive Completed**: Keep workspace organized
+---
+*Powered by [Composio](https://composio.dev)*

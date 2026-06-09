@@ -1,210 +1,86 @@
 ---
 name: test-scenarios
-description: >
-  Generate complete test scenario coverage from a feature spec: happy
-  paths, edge cases, error handling, accessibility, security, and
-  performance scenarios. Includes a coverage analyzer that flags
-  gaps before QA writes the test plan. Distinct from automated test
-  generation — this is the WHAT to test before HOW.
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: borghei
-  category: project-management
-  domain: execution
-  updated: 2026-05-27
-  python-tools: test_scenario_generator.py
-  tech-stack: test-scenarios, qa, edge-cases, acceptance-criteria
+description: "Create comprehensive test scenarios from user stories with test objectives, starting conditions, user roles, step-by-step actions, and expected outcomes. Use when writing QA test cases, creating test plans, defining acceptance tests, or preparing for feature validation."
 ---
-
 # Test Scenarios
 
-Generate complete scenario coverage from a feature spec before tests
-are written. Closes the gap between "we built it" and "it survives
-production."
+Create comprehensive test scenarios from user stories with test objectives, starting conditions, user roles, step-by-step test actions, and expected outcomes.
 
-## When to use this skill
+**Use when:** Writing QA test cases, creating test plans, defining acceptance test scenarios, or validating user story implementations.
 
-- After **PRD approval** but before engineering implementation
-- During **sprint planning** to size testing effort
-- During **code review** to verify test coverage
-- During **QA planning** to scope test pass
-- During **bug-bash** prep
-- After a **production incident** to validate scenario gaps
+**Arguments:**
+- `$PRODUCT`: The product or system name
+- `$USER_STORY`: The user story to test (title and acceptance criteria)
+- `$CONTEXT`: Additional testing context or constraints
 
-## The 7 scenario categories
+## Step-by-Step Process
 
-For every feature, generate scenarios across:
+1. **Review the user story** and acceptance criteria
+2. **Define test objectives** - What specific behavior to validate
+3. **Establish starting conditions** - System state, data setup, configurations
+4. **Identify user roles** - Who performs the test actions
+5. **Create test steps** - Break down interactions step-by-step
+6. **Define expected outcomes** - Observable results after each step
+7. **Consider edge cases** - Invalid inputs, boundary conditions
+8. **Output detailed test scenarios** - Ready for QA execution
 
-1. **Happy paths** — primary user goals achieved cleanly
-2. **Edge cases** — boundary conditions, unusual inputs
-3. **Error handling** — what users see when things go wrong
-4. **Empty states** — first-use, no data, after-delete
-5. **Concurrent operations** — race conditions, optimistic locking
-6. **Accessibility** — keyboard nav, screen reader, contrast, motion
-7. **Security + privacy** — auth, permissions, PII, injection
+## Scenario Template
 
-Plus when applicable:
-- Performance scenarios (load, latency, throughput)
-- Localization (RTL, long-string, currency, date format)
-- Cross-platform (browsers, devices, OS versions)
+**Test Scenario:** [Clear scenario name]
 
-## Workflow
+**Test Objective:** [What this test validates]
 
-### Step 1 — Spec read
-Read the PRD / user story / acceptance criteria. Identify:
-- User goals (what they want to do)
-- Inputs (what they provide)
-- Outputs (what they expect)
-- Side effects (what changes in the system)
+**Starting Conditions:**
+- [System state required]
+- [Data or configuration needed]
+- [User setup or permissions]
 
-### Step 2 — Happy path
-For each user goal, write the primary flow:
-- Preconditions
-- Steps
-- Expected result
+**User Role:** [Who performs the test]
 
-Aim for 1-3 happy paths per feature.
+**Test Steps:**
+1. [First action and its expected result]
+2. [Second action and observable outcome]
+3. [Third action and system behavior]
+4. [Completion action and final state]
 
-### Step 3 — Edge cases
-For each input, ask:
-- What's the empty value?
-- What's the minimum?
-- What's the maximum?
-- What's just below min / just above max?
-- What's the wrong type?
-- What's the weird-but-valid (very long, special chars, Unicode, emoji)?
+**Expected Outcomes:**
+- [Observable result 1]
+- [Observable result 2]
+- [Observable result 3]
 
-### Step 4 — Error handling
-For each failure mode:
-- Network failure
-- Server error (5xx)
-- Validation error (4xx)
-- Timeout
-- Concurrent modification
-- Auth expired / lost
+## Example Test Scenario
 
-For each: what does the user see? Recover-from / try-again UX?
+**Test Scenario:** View Recently Viewed Products on Product Page
 
-### Step 5 — Empty / first-use / after-action states
-- First use (no data)
-- After delete (last item)
-- After error (partial state)
-- After timeout
-- After cancel
+**Test Objective:** Verify that the 'Recently viewed' section displays correctly and excludes the current product.
 
-### Step 6 — Concurrent / race scenarios
-Two users simultaneously:
-- Editing same record
-- Triggering same action
-- Submitting same form
-- Reaching capacity limit
+**Starting Conditions:**
+- User is logged in or has browser history enabled
+- User has viewed at least 2 products in the current session
+- User is now on a product page different from previously viewed items
 
-### Step 7 — Accessibility
-- Tab through with keyboard
-- Use with screen reader
-- High contrast / inverted colors
-- Reduced motion preference
-- Large text scaling
-- Voice control
+**User Role:** Online Shopper
 
-### Step 8 — Security + privacy
-- Logged out user accesses
-- Unauthorized user accesses
-- Permission downgrade mid-action
-- PII handling
-- Injection attempts (XSS, SQLi)
-- Rate limiting
+**Test Steps:**
+1. Navigate to any product page → Section should appear at bottom with previously viewed items
+2. Scroll to bottom of page → "Recently viewed" section is visible with product cards
+3. Verify product thumbnails → Images, titles, and prices are displayed correctly
+4. Check current product → Current product is NOT in the recently viewed list
+5. Click on a product card → User navigates to the corresponding product page
 
-### Step 9 — Run `test_scenario_generator.py`
-Audit a candidate scenario list for category coverage; flag gaps.
+**Expected Outcomes:**
+- Recently viewed section appears only after viewing at least 1 prior product
+- Section displays 4-8 product cards with complete information
+- Current product is excluded from the list
+- Each card shows "Viewed X minutes/hours ago" timestamp
+- Clicking cards navigates to correct product pages
+- Performance: Section loads within 2 seconds
 
-```bash
-python3 project-management/execution/test-scenarios/scripts/test_scenario_generator.py \
-  --input feature_spec.json --format markdown
-```
+## Output Deliverables
 
-## Decision frameworks
-
-### How many scenarios per category?
-
-| Feature type | Happy | Edge | Error | Empty | Concur | A11y | Security |
-|--------------|-------|------|-------|-------|--------|------|----------|
-| Form / submission | 1-3 | 4-8 | 4-6 | 2 | 1-2 | 4 | 3-5 |
-| Browse / list | 2-3 | 3-5 | 2-3 | 2-3 | 1 | 3 | 2 |
-| Real-time / collab | 3 | 4-6 | 4-6 | 2 | 4-6 (essential) | 3 | 3 |
-| File upload | 2 | 6-10 (sizes/types) | 4-6 | 1 | 1-2 | 2 | 5+ (file abuse) |
-| Payment / financial | 3 | 6-10 | 8+ (critical) | 2 | 4-6 (idempotency!) | 3 | 8+ |
-| Bulk operation | 2 | 4-6 (sizes) | 4-6 | 1 | 2-4 (partial fail) | 2 | 3 |
-
-Adjust for risk profile of the specific feature.
-
-### Risk-weighted scenario selection
-
-Not all scenarios need full QA coverage. Apply:
-- **Happy path:** always test
-- **Edge cases:** test those that matter (likelihood × severity)
-- **Error handling:** test all paths that user can recover from
-- **Empty state:** always test (first impression!)
-- **Concurrent:** test for data-integrity-critical features
-- **Accessibility:** baseline coverage on all UI; full coverage on user-facing
-- **Security:** scale with sensitivity (full coverage on auth/payment)
-
-### Manual vs automated
-
-| Scenario type | Default |
-|----------------|---------|
-| Happy path | Automated (E2E or integration) |
-| Edge cases (input validation) | Unit tests |
-| Error handling | Mix (mocked errors in unit; real in integration) |
-| Empty state | Visual regression + manual |
-| Concurrent | Hard — usually manual + targeted integration |
-| Accessibility | Automated (axe-core) + manual screen-reader |
-| Security | SAST + DAST + manual review for critical paths |
-| Performance | Automated load tests |
-| Localization | Pseudo-localization + manual spot-check |
-
-## Common engagements
-
-### "Generate test scenarios for this new feature"
-1. Read the PRD / spec.
-2. Apply the 7 categories.
-3. Generate scenarios; estimate count per category.
-4. Run validator; address gaps.
-5. Hand to QA for implementation.
-
-### "Audit our test plan for completeness"
-1. Categorize existing scenarios.
-2. Identify under-covered categories.
-3. Score by risk × likelihood.
-4. Recommend additions.
-
-### "Post-incident scenario gap analysis"
-1. Pull the incident scenario.
-2. Map: which category was missed?
-3. Add scenario; verify regression coverage.
-4. Update default-coverage rubric for that feature type.
-
-## Anti-patterns to avoid
-
-- **Only happy paths.** Production fails on edges; you skipped them.
-- **No empty state.** First-use is broken.
-- **"QA will figure it out."** No, QA tests what's specified.
-- **Generic acceptance criteria.** "Should work" is not testable.
-- **No accessibility scenarios.** Excludes users; fails compliance.
-- **No security scenarios.** Vulnerable paths ship.
-- **No performance scenarios for performance-sensitive features.** Surprise at scale.
-- **Skipping concurrent for collaborative features.** Race conditions ship.
-
-## References
-
-- `references/scenario-categories.md` — deep on the 7+ categories with examples
-- `references/coverage-anti-patterns.md` — common gaps + fixes
-
-## Related skills
-
-- `project-management/execution/create-prd` — upstream spec
-- `project-management/execution/wwas` — acceptance criteria
-- `engineering/senior-qa` — implementation
-- `engineering/code-reviewer` — review coverage
-- `product-team/spec-to-repo` — translating spec to tickets
+- Comprehensive test scenarios for each acceptance criterion
+- Clear test objectives aligned with user story intent
+- Detailed step-by-step test actions
+- Observable expected outcomes after each step
+- Edge case and error scenario coverage
+- Ready for QA team execution and documentation

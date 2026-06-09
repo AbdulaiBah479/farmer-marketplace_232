@@ -1,87 +1,68 @@
 ---
 name: creative-director
-description: Use when overseeing animation vision, setting creative direction for motion, or guiding teams on animation quality and consistency.
+description: |
+  AI creative director with recursive self-assessment: 20+ methodologies (SIT, TRIZ, Bisociation, SCAMPER, Synectics), 3-axis evaluation calibrated against Cannes/D&AD/HumanKind, 5-phase process from brief to presentation.
+triggers:
+  - "creative director"
+  - "campaign concept"
+  - "creative critique"
+  - "cannes review"
+  - "scamper"
+od:
+  mode: design-system
+  category: creative-direction
+  upstream: "https://github.com/smixs/creative-director-skill"
 ---
 
-# Creative Director: Animation Vision & Leadership
+# creative-director
 
-You are a creative director setting vision and standards for animation across projects. Apply Disney's 12 principles to lead teams toward excellent motion design.
+> Curated from @smixs.
 
-## The 12 Principles for Creative Leadership
+## What it does
 
-### 1. Squash and Stretch
-**Creative Direction**: Define the elasticity range for your project. How much life do we give objects? What's our physics reality?
-**Vision Question**: "On a spectrum from rigid to rubbery, where does our world live?"
+AI creative director with recursive self-assessment: 20+ methodologies (SIT, TRIZ, Bisociation, SCAMPER, Synectics), 3-axis evaluation calibrated against Cannes/D&AD/HumanKind, 5-phase process from brief to presentation.
 
-### 2. Anticipation
-**Creative Direction**: Establish anticipation as a pacing tool. Are we building tension or moving quickly? Anticipation is your dramatic control.
-**Vision Question**: "Do we let moments breathe, or do we punch through?"
+## Open Design orchestration mode
 
-### 3. Staging
-**Creative Direction**: Visual hierarchy is storytelling. Review compositions for clarity. If staging requires explanation, it's not working.
-**Vision Question**: "Does the eye know where to go? Does the motion tell the story?"
+When this skill is invoked inside Open Design, treat it as the design-flow
+director, not as a single polish checklist.
 
-### 4. Straight Ahead vs Pose to Pose
-**Creative Direction**: Production approach impacts feel. Commission straight ahead for organic warmth, pose to pose for controlled precision.
-**Vision Question**: "What production approach serves this creative vision?"
+1. Define what "good-looking" means before changing pixels: audience, product
+   goal, brand posture, style references, information density, typography,
+   palette, motion tone, asset needs, and explicit anti-patterns such as
+   generic AI gradients, empty cards, vague copy, and template symmetry.
+2. Inspect the current target: HTML/page element, browser tab, design file,
+   active design system, attached image, or project folder.
+3. Search across every available Open Design resource, not only this skill:
+   skills, plugins, MCP servers and templates, connected connectors, design
+   files, active browser/context, and user-provided assets.
+4. Match resources into a staged workflow. Typical lanes are critique,
+   style-direction selection, visual asset generation, motion, data/proof
+   grounding, implementation polish, responsive/accessibility hardening, and
+   final verification.
+5. When the design target or aesthetic bar is ambiguous, present a small
+   guided UI-style choice set or form with a recommended default. Continue the
+   workflow after the choice instead of stopping at a generic question.
+6. If the best resource is not configured yet, explain why it is needed and
+   guide setup; otherwise use the closest configured alternative and mark the
+   tradeoff.
 
-### 5. Follow Through and Overlapping Action
-**Creative Direction**: Follow-through is where craft shows. This is the layer that separates amateur from professional. Invest here.
-**Vision Question**: "Have we earned the details? Does the craft match the ambition?"
+## Source
 
-### 6. Slow In and Slow Out
-**Creative Direction**: Easing is the signature. Define your curves and protect them. Inconsistent easing breaks the world.
-**Vision Question**: "What does our motion feel like? Do we have a recognizable rhythm?"
+- Upstream: https://github.com/smixs/creative-director-skill
+- Category: `creative-direction`
 
-### 7. Arc
-**Creative Direction**: Movement paths define spatial philosophy. Organic worlds arc. Mechanical worlds line. Establish the rule, then break it intentionally.
-**Vision Question**: "What kind of space are we creating? How do things move through it?"
+## How to use
 
-### 8. Secondary Action
-**Creative Direction**: The delight layer. This is where personality lives. Allocate time for secondary action—it's not polish, it's character.
-**Vision Question**: "What small moments will make people love this?"
+This catalogue entry advertises the skill in Open Design so the agent
+discovers it during planning. To run the full upstream workflow with
+its original assets, scripts, and references, install the upstream
+bundle into your active agent's skills directory:
 
-### 9. Timing
-**Creative Direction**: Timing is tone. Fast and snappy vs slow and weighty. Establish timing frameworks early—retrofitting timing is expensive.
-**Vision Question**: "What's the tempo of this experience?"
+```bash
+# Inspect the upstream README for exact paths
+open https://github.com/smixs/creative-director-skill
+```
 
-### 10. Exaggeration
-**Creative Direction**: Exaggeration calibration sets genre. Too little = boring. Too much = cartoon. Find your specific sweet spot.
-**Vision Question**: "How stylized is our reality? Where's our line?"
-
-### 11. Solid Drawing
-**Creative Direction**: Spatial coherence across all animation. Different animators must produce consistent spatial logic. Define the rules.
-**Vision Question**: "Would animation from different artists feel like one world?"
-
-### 12. Appeal
-**Creative Direction**: The sum of all principles. Appeal is the emotional response to everything working together. This is what you're ultimately responsible for.
-**Vision Question**: "Do people want to keep watching? Does it feel like us?"
-
-## Leadership Responsibilities
-
-### Vision Setting
-- Create motion mood boards and reference libraries
-- Define the "feel" in communicable terms
-- Make early animation tests before full production
-
-### Quality Standards
-- Establish review checkpoints
-- Create do/don't reference guides
-- Define minimum quality thresholds
-
-### Team Guidance
-- Protect animator creative ownership within bounds
-- Balance consistency with individual expression
-- Know when to push and when to accept
-
-### Stakeholder Communication
-- Translate animation quality to business value
-- Defend craft time in production schedules
-- Present work in context of vision
-
-## Review Checklist
-
-- Does it match the established motion language?
-- Does it serve the story/user need?
-- Is the craft level consistent with project standards?
-- Would I put my name on this?
+Then ask the agent to invoke this skill by name (`creative-director`) or with
+one of the trigger phrases listed in this skill's frontmatter.

@@ -1,13 +1,28 @@
 ---
 name: on-call-handoff-patterns
-description: Master on-call shift handoffs with context transfer, escalation procedures, and documentation. Use when transitioning on-call responsibilities, documenting shift summaries, or improving on-call processes.
+description: "Effective patterns for on-call shift transitions, ensuring continuity, context transfer, and reliable incident response across shifts."
+risk: unknown
+source: community
+date_added: "2026-02-27"
 ---
 
 # On-Call Handoff Patterns
 
 Effective patterns for on-call shift transitions, ensuring continuity, context transfer, and reliable incident response across shifts.
 
-## When to Use This Skill
+## Do not use this skill when
+
+- The task is unrelated to on-call handoff patterns
+- You need a different domain or tool outside this scope
+
+## Instructions
+
+- Clarify goals, constraints, and required inputs.
+- Apply relevant best practices and validate outcomes.
+- Provide actionable steps and verification.
+- If detailed examples are required, open `resources/implementation-playbook.md`.
+
+## Use this skill when
 
 - Transitioning on-call responsibilities
 - Writing shift handoff summaries
@@ -439,3 +454,8 @@ I'll be available on Slack until 17:00 today.
 - [Google SRE - Being On-Call](https://sre.google/sre-book/being-on-call/)
 - [PagerDuty On-Call Guide](https://www.pagerduty.com/resources/learn/on-call-management/)
 - [Increment On-Call Issue](https://increment.com/on-call/)
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

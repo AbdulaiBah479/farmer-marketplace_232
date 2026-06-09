@@ -1,274 +1,310 @@
 ---
 name: gemini
-description: Global behavior rules for the workspace.
+argument-hint: "'review', 'challenge', or 'consult' + optional context"
+description: >
+  Cross-model second opinion from Google Gemini — a different AI reviewing the
+  same changes, with deep Google ecosystem knowledge. Three modes: review
+  (pass/fail gate for Google Ads campaigns, SEO metadata, or code), challenge
+  (adversarial stress-test that tries to break your changes), and consult
+  (open Q&A with Gemini on Google Ads strategy, SEO best practices, or
+  implementation questions). Use when the user says "gemini review", "ask
+  gemini", "gemini challenge", "second opinion from gemini", "consult gemini",
+  "stress test with gemini", "what would gemini say", "cross-model review",
+  or "get another opinion". Voice aliases: "gem", "gemini check". Especially
+  useful for Google Ads changes, SEO metadata updates, campaign structure
+  decisions, keyword strategies, and bid/budget changes — Gemini has native
+  Google ecosystem knowledge that complements Claude's analysis.
+triggers:
+  - gemini
+  - gemini review
+  - gemini challenge
+  - gemini consult
+  - ask gemini
+  - second opinion gemini
+  - stress test gemini
+  - gem review
+  - gem consult
 ---
 
-# gemini.md - This kit
+# Gemini — Cross-Model Second Opinion
 
-> This file defines how the AI behaves in this workspace.
+You are orchestrating a cross-model review by launching Google's Gemini CLI as
+an independent reviewer. Gemini brings native Google ecosystem knowledge —
+especially valuable for Google Ads, Search Console, and SEO decisions where
+Google's own AI has deeper context about how their platforms work.
 
----
+**Unlike the code-only review pattern**, this skill handles three types of
+changes:
 
-## CRITICAL: AGENT & SKILL PROTOCOL (START HERE)
-
-> **MANDATORY:** You MUST read the appropriate agent file and its skills BEFORE performing any implementation. This is the highest priority rule.
-
-### 1. Modular Skill Loading Protocol
-
-Agent activated → Check frontmatter "skills:" → Read [SKILL.md](SKILL.md) (INDEX) → Read specific sections.
-
-- **Selective Reading:** DO NOT read ALL files in a skill folder. Read [SKILL.md](SKILL.md) first, then only read sections matching the user's request.
-- **Rule Priority:** P0 (gemini.md) > P1 (Agent .md) > P2 ([SKILL.md](SKILL.md)). All rules are binding.
-
-### 2. Enforcement Protocol
-
-1. **When agent is activated:**
-    - ✅ Activate: Read Rules → Check Frontmatter → Load [SKILL.md](SKILL.md) → Apply All.
-2. **Forbidden:** Never skip reading agent rules or skill instructions. "Read → Understand → Apply" is mandatory.
+1. **Code changes** — diffs, new files, refactors
+2. **Google Ads changes** — campaign structure, bid strategies, keyword lists, negative keywords, ad copy, budget allocation
+3. **SEO metadata changes** — title tags, meta descriptions, schema markup, robots directives, sitemap updates, content rewrites
 
 ---
 
-## 📥 REQUEST CLASSIFIER (STEP 1)
+## Step 0 — Detect Gemini CLI
 
-**Before ANY action, classify the request:**
-
-| Request Type     | Trigger Keywords                           | Active Tiers                   | Result                      |
-| ---------------- | ------------------------------------------ | ------------------------------ | --------------------------- |
-| **QUESTION**     | "what is", "how does", "explain"           | TIER 0 only                    | Text Response               |
-| **SURVEY/INTEL** | "analyze", "list files", "overview"        | TIER 0 + Explorer              | Session Intel (No File)     |
-| **SIMPLE CODE**  | "fix", "add", "change" (single file)       | TIER 0 + TIER 1 (lite)         | Inline Edit                 |
-| **COMPLEX CODE** | "build", "create", "implement", "refactor" | TIER 0 + TIER 1 (full) + Agent | **{task-slug}.md Required** |
-| **DESIGN/UI**    | "design", "UI", "page", "dashboard"        | TIER 0 + TIER 1 + Agent        | **{task-slug}.md Required** |
-| **SLASH CMD**    | /create, /orchestrate, /debug              | Command-specific flow          | Variable                    |
-
----
-
-## 🤖 INTELLIGENT AGENT ROUTING (STEP 2 - AUTO)
-
-**ALWAYS ACTIVE: Before responding to ANY request, automatically analyze and select the best agent(s).**
-
-> 🔴 **MANDATORY:** You MUST follow the protocol defined in `@[skills/intelligent-routing]`.
-
-### Auto-Selection Protocol
-
-1. **Analyze (Silent)**: Detect domains (Frontend, Backend, Security, etc.) from user request.
-2. **Select Agent(s)**: Choose the most appropriate specialist(s).
-3. **Inform User**: Concisely state which expertise is being applied.
-4. **Apply**: Generate response using the selected agent's persona and rules.
-
-### Response Format (MANDATORY)
-
-When auto-applying an agent, inform the user:
-
-```markdown
-🤖 **Applying knowledge of `@[agent-name]`...**
-
-[Continue with specialized response]
+```bash
+command -v gemini >/dev/null 2>&1 && echo "GEMINI_FOUND" || echo "GEMINI_NOT_FOUND"
 ```
 
-**Rules:**
+**If `GEMINI_NOT_FOUND`:** Stop and tell the user:
 
-1. **Silent Analysis**: No verbose meta-commentary ("I am analyzing...").
-2. **Respect Overrides**: If user mentions `@agent`, use it.
-3. **Complex Tasks**: For multi-domain requests, use `orchestrator` and ask Socratic questions first.
+> Gemini CLI is not installed. Install it with:
+>
+> ```
+> npm install -g @google/gemini-cli
+> ```
+>
+> Then run `gemini` once to authenticate with your Google account, and retry.
 
-### ⚠️ AGENT ROUTING CHECKLIST (MANDATORY BEFORE EVERY CODE/DESIGN RESPONSE)
-
-**Before ANY code or design work, you MUST complete this mental checklist:**
-
-| Step | Check | If Unchecked |
-|------|-------|--------------|
-| 1 | Did I identify the correct agent for this domain? | → STOP. Analyze request domain first. |
-| 2 | Did I READ the agent's `.md` file (or recall its rules)? | → STOP. Open the platform agent file |
-| 3 | Did I announce `🤖 Applying knowledge of @[agent]...`? | → STOP. Add announcement before response. |
-| 4 | Did I load required skills from agent's frontmatter? | → STOP. Check `skills:` field and read them. |
-
-**Failure Conditions:**
-
-- ❌ Writing code without identifying an agent = **PROTOCOL VIOLATION**
-- ❌ Skipping the announcement = **USER CANNOT VERIFY AGENT WAS USED**
-- ❌ Ignoring agent-specific rules (e.g., Purple Ban) = **QUALITY FAILURE**
-
-> 🔴 **Self-Check Trigger:** Every time you are about to write code or create UI, ask yourself:
-> "Have I completed the Agent Routing Checklist?" If NO → Complete it first.
+**If `GEMINI_FOUND`:** continue silently.
 
 ---
 
-## TIER 0: UNIVERSAL RULES (Always Active)
+## Step 1 — Detect Mode
 
-### 🌐 Language Handling
+Parse the user's request to determine the mode. Match against these patterns:
 
-When user's prompt is NOT in English:
+| Mode | Trigger phrases |
+|------|----------------|
+| **review** | "review", "check", "look at", "pass/fail", "gate", "approve" |
+| **challenge** | "challenge", "stress test", "break", "adversarial", "find holes", "poke holes" |
+| **consult** | "consult", "ask", "what does gemini think", "opinion", "advice", "strategy" |
 
-1. **Internally translate** for better comprehension
-2. **Respond in user's language** - match their communication
-3. **Code comments/variables** remain in English
+**If ambiguous:** default to **review** for changes that exist in the diff, or
+**consult** if the user is asking a question with no pending changes.
 
-### 🧹 Clean Code (Global Mandatory)
+---
 
-**ALL code MUST follow `@[skills/clean-code]` rules. No exceptions.**
+## Step 2 — Detect Change Type
 
-- **Code**: Concise, direct, no over-engineering. Self-documenting.
-- **Testing**: Mandatory. Pyramid (Unit > Int > E2E) + AAA Pattern.
-- **Performance**: Measure first. Adhere to 2025 standards (Core Web Vitals).
-- **Infra/Safety**: 5-Phase Deployment. Verify secrets security.
+Determine what kind of changes are being reviewed. Check in this order:
 
-### 📁 File Dependency Awareness
+### 2a — Check for Google Ads changes
 
-**Before modifying ANY file:**
+Look for signs of Ads-related work in the current conversation context:
+- Recent MCP tool calls to `mcp__notfair__*` or `mcp__google_ads_mcp__*`
+- Discussion of campaigns, keywords, bids, budgets, ad copy, negative keywords
+- Files like `.notfair/change-log.json` or Ads-related config changes
 
-1. Check `CODEBASE.md` → File Dependencies
-2. Identify dependent files
-3. Update ALL affected files together
+If found, set `CHANGE_TYPE=google-ads`.
 
-### 🗺️ System Map Read
+### 2b — Check for SEO metadata changes
 
-> 🔴 **MANDATORY:** Read `ARCHITECTURE.md` at session start to understand Agents, Skills, and Scripts.
+Look for:
+- Recent calls to SEO skills (seo-analysis, meta-tags-optimizer, schema-markup-generator)
+- Discussion of title tags, meta descriptions, schema markup, robots.txt, sitemaps
+- Content rewrites or keyword targeting changes
+- CMS content updates (Strapi, WordPress, etc.)
 
-**Path Awareness:**
+If found, set `CHANGE_TYPE=seo`.
 
-- Agents: platform `agents/` directory
-- Skills: platform `skills/` directory
-- Runtime Scripts: platform `skills/<skill>/scripts/`
+### 2c — Check for code changes
 
-### 🧠 Read → Understand → Apply
-
-```
-❌ WRONG: Read agent file → Start coding
-✅ CORRECT: Read → Understand WHY → Apply PRINCIPLES → Code
+```bash
+git diff --stat HEAD 2>/dev/null || echo "NO_GIT_DIFF"
 ```
 
-**Before coding, answer:**
+If there's a diff, set `CHANGE_TYPE=code`.
 
-1. What is the GOAL of this agent/skill?
-2. What PRINCIPLES must I apply?
-3. How does this DIFFER from generic output?
+### 2d — Mixed or unclear
 
----
-
-## TIER 1: CODE RULES (When Writing Code)
-
-### 📱 Project Type Routing
-
-| Project Type                           | Primary Agent         | Skills                        |
-| -------------------------------------- | --------------------- | ----------------------------- |
-| **MOBILE** (iOS, Android, RN, Flutter) | `mobile-developer`    | mobile-design                 |
-| **WEB** (Next.js, React web)           | `frontend-specialist` | frontend-design               |
-| **BACKEND** (API, server, DB)          | `backend-specialist`  | api-patterns, database-design |
-
-> 🔴 **Mobile + frontend-specialist = WRONG.** Mobile = mobile-developer ONLY.
-
-### 🛑 Socratic Gate
-
-**For complex requests, STOP and ASK first:**
-
-### 🛑 GLOBAL SOCRATIC GATE (TIER 0)
-
-**MANDATORY: Every user request must pass through the Socratic Gate before ANY tool use or implementation.**
-
-| Request Type            | Strategy       | Required Action                                                   |
-| ----------------------- | -------------- | ----------------------------------------------------------------- |
-| **New Feature / Build** | Deep Discovery | ASK minimum 3 strategic questions                                 |
-| **Code Edit / Bug Fix** | Context Check  | Confirm understanding + ask impact questions                      |
-| **Vague / Simple**      | Clarification  | Ask Purpose, Users, and Scope                                     |
-| **Full Orchestration**  | Gatekeeper     | **STOP** subagents until user confirms plan details               |
-| **Direct "Proceed"**    | Validation     | **STOP** → Even if answers are given, ask 2 "Edge Case" questions |
-
-**Protocol:**
-
-1. **Never Assume:** If even 1% is unclear, ASK.
-2. **Handle Spec-heavy Requests:** When user gives a list (Answers 1, 2, 3...), do NOT skip the gate. Instead, ask about **Trade-offs** or **Edge Cases** (e.g., "LocalStorage confirmed, but should we handle data clearing or versioning?") before starting.
-3. **Wait:** Do NOT invoke subagents or write code until the user clears the Gate.
-4. **Reference:** Full protocol in `@[skills/brainstorming]`.
-
-### 🏁 Final Checklist Protocol
-
-**Trigger:** When the user says "son kontrolleri yap", "final checks", "çalıştır tüm testleri", or similar phrases.
-
-| Task Stage       | Command                                            | Purpose                        |
-| ---------------- | -------------------------------------------------- | ------------------------------ |
-| **Manual Audit** | `python <platform>/scripts/checklist.py .`             | Priority-based project audit   |
-| **Pre-Deploy**   | `python <platform>/scripts/checklist.py . --url <URL>` | Full Suite + Performance + E2E |
-
-**Priority Execution Order:**
-
-1. **Security** → 2. **Lint** → 3. **Schema** → 4. **Tests** → 5. **UX** → 6. **Seo** → 7. **Lighthouse/E2E**
-
-**Rules:**
-
-- **Completion:** A task is NOT finished until `checklist.py` returns success.
-- **Reporting:** If it fails, fix the **Critical** blockers first (Security/Lint).
-
-**Available Scripts (12 total):**
-
-| Script                     | Skill                 | When to Use         |
-| -------------------------- | --------------------- | ------------------- |
-| `security_scan.py`         | vulnerability-scanner | Always on deploy    |
-| `dependency_analyzer.py`   | vulnerability-scanner | Weekly / Deploy     |
-| `lint_runner.py`           | lint-and-validate     | Every code change   |
-| `test_runner.py`           | testing-patterns      | After logic change  |
-| `schema_validator.py`      | database-design       | After DB change     |
-| `ux_audit.py`              | frontend-design       | After UI change     |
-| `accessibility_checker.py` | frontend-design       | After UI change     |
-| `seo_checker.py`           | seo-fundamentals      | After page change   |
-| `bundle_analyzer.py`       | performance-profiling | Before deploy       |
-| `mobile_audit.py`          | mobile-design         | After mobile change |
-| `lighthouse_audit.py`      | performance-profiling | Before deploy       |
-| `playwright_runner.py`     | webapp-testing        | Before deploy       |
-
-> 🔴 **Agents & Skills can invoke ANY script** via `python <platform>/skills/<skill>/scripts/<script>.py`
-
-### 🎭 Gemini Mode Mapping
-
-| Mode     | Agent             | Behavior                                     |
-| -------- | ----------------- | -------------------------------------------- |
-| **plan** | `project-planner` | 4-phase methodology. NO CODE before Phase 4. |
-| **ask**  | -                 | Focus on understanding. Ask questions.       |
-| **edit** | `orchestrator`    | Execute. Check `{task-slug}.md` first.       |
-
-**Plan Mode (4-Phase):**
-
-1. ANALYSIS → Research, questions
-2. PLANNING → `{task-slug}.md`, task breakdown
-3. SOLUTIONING → Architecture, design (NO CODE!)
-4. IMPLEMENTATION → Code + tests
-
-> 🔴 **Edit mode:** If multi-file or structural change → Offer to create `{task-slug}.md`. For single-file fixes → Proceed directly.
+If multiple types are present, set `CHANGE_TYPE=mixed`. If nothing is found and
+mode is **consult**, set `CHANGE_TYPE=consult-only`.
 
 ---
 
-## TIER 2: DESIGN RULES (Reference)
+## Step 3 — Build the Context
 
-> **Design rules are in the specialist agents, NOT here.**
+Assemble the context payload that Gemini will review. Tailor it to the change type.
 
-| Task         | Read                            |
-| ------------ | ------------------------------- |
-| Web UI/UX    | platform `agents/frontend-specialist.md` |
-| Mobile UI/UX | platform `agents/mobile-developer.md`    |
+### For `google-ads` changes:
 
-**These agents contain:**
+Summarize the proposed Ads changes in a structured block:
 
-- Purple Ban (no violet/purple colors)
-- Template Ban (no standard layouts)
-- Anti-cliché rules
-- Deep Design Thinking protocol
+```
+GOOGLE ADS CHANGE SUMMARY
+==========================
+Account: [account name/ID if known]
+Change type: [campaign creation | bid adjustment | keyword changes | negative keywords | ad copy | budget | targeting | etc.]
 
-> 🔴 **For design work:** Open and READ the agent file. Rules are there.
+BEFORE (current state):
+[Describe current campaign/keyword/bid state]
+
+AFTER (proposed changes):
+[Describe what will change]
+
+BUSINESS CONTEXT:
+[Goal of the change — CPA target, ROAS goal, traffic objective, etc.]
+```
+
+### For `seo` changes:
+
+```
+SEO CHANGE SUMMARY
+==================
+Site: [URL]
+Change type: [title tags | meta descriptions | schema markup | content rewrite | robots.txt | sitemap | etc.]
+
+BEFORE (current state):
+[Current metadata/content]
+
+AFTER (proposed changes):
+[New metadata/content]
+
+TARGET KEYWORDS:
+[Keywords being targeted, if applicable]
+
+SEARCH INTENT:
+[Informational / navigational / commercial / transactional]
+```
+
+### For `code` changes:
+
+```bash
+BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+DIFF=$(git diff HEAD 2>/dev/null)
+STAT=$(git diff --stat HEAD 2>/dev/null)
+```
+
+Combine the diff stat and full diff into the context.
+
+### For `mixed` changes:
+
+Combine all applicable sections above.
 
 ---
 
-## 📁 QUICK REFERENCE
+## Step 4 — Run Gemini
 
-### Agents & Skills
+Build and execute the Gemini CLI command based on mode and change type.
 
-- **Masters**: `orchestrator`, `project-planner`, `security-auditor` (Cyber/Audit), `backend-specialist` (API/DB), `frontend-specialist` (UI/UX), `mobile-developer`, `debugger`, `game-developer`
-- **Key Skills**: `clean-code`, `brainstorming`, `app-builder`, `frontend-design`, `mobile-design`, `writing-plans`, `behavioral-modes`
+### Review Mode
 
-### Key Scripts
+```bash
+gemini -p "You are a senior reviewer with deep expertise in Google's advertising platform, Google Search, and SEO best practices. You are reviewing proposed changes for correctness, effectiveness, and potential risks.
 
-- **Verify**: `<platform>/scripts/verify_all.py`, `<platform>/scripts/checklist.py`
-- **Scanners**: `security_scan.py`, `dependency_analyzer.py`
-- **Audits**: `ux_audit.py`, `mobile_audit.py`, `lighthouse_audit.py`, `seo_checker.py`
-- **Test**: `playwright_runner.py`, `test_runner.py`
+CHANGE TYPE: ${CHANGE_TYPE}
+
+${CONTEXT}
+
+Evaluate these changes and produce a structured review:
+
+1. VERDICT: PASS or FAIL (use FAIL if any blocking issue exists)
+
+2. BLOCKING ISSUES (if any):
+   - Issue, why it matters, and how to fix it
+
+3. WARNINGS (non-blocking but worth considering):
+   - Concern and recommendation
+
+4. STRENGTHS:
+   - What the changes do well
+
+For Google Ads changes, specifically check:
+- Policy compliance (disapprovals, trademark issues, restricted content)
+- Budget efficiency (is spend allocated to highest-intent keywords?)
+- Keyword conflicts (cannibalization, broad match pitfalls, missing negatives)
+- Landing page alignment (do ads match what the page delivers?)
+- Bid strategy fit (does the strategy match the campaign goal?)
+
+For SEO changes, specifically check:
+- Title tag length (under 60 chars) and keyword placement (front-loaded?)
+- Meta description length (under 160 chars) and call-to-action presence
+- Schema markup validity and completeness
+- Potential keyword cannibalization across pages
+- Search intent alignment (does the content match what users expect?)
+- E-E-A-T signals (expertise, experience, authoritativeness, trustworthiness)
+- Internal linking opportunities missed
+
+For code changes, check:
+- Correctness and edge cases
+- Security issues
+- Performance concerns
+- Breaking changes" 2>&1
+```
+
+Capture the output. If the exit code is non-zero, report the error to the user
+and suggest checking `gemini` authentication.
+
+### Challenge Mode
+
+```bash
+gemini -p "You are a seasoned and skeptical growth advisor who has managed eight-figure Google Ads budgets and scaled organic traffic for major brands. You have expert-level knowledge of Google's latest policies — Ads editorial standards, Performance Max behavior, broad match changes, Search quality guidelines, spam policies, Core Web Vitals thresholds, and structured data requirements.
+
+Your role is devil's advocate. The team is proposing changes and they want you to pressure-test them before committing. Do not be agreeable — your value is in catching what optimism misses. Evaluate based on evidence, data, and your experience with how Google's systems actually behave (not how documentation says they should).
+
+CHANGE TYPE: ${CHANGE_TYPE}
+
+${CONTEXT}
+
+For each proposed change:
+
+1. STATE THE ASSUMPTION — What is the team assuming will happen?
+2. CHALLENGE IT — Why might that assumption be wrong? Cite specific Google policy, algorithm behavior, or auction mechanics where relevant. Reference real patterns you'd expect to see in the data.
+3. WHAT DOES THE DATA SAY? — What metrics or signals should the team check before and after to validate this change? Be specific (e.g. 'compare impression share lost to rank before and 14 days after', not 'monitor performance').
+4. VERDICT — For each change: SOUND, RISKY, or RETHINK. One sentence explaining why.
+
+Finally, give an overall honest opinion: is this set of changes worth shipping as-is, or should the team pause and address specific concerns first? Be concise and professional — no filler, no hedging." 2>&1
+```
+
+### Consult Mode
+
+```bash
+gemini -p "You are a Google Ads and SEO expert consultant with deep knowledge of Google's ecosystem — Search algorithms, Ads auction mechanics, Search Console, and web performance. The user wants your independent perspective.
+
+CONTEXT:
+${CONTEXT}
+
+USER QUESTION:
+${USER_QUESTION}
+
+Provide a clear, opinionated answer. If you disagree with a proposed approach, say so directly and explain why. Draw on Google-specific knowledge — ad auction dynamics, search ranking factors, Quality Score mechanics, Core Web Vitals thresholds, etc." 2>&1
+```
 
 ---
+
+## Step 5 — Present Results
+
+### 5a — Format the Gemini output
+
+Present Gemini's response with a clear header:
+
+> **Gemini Review** (`${CHANGE_TYPE}` | `${MODE}` mode)
+>
+> [Gemini's formatted output]
+
+### 5b — Cross-model analysis (if Claude already reviewed)
+
+If Claude has already reviewed the same changes (e.g., via `/notfair:seo-analysis`
+or `/notfair:google-ads-audit` earlier in the conversation), produce a cross-model
+comparison:
+
+> **Cross-Model Analysis: Claude vs Gemini**
+>
+> **Overlapping findings** (both flagged):
+> - [Finding 1]
+> - [Finding 2]
+>
+> **Claude-only findings:**
+> - [Finding that only Claude caught]
+>
+> **Gemini-only findings:**
+> - [Finding that only Gemini caught]
+>
+> **Disagreements** (if any):
+> - [Topic]: Claude says X, Gemini says Y
+
+Overlapping findings have higher confidence — they should be addressed first.
+Unique findings from either model are worth investigating. Disagreements should
+be flagged to the user for a judgment call.
+
+### 5c — Suggest next steps
+
+Based on the results:
+- **Review PASS:** "Gemini approved. Ready to ship."
+- **Review FAIL:** "Gemini flagged blocking issues. Address them, then re-run `/notfair:gemini review`."
+- **Challenge — HIGH risk:** "Stress test surfaced high-risk scenarios. Consider the mitigations before proceeding."
+- **Challenge — LOW risk:** "Gemini couldn't find major attack vectors. Changes look resilient."
+- **Consult:** "Want me to apply any of Gemini's suggestions?"

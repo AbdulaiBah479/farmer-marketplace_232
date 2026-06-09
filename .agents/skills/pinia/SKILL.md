@@ -1,73 +1,59 @@
 ---
-id: eng-state-management
-name: 全局状态管理规范 (Pinia)
-category: engineering
-description: 基于 Pinia 的全局状态管理规范，包含 UserStore、AppStore 的标准定义
-tags: [pinia, store, state, vue3]
-updated_at: 2026-01-09
+name: pinia
+description: Pinia official Vue state management library, type-safe and extensible. Use when defining stores, working with state/getters/actions, or implementing store patterns in Vue apps.
+metadata:
+  author: Anthony Fu
+  version: "2026.1.28"
+  source: Generated from https://github.com/vuejs/pinia, scripts located at https://github.com/antfu/skills
 ---
 
-# 全局状态管理规范 (Pinia)
+# Pinia
 
-推荐使用 **Setup Store** 语法（类似 Composition API），比 Options API 更灵活。
+Pinia is the official state management library for Vue, designed to be intuitive and type-safe. It supports both Options API and Composition API styles, with first-class TypeScript support and devtools integration.
 
-## 基础模式
+> The skill is based on Pinia v3.0.4, generated at 2026-01-28.
 
-```typescript
-// src/store/user.ts
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
+## Core References
 
-export const useUserStore = defineStore('user', () => {
-  const userInfo = ref(null);
-  const loading = ref(false);
+| Topic | Description | Reference |
+|-------|-------------|-----------|
+| Stores | Defining stores, state, getters, actions, storeToRefs, subscriptions | [core-stores](references/core-stores.md) |
 
-  const fetchUserInfo = async () => {
-    if (userInfo.value) return userInfo.value;
-    loading.value = true;
-    try {
-      userInfo.value = await http.get('/user/info');
-    } finally {
-      loading.value = false;
-    }
-  };
+## Features
 
-  return { userInfo, loading, fetchUserInfo };
-});
-```
+### Extensibility
 
-## 组件中使用
+| Topic | Description | Reference |
+|-------|-------------|-----------|
+| Plugins | Extend stores with custom properties, state, and behavior | [features-plugins](references/features-plugins.md) |
 
-```typescript
-<script setup lang="ts">
-import { useUserStore } from '@/store/user';
-import { storeToRefs } from 'pinia';
+### Composability
 
-const userStore = useUserStore();
-// 使用 storeToRefs 保持响应性
-const { userInfo, loading } = storeToRefs(userStore);
-// Action 直接调用
-userStore.fetchUserInfo();
-</script>
-```
+| Topic | Description | Reference |
+|-------|-------------|-----------|
+| Composables | Using Vue composables within stores (VueUse, etc.) | [features-composables](references/features-composables.md) |
+| Composing Stores | Store-to-store communication, avoiding circular dependencies | [features-composing-stores](references/features-composing-stores.md) |
 
-## 常见错误
+## Best Practices
 
-| 错误 | 解决 |
-|------|------|
-| 解构丢失响应性 | 用 `storeToRefs()` |
-| 多次实例化 | Store 单例，直接 `useXxxStore()` |
+| Topic | Description | Reference |
+|-------|-------------|-----------|
+| Testing | Unit testing with @pinia/testing, mocking, stubbing | [best-practices-testing](references/best-practices-testing.md) |
+| Outside Components | Using stores in navigation guards, plugins, middlewares | [best-practices-outside-component](references/best-practices-outside-component.md) |
 
-## 📦 按需加载资源
+## Advanced
 
-| 资源 | URI |
-|-----|-----|
-| 完整 Store 模板 | `skill://pinia-setup/assets/store-template.ts` |
+| Topic | Description | Reference |
+|-------|-------------|-----------|
+| SSR | Server-side rendering, state hydration | [advanced-ssr](references/advanced-ssr.md) |
+| Nuxt | Nuxt integration, auto-imports, SSR best practices | [advanced-nuxt](references/advanced-nuxt.md) |
+| HMR | Hot module replacement for development | [advanced-hmr](references/advanced-hmr.md) |
 
+## Key Recommendations
 
----
-## 📦 可用资源
-
-- `skill://pinia-setup/assets/store-template.ts`
-
-> 根据 SKILL.md 中的 IF-THEN 规则判断是否需要加载
+- **Prefer Setup Stores** for complex logic, composables, and watchers
+- **Use `storeToRefs()`** when destructuring state/getters to preserve reactivity
+- **Actions can be destructured directly** - they're bound to the store
+- **Call stores inside functions** not at module scope, especially for SSR
+- **Add HMR support** to each store for better development experience
+- **Use `@pinia/testing`** for component tests with mocked stores

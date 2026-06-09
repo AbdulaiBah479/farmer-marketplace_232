@@ -1,11 +1,18 @@
 ---
 name: n8n-expression-syntax
 description: Validate n8n expression syntax and fix common errors. Use when writing n8n expressions, using {{}} syntax, accessing $json/$node variables, troubleshooting expression errors, or working with webhook data in workflows.
+risk: unknown
+source: community
 ---
 
 # n8n Expression Syntax
 
 Expert guide for writing correct n8n expressions in workflows.
+
+## When to Use
+- You need to write or debug n8n expressions using `{{ ... }}` syntax.
+- The task involves `$json`, `$node`, webhook payloads, or expression-related workflow errors.
+- You want syntax-correct dynamic values inside n8n nodes and parameters.
 
 ---
 
@@ -249,7 +256,7 @@ Don't double-wrap expressions:
 
 ## Common Mistakes
 
-For complete error catalog with fixes, see [COMMON_MISTAKES.md](COMMON_MISTAKES.md)
+For complete error catalog with fixes, see COMMON_MISTAKES.md
 
 ### Quick Fixes
 
@@ -266,7 +273,7 @@ For complete error catalog with fixes, see [COMMON_MISTAKES.md](COMMON_MISTAKES.
 
 ## Working Examples
 
-For real workflow examples, see [EXAMPLES.md](EXAMPLES.md)
+For real workflow examples, see EXAMPLES.md
 
 ### Example 1: Webhook to Slack
 
@@ -508,9 +515,14 @@ Hello {{$json.name}}!
 - `{{$node.HTTP Request}}` → Use `{{$node["HTTP Request"]}}`
 
 For more details, see:
-- [COMMON_MISTAKES.md](COMMON_MISTAKES.md) - Complete error catalog
-- [EXAMPLES.md](EXAMPLES.md) - Real workflow examples
+- COMMON_MISTAKES.md - Complete error catalog
+- EXAMPLES.md - Real workflow examples
 
 ---
 
 **Need Help?** Reference the n8n expression documentation or use n8n-mcp validation tools to check your expressions.
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

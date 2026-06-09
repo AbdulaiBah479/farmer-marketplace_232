@@ -1,14 +1,15 @@
 ---
 name: project-development
-description: This skill should be used when the user asks to "start an LLM project", "design batch pipeline", "evaluate task-model fit", "structure agent project", or mentions pipeline architecture, agent-assisted development, cost estimation, or choosing between LLM and traditional approaches.
+description: "This skill covers the principles for identifying tasks suited to LLM processing, designing effective project architectures, and iterating rapidly using agent-assisted development."
+risk: unknown
+source: community
 ---
 
 # Project Development Methodology
 
 This skill covers the principles for identifying tasks suited to LLM processing, designing effective project architectures, and iterating rapidly using agent-assisted development. The methodology applies whether building a batch processing pipeline, a multi-agent research system, or an interactive agent application.
 
-## When to Activate
-
+## When to Use
 Activate this skill when:
 - Starting a new project that might benefit from LLM processing
 - Evaluating whether a task is well-suited for agents versus traditional code
@@ -290,7 +291,7 @@ After: 2 tools (bash + SQL), 100% success rate, 77s average execution.
 
 Key insight: The semantic layer was already good documentation. Claude just needed access to read files directly.
 
-See [Case Studies](./references/case-studies.md) for detailed analysis.
+See Case Studies for detailed analysis.
 
 ## Guidelines
 
@@ -317,8 +318,8 @@ This skill connects to:
 ## References
 
 Internal references:
-- [Case Studies](./references/case-studies.md) - Karpathy HN Capsule, Vercel d0, Manus patterns
-- [Pipeline Patterns](./references/pipeline-patterns.md) - Detailed pipeline architecture guidance
+- Case Studies - Karpathy HN Capsule, Vercel d0, Manus patterns
+- Pipeline Patterns - Detailed pipeline architecture guidance
 
 Related skills in this collection:
 - tool-design - Tool architecture and reduction patterns
@@ -340,3 +341,7 @@ External resources:
 **Author**: Agent Skills for Context Engineering Contributors
 **Version**: 1.0.0
 
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

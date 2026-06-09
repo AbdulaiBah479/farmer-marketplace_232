@@ -1,6 +1,6 @@
 ---
 name: api-and-interface-design
-description: Use when designing APIs, module boundaries, or any public interface. Use when creating REST or GraphQL endpoints, defining type contracts between modules, or establishing boundaries between frontend and backend.
+description: Guides stable API and interface design. Use when designing APIs, module boundaries, or any public interface. Use when creating REST or GraphQL endpoints, defining type contracts between modules, or establishing boundaries between frontend and backend.
 ---
 
 # API and Interface Design
@@ -18,6 +18,21 @@ Design stable, well-documented interfaces that are hard to misuse. Good interfac
 - Changing existing public interfaces
 
 ## Core Principles
+
+### Hyrum's Law
+
+> With a sufficient number of users of an API, all observable behaviors of your system will be depended on by somebody, regardless of what you promise in the contract.
+
+This means: every public behavior — including undocumented quirks, error message text, timing, and ordering — becomes a de facto contract once users depend on it. Design implications:
+
+- **Be intentional about what you expose.** Every observable behavior is a potential commitment.
+- **Don't leak implementation details.** If users can observe it, they will depend on it.
+- **Plan for deprecation at design time.** See `deprecation-and-migration` for how to safely remove things users depend on.
+- **Tests are not enough.** Even with perfect contract tests, Hyrum's Law means "safe" changes can break real users who depend on undocumented behavior.
+
+### The One-Version Rule
+
+Avoid forcing consumers to choose between multiple versions of the same dependency or API. Diamond dependency problems arise when different consumers need different versions of the same thing. Design for a world where only one version exists at a time — extend rather than fork.
 
 ### 1. Contract First
 
@@ -97,8 +112,10 @@ app.post('/api/tasks', async (req, res) => {
 Where validation belongs:
 - API route handlers (user input)
 - Form submission handlers (user input)
-- External service response parsing (third-party data)
+- External service response parsing (third-party data -- **always treat as untrusted**)
 - Environment variable loading (configuration)
+
+> **Third-party API responses are untrusted data.** Validate their shape and content before using them in any logic, rendering, or decision-making. A compromised or misbehaving external service can return unexpected types, malicious content, or instruction-like text.
 
 Where validation does NOT belong:
 - Between internal functions that share type contracts
@@ -153,7 +170,7 @@ POST   /api/tasks/:id/comments → Add a comment to a task
 
 ### Pagination
 
-Always paginate list endpoints:
+Paginate list endpoints:
 
 ```typescript
 // Request
@@ -250,6 +267,8 @@ function getTask(id: TaskId): Promise<Task> { ... }
 | "We don't need pagination for now" | You will the moment someone has 100+ items. Add it from the start. |
 | "PATCH is complicated, let's just use PUT" | PUT requires the full object every time. PATCH is what clients actually want. |
 | "We'll version the API when we need to" | Breaking changes without versioning break consumers. Design for extension from the start. |
+| "Nobody uses that undocumented behavior" | Hyrum's Law: if it's observable, somebody depends on it. Treat every public behavior as a commitment. |
+| "We can just maintain two versions" | Multiple versions multiply maintenance cost and create diamond dependency problems. Prefer the One-Version Rule. |
 | "Internal APIs don't need contracts" | Internal consumers are still consumers. Contracts prevent coupling and enable parallel work. |
 
 ## Red Flags
@@ -260,6 +279,7 @@ function getTask(id: TaskId): Promise<Task> { ... }
 - Breaking changes to existing fields (type changes, removals)
 - List endpoints without pagination
 - Verbs in REST URLs (`/api/createTask`, `/api/getUsers`)
+- Third-party API responses used without validation or sanitization
 
 ## Verification
 

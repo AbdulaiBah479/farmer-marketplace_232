@@ -1,194 +1,112 @@
 ---
 name: fp-check
-description: Systematic false positive verification for security findings. Provides structured methodology to confirm or dismiss scanner results, manual audit findings, and automated alerts. Adapted from Trail of Bits. Use when triaging security scan results or verifying audit findings.
+description: "Systematically verifies suspected security bugs to eliminate false positives. Produces TRUE POSITIVE or FALSE POSITIVE verdicts with documented evidence for each bug."
+allowed-tools: Read Grep Glob LSP Bash Task Write Edit AskUserQuestion TaskCreate TaskUpdate TaskList TaskGet
 ---
 
-# False Positive Verification
+# False Positive Check
 
-Not every finding is real. But dismissing a real finding as "false positive" is worse than investigating a false one. This skill provides a systematic approach to verify findings without bias.
+## When to Use
 
-## Verification Process
+- "Is this bug real?" or "is this a true positive?"
+- "Is this a false positive?" or "verify this finding"
+- "Check if this vulnerability is exploitable"
+- Any request to verify or validate a specific suspected bug
 
-### Step 1: Reproduce the Claim
+## When NOT to Use
 
-Before dismissing anything, attempt to confirm:
+- Finding or hunting for bugs ("find bugs", "security analysis", "audit code")
+- General code review for style, performance, or maintainability
+- Feature development, refactoring, or non-security tasks
+- When the user explicitly asks for a quick scan without verification
 
-```
-FINDING: SQL injection in /api/users
-CLAIM: User input reaches database query unsanitized
+## Rationalizations to Reject
 
-VERIFICATION:
-1. Read the actual code at the reported location
-2. Trace the data flow from input to sink
-3. Check for sanitization/validation between input and sink
-4. Check for framework-level protections (ORM, parameterized queries)
-5. Attempt to construct an exploit payload
-```
+If you catch yourself thinking any of these, STOP.
 
-### Step 2: Evidence-Based Triage
+| Rationalization | Why It's Wrong | Required Action |
+|---|---|---|
+| "Rapid analysis of remaining bugs" | Every bug gets full verification | Return to task list, verify next bug through all phases |
+| "This pattern looks dangerous, so it's a vulnerability" | Pattern recognition is not analysis | Complete data flow tracing before any conclusion |
+| "Skipping full verification for efficiency" | No partial analysis allowed | Execute all steps per the chosen verification path |
+| "The code looks unsafe, reporting without tracing data flow" | Unsafe-looking code may have upstream validation | Trace the complete path from source to sink |
+| "Similar code was vulnerable elsewhere" | Each context has different validation, callers, and protections | Verify this specific instance independently |
+| "This is clearly critical" | LLMs are biased toward seeing bugs and overrating severity | Complete devil's advocate review; prove it with evidence |
 
-| Verdict | Criteria | Evidence Required |
-|---------|----------|-------------------|
-| TRUE POSITIVE | Vulnerability exists and is exploitable | Code path + exploit scenario |
-| TRUE POSITIVE (mitigated) | Vulnerability exists but other controls prevent exploitation | Code path + mitigation proof |
-| FALSE POSITIVE (provable) | Finding is wrong due to tool limitation | Specific reason why tool was wrong |
-| FALSE POSITIVE (contextual) | Code is technically flagged but context makes it safe | Context documentation |
-| NEEDS INVESTIGATION | Cannot determine without more analysis | What additional info is needed |
+---
 
-### Step 3: Document the Decision
+## Step 0: Understand the Claim and Context
 
-```
-FINDING: [scanner/auditor finding description]
-SOURCE: [which tool/person reported it]
-LOCATION: file.ts:42
+Before any analysis, restate the bug in your own words. If you cannot do this clearly, ask the user for clarification using AskUserQuestion. Half of false positives collapse at this step — the claim doesn't make coherent sense when restated precisely.
 
-VERDICT: [TRUE POSITIVE | FALSE POSITIVE | NEEDS INVESTIGATION]
+Document:
 
-EVIDENCE:
-  - [What you checked]
-  - [What you found]
-  - [Why you reached this conclusion]
+- **What is the exact vulnerability claim?** (e.g., "heap buffer overflow in `parse_header()` when `content_length` exceeds 4096")
+- **What is the alleged root cause?** (e.g., "missing bounds check before `memcpy` at line 142")
+- **What is the supposed trigger?** (e.g., "attacker sends HTTP request with oversized Content-Length header")
+- **What is the claimed impact?** (e.g., "remote code execution via controlled heap corruption")
+- **What is the threat model?** What privilege level does this code run at? Is it sandboxed? What can the attacker already do before triggering this bug? (e.g., "unauthenticated remote attacker vs privileged local user"; "runs inside Chrome renderer sandbox" vs "runs as root with no sandbox")
+- **What is the bug class?** Classify the bug and consult [bug-class-verification.md]({baseDir}/references/bug-class-verification.md) for class-specific verification requirements that supplement the generic phases below.
+- **Execution context**: When and how is this code path reached during normal execution?
+- **Caller analysis**: What functions call this code and what input constraints do they impose?
+- **Architectural context**: Is this part of a larger security system with multiple protection layers?
+- **Historical context**: Any recent changes, known issues, or previous security reviews of this code area?
 
-REASONING:
-  [Detailed explanation of why this is/isn't a real finding]
+## Route: Standard vs Deep Verification
 
-CONFIDENCE: [HIGH | MEDIUM | LOW]
-  [If LOW, explain what would increase confidence]
-```
+After Step 0, choose a verification path.
 
-## Common False Positive Patterns
+### Standard Verification
 
-### 1. Scanner Doesn't Understand Context
+Use when ALL of these hold:
 
-```
-Scanner says: "Hardcoded password detected"
-Actual code: const DEFAULT_LABEL = "password"
-Verdict: FALSE POSITIVE -- it's a UI label, not a credential
-Evidence: Variable is used only in form field label rendering
-```
+- Clear, specific vulnerability claim (not vague or ambiguous)
+- Single component — no cross-component interaction in the bug path
+- Well-understood bug class (buffer overflow, SQL injection, XSS, integer overflow, etc.)
+- No concurrency or async involved in the trigger
+- Straightforward data flow from source to sink
 
-### 2. Framework Protection Not Recognized
+Follow [standard-verification.md]({baseDir}/references/standard-verification.md). No task creation — work through the linear checklist, documenting findings inline.
 
-```
-Scanner says: "SQL injection in query"
-Actual code: db.query("SELECT * FROM users WHERE id = $1", [userId])
-Verdict: FALSE POSITIVE -- parameterized query prevents injection
-Evidence: $1 is a parameter placeholder, userId is bound safely
-```
+### Deep Verification
 
-### 3. Dead Code / Unreachable Path
+Use when ANY of these hold:
 
-```
-Scanner says: "XSS in renderUserInput()"
-Actual code: renderUserInput() exists but is never called
-Verdict: FALSE POSITIVE -- function is dead code
-Evidence: grep shows no callers; function should be removed anyway
-WARNING: Verify it's truly unreachable, not just unused currently
-```
+- Ambiguous claim that could be interpreted multiple ways
+- Cross-component bug path (data flows through 3+ modules or services)
+- Race conditions, TOCTOU, or concurrency in the trigger mechanism
+- Logic bugs without a clear spec to verify against
+- Standard verification was inconclusive or escalated
+- User explicitly requests full verification
 
-### 4. Test Code Flagged
+Follow [deep-verification.md]({baseDir}/references/deep-verification.md). Create the full task dependency graph and execute phases with the plugin's agents.
 
-```
-Scanner says: "Hardcoded API key"
-Actual code: const TEST_KEY = "test-key-123" in test/fixtures.ts
-Verdict: FALSE POSITIVE -- test fixture, not production code
-Evidence: File is in test directory, key is clearly a test value
-WARNING: Verify the key isn't a real key used in test environment
-```
+### Default
 
-### 5. Intentional Behavior
+Start with standard. Standard verification has two built-in escalation checkpoints that route to deep when complexity exceeds the linear checklist.
 
-```
-Scanner says: "Insecure random number generation"
-Actual code: Math.random() used for UI animation timing
-Verdict: FALSE POSITIVE -- not used for security purposes
-Evidence: Used only for visual jitter in animation, no security impact
-```
+## Batch Triage
 
-## Red Flags: When "False Positive" Is Actually Real
+When verifying multiple bugs at once:
 
-Do NOT dismiss if:
+1. Run Step 0 for all bugs first — restating each claim often collapses obvious false positives immediately
+2. Route each bug independently (some may be standard, others deep)
+3. Process all standard-routed bugs first, then deep-routed bugs
+4. After all bugs are verified, check for **exploit chains** — findings that individually failed gate review may combine to form a viable attack
 
-| Red Flag | Why It Matters |
-|----------|---------------|
-| "It's behind a VPN" | VPNs get compromised, zero trust is the standard |
-| "Only admins can reach it" | Admin accounts get compromised |
-| "The input is from our other service" | Services can be compromised too |
-| "We sanitize it elsewhere" | Verify the "elsewhere" actually runs |
-| "It's just a low severity" | Low severity findings chain into high impact |
-| "The scanner is always wrong about this" | Verify EACH instance independently |
-| "We've never been exploited" | Survivorship bias |
+## Final Summary
 
-## Verification Techniques
+After processing ALL suspected bugs, provide:
 
-### 1. Data Flow Tracing
-Follow the data from source to sink:
-```
-Source (user input) -> [validation?] -> [transformation?] -> [sanitization?] -> Sink (dangerous operation)
+1. **Counts**: X TRUE POSITIVES, Y FALSE POSITIVES
+2. **TRUE POSITIVE list**: Each with brief vulnerability description
+3. **FALSE POSITIVE list**: Each with brief reason for rejection
 
-If ANY step is missing or bypassable, it's a TRUE POSITIVE.
-```
+## References
 
-### 2. Control Flow Analysis
-Check all paths to the vulnerable code:
-```
-Can the code be reached without authentication?
-Can the code be reached with different parameters?
-Can the code be reached through an alternative route?
-```
-
-### 3. Exploit Attempt
-Construct a minimal proof:
-```
-Input: [specific malicious input]
-Expected: [what should happen if vulnerable]
-Actual: [what actually happens]
-Blocked by: [what prevents exploitation, if anything]
-```
-
-### 4. Historical Check
-```bash
-# Has this code had real vulnerabilities before?
-git log --grep="fix\|vuln\|security\|CVE" -- <file>
-
-# Has the scanner been wrong about this pattern before?
-# Check past triage decisions for this rule
-```
-
-## Batch Triage Template
-
-For large scan results:
-
-```markdown
-# Security Scan Triage - [Date]
-
-Scanner: [tool name and version]
-Scan target: [repo/branch/commit]
-Total findings: [N]
-
-## Summary
-| Verdict | Count |
-|---------|-------|
-| True Positive | X |
-| True Positive (mitigated) | X |
-| False Positive | X |
-| Needs Investigation | X |
-
-## True Positives (Action Required)
-1. [SEVERITY] file.ts:42 -- [description] -- [recommended fix]
-
-## False Positives (Documented)
-1. file.ts:88 -- [reason it's false positive]
-
-## Needs Investigation
-1. file.ts:120 -- [what additional info is needed]
-```
-
-## Integration with vibecosystem
-
-- **security-reviewer agent**: Use fp-check after running security scans
-- **sast-scanner agent**: Triage Semgrep results with this methodology
-- **code-reviewer agent**: When flagging potential issues, verify first
-- **verifier agent**: Include false positive check in quality gate
-
-Inspired by [Trail of Bits](https://github.com/trailofbits/skills) fp-check plugin.
+- [Standard Verification]({baseDir}/references/standard-verification.md) — Linear single-pass checklist for straightforward bugs
+- [Deep Verification]({baseDir}/references/deep-verification.md) — Full task-based orchestration for complex bugs
+- [Gate Reviews]({baseDir}/references/gate-reviews.md) — Six mandatory gates and verdict format
+- [Bug-Class Verification]({baseDir}/references/bug-class-verification.md) — Class-specific verification requirements for memory corruption, logic bugs, race conditions, integer issues, crypto, injection, info disclosure, DoS, and deserialization
+- [False Positive Patterns]({baseDir}/references/false-positive-patterns.md) — 13-item checklist and red flags for common false positive patterns
+- [Evidence Templates]({baseDir}/references/evidence-templates.md) — Documentation templates for data flow, mathematical proofs, attacker control, and devil's advocate reviews

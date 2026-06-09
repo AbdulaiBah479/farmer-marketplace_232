@@ -1,11 +1,6 @@
 ---
 name: power-apps-code-app-scaffold
-description: >-
-  Scaffold a complete Power Apps Code App project with PAC CLI setup, SDK
-  integration, and connector configuration
-author:
-  name: Community
-  url: 'https://github.com/beel-collab/presets.dev'
+description: 'Scaffold a complete Power Apps Code App project with PAC CLI setup, SDK integration, and connector configuration'
 ---
 
 # Power Apps Code Apps Project Scaffolding

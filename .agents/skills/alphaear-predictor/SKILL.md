@@ -46,6 +46,9 @@ This skill requires the **Kronos** model and an embedding model.
     -   Place trained news projector weights (e.g., `kronos_news_v1.pt`) in `exports/models/`.
     -   Or depend on the base model (automatically downloaded).
 
+> [!CAUTION]
+> **Model Security**: This skill loads model weights from `exports/models`. We use `weights_only=True` and only scan for the `kronos_news_*.pt` pattern. Ensure you only place trusted checkpoints in this directory.
+
 2.  **Environment Variables**:
     -   `EMBEDDING_MODEL`: Path or name of the embedding model (default: `sentence-transformers/all-MiniLM-L6-v2`).
     -   `KRONOS_MODEL_PATH`: Optional path to override model loading.

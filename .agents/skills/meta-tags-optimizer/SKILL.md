@@ -1,13 +1,24 @@
 ---
 name: meta-tags-optimizer
-description: Creates and optimizes meta tags including title tags, meta descriptions, Open Graph tags, and Twitter cards for maximum click-through rates and social sharing engagement.
+argument-hint: "<URL or page title to optimize>"
+description: >
+  Optimize title tags, meta descriptions, Open Graph, and Twitter cards for
+  maximum click-through rate. Generates multiple A/B test variations with
+  character counting and SERP preview. Use when asked to "optimize title tag",
+  "write meta description", "improve CTR", "Open Graph tags", "fix my meta
+  tags", "social media preview", "my click rate is low", "title optimization",
+  or any meta tag task.
 ---
 
 # Meta Tags Optimizer
 
 This skill creates compelling, optimized meta tags that improve click-through rates from search results and enhance social media sharing. It covers title tags, meta descriptions, and social meta tags.
 
-## When to Use This Skill
+## When This Must Trigger
+
+Use this when the conversation involves any of these situations — even if the user does not use SEO terminology:
+
+Use this whenever the task needs a shippable asset or transformation that should feed directly into quality review, deployment, or monitoring.
 
 - Creating meta tags for new pages
 - Optimizing existing meta tags for better CTR
@@ -27,7 +38,9 @@ This skill creates compelling, optimized meta tags that improve click-through ra
 6. **Character Counting**: Ensures proper length for SERP display
 7. **A/B Test Suggestions**: Provides variations for testing
 
-## How to Use
+## Quick Start
+
+Start with one of these prompts.
 
 ### Create Meta Tags
 
@@ -50,6 +63,20 @@ Improve these meta tags for better CTR: [current tags]
 ```
 Create Open Graph and Twitter card tags for [page/URL]
 ```
+
+## Data Sources
+
+**With ~~search console + ~~SEO tool connected:**
+Automatically pull current meta tags, CTR data by query, competitor title/description patterns, SERP preview data, and impression/click metrics to identify optimization opportunities.
+
+**With manual data only:**
+Ask the user to provide:
+1. Current title and meta description (if optimizing existing)
+2. Target primary keyword and 2-3 secondary keywords
+3. Page URL and main content/value proposition
+4. Competitor URLs or examples of well-performing titles in the SERP
+
+Proceed with the full workflow using provided data. Note in the output which metrics are from automated collection vs. user-provided data.
 
 ## Instructions
 
@@ -156,175 +183,39 @@ When a user requests meta tag optimization:
    ```
    ```
 
-4. **Create Open Graph Tags**
+4. **Create Open Graph, Twitter Card, and Additional Meta Tags**
+
+   Generate OG tags (og:type, og:url, og:title, og:description, og:image), Twitter Card tags, canonical URL, robots, viewport, author, and article-specific tags. Then combine into a complete meta tag block.
+
+   > **Reference**: See [references/meta-tag-code-templates.md](references/meta-tag-code-templates.md) for OG type selection guide, Twitter card type selection, all HTML code templates, and the complete meta tag block template.
+
+5. **CORE-EEAT Alignment Check**
+
+   Verify meta tags align with content quality standards (CORE-EEAT Benchmark).
 
    ```markdown
-   ### Open Graph Tags (Facebook, LinkedIn, etc.)
-   
-   **Required OG Tags**:
-   
-   ```html
-   <!-- Primary Open Graph Tags -->
-   <meta property="og:type" content="[article/website/product]">
-   <meta property="og:url" content="[Full canonical URL]">
-   <meta property="og:title" content="[OG-optimized title - up to 60 chars]">
-   <meta property="og:description" content="[OG description - up to 200 chars]">
-   <meta property="og:image" content="[Image URL - 1200x630px recommended]">
-   
-   <!-- Optional but Recommended -->
-   <meta property="og:site_name" content="[Website Name]">
-   <meta property="og:locale" content="en_US">
-   ```
-   
-   **OG Type Selection Guide**:
-   
-   | Page Type | og:type |
-   |-----------|---------|
-   | Blog post | article |
-   | Homepage | website |
-   | Product | product |
-   | Video | video.other |
-   | Profile | profile |
-   
-   **OG Title Considerations**:
-   - Can be different from title tag
-   - Optimize for social sharing context
-   - More conversational tone acceptable
-   - Up to 60 characters ideal
-   
-   **OG Description Considerations**:
-   - Can be longer than meta description (up to 200 chars)
-   - Focus on shareability
-   - What would make someone click when shared?
-   
-   **OG Image Requirements**:
-   - Recommended size: 1200x630 pixels
-   - Minimum size: 600x315 pixels
-   - Format: JPG or PNG
-   - Keep text to less than 20% of image
-   - Include branding subtly
+   ### CORE-EEAT Meta Tag Alignment
+
+   | Check | Status | Notes |
+   |-------|--------|-------|
+   | **C01 Intent Alignment**: Title promise matches actual content delivery | ✅/⚠️/❌ | [Does the title accurately represent what the page delivers?] |
+   | **C02 Direct Answer**: Meta description reflects the core answer available in first 150 words | ✅/⚠️/❌ | [Does the description preview the direct answer?] |
+
+   **If C01 fails**: Title is misleading — rewrite to match actual content.
+   **If C02 fails**: Content may need restructuring to front-load the answer, or description should better reflect available content.
    ```
 
-5. **Create Twitter Card Tags**
-
-   ```markdown
-   ### Twitter Card Tags
-   
-   **Card Type Selection**:
-   
-   | Card Type | Best For | Image Size |
-   |-----------|----------|------------|
-   | summary | Articles, blogs | 144x144 min |
-   | summary_large_image | Visual content | 300x157 min |
-   | player | Video/audio | 640x360 min |
-   | app | Mobile apps | 800x418 |
-   
-   **Twitter Card Code**:
-   
-   ```html
-   <!-- Twitter Card Tags -->
-   <meta name="twitter:card" content="[summary_large_image/summary]">
-   <meta name="twitter:site" content="@[YourTwitterHandle]">
-   <meta name="twitter:creator" content="@[AuthorTwitterHandle]">
-   <meta name="twitter:title" content="[Title - 70 chars max]">
-   <meta name="twitter:description" content="[Description - 200 chars max]">
-   <meta name="twitter:image" content="[Image URL]">
-   <meta name="twitter:image:alt" content="[Image description for accessibility]">
-   ```
-   
-   **Twitter-Specific Considerations**:
-   - Shorter titles work better (under 70 chars)
-   - Include @mentions if relevant
-   - Hashtag-relevant terms can help discovery
-   - Test with Twitter Card Validator
-   ```
-
-6. **Additional Meta Tags**
-
-   ```markdown
-   ### Additional Recommended Meta Tags
-   
-   **Canonical URL** (Prevent duplicates):
-   ```html
-   <link rel="canonical" href="[Preferred URL]">
-   ```
-   
-   **Robots Tag** (Indexing control):
-   ```html
-   <meta name="robots" content="index, follow">
-   ```
-   
-   **Viewport** (Mobile optimization):
-   ```html
-   <meta name="viewport" content="width=device-width, initial-scale=1">
-   ```
-   
-   **Author** (For articles):
-   ```html
-   <meta name="author" content="[Author Name]">
-   ```
-   
-   **Language**:
-   ```html
-   <html lang="en">
-   ```
-   
-   **Article-Specific** (For blog posts):
-   ```html
-   <meta property="article:published_time" content="[ISO 8601 date]">
-   <meta property="article:modified_time" content="[ISO 8601 date]">
-   <meta property="article:author" content="[Author URL]">
-   <meta property="article:section" content="[Category]">
-   <meta property="article:tag" content="[Tag 1]">
-   ```
-   ```
-
-7. **Generate Complete Meta Tag Block**
-
-   ```markdown
-   ## Complete Meta Tags
-   
-   Copy and paste this complete meta tag block:
-   
-   ```html
-   <!-- Primary Meta Tags -->
-   <title>[Optimized Title]</title>
-   <meta name="title" content="[Optimized Title]">
-   <meta name="description" content="[Optimized Description]">
-   <link rel="canonical" href="[Canonical URL]">
-   
-   <!-- Open Graph / Facebook -->
-   <meta property="og:type" content="[type]">
-   <meta property="og:url" content="[URL]">
-   <meta property="og:title" content="[OG Title]">
-   <meta property="og:description" content="[OG Description]">
-   <meta property="og:image" content="[Image URL]">
-   <meta property="og:site_name" content="[Site Name]">
-   
-   <!-- Twitter -->
-   <meta name="twitter:card" content="summary_large_image">
-   <meta name="twitter:url" content="[URL]">
-   <meta name="twitter:title" content="[Twitter Title]">
-   <meta name="twitter:description" content="[Twitter Description]">
-   <meta name="twitter:image" content="[Image URL]">
-   
-   <!-- Additional -->
-   <meta name="robots" content="index, follow">
-   <meta name="author" content="[Author]">
-   ```
-   ```
-
-8. **Provide CTR Optimization Tips**
+9. **Provide CTR Optimization Tips**
 
    ```markdown
    ## CTR Optimization Analysis
-   
+
    ### Power Words Used
    - [Word 1] - Creates [emotion/action]
    - [Word 2] - Creates [emotion/action]
-   
+
    ### CTR Boosting Elements
-   
+
    | Element | Present | Impact |
    |---------|---------|--------|
    | Numbers | Yes/No | +20-30% CTR |
@@ -332,117 +223,74 @@ When a user requests meta tag optimization:
    | Power Words | Yes/No | +10-15% CTR |
    | Question | Yes/No | +10-15% CTR |
    | Brackets | Yes/No | +10% CTR |
-   
+
    ### A/B Test Suggestions
-   
+
    Test these variations:
-   
+
    **Version A** (Current):
    - Title: [Title]
    - Description: [Description]
-   
+
    **Version B** (Test):
    - Title: [Alternative title]
    - Description: [Alternative description]
    - Hypothesis: [Why this might perform better]
    ```
 
+## Validation Checkpoints
+
+### Input Validation
+- [ ] Primary keyword confirmed and matches page content
+- [ ] Page type identified (blog/product/landing/service/homepage)
+- [ ] Target audience and search intent clearly defined
+- [ ] Unique value proposition articulated
+
+### Output Validation
+- [ ] Title length 50-60 characters (displays fully in SERP)
+- [ ] Meta description length 150-160 characters
+- [ ] Primary keyword appears in both title and description
+- [ ] Open Graph image specified (1200x630px recommended)
+- [ ] All HTML syntax valid (no unclosed quotes or tags)
+- [ ] Source of each data point clearly stated (~~search console CTR data, ~~SEO tool competitor data, user-provided, or estimated)
+
 ## Example
 
-**User**: "Create meta tags for a blog post about 'how to start a podcast in 2024'"
+**User**: "Create meta tags for a blog post about 'how to start a podcast in [current year]'"
 
 **Output**:
 
 ```markdown
-## Meta Tags: How to Start a Podcast (2024)
+## Meta Tags: How to Start a Podcast ([current year])
 
 ### Title Tag
 ```html
-<title>How to Start a Podcast in 2024: Complete Beginner's Guide</title>
+<title>How to Start a Podcast in [current year]: Complete Beginner's Guide</title>
 ```
-**Length**: 54 characters ✅
+**Length**: ~55 characters ✅
 **Keyword**: "how to start a podcast" at front ✅
 **Power Words**: "Complete", "Beginner's" ✅
 
 ### Meta Description
 ```html
-<meta name="description" content="Learn how to start a podcast in 2024 with our step-by-step guide. Covers equipment, hosting, recording, and launching your first episode. Start podcasting today!">
+<meta name="description" content="Learn how to start a podcast in [current year] with our step-by-step guide. Covers equipment, hosting, recording, and launching your first episode. Start podcasting today!">
 ```
-**Length**: 158 characters ✅
+**Length**: ~163 characters ✅
 **Keyword**: Included naturally ✅
 **CTA**: "Start podcasting today!" ✅
 
-### Complete Meta Tag Block
-
-```html
-<!-- Primary Meta Tags -->
-<title>How to Start a Podcast in 2024: Complete Beginner's Guide</title>
-<meta name="description" content="Learn how to start a podcast in 2024 with our step-by-step guide. Covers equipment, hosting, recording, and launching your first episode. Start podcasting today!">
-<link rel="canonical" href="https://yoursite.com/how-to-start-a-podcast/">
-
-<!-- Open Graph / Facebook -->
-<meta property="og:type" content="article">
-<meta property="og:url" content="https://yoursite.com/how-to-start-a-podcast/">
-<meta property="og:title" content="How to Start a Podcast in 2024 (Complete Guide)">
-<meta property="og:description" content="Everything you need to launch your podcast: equipment recommendations, hosting platforms, recording tips, and step-by-step launch checklist. No experience required.">
-<meta property="og:image" content="https://yoursite.com/images/podcast-guide-2024.jpg">
-<meta property="og:site_name" content="Your Site Name">
-
-<!-- Twitter -->
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="How to Start a Podcast in 2024 🎙️">
-<meta name="twitter:description" content="Complete beginner's guide to launching your podcast. Equipment, hosting, recording, and more.">
-<meta name="twitter:image" content="https://yoursite.com/images/podcast-guide-2024.jpg">
-<meta name="twitter:site" content="@YourHandle">
-
-<!-- Article Tags -->
-<meta property="article:published_time" content="2024-01-15T08:00:00+00:00">
-<meta property="article:author" content="https://yoursite.com/author/name">
-<meta property="article:section" content="Podcasting">
-<meta property="article:tag" content="podcasting">
-<meta property="article:tag" content="content creation">
-```
+_Complete meta tag block (with OG, Twitter, Article tags) generated using template from [references/meta-tag-code-templates.md](references/meta-tag-code-templates.md)._
 
 ### A/B Test Variations
 
 **Title Variation B**:
-"Start a Podcast in 2024: Step-by-Step Guide (+ Free Checklist)"
+"Start a Podcast in [current year]: Step-by-Step Guide (+ Free Checklist)"
 
 **Title Variation C**:
-"How to Start a Podcast: 2024 Guide [Equipment + Software + Tips]"
+"How to Start a Podcast: [current year] Guide [Equipment + Software + Tips]"
 
 **Description Variation B**:
-"Want to start a podcast in 2024? This guide covers everything: equipment ($100 budget option), best hosting platforms, recording tips, and how to get your first 1,000 listeners."
-```
-
-## Page-Type Templates
-
-### Homepage
-
-```html
-<title>[Brand Name] - [Primary Value Proposition]</title>
-<meta name="description" content="[Brand] helps [audience] [achieve goal]. [Key feature/benefit]. [CTA]">
-```
-
-### Product Page
-
-```html
-<title>[Product Name] - [Key Benefit] | [Brand]</title>
-<meta name="description" content="[Product] [key features]. [Price/offer if applicable]. [Social proof]. [CTA]">
-```
-
-### Blog Post
-
-```html
-<title>[How to/What is/Number] [Keyword] [Benefit/Year]</title>
-<meta name="description" content="[What they'll learn]. [Key points covered]. [CTA]">
-```
-
-### Service Page
-
-```html
-<title>[Service] in [Location] - [Brand] | [Differentiator]</title>
-<meta name="description" content="[Service description]. [Experience/credentials]. [Key benefit]. [CTA]">
+"Want to start a podcast in [current year]? This guide covers everything: equipment ($100 budget option), best hosting platforms, recording tips, and how to get your first 1,000 listeners."
 ```
 
 ## Tips for Success
@@ -454,10 +302,12 @@ When a user requests meta tag optimization:
 5. **Update regularly** - Add current year, refresh messaging
 6. **Check competitors** - See what's working in your SERP
 
-## Related Skills
 
-- [seo-content-writer](../seo-content-writer/) - Create content for meta tags
-- [schema-markup-generator](../schema-markup-generator/) - Add structured data
-- [on-page-seo-auditor](../../optimize/on-page-seo-auditor/) - Audit all meta tags
-- [serp-analysis](../../research/serp-analysis/) - Analyze competitor meta tags
+## Reference Materials
 
+- [Meta Tag Formulas](references/meta-tag-formulas.md) — Proven title and description formulas
+- [CTR and Social Reference](references/ctr-and-social-reference.md) — Page-type templates, CTR data, OG best practices
+
+## Next Best Skill
+
+- **Primary**: [schema-markup-generator](../schema-markup-generator/SKILL.md) — complete the SERP packaging with structured data.

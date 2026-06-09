@@ -1,172 +1,94 @@
 ---
-name: GTM Strategy
-description: Go-to-market planning and execution capabilities for product launches
-allowed-tools:
-  - Read
-  - Write
-  - Glob
-  - Grep
-  - Bash
-  - WebSearch
+name: gtm-strategy
+description: "Create a go-to-market strategy covering marketing channels, messaging, success metrics, and launch timeline. Use when planning a product launch, creating a GTM plan from scratch, or defining a launch strategy for a new market."
 ---
-
-# GTM Strategy Skill
+# GTM Strategy
 
 ## Overview
+Create a comprehensive go-to-market strategy for a product launch. This skill covers marketing channels, messaging development, success metrics definition, and launch planning.
 
-Specialized skill for go-to-market planning and execution capabilities. Enables product teams to plan effective launches, develop messaging, and coordinate cross-functional GTM activities.
+## When to Use
+- Planning a product launch
+- Creating a GTM plan from scratch
+- Defining a launch strategy for a new market
+- Developing product-to-market fit strategy
+- Preparing a product go-live roadmap
 
-## Capabilities
+## How It Works
 
-### Launch Planning
-- Generate launch tier recommendations (T1/T2/T3)
-- Create launch timeline milestones
-- Build launch checklist templates
-- Define launch success metrics
-- Plan phased rollout strategies
+### Step 1: Gather Research Data
+The system will help you load and analyze early research about your product and target market. Provide:
+- Product description and key features
+- Target market segment details
+- Market research or validation data
+- Competitive landscape information
+- Any available customer interviews or survey data
 
-### Messaging and Positioning
-- Create messaging frameworks and positioning
-- Develop value proposition statements
-- Generate competitive differentiation points
-- Create audience-specific messaging variants
-- Build elevator pitch templates
+### Step 2: Define Marketing Channels
+Evaluate which channels best reach your target audience:
+- Digital marketing channels (paid search, social media, display)
+- Content and inbound channels (blog, SEO, thought leadership)
+- Sales and outbound channels (direct outreach, partnerships)
+- Community and grassroots channels
+- Product-led and viral channels
 
-### Channel Strategy
-- Build channel strategy recommendations
-- Identify optimal launch channels
-- Create channel-specific content plans
-- Define channel success metrics
+### Step 3: Develop Messaging
+Create audience-specific messaging that resonates:
+- Core value proposition for target segment
+- Key differentiators and competitive advantages
+- Pain point validation and solution mapping
+- Proof points and social proof strategies
+- Channel-specific messaging variations
 
-### Sales Enablement
-- Generate sales enablement materials structure
-- Create competitive battlecard frameworks
-- Build objection handling guides
-- Develop pricing talk tracks
-- Create demo flow recommendations
+### Step 4: Define Success Metrics
+Establish measurable KPIs to track launch success:
+- Awareness metrics (impressions, reach, brand recall)
+- Engagement metrics (CTR, cost per engagement, time on site)
+- Conversion metrics (signups, demos requested, trials started)
+- Revenue metrics (MRR, customer acquisition cost, lifetime value)
+- Market metrics (market share, segment penetration)
 
-## Target Processes
+### Step 5: Create Launch Plan
+Build a phased launch timeline:
+- Pre-launch preparation (messaging, channels, timeline)
+- Launch day activities and announcements
+- Post-launch momentum (content, partnerships, communities)
+- Measurement and optimization cadence
+- Success criteria and go/no-go decision points
 
-This skill integrates with the following processes:
-- `product-launch-gtm.js` - Primary GTM planning and execution
-- `competitive-analysis.js` - Competitive positioning for launches
-- `beta-program.js` - Beta-to-GA transition planning
-- `stakeholder-alignment.js` - Launch communication coordination
+## Input Format
+Use $ARGUMENTS to pass:
+- Product name and description
+- Target market segment
+- Research data or file path
+- Launch timeline and constraints
+- Budget or resource limitations
 
-## Input Schema
+## Output
+A structured GTM strategy document including:
+- Recommended marketing channels with justification
+- Channel-specific messaging and positioning
+- Launch timeline with key milestones
+- KPI targets and measurement framework
+- Risk mitigation strategies
+- 90-day execution roadmap
 
-```json
-{
-  "type": "object",
-  "properties": {
-    "product": {
-      "type": "object",
-      "properties": {
-        "name": { "type": "string" },
-        "description": { "type": "string" },
-        "targetAudience": { "type": "array", "items": { "type": "string" } },
-        "valueProposition": { "type": "string" },
-        "keyFeatures": { "type": "array", "items": { "type": "string" } }
-      }
-    },
-    "launchType": {
-      "type": "string",
-      "enum": ["new-product", "major-release", "feature-launch", "market-expansion"],
-      "description": "Type of launch"
-    },
-    "launchTier": {
-      "type": "string",
-      "enum": ["T1", "T2", "T3"],
-      "description": "Launch tier (T1=major, T2=medium, T3=minor)"
-    },
-    "targetDate": {
-      "type": "string",
-      "format": "date",
-      "description": "Target launch date"
-    },
-    "competitiveContext": {
-      "type": "object",
-      "description": "Competitive landscape information"
-    }
-  },
-  "required": ["product", "launchType"]
-}
-```
+## Framework
+This skill applies Product Compass GTM strategy methodology, focusing on market selection, channel fit, and message-market fit for sustainable product growth.
 
-## Output Schema
+## Tips
+- Start with your most confident customer segment
+- Validate assumptions through customer interviews before full launch
+- Focus on a few channels excellently rather than many channels poorly
+- Establish baseline metrics before launch to measure impact
+- Plan for feedback loops and optimization
 
-```json
-{
-  "type": "object",
-  "properties": {
-    "launchPlan": {
-      "type": "object",
-      "properties": {
-        "tier": { "type": "string" },
-        "timeline": { "type": "array", "items": { "type": "object" } },
-        "milestones": { "type": "array", "items": { "type": "object" } },
-        "checklist": { "type": "array", "items": { "type": "string" } }
-      }
-    },
-    "messaging": {
-      "type": "object",
-      "properties": {
-        "positioning": { "type": "string" },
-        "valueProposition": { "type": "string" },
-        "keyMessages": { "type": "array", "items": { "type": "string" } },
-        "audienceVariants": { "type": "object" }
-      }
-    },
-    "channelStrategy": {
-      "type": "object",
-      "properties": {
-        "primaryChannels": { "type": "array", "items": { "type": "string" } },
-        "contentPlan": { "type": "object" },
-        "metrics": { "type": "object" }
-      }
-    },
-    "salesEnablement": {
-      "type": "object",
-      "properties": {
-        "battlecard": { "type": "object" },
-        "objectionHandling": { "type": "array", "items": { "type": "object" } },
-        "talkTracks": { "type": "array", "items": { "type": "object" } }
-      }
-    },
-    "successMetrics": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "metric": { "type": "string" },
-          "target": { "type": "string" },
-          "timeframe": { "type": "string" }
-        }
-      }
-    }
-  }
-}
-```
+---
 
-## Usage Example
+### Further Reading
 
-```javascript
-const gtmPlan = await executeSkill('gtm-strategy', {
-  product: {
-    name: 'Advanced Analytics Suite',
-    description: 'Enterprise analytics platform with AI-powered insights',
-    targetAudience: ['Data Analysts', 'Business Intelligence Teams', 'C-Suite'],
-    valueProposition: 'Get actionable insights 10x faster with AI-powered analytics',
-    keyFeatures: ['Natural language queries', 'Automated insights', 'Real-time dashboards']
-  },
-  launchType: 'major-release',
-  launchTier: 'T1',
-  targetDate: '2026-03-15'
-});
-```
-
-## Dependencies
-
-- Marketing frameworks
-- Channel templates
-- Sales enablement templates
+- [5 GTM Principles You Should Know as a PM](https://www.productcompass.pm/p/5-gtm-principles-with-frameworks-templates)
+- [OpenAI’s Product Leader Shares 3-Layer Distribution Framework To Win Mind & Market Share in the AI World](https://www.productcompass.pm/p/distribution-framework-ai-products)
+- [Product-Led Growth 101, Part 1/2](https://www.productcompass.pm/p/product-led-growth-101-12)
+- [How to Design a Value Proposition Customers Can't Resist?](https://www.productcompass.pm/p/how-to-design-value-proposition-template)
+- [How to Achieve Product-Market Fit? Part I: Market and Value Proposition](https://www.productcompass.pm/p/how-to-achieve-the-product-market)

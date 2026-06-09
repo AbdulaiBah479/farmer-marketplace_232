@@ -1,237 +1,166 @@
 ---
 name: ansoff-matrix
-description: >
-  Ansoff Matrix — 4-quadrant framework for growth strategy options:
-  market penetration, market development, product development, and
-  diversification. Use when evaluating growth bets, prioritizing
-  investment across quadrants, and explicitly acknowledging the risk
-  ladder from "more of what we know" to "new product in new market".
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: borghei
-  category: project-management
-  domain: strategy-frameworks
-  updated: 2026-05-27
-  python-tools: ansoff_growth_scorer.py
-  tech-stack: ansoff-matrix, growth-strategy, product-market-expansion
+description: "Generate an Ansoff Matrix analysis mapping growth strategies across market penetration, market development, product development, and diversification. Use when considering growth options, planning market expansion, or evaluating strategic growth paths."
 ---
-
 # Ansoff Matrix
 
-Igor Ansoff's product/market matrix for evaluating growth options.
-Forces explicit choice between four growth bets of increasing risk.
+## Metadata
+- **Name**: ansoff-matrix
+- **Description**: Generate an Ansoff Matrix analysis mapping growth strategies across market penetration, market development, product development, and diversification.
+- **Triggers**: Ansoff matrix, growth matrix, market expansion, growth strategy options
 
-## The 2x2
+## Instructions
 
-|                 | **Existing Products** | **New Products**       |
-|-----------------|------------------------|------------------------|
-| **Existing Markets** | Market Penetration (lowest risk) | Product Development |
-| **New Markets**       | Market Development | Diversification (highest risk) |
+You are a growth strategist analyzing expansion opportunities using the Ansoff Matrix for $ARGUMENTS.
 
-## When to use this skill
+Your task is to evaluate growth options across product and market dimensions and develop specific strategies for each quadrant.
 
-- **Annual / quarterly growth planning**
-- **Investment allocation** across growth bets
-- **Post-funding deployment** planning
-- **Board strategy discussions**
-- **Strategic-pivot decisions** (which quadrant are we really in?)
-- **Acquisition rationale** assessment
+## Input Requirements
+- Current product(s) and market definition
+- Current market penetration and performance
+- Customer insights and market opportunities
+- Company capabilities and constraints
+- Growth targets and timelines
+- Competitive dynamics
 
-## The 4 quadrants in depth
+## Ansoff Matrix Framework
 
-### Q1 — Market Penetration (existing product × existing market)
-Sell more of what we have to people we know.
+### 2x2 Matrix: Products vs. Markets
 
-**Tactics:**
-- Increase usage / frequency
-- Take share from competitors
-- Improve conversion rates
-- Pricing optimization
-- Loyalty / retention programs
+|  | Current Market | New Market |
+|---|---|---|
+| **Current Product** | Market Penetration | Market Development |
+| **New Product** | Product Development | Diversification |
 
-**Risk profile:** Lowest. You know the product + market.
+---
 
-**Investment:** ~30-50% of growth investment for most companies.
+### 1. Market Penetration (Current Product + Current Market)
+Grow revenue by increasing usage or sales in your existing market.
 
-**When dominant:** Early-stage; high-growth market with share to take.
+**Strategies:**
+- Increase frequency of product usage
+- Expand use cases within existing customer base
+- Acquire competitors' customers
+- Reduce churn and improve retention
+- Upsell and cross-sell existing customers
+- Lower prices to capture price-sensitive segments
+- Increase marketing and brand awareness
+- Improve customer experience to drive referrals
 
-### Q2 — Market Development (existing product × new market)
-Take what works to a new market.
+**Examples:**
+- Netflix adding games to increase engagement
+- Starbucks encouraging multiple visits per week
+- Adobe expanding Adobe Creative Cloud subscriptions
 
-**Tactics:**
-- New geography
-- New industry vertical
-- New customer segment (SMB → mid-market)
-- New use case
-- New channel (direct → channel; SMB → enterprise sales)
+**Risk Level:** Low (familiar market, product, capabilities)
 
-**Risk profile:** Medium. Product known; market unknown.
+**Typical Timeline:** 6-12 months
 
-**Investment:** ~20-30%.
+---
 
-**When dominant:** Product-market fit established in initial segment;
-proven by reference customers; ready to scale.
+### 2. Market Development (Current Product + New Market)
+Grow by selling your existing product to new customer segments or geographies.
 
-### Q3 — Product Development (new product × existing market)
-Build something new for people we know.
+**Strategies:**
+- Expand into new geographies or regions
+- Target new customer segments or personas
+- Sell through new channels or partnerships
+- Adapt product for new use cases
+- Partner with complementary companies
+- Localize product for new markets
+- Build brand awareness in new markets
 
-**Tactics:**
-- New SKU / module / add-on
-- Adjacent product line
-- Platform extension
-- Feature line that becomes its own product
+**Examples:**
+- Facebook expanding internationally
+- Uber moving into new cities and countries
+- Slack selling to non-tech industries
 
-**Risk profile:** Medium. Market known; product unknown.
+**Risk Level:** Medium (new market dynamics, but proven product)
 
-**Investment:** ~15-25%.
+**Typical Timeline:** 12-24 months
 
-**When dominant:** Captive audience with related JTBDs;
-distribution advantage; brand permission to extend.
+---
 
-### Q4 — Diversification (new product × new market)
-New thing for new people.
+### 3. Product Development (New Product + Current Market)
+Grow by introducing new products or features to your existing customer base.
 
-**Tactics:**
-- Adjacent diversification (related to current)
-- Conglomerate diversification (unrelated)
-- Acquisition-driven new categories
+**Strategies:**
+- Add new features to existing product
+- Create adjacent product lines
+- Bundle products for greater value
+- Develop premium/lite versions
+- Integrate adjacent capabilities
+- Create complementary products
+- Upgrade product experience or performance
 
-**Risk profile:** Highest. Both axes unknown.
+**Examples:**
+- Spotify adding podcasts
+- Amazon Prime expanding services (video, music, grocery)
+- Figma adding prototyping and FigJam
 
-**Investment:** ~5-15% (or 0% — most companies should not diversify).
+**Risk Level:** Medium (existing customers but new product)
 
-**When dominant:** Few situations justify high diversification. Usually:
-mature core business with cash, declining core business needing pivot,
-or genuine adjacent opportunity with shared capability.
+**Typical Timeline:** 12-18 months
 
-## Workflow
+---
 
-### Step 1 — Define "existing" precisely
-Most Ansoff confusion comes from vague boundaries.
-- "Existing market" = which segment, which geography, which buyer
-- "Existing product" = which SKU, which capabilities
-- "New" = anything outside those boundaries
+### 4. Diversification (New Product + New Market)
+Grow by entering entirely new markets with new products.
 
-### Step 2 — List current growth initiatives
-For each initiative, classify into a quadrant. Be honest:
-- "Adjacent vertical for our SaaS" = Market Development (usually)
-- "New module for existing customers" = Product Development
-- "Same product in EU" = Market Development (regulatory, cultural,
-  linguistic differences = market difference)
+**Strategies:**
+- Related diversification: leveraging existing competencies
+- Unrelated diversification: entering new domains
+- Acquire companies in new markets/products
+- Strategic partnerships or joint ventures
+- Build new business units
+- Apply capabilities to adjacent problems
 
-### Step 3 — Score by risk-adjusted return
-Per initiative:
-- Investment size
-- Expected return
-- Risk of failure
-- Time to revenue
-- Risk-adjusted ROI
+**Examples:**
+- Amazon expanding from books to cloud services (AWS)
+- Apple expanding from computers to phones, wearables, services
+- Microsoft moving from software to cloud (Azure) and gaming (Xbox)
 
-### Step 4 — Allocate across quadrants
-Most companies cluster in Q1 + one other. Pure diversification (Q4) is
-rare; usually disguised market or product development.
+**Risk Level:** High (new market, new product, new capabilities)
 
-### Step 5 — Validate the mix
-Target mix depends on stage:
-- **Early:** 70% Q1 + 30% Q2/Q3 (split)
-- **Growth:** 50% Q1 + 25% Q2 + 25% Q3
-- **Mature:** 30% Q1 + 30% Q2 + 30% Q3 + 10% Q4
+**Typical Timeline:** 24+ months, requires significant investment
 
-If you're 90% Q1, you're not growing strategically. If you're 40% Q4,
-you're betting the company.
+---
 
-### Step 6 — Run `ansoff_growth_scorer.py`
-Score each initiative; surface mix; flag risky concentration.
+## Output Process
+1. Define current market and product clearly
+2. Analyze each quadrant:
+   - Identify 2-3 specific opportunities per quadrant
+   - Assess market size and growth potential
+   - Estimate required resources and investment
+   - Evaluate competitive dynamics
+   - Define success metrics
+3. Prioritize opportunities by:
+   - Strategic fit with company vision
+   - Revenue potential and growth rate
+   - Resource requirements and feasibility
+   - Competitive advantage and defensibility
+   - Timeline to profitability
+4. Develop go-to-market strategy for top 2-3 opportunities
+5. Create phased roadmap and milestones
+6. Identify risks and mitigation plans
+7. Define success metrics and leading indicators
 
-```bash
-python3 project-management/strategy-frameworks/ansoff-matrix/scripts/ansoff_growth_scorer.py \
-  --input initiatives.json --format markdown
-```
+## Strategic Questions
+- Which quadrant offers the best risk-reward profile?
+- Where do our capabilities give us competitive advantage?
+- Which opportunities align best with our vision and values?
+- What partnerships or acquisitions would accelerate growth?
+- How does each option impact our brand and positioning?
 
-## Decision frameworks
+## Notes
+- Market penetration is lowest risk; diversification is highest risk
+- Most companies should excel in one quadrant before expanding
+- Avoid spreading too thin across all four quadrants simultaneously
+- Consider sequential strategy: penetration first, then market development
+- Reassess Ansoff Matrix annually or when market conditions shift
 
-### What counts as "new market"?
+---
 
-| Different... | New market? |
-|--------------|-------------|
-| Geography | Yes (regulation, culture, language, channel) |
-| Industry vertical | Yes |
-| Company size band (SMB → ENT) | Usually yes |
-| Use case (same persona) | Usually no |
-| Buyer persona | Yes |
-| Pricing tier (free vs paid) | Usually no |
+### Further Reading
 
-If you'd need a different sales motion or different channels, it's a new market.
-
-### What counts as "new product"?
-
-| Different... | New product? |
-|--------------|--------------|
-| New SKU / module | Yes |
-| New pricing tier of same product | No |
-| New feature in existing product | No |
-| Significantly different value prop | Yes |
-| Different underlying tech | Yes |
-
-If you'd need a different roadmap and different success metrics, it's a new product.
-
-### When diversification (Q4) makes sense
-
-- **Adjacent diversification:** shared capability or audience
-  - Amazon → AWS: shared capability (infra)
-  - Disney → theme parks: shared capability (IP)
-- **Acquisition-led:** buying expertise + product + market together
-- **Declining core:** need new business model
-
-When diversification fails:
-- "Synergies" overclaimed
-- Acquired company managed by incumbent culture
-- No shared capability or audience
-- Justified by spreadsheet only
-
-## Common engagements
-
-### "Help us prioritize growth bets"
-1. List all growth initiatives.
-2. Classify into quadrants.
-3. Score risk-adjusted return.
-4. Reconcile against stage-appropriate target mix.
-5. Recommend top 5 with allocation.
-
-### "We're considering acquiring company X"
-1. Classify the acquisition by quadrant.
-2. Q1 (existing × existing) = bolt-on; lower risk
-3. Q2 (existing × new) = market expansion via M&A
-4. Q3 (new × existing) = product line extension
-5. Q4 (new × new) = highest risk; question hard
-
-### "Should we enter market X?"
-1. Confirm it's truly Q2 (new market for existing product).
-2. Test: same value prop? same buyer? same channel? if all yes, it's
-   really Q1 (different segment).
-3. If true Q2, scope cost + time to validate vs Q1 alternatives.
-
-## Anti-patterns to avoid
-
-- **Misclassifying initiatives.** Q4 dressed as Q3 or Q2 — gets approved that wouldn't pass Q4 scrutiny.
-- **All-Q1 portfolio.** Not strategic growth.
-- **All-Q4 portfolio.** Bet-the-company every quarter.
-- **"Adjacent" labelling.** Often hides Q4 as Q3.
-- **No investment percentages.** Just lists; no allocation.
-- **Static mix.** Should change with stage.
-- **Ignoring the boring Q1.** Penetration is unglamorous but highest-ROI.
-
-## References
-
-- `references/ansoff-matrix-deep.md` — quadrant tactics, examples, risk patterns
-- `references/growth-strategy-patterns.md` — stage-based mixes, common pitfalls
-
-## Related skills
-
-- `project-management/strategy-frameworks/business-model-canvas` — operational view of each quadrant
-- `project-management/strategy-frameworks/swot-analysis` — strategic context
-- `project-management/strategy-frameworks/porters-five-forces` — industry analysis
-- `c-level-advisor/ceo-advisor` — strategic context
-- `c-level-advisor/cmo-advisor` — Q1/Q2 marketing context
-- `c-level-advisor/cpo-advisor` — Q3 product development context
+- [The Product Management Frameworks Compendium + Templates](https://www.productcompass.pm/p/the-product-frameworks-compendium)

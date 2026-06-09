@@ -1,14 +1,15 @@
 ---
 name: hosted-agents
-description: This skill should be used when the user asks to "build background agent", "create hosted coding agent", "set up sandboxed execution", "implement multiplayer agent", or mentions background agents, sandboxed VMs, agent infrastructure, Modal sandboxes, self-spawning agents, or remote coding environments.
+description: Build background agents in sandboxed environments. Use for hosted coding agents, sandboxed VMs, Modal sandboxes, and remote coding environments.
+risk: unknown
+source: community
 ---
 
 # Hosted Agent Infrastructure
 
 Hosted agents run in remote sandboxed environments rather than on local machines. When designed well, they provide unlimited concurrency, consistent execution environments, and multiplayer collaboration. The critical insight is that session speed should be limited only by model provider time-to-first-token, with all infrastructure setup completed before the user starts their session.
 
-## When to Activate
-
+## When to Use
 Activate this skill when:
 - Building background coding agents that run independently of user devices
 - Designing sandboxed execution environments for agent workloads
@@ -256,7 +257,7 @@ This skill builds on multi-agent-patterns for agent coordination and tool-design
 ## References
 
 Internal reference:
-- [Infrastructure Patterns](./references/infrastructure-patterns.md) - Detailed implementation patterns
+- Infrastructure Patterns - Detailed implementation patterns
 
 Related skills in this collection:
 - multi-agent-patterns - Coordination patterns for self-spawning agents
@@ -277,3 +278,11 @@ External resources:
 **Last Updated**: 2026-01-12
 **Author**: Agent Skills for Context Engineering Contributors
 **Version**: 1.0.0
+
+### When to Use
+Use this skill when tackling tasks related to its primary domain or functionality as described above.
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

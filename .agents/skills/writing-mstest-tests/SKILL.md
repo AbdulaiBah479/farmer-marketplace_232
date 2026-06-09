@@ -1,6 +1,22 @@
 ---
 name: writing-mstest-tests
-description: "Best practices for writing MSTest 3.x/4.x unit tests. Use when the user needs to write, improve, or review MSTest tests, including modern assertions, data-driven tests, test lifecycle, and common anti-patterns. Covers MSTest.Sdk, sealed classes, Assert.Throws, DynamicData with ValueTuples, TestContext, and conditional execution."
+description: >
+  Write new MSTest unit tests and fix existing MSTest code using MSTest 3.x/4.x
+  modern APIs and best practices.
+  USE FOR: write or create MSTest unit tests, fix or modernize MSTest assertions,
+  better MSTest assertion than Assert.IsTrue, replace hard cast with MSTest type assertion,
+  MSTest assertion APIs (IsInstanceOfType, Contains, ContainsSingle, HasCount,
+  IsEmpty, IsNotEmpty, DoesNotContain, StartsWith, EndsWith, MatchesRegex,
+  IsGreaterThan, IsInRange, IsNull),
+  fix swapped Assert.AreEqual arguments, replace ExpectedException with Assert.Throws,
+  data-driven tests (DataRow, DynamicData, ValueTuples),
+  test lifecycle (sealed classes, TestInitialize, TestCleanup),
+  async tests and cancellation tokens, test parallelization (Parallelize / DoNotParallelize),
+  MSTest.Sdk project setup.
+  DO NOT USE FOR: broad test quality audits (use test-anti-patterns),
+  running tests (use run-tests), MSTest version migration (use migrate-mstest-v1v2-to-v3
+  or migrate-mstest-v3-to-v4), xUnit/NUnit/TUnit, or non-.NET languages.
+license: MIT
 ---
 
 # Writing MSTest Tests
@@ -10,12 +26,17 @@ Help users write effective, modern unit tests with MSTest 3.x/4.x using current 
 ## When to Use
 
 - User wants to write new MSTest unit tests
-- User wants to improve or modernize existing MSTest tests
+- User wants to improve or modernize existing MSTest tests by implementing concrete fixes
 - User asks about MSTest assertion APIs, data-driven patterns, or test lifecycle
-- User needs to review MSTest test code for anti-patterns
+- User asks to replace `Assert.IsTrue` with more specific assertions (collections, nulls, types, comparisons)
+- User asks to replace hard casts with type-checking assertions in tests
+- User needs help fixing a specific MSTest test bug or failing assertion
+- User asks to fix swapped `Assert.AreEqual` argument order (expected first, actual second)
+- User asks to convert `DynamicData` from `IEnumerable<object[]>` to ValueTuple-based data
 
 ## When Not to Use
 
+- User needs a test quality audit, anti-pattern detection, or flaky-test investigation (use `test-anti-patterns`)
 - User needs to run or execute tests (use the `run-tests` skill)
 - User needs to upgrade from MSTest v1/v2 to v3 (use `migrate-mstest-v1v2-to-v3`)
 - User needs to upgrade from MSTest v3 to v4 (use `migrate-mstest-v3-to-v4`)
@@ -27,8 +48,14 @@ Help users write effective, modern unit tests with MSTest 3.x/4.x using current 
 | Input | Required | Description |
 |-------|----------|-------------|
 | Code under test | No | The production code to be tested |
-| Existing test code | No | Current tests to review or improve |
+| Existing test code | No | Current tests to fix, update, or modernize |
 | Test scenario description | No | What behavior the user wants to test |
+
+## Response Guidelines
+
+- **Specific API or pattern questions** (assertions, data-driven, lifecycle): Jump directly to the relevant workflow step. Do not follow the full workflow.
+- **Write new tests from scratch**: Follow the full workflow.
+- **Review and fix existing tests**: Fix only the issues present. Do not add unrelated improvements.
 
 ## Workflow
 
@@ -105,18 +132,34 @@ public sealed class OrderServiceTests
 
 ### Step 3: Use modern assertion APIs
 
-Use the correct assertion for each scenario. Prefer `Assert` class methods over `StringAssert` or `CollectionAssert` where both exist.
+Pick the most specific assertion for each test scenario. More specific assertions produce better failure messages and make the test's intent clear:
 
-#### Equality and null checks
+| What you are testing | Assertion |
+|---|---|
+| Two values are equal | `Assert.AreEqual(expected, actual)` |
+| Same object instance (reference identity) | `Assert.AreSame(expected, actual)` |
+| Value is null | `Assert.IsNull(value)` |
+| Value is not null | `Assert.IsNotNull(value)` |
+| Collection is empty | `Assert.IsEmpty(collection)` |
+| Collection is not empty | `Assert.IsNotEmpty(collection)` |
+| Collection has exactly N items | `Assert.HasCount(N, collection)` |
+| Collection contains an item | `Assert.Contains(item, collection)` |
+| Collection does not contain an item | `Assert.DoesNotContain(item, collection)` |
+| Object is a specific type | `Assert.IsInstanceOfType<T>(value)` |
+| Code throws an exception | `Assert.ThrowsExactly<T>(() => ...)` |
+
+Prefer `Assert` class methods over `StringAssert` or `CollectionAssert` where both exist.
+
+#### Equality, null, and reference checks
 
 ```csharp
 Assert.AreEqual(expected, actual);      // Value equality
-Assert.AreSame(expected, actual);       // Reference equality
+Assert.AreSame(expected, actual);       // Reference equality -- same object instance
 Assert.IsNull(value);
 Assert.IsNotNull(value);
 ```
 
-#### Exception testing — use `Assert.Throws` instead of `[ExpectedException]`
+#### Exception testing -- use `Assert.Throws` instead of `[ExpectedException]`
 
 ```csharp
 // Synchronous
@@ -139,7 +182,22 @@ Assert.DoesNotContain(unexpectedItem, collection);
 var single = Assert.ContainsSingle(collection);  // Returns the single element
 Assert.HasCount(3, collection);
 Assert.IsEmpty(collection);
+Assert.IsNotEmpty(collection);
 ```
+
+Replace generic `Assert.IsTrue` with specialized assertions -- they give better failure messages:
+
+| Instead of | Use |
+|---|---|
+| `Assert.IsTrue(list.Count > 0)` | `Assert.IsNotEmpty(list)` |
+| `Assert.IsTrue(list.Count == 0)` | `Assert.IsEmpty(list)` |
+| `Assert.IsTrue(list.Count() == 3)` | `Assert.HasCount(3, list)` |
+| `Assert.IsTrue(x != null)` | `Assert.IsNotNull(x)` |
+| `Assert.IsTrue(x == null)` | `Assert.IsNull(x)` |
+| `Assert.AreEqual(a, b)` for same instance | `Assert.AreSame(a, b)` -- reference identity |
+| `Assert.IsTrue(!list.Contains(item))` | `Assert.DoesNotContain(item, list)` |
+| `list.Single(predicate)` + `Assert.IsNotNull` | `Assert.ContainsSingle(list)` |
+| `Assert.IsTrue(list.Contains(item))` | `Assert.Contains(item, list)` |
 
 #### String assertions
 
@@ -153,11 +211,11 @@ Assert.MatchesRegex(@"\d{3}-\d{4}", phoneNumber);
 #### Type assertions
 
 ```csharp
-// MSTest 3.x — out parameter
+// MSTest 3.x -- out parameter
 Assert.IsInstanceOfType<MyHandler>(result, out var typed);
 typed.Handle();
 
-// MSTest 4.x — returns directly
+// MSTest 4.x -- returns directly
 var typed = Assert.IsInstanceOfType<MyHandler>(result);
 ```
 
@@ -197,7 +255,7 @@ public void ApplyDiscount_ReturnsExpectedPrice(decimal price, int percent, decim
     Assert.AreEqual(expected, result);
 }
 
-// ValueTuple — preferred (MSTest 3.7+)
+// ValueTuple -- preferred (MSTest 3.7+)
 public static IEnumerable<(decimal price, int percent, decimal expected)> DiscountTestData =>
 [
     (100m, 10, 90m),
@@ -219,7 +277,7 @@ public static IEnumerable<TestDataRow<(decimal price, int percent, decimal expec
 
 ### Step 5: Handle test lifecycle correctly
 
-- **Always initialize in the constructor** — this enables `readonly` fields and works correctly with nullability analyzers (fields are guaranteed non-null after construction)
+- **Always initialize in the constructor** -- this enables `readonly` fields and works correctly with nullability analyzers (fields are guaranteed non-null after construction)
 - Use `[TestInitialize]` **only** for async initialization, combined with the constructor for sync parts
 - Use `[TestCleanup]` for cleanup that must run even on failure
 - Inject `TestContext` via constructor (MSTest 3.6+)
@@ -229,7 +287,7 @@ public static IEnumerable<TestDataRow<(decimal price, int percent, decimal expec
 public sealed class RepositoryTests
 {
     private readonly TestContext _testContext;
-    private readonly FakeDatabase _db;  // readonly — guaranteed by constructor
+    private readonly FakeDatabase _db;  // readonly -- guaranteed by constructor
 
     public RepositoryTests(TestContext testContext)
     {
@@ -251,15 +309,15 @@ public sealed class RepositoryTests
 
 #### Execution order
 
-1. `[AssemblyInitialize]` — once per assembly
-2. `[ClassInitialize]` — once per class
+1. `[AssemblyInitialize]` -- once per assembly
+2. `[ClassInitialize]` -- once per class
 3. Per test:
-   - With `TestContext` property injection: Constructor → set `TestContext` property → `[TestInitialize]`
-   - With constructor injection of `TestContext`: Constructor (receives `TestContext`) → `[TestInitialize]`
+   - With `TestContext` property injection: Constructor -> set `TestContext` property -> `[TestInitialize]`
+   - With constructor injection of `TestContext`: Constructor (receives `TestContext`) -> `[TestInitialize]`
 4. Test method
-5. `[TestCleanup]` → `DisposeAsync` → `Dispose` — per test
-6. `[ClassCleanup]` — once per class
-7. `[AssemblyCleanup]` — once per assembly
+5. `[TestCleanup]` -> `DisposeAsync` -> `Dispose` -- per test
+6. `[ClassCleanup]` -- once per class
+7. `[AssemblyCleanup]` -- once per assembly
 
 ### Step 6: Apply cancellation and timeout patterns
 
@@ -278,6 +336,8 @@ public async Task FetchData_ReturnsWithinTimeout()
 ### Step 7: Use advanced features where appropriate
 
 #### Retry flaky tests (MSTest 3.9+)
+
+Use only for genuinely flaky external dependencies (network, file system), not to paper over race conditions or shared state issues.
 
 ```csharp
 [TestMethod]
@@ -306,18 +366,3 @@ public void LocalOnly_InteractiveTest() { }
 [DoNotParallelize]  // Opt out specific classes
 public sealed class DatabaseIntegrationTests { }
 ```
-
-## Common Pitfalls
-
-| Pitfall | Solution |
-|---------|----------|
-| `Assert.AreEqual(actual, expected)` — swapped arguments | Always put expected first: `Assert.AreEqual(expected, actual)` |
-| `[ExpectedException]` — obsolete, cannot assert message | Use `Assert.Throws<T>` or `Assert.ThrowsExactly<T>` |
-| `items.Single()` — unclear exception on failure | Use `Assert.ContainsSingle(items)` for better failure messages |
-| Hard cast `(MyType)result` — unclear exception | Use `Assert.IsInstanceOfType<MyType>(result)` |
-| `IEnumerable<object[]>` for DynamicData | Use `IEnumerable<(T1, T2, ...)>` ValueTuples for type safety |
-| Sync setup in `[TestInitialize]` | Initialize in the constructor instead — enables `readonly` fields and satisfies nullability analyzers |
-| `CancellationToken.None` in async tests | Use `TestContext.CancellationToken` for cooperative timeout |
-| `public TestContext? TestContext { get; set; }` | Drop the `?` — MSTest suppresses CS8618 for this property |
-| `TestContext TestContext { get; set; } = null!` | Remove `= null!` — unnecessary, MSTest handles assignment |
-| Non-sealed test classes | Seal test classes by default for performance |

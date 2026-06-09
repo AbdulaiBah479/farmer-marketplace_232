@@ -1,491 +1,186 @@
 ---
-name: Trello Automation
-description: Automate Trello board management, card workflows, power-ups, and team collaboration
-version: 1.0.0
-author: Claude Office Skills
+name: trello-automation
+description: Automate Trello boards, cards, and workflows via Rube MCP (Composio). Create cards, manage lists, assign members, and search across boards programmatically.
+requires:
+  mcp: [rube]
 category: project-management
-tags:
-  - trello
-  - kanban
-  - project-management
-  - cards
-  - automation
-department: operations
-models:
-  - claude-3-opus
-  - claude-3-sonnet
-  - gpt-4
-mcp:
-  server: project-mcp
-  tools:
-    - trello_card
-    - trello_list
-    - trello_board
-    - trello_automation
-capabilities:
-  - Card management
-  - Board automation (Butler)
-  - Workflow templates
-  - Cross-board sync
-input:
-  - Card details
-  - Board configurations
-  - Automation rules
-  - Labels and members
-output:
-  - Created/updated cards
-  - Board reports
-  - Activity logs
-  - Automation results
-languages:
-  - en
-related_skills:
-  - asana-automation
-  - jira-automation
-  - notion-automation
 ---
 
-# Trello Automation
+# Trello Automation via Rube MCP
 
-Comprehensive skill for automating Trello board management and kanban workflows.
+Automate Trello board management, card creation, and team workflows through Composio's Rube MCP integration.
 
-## Core Concepts
+**Toolkit docs**: [composio.dev/toolkits/trello](https://composio.dev/toolkits/trello)
 
-### Board Structure
+## Prerequisites
 
-```
-TRELLO BOARD ANATOMY:
-┌─────────────────────────────────────────────────────────┐
-│ 📋 Project Board                                        │
-├───────────┬───────────┬───────────┬───────────┬────────┤
-│  Backlog  │   To Do   │   Doing   │  Review   │  Done  │
-├───────────┼───────────┼───────────┼───────────┼────────┤
-│ ┌───────┐ │ ┌───────┐ │ ┌───────┐ │ ┌───────┐ │        │
-│ │Card 1 │ │ │Card 3 │ │ │Card 5 │ │ │Card 7 │ │        │
-│ │Labels │ │ │@Mike  │ │ │@Sarah │ │ │@Lisa  │ │        │
-│ │Due    │ │ │Due:3d │ │ │       │ │ │       │ │        │
-│ └───────┘ │ └───────┘ │ └───────┘ │ └───────┘ │        │
-│ ┌───────┐ │ ┌───────┐ │ ┌───────┐ │           │        │
-│ │Card 2 │ │ │Card 4 │ │ │Card 6 │ │           │        │
-│ └───────┘ │ └───────┘ │ └───────┘ │           │        │
-└───────────┴───────────┴───────────┴───────────┴────────┘
-```
+- Rube MCP must be connected (RUBE_SEARCH_TOOLS available)
+- Active Trello connection via `RUBE_MANAGE_CONNECTIONS` with toolkit `trello`
+- Always call `RUBE_SEARCH_TOOLS` first to get current tool schemas
 
-### Card Components
+## Setup
 
-```yaml
-card_structure:
-  title: "{{task_name}}"
-  description: "{{detailed_description}}"
-  
-  metadata:
-    labels:
-      - name: "Bug"
-        color: red
-      - name: "Feature"
-        color: green
-      - name: "Urgent"
-        color: orange
-        
-    members: ["@member1", "@member2"]
-    due_date: "2024-01-20"
-    start_date: "2024-01-15"
-    
-  attachments:
-    - type: file
-      url: "{{attachment_url}}"
-    - type: link
-      url: "{{external_link}}"
-      
-  checklists:
-    - name: "Acceptance Criteria"
-      items:
-        - "Requirement 1"
-        - "Requirement 2"
-        - "Requirement 3"
-        
-  custom_fields:
-    story_points: 5
-    sprint: "Sprint 15"
-```
+**Get Rube MCP**: Add `https://rube.app/mcp` as an MCP server in your client configuration. No API keys needed — just add the endpoint and it works.
 
-## Butler Automation
 
-### Automation Rules
+1. Verify Rube MCP is available by confirming `RUBE_SEARCH_TOOLS` responds
+2. Call `RUBE_MANAGE_CONNECTIONS` with toolkit `trello`
+3. If connection is not ACTIVE, follow the returned auth link to complete Trello auth
+4. Confirm connection status shows ACTIVE before running any workflows
 
-```yaml
-butler_rules:
-  - name: auto_assign_on_move
-    trigger:
-      type: card_moved_to_list
-      list: "Doing"
-    action:
-      - join_card
-      - set_due_date: "+3 days"
-      - add_label: "In Progress"
-      
-  - name: due_date_reminder
-    trigger:
-      type: due_date_approaching
-      days: 1
-    action:
-      - post_comment: "@card Reminder: Due tomorrow!"
-      - move_to_list: "Urgent"
-      
-  - name: completion_cleanup
-    trigger:
-      type: card_moved_to_list
-      list: "Done"
-    action:
-      - mark_due_complete
-      - remove_all_members
-      - add_label: "Completed"
-      
-  - name: scheduled_archive
-    trigger:
-      type: schedule
-      frequency: weekly
-      day: sunday
-    action:
-      - archive_cards_in_list: "Done"
-      - older_than: 7_days
-```
+## Core Workflows
 
-### Button Commands
+### 1. Create a Card on a Board
 
-```yaml
-card_buttons:
-  - name: "Start Working"
-    actions:
-      - move_to_list: "Doing"
-      - join_card
-      - set_due_date: "+3 days"
-      - remove_label: "Backlog"
-      - add_label: "In Progress"
-      
-  - name: "Submit for Review"
-    actions:
-      - move_to_list: "Review"
-      - add_checklist:
-          name: "Review Checklist"
-          items:
-            - "Code reviewed"
-            - "Tests passing"
-            - "Documentation updated"
-      - mention: "@reviewer"
-      
-  - name: "Mark Complete"
-    actions:
-      - check_all_items
-      - move_to_list: "Done"
-      - mark_due_complete
-      - post_comment: "✅ Completed!"
-```
+**When to use**: User wants to add a new card/task to a Trello board
 
-## Board Templates
+**Tool sequence**:
+1. `TRELLO_GET_MEMBERS_BOARDS_BY_ID_MEMBER` - List boards to find target board ID [Prerequisite]
+2. `TRELLO_GET_BOARDS_LISTS_BY_ID_BOARD` - Get lists on board to find target list ID [Prerequisite]
+3. `TRELLO_ADD_CARDS` - Create the card on the resolved list [Required]
+4. `TRELLO_ADD_CARDS_CHECKLISTS_BY_ID_CARD` - Add a checklist to the card [Optional]
+5. `TRELLO_ADD_CARDS_CHECKLIST_CHECK_ITEM_BY_ID_CARD_BY_ID_CHECKLIST` - Add items to the checklist [Optional]
 
-### Sprint Board
+**Key parameters**:
+- `idList`: 24-char hex ID (NOT list name)
+- `name`: Card title
+- `desc`: Card description (supports Markdown)
+- `pos`: Position ('top'/'bottom')
+- `due`: Due date (ISO 8601 format)
 
-```yaml
-sprint_board_template:
-  name: "Sprint {{number}}"
-  
-  lists:
-    - name: "Sprint Backlog"
-      position: 1
-    - name: "To Do"
-      position: 2
-    - name: "In Progress"
-      position: 3
-      wip_limit: 5
-    - name: "Code Review"
-      position: 4
-      wip_limit: 3
-    - name: "Testing"
-      position: 5
-    - name: "Done"
-      position: 6
-      
-  labels:
-    - name: "Bug"
-      color: red
-    - name: "Feature"
-      color: green
-    - name: "Tech Debt"
-      color: yellow
-    - name: "Blocked"
-      color: purple
-      
-  custom_fields:
-    - name: "Story Points"
-      type: number
-    - name: "Priority"
-      type: dropdown
-      options: ["High", "Medium", "Low"]
-```
+**Pitfalls**:
+- Store returned id (idCard) immediately; downstream checklist operations fail without it
+- Checklist payload may be nested (data.data); extract idChecklist from inner object
+- One API call per checklist item; large checklists can trigger rate limits
 
-### Content Calendar
+### 2. Manage Boards and Lists
 
-```yaml
-content_calendar_template:
-  name: "Content Calendar - {{month}}"
-  
-  lists:
-    - name: "Ideas"
-    - name: "Planning"
-    - name: "Writing"
-    - name: "Editing"
-    - name: "Scheduled"
-    - name: "Published"
-    
-  labels:
-    - name: "Blog"
-      color: blue
-    - name: "Social"
-      color: pink
-    - name: "Video"
-      color: purple
-    - name: "Newsletter"
-      color: green
-      
-  card_template:
-    name: "{{content_title}}"
-    description: |
-      **Topic:** {{topic}}
-      **Target Audience:** {{audience}}
-      **Keywords:** {{keywords}}
-      **Publish Date:** {{date}}
-    checklists:
-      - name: "Content Workflow"
-        items:
-          - "Research complete"
-          - "Outline approved"
-          - "First draft"
-          - "Edit pass"
-          - "Graphics ready"
-          - "SEO optimized"
-          - "Scheduled"
-```
+**When to use**: User wants to view, browse, or restructure board layout
 
-## Workflow Automation
+**Tool sequence**:
+1. `TRELLO_GET_MEMBERS_BOARDS_BY_ID_MEMBER` - List all boards for the user [Required]
+2. `TRELLO_GET_BOARDS_BY_ID_BOARD` - Get detailed board info [Required]
+3. `TRELLO_GET_BOARDS_LISTS_BY_ID_BOARD` - Get lists (columns) on the board [Optional]
+4. `TRELLO_GET_BOARDS_MEMBERS_BY_ID_BOARD` - Get board members [Optional]
+5. `TRELLO_GET_BOARDS_LABELS_BY_ID_BOARD` - Get labels on the board [Optional]
 
-### Card Movement Rules
+**Key parameters**:
+- `idMember`: Use 'me' for authenticated user
+- `filter`: 'open', 'starred', or 'all'
+- `idBoard`: 24-char hex or 8-char shortLink (NOT board name)
 
-```yaml
-workflow_rules:
-  to_do:
-    entry_actions:
-      - require_due_date
-      - require_labels
-    exit_requirements:
-      - has_assignee
-      
-  in_progress:
-    entry_actions:
-      - start_timer
-      - add_comment: "Work started"
-    constraints:
-      wip_limit: 3
-      
-  review:
-    entry_actions:
-      - notify_reviewers
-      - add_checklist: review_checklist
-    exit_requirements:
-      - all_checklist_complete
-      
-  done:
-    entry_actions:
-      - stop_timer
-      - calculate_cycle_time
-      - notify_stakeholders
-```
+**Pitfalls**:
+- Some runs return boards under response.data.details[]—don't assume flat top-level array
+- Lists may be nested under results[0].response.data.details—parse defensively
+- ISO 8601 timestamps with trailing 'Z' must be parsed as timezone-aware
 
-### Checklist Templates
+### 3. Move Cards Between Lists
 
-```yaml
-checklist_templates:
-  bug_fix:
-    name: "Bug Fix Checklist"
-    items:
-      - "Reproduce the bug"
-      - "Identify root cause"
-      - "Write fix"
-      - "Add tests"
-      - "Test locally"
-      - "Code review"
-      - "Deploy to staging"
-      - "Verify fix"
-      
-  feature:
-    name: "Feature Checklist"
-    items:
-      - "Requirements documented"
-      - "Design approved"
-      - "Implementation complete"
-      - "Unit tests written"
-      - "Integration tested"
-      - "Documentation updated"
-      - "Demo prepared"
-```
+**When to use**: User wants to change a card's status by moving it to another list
 
-## Power-Up Integrations
+**Tool sequence**:
+1. `TRELLO_GET_SEARCH` - Find the card by name or keyword [Prerequisite]
+2. `TRELLO_GET_BOARDS_LISTS_BY_ID_BOARD` - Get destination list ID [Prerequisite]
+3. `TRELLO_UPDATE_CARDS_BY_ID_CARD` - Update card's idList to move it [Required]
 
-### Popular Power-Ups
+**Key parameters**:
+- `idCard`: Card ID from search
+- `idList`: Destination list ID
+- `pos`: Optional ordering within new list
 
-```yaml
-power_ups:
-  calendar:
-    description: "Visualize cards with due dates"
-    view: calendar
-    sync: true
-    
-  custom_fields:
-    fields:
-      - name: "Priority"
-        type: dropdown
-      - name: "Estimate"
-        type: number
-      - name: "Client"
-        type: text
-        
-  card_aging:
-    enable: true
-    mode: regular  # or pirate mode
-    
-  voting:
-    enable: true
-    one_vote_per_member: true
-```
+**Pitfalls**:
+- Search returns partial matches; verify card name before updating
+- Moving doesn't update position within new list; set pos if ordering matters
 
-### Slack Integration
+### 4. Assign Members to Cards
 
-```yaml
-slack_integration:
-  notifications:
-    - trigger: card_created
-      channel: "#project-updates"
-      
-    - trigger: card_moved_to
-      list: "Done"
-      channel: "#wins"
-      
-    - trigger: comment_added
-      notify: card_members
-      
-  commands:
-    /trello:
-      - add_card
-      - search_cards
-      - my_cards
-```
+**When to use**: User wants to assign team members to cards
 
-## Reporting & Analytics
+**Tool sequence**:
+1. `TRELLO_GET_BOARDS_MEMBERS_BY_ID_BOARD` - Get member IDs from the board [Prerequisite]
+2. `TRELLO_ADD_CARDS_ID_MEMBERS_BY_ID_CARD` - Add a member to the card [Required]
 
-### Board Metrics
+**Key parameters**:
+- `idCard`: Target card ID
+- `value`: Member ID to assign
 
-```
-BOARD ANALYTICS - SPRINT 15
-═══════════════════════════════════════
+**Pitfalls**:
+- UPDATE_CARDS_ID_MEMBERS replaces entire member list; use ADD_CARDS_ID_MEMBERS to append
+- Member must have board permissions
 
-CARDS:
-Total:        45
-Completed:    28 (62%)
-In Progress:  12
-Blocked:      2
+### 5. Search and Filter Cards
 
-VELOCITY:
-This Sprint:  28 cards
-Average:      25 cards
-Trend:        +12%
+**When to use**: User wants to find specific cards across boards
 
-CYCLE TIME:
-Average:      3.2 days
-Shortest:     0.5 days
-Longest:      8 days
+**Tool sequence**:
+1. `TRELLO_GET_SEARCH` - Search by query string [Required]
 
-BY LABEL:
-Feature    █████████████░░░ 18
-Bug        ████████░░░░░░░░ 12
-Tech Debt  █████░░░░░░░░░░░ 8
-Other      ███░░░░░░░░░░░░░ 7
+**Key parameters**:
+- `query`: Search string (supports board:, list:, label:, is:open/archived operators)
+- `modelTypes`: Set to 'cards'
+- `partial`: Set to 'true' for prefix matching
 
-BY MEMBER:
-Sarah     ████████████░░░░ 15
-Mike      ██████████░░░░░░ 12
-Lisa      ████████░░░░░░░░ 10
-Alex      ██████░░░░░░░░░░ 8
-```
+**Pitfalls**:
+- Search indexing has delay; newly created cards may not appear for several minutes
+- For exact name matching, use TRELLO_GET_BOARDS_CARDS_BY_ID_BOARD and filter locally
+- Query uses word tokenization; common words may be ignored as stop words
 
-### Burndown Chart
+### 6. Add Comments and Attachments
 
-```
-SPRINT BURNDOWN
-│ 45 ┤ ▪
-│    │  ▪▪
-│    │    ▪▪ ← Ideal
-│    │      ▪▪
-│ 22 ┤        ●●
-│    │          ●● ← Actual
-│    │            ▪▪●●
-│    │              ▪▪●●
-│  0 ┤                ▪▪●●
-└────┴────────────────────────
-     Day 1              Day 14
+**When to use**: User wants to add context to an existing card
 
-On Track: ✓ 2 cards ahead of schedule
-```
+**Tool sequence**:
+1. `TRELLO_ADD_CARDS_ACTIONS_COMMENTS_BY_ID_CARD` - Post a comment on the card [Required]
+2. `TRELLO_ADD_CARDS_ATTACHMENTS_BY_ID_CARD` - Attach a file or URL [Optional]
 
-## API Examples
+**Key parameters**:
+- `text`: Comment text (1-16384 chars, supports Markdown and @mentions)
+- `url` OR `file`: Attachment source (not both)
+- `name`: Attachment display name
+- `mimeType`: File MIME type
 
-### Create Card
+**Pitfalls**:
+- Comments don't support file attachments; use the attachment tool separately
+- Attachment deletion is irreversible
 
-```javascript
-// Create Card with full details
-const card = await trello.cards.create({
-  name: "Implement user authentication",
-  desc: "Add OAuth2 support for Google and GitHub",
-  idList: "list_id",
-  idLabels: ["label_id_1", "label_id_2"],
-  idMembers: ["member_id"],
-  due: "2024-01-20T17:00:00.000Z",
-  pos: "top"
-});
+## Common Patterns
 
-// Add Checklist
-await trello.cards.createChecklist(card.id, {
-  name: "Implementation Tasks"
-});
+### ID Resolution
+Always resolve display names to IDs before operations:
+- **Board name → Board ID**: `TRELLO_GET_MEMBERS_BOARDS_BY_ID_MEMBER` with idMember='me'
+- **List name → List ID**: `TRELLO_GET_BOARDS_LISTS_BY_ID_BOARD` with resolved board ID
+- **Card name → Card ID**: `TRELLO_GET_SEARCH` with query string
+- **Member name → Member ID**: `TRELLO_GET_BOARDS_MEMBERS_BY_ID_BOARD`
 
-// Add Checklist Item
-await trello.checklists.createCheckItem(checklistId, {
-  name: "Set up OAuth provider",
-  checked: false
-});
-```
+### Pagination
+Most list endpoints return all items. For boards with 1000+ cards, use `limit` and `before` parameters on card listing endpoints.
 
-### Move Card
+### Rate Limits
+300 requests per 10 seconds per token. Use `TRELLO_GET_BATCH` for bulk read operations to stay within limits.
 
-```javascript
-// Move card to different list
-await trello.cards.update(cardId, {
-  idList: "new_list_id",
-  pos: "bottom"
-});
+## Known Pitfalls
 
-// Add comment
-await trello.cards.createComment(cardId, {
-  text: "Moving to review. @reviewer please check."
-});
-```
+- **ID Requirements**: Nearly every tool requires IDs, not display names. Always resolve names to IDs first.
+- **Board ID Format**: Board IDs must be 24-char hex or 8-char shortLink. URL slugs like 'my-board' are NOT valid.
+- **Search Delays**: Search indexing has delays; newly created/updated cards may not appear immediately.
+- **Nested Responses**: Response data is often nested (data.data or data.details[]); parse defensively.
+- **Rate Limiting**: 300 req/10s per token. Batch reads with TRELLO_GET_BATCH.
 
-## Best Practices
+## Quick Reference
 
-1. **Simple Lists**: 5-7 lists maximum
-2. **Clear Labels**: Consistent color coding
-3. **Due Dates**: Set realistic deadlines
-4. **WIP Limits**: Prevent bottlenecks
-5. **Regular Cleanup**: Archive completed cards
-6. **Checklists**: Break down complex tasks
-7. **Butler Rules**: Automate repetitive actions
-8. **Board Templates**: Standardize workflows
+| Task | Tool Slug | Key Params |
+|------|-----------|------------|
+| List user's boards | TRELLO_GET_MEMBERS_BOARDS_BY_ID_MEMBER | idMember='me', filter='open' |
+| Get board details | TRELLO_GET_BOARDS_BY_ID_BOARD | idBoard (24-char hex) |
+| List board lists | TRELLO_GET_BOARDS_LISTS_BY_ID_BOARD | idBoard |
+| Create card | TRELLO_ADD_CARDS | idList, name, desc, pos, due |
+| Update card | TRELLO_UPDATE_CARDS_BY_ID_CARD | idCard, idList (to move) |
+| Search cards | TRELLO_GET_SEARCH | query, modelTypes='cards' |
+| Add checklist | TRELLO_ADD_CARDS_CHECKLISTS_BY_ID_CARD | idCard, name |
+| Add comment | TRELLO_ADD_CARDS_ACTIONS_COMMENTS_BY_ID_CARD | idCard, text |
+| Assign member | TRELLO_ADD_CARDS_ID_MEMBERS_BY_ID_CARD | idCard, value (member ID) |
+| Attach file/URL | TRELLO_ADD_CARDS_ATTACHMENTS_BY_ID_CARD | idCard, url OR file |
+| Get board members | TRELLO_GET_BOARDS_MEMBERS_BY_ID_BOARD | idBoard |
+| Batch read | TRELLO_GET_BATCH | urls (comma-separated paths) |
+---
+*Powered by [Composio](https://composio.dev)*

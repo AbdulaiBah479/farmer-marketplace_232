@@ -1,84 +1,80 @@
 ---
-name: GitHub
-description: Wrapper scripts for GitHub CLI (gh) commands to access issues, PRs, and authentication status. Supports cross-repository operations. Use when direct gh commands are blocked.
-allowed-tools:
-  - Bash
-  - Read
+name: github
+description: "Use the `gh` CLI for issues, pull requests, Actions runs, and GitHub API queries."
+risk: safe
+source: "Dimillian/Skills (MIT)"
+date_added: "2026-03-25"
 ---
 
-# GitHub
+# GitHub Skill
 
-This skill provides wrapper scripts for GitHub operations. Scripts automatically use curl with GITHUB_TOKEN when available, falling back to gh CLI otherwise. All issue commands support `-R owner/repo` for cross-repository operations.
+Use the `gh` CLI to interact with GitHub. Always specify `--repo owner/repo` when not in a git directory, or use URLs directly.
 
-## Available Scripts
+## When to Use
+- When the user asks about GitHub issues, pull requests, workflow runs, or CI failures.
+- When you need `gh issue`, `gh pr`, `gh run`, or `gh api` from the command line.
 
-### Authentication
+## Pull Requests
 
+Check CI status on a PR:
 ```bash
-bash .claude/skills/github/scripts/gh-auth.sh" status
+gh pr checks 55 --repo owner/repo
 ```
 
-### Issues
-
+List recent workflow runs:
 ```bash
-# List issues
-bash .claude/skills/github/scripts/gh-issue.sh" list
-bash .claude/skills/github/scripts/gh-issue.sh" list --state all -L 10
-
-# View issue
-bash .claude/skills/github/scripts/gh-issue.sh" view 123
-
-# Create issue
-bash .claude/skills/github/scripts/gh-issue.sh" create --title "Bug report" --body "Description"
-
-# Add comment
-bash .claude/skills/github/scripts/gh-issue.sh" comment 123 --body "My comment"
-
-# Close issue
-bash .claude/skills/github/scripts/gh-issue.sh" close 123
-
-# Assign to yourself
-bash .claude/skills/github/scripts/gh-issue.sh" assign 123
+gh run list --repo owner/repo --limit 10
 ```
 
-### Cross-Repository Issue Operations
-
-Use `-R` or `--repo` to target a different repository:
-
+View a run and see which steps failed:
 ```bash
-# List issues in another repo
-bash .claude/skills/github/scripts/gh-issue.sh" -R owner/repo list
-
-# View issue in another repo
-bash .claude/skills/github/scripts/gh-issue.sh" -R owner/repo view 123
-
-# Create issue in another repo
-bash .claude/skills/github/scripts/gh-issue.sh" -R owner/repo create --title "Bug report" --body "Description"
-
-# Add comment to issue in another repo
-bash .claude/skills/github/scripts/gh-issue.sh" -R owner/repo comment 123 --body "My comment"
-
-# Close issue in another repo
-bash .claude/skills/github/scripts/gh-issue.sh" -R owner/repo close 123
+gh run view <run-id> --repo owner/repo
 ```
 
-### Pull Requests
-
+View logs for failed steps only:
 ```bash
-# List PRs
-bash .claude/skills/github/scripts/gh-pr.sh" list
-bash .claude/skills/github/scripts/gh-pr.sh" list --state all -L 10
-
-# View PR
-bash .claude/skills/github/scripts/gh-pr.sh" view 123
-
-# Create PR
-bash .claude/skills/github/scripts/gh-pr.sh" create --title "My PR" --body "Description" --base main
+gh run view <run-id> --repo owner/repo --log-failed
 ```
 
-## Authentication Methods
+### Debugging a CI Failure
 
-1. **GITHUB_TOKEN** (preferred for remote): Set in `.env` file, scripts use curl with GitHub API
-2. **gh CLI** (fallback): Uses gh's own authentication when token not available
+Follow this sequence to investigate a failing CI run:
 
-The session-start hook automatically configures GITHUB_TOKEN in `.env` for remote environments.
+1. **Check PR status** — identify which checks are failing:
+   ```bash
+   gh pr checks 55 --repo owner/repo
+   ```
+2. **List recent runs** — find the relevant run ID:
+   ```bash
+   gh run list --repo owner/repo --limit 10
+   ```
+3. **View the failed run** — see which jobs and steps failed:
+   ```bash
+   gh run view <run-id> --repo owner/repo
+   ```
+4. **Fetch failure logs** — get the detailed output for failed steps:
+   ```bash
+   gh run view <run-id> --repo owner/repo --log-failed
+   ```
+
+## API for Advanced Queries
+
+The `gh api` command is useful for accessing data not available through other subcommands.
+
+Get PR with specific fields:
+```bash
+gh api repos/owner/repo/pulls/55 --jq '.title, .state, .user.login'
+```
+
+## JSON Output
+
+Most commands support `--json` for structured output.  You can use `--jq` to filter:
+
+```bash
+gh issue list --repo owner/repo --json number,title --jq '.[] | "\(.number): \(.title)"'
+```
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

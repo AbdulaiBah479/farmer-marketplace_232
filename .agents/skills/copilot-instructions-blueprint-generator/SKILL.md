@@ -1,13 +1,6 @@
 ---
 name: copilot-instructions-blueprint-generator
-description: >-
-  Technology-agnostic blueprint generator for creating comprehensive
-  copilot-instructions.md files that guide GitHub Copilot to produce code
-  consistent with project standards, architecture patterns, and exact technology
-  versions by analyzing existing codebase patterns and avoiding assumptions.
-author:
-  name: Community
-  url: 'https://github.com/beel-collab/presets.dev'
+description: 'Technology-agnostic blueprint generator for creating comprehensive copilot-instructions.md files that guide GitHub Copilot to produce code consistent with project standards, architecture patterns, and exact technology versions by analyzing existing codebase patterns and avoiding assumptions.'
 ---
 
 # Copilot Instructions Blueprint Generator

@@ -1,223 +1,836 @@
 ---
-id: SKL-hubspot-HUBSPOTINTEGRATION
-name: Hubspot Integration
-description: HubSpot is an inbound marketing and sales platform with comprehensive
-  APIs. This guide covers CRM objects, workflows, webhooks, and integration patterns
-  for syncing data and automating marketing and s
-version: 1.0.0
-status: active
-owner: '@cerebra-team'
-last_updated: '2026-02-22'
-category: Backend
-tags:
-- api
-- backend
-- server
-- database
-stack:
-- Python
-- Node.js
-- REST API
-- GraphQL
-difficulty: Intermediate
+name: hubspot-integration
+description: Expert patterns for HubSpot CRM integration including OAuth
+  authentication, CRM objects, associations, batch operations, webhooks, and
+  custom objects. Covers Node.js and Python SDKs.
+risk: unknown
+source: vibeship-spawner-skills (Apache 2.0)
+date_added: 2026-02-27
 ---
 
-# Hubspot Integration
+# HubSpot Integration
 
-## Skill Profile
-*(Select at least one profile to enable specific modules)*
-- [ ] **DevOps**
-- [x] **Backend**
-- [ ] **Frontend**
-- [ ] **AI-RAG**
-- [ ] **Security Critical**
+Expert patterns for HubSpot CRM integration including OAuth authentication,
+CRM objects, associations, batch operations, webhooks, and custom objects.
+Covers Node.js and Python SDKs.
 
-## Overview
-HubSpot is an inbound marketing and sales platform with comprehensive APIs. This guide covers CRM objects, workflows, webhooks, and integration patterns for syncing data and automating marketing and sales processes.
+## Patterns
 
-## Why This Matters
-- **Marketing Automation**: HubSpot provides powerful marketing tools
-- **Sales Pipeline**: Built-in deal management and tracking
-- **Integration**: Well-documented APIs for easy integration
-- **Scalability**: HubSpot handles large volumes
+### OAuth 2.0 Authentication
 
----
+Secure authentication for public apps
 
-## Core Concepts & Rules
+**When to use**: Building public app or multi-account integration
 
-### 1. Core Principles
-- Follow established patterns and conventions
-- Maintain consistency across codebase
-- Document decisions and trade-offs
+### Template
 
-### 2. Implementation Guidelines
-- Start with the simplest viable solution
-- Iterate based on feedback and requirements
-- Test thoroughly before deployment
+// OAuth 2.0 flow for HubSpot
+import { Client } from "@hubspot/api-client";
 
+// Environment variables
+const CLIENT_ID = process.env.HUBSPOT_CLIENT_ID;
+const CLIENT_SECRET = process.env.HUBSPOT_CLIENT_SECRET;
+const REDIRECT_URI = process.env.HUBSPOT_REDIRECT_URI;
+const SCOPES = "crm.objects.contacts.read crm.objects.contacts.write";
 
-## Inputs / Outputs / Contracts
-* **Inputs**:
-  - HubSpot API key or OAuth token
-  - Contact data
-  - Deal information
-  - Webhook URLs
-* **Entry Conditions**:
-  - HubSpot account configured
-  - API credentials available
-  - Webhook endpoints set up
-* **Outputs**:
-  - Synced CRM objects
-  - Webhook event processing
-  - Workflow triggers
-  - Marketing campaign results
-* **Artifacts Required (Deliverables)**:
-  - HubSpot client service
-  - Webhook handler
-  - Sync service
-  - Workflow automation
-* **Acceptance Evidence**:
-  - Unit tests for API integration
-  - Integration tests with HubSpot
-  - E2E tests for webhook processing
-* **Success Criteria**:
-  - API calls < 500ms
-  - Webhook processing < 1 second
-  - Sync completes within 5 minutes
+// Step 1: Generate authorization URL
+function getAuthUrl(): string {
+  const authUrl = new URL("https://app.hubspot.com/oauth/authorize");
+  authUrl.searchParams.set("client_id", CLIENT_ID);
+  authUrl.searchParams.set("redirect_uri", REDIRECT_URI);
+  authUrl.searchParams.set("scope", SCOPES);
+  return authUrl.toString();
+}
 
-## Skill Composition
-* **Depends on**: [Contact Management](32-crm-integration/contact-management/SKILL.md), [Lead Management](32-crm-integration/lead-management/SKILL.md)
-* **Compatible with**: [Sales Pipeline](32-crm-integration/sales-pipeline/SKILL.md), [Salesforce Integration](32-crm-integration/salesforce-integration/SKILL.md)
-* **Conflicts with**: None
-* **Related Skills**: [API Design](03-backend-api/), [Webhook Handling](08-messaging-queue/), [Marketing Integration](28-marketing-integration/)
+// Step 2: Handle OAuth callback
+async function handleOAuthCallback(code: string) {
+  const response = await fetch("https://api.hubapi.com/oauth/v1/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "authorization_code",
+      client_id: CLIENT_ID,
+      client_secret: CLIENT_SECRET,
+      redirect_uri: REDIRECT_URI,
+      code: code,
+    }),
+  });
 
----
+  const tokens = await response.json();
+  // {
+  //   access_token: "xxx",
+  //   refresh_token: "xxx",
+  //   expires_in: 1800  // 30 minutes
+  // }
 
-## Quick Start / Implementation Example
+  // Store tokens securely
+  await storeTokens(tokens);
 
-1. Review requirements and constraints
-2. Set up development environment
-3. Implement core functionality following patterns
-4. Write tests for critical paths
-5. Run tests and fix issues
-6. Document any deviations or decisions
+  return tokens;
+}
 
-```python
-# Example implementation following best practices
-def example_function():
-    # Your implementation here
-    pass
-```
+// Step 3: Refresh access token (before expiry)
+async function refreshAccessToken(refreshToken: string) {
+  const response = await fetch("https://api.hubapi.com/oauth/v1/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "refresh_token",
+      client_id: CLIENT_ID,
+      client_secret: CLIENT_SECRET,
+      refresh_token: refreshToken,
+    }),
+  });
 
+  return response.json();
+}
 
-## Assumptions / Constraints / Non-goals
+// Step 4: Create authenticated client
+function createClient(accessToken: string): Client {
+  const hubspotClient = new Client({ accessToken });
+  return hubspotClient;
+}
 
-* **Assumptions**:
-  - Development environment is properly configured
-  - Required dependencies are available
-  - Team has basic understanding of domain
-* **Constraints**:
-  - Must follow existing codebase conventions
-  - Time and resource limitations
-  - Compatibility requirements
-* **Non-goals**:
-  - This skill does not cover edge cases outside scope
-  - Not a replacement for formal training
+### Notes
 
+- Access tokens expire in 30 minutes
+- Refresh tokens before expiry
+- Store refresh tokens securely
+- Rotate tokens every 6 months
 
-## Compatibility & Prerequisites
+### Private App Token
 
-* **Supported Versions**:
-  - Python 3.8+
-  - Node.js 16+
-  - Modern browsers (Chrome, Firefox, Safari, Edge)
-* **Required AI Tools**:
-  - Code editor (VS Code recommended)
-  - Testing framework appropriate for language
-  - Version control (Git)
-* **Dependencies**:
-  - Language-specific package manager
-  - Build tools
-  - Testing libraries
-* **Environment Setup**:
-  - `.env.example` keys: `API_KEY`, `DATABASE_URL` (no values)
+Authentication for single-account integrations
 
+**When to use**: Building internal integration for one HubSpot account
 
-## Test Scenario Matrix (QA Strategy)
+### Template
 
-| Type | Focus Area | Required Scenarios / Mocks |
-| :--- | :--- | :--- |
-| **Unit** | Core Logic | Must cover primary logic and at least 3 edge/error cases. Target minimum 80% coverage |
-| **Integration** | DB / API | All external API calls or database connections must be mocked during unit tests |
-| **E2E** | User Journey | Critical user flows to test |
-| **Performance** | Latency / Load | Benchmark requirements |
-| **Security** | Vuln / Auth | SAST/DAST or dependency audit |
-| **Frontend** | UX / A11y | Accessibility checklist (WCAG), Performance Budget (Lighthouse score) |
+// Private App Token - simpler for single account
+import { Client } from "@hubspot/api-client";
 
+// Create client with private app token
+const hubspotClient = new Client({
+  accessToken: process.env.HUBSPOT_PRIVATE_APP_TOKEN,
+});
 
-## Technical Guardrails & Security Threat Model
+// Private app tokens don't expire
+// But should be rotated every 6 months for security
 
-### 1. Security & Privacy (Threat Model)
-* **Top Threats**: Injection attacks, authentication bypass, data exposure
-- [ ] **Data Handling**: Sanitize all user inputs to prevent Injection attacks. Never log raw PII
-- [ ] **Secrets Management**: No hardcoded API keys. Use Env Vars/Secrets Manager
-- [ ] **Authorization**: Validate user permissions before state changes
+// Example: Get contacts
+async function getContacts() {
+  try {
+    const response = await hubspotClient.crm.contacts.basicApi.getPage(
+      100,  // limit
+      undefined,  // after cursor
+      ["firstname", "lastname", "email", "phone"],  // properties
+    );
 
-### 2. Performance & Resources
-- [ ] **Execution Efficiency**: Consider time complexity for algorithms
-- [ ] **Memory Management**: Use streams/pagination for large data
-- [ ] **Resource Cleanup**: Close DB connections/file handlers in finally blocks
+    return response.results;
+  } catch (error) {
+    if (error.code === 429) {
+      // Rate limited - implement backoff
+      const retryAfter = error.headers?.["retry-after"] || 10;
+      await sleep(retryAfter * 1000);
+      return getContacts();
+    }
+    throw error;
+  }
+}
 
-### 3. Architecture & Scalability
-- [ ] **Design Pattern**: Follow SOLID principles, use Dependency Injection
-- [ ] **Modularity**: Decouple logic from UI/Frameworks
+// Python equivalent
+// from hubspot import HubSpot
+//
+// client = HubSpot(access_token=os.environ["HUBSPOT_PRIVATE_APP_TOKEN"])
+//
+// contacts = client.crm.contacts.basic_api.get_page(
+//     limit=100,
+//     properties=["firstname", "lastname", "email"]
+// )
 
-### 4. Observability & Reliability
-- [ ] **Logging Standards**: Structured JSON, include trace IDs `request_id`
-- [ ] **Metrics**: Track `error_rate`, `latency`, `queue_depth`
-- [ ] **Error Handling**: Standardized error codes, no bare except
-- [ ] **Observability Artifacts**:
-    - **Log Fields**: timestamp, level, message, request_id
-    - **Metrics**: request_count, error_count, response_time
-    - **Dashboards/Alerts**: High Error Rate > 5%
+### Notes
 
+- Private app tokens don't expire
+- All private apps share daily rate limit
+- Each private app has own burst limit
+- Recommended: Rotate every 6 months
 
-## Agent Directives & Error Recovery
-*(ข้อกำหนดสำหรับ AI Agent ในการคิดและแก้ปัญหาเมื่อเกิดข้อผิดพลาด)*
+### CRM Object CRUD Operations
 
-- **Thinking Process**: Analyze root cause before fixing. Do not brute-force.
-- **Fallback Strategy**: Stop after 3 failed test attempts. Output root cause and ask for human intervention/clarification.
-- **Self-Review**: Check against Guardrails & Anti-patterns before finalizing.
-- **Output Constraints**: Output ONLY the modified code block. Do not explain unless asked.
+Create, read, update, delete CRM records
 
+**When to use**: Working with contacts, companies, deals, tickets
 
-## Definition of Done (DoD) Checklist
+### Template
 
-- [ ] Tests passed + coverage met
-- [ ] Lint/Typecheck passed
-- [ ] Logging/Metrics/Trace implemented
-- [ ] Security checks passed
-- [ ] Documentation/Changelog updated
-- [ ] Accessibility/Performance requirements met (if frontend)
+import { Client } from "@hubspot/api-client";
 
+const hubspotClient = new Client({
+  accessToken: process.env.HUBSPOT_TOKEN,
+});
 
-## Anti-patterns / Pitfalls
+// CREATE contact
+async function createContact(data: {
+  email: string;
+  firstname: string;
+  lastname: string;
+}) {
+  const response = await hubspotClient.crm.contacts.basicApi.create({
+    properties: {
+      email: data.email,
+      firstname: data.firstname,
+      lastname: data.lastname,
+    },
+  });
 
-* ⛔ **Don't**: Log PII, catch-all exception, N+1 queries
-* ⚠️ **Watch out for**: Common symptoms and quick fixes
-* 💡 **Instead**: Use proper error handling, pagination, and logging
+  return response;
+}
 
+// READ contact by ID
+async function getContact(contactId: string) {
+  const response = await hubspotClient.crm.contacts.basicApi.getById(
+    contactId,
+    ["firstname", "lastname", "email", "phone", "company"],
+  );
 
-## Reference Links & Examples
+  return response;
+}
 
-* Internal documentation and examples
-* Official documentation and best practices
-* Community resources and discussions
+// UPDATE contact
+async function updateContact(contactId: string, properties: object) {
+  const response = await hubspotClient.crm.contacts.basicApi.update(
+    contactId,
+    { properties },
+  );
 
+  return response;
+}
 
-## Versioning & Changelog
+// DELETE contact
+async function deleteContact(contactId: string) {
+  await hubspotClient.crm.contacts.basicApi.archive(contactId);
+}
 
-* **Version**: 1.0.0
-* **Changelog**:
-  - 2026-02-22: Initial version with complete template structure
+// SEARCH contacts
+async function searchContacts(query: string) {
+  const response = await hubspotClient.crm.contacts.searchApi.doSearch({
+    query,
+    limit: 100,
+    properties: ["firstname", "lastname", "email"],
+    sorts: [{ propertyName: "createdate", direction: "DESCENDING" }],
+  });
 
+  return response.results;
+}
+
+// LIST with pagination
+async function getAllContacts() {
+  const allContacts = [];
+  let after = undefined;
+
+  do {
+    const response = await hubspotClient.crm.contacts.basicApi.getPage(
+      100,
+      after,
+      ["firstname", "lastname", "email"],
+    );
+
+    allContacts.push(...response.results);
+    after = response.paging?.next?.after;
+  } while (after);
+
+  return allContacts;
+}
+
+### Notes
+
+- Use properties param to fetch only needed fields
+- Search API has 10k result limit
+- Always implement pagination for lists
+- Archive (soft delete) vs. GDPR delete available
+
+### Batch Operations
+
+Bulk create, update, or read records efficiently
+
+**When to use**: Processing multiple records (reduce rate limit usage)
+
+### Template
+
+import { Client } from "@hubspot/api-client";
+
+const hubspotClient = new Client({
+  accessToken: process.env.HUBSPOT_TOKEN,
+});
+
+// BATCH CREATE contacts (up to 100 per batch)
+async function batchCreateContacts(contacts: Array<{
+  email: string;
+  firstname: string;
+  lastname: string;
+}>) {
+  const inputs = contacts.map((contact) => ({
+    properties: {
+      email: contact.email,
+      firstname: contact.firstname,
+      lastname: contact.lastname,
+    },
+  }));
+
+  const response = await hubspotClient.crm.contacts.batchApi.create({
+    inputs,
+  });
+
+  return response.results;
+}
+
+// BATCH UPDATE contacts
+async function batchUpdateContacts(
+  updates: Array<{ id: string; properties: object }>
+) {
+  const inputs = updates.map(({ id, properties }) => ({
+    id,
+    properties,
+  }));
+
+  const response = await hubspotClient.crm.contacts.batchApi.update({
+    inputs,
+  });
+
+  return response.results;
+}
+
+// BATCH READ contacts by ID
+async function batchReadContacts(
+  ids: string[],
+  properties: string[] = ["firstname", "lastname", "email"]
+) {
+  const response = await hubspotClient.crm.contacts.batchApi.read({
+    inputs: ids.map((id) => ({ id })),
+    properties,
+  });
+
+  return response.results;
+}
+
+// BATCH ARCHIVE contacts
+async function batchDeleteContacts(ids: string[]) {
+  await hubspotClient.crm.contacts.batchApi.archive({
+    inputs: ids.map((id) => ({ id })),
+  });
+}
+
+// Process large dataset in chunks
+async function processLargeDataset(allContacts: any[]) {
+  const BATCH_SIZE = 100;
+  const results = [];
+
+  for (let i = 0; i < allContacts.length; i += BATCH_SIZE) {
+    const batch = allContacts.slice(i, i + BATCH_SIZE);
+    const batchResults = await batchCreateContacts(batch);
+    results.push(...batchResults);
+
+    // Respect rate limits - wait between batches
+    if (i + BATCH_SIZE < allContacts.length) {
+      await sleep(100);  // 100ms between batches
+    }
+  }
+
+  return results;
+}
+
+### Notes
+
+- Max 100 items per batch request
+- Saves up to 80% of rate limit quota
+- Batch operations are atomic per item (partial success possible)
+- Check response.errors for failed items
+
+### Associations v4 API
+
+Create relationships between CRM records
+
+**When to use**: Linking contacts to companies, deals, etc.
+
+### Template
+
+import { Client, AssociationTypes } from "@hubspot/api-client";
+
+const hubspotClient = new Client({
+  accessToken: process.env.HUBSPOT_TOKEN,
+});
+
+// CREATE association (Contact to Company)
+async function associateContactToCompany(
+  contactId: string,
+  companyId: string
+) {
+  await hubspotClient.crm.associations.v4.basicApi.create(
+    "contacts",
+    contactId,
+    "companies",
+    companyId,
+    [
+      {
+        associationCategory: "HUBSPOT_DEFINED",
+        associationTypeId: AssociationTypes.contactToCompany,
+      },
+    ]
+  );
+}
+
+// CREATE association (Deal to Contact)
+async function associateDealToContact(dealId: string, contactId: string) {
+  await hubspotClient.crm.associations.v4.basicApi.create(
+    "deals",
+    dealId,
+    "contacts",
+    contactId,
+    [
+      {
+        associationCategory: "HUBSPOT_DEFINED",
+        associationTypeId: 3,  // deal_to_contact
+      },
+    ]
+  );
+}
+
+// GET associations for a record
+async function getContactCompanies(contactId: string) {
+  const response = await hubspotClient.crm.associations.v4.basicApi.getPage(
+    "contacts",
+    contactId,
+    "companies",
+    undefined,
+    500
+  );
+
+  return response.results;
+}
+
+// CREATE association with custom label
+async function createLabeledAssociation(
+  contactId: string,
+  companyId: string,
+  labelId: number  // Custom association label ID
+) {
+  await hubspotClient.crm.associations.v4.basicApi.create(
+    "contacts",
+    contactId,
+    "companies",
+    companyId,
+    [
+      {
+        associationCategory: "USER_DEFINED",
+        associationTypeId: labelId,
+      },
+    ]
+  );
+}
+
+// BATCH create associations
+async function batchAssociateContactsToCompany(
+  contactIds: string[],
+  companyId: string
+) {
+  const inputs = contactIds.map((contactId) => ({
+    _from: { id: contactId },
+    to: { id: companyId },
+    types: [
+      {
+        associationCategory: "HUBSPOT_DEFINED",
+        associationTypeId: AssociationTypes.contactToCompany,
+      },
+    ],
+  }));
+
+  await hubspotClient.crm.associations.v4.batchApi.create(
+    "contacts",
+    "companies",
+    { inputs }
+  );
+}
+
+// Common association type IDs
+// Contact to Company: 1
+// Company to Contact: 2
+// Deal to Contact: 3
+// Contact to Deal: 4
+// Deal to Company: 5
+// Company to Deal: 6
+
+### Notes
+
+- Requires SDK version 9.0.0+ for v4 API
+- Association labels supported for custom relationships
+- Use batch API for multiple associations
+- HUBSPOT_DEFINED for standard, USER_DEFINED for custom labels
+
+### Webhook Handling
+
+Receive real-time notifications from HubSpot
+
+**When to use**: Need instant updates on CRM changes
+
+### Template
+
+import crypto from "crypto";
+import { Client } from "@hubspot/api-client";
+
+// Webhook signature validation
+function validateWebhookSignature(
+  requestBody: string,
+  signature: string,
+  clientSecret: string
+): boolean {
+  // For v2 signature (most common)
+  const expectedSignature = crypto
+    .createHmac("sha256", clientSecret)
+    .update(requestBody)
+    .digest("hex");
+
+  return signature === expectedSignature;
+}
+
+// Express webhook handler
+app.post("/webhooks/hubspot", async (req, res) => {
+  const signature = req.headers["x-hubspot-signature-v3"] as string;
+  const timestamp = req.headers["x-hubspot-request-timestamp"] as string;
+  const requestBody = JSON.stringify(req.body);
+
+  // Validate signature
+  const isValid = validateWebhookSignature(
+    requestBody,
+    signature,
+    process.env.HUBSPOT_CLIENT_SECRET
+  );
+
+  if (!isValid) {
+    console.error("Invalid webhook signature");
+    return res.status(401).send("Unauthorized");
+  }
+
+  // Check timestamp (prevent replay attacks)
+  const timestampAge = Date.now() - parseInt(timestamp);
+  if (timestampAge > 300000) {  // 5 minutes
+    console.error("Webhook timestamp too old");
+    return res.status(401).send("Timestamp expired");
+  }
+
+  // Process events - respond quickly!
+  const events = req.body;
+
+  // Queue for async processing
+  for (const event of events) {
+    await queue.add("hubspot-webhook", event);
+  }
+
+  // Respond immediately
+  res.status(200).send("OK");
+});
+
+// Async processor
+async function processWebhookEvent(event: any) {
+  const { subscriptionType, objectId, propertyName, propertyValue } = event;
+
+  switch (subscriptionType) {
+    case "contact.creation":
+      await handleContactCreated(objectId);
+      break;
+
+    case "contact.propertyChange":
+      await handleContactPropertyChange(objectId, propertyName, propertyValue);
+      break;
+
+    case "deal.creation":
+      await handleDealCreated(objectId);
+      break;
+
+    case "contact.deletion":
+      await handleContactDeleted(objectId);
+      break;
+
+    default:
+      console.log(`Unhandled event: ${subscriptionType}`);
+  }
+}
+
+// Webhook subscription types:
+// contact.creation, contact.deletion, contact.propertyChange
+// company.creation, company.deletion, company.propertyChange
+// deal.creation, deal.deletion, deal.propertyChange
+
+### Notes
+
+- Validate signature before processing
+- Respond within 5 seconds
+- Queue heavy processing for async
+- Max 1000 webhook subscriptions per app
+
+### Custom Objects
+
+Create and manage custom object types
+
+**When to use**: Standard objects don't fit your data model
+
+### Template
+
+import { Client } from "@hubspot/api-client";
+
+const hubspotClient = new Client({
+  accessToken: process.env.HUBSPOT_TOKEN,
+});
+
+// CREATE custom object schema
+async function createCustomObjectSchema() {
+  const schema = {
+    name: "projects",
+    labels: {
+      singular: "Project",
+      plural: "Projects",
+    },
+    primaryDisplayProperty: "project_name",
+    requiredProperties: ["project_name"],
+    properties: [
+      {
+        name: "project_name",
+        label: "Project Name",
+        type: "string",
+        fieldType: "text",
+      },
+      {
+        name: "status",
+        label: "Status",
+        type: "enumeration",
+        fieldType: "select",
+        options: [
+          { label: "Active", value: "active" },
+          { label: "Completed", value: "completed" },
+          { label: "On Hold", value: "on_hold" },
+        ],
+      },
+      {
+        name: "budget",
+        label: "Budget",
+        type: "number",
+        fieldType: "number",
+      },
+      {
+        name: "start_date",
+        label: "Start Date",
+        type: "date",
+        fieldType: "date",
+      },
+    ],
+    associatedObjects: ["CONTACT", "COMPANY"],
+  };
+
+  const response = await hubspotClient.crm.schemas.coreApi.create(schema);
+  return response;
+}
+
+// CREATE custom object record
+async function createProject(data: {
+  project_name: string;
+  status: string;
+  budget: number;
+}) {
+  const response = await hubspotClient.crm.objects.basicApi.create(
+    "projects",  // Custom object name
+    { properties: data }
+  );
+
+  return response;
+}
+
+// READ custom object by ID
+async function getProject(projectId: string) {
+  const response = await hubspotClient.crm.objects.basicApi.getById(
+    "projects",
+    projectId,
+    ["project_name", "status", "budget", "start_date"]
+  );
+
+  return response;
+}
+
+// UPDATE custom object
+async function updateProject(projectId: string, properties: object) {
+  const response = await hubspotClient.crm.objects.basicApi.update(
+    "projects",
+    projectId,
+    { properties }
+  );
+
+  return response;
+}
+
+// SEARCH custom objects
+async function searchProjects(status: string) {
+  const response = await hubspotClient.crm.objects.searchApi.doSearch(
+    "projects",
+    {
+      filterGroups: [
+        {
+          filters: [
+            {
+              propertyName: "status",
+              operator: "EQ",
+              value: status,
+            },
+          ],
+        },
+      ],
+      properties: ["project_name", "status", "budget"],
+      limit: 100,
+    }
+  );
+
+  return response.results;
+}
+
+### Notes
+
+- Custom objects require Enterprise tier
+- Max 10 custom objects per account
+- Use crm.objects API with object name as parameter
+- Can associate with standard and other custom objects
+
+## Sharp Edges
+
+### Rate Limits Vary by App Type and Hub Tier
+
+Severity: HIGH
+
+### 5% Error Rate Threshold for Marketplace Apps
+
+Severity: HIGH
+
+### API Keys Deprecated - Use OAuth or Private App Tokens
+
+Severity: CRITICAL
+
+### OAuth Access Tokens Expire in 30 Minutes
+
+Severity: HIGH
+
+### Webhook Requests Must Be Validated
+
+Severity: CRITICAL
+
+### All List Endpoints Require Pagination
+
+Severity: MEDIUM
+
+### Associations v4 API Has Breaking Changes
+
+Severity: HIGH
+
+### Polling Limited to 100,000 Requests Per Day
+
+Severity: MEDIUM
+
+## Validation Checks
+
+### Hardcoded HubSpot API Key
+
+Severity: ERROR
+
+API keys must never be hardcoded
+
+Message: Hardcoded HubSpot API key detected. Use environment variables. Note: API keys are deprecated - use Private App tokens.
+
+### Hardcoded HubSpot Access Token
+
+Severity: ERROR
+
+Access tokens must use environment variables
+
+Message: Hardcoded HubSpot access token. Use environment variables.
+
+### Hardcoded Client Secret
+
+Severity: ERROR
+
+OAuth client secrets must be secured
+
+Message: Hardcoded client secret. Use environment variables.
+
+### Missing Webhook Signature Validation
+
+Severity: ERROR
+
+Webhook endpoints must validate HubSpot signatures
+
+Message: Webhook endpoint without signature validation. Validate X-HubSpot-Signature-v3.
+
+### Missing Rate Limit Handling
+
+Severity: WARNING
+
+API calls should handle 429 responses
+
+Message: HubSpot API calls without rate limit handling. Implement retry logic with backoff.
+
+### Unthrottled Parallel API Calls
+
+Severity: WARNING
+
+Parallel calls can exceed rate limits
+
+Message: Parallel HubSpot API calls without throttling. Use rate limiter.
+
+### Missing Pagination for List Calls
+
+Severity: WARNING
+
+List endpoints return paginated results
+
+Message: API call without pagination handling. Implement cursor-based pagination.
+
+### Individual Operations in Loop
+
+Severity: INFO
+
+Use batch operations for multiple items
+
+Message: Individual API calls in loop. Consider batch operations for better performance.
+
+### Token Storage Without Expiry
+
+Severity: WARNING
+
+OAuth tokens expire and need refresh logic
+
+Message: Token storage without expiry tracking. Store expiresAt for refresh logic.
+
+### Deprecated API Key Usage
+
+Severity: ERROR
+
+API keys are deprecated
+
+Message: Using deprecated API key. Migrate to Private App token or OAuth 2.0.
+
+## Collaboration
+
+### Delegation Triggers
+
+- user needs email marketing automation -> email-marketing (Beyond HubSpot's built-in email tools)
+- user needs custom CRM UI -> frontend (Building portal or dashboard)
+- user needs data pipeline -> data-engineer (ETL from HubSpot to warehouse)
+- user needs Salesforce integration -> salesforce-development (HubSpot + Salesforce sync)
+- user needs payment processing -> stripe-integration (Payments beyond HubSpot quotes)
+- user needs analytics dashboard -> analytics-specialist (Custom reporting beyond HubSpot)
+
+## When to Use
+- User mentions or implies: hubspot
+- User mentions or implies: hubspot api
+- User mentions or implies: hubspot crm
+- User mentions or implies: hubspot integration
+- User mentions or implies: contacts api
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

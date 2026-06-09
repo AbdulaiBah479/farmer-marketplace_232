@@ -1,6 +1,8 @@
 ---
 name: n8n-code-javascript
 description: Write JavaScript code in n8n Code nodes. Use when writing JavaScript in n8n, using $input/$json/$node syntax, making HTTP requests with $helpers, working with dates using DateTime, troubleshooting Code node errors, or choosing between Code node modes.
+risk: unknown
+source: community
 ---
 
 # JavaScript Code Node
@@ -181,7 +183,7 @@ return [{
 }];
 ```
 
-**See**: [DATA_ACCESS.md](DATA_ACCESS.md) for comprehensive guide
+**See**: DATA_ACCESS.md for comprehensive guide
 
 ---
 
@@ -205,7 +207,7 @@ const name = webhookData.name;
 
 **Why**: Webhook node wraps all request data under `body` property. This includes POST data, query parameters, and JSON payloads.
 
-**See**: [DATA_ACCESS.md](DATA_ACCESS.md) for full webhook structure details
+**See**: DATA_ACCESS.md for full webhook structure details
 
 ---
 
@@ -275,7 +277,7 @@ return [{data: value}];  // Should be {json: value}
 
 **Why it matters**: Next nodes expect array format. Incorrect format causes workflow execution to fail.
 
-**See**: [ERROR_PATTERNS.md](ERROR_PATTERNS.md) #3 for detailed error solutions
+**See**: ERROR_PATTERNS.md #3 for detailed error solutions
 
 ---
 
@@ -378,7 +380,7 @@ return [{
 }];
 ```
 
-**See**: [COMMON_PATTERNS.md](COMMON_PATTERNS.md) for 10 detailed production patterns
+**See**: COMMON_PATTERNS.md for 10 detailed production patterns
 
 ---
 
@@ -447,7 +449,7 @@ const email = $json.email;
 const email = $json.body.email;
 ```
 
-**See**: [ERROR_PATTERNS.md](ERROR_PATTERNS.md) for comprehensive error guide
+**See**: ERROR_PATTERNS.md for comprehensive error guide
 
 ---
 
@@ -510,7 +512,7 @@ const names = $jmespath(data, 'users[*].name');
 return [{json: {adults, names}}];
 ```
 
-**See**: [BUILTIN_FUNCTIONS.md](BUILTIN_FUNCTIONS.md) for complete reference
+**See**: BUILTIN_FUNCTIONS.md for complete reference
 
 ---
 
@@ -684,10 +686,10 @@ Before deploying Code nodes, verify:
 ## Additional Resources
 
 ### Related Files
-- [DATA_ACCESS.md](DATA_ACCESS.md) - Comprehensive data access patterns
-- [COMMON_PATTERNS.md](COMMON_PATTERNS.md) - 10 production-tested patterns
-- [ERROR_PATTERNS.md](ERROR_PATTERNS.md) - Top 5 errors and solutions
-- [BUILTIN_FUNCTIONS.md](BUILTIN_FUNCTIONS.md) - Complete built-in reference
+- DATA_ACCESS.md - Comprehensive data access patterns
+- COMMON_PATTERNS.md - 10 production-tested patterns
+- ERROR_PATTERNS.md - Top 5 errors and solutions
+- BUILTIN_FUNCTIONS.md - Complete built-in reference
 
 ### n8n Documentation
 - Code Node Guide: https://docs.n8n.io/code/code-node/
@@ -697,3 +699,8 @@ Before deploying Code nodes, verify:
 ---
 
 **Ready to write JavaScript in n8n Code nodes!** Start with simple transformations, use the error patterns guide to avoid common mistakes, and reference the pattern library for production-ready examples.
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

@@ -1,8 +1,9 @@
 ---
 name: copy-editing
-description: "When the user wants to edit, review, or improve existing marketing copy. Also use when the user mentions 'edit this copy,' 'review my copy,' 'copy feedback,' 'proofread,' 'polish this,' 'make this better,' or 'copy sweep.' This skill provides a systematic approach to editing marketing copy through multiple focused passes."
-metadata:
-  version: 1.0.0
+description: "You are an expert copy editor specializing in marketing and conversion copy. Your goal is to systematically improve existing copy through focused editing passes while preserving the core message."
+risk: unknown
+source: community
+date_added: "2026-02-27"
 ---
 
 # Copy Editing
@@ -10,9 +11,6 @@ metadata:
 You are an expert copy editor specializing in marketing and conversion copy. Your goal is to systematically improve existing copy through focused editing passes while preserving the core message.
 
 ## Core Philosophy
-
-**Check for product marketing context first:**
-If `.claude/product-marketing-context.md` exists, read it before editing. Use brand voice and customer language from that context to guide your edits.
 
 Good copy editing isn't about rewriting—it's about enhancing. Each pass focuses on one dimension, catching issues that get missed when you try to fix everything at once.
 
@@ -413,18 +411,15 @@ This iterative process ensures each edit doesn't create new problems while respe
 
 ---
 
-## References
+## Questions to Ask
 
-- [Plain English Alternatives](references/plain-english-alternatives.md): Replace complex words with simpler alternatives
-
----
-
-## Task-Specific Questions
-
+If you need more context:
 1. What's the goal of this copy? (Awareness, conversion, retention)
-2. What action should readers take?
-3. Are there specific concerns or known issues?
-4. What proof/evidence do you have available?
+2. Who's the target audience?
+3. What action should readers take?
+4. What's the brand voice? (Casual, professional, playful, authoritative)
+5. Are there specific concerns or known issues?
+6. What proof/evidence do you have available?
 
 ---
 
@@ -445,3 +440,8 @@ This iterative process ensures each edit doesn't create new problems while respe
 | Reviewing and improving existing copy | copy-editing (this skill) |
 | Editing copy you just wrote | copy-editing (this skill) |
 | Structural or strategic page changes | page-cro |
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

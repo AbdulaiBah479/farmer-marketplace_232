@@ -1,64 +1,230 @@
 ---
-name: Security
-description: Proactive security engineering for PAI projects. USE WHEN user needs threat modeling, CMMC compliance baseline, security requirements, vulnerability analysis, or security-first design. Prevents security issues during design, not after deployment.
+name: security
+description: Security audit workflow - vulnerability scan → verification
 ---
 
-# Security
+# /security - Security Audit Workflow
 
-Shift-left security: identify and mitigate threats before code is written.
+Dedicated security analysis for sensitive code.
 
-## Workflow Routing
+## When to Use
 
-| Workflow | When to Use | Output |
-|----------|-------------|--------|
-| ThreatModel | Designing new feature or system | Threat model document with STRIDE threats and mitigations |
-| CmmcBaseline | Starting DoD/government project | CMMC Level 2 compliance baseline (all 17 domains, 110 practices) |
-| SecurityReview | Reviewing code for vulnerabilities | Security review report with OWASP Top 10 findings and fixes |
-| InfrastructureSecurity | Auditing cloud/infrastructure config | Infrastructure security audit with hardening recommendations |
+- "Security audit"
+- "Check for vulnerabilities"
+- "Is this secure?"
+- "Review authentication code"
+- "Check for injection attacks"
+- Before handling auth, payments, user data
+- After adding security-sensitive features
 
-## Examples
+## Workflow Overview
 
-### Example 1: Threat model a new feature
 ```
-User: "Threat model the user login feature"
-Skill loads: Security → ThreatModel workflow
-Output: STRIDE threats identified (spoofing, tampering, etc.) with mitigations
-```
-
-### Example 2: Generate CMMC baseline
-```
-User: "Create CMMC baseline for our e-commerce app"
-Skill loads: Security → CmmcBaseline workflow
-Output: CMMC practices mapped to features, gap analysis, compliance roadmap
+┌─────────┐    ┌───────────┐
+│  aegis  │───▶│ arbiter  │
+│         │    │           │
+└─────────┘    └───────────┘
+  Security       Verify
+  audit          fixes
 ```
 
-### Example 3: Code security review
+## Agent Sequence
+
+| # | Agent | Role | Output |
+|---|-------|------|--------|
+| 1 | **aegis** | Comprehensive security scan | Vulnerability report |
+| 2 | **arbiter** | Verify fixes, run security tests | Verification report |
+
+## Why Dedicated Security?
+
+The `/review` workflow focuses on code quality. Security needs:
+- Specialized vulnerability patterns
+- Dependency scanning
+- Secret detection
+- OWASP Top 10 checks
+- Authentication/authorization review
+
+## Execution
+
+### Phase 1: Security Audit
+
 ```
-User: "Review this authentication code for security vulnerabilities"
-Skill loads: Security → SecurityReview workflow
-Output: OWASP Top 10 analysis, vulnerability findings (SQL injection, weak passwords), remediation guidance
+Task(
+  subagent_type="aegis",
+  prompt="""
+  Security audit: [SCOPE]
+
+  Scan for:
+
+  **Injection Attacks:**
+  - SQL injection
+  - Command injection
+  - XSS (Cross-Site Scripting)
+  - LDAP injection
+
+  **Authentication/Authorization:**
+  - Broken authentication
+  - Session management issues
+  - Privilege escalation
+  - Insecure direct object references
+
+  **Data Protection:**
+  - Sensitive data exposure
+  - Hardcoded secrets/credentials
+  - Insecure cryptography
+  - Missing encryption
+
+  **Configuration:**
+  - Security misconfigurations
+  - Default credentials
+  - Verbose error messages
+  - Missing security headers
+
+  **Dependencies:**
+  - Known vulnerable packages
+  - Outdated dependencies
+  - Supply chain risks
+
+  Output: Detailed report with:
+  - Severity (CRITICAL/HIGH/MEDIUM/LOW)
+  - Location (file:line)
+  - Description
+  - Remediation steps
+  """
+)
 ```
 
-### Example 4: Infrastructure security audit
+### Phase 2: Verification (After Fixes)
+
 ```
-User: "Audit our AWS configuration for security issues"
-Skill loads: Security → InfrastructureSecurity workflow
-Output: Infrastructure security findings (open S3 buckets, weak IAM policies), CIS Benchmark gaps
+Task(
+  subagent_type="arbiter",
+  prompt="""
+  Verify security fixes: [SCOPE]
+
+  Run:
+  - Security-focused tests
+  - Dependency audit (npm audit, pip audit)
+  - Re-check reported vulnerabilities
+  - Verify fixes don't introduce regressions
+
+  Output: Verification report
+  """
+)
 ```
 
-## Integration
+## Security Scopes
 
-- Works with AgilePm skill (adds security reqs to user stories)
-- Works with TestArchitect skill (security test scenarios from threat model)
-- Generates threat-model.md for project documentation
-- Maps to CMMC practices for compliance
+### Full Codebase
+```
+User: /security
+→ Scan entire codebase
+```
 
-## Methodology
+### Specific Area
+```
+User: /security authentication
+→ Focus on auth-related code
+```
 
-This skill follows security-first principles:
-- Threat model during design (not after deployment)
-- STRIDE methodology (Microsoft's threat modeling framework)
-- CMMC Level 2 baseline (110 practices for DoD contractors)
-- Risk-based prioritization (fix critical threats first)
+### Single File
+```
+User: /security src/api/auth.py
+→ Deep dive on one file
+```
 
-Based on industry standards: STRIDE, OWASP Top 10, CMMC Model v2.0.
+### Dependencies Only
+```
+User: /security --deps
+→ Only dependency vulnerabilities
+```
+
+## Example
+
+```
+User: /security the payment processing code
+
+Claude: Starting /security audit for payment code...
+
+Phase 1: Security audit...
+[Spawns aegis]
+
+┌─────────────────────────────────────────────────────────────┐
+│ Security Audit Report                                       │
+├─────────────────────────────────────────────────────────────┤
+│ Scope: src/services/payment/                                │
+│ Files scanned: 12                                           │
+│ Lines analyzed: 2,847                                       │
+├─────────────────────────────────────────────────────────────┤
+│ CRITICAL (1)                                                │
+│ ──────────                                                  │
+│ [C1] SQL Injection in payment.py:89                         │
+│      query = f"SELECT * FROM orders WHERE id = {order_id}"  │
+│      Fix: Use parameterized queries                         │
+│                                                             │
+│ HIGH (2)                                                    │
+│ ────────                                                    │
+│ [H1] Hardcoded API key in stripe_client.py:12               │
+│      STRIPE_KEY = "sk_live_..."                             │
+│      Fix: Move to environment variable                      │
+│                                                             │
+│ [H2] Missing input validation in refund.py:45               │
+│      amount = request.json['amount']  # No validation       │
+│      Fix: Validate amount is positive number                │
+│                                                             │
+│ MEDIUM (1)                                                  │
+│ ──────────                                                  │
+│ [M1] Verbose error messages in error_handler.py:23          │
+│      return {"error": str(e)}  # Leaks internal details     │
+│      Fix: Return generic message, log details internally    │
+│                                                             │
+│ LOW (0)                                                     │
+│ ───────                                                     │
+│ None                                                        │
+├─────────────────────────────────────────────────────────────┤
+│ Summary: 1 critical, 2 high, 1 medium, 0 low                │
+│ Status: BLOCKING - Fix critical issues before release       │
+└─────────────────────────────────────────────────────────────┘
+
+Fix the critical and high issues, then run:
+/security --verify
+```
+
+### After Fixes
+
+```
+User: /security --verify
+
+Claude: Phase 2: Verifying fixes...
+[Spawns arbiter]
+
+✅ C1: SQL injection fixed - using parameterized queries
+✅ H1: API key moved to environment variable
+✅ H2: Input validation added
+✅ M1: Error messages sanitized
+
+All security tests passing.
+Security audit: PASSED
+```
+
+## OWASP Top 10 Coverage
+
+| Risk | Checked |
+|------|---------|
+| A01 Broken Access Control | ✅ |
+| A02 Cryptographic Failures | ✅ |
+| A03 Injection | ✅ |
+| A04 Insecure Design | ✅ |
+| A05 Security Misconfiguration | ✅ |
+| A06 Vulnerable Components | ✅ |
+| A07 Auth Failures | ✅ |
+| A08 Data Integrity Failures | ✅ |
+| A09 Logging Failures | ✅ |
+| A10 SSRF | ✅ |
+
+## Flags
+
+- `--deps`: Dependencies only
+- `--verify`: Re-run after fixes
+- `--owasp`: Explicit OWASP Top 10 report
+- `--secrets`: Focus on secret detection

@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>design-extract · 风格选择器</title>
+<!--
+  数据驱动的 picker 外壳：本文件不要按轮次修改，每轮只重写 picker-data.js。
+  约定：
+  - window.PICKER_DATA 见 references/picker-protocol.md
+  - 区块类型 section.type："pick"（默认：单选 + 微调 + 反馈）/ "vote"（三态投票：
+    心动/无感/不要，速筛轮用）/ "text"（文本题：事实题用）/ "checklist"（勾选确认：
+    Do/Don't 用）——只有 pick 区块参与全局预览合成与锁定
+  - preview.html 的根节点会被渲染进固定 480×360 的舞台（缩略图按比例缩小），
+    其中所有会随候选变化的视觉属性必须写成 var(--xxx)
+  - 方向板轮：候选可自带 html/css 模板（css 须用唯一根类名命名空间）——
+    缩略图渲染候选自己的模板，选中后主预览整体切换到该模板
+  - 已锁定区块需提供 lockedPick(展示用 label) 与 lockedVars(参与全局预览合成)
+  - UI 本身刻意中性灰，避免给用户的审美判断掺杂噪音
+-->
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+         background: #ECECEC; color: #333; line-height: 1.6; }
+  header { background: #FFF; border-bottom: 1px solid #DDD; padding: 14px 28px;
+           position: sticky; top: 0; z-index: 10; display: flex; align-items: baseline; gap: 16px; }
+  header h1 { font-size: 17px; font-weight: 600; }
+  header .progress { font-size: 13px; color: #888; }
+  .layout { display: grid; grid-template-columns: 1fr 540px; gap: 24px;
+            max-width: 1480px; margin: 0 auto; padding: 24px 28px 120px; }
+  .layout.no-preview { grid-template-columns: 1fr; max-width: 1100px; }
+
+  /* —— 区块 —— */
+  .section { background: #FFF; border-radius: 10px; padding: 20px 24px; margin-bottom: 20px;
+             border: 1px solid #E2E2E2; }
+  .section h2 { font-size: 15px; margin-bottom: 2px; }
+  .section .desc { font-size: 12.5px; color: #999; margin-bottom: 14px; }
+  /* 锁定区块不做整体置灰——里面有定稿色样/小样，透明度会冲淡颜色，样片必须忠实 */
+  .locked-banner { display: flex; align-items: center; gap: 10px; font-size: 13px;
+                   background: #F0F7F0; border: 1px solid #CBE3CB; color: #3A7A3A;
+                   border-radius: 8px; padding: 8px 12px; }
+  .lk-chips { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .lk-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: #555;
+             background: #FAFAFA; border: 1px solid #E2E2E2; border-radius: 6px; padding: 4px 10px;
+             font-family: "SF Mono", Menlo, monospace; }
+  .lk-chip i { width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(0,0,0,.15);
+               display: inline-block; }
+  .lk-chip em { font-style: normal; font-size: 15px; color: #333; }
+  .lk-sample { margin-top: 10px; }
+
+  /* —— 候选缩略图 —— */
+  .cands { display: flex; flex-wrap: wrap; gap: 14px; }
+  .cand { cursor: pointer; border: 2px solid #DDD; border-radius: 8px; overflow: hidden;
+          background: #FAFAFA; transition: border-color .15s, box-shadow .15s; width: 216px; }
+  .cand:hover { border-color: #AAA; }
+  .cand.selected { border-color: #2B6CB0; box-shadow: 0 0 0 3px rgba(43,108,176,.18); }
+  .cand .thumb { width: 216px; height: 162px; overflow: hidden; position: relative; background: #FFF; }
+  .cand .thumb .pv-fit { width: 480px; height: 360px; transform: scale(0.45); transform-origin: 0 0; }
+  .cand .meta { padding: 8px 10px; border-top: 1px solid #EEE; }
+  .cand .meta .label { font-size: 13px; font-weight: 600; }
+  .cand .meta .note { font-size: 11.5px; color: #999; }
+
+  /* —— 三态投票（vote 区块） —— */
+  .vote-row { display: flex; border-top: 1px solid #EEE; }
+  .vote-btn { flex: 1; padding: 6px 0; font-size: 12px; text-align: center; cursor: pointer;
+              background: #FAFAFA; border: none; border-right: 1px solid #EEE; color: #888; }
+  .vote-btn:last-child { border-right: none; }
+  .vote-btn.on-love { background: #2B6CB0; color: #FFF; }
+  .vote-btn.on-neutral { background: #E0E0E0; color: #555; }
+  .vote-btn.on-veto { background: #C0392B; color: #FFF; }
+  .cand.v-love { border-color: #2B6CB0; box-shadow: 0 0 0 3px rgba(43,108,176,.18); }
+  .cand.v-veto { border-color: #C0392B; opacity: .55; }
+
+  /* —— 文本题（text 区块） —— */
+  .q-text textarea { width: 100%; min-height: 64px; border: 1px solid #DDD; border-radius: 6px;
+                     padding: 8px 10px; font-size: 13px; font-family: inherit; resize: vertical; }
+  .q-text textarea:focus { outline: none; border-color: #2B6CB0; }
+
+  /* —— 勾选确认（checklist 区块） —— */
+  .ckl { display: flex; flex-direction: column; gap: 8px; }
+  .ckl label { display: flex; gap: 8px; align-items: flex-start; font-size: 13px;
+               padding: 8px 10px; border: 1px solid #E2E2E2; border-radius: 6px;
+               background: #FAFAFA; cursor: pointer; }
+  .ckl label input { margin-top: 3px; accent-color: #2B6CB0; }
+  .ckl .src { display: block; font-size: 11.5px; color: #999; }
+
+  /* —— 微调 —— */
+  .adjusters { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+  .adjuster { display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
+  .adjuster .name { color: #777; min-width: 64px; }
+  .chip { padding: 3px 12px; border-radius: 99px; border: 1px solid #CCC; background: #FFF;
+          font-size: 12px; cursor: pointer; }
+  .chip.on { background: #2B6CB0; border-color: #2B6CB0; color: #FFF; }
+
+  /* —— 反馈 / 都不是 —— */
+  .fb { margin-top: 14px; }
+  .fb textarea { width: 100%; min-height: 52px; border: 1px solid #DDD; border-radius: 6px;
+                 padding: 8px 10px; font-size: 13px; font-family: inherit; resize: vertical; }
+  .fb textarea:focus { outline: none; border-color: #2B6CB0; }
+  .fb .hint { font-size: 11.5px; color: #AAA; margin-top: 2px; }
+  .none-row { margin-top: 10px; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+  .none-row input { accent-color: #C0392B; }
+  .section.noned .cands, .section.noned .adjusters { opacity: 0.35; pointer-events: none; }
+  .err { color: #C0392B; font-size: 12.5px; margin-top: 6px; display: none; }
+  .section.invalid .err { display: block; }
+  .section.invalid { border-color: #E2A9A0; }
+
+  /* —— 实时预览 —— */
+  .preview-pane { position: sticky; top: 76px; align-self: start; }
+  .preview-pane .pv-card { background: #FFF; border: 1px solid #E2E2E2; border-radius: 10px;
+                           padding: 16px; }
+  .preview-pane h3 { font-size: 13px; color: #888; font-weight: 500; margin-bottom: 10px; }
+  .pv-stage { width: 480px; height: 360px; overflow: hidden; border-radius: 6px;
+              border: 1px solid #EEE; }
+  .pv-tip { font-size: 12px; color: #AAA; margin-top: 10px; }
+
+  /* —— 提交 —— */
+  .submit-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #FFF;
+                border-top: 1px solid #DDD; padding: 12px 28px; display: flex;
+                justify-content: center; gap: 16px; align-items: center; z-index: 20; }
+  .submit-bar button { background: #2B6CB0; color: #FFF; border: none; border-radius: 8px;
+                       padding: 10px 48px; font-size: 15px; font-weight: 600; cursor: pointer; }
+  .submit-bar button:hover { background: #235A94; }
+  .submit-bar .bar-err { color: #C0392B; font-size: 13px; }
+  .done-overlay { position: fixed; inset: 0; background: rgba(255,255,255,.96); z-index: 50;
+                  display: none; flex-direction: column; align-items: center; justify-content: center;
+                  gap: 12px; text-align: center; }
+  .done-overlay.show { display: flex; }
+  .done-overlay .big { font-size: 22px; font-weight: 700; }
+  .done-overlay .sub { color: #888; font-size: 14px; }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="hd-title">风格选择器</h1>
+  <span class="progress" id="hd-progress"></span>
+</header>
+
+<div class="layout">
+  <main id="sections"></main>
+  <aside class="preview-pane">
+    <div class="pv-card">
+      <h3>实时预览 · 当前组合</h3>
+      <div class="pv-stage" id="pv-main"></div>
+      <p class="pv-tip">每点选一个候选，预览立即按当前组合更新</p>
+    </div>
+  </aside>
+</div>
+
+<div class="submit-bar">
+  <span class="bar-err" id="bar-err"></span>
+  <button id="btn-submit">确认提交本轮选择</button>
+</div>
+
+<div class="done-overlay" id="done">
+  <div class="big">已提交 ✓</div>
+  <div class="sub">回到 Claude Code 继续；如有下一轮，刷新本页即可</div>
+</div>
+
+<script src="picker-data.js"></script>
+<script>
+(function () {
+  const D = window.PICKER_DATA;
+  if (!D) { document.body.innerHTML = "<p style='padding:40px'>缺少 picker-data.js</p>"; return; }
+
+  // 注入候选预览所需的样式：共享 preview.css + 各候选自带 css（方向板轮）
+  // + 已锁定区块的定稿小样 css（lockedSample）。自带 css 必须用唯一根类名命名空间
+  const styleEl = document.createElement("style");
+  styleEl.textContent = (D.preview.css || "") + "\n" +
+    D.sections.flatMap((s) => (s.candidates || []).map((c) => c.css || "")
+      .concat((s.lockedSample && s.lockedSample.css) || "")).join("\n");
+  document.head.appendChild(styleEl);
+
+  // —— 状态：按区块类型初始化 ——
+  const state = {};
+  D.sections.forEach((s) => {
+    if (s.locked) return;
+    const t = s.type || "pick";
+    if (t === "vote") state[s.id] = { type: t, feedback: "",
+      votes: Object.fromEntries((s.candidates || []).map((c) => [c.id, "neutral"])) };
+    else if (t === "text") state[s.id] = { type: t, answer: "" };
+    else if (t === "checklist") state[s.id] = { type: t, feedback: "",
+      checked: Object.fromEntries((s.items || []).map((i) => [i.id, i.checked !== false])) };
+    else state[s.id] = { type: "pick", pick: null, none: false, feedback: "", adjustments: {} };
+  });
+
+  const candById = (s, id) => s.candidates && s.candidates.find((c) => c.id === id);
+
+  // 合成全局变量：base + 各区块贡献（锁定区块用 lockedVars；未锁定用选中候选 + 微调）
+  // excludeId 用于候选缩略图——缩略图要体现"全局其余选择 + 本候选"的真实组合
+  function mergedVars(excludeId, extra) {
+    const vars = Object.assign({}, D.preview.baseVars || {});
+    D.sections.forEach((s) => {
+      if (s.id === excludeId) return;
+      if (s.locked) { Object.assign(vars, s.lockedVars || {}); return; }
+      if (s.type && s.type !== "pick") return; // vote/text/checklist 不参与变量合成
+      const st = state[s.id];
+      if (st && st.pick && !st.none) {
+        const c = candById(s, st.pick);
+        if (c) Object.assign(vars, c.vars || {});
+        Object.assign(vars, st.adjustments);
+      }
+    });
+    if (extra) Object.assign(vars, extra);
+    return vars;
+  }
+  const varsToStyle = (vars) => Object.entries(vars).map(([k, v]) => `${k}:${v}`).join(";");
+
+  // —— 渲染区块 ——
+  const root = document.getElementById("sections");
+  D.sections.forEach((s) => {
+    const el = document.createElement("section");
+    el.className = "section" + (s.locked ? " locked" : "");
+    el.dataset.id = s.id;
+    let inner = `<h2>${s.title}</h2><div class="desc">${s.desc || ""}</div>`;
+
+    if (s.locked) {
+      inner += `<div class="locked-banner">🔒 已锁定：${s.lockedPick || ""}（本轮不可改，如需推翻请在对话里说）</div>`;
+      // 定稿内容直接展示：lockedVars 里的色值渲染成色块芯片、字体渲染成实字样，
+      // 其余值（display/边框等）靠 lockedPick 文字描述
+      const chips = Object.entries(s.lockedVars || {}).map(([k, v]) => {
+        const val = String(v).trim();
+        if (/^#[0-9A-Fa-f]{3,8}$/.test(val))
+          return `<span class="lk-chip"><i style="background:${val}"></i>${k.replace(/^--/, "")} ${val}</span>`;
+        if (k.startsWith("--font-"))
+          return `<span class="lk-chip"><em style="font-family:${val}">Ag 永</em>${val.split(",")[0].replace(/['"]/g, "")}</span>`;
+        return "";
+      }).join("");
+      if (chips) inner += `<div class="lk-chips">${chips}</div>`;
+      // 非色值/字体的定稿（质感/元件/形状）用 lockedSample 小样展示，
+      // 小样内可用 var()——repaint 会把全局合成变量注入样片容器
+      if (s.lockedSample) inner += `<div class="lk-sample">${s.lockedSample.html}</div>`;
+      el.innerHTML = inner;
+      root.appendChild(el);
+      return;
+    }
+
+    const type = s.type || "pick";
+
+    // —— text：文本题（事实题用，required 默认 true） ——
+    if (type === "text") {
+      inner += `<div class="q-text"><textarea placeholder="${s.placeholder || ""}"></textarea></div>
+        <div class="err"></div>`;
+      el.innerHTML = inner;
+      root.appendChild(el);
+      el.querySelector("textarea").addEventListener("input", (e) => {
+        state[s.id].answer = e.target.value.trim();
+        el.classList.remove("invalid");
+      });
+      return;
+    }
+
+    // —— checklist：勾选确认（Do/Don't 用，items 默认全勾） ——
+    if (type === "checklist") {
+      inner += `<div class="ckl">` + (s.items || []).map((it) => `
+        <label><input type="checkbox" data-item="${it.id}" ${state[s.id].checked[it.id] ? "checked" : ""} />
+          <span>${it.label}${it.note ? `<span class="src">${it.note}</span>` : ""}</span></label>`).join("") + `</div>`;
+      if (s.feedback !== false) inner += `<div class="fb">
+        <textarea placeholder="${s.fbHint || "想补充新条目或修改措辞的，写在这里（可留空）"}"></textarea></div>`;
+      el.innerHTML = inner;
+      root.appendChild(el);
+      el.querySelectorAll("input[type=checkbox]").forEach((ck) =>
+        ck.addEventListener("change", () => { state[s.id].checked[ck.dataset.item] = ck.checked; }));
+      const cklFb = el.querySelector(".fb textarea");
+      if (cklFb) cklFb.addEventListener("input", (e) => { state[s.id].feedback = e.target.value.trim(); });
+      return;
+    }
+
+    // —— vote：三态投票（速筛轮用，候选自带模板，不参与全局合成） ——
+    if (type === "vote") {
+      inner += `<div class="cands">` + s.candidates.map((c) => `
+        <div class="cand" data-cand="${c.id}">
+          <div class="thumb"><div class="pv-fit" data-thumb="${c.id}">${c.html || D.preview.html}</div></div>
+          <div class="meta"><div class="label">${c.label}</div><div class="note">${c.note || ""}</div></div>
+          <div class="vote-row">
+            <button class="vote-btn" data-v="love">♥ 心动</button>
+            <button class="vote-btn on-neutral" data-v="neutral">– 无感</button>
+            <button class="vote-btn" data-v="veto">✗ 不要</button>
+          </div>
+        </div>`).join("") + `</div>`;
+      if (s.feedback !== false) inner += `<div class="fb">
+        <textarea placeholder="${s.fbHint || "排除的原因、心动卡里更偏向谁……写给下一轮（可留空）"}"></textarea>
+        <div class="hint">投票定方向，文字补细节</div></div>`;
+      inner += `<div class="err"></div>`;
+      el.innerHTML = inner;
+      root.appendChild(el);
+      el.querySelectorAll(".cand").forEach((cEl) => {
+        const cid = cEl.dataset.cand;
+        cEl.querySelectorAll(".vote-btn").forEach((b) => b.addEventListener("click", () => {
+          state[s.id].votes[cid] = b.dataset.v;
+          el.classList.remove("invalid");
+          cEl.classList.toggle("v-love", b.dataset.v === "love");
+          cEl.classList.toggle("v-veto", b.dataset.v === "veto");
+          cEl.querySelectorAll(".vote-btn").forEach((x) => {
+            x.className = "vote-btn" + (x === b ? " on-" + b.dataset.v : "");
+          });
+        }));
+      });
+      const voteFb = el.querySelector(".fb textarea");
+      if (voteFb) voteFb.addEventListener("input", (e) => { state[s.id].feedback = e.target.value.trim(); });
+      return;
+    }
+
+    // thumbHtml：仅缩略图用的放大样片（字体/元件等微差异区块），主预览模板不受它影响
+    inner += `<div class="cands">` + s.candidates.map((c) => `
+      <div class="cand" data-cand="${c.id}">
+        <div class="thumb"><div class="pv-fit" data-thumb="${c.id}">${c.thumbHtml || c.html || D.preview.html}</div></div>
+        <div class="meta"><div class="label">${c.label}</div><div class="note">${c.note || ""}</div></div>
+      </div>`).join("") + `</div>`;
+
+    if (s.adjusters && s.adjusters.length) {
+      inner += `<div class="adjusters">` + s.adjusters.map((a) => `
+        <div class="adjuster" data-adj="${a.id}">
+          <span class="name">${a.label}</span>
+          ${a.options.map((o) => `<button class="chip${o.default ? " on" : ""}"
+             data-var="${a.var}" data-value="${o.value}" data-default="${o.default ? 1 : 0}">${o.label}</button>`).join("")}
+        </div>`).join("") + `</div>`;
+    }
+
+    inner += `<div class="fb">
+        <textarea placeholder="以选中的为基础，但是…（有不满就写，留空 = 这个区块定稿锁定）"></textarea>
+        <div class="hint">写了反馈 → 下一轮基于你选的这版改；留空 → 锁定不再出现</div>
+      </div>`;
+    if (s.allowNone !== false) {
+      inner += `<label class="none-row"><input type="checkbox" class="none-ck" />
+        ${s.noneLabel || "✗ 都不是我想要的（请务必在上面写明原因，给下一轮换方向）"}</label>`;
+    }
+    inner += `<div class="err"></div>`;
+    el.innerHTML = inner;
+    root.appendChild(el);
+
+    // 事件：选候选
+    el.querySelectorAll(".cand").forEach((cEl) => {
+      cEl.addEventListener("click", () => {
+        state[s.id].pick = cEl.dataset.cand;
+        state[s.id].none = false;
+        const ck = el.querySelector(".none-ck"); if (ck) ck.checked = false;
+        el.classList.remove("noned", "invalid");
+        el.querySelectorAll(".cand").forEach((x) => x.classList.toggle("selected", x === cEl));
+        repaint();
+      });
+    });
+    // 事件：微调 chips
+    el.querySelectorAll(".chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        const row = chip.closest(".adjuster");
+        row.querySelectorAll(".chip").forEach((x) => x.classList.toggle("on", x === chip));
+        if (chip.dataset.default === "1") delete state[s.id].adjustments[chip.dataset.var];
+        else state[s.id].adjustments[chip.dataset.var] = chip.dataset.value;
+        repaint();
+      });
+    });
+    // 事件：反馈 / 都不是
+    el.querySelector("textarea").addEventListener("input", (e) => {
+      state[s.id].feedback = e.target.value.trim();
+      el.classList.remove("invalid");
+    });
+    const ck = el.querySelector(".none-ck");
+    if (ck) ck.addEventListener("change", () => {
+      state[s.id].none = ck.checked;
+      if (ck.checked) { state[s.id].pick = null;
+        el.querySelectorAll(".cand").forEach((x) => x.classList.remove("selected")); }
+      el.classList.toggle("noned", ck.checked);
+      el.classList.remove("invalid");
+      repaint();
+    });
+  });
+
+  // —— 预览刷新：主预览 + 所有缩略图（缩略图也吃全局组合，保证"实景"）——
+  // 主预览模板：默认共享 preview.html；选中自带模板的候选（方向板）时整体切换
+  const pvMain = document.getElementById("pv-main");
+  let mainTpl = null;
+  function currentTemplate() {
+    let html = D.preview.html;
+    D.sections.forEach((s) => {
+      if (s.locked) return;
+      if (s.type && s.type !== "pick") return;
+      const st = state[s.id];
+      if (st && st.pick && !st.none) {
+        const c = candById(s, st.pick);
+        if (c && c.html) html = c.html;
+      }
+    });
+    return html;
+  }
+  function repaint() {
+    const tpl = currentTemplate();
+    if (tpl !== mainTpl) {
+      mainTpl = tpl;
+      pvMain.innerHTML = `<div class="pv-fit" style="width:480px;height:360px">${tpl}</div>`;
+    }
+    pvMain.firstElementChild.style.cssText = "width:480px;height:360px;" + varsToStyle(mergedVars(null));
+    document.querySelectorAll(".lk-sample").forEach((el) => { el.style.cssText = varsToStyle(mergedVars(null)); });
+    D.sections.forEach((s) => {
+      if (s.locked) return;
+      (s.candidates || []).forEach((c) => {
+        const t = document.querySelector(`[data-thumb="${c.id}"]`);
+        if (t) t.style.cssText = "width:480px;height:360px;transform:scale(0.45);transform-origin:0 0;" +
+          varsToStyle(mergedVars(s.id, c.vars));
+      });
+    });
+  }
+
+  // —— 头部进度（只统计 pick 区块——其余类型无锁定概念） ——
+  const pickSecs = D.sections.filter((s) => !s.type || s.type === "pick");
+  const lockedCount = pickSecs.filter((s) => s.locked).length;
+  document.getElementById("hd-title").textContent = D.title || "风格选择器";
+  document.getElementById("hd-progress").textContent = pickSecs.length
+    ? `第 ${D.round ?? 1} 轮 · 已锁定 ${lockedCount}/${pickSecs.length} 个区块`
+    : `第 ${D.round ?? 1} 轮`;
+
+  // —— 无预览模式（速筛轮等无全局组合可言的轮次） ——
+  if (D.preview.hidden) {
+    document.querySelector(".preview-pane").style.display = "none";
+    document.querySelector(".layout").classList.add("no-preview");
+  }
+
+  // —— 提交 ——
+  document.getElementById("btn-submit").addEventListener("click", async () => {
+    let firstBad = null;
+    D.sections.forEach((s) => {
+      if (s.locked) return;
+      const st = state[s.id];
+      const el = root.querySelector(`[data-id="${s.id}"]`);
+      const t = s.type || "pick";
+      let bad = false, msg = "";
+      if (t === "pick") {
+        bad = st.none ? (s.noneNeedsReason !== false && !st.feedback) : !st.pick;
+        msg = st.none
+          ? "勾了「都不是」就必须写原因——沉默的否定没法指导下一轮"
+          : "这个区块还没选：挑一个最接近的，或勾「都不是」并写原因";
+      } else if (t === "text") {
+        bad = s.required !== false && !st.answer;
+        msg = "这一题需要填写";
+      } else if (t === "vote") {
+        bad = s.requireVote !== false &&
+          !Object.values(st.votes).some((v) => v !== "neutral");
+        msg = "全部无感没法定向——至少投出一些「♥ 心动」或「✗ 不要」";
+      } // checklist 无必填项
+      el.classList.toggle("invalid", bad);
+      if (bad) {
+        el.querySelector(".err").textContent = msg;
+        if (!firstBad) firstBad = el;
+      }
+    });
+    if (firstBad) {
+      document.getElementById("bar-err").textContent = "还有区块未完成，已标红";
+      firstBad.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    const payload = { round: D.round ?? 1, sections: {} };
+    Object.entries(state).forEach(([id, st]) => {
+      if (st.type === "vote")
+        payload.sections[id] = { type: "vote", votes: st.votes, feedback: st.feedback };
+      else if (st.type === "text")
+        payload.sections[id] = { type: "text", answer: st.answer };
+      else if (st.type === "checklist")
+        payload.sections[id] = { type: "checklist",
+          checked: Object.keys(st.checked).filter((k) => st.checked[k]),
+          unchecked: Object.keys(st.checked).filter((k) => !st.checked[k]),
+          feedback: st.feedback };
+      else
+        payload.sections[id] = { type: "pick", pick: st.pick, none: st.none,
+          adjustments: st.adjustments, feedback: st.feedback };
+    });
+    try {
+      const r = await fetch("/submit", { method: "POST",
+        headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      document.getElementById("done").classList.add("show");
+    } catch (e) {
+      document.getElementById("bar-err").textContent = "提交失败：" + e.message + "（服务器还在吗？）";
+    }
+  });
+
+  repaint();
+})();
+</script>
+</body>
+</html>

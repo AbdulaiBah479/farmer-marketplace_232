@@ -1,124 +1,100 @@
 ---
 name: generate-image
-description: Generate or edit images using AI models (FLUX, Gemini). Use for scientific illustrations, diagrams, schematics, infographics, concept visualizations, and artistic images. Supports image editing to modify existing images (change colors, add/remove elements, style transfer). Useful for figures, posters, and visual explanations.
+description: >-
+  Generate images using AI. Use when asked to generate, create, or make images, textures,
+  icons, sprites, artwork, visual assets, or mockups. Supports OpenAI (gpt-image-2) and
+  Google Gemini (Nano Banana). Requires an API key for the chosen provider.
+argument-hint: "[description of the image to generate]"
+license: MIT
+metadata:
+  version: "2.1.0"
+  providers: "openai, gemini"
 ---
 
 # Generate Image
 
-Generate and edit high-quality images using OpenRouter's image generation models including FLUX.2 Pro and Nano Banana Pro (Gemini 3 Pro).
+You are an image generation assistant. When invoked, follow the workflow below.
 
-## Quick Start
+## Workflow
 
-Use the `scripts/generate_image.py` script to generate or edit images:
+1. **Check for API keys** — check whether `SKILL_IMAGE_GEN_OPENAI_KEY` and/or `SKILL_IMAGE_GEN_GEMINI_KEY` are set in the environment.
+2. **If one key is set** — use that provider. No need to ask.
+3. **If both are set** — pick based on context (OpenAI for polish, Gemini for speed), or ask if the user has a preference.
+4. **If no keys are set** — run the Onboarding section.
+5. **Generate the image** using the appropriate API reference.
+6. **Tell the user** where the image was saved.
 
-```bash
-# Generate a new image
-python scripts/generate_image.py "A beautiful sunset over mountains"
+## Onboarding
 
-# Edit an existing image
-python scripts/generate_image.py "Make the sky purple" --input photo.jpg
+Only run this if no keys are set. Guide the user conversationally.
+
+1. Ask which provider they'd like to use:
+   - **OpenAI (gpt-image-2)** — High quality, excellent text rendering, paid per image
+   - **Google Gemini (Nano Banana)** — Fast, free tier available, great for iteration
+2. Direct them to get an API key:
+   - OpenAI → https://platform.openai.com/api-keys
+   - Gemini → https://aistudio.google.com/apikey
+3. Once they provide the key, set `SKILL_IMAGE_GEN_OPENAI_KEY` or `SKILL_IMAGE_GEN_GEMINI_KEY` in the current session and persist it to the appropriate shell profile.
+4. Proceed to generate the image they originally asked for.
+
+## API Reference: OpenAI
+
+**Method:** `POST`
+**URL:** `https://api.openai.com/v1/images/generations`
+
+**Headers:**
+- `Authorization: Bearer <SKILL_IMAGE_GEN_OPENAI_KEY>`
+- `Content-Type: application/json`
+
+**Body (JSON):**
+```json
+{
+  "model": "gpt-image-2",
+  "prompt": "<user prompt>",
+  "n": 1,
+  "size": "1024x1024",
+  "quality": "medium"
+}
 ```
 
-This generates/edits an image and saves it as `generated_image.png` in the current directory.
+| Field | Default | Options |
+|---|---|---|
+| model | `gpt-image-2` | `gpt-image-2`, `gpt-image-1` |
+| size | `1024x1024` | `1024x1024`, `1024x1536`, `1536x1024`, `auto` |
+| quality | `medium` | `low`, `medium`, `high` |
 
-## API Key Setup
+**Response:** `data[0].b64_json` contains the base64-encoded image. Decode it and save to the output path. If `data[0].url` is present instead, download the image from that URL.
 
-**CRITICAL**: The script requires an OpenRouter API key. Before running, check if the user has configured their API key:
+## API Reference: Google Gemini (Nano Banana)
 
-1. Look for a `.env` file in the project directory or parent directories
-2. Check for `OPENROUTER_API_KEY=<key>` in the `.env` file
-3. If not found, inform the user they need to:
-   - Create a `.env` file with `OPENROUTER_API_KEY=your-api-key-here`
-   - Or set the environment variable: `export OPENROUTER_API_KEY=your-api-key-here`
-   - Get an API key from: https://openrouter.ai/keys
+**Method:** `POST`
+**URL:** `https://generativelanguage.googleapis.com/v1beta/models/<model>:generateContent`
 
-The script will automatically detect the `.env` file and provide clear error messages if the API key is missing.
+**Headers:**
+- `x-goog-api-key: <SKILL_IMAGE_GEN_GEMINI_KEY>`
+- `Content-Type: application/json`
 
-## Model Selection
-
-**Default model**: `google/gemini-3-pro-image-preview` (high quality, recommended)
-
-**Available models for generation and editing**:
-- `google/gemini-3-pro-image-preview` - High quality, supports generation + editing
-- `black-forest-labs/flux.2-pro` - Fast, high quality, supports generation + editing
-
-**Generation only**:
-- `black-forest-labs/flux.2-dev` - Development version, generation only
-
-Select based on:
-- **Quality**: Use gemini-3-pro or flux.2-pro
-- **Editing**: Use gemini-3-pro or flux.2-pro (both support image editing)
-- **Cost**: Use flux.2-dev for generation only
-
-## Common Usage Patterns
-
-### Basic generation
-```bash
-python scripts/generate_image.py "Your prompt here"
+**Body (JSON):**
+```json
+{
+  "contents": [{"parts": [{"text": "Generate an image: <user prompt>"}]}],
+  "generationConfig": {"responseModalities": ["TEXT", "IMAGE"]}
+}
 ```
 
-### Specify model
-```bash
-python scripts/generate_image.py "A cat in space" --model "black-forest-labs/flux.2-pro"
-```
+| Field | Default | Options |
+|---|---|---|
+| model (in URL) | `gemini-2.0-flash-exp` | `gemini-2.0-flash-exp`, `gemini-2.5-flash-image` |
 
-### Custom output path
-```bash
-python scripts/generate_image.py "Abstract art" --output artwork.png
-```
+**Response:** Find `candidates[0].content.parts[]` — look for a part with `inlineData.data` (base64 image) and `inlineData.mimeType`. Decode and save.
 
-### Edit an existing image
-```bash
-python scripts/generate_image.py "Make the background blue" --input photo.jpg
-```
+**Error cases:** `error` key (API error), `promptFeedback.blockReason` (safety block), `finishReason: "SAFETY"` (filtered).
 
-### Edit with a specific model
-```bash
-python scripts/generate_image.py "Add sunglasses to the person" --input portrait.png --model "black-forest-labs/flux.2-pro"
-```
+## Agent Guidelines
 
-### Edit with custom output
-```bash
-python scripts/generate_image.py "Remove the text from the image" --input screenshot.png --output cleaned.png
-```
-
-### Multiple images
-Run the script multiple times with different prompts or output paths:
-```bash
-python scripts/generate_image.py "Image 1 description" --output image1.png
-python scripts/generate_image.py "Image 2 description" --output image2.png
-```
-
-## Script Parameters
-
-- `prompt` (required): Text description of the image to generate, or editing instructions
-- `--input` or `-i`: Input image path for editing (enables edit mode)
-- `--model` or `-m`: OpenRouter model ID (default: google/gemini-3-pro-image-preview)
-- `--output` or `-o`: Output file path (default: generated_image.png)
-- `--api-key`: OpenRouter API key (overrides .env file)
-
-## Error Handling
-
-The script provides clear error messages for:
-- Missing API key (with setup instructions)
-- API errors (with status codes)
-- Unexpected response formats
-- Missing dependencies (requests library)
-
-If the script fails, read the error message and address the issue before retrying.
-
-## Notes
-
-- Images are returned as base64-encoded data URLs and automatically saved as PNG files
-- The script supports both `images` and `content` response formats from different OpenRouter models
-- Generation time varies by model (typically 5-30 seconds)
-- For image editing, the input image is encoded as base64 and sent to the model
-- Supported input image formats: PNG, JPEG, GIF, WebP
-- Check OpenRouter pricing for cost information: https://openrouter.ai/models
-
-## Image Editing Tips
-
-- Be specific about what changes you want (e.g., "change the sky to sunset colors" vs "edit the sky")
-- Reference specific elements in the image when possible
-- For best results, use clear and detailed editing instructions
-- Both Gemini 3 Pro and FLUX.2 Pro support image editing through OpenRouter
+- Choose the output path intelligently — save to the project's relevant directory (e.g., `assets/`, `images/`, or the current directory).
+- For game textures, enrich prompts with "seamless", "tileable", "game asset".
+- For batch generation, make multiple API calls in parallel.
+- If the user asks to switch providers or what options are available, explain both and help them set up.
+- Always create the output directory before saving.
+- Ensure special characters in the user's prompt are properly escaped in the JSON body.

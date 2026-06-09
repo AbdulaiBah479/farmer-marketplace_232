@@ -1,156 +1,200 @@
 ---
-name: Spec Driven Development
-description: 기능 구현을 위한 테크스펙과 구현 계획 문서를 작성합니다. 스펙 주도 개발 워크플로우를 지원합니다.
+name: spec-driven-development
+description: Creates specs before coding. Use when starting a new project, feature, or significant change and no specification exists yet. Use when requirements are unclear, ambiguous, or only exist as a vague idea.
 ---
 
-# 스펙 주도 개발 (Spec Driven Development)
+# Spec-Driven Development
 
-## 개요
+## Overview
 
-이 skill은 기능 구현 전에 테크스펙과 구현 계획 문서를 체계적으로 작성하도록 도와줍니다.
+Write a structured specification before writing any code. The spec is the shared source of truth between you and the human engineer — it defines what we're building, why, and how we'll know it's done. Code without a spec is guessing.
 
----
+## When to Use
 
-## 핵심 원칙: 테크스펙이 가장 중요하다
+- Starting a new project or feature
+- Requirements are ambiguous or incomplete
+- The change touches multiple files or modules
+- You're about to make an architectural decision
+- The task would take more than 30 minutes to implement
 
-> **"코드는 테크스펙의 구현일 뿐이다. 테크스펙 없이 코드를 작성하지 마라."**
+**When NOT to use:** Single-line fixes, typo corrections, or changes where requirements are unambiguous and self-contained.
 
-### 왜 테크스펙이 중요한가?
+## The Gated Workflow
 
-1. **명확한 방향 설정**: 구현 전에 무엇을, 왜, 어떻게 만들지 명확히 정의
-2. **설계 오류 조기 발견**: 코드 작성 전에 설계 문제를 발견하고 수정
-3. **커뮤니케이션 도구**: 팀원, 미래의 자신과의 명확한 의사소통
-4. **의사결정 기록**: 기술적 결정의 이유와 트레이드오프 문서화
-5. **구현 품질 향상**: 충분한 사전 검토로 더 나은 코드 품질 확보
-
-### 테크스펙 작성 원칙
-
-- **최대한 자세하게**: 모호함 없이 구체적으로 작성
-- **모든 엣지 케이스 고려**: 예외 상황과 경계 조건 명시
-- **코드 수준의 상세함**: 주요 타입, 함수 시그니처, 데이터 구조 포함
-- **Why를 명확히**: 단순히 What이 아닌, 왜 그렇게 결정했는지 기록
-- **검증 가능한 요구사항**: 테스트로 검증할 수 있는 형태로 작성
-
-### 테크스펙 완성 기준
-
-테크스펙은 다음 질문에 모두 답할 수 있어야 완성된 것이다:
-
-- [ ] 이 기능이 해결하는 문제가 명확한가?
-- [ ] 모든 기능적/비기능적 요구사항이 정의되었는가?
-- [ ] 도메인 모델과 타입이 구체적으로 설계되었는가?
-- [ ] API 인터페이스가 명확하게 정의되었는가?
-- [ ] 데이터 모델과 스키마가 설계되었는가?
-- [ ] 기술 선택의 이유가 문서화되었는가?
-- [ ] 위험 요소와 완화 방안이 식별되었는가?
-- [ ] 테스트 전략이 수립되었는가?
-
----
-
-## 워크플로우
-
-1. **테크스펙 작성** (가장 중요): 기능의 요구사항, 설계, 기술적 결정사항을 **최대한 자세하게** 문서화
-2. **구현 계획 작성**: 테크스펙 기반으로 단계별 구현 계획과 체크리스트 생성
-
-## 파일 구조
+Spec-driven development has four phases. Do not advance to the next phase until the current one is validated.
 
 ```
-docs/spec/
-├── 001-기능명/
-│   ├── TECH-SPEC.md           # 테크스펙
-│   └── PLAN.md                # 구현 계획
-├── 002-기능명/
-│   ├── TECH-SPEC.md
-│   └── PLAN.md
-└── ...
+SPECIFY ──→ PLAN ──→ TASKS ──→ IMPLEMENT
+   │          │        │          │
+   ▼          ▼        ▼          ▼
+ Human      Human    Human      Human
+ reviews    reviews  reviews    reviews
 ```
 
-## 사용법
+### Phase 1: Specify
 
-### 1. 새 기능 테크스펙 작성
+Start with a high-level vision. Ask the human clarifying questions until requirements are concrete.
 
-사용자가 기능에 대해 설명하면:
+**Surface assumptions immediately.** Before writing any spec content, list what you're assuming:
 
-1. `docs/spec/` 디렉토리에서 기존 폴더 번호 확인
-2. 다음 번호로 `docs/spec/NNN-기능명/` 디렉토리 생성
-3. [TECH-SPEC.template.md](./TECH-SPEC.template.md) 템플릿을 기반으로 `TECH-SPEC.md` 작성
-
-### 2. 구현 계획 작성
-
-테크스펙이 완성되면:
-
-1. **사용자에게 PLAN 문서 작성 여부 확인** (필수)
-   - "테크스펙 작성이 완료되었습니다. 구현 계획(PLAN) 문서를 작성할까요?"
-   - 사용자가 명시적으로 허락할 때까지 PLAN 작성을 진행하지 않음
-2. 사용자 승인 후, 동일 디렉토리에 `PLAN.md` 파일 생성
-3. [PLAN.template.md](./PLAN.template.md) 템플릿을 기반으로 문서 작성
-4. 각 단계별 체크리스트 포함
-
----
-
-## 템플릿 파일
-
-- **테크스펙 템플릿**: [TECH-SPEC.template.md](./TECH-SPEC.template.md)
-- **구현 계획 템플릿**: [PLAN.template.md](./PLAN.template.md)
-
----
-
-## 진행 방법
-
-### 테크스펙 작성 시
-
-1. 사용자로부터 기능 요구사항 청취
-2. `docs/spec/` 디렉토리의 기존 파일 확인하여 다음 번호 결정
-3. 테크스펙 템플릿을 기반으로 문서 작성
-4. 사용자와 함께 요구사항 및 설계 검토
-
-### 구현 계획 작성 시
-
-> **중요**: 테크스펙 완성 후 반드시 사용자에게 PLAN 작성 허락을 받아야 합니다.
-> 사용자가 명시적으로 승인하기 전까지 PLAN 문서 작성을 시작하지 마세요.
-
-1. 테크스펙 완성 후 사용자에게 PLAN 작성 여부 질문
-2. **사용자 승인 후에만** 해당 테크스펙 문서 읽기
-3. 테크스펙 기반으로 구현 단계 도출
-4. 각 단계별 체크리스트 작성
-5. 의존성 및 선행 조건 명시
-
-### 구현 진행 시
-
-1. 구현 계획 문서의 체크리스트 확인
-2. 각 작업 완료 시 체크 표시 (`- [x]`)
-3. 단계 완료 시 상태 테이블 업데이트
-4. 예상치 못한 변경사항은 계획 문서에 반영
-
----
-
-## 디렉토리 번호 규칙
-
-```bash
-# 기존 디렉토리 확인
-ls -d docs/spec/[0-9]*/ 2>/dev/null | sort -r | head -1
-
-# 다음 번호 결정
-# 기존 디렉토리가 없으면: 001
-# 기존 최신이 005면: 006
+```
+ASSUMPTIONS I'M MAKING:
+1. This is a web application (not native mobile)
+2. Authentication uses session-based cookies (not JWT)
+3. The database is PostgreSQL (based on existing Prisma schema)
+4. We're targeting modern browsers only (no IE11)
+→ Correct me now or I'll proceed with these.
 ```
 
-## 디렉토리명 규칙
+Don't silently fill in ambiguous requirements. The spec's entire purpose is to surface misunderstandings *before* code gets written — assumptions are the most dangerous form of misunderstanding.
 
-- 번호: 3자리 (001, 002, ...)
-- 기능명: 영문 소문자 + 하이픈 (kebab-case)
-- 예시:
-  - `docs/spec/001-user-authentication/TECH-SPEC.md`
-  - `docs/spec/001-user-authentication/PLAN.md`
-  - `docs/spec/002-order-execution/TECH-SPEC.md`
-  - `docs/spec/002-order-execution/PLAN.md`
+**Write a spec document covering these six core areas:**
 
----
+1. **Objective** — What are we building and why? Who is the user? What does success look like?
 
-## 주의사항
+2. **Commands** — Full executable commands with flags, not just tool names.
+   ```
+   Build: npm run build
+   Test: npm test -- --coverage
+   Lint: npm run lint --fix
+   Dev: npm run dev
+   ```
 
-1. **테크스펙 먼저**: 구현 계획은 반드시 테크스펙 완성 후 작성
-2. **사용자 승인 필수**: PLAN 문서는 사용자가 명시적으로 허락할 때만 작성 (자동으로 진행하지 않음)
-3. **점진적 상세화**: 처음부터 완벽할 필요 없음, 점진적으로 보완
-4. **변경 추적**: 중요한 변경사항은 문서에 기록
-5. **체크리스트 활용**: 구현 진행 상황을 체크리스트로 추적
-6. **프로젝트 원칙 준수**: CLAUDE.md의 함수형 DDD 원칙 따르기
+3. **Project Structure** — Where source code lives, where tests go, where docs belong.
+   ```
+   src/           → Application source code
+   src/components → React components
+   src/lib        → Shared utilities
+   tests/         → Unit and integration tests
+   e2e/           → End-to-end tests
+   docs/          → Documentation
+   ```
+
+4. **Code Style** — One real code snippet showing your style beats three paragraphs describing it. Include naming conventions, formatting rules, and examples of good output.
+
+5. **Testing Strategy** — What framework, where tests live, coverage expectations, which test levels for which concerns.
+
+6. **Boundaries** — Three-tier system:
+   - **Always do:** Run tests before commits, follow naming conventions, validate inputs
+   - **Ask first:** Database schema changes, adding dependencies, changing CI config
+   - **Never do:** Commit secrets, edit vendor directories, remove failing tests without approval
+
+**Spec template:**
+
+```markdown
+# Spec: [Project/Feature Name]
+
+## Objective
+[What we're building and why. User stories or acceptance criteria.]
+
+## Tech Stack
+[Framework, language, key dependencies with versions]
+
+## Commands
+[Build, test, lint, dev — full commands]
+
+## Project Structure
+[Directory layout with descriptions]
+
+## Code Style
+[Example snippet + key conventions]
+
+## Testing Strategy
+[Framework, test locations, coverage requirements, test levels]
+
+## Boundaries
+- Always: [...]
+- Ask first: [...]
+- Never: [...]
+
+## Success Criteria
+[How we'll know this is done — specific, testable conditions]
+
+## Open Questions
+[Anything unresolved that needs human input]
+```
+
+**Reframe instructions as success criteria.** When receiving vague requirements, translate them into concrete conditions:
+
+```
+REQUIREMENT: "Make the dashboard faster"
+
+REFRAMED SUCCESS CRITERIA:
+- Dashboard LCP < 2.5s on 4G connection
+- Initial data load completes in < 500ms
+- No layout shift during load (CLS < 0.1)
+→ Are these the right targets?
+```
+
+This lets you loop, retry, and problem-solve toward a clear goal rather than guessing what "faster" means.
+
+### Phase 2: Plan
+
+With the validated spec, generate a technical implementation plan:
+
+1. Identify the major components and their dependencies
+2. Determine the implementation order (what must be built first)
+3. Note risks and mitigation strategies
+4. Identify what can be built in parallel vs. what must be sequential
+5. Define verification checkpoints between phases
+
+The plan should be reviewable: the human should be able to read it and say "yes, that's the right approach" or "no, change X."
+
+### Phase 3: Tasks
+
+Break the plan into discrete, implementable tasks:
+
+- Each task should be completable in a single focused session
+- Each task has explicit acceptance criteria
+- Each task includes a verification step (test, build, manual check)
+- Tasks are ordered by dependency, not by perceived importance
+- No task should require changing more than ~5 files
+
+**Task template:**
+```markdown
+- [ ] Task: [Description]
+  - Acceptance: [What must be true when done]
+  - Verify: [How to confirm — test command, build, manual check]
+  - Files: [Which files will be touched]
+```
+
+### Phase 4: Implement
+
+Execute tasks one at a time following `skills/incremental-implementation/SKILL.md` (`incremental-implementation`) and `skills/test-driven-development/SKILL.md` (`test-driven-development`). Use `skills/context-engineering/SKILL.md` (`context-engineering`) to load the right spec sections and source files at each step rather than flooding the agent with the entire spec.
+
+## Keeping the Spec Alive
+
+The spec is a living document, not a one-time artifact:
+
+- **Update when decisions change** — If you discover the data model needs to change, update the spec first, then implement.
+- **Update when scope changes** — Features added or cut should be reflected in the spec.
+- **Commit the spec** — The spec belongs in version control alongside the code.
+- **Reference the spec in PRs** — Link back to the spec section that each PR implements.
+
+## Common Rationalizations
+
+| Rationalization | Reality |
+|---|---|
+| "This is simple, I don't need a spec" | Simple tasks don't need *long* specs, but they still need acceptance criteria. A two-line spec is fine. |
+| "I'll write the spec after I code it" | That's documentation, not specification. The spec's value is in forcing clarity *before* code. |
+| "The spec will slow us down" | A 15-minute spec prevents hours of rework. Waterfall in 15 minutes beats debugging in 15 hours. |
+| "Requirements will change anyway" | That's why the spec is a living document. An outdated spec is still better than no spec. |
+| "The user knows what they want" | Even clear requests have implicit assumptions. The spec surfaces those assumptions. |
+
+## Red Flags
+
+- Starting to write code without any written requirements
+- Asking "should I just start building?" before clarifying what "done" means
+- Implementing features not mentioned in any spec or task list
+- Making architectural decisions without documenting them
+- Skipping the spec because "it's obvious what to build"
+
+## Verification
+
+Before proceeding to implementation, confirm:
+
+- [ ] The spec covers all six core areas
+- [ ] The human has reviewed and approved the spec
+- [ ] Success criteria are specific and testable
+- [ ] Boundaries (Always/Ask First/Never) are defined
+- [ ] The spec is saved to a file in the repository

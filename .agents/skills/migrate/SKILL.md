@@ -1,137 +1,270 @@
 ---
 name: migrate
-description: |
-  Interactive cleanup of broken tests and code after a new feature lands. Use this skill
-  when: (1) TDD is complete but the full test suite has failures, (2) the user says
-  "migrate" or "fix broken tests", (3) preparing a branch for PR after feature work.
+description: Migration workflow - research → analyze → plan → implement → review
 ---
 
-# Migrate
+# /migrate - Migration Workflow
 
-Interactive cleanup after TDD execution. You run the suite, surface breakage, and
-the user decides what to do about each failure. You execute their decisions.
+Safe migrations for frameworks, languages, and infrastructure.
 
-## Prerequisites
+## When to Use
 
-- TDD execution is complete (new feature tests pass)
-- Full test suite has not been verified green yet
+- "Migrate to X"
+- "Upgrade framework"
+- "Move from X to Y"
+- "Upgrade Python/Node/etc."
+- "Migrate database"
+- Framework version upgrades
+- Language migrations
+- Infrastructure changes
 
-## Process
+## Workflow Overview
 
-### 0. Environment Setup
-
-Activate virtual environments and verify infrastructure before running tests:
-
-```bash
-# Backend: activate venv (NEVER claim "pytest unavailable" without checking)
-cd backend && source venv/bin/activate && python -m pytest --version
-
-# Frontend: verify node_modules
-cd frontend && ls node_modules/.bin/vitest
-
-# E2E: start servers if needed for E2E tests
-cd backend && source venv/bin/activate && uvicorn app.main:app --port 8001 &
-cd frontend && npm run dev -- --port 5174 &
+```
+┌──────────┐    ┌──────────┐    ┌────────────┐    ┌──────────┐    ┌───────────┐
+│  oracle  │───▶│ phoenix  │───▶│   plan-    │───▶│  kraken  │───▶│ surveyor  │
+│          │    │          │    │   agent    │    │          │    │           │
+└──────────┘    └──────────┘    └────────────┘    └──────────┘    └───────────┘
+  Research       Analyze          Plan             Implement       Review
+  target         current          migration        changes         migration
 ```
 
-If venv or node_modules don't exist, install dependencies first (`pip install -r requirements.txt` / `npm install`).
+## Agent Sequence
 
-### 1. Run Full Suite
+| # | Agent | Role | Output |
+|---|-------|------|--------|
+| 1 | **oracle** | Research target framework/version | Research report |
+| 2 | **phoenix** | Analyze current codebase for migration impact | Impact analysis |
+| 3 | **plan-agent** | Create phased migration plan | Migration plan |
+| 4 | **kraken** | Implement migration changes | Code changes |
+| 5 | **surveyor** | Review migration for completeness | Migration review |
 
-Run all test layers (with venv activated for backend):
+## Why Extra Gates?
 
-```bash
-cd backend && source venv/bin/activate && python -m pytest
-cd frontend && npm test -- --run
-cd e2e && npx playwright test
+Migrations are high-risk:
+- Breaking changes between versions
+- Dependency conflicts
+- Data format changes
+- API deprecations
+
+The extra research and review phases catch issues early.
+
+## Execution
+
+### Phase 1: Research Target
+
+```
+Task(
+  subagent_type="oracle",
+  prompt="""
+  Research migration target: [TARGET]
+
+  Investigate:
+  - Breaking changes from current version
+  - New APIs and patterns
+  - Deprecated features we use
+  - Migration guides from official docs
+  - Common pitfalls and solutions
+
+  Output: Migration research report
+  """
+)
 ```
 
-Collect all failures.
+### Phase 2: Analyze Current State
 
-### 2. Categorize Failures
+```
+Task(
+  subagent_type="phoenix",
+  prompt="""
+  Analyze codebase for migration: [FROM] → [TO]
 
-Separate failures into:
+  Identify:
+  - Files using deprecated APIs
+  - Dependency conflicts
+  - Patterns that need updating
+  - Test coverage of affected areas
+  - Risk areas (critical paths)
 
-| Category | Meaning | Action |
-|----------|---------|--------|
-| New feature tests failing | Bug in the feature | Flag — TDD didn't complete cleanly |
-| Existing tests failing | Cascade from new behavior | Present to user for decision |
+  Output: Impact analysis with affected files
+  """
+)
+```
 
-All failures are caused by this branch — main is always green.
+### Phase 3: Plan Migration
 
-### 3. Present Each Failure
+```
+Task(
+  subagent_type="plan-agent",
+  prompt="""
+  Create migration plan: [FROM] → [TO]
 
-For each existing test failure caused by the new feature, use `AskUserQuestion`:
+  Research: [from oracle]
+  Impact: [from phoenix]
 
-Present:
-- Test name and file
-- What it asserts (the old behavior)
-- Why it fails (the new behavior)
-- Relevant code diff if helpful
+  Plan should:
+  - Be phased (incremental if possible)
+  - Each phase independently testable
+  - Include rollback strategy
+  - Prioritize critical path stability
 
-Options:
-- **Update test** — modify assertions to reflect new correct behavior
-- **Remove test** — this scenario no longer applies
-- **This is a bug** — the feature broke something it shouldn't have; needs fixing
-- **Skip for now** — revisit later
+  Output: Phased migration plan
+  """
+)
+```
 
-Group related failures by topic when possible (e.g., "These 4 tests all assert
-the old response format for GET /recipes").
+### Phase 4: Implement
 
-### 4. Execute Decisions
+```
+Task(
+  subagent_type="kraken",
+  prompt="""
+  Implement migration phase: [PHASE_N]
 
-For each decision:
+  Plan: [from plan-agent]
 
-- **Update test**: Modify the test to assert new behavior. Run it to confirm it passes.
-- **Remove test**: Delete the test. If it was the only test for that behavior, ask
-  if replacement coverage is needed.
-- **Bug**: Create a LEARNING task noting the regression. Do not fix in migration —
-  this goes back to the feature implementation.
-- **Skip**: Leave as-is, note it for later.
+  Requirements:
+  - Follow plan exactly
+  - Run tests after each change
+  - Document any deviations
+  - Stop if tests fail
 
-### 5. Database Migrations
+  Output: Completed phase with test results
+  """
+)
+```
 
-Evaluate code changes in this branch for database impact:
+### Phase 5: Review Migration
 
-- Check for new/modified models, schema changes, or new fields
-- Check for changed relationships or constraints
-- Check for renamed or removed columns/tables
+```
+Task(
+  subagent_type="surveyor",
+  prompt="""
+  Review migration: [FROM] → [TO]
 
-If database changes are detected, present to user via `AskUserQuestion`:
-- What changed (model/field/relationship)
-- Whether a migration is needed (new table, altered column, etc.)
-- Suggested migration approach (e.g., Alembic revision, data backfill, nullable transition)
+  Check:
+  - All deprecated APIs replaced
+  - No remaining compatibility shims
+  - Tests passing
+  - Performance acceptable
+  - No security regressions
 
-For each migration needed:
-- **Generate migration**: Create the migration file, run it, verify it applies cleanly
-- **Data backfill**: If existing rows need default values, suggest and confirm approach
-- **Destructive changes**: Flag column/table removals — confirm data loss is acceptable
+  Output: Migration review report
+  """
+)
+```
 
-If no database changes detected, skip this step.
+## Migration Types
 
-### 6. Verify
+### Framework Upgrade
+```
+User: /migrate React 17 → 18
+→ Full workflow with hooks/concurrent mode changes
+```
 
-After all decisions are executed:
-- Run full suite again
-- If new failures appear (from the fixes), repeat from step 3
-- Continue until suite is green or only skipped/bug items remain
+### Language Version
+```
+User: /migrate Python 3.9 → 3.12
+→ Focus on new syntax, removed features
+```
 
-### 7. Summary
+### Database Migration
+```
+User: /migrate MongoDB → PostgreSQL
+→ Schema design, data transformation, query rewrite
+```
 
-Present final state:
-- Tests updated: [count and list]
-- Tests removed: [count and list]
-- Migrations created: [count and list]
-- Bugs found: [count and list — these need attention]
-- Skipped: [count and list]
-- Suite status: GREEN / remaining failures
+### Infrastructure
+```
+User: /migrate AWS → GCP
+→ Service mapping, config translation
+```
 
-Tell the user: "Migration complete. Run `/code-review` to verify against the plan
-before PR."
+## Example
 
-## Principles
+```
+User: /migrate from Express to Fastify
 
-- **User decides** — never update or remove a test without explicit approval
-- **Group related failures** — don't ask about 10 tests one at a time if they're the same issue
-- **Bugs go back** — if the feature broke something unintentionally, that's a bug, not a migration
-- **Green suite before PR** — the goal is a clean test suite
+Claude: Starting /migrate workflow: Express → Fastify
+
+Phase 1: Researching Fastify...
+[Spawns oracle]
+Key differences:
+- Schema-based validation (vs middleware)
+- Plugin architecture
+- Async/await native
+- Different middleware pattern
+
+Phase 2: Analyzing current Express usage...
+[Spawns phoenix]
+Impact analysis:
+- 23 route files to update
+- 8 middleware to convert
+- 3 plugins need Fastify equivalents
+- Test coverage: 78%
+
+Phase 3: Creating migration plan...
+[Spawns plan-agent]
+
+Migration Plan: Express → Fastify
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Phase 1: Setup & Core
+- Add Fastify alongside Express
+- Migrate core server setup
+- Run both in parallel
+
+Phase 2: Routes (by domain)
+- Migrate auth routes
+- Migrate user routes
+- Migrate product routes
+- ...
+
+Phase 3: Middleware
+- Convert error handler
+- Convert auth middleware
+- Convert logging
+
+Phase 4: Cleanup
+- Remove Express
+- Remove compatibility layer
+- Final testing
+
+Rollback: Keep Express until Phase 4 complete
+
+Phase 4: Implementing Phase 1...
+[Spawns kraken]
+✅ Fastify server running alongside Express
+✅ Core routes migrated
+✅ Tests passing
+
+[Continues through phases...]
+
+Phase 5: Reviewing migration...
+[Spawns surveyor]
+✅ All Express code removed
+✅ 23/23 routes migrated
+✅ Performance improved (2.1x faster)
+✅ No security regressions
+
+Migration complete! Express → Fastify
+```
+
+## Incremental Migration
+
+For large codebases, run one phase at a time:
+
+```
+User: /migrate React 17 → 18 --phase 1
+[Runs only Phase 1]
+
+User: /migrate React 17 → 18 --phase 2
+[Runs Phase 2, reads previous handoff]
+```
+
+## Flags
+
+- `--phase N`: Run specific phase only
+- `--dry-run`: Plan without implementing
+- `--rollback`: Execute rollback plan
+- `--parallel`: Run new alongside old (strangler fig)

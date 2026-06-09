@@ -1,97 +1,74 @@
 ---
 name: domain-driven-design
-description: Expert guidance for Domain-Driven Design architecture and implementation. Use when designing complex business systems, defining bounded contexts, structuring domain models, choosing between modular monolith vs microservices, implementing aggregates/entities/value objects, or when users mention "DDD", "domain-driven design", "bounded context", "aggregate", "domain model", "ubiquitous language", "event storming", "context mapping", "domain events", "anemic domain model", strategic design, tactical patterns, or domain modeling. Helps make architectural decisions, identify subdomains, design aggregates, and avoid common DDD pitfalls.
+description: "Plan and route Domain-Driven Design work from strategic modeling to tactical implementation and evented architecture patterns."
+risk: safe
+source: self
+tags: "[ddd, domain, bounded-context, architecture]"
+date_added: "2026-02-27"
 ---
 
-# Domain-Driven Design Skill
+# Domain-Driven Design
 
-DDD manages complexity through alignment between software and business reality. **Strategic design (boundaries, language, subdomains) provides more value than tactical patterns (aggregates, repositories).**
+## Use this skill when
 
-## When to Apply DDD
+- You need to model a complex business domain with explicit boundaries.
+- You want to decide whether full DDD is worth the added complexity.
+- You need to connect strategic design decisions to implementation patterns.
+- You are planning CQRS, event sourcing, sagas, or projections from domain needs.
 
-**Apply DDD when:**
-- Domain has intricate business rules
-- System is long-lived and high-value
-- Domain experts are available
-- Multiple teams/departments involved
-- Software represents competitive advantage
+## Do not use this skill when
 
-**DDD is overkill when:**
-- Simple CRUD applications
-- Tight deadlines, limited budgets
-- No domain experts available
-- Complexity is purely technical, not business
+- The problem is simple CRUD with low business complexity.
+- You only need localized bug fixes.
+- There is no access to domain knowledge and no proxy product expert.
 
-## Core Workflow
+## Instructions
 
-1. **Domain Discovery** → Identify subdomains and their strategic importance
-2. **Bounded Context Definition** → Draw boundaries where language changes
-3. **Context Mapping** → Define integration patterns between contexts
-4. **Architecture Selection** → Choose modular monolith vs microservices
-5. **Tactical Implementation** → Apply patterns within core domains only
+1. Run a viability check before committing to full DDD.
+2. Produce strategic artifacts first: subdomains, bounded contexts, language glossary.
+3. Route to specialized skills based on current task.
+4. Define success criteria and evidence for each stage.
 
-## Quick Reference
+### Viability check
 
-### Subdomain Types (Problem Space)
+Use full DDD only when at least two of these are true:
 
-| Type | Investment | Example |
-|------|-----------|---------|
-| **Core** | Maximum - competitive advantage | Recommendation engine, trading logic |
-| **Supporting** | Custom but quality tradeoffs OK | Inventory management |
-| **Generic** | Buy/outsource | Auth, email, payments |
+- Business rules are complex or fast-changing.
+- Multiple teams are causing model collisions.
+- Integration contracts are unstable.
+- Auditability and explicit invariants are critical.
 
-### Key Decision: Entity vs Value Object
+### Routing map
 
-- **Entity**: Has identity, tracked through time, mutable → `Customer`, `Order`
-- **Value Object**: Defined by attributes, immutable, interchangeable → `Money`, `Address`, `Email`
+- Strategic model and boundaries: `@ddd-strategic-design`
+- Cross-context integrations and translation: `@ddd-context-mapping`
+- Tactical code modeling: `@ddd-tactical-patterns`
+- Read/write separation: `@cqrs-implementation`
+- Event history as source of truth: `@event-sourcing-architect` and `@event-store-design`
+- Long-running workflows: `@saga-orchestration`
+- Read models: `@projection-patterns`
+- Decision log: `@architecture-decision-records`
 
-**Default to value objects.** Only use entities when identity matters.
+If templates are needed, open `references/ddd-deliverables.md`.
 
-### Aggregate Design Rules (Vaughn Vernon)
+## Output requirements
 
-1. Model true invariants in consistency boundaries
-2. Design small aggregates (~70% should be root + value objects only)
-3. Reference other aggregates by ID only
-4. Use eventual consistency outside the boundary
+Always return:
 
-### Architecture Decision
+- Scope and assumptions
+- Current stage (strategic, tactical, or evented)
+- Explicit artifacts produced
+- Open risks and next step recommendation
 
-```
-Start with modular monolith when:
-├── Team < 20 developers
-├── Domain boundaries unclear
-├── Time-to-market critical
-└── Strong consistency required
+## Examples
 
-Consider microservices when:
-├── Bounded contexts have distinct languages
-├── Teams can own full contexts
-├── Independent scaling required
-└── DevOps maturity exists
+```text
+Use @domain-driven-design to assess if this billing platform should adopt full DDD.
+Then route to the right next skill and list artifacts we must produce this week.
 ```
 
-## Detailed References
+## Limitations
 
-- **Strategic Patterns**: See [references/STRATEGIC-PATTERNS.md](references/STRATEGIC-PATTERNS.md) for subdomains, bounded contexts, context mapping, event storming
-- **Tactical Patterns**: See [references/TACTICAL-PATTERNS.md](references/TACTICAL-PATTERNS.md) for entities, value objects, aggregates, services, repositories
-- **Architecture Alignment**: See [references/ARCHITECTURE-ALIGNMENT.md](references/ARCHITECTURE-ALIGNMENT.md) for clean/hexagonal architecture, modular monolith, microservices
-- **Anti-Patterns**: See [references/ANTI-PATTERNS.md](references/ANTI-PATTERNS.md) for common pitfalls and how to avoid them
-- **Troubleshooting**: See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common issues and solutions
-
-## Critical Reminders
-
-1. **Ubiquitous language first** - Code should read like business language
-2. **Strategic before tactical** - Understand boundaries before implementing patterns
-3. **Apply tactical patterns selectively** - Only in core domains where complexity warrants
-4. **One aggregate per transaction** - Cross-aggregate consistency via domain events
-5. **Persistence ignorance** - Domain layer has no infrastructure dependencies
-
-## Implementation Skills
-
-For framework-specific implementation of these patterns:
-
-- **Spring Boot data layer**: See `spring-boot-data-ddd` skill for JPA/JDBC aggregates, repositories, transactions
-- **Spring Boot web layer**: See `spring-boot-web-api` skill for controllers, validation, exception handling  
-- **Spring Modulith**: See `spring-boot-modulith` skill for module structure and event-driven communication
-
-These skills provide Spring Boot 4 implementation patterns for the DDD concepts defined here.
+- This skill does not replace direct workshops with domain experts.
+- It does not provide framework-specific code generation.
+- It should not be used as a justification to over-engineer simple systems.

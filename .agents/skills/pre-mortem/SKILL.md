@@ -1,288 +1,93 @@
 ---
 name: pre-mortem
-description: Guide prospective hindsight analysis to identify project risks before failure occurs. Teams imagine the project has failed spectacularly, then work backward to identify causes. Increases risk identification by 30% compared to traditional planning.
-license: MIT
-metadata:
-  version: 1.0.0
-  model: claude-sonnet-4-5
-  author: SkillForge
-  academic_source: "HBR 2007 - Performing a Project Premortem by Gary Klein"
+description: "Run a pre-mortem risk analysis on a PRD or launch plan. Categorizes risks as Tigers (real problems), Paper Tigers (overblown concerns), and Elephants (unspoken worries), then classifies as launch-blocking, fast-follow, or track. Use when preparing for launch, stress-testing a product plan, or identifying what could go wrong."
 ---
 
-# Pre-Mortem Risk Identification
+# Pre-Mortem: Risk Analysis for Product Launch
 
-When this skill activates, you become a pre-mortem facilitator. Your role is to guide users through prospective hindsight analysis, helping them identify project risks by imagining failure has already occurred.
+## Purpose
 
-## Triggers
+You are a veteran product manager conducting a pre-mortem analysis on $ARGUMENTS. This skill imagines launch failure and works backward to identify real risks, distinguish them from perceived worries, and create action plans to mitigate launch-blocking issues.
 
-Activate when the user:
+## Context
 
-- "Run a pre-mortem on..."
-- "What could cause this project to fail?"
-- "Identify project risks for..."
-- "What could go wrong with..."
-- "Risk identification for..."
-- "Pre-mortem analysis"
+A pre-mortem is a structured risk-identification exercise that forces teams to think critically about what could go wrong before launch, when there's still time to act. By assuming failure, we surface hidden concerns and separate legitimate threats from overblown worries.
 
-## Quick Reference
+## Instructions
 
-| Phase | Duration | Output |
-|-------|----------|--------|
-| 1. Brief | 2-3 min | Project context documented |
-| 2. Failure Announcement | 30 sec | Mindset shift established |
-| 3. Independent Analysis | 3-5 min | Individual failure reasons |
-| 4. Round-Robin Collection | 5-10 min | Consolidated failure list |
-| 5. Review and Mitigate | 10-15 min | Risk inventory with mitigations |
+1. **Gather the PRD**: If the user provides a PRD or product plan file, read it thoroughly. Understand the product, target market, key assumptions, and timeline. If relevant, use web search to research competitive landscape or market conditions.
 
-## Why Pre-Mortem Works
+2. **Think Step by Step**:
+   - Imagine the product launches in 14 days
+   - Now imagine it fails—customers don't adopt it, revenue targets miss, reputation takes a hit
+   - What went wrong?
+   - What did we miss or not execute well?
+   - What were we overconfident about?
 
-Research by Gary Klein demonstrates that **prospective hindsight** (imagining an event has already occurred) increases the ability to identify reasons for outcomes by 30%.
+3. **Categorize Risks**: Classify each potential failure as one of three types:
 
-**Key psychological benefits:**
+   **Tigers**: Real problems you personally see that could derail the project
+   - Based on evidence, past experience, or clear logic
+   - Should keep you awake at night
+   - Require action
 
-1. **Reduces "damn-the-torpedoes" attitude** - Acknowledging failure is possible
-2. **Creates psychological safety** - Dissenters can voice concerns as analysis, not criticism
-3. **Surfaces hidden knowledge** - People share what they know but fear saying
-4. **Catches blind spots early** - Before commitment and sunk costs
+   **Paper Tigers**: Problems others might worry about, but you don't believe in them
+   - Valid concerns on the surface, but unlikely or overblown
+   - Not worth significant resource investment
+   - Worth documenting to align stakeholders
 
-## Process
+   **Elephants**: Something you're not sure is a problem, but the team isn't discussing it enough
+   - Unspoken concerns or assumptions nobody is validating
+   - Could be real; you're unsure
+   - Deserve investigation before launch
 
-### Phase 1: Project Brief (2-3 minutes)
+4. **Classify Tigers by Urgency**:
 
-**Input Required:**
+   **Launch-Blocking**: Must be solved before launch
+   - Example: Core feature broken, regulatory blocker, key customer dependency unmet
 
-- Project name and objective
-- Timeline and key milestones
-- Team composition (if team context)
-- Success criteria
+   **Fast-Follow**: Must be solved within 30 days post-launch
+   - Example: Performance issues, secondary features incomplete
 
-**Actions:**
+   **Track**: Monitor post-launch; solve if it becomes an issue
+   - Example: Nice-to-have features, edge cases
 
-1. Document the project scope clearly
-2. Identify key stakeholders
-3. Note any constraints or dependencies
-4. Confirm understanding with user
+5. **Create Action Plans**: For every Launch-Blocking Tiger:
+   - Describe the risk clearly
+   - Suggest a concrete mitigation action
+   - Identify the best owner (function/person)
+   - Set a decision/completion date
 
-**Output:** Project context document
+6. **Structure Output**: Present the analysis as:
 
-### Phase 2: Failure Announcement (30 seconds)
+   ```
+   ## Pre-Mortem Analysis: [Product Name]
 
-**The critical mindset shift.**
+   ### Tigers (Real Risks)
+   [List each real risk with category and mitigation plan]
 
-Announce to the user (or team):
+   ### Paper Tigers (Overblown Concerns)
+   [List each, explain why it's not a true risk]
 
-> "The project has failed. It is [timeline endpoint]. The project did not just miss its goals, it failed spectacularly. Your task now is to identify all the reasons why it failed."
+   ### Elephants (Unspoken Worries)
+   [List each, recommend investigation approach]
 
-**Important:** Use past tense. The failure has already happened. This is not speculation about what "might" happen; it "did" happen.
+   ### Action Plans for Launch-Blocking Tigers
+   [For each, include: Risk, Mitigation, Owner, Due Date]
+   ```
 
-### Phase 3: Independent Analysis (3-5 minutes)
+7. **Save the Output**: Save as a markdown document: `PreMortem-[product-name]-[date].md`
 
-**For individual context:**
+## Notes
 
-- User writes down 5-10 reasons why the project failed
-- No filtering or evaluation yet
-- Include both obvious and "unlikely" causes
-- Consider technical, human, organizational, and external factors
+- Be honest and constructive—the goal is to improve launch readiness, not assign blame
+- Default to "Tiger" if unsure; it's better to address risks early
+- Involve cross-functional perspectives (engineering, design, go-to-market) in your analysis
+- Revisit the pre-mortem 2-3 weeks before launch to verify mitigations are on track
 
-**For team context:**
+---
 
-- Each person writes independently
-- No discussion or sharing yet
-- Silent reflection maximizes diversity of thought
+### Further Reading
 
-**Prompt the user:**
-> "Write down every reason you can think of for why this project failed. Include causes you consider unlikely. Do not filter yourself. You have 3-5 minutes."
-
-**Output:** Raw list of failure reasons
-
-### Phase 4: Round-Robin Collection (5-10 minutes)
-
-**For individual context:**
-
-- Review each failure reason
-- Group by category (see Categories below)
-- No evaluation yet, just collection
-
-**For team context:**
-
-- Go around the room, each person shares ONE reason
-- Continue rounds until all reasons exhausted
-- Record without discussion or debate
-- No "that won't happen" or "we already thought of that"
-
-**Categories for grouping:**
-
-1. **Technical** - Technology, architecture, implementation
-2. **People** - Skills, availability, communication
-3. **Process** - Methodology, workflow, coordination
-4. **Organizational** - Politics, priorities, resources
-5. **External** - Market, competitors, regulations, dependencies
-6. **Unknown Unknowns** - Black swan events, assumptions
-
-**Output:** Categorized failure reasons
-
-### Phase 5: Review and Mitigate (10-15 minutes)
-
-**For each failure reason:**
-
-1. **Assess likelihood** (1-5 scale)
-   - 1: Very unlikely
-   - 2: Unlikely
-   - 3: Possible
-   - 4: Likely
-   - 5: Very likely
-
-2. **Assess impact** (1-5 scale)
-   - 1: Minor inconvenience
-   - 2: Delays
-   - 3: Significant setback
-   - 4: Major failure
-   - 5: Project-killing
-
-3. **Calculate risk score**: Likelihood x Impact
-
-4. **Identify mitigation strategies:**
-   - Prevention: How to stop it from happening
-   - Detection: How to know early if it is happening
-   - Response: What to do if it happens
-
-5. **Assign ownership** (if team context)
-
-**Prioritization:**
-
-- Risk score 15-25: Critical, address immediately
-- Risk score 8-14: High, plan mitigation
-- Risk score 4-7: Medium, monitor
-- Risk score 1-3: Low, accept or defer
-
-**Output:** Complete risk inventory (see template)
-
-## Output Template
-
-Generate the risk inventory using this structure:
-
-```markdown
-# Pre-Mortem Risk Inventory
-
-**Project:** [Name]
-**Date:** [Date]
-**Participants:** [Names or "Individual Analysis"]
-
-## Project Context
-
-- **Objective:** [What success looks like]
-- **Timeline:** [Start to end]
-- **Key Dependencies:** [Critical external factors]
-
-## Risk Summary
-
-| Priority | Count | Top Risk |
-|----------|-------|----------|
-| Critical | N | [Highest scoring risk] |
-| High | N | [Second highest category risk] |
-| Medium | N | |
-| Low | N | |
-
-## Critical Risks (Score 15-25)
-
-### R1: [Risk Name]
-
-- **Category:** [Technical/People/Process/Organizational/External]
-- **Failure Scenario:** [How this causes project failure]
-- **Likelihood:** [1-5] | **Impact:** [1-5] | **Score:** [L x I]
-- **Root Cause:** [Why this might happen]
-- **Mitigation:**
-  - Prevention: [How to avoid]
-  - Detection: [Early warning signs]
-  - Response: [Contingency plan]
-- **Owner:** [Person responsible]
-- **Status:** [Open/Mitigating/Accepted]
-
-[Repeat for each critical risk]
-
-## High Risks (Score 8-14)
-
-[Same structure as Critical]
-
-## Medium Risks (Score 4-7)
-
-[Abbreviated: Name, Category, Score, One-line mitigation]
-
-## Low Risks (Score 1-3)
-
-[List only: Name and score]
-
-## Action Items
-
-| Action | Owner | Due Date | Risk Addressed |
-|--------|-------|----------|----------------|
-| [Specific action] | [Name] | [Date] | R1, R3 |
-
-## Review Schedule
-
-- **Next review:** [Date]
-- **Review frequency:** [Weekly/Bi-weekly/Monthly]
-```
-
-## Scripts
-
-### pre-mortem.py
-
-Validates risk inventory completeness and calculates aggregate statistics.
-
-```bash
-python3 .claude/skills/pre-mortem/scripts/pre-mortem.py \
-  --inventory-path <path-to-risk-inventory.md> \
-  --validate
-```
-
-**Exit Codes:**
-
-- 0: Valid inventory with all required fields
-- 1: Invalid arguments
-- 10: Validation failed (missing required sections)
-
-## Anti-Patterns
-
-| Avoid | Why | Instead |
-|-------|-----|---------|
-| Skipping Phase 2 | Mindset shift is critical for effectiveness | Always announce failure explicitly |
-| Allowing discussion during Phase 3 | Reduces diversity of thought | Enforce silent writing |
-| Filtering "unlikely" causes | Miss black swan events | Include all causes, prioritize later |
-| Stopping at identification | Risk without mitigation is incomplete | Always complete Phase 5 |
-| One-time exercise | Projects evolve, new risks emerge | Schedule periodic reviews |
-
-## Facilitation Tips
-
-**For team settings:**
-
-- Emphasize no blame or criticism
-- Senior members speak last in round-robin
-- Celebrate thorough risk identification
-- Treat skeptics as valuable, not negative
-
-**For individual use:**
-
-- Role-play multiple perspectives (developer, user, manager)
-- Challenge your own assumptions explicitly
-- Consider "what would my critics say?"
-
-## Extension Points
-
-1. **Custom Categories:** Add domain-specific risk categories
-2. **Risk Templates:** Pre-built risks for common project types
-3. **Integration:** Link to issue trackers for action item follow-up
-4. **Quantification:** Add financial impact estimation
-
-## Related Skills
-
-| Skill | Relationship |
-|-------|--------------|
-| decision-critic | Post-decision validation (pre-mortem is pre-decision) |
-| planner | Use pre-mortem output to inform planning |
-| architect | Technical risks feed into ADR considerations |
-
-## References
-
-- Klein, G. (2007). "Performing a Project Premortem." Harvard Business Review.
-- Mitchell, D. J., et al. (1989). "Back to the Future: Temporal Perspective in the Explanation of Events." Journal of Behavioral Decision Making.
+- [How Meta and Instagram Use Pre-Mortems to Avoid Post-Mortems](https://www.productcompass.pm/p/how-to-run-pre-mortem-template)
+- [How to Manage Risks as a Product Manager](https://www.productcompass.pm/p/how-to-manage-risks-as-a-product-manager)

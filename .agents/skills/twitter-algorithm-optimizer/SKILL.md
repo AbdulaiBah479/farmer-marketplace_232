@@ -1,200 +1,328 @@
 ---
 name: twitter-algorithm-optimizer
-description: 使用 Twitter 开源算法洞察分析和优化推文以获得最大覆盖范围。根据推荐系统对内容排名的方式重写和编辑用户推文，以提升参与度和可见性。
+description: Analyze and optimize tweets for maximum reach using Twitter's open-source algorithm insights. Rewrite and edit user tweets to improve engagement and visibility based on how the recommendation system ranks content.
 license: AGPL-3.0 (referencing Twitter's algorithm source)
+category: creative-collaboration
 ---
 
-# Twitter 算法优化器
+# Twitter Algorithm Optimizer
 
-## 何时使用此技能
+## When to Use This Skill
 
-当你需要以下操作时使用此技能：
-- **优化推文草稿**以获得最大覆盖范围和参与度
-- **理解为什么**某条推文可能在算法上表现不佳
-- **重写推文**以符合 Twitter 的排名机制
-- **根据实际排名算法改进内容策略**
-- **调试表现不佳的内容**并增加可见性
-- **最大化 Twitter 算法跟踪的参与度信号**
+Use this skill when you need to:
+- **Optimize tweet drafts** for maximum reach and engagement
+- **Understand why** a tweet might not perform well algorithmically
+- **Rewrite tweets** to align with Twitter's ranking mechanisms
+- **Improve content strategy** based on the actual ranking algorithms
+- **Debug underperforming content** and increase visibility
+- **Maximize engagement signals** that Twitter's algorithms track
 
-## 此技能的作用
+## What This Skill Does
 
-1. **针对 Twitter 的核心推荐算法分析推文**
-2. **根据参与度信号识别优化机会**
-3. **重写和编辑推文以提高算法排名**
-4. **使用算法洞察解释推荐背后的"原因"**
-5. **将 Real-graph、SimClusters 和 TwHIN 原则应用于内容策略**
-6. **提供基于 Twitter 实际系统的参与度提升策略**
+1. **Analyzes tweets** against Twitter's core recommendation algorithms
+2. **Identifies optimization opportunities** based on engagement signals
+3. **Rewrites and edits tweets** to improve algorithmic ranking
+4. **Explains the "why"** behind recommendations using algorithm insights
+5. **Applies Real-graph, SimClusters, and TwHIN principles** to content strategy
+6. **Provides engagement-boosting tactics** grounded in Twitter's actual systems
 
-## 工作原理：Twitter 的算法架构
+## How It Works: Twitter's Algorithm Architecture
 
-Twitter 的推荐系统使用多个相互关联的模型：
+Twitter's recommendation system uses multiple interconnected models:
 
-### 核心排名模型
+### Core Ranking Models
 
-**Real-graph**：预测用户之间的互动可能性
-- 确定你的关注者是否将与你的内容互动
-- 影响 Twitter 向其他人展示你的推文的范围
-- 关键信号：关注者会喜欢、回复或转发这条推文吗？
+**Real-graph**: Predicts interaction likelihood between users
+- Determines if your followers will engage with your content
+- Affects how widely Twitter shows your tweet to others
+- Key signal: Will followers like, reply, or retweet this?
 
-**SimClusters**：具有稀疏嵌入的社区检测
-- 识别具有相似兴趣的用户社区
-- 确定你的推文是否在特定社区内产生共鸣
-- 关键策略：制作吸引会参与的高凝聚力社区的内容
+**SimClusters**: Community detection with sparse embeddings
+- Identifies communities of users with similar interests
+- Determines if your tweet resonates within specific communities
+- Key strategy: Make content that appeals to tight communities who will engage
 
-**TwHIN**：用户和帖子的知识图嵌入
-- 映射用户和内容主题之间的关系
-- 帮助 Twitter 理解你的推文是否符合关注者的兴趣
-- 关键策略：保持在你的领域内，或清楚地表明主题转变
+**TwHIN**: Knowledge graph embeddings for users and posts
+- Maps relationships between users and content topics
+- Helps Twitter understand if your tweet fits your follower interests
+- Key strategy: Stay in your niche or clearly signal topic shifts
 
-**Tweepcred**：用户声誉/权威评分
-- 更高可信度的用户获得更多分发
-- 你过去的参与历史会影响当前推文的覆盖范围
-- 关键策略：通过持续参与建立声誉
+**Tweepcred**: User reputation/authority scoring
+- Higher-credibility users get more distribution
+- Your past engagement history affects current tweet reach
+- Key strategy: Build reputation through consistent engagement
 
-### 跟踪的参与度信号
+### Engagement Signals Tracked
 
-Twitter 的**统一用户操作**服务跟踪显式和隐式信号：
+Twitter's **Unified User Actions** service tracks both explicit and implicit signals:
 
-**显式信号**（高权重）：
-- 点赞（直接正面信号）
-- 回复（表示值得讨论的有价值内容）
-- 转发（最强信号 - 用户想要分享它）
-- 引用推文（参与式讨论）
+**Explicit Signals** (high weight):
+- Likes (direct positive signal)
+- Replies (indicates valuable content worth discussing)
+- Retweets (strongest signal - users want to share it)
+- Quote tweets (engaged discussion)
 
-**隐式信号**（也有权重）：
-- 个人主页访问（对作者的好奇）
-- 点击/链接点击（内容被认为值得探索）
-- 时间花费（用户阅读/考虑你的推文）
-- 保存/书签（计划以后返回）
+**Implicit Signals** (also weighted):
+- Profile visits (curiosity about the author)
+- Clicks/link clicks (content deemed useful enough to explore)
+- Time spent (users reading/considering your tweet)
+- Saves/bookmarks (plan to return later)
 
-**负面信号**：
-- 屏蔽/举报（Twitter 会对这个进行严重惩罚）
-- 取消关注/静音（该人不想看到你的内容）
-- 快速跳过/快速滚动（低参与度）
+**Negative Signals**:
+- Block/report (Twitter penalizes this heavily)
+- Mute/unfollow (person doesn't want your content)
+- Skip/scroll past quickly (low engagement)
 
-### 动态生成过程
+### The Feed Generation Process
 
-你的推文通过以下流程触达用户：
+Your tweet reaches users through this pipeline:
 
-1. **候选检索** - 多个来源找到候选推文：
-   - 搜索索引（相关关键词匹配）
-   - UTEG（时间线参与图 - 关注关系）
-   - Tweet-mixer（热门/病毒内容）
+1. **Candidate Retrieval** - Multiple sources find candidate tweets:
+   - Search Index (relevant keyword matches)
+   - UTEG (timeline engagement graph - following relationships)
+   - Tweet-mixer (trending/viral content)
 
-2. **排名** - ML 模型对候选进行排名，预测参与度：
-   - 这个用户会与这条推文互动吗？
-   - 参与会发生得多快？
-   - 它会传播到非关注者吗？
+2. **Ranking** - ML models rank candidates by predicted engagement:
+   - Will THIS user engage with THIS tweet?
+   - How quickly will engagement happen?
+   - Will it spread to non-followers?
 
-3. **过滤** - 移除屏蔽的内容，应用偏好
+3. **Filtering** - Remove blocked content, apply preferences
 
-4. **交付** - 向用户展示排名后的动态
+4. **Delivery** - Show ranked feed to user
 
-## 基于算法洞察的优化策略
+## Optimization Strategies Based on Algorithm Insights
 
-### 1. 最大化 Real-graph（关注者参与度）
+### 1. Maximize Real-graph (Follower Engagement)
 
-**策略**：制作你的关注者会参与的内容
+**Strategy**: Make content your followers WILL engage with
 
-- **了解你的受众**：参考他们关心的话题
-- **提问**：直接问题比陈述获得更多回复
-- **（安全地）制造争议**：辩论吸引参与（但避免屏蔽/举报）
-- **标记相关创作者**：通过网络增加可见性
-- **在关注者活跃时发布**：更好的早期参与意味着更好的排名
+- **Know your audience**: Reference topics they care about
+- **Ask questions**: Direct questions get more replies than statements
+- **Create controversy (safely)**: Debate attracts engagement (but avoid blocks/reports)
+- **Tag related creators**: Increases visibility through networks
+- **Post when followers are active**: Better early engagement means better ranking
 
-**优化示例**：
-- ❌ "我认为气候政策很重要"
-- ✅ "热门观点：当前气候政策忽视了核能。大家怎么看？"（触发回复）
+**Example Optimization**:
+- ❌ "I think climate policy is important"
+- ✅ "Hot take: Current climate policy ignores nuclear energy. Thoughts?" (triggers replies)
 
-### 2. 利用 SimClusters（社区共鸣）
+### 2. Leverage SimClusters (Community Resonance)
 
-**策略**：找到并服务对你的话题深入感兴趣的紧密社区
+**Strategy**: Find and serve tight communities deeply interested in your topic
 
-- **选择一个清晰的主题**：不要用混合信息混淆算法
-- **使用社区语言**：参考共同的梗、内部笑话和术语
-- **为小众社区提供价值**：对那个特定社区真正有用
-- **鼓励社区到社区的分享**：引发讨论的引用
-- **在你的道路上建立一致性**：一致性帮助算法理解你的主题
+- **Pick ONE clear topic**: Don't confuse the algorithm with mixed messages
+- **Use community language**: Reference shared memes, inside jokes, terminology
+- **Provide value to the niche**: Be genuinely useful to that specific community
+- **Encourage community-to-community sharing**: Quotes that spark discussion
+- **Build in your lane**: Consistency helps algorithm understand your topic
 
-**优化示例**：
-- ❌ "我使用很多编程语言"
-- ✅ "Rust 的所有权系统是被低估的功能。以下是原因..."（针对特定的开发者社区）
+**Example Optimization**:
+- ❌ "I use many programming languages"
+- ✅ "Rust's ownership system is the most underrated feature. Here's why..." (targets specific dev community)
 
-### 3. 改善 TwHIN 映射（内容-用户匹配）
+### 3. Improve TwHIN Mapping (Content-User Fit)
 
-**策略**：使你的内容与你的既定身份明显相关
+**Strategy**: Make your content clearly relevant to your established identity
 
-- **表明你的专业知识**：以领域知识为主导
-- **一致性很重要**：保持在你的领域内（或清楚地宣布新方向）
-- **使用具体术语**：帮助算法正确对你进行分类
-- **参考你过去的成功**："跟进我关于 X 的推文..."
-- **建立主题权威**：同一主题的多条推文强化联系
+- **Signal your expertise**: Lead with domain knowledge
+- **Consistency matters**: Stay in your lanes (or clearly announce a new direction)
+- **Use specific terminology**: Helps algorithm categorize you correctly
+- **Reference your past wins**: "Following up on my tweet about X..."
+- **Build topical authority**: Multiple tweets on same topic strengthen the connection
 
-**优化示例**：
-- ❌ "我喜欢很多东西"（模糊，混淆算法）
-- ✅ "作为全栈工程师的第三次连续框架评测"（建立权威）
+**Example Optimization**:
+- ❌ "I like lots of things" (vague, confuses algorithm)
+- ✅ "My 3rd consecutive framework review as a full-stack engineer" (establishes authority)
 
-### 4. 提升 Tweepcred（权威/可信度）
+### 4. Boost Tweepcred (Authority/Credibility)
 
-**策略**：通过参与一致性建立声誉
+**Strategy**: Build reputation through engagement consistency
 
-- **回复顶级创作者**：与高可信度账户的互动提升可见性
-- **引用有趣的推文**：增加价值并表明参与
-- **避免参与诱饵**：不会建立真正的可信度
-- **保持一致**：定期发布高质量内容胜过零星的病毒式尝试
-- **深入参与**：高质量的回复和讨论比数量更重要
+- **Reply to top creators**: Interaction with high-credibility accounts boosts visibility
+- **Quote interesting tweets**: Adds value and signals engagement
+- **Avoid engagement bait**: Doesn't build real credibility
+- **Be consistent**: Regular quality posting beats sporadic viral attempts
+- **Engage deeply**: Quality replies and discussions matter more than volume
 
-**优化示例**：
-- ❌ "如果同意就转发..."（参与诱饵，随着时间推移损害可信度）
-- ✅ "对[链接推文]中方法的深思熟虑的批评"（建立权威）
+**Example Optimization**:
+- ❌ "RETWEET IF..." (engagement bait, damages credibility over time)
+- ✅ "Thoughtful critique of the approach in [linked tweet]" (builds authority)
 
-### 5. 最大化参与度信号
+### 5. Maximize Engagement Signals
 
-**显式信号触发器**：
+**Explicit Signal Triggers**:
 
-**对于点赞**：
-- 新颖的见解或令人难忘的措辞
-- 对受众信念的验证
-- 有用/可操作的信息
-- 有支持证据的强烈观点
+**For Likes**:
+- Novel insights or memorable phrasing
+- Validation of audience beliefs
+- Useful/actionable information
+- Strong opinions with supporting evidence
 
-**对于回复**：
-- 提出直接问题
-- 制造辩论
-- 请求意见
-- 分享不完整的想法（邀请补充）
+**For Replies**:
+- Ask a direct question
+- Create a debate
+- Request opinions
+- Share incomplete thoughts (invites completion)
 
-**对于转发**：
-- 人们想要分享的有用信息
-- 代表性价值（推文代表他们）
-- 娱乐他们的关注者
-- 信息优势（首先发布突发新闻）
+**For Retweets**:
+- Useful information people want to share
+- Representational value (tweet speaks for them)
+- Entertainment that entertains their followers
+- Information advantage (breaking news first)
 
-**对于保存/书签**：
-- 教程或操作指南
-- 他们以后会参考的数据/统计
-- 灵感或动力
-- 他们想再次看到的笑话/娱乐
+**For Bookmarks/Saves**:
+- Tutorials or how-tos
+- Data/statistics they'll reference later
+- Inspiration or motivation
+- Jokes/entertainment they'll want to see again
 
-**优化示例**：
-- ❌ "看看这个工具"（被动）
-- ✅ "这个工具这周节省了我 5 个小时。以下是设置方法..."（可操作，值得转发）
+**Example Optimization**:
+- ❌ "Check out this tool" (passive)
+- ✅ "This tool saved me 5 hours this week. Here's how to set it up..." (actionable, retweet-worthy)
 
-### 6. 防止负面信号
+### 6. Prevent Negative Signals
 
-**避免**：
-- 可能被举报的煽动性内容
-- 有针对性的骚扰（受到算法惩罚）
-- 误导性/虚假声明（损害可信度）
-- 品牌外转型（混淆算法）
-- 回复者综合症（太多低价值回复）
+**Avoid**:
+- Inflammatory content likely to be reported
+- Targeted harassment (gets algorithmic penalty)
+- Misleading/false claims (damages credibility)
+- Off-brand pivots (confuses the algorithm)
+- Reply-guy syndrome (too many low-value replies)
 
-## 如何优化你的推文
+## How to Optimize Your Tweets
 
-### 第 1 步：识别核心信息
-- 这条推文传达的最重要的一件事是什么？
-- 谁应该关心这个？
-- 你想要什么行动/参与？
+### Step 1: Identify the Core Message
+- What's the single most important thing this tweet communicates?
+- Who should care about this?
+- What action/engagement do you want?
 
-### 第 2 步：映射到算法策略
-- 哪个 Real-graph 关注者细分群体会参与？（关心 X 的关注者）
+### Step 2: Map to Algorithm Strategy
+- Which Real-graph follower segment will engage? (Followers who care about X)
+- Which SimCluster community? (Niche interested in Y)
+- How does this fit your TwHIN identity? (Your established expertise)
+- Does this boost or hurt Tweepcred?
+
+### Step 3: Optimize for Signals
+- Does it trigger replies? (Ask a question, create debate)
+- Is it retweet-worthy? (Usefulness, entertainment, representational value)
+- Will followers like it? (Novel, validating, actionable)
+- Could it go viral? (Community resonance + network effects)
+
+### Step 4: Check Against Negatives
+- Any blocks/reports risk?
+- Any confusion about your identity?
+- Any engagement bait that damages credibility?
+- Any inflammatory language that hurts Tweepcred?
+
+## Example Optimizations
+
+### Example 1: Developer Tweet
+
+**Original**:
+> "I fixed a bug today"
+
+**Algorithm Analysis**:
+- No clear audience - too generic
+- No engagement signals - statements don't trigger replies
+- No Real-graph trigger - followers won't engage strongly
+- No SimCluster resonance - could apply to any developer
+
+**Optimized**:
+> "Spent 2 hours debugging, turned out I was missing one semicolon. The best part? The linter didn't catch it.
+>
+> What's your most embarrassing bug? Drop it in replies 👇"
+
+**Why It Works**:
+- SimCluster trigger: Specific developer community
+- Real-graph trigger: Direct question invites replies
+- Tweepcred: Relatable vulnerability builds connection
+- Engagement: Likely replies (others share embarrassing bugs)
+
+### Example 2: Product Launch Tweet
+
+**Original**:
+> "We launched a new feature today. Check it out."
+
+**Algorithm Analysis**:
+- Passive voice - doesn't indicate impact
+- No specific benefit - followers don't know why to care
+- No community resonance - generic
+- Engagement bait risk if it feels like self-promotion
+
+**Optimized**:
+> "Spent 6 months on the one feature our users asked for most: export to PDF.
+>
+> 10x improvement in report generation time. Already live.
+>
+> What export format do you want next?"
+
+**Why It Works**:
+- Real-graph: Followers in your product space will engage
+- Specificity: "PDF export" + "10x improvement" triggers bookmarks (useful info)
+- Question: Ends with engagement trigger
+- Authority: You spent 6 months (shows credibility)
+- SimCluster: Product management/SaaS community resonates
+
+### Example 3: Opinion Tweet
+
+**Original**:
+> "I think remote work is better than office work"
+
+**Algorithm Analysis**:
+- Vague opinion - doesn't invite engagement
+- Could be debated either way - no clear position
+- No Real-graph hooks - followers unclear if they should care
+- Generic topic - dilutes your personal brand
+
+**Optimized**:
+> "Hot take: remote work works great for async tasks but kills creative collaboration.
+>
+> We're now hybrid: deep focus days remote, collab days in office.
+>
+> What's your team's balance? Genuinely curious what works."
+
+**Why It Works**:
+- Clear position: Not absolutes, nuanced stance
+- Debate trigger: "Hot take" signals discussion opportunity
+- Question: Direct engagement request
+- Real-graph: Followers in your industry will have opinions
+- SimCluster: CTOs, team leads, engineering managers will relate
+- Tweepcred: Nuanced thinking builds authority
+
+## Best Practices for Algorithm Optimization
+
+1. **Quality Over Virality**: Consistent engagement from your community beats occasional viral moments
+2. **Community First**: Deep resonance with 100 engaged followers beats shallow reach to 10,000
+3. **Authenticity Matters**: The algorithm rewards genuine engagement, not manipulation
+4. **Timing Helps**: Engage early when tweet is fresh (first hour critical)
+5. **Build Threads**: Threaded tweets often get more engagement than single tweets
+6. **Follow Up**: Reply to replies quickly - Twitter's algorithm favors active conversation
+7. **Avoid Spam**: Engagement pods and bots hurt long-term credibility
+8. **Track Your Performance**: Notice what YOUR audience engages with and iterate
+
+## Common Pitfalls to Avoid
+
+- **Generic statements**: Doesn't trigger algorithm (too vague)
+- **Pure engagement bait**: "Like if you agree" - hurts credibility long-term
+- **Unclear audience**: Who should care? If unclear, algorithm won't push it far
+- **Off-brand pivots**: Confuses algorithm about your identity
+- **Over-frequency**: Spamming hurts engagement rate metrics
+- **Toxicity**: Blocks/reports heavily penalize future reach
+- **No calls to action**: Passive tweets underperform
+
+## When to Ask for Algorithm Optimization
+
+Use this skill when:
+- You've drafted a tweet and want to maximize reach
+- A tweet underperformed and you want to understand why
+- You're launching important content and want algorithm advantage
+- You're building audience in a specific niche
+- You want to become known for something specific
+- You're debugging inconsistent engagement rates
+
+Use Claude without this skill for:
+- General writing and grammar fixes
+- Tone adjustments not related to algorithm
+- Off-Twitter content (LinkedIn, Medium, blogs, etc.)
+- Personal conversations and casual tweets

@@ -1,11 +1,6 @@
 ---
 name: breakdown-feature-implementation
-description: >-
-  Prompt for creating detailed feature implementation plans, following Epoch
-  monorepo structure.
-author:
-  name: Community
-  url: 'https://github.com/beel-collab/presets.dev'
+description: 'Prompt for creating detailed feature implementation plans, following Epoch monorepo structure.'
 ---
 
 # Feature Implementation Plan Prompt

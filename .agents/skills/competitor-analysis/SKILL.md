@@ -1,156 +1,110 @@
 ---
 name: competitor-analysis
-description: 'Use when the user asks to "compare competitors" or find SEO/GEO gaps; analyzes keywords, content, backlinks, AI citations, and traffic share. 竞品分析/竞争对手'
-version: "9.9.9"
-license: Apache-2.0
-compatibility: "Claude Code, skills.sh, ClawHub, Vercel Labs, Cursor, Windsurf, Codex CLI, Amp, Gemini CLI, Kimi Code, Qwen Code, CodeBuddy"
-homepage: "https://github.com/aaron-he-zhu/seo-geo-claude-skills"
-when_to_use: "Use when analyzing competitor SEO strategy, comparing domains, benchmarking against competitors, or finding competitor keywords and content gaps."
-argument-hint: "<competitor URL or domain>"
-metadata:
-  author: aaron-he-zhu
-  version: "9.9.9"
-  geo-relevance: "medium"
-  tags:
-    - seo
-    - geo
-    - competitor-analysis
-    - competitive-intelligence
-    - benchmarking
-    - competitor-keywords
-    - competitor-backlinks
-    - market-analysis
-    - spyfu-alternative
-    - 竞品分析
-    - 競合分析
-    - 경쟁분석
-    - analisis-competitivo
-  triggers:
-    - "analyze competitors"
-    - "competitor SEO"
-    - "competitive analysis"
-    - "competitor keywords"
-    - "competitive intelligence"
-    - "what are my competitors doing"
-    - "why do they rank higher"
-    - "spy on competitor SEO"
-    - "why do they outrank me"
-    - "who are my SEO competitors"
-    - "how do I beat my competitors"
-    - "SpyFu alternative"
-    - "Semrush competitor analysis"
-    - "Ahrefs competitor tool"
-    - "竞品分析"
-    - "竞争对手分析"
-    - "竞品SEO"
-    - "对标分析"
-    - "竞争情报"
-    - "竞品怎么做的"
-    - "他们排名为什么比我高"
-    - "看看对手在干什么"
-    - "为什么他们排名好"
-    - "競合分析"
-    - "競合SEO分析"
-    - "ライバル分析"
-    - "경쟁 분석"
-    - "경쟁사 SEO"
-    - "경쟁사 키워드"
-    - "análisis de competidores"
-    - "análisis competitivo SEO"
-    - "análise de concorrentes"
+description: "Analyze competitors with strengths, weaknesses, and differentiation opportunities. Identifies direct competitors and maps the competitive landscape. Use when doing competitive research, preparing a competitive brief, or finding differentiation opportunities."
 ---
 
 # Competitor Analysis
 
-Analyzes competitor SEO and GEO strategies to reveal repeatable wins, weak spots, and market gaps.
-
-## Quick Start
-
-```
-Analyze SEO strategy for [competitor URL]
-```
-
-```
-Compare my site [URL] against [competitor 1], [competitor 2], [competitor 3]
-```
-
-## Skill Contract
-
-**Expected output**: a prioritized competitor brief plus the standard handoff summary for `memory/research/`.
-
-- **Reads**: goals, market inputs, tool data, and prior strategy from [CLAUDE.md](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/CLAUDE.md) and the shared [State Model](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/references/state-model.md) when available.
-- **Writes**: a user-facing analysis and reusable summary.
-- **Promotes**: durable competitor facts, keyword priorities, entity candidates, and pending strategy decisions to `memory/hot-cache.md`, `memory/open-loops.md`, and `memory/research/`.
-- **Primary next skill**: [content-gap-analysis](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/research/content-gap-analysis/SKILL.md) when the competitive landscape is clear.
-
-### Handoff Summary
-
-> Emit the standard shape from [skill-contract.md §Handoff Summary Format](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/references/skill-contract.md).
-
-## Data Sources
-
-Optional integrations: ~~SEO tool, ~~analytics, ~~AI monitor. Without tools, ask for competitor URLs, your site metrics, and industry context. See [CONNECTORS.md](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/CONNECTORS.md).
+## Purpose
+Conduct a comprehensive competitive analysis to understand the landscape, identify 5 direct competitors, and uncover differentiation opportunities. This skill maps competitive positioning, synthesizes competitor strengths and weaknesses, and highlights opportunities for strategic differentiation.
 
 ## Instructions
 
-When a user requests competitor analysis:
+You are a strategic product analyst and competitive intelligence expert specializing in competitive positioning and market landscape mapping.
 
-1. **Identify Competitors** — separate direct competitors, indirect alternatives, and content competitors if the user has not named them already.
-2. **Gather Competitor Data** — capture URL, domain age, estimated traffic, domain authority, business model, target audience, and key offerings.
-3. **Analyze Keyword Rankings** — document total rankings, top 10/top 3 counts, high-value keywords, intent mix, and keyword gaps.
-4. **Audit Content Strategy** — review content volume, top performers, publishing patterns, themes, and success factors.
-5. **Analyze Backlink Profile** — review backlink totals, quality mix, top linking domains, link acquisition patterns, and linkable assets.
-6. **Technical SEO Assessment** — evaluate Core Web Vitals, mobile-friendliness, architecture, internal linking, URL structure, and standout strengths/weaknesses.
-7. **GEO / AI Citation Analysis** — test which queries cite competitors, what formats get cited, and where competitors still leave openings.
-8. **Synthesize Competitive Intelligence** — deliver an Executive Summary, comparison table, CITE comparison, strengths to learn from, weaknesses to exploit, keyword opportunities, content recommendations, and an Immediate / Short-term / Long-term plan.
+### Input
+Your task is to analyze the competitive landscape for **$ARGUMENTS** in the **[market/industry segment]** (if specified).
 
-> **Reference**: See [references/analysis-templates.md](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/research/competitor-analysis/references/analysis-templates.md) for the compact templates used at each step.
+Conduct web research to identify direct competitors. If the user provides market research, competitor data, pricing sheets, feature comparisons, or customer feedback about competitors, read and analyze them directly. Synthesize data into a comprehensive competitive view.
 
-## Example
+### Analysis Steps (Think Step by Step)
 
-See [references/example-report.md](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/research/competitor-analysis/references/example-report.md) for a full sample analyzing HubSpot's marketing keyword dominance.
+1. **Market Scoping**: Define the market, industry, and addressable customer base for $ARGUMENTS
+2. **Competitor Identification**: Use web search to identify 5 primary direct competitors
+3. **Competitive Intelligence**: Research each competitor's positioning, features, pricing, go-to-market strategy
+4. **Strengths & Weaknesses**: Assess competitor capabilities, limitations, and market positioning
+5. **Differentiation Mapping**: Identify gaps, overlaps, and opportunities for $ARGUMENTS to differentiate
+6. **Strategic Synthesis**: Develop insights about competitive dynamics and future threats
 
-## Advanced Analysis Types
+### Output Structure
 
-### Content Gap Analysis
+**Market Overview & Definition**
+- Market size and growth trends
+- Primary customer segments and use cases
+- Key success factors in this market
+- Market dynamics and competitive intensity
 
-```
-Show me content [competitor] has that I don't, sorted by traffic potential
-```
+**Competitive Set Summary**
+- 5 primary direct competitors identified
+- Market positions: leaders, challengers, niche players
+- Estimated market share or positioning
+- Notable adjacent or indirect competitors
 
-### Link Intersection
+For each of the 5 competitors:
 
-```
-Find sites linking to [competitor 1] AND [competitor 2] but not me
-```
+**Competitor Profile**
+- Company name, founding date, funding/status
+- Primary market focus and customer segments served
+- Estimated market share or customer base size
+- Market positioning and go-to-market strategy
 
-### SERP Feature Analysis
+**Core Product Strengths**
+- Key features and capabilities
+- Unique competitive advantages
+- Customer value proposition
+- Technology differentiation or moats
+- Customer satisfaction and retention signals
 
-```
-What SERP features do competitors win? (Featured snippets, PAA, etc.)
-```
+**Product Weaknesses & Gaps**
+- Missing features or use cases
+- Known limitations or pain points for customers
+- Technical or operational weaknesses
+- Market positioning gaps
+- Customer dissatisfaction areas
 
-### Historical Tracking
+**Business Model & Pricing**
+- Pricing structure (per-seat, per-usage, flat-fee, freemium, etc.)
+- Price point(s) in market
+- Go-to-market channels and sales motion
+- Revenue model and growth stage
 
-```
-How has [competitor]'s SEO strategy evolved over the past year?
-```
+**Competitive Threats & Advantages**
+- How this competitor threatens $ARGUMENTS
+- Existing customer base and switching costs
+- Strategic partnerships or ecosystems
+- Recent product updates or strategic moves
 
-## Tips for Success
+**Differentiation Opportunities for $ARGUMENTS**
 
-Analyze 3-5 competitors, include indirect players, and study both strengths and failures.
+- Unmet customer needs across competitive set
+- Feature/pricing/UX opportunities to stand out
+- Target segments underserved by competitors
+- Jobs-to-be-done not effectively solved by competitors
+- Channel or go-to-market approaches not yet deployed
+- Potential partnerships or integrations competitors lack
 
-### Save Results
+**Competitive Positioning Recommendation**
+- Recommended competitive positioning for $ARGUMENTS
+- Key differentiators to emphasize
+- Segments or use cases to target or avoid
+- Competitive threats to monitor
+- 12-18 month competitive risks and opportunities
 
-After delivering, offer to save `memory/research/competitor-analysis/YYYY-MM-DD-<topic>.md` and promote durable conclusions to `memory/hot-cache.md`.
+## Best Practices
 
-## Reference Materials
+- Research current competitor websites, pricing pages, and customer reviews
+- Use web search to identify product launches, funding, executive moves
+- Distinguish between direct competitors and adjacent alternatives
+- Validate competitive insights across multiple sources
+- Identify both obvious and subtle differentiation opportunities
+- Consider customer pain points not yet addressed in market
+- Look for emerging competitors or new market entrants
+- Flag competitors gaining traction or gaining market share
+- Consider long-term competitive dynamics and market shifts
 
-- [Analysis Templates](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/research/competitor-analysis/references/analysis-templates.md) — Step-by-step analysis templates
-- [Battlecard Template](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/research/competitor-analysis/references/battlecard-template.md) — Quick-reference battlecard format
-- [Positioning Frameworks](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/research/competitor-analysis/references/positioning-frameworks.md) — Positioning and differentiation frameworks
-- [Example Report](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/research/competitor-analysis/references/example-report.md) — Worked sample
+---
 
-## Next Best Skill
+### Further Reading
 
-Primary: [content-gap-analysis](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/research/content-gap-analysis/SKILL.md). Also: [serp-analysis](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/research/serp-analysis/SKILL.md) and [backlink-analyzer](https://github.com/aaron-he-zhu/seo-geo-claude-skills/blob/main/monitor/backlink-analyzer/SKILL.md).
+- [Market Research: Advanced Techniques](https://www.productcompass.pm/p/market-research-advanced-techniques)
+- [User Interviews: The Ultimate Guide to Research Interviews](https://www.productcompass.pm/p/interviewing-customers-the-ultimate)

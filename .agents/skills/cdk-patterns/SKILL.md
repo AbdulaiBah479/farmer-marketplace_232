@@ -1,169 +1,83 @@
 ---
 name: cdk-patterns
-description: AWS CDK patterns for TypeScript. Use when working with CDK infrastructure code. Do NOT use for Terraform, CloudFormation YAML, or other IaC tools. JavaScript is prohibited for CDK.
-durability: encoded-preference
+description: "Common AWS CDK patterns and constructs for building cloud infrastructure with TypeScript, Python, or Java. Use when designing reusable CDK stacks and L3 constructs."
+risk: unknown
+source: community
+date_added: "2026-02-27"
 ---
+You are an expert in AWS Cloud Development Kit (CDK) specializing in reusable patterns, L2/L3 constructs, and production-grade infrastructure stacks.
 
-# AWS CDK Patterns (TypeScript)
+## Use this skill when
 
-Patterns for AWS CDK infrastructure as code.
+- Building reusable CDK constructs or patterns
+- Designing multi-stack CDK applications
+- Implementing common infrastructure patterns (API + Lambda + DynamoDB, ECS services, static sites)
+- Reviewing CDK code for best practices and anti-patterns
 
-**IMPORTANT**: Always use TypeScript for CDK. JavaScript is prohibited.
+## Do not use this skill when
 
-## Construct Separation: When to Do It
+- The user needs raw CloudFormation templates without CDK
+- The task is Terraform-specific
+- Simple one-off CLI resource creation is sufficient
 
-### DO separate when:
-- **Multiple instances needed** in same Stack with different config
-- **Organization-wide reuse** as npm package
-- **Unit testing** a specific piece of infrastructure
+## Instructions
 
-### DON'T separate when:
-- Single use within a Stack → **function extraction is enough**
-- No reuse planned → **YAGNI**
-- Simple composition → avoid over-engineering
+1. Identify the infrastructure pattern needed (e.g., serverless API, container service, data pipeline).
+2. Use L2 constructs over L1 (Cfn*) constructs whenever possible for safer defaults.
+3. Apply the principle of least privilege for all IAM roles and policies.
+4. Use `RemovalPolicy` and `Tags` appropriately for production readiness.
+5. Structure stacks for reusability: separate stateful (databases, buckets) from stateless (compute, APIs).
+6. Enable monitoring by default (CloudWatch alarms, X-Ray tracing).
 
-### Function extraction (often sufficient)
+## Examples
+
+### Example 1: Serverless API Pattern
+
 ```typescript
-export class MyStack extends Stack {
-  constructor(scope: Construct, id: string, props?: StackProps) {
-    super(scope, id, props)
+import { Construct } from "constructs";
+import * as apigateway from "aws-cdk-lib/aws-apigateway";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 
-    const table = this.createDatabase()
-    const api = this.createApi(table)
-  }
-
-  private createDatabase(): dynamodb.Table {
-    return new dynamodb.Table(this, 'Table', { ... })
-  }
-
-  private createApi(table: dynamodb.Table): apigateway.RestApi {
-    const handler = new lambda.Function(this, 'Handler', { ... })
-    table.grantReadWriteData(handler)
-    return new apigateway.RestApi(this, 'Api', { ... })
-  }
-}
-```
-
-## Stack Design
-
-### Environment-based Stacks
-```typescript
-// bin/app.ts
-const app = new cdk.App()
-
-const envConfig = {
-  dev: { account: '111111111111', region: 'ap-northeast-1' },
-  prod: { account: '222222222222', region: 'ap-northeast-1' },
-}
-
-new MyStack(app, 'MyStack-Dev', { env: envConfig.dev, stage: 'dev' })
-new MyStack(app, 'MyStack-Prod', { env: envConfig.prod, stage: 'prod' })
-```
-
-### Stack Props Pattern
-```typescript
-interface MyStackProps extends StackProps {
-  stage: 'dev' | 'staging' | 'prod'
-}
-
-export class MyStack extends Stack {
-  constructor(scope: Construct, id: string, props: MyStackProps) {
-    super(scope, id, props)
-
-    const isProd = props.stage === 'prod'
-
-    new dynamodb.Table(this, 'Table', {
-      billingMode: isProd
-        ? dynamodb.BillingMode.PROVISIONED
-        : dynamodb.BillingMode.PAY_PER_REQUEST,
-    })
-  }
-}
-```
-
-## Props Design
-
-### Required vs Optional
-```typescript
-interface MyConstructProps {
-  // Required: no default makes sense
-  tableName: string
-
-  // Optional: sensible default exists
-  readCapacity?: number
-}
-
-export class MyConstruct extends Construct {
-  constructor(scope: Construct, id: string, props: MyConstructProps) {
-    super(scope, id)
-
-    const readCapacity = props.readCapacity ?? 5  // Default value
-  }
-}
-```
-
-### Exposing Resources
-```typescript
-export class MyConstruct extends Construct {
-  // Expose for cross-construct references
-  public readonly table: dynamodb.Table
-  public readonly tableArn: string  // Convenience property
-
+export class ServerlessApiPattern extends Construct {
   constructor(scope: Construct, id: string) {
-    super(scope, id)
+    super(scope, id);
 
-    this.table = new dynamodb.Table(this, 'Table', { ... })
-    this.tableArn = this.table.tableArn
+    const table = new dynamodb.Table(this, "Table", {
+      partitionKey: { name: "pk", type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
+    const handler = new lambda.Function(this, "Handler", {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      handler: "index.handler",
+      code: lambda.Code.fromAsset("lambda"),
+      environment: { TABLE_NAME: table.tableName },
+      tracing: lambda.Tracing.ACTIVE,
+    });
+
+    table.grantReadWriteData(handler);
+
+    new apigateway.LambdaRestApi(this, "Api", { handler });
   }
 }
 ```
 
-## Testing with CDK Assertions
+## Best Practices
 
-### Snapshot Testing
-```typescript
-import { Template } from 'aws-cdk-lib/assertions'
+- ✅ **Do:** Use `cdk.Tags.of(this).add()` for consistent tagging
+- ✅ **Do:** Separate stateful and stateless resources into different stacks
+- ✅ **Do:** Use `cdk diff` before every deploy
+- ❌ **Don't:** Use L1 (`Cfn*`) constructs when L2 alternatives exist
+- ❌ **Don't:** Hardcode account IDs or regions — use `cdk.Aws.ACCOUNT_ID`
 
-test('Stack matches snapshot', () => {
-  const app = new cdk.App()
-  const stack = new MyStack(app, 'TestStack')
-  const template = Template.fromStack(stack)
+## Troubleshooting
 
-  expect(template.toJSON()).toMatchSnapshot()
-})
-```
+**Problem:** Circular dependency between stacks
+**Solution:** Extract shared resources into a dedicated base stack and pass references via constructor props.
 
-### Resource Assertions
-```typescript
-test('Creates DynamoDB table with correct config', () => {
-  const app = new cdk.App()
-  const stack = new MyStack(app, 'TestStack', { stage: 'prod' })
-  const template = Template.fromStack(stack)
-
-  template.hasResourceProperties('AWS::DynamoDB::Table', {
-    BillingMode: 'PROVISIONED',
-  })
-})
-
-test('Lambda has correct IAM permissions', () => {
-  const template = Template.fromStack(stack)
-
-  template.hasResourceProperties('AWS::IAM::Policy', {
-    PolicyDocument: {
-      Statement: Match.arrayWith([
-        Match.objectLike({
-          Action: Match.arrayWith(['dynamodb:GetItem', 'dynamodb:PutItem']),
-        }),
-      ]),
-    },
-  })
-})
-```
-
-### Resource Count
-```typescript
-test('Creates expected number of Lambda functions', () => {
-  const template = Template.fromStack(stack)
-  template.resourceCountIs('AWS::Lambda::Function', 3)
-})
-```
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

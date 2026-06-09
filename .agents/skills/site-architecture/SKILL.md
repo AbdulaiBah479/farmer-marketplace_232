@@ -1,926 +1,370 @@
 ---
 name: site-architecture
-description: Technical SEO - robots.txt, sitemap, meta tags, Core Web Vitals
+description: "Plan or restructure website hierarchy, navigation, URL patterns, breadcrumbs, and internal linking. Use when mapping pages, sections, and site structure, but not for XML sitemap auditing or schema markup."
+risk: unknown
+source: "https://github.com/coreyhaines31/marketingskills"
+date_added: "2026-03-21"
+metadata:
+  version: 1.1.0
 ---
 
-# Site Architecture Skill
+# Site Architecture
 
-*Load with: base.md + web-content.md*
+You are an information architecture expert. Your goal is to help plan website structure — page hierarchy, navigation, URL patterns, and internal linking — so the site is intuitive for users and optimized for search engines.
 
-For technical website structure that enables discovery by search engines AND AI crawlers (GPTBot, ClaudeBot, PerplexityBot).
+## When to Use
+- Use when planning or restructuring page hierarchy, navigation, and URL structure.
+- Use when mapping site sections, breadcrumbs, and internal linking.
+- Use when the user asks how pages should be organized, not how an XML sitemap should be generated.
 
----
+## Before Planning
 
-## Philosophy
+**Check for product marketing context first:**
+If `.agents/product-marketing-context.md` exists (or `.claude/product-marketing-context.md` in older setups), read it before asking questions. Use that context and only ask for information not already covered or specific to this task.
 
-**Content is king. Architecture is the kingdom.**
+Gather this context (ask if not provided):
 
-Great content buried in poor architecture won't be discovered. This skill covers the technical foundation that makes your content findable by:
-- Google, Bing (traditional search)
-- GPTBot (ChatGPT), ClaudeBot, PerplexityBot (AI assistants)
-- Social platforms (Open Graph, Twitter Cards)
+### 1. Business Context
+- What does the company do?
+- Who are the primary audiences?
+- What are the top 3 goals for the site? (conversions, SEO traffic, education, support)
 
----
+### 2. Current State
+- New site or restructuring an existing one?
+- If restructuring: what's broken? (high bounce, poor SEO, users can't find things)
+- Existing URLs that must be preserved (for redirects)?
 
-## robots.txt
+### 3. Site Type
+- SaaS marketing site
+- Content/blog site
+- E-commerce
+- Documentation
+- Hybrid (SaaS + content)
+- Small business / local
 
-### Basic Template
-
-```txt
-# robots.txt
-
-# Allow all crawlers by default
-User-agent: *
-Allow: /
-Disallow: /api/
-Disallow: /admin/
-Disallow: /private/
-Disallow: /_next/
-Disallow: /cdn-cgi/
-
-# Sitemap location
-Sitemap: https://yoursite.com/sitemap.xml
-
-# Crawl delay (optional - be careful, not all bots respect this)
-# Crawl-delay: 1
-```
-
-### AI Bot Configuration
-
-```txt
-# robots.txt with AI bot rules
-
-# === SEARCH ENGINES ===
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-# === AI ASSISTANTS (Allow for discovery) ===
-User-agent: GPTBot
-Allow: /
-
-User-agent: ChatGPT-User
-Allow: /
-
-User-agent: Claude-Web
-Allow: /
-
-User-agent: ClaudeBot
-Allow: /
-
-User-agent: PerplexityBot
-Allow: /
-
-User-agent: Amazonbot
-Allow: /
-
-User-agent: anthropic-ai
-Allow: /
-
-User-agent: Google-Extended
-Allow: /
-
-# === BLOCK AI TRAINING (Optional - block training, allow chat) ===
-# Uncomment these if you want to be cited but not used for training
-# User-agent: CCBot
-# Disallow: /
-
-# User-agent: GPTBot
-# Disallow: /  # Blocks both chat and training
-
-# === BLOCK SCRAPERS ===
-User-agent: AhrefsBot
-Disallow: /
-
-User-agent: SemrushBot
-Disallow: /
-
-User-agent: MJ12bot
-Disallow: /
-
-# === DEFAULT ===
-User-agent: *
-Allow: /
-Disallow: /api/
-Disallow: /admin/
-Disallow: /auth/
-Disallow: /private/
-Disallow: /*.json$
-Disallow: /*?*
-
-Sitemap: https://yoursite.com/sitemap.xml
-```
-
-### Next.js robots.txt
-
-```typescript
-// app/robots.ts
-import { MetadataRoute } from 'next';
-
-export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://yoursite.com';
-
-  return {
-    rules: [
-      {
-        userAgent: '*',
-        allow: '/',
-        disallow: ['/api/', '/admin/', '/private/', '/_next/'],
-      },
-      {
-        userAgent: 'GPTBot',
-        allow: '/',
-      },
-      {
-        userAgent: 'ClaudeBot',
-        allow: '/',
-      },
-      {
-        userAgent: 'PerplexityBot',
-        allow: '/',
-      },
-    ],
-    sitemap: `${baseUrl}/sitemap.xml`,
-  };
-}
-```
+### 4. Content Inventory
+- How many pages exist or are planned?
+- What are the most important pages? (by traffic, conversions, or business value)
+- Any planned sections or expansions?
 
 ---
 
-## Sitemap
+## Site Types and Starting Points
 
-### XML Sitemap Template
+| Site Type | Typical Depth | Key Sections | URL Pattern |
+|-----------|--------------|--------------|-------------|
+| SaaS marketing | 2-3 levels | Home, Features, Pricing, Blog, Docs | `/features/name`, `/blog/slug` |
+| Content/blog | 2-3 levels | Home, Blog, Categories, About | `/blog/slug`, `/category/slug` |
+| E-commerce | 3-4 levels | Home, Categories, Products, Cart | `/category/subcategory/product` |
+| Documentation | 3-4 levels | Home, Guides, API Reference | `/docs/section/page` |
+| Hybrid SaaS+content | 3-4 levels | Home, Product, Blog, Resources, Docs | `/product/feature`, `/blog/slug` |
+| Small business | 1-2 levels | Home, Services, About, Contact | `/services/name` |
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"
-        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
-  <url>
-    <loc>https://yoursite.com/</loc>
-    <lastmod>2025-01-15</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>https://yoursite.com/pricing</loc>
-    <lastmod>2025-01-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://yoursite.com/blog/article-slug</loc>
-    <lastmod>2025-01-12</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://yoursite.com/images/article-image.jpg</image:loc>
-    </image:image>
-  </url>
-</urlset>
-```
-
-### Next.js Dynamic Sitemap
-
-```typescript
-// app/sitemap.ts
-import { MetadataRoute } from 'next';
-
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://yoursite.com';
-
-  // Static pages
-  const staticPages = [
-    { url: '/', priority: 1.0, changeFrequency: 'weekly' as const },
-    { url: '/pricing', priority: 0.9, changeFrequency: 'monthly' as const },
-    { url: '/about', priority: 0.8, changeFrequency: 'monthly' as const },
-    { url: '/contact', priority: 0.7, changeFrequency: 'yearly' as const },
-  ];
-
-  // Dynamic pages (e.g., blog posts)
-  const posts = await getBlogPosts(); // Your data fetching function
-  const blogPages = posts.map((post) => ({
-    url: `/blog/${post.slug}`,
-    lastModified: new Date(post.updatedAt),
-    changeFrequency: 'monthly' as const,
-    priority: 0.8,
-  }));
-
-  return [
-    ...staticPages.map((page) => ({
-      url: `${baseUrl}${page.url}`,
-      lastModified: new Date(),
-      changeFrequency: page.changeFrequency,
-      priority: page.priority,
-    })),
-    ...blogPages.map((page) => ({
-      url: `${baseUrl}${page.url}`,
-      lastModified: page.lastModified,
-      changeFrequency: page.changeFrequency,
-      priority: page.priority,
-    })),
-  ];
-}
-```
-
-### Sitemap Index (Large Sites)
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <sitemap>
-    <loc>https://yoursite.com/sitemap-pages.xml</loc>
-    <lastmod>2025-01-15</lastmod>
-  </sitemap>
-  <sitemap>
-    <loc>https://yoursite.com/sitemap-blog.xml</loc>
-    <lastmod>2025-01-14</lastmod>
-  </sitemap>
-  <sitemap>
-    <loc>https://yoursite.com/sitemap-products.xml</loc>
-    <lastmod>2025-01-13</lastmod>
-  </sitemap>
-</sitemapindex>
-```
+**For full page hierarchy templates**: See [references/site-type-templates.md](references/site-type-templates.md)
 
 ---
 
-## Meta Tags
+## Page Hierarchy Design
 
-### Essential Meta Tags
+### The 3-Click Rule
 
-```html
-<head>
-  <!-- Basic -->
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Page Title | Brand Name</title>
-  <meta name="description" content="Compelling 150-160 character description with keywords and CTA.">
+Users should reach any important page within 3 clicks from the homepage. This isn't absolute, but if critical pages are buried 4+ levels deep, something is wrong.
 
-  <!-- Canonical (prevent duplicate content) -->
-  <link rel="canonical" href="https://yoursite.com/current-page">
+### Flat vs Deep
 
-  <!-- Language -->
-  <html lang="en">
-  <meta name="language" content="English">
+| Approach | Best For | Tradeoff |
+|----------|----------|----------|
+| Flat (2 levels) | Small sites, portfolios | Simple but doesn't scale |
+| Moderate (3 levels) | Most SaaS, content sites | Good balance of depth and findability |
+| Deep (4+ levels) | E-commerce, large docs | Scales but risks burying content |
 
-  <!-- Robots -->
-  <meta name="robots" content="index, follow">
-  <meta name="googlebot" content="index, follow">
+**Rule of thumb**: Go as flat as possible while keeping navigation clean. If a nav dropdown has 20+ items, add a level of hierarchy.
 
-  <!-- Author -->
-  <meta name="author" content="Author Name">
+### Hierarchy Levels
 
-  <!-- Favicon -->
-  <link rel="icon" href="/favicon.ico" sizes="any">
-  <link rel="icon" href="/icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-  <link rel="manifest" href="/manifest.webmanifest">
-</head>
+| Level | What It Is | Example |
+|-------|-----------|---------|
+| L0 | Homepage | `/` |
+| L1 | Primary sections | `/features`, `/blog`, `/pricing` |
+| L2 | Section pages | `/features/analytics`, `/blog/seo-guide` |
+| L3+ | Detail pages | `/docs/api/authentication` |
+
+### ASCII Tree Format
+
+Use this format for page hierarchies:
+
+```
+Homepage (/)
+├── Features (/features)
+│   ├── Analytics (/features/analytics)
+│   ├── Automation (/features/automation)
+│   └── Integrations (/features/integrations)
+├── Pricing (/pricing)
+├── Blog (/blog)
+│   ├── [Category: SEO] (/blog/category/seo)
+│   └── [Category: CRO] (/blog/category/cro)
+├── Resources (/resources)
+│   ├── Case Studies (/resources/case-studies)
+│   └── Templates (/resources/templates)
+├── Docs (/docs)
+│   ├── Getting Started (/docs/getting-started)
+│   └── API Reference (/docs/api)
+├── About (/about)
+│   └── Careers (/about/careers)
+└── Contact (/contact)
 ```
 
-### Open Graph (Social Sharing)
+**When to use ASCII vs Mermaid**:
+- ASCII: quick hierarchy drafts, text-only contexts, simple structures
+- Mermaid: visual presentations, complex relationships, showing nav zones or linking patterns
 
-```html
-<!-- Open Graph / Facebook -->
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://yoursite.com/page">
-<meta property="og:title" content="Page Title - Brand">
-<meta property="og:description" content="Description for social sharing (can be longer).">
-<meta property="og:image" content="https://yoursite.com/og-image.jpg">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:site_name" content="Brand Name">
-<meta property="og:locale" content="en_US">
+---
 
-<!-- Article-specific (for blog posts) -->
-<meta property="og:type" content="article">
-<meta property="article:published_time" content="2025-01-15T08:00:00Z">
-<meta property="article:modified_time" content="2025-01-20T10:00:00Z">
-<meta property="article:author" content="https://yoursite.com/team/author">
-<meta property="article:section" content="Technology">
-<meta property="article:tag" content="AI, SEO, Content">
+## Navigation Design
+
+### Navigation Types
+
+| Nav Type | Purpose | Placement |
+|----------|---------|-----------|
+| Header nav | Primary navigation, always visible | Top of every page |
+| Dropdown menus | Organize sub-pages under parent | Expands from header items |
+| Footer nav | Secondary links, legal, sitemap | Bottom of every page |
+| Sidebar nav | Section navigation (docs, blog) | Left side within a section |
+| Breadcrumbs | Show current location in hierarchy | Below header, above content |
+| Contextual links | Related content, next steps | Within page content |
+
+### Header Navigation Rules
+
+- **4-7 items max** in the primary nav (more causes decision paralysis)
+- **CTA button** goes rightmost (e.g., "Start Free Trial," "Get Started")
+- **Logo** links to homepage (left side)
+- **Order by priority**: most important/visited pages first
+- If you have a mega menu, limit to 3-4 columns
+
+### Footer Organization
+
+Group footer links into columns:
+- **Product**: Features, Pricing, Integrations, Changelog
+- **Resources**: Blog, Case Studies, Templates, Docs
+- **Company**: About, Careers, Contact, Press
+- **Legal**: Privacy, Terms, Security
+
+### Breadcrumb Format
+
+```
+Home > Features > Analytics
+Home > Blog > SEO Category > Post Title
 ```
 
-### Twitter Cards
+Breadcrumbs should mirror the URL hierarchy. Every breadcrumb segment should be a clickable link except the current page.
 
-```html
-<!-- Twitter -->
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:site" content="@yourbrand">
-<meta name="twitter:creator" content="@authorhandle">
-<meta name="twitter:title" content="Page Title">
-<meta name="twitter:description" content="Description for Twitter (max 200 chars).">
-<meta name="twitter:image" content="https://yoursite.com/twitter-image.jpg">
-```
-
-### Next.js Metadata
-
-```typescript
-// app/layout.tsx
-import { Metadata } from 'next';
-
-export const metadata: Metadata = {
-  metadataBase: new URL('https://yoursite.com'),
-  title: {
-    default: 'Brand Name',
-    template: '%s | Brand Name',
-  },
-  description: 'Your default site description.',
-  keywords: ['keyword1', 'keyword2', 'keyword3'],
-  authors: [{ name: 'Brand Name', url: 'https://yoursite.com' }],
-  creator: 'Brand Name',
-  publisher: 'Brand Name',
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
-  openGraph: {
-    type: 'website',
-    locale: 'en_US',
-    url: 'https://yoursite.com',
-    siteName: 'Brand Name',
-    title: 'Brand Name',
-    description: 'Your site description.',
-    images: [
-      {
-        url: '/og-image.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'Brand Name',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    site: '@yourbrand',
-    creator: '@yourbrand',
-  },
-  verification: {
-    google: 'google-verification-code',
-    yandex: 'yandex-verification-code',
-  },
-};
-
-// app/blog/[slug]/page.tsx
-export async function generateMetadata({ params }): Promise<Metadata> {
-  const post = await getPost(params.slug);
-
-  return {
-    title: post.title,
-    description: post.excerpt,
-    openGraph: {
-      title: post.title,
-      description: post.excerpt,
-      type: 'article',
-      publishedTime: post.publishedAt,
-      modifiedTime: post.updatedAt,
-      authors: [post.author.name],
-      images: [post.coverImage],
-    },
-  };
-}
-```
+**For detailed navigation patterns**: See [references/navigation-patterns.md](references/navigation-patterns.md)
 
 ---
 
 ## URL Structure
 
-### Best Practices
+### Design Principles
 
-```markdown
-✅ GOOD URLs:
-/blog/ai-seo-best-practices
-/products/pro-plan
-/pricing
-/about/team
+1. **Readable by humans** — `/features/analytics` not `/f/a123`
+2. **Hyphens, not underscores** — `/blog/seo-guide` not `/blog/seo_guide`
+3. **Reflect the hierarchy** — URL path should match site structure
+4. **Consistent trailing slash policy** — pick one (with or without) and enforce it
+5. **Lowercase always** — `/About` should redirect to `/about`
+6. **Short but descriptive** — `/blog/how-to-improve-landing-page-conversion-rates` is too long; `/blog/landing-page-conversions` is better
 
-❌ BAD URLs:
-/blog?id=123
-/p/12345
-/index.php?page=about
-/Products/Pro_Plan (inconsistent casing)
-```
+### URL Patterns by Page Type
 
-### URL Guidelines
+| Page Type | Pattern | Example |
+|-----------|---------|---------|
+| Homepage | `/` | `example.com` |
+| Feature page | `/features/{name}` | `/features/analytics` |
+| Pricing | `/pricing` | `/pricing` |
+| Blog post | `/blog/{slug}` | `/blog/seo-guide` |
+| Blog category | `/blog/category/{slug}` | `/blog/category/seo` |
+| Case study | `/customers/{slug}` | `/customers/acme-corp` |
+| Documentation | `/docs/{section}/{page}` | `/docs/api/authentication` |
+| Legal | `/{page}` | `/privacy`, `/terms` |
+| Landing page | `/{slug}` or `/lp/{slug}` | `/free-trial`, `/lp/webinar` |
+| Comparison | `/compare/{competitor}` or `/vs/{competitor}` | `/compare/competitor-name` |
+| Integration | `/integrations/{name}` | `/integrations/slack` |
+| Template | `/templates/{slug}` | `/templates/marketing-plan` |
 
-| Rule | Example |
-|------|---------|
-| Lowercase only | `/blog/my-post` not `/Blog/My-Post` |
-| Hyphens not underscores | `/my-page` not `/my_page` |
-| No trailing slashes | `/about` not `/about/` |
-| Descriptive slugs | `/pricing` not `/p` |
-| No query params for content | `/blog/post-title` not `/blog?id=123` |
-| Max 3-4 levels deep | `/blog/category/post` |
+### Common Mistakes
 
-### Redirect Configuration
+- **Dates in blog URLs** — `/blog/2024/01/15/post-title` adds no value and makes URLs long. Use `/blog/post-title`.
+- **Over-nesting** — `/products/category/subcategory/item/detail` is too deep. Flatten where possible.
+- **Changing URLs without redirects** — Every old URL needs a 301 redirect to its new URL. Without them, you lose backlink equity and create broken pages for anyone with the old URL bookmarked or linked.
+- **IDs in URLs** — `/product/12345` is not human-readable. Use slugs.
+- **Query parameters for content** — `/blog?id=123` should be `/blog/post-title`.
+- **Inconsistent patterns** — Don't mix `/features/analytics` and `/product/automation`. Pick one parent.
 
-```typescript
-// next.config.js
-module.exports = {
-  async redirects() {
-    return [
-      // Redirect old URLs to new
-      {
-        source: '/old-page',
-        destination: '/new-page',
-        permanent: true, // 301 redirect
-      },
-      // Redirect with wildcard
-      {
-        source: '/blog/old/:slug',
-        destination: '/articles/:slug',
-        permanent: true,
-      },
-      // Trailing slash redirect
-      {
-        source: '/:path+/',
-        destination: '/:path+',
-        permanent: true,
-      },
-    ];
-  },
-};
-```
+### Breadcrumb-URL Alignment
+
+The breadcrumb trail should mirror the URL path:
+
+| URL | Breadcrumb |
+|-----|-----------|
+| `/features/analytics` | Home > Features > Analytics |
+| `/blog/seo-guide` | Home > Blog > SEO Guide |
+| `/docs/api/auth` | Home > Docs > API > Authentication |
 
 ---
 
-## Canonical URLs
+## Visual Sitemap Output (Mermaid)
 
-### Implementation
+Use Mermaid `graph TD` for visual sitemaps. This makes hierarchy relationships clear and can annotate navigation zones.
 
-```html
-<!-- Always include canonical, even for primary URL -->
-<link rel="canonical" href="https://yoursite.com/current-page">
+### Basic Hierarchy
+
+```mermaid
+graph TD
+    HOME[Homepage] --> FEAT[Features]
+    HOME --> PRICE[Pricing]
+    HOME --> BLOG[Blog]
+    HOME --> ABOUT[About]
+
+    FEAT --> F1[Analytics]
+    FEAT --> F2[Automation]
+    FEAT --> F3[Integrations]
+
+    BLOG --> B1[Post 1]
+    BLOG --> B2[Post 2]
 ```
 
-### When to Use
+### With Navigation Zones
 
-```markdown
-✅ USE CANONICAL:
-- Every page (even if only version exists)
-- Paginated content (point to page 1 or use rel=prev/next)
-- URL parameters that don't change content (?utm_source=...)
-- HTTP vs HTTPS (canonical to HTTPS)
-- www vs non-www (pick one, canonical to it)
+```mermaid
+graph TD
+    subgraph Header Nav
+        HOME[Homepage]
+        FEAT[Features]
+        PRICE[Pricing]
+        BLOG[Blog]
+        CTA[Get Started]
+    end
 
-Example: /products?sort=price should canonical to /products
+    subgraph Footer Nav
+        ABOUT[About]
+        CAREERS[Careers]
+        CONTACT[Contact]
+        PRIVACY[Privacy]
+    end
+
+    HOME --> FEAT
+    HOME --> PRICE
+    HOME --> BLOG
+    HOME --> ABOUT
+
+    FEAT --> F1[Analytics]
+    FEAT --> F2[Automation]
 ```
 
-### Next.js Canonical
-
-```typescript
-// Automatic in metadata
-export const metadata: Metadata = {
-  alternates: {
-    canonical: '/current-page',
-  },
-};
-```
+**For more Mermaid templates**: See [references/mermaid-templates.md](references/mermaid-templates.md)
 
 ---
 
-## Security Headers
+## Internal Linking Strategy
 
-### Essential Headers
+### Link Types
 
-```typescript
-// next.config.js
-const securityHeaders = [
-  {
-    key: 'X-DNS-Prefetch-Control',
-    value: 'on',
-  },
-  {
-    key: 'Strict-Transport-Security',
-    value: 'max-age=63072000; includeSubDomains; preload',
-  },
-  {
-    key: 'X-Frame-Options',
-    value: 'SAMEORIGIN',
-  },
-  {
-    key: 'X-Content-Type-Options',
-    value: 'nosniff',
-  },
-  {
-    key: 'Referrer-Policy',
-    value: 'strict-origin-when-cross-origin',
-  },
-  {
-    key: 'Permissions-Policy',
-    value: 'camera=(), microphone=(), geolocation=()',
-  },
-];
+| Type | Purpose | Example |
+|------|---------|---------|
+| Navigational | Move between sections | Header, footer, sidebar links |
+| Contextual | Related content within text | "Learn more about analytics at `/features/analytics`" |
+| Hub-and-spoke | Connect cluster content to hub | Blog posts linking to pillar page |
+| Cross-section | Connect related pages across sections | Feature page linking to related case study |
 
-module.exports = {
-  async headers() {
-    return [
-      {
-        source: '/:path*',
-        headers: securityHeaders,
-      },
-    ];
-  },
-};
+### Internal Linking Rules
+
+1. **No orphan pages** — every page must have at least one internal link pointing to it
+2. **Descriptive anchor text** — "our analytics features" not "click here"
+3. **5-10 internal links per 1000 words** of content (approximate guideline)
+4. **Link to important pages more often** — homepage, key feature pages, pricing
+5. **Use breadcrumbs** — free internal links on every page
+6. **Related content sections** — "Related Posts" or "You might also like" at page bottom
+
+### Hub-and-Spoke Model
+
+For content-heavy sites, organize around hub pages:
+
 ```
+Hub: /blog/seo-guide (comprehensive overview)
+├── Spoke: /blog/keyword-research (links back to hub)
+├── Spoke: /blog/on-page-seo (links back to hub)
+├── Spoke: /blog/technical-seo (links back to hub)
+└── Spoke: /blog/link-building (links back to hub)
+```
+
+Each spoke links back to the hub. The hub links to all spokes. Spokes link to each other where relevant.
+
+### Link Audit Checklist
+
+- [ ] Every page has at least one inbound internal link
+- [ ] No broken internal links (404s)
+- [ ] Anchor text is descriptive (not "click here" or "read more")
+- [ ] Important pages have the most inbound internal links
+- [ ] Breadcrumbs are implemented on all pages
+- [ ] Related content links exist on blog posts
+- [ ] Cross-section links connect features to case studies, blog to product pages
 
 ---
 
-## Core Web Vitals
+## Output Format
 
-### Target Metrics
+When creating a site architecture plan, provide these deliverables:
 
-| Metric | Good | Needs Improvement | Poor |
-|--------|------|-------------------|------|
-| LCP (Largest Contentful Paint) | ≤2.5s | ≤4.0s | >4.0s |
-| INP (Interaction to Next Paint) | ≤200ms | ≤500ms | >500ms |
-| CLS (Cumulative Layout Shift) | ≤0.1 | ≤0.25 | >0.25 |
+### 1. Page Hierarchy (ASCII Tree)
+Full site structure with URLs at each node. Use the ASCII tree format from the Page Hierarchy Design section.
 
-### Optimization Checklist
+### 2. Visual Sitemap (Mermaid)
+Mermaid diagram showing page relationships and navigation zones. Use `graph TD` with subgraphs for nav zones where helpful.
 
-```markdown
-## LCP (Loading)
-- [ ] Optimize largest image (WebP, proper sizing)
-- [ ] Preload critical assets
-- [ ] Use CDN for static assets
-- [ ] Enable compression (gzip/brotli)
-- [ ] Minimize render-blocking resources
+### 3. URL Map Table
 
-## INP (Interactivity)
-- [ ] Minimize JavaScript execution time
-- [ ] Break up long tasks
-- [ ] Use web workers for heavy computation
-- [ ] Optimize event handlers
-- [ ] Lazy load non-critical JS
+| Page | URL | Parent | Nav Location | Priority |
+|------|-----|--------|-------------|----------|
+| Homepage | `/` | — | Header | High |
+| Features | `/features` | Homepage | Header | High |
+| Analytics | `/features/analytics` | Features | Header dropdown | Medium |
+| Pricing | `/pricing` | Homepage | Header | High |
+| Blog | `/blog` | Homepage | Header | Medium |
 
-## CLS (Visual Stability)
-- [ ] Set dimensions on images/videos
-- [ ] Reserve space for dynamic content
-- [ ] Avoid inserting content above existing
-- [ ] Use transform for animations
-- [ ] Preload fonts
-```
+### 4. Navigation Spec
+- Header nav items (ordered, with CTA)
+- Footer sections and links
+- Sidebar nav (if applicable)
+- Breadcrumb implementation notes
 
-### Next.js Performance
-
-```typescript
-// Image optimization
-import Image from 'next/image';
-
-<Image
-  src="/hero.jpg"
-  alt="Hero image"
-  width={1200}
-  height={630}
-  priority // Preload for LCP
-  placeholder="blur"
-  blurDataURL={blurDataUrl}
-/>
-
-// Font optimization
-import { Inter } from 'next/font/google';
-
-const inter = Inter({
-  subsets: ['latin'],
-  display: 'swap', // Prevent FOIT
-});
-
-// Dynamic imports
-import dynamic from 'next/dynamic';
-
-const HeavyComponent = dynamic(() => import('./HeavyComponent'), {
-  loading: () => <Skeleton />,
-  ssr: false, // Client-only if needed
-});
-```
+### 5. Internal Linking Plan
+- Hub pages and their spokes
+- Cross-section link opportunities
+- Orphan page audit (if restructuring)
+- Recommended links per key page
 
 ---
 
-## Internal Linking
+## Task-Specific Questions
 
-### Structure
-
-```markdown
-## Link Architecture
-
-Homepage
-├── /pricing (1 click)
-├── /features (1 click)
-├── /blog (1 click)
-│   ├── /blog/category-1 (2 clicks)
-│   │   └── /blog/category-1/post (3 clicks)
-│   └── /blog/category-2 (2 clicks)
-└── /about (1 click)
-
-Rule: Every page within 3 clicks of homepage
-```
-
-### Best Practices
-
-```markdown
-✅ DO:
-- Use descriptive anchor text
-- Link contextually within content
-- Create hub pages for topics
-- Link to related content at end of posts
-- Use breadcrumbs for navigation
-
-❌ AVOID:
-- "Click here" as anchor text
-- Orphan pages (no internal links)
-- Too many links per page (>100)
-- Broken internal links
-- Redirect chains
-```
-
-### Breadcrumbs
-
-```typescript
-// components/Breadcrumbs.tsx
-import Link from 'next/link';
-
-interface BreadcrumbItem {
-  name: string;
-  href: string;
-}
-
-export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: items.map((item, index) => ({
-      '@type': 'ListItem',
-      position: index + 1,
-      name: item.name,
-      item: `https://yoursite.com${item.href}`,
-    })),
-  };
-
-  return (
-    <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      <nav aria-label="Breadcrumb">
-        <ol className="flex gap-2">
-          {items.map((item, index) => (
-            <li key={item.href}>
-              {index > 0 && <span>/</span>}
-              <Link href={item.href}>{item.name}</Link>
-            </li>
-          ))}
-        </ol>
-      </nav>
-    </>
-  );
-}
-```
+1. Is this a new site or are you restructuring an existing one?
+2. What type of site is it? (SaaS, content, e-commerce, docs, hybrid, small business)
+3. How many pages exist or are planned?
+4. What are the 5 most important pages on the site?
+5. Are there existing URLs that need to be preserved or redirected?
+6. Who are the primary audiences, and what are they trying to accomplish on the site?
 
 ---
 
-## AI Crawler Handling
+## Related Skills
 
-### Known AI Crawlers
+- **content-strategy**: For planning what content to create and topic clusters
+- **programmatic-seo**: For building SEO pages at scale with templates and data
+- **seo-audit**: For technical SEO, on-page optimization, and indexation issues
+- **page-cro**: For optimizing individual pages for conversion
+- **schema-markup**: For implementing breadcrumb and site navigation structured data
+- **competitor-alternatives**: For comparison page frameworks and URL patterns
 
-| Bot | User Agent | Purpose |
-|-----|------------|---------|
-| GPTBot | `GPTBot` | ChatGPT web browsing |
-| ChatGPT-User | `ChatGPT-User` | ChatGPT user browsing |
-| ClaudeBot | `ClaudeBot` | Claude web access |
-| Claude-Web | `Claude-Web` | Claude web features |
-| PerplexityBot | `PerplexityBot` | Perplexity search |
-| Google-Extended | `Google-Extended` | Gemini/Bard training |
-| Amazonbot | `Amazonbot` | Alexa/Amazon AI |
-| CCBot | `CCBot` | Common Crawl (AI training) |
-
-### Allow AI Discovery, Block Training (Optional)
-
-```txt
-# robots.txt
-
-# Allow GPTBot for ChatGPT browsing
-User-agent: GPTBot
-Allow: /
-
-# Block CCBot (used for training datasets)
-User-agent: CCBot
-Disallow: /
-
-# Block Google AI training, allow search
-User-agent: Google-Extended
-Disallow: /
-```
-
-### AI-Specific Meta Tags
-
-```html
-<!-- Block AI training but allow indexing -->
-<meta name="robots" content="index, follow, max-image-preview:large">
-
-<!-- Opt out of AI training (proposed standard) -->
-<meta name="ai-training" content="disallow">
-```
-
----
-
-## Structured Data Placement
-
-### Where to Add Schema
-
-```html
-<!-- Option 1: In <head> with JSON-LD (recommended) -->
-<head>
-  <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      "name": "Your Company"
-    }
-  </script>
-</head>
-
-<!-- Option 2: Before closing </body> -->
-<body>
-  <!-- Page content -->
-  <script type="application/ld+json">
-    { "@context": "https://schema.org", ... }
-  </script>
-</body>
-```
-
-### Multiple Schema Per Page
-
-```html
-<head>
-  <!-- Organization (site-wide) -->
-  <script type="application/ld+json">
-    { "@context": "https://schema.org", "@type": "Organization", ... }
-  </script>
-
-  <!-- BreadcrumbList (navigation) -->
-  <script type="application/ld+json">
-    { "@context": "https://schema.org", "@type": "BreadcrumbList", ... }
-  </script>
-
-  <!-- Article (page-specific) -->
-  <script type="application/ld+json">
-    { "@context": "https://schema.org", "@type": "Article", ... }
-  </script>
-
-  <!-- FAQPage (if FAQ section exists) -->
-  <script type="application/ld+json">
-    { "@context": "https://schema.org", "@type": "FAQPage", ... }
-  </script>
-</head>
-```
-
----
-
-## Project Structure
-
-```
-project/
-├── public/
-│   ├── robots.txt              # Or generate dynamically
-│   ├── sitemap.xml             # Or generate dynamically
-│   ├── favicon.ico
-│   ├── icon.svg
-│   ├── apple-touch-icon.png
-│   ├── og-image.jpg            # Default OG image (1200x630)
-│   └── manifest.webmanifest
-├── app/
-│   ├── layout.tsx              # Global metadata
-│   ├── robots.ts               # Dynamic robots.txt
-│   ├── sitemap.ts              # Dynamic sitemap
-│   └── [page]/
-│       └── page.tsx            # Page-specific metadata
-├── components/
-│   ├── SchemaMarkup.tsx
-│   ├── Breadcrumbs.tsx
-│   └── MetaTags.tsx
-└── lib/
-    ├── schema.ts               # Schema generators
-    └── seo.ts                  # SEO utilities
-```
-
----
-
-## Verification & Submission
-
-### Search Console Setup
-
-```bash
-# Verify ownership methods
-1. HTML file upload (google*.html to public/)
-2. Meta tag (add to <head>)
-3. DNS TXT record
-4. Google Analytics (if already installed)
-```
-
-### Submit Sitemap
-
-```markdown
-1. Google Search Console
-   - Sitemaps → Add new sitemap → yoursite.com/sitemap.xml
-
-2. Bing Webmaster Tools
-   - Sitemaps → Submit sitemap
-
-3. Yandex Webmaster (if relevant)
-   - Indexing → Sitemap files
-```
-
----
-
-## Checklist
-
-```markdown
-## Technical SEO Checklist
-
-### robots.txt
-- [ ] Allow search engines
-- [ ] Allow AI bots (GPTBot, ClaudeBot, PerplexityBot)
-- [ ] Block admin/private areas
-- [ ] Include sitemap reference
-- [ ] Test with Google's robots.txt tester
-
-### Sitemap
-- [ ] Include all indexable pages
-- [ ] Exclude noindex pages
-- [ ] Include lastmod dates
-- [ ] Submit to Search Console
-- [ ] Auto-update on content changes
-
-### Meta Tags
-- [ ] Unique title per page (50-60 chars)
-- [ ] Unique description per page (150-160 chars)
-- [ ] Canonical URL on every page
-- [ ] Open Graph tags
-- [ ] Twitter Card tags
-
-### URL Structure
-- [ ] Lowercase, hyphenated
-- [ ] Descriptive slugs
-- [ ] No query params for content
-- [ ] 301 redirects for moved content
-- [ ] No broken links
-
-### Performance
-- [ ] LCP < 2.5s
-- [ ] INP < 200ms
-- [ ] CLS < 0.1
-- [ ] HTTPS enabled
-- [ ] Security headers configured
-
-### Structured Data
-- [ ] Organization schema (homepage)
-- [ ] BreadcrumbList (all pages)
-- [ ] Article schema (blog posts)
-- [ ] FAQ schema (FAQ sections)
-- [ ] Validate with Rich Results Test
-```
-
----
-
-## Quick Reference
-
-### File Checklist
-
-```
-public/
-├── robots.txt          ✓ Required
-├── sitemap.xml         ✓ Required
-├── favicon.ico         ✓ Required
-├── og-image.jpg        ✓ Required (1200x630)
-└── manifest.json       ○ Recommended
-```
-
-### Meta Tag Lengths
-
-| Tag | Length |
-|-----|--------|
-| Title | 50-60 characters |
-| Description | 150-160 characters |
-| OG Title | 60-90 characters |
-| OG Description | 200 characters |
-| Twitter Description | 200 characters |
-
-### Image Sizes
-
-| Image | Dimensions |
-|-------|------------|
-| OG Image | 1200 x 630 |
-| Twitter Image | 1200 x 628 |
-| Favicon | 32 x 32 |
-| Apple Touch Icon | 180 x 180 |
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

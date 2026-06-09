@@ -14,13 +14,19 @@ Idea -> Research -> PRD -> Tech Design -> Agent Config -> Build MVP
         (20 min)  (15 min)  (15 min)      (10 min)      (1-3 hrs)
 ```
 
+## Global Rules
+
+1. Keep users in one continuous project session where possible.
+2. Prefer compaction/summaries over opening empty replacement chats.
+3. Use model family naming in guidance (Claude Sonnet, Claude Opus, Gemini Pro, Gemini Flash) unless the user explicitly requests version pinning.
+
 ## Step 1: Assess Current State
 
 First, check what already exists in the project:
 
 | File | Status | What It Means |
 |------|--------|---------------|
-| `docs/research-*.txt` | Check | Research complete |
+| `docs/research-*.md` (or `*.txt`) | Check | Research complete |
 | `docs/PRD-*.md` | Check | Requirements defined |
 | `docs/TechDesign-*.md` | Check | Architecture planned |
 | `AGENTS.md` | Check | Ready to build |
@@ -51,14 +57,14 @@ Say:
 
 Then guide them through the research phase (see vibe-research skill).
 
-### If Research Exists (has research-*.txt)
+### If Research Exists (has research-*.md or *.txt)
 
 Say:
 > **Progress Check:** Research complete!
 >
 > **Next Step:** Create your Product Requirements Document (PRD)
 >
-> I found your research at `docs/research-[name].txt`. I'll use this to inform your PRD.
+> I found your research at `docs/research-[name].md`. I'll use this to inform your PRD.
 >
 > Ready to define your product requirements?
 

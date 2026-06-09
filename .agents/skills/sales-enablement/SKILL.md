@@ -1,306 +1,362 @@
 ---
 name: sales-enablement
-version: 0.1.0
-description: >
-  Use this skill when creating battle cards, competitive intelligence, case studies,
-  or ROI calculators for sales teams. Triggers on battle cards, competitive analysis,
-  case studies, sales collateral, ROI calculators, sales training, product positioning,
-  and any task requiring sales enablement content or strategy.
-category: sales
-tags: [sales-enablement, battle-cards, competitive-intel, case-studies, roi]
-recommended_skills: [sales-playbook, competitive-analysis, proposal-writing, crm-management]
-platforms:
-  - claude-code
-  - gemini-cli
-  - openai-codex
-license: MIT
-maintainers:
-  - github: maddhruv
+description: "Create sales collateral such as decks, one-pagers, objection docs, demo scripts, playbooks, and proposal templates. Use when a sales team needs assets that help reps move deals forward and close."
+risk: unknown
+source: "https://github.com/coreyhaines31/marketingskills"
+date_added: "2026-03-21"
+metadata:
+  version: 1.1.0
 ---
-
-When this skill is activated, always start your first response with the 🧢 emoji.
 
 # Sales Enablement
 
-Sales enablement is the discipline of giving sales teams the content, tools, and
-knowledge they need to effectively engage buyers at every stage of the purchasing
-journey. The core idea is that reps should spend time selling, not hunting for
-materials or improvising answers to objections they have seen a hundred times before.
-This skill covers how to build, structure, and maintain the assets that make a sales
-team consistently effective: battle cards, case studies, ROI calculators, competitive
-intelligence briefs, product one-pagers, and training programs.
+You are an expert in B2B sales enablement. Your goal is to create sales collateral that reps actually use — decks, one-pagers, objection docs, demo scripts, and playbooks that help close deals.
+
+## When to Use
+- Use when building decks, one-pagers, objection handling docs, or demo scripts.
+- Use when a sales team needs collateral tailored to stage, persona, or use case.
+- Use when the asset should help reps close deals rather than drive top-of-funnel traffic.
+
+## Before Starting
+
+**Check for product marketing context first:**
+If `.agents/product-marketing-context.md` exists (or `.claude/product-marketing-context.md` in older setups), read it before asking questions. Use that context and only ask for information not already covered or specific to this task.
+
+Gather this context (ask if not provided):
+
+1. **Value Proposition & Differentiators**
+   - What do you sell and who is it for?
+   - What makes you different from the next best alternative?
+   - What outcomes can you prove?
+
+2. **Sales Motion**
+   - How do you sell? (self-serve, inside sales, field sales, hybrid)
+   - Average deal size and sales cycle length
+   - Key personas involved in the buying decision
+
+3. **Collateral Needs**
+   - What specific assets do you need?
+   - What stage of the funnel are they for?
+   - Who will use them? (AE, SDR, champion, prospect)
+
+4. **Current State**
+   - What materials exist today?
+   - What's working and what's not?
+   - What do reps ask for most?
 
 ---
 
-## When to use this skill
+## Core Principles
 
-Trigger this skill when the user:
-- Asks to create or update a battle card for a product or competitor
-- Needs a competitive intelligence brief or analysis
-- Wants to write a customer case study or success story
-- Asks to build an ROI or business value calculator
-- Needs a product one-pager or sales leave-behind
-- Wants to design or structure a sales training program
-- Asks for help with product positioning for a sales audience
-- Needs to measure or improve sales enablement effectiveness
+### Sales Uses What Sales Trusts
+Involve reps in creation. Use their language, not marketing's. If reps rewrite your deck before sending it, you wrote the wrong deck. Test drafts with your top performers first.
 
-Do NOT trigger this skill for:
-- Marketing campaign copy or demand generation (audience is buyers, not reps)
-- Product roadmap or engineering documentation (use product-management skills instead)
+### Situation-Specific, Not Generic
+Tailor to persona, deal stage, and use case. A deck for a CTO should look different from one for a VP of Sales. A one-pager for post-meeting follow-up serves a different purpose than one for a trade show.
+
+### Scannable Over Comprehensive
+Reps need information in 3 seconds, not 30. Use bold headers, short bullets, and visual hierarchy. If a rep can't find the answer mid-call, the doc has failed.
+
+### Tie Back to Business Outcomes
+Every claim connects to revenue, efficiency, or risk reduction. Features mean nothing without the "so what." Replace "AI-powered analytics" with "cut reporting time by 80%."
 
 ---
 
-## Key principles
+## Sales Deck / Pitch Deck
 
-1. **Sales-ready, not marketing-pretty** - Sales collateral must be scannable in 30
-   seconds and answerable in a live call. Dense prose, brand storytelling, and visual
-   polish matter less than clarity, speed, and objection coverage. If a rep can't
-   use it under pressure, it will never leave the folder.
+### 10-12 Slide Framework
 
-2. **Update quarterly or it's stale** - Competitive landscapes, pricing, and product
-   capabilities shift constantly. A battle card with outdated win rates or features
-   that no longer exist actively hurts deals. Schedule a quarterly review cycle and
-   treat outdated content as a blocker, not a to-do.
+1. **Current World Problem** — The pain your buyer lives with today
+2. **Cost of the Problem** — What inaction costs (time, money, risk)
+3. **The Shift Happening** — Market or technology change creating urgency
+4. **Your Approach** — How you solve it differently
+5. **Product Walkthrough** — 3-4 key workflows, not a feature tour
+6. **Proof Points** — Metrics, logos, analyst recognition
+7. **Case Study** — One customer story told well
+8. **Implementation / Timeline** — How they get from here to live
+9. **ROI / Value** — Expected return and payback period
+10. **Pricing Overview** — Transparent, tiered if applicable
+11. **Next Steps / CTA** — Clear action with timeline
 
-3. **One page per asset** - Every piece of enablement content should fit on one
-   printed page or one screen without scrolling. If it doesn't fit, split it into
-   two assets. Length signals effort to the creator; brevity signals respect for
-   the reader's time under pressure.
+### Deck Principles
 
-4. **Arm for objections, not just features** - The job of enablement content is to
-   prepare reps for the moments they feel vulnerable: "Your competitor does this
-   for half the price," "We already have a solution for that," "We'll revisit next
-   quarter." Every asset should include the three most common objections reps hear
-   and a proven response to each.
+- **Story arc, not feature tour.** Every deck tells a story: the world has a problem, there's a better way, here's proof, here's how to get there.
+- **One idea per slide.** If you need two points, use two slides.
+- **Design for presenting, not reading.** Slides support the conversation — they don't replace it. Minimal text, strong visuals.
 
-5. **Measure usage and impact** - Enablement content that is never opened cannot
-   drive revenue. Track view rates, download counts, content usage by deal stage,
-   and win rates for deals where content was used versus not. Cull assets that go
-   unused and double down on those that correlate with wins.
+### Customization by Buyer Type
 
----
+| Buyer | Emphasize | De-emphasize |
+|-------|-----------|--------------|
+| Technical buyer | Architecture, security, integrations, API | ROI calculations, business metrics |
+| Economic buyer | ROI, payback period, total cost, risk | Technical details, implementation specifics |
+| Champion | Internal selling points, quick wins, peer proof | Deep technical or financial detail |
 
-## Core concepts
-
-### Enablement content types
-
-| Asset | Primary use | Length | Update cadence |
-|---|---|---|---|
-| Battle card | Live competitive calls | 1 page | Quarterly |
-| Case study | Late-stage proof | 1-2 pages | As new wins occur |
-| ROI calculator | Business case / CFO | 1 spreadsheet | Semi-annually |
-| Product one-pager | Discovery and demos | 1 page | With major releases |
-| Competitive brief | Deep research | 3-5 pages | Quarterly |
-| Sales playbook | New hire ramp / coaching | 10-20 pages | Annually |
-| Objection handler | Ongoing coaching | 1-2 pages | Quarterly |
-
-### Buyer journey mapping
-
-Align content to where the buyer is in their decision process:
-
-- **Awareness** - Buyer has a problem but no solution in mind. Use thought leadership,
-  industry data, and problem-framing one-pagers.
-- **Consideration** - Buyer is evaluating solutions. Use competitive battle cards,
-  feature comparison sheets, and analyst summaries.
-- **Decision** - Buyer is choosing a vendor. Use case studies, ROI calculators,
-  security/compliance docs, and reference call frameworks.
-- **Post-sale** - Buyer becomes a customer. Use onboarding guides, expansion plays,
-  and renewal decks.
-
-### Competitive positioning
-
-Effective competitive positioning is not about tearing down competitors. It is about
-making the choice obvious for the right buyer. Build positioning on four pillars:
-
-1. **Where we win** - Deal types, company sizes, industries, or use cases where the
-   product is the clear best fit.
-2. **Where they win** - Honest assessment of situations where a competitor is a
-   better fit. Reps who acknowledge this build trust; reps who deny it lose deals.
-3. **Key differentiators** - Three to five concrete, provable differences - not
-   "we are more innovative" but "we process transactions in under 50ms vs their
-   documented 200ms average."
-4. **Trap questions** - Discovery questions that expose competitor weaknesses and
-   pull the conversation toward your strengths.
-
-### Win/loss analysis
-
-Win/loss analysis is the feedback loop that makes all other enablement content
-accurate. Conduct structured interviews within two weeks of closing or losing a deal:
-
-- Why did the buyer choose us / not choose us?
-- Which competitors were in the deal? What did they say about them?
-- Which objections came up? How were they handled?
-- What content did the rep use? Was it helpful?
-
-Feed findings back into battle cards, objection handlers, and training within 30 days.
+**For full slide-by-slide guidance**: See [references/deck-frameworks.md](references/deck-frameworks.md)
 
 ---
 
-## Common tasks
+## One-Pagers / Leave-Behinds
 
-### Create a battle card
+### When to Use
 
-Use the template in `references/battle-card-template.md`. Key sections:
+- **Post-meeting recap** — Reinforce what you discussed, keep momentum
+- **Champion internal selling** — Arm your champion to sell for you
+- **Trade show handout** — Quick intro that drives follow-up
 
-1. **One-line pitch** - Why choose us over this competitor in one sentence.
-2. **Where we win** - Three to five deal types or buyer profiles where we are the
-   stronger choice.
-3. **Where they win** - One to two honest scenarios. Omitting this makes the card
-   look like propaganda and trains reps to be blindsided.
-4. **Top objections and responses** - The three objections reps hear most in
-   competitive deals, each with a validated response from a rep who has won that
-   exchange.
-5. **Trap questions** - Two or three discovery questions that surface needs your
-   product addresses better.
-6. **Key differentiators** - Concrete, provable, and ideally third-party validated.
-7. **Do not say** - Phrases or claims that are inaccurate, legally risky, or that
-   consistently backfire in deals.
+### Structure
 
-### Write a case study
+1. **Problem statement** — The pain in one sentence
+2. **Your solution** — What you do and how
+3. **3 differentiators** — Why you vs. alternatives
+4. **Proof point** — One strong metric or customer quote
+5. **CTA** — Clear next step with contact info
 
-Use the Problem-Solution-Result framework:
+### Design Principles
 
-```
-CUSTOMER: [Name], [industry], [size]
-CHALLENGE: One paragraph. What specific problem were they trying to solve?
-           Include the business impact of NOT solving it (cost, risk, lost time).
-SOLUTION: One paragraph. What did they implement and how? Focus on capabilities
-          used, not product marketing language.
-RESULTS: Three to five bullet points with quantified outcomes.
-         - Reduced onboarding time from 6 weeks to 10 days
-         - Saved $340k annually in manual processing costs
-         - Increased NPS from 32 to 67 within 90 days
-QUOTE: One direct quote from the economic buyer or champion, attributed to name
-       and title, that captures the business value in their words.
-```
+- One page, literally. Front only, or front and back maximum.
+- Scannable in 30 seconds. Bold headers, short bullets, whitespace.
+- Include your logo, website, and a specific contact (not info@).
+- Match your brand but keep it clean — this is a sales tool, not a brand piece.
 
-Validation rules: Every number must be approved by the customer. Every quote must
-be attributed. Every case study must go through legal review before external use.
-
-### Build an ROI calculator
-
-ROI calculators must answer three questions for a CFO:
-
-1. **What does the problem cost today?** - Quantify the status quo in dollars.
-   Hours wasted * loaded salary rate, error rates * average cost per error,
-   churn caused by the problem * average contract value.
-2. **What does the solution cost?** - License cost + implementation + training +
-   ongoing admin. Be honest. Buyers will find the hidden costs anyway.
-3. **What is the net return and payback period?** - (Annual benefit - annual cost)
-   / annual cost = ROI%. Break-even month = total investment / monthly benefit.
-
-Build the model in a spreadsheet with clearly labeled input cells (highlighted
-yellow) and output cells. Every assumption should be visible and editable.
-Provide conservative, base, and optimistic scenario columns.
-
-### Develop competitive intelligence briefs
-
-Structure a competitive intelligence brief in five sections:
-
-1. **Company overview** - Size, funding, recent news, strategic direction.
-2. **Product comparison** - Feature-by-feature table with honest ratings (strong /
-   comparable / weak) for both products.
-3. **Pricing and packaging** - What is known publicly; estimated ranges from deal
-   data; typical discounting patterns.
-4. **Sales tactics** - How they sell: FUD they spread, discounting triggers,
-   pressure tactics reps have encountered.
-5. **How to beat them** - Specific deal strategy, trap questions, and references
-   to relevant battle card.
-
-Sources: competitor website, G2/Gartner reviews, job postings (reveal roadmap
-priorities), LinkedIn, customer interviews, and your own deal notes.
-
-### Create product one-pagers
-
-A product one-pager is not a datasheet. It is a conversation starter for
-discovery calls and a leave-behind after demos. Structure:
-
-- **Headline** - Outcome the buyer gets, not product name or feature list.
-- **The problem** - Two sentences on the pain. Buyers should nod.
-- **The solution** - Three bullet points on what the product does.
-- **Why us** - Three differentiators with evidence.
-- **Customer proof** - One logo strip or one quote.
-- **Call to action** - Next step that is specific and low-friction.
-
-Avoid: feature lists without context, internal jargon, and anything that requires
-a product manager to explain.
-
-### Design sales training program
-
-Structure a training program around four competency areas:
-
-1. **Product knowledge** - What it does, how it works, common configurations.
-   Tested via demo certification (rep must demo without a script).
-2. **Competitive knowledge** - Who the competitors are, where we win and lose.
-   Tested via mock competitive call with objections thrown.
-3. **Discovery skills** - How to uncover business pain, quantify impact, map to
-   stakeholders. Practiced via recorded discovery calls with feedback.
-4. **Deal execution** - How to build a mutual success plan, navigate procurement,
-   create urgency ethically. Practiced via deal reviews.
-
-Ramp milestone: rep should be fully certified and carrying quota by week eight.
-Each certification requires a practical demonstration, not just a quiz.
-
-### Measure enablement effectiveness
-
-Track these metrics in a monthly review:
-
-| Metric | What it measures | Target |
-|---|---|---|
-| Content usage rate | % of reps using assets in active deals | > 60% |
-| Asset open rate | % of sent assets opened by buyers | > 40% |
-| Win rate with content | Win rate when asset used vs not | > 10 pp lift |
-| Time to rep productivity | Weeks from start date to first close | Trend down |
-| Competitive win rate | Win rate in tracked competitive deals | Track by competitor |
-| Enablement NPS | Rep satisfaction with materials | > 30 |
-
-Review with sales leadership monthly. Drop assets below 20% usage. Investigate
-and replicate assets with strong win rate correlation.
+**For templates by use case**: See [references/one-pager-templates.md](references/one-pager-templates.md)
 
 ---
 
-## Anti-patterns / common mistakes
+## Objection Handling Docs
 
-| Mistake | Why it's wrong | What to do instead |
-|---|---|---|
-| Building for marketing, not reps | Long-form PDFs and polished decks reps cannot use under pressure | Co-create with reps; test every asset in a live role play before publishing |
-| Ignoring where you lose | Omitting competitor strengths makes cards feel like propaganda; reps get blindsided | Include honest "where they win" sections; this builds rep credibility with buyers |
-| One ROI model for all buyers | A CFO and a VP of Engineering evaluate value differently | Build buyer-persona-specific calculators or clearly label which persona each model targets |
-| Launching without training | Uploading content to a portal and expecting adoption | Run a 30-minute launch session; show reps when and how to use each asset |
-| Treating enablement as a one-time project | Content is stale within months; stale content is worse than no content | Put quarterly review dates on every asset at creation time |
-| Measuring output not outcomes | Reporting number of assets created instead of deals influenced | Tie every enablement initiative to a revenue or productivity metric from day one |
+### Objection Categories
 
----
+| Category | Examples |
+|----------|----------|
+| Price | "Too expensive," "No budget this quarter," "Competitor is cheaper" |
+| Timing | "Not the right time," "Maybe next quarter," "Too busy to implement" |
+| Competition | "We already use X," "What makes you different?" |
+| Authority | "I need to check with my boss," "The committee decides" |
+| Status quo | "What we have works fine," "Not broken, don't fix it" |
+| Technical | "Does it integrate with X?," "Security concerns," "Can it scale?" |
 
-## Gotchas
+### Response Framework
 
-1. **Battle card built without input from reps who've been in those deals** - An enablement asset created by product marketing without validating objections against real deal data produces cards that look complete but fail in live calls. Validate every objection and response with at least two reps who have faced that competitor.
+For each objection, document:
 
-2. **ROI calculator with hidden or locked assumptions** - If buyers can't see and edit the input assumptions, they distrust the output. A locked model that produces "you save $500k" with no visible math undermines credibility. Every assumption cell must be visible, labeled, and editable.
+1. **Objection statement** — Exactly how reps hear it
+2. **Why they say it** — The real concern behind the words
+3. **Response approach** — How to acknowledge and redirect
+4. **Proof point** — Specific evidence that addresses the concern
+5. **Follow-up question** — Keep the conversation moving forward
 
-3. **Case study numbers not customer-approved** - Publishing customer outcome numbers without explicit written approval is both a trust and legal risk. Every metric in an external case study needs sign-off from the customer's legal or PR team, not just the champion contact.
+### Two Formats
 
-4. **Enablement content launched without a training session** - Uploading assets to a portal and sending a Slack message does not drive adoption. Reps don't use content they weren't shown how and when to use. Run a 30-minute launch session with real deal scenarios before expecting content usage.
+- **Quick-reference table** for live calls — objection, one-line response, proof point. Fits on one screen.
+- **Detailed doc** for prep and training — full context, talk tracks, role-play scenarios.
 
-5. **Competitive intel briefs that don't include "where they win"** - A battle card that only lists your strengths and the competitor's weaknesses reads as propaganda and trains reps to be blindsided. Honest "where they win" sections build rep credibility with buyers and prevent overconfidence in unsuitable deals.
-
----
-
-## References
-
-For detailed content on specific topics, read the relevant file from `references/`:
-
-- `references/battle-card-template.md` - Full battle card structure with annotated
-  examples and fill-in sections for each competitor
-
-Only load a references file if the current task requires deep detail on that topic.
+**For the full objection library**: See [references/objection-library.md](references/objection-library.md)
 
 ---
 
-## Companion check
+## ROI Calculators & Value Props
 
-> On first activation of this skill in a conversation: check which companion skills are installed by running `ls ~/.claude/skills/ ~/.agent/skills/ ~/.agents/skills/ .claude/skills/ .agent/skills/ .agents/skills/ 2>/dev/null`. Compare the results against the `recommended_skills` field in this file's frontmatter. For any that are missing, mention them once and offer to install:
-> ```
-> npx skills add AbsolutelySkilled/AbsolutelySkilled --skill <name>
-> ```
-> Skip entirely if `recommended_skills` is empty or all companions are already installed.
+### Calculator Design
+
+**Inputs** (current state metrics the prospect provides):
+- Time spent on manual processes
+- Current tool costs
+- Error rates or inefficiency metrics
+- Team size
+
+**Calculations** (your formula for value):
+- Time saved per week/month/year
+- Cost reduction (tools, headcount, errors)
+- Revenue impact (faster deals, higher conversion)
+
+**Outputs** (what the prospect sees):
+- Annual ROI percentage
+- Payback period in months
+- Total 3-year value
+
+### Value Prop by Persona
+
+| Persona | Cares About | Lead With |
+|---------|-------------|-----------|
+| CTO / VP Eng | Architecture, scale, security, team velocity | Technical superiority, integration depth |
+| VP Sales | Pipeline, quota attainment, rep productivity | Revenue impact, time savings per rep |
+| CFO | Total cost, payback period, risk | ROI, cost reduction, financial predictability |
+| End user | Ease of use, daily workflow, learning curve | Time saved, frustration eliminated |
+
+### Implementation Options
+
+- **Spreadsheet** — Fastest to build, easy to customize per deal. Works for inside sales.
+- **Web tool** — More polished, captures leads, scales better. Worth building if deal volume is high.
+- **Slide-based** — ROI story embedded in the deck. Good for executive presentations.
+
+---
+
+## Demo Scripts & Talk Tracks
+
+### Script Structure
+
+1. **Opening** (2 min) — Context setting, agenda, confirm goals for the call
+2. **Discovery recap** (3 min) — Summarize what you learned, confirm priorities
+3. **Solution walkthrough** (15-20 min) — 3-4 key workflows mapped to their pain
+4. **Interaction points** — Questions to ask during the demo, not just at the end
+5. **Close** (5 min) — Summarize value, propose next steps with timeline
+
+### Talk Track Types
+
+| Type | Duration | Focus |
+|------|----------|-------|
+| Discovery call | 30 min | Qualify, understand pain, map buying process |
+| First demo | 30-45 min | Show 3-4 workflows tied to their pain |
+| Technical deep-dive | 45-60 min | Architecture, security, integrations, API |
+| Executive overview | 20-30 min | Business outcomes, ROI, strategic alignment |
+
+### Key Principles
+
+- **Demo after discovery, not before.** If you don't know their pain, you're guessing which features matter.
+- **Customize to their use case.** Use their terminology, their data (if possible), their workflow.
+- **Leave time for questions.** A demo where the prospect doesn't talk is a demo that doesn't close.
+
+**For full script templates**: See [references/demo-scripts.md](references/demo-scripts.md)
+
+---
+
+## Case Study Briefs (Sales Format)
+
+### How Sales Case Studies Differ
+
+Marketing case studies tell a story. Sales case studies arm reps with fast-access proof. Keep them short, outcome-focused, and tagged for retrieval.
+
+### Structure
+
+1. **Customer profile** — Industry, company size, buyer role
+2. **Challenge** — What they were struggling with (2-3 sentences)
+3. **Solution** — What they implemented (1-2 sentences)
+4. **Results** — 3 specific metrics (before/after)
+5. **Pull quote** — One sentence from the customer
+6. **Tags** — Industry, use case, company size, persona
+
+### Organization
+
+Organize case studies so reps can find the right one instantly:
+- **By industry** — "Show me a case study for healthcare"
+- **By use case** — "Show me someone who used us for X"
+- **By company size** — "Show me an enterprise example"
+
+---
+
+## Proposal Templates
+
+### Structure
+
+1. **Executive summary** — Their challenge, your solution, expected outcome (1 page max)
+2. **Proposed solution** — What you'll deliver, mapped to their requirements
+3. **Implementation plan** — Timeline, milestones, responsibilities
+4. **Investment** — Pricing, payment terms, what's included
+5. **Next steps** — How to move forward, decision timeline
+
+### Customization Guidance
+
+- Mirror their language from discovery calls
+- Reference specific pain points they mentioned
+- Include only relevant case studies (same industry or use case)
+- Name the stakeholders you've spoken with
+
+### Common Mistakes
+
+- **Too long** — If it's over 10 pages, it won't get read. Aim for 5-7.
+- **Too generic** — Templated proposals signal low effort. Customize the exec summary at minimum.
+- **Burying the price** — Don't make them hunt for it. Be transparent and confident.
+
+---
+
+## Sales Playbooks
+
+### What Goes in a Playbook
+
+- **Buyer profile** — Who you're selling to, their goals and pains
+- **Qualification criteria** — BANT, MEDDIC, or your framework
+- **Discovery questions** — Organized by topic, not a script
+- **Objection handling** — Top 10 objections with responses
+- **Competitive positioning** — How you win against each competitor
+- **Demo flow** — Recommended sequence for each persona
+- **Email templates** — Follow-up, proposal, check-in, breakup
+
+### When to Build
+
+- **New product launch** — Reps need a single source of truth
+- **New market segment** — Different buyers need different approaches
+- **New hire ramp** — Playbooks cut ramp time significantly
+
+### Keeping It Living
+
+Playbooks die when they're not updated. Review quarterly, get input from top reps, and remove anything outdated. Assign an owner — if nobody owns it, it rots.
+
+---
+
+## Buyer Persona Cards
+
+### Card Structure
+
+| Field | Description |
+|-------|-------------|
+| Role / title | Common titles and reporting structure |
+| Goals | What success looks like for them |
+| Pains | What frustrates them daily |
+| Top objections | The 3-5 objections you'll hear from this role |
+| Evaluation criteria | How they judge solutions |
+| Buying process | Their role in the decision, who they influence |
+| Messaging angle | The one sentence that resonates most |
+
+### Persona Types
+
+- **Economic buyer** — Signs the check. Cares about ROI and risk.
+- **Technical buyer** — Evaluates the product. Cares about capabilities and integration.
+- **End user** — Uses it daily. Cares about ease and workflow fit.
+- **Champion** — Advocates internally. Needs ammunition to sell for you.
+- **Blocker** — Opposes the purchase. Understand their concern to neutralize it.
+
+---
+
+## Output Format
+
+Deliver the right format for each asset type:
+
+| Asset | Deliverable |
+|-------|-------------|
+| Sales deck | Slide-by-slide outline with headline, body copy, and speaker notes |
+| One-pager | Full copy with layout guidance (visual hierarchy, sections) |
+| Objection doc | Table format: objection, response, proof point, follow-up |
+| Demo script | Scene-by-scene with timing, talk track, and interaction points |
+| ROI calculator | Input fields, formulas, output display with sample data |
+| Playbook | Structured document with table of contents and sections |
+| Persona card | One-page card format per persona |
+| Proposal | Section-by-section copy with customization notes |
+
+---
+
+## Task-Specific Questions
+
+If context is missing, ask:
+
+1. What collateral do you need? (deck, one-pager, objection doc, etc.)
+2. Who will use it? (AE, SDR, champion, prospect)
+3. What sales stage is it for? (prospecting, discovery, demo, negotiation, close)
+4. Who is the target persona? (title, seniority, department)
+5. What are the top 3 objections you hear most?
+
+---
+
+## Related Skills
+
+- **competitor-alternatives**: For public-facing comparison and alternative pages
+- **copywriting**: For marketing website copy
+- **cold-email**: For outbound prospecting emails
+- **revops**: For lead lifecycle, scoring, routing, and pipeline management
+- **pricing-strategy**: For pricing decisions and packaging
+- **product-marketing-context**: For foundational positioning and messaging
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

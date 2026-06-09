@@ -1,13 +1,24 @@
 ---
 name: schema-markup-generator
-description: Generates structured data markup (Schema.org JSON-LD) to enable rich results in search engines including FAQ snippets, How-To cards, Product listings, Reviews, and more.
+argument-hint: "<URL or page type, e.g. 'FAQ page' or 'product page'>"
+description: >
+  Generate JSON-LD structured data markup for rich results in Google Search.
+  Supports FAQ, HowTo, Article, Product, LocalBusiness, and multi-type schemas.
+  Validates against Google requirements and provides implementation guidance.
+  Use when asked to "add schema markup", "generate structured data", "JSON-LD",
+  "rich snippets", "FAQ schema", "product markup", "add structured data to my
+  page", "how to get rich snippets", or any structured data task.
 ---
 
 # Schema Markup Generator
 
 This skill creates Schema.org structured data markup in JSON-LD format to help search engines understand your content and enable rich results in SERPs.
 
-## When to Use This Skill
+## When This Must Trigger
+
+Use this when the conversation involves any of these situations — even if the user does not use SEO terminology:
+
+Use this whenever the task needs a shippable asset or transformation that should feed directly into quality review, deployment, or monitoring.
 
 - Adding FAQ schema for expanded SERP presence
 - Creating How-To schema for step-by-step content
@@ -27,7 +38,9 @@ This skill creates Schema.org structured data markup in JSON-LD format to help s
 5. **Nested Schema**: Handles complex, multi-type schemas
 6. **Rich Result Eligibility**: Identifies which rich results you can target
 
-## How to Use
+## Quick Start
+
+Start with one of these prompts.
 
 ### Generate Schema for Content
 
@@ -55,18 +68,52 @@ Generate LocalBusiness schema for [business name and details]
 Review and improve this schema markup: [existing schema]
 ```
 
+## Data Sources
+
+**With ~~web crawler connected:**
+Automatically crawl and extract page content (visible text, headings, lists, tables), existing schema markup, page metadata, and structured content elements that map to schema properties.
+
+**With manual data only:**
+Ask the user to provide:
+1. Page URL or full HTML content
+2. Page type (article, product, FAQ, how-to, local business, etc.)
+3. Specific data needed for schema (prices, dates, author info, Q&A pairs, etc.)
+4. Current schema markup (if optimizing existing)
+
+Proceed with the full workflow using provided data. Note in the output which data is from automated extraction vs. user-provided data.
+
 ## Instructions
 
 When a user requests schema markup:
 
 1. **Identify Content Type and Rich Result Opportunity**
 
+   Reference the CORE-EEAT Benchmark item **O05 (Schema Markup)** for content-type to schema mapping:
+
+   ```markdown
+   ### CORE-EEAT Schema Mapping (O05)
+
+   | Content Type | Required Schema | Conditional Schema |
+   |-------------|----------------|--------------------|
+   | Blog (guides) | Article, Breadcrumb | FAQ, HowTo |
+   | Blog (tools) | Article, Breadcrumb | FAQ, Review |
+   | Blog (insights) | Article, Breadcrumb | FAQ |
+   | Alternative | Comparison*, Breadcrumb, FAQ | AggregateRating |
+   | Best-of | ItemList, Breadcrumb, FAQ | AggregateRating per tool |
+   | Use-case | WebPage, Breadcrumb, FAQ | — |
+   | FAQ | FAQPage, Breadcrumb | — |
+   | Landing | SoftwareApplication, Breadcrumb, FAQ | WebPage |
+   | Testimonial | Review, Breadcrumb | FAQ, Person |
+
+   *Use the mapping above to ensure schema type matches content type (CORE-EEAT O05: Pass criteria).*
+   ```
+
    ```markdown
    ### Schema Analysis
-   
+
    **Content Type**: [blog/product/FAQ/how-to/local business/etc.]
    **Page URL**: [URL]
-   
+
    **Eligible Rich Results**:
    
    | Rich Result Type | Eligibility | Impact |
@@ -84,372 +131,26 @@ When a user requests schema markup:
    2. [Secondary schema type] - [reason]
    ```
 
-2. **Generate FAQ Schema**
+2. **Generate Schema Markup**
 
-   ```markdown
-   ### FAQ Schema (FAQPage)
-   
-   **Requirements**:
-   - Minimum 2 Q&A pairs
-   - Questions must be complete questions
-   - Answers should be comprehensive
-   - Must match visible page content
-   
-   **Generated Schema**:
-   
-   ```json
-   {
-     "@context": "https://schema.org",
-     "@type": "FAQPage",
-     "mainEntity": [
-       {
-         "@type": "Question",
-         "name": "[Question 1 - exactly as shown on page]",
-         "acceptedAnswer": {
-           "@type": "Answer",
-           "text": "[Complete answer text]"
-         }
-       },
-       {
-         "@type": "Question",
-         "name": "[Question 2]",
-         "acceptedAnswer": {
-           "@type": "Answer",
-           "text": "[Complete answer text]"
-         }
-       }
-     ]
-   }
-   ```
-   
-   **Rich Result Preview**:
-   ```
-   [Page Title]
-   [URL]
-   [Meta Description]
-   
-   ▼ Question 1?
-     [Answer preview...]
-   ▼ Question 2?
-     [Answer preview...]
-   ```
-   ```
+   Based on the identified content type, generate the appropriate JSON-LD schema. Supported types: FAQPage, HowTo, Article/BlogPosting/NewsArticle, Product, LocalBusiness, Organization, BreadcrumbList, Event, Recipe, and combined multi-type schemas.
 
-3. **Generate How-To Schema**
+   > **Reference**: See [references/schema-templates.md](references/schema-templates.md) for complete, copy-ready JSON-LD templates for all schema types with required and optional properties.
 
-   ```markdown
-   ### How-To Schema (HowTo)
-   
-   **Requirements**:
-   - Clear step-by-step instructions
-   - Each step must have text
-   - Optional: images, videos, time, supplies
-   
-   **Generated Schema**:
-   
-   ```json
-   {
-     "@context": "https://schema.org",
-     "@type": "HowTo",
-     "name": "[How-to title]",
-     "description": "[Brief description of what this teaches]",
-     "totalTime": "PT[X]M",
-     "estimatedCost": {
-       "@type": "MonetaryAmount",
-       "currency": "USD",
-       "value": "[cost]"
-     },
-     "supply": [
-       {
-         "@type": "HowToSupply",
-         "name": "[Supply item 1]"
-       }
-     ],
-     "tool": [
-       {
-         "@type": "HowToTool",
-         "name": "[Tool 1]"
-       }
-     ],
-     "step": [
-       {
-         "@type": "HowToStep",
-         "name": "[Step 1 title]",
-         "text": "[Step 1 detailed instructions]",
-         "url": "[URL]#step1",
-         "image": "[Step 1 image URL]"
-       },
-       {
-         "@type": "HowToStep",
-         "name": "[Step 2 title]",
-         "text": "[Step 2 detailed instructions]",
-         "url": "[URL]#step2",
-         "image": "[Step 2 image URL]"
-       }
-     ]
-   }
-   ```
-   ```
+   For each schema generated, include:
+   - All required properties for the chosen type
+   - Rich result preview showing expected SERP appearance
+   - Notes on which properties are required vs. optional
 
-4. **Generate Article Schema**
+   When combining multiple schema types on one page, wrap them in a JSON array inside a single `<script type="application/ld+json">` tag.
 
-   ```markdown
-   ### Article Schema
-   
-   **Schema Type Options**:
-   - `Article` - General articles
-   - `BlogPosting` - Blog posts
-   - `NewsArticle` - News content
-   - `TechArticle` - Technical documentation
-   
-   **Generated Schema**:
-   
-   ```json
-   {
-     "@context": "https://schema.org",
-     "@type": "Article",
-     "headline": "[Article title - max 110 chars]",
-     "description": "[Article summary]",
-     "image": [
-       "[Image URL 1 - 1200px wide]",
-       "[Image URL 2 - 4:3 ratio]",
-       "[Image URL 3 - 16:9 ratio]"
-     ],
-     "datePublished": "[ISO 8601 date: 2024-01-15T08:00:00+00:00]",
-     "dateModified": "[ISO 8601 date]",
-     "author": {
-       "@type": "Person",
-       "name": "[Author Name]",
-       "url": "[Author profile URL]"
-     },
-     "publisher": {
-       "@type": "Organization",
-       "name": "[Publisher Name]",
-       "logo": {
-         "@type": "ImageObject",
-         "url": "[Logo URL - 60px high max]"
-       }
-     },
-     "mainEntityOfPage": {
-       "@type": "WebPage",
-       "@id": "[Canonical URL]"
-     }
-   }
-   ```
-   ```
-
-5. **Generate Product Schema**
-
-   ```markdown
-   ### Product Schema
-   
-   **Requirements for Rich Results**:
-   - Name (required)
-   - Image (required)
-   - Offers with price (for price rich results)
-   - AggregateRating (for star ratings)
-   - Review (for review snippets)
-   
-   **Generated Schema**:
-   
-   ```json
-   {
-     "@context": "https://schema.org",
-     "@type": "Product",
-     "name": "[Product Name]",
-     "image": [
-       "[Product image URL 1]",
-       "[Product image URL 2]"
-     ],
-     "description": "[Product description]",
-     "sku": "[SKU]",
-     "mpn": "[Manufacturer Part Number]",
-     "brand": {
-       "@type": "Brand",
-       "name": "[Brand Name]"
-     },
-     "offers": {
-       "@type": "Offer",
-       "url": "[Product URL]",
-       "priceCurrency": "USD",
-       "price": "[Price]",
-       "priceValidUntil": "[Date]",
-       "availability": "https://schema.org/InStock",
-       "seller": {
-         "@type": "Organization",
-         "name": "[Seller Name]"
-       }
-     },
-     "aggregateRating": {
-       "@type": "AggregateRating",
-       "ratingValue": "[4.5]",
-       "reviewCount": "[89]"
-     },
-     "review": {
-       "@type": "Review",
-       "reviewRating": {
-         "@type": "Rating",
-         "ratingValue": "[5]"
-       },
-       "author": {
-         "@type": "Person",
-         "name": "[Reviewer Name]"
-       },
-       "reviewBody": "[Review text]"
-     }
-   }
-   ```
-   ```
-
-6. **Generate Local Business Schema**
-
-   ```markdown
-   ### LocalBusiness Schema
-   
-   **Generated Schema**:
-   
-   ```json
-   {
-     "@context": "https://schema.org",
-     "@type": "[LocalBusiness/Restaurant/Store/etc.]",
-     "name": "[Business Name]",
-     "image": "[Business image URL]",
-     "@id": "[Business URL]",
-     "url": "[Website URL]",
-     "telephone": "[Phone number]",
-     "priceRange": "[$$]",
-     "address": {
-       "@type": "PostalAddress",
-       "streetAddress": "[Street Address]",
-       "addressLocality": "[City]",
-       "addressRegion": "[State]",
-       "postalCode": "[ZIP]",
-       "addressCountry": "US"
-     },
-     "geo": {
-       "@type": "GeoCoordinates",
-       "latitude": [latitude],
-       "longitude": [longitude]
-     },
-     "openingHoursSpecification": [
-       {
-         "@type": "OpeningHoursSpecification",
-         "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-         "opens": "09:00",
-         "closes": "17:00"
-       }
-     ],
-     "aggregateRating": {
-       "@type": "AggregateRating",
-       "ratingValue": "[4.5]",
-       "reviewCount": "[123]"
-     }
-   }
-   ```
-   ```
-
-7. **Generate Organization Schema**
-
-   ```markdown
-   ### Organization Schema
-   
-   **Generated Schema**:
-   
-   ```json
-   {
-     "@context": "https://schema.org",
-     "@type": "Organization",
-     "name": "[Organization Name]",
-     "url": "[Website URL]",
-     "logo": "[Logo URL]",
-     "sameAs": [
-       "[Facebook URL]",
-       "[Twitter URL]",
-       "[LinkedIn URL]",
-       "[Instagram URL]"
-     ],
-     "contactPoint": {
-       "@type": "ContactPoint",
-       "telephone": "[Phone]",
-       "contactType": "customer service",
-       "availableLanguage": ["English"]
-     }
-   }
-   ```
-   ```
-
-8. **Generate Breadcrumb Schema**
-
-   ```markdown
-   ### BreadcrumbList Schema
-   
-   **Generated Schema**:
-   
-   ```json
-   {
-     "@context": "https://schema.org",
-     "@type": "BreadcrumbList",
-     "itemListElement": [
-       {
-         "@type": "ListItem",
-         "position": 1,
-         "name": "Home",
-         "item": "[Homepage URL]"
-       },
-       {
-         "@type": "ListItem",
-         "position": 2,
-         "name": "[Category Name]",
-         "item": "[Category URL]"
-       },
-       {
-         "@type": "ListItem",
-         "position": 3,
-         "name": "[Page Name]",
-         "item": "[Page URL]"
-       }
-     ]
-   }
-   ```
-   ```
-
-9. **Combine Multiple Schema Types**
-
-   ```markdown
-   ### Combined Schema Implementation
-   
-   For pages needing multiple schema types:
-   
-   ```json
-   <script type="application/ld+json">
-   [
-     {
-       "@context": "https://schema.org",
-       "@type": "Article",
-       // Article properties...
-     },
-     {
-       "@context": "https://schema.org",
-       "@type": "FAQPage",
-       // FAQ properties...
-     },
-     {
-       "@context": "https://schema.org",
-       "@type": "BreadcrumbList",
-       // Breadcrumb properties...
-     }
-   ]
-   </script>
-   ```
-   ```
-
-10. **Provide Implementation and Validation**
+3. **Provide Implementation and Validation**
 
     ```markdown
     ## Implementation Guide
-    
+
     ### Adding Schema to Your Page
-    
+
     **Option 1: In HTML <head>**
     ```html
     <head>
@@ -458,7 +159,7 @@ When a user requests schema markup:
       </script>
     </head>
     ```
-    
+
     **Option 2: Before closing </body>**
     ```html
       <script type="application/ld+json">
@@ -466,31 +167,47 @@ When a user requests schema markup:
       </script>
     </body>
     ```
-    
+
     ### Validation Steps
-    
-    1. **Google Rich Results Test**
-       - URL: https://search.google.com/test/rich-results
+
+    1. **~~schema validator**
        - Test your live URL or paste code
        - Check for errors and warnings
-    
+
     2. **Schema.org Validator**
        - URL: https://validator.schema.org/
        - Validates against Schema.org spec
-    
-    3. **Google Search Console**
-       - Monitor rich results in Search Console
+
+    3. **~~search console**
+       - Monitor rich results in ~~search console
        - Check Enhancements reports for issues
-    
+
     ### Validation Checklist
-    
+
     - [ ] JSON syntax is valid (no trailing commas)
     - [ ] All required properties present
     - [ ] URLs are absolute, not relative
     - [ ] Dates are in ISO 8601 format
     - [ ] Content matches visible page content
-    - [ ] No Google policy violations
+    - [ ] No policy violations
     ```
+
+## Validation Checkpoints
+
+### Input Validation
+- [ ] Page URL or content provided
+- [ ] Schema type appropriate for content (Article for blog, Product for e-commerce, etc.)
+- [ ] All required data available (author, dates, prices, etc. depending on schema type)
+- [ ] Content eligibility for rich results confirmed
+
+### Output Validation
+- [ ] JSON syntax validates (no trailing commas, proper quotes)
+- [ ] All required properties present for chosen schema type
+- [ ] URLs are absolute, not relative
+- [ ] Dates in ISO 8601 format (YYYY-MM-DDTHH:MM:SS+00:00)
+- [ ] Schema content matches visible page content exactly
+- [ ] Passes ~~schema validator with no errors
+- [ ] Source of each data point clearly stated (~~web crawler extraction, user-provided, or manual entry)
 
 ## Example
 
@@ -536,46 +253,7 @@ When a user requests schema markup:
 }
 ```
 
-### Implementation
-
-```html
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": [
-    {
-      "@type": "Question",
-      "name": "What is SEO?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "SEO (Search Engine Optimization) is the practice of optimizing websites and content to rank higher in search engine results pages (SERPs). It involves technical optimizations, content creation, and link building to increase organic visibility and drive qualified traffic to your website."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "How long does SEO take to work?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "SEO typically takes 3-6 months to show significant results, though this varies based on competition, domain authority, and effort invested. New websites may take 6-12 months, while established sites with existing authority can see improvements in 1-3 months for less competitive keywords."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Is SEO better than paid advertising?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "SEO and paid advertising serve different purposes. SEO provides sustainable, long-term traffic without per-click costs but takes time to build. Paid advertising delivers immediate results but stops when you stop paying. Most successful businesses use both: paid ads for immediate leads and SEO for long-term growth."
-      }
-    }
-  ]
-}
-</script>
-```
-
-### Validation
-
-Test at: https://search.google.com/test/rich-results
+_Implementation: Wrap the above JSON-LD in `<script type="application/ld+json">...</script>` and place in `<head>` or before `</body>`. Test with ~~schema validator._
 
 ### SERP Preview
 
@@ -616,10 +294,16 @@ Learn SEO from scratch with our comprehensive guide...
 4. **Test thoroughly** - Validate before deploying
 5. **Monitor Search Console** - Watch for errors and warnings
 
-## Related Skills
+## Schema Type Decision Tree
 
-- [seo-content-writer](../seo-content-writer/) - Create content worth marking up
-- [geo-content-optimizer](../geo-content-optimizer/) - Optimize FAQ content
-- [on-page-seo-auditor](../../optimize/on-page-seo-auditor/) - Audit existing schema
-- [technical-seo-checker](../../optimize/technical-seo-checker/) - Technical validation
+> **Reference**: See [references/schema-decision-tree.md](references/schema-decision-tree.md) for the full decision tree (content-to-schema mapping), industry-specific recommendations, implementation priority tiers (P0-P4), and validation quick reference.
 
+
+## Reference Materials
+
+- [Schema Templates](references/schema-templates.md) - Copy-ready JSON-LD templates for all schema types
+- [Validation Guide](references/validation-guide.md) - Common errors, required properties, testing workflow
+
+## Next Best Skill
+
+- **Primary**: [seo-analysis](../seo-analysis/SKILL.md) — verify implementation with a technical SEO audit.

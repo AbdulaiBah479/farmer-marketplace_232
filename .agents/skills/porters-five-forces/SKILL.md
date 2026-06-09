@@ -1,166 +1,212 @@
 ---
 name: porters-five-forces
-description: >
-  Porter's Five Forces — analyze the competitive intensity and
-  attractiveness of an industry. Use when evaluating a new market entry,
-  understanding why margins are under pressure, designing a defensive
-  strategy, or auditing strategic positioning at industry level.
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: borghei
-  category: project-management
-  domain: strategy-frameworks
-  updated: 2026-05-27
-  python-tools: five_forces_scorer.py
-  tech-stack: porters-five-forces, industry-analysis, competitive-strategy
+description: "Perform Porter's Five Forces analysis — competitive rivalry, supplier power, buyer power, threat of substitutes, and threat of new entrants. Use when analyzing industry dynamics, assessing competitive forces, or evaluating market attractiveness."
 ---
-
 # Porter's Five Forces
 
-Michael Porter's framework for analyzing the structural attractiveness
-of an industry. Reveals where profit pools form, why some markets are
-chronically unprofitable, and where strategic positioning has leverage.
+## Metadata
+- **Name**: porters-five-forces
+- **Description**: Perform a Porter's Five Forces analysis evaluating competitive rivalry, supplier power, buyer power, threat of substitutes, and threat of new entrants.
+- **Triggers**: Porter's five forces, competitive forces, industry analysis, market forces, competitive dynamics
 
-## When to use this skill
+## Instructions
 
-- **Market entry** decision (which industry to play in)
-- Diagnosing **chronic margin pressure** (why are we squeezed?)
-- **Strategic positioning** (where to invest, where to defend)
-- **Competitive response** planning
-- **M&A target evaluation** (industry attractiveness)
-- **Pre-fundraise** industry framing
+You are a competitive strategist conducting a Porter's Five Forces analysis for $ARGUMENTS.
 
-## The 5 forces
+Your task is to evaluate the structural attractiveness of an industry and identify the competitive dynamics that will determine profitability.
 
-1. **Threat of new entrants** — how easily can newcomers join?
-2. **Bargaining power of suppliers** — how concentrated/critical are inputs?
-3. **Bargaining power of buyers** — how concentrated/price-sensitive are customers?
-4. **Threat of substitute products** — what alternatives could replace the category?
-5. **Competitive rivalry** — how intense is competition between existing players?
+## Input Requirements
+- Industry or market definition
+- Current competitors and competitive positioning
+- Supplier and customer landscape
+- Potential substitutes and new entrants
+- Product or service specifics
 
-Plus (Porter's later addition):
-6. **Complementors** (the "sixth force") — do partners increase total industry value?
+## Porter's Five Forces Framework
 
-## Scoring rubric
+### 1. Competitive Rivalry (How intense is competition?)
+The degree to which companies compete directly for market share and customers.
 
-Each force is rated **low / medium / high** based on specific factors:
+**High Rivalry When:**
+- Many competitors of similar size and strength
+- Slow industry growth (zero-sum competition)
+- Low product differentiation (commoditized)
+- High fixed costs (pressure to maintain volume)
+- Exit barriers are high (expensive to leave)
+- Price competition is intense
+- Rivals have diverse strategies and goals
+- Emotional or strategic commitments keep rivals fighting
 
-### 1. Threat of new entrants — high when:
-- Low capital requirements
-- No regulatory barriers
-- No proprietary tech / patents
+**Low Rivalry When:**
+- Few competitors
+- High growth market
+- High differentiation (less price-sensitive)
+- Low fixed costs
+- Low switching costs for competitors
+- Industry leader has clear dominance
+- Rivals are cooperative or have compatible goals
+
+**Strategic Implications:**
+- Assess competitive positioning and differentiation
+- Define defensible competitive advantages
+- Monitor competitor moves and market consolidation
+- Invest in differentiation or cost leadership
+
+---
+
+### 2. Supplier Power (How much power do suppliers have?)
+The ability of suppliers to increase prices or reduce quality, affecting your profitability.
+
+**High Supplier Power When:**
+- Few suppliers or concentrated supplier base
+- Switching costs are high (changing suppliers is expensive)
+- Backward integration threat (suppliers become competitors)
+- Suppliers' product is critical or unique
+- Suppliers have strong bargaining position
+- No substitutes for supplier offerings
+- Suppliers sell to many industries (less dependent on you)
+
+**Low Supplier Power When:**
+- Many suppliers available
 - Low switching costs
-- No economies of scale
-- No brand loyalty
-- Access to distribution is easy
-- Network effects absent
+- Suppliers depend on your business
+- Commodity products (interchangeable suppliers)
+- Threat of forward integration (you become your own supplier)
+- Available substitutes for supplier offerings
+- You have significant bargaining leverage
 
-### 2. Supplier power — high when:
-- Few suppliers / concentrated supply base
-- Suppliers are critical / cannot be substituted
-- Switching cost is high
-- Suppliers can forward-integrate
-- Industry is not a large customer for supplier
+**Strategic Implications:**
+- Diversify supplier base to reduce dependency
+- Build strong supplier relationships
+- Consider vertical integration or alternatives
+- Negotiate long-term contracts with favorable terms
+- Invest in suppliers' success (partnerships)
 
-### 3. Buyer power — high when:
-- Few buyers / concentrated demand
-- Buyers purchase in large volumes
-- Product is undifferentiated
-- Switching cost is low
-- Buyers can backward-integrate
-- Buyers have full information
-- Buyers face thin margins (price pressure)
+---
 
-### 4. Threat of substitutes — high when:
-- Many substitutes exist
-- Substitutes have favorable price-performance
-- Switching cost to substitute is low
-- Buyer propensity to substitute is high
-- Substitute industry is growing fast
+### 3. Buyer Power (How much power do customers have?)
+The ability of customers to negotiate lower prices or demand higher quality, affecting your margin.
 
-### 5. Competitive rivalry — high when:
-- Many similar-sized competitors
-- Low growth industry (zero-sum)
-- High fixed costs (drive volume)
-- Low differentiation
-- High exit barriers
-- Strategic stakes high
+**High Buyer Power When:**
+- Few large customers (concentrated demand)
+- Buyers switch easily and often (low switching costs)
+- Backwards integration threat (customers become competitors)
+- Product is undifferentiated (commoditized)
+- Buyers have price sensitivity or tight budgets
+- Buyers have full information about alternatives
+- Customers can bypass you entirely
 
-## Workflow
+**Low Buyer Power When:**
+- Many fragmented customers
+- High switching costs (lock-in, integration, training)
+- High product differentiation (fewer alternatives)
+- Customers depend on your product
+- You have strong brand or reputation
+- Switching to alternatives involves risk
+- Customers lack information about alternatives
 
-### Step 1 — Define the industry
-Industry definition is the most-frequent source of error.
-- "Software" is too broad
-- "B2B SaaS" is too broad
-- "Mid-market HR analytics SaaS" is workable
-- "Enterprise revenue intelligence tools (Gong, Outreach, Salesloft-tier)" is precise
+**Strategic Implications:**
+- Build strong customer relationships and loyalty
+- Create switching costs through integration
+- Invest in brand and differentiation
+- Develop customer success programs
+- Create network effects or communities
+- Segment customers by willingness to pay
 
-### Step 2 — Score each force
-Use the rubric. Each force gets low / medium / high + evidence.
+---
 
-### Step 3 — Identify the dominant force(s)
-Usually 1-2 forces dominate. They drive the industry's profit pool.
+### 4. Threat of Substitutes (Are there alternative solutions?)
+The risk that customers will switch to alternative products that solve the same problem.
 
-### Step 4 — Translate to strategy
-Each force suggests strategic moves:
+**High Threat When:**
+- Good substitutes exist and are easily accessible
+- Substitutes have similar performance or better value
+- Switching costs to substitutes are low
+- Customers are willing to try alternatives
+- Substitutes are improving faster than your product
+- Price-to-performance of substitutes is attractive
+- Substitute technology is disruptive or emerging
 
-| Force | High = unfavorable | Strategy implications |
-|-------|---------------------|------------------------|
-| New entrants | Easy entry | Build barriers (brand, scale, network, switching cost) |
-| Supplier power | Concentrated | Diversify, integrate backward, build alternative supply |
-| Buyer power | Concentrated | Diversify customer base, differentiate, integrate forward |
-| Substitutes | Strong substitutes | Differentiate, raise switching cost, defend value prop |
-| Rivalry | Intense | Differentiate, niche down, exit, consolidate |
+**Low Threat When:**
+- No good substitutes exist
+- Substitutes are more expensive or inferior
+- Switching costs are high
+- Your product is deeply integrated into customer workflows
+- Customer preference and loyalty are strong
+- Barrier to substitute entry are high
+- Your product solves the problem uniquely
 
-### Step 5 — Run `five_forces_scorer.py`
-Audit for: missing evidence, generic factors, missed sub-factors, no
-strategy implications drawn.
+**Strategic Implications:**
+- Monitor emerging substitutes and disruptive technologies
+- Build customer stickiness through integration and loyalty
+- Invest in product innovation and improvement
+- Create switching costs through ecosystem or community
+- Diversify into adjacent or complementary products
+- Defend through brand, service, or convenience
 
-```bash
-python3 project-management/strategy-frameworks/porters-five-forces/scripts/five_forces_scorer.py \
-  --input forces.json --format markdown
-```
+---
 
-## Common engagements
+### 5. Threat of New Entrants (Can new competitors easily enter?)
+The risk that new competitors will enter the market and capture share.
 
-### "Should we enter market X?"
-1. Define X precisely.
-2. Score each force.
-3. Identify dominant force.
-4. Assess: can we differentiate against the dominant force?
-5. If yes, structure entry to counter that force; if no, don't enter.
+**High Threat When:**
+- Low barriers to entry (capital, expertise, licensing)
+- Attractive industry margins and growth
+- Incumbents are vulnerable or complacent
+- Distribution or channel access is available
+- Economies of scale are limited
+- Network effects are weak or absent
+- Regulation is permissive
+- New technologies enable disruption
 
-### "Why are our margins under pressure?"
-1. Score industry today vs 3-5 years ago.
-2. Identify the force(s) that shifted (usually buyer power or rivalry).
-3. Identify which factor specifically caused the shift.
-4. Address: product differentiation, switching cost, customer concentration, etc.
+**Low Threat When:**
+- High barriers to entry (capital, IP, expertise, relationships)
+- Entrenched incumbents with scale advantages
+- Strong network effects or switching costs
+- Brand loyalty is high
+- Regulatory or licensing barriers exist
+- Economies of scale create cost advantage
+- Control of critical resources or distribution
+- Retaliation by incumbents is credible
 
-### "Audit our strategic position"
-1. Score industry forces.
-2. For each high force, identify how we currently counter it.
-3. Identify weak counters; recommend reinforcement.
+**Strategic Implications:**
+- Build defensible barriers (IP, brand, network effects)
+- Establish cost leadership and scale advantages
+- Create switching costs and customer lock-in
+- Invest in brand and customer relationships
+- Monitor startups and disruptors in your space
+- Build alliances and control key resources
 
-## Anti-patterns to avoid
+---
 
-- **Industry defined too broadly.** Yields generic analysis.
-- **Industry defined too narrowly.** Misses substitute threats.
-- **Each force = "medium".** No analysis happened.
-- **No evidence cited.** Just opinion.
-- **No strategy implications.** Just a score; not actionable.
-- **Static analysis.** Industries evolve; refresh every 12-18 months.
-- **Mixing internal capabilities with industry analysis.** Five Forces is industry-level; capabilities are firm-level (see SWOT).
+## Output Process
+1. Assess each of the five forces (High, Medium, Low)
+2. Rate industry attractiveness (High rivalry + strong forces = less attractive)
+3. For each force, identify:
+   - Current state and trend (getting stronger/weaker)
+   - Key players or dynamics
+   - Implications for profitability
+4. Prioritize the 2-3 forces most critical to your strategy
+5. Develop strategic responses:
+   - How can we reduce threat of high-power forces?
+   - How can we leverage weak forces for advantage?
+6. Identify competitive positioning opportunities
+7. Create strategic initiatives aligned with force analysis
 
-## References
+## Industry Attractiveness
+- **Attractive**: Low rivalry, weak supplier/buyer power, few substitutes, high entry barriers
+- **Unattractive**: High rivalry, strong supplier/buyer power, many substitutes, low entry barriers
+- **Moderate**: Mixed dynamics requiring strategic differentiation
 
-- `references/five-forces-deep.md` — each force, factors, examples
-- `references/five-forces-and-strategy.md` — translating to strategic moves
+## Notes
+- No industry is universally attractive or unattractive; position matters
+- Same industry can be attractive for some companies, unattractive for others
+- Forces change over time; re-assess as market evolves
+- Use Porter's Five Forces with SWOT and PESTLE for comprehensive analysis
+- Strategy should directly address the highest-force threats
 
-## Related skills
+---
 
-- `project-management/strategy-frameworks/swot-analysis` — firm-level positioning
-- `project-management/strategy-frameworks/ansoff-matrix` — growth options
-- `project-management/strategy-frameworks/business-model-canvas` — operational view
-- `marketing/competitive-teardown` — competitor-specific analysis
-- `c-level-advisor/ceo-advisor` — strategic context
+### Further Reading
+
+- [The Product Management Frameworks Compendium + Templates](https://www.productcompass.pm/p/the-product-frameworks-compendium)

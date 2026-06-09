@@ -1,12 +1,14 @@
 ---
 name: tailwind-patterns
-description: Tailwind CSS v4 principles. CSS-first configuration, container queries, modern patterns, design token architecture.
-allowed-tools: Read, Write, Edit, Glob, Grep
+description: "Tailwind CSS v4 principles. CSS-first configuration, container queries, modern patterns, design token architecture. Use when building with Tailwind v4 or migrating from v3."
+domain: design
+supports: [claude-code, cursor, codex, generic]
+version: 0.1.0
 ---
 
 # Tailwind CSS Patterns (v4 - 2025)
 
-> Modern utility-first CSS with CSS-native configuration.
+Tailwind CSS v4 principles. CSS-first configuration, container queries, modern patterns, design token architecture. Use when building with Tailwind CSS v4, migrating from v3, configuring design tokens in CSS, implementing responsive layouts, or applying utility-first patterns.
 
 ---
 
@@ -37,7 +39,7 @@ allowed-tools: Read, Write, Edit, Glob, Grep
 
 ### Theme Definition
 
-```
+```css
 @theme {
   /* Colors - use semantic names */
   --color-primary: oklch(0.7 0.15 250);

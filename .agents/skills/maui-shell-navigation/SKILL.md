@@ -1,17 +1,44 @@
 ---
 name: maui-shell-navigation
-description: >
-  .NET MAUI Shell navigation guidance — Shell visual hierarchy, AppShell setup,
-  tab bars, flyout menus, URI-based navigation with GoToAsync, route registration,
-  query parameters, back navigation, and navigation events.
-  USE FOR: "Shell navigation", "GoToAsync", "AppShell", "tab bar", "flyout menu",
-  "route registration", "query parameters navigation", "back navigation",
-  "Shell tabs", "URI navigation", "navigation events".
-  DO NOT USE FOR: deep linking from external URLs (use maui-deep-linking),
-  data binding on pages (use maui-data-binding), or dependency injection setup (use maui-dependency-injection).
+description: >-
+  Guide for implementing Shell-based navigation in .NET MAUI apps. Covers AppShell
+  setup, visual hierarchy (FlyoutItem, TabBar, Tab, ShellContent), URI-based navigation
+  with GoToAsync, route registration, query parameters, back navigation, flyout and
+  tab configuration, navigation events, and navigation guards.
+  Use when: setting up Shell navigation, adding tabs or flyout menus, navigating between
+  pages with GoToAsync, passing parameters between pages, registering routes, customizing
+  back button behavior, or guarding navigation with confirmation dialogs.
+  Do not use for: deep linking from external URLs (see .NET MAUI deep linking
+  documentation), data binding on pages (use maui-data-binding), dependency injection
+  setup (use maui-dependency-injection), or NavigationPage-only apps that don't use Shell.
+license: MIT
 ---
 
 # .NET MAUI Shell Navigation
+
+Implement page navigation in .NET MAUI apps using Shell. Shell provides URI-based navigation, a flyout menu, tab bars, and a four-level visual hierarchy — all configured declaratively in XAML.
+
+## When to Use
+
+- Setting up top-level app navigation with tabs or a flyout menu
+- Navigating between pages programmatically with `GoToAsync`
+- Passing data between pages via query parameters or object parameters
+- Registering detail-page routes for push navigation
+- Guarding navigation with confirmation dialogs (e.g., unsaved changes)
+- Customizing back button behavior per page
+
+## When Not to Use
+
+- Deep linking from external URLs or app links — see [.NET MAUI deep linking docs](https://learn.microsoft.com/dotnet/maui/fundamentals/app-links)
+- Data binding on navigation target pages — use `maui-data-binding`
+- Dependency injection for pages and view models — use `maui-dependency-injection`
+- Apps using `NavigationPage` without Shell (different navigation API)
+
+## Inputs
+
+- A .NET MAUI project with `AppShell.xaml` as the root shell
+- Pages (`ContentPage`) to navigate between
+- Route names for detail pages not in the visual hierarchy
 
 ## Shell Visual Hierarchy
 
@@ -19,32 +46,36 @@ Shell uses a four-level hierarchy. Each level wraps the one below it:
 
 ```
 Shell
- ├── FlyoutItem / TabBar          (top-level navigation grouping)
+ ├── FlyoutItem / TabBar          (top-level grouping)
  │    ├── Tab                     (bottom-tab grouping)
- │    │    ├── ShellContent        (page slot; points to a ContentPage)
- │    │    └── ShellContent        (creates top tabs within a bottom tab)
+ │    │    ├── ShellContent        (page slot → ContentPage)
+ │    │    └── ShellContent        (multiple = top tabs)
  │    └── Tab
  └── FlyoutItem / TabBar
 ```
 
-- **FlyoutItem** – appears in the flyout menu. Contains one or more `Tab` children.
-- **TabBar** – bottom tab bar with no flyout entry. Use when the app has no flyout.
-- **Tab** – groups `ShellContent` objects. Multiple `ShellContent` in one `Tab` produces top tabs.
-- **ShellContent** – each represents a `ContentPage`.
+- **FlyoutItem** — appears in the flyout menu; contains `Tab` children
+- **TabBar** — bottom tab bar with no flyout entry
+- **Tab** — groups `ShellContent`; multiple children produce top tabs
+- **ShellContent** — each points to a `ContentPage`
 
 ### Implicit Conversion
 
 You can omit intermediate wrappers. Shell auto-wraps:
 
-| You write              | Shell creates                                |
-|------------------------|----------------------------------------------|
-| `ShellContent` only    | `FlyoutItem > Tab > ShellContent`            |
-| `Tab` only             | `FlyoutItem > Tab`                           |
-| `ShellContent` in `TabBar` | `TabBar > Tab > ShellContent`            |
+| You write                    | Shell creates                         |
+|------------------------------|---------------------------------------|
+| `ShellContent` only          | `FlyoutItem > Tab > ShellContent`     |
+| `Tab` only                   | `FlyoutItem > Tab`                    |
+| `ShellContent` in `TabBar`   | `TabBar > Tab > ShellContent`         |
 
-This keeps simple apps concise while allowing full control when needed.
+## Workflow: Set Up AppShell
 
-## AppShell.xaml Setup
+1. Define `AppShell.xaml` inheriting from `Shell`
+2. Add `FlyoutItem` or `TabBar` elements for top-level navigation
+3. Add `Tab` elements for bottom tabs; nest multiple `ShellContent` for top tabs
+4. **Always use `ContentTemplate`** with `DataTemplate` so pages load on demand
+5. Register detail-page routes in the `AppShell` constructor
 
 ```xml
 <Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
@@ -74,176 +105,59 @@ This keeps simple apps concise while allowing full control when needed.
 </Shell>
 ```
 
-### ContentTemplate and Lazy Loading
-
-Always use `ContentTemplate` with `DataTemplate` so pages are created on demand.
-Using `Content` directly creates all pages during Shell init, hurting startup time.
-
-## Tab Configuration
-
-### Bottom Tabs
-
-Multiple `ShellContent` (or `Tab`) children inside a `TabBar` or `FlyoutItem`
-produce bottom tabs.
-
-### Top Tabs
-
-Multiple `ShellContent` children inside a single `Tab` produce top tabs within
-that bottom tab:
-
-```xml
-<Tab Title="Photos">
-    <ShellContent Title="Recent"  ContentTemplate="{DataTemplate views:RecentPage}" />
-    <ShellContent Title="Favorites" ContentTemplate="{DataTemplate views:FavoritesPage}" />
-</Tab>
+```csharp
+// AppShell.xaml.cs
+public partial class AppShell : Shell
+{
+    public AppShell()
+    {
+        InitializeComponent();
+        Routing.RegisterRoute("animaldetails", typeof(AnimalDetailsPage));
+        Routing.RegisterRoute("editanimal", typeof(EditAnimalPage));
+    }
+}
 ```
 
-### TabBar Appearance (Attached Properties)
+## Workflow: Navigate with GoToAsync
 
-Set these on any page or Shell element:
+All programmatic navigation uses `Shell.Current.GoToAsync`. Always `await` the call.
 
-| Attached Property              | Type    | Purpose                          |
-|--------------------------------|---------|----------------------------------|
-| `Shell.TabBarBackgroundColor`  | `Color` | Tab bar background               |
-| `Shell.TabBarForegroundColor`  | `Color` | Foreground / selected icon color |
-| `Shell.TabBarTitleColor`       | `Color` | Selected tab title color         |
-| `Shell.TabBarUnselectedColor`  | `Color` | Unselected tab icon/title color  |
-| `Shell.TabBarDisabledColor`    | `Color` | Disabled tab color               |
-| `Shell.TabBarIsVisible`        | `bool`  | Show/hide the tab bar            |
+### Route Prefixes
 
-```xml
-<ContentPage Shell.TabBarIsVisible="False" ... />
-```
+| Prefix | Meaning                                     |
+|--------|---------------------------------------------|
+| `//`   | Absolute route from Shell root              |
+| (none) | Relative; pushes onto the current nav stack |
+| `..`   | Go back one level                           |
+| `../`  | Go back then navigate forward               |
 
-## Flyout Configuration
-
-### FlyoutBehavior
-
-Set on `Shell`:
-
-```xml
-<Shell FlyoutBehavior="Flyout"> ... </Shell>
-```
-
-Values: `Disabled`, `Flyout`, `Locked`.
-
-### FlyoutDisplayOptions
-
-Controls how a `FlyoutItem`'s children appear in the flyout:
-
-```xml
-<FlyoutItem Title="Animals" FlyoutDisplayOptions="AsMultipleItems">
-    <Tab Title="Cats" ... />
-    <Tab Title="Dogs" ... />
-</FlyoutItem>
-```
-
-- `AsSingleItem` (default) – one flyout entry for the group.
-- `AsMultipleItems` – each child `Tab` gets its own flyout entry.
-
-### Flyout Item Template
-
-Customize appearance with `Shell.ItemTemplate`. BindingContext exposes `Title`
-and `FlyoutIcon` (FlyoutItem) or `Text` and `IconImageSource` (MenuItem):
-
-```xml
-<Shell.ItemTemplate>
-    <DataTemplate>
-        <Grid ColumnDefinitions="Auto,*" Padding="10">
-            <Image Source="{Binding FlyoutIcon}" HeightRequest="24" />
-            <Label Grid.Column="1" Text="{Binding Title}" VerticalTextAlignment="Center" />
-        </Grid>
-    </DataTemplate>
-</Shell.ItemTemplate>
-```
-
-### Replacing Flyout Content
-
-```xml
-<Shell.FlyoutContent>
-    <CollectionView BindingContext="{x:Reference shell}"
-                    ItemsSource="{Binding FlyoutItems}" />
-</Shell.FlyoutContent>
-```
-
-### MenuItem (non-navigation flyout entries)
-
-```xml
-<MenuItem Text="Log Out"
-          Command="{Binding LogOutCommand}"
-          IconImageSource="logout.png" />
-```
-
-## Route Registration
-
-Shell visual hierarchy items have implicit routes derived from their `Route`
-property (or type name). Detail pages not in the hierarchy must be registered:
+### Navigation Examples
 
 ```csharp
-// In AppShell constructor or MauiProgram
-Routing.RegisterRoute("animaldetails", typeof(AnimalDetailsPage));
-Routing.RegisterRoute("editanimal", typeof(EditAnimalPage));
-```
-
-**Gotcha:** Duplicate route names throw `ArgumentException` at registration time.
-Every route must be unique across the entire app.
-
-## Navigation with GoToAsync
-
-All programmatic navigation goes through `Shell.Current.GoToAsync`:
-
-```csharp
-// Absolute – navigate to a specific place in the hierarchy
+// 1. Absolute — switch to a specific hierarchy location
 await Shell.Current.GoToAsync("//animals/cats/domestic");
 
-// Relative – push a registered page onto the navigation stack
+// 2. Relative — push a registered detail page
 await Shell.Current.GoToAsync("animaldetails");
 
-// With query string
+// 3. With query string parameters
 await Shell.Current.GoToAsync($"animaldetails?id={animal.Id}");
-```
 
-### Absolute vs Relative Routes
-
-| Prefix   | Meaning                                        |
-|----------|------------------------------------------------|
-| `//`     | Absolute route from Shell root                 |
-| (none)   | Relative; pushes onto the current nav stack    |
-| `..`     | Go back one level in the navigation stack      |
-| `../`    | Go back then navigate forward                  |
-
-```csharp
-// Go back one page
+// 4. Go back one page
 await Shell.Current.GoToAsync("..");
 
-// Go back two pages
+// 5. Go back two pages
 await Shell.Current.GoToAsync("../..");
 
-// Go back one page, then navigate to edit
+// 6. Go back one page, then push a different page
 await Shell.Current.GoToAsync("../editanimal");
 ```
 
-**Gotcha:** Relative routes work only for pages registered with
-`Routing.RegisterRoute`. You cannot push visual-hierarchy pages as relative routes.
+## Workflow: Pass Data Between Pages
 
-## Query Parameters
+### Option 1: IQueryAttributable (Preferred)
 
-### QueryProperty Attribute
-
-```csharp
-[QueryProperty(nameof(AnimalId), "id")]
-public partial class AnimalDetailsPage : ContentPage
-{
-    public string AnimalId { get; set; }
-}
-
-// Navigate with query string:
-await Shell.Current.GoToAsync($"animaldetails?id={animal.Id}");
-```
-
-### IQueryAttributable Interface
-
-Preferred for ViewModels — gives you all parameters in one call:
+Implement on ViewModels to receive all parameters in one call:
 
 ```csharp
 public class AnimalDetailsViewModel : ObservableObject, IQueryAttributable
@@ -256,18 +170,26 @@ public class AnimalDetailsViewModel : ObservableObject, IQueryAttributable
 }
 ```
 
-The interface works on the page itself or on any object set as the page's
-`BindingContext`.
+### Option 2: QueryProperty Attribute
 
-### Passing Complex Objects
+Apply directly on the page class:
 
-Use `ShellNavigationQueryParameters` (dictionary of `string` → `object`) to pass
-objects without serializing to strings:
+```csharp
+[QueryProperty(nameof(AnimalId), "id")]
+public partial class AnimalDetailsPage : ContentPage
+{
+    public string AnimalId { get; set; }
+}
+```
+
+### Option 3: Complex Objects via ShellNavigationQueryParameters
+
+Pass objects without serializing to strings:
 
 ```csharp
 var parameters = new ShellNavigationQueryParameters
 {
-    { "animal", selectedAnimal }  // pass the object directly
+    { "animal", selectedAnimal }
 };
 await Shell.Current.GoToAsync("animaldetails", parameters);
 ```
@@ -281,42 +203,88 @@ public void ApplyQueryAttributes(IDictionary<string, object> query)
 }
 ```
 
-## Navigation Events
+## Workflow: Guard Navigation
 
-Override in your `AppShell`:
+Use `GetDeferral()` in `OnNavigating` for async checks (e.g., "save unsaved changes?"):
 
 ```csharp
-protected override void OnNavigating(ShellNavigatingEventArgs args)
+// In AppShell.xaml.cs
+protected override async void OnNavigating(ShellNavigatingEventArgs args)
 {
     base.OnNavigating(args);
     if (hasUnsavedChanges && args.Source == ShellNavigationSource.Pop)
-        args.Cancel();  // prevent leaving
-}
-
-protected override void OnNavigated(ShellNavigatedEventArgs args)
-{
-    base.OnNavigated(args);
-    // args.Current, args.Previous, args.Source
+    {
+        var deferral = args.GetDeferral();
+        bool discard = await ShowConfirmationDialog();
+        if (!discard)
+            args.Cancel();
+        deferral.Complete();
+    }
 }
 ```
 
-For async checks, use `args.GetDeferral()` → do work → `deferral.Complete()`.
+## Tab Configuration
 
-`ShellNavigationSource` values: `Push`, `Pop`, `PopToRoot`, `Insert`, `Remove`,
-`ShellItemChanged`, `ShellSectionChanged`, `ShellContentChanged`, `Unknown`.
+### Bottom Tabs
 
-## Inspecting Navigation State
+Multiple `ShellContent` (or `Tab`) children inside a `TabBar` or `FlyoutItem` produce bottom tabs.
 
-```csharp
-// Current URI location
-ShellNavigationState state = Shell.Current.CurrentState;
-string location = state.Location.ToString();  // e.g. "//animals/cats/domestic"
+### Top Tabs
 
-// Current page
-Page page = Shell.Current.CurrentPage;
+Multiple `ShellContent` children inside a single `Tab` produce top tabs:
 
-// Navigation stack of the current tab
-IReadOnlyList<Page> stack = Shell.Current.Navigation.NavigationStack;
+```xml
+<Tab Title="Photos">
+    <ShellContent Title="Recent"    ContentTemplate="{DataTemplate views:RecentPage}" />
+    <ShellContent Title="Favorites" ContentTemplate="{DataTemplate views:FavoritesPage}" />
+</Tab>
+```
+
+### Tab Bar Appearance
+
+| Attached Property              | Type    | Purpose                        |
+|--------------------------------|---------|--------------------------------|
+| `Shell.TabBarBackgroundColor`  | `Color` | Tab bar background             |
+| `Shell.TabBarForegroundColor`  | `Color` | Selected icon color            |
+| `Shell.TabBarTitleColor`       | `Color` | Selected tab title color       |
+| `Shell.TabBarUnselectedColor`  | `Color` | Unselected tab icon/title      |
+| `Shell.TabBarIsVisible`        | `bool`  | Show/hide the tab bar          |
+
+```xml
+<!-- Hide the tab bar on a specific page -->
+<ContentPage Shell.TabBarIsVisible="False" ... />
+```
+
+## Flyout Configuration
+
+### FlyoutBehavior
+
+Set on `Shell`: `Disabled`, `Flyout`, or `Locked`.
+
+```xml
+<Shell FlyoutBehavior="Flyout"> ... </Shell>
+```
+
+### FlyoutDisplayOptions
+
+Controls how children appear in the flyout:
+
+- `AsSingleItem` (default) — one flyout entry for the group
+- `AsMultipleItems` — each child `Tab` gets its own entry
+
+```xml
+<FlyoutItem Title="Animals" FlyoutDisplayOptions="AsMultipleItems">
+    <Tab Title="Cats" ... />
+    <Tab Title="Dogs" ... />
+</FlyoutItem>
+```
+
+### MenuItem (Non-Navigation Flyout Entries)
+
+```xml
+<MenuItem Text="Log Out"
+          Command="{Binding LogOutCommand}"
+          IconImageSource="logout.png" />
 ```
 
 ## Back Button Behavior
@@ -327,25 +295,54 @@ Customize the back button per page:
 <Shell.BackButtonBehavior>
     <BackButtonBehavior Command="{Binding BackCommand}"
                        IconOverride="back_arrow.png"
-                       TextOverride="Cancel" />
+                       TextOverride="Cancel"
+                       IsVisible="True" />
 </Shell.BackButtonBehavior>
 ```
 
-Properties: `Command`, `CommandParameter`, `IconOverride`, `TextOverride`,
-`IsVisible`, `IsEnabled`.
+Properties: `Command`, `CommandParameter`, `IconOverride`, `TextOverride`, `IsVisible`, `IsEnabled`.
 
-## Common Gotchas
+## Inspecting Navigation State
 
-1. **Duplicate route names** – `Routing.RegisterRoute` throws `ArgumentException`
-   if a route name is already registered or matches a visual hierarchy route.
-2. **Relative routes require registration** – you cannot `GoToAsync("somepage")`
-   unless `somepage` was registered with `Routing.RegisterRoute`. Visual hierarchy
-   pages use absolute `//` routes.
-3. **Pages are created on demand** – when using `ContentTemplate`, the page
-   constructor runs only on first navigation. Don't assume pages exist at startup.
-4. **Tab.Stack is read-only** – you cannot manipulate the navigation stack directly;
-   use `GoToAsync` for all navigation changes.
-5. **GoToAsync is async** – always `await` it. Fire-and-forget navigation causes
-   race conditions and can silently fail.
-6. **Route hierarchy matters** – absolute routes must match the full path through
-   the visual hierarchy (`//FlyoutItem/Tab/ShellContent`).
+```csharp
+// Current URI location
+string location = Shell.Current.CurrentState.Location.ToString();
+
+// Current page
+Page page = Shell.Current.CurrentPage;
+
+// Navigation stack of the current tab
+IReadOnlyList<Page> stack = Shell.Current.Navigation.NavigationStack;
+```
+
+## Navigation Events
+
+Override in `AppShell`:
+
+```csharp
+protected override void OnNavigated(ShellNavigatedEventArgs args)
+{
+    base.OnNavigated(args);
+    // args.Current, args.Previous, args.Source
+}
+```
+
+`ShellNavigationSource` values: `Push`, `Pop`, `PopToRoot`, `Insert`, `Remove`, `ShellItemChanged`, `ShellSectionChanged`, `ShellContentChanged`, `Unknown`.
+
+## Common Pitfalls
+
+- **Eager page creation**: Using `Content` directly instead of `ContentTemplate` with `DataTemplate` creates all pages at Shell init, hurting startup time. Always use `ContentTemplate`.
+- **Duplicate route names**: `Routing.RegisterRoute` throws `ArgumentException` if a route name matches an existing route or a visual hierarchy route. Every route must be unique across the app.
+- **Relative routes without registration**: You cannot `GoToAsync("somepage")` unless `somepage` was registered with `Routing.RegisterRoute`. Visual hierarchy pages use absolute `//` routes.
+- **Fire-and-forget GoToAsync**: Not awaiting `GoToAsync` causes race conditions and silent failures. Always `await` the call.
+- **Wrong absolute route path**: Absolute routes must match the full path through the visual hierarchy (`//FlyoutItem/Tab/ShellContent`). Wrong paths produce silent no-ops, not exceptions.
+- **Manipulating Tab.Stack directly**: The navigation stack is read-only. Use `GoToAsync` for all navigation changes.
+- **Forgetting `GetDeferral()` for async guards**: Synchronous cancellation in `OnNavigating` works, but async checks require `GetDeferral()` / `deferral.Complete()` to avoid race conditions.
+
+## References
+
+- `references/shell-navigation-api.md` — Full API reference for Shell hierarchy, routes, tabs, flyout, and navigation
+- [.NET MAUI Shell Navigation](https://learn.microsoft.com/dotnet/maui/fundamentals/shell/navigation)
+- [.NET MAUI Shell Tabs](https://learn.microsoft.com/dotnet/maui/fundamentals/shell/tabs)
+- [.NET MAUI Shell Flyout](https://learn.microsoft.com/dotnet/maui/fundamentals/shell/flyout)
+- [.NET MAUI Shell Pages](https://learn.microsoft.com/dotnet/maui/fundamentals/shell/pages)

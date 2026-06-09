@@ -1,10 +1,9 @@
 ---
 name: linear-claude-skill
 description: "Manage Linear issues, projects, and teams"
-allowed-tools: 
-- WebFetch(domain: linear.app)
-source: "https://github.com/wrsmith108/linear-claude-skill"
 risk: safe
+source: "https://github.com/wrsmith108/linear-claude-skill"
+date_added: "2026-02-27"
 ---
 
 ## When to Use This Skill
@@ -49,12 +48,6 @@ linear issues list
 
 ---
 
-
-## When to Use This Skill
-
-Manage Linear issues, projects, and teams
-
-Use this skill when working with manage linear issues, projects, and teams.
 ## 🔐 Security: Varlock Integration
 
 **CRITICAL**: Never expose API keys in terminal output or Claude's context.
@@ -175,12 +168,6 @@ See [Project Management Commands](#project-management-commands) for full referen
 
 ---
 
-
-## When to Use This Skill
-
-Manage Linear issues, projects, and teams
-
-Use this skill when working with manage linear issues, projects, and teams.
 ## Project Planning Workflow
 
 ### Create Issues in the Correct Project from the Start
@@ -327,12 +314,6 @@ npx tsx scripts/linear-ops.ts link-initiative "Phase 11" "Q2 Goals"
 
 ---
 
-
-## When to Use This Skill
-
-Manage Linear issues, projects, and teams
-
-Use this skill when working with manage linear issues, projects, and teams.
 ## Tool Selection
 
 Choose the right tool for the task:
@@ -507,12 +488,6 @@ npx tsx scripts/linear-ops.ts unlink-initiative "Phase X" "Old Initiative"
 
 ---
 
-
-## When to Use This Skill
-
-Manage Linear issues, projects, and teams
-
-Use this skill when working with manage linear issues, projects, and teams.
 ## Sync Patterns (Bulk Operations)
 
 For bulk synchronization of code changes to Linear, see **sync.md**.
@@ -541,3 +516,8 @@ npx tsx scripts/linear-ops.ts project-status "My Project" completed
 | docs/labels.md | Label taxonomy |
 
 **External:** [Linear MCP Documentation](https://linear.app/docs/mcp.md)
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

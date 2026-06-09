@@ -1,525 +1,265 @@
 ---
 name: documentation
-description: "Generate and maintain comprehensive documentation. Use when writing README, API docs, code comments, or technical documentation."
-enabled: true
-visibility: default
-allowedTools: ["read", "write", "edit", "grep", "glob"]
+description: "Documentation generation workflow covering API docs, architecture docs, README files, code comments, and technical writing."
+category: workflow-bundle
+risk: safe
+source: personal
+date_added: "2026-02-27"
 ---
 
-# Documentation Skill
+# Documentation Workflow Bundle
 
-Create clear, comprehensive, and maintainable documentation for code projects.
+## Overview
+
+Comprehensive documentation workflow for generating API documentation, architecture documentation, README files, code comments, and technical content from codebases.
+
+## When to Use This Workflow
+
+Use this workflow when:
+- Creating project documentation
+- Generating API documentation
+- Writing architecture docs
+- Documenting code
+- Creating user guides
+- Maintaining wikis
+
+## Workflow Phases
+
+### Phase 1: Documentation Planning
+
+#### Skills to Invoke
+- `docs-architect` - Documentation architecture
+- `documentation-templates` - Documentation templates
+
+#### Actions
+1. Identify documentation needs
+2. Choose documentation tools
+3. Plan documentation structure
+4. Define style guidelines
+5. Set up documentation site
+
+#### Copy-Paste Prompts
+```
+Use @docs-architect to plan documentation structure
+```
+
+```
+Use @documentation-templates to set up documentation
+```
+
+### Phase 2: API Documentation
+
+#### Skills to Invoke
+- `api-documenter` - API documentation
+- `api-documentation-generator` - Auto-generation
+- `openapi-spec-generation` - OpenAPI specs
+
+#### Actions
+1. Extract API endpoints
+2. Generate OpenAPI specs
+3. Create API reference
+4. Add usage examples
+5. Set up auto-generation
+
+#### Copy-Paste Prompts
+```
+Use @api-documenter to generate API documentation
+```
+
+```
+Use @openapi-spec-generation to create OpenAPI specs
+```
+
+### Phase 3: Architecture Documentation
+
+#### Skills to Invoke
+- `c4-architecture-c4-architecture` - C4 architecture
+- `c4-context` - Context diagrams
+- `c4-container` - Container diagrams
+- `c4-component` - Component diagrams
+- `c4-code` - Code diagrams
+- `mermaid-expert` - Mermaid diagrams
+
+#### Actions
+1. Create C4 diagrams
+2. Document architecture
+3. Generate sequence diagrams
+4. Document data flows
+5. Create deployment docs
+
+#### Copy-Paste Prompts
+```
+Use @c4-architecture-c4-architecture to create C4 diagrams
+```
+
+```
+Use @mermaid-expert to create architecture diagrams
+```
+
+### Phase 4: Code Documentation
+
+#### Skills to Invoke
+- `code-documentation-code-explain` - Code explanation
+- `code-documentation-doc-generate` - Doc generation
+- `documentation-generation-doc-generate` - Auto-generation
+
+#### Actions
+1. Extract code comments
+2. Generate JSDoc/TSDoc
+3. Create type documentation
+4. Document functions
+5. Add usage examples
+
+#### Copy-Paste Prompts
+```
+Use @code-documentation-code-explain to explain code
+```
+
+```
+Use @code-documentation-doc-generate to generate docs
+```
+
+### Phase 5: README and Getting Started
+
+#### Skills to Invoke
+- `readme` - README generation
+- `environment-setup-guide` - Setup guides
+- `tutorial-engineer` - Tutorial creation
+
+#### Actions
+1. Create README
+2. Write getting started guide
+3. Document installation
+4. Add usage examples
+5. Create troubleshooting guide
+
+#### Copy-Paste Prompts
+```
+Use @readme to create project README
+```
+
+```
+Use @tutorial-engineer to create tutorials
+```
+
+### Phase 6: Wiki and Knowledge Base
+
+#### Skills to Invoke
+- `wiki-architect` - Wiki architecture
+- `wiki-page-writer` - Wiki pages
+- `wiki-onboarding` - Onboarding docs
+- `wiki-qa` - Wiki Q&A
+- `wiki-researcher` - Wiki research
+- `wiki-vitepress` - VitePress wiki
+
+#### Actions
+1. Design wiki structure
+2. Create wiki pages
+3. Write onboarding guides
+4. Document processes
+5. Set up wiki site
+
+#### Copy-Paste Prompts
+```
+Use @wiki-architect to design wiki structure
+```
+
+```
+Use @wiki-page-writer to create wiki pages
+```
+
+```
+Use @wiki-onboarding to create onboarding docs
+```
+
+### Phase 7: Changelog and Release Notes
+
+#### Skills to Invoke
+- `changelog-automation` - Changelog generation
+- `wiki-changelog` - Changelog from git
+
+#### Actions
+1. Extract commit history
+2. Categorize changes
+3. Generate changelog
+4. Create release notes
+5. Publish updates
+
+#### Copy-Paste Prompts
+```
+Use @changelog-automation to generate changelog
+```
+
+```
+Use @wiki-changelog to create release notes
+```
+
+### Phase 8: Documentation Maintenance
+
+#### Skills to Invoke
+- `doc-coauthoring` - Collaborative writing
+- `reference-builder` - Reference docs
+
+#### Actions
+1. Review documentation
+2. Update outdated content
+3. Fix broken links
+4. Add new features
+5. Gather feedback
+
+#### Copy-Paste Prompts
+```
+Use @doc-coauthoring to collaborate on docs
+```
 
 ## Documentation Types
 
-### 1. README.md
-**Purpose**: Project overview and quick start guide
-
-**Essential Sections**:
-```markdown
-# Project Name
-
-Brief description (1-2 sentences)
-
-## Features
-- Key feature 1
-- Key feature 2
-
-## Installation
-```bash
-npm install package-name
-```
-
-## Quick Start
-```javascript
-const lib = require('package-name');
-lib.doSomething();
-```
-
-## Usage
-[Detailed examples]
-
-## API Reference
-[Link to detailed API docs]
-
-## Contributing
-[How to contribute]
-
-## License
-MIT
-```
-
----
-
-### 2. Code Comments
-
-**When to Comment**:
-- ✅ Complex algorithms
-- ✅ Non-obvious decisions
-- ✅ Workarounds for bugs
-- ✅ Public APIs
-- ❌ Self-explanatory code
-- ❌ What code does (code shows that)
-
-**Good Comments**:
-```python
-# Calculate tax using 2024 progressive rates
-# See: https://irs.gov/tax-rates-2024
-def calculate_tax(income):
-    # ...
-
-# HACK: API returns string "null" instead of null
-# TODO: Remove once API v2 is deployed
-if response == "null":
-    response = None
-```
-
-**Bad Comments**:
-```python
-# Increment i
-i = i + 1  # Obvious from code
-
-# This function adds two numbers
-def add(a, b):  # Function name is clear
-    return a + b
-```
-
----
-
-### 3. Function Documentation
-
-**Python (Docstrings)**:
-```python
-def calculate_discount(price: float, discount_pct: float) -> float:
-    """
-    Calculate discounted price.
-
-    Args:
-        price: Original price in dollars
-        discount_pct: Discount percentage (0-100)
-
-    Returns:
-        Final price after discount
-
-    Raises:
-        ValueError: If discount_pct is not between 0 and 100
-
-    Examples:
-        >>> calculate_discount(100, 20)
-        80.0
-    """
-    if not 0 <= discount_pct <= 100:
-        raise ValueError("Discount must be between 0 and 100")
-    return price * (1 - discount_pct / 100)
-```
-
-**JavaScript (JSDoc)**:
-```javascript
-/**
- * Calculate discounted price
- * @param {number} price - Original price in dollars
- * @param {number} discountPct - Discount percentage (0-100)
- * @returns {number} Final price after discount
- * @throws {Error} If discountPct is not between 0 and 100
- * @example
- * calculateDiscount(100, 20) // Returns 80
- */
-function calculateDiscount(price, discountPct) {
-    if (discountPct < 0 || discountPct > 100) {
-        throw new Error('Discount must be between 0 and 100');
-    }
-    return price * (1 - discountPct / 100);
-}
-```
-
----
-
-### 4. API Documentation
-
-**REST API Example**:
-```markdown
-## GET /api/users/:id
-
-Retrieve user by ID.
-
-### Parameters
-- `id` (path, required): User ID
-
-### Query Parameters
-- `include` (optional): Comma-separated relations to include
-  - Values: `profile`, `posts`, `comments`
-
-### Response
-```json
-{
-  "id": 123,
-  "name": "John Doe",
-  "email": "john@example.com",
-  "createdAt": "2024-01-15T10:30:00Z"
-}
-```
-
-### Status Codes
-- `200 OK`: User found
-- `404 Not Found`: User doesn't exist
-- `401 Unauthorized`: Missing or invalid token
-
-### Example
-```bash
-curl -H "Authorization: Bearer TOKEN" \
-     https://api.example.com/api/users/123?include=profile
-```
-```
-
----
-
-### 5. Architecture Documentation
-
-**System Overview**:
-```markdown
-## Architecture
-
-### High-Level Design
-```
-┌──────────┐      ┌──────────┐      ┌──────────┐
-│  Client  │─────▶│   API    │─────▶│ Database │
-└──────────┘      └──────────┘      └──────────┘
-                        │
-                        ▼
-                  ┌──────────┐
-                  │  Cache   │
-                  └──────────┘
-```
-
-### Components
-
-#### API Server
-- **Technology**: Node.js + Express
-- **Responsibility**: Handle HTTP requests, business logic
-- **Scaling**: Horizontal (load balanced)
-
-#### Database
-- **Technology**: PostgreSQL 15
-- **Responsibility**: Persistent data storage
-- **Backup**: Daily automated backups
-
-#### Cache
-- **Technology**: Redis
-- **Responsibility**: Session storage, API response cache
-- **TTL**: 5 minutes for API responses
-```
-
----
-
-## Documentation Best Practices
-
-### Writing Guidelines
-
-1. **Be Clear and Concise**
-   - Use simple language
-   - Avoid jargon (or explain it)
-   - Short sentences and paragraphs
-
-2. **Use Examples**
-   - Show don't just tell
-   - Include common use cases
-   - Provide working code samples
-
-3. **Keep Updated**
-   - Update docs with code changes
-   - Mark deprecated features
-   - Version documentation
-
-4. **Structure Logically**
-   - Start with overview
-   - Organize by use case
-   - Use clear headings
-
-5. **Make Searchable**
-   - Use descriptive headings
-   - Include keywords
-   - Add table of contents
-
-### Format Tips
-
-**Use Code Blocks**:
-````markdown
-```python
-# Code here
-```
-````
-
-**Use Tables**:
-```markdown
-| Parameter | Type   | Required | Description |
-|-----------|--------|----------|-------------|
-| name      | string | yes      | User name   |
-```
-
-**Use Lists**:
-```markdown
-- Item 1
-- Item 2
-  - Sub-item 2.1
-```
-
-**Use Emphasis**:
-```markdown
-**Bold** for important terms
-*Italic* for emphasis
-`code` for inline code
-```
-
----
-
-## Documentation Templates
-
-### README Template
-```markdown
-# Project Name
-
-One-line description
-
-## Table of Contents
-- [Features](#features)
-- [Installation](#installation)
-- [Usage](#usage)
-- [API Reference](#api-reference)
-- [Contributing](#contributing)
-- [License](#license)
-
-## Features
-- Feature 1
-- Feature 2
-
-## Installation
-
-### Prerequisites
-- Node.js 18+
-- npm or yarn
-
-### Steps
-```bash
-git clone https://github.com/user/repo.git
-cd repo
-npm install
-```
-
-## Usage
-
-### Basic Example
-```javascript
-const lib = require('lib');
-lib.doSomething();
-```
-
-### Advanced Example
-[More complex usage]
-
-## API Reference
-
-See [API.md](./API.md) for detailed API documentation.
-
-## Configuration
-
-Create `.env` file:
-```env
-API_KEY=your_key
-DATABASE_URL=postgresql://...
-```
-
-## Development
-
-```bash
-npm run dev        # Start dev server
-npm test          # Run tests
-npm run lint      # Lint code
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing`)
-5. Open Pull Request
-
-## License
-
-MIT License - see [LICENSE](LICENSE) file
-
-## Contact
-
-- GitHub: [@username](https://github.com/username)
-- Email: email@example.com
-```
-
-### CHANGELOG Template
-```markdown
-# Changelog
-
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/).
-
-## [Unreleased]
-
-### Added
-- New feature X
-
-### Changed
-- Updated dependency Y
-
-### Fixed
-- Bug Z in component W
-
-## [1.0.0] - 2024-01-15
-
-### Added
-- Initial release
-- Feature A
-- Feature B
-
-### Security
-- Fixed vulnerability CVE-XXXX
-```
-
-### CONTRIBUTING Template
-```markdown
-# Contributing Guide
-
-Thank you for contributing!
-
-## Code of Conduct
-
-Be respectful and inclusive.
-
-## How to Contribute
-
-### Reporting Bugs
-- Check existing issues first
-- Use bug report template
-- Include reproduction steps
-- Specify environment details
-
-### Suggesting Features
-- Check roadmap and existing requests
-- Use feature request template
-- Explain use case and benefits
-
-### Pull Requests
-
-#### Before Submitting
-1. Fork and create branch
-2. Follow coding standards
-3. Add tests
-4. Update documentation
-5. Run linter and tests
-
-#### PR Guidelines
-- Clear description of changes
-- Link related issues
-- Keep changes focused
-- Update CHANGELOG.md
-
-## Development Setup
-
-```bash
-git clone https://github.com/user/repo.git
-cd repo
-npm install
-npm run dev
-```
-
-## Testing
-
-```bash
-npm test              # Run all tests
-npm run test:watch    # Watch mode
-npm run test:coverage # Coverage report
-```
-
-## Code Style
-
-- Follow ESLint configuration
-- Use Prettier for formatting
-- Write descriptive commit messages
-
-## Commit Messages
-
-Format: `type(scope): description`
-
-Types:
-- `feat`: New feature
-- `fix`: Bug fix
-- `docs`: Documentation
-- `style`: Formatting
-- `refactor`: Code restructure
-- `test`: Tests
-- `chore`: Maintenance
-
-Example: `feat(auth): add password reset`
-```
-
----
-
-## Documentation Checklist
-
-Before finalizing documentation:
-
-- [ ] README exists and is complete
-- [ ] Installation instructions clear
-- [ ] Usage examples provided
-- [ ] API documented (if applicable)
-- [ ] Code has appropriate comments
-- [ ] Complex logic explained
-- [ ] Configuration documented
-- [ ] Contributing guide exists
-- [ ] License specified
-- [ ] CHANGELOG maintained
-- [ ] Links work correctly
-- [ ] Code examples tested
-- [ ] Spelling/grammar checked
-- [ ] Formatting consistent
-
----
-
-## Automation Tips
-
-### Auto-Generate API Docs
-```javascript
-// JSDoc to Markdown
-npm install -g jsdoc-to-markdown
-jsdoc2md src/**/*.js > API.md
-```
-
-### Documentation Testing
-```python
-# Python: Test docstring examples
-python -m doctest module.py
-
-# Or use pytest
-pytest --doctest-modules
-```
-
-### Keep Docs in Sync
-```bash
-# Pre-commit hook to check docs
-#!/bin/bash
-if git diff --cached --name-only | grep -q "^src/"; then
-    if ! git diff --cached --name-only | grep -q "^docs/"; then
-        echo "Warning: Code changed but docs not updated"
-        exit 1
-    fi
-fi
-```
-
----
-
-## Remember
-
-- Documentation is part of the code
-- Good docs save time for everyone
-- Update docs with every code change
-- Write for your future self
-- Examples are worth a thousand words
+### Code-Level
+- JSDoc/TSDoc comments
+- Function documentation
+- Type definitions
+- Example code
+
+### API Documentation
+- Endpoint reference
+- Request/response schemas
+- Authentication guides
+- SDK documentation
+
+### Architecture Documentation
+- System overview
+- Component diagrams
+- Data flow diagrams
+- Deployment architecture
+
+### User Documentation
+- Getting started guides
+- User manuals
+- Tutorials
+- FAQs
+
+### Process Documentation
+- Runbooks
+- Onboarding guides
+- SOPs
+- Decision records
+
+## Quality Gates
+
+- [ ] All APIs documented
+- [ ] Architecture diagrams current
+- [ ] README up to date
+- [ ] Code comments helpful
+- [ ] Examples working
+- [ ] Links valid
+
+## Related Workflow Bundles
+
+- `development` - Development workflow
+- `testing-qa` - Documentation testing
+- `ai-ml` - AI documentation
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

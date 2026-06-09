@@ -1,147 +1,94 @@
 ---
 name: metrics-dashboard
-description: Tracks pipeline velocity, success rates, and cycle times. Use to view performance metrics, identify bottlenecks, and generate reports.
+description: "Define and design a product metrics dashboard with key metrics, data sources, visualization types, and alert thresholds. Use when creating a metrics dashboard, defining KPIs, setting up product analytics, or building a data monitoring plan."
 ---
 
-# Metrics Dashboard
+## Product Metrics Dashboard
 
-Aggregates pipeline run data to track velocity, success rates, and identify improvement areas.
+Design a comprehensive product metrics dashboard with the right metrics, visualizations, and alert thresholds.
 
-## Data Sources
+### Context
 
-- `runs/*/status.json` - Phase timestamps, success/failure
-- `runs/*/ticket.json` - Ticket metadata
-- Git history - Commit and PR data
-- Notion - Ticket status transitions
+You are designing a metrics dashboard for **$ARGUMENTS**.
 
-## Workflow
+If the user provides files (existing dashboards, analytics data, OKRs, or strategy docs), read them first.
 
-### 1. Collect Run Data
+### Domain Context
 
-```bash
-find runs/ -name "status.json" -type f | while read f; do
-  jq -c '{
-    id: .ticketId,
-    status: .status,
-    started: .intakeAt,
-    completed: .completedAt,
-    phases: .phaseTimestamps
-  }' "$f"
-done > /tmp/runs-data.jsonl
-```
+**Metrics vs KPIs vs NSM**: Metrics = all measurable things. KPIs = a few key quantitative metrics tracked over a longer period. North Star Metric = a single customer-centric KPI that is a leading indicator of business success.
 
-### 2. Calculate Metrics
+**4 criteria for a good metric** (Ben Yoskovitz, *Lean Analytics*): (1) Understandable — creates a common language. (2) Comparative — over time, not a snapshot. (3) Ratio or Rate — more revealing than whole numbers. (4) Behavior-changing — the Golden Rule: "If a metric won't change how you behave, it's a bad metric."
 
-**Cycle Time:**
+**8 metric types**: Vanity vs Actionable (only actionable metrics change behavior), Qualitative vs Quantitative (WHAT vs WHY — you need both; never stop talking to customers), Exploratory vs Reporting (explore data to uncover unexpected insights), Lagging vs Leading (leading indicators enable faster learning cycles, e.g. customer complaints predict churn).
 
-```bash
-jq -s '
-  map(select(.completed != null)) |
-  map(.cycleTime = ((.completed | fromdate) - (.started | fromdate)) / 3600) |
-  {
-    avgCycleTimeHours: (map(.cycleTime) | add / length),
-    minCycleTimeHours: (map(.cycleTime) | min),
-    maxCycleTimeHours: (map(.cycleTime) | max)
-  }
-' /tmp/runs-data.jsonl
-```
+**5 action steps**: (1) Audit metrics against the 4 good-metric criteria. (2) Update dashboards — ensure all key metrics are good ones. (3) Identify vanity metrics — be careful how you use them. (4) Classify leading vs lagging indicators. (5) Pick one problem and dig deep into the data.
 
-**Success Rate:**
+For case studies and more detail: [Are You Tracking the Right Metrics?](https://www.productcompass.pm/p/are-you-tracking-the-right-metrics) by Ben Yoskovitz
 
-```bash
-jq -s '{
-  total: length,
-  completed: (map(select(.status == "done")) | length),
-  failed: (map(select(.status == "failed")) | length),
-  inProgress: (map(select(.status | test("^(implementing|review|pr-created)$"))) | length)
-} | .successRate = (.completed / .total * 100)' /tmp/runs-data.jsonl
-```
+### Instructions
 
-**Phase Duration:**
+1. **Identify the metrics framework** — organize metrics into layers:
 
-```bash
-jq -s '
-  map(.phases) | flatten | group_by(.phase) |
-  map({phase: .[0].phase, avgMinutes: (map(.durationSeconds) | add / length / 60)})
-' /tmp/runs-data.jsonl
-```
+   **North Star Metric**: The single metric that best captures core value delivery
 
-### 3. Generate Dashboard
+   **Input Metrics** (3-5): The levers that drive the North Star
 
-```markdown
-# Pipeline Metrics Dashboard
+   **Health Metrics**: Guardrails that ensure overall product health
 
-**Period:** Last 30 days | **Generated:** {timestamp}
+   **Business Metrics**: Revenue, cost, and unit economics
 
-## Summary
+2. **For each metric, define**:
 
-| Metric            | Value   | Trend      |
-| ----------------- | ------- | ---------- |
-| Tickets Completed | 12      | ↑ +3       |
-| Success Rate      | 83%     | ↑ +5%      |
-| Avg Cycle Time    | 2.5 hrs | ↓ -0.5 hrs |
+   | Metric | Definition | Data Source | Visualization | Target | Alert Threshold |
+   |---|---|---|---|---|---|
+   | [Name] | [Exact calculation: numerator/denominator, time window] | [Where the data comes from] | [Line chart / Bar / Number / Funnel] | [Goal value] | [When to trigger an alert] |
 
-## Cycle Time Breakdown
+3. **Design the dashboard layout**:
 
-Intake ████ 5 min | Research ████████ 15 min | Planning ██████ 10 min
-Implement █████████████ 25 min | Quality ████ 8 min | Review ██████ 12 min
+   ```
+   ┌─────────────────────────────────────────────┐
+   │  NORTH STAR: [Metric] — [Current Value]     │
+   │  Trend: [↑/↓ X% vs last period]             │
+   ├──────────────────┬──────────────────────────┤
+   │  Input Metric 1  │  Input Metric 2          │
+   │  [Sparkline]     │  [Sparkline]             │
+   ├──────────────────┼──────────────────────────┤
+   │  Input Metric 3  │  Input Metric 4          │
+   │  [Sparkline]     │  [Sparkline]             │
+   ├──────────────────┴──────────────────────────┤
+   │  HEALTH: [Latency] [Error Rate] [NPS]       │
+   ├─────────────────────────────────────────────┤
+   │  BUSINESS: [MRR] [CAC] [LTV] [Churn]        │
+   └─────────────────────────────────────────────┘
+   ```
 
-## Success by Type
+4. **Set review cadence**:
+   - **Daily**: Operational health (errors, latency, critical flows)
+   - **Weekly**: Input metrics and engagement trends
+   - **Monthly**: North Star, business metrics, OKR progress
+   - **Quarterly**: Strategic review and metric recalibration
 
-| Type     | Count | Success | Avg Time |
-| -------- | ----- | ------- | -------- |
-| Bug Fix  | 5     | 100%    | 1.2 hrs  |
-| Feature  | 4     | 75%     | 3.5 hrs  |
-| Refactor | 3     | 67%     | 2.8 hrs  |
+5. **Define alerts**:
+   - What thresholds trigger investigation?
+   - Who gets alerted and through what channel?
+   - What's the expected response time?
 
-## Failure Analysis
+6. **Recommend tools** based on the user's context:
+   - Amplitude, Mixpanel, PostHog for product analytics
+   - Looker, Metabase, Mode for SQL-based dashboards
+   - Datadog, Grafana for operational health
 
-| Failure Point    | Count | %   |
-| ---------------- | ----- | --- |
-| Quality gates    | 2     | 40% |
-| CI failures      | 1     | 20% |
-| Review rejection | 1     | 20% |
+Think step by step. Save the dashboard specification as a markdown document.
 
-## Recommendations
+---
 
-1. **Reduce implementation time** - Consider more parallel subagents
-2. **Improve quality gates** - 40% of failures at this stage
-```
+### Further Reading
 
-### 4. Save Dashboard
-
-```bash
-echo "$DASHBOARD" > "$RUN_DIR/../metrics-$(date +%Y-%m-%d).md"
-
-cat > runs/metrics-summary.json << EOF
-{"generatedAt": "$(date -Iseconds)", "period": "30d", "totalRuns": $TOTAL, "successRate": $SUCCESS_RATE, "avgCycleTimeHours": $AVG_CYCLE}
-EOF
-
-# Append to history
-jq -c '{date: now | strftime("%Y-%m-%d"), metrics: .}' runs/metrics-summary.json >> runs/metrics-history.jsonl
-```
-
-## Custom Queries
-
-```bash
-# Tickets by assignee
-jq -s 'group_by(.assignee) | map({assignee: .[0].assignee, count: length})' /tmp/runs-data.jsonl
-
-# Slowest tickets
-jq -s 'sort_by(.cycleTime) | reverse | .[0:5]' /tmp/runs-data.jsonl
-
-# Failed at phase
-jq -s 'map(select(.status == "failed")) | group_by(.failedAtPhase)' /tmp/runs-data.jsonl
-```
-
-## Notion Integration (Optional)
-
-Prompt user before syncing metrics to Notion.
-
-## Output Artifacts
-
-| File                  | Location | Description             |
-| --------------------- | -------- | ----------------------- |
-| metrics-{date}.md     | `runs/`  | Point-in-time dashboard |
-| metrics-summary.json  | `runs/`  | Latest metrics JSON     |
-| metrics-history.jsonl | `runs/`  | Historical trends       |
+- [The Ultimate List of Product Metrics](https://www.productcompass.pm/p/the-ultimate-list-of-product-metrics)
+- [The North Star Framework 101](https://www.productcompass.pm/p/the-north-star-framework-101)
+- [The Product Analytics Playbook: AARRR, HEART, Cohorts & Funnels for PMs](https://www.productcompass.pm/p/the-product-analytics-playbook-aarrr)
+- [AARRR (Pirate) Metrics: The 5-Stage Framework for Growth](https://www.productcompass.pm/p/aarrr-pirate-metrics)
+- [The Google HEART Framework: Your Guide to Measuring User-Centric Success](https://www.productcompass.pm/p/the-google-heart-framework)
+- [Funnel Analysis 101: How to Track and Optimize Your User Journey](https://www.productcompass.pm/p/funnel-analysis)
+- [Are You Tracking the Right Metrics?](https://www.productcompass.pm/p/are-you-tracking-the-right-metrics)
+- [Continuous Product Discovery Masterclass (CPDM)](https://www.productcompass.pm/p/cpdm) (video course)

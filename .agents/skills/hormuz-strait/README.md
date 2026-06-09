@@ -15,6 +15,7 @@ Fetches the current status of the Strait of Hormuz and presents a risk briefing 
 - **Diplomatic status** — current situation, parties involved, and headline
 - **Global trade impact** — percent of world oil/LNG at risk, daily cost, affected regions, alternative routes, and supply chain disruption
 - **Crisis timeline** — chronological events (military, diplomatic, economic)
+- **Tanker freight rates** — VLCC benchmark rate vs. pre-crisis baseline with trend
 - **Latest news** — recent articles with sources and links
 
 **This skill is read-only.** No authentication required — uses the public dashboard API.
@@ -34,10 +35,14 @@ Works on **all platforms** (Claude Code, Claude.ai, and other agents). Only requ
 ## Setup
 
 ```bash
+# As a plugin (recommended — installs all skills)
+npx plugins add himself65/finance-skills --plugin finance-data-providers
+
+# Or install just this skill
 npx skills add himself65/finance-skills --skill hormuz-strait
 ```
 
-See the [main README](../../README.md) for more installation options.
+See the [main README](../../../../README.md) for more installation options.
 
 ## Reference files
 

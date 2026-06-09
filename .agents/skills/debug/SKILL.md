@@ -1,196 +1,195 @@
 ---
-name: Debug
-description: Conventions and tools for the `debug` npm package. Run tests with debug output.
-allowed-tools:
-  - Bash
+name: debug
+description: Debug issues by investigating logs, database state, and git history
 ---
 
-# debug
+# Debug
 
-Conventions for the `debug` npm package.
+You are tasked with helping debug issues during manual testing or implementation. This command allows you to investigate problems by examining logs, database state, and git history without editing files. Think of this as a way to bootstrap a debugging session without using the primary window's context.
 
-## Setup
+## Initial Response
 
-```typescript
-import createDebug from 'debug';
+When invoked WITH a plan/ticket file:
+```
+I'll help debug issues with [file name]. Let me understand the current state.
 
-// Server: include app/library name
-const Debug = createDebug('MyApp:ClassName');
+What specific problem are you encountering?
+- What were you trying to test/implement?
+- What went wrong?
+- Any error messages?
 
-// Client: class name only
-const Debug = createDebug('ClassName');
+I'll investigate the logs, database, and git state to help figure out what's happening.
 ```
 
-## In Methods
+When invoked WITHOUT parameters:
+```
+I'll help debug your current issue.
 
-```typescript
-async processOrder(orderId: string, items: Item[]) {
-  const debug = Debug.extend('processOrder');
-  debug('orderId %j', orderId);
-  debug('items.length %j', items.length);  // Don't log large arrays
+Please describe what's going wrong:
+- What are you working on?
+- What specific problem occurred?
+- When did it last work?
 
-  const result = await this.orderService.create(orderId, items);
-  debug('result %j', result);
-
-  return result;
-}
-
-// Extend again inside callbacks when needed
-items.forEach((item, index) => {
-  const cbDebug = debug.extend(`item-${index}`);
-  cbDebug('processing %j', item);
-});
+I can investigate logs, database state, and recent changes to help identify the issue.
 ```
 
-## Rules
+## Environment Information
 
-1. **Blank line after debug statements** - separates logging from logic
-   ```typescript
-   // Good
-   debug('orderId %j', orderId);
-   debug('items.length %j', items.length);
+You have access to these key locations and tools:
 
-   const result = await this.process(orderId);
-   debug('result %j', result);
+**Logs**:
+- Application logs (check project-specific locations)
+- Common locations: `./logs/`, `~/.local/share/{app}/`, `/var/log/`
 
-   return result;
+**Database** (if applicable):
+- SQLite databases can be queried with `sqlite3`
+- Check project config for database locations
 
-   // Bad - debug mixed with logic
-   debug('orderId %j', orderId);
-   const result = await this.process(orderId);
-   debug('result %j', result);
-   return result;
+**Git State**:
+- Check current branch, recent commits, uncommitted changes
+- Similar to how `commit` and `describe_pr` commands work
+
+**Service Status**:
+- Check running processes: `ps aux | grep {service}`
+- Check listening ports: `lsof -i :{port}`
+
+## Process Steps
+
+### Step 1: Understand the Problem
+
+After the user describes the issue:
+
+1. **Read any provided context** (plan or ticket file):
+   - Understand what they're implementing/testing
+   - Note which phase or step they're on
+   - Identify expected vs actual behavior
+
+2. **Quick state check**:
+   - Current git branch and recent commits
+   - Any uncommitted changes
+   - When the issue started occurring
+
+### Step 2: Investigate the Issue
+
+Spawn parallel Task agents for efficient investigation:
+
+```
+Task 1 - Check Recent Logs:
+Find and analyze the most recent logs for errors:
+1. Find latest logs: ls -t ./logs/*.log | head -1 (or project-specific location)
+2. Search for errors, warnings, or issues around the problem timeframe
+3. Note the working directory if shown
+4. Look for stack traces or repeated errors
+Return: Key errors/warnings with timestamps
+```
+
+```
+Task 2 - Database State (if applicable):
+Check the current database state:
+1. Locate database file (check project config)
+2. Connect: sqlite3 {database_path}
+3. Check schema: .tables and .schema for relevant tables
+4. Query recent data based on the issue
+5. Look for stuck states or anomalies
+Return: Relevant database findings
+```
+
+```
+Task 3 - Git and File State:
+Understand what changed recently:
+1. Check git status and current branch
+2. Look at recent commits: git log --oneline -10
+3. Check uncommitted changes: git diff
+4. Verify expected files exist
+5. Look for any file permission issues
+Return: Git state and any file issues
+```
+
+### Step 3: Present Findings
+
+Based on the investigation, present a focused debug report:
+
+```markdown
+## Debug Report
+
+### What's Wrong
+[Clear statement of the issue based on evidence]
+
+### Evidence Found
+
+**From Logs**:
+- [Error/warning with timestamp]
+- [Pattern or repeated issue]
+
+**From Database** (if applicable):
+```sql
+-- Relevant query and result
+[Finding from database]
+```
+
+**From Git/Files**:
+- [Recent changes that might be related]
+- [File state issues]
+
+### Root Cause
+[Most likely explanation based on evidence]
+
+### Next Steps
+
+1. **Try This First**:
+   ```bash
+   [Specific command or action]
    ```
 
-2. **One item per debug statement**
-   ```typescript
-   // Good
-   debug('this.userId %j', this.userId);
-   debug('this.token %j', this.token);
+2. **If That Doesn't Work**:
+   - Restart relevant services
+   - Check browser console for frontend errors
+   - Run with debug flags enabled
 
-   // Bad
-   debug('userId=%s token=%s', this.userId, this.token);
-   ```
+### Can't Access?
+Some issues might be outside my reach:
+- Browser console errors (F12 in browser)
+- MCP server internal state
+- System-level issues
 
-3. **Keep labels simple** - use variable name, not prose
-   ```typescript
-   // Good
-   debug('order %j', order);
+Would you like me to investigate something specific further?
+```
 
-   // Bad
-   debug('The current order is: %j', order);
-   ```
+## Important Notes
 
-4. **Label must match value** - no transformations
-   ```typescript
-   // Good - label matches value exactly
-   debug('this.maxDate', this.maxDate);
+- **Focus on manual testing scenarios** - This is for debugging during implementation
+- **Always require problem description** - Can't debug without knowing what's wrong
+- **Read files completely** - No limit/offset when reading context
+- **Think like `commit` or `describe_pr`** - Understand git state and changes
+- **Guide back to user** - Some issues (browser console, MCP internals) are outside reach
+- **No file editing** - Pure investigation only
 
-   // Bad - label says maxDate but value is toISO() result
-   debug('this.maxDate', this.maxDate.toISO());
-   ```
+## Quick Reference
 
-5. **Prose-only for flow markers** - when there's no value to log
-   ```typescript
-   debug('initialized');
-   debug('enter pressed');
-   debug('no loader registered');
-   ```
-
-6. **Use %j for Server Side Only** (usually)
-   ```typescript
-   // Server: always use %j
-   debug('config %j', config);
-
-   // Client: don't use %j - browser console lets you inspect objects
-   debug('config', config);
-
-   // Exception: use %j client-side for timing issues where you need
-   // to see object state at multiple points in time (otherwise you
-   // only see the final state when you expand the object)
-   ```
-
-7. **Log length for arrays** - don't flood output
-   ```typescript
-   debug('users.length %j', users.length);
-   ```
-
-8. **Debug early returns** - so you can trace why execution stopped
-   ```typescript
-   if (!date) {
-     debug('date %j', date);
-
-     this.control.setValue(null);
-     return;
-   }
-   ```
-
-9. **Debug inputs and outputs** - trace execution flow
-   ```typescript
-   async getUser(id: string) {
-     const debug = Debug.extend('getUser');
-     debug('id %j', id);
-
-     const user = await this.db.findUser(id);
-     debug('user %j', user);
-
-     return user;
-   }
-   ```
-
-10. **Debug intermediate results** - after each method call
-   ```typescript
-   const user = await this.userService.getUser(id);
-   debug('user %j', user);
-
-   const permissions = await this.authService.getPermissions(user.role);
-   debug('permissions %j', permissions);
-
-   const filtered = permissions.filter(p => p.active);
-   debug('filtered.length %j', filtered.length);
-   ```
-
-11. **Debug loop iterations** when needed
-   ```typescript
-   for (const item of items) {
-     debug('item %j', item);
-     // ... process item
-   }
-   ```
-
-12. **Use console for always-on logging**
-   ```typescript
-   console.log('Server started on port', port);  // Always show
-   console.error('Fatal error:', err);           // Always show
-   debug('request %j', req);                     // Only when DEBUG enabled
-   ```
-
-## Enabling Debug Output
-
-Server-side DEBUG strings can get long. Remember that wildcards work well:
-
+**Find Latest Logs**:
 ```bash
-# Full namespace
-DEBUG=MyApp:OrderService:processOrder node app.js
-
-# Wildcard - often sufficient
-DEBUG=*processOrder node app.js
-DEBUG=*Order* node app.js
+ls -t ./logs/*.log | head -1
+# Or check project-specific log locations
 ```
 
-## Running Tests with Debug
-
-Use the debug-test script to run tests with DEBUG output:
-
+**Database Queries** (SQLite):
 ```bash
-# Run specific test file with debug output
-bash .claude/skills/debug/scripts/debug-test.sh '*OrderService*' -- src/order.spec.ts
-
-# Run test by name pattern
-bash .claude/skills/debug/scripts/debug-test.sh '*processOrder*' -- -t "should process order"
-
-# Run all tests in a directory with debug
-bash .claude/skills/debug/scripts/debug-test.sh 'MyApp:*' -- src/services/
+sqlite3 {database_path} ".tables"
+sqlite3 {database_path} ".schema {table}"
+sqlite3 {database_path} "SELECT * FROM {table} ORDER BY created_at DESC LIMIT 5;"
 ```
 
-The script sets the DEBUG environment variable and passes remaining arguments to `npm test`.
+**Service Check**:
+```bash
+ps aux | grep {service_name}
+lsof -i :{port}
+```
+
+**Git State**:
+```bash
+git status
+git log --oneline -10
+git diff
+```
+
+Remember: This command helps you investigate without burning the primary window's context. Perfect for when you hit an issue during manual testing and need to dig into logs, database, or git state.

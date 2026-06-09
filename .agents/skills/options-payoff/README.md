@@ -36,15 +36,19 @@ For unlisted strategies, the skill uses `custom` mode — decomposing into indiv
 
 ## Platform
 
-Works on **Claude.ai** (via the built-in `show_widget` tool) or with the [generative-ui](../generative-ui/) skill on Claude Code.
+Works on **Claude.ai** (via the built-in `show_widget` tool) or with the [generative-ui](../../../ui-tools/skills/generative-ui/) skill on Claude Code.
 
 ## Setup
 
 ```bash
+# As a plugin (recommended — installs all skills)
+npx plugins add himself65/finance-skills --plugin finance-market-analysis
+
+# Or install just this skill
 npx skills add himself65/finance-skills --skill options-payoff
 ```
 
-See the [main README](../../README.md) for more installation options.
+See the [main README](../../../../README.md) for more installation options.
 
 ## Reference files
 

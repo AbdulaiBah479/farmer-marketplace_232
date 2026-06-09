@@ -1,11 +1,6 @@
 ---
 name: power-bi-model-design-review
-description: >-
-  Comprehensive Power BI data model design review prompt for evaluating model
-  architecture, relationships, and optimization opportunities.
-author:
-  name: Community
-  url: 'https://github.com/beel-collab/presets.dev'
+description: 'Comprehensive Power BI data model design review prompt for evaluating model architecture, relationships, and optimization opportunities.'
 ---
 
 # Power BI Data Model Design Review

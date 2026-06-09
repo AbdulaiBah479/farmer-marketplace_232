@@ -1,1085 +1,1031 @@
 ---
-name: Workflow Automation
-description: Expertise in CI/CD pipeline creation, process automation, and team workflow optimization. Activates when working with "automate", "pipeline", "workflow", "CI/CD", "process", or automation tools.
-version: 1.0.0
+name: workflow-automation
+description: Workflow automation is the infrastructure that makes AI agents
+  reliable. Without durable execution, a network hiccup during a 10-step payment
+  flow means lost money and angry customers. With it, workflows resume exactly
+  where they left off.
+risk: critical
+source: vibeship-spawner-skills (Apache 2.0)
+date_added: 2026-02-27
 ---
 
-# Workflow Automation Skill
-
-## Overview
-
-Design and implement automated workflows for development teams, including CI/CD pipelines, release automation, code quality gates, deployment processes, and team collaboration workflows. This skill encompasses GitHub Actions, Harness pipelines, automated testing workflows, release management, and process optimization strategies.
-
-## Core Competencies
-
-### GitHub Actions Workflows
-
-**Design Comprehensive CI Workflows:**
-
-Create multi-stage CI pipelines with proper job dependencies:
-
-```yaml
-# .github/workflows/ci.yml
-name: Continuous Integration
-
-on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
-  workflow_dispatch:
-
-env:
-  NODE_VERSION: '20'
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-jobs:
-  setup:
-    name: Setup and Cache
-    runs-on: ubuntu-latest
-    outputs:
-      cache-key: ${{ steps.cache-key.outputs.key }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Generate cache key
-        id: cache-key
-        run: echo "key=${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}" >> $GITHUB_OUTPUT
-
-      - name: Install dependencies
-        run: npm ci
-
-  lint:
-    name: Lint Code
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run ESLint
-        run: npm run lint -- --format json --output-file eslint-report.json
-        continue-on-error: true
-
-      - name: Annotate code
-        uses: ataylorme/eslint-annotate-action@v2
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          report-json: eslint-report.json
-
-      - name: Upload ESLint results
-        uses: actions/upload-artifact@v4
-        with:
-          name: eslint-report
-          path: eslint-report.json
-
-  type-check:
-    name: Type Check
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run TypeScript compiler
-        run: npm run type-check
-
-  unit-tests:
-    name: Unit Tests
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run unit tests
-        run: npm run test:unit -- --coverage
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./coverage/coverage-final.json
-          flags: unit
-          name: unit-tests
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: unit-test-results
-          path: |
-            coverage/
-            test-results/
-
-  integration-tests:
-    name: Integration Tests
-    needs: setup
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_DB: test_db
-          POSTGRES_USER: test_user
-          POSTGRES_PASSWORD: test_pass
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
-      redis:
-        image: redis:7-alpine
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 6379:6379
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run database migrations
-        run: npm run migrate
-        env:
-          DATABASE_URL: postgresql://test_user:test_pass@localhost:5432/test_db
-
-      - name: Run integration tests
-        run: npm run test:integration -- --coverage
-        env:
-          DATABASE_URL: postgresql://test_user:test_pass@localhost:5432/test_db
-          REDIS_URL: redis://localhost:6379
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./coverage/coverage-final.json
-          flags: integration
-          name: integration-tests
-
-  e2e-tests:
-    name: E2E Tests
-    needs: [unit-tests, integration-tests]
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps
-
-      - name: Run E2E tests
-        run: npm run test:e2e
-
-      - name: Upload Playwright report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 30
-
-  security-scan:
-    name: Security Scan
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Run npm audit
-        run: npm audit --audit-level=moderate
-        continue-on-error: true
-
-      - name: Run Snyk security scan
-        uses: snyk/actions/node@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --severity-threshold=high
-
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-
-      - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results.sarif'
-
-  build:
-    name: Build Application
-    needs: [lint, type-check, unit-tests, integration-tests]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build application
-        run: npm run build
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: dist/
-
-  docker-build:
-    name: Build Docker Image
-    needs: [build, security-scan]
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=sha,prefix={{branch}}-
-            type=raw,value=latest,enable={{is_default_branch}}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          build-args: |
-            NODE_VERSION=${{ env.NODE_VERSION }}
-            BUILD_DATE=${{ github.event.head_commit.timestamp }}
-            VCS_REF=${{ github.sha }}
-
-  quality-gate:
-    name: Quality Gate
-    needs: [lint, type-check, unit-tests, integration-tests, e2e-tests, security-scan]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-
-      - name: Check quality metrics
-        run: |
-          echo "All quality checks passed"
-          echo "Ready for deployment"
-
-      - name: Post summary
-        run: |
-          echo "## CI Pipeline Summary" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Linting passed" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Type checking passed" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Unit tests passed" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Integration tests passed" >> $GITHUB_STEP_SUMMARY
-          echo "✅ E2E tests passed" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Security scan passed" >> $GITHUB_STEP_SUMMARY
-```
-
-**Implement Automated Release Workflow:**
-
-Create release automation with changelog generation:
-
-```yaml
-# .github/workflows/release.yml
-name: Release
-
-on:
-  push:
-    tags:
-      - 'v*'
-
-permissions:
-  contents: write
-  packages: write
-
-jobs:
-  create-release:
-    name: Create Release
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Generate changelog
-        id: changelog
-        uses: mikepenz/release-changelog-builder-action@v4
-        with:
-          configuration: '.github/changelog-config.json'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          body: ${{ steps.changelog.outputs.changelog }}
-          draft: false
-          prerelease: ${{ contains(github.ref, 'beta') || contains(github.ref, 'alpha') }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  publish-npm:
-    name: Publish to NPM
-    needs: create-release
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
-
-      - name: Publish to NPM
-        run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-  deploy-production:
-    name: Deploy to Production
-    needs: create-release
-    runs-on: ubuntu-latest
-    environment:
-      name: production
-      url: https://app.example.com
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup kubectl
-        uses: azure/setup-kubectl@v3
-
-      - name: Setup Helm
-        uses: azure/setup-helm@v3
-
-      - name: Azure Login
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Get AKS credentials
-        run: |
-          az aks get-credentials \
-            --resource-group ${{ secrets.RESOURCE_GROUP }} \
-            --name ${{ secrets.CLUSTER_NAME }}
-
-      - name: Deploy with Helm
-        run: |
-          helm upgrade --install app \
-            ./deployment/helm/app \
-            --namespace production \
-            --create-namespace \
-            --values ./deployment/helm/app/values-prod.yaml \
-            --set image.tag=${{ github.ref_name }} \
-            --wait \
-            --timeout 10m
-
-      - name: Run smoke tests
-        run: |
-          kubectl run smoke-test \
-            --image=curlimages/curl:latest \
-            --restart=Never \
-            --rm \
-            -i \
-            -- curl -f https://app.example.com/health
-```
-
-### Harness Pipeline Configuration
-
-**Design Enterprise CI/CD Pipeline:**
-
-Configure Harness pipelines for complex deployment scenarios:
-
-```yaml
-# harness/pipelines/production-deploy.yml
-pipeline:
-  name: Production Deployment Pipeline
-  identifier: prod_deployment
-  projectIdentifier: platform
-  orgIdentifier: engineering
-  tags:
-    env: production
-    team: platform
-  stages:
-    - stage:
-        name: Build and Test
-        identifier: build_test
-        type: CI
-        spec:
-          cloneCodebase: true
-          infrastructure:
-            type: KubernetesDirect
-            spec:
-              connectorRef: k8s_delegate
-              namespace: harness-builds
-              automountServiceAccountToken: true
-          execution:
-            steps:
-              - step:
-                  type: Run
-                  name: Install Dependencies
-                  identifier: install_deps
-                  spec:
-                    connectorRef: docker_hub
-                    image: node:20-alpine
-                    shell: Bash
-                    command: npm ci
-
-              - step:
-                  type: Run
-                  name: Run Tests
-                  identifier: run_tests
-                  spec:
-                    connectorRef: docker_hub
-                    image: node:20-alpine
-                    shell: Bash
-                    command: |
-                      npm run lint
-                      npm run test:unit
-                      npm run test:integration
-                  failureStrategies:
-                    - onFailure:
-                        errors:
-                          - AllErrors
-                        action:
-                          type: Abort
-
-              - step:
-                  type: Run
-                  name: Security Scan
-                  identifier: security_scan
-                  spec:
-                    connectorRef: docker_hub
-                    image: aquasec/trivy:latest
-                    shell: Bash
-                    command: trivy fs --security-checks vuln,config .
-
-              - step:
-                  type: BuildAndPushDockerRegistry
-                  name: Build and Push Image
-                  identifier: build_push
-                  spec:
-                    connectorRef: docker_registry
-                    repo: platform/app
-                    tags:
-                      - <+pipeline.sequenceId>
-                      - <+pipeline.executionId>
-                      - latest
-                    optimize: true
-                    caching: true
-
-    - stage:
-        name: Deploy to Staging
-        identifier: deploy_staging
-        type: Deployment
-        spec:
-          deploymentType: Kubernetes
-          service:
-            serviceRef: app_service
-            serviceInputs:
-              serviceDefinition:
-                type: Kubernetes
-                spec:
-                  artifacts:
-                    primary:
-                      primaryArtifactRef: <+input>
-                      sources:
-                        - identifier: docker_image
-                          type: DockerRegistry
-                          spec:
-                            tag: <+pipeline.sequenceId>
-          environment:
-            environmentRef: staging
-            deployToAll: false
-            infrastructureDefinitions:
-              - identifier: staging_k8s
-          execution:
-            steps:
-              - step:
-                  type: K8sRollingDeploy
-                  name: Rolling Deployment
-                  identifier: rolling_deploy
-                  spec:
-                    skipDryRun: false
-                    pruningEnabled: true
-
-              - step:
-                  type: ShellScript
-                  name: Run Smoke Tests
-                  identifier: smoke_tests
-                  spec:
-                    shell: Bash
-                    source:
-                      type: Inline
-                      spec:
-                        script: |
-                          #!/bin/bash
-                          set -e
-
-                          echo "Running smoke tests..."
-                          curl -f https://staging.example.com/health
-                          echo "Smoke tests passed"
-                  timeout: 5m
-
-            rollbackSteps:
-              - step:
-                  type: K8sRollingRollback
-                  name: Rollback Deployment
-                  identifier: rollback
-
-    - stage:
-        name: Approval
-        identifier: approval
-        type: Approval
-        spec:
-          execution:
-            steps:
-              - step:
-                  type: HarnessApproval
-                  name: Manual Approval
-                  identifier: manual_approval
-                  spec:
-                    approvalMessage: Please review and approve deployment to production
-                    includePipelineExecutionHistory: true
-                    approvers:
-                      userGroups:
-                        - account.ProductionApprovers
-                    minimumCount: 2
-                    disallowPipelineExecutor: false
-                  timeout: 1d
-
-    - stage:
-        name: Deploy to Production
-        identifier: deploy_production
-        type: Deployment
-        spec:
-          deploymentType: Kubernetes
-          service:
-            serviceRef: app_service
-            serviceInputs:
-              serviceDefinition:
-                type: Kubernetes
-                spec:
-                  artifacts:
-                    primary:
-                      primaryArtifactRef: <+input>
-                      sources:
-                        - identifier: docker_image
-                          type: DockerRegistry
-                          spec:
-                            tag: <+pipeline.sequenceId>
-          environment:
-            environmentRef: production
-            deployToAll: false
-            infrastructureDefinitions:
-              - identifier: prod_k8s_us_east
-              - identifier: prod_k8s_eu_west
-          execution:
-            steps:
-              - step:
-                  type: K8sBlueGreenDeploy
-                  name: Blue Green Deployment
-                  identifier: bg_deploy
-                  spec:
-                    skipDryRun: false
-                    pruningEnabled: false
-
-              - step:
-                  type: ShellScript
-                  name: Health Check
-                  identifier: health_check
-                  spec:
-                    shell: Bash
-                    source:
-                      type: Inline
-                      spec:
-                        script: |
-                          #!/bin/bash
-                          set -e
-
-                          for i in {1..10}; do
-                            if curl -f https://app.example.com/health; then
-                              echo "Health check passed"
-                              exit 0
-                            fi
-                            echo "Attempt $i failed, retrying..."
-                            sleep 10
-                          done
-
-                          echo "Health check failed"
-                          exit 1
-                  timeout: 5m
-
-              - step:
-                  type: K8sBGSwapServices
-                  name: Swap Traffic
-                  identifier: swap_traffic
-                  spec:
-                    skipDryRun: false
-
-              - step:
-                  type: ShellScript
-                  name: Monitor Metrics
-                  identifier: monitor_metrics
-                  spec:
-                    shell: Bash
-                    source:
-                      type: Inline
-                      spec:
-                        script: |
-                          #!/bin/bash
-                          # Monitor error rates and latency for 5 minutes
-                          for i in {1..30}; do
-                            ERROR_RATE=$(curl -s "https://monitoring.example.com/api/v1/query?query=rate(http_requests_total{status=~\"5..\"}[5m])" | jq '.data.result[0].value[1]' -r)
-
-                            if (( $(echo "$ERROR_RATE > 0.01" | bc -l) )); then
-                              echo "Error rate too high: $ERROR_RATE"
-                              exit 1
-                            fi
-
-                            sleep 10
-                          done
-                  timeout: 10m
-
-            rollbackSteps:
-              - step:
-                  type: K8sBGSwapServices
-                  name: Rollback Traffic
-                  identifier: rollback_traffic
-
-  notificationRules:
-    - name: Pipeline Failed
-      pipelineEvents:
-        - type: PipelineFailed
-      notificationMethod:
-        type: Slack
-        spec:
-          userGroups:
-            - account.DevOps
-          webhookUrl: <+secrets.getValue("slack_webhook")>
-
-    - name: Production Deployed
-      pipelineEvents:
-        - type: StageSuccess
-      notificationMethod:
-        type: Email
-        spec:
-          userGroups:
-            - account.Engineering
-          recipients:
-            - engineering@example.com
-```
-
-### Automation Scripts
-
-**Create Reusable Workflow Templates:**
-
-Build modular automation scripts for common tasks:
-
-```bash
-#!/bin/bash
-# scripts/automation/deploy.sh
-
-set -euo pipefail
-
-# Configuration
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
-# Functions
-log_info() {
-    echo -e "${GREEN}[INFO]${NC} $1"
+# Workflow Automation
+
+Workflow automation is the infrastructure that makes AI agents reliable.
+Without durable execution, a network hiccup during a 10-step payment
+flow means lost money and angry customers. With it, workflows resume
+exactly where they left off.
+
+This skill covers the platforms (n8n, Temporal, Inngest) and patterns
+(sequential, parallel, orchestrator-worker) that turn brittle scripts
+into production-grade automation.
+
+Key insight: The platforms make different tradeoffs. n8n optimizes for
+accessibility, Temporal for correctness, Inngest for developer experience.
+Pick based on your actual needs, not hype.
+
+## Principles
+
+- Durable execution is non-negotiable for money or state-critical workflows
+- Events are the universal language of workflow triggers
+- Steps are checkpoints - each should be independently retryable
+- Start simple, add complexity only when reliability demands it
+- Observability isn't optional - you need to see where workflows fail
+- Workflows and agents co-evolve - design for both
+
+## Capabilities
+
+- workflow-automation
+- workflow-orchestration
+- durable-execution
+- event-driven-workflows
+- step-functions
+- job-queues
+- background-jobs
+- scheduled-tasks
+
+## Scope
+
+- multi-agent-coordination → multi-agent-orchestration
+- ci-cd-pipelines → devops
+- data-pipelines → data-engineer
+- api-design → api-designer
+
+## Tooling
+
+### Platforms
+
+- n8n - When: Low-code automation, quick prototyping, non-technical users Note: Self-hostable, 400+ integrations, great for visual workflows
+- Temporal - When: Mission-critical workflows, financial transactions, microservices Note: Strongest durability guarantees, steeper learning curve
+- Inngest - When: Event-driven serverless, TypeScript codebases, AI workflows Note: Best developer experience, works with any hosting
+- AWS Step Functions - When: AWS-native stacks, existing Lambda functions Note: Tight AWS integration, JSON-based workflow definition
+- Azure Durable Functions - When: Azure stacks, .NET or TypeScript Note: Good AI agent support, checkpoint and replay
+
+## Patterns
+
+### Sequential Workflow Pattern
+
+Steps execute in order, each output becomes next input
+
+**When to use**: Content pipelines, data processing, ordered operations
+
+# SEQUENTIAL WORKFLOW:
+
+"""
+Step 1 → Step 2 → Step 3 → Output
+  ↓         ↓         ↓
+(checkpoint at each step)
+"""
+
+## Inngest Example (TypeScript)
+"""
+import { inngest } from "./client";
+
+export const processOrder = inngest.createFunction(
+  { id: "process-order" },
+  { event: "order/created" },
+  async ({ event, step }) => {
+    // Step 1: Validate order
+    const validated = await step.run("validate-order", async () => {
+      return validateOrder(event.data.order);
+    });
+
+    // Step 2: Process payment (durable - survives crashes)
+    const payment = await step.run("process-payment", async () => {
+      return chargeCard(validated.paymentMethod, validated.total);
+    });
+
+    // Step 3: Create shipment
+    const shipment = await step.run("create-shipment", async () => {
+      return createShipment(validated.items, validated.address);
+    });
+
+    // Step 4: Send confirmation
+    await step.run("send-confirmation", async () => {
+      return sendEmail(validated.email, { payment, shipment });
+    });
+
+    return { success: true, orderId: event.data.orderId };
+  }
+);
+"""
+
+## Temporal Example (TypeScript)
+"""
+import { proxyActivities } from '@temporalio/workflow';
+import type * as activities from './activities';
+
+const { validateOrder, chargeCard, createShipment, sendEmail } =
+  proxyActivities<typeof activities>({
+    startToCloseTimeout: '30 seconds',
+    retry: {
+      maximumAttempts: 3,
+      backoffCoefficient: 2,
+    }
+  });
+
+export async function processOrderWorkflow(order: Order): Promise<void> {
+  const validated = await validateOrder(order);
+  const payment = await chargeCard(validated.paymentMethod, validated.total);
+  const shipment = await createShipment(validated.items, validated.address);
+  await sendEmail(validated.email, { payment, shipment });
 }
+"""
 
-log_warn() {
-    echo -e "${YELLOW}[WARN]${NC} $1"
+## n8n Pattern
+"""
+[Webhook: order.created]
+    ↓
+[HTTP Request: Validate Order]
+    ↓
+[HTTP Request: Process Payment]
+    ↓
+[HTTP Request: Create Shipment]
+    ↓
+[Send Email: Confirmation]
+
+Configure each node with retry on failure.
+Use Error Trigger for dead letter handling.
+"""
+
+### Parallel Workflow Pattern
+
+Independent steps run simultaneously, aggregate results
+
+**When to use**: Multiple independent analyses, data from multiple sources
+
+# PARALLEL WORKFLOW:
+
+"""
+        ┌→ Step A ─┐
+Input ──┼→ Step B ─┼→ Aggregate → Output
+        └→ Step C ─┘
+"""
+
+## Inngest Example
+"""
+export const analyzeDocument = inngest.createFunction(
+  { id: "analyze-document" },
+  { event: "document/uploaded" },
+  async ({ event, step }) => {
+    // Run analyses in parallel
+    const [security, performance, compliance] = await Promise.all([
+      step.run("security-analysis", () =>
+        analyzeForSecurityIssues(event.data.document)
+      ),
+      step.run("performance-analysis", () =>
+        analyzeForPerformance(event.data.document)
+      ),
+      step.run("compliance-analysis", () =>
+        analyzeForCompliance(event.data.document)
+      ),
+    ]);
+
+    // Aggregate results
+    const report = await step.run("generate-report", () =>
+      generateReport({ security, performance, compliance })
+    );
+
+    return report;
+  }
+);
+"""
+
+## AWS Step Functions (Amazon States Language)
+"""
+{
+  "Type": "Parallel",
+  "Branches": [
+    {
+      "StartAt": "SecurityAnalysis",
+      "States": {
+        "SecurityAnalysis": {
+          "Type": "Task",
+          "Resource": "arn:aws:lambda:...:security-analyzer",
+          "End": true
+        }
+      }
+    },
+    {
+      "StartAt": "PerformanceAnalysis",
+      "States": {
+        "PerformanceAnalysis": {
+          "Type": "Task",
+          "Resource": "arn:aws:lambda:...:performance-analyzer",
+          "End": true
+        }
+      }
+    }
+  ],
+  "Next": "AggregateResults"
 }
+"""
 
-log_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
+### Orchestrator-Worker Pattern
+
+Central coordinator dispatches work to specialized workers
+
+**When to use**: Complex tasks requiring different expertise, dynamic subtask creation
+
+# ORCHESTRATOR-WORKER PATTERN:
+
+"""
+┌─────────────────────────────────────┐
+│          ORCHESTRATOR               │
+│  - Analyzes task                    │
+│  - Creates subtasks                 │
+│  - Dispatches to workers            │
+│  - Aggregates results               │
+└─────────────────────────────────────┘
+                │
+    ┌───────────┼───────────┐
+    ▼           ▼           ▼
+┌───────┐  ┌───────┐  ┌───────┐
+│Worker1│  │Worker2│  │Worker3│
+│Create │  │Modify │  │Delete │
+└───────┘  └───────┘  └───────┘
+"""
+
+## Temporal Example
+"""
+export async function orchestratorWorkflow(task: ComplexTask) {
+  // Orchestrator decides what work needs to be done
+  const plan = await analyzeTask(task);
+
+  // Dispatch to specialized worker workflows
+  const results = await Promise.all(
+    plan.subtasks.map(subtask => {
+      switch (subtask.type) {
+        case 'create':
+          return executeChild(createWorkerWorkflow, { args: [subtask] });
+        case 'modify':
+          return executeChild(modifyWorkerWorkflow, { args: [subtask] });
+        case 'delete':
+          return executeChild(deleteWorkerWorkflow, { args: [subtask] });
+      }
+    })
+  );
+
+  // Aggregate results
+  return aggregateResults(results);
 }
+"""
 
-check_prerequisites() {
-    log_info "Checking prerequisites..."
+## Inngest with AI Orchestration
+"""
+export const aiOrchestrator = inngest.createFunction(
+  { id: "ai-orchestrator" },
+  { event: "task/complex" },
+  async ({ event, step }) => {
+    // AI decides what needs to be done
+    const plan = await step.run("create-plan", async () => {
+      return await llm.chat({
+        messages: [
+          { role: "system", content: "Break this task into subtasks..." },
+          { role: "user", content: event.data.task }
+        ]
+      });
+    });
 
-    command -v kubectl >/dev/null 2>&1 || {
-        log_error "kubectl is required but not installed."
-        exit 1
+    // Execute each subtask as a durable step
+    const results = [];
+    for (const subtask of plan.subtasks) {
+      const result = await step.run(`execute-${subtask.id}`, async () => {
+        return executeSubtask(subtask);
+      });
+      results.push(result);
     }
 
-    command -v helm >/dev/null 2>&1 || {
-        log_error "helm is required but not installed."
-        exit 1
+    // Final synthesis
+    return await step.run("synthesize", async () => {
+      return synthesizeResults(results);
+    });
+  }
+);
+"""
+
+### Event-Driven Trigger Pattern
+
+Workflows triggered by events, not schedules
+
+**When to use**: Reactive systems, user actions, webhook integrations
+
+# EVENT-DRIVEN TRIGGERS:
+
+## Inngest Event-Based
+"""
+// Define events with TypeScript types
+type Events = {
+  "user/signed.up": {
+    data: { userId: string; email: string };
+  };
+  "order/completed": {
+    data: { orderId: string; total: number };
+  };
+};
+
+// Function triggered by event
+export const onboardUser = inngest.createFunction(
+  { id: "onboard-user" },
+  { event: "user/signed.up" },  // Trigger on this event
+  async ({ event, step }) => {
+    // Wait 1 hour, then send welcome email
+    await step.sleep("wait-for-exploration", "1 hour");
+
+    await step.run("send-welcome", async () => {
+      return sendWelcomeEmail(event.data.email);
+    });
+
+    // Wait 3 days for engagement check
+    await step.sleep("wait-for-engagement", "3 days");
+
+    const engaged = await step.run("check-engagement", async () => {
+      return checkUserEngagement(event.data.userId);
+    });
+
+    if (!engaged) {
+      await step.run("send-nudge", async () => {
+        return sendNudgeEmail(event.data.email);
+      });
+    }
+  }
+);
+
+// Send events from anywhere
+await inngest.send({
+  name: "user/signed.up",
+  data: { userId: "123", email: "user@example.com" }
+});
+"""
+
+## n8n Webhook Trigger
+"""
+[Webhook: POST /api/webhooks/order]
+    ↓
+[Switch: event.type]
+    ↓ order.created
+[Process New Order Subworkflow]
+    ↓ order.cancelled
+[Handle Cancellation Subworkflow]
+"""
+
+### Retry and Recovery Pattern
+
+Automatic retry with backoff, dead letter handling
+
+**When to use**: Any workflow with external dependencies
+
+# RETRY AND RECOVERY:
+
+## Temporal Retry Configuration
+"""
+const activities = proxyActivities<typeof activitiesType>({
+  startToCloseTimeout: '30 seconds',
+  retry: {
+    initialInterval: '1 second',
+    backoffCoefficient: 2,
+    maximumInterval: '1 minute',
+    maximumAttempts: 5,
+    nonRetryableErrorTypes: [
+      'ValidationError',      // Don't retry validation failures
+      'InsufficientFunds',    // Don't retry payment failures
+    ]
+  }
+});
+"""
+
+## Inngest Retry Configuration
+"""
+export const processPayment = inngest.createFunction(
+  {
+    id: "process-payment",
+    retries: 5,  // Retry up to 5 times
+  },
+  { event: "payment/initiated" },
+  async ({ event, step, attempt }) => {
+    // attempt is 0-indexed retry count
+
+    const result = await step.run("charge-card", async () => {
+      try {
+        return await stripe.charges.create({...});
+      } catch (error) {
+        if (error.code === 'card_declined') {
+          // Don't retry card declines
+          throw new NonRetriableError("Card declined");
+        }
+        throw error;  // Retry other errors
+      }
+    });
+
+    return result;
+  }
+);
+"""
+
+## Dead Letter Handling
+"""
+// n8n: Use Error Trigger node
+[Error Trigger]
+    ↓
+[Log to Error Database]
+    ↓
+[Send Alert to Slack]
+    ↓
+[Create Ticket in Jira]
+
+// Inngest: Handle in onFailure
+export const myFunction = inngest.createFunction(
+  {
+    id: "my-function",
+    onFailure: async ({ error, event, step }) => {
+      await step.run("alert-team", async () => {
+        await slack.postMessage({
+          channel: "#errors",
+          text: `Function failed: ${error.message}`
+        });
+      });
+    }
+  },
+  { event: "..." },
+  async ({ step }) => { ... }
+);
+"""
+
+### Scheduled Workflow Pattern
+
+Time-based triggers for recurring tasks
+
+**When to use**: Daily reports, periodic sync, batch processing
+
+# SCHEDULED WORKFLOWS:
+
+## Inngest Cron
+"""
+export const dailyReport = inngest.createFunction(
+  { id: "daily-report" },
+  { cron: "0 9 * * *" },  // Every day at 9 AM
+  async ({ step }) => {
+    const data = await step.run("gather-metrics", async () => {
+      return gatherDailyMetrics();
+    });
+
+    await step.run("generate-report", async () => {
+      return generateAndSendReport(data);
+    });
+  }
+);
+
+export const syncInventory = inngest.createFunction(
+  { id: "sync-inventory" },
+  { cron: "*/15 * * * *" },  // Every 15 minutes
+  async ({ step }) => {
+    await step.run("sync", async () => {
+      return syncWithSupplier();
+    });
+  }
+);
+"""
+
+## Temporal Cron Workflow
+"""
+// Schedule workflow to run on cron
+const handle = await client.workflow.start(dailyReportWorkflow, {
+  taskQueue: 'reports',
+  workflowId: 'daily-report',
+  cronSchedule: '0 9 * * *',  // 9 AM daily
+});
+"""
+
+## n8n Schedule Trigger
+"""
+[Schedule Trigger: Every day at 9:00 AM]
+    ↓
+[HTTP Request: Get Metrics]
+    ↓
+[Code Node: Generate Report]
+    ↓
+[Send Email: Report]
+"""
+
+## Sharp Edges
+
+### Non-Idempotent Steps in Durable Workflows
+
+Severity: CRITICAL
+
+Situation: Writing workflow steps that modify external state
+
+Symptoms:
+Customer charged twice. Email sent three times. Database record
+created multiple times. Workflow retries cause duplicate side effects.
+
+Why this breaks:
+Durable execution replays workflows from the beginning on restart.
+If step 3 crashes and the workflow resumes, steps 1 and 2 run again.
+Without idempotency keys, external services don't know these are retries.
+
+Recommended fix:
+
+# ALWAYS use idempotency keys for external calls:
+
+### Stripe example:
+await stripe.paymentIntents.create({
+  amount: 1000,
+  currency: 'usd',
+  idempotency_key: `order-${orderId}-payment`  # Critical!
+});
+
+### Email example:
+await step.run("send-confirmation", async () => {
+  const alreadySent = await checkEmailSent(orderId);
+  if (alreadySent) return { skipped: true };
+  return sendEmail(customer, orderId);
+});
+
+### Database example:
+await db.query(`
+  INSERT INTO orders (id, ...) VALUES ($1, ...)
+  ON CONFLICT (id) DO NOTHING
+`, [orderId]);
+
+# Generate idempotency key from stable inputs, not random values
+
+### Workflow Runs for Hours/Days Without Checkpoints
+
+Severity: HIGH
+
+Situation: Long-running workflows with infrequent steps
+
+Symptoms:
+Memory consumption grows. Worker timeouts. Lost progress after
+crashes. "Workflow exceeded maximum duration" errors.
+
+Why this breaks:
+Workflows hold state in memory until checkpointed. A workflow that
+runs for 24 hours with one step per hour accumulates state for 24h.
+Workers have memory limits. Functions have execution time limits.
+
+Recommended fix:
+
+# Break long workflows into checkpointed steps:
+
+### WRONG - one long step:
+await step.run("process-all", async () => {
+  for (const item of thousandItems) {
+    await processItem(item);  // Hours of work, one checkpoint
+  }
+});
+
+### CORRECT - many small steps:
+for (const item of thousandItems) {
+  await step.run(`process-${item.id}`, async () => {
+    return processItem(item);  // Checkpoint after each
+  });
+}
+
+## For very long waits, use sleep:
+await step.sleep("wait-for-trial", "14 days");
+// Doesn't consume resources while waiting
+
+## Consider child workflows for long processes:
+await step.invoke("process-batch", {
+  function: batchProcessor,
+  data: { items: batch }
+});
+
+### Activities Without Timeout Configuration
+
+Severity: HIGH
+
+Situation: Calling external services from workflow activities
+
+Symptoms:
+Workflows hang indefinitely. Worker pool exhausted. Dead workflows
+that never complete or fail. Manual intervention needed to kill stuck
+workflows.
+
+Why this breaks:
+External APIs can hang forever. Without timeout, your workflow waits
+forever. Unlike HTTP clients, workflow activities don't have default
+timeouts in most platforms.
+
+Recommended fix:
+
+# ALWAYS set timeouts on activities:
+
+### Temporal:
+const activities = proxyActivities<typeof activitiesType>({
+  startToCloseTimeout: '30 seconds',  # Required!
+  scheduleToCloseTimeout: '5 minutes',
+  heartbeatTimeout: '10 seconds',  # For long activities
+  retry: {
+    maximumAttempts: 3,
+    initialInterval: '1 second',
+  }
+});
+
+### Inngest:
+await step.run("call-api", { timeout: "30s" }, async () => {
+  return fetch(url, { signal: AbortSignal.timeout(25000) });
+});
+
+## AWS Step Functions:
+{
+  "Type": "Task",
+  "TimeoutSeconds": 30,
+  "HeartbeatSeconds": 10,
+  "Resource": "arn:aws:lambda:..."
+}
+
+# Rule: Activity timeout < Workflow timeout
+
+### Side Effects Outside Step/Activity Boundaries
+
+Severity: CRITICAL
+
+Situation: Writing code that runs during workflow replay
+
+Symptoms:
+Random failures on replay. "Workflow corrupted" errors. Different
+behavior on replay than initial run. Non-determinism errors.
+
+Why this breaks:
+Workflow code runs on EVERY replay. If you generate a random ID in
+workflow code, you get a different ID each replay. If you read the
+current time, you get a different time. This breaks determinism.
+
+Recommended fix:
+
+# WRONG - side effects in workflow code:
+export async function orderWorkflow(order) {
+  const orderId = uuid();  // Different every replay!
+  const now = new Date();  // Different every replay!
+  await activities.process(orderId, now);
+}
+
+# CORRECT - side effects in activities:
+export async function orderWorkflow(order) {
+  const orderId = await activities.generateOrderId();  # Recorded
+  const now = await activities.getCurrentTime();       # Recorded
+  await activities.process(orderId, now);
+}
+
+# Also CORRECT - Temporal workflow.now() and sideEffect:
+import { sideEffect } from '@temporalio/workflow';
+
+const orderId = await sideEffect(() => uuid());
+const now = workflow.now();  # Deterministic replay-safe time
+
+# Side effects that are safe in workflow code:
+# - Reading function arguments
+# - Simple calculations (no randomness)
+# - Logging (usually)
+
+### Retry Configuration Without Exponential Backoff
+
+Severity: MEDIUM
+
+Situation: Configuring retry behavior for failing steps
+
+Symptoms:
+Overwhelming failing services. Rate limiting. Cascading failures.
+Retry storms causing outages. Being blocked by external APIs.
+
+Why this breaks:
+When a service is struggling, immediate retries make it worse.
+100 workflows retrying instantly = 100 requests hitting a service
+that's already failing. Backoff gives the service time to recover.
+
+Recommended fix:
+
+# ALWAYS use exponential backoff:
+
+### Temporal:
+const activities = proxyActivities({
+  retry: {
+    initialInterval: '1 second',
+    backoffCoefficient: 2,       # 1s, 2s, 4s, 8s, 16s...
+    maximumInterval: '1 minute',  # Cap the backoff
+    maximumAttempts: 5,
+  }
+});
+
+### Inngest (built-in backoff):
+{
+  id: "my-function",
+  retries: 5,  # Uses exponential backoff by default
+}
+
+### Manual backoff:
+const backoff = (attempt) => {
+  const base = 1000;
+  const max = 60000;
+  const delay = Math.min(base * Math.pow(2, attempt), max);
+  const jitter = delay * 0.1 * Math.random();
+  return delay + jitter;
+};
+
+# Add jitter to prevent thundering herd
+
+### Storing Large Data in Workflow State
+
+Severity: HIGH
+
+Situation: Passing large payloads between workflow steps
+
+Symptoms:
+Slow workflow execution. Memory errors. "Payload too large" errors.
+Expensive storage costs. Slow replays.
+
+Why this breaks:
+Workflow state is persisted and replayed. A 10MB payload is stored,
+serialized, and deserialized on every step. This adds latency and
+cost. Some platforms have hard limits (e.g., Step Functions 256KB).
+
+Recommended fix:
+
+# WRONG - large data in workflow:
+await step.run("fetch-data", async () => {
+  const largeDataset = await fetchAllRecords();  // 100MB!
+  return largeDataset;  // Stored in workflow state
+});
+
+# CORRECT - store reference, not data:
+await step.run("fetch-data", async () => {
+  const largeDataset = await fetchAllRecords();
+  const s3Key = await uploadToS3(largeDataset);
+  return { s3Key };  // Just the reference
+});
+
+const processed = await step.run("process-data", async () => {
+  const data = await downloadFromS3(fetchResult.s3Key);
+  return processData(data);
+});
+
+# For Step Functions, use S3 for large payloads:
+{
+  "Type": "Task",
+  "Resource": "arn:aws:states:::s3:putObject",
+  "Parameters": {
+    "Bucket": "my-bucket",
+    "Key.$": "$.outputKey",
+    "Body.$": "$.largeData"
+  }
+}
+
+### Missing Dead Letter Queue or Failure Handler
+
+Severity: HIGH
+
+Situation: Workflows that exhaust all retries
+
+Symptoms:
+Failed workflows silently disappear. No alerts when things break.
+Customer issues discovered days later. Manual recovery impossible.
+
+Why this breaks:
+Even with retries, some workflows will fail permanently. Without
+dead letter handling, you don't know they failed. The customer
+waits forever, you're unaware, and there's no data to debug.
+
+Recommended fix:
+
+# Inngest onFailure handler:
+export const myFunction = inngest.createFunction(
+  {
+    id: "process-order",
+    onFailure: async ({ error, event, step }) => {
+      // Log to error tracking
+      await step.run("log-error", () =>
+        sentry.captureException(error, { extra: { event } })
+      );
+
+      // Alert team
+      await step.run("alert", () =>
+        slack.postMessage({
+          channel: "#alerts",
+          text: `Order ${event.data.orderId} failed: ${error.message}`
+        })
+      );
+
+      // Queue for manual review
+      await step.run("queue-review", () =>
+        db.insert(failedOrders, { orderId, error, event })
+      );
+    }
+  },
+  { event: "order/created" },
+  async ({ event, step }) => { ... }
+);
+
+# n8n Error Trigger:
+[Error Trigger]  →  [Log to DB]  →  [Slack Alert]  →  [Create Ticket]
+
+# Temporal: Use workflow.failed or workflow signals
+
+### n8n Workflow Without Error Trigger
+
+Severity: MEDIUM
+
+Situation: Building production n8n workflows
+
+Symptoms:
+Workflow fails silently. Errors only visible in execution logs.
+No alerts, no recovery, no visibility until someone notices.
+
+Why this breaks:
+n8n doesn't notify on failure by default. Without an Error Trigger
+node connected to alerting, failures are only visible in the UI.
+Production failures go unnoticed.
+
+Recommended fix:
+
+# Every production n8n workflow needs:
+
+1. Error Trigger node
+   - Catches any node failure in the workflow
+   - Provides error details and context
+
+2. Connected error handling:
+   [Error Trigger]
+       ↓
+   [Set: Extract Error Details]
+       ↓
+   [HTTP: Log to Error Service]
+       ↓
+   [Slack/Email: Alert Team]
+
+3. Consider dead letter pattern:
+   [Error Trigger]
+       ↓
+   [Redis/Postgres: Store Failed Job]
+       ↓
+   [Separate Recovery Workflow]
+
+# Also use:
+- Retry on node failures (built-in)
+- Node timeout settings
+- Workflow timeout
+
+### Long-Running Temporal Activities Without Heartbeat
+
+Severity: MEDIUM
+
+Situation: Activities that run for more than a few seconds
+
+Symptoms:
+Activity timeouts even when work is progressing. Lost work when
+workers restart. Can't cancel long-running activities.
+
+Why this breaks:
+Temporal detects stuck activities via heartbeat. Without heartbeat,
+Temporal can't tell if activity is working or stuck. Long activities
+appear hung, may timeout, and can't be gracefully cancelled.
+
+Recommended fix:
+
+# For any activity > 10 seconds, add heartbeat:
+
+import { heartbeat, activityInfo } from '@temporalio/activity';
+
+export async function processLargeFile(fileUrl: string): Promise<void> {
+  const chunks = await downloadChunks(fileUrl);
+
+  for (let i = 0; i < chunks.length; i++) {
+    // Check for cancellation
+    const { cancelled } = activityInfo();
+    if (cancelled) {
+      throw new CancelledFailure('Activity cancelled');
     }
 
-    command -v docker >/dev/null 2>&1 || {
-        log_error "docker is required but not installed."
-        exit 1
-    }
+    await processChunk(chunks[i]);
+
+    // Report progress
+    heartbeat({ progress: (i + 1) / chunks.length });
+  }
 }
 
-build_image() {
-    local tag=$1
-    log_info "Building Docker image with tag: $tag"
+# Configure heartbeat timeout:
+const activities = proxyActivities({
+  startToCloseTimeout: '10 minutes',
+  heartbeatTimeout: '30 seconds',  # Must heartbeat every 30s
+});
 
-    docker build \
-        -f deployment/docker/Dockerfile \
-        -t "$DOCKER_REGISTRY/$IMAGE_NAME:$tag" \
-        --build-arg NODE_VERSION=20 \
-        --build-arg BUILD_DATE="$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
-        --build-arg VCS_REF="$(git rev-parse --short HEAD)" \
-        .
-}
+# If no heartbeat for 30s, activity is considered stuck
 
-push_image() {
-    local tag=$1
-    log_info "Pushing Docker image with tag: $tag"
+## Validation Checks
 
-    docker push "$DOCKER_REGISTRY/$IMAGE_NAME:$tag"
-}
+### External Calls Without Idempotency Key
 
-deploy_helm() {
-    local environment=$1
-    local tag=$2
+Severity: ERROR
 
-    log_info "Deploying to $environment with tag: $tag"
+Stripe/payment calls should use idempotency keys
 
-    helm upgrade --install "$RELEASE_NAME" \
-        ./deployment/helm/app \
-        --namespace "$NAMESPACE" \
-        --create-namespace \
-        --values "./deployment/helm/app/values-$environment.yaml" \
-        --set "image.tag=$tag" \
-        --wait \
-        --timeout 10m
-}
+Message: Payment call without idempotency_key. Add idempotency key to prevent duplicate charges on retry.
 
-run_smoke_tests() {
-    local url=$1
-    log_info "Running smoke tests against $url"
+### Email Sending Without Deduplication
 
-    for i in {1..10}; do
-        if curl -f -s "$url/health" > /dev/null; then
-            log_info "Smoke tests passed"
-            return 0
-        fi
-        log_warn "Attempt $i failed, retrying..."
-        sleep 5
-    done
+Severity: WARNING
 
-    log_error "Smoke tests failed"
-    return 1
-}
+Email sends in workflows should check for already-sent
 
-# Main deployment function
-deploy() {
-    local environment=$1
-    local version=${2:-$(git rev-parse --short HEAD)}
+Message: Email sent in workflow without deduplication check. Retries may send duplicate emails.
 
-    check_prerequisites
+### Temporal Activities Without Timeout
 
-    log_info "Starting deployment to $environment"
-    log_info "Version: $version"
+Severity: ERROR
 
-    # Build and push image
-    build_image "$version"
-    push_image "$version"
+All Temporal activities need timeout configuration
 
-    # Deploy with Helm
-    deploy_helm "$environment" "$version"
+Message: proxyActivities without timeout. Add startToCloseTimeout to prevent indefinite hangs.
 
-    # Run smoke tests
-    case $environment in
-        production)
-            run_smoke_tests "https://app.example.com"
-            ;;
-        staging)
-            run_smoke_tests "https://staging.example.com"
-            ;;
-        *)
-            log_warn "Skipping smoke tests for $environment"
-            ;;
-    esac
+### Inngest Steps Calling External APIs Without Timeout
 
-    log_info "Deployment completed successfully"
-}
+Severity: WARNING
 
-# Parse command line arguments
-case ${1:-} in
-    production|staging|development)
-        deploy "$@"
-        ;;
-    *)
-        echo "Usage: $0 {production|staging|development} [version]"
-        exit 1
-        ;;
-esac
-```
+External API calls should have timeouts
 
-**Create Database Migration Workflow:**
+Message: External API call in step without timeout. Add timeout to prevent workflow hangs.
 
-Automate database schema changes:
+### Random Values in Workflow Code
 
-```bash
-#!/bin/bash
-# scripts/automation/migrate.sh
+Severity: ERROR
 
-set -euo pipefail
+Random values break determinism on replay
 
-# Database migration automation
-run_migrations() {
-    local environment=$1
-    local direction=${2:-up}
+Message: Random value in workflow code. Move to activity/step or use sideEffect.
 
-    log_info "Running $direction migrations for $environment"
+### Date.now() in Workflow Code
 
-    # Load environment-specific configuration
-    case $environment in
-        production)
-            DB_URL="$PRODUCTION_DB_URL"
-            ;;
-        staging)
-            DB_URL="$STAGING_DB_URL"
-            ;;
-        development)
-            DB_URL="$DEVELOPMENT_DB_URL"
-            ;;
-    esac
+Severity: ERROR
 
-    # Create backup before migration
-    if [ "$environment" = "production" ]; then
-        log_info "Creating database backup..."
-        backup_database "$environment"
-    fi
+Current time breaks determinism on replay
 
-    # Run migrations
-    if [ "$direction" = "up" ]; then
-        npm run migrate:up
-    else
-        npm run migrate:down
-    fi
+Message: Current time in workflow code. Use workflow.now() or move to activity/step.
 
-    log_info "Migrations completed"
-}
+### Inngest Function Without onFailure Handler
 
-backup_database() {
-    local environment=$1
-    local timestamp=$(date +%Y%m%d_%H%M%S)
-    local backup_file="backup_${environment}_${timestamp}.sql"
+Severity: WARNING
 
-    pg_dump "$DB_URL" > "$backup_file"
+Production functions should have failure handlers
 
-    # Upload to cloud storage
-    aws s3 cp "$backup_file" "s3://backups/$backup_file"
+Message: Inngest function without onFailure handler. Add failure handling for production reliability.
 
-    log_info "Backup created: $backup_file"
-}
+### Step Without Error Handling
 
-run_migrations "$@"
-```
+Severity: WARNING
 
-## Process Optimization
+Steps should handle errors gracefully
 
-**Implement Branch Protection Rules:**
+Message: Step without try/catch. Consider handling specific error cases.
 
-Configure automated branch protection:
+### Potentially Large Data Returned from Step
 
-```yaml
-# .github/branch-protection.yml
-rules:
-  - pattern: main
-    required_status_checks:
-      strict: true
-      contexts:
-        - ci/lint
-        - ci/type-check
-        - ci/unit-tests
-        - ci/integration-tests
-        - ci/e2e-tests
-        - ci/security-scan
-    required_pull_request_reviews:
-      required_approving_review_count: 2
-      dismiss_stale_reviews: true
-      require_code_owner_reviews: true
-    restrictions:
-      users: []
-      teams:
-        - core-team
-        - platform-team
-    enforce_admins: true
-    required_signatures: true
-    allow_force_pushes: false
-    allow_deletions: false
+Severity: INFO
 
-  - pattern: develop
-    required_status_checks:
-      strict: true
-      contexts:
-        - ci/lint
-        - ci/type-check
-        - ci/unit-tests
-    required_pull_request_reviews:
-      required_approving_review_count: 1
-      dismiss_stale_reviews: true
-    enforce_admins: false
-    allow_force_pushes: false
-```
+Large data in workflow state slows execution
 
-**Create Automated Dependency Updates:**
+Message: Returning potentially large data from step. Consider storing in S3/DB and returning reference.
 
-Implement automated dependency management:
+### Retry Without Backoff Configuration
 
-```yaml
-# .github/workflows/dependency-update.yml
-name: Dependency Updates
+Severity: WARNING
 
-on:
-  schedule:
-    - cron: '0 0 * * 1' # Weekly on Monday
-  workflow_dispatch:
+Retries should use exponential backoff
 
-jobs:
-  update-dependencies:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+Message: Retry configured without backoff. Add backoffCoefficient and initialInterval.
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+## Collaboration
 
-      - name: Update dependencies
-        run: |
-          npm update
-          npm outdated || true
+### Delegation Triggers
 
-      - name: Run tests
-        run: |
-          npm ci
-          npm run test
+- user needs multi-agent coordination -> multi-agent-orchestration (Workflow provides infrastructure, orchestration provides patterns)
+- user needs tool building for workflows -> agent-tool-builder (Tools that workflows can invoke)
+- user needs Zapier/Make integration -> zapier-make-patterns (No-code automation platforms)
+- user needs browser automation in workflow -> browser-automation (Playwright/Puppeteer activities)
+- user needs computer control in workflow -> computer-use-agents (Desktop automation activities)
+- user needs LLM integration in workflow -> llm-architect (AI-powered workflow steps)
 
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: 'chore: update dependencies'
-          title: 'chore: automated dependency updates'
-          body: |
-            This PR contains automated dependency updates.
+## Related Skills
 
-            Please review the changes and ensure all tests pass.
-          branch: chore/dependency-updates
-          labels: dependencies, automated
-```
+Works well with: `multi-agent-orchestration`, `agent-tool-builder`, `backend`, `devops`
 
-## Related Resources
+## When to Use
+- User mentions or implies: workflow
+- User mentions or implies: automation
+- User mentions or implies: n8n
+- User mentions or implies: temporal
+- User mentions or implies: inngest
+- User mentions or implies: step function
+- User mentions or implies: background job
+- User mentions or implies: durable execution
+- User mentions or implies: event-driven
+- User mentions or implies: scheduled task
+- User mentions or implies: job queue
+- User mentions or implies: cron
+- User mentions or implies: trigger
 
-- **DevOps Practices Skill** - For deployment and infrastructure automation
-- **Code Quality Skill** - For quality gate implementation in pipelines
-- **Integration Patterns Skill** - For API and service integration in workflows
-- **GitHub Actions Documentation** - https://docs.github.com/actions
-- **Harness Documentation** - https://developer.harness.io
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

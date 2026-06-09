@@ -1,0 +1,36 @@
+/* <BRAND> — design tokens
+   Fill from the confirmed kernel. Keep flat; accents are scalpels; color never alone. */
+
+/* @import url('<font CDN url for the three voices>'); */
+
+:root {
+  /* surfaces */
+  --bg:        #;   /* page background */
+  --surface:   #;   /* cards / raised */
+  --line:      #;   /* hairline rules */
+  --paper:     #;   /* light / text-on-dark */
+
+  /* signal system — each meaning ALSO needs a label/icon/strike, never hue alone */
+  --accent:     #;  /* the one loud color — used rarely */
+  --accent-ink: #;  /* dark member of the accent family for text-on-light */
+  --warn:       #;  /* caution / uncertain */
+  --error:      #;  /* wrong / struck */
+
+  /* support */
+  --muted: #;       /* captions, neutral states */
+  --body:  #;       /* body text */
+
+  /* type — voices, each with a job */
+  --font-display: ;  /* attitude */
+  --font-mono:    ;  /* evidence/receipts */
+  --font-body:    ;  /* body */
+
+  /* shape */
+  --radius: ;        /* sharp vs. soft is a brand decision */
+  --rule: 1px solid var(--line);
+}
+
+/* role notes:
+   - <accent> means <X>, never "truth/good" by default — pair with label + arrow/icon.
+   - numbers in --font-mono when credibility matters.
+   - if a screen has more than ~2 accent moments, cut one. */

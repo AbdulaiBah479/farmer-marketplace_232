@@ -1,209 +1,144 @@
 ---
 name: youtube-full
-description: Complete YouTube toolkit — transcripts, search, channels, playlists, and metadata all in one skill. Use when you need comprehensive YouTube access, want to search and then get transcripts, browse channel content, work with playlists, or need the full suite of YouTube data endpoints. The all-in-one YouTube skill for agents.
-homepage: https://transcriptapi.com
-user-invocable: true
-metadata: {"openclaw":{"emoji":"🎯","requires":{"env":["TRANSCRIPT_API_KEY"],"bins":["node"],"config":["~/.openclaw/openclaw.json"]},"primaryEnv":"TRANSCRIPT_API_KEY"}}
+description: "Fetch YouTube transcripts, search videos, browse channels, and extract playlists via TranscriptAPI — no yt-dlp, no Google API key, works from any cloud server."
+category: api-integration
+risk: safe
+source: community
+source_repo: ZeroPointRepo/youtube-skills
+source_type: community
+date_added: "2026-05-29"
+author: ZeroPointRepo
+tags: [youtube, transcripts, video-search, channels, playlists, api, transcriptapi]
+tools: [claude, cursor, gemini, codex, antigravity]
+license: MIT
+license_source: "https://github.com/ZeroPointRepo/youtube-skills/blob/main/LICENSE"
+upstream: "https://github.com/ZeroPointRepo/youtube-skills"
+plugin:
+  setup:
+    type: automatic
+    summary: "TranscriptAPI OAuth provisions the API key on first skill invocation. No manual credential setup. 100 free credits included."
+    docs: "https://transcriptapi.com/docs"
 ---
 
-# YouTube Full
+# youtube-full — YouTube transcript, search, channels & playlists via TranscriptAPI
 
-Complete YouTube toolkit via [TranscriptAPI.com](https://transcriptapi.com). Everything in one skill.
+YouTube transcripts, video search, channel browsing, in-channel search, playlist extraction, and new-upload monitoring — all via [TranscriptAPI](https://transcriptapi.com). Processes 500K+ transcripts daily, fast. No yt-dlp, no headless browsers, no Google API key.
 
-## Setup
+This is the API-backed alternative to `ingest-youtube`. Where `ingest-youtube` uses yt-dlp (which stops working on cloud server IPs), `youtube-full` calls TranscriptAPI's API and works from any runtime — local machine, cloud server, serverless function, or CI environment. 686 installs via the `skills` CLI (skills.sh/zeropointrepo/youtube-skills).
 
-If `$TRANSCRIPT_API_KEY` is not set, help the user create an account (100 free credits, no card):
+## When to Use This Skill
 
-**Step 1 — Register:** Ask user for their email.
+- User asks to get, fetch, or retrieve a YouTube video transcript
+- User asks to search YouTube for videos on a topic
+- User wants to monitor a channel for new uploads
+- User needs channel metadata, video lists, or playlist contents
+- Agent is deployed on a cloud server where yt-dlp calls fail (YouTube blocks cloud IPs)
+- Building a research corpus from YouTube conference talks, tutorials, or interviews
+- Competitive intelligence: monitoring competitor channels for new content
 
-```bash
-node ./scripts/tapi-auth.js register --email USER_EMAIL
-```
+Do NOT use for:
+- Downloading actual video or audio files (use yt-dlp directly with `-f best`)
+- YouTube comments, likes, or engagement data (not in API)
+- Private or age-restricted videos (not accessible without user authentication)
+- Live stream transcripts (not stable until stream ends)
 
-→ OTP sent to email. Ask user: _"Check your email for a 6-digit verification code."_
+## How It Works
 
-**Step 2 — Verify:** Once user provides the OTP:
-
-```bash
-node ./scripts/tapi-auth.js verify --token TOKEN_FROM_STEP_1 --otp CODE
-```
-
-> API key saved to `~/.openclaw/openclaw.json`. See **File Writes** below for details. Existing file is backed up before modification.
-
-Manual option: [transcriptapi.com/signup](https://transcriptapi.com/signup) → Dashboard → API Keys.
-
-## File Writes
-
-The verify and save-key commands save the API key to `~/.openclaw/openclaw.json` (sets `skills.entries.transcriptapi.apiKey` and `enabled: true`). **Existing file is backed up to `~/.openclaw/openclaw.json.bak` before modification.**
-
-To use the API key in terminal/CLI outside the agent, add to your shell profile manually:
-`export TRANSCRIPT_API_KEY=<your-key>`
-
-## API Reference
-
-Full OpenAPI spec: [transcriptapi.com/openapi.json](https://transcriptapi.com/openapi.json) — consult this for the latest parameters and schemas.
-
-## Transcript — 1 credit
+### Step 1: Install the skill
 
 ```bash
-curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
-?video_url=VIDEO_URL&format=text&include_timestamp=true&send_metadata=true" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+npx skills add ZeroPointRepo/youtube-skills --skill youtube-full
 ```
 
-| Param               | Required | Default | Values                          |
-| ------------------- | -------- | ------- | ------------------------------- |
-| `video_url`         | yes      | —       | YouTube URL or 11-char video ID |
-| `format`            | no       | `json`  | `json`, `text`                  |
-| `include_timestamp` | no       | `true`  | `true`, `false`                 |
-| `send_metadata`     | no       | `false` | `true`, `false`                 |
+100 free credits included. API key is provisioned automatically via TranscriptAPI OAuth on first invocation — no manual setup.
 
-**Response** (`format=json`):
+### Step 2: Use it by asking Claude
 
-```json
-{
-  "video_id": "dQw4w9WgXcQ",
-  "language": "en",
-  "transcript": [{ "text": "...", "start": 18.0, "duration": 3.5 }],
-  "metadata": { "title": "...", "author_name": "...", "author_url": "..." }
-}
+```text
+Get the transcript of https://www.youtube.com/watch?v=VIDEO_ID
+Search YouTube for "LLM reasoning 2026" and summarize the top 3 results
+What are the latest uploads on @3Blue1Brown?
+List all videos in this playlist: https://www.youtube.com/playlist?list=PLAYLIST_ID
 ```
 
-## Search — 1 credit
+### Step 3: Available operations
 
-```bash
-# Videos
-curl -s "https://transcriptapi.com/api/v2/youtube/search?q=QUERY&type=video&limit=20" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+| Operation | Skill invocation | Credits |
+|---|---|---|
+| Get transcript | `get_transcript(video_id)` | 1 |
+| Search YouTube | `search_youtube(query)` | 1 per page |
+| Channel video list | `get_channel_videos(handle)` | 1 per page |
+| In-channel search | `search_in_channel(handle, query)` | 1 per page |
+| Playlist extraction | `get_playlist_videos(playlist_id)` | 1 per page |
+| Track new uploads | `channel_latest(handle)` | **Free** |
+| Resolve channel handle | `channel_resolve(handle)` | **Free** |
 
-# Channels
-curl -s "https://transcriptapi.com/api/v2/youtube/search?q=QUERY&type=channel&limit=10" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+Failed or rate-limited calls cost zero credits.
+
+## Examples
+
+### Example 1: Research corpus from conference talks
+
+```text
+Search YouTube for "NeurIPS 2025 keynote" and get transcripts for the top 5 results. 
+Summarize the main themes across all talks.
 ```
 
-| Param   | Required | Default | Validation         |
-| ------- | -------- | ------- | ------------------ |
-| `q`     | yes      | —       | 1-200 chars        |
-| `type`  | no       | `video` | `video`, `channel` |
-| `limit` | no       | `20`    | 1-50               |
+The agent calls `search_youtube`, selects the top 5 results, calls `get_transcript` for each, and synthesizes.
 
-## Channels
+### Example 2: Competitive channel monitoring
 
-All channel endpoints accept `channel` — an `@handle`, channel URL, or `UC...` channel ID. No need to resolve first.
-
-### Resolve handle — FREE
-
-```bash
-curl -s "https://transcriptapi.com/api/v2/youtube/channel/resolve?input=@TED" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+```text
+Check @AnthropicAI and @OpenAI channels for any new videos in the last week. 
+For each new video, get the transcript and extract any product announcements.
 ```
 
-Response: `{"channel_id": "UC...", "resolved_from": "@TED"}`
+The agent calls `channel_latest` (free) for each channel, fetches transcripts of new uploads, and extracts signal.
 
-### Latest 15 videos — FREE
+### Example 3: Direct transcript with timestamps
 
-```bash
-curl -s "https://transcriptapi.com/api/v2/youtube/channel/latest?channel=@TED" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+```text
+Get the full transcript with timestamps for https://www.youtube.com/watch?v=dQw4w9WgXcQ
 ```
 
-Returns exact `viewCount` and ISO `published` timestamps.
+The agent calls `get_transcript(video_id, timestamps=true)` and returns the full text.
 
-### All channel videos — 1 credit/page
+## Best Practices
 
-```bash
-# First page (100 videos)
-curl -s "https://transcriptapi.com/api/v2/youtube/channel/videos?channel=@NASA" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+- Use `channel_latest` (free) before `get_transcript` to check if a video is new
+- Cache transcripts in your workflow — each `get_transcript` call costs 1 credit
+- Use `search_in_channel` when you already know the channel to avoid broad search noise
+- Prefer `get_playlist_videos` for course or lecture series — cheaper than searching by query
+- Don't batch-transcribe entire channels unless the user explicitly requested it
+- Don't use `search_youtube` when you already have the video URL — jump straight to `get_transcript`
 
-# Next pages
-curl -s "https://transcriptapi.com/api/v2/youtube/channel/videos?continuation=TOKEN" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
-```
+## Limitations
 
-Provide exactly one of `channel` or `continuation`. Response includes `continuation_token` and `has_more`.
+- This skill does not replace environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, or safety boundaries are missing.
+- Transcripts are available only when YouTube has captions (manual or auto-generated). Some videos have no captions.
+- API key is required for paid usage beyond the free 100-credit tier. Get one at transcriptapi.com.
+- Rate limits apply: 200 RPM on Monthly plan, 300 RPM on Annual. Contact support for higher limits.
 
-### Search within channel — 1 credit
+## Security & Safety Notes
 
-```bash
-curl -s "https://transcriptapi.com/api/v2/youtube/channel/search\
-?channel=@TED&q=QUERY&limit=30" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
-```
+- This skill makes HTTPS API calls to `transcriptapi.com`. No local data is written.
+- The API key is stored in the agent's credential store, not in this SKILL.md.
+- No shell commands, no binary execution, no local system mutation. Risk level: `safe`.
 
-## Playlists — 1 credit/page
+## Common Pitfalls
 
-Accepts `playlist` — a YouTube playlist URL or playlist ID.
+- **Problem:** `yt-dlp` fails when the agent runs on a cloud server.  
+  **Solution:** This is exactly the use case for `youtube-full`. The API routes through TranscriptAPI's infrastructure and works from any cloud runtime.
 
-```bash
-# First page
-curl -s "https://transcriptapi.com/api/v2/youtube/playlist/videos?playlist=PL_ID" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
+- **Problem:** Credit balance runs out mid-workflow.  
+  **Solution:** Use `channel_latest` (free) to check before fetching; use targeted search to fetch only the videos you need.
 
-# Next pages
-curl -s "https://transcriptapi.com/api/v2/youtube/playlist/videos?continuation=TOKEN" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
-```
+- **Problem:** Transcript is not available for a video.  
+  **Solution:** The API returns a structured error (zero credits charged). Ask the user to provide an alternative source.
 
-Valid ID prefixes: `PL`, `UU`, `LL`, `FL`, `OL`. Response includes `playlist_info`, `results`, `continuation_token`, `has_more`.
+## Related Skills
 
-## Credit Costs
-
-| Endpoint        | Cost     |
-| --------------- | -------- |
-| transcript      | 1        |
-| search          | 1        |
-| channel/resolve | **free** |
-| channel/latest  | **free** |
-| channel/videos  | 1/page   |
-| channel/search  | 1        |
-| playlist/videos | 1/page   |
-
-## Validation Rules
-
-| Field      | Rule                                                    |
-| ---------- | ------------------------------------------------------- |
-| `channel`  | `@handle`, channel URL, or `UC...` ID                   |
-| `playlist` | Playlist URL or ID (`PL`/`UU`/`LL`/`FL`/`OL` prefix)   |
-| `q`        | 1-200 chars                                             |
-| `limit`    | 1-50                                                    |
-
-## Errors
-
-| Code | Meaning          | Action                                |
-| ---- | ---------------- | ------------------------------------- |
-| 401  | Bad API key      | Check key                             |
-| 402  | No credits       | transcriptapi.com/billing             |
-| 404  | Not found        | Resource doesn't exist or no captions |
-| 408  | Timeout          | Retry once after 2s                   |
-| 422  | Validation error | Check param format                    |
-| 429  | Rate limited     | Wait, respect Retry-After             |
-
-## Typical Workflows
-
-**Research workflow:** search → pick videos → fetch transcripts
-
-```bash
-# 1. Search
-curl -s "https://transcriptapi.com/api/v2/youtube/search\
-?q=machine+learning+explained&limit=5" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
-# 2. Transcript
-curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
-?video_url=VIDEO_ID&format=text&include_timestamp=true&send_metadata=true" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
-```
-
-**Channel monitoring:** latest (free) → transcript
-
-```bash
-# 1. Latest uploads (free — pass @handle directly)
-curl -s "https://transcriptapi.com/api/v2/youtube/channel/latest?channel=@TED" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
-# 2. Transcript of latest
-curl -s "https://transcriptapi.com/api/v2/youtube/transcript\
-?video_url=VIDEO_ID&format=text&include_timestamp=true&send_metadata=true" \
-  -H "Authorization: Bearer $TRANSCRIPT_API_KEY"
-```
-
-Free tier: 100 credits, 300 req/min. Starter ($5/mo): 1,000 credits.
+- `@ingest-youtube` — yt-dlp-based local ingestion to a markdown vault; works locally but not on cloud servers
+- `@deep-research` — General-purpose research skill that can incorporate youtube-full as a data source
+- `@ai-research-corpus` — Building searchable knowledge bases; pairs well with youtube-full for video content

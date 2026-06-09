@@ -1,12 +1,15 @@
 ---
 name: monte-carlo-monitor-creation
-description: |
-  Guides AI agents through creating Monte Carlo monitors via MCP tools.
-  Activates when a user asks to create, add, or set up a monitor for a table,
-  field, metric, or data quality rule. Produces monitors-as-code (MaC) YAML
-  that can be applied via the Monte Carlo CLI or CI/CD. All creation tools run
-  in dry-run mode and return YAML -- they do not directly create monitors.
-version: 1.0.0
+description: "Guides creation of Monte Carlo monitors via MCP tools, producing monitors-as-code YAML for CI/CD deployment."
+category: data
+risk: safe
+source: community
+source_repo: monte-carlo-data/mc-agent-toolkit
+source_type: community
+date_added: "2026-04-08"
+author: monte-carlo-data
+tags: [data-observability, monitoring, monte-carlo, monitors-as-code]
+tools: [claude, cursor, codex]
 ---
 
 # Monte Carlo Monitor Creation Skill
@@ -217,3 +220,8 @@ Tell the user:
 - ALWAYS use ISO 8601 format for datetime values.
 - NEVER reformat YAML values returned by creation tools.
 - Do not call creation tools before the validation phase is complete.
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

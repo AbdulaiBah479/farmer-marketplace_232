@@ -1,130 +1,68 @@
 ---
 name: outcome-roadmap
-description: "Transform an output-focused roadmap (feature list) into an outcome-focused one. Rewrites initiatives as outcome statements reflecting user and business impact. Use when a roadmap lists features instead of results, when making a roadmap more strategic, or when communicating what success looks like vs what will be built."
-when_to_use: |
-  Apply when:
-  - CTO provides a feature list and asks "what should we do next quarter"
-  - pm agent receives a roadmap full of features, not outcomes
-  - stakeholders need to understand why we're building things, not just what
-  - a roadmap review reveals it lists outputs (features) but not outcomes (results)
-  Guards — do NOT apply when:
-  - The input already states outcomes with metrics
-  - This is a single-feature PRD (use /prd instead)
-effort: low
-allowed-tools: Read, Write
-paths:
-  - "docs/plans/**"
-  - "docs/requirements/**"
+description: "Transform an output-focused roadmap into an outcome-focused one that communicates strategic intent. Rewrites initiatives as outcome statements reflecting user and business impacts. Use when shifting to outcome roadmaps, making a roadmap more strategic, or rewriting feature lists as outcomes."
 ---
 
-# Outcome Roadmap — from features to results
+# Transform Roadmap to Outcome-Focused Format
 
-Converts a feature-focused roadmap into an outcome-focused one.
+## Purpose
 
-**Core principle:** Teams build features, but customers and businesses care about outcomes. An outcome roadmap communicates WHAT CHANGES, not what gets built.
+You are an experienced product manager helping $ARGUMENTS shift from output-focused roadmaps (which emphasize features) to outcome-focused roadmaps (which emphasize customer and business impact). This skill rewrites initiatives as outcome statements that inspire and measure what matters.
 
----
+## Context
 
-## The transformation formula
+Output-focused roadmaps create false precision and misalign teams around features rather than results. Outcome-focused roadmaps clarify the customer problems being solved and the business value expected, enabling flexible execution and strategic thinking.
 
-For every initiative on the roadmap, apply:
+## Instructions
 
-```
-Enable [customer segment] to [desired customer outcome] so that [business impact]
-```
+1. **Gather Information**: If the user provides a current roadmap, read it carefully. If they mention strategy documents or company objectives, use web search to understand how the roadmap should align with broader goals.
 
-Examples:
+2. **Think Step by Step**:
+   - For each initiative, ask: "What outcome are we trying to achieve?"
+   - What customer problem are we solving?
+   - What business metric will improve?
+   - How will this impact the customer experience or business?
+   - Is there a better, different way to achieve the same outcome?
 
-| Output (old) | Outcome (new) |
-|---|---|
-| Q2: Build advanced search filters | Q2: Enable customers to find products 50% faster through intuitive discovery |
-| Q2: AI recommendations | Q2: Increase average order value 20% through personalised recommendations |
-| Q3: Dashboard redesign | Q3: Help operators monitor all systems with 80% less time spent on dashboards |
-| Q3: SSO integration | Q3: Remove auth friction for enterprise admins so we can close 3+ enterprise deals |
-| Q4: Mobile app | Q4: Enable users to complete core workflows on mobile so 7-day retention increases from 20% to 35% |
+3. **Transformation Process**: For each initiative on the roadmap:
+   - **Identify the Output**: What feature or project is planned?
+   - **Uncover the Outcome**: Why are we building it? What changes for customers or business?
+   - **Rewrite as Outcome Statement**: Use this format:
+     ```
+     Enable [customer segment] to [desired customer outcome] so that [business impact]
+     ```
 
----
+4. **Example Transformation**:
+   - **Output (Old)**: Q2: Build advanced search filters, implement AI recommendations, redesign dashboard
+   - **Outcome (New)**:
+     - Q2: Enable customers to find products 50% faster through intuitive discovery
+     - Q2: Increase average order value by 20% through personalized AI recommendations
+     - Q2: Help operators monitor all systems with 80% reduction in dashboard load time
 
-## How to apply
+5. **Structure Output**: Present the transformed roadmap with:
+   - Original initiatives listed by quarter/phase
+   - Outcome statements for each initiative
+   - Key metrics that will indicate success
+   - Dependencies or sequencing notes
 
-### Step 1 — Read the existing roadmap
+6. **Include Strategic Context**: For the overall roadmap, add:
+   - How outcomes align with company strategy
+   - Key assumptions about customer needs
+   - Flexible release windows (quarters, not specific dates)
 
-If the user provides a roadmap file, read it. If they describe it verbally, extract the initiative list.
+7. **Save the Output**: If substantial, save as a markdown document: `Outcome-Roadmap-[year].md`
 
-For each initiative, ask internally:
-- What feature / project is planned?
-- **Why** are we building it? What changes for customers or the business?
-- What metric will improve, and by how much?
-- Is there a better, different way to achieve the same outcome?
+## Notes
 
-### Step 2 — Rewrite each initiative as an outcome
-
-For each item in the roadmap:
-
-1. **Identify the output**: What feature or project is planned?
-2. **Uncover the outcome**: Why are we building it? Keep asking "So what?" until you reach real customer or business value.
-3. **Rewrite**: Use the formula above. Include a metric if possible.
-
-**"So what?" chain example:**
-- "We're adding search filters" → So what?
-- "Users can narrow results" → So what?
-- "Users find what they're looking for faster" → So what?
-- "Users convert at higher rates because they find products before abandoning" ✅ That's the outcome.
-
-### Step 3 — Group by strategic theme (optional)
-
-If the roadmap has 5+ items, group related outcomes into themes:
-- **Retention** (outcomes that reduce churn)
-- **Acquisition** (outcomes that improve conversion)
-- **Monetisation** (outcomes that increase revenue per user)
-- **Ops efficiency** (outcomes that reduce internal cost/time)
-
-### Step 4 — Output format
-
-```markdown
-## Outcome Roadmap — <Product> <Quarter/Year>
-
-### Strategic context
-<1–2 sentences on what the team is optimising for this period>
-
-### Q<N> Outcomes
-
-| Initiative | Outcome Statement | Primary Metric | Target |
-|------------|------------------|----------------|--------|
-| <original feature name> | Enable [segment] to [outcome] so that [business impact] | <metric> | <target> |
-
-### What we're NOT doing this quarter (and why)
-- <deprioritised initiative>: <reason — not enough signal / too early / wrong priority>
-
-### Key assumptions
-- <assumption this roadmap depends on — if it's wrong, the outcomes change>
-```
-
-### Step 5 — Validate
-
-Before presenting, check:
-- Every outcome has a measurable component (%, number, ratio, frequency)
-- "So what?" has been applied to every item — no pure feature descriptions remain
-- At least one "Not doing" item is stated — otherwise scope is unbounded
-- Outcomes align with stated OKRs or strategic goals in PROJECT.md
+- An outcome should be testable and measurable
+- Multiple outputs may achieve one outcome; focus on the outcome, not the feature list
+- Outcome roadmaps are more resilient to change—embrace flexibility
+- If unsure what outcome a feature drives, ask: "So what?" until you reach real customer/business value
 
 ---
 
-## Anti-patterns
+### Further Reading
 
-❌ **"We will build X"** — that's an output, not an outcome.
-
-❌ **"Improve UX"** — unmeasurable. Rewrite as: "Reduce time to complete checkout from 4min to 90sec".
-
-❌ **Outcome without a metric** — if you can't measure it, you can't know if you achieved it.
-
-❌ **Outcomes that require building a specific solution** — "Enable users to access features via mobile app" locks the solution. Better: "Enable users to complete core workflows on any device".
-
----
-
-## Integration with pm agent
-
-When the pm agent receives a feature list without a PRD:
-1. Check if the list looks like outputs (feature names) or outcomes (result statements)
-2. If outputs → apply this skill to transform before decomposing into tasks
-3. Pass the outcome statements into the PLAN doc as the "Why" for each task group
+- [Product Vision vs Strategy vs Objectives vs Roadmap: The Advanced Edition](https://www.productcompass.pm/p/product-vision-strategy-goals-and)
+- [Objectives and Key Results (OKRs) 101](https://www.productcompass.pm/p/okrs-101-advanced-techniques)
+- [Business Outcomes vs Product Outcomes vs Customer Outcomes](https://www.productcompass.pm/p/business-outcomes-vs-product-outcomes)

@@ -1,173 +1,32 @@
 ---
-<<<<<<< HEAD
 name: pdf
-description: |
-  Extract text, create PDFs, and handle forms. Useful for press releases, branded one-pagers, and printable design deliverables.
-triggers:
-  - "pdf"
-  - "create pdf"
-  - "pdf form"
-  - "branded pdf"
-  - "one pager"
-od:
-  mode: prototype
-  category: documents
-  upstream: "https://github.com/anthropics/skills/tree/main/skills/pdf"
-=======
-name: Pdf
-description: PDF processing. USE WHEN pdf, PDF file. SkillSearch('pdf') for docs.
->>>>>>> 4b9d09d6dab9a725d3e3c3e2f77c256484dc8d8b
+description: Comprehensive PDF manipulation toolkit for extracting text and tables, creating new PDFs, merging/splitting documents, and handling forms. When Claude needs to fill in a PDF form or programmatically process, generate, or analyze PDF documents at scale.
+license: Proprietary. LICENSE.txt has complete terms
 ---
 
-# pdf
-
-<<<<<<< HEAD
-> Curated from Anthropic's official skills repository.
-
-## What it does
-=======
-## 🎯 Load Full PAI Context
-
-**Before starting any task with this skill, load complete PAI context:**
-
-`read ~/.claude/skills/CORE/SKILL.md`
-
-This provides access to:
-- Complete contact list (Angela, Bunny, Saša, Greg, team members)
-- Stack preferences (TypeScript>Python, bun>npm, uv>pip)
-- Security rules and repository safety protocols
-- Response format requirements (structured emoji format)
-- Voice IDs for agent routing (ElevenLabs)
-- Personal preferences and operating instructions
-
-## When to Activate This Skill
-
-### Direct PDF Task Triggers
-- User wants to **create** a new PDF document
-- User wants to **merge**, **combine**, or **concatenate** multiple PDFs
-- User wants to **split** or **separate** a PDF into individual pages/sections
-- User mentions "**extract text from PDF**", "**PDF text extraction**"
-- User mentions "**extract tables from PDF**", "**PDF tables**"
-- User wants to "**fill PDF form**", "**PDF form filling**"
-- User mentions "**OCR**", "**scanned PDF**", or "**scan to text**"
-- User wants to add **watermarks**, **password protection**, or **encryption**
-- User wants to **extract images** from a PDF
-- User wants to **rotate pages** or manipulate PDF structure
-
-### Contextual Triggers
-- User provides a **.pdf file path** for processing
-- User mentions form filling automation or batch PDF processing
-- User needs to process PDFs programmatically at scale
-
-## 🔀 PDF Workflow Routing
-
-This skill supports multiple PDF processing workflows:
-
-### Creation Workflow
-**Trigger:** "create PDF", "generate PDF", "make PDF", "PDF from data"
-
-**Tools:** reportlab (Python)
-**Documentation:** Lines 136-181 (SKILL.md)
-
-**Use Cases:**
-- Creating new PDFs from scratch
-- Generating reports programmatically
-- Multi-page documents with text and graphics
-- PDF generation from templates or data
-
-### Merge/Split Workflow
-**Trigger:** "merge PDFs", "combine PDFs", "split PDF", "separate pages"
-
-**Tools:** pypdf (Python), qpdf (CLI)
-**Documentation:** Lines 46-68 (SKILL.md), Lines 199-211 (qpdf)
-
-**Use Cases:**
-- Combining multiple PDFs into one document
-- Splitting PDFs into individual pages or ranges
-- Reorganizing PDF page order
-- Extracting specific page ranges
-
-### Text Extraction Workflow
-**Trigger:** "extract text", "PDF to text", "read PDF content"
-
-**Tools:** pdfplumber (Python), pdftotext (CLI)
-**Documentation:** Lines 95-103 (pdfplumber), Lines 186-196 (pdftotext)
-
-**Use Cases:**
-- Extracting text while preserving layout
-- Converting PDFs to plain text
-- Batch text extraction from multiple PDFs
-- Metadata extraction
-
-### Table Extraction Workflow
-**Trigger:** "extract tables", "PDF tables", "table data from PDF"
-
-**Tools:** pdfplumber + pandas (Python)
-**Documentation:** Lines 106-133 (SKILL.md)
-
-**Use Cases:**
-- Extracting structured table data to Excel/CSV
-- Financial data extraction from PDF reports
-- Converting PDF tables to dataframes
-- Multi-table extraction and combination
-
-### Form Filling Workflow
-**Trigger:** "fill PDF form", "PDF form filling", "complete PDF form"
-
-**Tools:** pdf-lib (JavaScript) or pypdf (Python)
-**Documentation:** forms.md (complete guide)
-
-**Use Cases:**
-- Programmatic form completion
-- Batch form processing
-- Template-based PDF generation
-- Form field population from data sources
-
-### OCR Workflow
-**Trigger:** "OCR", "scanned PDF", "extract text from scan", "image to text"
-
-**Tools:** pytesseract + pdf2image (Python)
-**Documentation:** Lines 227-244 (SKILL.md)
-
-**Use Cases:**
-- Extracting text from scanned documents
-- Processing image-based PDFs
-- Converting scanned forms to editable text
-- Legacy document digitization
-
-### Manipulation Workflow
-**Trigger:** "watermark", "password protect", "encrypt PDF", "rotate pages", "extract images"
-
-**Tools:** pypdf (Python), pdfimages (CLI)
-**Documentation:** Lines 246-288 (SKILL.md)
-
-**Use Cases:**
-- Adding watermarks to PDFs
-- Password protection and encryption
-- Page rotation and transformation
-- Image extraction from PDFs
+# PDF Processing Guide
 
 ## Overview
 
 This guide covers essential PDF processing operations using Python libraries and command-line tools. For advanced features, JavaScript libraries, and detailed examples, see reference.md. If you need to fill out a PDF form, read forms.md and follow its instructions.
->>>>>>> 4b9d09d6dab9a725d3e3c3e2f77c256484dc8d8b
 
-Extract text, create PDFs, and handle forms. Useful for press releases, branded one-pagers, and printable design deliverables.
+## Quick Start
 
-## Source
+```python
+from pypdf import PdfReader, PdfWriter
 
-- Upstream: https://github.com/anthropics/skills/tree/main/skills/pdf
-- Category: `documents`
+# Read a PDF
+reader = PdfReader("document.pdf")
+print(f"Pages: {len(reader.pages)}")
 
-## How to use
+# Extract text
+text = ""
+for page in reader.pages:
+    text += page.extract_text()
+```
 
-This catalogue entry advertises the skill in Open Design so the agent
-discovers it during planning. To run the full upstream workflow with
-its original assets, scripts, and references, install the upstream
-bundle into your active agent's skills directory:
+## Python Libraries
 
-<<<<<<< HEAD
-=======
 ### pypdf - Basic Operations
 
 #### Merge PDFs
@@ -310,16 +169,17 @@ doc.build(story)
 ## Command-Line Tools
 
 ### pdftotext (poppler-utils)
->>>>>>> 4b9d09d6dab9a725d3e3c3e2f77c256484dc8d8b
 ```bash
-# Inspect the upstream README for exact paths
-open https://github.com/anthropics/skills/tree/main/skills/pdf
+# Extract text
+pdftotext input.pdf output.txt
+
+# Extract text preserving layout
+pdftotext -layout input.pdf output.txt
+
+# Extract specific pages
+pdftotext -f 1 -l 5 input.pdf output.txt  # Pages 1-5
 ```
 
-<<<<<<< HEAD
-Then ask the agent to invoke this skill by name (`pdf`) or with
-one of the trigger phrases listed in this skill's frontmatter.
-=======
 ### qpdf
 ```bash
 # Merge PDFs
@@ -426,36 +286,9 @@ with open("encrypted.pdf", "wb") as output:
 | OCR scanned PDFs | pytesseract | Convert to image first |
 | Fill PDF forms | pdf-lib or pypdf (see forms.md) | See forms.md |
 
-## Examples
-
-**Example 1: Extract tables from PDF report**
-```
-User: "Pull the tables out of this quarterly report PDF"
-→ Opens PDF with pdfplumber
-→ Extracts tables, converts to pandas DataFrame
-→ Exports to Excel file with clean formatting
-```
-
-**Example 2: Merge multiple PDFs**
-```
-User: "Combine these three contracts into one PDF"
-→ Uses pypdf to read all input files
-→ Adds pages sequentially to new writer
-→ Saves merged document to output path
-```
-
-**Example 3: Fill out a PDF form**
-```
-User: "Fill in this tax form with my info"
-→ Reads forms.md for form-filling workflow
-→ Uses pdf-lib to populate form fields
-→ Saves completed PDF with flattened form data
-```
-
 ## Next Steps
 
 - For advanced pypdfium2 usage, see reference.md
 - For JavaScript libraries (pdf-lib), see reference.md
 - If you need to fill out a PDF form, follow the instructions in forms.md
 - For troubleshooting guides, see reference.md
->>>>>>> 4b9d09d6dab9a725d3e3c3e2f77c256484dc8d8b

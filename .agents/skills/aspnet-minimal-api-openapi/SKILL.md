@@ -1,9 +1,6 @@
 ---
 name: aspnet-minimal-api-openapi
-description: Create ASP.NET Minimal API endpoints with proper OpenAPI documentation
-author:
-  name: Community
-  url: 'https://github.com/beel-collab/presets.dev'
+description: 'Create ASP.NET Minimal API endpoints with proper OpenAPI documentation'
 ---
 
 # ASP.NET Minimal API with OpenAPI

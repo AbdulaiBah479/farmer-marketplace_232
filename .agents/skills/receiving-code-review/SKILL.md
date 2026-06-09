@@ -7,6 +7,8 @@ description: Use when receiving code review feedback, before implementing sugges
 
 ## Overview
 
+**Announce at start:** "Receiving Code Review skill activated."
+
 Code review requires technical evaluation, not emotional performance.
 
 **Core principle:** Verify before implementing. Ask before assuming. Technical correctness over social comfort.

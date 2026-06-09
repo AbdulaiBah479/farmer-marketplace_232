@@ -1,244 +1,420 @@
 ---
 name: opportunity-solution-tree
-description: Guide for creating Opportunity Solution Trees (OST) for pre-PMF startups. Use when discussing product discovery, problem validation, customer research, or when helping startups identify problems worth solving. Use for queries about OST framework, problem-solution mapping, or validating product ideas.
+description: Build an Opportunity Solution Tree from outcomes to opportunities, solutions, and tests. Use when a stakeholder request needs problem framing before you decide what to build.
+intent: >-
+  Guide product managers through creating an Opportunity Solution Tree (OST) by extracting target outcomes from stakeholder requests, generating opportunity options (problems to solve), mapping potential solutions, and selecting the best proof-of-concept (POC) based on feasibility, impact, and market fit. Use this to move from vague product requests to structured discovery, ensuring teams solve the right problems before jumping to solutions—avoiding "feature factory" syndrome and premature convergence on ideas.
+type: interactive
 ---
 
-# The Opportunity Solution Tree: A Detailed Guide for Pre-PMF Startups
 
-## What It Actually Is
+## Purpose
+Guide product managers through creating an Opportunity Solution Tree (OST) by extracting target outcomes from stakeholder requests, generating opportunity options (problems to solve), mapping potential solutions, and selecting the best proof-of-concept (POC) based on feasibility, impact, and market fit. Use this to move from vague product requests to structured discovery, ensuring teams solve the right problems before jumping to solutions—avoiding "feature factory" syndrome and premature convergence on ideas.
 
-The Opportunity Solution Tree is a framework for **exploring and mapping the problem space** before committing to solutions. For pre-PMF startups, it's less about optimizing existing metrics and more about discovering which problems are worth solving and for whom.
+This is not a roadmap generator—it's a structured discovery process that outputs validated opportunities with testable solution hypotheses.
 
-Think of it as a systematic way to avoid building something nobody wants. Instead of jumping from "I have an idea" to "let's build it," the OST forces you to map out: what you're trying to learn or achieve, what problems exist in your target market, what you might build, and how you'll test if you're right.
+## Key Concepts
 
-The tree is a **living document**—not a one-time planning exercise. As you learn from experiments and customer conversations, opportunities shift in priority, new ones emerge, and solutions evolve or get discarded. This continuous discovery process is what helps pre-PMF startups navigate from uncertainty to product-market fit.
+### What is an Opportunity Solution Tree (OST)?
 
-## The Four Levels Explained
+An OST is a visual framework (Teresa Torres, *Continuous Discovery Habits*) that connects:
+1. **Desired Outcome** (business goal or product metric)
+2. **Opportunities** (customer problems, needs, pain points, or desires that could drive the outcome)
+3. **Solutions** (ways to address each opportunity)
+4. **Experiments** (tests to validate solutions)
 
-### 1. Outcome (The Root)
+**Structure:**
+```
+         Desired Outcome (1)
+                |
+    +-----------+-----------+
+    |           |           |
+Opportunity  Opportunity  Opportunity (3)
+    |           |           |
+  +-+-+       +-+-+       +-+-+
+  | | |       | | |       | | |
+ S1 S2 S3    S1 S2 S3    S1 S2 S3 (9 total solutions)
+```
 
-**What it should be:** Your desired outcome at the pre-PMF stage isn't typically a polished KPI. It's more like a learning goal or an early traction signal that indicates you're onto something real.
+### Why This Works
+- **Outcome-driven:** Starts with business goal, not feature requests
+- **Divergent before convergent:** Explores multiple opportunities before picking solutions
+- **Problem-focused:** Opportunities are problems, not solutions disguised as problems
+- **Testable:** Each solution maps to experiments, not just "build it and ship"
+- **POC selection:** Evaluates feasibility, impact, market fit before committing resources
 
-**Good pre-PMF outcomes:**
-- "Validate that [ICP] will pay for a solution to [problem area]"
-- "Get 10 companies in [industry] actively using our prototype weekly"
-- "Identify which segment within [broad ICP] has the most urgent need"
-- "Achieve $10K MRR with manual, non-scalable processes"
-- "Find the problem worth building a company around in [market space]"
+### Anti-Patterns (What This Is NOT)
+- **Not a feature list:** Opportunities are problems customers face, not "we need dark mode"
+- **Not solution-first:** Don't start with "we should build X"—start with "customers struggle with Y"
+- **Not waterfall planning:** OST is a discovery tool, not a project plan
+- **Not a one-time exercise:** OSTs evolve as you learn from experiments
 
-**Not good outcomes:**
-- "Build an AI-powered platform" (that's a solution)
-- "Launch our product" (that's an activity)
-- "Become the leading provider in..." (too vague, too distant)
-- Precise percentage improvements of metrics you don't have yet
+### When to Use This
+- Stakeholder requests a feature or product initiative
+- Starting discovery for a new product area
+- Clarifying vague OKRs or strategic goals
+- Prioritizing which problems to solve first
+- Aligning team on what outcomes you're driving
 
-**The key principle:** Your outcome should be **specific enough to guide decisions** but **humble enough to acknowledge uncertainty**. Pre-PMF, you're often trying to learn something fundamental about your market, not optimize something you've already proven.
+### When NOT to Use This
+- When the problem is already validated (move to solution testing)
+- For tactical bug fixes or technical debt (no discovery needed)
+- When stakeholders demand a specific solution (address alignment issues first)
 
-### 2. Opportunities (The First Branches)
+---
 
-**What they should be:** Real problems, pain points, needs, or "jobs to be done" that your ICP experiences. These come from customer conversations, observations, and research—not from your assumptions.
+### Facilitation Source of Truth
 
-**Critical distinction:** Opportunities are **problems in the customer's world**, not gaps in the market or ideas you have. They should be framed from the customer's perspective.
+Use [`workshop-facilitation`](../workshop-facilitation/SKILL.md) as the default interaction protocol for this skill.
 
-**Good opportunities (for a startup targeting small e-commerce brands):**
-- "We struggle to understand which marketing channels actually drive profitable customers"
-- "Our inventory is constantly out of sync across platforms, causing overselling"
-- "We can't afford a full-time developer but need custom integrations between our tools"
-- "Customer support takes 40% of our time but we can't afford to hire help"
+It defines:
+- session heads-up + entry mode (Guided, Context dump, Best guess)
+- one-question turns with plain-language prompts
+- progress labels (for example, Context Qx/8 and Scoring Qx/5)
+- interruption handling and pause/resume behavior
+- numbered recommendations at decision points
+- quick-select numbered response options for regular questions (include `Other (specify)` when useful)
 
-**Not good opportunities:**
-- "No good AI-powered analytics exist for SMBs" (that's a market gap, not a customer problem)
-- "Shopify's reporting is limited" (too solution-focused, not about the actual impact)
-- "They need better data" (too vague—better for what purpose?)
-- "They don't use any automation" (that's an observation, not a problem)
+This file defines the domain-specific assessment content. If there is a conflict, follow this file's domain logic.
 
-**The "so what?" test:** For each opportunity, you should be able to ask "so what?" and get to real consequences. "They don't have good analytics" → So what? → "They waste money on ads that don't work and miss their best opportunities" → That's the real opportunity.
+## Application
 
-**Opportunity altitude—getting it right:**
+Use `template.md` for the full fill-in structure.
 
-- **Too high:** "They want to grow their business" (true for everyone, not actionable)
-- **Too low:** "The export button is on the wrong side of the screen" (too specific, too solution-adjacent)
-- **Just right:** "They spend 2 hours per week manually copying data between systems because they can't figure out the integration"
+This interactive skill follows a **two-phase process**:
 
-**The test:** Can you design multiple different solutions for this opportunity? If not, it might be too specific. Does it describe a real situation with real consequences? If not, it might be too generic.
+**Phase 1:** Generate OST (extract outcome, identify opportunities, map solutions)
+**Phase 2:** Select POC (evaluate solutions, recommend best starting point)
 
-### 3. Solutions (The Next Layer)
+---
 
-**What they should be:** Specific ideas for how you might address an opportunity. At pre-PMF, these should range from very lightweight to more built-out, and you should have **multiple solutions per opportunity**.
+### Step 0: Gather Context (Before Questions)
 
-**Good solutions (for the opportunity "struggle to understand which channels drive profitable customers"):**
-- Weekly email digest showing revenue by source with simple profitability estimates
-- Notion template with framework for tracking channel performance manually
-- Spreadsheet tool that connects to Stripe and ad accounts
-- Done-for-you monthly report service (human-powered, non-scalable)
-- Mobile app that sends daily alerts when channel performance shifts
+**Agent suggests:**
 
-**Not good solutions:**
-- Only having one solution per opportunity (shows you jumped to the first idea)
-- Solutions that are just feature lists: "Dashboard with graphs and filters"
-- Solutions that are too big: "Full-featured analytics platform with AI predictions"
-- Solutions that don't clearly connect to the specific opportunity
+Before we create your Opportunity Solution Tree, let's gather context:
 
-**The diversity principle:** If all your solutions look similar (all software, all DIY tools, all services), you're probably not exploring widely enough. Pre-PMF, you should be willing to consider solutions that don't scale, manual services, templates, or even concierge approaches.
+**Stakeholder Request or Product Initiative:**
+- What did the stakeholder ask for? (Feature request, product idea, strategic goal)
+- Any existing materials: PRD drafts, OKR documents, strategy memos, meeting notes
+- Problem statements, customer complaints, or research findings
 
-### 4. Experiments (The Leaves)
+**Product Context (if available):**
+- Website copy, positioning statements, product descriptions
+- Competitor materials, customer reviews (G2, Capterra), community discussions
+- Usage data, support tickets, churn reasons
 
-**What they should be:** Specific, time-bound tests designed to validate whether a solution actually addresses the opportunity. Each experiment should have a **clear hypothesis** and **defined success criteria** you establish before running it.
+**You can paste this content directly, or describe the request briefly.**
 
-**The structure:** "We believe [solution] will [result] for [opportunity]. We'll know we're right when [specific measurable outcome]."
+---
 
-**Good experiments (for a solution like "Weekly email digest showing revenue by source"):**
-- "Send 10 prospects a mockup of the email; hypothesis: at least 6 will reply saying they'd want this, and 3 will ask about pricing"
-- "Manually create and send the digest to 5 beta customers for 3 weeks; hypothesis: at least 4 will open it each week and 3 will take action based on it"
-- "Build a landing page describing the digest; hypothesis: 10% of 200 visitors from our ICP will provide their email to get early access"
-- "Interview 8 people currently solving this manually; hypothesis: at least 6 spend more than 2 hours/week on it and say they'd pay $50+/month to automate it"
+## Phase 1: Generate Opportunity Solution Tree
 
-**Not good experiments:**
-- "Get feedback on the idea" (no hypothesis, no success criteria)
-- "Build an MVP" (too big, not testing a specific assumption)
-- "Launch a beta program" (what specifically are you testing?)
-- "See if people like it" (too vague—like it enough to do what?)
-- "Talk to 20 customers" (conversations are research, not experiments unless you're testing something specific)
+### Question 1: Extract Desired Outcome
 
-**Key experiment principles:**
+**Agent asks:**
+"What's the desired outcome for this initiative? (What business or product metric are you trying to move?)"
 
-**Small and fast:** Pre-PMF experiments should be completable in days or weeks, not months. If an experiment takes a long time, break it into smaller tests.
+**Offer 4 enumerated options:**
 
-**Test assumptions, not build products:** You're testing whether your thinking is correct—about the problem's urgency, the solution's fit, customer willingness to pay, etc.
+1. **Revenue growth** — "Increase ARR, expand revenue from existing customers, new revenue streams" (Common for scaling products)
+2. **Customer retention** — "Reduce churn, increase activation, improve engagement/stickiness" (Common for established products with retention issues)
+3. **Customer acquisition** — "Increase sign-ups, trial conversions, new user growth" (Common for early-stage or growth products)
+4. **Product efficiency** — "Reduce support costs, decrease time-to-value, improve operational metrics" (Common for mature products optimizing operations)
 
-**Failure is valuable:** A "failed" experiment that clearly invalidates an assumption saves you months of building the wrong thing. Design experiments where negative results are genuinely informative.
+**Or describe your specific desired outcome (be measurable: e.g., "Increase trial-to-paid conversion from 15% to 25%").**
 
-**Cheapest test first:** Before building anything, can you test with:
-- Mockups or prototypes?
-- Fake door tests (landing pages for non-existent products)?
-- Manual/concierge delivery of the solution?
-- Conversations with specific hypotheses?
+**User response:** [Selection or custom]
 
-**Different types of pre-PMF experiments:**
+**Agent extracts and confirms:**
+- **Desired Outcome:** [Specific, measurable outcome]
+- **Why it matters:** [Rationale from stakeholder request or context]
 
-- **Desirability tests:** Do people actually want this? (Interviews, mockups, landing pages)
-- **Usability tests:** Can they understand and use it? (Prototypes, walkthroughs)
-- **Feasibility tests:** Can we actually build/deliver this? (Technical spikes, manual delivery)
-- **Viability tests:** Will they pay enough to make this work? (Pricing conversations, pre-orders)
+---
 
-## Common Failures, Misunderstandings, and Pitfalls
+### Question 2: Identify Opportunities (Problems to Solve)
 
-### Pitfall #1: Solution Disguised as Outcome
+**Agent generates 3 opportunities** based on the desired outcome and context provided.
 
-**The mistake:** "Our outcome is to build a mobile app for small retailers."
+**Agent says:**
+"Based on your desired outcome ([from Q1]) and the context you provided, here are **3 opportunities** (customer problems or needs) that could drive this outcome:"
 
-**Why it's wrong:** You've smuggled your solution (mobile app) into the outcome position. This blinds you to whether a mobile app is even the right approach.
+**Example (if Outcome = Increase trial-to-paid conversion):**
 
-**How to fix it:** Ask "why?" repeatedly. Why a mobile app? "To help retailers manage inventory." Why? "So they don't lose sales from stockouts." Now you have a real outcome: "Help retailers reduce lost sales from inventory issues."
+1. **Opportunity 1: Users don't experience value during trial** — "New users sign up but don't complete onboarding, never reach 'aha moment,' abandon before seeing core value"
+   - Evidence: [From context: onboarding analytics, support tickets, exit surveys]
 
-### Pitfall #2: Opportunities That Are Really Features You Want to Build
+2. **Opportunity 2: Pricing is unclear or misaligned** — "Users unsure if paid plan is worth it; don't understand what they get for the price; pricing page confusing"
+   - Evidence: [From context: conversion funnel drop-off at pricing page, sales objections]
 
-**The mistake:** Listing opportunities like "Need an AI chatbot," "Want automated workflows," "Require real-time dashboards."
+3. **Opportunity 3: Free plan is 'good enough'** — "Users stay on free tier indefinitely because it meets their needs; no compelling reason to upgrade"
+   - Evidence: [From context: freemium user retention data, support tickets asking for workarounds]
 
-**Why it's wrong:** These are solutions you're excited about, dressed up as customer needs. Real opportunities are **solution-agnostic problems**.
+**Agent asks:**
+"Which opportunity feels most critical to explore first, or would you like to modify/add opportunities?"
 
-**How to fix it:** Go back to actual customer conversations. What were they trying to accomplish? What was frustrating them? Frame it in their language: "I'm constantly interrupted by the same basic questions" is an opportunity. "Need a chatbot" is not.
+**User response:** [Selection or custom]
 
-### Pitfall #3: Too Few Opportunities (The Tunnel Vision Problem)
+---
 
-**The mistake:** Having only 1-2 opportunities under your outcome, often the ones that match your preconceived solution.
+### Question 3: Generate Solutions for Selected Opportunity
 
-**Why it's wrong:** You're likely confirming your biases rather than genuinely exploring the problem space. If you've only found one or two problems in your entire ICP, you haven't talked to enough people or you've filtered what you heard through your solution lens.
+**Agent generates 3 solution ideas** for the selected opportunity.
 
-**How to fix it:** Aim for 5-10+ opportunities initially. Some will be more important than others, but having multiple forces you to really listen and consider different angles on the problem space.
+**Agent says:**
+"For **Opportunity [X]: [Name]**, here are **3 potential solutions** to test:"
 
-### Pitfall #4: Not Actually Talking to Customers
+**Example (if Opportunity 1 selected: Users don't experience value during trial):**
 
-**The mistake:** Filling out your tree based on what you think customers experience, competitive research, or online forum browsing.
+1. **Solution 1: Guided onboarding checklist** — "Interactive checklist that walks users through core workflows step-by-step (e.g., 'Create your first project,' 'Invite a teammate,' 'Complete a task')"
+   - Hypothesis: Structured guidance increases completion rate
+   - Experiment: A/B test checklist vs. no checklist, measure activation rate
 
-**Why it's wrong:** You'll generate hypothetical opportunities that sound plausible but don't reflect real urgency, real budget, or real problem-solving behavior.
+2. **Solution 2: Time-to-value triggers** — "Automatically prompt users when they're stuck (e.g., 'You haven't created a project yet—here's a template to get started')"
+   - Hypothesis: Proactive nudges prevent drop-off
+   - Experiment: Track engagement with prompts, measure trial-to-paid lift
 
-**The reality check:** For each opportunity, you should be able to say: "I heard this from [Name] at [Company], and also [Name] at [Company], and I observed [Name] struggling with exactly this."
+3. **Solution 3: Human-assisted onboarding** — "Offer 15-min onboarding call with CSM for high-value trial users (enterprise, team plans)"
+   - Hypothesis: Personal touch increases conversion for high-intent users
+   - Experiment: Offer to 50 trial users, measure conversion vs. control group
 
-### Pitfall #5: Everything is Equally Weighted
+**Agent asks:**
+"Would you like to explore solutions for another opportunity, or move to POC selection?"
 
-**The mistake:** Treating all opportunities as equally important and trying to generate solutions for everything simultaneously.
+**User response:** [Selection or custom]
 
-**Why it's wrong:** You have limited resources. Part of the OST's value is helping you choose where to focus.
+---
 
-**How to prioritize:** Assess opportunities by:
-- **Frequency:** How often does this problem occur?
-- **Intensity:** How painful is it when it happens?
-- **Willingness to pay:** Would they pay to solve this or just tolerate it?
-- **Number of people:** How many within your ICP have this problem?
+## Phase 2: Select Proof-of-Concept (POC)
 
-Start experiments on the opportunities that score highest. Keep the others visible but dormant.
+After generating solutions, the agent helps select which solution to test first.
 
-### Pitfall #6: Solutions That Are Too Big to Experiment With
+---
 
-**The mistake:** Only considering solutions that would take months to build, making it impossible to run fast experiments.
+### Question 4: Evaluate Solutions (Feasibility, Impact, Market Fit)
 
-**Why it's wrong:** You can't learn quickly if every solution idea requires a major engineering lift.
+**Agent says:**
+"Let's evaluate your solutions to pick the best starting point. I'll score each solution on **Feasibility** (how hard to build), **Impact** (how much it could move the outcome), and **Market Fit** (how well it aligns with customer needs)."
 
-**The pre-PMF principle:** For every opportunity, at least one solution should be testable in **2 weeks or less**. This might mean:
-- Manual/concierge versions
-- No-code prototypes
-- Fake door tests (landing pages for vaporware)
-- Services you deliver yourself before automating
+**Agent generates evaluation table:**
 
-### Pitfall #7: Experiments That Don't Actually Test Anything
+| Solution | Feasibility (1-5) | Impact (1-5) | Market Fit (1-5) | Total Score | Rationale |
+|----------|-------------------|--------------|------------------|-------------|-----------|
+| Solution 1: Guided onboarding checklist | 4 | 4 | 5 | 13 | High feasibility (UI pattern), proven impact (industry standard), strong market fit (users expect onboarding) |
+| Solution 2: Time-to-value triggers | 3 | 3 | 4 | 10 | Medium feasibility (requires analytics integration), moderate impact (depends on trigger quality), good market fit |
+| Solution 3: Human-assisted onboarding | 5 | 5 | 3 | 13 | High feasibility (no dev work), high impact (personal touch), lower market fit (doesn't scale, high-touch only) |
 
-**The mistake:** "Experiments" like "Build MVP," "Launch beta," "Get feedback."
+**Scoring criteria:**
+- **Feasibility:** 1 = months of work, 5 = days/weeks
+- **Impact:** 1 = minimal outcome movement, 5 = major outcome shift
+- **Market Fit:** 1 = customers don't care, 5 = customers actively request this
 
-**Why it's wrong:** These aren't experiments—they're just work. Real experiments have a **specific hypothesis** and **clear success criteria** you define upfront.
+**Agent recommends:**
 
-**Additional experiment pitfalls:**
+**Recommended POC: Solution 1 (Guided onboarding checklist)**
 
-**Building before testing desirability:** Don't start with "Build feature X and see if people use it." Start with "Show mockup of feature X and see if people express genuine interest or commitment."
+**Why this POC:**
+- Balances feasibility (can build in 2-4 weeks) with impact (proven pattern)
+- Strong market fit (users expect onboarding guidance)
+- Testable hypothesis: "If we guide users through core workflows, activation rate will increase from X% to Y%"
 
-**Only testing with friendlies:** Your friend who's "in your target market" is not a good experiment subject. They'll be too nice. Test with people who have no relationship with you and no reason to spare your feelings.
+**Alternative POC:** Solution 3 (Human-assisted onboarding)
+- If you want to learn fast with no dev work, start here
+- Test manually with 20-50 trial users, gather qualitative feedback
+- Use learnings to inform automated solution (Solution 1)
 
-**Ambiguous success criteria:** "We'll talk to customers and see what they think" leaves too much room for interpretation. Instead: "At least 7 of 10 will say they currently spend money trying to solve this problem."
+**Not recommended for POC:** Solution 2 (Time-to-value triggers)
+- Requires more upfront investment
+- Impact depends on trigger quality (needs experimentation to get right)
+- Better as follow-up after validating core onboarding flow
 
-**Not defining success criteria upfront:** If you wait until after the experiment to decide what "good" looks like, you'll rationalize whatever results you got. Commit to the threshold beforehand.
+---
 
-**No kill criteria:** Before running an experiment, decide: "What result would cause us to abandon this solution or opportunity entirely?" If you can't think of any result that would change your plans, you're not really experimenting.
+### Question 5: Define Experiment
 
-**Treating experiments as commitments:** Just because you're experimenting with a solution doesn't mean you have to build it. Most experiments should fail or provide learning that changes your direction. That's success.
+**Agent asks:**
+"How will you test this solution? What's the experiment?"
 
-### Pitfall #8: Treating the Tree as Permanent
+**Offer 3 enumerated options:**
 
-**The mistake:** Building your tree once during a planning session and never revisiting it.
+1. **A/B test** — "Build MVP, show to 50% of trial users, compare conversion vs. control" (Best for: Quantitative validation, requires traffic)
+2. **Prototype + usability test** — "Create clickable prototype, watch 10 users attempt onboarding, gather qualitative feedback" (Best for: Early-stage validation, low traffic)
+3. **Manual concierge test** — "Run the solution manually with 20 users (e.g., personally walk them through onboarding), measure outcomes" (Best for: Learning fast, no dev work)
 
-**Why it's wrong:** The entire point is continuous discovery. As you learn, opportunities should shift in priority, new ones should emerge, and solutions should evolve or get discarded.
+**Or describe your experiment approach.**
 
-**How to use it:** The tree is a living document. Weekly or bi-weekly, you should be adding learnings, pruning dead ends, and adjusting based on what experiments taught you.
+**User response:** [Selection or custom]
 
-### Pitfall #9: Confusing the Tree with Product Roadmap
+---
 
-**The mistake:** Thinking the solutions on your tree are your roadmap, in the order you'll build them.
+### Output: Opportunity Solution Tree + POC Plan
 
-**Why it's wrong:** Most solutions on your tree will never get built. Many opportunities won't pan out. The tree is an **exploration tool**, not a commitment.
+After completing the flow, the agent outputs:
 
-**The right mindset:** You're mapping possibilities and systematically invalidating most of them. The tree helps you **avoid building the wrong things**, not ensure you build everything on it.
+```markdown
+# Opportunity Solution Tree + POC Plan
 
-## The Pre-PMF Mindset
+## Desired Outcome
+**Outcome:** [From Q1]
+**Target Metric:** [Specific, measurable goal]
+**Why it matters:** [Rationale]
 
-The OST is particularly valuable for pre-PMF startups because it **resists the urge to build**. Your instinct is probably to start coding or designing immediately. The tree forces you to:
+---
 
-1. **Separate learning from building** - Most of your early effort should be in understanding opportunities, not creating solutions
-2. **Stay problem-focused** - When you're pre-PMF, the problem is usually more stable than your solution
-3. **Embrace multiple options** - You don't know which problem is most valuable yet, so keep several in play
-4. **Make learning explicit** - Experiments force you to articulate what you're testing and what would change your mind
+## Opportunity Map
 
-The tree isn't about being "complete" or "correct"—it's about being **honest about what you know, what you're guessing, and what you need to learn next**.
+### Opportunity 1: [Name]
+**Problem:** [Description]
+**Evidence:** [From context]
 
-For each opportunity on your tree, you should be able to point to specific customer conversations where you heard about this problem. For each solution, you should be able to articulate why you think it might work and what assumption you're making. For each experiment, you should know beforehand what result would cause you to pivot or persevere.
+**Solutions:**
+1. [Solution A]
+2. [Solution B]
+3. [Solution C]
 
-This level of explicitness feels uncomfortable at first. It's much easier to say "let's just build it and see." But that comfort comes at the cost of months or years building the wrong thing. The OST trades short-term comfort for long-term clarity—and for pre-PMF startups, that clarity is the difference between finding product-market fit and running out of runway.
+---
 
-## When to Use This Skill
+### Opportunity 2: [Name]
+**Problem:** [Description]
+**Evidence:** [From context]
 
-I'll reference this skill when you:
-- Ask about product discovery or validation frameworks
-- Need help structuring customer research findings
-- Want to evaluate problems or opportunities
-- Are deciding what to build next
-- Need guidance on running experiments
-- Ask about Opportunity Solution Trees specifically
-- Are working on pre-PMF product strategy
+**Solutions:**
+1. [Solution A]
+2. [Solution B]
+3. [Solution C]
+
+---
+
+### Opportunity 3: [Name]
+**Problem:** [Description]
+**Evidence:** [From context]
+
+**Solutions:**
+1. [Solution A]
+2. [Solution B]
+3. [Solution C]
+
+---
+
+## Selected POC
+
+**Opportunity:** [Selected opportunity]
+**Solution:** [Selected solution]
+
+**Hypothesis:**
+- "If we [implement solution], then [outcome metric] will [increase/decrease] from [X] to [Y] because [rationale]."
+
+**Experiment:**
+- **Type:** [A/B test / Prototype test / Concierge test]
+- **Participants:** [Number of users, segment]
+- **Duration:** [Timeline]
+- **Success criteria:** [What validates the hypothesis]
+
+**Feasibility Score:** [1-5]
+**Impact Score:** [1-5]
+**Market Fit Score:** [1-5]
+**Total:** [Sum]
+
+**Why this POC:**
+- [Rationale 1]
+- [Rationale 2]
+- [Rationale 3]
+
+---
+
+## Next Steps
+
+1. **Build experiment:** [Specific action, e.g., "Create onboarding checklist wireframes"]
+2. **Run experiment:** [Specific action, e.g., "Deploy to 50% of trial users for 2 weeks"]
+3. **Measure results:** [Specific metric, e.g., "Compare activation rate: checklist vs. control"]
+4. **Decide:** [If successful → scale; if failed → try next solution]
+
+---
+
+**Ready to build the experiment? Let me know if you'd like to refine the hypothesis or explore alternative solutions.**
+```
+
+---
+
+## Examples
+
+See `examples/sample.md` for full OST examples.
+
+Mini example excerpt:
+
+```markdown
+**Desired Outcome:** Increase trial-to-paid conversion from 15% to 25%
+**Opportunity:** Users don’t reach "aha" moment during trial
+**Solution:** Guided onboarding checklist
+```
+
+## Common Pitfalls
+
+### Pitfall 1: Opportunities Disguised as Solutions
+**Symptom:** "Opportunity: We need a mobile app"
+
+**Consequence:** You've already converged on a solution without exploring the problem.
+
+**Fix:** Reframe opportunities as customer problems: "Mobile-first users can't access product on the go."
+
+---
+
+### Pitfall 2: Skipping Divergence (Jumping to One Solution)
+**Symptom:** "We know the solution is [X], just need to build it"
+
+**Consequence:** Miss better alternatives, no learning.
+
+**Fix:** Generate at least 3 solutions per opportunity. Force divergence before convergence.
+
+---
+
+### Pitfall 3: Outcome is Too Vague
+**Symptom:** "Desired Outcome: Improve user experience"
+
+**Consequence:** Can't measure success, can't prioritize opportunities.
+
+**Fix:** Make outcomes measurable: "Increase NPS from 30 to 50" or "Reduce onboarding drop-off from 60% to 40%."
+
+---
+
+### Pitfall 4: No Experiments (Just Build It)
+**Symptom:** Picking a solution and moving straight to roadmap
+
+**Consequence:** No validation, high risk of building wrong thing.
+
+**Fix:** Every solution must map to an experiment. No experiments = no OST.
+
+---
+
+### Pitfall 5: Analysis Paralysis (Exploring Forever)
+**Symptom:** Generating 20 opportunities, 50 solutions, never picking one
+
+**Consequence:** Team stuck in discovery, no progress.
+
+**Fix:** Limit to 3 opportunities, 3 solutions each (9 total). Pick POC, run experiment, learn, iterate.
+
+---
+
+## References
+
+### Related Skills
+- `skills/problem-statement/SKILL.md` — Frames opportunities as customer problems
+- `skills/jobs-to-be-done/SKILL.md` — Helps identify opportunities from JTBD research
+- `skills/epic-hypothesis/SKILL.md` — Turns validated solutions into testable epics
+- `skills/user-story/SKILL.md` — Breaks experiments into deliverable stories
+- `skills/discovery-interview-prep/SKILL.md` — Validates opportunities through customer interviews
+
+### External Frameworks
+- Teresa Torres, *Continuous Discovery Habits* (2021) — Origin of Opportunity Solution Tree
+- Jeff Patton, *User Story Mapping* (2014) — Outcome-driven product planning
+- Ash Maurya, *Running Lean* (2012) — Hypothesis-driven experimentation
+
+### Dean's Work
+- Productside Blueprint — Strategic product discovery process
+- [If Dean has OST resources, link here]
+
+---
+
+**Skill type:** Interactive
+**Suggested filename:** `opportunity-solution-tree.md`
+**Suggested placement:** `/skills/interactive/`
+**Dependencies:** Uses `skills/problem-statement/SKILL.md`, `skills/jobs-to-be-done/SKILL.md`, `skills/epic-hypothesis/SKILL.md`, `skills/user-story/SKILL.md`

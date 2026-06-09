@@ -1,300 +1,404 @@
 ---
 name: remotion
-description: |
-  MUEDnote動画制作スキル。プロモーション動画、Hooキャラクターアニメーション、
-  LP用動画、アプリ内チュートリアル動画の制作に使用。Remotionベース。
-  トリガー: "プロモ動画", "Hooアニメーション", "MUEDnote動画",
-  "動画を作って", "アニメーションを作成"
+description: Generate walkthrough videos from Stitch projects using Remotion with smooth transitions, zooming, and text overlays
+allowed-tools:
+  - "stitch*:*"
+  - "remotion*:*"
+  - "Bash"
+  - "Read"
+  - "Write"
+  - "web_fetch"
+risk: unknown
+source: community
 ---
 
-# MUEDnote Video Skill (Remotion)
+# Stitch to Remotion Walkthrough Videos
 
-Remotionを使用したMUEDnote動画制作スキル。
+You are a video production specialist focused on creating engaging walkthrough videos from app designs. You combine Stitch's screen retrieval capabilities with Remotion's programmatic video generation to produce smooth, professional presentations.
 
-## 注意事項
+## Overview
 
-このスキルは**新規Remotionプロジェクト作成時のテンプレート**。
-mued_v2にはRemotionは未インストール。動画制作時は別ディレクトリで作業するか、
-mued_v2にRemotionをセットアップすること。
+This skill enables you to create walkthrough videos that showcase app screens with professional transitions, zoom effects, and contextual text overlays. The workflow retrieves screens from Stitch projects and orchestrates them into a Remotion video composition.
 
-### Remotionセットアップ（必要時）
+## Prerequisites
 
-```bash
-# 別ディレクトリで新規作成
-npx create-video@latest muednote-videos
+**Required:**
+- Access to the Stitch MCP Server
+- Access to the Remotion MCP Server (or Remotion CLI)
+- Node.js and npm installed
+- A Stitch project with designed screens
 
-# または mued_v2 に追加（推奨しない - 依存関係が複雑になる）
-npm install remotion @remotion/cli @remotion/player
+**Recommended:**
+- Familiarity with Remotion's video capabilities
+- Understanding of React components (Remotion uses React)
+
+## Retrieval and Networking
+
+### Step 1: Discover Available MCP Servers
+
+Run `list_tools` to identify available MCP servers and their prefixes:
+- **Stitch MCP**: Look for `stitch:` or `mcp_stitch:` prefix
+- **Remotion MCP**: Look for `remotion:` or `mcp_remotion:` prefix
+
+### Step 2: Retrieve Stitch Project Information
+
+1. **Project lookup** (if Project ID is not provided):
+   - Call `[stitch_prefix]:list_projects` with `filter: "view=owned"`
+   - Identify target project by title (e.g., "Calculator App")
+   - Extract Project ID from `name` field (e.g., `projects/13534454087919359824`)
+
+2. **Screen retrieval**:
+   - Call `[stitch_prefix]:list_screens` with the project ID (numeric only)
+   - Review screen titles to identify all screens for the walkthrough
+   - Extract Screen IDs from each screen's `name` field
+
+3. **Screen metadata fetch**:
+   For each screen:
+   - Call `[stitch_prefix]:get_screen` with `projectId` and `screenId`
+   - Retrieve:
+     - `screenshot.downloadUrl` — Visual asset for the video
+     - `htmlCode.downloadUrl` — Optional: for extracting text/content
+     - `width`, `height` — Screen dimensions for proper scaling
+     - Screen title and description for text overlays
+
+4. **Asset download**:
+   - Use `web_fetch` or `Bash` with `curl` to download screenshots
+   - Save to a staging directory: `assets/screens/{screen-name}.png`
+   - Organize assets in order of the intended walkthrough flow
+
+### Step 3: Set Up Remotion Project
+
+1. **Check for existing Remotion project**:
+   - Look for `remotion.config.ts` or `package.json` with Remotion dependencies
+   - If exists, use the existing project structure
+
+2. **Create new Remotion project** (if needed):
+   ```bash
+   npm create video@latest -- --blank
+   ```
+   - Choose TypeScript template
+   - Set up in a dedicated `video/` directory
+
+3. **Install dependencies**:
+   ```bash
+   cd video
+   npm install @remotion/transitions @remotion/animated-emoji
+   ```
+
+## Video Composition Strategy
+
+### Architecture
+
+Create a modular Remotion composition with these components:
+
+1. **`ScreenSlide.tsx`** — Individual screen display component
+   - Props: `imageSrc`, `title`, `description`, `width`, `height`
+   - Features: Zoom-in animation, fade transitions
+   - Duration: Configurable (default 3-5 seconds per screen)
+
+2. **`WalkthroughComposition.tsx`** — Main video composition
+   - Sequences multiple `ScreenSlide` components
+   - Handles transitions between screens
+   - Adds text overlays and annotations
+
+3. **`config.ts`** — Video configuration
+   - Frame rate (default: 30 fps)
+   - Video dimensions (match Stitch screen dimensions or scale appropriately)
+   - Total duration calculation
+
+### Transition Effects
+
+Use Remotion's `@remotion/transitions` for professional effects:
+
+- **Fade**: Smooth cross-fade between screens
+  ```tsx
+  import {fade} from '@remotion/transitions/fade';
+  ```
+
+- **Slide**: Directional slide transitions
+  ```tsx
+  import {slide} from '@remotion/transitions/slide';
+  ```
+
+- **Zoom**: Zoom in/out effects for emphasis
+  - Use `spring()` animation for smooth zoom
+  - Apply to important UI elements
+
+### Text Overlays
+
+Add contextual information using Remotion's text rendering:
+
+1. **Screen titles**: Display at the top or bottom of each frame
+2. **Feature callouts**: Highlight specific UI elements with animated pointers
+3. **Descriptions**: Fade in descriptive text for each screen
+4. **Progress indicator**: Show current screen position in walkthrough
+
+## Execution Steps
+
+### Step 1: Gather Screen Assets
+
+1. Identify target Stitch project
+2. List all screens in the project
+3. Download screenshots for each screen
+4. Organize in order of walkthrough flow
+5. Create a manifest file (`screens.json`):
+
+```json
+{
+  "projectName": "Calculator App",
+  "screens": [
+    {
+      "id": "1",
+      "title": "Home Screen",
+      "description": "Main calculator interface with number pad",
+      "imagePath": "assets/screens/home.png",
+      "width": 1200,
+      "height": 800,
+      "duration": 4
+    },
+    {
+      "id": "2",
+      "title": "History View",
+      "description": "View of previous calculations",
+      "imagePath": "assets/screens/history.png",
+      "width": 1200,
+      "height": 800,
+      "duration": 3
+    }
+  ]
+}
 ```
 
----
+### Step 2: Generate Remotion Components
 
-## ブランドガイドライン
+Create the video components following Remotion best practices:
 
-### カラーパレット
-```typescript
-// src/styles/theme.ts
-export const colors = {
-  primary: '#2D3748',      // ダークグレー（メインUI）
-  accent: '#6366F1',       // インディゴ（CTAボタン等）
-  background: '#1A202C',   // ダークBG
-  backgroundLight: '#2D3748',
-  text: '#E2E8F0',         // ライトグレー（本文）
-  textMuted: '#A0AEC0',    // ミュートテキスト
-  hoo: '#FFFFFF',          // Hooは白ラインアート
-  success: '#48BB78',      // 成功
-  error: '#F56565',        // エラー
-};
-```
+1. **Create `ScreenSlide.tsx`**:
+   - Use `useCurrentFrame()` and `spring()` for animations
+   - Implement zoom and fade effects
+   - Add text overlays with proper timing
 
-### タイポグラフィ
-- 見出し: `Noto Sans JP Bold` / `font-weight: 700`
-- 本文: `Noto Sans JP Regular` / `font-weight: 400`
-- コード/数字: `JetBrains Mono`
+2. **Create `WalkthroughComposition.tsx`**:
+   - Import screen manifest
+   - Sequence screens with `<Sequence>` components
+   - Apply transitions between screens
+   - Calculate proper timing and offsets
 
-### 動画設定デフォルト
-- 解像度: 1920×1080 (16:9)
-- FPS: 30
-- コーデック: h264
+3. **Update `remotion.config.ts`**:
+   - Set composition ID
+   - Configure video dimensions
+   - Set frame rate and duration
 
----
+**Reference Resources:**
+- Use `resources/screen-slide-template.tsx` as starting point
+- Follow `resources/composition-checklist.md` for completeness
+- Review examples in `examples/walkthrough/` directory
 
-## Hooキャラクター仕様
+### Step 3: Preview and Refine
 
-### デザインコンセプト
-**フクロウ + オープンリールテープレコーダー** のハイブリッド
-- 目 = テープリール（2つの円）
-- リール間にテープが張っている
-- 音楽記録アプリの象徴的デザイン
+1. **Start Remotion Studio**:
+   ```bash
+   npm run dev
+   ```
+   - Opens browser-based preview
+   - Allows real-time editing and refinement
 
-### 基本情報
-- 名前: Hoo（フー）
-- キャッチフレーズ: "ほほう (Ho Hoo)"
-- 役割: MUEDnoteのAIアシスタント、マーケティングマスコット
-- **スタイル**: 白いラインアート（モノトーン）
-- **ベースカラー**: `#FFFFFF`（白ストローク、塗りなし）
-- **参照**: `/public/logo.png`
+2. **Adjust timing**:
+   - Ensure each screen has appropriate display duration
+   - Verify transitions are smooth
+   - Check text overlay timing
 
-### アニメーション可能パーツ
-| パーツ | 説明 | アニメーション |
-|-------|------|--------------|
-| left-reel | 左目（テープリール） | 回転 |
-| right-reel | 右目（テープリール） | 回転（逆方向） |
-| tape | リール間のテープ | 流れる動き |
-| body | 本体輪郭 | 揺れ、傾き |
-| ears | 耳（羽角） | 軽い揺れ |
+3. **Fine-tune animations**:
+   - Adjust spring configurations for zoom effects
+   - Modify easing functions for transitions
+   - Ensure text is readable at all times
 
-### 表情・状態
-| 状態 | 用途 | アニメーション |
-|------|------|--------------|
-| idle | 待機 | リールゆっくり回転 + 軽い呼吸 |
-| recording | 録音中 | リール高速回転 + テープ流れ |
-| curious | 興味・説明 | 首を傾ける + リール回転 |
-| happy | 喜び・完了 | リール高速 + 上下バウンス |
+### Step 4: Render Video
 
-### アニメーションコード
+1. **Render using Remotion CLI**:
+   ```bash
+   npx remotion render WalkthroughComposition output.mp4
+   ```
 
-```typescript
-// リール回転（常時）
-const reelRotation = (frame / fps) * 30; // 1秒で30度
+2. **Alternative: Use Remotion MCP** (if available):
+   - Call `[remotion_prefix]:render` with composition details
+   - Specify output format (MP4, WebM, etc.)
 
-// 首傾げ（curious時）
-const tilt = spring({
-  frame: frame - startFrame,
-  fps,
-  config: { damping: 15, stiffness: 80 },
-}) * 15;
+3. **Optimization options**:
+   - Set quality level (`--quality`)
+   - Configure codec (`--codec h264` or `h265`)
+   - Enable parallel rendering (`--concurrency`)
 
-// リール高速回転（recording/happy時）
-const fastRotation = (frame / fps) * 180;
+## Advanced Features
 
-// テープ流れ（strokeDashoffsetで表現）
-const tapeOffset = (frame / fps) * 50;
-```
+### Interactive Hotspots
 
-**詳細**: `hoo-animation.md` 参照
+Highlight clickable elements or important features:
 
----
+```tsx
+import {interpolate, useCurrentFrame} from 'remotion';
 
-## 動画テンプレート
-
-### 1. プロモーション動画（30秒）
-
-```
-構成:
-├── Hook (0-5秒)
-│   └── 問題提起テキスト + Hooが右下から登場
-├── Problem (5-12秒)
-│   └── 課題の可視化 + Hoo心配顔
-├── Solution (12-25秒)
-│   └── MUEDnote機能デモ + Hooが説明
-└── CTA (25-30秒)
-    └── ダウンロード促し + Hoo喜び
-```
-
-**指示例:**
-```
-MUEDnoteの30秒プロモ動画を作成。
-Hook: "音楽制作、記録してる？"
-Problem: アイデアが消えていく様子
-Solution: MUEDnoteの3つの機能をハイライト
-CTA: App Storeへ誘導
-Hooを各シーンで使用。
-```
-
-### 2. 機能紹介動画（15秒）
-
-```
-構成:
-├── タイトル (0-3秒): 機能名 + アイコン
-├── デモ (3-12秒): 操作画面のアニメーション
-└── 締め (12-15秒): Hoo「ほほう」+ ロゴ
-```
-
-### 3. チュートリアル動画（60秒）
-
-```
-構成:
-├── 導入 (0-5秒): Hoo挨拶「こんにちは！」
-├── ステップ1 (5-20秒): 最初の操作説明
-├── ステップ2 (20-35秒): 次の操作説明
-├── ステップ3 (35-50秒): 最後の操作説明
-└── まとめ (50-60秒): Hoo「ほほう、簡単でしょう？」
-```
-
----
-
-## 推奨プロジェクト構造
-
-```
-muednote-videos/           # 別ディレクトリ推奨
-├── src/
-│   ├── Root.tsx
-│   ├── compositions/
-│   │   ├── PromoVideo.tsx
-│   │   ├── FeatureDemo.tsx
-│   │   └── Tutorial.tsx
-│   ├── components/
-│   │   ├── Hoo/
-│   │   │   ├── HooCharacter.tsx
-│   │   │   ├── HooExpressions.tsx
-│   │   │   └── animations.ts
-│   │   ├── Text/
-│   │   │   ├── TitleText.tsx
-│   │   │   ├── TypewriterText.tsx
-│   │   │   └── HighlightText.tsx
-│   │   ├── Transitions/
-│   │   │   ├── FadeSlide.tsx
-│   │   │   ├── ScaleIn.tsx
-│   │   │   └── WipeTransition.tsx
-│   │   └── UI/
-│   │       ├── PhoneMockup.tsx
-│   │       ├── AppStoreBadge.tsx
-│   │       └── Logo.tsx
-│   ├── styles/
-│   │   └── theme.ts
-│   └── utils/
-│       └── animations.ts
-├── public/
-│   └── assets/           # ロゴ、スクリーンショット等
-└── out/                  # レンダリング出力
-```
-
----
-
-## よく使うアニメーションパターン
-
-### フェードイン + スライドアップ
-```typescript
-const FadeSlideIn: React.FC<{children: React.ReactNode; delay?: number}> = ({
-  children,
-  delay = 0,
-}) => {
+const Hotspot = ({x, y, label}) => {
   const frame = useCurrentFrame();
-  const adjustedFrame = frame - delay;
-
-  const opacity = interpolate(adjustedFrame, [0, 20], [0, 1], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
+  const scale = spring({
+    frame,
+    fps: 30,
+    config: {damping: 10, stiffness: 100}
   });
-
-  const translateY = interpolate(adjustedFrame, [0, 20], [30, 0], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  });
-
+  
   return (
-    <div style={{ opacity, transform: `translateY(${translateY}px)` }}>
-      {children}
+    <div style={{
+      position: 'absolute',
+      left: x,
+      top: y,
+      transform: `scale(${scale})`
+    }}>
+      <div className="pulse-ring" />
+      <span>{label}</span>
     </div>
   );
 };
 ```
 
-### タイプライター効果
-```typescript
-const TypewriterText: React.FC<{text: string; startFrame?: number}> = ({
-  text,
-  startFrame = 0,
-}) => {
-  const frame = useCurrentFrame();
-  const adjustedFrame = frame - startFrame;
+### Voiceover Integration
 
-  const charsToShow = Math.floor(
-    interpolate(adjustedFrame, [0, text.length * 3], [0, text.length], {
-      extrapolateRight: 'clamp',
-    })
-  );
+Add narration to the walkthrough:
 
-  return <span>{text.slice(0, charsToShow)}</span>;
-};
+1. Generate voiceover script from screen descriptions
+2. Use text-to-speech or record audio
+3. Import audio into Remotion with `<Audio>` component
+4. Sync screen timing with voiceover pacing
+
+### Dynamic Text Extraction
+
+Extract text from Stitch HTML code for automatic annotations:
+
+1. Download `htmlCode.downloadUrl` for each screen
+2. Parse HTML to extract key text elements (headings, buttons, labels)
+3. Generate automatic callouts for important UI elements
+4. Add to composition as timed text overlays
+
+## File Structure
+
+```
+project/
+├── video/                      # Remotion project directory
+│   ├── src/
+│   │   ├── WalkthroughComposition.tsx
+│   │   ├── ScreenSlide.tsx
+│   │   ├── components/
+│   │   │   ├── Hotspot.tsx
+│   │   │   └── TextOverlay.tsx
+│   │   └── Root.tsx
+│   ├── public/
+│   │   └── assets/
+│   │       └── screens/        # Downloaded Stitch screenshots
+│   │           ├── home.png
+│   │           └── history.png
+│   ├── remotion.config.ts
+│   └── package.json
+├── screens.json                # Screen manifest
+└── output.mp4                  # Rendered video
 ```
 
-### スケールバウンス（登場演出）
-```typescript
-const scaleValue = spring({
-  frame: frame - delay,
-  fps,
-  config: {
-    damping: 10,
-    stiffness: 100,
-    mass: 0.5,
-  },
-});
+## Integration with Remotion Skills
+
+Remotion maintains its own Agent Skills that define best practices. Review these for advanced techniques:
+
+- **Repository**: https://github.com/remotion-dev/remotion/tree/main/packages/skills
+- **Installation**: `npx skills add remotion-dev/skills`
+
+Key Remotion skills to leverage:
+- Animation timing and easing
+- Composition architecture patterns
+- Performance optimization
+- Audio synchronization
+
+## Common Patterns
+
+### Pattern 1: Simple Slide Show
+
+Basic walkthrough with fade transitions:
+- 3-5 seconds per screen
+- Cross-fade transitions
+- Bottom text overlay with screen title
+- Progress bar at top
+
+### Pattern 2: Feature Highlight
+
+Focus on specific UI elements:
+- Zoom into specific regions
+- Animated circles/arrows pointing to features
+- Slow-motion emphasis on key interactions
+- Side-by-side before/after comparisons
+
+### Pattern 3: User Flow
+
+Show step-by-step user journey:
+- Sequential screen flow with directional slides
+- Numbered steps overlay
+- Highlight user actions (clicks, taps)
+- Connect screens with animated paths
+
+## Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| **Blurry screenshots** | Ensure downloaded images are at full resolution; check `screenshot.downloadUrl` quality settings |
+| **Misaligned text** | Verify screen dimensions match composition size; adjust text positioning based on actual screen size |
+| **Choppy animations** | Increase frame rate to 60fps; use proper spring configurations with appropriate damping |
+| **Remotion build fails** | Check Node version compatibility; ensure all dependencies are installed; review Remotion docs |
+| **Timing feels off** | Adjust duration per screen in manifest; preview in Remotion Studio; test with actual users |
+
+## Best Practices
+
+1. **Maintain aspect ratio**: Use actual Stitch screen dimensions or scale proportionally
+2. **Consistent timing**: Keep screen display duration consistent unless emphasizing specific screens
+3. **Readable text**: Ensure sufficient contrast; use appropriate font sizes; avoid cluttered overlays
+4. **Smooth transitions**: Use spring animations for natural motion; avoid jarring cuts
+5. **Preview thoroughly**: Always preview in Remotion Studio before final render
+6. **Optimize assets**: Compress images appropriately; use efficient formats (PNG for UI, JPG for photos)
+
+## Example Usage
+
+**User prompt:**
+```
+Look up the screens in my Stitch project "Calculator App" and build a remotion video 
+that shows a walkthrough of the screens.
 ```
 
----
+**Agent workflow:**
+1. List Stitch projects → Find "Calculator App" → Extract project ID
+2. List screens in project → Identify all screens (Home, History, Settings)
+3. Download screenshots for each screen → Save to `assets/screens/`
+4. Create `screens.json` manifest with screen metadata
+5. Generate Remotion components (`ScreenSlide.tsx`, `WalkthroughComposition.tsx`)
+6. Preview in Remotion Studio → Refine timing and transitions
+7. Render final video → `calculator-walkthrough.mp4`
+8. Report completion with video preview link
 
-## レンダリング
+## Tips for Success
 
-### 標準（YouTube/LP用）
-```bash
-npx remotion render src/index.ts CompositionName out/video.mp4
-```
+- **Start simple**: Begin with basic fade transitions before adding complex animations
+- **Follow Remotion patterns**: Leverage Remotion's official skills and documentation
+- **Use manifest files**: Keep screen data organized in JSON for easy updates
+- **Preview frequently**: Use Remotion Studio to catch issues early
+- **Consider accessibility**: Add captions; ensure text is readable; use clear visuals
+- **Optimize for platform**: Match video dimensions to target platform (YouTube, social media, etc.)
 
-### 高品質
-```bash
-npx remotion render src/index.ts CompositionName out/video-hq.mp4 \
-  --codec=h264 \
-  --quality=100
-```
+## References
 
-### SNS向け縦型
-```bash
-# Instagram Reels / TikTok
-npx remotion render src/index.ts VerticalComp out/vertical.mp4 \
-  --height=1920 --width=1080
-```
+- **Stitch Documentation**: https://stitch.withgoogle.com/docs/
+- **Remotion Documentation**: https://www.remotion.dev/docs/
+- **Remotion Skills**: https://www.remotion.dev/docs/ai/skills
+- **Remotion MCP**: https://www.remotion.dev/docs/ai/mcp
+- **Remotion Transitions**: https://www.remotion.dev/docs/transitions
 
-### GIF（短尺・ループ用）
-```bash
-npx remotion render src/index.ts ShortLoop out/loop.gif \
-  --codec=gif
-```
 
----
+## When to Use
+Use this skill when tackling tasks related to its primary domain or functionality as described above.
 
-## 関連ファイル
-
-- `hoo-animation.md` - Hooアニメーション詳細仕様
-- `remotion-handson-glasswerks.md` - Remotionハンズオンメモ
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

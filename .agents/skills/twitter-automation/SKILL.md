@@ -3,11 +3,14 @@ name: twitter-automation
 description: "Automate Twitter/X tasks via Rube MCP (Composio): posts, search, users, bookmarks, lists, media. Always search tools first for current schemas."
 requires:
   mcp: [rube]
+category: social-media
 ---
 
 # Twitter/X Automation via Rube MCP
 
 Automate Twitter/X operations through Composio's Twitter toolkit via Rube MCP.
+
+**Toolkit docs**: [composio.dev/toolkits/twitter](https://composio.dev/toolkits/twitter)
 
 ## Prerequisites
 
@@ -229,3 +232,6 @@ Automate Twitter/X operations through Composio's Twitter toolkit via Rube MCP.
 | Pinned lists | TWITTER_GET_A_USER_S_PINNED_LISTS | id |
 | Followed lists | TWITTER_GET_USER_S_FOLLOWED_LISTS | id |
 | List details | TWITTER_LIST_LOOKUP_BY_LIST_ID | list_id |
+
+---
+*Powered by [Composio](https://composio.dev)*

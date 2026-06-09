@@ -1,142 +1,77 @@
 ---
-name: Xlsx
-description: Excel file processing. USE WHEN xlsx, Excel, spreadsheet. SkillSearch('xlsx') for docs.
+name: xlsx
+description: "Spreadsheet creation, editing, and analysis. Two approaches: Programmatic (openpyxl/pandas for .xlsx files with formulas, formatting, and data analysis) and Browser-based (Excel Online via Playwright for pivot tables, charts, and collaboration). Use when the user wants to create, read, edit, or fix .xlsx/.xlsm/.csv/.tsv files, or work with Excel Online."
 ---
 
-# Requirements for Outputs
+# XLSX — Spreadsheet Skill
 
-## 🎯 Load Full PAI Context
+Two approaches for working with spreadsheets depending on the task:
 
-**Before starting any task with this skill, load complete PAI context:**
+| Approach | Tool | Best For |
+|----------|------|----------|
+| Programmatic | openpyxl / pandas | Creating files, bulk data, formulas, automation |
+| Browser-based | Excel Online via Playwright | Pivot tables, charts, collaboration, interactive editing |
 
-`read ~/.claude/skills/PAI/SKILL.md`
+---
 
-This provides access to:
-- Complete contact list (Angela, Bunny, Saša, Greg, team members)
-- Stack preferences (TypeScript>Python, bun>npm, uv>pip)
-- Security rules and repository safety protocols
-- Response format requirements (structured emoji format)
-- Voice IDs for agent routing (ElevenLabs)
-- Personal preferences and operating instructions
+## Part 1: Programmatic Approach (openpyxl / pandas)
 
-## 🔀 When to Use This Sub-Skill
+### Requirements for All Excel Outputs
 
-This sub-skill activates when the user's request involves Excel spreadsheets (.xlsx, .xlsm, .csv, .tsv).
+#### Professional Font
+- Use a consistent, professional font (e.g., Arial, Times New Roman) unless otherwise instructed
 
-### Explicit Triggers
-- User mentions "create spreadsheet", "new Excel file", "Excel workbook"
-- User requests "formulas", "financial model", "financial modeling"
-- User wants to "recalculate" or "recalculate formulas"
-- User says "analyze data in Excel", "read Excel", "Excel data analysis"
-- User mentions .xlsx, .xlsm, .csv, or .tsv files
-
-### Contextual Triggers
-- User provides path to .xlsx/.xlsm file
-- User discusses calculations, projections, or financial data
-- User mentions financial projections, revenue models, or valuations
-- User wants to work with spreadsheet formulas or data
-
-### Workflow Routing
-
-**Creation Workflow (openpyxl):**
-- "Create spreadsheet", "new Excel file", "build financial model"
-- User wants to create new .xlsx files with formulas and formatting
-- Use openpyxl for formula support and Excel-specific features
-
-**Editing Workflow (openpyxl):**
-- "Edit spreadsheet", "modify Excel", "update cells"
-- User wants to modify existing .xlsx files while preserving formulas
-- Use `load_workbook()` to preserve existing formatting and formulas
-
-**Data Analysis Workflow (pandas):**
-- "Analyze data", "read Excel", "data visualization"
-- User wants to analyze or visualize data from Excel files
-- Use pandas for powerful data manipulation and analysis
-
-**Financial Modeling Workflow:**
-- "Financial model", "revenue projections", "valuation model"
-- User wants professional financial models with color coding
-- Follow financial model standards (blue inputs, black formulas, green links)
-
-**Recalculation Workflow:**
-- "Recalculate", "update formula values", "calculate formulas"
-- After creating/editing files with formulas
-- MANDATORY step after using formulas - run `recalc.py` script
-
-## All Excel files
-
-### Zero Formula Errors
+#### Zero Formula Errors
 - Every Excel model MUST be delivered with ZERO formula errors (#REF!, #DIV/0!, #VALUE!, #N/A, #NAME?)
 
-### Preserve Existing Templates (when updating templates)
+#### Preserve Existing Templates
 - Study and EXACTLY match existing format, style, and conventions when modifying files
-- Never impose standardized formatting on files with established patterns
 - Existing template conventions ALWAYS override these guidelines
 
-## Financial models
+### Financial Model Standards
 
-### Color Coding Standards
-Unless otherwise stated by the user or existing template
-
-#### Industry-Standard Color Conventions
-- **Blue text (RGB: 0,0,255)**: Hardcoded inputs, and numbers users will change for scenarios
+#### Color Coding (Industry-Standard)
+- **Blue text (RGB: 0,0,255)**: Hardcoded inputs and scenario-adjustable numbers
 - **Black text (RGB: 0,0,0)**: ALL formulas and calculations
-- **Green text (RGB: 0,128,0)**: Links pulling from other worksheets within same workbook
+- **Green text (RGB: 0,128,0)**: Links pulling from other worksheets
 - **Red text (RGB: 255,0,0)**: External links to other files
-- **Yellow background (RGB: 255,255,0)**: Key assumptions needing attention or cells that need to be updated
+- **Yellow background (RGB: 255,255,0)**: Key assumptions needing attention
 
-### Number Formatting Standards
-
-#### Required Format Rules
-- **Years**: Format as text strings (e.g., "2024" not "2,024")
+#### Number Formatting
+- **Years**: Format as text strings ("2024" not "2,024")
 - **Currency**: Use $#,##0 format; ALWAYS specify units in headers ("Revenue ($mm)")
-- **Zeros**: Use number formatting to make all zeros "-", including percentages (e.g., "$#,##0;($#,##0);-")
+- **Zeros**: Use formatting to display as "-" including percentages
 - **Percentages**: Default to 0.0% format (one decimal)
-- **Multiples**: Format as 0.0x for valuation multiples (EV/EBITDA, P/E)
+- **Multiples**: Format as 0.0x for valuation multiples
 - **Negative numbers**: Use parentheses (123) not minus -123
 
-### Formula Construction Rules
+#### Formula Rules
+- Place ALL assumptions in separate cells, use cell references in formulas
+- Use `=B5*(1+$B$6)` instead of `=B5*1.05`
+- Document hardcodes with source comments
 
-#### Assumptions Placement
-- Place ALL assumptions (growth rates, margins, multiples, etc.) in separate assumption cells
-- Use cell references instead of hardcoded values in formulas
-- Example: Use =B5*(1+$B$6) instead of =B5*1.05
+### CRITICAL: Use Formulas, Not Hardcoded Values
 
-#### Formula Error Prevention
-- Verify all cell references are correct
-- Check for off-by-one errors in ranges
-- Ensure consistent formulas across all projection periods
-- Test with edge cases (zero values, negative numbers)
-- Verify no unintended circular references
+Always use Excel formulas instead of calculating values in Python and hardcoding them.
 
-#### Documentation Requirements for Hardcodes
-- Comment or in cells beside (if end of table). Format: "Source: [System/Document], [Date], [Specific Reference], [URL if applicable]"
-- Examples:
-  - "Source: Company 10-K, FY2024, Page 45, Revenue Note, [SEC EDGAR URL]"
-  - "Source: Company 10-Q, Q2 2025, Exhibit 99.1, [SEC EDGAR URL]"
-  - "Source: Bloomberg Terminal, 8/15/2025, AAPL US Equity"
-  - "Source: FactSet, 8/20/2025, Consensus Estimates Screen"
+```python
+# WRONG - Hardcoding calculated values
+total = df['Sales'].sum()
+sheet['B10'] = total  # Hardcodes 5000
 
-# XLSX creation, editing, and analysis
+# CORRECT - Using Excel formulas
+sheet['B10'] = '=SUM(B2:B9)'
+sheet['C5'] = '=(C4-C2)/C2'
+sheet['D20'] = '=AVERAGE(D2:D19)'
+```
 
-## Overview
-
-A user may ask you to create, edit, or analyze the contents of an .xlsx file. You have different tools and workflows available for different tasks.
-
-## Important Requirements
-
-**LibreOffice Required for Formula Recalculation**: You can assume LibreOffice is installed for recalculating formula values using the `recalc.py` script. The script automatically configures LibreOffice on first run
-
-## Reading and analyzing data
-
-### Data analysis with pandas
-For data analysis, visualization, and basic operations, use **pandas** which provides powerful data manipulation capabilities:
+### Reading and Analyzing Data
 
 ```python
 import pandas as pd
 
 # Read Excel
-df = pd.read_excel('file.xlsx')  # Default: first sheet
+df = pd.read_excel('file.xlsx')                    # Default: first sheet
 all_sheets = pd.read_excel('file.xlsx', sheet_name=None)  # All sheets as dict
 
 # Analyze
@@ -148,64 +83,9 @@ df.describe()  # Statistics
 df.to_excel('output.xlsx', index=False)
 ```
 
-## Excel File Workflows
-
-## CRITICAL: Use Formulas, Not Hardcoded Values
-
-**Always use Excel formulas instead of calculating values in Python and hardcoding them.** This ensures the spreadsheet remains dynamic and updateable.
-
-### ❌ WRONG - Hardcoding Calculated Values
-```python
-# Bad: Calculating in Python and hardcoding result
-total = df['Sales'].sum()
-sheet['B10'] = total  # Hardcodes 5000
-
-# Bad: Computing growth rate in Python
-growth = (df.iloc[-1]['Revenue'] - df.iloc[0]['Revenue']) / df.iloc[0]['Revenue']
-sheet['C5'] = growth  # Hardcodes 0.15
-
-# Bad: Python calculation for average
-avg = sum(values) / len(values)
-sheet['D20'] = avg  # Hardcodes 42.5
-```
-
-### ✅ CORRECT - Using Excel Formulas
-```python
-# Good: Let Excel calculate the sum
-sheet['B10'] = '=SUM(B2:B9)'
-
-# Good: Growth rate as Excel formula
-sheet['C5'] = '=(C4-C2)/C2'
-
-# Good: Average using Excel function
-sheet['D20'] = '=AVERAGE(D2:D19)'
-```
-
-This applies to ALL calculations - totals, percentages, ratios, differences, etc. The spreadsheet should be able to recalculate when source data changes.
-
-## Common Workflow
-1. **Choose tool**: pandas for data, openpyxl for formulas/formatting
-2. **Create/Load**: Create new workbook or load existing file
-3. **Modify**: Add/edit data, formulas, and formatting
-4. **Save**: Write to file
-5. **Recalculate formulas (MANDATORY IF USING FORMULAS)**: Use the recalc.py script
-   ```bash
-   python recalc.py output.xlsx
-   ```
-6. **Verify and fix any errors**: 
-   - The script returns JSON with error details
-   - If `status` is `errors_found`, check `error_summary` for specific error types and locations
-   - Fix the identified errors and recalculate again
-   - Common errors to fix:
-     - `#REF!`: Invalid cell references
-     - `#DIV/0!`: Division by zero
-     - `#VALUE!`: Wrong data type in formula
-     - `#NAME?`: Unrecognized formula name
-
-### Creating new Excel files
+### Creating New Excel Files
 
 ```python
-# Using openpyxl for formulas and formatting
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 
@@ -231,25 +111,22 @@ sheet.column_dimensions['A'].width = 20
 wb.save('output.xlsx')
 ```
 
-### Editing existing Excel files
+### Editing Existing Files
 
 ```python
-# Using openpyxl to preserve formulas and formatting
 from openpyxl import load_workbook
 
-# Load existing file
 wb = load_workbook('existing.xlsx')
-sheet = wb.active  # or wb['SheetName'] for specific sheet
+sheet = wb.active  # or wb['SheetName']
 
 # Working with multiple sheets
 for sheet_name in wb.sheetnames:
     sheet = wb[sheet_name]
-    print(f"Sheet: {sheet_name}")
 
 # Modify cells
 sheet['A1'] = 'New Value'
-sheet.insert_rows(2)  # Insert row at position 2
-sheet.delete_cols(3)  # Delete column 3
+sheet.insert_rows(2)
+sheet.delete_cols(3)
 
 # Add new sheet
 new_sheet = wb.create_sheet('NewSheet')
@@ -258,115 +135,159 @@ new_sheet['A1'] = 'Data'
 wb.save('modified.xlsx')
 ```
 
-## Recalculating formulas
+### Recalculating Formulas
 
-Excel files created or modified by openpyxl contain formulas as strings but not calculated values. Use the provided `recalc.py` script to recalculate formulas:
+**LibreOffice Required**: Use the provided `scripts/recalc.py` script to recalculate formula values.
 
 ```bash
-python recalc.py <excel_file> [timeout_seconds]
-```
-
-Example:
-```bash
-python recalc.py output.xlsx 30
+python scripts/recalc.py output.xlsx 30
 ```
 
 The script:
 - Automatically sets up LibreOffice macro on first run
 - Recalculates all formulas in all sheets
-- Scans ALL cells for Excel errors (#REF!, #DIV/0!, etc.)
+- Scans ALL cells for Excel errors
 - Returns JSON with detailed error locations and counts
-- Works on both Linux and macOS
 
-## Formula Verification Checklist
-
-Quick checks to ensure formulas work correctly:
-
-### Essential Verification
-- [ ] **Test 2-3 sample references**: Verify they pull correct values before building full model
-- [ ] **Column mapping**: Confirm Excel columns match (e.g., column 64 = BL, not BK)
-- [ ] **Row offset**: Remember Excel rows are 1-indexed (DataFrame row 5 = Excel row 6)
-
-### Common Pitfalls
-- [ ] **NaN handling**: Check for null values with `pd.notna()`
-- [ ] **Far-right columns**: FY data often in columns 50+ 
-- [ ] **Multiple matches**: Search all occurrences, not just first
-- [ ] **Division by zero**: Check denominators before using `/` in formulas (#DIV/0!)
-- [ ] **Wrong references**: Verify all cell references point to intended cells (#REF!)
-- [ ] **Cross-sheet references**: Use correct format (Sheet1!A1) for linking sheets
-
-### Formula Testing Strategy
-- [ ] **Start small**: Test formulas on 2-3 cells before applying broadly
-- [ ] **Verify dependencies**: Check all cells referenced in formulas exist
-- [ ] **Test edge cases**: Include zero, negative, and very large values
-
-### Interpreting recalc.py Output
-The script returns JSON with error details:
 ```json
 {
-  "status": "success",           // or "errors_found"
-  "total_errors": 0,              // Total error count
-  "total_formulas": 42,           // Number of formulas in file
-  "error_summary": {              // Only present if errors found
-    "#REF!": {
-      "count": 2,
-      "locations": ["Sheet1!B5", "Sheet1!C10"]
-    }
-  }
+  "status": "success",
+  "total_errors": 0,
+  "total_formulas": 42,
+  "error_summary": {}
 }
 ```
 
-## Best Practices
+### Formula Verification Checklist
 
-### Library Selection
-- **pandas**: Best for data analysis, bulk operations, and simple data export
+- [ ] Test 2-3 sample references before building full model
+- [ ] Confirm column mapping (column 64 = BL, not BK)
+- [ ] Remember row offset (DataFrame row 5 = Excel row 6)
+- [ ] Handle NaN with `pd.notna()`
+- [ ] Check far-right columns (FY data often in columns 50+)
+- [ ] Verify cross-sheet references use correct format (Sheet1!A1)
+- [ ] Test edge cases: zero, negative, and very large values
+
+### Library Selection Guide
+
+- **pandas**: Best for data analysis, bulk operations, simple data export
 - **openpyxl**: Best for complex formatting, formulas, and Excel-specific features
+- **Warning**: `load_workbook('file.xlsx', data_only=True)` replaces formulas with values if saved
 
-### Working with openpyxl
-- Cell indices are 1-based (row=1, column=1 refers to cell A1)
-- Use `data_only=True` to read calculated values: `load_workbook('file.xlsx', data_only=True)`
-- **Warning**: If opened with `data_only=True` and saved, formulas are replaced with values and permanently lost
-- For large files: Use `read_only=True` for reading or `write_only=True` for writing
-- Formulas are preserved but not evaluated - use recalc.py to update values
+---
 
-### Working with pandas
-- Specify data types to avoid inference issues: `pd.read_excel('file.xlsx', dtype={'id': str})`
-- For large files, read specific columns: `pd.read_excel('file.xlsx', usecols=['A', 'C', 'E'])`
-- Handle dates properly: `pd.read_excel('file.xlsx', parse_dates=['date_column'])`
+## Part 2: Browser-Based Approach (Excel Online)
+
+For interactive spreadsheet work via Playwright MCP automation.
+
+### Setup
+
+Configure via canifi-env:
+```bash
+canifi-env set MICROSOFT_EMAIL "your-email@outlook.com"
+```
+
+### Authentication Options
+
+**Option 1: Manual Browser Login (Recommended)**
+1. Complete Browser Automation Setup using CDP mode
+2. Login to Excel Online manually in the Playwright-controlled Chrome window
+3. Claude uses your authenticated session without seeing your password
+
+**Option 2: Environment Variables**
+```bash
+canifi-env set SERVICE_EMAIL "your-email"
+canifi-env set SERVICE_PASSWORD "your-password"
+```
+
+### Browser Capabilities
+- Create and edit spreadsheets
+- Build formulas and functions
+- Create charts and visualizations
+- Apply conditional formatting
+- Create pivot tables
+- Sort and filter data
+- Use data validation
+- Import and export data
+- Collaborate in real-time
+
+### Usage Examples
+
+**Create Spreadsheet:**
+```
+User: "Create an expense tracker in Excel"
+Claude: Creates new workbook "Expense Tracker", adds columns for
+        Date, Category, Description, Amount. Adds SUM formula for total.
+```
+
+**Analyze Data:**
+```
+User: "Create a pivot table from my sales data"
+Claude: Selects data range, inserts pivot table,
+        configures rows, columns, and values.
+```
+
+**Create Chart:**
+```
+User: "Make a line chart showing revenue trends"
+Claude: Selects revenue data, inserts line chart,
+        adds titles and labels.
+```
+
+### Selectors Reference
+
+```javascript
+// New workbook
+'[aria-label="New blank workbook"]'
+
+// Cell input
+'.formulabar-input' or 'input[name="Cell"]'
+
+// Ribbon tabs
+'[role="tablist"]'
+'[aria-label="Insert"]'
+'[aria-label="Formulas"]'
+'[aria-label="Data"]'
+
+// Actions
+'[aria-label="Insert chart"]'
+'[aria-label="Sort"]'
+'[aria-label="Filter"]'
+```
+
+### Common Formulas
+
+```
+=SUM(A1:A10)              // Sum range
+=AVERAGE(A1:A10)          // Average
+=VLOOKUP(key,range,col,0) // Vertical lookup
+=IF(condition,true,false)  // Conditional
+=COUNTIF(range,criteria)   // Count matching
+=SUMIF(range,crit,sum)     // Sum matching
+=TEXT(A1,"format")         // Format text
+=TODAY()                   // Current date
+=CONCATENATE(A1,B1)        // Join text
+```
+
+### Error Handling
+- **Login Failed**: Retry 3 times, notify user
+- **Session Expired**: Re-authenticate automatically
+- **Workbook Not Found**: Search OneDrive, ask for clarification
+- **Formula Error**: Identify error type, suggest fix
+- **Save Failed**: Enable AutoSave, retry
+
+### Excel Online Limitations
+- Auto-saves to OneDrive
+- Some advanced features only in desktop version
+- Maximum rows: 1,048,576 per sheet
+- Power Query limited in online version
+- Macros not supported in online version
+- Can open and edit .xlsx, .xlsm files
+
+---
 
 ## Code Style Guidelines
-**IMPORTANT**: When generating Python code for Excel operations:
-- Write minimal, concise Python code without unnecessary comments
-- Avoid verbose variable names and redundant operations
-- Avoid unnecessary print statements
 
-**For Excel files themselves**:
-- Add comments to cells with complex formulas or important assumptions
-- Document data sources for hardcoded values
-- Include notes for key calculations and model sections
+**For Python code**: Write minimal, concise code without unnecessary comments or verbose variable names.
 
-## Examples
-
-**Example 1: Build a financial model**
-```
-User: "Create a revenue projection model for the next 5 years"
-→ Creates workbook with assumptions sheet + projections
-→ Uses Excel formulas (=SUM, growth rates) not hardcoded values
-→ Applies color coding (blue inputs, black formulas), runs recalc.py
-```
-
-**Example 2: Analyze data from Excel file**
-```
-User: "What are the top 10 customers by revenue in this spreadsheet?"
-→ Reads Excel with pandas
-→ Groups, sorts, and filters data
-→ Returns summary with statistics
-```
-
-**Example 3: Update existing spreadsheet**
-```
-User: "Add a new column with profit margin calculations"
-→ Loads workbook preserving existing formulas
-→ Adds new column with margin formula referencing existing cells
-→ Saves and recalculates to verify no errors
-```
+**For Excel files**: Add comments to cells with complex formulas, document data sources for hardcoded values, include notes for key calculations.

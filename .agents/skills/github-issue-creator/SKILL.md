@@ -1,49 +1,137 @@
 ---
 name: github-issue-creator
-description: "Creates well-structured GitHub issues for the MCPSpy project using the gh CLI tool. Use when asked to create issues, report bugs, or document features. Follows conventional naming with feat/chore/fix prefixes and maintains appropriate detail levels."
-allowed-tools:
-  - Bash(gh issue:*)
+description: Convert raw notes, error logs, voice dictation, or screenshots into crisp GitHub-flavored markdown issue reports. Use when the user pastes bug info, error messages, or informal descriptions and wants a structured GitHub issue. Supports images/GIFs for visual evidence.
 ---
 
-# GitHub Issue Creator Skill
+# GitHub Issue Creator
 
-Automates the creation of well-structured GitHub issues for the MCPSpy project.
+Transform messy input (error logs, voice notes, screenshots) into clean, actionable GitHub issues.
 
-## Tools and Usage
+## Output Template
 
-Use the `gh issue` CLI tool to create GitHub issues. If the issue body is rather long, write it to a temporary markdown file and use the `gh issue create --body-file <file>` option.
+```markdown
+## Summary
+[One-line description of the issue]
 
-## Issue Naming Convention
+## Environment
+- **Product/Service**: 
+- **Region/Version**: 
+- **Browser/OS**: (if relevant)
 
-- Use standard prefixes: `feat(component):`, `chore:`, `fix(component):`
-- Component examples: `library-manager`, `ebpf`, `mcp`, `http`, `output`
-- Brackets are optional but recommended for clarity
-- Keep titles concise and descriptive
+## Reproduction Steps
+1. [Step]
+2. [Step]
+3. [Step]
 
-### Examples
+## Expected Behavior
+[What should happen]
 
-- `feat(library-manager): add support for container runtime detection`
-- `chore: update dependencies to latest versions`
-- `fix(ebpf): handle kernel version compatibility issues`
+## Actual Behavior
+[What actually happens]
 
-## Issue Content Guidelines
+## Error Details
+```
+[Error message/code if applicable]
+```
 
-### What to Include
+## Visual Evidence
+[Reference to attached screenshots/GIFs]
 
-- **High-level design notes** - focus on the "what" and "why"
-- **POC-level details** - enough to get started, not exhaustive
-- **Actionable scope** - should be implementable by a developer familiar with the codebase
+## Impact
+[Severity: Critical/High/Medium/Low + brief explanation]
 
-### What NOT to Include
+## Additional Context
+[Any other relevant details]
+```
 
-- Detailed test plans
-- Exhaustive acceptance criteria
-- Deep technical specifications
-- Code examples (unless absolutely necessary for clarity)
+## Output Location
 
-## When to Use This Skill
+**Create issues as markdown files** in `/issues/` directory at the repo root. Use naming convention: `YYYY-MM-DD-short-description.md`
 
-- Creating new feature requests
-- Reporting bugs and issues
-- Documenting technical debt
-- Planning work items for the MCPSpy project
+## Guidelines
+
+**Be crisp**: No fluff. Every word should add value.
+
+**Extract structure from chaos**: Voice dictation and raw notes often contain the facts buried in casual language. Pull them out.
+
+**Infer missing context**: If user mentions "same project" or "the dashboard", use context from conversation or memory to fill in specifics.
+
+**Placeholder sensitive data**: Use `[PROJECT_NAME]`, `[USER_ID]`, etc. for anything that might be sensitive.
+
+**Match severity to impact**:
+- Critical: Service down, data loss, security issue
+- High: Major feature broken, no workaround
+- Medium: Feature impaired, workaround exists
+- Low: Minor inconvenience, cosmetic
+
+**Image/GIF handling**: Reference attachments inline. Format: `![Description](attachment-name.png)`
+
+## Examples
+
+**Input (voice dictation)**:
+> so I was trying to deploy the agent and it just failed silently no error nothing the workflow ran but then poof gone from the list had to refresh and try again three times
+
+**Output**:
+```markdown
+## Summary
+Agent deployment fails silently - no error displayed, agent disappears from list
+
+## Environment
+- **Product/Service**: Azure AI Foundry
+- **Region/Version**: westus2
+
+## Reproduction Steps
+1. Navigate to agent deployment
+2. Configure and deploy agent
+3. Observe workflow completes
+4. Check agent list
+
+## Expected Behavior
+Agent appears in list with deployment status, errors shown if deployment fails
+
+## Actual Behavior
+Agent disappears from list. No error message. Requires page refresh and retry.
+
+## Impact
+**High** - Blocks agent deployment workflow, no feedback on failure cause
+
+## Additional Context
+Required 3 retry attempts before successful deployment
+```
+
+---
+
+**Input (error paste)**:
+> Error: PERMISSION_DENIED when publishing to Teams channel. Code: 403. Was working yesterday.
+
+**Output**:
+```markdown
+## Summary
+403 PERMISSION_DENIED error when publishing to Teams channel
+
+## Environment
+- **Product/Service**: Copilot Studio → Teams integration
+- **Region/Version**: [REGION]
+
+## Reproduction Steps
+1. Configure agent for Teams channel
+2. Attempt to publish
+
+## Expected Behavior
+Agent publishes successfully to Teams channel
+
+## Actual Behavior
+Returns `PERMISSION_DENIED` with code 403
+
+## Error Details
+```
+Error: PERMISSION_DENIED
+Code: 403
+```
+
+## Impact
+**High** - Blocks Teams integration, regression from previous working state
+
+## Additional Context
+Was working yesterday - possible permission/config change or service regression
+```

@@ -1,499 +1,682 @@
 ---
-name: "Vercel Deployment"
-description: "Deploy Next.js to Vercel with zero-config, manage environment variables, set up CI/CD pipelines, and optimize production performance. Apply when deploying to Vercel, configuring environments, or setting up CI/CD workflows."
-allowed-tools: Read, Write, Edit, Bash
-version: 1.1.0
-compatibility: Claude Opus 4.5, Claude Code v2.x
-updated: 2026-01-24
+name: vercel-deployment
+description: Expert knowledge for deploying to Vercel with Next.js
+risk: safe
+source: vibeship-spawner-skills (Apache 2.0)
+date_added: 2026-02-27
 ---
 
 # Vercel Deployment
 
-Systematic Vercel deployment ensuring fast, scalable, production-ready applications with CI/CD automation.
+Expert knowledge for deploying to Vercel with Next.js
 
-## Overview
+## Capabilities
 
-This Skill enforces:
-- Zero-config Next.js deployments
-- Secure environment variable management
-- Automated CI/CD pipelines (GitHub Actions)
-- Preview deployments for every PR
-- Production deployments on main branch merge
-- Performance optimization
+- vercel
+- deployment
+- edge-functions
+- serverless
+- environment-variables
 
-Apply when deploying to Vercel, configuring environments, or testing CI/CD workflows.
+## Prerequisites
 
-## Deployment Workflow
+- Required skills: nextjs-app-router
 
-**Every deployment follows this process**:
+## Patterns
 
-```
-Step 1: Connect GitHub repository
-  ↓
-Step 2: Configure environment variables
-  ↓
-Step 3: Set up CI/CD pipelines
-  ↓
-Step 4: Trigger preview deployment (on PR)
-  ↓
-Step 5: Merge and deploy production
-  ↓
-Step 6: Monitor performance
-```
+### Environment Variables Setup
 
-## Step 1: Initial Connection
+Properly configure environment variables for all environments
 
-### Connect GitHub Repository
+**When to use**: Setting up a new project on Vercel
 
-```bash
-# 1. Visit https://vercel.com and login
-# 2. Click "New Project"
-# 3. Select GitHub repository
-# 4. Vercel auto-detects Next.js
-# 5. Click "Deploy"
-```
+// Three environments in Vercel:
+// - Development (local)
+// - Preview (PR deployments)
+// - Production (main branch)
 
-**Vercel automatically detects**:
-- Framework: Next.js
-- Build command: `next build`
-- Output directory: `.next`
-- Install command: `npm install`
+// In Vercel Dashboard:
+// Settings → Environment Variables
 
-No configuration needed for basic setup.
+// PUBLIC variables (exposed to browser)
+NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 
-### Verify Deployment
+// PRIVATE variables (server only)
+SUPABASE_SERVICE_ROLE_KEY=eyJ...  // Never NEXT_PUBLIC_!
+DATABASE_URL=postgresql://...
 
-After deploy:
-- Live at: `yourproject.vercel.app`
-- Production domain: `yourdomain.com` (if configured)
-- Preview URL provided in PR comments
+// Per-environment values:
+// Production: Real database, production API keys
+// Preview: Staging database, test API keys
+// Development: Local/dev values (also in .env.local)
 
-## Step 2: Environment Variables
+// In code, check environment:
+const isProduction = process.env.VERCEL_ENV === 'production'
+const isPreview = process.env.VERCEL_ENV === 'preview'
 
-### Setup Variables
+### Edge vs Serverless Functions
 
-**MUST NOT**: Hardcode secrets in code or commit `.env` files.
+Choose the right runtime for your API routes
 
-### Local Development
+**When to use**: Creating API routes or middleware
 
-Pull dev environment variables:
+// EDGE RUNTIME - Fast cold starts, limited APIs
+// Good for: Auth checks, redirects, simple transforms
 
-```bash
-vercel env pull
-```
+// app/api/hello/route.ts
+export const runtime = 'edge'
 
-This creates `.env.local` with variables from Vercel Development environment.
-
-Add to `.gitignore`:
-```
-.env.local
-.env.*.local
-```
-
-### Vercel Dashboard Configuration
-
-1. Go to Project Settings → Environment Variables
-2. Add variable for each environment:
-   - **Development**: Local development only
-   - **Preview**: Pull requests and branches
-   - **Production**: Main branch deployments
-
-### Variable Types
-
-```
-Regular: Visible in logs and build output
-Sensitive: Hidden, only for production/preview
-System: Vercel-provided (__VERCEL_*)
-```
-
-### Example Configuration
-
-```
-DATABASE_URL=postgresql://...        # All environments
-NEXT_PUBLIC_API_URL=https://api....  # Public (prefixed with NEXT_PUBLIC_)
-STRIPE_SECRET_KEY=sk_live_...        # Sensitive production only
-```
-
-### Accessing Variables
-
-**Public variables** (client-side, prefixed `NEXT_PUBLIC_`):
-
-```ts
-// Available in browser
-const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-```
-
-**Secret variables** (server-side only):
-
-```ts
-// Only available on server
-export async function getServerSideProps() {
-  const dbUrl = process.env.DATABASE_URL;  // Server-side only
-  return { props: {} };
-}
-```
-
-**Anti-Pattern**:
-
-```ts
-// ❌ BAD: Hardcoded secrets
-const apiKey = 'sk-1234567890';
-
-// ❌ BAD: Committing .env
-git add .env  // NEVER!
-
-// ❌ BAD: Public secret key
-const apiKey = process.env.STRIPE_SECRET_KEY;  // Exposed in browser!
-```
-
-## Step 3: CI/CD Pipeline Setup
-
-### MUST NOT: Mention Claude/Anthropic
-
-No automated footers, comments, or attributions to Claude or Anthropic in any generated code or documentation.
-
-### GitHub Actions Workflow
-
-Create `.github/workflows/production.yaml`:
-
-```yaml
-name: Vercel Production Deployment
-
-env:
-  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
-on:
-  push:
-    branches:
-      - main
-
-jobs:
-  Deploy-Production:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run linting
-        run: npm run lint
-
-      - name: Run tests
-        run: npm run test
-
-      - name: Build
-        run: npm run build
-
-      - name: Install Vercel CLI
-        run: npm install -g vercel
-
-      - name: Pull Vercel environment
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Deploy to Production
-        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
-```
-
-### Preview Deployment
-
-Create `.github/workflows/preview.yaml`:
-
-```yaml
-name: Vercel Preview Deployment
-
-env:
-  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
-on:
-  pull_request:
-
-jobs:
-  Deploy-Preview:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run linting
-        run: npm run lint
-
-      - name: Run tests
-        run: npm run test
-
-      - name: Build
-        run: npm run build
-
-      - name: Install Vercel CLI
-        run: npm install -g vercel
-
-      - name: Pull Vercel environment
-        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Deploy to Preview
-        run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
-```
-
-### Configure GitHub Secrets
-
-Add to GitHub repository → Settings → Secrets and variables → Actions:
-
-```
-VERCEL_ORG_ID     # From vercel link command
-VERCEL_PROJECT_ID # From vercel link command
-VERCEL_TOKEN      # From Vercel account settings
-```
-
-### Linking Project
-
-```bash
-# Link project to Vercel
-vercel link
-
-# Creates .vercel/project.json with project and org IDs
-# Copy these to GitHub Secrets
-```
-
-## Step 4: Preview Deployments
-
-### Automatic PR Previews
-
-When PR opens:
-1. GitHub Actions triggers preview workflow
-2. Code is tested, built, deployed
-3. Preview URL added to PR comments
-4. Team reviews in production-like environment
-5. Unique URL for each PR: `project-pr-123.vercel.app`
-
-### Workflow
-
-```
-Push to feature branch → GitHub Actions runs tests & builds
-  ↓
-Deploy preview to Vercel
-  ↓
-PR gets preview URL comment
-  ↓
-Team reviews changes
-  ↓
-Merge to main triggers production
-```
-
-## Step 5: Production Deployment
-
-### Merge to Main
-
-```bash
-# After PR approval
-git checkout main
-git pull origin main
-git merge feature-branch
-git push origin main
-
-# GitHub Actions automatically:
-# 1. Runs linting
-# 2. Runs tests
-# 3. Builds project
-# 4. Deploys to production
-```
-
-### Deployment Checklist
-
-Before merging to main:
-
-- [ ] All tests pass locally
-- [ ] Linting passes
-- [ ] TypeScript compiles
-- [ ] Preview deployment tested
-- [ ] No sensitive data in code
-- [ ] Environment variables configured
-- [ ] Performance optimizations applied
-
-## Step 6: Performance Optimization
-
-### Image Optimization
-
-```tsx
-// ✅ GOOD: Use next/image
-import Image from 'next/image';
-
-export function ProfileImage({ src, alt }) {
-  return (
-    <Image
-      src={src}
-      alt={alt}
-      width={200}
-      height={200}
-      priority  // Load immediately
-    />
-  );
+export async function GET() {
+  return Response.json({ message: 'Hello from Edge!' })
 }
 
-// ❌ BAD: Unoptimized HTML img
-<img src={imageUrl} alt="profile" />
-```
-
-### Static Generation (ISR)
-
-```ts
-// ✅ GOOD: Incremental Static Regeneration
-export const revalidate = 3600;  // Revalidate every 1 hour
-
-export default async function Page() {
-  const data = await fetch('https://api.example.com/data', {
-    next: { revalidate: 3600 }
-  });
-  return <div>{data}</div>;
+// middleware.ts (always edge)
+export function middleware(request: NextRequest) {
+  // Fast auth checks here
 }
-```
 
-### Edge Functions
+// SERVERLESS (Node.js) - Full Node APIs, slower cold start
+// Good for: Database queries, file operations, heavy computation
 
-```ts
-// ✅ GOOD: Run at edge (fastest response)
-export const config = {
-  runtime: 'edge'
-};
+// app/api/users/route.ts
+export const runtime = 'nodejs'  // Default, can omit
 
-export default async function middleware(request) {
-  if (request.nextUrl.pathname === '/admin') {
-    if (!request.headers.get('authorization')) {
-      return new Response('Unauthorized', { status: 401 });
+export async function GET() {
+  const users = await db.query('SELECT * FROM users')
+  return Response.json(users)
+}
+
+### Build Optimization
+
+Optimize build for faster deployments and smaller bundles
+
+**When to use**: Preparing for production deployment
+
+// next.config.js
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // Minimize output
+  output: 'standalone',  // For Docker/self-hosting
+
+  // Image optimization
+  images: {
+    remotePatterns: [
+      { hostname: 'your-cdn.com' },
+    ],
+  },
+
+  // Bundle analyzer (dev only)
+  // npm install @next/bundle-analyzer
+  ...(process.env.ANALYZE === 'true' && {
+    webpack: (config) => {
+      const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
+      config.plugins.push(new BundleAnalyzerPlugin())
+      return config
+    },
+  }),
+}
+
+// Reduce serverless function size:
+// - Use dynamic imports for heavy libs
+// - Check bundle with: npx @next/bundle-analyzer
+
+### Preview Deployment Workflow
+
+Use preview deployments for PR reviews
+
+**When to use**: Setting up team development workflow
+
+// Every PR gets a unique preview URL automatically
+
+// Protect preview deployments with password:
+// Vercel Dashboard → Settings → Deployment Protection
+
+// Use different env vars for preview:
+// - PREVIEW: Use staging database
+// - PRODUCTION: Use production database
+
+// In code, detect preview:
+if (process.env.VERCEL_ENV === 'preview') {
+  // Show "Preview" banner
+  // Use test payment processor
+  // Disable analytics
+}
+
+// Comment preview URL on PR (automatic with Vercel GitHub integration)
+
+### Custom Domain Setup
+
+Configure custom domains with proper SSL
+
+**When to use**: Going to production
+
+// In Vercel Dashboard → Domains
+
+// Add domains:
+// - example.com (apex/root)
+// - www.example.com (subdomain)
+
+// DNS Configuration (at your registrar):
+// Type: A, Name: @, Value: 76.76.21.21
+// Type: CNAME, Name: www, Value: cname.vercel-dns.com
+
+// Redirect www to apex (or vice versa):
+// Vercel handles this automatically
+
+// In next.config.js for redirects:
+module.exports = {
+  async redirects() {
+    return [
+      {
+        source: '/old-page',
+        destination: '/new-page',
+        permanent: true,  // 308
+      },
+    ]
+  },
+}
+
+## Sharp Edges
+
+### NEXT_PUBLIC_ exposes secrets to the browser
+
+Severity: CRITICAL
+
+Situation: Using NEXT_PUBLIC_ prefix for sensitive API keys
+
+Symptoms:
+- Secrets visible in browser DevTools → Sources
+- Security audit finds exposed keys
+- Unexpected API access from unknown sources
+
+Why this breaks:
+Variables prefixed with NEXT_PUBLIC_ are inlined into the JavaScript
+bundle at build time. Anyone can view them in browser DevTools.
+This includes all your users and potential attackers.
+
+Recommended fix:
+
+Only use NEXT_PUBLIC_ for truly public values:
+
+// SAFE to use NEXT_PUBLIC_
+NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...  // Anon key is designed to be public
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
+NEXT_PUBLIC_GA_ID=G-XXXXXXX
+
+// NEVER use NEXT_PUBLIC_
+SUPABASE_SERVICE_ROLE_KEY=eyJ...     // Full database access!
+STRIPE_SECRET_KEY=sk_live_...         // Can charge cards!
+DATABASE_URL=postgresql://...          // Direct DB access!
+JWT_SECRET=...                         // Can forge tokens!
+
+// Access server-only vars in:
+// - Server Components (app router)
+// - API Routes
+// - Server Actions ('use server')
+// - getServerSideProps (pages router)
+
+### Preview deployments using production database
+
+Severity: HIGH
+
+Situation: Not configuring separate environment variables for preview
+
+Symptoms:
+- Test data appearing in production
+- Production data corrupted after PR merge
+- Users seeing test accounts/content
+
+Why this breaks:
+Preview deployments run untested code. If they use production database,
+a bug in a PR can corrupt production data. Also, testers might create
+test data that shows up in production.
+
+Recommended fix:
+
+Set up separate databases for each environment:
+
+// In Vercel Dashboard → Settings → Environment Variables
+
+// Production (production env only):
+DATABASE_URL=postgresql://prod-host/prod-db
+
+// Preview (preview env only):
+DATABASE_URL=postgresql://staging-host/staging-db
+
+// Or use Vercel's branching databases:
+// - Neon, PlanetScale, Supabase all support branch databases
+// - Auto-create preview DB for each PR
+
+// For Supabase, create a staging project:
+// Production:
+NEXT_PUBLIC_SUPABASE_URL=https://prod-xxx.supabase.co
+
+// Preview:
+NEXT_PUBLIC_SUPABASE_URL=https://staging-xxx.supabase.co
+
+### Serverless function too large, slow cold starts
+
+Severity: HIGH
+
+Situation: API route or server component has slow initial load
+
+Symptoms:
+- First request takes 3-10+ seconds
+- Subsequent requests are fast
+- Function size limit exceeded error
+- Deployment fails with size error
+
+Why this breaks:
+Vercel serverless functions have a 50MB limit (compressed).
+Large functions mean slow cold starts (1-5+ seconds).
+Heavy dependencies like puppeteer, sharp can cause this.
+
+Recommended fix:
+
+Reduce function size:
+
+// 1. Use dynamic imports for heavy libs
+export async function GET() {
+  const sharp = await import('sharp')  // Only loads when needed
+  // ...
+}
+
+// 2. Move heavy processing to edge or external service
+export const runtime = 'edge'  // Much smaller, faster cold start
+
+// 3. Check bundle size
+// npx @next/bundle-analyzer
+// Look for large dependencies
+
+// 4. Use external services for heavy tasks
+// - Image processing: Cloudinary, imgix
+// - PDF generation: API service
+// - Puppeteer: Browserless.io
+
+// 5. Split into multiple functions
+// /api/heavy-task/start - Queue the job
+// /api/heavy-task/status - Check progress
+
+### Edge runtime missing Node.js APIs
+
+Severity: HIGH
+
+Situation: Using Node.js APIs in edge runtime functions
+
+Symptoms:
+- X is not defined at runtime
+- Cannot find module fs
+- Works locally, fails deployed
+- Middleware crashes
+
+Why this breaks:
+Edge runtime runs on V8, not Node.js. Many Node APIs are missing:
+fs, path, crypto (partial), child_process, and most native modules.
+Your code will fail at runtime with "X is not defined".
+
+Recommended fix:
+
+Check API compatibility before using edge:
+
+// SUPPORTED in Edge:
+// - fetch, Request, Response
+// - crypto.subtle (Web Crypto)
+// - TextEncoder, TextDecoder
+// - URL, URLSearchParams
+// - Headers, FormData
+// - setTimeout, setInterval
+
+// NOT SUPPORTED in Edge:
+// - fs, path, os
+// - Buffer (use Uint8Array)
+// - crypto.createHash (use crypto.subtle)
+// - Most npm packages with native deps
+
+// If you need Node.js APIs:
+export const runtime = 'nodejs'  // Use Node runtime instead
+
+// For crypto hashing in edge:
+// WRONG
+import { createHash } from 'crypto'  // Fails in edge
+
+// RIGHT
+async function hash(message: string) {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(message)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+  return Array.from(new Uint8Array(hashBuffer))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('')
+}
+
+### Function timeout causes incomplete operations
+
+Severity: MEDIUM
+
+Situation: Long-running operations timing out
+
+Symptoms:
+- Task timed out after X seconds
+- Incomplete database operations
+- Partial file uploads
+- Function killed mid-execution
+
+Why this breaks:
+Vercel has timeout limits:
+- Hobby: 10 seconds
+- Pro: 60 seconds (can increase to 300)
+- Enterprise: 900 seconds
+
+Operations exceeding this are killed mid-execution.
+
+Recommended fix:
+
+Handle long operations properly:
+
+// 1. Return early, process async
+export async function POST(request: Request) {
+  const data = await request.json()
+
+  // Queue for background processing
+  await queue.add('process-data', data)
+
+  // Return immediately
+  return Response.json({ status: 'queued' })
+}
+
+// 2. Use streaming for long responses
+export async function GET() {
+  const stream = new ReadableStream({
+    async start(controller) {
+      for (const chunk of generateChunks()) {
+        controller.enqueue(chunk)
+        await sleep(100)  // Prevents timeout
+      }
+      controller.close()
+    }
+  })
+  return new Response(stream)
+}
+
+// 3. Use external services for heavy processing
+// - Trigger serverless function, return job ID
+// - Process in background (Inngest, Trigger.dev)
+// - Client polls for completion
+
+// 4. Increase timeout (Pro plan)
+// vercel.json:
+{
+  "functions": {
+    "app/api/slow/route.ts": {
+      "maxDuration": 60
     }
   }
-  return null;
 }
+
+### Environment variable missing at runtime but present at build
+
+Severity: MEDIUM
+
+Situation: Environment variable works in build but undefined at runtime
+
+Symptoms:
+- Env var is undefined in production
+- Value doesn't change after updating in dashboard
+- Works in dev, wrong value in production
+- Requires redeploy to update value
+
+Why this breaks:
+Some env vars are only available at build time (hardcoded into bundle).
+If you expect a runtime value but it was baked in at build, you get
+the build-time value or undefined.
+
+Recommended fix:
+
+Understand when env vars are read:
+
+// BUILD TIME (baked into bundle):
+// - NEXT_PUBLIC_* variables
+// - next.config.js
+// - generateStaticParams
+// - Static pages
+
+// RUNTIME (read on each request):
+// - Server Components (without cache)
+// - API Routes
+// - Server Actions
+// - Middleware
+
+// To force runtime reading:
+export const dynamic = 'force-dynamic'
+
+// For config that must be runtime:
+// Don't use NEXT_PUBLIC_, read on server and pass to client
+
+// Check which env vars you need:
+// Build: URLs, public keys, feature flags (if static)
+// Runtime: Secrets, database URLs, user-specific config
+
+### CORS errors calling API routes from different domain
+
+Severity: MEDIUM
+
+Situation: Frontend on different domain can't call API routes
+
+Symptoms:
+- CORS policy error in browser console
+- No Access-Control-Allow-Origin header
+- Requests work in Postman but not browser
+- Works same-origin, fails cross-origin
+
+Why this breaks:
+By default, browsers block cross-origin requests. Vercel doesn't
+automatically add CORS headers. If your frontend is on a different
+domain (or localhost in dev), requests fail.
+
+Recommended fix:
+
+Add CORS headers to API routes:
+
+// app/api/data/route.ts
+export async function GET(request: Request) {
+  const data = await fetchData()
+
+  return Response.json(data, {
+    headers: {
+      'Access-Control-Allow-Origin': '*',  // Or specific domain
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  })
+}
+
+// Handle preflight requests
+export async function OPTIONS() {
+  return new Response(null, {
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  })
+}
+
+// Or use next.config.js for all routes:
+module.exports = {
+  async headers() {
+    return [
+      {
+        source: '/api/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+        ],
+      },
+    ]
+  },
+}
+
+### Page shows stale data after deployment
+
+Severity: MEDIUM
+
+Situation: Updated data not appearing after new deployment
+
+Symptoms:
+- Old content shows after deploy
+- Changes not visible immediately
+- Different users see different versions
+- Data updates but page doesn't
+
+Why this breaks:
+Vercel caches aggressively. Static pages are cached at the edge.
+Even dynamic pages may be cached if not configured properly.
+Old cached versions served until cache expires or is purged.
+
+Recommended fix:
+
+Control caching behavior:
+
+// Force no caching (always fresh)
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+// ISR - revalidate every 60 seconds
+export const revalidate = 60
+
+// On-demand revalidation (after mutation)
+import { revalidatePath, revalidateTag } from 'next/cache'
+
+// In Server Action:
+async function updatePost(id: string) {
+  await db.post.update({ ... })
+  revalidatePath(`/posts/${id}`)  // Purge this page
+  revalidateTag('posts')          // Purge all with this tag
+}
+
+// Purge via API (deployment hook):
+// POST https://your-site.vercel.app/api/revalidate?path=/posts
+
+// Check caching in response headers:
+// x-vercel-cache: HIT = served from cache
+// x-vercel-cache: MISS = freshly generated
+
+## Validation Checks
+
+### Secret in NEXT_PUBLIC Variable
+
+Severity: CRITICAL
+
+Message: Secret exposed via NEXT_PUBLIC_ prefix. This will be visible in browser.
+
+Fix action: Remove NEXT_PUBLIC_ prefix and access only in server-side code
+
+### Hardcoded Vercel URL
+
+Severity: WARNING
+
+Message: Hardcoded Vercel URL. Use VERCEL_URL environment variable instead.
+
+Fix action: Use process.env.VERCEL_URL or NEXT_PUBLIC_VERCEL_URL
+
+### Node.js API in Edge Runtime
+
+Severity: ERROR
+
+Message: Node.js module used in Edge runtime. fs/path not available in Edge.
+
+Fix action: Use runtime = 'nodejs' or remove Node.js dependencies
+
+### API Route Without CORS Headers
+
+Severity: WARNING
+
+Message: API route without CORS headers may fail cross-origin requests.
+
+Fix action: Add Access-Control-Allow-Origin header if API is called from other domains
+
+### API Route Without Error Handling
+
+Severity: WARNING
+
+Message: API route without try/catch. Unhandled errors return 500 without details.
+
+Fix action: Wrap in try/catch and return appropriate error responses
+
+### Secret Read in Static Context
+
+Severity: WARNING
+
+Message: Server secret accessed in static generation. Value baked into build.
+
+Fix action: Move secret access to runtime code or use NEXT_PUBLIC_ for public values
+
+### Large Package Import
+
+Severity: WARNING
+
+Message: Large package imported. May cause slow cold starts. Consider alternatives.
+
+Fix action: Use lodash-es with tree shaking, date-fns instead of moment, @aws-sdk/client-* instead of aws-sdk
+
+### Dynamic Page Without Revalidation Config
+
+Severity: WARNING
+
+Message: Dynamic page without revalidation config. Consider setting revalidation strategy.
+
+Fix action: Add export const revalidate = 60 for ISR, or 0 for no cache
+
+## Collaboration
+
+### Delegation Triggers
+
+- next.js|app router|pages|server components -> nextjs-app-router (Deployment needs Next.js patterns)
+- database|supabase|backend -> supabase-backend (Deployment needs database)
+- auth|authentication|session -> nextjs-supabase-auth (Deployment needs auth config)
+- monitoring|logs|errors|analytics -> analytics-architecture (Deployment needs monitoring)
+
+### Production Launch
+
+Skills: vercel-deployment, nextjs-app-router, supabase-backend, nextjs-supabase-auth
+
+Workflow:
+
+```
+1. App configuration (nextjs-app-router)
+2. Database setup (supabase-backend)
+3. Auth config (nextjs-supabase-auth)
+4. Deploy (vercel-deployment)
 ```
 
-### Bundle Analysis
+### CI/CD Pipeline
 
-```bash
-# Analyze bundle size
-npm run build
+Skills: vercel-deployment, devops, qa-engineering
 
-# Check what contributes to bundle
-npm run analyze
+Workflow:
+
+```
+1. Test automation (qa-engineering)
+2. Pipeline config (devops)
+3. Deploy strategy (vercel-deployment)
 ```
 
-## Anti-Patterns
+## Related Skills
 
-```bash
-# ❌ BAD: Push to main without tests
-git push origin main
+Works well with: `nextjs-app-router`, `supabase-backend`
 
-# ❌ BAD: Hardcoded API keys
-const apiKey = 'sk-1234567890';
+## When to Use
+- User mentions or implies: vercel
+- User mentions or implies: deploy
+- User mentions or implies: deployment
+- User mentions or implies: hosting
+- User mentions or implies: production
+- User mentions or implies: environment variables
+- User mentions or implies: edge function
+- User mentions or implies: serverless function
 
-# ❌ BAD: No linting in pipeline
-# Deploy without checking code quality
-
-# ❌ BAD: Commit .env
-git add .env
-
-# ❌ BAD: No preview deployments
-# Deploy to production without team review
-
-# ❌ BAD: No environment variables separated
-# Use same config for dev/preview/prod
-```
-
-## Verification Before Deployment
-
-Before deploying to production:
-
-- [ ] All GitHub Secrets configured (ORG_ID, PROJECT_ID, TOKEN)
-- [ ] `.github/workflows/` files created (preview.yaml, production.yaml)
-- [ ] Tests pass locally
-- [ ] Linting passes
-- [ ] Environment variables set in Vercel dashboard
-- [ ] No hardcoded secrets in code
-- [ ] `.env` files in `.gitignore`
-- [ ] Preview deployment tested
-- [ ] Performance optimized (images, bundle size)
-- [ ] HTTPS enabled (automatic on Vercel)
-
-## Common Commands
-
-```bash
-# Pull dev environment variables
-vercel env pull
-
-# Link project
-vercel link
-
-# Deploy preview
-vercel deploy --prebuilt
-
-# Deploy production
-vercel deploy --prebuilt --prod
-
-# View logs
-vercel logs
-
-# Run locally with production settings
-vercel dev
-```
-
-## Troubleshooting
-
-### Build Failures
-
-```bash
-# Check build logs in Vercel dashboard
-# Verify environment variables set
-# Run locally: npm run build
-# Check for TypeScript errors: npx tsc --noEmit
-```
-
-### Environment Variable Not Found
-
-```bash
-# Verify variable exists in Vercel dashboard
-# Check environment matches deployment (dev/preview/prod)
-# For public variables, prefix with NEXT_PUBLIC_
-# For server variables, only accessible in API routes or server functions
-```
-
-### Preview URL Not Working
-
-```bash
-# Verify GitHub Actions workflow passed
-# Check workflow logs in GitHub Actions tab
-# Confirm Vercel secrets set correctly
-# Verify preview.yaml file exists
-```
-
-## Integration with Project Standards
-
-Enforces deployment best practices:
-- Zero-config Next.js deployment
-- Secure secret management (S-5)
-- Automated CI/CD pipeline
-- Performance optimization
-- Production-grade deployment workflow
-
-## Resources
-
-- Vercel Docs: https://vercel.com/docs
-- Next.js Deployment: https://nextjs.org/learn/basics/deploying
-- GitHub Actions: https://docs.github.com/en/actions
-- Environment Variables: https://vercel.com/docs/projects/environment-variables
----
-
-**Last Updated:** January 24, 2026
-**Compatibility:** Claude Opus 4.5, Claude Code v2.x
-**Status:** Production Ready
-
-> **January 2026 Update:** This skill is compatible with Claude Opus 4.5 and Claude Code v2.x. For complex tasks, use the `effort: high` parameter for thorough analysis.
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

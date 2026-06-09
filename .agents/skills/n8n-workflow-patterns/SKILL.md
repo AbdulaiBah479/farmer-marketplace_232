@@ -1,11 +1,18 @@
 ---
 name: n8n-workflow-patterns
-description: Proven workflow architectural patterns from real n8n workflows. Use when building new workflows, designing workflow structure, choosing workflow patterns, planning workflow architecture, or asking about webhook processing, HTTP API integration, database operations, AI agent workflows, or scheduled tasks.
+description: "Proven architectural patterns for building n8n workflows."
+risk: unknown
+source: community
 ---
 
 # n8n Workflow Patterns
 
 Proven architectural patterns for building n8n workflows.
+
+## When to Use
+- You need to choose an architectural pattern for an n8n workflow before building it.
+- The task involves webhook processing, API integration, scheduled jobs, database sync, or AI-agent workflow design.
+- You want a high-level workflow structure rather than node-by-node troubleshooting.
 
 ---
 
@@ -13,23 +20,23 @@ Proven architectural patterns for building n8n workflows.
 
 Based on analysis of real workflow usage:
 
-1. **[Webhook Processing](webhook_processing.md)** (Most Common)
+1. **Webhook Processing** (Most Common)
    - Receive HTTP requests → Process → Output
    - Pattern: Webhook → Validate → Transform → Respond/Notify
 
-2. **[HTTP API Integration](http_api_integration.md)**
+2. **[HTTP API Integration]**
    - Fetch from REST APIs → Transform → Store/Use
    - Pattern: Trigger → HTTP Request → Transform → Action → Error Handler
 
-3. **[Database Operations](database_operations.md)**
+3. **Database Operations**
    - Read/Write/Sync database data
    - Pattern: Schedule → Query → Transform → Write → Verify
 
-4. **[AI Agent Workflow](ai_agent_workflow.md)**
+4. **AI Agent Workflow**
    - AI agents with tools and memory
    - Pattern: Trigger → AI Agent (Model + Tools + Memory) → Output
 
-5. **[Scheduled Tasks](scheduled_tasks.md)**
+5. **Scheduled Tasks**
    - Recurring automation workflows
    - Pattern: Schedule → Fetch → Process → Deliver → Log
 
@@ -126,14 +133,14 @@ When building ANY workflow, follow this checklist:
 - [ ] Configure error handling
 
 ### Validation Phase
-- [ ] Validate each node configuration (validate_node_operation)
+- [ ] Validate each node configuration (validate_node)
 - [ ] Validate complete workflow (validate_workflow)
 - [ ] Test with sample data
 - [ ] Handle edge cases (empty data, errors)
 
 ### Deployment Phase
 - [ ] Review workflow settings (execution order, timeout, error handling)
-- [ ] Activate workflow ⚠️ **Manual activation required in n8n UI** (API/MCP cannot activate)
+- [ ] Activate workflow using `activateWorkflow` operation
 - [ ] Monitor first executions
 - [ ] Document workflow purpose and data flow
 
@@ -225,8 +232,10 @@ These skills work together with Workflow Patterns:
 
 **n8n MCP Tools Expert** - Use to:
 - Find nodes for your pattern (search_nodes)
-- Understand node operations (get_node_essentials)
+- Understand node operations (get_node)
 - Create workflows (n8n_create_workflow)
+- Deploy templates (n8n_deploy_template)
+- Use ai_agents_guide for AI pattern guidance
 
 **n8n Expression Syntax** - Use to:
 - Write expressions in transformation nodes
@@ -327,11 +336,11 @@ Common workflow patterns:
 
 For comprehensive guidance on each pattern:
 
-- **[webhook_processing.md](webhook_processing.md)** - Webhook patterns, data structure, response handling
-- **[http_api_integration.md](http_api_integration.md)** - REST APIs, authentication, pagination, retries
-- **[database_operations.md](database_operations.md)** - Queries, sync, transactions, batch processing
-- **[ai_agent_workflow.md](ai_agent_workflow.md)** - AI agents, tools, memory, langchain nodes
-- **[scheduled_tasks.md](scheduled_tasks.md)** - Cron schedules, reports, maintenance tasks
+- **webhook_processing.md** - Webhook patterns, data structure, response handling
+- **http_api_integration** - REST APIs, authentication, pagination, retries
+- **database_operations.md** - Queries, sync, transactions, batch processing
+- **ai_agent_workflow.md** - AI agents, tools, memory, langchain nodes
+- **scheduled_tasks.md** - Cron schedules, reports, maintenance tasks
 
 ---
 
@@ -407,3 +416,8 @@ Use `search_templates` and `get_template` from n8n-mcp tools to find examples!
 - n8n Expression Syntax - Write expressions correctly
 - n8n Validation Expert - Validate and fix errors
 - n8n Node Configuration - Configure specific operations
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

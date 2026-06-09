@@ -1,701 +1,843 @@
 ---
 name: clerk-auth
-description: |
-  Clerk auth with API Keys beta (Dec 2025), Next.js 16 proxy.ts (March 2025 CVE context), API version 2025-11-10 breaking changes, clerkMiddleware() options, webhooks, production considerations (GCP outages), and component reference. Prevents 15 documented errors. Use when: API keys for users/orgs, Next.js 16 middleware filename, troubleshooting JWKS/CSRF/JWT/token-type-mismatch errors, webhook verification, user type inconsistencies, or testing with 424242 OTP.
-user-invocable: true
+description: Expert patterns for Clerk auth implementation, middleware,
+  organizations, webhooks, and user sync
+risk: safe
+source: vibeship-spawner-skills (Apache 2.0)
+date_added: 2026-02-27
 ---
 
-# Clerk Auth - Breaking Changes & Error Prevention Guide
+# Clerk Authentication
 
-**Package Versions**: @clerk/nextjs@6.36.7, @clerk/backend@2.29.2, @clerk/clerk-react@5.59.2, @clerk/testing@1.13.26
-**Breaking Changes**: Nov 2025 - API version 2025-11-10, Oct 2024 - Next.js v6 async auth()
-**Last Updated**: 2026-01-09
+Expert patterns for Clerk auth implementation, middleware, organizations, webhooks, and user sync
 
----
+## Patterns
 
-## What's New (Dec 2025 - Jan 2026)
+### Next.js App Router Setup
 
-### 1. API Keys Beta (Dec 11, 2025) - NEW ✨
+Complete Clerk setup for Next.js 14/15 App Router.
 
-User-scoped and organization-scoped API keys for your application. Zero-code UI component.
+Includes ClerkProvider, environment variables, and basic
+sign-in/sign-up components.
 
-```typescript
-// 1. Add the component for self-service API key management
-import { APIKeys } from '@clerk/nextjs'
+Key components:
+- ClerkProvider: Wraps app for auth context
+- <SignIn />, <SignUp />: Pre-built auth forms
+- <UserButton />: User menu with session management
 
-export default function SettingsPage() {
+### Code_example
+
+# Environment variables (.env.local)
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/dashboard
+NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/onboarding
+
+// app/layout.tsx
+import { ClerkProvider } from '@clerk/nextjs';
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <div>
-      <h2>API Keys</h2>
-      <APIKeys />  {/* Full CRUD UI for user's API keys */}
+    <ClerkProvider>
+      <html lang="en">
+        <body>{children}</body>
+      </html>
+    </ClerkProvider>
+  );
+}
+
+// app/sign-in/[[...sign-in]]/page.tsx
+import { SignIn } from '@clerk/nextjs';
+
+export default function SignInPage() {
+  return (
+    <div className="flex justify-center items-center min-h-screen">
+      <SignIn />
     </div>
-  )
+  );
 }
-```
 
-**Backend Verification:**
-```typescript
-import { verifyToken } from '@clerk/backend'
+// app/sign-up/[[...sign-up]]/page.tsx
+import { SignUp } from '@clerk/nextjs';
 
-// API keys are verified like session tokens
-const { data, error } = await verifyToken(apiKey, {
-  secretKey: process.env.CLERK_SECRET_KEY,
-  authorizedParties: ['https://yourdomain.com'],
-})
-
-// Check token type
-if (data?.tokenType === 'api_key') {
-  // Handle API key auth
+export default function SignUpPage() {
+  return (
+    <div className="flex justify-center items-center min-h-screen">
+      <SignUp />
+    </div>
+  );
 }
-```
 
-**clerkMiddleware Token Types:**
-```typescript
-// v6.36.0+: Middleware can distinguish token types
-clerkMiddleware((auth, req) => {
-  const { userId, tokenType } = auth()
+// components/Header.tsx
+import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
 
-  if (tokenType === 'api_key') {
-    // API key auth - programmatic access
-  } else if (tokenType === 'session_token') {
-    // Regular session - web UI access
+export function Header() {
+  return (
+    <header className="flex justify-between p-4">
+      <h1>My App</h1>
+      <SignedOut>
+        <SignInButton />
+      </SignedOut>
+      <SignedIn>
+        <UserButton afterSignOutUrl="/" />
+      </SignedIn>
+    </header>
+  );
+}
+
+### Anti_patterns
+
+- Pattern: ClerkProvider inside page component | Why: Provider must wrap entire app in root layout | Fix: Move ClerkProvider to app/layout.tsx
+- Pattern: Using auth() without middleware | Why: auth() requires clerkMiddleware to be configured | Fix: Set up middleware.ts with clerkMiddleware
+
+### References
+
+- https://clerk.com/docs/nextjs/getting-started/quickstart
+
+### Middleware Route Protection
+
+Protect routes using clerkMiddleware and createRouteMatcher.
+
+Best practices:
+- Single middleware.ts file at project root
+- Use createRouteMatcher for route groups
+- auth.protect() for explicit protection
+- Centralize all auth logic in middleware
+
+### Code_example
+
+// middleware.ts
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+
+// Define protected route patterns
+const isProtectedRoute = createRouteMatcher([
+  '/dashboard(.*)',
+  '/settings(.*)',
+  '/api/private(.*)',
+]);
+
+// Define public routes (optional, for clarity)
+const isPublicRoute = createRouteMatcher([
+  '/',
+  '/sign-in(.*)',
+  '/sign-up(.*)',
+  '/api/webhooks(.*)',
+]);
+
+export default clerkMiddleware(async (auth, req) => {
+  // Protect matched routes
+  if (isProtectedRoute(req)) {
+    await auth.protect();
   }
-})
-```
-
-**Pricing (Beta = Free):**
-- Creation: $0.001/key
-- Verification: $0.0001/verification
-
-### 2. Next.js 16: proxy.ts Middleware Filename (Dec 2025)
-
-**⚠️ BREAKING**: Next.js 16 changed middleware filename due to critical security vulnerability (CVE disclosed March 2025).
-
-**Background**: The March 2025 vulnerability (affecting Next.js 11.1.4-15.2.2) allowed attackers to completely bypass middleware-based authorization by adding a single HTTP header: `x-middleware-subrequest: true`. This affected all auth libraries (NextAuth, Clerk, custom solutions).
-
-**Why the Rename**: The `middleware.ts` → `proxy.ts` change isn't just cosmetic - it's Next.js signaling that middleware-first security patterns are dangerous. Future auth implementations should not rely solely on middleware for authorization.
-
-```
-Next.js 15 and earlier: middleware.ts
-Next.js 16+:            proxy.ts
-```
-
-**Correct Setup for Next.js 16:**
-```typescript
-// src/proxy.ts (NOT middleware.ts!)
-import { clerkMiddleware } from '@clerk/nextjs/server'
-
-export default clerkMiddleware()
+});
 
 export const config = {
   matcher: [
+    // Match all routes except static files
     '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Always run for API routes
     '/(api|trpc)(.*)',
   ],
-}
-```
+};
 
-**Minimum Version**: @clerk/nextjs@6.35.0+ required for Next.js 16 (fixes Turbopack build errors and cache invalidation on sign-out).
+// Advanced: Role-based protection
+export default clerkMiddleware(async (auth, req) => {
+  if (isProtectedRoute(req)) {
+    await auth.protect();
+  }
 
-### 3. Force Password Reset (Dec 19, 2025)
+  // Admin routes require admin role
+  if (req.nextUrl.pathname.startsWith('/admin')) {
+    await auth.protect({
+      role: 'org:admin',
+    });
+  }
 
-Administrators can mark passwords as compromised and force reset:
+  // Premium routes require premium permission
+  if (req.nextUrl.pathname.startsWith('/premium')) {
+    await auth.protect({
+      permission: 'org:premium:access',
+    });
+  }
+});
 
-```typescript
-import { clerkClient } from '@clerk/backend'
+### Anti_patterns
 
-// Force password reset for a user
-await clerkClient.users.updateUser(userId, {
-  passwordDigest: 'compromised',  // Triggers reset on next sign-in
-})
-```
+- Pattern: Multiple middleware.ts files | Why: Causes conflicts and redirect loops | Fix: Use single middleware.ts with route matchers
+- Pattern: Manual redirects in components | Why: Double redirects, missed routes | Fix: Handle all redirects in middleware
+- Pattern: Missing matcher config | Why: Middleware won't run on all routes | Fix: Add comprehensive matcher pattern
 
-### 4. Organization Reports & Filters (Dec 15-17, 2025)
+### References
 
-Dashboard now includes org creation metrics and filtering by name/slug/date.
+- https://clerk.com/docs/reference/nextjs/clerk-middleware
 
----
+### Server Component Authentication
 
-## API Version 2025-11-10 Breaking Changes
+Access auth state in Server Components using auth() and currentUser().
 
-### 1. API Version 2025-11-10 (Nov 10, 2025) - BREAKING CHANGES ⚠️
+Key functions:
+- auth(): Returns userId, sessionId, orgId, claims
+- currentUser(): Returns full User object
+- Both require clerkMiddleware to be configured
 
-**Affects:** Applications using Clerk Billing/Commerce APIs
+### Code_example
 
-**Critical Changes:**
-- **Endpoint URLs:** `/commerce/` → `/billing/` (30+ endpoints)
-  ```
-  GET /v1/commerce/plans → GET /v1/billing/plans
-  GET /v1/commerce/statements → GET /v1/billing/statements
-  POST /v1/me/commerce/checkouts → POST /v1/me/billing/checkouts
-  ```
+// app/dashboard/page.tsx (Server Component)
+import { auth, currentUser } from '@clerk/nextjs/server';
+import { redirect } from 'next/navigation';
 
-- **Field Terminology:** `payment_source` → `payment_method`
-  ```typescript
-  // OLD (deprecated)
-  { payment_source_id: "...", payment_source: {...} }
-
-  // NEW (required)
-  { payment_method_id: "...", payment_method: {...} }
-  ```
-
-- **Removed Fields:** Plans responses no longer include:
-  - `amount`, `amount_formatted` (use `fee.amount` instead)
-  - `currency`, `currency_symbol` (use fee objects)
-  - `payer_type` (use `for_payer_type`)
-  - `annual_monthly_amount`, `annual_amount`
-
-- **Removed Endpoints:**
-  - Invoices endpoint (use statements)
-  - Products endpoint
-
-- **Null Handling:** Explicit rules - `null` means "doesn't exist", omitted means "not asserting existence"
-
-**Migration:** Update SDK to v6.35.0+ which includes support for API version 2025-11-10.
-
-**Official Guide:** https://clerk.com/docs/guides/development/upgrading/upgrade-guides/2025-11-10
-
-### 2. Next.js v6 Async auth() (Oct 2024) - BREAKING CHANGE ⚠️
-
-**Affects:** All Next.js Server Components using `auth()`
-
-```typescript
-// ❌ OLD (v5 - synchronous)
-const { userId } = auth()
-
-// ✅ NEW (v6 - asynchronous)
-const { userId } = await auth()
-```
-
-**Also affects:** `auth.protect()` is now async in middleware
-
-```typescript
-// ❌ OLD (v5)
-auth.protect()
-
-// ✅ NEW (v6)
-await auth.protect()
-```
-
-**Compatibility:** Next.js 15, 16 supported. Static rendering by default.
-
-### 3. PKCE Support for Custom OAuth (Nov 12, 2025)
-
-Custom OIDC providers and social connections now support PKCE (Proof Key for Code Exchange) for enhanced security in native/mobile applications where client secrets cannot be safely stored.
-
-**Use case:** Mobile apps, native apps, public clients that can't securely store secrets.
-
-### 4. Client Trust: Credential Stuffing Defense (Nov 14, 2025)
-
-Automatic secondary authentication when users sign in from unrecognized devices:
-- Activates for users with valid passwords but no 2FA
-- No configuration required
-- Included in all Clerk plans
-
-**How it works:** Clerk automatically prompts for additional verification (email code, backup code) when detecting sign-in from new device.
-
-### 5. Next.js 16 Support (Nov 2025)
-
-**@clerk/nextjs v6.35.2+** includes cache invalidation improvements for Next.js 16 during sign-out.
-
----
-
-## Critical Patterns & Error Prevention
-
-### Next.js v6: Async auth() Helper
-
-**Pattern:**
-```typescript
-import { auth } from '@clerk/nextjs/server'
-
-export default async function Page() {
-  const { userId } = await auth()  // ← Must await
+export default async function DashboardPage() {
+  const { userId } = await auth();
 
   if (!userId) {
-    return <div>Unauthorized</div>
+    redirect('/sign-in');
   }
 
-  return <div>User ID: {userId}</div>
+  // Full user data (counts toward rate limits)
+  const user = await currentUser();
+
+  return (
+    <div>
+      <h1>Welcome, {user?.firstName}!</h1>
+      <p>Email: {user?.emailAddresses[0]?.emailAddress}</p>
+    </div>
+  );
 }
-```
 
-### Cloudflare Workers: authorizedParties (CSRF Prevention)
+// Using auth() for quick checks
+export default async function ProtectedLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { userId, orgId, orgRole } = await auth();
 
-**CRITICAL:** Always set `authorizedParties` to prevent CSRF attacks
-
-```typescript
-import { verifyToken } from '@clerk/backend'
-
-const { data, error } = await verifyToken(token, {
-  secretKey: c.env.CLERK_SECRET_KEY,
-  // REQUIRED: Prevent CSRF attacks
-  authorizedParties: ['https://yourdomain.com'],
-})
-```
-
-**Why:** Without `authorizedParties`, attackers can use valid tokens from other domains.
-
-**Source:** https://clerk.com/docs/reference/backend/verify-token
-
----
-
-## clerkMiddleware() Configuration
-
-### Route Protection Patterns
-
-```typescript
-import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
-
-// Define protected routes
-const isProtectedRoute = createRouteMatcher([
-  '/dashboard(.*)',
-  '/api/private(.*)',
-])
-
-const isAdminRoute = createRouteMatcher(['/admin(.*)'])
-
-export default clerkMiddleware(async (auth, req) => {
-  // Protect routes
-  if (isProtectedRoute(req)) {
-    await auth.protect()  // Redirects unauthenticated users
+  if (!userId) {
+    redirect('/sign-in');
   }
 
-  // Require specific permissions
-  if (isAdminRoute(req)) {
-    await auth.protect({
-      role: 'org:admin',  // Requires organization admin role
-    })
+  // Check organization access
+  if (!orgId) {
+    redirect('/select-org');
   }
-})
-```
 
-### All Middleware Options
+  return (
+    <div>
+      <p>Organization Role: {orgRole}</p>
+      {children}
+    </div>
+  );
+}
 
-| Option | Type | Description |
-|--------|------|-------------|
-| `debug` | `boolean` | Enable debug logging |
-| `jwtKey` | `string` | JWKS public key for networkless verification |
-| `clockSkewInMs` | `number` | Token time variance (default: 5000ms) |
-| `organizationSyncOptions` | `object` | URL-based org activation |
-| `signInUrl` | `string` | Custom sign-in URL |
-| `signUpUrl` | `string` | Custom sign-up URL |
+// Server Action with auth check
+// app/actions/posts.ts
+'use server';
+import { auth } from '@clerk/nextjs/server';
 
-### Organization Sync (URL-based Org Activation)
+export async function createPost(formData: FormData) {
+  const { userId } = await auth();
 
-**⚠️ Next.js Only**: This feature currently only works with `clerkMiddleware()` in Next.js. It does NOT work with `authenticateRequest()` in other runtimes (Cloudflare Workers, Express, etc.) due to `Sec-Fetch-Dest` header checks.
+  if (!userId) {
+    throw new Error('Unauthorized');
+  }
 
-**Source**: [GitHub Issue #7178](https://github.com/clerk/javascript/issues/7178)
+  const title = formData.get('title') as string;
 
-```typescript
-clerkMiddleware({
-  organizationSyncOptions: {
-    organizationPatterns: ['/orgs/:slug', '/orgs/:slug/(.*)'],
-    personalAccountPatterns: ['/personal', '/personal/(.*)'],
-  },
-})
-```
+  // Create post with userId
+  const post = await prisma.post.create({
+    data: {
+      title,
+      authorId: userId,
+    },
+  });
 
----
+  return post;
+}
 
-## Webhooks
+### Anti_patterns
 
-### Webhook Verification
+- Pattern: Not awaiting auth() | Why: auth() is async in App Router | Fix: Use await auth() or const { userId } = await auth()
+- Pattern: Using currentUser() for simple checks | Why: Counts toward rate limits, slower than auth() | Fix: Use auth() for userId checks, currentUser() for user data
 
-```typescript
-import { Webhook } from 'svix'
+### References
+
+- https://clerk.com/docs/references/nextjs/auth
+
+### Client Component Hooks
+
+Access auth state in Client Components using hooks.
+
+Key hooks:
+- useUser(): User object and loading state
+- useAuth(): Auth state, signOut, etc.
+- useSession(): Session object
+- useOrganization(): Current organization
+
+### Code_example
+
+// components/UserProfile.tsx
+'use client';
+import { useUser, useAuth } from '@clerk/nextjs';
+
+export function UserProfile() {
+  const { user, isLoaded, isSignedIn } = useUser();
+  const { signOut } = useAuth();
+
+  if (!isLoaded) {
+    return <div>Loading...</div>;
+  }
+
+  if (!isSignedIn) {
+    return <div>Not signed in</div>;
+  }
+
+  return (
+    <div>
+      <img src={user.imageUrl} alt={user.fullName ?? ''} />
+      <h2>{user.fullName}</h2>
+      <p>{user.emailAddresses[0]?.emailAddress}</p>
+      <button onClick={() => signOut()}>Sign Out</button>
+    </div>
+  );
+}
+
+// Organization context
+'use client';
+import { useOrganization, useOrganizationList } from '@clerk/nextjs';
+
+export function OrgSwitcher() {
+  const { organization, membership } = useOrganization();
+  const { setActive, userMemberships } = useOrganizationList({
+    userMemberships: { infinite: true },
+  });
+
+  if (!organization) {
+    return <p>No organization selected</p>;
+  }
+
+  return (
+    <div>
+      <p>Current: {organization.name}</p>
+      <p>Role: {membership?.role}</p>
+
+      <select
+        onChange={(e) => setActive?.({ organization: e.target.value })}
+        value={organization.id}
+      >
+        {userMemberships.data?.map((mem) => (
+          <option key={mem.organization.id} value={mem.organization.id}>
+            {mem.organization.name}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+// Protected client component
+'use client';
+import { useAuth } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+
+export function ProtectedContent() {
+  const { isLoaded, userId } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isLoaded && !userId) {
+      router.push('/sign-in');
+    }
+  }, [isLoaded, userId, router]);
+
+  if (!isLoaded || !userId) {
+    return <div>Loading...</div>;
+  }
+
+  return <div>Protected content here</div>;
+}
+
+### Anti_patterns
+
+- Pattern: Not checking isLoaded | Why: Auth state undefined during hydration | Fix: Always check isLoaded before accessing user/auth state
+- Pattern: Using hooks in Server Components | Why: Hooks only work in Client Components | Fix: Use auth() and currentUser() in Server Components
+
+### References
+
+- https://clerk.com/docs/references/react/use-user
+
+### Organizations and Multi-Tenancy
+
+Implement B2B multi-tenancy with Clerk Organizations.
+
+Features:
+- Multiple orgs per user
+- Roles and permissions
+- Organization-scoped data
+- Enterprise SSO per organization
+
+### Code_example
+
+// Organization creation UI
+// app/create-org/page.tsx
+import { CreateOrganization } from '@clerk/nextjs';
+
+export default function CreateOrgPage() {
+  return (
+    <div className="flex justify-center">
+      <CreateOrganization afterCreateOrganizationUrl="/dashboard" />
+    </div>
+  );
+}
+
+// Organization profile and management
+// app/org-settings/page.tsx
+import { OrganizationProfile } from '@clerk/nextjs';
+
+export default function OrgSettingsPage() {
+  return <OrganizationProfile />;
+}
+
+// Organization switcher in header
+// components/Header.tsx
+import { OrganizationSwitcher, UserButton } from '@clerk/nextjs';
+
+export function Header() {
+  return (
+    <header className="flex justify-between p-4">
+      <OrganizationSwitcher
+        hidePersonal
+        afterCreateOrganizationUrl="/dashboard"
+        afterSelectOrganizationUrl="/dashboard"
+      />
+      <UserButton />
+    </header>
+  );
+}
+
+// Org-scoped data access
+// app/dashboard/page.tsx
+import { auth } from '@clerk/nextjs/server';
+import { prisma } from '@/lib/prisma';
+
+export default async function DashboardPage() {
+  const { orgId } = await auth();
+
+  if (!orgId) {
+    redirect('/select-org');
+  }
+
+  // Fetch org-scoped data
+  const projects = await prisma.project.findMany({
+    where: { organizationId: orgId },
+  });
+
+  return (
+    <div>
+      <h1>Projects</h1>
+      {projects.map((p) => (
+        <div key={p.id}>{p.name}</div>
+      ))}
+    </div>
+  );
+}
+
+// Role-based UI
+'use client';
+import { useOrganization, Protect } from '@clerk/nextjs';
+
+export function AdminPanel() {
+  const { membership } = useOrganization();
+
+  // Using Protect component
+  return (
+    <Protect role="org:admin" fallback={<p>Admin access required</p>}>
+      <div>Admin content here</div>
+    </Protect>
+  );
+
+  // Or manual check
+  if (membership?.role !== 'org:admin') {
+    return <p>Admin access required</p>;
+  }
+
+  return <div>Admin content here</div>;
+}
+
+### Anti_patterns
+
+- Pattern: Not scoping data by orgId | Why: Data leaks between organizations | Fix: Always filter queries by orgId from auth()
+- Pattern: Hardcoding role strings | Why: Typos cause access issues | Fix: Define role constants or use TypeScript enums
+
+### References
+
+- https://clerk.com/docs/guides/organizations
+- https://clerk.com/articles/multi-tenancy-in-react-applications-guide
+
+### Webhook User Sync
+
+Sync Clerk users to your database using webhooks.
+
+Key webhooks:
+- user.created: New user signed up
+- user.updated: User profile changed
+- user.deleted: User deleted account
+
+Uses svix for signature verification.
+
+### Code_example
+
+// app/api/webhooks/clerk/route.ts
+import { Webhook } from 'svix';
+import { headers } from 'next/headers';
+import { WebhookEvent } from '@clerk/nextjs/server';
+import { prisma } from '@/lib/prisma';
 
 export async function POST(req: Request) {
-  const payload = await req.text()
-  const headers = {
-    'svix-id': req.headers.get('svix-id')!,
-    'svix-timestamp': req.headers.get('svix-timestamp')!,
-    'svix-signature': req.headers.get('svix-signature')!,
+  const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
+
+  if (!WEBHOOK_SECRET) {
+    throw new Error('Missing CLERK_WEBHOOK_SECRET');
   }
 
-  const wh = new Webhook(process.env.CLERK_WEBHOOK_SIGNING_SECRET!)
+  // Get headers
+  const headerPayload = await headers();
+  const svix_id = headerPayload.get('svix-id');
+  const svix_timestamp = headerPayload.get('svix-timestamp');
+  const svix_signature = headerPayload.get('svix-signature');
+
+  if (!svix_id || !svix_timestamp || !svix_signature) {
+    return new Response('Missing svix headers', { status: 400 });
+  }
+
+  // Get body
+  const payload = await req.json();
+  const body = JSON.stringify(payload);
+
+  // Verify webhook
+  const wh = new Webhook(WEBHOOK_SECRET);
+  let evt: WebhookEvent;
 
   try {
-    const event = wh.verify(payload, headers)
-    // Process event
-    return Response.json({ success: true })
+    evt = wh.verify(body, {
+      'svix-id': svix_id,
+      'svix-timestamp': svix_timestamp,
+      'svix-signature': svix_signature,
+    }) as WebhookEvent;
   } catch (err) {
-    return Response.json({ error: 'Invalid signature' }, { status: 400 })
+    console.error('Webhook verification failed:', err);
+    return new Response('Verification failed', { status: 400 });
   }
-}
-```
 
-### Common Event Types
+  // Handle events
+  const eventType = evt.type;
 
-| Event | Trigger |
-|-------|---------|
-| `user.created` | New user signs up |
-| `user.updated` | User profile changes |
-| `user.deleted` | User account deleted |
-| `session.created` | New sign-in |
-| `session.ended` | Sign-out |
-| `organization.created` | New org created |
-| `organization.membership.created` | User joins org |
+  if (eventType === 'user.created') {
+    const { id, email_addresses, first_name, last_name, image_url } = evt.data;
 
-**⚠️ Important:** Webhook routes must be PUBLIC (no auth). Add to middleware exclude list:
-
-```typescript
-const isPublicRoute = createRouteMatcher([
-  '/api/webhooks/clerk(.*)',  // Clerk webhooks are public
-])
-
-clerkMiddleware((auth, req) => {
-  if (!isPublicRoute(req)) {
-    auth.protect()
+    await prisma.user.create({
+      data: {
+        clerkId: id,
+        email: email_addresses[0]?.email_address,
+        firstName: first_name,
+        lastName: last_name,
+        imageUrl: image_url,
+      },
+    });
   }
-})
-```
 
----
+  if (eventType === 'user.updated') {
+    const { id, email_addresses, first_name, last_name, image_url } = evt.data;
 
-## UI Components Quick Reference
-
-| Component | Purpose |
-|-----------|---------|
-| `<SignIn />` | Full sign-in flow |
-| `<SignUp />` | Full sign-up flow |
-| `<SignInButton />` | Trigger sign-in modal |
-| `<SignUpButton />` | Trigger sign-up modal |
-| `<SignedIn>` | Render only when authenticated |
-| `<SignedOut>` | Render only when unauthenticated |
-| `<UserButton />` | User menu with sign-out |
-| `<UserProfile />` | Full profile management |
-| `<OrganizationSwitcher />` | Switch between orgs |
-| `<OrganizationProfile />` | Org settings |
-| `<CreateOrganization />` | Create new org |
-| `<APIKeys />` | API key management (NEW) |
-
-### React Hooks
-
-| Hook | Returns |
-|------|---------|
-| `useAuth()` | `{ userId, sessionId, isLoaded, isSignedIn, getToken }` |
-| `useUser()` | `{ user, isLoaded, isSignedIn }` |
-| `useClerk()` | Clerk instance with methods |
-| `useSession()` | Current session object |
-| `useOrganization()` | Current org context |
-| `useOrganizationList()` | All user's orgs |
-
----
-
-## JWT Templates - Size Limits & Shortcodes
-
-### JWT Size Limitation: 1.2KB for Custom Claims ⚠️
-
-**Problem**: Browser cookies limited to 4KB. Clerk's default claims consume ~2.8KB, leaving **1.2KB for custom claims**.
-
-**⚠️ Development Note**: When testing custom JWT claims in Vite dev mode, you may encounter **"431 Request Header Fields Too Large"** error. This is caused by Clerk's handshake token in the URL exceeding Vite's 8KB limit. See [Issue #11](#issue-11-431-request-header-fields-too-large-vite-dev-mode) for solution.
-
-**Solution:**
-```json
-// ✅ GOOD: Minimal claims
-{
-  "user_id": "{{user.id}}",
-  "email": "{{user.primary_email_address}}",
-  "role": "{{user.public_metadata.role}}"
-}
-
-// ❌ BAD: Exceeds limit
-{
-  "bio": "{{user.public_metadata.bio}}",  // 6KB field
-  "all_metadata": "{{user.public_metadata}}"  // Entire object
-}
-```
-
-**Best Practice**: Store large data in database, include only identifiers/roles in JWT.
-
-### Available Shortcodes Reference
-
-| Category | Shortcodes | Example |
-|----------|-----------|---------|
-| **User ID & Name** | `{{user.id}}`, `{{user.first_name}}`, `{{user.last_name}}`, `{{user.full_name}}` | `"John Doe"` |
-| **Contact** | `{{user.primary_email_address}}`, `{{user.primary_phone_address}}` | `"john@example.com"` |
-| **Profile** | `{{user.image_url}}`, `{{user.username}}`, `{{user.created_at}}` | `"https://..."` |
-| **Verification** | `{{user.email_verified}}`, `{{user.phone_number_verified}}` | `true` |
-| **Metadata** | `{{user.public_metadata}}`, `{{user.public_metadata.FIELD}}` | `{"role": "admin"}` |
-| **Organization** | `org_id`, `org_slug`, `org_role` (in sessionClaims) | `"org:admin"` |
-
-**Advanced Features:**
-- **String Interpolation**: `"{{user.last_name}} {{user.first_name}}"`
-- **Conditional Fallbacks**: `"{{user.public_metadata.role || 'user'}}"`
-- **Nested Metadata**: `"{{user.public_metadata.profile.interests}}"`
-
-**Official Docs**: https://clerk.com/docs/guides/sessions/jwt-templates
-
----
-
-## Testing with Clerk
-
-### Test Credentials (Fixed OTP: 424242)
-
-**Test Emails** (no emails sent, fixed OTP):
-```
-john+clerk_test@example.com
-jane+clerk_test@gmail.com
-```
-
-**Test Phone Numbers** (no SMS sent, fixed OTP):
-```
-+12015550100
-+19735550133
-```
-
-**Fixed OTP Code**: `424242` (works for all test credentials)
-
-### Generate Session Tokens (60-second lifetime)
-
-**Script** (`scripts/generate-session-token.js`):
-```bash
-# Generate token
-CLERK_SECRET_KEY=sk_test_... node scripts/generate-session-token.js
-
-# Create new test user
-CLERK_SECRET_KEY=sk_test_... node scripts/generate-session-token.js --create-user
-
-# Auto-refresh token every 50 seconds
-CLERK_SECRET_KEY=sk_test_... node scripts/generate-session-token.js --refresh
-```
-
-**Manual Flow**:
-1. Create user: `POST /v1/users`
-2. Create session: `POST /v1/sessions`
-3. Generate token: `POST /v1/sessions/{session_id}/tokens`
-4. Use in header: `Authorization: Bearer <token>`
-
-### E2E Testing with Playwright
-
-Install `@clerk/testing` for automatic Testing Token management:
-
-```bash
-npm install -D @clerk/testing
-```
-
-**Global Setup** (`global.setup.ts`):
-```typescript
-import { clerkSetup } from '@clerk/testing/playwright'
-import { test as setup } from '@playwright/test'
-
-setup('global setup', async ({}) => {
-  await clerkSetup()
-})
-```
-
-**Test File** (`auth.spec.ts`):
-```typescript
-import { setupClerkTestingToken } from '@clerk/testing/playwright'
-import { test } from '@playwright/test'
-
-test('sign up', async ({ page }) => {
-  await setupClerkTestingToken({ page })
-
-  await page.goto('/sign-up')
-  await page.fill('input[name="emailAddress"]', 'test+clerk_test@example.com')
-  await page.fill('input[name="password"]', 'TestPassword123!')
-  await page.click('button[type="submit"]')
-
-  // Verify with fixed OTP
-  await page.fill('input[name="code"]', '424242')
-  await page.click('button[type="submit"]')
-
-  await expect(page).toHaveURL('/dashboard')
-})
-```
-
-**Official Docs**: https://clerk.com/docs/guides/development/testing/overview
-
----
-
-## Known Issues Prevention
-
-This skill prevents **15 documented issues**:
-
-### Issue #1: Missing Clerk Secret Key
-**Error**: "Missing Clerk Secret Key or API Key"
-**Source**: https://stackoverflow.com/questions/77620604
-**Prevention**: Always set in `.env.local` or via `wrangler secret put`
-
-### Issue #2: API Key → Secret Key Migration
-**Error**: "apiKey is deprecated, use secretKey"
-**Source**: https://clerk.com/docs/upgrade-guides/core-2/backend
-**Prevention**: Replace `apiKey` with `secretKey` in all calls
-
-### Issue #3: JWKS Cache Race Condition
-**Error**: "No JWK available"
-**Source**: https://github.com/clerk/javascript/blob/main/packages/backend/CHANGELOG.md
-**Prevention**: Use @clerk/backend@2.17.2 or later (fixed)
-
-### Issue #4: Missing authorizedParties (CSRF)
-**Error**: No error, but CSRF vulnerability
-**Source**: https://clerk.com/docs/reference/backend/verify-token
-**Prevention**: Always set `authorizedParties: ['https://yourdomain.com']`
-
-### Issue #5: Import Path Changes (Core 2)
-**Error**: "Cannot find module"
-**Source**: https://clerk.com/docs/upgrade-guides/core-2/backend
-**Prevention**: Update import paths for Core 2
-
-### Issue #6: JWT Size Limit Exceeded
-**Error**: Token exceeds size limit
-**Source**: https://clerk.com/docs/backend-requests/making/custom-session-token
-**Prevention**: Keep custom claims under 1.2KB
-
-### Issue #7: Deprecated API Version v1
-**Error**: "API version v1 is deprecated"
-**Source**: https://clerk.com/docs/upgrade-guides/core-2/backend
-**Prevention**: Use latest SDK versions (API v2025-11-10)
-
-### Issue #8: ClerkProvider JSX Component Error
-**Error**: "cannot be used as a JSX component"
-**Source**: https://stackoverflow.com/questions/79265537
-**Prevention**: Ensure React 19 compatibility with @clerk/clerk-react@5.59.2+
-
-### Issue #9: Async auth() Helper Confusion
-**Error**: "auth() is not a function"
-**Source**: https://clerk.com/changelog/2024-10-22-clerk-nextjs-v6
-**Prevention**: Always await: `const { userId } = await auth()`
-
-### Issue #10: Environment Variable Misconfiguration
-**Error**: "Missing Publishable Key" or secret leaked
-**Prevention**: Use correct prefixes (`NEXT_PUBLIC_`, `VITE_`), never commit secrets
-
-### Issue #11: 431 Request Header Fields Too Large (Vite Dev Mode)
-**Error**: "431 Request Header Fields Too Large" when signing in
-**Source**: Common in Vite dev mode when testing custom JWT claims
-**Cause**: Clerk's `__clerk_handshake` token in URL exceeds Vite's 8KB header limit
-**Prevention**:
-
-Add to `package.json`:
-```json
-{
-  "scripts": {
-    "dev": "NODE_OPTIONS='--max-http-header-size=32768' vite"
+    await prisma.user.update({
+      where: { clerkId: id },
+      data: {
+        email: email_addresses[0]?.email_address,
+        firstName: first_name,
+        lastName: last_name,
+        imageUrl: image_url,
+      },
+    });
   }
-}
-```
 
-**Temporary Workaround**: Clear browser cache, sign out, sign back in
+  if (eventType === 'user.deleted') {
+    const { id } = evt.data;
 
-**Why**: Clerk dev tokens are larger than production; custom JWT claims increase handshake token size
-
-**Note**: This is different from Issue #6 (session token size). Issue #6 is about cookies (1.2KB), this is about URL parameters in dev mode (8KB → 32KB).
-
-### Issue #12: User Type Mismatch (useUser vs currentUser)
-**Error**: TypeScript errors when sharing user utilities across client/server
-**Source**: [GitHub Issue #2176](https://github.com/clerk/javascript/issues/2176)
-**Why It Happens**: `useUser()` returns `UserResource` (client-side) with different properties than `currentUser()` returns `User` (server-side). Client has `fullName`, `primaryEmailAddress` object; server has `primaryEmailAddressId` and `privateMetadata` instead.
-**Prevention**: Use shared properties only, or create separate utility functions for client vs server contexts.
-
-```typescript
-// ✅ CORRECT: Use properties that exist in both
-const primaryEmailAddress = user.emailAddresses.find(
-  ({ id }) => id === user.primaryEmailAddressId
-)
-
-// ✅ CORRECT: Separate types
-type ClientUser = ReturnType<typeof useUser>['user']
-type ServerUser = Awaited<ReturnType<typeof currentUser>>
-```
-
-### Issue #13: Multiple acceptsToken Types Causes token-type-mismatch
-**Error**: "token-type-mismatch" when using `authenticateRequest()` with multiple token types
-**Source**: [GitHub Issue #7520](https://github.com/clerk/javascript/issues/7520)
-**Why It Happens**: When using `authenticateRequest()` with multiple `acceptsToken` values (e.g., `['session_token', 'api_key']`), Clerk incorrectly throws token-type-mismatch error.
-**Prevention**: Upgrade to @clerk/backend@2.29.2+ (fix available in snapshot, releasing soon).
-
-```typescript
-// This now works in @clerk/backend@2.29.2+
-const result = await authenticateRequest(request, {
-  acceptsToken: ['session_token', 'api_key'],  // Fixed!
-})
-```
-
-### Issue #14: deriveUrlFromHeaders Server Crash on Malformed URLs
-**Error**: Server crashes with URL parsing error
-**Source**: [GitHub Issue #7275](https://github.com/clerk/javascript/issues/7275)
-**Why It Happens**: Internal `deriveUrlFromHeaders()` function performs unsafe URL parsing and crashes the entire server when receiving malformed URLs in headers (e.g., `x-forwarded-host: 'example.com[invalid]'`). This is a denial-of-service vulnerability.
-**Prevention**: Upgrade to @clerk/backend@2.29.0+ (fixed).
-
-### Issue #15: treatPendingAsSignedOut Option for Pending Sessions
-**Error**: None - optional parameter for edge case handling
-**Source**: [Changelog @clerk/nextjs@6.32.0](https://github.com/clerk/javascript/blob/main/packages/nextjs/CHANGELOG.md#6320)
-**Why It Exists**: Sessions can have a `pending` status during certain flows (e.g., credential stuffing defense secondary auth). By default, pending sessions are treated as signed-out (user is null).
-**Usage**: Set `treatPendingAsSignedOut: false` to treat pending as signed-in (available in @clerk/nextjs@6.32.0+).
-
-```typescript
-// Default: pending = signed out
-const user = await currentUser()  // null if status is 'pending'
-
-// Treat pending as signed in
-const user = await currentUser({ treatPendingAsSignedOut: false })  // defined if pending
-```
-
----
-
-## Production Considerations
-
-### Service Availability & Reliability
-
-**Context**: Clerk experienced 3 major service disruptions in May-June 2025 attributed to Google Cloud Platform (GCP) outages. The June 26, 2025 outage lasted 45 minutes (6:16-7:01 UTC) and affected all Clerk customers.
-
-**Source**: [Clerk Postmortem: June 26, 2025](https://clerk.com/blog/postmortem-jun-26-2025-service-outage)
-
-**Mitigation Strategies**:
-- Monitor [Clerk Status](https://status.clerk.com) for real-time updates
-- Implement graceful degradation when Clerk API is unavailable
-- Cache auth tokens locally where possible
-- For existing sessions, use `jwtKey` option for networkless verification:
-
-```typescript
-clerkMiddleware({
-  jwtKey: process.env.CLERK_JWT_KEY,  // Allows offline token verification
-})
-```
-
-**Note**: During total outage, no new sessions can be created (auth requires Clerk API). However, existing sessions can continue working if you verify JWTs locally with `jwtKey`. Clerk committed to exploring multi-cloud redundancy to reduce single-vendor dependency risk.
-
----
-
-## Official Documentation
-
-- **Clerk Docs**: https://clerk.com/docs
-- **Next.js Guide**: https://clerk.com/docs/references/nextjs/overview
-- **React Guide**: https://clerk.com/docs/references/react/overview
-- **Backend SDK**: https://clerk.com/docs/reference/backend/overview
-- **JWT Templates**: https://clerk.com/docs/guides/sessions/jwt-templates
-- **API Version 2025-11-10 Upgrade**: https://clerk.com/docs/guides/development/upgrading/upgrade-guides/2025-11-10
-- **Testing Guide**: https://clerk.com/docs/guides/development/testing/overview
-- **Context7 Library ID**: `/clerk/clerk-docs`
-
----
-
-## Package Versions
-
-**Latest (Nov 22, 2025):**
-```json
-{
-  "dependencies": {
-    "@clerk/nextjs": "^6.36.7",
-    "@clerk/clerk-react": "^5.59.2",
-    "@clerk/backend": "^2.29.2",
-    "@clerk/testing": "^1.13.26"
+    await prisma.user.delete({
+      where: { clerkId: id! },
+    });
   }
+
+  return new Response('Webhook processed', { status: 200 });
 }
-```
 
----
+// Prisma schema
+// prisma/schema.prisma
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String   @unique
+  firstName String?
+  lastName  String?
+  imageUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-**Token Efficiency**:
-- **Without skill**: ~6,500 tokens (setup tutorials, JWT templates, testing setup, webhooks, production considerations)
-- **With skill**: ~3,200 tokens (breaking changes + critical patterns + error prevention + production guidance)
-- **Savings**: ~51% (~3,300 tokens)
+  posts     Post[]
+  @@index([clerkId])
+}
 
-**Errors prevented**: 15 documented issues with exact solutions
-**Key value**: API Keys beta, Next.js 16 proxy.ts (with March 2025 CVE context), clerkMiddleware() options, webhooks, component reference, API 2025-11-10 breaking changes, JWT size limits, user type mismatches, production considerations (GCP outages, jwtKey offline verification)
+### Anti_patterns
 
----
+- Pattern: Not verifying webhook signature | Why: Anyone can hit your endpoint with fake data | Fix: Always verify with svix
+- Pattern: Blocking middleware for webhook routes | Why: Webhooks come from Clerk, not authenticated users | Fix: Add /api/webhooks(.*)' to public routes
+- Pattern: Not handling race conditions | Why: user.created might arrive after user.updated | Fix: Use upsert instead of create, handle missing records
 
-**Last verified**: 2026-01-20 | **Skill version**: 3.1.0 | **Changes**: Added 4 new Known Issues (#12-15: user type mismatch, acceptsToken type mismatch, deriveUrlFromHeaders crash, treatPendingAsSignedOut option), expanded proxy.ts section with March 2025 CVE security context, added Production Considerations section (GCP outages + mitigation), added organizationSyncOptions Next.js-only limitation note, updated minimum version requirements for Next.js 16 (6.35.0+).
+### References
+
+- https://clerk.com/docs/webhooks/sync-data
+- https://clerk.com/articles/how-to-sync-clerk-user-data-to-your-database
+
+### API Route Protection
+
+Protect API routes using auth() from Clerk.
+
+Route Handlers in App Router use auth() for authentication.
+Middleware provides initial protection, auth() provides in-handler verification.
+
+### Code_example
+
+// app/api/projects/route.ts
+import { auth } from '@clerk/nextjs/server';
+import { prisma } from '@/lib/prisma';
+import { NextResponse } from 'next/server';
+
+export async function GET() {
+  const { userId, orgId } = await auth();
+
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // User's personal projects or org projects
+  const projects = await prisma.project.findMany({
+    where: orgId
+      ? { organizationId: orgId }
+      : { userId, organizationId: null },
+  });
+
+  return NextResponse.json(projects);
+}
+
+export async function POST(req: Request) {
+  const { userId, orgId } = await auth();
+
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const body = await req.json();
+
+  const project = await prisma.project.create({
+    data: {
+      name: body.name,
+      userId,
+      organizationId: orgId ?? null,
+    },
+  });
+
+  return NextResponse.json(project, { status: 201 });
+}
+
+// Protected with role check
+// app/api/admin/users/route.ts
+export async function GET() {
+  const { userId, orgRole } = await auth();
+
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  if (orgRole !== 'org:admin') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  // Admin-only logic
+  const users = await prisma.user.findMany();
+  return NextResponse.json(users);
+}
+
+// Using getAuth in older patterns (not recommended)
+// For backwards compatibility only
+import { getAuth } from '@clerk/nextjs/server';
+
+export async function GET(req: Request) {
+  const { userId } = getAuth(req);
+  // ...
+}
+
+### Anti_patterns
+
+- Pattern: Trusting middleware alone | Why: Middleware can be bypassed (CVE-2025-29927) | Fix: Always verify auth in route handler too
+- Pattern: Not checking orgId for multi-tenant | Why: Users might access other org's data | Fix: Always filter by orgId from auth()
+
+### References
+
+- https://clerk.com/docs/guides/protecting-pages
+
+## Sharp Edges
+
+### CVE-2025-29927 Middleware Bypass Vulnerability
+
+Severity: CRITICAL
+
+### Multiple Middleware Files Cause Conflicts
+
+Severity: HIGH
+
+### 4KB Session Token Cookie Limit
+
+Severity: HIGH
+
+### auth() Requires clerkMiddleware Configuration
+
+Severity: HIGH
+
+### Webhook Race Conditions
+
+Severity: MEDIUM
+
+### auth() is Async in App Router
+
+Severity: MEDIUM
+
+### Middleware Blocks Webhook Endpoints
+
+Severity: MEDIUM
+
+### Accessing Auth State Before isLoaded
+
+Severity: MEDIUM
+
+### Manual Redirects Cause Double Redirects
+
+Severity: MEDIUM
+
+### Organization Data Not Scoped by orgId
+
+Severity: HIGH
+
+## Validation Checks
+
+### Clerk Secret Key in Client Code
+
+Severity: ERROR
+
+CLERK_SECRET_KEY must only be used server-side
+
+Message: Clerk secret key exposed to client. Use CLERK_SECRET_KEY without NEXT_PUBLIC prefix.
+
+### Protected Route Without Middleware
+
+Severity: ERROR
+
+API routes should have middleware protection
+
+Message: API route without auth check. Add middleware protection or auth() check.
+
+### Hardcoded Clerk API Keys
+
+Severity: ERROR
+
+Clerk keys should use environment variables
+
+Message: Hardcoded Clerk keys. Use environment variables.
+
+### Missing Await on auth()
+
+Severity: ERROR
+
+auth() is async in App Router and must be awaited
+
+Message: auth() not awaited. Use 'await auth()' in App Router.
+
+### Multiple Middleware Files
+
+Severity: WARNING
+
+Only one middleware.ts file should exist
+
+Message: Multiple middleware files detected. Use single middleware.ts.
+
+### Webhook Route Not Excluded from Protection
+
+Severity: WARNING
+
+Webhook routes should be public
+
+Message: Webhook route may be blocked by middleware. Add to public routes.
+
+### Accessing Auth Without isLoaded Check
+
+Severity: WARNING
+
+Check isLoaded before accessing user state in client components
+
+Message: Accessing user without isLoaded check. Check isLoaded first.
+
+### Clerk Hooks in Server Component
+
+Severity: ERROR
+
+Clerk hooks only work in Client Components
+
+Message: Clerk hooks in Server Component. Add 'use client' or use auth().
+
+### Multi-Tenant Query Without orgId
+
+Severity: WARNING
+
+Organization data should be scoped by orgId
+
+Message: Query without organization scope. Filter by orgId for multi-tenancy.
+
+### Webhook Without Signature Verification
+
+Severity: ERROR
+
+Clerk webhooks must verify svix signature
+
+Message: Webhook without signature verification. Use svix to verify.
+
+## Collaboration
+
+### Delegation Triggers
+
+- user needs database -> postgres-wizard (User table with clerkId)
+- user needs payments -> stripe-integration (Customer linked to Clerk user)
+- user needs search -> algolia-search (Secured API keys per user)
+- user needs analytics -> segment-cdp (User identification)
+- user needs email -> resend-email (Transactional emails)
+
+## When to Use
+- User mentions or implies: adding authentication
+- User mentions or implies: clerk auth
+- User mentions or implies: user authentication
+- User mentions or implies: sign in
+- User mentions or implies: sign up
+- User mentions or implies: user management
+- User mentions or implies: multi-tenancy
+- User mentions or implies: organizations
+- User mentions or implies: sso
+- User mentions or implies: single sign-on
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

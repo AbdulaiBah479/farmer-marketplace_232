@@ -1,52 +1,72 @@
 ---
-id: eng-bundle-opt
-name: Vite 构建产物体积优化
-category: engineering
-description: 使用 Rollup Visualizer 分析产物，并通过拆包 (Code Splitting) 和 Tree Shaking 减少首屏体积。
-tags: [vite, rollup, performance, optimization]
-updated_at: 2026-01-09
+name: vite
+description: Vite build tool configuration, plugin API, SSR, and Vite 8 Rolldown migration. Use when working with Vite projects, vite.config.ts, Vite plugins, or building libraries/SSR apps with Vite.
+metadata:
+  author: Anthony Fu
+  version: "2026.1.31"
+  source: Generated from https://github.com/vitejs/vite, scripts at https://github.com/antfu/skills
 ---
 
-# Vite 构建产物体积优化
+# Vite
 
-当首屏加载慢 (FCP > 1.5s) 时，通常需要检查 JS Bundle 的体积。
+> Based on Vite 8 beta (Rolldown-powered). Vite 8 uses Rolldown bundler and Oxc transformer.
 
-## 1. 产物分析 (Visualizer)
+Vite is a next-generation frontend build tool with fast dev server (native ESM + HMR) and optimized production builds.
 
-首先"看见"哪些包最大。
+## Preferences
+
+- Use TypeScript: prefer `vite.config.ts`
+- Always use ESM, avoid CommonJS
+
+## Core
+
+| Topic | Description | Reference |
+|-------|-------------|-----------|
+| Configuration | `vite.config.ts`, `defineConfig`, conditional configs, `loadEnv` | [core-config](references/core-config.md) |
+| Features | `import.meta.glob`, asset queries (`?raw`, `?url`), `import.meta.env`, HMR API | [core-features](references/core-features.md) |
+| Plugin API | Vite-specific hooks, virtual modules, plugin ordering | [core-plugin-api](references/core-plugin-api.md) |
+
+## Build & SSR
+
+| Topic | Description | Reference |
+|-------|-------------|-----------|
+| Build & SSR | Library mode, SSR middleware mode, `ssrLoadModule`, JavaScript API | [build-and-ssr](references/build-and-ssr.md) |
+
+## Advanced
+
+| Topic | Description | Reference |
+|-------|-------------|-----------|
+| Environment API | Vite 6+ multi-environment support, custom runtimes | [environment-api](references/environment-api.md) |
+| Rolldown Migration | Vite 8 changes: Rolldown bundler, Oxc transformer, config migration | [rolldown-migration](references/rolldown-migration.md) |
+
+## Quick Reference
+
+### CLI Commands
 
 ```bash
-npm install rollup-plugin-visualizer -D
+vite              # Start dev server
+vite build        # Production build
+vite preview      # Preview production build
+vite build --ssr  # SSR build
 ```
 
-## 2. 常用优化策略
+### Common Config
 
-### 路由懒加载 (Route Lazy Loading)
-**这是收益最大的优化点**。
+```ts
+import { defineConfig } from 'vite'
 
-❌ `import UserList from './views/UserList.vue'`
-✅ `component: () => import('./views/UserList.vue')`
-
-### 依赖分包 (Manual Chunks)
-将大型库（ECharts, bkui-vue）单独打包，避免 vendor hash 频繁变化。
-
-### 按需引入 (Tree Shaking)
-❌ `import _ from 'lodash'`
-✅ `import debounce from 'lodash-es/debounce'`
-
-### Gzip 压缩
-```bash
-npm install vite-plugin-compression -D
+export default defineConfig({
+  plugins: [],
+  resolve: { alias: { '@': '/src' } },
+  server: { port: 3000, proxy: { '/api': 'http://localhost:8080' } },
+  build: { target: 'esnext', outDir: 'dist' },
+})
 ```
 
-## 3. 完整配置模版
+### Official Plugins
 
-> 📦 获取完整 vite.config.ts 配置：`skill://bundle-optimization/assets/vite.config.optimization.ts`
-
-
----
-## 📦 可用资源
-
-- `skill://bundle-optimization/assets/vite.config.optimization.ts`
-
-> 根据 SKILL.md 中的 IF-THEN 规则判断是否需要加载
+- `@vitejs/plugin-vue` - Vue 3 SFC support
+- `@vitejs/plugin-vue-jsx` - Vue 3 JSX
+- `@vitejs/plugin-react` - React with Oxc/Babel
+- `@vitejs/plugin-react-swc` - React with SWC
+- `@vitejs/plugin-legacy` - Legacy browser support

@@ -1,449 +1,65 @@
 ---
 name: microsoft-agent-framework
-version: 0.1.0
-description: |
-  Comprehensive knowledge of Microsoft Agent Framework for building production AI agents and workflows.
-  Auto-activates for agent building, workflow design, AutoGen migration, and enterprise AI tasks.
+description: 'Create, update, refactor, explain, or review Microsoft Agent Framework solutions using shared guidance plus language-specific references for .NET and Python.'
 ---
 
-# Microsoft Agent Framework Skill
+# Microsoft Agent Framework
 
-**Version**: 0.1.0-preview | **Last Updated**: 2025-11-15 | **Framework Version**: 0.1.0-preview
-**Languages**: Python 3.10+, C# (.NET 8.0+) | **License**: MIT
+Use this skill when working with applications, agents, workflows, or migrations built on Microsoft Agent Framework.
 
-## Quick Reference
+Microsoft Agent Framework is the unified successor to Semantic Kernel and AutoGen, combining their strengths with new capabilities. Because it is still in public preview and changes quickly, always ground implementation advice in the latest official documentation and samples rather than relying on stale knowledge.
 
-Microsoft Agent Framework is an open-source platform for building production AI agents and workflows, unifying AutoGen's simplicity with Semantic Kernel's enterprise features.
+## Determine the target language first
 
-**Core Capabilities**: AI Agents (stateful conversations, tool integration) | Workflows (graph-based orchestration, parallel processing) | Enterprise features (telemetry, middleware, MCP support)
+Choose the language workflow before making recommendations or code changes:
 
-**Installation**:
+1. Use the **.NET** workflow when the repository contains `.cs`, `.csproj`, `.sln`, `.slnx`, or other .NET project files, or when the user explicitly asks for C# or .NET guidance. Follow [references/dotnet.md](references/dotnet.md).
+2. Use the **Python** workflow when the repository contains `.py`, `pyproject.toml`, `requirements.txt`, or the user explicitly asks for Python guidance. Follow [references/python.md](references/python.md).
+3. If the repository contains both ecosystems, match the language used by the files being edited or the user's stated target.
+4. If the language is ambiguous, inspect the current workspace first and then choose the closest language-specific reference.
 
-- Python: `pip install agent-framework --pre`
-- C#: `dotnet add package Microsoft.Agents.AI --prerelease`
+## Always consult live documentation
 
-**Repository**: https://github.com/microsoft/agent-framework (5.1k stars)
+- Read the Microsoft Agent Framework overview first: <https://learn.microsoft.com/agent-framework/overview/agent-framework-overview>
+- Prefer official docs and samples for the current API surface.
+- Use the Microsoft Docs MCP tooling when available to fetch up-to-date framework guidance and examples.
+- Treat older Semantic Kernel or AutoGen patterns as migration inputs, not as the default implementation model.
 
----
+## Shared guidance
 
-## When to Use This Skill
+When working with Microsoft Agent Framework in any language:
 
-Use Microsoft Agent Framework when you need:
+- Use async patterns for agent and workflow operations.
+- Implement explicit error handling and logging.
+- Prefer strong typing, clear interfaces, and maintainable composition patterns.
+- Use `DefaultAzureCredential` when Azure authentication is appropriate.
+- Use agents for autonomous decision-making, ad hoc planning, conversation flows, tool usage, and MCP server interactions.
+- Use workflows for multi-step orchestration, predefined execution graphs, long-running tasks, and human-in-the-loop scenarios.
+- Support model providers such as Azure AI Foundry, Azure OpenAI, OpenAI, and others, but prefer Azure AI Foundry services for new projects when that matches user needs.
+- Use thread-based or equivalent state handling, context providers, middleware, checkpointing, routing, and orchestration patterns when they fit the problem.
 
-1. **Production AI Agents** with enterprise features (telemetry, middleware, structured outputs)
-2. **Multi-Agent Orchestration** via graph-based workflows with conditional routing
-3. **Tool/Function Integration** with approval workflows and error handling
-4. **Cross-Platform Development** requiring both Python and C# implementations
-5. **Research-to-Production Pipeline** leveraging AutoGen + Semantic Kernel convergence
+## Migration guidance
 
-**Integration with amplihack**: Use Agent Framework for **stateful conversational agents** and **complex orchestration**. Use amplihack's native agent system for **stateless task delegation** and **simple orchestration**. See `@integration/decision-framework.md` for detailed guidance.
+- If migrating from Semantic Kernel, use the official migration guide: <https://learn.microsoft.com/agent-framework/migration-guide/from-semantic-kernel/>
+- If migrating from AutoGen, use the official migration guide: <https://learn.microsoft.com/agent-framework/migration-guide/from-autogen/>
+- Preserve behavior first, then adopt native Agent Framework patterns incrementally.
 
----
+## Workflow
 
-## Core Concepts
+1. Determine the target language and read the matching reference file.
+2. Fetch the latest official docs and samples before making implementation choices.
+3. Apply the shared agent and workflow guidance from this skill.
+4. Use the language-specific package, repository, sample paths, and coding practices from the chosen reference.
+5. When examples in the repo differ from current docs, explain the difference and follow the current supported pattern.
 
-### 1. AI Agents
+## References
 
-Stateful conversational entities that process messages, call tools, and maintain context.
+- [.NET reference](references/dotnet.md)
+- [Python reference](references/python.md)
 
-**Python Example**:
+## Completion criteria
 
-```python
-from agents_framework import Agent, ModelClient
-
-# Create agent with model
-agent = Agent(
-    name="assistant",
-    model=ModelClient(model="gpt-4"),
-    instructions="You are a helpful assistant"
-)
-
-# Single-turn conversation
-response = await agent.run(message="Hello!")
-print(response.content)
-
-# Multi-turn with thread
-from agents_framework import Thread
-thread = Thread()
-response = await agent.run(thread=thread, message="What's 2+2?")
-response = await agent.run(thread=thread, message="Double that")
-```
-
-**C# Example**:
-
-```csharp
-using Microsoft.Agents.AI;
-
-var agent = new Agent(
-    name: "assistant",
-    model: new ModelClient(model: "gpt-4"),
-    instructions: "You are a helpful assistant"
-);
-
-var response = await agent.RunAsync("Hello!");
-Console.WriteLine(response.Content);
-```
-
-### 2. Tools & Functions
-
-Extend agent capabilities by providing callable functions.
-
-**Python Example**:
-
-```python
-from agents_framework import function_tool
-
-@function_tool
-def get_weather(location: str) -> str:
-    """Get weather for a location."""
-    return f"Weather in {location}: Sunny, 72°F"
-
-agent = Agent(
-    name="assistant",
-    model=ModelClient(model="gpt-4"),
-    tools=[get_weather]
-)
-
-response = await agent.run(message="What's the weather in Seattle?")
-# Agent automatically calls get_weather() and responds with result
-```
-
-**C# Example**:
-
-```csharp
-[FunctionTool]
-public static string GetWeather(string location)
-{
-    return $"Weather in {location}: Sunny, 72°F";
-}
-
-var agent = new Agent(
-    name: "assistant",
-    model: new ModelClient(model: "gpt-4"),
-    tools: new[] { typeof(Tools).GetMethod("GetWeather") }
-);
-```
-
-### 3. Workflows
-
-Graph-based orchestration for multi-agent systems with conditional routing and parallel execution.
-
-**Python Example**:
-
-```python
-from agents_framework import Workflow, GraphWorkflow
-
-# Define workflow graph
-workflow = GraphWorkflow()
-
-# Add agents as nodes
-workflow.add_node("researcher", research_agent)
-workflow.add_node("writer", writer_agent)
-workflow.add_node("reviewer", review_agent)
-
-# Define edges (control flow)
-workflow.add_edge("researcher", "writer")  # Sequential
-workflow.add_edge("writer", "reviewer")
-
-# Conditional routing
-def should_revise(state):
-    return state.get("needs_revision", False)
-
-workflow.add_conditional_edge(
-    "reviewer",
-    should_revise,
-    {"revise": "writer", "done": "END"}
-)
-
-# Execute workflow
-result = await workflow.run(initial_message="Research AI trends")
-```
-
-**C# Example**:
-
-```csharp
-var workflow = new GraphWorkflow();
-
-workflow.AddNode("researcher", researchAgent);
-workflow.AddNode("writer", writerAgent);
-workflow.AddNode("reviewer", reviewAgent);
-
-workflow.AddEdge("researcher", "writer");
-workflow.AddEdge("writer", "reviewer");
-
-var result = await workflow.RunAsync("Research AI trends");
-```
-
-### 4. Context & State Management
-
-Maintain conversation history and shared state across agents.
-
-**Python**:
-
-```python
-from agents_framework import Thread, ContextProvider
-
-# Thread maintains conversation history
-thread = Thread()
-await agent.run(thread=thread, message="Remember: My name is Alice")
-await agent.run(thread=thread, message="What's my name?")  # "Alice"
-
-# Custom context provider
-class DatabaseContext(ContextProvider):
-    async def get_context(self, thread_id: str):
-        return await db.fetch_history(thread_id)
-
-    async def save_context(self, thread_id: str, messages):
-        await db.save_history(thread_id, messages)
-
-agent = Agent(model=model, context_provider=DatabaseContext())
-```
-
-### 5. Middleware & Telemetry
-
-Add cross-cutting concerns like logging, auth, and monitoring.
-
-**Python**:
-
-```python
-from agents_framework import Middleware
-from opentelemetry import trace
-
-# Custom middleware
-class LoggingMiddleware(Middleware):
-    async def process(self, message, next_handler):
-        print(f"Processing: {message.content}")
-        response = await next_handler(message)
-        print(f"Response: {response.content}")
-        return response
-
-# OpenTelemetry integration
-tracer = trace.get_tracer(__name__)
-with tracer.start_as_current_span("agent-run"):
-    response = await agent.run(message="Hello")
-```
-
-**C#**:
-
-```csharp
-public class LoggingMiddleware : IMiddleware
-{
-    public async Task<Message> ProcessAsync(Message message, Func<Message, Task<Message>> next)
-    {
-        Console.WriteLine($"Processing: {message.Content}");
-        var response = await next(message);
-        Console.WriteLine($"Response: {response.Content}");
-        return response;
-    }
-}
-```
-
----
-
-## Common Patterns
-
-### Human-in-the-Loop Approval
-
-```python
-from agents_framework import HumanInTheLoop
-
-@function_tool
-def delete_file(path: str) -> str:
-    """Delete a file (requires approval)."""
-    return f"Deleted {path}"
-
-# Add approval wrapper
-delete_file_with_approval = HumanInTheLoop(
-    tool=delete_file,
-    approval_prompt="Approve deletion of {path}?"
-)
-
-agent = Agent(tools=[delete_file_with_approval])
-```
-
-### Parallel Agent Execution
-
-```python
-workflow = GraphWorkflow()
-
-# Add multiple agents
-workflow.add_node("analyst1", analyst_agent)
-workflow.add_node("analyst2", analyst_agent)
-workflow.add_node("synthesizer", synthesis_agent)
-
-# Parallel execution
-workflow.add_edge("START", ["analyst1", "analyst2"])  # Both run in parallel
-workflow.add_edge(["analyst1", "analyst2"], "synthesizer")  # Wait for both
-
-result = await workflow.run(message="Analyze market trends")
-```
-
-### Structured Output Generation
-
-```python
-from pydantic import BaseModel
-
-class WeatherReport(BaseModel):
-    location: str
-    temperature: float
-    conditions: str
-
-agent = Agent(
-    model=model,
-    instructions="Generate weather reports",
-    response_format=WeatherReport
-)
-
-response = await agent.run(message="Weather in Seattle")
-report: WeatherReport = response.parsed
-print(f"{report.location}: {report.temperature}°F, {report.conditions}")
-```
-
-### Error Handling & Retries
-
-```python
-from agents_framework import RetryPolicy
-
-agent = Agent(
-    model=model,
-    retry_policy=RetryPolicy(
-        max_retries=3,
-        backoff_factor=2.0,
-        exceptions=[TimeoutError, ConnectionError]
-    )
-)
-
-try:
-    response = await agent.run(message="Hello")
-except Exception as e:
-    print(f"Failed after retries: {e}")
-```
-
----
-
-## Integration with amplihack
-
-### Decision Framework
-
-**Use Microsoft Agent Framework when**:
-
-- Building stateful conversational agents (multi-turn dialogue)
-- Need enterprise features (telemetry, middleware, auth)
-- Complex multi-agent orchestration with conditional routing
-- Cross-platform requirements (Python + C#)
-- Integration with Microsoft ecosystem (Azure, M365)
-
-**Use amplihack native agents when**:
-
-- Stateless task delegation (code review, analysis)
-- Simple sequential/parallel orchestration
-- File-based operations and local tooling
-- Rapid prototyping without infrastructure
-- Token-efficient skill-based architecture
-
-**Hybrid Approach**:
-
-```python
-# Use amplihack for orchestration
-from claude import Agent as ClaudeAgent
-
-orchestrator = ClaudeAgent("orchestrator.md")
-
-# Delegate to Agent Framework for stateful agents
-from agents_framework import Agent, Thread
-
-conversational_agent = Agent(
-    model=ModelClient(model="gpt-4"),
-    instructions="Maintain conversation context"
-)
-
-thread = Thread()
-response1 = await conversational_agent.run(thread=thread, message="Start task")
-response2 = await conversational_agent.run(thread=thread, message="Continue")
-
-# Use amplihack for final synthesis
-result = orchestrator.process({"responses": [response1, response2]})
-```
-
-See `@integration/amplihack-integration.md` for complete patterns.
-
----
-
-## Quick Start Workflow
-
-1. **Install**: `pip install agent-framework --pre` (Python) or `dotnet add package Microsoft.Agents.AI --prerelease` (C#)
-
-2. **Create Basic Agent**:
-
-   ```python
-   from agents_framework import Agent, ModelClient
-
-   agent = Agent(
-       name="assistant",
-       model=ModelClient(model="gpt-4"),
-       instructions="You are a helpful assistant"
-   )
-
-   response = await agent.run(message="Hello!")
-   ```
-
-3. **Add Tools**:
-
-   ```python
-   @function_tool
-   def calculate(expr: str) -> float:
-       return eval(expr)
-
-   agent = Agent(model=model, tools=[calculate])
-   ```
-
-4. **Build Workflow**:
-
-   ```python
-   workflow = GraphWorkflow()
-   workflow.add_node("agent1", agent1)
-   workflow.add_node("agent2", agent2)
-   workflow.add_edge("agent1", "agent2")
-   result = await workflow.run(message="Task")
-   ```
-
-5. **Add Telemetry**:
-   ```python
-   from opentelemetry import trace
-   tracer = trace.get_tracer(__name__)
-   with tracer.start_as_current_span("agent-run"):
-       response = await agent.run(message="Hello")
-   ```
-
----
-
-## Reference Documentation
-
-For detailed information, see:
-
-- `@reference/01-overview.md` - Architecture, components, use cases
-- `@reference/02-agents.md` - Agent creation, lifecycle, advanced features
-- `@reference/03-workflows.md` - Workflow patterns, executors, checkpointing
-- `@reference/04-tools-functions.md` - Tool definition, approval workflows, error handling
-- `@reference/05-context-middleware.md` - Context providers, middleware patterns, auth
-- `@reference/06-telemetry-monitoring.md` - OpenTelemetry, logging, debugging
-- `@reference/07-advanced-patterns.md` - Multi-agent patterns, streaming, DevUI
-
-## Working Examples
-
-- `@examples/01-basic-agent.py` - Simple conversational agent
-- `@examples/02-tool-integration.py` - Agent with function calling
-- `@examples/03-simple-workflow.py` - Multi-agent workflow
-- `@examples/04-basic-agent.cs` - C# agent implementation
-- `@examples/05-tool-integration.cs` - C# tool integration
-- `@examples/06-simple-workflow.cs` - C# workflow example
-
-## Maintenance
-
-Check framework freshness: `python @scripts/check-freshness.py`
-
-Current version tracking: `@metadata/version-tracking.json`
-
----
-
-**Token Count**: ~4,200 tokens (under 4,800 limit)
+- Recommendations match the target language.
+- Package names, repository paths, and sample locations match the selected ecosystem.
+- Guidance reflects current Microsoft Agent Framework documentation rather than legacy assumptions.
+- Migration advice calls out Semantic Kernel and AutoGen only when relevant.

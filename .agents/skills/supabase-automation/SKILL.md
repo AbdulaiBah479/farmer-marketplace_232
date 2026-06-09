@@ -1,835 +1,242 @@
 ---
 name: supabase-automation
-description: "Master Supabase CLI automation, auth configuration, edge functions, secrets management, MCP integration, and Management API for production deployments"
+description: Automate Supabase database queries, table management, project administration, storage, edge functions, and SQL execution via Rube MCP (Composio). Always search tools first for current schemas.
+requires:
+  mcp: [rube]
+category: development-code
 ---
 
-# Supabase Automation & Integration Expert
-
-Complete automation toolkit for Supabase CLI, auth configuration, edge functions, secrets, MCP integration, and API management.
-
-## MCP Integration
-
-**Supabase MCP Server** provides Model Context Protocol integration for:
-- **Docs** - Access Supabase documentation
-- **Account** - Manage account and projects
-- **Database** - Query and manage database
-- **Debugging** - Debug edge functions and queries
-- **Development** - Local development tools
-- **Functions** - Manage edge functions
-- **Branching** - Database branching (preview environments)
-- **Storage** - File storage management
-
-**MCP Connection URL:**
-```
-https://mcp.supabase.com/mcp?project_ref=spdtwktxdalcfigzeqrz&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching%2Cstorage
-```
-
-**Setup MCP Server:**
-```bash
-# Add to Claude Desktop config (~/.config/claude/claude_desktop_config.json)
-{
-  "mcpServers": {
-    "supabase": {
-      "url": "https://mcp.supabase.com/mcp",
-      "params": {
-        "project_ref": "spdtwktxdalcfigzeqrz",
-        "features": "docs,account,database,debugging,development,functions,branching,storage"
-      },
-      "env": {
-        "SUPABASE_ACCESS_TOKEN": "${SUPABASE_ACCESS_TOKEN}",
-        "SUPABASE_ANON_KEY": "${SUPABASE_ANON_KEY}",
-        "SUPABASE_SERVICE_ROLE_KEY": "${SUPABASE_SERVICE_ROLE_KEY}"
-      }
-    }
-  }
-}
-```
-
-## Core Capabilities
-
-### 1. CLI Automation
-- Project initialization and configuration
-- Local development setup
-- Database migrations and seeding
-- Type generation for TypeScript
-- Database schema management
-- Automated deployments
-
-### 2. Auth Configuration
-- Site URL and redirect URL management
-- OAuth provider setup (Google, GitHub, etc.)
-- Email/password authentication
-- Magic links and OTP
-- JWT configuration
-- Row Level Security (RLS) policies
-
-### 3. Edge Functions
-- Function creation and deployment
-- Deno runtime configuration
-- Secrets injection
-- CORS configuration
-- Function invocation and testing
-- Local development server
-
-### 4. Secrets Management
-- Environment variable management
-- Secret storage via Supabase CLI
-- Vault integration
-- Secret rotation
-- Secure credential handling
-
-### 5. Management API
-- Project configuration via API
-- Database connection pooling
-- API key management
-- Usage monitoring
-- Automated backups
-- SSL configuration
-
-## Documentation References
-
-**Essential Reading:**
-- [API Reference](https://supabase.com/docs/reference/api/introduction)
-- [CLI Reference](https://supabase.com/docs/reference/cli/introduction)
-- [Local Development](https://supabase.com/docs/guides/local-development)
-- [Deployment Guide](https://supabase.com/docs/guides/deployment)
-
-## Quick Start Examples
-
-### 1. Initialize Local Development
-```bash
-# Initialize Supabase in project
-supabase init
-
-# Start local Supabase (Docker required)
-supabase start
-
-# Generate TypeScript types
-supabase gen types typescript --local > types/supabase.ts
-
-# View local dashboard
-# Studio: http://localhost:54323
-# API URL: http://localhost:54321
-```
-
-### 2. Configure Auth URLs
-```bash
-# Set site URL (production)
-supabase secrets set SITE_URL=https://app.insightpulseai.net
-
-# Add redirect URLs via Dashboard or Management API
-curl -X POST 'https://api.supabase.com/v1/projects/{project-ref}/config' \
-  -H "Authorization: Bearer ${SUPABASE_ACCESS_TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "auth": {
-      "site_url": "https://app.insightpulseai.net",
-      "redirect_urls": [
-        "https://app.insightpulseai.net/auth/callback",
-        "https://*.insightpulseai.net/auth/callback",
-        "http://localhost:3000/auth/callback"
-      ]
-    }
-  }'
-```
-
-### 3. Deploy Edge Functions
-```bash
-# Create new edge function
-supabase functions new my-function
-
-# Write function code
-cat > supabase/functions/my-function/index.ts << 'EOF'
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-serve(async (req) => {
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-  )
-
-  // Your function logic here
-  const { data, error } = await supabase.from('table').select('*')
-
-  return new Response(
-    JSON.stringify({ data, error }),
-    { headers: { "Content-Type": "application/json" } }
-  )
-})
-EOF
-
-# Set secrets for edge function
-supabase secrets set API_KEY=your_secret_key
-supabase secrets set OPENAI_API_KEY=sk-...
-
-# Deploy edge function
-supabase functions deploy my-function
-
-# Invoke function
-curl -X POST 'https://{project-ref}.supabase.co/functions/v1/my-function' \
-  -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
-  -H "Content-Type: application/json" \
-  -d '{"param": "value"}'
-```
-
-### 4. Database Migrations
-```bash
-# Create new migration
-supabase migration new create_users_table
-
-# Edit migration file
-cat > supabase/migrations/20250101_create_users_table.sql << 'EOF'
--- Create users table with RLS
-CREATE TABLE public.users (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  email TEXT UNIQUE NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Enable RLS
-ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
-
--- Policy: Users can read their own data
-CREATE POLICY "Users can view own data"
-  ON public.users
-  FOR SELECT
-  USING (auth.uid() = id);
-
--- Grant permissions
-GRANT SELECT, INSERT, UPDATE ON public.users TO authenticated;
-EOF
-
-# Apply migrations locally
-supabase db reset
-
-# Push to production
-supabase db push
-```
-
-### 5. Secrets Management
-```bash
-# List all secrets
-supabase secrets list
-
-# Set secret
-supabase secrets set DATABASE_URL=postgresql://...
-supabase secrets set STRIPE_SECRET_KEY=sk_live_...
-supabase secrets set OPENAI_API_KEY=sk-...
-
-# Unset secret
-supabase secrets unset OLD_SECRET
-
-# Use secrets in edge functions
-# Automatically available as Deno.env.get('SECRET_NAME')
-```
-
-### 6. Management API - Full Configuration
-```typescript
-// supabase-management.ts
-const SUPABASE_ACCESS_TOKEN = process.env.SUPABASE_ACCESS_TOKEN
-const PROJECT_REF = 'your-project-ref'
-const API_BASE = 'https://api.supabase.com/v1'
-
-// Configure auth settings
-async function configureAuth() {
-  const response = await fetch(`${API_BASE}/projects/${PROJECT_REF}/config`, {
-    method: 'PATCH',
-    headers: {
-      'Authorization': `Bearer ${SUPABASE_ACCESS_TOKEN}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      auth: {
-        site_url: 'https://app.insightpulseai.net',
-        redirect_urls: [
-          'https://app.insightpulseai.net/auth/callback',
-          'https://*.insightpulseai.net/auth/callback',
-          'http://localhost:3000/auth/callback'
-        ],
-        external_google_enabled: true,
-        external_github_enabled: true,
-        jwt_exp: 3600,
-        refresh_token_rotation_enabled: true,
-        security_refresh_token_reuse_interval: 10
-      }
-    })
-  })
-  return response.json()
-}
-
-// Configure database pooling
-async function configureDatabasePooling() {
-  const response = await fetch(`${API_BASE}/projects/${PROJECT_REF}/database/pooling`, {
-    method: 'PATCH',
-    headers: {
-      'Authorization': `Bearer ${SUPABASE_ACCESS_TOKEN}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      pool_mode: 'transaction',
-      default_pool_size: 15,
-      ignore_startup_parameters: 'extra_float_digits'
-    })
-  })
-  return response.json()
-}
-```
-
-## Common Workflows
-
-### Workflow 1: New Project Setup
-```bash
-# 1. Initialize project
-supabase init
-supabase login
-
-# 2. Link to remote project
-supabase link --project-ref {project-ref}
-
-# 3. Pull remote schema
-supabase db pull
-
-# 4. Generate types
-supabase gen types typescript --linked > types/supabase.ts
-
-# 5. Start local development
-supabase start
-```
-
-### Workflow 2: Deploy with CI/CD
-```yaml
-# .github/workflows/deploy-supabase.yml
-name: Deploy Supabase
-
-on:
-  push:
-    branches: [main]
-    paths:
-      - 'supabase/**'
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v1
-        with:
-          version: latest
-
-      - name: Link Supabase project
-        run: supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-
-      - name: Push database migrations
-        run: supabase db push
-
-      - name: Deploy edge functions
-        run: |
-          supabase functions deploy --no-verify-jwt
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-
-      - name: Set production secrets
-        run: |
-          supabase secrets set OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
-          supabase secrets set STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
-```
-
-### Workflow 3: Auth Provider Setup
-```typescript
-// Setup Google OAuth
-// 1. Get credentials from Google Cloud Console
-// 2. Configure in Supabase Dashboard or via API
-
-const setupGoogleAuth = async () => {
-  const response = await fetch(
-    `https://api.supabase.com/v1/projects/${PROJECT_REF}/config`,
-    {
-      method: 'PATCH',
-      headers: {
-        'Authorization': `Bearer ${SUPABASE_ACCESS_TOKEN}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        auth: {
-          external_google_enabled: true,
-          external_google_client_id: 'your-google-client-id.apps.googleusercontent.com',
-          external_google_secret: 'GOCSPX-...'
-        }
-      })
-    }
-  )
-  return response.json()
-}
-
-// Use in your app
-const { data, error } = await supabase.auth.signInWithOAuth({
-  provider: 'google',
-  options: {
-    redirectTo: 'https://app.insightpulseai.net/auth/callback'
-  }
-})
-```
-
-## MCP-Powered Workflows
-
-### MCP Workflow 1: Database Branching for Testing
-```bash
-# Using MCP to create database branch for feature testing
-# MCP command: create_database_branch
-
-# Create branch from production
-supabase branches create feature-trial-balance --project-ref spdtwktxdalcfigzeqrz
-
-# Get branch connection string
-supabase branches get feature-trial-balance --project-ref spdtwktxdalcfigzeqrz
-
-# Run migrations on branch
-supabase db push --branch feature-trial-balance
-
-# Test your changes
-# Connect app to branch URL temporarily
-
-# Merge branch when ready
-supabase branches merge feature-trial-balance --project-ref spdtwktxdalcfigzeqrz
-```
-
-### MCP Workflow 2: Edge Function Debugging
-```typescript
-// Use MCP debugging features to troubleshoot edge functions
-
-// Enable verbose logging in edge function
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-
-serve(async (req) => {
-  console.log('[DEBUG] Request received:', {
-    method: req.method,
-    url: req.url,
-    headers: Object.fromEntries(req.headers)
-  })
-
-  try {
-    // Your function logic
-    const result = await processRequest(req)
-    console.log('[DEBUG] Processing successful:', result)
-    return new Response(JSON.stringify(result))
-  } catch (error) {
-    console.error('[ERROR] Function failed:', error)
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500
-    })
-  }
-})
-
-// Check logs via MCP or CLI
-// supabase functions logs my-function --project-ref spdtwktxdalcfigzeqrz
-```
-
-### MCP Workflow 3: Storage Management
-```typescript
-// Using MCP storage features for BIR document management
-
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
-// Create storage bucket for BIR forms
-const { data: bucket, error: bucketError } = await supabase
-  .storage
-  .createBucket('bir-forms', {
-    public: false,
-    fileSizeLimit: 52428800, // 50MB
-    allowedMimeTypes: ['application/pdf', 'image/png', 'image/jpeg']
-  })
-
-// Upload BIR form with RLS
-const { data, error } = await supabase
-  .storage
-  .from('bir-forms')
-  .upload(
-    `company_${companyId}/1601C_${period}.pdf`,
-    fileBuffer,
-    {
-      contentType: 'application/pdf',
-      upsert: true,
-      metadata: {
-        company_id: companyId,
-        form_type: '1601C',
-        period: period
-      }
-    }
-  )
-
-// Create RLS policy for storage
-/*
-CREATE POLICY "Company users can access their BIR forms"
-ON storage.objects FOR ALL
-USING (
-  bucket_id = 'bir-forms'
-  AND (storage.foldername(name))[1] = 'company_' || auth.jwt() ->> 'company_id'
-);
-*/
-```
-
-## InsightPulse Integration Patterns
-
-### Pattern 1: Odoo + Supabase Auth
-```typescript
-// Edge function for Odoo SSO
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-serve(async (req) => {
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-  )
-
-  // Verify Supabase JWT
-  const token = req.headers.get('Authorization')?.replace('Bearer ', '')
-  const { data: { user }, error } = await supabase.auth.getUser(token)
-
-  if (error || !user) {
-    return new Response('Unauthorized', { status: 401 })
-  }
-
-  // Connect to Odoo
-  const odooResponse = await fetch(`${Deno.env.get('ODOO_URL')}/web/session/authenticate`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      jsonrpc: '2.0',
-      params: {
-        db: Deno.env.get('ODOO_DB'),
-        login: user.email,
-        password: Deno.env.get('ODOO_SSO_PASSWORD')
-      }
-    })
-  })
-
-  return new Response(JSON.stringify(await odooResponse.json()), {
-    headers: { 'Content-Type': 'application/json' }
-  })
-})
-```
-
-### Pattern 2: Real-time Finance Updates
-```typescript
-// Subscribe to trial balance changes
-const subscription = supabase
-  .channel('trial-balance-changes')
-  .on(
-    'postgres_changes',
-    {
-      event: '*',
-      schema: 'public',
-      table: 'account_move_line',
-      filter: 'company_id=eq.1'
-    },
-    (payload) => {
-      console.log('Change detected:', payload)
-      // Update Superset dashboard
-      // Trigger recalculation
-    }
-  )
-  .subscribe()
-```
-
-### Pattern 3: Vector Search for BIR Forms
-```sql
--- Create vector extension
-CREATE EXTENSION IF NOT EXISTS vector;
-
--- Add vector column for OCR embeddings
-ALTER TABLE bir_forms
-ADD COLUMN embedding vector(1536);
-
--- Create vector index
-CREATE INDEX ON bir_forms
-USING ivfflat (embedding vector_cosine_ops)
-WITH (lists = 100);
-
--- Search similar forms
-SELECT
-  form_number,
-  form_type,
-  1 - (embedding <=> $1::vector) AS similarity
-FROM bir_forms
-ORDER BY embedding <=> $1::vector
-LIMIT 10;
-```
-
-## Environment Configuration
-
-### Local Development (.env.local)
-```bash
-# Supabase Local
-NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-
-# Local Postgres
-DATABASE_URL=postgresql://postgres:postgres@localhost:54322/postgres
-```
-
-### Production (.env.production)
-```bash
-# Supabase Production
-NEXT_PUBLIC_SUPABASE_URL=https://spdtwktxdalcfigzeqrz.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-
-# Production Postgres (Pooler)
-DATABASE_URL=postgresql://postgres.spdtwktxdalcfigzeqrz:password@aws-1-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require
-
-# Management API
-SUPABASE_ACCESS_TOKEN=sbp_...
-SUPABASE_PROJECT_REF=spdtwktxdalcfigzeqrz
-```
-
-## Security Best Practices
-
-### 1. Row Level Security (RLS)
-```sql
--- Enable RLS on all tables
-ALTER TABLE account_move_line ENABLE ROW LEVEL SECURITY;
-
--- Policy: Users can only see their company's data
-CREATE POLICY "company_isolation"
-  ON account_move_line
-  FOR ALL
-  USING (
-    company_id IN (
-      SELECT company_id
-      FROM user_companies
-      WHERE user_id = auth.uid()
-    )
-  );
-```
-
-### 2. Service Role Key Protection
-- Never expose service role key in client code
-- Use edge functions for privileged operations
-- Rotate keys regularly via Dashboard
-
-### 3. OAuth Configuration
-```bash
-# Set redirect URLs to prevent open redirects
-# Use wildcards carefully: https://*.insightpulseai.net is safer than https://*
-```
-
-## Troubleshooting
-
-### Issue: Edge function deployment fails
-```bash
-# Check function logs
-supabase functions logs my-function
-
-# Test locally first
-supabase functions serve my-function
-
-# Verify Deno permissions
-deno run --allow-net --allow-env index.ts
-```
-
-### Issue: Auth redirect not working
-```bash
-# Verify redirect URLs in dashboard
-# Check site URL matches your domain
-# Ensure CORS is configured
-
-# Test auth flow
-curl -X POST 'https://{project-ref}.supabase.co/auth/v1/token?grant_type=password' \
-  -H "apikey: ${SUPABASE_ANON_KEY}" \
-  -H "Content-Type: application/json" \
-  -d '{"email": "test@example.com", "password": "password"}'
-```
-
-### Issue: Database migration conflict
-```bash
-# Reset local database
-supabase db reset
-
-# Force push (DANGER: production)
-supabase db push --force
-
-# Create repair migration
-supabase migration new repair_conflict
-```
-
-## CLI Command Reference
-
-```bash
-# Project Management
-supabase init                          # Initialize new project
-supabase login                         # Login to Supabase
-supabase projects list                 # List all projects
-supabase link --project-ref {ref}      # Link to remote project
-
-# Database
-supabase db reset                      # Reset local database
-supabase db push                       # Push migrations to remote
-supabase db pull                       # Pull remote schema
-supabase db diff                       # Show schema differences
-supabase migration new {name}          # Create new migration
-supabase migration up                  # Apply migrations
-
-# Edge Functions
-supabase functions new {name}          # Create new function
-supabase functions deploy {name}       # Deploy function
-supabase functions serve {name}        # Run function locally
-supabase functions delete {name}       # Delete function
-
-# Secrets
-supabase secrets list                  # List all secrets
-supabase secrets set {KEY}={VALUE}     # Set secret
-supabase secrets unset {KEY}           # Remove secret
-
-# Type Generation
-supabase gen types typescript --local              # Generate from local
-supabase gen types typescript --linked             # Generate from remote
-supabase gen types typescript --db-url {URL}       # Generate from URL
-
-# Local Development
-supabase start                         # Start local Supabase
-supabase stop                          # Stop local Supabase
-supabase status                        # Show local status
-```
-
-## Supabase UI Components (shadcn/ui)
-
-Supabase provides official UI components built on shadcn/ui for Next.js and React apps.
-
-### Installation
-
-```bash
-# Install shadcn/ui first
-npx shadcn@latest init
-
-# Add Supabase UI components
-npx shadcn@latest add https://ui.supabase.com/registry/supabase-auth-block.json
-npx shadcn@latest add https://ui.supabase.com/registry/supabase-storage-upload.json
-npx shadcn@latest add https://ui.supabase.com/registry/supabase-realtime-chat.json
-```
-
-### Available Components
-
-#### 1. SupabaseAuthBlock
-Complete authentication UI with sign-up, sign-in, password reset, and OAuth.
-
-```typescript
-import { SupabaseAuthBlock } from '@/components/supabase-ui/auth-block'
-
-export default function LoginPage() {
-  return (
-    <SupabaseAuthBlock
-      providers={['google', 'github']}
-      redirectTo="/dashboard"
-      appearance={{
-        theme: 'default',
-        variables: {
-          default: {
-            colors: {
-              brand: '#3b82f6',
-              brandAccent: '#2563eb'
-            }
-          }
-        }
-      }}
-    />
-  )
-}
-```
-
-#### 2. SupabaseStorageUpload
-File upload component with progress tracking and thumbnail previews.
-
-```typescript
-import { SupabaseStorageUpload } from '@/components/supabase-ui/storage-upload'
-
-export function FileUploader() {
-  return (
-    <SupabaseStorageUpload
-      bucket="avatars"
-      path={`${userId}/`}
-      accept="image/*"
-      maxSize={5242880} // 5MB
-      onUpload={(url) => console.log('Uploaded:', url)}
-    />
-  )
-}
-```
-
-#### 3. SupabaseRealtimeChat
-Real-time chat component with presence and typing indicators.
-
-```typescript
-import { SupabaseRealtimeChat } from '@/components/supabase-ui/realtime-chat'
-
-export function ChatRoom({ roomId }: { roomId: string }) {
-  return (
-    <SupabaseRealtimeChat
-      channel={`room:${roomId}`}
-      onMessage={(message) => console.log(message)}
-    />
-  )
-}
-```
-
-### Hybrid Stack: Next.js + OWL
-
-For InsightPulse, we use **both** Supabase UI (Next.js) and Odoo OWL:
-
-**Use Next.js + Supabase UI for:**
-- Public portals and customer-facing apps
-- Analytics dashboards (read-heavy)
-- Real-time features (chat, notifications)
-- File uploads and storage
-- Authentication and user management
-
-**Use Odoo OWL for:**
-- ERP workflows (accounting, inventory, HR)
-- Complex business logic
-- BIR tax forms and compliance
-- Multi-company/multi-currency
-- Backend admin interfaces
-
-See: `/docs/HYBRID_STACK_ARCHITECTURE.md` for complete integration guide.
-
-## When to Use This Skill
-
-Use this skill when you need to:
-- ✅ Set up local Supabase development environment
-- ✅ Configure authentication providers and redirect URLs
-- ✅ Deploy and manage edge functions
-- ✅ Manage secrets and environment variables
-- ✅ Automate database migrations
-- ✅ Integrate Supabase with Odoo/Superset
-- ✅ Configure RLS policies
-- ✅ Use Management API for infrastructure automation
-- ✅ Set up CI/CD for Supabase deployments
-- ✅ Implement vector search with pgvector
-- ✅ Configure production database pooling
-- ✅ Build Next.js apps with Supabase UI components
-- ✅ Create hybrid Next.js + OWL architectures
-
-## Related Skills
-- `supabase-rpc-manager` - For RPC calls and real-time subscriptions
-- `odoo` - For Odoo ERP integration
-- `superset-dashboard-automation` - For analytics integration
-
-## Related Documentation
-- `/docs/HYBRID_STACK_ARCHITECTURE.md` - Next.js + OWL integration guide
-
-## Support Resources
-- [Supabase Discord](https://discord.supabase.com)
-- [GitHub Discussions](https://github.com/supabase/supabase/discussions)
-- [Stack Overflow](https://stackoverflow.com/questions/tagged/supabase)
-- [Supabase UI Library](https://ui.supabase.com)
+# Supabase Automation via Rube MCP
+
+Automate Supabase operations including database queries, table schema inspection, SQL execution, project and organization management, storage buckets, edge functions, and service health monitoring through Composio's Supabase toolkit.
+
+**Toolkit docs**: [composio.dev/toolkits/supabase](https://composio.dev/toolkits/supabase)
+
+## Prerequisites
+
+- Rube MCP must be connected (RUBE_SEARCH_TOOLS available)
+- Active Supabase connection via `RUBE_MANAGE_CONNECTIONS` with toolkit `supabase`
+- Always call `RUBE_SEARCH_TOOLS` first to get current tool schemas
+
+## Setup
+
+**Get Rube MCP**: Add `https://rube.app/mcp` as an MCP server in your client configuration. No API keys needed — just add the endpoint and it works.
+
+
+1. Verify Rube MCP is available by confirming `RUBE_SEARCH_TOOLS` responds
+2. Call `RUBE_MANAGE_CONNECTIONS` with toolkit `supabase`
+3. If connection is not ACTIVE, follow the returned auth link to complete Supabase authentication
+4. Confirm connection status shows ACTIVE before running any workflows
+
+## Core Workflows
+
+### 1. Query and Manage Database Tables
+
+**When to use**: User wants to read data from tables, inspect schemas, or perform CRUD operations
+
+**Tool sequence**:
+1. `SUPABASE_LIST_ALL_PROJECTS` - List projects to find the target project_ref [Prerequisite]
+2. `SUPABASE_LIST_TABLES` - List all tables and views in the database [Prerequisite]
+3. `SUPABASE_GET_TABLE_SCHEMAS` - Get detailed column types, constraints, and relationships [Prerequisite for writes]
+4. `SUPABASE_SELECT_FROM_TABLE` - Query rows with filtering, sorting, and pagination [Required for reads]
+5. `SUPABASE_BETA_RUN_SQL_QUERY` - Execute arbitrary SQL for complex queries, inserts, updates, or deletes [Required for writes]
+
+**Key parameters for SELECT_FROM_TABLE**:
+- `project_ref`: 20-character lowercase project reference
+- `table`: Table or view name to query
+- `select`: Comma-separated column list (supports nested selections and JSON paths like `profile->avatar_url`)
+- `filters`: Array of filter objects with `column`, `operator`, `value`
+- `order`: Sort expression like `created_at.desc`
+- `limit`: Max rows to return (minimum 1)
+- `offset`: Rows to skip for pagination
+
+**PostgREST filter operators**:
+- `eq`, `neq`: Equal / not equal
+- `gt`, `gte`, `lt`, `lte`: Comparison operators
+- `like`, `ilike`: Pattern matching (case-sensitive / insensitive)
+- `is`: IS check (for null, true, false)
+- `in`: In a list of values
+- `cs`, `cd`: Contains / contained by (arrays)
+- `fts`, `plfts`, `phfts`, `wfts`: Full-text search variants
+
+**Key parameters for RUN_SQL_QUERY**:
+- `ref`: Project reference (20 lowercase letters, pattern `^[a-z]{20}$`)
+- `query`: Valid PostgreSQL SQL statement
+- `read_only`: Boolean to force read-only transaction (safer for SELECTs)
+
+**Pitfalls**:
+- `project_ref` must be exactly 20 lowercase letters (a-z only, no numbers or hyphens)
+- `SELECT_FROM_TABLE` is read-only; use `RUN_SQL_QUERY` for INSERT, UPDATE, DELETE operations
+- For PostgreSQL array columns (text[], integer[]), use `ARRAY['item1', 'item2']` or `'{"item1", "item2"}'` syntax, NOT JSON array syntax `'["item1", "item2"]'`
+- SQL identifiers that are case-sensitive must be double-quoted in queries
+- Complex DDL operations may timeout (~60 second limit); break into smaller queries
+- ERROR 42P01 "relation does not exist" usually means unquoted case-sensitive identifiers
+- ERROR 42883 "function does not exist" means you are calling non-standard helpers; prefer information_schema queries
+
+### 2. Manage Projects and Organizations
+
+**When to use**: User wants to list projects, inspect configurations, or manage organizations
+
+**Tool sequence**:
+1. `SUPABASE_LIST_ALL_ORGANIZATIONS` - List all organizations (IDs and names) [Required]
+2. `SUPABASE_GETS_INFORMATION_ABOUT_THE_ORGANIZATION` - Get detailed org info by slug [Optional]
+3. `SUPABASE_LIST_MEMBERS_OF_AN_ORGANIZATION` - List org members with roles and MFA status [Optional]
+4. `SUPABASE_LIST_ALL_PROJECTS` - List all projects with metadata [Required]
+5. `SUPABASE_GETS_PROJECT_S_POSTGRES_CONFIG` - Get database configuration [Optional]
+6. `SUPABASE_GETS_PROJECT_S_AUTH_CONFIG` - Get authentication configuration [Optional]
+7. `SUPABASE_GET_PROJECT_API_KEYS` - Get API keys (sensitive -- handle carefully) [Optional]
+8. `SUPABASE_GETS_PROJECT_S_SERVICE_HEALTH_STATUS` - Check service health [Optional]
+
+**Key parameters**:
+- `ref`: Project reference for project-specific tools
+- `slug`: Organization slug (URL-friendly identifier) for org tools
+- `services`: Array of services for health check: `auth`, `db`, `db_postgres_user`, `pg_bouncer`, `pooler`, `realtime`, `rest`, `storage`
+
+**Pitfalls**:
+- `LIST_ALL_ORGANIZATIONS` returns both `id` and `slug`; `LIST_MEMBERS_OF_AN_ORGANIZATION` expects `slug`, not `id`
+- `GET_PROJECT_API_KEYS` returns live secrets -- NEVER log, display, or persist full key values
+- `GETS_PROJECT_S_SERVICE_HEALTH_STATUS` requires a non-empty `services` array; empty array causes invalid_request error
+- Config tools may return 401/403 if token lacks required scope; handle gracefully rather than failing the whole workflow
+
+### 3. Inspect Database Schema
+
+**When to use**: User wants to understand table structure, columns, constraints, or generate types
+
+**Tool sequence**:
+1. `SUPABASE_LIST_ALL_PROJECTS` - Find the target project [Prerequisite]
+2. `SUPABASE_LIST_TABLES` - Enumerate all tables and views with metadata [Required]
+3. `SUPABASE_GET_TABLE_SCHEMAS` - Get detailed schema for specific tables [Required]
+4. `SUPABASE_GENERATE_TYPE_SCRIPT_TYPES` - Generate TypeScript types from schema [Optional]
+
+**Key parameters for LIST_TABLES**:
+- `project_ref`: Project reference
+- `schemas`: Array of schema names to search (e.g., `["public"]`); omit for all non-system schemas
+- `include_views`: Include views alongside tables (default true)
+- `include_metadata`: Include row count estimates and sizes (default true)
+- `include_system_schemas`: Include pg_catalog, information_schema, etc. (default false)
+
+**Key parameters for GET_TABLE_SCHEMAS**:
+- `project_ref`: Project reference
+- `table_names`: Array of table names (max 20 per request); supports schema prefix like `public.users`, `auth.users`
+- `include_relationships`: Include foreign key info (default true)
+- `include_indexes`: Include index info (default true)
+- `exclude_null_values`: Cleaner output by hiding null fields (default true)
+
+**Key parameters for GENERATE_TYPE_SCRIPT_TYPES**:
+- `ref`: Project reference
+- `included_schemas`: Comma-separated schema names (default `"public"`)
+
+**Pitfalls**:
+- Table names without schema prefix assume `public` schema
+- `row_count` and `size_bytes` from LIST_TABLES may be null for views or recently created tables; treat as unknown, not zero
+- GET_TABLE_SCHEMAS has a max of 20 tables per request; batch if needed
+- TypeScript types include all tables in specified schemas; cannot filter individual tables
+
+### 4. Manage Edge Functions
+
+**When to use**: User wants to list, inspect, or work with Supabase Edge Functions
+
+**Tool sequence**:
+1. `SUPABASE_LIST_ALL_PROJECTS` - Find the project reference [Prerequisite]
+2. `SUPABASE_LIST_ALL_FUNCTIONS` - List all edge functions with metadata [Required]
+3. `SUPABASE_RETRIEVE_A_FUNCTION` - Get detailed info for a specific function [Optional]
+
+**Key parameters**:
+- `ref`: Project reference
+- Function slug for RETRIEVE_A_FUNCTION
+
+**Pitfalls**:
+- `LIST_ALL_FUNCTIONS` returns metadata only, not function code or logs
+- `created_at` and `updated_at` may be epoch milliseconds; convert to human-readable timestamps
+- These tools cannot create or deploy edge functions; they are read-only inspection tools
+- Permission errors may occur without org/project admin rights
+
+### 5. Manage Storage Buckets
+
+**When to use**: User wants to list storage buckets or manage file storage
+
+**Tool sequence**:
+1. `SUPABASE_LIST_ALL_PROJECTS` - Find the project reference [Prerequisite]
+2. `SUPABASE_LISTS_ALL_BUCKETS` - List all storage buckets [Required]
+
+**Key parameters**:
+- `ref`: Project reference
+
+**Pitfalls**:
+- `LISTS_ALL_BUCKETS` returns bucket list only, not bucket contents or access policies
+- For file uploads, `SUPABASE_RESUMABLE_UPLOAD_SIGN_OPTIONS_WITH_ID` handles CORS preflight for TUS resumable uploads only
+- Direct file operations may require using `proxy_execute` with the Supabase storage API
+
+## Common Patterns
+
+### ID Resolution
+- **Project reference**: `SUPABASE_LIST_ALL_PROJECTS` -- extract `ref` field (20 lowercase letters)
+- **Organization slug**: `SUPABASE_LIST_ALL_ORGANIZATIONS` -- use `slug` (not `id`) for downstream org tools
+- **Table names**: `SUPABASE_LIST_TABLES` -- enumerate available tables before querying
+- **Schema discovery**: `SUPABASE_GET_TABLE_SCHEMAS` -- inspect columns and constraints before writes
+
+### Pagination
+- `SUPABASE_SELECT_FROM_TABLE`: Uses `offset` + `limit` pagination. Increment offset by limit until fewer rows than limit are returned.
+- `SUPABASE_LIST_ALL_PROJECTS`: May paginate for large accounts; follow cursors/pages until exhausted.
+- `SUPABASE_LIST_TABLES`: May paginate for large databases.
+
+### SQL Best Practices
+- Always use `SUPABASE_GET_TABLE_SCHEMAS` or `SUPABASE_LIST_TABLES` before writing SQL
+- Use `read_only: true` for SELECT queries to prevent accidental mutations
+- Quote case-sensitive identifiers: `SELECT * FROM "MyTable"` not `SELECT * FROM MyTable`
+- Use PostgreSQL array syntax for array columns: `ARRAY['a', 'b']` not `['a', 'b']`
+- Break complex DDL into smaller statements to avoid timeouts
+
+## Known Pitfalls
+
+### ID Formats
+- Project references are exactly 20 lowercase letters (a-z): pattern `^[a-z]{20}$`
+- Organization identifiers come as both `id` (UUID) and `slug` (URL-friendly string); tools vary in which they accept
+- `LIST_MEMBERS_OF_AN_ORGANIZATION` requires `slug`, not `id`
+
+### SQL Execution
+- `BETA_RUN_SQL_QUERY` has ~60 second timeout for complex operations
+- PostgreSQL array syntax required: `ARRAY['item']` or `'{"item"}'`, NOT JSON syntax `'["item"]'`
+- Case-sensitive identifiers must be double-quoted in SQL
+- ERROR 42P01: relation does not exist (check quoting and schema prefix)
+- ERROR 42883: function does not exist (use information_schema instead of custom helpers)
+
+### Sensitive Data
+- `GET_PROJECT_API_KEYS` returns service-role keys -- NEVER expose full values
+- Auth config tools exclude secrets but may still contain sensitive configuration
+- Always mask or truncate API keys in output
+
+### Schema Metadata
+- `row_count` and `size_bytes` from `LIST_TABLES` can be null; do not treat as zero
+- System schemas are excluded by default; set `include_system_schemas: true` to see them
+- Views appear alongside tables unless `include_views: false`
+
+### Rate Limits and Permissions
+- Enrichment tools (API keys, configs) may return 401/403 without proper scopes; skip gracefully
+- Large table listings may require pagination
+- `GETS_PROJECT_S_SERVICE_HEALTH_STATUS` fails with empty `services` array -- always specify at least one
+
+## Quick Reference
+
+| Task | Tool Slug | Key Params |
+|------|-----------|------------|
+| List organizations | `SUPABASE_LIST_ALL_ORGANIZATIONS` | (none) |
+| Get org info | `SUPABASE_GETS_INFORMATION_ABOUT_THE_ORGANIZATION` | `slug` |
+| List org members | `SUPABASE_LIST_MEMBERS_OF_AN_ORGANIZATION` | `slug` |
+| List projects | `SUPABASE_LIST_ALL_PROJECTS` | (none) |
+| List tables | `SUPABASE_LIST_TABLES` | `project_ref`, `schemas` |
+| Get table schemas | `SUPABASE_GET_TABLE_SCHEMAS` | `project_ref`, `table_names` |
+| Query table | `SUPABASE_SELECT_FROM_TABLE` | `project_ref`, `table`, `select`, `filters` |
+| Run SQL | `SUPABASE_BETA_RUN_SQL_QUERY` | `ref`, `query`, `read_only` |
+| Generate TS types | `SUPABASE_GENERATE_TYPE_SCRIPT_TYPES` | `ref`, `included_schemas` |
+| Postgres config | `SUPABASE_GETS_PROJECT_S_POSTGRES_CONFIG` | `ref` |
+| Auth config | `SUPABASE_GETS_PROJECT_S_AUTH_CONFIG` | `ref` |
+| Get API keys | `SUPABASE_GET_PROJECT_API_KEYS` | `ref` |
+| Service health | `SUPABASE_GETS_PROJECT_S_SERVICE_HEALTH_STATUS` | `ref`, `services` |
+| List edge functions | `SUPABASE_LIST_ALL_FUNCTIONS` | `ref` |
+| Get edge function | `SUPABASE_RETRIEVE_A_FUNCTION` | `ref`, function slug |
+| List storage buckets | `SUPABASE_LISTS_ALL_BUCKETS` | `ref` |
+| List DB branches | `SUPABASE_LIST_ALL_DATABASE_BRANCHES` | `ref` |
+
+---
+*Powered by [Composio](https://composio.dev)*

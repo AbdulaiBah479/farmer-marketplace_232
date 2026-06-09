@@ -1,217 +1,166 @@
 ---
 name: keyword-extractor
-description: Extract keywords and key phrases from text using TF-IDF, RAKE, and frequency analysis. Generate word clouds and export to various formats.
+description: >
+  Extracts up to 50 highly relevant SEO keywords from text. Use when user wants to generate or extract keywords for given text.
+risk: safe
+source: original
+date_added: "2026-03-11"
 ---
 
 # Keyword Extractor
 
-Extract important keywords and key phrases from text documents using multiple algorithms. Supports TF-IDF, RAKE, and simple frequency analysis with word cloud visualization.
+Extracts **max 50 relevant keywords** from text and formats them in a strict machine-ready structure.
 
-## Quick Start
+---
 
-```python
-from scripts.keyword_extractor import KeywordExtractor
+## QUICK START
 
-# Extract keywords
-extractor = KeywordExtractor()
-keywords = extractor.extract("Your long text document here...")
-print(keywords[:10])  # Top 10 keywords
+Jump to any section:
+1. [CORE MANDATE](#core-mandate) – Output rules and formatting 
+2. [WHEN TO USE](#when-to-use) – Trigger conditions for this skill 
+3. [KEYWORD QUALITY RULES](#keyword-quality-rules) – Priorities and forbidden keywords 
+4. [WORKFLOW](#workflow) – Step-by-step generation and processing 
+5. [FAILURE HANDLING](#failure-handling) – Short text or edge cases 
 
-# From file
-keywords = extractor.extract_from_file("document.txt")
-extractor.to_wordcloud("keywords.png")
-```
+---
 
-## Features
+# CORE MANDATE
 
-- **Multiple Algorithms**: TF-IDF, RAKE, frequency-based
-- **Key Phrases**: Extract multi-word phrases, not just single words
-- **Scoring**: Relevance scores for ranking
-- **Stopword Filtering**: Built-in + custom stopwords
-- **N-gram Support**: Unigrams, bigrams, trigrams
-- **Word Cloud**: Visualize keyword importance
-- **Batch Processing**: Process multiple documents
+Return **exactly one comma-separated line** of keywords, following these rules:
+- max 50 keywords  
+- ordered by relevance  
+- all lowercase  
+- no duplicates or near-duplicates  
+- mix of single words and 2–4 word phrases  
+- no numbering, bullets, explanations, or trailing period
 
-## API Reference
+---
 
-### Initialization
+## When to Use
+Use this skill when the user wants to generate or extract **SEO-friendly keywords or tags** from text including:
+- Extracting keywords or tags for any given text or paragraph  
+- Creating **comma-separated keywords or tags** suitable for SEO, search, or metadata  
+- Generating topic-specific keywords or tags based on the content’s main subjects and concepts  
 
-```python
-extractor = KeywordExtractor(
-    method="tfidf",      # tfidf, rake, frequency
-    max_keywords=20,     # Maximum keywords to return
-    min_word_length=3,   # Minimum word length
-    ngram_range=(1, 3)   # Unigrams to trigrams
-)
-```
+This skill should be triggered for **all text-based keyword extraction requests**, regardless of phrasing, as long as the goal is SEO, tagging, or metadata generation.
 
-### Extraction Methods
+Do NOT trigger this skill for:  
+- Summaries or paraphrasing requests  
+- Text analysis without keyword generation
 
-```python
-# TF-IDF (best for comparing documents)
-keywords = extractor.extract(text, method="tfidf")
+---
 
-# RAKE (best for key phrases)
-keywords = extractor.extract(text, method="rake")
+# KEYWORD QUALITY RULES
 
-# Frequency (simple word counts)
-keywords = extractor.extract(text, method="frequency")
-```
+Prefer noun phrases over verbs or adjectives.
+Prefer keywords useful for:
+- SEO and search
+- tagging
+- metadata
 
-### Results Format
+Prioritize:
+- domain terminology
+- meaningful nouns
+- search phrases
+- entities
+- technical concepts
 
-```python
-keywords = extractor.extract(text)
-# Returns list of tuples: [(keyword, score), ...]
-# [('machine learning', 0.85), ('data science', 0.72), ...]
+Avoid weak keywords like:
+- things and various topics
+- general concepts
+- important ideas
+- methods
 
-# Get just keywords
-keyword_list = extractor.get_keywords(text)
-# ['machine learning', 'data science', ...]
-```
+**IMPORTANT: Each keyword must strictly represent a phrase that a user would type into a search engine**
 
-### Customization
+---
 
-```python
-# Add custom stopwords
-extractor.add_stopwords(['company', 'product', 'service'])
+# WORKFLOW
 
-# Set minimum frequency
-extractor.min_frequency = 2
+## Step 1 — Analyze
 
-# Filter by part of speech (nouns only)
-extractor.pos_filter = ['NN', 'NNS', 'NNP']
-```
+Identify:
+- main subject
+- key topics
+- domain terminology
+- entities
+- concepts
 
-### Visualization
+Ignore filler words.
 
-```python
-# Generate word cloud
-extractor.to_wordcloud("wordcloud.png", colormap="viridis")
+---
 
-# Bar chart of top keywords
-extractor.plot_keywords("keywords.png", top_n=15)
-```
+## Step 2 — Generate Keywords
 
-### Export
+Generate up to 50 strictly SEO-friendly keywords directly from the text.
 
-```python
-# To JSON
-extractor.to_json("keywords.json")
+Include:
+- core topics
+- domain terminology
+- related concepts
+- common search queries
 
-# To CSV
-extractor.to_csv("keywords.csv")
+Allowed formats:
+- single words
+- 2 word phrases
+- 3 word phrases
+- 4 word phrases
 
-# To plain text
-extractor.to_text("keywords.txt")
-```
+Example:
+```machine learning, neural networks, deep learning models, ai algorithms, data science tools```
 
-## CLI Usage
+Avoid vague keywords, filler phrases, adjectives without nouns like:
+```important methods, different ideas, various techniques, things```
 
-```bash
-# Extract from text
-python keyword_extractor.py --text "Your text here" --top 10
+Keywords must not exceed 4 words.
 
-# Extract from file
-python keyword_extractor.py --input document.txt --method tfidf --output keywords.json
+---
 
-# Generate word cloud
-python keyword_extractor.py --input document.txt --wordcloud cloud.png
+## Step 3 — Rank
 
-# Batch process directory
-python keyword_extractor.py --input-dir ./docs --output keywords_all.csv
-```
+Order keywords by SEO importance using these signals:
+1. main topic of the text
+2. high-value domain terminology
+3. technologies, tools, or entities mentioned
+4. common search queries related to the topic
+5. supporting contextual topics
 
-### CLI Arguments
+Most important keywords should always appear first.
 
-| Argument | Description | Default |
-|----------|-------------|---------|
-| `--text` | Text to analyze | - |
-| `--input` | Input file path | - |
-| `--input-dir` | Directory of files | - |
-| `--output` | Output file | - |
-| `--method` | Algorithm (tfidf, rake, frequency) | `tfidf` |
-| `--top` | Number of keywords | 20 |
-| `--ngrams` | N-gram range (e.g., "1,2") | `1,3` |
-| `--wordcloud` | Generate word cloud | - |
-| `--stopwords` | Custom stopwords file | - |
+---
 
-## Examples
+## Step 4 — Normalize
 
-### Article Keyword Extraction
+Ensure:
+- lowercase, comma separated, no duplicates
+- ≤50 keywords
+- Remove near-duplicate keywords that represent the same concept.
+- Keep only the most common search phrase.
+- If two keywords represent the same concept, keep only the more common search phrase.
 
-```python
-extractor = KeywordExtractor(method="tfidf")
+---
 
-article = """
-Machine learning is transforming data science. Deep learning models
-are achieving state-of-the-art results in natural language processing
-and computer vision. Neural networks continue to advance...
-"""
+## Step 5 — Validate
 
-keywords = extractor.extract(article, top_n=10)
-for keyword, score in keywords:
-    print(f"{score:.3f}: {keyword}")
-```
+Before returning output ensure:
+- keyword_count <= 50
+- no duplicates and near-duplicates
+- all lowercase and comma separated
+- no trailing period
+- each keyword is a clear searchable topic
+- keywords do not exceed 4 words
 
-### Compare Multiple Documents
+If any rule fails regenerate the list.
 
-```python
-extractor = KeywordExtractor(method="tfidf")
+---
 
-docs = [
-    open("doc1.txt").read(),
-    open("doc2.txt").read(),
-    open("doc3.txt").read()
-]
+# FAILURE HANDLING
 
-# Extract keywords from each
-for i, doc in enumerate(docs):
-    keywords = extractor.extract(doc, top_n=5)
-    print(f"\nDocument {i+1}:")
-    for kw, score in keywords:
-        print(f"  {kw}: {score:.3f}")
-```
+If text is very short, infer likely topics and still generate keywords. Never exceed 50 keywords.
 
-### SEO Keyword Research
-
-```python
-extractor = KeywordExtractor(
-    method="rake",
-    ngram_range=(2, 4),  # Focus on phrases
-    max_keywords=30
-)
-
-webpage_content = open("page.html").read()
-keywords = extractor.extract(webpage_content)
-
-# Filter by score threshold
-high_value = [(kw, s) for kw, s in keywords if s > 0.5]
-print("High-value keywords for SEO:")
-for kw, score in high_value:
-    print(f"  {kw}")
-```
-
-## Algorithm Comparison
-
-| Algorithm | Best For | Strengths |
-|-----------|----------|-----------|
-| **TF-IDF** | Document comparison | Finds unique terms, good for search |
-| **RAKE** | Key phrases | Extracts multi-word concepts |
-| **Frequency** | Quick overview | Simple, fast, interpretable |
-
-## Dependencies
-
-```
-scikit-learn>=1.2.0
-nltk>=3.8.0
-pandas>=2.0.0
-matplotlib>=3.7.0
-wordcloud>=1.9.0
-```
+---
 
 ## Limitations
-
-- English optimized (other languages need language-specific stopwords)
-- Very short texts may not have enough data for TF-IDF
-- Domain-specific jargon may need custom stopword handling
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

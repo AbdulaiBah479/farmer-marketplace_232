@@ -1,6 +1,13 @@
 ---
 name: ai-marketing-videos
-description: "Create AI marketing videos for ads, promos, product launches, and brand content. Models: Veo, Seedance, Wan, FLUX for visuals, Kokoro for voiceover. Types: product demos, testimonials, explainers, social ads, brand videos. Use for: Facebook ads, YouTube ads, product launches, brand awareness. Triggers: marketing video, ad video, promo video, commercial, brand video, product video, explainer video, ad creative, video ad, facebook ad video, youtube ad, instagram ad, tiktok ad, promotional video, launch video"
+description: |
+  Create AI marketing videos for ads, promos, product launches, and brand content.
+  Models: Veo, Seedance, Wan, FLUX for visuals, Kokoro for voiceover.
+  Types: product demos, testimonials, explainers, social ads, brand videos.
+  Use for: Facebook ads, YouTube ads, product launches, brand awareness.
+  Triggers: marketing video, ad video, promo video, commercial, brand video,
+  product video, explainer video, ad creative, video ad, facebook ad video,
+  youtube ad, instagram ad, tiktok ad, promotional video, launch video
 allowed-tools: Bash(infsh *)
 ---
 
@@ -8,21 +15,16 @@ allowed-tools: Bash(infsh *)
 
 Create professional marketing videos via [inference.sh](https://inference.sh) CLI.
 
-![AI Marketing Videos](https://cloud.inference.sh/app/files/u/4mg21r6ta37mpaz6ktzwtt8krr/01kg2c0egyg243mnyth4y6g51q.jpeg)
-
 ## Quick Start
 
-> Requires inference.sh CLI (`infsh`). Get installation instructions: `npx skills add inference-sh/skills@agent-tools`
-
 ```bash
-infsh login
+curl -fsSL https://cli.inference.sh | sh && infsh login
 
 # Generate a product promo video
 infsh app run google/veo-3-1-fast --input '{
   "prompt": "Sleek product reveal video, smartphone emerging from light particles, premium tech aesthetic, commercial quality"
 }'
 ```
-
 
 ## Video Ad Types
 
@@ -113,7 +115,7 @@ infsh app run google/veo-3-1-fast --input '{
 
 # 6. Generate voiceover
 infsh app run infsh/kokoro-tts --input '{
-  "prompt": "Tired of [problem]? Introducing [Product]. [Key benefit 1]. [Key benefit 2]. [Key benefit 3]. Get yours today.",
+  "text": "Tired of [problem]? Introducing [Product]. [Key benefit 1]. [Key benefit 2]. [Key benefit 3]. Get yours today.",
   "voice": "af_nicole"
 }' > voiceover.json
 
@@ -159,7 +161,7 @@ done
 
 # 3. Generate professional voiceover
 infsh app run infsh/kokoro-tts --input '{
-  "prompt": "<full-script>",
+  "text": "<full-script>",
   "voice": "am_michael"
 }' > voiceover.json
 
@@ -287,8 +289,7 @@ npx skills add inference-sh/skills@text-to-speech
 npx skills add inference-sh/skills@ai-social-media-content
 
 # Full platform skill
-npx skills add inference-sh/skills@agent-tools
+npx skills add inference-sh/skills@inference-sh
 ```
 
 Browse all apps: `infsh app list`
-

@@ -1,11 +1,31 @@
 ---
 name: binary-analysis-patterns
-description: Master binary analysis patterns including disassembly, decompilation, control flow analysis, and code pattern recognition. Use when analyzing executables, understanding compiled code, or performing static analysis on binaries.
+description: "Comprehensive patterns and techniques for analyzing compiled binaries, understanding assembly code, and reconstructing program logic."
+risk: unknown
+source: community
+date_added: "2026-02-27"
 ---
 
 # Binary Analysis Patterns
 
 Comprehensive patterns and techniques for analyzing compiled binaries, understanding assembly code, and reconstructing program logic.
+
+## Use this skill when
+
+- Working on binary analysis patterns tasks or workflows
+- Needing guidance, best practices, or checklists for binary analysis patterns
+
+## Do not use this skill when
+
+- The task is unrelated to binary analysis patterns
+- You need a different domain or tool outside this scope
+
+## Instructions
+
+- Clarify goals, constraints, and required inputs.
+- Apply relevant best practices and validate outcomes.
+- Provide actionable steps and verification.
+- If detailed examples are required, open `resources/implementation-playbook.md`.
 
 ## Disassembly Fundamentals
 
@@ -431,3 +451,8 @@ def auto_rename():
 - **Tail call optimization**: `jmp` instead of `call` + `ret`
 - **Dead code**: Unreachable code from optimization
 - **Position-independent code**: RIP-relative addressing
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

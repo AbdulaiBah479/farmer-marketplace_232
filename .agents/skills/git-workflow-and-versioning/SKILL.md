@@ -1,6 +1,6 @@
 ---
 name: git-workflow-and-versioning
-description: Use when making any code change. Use when committing, branching, resolving conflicts, or when you need to organize work across multiple parallel streams.
+description: Structures git workflow practices. Use when making any code change. Use when committing, branching, resolving conflicts, or when you need to organize work across multiple parallel streams.
 ---
 
 # Git Workflow and Versioning
@@ -14,6 +14,22 @@ Git is your safety net. Treat commits as save points, branches as sandboxes, and
 Always. Every code change flows through git.
 
 ## Core Principles
+
+### Trunk-Based Development (Recommended)
+
+Keep `main` always deployable. Work in short-lived feature branches that merge back within 1-3 days. Long-lived development branches are hidden costs — they diverge, create merge conflicts, and delay integration. DORA research consistently shows trunk-based development correlates with high-performing engineering teams.
+
+```
+main ──●──●──●──●──●──●──●──●──●──  (always deployable)
+        ╲      ╱  ╲    ╱
+         ●──●─╱    ●──╱    ← short-lived feature branches (1-3 days)
+```
+
+This is the recommended default. Teams using gitflow or long-lived branches can adapt the principles (atomic commits, small changes, descriptive messages) to their branching model — the commit discipline matters more than the specific branching strategy.
+
+- **Dev branches are costs.** Every day a branch lives, it accumulates merge risk.
+- **Release branches are acceptable.** When you need to stabilize a release while main moves forward.
+- **Feature flags > long branches.** Prefer deploying incomplete work behind flags rather than keeping it on a branch for weeks.
 
 ### 1. Commit Early, Commit Often
 
@@ -77,9 +93,9 @@ update auth.ts
 - `docs` — Documentation only
 - `chore` — Tooling, dependencies, config
 
-### 4. Never Mix Concerns
+### 4. Keep Concerns Separate
 
-Don't combine formatting changes with behavior changes. Don't combine refactors with features. Each type of change should be a separate commit:
+Don't combine formatting changes with behavior changes. Don't combine refactors with features. Each type of change should be a separate commit — and ideally a separate PR:
 
 ```
 # Good: Separate concerns
@@ -88,6 +104,18 @@ git commit -m "feat: add phone number validation to registration"
 
 # Bad: Mixed concerns
 git commit -m "refactor validation and add phone number field"
+```
+
+**Separate refactoring from feature work.** A refactoring change and a feature change are two different changes — submit them separately. This makes each change easier to review, revert, and understand in history. Small cleanups (renaming a variable) can be included in a feature commit at reviewer discretion.
+
+### 5. Size Your Changes
+
+Target ~100 lines per commit/PR. Changes over ~1000 lines should be split. See the splitting strategies in `code-review-and-quality` for how to break down large changes.
+
+```
+~100 lines  → Easy to review, easy to revert
+~300 lines  → Acceptable for a single logical change
+~1000 lines → Split into smaller changes
 ```
 
 ## Branching Strategy
@@ -103,8 +131,9 @@ main (always deployable)
 ```
 
 - Branch from `main` (or the team's default branch)
-- Keep branches short-lived (merge within 1-3 days)
+- Keep branches short-lived (merge within 1-3 days) — long-lived branches are hidden costs
 - Delete branches after merge
+- Prefer feature flags over long-lived branches for incomplete features
 
 ### Branch Naming
 
@@ -216,7 +245,7 @@ Automate this with git hooks:
 
 - **Commit generated files** only if the project expects them (e.g., `package-lock.json`, Prisma migrations)
 - **Don't commit** build output (`dist/`, `.next/`), environment files (`.env`), or IDE config (`.vscode/settings.json` unless shared)
-- **Always have a `.gitignore`** that covers: `node_modules/`, `dist/`, `.env`, `.env.local`, `*.pem`
+- **Have a `.gitignore`** that covers: `node_modules/`, `dist/`, `.env`, `.env.local`, `*.pem`
 
 ## Using Git for Debugging
 
@@ -245,7 +274,8 @@ git log --grep="validation" --oneline
 | "I'll commit when the feature is done" | One giant commit is impossible to review, debug, or revert. Commit each slice. |
 | "The message doesn't matter" | Messages are documentation. Future you (and future agents) will need to understand what changed and why. |
 | "I'll squash it all later" | Squashing destroys the development narrative. Prefer clean incremental commits from the start. |
-| "Branches add overhead" | Branches are free and prevent conflicting work from colliding. Use them. |
+| "Branches add overhead" | Short-lived branches are free and prevent conflicting work from colliding. Long-lived branches are the problem — merge within 1-3 days. |
+| "I'll split this change later" | Large changes are harder to review, riskier to deploy, and harder to revert. Split before submitting, not after. |
 | "I don't need a .gitignore" | Until `.env` with production secrets gets committed. Set it up immediately. |
 
 ## Red Flags

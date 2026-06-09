@@ -1,36 +1,66 @@
 ---
 name: exa-search
-description: Semantic search, similar content discovery, and structured research using Exa API
+description: Use Exa for web/code/company research (web_search_exa / get_code_context_exa / company_research_exa), with parameters and examples; trigger when online search or parameter checks are needed.
 ---
 
-# exa-search
+# Exa
 
-## Overview
-Semantic search, similar content discovery, and structured research using Exa API
+## Tools and parameters
 
-## When to Use
-- When you need semantic/embeddings-based search
-- When finding similar content
-- When searching by category (company, people, research papers, etc.)
+### web_search_exa
 
-## Installation
-```bash
-npx skills add -g BenedictKing/exa-search
+- Purpose: general web search, returns ready-to-use text content
+- Parameters:
+  - `query`: search query (required)
+  - `numResults`: number of results (default 8)
+  - `type`: `auto` | `fast` (default `auto`)
+  - `livecrawl`: `preferred` | `fallback` (default `fallback`)
+  - `contextMaxCharacters`: max text length (default 10000)
+
+### get_code_context_exa
+
+- Purpose: code/docs/technical search
+- Parameters:
+  - `query`: search query (required)
+  - `tokensNum`: returned token count (1000-50000, default 5000)
+
+### company_research_exa
+
+- Purpose: company info and news
+- Parameters:
+  - `companyName`: company name (required)
+  - `numResults`: number of results (default 5)
+
+## Parameter templates (JSON)
+
+### web_search_exa
+
+```
+{"query":"...", "numResults":8, "type":"auto", "livecrawl":"preferred", "contextMaxCharacters":10000}
 ```
 
-## Step-by-Step Guide
-1. Install the skill using the command above
-2. Configure Exa API key
-3. Use naturally in Claude Code conversations
+### get_code_context_exa
 
-## Examples
-See [GitHub Repository](https://github.com/BenedictKing/exa-search) for examples.
+```
+{"query":"...", "tokensNum":5000}
+```
 
-## Best Practices
-- Configure API keys via environment variables
+### company_research_exa
 
-## Troubleshooting
-See the GitHub repository for troubleshooting guides.
+```
+{"companyName":"...", "numResults":5}
+```
 
-## Related Skills
-- context7-auto-research, tavily-web, firecrawl-scraper, codex-review
+## Invocation examples
+
+```
+URL="https://mcp.exa.ai/mcp?tools=web_search_exa,get_code_context_exa,company_research_exa"
+npx -y mcporter call --http-url "$URL" --tool web_search_exa --args '{"query":"latest AI safety research"}'
+npx -y mcporter call --http-url "$URL" --tool get_code_context_exa --args '{"query":"React useEffect cleanup examples","tokensNum":5000}'
+npx -y mcporter call --http-url "$URL" --tool company_research_exa --args '{"companyName":"OpenAI","numResults":5}'
+```
+
+## Notes
+
+- Tools and fields reference: `references/exa-tools.md`
+- If you need an API key, pass `exaApiKey` as a request parameter

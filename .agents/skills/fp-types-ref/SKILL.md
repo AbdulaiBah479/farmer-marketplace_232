@@ -1,21 +1,18 @@
 ---
 name: fp-types-ref
-description: Quick reference for fp-ts types. Use when user asks which type to use,
-  needs Option/Either/Task decision help, or wants fp-ts imports.
-version: 1.0.0
-tags:
-- fp-ts
-- typescript
-- quick-reference
-- option
-- either
-- task
+description: Quick reference for fp-ts types. Use when user asks which type to use, needs Option/Either/Task decision help, or wants fp-ts imports.
 risk: safe
 source: community
-license: MIT
+version: 1.0.0
+tags: [fp-ts, typescript, quick-reference, option, either, task]
 ---
 
 # fp-ts Quick Reference
+
+## When to Use
+- You need help choosing between `Option`, `Either`, `Task`, `TaskEither`, or related fp-ts types.
+- The task is about imports, decision guidance, or selecting the right abstraction for a TypeScript flow.
+- You want a compact reference for common fp-ts type choices and patterns.
 
 ## Which Type Should I Use?
 
@@ -75,5 +72,7 @@ pipe(result, E.match(
 ))
 ```
 
-## When to Use
-- Use this skill when you need for functional programming or specific domain tasks.
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

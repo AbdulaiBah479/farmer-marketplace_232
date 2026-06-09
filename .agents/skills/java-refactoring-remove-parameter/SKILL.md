@@ -1,9 +1,6 @@
 ---
 name: java-refactoring-remove-parameter
-description: Refactoring using Remove Parameter in Java Language
-author:
-  name: Community
-  url: 'https://github.com/beel-collab/presets.dev'
+description: 'Refactoring using Remove Parameter in Java Language'
 ---
 
 # Refactoring Java Methods with Remove Parameter

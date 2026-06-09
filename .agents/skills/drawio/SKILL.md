@@ -1,141 +1,96 @@
 ---
 name: drawio
-description: Generate draw.io diagrams programmatically using Python. Creates flowcharts, architecture diagrams, tree structures, network diagrams, and more. Use when the user requests a .drawio file, diagram, flowchart, or visual documentation.
-license: MIT
-metadata:
-  author: example
-  version: "1.1"
-  dependency-management: uv (PEP 723 inline script metadata)
+description: Generate draw.io diagrams as .drawio files and export to PNG/SVG/PDF with embedded XML
 ---
 
-# Draw.io Diagram Generation
+# Draw.io Diagram Skill
 
-## Overview
+Generate draw.io diagrams as native `.drawio` files and export them to PNG images that can be embedded in Word documents.
 
-This skill generates `.drawio` files using the **drawpyo** Python library. Draw.io diagrams are XML-based and can be opened in:
-- draw.io desktop app
-- diagrams.net (web)
-- VS Code draw.io extension
+## How to Create a Diagram
 
-## Quick Start
+1. **Generate draw.io XML** in `mxGraphModel` format for the requested diagram
+2. **Write the XML** to a `.drawio` file using the create/edit file tool
+3. **Export to PNG** using the bundled export script
 
-All scripts include inline dependency metadata (PEP 723). Use `uv run` to execute them — dependencies are handled automatically in an isolated environment:
+## Bundled Export Script
+
+This skill includes `drawio-to-png.mjs`, a Node.js export script with two rendering backends:
+
+1. **draw.io CLI** (pixel-perfect, fastest) — used automatically if draw.io desktop is installed
+2. **Official draw.io viewer in headless browser** (pixel-perfect, needs Chromium/Edge) — fallback when CLI is unavailable
+
+### Usage
 
 ```bash
-# No installation needed — uv handles dependencies automatically
-uv run scripts/create_flowchart.py steps.json /mnt/user-data/outputs/flow.drawio
+# Install dependencies (one-time, from the scripts folder)
+cd skills/drawio/scripts && npm install
+
+# Export a single diagram
+node skills/drawio/scripts/drawio-to-png.mjs <input.drawio> [output.png]
+
+# Export all .drawio files in a directory
+node skills/drawio/scripts/drawio-to-png.mjs --dir <directory>
+
+# Force a specific renderer
+node skills/drawio/scripts/drawio-to-png.mjs --renderer=cli|viewer|auto <input.drawio>
 ```
 
-For custom code, you can also use `uv run` with inline dependencies:
+### Skill Folder Contents
 
-```python
-#!/usr/bin/env python3
-# /// script
-# requires-python = ">=3.10"
-# dependencies = ["drawpyo>=0.2.0"]
-# ///
-import drawpyo
+| File | Purpose |
+|------|---------|
+| `SKILL.md` | This instruction file |
+| `scripts/drawio-to-png.mjs` | Node.js export script (CLI + browser fallback) |
+| `scripts/package.json` | Dependencies (`puppeteer-core`) |
 
-# Create a file and page
-file = drawpyo.File()
-file.file_path = "/home/claude"
-file.file_name = "diagram.drawio"
-page = drawpyo.Page(file=file)
+## Supported Export Formats
 
-# Add a shape
-box = drawpyo.diagram.Object(page=page, value="Hello World")
-box.position = (100, 100)
+| Format | Embed XML | Notes |
+|--------|-----------|-------|
+| `png` | Yes | Viewable everywhere, editable in draw.io |
+| `svg` | Yes | Scalable, editable in draw.io |
+| `pdf` | Yes | Printable, editable in draw.io |
 
-# Save
-file.write()
+## Draw.io XML Style Conventions
+
+Use these styles for consistent, professional diagrams:
+
+```xml
+<!-- Primary service (highlighted) -->
+<mxCell style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;arcSize=12;shadow=1;" />
+
+<!-- External system -->
+<mxCell style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" />
+
+<!-- Success/processing stage -->
+<mxCell style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" />
+
+<!-- Warning/quality gate -->
+<mxCell style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" />
+
+<!-- Error/failure path -->
+<mxCell style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" />
+
+<!-- Data store (cylinder) -->
+<mxCell style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" />
+
+<!-- Arrow -->
+<mxCell style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#6c8ebf;strokeWidth=2;" />
 ```
 
-Then run with: `uv run my_script.py`
+## Locating the draw.io CLI
 
-## Decision Tree
+Try `drawio` first (works if on PATH), then fall back:
 
-```
-What type of diagram?
-├── Tree/Hierarchy (org chart, decision tree, file structure)
-│   └── Use TreeDiagram class (auto-layout) — see references/REFERENCE.md
-│
-├── Flowchart (sequential steps with decisions)
-│   └── Use helper script: scripts/create_flowchart.py
-│   └── Or write custom code with Object + Edge classes
-│
-├── Architecture/Network (boxes with connections)
-│   └── Write custom code using Object + Edge classes
-│   └── See references/REFERENCE.md
-│
-├── From structured data (CSV, JSON, dict)
-│   └── Use helper script: scripts/from_data.py
-│
-└── Complex/Custom
-    └── Write custom drawpyo code — see references/REFERENCE.md
+- **Windows**: `"C:\Program Files\draw.io\draw.io.exe"`
+- **macOS**: `/Applications/draw.io.app/Contents/MacOS/draw.io`
+- **Linux**: `drawio` (via snap/apt/flatpak)
+
+### CLI Export Command
+
+```bash
+drawio -x -f png -e -b 10 -o <output.png> <input.drawio>
 ```
 
-## Key Concepts
-
-### Objects (Shapes)
-```python
-# Basic rectangle
-obj = drawpyo.diagram.Object(page=page, value="Label")
-obj.position = (x, y)        # Coordinates in pixels
-obj.width = 120              # Default: 120
-obj.height = 60              # Default: 60
-
-# From draw.io shape library
-obj = drawpyo.diagram.object_from_library(
-    page=page,
-    library="general",       # or "flowchart", "basic", etc.
-    obj_name="process",      # shape name from library
-    value="Process Step"
-)
-```
-
-### Edges (Connections)
-```python
-edge = drawpyo.diagram.Edge(
-    page=page,
-    source=obj1,
-    target=obj2,
-    label="connects to"
-)
-```
-
-### Styling
-```python
-# Apply a style string (same format as draw.io)
-obj.apply_style_string(
-    "rounded=1;whiteSpace=wrap;html=1;"
-    "fillColor=#dae8fc;strokeColor=#6c8ebf;"
-)
-```
-
-## Helper Scripts
-
-Run with `uv run` — dependencies are handled automatically:
-
-| Script | Purpose | Usage |
-|--------|---------|-------|
-| `scripts/create_flowchart.py` | Create flowcharts from step definitions | `uv run scripts/create_flowchart.py input.json output.drawio` |
-| `scripts/create_tree.py` | Create tree diagrams with auto-layout | `uv run scripts/create_tree.py input.json output.drawio` |
-| `scripts/from_data.py` | Create diagrams from JSON/dict data | `uv run scripts/from_data.py input.json output.drawio` |
-
-## Common Shape Libraries
-
-Use with `object_from_library(library=..., obj_name=...)`:
-
-- **general**: `rectangle`, `ellipse`, `process`, `diamond`, `parallelogram`, `hexagon`, `triangle`, `cylinder`, `cloud`, `document`, `note`, `actor`
-- **flowchart**: `terminator`, `process`, `decision`, `data`, `document`, `predefined_process`, `stored_data`, `internal_storage`, `manual_input`, `manual_operation`
-- **basic**: `rectangle`, `ellipse`, `rhombus`, `triangle`, `pentagon`, `hexagon`, `octagon`
-
-## Output
-
-Always save generated `.drawio` files to `/mnt/user-data/outputs/` and use the `present_files` tool to share with the user.
-
-## Next Steps
-
-- **references/REFERENCE.md**: Complete API documentation, styling options, all shape libraries
-- **references/examples.md**: Example code for common diagram types
-- **scripts/**: Ready-to-use helper scripts
+Flags: `-x` (export), `-f` (format), `-e` (embed diagram XML), `-b` (border), `-o` (output path).

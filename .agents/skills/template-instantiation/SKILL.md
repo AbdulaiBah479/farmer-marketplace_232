@@ -10,6 +10,7 @@ description: >
   DO NOT USE FOR: finding or comparing templates (use template-discovery), authoring
   custom templates (use template-authoring), modifying existing projects or adding
   NuGet packages to existing projects.
+license: MIT
 ---
 
 # Template Instantiation
@@ -70,6 +71,18 @@ Use `dotnet new` with the template name and all parameters:
 ```bash
 dotnet new webapi --name MyApi --output ./src/MyApi --framework net10.0 --auth Individual
 ```
+
+#### Common parameter combinations
+
+| Template | Parameters | Example |
+|----------|-----------|---------|
+| `webapi` | `--auth` (None, Individual, SingleOrg, Windows), `--aot` (native AOT) | `dotnet new webapi -n MyApi --auth Individual --aot` |
+| `webapi` | `--use-controllers` (use controllers vs minimal APIs) | `dotnet new webapi -n MyApi --use-controllers` |
+| `blazor` | `--interactivity` (None, Server, WebAssembly, Auto), `--auth` | `dotnet new blazor -n MyApp --interactivity Server` |
+| `grpc` | `--aot` (native AOT) | `dotnet new grpc -n MyService --aot` |
+| `worker` | `--aot` (native AOT) | `dotnet new worker -n MyWorker --aot` |
+
+Note: Use `dotnet new <template> --help` to see all available parameters for any template.
 
 After creation, if the workspace uses CPM:
 1. Check `.csproj` for inline `<PackageReference>` versions

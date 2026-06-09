@@ -1,19 +1,20 @@
 ---
 name: skill-scanner
-description: Scan agent skills for security issues. Use when asked to "scan a skill",
-  "audit a skill", "review skill security", "check skill for injection", "validate SKILL.md",
-  or assess whether an agent skill is safe to install. Checks for prompt injection,
-  malicious scripts, excessive permissions, secret exposure, and supply chain risks.
-allowed-tools: Read, Grep, Glob, Bash
+description: "Scan agent skills for security issues before adoption. Detects prompt injection, malicious code, excessive permissions, secret exposure, and supply chain risks."
+risk: unknown
+source: community
 ---
 
 # Skill Security Scanner
 
 Scan agent skills for security issues before adoption. Detects prompt injection, malicious code, excessive permissions, secret exposure, and supply chain risks.
 
-**Requires**: The `uv` CLI for python package management, install guide at https://docs.astral.sh/uv/getting-started/installation/
+**Important**: Run all scripts from the repository root using the full path via `${CLAUDE_SKILL_ROOT}`.
 
-**Important**: Run all scripts from the repository root. Script paths like `scripts/scan_skill.py` are relative to this skill's root directory (the directory containing this SKILL.md), not relative to the target repository.
+## When to Use
+- You need to evaluate a skill for prompt injection, malicious code, over-broad permissions, or supply-chain risk before adopting it.
+- You want a static scan plus manual review workflow for a skill directory.
+- The task is to decide whether a skill is safe enough to trust in an agent environment.
 
 ## Bundled Script
 
@@ -22,7 +23,7 @@ Scan agent skills for security issues before adoption. Detects prompt injection,
 Static analysis scanner that detects deterministic patterns. Outputs structured JSON.
 
 ```bash
-uv run scripts/scan_skill.py <skill-directory>
+uv run ${CLAUDE_SKILL_ROOT}/scripts/scan_skill.py <skill-directory>
 ```
 
 Returns JSON with findings, URLs, structure info, and severity counts. The script catches patterns mechanically — your job is to evaluate intent and filter false positives.
@@ -34,7 +35,7 @@ Returns JSON with findings, URLs, structure info, and severity counts. The scrip
 Determine the scan target:
 
 - If the user provides a skill directory path, use it directly
-- If the user names a skill, look for it under `.agents/skills/<name>/` first, then other established layouts such as `skills/<name>/` when the repo uses a canonical root skill tree, `.claude/skills/<name>/`, `plugins/*/skills/<name>/`, or another repo-managed skill root with clear prior art
+- If the user names a skill, look for it under `plugins/*/skills/<name>/` or `.claude/skills/<name>/`
 - If the user says "scan all skills", discover all `*/SKILL.md` files and scan each
 
 Validate the target contains a `SKILL.md` file. List the skill structure:
@@ -50,7 +51,7 @@ ls <skill-directory>/scripts/ 2>/dev/null
 Run the bundled scanner:
 
 ```bash
-uv run scripts/scan_skill.py <skill-directory>
+uv run ${CLAUDE_SKILL_ROOT}/scripts/scan_skill.py <skill-directory>
 ```
 
 Parse the JSON output. The script produces findings with severity levels, URL analysis, and structure information. Use these as leads for deeper analysis.
@@ -69,7 +70,7 @@ Read the SKILL.md and check:
 
 ### Phase 4: Prompt Injection Analysis
 
-Load `references/prompt-injection-patterns.md` for context.
+Load `${CLAUDE_SKILL_ROOT}/references/prompt-injection-patterns.md` for context.
 
 Review scanner findings in the "Prompt Injection" category. For each finding:
 
@@ -90,8 +91,7 @@ This phase is agent-only — no pattern matching. Read the full SKILL.md instruc
 **Config/memory poisoning**:
 - Instructions to modify `CLAUDE.md`, `MEMORY.md`, `settings.json`, `.mcp.json`, or hook configurations
 - Instructions to add itself to allowlists or auto-approve permissions
-- Writing to `~/.claude/`, `~/.agents/`, or any agent configuration directory
-- Scripts that append to global config files — the poisoned instructions persist after skill removal
+- Writing to `~/.claude/` or any agent configuration directory
 
 **Scope creep**:
 - Instructions that exceed the skill's stated purpose
@@ -103,19 +103,11 @@ This phase is agent-only — no pattern matching. Read the full SKILL.md instruc
 - Listing directory contents outside the skill's scope
 - Accessing git history, credentials, or user data unnecessarily
 
-**Structural attacks** (check scanner output for these):
-- **Symlinks**: Files that resolve outside the skill directory — can disguise reads of `~/.ssh/id_rsa`, `~/.aws/credentials`, etc. as "example" files
-- **Frontmatter hooks**: `PostToolUse`/`PreToolUse` hooks in YAML — execute shell commands automatically, the model cannot prevent it
-- **`!`command`` syntax**: Runs shell commands at skill load time during template expansion, before the model sees the prompt
-- **Test files**: `conftest.py`, `test_*.py`, `*.test.js` — test runners auto-discover and execute these as side effects of `pytest` or `npm test`
-- **npm lifecycle hooks**: `postinstall` scripts in bundled `package.json` — run automatically on `npm install`
-- **Image metadata**: PNG files with text in metadata chunks (tEXt/iTXt) — multimodal LLMs can read hidden instructions from image metadata
-
 ### Phase 6: Script Analysis
 
 If the skill has a `scripts/` directory:
 
-1. Load `references/dangerous-code-patterns.md` for context
+1. Load `${CLAUDE_SKILL_ROOT}/references/dangerous-code-patterns.md` for context
 2. Read each script file fully (do not skip any)
 3. Check scanner findings in the "Malicious Code" category
 4. For each finding, evaluate:
@@ -141,7 +133,7 @@ Review URLs from the scanner output and any additional URLs found in scripts:
 
 ### Phase 8: Permission Analysis
 
-Load `references/permission-analysis.md` for the tool risk matrix.
+Load `${CLAUDE_SKILL_ROOT}/references/permission-analysis.md` for the tool risk matrix.
 
 Evaluate:
 
@@ -207,3 +199,8 @@ Example assessments:
 | `references/prompt-injection-patterns.md` | Injection patterns, jailbreaks, obfuscation techniques, false positive guide |
 | `references/dangerous-code-patterns.md` | Script security patterns: exfiltration, shells, credential theft, eval/exec |
 | `references/permission-analysis.md` | Tool risk tiers, least privilege methodology, common skill permission profiles |
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

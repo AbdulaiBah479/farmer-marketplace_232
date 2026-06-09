@@ -3,7 +3,9 @@ name: vfx-text-cursor
 zh_name: "VFX 文字光标"
 en_name: "VFX Text Cursor"
 emoji: "✨"
-description: "光标拖光 + 彩色像散射线 + 定向光斑, 适合视频片头逐字揭示金句"
+description: "Cursor light trail, chromatic rays, and directional flares for word-by-word quote reveals in video intros."
+zh_description: "光标拖光 + 彩色像散射线 + 定向光斑, 适合视频片头逐字揭示金句"
+en_description: "Cursor light trail, chromatic rays, and directional flares for word-by-word quote reveals in video intros."
 category: video
 scenario: video
 aspect_hint: "1920×1080 (16:9)"
@@ -17,6 +19,21 @@ example_tagline: "逐字揭示 + chromatic 拖光"
 example_desc: "光标打字 hot pink + cyan 像散, 视频开场用"
 example_source_url: "https://hyperframes.heygen.com/catalog"
 example_source_label: "hyperframes · vfx-text-cursor"
+od:
+  mode: video
+  surface: video
+  scenario: video
+  featured: 0.15
+  upstream: "https://github.com/nexu-io/html-anything"
+  preview:
+    type: html
+    entry: index.html
+    reload: debounce-100
+  design_system:
+    requires: false
+  example_prompt: "Use the VFX Text Cursor template to turn my content into a video-intro quote reveal with cursor light trails, chromatic rays, and directional flares. Preserve the template's visual signature, use real content and data, and avoid lorem ipsum or placeholder images."
+  example_prompt_i18n:
+    zh-CN: "用「VFX 文字光标」模板把我的内容做成一段「光标拖光 + 彩色像散射线 + 定向光斑, 适合视频片头逐字揭示金句」。保持模板的视觉签名，使用真实内容和数据，避免 lorem ipsum 和占位图片。"
 ---
 
 【模板: VFX 文字光标 (Text Cursor)】

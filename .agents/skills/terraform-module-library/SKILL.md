@@ -1,17 +1,32 @@
 ---
 name: terraform-module-library
-description: Build reusable Terraform modules for AWS, Azure, and GCP infrastructure following infrastructure-as-code best practices. Use when creating infrastructure modules, standardizing cloud provisioning, or implementing reusable IaC components.
+description: "Production-ready Terraform module patterns for AWS, Azure, and GCP infrastructure."
+risk: unknown
+source: community
+date_added: "2026-02-27"
 ---
 
 # Terraform Module Library
 
 Production-ready Terraform module patterns for AWS, Azure, and GCP infrastructure.
 
+## Do not use this skill when
+
+- The task is unrelated to terraform module library
+- You need a different domain or tool outside this scope
+
+## Instructions
+
+- Clarify goals, constraints, and required inputs.
+- Apply relevant best practices and validate outcomes.
+- Provide actionable steps and verification.
+- If detailed examples are required, open `resources/implementation-playbook.md`.
+
 ## Purpose
 
 Create reusable, well-tested Terraform modules for common cloud infrastructure patterns across multiple cloud providers.
 
-## When to Use
+## Use this skill when
 
 - Build reusable infrastructure components
 - Standardize cloud resource provisioning
@@ -247,3 +262,8 @@ func TestVPCModule(t *testing.T) {
 
 - `multi-cloud-architecture` - For architectural decisions
 - `cost-optimization` - For cost-effective designs
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

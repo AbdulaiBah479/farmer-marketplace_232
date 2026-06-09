@@ -1,219 +1,110 @@
 ---
 name: recall
-description: Deep search across all past Claude Code sessions for decisions, solutions, and discussions
-version: 0.6.0
-triggers:
-  - "I forgot"
-  - "do you remember"
-  - "what did we decide"
-  - "we discussed this before"
-  - "I need to recall"
-  - "search my memory"
-  - "/recall"
-tools:
-  - Bash
-  - Read
+description: >
+  Search Origin's local memory by query. Targeted lookup, not orientation.
+  Invoked as `/recall <query>`. Use when the user asks "do you
+  remember", "what do you know about", "look up".
+argument-hint: "<query>"
+allowed-tools: ["mcp__plugin_origin_origin__recall"]
 ---
 
-# Recall: Self-Memory Retrieval
+# /recall
 
-> **STOP. READ THIS FIRST.**
->
-> **THE ONLY COMMAND YOU MAY USE IS:**
-> ```
-> .claude/bin/transcript recall "your query"
-> ```
->
-> **YOU MUST NOT USE:**
-> - `rg` - FORBIDDEN
-> - `grep` - FORBIDDEN
-> - `find` - FORBIDDEN
-> - `cat ~/.claude/` - FORBIDDEN
-> - Any direct file access to `~/.claude/projects/` - FORBIDDEN
->
-> If you use any forbidden command, you are violating this skill's requirements.
+Search Origin's memory by natural-language query. Returns matching memories
+ranked by hybrid vector + FTS search, then re-ordered by the agent if it
+helps.
 
-## Why This Matters
+## Two phases
 
-The `transcript` CLI:
-- Handles JSONL parsing correctly
-- Groups results by session
-- Shows timestamps and context
-- Finds related skills automatically
-- Auto-synthesizes complex queries with LLM
+When a local model or API key is configured, the daemon can rerank and
+expand server-side. In local memory mode it cannot. The skill always does
+**agent-side expansion and rerank** itself — cheap, makes results good in
+both modes.
 
-Raw tools like `rg` return unreadable JSON blobs and miss context. **Using them is a failure mode.**
+### Phase 1 — expand the query (agent-side)
 
-## The Command
+Before calling `recall`, rewrite the user's query into a more
+search-friendly form:
 
-```bash
-.claude/bin/transcript recall "your query"
-```
+- Replace pronouns with the referent ("it" → the actual thing).
+- Expand abbreviations the embedder is unlikely to know.
+- Add the obvious synonym when the original term is too narrow (e.g.
+  "auth" → "auth OR authentication").
 
-That's it. Run this command. Read the output. Done.
+Don't over-expand. If the query is already specific, leave it alone.
+One recall call per `/recall` invocation — duplicate calls double
+embedding load and the merge step is rarely worth it. The daemon's
+own `search_memory_expanded` exists for the multi-query case; if it
+matters, use that endpoint instead of issuing parallel calls here.
 
-## Tiered Retrieval
-
-Recall uses intelligent tiering to match retrieval strategy to query complexity:
-
-### Fast Path (default)
-- SQLite FTS search
-- Returns in 1-2 seconds
-- Best for simple keyword lookups
-
-### Deep Path (auto or --deep)
-- Fast path + LLM synthesis
-- Returns in 5-10 seconds
-- Best for complex questions requiring cross-session analysis
-
-### Auto-Escalation
-
-The command automatically escalates to deep path when:
-- **Match count > 50** - Too many results to scan manually
-- **Results span > 7 days** - Long time range suggests complex topic
-- **Query is a question** - Starts with what/why/how/did/do/etc.
-- **Session count > 5** - Information spread across many sessions
-
-### Controlling Escalation
-
-```bash
-# Force deep path (LLM synthesis) even for simple queries
-.claude/bin/transcript recall "caching" --deep
-.claude/bin/transcript recall "caching" -D
-
-# Force fast path (skip synthesis) even when criteria would trigger escalation
-.claude/bin/transcript recall "why did we choose redis" --fast
-.claude/bin/transcript recall "why did we choose redis" -F
-```
-
-**Note:** `--fast` takes precedence over `--deep` if both are specified.
-
-### Options
-
-```bash
-.claude/bin/transcript recall "query" --max-sessions 5    # Limit sessions shown (default: 5)
-.claude/bin/transcript recall "query" --context 3         # Matches per session (default: 3)
-.claude/bin/transcript recall "query" --limit 100         # Total matches to search (default: 100)
-.claude/bin/transcript recall "query" --deep              # Force LLM synthesis
-.claude/bin/transcript recall "query" --fast              # Skip LLM synthesis
-.claude/bin/transcript recall "query" --json              # Output as JSON (includes synthesis if applicable)
-```
-
-## Examples
-
-### Simple keyword lookup (fast path)
-```bash
-.claude/bin/transcript recall "caching"
-```
-Returns grouped results in 1-2 seconds.
-
-### Question query (auto-escalates to deep path)
-```bash
-.claude/bin/transcript recall "why did we decide to use Redis?"
-```
-Auto-detects question pattern, runs synthesis, returns synthesized answer with citations.
-
-### Force deep analysis
-```bash
-.claude/bin/transcript recall "authentication patterns" --deep
-```
-Forces LLM synthesis even if auto-escalation criteria not met.
-
-### Skip synthesis for speed
-```bash
-.claude/bin/transcript recall "how does the login flow work" --fast
-```
-Skips synthesis despite question pattern, returns fast path results only.
-
-## Understanding the Output
-
-### Fast Path Output
-```
-🔍 Recall: "caching"
-
-Found 12 matches across 3 sessions
-⏩ Fast path: No escalation criteria met
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📁 happy-hippo (5 matches)
-   Jan 15, 10:30 AM - 11:45 AM
-
-   [10:32 AM] assistant   Line 245
-   Implemented Redis caching layer with 60-second TTL...
-
-   → .claude/bin/transcripthappy-hippo --search "caching" --human
-```
-
-### Deep Path Output
-```
-🔍 Recall: "why did we choose Redis?"
-
-Found 28 matches across 4 sessions
-⚡ Deep path: Query is a question
-
-[... fast path results ...]
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🤖 Synthesized Answer
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Based on your past sessions, you chose Redis for caching because:
-
-1. **Performance requirements** [1] - The dashboard needed sub-100ms response times
-2. **Existing infrastructure** [2] - You already had Redis running for session storage
-3. **TTL support** [3] - Native expiration simplified cache invalidation logic
-
-───────────────────────────────────────────────────────────
-📚 Sources
-
-  [1] happy-hippo (Jan 15, 2026)
-      → .claude/bin/transcripthappy-hippo --search "why did we choose Redis?" --human
-  [2] clever-cat (Jan 10, 2026)
-      → .claude/bin/transcriptclever-cat --search "why did we choose Redis?" --human
-```
-
-## Workflow
+### Phase 2 — call the MCP tool
 
 ```
-User asks about past discussion
-         ↓
-.claude/bin/transcript recall "topic"     ← START HERE, ALWAYS
-         ↓
-Check path indicator (⏩ Fast or ⚡ Deep)
-         ↓
-Read the grouped output (and synthesis if deep)
-         ↓
-Need more detail? → Use drill-down command from output
-         ↓
-Respond to user with findings
+recall(query="<expanded query>", space=<inferred>, memory_type=<inferred>)
 ```
 
-## Common Mistakes (DO NOT DO THESE)
+Inferences (do not ask the user):
 
-```bash
-# WRONG - Do not use rg
-rg "sandbox" ~/.claude/projects/
+- `space`: current working directory (e.g. `~/Repos/origin/...` → `"origin"`),
+  the topic being discussed, or whatever space was mentioned in recent turns.
+  Always pass when scope is known; if uncertain, run `list_spaces` later
+  (post-PR-C) or omit.
+- `memory_type`: only when the query itself names a type ("decision on X",
+  "lesson about Y", "preference for Z"). Otherwise omit and let hybrid
+  search rank.
+- `limit`: default 10. Use 3-5 for quick lookups, 10-20 for exploration.
 
-# WRONG - Do not use grep
-grep -r "sandbox" ~/.claude/
+### Phase 3 — rerank (agent-side)
 
-# WRONG - Do not use find
-find ~/.claude -name "*.jsonl" | xargs grep sandbox
+The daemon returns hits ranked by hybrid search. That ranking is good but
+not perfect — it doesn't know the user's exact intent.
 
-# WRONG - Do not cat jsonl files directly
-cat ~/.claude/projects/*/abc123.jsonl | grep sandbox
+Re-read the returned memories against the *original* query. Promote the
+ones that directly answer the question; demote ones that just share
+keywords.
+
+Show the user the top 3-5 reranked hits. Surface the rest only if asked.
+
+### Phase 4 — render revision context (per result)
+
+Each memory may carry revision fields: `version`, `pending_revision`,
+`merged_from`, `last_delta_summary`. Most memories are fresh (v1, none
+set) — render nothing extra for those. Only add a tag line when
+something meaningful is present.
+
+**Condition:** emit the tag line when any of these holds:
+- `version > 1`
+- `merged_from` is non-empty
+- `pending_revision == true`
+
+**Format** — one compact line above the memory body:
+
+```
+<id>  v<N> (merged <K> memories)         ← merged_from has K entries
+<id>  v<N>, pending revision against <id> ← pending_revision true
+<id>  v<N> — <last_delta_summary>         ← version > 1, delta populated
+<id>  v<N>                                ← version > 1, no delta
 ```
 
-```bash
-# CORRECT - Use .claude/bin/transcript recall
-.claude/bin/transcript recall "sandbox"
-```
+Rules:
+- Merged takes precedence over pending_revision in the label.
+- Omit `— <delta>` when `last_delta_summary` is empty or null.
+- Skip the tag line entirely when version == 1 (or null) and no other
+  flag is set. Preserves current output for fresh memories.
 
-## Summary
+## When to use
 
-1. **USE:** `.claude/bin/transcript recall "query"`
-2. **DO NOT USE:** `rg`, `grep`, `find`, `cat` on transcript files
-3. Let auto-escalation work - it detects when synthesis is needed
-4. Use `--deep` to force synthesis, `--fast` to skip it
-5. Read the grouped output (and synthesis if provided)
-6. Drill down if needed using commands from the output
+- "What did I say about X?"
+- "Do you remember the decision on Y?"
+- Need a specific fact before continuing.
+
+## When NOT to use
+
+- Broad session orientation → use `/brief` instead.
+- Storing a new memory → use `/capture`.
+
+## Hint: write specific queries
+
+"Alice database preference" finds more than "database stuff". The semantic
+matcher rewards specificity. If too many results return, add filters rather
+than making the query longer.

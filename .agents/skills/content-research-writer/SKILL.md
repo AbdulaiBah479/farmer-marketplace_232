@@ -1,368 +1,539 @@
 ---
-# ═══════════════════════════════════════════════════════════════════════════════
-# CLAUDE OFFICE SKILL - Enhanced Metadata v2.0
-# ═══════════════════════════════════════════════════════════════════════════════
-
-# Basic Information
-name: Content Research Writer
-description: "Research topics and write content like blog posts, articles, and copy"
-version: "1.0"
-author: claude-office-skills
-license: MIT
-
-# Categorization
-category: marketing
-tags:
-  - content
-  - writing
-  - blog
-  - article
-department: Marketing
-
-# AI Model Compatibility
-models:
-  recommended:
-    - claude-sonnet-4
-    - claude-opus-4
-  compatible:
-    - claude-3-5-sonnet
-    - gpt-4
-    - gpt-4o
-
-# MCP Tools Integration
-mcp:
-  server: office-mcp
-  tools:
-    - create_docx
-    - md_to_docx
-
-# Skill Capabilities
-capabilities:
-  - content_creation
-  - seo_writing
-  - research
-
-# Language Support
-languages:
-  - en
-  - zh
+name: content-research-writer
+category: business-productivity
+description: Assists in writing high-quality content by conducting research, adding citations, improving hooks, iterating on outlines, and providing real-time feedback on each section. Transforms your writing process from solo effort to collaborative partnership.
 ---
 
 # Content Research Writer
 
-Research topics and create compelling content for blogs, articles, and marketing materials.
+This skill acts as your writing partner, helping you research, outline, draft, and refine content while maintaining your unique voice and style.
 
-## Overview
+## When to Use This Skill
 
-This skill helps you:
-- Research topics thoroughly
-- Write engaging blog posts and articles
-- Create SEO-optimized content
-- Develop various content formats
-- Maintain brand voice consistency
+- Writing blog posts, articles, or newsletters
+- Creating educational content or tutorials
+- Drafting thought leadership pieces
+- Researching and writing case studies
+- Producing technical documentation with sources
+- Writing with proper citations and references
+- Improving hooks and introductions
+- Getting section-by-section feedback while writing
+
+## What This Skill Does
+
+1. **Collaborative Outlining**: Helps you structure ideas into coherent outlines
+2. **Research Assistance**: Finds relevant information and adds citations
+3. **Hook Improvement**: Strengthens your opening to capture attention
+4. **Section Feedback**: Reviews each section as you write
+5. **Voice Preservation**: Maintains your writing style and tone
+6. **Citation Management**: Adds and formats references properly
+7. **Iterative Refinement**: Helps you improve through multiple drafts
 
 ## How to Use
 
-### Research Request
+### Setup Your Writing Environment
+
+Create a dedicated folder for your article:
 ```
-"Research [topic] for a blog post"
-"What are the key points to cover about [subject]?"
-"Find statistics and examples about [topic]"
+mkdir ~/writing/my-article-title
+cd ~/writing/my-article-title
 ```
 
-### Writing Request
+Create your draft file:
 ```
-"Write a blog post about [topic]"
-"Create a 1500-word article on [subject]"
-"Draft social media posts about [topic]"
+touch article-draft.md
 ```
 
-### With Guidelines
+Open Claude Code from this directory and start writing.
+
+### Basic Workflow
+
+1. **Start with an outline**:
 ```
-"Write about [topic] for [audience]. Tone: [professional/casual]. Include [requirements]."
+Help me create an outline for an article about [topic]
 ```
 
-## Content Types
+2. **Research and add citations**:
+```
+Research [specific topic] and add citations to my outline
+```
 
-### Blog Post
+3. **Improve the hook**:
+```
+Here's my introduction. Help me make the hook more compelling.
+```
+
+4. **Get section feedback**:
+```
+I just finished the "Why This Matters" section. Review it and give feedback.
+```
+
+5. **Refine and polish**:
+```
+Review the full draft for flow, clarity, and consistency.
+```
+
+## Instructions
+
+When a user requests writing assistance:
+
+1. **Understand the Writing Project**
+   
+   Ask clarifying questions:
+   - What's the topic and main argument?
+   - Who's the target audience?
+   - What's the desired length/format?
+   - What's your goal? (educate, persuade, entertain, explain)
+   - Any existing research or sources to include?
+   - What's your writing style? (formal, conversational, technical)
+
+2. **Collaborative Outlining**
+   
+   Help structure the content:
+   
+   ```markdown
+   # Article Outline: [Title]
+   
+   ## Hook
+   - [Opening line/story/statistic]
+   - [Why reader should care]
+   
+   ## Introduction
+   - Context and background
+   - Problem statement
+   - What this article covers
+   
+   ## Main Sections
+   
+   ### Section 1: [Title]
+   - Key point A
+   - Key point B
+   - Example/evidence
+   - [Research needed: specific topic]
+   
+   ### Section 2: [Title]
+   - Key point C
+   - Key point D
+   - Data/citation needed
+   
+   ### Section 3: [Title]
+   - Key point E
+   - Counter-arguments
+   - Resolution
+   
+   ## Conclusion
+   - Summary of main points
+   - Call to action
+   - Final thought
+   
+   ## Research To-Do
+   - [ ] Find data on [topic]
+   - [ ] Get examples of [concept]
+   - [ ] Source citation for [claim]
+   ```
+   
+   **Iterate on outline**:
+   - Adjust based on feedback
+   - Ensure logical flow
+   - Identify research gaps
+   - Mark sections for deep dives
+
+3. **Conduct Research**
+   
+   When user requests research on a topic:
+   
+   - Search for relevant information
+   - Find credible sources
+   - Extract key facts, quotes, and data
+   - Add citations in requested format
+   
+   Example output:
+   ```markdown
+   ## Research: AI Impact on Productivity
+   
+   Key Findings:
+   
+   1. **Productivity Gains**: Studies show 40% time savings for 
+      content creation tasks [1]
+   
+   2. **Adoption Rates**: 67% of knowledge workers use AI tools 
+      weekly [2]
+   
+   3. **Expert Quote**: "AI augments rather than replaces human 
+      creativity" - Dr. Jane Smith, MIT [3]
+   
+   Citations:
+   [1] McKinsey Global Institute. (2024). "The Economic Potential 
+       of Generative AI"
+   [2] Stack Overflow Developer Survey (2024)
+   [3] Smith, J. (2024). MIT Technology Review interview
+   
+   Added to outline under Section 2.
+   ```
+
+4. **Improve Hooks**
+   
+   When user shares an introduction, analyze and strengthen:
+   
+   **Current Hook Analysis**:
+   - What works: [positive elements]
+   - What could be stronger: [areas for improvement]
+   - Emotional impact: [current vs. potential]
+   
+   **Suggested Alternatives**:
+   
+   Option 1: [Bold statement]
+   > [Example]
+   *Why it works: [explanation]*
+   
+   Option 2: [Personal story]
+   > [Example]
+   *Why it works: [explanation]*
+   
+   Option 3: [Surprising data]
+   > [Example]
+   *Why it works: [explanation]*
+   
+   **Questions to hook**:
+   - Does it create curiosity?
+   - Does it promise value?
+   - Is it specific enough?
+   - Does it match the audience?
+
+5. **Provide Section-by-Section Feedback**
+   
+   As user writes each section, review for:
+   
+   ```markdown
+   # Feedback: [Section Name]
+   
+   ## What Works Well ✓
+   - [Strength 1]
+   - [Strength 2]
+   - [Strength 3]
+   
+   ## Suggestions for Improvement
+   
+   ### Clarity
+   - [Specific issue] → [Suggested fix]
+   - [Complex sentence] → [Simpler alternative]
+   
+   ### Flow
+   - [Transition issue] → [Better connection]
+   - [Paragraph order] → [Suggested reordering]
+   
+   ### Evidence
+   - [Claim needing support] → [Add citation or example]
+   - [Generic statement] → [Make more specific]
+   
+   ### Style
+   - [Tone inconsistency] → [Match your voice better]
+   - [Word choice] → [Stronger alternative]
+   
+   ## Specific Line Edits
+   
+   Original:
+   > [Exact quote from draft]
+   
+   Suggested:
+   > [Improved version]
+   
+   Why: [Explanation]
+   
+   ## Questions to Consider
+   - [Thought-provoking question 1]
+   - [Thought-provoking question 2]
+   
+   Ready to move to next section!
+   ```
+
+6. **Preserve Writer's Voice**
+   
+   Important principles:
+   
+   - **Learn their style**: Read existing writing samples
+   - **Suggest, don't replace**: Offer options, not directives
+   - **Match tone**: Formal, casual, technical, friendly
+   - **Respect choices**: If they prefer their version, support it
+   - **Enhance, don't override**: Make their writing better, not different
+   
+   Ask periodically:
+   - "Does this sound like you?"
+   - "Is this the right tone?"
+   - "Should I be more/less [formal/casual/technical]?"
+
+7. **Citation Management**
+   
+   Handle references based on user preference:
+   
+   **Inline Citations**:
+   ```markdown
+   Studies show 40% productivity improvement (McKinsey, 2024).
+   ```
+   
+   **Numbered References**:
+   ```markdown
+   Studies show 40% productivity improvement [1].
+   
+   [1] McKinsey Global Institute. (2024)...
+   ```
+   
+   **Footnote Style**:
+   ```markdown
+   Studies show 40% productivity improvement^1
+   
+   ^1: McKinsey Global Institute. (2024)...
+   ```
+   
+   Maintain a running citations list:
+   ```markdown
+   ## References
+   
+   1. Author. (Year). "Title". Publication.
+   2. Author. (Year). "Title". Publication.
+   ...
+   ```
+
+8. **Final Review and Polish**
+   
+   When draft is complete, provide comprehensive feedback:
+   
+   ```markdown
+   # Full Draft Review
+   
+   ## Overall Assessment
+   
+   **Strengths**:
+   - [Major strength 1]
+   - [Major strength 2]
+   - [Major strength 3]
+   
+   **Impact**: [Overall effectiveness assessment]
+   
+   ## Structure & Flow
+   - [Comments on organization]
+   - [Transition quality]
+   - [Pacing assessment]
+   
+   ## Content Quality
+   - [Argument strength]
+   - [Evidence sufficiency]
+   - [Example effectiveness]
+   
+   ## Technical Quality
+   - Grammar and mechanics: [assessment]
+   - Consistency: [assessment]
+   - Citations: [completeness check]
+   
+   ## Readability
+   - Clarity score: [evaluation]
+   - Sentence variety: [evaluation]
+   - Paragraph length: [evaluation]
+   
+   ## Final Polish Suggestions
+   
+   1. **Introduction**: [Specific improvements]
+   2. **Body**: [Specific improvements]
+   3. **Conclusion**: [Specific improvements]
+   4. **Title**: [Options if needed]
+   
+   ## Pre-Publish Checklist
+   - [ ] All claims sourced
+   - [ ] Citations formatted
+   - [ ] Examples clear
+   - [ ] Transitions smooth
+   - [ ] Call to action present
+   - [ ] Proofread for typos
+   
+   Ready to publish! 🚀
+   ```
+
+## Examples
+
+### Example 1: Teresa Torres's Workflow
+
+**User**: "I'm writing an article about continuous discovery. Help me create an outline."
+
+**Process**:
+1. Collaborates on outline structure
+2. Identifies research needs
+3. User starts writing introduction
+4. Reviews and improves the hook
+5. User writes each section
+6. Provides feedback after each section
+7. Conducts research and adds citations
+8. Final review of complete draft
+9. Polish and prep for publishing
+
+**Result**: Well-researched, properly cited article written in Teresa's voice with strong structure and flow.
+
+### Example 2: Research-Heavy Article
+
+**User**: "I'm writing about AI's impact on product management. Help me find current data and examples."
+
+**Output**:
 ```markdown
-# [Attention-Grabbing Title]
+## Research Compiled
 
-**Reading time**: [X] minutes
-**Published**: [Date]
+### Recent Data
+- Gartner: 80% of PMs will use AI tools by 2025 [1]
+- Survey: 45% report faster feature shipping [2]
+- Case study: Airbnb's AI-assisted prioritization [3]
 
-[Hook - opening that captures attention]
+### Expert Quotes
+- "AI amplifies PM judgment, not replaces it" - Marty Cagan
+- [Additional quotes with citations]
 
-## Introduction
-[Problem statement or context - why reader should care]
+### Real Examples
+1. **Company A**: Used AI for user research synthesis
+   - Result: 60% time savings
+   - Source: [citation]
 
-## [Main Section 1]
-[Content with examples, data, insights]
+2. **Company B**: AI-powered roadmap analysis
+   - Result: Better stakeholder alignment
+   - Source: [citation]
 
-### [Subsection if needed]
-[Detailed information]
-
-## [Main Section 2]
-[Content continuing the narrative]
-
-## [Main Section 3]
-[Content building to conclusion]
-
-## Key Takeaways
-- [Takeaway 1]
-- [Takeaway 2]
-- [Takeaway 3]
-
-## Conclusion
-[Summary and call to action]
-
----
-**Related Articles**:
-- [Link 1]
-- [Link 2]
+All added to your outline with proper citations.
 ```
 
-### Long-Form Article
+### Example 3: Hook Improvement
+
+**User's Original Hook**:
+> "Product management is changing because of AI. In this article, I'll discuss some ways AI affects product managers."
+
+**Improved Options**:
+
+**Option 1 (Data-driven)**:
+> "Last month, I asked AI to analyze 500 customer interviews. It took 30 minutes instead of 3 weeks. Product management will never be the same."
+
+**Option 2 (Question)**:
+> "What if you could talk to every customer, read every review, and analyze every support ticket—all before your morning coffee?"
+
+**Option 3 (Story)**:
+> "Sarah spent two weeks building the wrong feature. Not because she didn't understand her users, but because she couldn't process the hundreds of interviews fast enough to spot the pattern."
+
+### Example 4: Section Feedback
+
+**User**: "Just finished my 'Common Mistakes' section. Thoughts?"
+
+**Response**:
 ```markdown
-# [Title]: [Subtitle]
+# Feedback: Common Mistakes Section
 
-**Author**: [Name] | **Updated**: [Date] | **[X] min read**
+## What Works Well ✓
+- Strong examples (the Slack notification story)
+- Clear structure (3 mistakes, clean layout)
+- Practical advice for each mistake
 
-> [Executive summary or key insight quote]
+## Suggestions
 
-## Table of Contents
-1. [Section 1]
-2. [Section 2]
-3. [Section 3]
-...
+### Make It More Specific
+Your second point says "Bad prioritization" but could be stronger:
 
-## Introduction
-[Context, importance, what reader will learn]
+Current:
+> "Many teams prioritize badly by focusing on features instead of outcomes."
 
-## [Section 1: Foundation]
-[Comprehensive coverage]
+Suggested:
+> "I've watched teams ship 14 features in a quarter yet move none of their key metrics. They prioritized activity over progress."
 
-### [Subsection]
-[Details]
+### Add Data
+The third mistake would benefit from evidence:
+> "[Add citation]: Studies show teams without regular user contact are 3x more likely to build unused features [needs source]"
 
-> **Expert Quote**: "[Quote]" — [Source]
+### Flow Improvement
+Consider reordering: Mistake 3 → Mistake 2 → Mistake 1
+This builds from small to big impact.
 
-## [Section 2: Deep Dive]
-[Analysis, examples, case studies]
-
-| Comparison | Option A | Option B |
-|------------|----------|----------|
-| [Factor 1] | [Value] | [Value] |
-| [Factor 2] | [Value] | [Value] |
-
-## [Section 3: Application]
-[How-to, practical steps, implementation]
-
-**Step 1**: [Action]
-[Details]
-
-**Step 2**: [Action]
-[Details]
-
-## Conclusion
-[Summary, future implications, CTA]
-
-## References
-1. [Source 1]
-2. [Source 2]
+Ready for the next section!
 ```
 
-### How-To Guide
-```markdown
-# How to [Achieve Outcome]: A Step-by-Step Guide
+## Writing Workflows
 
-**Difficulty**: [Beginner/Intermediate/Advanced]
-**Time Required**: [Estimate]
-**What You'll Need**: [Prerequisites]
+### Blog Post Workflow
+1. Outline together
+2. Research key points
+3. Write introduction → get feedback
+4. Write body sections → feedback each
+5. Write conclusion → final review
+6. Polish and edit
 
-## Overview
-[Brief description of what reader will accomplish]
+### Newsletter Workflow
+1. Discuss hook ideas
+2. Quick outline (shorter format)
+3. Draft in one session
+4. Review for clarity and links
+5. Quick polish
 
-## Before You Start
-- [ ] [Prerequisite 1]
-- [ ] [Prerequisite 2]
+### Technical Tutorial Workflow
+1. Outline steps
+2. Write code examples
+3. Add explanations
+4. Test instructions
+5. Add troubleshooting section
+6. Final review for accuracy
 
-## Step 1: [Action Verb + Task]
-[Detailed instructions]
+### Thought Leadership Workflow
+1. Brainstorm unique angle
+2. Research existing perspectives
+3. Develop your thesis
+4. Write with strong POV
+5. Add supporting evidence
+6. Craft compelling conclusion
 
-![Step 1 Screenshot/Image placeholder]
+## Pro Tips
 
-**Tip**: [Helpful tip for this step]
+1. **Work in VS Code**: Better than web Claude for long-form writing
+2. **One section at a time**: Get feedback incrementally
+3. **Save research separately**: Keep a research.md file
+4. **Version your drafts**: article-v1.md, article-v2.md, etc.
+5. **Read aloud**: Use feedback to identify clunky sentences
+6. **Set deadlines**: "I want to finish the draft today"
+7. **Take breaks**: Write, get feedback, pause, revise
 
-## Step 2: [Action Verb + Task]
-[Detailed instructions]
+## File Organization
 
-⚠️ **Warning**: [Common mistake to avoid]
+Recommended structure for writing projects:
 
-## Step 3: [Action Verb + Task]
-[Detailed instructions]
-
-## Troubleshooting
-| Problem | Solution |
-|---------|----------|
-| [Issue 1] | [Fix] |
-| [Issue 2] | [Fix] |
-
-## Next Steps
-Now that you've [accomplished X], you can:
-- [Advanced topic 1]
-- [Related skill 2]
-
-## FAQ
-**Q: [Common question]?**
-A: [Answer]
+```
+~/writing/article-name/
+├── outline.md          # Your outline
+├── research.md         # All research and citations
+├── draft-v1.md         # First draft
+├── draft-v2.md         # Revised draft
+├── final.md            # Publication-ready
+├── feedback.md         # Collected feedback
+└── sources/            # Reference materials
+    ├── study1.pdf
+    └── article2.md
 ```
 
-### Listicle
-```markdown
-# [Number] [Topic] to [Benefit] in [Year]
+## Best Practices
 
-[Brief intro explaining why this list matters]
+### For Research
+- Verify sources before citing
+- Use recent data when possible
+- Balance different perspectives
+- Link to original sources
 
-## 1. [Item Name]
-**Best for**: [Use case]
+### For Feedback
+- Be specific about what you want: "Is this too technical?"
+- Share your concerns: "I'm worried this section drags"
+- Ask questions: "Does this flow logically?"
+- Request alternatives: "What's another way to explain this?"
 
-[Description - what it is and why it's included]
+### For Voice
+- Share examples of your writing
+- Specify tone preferences
+- Point out good matches: "That sounds like me!"
+- Flag mismatches: "Too formal for my style"
 
-**Key Features**:
-- [Feature 1]
-- [Feature 2]
+## Related Use Cases
 
-**Pros**: [Benefits]
-**Cons**: [Drawbacks]
+- Creating social media posts from articles
+- Adapting content for different audiences
+- Writing email newsletters
+- Drafting technical documentation
+- Creating presentation content
+- Writing case studies
+- Developing course outlines
 
----
-
-## 2. [Item Name]
-[Same structure...]
-
----
-
-## Comparison Table
-
-| Tool | Price | Best For | Rating |
-|------|-------|----------|--------|
-| [1] | [Price] | [Use] | ⭐⭐⭐⭐⭐ |
-| [2] | [Price] | [Use] | ⭐⭐⭐⭐ |
-
-## Conclusion
-[Summary of recommendations by use case]
-```
-
-## Research Output
-
-### Topic Research Brief
-```markdown
-# Research Brief: [Topic]
-
-## Overview
-**Topic**: [Subject]
-**Target Audience**: [Who]
-**Content Goal**: [Inform/Persuade/Educate/Entertain]
-
-## Key Points to Cover
-1. [Main point 1]
-   - Supporting info
-   - Data/statistic
-2. [Main point 2]
-   - Supporting info
-3. [Main point 3]
-
-## Statistics & Data
-| Stat | Source | Year |
-|------|--------|------|
-| [Statistic] | [Source] | [Year] |
-| [Statistic] | [Source] | [Year] |
-
-## Expert Quotes
-> "[Quote]" — [Expert Name], [Title/Company]
-
-## Common Questions (FAQ Potential)
-1. [Question 1]?
-2. [Question 2]?
-3. [Question 3]?
-
-## Competitor Content Analysis
-| Article | Word Count | Strengths | Gaps |
-|---------|------------|-----------|------|
-| [URL 1] | [X] | [What's good] | [Missing] |
-
-## Recommended Angle
-[Unique perspective or approach to differentiate]
-
-## Keywords
-**Primary**: [main keyword]
-**Secondary**: [keyword 2], [keyword 3]
-**Long-tail**: [phrase 1], [phrase 2]
-```
-
-## SEO Guidelines
-
-### Content Optimization
-```markdown
-## SEO Checklist
-
-### Title
-- [ ] Primary keyword included
-- [ ] Under 60 characters
-- [ ] Compelling and click-worthy
-
-### Meta Description
-- [ ] Primary keyword included
-- [ ] 150-160 characters
-- [ ] Clear value proposition
-
-### Headers (H1, H2, H3)
-- [ ] H1 matches/closely relates to title
-- [ ] Keywords in H2s naturally
-- [ ] Logical hierarchy
-
-### Content
-- [ ] Primary keyword in first 100 words
-- [ ] Keyword density 1-2%
-- [ ] Related keywords/LSI terms included
-- [ ] Internal links: [X] links
-- [ ] External links: [X] authoritative sources
-
-### Media
-- [ ] Images with alt text
-- [ ] Compressed file sizes
-- [ ] Descriptive file names
-
-### Readability
-- [ ] Short paragraphs (2-4 sentences)
-- [ ] Subheadings every 300 words
-- [ ] Bullet points for lists
-- [ ] Reading level: [Grade X]
-```
-
-## Style Guidelines
-
-### Tone Options
-| Tone | Description | Example |
-|------|-------------|---------|
-| Professional | Formal, authoritative | "Research indicates that..." |
-| Conversational | Friendly, relatable | "You know that feeling when..." |
-| Educational | Clear, instructive | "Let's break this down..." |
-| Persuasive | Compelling, action-oriented | "Imagine achieving..." |
-| Playful | Fun, engaging | "Here's the plot twist..." |
-
-### Best Practices
-1. **Hook early**: First sentence should grab attention
-2. **Be specific**: Data > vague claims
-3. **Use examples**: Make abstract concrete
-4. **Break it up**: Headers, bullets, images
-5. **End strong**: Clear takeaway or CTA
-
-## Limitations
-
-- Cannot guarantee SEO rankings
-- Statistics should be verified
-- Cannot access paywalled sources
-- Brand voice requires guidance
-- Visual content descriptions only

@@ -1,506 +1,291 @@
 ---
 name: sveltekit
-description: Builds applications with SvelteKit including routing, load functions, form actions, hooks, and adapters. Use when creating Svelte applications with SSR, building full-stack apps, or needing file-based routing with Svelte.
+description: "Build full-stack web applications with SvelteKit — file-based routing, SSR, SSG, API routes, and form actions in one framework."
+category: frontend
+risk: safe
+source: community
+date_added: "2026-03-18"
+author: suhaibjanjua
+tags: [svelte, sveltekit, fullstack, ssr, ssg, typescript]
+tools: [claude, cursor, gemini]
 ---
 
-# SvelteKit
+# SvelteKit Full-Stack Development
 
-The official application framework for Svelte with routing, SSR, and more.
+## Overview
 
-## Quick Start
+SvelteKit is the official full-stack framework built on top of Svelte. It provides file-based routing, server-side rendering (SSR), static site generation (SSG), API routes, and progressive form actions — all with Svelte's compile-time reactivity model that ships zero runtime overhead to the browser. Use this skill when building fast, modern web apps where both DX and performance matter.
 
-**Create project:**
+## When to Use This Skill
+
+- Use when building a new full-stack web application with Svelte
+- Use when you need SSR or SSG with fine-grained control per route
+- Use when migrating a SPA to a framework with server capabilities
+- Use when working on a project that needs file-based routing and collocated API endpoints
+- Use when the user asks about `+page.svelte`, `+layout.svelte`, `load` functions, or form actions
+
+## How It Works
+
+### Step 1: Project Setup
+
 ```bash
-npx sv create my-app
+npm create svelte@latest my-app
 cd my-app
 npm install
 npm run dev
 ```
 
-## Project Structure
+Choose **Skeleton project** + **TypeScript** + **ESLint/Prettier** when prompted.
+
+Directory structure after scaffolding:
 
 ```
-my-app/
-  src/
-    routes/           # File-based routing
-      +page.svelte    # Page components
-      +page.server.ts # Server load functions
-      +layout.svelte  # Layouts
-    lib/              # Shared code ($lib alias)
-    app.html          # HTML template
-    hooks.server.ts   # Server hooks
-  static/             # Static assets
-  svelte.config.js    # SvelteKit config
-  vite.config.ts      # Vite config
+src/
+  routes/
+    +page.svelte        ← Root page component
+    +layout.svelte      ← Root layout (wraps all pages)
+    +error.svelte       ← Error boundary
+  lib/
+    server/             ← Server-only code (never bundled to client)
+    components/         ← Shared components
+  app.html              ← HTML shell
+static/                 ← Static assets
 ```
 
-## Routing
+### Step 2: File-Based Routing
 
-### Basic Pages
+Every `+page.svelte` file in `src/routes/` maps directly to a URL:
 
-```svelte
-<!-- src/routes/+page.svelte -->
-<h1>Home Page</h1>
-<a href="/about">About</a>
+```
+src/routes/+page.svelte          → /
+src/routes/about/+page.svelte    → /about
+src/routes/blog/[slug]/+page.svelte  → /blog/:slug
+src/routes/shop/[...path]/+page.svelte → /shop/* (catch-all)
 ```
 
-### Dynamic Routes
+**Route groups** (no URL segment): wrap in `(group)/` folder.
+**Private routes** (not accessible as URLs): prefix with `_` or `(group)`.
 
-```svelte
-<!-- src/routes/users/[id]/+page.svelte -->
-<script lang="ts">
-  let { data } = $props();
-</script>
+### Step 3: Loading Data with `load` Functions
 
-<h1>User: {data.user.name}</h1>
-```
+Use a `+page.ts` (universal) or `+page.server.ts` (server-only) file alongside the page:
 
 ```typescript
-// src/routes/users/[id]/+page.server.ts
+// src/routes/blog/[slug]/+page.server.ts
+import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params }) => {
-  const user = await getUser(params.id);
-  return { user };
-};
-```
-
-### Optional Parameters
-
-```
-src/routes/[[lang]]/about/+page.svelte
-// Matches /about and /en/about
-```
-
-### Rest Parameters
-
-```
-src/routes/files/[...path]/+page.svelte
-// Matches /files/a/b/c -> params.path = 'a/b/c'
-```
-
-### Route Groups
-
-```
-src/routes/
-  (auth)/
-    login/+page.svelte
-    register/+page.svelte
-  (app)/
-    dashboard/+page.svelte
-```
-
-## Load Functions
-
-### Server Load
-
-```typescript
-// src/routes/posts/+page.server.ts
-import type { PageServerLoad } from './$types';
-import { error } from '@sveltejs/kit';
-
-export const load: PageServerLoad = async ({ params, locals, fetch }) => {
-  const response = await fetch('/api/posts');
-
-  if (!response.ok) {
-    throw error(404, 'Posts not found');
-  }
-
-  const posts = await response.json();
-  return { posts };
-};
-```
-
-### Universal Load
-
-```typescript
-// src/routes/posts/+page.ts
-import type { PageLoad } from './$types';
-
-export const load: PageLoad = async ({ fetch, data }) => {
-  // Runs on server and client
-  const response = await fetch('/api/posts');
-  return { posts: await response.json() };
-};
-```
-
-### Layout Load
-
-```typescript
-// src/routes/+layout.server.ts
-import type { LayoutServerLoad } from './$types';
-
-export const load: LayoutServerLoad = async ({ locals }) => {
-  return {
-    user: locals.user,
-  };
-};
-```
-
-### Using Data in Components
-
-```svelte
-<!-- src/routes/posts/+page.svelte -->
-<script lang="ts">
-  import type { PageData } from './$types';
-
-  let { data }: { data: PageData } = $props();
-</script>
-
-<h1>Posts</h1>
-{#each data.posts as post}
-  <article>
-    <h2>{post.title}</h2>
-    <p>{post.excerpt}</p>
-  </article>
-{/each}
-```
-
-## Form Actions
-
-### Basic Action
-
-```typescript
-// src/routes/login/+page.server.ts
-import type { Actions } from './$types';
-import { fail, redirect } from '@sveltejs/kit';
-
-export const actions: Actions = {
-  default: async ({ request, cookies }) => {
-    const data = await request.formData();
-    const email = data.get('email') as string;
-    const password = data.get('password') as string;
-
-    const user = await login(email, password);
-
-    if (!user) {
-      return fail(400, { email, error: 'Invalid credentials' });
-    }
-
-    cookies.set('session', user.token, { path: '/' });
-    throw redirect(303, '/dashboard');
-  },
-};
-```
-
-```svelte
-<!-- src/routes/login/+page.svelte -->
-<script lang="ts">
-  import type { ActionData } from './$types';
-
-  let { form }: { form: ActionData } = $props();
-</script>
-
-<form method="POST">
-  <input name="email" value={form?.email ?? ''} />
-  <input name="password" type="password" />
-  <button>Login</button>
-
-  {#if form?.error}
-    <p class="error">{form.error}</p>
-  {/if}
-</form>
-```
-
-### Named Actions
-
-```typescript
-// src/routes/todo/+page.server.ts
-export const actions: Actions = {
-  create: async ({ request }) => {
-    const data = await request.formData();
-    await createTodo(data.get('text'));
-  },
-  delete: async ({ request }) => {
-    const data = await request.formData();
-    await deleteTodo(data.get('id'));
-  },
-};
-```
-
-```svelte
-<form method="POST" action="?/create">
-  <input name="text" />
-  <button>Add</button>
-</form>
-
-<form method="POST" action="?/delete">
-  <input type="hidden" name="id" value={todo.id} />
-  <button>Delete</button>
-</form>
-```
-
-### Progressive Enhancement
-
-```svelte
-<script lang="ts">
-  import { enhance } from '$app/forms';
-</script>
-
-<form method="POST" use:enhance>
-  <!-- Form content -->
-</form>
-
-<!-- Custom enhance -->
-<form
-  method="POST"
-  use:enhance={() => {
-    return async ({ result, update }) => {
-      if (result.type === 'success') {
-        // Handle success
-      }
-      await update();
-    };
-  }}
->
-```
-
-## Layouts
-
-### Basic Layout
-
-```svelte
-<!-- src/routes/+layout.svelte -->
-<script lang="ts">
-  import type { LayoutData } from './$types';
-  import { Snippet } from 'svelte';
-
-  let { data, children }: { data: LayoutData; children: Snippet } = $props();
-</script>
-
-<nav>
-  <a href="/">Home</a>
-  {#if data.user}
-    <span>{data.user.name}</span>
-  {/if}
-</nav>
-
-<main>
-  {@render children()}
-</main>
-
-<footer>Footer</footer>
-```
-
-### Nested Layouts
-
-```
-src/routes/
-  +layout.svelte          # Root layout
-  (app)/
-    +layout.svelte        # App layout
-    dashboard/+page.svelte
-```
-
-### Reset Layout
-
-```svelte
-<!-- src/routes/special/+page@.svelte -->
-<!-- Uses root layout, skipping intermediate layouts -->
-```
-
-## Hooks
-
-### Server Hooks
-
-```typescript
-// src/hooks.server.ts
-import type { Handle, HandleFetch } from '@sveltejs/kit';
-
-export const handle: Handle = async ({ event, resolve }) => {
-  // Run before every request
-  const session = event.cookies.get('session');
-
-  if (session) {
-    event.locals.user = await getUser(session);
-  }
-
-  const response = await resolve(event);
-  return response;
-};
-
-export const handleFetch: HandleFetch = async ({ request, fetch }) => {
-  // Intercept fetch calls
-  return fetch(request);
-};
-
-export const handleError = async ({ error, event }) => {
-  console.error(error);
-  return {
-    message: 'Internal Error',
-  };
-};
-```
-
-### Sequence Multiple Hooks
-
-```typescript
-import { sequence } from '@sveltejs/kit/hooks';
-
-export const handle = sequence(
-  authHandle,
-  loggingHandle,
-  corsHandle
-);
-```
-
-## API Routes
-
-```typescript
-// src/routes/api/users/+server.ts
-import type { RequestHandler } from './$types';
-import { json, error } from '@sveltejs/kit';
-
-export const GET: RequestHandler = async ({ url }) => {
-  const limit = Number(url.searchParams.get('limit') ?? 10);
-  const users = await getUsers(limit);
-  return json(users);
-};
-
-export const POST: RequestHandler = async ({ request }) => {
-  const data = await request.json();
-  const user = await createUser(data);
-  return json(user, { status: 201 });
-};
-
-export const DELETE: RequestHandler = async ({ params }) => {
-  await deleteUser(params.id);
-  return new Response(null, { status: 204 });
-};
-```
-
-## Navigation
-
-```svelte
-<script lang="ts">
-  import { goto, invalidate, invalidateAll } from '$app/navigation';
-  import { page } from '$app/stores';
-
-  async function navigate() {
-    await goto('/dashboard');
-  }
-
-  async function refresh() {
-    await invalidate('/api/data');
-    // or invalidateAll() for all data
-  }
-</script>
-
-<p>Current path: {$page.url.pathname}</p>
-```
-
-## Error Handling
-
-### Error Pages
-
-```svelte
-<!-- src/routes/+error.svelte -->
-<script lang="ts">
-  import { page } from '$app/stores';
-</script>
-
-<h1>{$page.status}</h1>
-<p>{$page.error?.message}</p>
-```
-
-### Throwing Errors
-
-```typescript
-import { error } from '@sveltejs/kit';
-
-export const load = async ({ params }) => {
-  const post = await getPost(params.id);
+export const load: PageServerLoad = async ({ params, fetch }) => {
+  const post = await fetch(`/api/posts/${params.slug}`).then(r => r.json());
 
   if (!post) {
-    throw error(404, {
-      message: 'Post not found',
-    });
+    error(404, 'Post not found');
   }
 
   return { post };
 };
 ```
 
-## Environment Variables
+```svelte
+<!-- src/routes/blog/[slug]/+page.svelte -->
+<script lang="ts">
+  import type { PageData } from './$types';
+  export let data: PageData;
+</script>
 
-```typescript
-// .env
-PUBLIC_API_URL=https://api.example.com
-DATABASE_URL=postgres://...
-
-// Access in server code
-import { DATABASE_URL } from '$env/static/private';
-import { env } from '$env/dynamic/private';
-
-// Access in client code
-import { PUBLIC_API_URL } from '$env/static/public';
+<h1>{data.post.title}</h1>
+<article>{@html data.post.content}</article>
 ```
 
-## Adapters
+### Step 4: API Routes (Server Endpoints)
 
-```javascript
-// svelte.config.js
-import adapter from '@sveltejs/adapter-auto';
-// Or specific adapter:
-// import adapter from '@sveltejs/adapter-node';
-// import adapter from '@sveltejs/adapter-vercel';
-// import adapter from '@sveltejs/adapter-static';
+Create `+server.ts` files for REST-style endpoints:
 
-export default {
-  kit: {
-    adapter: adapter(),
-  },
+```typescript
+// src/routes/api/posts/+server.ts
+import { json } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
+
+export const GET: RequestHandler = async ({ url }) => {
+  const limit = Number(url.searchParams.get('limit') ?? 10);
+  const posts = await db.post.findMany({ take: limit });
+  return json(posts);
+};
+
+export const POST: RequestHandler = async ({ request }) => {
+  const body = await request.json();
+  const post = await db.post.create({ data: body });
+  return json(post, { status: 201 });
 };
 ```
 
-### Static Adapter
+### Step 5: Form Actions
 
-```javascript
-import adapter from '@sveltejs/adapter-static';
+Form actions are the SvelteKit-native way to handle mutations — no client-side fetch required:
 
-export default {
-  kit: {
-    adapter: adapter({
-      pages: 'build',
-      assets: 'build',
-      fallback: '404.html',
-    }),
-    prerender: {
-      entries: ['*'],
-    },
-  },
+```typescript
+// src/routes/contact/+page.server.ts
+import { fail, redirect } from '@sveltejs/kit';
+import type { Actions } from './$types';
+
+export const actions: Actions = {
+  default: async ({ request }) => {
+    const data = await request.formData();
+    const email = data.get('email');
+
+    if (!email) {
+      return fail(400, { email, missing: true });
+    }
+
+    await sendEmail(String(email));
+    redirect(303, '/thank-you');
+  }
 };
 ```
 
-## Page Options
+```svelte
+<!-- src/routes/contact/+page.svelte -->
+<script lang="ts">
+  import { enhance } from '$app/forms';
+  import type { ActionData } from './$types';
+  export let form: ActionData;
+</script>
+
+<form method="POST" use:enhance>
+  <input name="email" type="email" />
+  {#if form?.missing}<p class="error">Email is required</p>{/if}
+  <button type="submit">Subscribe</button>
+</form>
+```
+
+### Step 6: Layouts and Nested Routes
+
+```svelte
+<!-- src/routes/+layout.svelte -->
+<script lang="ts">
+  import type { LayoutData } from './$types';
+  export let data: LayoutData;
+</script>
+
+<nav>
+  <a href="/">Home</a>
+  <a href="/blog">Blog</a>
+  {#if data.user}
+    <a href="/dashboard">Dashboard</a>
+  {/if}
+</nav>
+
+<slot />  <!-- child page renders here -->
+```
 
 ```typescript
-// src/routes/+page.ts
-export const prerender = true;  // Static generation
-export const ssr = false;       // Client-only
-export const csr = true;        // Enable client JS
+// src/routes/+layout.server.ts
+import type { LayoutServerLoad } from './$types';
+
+export const load: LayoutServerLoad = async ({ locals }) => {
+  return { user: locals.user ?? null };
+};
+```
+
+### Step 7: Rendering Modes
+
+Control per-route rendering with page options:
+
+```typescript
+// src/routes/docs/+page.ts
+export const prerender = true;   // Static — generated at build time
+export const ssr = true;         // Default — rendered on server per request
+export const csr = false;        // Disable client-side hydration entirely
+```
+
+## Examples
+
+### Example 1: Protected Dashboard Route
+
+```typescript
+// src/routes/dashboard/+layout.server.ts
+import { redirect } from '@sveltejs/kit';
+import type { LayoutServerLoad } from './$types';
+
+export const load: LayoutServerLoad = async ({ locals }) => {
+  if (!locals.user) {
+    redirect(303, '/login');
+  }
+  return { user: locals.user };
+};
+```
+
+### Example 2: Hooks — Session Middleware
+
+```typescript
+// src/hooks.server.ts
+import type { Handle } from '@sveltejs/kit';
+import { verifyToken } from '$lib/server/auth';
+
+export const handle: Handle = async ({ event, resolve }) => {
+  const token = event.cookies.get('session');
+  if (token) {
+    event.locals.user = await verifyToken(token);
+  }
+  return resolve(event);
+};
+```
+
+### Example 3: Preloading and Invalidation
+
+```svelte
+<script lang="ts">
+  import { invalidateAll } from '$app/navigation';
+
+  async function refresh() {
+    await invalidateAll(); // re-runs all load functions on the page
+  }
+</script>
+
+<button on:click={refresh}>Refresh</button>
 ```
 
 ## Best Practices
 
-1. **Use form actions** - Progressive enhancement built-in
-2. **Leverage load functions** - Data loading before render
-3. **Use +server.ts for APIs** - Clean API separation
-4. **Type everything** - Use generated types
-5. **Choose right adapter** - Match deployment target
+- ✅ Use `+page.server.ts` for database/auth logic — it never ships to the client
+- ✅ Use `$lib/server/` for shared server-only modules (DB client, auth helpers)
+- ✅ Use form actions for mutations instead of client-side `fetch` — works without JS
+- ✅ Type all `load` return values with generated `$types` (`PageData`, `LayoutData`)
+- ✅ Use `event.locals` in hooks to pass server-side context to load functions
+- ❌ Don't import server-only code in `+page.svelte` or `+layout.svelte` directly
+- ❌ Don't store sensitive state in stores — use `locals` on the server
+- ❌ Don't skip `use:enhance` on forms — without it, forms lose progressive enhancement
 
-## Common Mistakes
+## Security & Safety Notes
 
-| Mistake | Fix |
-|---------|-----|
-| fetch in component | Move to load function |
-| Not using $props | Use $props for Svelte 5 |
-| Missing $types imports | Generate types with `npm run check` |
-| Wrong action method | Forms need method="POST" |
-| Forgetting await | await goto() and invalidate() |
+- All code in `+page.server.ts`, `+server.ts`, and `$lib/server/` runs exclusively on the server — safe for DB queries, secrets, and session validation.
+- Always validate and sanitize form data before database writes.
+- Use `error(403)` or `redirect(303)` from `@sveltejs/kit` rather than returning raw error objects.
+- Set `httpOnly: true` and `secure: true` on all auth cookies.
+- CSRF protection is built-in for form actions — do not disable `checkOrigin` in production.
 
-## Reference Files
+## Common Pitfalls
 
-- [references/routing.md](references/routing.md) - Advanced routing
-- [references/forms.md](references/forms.md) - Form patterns
-- [references/deployment.md](references/deployment.md) - Deployment guides
+- **Problem:** `Cannot use import statement in a module` in `+page.server.ts`
+  **Solution:** The file must be `.ts` or `.js`, not `.svelte`. Server files and Svelte components are separate.
+
+- **Problem:** Store value is `undefined` on first SSR render
+  **Solution:** Populate the store from the `load` function return value (`data` prop), not from client-side `onMount`.
+
+- **Problem:** Form action does not redirect after submit
+  **Solution:** Use `redirect(303, '/path')` from `@sveltejs/kit`, not a plain `return`. 303 is required for POST redirects.
+
+- **Problem:** `locals.user` is undefined inside a `+page.server.ts` load function
+  **Solution:** Set `event.locals.user` in `src/hooks.server.ts` before the `resolve()` call.
+
+## Related Skills
+
+- `@nextjs-app-router-patterns` — When you prefer React over Svelte for SSR/SSG
+- `@trpc-fullstack` — Add end-to-end type safety to SvelteKit API routes
+- `@auth-implementation-patterns` — Authentication patterns usable with SvelteKit hooks
+- `@tailwind-patterns` — Styling SvelteKit apps with Tailwind CSS
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

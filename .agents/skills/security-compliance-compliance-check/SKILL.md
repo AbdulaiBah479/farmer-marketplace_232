@@ -1,7 +1,9 @@
 ---
-version: 4.1.0-fractal
 name: security-compliance-compliance-check
-description: "You are a compliance expert specializing in regulatory requirements for software systems including GDPR, HIPAA, SOC2, PCI-DSS, and other industry standards. Perform compliance audits and provide implementation guidance."
+description: "You are a compliance expert specializing in regulatory requirements for software systems including GDPR, HIPAA, SOC2, PCI-DSS, and other industry standards. Perform comprehensive compliance audits and provide implementation guidance for achieving and maintaining compliance."
+risk: safe
+source: community
+date_added: "2026-02-27"
 ---
 
 # Regulatory Compliance Check
@@ -55,7 +57,7 @@ Focus on practical implementation that balances compliance requirements with bus
 
 - `resources/implementation-playbook.md` for detailed patterns and examples.
 
-
-## 🧠 Knowledge Modules (Fractal Skills)
-
-### 1. [implementation-playbook](./sub-skills/implementation-playbook.md)
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

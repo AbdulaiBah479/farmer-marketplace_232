@@ -1,50 +1,72 @@
 ---
 name: maui-app-lifecycle
-description: >
-  .NET MAUI app lifecycle guidance covering the four app states (not running,
-  running, deactivated, stopped), cross-platform Window lifecycle events,
-  backgrounding and resume behaviour, platform-specific lifecycle mapping
-  for Android and iOS/Mac Catalyst, and state-preservation patterns.
-  USE FOR: "app lifecycle", "OnStart", "OnSleep", "OnResume", "backgrounding",
-  "app state", "window lifecycle", "save state on background", "resume app",
-  "deactivated event", "lifecycle events".
+description: >-
+  .NET MAUI app lifecycle guidance — the four app states, cross-platform Window
+  lifecycle events (Created, Activated, Deactivated, Stopped, Resumed, Destroying),
+  platform-specific lifecycle mapping, backgrounding and resume behavior, and
+  state-preservation patterns.
+  USE FOR: "app lifecycle", "window lifecycle events", "save state on background",
+  "resume app", "OnStopped", "OnResumed", "backgrounding", "deactivated event",
+  "ConfigureLifecycleEvents", "platform lifecycle hooks".
   DO NOT USE FOR: navigation events (use maui-shell-navigation),
-  dependency injection setup (use maui-dependency-injection), or platform APIs (use maui-platform-invoke).
+  dependency injection setup (use maui-dependency-injection),
+  platform API invocation (use conditional compilation and partial classes).
+license: MIT
 ---
 
 # .NET MAUI App Lifecycle
 
-## App states
+Handle application state transitions correctly in .NET MAUI. This skill covers the cross-platform Window lifecycle events, their platform-native mappings, and patterns for preserving state across backgrounding and resume cycles.
 
-A MAUI app moves through four logical states:
+## When to Use
 
-| State | Meaning |
+- Saving or restoring state when the app backgrounds or resumes
+- Subscribing to Window lifecycle events (Created, Activated, Deactivated, Stopped, Resumed, Destroying)
+- Hooking into platform-native lifecycle callbacks via `ConfigureLifecycleEvents`
+- Deciding where to place initialization, teardown, or refresh logic
+- Understanding the difference between Deactivated and Stopped
+
+## When Not to Use
+
+- Page-level navigation events — use Shell navigation guidance instead
+- Registering services at startup — use dependency injection guidance instead
+- Calling platform-specific APIs outside lifecycle context — use platform invoke guidance instead
+
+## Inputs
+
+- The target lifecycle transition (e.g., "save draft when backgrounded", "refresh data on resume")
+- Which platforms the developer targets (Android, iOS, Mac Catalyst, Windows)
+- Whether the app uses multiple windows (iPad, Mac Catalyst, desktop Windows)
+
+## App States
+
+A .NET MAUI app moves through four states:
+
+| State | Description |
 |---|---|
-| **Not Running** | App process does not exist. |
-| **Running** | App is in the foreground and receiving input. |
-| **Deactivated** | App is visible but lost focus (e.g. a dialog or split-screen). |
-| **Stopped** | App is fully backgrounded; UI is not visible. |
+| **Not Running** | Process does not exist |
+| **Running** | Foreground, receiving input |
+| **Deactivated** | Visible but lost focus (dialog, split-screen, notification shade) |
+| **Stopped** | Fully backgrounded, UI not visible |
 
 Typical flow: Not Running → Running → Deactivated → Stopped → Running (resumed) or Not Running (terminated).
 
-## Cross-platform Window events
+## Window Lifecycle Events
 
-`Microsoft.Maui.Controls.Window` exposes six lifecycle events:
+`Microsoft.Maui.Controls.Window` exposes six cross-platform events:
 
-| Event | When it fires |
+| Event | Fires when |
 |---|---|
-| `Created` | Window has been created (native window allocated). |
-| `Activated` | Window has been activated and is receiving input. |
-| `Deactivated` | Window lost focus but may still be visible. |
-| `Stopped` | Window is no longer visible (backgrounded). |
-| `Resumed` | Window returns to the foreground after being stopped. |
-| `Destroying` | Window is being torn down (native window deallocated). |
+| `Created` | Native window allocated |
+| `Activated` | Window receives input focus |
+| `Deactivated` | Window loses focus (may still be visible) |
+| `Stopped` | Window is no longer visible |
+| `Resumed` | Window returns to foreground after Stopped |
+| `Destroying` | Native window is being torn down |
 
-> **Important:** `Resumed` never fires on the app's first launch. It only fires when returning from the `Stopped` state.
+### Subscribing via CreateWindow
 
-## Subscribing to Window events
-
-### Option A – Override `CreateWindow` in `App`
+Override `CreateWindow` in your `App` class and attach event handlers:
 
 ```csharp
 public partial class App : Application
@@ -53,29 +75,28 @@ public partial class App : Application
     {
         var window = base.CreateWindow(activationState);
 
-        window.Created += (s, e) => Log("Window Created");
-        window.Activated += (s, e) => Log("Window Activated");
-        window.Deactivated += (s, e) => Log("Window Deactivated");
-        window.Stopped += (s, e) => Log("Window Stopped");
-        window.Resumed += (s, e) => Log("Window Resumed");
-        window.Destroying += (s, e) => Log("Window Destroying");
+        window.Created += (s, e) => Debug.WriteLine("Created");
+        window.Activated += (s, e) => Debug.WriteLine("Activated");
+        window.Deactivated += (s, e) => Debug.WriteLine("Deactivated");
+        window.Stopped += (s, e) => Debug.WriteLine("Stopped");
+        window.Resumed += (s, e) => Debug.WriteLine("Resumed");
+        window.Destroying += (s, e) => Debug.WriteLine("Destroying");
 
         return window;
     }
 }
 ```
 
-### Option B – Custom Window subclass with overrides
+### Subscribing via a Custom Window Subclass
+
+Create a `Window` subclass and override the virtual methods:
 
 ```csharp
 public class AppWindow : Window
 {
-    public AppWindow() : base() { }
     public AppWindow(Page page) : base(page) { }
 
-    protected override void OnCreated() { /* init work */ }
     protected override void OnActivated() { /* refresh UI */ }
-    protected override void OnDeactivated() { /* pause timers */ }
     protected override void OnStopped() { /* save state */ }
     protected override void OnResumed() { /* restore state */ }
     protected override void OnDestroying() { /* cleanup */ }
@@ -86,16 +107,45 @@ Return it from `CreateWindow`:
 
 ```csharp
 protected override Window CreateWindow(IActivationState? activationState)
+    => new AppWindow(new AppShell());
+```
+
+## Workflow: Save and Restore State on Background
+
+1. **Identify transient state** — draft text, scroll position, form inputs, timer values.
+2. **Save in `OnStopped`** — use `Preferences` for small values or file serialization for larger state.
+3. **Restore in `OnResumed`** — read back saved values and apply to your view model.
+4. **Also save in `OnDestroying`** on Android — the back button can skip `Stopped` entirely.
+5. **Keep handlers fast** — complete within 1–2 seconds to avoid ANR on Android or watchdog kills on iOS.
+
+```csharp
+protected override void OnStopped()
 {
-    return new AppWindow(new AppShell());
+    base.OnStopped();
+    Preferences.Set("draft_text", _viewModel.DraftText);
+    Preferences.Set("scroll_y", _viewModel.ScrollY);
+}
+
+protected override void OnResumed()
+{
+    base.OnResumed();
+    _viewModel.DraftText = Preferences.Get("draft_text", string.Empty);
+    _viewModel.ScrollY = Preferences.Get("scroll_y", 0.0);
+}
+
+protected override void OnDestroying()
+{
+    base.OnDestroying();
+    // Android back-button can skip Stopped
+    Preferences.Set("draft_text", _viewModel.DraftText);
 }
 ```
 
-## Platform lifecycle event mapping
+## Platform Lifecycle Mapping
 
 ### Android
 
-| Window event | Android Activity callback |
+| Window Event | Android Callback |
 |---|---|
 | Created | `OnCreate` |
 | Activated | `OnResume` |
@@ -106,7 +156,7 @@ protected override Window CreateWindow(IActivationState? activationState)
 
 ### iOS / Mac Catalyst
 
-| Window event | UIKit callback |
+| Window Event | UIKit Callback |
 |---|---|
 | Created | `WillFinishLaunching` / `SceneWillConnect` |
 | Activated | `DidBecomeActive` |
@@ -117,7 +167,7 @@ protected override Window CreateWindow(IActivationState? activationState)
 
 ### Windows (WinUI)
 
-| Window event | WinUI callback |
+| Window Event | WinUI Callback |
 |---|---|
 | Created | `OnLaunched` |
 | Activated | `Activated` (foreground) |
@@ -126,65 +176,45 @@ protected override Window CreateWindow(IActivationState? activationState)
 | Resumed | `VisibilityChanged` (true) |
 | Destroying | `Closed` |
 
-## Platform-specific lifecycle events
+## Hooking Native Lifecycle Directly
 
-Use `ConfigureLifecycleEvents` in `MauiProgram.cs` to hook directly into native callbacks:
+Use `ConfigureLifecycleEvents` in `MauiProgram.cs` when you need platform-specific callbacks beyond what Window events provide:
 
 ```csharp
 builder.ConfigureLifecycleEvents(events =>
 {
 #if ANDROID
     events.AddAndroid(android => android
-        .OnCreate((activity, bundle) => Log("Android OnCreate"))
-        .OnStart(activity => Log("Android OnStart"))
-        .OnResume(activity => Log("Android OnResume"))
-        .OnPause(activity => Log("Android OnPause"))
-        .OnStop(activity => Log("Android OnStop"))
-        .OnDestroy(activity => Log("Android OnDestroy")));
+        .OnCreate((activity, bundle) => Debug.WriteLine("Android OnCreate"))
+        .OnResume(activity => Debug.WriteLine("Android OnResume"))
+        .OnPause(activity => Debug.WriteLine("Android OnPause"))
+        .OnStop(activity => Debug.WriteLine("Android OnStop"))
+        .OnDestroy(activity => Debug.WriteLine("Android OnDestroy")));
 #elif IOS || MACCATALYST
     events.AddiOS(ios => ios
-        .WillFinishLaunching((app, options) => { Log("iOS WillFinishLaunching"); return true; })
-        .SceneWillConnect((scene, session, options) => Log("iOS SceneWillConnect"))
-        .DidBecomeActive(app => Log("iOS DidBecomeActive"))
-        .WillResignActive(app => Log("iOS WillResignActive"))
-        .DidEnterBackground(app => Log("iOS DidEnterBackground"))
-        .WillTerminate(app => Log("iOS WillTerminate")));
+        .DidBecomeActive(app => Debug.WriteLine("iOS DidBecomeActive"))
+        .WillResignActive(app => Debug.WriteLine("iOS WillResignActive"))
+        .DidEnterBackground(app => Debug.WriteLine("iOS DidEnterBackground"))
+        .WillEnterForeground(app => Debug.WriteLine("iOS WillEnterForeground")));
 #elif WINDOWS
     events.AddWindows(windows => windows
-        .OnLaunched((app, args) => Log("Windows OnLaunched"))
-        .OnActivated((window, args) => Log("Windows Activated"))
-        .OnClosed((window, args) => Log("Windows Closed")));
+        .OnLaunched((app, args) => Debug.WriteLine("Windows OnLaunched"))
+        .OnActivated((window, args) => Debug.WriteLine("Windows Activated"))
+        .OnClosed((window, args) => Debug.WriteLine("Windows Closed")));
 #endif
 });
 ```
 
-## State preservation pattern
+## Common Pitfalls
 
-Save and restore transient state during backgrounding:
+1. **Resumed does not fire on first launch.** The initial sequence is `Created` → `Activated`. Use `OnActivated` for logic that must run on every foreground entry, not `OnResumed`.
 
-```csharp
-protected override void OnStopped()
-{
-    base.OnStopped();
-    Preferences.Set("draft_text", _viewModel.DraftText);
-    Preferences.Set("scroll_position", _viewModel.ScrollY);
-}
+2. **Deactivated ≠ Stopped.** A dialog, split-screen, or notification pull-down triggers `Deactivated` without `Stopped`. Do not perform heavy saves in `OnDeactivated` — the app may never actually background.
 
-protected override void OnResumed()
-{
-    base.OnResumed();
-    _viewModel.DraftText = Preferences.Get("draft_text", string.Empty);
-    _viewModel.ScrollY = Preferences.Get("scroll_position", 0.0);
-}
-```
+3. **Android back button skips Stopped.** On Android, pressing back may call `Destroying` directly without `Stopped`. Place critical save logic in both `OnStopped` and `OnDestroying`.
 
-For larger state, use `SecureStorage` or file-based serialization instead of `Preferences`.
+4. **Multi-window apps fire events independently.** On iPad, Mac Catalyst, and desktop Windows each `Window` instance fires its own lifecycle events. Do not assume a single global lifecycle.
 
-## Key behavioural notes
+5. **Long-running handlers cause kills.** Android enforces a ~5 second ANR timeout; iOS has limited background execution time. Keep lifecycle handlers synchronous and fast — use `Preferences` for quick saves, not database writes.
 
-- **Resumed ≠ first launch.** `Resumed` only fires when returning from `Stopped`. On first launch the sequence is `Created` → `Activated`.
-- **Deactivated ≠ Stopped.** A dialog or split-screen triggers `Deactivated` without `Stopped`.
-- **Android back button** may call `Destroying` without `Stopped` if the activity finishes.
-- **iOS scene lifecycle** is used on iOS 13+; older delegate methods are still forwarded.
-- **Multiple windows** (iPad, Mac Catalyst, desktop Windows): each `Window` instance fires its own events independently.
-- Keep lifecycle handlers fast. Long-running work should use `Task.Run` or background services to avoid ANR/watchdog kills.
+6. **Do not use legacy Xamarin.Forms lifecycle methods.** `Application.OnStart()`, `Application.OnSleep()`, and `Application.OnResume()` exist for backward compatibility but bypass Window-level events. In .NET MAUI, prefer `Window` lifecycle events (`OnActivated`, `OnStopped`, `OnResumed`, etc.) for correct multi-window behavior.

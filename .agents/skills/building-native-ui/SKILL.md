@@ -1,28 +1,40 @@
 ---
 name: building-native-ui
 description: Complete guide for building beautiful apps with Expo Router. Covers fundamentals, styling, components, navigation, animations, patterns, and native tabs.
-version: 1.0.0
+risk: unknown
+source: community
+version: 1.0.1
 license: MIT
 ---
 
 # Expo UI Guidelines
 
+## When to Use
+- You are building a native-feeling Expo Router application and need guidance on navigation, controls, effects, or platform-specific UI.
+- You need to decide whether Expo Go is sufficient or a custom native build is actually required.
+- The task involves modern Expo UI patterns across animations, tabs, headers, storage, media, or visual effects.
+
 ## References
 
 Consult these resources as needed:
 
-- ./references/route-structure.md -- Route file conventions, dynamic routes, query parameters, groups, and folder organization
-- ./references/tabs.md -- Native tab bar with NativeTabs, migration from JS tabs, iOS 26 features
-- ./references/icons.md -- SF Symbols with expo-symbols, common icon names, animations, and weights
-- ./references/controls.md -- Native iOS controls: Switch, Slider, SegmentedControl, DateTimePicker, Picker
-- ./references/visual-effects.md -- Blur effects with expo-blur and liquid glass with expo-glass-effect
-- ./references/animations.md -- Reanimated animations: entering, exiting, layout, scroll-driven, and gestures
-- ./references/search.md -- Search bar integration with headers, useSearch hook, and filtering patterns
-- ./references/gradients.md -- CSS gradients using experimental_backgroundImage (New Architecture only)
-- ./references/media.md -- Media handling for Expo Router including camera, audio, video, and file saving
-- ./references/storage.md -- Data storage patterns including SQLite, AsyncStorage, and SecureStore
-- ./references/webgpu-three.md -- 3D graphics, games, and GPU-powered visualizations with WebGPU and Three.js
-- ./references/toolbars-and-headers.md -- Customizing stack headers and toolbar with buttons, menus, and search bars in expo-router app. Available only on iOS.
+```
+references/
+  animations.md          Reanimated: entering, exiting, layout, scroll-driven, gestures
+  controls.md            Native iOS: Switch, Slider, SegmentedControl, DateTimePicker, Picker
+  form-sheet.md          Form sheets in expo-router: configuration, footers and background interaction. 
+  gradients.md           CSS gradients via experimental_backgroundImage (New Arch only)
+  icons.md               SF Symbols via expo-image (sf: source), names, animations, weights
+  media.md               Camera, audio, video, and file saving
+  route-structure.md     Route conventions, dynamic routes, groups, folder organization
+  search.md              Search bar with headers, useSearch hook, filtering patterns
+  storage.md             SQLite, AsyncStorage, SecureStore
+  tabs.md                NativeTabs, migration from JS tabs, iOS 26 features
+  toolbar-and-headers.md Stack headers and toolbar buttons, menus, search (iOS only)
+  visual-effects.md      Blur (expo-blur) and liquid glass (expo-glass-effect)
+  webgpu-three.md        3D graphics, games, GPU visualizations with WebGPU and Three.js
+  zoom-transitions.md    Apple Zoom: fluid zoom transitions with Link.AppleZoom (iOS 18+)
+```
 
 ## Running the App
 
@@ -77,7 +89,7 @@ See `./references/route-structure.md` for detailed route conventions.
 - Never use legacy expo-permissions
 - `expo-audio` not `expo-av`
 - `expo-video` not `expo-av`
-- `expo-symbols` not `@expo/vector-icons`
+- `expo-image` with `source="sf:name"` for SF Symbols, not `expo-symbols` or `@expo/vector-icons`
 - `react-native-safe-area-context` not react-native SafeAreaView
 - `process.env.EXPO_OS` not `Platform.OS`
 - `React.use` not `React.useContext`
@@ -97,6 +109,7 @@ See `./references/route-structure.md` for detailed route conventions.
 - Use expo-haptics conditionally on iOS to make more delightful experiences
 - Use views with built-in haptics like `<Switch />` from React Native and `@react-native-community/datetimepicker`
 - When a route belongs to a Stack, its first child should almost always be a ScrollView with `contentInsetAdjustmentBehavior="automatic"` set
+- When adding a `ScrollView` to the page it should almost always be the first component inside the route component
 - Prefer `headerSearchBarOptions` in Stack.Screen options to add a search bar
 - Use the `<Text selectable />` prop on text containing data that could be copied
 - Consider formatting large numbers like 1.4M or 38k
@@ -313,3 +326,8 @@ export default function Layout({ segment }) {
   );
 }
 ```
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

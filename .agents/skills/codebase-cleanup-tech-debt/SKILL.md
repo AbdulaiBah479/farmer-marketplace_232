@@ -1,11 +1,24 @@
 ---
 name: codebase-cleanup-tech-debt
 description: "You are a technical debt expert specializing in identifying, quantifying, and prioritizing technical debt in software projects. Analyze the codebase to uncover debt, assess its impact, and create acti"
+risk: unknown
+source: community
+date_added: "2026-02-27"
 ---
 
 # Technical Debt Analysis and Remediation
 
 You are a technical debt expert specializing in identifying, quantifying, and prioritizing technical debt in software projects. Analyze the codebase to uncover debt, assess its impact, and create actionable remediation plans.
+
+## Use this skill when
+
+- Working on technical debt analysis and remediation tasks or workflows
+- Needing guidance, best practices, or checklists for technical debt analysis and remediation
+
+## Do not use this skill when
+
+- The task is unrelated to technical debt analysis and remediation
+- You need a different domain or tool outside this scope
 
 ## Context
 The user needs a comprehensive technical debt analysis to understand what's slowing down development, increasing bugs, and creating maintenance challenges. Focus on practical, measurable improvements with clear ROI.
@@ -374,3 +387,8 @@ Track progress with clear KPIs:
 7. **ROI Projections**: Expected returns on debt reduction investment
 
 Focus on delivering measurable improvements that directly impact development velocity, system reliability, and team morale.
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

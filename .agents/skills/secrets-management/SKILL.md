@@ -1,217 +1,372 @@
 ---
-id: SKL-secrets-SECRETSMANAGEMENT
-name: Secrets Management
-description: '* **Depends on**: security * **Compatible with**: None * **Conflicts
-  with**: None * **Related Skills**: authn, authz # Secrets Management'
-version: 1.0.0
-status: active
-owner: '@cerebra-team'
-last_updated: '2026-02-22'
-category: Backend
-tags:
-- api
-- backend
-- server
-- database
-stack:
-- Python
-- Node.js
-- REST API
-- GraphQL
-difficulty: Intermediate
+name: secrets-management
+description: "Secure secrets management practices for CI/CD pipelines using Vault, AWS Secrets Manager, and other tools."
+risk: unknown
+source: community
+date_added: "2026-02-27"
 ---
 
 # Secrets Management
 
-## Skill Profile
-*(Select at least one profile to enable specific modules)*
-- [ ] **DevOps**
-- [x] **Backend**
-- [ ] **Frontend**
-- [ ] **AI-RAG**
-- [ ] **Security Critical**
+Secure secrets management practices for CI/CD pipelines using Vault, AWS Secrets Manager, and other tools.
 
-## Overview
-This skill provides comprehensive guidance and best practices for implementation. It enables teams to achieve reliable, maintainable, and scalable solutions.
+## Purpose
 
-### When to use / When NOT to use
-* ✅ **Use when**: Implementing this capability in your project
-* ✅ **Use when**: Need to follow established patterns and conventions
-* ❌ **Avoid when**: The requirements don't match this skill's scope
-* ❌ **Avoid when**: Simpler alternatives would suffice
+Implement secure secrets management in CI/CD pipelines without hardcoding sensitive information.
 
+## Use this skill when
 
-## Why This Matters
-Secrets management is the practice of securely storing, accessing, and managing sensitive information such as API keys, passwords, certificates, and encryption keys. Proper secrets management prevents credential leakage, enables rotation and auditing, and ensures compliance with security standards.
+- Store API keys and credentials
+- Manage database passwords
+- Handle TLS certificates
+- Rotate secrets automatically
+- Implement least-privilege access
 
-## Core Concepts & Rules
+## Do not use this skill when
 
-### 1. Core Principles
-- Follow established patterns and conventions
-- Maintain consistency across codebase
-- Document decisions and trade-offs
+- You plan to hardcode secrets in source control
+- You cannot secure access to the secrets backend
+- You only need local development values without sharing
 
-### 2. Implementation Guidelines
-- Start with the simplest viable solution
-- Iterate based on feedback and requirements
-- Test thoroughly before deployment
+## Instructions
 
+1. Identify secret types, owners, and rotation requirements.
+2. Choose a secrets backend and access model.
+3. Integrate CI/CD or runtime retrieval with least privilege.
+4. Validate rotation and audit logging.
 
-## Inputs / Outputs / Contracts
-**Inputs:**
-- Secret names/identifiers
-- Secret values (for storage)
-- Access policies and permissions
-- Rotation schedules
-- Encryption keys
+## Safety
 
-**Outputs:**
-- Retrieved secret values
-- Secret metadata (version, creation time, last accessed)
-- Audit logs
-- Rotation status
-- Access control results
+- Never commit secrets to source control.
+- Limit access and log secret usage for auditing.
 
-**Contracts:**
-- All secrets encrypted at rest and in transit
-- All access logged with user, timestamp, and context
-- Secrets never exposed in logs or error messages
-- Minimum privilege access enforced
-- Automatic rotation supported
+## Secrets Management Tools
 
-## Skill Composition
-* **Depends on**: security
-* **Compatible with**: None
-* **Conflicts with**: None
-* **Related Skills**: authn, authz
+### HashiCorp Vault
+- Centralized secrets management
+- Dynamic secrets generation
+- Secret rotation
+- Audit logging
+- Fine-grained access control
 
-# Secrets Management
+### AWS Secrets Manager
+- AWS-native solution
+- Automatic rotation
+- Integration with RDS
+- CloudFormation support
 
-## Quick Start / Implementation Example
+### Azure Key Vault
+- Azure-native solution
+- HSM-backed keys
+- Certificate management
+- RBAC integration
 
-1. Review requirements and constraints
-2. Set up development environment
-3. Implement core functionality following patterns
-4. Write tests for critical paths
-5. Run tests and fix issues
-6. Document any deviations or decisions
+### Google Secret Manager
+- GCP-native solution
+- Versioning
+- IAM integration
 
-```python
-# Example implementation following best practices
-def example_function():
-    # Your implementation here
-    pass
+## HashiCorp Vault Integration
+
+### Setup Vault
+
+```bash
+# Start Vault dev server
+vault server -dev
+
+# Set environment
+export VAULT_ADDR='http://127.0.0.1:8200'
+export VAULT_TOKEN='root'
+
+# Enable secrets engine
+vault secrets enable -path=secret kv-v2
+
+# Store secret
+vault kv put secret/database/config username=admin password=secret
 ```
 
+### GitHub Actions with Vault
 
-## Assumptions / Constraints / Non-goals
+```yaml
+name: Deploy with Vault Secrets
 
-* **Assumptions**:
-  - Development environment is properly configured
-  - Required dependencies are available
-  - Team has basic understanding of domain
-* **Constraints**:
-  - Must follow existing codebase conventions
-  - Time and resource limitations
-  - Compatibility requirements
-* **Non-goals**:
-  - This skill does not cover edge cases outside scope
-  - Not a replacement for formal training
+on: [push]
 
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
 
-## Compatibility & Prerequisites
+    - name: Import Secrets from Vault
+      uses: hashicorp/vault-action@v2
+      with:
+        url: https://vault.example.com:8200
+        token: ${{ secrets.VAULT_TOKEN }}
+        secrets: |
+          secret/data/database username | DB_USERNAME ;
+          secret/data/database password | DB_PASSWORD ;
+          secret/data/api key | API_KEY
 
-* **Supported Versions**:
-  - Python 3.8+
-  - Node.js 16+
-  - Modern browsers (Chrome, Firefox, Safari, Edge)
-* **Required AI Tools**:
-  - Code editor (VS Code recommended)
-  - Testing framework appropriate for language
-  - Version control (Git)
-* **Dependencies**:
-  - Language-specific package manager
-  - Build tools
-  - Testing libraries
-* **Environment Setup**:
-  - `.env.example` keys: `API_KEY`, `DATABASE_URL` (no values)
+    - name: Use secrets
+      run: |
+        echo "Connecting to database as $DB_USERNAME"
+        # Use $DB_PASSWORD, $API_KEY
+```
 
+### GitLab CI with Vault
 
-## Test Scenario Matrix (QA Strategy)
+```yaml
+deploy:
+  image: vault:latest
+  before_script:
+    - export VAULT_ADDR=https://vault.example.com:8200
+    - export VAULT_TOKEN=$VAULT_TOKEN
+    - apk add curl jq
+  script:
+    - |
+      DB_PASSWORD=$(vault kv get -field=password secret/database/config)
+      API_KEY=$(vault kv get -field=key secret/api/credentials)
+      echo "Deploying with secrets..."
+      # Use $DB_PASSWORD, $API_KEY
+```
 
-| Type | Focus Area | Required Scenarios / Mocks |
-| :--- | :--- | :--- |
-| **Unit** | Core Logic | Must cover primary logic and at least 3 edge/error cases. Target minimum 80% coverage |
-| **Integration** | DB / API | All external API calls or database connections must be mocked during unit tests |
-| **E2E** | User Journey | Critical user flows to test |
-| **Performance** | Latency / Load | Benchmark requirements |
-| **Security** | Vuln / Auth | SAST/DAST or dependency audit |
-| **Frontend** | UX / A11y | Accessibility checklist (WCAG), Performance Budget (Lighthouse score) |
+**Reference:** See `references/vault-setup.md`
 
+## AWS Secrets Manager
 
-## Technical Guardrails & Security Threat Model
+### Store Secret
 
-### 1. Security & Privacy (Threat Model)
-* **Top Threats**: Injection attacks, authentication bypass, data exposure
-- [ ] **Data Handling**: Sanitize all user inputs to prevent Injection attacks. Never log raw PII
-- [ ] **Secrets Management**: No hardcoded API keys. Use Env Vars/Secrets Manager
-- [ ] **Authorization**: Validate user permissions before state changes
+```bash
+aws secretsmanager create-secret \
+  --name production/database/password \
+  --secret-string "super-secret-password"
+```
 
-### 2. Performance & Resources
-- [ ] **Execution Efficiency**: Consider time complexity for algorithms
-- [ ] **Memory Management**: Use streams/pagination for large data
-- [ ] **Resource Cleanup**: Close DB connections/file handlers in finally blocks
+### Retrieve in GitHub Actions
 
-### 3. Architecture & Scalability
-- [ ] **Design Pattern**: Follow SOLID principles, use Dependency Injection
-- [ ] **Modularity**: Decouple logic from UI/Frameworks
+```yaml
+- name: Configure AWS credentials
+  uses: aws-actions/configure-aws-credentials@v4
+  with:
+    aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    aws-region: us-west-2
 
-### 4. Observability & Reliability
-- [ ] **Logging Standards**: Structured JSON, include trace IDs `request_id`
-- [ ] **Metrics**: Track `error_rate`, `latency`, `queue_depth`
-- [ ] **Error Handling**: Standardized error codes, no bare except
-- [ ] **Observability Artifacts**:
-    - **Log Fields**: timestamp, level, message, request_id
-    - **Metrics**: request_count, error_count, response_time
-    - **Dashboards/Alerts**: High Error Rate > 5%
+- name: Get secret from AWS
+  run: |
+    SECRET=$(aws secretsmanager get-secret-value \
+      --secret-id production/database/password \
+      --query SecretString \
+      --output text)
+    echo "::add-mask::$SECRET"
+    echo "DB_PASSWORD=$SECRET" >> $GITHUB_ENV
 
+- name: Use secret
+  run: |
+    # Use $DB_PASSWORD
+    ./deploy.sh
+```
 
-## Agent Directives & Error Recovery
-*(ข้อกำหนดสำหรับ AI Agent ในการคิดและแก้ปัญหาเมื่อเกิดข้อผิดพลาด)*
+### Terraform with AWS Secrets Manager
 
-- **Thinking Process**: Analyze root cause before fixing. Do not brute-force.
-- **Fallback Strategy**: Stop after 3 failed test attempts. Output root cause and ask for human intervention/clarification.
-- **Self-Review**: Check against Guardrails & Anti-patterns before finalizing.
-- **Output Constraints**: Output ONLY the modified code block. Do not explain unless asked.
+```hcl
+data "aws_secretsmanager_secret_version" "db_password" {
+  secret_id = "production/database/password"
+}
 
+resource "aws_db_instance" "main" {
+  allocated_storage    = 100
+  engine              = "postgres"
+  instance_class      = "db.t3.large"
+  username            = "admin"
+  password            = jsondecode(data.aws_secretsmanager_secret_version.db_password.secret_string)["password"]
+}
+```
 
-## Definition of Done (DoD) Checklist
+## GitHub Secrets
 
-- [ ] Tests passed + coverage met
-- [ ] Lint/Typecheck passed
-- [ ] Logging/Metrics/Trace implemented
-- [ ] Security checks passed
-- [ ] Documentation/Changelog updated
-- [ ] Accessibility/Performance requirements met (if frontend)
+### Organization/Repository Secrets
 
+```yaml
+- name: Use GitHub secret
+  run: |
+    echo "API Key: ${{ secrets.API_KEY }}"
+    echo "Database URL: ${{ secrets.DATABASE_URL }}"
+```
 
-## Anti-patterns / Pitfalls
+### Environment Secrets
 
-* ⛔ **Don't**: Log PII, catch-all exception, N+1 queries
-* ⚠️ **Watch out for**: Common symptoms and quick fixes
-* 💡 **Instead**: Use proper error handling, pagination, and logging
+```yaml
+deploy:
+  runs-on: ubuntu-latest
+  environment: production
+  steps:
+  - name: Deploy
+    run: |
+      echo "Deploying with ${{ secrets.PROD_API_KEY }}"
+```
 
+**Reference:** See `references/github-secrets.md`
 
-## Reference Links & Examples
+## GitLab CI/CD Variables
 
-* Internal documentation and examples
-* Official documentation and best practices
-* Community resources and discussions
+### Project Variables
 
+```yaml
+deploy:
+  script:
+    - echo "Deploying with $API_KEY"
+    - echo "Database: $DATABASE_URL"
+```
 
-## Versioning & Changelog
+### Protected and Masked Variables
+- Protected: Only available in protected branches
+- Masked: Hidden in job logs
+- File type: Stored as file
 
-* **Version**: 1.0.0
-* **Changelog**:
-  - 2026-02-22: Initial version with complete template structure
+## Best Practices
 
+1. **Never commit secrets** to Git
+2. **Use different secrets** per environment
+3. **Rotate secrets regularly**
+4. **Implement least-privilege access**
+5. **Enable audit logging**
+6. **Use secret scanning** (GitGuardian, TruffleHog)
+7. **Mask secrets in logs**
+8. **Encrypt secrets at rest**
+9. **Use short-lived tokens** when possible
+10. **Document secret requirements**
+
+## Secret Rotation
+
+### Automated Rotation with AWS
+
+```python
+import boto3
+import json
+
+def lambda_handler(event, context):
+    client = boto3.client('secretsmanager')
+
+    # Get current secret
+    response = client.get_secret_value(SecretId='my-secret')
+    current_secret = json.loads(response['SecretString'])
+
+    # Generate new password
+    new_password = generate_strong_password()
+
+    # Update database password
+    update_database_password(new_password)
+
+    # Update secret
+    client.put_secret_value(
+        SecretId='my-secret',
+        SecretString=json.dumps({
+            'username': current_secret['username'],
+            'password': new_password
+        })
+    )
+
+    return {'statusCode': 200}
+```
+
+### Manual Rotation Process
+
+1. Generate new secret
+2. Update secret in secret store
+3. Update applications to use new secret
+4. Verify functionality
+5. Revoke old secret
+
+## External Secrets Operator
+
+### Kubernetes Integration
+
+```yaml
+apiVersion: external-secrets.io/v1beta1
+kind: SecretStore
+metadata:
+  name: vault-backend
+  namespace: production
+spec:
+  provider:
+    vault:
+      server: "https://vault.example.com:8200"
+      path: "secret"
+      version: "v2"
+      auth:
+        kubernetes:
+          mountPath: "kubernetes"
+          role: "production"
+
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: database-credentials
+  namespace: production
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault-backend
+    kind: SecretStore
+  target:
+    name: database-credentials
+    creationPolicy: Owner
+  data:
+  - secretKey: username
+    remoteRef:
+      key: database/config
+      property: username
+  - secretKey: password
+    remoteRef:
+      key: database/config
+      property: password
+```
+
+## Secret Scanning
+
+### Pre-commit Hook
+
+```bash
+#!/bin/bash
+# .git/hooks/pre-commit
+
+# Check for secrets with TruffleHog
+docker run --rm -v "$(pwd):/repo" \
+  trufflesecurity/trufflehog:latest \
+  filesystem --directory=/repo
+
+if [ $? -ne 0 ]; then
+  echo "❌ Secret detected! Commit blocked."
+  exit 1
+fi
+```
+
+### CI/CD Secret Scanning
+
+```yaml
+secret-scan:
+  stage: security
+  image: trufflesecurity/trufflehog:latest
+  script:
+    - trufflehog filesystem .
+  allow_failure: false
+```
+
+## Reference Files
+
+- `references/vault-setup.md` - HashiCorp Vault configuration
+- `references/github-secrets.md` - GitHub Secrets best practices
+
+## Related Skills
+
+- `github-actions-templates` - For GitHub Actions integration
+- `gitlab-ci-patterns` - For GitLab CI integration
+- `deployment-pipeline-design` - For pipeline architecture
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

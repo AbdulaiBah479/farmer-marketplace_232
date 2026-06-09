@@ -1,216 +1,419 @@
 ---
 name: instagram
-description: Instagram Graph API integration via curl. Use this skill to fetch and publish Instagram media.
-vm0_secrets:
-  - INSTAGRAM_ACCESS_TOKEN
-vm0_vars:
-  - INSTAGRAM_BUSINESS_ACCOUNT_ID
+description: Integracao completa com Instagram via Graph API. Publicacao, analytics, comentarios, DMs, hashtags, agendamento, templates e gestao de contas Business/Creator.
+risk: critical
+source: community
+date_added: '2026-03-06'
+author: renat
+tags:
+- social-media
+- instagram
+- graph-api
+- content
+tools:
+- claude-code
+- antigravity
+- cursor
+- gemini-cli
+- codex-cli
 ---
 
-# Instagram API (Graph API)
+# Skill: Instagram Integration
 
-Use the Instagram Graph API by directly executing `curl` commands to **read and publish Instagram content**.
+## Overview
 
-> Official docs: `https://developers.facebook.com/docs/instagram-api`
+Integracao completa com Instagram via Graph API. Publicacao, analytics, comentarios, DMs, hashtags, agendamento, templates e gestao de contas Business/Creator.
 
----
+## When to Use This Skill
 
-## When to Use
+- When the user mentions "instagram" or related topics
+- When the user mentions "ig" or related topics
+- When the user mentions "post instagram" or related topics
+- When the user mentions "publicar instagram" or related topics
+- When the user mentions "reels instagram" or related topics
+- When the user mentions "stories instagram" or related topics
 
-Use this skill when you need to:
+## Do Not Use This Skill When
 
-- **Fetch recent media (photos / videos / Reels)** from an account
-- **Get detailed information** about a specific media item (caption, type, link, time, etc.)
-- **Search recent media by hashtag**
-- **Publish image posts via API** (with caption)
+- The task is unrelated to instagram
+- A simpler, more specific tool can handle the request
+- The user needs general-purpose assistance without domain expertise
 
----
+## How It Works
 
-## Prerequisites
+Controle completo da conta Instagram via Graph API. Publicação, comunidade, analytics,
+DMs, hashtags, templates e dashboard — tudo gerido com governança (rate limits, audit log,
+confirmações antes de ações públicas).
 
-1. You must have an **Instagram Business / Creator account** linked to a **Facebook Page**
-2. Create an app in Facebook Developers and enable **Instagram Basic Display / Instagram Graph API** permissions
-3. Obtain:
-  - `INSTAGRAM_ACCESS_TOKEN`: a long-lived user access token
-  - `INSTAGRAM_BUSINESS_ACCOUNT_ID`: your Instagram Business account ID
+## Resumo Rápido
 
-Set the environment variables, for example:
+| Área | Scripts | O que faz |
+|------|---------|-----------|
+| **Setup** | `account_setup.py`, `auth.py` | Configurar conta, OAuth, token |
+| **Publicação** | `publish.py`, `schedule.py` | Publicar foto/vídeo/reel/story/carrossel, agendar |
+| **Comunidade** | `comments.py`, `messages.py` | Comentários, DMs, menções |
+| **Analytics** | `insights.py`, `analyze.py` | Métricas, melhores horários, top posts |
+| **Hashtags** | `hashtags.py` | Pesquisa e tracking |
+| **Inteligência** | `templates.py`, `analyze.py` | Templates de conteúdo, tendências |
+| **Infra** | `export.py`, `serve_api.py`, `run_all.py` | Exportar, dashboard, sync |
+| **Leitura** | `profile.py`, `media.py` | Perfil, listar mídia |
+
+## Localização
+
+```
+C:\Users\renat\skills\instagram\
+├── SKILL.md
+├── scripts/
+│   ├── requirements.txt
+│   │  # ── CORE ──
+│   ├── config.py                     # Paths, constantes, specs de mídia
+│   ├── db.py                         # SQLite: accounts, posts, comments, insights
+│   ├── auth.py                       # OAuth 2.0, token storage/refresh
+│   ├── api_client.py                 # Instagram Graph API wrapper + retry
+│   ├── governance.py                 # Rate limits, audit log, confirmações
+│   │  # ── FEATURES ──
+│   ├── account_setup.py              # Detecção conta, migração, verificação
+│   ├── publish.py                    # Publicar + upload local via Imgur
+│   ├── schedule.py                   # Orquestrador: approved → published
+│   ├── comments.py                   # Ler/responder/deletar comentários
+│   ├── messages.py                   # DMs (enviar/receber/listar)
+│   ├── insights.py                   # Fetch + store métricas
+│   ├── hashtags.py                   # Pesquisa + tracking
+│   ├── profile.py                    # Ver/atualizar perfil
+│   ├── media.py                      # Listar mídia, detalhes
+│   │  # ── INTELIGÊNCIA ──
+│   ├── templates.py                  # Templates de caption/hashtags
+│   ├── analyze.py                    # Melhores horários, top posts
+│   │  # ── INFRA ──
+│   ├── export.py                     # Exportar JSON/CSV/JSONL
+│   ├── serve_api.py                  # FastAPI + dashboard
+│   └── run_all.py                    # Sync completo
+├── references/
+│   ├── graph_api.md                  # Endpoints e parâmetros
+│   ├── permissions.md                # Scopes OAuth por feature
+│   ├── rate_limits.md                # Limites 2025
+│   ├── account_types.md              # Business vs Creator
+│   ├── publishing_guide.md           # Specs de mídia
+│   ├── setup_walkthrough.md          # Guia Meta App
+│   └── schema.md                     # ER diagram
+├── static/
+│   └── dashboard.html                # Dashboard Chart.js
+└── data/
+    
+
+## Instalação (Uma Vez)
 
 ```bash
-export INSTAGRAM_ACCESS_TOKEN="EAAG..."
-export INSTAGRAM_BUSINESS_ACCOUNT_ID="1784140xxxxxxx"
+pip install -r C:\Users\renat\skills\instagram\scripts\requirements.txt
 ```
 
-These examples use Graph API version `v21.0`. You can replace this with the latest version if needed.
-
-### Required permissions (scopes)
-
-Depending on which endpoints you use, make sure your app has requested and been approved for (at least):
-
-- `instagram_basic`
-- `pages_show_list`
-- `instagram_content_publish` (for publishing media)
-- `instagram_manage_insights` and related permissions (for insights / some hashtag use cases)
-
----
-
-
-> **Important:** When using `$VAR` in a command that pipes to another command, wrap the command containing `$VAR` in `bash -c '...'`. Due to a Claude Code bug, environment variables are silently cleared when pipes are used directly.
-> ```bash
-> bash -c 'curl -s "https://api.example.com" -H "Authorization: Bearer $API_KEY"' | jq '.'
-> ```
-
-## How to Use
-
-All examples below assume you have already set:
+## Configuração Inicial
 
 ```bash
-INSTAGRAM_ACCESS_TOKEN
-INSTAGRAM_BUSINESS_ACCOUNT_ID
+
+## 1. Verificar Tipo De Conta Instagram
+
+python C:\Users\renat\skills\instagram\scripts\account_setup.py --check
+
+## 2. Configurar Oauth (Abre Browser Para Autorização)
+
+python C:\Users\renat\skills\instagram\scripts\auth.py --setup
+
+## 3. Verificar Se Está Tudo Funcionando
+
+python C:\Users\renat\skills\instagram\scripts\profile.py --view
 ```
 
-### 1. Fetch recent media for the account
+Se a conta for pessoal, o script `account_setup.py --guide` dá instruções de migração
+para Business ou Creator.
 
-Fetch the most recent media (photos / videos / Reels) for the account:
+## Foto (Aceita Arquivo Local — Faz Upload Automático Via Imgur)
+
+python C:\Users\renat\skills\instagram\scripts\publish.py --type photo --image caminho/foto.jpg --caption "Texto do post"
+
+## Vídeo
+
+python C:\Users\renat\skills\instagram\scripts\publish.py --type video --video caminho/video.mp4 --caption "Meu vídeo"
+
+## Reel
+
+python C:\Users\renat\skills\instagram\scripts\publish.py --type reel --video caminho/reel.mp4 --caption "Novo reel!"
+
+## Story
+
+python C:\Users\renat\skills\instagram\scripts\publish.py --type story --image caminho/story.jpg
+
+## Carrossel (2-10 Imagens)
+
+python C:\Users\renat\skills\instagram\scripts\publish.py --type carousel --images img1.jpg img2.jpg img3.jpg --caption "Carrossel"
+
+## Criar Como Rascunho (Não Publica Imediatamente)
+
+python C:\Users\renat\skills\instagram\scripts\publish.py --type photo --image foto.jpg --caption "Texto" --draft
+
+## Aprovar Rascunho Para Publicação
+
+python C:\Users\renat\skills\instagram\scripts\publish.py --approve --id 5
+```
+
+## Agendar Publicação Futura
+
+python C:\Users\renat\skills\instagram\scripts\schedule.py --type photo --image foto.jpg --caption "Post agendado" --at "2026-03-01T10:00"
+
+## Listar Posts Agendados
+
+python C:\Users\renat\skills\instagram\scripts\schedule.py --list
+
+## Processar Posts Prontos Para Publicar
+
+python C:\Users\renat\skills\instagram\scripts\schedule.py --process
+
+## Cancelar Agendamento
+
+python C:\Users\renat\skills\instagram\scripts\schedule.py --cancel --id 5
+```
+
+## Listar Comentários De Um Post
+
+python C:\Users\renat\skills\instagram\scripts\comments.py --list --media-id 12345
+
+## Responder A Um Comentário
+
+python C:\Users\renat\skills\instagram\scripts\comments.py --reply --comment-id 67890 --text "Obrigado!"
+
+## Deletar Comentário
+
+python C:\Users\renat\skills\instagram\scripts\comments.py --delete --comment-id 67890
+
+## Ver Menções
+
+python C:\Users\renat\skills\instagram\scripts\comments.py --mentions
+
+## Comentários Não Respondidos
+
+python C:\Users\renat\skills\instagram\scripts\comments.py --unreplied
+```
+
+## Enviar Dm
+
+python C:\Users\renat\skills\instagram\scripts\messages.py --send --user-id 12345 --text "Olá!"
+
+## Listar Conversas
+
+python C:\Users\renat\skills\instagram\scripts\messages.py --conversations
+
+## Ver Mensagens De Uma Conversa
+
+python C:\Users\renat\skills\instagram\scripts\messages.py --thread --conversation-id 12345
+```
+
+## Métricas De Um Post Específico
+
+python C:\Users\renat\skills\instagram\scripts\insights.py --media --media-id 12345
+
+## Métricas Da Conta (Últimos 7 Dias)
+
+python C:\Users\renat\skills\instagram\scripts\insights.py --user --period day --since 7
+
+## Buscar E Salvar Insights De Todos Os Posts Recentes
+
+python C:\Users\renat\skills\instagram\scripts\insights.py --fetch-all --limit 20
+```
+
+## Melhores Horários Para Postar (Baseado Nos Seus Dados)
+
+python C:\Users\renat\skills\instagram\scripts\analyze.py --best-times
+
+## Top Posts Por Engajamento
+
+python C:\Users\renat\skills\instagram\scripts\analyze.py --top-posts --limit 10
+
+## Tendências De Crescimento
+
+python C:\Users\renat\skills\instagram\scripts\analyze.py --growth --period 30
+```
+
+## Buscar Posts Recentes Com Uma Hashtag
+
+python C:\Users\renat\skills\instagram\scripts\hashtags.py --search "artificialintelligence" --limit 25
+
+## Top Posts De Uma Hashtag
+
+python C:\Users\renat\skills\instagram\scripts\hashtags.py --top "tecnologia"
+
+## Info Da Hashtag (Contagem De Posts)
+
+python C:\Users\renat\skills\instagram\scripts\hashtags.py --info "marketing"
+```
+
+## Criar Template
+
+python C:\Users\renat\skills\instagram\scripts\templates.py --create --name "promo" --caption "Nova promoção: {produto}! {desconto}% OFF" --hashtags "#oferta,#desconto,#promoção"
+
+## Listar Templates
+
+python C:\Users\renat\skills\instagram\scripts\templates.py --list
+
+## Usar Template Em Um Post
+
+python C:\Users\renat\skills\instagram\scripts\publish.py --type photo --image foto.jpg --template promo --vars produto="Tênis" desconto=30
+```
+
+## Ver Perfil
+
+python C:\Users\renat\skills\instagram\scripts\profile.py --view
+
+## Listar Posts Recentes
+
+python C:\Users\renat\skills\instagram\scripts\media.py --list --limit 10
+
+## Detalhes De Um Post
+
+python C:\Users\renat\skills\instagram\scripts\media.py --details --media-id 12345
+```
+
+## Exportar Analytics Para Csv
+
+python C:\Users\renat\skills\instagram\scripts\export.py --type insights --format csv
+
+## Exportar Comentários
+
+python C:\Users\renat\skills\instagram\scripts\export.py --type comments --format json
+
+## Exportar Tudo
+
+python C:\Users\renat\skills\instagram\scripts\export.py --type all --format csv
+
+## Iniciar Dashboard Web
+
+python C:\Users\renat\skills\instagram\scripts\serve_api.py
+
+## Acesse: Http://Localhost:8000/Dashboard
+
+```
+
+## Status Da Autenticação
+
+python C:\Users\renat\skills\instagram\scripts\auth.py --status
+
+## Sync Completo (Busca Perfil + Mídia + Insights + Comentários)
+
+python C:\Users\renat\skills\instagram\scripts\run_all.py
+
+## Sync Parcial
+
+python C:\Users\renat\skills\instagram\scripts\run_all.py --only media insights
+```
+
+## Rate Limits
+
+A skill rastreia automaticamente os rate limits da API:
+- **200 requests/hora** por conta
+- **25 publicações/dia** por conta
+- **30 hashtags únicas/semana** por conta
+- **200 DMs/hora** por conta
+
+Quando em 90% do limite, a skill emite warnings. Se exceder, bloqueia a ação e informa
+quanto tempo esperar.
+
+## Confirmações
+
+Ações que afetam conteúdo público requerem confirmação:
+- **PUBLISH**: Publicar foto/vídeo/reel/story/carrossel
+- **DELETE**: Deletar comentário
+- **MESSAGE**: Enviar DM
+- **ENGAGE**: Responder comentário, ocultar comentário
+
+O script retorna os detalhes da ação e pede confirmação antes de executar.
+
+## Audit Log
+
+Todas as ações que modificam dados são logadas no banco SQLite (`action_log` table):
+- Timestamp, ação, parâmetros, resultado, status de confirmação
+- Consultar via: `python C:\Users\renat\skills\instagram\scripts\db.py`
+
+## Token Auto-Refresh
+
+O token OAuth (60 dias) é renovado automaticamente quando está a 7 dias de expirar.
+Sem intervenção manual necessária.
+
+## Limitações Da Api
+
+Coisas que a Instagram Graph API **não permite**:
+- Deletar posts já publicados
+- Editar captions após publicar
+- Aplicar filtros via API
+- Postar de contas pessoais (só Business/Creator)
+- DMs fora da janela de 24hrs (usuário precisa ter interagido primeiro)
+- Fotos em formato diferente de JPEG (auto-conversão feita pelos scripts)
+
+## "Quero Publicar Uma Foto"
 
 ```bash
-bash -c 'curl -s -X GET "https://graph.facebook.com/v21.0/${INSTAGRAM_BUSINESS_ACCOUNT_ID}/media?fields=id,caption,media_type,media_url,permalink,timestamp" --header "Authorization: Bearer ${INSTAGRAM_ACCESS_TOKEN}"'
+python C:\Users\renat\skills\instagram\scripts\publish.py --type photo --image foto.jpg --caption "Texto"
 ```
 
-**Notes:**
-
-- Each item in the returned JSON represents a media object
-- Common fields:
-  - `id`: media ID (used for details / insights later)
-  - `caption`: caption text
-  - `media_type`: `IMAGE` / `VIDEO` / `CAROUSEL_ALBUM`
-  - `media_url`: direct URL to the media
-  - `permalink`: Instagram permalink
-  - `timestamp`: creation time
-
----
-
-### 2. Get details for a single media
-
-If you already have a media `id`, you can fetch more complete information. Replace `<your-media-id>` with the `id` field from the "Get User Media" response (section 1 above):
+## "Me Mostra Meus Analytics"
 
 ```bash
-bash -c 'curl -s -X GET "https://graph.facebook.com/v21.0/<your-media-id>?fields=id,caption,media_type,media_url,permalink,thumbnail_url,timestamp,username" --header "Authorization: Bearer ${INSTAGRAM_ACCESS_TOKEN}"'
+python C:\Users\renat\skills\instagram\scripts\run_all.py --only insights
+python C:\Users\renat\skills\instagram\scripts\analyze.py --summary
 ```
 
----
-
-### 3. Search media by hashtag
-
-> Note: hashtag search requires proper business use cases and permissions as defined by Facebook/Instagram. Refer to the official docs.
-
-This usually involves two steps:
-
-#### 3.1 Get the hashtag ID
-
-Replace `<hashtag-name>` with any hashtag name you want to search for (without the # symbol), e.g., "travel", "food", "photography":
+## "Qual O Melhor Horário Para Postar?"
 
 ```bash
-bash -c 'curl -s -X GET "https://graph.facebook.com/v21.0/ig_hashtag_search?user_id=${INSTAGRAM_BUSINESS_ACCOUNT_ID}&q=<hashtag-name>" --header "Authorization: Bearer ${INSTAGRAM_ACCESS_TOKEN}"'
+python C:\Users\renat\skills\instagram\scripts\analyze.py --best-times
 ```
 
-Note the `id` field in the returned JSON for use in the next step.
-
-#### 3.2 Fetch recent media for the hashtag
-
-Replace `<hashtag-id>` with the `id` field from the "Search Hashtag" response (section 3.1 above):
+## "Responde Esse Comentário"
 
 ```bash
-bash -c 'curl -s -X GET "https://graph.facebook.com/v21.0/<hashtag-id>/recent_media?user_id=${INSTAGRAM_BUSINESS_ACCOUNT_ID}&fields=id,caption,media_type,media_url,permalink,timestamp" --header "Authorization: Bearer ${INSTAGRAM_ACCESS_TOKEN}"'
+python C:\Users\renat\skills\instagram\scripts\comments.py --reply --comment-id ID --text "Resposta"
 ```
 
----
-
-### 4. Publish an image post
-
-Publishing an image post via the Graph API usually requires **two steps**:
-
-1. **Create a media container**
-2. **Publish the container to the feed**
-
-#### 4.1 Create a media container
-
-Write the request data to `/tmp/request.json`:
-
-```json
-{
-  "image_url": "https://example.com/image.jpg",
-  "caption": "Hello from Instagram API 👋"
-}
-```
-
-Replace `https://example.com/image.jpg` with any publicly accessible image URL and update the caption text as needed.
+## "Sincroniza Tudo"
 
 ```bash
-bash -c 'curl -s -X POST "https://graph.facebook.com/v21.0/${INSTAGRAM_BUSINESS_ACCOUNT_ID}/media" -H "Content-Type: application/json" -d @/tmp/request.json --header "Authorization: Bearer ${INSTAGRAM_ACCESS_TOKEN}"'
+python C:\Users\renat\skills\instagram\scripts\run_all.py
 ```
 
-The response will contain an `id` (media container ID), for example:
-
-```json
-{
-  "id": "1790xxxxxxxxxxxx"
-}
-```
-
-Note this ID for use in the next step.
-
-#### 4.2 Publish the media container to the feed
-
-Write the request data to `/tmp/request.json`:
-
-```json
-{
-  "creation_id": "<your-creation-id>"
-}
-```
-
-Replace `<your-creation-id>` with the `id` field from the "Create Media Container" response (section 4.1 above):
+## "Abre O Dashboard"
 
 ```bash
-bash -c 'curl -s -X POST "https://graph.facebook.com/v21.0/${INSTAGRAM_BUSINESS_ACCOUNT_ID}/media_publish" -H "Content-Type: application/json" -d @/tmp/request.json --header "Authorization: Bearer ${INSTAGRAM_ACCESS_TOKEN}"'
+python C:\Users\renat\skills\instagram\scripts\serve_api.py
 ```
 
-If successful, the response will contain the final media `id`:
+## Referências
 
-```json
-{
-  "id": "1791yyyyyyyyyyyy"
-}
-```
+Consultar quando precisar de detalhes:
+- `references/graph_api.md` — Endpoints, parâmetros e responses da API
+- `references/publishing_guide.md` — Specs de mídia (dimensões, formatos, tamanhos)
+- `references/rate_limits.md` — Rate limits detalhados e estratégias
+- `references/account_types.md` — Diferenças Business vs Creator, migração
+- `references/permissions.md` — Scopes OAuth necessários por feature
+- `references/setup_walkthrough.md` — Guia passo-a-passo de setup do Meta App
+- `references/schema.md` — Schema do banco SQLite (ER diagram, campos, índices, queries)
 
-You can then use the "Get details for a single media" command to fetch its `permalink`.
+## Best Practices
 
----
+- Provide clear, specific context about your project and requirements
+- Review all suggestions before applying them to production code
+- Combine with other complementary skills for comprehensive analysis
 
-### 5. Common errors and troubleshooting
+## Common Pitfalls
 
-1. **Permissions / OAuth errors**
+- Using this skill for tasks outside its domain expertise
+- Applying recommendations without understanding your specific context
+- Not providing enough project context for accurate analysis
 
-  - Typical error message: `(#10) Application does not have permission for this action`
-  - Check:
-  - Whether the app has been reviewed / approved
-  - Whether the required Instagram permissions are enabled
-  - Whether `INSTAGRAM_ACCESS_TOKEN` is a valid long-lived token
+## Related Skills
 
-2. **Unsupported account type**
+- `social-orchestrator` - Complementary skill for enhanced analysis
+- `telegram` - Complementary skill for enhanced analysis
+- `whatsapp-cloud-api` - Complementary skill for enhanced analysis
 
-  - Most Graph API features require **Business / Creator** accounts
-  - Make sure the Instagram account type is correct and linked to a Facebook Page
-
-3. **Rate limits**
-  - Too many requests in a short period may hit rate limits; add delays for bulk operations
-
----
-
-## Guidelines
-
-1. **Do not log tokens**: `INSTAGRAM_ACCESS_TOKEN` is sensitive; avoid printing it in logs or chat transcripts
-2. **Validate curl commands in a test environment first**: confirm flows before wiring them into automation / agents
-3. **Keep API version up to date**: periodically check Facebook docs and update the `v21.0` version in URLs to the latest
-4. **Use placeholder text for IDs**: all examples use placeholder text like `<your-media-id>` instead of shell variables in URLs to avoid dependencies and make examples self-contained
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

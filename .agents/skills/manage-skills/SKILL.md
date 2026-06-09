@@ -1,202 +1,200 @@
 ---
 name: manage-skills
-description: Manage and maintain VRP Toolkit skills through compliance checking, audit tracking, and documentation synchronization. Use when (1) adding or modifying skills, (2) checking skill compliance with project standards, (3) auditing SKILLS.md vs skills directory consistency, (4) recording skill changes to SKILLS_LOG.md, or (5) performing periodic skill health checks. Ensures skills stay independent, under 500 lines, properly structured, and well-documented.
+description: Discover, list, create, edit, toggle, copy, move, and delete AI agent skills across 11 tools (Cursor, Claude, Agents, Windsurf, Copilot, Codex, Cline, Aider, Continue, Roo Code, Augment)
+risk: critical
+source: community
+source_repo: umutbozdag/agent-skills-manager
+source_type: community
 ---
 
-# Manage Skills
+# Manage AI Agent Skills
 
-Meta-skill for managing, auditing, and maintaining all VRP Toolkit skills.
+You can manage skills and rules for all major AI coding tools directly from the terminal. This skill teaches you the directory layout, file format, and operations for each tool.
 
-## Core Functions
+## When to Use
 
-### 1. Audit Skills Directory
-Compare actual skills in `.claude/skills/` with SKILLS.md documentation.
+Use this skill when the user wants to inspect, create, edit, enable, disable, copy, move, or delete local AI-agent skills or rule files across supported coding tools.
 
-**Usage:**
-```bash
-python .claude/skills/manage-skills/scripts/audit_skills.py
-```
+## Supported Tools & Paths
 
-**Reports:**
-- Skills in directory vs SKILLS.md
-- Missing from documentation
-- Missing from directory
-- Sync status
+### Directory-based tools (multiple skills)
 
-### 2. Check Skill Compliance
-Validate skills against VRP Toolkit standards.
+Each skill lives in its own subdirectory with a `SKILL.md` file containing YAML frontmatter.
 
-**Usage:**
-```bash
-# Check specific skill
-python .claude/skills/manage-skills/scripts/check_compliance.py skill-name
+| Tool | Global Path | Project Path |
+|------|------------|--------------|
+| Agents | `~/.agents/skills/<name>/SKILL.md` | `.agents/skills/<name>/SKILL.md` |
+| Cursor | `~/.cursor/skills/<name>/SKILL.md` | `.cursor/skills/<name>/SKILL.md` |
+| Claude | `~/.claude/skills/<name>/SKILL.md` | `.claude/skills/<name>/SKILL.md` |
+| Windsurf | `~/.windsurf/rules/<name>/<name>.md` | `.windsurf/rules/<name>/<name>.md` |
+| Cline | `~/.cline/rules/<name>/<name>.md` | `.cline/rules/<name>/<name>.md` |
+| Continue | `~/.continue/rules/<name>/<name>.md` | `.continue/rules/<name>/<name>.md` |
+| Roo Code | `~/.roo/rules/<name>/<name>.md` | `.roo/rules/<name>/<name>.md` |
 
-# Check all skills
-python .claude/skills/manage-skills/scripts/check_compliance.py --all
-```
+### Single-file tools (one config file)
 
-**Checks:**
-- **Independence**: Skill doesn't embed other skills' content
-- **Size**: SKILL.md ≤ 500 lines (body, excluding frontmatter)
-- **Structure**: Required files present, no prohibited files
-- **Frontmatter**: Valid YAML with name and description
-- **References**: All reference files mentioned in SKILL.md
+| Tool | Global Path | Project Path |
+|------|------------|--------------|
+| Copilot | `~/.github/copilot-instructions.md` | `.github/copilot-instructions.md` |
+| Codex | `~/.codex/AGENTS.md` | `.codex/AGENTS.md` |
+| Aider | `~/.aider.conf.yml` | `.aider.conf.yml` |
+| Augment | `~/augment-guidelines.md` | `augment-guidelines.md` |
 
-See [compliance_checklist.md](references/compliance_checklist.md) for detailed standards.
+### Cursor plugins (read-only)
 
-### 3. Update SKILLS.md Index
-Sync skills documentation in SKILLS.md with actual skills.
+Plugin skills are cached at `~/.cursor/plugins/cache/<org>/<plugin>/<version>/skills/<name>/SKILL.md`. These are managed by Cursor and should not be edited directly.
 
-**When:**
-- After adding new skill
-- After removing skill
-- After significantly modifying skill description
+## Skill File Format
 
-**See:** [update_procedures.md](references/update_procedures.md) → Section 1
+For directory-based tools (Agents, Cursor, Claude), skills use YAML frontmatter:
 
-### 4. Record Changes in SKILLS_LOG.md
-Log all skill modifications for tracking and history.
-
-**When:**
-- After any skill change (add/update/remove/rename/split/merge)
-
-**Template:**
 ```markdown
-## YYYY-MM-DD - [Action]: [skill-name]
-**Action:** [Added/Updated/Removed/Renamed/Split/Merged]
-**Reason:** [Why this change was made]
-**Changes:**
-- [Specific change 1]
-- [Specific change 2]
-**Compliance Notes:** [Any compliance issues addressed]
-**Impact:** [How this affects other skills or workflows]
+---
+name: skill-name
+description: Brief description of what this skill does
+---
+
+# Skill Name
+
+Skill instructions go here. The AI agent reads this content
+when the skill is activated.
 ```
 
-**See:** [update_procedures.md](references/update_procedures.md) → Section 2
+For Windsurf, Cline, Continue, and Roo Code, skills are plain `.md` files (frontmatter optional).
 
-## Workflow Patterns
+## Operations
 
-### Pattern A: Add New Skill
-```
-1. Create skill using skill-creator
-2. Run: audit_skills.py
-   → Check if new skill appears in directory
-3. Update SKILLS.md skills index (Section 1)
-4. Record in SKILLS_LOG.md
-5. Run: check_compliance.py skill-name
-   → Verify new skill is compliant
-```
+### List all skills
 
-### Pattern B: Modify Existing Skill
-```
-1. Make changes to skill
-2. Run: check_compliance.py skill-name
-   → Check for violations (size, independence, etc.)
-3. If issues found, fix them
-4. Update SKILLS.md description if needed
-5. Record changes in SKILLS_LOG.md
-```
+```bash
+# List skills for a specific tool
+ls ~/.agents/skills/
+ls ~/.cursor/skills/
+ls ~/.claude/skills/
+ls ~/.windsurf/rules/
+ls ~/.cline/rules/
+ls ~/.continue/rules/
+ls ~/.roo/rules/
 
-### Pattern C: Periodic Audit
-```
-1. Run: audit_skills.py
-   → Check directory vs SKILLS.md sync
-2. Run: check_compliance.py --all
-   → Check all skills for compliance
-3. Review warnings and errors
-4. Plan fixes or improvements
-5. Update SKILLS_LOG.md with findings
+# Count total skills across all tools
+echo "Agents: $(ls ~/.agents/skills/ 2>/dev/null | wc -l | tr -d ' ')"
+echo "Cursor: $(ls ~/.cursor/skills/ 2>/dev/null | wc -l | tr -d ' ')"
+echo "Claude: $(ls ~/.claude/skills/ 2>/dev/null | wc -l | tr -d ' ')"
+echo "Windsurf: $(ls ~/.windsurf/rules/ 2>/dev/null | wc -l | tr -d ' ')"
+echo "Cline: $(ls ~/.cline/rules/ 2>/dev/null | wc -l | tr -d ' ')"
+echo "Continue: $(ls ~/.continue/rules/ 2>/dev/null | wc -l | tr -d ' ')"
+echo "Roo: $(ls ~/.roo/rules/ 2>/dev/null | wc -l | tr -d ' ')"
+
+# Check single-file tools
+test -f ~/.github/copilot-instructions.md && echo "Copilot: exists" || echo "Copilot: not found"
+test -f ~/.codex/AGENTS.md && echo "Codex: exists" || echo "Codex: not found"
+test -f ~/.aider.conf.yml && echo "Aider: exists" || echo "Aider: not found"
+test -f ~/augment-guidelines.md && echo "Augment: exists" || echo "Augment: not found"
 ```
 
-### Pattern D: Fix Compliance Issues
+### Read a skill
 
-**Size Violation (>500 lines):**
-```
-1. Identify extractable sections
-2. Move to references/ or create new skill
-3. Update SKILL.md references
-4. Re-run check_compliance.py
-5. Record in SKILLS_LOG.md
+```bash
+cat ~/.cursor/skills/my-skill/SKILL.md
 ```
 
-**Independence Violation:**
-```
-1. Find embedded content from other skills
-2. Replace with reference: "See [skill-name] for..."
-3. Re-run check_compliance.py
-4. Record in SKILLS_LOG.md
-```
+### Create a new skill
 
-See [update_procedures.md](references/update_procedures.md) for detailed procedures on:
-- Renaming skills
-- Splitting large skills
-- Merging similar skills
-- Archiving deprecated skills
+```bash
+# For Agents/Cursor/Claude (SKILL.md format)
+mkdir -p ~/.agents/skills/my-new-skill
+cat > ~/.agents/skills/my-new-skill/SKILL.md << 'EOF'
+---
+name: my-new-skill
+description: What this skill does
+---
 
-## Integration with Other Skills
+# My New Skill
 
-**Works with:**
-- **skill-creator** - Use to create new skills before managing them
-- **update-migration-log** - Similar logging pattern for migrations
-- **update-task-board** - Similar documentation sync pattern
+Instructions for the agent go here.
+EOF
 
-**DO NOT embed workflows from these skills** - Reference them instead.
+# For Windsurf/Cline/Continue/Roo (plain .md format)
+mkdir -p ~/.windsurf/rules/my-new-rule
+cat > ~/.windsurf/rules/my-new-rule/my-new-rule.md << 'EOF'
+# My New Rule
 
-## Compliance Standards Quick Reference
+Instructions go here.
+EOF
 
-```yaml
-Independence:
-  ✓ Can reference other skills: "See [skill-name] for..."
-  ✗ Cannot embed workflows from other skills
-
-Size:
-  ✓ SKILL.md ≤ 500 lines (excluding frontmatter)
-  ⚠ Warning at 400 lines
-  ✗ Error at 500 lines
-
-Structure:
-  ✓ Required: SKILL.md with valid frontmatter
-  ✓ Optional: scripts/, references/, assets/
-  ✗ Prohibited: README.md, CHANGELOG.md, etc.
-
-Frontmatter:
-  ✓ Required fields: name, description
-  ✓ Description: 50-200 words with use cases
-  ✗ Extra fields discouraged
-
-References:
-  ✓ All refs linked from SKILL.md
-  ✓ Max 1 level deep (no nested dirs)
-  ⚠ Warning if ref >500 lines
+# For single-file tools
+cat > .github/copilot-instructions.md << 'EOF'
+Instructions for Copilot go here.
+EOF
 ```
 
-Full details: [compliance_checklist.md](references/compliance_checklist.md)
+### Enable / Disable a skill
 
-## Files in This Skill
+Disabling renames the file to `.disabled` so the tool ignores it but the content is preserved:
 
-```
-manage-skills/
-├── SKILL.md                          # This file
-├── scripts/
-│   ├── audit_skills.py              # Directory vs CLAUDE.md audit
-│   └── check_compliance.py          # Compliance validation
-├── references/
-│   ├── compliance_checklist.md      # Detailed compliance standards
-│   └── update_procedures.md         # Step-by-step update procedures
-└── assets/
-    └── SKILLS_LOG_template.md       # Template for SKILLS_LOG.md
+```bash
+# Disable
+mv ~/.cursor/skills/my-skill/SKILL.md ~/.cursor/skills/my-skill/SKILL.md.disabled
+
+# Enable
+mv ~/.cursor/skills/my-skill/SKILL.md.disabled ~/.cursor/skills/my-skill/SKILL.md
 ```
 
-## Tips
+### Copy a skill between tools
 
-1. **Run audit after adding skills** - Catches missing documentation immediately
-2. **Check compliance before packaging** - Prevents distribution of non-compliant skills
-3. **Keep SKILLS_LOG.md updated** - Provides history for troubleshooting
-4. **Review warnings seriously** - They often indicate real issues
-5. **Split before 500 lines** - Easier to split at 400 than fix at 600
+```bash
+# Copy from Cursor to Claude
+cp -r ~/.cursor/skills/my-skill ~/.claude/skills/my-skill
+
+# Copy from Agents to Windsurf (adapt format)
+mkdir -p ~/.windsurf/rules/my-skill
+cp ~/.agents/skills/my-skill/SKILL.md ~/.windsurf/rules/my-skill/my-skill.md
+```
+
+### Move a skill
+
+```bash
+mv ~/.cursor/skills/my-skill ~/.agents/skills/my-skill
+```
+
+### Delete a skill
+
+```bash
+rm -rf ~/.cursor/skills/my-skill
+```
+
+### Copy a skill from global to project scope
+
+```bash
+cp -r ~/.cursor/skills/my-skill .cursor/skills/my-skill
+```
+
+### Search across all skills
+
+```bash
+# Search by name
+find ~/.agents/skills ~/.cursor/skills ~/.claude/skills ~/.windsurf/rules ~/.cline/rules ~/.continue/rules ~/.roo/rules -maxdepth 1 -type d 2>/dev/null | sort
+
+# Search by content
+grep -rl "search term" ~/.agents/skills/ ~/.cursor/skills/ ~/.claude/skills/ 2>/dev/null
+```
+
+### Find disabled skills
+
+```bash
+find ~/.agents/skills ~/.cursor/skills ~/.claude/skills -name "*.disabled" 2>/dev/null
+```
+
+## Guidelines
+
+- When the user asks to "manage skills", "list my skills", "create a skill", "copy a skill to X", or similar, use the paths and formats above.
+- Always confirm before deleting skills.
+- When copying between tools with different formats (e.g., Cursor SKILL.md to Windsurf plain .md), adapt the file naming accordingly.
+- Project-scoped skills override global skills of the same name.
+- For single-file tools (Copilot, Codex, Aider, Augment), editing means replacing the entire file content.
+- When creating skills, use kebab-case for directory names (e.g., `my-new-skill`).
 
 ## Limitations
-
-- Does not automatically fix compliance issues (manual fixes required)
-- Cannot detect semantic overlap between skills (manual review needed)
-- Windows encoding issues with emoji in scripts (uses ASCII fallback)
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

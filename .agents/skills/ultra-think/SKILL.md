@@ -1,160 +1,199 @@
 ---
 name: ultra-think
-description: Deep analysis and problem solving with multi-dimensional thinking. Use when facing complex architectural decisions, strategic planning, or problems requiring thorough analysis from multiple perspectives.
-argument-hint: [problem or question to analyze]
+description: "Deep, multi-dimensional analysis and problem solving. Activates systematic reasoning across technical, business, user, and system perspectives. Generates multiple solutions with trade-offs, then synthesizes into a clear recommendation."
+domain: foundational
+supports: [claude-code, cursor, codex, generic]
+version: 0.1.0
 ---
 
-# Deep Analysis and Problem Solving Mode
+# Ultra Think — Deep Analysis Mode
 
-Deep analysis and problem solving mode
+Deep, multi-dimensional analysis and problem solving. Activates systematic reasoning across technical, business, user, and system perspectives. Generates multiple solutions with trade-offs, then synthesizes into a clear recommendation.
 
-## Instructions
+**Use when**: facing architectural decisions, complex trade-offs, strategic technology choices, system design problems, scaling challenges, migration decisions, or any question that deserves more than a quick answer. Attach this skill when you want rigorous, first-principles thinking.
 
-1. **Initialize Ultra Think Mode**
-   - Acknowledge the request for enhanced analytical thinking
-   - Set context for deep, systematic reasoning
-   - Prepare to explore the problem space comprehensively
+---
 
-2. **Parse the Problem or Question**
-   - Extract the core challenge from: $ARGUMENTS
-   - Identify all stakeholders and constraints
-   - Recognize implicit requirements and hidden complexities
-   - Question assumptions and surface unknowns
+## When This Skill Is Activated
 
-3. **Multi-Dimensional Analysis**
-   Approach the problem from multiple angles:
+Do NOT jump to a solution. Follow every step below in order. Think deeply at each stage before moving on.
 
-   ### Technical Perspective
-   - Analyze technical feasibility and constraints
-   - Consider scalability, performance, and maintainability
-   - Evaluate security implications
-   - Assess technical debt and future-proofing
+---
 
-   ### Business Perspective
-   - Understand business value and ROI
-   - Consider time-to-market pressures
-   - Evaluate competitive advantages
-   - Assess risk vs. reward trade-offs
+## Step 1: Parse the Problem
 
-   ### User Perspective
-   - Analyze user needs and pain points
-   - Consider usability and accessibility
-   - Evaluate user experience implications
-   - Think about edge cases and user journeys
+Before analyzing, make sure you understand what's actually being asked.
 
-   ### System Perspective
-   - Consider system-wide impacts
-   - Analyze integration points
-   - Evaluate dependencies and coupling
-   - Think about emergent behaviors
+- Extract the core challenge from the user's message
+- Identify all stakeholders and constraints (stated and implied)
+- Surface hidden complexities and implicit requirements
+- Question assumptions — what is the user taking for granted?
+- Name the unknowns explicitly
 
-4. **Generate Multiple Solutions**
-   - Brainstorm at least 3-5 different approaches
-   - For each approach, consider:
-     - Pros and cons
-     - Implementation complexity
-     - Resource requirements
-     - Potential risks
-     - Long-term implications
-   - Include both conventional and creative solutions
-   - Consider hybrid approaches
+---
 
-5. **Deep Dive Analysis**
-   For the most promising solutions:
-   - Create detailed implementation plans
-   - Identify potential pitfalls and mitigation strategies
-   - Consider phased approaches and MVPs
-   - Analyze second and third-order effects
-   - Think through failure modes and recovery
+## Step 2: Multi-Dimensional Analysis
 
-6. **Cross-Domain Thinking**
-   - Draw parallels from other industries or domains
-   - Apply design patterns from different contexts
-   - Consider biological or natural system analogies
-   - Look for innovative combinations of existing solutions
+Analyze the problem from four perspectives. Do not skip any.
 
-7. **Challenge and Refine**
-   - Play devil's advocate with each solution
-   - Identify weaknesses and blind spots
-   - Consider "what if" scenarios
-   - Stress-test assumptions
-   - Look for unintended consequences
+### Technical Perspective
+- Feasibility and constraints
+- Scalability, performance, maintainability
+- Security implications
+- Technical debt and future-proofing
+- Integration complexity
 
-8. **Synthesize Insights**
-   - Combine insights from all perspectives
-   - Identify key decision factors
-   - Highlight critical trade-offs
-   - Summarize innovative discoveries
-   - Present a nuanced view of the problem space
+### Business Perspective
+- Business value and ROI
+- Time-to-market pressure
+- Competitive advantage
+- Risk vs. reward trade-offs
+- Cost (development, operational, opportunity)
 
-9. **Provide Structured Recommendations**
-   Present findings in a clear structure:
+### User Perspective
+- User needs and pain points
+- Usability and accessibility
+- Edge cases and failure states from the user's point of view
+- User journeys affected
 
-   ## Problem Analysis
-   - Core challenge
-   - Key constraints
-   - Critical success factors
+### System Perspective
+- System-wide impacts and ripple effects
+- Integration points and coupling
+- Dependencies (upstream and downstream)
+- Emergent behaviors and unintended interactions
 
-   ## Solution Options
+---
 
-   ### Option 1: [Name]
-   - Description
-   - Pros/Cons
-   - Implementation approach
-   - Risk assessment
+## Step 3: Generate Multiple Solutions
 
-   ### Option 2: [Name]
+Brainstorm **at least 3 distinct approaches** — not variations of the same idea.
 
-   [Similar structure]
+For each approach, evaluate:
+- Pros and cons
+- Implementation complexity (T-shirt size: S/M/L/XL)
+- Resource requirements (people, time, money)
+- Key risks
+- Long-term implications (what does this look like in 2 years?)
 
-   ## Recommendation
-   - Recommended approach
-   - Rationale
-   - Implementation roadmap
-   - Success metrics
-   - Risk mitigation plan
+Include at least one unconventional or creative solution. Consider hybrid approaches that combine strengths of different options.
 
-   ## Alternative Perspectives
-   - Contrarian view
-   - Future considerations
-   - Areas for further research
+---
 
-10. **Meta-Analysis**
-    - Reflect on the thinking process itself
-    - Identify areas of uncertainty
-    - Acknowledge biases or limitations
-    - Suggest additional expertise needed
-    - Provide confidence levels for recommendations
+## Step 4: Deep Dive on Top Candidates
 
-## Usage Examples
+For the 1–2 most promising solutions:
 
-```bash
-# Architectural decision
-/ultra-think Should we migrate to microservices or improve our monolith?
+- Sketch a detailed implementation plan (phases, milestones)
+- Identify pitfalls and mitigation strategies
+- Consider a phased approach or MVP path
+- Analyze **second-order effects** — what changes because of this change?
+- Think through failure modes — what happens when this breaks?
+- Estimate reversibility — how hard is it to undo if wrong?
 
-# Complex problem solving
-/ultra-think How do we scale our system to handle 10x traffic while reducing costs?
+---
 
-# Strategic planning
-/ultra-think What technology stack should we choose for our next-gen platform?
+## Step 5: Cross-Domain Thinking
 
-# Design challenge
-/ultra-think How can we improve our API to be more developer-friendly while maintaining backward compatibility?
+Look beyond the immediate domain for insight:
+
+- Are there parallels from other industries? (e.g., how did logistics solve this? Healthcare? Finance?)
+- Do design patterns from other contexts apply? (e.g., circuit breakers from electrical engineering → software resilience)
+- Are there natural system analogies? (e.g., biological redundancy, evolutionary pressure)
+- Can existing solutions be combined in a novel way?
+
+---
+
+## Step 6: Challenge and Stress-Test
+
+Play devil's advocate against every solution, including the one you favor.
+
+- What's the strongest argument against each option?
+- What blind spots might you have?
+- Run "what if" scenarios (what if traffic is 10x? what if the team halves? what if requirements change?)
+- Stress-test assumptions — which ones, if wrong, would invalidate the whole approach?
+- Look for unintended consequences
+
+---
+
+## Step 7: Synthesize and Recommend
+
+Combine all insights into a structured deliverable. Use this exact format:
+
+```
+## Problem Analysis
+- **Core challenge**: [one sentence]
+- **Key constraints**: [list]
+- **Critical success factors**: [what must be true for any solution to work]
+- **Assumptions**: [what we're taking as given]
+
+## Solution Options
+
+### Option 1: [Name]
+- **Description**: [2-3 sentences]
+- **Pros**: [list]
+- **Cons**: [list]
+- **Complexity**: [S/M/L/XL]
+- **Risk level**: [Low/Medium/High]
+- **Best when**: [conditions that make this the right choice]
+
+### Option 2: [Name]
+[Same structure]
+
+### Option 3: [Name]
+[Same structure]
+
+## Recommendation
+- **Recommended approach**: [which option and why]
+- **Rationale**: [the decisive factors]
+- **Implementation roadmap**: [phases with rough timelines]
+- **Success metrics**: [how we'll know it's working]
+- **Risk mitigation**: [top 3 risks and their mitigations]
+- **Reversibility**: [how hard to undo if wrong]
+
+## Contrarian View
+- **The case against this recommendation**: [strongest counterargument]
+- **What would change our mind**: [signals that we chose wrong]
+- **Areas of uncertainty**: [what we don't know yet]
+
+## Confidence Assessment
+- **Overall confidence**: [High/Medium/Low] — [why]
+- **What would increase confidence**: [additional research, prototyping, data needed]
 ```
 
-## Key Principles
+---
 
-- **First Principles Thinking**: Break down to fundamental truths
-- **Systems Thinking**: Consider interconnections and feedback loops
-- **Probabilistic Thinking**: Work with uncertainties and ranges
-- **Inversion**: Consider what to avoid, not just what to do
-- **Second-Order Thinking**: Consider consequences of consequences
+## Step 8: Meta-Reflection
+
+End with a brief reflection:
+
+- Where is the analysis weakest?
+- What biases might be influencing the recommendation?
+- What additional expertise or data would improve the analysis?
+- What's the one thing most likely to be wrong?
+
+---
+
+## Thinking Principles
+
+Apply these mental models throughout the analysis:
+
+| Principle | Application |
+|-----------|-------------|
+| **First Principles** | Break down to fundamental truths, don't reason by analogy alone |
+| **Systems Thinking** | Consider interconnections, feedback loops, emergent behavior |
+| **Probabilistic Thinking** | Work with ranges and likelihoods, not certainties |
+| **Inversion** | Ask "what should we avoid?" not just "what should we do?" |
+| **Second-Order Effects** | Consider the consequences of consequences |
+| **Reversibility** | Prefer reversible decisions; be extra careful with irreversible ones |
+| **Occam's Razor** | Among equally valid solutions, prefer the simpler one |
+
+---
 
 ## Output Expectations
 
-- Comprehensive analysis (typically 2-4 pages of insights)
-- Multiple viable solutions with trade-offs
-- Clear reasoning chains
-- Acknowledgment of uncertainties
-- Actionable recommendations
-- Novel insights or perspectives
+- Comprehensive analysis (typically 2–4 pages of insight)
+- Multiple viable solutions with honest trade-offs
+- Clear reasoning chains — show your work
+- Explicit acknowledgment of uncertainties
+- Actionable recommendation with next steps
+- At least one novel insight or non-obvious perspective

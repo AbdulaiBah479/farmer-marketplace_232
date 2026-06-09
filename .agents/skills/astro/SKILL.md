@@ -1,238 +1,108 @@
 ---
 name: astro
-description: Builds content-focused websites with Astro using islands architecture, content collections, and multi-framework support. Use when creating static sites, blogs, documentation, marketing pages, or content-heavy applications with minimal JavaScript.
+description: "Build content-focused websites with Astro — zero JS by default, islands architecture, multi-framework components, and Markdown/MDX support."
+category: frontend
+risk: safe
+source: community
+date_added: "2026-03-18"
+author: suhaibjanjua
+tags: [astro, ssg, ssr, islands, content, markdown, mdx, performance]
+tools: [claude, cursor, gemini]
 ---
 
-# Astro
+# Astro Web Framework
 
-Content-focused web framework with islands architecture for building fast static and server-rendered websites with minimal JavaScript.
+## Overview
 
-## Quick Start
+Astro is a web framework designed for content-rich websites — blogs, docs, portfolios, marketing sites, and e-commerce. Its core innovation is the **Islands Architecture**: by default, Astro ships zero JavaScript to the browser. Interactive components are selectively hydrated as isolated "islands." Astro supports React, Vue, Svelte, Solid, and other UI frameworks simultaneously in the same project, letting you pick the right tool per component.
 
-**Create new project:**
+## When to Use This Skill
+
+- Use when building a blog, documentation site, marketing page, or portfolio
+- Use when performance and Core Web Vitals are the top priority
+- Use when the project is content-heavy with Markdown or MDX files
+- Use when you want SSG (static) output with optional SSR for dynamic routes
+- Use when the user asks about `.astro` files, `Astro.props`, content collections, or `client:` directives
+
+## How It Works
+
+### Step 1: Project Setup
+
 ```bash
 npm create astro@latest my-site
 cd my-site
+npm install
 npm run dev
 ```
 
-**Essential file structure:**
+Add integrations as needed:
+
+```bash
+npx astro add tailwind        # Tailwind CSS
+npx astro add react           # React component support
+npx astro add mdx             # MDX support
+npx astro add sitemap         # Auto sitemap.xml
+npx astro add vercel          # Vercel SSR adapter
+```
+
+Project structure:
+
 ```
 src/
-  pages/              # File-based routing
-    index.astro       # Home page (/)
-    about.astro       # /about
-    blog/
-      [slug].astro    # /blog/:slug
-  components/         # Reusable components
-  layouts/            # Page layouts
-  content/            # Content collections
-    blog/             # Blog posts collection
-  styles/             # Global styles
-public/               # Static assets
-astro.config.mjs      # Astro configuration
+  pages/          ← File-based routing (.astro, .md, .mdx)
+  layouts/        ← Reusable page shells
+  components/     ← UI components (.astro, .tsx, .vue, etc.)
+  content/        ← Type-safe content collections (Markdown/MDX)
+  styles/         ← Global CSS
+public/           ← Static assets (copied as-is)
+astro.config.mjs  ← Framework config
 ```
 
-## Astro Components
+### Step 2: Astro Component Syntax
 
-### Basic Syntax
+`.astro` files have a code fence at the top (server-only) and a template below:
 
 ```astro
 ---
-// Component Script (runs at build time)
-import Header from '../components/Header.astro';
-import Button from '../components/Button.tsx';
-
+// src/components/Card.astro
+// This block runs on the server ONLY — never in the browser
 interface Props {
   title: string;
-  description?: string;
+  href: string;
+  description: string;
 }
 
-const { title, description = 'Default description' } = Astro.props;
-
-// Fetch data at build time
-const response = await fetch('https://api.example.com/data');
-const data = await response.json();
+const { title, href, description } = Astro.props;
 ---
 
-<!-- Component Template -->
-<html lang="en">
-  <head>
-    <title>{title}</title>
-    <meta name="description" content={description} />
-  </head>
-  <body>
-    <Header />
-    <main>
-      <h1>{title}</h1>
-      <ul>
-        {data.items.map((item) => (
-          <li>{item.name}</li>
-        ))}
-      </ul>
-      <!-- Interactive island -->
-      <Button client:load>Click me</Button>
-    </main>
-  </body>
-</html>
+<article class="card">
+  <h2><a href={href}>{title}</a></h2>
+  <p>{description}</p>
+</article>
 
 <style>
-  /* Scoped CSS by default */
-  h1 {
-    color: navy;
-    font-size: 2rem;
-  }
+  /* Scoped to this component automatically */
+  .card { border: 1px solid #eee; padding: 1rem; }
 </style>
 ```
 
-### Props and Types
-
-```astro
----
-interface Props {
-  title: string;
-  tags: string[];
-  publishDate: Date;
-  featured?: boolean;
-}
-
-const { title, tags, publishDate, featured = false } = Astro.props;
----
-
-<article class:list={['post', { featured }]}>
-  <h2>{title}</h2>
-  <time datetime={publishDate.toISOString()}>
-    {publishDate.toLocaleDateString()}
-  </time>
-  <ul>
-    {tags.map((tag) => <li>{tag}</li>)}
-  </ul>
-</article>
-```
-
-### Slots
-
-```astro
----
-// Card.astro
-interface Props {
-  title: string;
-}
-const { title } = Astro.props;
----
-
-<div class="card">
-  <header>
-    <slot name="header">{title}</slot>
-  </header>
-  <main>
-    <slot />  <!-- Default slot -->
-  </main>
-  <footer>
-    <slot name="footer">Default footer</slot>
-  </footer>
-</div>
-```
-
-**Using slots:**
-```astro
-<Card title="My Card">
-  <h3 slot="header">Custom Header</h3>
-  <p>Main content goes here</p>
-  <button slot="footer">Action</button>
-</Card>
-```
-
-## Islands Architecture
-
-### Client Directives
-
-Components are static by default. Add `client:*` directives for interactivity:
-
-| Directive | When JavaScript Loads |
-|-----------|----------------------|
-| `client:load` | Immediately on page load |
-| `client:idle` | When browser becomes idle |
-| `client:visible` | When component enters viewport |
-| `client:media` | When media query matches |
-| `client:only` | Skip SSR, client render only |
-
-```astro
----
-import Counter from '../components/Counter.tsx';
-import Newsletter from '../components/Newsletter.vue';
-import Comments from '../components/Comments.svelte';
----
-
-<!-- Load immediately (above fold, critical) -->
-<Counter client:load />
-
-<!-- Load when idle (non-critical) -->
-<Newsletter client:idle />
-
-<!-- Load when visible (below fold) -->
-<Comments client:visible />
-
-<!-- Load on mobile only -->
-<MobileMenu client:media="(max-width: 768px)" />
-
-<!-- React-only, no SSR -->
-<ReactChart client:only="react" />
-```
-
-### Framework Integrations
-
-```bash
-# Add React
-npx astro add react
-
-# Add Vue
-npx astro add vue
-
-# Add Svelte
-npx astro add svelte
-
-# Add SolidJS
-npx astro add solid
-```
-
-**Using multiple frameworks:**
-```astro
----
-import ReactComponent from '../components/ReactComponent.tsx';
-import VueComponent from '../components/VueComponent.vue';
-import SvelteComponent from '../components/SvelteComponent.svelte';
----
-
-<ReactComponent client:load />
-<VueComponent client:visible />
-<SvelteComponent client:idle />
-```
-
-## File-Based Routing
-
-### Static Routes
+### Step 3: File-Based Pages and Routing
 
 ```
-src/pages/
-  index.astro          # /
-  about.astro          # /about
-  contact.astro        # /contact
-  blog/
-    index.astro        # /blog
-    first-post.astro   # /blog/first-post
+src/pages/index.astro          → /
+src/pages/about.astro          → /about
+src/pages/blog/[slug].astro    → /blog/:slug (dynamic)
+src/pages/blog/[...path].astro → /blog/* (catch-all)
 ```
 
-### Dynamic Routes
+Dynamic route with `getStaticPaths`:
 
 ```astro
 ---
 // src/pages/blog/[slug].astro
-import { getCollection } from 'astro:content';
-
 export async function getStaticPaths() {
   const posts = await getCollection('blog');
-  return posts.map((post) => ({
+  return posts.map(post => ({
     params: { slug: post.slug },
     props: { post },
   }));
@@ -242,127 +112,78 @@ const { post } = Astro.props;
 const { Content } = await post.render();
 ---
 
-<article>
-  <h1>{post.data.title}</h1>
-  <Content />
-</article>
+<h1>{post.data.title}</h1>
+<Content />
 ```
 
-### Rest Parameters
+### Step 4: Content Collections
 
-```astro
----
-// src/pages/docs/[...slug].astro
-// Matches /docs, /docs/intro, /docs/guides/getting-started
-
-export function getStaticPaths() {
-  return [
-    { params: { slug: undefined } },  // /docs
-    { params: { slug: 'intro' } },     // /docs/intro
-    { params: { slug: 'guides/start' } }, // /docs/guides/start
-  ];
-}
-
-const { slug } = Astro.params;
----
-```
-
-## Content Collections
-
-### Define Collections
+Content collections give you type-safe access to Markdown and MDX files:
 
 ```typescript
-// src/content.config.ts
-import { defineCollection, z } from 'astro:content';
-import { glob } from 'astro/loaders';
+// src/content/config.ts
+import { z, defineCollection } from 'astro:content';
 
 const blog = defineCollection({
-  loader: glob({ pattern: '**/*.md', base: './src/content/blog' }),
+  type: 'content',
   schema: z.object({
     title: z.string(),
-    description: z.string(),
-    pubDate: z.coerce.date(),
-    updatedDate: z.coerce.date().optional(),
-    heroImage: z.string().optional(),
+    date: z.coerce.date(),
     tags: z.array(z.string()).default([]),
     draft: z.boolean().default(false),
   }),
 });
 
-const authors = defineCollection({
-  loader: glob({ pattern: '**/*.json', base: './src/content/authors' }),
-  schema: z.object({
-    name: z.string(),
-    bio: z.string(),
-    avatar: z.string(),
-    social: z.object({
-      twitter: z.string().optional(),
-      github: z.string().optional(),
-    }),
-  }),
-});
-
-export const collections = { blog, authors };
+export const collections = { blog };
 ```
-
-### Query Collections
 
 ```astro
 ---
-import { getCollection, getEntry } from 'astro:content';
+// src/pages/blog/index.astro
+import { getCollection } from 'astro:content';
 
-// Get all published posts
-const allPosts = await getCollection('blog', ({ data }) => {
-  return data.draft !== true;
-});
-
-// Sort by date
-const sortedPosts = allPosts.sort(
-  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
-);
-
-// Get single entry
-const featuredPost = await getEntry('blog', 'featured-post');
+const posts = (await getCollection('blog'))
+  .filter(p => !p.data.draft)
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 ---
 
 <ul>
-  {sortedPosts.map((post) => (
+  {posts.map(post => (
     <li>
       <a href={`/blog/${post.slug}`}>{post.data.title}</a>
+      <time>{post.data.date.toLocaleDateString()}</time>
     </li>
   ))}
 </ul>
 ```
 
-### Render Content
+### Step 5: Islands — Selective Hydration
+
+By default, UI framework components render to static HTML with no JS. Use `client:` directives to hydrate:
 
 ```astro
 ---
-import { getEntry } from 'astro:content';
-
-const post = await getEntry('blog', 'my-post');
-const { Content, headings } = await post.render();
+import Counter from '../components/Counter.tsx';  // React component
+import VideoPlayer from '../components/VideoPlayer.svelte';
 ---
 
-<article>
-  <h1>{post.data.title}</h1>
-  <nav>
-    <h2>Table of Contents</h2>
-    <ul>
-      {headings.map((h) => (
-        <li>
-          <a href={`#${h.slug}`}>{h.text}</a>
-        </li>
-      ))}
-    </ul>
-  </nav>
-  <Content />
-</article>
+<!-- Static HTML — no JavaScript sent to browser -->
+<Counter initialCount={0} />
+
+<!-- Hydrate immediately on page load -->
+<Counter initialCount={0} client:load />
+
+<!-- Hydrate when the component scrolls into view -->
+<VideoPlayer src="/demo.mp4" client:visible />
+
+<!-- Hydrate only when browser is idle -->
+<Analytics client:idle />
+
+<!-- Hydrate only on a specific media query -->
+<MobileMenu client:media="(max-width: 768px)" />
 ```
 
-## Layouts
-
-### Basic Layout
+### Step 6: Layouts
 
 ```astro
 ---
@@ -371,275 +192,173 @@ interface Props {
   title: string;
   description?: string;
 }
-
-const { title, description = 'My Astro site' } = Astro.props;
+const { title, description = 'My Astro Site' } = Astro.props;
 ---
 
-<!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <meta name="description" content={description} />
+    <meta charset="utf-8" />
     <title>{title}</title>
+    <meta name="description" content={description} />
   </head>
   <body>
-    <header>
-      <nav><!-- Navigation --></nav>
-    </header>
+    <nav>...</nav>
     <main>
-      <slot />
+      <slot />  <!-- page content renders here -->
     </main>
-    <footer><!-- Footer --></footer>
+    <footer>...</footer>
   </body>
 </html>
 ```
 
-**Using layouts:**
 ```astro
 ---
+// src/pages/about.astro
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
-<BaseLayout title="Home">
-  <h1>Welcome!</h1>
-  <p>This is the home page.</p>
+<BaseLayout title="About Us">
+  <h1>About Us</h1>
+  <p>Welcome to our company...</p>
 </BaseLayout>
 ```
 
-### Markdown Layout
+### Step 7: SSR Mode (On-Demand Rendering)
 
-```astro
----
-// src/layouts/BlogPost.astro
-import BaseLayout from './BaseLayout.astro';
-import { type CollectionEntry } from 'astro:content';
-
-interface Props {
-  post: CollectionEntry<'blog'>;
-}
-
-const { post } = Astro.props;
-const { title, pubDate, heroImage } = post.data;
----
-
-<BaseLayout title={title}>
-  <article>
-    {heroImage && <img src={heroImage} alt="" />}
-    <h1>{title}</h1>
-    <time datetime={pubDate.toISOString()}>
-      {pubDate.toLocaleDateString()}
-    </time>
-    <slot />
-  </article>
-</BaseLayout>
-```
-
-## Server-Side Rendering
-
-### Enable SSR
+Enable SSR for dynamic pages by setting an adapter:
 
 ```javascript
 // astro.config.mjs
 import { defineConfig } from 'astro/config';
-import node from '@astrojs/node';
+import vercel from '@astrojs/vercel/serverless';
 
 export default defineConfig({
-  output: 'server', // or 'hybrid'
-  adapter: node({
-    mode: 'standalone',
-  }),
+  output: 'hybrid',  // 'static' | 'server' | 'hybrid'
+  adapter: vercel(),
 });
 ```
 
-### Server Endpoints
+Opt individual pages into SSR with `export const prerender = false`.
+
+## Examples
+
+### Example 1: Blog with RSS Feed
 
 ```typescript
-// src/pages/api/posts.json.ts
+// src/pages/rss.xml.ts
+import rss from '@astrojs/rss';
+import { getCollection } from 'astro:content';
+
+export async function GET(context) {
+  const posts = await getCollection('blog');
+  return rss({
+    title: 'My Blog',
+    description: 'Latest posts',
+    site: context.site,
+    items: posts.map(post => ({
+      title: post.data.title,
+      pubDate: post.data.date,
+      link: `/blog/${post.slug}/`,
+    })),
+  });
+}
+```
+
+### Example 2: API Endpoint (SSR)
+
+```typescript
+// src/pages/api/subscribe.ts
 import type { APIRoute } from 'astro';
 
-export const GET: APIRoute = async ({ request }) => {
-  const posts = await getPosts();
-  return new Response(JSON.stringify(posts), {
-    headers: { 'Content-Type': 'application/json' },
-  });
-};
-
 export const POST: APIRoute = async ({ request }) => {
-  const data = await request.json();
-  const post = await createPost(data);
-  return new Response(JSON.stringify(post), {
-    status: 201,
-    headers: { 'Content-Type': 'application/json' },
-  });
+  const { email } = await request.json();
+
+  if (!email) {
+    return new Response(JSON.stringify({ error: 'Email required' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  await addToNewsletter(email);
+  return new Response(JSON.stringify({ success: true }), { status: 200 });
 };
 ```
 
-### Hybrid Rendering
+### Example 3: React Component as Island
 
-```javascript
-// astro.config.mjs
-export default defineConfig({
-  output: 'hybrid', // Static by default, opt-in to SSR
-});
-```
+```tsx
+// src/components/SearchBox.tsx
+import { useState } from 'react';
 
-```astro
----
-// This page renders on each request
-export const prerender = false;
+export default function SearchBox() {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
 
-const user = await getUser(Astro.cookies.get('session'));
----
-```
-
-## Styling
-
-### Scoped Styles
-
-```astro
-<style>
-  /* Scoped to this component only */
-  h1 {
-    color: red;
+  async function search(e: React.FormEvent) {
+    e.preventDefault();
+    const data = await fetch(`/api/search?q=${query}`).then(r => r.json());
+    setResults(data);
   }
-</style>
-```
 
-### Global Styles
-
-```astro
-<style is:global>
-  /* Applies globally */
-  body {
-    font-family: sans-serif;
-  }
-</style>
-```
-
-### CSS Variables
-
-```astro
----
-const { color = 'blue' } = Astro.props;
----
-
-<div class="box">Content</div>
-
-<style define:vars={{ color }}>
-  .box {
-    background-color: var(--color);
-  }
-</style>
-```
-
-### Tailwind CSS
-
-```bash
-npx astro add tailwind
-```
-
-```astro
-<div class="flex items-center justify-between p-4 bg-blue-500">
-  <h1 class="text-2xl font-bold text-white">Hello</h1>
-</div>
-```
-
-## View Transitions
-
-```astro
----
-import { ViewTransitions } from 'astro:transitions';
----
-
-<html>
-  <head>
-    <ViewTransitions />
-  </head>
-  <body>
-    <header transition:persist>
-      <!-- Persists across page navigations -->
-    </header>
-    <main transition:animate="slide">
-      <slot />
-    </main>
-  </body>
-</html>
-```
-
-**Custom transitions:**
-```astro
-<div transition:name="hero" transition:animate="fade">
-  <img src={heroImage} alt="" />
-</div>
-```
-
-## Image Optimization
-
-```astro
----
-import { Image } from 'astro:assets';
-import heroImage from '../assets/hero.png';
----
-
-<!-- Optimized image -->
-<Image src={heroImage} alt="Hero" />
-
-<!-- With dimensions -->
-<Image src={heroImage} alt="Hero" width={800} height={600} />
-
-<!-- Remote image -->
-<Image
-  src="https://example.com/image.jpg"
-  alt="Remote"
-  width={400}
-  height={300}
-/>
-```
-
-## Environment Variables
-
-```bash
-# .env
-PUBLIC_API_URL=https://api.example.com
-SECRET_KEY=abc123
+  return (
+    <form onSubmit={search}>
+      <input value={query} onChange={e => setQuery(e.target.value)} />
+      <button type="submit">Search</button>
+      <ul>{results.map(r => <li key={r.id}>{r.title}</li>)}</ul>
+    </form>
+  );
+}
 ```
 
 ```astro
 ---
-// Server-side (secret)
-const secret = import.meta.env.SECRET_KEY;
-
-// Client-side (public)
-const apiUrl = import.meta.env.PUBLIC_API_URL;
+import SearchBox from '../components/SearchBox.tsx';
 ---
+<!-- Hydrated immediately — this island is interactive -->
+<SearchBox client:load />
 ```
 
 ## Best Practices
 
-1. **Default to static** - Only add interactivity where needed
-2. **Use content collections** - For any structured content
-3. **Lazy load islands** - Use `client:visible` for below-fold content
-4. **Colocate styles** - Use scoped styles in components
-5. **Optimize images** - Use `astro:assets` for automatic optimization
+- ✅ Keep most components as static `.astro` files — only hydrate what must be interactive
+- ✅ Use content collections for all Markdown/MDX content — you get type safety and auto-validation
+- ✅ Prefer `client:visible` over `client:load` for below-the-fold components to reduce initial JS
+- ✅ Use `import.meta.env` for environment variables — prefix public vars with `PUBLIC_`
+- ✅ Add `<ViewTransitions />` from `astro:transitions` for smooth page navigation without a full SPA
+- ❌ Don't use `client:load` on every component — this defeats Astro's performance advantage
+- ❌ Don't put secrets in `.astro` frontmatter that gets used in client-facing templates
+- ❌ Don't skip `getStaticPaths` for dynamic routes in static mode — builds will fail
 
-## Common Mistakes
+## Security & Safety Notes
 
-| Mistake | Fix |
-|---------|-----|
-| Adding `client:*` everywhere | Only for truly interactive components |
-| Large client bundles | Split into smaller islands |
-| Not using content collections | For blogs, docs, use collections |
-| Fetching in client components | Fetch in Astro component script |
-| Ignoring `getStaticPaths` | Required for dynamic routes |
+- Frontmatter code in `.astro` files runs server-side only and is never exposed to the browser.
+- Use `import.meta.env.PUBLIC_*` only for non-sensitive values. Private env vars (no `PUBLIC_` prefix) are never sent to the client.
+- When using SSR mode, validate all `Astro.request` inputs before database queries or API calls.
+- Sanitize any user-supplied content before rendering with `set:html` — it bypasses auto-escaping.
 
-## Reference Files
+## Common Pitfalls
 
-- [references/content-collections.md](references/content-collections.md) - Advanced collection patterns
-- [references/islands.md](references/islands.md) - Islands architecture deep dive
-- [references/deployment.md](references/deployment.md) - Deployment options
+- **Problem:** JavaScript from a React/Vue component doesn't run in the browser
+  **Solution:** Add a `client:` directive (`client:load`, `client:visible`, etc.) — without it, components render as static HTML only.
 
-## Templates
+- **Problem:** `getStaticPaths` data is stale after content updates during dev
+  **Solution:** Astro's dev server watches content files — restart if changes to `content/config.ts` are not reflected.
 
-- [templates/page.astro](templates/page.astro) - Page component template
-- [templates/layout.astro](templates/layout.astro) - Layout component template
+- **Problem:** `Astro.props` type is `any` — no autocomplete
+  **Solution:** Define a `Props` interface or type in the frontmatter and Astro will infer it automatically.
+
+- **Problem:** CSS from a `.astro` component bleeds into other components
+  **Solution:** Styles in `.astro` `<style>` tags are automatically scoped. Use `:global()` only when intentionally targeting children.
+
+## Related Skills
+
+- `@sveltekit` — When you need a full-stack framework with reactive UI (vs Astro's content focus)
+- `@nextjs-app-router-patterns` — When you need a React-first full-stack framework
+- `@tailwind-patterns` — Styling Astro sites with Tailwind CSS
+- `@progressive-web-app` — Adding PWA capabilities to an Astro site
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

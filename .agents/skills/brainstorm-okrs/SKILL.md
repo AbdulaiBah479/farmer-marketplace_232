@@ -1,241 +1,80 @@
 ---
 name: brainstorm-okrs
-description: >
-  OKR brainstorming and validation using the Radical Focus framework. Generates
-  outcome-focused objectives with measurable key results and counter-metrics.
-  Use when setting quarterly OKRs, validating existing OKRs against quality
-  criteria, aligning team goals to company objectives, or teaching teams the
-  difference between outputs and outcomes in goal-setting.
-license: MIT + Commons Clause
-metadata:
-  version: 1.0.0
-  author: borghei
-  category: project-management
-  domain: pm-execution
-  updated: 2026-03-04
-  python-tools: okr_validator.py
-  tech-stack: okr, radical-focus, goal-setting, strategic-planning
+description: "Brainstorm team-level OKRs aligned with company objectives — qualitative objectives with measurable key results. Use when setting quarterly OKRs, aligning team goals with company strategy, drafting objectives, or learning how to write effective OKRs."
 ---
-# OKR Brainstorming Expert
 
-The agent generates and validates outcome-focused OKR sets using Christina Wodtke's Radical Focus methodology. It produces inspirational objectives with measurable key results, applies counter-metric tests, and scores quality against proven criteria.
+# Brainstorm Team OKRs
 
-## Workflow
+## Purpose
 
-### 1. Identify the Theme
+You are a veteran product leader responsible for defining Objectives and Key Results (OKRs) for the team working on $ARGUMENTS. Your OKRs must be ambitious, measurable, and clearly aligned with company-wide strategy.
 
-The agent asks: "What is the single most important thing this team needs to change this quarter?" The answer becomes the theme. Every OKR must connect back to this theme.
+## Context
 
-**Validation checkpoint:** If the user provides more than one theme, the agent pushes back. One theme per team per quarter. Multiple themes means no focus.
+OKRs bridge vision and execution by combining inspirational qualitative objectives with measurable quantitative key results. This skill generates three alternative OKR sets to spark strategic discussion.
 
-### 2. Generate 3 Distinct OKR Sets
+## Domain Context
 
-For each set, the agent produces:
+**OKR** (Christina Wodtke, *Radical Focus*):
+- **Objective** (Why, What, When): Qualitative, inspirational, time-bound goal. Typically quarterly. Should be SMART.
+- **Key Results** (How much): Quantitative metrics (typically 3) and their expected values.
 
-1. **Objective** -- One qualitative, inspirational statement (no numbers)
-2. **Key Result 1** -- Primary metric proving progress
-3. **Key Result 2** -- Secondary metric capturing a different dimension
-4. **Key Result 3** -- Counter-metric preventing gaming of KR1 and KR2
-5. **Rationale** -- 2-3 sentences on why this set matters and how it connects to the theme
+**OKRs, KPIs, and NSM are interconnected — not alternatives.** Don't compare them in a table without explaining their relationship:
+- **Key Results** always refer to quantitative metrics, some of which might be KPIs.
+- **KPIs** = a few key quantitative metrics tracked over a longer period. Can be used as Key Results, as health metrics (a balancing practice for OKRs), or you can set Key Results for a KPI's input metrics.
+- **North Star Metric** = a single, customer-centric KPI. A leading indicator of business success. You can use Key Results to express expected change in NSM.
 
-**Objective quality criteria:**
-- Qualitative (numbers belong in key results)
-- Inspirational (team would be excited to achieve it)
-- Time-bound (achievable within one quarter)
-- Actionable (team can directly influence the outcome)
+OKRs are fundamentally about: (1) Setting a single, inspiring goal. (2) Empowering a team to determine the optimal approach. (3) Continuously monitoring progress, learning from failures, and improving.
 
-**Key result quality criteria:**
-- Measurable (has a metric with a number)
-- Outcome-focused (measures results, not activities)
-- Set at 60-70% confidence (not sandbagging, not demoralizing)
-- Limited to 3 per objective
+## Instructions
 
-### 3. Apply the Counter-Metric Test
+1. **Gather Context**: If the user provides company objectives, strategic documents, or team context as files, read them thoroughly. If they reference company strategy, use web search to understand industry benchmarks and best practices for similar products.
 
-For every pair of key results, the agent asks: "Could we hit these numbers by doing something harmful?" If yes, it adds a counter-metric.
+2. **Understand the Framework**: OKRs have two components:
+   - **Objective**: A qualitative, inspirational goal describing the directional intent
+   - **Key Results**: 3 quantitative metrics (typically) measuring progress toward the objective
 
-Example: If KR1 is "Increase sign-ups by 40%", a counter-metric is "Maintain activation rate above 60%." Without it, the team could game KR1 by lowering sign-up barriers so far that unqualified users flood in.
+3. **Think Step by Step**:
+   - What is the company strategy?
+   - What are the 3-5 most impactful areas the team can influence?
+   - How do team efforts ladder up to company goals?
+   - What would success look like for customers and the business?
 
-### 4. Validate with Tool
+4. **Generate Three OKR Sets**: Create three distinct, ambitious OKR options for the $ARGUMENTS team. For each set:
+   - Start with a clear, inspiring Objective statement
+   - Define exactly 3 Key Results that are:
+     - Measurable (can be tracked numerically)
+     - Achievable but ambitious (60-70% confidence level)
+     - Aligned with company strategy
 
-```bash
-python scripts/okr_validator.py --input okrs.json
-```
+5. **Example Format**:
+   ```
+   Objective: Delight new users with an effortless onboarding experience
+   Key Results:
+   - CSAT score >= 75% on onboarding survey
+   - 66%+ of onboardings completed within two days
+   - Average time-to-value (TTV) <= 20 minutes
+   ```
 
-The validator scores each OKR set and surfaces quality issues: disguised tasks, missing metrics, output-framed key results, or missing counter-metrics.
+6. **Structure Output**: Present all three OKR sets with equal weight. For each, include:
+   - Objective (1-2 sentences)
+   - Three Key Results (specific metrics with targets)
+   - Brief rationale (why this matters to the company and team)
 
-**Validation checkpoint:** Any OKR set scoring below 70% must be revised before committing.
+7. **Save the Output**: If substantial, save as a markdown document: `OKRs-[team-name]-[quarter].md`
 
-## Example: Quarterly OKR Generation
+## Notes
 
-**Input:** Theme is "retention" for a SaaS product team.
+- Ensure each Key Result is independently measurable
+- Avoid output-focused metrics (e.g., "launch 5 features"); focus on outcomes
+- All three OKR sets should be credible, not one clearly better than others
+- Flag any assumptions about data availability
 
-**Output:**
+---
 
-```
-OKR Set 1:
-  Objective: "Become the product teams can't imagine leaving"
-  KR1: Reduce monthly churn from 4.2% to 2.5%
-  KR2: Increase 90-day retention cohort from 68% to 82%
-  KR3 (counter): Maintain NPS score above 45 (prevent forced lock-in tactics)
-  Rationale: Churn is the top revenue leak. Improving retention directly
-  increases LTV and reduces pressure on acquisition spend.
+### Further Reading
 
-OKR Set 2:
-  Objective: "Make our onboarding so good that users hit value in their first session"
-  KR1: Increase Day-1 activation rate from 34% to 55%
-  KR2: Reduce time-to-first-value from 12 minutes to under 4 minutes
-  KR3 (counter): Maintain support ticket volume below 200/week (don't hide complexity)
-  Rationale: Users who activate on Day 1 retain at 3x the rate. Onboarding
-  is the highest-leverage retention lever.
-
-OKR Set 3:
-  Objective: "Turn our power users into vocal advocates"
-  KR1: Increase referral-sourced signups from 8% to 20% of new users
-  KR2: Grow active community members from 500 to 2,000
-  KR3 (counter): Maintain power user retention above 95% (don't distract them)
-  Rationale: Advocacy compounds. Referred users have 37% higher retention
-  than paid-acquisition users.
-```
-
-```bash
-$ python scripts/okr_validator.py --input okrs.json
-
-OKR Validation Results
-======================
-Set 1: 92/100 - PASS
-  Objective: Qualitative, inspirational, time-bound
-  KR1: Measurable, outcome-focused, stretch target
-  KR2: Measurable, different dimension from KR1
-  KR3: Valid counter-metric for churn reduction
-
-Set 2: 88/100 - PASS
-  Objective: Qualitative, inspirational, time-bound
-  KR1: Measurable, outcome-focused
-  KR2: Measurable, tracks different dimension
-  KR3: Valid counter-metric
-  Note: "under 4 minutes" - verify baseline measurement exists
-
-Set 3: 85/100 - PASS
-  Objective: Qualitative, inspirational
-  KR1: Measurable, outcome-focused
-  KR2: Measurable, but "active" needs precise definition
-  KR3: Valid counter-metric
-```
-
-## Common OKR Mistakes
-
-| Mistake | Example | Fix |
-|---------|---------|-----|
-| Disguised task | "Launch the mobile app" | Ask "why?" -- measure the outcome the launch enables |
-| Too many OKRs | 5 objectives per team | Pick 1, maybe 2. More means no focus |
-| 100% confidence | Target you know you will hit | Stretch to 60-70% confidence |
-| Activity metric | "Publish 12 blog posts" | Measure impact: "Increase organic traffic by 30%" |
-| Set and forget | Review only at quarter end | Weekly check-ins with confidence scoring |
-| Top-down only | All OKRs from leadership | Combine top-down direction with bottom-up team insight |
-
-## OKRs vs KPIs vs North Star Metric
-
-| Concept | Purpose | Cadence | Example |
-|---------|---------|---------|---------|
-| North Star Metric | Single metric capturing core value delivery | Permanent | Weekly active users completing a workflow |
-| KPIs | Health indicators across the business | Ongoing | Revenue, churn rate, response time |
-| OKRs | Ambitious quarterly goals that move KPIs | Quarterly | "Become the fastest onboarding in our category" |
-
-**Relationship:** OKRs are the lever pulled to move KPIs toward the North Star Metric. KPIs indicate business health. The NSM indicates core value delivery. OKRs define what changes this quarter.
-
-## Tools
-
-| Tool | Purpose | Command |
-|------|---------|---------|
-| `okr_validator.py` | Validate and score OKR sets | `python scripts/okr_validator.py --input okrs.json` |
-| `okr_validator.py` | Run demo validation | `python scripts/okr_validator.py --demo` |
-
-## Troubleshooting
-
-| Symptom | Likely Cause | Resolution |
-|---------|-------------|------------|
-| OKR set scores below 70% consistently | Key results framed as tasks/outputs instead of outcomes, or objective contains numbers | Ask "So what?" for each KR until you reach a measurable outcome; remove numbers from objectives |
-| Validator flags "output-oriented language" | KR description starts with verbs like "launch", "build", "implement", "ship" | Reframe: "Launch mobile app" becomes "Increase mobile-originated revenue from 0% to 15%" |
-| Team sets 5+ objectives per quarter | Lack of strategic focus or inability to say no | Enforce 1 theme per team per quarter; use the Radical Focus constraint: one objective, maybe two |
-| Key results hit 100% every quarter | Targets are sandbagged at 100% confidence | Stretch to 60-70% confidence; if you hit every KR, you are not being ambitious enough |
-| Counter-metrics missing from OKR sets | Team did not apply the gaming test to KR pairs | For every pair of KRs, ask: "Could we hit these numbers by doing something harmful?" Add a counter-metric if yes |
-| OKRs set and forgotten until quarter end | No weekly check-in rhythm established | Implement weekly confidence scoring (red/yellow/green) per KR; teams with weekly check-ins complete 43% more goals |
-| Validator rejects input JSON | Schema mismatch: missing `okr_sets` key or `key_results` array per set | Ensure JSON has `okr_sets` array, each with `objective` string and `key_results` array containing `description`, `metric`, `target_value`, `current_value` |
-
-## Success Criteria
-
-- Each OKR set scores above 80/100 on the validator before committing to the quarter
-- Maximum 1-2 objectives per team per quarter (focus over breadth)
-- Every objective is qualitative and inspirational (no numbers in the objective itself)
-- Each objective has exactly 3 key results: primary metric, secondary dimension, and counter-metric
-- Key results are set at 60-70% confidence (stretch, not sandbagged)
-- Weekly confidence check-ins are conducted, not just end-of-quarter reviews
-- OKR retrospectives run at quarter end with structured review of what was learned
-
-## Scope & Limitations
-
-**In Scope:**
-- OKR brainstorming using Christina Wodtke's Radical Focus methodology
-- Generating 3 distinct OKR sets per theme with counter-metric testing
-- Automated validation and scoring of OKR quality (output detection, metric presence, structural checks)
-- Guidance on OKR vs. KPI vs. North Star Metric distinctions
-- Common OKR mistake identification and remediation
-
-**Out of Scope:**
-- OKR tracking and progress monitoring over the quarter (use dedicated OKR platforms)
-- Company-level OKR cascade and alignment across teams (see `senior-pm/` for portfolio alignment)
-- Individual performance-linked OKRs (OKRs should be team goals, not performance reviews)
-- Metric instrumentation or analytics setup for measuring key results
-
-**Important Caveats:**
-- OKRs work best when combined with weekly check-ins. Teams that review OKRs only at quarter end see 30-45% lower completion rates.
-- The validator catches structural issues but cannot assess strategic quality. A perfectly scored OKR can still be the wrong goal.
-- OKRs should be aligned top-down (strategic direction) and bottom-up (team insight). Pure top-down OKRs reduce team ownership.
-
-## Integration Points
-
-| Integration | Direction | Description |
-|------------|-----------|-------------|
-| `scrum-master/` | Receives from | Sprint velocity and capacity data inform realistic KR target-setting |
-| `senior-pm/` | Receives from | Portfolio strategic priorities shape quarterly OKR themes |
-| `execution/outcome-roadmap/` | Feeds into | OKR key results become success metrics for roadmap Now/Next items |
-| `execution/prioritization-frameworks/` | Complements | Prioritized initiatives inform which OKR theme to focus on |
-| `discovery/identify-assumptions/` | Receives from | Validated assumptions increase confidence in OKR target feasibility |
-| `discovery/brainstorm-experiments/` | Feeds into | Experiment metrics may become OKR key results when validated |
-
-## Tool Reference
-
-### okr_validator.py
-
-Validates and scores OKR sets against quality criteria. Checks objectives for qualitative/inspirational language, key results for measurable outcomes, and structural completeness.
-
-| Flag | Type | Default | Description |
-|------|------|---------|-------------|
-| `--input` | string | (required, mutually exclusive with --demo) | Path to JSON file containing OKR sets |
-| `--demo` | flag | off | Run validation on built-in demo data (mix of good and bad OKRs) |
-| `--format` | choice | `text` | Output format: `text` or `json` |
-
-**Input JSON schema:**
-```json
-{
-  "okr_sets": [
-    {
-      "objective": "string (qualitative, no numbers)",
-      "key_results": [
-        {
-          "description": "string",
-          "metric": "string (unit of measurement)",
-          "target_value": "number",
-          "current_value": "number (baseline)"
-        }
-      ]
-    }
-  ]
-}
-```
-
-## References
-
-- `references/okr-best-practices.md` -- Detailed OKR guide with examples and anti-patterns
-- `assets/okr_template.md` -- OKR document template and quarterly review format
+- [Objectives and Key Results (OKRs) 101](https://www.productcompass.pm/p/okrs-101-advanced-techniques)
+- [OKR vs KPI: What's the Difference?](https://www.productcompass.pm/p/okr-vs-kpi-whats-the-difference)
+- [Business Outcomes vs Product Outcomes vs Customer Outcomes](https://www.productcompass.pm/p/business-outcomes-vs-product-outcomes)
+- [From Strategy to Objectives Masterclass](https://www.productcompass.pm/p/product-vision-strategy-objectives-course) (video course)

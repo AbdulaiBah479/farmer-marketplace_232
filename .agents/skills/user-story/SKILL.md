@@ -1,83 +1,272 @@
 ---
 name: user-story
-description: Creates well-structured user stories for software development and project management. Use when the user asks to write, create, or format a user story, or needs to document requirements, features, or tasks in user story format.
+description: Create user stories with Mike Cohn format and Gherkin acceptance criteria. Use when turning user needs into development-ready work with clear outcomes and testable conditions.
+intent: >-
+  Create clear, concise user stories that combine Mike Cohn's user story format with Gherkin-style acceptance criteria. Use this to translate user needs into actionable development work that focuses on outcomes, ensures shared understanding between product and engineering, and provides testable success criteria.
+type: component
+theme: pm-artifacts
+best_for:
+  - "Writing user stories with proper acceptance criteria"
+  - "Converting requirements into development-ready stories"
+  - "Establishing story quality standards across your team"
+scenarios:
+  - "I need to write a user story for a new notification system in our B2B SaaS app"
+  - "Convert this PRD requirement into a properly formatted user story with Gherkin acceptance criteria"
+estimated_time: "5-10 min"
 ---
 
-# User Story Skill
 
-Create clear, actionable user stories following industry best practices.
+## Purpose
+Create clear, concise user stories that combine Mike Cohn's user story format with Gherkin-style acceptance criteria. Use this to translate user needs into actionable development work that focuses on outcomes, ensures shared understanding between product and engineering, and provides testable success criteria.
 
-## Guidelines
+This is not a feature spec—it's a conversation starter that captures *who* benefits, *what* they're trying to do, *why* it matters, and *how* you'll know it works.
 
-- Use the standard user story format: "As a [type of user], I want [goal] so that [reason/benefit]"
-- Keep titles concise and descriptive
-- Write a brief 1-2 sentence summary explaining the context
-- **Be concise - avoid over-doing it with too much detail**
-- Focus on user value and outcomes, not implementation details
+## Key Concepts
 
-## Structure
+### The Mike Cohn + Gherkin Format
+A user story combines:
 
-Use the template provided in `template.md` to ensure consistency:
+**Use Case (Mike Cohn format):**
+- **As a** [user persona/role]
+- **I want to** [action to achieve outcome]
+- **so that** [desired outcome]
 
-1. **Title**: Brief, descriptive headline starting with "As a..."
-2. **Summary**: 1-2 sentences providing context
-3. **Task List** (optional): Use for highly technical, non-user-facing work
-4. **Acceptance Criteria** (optional): Use for user-facing stories to define what "done" looks like
+**Acceptance Criteria (Gherkin format):**
+- **Scenario:** [Brief description of the scenario]
+- **Given:** [Initial context or preconditions]
+- **and Given:** [Additional preconditions]
+- **When:** [Event that triggers the action]
+- **Then:** [Expected outcome]
 
-**Important**: Stories typically have EITHER a task list OR acceptance criteria, not both. Choose based on the story type:
+### Why This Structure Works
+- **User-centric:** Forces focus on who benefits and why
+- **Outcome-focused:** "So that" emphasizes the value delivered, not just the action
+- **Testable:** Gherkin acceptance criteria are concrete and verifiable
+- **Conversational:** Story is the opening for discussion, not the final spec
+- **Shared language:** Product, engineering, and QA all understand the format
 
-## Best Practices
+### Anti-Patterns (What This Is NOT)
+- **Not a task:** "As a developer, I want to refactor the database" (this is a tech task, not user value)
+- **Not a feature list:** "I want dashboards, reports, and analytics" (this is too big—needs splitting)
+- **Not vague:** "I want a better experience" (unmeasurable, no clear outcome)
+- **Not a contract:** Stories are placeholders for conversation, not locked-in specs
 
-- **Keep it simple**: Don't over-engineer the story with unnecessary detail
-- Make acceptance criteria specific and measurable (when included)
-- Use "Given-When-Then" format sparingly and only when it adds clarity
-- Keep stories focused on a single piece of value
-- For task lists, list only essential implementation steps
-- For acceptance criteria, list only what's needed to verify completion
+### When to Use This
+- Translating user needs into development work
+- Backlog grooming and sprint planning
+- Communicating value to engineering and design
+- Ensuring testable acceptance criteria exist before development
+
+### When NOT to Use This
+- For pure technical debt or refactoring (use engineering tasks instead)
+- When stories are too large (split first—see `skills/user-story-splitting/SKILL.md`)
+- Before understanding the user problem (write a problem statement first)
+
+---
+
+## Application
+
+### Step 1: Gather Context
+Before writing a story, ensure you have:
+- **User persona:** Who is this for? (reference `skills/proto-persona/SKILL.md`)
+- **Problem understanding:** What need does this address? (reference `skills/problem-statement/SKILL.md`)
+- **Desired outcome:** What does success look like?
+- **Constraints:** Technical, time, or scope limitations
+
+**If missing context:** Run discovery interviews or problem validation work first.
+
+---
+
+### Optional Helper Script (Template Generator)
+
+If you want a consistent Markdown stub, you can generate one from CLI inputs. This script is deterministic and does not fetch data or write files.
+
+```bash
+python3 scripts/user-story-template.py --persona \"trial user\" --action \"log in with Google\" --outcome \"access the app without creating a new password\"
+```
+
+---
+
+### Step 2: Write the Use Case
+
+Use `template.md` for the full fill-in structure.
+
+Fill in the template:
+
+```markdown
+### User Story [ID]:
+
+- **Summary:** [Brief, memorable title focused on value to the user]
+
+#### Use Case:
+- **As a** [user name if available, otherwise persona, otherwise role]
+- **I want to** [action user takes to get to outcome]
+- **so that** [desired outcome]
+```
+
+**Quality checks:**
+- **"As a" specificity:** Is this a specific persona (e.g., "trial user") or generic ("user")?
+- **"I want to" clarity:** Is this an action the user takes, or a feature you're building?
+- **"So that" outcome:** Does this explain the user's motivation? Or is it just restating the action?
+
+**Common mistakes:**
+- ❌ "As a user, I want a login button, so that I can log in" (restating the action)
+- ✅ "As a trial user, I want to log in with Google, so that I can access the app without creating a new password"
+
+---
+
+### Step 3: Write the Acceptance Criteria
+
+Fill in the template:
+
+```markdown
+#### Acceptance Criteria:
+
+- **Scenario:** [Brief, human-readable scenario describing value]
+- **Given:** [Initial context or precondition]
+- **and Given:** [Additional context or preconditions]
+- **and Given:** [Additional context as needed]
+- **and Given:** [UI-focused context ensuring 'When' can happen]
+- **and Given:** [Outcomes-focused context ensuring 'Then' is delivered]
+- **When:** [Event that triggers the action—aligns with 'I want to']
+- **Then:** [Expected outcome—aligns with 'so that']
+```
+
+**Quality checks:**
+- **Multiple Givens are okay:** Preconditions stack up (e.g., "Given I'm logged in" + "Given I have items in my cart")
+- **Only one When:** If you need multiple "When" statements, you likely have multiple stories—split them
+- **Only one Then:** If you need multiple "Then" statements, you likely have multiple stories—split them
+- **Alignment:** Does "When" match "I want to"? Does "Then" match "so that"?
+
+**Red flags:**
+- **Multiple Whens/Thens:** Sign of scope creep—split the story (reference `skills/user-story-splitting/SKILL.md`)
+- **Vague Thens:** "Then I see improved performance" (unmeasurable—make it specific)
+
+---
+
+### Step 4: Add a Summary
+
+Write a short, memorable summary that captures the story's value:
+
+```markdown
+- **Summary:** [Brief, human-readable title]
+```
+
+**Examples:**
+- ✅ "Enable Google login for trial users to reduce signup friction"
+- ✅ "Bulk delete items to save time for power users"
+- ❌ "Add delete button" (feature-centric, not value-centric)
+
+---
+
+### Step 5: Validate and Refine
+
+- **Read aloud to the team:** Does everyone understand who, what, why?
+- **Test acceptance criteria:** Can QA write test cases from this?
+- **Check for splitting:** If the story feels too big, use `skills/user-story-splitting/SKILL.md`
+- **Ensure testability:** Can you prove "Then" happened?
+
+---
 
 ## Examples
 
-### User-Facing Story (Acceptance Criteria)
+See `examples/sample.md` for full examples (good, bad, and split-needed stories).
 
-**Title**: As a user, I want to reset my password via email
+Mini example excerpt:
 
-**Summary**: Users who forget their passwords need a secure way to regain access to their accounts.
+```markdown
+### User Story 042:
 
-**Acceptance Criteria**:
+- **Summary:** Enable Google login for trial users to reduce signup friction
 
-- User can request password reset from login page
-- System sends reset link to registered email
-- Reset link expires after 24 hours
-- User can set new password using valid link
+#### Use Case:
+- **As a** trial user visiting the app for the first time
+- **I want to** log in using my Google account
+- **so that** I can access the app without creating and remembering a new password
 
-### Technical Story (Task List)
+#### Acceptance Criteria:
+- **Scenario:** First-time trial user logs in via Google OAuth
+- **Given:** I am on the login page
+- **and Given:** I have a login account
+- **When:** I click the "Sign in with Google" button and authorize the app
+- **Then:** I am logged into the app and redirected to the onboarding flow
+```
 
-**Title**: As a developer, I want to upgrade the database schema
+---
 
-**Summary**: We need to migrate from the old schema to support new feature requirements.
+## Common Pitfalls
 
-**Task List**:
+### Pitfall 1: Technical Tasks Disguised as User Stories
+**Symptom:** "As a developer, I want to refactor the API, so that the code is cleaner"
 
-- Create migration script
-- Test migration on staging environment
-- Schedule maintenance window
-- Execute migration on production
-- Verify data integrity
+**Consequence:** This is an engineering task, not a user story. No user value is delivered.
 
-### Balanced Story (Both - Use Sparingly)
+**Fix:** If there's no user outcome, it's not a user story—use an engineering task or tech debt ticket instead.
 
-**Title**: As an admin, I want to export user data to CSV
+---
 
-**Summary**: Administrators need to extract user data for reporting and compliance purposes.
+### Pitfall 2: "As a User" (Too Generic)
+**Symptom:** Every story starts with "As a user"
 
-**Task List**:
+**Consequence:** No persona clarity. Different users have different needs.
 
-- Implement CSV export endpoint
-- Add data filtering options
+**Fix:** Use specific personas: "As a trial user," "As a paid subscriber," "As an admin," etc. (reference `skills/proto-persona/SKILL.md`)
 
-**Acceptance Criteria**:
+---
 
-- Admin can select which fields to export
-- System handles 10,000+ users
-- File downloads automatically when ready
-- Export includes timestamp and admin username in filename
+### Pitfall 3: "So That" Restates "I Want To"
+**Symptom:** "I want to click the save button, so that I can save my work"
+
+**Consequence:** No insight into *why* the user cares. Just restating the action.
+
+**Fix:** Dig into the motivation: "so that I don't lose my progress if the page crashes" (real outcome).
+
+---
+
+### Pitfall 4: Multiple When/Then Statements
+**Symptom:** Acceptance criteria with 5 "When" statements and 5 "Then" statements
+
+**Consequence:** Story is too big. Likely multiple features bundled together.
+
+**Fix:** Split the story using `skills/user-story-splitting/SKILL.md`. Each When/Then pair should be its own story (or at least evaluated for splitting).
+
+---
+
+### Pitfall 5: Untestable Acceptance Criteria
+**Symptom:** "Then the user has a better experience" or "Then it's faster"
+
+**Consequence:** QA can't verify success. Ambiguous definition of "done."
+
+**Fix:** Make it measurable: "Then the page loads in under 2 seconds" or "Then the user sees a success confirmation message."
+
+---
+
+## References
+
+### Related Skills
+- `skills/user-story-splitting/SKILL.md` — How to break large stories into smaller ones
+- `skills/proto-persona/SKILL.md` — Defines the "As a [persona]" section
+- `skills/problem-statement/SKILL.md` — Stories should address validated problems
+- `skills/epic-hypothesis/SKILL.md` — Epics decompose into user stories
+
+### Optional Helpers
+- `skills/user-story/scripts/user-story-template.py` — Deterministic Markdown stub generator (no network access)
+
+### External Frameworks
+- Mike Cohn, *User Stories Applied* (2004) — Origin of the "As a / I want / so that" format
+- Gherkin (Cucumber) — "Given/When/Then" acceptance criteria format
+- INVEST criteria (Independent, Negotiable, Valuable, Estimable, Small, Testable)
+
+### Dean's Work
+- [Link to relevant Dean Peters' Substack articles if applicable]
+
+### Provenance
+- Adapted from `prompts/user-story-prompt-template.md` in the `https://github.com/deanpeters/product-manager-prompts` repo.
+
+---
+
+**Skill type:** Component
+**Suggested filename:** `user-story.md`
+**Suggested placement:** `/skills/components/`
+**Dependencies:** References `skills/proto-persona/SKILL.md`, `skills/problem-statement/SKILL.md`
+**Used by:** `skills/user-story-splitting/SKILL.md`, `skills/epic-hypothesis/SKILL.md`

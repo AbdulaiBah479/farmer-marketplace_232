@@ -1,159 +1,95 @@
 ---
 name: create-handoff
-description: Create unified artifact document for checkpoint, handoff, or finalize
+description: Create handoff document for transferring work to another session
 ---
 
-# Create Unified Artifact
+# Create Handoff
 
-This skill is the **canonical generator** for unified artifacts (checkpoint, handoff, finalize). Use it to capture session state in a consistent schema under the canonical directory.
+You are tasked with writing a handoff document to hand off your work to another agent in a new session. You will create a handoff document that is thorough, but also **concise**. The goal is to compact and summarize your context without losing any of the key details of what you're working on.
 
-## When to Use
-
-- **/checkpoint**: quick mid-session snapshot (bead optional)
-- **/handoff**: transfer ongoing work to the next session (bead required)
-- **/finalize**: memorialize completed work (bead required)
 
 ## Process
+### 1. Filepath & Metadata
+Use the following information to understand how to create your document:
 
-### 1. Gather Session Context
-
-If a bead is active, capture it. For handoff/finalize, a bead is **required**:
-
+**First, determine the session name from existing handoffs:**
 ```bash
-bd list --status=in_progress
+ls -td thoughts/shared/handoffs/*/ 2>/dev/null | head -1 | xargs basename
 ```
 
-### 2. Create the Unified Artifact
+This returns the most recently modified handoff folder name (e.g., `open-source-release`). Use this as the handoff folder name.
 
-Preferred path: use the core generator script (handles timestamps + git metadata):
+If no handoffs exist, use `general` as the folder name.
 
-```bash
-~/.claude/scripts/cc-artifact --mode <checkpoint|handoff|finalize> [--bead <BEAD_ID>] [--session-title "<short title>"]
-```
+**Create your file under:** `thoughts/shared/handoffs/{session-name}/YYYY-MM-DD_HH-MM_description.yaml`, where:
+- `{session-name}` is from existing handoffs (e.g., `open-source-release`) or `general` if none exist
+- `YYYY-MM-DD` is today's date
+- `HH-MM` is the current time in 24-hour format (no seconds needed)
+- `description` is a brief kebab-case description
 
-Artifacts are written to:
+**Examples:**
+- `thoughts/shared/handoffs/open-source-release/2026-01-08_16-30_memory-system-fix.yaml`
+- `thoughts/shared/handoffs/general/2026-01-08_16-30_bug-investigation.yaml`
 
-```
-thoughts/shared/handoffs/<session>/YYYY-MM-DD_HH-MM_<title>_<mode>.yaml
-```
+### 2. Write YAML handoff (~400 tokens vs ~2000 for markdown)
 
-**Filename format:**
-- `YYYY-MM-DD_HH-MM`: Date and time (UTC) with hyphen separators
-- `<title>`: Slugified session title (or derived from session)
-- `<mode>`: checkpoint | handoff | finalize
-- Example: `2026-01-14_01-23_auth-refactor_handoff.yaml`
+**CRITICAL: Use EXACTLY this YAML format. Do NOT deviate or use alternative field names.**
 
-### 3. Required Fields
-
-**Core fields (all artifacts):**
-- `schema_version`: "1.0.0"
-- `mode`: "checkpoint" | "handoff" | "finalize"
-- `date`: ISO 8601 date or date-time (e.g., "2026-01-14T01:23:45.678Z")
-- `session`: Session folder name (bead + slug)
-- `goal`: What this session accomplished
-- `now`: Current focus / next action
-- `outcome`: SUCCEEDED | PARTIAL_PLUS | PARTIAL_MINUS | FAILED
-- `primary_bead`: Required for handoff/finalize, optional for checkpoint
-
-**Handoff-specific fields (optional):**
-- `related_beads`: Related bead IDs
-- `files_to_review`: Array of {path, note}
-- `continuation_prompt`: Resume instructions
-
-**Finalize-specific fields (optional but recommended):**
-- `final_solutions`: Array of {problem, solution, rationale}
-- `final_decisions`: Array of decision objects
-- `artifacts_produced`: Array of {path, note}
-
-**Optional but recommended:**
-- `session_id`: 8-char hex identifier
-- `done_this_session`: Array of completed tasks with files
-- `next`: Array of next steps
-- `blockers`: Array of blocking issues
-- `questions`: Array of unresolved questions
-- `decisions`: Record of key decisions (simple format) or array of Decision objects
-- `worked`: What worked well
-- `failed`: What didn't work and why
-- `findings`: Record of key discoveries
-- `git`: Branch, commit, remote
-- `files`: Object with created, modified, deleted arrays
-- `test`: Command to verify the work
-
-### 4. YAML Format (Handoff Example)
+The `goal:` and `now:` fields are shown in the statusline - they MUST be named exactly this.
 
 ```yaml
 ---
-schema_version: "1.0.0"
-mode: handoff
-date: 2026-01-14T01:23:45.678Z
-session: Continuous-Claude-v3-ug8.6-auth-refactor
-outcome: PARTIAL_PLUS
-primary_bead: Continuous-Claude-v3-ug8.6
-session_id: abc12345
+session: {session-name from ledger}
+date: YYYY-MM-DD
+status: complete|partial|blocked
+outcome: SUCCEEDED|PARTIAL_PLUS|PARTIAL_MINUS|FAILED
 ---
 
-goal: What this session accomplished
-now: What next session should do first
+goal: {What this session accomplished - shown in statusline}
+now: {What next session should do first - shown in statusline}
+test: {Command to verify this work, e.g., pytest tests/test_foo.py}
 
 done_this_session:
-  - task: First completed task
-    files:
-      - path/to/file1.ts
-      - path/to/file2.ts
-  - task: Second completed task
-    files:
-      - path/to/file3.ts
+  - task: {First completed task}
+    files: [{file1.py}, {file2.py}]
+  - task: {Second completed task}
+    files: [{file3.py}]
 
-next:
-  - First step for next session
-  - Second step for next session
+blockers: [{any blocking issues}]
 
-blockers:
-  - Blocking issue 1
-  - Blocking issue 2
-
-questions:
-  - Unresolved question 1
-  - Unresolved question 2
+questions: [{unresolved questions for next session}]
 
 decisions:
-  decision_name: Rationale for this decision
-
-worked:
-  - Approach that worked
-failed:
-  - Approach that failed and why
+  - {decision_name}: {rationale}
 
 findings:
-  key_finding: Details about this finding
+  - {key_finding}: {details}
 
-related_beads:
-  - beads-xxx
-  - beads-yyy
+worked: [{approaches that worked}]
+failed: [{approaches that failed and why}]
 
-files_to_review:
-  - path: src/important-file.ts
-    note: Focus on the authentication logic here
-
-continuation_prompt: |
-  Start by reviewing the auth flow in src/auth.ts.
-  The next step is to implement the refresh token logic.
-
-git:
-  branch: feat/auth-system
-  commit: abc1234
-  remote: origin
+next:
+  - {First next step}
+  - {Second next step}
 
 files:
-  created:
-    - new-file.ts
-  modified:
-    - existing-file.ts
-
-test: npm test
+  created: [{new files}]
+  modified: [{changed files}]
 ```
 
-### 5. Mark Session Outcome (REQUIRED)
+**Field guide:**
+- `goal:` + `now:` - REQUIRED, shown in statusline
+- `done_this_session:` - What was accomplished with file references
+- `decisions:` - Important choices and rationale
+- `findings:` - Key learnings
+- `worked:` / `failed:` - What to repeat vs avoid
+- `next:` - Action items for next session
+
+**DO NOT use alternative field names like `session_goal`, `objective`, `focus`, `current`, etc.**
+**The statusline parser looks for EXACTLY `goal:` and `now:` - nothing else works.**
+---
+
+### 3. Mark Session Outcome (REQUIRED)
 
 **IMPORTANT:** Before responding to the user, you MUST ask about the session outcome.
 
@@ -168,27 +104,38 @@ Options:
   - FAILED: Task abandoned or blocked
 ```
 
-After the user responds, the outcome is included in the YAML.
+After the user responds, index and mark the outcome:
+```bash
+# Mark the most recent handoff (works with PostgreSQL or SQLite)
+# Use git root to find project, then opc/scripts/core/
+PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo "${CLAUDE_PROJECT_DIR:-.}")
 
-### 6. Confirm Completion
+# First, index the handoff into the database
+cd "$PROJECT_ROOT/opc" && uv run python scripts/core/artifact_index.py --file thoughts/shared/handoffs/{session_name}/{filename}.yaml
 
-Respond to the user:
+# Then mark the outcome
+cd "$PROJECT_ROOT/opc" && uv run python scripts/core/artifact_mark.py --latest --outcome <USER_CHOICE>
+```
+
+**IMPORTANT:** Replace `{session_name}` and `{filename}` with the actual values from step 1.
+
+These commands auto-detect the database (PostgreSQL if configured, SQLite fallback).
+
+**Note:** If indexing fails, the marking step will show "Database marking was not available" - this is acceptable for the first handoff but indicates the indexing step was skipped.
+
+### 4. Confirm completion
+
+After marking the outcome, respond to the user:
 
 ```
-Artifact created! Outcome: [OUTCOME]
+Handoff created! Outcome marked as [OUTCOME].
 
 Resume in a new session with:
-/resume_handoff thoughts/shared/handoffs/<session>/[filename]
+/resume_handoff path/to/handoff.yaml
 ```
 
 ---
-
-## Additional Notes
-
-- **Be thorough and concise**: Include key details without excessive verbosity
-- **Avoid large code snippets**: Use file:line references (e.g., `src/file.ts:42-56`)
-- **Focus on context**: What does the next session need to know?
-- **Link files**: Reference important files with notes for next session
-- **primary_bead is REQUIRED for handoff/finalize**
-
-This skill provides a single, structured artifact format for checkpoints, handoffs, and finalize events.
+##.  Additional Notes & Instructions
+- **more information, not less**. This is a guideline that defines the minimum of what a handoff should be. Always feel free to include more information if necessary.
+- **be thorough and precise**. include both top-level objectives, and lower-level details as necessary.
+- **avoid excessive code snippets**. While a brief snippet to describe some key change is important, avoid large code blocks or diffs; do not include one unless it's necessary (e.g. pertains to an error you're debugging). Prefer using `/path/to/file.ext:line` references that an agent can follow later when it's ready, e.g. `packages/dashboard/src/app/dashboard/page.tsx:12-24`

@@ -3,11 +3,14 @@ name: slack-automation
 description: Automate Slack messaging, channel management, search, reactions, and threads via Rube MCP (Composio). Send messages, search conversations, manage channels/users, and react to messages programmatically.
 requires:
   mcp: [rube]
+category: communication
 ---
 
 # Slack Automation via Rube MCP
 
 Automate Slack workspace operations including messaging, search, channel management, and reaction workflows through Composio's Slack toolkit.
+
+**Toolkit docs**: [composio.dev/toolkits/slack](https://composio.dev/toolkits/slack)
 
 ## Prerequisites
 
@@ -187,3 +190,6 @@ Most list endpoints use cursor-based pagination:
 | Get channel info | `SLACK_RETRIEVE_CONVERSATION_INFORMATION` | channel ID |
 | Channel history | `SLACK_FETCH_CONVERSATION_HISTORY` | `channel`, `oldest`, `latest` |
 | Workspace info | `SLACK_FETCH_TEAM_INFO` | (none) |
+
+---
+*Powered by [Composio](https://composio.dev)*

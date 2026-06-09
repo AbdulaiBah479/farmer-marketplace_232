@@ -1,191 +1,286 @@
 ---
 name: run-tests
-description: Run the appropriate test suite based on what you're testing and whether you need database access
+description: >
+  For `dotnet test`: figures out which test platform (VSTest vs
+  Microsoft.Testing.Platform) a project uses from `Directory.Build.props`,
+  `global.json`, and `.csproj`, then picks the matching command syntax. USE
+  FOR: running, filtering, or troubleshooting `dotnet test`; identifying the
+  test runner/platform from project files; `--` separator rules on .NET SDK
+  8/9 vs 10+; choosing the right filter syntax for MSTest / xUnit / NUnit /
+  TUnit (--filter, --filter-class, --filter-trait, --filter-query,
+  --treenode-filter); TRX/reporting (--report-trx vs --logger trx);
+  blame/hang/crash diagnostics (--blame-hang-timeout, --blame-crash); running
+  tests against a single target framework when a project targets multiple
+  TFMs (e.g., `<TargetFrameworks>net8.0;net9.0</TargetFrameworks>`,
+  `--framework <TFM>`); and avoiding MTP/VSTest argument mixups (--logger
+  trx on MTP, --report-trx on VSTest, --blame on MTP).
+  DO NOT USE FOR: writing/generating test code, CI/CD config, or debugging
+  failing test logic.
+license: MIT
 ---
 
-# Run Tests Skill
+# Run .NET Tests
 
-Use this skill when running or writing tests for this project.
+Detect the test platform and framework, run tests, and apply filters using `dotnet test`.
 
----
+## When to Use
 
-## Test Types
+- User wants to run tests in a .NET project
+- User needs to run a subset of tests using filters
+- User needs help detecting which test platform (VSTest vs MTP) or framework is in use
+- User wants to understand the correct filter syntax for their setup
 
-This project uses filename and function name conventions for test categorization:
+## When Not to Use
 
-- **Unit tests**: Files without "Integration" in test function names. No external dependencies, fast.
-- **Integration tests**: `*_integration_test.go` files with "Integration" in function names. Requires database, slower.
-- **Benchmarks**: Standard Go benchmarks (`func Benchmark...`). See `internal/evaluator/evaluator_benchmark_test.go` for an example.
+- User needs to write or generate test code (use `writing-mstest-tests` for MSTest, or general coding assistance for other frameworks)
+- User needs to migrate from VSTest to MTP (use `migrate-vstest-to-mtp`)
+- User wants to iterate on failing tests without rebuilding (use `mtp-hot-reload`)
+- User needs CI/CD pipeline configuration (use CI-specific skills)
+- User needs to debug a test (use debugging skills)
 
-## When to Use Each
+## Inputs
 
-### Unit Tests (`task test:unit`)
+| Input | Required | Description |
+|-------|----------|-------------|
+| Project or solution path | No | Path to the test project (.csproj) or solution (.sln). Defaults to current directory. |
+| Filter expression | No | Filter expression to select specific tests |
+| Target framework | No | Target framework moniker to run against (e.g., `net8.0`) |
 
-**Use when:**
-- Doing TDD or tight iteration loops
-- Testing pure functions or business logic
-- No database or network calls needed
-- Want fast feedback (runs in seconds)
+## Critical Rules — Avoid Cross-Platform Mistakes
 
-**Command:**
-```bash
-task test:unit
-```
+These are the most common agent mistakes. Internalize before proceeding:
 
-**What it runs:**
-```bash
-go test ./... -run "Test[^I]"
-```
+| Rule | Why |
+|------|-----|
+| **Do NOT use `--logger trx`** for MTP projects | MTP uses `--report-trx` (requires the TrxReport extension package) |
+| **Do NOT use `--report-trx`** for VSTest projects | VSTest uses `--logger trx` |
+| **Do NOT use `-- --arg`** on .NET SDK 10+ | SDK 10+ passes MTP args directly: `dotnet test --project . --report-trx` |
+| **Do NOT omit `--`** on .NET SDK 8/9 with MTP | SDK 8/9 requires the separator: `dotnet test -- --report-trx` |
+| **Do NOT use `--filter "ClassName=..."`** with xUnit v3 on MTP | xUnit v3 on MTP uses `--filter-class`, `--filter-method`, `--filter-trait` |
+| **Do NOT use bare positional path** on SDK 10+ | Use `--project <path>` or `--solution <path>` instead |
+| **Do NOT use `--blame`** for MTP projects | MTP uses `--blame-crash` and `--blame-hang-timeout` separately (each requires its extension package) |
+| **Do NOT use `--collect "Code Coverage"`** for MTP | MTP uses `--coverage` (requires the CodeCoverage extension package) |
 
-This runs all tests that don't have "Integration" in the name.
+## Workflow
 
-**Example test files:**
-- `internal/helpers/maths_test.go`
-- `internal/candidate_tree/item_test.go`
-- `internal/evaluator/trader_constraints_test.go`
+### Quick Reference
 
-### Integration Tests (`task test:integration`)
+| Platform | SDK | Command pattern |
+|----------|-----|----------------|
+| VSTest | Any | `dotnet test [<path>] [--filter <expr>] [--logger trx]` |
+| MTP | 8 or 9 | `dotnet test [<path>] -- <MTP_ARGS>` |
+| MTP | 10+ | `dotnet test --project <path> <MTP_ARGS>` |
 
-**Use when:**
-- Testing database operations (models package)
-- Testing full workflows that span multiple components
-- Verifying migrations work correctly
-- Before merging to main
+**Detection files to always check** (in order): `global.json` -> `.csproj` -> `Directory.Build.props` -> `Directory.Packages.props`
 
-**Commands:**
-```bash
-# Recommended for DevContainer (assuming database is running)
-task test:integration
+**If the prompt names a subset of tests** (e.g., "integration tests", "smoke tests", a specific class, a specific TFM), plan to apply the matching filter / `--framework` in [Step 3](#step-3-run-filtered-tests) — do not run the whole suite.
 
-# Use if database needs to be started via Docker Compose
-task test:integration:docker
-```
+### Step 1: Detect the test platform and framework
 
-**What it does:**
-1. `test:integration`: Runs tests matching `.*Integration.*` pattern.
-2. `test:integration:docker`: Starts Docker services (PostgreSQL) via `compose:up`, then runs integration tests.
+1. Run `dotnet --version` in the project directory to determine the SDK version. This accounts for `global.json` SDK pinning.
+2. Read `global.json` — on .NET SDK 10+, `"test": { "runner": "Microsoft.Testing.Platform" }` is the **authoritative MTP signal**. If present, the project uses MTP and SDK 10+ syntax (no `--` separator).
+3. Read `.csproj`, `Directory.Build.props`, **and** `Directory.Packages.props` for framework packages and MTP properties. **Always check all three files** — MTP properties are frequently set in `Directory.Build.props` rather than individual `.csproj` files.
+4. For full detection logic (SDK 8/9 signals, framework identification), see the `platform-detection` skill.
 
-**What it runs:**
-```bash
-go test ./... -run ".*Integration.*"
-```
+**What to look for in each file:**
 
-**Example test files:**
-- `internal/evaluator/find_best_build_integration_test.go`
-- `internal/db/db_test.go`
+| File | Look for | Indicates |
+|------|----------|-----------|
+| `global.json` | `"test": { "runner": "Microsoft.Testing.Platform" }` | MTP on SDK 10+ |
+| `global.json` | `"sdk": { "version": "..." }` | SDK version (determines `--` separator behavior) |
+| `.csproj` | `<TestingPlatformDotnetTestSupport>true` | MTP on SDK 8/9 |
+| `.csproj` | `MSTest`, `xunit.v3`, `NUnit`, `TUnit` packages | Framework identity |
+| `.csproj` | `Microsoft.NET.Test.Sdk` + test adapter | VSTest (unless overridden by MTP signals above) |
+| `.csproj` | `<TargetFrameworks>` (plural) | Multi-TFM — may need `--framework` |
+| `Directory.Build.props` | `<TestingPlatformDotnetTestSupport>true` | MTP on SDK 8/9 (often set here, not in .csproj) |
+| `Directory.Packages.props` | Centrally managed test package versions | Framework identity for CPM repos |
 
-**Requirements:**
-- Docker running
-- `.env` file configured
-- Database migrations applied
+**Quick detection summary:**
 
-### All Tests (`task test`)
+| Signal | Means |
+|--------|-------|
+| `global.json` has `"test": { "runner": "Microsoft.Testing.Platform" }` | **MTP on SDK 10+** — pass args directly, no `--` |
+| `<TestingPlatformDotnetTestSupport>true` in csproj or Directory.Build.props | **MTP on SDK 8/9** — pass args after `--` |
+| Neither signal present | **VSTest** |
 
-**Use when:**
-- Running CI/CD pipeline
-- Final verification before pushing
-- Want comprehensive coverage check
+### Step 2: Run tests
 
-**Command:**
-```bash
-task test
-```
-
-**What it runs:**
-```bash
-go test ./...
-```
-
-Runs everything: unit, integration, and any other tests.
-
-## Test Workflow Recommendations
-
-### During Active Development (TDD)
+#### VSTest (any .NET SDK version)
 
 ```bash
-# Run unit tests repeatedly after changes
-task test:unit
+dotnet test [<PROJECT> | <SOLUTION> | <DIRECTORY> | <DLL> | <EXE>]
 ```
 
-### Before Committing
+Common flags:
+
+| Flag | Description |
+|------|-------------|
+| `--framework <TFM>` | Target a specific framework in multi-TFM projects (e.g., `net8.0`) |
+| `--no-build` | Skip build, use previously built output |
+| `--filter <EXPRESSION>` | Run selected tests (see [Step 3](#step-3-run-filtered-tests)) |
+| `--logger trx` | Generate TRX results file |
+| `--collect "Code Coverage"` | Collect code coverage using Microsoft Code Coverage (built-in, always available) |
+| `--blame` | Enable blame mode to detect tests that crash the host |
+| `--blame-crash` | Collect a crash dump when the test host crashes |
+| `--blame-hang-timeout <duration>` | Abort test if it hangs longer than duration (e.g., `5min`) |
+| `-v <level>` | Verbosity: `quiet`, `minimal`, `normal`, `detailed`, `diagnostic` |
+
+#### MTP with .NET SDK 8 or 9
+
+With `<TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>`, `dotnet test` bridges to MTP but uses VSTest-style argument parsing. MTP-specific arguments must be passed after `--`:
 
 ```bash
-# Run unit tests (fast check)
-task test:unit
-
-# If touching database code, run integration tests
-task test:integration
+dotnet test [<PROJECT> | <SOLUTION> | <DIRECTORY> | <DLL> | <EXE>] -- <MTP_ARGUMENTS>
 ```
 
-### Before Pushing/Merging
+#### MTP with .NET SDK 10+
+
+With the `global.json` runner set to `Microsoft.Testing.Platform`, `dotnet test` natively understands MTP arguments without `--`:
 
 ```bash
-# Run everything
-task test
-
-# Run linter too
-task lint
+dotnet test
+    [--project <PROJECT_OR_DIRECTORY>]
+    [--solution <SOLUTION_OR_DIRECTORY>]
+    [--test-modules <EXPRESSION>]
+    [<MTP_ARGUMENTS>]
 ```
 
-## Running Specific Tests
+Examples:
 
-### Single test function:
 ```bash
-go test ./internal/evaluator -run TestFindBestBuild
+# Run all tests in a project
+dotnet test --project path/to/MyTests.csproj
+
+# Run all tests in a directory containing a project
+dotnet test --project path/to/
+
+# Run all tests in a solution (sln, slnf, slnx)
+dotnet test --solution path/to/MySolution.sln
+
+# Run all tests in a directory containing a solution
+dotnet test --solution path/to/
+
+# Run with MTP flags
+dotnet test --project path/to/MyTests.csproj --report-trx --blame-hang-timeout 5min
 ```
 
-### Single package:
+> **Note**: The .NET 10+ `dotnet test` syntax does **not** accept a bare positional argument like the VSTest syntax. Use `--project`, `--solution`, or `--test-modules` to specify the target.
+
+#### Common MTP flags
+
+These flags apply to MTP on both SDK versions. On SDK 8/9, pass after `--`; on SDK 10+, pass directly.
+
+> **Important:** `dotnet test`/MSBuild flags such as `--framework`, `--no-build`, `--configuration`, and `--verbosity` are consumed by `dotnet test` itself (they drive restore/build/host selection) and **always go BEFORE `--`**, regardless of platform or SDK. Only MTP test-platform arguments go after `--` on SDK 8/9. For example: `dotnet test --framework net9.0 -- --report-trx` (built-in flag before `--`, MTP extension flag after).
+
+**Built-in flags (always available):**
+
+| Flag | Description |
+|------|-------------|
+| `--results-directory <DIR>` | Directory for test result output |
+| `--diagnostic` | Enable diagnostic logging for the test platform |
+| `--diagnostic-output-directory <DIR>` | Directory for diagnostic log output |
+
+**Extension-dependent flags (require the corresponding extension package to be registered):**
+
+| Flag | Requires | Description |
+|------|----------|-------------|
+| `--filter <EXPRESSION>` | Framework-specific (not all frameworks support this) | Run selected tests (see [Step 3](#step-3-run-filtered-tests)) |
+| `--report-trx` | `Microsoft.Testing.Extensions.TrxReport` | Generate TRX results file |
+| `--report-trx-filename <FILE>` | `Microsoft.Testing.Extensions.TrxReport` | Set TRX output filename |
+| `--blame-hang-timeout <duration>` | `Microsoft.Testing.Extensions.HangDump` | Abort test if it hangs longer than duration (e.g., `5min`) |
+| `--blame-crash` | `Microsoft.Testing.Extensions.CrashDump` | Collect a crash dump when the test host crashes |
+| `--coverage` | `Microsoft.Testing.Extensions.CodeCoverage` | Collect code coverage using Microsoft Code Coverage |
+
+> Some frameworks (e.g., MSTest) bundle common extensions by default. Others may require explicit package references. If a flag is not recognized, check that the corresponding extension package is referenced in the project.
+
+#### Alternative MTP invocations
+
+MTP test projects are standalone executables. Beyond `dotnet test`, they can be run directly:
+
 ```bash
-go test ./internal/evaluator/...
+# Build and run
+dotnet run --project <PROJECT_PATH>
+
+# Run a previously built DLL
+dotnet exec <PATH_TO_DLL>
+
+# Run the executable directly (Windows)
+<PATH_TO_EXE>
 ```
 
-### Verbose output:
-```bash
-go test -v ./...
-```
+These alternative invocations accept MTP command line arguments directly (no `--` separator needed).
 
-### With coverage:
-```bash
-go test -cover ./...
-```
+### Step 3: Run filtered tests
 
-## Writing New Tests
+See the `filter-syntax` skill for the complete filter syntax for each platform and framework combination. Key points:
 
-When creating tests, follow the naming convention:
+- **VSTest** (MSTest, xUnit v2, NUnit): `dotnet test --filter <EXPRESSION>` with `=`, `!=`, `~`, `!~` operators
+- **MTP -- MSTest and NUnit**: Same `--filter` syntax as VSTest; pass after `--` on SDK 8/9, directly on SDK 10+
+- **MTP -- xUnit v3**: Uses `--filter-class`, `--filter-method`, `--filter-trait` (not VSTest expression syntax)
+- **MTP -- TUnit**: Uses `--treenode-filter` with path-based syntax
 
-```go
-// Unit test (no external dependencies)
-// File: internal/helpers/maths_unit_test.go
-func TestCalculateAverage(t *testing.T) {
-    // ...
-}
+#### When the user names a test category, trait, or group
 
-// Integration test (uses database)
-// File: internal/models/weapons_integration_test.go
-func TestWeaponsIntegration(t *testing.T) {
-    // ...
-}
-```
+When the prompt names a subset of tests by category (e.g., "integration tests", "unit tests", "smoke tests", "fast tests"), **do not run all tests** — translate the user's vocabulary into the platform-appropriate filter:
 
-**Rules:**
-- Unit tests: `*_unit_test.go` files, no database/network
-- Integration tests: `*_integration_test.go` files, function name must include "Integration"
-- Use table-driven tests for multiple cases
-- Keep tests focused and independent
+1. **Inspect the test source files** for filter-attribute annotations that match the named group:
+
+   | Framework | Attribute | Filter property |
+   |-----------|-----------|-----------------|
+   | MSTest | `[TestCategory("Integration")]` | `TestCategory` |
+   | NUnit | `[Category("Integration")]` | `TestCategory` (mapped) |
+   | xUnit v2 | `[Trait("Category", "Integration")]` | `Category` |
+   | xUnit v3 | `[Trait("Category", "Integration")]` | `Category` (use `--filter-trait`) |
+   | TUnit | `[Category("Integration")]` | `Category` |
+
+2. **Build the filter expression** and combine it with the platform-correct invocation. For "run the integration tests" against an MSTest project:
+
+   | Platform | SDK | Command |
+   |----------|-----|---------|
+   | VSTest (MSTest) | any | `dotnet test --filter "TestCategory=Integration"` |
+   | MTP (MSTest) | 8 or 9 | `dotnet test -- --filter "TestCategory=Integration"` |
+   | MTP (MSTest) | 10+ | `dotnet test --filter "TestCategory=Integration"` |
+   | MTP (xUnit v3) | 8 or 9 | `dotnet test -- --filter-trait "Category=Integration"` |
+   | MTP (xUnit v3) | 10+ | `dotnet test --filter-trait "Category=Integration"` |
+   | MTP (TUnit) | 8 or 9 | `dotnet test -- --treenode-filter "/*/*/*/*[Category=Integration]"` |
+
+3. If you cannot find a matching attribute, ask the user to confirm the category name or fall back to a name-pattern filter (e.g., `--filter "FullyQualifiedName~Integration"`).
+
+## Validation
+
+- [ ] Test platform (VSTest or MTP) was correctly identified
+- [ ] Test framework (MSTest, xUnit, NUnit, TUnit) was correctly identified
+- [ ] Correct `dotnet test` invocation was used for the detected platform and SDK version
+- [ ] When the user named a test category/trait/group, the appropriate filter was applied (not "run all tests")
+- [ ] Filter expressions used the syntax appropriate for the platform and framework
+- [ ] Test results were clearly reported to the user
+
+## Common Pitfalls
+
+| Pitfall | Solution |
+|---------|----------|
+| Missing `Microsoft.NET.Test.Sdk` in a VSTest project | Tests won't be discovered. Add `<PackageReference Include="Microsoft.NET.Test.Sdk" />` |
+| Using VSTest `--filter` syntax with xUnit v3 on MTP | xUnit v3 on MTP uses `--filter-class`, `--filter-method`, etc. -- not the VSTest expression syntax |
+| Passing MTP args without `--` on .NET SDK 8/9 | Before .NET 10, MTP args must go after `--`: `dotnet test -- --report-trx` |
+| Using `-- --arg` separator on .NET SDK 10+ | SDK 10+ passes MTP args directly — do NOT use `--` separator |
+| Using `--logger trx` for MTP or `--report-trx` for VSTest | Each platform has its own TRX flag — check the Critical Rules table |
+| Only checking `.csproj` for MTP signals | Always check `Directory.Build.props` and `Directory.Packages.props` too — MTP properties are frequently set there |
+| Using bare positional path argument on SDK 10+ | SDK 10+ requires named flags: `--project <path>` or `--solution <path>` |
 
 ## Troubleshooting
 
-**Integration tests fail with connection error:**
-- Ensure database is running.
-- Check `.env` has correct connection details.
-- In a devcontainer, the database is usually already running. Outside, you might need `task compose:up`.
+Common error messages and how to resolve them:
 
-**Tests pass locally but fail in CI:**
-- Ensure you're not relying on local state or files
-- Check if tests have proper cleanup
-- Verify tests are idempotent (can run multiple times)
-
-**Tests are slow:**
-- Ensure unit tests aren't hitting the database
-- Check if you can mock external dependencies
-- Consider moving integration logic to integration test files
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `No test is available` or `No test matches the given testcase filter` | Wrong filter syntax for the platform/framework, or tests not discovered | Verify filter syntax matches the platform (see `filter-syntax` skill). For discovery issues, check that the test SDK and adapter packages are installed |
+| `The --report-trx option is unrecognized` | MTP extension package not referenced, or using MTP flag on a VSTest project | Add `<PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />` for MTP, or use `--logger trx` for VSTest |
+| `The --blame-hang-timeout option is unrecognized` | Missing HangDump extension on MTP | Add `<PackageReference Include="Microsoft.Testing.Extensions.HangDump" />` |
+| `error NETSDK1045: The current .NET SDK does not support targeting .NET X.0` | SDK version in `global.json` doesn't match the project's target framework | Update `global.json` SDK version or install the required SDK |
+| `The test runner process exited with non-zero exit code` | MTP test host crashed or test failure | Run with `--blame-crash` (MTP) or `--blame` (VSTest) to collect a crash dump for diagnosis |
+| `No test source files were found` / `No test project found` | `dotnet test` can't find a test project in the given path | Specify the path explicitly: `dotnet test <path/to/project.csproj>` (VSTest) or `dotnet test --project <path>` (SDK 10+) |
+| Tests discovered but 0 executed | Filter expression matches no tests | Double-check filter property names and values. Common typo: `TestCategory` (MSTest) vs `Category` (NUnit) vs trait syntax (xUnit) |
+| Using `--` for MTP args on .NET SDK 10+ | On .NET 10+, MTP args are passed directly: `dotnet test --project . --blame-hang-timeout 5min` — do NOT use `-- --blame-hang-timeout` |
+| Multi-TFM project runs tests for all frameworks | Use `--framework <TFM>` to target a specific framework |
+| `global.json` runner setting ignored | Requires .NET 10+ SDK. On older SDKs, use `<TestingPlatformDotnetTestSupport>` MSBuild property instead |
+| TUnit `--treenode-filter` not recognized | TUnit is MTP-only. On .NET SDK 10+ use `dotnet test`; on older SDKs use `dotnet run` since VSTest-mode `dotnet test` does not support TUnit |

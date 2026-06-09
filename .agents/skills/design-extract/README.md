@@ -1,0 +1,158 @@
+<div align="center">
+
+# 🎨 design-extract
+
+**把零散的视觉偏好，提炼成可执行的个人品牌设计系统**
+
+![Agent Skill](https://img.shields.io/badge/Agent%20Skill-SKILL.md-4c8eda) ![Agents](https://img.shields.io/badge/agents-Claude%20Code%20%C2%B7%20Codex%20%C2%B7%20opencode%20%C2%B7%20pi-7b5cd6) ![Platform](https://img.shields.io/badge/platform-macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-2ea44f) ![Node](https://img.shields.io/badge/Node.js-%E2%89%A5%2018-339933?logo=nodedotjs&logoColor=white) ![Zero npm deps](https://img.shields.io/badge/npm%20deps-0-lightgrey) ![License: MIT](https://img.shields.io/badge/license-MIT-yellow)
+
+</div>
+
+一个通用 **Agent Skill**——兼容 [Claude Code](https://claude.com/claude-code)、[Codex](https://developers.openai.com/codex/skills)、[opencode](https://opencode.ai/docs/skills/)、[pi](https://github.com/badlogic/pi-mono) 等所有支持 `SKILL.md` 标准的编码 agent。
+
+你给它旧封面、喜欢的参考、甚至什么都不给——它通过浏览器里的交互式点选循环，最终交付一份人读的品牌规范（`design.md`）、一份机器可执行的 CSS 主题（`theme.css`）和一页定稿展示（`preview.html`），让你后续所有内容工具（幻灯片、封面图、视频动画）从同一个视觉源头取值。
+
+<div align="center">
+
+![内置 16 个风格原型速筛卡](docs/archetypes.png)
+
+*零素材冷启动的 16 张风格原型速筛卡——气质不问，用眼睛投：❤️ 心动 / 😐 无感 / ❌ 不要*
+
+</div>
+
+## 🎯 解决什么问题
+
+内容创作者的视觉风格通常散落在感觉里："我喜欢那种米白的、有点书卷气的……"。这种描述既没法复用，也没法交给工具执行。每做一张封面、一页幻灯片都要重新"凭感觉对齐"，产出忽冷忽暖。
+
+design-extract 把这个感觉**钉死成精确的 token**：`#F3EDE0` 而不是"米白"、`Cormorant Garamond × Noto Serif SC` 而不是"优雅的衬线"。钉死之后，品牌一致性就从"靠记忆"变成"靠引用"。
+
+## 📦 最终产出
+
+| 文件 | 给谁用 | 内容 |
+|------|--------|------|
+| **design.md** | 人 + AI 会话 | 品牌 SSOT，六段式：命名调性 / 版式语法（构图语法 · 明度结构 · 密度，跨场景不变量）/ 配色 token 表（hex + 用途 + 配比，含可选暗色变体）/ 字体配对 / 视觉语言元件 / Do & Don't 红线 |
+| **theme.css** | 下游工具 | `:root` 全量变量 + 品牌元件样式 + 可选 `[data-theme="dark"]` 暗色变体。纪律：`:root` 之外零硬编码色值，下游切换主题 = 换这一个文件 |
+| **preview.html** | 人（终验 + 分享） | 定稿展示页：实景场景小样 + token 表 + 调性红线，全部引用 theme.css 的 var() 渲染——既是交付报告，也是 token 可消费性的活验证 |
+
+```css
+/* theme.css 长这样（节选） */
+:root {
+  --paper: #F3EDE0;   /* 背景主色 / 羊皮纸 */
+  --ink: #2C3A2F;     /* 主文字 / 墨绿 */
+  --accent: #8C6F3E;  /* 点缀 / 烫金 */
+  --font-title: "Cormorant Garamond", "Noto Serif SC", serif;
+}
+.badge { color: var(--accent); border: 3px double var(--accent); }
+```
+
+（picker 临时目录里的最后一轮页面是过程预览，可选保留；正式的定稿展示以 preview.html 为准。）
+
+## ⚙️ 它怎么工作
+
+```
+① 模式判定 → ② 速筛轮(浏览器·原型卡三态投票+事实题) → ③ 方向板轮(整板单选，锁定版式语法)
+→ ④ 细节轮循环(浏览器点选)
+       ↑               │ 不满意区块重生成
+       └───────────────┘ 满意区块锁定
+→ ⑤ 收尾轮(浏览器·暗色变体+调性回放+命名+Do/Don't) → ⑥ design.md + theme.css + preview.html
+```
+
+**三种输入模式**，按你手上有什么自动选择：
+
+| 模式 | 你有什么 | 候选从哪来 |
+|------|---------|-----------|
+| 素材提取 | 自己的旧封面 / 作品截图 / 旧 CSS | 提纯你已有的风格 |
+| 参考借鉴 | 喜欢的账号 / 网站 / 海报 | 转译气质和手法（不抄画面） |
+| 零素材探索 | 什么都没有 | 16 张原型卡速筛投票 + 事实题建立偏好画像，从内置原型库组合生成 |
+
+**核心机制是 picker**：候选方案不是色块表——hex 码肉眼读不出感觉——而是渲染成实景小样（迷你封面）的网页。速筛投票之后进入**方向板轮**：10 个结构级不同的完整方向板（硬性板数，全部由心动原型的设计要素融合重组而成），每板把同一套版式语法在 2-3 个场景（迷你封面/幻灯内页/金句卡）上实例化——你选的不是一张布局，是穿越场景仍然成立的语法，整板单选先锁定决定远距识别度的结构层，再进细节轮逐区块打磨色彩字体质感等样式层。你在浏览器里：
+
+- **点选**候选，右侧实时预览整体组合
+- **微调**差一口气的细节（明度 / 字重 / 密度档位）
+- **写反馈**："以这个为基础，但点缀色想要更复古的红"
+- **否决**："✗ 都不是" + 必填原因（原因会自动记入 Do/Don't 红线）
+
+提交后 agent 读取你的选择：满意的区块**锁定**不再出现，不满意的按反馈重做，循环三五轮收敛。**问答也全程在浏览器、全部给可见物**：开场不填文字问卷——16 张风格原型卡渲染成实景小样，凭直觉投"心动/无感/不要"（颗粒度到原型级，排除票自动记入红线）；收尾的调性描述、体系命名（wordmark 卡）、Do/Don't 红线也都渲染成贴着定稿预览的卡片让你挑、勾——每个候选标注来源，你不需要会表达，只需要会说"不对"。
+
+## 🧰 内置内容
+
+**16 个风格原型 · 6 个气质族**（`references/style-archetypes.md`，零素材冷启动的基底，每个含完整色板 hex / 字体配对 / 质感 / 标志元件 / 红线种子）：
+
+| 气质族 | 原型 | 适合 |
+|--------|------|------|
+| 纸感工坊 | 复古印刷 · 手账涂鸦 · 复古旅贴 | 评论刊物、学习笔记、旅行人文 |
+| 理性编辑 | 杂志编辑 · 极简瑞士 · 包豪斯几何 | 深度长文、数据测评、设计艺术 |
+| 书卷东方 | 学院羊皮 · 水墨宣纸 | 读书人文、传统文化 |
+| 暗色夜场 | 暗黑终端 · 夜读烛光 · 像素街机 · 青图纸 | 编程极客、深夜电台、游戏区、工程档案 |
+| 活力撞色 | 新粗野 · 孟菲斯糖果 | 产品发布、娱乐综艺 |
+| 柔和记录 | 柔和粉彩 · 胶片暗房 | 治愈系、摄影记录 |
+
+原型只是第一轮候选的起点，循环微调后才是个人化结果。每个原型自带**版式签名**（构图语法 + 明度结构 + 密度），是方向板轮的结构层；细节轮的色板/字体/质感/元件/形状五个区块（样式层）是**独立轴**，内置《混搭规则》强制候选跨原型取材（"印刷的票据框 + 粉彩的色板"），并附配方示例与冲突警告——个性来自组合，不来自单选。
+
+## 🚧 边界
+
+本 skill 只做一件事：**提取视觉语言**。判断标准：能落进 design.md / theme.css 的视觉成分才在范围内。明确不做：内容策略（文案语气/标题句式）、版式模板库（具体页面布局是消费方引擎的事，这里只提取版式语法规则）、logo/头像设计、动画编排。提需求或贡献功能前先过这道边界。
+
+**结构模板与基础设施**：
+
+- `references/design-md-template.md` — design.md 六段式模板 + theme.css 翻译模板 + 硬编码自检清单
+- `references/picker-protocol.md` — picker 循环协议、choices.json schema、收敛规则
+- `assets/picker/picker-shell.html` — 数据驱动的选择器页面（每轮只换数据不换壳）
+- `assets/picker/server.mjs` — 零依赖本地服务器（静态托管 + 接收提交落盘 choices.json）
+
+## 📥 安装
+
+```bash
+git clone https://github.com/lawrencewzen/design-extract.git
+cd design-extract
+
+# macOS / Linux / Windows(Git Bash)
+./install.sh                      # Claude Code → ~/.claude/skills/（opencode 也读这个目录，装一次两边生效）
+./install.sh --agent codex        # Codex    → ~/.codex/skills/
+./install.sh --agent opencode     # opencode → ~/.config/opencode/skills/
+./install.sh --agent pi           # pi       → ~/.pi/agent/skills/
+./install.sh --agent agents       # 跨 agent 通用目录 → ~/.agents/skills/
+./install.sh --dir <skills目录>    # 其他任意 agent
+./install.sh /path/to/project     # 项目级安装（项目内目录按 --agent 决定）
+```
+
+```powershell
+# Windows（原生 PowerShell）
+.\install.ps1                     # 参数同上：-Agent / -Dir / -Project / -Uninstall
+```
+
+安装方式是**链接**（macOS/Linux 软链接，Windows junction，均无需管理员权限）——仓库 `git pull` 更新后所有 agent 立即生效，无需重装。卸载：`./install.sh --uninstall`（带相同定位参数）。
+
+依赖：Node.js ≥ 18（picker 本地服务器），零 npm 依赖。
+
+## 🚀 使用
+
+在你的 agent（Claude Code / Codex / opencode / pi …）里直接说（无需记命令）：
+
+- "帮我提取我的品牌设计，素材在 `./covers/` 下" → 素材提取模式
+- "从这几个我喜欢的网站提取一套设计语言：……" → 参考借鉴模式
+- "我想定义自己的视觉风格，但我没有素材" → 零素材探索模式
+
+之后跟着流程走：浏览器自动打开 → 速筛页写两句事实、给原型卡投票 → 方向板/细节轮点选、微调、反馈 → 提交、重复至收敛 → 收尾轮确认暗色变体/调性/命名/红线 → 拿到 `design.md` + `theme.css` + `preview.html`（自动在浏览器打开终验）。
+
+## 🗂️ 仓库结构
+
+```
+SKILL.md                          # 主指令：三模式 + 流程编排
+install.sh                        # 安装/卸载（macOS / Linux / Git Bash，多 agent 目录预设）
+install.ps1                       # 安装/卸载（Windows PowerShell，junction 方式）
+references/
+  design-md-template.md           # 产出模板 + 翻译规则
+  style-archetypes.md             # 16 个风格原型库（6 气质族 + 混搭规则）
+  picker-protocol.md              # picker 循环协议
+assets/picker/
+  server.mjs                      # 本地服务器
+  picker-shell.html               # 选择器页面外壳（数据驱动）
+  archetype-cards.js              # 16 张预制标准速筛卡（速筛轮题目，随 skill 分发）
+docs/
+  archetypes.png                  # README 配图：16 张速筛卡实景
+```
+
+## 📄 License
+
+[MIT](LICENSE)

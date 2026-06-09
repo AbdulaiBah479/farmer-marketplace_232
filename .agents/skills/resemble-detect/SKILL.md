@@ -1,6 +1,8 @@
 ---
 name: resemble-detect
+category: analytics
 description: Deepfake detection and media safety — detect AI-generated audio, images, video, and text, trace synthesis sources, apply watermarks, verify speaker identity, and analyze media intelligence using Resemble AI
+license: Apache-2.0 (see LICENSE)
 ---
 
 # Resemble Detect — Deepfake Detection & Media Safety

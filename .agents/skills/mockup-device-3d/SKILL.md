@@ -3,7 +3,9 @@ name: mockup-device-3d
 zh_name: "iPhone × MacBook 立体展架"
 en_name: "Device 3D Showcase"
 emoji: "📱"
-description: "iPhone + MacBook 仿 GLTF 静态展架, 屏幕内嵌真实 HTML 内容, 玻璃镜头折射, 360° 转盘构图"
+description: "Static iPhone and MacBook 3D-style showcase with real HTML embedded on screens, glass-lens refraction, and 360-degree turntable composition."
+zh_description: "iPhone + MacBook 仿 GLTF 静态展架, 屏幕内嵌真实 HTML 内容, 玻璃镜头折射, 360° 转盘构图"
+en_description: "Static iPhone and MacBook 3D-style showcase with real HTML embedded on screens, glass-lens refraction, and 360-degree turntable composition."
 category: poster
 scenario: product
 aspect_hint: "1920×1080 (16:9)"
@@ -16,6 +18,21 @@ example_tagline: "HTML-in-Canvas 设备秀"
 example_desc: "iPhone 屏幕 + MacBook 屏幕都嵌入真实 UI 内容, 玻璃镜头折射"
 example_source_url: "https://hyperframes.heygen.com/catalog"
 example_source_label: "hyperframes · vfx-iphone-device"
+od:
+  mode: prototype
+  surface: web
+  platform: desktop
+  scenario: product
+  upstream: "https://github.com/nexu-io/html-anything"
+  preview:
+    type: html
+    entry: index.html
+    reload: debounce-100
+  design_system:
+    requires: false
+  example_prompt: "Use the Device 3D Showcase template to turn my content into a static iPhone and MacBook 3D-style showcase with real HTML embedded on the screens. Preserve the template's visual signature, use real content and data, and avoid lorem ipsum or placeholder images."
+  example_prompt_i18n:
+    zh-CN: "用「iPhone × MacBook 立体展架」模板把我的内容做成一份「iPhone + MacBook 仿 GLTF 静态展架, 屏幕内嵌真实 HTML 内容, 玻璃镜头折射, 360° 转盘构图」。保持模板的视觉签名，使用真实内容和数据，避免 lorem ipsum 和占位图片。"
 ---
 
 【模板: 设备 3D 展架 (Device 3D Showcase / HTML-in-Canvas)】

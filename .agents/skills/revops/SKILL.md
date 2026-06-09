@@ -1,6 +1,9 @@
 ---
 name: revops
-description: "When the user wants help with revenue operations, lead lifecycle management, or marketing-to-sales handoff processes. Also use when the user mentions 'RevOps,' 'revenue operations,' 'lead scoring,' 'lead routing,' 'MQL,' 'SQL,' 'pipeline stages,' 'deal desk,' 'CRM automation,' 'marketing-to-sales handoff,' or 'data hygiene.' For cold outreach emails, see cold-email. For email drip campaigns, see email-sequence. For pricing decisions, see pricing-strategy."
+description: "Design and improve revenue operations, lead lifecycle rules, scoring, routing, handoffs, and CRM process automation. Use when marketing, sales, and customer success workflows need clearer operational structure."
+risk: unknown
+source: "https://github.com/coreyhaines31/marketingskills"
+date_added: "2026-03-21"
 metadata:
   version: 1.1.0
 ---
@@ -8,6 +11,11 @@ metadata:
 # RevOps
 
 You are an expert in revenue operations. Your goal is to help design and optimize the systems that connect marketing, sales, and customer success into a unified revenue engine.
+
+## When to Use
+- Use when the user needs lead scoring, routing, handoffs, or lifecycle definitions.
+- Use when CRM process design and revenue-team coordination are the core problem.
+- Use when marketing, sales, and customer success systems need operational alignment.
 
 ## Before Starting
 
@@ -133,7 +141,7 @@ Define response times and document them:
 ### Routing Rules Essentials
 
 - Route to the **most specific match** first, then fall back to general
-- Always include a **fallback owner** — no lead should go unassigned
+- Include a **fallback owner** — unassigned leads go cold fast and waste pipeline
 - Round-robin should account for **rep capacity and availability** (PTO, quota attainment)
 - Log every routing decision for audit and optimization
 
@@ -318,18 +326,18 @@ Format each as a standalone document the user can implement directly. Include pl
 
 ## Tool Integrations
 
-For implementation, see the [tools registry](../../tools/REGISTRY.md). Key RevOps tools:
+For implementation, use the CRM, scheduling, enrichment, and automation tools available in the current environment. Key RevOps tools:
 
 | Tool | What It Does | Guide |
 |------|-------------|-------|
-| **HubSpot** | CRM, marketing automation, lead scoring, workflows | [hubspot.md](../../tools/integrations/hubspot.md) |
-| **Salesforce** | Enterprise CRM, pipeline management, reporting | [salesforce.md](../../tools/integrations/salesforce.md) |
-| **Calendly** | Meeting scheduling, round-robin routing | [calendly.md](../../tools/integrations/calendly.md) |
-| **SavvyCal** | Scheduling with priority-based availability | [savvycal.md](../../tools/integrations/savvycal.md) |
-| **Clearbit** | Real-time lead enrichment and scoring | [clearbit.md](../../tools/integrations/clearbit.md) |
-| **Apollo** | Contact data, enrichment, and outbound sequences | [apollo.md](../../tools/integrations/apollo.md) |
-| **ActiveCampaign** | Marketing automation for SMBs, lead scoring | [activecampaign.md](../../tools/integrations/activecampaign.md) |
-| **Zapier** | Cross-tool automation and workflow glue | [zapier.md](../../tools/integrations/zapier.md) |
+| **HubSpot** | CRM, marketing automation, lead scoring, workflows | Use available HubSpot integrations |
+| **Salesforce** | Enterprise CRM, pipeline management, reporting | Use available Salesforce integrations |
+| **Calendly** | Meeting scheduling, round-robin routing | Use available scheduling integrations |
+| **SavvyCal** | Scheduling with priority-based availability | Use available scheduling integrations |
+| **Clearbit** | Real-time lead enrichment and scoring | Use available enrichment integrations |
+| **Apollo** | Contact data, enrichment, and outbound sequences | Use available outbound data integrations |
+| **ActiveCampaign** | Marketing automation for SMBs, lead scoring | Use available marketing automation integrations |
+| **Zapier** | Cross-tool automation and workflow glue | Use available workflow automation integrations |
 
 ---
 
@@ -341,3 +349,8 @@ For implementation, see the [tools registry](../../tools/REGISTRY.md). Key RevOp
 - **analytics-tracking**: For tracking pipeline metrics and attribution
 - **launch-strategy**: For go-to-market launch planning
 - **sales-enablement**: For sales collateral, decks, and objection handling
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

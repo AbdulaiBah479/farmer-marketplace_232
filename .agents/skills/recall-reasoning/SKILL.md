@@ -1,88 +1,98 @@
 ---
 name: recall-reasoning
-description: "Recall the reasoning behind a past change from Codex session history when available, falling back to commit diff and surrounding code. Use when the user asks to \"recall reasoning\", \"find reasoning\", \"look up reasoning\", \"recall implementation reasoning\", \"find the rationale\", \"why did I do X\", \"recall from transcripts\", or \"find the transcript for this commit\"."
+description: Search past reasoning for relevant decisions and approaches
+user-invocable: false
 ---
 
-# Recall Reasoning
+# Recall Past Work
 
-Recover the reasoning behind a change. Prefer Codex session history when it can be found; otherwise derive the explanation from git history and current code.
+Search through previous sessions to find relevant decisions, approaches that worked, and approaches that failed. Queries two sources:
 
-## Inputs
+1. **Artifact Index** - Handoffs, plans, ledgers with post-mortems (what worked/failed)
+2. **Reasoning Files** - Build attempts, test failures, commit context
 
-Accept any of:
+## When to Use
 
-- A commit SHA
-- A file path, optionally with a line number (`<path>:<line>`)
-- A reviewer question plus surrounding context
+- Starting work similar to past sessions
+- "What did we do last time with X?"
+- Looking for patterns that worked before
+- Investigating why something was done a certain way
+- Debugging an issue encountered previously
 
-If only a file is given, use `git blame` to resolve the commit that last touched the line.
+## Usage
 
-## Step 1: Resolve the Commit
-
-Resolve the target commit:
-
-```bash
-git rev-parse <sha>
-git blame -L <line>,<line> -- <path>
-```
-
-Collect the commit subject, changed files, and relevant diff:
+### Primary: Artifact Index (rich context)
 
 ```bash
-git show --stat --oneline <sha>
-git show -- <path>
+uv run python scripts/core/artifact_query.py "<query>" [--outcome SUCCEEDED|FAILED] [--limit N]
 ```
 
-## Step 2: Search Codex Session History
+This searches handoffs with post-mortems (what worked, what failed, key decisions).
 
-If Codex session files are available, search them for the commit SHA, touched file paths, branch name, and distinctive user request text:
+### Secondary: Reasoning Files (build attempts)
 
 ```bash
-rg "<sha>|<file>|<branch>|<distinctive text>" ~/.codex/sessions
+bash "$CLAUDE_PROJECT_DIR/.claude/scripts/search-reasoning.sh" "<query>"
 ```
 
-Read only the smallest relevant transcript excerpts. Prefer sessions close to the commit time and sessions that mention both the file and the task.
+This searches `.git/claude/commits/*/reasoning.md` for build failures and fixes.
 
-If no matching session is found, continue with the fallback path.
+## Examples
 
-## Step 3: Synthesize
+```bash
+# Search for authentication-related work
+uv run python scripts/core/artifact_query.py "authentication OAuth JWT"
 
-If session reasoning was found:
+# Find only successful approaches
+uv run python scripts/core/artifact_query.py "implement agent" --outcome SUCCEEDED
 
-- Lead with the **why**. The diff already shows the what.
-- Quote or paraphrase only the relevant reasoning.
-- Keep the explanation to one or two paragraphs.
+# Find what failed (to avoid repeating mistakes)
+uv run python scripts/core/artifact_query.py "hook implementation" --outcome FAILED
 
-If no session reasoning was found:
-
-- Read the commit diff and surrounding current code.
-- Infer the most likely rationale from the code, tests, plan/spec artifacts, and PR context.
-- Mark the output as fallback-derived.
-
-## Step 4: Output
-
-When session reasoning was found:
-
-```markdown
-**Commit:** <short-sha> — <subject>
-**Session:** <session reference>
-
-<one or two paragraphs of reasoning>
+# Search build/test reasoning
+bash "$CLAUDE_PROJECT_DIR/.claude/scripts/search-reasoning.sh" "TypeError"
 ```
 
-When no session reasoning was found:
+## What Gets Searched
 
-```markdown
-**Commit:** <short-sha> — <subject>
-**Session:** none found
+**Artifact Index** (handoffs, plans, ledgers):
+- Task summaries and status
+- **What worked** - Successful approaches
+- **What failed** - Dead ends and why
+- **Key decisions** - Choices with rationale
+- Goal and constraints from ledgers
 
-<fallback explanation derived from git history and current code>
-```
+**Reasoning Files** (`.git/claude/`):
+- Failed build attempts and error output
+- Successful builds after failures
+- Commit context and branch info
 
-Then update or check the active plan and proceed to any remaining task.
+## Interpreting Results
 
-## Rules
+**From Artifact Index:**
+- `✓` = SUCCEEDED outcome (pattern to follow)
+- `✗` = FAILED outcome (pattern to avoid)
+- `?` = UNKNOWN outcome (not yet marked)
+- Post-mortem sections show distilled learnings
 
-- Treat session excerpts as evidence, not ground truth.
-- Do not read full transcript files unless excerpts are insufficient.
-- If current code contradicts a remembered rationale, note the discrepancy.
+**From Reasoning:**
+- `build_fail` = approach that didn't work
+- `build_pass` = what finally succeeded
+- Multiple failures before success = non-trivial problem
+
+## Process
+
+1. **Run Artifact Index query first** - richer context, post-mortems
+2. **Review relevant handoffs** - check what worked/failed sections
+3. **If needed, search reasoning** - for specific build errors
+4. **Apply learnings** - follow successful patterns, avoid failed ones
+
+## No Results?
+
+**Artifact Index empty:**
+- Run `uv run python scripts/core/artifact_index.py --all` to index existing handoffs
+- Create handoffs with post-mortem sections for future recall
+
+**Reasoning files empty:**
+- Use `/commit` after builds to capture reasoning
+- Check if `.git/claude/` directory exists

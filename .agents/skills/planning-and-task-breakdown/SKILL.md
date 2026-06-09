@@ -1,6 +1,6 @@
 ---
 name: planning-and-task-breakdown
-description: Use when you have a spec or clear requirements and need to break work into implementable tasks. Use when a task feels too large to start, when you need to estimate scope, or when parallel work is possible.
+description: Breaks work into ordered tasks. Use when you have a spec or clear requirements and need to break work into implementable tasks. Use when a task feels too large to start, when you need to estimate scope, or when parallel work is possible.
 ---
 
 # Planning and Task Breakdown
@@ -133,6 +133,12 @@ Add explicit checkpoints:
 | **XL** | 8+ | **Too large — break it down further** | — |
 
 If a task is L or larger, it should be broken into smaller tasks. An agent performs best on S and M tasks.
+
+**When to break a task down further:**
+- It would take more than one focused session (roughly 2+ hours of agent work)
+- You cannot describe the acceptance criteria in 3 or fewer bullet points
+- It touches two or more independent subsystems (e.g., auth and billing)
+- You find yourself writing "and" in the task title (a sign it is two tasks)
 
 ## Plan Document Template
 

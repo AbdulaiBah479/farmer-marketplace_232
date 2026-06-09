@@ -1,10 +1,22 @@
 ---
 name: favicon
-description: Generate a complete set of favicons from a source image and update HTML. Use when setting up favicons for a web project.
 argument-hint: [path to source image]
+description: Generate favicons from a source image
+allowed-tools: Bash(magick *), Bash(which *), Bash(cp *), Bash(mkdir *)
+context: fork
+risk: unknown
+source: community
+metadata:
+  author: Shpigford
+  version: "1.0"
 ---
 
 Generate a complete set of favicons from the source image at `$1` and update the project's HTML with the appropriate link tags.
+
+## When to Use
+- You need to generate a complete favicon set from a single source image.
+- The task includes placing the assets in the correct framework-specific static directory and updating HTML link tags.
+- You want one workflow that validates the source image, detects the project type, and writes the right favicon outputs.
 
 ## Prerequisites
 
@@ -70,34 +82,36 @@ Check if the detected static assets directory exists. If not, create it.
 
 Run these ImageMagick commands to generate all favicon files. Replace `[STATIC_DIR]` with the detected static assets directory from Step 2.
 
+**Important**: The `-background none` flag must come BEFORE the input file to properly preserve transparency when rendering SVGs. Placing it after the input will result in a white background.
+
 ### favicon.ico (multi-resolution: 16x16, 32x32, 48x48)
 ```bash
-magick "$1" \
+magick -background none "$1" \
   \( -clone 0 -resize 16x16 \) \
   \( -clone 0 -resize 32x32 \) \
   \( -clone 0 -resize 48x48 \) \
-  -delete 0 -alpha on -background none \
+  -delete 0 -alpha on \
   [STATIC_DIR]/favicon.ico
 ```
 
 ### favicon-96x96.png
 ```bash
-magick "$1" -resize 96x96 -background none -alpha on [STATIC_DIR]/favicon-96x96.png
+magick -background none "$1" -resize 96x96 -alpha on [STATIC_DIR]/favicon-96x96.png
 ```
 
 ### apple-touch-icon.png (180x180)
 ```bash
-magick "$1" -resize 180x180 -background none -alpha on [STATIC_DIR]/apple-touch-icon.png
+magick -background none "$1" -resize 180x180 -alpha on [STATIC_DIR]/apple-touch-icon.png
 ```
 
 ### web-app-manifest-192x192.png
 ```bash
-magick "$1" -resize 192x192 -background none -alpha on [STATIC_DIR]/web-app-manifest-192x192.png
+magick -background none "$1" -resize 192x192 -alpha on [STATIC_DIR]/web-app-manifest-192x192.png
 ```
 
 ### web-app-manifest-512x512.png
 ```bash
-magick "$1" -resize 512x512 -background none -alpha on [STATIC_DIR]/web-app-manifest-512x512.png
+magick -background none "$1" -resize 512x512 -alpha on [STATIC_DIR]/web-app-manifest-512x512.png
 ```
 
 ### favicon.svg (only if source is SVG)
@@ -222,3 +236,8 @@ Report completion with:
 - If the source image doesn't exist, report the exact path that was tried and stop
 - If ImageMagick commands fail, report the specific error message
 - If the layout file cannot be found for HTML updates, generate files anyway and instruct on manual HTML addition
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

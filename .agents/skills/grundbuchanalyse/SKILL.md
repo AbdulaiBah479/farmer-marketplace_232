@@ -1,9 +1,21 @@
 ---
 name: grundbuchanalyse
-description: "Grundbuchauszug analysieren: Eigentuemer, Belastungen, Grundschulden, Dienstbarkeiten. Normen: §§ 873 ff. 1105 ff. 1191 ff. BGB, GBO. Prüfraster: Abteilung I bis III, Widersprueche, Rangverhältnisse, Löschungsansprüche. Output: Grundbuchanalyse-Bericht mit Handlungsempfehlung. Abgrenzung: nicht Kaufvertragsprüfung."
+description: "Grundbuchauszug analysieren: Eigentuemer, Belastungen, Grundschulden, Dienstbarkeiten. Normen: §§ 873 ff. 1105 ff. 1191 ff. BGB, GBO. Prüfraster: Abteilung I bis III, Widersprueche, Rangverhältnisse, Löschungsansprüche. Output: Grundbuchanalyse-Bericht mit Handlungsempfehlung. Abgrenzung: nicht K..."
 ---
 
 # Grundbuchanalyse
+
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: BGB §§ 535-577a, BetrKV, WEG §§ 24, 25, 27, BGB §§ 558, 558a, 558b, 573, 573c — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+## Fachkern: Grundbuchanalyse
+- **Normen-/Quellenanker:** BGB, GBO, WEG, BauGB, ErbbauRG, MaBV, Mietrecht, Grundpfandrechte, Notar-/Registervollzug und öffentlich-rechtliche Lasten.
+- **Entscheidende Weiche:** Trenne Eigentum, Besitz, Grundbuchabteilung, Belastung, Fälligkeit, Vollzug, Mängel, Miet-/Nutzungsverhältnis und Finanzierung.
 
 ## Leitidee
 
@@ -25,33 +37,24 @@ Objekttabelle und ein einheitliches Risikoschema.
 1. OCR auf gescannten PDFs
 2. Pro Auszug Identifikation Bestandsverzeichnis Abteilung I II III
 3. Strukturierte Extraktion:
-   - Bestandsverzeichnis: Gemarkung Flur Flurstück Wirtschaftsart
-     Größe
-   - Abteilung I: Eigentümerkette mit Erwerbsgrund
-   - Abteilung II: Lasten und Beschraenkungen (Dienstbarkeiten
-     Reallasten Vorkaufsrechte Nacherbenvermerk Sanierungsvermerk)
-   - Abteilung III: Grundpfandrechte mit Rang Betrag Gläubiger
-     Löschungserleichterung Brieftyp
+ - Bestandsverzeichnis: Gemarkung Flur Flurstück Wirtschaftsart
+ Größe
+ - Abteilung I: Eigentümerkette mit Erwerbsgrund
+ - Abteilung II: Lasten und Beschraenkungen (Dienstbarkeiten
+ Reallasten Vorkaufsrechte Nacherbenvermerk Sanierungsvermerk)
+ - Abteilung III: Grundpfandrechte mit Rang Betrag Gläubiger
+ Löschungserleichterung Brieftyp
 4. Querverweis mit Baulastenverzeichnis (Baulasten existieren NICHT
-   im Grundbuch)
+ im Grundbuch)
 5. Risikobewertung pro Objekt und Aggregation auf Portfolio
 6. Generierung Risikomatrix Excel-Tabelle und Memo
-
-## Output
-
-- `Grundbuch_Portfolio.xlsx` — eine Zeile pro Flurstück, Spalten je
-  Risikofeld
-- `Risikomatrix.md` mit Ampel pro Objekt und Aggregat-Statistik
-- `Auffaelligkeiten.md` — Objekte mit ungewöhnlichen Vermerken
-  (Insolvenzvermerk Zwangsversteigerungsvermerk Nacherbenvermerk
-  Sanierungsvermerk § 144 BauGB Vorkaufsrecht nach BauGB)
 
 ## Typische Risikofelder
 
 - Briefgrundschuld ohne Löschungsbewilligung
 - Rangverhältnis Abteilung III nicht eindeutig
 - Dienstbarkeit zugunsten unbekannter Dritter (Leitungsrechte
-  Wegerechte)
+ Wegerechte)
 - Vorkaufsrecht der Gemeinde nach §§ 24 ff. BauGB
 - Sanierungsvermerk § 144 BauGB — Genehmigung erforderlich
 - Nacherbenvermerk § 2113 BGB
@@ -62,11 +65,11 @@ Objekttabelle und ein einheitliches Risikoschema.
 ## Beispielformulierungen
 
 - "Werte alle Grundbuchauszüge aus diesem Ordner aus. Erzeuge
-  Portfoliosicht und markiere Objekte mit Sanierungsvermerk."
+ Portfoliosicht und markiere Objekte mit Sanierungsvermerk."
 - "Ich habe 87 PDF-Auszüge. Zeig mir Objekte mit offenen
-  Briefgrundschulden und Baulasten."
+ Briefgrundschulden und Baulasten."
 - "Prüfe diese 15 Objekte auf Vorkaufsrechte der Gemeinde nach
-  Paragraph 24 BauGB."
+ Paragraph 24 BauGB."
 
 ## Relevante Normen
 
@@ -85,16 +88,13 @@ Objekttabelle und ein einheitliches Risikoschema.
 ## Aktuelle Rechtsprechung — Leitsaetze (Stand 05/2026, verifiziert dejure.org)
 
 - **BGH 15.04.2021, V ZB 175/20**: Grundbucheintragung — Bewilligung muss bestimmten Inhalt aufweisen; bei Auflassungsvormerkung Konkretisierung des gesicherten Anspruchs erforderlich. Quelle: dejure.org/2021,14528.
-- **BGH 17.09.2021, V ZR 12/21**: WEMoG-Reform; Bauliche Veraenderungen § 20 WEG; Folgen fuer Grundbucheintragungen bei Sondernutzungsrechten. Quelle: dejure.org/2021,30989.
+- **BGH 17.09.2021, V ZR 12/21**: WEMoG-Reform; Bauliche Veraenderungen § 20 WEG; Folgen für Grundbucheintragungen bei Sondernutzungsrechten. Quelle: dejure.org/2021,30989.
 - **BGH 25.02.2016, V ZR 244/14**: Loeschungsfaehiges Grundpfandrecht — Voraussetzungen § 1183 BGB. Quelle: dejure.org/2016,5478.
 - **BGH 07.07.2022, V ZB 21/22**: Notarielle Beurkundungsbefugnis ueber Grundstuecksgeschaefte gem. § 311b BGB. Quelle: dejure.org/2022,18504.
 
 Konkrete Entscheidungen vor Ausgabe per dejure.org / bundesgerichtshof.de verifizieren.
 
-## Quellenregel
-
-Quellenregel: Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen; Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff.
-## Workflow — Schritt fuer Schritt
+## — Schritt für Schritt
 
 1. **Grundbuchauszuege anfordern** — aktuell (ggf. amtliches Datumsstempel pruefen); bei Portfolio: Grundbuchamts-CSV abrufen
 2. **Abt. I — Eigentuemerkette** — Luecken im Eigentumsuebergang? Erbfolgenachweis (Erbschein/Erbvertrag) aktuell?
@@ -117,5 +117,5 @@ Er liefert Vorstrukturierung und Risiko-Heatmap, damit der Mensch
 seine Zeit dort einsetzt, wo es wirklich brennt.
 
 <!-- AUDIT 27.05.2026 — Bundle 033 —
-  Kein gesicherter Ersatz verfügbar; Eintrag gelöscht. § 892 BGB bleibt als Normverweis erhalten.
+ Kein gesicherter Ersatz verfügbar; Eintrag gelöscht. § 892 BGB bleibt als Normverweis erhalten.
 -->

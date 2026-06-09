@@ -1,76 +1,56 @@
 ---
 name: privileged-access-management
-description: "Design just-in-time elevation, break-glass accounts, and audit trails for Modify All Data / System Admin / Customize Application permissions. NOT for regular permission set design."
-category: security
-salesforce-version: "Spring '25+"
-well-architected-pillars:
-  - Security
-  - Operational Excellence
-triggers:
-  - "system admin break glass account"
-  - "too many modify all data users"
-  - "just in time admin elevation"
-  - "root account security salesforce"
-tags:
-  - pam
-  - admin
-  - sod
-  - audit
-inputs:
-  - "Current admin user list"
-  - "audit log retention capability"
-outputs:
-  - "PAM runbook"
-  - "permission-set-group rotation policy"
-  - "break-glass procedure"
-dependencies: []
-version: 1.0.0
-author: Pranav Nagrecha
-updated: 2026-04-28
+description: "Prüft privilegierte Zugänge, Admin-Sessions und Break-glass im Nis2 Cybersecurity Compliance."
 ---
 
-# Privileged Access Management (PAM)
+# Privileged Access Management
 
-Salesforce System Administrators hold the highest-risk permission in the platform. PAM narrows standing admin count to two (break-glass), grants temporary elevation via time-boxed Permission Set Groups with expiration, and mirrors all admin-scoped actions to a SIEM via Event Monitoring.
+## Arbeitsweg
 
-## Recommended Workflow
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: NIS2 Art. 23 Frühwarnung 24h, Meldung 72h, Abschlussbericht 1 Monat, Registrierung beim BSI, Schulungspflicht Leitungsorgane.
+- Tragende Normen verifizieren: EU NIS2-RL 2022/2555, NIS2UmsuCG (deutsches Umsetzungsgesetz), BSIG §§ 8a, 8b, 8c, KRITIS-DachG, DORA (VO 2022/2554) für Finanzwesen, IT-SiG 2.0, DSGVO Art. 32 — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Wesentliche Einrichtung / Wichtige Einrichtung, Geschäftsleitung (NIS2 Art. 20 Haftung), BSI, BNetzA (Sektorbehörden), CSIRT-Bund.
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Risikoanalyse, Informationssicherheits-Konzept, Incident-Response-Plan, BSI-Meldung, Schulungsnachweis Geschäftsleitung, Lieferkettenrisiko-Bericht, Business-Continuity-Plan — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
 
-1. Inventory every user with System Administrator profile or Modify All Data permission.
-2. Define three tiers: (1) Daily admin PSG — no Modify All Data, Customize Application only where needed; (2) Elevated PSG — full admin, auto-expires in 4h; (3) Break-glass — 2 named users, MFA + IP restriction.
-3. Implement a request workflow (Flow or Jira integration) where admins request the Elevated PSG; grant uses PermissionSetAssignment.ExpirationDate.
-4. Stream LoginHistory, SetupAuditTrail, and PermissionSetAssignment change events to SIEM via Event Monitoring.
-5. Quarterly review: prove that standing admin count is ≤2 and elevated grants are ≤N hours median.
+## Wofür dieser Arbeitsgang da ist
+PAM-Tresor, Session Recording, Vier-Augen-Prinzip, Notfallkonten, Secrets und Protokollierung.
 
-## Key Considerations
+Dieser Skill arbeitet nicht als abstraktes Merkblatt. Er zwingt die Nutzerin oder den Nutzer, die konkrete Lage, die vorhandenen Dokumente, technische Spuren, Zahlen und Zuständigkeiten offenzulegen, bevor eine rechtliche oder praktische Bewertung ausgegeben wird.
 
-- PermissionSetAssignment.ExpirationDate is GA; use it instead of custom revoke schedulers.
-- Break-glass users should have 24/7 paging and session-recorded logins.
-- MFA is mandatory for anyone in the Elevated or Break-glass tiers.
-- SetupAuditTrail retains 180 days of config changes; longer retention requires Event Monitoring + archive.
+## Kaltstartfragen
 
-## Worked Examples (see `references/examples.md`)
+- Welche konkrete Entscheidung steht jetzt an und wer muss sie verantworten?
+- Welche Dokumente, Tabellen, Verträge, Tickets, Logs, E-Mails oder Chatverläufe liegen bereits vor?
+- Welche Frist, Behörde, Vertragspartei, Kundengruppe oder interne Eskalation macht Druck?
+- Was wäre der schlimmste realistische Fehler, wenn man hier zu schnell antwortet?
+- Welche Quelle muss live geprüft werden, bevor eine Norm, Frist oder Rechtsprechung zitiert wird?
 
-- *Elevated PSG with 4-hour expiration* — ServiceNow ticket approves admin request.
-- *Break-glass alert* — Break-glass user logs in.
+## Arbeitslogik
 
-## Common Gotchas (see `references/gotchas.md`)
+1. **Sachverhalt festnageln:** Beteiligte, Zeitraum, Dokumente, Zahlen, Systeme, Rollen und offene Lücken in einer kurzen Matrix erfassen.
+2. **Pflichtanker setzen:** Maßgebliche Normen und Behördenquellen live prüfen; keine BeckRS-, Juris-, Kommentar- oder Aufsatz-Blindzitate verwenden.
+3. **Beweis- und Nachweisfähigkeit prüfen:** Jede Aussage einer Datei, einem Log, einer Abrechnung, einem Vertrag, einem Board-Protokoll oder einer freien amtlichen Quelle zuordnen.
+4. **Risiko sortieren:** Rot für sofortige Handlung, Gelb für Klärung/Entscheidung, Grün für dokumentierte Unauffälligkeit.
+5. **Umsetzbaren Output bauen:** Keine bloße Erklärung, sondern einen nächsten Schritt mit Textbaustein, Tabelle, Memo, Klausel, Fristenliste oder Maßnahmenplan liefern.
 
-- **ExpirationDate ignored for Permission Set Group licenses** — License-required PSGs don't auto-expire on all editions.
-- **Setup Audit Trail gaps** — Certain configuration changes are not logged.
-- **Break-glass account shared** — One account used by multiple humans; no personal accountability.
+## Fachanker
 
-## Top LLM Anti-Patterns (full list in `references/llm-anti-patterns.md`)
+- Primärer Anker: BSI Grundschutz; NIS-2.
+- Ergänzend immer die aktuelle Fassung auf offiziellen oder frei zugänglichen Quellen prüfen.
+- Rechtsprechung nur nennen, wenn Gericht, Entscheidungsdatum, Aktenzeichen und eine frei überprüfbare Quelle vorliegen.
 
-- Assigning System Administrator profile as the baseline for IT staff
-- Sharing a single break-glass account across the team
-- Granting Elevated PSG without expiration
+## Typische Stolperstellen
 
-## Official Sources Used
+- Aus einem bloßen Policy-Dokument wird vorschnell auf tatsächliche Umsetzung geschlossen.
+- Es fehlt die Trennung zwischen Pflicht, Best Practice, Vertragsstandard und bloßem Managementwunsch.
+- Zahlen, Fristen oder Zuständigkeiten werden aus alten Templates übernommen, ohne den aktuellen Sachstand zu prüfen.
+- Der Output klingt überzeugend, enthält aber keinen verwendbaren Nachweis und keine entscheidungsfähige Empfehlung.
 
-- Apex Developer Guide — Sharing — https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_bulk_sharing_understanding.htm
-- Salesforce Security Guide — https://help.salesforce.com/s/articleView?id=sf.security.htm
-- Shield Platform Encryption — https://help.salesforce.com/s/articleView?id=sf.security_pe_overview.htm
-- Session Security Levels — https://help.salesforce.com/s/articleView?id=sf.security_hap_session.htm
-- CSP and Trusted URLs — https://help.salesforce.com/s/articleView?id=sf.security_csp_overview.htm
-- API Only User Profile — https://help.salesforce.com/s/articleView?id=sf.users_profiles_api_only.htm
-- Privacy Center and DSR — https://help.salesforce.com/s/articleView?id=sf.privacy_center_overview.htm
+## Ergebnisformat
+
+Erzeuge bevorzugt: PAM-Abnahmebericht. Wenn der Nutzer nur eine Kurzantwort möchte, trotzdem am Ende eine Mini-Checkliste mit drei Punkten liefern: **Quelle**, **Risiko**, **nächster Schritt**.
+
+## Qualitätsfilter
+
+Vor Ausgabe kontrollieren: Norm aktuell, Quelle frei prüfbar, Sachverhalt nicht ergänzt, Gegenargument genannt, Umsetzungsfolge klar, kein blindes Zitat, keine Scheinsicherheit.

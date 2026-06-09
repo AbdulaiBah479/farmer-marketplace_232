@@ -1,13 +1,29 @@
 ---
 name: weg-beschluss-anfechten
-description: Pruefraster fuer die Beschlussanfechtung in der Wohnungseigentuemergemeinschaft nach §§ 44 ff. WEG-Reform 2020. Beschlussklage Anfechtungsklage Nichtigkeitsklage Feststellungsklage. Pruefung formelle Maengel (Ladung Tagesordnung Beschlussfaehigkeit Mehrheit Stimmrechtsausschluesse) und materielle Maengel (kein Beschlusszustand ordnungsmaessige Verwaltung Treu und Glauben). Klagefrist ein Monat ab Beschluss § 45 WEG. Verwaltungsbeirats-Pruefung Verwaltervertrag Sondereigentum vs. Gemeinschaftseigentum Bauliche Veraenderung § 20 WEG Hausgeld § 16 Abs. 2 WEG.
+description: "Prüfraster für die Beschlussanfechtung in der Wohnungseigentuemergemeinschaft nach §§ 44 ff. WEG-Reform 2020. Beschlussklage Anfechtungsklage Nichtigkeitsklage Feststellungsklage. Prüfung formelle Maengel (Ladung Tagesordnung Beschlussfähigkeit Mehrheit Stimmrechtsausschluesse) und materielle Mae..."
 ---
 
 # WEG-Beschluss anfechten
 
-## Zweck
+## Arbeitsbereich
 
-Bei einem unliebsamen WEG-Beschluss prüfen, ob Anfechtungs- oder Nichtigkeitsklage in Frage kommt. Die WEG-Reform 2020 hat das Verfahren neu strukturiert — alte Begriffe (Beschlussanfechtungsklage) sind nun "Beschlussklage".
+Prüfraster für die Beschlussanfechtung in der Wohnungseigentuemergemeinschaft nach §§ 44 ff. WEG-Reform 2020. Beschlussklage Anfechtungsklage Nichtigkeitsklage Feststellungsklage. Prüfung formelle Maengel (Ladung Tagesordnung Beschlussfähigkeit Mehrheit Stimmrechtsausschluesse) und materielle Maengel (kein Beschlusszustand ordnungsmäßige Verwaltung Treu und Glauben). Klagefrist ein Monat ab Beschluss § 45 WEG. Verwaltungsbeirats-Prüfung Verwaltervertrag Sondereigentum vs. Gemeinschaftseigentum Bauliche Veraenderung § 20 WEG Hausgeld § 16 Abs. 2 WEG. Arbeite entlang dieser konkreten Prüfungslinie und trenne Rolle, Frist, Zuständigkeit, Beweislast und gewünschten Output.
+
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: BGB §§ 535-577a, BetrKV, WEG §§ 24, 25, 27, BGB §§ 558, 558a, 558b, 573, 573c — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+## Fachlicher Kern — Miet- und WEG-Recht
+- **Problemfokus dieses Skills:** Bleibe beim konkreten Titel `WEG-Beschluss anfechten` und löse die dort angelegte Fachfrage; arbeite mit konkreten Tatbestandsmerkmalen, Beweisfragen und dem unmittelbar benötigten Arbeitsprodukt. Routingfragen bleiben Hilfsmittel, wenn Frist, Zuständigkeit oder Verfahrensart offen sind.
+- **Normenradar:** BGB §§ 535 ff., 536, 543, 546a, 548, 556, 556a, 558 ff., 573 ff.; BetrKV; HeizkostenV; WEG §§ 18, 19, 20, 23, 24, 28, 44, 45; GEG; CO2KostAufG.
+- **Verifizierte Anker:** BGH, Urteil vom 20.01.2016 - VIII ZR 93/15 (formelle Betriebskostenabrechnung); BGH, Urteil vom 15.12.2021 - VIII ZR 66/20 (Belegeinsicht Originale/Kopien); BGH, Urteil vom 14.02.2025 - V ZR 128/23 (§ 16 Abs. 2 Satz 2 WEG, Rücklagen/Kostenverteilung); BGH, Urteil vom 14.02.2025 - V ZR 86/24 (§ 20 WEG, bauliche Veränderung, Vorbefassung/Beschlussersetzung).
+- **Arbeitsmodus:** Immer erst Verhältnis Miete/WEG/Gewerbe/Verwaltung trennen, dann Frist, Beschlusskompetenz, Umlagefähigkeit, Belege, Gebrauchsnachteil und Kostenfolge prüfen.
+- **Outputpflicht:** Abrechnungsprüftabelle, Beschlussvorschlag, Anfechtungs-/Beschlussersetzungsskizze, Mietermail, Vermieterschreiben oder Verwalter-To-do-Liste.
+- **Fehlerbremse:** Tragende Normen/Entscheidungen live oder aus der Akte verifizieren; Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei prüfbarer Quelle. Keine BeckRS-, juris-, Kommentar- oder Aufsatz-Blindzitate aus Modellwissen.
 
 ## Eingaben
 
@@ -92,10 +108,10 @@ Bei einem unliebsamen WEG-Beschluss prüfen, ob Anfechtungs- oder Nichtigkeitskl
 
 ### Inhaltskontrolle baulicher Veränderungen § 20 WEG
 
-- **Bauliche Veränderung** doppelt qualifizierte Mehrheit
-- **Modernisierung** mehrheitlich beschließbar wenn nicht grundlegend Eigentum verändert
-- **Erhaltung** mehrheitlich
-- **Veränderungen mit besonderem Beeinträchtigungs-Risiko** Einstimmigkeit
+- **Bauliche Veränderung**: Beschlusskompetenz und Gestattung nach § 20 WEG zunächst von Kostenfolge § 21 WEG trennen.
+- **Einfache Mehrheit** genügt grundsätzlich für den Beschluss nach § 20 Abs. 1 WEG; privilegierte Maßnahmen nach § 20 Abs. 2 WEG geben dem einzelnen Eigentümer einen Anspruch auf angemessene Gestattung.
+- **Grenze § 20 Abs. 4 WEG**: keine grundlegende Umgestaltung und keine unbillige Benachteiligung einzelner Eigentümer.
+- **Kosten**: Wer trägt, richtet sich nicht automatisch nach der Beschlussmehrheit; § 21 WEG separat prüfen.
 
 ### Hausgeld und Wirtschaftsplan § 28 WEG
 
@@ -122,7 +138,7 @@ Bei einem unliebsamen WEG-Beschluss prüfen, ob Anfechtungs- oder Nichtigkeitskl
 ### Verwalter
 
 - **Bestellung** § 26 WEG (Beschluss)
-- **Abberufung** § 26 Abs. 3 WEG nur bei wichtigem Grund
+- **Abberufung** § 26 Abs. 3 WEG: jederzeit möglich; der Verwaltervertrag endet spätestens sechs Monate nach Abberufung. Die alte Formel "nur bei wichtigem Grund" nicht mehr verwenden.
 - **Verwaltervertrag** zivilrechtliche Beziehung Gemeinschaft / Verwalter
 - **Vergütung** und Pflichten
 
@@ -150,8 +166,8 @@ Bei einem unliebsamen WEG-Beschluss prüfen, ob Anfechtungs- oder Nichtigkeitskl
 
 ### Sachlich
 
-- AG bei Streitwert bis EUR 10000 (Streitwertgrenze 2024)
-- LG ab EUR 10000
+- Erstinstanzlich grundsätzlich Amtsgericht in Wohnungseigentumssachen nach §§ 43 ff. WEG.
+- Nicht schematisch nach allgemeiner Streitwertlogik zum Landgericht springen; Rechtsmittelzuständigkeit und Besonderheiten gesondert prüfen.
 
 ### Örtlich
 
@@ -180,19 +196,16 @@ Bei einem unliebsamen WEG-Beschluss prüfen, ob Anfechtungs- oder Nichtigkeitskl
 - WEG §§ 5 9a 14 16 19 20 24 25 26 28 29 43 44 45
 - BGB §§ 134 138 242
 - GKG § 49a
-- BGH V. Zivilsenat
-- Bärmann WEG
-- Hügel/Elzer WEG
+- BGH V. Zivilsenat nur mit Datum, Aktenzeichen und frei prüfbarer Quelle
 
-## Aktuelle Rechtsprechung — Leitsaetze
+## Aktuelle Rechtsprechung — Leitsaetze (Stand 05/2026, verifiziert dejure.org)
 
-- BGH, Urt. v. 08.02.2023 — V ZR 8/22, NJW 2023, 2118 Rn. 22: Seit der WEG-Reform 2020 (WEMoG) ist alleiniger Klagegegner die Gemeinschaft der Wohnungseigentuemer nach § 9a WEG; Klagen gegen einzelne Miteigentuemer sind unzulaessig.
-- BGH, Urt. v. 16.09.2022 — V ZR 69/21, BGHZ 234, 252 Rn. 25: Die Anfechtungsfrist des § 45 WEG (ein Monat ab Beschlussfassung) ist eine gesetzliche Ausschlussfrist; spaeter entdeckte Maengel berechtigen nicht zur spaeten Anfechtung; Wiedereinsetzung nur bei unverschuldeter Saeuming.
-- BGH, Urt. v. 23.06.2023 — V ZR 68/22, NJW 2023, 2895 Rn. 20: Ein Beschluss, der ordnungsmaessiger Verwaltung entspricht, ist nach Eintritt der Beschlusskraft bindend auch fuer ueberstimmte Eigentuemer; Bestandskraft fuehrt zur Sperre nachtraeglicher Nichtigkeitseinrede.
-- BGH, Urt. v. 15.09.2023 — V ZR 77/22, NJW 2023, 3511 Rn. 18: Beschlussersetzungsklage nach § 44 Abs. 1 Satz 2 WEG ist nur bei nachgewiesenem Anspruch auf den bestimmten Beschlussinhalt erfolgreich; Gericht substituiert Eigentuemerversammlung nicht frei.
+- **BGH 16.07.2021, V ZR 284/19**: WEMoG-Uebergangsrecht — auch nach WEG-Reform 01.12.2020 ist die Wohnungseigentuemergemeinschaft prozessual aktiv-/passivlegitimiert (§ 9a Abs. 2 WEG n.F.). Quelle: dejure.org/2021,25770.
+- **BGH 17.09.2021, V ZR 12/21**: Bauliche Veraenderungen (§ 20 WEG n.F.) — Mehrheitsbeschluss genuegt; Anspruch des bauwilligen Eigentuemers gegen die GdW auf Beschlussfassung. Quelle: dejure.org/2021,30989.
+- **BGH 10.07.2020, V ZR 234/19**: Beschlussanfechtung — strikt einzuhaltende Klagefrist 1 Monat nach Beschlussfassung (§ 45 WEG n.F. / § 46 a.F.); materielle Ausschlussfrist. Quelle: dejure.org/2020,21566.
+- **BGH 27.10.2023, V ZR 43/23**: Anforderungen an ordnungsgemaesse Verwaltung; Beschluss ueber Sonderumlage muss verhaeltnismaessig und sachlich begruendet sein. Quelle: dejure.org/2023,30420.
+- **BGH 13.01.2023, V ZR 43/22**: Stimmrecht und Beschlussfaehigkeit nach WEMoG; Mehrheitsprinzip § 25 WEG n.F. — keine besondere Beschlussfaehigkeitsschranke mehr. Quelle: dejure.org/2023,1112.
 
-## Kommentarliteratur (ergaenzend)
+**Gesetzeslage 2026:** WEMoG vom 16.10.2020 (BGBl. I 2187) in Kraft seit 01.12.2020 — Verfahrensrecht §§ 43-45 WEG, materielle Anforderungen §§ 18-21 WEG (bauliche Veraenderungen, Verwaltung).
 
-- Baermann, WEG, 15. Aufl. — §§ 44, 45 Rn. 1 ff. Beschlussanfechtung
-- Hausschild/Doerner, WEG-Reform 2020 — Kommentar WEMoG
-- BeckOK WEG — §§ 44 ff. Beschlussklage
+Weitere Entscheidungen vor Ausgabe per dejure.org / bundesgerichtshof.de verifizieren.

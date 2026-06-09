@@ -1,9 +1,35 @@
 ---
 name: nda-abgleich
-description: "NDA-Verhandlungshilfe fuer die empfangende Seite. Zwei Modi: (A) Standard-Destillation aus 1 bis n eigenen NDAs und frei beschreibbarer Erfahrung in einen konsolidierten Haltelinien-Standard mit Ampelmatrix ROT/GELB/GRUEN; (B) Redlining-Lauf, der einen Entwurf der Gegenseite gegen genau diesen Standard chirurgisch mit echten Word-Tracked-Changes umarbeitet (w:ins und w:del als Geschwister auf Laufebene, mit author und date). Keine Absatzloeschungen, keine kompletten Klausel-Neufassungen, jede Aenderung minimalinvasiv. Verwenden bei Formulierungen wie 'aus unseren NDAs einen Standard ableiten', 'Haltelinien aus mehreren Vertraegen destillieren', 'NDA der Gegenseite anpassen', 'NDA Redlining', 'Standard durchsetzen', 'NDA Tracked Changes', 'NDA chirurgisch redigieren'."
+description: "Empfangende Seite soll NDA der Gegenseite prüfen und verhandeln oder Kanzlei will aus mehreren NDAs einen eigenen Standard destillieren. NDA-Verhandlungshilfe. Modus A Destillation: 1 bis n eigene NDAs in konsolidierten Haltelinien-Standard mit Ampelmatrix ROT/GELB/GRUEN. Modus B Redlining: Gegen — Arbeitskontext: NDA-Abgleich, Schwerpunkt nda abgleich."
 ---
 
 # NDA-Abgleich: eigenen Standard destillieren und chirurgisch durchsetzen
+
+## Triage — kläre vor dem Start
+
+1. **Modus:** Modus A (Standard destillieren aus eigenen NDAs) oder Modus B (Redlining eines Gegenseite-Entwurfs) oder beides?
+2. **Unterlagenbasis:** Wie viele eigene NDAs / Entwuerfe liegen vor? Liegt ein Haltelinien-Standard aus früherem Modus A bereits vor?
+3. **Rolle:** Empfangende Seite oder offenbarende Seite — einseits oder gegenseitiger NDA?
+4. **Nicht verhandelbare Punkte (ROT):** Welche Klauseln sind absolut gesetzt (Recht, Gerichtsstand, Nachwirkungsfrist)?
+5. **Datenschutz:** Dürfen die eingereichten NDAs in das eingesetzte KI-System geladen werden (§ 203 StGB, GeschGehG)?
+
+## Zentrale Normen
+- § 2 GeschGehG (Definition Geschaeftsgeheimnis — Schutzvoraussetzungen für NDA-Schutzgegenstand): https://www.gesetze-im-internet.de/geschgehg/__2.html
+- § 4 GeschGehG (Handlungsverbote bei Geheimnisverrat): https://www.gesetze-im-internet.de/geschgehg/__4.html
+- § 6 GeschGehG (Unterlassungs- und Beseitigungsanspruechen): https://www.gesetze-im-internet.de/geschgehg/__6.html
+- § 9 GeschGehG (Schadensersatz): https://www.gesetze-im-internet.de/geschgehg/__9.html
+- §§ 16-20 GeschGehG (prozessualer Geheimnisschutz im Geschaeftsgeheimnisstreit)
+- **§ 273a ZPO** (neu eingefuegt durch Justizstandort-Staerkungsgesetz; in Kraft 01.04.2025): erstreckt die prozessualen Geheimnisschutzmassnahmen der §§ 16-20 GeschGehG auf alle Zivilverfahren und arbeitsgerichtliche Verfahren (§ 6a ArbGG); Antrag kann jede Partei stellen; Geheimhaltungspflicht aller Beteiligten, Verstoss-Ordnungsmittel bis 100.000 EUR. Quelle: https://www.gesetze-im-internet.de/zpo/__273a.html
+- §§ 305 ff. BGB (AGB-Kontrolle — bei vorformulierten NDA-Klauseln): https://www.gesetze-im-internet.de/bgb/__305.html
+- § 125 BGB (Schriftformerfordernis — doppelte Schriftformklausel): https://www.gesetze-im-internet.de/bgb/__125.html
+- § 203 StGB (Mandatsgeheimnis): https://www.gesetze-im-internet.de/stgb/__203.html
+- Umsetzungshintergrund: Richtlinie (EU) 2016/943 (Trade Secrets Directive): https://eur-lex.europa.eu/eli/dir/2016/943/oj
+
+## Rechtsprechung
+1. Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+2. Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+3. Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+4. Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
 ## Wann diesen Skill aufrufen
 
@@ -30,7 +56,7 @@ Nicht zuständig: Erstellung eines NDA von Null ohne jegliche Vorlage, allgemein
 Alles, was der Anwender beibringen kann, ist verwertbar — gerade weil der Standard aus gelebter Praxis und nicht aus einem Template-Fetisch entstehen soll. Verarbeitbar sind:
 
 - **Eigene NDAs** als .docx oder .pdf (auch viele auf einmal, typischerweise 1 bis 50). Jede Datei wird einzeln analysiert.
-- **NDAs der Gegenseite aus frueheren Verhandlungen**, soweit der Anwender sie freigibt. Diese werden besonders interessant ausgewertet: wo hat der Mandant nachgegeben, wo hat die Gegenseite nachgegeben, wo wurde eine Mittellösung gefunden?
+- **NDAs der Gegenseite aus früheren Verhandlungen**, soweit der Anwender sie freigibt. Diese werden besonders interessant ausgewertet: wo hat der Mandant nachgegeben, wo hat die Gegenseite nachgegeben, wo wurde eine Mittellösung gefunden?
 - **Verhandlungs-Notizen, E-Mails, Aktenvermerke** in beliebigem Format. Werden ausgelesen und in den Standard eingeflochten als "Erfahrungswert".
 - **Frei beschriebene Erfahrung** des Anwenders im Chat: "Wir akzeptieren nie Schiedsklauseln, weil unser letzter Schiedsfall in Singapur 14 Monate gedauert hat." Solche freitext-Sätze werden als zusätzliche Haltelinien aufgenommen, sofern sie konkret genug sind.
 - **Eigenes Template-NDA**, sofern vorhanden, als grobe Strukturreferenz. Der Skill **gewichtet das Template aber nicht höher als die gelebte Praxis** — wenn die Praxis vom Template abweicht, gewinnt die Praxis.
@@ -45,7 +71,7 @@ Für jede der typischen NDA-Klauseln (siehe Klauselkatalog unten) wertet der Ski
 2. **Wie häufig?** Die Verteilung wird sichtbar gemacht: "In 9 von 12 NDAs deutsches Recht, in 2 schweizerisches, in 1 englisches."
 3. **Mit welcher Streuung?** Wo eine echte Bandbreite besteht (z. B. Nachwirkungsfrist zwischen 2 und 5 Jahren), wird die Spanne und der Median dokumentiert.
 4. **Welche Outlier?** Eine einzelne Abweichung aus einem Spezialfall (z. B. ein NDA für eine US-Akquisition mit Delaware-Recht) wird nicht zur Regel hochgerechnet, sondern als Ausnahme markiert.
-5. **Welche Vorzugsformulierung?** Pro Klausel wird die im Mandantenkreis am häufigsten verwendete Formulierung als Standardposition vorgeschlagen — woertlich, damit sie später in Modus B als Einfuegungstext direkt zur Verfügung steht.
+5. **Welche Vorzugsformulierung?** Pro Klausel wird die im Mandantenkreis am häufigsten verwendete Formulierung als Standardposition vorgeschlagen — wörtlich, damit sie später in Modus B als Einfuegungstext direkt zur Verfügung steht.
 
 ### Output von Modus A
 
@@ -55,11 +81,11 @@ Die Destillation liefert drei Dateien im Workspace:
 - `Haltelinien-Standard_<Mandant>_<Datum>.docx` — dieselbe Matrix als formatierte Tabelle zum internen Verteilen.
 - `Haltelinien-Standard_<Mandant>_<Datum>.json` — maschinenlesbare Repräsentation derselben Matrix; wird von Modus B als Eingangsgroesse genutzt.
 
-Die Ampel-Zuordnung folgt diesen Heuristiken (der Anwender kann jede ueberstimmen):
+Die Ampel-Zuordnung folgt diesen Heuristiken (der Anwender kann jede überstimmen):
 
 - **ROT** wird vorgeschlagen, wenn in **allen** verfügbaren NDAs dieselbe Position vereinbart wurde und/oder der Anwender sie als "nicht verhandelbar" beschrieben hat.
 - **GELB** wird vorgeschlagen, wenn die Klausel über die Inputs hinweg innerhalb einer engen Bandbreite variiert (z. B. Nachwirkungsfrist 3 bis 5 Jahre, Vertragsstrafe 10 bis 50 TEUR).
-- **GRUEN** wird vorgeschlagen, wenn die Klausel in der gelebten Praxis sehr unterschiedlich gehandhabt wurde, ohne dass das den Schutzinteressen des Mandanten geschadet haette (Form der Mitteilungen, Sprache, Counterparts).
+- **GRUEN** wird vorgeschlagen, wenn die Klausel in der gelebten Praxis sehr unterschiedlich gehandhabt wurde, ohne dass das den Schutzinteressen des Mandanten geschadet hätte (Form der Mitteilungen, Sprache, Counterparts).
 
 Der Skill **fragt vor Finalisierung nach**, ob die vorgeschlagene Ampel-Zuordnung passt; im Zweifel werden GELB-Positionen mit der zugehoerigen Bandbreite belassen.
 
@@ -88,7 +114,7 @@ Weitere Klauseln, die in den Inputs auftauchen (z. B. Non-Solicitation, Standsti
 
 ### Iteratives Schärfen
 
-Der Skill behandelt den destillierten Standard als **lebendes Dokument**. Wenn der Anwender später weitere NDAs einreicht, kann derselbe Skill den bestehenden Standard re-destillieren — neue Erkenntnisse fliessen ein, alte Belegbasis bleibt versioniert. Im Workspace wird die jeweils neue Fassung mit Zeitstempel abgelegt, die alte nicht ueberschrieben.
+Der Skill behandelt den destillierten Standard als **lebendes Dokument**. Wenn der Anwender später weitere NDAs einreicht, kann derselbe Skill den bestehenden Standard re-destillieren — neue Erkenntnisse fliessen ein, alte Belegbasis bleibt versioniert. Im Workspace wird die jeweils neue Fassung mit Zeitstempel abgelegt, die alte nicht überschrieben.
 
 ## Modus B — Redlining-Lauf
 
@@ -116,9 +142,9 @@ Vor der ersten Änderung liest der Skill alle Inputs vollständig:
 - Der Entwurf der Gegenseite wird in seine Absätze zerlegt und durchnummeriert (typischerweise 60 bis 100 Absätze). Diese Nummerierung dient als Adresse für jede Änderung.
 - Der Haltelinien-Standard liefert die **Zielformulierungen** für jede Klausel — also die genauen Worte, mit denen die eigene Position sprachlich am elegantesten ins Dokument der Gegenseite eingebaut werden kann.
 - Die Ampelmatrix liefert die **Reihenfolge der Verbindlichkeit**:
-  - ROT-Einträge sind **nicht verhandelbar**. Jeder ROT-Punkt muss in der Ausgabe-Datei adressiert sein, andernfalls schlaegt das Mandat fehl.
-  - GELB-Einträge werden in **Standardposition** eingebracht; die zulässige Bandbreite ist in der Matrix definiert.
-  - GRUEN-Einträge werden nur dann beruehrt, wenn die Gegenseite eine Formulierung gewählt hat, die deutlich vom Standard abweicht — sonst stehen sie unverändert.
+ - ROT-Einträge sind **nicht verhandelbar**. Jeder ROT-Punkt muss in der Ausgabe-Datei adressiert sein, andernfalls schlägt das Mandat fehl.
+ - GELB-Einträge werden in **Standardposition** eingebracht; die zulässige Bandbreite ist in der Matrix definiert.
+ - GRUEN-Einträge werden nur dann beruehrt, wenn die Gegenseite eine Formulierung gewählt hat, die deutlich vom Standard abweicht — sonst stehen sie unverändert.
 
 Wenn die Ampelmatrix unklar oder unvollständig ist, **fragt der Skill nach**, bevor er beginnt. Er erfindet keine Haltelinien.
 
@@ -154,9 +180,9 @@ Schritt 3: Pro Matrixpunkt entscheiden, ob der Gegenseite-Text bereits der eigen
 Jede einzelne Änderung folgt diesen Regeln:
 
 - **So wenige Worte wie möglich, so viele wie noetig.** Wo ein Wort genügt, wird nicht ein Halbsatz verändert.
-- **Streichung und Einfuegung gehören zusammen.** Niemals nur löschen, ohne den Ersatz mitzugeben. Niemals nur einfuegen, ohne die alte Stelle zu streichen, wo eine semantische Verschiebung passiert.
+- **Streichung und Einfuegung gehören zusammen.** Niemals nur löschen, ohne den Ersatz mitzugeben. Niemals nur einfügen, ohne die alte Stelle zu streichen, wo eine semantische Verschiebung passiert.
 - **Niemals ganze Absätze löschen.** Auch eine vollständig unakzeptable Klausel wird durch wenige zielgenau geänderte Worte gerettet — etwa "Disclosing Party" zu "Each Party", "California law" zu "the laws of the Federal Republic of Germany".
-- **Keine neuen Absätze einfuegen.** Wenn ein Punkt im Entwurf der Gegenseite gar nicht vorkommt (etwa ein vollständiger Carve-out-Katalog fehlt), wird in einem **Kommentar** angemerkt, dass dies in einer separaten Verhandlungsrunde adressiert werden muss — der Skill schlaegt nicht eigenmaechtig neue Absätze vor.
+- **Keine neuen Absätze einfügen.** Wenn ein Punkt im Entwurf der Gegenseite gar nicht vorkommt (etwa ein vollständiger Carve-out-Katalog fehlt), wird in einem **Kommentar** angemerkt, dass dies in einer separaten Verhandlungsrunde adressiert werden muss — der Skill schlägt nicht eigenmaechtig neue Absätze vor.
 - **Inhalt vor Sprache.** Tippfehler und sprachliche Unsauberkeiten der Gegenseite werden **nur dann** angetastet, wenn sie zugleich eine inhaltliche Verschiebung bewirken. Eine reine Korrektur von "posseses" zu "possesses" ist nicht Aufgabe des Skills.
 
 ## Sprache und Ausgangstextpflege
@@ -171,8 +197,8 @@ Die Ausgabedatei ist **valid .docx** und enthält echte Word-Tracked-Changes. Pr
 - Eingefügter Text steht in `<w:ins>` mit einem Kind-Run `<w:r>`, der wieder einen `<w:t>` trägt.
 - Gelöschter Text steht in `<w:del>` mit einem Kind-Run, dessen Text in `<w:delText>` (statt `<w:t>`) liegt.
 - Beide Elemente tragen die Attribute **`w:id`**, **`w:author`** und **`w:date`**.
-  - `w:author` Standardwert: **"Receiving Party Counsel"** (oder vom Anwender vorgegeben).
-  - `w:date` als ISO-8601-Zeitstempel der Bearbeitung, z. B. `2026-05-20T01:55:00Z`.
+ - `w:author` Standardwert: **"Receiving Party Counsel"** (oder vom Anwender vorgegeben).
+ - `w:date` als ISO-8601-Zeitstempel der Bearbeitung, z. B. `2026-05-20T01:55:00Z`.
 - Jede `w:id` ist im ganzen Dokument eindeutig.
 - Die Datei oeffnet ohne Reparatur-Dialog in Microsoft Word ab Version 2016 und in LibreOffice ab Version 7.
 
@@ -180,20 +206,20 @@ Beispiel für einen Wortaustausch in einem Lauf:
 
 ```xml
 <w:r>
-  <w:t xml:space="preserve">governed by </w:t>
+ <w:t xml:space="preserve">governed by </w:t>
 </w:r>
 <w:del w:id="42" w:author="Receiving Party Counsel" w:date="2026-05-20T01:55:00Z">
-  <w:r>
-    <w:delText xml:space="preserve">the laws of the State of Delaware</w:delText>
-  </w:r>
+ <w:r>
+ <w:delText xml:space="preserve">the laws of the State of Delaware</w:delText>
+ </w:r>
 </w:del>
 <w:ins w:id="43" w:author="Receiving Party Counsel" w:date="2026-05-20T01:55:00Z">
-  <w:r>
-    <w:t xml:space="preserve">the laws of the Federal Republic of Germany, excluding the CISG and rules of private international law</w:t>
-  </w:r>
+ <w:r>
+ <w:t xml:space="preserve">the laws of the Federal Republic of Germany, excluding the CISG and rules of private international law</w:t>
+ </w:r>
 </w:ins>
 <w:r>
-  <w:t xml:space="preserve">.</w:t>
+ <w:t xml:space="preserve">.</w:t>
 </w:r>
 ```
 
@@ -203,7 +229,7 @@ Beispiel für einen Wortaustausch in einem Lauf:
 
 1. `.docx` als ZIP entpacken (Python `zipfile`).
 2. `word/document.xml` einlesen, Namespaces registrieren (`w` = `http://schemas.openxmlformats.org/wordprocessingml/2006/main`).
-3. Pro geplanter Änderung den passenden `<w:r>`-Lauf finden, an der Wortgrenze splitten, `<w:del>` und `<w:ins>` mit den korrekten Attributen einfuegen.
+3. Pro geplanter Änderung den passenden `<w:r>`-Lauf finden, an der Wortgrenze splitten, `<w:del>` und `<w:ins>` mit den korrekten Attributen einfügen.
 4. Alle anderen Dateien (`word/styles.xml`, `_rels`, `[Content_Types].xml`, Headers/Footers) unverändert lassen.
 5. ZIP neu schreiben.
 
@@ -211,7 +237,7 @@ Wichtig: Niemals den Text direkt am Anfang der `document.xml` über regulaere Au
 
 ## Header-Eintrag für die empfangende Partei
 
-Der Name des Mandanten (z. B. Wernherr & Dimpflmoser Spezialventiltechnik GmbH & Co. KG) wird als **Tracked Change** an der Stelle eingefügt, wo der Entwurf "[Company Name]" oder einen aequivalenten Platzhalter enthält. Ist kein Platzhalter vorhanden, wird die nächstpassende Stelle (in der "between"-Klausel der Praeambel) verwendet und der Eintrag dort durch einen `w:ins`-Block ergänzt.
+Der Name des Mandanten (z. B. Wernherr & Dimpflmoser Spezialventiltechnik GmbH & Co. KG) wird als **Tracked Change** an der Stelle eingefügt, wo der Entwurf "[Company Name]" oder einen aequivalenten Platzhalter enthält. Ist kein Platzhalter vorhanden, wird die nächstpassende Stelle (in der "between"-Klausel der Präambel) verwendet und der Eintrag dort durch einen `w:ins`-Block ergänzt.
 
 ## Reporting im Chat
 
@@ -229,7 +255,7 @@ Die Ausgabedatei trägt den Namen des Ursprungsdokuments mit dem Suffix `_redlin
 
 - **Keine Bewertung des Endverhandlungsergebnisses.** Der Skill stellt nur die Haltelinien sicher; ob das Verhandlungsergebnis kommerziell akzeptabel ist, entscheidet der Anwender.
 - **Keine Prüfung der Bonität oder Rechtsfähigkeit der Gegenseite.**
-- **Keine Prüfung der eigenen Bevollmaechtigung.** Der Anwender muss selbst sicherstellen, dass er für den Mandanten zeichnen darf.
+- **Keine Prüfung der eigenen Bevollmächtigung.** Der Anwender muss selbst sicherstellen, dass er für den Mandanten zeichnen darf.
 - **Keine Schwaerzung von Drittinformationen.** Wenn der Entwurf der Gegenseite Drittinformationen enthält (Namen, E-Mails von nicht beteiligten Personen in Kommentaren), wird das gemeldet, aber nicht automatisch entfernt.
 - **Keine elektronische Signatur und kein Versand.** Die fertige .docx wird im Workspace abgelegt, der Anwender übernimmt Versand und Signatur.
 

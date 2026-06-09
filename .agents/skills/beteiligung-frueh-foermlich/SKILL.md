@@ -1,13 +1,9 @@
 ---
 name: beteiligung-frueh-foermlich
-description: "Mandant greift Bebauungsplan wegen Fehlern in der Buerger- oder Behoerdenbeteiligung an. §§ 3 4 BauGB Beteiligungsverfahren. Prüfraster: fruehzeitige Beteiligung § 3 Abs. 1 foermliche Auslegung § 3 Abs. 2 mindestens 1 Monat Behoerdenbeteiligung §§ 4 Abs. 1 und 2 Wiederholung bei wesentlicher Aenderung § 4a Abs. 3 Online-Pflicht § 4a Abs. 4. Output: Beteiligungsfehler-Prüfprotokoll und Angriffspunkte. Abgrenzung zu aufstellungsbeschluss-bekanntmachung (formelle Verfahrenskette) und planerhaltung-214-215-baugb."
+description: "Mandant greift Bebauungsplan wegen Fehlern in der Buerger- oder Behördenbeteiligung an. §§ 3 4 BauGB Beteiligungsverfahren. Prüfraster: fruehzeitige Beteiligung § 3 Abs. 1 foermliche Auslegung § 3 Abs. 2 mindestens 1 Monat Behördenbeteiligung §§ 4 Abs. 1 und 2 Wiederholung bei wesentlicher Aender — Arbeitskontext: Normenkontrolle Bauleitplanung, Schwerpunkt beteiligung frueh foermlich."
 ---
 
 # Beteiligung — frühzeitig und förmlich
-
-## Zweck
-
-Audit der zweistufigen Beteiligung. Hier finden sich die meisten Verfahrenshebel: Auslegungsdauer, Bekanntmachung der Auslegung, Identität der ausgelegten Unterlagen, Online-Veröffentlichung, Behandlung der Stellungnahmen.
 
 ## Schritt 1 — Frühzeitige Beteiligung § 3 Abs. 1 BauGB
 
@@ -151,7 +147,3 @@ Audit der zweistufigen Beteiligung. Hier finden sich die meisten Verfahrenshebel
 ## Ergänzende Rechtsprechung
 
 - Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
-
-## Quellenregel
-
-Quellenregel: Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen; Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff.

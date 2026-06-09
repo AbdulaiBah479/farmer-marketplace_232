@@ -1,9 +1,29 @@
 ---
 name: mittelstand-ma-tabellenreview
-description: "Kanzlei prüft Dokumente Tabellen Formeln und Datenpunkte für Corporate/M&A mit interner Review-Matrix aus drei Perspektiven: Recht Steuer Wirtschaft. Normen §§ 276 278 BGB Sorgfaltspflicht. Prüfraster Formel-Validierung Datenpunkt-Konsistenz Perspektiven-Abgleich Fehlermarkierung. Output Review-Matrix Fehlerliste Korrekturen. Abgrenzung zu tabellenreview-3d-datenraum (Datenraum-spezifisch) und datenqualitaet-xai (KI-Qualitaet)."
+description: "Kanzlei prüft Dokumente Tabellen Formeln und Datenpunkte für Corporate/M&A mit interner Review-Matrix aus drei Perspektiven: Recht Steuer Wirtschaft. Normen §§ 276 278 BGB Sorgfaltspflicht. Prüfraster Formel-Validierung Datenpunkt-Konsistenz Perspektiven-Abgleich Fehlermarkierung. Output Review-M..."
 ---
 
 # Freistehender Tabellenreview (Mittelstand)
+
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: BRAO, BORA, FAO, BNotO, StBerG, WPO, PAO; AO §§ 38, 42, 90, 93, 153, 162, 164, 169-171, 173, 233a, 370-378, UStG, EStG, KStG, GewStG, GrEStG, ErbStG, FGO; StaRUG — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+## Fachlicher Kern — Gesellschaftsrecht und Corporate Law
+- **Problemfokus dieses Skills:** Bleibe beim konkreten Titel `Freistehender Tabellenreview (Mittelstand)` und löse die dort angelegte Fachfrage; arbeite mit konkreten Tatbestandsmerkmalen, Beweisfragen und dem unmittelbar benötigten Arbeitsprodukt. Routingfragen bleiben Hilfsmittel, wenn Frist, Zuständigkeit oder Verfahrensart offen sind.
+- **Normenradar:** GmbHG §§ 3, 5, 13, 15, 16, 30, 34, 35, 40, 43, 46, 47, 49 ff.; AktG §§ 76, 93, 111, 119, 130, 243 ff.; HGB §§ 105 ff., 161 ff.; MoPeG/GesRÄndG-Folgen; UmwG; FamFG/Registerrecht; GWB/Fusionskontrolle bei Transaktionen.
+- **Verifizierte Anker:** BGH, Urteil vom 08.11.2022 - II ZR 91/21 (zutreffende Gesellschafterliste/Listenstreit); BGH, Beschluss vom 18.03.2025 - II ZB 11/24 (Registerordner/Gesellschafterliste, Prüfungsumfang); BGH, Urteil vom 11.12.2006 - II ZR 166/05 und Urteil vom 12.04.2016 - II ZR 275/14 (Treuepflicht, Zustimmungspflichten); BGH, Urteil vom 30.09.2025 - II ZR 154/23 (Drittvergleich/verdeckte Vermögenszuwendung, Organ-/Beschlusskontrolle).
+- **Arbeitsmodus:** Erst Gesellschaftsform, Organ, Beschlussweg, Vertretung, Registerlage, wirtschaftliches Ziel und Minderheitenposition sortieren; dann Treuepflicht, Kapitalerhaltung, Haftung, Transaktions-Closing und Beweis-/Vollzugsrisiko prüfen.
+- **Outputpflicht:** Beschluss-/Listenmatrix, Register-To-do, Board-/Beiratsvorlage, Closing-CP-Liste, Treuepflicht-Red-Team, Geschäftsführerhaftungsmemo oder Mandanten-Decision-Paper.
+- **Fehlerbremse:** Tragende Normen/Entscheidungen live oder aus der Akte verifizieren; Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei prüfbarer Quelle. Keine BeckRS-, juris-, Kommentar- oder Aufsatz-Blindzitate aus Modellwissen.
+
+## Fachkern: Freistehender Tabellenreview (Mittelstand)
+- **Normen-/Quellenanker:** GmbHG, HGB, BGB, UmwG, WpÜG/GWB/AWG je nach Transaktion, Satzung, Geschäftsordnung, Gesellschafterbeschluss und Beiratsordnung.
+- **Entscheidende Weiche:** Trenne Dealstruktur, Organbeschluss, Zustimmungsvorbehalt, Informationsrecht, Haftung, Interessenkonflikt und Vollzugsdokument.
 
 ## Kernsachverhalt
 
@@ -17,7 +37,7 @@ Im Mittelstands-M&A liegen die Daten häufig in schlechter Qualität vor: Excel-
 4. Gibt es bekannte Problemfelder — Privatentnahmen, nahestehende Personen, Gesellschafter-Darlehen, nicht betriebsnotwendiges Vermögen?
 5. Ist die Transaktion ein Share Deal oder Asset Deal? Welche Positionen sind kaufpreisrelevant?
 6. Soll die BWA mit dem Jahresabschluss abgeglichen werden (typische Abweichungsursachen: Abschreibungen, Rückstellungen, Abgrenzungen)?
-- **Was will der Mandant wirklich erreichen?** (Nicht: was steht im Standardweg, sondern: welches Ergebnis ist fuer den Mandanten persoenlich/wirtschaftlich das beste? Manchmal ist der schnellere Vergleich besser als der formal "richtige" Weg.)
+- **Was will der Mandant wirklich erreichen?** (Nicht: was steht im Standardweg, sondern: welches Ergebnis ist für den Mandanten persoenlich/wirtschaftlich das beste? Manchmal ist der schnellere Vergleich besser als der formal "richtige" Weg.)
 
 ## Rechtsgrundlagen
 
@@ -40,8 +60,7 @@ Im Mittelstands-M&A liegen die Daten häufig in schlechter Qualität vor: Excel-
 
 ## Prüfschema / Review-Würfel (Mittelstand-angepasst)
 
-
-**Vorab:** Der untenstehende Workflow ist die typische Standardlinie. Wenn die Mandantenlage abweicht (siehe "Strategische Optionen" oben), sind die Schritte entsprechend zu verkuerzen, umzustellen oder durch ein anderes Skill zu ersetzen — der Workflow ist Leitfaden, nicht Pflichtprogramm.
+**Vorab:** Der untenstehende ist die typische Standardlinie. Wenn die Mandantenlage abweicht (siehe "Strategische Optionen" oben), sind die Schritte entsprechend zu verkuerzen, umzustellen oder durch ein anderes Skill zu ersetzen — der ist Leitfaden, nicht Pflichtprogramm.
 
 | Schritt | Prüfungspunkt | Inhalt | Status |
 |---|---|---|---|
@@ -93,7 +112,6 @@ Bevor das Template eins-zu-eins gefuellt wird, ist zu pruefen welche Variante zu
 
 Wenn die Mandantenkonstellation **nicht** ins Standardschema passt, ist das Template anzupassen oder durch ein anderes Skill abzuloesen — nicht das Mandat in das Schema zu pressen.
 
-
 ## Schriftsatzbausteine
 
 ### Baustein 1 — Normalisierungs-Memo (Bereinigtes EBITDA)
@@ -103,17 +121,17 @@ NORMALISIERUNGS-MEMO — Projekt [Deal-Code]
 Datum: [TT.MM.JJJJ]
 Erstellt von: [Name]
 
-AUSGANGSPUNKT: EBITDA laut Jahresabschluss [Jahr]    EUR [X]
+AUSGANGSPUNKT: EBITDA laut Jahresabschluss [Jahr] EUR [X]
 
 NORMALISIERUNGEN:
 (+/-) GF-Gehalt über Marktlohn: Marktgehalt EUR [Y], tatsächlich EUR [Z],
-      Differenz EUR [Z-Y] — bereinigt: EUR [(Z-Y)] addieren/subtrahieren
+ Differenz EUR [Z-Y] — bereinigt: EUR [(Z-Y)] addieren/subtrahieren
 (+) Einmalige Restrukturierungskosten [Jahr]: EUR [A] — addieren
 (+) Nicht betriebsnotwendige Kfz-Kosten (privat genutzt): EUR [B] — addieren
 (-) Einmaliger Sonderertrag Grundstücksverkauf: EUR [C] — subtrahieren
 (-) Subventionen (nicht wiederkehrend): EUR [D] — subtrahieren
 
-BEREINIGTES EBITDA:                                  EUR [X + Korrekturen]
+BEREINIGTES EBITDA: EUR [X + Korrekturen]
 
 HINWEIS: Normalisierungen sind kaufpreisrelevant; Verkäufer um Bestätigung bitten.
 ```
@@ -145,11 +163,10 @@ Bestehen Steuerrückstände oder laufende Betriebsprüfungen beim Finanzamt [Ort
 3. Sind Anschlusswege erwuenscht? [Mediation / Direktgesprach / Einigung vor Fristablauf]
 
 Schlussabsatz Variante A (kooperativ):
-Wir regen eine guetliche Einigung an und stehen fuer ein klaerenden Gesprach zur Verfuegung. Eine einvernehmliche Loesung erspart beiden Seiten Zeit und Kosten.
+Wir regen eine guetliche Einigung an und stehen für ein klaerenden Gesprach zur Verfuegung. Eine einvernehmliche Loesung erspart beiden Seiten Zeit und Kosten.
 
 Schlussabsatz Variante B (formal-streng):
 Eine aussergerichtliche Einigung kommt nur in Betracht wenn die Gegenseite innerhalb von [X] Tagen einen akzeptablen Vorschlag unterbreitet. Anderenfalls werden wir alle rechtlichen Schritte einleiten.
-
 
 ## Streitwert und Kosten
 

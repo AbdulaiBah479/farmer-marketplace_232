@@ -1,6 +1,6 @@
 ---
 name: begruendung-allgemein-und-besonders
-description: "Zweiteilige Begründung zu einem Gesetzesentwurf oder einer Verordnung verfassen. Anwendungsfall Referentenentwurf oder Kabinettsentwurf ist fertig und Begründung muss nach HdR-Schema aufgebaut werden. Allgemeiner Teil A Anlass und Ziel B wesentlicher Inhalt C Alternativen D Erfuellungsaufwand E weitere Kosten F weitere Folgen. Besonderer Teil Erlaeuterung je geaendertem Paragrafen was geaendert wird warum wie es zu verstehen ist absehbare Auslegungsfragen Bezug BVerfG BVerwG BGH BSG BFH BAG EuGH-Rechtsprechung. Output vollständige Begründung. Anschluss synopse-erstellen xml-paralleldarstellung."
+description: "Zweiteilige Begründung zu einem Gesetzesentwurf oder einer Verordnung verfassen. Anwendungsfall Referentenentwurf oder Kabinettsentwurf ist fertig und Begründung muss nach HdR-Schema aufgebaut werden. Allgemeiner Teil A Anlass und Ziel B wesentlicher Inhalt C Alternativen D Erfuellungsaufwand E w..."
 ---
 
 # Begründung allgemein und besonders
@@ -81,9 +81,6 @@ Pro Artikel und pro Paragraf:
 
 § 39 VwVfG (Begruendungspflicht Verwaltungsakt) — § 41 VwVfG (Heilung von Begruendungsmaengeln) — § 76 GGO (Begruendung Referentenentwurf) — §§ 1-4 UVPG (Umwelt-Begruendungspflichten) — § 35 BauGB (Begruendung Abwaegungsergebnis Bauleitplanung)
 
-## Quellenregel
-
-Quellenregel: Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen; Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff.
 ## Ausgabe
 
 Markdown-Datei "Begruendung.md".

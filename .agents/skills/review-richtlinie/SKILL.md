@@ -1,13 +1,9 @@
 ---
 name: review-richtlinie
-description: "Pruefung: Internationaler Bezug und Schnittstellen im Plugin ki governance; schärft Rollen, Belege, Fachnormen, Risiken, Gegenargumente und nächsten verwertbaren Schritt statt austauschbarer Standardprüfung: eigenständiges Prüffeld mit Norm-/Quellencheck, Risikoampel und verwertbarem Output."
+description: "Pruefung: Internationaler Bezug und Schnittstellen im Plugin ki governance im Ki Governance."
 ---
 
 # Pruefung: Internationaler Bezug und Schnittstellen
-
-## Arbeitsbereich
-
-Pruefung: Internationaler Bezug und Schnittstellen im Plugin ki governance; schärft Rollen, Belege, Fachnormen, Risiken, Gegenargumente und nächsten verwertbaren Schritt statt austauschbarer Standardprüfung. Die Prüfung konzentriert sich auf dieses Prüffeld und trennt Rolle, Frist, Zuständigkeit, Beweislast und gewünschten Output.
 
 ## Arbeitsweg
 
@@ -17,14 +13,8 @@ Pruefung: Internationaler Bezug und Schnittstellen im Plugin ki governance; sch�
 - Zuständige Stelle bestimmen und Adressaten richtig wählen: Geschäftsleitung, KI-Officer, Datenschutzbeauftragter, Compliance, Aufsichtsrat, Marktüberwachung, externer Auditor, betroffene Personen.
 - Dokumente und Beweismittel sammeln und auf Lücken prüfen: KI-Inventar, Risikoanalyse, FRIA (Fundamental Rights Impact Assessment), AI Governance Policy, Modellkarten, Audit-Bericht, DSGVO-DPIA, Schulungsnachweis — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
 
-## Spezialwissen
-
 ## Spezialwissen: Pruefung: Internationaler Bezug und Schnittstellen
-- **Spezialgegenstand:** Pruefung: Internationaler Bezug und Schnittstellen / pruefung internationaler bezug und schnittstellen. Der Skill löst diese konkrete Lage und darf nicht in allgemeines Routing ausweichen.
 - **Normen-/Quellenanker:** EU, KI, VO, DSGVO, AIA, DPIA.
-- **Entscheidende Weiche:** Aus dem Sachverhalt sind Tatbestandsmerkmal, Zuständigkeit, Frist, Beweislast, Ermessen/Wertung und Rechtsfolge getrennt herauszuarbeiten; offene Tatsachen werden als offen markiert.
-- **Arbeitsprodukt:** Erzeuge eine fallbezogene Matrix `Norm / Tatsache / Beleg / Gegenargument / Risiko / nächster Schritt` plus einen direkt verwendbaren Baustein für Vermerk, Schreiben, Antrag, Schriftsatz oder Entscheidungsvorlage.
-
 
 ## Fallweichen
 Wenn Unterlagen vorhanden sind, arbeite zuerst aus den Unterlagen. Stelle nur Rückfragen, die die nächste Weiche verändern:
@@ -64,15 +54,3 @@ Wenn Unterlagen vorhanden sind, arbeite zuerst aus den Unterlagen. Stelle nur R�
 
 ## Praxis-Tipp
 Bei multinationaler KI-Nutzung pro Tool/Anbieter eine Schnittstellenmatrix führen: Welche Datenarten gehen wohin? Welche Rechtsgrundlage je Jurisdiktion? Welche behördliche Aufsicht (BfDI vs. ICO vs. CNIL)? Pauschalkonzepte funktionieren bei US-Cloud nicht — Detailprüfung pro Land.
-
-## Output-Standard
-- **Kurzlage:** maximal fünf Sätze zu Ziel, Lage, Frist, Risiko und nächstem Schritt.
-- **Prüfmatrix:** Punkt, Norm/Quelle, Tatsache, Beleg, Bewertung, To-do.
-- **Arbeitsprodukt:** direkt nutzbarer Entwurf oder Baustein in der passenden Tonalität.
-- **Qualitätsgate:** keine Scheingenauigkeit; Lücken, Annahmen und Live-Check-Bedarf ausdrücklich markieren.
-
-## Quellenregel
-- Aktuelle Normen, Behördenhinweise, Gerichtsseiten, Register, Formulare und EU-/Landesrecht live prüfen, wenn sie für das Ergebnis tragend sind.
-- Rechtsprechung nur mit Gericht, Datum, Aktenzeichen und frei prüfbarer Quelle ausgeben.
-- Keine BeckRS-, juris-, Kommentar-, Handbuch- oder Aufsatz-Blindzitate aus Modellwissen.
-- Paywall-Literatur nur verwerten, wenn sie von der Nutzerin oder dem Nutzer als Text bereitgestellt wurde; dann nicht als frei verifizierte Quelle ausgeben.

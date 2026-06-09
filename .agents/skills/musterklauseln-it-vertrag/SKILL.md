@@ -1,15 +1,29 @@
 ---
 name: musterklauseln-it-vertrag
-description: "Musterklauseln für IT-Vertraege mit KI-Dienstleistern in Kanzleien: Anwendungsfall Kanzlei verhandelt Vertrag mit KI-Anbieter und braucht Klauseln zu Verschwiegenheit Training-Opt-out Löschpflichten und Haftung. § 43e BRAO Verschwiegenheits-Erklärung, Art. 28 DSGVO AVV, § 203 StGB Berufsgeheimnis. Prüfraster Verschwiegenheits- und § 43e-Erklärung, Training-Opt-out, Löschpflichten, Auditrrechte, Haftungsregelung, Subprozessoren-Genehmigung. Output Musterklausel-Sammlung für IT-Vertrag mit KI-Dienstleister. Abgrenzung zu Auftragsverarbeitungsvertrag-Prüfen und zu Dienstleister-Due-Diligence."
+description: "Musterklauseln für IT-Vertraege mit KI-Dienstleistern in Kanzleien: Anwendungsfall Kanzlei verhandelt Vertrag mit KI-Anbieter und braucht Klauseln zu Verschwiegenheit Training-Opt-out Löschpflichten und Haftung. § 43e BRAO Verschwiegenheits-Erklärung, Art. 28 DSGVO AVV, § 203 StGB Berufsgeheimnis..."
 ---
 
 # Musterklauseln IT-Vertrag
+
+## Arbeitsbereich
+
+Musterklauseln für IT-Vertraege mit KI-Dienstleistern in Kanzleien: Anwendungsfall Kanzlei verhandelt Vertrag mit KI-Anbieter und braucht Klauseln zu Verschwiegenheit Training-Opt-out Löschpflichten und Haftung. § 43e BRAO Verschwiegenheits-Erklärung, Art. 28 DSGVO AVV, § 203 StGB Berufsgeheimnis. Prüfraster Verschwiegenheits- und § 43e-Erklärung, Training-Opt-out, Löschpflichten, Auditrrechte, Haftungsregelung, Subprozessoren-Genehmigung. Output Musterklausel-Sammlung für IT-Vertrag mit KI-Dienstleister. Abgrenzung zu Auftragsverarbeitungsvertrag-Prüfen und zu Dienstleister-Due-Diligence. Arbeite entlang dieser konkreten Prüfungslinie und trenne Rolle, Frist, Zuständigkeit, Beweislast und gewünschten Output.
+
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: BRAO, BORA, FAO, BNotO, StBerG, WPO, PAO; DSGVO — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+## Spezialwissen
 
 Jeder Vertrag mit einem KI-Dienstleister, der Mandatsdaten verarbeiten soll, muss zwei Säulen aufweisen: einen datenschutzrechtlichen Auftragsverarbeitungsvertrag (AVV) nach Art. 28 DSGVO und eine berufsrechtliche Vereinbarung nach § 43e BRAO. Dieser Skill stellt die wichtigsten Musterklauseln bereit.
 
 ## Rechtlicher Hintergrund
 
-§ 43e BRAO: Befugte Weitergabe von Berufsgeheimnissen an IT-Dienstleister setzt einen entsprechenden Vertrag voraus, der den Dienstleister zur Verschwiegenheit verpflichtet. § 203 Abs. 3 Satz 2 StGB: Der Dienstleister wird als „mitwirkende Person" privilegiert und nicht wegen Geheimnisverrats bestraft, wenn eine ordnungsgemäße § 43e-Vereinbarung besteht. § 53a StPO: Zeugnisverweigerungsrecht des Dienstleisters. § 97 Abs. 2 StPO: Beschlagnahmeschutz. Art. 28 DSGVO: AVV-Pflicht. Art. 82 DSGVO: Haftung des Verantwortlichen und Auftragsverarbeiters.
+§ 43e BRAO: Befugte Weitergabe von Berufsgeheimnissen an IT-Dienstleister setzt einen entsprechenden Vertrag voraus, der den Dienstleister zur Verschwiegenheit verpflichtet. § 203 Abs. 3 Satz 2 StGB: Der Dienstleister wird als "mitwirkende Person" privilegiert und nicht wegen Geheimnisverrats bestraft, wenn eine ordnungsgemäße § 43e-Vereinbarung besteht. § 53a StPO: Zeugnisverweigerungsrecht des Dienstleisters. § 97 Abs. 2 StPO: Beschlagnahmeschutz. Art. 28 DSGVO: AVV-Pflicht. Art. 82 DSGVO: Haftung des Verantwortlichen und Auftragsverarbeiters.
 
 ## Vorgehen
 
@@ -50,10 +64,7 @@ Der Auftraggeber oder ein von ihm beauftragter Dritter ist berechtigt, die Einha
 Musterklauseln sind bei jeder wesentlichen Änderung der berufsrechtlichen oder datenschutzrechtlichen Anforderungen zu aktualisieren. Neue BRAK-Veröffentlichungen zu § 43e BRAO-Vereinbarungen sind besonders zu beachten. Ebenso sind neue Entscheidungen zu § 203 StGB oder zu den Anforderungen an AVV in die Klauseln einzuarbeiten.
 
 ## Aktuelle Rechtsprechung (v14.2)
-- BGH, Urt. v. 17.05.2018 — VII ZR 157/17, NJW 2018, 2412 Rn. 18: AGB-Kontrolle von Haftungsausschluessen bei komplexen IT-Systemen — massgeblich fuer KI-Musterklauseln.
-- BGH, Urt. v. 06.12.2016 — VII ZR 165/14, NJW 2017, 1017 Rn. 26: Tagessatz-Klausel ohne Hoechtgrenze in AGB nach § 307 BGB unwirksam — Musterklauseln muss Hoechtgrenze enthalten.
-- EuGH, Urt. v. 07.12.2023 — C-634/21 (SCHUFA-Score), NJW 2024, 248 Rn. 55: Betreiber-Sorgfaltspflicht bei KI-Systemen — Vertragsklauseln muessen Haftungszuordnung klar regeln.
-- BGH, Urt. v. 25.03.2021 — I ZR 37/20, GRUR 2021, 896 Rn. 22: GeschGehG-Schutz in IT-Vertraegen — Musterklausel fuer Vertraulichkeit und KI-Training notwendig.
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
 ## Zentrale Normen (Paragrafenkette)
 - § 305 BGB — Einbeziehung von AGB
@@ -89,10 +100,10 @@ nehmer als Anbieter traegt die Pflichten nach Art. 9-15 KI-VO.
 (3) Auftragsverarbeitung: Soweit der Auftragnehmer personenbezogene Daten
 verarbeitet, gilt Anlage [X] (AVV nach Art. 28 DSGVO).
 
-(4) Haftungsgrenze: Die Haftung des Auftragnehmers fuer Schaden durch
+(4) Haftungsgrenze: Die Haftung des Auftragnehmers für Schaden durch
 fehlerhafte KI-Ausgaben ist auf [EURO-BETRAG] pro Schadensfall begrenzt,
 hoechstens [EURO-BETRAG] pro Jahr. Vorbehaltlich § 307 BGB.
 
 (5) Vertraulichkeit (GeschGehG): Der Auftragnehmer verpflichtet sich, alle
-Eingabedaten als Geschaeftsgeheimnisse i.S.d. § 2 GeschGehG zu behandeln.
+Eingabedaten als Geschäftsgeheimnisse i.S.d. § 2 GeschGehG zu behandeln.
 ```

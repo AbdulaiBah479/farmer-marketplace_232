@@ -1,13 +1,9 @@
 ---
 name: betreiber-deployer-pflichten-art-26
-description: "Unternehmen oder Behoerde setzt ein Hochrisiko-KI-System, GPAI-System oder allgemeinen Chatbot ein und fragt nach Betreiberpflichten. Art. 26 KI-VO: bestimmungsgemaesse Verwendung, menschliche Aufsicht, Eingabedaten, Protokolle, Vorfallmeldungen, Informationspflichten; Art. 27 Grundrechte-Folgenabschaetzung. Besonderer Fokus: Off-label-Nutzung durch Mitarbeitende, Zweckaenderung, Art. 25 Anbieterwerden, Governance fuer allgemeine Chatbots in Hochrisiko-Kontexten. Output: Betreiber-Compliance-Checkliste mit Fehlgebrauchs- und Re-Evaluationsplan."
+description: "Unternehmen oder Behörde setzt ein Hochrisiko-KI-System, GPAI-System oder allgemeinen Chatbot ein und fragt nach Betreiberpflichten. Art. 26 KI-VO: bestimmungsgemaesse Verwendung, menschliche Aufsicht, Eingabedaten, Protokolle, Vorfallmeldungen, Informationspflichten; Art. 27 Grundrechte-Folgenab — Arbeitskontext: KI-VO/AI Act Prüfer, Schwerpunkt betreiber deployer pflichten art 26."
 ---
 
 # Betreiber-Pflichten (Deployer) — Art. 26 und 27 KI-VO
-
-## Zweck
-
-Betreiber sind natürliche oder juristische Personen, Behörden, Einrichtungen oder sonstige Stellen, die ein KI-System unter eigener Verantwortung verwenden. Dieser Skill prüft die Pflichten beim Einsatz von Hochrisiko-KI und ergänzt einen Governance-Check für allgemeine Chatbots/GPAI-Systeme, die intern zweckwidrig für Hochrisiko-Kontexte genutzt werden könnten.
 
 ## Pflicht 1 — Bestimmungsgemäße Verwendung
 

@@ -1,9 +1,23 @@
 ---
 name: dsgvo-compliance-bausteine
-description: "DSGVO-Textbausteine für KI-Nutzungsrichtlinien in Kanzleien: Anwendungsfall Kanzlei erstellt oder aktualisiert KI-Richtlinie und benoetigt prazise datenschutzrechtliche Formulierungen. Art. 2 Abs. 1 DSGVO Anwendungsbereich, Art. 6 DSGVO Rechtsgrundlage, Art. 9 DSGVO besondere Kategorien, Art. 28 DSGVO AVV. Prüfraster Datenminimierung, Zweckbindung, Drittlandtransfer, Anonymisierung, AVV-Pflicht, Löschkonzept. Output DSGVO-Bausteine-Sammlung anpassbar für Kanzlei-Profil mit Normreferenzen. Abgrenzung zu Auftragsverarbeitungsvertrag-Prüfen und zu Anonymisierung-Pseudonymisierung."
+description: "DSGVO-Textbausteine für KI-Nutzungsrichtlinien in Kanzleien: Anwendungsfall Kanzlei erstellt oder aktualisiert KI-Richtlinie und benoetigt prazise datenschutzrechtliche Formulierungen. Art. 2 Abs. 1 DSGVO Anwendungsbereich, Art. 6 DSGVO Rechtsgrundlage, Art. 9 DSGVO besondere Kategorien, Art. 28..."
 ---
 
 # DSGVO-Compliance-Bausteine
+
+## Arbeitsbereich
+
+DSGVO-Textbausteine für KI-Nutzungsrichtlinien in Kanzleien: Anwendungsfall Kanzlei erstellt oder aktualisiert KI-Richtlinie und benoetigt prazise datenschutzrechtliche Formulierungen. Art. 2 Abs. 1 DSGVO Anwendungsbereich, Art. 6 DSGVO Rechtsgrundlage, Art. 9 DSGVO besondere Kategorien, Art. 28 DSGVO AVV. Prüfraster Datenminimierung, Zweckbindung, Drittlandtransfer, Anonymisierung, AVV-Pflicht, Löschkonzept. Output DSGVO-Bausteine-Sammlung anpassbar für Kanzlei-Profil mit Normreferenzen. Abgrenzung zu Auftragsverarbeitungsvertrag-Prüfen und zu Anonymisierung-Pseudonymisierung. Arbeite entlang dieser konkreten Prüfungslinie und trenne Rolle, Frist, Zuständigkeit, Beweislast und gewünschten Output.
+
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: BRAO, BORA, FAO, BNotO, StBerG, WPO, PAO; DSGVO — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+## Spezialwissen
 
 Der datenschutzrechtliche Teil einer KI-Nutzungsrichtlinie muss die Grundsätze der DSGVO kohärent auf den Einsatz von KI-Systemen in der Kanzlei übertragen. Da KI-Systeme regelmäßig personenbezogene Daten verarbeiten, kommt Art. 2 Abs. 1 DSGVO zur Anwendung, was umfangreiche Dokumentations- und Rechtfertigungspflichten auslöst.
 

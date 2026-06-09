@@ -1,13 +1,9 @@
 ---
 name: einfuehrer-importer-pflichten-art-23
-description: "Importeur von KI-Systemen aus Drittstaaten fragt: Was muss ich prüfen bevor ich ein Hochrisiko-KI-System in der EU in Verkehr bringe? Art. 23 KI-VO Einführer-Pflichten. Prüfraster: Konformitätsbewertung durch Anbieter bereits durchgeführt CE-Kennzeichnung vorhanden technische Dokumentation und EU-Konformitätserklärung geprüft Bevollmaechtigter benannt. Wann wird Einführer zum Anbieter Art. 25 KI-VO. Output: Checkliste Einführer-Sorgfaltspflichten. Abgrenzung zu haendler-distributor-pflichten-art-24 (Vertrieb) und anbieter-werden-art-25 (Rollenwechsel)."
+description: "Importeur von KI-Systemen aus Drittstaaten fragt: Was muss ich prüfen bevor ich ein Hochrisiko-KI-System in der EU in Verkehr bringe? Art. 23 KI-VO Einführer-Pflichten. Prüfraster: Konformitätsbewertung durch Anbieter bereits durchgeführt CE-Kennzeichnung vorhanden technische Dokumentation und EU — Arbeitskontext: KI-VO/AI Act Prüfer, Schwerpunkt einfuehrer importer pflichten art 23."
 ---
 
 # Einführer-Pflichten (Importer) — Art. 23 KI-VO
-
-## Zweck
-
-Ein Einführer ist derjenige, der ein in einem Drittland in Verkehr gebrachtes Hochrisiko-KI-System in der EU in Verkehr bringt. Art. 23 KI-VO legt den Pflichtenkatalog für Einführer fest.
 
 ## Wer ist Einführer?
 
@@ -84,9 +80,6 @@ Hinweis: Keine Rechtsberatung. Mechanische Prüfung anhand vom Nutzer behauptete
 - Art. 26 KI-VO — Betreiberpflichten
 - Art. 99 KI-VO — Bussgelder bis 35 Mio. EUR / 7 % Jahresumsatz
 
-## Quellenregel
-
-Quellenregel: Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen; Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff.
 ## Triage zu Beginn
 1. Welche Rolle hat das Unternehmen im KI-Lieferkette (Art. 3 KI-VO — Anbieter, Betreiber, Importeur)?
 2. Liegt ein Hochrisiko-System vor (Art. 6 i.V.m. Anhang III Nr. 1-8 KI-VO)?
@@ -106,7 +99,7 @@ Gepruefte Norm(en): [Art. 23 Rn. 3]
 Ergebnis:
 [ ] Anforderung erfuellt
 [ ] Anforderung nicht erfuellt — Massnahmen erforderlich:
-    1. [MASSNAHME — Verantwortlicher: NAME — Frist: DATUM]
+ 1. [MASSNAHME — Verantwortlicher: NAME — Frist: DATUM]
 [ ] Nicht einschlaegig — Begruendung: [BEGRUENDUNG]
 
 Sanktionsrisiko: [NIEDRIG / MITTEL / HOCH — bis [BETRAG] nach Art. 99 KI-VO]

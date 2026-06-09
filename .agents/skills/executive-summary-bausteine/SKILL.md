@@ -1,9 +1,23 @@
 ---
 name: executive-summary-bausteine
-description: "Executive Summary der KI-Nutzungsrichtlinie für Kanzleien erstellen: Anwendungsfall Kanzleiführung will Mitarbeitenden die wichtigsten Kernpunkte in kurzem Executive Summary vermitteln. § 43a BRAO Verschwiegenheit, § 43e BRAO IT-Dienstleister, Art. 4 KI-VO KI-Kompetenz. Prüfraster sechs Kern-Eckpunkte Werkzeugcharakter, Verschwiegenheit, Datenschutz, Quellenprüfung, keine Privat-Accounts, Kennzeichnungspflichten. Output modularer Executive Summary anpassbar an Kanzlei-Groesse und Rechtsgebiete. Abgrenzung zu Richtlinien-Skelett für vollständige Richtlinie und zu Compliance-Regelsatz."
+description: "Executive Summary der KI-Nutzungsrichtlinie für Kanzleien erstellen: Anwendungsfall Kanzleiführung will Mitarbeitenden die wichtigsten Kernpunkte in kurzem Executive Summary vermitteln. § 43a BRAO Verschwiegenheit, § 43e BRAO IT-Dienstleister, Art. 4 KI-VO KI-Kompetenz. Prüfraster sechs Kern-Eckp..."
 ---
 
 # Executive Summary Bausteine
+
+## Arbeitsbereich
+
+Executive Summary der KI-Nutzungsrichtlinie für Kanzleien erstellen: Anwendungsfall Kanzleiführung will Mitarbeitenden die wichtigsten Kernpunkte in kurzem Executive Summary vermitteln. § 43a BRAO Verschwiegenheit, § 43e BRAO IT-Dienstleister, Art. 4 KI-VO KI-Kompetenz. Prüfraster sechs Kern-Eckpunkte Werkzeugcharakter, Verschwiegenheit, Datenschutz, Quellenprüfung, keine Privat-Accounts, Kennzeichnungspflichten. Output modularer Executive Summary anpassbar an Kanzlei-Groesse und Rechtsgebiete. Abgrenzung zu Richtlinien-Skelett für vollständige Richtlinie und zu Compliance-Regelsatz. Arbeite entlang dieser konkreten Prüfungslinie und trenne Rolle, Frist, Zuständigkeit, Beweislast und gewünschten Output.
+
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: BRAO, BORA, FAO, BNotO, StBerG, WPO, PAO; DSGVO — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+## Spezialwissen
 
 Der Executive Summary einer KI-Nutzungsrichtlinie fasst die sechs wichtigsten Eckpunkte so zusammen, dass alle Mitarbeitenden — Anwältinnen und Anwälte wie auch nicht-anwaltliche Kräfte — die wesentlichen Verhaltensregeln sofort überblicken können. Die Bausteine sind modular und können je nach Kanzlei-Profil angepasst werden.
 
@@ -13,7 +27,7 @@ Die sechs Eckpunkte spiegeln die zentralen Rechtspflichten wider: § 43 BRAO (Ge
 
 ## Vorgehen
 
-**Vorab:** Der untenstehende Workflow ist die typische Standardlinie. Wenn die Mandantenlage abweicht (siehe "Strategische Optionen" oben), sind die Schritte entsprechend zu verkuerzen, umzustellen oder durch ein anderes Skill zu ersetzen — der Workflow ist Leitfaden, nicht Pflichtprogramm.
+**Vorab:** Der untenstehende ist die typische Standardlinie. Wenn die Mandantenlage abweicht (siehe "Strategische Optionen" oben), sind die Schritte entsprechend zu verkuerzen, umzustellen oder durch ein anderes Skill zu ersetzen — der ist Leitfaden, nicht Pflichtprogramm.
 
 1. **Eckpunkt 1 – Werkzeugcharakter** herausarbeiten und in die Richtlinie einpassen.
 2. **Eckpunkt 2 – Verschwiegenheit** mit § 43a BRAO und § 203 StGB verankern.
@@ -29,9 +43,9 @@ Bevor das Template eins-zu-eins gefuellt wird, ist zu pruefen welche Variante zu
 | Konstellation | Empfohlener Weg |
 |---|---|
 | Standard — Executive Summary KI-Richtlinie erstellen | Summary nach Schema; Template unten |
-| Variante A — Nur fuer Fuehrungsebene kein Technik-Detail | Managementfassung ohne technische Spezifikationen |
+| Variante A — Nur für Fuehrungsebene kein Technik-Detail | Managementfassung ohne technische Spezifikationen |
 | Variante B — Summary soll Mandanten ueberzeugen nicht intern | Externe Kommunikations-Version; Nutzen betonen |
-| Variante C — Summary fuer Regulierungsbehoerde | Regulierungskonforme Darstellung; Compliance-Sprache |
+| Variante C — Summary für Regulierungsbehoerde | Regulierungskonforme Darstellung; Compliance-Sprache |
 
 Wenn die Mandantenkonstellation **nicht** ins Standardschema passt, ist das Template anzupassen oder durch ein anderes Skill abzuloesen — nicht das Mandat in das Schema zu pressen.
 
@@ -61,7 +75,7 @@ Verwenden Sie für Ihre berufliche Tätigkeit in der Kanzlei nur vorab freigegeb
 3. Sind Anschlusswege erwuenscht? [Mediation / Direktgesprach / Einigung vor Fristablauf]
 
 Schlussabsatz Variante A (kooperativ):
-Wir regen eine guetliche Einigung an und stehen fuer ein klaerenden Gesprach zur Verfuegung. Eine einvernehmliche Loesung erspart beiden Seiten Zeit und Kosten.
+Wir regen eine guetliche Einigung an und stehen für ein klaerenden Gesprach zur Verfuegung. Eine einvernehmliche Loesung erspart beiden Seiten Zeit und Kosten.
 
 Schlussabsatz Variante B (formal-streng):
 Eine aussergerichtliche Einigung kommt nur in Betracht wenn die Gegenseite innerhalb von [X] Tagen einen akzeptablen Vorschlag unterbreitet. Anderenfalls werden wir alle rechtlichen Schritte einleiten.
@@ -84,8 +98,8 @@ Die Eckpunkte sind zu überarbeiten, wenn neue BRAK-Hinweise oder DAV-Stellungna
 2. Wie umfangreich ist die KI-Nutzungsrichtlinie — was muss im Summary priorisiert werden?
 3. Sind kritische Nutzungsfaelle bekannt — muss das Summary sie explizit adressieren?
 4. Soll das Summary als eigenstaendiges Dokument oder als Richtlinien-Deckblatt verwendet werden?
-5. Wird das Summary zum Compliance-Nachweis gegenueber Mandanten oder Behoerden verwendet?
-- **Was will der Mandant wirklich erreichen?** (Nicht: was steht im Standardweg, sondern: welches Ergebnis ist fuer den Mandanten persoenlich/wirtschaftlich das beste? Manchmal ist der schnellere Vergleich besser als der formal "richtige" Weg.)
+5. Wird das Summary zum Compliance-Nachweis gegenueber Mandanten oder Behörden verwendet?
+- **Was will der Mandant wirklich erreichen?** (Nicht: was steht im Standardweg, sondern: welches Ergebnis ist für den Mandanten persoenlich/wirtschaftlich das beste? Manchmal ist der schnellere Vergleich besser als der formal "richtige" Weg.)
 
 ## Output-Template — Executive Summary KI-Nutzungsrichtlinie
 **Adressat:** Kanzlei-Fuehrung / alle Mitarbeiter — Tonfall: klar, begrenzend, essentiell
@@ -96,22 +110,22 @@ EXECUTIVE SUMMARY — KI-NUTZUNGSRICHTLINIE
 6 GRUNDSAETZE FUR DEN KI-EINSATZ IN UNSERER KANZLEI:
 
 1. WERKZEUGCHARAKTER: KI ist ein Arbeitshilfsmittel — keine eigenstaendige Rechtsberatung.
-   Jede KI-Ausgabe wird menschlich geprueft und verantwortet.
+ Jede KI-Ausgabe wird menschlich geprueft und verantwortet.
 
 2. VERSCHWIEGENHEIT (§ 43a Abs. 2 BRAO): Mandatsdaten werden vor KI-Eingabe anonymisiert.
-   Das Mandantengeheimnis gilt absolut.
+ Das Mandantengeheimnis gilt absolut.
 
 3. DATENSCHUTZ (DSGVO / Art. 28): Nur KI-Systeme mit Kanzlei-Account und AVV.
-   Kein Privat-Account. Kein Upload personenbezogener Daten ohne AVV.
+ Kein Privat-Account. Kein Upload personenbezogener Daten ohne AVV.
 
 4. QUELLENPRÜFUNG: Rechtsprechungs-Zitate werden gegen amtliche Quellen verifiziert.
-   Halluzinierte Fundstellen sind ein Haftungsrisiko.
+ Halluzinierte Fundstellen sind ein Haftungsrisiko.
 
 5. KEINE PRIVAT-ACCOUNTS: Nur freigegebene Kanzlei-Lizenzen.
-   (Freigabeliste: [REFERENZ AUF LISTE])
+ (Freigabeliste: [REFERENZ AUF LISTE])
 
 6. KENNZEICHNUNGSPFLICHT: KI-generierte Abschnitte in Mandanten-Dokumenten als solche
-   kennzeichnen (interne Kennzeichnung genuegt).
+ kennzeichnen (interne Kennzeichnung genuegt).
 
 Bei Fragen: [ANSPRECHPARTNER] — [EMAIL]
 Vollstaendige Richtlinie: [REFERENZ]

@@ -1,6 +1,6 @@
 ---
 name: terminologie-konsistenz
-description: "Terminologie-Konsistenz im legistischen Entwurf prüfen und Begriffstabelle aufbauen. Anwendungsfall Entwurf enthaelt neue Legaldefinitionen oder Referent prüft ob Begriffe konsistent verwendet werden und keine ungewollten Abweichungen von bestehenden Legaldefinitionen in anderen Gesetzen vorliegen. Faustregel ein Begriff eine Bedeutung. Prüfung gegen HdR und GGO. Abweichung gerechtfertigt und ausdrücklich oder versehentliche Bruchbildung. Output Begriffsliste kritische Faelle markiert Aenderungsvorschlag."
+description: "Terminologie-Konsistenz im legistischen Entwurf prüfen und Begriffstabelle aufbauen. Anwendungsfall Entwurf enthaelt neue Legaldefinitionen oder Referent prüft ob Begriffe konsistent verwendet werden und keine ungewollten Abweichungen von bestehenden Legaldefinitionen in anderen Gesetzen vorliege..."
 ---
 
 # Terminologie-Konsistenz
@@ -60,9 +60,6 @@ Inkonsistenz vermeiden - eine Formel je Gesetz.
 
 §§ 43-46 HdR (einheitliche Begriffsverwendung, Terminologie-Gebot) — Art. 20 Abs. 3 GG (Bestimmtheitsgebot, Normenklarheit) — § 288 AEUV (EU-Richtlinie verlangt einheitliche terminologische Umsetzung) — §§ 1-5 DIN 1422 (Norm Terminologie-Konsistenz in Rechtstexten)
 
-## Quellenregel
-
-Quellenregel: Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen; Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff.
 ## Ausgabe
 
 Begriffstabelle als Anhang zum Entwurf. Kritische Fälle (Bruchbildung) markiert.

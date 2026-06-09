@@ -1,12 +1,21 @@
 ---
 name: erstantwort-generator
-description: "Sekretariat oder Anwalt muss professionelle Erstantwort-E-Mail an potentiellen Mandanten senden. Hauptskill Erstantwort-E-Mail. Prüfraster: Dank für Anfrage exakte Anrede Terminvergabe-Hinweis Transkriptionsservice mit DSGVO-Einwilligung Mandatsverhältnis-Disclaimer Schlussformel. Output: fertige Erstantwort-E-Mail mit allen Pflichthinweisen. Abgrenzung zu muster-erstantwort (Template-Vorlage) und anrede-uebernehmen."
+description: "Sekretariat oder Anwalt muss professionelle Erstantwort-E-Mail an potentiellen Mandanten senden. Hauptskill Erstantwort-E-Mail. Prüfraster: Dank für Anfrage exakte Anrede Terminvergabe-Hinweis Transkriptionsservice mit DSGVO-Einwilligung Mandatsverhältnis-Disclaimer Schlussformel. Output: fertige..."
 ---
 
 # Erstantwort-Generator
 
-Dieser Hauptskill erstellt die vollständige formelle Erstantwort-E-Mail an einen potenziellen Mandanten. Er koordiniert alle Teilskills und fügt deren Output zu einem druckfertigen Schreiben zusammen.
+## Arbeitsweg
 
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: BRAO § 44 unverzügliche Annahme/Ablehnung, RVG § 34 Erstberatung max. 190 EUR (Verbraucher), DSGVO Art. 13 Information bei Erhebung.
+- Tragende Normen verifizieren: BRAO §§ 43a, 44, 49b, BORA §§ 2, 11, BGB §§ 145 ff., 280, 627, 675, GwG §§ 10, 11, RVG §§ 1, 4, 34 (Erstberatung), DSGVO Art. 6, 13 — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Anfragender (Interessent), Anwalt, Sekretariat, Compliance-Beauftragter, Mandantenbetreuer.
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Erstkontaktformular, Konfliktscreening, Mandatsvertrag, Vollmacht, Honorarvereinbarung, Mandantendossier, Datenschutzhinweis — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+## Spezialwissen
+
+Dieser Hauptskill erstellt die vollständige formelle Erstantwort-E-Mail an einen potenziellen Mandanten. Er koordiniert alle Teilskills und fügt deren Output zu einem druckfertigen Schreiben zusammen.
 
 ## Triage zu Beginn
 1. Sind alle Teil-Skills bereits ausgefuehrt (Parsing, Spam-Check, Dringlichkeit, Anrede, Sprache)?
@@ -23,9 +32,6 @@ Dieser Hauptskill erstellt die vollständige formelle Erstantwort-E-Mail an eine
 - § 43 BRAO — Sorgfaltspflicht: zeitnahe und vollstaendige Beantwortung eingehender Anfragen
 - § 43a Abs. 2 BRAO — Verschwiegenheit: gilt auch gegenueber dem potenziellen Mandanten
 
-## Quellenregel
-
-Quellenregel: Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen; Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff.
 ## Ablauf (Koordination der Teil-Skills)
 
 1. **Parsing:** Skill `anfrage-eingang-parser` läuft zuerst und liefert strukturierte Daten.
@@ -62,16 +68,16 @@ nächsten Schritte zu finden. Bitte beachten Sie, dass [MANDATSVERHAELTNIS-DISCL
 
 Für eine erste Terminabsprache stehen wir Ihnen telefonisch zur Verfügung:
 
-  Sekretariat: [SEKRETARIATS-TELEFON]
-  Erreichbarkeit: [ERREICHBARKEITSZEITEN]
+ Sekretariat: [SEKRETARIATS-TELEFON]
+ Erreichbarkeit: [ERREICHBARKEITSZEITEN]
 
 Um Ihren Fall bestmöglich vorzubereiten, bitten wir Sie, uns vorab Ihren
 Sachverhalt in einer kurzen E-Mail zusammenzufassen:
 
-  — Was ist der Kern Ihres Anliegens?
-  — Wann hat das zugrunde liegende Ereignis stattgefunden?
-  — Gibt es Fristen, Termine oder Bescheide, die wir kennen sollten?
-  — Wer ist die Gegenseite (Person, Unternehmen, Behörde)?
+ — Was ist der Kern Ihres Anliegens?
+ — Wann hat das zugrunde liegende Ereignis stattgefunden?
+ — Gibt es Fristen, Termine oder Bescheide, die wir kennen sollten?
+ — Wer ist die Gegenseite (Person, Unternehmen, Behörde)?
 
 [TRANSKRIPTIONS-ABSCHNITT — nur wenn Anfragende nicht schreiben kann/mag:]
 

@@ -1,11 +1,26 @@
 ---
 name: synopse-erstellen
-description: "Synopse als Dreispalten-Tabelle bisheriges Recht neues Recht Aenderungsbefehl erstellen. Anwendungsfall Ressortabstimmung Bundestag oder Bundesrat brauchen vergleichende Darstellung um Aenderungen schnell zu erfassen. Pro geaendertem Paragrafen eine Zeile oder Block pro Stammgesetz eigene Synopsen-Tabelle. Spalten gleich breit druckbar A4 quer oder A3. Output Synopsen-Tabelle Markdown plus DOCX-Vorlage. Anschluss lesefassung-konsolidiert. Abgrenzung zu xml-paralleldarstellung maschinenlesbare Ausgabe."
+description: "Synopse als Dreispalten-Tabelle bisheriges Recht neues Recht Aenderungsbefehl erstellen. Anwendungsfall Ressortabstimmung Bundestag oder Bundesrat brauchen vergleichende Darstellung um Aenderungen schnell zu erfassen. Pro geaendertem Paragrafen eine Zeile oder Block pro Stammgesetz eigene Synopse..."
 ---
 
 # Synopse erstellen
 
-> Drei Spalten: vorher, nachher, Änderungsbefehl. Hilft Allen.
+## Normenanker
+
+Arbeitsfokus: **Synopse erstellen**. Prüfe diese Anker am Sachverhalt; ergänze nur Normen, die denselben Output, dieselbe Frist oder dieselbe Beweisfrage tragen:
+
+- `Art. 20 Abs. 3 GG` — Gesetzesbindung.
+- `Art. 76 Abs. 1 GG` — Gesetzesinitiative.
+- `Art. 77 Abs. 1 GG` — Gesetzesbeschluss.
+- `Art. 80 Abs. 1 GG` — Verordnungsermächtigung.
+- `Art. 84 Abs. 1 GG` — Verwaltungsvollzug.
+- `§ 42 Abs. 1 GGO` — Gesetzgebungsvorhaben.
+- `§ 43 Abs. 1 GGO` — Ressortabstimmung.
+- `§ 44 Abs. 1 GGO` — Gesetzesfolgen.
+- `§ 45 GGO` — Beteiligung.
+- `§ 46 GGO` — Rechtsförmlichkeit.
+
+Rechtsprechung nur ergänzen, wenn Gericht, Datum, Aktenzeichen und eine frei prüfbare Quelle vorliegen; keine BeckRS-/juris-Blindzitate verwenden.
 
 ## Aufbau einer Synopse
 
@@ -45,9 +60,6 @@ Beispiel "Lesefassung_HGB_Paragraf_33.md" - das ist der Paragraf, wie er nach In
 
 §§ 42-48 GGO (Synopse als Bestandteil der Begr.) — §§ 1-4 HdR (Rechtsfoermlichkeit, Vergleichs-Darstellungen) — Art. 76 Abs. 2 GG (Einbringungs-Unterlagen inkl. erlaeuternder Materialien)
 
-## Quellenregel
-
-Quellenregel: Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen; Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff.
 ## Anschluss
 
 `lesefassung-konsolidiert`.

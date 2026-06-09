@@ -1,6 +1,6 @@
 ---
 name: folgenabschaetzung-nachhaltigkeit
-description: "Weitere Folgen und Nachhaltigkeitsprüfung für Gesetzesentwurf erstellen. Anwendungsfall Referentenentwurf benoetigt Vorblatt Abschnitt G und Begründung A.VI.6 zu Nachhaltigkeitsfolgen. UN-SDGs prüfen welche betroffen Bewertung positiv neutral negativ. Demografiecheck Wirkung auf aeltere Buerger Familien. Gleichstellungspolitischer Check Art. 3 GG Equal Pay. Klimacheck Treibhausgasemissionen Ressourcenverbrauch. Soziale Folgen Inklusion Teilhabe. Output Folgenmatrix Vorblatt Abschnitt G Begründung A.VI.6. Abgrenzung zu folgenabschaetzung-erfuellungsaufwand Buerokratiekosten."
+description: "Weitere Folgen und Nachhaltigkeitsprüfung für Gesetzesentwurf erstellen. Anwendungsfall Referentenentwurf benoetigt Vorblatt Abschnitt G und Begründung A.VI.6 zu Nachhaltigkeitsfolgen. UN-SDGs prüfen welche betroffen Bewertung positiv neutral negativ. Demografiecheck Wirkung auf aeltere Buerger F..."
 ---
 
 # Folgenabschätzung - Nachhaltigkeit
@@ -62,9 +62,6 @@ Klimaschutzgesetz Paragraf 13. Wirkung auf Treibhausgasemissionen direkt und ind
 
 §§ 3-6 UVPG (Umweltvertraeglichkeitspruefung) — Art. 20a GG (Staatsziel Umweltschutz) — §§ 4-6 KSG (Klimaschutzziele, Sektorziele) — DNK Deutsche Nachhaltigkeitsstrategie — § 65 GGO (Nachhaltigkeitspruefung in Begruendung)
 
-## Quellenregel
-
-Quellenregel: Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen; Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff.
 ## Ausgabe
 
 Folgenmatrix als Tabelle plus Text für Vorblatt G und Begründung A.VI.6.

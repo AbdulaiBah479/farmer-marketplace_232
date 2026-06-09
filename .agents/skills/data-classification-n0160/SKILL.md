@@ -1,0 +1,9 @@
+---
+name: data-classification-n0160
+description: "Expert knowledge in data classification: skill #160 covering advanced techniques, real-world applications, and best practices."
+category: expertise-data-classification
+---
+
+# Data Classification #160
+
+Expert knowledge in data classification: skill #160 covering advanced techniques, real-world applications, and best practices.

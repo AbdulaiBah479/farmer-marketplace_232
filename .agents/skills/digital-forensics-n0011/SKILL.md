@@ -1,0 +1,9 @@
+---
+name: digital-forensics-n0011
+description: "Expert knowledge in digital forensics: skill #11 covering advanced techniques, real-world applications, and best practices."
+category: expertise-digital-forensics
+---
+
+# Digital Forensics #11
+
+Expert knowledge in digital forensics: skill #11 covering advanced techniques, real-world applications, and best practices.

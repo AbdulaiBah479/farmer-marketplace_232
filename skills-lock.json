@@ -1,11 +1,23 @@
 {
   "version": 1,
   "skills": {
+    "8-bit-orbit-video-template": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/8-bit-orbit-video-template/SKILL.md",
+      "computedHash": "4dc23e4efd92f081d3f12f45b2d1131b05832ac4d659e6676e548a7ca716ed06"
+    },
     "activate-site": {
       "source": "microsoft/power-platform-skills",
       "sourceType": "github",
       "skillPath": "plugins/power-pages/skills/activate-site/SKILL.md",
       "computedHash": "9b59c5ff852b1d24e54abb8b4f1f461c4640afb219e89bf81a226d4d1bbc5dcb"
+    },
+    "ad-creative": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/ad-creative/SKILL.md",
+      "computedHash": "0e34a9585693914a03266ded0da62140fdd02378c89f8f7de75223fb3fc1878d"
     },
     "adaptyv": {
       "source": "bitroc-ai/medical-skills",
@@ -115,11 +127,17 @@
       "skillPath": "skills/aeon/SKILL.md",
       "computedHash": "c26b247eebaf022d6828ebdc7b85286068e5d0cd13163936e4511dc74ec23aae"
     },
+    "after-hours-editorial-template": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/after-hours-editorial-template/SKILL.md",
+      "computedHash": "72d63f90ff77d65420cb3ca851c6ec86fe946538bd10c16575b520ac72b4c79a"
+    },
     "agent-browser": {
-      "source": "bitroc-ai/medical-skills",
+      "source": "nexu-io/open-design",
       "sourceType": "github",
       "skillPath": "skills/agent-browser/SKILL.md",
-      "computedHash": "d895385e2c55dbb9ce9a5c2e0c395a9d5c3a61142f2cab641e9a1f78db048708"
+      "computedHash": "09ef2d39e3905cee2f1a40f6e6223da42c2b77efe7df45cf15f6c093f7fa36b5"
     },
     "agent-creator": {
       "source": "WalletConnect/skills",
@@ -139,6 +157,12 @@
       "skillPath": "ai-governance-legal/skills/ai-inventory/SKILL.md",
       "computedHash": "18fa696eb4047bcccda02c687371625a100305cb9e33144aac48741e8bf3c36f"
     },
+    "ai-music-album": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/ai-music-album/SKILL.md",
+      "computedHash": "9f33ae92e8689fde486927dee7717ddb3e953eaeb0e7824a806d686918cb0bf5"
+    },
     "ai-tool-handoff": {
       "source": "anthropics/claude-for-legal",
       "sourceType": "github",
@@ -150,6 +174,12 @@
       "sourceType": "github",
       "skillPath": "ai-governance-legal/skills/aia-generation/SKILL.md",
       "computedHash": "02271886b10e4da1b3cb638f470c68f066e23f8462606e684d0a43539d9cd22d"
+    },
+    "algorithmic-art": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/algorithmic-art/SKILL.md",
+      "computedHash": "bd8d3ee280a9be1cac71e56e23fd87ef5f0b81aac112fea5af84dca866e13039"
     },
     "alphafold": {
       "source": "bitroc-ai/medical-skills",
@@ -175,11 +205,35 @@
       "skillPath": "skills/anndata/SKILL.md",
       "computedHash": "139e609d7ca16718128dfedbfeea10852fe73dfa3061192dc2c98babf96ab806"
     },
+    "api-and-interface-design": {
+      "source": "addyosmani/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/api-and-interface-design/SKILL.md",
+      "computedHash": "3cf54553433e55875c664baf78f9c769820bdfac155f09bf2989d70e20e6e147"
+    },
+    "apple-hig": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/apple-hig/SKILL.md",
+      "computedHash": "810dd0ff8da113fceee96b5d4228b0d298d29d14ee90b9977fae1bc76d1358e8"
+    },
     "arboreto": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
       "skillPath": "skills/arboreto/SKILL.md",
       "computedHash": "b8e62da5941524c2c4c98006e3687a1917d308e5b14aaa79a37f90100b88005c"
+    },
+    "article-magazine": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/article-magazine/SKILL.md",
+      "computedHash": "87027fe506acf8ef2c2479bde97d8e4fb6bacab66aca074413489a8affe176b6"
+    },
+    "artifacts-builder": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/artifacts-builder/SKILL.md",
+      "computedHash": "9b59e116000cc4e7cadf28d1697262b6a905aa85ac97880d8cb5cb616bd9a4ac"
     },
     "arxiv-search": {
       "source": "bitroc-ai/medical-skills",
@@ -2798,10 +2852,22 @@
       "computedHash": "60bccbe567b3c133d383eb1dabf70f8ae0c9b54bf532b7f6ffde43d57db9f958"
     },
     "brainstorming": {
-      "source": "bitroc-ai/medical-skills",
+      "source": "nexu-io/open-design",
       "sourceType": "github",
       "skillPath": "skills/brainstorming/SKILL.md",
-      "computedHash": "5cafa1558b0b6bd4d4c71f23d5567b7fcbbcdb4b0a50b0c5f69a80a3cebaf9b8"
+      "computedHash": "b81a2afee85463796b78c180270625040e1f5a1fb6e04778f2f19e303a5ea077"
+    },
+    "brand-guidelines": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/brand-guidelines/SKILL.md",
+      "computedHash": "8af0e4d2097017080331ec7b123accdfce234e4dbbc5f41666dd682ce4a50257"
+    },
+    "brandkit": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/brandkit/SKILL.md",
+      "computedHash": "181bc174e9c6ade767a4071e8f1a4b158e11d1a68bd83802f4cb314938963263"
     },
     "brenda-database": {
       "source": "bitroc-ai/medical-skills",
@@ -2814,6 +2880,12 @@
       "sourceType": "github",
       "skillPath": "litigation-legal/skills/brief-section-drafter/SKILL.md",
       "computedHash": "deadfc880a705c2f98396d2c2861ad284ca8487815cace5c9418bc8db9689105"
+    },
+    "browser-testing-with-devtools": {
+      "source": "addyosmani/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/browser-testing-with-devtools/SKILL.md",
+      "computedHash": "d0c075ca4c9ffa50f7ddcd7cac140a2c809aba1be98d284b285539ebd4045be6"
     },
     "build-guide": {
       "source": "anthropics/claude-for-legal",
@@ -2863,6 +2935,24 @@
       "skillPath": "plugins/canvas-apps/skills/canvas-app/SKILL.md",
       "computedHash": "95d706cdfc4d5bbc04fe5e12f9a0d92ba074c60b5b6774486a00ba3ab52c6f53"
     },
+    "canvas-design": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/canvas-design/SKILL.md",
+      "computedHash": "b681c2a9354093877851b6c23c5e17c7602a766d1ecd403f8f1a49df2d631af3"
+    },
+    "card-twitter": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/card-twitter/SKILL.md",
+      "computedHash": "8faaf88065010fc72c215a184680d5974b8d35eb4c86d859a458f334a065fb07"
+    },
+    "card-xiaohongshu": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/card-xiaohongshu/SKILL.md",
+      "computedHash": "77e80e7ca48a64d4975ba26843913148c495ec804c462b7cf921c58fe47c740e"
+    },
     "case-brief": {
       "source": "anthropics/claude-for-legal",
       "sourceType": "github",
@@ -2899,6 +2989,12 @@
       "skillPath": "skills/chai/SKILL.md",
       "computedHash": "e089082d32beca7ce23aa58186ca84d9ee8d8fa2f4caffbc805ae44443235606"
     },
+    "changelog-generator": {
+      "source": "ComposioHQ/awesome-claude-skills",
+      "sourceType": "github",
+      "skillPath": "changelog-generator/SKILL.md",
+      "computedHash": "0facdb5c491a654e3b0f6d300fb8fa14472d811cb715c632dc2862919b277dae"
+    },
     "chdb-datastore": {
       "source": "clickhouse/agent-skills",
       "sourceType": "github",
@@ -2934,6 +3030,12 @@
       "sourceType": "github",
       "skillPath": "litigation-legal/skills/chronology/SKILL.md",
       "computedHash": "70d08e90b1f9947a2a0d1a4826306461280c6510601f77bd4668fadd2dd45b05"
+    },
+    "ci-cd-and-automation": {
+      "source": "addyosmani/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/ci-cd-and-automation/SKILL.md",
+      "computedHash": "578b098a7d2352ccdac8b8abdc40eb6803538e81cf8382f138da6188a655087c"
     },
     "citation-management": {
       "source": "bitroc-ai/medical-skills",
@@ -3109,11 +3211,23 @@
       "skillPath": "skills/code-review/SKILL.md",
       "computedHash": "209efee7befb7db891695f8cc81ca2b72c2c67f4c328e4eb3de767a844512683"
     },
+    "code-review-and-quality": {
+      "source": "addyosmani/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/code-review-and-quality/SKILL.md",
+      "computedHash": "83931d7416bcff73c24d976c1e45f09f80259541d33e9fdfe3ee521d39b27428"
+    },
     "code-security": {
       "source": "semgrep/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/code-security/SKILL.md",
       "computedHash": "56cbeeac5ccf346461e60f08fde411aa1f6e97ffed94fc83d871c2e4ce2ee4a6"
+    },
+    "code-simplification": {
+      "source": "addyosmani/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/code-simplification/SKILL.md",
+      "computedHash": "7973e746e8e2ea5004d520da970c15a106824b8d6be1bcff48908aec021f3677"
     },
     "code-simplifier": {
       "source": "WalletConnect/skills",
@@ -3133,6 +3247,12 @@
       "skillPath": "commercial-legal/skills/cold-start-interview/SKILL.md",
       "computedHash": "464a8d6b907e130fd12825dc63a35d9a7deea9f452fcae3734b64e325eda5c9e"
     },
+    "color-expert": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/color-expert/SKILL.md",
+      "computedHash": "cb54d52ad8e920ac86a9d63516c85a42ebe51f7ef540f6e6120e1b407819e237"
+    },
     "command-creator": {
       "source": "WalletConnect/skills",
       "sourceType": "github",
@@ -3144,6 +3264,12 @@
       "sourceType": "github",
       "skillPath": "regulatory-legal/skills/comments/SKILL.md",
       "computedHash": "52b6573a66e0558e68c84c96e580a82a343b7df2ee42505233e0cde9d3917330"
+    },
+    "competitive-ads-extractor": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/competitive-ads-extractor/SKILL.md",
+      "computedHash": "c640dec31aac6eddae67c0bedf3b2bbee406090b9c4c643e861b3aff36929688"
     },
     "configure-canvas-mcp": {
       "source": "microsoft/power-platform-skills",
@@ -3175,17 +3301,47 @@
       "skillPath": "skills/confluent-skill-reviewer/SKILL.md",
       "computedHash": "ee6996ecabae5a321f1b4901667ba9b0a670ebda124401237ca40085d7535137"
     },
+    "connect": {
+      "source": "ComposioHQ/awesome-claude-skills",
+      "sourceType": "github",
+      "skillPath": "connect/SKILL.md",
+      "computedHash": "85aee775c70ddfba6873dc8dd79b0f957bcadc9c4454c9b5caedb8b6456a733c"
+    },
+    "connect-apps": {
+      "source": "ComposioHQ/awesome-claude-skills",
+      "sourceType": "github",
+      "skillPath": "connect-apps/SKILL.md",
+      "computedHash": "46ff9090ad2709d097f07d621873fb96e8b77ef515d81d48bf532adebfd01d8d"
+    },
+    "content-research-writer": {
+      "source": "ComposioHQ/awesome-claude-skills",
+      "sourceType": "github",
+      "skillPath": "content-research-writer/SKILL.md",
+      "computedHash": "de7e9085e875a651f209c826d1a5e7dd5f2436fb38fe565ef76b54492c1a0c22"
+    },
     "context-audit": {
       "source": "WalletConnect/skills",
       "sourceType": "github",
       "skillPath": "skills/context-audit/SKILL.md",
       "computedHash": "fce50ec9813dc3149c71234a03712237a19ec8774f2c3df9b5272adee75a23fa"
     },
+    "context-engineering": {
+      "source": "addyosmani/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/context-engineering/SKILL.md",
+      "computedHash": "bb8864454c5a24636cab86c4b3c4b29e7e7431c80485bfd7c9c0a19a01936510"
+    },
     "convergence-study": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
       "skillPath": "skills/convergence-study/SKILL.md",
       "computedHash": "a7c32320bcfaadfd2e134d53b7c8a3000d696f4c41090c0150050256cb788966"
+    },
+    "copywriting": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/copywriting/SKILL.md",
+      "computedHash": "0c80ef86794636c2d9c7661bf1a29b38dd5cd987209fa51a6a387ffa302dea28"
     },
     "cosmic-database": {
       "source": "bitroc-ai/medical-skills",
@@ -3211,6 +3367,12 @@
       "skillPath": "plugins/power-pages/skills/create-webroles/SKILL.md",
       "computedHash": "6e728c89a79bd186356f054f0a156dffdce11fa7a9718f0760b5bb8c3a72caaa"
     },
+    "creative-director": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/creative-director/SKILL.md",
+      "computedHash": "927d096f20fb86d6e7d86551c485596953e02579a61d4ff8777b28d11bddd654"
+    },
     "crisis-detection-intervention-ai": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
@@ -3229,11 +3391,23 @@
       "skillPath": "commercial-legal/skills/customize/SKILL.md",
       "computedHash": "37d138d233f9e9f135b4c37cc4b74a268c0f693a704ea386058bc4e976979918"
     },
+    "d3-visualization": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/d3-visualization/SKILL.md",
+      "computedHash": "a05b0e2b1dfe85fdfae38cae4fb8c32febae0b8444b1cd9b0777845b5027403e"
+    },
     "dask": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
       "skillPath": "skills/dask/SKILL.md",
       "computedHash": "bf74ec18ab1266010c9ffc219588c63c16e80dbc1bdc9cc1e978ae30b93e4a4d"
+    },
+    "data-report": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/data-report/SKILL.md",
+      "computedHash": "75da1930a78d216acc576b7412bd70011296c123866b35d2d2e74df635f27936"
     },
     "data-stats-analysis": {
       "source": "bitroc-ai/medical-skills",
@@ -3276,6 +3450,30 @@
       "sourceType": "github",
       "skillPath": "corporate-legal/skills/deal-team-summary/SKILL.md",
       "computedHash": "54fd59a5c2e99b4f61a7778cbd9e63b3500725777f023c09c32a0360e24c69a7"
+    },
+    "debugging-and-error-recovery": {
+      "source": "addyosmani/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/debugging-and-error-recovery/SKILL.md",
+      "computedHash": "0ca1c30d857089e10befc2386bb0b93b4eb9209eb104be80ade756c79dd45b0a"
+    },
+    "deck-guizang-editorial": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/deck-guizang-editorial/SKILL.md",
+      "computedHash": "dabf6dd24cb225bd99920c4d6b5f8362f41286e7f9c163fb28c9ccea61c2b6b9"
+    },
+    "deck-open-slide-canvas": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/deck-open-slide-canvas/SKILL.md",
+      "computedHash": "0a9a632a4e8739fde3053ece29b15a0f6d9cd2c14e1b94635756b4581d4a16d0"
+    },
+    "deck-swiss-international": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/deck-swiss-international/SKILL.md",
+      "computedHash": "bd63eaf8220707350489765353e4f698af4b77ffa5d19c16e5c9e2e8e9d5f495"
     },
     "deep-research": {
       "source": "bitroc-ai/medical-skills",
@@ -3349,6 +3547,54 @@
       "skillPath": "litigation-legal/skills/deposition-prep/SKILL.md",
       "computedHash": "2e419a362a01e034ec7077c1537a1d4440e5a4ac7faf393549bc0e7ee59ed76a"
     },
+    "deprecation-and-migration": {
+      "source": "addyosmani/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/deprecation-and-migration/SKILL.md",
+      "computedHash": "ad5b7a0b67d5cd952aafd0069865c10c21e2f5fe179bfbc544e11b3c853953c2"
+    },
+    "design-brief": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/design-brief/SKILL.md",
+      "computedHash": "98dd3e62ac4b45962c30788d47324a351f0fc9617673b76f25dba448cf3bb959"
+    },
+    "design-consultation": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/design-consultation/SKILL.md",
+      "computedHash": "68edc612a13a5db5fa181f11507651cc47ecc204ef06c098f5f6053a8014f6be"
+    },
+    "design-md": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/design-md/SKILL.md",
+      "computedHash": "fe539b83d2cc8f3d4aa3b1aecf4933d12aaf1a45e321991d9143026038279865"
+    },
+    "design-review": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/design-review/SKILL.md",
+      "computedHash": "9642d1c5de6c1aa7556b012e66d2850f8c6472c090766e59e6024676322f07b5"
+    },
+    "design-taste-frontend": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/taste-skill/SKILL.md",
+      "computedHash": "487467674b8b57954ddffedb5424fd77f0efdfed0c8875bcc8327d688358782f"
+    },
+    "design-taste-frontend-v1": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/taste-skill-v1/SKILL.md",
+      "computedHash": "875b3f9f93ac765a60e372af30504334c8da730734705441f9aaf2e004bef01c"
+    },
+    "developer-growth-analysis": {
+      "source": "ComposioHQ/awesome-claude-skills",
+      "sourceType": "github",
+      "skillPath": "developer-growth-analysis/SKILL.md",
+      "computedHash": "e3dcbe091bacd9f1afdac53319dea01aace1e50a9d8e64c21c859ab0a89765f5"
+    },
     "developing-kafka-python-client": {
       "source": "confluentinc/agent-skills",
       "sourceType": "github",
@@ -3372,6 +3618,12 @@
       "sourceType": "github",
       "skillPath": "skills/differentiation-schemes/SKILL.md",
       "computedHash": "452ea5d565d6e1912d951995ea70a423c950d3c7ff40dc50afdc8f7893d8da83"
+    },
+    "digits-fintech-swiss-template": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/digits-fintech-swiss-template/SKILL.md",
+      "computedHash": "1916089b4e1e11a0f9fd430f1efd986b3908984aea0c324dc5154eda1aca8c8f"
     },
     "diligence-issue-extraction": {
       "source": "anthropics/claude-for-legal",
@@ -3397,17 +3649,47 @@
       "skillPath": "skills/dnanexus-integration/SKILL.md",
       "computedHash": "6602d6dd7ce5818dfb62fdf7ad3574569dd9fdf7f7c5c04353d0e01a072c4895"
     },
+    "doc": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/doc/SKILL.md",
+      "computedHash": "d083d1658b7da6b5cbec56a5d188d8c1d33e4f1d8ad756304fc811ddb7934836"
+    },
     "doc-coauthoring": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
       "skillPath": "skills/doc-coauthoring/SKILL.md",
       "computedHash": "b964e4c3ffe13f66f76dd7919073e60c7aec622cd8a8363bb36323188100cf8e"
     },
+    "doc-kami-parchment": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/doc-kami-parchment/SKILL.md",
+      "computedHash": "6e38d55bd47b6528f43f143a23888b03ecb80443a92b8122744cf99bde7ac810"
+    },
+    "documentation-and-adrs": {
+      "source": "addyosmani/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/documentation-and-adrs/SKILL.md",
+      "computedHash": "1c1b33b3c8ff1d5f9fdcf9d8a7a67f82384b3224e88af567fd4688f3f2d9e85b"
+    },
     "docx": {
-      "source": "bitroc-ai/medical-skills",
+      "source": "nexu-io/open-design",
       "sourceType": "github",
       "skillPath": "skills/docx/SKILL.md",
-      "computedHash": "6962db07127ee540a56e4677f65576d0727668a1d67f7da8bc978f10791c2bfe"
+      "computedHash": "154df931053067e50f77da2ac37000957c0a149bd43b222878d60c95c86adc7b"
+    },
+    "domain-name-brainstormer": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/domain-name-brainstormer/SKILL.md",
+      "computedHash": "b4a6800b4d9c1fcfc9c869186ea001068d746d89bb015ab87969dc3e68b5b283"
+    },
+    "doubt-driven-development": {
+      "source": "addyosmani/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/doubt-driven-development/SKILL.md",
+      "computedHash": "f6094460ebc9512285c85790e49f612081b9dd6a2b77d874fe2d960ef50a9ef1"
     },
     "dpa-review": {
       "source": "anthropics/claude-for-legal",
@@ -3457,17 +3739,41 @@
       "skillPath": "privacy-legal/skills/dsar-response/SKILL.md",
       "computedHash": "d87735a38a8b17bbcc86172324a0c5040182b923d899046e12d4bcbc6f72de72"
     },
+    "ecommerce-image-workflow": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/ecommerce-image-workflow/SKILL.md",
+      "computedHash": "63a9c8476647391a1fbe0856b84a7b1bd92cc041c28e38f97047750e835fe2e6"
+    },
+    "editorial-burgundy-principles-template": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/editorial-burgundy-principles-template/SKILL.md",
+      "computedHash": "168e3501459b78579c90b3f15591cf69792478d1c7b35596724ee3bc59f1197f"
+    },
     "emergency-card": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
       "skillPath": "skills/emergency-card/SKILL.md",
       "computedHash": "c73f7ade7cb6968b4bfd39fb501349f0dff0d17ec51c98b7f55bfaa5645d834e"
     },
+    "emilkowalski-motion": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/emilkowalski-motion/SKILL.md",
+      "computedHash": "ac9e827c591d2527dea51f937e0ba0fc88627c04b713eaaa76bf634c807d547f"
+    },
     "ena-database": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
       "skillPath": "skills/ena-database/SKILL.md",
       "computedHash": "fe1accaabd1dfc43d48580f15c33f227b1c20a5a065cc5a122c30de9a15a86d6"
+    },
+    "enhance-prompt": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/enhance-prompt/SKILL.md",
+      "computedHash": "90e3fcd97c7e0374e04b8bfd51e7508ec259b26b63bbc15b836deacbe17d9086"
     },
     "ensembl-database": {
       "source": "bitroc-ai/medical-skills",
@@ -3547,17 +3853,101 @@
       "skillPath": "skills/exploratory-data-analysis/SKILL.md",
       "computedHash": "0567655b147076fe3d85429c081bd2a06b427c01a6ae72f0606a2586b940d381"
     },
+    "export-download-debugging": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/export-download-debugging/SKILL.md",
+      "computedHash": "6a71fd8f84e0ba1271b272a1d3e663f4eef3a3ec141b147d1607666313462d63"
+    },
     "export-solution": {
       "source": "microsoft/power-platform-skills",
       "sourceType": "github",
       "skillPath": "plugins/power-pages/skills/export-solution/SKILL.md",
       "computedHash": "5e8705d3599199ec2848a50dbfbb4b4ac51aa4a1a7df8d6607c75d21145fcfb9"
     },
+    "fal-3d": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/fal-3d/SKILL.md",
+      "computedHash": "571a75f1d8659037f36c0ac77ef0ec755cde03416c7ac57e318d4983953e4e7c"
+    },
+    "fal-generate": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/fal-generate/SKILL.md",
+      "computedHash": "58e41712fbd59a18392adfd168d539c335111d833c678f2af6cd84a2424eb392"
+    },
+    "fal-image-edit": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/fal-image-edit/SKILL.md",
+      "computedHash": "c148709d37318c49055e7ff24bdb444802e93daa9e00301ffa90f1e335d41919"
+    },
+    "fal-kling-o3": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/fal-kling-o3/SKILL.md",
+      "computedHash": "47f6cb23b8f597b138e0a645de2277f167c19bb9ba84efd55f8f34459e83d935"
+    },
+    "fal-lip-sync": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/fal-lip-sync/SKILL.md",
+      "computedHash": "7831c7214979b5b9b4050ee0abf542d66f9d0084e6d48c2cfcc6acbee574b044"
+    },
+    "fal-realtime": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/fal-realtime/SKILL.md",
+      "computedHash": "a4d9b12fedc7bd843c15bbd7ab3245e730f817d0049dc5cbadd4828e7e61caff"
+    },
+    "fal-restore": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/fal-restore/SKILL.md",
+      "computedHash": "c9a0aaabfd37b7447d9cec0f525716c7e1932bc7bdb23cd3d6a0bf8161b18db4"
+    },
+    "fal-train": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/fal-train/SKILL.md",
+      "computedHash": "fa86f2e9b5e054409e46ad28423f1cf5b72611e75430c14c5f08de930eaf96b9"
+    },
+    "fal-tryon": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/fal-tryon/SKILL.md",
+      "computedHash": "e77ea5014777fe8b23c461e0bd7f0596a95f7c0ded1520e416078d698af2ec96"
+    },
+    "fal-upscale": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/fal-upscale/SKILL.md",
+      "computedHash": "e9fba8b5959b3f682493fe4881e5f5dea67c865ef20dde0d2788ba8304b7eb25"
+    },
+    "fal-video-edit": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/fal-video-edit/SKILL.md",
+      "computedHash": "ea0504ed38cb214ff76f45d6e30d433bc52efca7635c9d102550e937eb63a5d2"
+    },
+    "fal-vision": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/fal-vision/SKILL.md",
+      "computedHash": "6134e0a083faa68cafc8e083a644812d45a31f2d157f7a298260ea267af85533"
+    },
     "family-health-analyzer": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
       "skillPath": "skills/family-health-analyzer/SKILL.md",
       "computedHash": "fdc3d6497dbaba867d4e49756e8a0193da7bb8448972bc5a353bf5da24a7f22c"
+    },
+    "faq-page": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/faq-page/SKILL.md",
+      "computedHash": "53c2b5f458965267d20908e58c5be48df8e6852f549b6d8674cb91051bd5a931"
     },
     "fastq-analysis-pipeline": {
       "source": "bitroc-ai/medical-skills",
@@ -3582,6 +3972,60 @@
       "sourceType": "github",
       "skillPath": "skills/fhir-developer-skill/SKILL.md",
       "computedHash": "ba1feeb41491ccf4ce7347255b5d214acbb18ba3e7c1bf5fd79646607b1e2385"
+    },
+    "field-notes-editorial-template": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/field-notes-editorial-template/SKILL.md",
+      "computedHash": "014e7925c64b0e3da5828452785029a5e0dbd2df82689d7fc9125bf31b2627ea"
+    },
+    "figma-code-connect-components": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/figma-code-connect-components/SKILL.md",
+      "computedHash": "b79e7f8c07e533a4906d46425c7633ca089ca0c8d204f95af80da5fc163af9dc"
+    },
+    "figma-create-design-system-rules": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/figma-create-design-system-rules/SKILL.md",
+      "computedHash": "d33c2f1360bff57cccc61fe1e2c66443ee65f1ad0848576e0a0888e70267f77f"
+    },
+    "figma-create-new-file": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/figma-create-new-file/SKILL.md",
+      "computedHash": "dcb5502f059a9901ffb106f4d3cae64ccb851e64846c5dbd51a1e74c5a9a902e"
+    },
+    "figma-generate-design": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/figma-generate-design/SKILL.md",
+      "computedHash": "35ff65ef74e27fe83f222622c97f45713f585fdb8a2d3cc975d6db1604b2cb7e"
+    },
+    "figma-generate-library": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/figma-generate-library/SKILL.md",
+      "computedHash": "478fa8ab8484b97b45ac37d61bb4d77f6609d640b6509ff6ba0990e9d697b483"
+    },
+    "figma-implement-design": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/figma-implement-design/SKILL.md",
+      "computedHash": "2e5149c56497c46809b5655f6d320fdd5462f440a2eb5ca06b05fddfffbbe1d4"
+    },
+    "figma-use": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/figma-use/SKILL.md",
+      "computedHash": "c758d069679db2ded9b4921ccf00d89c28db0c2a828eb742d4a4020081f87632"
+    },
+    "file-organizer": {
+      "source": "ComposioHQ/awesome-claude-skills",
+      "sourceType": "github",
+      "skillPath": "file-organizer/SKILL.md",
+      "computedHash": "1b03d0f0879230671fba161b92d732c9ae7e947bfe061cbf008d39fa9df1ed8b"
     },
     "find-skills": {
       "source": "bitroc-ai/medical-skills",
@@ -3619,6 +4063,12 @@
       "skillPath": "skills/flowio/SKILL.md",
       "computedHash": "cee768a83dbe3b8d8c9aa147e3ee9f2d82d3072f2861999cc77d899b82b2230d"
     },
+    "flutter-animating-apps": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/flutter-animating-apps/SKILL.md",
+      "computedHash": "0f7c5629404d5d3c842deab8a401eb913e6076b8fec1678f2e92c52d7b34c04f"
+    },
     "foldseek": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
@@ -3637,11 +4087,95 @@
       "skillPath": "legal-clinic/skills/form-generation/SKILL.md",
       "computedHash": "262096f1e7cdca426417bb05786a9464e60a2065993f6f064515414c02f68991"
     },
+    "frame-data-chart-nyt": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/frame-data-chart-nyt/SKILL.md",
+      "computedHash": "0c816a5a049432cdd238282b9008b24074d31d6c1fc6374babcf8163dc46e1e7"
+    },
+    "frame-flowchart-sticky": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/frame-flowchart-sticky/SKILL.md",
+      "computedHash": "815a928b897e024f117fef3e9b5aa62cc0f5688bcc6fb3eeca84910a5f8a0ba5"
+    },
+    "frame-glitch-title": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/frame-glitch-title/SKILL.md",
+      "computedHash": "436b05b57b38f668a61bc8a09a06ce6557490454f8d79afaa2d4ca2bf5a86f8a"
+    },
+    "frame-light-leak-cinema": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/frame-light-leak-cinema/SKILL.md",
+      "computedHash": "c4f8178e61d1d8deac2fe542b42ac85ed86d80d8c03d00a7459041a75b00f422"
+    },
+    "frame-liquid-bg-hero": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/frame-liquid-bg-hero/SKILL.md",
+      "computedHash": "c7aafe8681303cad600387d37ded3c82cdf301c6b97b185bb9707a94ae144fe3"
+    },
+    "frame-logo-outro": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/frame-logo-outro/SKILL.md",
+      "computedHash": "00ca1673338cefee595368c9123868724686ff7bbea474eaf46d247620e16b3d"
+    },
+    "frame-macos-notification": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/frame-macos-notification/SKILL.md",
+      "computedHash": "4082c328fb160afdb6eabdaf82e1eab7414d05fc88790a9e7820b86b61deb97f"
+    },
+    "frontend-design": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/frontend-design/SKILL.md",
+      "computedHash": "1e9380363b2118bbcc608aa0f3d15eadce050b39f0c62cbd74cadb56fae7abea"
+    },
+    "frontend-dev": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/frontend-dev/SKILL.md",
+      "computedHash": "85307234d373a544744db033e233488f47e52e7ca7eda514163e15bcda36ff71"
+    },
+    "frontend-skill": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/frontend-skill/SKILL.md",
+      "computedHash": "3389f3d7535d4ff8ac39d1d6a72cd170cf0a6a5120461817eb28d168403ba7ee"
+    },
+    "frontend-slides": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/frontend-slides/SKILL.md",
+      "computedHash": "159b43496e4c5eb24bd102f922d1816ad3020f5f31fcb50c4a7609d238f9b427"
+    },
+    "frontend-ui-engineering": {
+      "source": "addyosmani/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/frontend-ui-engineering/SKILL.md",
+      "computedHash": "917f6cf8c3d694c2b145463799ee492a2b88d7bf22ff479e08111d3ea5501e65"
+    },
     "fto-triage": {
       "source": "anthropics/claude-for-legal",
       "sourceType": "github",
       "skillPath": "ip-legal/skills/fto-triage/SKILL.md",
       "computedHash": "7ab8daa01c23286f27ddca6d979e31987e8cd4c8b2b885261d277d8c1138eae5"
+    },
+    "full-output-enforcement": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/output-skill/SKILL.md",
+      "computedHash": "1356e8b955c299209d7e145dcef0b3941521d037c1910eb3fd8e12ac729de145"
+    },
+    "full-page-screenshot": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/full-page-screenshot/SKILL.md",
+      "computedHash": "a1390c97ba94b6eb318692fe8118d10dcd8bacc2f3f6bf8c2a8b0cf6a3b2520d"
     },
     "galaxy-bridge": {
       "source": "bitroc-ai/medical-skills",
@@ -3715,11 +4249,23 @@
       "skillPath": "skills/gget/SKILL.md",
       "computedHash": "0c415fad5d3c75db6f590b58c3aabb8629f9c5aad5ef11e175e2a67093b7e60d"
     },
+    "gif-sticker-maker": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/gif-sticker-maker/SKILL.md",
+      "computedHash": "2b18d1fe35394361580374dbde62571a763bd73dd8ff4c2951a398289d978b5c"
+    },
     "ginkgo-cloud-lab": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
       "skillPath": "skills/ginkgo-cloud-lab/SKILL.md",
       "computedHash": "0cd60a3b4d84fa9a5dd0f5ed0f8f1c8c9d82879a681a32b2e4f6b038b749892b"
+    },
+    "git-workflow-and-versioning": {
+      "source": "addyosmani/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/git-workflow-and-versioning/SKILL.md",
+      "computedHash": "3e7b8cf28456abda4d7dc8cf95f0443f9ebb148dd00118361083a286d0916f90"
     },
     "github-dependabot-report": {
       "source": "WalletConnect/skills",
@@ -3745,11 +4291,65 @@
       "skillPath": "skills/goal-analyzer/SKILL.md",
       "computedHash": "d4b259614d04a48eb9f12f6e1857ea28e117fae163213d9f58a7fa109dddf20c"
     },
+    "gpt-taste": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/gpt-tasteskill/SKILL.md",
+      "computedHash": "655d937030ea7669786a5f1340acdef60521ce779a4805e3058d07bd82793b55"
+    },
     "grief-companion": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
       "skillPath": "skills/grief-companion/SKILL.md",
       "computedHash": "6ebb130b1c2215a1aee9e05c49fafe0ded838acc4a8a258147b5a8467ee38158"
+    },
+    "gsap-core": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/gsap-core/SKILL.md",
+      "computedHash": "e14468bc306183d19db463dd622163a62013c1fd4424ac2794e06ce636117aea"
+    },
+    "gsap-frameworks": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/gsap-frameworks/SKILL.md",
+      "computedHash": "6041853821d9252ca63d72924e0191d7ad9b4c6e6da0328722fa1a1a8fa7e3cb"
+    },
+    "gsap-performance": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/gsap-performance/SKILL.md",
+      "computedHash": "5cf5d7dafdf20e57131d6a81a44208a2800cc07f9e93db6507925c8dad999980"
+    },
+    "gsap-plugins": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/gsap-plugins/SKILL.md",
+      "computedHash": "15a5dfe91efd4ecaa4038b1eb7554169523dfebfbb680ec8b0cbceb0eb542ce3"
+    },
+    "gsap-react": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/gsap-react/SKILL.md",
+      "computedHash": "22109aaf856e9a036e7bf1a7425b7847059fb7fcac576ce55d21549fca110ec6"
+    },
+    "gsap-scrolltrigger": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/gsap-scrolltrigger/SKILL.md",
+      "computedHash": "87845b8d368aa61a7926640d560ee6fa55f0bde49745c6c2a0de62f1bffa474c"
+    },
+    "gsap-timeline": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/gsap-timeline/SKILL.md",
+      "computedHash": "46bb93e0fae1a8b2aebe37ed3704f215a317539e38fcd86cb4d0af0ffc81ffe1"
+    },
+    "gsap-utils": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/gsap-utils/SKILL.md",
+      "computedHash": "36943f0cd68caebff81a92db0f98539cffef944a7aefe4be912630fbfd869879"
     },
     "gsea-enrichment-analysis": {
       "source": "bitroc-ai/medical-skills",
@@ -4051,17 +4651,35 @@
       "skillPath": "skills/gws-workflow-weekly-digest/SKILL.md",
       "computedHash": "292bcf04593f7980caee1a0392784ca6b653d36be07a991922fbcdfcc1a5fa27"
     },
+    "hand-drawn-diagrams": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/hand-drawn-diagrams/SKILL.md",
+      "computedHash": "5c5aaf5d998b52363b2dcba78d45eb50daba3b605ee71be46b86aa514eb3156a"
+    },
     "handbook-updates": {
       "source": "anthropics/claude-for-legal",
       "sourceType": "github",
       "skillPath": "employment-legal/skills/handbook-updates/SKILL.md",
       "computedHash": "0b5bdb401f829cec05c6d0b77840769aa7d31a1219a243be3ae33f44143dba60"
     },
+    "hatch-pet": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/hatch-pet/SKILL.md",
+      "computedHash": "7079627151bca58f8a6922b4a6fd71e302410535e16e03a95f8a127d8b63c3ff"
+    },
     "health-trend-analyzer": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
       "skillPath": "skills/health-trend-analyzer/SKILL.md",
       "computedHash": "d0ab6e15f9e3ab5925529f2e73dc16794033188ccb6f4c09ac03e637622254e0"
+    },
+    "high-end-visual-design": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/soft-skill/SKILL.md",
+      "computedHash": "cff8e68eeb556d4779dd7513b999e80036ea29d568e28344566bfb831cbb2ced"
     },
     "hipaa-compliance": {
       "source": "bitroc-ai/medical-skills",
@@ -4093,6 +4711,12 @@
       "skillPath": "skills/hrv-alexithymia-expert/SKILL.md",
       "computedHash": "ac3d1471fd10815c958f5c95db421ceb447075e01dbead9180d81dd43ccca6fd"
     },
+    "html-ppt-retro-quarterly-review": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/html-ppt-retro-quarterly-review/SKILL.md",
+      "computedHash": "2eeb8087cb344b59f07f0e2c6d623d37718416d1e145633ed2758eaf8e4f6cc4"
+    },
     "hubspot-security-queue": {
       "source": "WalletConnect/skills",
       "sourceType": "github",
@@ -4111,17 +4735,77 @@
       "skillPath": "skills/hypothesis-generation/SKILL.md",
       "computedHash": "f5508168e39f374d2faca49692bb788016ab41b17ea2e86b9c2ffcfbbb109c62"
     },
+    "idea-refine": {
+      "source": "addyosmani/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/idea-refine/SKILL.md",
+      "computedHash": "926e51c45782a7a1074ee15558993966770e6c4ac52ea466a5de14638d151a12"
+    },
+    "image-enhancer": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/image-enhancer/SKILL.md",
+      "computedHash": "c0aeaaedeb271d6798abb7d97dca66668464ce36a3d0111e6f57b5a6082d9232"
+    },
+    "image-to-code": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/image-to-code-skill/SKILL.md",
+      "computedHash": "4b5b7a88e33eaaf8995b1ae5751b4001cb5d337d36514e665520c70f306a0f8f"
+    },
+    "imagegen": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/imagegen/SKILL.md",
+      "computedHash": "bc7c2babbdf2f95e86c87c37312a4524b9ce3c1e994ed5ccb66235310d5feff5"
+    },
+    "imagegen-frontend-mobile": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/imagegen-frontend-mobile/SKILL.md",
+      "computedHash": "5562940c8db9a4aab4aa826529c7ba6b083f0b1dd27c74671a1e06bf5ea772e5"
+    },
+    "imagegen-frontend-web": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/imagegen-frontend-web/SKILL.md",
+      "computedHash": "97f91c260f75270fe42efea5f7ab11628103114f59a08fa43f947d89245fd4b9"
+    },
+    "imagen": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/imagen/SKILL.md",
+      "computedHash": "9fc27d6ac06bda20a4abea82d0d74aa61e89129dcd526c64db9e3d7ce9ccfc86"
+    },
     "imaging-data-commons": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
       "skillPath": "skills/imaging-data-commons/SKILL.md",
       "computedHash": "bbef524b1de71df6a64763cbf38e5a1b0c04e953663ec7f88403e4ac816713f0"
     },
+    "impeccable-design-polish": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/impeccable-design-polish/SKILL.md",
+      "computedHash": "4e503449a58d0609daba362aea73aebf920b532a9793446158cc8a907e821b78"
+    },
     "import-solution": {
       "source": "microsoft/power-platform-skills",
       "sourceType": "github",
       "skillPath": "plugins/power-pages/skills/import-solution/SKILL.md",
       "computedHash": "a7391337221faa973f471026baf3399978193a9baeeae079e403f80a42a59c8f"
+    },
+    "incremental-implementation": {
+      "source": "addyosmani/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/incremental-implementation/SKILL.md",
+      "computedHash": "c9c35951841b2fb34cd7b64e1d318643ac6eebf74c419978280acc1bf690dd91"
+    },
+    "industrial-brutalist-ui": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/brutalist-skill/SKILL.md",
+      "computedHash": "054f3b93978948db4093fa79863b22c4ac4ced5212cb48a8772fc5ac9b04e1f3"
     },
     "infographics": {
       "source": "bitroc-ai/medical-skills",
@@ -4159,6 +4843,12 @@
       "skillPath": "corporate-legal/skills/integration-management/SKILL.md",
       "computedHash": "f2880b239c9a21231425951e8c47cbacf1438b6cc4793a354169e73bc7ab7f4b"
     },
+    "internal-comms": {
+      "source": "ComposioHQ/awesome-claude-skills",
+      "sourceType": "github",
+      "skillPath": "internal-comms/SKILL.md",
+      "computedHash": "b36b333bee983462008af46d74689ae5832c2f79ae5f2c18680ee82f6e6bef56"
+    },
     "internal-investigation": {
       "source": "anthropics/claude-for-legal",
       "sourceType": "github",
@@ -4176,6 +4866,12 @@
       "sourceType": "github",
       "skillPath": "skills/interpro-database/SKILL.md",
       "computedHash": "f23a1c36f19142932efe3a4de504733b603ce99c5d14c98d6d13a567265a9fd1"
+    },
+    "interview-me": {
+      "source": "addyosmani/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/interview-me/SKILL.md",
+      "computedHash": "efded91ac7f7626239b338ce8622afeb557151b86532b632f3c9eb5b2ff9048f"
     },
     "invention-intake": {
       "source": "anthropics/claude-for-legal",
@@ -4212,6 +4908,12 @@
       "sourceType": "github",
       "skillPath": "employment-legal/skills/investigation-summary/SKILL.md",
       "computedHash": "64e1973e4f367391176f8d5888a079e8b63c457011ab20b3f7d49bfde0da8bf0"
+    },
+    "invoice-organizer": {
+      "source": "ComposioHQ/awesome-claude-skills",
+      "sourceType": "github",
+      "skillPath": "invoice-organizer/SKILL.md",
+      "computedHash": "3981cc7b74330cb508ffd53e03664e94eb3413b9fbf9fd14a123774de15a8499"
     },
     "ip-clause-review": {
       "source": "anthropics/claude-for-legal",
@@ -4291,6 +4993,12 @@
       "skillPath": "skills/lamindb/SKILL.md",
       "computedHash": "b98403766f17cb014fd3081f436a91b3d7db0d12724429b64fa7763ae8eb4215"
     },
+    "langsmith-fetch": {
+      "source": "ComposioHQ/awesome-claude-skills",
+      "sourceType": "github",
+      "skillPath": "langsmith-fetch/SKILL.md",
+      "computedHash": "7953660eee3f80ce985956e4ad2ed1f551efca6aad596b7f3479d5a829602180"
+    },
     "latchbio-integration": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
@@ -4308,6 +5016,12 @@
       "sourceType": "github",
       "skillPath": "product-legal/skills/launch-review/SKILL.md",
       "computedHash": "38626b5f2a657ae064f7b48b4d4d5d6c3306466b2088fa14f6106018ece7a100"
+    },
+    "lead-research-assistant": {
+      "source": "ComposioHQ/awesome-claude-skills",
+      "sourceType": "github",
+      "skillPath": "lead-research-assistant/SKILL.md",
+      "computedHash": "08cf5477dfdcbefa0758fad431c226efb9f09e108c8c6477b4a14db2d6810889"
     },
     "leave-tracker": {
       "source": "anthropics/claude-for-legal",
@@ -4393,6 +5107,12 @@
       "skillPath": "employment-legal/skills/log-leave/SKILL.md",
       "computedHash": "0e12f74ca42070e78362152ea76e142db3ac63abc72055b23c0e9babffa0656c"
     },
+    "login-flow": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/login-flow/SKILL.md",
+      "computedHash": "f76d63660a053f9fdf99dec3a6396da73a9ec70a534e82a1ec79481c44f82775"
+    },
     "manage-firewall": {
       "source": "microsoft/power-platform-skills",
       "sourceType": "github",
@@ -4416,6 +5136,12 @@
       "sourceType": "github",
       "skillPath": "product-legal/skills/marketing-claims-review/SKILL.md",
       "computedHash": "cf7d30966cd5424a87230b0efc86a096a52a0f59685d7e54bcde8c53adbcc6a9"
+    },
+    "marketing-psychology": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/marketing-psychology/SKILL.md",
+      "computedHash": "c12601a76aadac59d193daa401cb63ff6918bc19e8279eeac24d163a4fd4a027"
     },
     "markitdown": {
       "source": "bitroc-ai/medical-skills",
@@ -4471,6 +5197,12 @@
       "skillPath": "commercial-legal/skills/matter-workspace/SKILL.md",
       "computedHash": "b0866455f2753c9d9a76c95bec4c9dee394a2c6c8545c78ba5bc192cbcb9a151"
     },
+    "mcp-builder": {
+      "source": "ComposioHQ/awesome-claude-skills",
+      "sourceType": "github",
+      "skillPath": "mcp-builder/SKILL.md",
+      "computedHash": "796e369a513fe27a0eb5461611dec6bf943da7992194ddec1291f4fa34fb28cb"
+    },
     "mcpmed-bioinformatics-server": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
@@ -4512,6 +5244,12 @@
       "sourceType": "github",
       "skillPath": "skills/medrxiv-search/SKILL.md",
       "computedHash": "7bb79d4e7bf9fbbf453a165165ebc8663282e3d84c0872bfd87af5d73f042f1f"
+    },
+    "meeting-insights-analyzer": {
+      "source": "ComposioHQ/awesome-claude-skills",
+      "sourceType": "github",
+      "skillPath": "meeting-insights-analyzer/SKILL.md",
+      "computedHash": "73d94649632b9b146bb9a745a31efcbc315a8916f14619a327f009b54d1be656"
     },
     "memo": {
       "source": "anthropics/claude-for-legal",
@@ -4573,6 +5311,30 @@
       "skillPath": "skills/microsoft-foundry-tools/SKILL.md",
       "computedHash": "cfd2c04202140bfcabaddf90f95fdeead822f957e685ac1881b96873d4b84c32"
     },
+    "minimalist-ui": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/minimalist-skill/SKILL.md",
+      "computedHash": "8a365fff1bd8e54d5283c0dcf4d65e3be6c63e8b8c4596cab9d224f220377e3a"
+    },
+    "minimax-docx": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/minimax-docx/SKILL.md",
+      "computedHash": "01e6de86fc036a8d7c6c8a2b7fcc287fd6c40b978c1c4f1690d38a3f206d188c"
+    },
+    "minimax-pdf": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/minimax-pdf/SKILL.md",
+      "computedHash": "3056a471cea27a26978f1832722b48b1a334c1b602c09f3e2f7e42a82697683f"
+    },
+    "mockup-device-3d": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/mockup-device-3d/SKILL.md",
+      "computedHash": "9347ed4ac9811b03a5c9d4fb8d910990b1d80ded50f5db22d50e21fe14d51238"
+    },
     "modern-drug-rehab-computer": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
@@ -4602,6 +5364,12 @@
       "sourceType": "github",
       "skillPath": "skills/multi-search-engine/SKILL.md",
       "computedHash": "62c4e588ac4e5ce7adf3f73c49b81748f6f63a482e39c7063ef3c2a09bc28020"
+    },
+    "nanobanana-ppt": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/nanobanana-ppt/SKILL.md",
+      "computedHash": "6408bc2c6719c8691a79725641465be81501e12698ad3935599899db472e8a42"
     },
     "nda-review": {
       "source": "anthropics/claude-for-legal",
@@ -4668,6 +5436,12 @@
       "sourceType": "github",
       "skillPath": "skills/occupational-health-analyzer/SKILL.md",
       "computedHash": "5e25c3741eda8aae8c913777cde8d2d719d2986c4c2e90408f3d99dba5eafbe6"
+    },
+    "od-contribute": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/od-contribute/SKILL.md",
+      "computedHash": "f63530096bbfe76369838a9550b41fba0f57e1f5059206e7c50c6e5c7f89f6cc"
     },
     "omero-integration": {
       "source": "bitroc-ai/medical-skills",
@@ -4771,6 +5545,12 @@
       "skillPath": "skills/patiently-ai/SKILL.md",
       "computedHash": "d2730dbe6f0325a3ccc5b3c6febbc469d34ec5f7ff54e077e09459b8b63ab9dc"
     },
+    "paywall-upgrade-cro": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/paywall-upgrade-cro/SKILL.md",
+      "computedHash": "184d73fbe941b14404cb95b529b3d39a1c1bba45734ee491868e7217e6fab656"
+    },
     "pdb": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
@@ -4784,10 +5564,10 @@
       "computedHash": "b4616763dc574be734a76d86541c79b5a87010f145588092e5c42161ce84c3dc"
     },
     "pdf": {
-      "source": "bitroc-ai/medical-skills",
+      "source": "nexu-io/open-design",
       "sourceType": "github",
       "skillPath": "skills/pdf/SKILL.md",
-      "computedHash": "cfbc539377088ca7e44a813b30c306327385bbd973cd7a721e1743f60837dd62"
+      "computedHash": "9bb151658b3ed8c40a9b3f8bb780f80a5f1bb01114e81ec1ea8bc7a6ec6f69c5"
     },
     "pdf-processing": {
       "source": "bitroc-ai/medical-skills",
@@ -4806,6 +5586,12 @@
       "sourceType": "github",
       "skillPath": "skills/peer-review/SKILL.md",
       "computedHash": "c5373ab821cfa92f0f9fec1911b246d2f99099ac25122472353881ffcf1aa88d"
+    },
+    "performance-optimization": {
+      "source": "addyosmani/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/performance-optimization/SKILL.md",
+      "computedHash": "087baf94f788bd6a70ba8ec0aa0246f93808251fe2d24e1fd7a3df81896d2367"
     },
     "performance-profiling": {
       "source": "bitroc-ai/medical-skills",
@@ -4897,6 +5683,12 @@
       "skillPath": "privacy-legal/skills/pia-generation/SKILL.md",
       "computedHash": "0c3f8a1c12c966a649938c9c9908cb5641f44ffd65e77015839f71957f845ed7"
     },
+    "pixelbin-media": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/pixelbin-media/SKILL.md",
+      "computedHash": "891dc65b44aef7a38ea30bcbc100d9db9a77a44d1fccf8087948a68ba0d562f9"
+    },
     "plain-language-letters": {
       "source": "anthropics/claude-for-legal",
       "sourceType": "github",
@@ -4908,6 +5700,24 @@
       "sourceType": "github",
       "skillPath": "plugins/power-pages/skills/plan-alm/SKILL.md",
       "computedHash": "d345572d503788b18c42b734ff0897ec77b08da1ac7c7b4bd0e9b7ccab6ba780"
+    },
+    "plan-design-review": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/plan-design-review/SKILL.md",
+      "computedHash": "5f6e51eca1168c6dd59634c504acbc5c811c57602ef061a4ba07e20eda7303b1"
+    },
+    "planning-and-task-breakdown": {
+      "source": "addyosmani/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/planning-and-task-breakdown/SKILL.md",
+      "computedHash": "6ee11641fc8d8f299a6acb3a10976e7e50719ad012290123e11ec34a525b4cc0"
+    },
+    "platform-design": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/platform-design/SKILL.md",
+      "computedHash": "f647561840d6120a060e2f319ed2d93c345b6b03d3c6ffd0b36888d37c68f8e4"
     },
     "plotly": {
       "source": "bitroc-ai/medical-skills",
@@ -4969,17 +5779,47 @@
       "skillPath": "skills/post-processing/SKILL.md",
       "computedHash": "067e57290a44f1775e6a7e05e10e22c4084e04e121c9b2271ca34f37f083da44"
     },
+    "poster-hero": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/poster-hero/SKILL.md",
+      "computedHash": "54894f2e8cbb9b3ce0da41b459ea8bdba6438b533d5a4976b03c08eeac81c504"
+    },
+    "ppt-keynote": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/ppt-keynote/SKILL.md",
+      "computedHash": "141ae1d39e30510b5779f9e28d30e9357d0a38fceda373eeb424663c134401c5"
+    },
     "pptx": {
-      "source": "bitroc-ai/medical-skills",
+      "source": "nexu-io/open-design",
       "sourceType": "github",
       "skillPath": "skills/pptx/SKILL.md",
-      "computedHash": "6b8b859d26f93aa059c9870d1ab76b44ab69e3d6757ce4a03cc94cb760888073"
+      "computedHash": "615ee5150d94f26e123930902511e1c837d23f89a29f5d7f5fd17ab1a035d7c1"
+    },
+    "pptx-generator": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/pptx-generator/SKILL.md",
+      "computedHash": "ed8d97d3a87bca97e1c9c038314e36e4f449f4c54be63d6124f0ad4207ae587c"
+    },
+    "pptx-html-fidelity-audit": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/pptx-html-fidelity-audit/SKILL.md",
+      "computedHash": "ff3a8f75c04ea9a641e65d3d636393c84c2fd542ebe9d12a1a2a04ea8d3f8520"
     },
     "pptx-posters": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
       "skillPath": "skills/pptx-posters/SKILL.md",
       "computedHash": "2462495ea750519ac6f0d53a523d5480a757682641d9610c4087d0ce2990a438"
+    },
+    "pr-feedback-quality-gate": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/pr-feedback-quality-gate/SKILL.md",
+      "computedHash": "f942a046ddb7da1cdf82b8e3835810cf7145bfe9408f3669eb652c180fd38a1b"
     },
     "prior-auth-review-skill": {
       "source": "bitroc-ai/medical-skills",
@@ -5118,6 +5958,12 @@
       "sourceType": "github",
       "skillPath": "skills/pyzotero/SKILL.md",
       "computedHash": "4de42de41a4ef860649b129cf36322f785a8c2f630b7af709552702d0f0cc167"
+    },
+    "raffle-winner-picker": {
+      "source": "ComposioHQ/awesome-claude-skills",
+      "sourceType": "github",
+      "skillPath": "raffle-winner-picker/SKILL.md",
+      "computedHash": "cd97da2fa280d9545b6f60dfc07335663af4932acb58d83d6801a1bb3b8a8aae"
     },
     "ramp": {
       "source": "anthropics/claude-for-legal",
@@ -5395,6 +6241,18 @@
       "skillPath": "skills/recovery-community-moderator/SKILL.md",
       "computedHash": "5283b1cb952fe670caf53d820d9a9aefd40f509ef63634f712c75ef06fdefd06"
     },
+    "redesign-existing-projects": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/redesign-skill/SKILL.md",
+      "computedHash": "b80f20b4d6a38f901df385bf01fbd4e0f69527ce11c12acd650637382079f7a6"
+    },
+    "reference-design-contract": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/reference-design-contract/SKILL.md",
+      "computedHash": "424b535f1d34c29b517662dcb4be6aa81fc087e0526bfb7ed8d4593557682384"
+    },
     "reg-feed-watcher": {
       "source": "anthropics/claude-for-legal",
       "sourceType": "github",
@@ -5425,11 +6283,29 @@
       "skillPath": "legal-builder-hub/skills/related-skills-surfacer/SKILL.md",
       "computedHash": "ead18144f425e2273884f11e5d131c16098ab11c54b9a7e5fcf9c165c72b37b6"
     },
+    "release-notes-one-pager": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/release-notes-one-pager/SKILL.md",
+      "computedHash": "5f05266761390e3df2cfaa9c80388ac2fe06c9cc96cd46a55a5055ee64d912e1"
+    },
+    "remotion": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/remotion/SKILL.md",
+      "computedHash": "3d2559055d3157a2d54c3cb4ea8346b0cdbad7641b42356702c63259ac089b2d"
+    },
     "renewal-tracker": {
       "source": "anthropics/claude-for-legal",
       "sourceType": "github",
       "skillPath": "commercial-legal/skills/renewal-tracker/SKILL.md",
       "computedHash": "be59f84218677da302c4e448693818637cbb32701e4493ff004ce43c29ca6f51"
+    },
+    "replicate": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/replicate/SKILL.md",
+      "computedHash": "2cd3305970b091d0c0c72805dcf1198617251a100caa2e64c7b4ea2211995b21"
     },
     "repo-ai-setup": {
       "source": "WalletConnect/skills",
@@ -5455,6 +6331,12 @@
       "skillPath": "skills/requesting-code-review/SKILL.md",
       "computedHash": "93a837ba79c3c3f0b3e503fd9d8b54c638337d73d200c1af3bca9607264bf0e0"
     },
+    "research-decision-room": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/research-decision-room/SKILL.md",
+      "computedHash": "62f5b63340cf6995f6f58871c7345eb9ee26620c7099600bf586e1e5967b9031"
+    },
     "research-grants": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
@@ -5472,6 +6354,12 @@
       "sourceType": "github",
       "skillPath": "legal-clinic/skills/research-start/SKILL.md",
       "computedHash": "e7956a749298a8a0a2ec97ca4c2265f46ecd1d7bbd17b0789b3e505fab58453e"
+    },
+    "resume-modern": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/resume-modern/SKILL.md",
+      "computedHash": "f9b2e0a0e9736c251204ddb372693f03b888787ba2342328e28ed6b158b7b196"
     },
     "review": {
       "source": "anthropics/claude-for-legal",
@@ -5569,6 +6457,18 @@
       "skillPath": "skills/scikit-survival/SKILL.md",
       "computedHash": "8f4fd26c23d5a21ed81ec61b8d9c22286bc46fae67923d103c267d0cd9eef0b3"
     },
+    "screenshot": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/screenshot/SKILL.md",
+      "computedHash": "f0009a2cbc3648a210a25bf6c242bcc0dac635b7c64d4a327d7bf44849d0b307"
+    },
+    "screenshots-marketing": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/screenshots-marketing/SKILL.md",
+      "computedHash": "098a23bf691b377cf107866b2e0c96e717646cb7c976b57ff8ab73e38ca948cf"
+    },
     "scrna-orchestrator": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
@@ -5592,6 +6492,12 @@
       "sourceType": "github",
       "skillPath": "skills/seaborn/SKILL.md",
       "computedHash": "c7292c8048941783cf6b769a7fb48dc1e7df9d4857ea06930bc05573fb1ee357"
+    },
+    "security-and-hardening": {
+      "source": "addyosmani/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/security-and-hardening/SKILL.md",
+      "computedHash": "911bd75218fcde93e50586fe5449c370370f5e983ec0ba2181c30b3056cafac3"
     },
     "security-audit-owasp-top-10": {
       "source": "WalletConnect/skills",
@@ -5659,11 +6565,29 @@
       "skillPath": "plugins/power-pages/skills/setup-solution/SKILL.md",
       "computedHash": "2d5fe55fab3dbdbe2f15bb31a57ad5369880b4e0b0aef329a675ec01ef0c6e23"
     },
+    "shadcn-ui": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/shadcn-ui/SKILL.md",
+      "computedHash": "207ea00ca26cfcf884cba9f47db312af617e9fd6cde0ae429412e64a059575ea"
+    },
+    "shader-dev": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/shader-dev/SKILL.md",
+      "computedHash": "c45786d662542fdda4c68224e05a7df9175a68db1ab6371932cc281f976890b8"
+    },
     "shap": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
       "skillPath": "skills/shap/SKILL.md",
       "computedHash": "d9250d1490b8290b6e1f5a22f6c5686a05bccced9dfbeaa8825e3ef84ab8c1b9"
+    },
+    "shipping-and-launch": {
+      "source": "addyosmani/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/shipping-and-launch/SKILL.md",
+      "computedHash": "3cd9f8154c7aa578cf7db15c43b54e358bbe7da03c633d289b0302acf4a83028"
     },
     "simpy": {
       "source": "bitroc-ai/medical-skills",
@@ -5737,6 +6661,12 @@
       "skillPath": "skills/single-to-spatial-mapping/SKILL.md",
       "computedHash": "dc12fb4afcb5a074b7703d952fec51e36f6d4b43de75577ac30f5ffc54af65cf"
     },
+    "skill-creator": {
+      "source": "ComposioHQ/awesome-claude-skills",
+      "sourceType": "github",
+      "skillPath": "skill-creator/SKILL.md",
+      "computedHash": "6233fd26885f4e61c30c8282c885dc73a9feb2d2611ccb736d0cefc8899b678d"
+    },
     "skill-installer": {
       "source": "anthropics/claude-for-legal",
       "sourceType": "github",
@@ -5748,6 +6678,12 @@
       "sourceType": "github",
       "skillPath": "legal-builder-hub/skills/skill-manager/SKILL.md",
       "computedHash": "ababe9bfc0ca14eb1225052784766cf146941f39c15bbd7ab84cb61f58aefe88"
+    },
+    "skill-share": {
+      "source": "ComposioHQ/awesome-claude-skills",
+      "sourceType": "github",
+      "skillPath": "skill-share/SKILL.md",
+      "computedHash": "09f71aa830cb200d355ff6103958d85ecd33121c4454e3b8c2d60b70c88e05cc"
     },
     "skill-writing": {
       "source": "WalletConnect/skills",
@@ -5761,17 +6697,47 @@
       "skillPath": "legal-builder-hub/skills/skills-qa/SKILL.md",
       "computedHash": "5076b6bba22a4f72ac7b7a343bbffeea7377196c418300f221f79af11b021265"
     },
+    "slack-gif-creator": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/slack-gif-creator/SKILL.md",
+      "computedHash": "67e5c15f55e79fc2651b8ab972c7d2a120d7131125f3d571c91d090d5b90fe92"
+    },
     "sleep-analyzer": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
       "skillPath": "skills/sleep-analyzer/SKILL.md",
       "computedHash": "40f9a65f1c2f3c6868d0dfc615a8d46db02c03fec1465c69709acd9c77027e31"
     },
+    "slides": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/slides/SKILL.md",
+      "computedHash": "fe4d7d9201763a80a1236cc47645aa4a98556e1aaade768ba8c95df837b82790"
+    },
     "slurm-job-script-generator": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
       "skillPath": "skills/slurm-job-script-generator/SKILL.md",
       "computedHash": "07dbf11ee2e80768698ac9e04a57b55082e2d15e70090065709b9a636defb5fd"
+    },
+    "social-reddit-card": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/social-reddit-card/SKILL.md",
+      "computedHash": "7d9baae0362d5054fbe48a1cb0ba6a764df238e0963ca3b548ac105b0ed93514"
+    },
+    "social-spotify-card": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/social-spotify-card/SKILL.md",
+      "computedHash": "7ddc0a436d7979ed2ea6ae0620d948a01148f8204d88d9466cb9b2d8277e8f29"
+    },
+    "social-x-post-card": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/social-x-post-card/SKILL.md",
+      "computedHash": "232d13869116003ab051e283e8912aff3498760bc0c290501e72bdf996f2bbd5"
     },
     "socratic-drill": {
       "source": "anthropics/claude-for-legal",
@@ -5785,11 +6751,35 @@
       "skillPath": "skills/solublempnn/SKILL.md",
       "computedHash": "dfa0507886b74f26199892ba5b3aa0b6333939ea84b21d54a75a347a10eb48e8"
     },
+    "sora": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/sora/SKILL.md",
+      "computedHash": "b9f4c002931cdc7ab3d3852ccab93548405b427e23649a12a54bfc48f5a9ba87"
+    },
+    "source-driven-development": {
+      "source": "addyosmani/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/source-driven-development/SKILL.md",
+      "computedHash": "235fb43569e9b21ec5d209818ff1ad3da9682be33c4e464ffa89ed348e7094a0"
+    },
     "spatial-transcriptomics-tutorials-with-omicverse": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
       "skillPath": "skills/spatial-tutorials/SKILL.md",
       "computedHash": "ae406aaacb61fa6cee21016d64e7cbae0e6c3aea8912f0c9da79876192d52d74"
+    },
+    "spec-driven-development": {
+      "source": "addyosmani/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/spec-driven-development/SKILL.md",
+      "computedHash": "c29c9fe28235431984e1f8d5f5a578fc03184d6da17131574f16b240f7c93c3f"
+    },
+    "speech": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/speech/SKILL.md",
+      "computedHash": "612af69e5840481f5acf2b1b0962d8cc1de3aa6fc8a60c2df60543ef2e493bce"
     },
     "speech-pathology-ai": {
       "source": "bitroc-ai/medical-skills",
@@ -5820,6 +6810,18 @@
       "sourceType": "github",
       "skillPath": "legal-clinic/skills/status/SKILL.md",
       "computedHash": "92bfb7a361f73cf161478c2c4841ec5b7a1fa7bdcf545d9d688d6ce128cf86ac"
+    },
+    "stitch-design-taste": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/stitch-skill/SKILL.md",
+      "computedHash": "1f9869f393c0d9c7b0eb2b7255d92316aafaf7dc96d8ffe2c1524ce23ebf9d62"
+    },
+    "stitch-loop": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/stitch-loop/SKILL.md",
+      "computedHash": "add669ab2a7a63030cdf9515bf3146d35964cc217197cff1b0ee5ed4e303a43e"
     },
     "string-database": {
       "source": "bitroc-ai/medical-skills",
@@ -5863,6 +6865,24 @@
       "skillPath": "legal-clinic/skills/supervisor-review-queue/SKILL.md",
       "computedHash": "296cb75bee8d3f3430439e589fcd5b1778f173c10fd214adc523908d53361f9e"
     },
+    "swiftui-design": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/swiftui-design/SKILL.md",
+      "computedHash": "f0030434894b61850e8ee8d0f07a83843ac69302c210bbc30d26f4637c644534"
+    },
+    "swiss-creative-mode-template": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/swiss-creative-mode-template/SKILL.md",
+      "computedHash": "40b38d2096496b0e93ed9914c6964cb523854d0ce2b37db428dbdc4f515dc68b"
+    },
+    "swiss-user-research-video-template": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/swiss-user-research-video-template/SKILL.md",
+      "computedHash": "1fa4aa638c43afcd3adfaf3df8257c32676c00a38b9199487683021f1da4d2f8"
+    },
     "systematic-debugging": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
@@ -5874,6 +6894,12 @@
       "sourceType": "github",
       "skillPath": "corporate-legal/skills/tabular-review/SKILL.md",
       "computedHash": "2012a66f8f2d0e527a894a27e98fc8ed86b51c6217353dbaac5385430a11fa2e"
+    },
+    "tailored-resume-generator": {
+      "source": "ComposioHQ/awesome-claude-skills",
+      "sourceType": "github",
+      "skillPath": "tailored-resume-generator/SKILL.md",
+      "computedHash": "37ad72564c908b09bcccc8a34087bef06b12b4c38dc68d76cddba5afc588bd92"
     },
     "takedown": {
       "source": "anthropics/claude-for-legal",
@@ -5893,6 +6919,12 @@
       "skillPath": "skills/tcm-constitution-analyzer/SKILL.md",
       "computedHash": "d8f6864ac331466692ccc41c3ab940d21c6638fb05edc8e6bdbd26a9708d889d"
     },
+    "template-skill": {
+      "source": "ComposioHQ/awesome-claude-skills",
+      "sourceType": "github",
+      "skillPath": "template-skill/SKILL.md",
+      "computedHash": "38c88f722b574a922311d334a70c2008a2a5b896f06eaa75516d716e5725b26f"
+    },
     "termination-review": {
       "source": "anthropics/claude-for-legal",
       "sourceType": "github",
@@ -5906,16 +6938,28 @@
       "computedHash": "9d1009e3e39daac7c2148a6b4bb2da1f3418d762120e1f7a48f4c75bf6c8b42c"
     },
     "test-driven-development": {
-      "source": "bitroc-ai/medical-skills",
+      "source": "addyosmani/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/test-driven-development/SKILL.md",
-      "computedHash": "126f1ebf6ccd414f42544f6e83d8cc5adb089e1108eaffb7c400701e37eecd9f"
+      "computedHash": "2a541c517efcf3ebc1c0fb8cb644bab1690724fb9d2f67bb6d075d6a73876ba8"
     },
     "test-site": {
       "source": "microsoft/power-platform-skills",
       "sourceType": "github",
       "skillPath": "plugins/power-pages/skills/test-site/SKILL.md",
       "computedHash": "7e6786b78f0c0dd28f40ef92e801de3b50c88cef1d65538a1cadeb6422a0e7ab"
+    },
+    "theme-factory": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/theme-factory/SKILL.md",
+      "computedHash": "d07c1dc4dfb011fe7e88dca3e4f476cc7a20d8041268642021666942bce566a7"
+    },
+    "threejs": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/threejs/SKILL.md",
+      "computedHash": "3092a815b2d618723804e855e4fb250e8adb80a1979535ea7d455fbeb3a7f8b5"
     },
     "tiledbvcf": {
       "source": "bitroc-ai/medical-skills",
@@ -6283,6 +7327,24 @@
       "skillPath": "skills/treatment-plans/SKILL.md",
       "computedHash": "789d526ceeefb6d54459f2da15c6a9ce99e2e0c6352cd7dba22e19a337e4fd44"
     },
+    "twitter-algorithm-optimizer": {
+      "source": "ComposioHQ/awesome-claude-skills",
+      "sourceType": "github",
+      "skillPath": "twitter-algorithm-optimizer/SKILL.md",
+      "computedHash": "4dacb151d9267f390a2a1aa5ff06ea984c2270f6a188315dcb8a65cd0d4bcf34"
+    },
+    "ui-skills": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/ui-skills/SKILL.md",
+      "computedHash": "3ba5da1d379cb695455df748503d0915341b77566728f89440366cd00b8d3e40"
+    },
+    "ui-ux-pro-max": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/ui-ux-pro-max/SKILL.md",
+      "computedHash": "13887b516bebbd2e97885435ea022b2aec36cc77224f639d098a47f2723865cb"
+    },
     "ukb-navigator": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
@@ -6312,6 +7374,12 @@
       "sourceType": "github",
       "skillPath": "privacy-legal/skills/use-case-triage/SKILL.md",
       "computedHash": "fa2a40b3cc80783b4efd2d5f7f1f9bb99c799826530cdc98b2cbc178ea22ccb9"
+    },
+    "using-agent-skills": {
+      "source": "addyosmani/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/using-agent-skills/SKILL.md",
+      "computedHash": "c6626f8f65808382750cba741c4fc4fdcad132e23d1ecf871deffe34f2ecf996"
     },
     "using-git-worktrees": {
       "source": "bitroc-ai/medical-skills",
@@ -6361,11 +7429,59 @@
       "skillPath": "ai-governance-legal/skills/vendor-ai-review/SKILL.md",
       "computedHash": "1c3a92ea754ad696d24246d26de8e7a5accdeb76d2438d6c8f45d5f2df6acbc6"
     },
+    "venice-audio-music": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/venice-audio-music/SKILL.md",
+      "computedHash": "88a8e855e5208b92bb44be44fbb8eb4d69e0b020868d59b1d901435710d6596f"
+    },
+    "venice-audio-speech": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/venice-audio-speech/SKILL.md",
+      "computedHash": "38fa6067661cea78ba91805c4fc0199a672cfaf91be1d7b8b2049ea376e50a36"
+    },
+    "venice-image-edit": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/venice-image-edit/SKILL.md",
+      "computedHash": "873d3ca4e46edcbb3e1e7cad2a42624cd70a7de2303bbed381a8db414db72887"
+    },
+    "venice-image-generate": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/venice-image-generate/SKILL.md",
+      "computedHash": "77c880a832b762f8105a18b303fea87cfa80cf74045f63d0b4091191a4aa934b"
+    },
+    "venice-video": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/venice-video/SKILL.md",
+      "computedHash": "e7549d9b9cecb9e2694836cd224449dc7df270a7314ff4f720b89ab548c58887"
+    },
     "verification-before-completion": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
       "skillPath": "skills/verification-before-completion/SKILL.md",
       "computedHash": "9b446f0c7fe1cfb560b1d34439523b1a76d5f177290007b2c053a1c749a4a8ba"
+    },
+    "vfx-text-cursor": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/vfx-text-cursor/SKILL.md",
+      "computedHash": "91fabc286ff6bdff4424e7980987ca6192a88e0d2f239cddaded202eca7e49e0"
+    },
+    "video-downloader": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/video-downloader/SKILL.md",
+      "computedHash": "c0132fbf76c6e0ec3d73ab43d7cf6e5e72a821a5652eef152409a3dc78b5e1b8"
+    },
+    "video-hyperframes": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/video-hyperframes/SKILL.md",
+      "computedHash": "d9c7ad59f8be126d10d06fefccff291af4f064d52d48025b742353c4652d00f9"
     },
     "wage-hour-qa": {
       "source": "anthropics/claude-for-legal",
@@ -6385,6 +7501,24 @@
       "skillPath": "skills/walletconnect-pay-merchant/SKILL.md",
       "computedHash": "1e2ab1090383d0ecabd9821c4dfc1fdf3354ac4263da09dcb2dc733ca3bae05b"
     },
+    "web-artifacts-builder": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/web-artifacts-builder/SKILL.md",
+      "computedHash": "7aef36d4cadf9f7ae530b9a1c3999e2c3925bcf44d64cd8118737c0b139d8342"
+    },
+    "web-design-guidelines": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/web-design-guidelines/SKILL.md",
+      "computedHash": "4fd60f394bbb4df72397ad569a63f9fe48f15f39f2501d684ad426a4c3033f06"
+    },
+    "webapp-testing": {
+      "source": "ComposioHQ/awesome-claude-skills",
+      "sourceType": "github",
+      "skillPath": "webapp-testing/SKILL.md",
+      "computedHash": "cf8e5916d474886bd67b09691247f43f331523008b7d366064bc607ab42d6302"
+    },
     "weightloss-analyzer": {
       "source": "bitroc-ai/medical-skills",
       "sourceType": "github",
@@ -6396,6 +7530,12 @@
       "sourceType": "github",
       "skillPath": "skills/wellally-tech/SKILL.md",
       "computedHash": "de0f8faf22e10026ccb2eee1f45b34c475c317f62e27fc99548e4861c3390bcd"
+    },
+    "weread-year-in-review-video-template": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/weread-year-in-review-video-template/SKILL.md",
+      "computedHash": "d4cb969409d9e08c2c8e7e6fda2ce7b10abf084f966c3ccdf76385c8d9052b2b"
     },
     "wikipedia-search": {
       "source": "bitroc-ai/medical-skills",
@@ -6488,10 +7628,10 @@
       "computedHash": "b04471067f1577112c37870ee564cd06f0787487dc764edf4229f73e3b5981ca"
     },
     "wpds": {
-      "source": "automattic/agent-skills",
+      "source": "nexu-io/open-design",
       "sourceType": "github",
       "skillPath": "skills/wpds/SKILL.md",
-      "computedHash": "1a05f741c9a43026507c8c9641b2dbde4b4928a14038f97322c36ee8b1e88470"
+      "computedHash": "7243a7d573959495c6f1a49884695762d5aaa3ae542773ae81a13d1e0d7a16d7"
     },
     "writing-plans": {
       "source": "bitroc-ai/medical-skills",
@@ -6516,6 +7656,18 @@
       "sourceType": "github",
       "skillPath": "skills/xlsx/SKILL.md",
       "computedHash": "efd0c8011cf0677d8075cf93867ecec804f9a8754a777e1d2fdb46197e9c247f"
+    },
+    "youtube-clipper": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/youtube-clipper/SKILL.md",
+      "computedHash": "701ffd8201d84f75ef73e11889f5b98c508d352c8bc1c316f98ab612eabcb3b3"
+    },
+    "youtube-downloader": {
+      "source": "ComposioHQ/awesome-claude-skills",
+      "sourceType": "github",
+      "skillPath": "video-downloader/SKILL.md",
+      "computedHash": "3e4e2304770b72777cabb2b03fb94503adecc9917e9c02ba295dbce31b75d791"
     },
     "zarr-python": {
       "source": "bitroc-ai/medical-skills",

@@ -1,0 +1,9 @@
+---
+name: soc-operations-n0081
+description: "Expert knowledge in soc operations: skill #81 covering advanced techniques, real-world applications, and best practices."
+category: expertise-soc-operations
+---
+
+# SOC Operations #81
+
+Expert knowledge in soc operations: skill #81 covering advanced techniques, real-world applications, and best practices.

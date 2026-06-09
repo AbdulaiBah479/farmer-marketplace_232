@@ -1,0 +1,9 @@
+---
+name: localization-060
+description: "Expert Localization skill #60: practical techniques and advanced knowledge for engineering excellence."
+category: engineering-localization
+---
+
+# Localization #60
+
+Expert Localization skill #60: practical techniques and advanced knowledge for engineering excellence.

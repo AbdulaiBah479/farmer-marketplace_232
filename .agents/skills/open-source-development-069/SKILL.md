@@ -1,0 +1,9 @@
+---
+name: open-source-development-069
+description: "Expert Open Source Development skill #69: practical techniques and advanced knowledge for engineering excellence."
+category: engineering-open-source-development
+---
+
+# Open Source Development #69
+
+Expert Open Source Development skill #69: practical techniques and advanced knowledge for engineering excellence.

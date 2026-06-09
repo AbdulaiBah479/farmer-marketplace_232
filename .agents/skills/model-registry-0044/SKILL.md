@@ -1,0 +1,9 @@
+---
+name: model-registry-0044
+description: "Expert model registry skill #44: specialized knowledge, patterns, and practical implementation guidance."
+category: advanced-model-registry
+---
+
+# Model Registry #44
+
+Expert model registry skill #44: specialized knowledge, patterns, and practical implementation guidance.

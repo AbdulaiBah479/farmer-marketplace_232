@@ -1,0 +1,9 @@
+---
+name: probabilistic-programming-x0013
+description: "Deep expertise in probabilistic programming: skill #13 with practical implementation knowledge."
+category: ai-ml-probabilistic-programming
+---
+
+# Probabilistic Programming #13
+
+Deep expertise in probabilistic programming: skill #13 with practical implementation knowledge.

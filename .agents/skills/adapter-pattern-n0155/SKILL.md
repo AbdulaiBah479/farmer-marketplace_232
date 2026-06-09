@@ -1,0 +1,9 @@
+---
+name: adapter-pattern-n0155
+description: "Expert knowledge in adapter pattern: skill #155 covering advanced techniques, real-world applications, and best practices."
+category: expertise-adapter-pattern
+---
+
+# Adapter Pattern #155
+
+Expert knowledge in adapter pattern: skill #155 covering advanced techniques, real-world applications, and best practices.

@@ -1,0 +1,9 @@
+---
+name: tabular-deep-learning-x0157
+description: "Deep expertise in tabular deep learning: skill #157 with practical implementation knowledge."
+category: ai-ml-tabular-deep-learning
+---
+
+# Tabular Deep Learning #157
+
+Deep expertise in tabular deep learning: skill #157 with practical implementation knowledge.

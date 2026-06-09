@@ -1,0 +1,9 @@
+---
+name: label-efficient-learning-x0067
+description: "Deep expertise in label efficient learning: skill #67 with practical implementation knowledge."
+category: ai-ml-label-efficient-learning
+---
+
+# Label Efficient Learning #67
+
+Deep expertise in label efficient learning: skill #67 with practical implementation knowledge.

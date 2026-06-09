@@ -1,0 +1,9 @@
+---
+name: security-governance-n0150
+description: "Expert knowledge in security governance: skill #150 covering advanced techniques, real-world applications, and best practices."
+category: expertise-security-governance
+---
+
+# Security Governance #150
+
+Expert knowledge in security governance: skill #150 covering advanced techniques, real-world applications, and best practices.

@@ -1,0 +1,9 @@
+---
+name: continual-learning-0058
+description: "Expert continual learning skill #58: specialized knowledge, patterns, and practical implementation guidance."
+category: advanced-continual-learning
+---
+
+# Continual Learning #58
+
+Expert continual learning skill #58: specialized knowledge, patterns, and practical implementation guidance.

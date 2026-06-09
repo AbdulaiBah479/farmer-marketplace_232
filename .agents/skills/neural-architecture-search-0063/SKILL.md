@@ -1,0 +1,9 @@
+---
+name: neural-architecture-search-0063
+description: "Expert neural architecture search skill #63: specialized knowledge, patterns, and practical implementation guidance."
+category: advanced-neural-architecture-search
+---
+
+# Neural Architecture Search #63
+
+Expert neural architecture search skill #63: specialized knowledge, patterns, and practical implementation guidance.

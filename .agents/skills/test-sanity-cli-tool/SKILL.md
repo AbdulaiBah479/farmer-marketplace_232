@@ -1,0 +1,9 @@
+---
+name: test-sanity-cli-tool
+description: "Strategies and best practices for sanity testing in cli tool applications."
+category: testing-sanity
+---
+
+# Sanity Testing for Cli Tool
+
+Strategies and best practices for sanity testing in cli tool applications.

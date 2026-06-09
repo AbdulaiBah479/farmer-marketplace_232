@@ -1,0 +1,9 @@
+---
+name: sdlc-documentation-offshore-brownfield
+description: "Software development lifecycle: documentation practices for offshore teams working on brownfield projects."
+category: sdlc
+---
+
+# Documentation for Offshore on Brownfield
+
+Software development lifecycle: documentation practices for offshore teams working on brownfield projects.

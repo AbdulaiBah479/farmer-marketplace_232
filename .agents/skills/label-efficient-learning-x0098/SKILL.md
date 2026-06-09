@@ -1,0 +1,9 @@
+---
+name: label-efficient-learning-x0098
+description: "Deep expertise in label efficient learning: skill #98 with practical implementation knowledge."
+category: ai-ml-label-efficient-learning
+---
+
+# Label Efficient Learning #98
+
+Deep expertise in label efficient learning: skill #98 with practical implementation knowledge.

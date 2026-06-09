@@ -1,0 +1,9 @@
+---
+name: ai-engineering-x0020
+description: "Deep expertise in ai engineering: skill #20 with practical implementation knowledge."
+category: ai-ml-ai-engineering
+---
+
+# AI Engineering #20
+
+Deep expertise in ai engineering: skill #20 with practical implementation knowledge.

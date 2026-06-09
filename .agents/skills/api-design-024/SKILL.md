@@ -1,0 +1,9 @@
+---
+name: api-design-024
+description: "Expert API Design skill #24: practical techniques and advanced knowledge for engineering excellence."
+category: engineering-api-design
+---
+
+# API Design #24
+
+Expert API Design skill #24: practical techniques and advanced knowledge for engineering excellence.

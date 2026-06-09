@@ -1,15 +1,17 @@
 ---
 name: gliederungs-baukasten
-description: "Erstellt oder erweitert Lernstrukturen nach dem Prüfungsstoff der Ersten und Zweiten Staatsprüfung (JAG/JAPrO der Bundesländer) — Skripten-Gliederung, Definitionen-Lernkartei, Paragraphenübersicht. Gerüstbau: schreibt die Inhalte nicht für den Studierenden. Lädt, wenn der Nutzer „Lernstruktur aufbauen\", „Gliederung [Rechtsgebiet]\", „Übersicht erstellen\" oder „mein Lernblatt erweitern\" sagt."
+description: "Gliederungs-Baukasten für juristische Hausarbeiten und Seminararbeiten: Anwendungsfall Student erstellt Gliederung für Hausarbeit Seminararbeit oder wissenschaftliche Arbeit und braucht strukturierten Aufbau. Methodenlehre, Gutachtenstil, wissenschaftliches Arbeiten. Prüfraster Gliederungstiefe A..."
 ---
 
 # Lernstruktur-Builder
 
-## Zweck
+## Arbeitsweg
 
-Die Lernstruktur ist das Instrument, aus dem studiert wird. **Den Aufbau selbst zu erarbeiten ist bereits die Hälfte des Lernens** — das ist keine Floskel. Eine Struktur, die jemand anderes erstellt hat, ist eine Struktur, die man im Examen nicht kennt.
-
-Diese Skill baut das Gerüst — Themenblöcke, Unterpunkte, Normslots, Ausnahmen-Platzhalter — und fragt nach. Inhalte (Definitionen, Fallgruppen, Ausnahmen) trägt der Studierende selbst ein, aus eigenen Notizen, Skripten oder Kommentaren. Das ist nicht Verweigerung — das ist Methode.
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: DRiG § 5a Studiendauer 9 Semester (Regelstudienzeit), Freischuss-Frist (i.d.R. 8 Semester nach JAG), Wiederholungsfrist, Hausarbeit 4-6 Wochen.
+- Tragende Normen verifizieren: DRiG §§ 5, 5a, 5b (Erste Prüfung), JAG der Länder, JAPO Bayern, JAG NRW, BBesG (Referendariat), Hochschulgesetze, Studienordnungen — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Studierende, Justizprüfungsamt (Landesjustizverwaltung), Universität, Repetitorium, Klausurleiter, Mündliche-Prüfungs-Kommission.
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Klausurgutachten (Anspruchsgrundlage, Tatbestand, Subsumtion, Ergebnis), Hausarbeit, Aktenvortrag (Referendar), Probeklausur, Prüfungsprotokoll — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
 
 ## Eingaben
 
@@ -32,20 +34,17 @@ Der Prüfungsstoff des Ersten Staatsexamens ist in den Juristenausbildungsgesetz
 **Maßgebliche Pflichtstoff-Leitentscheidungen:**
 
 Für BGB AT und Schuldrecht:
-- BGH, Urt. v. 07.06.1984 – IX ZR 66/83, BGHZ 91, 324 — Schweigen als Willenserklärung (§§ 116 ff. BGB)
-- BGH, Urt. v. 25.11.2009 – VIII ZR 318/08, NJW 2010, 610 Rn. 12 ff. — Leistungsstörungsrecht nach Schuldrechtsreform
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
 Für Strafrecht:
-- BGH, Beschl. v. 04.11.1988 – GSSt 1/88, BGHSt 36, 1 (Lederriemen) — dolus eventualis, Abgrenzung bewusste Fahrlässigkeit
-- BGH, Urt. v. 22.09.1995 – 2 StR 310/95, BGHSt 41, 292 — Mittäterschaft § 25 Abs. 2 StGB
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
 **Kanonische Lernmaterialien:**
 - Alpmann Schmidt, Gesamtdarstellungen (BGB AT, SchuldR, StGB AT/BT etc.)
 - Hemmer/Wüst, Skriptenreihe (durchgängig nach Examensstoff strukturiert)
 - Jura Intensiv, Skriptenreihe
 - Kaiser-Skripten
-- Grüneberg, BGB, 84. Aufl. 2025 (vormals Palandt) — Kurzkommentar für Normübersicht
-- MüKoBGB, 9. Aufl. 2021/2022 (Säcker/Rixecker/Oetker/Limperg, Hrsg.) — für tiefergehende Erschließung
+- Quellenregel: Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff; keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen.
 
 ## Ablauf
 
@@ -67,11 +66,11 @@ Das Gerüst entsteht aus dem einschlägigen Pflichtstoffkatalog und dem Inhaltsv
 
 **Wenn der Studierende Quellen einfügt** (Skript-Abschnitt, Notizen, Kommentarauszug): Regel und Definition aus dem bereitgestellten Text extrahieren und in das Gerüst integrieren. Das ist kein Schreiben für den Studierenden, sondern Formatierung des Bereitgestellten.
 
-**Wenn der Studierende keine Quelle liefert**: Gerüst mit Platzhalter belassen + Maieut-Fragen stellen (z. B. „Was hat der Professor zu § 119 BGB gesagt?", „Welche Fallgruppe nennt das Skript hier?"). Falls der Studierende ausdrücklich eine vorläufige Ausfüllung wünscht, kann ein Lehrbuch-Mehrheitsmeinung eingetragen werden — jede solche Angabe erhält `[PRÜFEN: gegen Skript / Kommentar abgleichen]`.
+**Wenn der Studierende keine Quelle liefert**: Gerüst mit Platzhalter belassen + Maieut-Fragen stellen (z. B. "Was hat der Professor zu § 119 BGB gesagt?", "Welche Fallgruppe nennt das Skript hier?"). Falls der Studierende ausdrücklich eine vorläufige Ausfüllung wünscht, kann ein Lehrbuch-Mehrheitsmeinung eingetragen werden — jede solche Angabe erhält `[PRÜFEN: gegen Skript / Kommentar abgleichen]`.
 
 **Regelwiderspruch in eigenen Materialien**: Wenn die vom Studierenden genannte Regel dem widerspricht, was in einer früher hochgeladenen Quelle steht:
 
-> „Das weicht von Ihrer Notiz bei [Abschnitt/Quelle] ab — dort steht: [wörtliches Zitat]. Welche Fassung ist die zutreffende?"
+> "Das weicht von Ihrer Notiz bei [Abschnitt/Quelle] ab — dort steht: [wörtliches Zitat]. Welche Fassung ist die zutreffende?"
 
 Das ist kein Einwurf aus eigenem Wissen, sondern Konfrontation mit eigenen Materialien.
 
@@ -86,63 +85,63 @@ Das ist kein Einwurf aus eigenem Wissen, sondern Konfrontation mit eigenen Mater
 
 ### Schritt 5: Drill-Modus (optional)
 
-Nach Fertigstellung eines Abschnitts: „Gliederung schließen. Frage: [konkreter Sachverhalt aus dem bearbeiteten Abschnitt]." Testen, ob der Aufbau den Kopf erreicht hat oder nur das Dokument.
+Nach Fertigstellung eines Abschnitts: "Gliederung schließen. Frage: [konkreter Sachverhalt aus dem bearbeiteten Abschnitt]." Testen, ob der Aufbau den Kopf erreicht hat oder nur das Dokument.
 
 ## Ausgabeformat
 
 **Klassische Gliederung (Standard für Hausarbeiten und Lernblätter):**
 ```
 A. [Rechtsgebiet / Oberthema]
-   I. [Hauptproblem]
-      1. [Tatbestandsmerkmal / Fallgruppe]
-         a) Definition: [LÜCKE — aus Skript ergänzen]
-         b) Leitfall: [LÜCKE — Leitentscheidung eintragen]
-         c) Ausnahme: [LÜCKE]
-      2. [Nächstes Merkmal]
+ I. [Hauptproblem]
+ 1. [Tatbestandsmerkmal / Fallgruppe]
+ a) Definition: [LÜCKE — aus Skript ergänzen]
+ b) Leitfall: [LÜCKE — Leitentscheidung eintragen]
+ c) Ausnahme: [LÜCKE]
+ 2. [Nächstes Merkmal]
 ```
 
 **Paragraphenübersicht (für Schnellorientierung):**
 ```
 § 119 BGB — Anfechtung wegen Irrtums
-  - Tatbestand: Inhalts-/Erklärungsirrtum; Eigenschaftsirrtum (Abs. 2)
-  - Rechtsfolge: Anfechtbarkeit, Ersatz des Vertrauensschadens § 122 BGB
-  - Abgrenzung: § 123 BGB (arglistige Täuschung)
-  - Leitfall: [LÜCKE]
+ - Tatbestand: Inhalts-/Erklärungsirrtum; Eigenschaftsirrtum (Abs. 2)
+ - Rechtsfolge: Anfechtbarkeit, Ersatz des Vertrauensschadens § 122 BGB
+ - Abgrenzung: § 123 BGB (arglistige Täuschung)
+ - Leitfall: [LÜCKE]
 ```
 
 **Flussdiagramm-Skizze:**
 ```
 Anspruch aus § 280 Abs. 1 BGB?
-  → Schuldverhältnis? (§§ 241 ff. BGB)
-    JA → Pflichtverletzung? (§ 241 Abs. 2 BGB)
-      JA → Vertretenmüssen? (§ 276 BGB, Vermutung)
-        JA → Schaden? (§§ 249 ff. BGB)
-          JA → Anspruch (+)
-          NEIN → (-)
-        NEIN → (-)
+ → Schuldverhältnis? (§§ 241 ff. BGB)
+ JA → Pflichtverletzung? (§ 241 Abs. 2 BGB)
+ JA → Vertretenmüssen? (§ 276 BGB, Vermutung)
+ JA → Schaden? (§§ 249 ff. BGB)
+ JA → Anspruch (+)
+ NEIN → (-)
+ NEIN → (-)
 ```
 
 ## Beispiel
 
-**Auftrag:** „Gliederung für BGB Schuldrecht AT aufbauen, Schwerpunkt Leistungsstörungsrecht."
+**Auftrag:** "Gliederung für BGB Schuldrecht AT aufbauen, Schwerpunkt Leistungsstörungsrecht."
 
 **Ergebnis (Gerüst, erste Ebene):**
 ```
 A. Grundlagen des Schuldverhältnisses (§§ 241–243 BGB)
 B. Leistungsstörungsrecht
-   I.   Unmöglichkeit (§§ 275, 283, 311a BGB)
-         1. Arten der Unmöglichkeit [LÜCKE]
-         2. Rechtsfolgen [LÜCKE]
-   II.  Verzug (§§ 280 Abs. 2, 286 ff. BGB)
-         1. Schuldnerverzug [LÜCKE]
-         2. Gläubigerverzug [LÜCKE]
-   III. Schadensersatz statt der Leistung (§§ 280 Abs. 3, 281, 283, 311a BGB)
-         [LÜCKE — Prüfungsreihenfolge nach Hemmer SchuldR AT, Rn. 150 ff.]
+ I. Unmöglichkeit (§§ 275, 283, 311a BGB)
+ 1. Arten der Unmöglichkeit [LÜCKE]
+ 2. Rechtsfolgen [LÜCKE]
+ II. Verzug (§§ 280 Abs. 2, 286 ff. BGB)
+ 1. Schuldnerverzug [LÜCKE]
+ 2. Gläubigerverzug [LÜCKE]
+ III. Schadensersatz statt der Leistung (§§ 280 Abs. 3, 281, 283, 311a BGB)
+ [LÜCKE — Prüfungsreihenfolge nach Hemmer SchuldR AT, Rn. 150 ff.]
 C. Besondere Leistungspflichten (§ 241 Abs. 2 BGB)
 D. Rücktritt (§§ 323 ff. BGB) [LÜCKE]
 ```
 
-**Sokrates-Frage danach:** „Schließen Sie die Gliederung. — Was sind die Voraussetzungen des Schuldnerverzugs nach § 286 BGB? Bitte alle vier."
+**Sokrates-Frage danach:** "Schließen Sie die Gliederung. — Was sind die Voraussetzungen des Schuldnerverzugs nach § 286 BGB? Bitte alle vier."
 
 ## Risiken und typische Fehler
 

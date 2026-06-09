@@ -1,14 +1,21 @@
 ---
 name: examensvorbereitung-fragen
-description: "Examensvorbereitungs-Fragen für 1. und 2. Staatsexamen erstellen: Anwendungsfall Student will Examenswissen durch gezielte Uebungsfragen trainieren und Schwachstellen erkennen. 1. StEx und 2. StEx, JAG Bundesland Bayern NRW Hamburg, Subsumtion Gutachtenstil. Prüfraster Fachgebiet Zivilrecht Strafrecht öffentliches Recht, Zeitdruck-Simulation oder Verstaendnis-Training, Bundesland-spezifisch. Output Uebungsfragen mit Musterlösung und Hinweis auf Schwachstellen. Abgrenzung zu Examensprognose für Themengewichtung und zu Gutachten-Uebung für Klausur-Training."
+description: "Examensvorbereitungs-Fragen für 1. und 2. Staatsexamen erstellen: Anwendungsfall Student will Examenswissen durch gezielte Uebungsfragen trainieren und Schwachstellen erkennen. 1. StEx und 2. StEx, JAG Bundesland Bayern NRW Hamburg, Subsumtion Gutachtenstil. Prüfraster Fachgebiet Zivilrecht Straf..."
 ---
 
 # Examensvorbereitungs-Fragen
 
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: DRiG § 5a Studiendauer 9 Semester (Regelstudienzeit), Freischuss-Frist (i.d.R. 8 Semester nach JAG), Wiederholungsfrist, Hausarbeit 4-6 Wochen.
+- Tragende Normen verifizieren: DRiG §§ 5, 5a, 5b (Erste Prüfung), JAG der Länder, JAPO Bayern, JAG NRW, BBesG (Referendariat), Hochschulgesetze, Studienordnungen — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Studierende, Justizprüfungsamt (Landesjustizverwaltung), Universität, Repetitorium, Klausurleiter, Mündliche-Prüfungs-Kommission.
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Klausurgutachten (Anspruchsgrundlage, Tatbestand, Subsumtion, Ergebnis), Hausarbeit, Aktenvortrag (Referendar), Probeklausur, Prüfungsprotokoll — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
 
 ## Triage zu Beginn
 1. Welches Examen und welches Bundesland (1. StEx, 2. StEx; Bayern, NRW, Hamburg)?
-2. Welches Fachgebiet soll geuebt werden (Zivilrecht, Strafrecht, oeffentliches Recht, Verfahrensrecht)?
+2. Welches Fachgebiet soll geuebt werden (Zivilrecht, Strafrecht, öffentliches Recht, Verfahrensrecht)?
 3. Zeitdruck-Simulation oder inhaltliches Verstaendnis-Training?
 4. Welche Schwachpunkte wurden in frueheren Uebungsklausuren identifiziert?
 
@@ -16,24 +23,10 @@ description: "Examensvorbereitungs-Fragen für 1. und 2. Staatsexamen erstellen:
 - Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
 ## Zentrale Normen
-- §§ 13, 14 JAG NRW — Examensklausuren: Inhaltsanforderungen und Bewertungsmassstab (exemplarisch fuer alle Bundeslaender)
+- §§ 13, 14 JAG NRW — Examensklausuren: Inhaltsanforderungen und Bewertungsmassstab (exemplarisch für alle Bundeslaender)
 - § 195 BGB — Regelverjaehrung: Dauerklassiker in Zivilrecht-Klausuren
 - § 1 Abs. 1 StGB — Bestimmtheitsgebot: Examens-Fundamentalsatz Strafrecht
-- § 42 VwGO — Anfechtungs- und Verpflichtungsklage: Examens-Standard oeffentliches Recht
-
-## Quellenregel
-
-Quellenregel: Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen; Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff.
-## Zweck
-
-Dieser Skill generiert Übungsfragen und -klausuren für das **Erste Juristische Staatsexamen (Erste Juristische Prüfung / FJP)** sowie das **Zweite Juristische Staatsexamen (Assessorexamen)**. Er berücksichtigt:
-
-- das jeweilige **Bundesland** und seine **JAG** (Juristenausbildungsgesetz)
-- die **Prüfungsgebiete** des zuständigen **Justizprüfungsamts (JPA)**
-- aktuelle **Schwerpunkte** aus JPA-Statistiken und bekannten Examensklausuren
-- das individuelle **Schwächeprofil** aus dem Lernprofil
-
-Quellenregel: Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen; Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff.
+- § 42 VwGO — Anfechtungs- und Verpflichtungsklage: Examens-Standard öffentliches Recht
 
 ## Eingaben
 
@@ -119,15 +112,15 @@ Prüfe alle in Betracht kommenden Ansprüche des A gegen B.
 A. Ansprüche des A gegen B
 
 I. Anspruch aus § 433 Abs. 2 BGB
-   Obersatz: A könnte gegen B einen Anspruch auf Kaufpreiszahlung
-   gemäß § 433 Abs. 2 BGB haben.
-   Voraussetzungen: wirksamer Kaufvertrag, Fälligkeit, kein Einrederecht.
-   Definition Kaufvertrag: …
-   Subsumtion: …
-   Ergebnis: Der Anspruch besteht / besteht nicht.
+ Obersatz: A könnte gegen B einen Anspruch auf Kaufpreiszahlung
+ gemäß § 433 Abs. 2 BGB haben.
+ Voraussetzungen: wirksamer Kaufvertrag, Fälligkeit, kein Einrederecht.
+ Definition Kaufvertrag: …
+ Subsumtion: …
+ Ergebnis: Der Anspruch besteht / besteht nicht.
 
 II. Anspruch aus § 280 Abs. 1 BGB
-   Obersatz: …
+ Obersatz: …
 
 **Literaturnachweise:**
 - Quellenregel: Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff; keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen.

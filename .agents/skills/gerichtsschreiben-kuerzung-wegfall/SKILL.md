@@ -1,0 +1,66 @@
+---
+name: gerichtsschreiben-kuerzung-wegfall
+description: "Gerichtsschreiben zur JVEG-Kostenkuerzung rechtlich prüfen und widersprechen. Normen: §§ 2 4 JVEG, GKG. Prüfraster: Kuerzungsbegründung, fehlerhafte Berechnung, Widerspruchsmöglichkeit. Output: Widerspruchsschreiben gegen JVEG-Kuerzung. Abgrenzung: nicht formelle Beschwerde im Jveg Kostenpruefer."
+---
+
+# JVEG-Gerichtsschreiben-Pruefung
+
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: JVEG § 2 Antragsfrist 3 Monate nach Beendigung der Tätigkeit, § 4 Erinnerung 2 Wochen, Beschwerde § 4 Abs. 3 unbefristet.
+- Tragende Normen verifizieren: JVEG §§ 1, 2, 4, 5, 7, 8, 9, 10, 12, 13, 14, 19, 22, 23, RVG (Anwalt), ZSEG (alt), KostO/GNotKG, GG Art. 12 — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Sachverständiger, Dolmetscher, Übersetzer, Geschäftsstelle, Kostenbeamter, Bezirksrevisor, Festsetzungsrichter, Erinnerung-/Beschwerdesenat.
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Vergütungsantrag, Stundennachweis, Reisekostenabrechnung, Festsetzungsbeschluss, Erinnerung, Beschwerde, Sachverständigenrechnung — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+## Fachkern: JVEG-Gerichtsschreiben-Pruefung
+- **Normen-/Quellenanker:** JVEG, GKG/KostR-Schnittstellen, Festsetzungsverfahren, Beschwerde, Vorschuss, Entschädigung, Sachverständigenvergütung und Belegpflicht.
+- **Entscheidende Weiche:** Trenne Rolle Zeuge/Sachverständiger/Dolmetscher, Zeitaufwand, Auslagen, Verdienstausfall, Vorschuss, Frist und Belegwert.
+
+## Triage — kläre vor der Prüfung
+
+1. **Schreibentyp:** Anforderungsschreiben, Kürzungsmitteilung, Festsetzungsbeschluss oder Ablehnungsbescheid?
+2. **Beanstandete Positionen:** Welche Vergütungspositionen sind gekürzt oder abgelehnt worden?
+3. **Begründung des Gerichts:** Auf welche Normen und Tatsachen stützt das Gericht seine Entscheidung?
+4. **Beleganforderungen:** Werden Belege verlangt, die über das JVEG-Erforderliche hinausgehen?
+5. **Fristen:** Besteht Antwort- oder Rechtsmittelfrist?
+
+## Speziallogik: Zerlegung in prüfbare Aussagen
+Jede Aussage des Gerichtsschreibens wird als prüfbare Hypothese behandelt:
+1. Normaussage: Ist die zitierte Norm korrekt angewandt?
+2. Tatsachenaussage: Stimmen die angenommenen Tatsachen mit dem Sachverhalt überein?
+3. Rechtsfolgenaussage: Ist die gezogene Rechtsfolge (Kürzung, Wegfall) normkonform?
+
+## Zentrale Normen
+- § 4 JVEG (Festsetzung)
+- § 8 JVEG (Sachverständigenvergütung)
+- § 8a JVEG (Kürzung/Wegfall)
+- § 5 JVEG (Fahrtkosten)
+- § 23 JVEG (Fristen)
+- § 286 ZPO (Freie Beweiswürdigung — Prüfmaßstab für Tatsachenfeststellungen)
+
+## Rechtsprechung
+1. Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+2. Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+3. Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+4. Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+
+## Startet bei
+Eingang eines Schreibens des Kostenbeamten oder Gerichts zu JVEG-Positionen.
+
+## Output-Template
+
+| Aussage des Gerichts | Normgrundlage | Prüfbefund | Fehlertyp | Handlungsbedarf |
+|---|---|---|---|---|
+| [Aussage 1] | § X JVEG | [Befund] | [Tatbestand/Ermessen/Rechtsfolge] | [Ja/Nein] |
+| [Aussage 2] | § Y JVEG | [Befund] | — | — |
+
+**Frist für Antwort/Beschwerde:** TT.MM.JJJJ
+**Empfehlung:** [Gegendarstellung / Beschwerde / Keine Maßnahme]
+
+## Ausgabe
+Strukturierte Schreibenanalyse mit Fehlertypen, Normverweisen und Handlungsempfehlung.
+
+## Leitplanken
+- Jede Aussage einzeln prüfen; keine Pauschalzustimmung.
+- Hinweis: Keine Rechtsberatung. Ausgaben dienen der internen Arbeitsvorbereitung.

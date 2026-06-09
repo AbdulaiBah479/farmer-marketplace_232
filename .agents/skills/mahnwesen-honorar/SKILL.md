@@ -1,9 +1,36 @@
 ---
 name: mahnwesen-honorar
-description: Mahnwesen fuer eigene Honorarforderungen der Kanzlei. Stufen erste Zahlungserinnerung (vor Verzug) erste Mahnung mit Verzugsbeginn nach § 286 BGB zweite Mahnung mit konkreter Klagedrohung dritte Mahnung als letztes vorprozessuales Schreiben mit Verzugszinsen Mahnkosten und Aufforderung. Bei weiterhin Nichtzahlung Mandatsuebergabe ans Inkasso oder eigene Klage zum AG (sachliche Zustaendigkeit § 23 Nr. 1 GVG 10000 EUR ab 01.01.2026). Vermeidet kanzlei-interne Eskalationsschwaeche.
+description: "Mahnwesen für eigene Honorarforderungen der Kanzlei gegenüber Mandanten. Anwendungsfall Mandant hat Rechnung nicht bezahlt und Kanzlei muss mahnen oder klagen. Normen § 286 BGB Verzugsbeginn § 288 BGB Verzugszinsen § 23 Nr. 1 GVG AG-Zuständigkeit bis 10000 EUR ab 01.01.2026 § 688 ff. ZPO Mahnverf..."
 ---
 
 # Mahnwesen für Kanzleihonorar
+
+## Arbeitsbereich
+
+Mahnwesen für eigene Honorarforderungen der Kanzlei gegenüber Mandanten. Anwendungsfall Mandant hat Rechnung nicht bezahlt und Kanzlei muss mahnen oder klagen. Normen § 286 BGB Verzugsbeginn § 288 BGB Verzugszinsen § 23 Nr. 1 GVG AG-Zuständigkeit bis 10000 EUR ab 01.01.2026 § 688 ff. ZPO Mahnverfahren. Prüfraster Stufen Zahlungserinnerung erste Mahnung zweite Mahnung dritte Mahnung Inkassouebergabe AG-Klage. Output Gestuftes Mahnschreibenpaket mit Verzugszinsen Mahnkosten Klagedrohung und Klageentwurf. Abgrenzung zu forderungsmanagement-klagewerkstatt-Plugin und kanzlei-allgemein-rechnung. Arbeite entlang dieser konkreten Prüfungslinie und trenne Rolle, Frist, Zuständigkeit, Beweislast und gewünschten Output.
+
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: StAG §§ 4, 5, 8-17, 25, 27, 30; DSGVO Art. 5, 6, 7, 9, 12-22, 25, 28, 30, 32, 33-34, 35, 51-58, 77-83, BDSG §§ 22-25, 26, 30 — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+## Triage zu Beginn
+1. Auf welcher Stufe befindet sich das Mahnverfahren: Zahlungserinnerung, erste, zweite oder dritte Mahnung?
+2. Wann ist die Forderung faellig geworden und wann ist der Verzug eingetreten (§ 286 BGB)?
+3. Besteht ein laufendes Mandatsverhältnis das die Eskalation taktisch beeinflusst?
+4. Ist ein Inkasso- oder gerichtliches Mahnverfahren (§§ 688 ff. ZPO) bereits eingeleitet oder geplant?
+
+## Aktuelle Rechtsprechung
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+
+## Zentrale Normen
+- § 286 BGB — Verzug: Voraussetzungen (Faelligkeit, Mahnung oder Kalendertermin)
+- § 288 Abs. 1, 2 BGB — Verzugszinsen: 5 Prozentpunkte (B2C) bzw. 9 Prozentpunkte (B2B) ueber Basiszinssatz
+- §§ 688-703 ZPO — Gerichtliches Mahnverfahren: schnelles Inkasso-Instrument
+- § 23 Nr. 1 GVG — Sachliche Zuständigkeit des AG bis 10.000 EUR (ab 01.01.2026)
 
 ## Disclaimer
 
@@ -14,7 +41,7 @@ Honorarforderungen gegen Mandanten sind besonders sensible Eskalationen — das 
 ### Stufe 0 — Zahlungserinnerung (vor Verzug)
 
 - Etwa zehn Tage nach Fälligkeit der Rechnung.
-- Hoeflicher Hinweis dass die Rechnung noch nicht beglichen ist.
+- Höflicher Hinweis dass die Rechnung noch nicht beglichen ist.
 - Kein Verzug; keine Mahnkosten; keine Verzugszinsen.
 
 ```
@@ -92,10 +119,10 @@ Mit freundlichen Grüßen
 
 Mandant kann verlangen Einsicht in die Akte (§ 50 Abs. 5 BRAO). Bei Streit über Honorar zuständig prüfen.
 
-### Vergütungsklage gegen frueheren Mandanten
+### Vergütungsklage gegen früheren Mandanten
 
 - Sachliche Zuständigkeit § 23 Nr. 1 GVG (bis 10.000 EUR seit 01.01.2026); darüber LG § 71 GVG.
-- Oertliche Zuständigkeit allgemeiner Gerichtsstand des Mandanten (§§ 12 13 ZPO).
+- Örtliche Zuständigkeit allgemeiner Gerichtsstand des Mandanten (§§ 12 13 ZPO).
 - Streitwert: Honorarforderung mit Nebenforderungen.
 
 ### Verjährung der Honorarforderung

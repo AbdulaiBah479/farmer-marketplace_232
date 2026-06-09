@@ -1,51 +1,56 @@
 ---
 name: stakeholder-map
-description: "Build a stakeholder map using a power/interest grid, identify communication strategies per quadrant, and generate a communication plan. Use when managing stakeholders, preparing for a launch, aligning cross-functional teams, or planning stakeholder engagement."
+description: "Stakeholder Map: steuert GC, Legal Ops, CFO, Fachbereich, Vorstand, Kanzleipartner und Gericht/Behörde abbilden zwischen Kanzlei, Mandant und Rechtsabteilung mit Dashboard, Budget, Fristen, Verantwortlichkeiten, Beziehungspflege und Quellenhygiene im Kanzlei-Mandant-Lifecycle."
 ---
 
-## Stakeholder Mapping & Communication Plan
+# Stakeholder Map
 
-Map stakeholders on a Power × Interest grid and create a tailored communication plan for each group.
+## Arbeitsweg
 
-### Context
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: die im Plugin-Kontext einschlägigen Normen über gesetze-im-internet.de, dejure.org, eur-lex.europa.eu und die amtlichen Bundes-/Landesportale live prüfen — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
 
-You are helping build a stakeholder map for **$ARGUMENTS**.
+## Fachkern: Stakeholder Map
+- **Normen-/Quellenanker:** BGB-Dienst-/Geschäftsbesorgungsvertrag, RVG, BRAO/BORA, DSGVO, GeschGehG, ZPO/ArbGG/VwGO je nach Mandat und Legal-Ops-Vorgaben.
+- **Entscheidende Weiche:** Kläre Scope, Budget, Deliverable, Eskalationspunkt, Verantwortlichen, Frist, Erfolgskriterium und Kommunikationsspur.
 
-If the user provides files (org charts, project briefs, team rosters), read them first. If they describe the product or initiative, use that context to infer likely stakeholders.
+## Worum es geht
 
-### Instructions
+Er verdichtet Sachverhalt, Rollen, Dokumente, Risiken, Quellen und nächsten Schritt zu einem steuerbaren Arbeitsweg.
 
-1. **Identify stakeholders**: List all relevant individuals and groups — executives, engineering leads, designers, marketing, sales, support, legal, finance, external partners, and end users.
+**Fokus:** GC, Legal Ops, CFO, Fachbereich, Vorstand, Kanzleipartner und Gericht/Behörde abbilden
 
-2. **Classify each stakeholder** on two dimensions:
-   - **Power** (High/Low): Their ability to influence decisions, resources, or outcomes
-   - **Interest** (High/Low): How much the project directly affects them or how engaged they are
+## Kaltstart-Fragen
 
-3. **Place stakeholders in the Power × Interest grid**:
+- Wer spricht gerade: Kanzlei, Einzelanwalt, Rechtsabteilung, GC, CFO, Fachabteilung oder Gericht/Behörde?
+- Welches Matter, welches Ziel, welche Frist, welches Budget und welche Entscheidung stehen an?
+- Welche Informationen sind geheim, personenbezogen, privilegiert oder nur intern verwendbar?
+- Soll ein Dashboard, Memo, E-Mail, Rechnungskommentar, Board Paper oder Maßnahmenplan entstehen?
 
-   | | High Interest | Low Interest |
-   |---|---|---|
-   | **High Power** | **Manage Closely** — Regular 1:1s, involve in decisions, seek their input early | **Keep Satisfied** — Periodic updates, escalate only critical issues |
-   | **Low Power** | **Keep Informed** — Regular status updates, invite to demos, gather feedback | **Monitor** — Light-touch updates, available on request |
+## Prüf- und Arbeitslogik
 
-4. **For each quadrant**, recommend:
-   - Communication frequency (daily, weekly, bi-weekly, monthly)
-   - Communication format (1:1, email, Slack, meeting, dashboard)
-   - Key messages and framing
-   - Potential risks if this stakeholder is neglected
+- **Rechtsanker:** Datenschutz, Vertraulichkeit, Governance und Projektmanagement.
+- **Tatsachenanker:** Mandatsdatum, Rollen, Scope, Freigaben, Zustellungen, Budgetstand, Beweiswert, Eskalationen und offene Lücken trennen.
+- **Risikoebenen:** Haftung, Berufsrecht, Datenschutz, Vergütung, Frist, Eskalation, Reputationsrisiko und Governance getrennt ausgeben.
+- **Gegenposition:** die beste plausible Gegenansicht formulieren und sagen, welche Unterlage sie trägt oder entkräftet.
+- **Entscheidung:** einen Minimalpfad für heute und einen robusten Hauptpfad für die nächsten Arbeitstage vorschlagen.
 
-5. **Create a communication plan table**:
+## Typische Fehlerquellen
 
-   | Stakeholder | Role | Power | Interest | Strategy | Frequency | Channel | Key Message |
-   |---|---|---|---|---|---|---|---|
+- Keine Mandatsgeheimnisse in ungeprüfte Systeme geben.
+- Budget und Erfolgsaussicht nie als Scheingenauigkeit verkaufen.
+- Kanzlei- und Mandantensicht trennen und dann bewusst zusammenführen.
+- Rechnung, Scope und Beziehung früh klären, bevor Misstrauen entsteht.
 
-6. **Flag potential conflicts**: Identify stakeholders with competing interests and suggest alignment strategies.
+## Quellen- und Aktualitätsgate
 
-Think step by step. Save the stakeholder map as a markdown document.
+Vor tragenden Aussagen live prüfen: amtliche Normfassung, zuständige Behörde/Institution, frei zugängliche Rechtsprechung nur mit Gericht, Datum und Aktenzeichen. Keine BeckRS-/juris-/Kommentar-Blindzitate. Bei dynamischen Medizin-, EU-, Berufsrechts- und Vergütungsfragen immer den Stand des konkreten Tages nennen.
 
----
+## Nützliche Startquellen
 
-### Further Reading
-
-- [The Product Management Frameworks Compendium + Templates](https://www.productcompass.pm/p/the-product-frameworks-compendium)
-- [Team Topologies: A Handbook to Set and Scale Product Teams](https://www.productcompass.pm/p/team-topologies-a-handbook-to-set)
+- RVG § 3a: https://www.gesetze-im-internet.de/rvg/__3a.html
+- BRAO § 43e: https://www.gesetze-im-internet.de/brao/__43e.html
+- BRAO § 49b: https://www.gesetze-im-internet.de/brao/__49b.html

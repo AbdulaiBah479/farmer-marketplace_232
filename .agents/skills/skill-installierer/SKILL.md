@@ -60,7 +60,7 @@ Dies dient zugleich der Einhaltung kanzleiinterner Informationssicherheitspflich
 
 ### Schritt 1: Zulassungsliste lesen (vor jedem Abruf)
 
-Lese `~/.claude/plugins/config/kanzlei-builder-hub/positivliste.yaml`.  
+Lese `~/.claude/plugins/config/kanzlei-builder-hub/positivliste.yaml`.
 Existiert die Datei nicht, teile dem Nutzer mit: "Keine Zulassungsliste unter [Pfad] gefunden. Führe `/kanzlei-builder-hub:kanzlei-builder-hub-kaltstart-interview` aus, um eine anzulegen — ohne sie gilt jede Quelle als vertrauenswürdig und der Installer hat keine strukturelle Schranke, nur die KI-gestützte Prüfung (die eine gut gestaltete Injection manipulieren kann). Ich fahre im permissiven Modus mit leerer Zulassungsliste fort."
 
 Prüfe Registry-URL und Herausgeber gegen die Listen `registries` und `publishers`:
@@ -187,19 +187,6 @@ Prüfen, ob der Skill in der Liste verfügbarer Skills erscheint. Den Nutzer nic
 
 ---
 
-## Ausgabeformat
-
-Strukturierte Ausgabe in dieser Reihenfolge:
-
-1. **Zulassungsstatus** — Quelle gelistet / Modus
-2. **Rohe SKILL.md** (vollständig)
-3. **Injection-Befunde** (mit Datei, Zeile, zitiertem Text)
-4. **Vertrauensprüfung** (Hooks, MCP, Werkzeuge, Netzwerk)
-5. **skills-qualitätsprüfung-Ergebnis**
-6. **Installationsprompt** (oder rollenabhängige Weiterleitung)
-
----
-
 ## Beispiel
 
 **Nutzer:** "Installiere den Skill `vertragsanalyse-nda` aus `kanzlei-registry.de`."
@@ -244,4 +231,5 @@ Hinweis: Dieser Skill ersetzt keine anwaltliche Beratung im konkreten Einzelfall
 ---
 
 <!-- AUDIT 27.05.2026 -->
+
 ## Audit-Hinweis (27.05.2026)

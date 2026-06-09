@@ -1,9 +1,17 @@
 ---
 name: liquiditaetsvorschau-insolvenzrechtlich
-description: "Erstellt und bewertet die rollierende Liquiditätsvorschau als strukturierte Arbeitsgrundlage für insolvenzrechtliche Tatbestände nach § 17 InsO (Zahlungsunfähigkeit) und § 19 Abs. 2 InsO (Fortbestehensprognose). Lädt, wenn geprüft werden soll, ob/wann Zahlungsunfähigkeit eingetreten ist, eine Liquiditätsbilanz für Gericht oder Insolvenzverwalter erstellt werden soll, oder die 13-Wochen- bzw. 24-Monats-Vorschau nach IDW S 11 zu konstruieren ist."
+description: "Erstellt und bewertet die rollierende Liquiditätsvorschau als strukturierte Arbeitsgrundlage für insolvenzrechtliche Tatbestände nach § 17 InsO (Zahlungsunfähigkeit) und § 19 Abs. 2 InsO (Fortbestehensprognose). Lädt, wenn geprüft werden soll, ob/wann Zahlungsunfähigkeit eingetreten ist, eine Liq..."
 ---
 
 # Liquiditätsvorschau als insolvenzrechtliches Beweismittel
+
+## Fachlicher Kern — Insolvenz- und Sanierungsrecht
+- **Problemfokus dieses Skills:** Bleibe beim konkreten Titel `Liquiditätsvorschau als insolvenzrechtliches Beweismittel` und löse die dort angelegte Fachfrage; arbeite mit konkreten Tatbestandsmerkmalen, Beweisfragen und dem unmittelbar benötigten Arbeitsprodukt. Routingfragen bleiben Hilfsmittel, wenn Frist, Zuständigkeit oder Verfahrensart offen sind.
+- **Normenradar:** InsO §§ 1, 13, 15a, 17, 18, 19, 21, 38 ff., 47, 49 ff., 55, 80, 103 ff., 129-147, 165 ff., 217 ff., 270 ff., 343; StaRUG; COVInsAG/Übergangsrecht nur bei Altzeiträumen; SGB III § 165.
+- **Verifizierte Anker:** BGH, Urteil vom 10.02.2005 - IX ZR 211/02 (Grenzen § 133 InsO bei Zwangsvollstreckung/verschlepptem Antrag als Klassiker); ausländische Verfahren: § 343 InsO Anerkennung, kein deutsches Chapter-15-Verfahren, häufig inzidente Prüfung durch Register, Grundbuch, Prozessgericht und Banken.
+- **Arbeitsmodus:** Zuerst Insolvenzgrund, Frist, Organpflicht, Verfahrensstand, Sicherheiten, Massebezug und Anfechtungszeitraum klären; dann Sanierungsfähigkeit, Plan/StaRUG, Haftung und Dokumentationsschutz.
+- **Outputpflicht:** Krisenzeitachse, Liquiditätsstatus, Anfechtungsmatrix, Sicherheitenradar, IDW-S6-/Sanierungscheck, Register-/Grundbuch-Nachweispaket oder Schriftsatzbaustein.
+- **Fehlerbremse:** Tragende Normen/Entscheidungen live oder aus der Akte verifizieren; Rechtsprechung nur mit Gericht, Entscheidungsform, Datum, Aktenzeichen und frei prüfbarer Quelle. Keine BeckRS-, juris-, Kommentar- oder Aufsatz-Blindzitate aus Modellwissen.
 
 ## Powerplugin-Hinweis
 
@@ -21,6 +29,12 @@ Fortbestehensprognose nach § 19 Abs. 2 S. 1 InsO? Die Liquiditätsvorschau dien
 dem Insolvenzverwalter, dem vorläufigen Insolvenzverwalter, dem Sachverständigen im
 Eröffnungsverfahren sowie dem beratenden Anwalt bei der Haftungsrekonstruktion gegenüber
 Geschäftsführern (§§ 15a, 15b InsO).
+
+Wenn die Liquiditätsvorschau als Grundlage für Bankgespräch, StaRUG, Schutzschirm,
+Eigenverwaltung, Insolvenzplan oder Sanierungskonzept verwendet werden soll, muss sie
+in eine integrierte Sanierungsplanung überführt werden. Dann reicht die Cash-Sicht nicht:
+GuV, Planbilanz, Krisenursachen, Leitbild, Maßnahmen, Szenarien und Dokumentation
+müssen zusammenpassen.
 
 Die Abgrenzung zur steuerberaterlichen Sicht ist methodisch zwingend: Steuerliche
 Liquiditätsplanungen verfolgen Planungszwecke, während die insolvenzrechtliche Liquiditätsbilanz
@@ -86,21 +100,22 @@ systematisch zu optimistisch sind.
 ### Quellenregel
 
 Quellenregel: Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen; Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff.
-### IDW S 11 (Beurteilung des Vorliegens von Insolvenzeröffnungsgründen)
+### Berufsständische Planungslogik
 
-Der IDW S 11 (Stand: 25.01.2017) liefert den methodischen Rahmen für die gutachterliche
-Beurteilung von Zahlungsunfähigkeit und Überschuldung. Er schreibt vor:
+Für die gutachterliche Beurteilung von Zahlungsunfähigkeit und Überschuldung ist die
+stichtagsbezogene Liquiditätsbilanz von der Fortbestehensprognose zu trennen. Für ein
+Sanierungskonzept ist zusätzlich zu prüfen, ob die Planung nicht nur Zahlungsfähigkeit,
+sondern auch nachhaltige Sanierungsfähigkeit trägt. Operativ bedeutet das:
 
 - **Stichtagsbezogene Liquiditätsbilanz** für § 17 InsO: Gegenüberstellung der liquiden
-  Mittel (Zahlungsmittel I. Stufe) und der fälligen sowie innerhalb von 21 Tagen fällig
-  werdenden Verbindlichkeiten (Zahlungsmittel II. Stufe für Mittelzuflüsse).
+ Mittel (Zahlungsmittel I. Stufe) und der fälligen sowie innerhalb von 21 Tagen fällig
+ werdenden Verbindlichkeiten (Zahlungsmittel II. Stufe für Mittelzuflüsse).
 - **Integrierte Finanzplanung** für § 19 InsO: Ertrags-, Vermögens- und
-  Liquiditätsplanung für mindestens 12 Monate (IDW S 11 empfiehlt 24 Monate).
-- **Prüfungspflichten des Gutachters**: Plausibilisierung aller Planungsprämissen,
-  Sensitivitätsanalyse, Dokumentation abweichender Szenarien.
-- **Drei-Stufen-Ampel** (methodisch abgeleitet aus IDW S 11 Tz. 15–21 i.V.m. BGH
-  IX ZR 123/04): Klassifizierung der Liquiditätslage als GRÜN, GELB oder ROT
-  (siehe Ablauf-Abschnitt).
+ Liquiditätsplanung für mindestens 12 Monate (IDW S 11 empfiehlt 24 Monate).
+- **Plausibilisierungspflichten**: Plausibilisierung aller Planungsprämissen,
+ Sensitivitätsanalyse, Dokumentation abweichender Szenarien.
+- **Drei-Stufen-Ampel**: Klassifizierung der Liquiditätslage als GRÜN, GELB oder ROT
+ (siehe Ablauf-Abschnitt). Rechtsprechungsfundstellen vor Ausgabe live verifizieren.
 
 ## Ablauf
 
@@ -126,13 +141,13 @@ Für jede der 13 Kalenderwochen wird eine eigene Zeile der Liquiditätsvorschau 
 
 ```
 Woche N:
-  (+) Anfangsbestand Kasse + Bank (verfügbar)
-  (+) Erwartete Forderungseingänge (dokumentiert, konkret)
-  (+) Freie KK-Linie (soweit nicht gekündigt)
-  (-) Fällige Verbindlichkeiten der Woche N
-  (-) Bis Ende Woche N+2 fällig werdende Verbindlichkeiten (3-Wochen-Fenster)
-  (=) Netto-Liquiditätsposition der Woche N
-  (%) Liquiditätslücke = Defizit / Summe fällige Verbindlichkeiten
+ (+) Anfangsbestand Kasse + Bank (verfügbar)
+ (+) Erwartete Forderungseingänge (dokumentiert, konkret)
+ (+) Freie KK-Linie (soweit nicht gekündigt)
+ (-) Fällige Verbindlichkeiten der Woche N
+ (-) Bis Ende Woche N+2 fällig werdende Verbindlichkeiten (3-Wochen-Fenster)
+ (=) Netto-Liquiditätsposition der Woche N
+ (%) Liquiditätslücke = Defizit / Summe fällige Verbindlichkeiten
 ```
 
 Für die 13-Wochen-Vorschau werden wochen- und tagesgenaue Fälligkeiten
@@ -156,6 +171,18 @@ Mindestliquiditätsreserve. Für die Fortbestehensprognose nach § 19 Abs. 2 Ins
 die Liquiditätsplanung zeigen, dass der Schuldner mit überwiegender Wahrscheinlichkeit
 in der Lage sein wird, seine Verbindlichkeiten laufend zu erfüllen.
 
+Wenn daraus ein Sanierungskonzept werden soll, ergänze:
+
+- Krisenursachenanalyse,
+- Leitbild des sanierten Unternehmens,
+- Maßnahmenmatrix mit Kosten, Timing, Verantwortlichem und Belegstatus,
+- Plan-GuV und Planbilanz,
+- Szenarien und Sensitivitäten,
+- Annahmen-, Quellen- und Planversionsregister.
+
+Erst daraus lässt sich ableiten, ob neben der Fortbestehensprognose auch nachhaltige
+Sanierungsfähigkeit vorliegt.
+
 **Schritt 6 — Gerichtsfeste Dokumentation**
 Das Ergebnis wird als Gutachten oder gutachtenähnliche Stellungnahme dokumentiert:
 Darstellung der Methodik, Auflistung aller Quellen, Sensitivitätsanalyse (Best/Base/Worst
@@ -169,16 +196,16 @@ Das Ausgabedokument ist eine **juristische Stellungnahme im Gutachtenstil** und 
 
 1. **Stichtagsbestimmung** — welcher Stichtag wird untersucht und warum
 2. **Datenbasis** — tabellarische Auflistung aller verwendeten Unterlagen mit Datum und
-   Herkunft
+ Herkunft
 3. **13-Wochen-Liquiditätsbilanz** — Tabelle mit Wochen-Spalten, Einzelpositionen
-   (Aktiv/Passiv), Netto-Liquiditätsposition und prozentualer Lücke
+ (Aktiv/Passiv), Netto-Liquiditätsposition und prozentualer Lücke
 4. **Ampel-Ergebnis** je Woche mit rechtlicher Bewertung (GRÜN/GELB/ROT + Begründung)
 5. **Stundungsabzüge** — Einzelauflistung aller herausgerechneten Verbindlichkeiten mit
-   Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+ Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 6. **24-Monats-Vorschau** (sofern Fortbestehensprognose zu beurteilen) — monatlicher
-   Cashflow, Prämissenblatt, Szenarioanalyse
+ Cashflow, Prämissenblatt, Szenarioanalyse
 7. **Rechtliche Subsumtion** — Abschließende Einordnung: liegt § 17 InsO vor, wenn ja
-   seit wann?; liegt § 19 InsO vor?
+ seit wann?; liegt § 19 InsO vor?
 8. **Hinweis auf Antragspflicht** — soweit Tatbestand des § 15a InsO ausgelöst
 
 Alle Tabellen enthalten Quellenverweise auf die zugrunde liegenden Belegpositionen
@@ -196,17 +223,17 @@ Der vorläufige Insolvenzverwalter hat folgende Eckdaten ermittelt:
 - Kassebestand 15.03.2025: 3.200 EUR
 - Bankguthaben (laufendes Konto): 8.500 EUR
 - Kontokorrentlinie: 150.000 EUR, zu **92 %** ausgenutzt (freie Linie: 12.000 EUR,
-  nicht erweiterungsfähig; Hausbank hat mit Schreiben vom 08.03.2025 eine
-  Kreditlinienerweiterung abgelehnt)
+ nicht erweiterungsfähig; Hausbank hat mit Schreiben vom 08.03.2025 eine
+ Kreditlinienerweiterung abgelehnt)
 - Fällige Verbindlichkeiten zum 15.03.2025: 87.400 EUR (davon SV-Rückstand
-  Februar 2025: 18.300 EUR; USt-Vorauszahlung Januar 2025: 11.200 EUR;
-  Lieferantenverbindlichkeiten > 30 Tage: 57.900 EUR)
+ Februar 2025: 18.300 EUR; USt-Vorauszahlung Januar 2025: 11.200 EUR;
+ Lieferantenverbindlichkeiten > 30 Tage: 57.900 EUR)
 - Binnen 3 Wochen (bis 05.04.2025) fällig werdende Verbindlichkeiten: 34.600 EUR
-  (Löhne März 2025: 28.400 EUR; Mietfälligkeit 01.04.2025: 6.200 EUR)
+ (Löhne März 2025: 28.400 EUR; Mietfälligkeit 01.04.2025: 6.200 EUR)
 - Dokumentierte Forderungseingänge binnen 3 Wochen: 14.300 EUR (zwei
-  Abschlagsrechnungen mit Zahlungsziel 31.03.2025, Bonität der Auftraggeber geprüft)
+ Abschlagsrechnungen mit Zahlungsziel 31.03.2025, Bonität der Auftraggeber geprüft)
 - Eine Stundungsvereinbarung liegt nur für einen Lieferanten (Fischer Baustoffe GmbH,
-  4.200 EUR) vor — schriftlich bestätigt bis 30.04.2025.
+ 4.200 EUR) vor — schriftlich bestätigt bis 30.04.2025.
 
 **Gutachtenstil-Subsumtion:**
 
@@ -278,9 +305,13 @@ zu trennen. Für die Liquiditätsbilanz zählt die **Fälligkeit**, nicht der Za
 
 **7. Kontokorrentlinie ohne Kündigungsprüfung**
 Eine bereits faktisch gekündigte oder nicht mehr verlängerungsfähige KK-Linie darf
-nicht als freie Liquiditätsreserve angesetzt werden. Schmerbach, in: K. Schmidt, InsO,
-20. Aufl. 2023, § 17 Rn. 28, betont, dass nur tatsächlich verfügbare Mittel einzustellen
-sind.
+nicht als freie Liquiditätsreserve angesetzt werden. Nur tatsächlich verfügbare und nicht
+gekündigte Mittel dürfen angesetzt werden.
+
+**8. Liquiditätsvorschau als Sanierungskonzept behandeln**
+Eine Zahlungsfähigkeitsvorschau belegt keine Sanierungsfähigkeit. Für Sanierungsfähigkeit
+braucht es zusätzlich Krisenursachen, Leitbild, Maßnahmen, GuV, Bilanz, Liquidität,
+Szenarien, Nachweise und Monitoring.
 
 ## Quellenpflicht
 
@@ -296,28 +327,23 @@ zwingend zu zitieren und zu berücksichtigen:
 
 - Keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen zitieren. Literatur nur nutzen, wenn der Nutzer die Quelle bereitstellt oder ein lizenzierter Live-Zugriff sie verifiziert.
 - Quellenregel: Keine Kommentar-, Handbuch-, Aufsatz- oder Tabellenfundstellen aus Modellwissen; nur Nutzerquelle, amtliche/freie Quelle oder lizenzierte Live-Verifikation verwenden.
-- Schmerbach, in: K. Schmidt, InsO, 20. Aufl. 2023, § 17 Rn. 11, 28
-
-**IDW-Standard:**
-- IDW S 11 (Beurteilung des Vorliegens von Insolvenzeröffnungsgründen), Stand 25.01.2017,
-  insb. Tz. 15–21 (Liquiditätsbilanz) und Tz. 40–55 (Fortbestehensprognose)
+**Berufsständischer Methodenrahmen:**
+- IDW S 11 für Insolvenzeröffnungsgründe und Fortbestehensprognose.
+- IDW S 6 für Sanierungskonzepte und integrierte Planung, wenn die Liquiditätsvorschau als Sanierungsgrundlage genutzt wird.
 
 **Ergänzend empfohlen:**
 - Quellenregel: Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff; keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen.
-  (integrierte Finanzplanung für Fortbestehensprognose)
-- Quellenregel: Keine Kommentar-, Handbuch-, Aufsatz- oder Tabellenfundstellen aus Modellwissen; nur Nutzerquelle, amtliche/freie Quelle oder lizenzierte Live-Verifikation verwenden.
-  6. Aufl. 2024, Kap. 5 Rn. 5.23 ff.
+ (integrierte Finanzplanung für Fortbestehensprognose und Sanierungskonzept)
 
 ---
 *Dieser Skill ersetzt keine konkrete anwaltliche Beratung im Einzelfall.*
-
 
 ## Triage — Liquiditaetsvorschau insolvenzrechtlich
 
 Bevor losgelegt wird, klaere:
 
 1. **Zweck?** ZU-Test § 17 InsO (3-Wochen-Fenster) oder Fortbestehensprognose § 19 Abs. 2 InsO (12 Monate)?
-2. **Methode?** Direkte Methode (Cash In / Cash Out) bevorzugt fuer InsO-Beurteilung.
+2. **Methode?** Direkte Methode (Cash In / Cash Out) bevorzugt für InsO-Beurteilung.
 3. **Zeitraum?** 3 Wochen (akute ZU-Pruefung), 13 Wochen (operativer Forecast), 12-24 Monate (Fortbestehensprognose).
 4. **Eingabedaten?** Offene Posten (OPOS), Bankkontoauszuege, Steuer- und SV-Verbindlichkeiten.
 5. **Stichtag?** Fuer InsO-Verfahren muss Stichtag tag-genau sein.

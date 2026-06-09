@@ -1,9 +1,17 @@
 ---
 name: skill-verwalter
-description: "Referenz-Skill für die Deinstallation, Deaktivierung und Reaktivierung von Community-Skills, die über den Kanzlei-Builder-Hub installiert wurden. Sicher nach Grundsatz — verweigert jede Aktion auf Erstanbieter-Plugin-Skills, bestätigt vor dem Löschen von Dateien und protokolliert jeden Vorgang. Wird von den Skills „uninstall\" und „deaktivieren\" des Kanzlei-Builder-Hub geladen. Kein direkter Nutzeraufruf."
+description: "Übersicht und Verwaltung aller installierten Skills: Status, Version, Abhaengigkeiten. Normen: technisch/intern. Prüfraster: aktive Skills, deaktivierte Skills, Update-Bedarf. Output: Skills-Verwaltungsuebersicht. Abgrenzung: nicht Einzelinstallation oder -aktualisierung im Kanzlei Builder Hub."
 ---
 
 # Skill-Manager
+
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: BRAO § 51 Mindestversicherung sofort, FAO § 4 Fachanwalt-Antrag 3-Jahres-Frist (10 % Mindestumfang), GwG-Risikoanalyse jährlich, beA Pflichtnutzung seit 01.01.2022.
+- Tragende Normen verifizieren: BRAO §§ 5, 7, 14, 27, 43 ff., 49b, 51 (Berufshaftpflicht), BORA, FAO, RVG §§ 1 ff., GwG §§ 2, 10, 11, 43 (Kanzlei als Verpflichteter), DSGVO, beA-Bedingungen, Steuerrecht (EStG, UStG, GewStG) — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Kanzleigründer, Kammer, BRAK, Versicherer (Berufshaftpflicht), Mandant, Steuerberater, IT-Dienstleister (beA, RA-MICRO/AnNoText).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Kanzleihandbuch, Datenschutz-Konzept, Geldwäsche-Risikoanalyse, Mandatsvertrag, Honorarvereinbarung, Versicherungspolice, Sozietätsvertrag, beA-Konfiguration — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
 
 ## Zweck
 
@@ -32,10 +40,9 @@ Die Protokollierungspflicht korrespondiert mit § 50 BRAO (Aktenführung) sowie 
 
 ### Leitentscheidungen
 
-- BGH, Urt. v. 14.07.2005 – IX ZR 284/04, NJW 2005, 2858 Rn. 11 — Rechtsanwaltskanzlei haftet für ordnungsgemäße Aktenführung und Nachweisbarkeit durchgeführter oder unterlassener Handlungen; Protokollierungslücken gehen zu Lasten der Kanzlei.
-- BGH, Urt. v. 19.02.2009 – IX ZR 117/08, NJW 2009, 1336 Rn. 14 — Unterlagen, die für die Mandatsbearbeitung relevant sind, unterliegen Aufbewahrungspflichten, deren Verletzung Schadensersatzansprüche begründen kann.
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
-### Kommentar- und Aufsatzbelege
+### Quellenregel
 
 - Hartung/Scharmer, in: Hartung/Scharmer, Berufs- und Fachanwaltsordnung, 7. Aufl. 2022, § 50 BRAO Rn. 12 — Anforderungen an die Kanzleiorganisation und digitale Aktenführung.
 - Wagner, BB 2024, 579 (583) — Organisationspflichten beim Einsatz von KI-Werkzeugen in der Kanzlei; Dokumentations- und Löschkonzepte als Bestandteil des Risikomanagements.
@@ -48,7 +55,7 @@ Die Protokollierungspflicht korrespondiert mit § 50 BRAO (Aktenführung) sowie 
 
 #### Schritt 1: Prüfung auf Community-Installation
 
-Lese `installations-protokoll.yaml`. Finde den jüngsten Eintrag für den genannten Skill.  
+Lese `installations-protokoll.yaml`. Finde den jüngsten Eintrag für den genannten Skill.
 Falls nicht vorhanden oder letzter Eintrag = `deinstallieren`: Mitteilen und abbrechen.
 
 #### Schritt 2: Dateien auflösen
@@ -62,7 +69,7 @@ Anzeigen:
 - Jede Datei, die gelöscht wird
 - Konfigurationsverzeichnisse, die **nicht** gelöscht werden (mit Hinweis, dass der Nutzer diese bei Bedarf manuell löschen kann)
 
-Prompt: „Diese Dateien löschen? (ja / nein)". Kein Löschen ohne ausdrückliches `ja`.
+Prompt: "Diese Dateien löschen? (ja / nein)". Kein Löschen ohne ausdrückliches `ja`.
 
 #### Schritt 4: Löschen
 
@@ -74,10 +81,10 @@ An `installations-protokoll.yaml` anhängen:
 
 ```yaml
 - skill: <name>
-  action: uninstall
-  timestamp: <ISO8601>
-  path: <gelöschter Pfad>
-  grund: <optional, vom Nutzer angegeben>
+ action: uninstall
+ timestamp: <ISO8601>
+ path: <gelöschter Pfad>
+ grund: <optional, vom Nutzer angegeben>
 ```
 
 Die Skill-Zeile aus der installierten Starter-Pack-Tabelle in der Hub-CLAUDE.md entfernen.
@@ -96,7 +103,7 @@ Die Skill-Zeile aus der installierten Starter-Pack-Tabelle in der Hub-CLAUDE.md 
 
 #### Schritt 3: Bestätigen
 
-Umbenennungsliste anzeigen. Prompt: „Diesen Skill deaktivieren? (ja / nein)".
+Umbenennungsliste anzeigen. Prompt: "Diesen Skill deaktivieren? (ja / nein)".
 
 #### Schritt 4: Umbenennen
 
@@ -114,27 +121,9 @@ Ist der jüngste Protokolleintrag für den genannten Skill `deaktiviert`, Reakti
 
 ---
 
-## Ausgabeformat
-
-Strukturierte Bestätigung nach jeder Aktion:
-
-```
-Skill-Manager — Aktion: [deinstalliert / deaktiviert / reaktiviert]
-Skill:          [name]
-Zeitstempel:    [ISO8601]
-Betroffene Dateien:
-  - [Pfad 1]
-  - [Pfad 2]
-Konfiguration beibehalten:
-  - [Pfad, falls zutreffend]
-Protokolleintrag: installations-protokoll.yaml aktualisiert.
-```
-
----
-
 ## Beispiel
 
-**Nutzer:** „Deinstalliere den Skill `vertragsanalyse-nda`."
+**Nutzer:** "Deinstalliere den Skill `vertragsanalyse-nda`."
 
 **Skill-Manager:**
 1. `installations-protokoll.yaml` gelesen — Eintrag für `vertragsanalyse-nda` gefunden, letzter Status `install`.
@@ -163,8 +152,7 @@ Bei der Ausführung dieses Skills sind folgende Quellen als anwendbares Recht zu
 - Art. 5 Abs. 2, Art. 32 DSGVO (Rechenschafts- und Sicherheitspflichten)
 - §§ 257 HGB, 147 AO (Aufbewahrungsfristen)
 - AI Act Art. 26 (Deployer-Pflichten)
-- BGH, Urt. v. 14.07.2005 – IX ZR 284/04, NJW 2005, 2858
-- BGH, Urt. v. 19.02.2009 – IX ZR 117/08, NJW 2009, 1336
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 - Hartung/Scharmer, in: Hartung/Scharmer, Berufs- und Fachanwaltsordnung, 7. Aufl. 2022, § 50 BRAO Rn. 12
 - Wagner, BB 2024, 579 (583)
 

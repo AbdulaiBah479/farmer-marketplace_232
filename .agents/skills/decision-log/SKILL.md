@@ -1,68 +1,73 @@
 ---
 name: decision-log
-description: Document major decisions made
-role_groups: [leadership]
-jtbd: |
-  Important decisions get made and the context is lost. This provides a decision 
-  template, prompts for context/options/rationale, links to supporting materials, 
-  and saves to a searchable decision log so you can reference why choices were made.
-time_investment: "15-20 minutes per decision"
+description: "Protokolliert Managemententscheidungen mit Option, Gegenargument, Owner und Review. Für Managing Partner, Management Committee oder COO/CFO einer deutschen mittelständischen Kanzlei mit konkreten Abfragen, Kennzahlen, Entscheidungen und berufsrechtlicher Quellenhygiene im Kanzlei Management."
 ---
 
-## Purpose
+# Decision Log
 
-Maintain searchable log of major decisions with full context and rationale.
+## Normenanker
 
-## Usage
+Vor einer rechtlichen Schlussfolgerung diese Anker am aktuellen Normtext prüfen; Spezial- und Landesrecht nur hinzunehmen, wenn es den konkreten Auftrag traegt:
 
-- `/decision-log [decision]` - Document specific decision
-- `/decision-log list` - View all logged decisions
+- `§ 43 BRAO` — allgemeine Berufspflicht.
+- `§ 43a Abs. 2 BRAO` — Verschwiegenheit.
+- `§ 43a Abs. 4 BRAO` — Interessenkollision.
+- `§ 49b BRAO` — Verguetungsrechtliche Grenzen.
+- `§ 50 BRAO` — Handakten.
+- `§ 2 BORA` — Verschwiegenheit.
+- `§ 3 BORA` — Interessenkollision.
+- `§ 10 BORA` — Briefbogen/Information.
+- `§ 4 RVG` — Verguetungsvereinbarung.
+- `§ 10 RVG` — Abrechnung.
 
----
+Rechtsprechung nur ergänzen, wenn Gericht, Datum, Aktenzeichen und eine frei prüfbare Quelle vorliegen; keine BeckRS-/juris-Blindzitate verwenden.
 
-## Steps
+## Arbeitsweg
 
-1. **Prompt for decision details:**
-   - What was decided?
-   - What were the options?
-   - Who was involved?
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: die im Plugin-Kontext einschlägigen Normen über gesetze-im-internet.de, dejure.org, eur-lex.europa.eu und die amtlichen Bundes-/Landesportale live prüfen — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
 
-2. **Document context:**
-   - Why was this decision needed?
-   - What factors influenced it?
-   - What information was considered?
+## Fachkern: Decision Log
 
-3. **Capture rationale:**
-   - Why this choice?
-   - What trade-offs were accepted?
-   - What risks acknowledged?
+- **Managementproblem (Decision Log):** Protokolliert Managemententscheidungen mit Option, Gegenargument, Owner und Review. Für Managing Partner, Management Committee oder COO/CFO einer deutschen mittelständischen Kanzlei mit konkreten Abfragen, Kennzahlen, Entscheidungen und berufsrechtlicher Quellenhygiene.
+- **Kennzahlenanker:** Umsatz, UBT, FTE, Utilization, Realization, WIP, DSO, Lock-up, Write-offs, Pipeline, Leverage, Fluktuation und Mandatsrisiko nur zweckbezogen verwenden.
+- **Governance-Weiche:** Partnerpolitik, Mandatsgeheimnis, Interessenkollision, Berufsrecht, People-Risiko und Cashflow getrennt entscheiden; keine hübschen Dashboards ohne Beschlussfrage.
+- **Arbeitsprodukt:** Entscheidungsboard mit drei Optionen, Owner, Frist, Gegenrechnung, Kommunikationslinie und Review-Datum.
 
-4. **Save decision record** in 06-Resources/Decisions/
+## Ausgangspunkt
 
----
+Protokolliert Managemententscheidungen mit Option, Gegenargument, Owner und Review. Der Skill denkt aus der Perspektive einer deutschen mittelständischen Kanzlei mit Partnerkreis, Associates, Counsel, Business Services, Mandatsgeheimnis, Berufsrecht, RVG/BRAO-Grenzen, Mandantenbeziehungen und echter Liquiditätslogik.
 
-## Output Format
+## Erste Abfragen
 
-```markdown
-# Decision: [Title]
+1. Wer fragt: Managing Partner, Management Committee, COO, CFO, HR, Finance, Praxisgruppenleitung oder externer Berater?
+2. Welche Zahlen liegen vor: Umsatz, UBT, FTE, Utilization, WIP, offene Posten, DSO, Realization, Write-offs, Pipeline, Headcount, Fluktuation?
+3. Welche Entscheidung steht an und wer darf sie treffen?
+4. Welche Menschen sind betroffen: Partnerkreis, Team, Associates, Assistenz, Mandant, Finance, HR?
+5. Gibt es berufsrechtliche Grenzen: Vergütung, Mandatsgeheimnis, Interessenkollision, beA/ERV, Datenschutz, Fristen oder Werbung?
 
-**Date:** [Today]
-**Deciders:** [Names]
-**Status:** Decided
+## Standard-Output
 
-## Context
-[Why was this decision needed?]
+Erzeuge:
 
-## Options Considered
-1. [Option 1] - Pros/Cons
-2. [Option 2] - Pros/Cons
+- Kurzbefund in fünf Sätzen.
+- Fakten- und Datenlückenliste.
+- Dashboard oder Matrix mit Ampel nur dort, wo sie eine Entscheidung erleichtert.
+- Drei Optionen: defensiv, ausgewogen, mutig.
+- Empfehlung mit Owner, Frist, Review-Datum und Kommunikationsvorschlag.
 
-## Decision
-We chose [Option] because [rationale].
+## Rote Flaggen
 
-## Trade-offs Accepted
-- [Trade-off 1]
+- WIP wird wie Umsatz behandelt, obwohl keine Rechnung gestellt ist.
+- Utilization steigt, aber Realization, Ausbildung und Stimmung fallen.
+- Rabatte werden als Beziehungspflege verkauft, ohne Scope oder Gegenleistung.
+- Partnerpolitik ersetzt Daten oder Daten werden zur Partnerpolitik hübsch gebogen.
+- Associates arbeiten dauerhaft am Limit, während die Kanzlei von Kultur spricht.
+- Das Dashboard sieht edel aus, beantwortet aber keine Managementfrage.
 
-## Follow-up Actions
-- [ ] [Action 1] - Owner: [Name]
-```
+## Quellen- und Compliance-Hygiene
+
+Bei Vergütung, Honorarvereinbarung, Erfolgshonorar, Mandatsannahme, Verschwiegenheit, Interessenkollision, Datenschutz, KI-/Cloud-Tooling, beA/ERV und Fristen nie aus Modellgefühl entscheiden. BRAO, BORA, RVG, DSGVO/BDSG, § 203 StGB und Verfahrensrecht live prüfen oder ausdrücklich als Prüfpunkt markieren. Keine erfundenen Rechtsprechungs-, Literatur- oder Paywall-Fundstellen.

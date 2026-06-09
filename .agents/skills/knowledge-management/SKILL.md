@@ -1,287 +1,73 @@
 ---
 name: knowledge-management
-description: 4-layer knowledge capture system for development sessions. Use when user says /mem (quick capture), /distill (extract patterns), /td (post-task retrospective with Before/After context), /improve (work on pending items), or /commit (atomic commits via TDG). Manages docs/learnings/, docs/knowledge-base/, and docs/retrospective/ directories.
+description: "Macht Muster, Know-how, Deal-Erfahrung und Rechtsprechungsupdates auffindbar. Für Managing Partner, Management Committee oder COO/CFO einer deutschen mittelständischen Kanzlei mit konkreten Abfragen, Kennzahlen, Entscheidungen und berufsrechtlicher Quellenhygiene im Kanzlei Management."
 ---
 
-# Knowledge Management System
+# Knowledge Management
 
-4-layer system for capturing and organizing development knowledge.
+## Normenanker
 
-## Commands
+Vor einer rechtlichen Schlussfolgerung diese Anker am aktuellen Normtext prüfen; Spezial- und Landesrecht nur hinzunehmen, wenn es den konkreten Auftrag traegt:
 
-| Command | Layer | Output | Trigger |
-|---------|-------|--------|---------|
-| `/mem [topic]` | 1 | `docs/learnings/YYYY-MM/DD/HH.MM_slug.md` | Quick insight capture |
-| `/distill [topic]` | 2 | `docs/knowledge-base/[topic].md` | 3+ learnings on same topic |
-| `/td` | 3 | `docs/retrospective/YYYY-MM/retrospective_*.md` | Task completed |
-| `/improve` | 4 | Implementation | Work on pending items |
-| `/commit` | - | Git commits | Atomic commits via TDG |
-| `/pr-review` | - | Learning doc + PR updates | Handle PR review feedback |
-| `/pr-poll` | - | Notification daemon | Auto PR review notifications |
-| `/example [lang] [name]` | - | `docs/examples/[lang]/[name].[ext]` | Save code snippets |
-| `/summary weekly\|monthly` | - | `docs/summaries/YYYY-MM-weekN.md` | Session summaries |
-| `/search [query]` | - | Search results | Search knowledge index |
-| `/share [file]` | - | `docs/shared-knowledge/[file]` | Cross-project knowledge |
-| `/flow [name]` | - | `docs/flows/[name].md` | Process flow diagrams |
-| `/pattern [name]` | - | `docs/patterns/[name].md` | Design pattern docs |
-| `/cleanup` | - | Archive + cleanup | Retention policy management |
+- `§ 43 BRAO` — allgemeine Berufspflicht.
+- `§ 43a Abs. 2 BRAO` — Verschwiegenheit.
+- `§ 43a Abs. 4 BRAO` — Interessenkollision.
+- `§ 49b BRAO` — Verguetungsrechtliche Grenzen.
+- `§ 50 BRAO` — Handakten.
+- `§ 2 BORA` — Verschwiegenheit.
+- `§ 3 BORA` — Interessenkollision.
+- `§ 10 BORA` — Briefbogen/Information.
+- `§ 4 RVG` — Verguetungsvereinbarung.
+- `§ 10 RVG` — Abrechnung.
 
-## Flow
+Rechtsprechung nur ergänzen, wenn Gericht, Datum, Aktenzeichen und eine frei prüfbare Quelle vorliegen; keine BeckRS-/juris-Blindzitate verwenden.
 
-```
-ทำงาน → /mem "insight" → /distill topic → /td → /improve
-         (Layer 1)        (Layer 2)      (Layer 3) (Layer 4)
-```
+## Arbeitsweg
 
-## Directory Structure
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: die im Plugin-Kontext einschlägigen Normen über gesetze-im-internet.de, dejure.org, eur-lex.europa.eu und die amtlichen Bundes-/Landesportale live prüfen — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
 
-```
-docs/
-├── learnings/           # /mem output
-│   └── YYYY-MM/DD/
-├── knowledge-base/      # /distill output
-├── examples/            # /example output
-│   └── [language]/
-├── summaries/           # /summary output
-├── shared-knowledge/    # /share output (cross-project)
-├── flows/               # /flow output (Mermaid diagrams)
-├── patterns/            # /pattern output (design patterns)
-└── retrospective/       # /td output
-    └── YYYY-MM/
-```
+## Fachkern: Knowledge Management
 
-## Setup
+- **Managementproblem (Knowledge Management):** Macht Muster, Know-how, Deal-Erfahrung und Rechtsprechungsupdates auffindbar. Für Managing Partner, Management Committee oder COO/CFO einer deutschen mittelständischen Kanzlei mit konkreten Abfragen, Kennzahlen, Entscheidungen und berufsrechtlicher Quellenhygiene.
+- **Kennzahlenanker:** Umsatz, UBT, FTE, Utilization, Realization, WIP, DSO, Lock-up, Write-offs, Pipeline, Leverage, Fluktuation und Mandatsrisiko nur zweckbezogen verwenden.
+- **Governance-Weiche:** Partnerpolitik, Mandatsgeheimnis, Interessenkollision, Berufsrecht, People-Risiko und Cashflow getrennt entscheiden; keine hübschen Dashboards ohne Beschlussfrage.
+- **Arbeitsprodukt:** Entscheidungsboard mit drei Optionen, Owner, Frist, Gegenrechnung, Kommunikationslinie und Review-Datum.
 
-Run init script to create directory structure:
-```bash
-./scripts/init.sh $PROJECT_ROOT
-```
+## Ausgangspunkt
 
-Or manually:
-```bash
-mkdir -p docs/{learnings,knowledge-base,retrospective}
-```
+Macht Muster, Know-how, Deal-Erfahrung und Rechtsprechungsupdates auffindbar. Der Skill denkt aus der Perspektive einer deutschen mittelständischen Kanzlei mit Partnerkreis, Associates, Counsel, Business Services, Mandatsgeheimnis, Berufsrecht, RVG/BRAO-Grenzen, Mandantenbeziehungen und echter Liquiditätslogik.
 
----
+## Erste Abfragen
 
-## Command: /mem
+1. Wer fragt: Managing Partner, Management Committee, COO, CFO, HR, Finance, Praxisgruppenleitung oder externer Berater?
+2. Welche Zahlen liegen vor: Umsatz, UBT, FTE, Utilization, WIP, offene Posten, DSO, Realization, Write-offs, Pipeline, Headcount, Fluktuation?
+3. Welche Entscheidung steht an und wer darf sie treffen?
+4. Welche Menschen sind betroffen: Partnerkreis, Team, Associates, Assistenz, Mandant, Finance, HR?
+5. Gibt es berufsrechtliche Grenzen: Vergütung, Mandatsgeheimnis, Interessenkollision, beA/ERV, Datenschutz, Fristen oder Werbung?
 
-**Quick knowledge capture** - ใช้ระหว่างทำงานเมื่อพบ insight
+## Standard-Output
 
-```bash
-TZ='Asia/Bangkok' date '+%Y-%m/%d/%H.%M'  # Path format
-```
+Erzeuge:
 
-**Output**: `docs/learnings/YYYY-MM/DD/HH.MM_[slug].md`
+- Kurzbefund in fünf Sätzen.
+- Fakten- und Datenlückenliste.
+- Dashboard oder Matrix mit Ampel nur dort, wo sie eine Entscheidung erleichtert.
+- Drei Optionen: defensiv, ausgewogen, mutig.
+- Empfehlung mit Owner, Frist, Review-Datum und Kommunikationsvorschlag.
 
-**Template**: See `references/mem-template.md`
+## Rote Flaggen
 
-**Key sections**: Key Insight, What We Learned, Gotchas, Tags
+- WIP wird wie Umsatz behandelt, obwohl keine Rechnung gestellt ist.
+- Utilization steigt, aber Realization, Ausbildung und Stimmung fallen.
+- Rabatte werden als Beziehungspflege verkauft, ohne Scope oder Gegenleistung.
+- Partnerpolitik ersetzt Daten oder Daten werden zur Partnerpolitik hübsch gebogen.
+- Associates arbeiten dauerhaft am Limit, während die Kanzlei von Kultur spricht.
+- Das Dashboard sieht edel aus, beantwortet aber keine Managementfrage.
 
----
+## Quellen- und Compliance-Hygiene
 
-## Command: /distill
-
-**Extract patterns** - รวม learnings เป็น reusable patterns
-
-**When**: มี 3+ learnings เรื่องเดียวกัน หรือ weekly review
-
-**Output**: `docs/knowledge-base/[topic-name].md`
-
-**Template**: See `references/distill-template.md`
-
-**Key sections**: Key Insight, The Problem, The Solution (with code), Anti-Patterns, When to Apply
-
-**After**: Mark source learnings as "Distilled"
-
----
-
-## Command: /td
-
-**Post-task retrospective** with Before/After context
-
-**Output**: `docs/retrospective/YYYY-MM/retrospective_YYYY-MM-DD_hhmmss.md`
-
-**Template**: See `references/td-template.md`
-
-### Type Classification (frontmatter)
-
-| Type | Use When |
-|------|----------|
-| `feature` | New functionality |
-| `bugfix` | Bug fix |
-| `refactor` | Code restructure |
-| `decision` | Architecture decision |
-| `discovery` | Research/learning |
-| `config` | Configuration changes |
-| `docs` | Documentation only |
-
-### Required: Before/After Context
-
-```markdown
-## Context: Before
-- **Problem**: ปัญหาที่เจอ
-- **Existing Behavior**: พฤติกรรมเดิม
-- **Metrics**: ตัวเลขก่อนแก้
-
-## Context: After
-- **Solution**: วิธีแก้
-- **New Behavior**: พฤติกรรมใหม่
-- **Metrics**: ตัวเลขหลังแก้
-```
-
-### Decisions Table
-
-```markdown
-| Decision | Options Considered | Chosen | Rationale |
-|----------|-------------------|--------|-----------|
-```
-
----
-
-## Command: /commit
-
-**Atomic commits** via TDG plugin
-
-**Delegates to**: `/tdg:atomic-commit` from https://github.com/chanwit/tdg
-
-**What it does**:
-- Analyzes staged/unstaged changes
-- Detects mixed concerns (multiple unrelated changes)
-- Helps create clean, focused atomic commits
-- Each commit is a complete unit of work
-
-**Usage**: Simply run `/commit` and it will invoke TDG's atomic-commit skill.
-
----
-
-## Command: /improve
-
-**Work on pending items** from all knowledge sources
-
-**Scan order** (priority):
-1. `docs/knowledge-base/` - Patterns to apply
-2. `docs/retrospective/` - Future Improvements (`- [ ]`)
-3. `docs/learnings/` - Gotchas to fix (skip if "Distilled")
-
-**Workflow**:
-1. Extract unchecked items
-2. Present prioritized list
-3. User selects items
-4. Implement & commit
-5. Update source file (`- [ ]` → `- [x]`)
-
----
-
-## Search Commands
-
-```bash
-# Find by type
-grep -l "type: bugfix" docs/retrospective/**/*.md
-
-# Search content
-grep -r "mongodb" docs/
-
-# Recent learnings
-find docs/learnings -name "*.md" -mtime -7
-```
-
----
-
-## Command: /pr-poll
-
-**Automatic PR review notifications** - Polling daemon ตรวจสอบ PR reviews
-
-**What it does**:
-- Poll GitHub for user's open PRs
-- Detect new reviews, comments, and review decisions
-- Send macOS notifications with review details
-- Suggest running `/pr-review` to respond
-
-**Usage**:
-```bash
-/pr-poll              # Show daemon status
-/pr-poll start        # Start polling daemon
-/pr-poll stop         # Stop daemon
-/pr-poll check        # Check once without daemon
-```
-
-**Notification sounds**:
-- APPROVED → Glass
-- CHANGES_REQUESTED → Basso
-- COMMENTED → Ping
-
-**Files**:
-- `~/.pr-review-poll.pid` - Daemon PID
-- `~/.pr-review-poll.log` - Daemon logs
-- `~/.pr-review-state.json` - PR state tracking
-
----
-
-## Command: /cleanup
-
-**Retention policy management** - จัดการไฟล์เก่าด้วย retention policy
-
-**What it does**:
-- Delete old auto-captured files (configurable retention period)
-- Archive old files before deletion (optional)
-- Dry-run mode to preview changes
-- Clean draft learnings that haven't been distilled
-
-**Usage**:
-```bash
-/cleanup                    # Preview (30 days default)
-/cleanup 7                  # Preview with 7 days retention
-/cleanup 14 --archive       # Archive & delete files older than 14 days
-/cleanup --all              # Clean all targets
-```
-
-**Protected directories** (never auto-deleted):
-- `docs/retrospective/` - Permanent records
-- `docs/knowledge-base/` - Distilled knowledge
-
----
-
-## Auto-Capture
-
-บันทึก session อัตโนมัติเมื่อจบงาน
-
-### Options
-
-| Option | Command | Trigger |
-|--------|---------|---------|
-| Hooks | - | Auto on session stop |
-| Wrapper | `claude` (alias) | Interactive prompt |
-| AI-Powered | `./scripts/ai-capture.sh` | Manual with AI analysis |
-
-### Setup (Hooks - Recommended)
-
-```bash
-# Add to ~/.claude/settings.json
-{
-  "hooks": {
-    "Stop": [{
-      "matcher": "",
-      "hooks": [{
-        "type": "command",
-        "command": "~/.claude/skills/knowledge-management/scripts/auto-capture.sh . 2>/dev/null || true"
-      }]
-    }]
-  }
-}
-```
-
-### Output
-
-`docs/auto-captured/YYYY-MM/DD/HH.MM_session-*.md`
-
-See `AUTO-CAPTURE.md` for full documentation.
-
----
-
-## References
-
-- `references/mem-template.md` - Full /mem template
-- `references/distill-template.md` - Full /distill template  
-- `references/td-template.md` - Full /td template
-- `references/improve-workflow.md` - /improve detailed workflow
+Bei Vergütung, Honorarvereinbarung, Erfolgshonorar, Mandatsannahme, Verschwiegenheit, Interessenkollision, Datenschutz, KI-/Cloud-Tooling, beA/ERV und Fristen nie aus Modellgefühl entscheiden. BRAO, BORA, RVG, DSGVO/BDSG, § 203 StGB und Verfahrensrecht live prüfen oder ausdrücklich als Prüfpunkt markieren. Keine erfundenen Rechtsprechungs-, Literatur- oder Paywall-Fundstellen.

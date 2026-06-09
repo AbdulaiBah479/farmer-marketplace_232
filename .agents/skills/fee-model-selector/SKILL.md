@@ -1,13 +1,25 @@
 ---
 name: fee-model-selector
-description: "Fee Model Selector: steuert Stundensatz, Festpreis, Cap, Blended Rate, Success-Komponente und Retainer vergleichen zwischen Kanzlei, Mandant und Rechtsabteilung mit Dashboard, Budget, Fristen, Verantwortlichkeiten, Beziehungspflege und Quellenhygiene."
+description: "Fee Model Selector: steuert Stundensatz, Festpreis, Cap, Blended Rate, Success-Komponente und Retainer vergleichen zwischen Kanzlei, Mandant und Rechtsabteilung mit Dashboard, Budget, Fristen, Verantwortlichkeiten, Beziehungspflege und Quellenhygiene im Kanzlei-Mandant-Lifecycle."
 ---
 
 # Fee Model Selector
 
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: die im Fachgebiet einschlägigen Verfahrens-, materiellen und Anmeldefristen vorab markieren und nicht aus Modellwissen finalisieren (insbesondere Widerspruch 1 Monat, Klage 1 Monat, Verjährung §§ 195, 199 BGB / spezialgesetzlich).
+- Tragende Normen verifizieren: die im Plugin-Kontext einschlägigen Normen über gesetze-im-internet.de, dejure.org, eur-lex.europa.eu und die amtlichen Bundes-/Landesportale live prüfen — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Mandant, Gegner, zuständige Behörde oder Gericht, Sachverständige, ggf. EU-/internationale Stelle (siehe Skill-Detail).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Verwaltungsakte, Vertragsurkunden, Schriftsätze, Bescheide, Protokolle, Sachverständigengutachten und externe Beweismittel des Fachgebiets — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
+
+## Fachkern: Fee Model Selector
+- **Normen-/Quellenanker:** BGB-Dienst-/Geschäftsbesorgungsvertrag, RVG, BRAO/BORA, DSGVO, GeschGehG, ZPO/ArbGG/VwGO je nach Mandat und Legal-Ops-Vorgaben.
+- **Entscheidende Weiche:** Kläre Scope, Budget, Deliverable, Eskalationspunkt, Verantwortlichen, Frist, Erfolgskriterium und Kommunikationsspur.
+
 ## Worum es geht
 
-Nutze diesen Skill im Plugin **Kanzlei-Mandant Lifecycle**, wenn der Fall genau in diese Lage führt. Ziel ist keine allgemeine Belehrung, sondern ein steuerbarer Arbeitsweg mit Dokumentenlogik, Risikoampel, nächstem Schritt und sauberem Quellencheck.
+Er verdichtet Sachverhalt, Rollen, Dokumente, Risiken, Quellen und nächsten Schritt zu einem steuerbaren Arbeitsweg.
 
 **Fokus:** Stundensatz, Festpreis, Cap, Blended Rate, Success-Komponente und Retainer vergleichen
 
@@ -32,13 +44,6 @@ Nutze diesen Skill im Plugin **Kanzlei-Mandant Lifecycle**, wenn der Fall genau 
 - Budget und Erfolgsaussicht nie als Scheingenauigkeit verkaufen.
 - Kanzlei- und Mandantensicht trennen und dann bewusst zusammenführen.
 - Rechnung, Scope und Beziehung früh klären, bevor Misstrauen entsteht.
-
-## Output
-
-- Dashboard-Karte mit Status, Budget, Ownern und nächstem Schritt.
-- Entscheidungsvorlage oder Kommunikationsentwurf für Kanzlei oder Mandant.
-- Risiko-/Kosten-/Fristenampel mit Eskalationspunkt.
-- Qualitygate: Was darf raus, was muss intern bleiben, was braucht Freigabe?
 
 ## Quellen- und Aktualitätsgate
 

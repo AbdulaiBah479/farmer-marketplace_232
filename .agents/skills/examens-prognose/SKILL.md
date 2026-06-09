@@ -1,21 +1,17 @@
 ---
 name: examens-prognose
-description: "Examensprognose auf Basis vergangener JPA-Klausuren, Statistiken des BMJV und bekannter Schwerpunktmuster. Lade diesen Skill bei Anfragen wie „Was kommt im Examen?\", „JPA-Statistik\", „Examensprognose\", „examens-prognose\" oder „worauf soll ich mich konzentrieren\"."
+description: "Examensprognose auf Basis bisheriger JPA-Klausuren und BMJV-Statistiken: Anwendungsfall Student will Lernzeit auf wahrscheinliche Themen konzentrieren und fragt welche Schwerpunkte das Justizprüfungsamt bisher prüfte. Examensvorbereitung 1. und 2. Staatsexamen, JAG Bundesland, BMJV-Statistiken. P..."
 ---
 
 # Examensprognose / JPA-Statistik
 
-## Zweck
+## Arbeitsweg
 
-Dieser Skill analysiert **vergangene Examsklausuren** desselben Justizprüfungsamts (JPA) und erstellt eine **gewichtete Prognose** für kommende Prüfungen. Er hilft dabei, Lernzeit auf examensrelevante Themen zu konzentrieren, statt gleichmäßig über alle Rechtsgebiete zu verteilen.
-
-Grundlage:
-- Vom Nutzer hochgeladene **JPA-Klausuren** aus dem Lernprofil
-- Öffentlich bekannte **Statistiken des BMJV** (Bundesministerium der Justiz) zur Bestehensquote und Fächerverteilung
-- **JPA-spezifische Schwerpunkte** (bekannte Präferenzen einzelner Prüfungsämter)
-- **Aktuelle Rechtsentwicklungen** (z. B. BGB-Reformen, neue BGH-Leitentscheidungen)
-
-**Wichtiger Vorbehalt:** Eine Prognose ist eine Gewichtungshilfe für die Lernzeitplanung, keine Vorhersage. Alle Prognosepunkte werden mit `[UNSICHER – Prognose]` markiert.
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: DRiG § 5a Studiendauer 9 Semester (Regelstudienzeit), Freischuss-Frist (i.d.R. 8 Semester nach JAG), Wiederholungsfrist, Hausarbeit 4-6 Wochen.
+- Tragende Normen verifizieren: DRiG §§ 5, 5a, 5b (Erste Prüfung), JAG der Länder, JAPO Bayern, JAG NRW, BBesG (Referendariat), Hochschulgesetze, Studienordnungen — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Studierende, Justizprüfungsamt (Landesjustizverwaltung), Universität, Repetitorium, Klausurleiter, Mündliche-Prüfungs-Kommission.
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Klausurgutachten (Anspruchsgrundlage, Tatbestand, Subsumtion, Ergebnis), Hausarbeit, Aktenvortrag (Referendar), Probeklausur, Prüfungsprotokoll — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
 
 ## Eingaben
 
@@ -84,45 +80,8 @@ Auf Basis der Gewichtungsmatrix:
 - JPA-Websites (Bayern: www.justizexamen.de; NRW: www.jpa.nrw.de; BW: www.justiz.bwl.de)
 - Öffentlich zugängliche Klausurensammlungen der Universitäten
 
-**Für inhaltliche Kommentare (Prüfungsstandard):**
-- Grüneberg, BGB (Standard für fast alle Zivilrechtsklausuren)
-- MüKoBGB (für Streitstände im schriftlichen Examen)
-- Medicus/Petersen, *Bürgerliches Recht*, 27. Aufl. 2019
-- Brox/Walker, *Allg. Schuldrecht*, 47. Aufl. 2023
-
-## Ausgabeformat
-
-### Examensprognose (Vollformat)
-
-```
-**Examensprognose – [Rechtsgebiet] – [Bundesland] / JPA [X]**
-Stand: [Datum der Analyse]
-
-⚠️ Hinweis: Diese Prognose ist eine Lernzeit-Gewichtungshilfe, keine Vorhersage.
-Alle Punkte mit [UNSICHER – Prognose] markiert.
-
-**Datenbasis:**
-- [N] eigene JPA-Klausuren analysiert [WENIG MATERIAL falls <5]
-- BMJV-Statistik [Jahr]
-- Bekannte JPA-Präferenzen [Bundesland]
-
-**Gewichtungsmatrix:**
-[Tabelle]
-
-**Priorität A – Schwerpunkt Lernzeit:**
-1. [Thema]: [Begründung] [UNSICHER – Prognose]
-2. [Thema]: …
-
-**Priorität B – Zweite Lernphase:**
-[…]
-
-**Aktuelle Rechtsentwicklungen die du kennen solltest:**
-- [Thema]: [Kurzbeschreibung] [Modellwissen – prüfen]
-
-**Verknüpfte Skills:**
-→ /jurastudium:lernplan (Prognose in Lernplan übertragen)
-→ /jurastudium:examensvorbereitung-fragen --bundesland [X] [Rechtsgebiet]
-```
+**Für inhaltliche Kontrolle:**
+- Quellenregel: Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff; keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen.
 
 ## Beispiel
 
@@ -140,9 +99,9 @@ Gewichtungsmatrix (Auszug):
 | Stellvertretung §§ 164 ff. BGB | 3/7 | mittel | ↔ |
 | Bereicherungsrecht §§ 812 ff. BGB | 2/7 | mittel | ↔ |
 
-Priorität A: Leistungsstörungsrecht – kommt in fast jeder BGB-Klausur vor. Fokus auf §§ 280 Abs. 1, 3, 281 BGB; Fristlosigkeit § 323 Abs. 2 BGB; Rücktritt vs. Schadensersatz. Grüneberg/Ernst, §§ 280, 281 beherrschen. `[UNSICHER – Prognose]`
+Priorität A: Leistungsstörungsrecht – kommt in fast jeder BGB-Klausur vor. Fokus auf §§ 280 Abs. 1, 3, 281 BGB; Fristlosigkeit § 323 Abs. 2 BGB; Rücktritt vs. Schadensersatz. lizenzpflichtige Literaturquelle/Ernst, §§ 280, 281 beherrschen. `[UNSICHER – Prognose]`
 
-Aktuelle Rechtsentwicklungen:  
+Aktuelle Rechtsentwicklungen:
 BGB-Reform 2022 (VerbrRRL): Neuer § 434 BGB – subjektiver, objektiver und montagebezogener Mangelbegriff. In Bayern erstmals in Klausuren ab Frühjahr 2023 abgefragt. `[Modellwissen – prüfen]`
 
 ## Risiken / typische Fehler

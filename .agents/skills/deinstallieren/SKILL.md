@@ -1,9 +1,17 @@
 ---
 name: deinstallieren
-description: "Deinstalliert einen Community-Skill, der über den Kanzlei-Builder-Hub installiert wurde. Bestätigt vor dem Löschen von Dateien, verweigert jede Aktion auf Erstanbieter-Plugin-Skills und protokolliert jeden Vorgang revisionssicher. Lädt, wenn der Nutzer einen Community-Skill vollständig entfernen möchte („Skill deinstallieren [Name]\", „Skill entfernen\")."
+description: "Plugins oder Skills vollständig deinstallieren: Abhaengigkeitsprüfung, Datensicherung. Normen: technisch/intern. Prüfraster: Abhaengigkeitscheck, Datensicherung vor Löschung, Bestätigung. Output: Deinstallationsprotokoll. Abgrenzung: nicht temporaeres Deaktivieren im Kanzlei Builder Hub."
 ---
 
 # Deinstallation
+
+## Arbeitsweg
+
+- Rolle, Ziel und gewünschtes Arbeitsprodukt klären: Wer handelt, welche Entscheidung steht an, welche Frist läuft und welcher Output wird gebraucht?
+- Fristen und Eilrisiken zuerst markieren: BRAO § 51 Mindestversicherung sofort, FAO § 4 Fachanwalt-Antrag 3-Jahres-Frist (10 % Mindestumfang), GwG-Risikoanalyse jährlich, beA Pflichtnutzung seit 01.01.2022.
+- Tragende Normen verifizieren: BRAO §§ 5, 7, 14, 27, 43 ff., 49b, 51 (Berufshaftpflicht), BORA, FAO, RVG §§ 1 ff., GwG §§ 2, 10, 11, 43 (Kanzlei als Verpflichteter), DSGVO, beA-Bedingungen, Steuerrecht (EStG, UStG, GewStG) — Fundstellen über gesetze-im-internet.de, dejure.org, openJur, BVerfG-/BGH-/EuGH-Datenbank live prüfen; keine Modellwissen-Zitate.
+- Zuständige Stelle bestimmen und Adressaten richtig wählen: Kanzleigründer, Kammer, BRAK, Versicherer (Berufshaftpflicht), Mandant, Steuerberater, IT-Dienstleister (beA, RA-MICRO/AnNoText).
+- Dokumente und Beweismittel sammeln und auf Lücken prüfen: Kanzleihandbuch, Datenschutz-Konzept, Geldwäsche-Risikoanalyse, Mandatsvertrag, Honorarvereinbarung, Versicherungspolice, Sozietätsvertrag, beA-Konfiguration — fehlende Belege durch Akteneinsicht oder Rückfrage beim Mandanten beschaffen, Live-Check für tagesaktuelle Normänderungen und Verwaltungspraxis.
 
 ## Zweck
 
@@ -11,7 +19,7 @@ Vollständiges Entfernen eines Community-Skills, der über den Kanzlei-Builder-H
 
 Die vollständige, revisionssichere Protokollierung der Deinstallation ist rechtlich geboten: § 50 BRAO verlangt nachvollziehbare Aktenführung über kanzleiinterne Vorgänge; Art. 5 Abs. 2 DSGVO (Rechenschaftspflicht) erfordert Nachweis über Verarbeitung und Löschung personenbezogener Daten; der AI Act Art. 26 verlangt Dokumentation der Außerbetriebnahme von Hochrisiko-KI-Systemen.
 
-Den vollständigen Deinstallations-, Deaktivierungs- und Reaktivierungsworkflow lädt dieser Skill aus dem `skill-verwalter`-Referenz-Skill — dieser muss vor substanzieller Arbeit geladen sein.
+Den vollständigen Deinstallations-, Deaktivierungs- und Reaktivierungslädt dieser Skill aus dem `skill-verwalter`-Referenz-Skill — dieser muss vor substanzieller Arbeit geladen sein.
 
 ---
 
@@ -34,12 +42,11 @@ Den vollständigen Deinstallations-, Deaktivierungs- und Reaktivierungsworkflow 
 
 ### Leitentscheidungen
 
-- BGH, Urt. v. 14.07.2005 – IX ZR 284/04, NJW 2005, 2858 — Kanzlei haftet für ordnungsgemäße Dokumentation aller kanzleiinternen Vorgänge; fehlende Protokollierung von Änderungen am Informationssystem geht zu Lasten der Kanzlei.
-- BVerfG, Beschl. v. 06.11.2019 – 1 BvR 16/13, NJW 2020, 300 (Recht auf Vergessen I) — Das Recht auf informationelle Selbstbestimmung umfasst Löschungsansprüche; Kanzleien müssen Lösch- und Deinstallationsvorgänge so gestalten, dass Betroffenenrechte effektiv durchsetzbar sind.
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
 
-### Kommentar- und Aufsatzbelege
+### Quellenregel
 
-- Henssler/Prütting, BRAO, 5. Aufl. 2023, § 50 Rn. 8 ff. — Umfang der Aktenführungspflicht bei digitaler Kanzleiorganisation; Anforderungen an Lösch- und Änderungsnachweise.
+- Quellenregel: Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff; keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen.
 - Vogel, BRAO, 1. Aufl. 2022, § 43a Rn. 112 ff. — Verschwiegenheits- und Sicherheitspflichten beim Einsatz und Betrieb externer Softwarewerkzeuge in der Kanzlei.
 
 ---
@@ -57,7 +64,7 @@ Vor jeder Aktion gelten folgende unverbrüchliche Regeln:
 
 ### Schritt 2: skill-verwalter laden
 
-Den vollständigen Deinstallationsworkflow aus dem `skill-verwalter`-Referenz-Skill laden und ausführen.
+Den vollständigen Deinstallationsaus dem `skill-verwalter`-Referenz-Skill laden und ausführen.
 
 ### Schritt 3: Alternativen prüfen
 
@@ -70,7 +77,7 @@ Vollständige Ablauf-Schritte gemäß `skill-verwalter`:
 1. Verifizierung der Community-Installation aus `installations-protokoll.yaml`
 2. Auflösung der Installationsdateien und Konfigurationspfade
 3. Anzeige aller zu löschenden Pfade + Konfigurationspfade, die beibehalten werden
-4. Bestätigungsprompt: „Diese Dateien löschen? (ja / nein)"
+4. Bestätigungsprompt: "Diese Dateien löschen? (ja / nein)"
 5. Löschen nach `ja`
 6. Protokolleintrag + CLAUDE.md-Aktualisierung
 
@@ -82,33 +89,15 @@ Nach der Deinstallation ausdrücklich darauf hinweisen:
 
 ---
 
-## Ausgabeformat
-
-Strukturierte Abschlussbestätigung:
-
-```
-Deinstallation — [skill-name]
-Zeitstempel:         [ISO8601]
-Gelöschte Dateien:
-  - [Pfad 1]
-  - [Pfad 2]
-Beigehaltene Konfiguration:
-  - [Pfad, falls zutreffend]
-Protokolleintrag:    installations-protokoll.yaml aktualisiert (action: uninstall)
-Aufbewahrungshinweis: [siehe oben, falls Konfiguration vorhanden]
-```
-
----
-
 ## Beispiel
 
-**Nutzer:** „Deinstalliere den Skill `miet-kündigung-analyse`."
+**Nutzer:** "Deinstalliere den Skill `miet-kündigung-analyse`."
 
 **Deinstallations-Skill:**
 1. `installations-protokoll.yaml` gelesen — `miet-kündigung-analyse` als Community-Skill gefunden, letzter Status `install`.
 2. Installationspfad: `~/.claude/skills/miet-kündigung-analyse/` (9 Dateien).
 3. Anzeige der 9 Dateien; Konfigurationspfad `~/.claude/plugins/config/kanzlei-builder-hub/miet-kündigung/` wird beibehalten.
-4. „Diese Dateien löschen? (ja / nein)" — Nutzer tippt `ja`.
+4. "Diese Dateien löschen? (ja / nein)" — Nutzer tippt `ja`.
 5. 9 Dateien gelöscht; Protokolleintrag mit `action: uninstall`, Zeitstempel und optionaler Begründung.
 6. Aufbewahrungshinweis für Konfigurationsdaten ausgegeben.
 
@@ -133,9 +122,8 @@ Bei der Ausführung dieses Skills sind folgende Quellen als anwendbares Recht zu
 - Art. 5 Abs. 2, Art. 17 DSGVO (Rechenschaftspflicht, Recht auf Löschung)
 - §§ 257 HGB, 147 AO (Aufbewahrungsfristen)
 - AI Act Art. 26 (Deployer-Pflichten, Außerbetriebnahme-Dokumentation)
-- BGH, Urt. v. 14.07.2005 – IX ZR 284/04, NJW 2005, 2858
-- BVerfG, Beschl. v. 06.11.2019 – 1 BvR 16/13, NJW 2020, 300
-- Henssler/Prütting, BRAO, 5. Aufl. 2023, § 50 Rn. 8 ff.
+- Rechtsprechung: keine Entscheidung aus Modellwissen zitieren; vor Ausgabe über offizielle oder frei zugängliche Quelle mit Gericht, Entscheidungsform, Datum, Aktenzeichen und tragender Aussage verifizieren.
+- Quellenregel: Literatur nur mit Nutzerquelle oder lizenziertem Live-Zugriff; keine Kommentar-, Handbuch- oder Aufsatzfundstellen aus Modellwissen.
 - Vogel, BRAO, 1. Aufl. 2022, § 43a Rn. 112 ff.
 
 Hinweis: Dieser Skill ersetzt keine anwaltliche Beratung im konkreten Einzelfall.

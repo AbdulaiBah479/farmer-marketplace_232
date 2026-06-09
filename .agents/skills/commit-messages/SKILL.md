@@ -1,94 +1,99 @@
 ---
 name: commit-messages
-description: Conventional Commits formatting guide for creating standardized commit messages. Use when Claude needs to create git commits, ensuring consistent message format with type prefixes (feat, fix, docs, chore). Automatically applied during git commit operations to maintain repository history standards.
+description: Generates conventional commit messages from staged changes. Use when committing and needing a well-formatted message. Do not use for full PR prep; use pr-prep.
+alwaysApply: false
+category: artifact-generation
+tags:
+- git
+- commit
+- conventional-commits
+tools: []
+complexity: low
+model_hint: fast
+estimated_tokens: 350
 ---
 
-# コミットメッセージ
+# Conventional Commit Workflow
 
-明確で標準化されたgitコミットメッセージを作成するためのConventional Commitsフォーマットガイド。
+## When To Use
 
-## クイックリファレンス
+- Generating conventional commit messages from staged changes
 
-以下のコミットタイプをプレフィックスとして使用:
+## When NOT To Use
 
-- **feat**: 新機能や新しい機能の追加
-- **fix**: バグ修正やエラーの修正
-- **docs**: ドキュメントのみの変更
-- **chore**: メンテナンス、依存関係、設定変更
+- Full PR preparation: use sanctum:pr-prep
+- Amending existing commits: use git directly
 
-## メッセージフォーマット
+## Steps
 
-```
-type(scope): subject
+1. **Gather context** (run in parallel):
+   - `git status -sb`
+   - `git diff --cached --stat`
+   - `git diff --cached`
+   - `git log --oneline -5`
+   - When sem is available (see `leyline:sem-integration`):
+     `sem diff --staged --json` for entity-level changes
 
-[optional body]
+   If nothing is staged, tell the user and stop.
 
-[optional footer]
-```
+   When sem output is available, use entity names
+   (function, class, method) in the commit subject and
+   body instead of parsing raw diff hunks. For example,
+   "add function validate_webhook_url" instead of
+   "add validation logic to notify.py".
 
-**基本例:**
-```
-feat: ユーザー認証機能を追加
-```
+2. **Classify**: Pick type (`feat`, `fix`, `docs`, `refactor`,
+   `test`, `chore`, `style`, `perf`, `ci`) and optional scope.
 
-**スコープ付き:**
-```
-feat(auth): OAuth2サポートを追加
-fix(ui): ボタンの配置を修正
-```
+3. **Draft the message**:
+   - **Subject**: `<type>(<scope>): <imperative summary>` (50 chars max)
+   - **Body**: What and why, wrapped at 72 chars
+   - **Footer**: BREAKING CHANGE or issue refs
 
-**破壊的変更:**
-```
-feat!: 非推奨のAPIエンドポイントを削除
-```
+4. **Slop check**: reject these words and replace with plain
+   alternatives:
 
-## サブジェクト行のガイドライン
+   | Reject | Use instead |
+   |--------|-------------|
+   | leverage, utilize | use |
+   | seamless | smooth |
+   | comprehensive | complete |
+   | robust | solid |
+   | facilitate | enable |
+   | streamline | simplify |
+   | optimize | improve |
+   | delve | explore |
+   | multifaceted | varied |
+   | pivotal | key |
+   | intricate | detailed |
 
-- タイプのプレフィックスで始める（必須）
-- スコープを括弧内に追加（任意）
-- サブジェクトは50文字以下に保つ
-- サブジェクトは小文字で書く
-- 末尾にピリオドを付けない
-- サブジェクトは日本語または英語で記述可能
+   Also reject: "it's worth noting", "at its core",
+   "in essence", "a testament to"
 
-**例:**
-```
-feat(api): ページネーション機能を実装
-fix: メモリリークを解決
-docs: READMEを更新
-chore: 依存関係をアップグレード
-feat(grpc): 双方向ストリーミングを追加
-```
+4a. **Character-level slop check**: load `shared/output-hygiene.md`
+   (Contract A) and strip these markers. Inline fallback if that
+   module is absent:
 
-## タイプ選択ガイド
+   | Marker | Replace with |
+   |--------|--------------|
+   | `"+"` as a prose conjunction | `and` (keep `+` in versions/code) |
+   | em-dash `—` | colon, period, comma, or rewrite |
+   | `--` as prose punctuation | colon or rewrite |
+   | arrows `->` / `→` as connectors | `to` / `into` |
+   | smart quotes `“ ” ‘ ’` | straight `"` and `'` |
 
-**feat** → 新しい機能の追加
-- 新機能、エンドポイント、ページ
-- ユーザー向けの新機能
-- 開発者向けの新しいツールや機能
+4b. **Subject-matter check** (Contract B): describe the change by its
+   reader-facing effect. Name neither the AI origin nor the specific
+   marker removed. Do NOT write `remove AI slop`, `de-slop`,
+   `AI-generated content`, `AI phrasing`, `replace em-dashes`, or
+   `remove smart quotes`. Test: if the subject only makes sense as "I
+   cleaned up AI output", rewrite it. For example `docs: clarify the
+   setup section`, not `style: replace em-dashes with colons`.
 
-**fix** → 問題の修正
-- バグ修正、エラーの修正
-- 壊れた機能の修正
-- 問題や不具合の解決
+5. **Write** to `./commit_msg.txt` and preview.
 
-**docs** → ドキュメントのみ
-- READMEの更新、コメント
-- APIドキュメント、ガイド
-- コードや設定の変更を含まない
+## Rules
 
-**chore** → その他すべて
-- 依存関係の更新、リファクタリング
-- 設定変更、ツール設定
-- ビルドシステム、CI/CDの更新
-- 動作を変更しないコードのクリーンアップ
-
-## 詳細リファレンス
-
-以下を含む包括的なガイドライン:
-- 各タイプの詳細な例
-- 破壊的変更の表記方法
-- 複数行メッセージのフォーマット
-- 良い例と悪い例
-
-詳細は [commit-types.md](references/commit-types.md) を参照
+- NEVER use `git commit --no-verify` or `-n`
+- Write for humans, not to impress
+- If pre-commit hooks fail, fix the issues

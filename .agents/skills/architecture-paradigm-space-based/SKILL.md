@@ -1,6 +1,6 @@
 ---
 name: architecture-paradigm-space-based
-description: 'Apply data-grid architecture for high-traffic stateful workloads with in-memory processing and linear scalability.'
+description: Applies data-grid architecture for high-traffic stateful workloads. Use when a single database cannot scale and in-memory partitioning is needed.
 alwaysApply: false
 category: architectural-pattern
 tags:
@@ -67,6 +67,6 @@ required dependencies and they are not part of the skill's
 restrictions). Use this list to disambiguate during architecture
 discussions.
 
-- ``data-grid-platform`` -- Hazelcast, Apache Ignite, or similar; in-memory partitioned data store
-- ``replication-manager`` -- moves writes asynchronously to durable storage and across regions
-- ``load-tester`` -- drives the grid past its single-region ceiling to validate scale-out
+- ``data-grid-platform``: Hazelcast, Apache Ignite, or similar; in-memory partitioned data store
+- ``replication-manager``: moves writes asynchronously to durable storage and across regions
+- ``load-tester``: drives the grid past its single-region ceiling to validate scale-out

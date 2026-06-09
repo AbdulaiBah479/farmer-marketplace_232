@@ -1,87 +1,73 @@
 ---
-name: react-component-generator
-description: 生成符合项目规范的 React 组件。当用户要求创建组件、新建 React 组件或生成组件文件时使用
+name: "react-component-generator"
+description: |
+  Generate react component generator operations. Auto-activating skill for Frontend Development.
+  Triggers on: react component generator, react component generator
+  Part of the Frontend Development skill category. Use when working with react component generator functionality. Trigger with phrases like "react component generator", "react generator", "react".
+allowed-tools: "Read, Write, Edit, Bash(cmd:*), Grep"
+version: 1.0.0
+license: MIT
+author: "Jeremy Longshore <jeremy@intentsolutions.io>"
+compatible-with: claude-code
 ---
 
-# React 组件生成器
+# React Component Generator
 
-## 组件规范
+## Overview
 
-项目使用以下约定：
-- TypeScript + React
-- 函数式组件 + Hooks
-- CSS Modules 样式
-- 完整的 JSDoc 注释
-- 配套的测试文件
+This skill provides automated assistance for react component generator tasks within the Frontend Development domain.
 
-## 生成流程
+## When to Use
 
-1. 确认组件信息
-   - 组件名称（PascalCase）
-   - 组件类型（基础组件、容器组件、页面组件）
-   - 所需 props
+This skill activates automatically when you:
+- Mention "react component generator" in your request
+- Ask about react component generator patterns or best practices
+- Need help with frontend skills covering react, vue, css, accessibility, performance optimization, and modern web development patterns.
 
-2. 创建文件结构
-   ```
-   src/components/{ComponentName}/
-   ├── index.tsx
-   ├── {ComponentName}.module.css
-   └── {ComponentName}.test.tsx
-   ```
+## Instructions
 
-3. 生成组件文件
+1. Provides step-by-step guidance for react component generator
+2. Follows industry best practices and patterns
+3. Generates production-ready code and configurations
+4. Validates outputs against common standards
 
-index.tsx 模板：
-```typescript
-import React from 'react';
-import styles from './{ComponentName}.module.css';
+## Examples
 
-interface {ComponentName}Props {
-  // 定义 props 类型
-}
+**Example: Basic Usage**
+Request: "Help me with react component generator"
+Result: Provides step-by-step guidance and generates appropriate configurations
 
-/**
- * {组件描述}
- * @param props - 组件属性
- */
-export const {ComponentName}: React.FC<{ComponentName}Props> = (props) => {
-  return (
-    <div className={styles.container}>
-      {/* 组件内容 */}
-    </div>
-  );
-};
-```
 
-4. 生成样式文件
+## Prerequisites
 
-{ComponentName}.module.css 模板：
-```css
-.container {
-  /* 组件样式 */
-}
-```
+- Relevant development environment configured
+- Access to necessary tools and services
+- Basic understanding of frontend development concepts
 
-5. 生成测试文件
 
-{ComponentName}.test.tsx 模板：
-```typescript
-import { render, screen } from '@testing-library/react';
-import { {ComponentName} } from './index';
+## Output
 
-describe('{ComponentName}', () => {
-  it('renders correctly', () => {
-    render(<{ComponentName} />);
-    // 添加断言
-  });
-});
-```
+- Generated configurations and code
+- Best practice recommendations
+- Validation results
 
-## 质量检查
 
-生成后自动运行：
-1. TypeScript 类型检查：`npm run type-check`
-2. ESLint 检查：`npm run lint`
-3. 测试：`npm test -- {ComponentName}`
+## Error Handling
 
-如有错误，显示错误信息并提供修复建议。
+| Error | Cause | Solution |
+|-------|-------|----------|
+| Configuration invalid | Missing required fields | Check documentation for required parameters |
+| Tool not found | Dependency not installed | Install required tools per prerequisites |
+| Permission denied | Insufficient access | Verify credentials and permissions |
+
+
+## Resources
+
+- Official documentation for related tools
+- Best practices guides
+- Community examples and tutorials
+
+## Related Skills
+
+Part of the **Frontend Development** skill category.
+Tags: react, vue, css, accessibility, web

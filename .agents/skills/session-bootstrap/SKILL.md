@@ -1,6 +1,31 @@
 ---
 name: session-bootstrap
-description: Agent init prompt.
+description: Universal AgentOps init prompt for starting or onboarding a fresh agent session.
+skill_api_version: 1
+metadata:
+  tier: session
+practices:
+- agile-manifesto
+- dora-metrics
+- fungibility-charter
+hexagonal_role: driving-adapter
+consumes:
+- bd
+- onboard
+produces:
+- stdout
+- json
+context_rel:
+- kind: customer-of
+  with: AGENTS.md
+- kind: customer-of
+  with: AGENTS-WORKFLOW.md
+- kind: customer-of
+  with: AGENTS-CI.md
+- kind: customer-of
+  with: AGENTS-CODEX.md
+- kind: customer-of
+  with: AGENTS-RUNTIME.md
 ---
 
 # `ao session bootstrap` — the universal init prompt
@@ -15,7 +40,7 @@ Triggers:
 
 - **Manual spawn** — operator just spawned a fresh agent into the repo: `ao session bootstrap`.
 - **SessionStart hook (opt-in)** — AgentOps 3.0 ships no SessionStart hook. If you author one via the `hooks-authoring` skill, it can fail-open auto-fire `ao session bootstrap --robot` and discard the exit code.
-- **Pipeline submit** — `agentopsd` and headless CI agents call `ao session bootstrap --json` before claiming work.
+- **Pipeline submit** — the orchestration substrate (the reference is NTM + MCP + managed-agents) and headless CI agents call `ao session bootstrap --json` before claiming work.
 
 If you spawned without running it: stop, run it, then resume.
 
@@ -33,7 +58,7 @@ Four fail-open substeps, each producing a field in the [session-bootstrap.v1 sch
 | Flag        | Effect                                                                                |
 |-------------|---------------------------------------------------------------------------------------|
 | `--json`    | Emit the full status object (machine-readable, matches the v1 schema)                 |
-| `--robot`   | Same as `--json` plus a tight exit-code contract for SessionStart hooks               |
+| `--robot`   | Same as `--json` plus a tight exit-code contract for opt-in SessionStart hooks        |
 | `--no-mail` | Skip the mcp-agent-mail probe even when the MCP server is reachable                   |
 
 Default (no flags): one-line human summary on stdout, plus a stderr warning if `AGENTS.md` is missing.
@@ -47,7 +72,7 @@ Default (no flags): one-line human summary on stdout, plus a stderr warning if `
   "onboard_phase": "skipped:not-implemented",
   "ready_beads_count": 12,
   "mail_unread_count": null,
-  "runtime": "codex",
+  "runtime": "claude-code",
   "started_at": "2026-05-21T01:50:00Z",
   "bootstrap_version": "v1"
 }
@@ -85,3 +110,7 @@ The [agent-fungibility-philosophy](https://github.com/boshu2/agentops/issues?q=l
 - [`AGENTS.md`](../../AGENTS.md) — orientation entry-point that points here.
 - [`AGENTS-WORKFLOW.md`](../../AGENTS-WORKFLOW.md) — what to do after bootstrap reports.
 - [`schemas/session-bootstrap.v1.schema.json`](../../schemas/session-bootstrap.v1.schema.json) — full output contract.
+
+## Reference Documents
+
+- [references/session-bootstrap.feature](references/session-bootstrap.feature) — Executable spec: every agent runs first, identical model-fungible frame, fail-open opt-in SessionStart hook, --json for pipeline (soc-qk4b)

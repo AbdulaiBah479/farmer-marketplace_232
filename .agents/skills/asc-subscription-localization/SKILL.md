@@ -1,9 +1,9 @@
 ---
 name: asc-subscription-localization
-description: Bulk-localize subscription and in-app purchase display names across all App Store locales using asc. Use when you want to fill in subscription/IAP names for every language without clicking through ASC manually.
+description: Bulk-localize subscription and in-app purchase display names across all App Store locales using asc. Use when you want to fill in subscription/IAP names for every language without clicking through App Store Connect manually.
 ---
 
-# ASC Subscription Localization
+# asc subscription localization
 
 Use this skill to bulk-create or bulk-update display names (and descriptions) for subscriptions, subscription groups, and in-app purchases across all App Store Connect locales. This eliminates the tedious manual process of clicking through each language in App Store Connect to set the same display name.
 
@@ -32,7 +32,7 @@ sv, th, tr, uk, vi, zh-Hans, zh-Hant
 asc subscriptions groups list --app "APP_ID" --output table
 
 # Find subscriptions within a group
-asc subscriptions list --group "GROUP_ID" --output table
+asc subscriptions list --group-id "GROUP_ID" --output table
 ```
 
 ### 2. Check existing localizations
@@ -196,7 +196,7 @@ asc subscriptions groups localizations update --id "LOC_ID" --name "New Group Na
 
 ### In-App Purchases
 ```bash
-asc iap localizations update --id "LOC_ID" --name "New Name"
+asc iap localizations update --localization-id "LOC_ID" --name "New Name"
 ```
 
 To bulk-update, list existing localizations first, extract the IDs, then update each one.
@@ -213,7 +213,7 @@ asc subscriptions groups list --app "APP_ID" --paginate
 #    (repeat group localization workflow above)
 
 # 3. For each group, list subscriptions
-asc subscriptions list --group "GROUP_ID" --paginate
+asc subscriptions list --group-id "GROUP_ID" --paginate
 
 # 4. For each subscription, localize it
 #    (repeat subscription localization workflow above)

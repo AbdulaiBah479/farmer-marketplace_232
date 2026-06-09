@@ -1,122 +1,81 @@
 ---
-name: sketch
-description: Design interfaces with Sketch - view designs in the web app, manage shared libraries, and collaborate on projects
-category: design
+name: "sketch"
+description: "A friendly, hand-drawn sketch interface inspired by pencil illustrations on warm cream paper. Soft teal brand accents, hand-written display headings, rounded pill controls."
+metadata:
+  author: typeui.sh
 ---
 
-# Sketch Skill
+<!-- TYPEUI_SH_MANAGED_START -->
+# Sketch Design System Skill (Universal)
 
-## Overview
-Enables Claude to interact with Sketch's web platform for viewing designs, managing shared libraries, accessing design documentation, and collaborating on UI/UX projects.
+## Mission
+You are an expert design-system guideline author for Sketch.
+Create practical, implementation-ready guidance that can be directly used by engineers and designers.
 
-## Quick Install
+## Brand
+A friendly, hand-drawn sketch interface inspired by pencil illustrations on warm cream paper. Soft teal brand accents, hand-written display headings, rounded pill controls, dashed card outlines, and chunky offset "pencil-drawn" shadows give every surface a tactile, illustrated feel.
 
-```bash
-curl -sSL https://canifi.com/skills/sketch/install.sh | bash
-```
+## Style Foundations
+- Visual style: modern, clean, high-contrast
+- Typography scale: 12/14/16/20/24/32 | Fonts: primary=Delicious Handrawn, display=Delicious Handrawn, mono=JetBrains Mono | weights=100, 200, 300, 400, 500, 600, 700, 800, 900
+- Color palette: primary, secondary, neutral, success, warning, danger | Tokens: primary=#1DAD97, secondary=#F4EDE0, success=#16A34A, warning=#D97706, danger=#DC2626, surface=#FFFFFF, text=#111827
+- Spacing scale: 4/8/12/16/24/32
 
-Or manually:
-```bash
-cp -r skills/sketch ~/.canifi/skills/
-```
+## Accessibility
+WCAG 2.2 AA, keyboard-first interactions, visible focus states
 
-## Setup
+## Writing Tone
+concise, confident, helpful
 
-Configure via [canifi-env](https://canifi.com/setup/scripts):
+## Rules: Do
+- prefer semantic tokens over raw values
+- preserve visual hierarchy
+- keep interaction states explicit
 
-```bash
-# First, ensure canifi-env is installed:
-# curl -sSL https://canifi.com/install.sh | bash
+## Rules: Don't
+- avoid low contrast text
+- avoid inconsistent spacing rhythm
+- avoid ambiguous labels
 
-canifi-env set SKETCH_EMAIL "your-email@example.com"
-canifi-env set SKETCH_PASSWORD "your-password"
-```
+## Expected Behavior
+- Follow the foundations first, then component consistency.
+- When uncertain, prioritize accessibility and clarity over novelty.
+- Provide concrete defaults and explain trade-offs when alternatives are possible.
+- Keep guidance opinionated, concise, and implementation-focused.
 
-## Privacy & Authentication
+## Guideline Authoring Workflow
+1. Restate the design intent in one sentence before proposing rules.
+2. Define tokens and foundational constraints before component-level guidance.
+3. Specify component anatomy, states, variants, and interaction behavior.
+4. Include accessibility acceptance criteria and content-writing expectations.
+5. Add anti-patterns and migration notes for existing inconsistent UI.
+6. End with a QA checklist that can be executed in code review.
 
-**Your credentials, your choice.** Canifi LifeOS respects your privacy.
+## Required Output Structure
+When generating design-system guidance, use this structure:
+- Context and goals
+- Design tokens and foundations
+- Component-level rules (anatomy, variants, states, responsive behavior)
+- Accessibility requirements and testable acceptance criteria
+- Content and tone standards with examples
+- Anti-patterns and prohibited implementations
+- QA checklist
 
-### Option 1: Manual Browser Login (Recommended)
-If you prefer not to share credentials with Claude Code:
-1. Complete the [Browser Automation Setup](/setup/automation) using CDP mode
-2. Login to the service manually in the Playwright-controlled Chrome window
-3. Claude will use your authenticated session without ever seeing your password
+## Component Rule Expectations
+- Define required states: default, hover, focus-visible, active, disabled, loading, error (as relevant).
+- Describe interaction behavior for keyboard, pointer, and touch.
+- State spacing, typography, and color-token usage explicitly.
+- Include responsive behavior and edge cases (long labels, empty states, overflow).
 
-### Option 2: Environment Variables
-If you're comfortable sharing credentials, you can store them locally:
-```bash
-canifi-env set SERVICE_EMAIL "your-email"
-canifi-env set SERVICE_PASSWORD "your-password"
-```
+## Quality Gates
+- No rule should depend on ambiguous adjectives alone; anchor each rule to a token, threshold, or example.
+- Every accessibility statement must be testable in implementation.
+- Prefer system consistency over one-off local optimizations.
+- Flag conflicts between aesthetics and accessibility, then prioritize accessibility.
 
-**Note**: Credentials stored in canifi-env are only accessible locally on your machine and are never transmitted.
+## Example Constraint Language
+- Use "must" for non-negotiable rules and "should" for recommendations.
+- Pair every do-rule with at least one concrete don't-example.
+- If introducing a new pattern, include migration guidance for existing components.
 
-## Capabilities
-- View designs in Sketch web app
-- Browse and manage workspaces
-- Access shared design libraries
-- View and export artboards
-- Review design comments
-- Manage document versions
-
-## Usage Examples
-
-### Example 1: View Design Specs
-```
-User: "Show me the design specs for the login screen"
-Claude: I'll pull up the login screen specs.
-1. Opening Sketch web via Playwright MCP
-2. Navigating to your workspace
-3. Finding the login screen artboard
-4. Displaying measurements and specs
-5. Summarizing key design details
-```
-
-### Example 2: Export Assets
-```
-User: "Export icons from my design as SVGs"
-Claude: I'll export your icons.
-1. Opening the design document
-2. Navigating to icons artboard
-3. Selecting export format as SVG
-4. Downloading icon assets
-```
-
-### Example 3: Check Version History
-```
-User: "What changes were made to the dashboard design yesterday?"
-Claude: I'll check the version history.
-1. Opening the dashboard document
-2. Accessing version history
-3. Filtering to yesterday's changes
-4. Summarizing modifications made
-```
-
-## Authentication Flow
-1. Navigate to sketch.com via Playwright MCP
-2. Click "Sign In" and enter email
-3. Enter password
-4. Handle 2FA if required (via iMessage)
-5. Maintain session for workspace access
-
-## Error Handling
-- **Login Failed**: Retry up to 3 times, notify via iMessage
-- **Session Expired**: Re-authenticate automatically
-- **Rate Limited**: Implement exponential backoff
-- **2FA Required**: Send iMessage notification
-- **Document Not Found**: Search workspace or verify link
-- **Export Failed**: Retry or check permissions
-
-## Self-Improvement Instructions
-When Sketch web updates:
-1. Document new viewing capabilities
-2. Update export workflow changes
-3. Track collaboration features
-4. Log library management updates
-
-## Notes
-- Full editing requires Sketch desktop app
-- Web app is primarily for viewing/collaboration
-- Sketch is macOS-only for editing
-- Shared libraries require team plan
-- Comments sync between web and desktop
+<!-- TYPEUI_SH_MANAGED_END -->

@@ -1,373 +1,209 @@
 ---
 name: compile
-description: Compile a course module into the Andamio import format for publishing.
-license: MIT
-compatibility: Designed for Andamio platform import format. Adapt output format for other learning platforms.
+description: Compile .agents knowledge wiki.
+practices:
+- wiki-knowledge-surface
+- ddd-bounded-context
+hexagonal_role: supporting
+consumes: []
+produces:
+- .agents/compiled/lint-report.md
+context_rel: []
+skill_api_version: 1
+user-invocable: true
+context:
+  window: fork
+  intent:
+    mode: task
+  sections:
+    exclude:
+    - TASK
+  intel_scope: full
 metadata:
-  author: Andamio
-  version: 1.0.0
+  tier: knowledge
+  stability: stable
+  dependencies: []
+output_contract: .agents/compiled/*.md, .agents/compiled/index.md, .agents/compiled/log.md,
+  .agents/compiled/lint-report.md
 ---
+# Compile — Knowledge Compiler
 
-# Skill: Compile Module for Import
+Reads raw `.agents/` artifacts and compiles them into a structured, interlinked
+markdown wiki. Inspired by [Karpathy's LLM Knowledge Bases](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f).
 
-## Description
+## What This Skill Does
 
-Takes a completed course module and packages it into the clean directory structure required by Andamio's module import system. Creates a `compiled/` directory with `outline.md`, numbered lesson files, and optional `introduction.md` and `assignment.md`.
+The knowledge flywheel captures signal reactively (via `/post-mortem`,
+`/forge`). `/compile` closes the loop by:
 
-## Import Format Quick Reference
+1. **Mining** unextracted signal from git and `.agents/` (existing)
+2. **Growing** learnings via validation, synthesis, and gap detection (existing)
+3. **Compiling** raw artifacts into interlinked wiki articles (NEW — the core value)
+4. **Linting** the compiled wiki for contradictions, orphans, and gaps (NEW)
+5. **Defragging** stale and duplicate artifacts (existing)
 
-```
-module-folder/
-├── outline.md          # Required
-├── introduction.md     # Optional
-├── assignment.md       # Optional
-├── lesson-1.md         # Optional (maps to SLT 1)
-├── lesson-2.md         # Optional (maps to SLT 2)
-└── ...
-```
+**No vector DB.** At personal scale (~100-400 articles), the compiled wiki fits
+in context windows. The wiki IS the retrieval layer.
 
-**outline.md critical requirements:**
-| Element | Format | Notes |
-|---------|--------|-------|
-| Title (YAML) | `title:` in frontmatter | Module display name |
-| Code | YAML `code:` | Unique module identifier — can be a number (`101`) or slug (`intro-cardano`) |
-| SLT heading | `## SLTs` | Must be exactly this (H2, case-insensitive) — first element after frontmatter |
-| SLT list | Numbered or bulleted | Each item becomes one SLT |
+**Output:** `.agents/compiled/` — encyclopedia-style markdown with `[[backlinks]]`,
+`index.md` catalog, and `log.md` chronological record.
 
-**Common mistakes:**
-- Adding `# Title` heading in outline.md → not needed, title comes from YAML frontmatter
-- Using `# Student Learning Targets` instead of `## SLTs` → parser ignores SLTs
+## Pluggable Compute Backend
 
-**Upsert behavior:** If `code` matches an existing module, content will be updated.
+Set `AGENTOPS_COMPILE_RUNTIME` to choose the LLM backend:
 
-## Instructions
+| Value | Backend | Notes |
+|-------|---------|-------|
+| `codex-cli` | Local `codex` binary | Zero-config. Inherits your Codex CLI auth — no API key needed. Auto-selected if `codex` is on PATH and nothing else is set. |
+| `ollama` | Ollama API | Default model: `gemma3:27b`. Set `OLLAMA_HOST` for remote (e.g., `ssh -L 11435:localhost:11435 bushido-windows`). |
+| `claude` | Claude API (HTTP) | Uses `ANTHROPIC_API_KEY`. Model: `claude-sonnet-4-20250514`. |
+| `openai` | OpenAI-compatible | Uses `OPENAI_API_KEY` + `OPENAI_BASE_URL`. |
+| (unset) | Claude Code session | Compilation happens inline via the current session's LLM. |
 
-### 1. Select Course and Module
+When `AGENTOPS_COMPILE_RUNTIME` is unset, `ao compile` first tries to
+auto-detect a local `codex` binary (codex-cli runtime). If that is also
+absent, headless compile fails fast with an explicit error naming the env var
+to set. Interactive `/compile` invocations still run compilation prompts
+inline — the agent reading this SKILL.md IS the compiler.
 
-First, list courses in `courses-in-progress/`:
+### Runtime preference (override auto-detect)
 
-```markdown
-## Available Courses
+To force a non-auto-detected runtime permanently (e.g. you have `claude`
+installed but prefer Ollama for privacy), set it in
+`~/.agentops/config.yaml`:
 
-| # | Course | Modules |
-|---|--------|---------|
-| 1 | andamio-for-contributors | 4 |
-| 2 | andamio-for-api-developers | 4 |
-
-Which course? (number or slug)
-```
-
-After course selection, list modules:
-
-```markdown
-## Modules in [Course Name]
-
-| # | Module | SLTs | Lessons Written |
-|---|--------|------|-----------------|
-| 1 | Your On-Chain Identity | 3 | 3/3 |
-| 2 | Browsing Courses and Projects | 3 | 3/3 |
-| 3 | Earning a Credential | 2 | 2/2 |
-| 4 | The Contribution Loop | 4 | 1/4 |
-
-Which module to compile? (number)
+```yaml
+compile:
+  preferred_runtime: ollama
 ```
 
-Warn if lessons are incomplete:
-- If `lessons/module-N/` doesn't have files for all SLTs, show warning
-- Ask if user wants to continue anyway (partial compile)
+Precedence (high → low): `--runtime` flag, `AGENTOPS_COMPILE_RUNTIME`
+env, `compile.preferred_runtime` config, `codex`-binary auto-detect,
+empty (error).
 
-### 2. Parse Source Materials
+### Large-corpus batching
 
-From `00-course.md`, extract for the selected module:
-- Module title (e.g., "Your On-Chain Identity")
-- Module number (1, 2, 3...)
-- All SLTs for that module (the "I can..." statements)
-- Assignment section content
+`ao compile` passes `--batch-size` to the headless compiler (default `25`
+changed files per LLM prompt). A fresh run against a 2000+ file corpus will
+split into batches automatically instead of sending one giant prompt.
 
-From `lessons/module-N/`:
-- All lesson markdown files (e.g., `1.1-compare-access-token.md`)
-- Map by SLT index (first number before hyphen)
+Flags:
 
-### 3. Generate Module Code
+- `--batch-size N` — files per batch (default 25)
+- `--max-batches N` — cap batches per invocation; remaining files are picked
+  up on the next run (default 0 = unlimited)
 
-Create a unique `code` for the module. This can be a numeric code or a slug string:
+## Execution Steps
 
-**Numeric convention** (when course uses numbered modules):
-- Module 1 of course → `101`
-- Module 2 of course → `102`
-- Module 3 of course → `103`
-- Intermediate course modules → `201`, `202`, `203`
+Phase-by-phase detail lives in [references/phases.md](references/phases.md).
+Summary of modes:
 
-**Slug convention** (when course uses descriptive identifiers):
-- `intro-cardano`
-- `wallet-setup`
-- `first-transaction`
+- `/compile` — Full cycle: Mine → Grow → Compile → Lint → Defrag
+- `/compile --compile-only` — Skip mine/grow, just compile + lint
+- `/compile --lint-only` — Only lint the existing compiled wiki
+- `/compile --defrag-only` — Only run defrag/cleanup
+- `/compile --mine-only` — Only run mine + grow (legacy behavior)
 
-The code must be unique within the course. If it matches an existing module, the import will upsert (update) rather than create.
+The steps are:
 
-### 4. Create Output Directory
+1. **Mine** — extract signal from git + `.agents/research/` + complexity hotspots
+2. **Grow** — LLM-driven validation, synthesis, gap detection; adjust learning confidence
+3. **Compile** — inventory → topic extraction → wiki articles with `[[backlinks]]`
+4. **Lint** — contradictions, orphans, missing cross-refs, stale claims
+5. **Defrag** — prune stale, dedup near-duplicates, sweep oscillating goals, normalization scan
+6. **Report** — write `.agents/compile/YYYY-MM-DD-report.md`
 
-Create `compiled/[course-slug]/[module-code]/`:
+See [references/phases.md](references/phases.md) for the full per-phase
+procedure, confidence-scoring table, auto-promotion rules, template
+shapes for article / index / log / lint-report / compile-report, and
+the normalization defect scan.
 
-```
-compiled/
-  andamio-for-contributors/
-    101/
-      outline.md
-      lesson-1.md
-      lesson-2.md
-      lesson-3.md
-      assignment.md
-```
+## Scheduling / Auto-Trigger
 
-### 5. Generate outline.md
+Lightweight defrag (prune + dedup, no mining or compilation) runs automatically at
+session end via the `compile-session-defrag.sh` hook. This keeps the knowledge store
+clean without requiring manual `/compile` invocations. The hook:
 
-```markdown
----
-title: [Module Title]
-code: [module-code]
----
+- Fires on every `SessionEnd` event after `session-end-maintenance.sh`
+- Skips silently if the `ao` CLI is not available
+- Runs only `ao defrag --prune --dedup` (no compilation or mining)
+- Has a 20-second timeout to avoid blocking session teardown
 
-## SLTs
+For full compilation, invoke `/compile` manually or schedule the headless compiler
+script with your host OS:
 
-1. [First SLT text, exactly as it appears on-chain]
-2. [Second SLT text, exactly as it appears on-chain]
-3. [Third SLT text, exactly as it appears on-chain]
+```bash
+# Example: external cron entry for nightly compilation on bushido
+0 3 * * * cd /path/to/repo && AGENTOPS_COMPILE_RUNTIME=ollama bash skills/compile/scripts/compile.sh --force
 ```
 
-**Critical format requirements:**
-- **No H1 heading** in outline.md — the module title comes from YAML `title:` field only
-- SLT heading **must** be exactly `## SLTs` (H2 level, case-insensitive) — first element after frontmatter
-- Common mistake: Adding `# Title` after frontmatter or using `# Student Learning Targets`
-- SLT list can be numbered (1.) or bulleted (-, *)
-- Each list item becomes one SLT
+AgentOps exposes this flow through `ao compile`. If you want unattended
+compilation, use your host scheduler (`launchd`, `cron`, `systemd`, CI, etc.)
+to invoke `ao compile --force --runtime ollama` or call the lower-level
+`bash skills/compile/scripts/compile.sh` directly.
+If you want the broader out-of-session compounding loop, run it on the
+out-of-session substrate (NTM + MCP + managed-agents) instead of inventing a
+parallel Dream wrapper inside `/compile`.
 
-**SLT text formatting:**
-- Preserve the SLT text exactly as written — do NOT strip "I can" or other prefixes
-- The importer uses the text as-is for the learning target
-- Number them 1, 2, 3... matching lesson file numbers
+## Interactive Modes
 
-### 6. Generate lesson-N.md Files
+These modes describe the interactive `/compile` skill behavior:
 
-For each SLT, copy the corresponding lesson file:
-- `1.1-compare-access-token.md` → `lesson-1.md`
-- `1.2-connect-wallet.md` → `lesson-2.md`
-- `1.3-mint-access-token.md` → `lesson-3.md`
+| Mode | Description |
+|------|-------------|
+| `--compile-only` | Skip mine/grow, just compile + lint |
+| `--lint-only` | Only lint the existing compiled wiki |
+| `--defrag-only` | Only run defrag/cleanup |
+| `--mine-only` | Only run mine + grow (legacy behavior) |
+| `--full` | Full cycle: mine → grow → compile → lint → defrag |
+| `--since 26h` | Time window for the mine phase |
+| `--incremental` | Skip unchanged source files (hash-based) |
+| `--force` | Recompile all articles regardless of hashes |
 
-**Lesson file transformations:**
-- Remove frontmatter-style header (SLT, Type lines at top, `---` divider)
-- **Add an `# H1` title** — this becomes the lesson title in the import system. Use a short, descriptive title (e.g., `# Connect a Cardano Wallet`, `# Mint Your Access Token`)
-- Keep all lesson content below the H1 title
+## Headless Script Flags
 
-### 7. Generate assignment.md
+For unattended runs, `bash skills/compile/scripts/compile.sh` supports:
 
-Extract assignment content from `00-course.md`:
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--sources <dir>` | `.agents` | Source root for learnings, patterns, research, retros, forge, and knowledge |
+| `--output <dir>` | `.agents/compiled` | Target directory for compiled wiki output |
+| `--incremental` | on | Skip unchanged source files (hash-based) |
+| `--force` | off | Recompile all articles regardless of hashes |
+| `--lint-only` | off | Only run the lint pass on the existing compiled wiki |
+| `--full` | on | Accepted for parity; default behavior already runs the full headless compile path |
 
-```markdown
-# Module Assignment
+## Examples
 
-## Task
+**User says:** `/compile` — Full Mine → Grow → Compile → Lint → Defrag cycle.
 
-[Description of what the learner will do]
+**User says:** `/compile --compile-only` — Just compile raw artifacts into wiki.
 
-## Deliverables
+**User says:** `/compile --lint-only` — Scan existing wiki for health issues.
 
-1. [First deliverable]
-2. [Second deliverable]
-3. [Third deliverable]
-```
+**User says:** `/compile --since 7d` — Mines with a wider window (7 days).
 
-**Assignment transformations:**
-- Convert "Artifact:" to the Task section
-- Convert "Assessment criteria:" bullets to numbered Deliverables
-- Optionally add a Notes section for on-chain cost, timing, common mistakes
+**Scheduled externally:** Nightly compilation on bushido GPU via Ollama.
 
-### 8. Generate introduction.md (Optional)
+**Pre-evolve warmup:** Run `/compile` before `/evolve` for a fresh, validated knowledge base.
 
-Module introduction shown before lessons. Great for context, prerequisites, or learning objectives.
+## Troubleshooting
 
-If the module section in `00-course.md` has introductory text, extract it:
+| Problem | Cause | Solution |
+|---------|-------|----------|
+| `ao mine` not found | ao CLI not in PATH | Use manual fallback in Step 1 |
+| No orphaned research | All research already referenced | Skip 2b, proceed to synthesis |
+| Empty mine output | No recent activity | Widen `--since` window |
+| Oscillation sweep empty | No oscillating goals | Healthy state — no action needed |
+| Ollama connection refused | Tunnel not running or wrong host | Run `ssh -L 11435:localhost:11435 bushido-windows` or check `OLLAMA_HOST` |
+| Compilation too slow | Large corpus on small model | Use `--incremental` or switch to larger model |
+| Hash file missing | First compilation | Normal — full compile runs, hashes saved after |
 
-```markdown
-# Welcome to [Module Topic]
+## Reference Documents
 
-[Module-level introduction - context, what learners will accomplish]
+- [references/compile.feature](references/compile.feature) — Executable spec: Mine→Grow→Lint→Defrag rebuild, lint-not-autofix, incremental batching, evolve warmup (soc-qk4b)
 
-## Prerequisites
-
-- [Prerequisite 1]
-- [Prerequisite 2]
-```
-
-If there's no intro text in the source, skip this file.
-
-### 9. Validation
-
-Before writing files, validate:
-- [ ] All SLTs have corresponding lesson files
-- [ ] Lesson files aren't empty
-- [ ] Assignment content exists in `00-course.md`
-- [ ] Module code is unique (no collision with existing compiled modules)
-
-Report any issues:
-
-```markdown
-## Validation
-
-- [x] 3 SLTs found in module
-- [x] 3 lesson files found
-- [x] Assignment content found
-- [ ] Missing: lesson-2.md (SLT 1.2)
-
-Fix missing lessons before compiling, or proceed with partial?
-```
-
-### 10. Write and Confirm
-
-Write all files to `compiled/[course-slug]/[module-code]/`.
-
-Show summary:
-
-```markdown
-## Compiled: Module [N] - [Title]
-
-**Output:** `compiled/[course-slug]/[module-code]/`
-
-### Files Created
-
-| File | Size | Status |
-|------|------|--------|
-| outline.md | 245 bytes | Created |
-| lesson-1.md | 3.2 KB | Created |
-| lesson-2.md | 2.8 KB | Created |
-| lesson-3.md | 4.1 KB | Created |
-| assignment.md | 890 bytes | Created |
-
-### Ready for Import
-
-This module is ready to upload to Andamio Studio.
-
-**Next steps:**
-1. Review files in `compiled/[course-slug]/[module-code]/`
-2. Upload folder via Studio import
-3. Verify SLTs and content in preview
-```
-
-## Image Handling
-
-Images in lessons are automatically processed during import. Place them correctly and they'll be uploaded to cloud storage with local paths replaced by hosted URLs.
-
-### Folder Structure
-
-Place images in an `assets/` subdirectory within your module folder:
-
-```
-compiled/
-  andamio-for-contributors/
-    101/
-      outline.md
-      lesson-1.md
-      lesson-2.md
-      assignment.md
-      assets/
-        diagram-1.png
-        screenshot-wallet.png
-        screenshots/
-          step-by-step.png
-```
-
-### Referencing Images in Markdown
-
-Use relative paths from the markdown file:
-
-```markdown
-![Wallet Setup](assets/screenshot-wallet.png)
-
-![Diagram](./assets/diagram-1.png)
-
-![Step by Step](assets/screenshots/step-by-step.png)
-```
-
-All three path formats work:
-- `assets/image.png`
-- `./assets/image.png`
-- Just `image.png` (matched by filename as fallback)
-
-### Supported Formats
-
-`.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`, `.svg`
-
-### What Happens on Import
-
-1. Images are automatically uploaded to cloud storage
-2. Local paths are replaced with hosted URLs
-3. Default size is Medium (600px)
-4. Use S/M/L toggle in editor to resize (300/600/900px)
-
-### Best Practices
-
-- Use lowercase filenames without spaces: `wallet-setup.png` not `Wallet Setup.png`
-- Keep filenames unique across subdirectories
-- Organize by type: `assets/diagrams/`, `assets/screenshots/`
-- Name screenshots to match lesson flow: `1.1-connect-wallet-01.png`, `1.1-connect-wallet-02.png`
-
-## Lesson File Cleaning Rules
-
-When copying lesson content, apply these transformations:
-
-1. **Top metadata block** — strip the SLT/Type/divider metadata:
-```markdown
-# Lesson X.Y: Title        ← STRIP this specific format
-
-**SLT:** I can...           ← STRIP
-**Type:** Product Demo      ← STRIP
----                         ← STRIP
-```
-
-2. **Add an `# H1` title** — this becomes the lesson title in the app:
-```markdown
-# Connect a Cardano Wallet  ← ADD a short, descriptive title
-
-## Before You Start          ← Lesson content starts here
-...
-```
-The H1 title should be descriptive but concise (not "Lesson 1.2: Connect a Cardano Wallet", just "Connect a Cardano Wallet").
-
-3. **Key Terms sections:** Keep (useful for learners)
-
-4. **What's Next sections:** Remove or keep based on context
-   - Remove if it references "the next lesson" specifically
-   - Keep if it references other courses or resources
-
-5. **"Want to know how this works?" links:** Keep (cross-course references are good)
-
-## Error Handling
-
-**Missing lesson file:**
-```
-Warning: No lesson file found for SLT 1.2
-- Expected: lessons/module-1/1.2-*.md
-- Action: Creating empty lesson-2.md placeholder
-```
-
-**Missing assignment:**
-```
-Warning: No assignment found for Module 1
-- Expected: "### Module 1 Assignment" in 00-course.md
-- Action: Skipping assignment.md
-```
-
-**Module code collision:**
-```
-Error: Module code "101" already exists
-- Existing: compiled/andamio-for-contributors/101/
-- Action: Choose different code or delete existing
-```
-
-## Guidelines
-
-- **Don't modify source files.** This skill only reads and outputs to `compiled/`.
-- **Keep lesson content intact.** Only strip metadata headers, not pedagogical content.
-- **SLT text is sacred.** Once on-chain, SLTs cannot change. Double-check the outline.md output.
-- **Prefer completeness.** Warn about missing pieces but allow partial compiles for preview.
-- **Clean output.** The `compiled/` directory should be uploadable as-is.
+- [references/phases.md](references/phases.md) — full per-phase procedure (mine → grow → compile → lint → defrag → report)
+- [references/confidence-scoring.md](references/confidence-scoring.md)
+- [references/knowledge-synthesis-patterns.md](references/knowledge-synthesis-patterns.md)
+- [references/flywheel-diagnostics.md](references/flywheel-diagnostics.md)

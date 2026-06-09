@@ -1,565 +1,503 @@
 ---
 name: evolve
-description: Population-based evolutionary search for code optimization. Maintains k candidates, evaluates against a fitness function, selects survivors, breeds new candidates via LLM mutation and crossover until fitness converges.
-args:
-  - name: -k N
-    description: Population size (default 4)
-  - name: -g N
-    description: Maximum generations (default 10)
-  - name: -s N
-    description: Stale generations before stopping (default 3)
-  - name: --files <paths>
-    description: Target files to evolve (prompted if omitted)
+description: Run autonomous improvement loops.
+practices:
+- lean-startup
+- dora-metrics
+- agile-manifesto
+hexagonal_role: supporting
+consumes:
+- rpi
+- goals
+- post-mortem
+- compile
+produces:
+- git-changes
+- goals-fitness-delta
+context_rel:
+- kind: customer-of
+  with: rpi
+skill_api_version: 1
+user-invocable: true
+context:
+  window: fork
+  intent:
+    mode: task
+  sections:
+    exclude:
+    - HISTORY
+  intel_scope: full
+metadata:
+  tier: execution
+  dependencies:
+  - rpi
+  - post-mortem
+  - compile
+  triggers:
+  - evolve
+  - improve everything
+  - autonomous improvement
+  - run until done
+  - postmortem and continue
+  - analyze repo and keep going
+output_contract: code changes, GOALS.md fitness deltas
 ---
+# /evolve — Goal-Driven Compounding Loop
 
-# Evolve
+> **Cross-vendor analog:** Anthropic Managed Agents Outcomes (May 2026). Both close the loop "agent runs → grader scores against a rubric → agent retries"; AgentOps does it locally against any model.
 
-You don't find the best implementation by improving one. You find it by improving many and keeping the winners.
+> Measure what's wrong. Fix the worst thing. Measure again. Compound.
 
-## Why This Works
+**The loop runs as this skill (skills-are-the-runtime).** `evolve` selects work
+and invokes complete `/rpi --auto` cycles — that *is* the loop. `evolve` (and
+`ao rpi loop --supervisor`) are terminal-native **wrapper commands** for humans or
+non-skill runtimes, not the default expression of the loop; they reuse the same v2
+RPI loop engine. (The substrate dispatches the whole `evolve` skill loop as one
+unit; it never drives the loop's insides. The `evolve`/`ao rpi` CLI wrappers are
+being retired — ag-iowf.)
 
-Hill climbing improves a single candidate and hopes it's in the right basin. Evolutionary search maintains a population — multiple candidates exploring different regions of the solution space simultaneously. Selection keeps the best, mutation explores nearby, crossover combines good ideas, and fresh random prevents the population from collapsing to a local optimum.
+**Operator cadence:** post-mortem finished work, analyze the current repo state,
+select or create the next highest-value work item, let `rpi` handle research,
+planning, pre-mortem, implementation, and validation, then harvest follow-ups
+and repeat until a kill switch, max-cycle cap, regression breaker, or real
+dormancy stops the run.
 
-LLMs make vastly better mutation operators than random perturbation. They understand code semantics, so mutations are meaningful — not "flip a bit" but "swap the sorting algorithm" or "add a caching layer." This turns evolutionary search from brute force into intelligent exploration.
+Always-on autonomous loop over `rpi`. Work selection order:
+1. **Harvested `.agents/rpi/next-work.jsonl` work** (freshest concrete follow-up)
+2. **Open ready beads work** (`bd ready`)
+3. **Failing goals and directive gaps** (`ao goals measure`)
+4. **Testing improvements** (missing/thin coverage, missing regression tests)
+5. **Validation tightening and bug-hunt passes** (gates, audits, bug sweeps)
+6. **Complexity / TODO / FIXME / drift / dead code / stale docs / stale research mining**
+7. **Concrete feature suggestions** derived from repo purpose when no sharper work exists
 
-## Relationship to Existing Skills
+**Work generators** that feed the selection ladder (auto-invoked, skip with `--no-lifecycle`):
+- `Skill(skill="test", args="coverage")` → files with <40% coverage become queue items (Step 3.4)
+- `Skill(skill="refactor", args="--sweep all --dry-run")` → functions with CC > 20 become queue items (Step 3.6)
+- `Skill(skill="deps", args="audit")` → deps with CVSS >= 7.0 or 2+ major versions behind become queue items (Step 3.5)
+- `Skill(skill="perf", args="profile --quick")` → perf findings become queue items when hot paths detected (Step 3.5)
 
-| Aspect         | `loop-codex-review`       | `spike`              | `evolve`                       |
-| -------------- | ------------------------- | -------------------- | ------------------------------ |
-| **Candidates** | 1 (hill climbing)         | N (one-shot)         | k per generation (iterated)    |
-| **Fitness**    | Binary (clean/issues)     | Human judgment       | Quantitative (scalar score)    |
-| **Iteration**  | Review-fix loop           | None                 | Generational selection         |
-| **Selection**  | Single candidate improves | Human picks winner   | Automated: keep top ceil(k/2)  |
-| **Mutation**   | Fix reviewer issues       | N/A                  | LLM rewrite toward objective   |
-| **Good for**   | Correctness, clarity      | Comparing approaches | Performance, optimization      |
-| **Stops when** | No reviewer issues        | All branches built   | Fitness plateaus (convergence) |
+**Dormancy is last resort.** Empty current queues mean "run the generator layers", not "stop". Only go dormant after the queue layers and generator layers come up empty across multiple consecutive passes.
 
-## Core Concept
-
-```
-          ┌──────────┐
-          │ Evaluate  │◄──────────────────────┐
-          └────┬─────┘                        │
-               │                              │
-          ┌────▼─────┐                        │
-          │  Select   │  keep top ceil(k/2)   │
-          └────┬─────┘                        │
-               │                              │
-          ┌────▼─────┐                        │
-          │  Report   │  HIL checkpoint       │
-          └────┬─────┘                        │
-               │                              │
-          ┌────▼─────┐                        │
-          │  Breed    │  mutation + crossover  │
-          └────┬─────┘                        │
-               │                              │
-               └──────────────────────────────┘
-```
-
-- **Evaluate**: Run user's fitness command on each candidate (sequential checkout-and-run)
-- **Select**: Rank by fitness, keep the best, delete the rest
-- **Report**: Present leaderboard to human, get approval to continue
-- **Breed**: LLM agents produce new candidates via mutation, crossover, or fresh generation
-
-## On Activation
-
-1. **Initialize** — Parse args, validate fitness command, identify target files, evaluate baseline
-2. **Seed** — Spawn k agents to create initial population (generation 1)
-3. **Evaluate** — Run fitness on all candidates
-4. **Select** — Keep top ceil(k/2), eliminate the rest
-5. **Report** — Present leaderboard, get human decision
-6. **Breed** — LLM agents produce new candidates to fill population back to k
-7. **Loop** — Return to Evaluate (step 3)
-8. **Converge** — When fitness plateaus or budget exhausted, present winner
-
-## State Schema
-
-Track in task description for compaction survival.
-
-```yaml
-# Parameters
-target_files: []
-fitness_cmd: ""
-base_branch: ""
-population_size: 4 # k
-max_generations: 10
-stale_limit: 3
-
-# Current state
-generation: 0
-best_fitness: null
-best_candidate: null
-stale_count: 0
-baseline_fitness: null
-
-# Current population
-candidates:
-  - id: "gen1-1"
-    branch: "evolve/gen1-1"
-    fitness: 847
-    parents: ["gen0-seed"]
-    operator: "mutation"
-    focus: "caching"
-    status: "alive" # alive | eliminated | invalid
-
-# Compact history (one line per generation)
-history:
-  - { gen: 0, best: 712, avg: 712 }
-  - { gen: 1, best: 923, avg: 847 }
-```
-
-## Phase: Initialize
-
-### Do:
-
-- Parse args: fitness command (first positional), target files (`--files` or ask), population size (`-k`), max generations (`-g`), stale limit (`-s`)
-- Validate fitness command: run it once, confirm it exits 0 and the last line of stdout parses as a number
-- Record baseline fitness (the seed's score)
-- Create seed branch: `git checkout -b evolve/gen0-seed`
-- Create tracking task with full state schema
-
-### Don't:
-
-- ❌ Skip fitness validation — a broken fitness command wastes every subsequent generation
-- ❌ Assume target files — always confirm with user if `--files` not provided
-- ❌ Start breeding without a baseline — you need a reference point for improvement
-
-### Fitness validation
+**Live skill edit immune system:** if an evolve cycle edits
+`skills/<slug>/SKILL.md`, run
+`ao skills edit seal --skill <slug> --actor "${AGENT_NAME:-agent}"` before the
+cycle hands off. The seal creates the rollback commit and records the
+`Skill-Edit` trailers used by the daily digest. Critical skills listed in
+`docs/contracts/critical-skills.txt` reject unattended edits; use
+`--allow-critical` only when Bo is supervising that critical edit.
 
 ```bash
-output=$($FITNESS_CMD 2>&1)
-exit_code=$?
-
-if [ $exit_code -ne 0 ]; then
-    echo "Fitness command failed (exit $exit_code)"
-    exit 1
-fi
-
-score=$(echo "$output" | tail -1)
-echo "$score" | grep -qE '^-?[0-9]+\.?[0-9]*$'
+/evolve                      # Run until kill switch, max-cycles, or real dormancy
+/evolve --max-cycles=5       # Cap at 5 cycles
+/evolve --dry-run            # Show what would be worked on, don't execute
+/evolve --beads-only         # Skip goals measurement, work beads backlog only
+/evolve --quality            # Quality-first mode: prioritize post-mortem findings
+/evolve --quality --max-cycles=10  # Quality mode with cycle cap
+/evolve --compile            # Mine → Defrag warmup before first cycle
+/evolve --compile --max-cycles=5 # Warm knowledge base then run 5 cycles
+/evolve --test-first         # Default strict-quality /rpi execution path
+/evolve --no-test-first      # Explicit opt-out from test-first mode
 ```
 
-### Args examples
+## Delineation vs Nightly Knowledge Compounding
+
+| Lane | Runs | Mutates code? | Mutates corpus? | Outer loop? | Budget |
+|------|------|---------------|-----------------|-------------|--------|
+| `$curate --mode=dream` | nightly, private local | **No** | **Yes (heavy)** | **Yes (convergence)** | wall-clock + plateau |
+| `evolve` | daytime, operator-driven | Yes (via `rpi`) | Yes (light) | Yes | cycle cap |
+
+**The old dream skill is retired**; out-of-session compounding moved to Gas City and the current skill surface is `$curate --mode=dream`. `/evolve` owns the live daytime code-compounding lane. Both still share the fitness-measurement substrate via `corpus.Compute` / `ao goals measure`.
+
+## Flags
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--max-cycles=N` | unlimited | Stop after `N` completed cycles |
+| `--dry-run` | off | Show planned cycle actions without executing |
+| `--beads-only` | off | Skip goal measurement and run backlog-only selection |
+| `--skip-baseline` | off | Skip first-run baseline snapshot |
+| `--quality` | off | Prioritize harvested post-mortem findings |
+| `--compile` | off | Run `ao mine` + `ao defrag` warmup before cycle 1 |
+| `--test-first` | on | Pass strict-quality defaults through to `rpi` |
+| `--no-test-first` | off | Explicitly disable test-first passthrough to `rpi` |
+| `--no-lifecycle` | off | Skip lifecycle work generators in Steps 3.4-3.6 (/test, /deps, /perf, /refactor). Falls back to manual scanning. |
+| `--mode=burst\|loop` | burst | Operator-loop; STOP refused. [loop-mode.md](references/loop-mode.md). |
+
+## Execution Steps
+
+**YOU MUST EXECUTE THIS WORKFLOW. Do not just describe it.**
+
+**FULLY AUTONOMOUS.** Read `references/autonomous-execution.md`. Every `rpi` uses `--auto`. Do NOT ask the user anything. Each cycle = complete 3-phase `rpi` run.
+
+For broad AgentOps 3.0 domain evolution across skills, CLI, hooks, docs, tests,
+beads, and knowledge, first read
+[references/domain-evolution-bootstrap.md](references/domain-evolution-bootstrap.md).
+It supplies the BDD/DDD/Hexagonal/TDD/XP control surface and the clean-room
+skill-factory guardrails.
+
+### Step 0: Setup
+
+**Stale-checkout survey guard (run FIRST).** Before any tree-reading survey: `git fetch origin && git status -sb`. If the checkout is behind/diverged AND it is a throwaway orchestration tree with no un-pushed work, `git reset --hard origin/main`. **BAN `git pull --rebase` on the survey path** — it silently no-ops against a diverged local `main`, so merged files appear "missing" and the survey investigates already-merged work.
 
 ```bash
-/evolve "python benchmark.py"                    # Ask for target files
-/evolve "make bench" --files src/solver.rs       # Explicit target
-/evolve "./test.sh | tail -1" -k 6 -g 20        # Larger population
+git fetch origin && git status -sb              # survey guard — never `git pull --rebase` here
+mkdir -p .agents/evolve
+ao corpus inject --query "autonomous improvement cycle" --limit 5 2>/dev/null || true
+bash scripts/evolve-update-session-state.sh 2>/dev/null || true  # refresh derived idle_streak + mode_repeat_streak
 ```
 
-## Phase: Seed (Generation 1)
+`ao corpus inject` routes through the typed BC1 `CorpusReaderPort`
+(`cli/cmd/ao/corpus_reader_adapter.go`, cycle 112 productionCorpusReader),
+emitting one ranked `ports.CorpusItem` JSON record per line from
+`.agents/learnings/` by default. This closes soc-y5vh.1 — Step 0 prior-knowledge
+retrieval is now load-bearing on the typed port, not an untyped `ao lookup`
+shell-out.
 
-**First generation only.** Creates the initial population from the seed.
+**Apply retrieved knowledge:** If learnings are returned, check each for applicability to the current improvement cycle. For applicable learnings, cite by filename and record: `ao metrics cite "<path>" --type applied 2>/dev/null || true`
 
-### Do:
+**Prior-failure injection (mandatory):** read the last 3 entries of `.agents/evolve/cycle-history.jsonl`. For any with `gate` containing `FAIL|FAILED|BLOCKED`, extract failure-surface keywords (`registry|bats|markdown|supergate|canary|coverage|toolchain`) and search `.agents/learnings/` for matching learnings. Print the top matches before work selection. Without this read path, the loop accumulates write-only ledgers and re-derives lessons each cycle. See `references/convergence-mechanics.md` for the full recipe.
 
-- Spawn k agents in parallel (`run_in_background: true`)
-- Each agent gets: target file contents, fitness objective, baseline fitness score
-- Each agent writes its variant to a new branch (`evolve/gen1-{id}`)
-- Assign each agent a different **focus lens** to force diversity
+Before cycle recovery, load the repo execution profile contract when it exists. The repo execution profile is the source for repo policy; the user prompt should mostly supply mission/objective, not restate startup reads, validation bundle, tracker wrapper rules, or `definition_of_done`.
 
-### Don't:
+- Locate `docs/contracts/repo-execution-profile.md` and `docs/contracts/repo-execution-profile.schema.json`.
+- Read the ordered `startup_reads` and bootstrap from those repo paths before selecting work.
+- Cache repo `validation_commands`, `tracker_commands`, and `definition_of_done` into session state.
+- If the repo execution profile is present but missing required fields, stop or downgrade with an explicit warning before cycle 1. Do not silently invent repo policy.
+- Read operating-doctrine ADRs (`docs/adr/` or `docs/decisions/`) when present — intent the loop re-reads each cycle: only operator markers stop the loop; the bead queue is a hypothesis re-confirmed against the goal, not spec; file-a-bead when a candidate is architecture disguised as bounded work.
 
-- ❌ Let all agents optimize the same way — enforce diversity via focus directives
-- ❌ Run agents sequentially — they're independent, always parallel
-- ❌ Skip the focus lens — without it, agents converge to the same "obvious" optimization
+Then load the repo-local autodev program contract when it exists. The execution profile remains the repo bootstrap and landing-policy layer; `PROGRAM.md` or `AUTODEV.md` is the repo-local execution layer for the current improvement loop.
 
-### Focus Lenses
+- Locate `PROGRAM.md` and `AUTODEV.md`. `PROGRAM.md` takes precedence.
+- Read the resolved program before cycle recovery and cache `program_path`, `mutable_scope`, `immutable_scope`, `validation_commands`, `decision_policy`, and `stop_conditions` into session state.
+- If the program file exists but is structurally invalid, stop or downgrade with an explicit warning before cycle 1. Do not silently ignore a broken operator contract.
+- When a program contract exists, prefer work that can land wholly inside mutable scope. Do not silently widen scope around immutable files.
 
-Each seed agent gets one lens — a constraint that forces it to explore a different region of the solution space. **Choose lenses appropriate to the user's objective.** The lenses below are examples, not an exhaustive list.
+Recover cycle number, generator streaks, and the last claimed work item from disk (survives context compaction). Initialize `CYCLE` from `cycle-history.jsonl`, recover `IDLE_STREAK`, `GENERATOR_EMPTY_STREAK`, `LAST_SELECTED_SOURCE`, and `CLAIMED_WORK_REF` from `session-state.json`.
 
-| Objective domain   | Example lenses                                                    |
-| ------------------ | ----------------------------------------------------------------- |
-| Performance        | Algorithm, data structure, caching, loop structure, parallelism   |
-| Accuracy / quality | Algorithm, error handling, edge cases, validation, representation |
-| Size / simplicity  | Elimination, decomposition, alternative libraries, rewrite        |
-| Robustness         | Error paths, input validation, retry strategy, fallback design    |
-| General (any)      | Algorithm, data structure, simplification, inversion              |
+**Circuit breakers:** Time-based (60 min no productive work).
 
-The key requirement: lenses must be **genuinely different axes**, not variations on a theme. With k=4, pick 4 lenses spanning the widest range. With k > 8, lenses may repeat.
+**Oscillation quarantine:** Pre-populate quarantine list from cycle history (scan for goals with 3+ improved-to-fail transitions). See `references/oscillation.md`.
 
-### Agent prompt template (seed)
+Parse flags: `--max-cycles=N` (default unlimited), `--dry-run`, `--beads-only`, `--skip-baseline`, `--quality`, `--compile`.
 
+Track cycle-level execution state:
+
+```text
+evolve_state = {
+  cycle: <current cycle number>,
+  mode: <standard|quality|beads-only>,
+  test_first: <true by default; false only when --no-test-first>,
+  repo_profile_path: <docs/contracts/repo-execution-profile.md or null>,
+  startup_reads: <ordered repo bootstrap paths>,
+  validation_commands: <ordered repo validation bundle>,
+  tracker_commands: <repo tracker shell wrappers>,
+  definition_of_done: <repo stop predicates>,
+  program_path: <PROGRAM.md|AUTODEV.md or null>,
+  program_mutable_scope: <declared mutable paths/globs>,
+  program_immutable_scope: <declared immutable paths/globs>,
+  program_validation_commands: <ordered program validation bundle>,
+  program_decision_policy: <ordered keep/revert rules>,
+  program_stop_conditions: <ordered cycle done criteria>,
+  generator_empty_streak: <consecutive passes where all generator layers returned nothing>,
+  last_selected_source: <harvested|beads|goal|directive|testing|validation|bug-hunt|drift|feature>,
+  claimed_work: <null or work reference being worked>,
+  queue_refresh_count: <incremented after every /rpi cycle>
+}
 ```
-You are optimizing code for the following objective:
-[user's description / fitness command explanation]
 
-Baseline fitness: [score]. Higher = better.
-The fitness function is: [command]
+Persist `evolve_state` to `.agents/evolve/session-state.json` at each cycle boundary, after work claims, after release/finalize, and during teardown. `cycle-history.jsonl` remains the canonical cycle ledger; `session-state.json` carries resume-only state that has not yet earned a committed cycle entry. Both files are **local-only** (the nested `.agents/.gitignore` denies all paths) — record durable milestones in commit messages too. See `references/cycle-history.md` for full local-only semantics.
 
-Here are the target files:
-[file contents]
+### Step 0.2: Compile Warmup (--compile only)
 
-Your focus: **[lens]**. Approach the problem primarily through [lens description].
+Skip if `--compile` was not passed or if `--dry-run`. Read `references/knowledge-loop-integration.md` for the full warmup procedure (mine + defrag + signal notes).
 
-Write the complete modified file(s). Do not stub or TODO — the code
-must be functional. You may make multiple changes, but your primary
-axis of variation should be [lens].
-```
+### Step 0.5: Baseline (first run only)
 
-Each agent:
+Skip if `--skip-baseline` or `--beads-only` or baseline already exists. Read `references/fitness-scoring.md` for the baseline capture procedure.
 
-1. Checks out `evolve/gen0-seed`
-2. Creates branch `evolve/gen1-{id}`
-3. Writes modified files
-4. Commits: `"evolve: gen1-{id} (seed, focus: {lens})"`
+### Step 1: Kill Switch Check
 
-## Phase: Evaluate
-
-### Do:
-
-- For each candidate branch (sequentially):
-  1. `git checkout evolve/gen{N}-{id}`
-  2. Run fitness command
-  3. Record score (last line of stdout, parsed as number)
-  4. Record exit code (non-zero = invalid, fitness = -infinity)
-- Return to base branch after all evaluations
-- Update state with all fitness scores
-
-### Don't:
-
-- ❌ Evaluate in parallel without worktrees — concurrent checkouts corrupt the working tree
-- ❌ Skip invalid candidates silently — report them in the leaderboard as "INVALID"
-- ❌ Discard invalid candidates before selection — they're data (the mutation broke something)
-
-### Evaluation loop
+Run at the TOP of every cycle:
 
 ```bash
-git checkout "$BRANCH"
-output=$($FITNESS_CMD 2>&1)
-exit_code=$?
-
-if [ $exit_code -eq 0 ]; then
-    score=$(echo "$output" | tail -1)
+CYCLE_START_SHA=$(git rev-parse HEAD)
+# Mechanical pre-cycle gate (soc-sfjx): markers (KILL/STOP/DORMANT/HANDOFF with
+# TTL + soc-5qit non-sticky semantics), goal-regression, and prior-cycle-FAIL.
+# This is a SCRIPT the loop MUST run, not prose it can skip — externalized from
+# the old inline block so the kill-switch + revert-on-red are enforced, not
+# advisory. Adapted from the mt-olympus unbounded-evolve substrate.
+if [ -x scripts/evolve/halt-check.sh ]; then
+  if ! HALT_OUT=$(bash scripts/evolve/halt-check.sh --json); then
+    REASON=$(printf '%s' "$HALT_OUT" | jq -r '.halt_reason // "unknown"')
+    if [ "$REASON" = "prior_cycle_fail" ]; then
+      export EVOLVE_RESTORATIVE=1   # not terminal: Step 1.5 restricts scope to CI-red reduction
+    else
+      echo "halt: $REASON"; exit 0  # kill/user_halt/dormant/goal_regression -> stop this cycle
+    fi
+  fi
 else
-    score="-inf"
+  # Fallback for repos without the substrate: minimal inline marker check.
+  for m in "$HOME/.config/evolve/KILL" .agents/evolve/STOP; do [ -f "$m" ] && { echo "halt: $m"; exit 0; }; done
+  [ -f .agents/evolve/DORMANT ] && { [ "$(bd ready --json 2>/dev/null | jq -r 'length // 0')" -gt 0 ] && rm -f .agents/evolve/DORMANT || { echo dormant; exit 0; }; }
+  [ -f .agents/evolve/HANDOFF ] && rm -f .agents/evolve/HANDOFF
 fi
-
-git checkout "$BASE_BRANCH"
 ```
 
-## Phase: Select
+**Agile-first dormancy (soc-5qit):** `DORMANT` is NEVER sticky while ready beads exist — `halt-check.sh` auto-clears it when `bd ready`/harvested work exists. KILL/STOP honor `EVOLVE_KILL_TTL_DAYS` (default 7); stale markers are surfaced and bypassed. `goal_regression` (latest cycle report `goals_passing_after < before`) halts the loop for operator attention. Heavy-context sessions write non-sticky HANDOFF; the next fire clears it and resumes. The gate is mechanical: see `scripts/evolve/halt-check.sh`.
 
-### Do:
+### Step 1.5: Healing-first classifier
 
-- Sort candidates by fitness (descending)
-- Keep top ceil(k/2) as survivors
-- Delete eliminated branches immediately (`git branch -D evolve/gen{N}-{id}`)
-- Record lineage of survivors in state
+Before fitness or work selection, classify the cycle: `ao ci recent --limit 1 2>/dev/null | jq -r '.Conclusion // empty'` (typed BC2 `CIStatusPort`, soc-y5vh.2). If the last push CI was `failure`, this cycle is **restorative-only** — Step 3 takes only CI-red-reducing work (bug-type harvested items, gate-failure-fix beads, generator bug output); no promotions, features, or new-shape work until green. A `gate=FAIL` in cycle-history.jsonl auto-triggers this for cycle N+1 (and `halt-check.sh` surfaces it as `prior_cycle_fail`). See `references/convergence-mechanics.md`.
 
-### Don't:
+**Convergence check:** evaluate the STOP predicate via the typed BC3 `ConvergenceCheckPort` — `ao loop converged --green-streak <n> --unconsumed-high-medium <n> [--fitness-baseline]` (soc-y5vh.8). Branch on `.converged` (default: CI green streak ≥ 3, HIGH+MEDIUM next-work ≤ 1, fitness baseline captured); if true, emit teardown and do NOT re-arm wakeup.
 
-- ❌ Keep all branches — branch sprawl makes the repo unnavigable
-- ❌ Delete branches before recording their fitness in state — the history is valuable
-- ❌ Keep invalid candidates unless they're the only ones left (warn the user)
+### Step 2: Measure Fitness
 
-### Selection example (k=4)
+Skip if `--beads-only`. Run `scripts/evolve-measure-fitness.sh` to produce a rolling fitness snapshot at `.agents/evolve/fitness-latest.json`. Read `references/fitness-scoring.md` for the full measurement procedure, baseline capture, and post-cycle regression detection.
 
+### Step 3: Select Work
+
+Selection is a ladder, not a one-shot check — after every productive cycle, return to the TOP and re-read the queue before considering dormancy. **Read [references/work-selection-ladder.md](references/work-selection-ladder.md) for the full per-rung procedure** (programmatic `ao loop next-work` recommendation, scope filter, metronome gate, the generator rungs with their code blocks, the `--quality` inverted cascade, and the dormancy hard-gate).
+
+Ladder order (standard mode):
+- **3.0 Scope filter** (soc-5qit) — split-or-defer oversized candidates via scout-mode; never bail.
+- **3.1 Harvested** — `.agents/rpi/next-work.jsonl`, highest-value unconsumed.
+- **3.2 Open ready beads** — `bd ready`, highest priority.
+- **3.3 Failing goals + directive gaps** — skip if `--beads-only`; skip quarantined oscillators.
+- **3.4–3.6 Generators** — `/test` coverage, `/deps`+`/perf`, `/refactor`; findings → beads/queue items.
+- **3.7 Feature suggestions** grounded in repo purpose.
+
+`--quality` inverts the top (findings before goals/directives). The metronome gate blocks a rung that would repeat the trailing run's `mode` (streak ≥3).
+
+**Agile invariant (soc-5qit):** `bd ready ≥ 1` ⇒ the loop NEVER writes DORMANT and NEVER exits. The only path to DORMANT is a fully empty backlog + dry generators (3 passes). Context exhaustion → HANDOFF, not DORMANT. Under loop mode, `write-stop-marker` refuses → log blocked + operator-wait (ADR-0007).
+
+If `--dry-run`: report what would be worked on and go to Teardown.
+
+### Step 4: Execute
+
+Primary engine: `rpi` for implementation-quality work (all 3 phases mandatory). `/implement` or `/crank` only when a bead has execution-ready scope.
+
+If a repo-local `PROGRAM.md` contract is active, `rpi` will load it automatically. `evolve` must compose with that behavior, not bypass it:
+- Do not select work that is obviously outside mutable scope.
+- If a bead or goal would require edits under immutable scope, escalate it or convert it into durable follow-up work instead of launching `rpi`.
+- When work is plausibly in scope but still uncertain, let `rpi` discovery validate the fit and surface a scope escape explicitly.
+
+For a **harvested item, failing goal, directive gap, testing improvement, validation tightening task, bug-hunt result, drift finding, or feature suggestion**:
 ```
-Candidates sorted by fitness:
-  gen2-3: 923 (mutation)    ← KEEP
-  gen2-1: 889 (crossover)   ← KEEP
-  gen2-2: 847 (mutation)    ← ELIMINATE
-  gen2-4: 801 (fresh)       ← ELIMINATE
-
-Survivors: gen2-3, gen2-1
-Eliminated: gen2-2, gen2-4 (branches deleted)
-```
-
-## Phase: Report (HIL)
-
-### Do:
-
-- Present leaderboard with fitness, parentage, operator, delta from baseline
-- Show fitness trend across generations (compact table)
-- Show stale counter (N/stale_limit)
-- Use `AskUserQuestion` with clear options
-
-### Don't:
-
-- ❌ Skip this checkpoint — human oversight is mandatory
-- ❌ Present raw numbers without context — always show delta from baseline and trend
-- ❌ Auto-continue without asking — the human decides
-
-### Leaderboard format
-
-```markdown
-## Generation {N} Results
-
-### Leaderboard
-
-| Rank | Candidate | Fitness | Delta Baseline | Parents        | Operator           |
-| ---- | --------- | ------- | -------------- | -------------- | ------------------ |
-| 1    | gen3-2    | 1,089   | +377           | gen2-3         | mutation (loop)    |
-| 2    | gen3-1    | 1,012   | +300           | gen2-3, gen2-1 | crossover          |
-| 3    | gen3-3    | 956     | +244           | gen2-1         | mutation (caching) |
-| 4    | gen3-4    | 823     | +111           | seed           | fresh              |
-
-### Trend
-
-| Gen | Best  | Avg | Delta Best |
-| --- | ----- | --- | ---------- |
-| 0   | 712   | 712 | --         |
-| 1   | 923   | 847 | +211       |
-| 2   | 978   | 901 | +55        |
-| 3   | 1,089 | 970 | +111       |
-
-Stale: 0/3. Best ever: 1,089 (gen3-2).
+Invoke /rpi "{normalized work title}" --auto --max-cycles=1
 ```
 
-### Options
-
+For a **beads issue**:
 ```
-AskUserQuestion:
-1. "Continue" (Recommended) — Breed next generation
-2. "Inspect winner" — Show diff of best candidate vs seed
-3. "Adjust parameters" — Change k, stale_limit, or mutation strategy
-4. "Stop and keep winner" — Apply best candidate
-5. "Stop and discard" — Delete all evolve branches, return to base
+Prefer: /rpi "Land {issue_id}: {title}" --auto --max-cycles=1
+Fallback: /implement {issue_id}
 ```
+Or for an epic with children: `Invoke /crank {epic_id}`.
 
-## Phase: Breed
+If Step 3 created durable work instead of executing it immediately, re-enter Step 3 and let the newly-created bead item win through the normal selection order.
 
-### Do:
+**Mechanical-batch hint:** when the implementation phase identifies > 20 uniform per-file edits, prefer a script (`awk`/`sed`/`for f in $candidates`) over N tool-level Edit calls. See `references/mechanical-batches.md` for the decision rule and the script-first pattern.
 
-- Determine how many new candidates needed: `k - ceil(k/2)`
-- Assign operators: ~50% point mutation, ~25% crossover, ~25% fresh random
-- Spawn agents in parallel (`run_in_background: true`), one per new candidate
-- Each agent creates a new branch (`evolve/gen{N+1}-{id}`) from its parent
-- Wait for all agents to complete before proceeding to Evaluate
+**Pre-flight schema check (architectural migrations):** if the selected work is a port/adapter migration that rewires an existing consumer, BEFORE invoking `rpi`, sample two representative consumer call sites and compare field-use against the target port surface. If the consumer reads > 20% more fields than the port projects, abort the migration cycle and convert the work into a port-widening cycle instead. The phase-2 narrowness post-mortem (`docs/learnings/2026-05-13-bc-ports-narrowness-postmortem.md`) is the encoded lesson; see `references/pre-flight-schema-check.md` for the procedure.
 
-### Don't:
+**Operator-shape carve-out:** `AskUserQuestion` is permitted ONLY for shape decisions affecting > 50 files OR a schema/contract surface (carrier choice, struct-field shape, frontmatter-key shape). See `references/autonomous-execution.md` for the bound on this exception.
 
-- ❌ Run agents sequentially — they're independent
-- ❌ Use the same focus lens for all point mutations — diversify
-- ❌ Skip fresh random candidates — they prevent population collapse
-- ❌ Show agents the full population — each agent sees only its parent(s)
+### Step 4.5: Source-surface detection (pre-gate sync)
 
-### Operator assignment (k=4, 2 survivors, 2 new slots)
+Before invoking the regression gate, sync downstream artifacts when the staged diff touches binary or embedded surfaces:
 
-| Slot  | Operator                              | Parents               | Focus             |
-| ----- | ------------------------------------- | --------------------- | ----------------- |
-| New 1 | Point mutation                        | Best survivor         | Randomly selected |
-| New 2 | Crossover OR Fresh random (alternate) | Both survivors / Seed | --                |
+- `cli/**/*.go` changed → `cd cli && make build && go install ./cmd/ao`
+- `skills/**` or `hooks/**` changed → `cd cli && make sync-hooks`
+- `skills-codex/**` changed → `bash scripts/regen-codex-hashes.sh`
 
-### Operator assignment (k=6, 3 survivors, 3 new slots)
+Without these, the gate fails on stale-binary or embedded-drift errors that look like real regressions. See `references/gate-hygiene.md` for the detection recipe.
 
-| Slot  | Operator       | Parents         | Focus       |
-| ----- | -------------- | --------------- | ----------- |
-| New 1 | Point mutation | Best survivor   | Random lens |
-| New 2 | Crossover      | Top 2 survivors | --          |
-| New 3 | Fresh random   | Seed only       | --          |
+**Adding or modifying a skill?** A skill touches **six derived surfaces** (registry.json SKU catalog, skill-domain-map, context-map, skill counts + the hand-added `SKILL-TIERS.md` row, codex twin, narrative counts) — regenerate them in one shot via `scripts/regen-all.sh` + the codex/count steps, never piecemeal. The most-missed is `registry.json` (stale → `contracts-sync` + `correctness(ubuntu)` fail together). See [references/new-skill-landing.md](references/new-skill-landing.md) for the full procedure, then [references/gate-hygiene.md](references/gate-hygiene.md) for the pre-push diff-scope check + pre-existing-vs-mine red triage.
 
-### Point mutation prompt
+### Step 5: Regression Gate
 
-```
-You are optimizing code for: [objective]
+After execution, run the project build+test bundle. If the repo execution profile declared `validation_commands`, run them. If a repo-local program contract exists, run its `validation_commands` too, de-duplicated and in declared order after the repo bootstrap checks. Also check `if [ -f scripts/check-wiring-closure.sh ]; then bash scripts/check-wiring-closure.sh; fi`.
 
-Current implementation (fitness [score]):
-[code]
+Use the program contract's `decision_policy` as the first keep/revert rule set for the cycle:
+- if the cycle breached immutable scope, treat it as regressed
+- if program validation commands fail, treat it as regressed
+- if the decision policy declares a revert rule that fired, revert before consuming claimed work or advancing the queue
 
-Best known fitness: [best_score].
-The fitness function is: [command]. Higher = better.
+Treat program `stop_conditions` as per-cycle done criteria. Do not mark claimed work consumed, completed, or productive until both the stop conditions and the regression gate pass.
 
-Make ONE meaningful change to improve fitness.
-Focus on: **[randomly selected lens]**.
+If not `--beads-only`, re-measure fitness to `fitness-latest-post.json` and detect regressions. The AgentOps CLI is required for fitness measurement. Read `references/fitness-scoring.md` for the full measurement, regression detection, and revert procedure.
 
-Do not rewrite from scratch. Make a targeted modification.
-Output the complete modified file(s).
-```
+**Gate output parsing:** trust the structural marker `^.*Pass [0-9]+: (FAILED|BLOCKED)` over the trailing status line — the trailing line conflates blocking and advisory results. See `references/gate-hygiene.md`.
 
-### Crossover prompt
+Work finalization after the regression gate: claim it first, then keep `consumed: false` until the /rpi cycle succeeds. After the cycle's `/post-mortem` finishes, immediately re-read `.agents/rpi/next-work.jsonl` before selecting the next item. Read `references/knowledge-loop-integration.md` for full claim/release semantics.
 
-```
-You are combining two implementations that both optimize for: [objective]
+### Step 6: Log Cycle + Commit
 
-Parent A (fitness [score_a]):
-[code_a]
+Two paths: productive cycles get committed, idle cycles are local-only.
 
-Parent B (fitness [score_b]):
-[code_b]
+**PRODUCTIVE cycles** (result is improved, regressed, or harvested): compute quality score (if `--quality`), log via `scripts/evolve-log-cycle.sh`, commit if real changes exist. See `references/quality-mode.md` for scoring.
 
-The fitness function is: [command]. Higher = better.
+**IDLE cycles** (nothing found even after generator layers): log via `evolve-log-cycle.sh` with `--result "unchanged"`. No git add, no commit.
 
-Combine the best ideas from both parents into a single implementation.
-Do not simply pick one parent. Identify what each does well and synthesize.
-Output the complete merged file(s).
-```
+**Record the XP/BDD/TDD trace.** When a cycle worked a product or goal-backed gap, pass `--trace-json` to `evolve-log-cycle.sh` (or `ao loop append`) so the cycle records the continuous-evolution kernel — goal hypothesis → selected gap → Gherkin scenario → first failing proof → red/green evidence → refactor note → validation evidence → ratchet action → goal reshape — and a reviewer can reconstruct the cycle without the transcript. A trivial one-shot cycle records a `trace.exemption_reason` instead of carrying false BDD/TDD ceremony. Trace completeness is advisory, never a gate. See `references/cycle-history.md` ("XP/BDD/TDD Evidence Trace").
 
-### Fresh random prompt
-
-```
-You are writing code to optimize: [objective]
-
-The fitness function is: [command]. Higher = better.
-Current best fitness: [best_score].
-
-Here is the original (unoptimized) starting point for reference:
-[seed code]
-
-Write a completely new implementation. Do NOT modify the original —
-start from first principles. Use a different algorithm, different
-data structures, or a fundamentally different approach.
-Output the complete file(s).
-```
-
-## Phase: Converge
-
-Triggered when any termination condition is met.
-
-### Termination conditions
-
-| Condition | Trigger                           | Message                                 |
-| --------- | --------------------------------- | --------------------------------------- |
-| Plateau   | `stale_count >= stale_limit`      | "Fitness plateaued for {N} generations" |
-| Budget    | `generation >= max_generations`   | "Maximum generations reached"           |
-| User stop | User chose "Stop and keep winner" | "Stopped by user"                       |
-
-### Do:
-
-- Present the winning candidate with full lineage
-- Show diff of winner vs seed (`git diff evolve/gen0-seed..evolve/{winner}`)
-- Show fitness curve (generation to best fitness)
-- Use `AskUserQuestion` for final disposition
-
-### Don't:
-
-- ❌ Auto-merge the winner — always ask
-- ❌ Delete branches before user confirms — they may want to inspect losers
-- ❌ Skip the diff — the user needs to see what actually changed
-
-### Final report
-
-```markdown
-## Evolution Complete
-
-**Winner:** gen5-2 (fitness 1,247)
-**Improvement:** +535 from baseline (+75%)
-**Generations:** 5 (converged: plateau for 3 generations)
-**Total candidates evaluated:** 20
-
-### Lineage
-
-gen0-seed (712)
-→ gen1-2 (923, mutation/caching)
-→ gen2-3 (978, mutation/loop)
-→ gen3-2 (1,089, crossover)
-→ gen5-2 (1,247, mutation/branch elimination)
-
-### Fitness Curve
-
-| Gen | Best  | Avg   | Delta Best |
-| --- | ----- | ----- | ---------- |
-| 0   | 712   | 712   | --         |
-| 1   | 923   | 847   | +211       |
-| 2   | 978   | 901   | +55        |
-| 3   | 1,089 | 970   | +111       |
-| 4   | 1,247 | 1,102 | +158       |
-| 5   | 1,247 | 1,150 | 0          |
-```
-
-### Options
-
-```
-AskUserQuestion:
-1. "Apply winner" (Recommended) — Merge winning branch to base, clean up
-2. "Apply winner on new branch" — Create clean branch with winning code
-3. "Keep all branches" — Leave everything for archaeology
-4. "Discard all" — Delete all evolve/* branches, return to base
-```
-
-### Apply winner
+### Step 7: Loop or Stop
 
 ```bash
-git checkout $BASE_BRANCH
-git merge evolve/$WINNER --no-ff -m "evolve: apply winner ($WINNER, fitness $SCORE)"
-git branch -D $(git branch --list 'evolve/*')
+while true; do
+  # Step 1 .. Step 6
+  # Stop ONLY if: operator override (KILL/STOP), max-cycles, regression-breaker,
+  # or genuine stagnation (bd ready=0 AND harvested=0 AND failing-goals=0 AND
+  # generators dry across 3 passes). Context exhaustion is NOT a stop — it's a
+  # session-handoff signal (HANDOFF marker) that the next cron-fire clears.
+  CYCLE=$((CYCLE + 1))
+done
 ```
 
-## Fitness Function Contract
+**Stop reasons (soc-5qit, ALL require genuine reason — never just context size):**
 
-The fitness command must:
+1. **KILL/STOP file present** — operator override.
+2. **`--max-cycles=N` cap reached**.
+3. **Genuine stagnation** — `bd ready=0 AND harvested-unconsumed=0 AND failing-goals=0 AND GENERATOR_EMPTY_STREAK>=2 AND IDLE_STREAK>=2`. Writes DORMANT, which auto-clears in Step 1 the moment `bd create` adds a new ready bead.
+4. **Regression breaker after a revert**.
 
-1. **Exit 0** on success. Non-zero = candidate is invalid (fitness = -infinity).
-2. **Print a number as the last line of stdout.** Parsed as a float. Higher = better.
-3. **Be deterministic enough to compare.** If stochastic, average multiple runs within the script.
-4. **Run in the repo root.** Working directory is the repo root with the candidate's code checked out.
+**Context exhaustion is NOT a stop (soc-5qit).** Heavy-context sessions write `.agents/evolve/HANDOFF` (non-sticky), log `result: "context-handoff"` to cycle-history, and exit the turn cleanly. The next cron-fire (compacted/fresh context) clears HANDOFF in Step 1 and resumes. The loop is continuous across compactions; never write DORMANT for context size. See `references/context-budget.md`.
 
-### Examples
+**Mandatory checkpoint #6 — session-PR threshold (NOT terminal, gates next cycle):** at `session_pr_count >= 5` (soc-waxr default), invoke `/post-mortem --deep`, wait for verdict file. PASS → continue. WARN → continue with caveat in next cycle's `notes`. FAIL or non-convergence → write STOP. Agent MUST NOT self-grade or self-write STOP. Full procedure in `references/postmortem-checkpoint.md` (soc-n75z).
 
+**Self-perpetuation modes:** the terminal-native `evolve` loop and the Claude-Code-harness `ScheduleWakeup` end-of-turn pattern are duals — both drive Step 1..Step 7 repeatedly against the same persisted state. See `references/autonomous-execution.md` for the ScheduleWakeup cadence and the rule that hard stops must NOT re-arm.
+
+Push only when productive work has accumulated:
 ```bash
-# Performance: operations per second
-./benchmark.sh
-
-# Accuracy: correct predictions out of test set
-python eval.py --dataset test.csv
-
-# Test pass rate
-make test 2>&1 | grep -oP '\d+ passed' | grep -oP '\d+'
-
-# Lower-is-better metrics: negate so higher = better
-echo "-$(./measure_latency.sh)"    # Latency
-echo "-$(wc -c < solution.py)"     # Code size
-
-# Multi-metric composite
-python evaluate.py  # Script prints composite score as last line
+if [ $((PRODUCTIVE_THIS_SESSION % 5)) -eq 0 ] && [ "$PRODUCTIVE_THIS_SESSION" -gt 0 ]; then
+  git push
+fi
 ```
 
-## Branch Management
+**Drive to completion (orchestrator-merge model, soc-2drk).** Where the repo requires PRs (branch protection rejects direct `main` pushes), a productive cycle does not stop at "PR opened" — the loop is the orchestrator that drives each bead to *merged*. Ship the bead from its per-bead worktree as a PR (trailers `Closes-scenario` / `Bounded-context` / `Evidence`), wait for CI, and **squash-merge to main yourself once CI is green** (`gh pr merge <N> --squash --admin`), then `bd close` the bead and remove the worktree. **Green CI is the only merge gate** — on a quality/test red, fix-and-repush or revert; never merge red. The loop may dispatch sub-agents to implement and drives their PRs to merge too. The operator stays *on* the loop (intent + STOP marker), not *in* it (per-PR approval). This **supersedes "operator is the merge gate"** for the autonomous loop — see [ADR-0008](../../docs/adr/ADR-0008-evolve-intelligent-agile-operating-model.md).
 
-### Naming
+**Confirmed-MERGED gate before `bd close` (hard, not advisory).** Re-confirm `gh pr view <N> --json state -q .state` returns `MERGED` *before* `bd close` — never close on a `gh pr merge` exit code, a log line, or a batch `bd --json` query (those flake to null/0). **Close a parent epic ONLY after every child PR is independently confirmed `MERGED`**; re-query per child first, and one non-merged child aborts the epic close. (Caught two premature epic-closes in the 2026-05-31 crank session — this gate is the governance checkpoint, applied here too.) Enforce via the committed `scripts/reconcile-pr.sh <pr> <bead> [--epic <epic>]` + `scripts/check-epic-children-closed.sh <epic>` (hermetic-tested in `tests/scripts/`), not by hand.
 
-`evolve/gen{N}-{id}` where N = generation, id = candidate number within generation.
+### Teardown
 
-Special: `evolve/gen0-seed` = the original code, unmodified. Never deleted until final cleanup.
+Read `references/knowledge-loop-integration.md` for the full teardown learning extraction procedure (commit staged artifacts, run `/post-mortem`, push, report summary).
 
-### Lifecycle
+A teardown `/post-mortem` is a light-touch retrospective on session-end. It does NOT substitute for the mandatory threshold checkpoint (`references/postmortem-checkpoint.md`); that one is council-gated and edge-triggered at `session_pr_count >= 5`. Never write `.agents/evolve/STOP` as a substitute for the checkpoint's verdict file — STOP without a verdict is the 2026-05-20 anti-pattern (soc-n75z).
+
+**Release-context teardown (MANDATORY when the loop ran on a release-shaped branch):**
+
+When the current branch matches `release/*`, `v*-prep`, `v*-evolve-run`, or `v\d+\.\d+*`, the teardown report MUST NOT recommend `/release` as the next step. Instead, emit the explicit pre-release checklist below — the operator must run these AND confirm green before tagging:
 
 ```
-Created (breed) → Evaluated → Alive or Eliminated
-  Alive → survives to next generation (may become parent)
-  Eliminated → branch deleted immediately after selection
+## Pre-release checklist — REQUIRED before /release
+
+The autonomous loop has stopped, but release-readiness gates have NOT been run
+during cycles. The operator MUST run the following sequence and confirm green
+before invoking /release. Do NOT skip any of these on the basis of "cycles
+were green" — fast pre-push gate ≠ full pre-push gate; goals-measure ≠
+release readiness.
+
+  [ ] 1. Regenerate ALL derived surfaces if any cobra command/flag changed:
+         bash scripts/regen-all.sh          # COMMANDS.md, registry.json, maps
+         # ADDING an `ao` command also needs the 2 surfaces regen-all only WARNS
+         # about: cli/cmd/ao/cobra_commands_test.go expectedCmds (x2 lists) +
+         # the cli-command-surface heading counts in
+         # evals/agentops-core/fixtures/cli-command-surface-smoke.sh AND
+         # evals/agentops-core/cli-command-surface-matrix.json (top/sub/all).
+         # Run the smoke fixture to read the exact new counts. (ag-jy12 will
+         # automate this.) Full procedure in
+         # [references/ao-command-landing.md](references/ao-command-landing.md)
+         git diff cli/docs/COMMANDS.md registry.json   # commit if non-empty
+
+  [ ] 2. Run the FULL pre-push gate (NOT --fast) with fail-fast OFF, so a
+         PRE-EXISTING failure (e.g. corpus-freshness) cannot mask your own
+         regressions by stopping the run early:
+         PRE_PUSH_FAIL_FAST=false bash scripts/pre-push-gate.sh
+
+  [ ] 3. Run the release-readiness gate:
+         bash scripts/ci-local-release.sh
+
+  [ ] 4. (Recommended) Smoke /evolve with the new typed read paths if BC port
+         wire-ups changed:
+         /evolve --quick --max-cycles=1 --dry-run
+
+Only after [1]–[3] pass: /release <version>
+
+If any check fails, fix the issue, re-run all four, then ship.
 ```
 
-### Branch count
+The handoff artifact (e.g., `.agents/runs/<release>/READY-TO-TAG.md`) MUST contain this checklist verbatim, unchecked, when written by the loop. The operator checks the boxes as they complete each gate; "ready to tag" means the boxes are checked, not that the loop ran cleanly.
 
-At any moment: at most k (current population) + seed (1) = k+1 branches. Eliminated candidates are deleted eagerly.
+**Rationale:** cycles 170-183 of the v2.41-evolve-run shipped clean code, all unit/integration tests green, `ao goals measure` 0/30 failing for three consecutive cycles — but the loop never ran the full pre-push gate, `ci-local-release.sh`, or `generate-cli-reference.sh`. The latter was load-bearing (the branch removed a CLI flag). Per-cycle `--fast` is a smoke test, not release readiness. Operator caught the gap; this checklist makes it mechanical.
 
-## Resumption (Post-Compaction)
+## Examples
 
-1. Run `TaskList` to find the evolve tracking task
-2. Read task description for persisted state
-3. Verify branches exist: `git branch --list 'evolve/*'`
-4. Check for running background agents (breeding phase)
-5. Resume from appropriate phase:
-   - Breeding agents still running → wait, then Evaluate
-   - Population has fitness but no selection → Select
-   - Selection done, no breeding yet → Report or Breed
-   - Unclear → re-evaluate current population
+**User says:** `/evolve --max-cycles=5`
+**What happens:** Evolve re-enters the full selection ladder after every `rpi` cycle and runs producer layers instead of idling on empty queues.
 
-## Anti-patterns
+**User says:** `/evolve --beads-only`
+**What happens:** Evolve skips goals measurement and works through `bd ready` backlog.
 
-- **Optimizing without a fitness function** — "Make it faster" is not measurable. Require a command that produces a number.
-- **k=1** — That's hill climbing, not evolution. Use `loop-codex-review` instead.
-- **Evaluating in parallel without isolation** — Concurrent checkouts corrupt the working tree. Sequential or worktrees only.
-- **Keeping all branches** — 40 branches after 10 generations is unnavigable. Eliminate eagerly.
-- **Same focus lens for all mutations** — Population converges to a single approach. Diversify.
-- **Skipping fresh random** — Without new genetic material, the population collapses to a local optimum.
-- **Breeding before evaluating** — Selection requires fitness scores. Always evaluate first.
-- **Auto-merging the winner** — The human must approve. Best-by-fitness may have unacceptable trade-offs.
+**User says:** `/evolve --dry-run`
+**What happens:** Evolve shows what would be worked on without executing.
 
-## Quick Reference: Don'ts
+**User says:** `/evolve --compile`
+**What happens:** Evolve runs `ao mine` + `ao defrag` at session start to surface fresh signal (orphaned research, code hotspots, oscillating goals) before the first evolve cycle. Use before a long autonomous run or after a burst of development activity.
 
-| Phase      | Don't                                                                      |
-| ---------- | -------------------------------------------------------------------------- |
-| Initialize | Skip fitness validation, assume target files, start without baseline       |
-| Seed       | Same focus for all agents, run sequentially, skip focus lens               |
-| Evaluate   | Parallel without worktrees, skip invalid candidates, discard before select |
-| Select     | Keep all branches, delete before recording fitness                         |
-| Report     | Skip HIL, present without trend context, auto-continue                     |
-| Breed      | Run sequentially, same lens for mutations, skip fresh random               |
-| Converge   | Auto-merge, delete before user confirms, skip the diff                     |
+**User says:** `evolve`
+**What happens:** See `references/examples.md` for a worked overnight flow that moves through beads -> harvested work -> goals -> testing -> bug hunt -> feature suggestion before dormancy is considered.
 
----
+See `references/examples.md` for detailed walkthroughs.
 
-Begin evolve now. Parse args for fitness command (first positional), target files (`--files` or ask), population size (`-k`, default 4), max generations (`-g`, default 10), and stale limit (`-s`, default 3). Validate the fitness command produces a number. Evaluate baseline fitness on current code. Then create the initial population with k diverse agents, each with a different focus lens. Enter the evolutionary loop: Evaluate → Select → Report → Breed → repeat. Present the leaderboard to the human after each generation.
+## Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| Loop exits immediately | Remove `~/.config/evolve/KILL` or `.agents/evolve/STOP` |
+| Stagnation after repeated empty passes | Queue layers and producer layers were empty across multiple passes — dormancy is the fallback outcome |
+| `ao goals measure` hangs | Use `--timeout 30 --total-timeout 75` or `--beads-only` to skip |
+| Regression gate reverts | Review reverted changes, narrow scope, re-run; claimed work items must be released back to available state |
+
+See `references/cycle-history.md` for advanced troubleshooting.
+
+## References
+
+- [references/evolve.feature](references/evolve.feature) — Executable spec: gated cycles, ladder, bounded slice, never-self-halt
+- [references/long-loop-discipline.md](references/long-loop-discipline.md) — Disk-is-truth axiom
+- [references/artifacts.md](references/artifacts.md) — Generated files registry
+- [references/autonomous-execution.md](references/autonomous-execution.md) — Autonomous-loop rules + operator-shape carve-out
+- [references/snapshot-pattern-for-long-cycle-gates.md](references/snapshot-pattern-for-long-cycle-gates.md) — Snapshot pattern for long-cycle gates
+- [references/compounding.md](references/compounding.md) — Knowledge flywheel and work harvesting
+- [references/context-budget.md](references/context-budget.md) — `CONTEXT_BUDGET_EXHAUSTED` as a third stop reason and handoff protocol
+- [references/convergence-mechanics.md](references/convergence-mechanics.md) — Read-path mechanisms for compounding
+- [references/domain-evolution-bootstrap.md](references/domain-evolution-bootstrap.md) — BDD/DDD/Hexagonal/TDD/XP control surface for skill/domain evolution
+- [references/cycle-history.md](references/cycle-history.md) — JSONL format, recovery protocol, kill switch
+- [references/examples.md](references/examples.md) — Detailed usage examples
+- [references/fitness-scoring.md](references/fitness-scoring.md) — Baseline capture, regression detection, revert procedure
+- [references/gate-hygiene.md](references/gate-hygiene.md) — Pre-gate source-surface detection, structural gate-output parsing, pre-push diff-scope check, pre-existing-vs-mine red triage
+- [references/new-skill-landing.md](references/new-skill-landing.md) — The six derived surfaces a new/modified skill must regenerate in one shot to stay one-shot-green
+- [references/ao-command-landing.md](references/ao-command-landing.md) — The surfaces a new/renamed `ao` command must regenerate (cobra expectedCmds x2 + cli-command-surface counts that regen-all only WARNS about)
+- [references/goals-schema.md](references/goals-schema.md) — GOALS.yaml format and continuous metrics
+- [references/knowledge-loop-integration.md](references/knowledge-loop-integration.md) — Claim/release semantics and harvest re-read
+- [references/mechanical-batches.md](references/mechanical-batches.md) — Script-first vs per-file Edit for > 20-file uniform batches
+- [references/metronome-gate.md](references/metronome-gate.md) — Cross-cycle same-mode-repeat blocker
+- [references/oscillation.md](references/oscillation.md) — Oscillation detection and quarantine
+- [references/pre-flight-schema-check.md](references/pre-flight-schema-check.md) — Cheap field-fit check before architectural migration cycles
+- [references/postmortem-checkpoint.md](references/postmortem-checkpoint.md) — Stop reason #6: session-PR post-mortem checkpoint (soc-n75z)
+- [references/parallel-execution.md](references/parallel-execution.md) — Parallel /swarm architecture
+- [references/quality-mode.md](references/quality-mode.md) — Quality-first mode: scoring, priority cascade, artifacts
+- [references/scout-mode.md](references/scout-mode.md) — Scout-mode as a first-class cycle result; scope filter procedure
+- [references/teardown.md](references/teardown.md) — Trajectory computation and session summary
+
+## See Also
+
+- `skills/curate/SKILL.md` — the knowledge compounder; `--mode=harvest` gathers artifacts and `--mode=dream` runs the compounding loop overnight
+- `skills/rpi/SKILL.md` — Full lifecycle orchestrator (called per cycle)
+- `skills/crank/SKILL.md` — Epic execution (called for beads epics)
+- `docs/contracts/autodev-program.md` — Repo-local operational contract for bounded autonomous development
+- `GOALS.yaml` — Fitness goals for this repo
+- [test](../test/SKILL.md) — Test generation and coverage analysis
+- [refactor](../refactor/SKILL.md) — Safe, verified refactoring
+- [deps](../deps/SKILL.md) — Dependency audit and vulnerability scanning
+- [perf](../perf/SKILL.md) — Performance profiling and benchmarking

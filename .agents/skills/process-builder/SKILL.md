@@ -251,7 +251,7 @@ The `ctx` object provides these intrinsics:
 | Method | Purpose | Behavior |
 |--------|---------|----------|
 | `ctx.task(taskDef, args, opts?)` | Execute a task | Returns result or throws typed exception |
-| `ctx.breakpoint(payload)` | Human approval gate | Pauses until approved via breakpoints service |
+| `ctx.breakpoint(payload)` | Human approval gate | Pauses until approved via human |
 | `ctx.sleepUntil(isoOrEpochMs)` | Time-based gate | Pauses until specified time |
 | `ctx.parallel.all([...thunks])` | Parallel execution | Runs independent tasks concurrently |
 | `ctx.parallel.map(items, fn)` | Parallel map | Maps items through task function |
@@ -582,7 +582,7 @@ export async function process(inputs, ctx) {
 
 ## Resources
 
-- **SDK Reference**: `plugins/babysitter/skills/babysit/reference/sdk.md`
+- **SDK Reference**: `plugins/babysitter/skills/babysit/process/reference/sdk.md`
 - **Methodology Backlog**: `plugins/babysitter/skills/babysit/process/methodologies/backlog.md`
 - **Specializations Backlog**: `plugins/babysitter/skills/babysit/process/specializations/backlog.md`
 - **Example: ATDD/TDD**: `plugins/babysitter/skills/babysit/process/methodologies/atdd-tdd/`

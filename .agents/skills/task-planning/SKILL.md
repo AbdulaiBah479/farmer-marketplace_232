@@ -1,272 +1,111 @@
 ---
 name: task-planning
-description: 実装タスク管理書（tasks.md）を作成・編集します。設計書からタスク分解、AIエージェント向けの具体的な実装指示、TDD手順の定義が必要な場合に使用してください。requirements.md、design.mdとの整合性を逆順レビューで確認します。
+description: Generates phased, dependency-ordered implementation tasks from specifications. Use after spec is complete and before starting implementation.
+alwaysApply: false
+category: planning
+tags:
+- speckit
+- tasks
+- planning
+- implementation
+- dependencies
+dependencies:
+- superpowers:writing-plans
+- superpowers:executing-plans
+tools: []
+modules:
+- phase-structure.md
+- dependency-patterns.md
+- modules/tech-stack-patterns.md
+progressive_loading: true
+usage_patterns:
+- task-generation
+- dependency-ordering
+- implementation-planning
+complexity: intermediate
+model_hint: standard
+estimated_tokens: 1200
 ---
+# Task Planning
 
-# タスク計画スキル
+## Overview
 
-設計書を基に、AIエージェント（Claude Code等）が実行可能な具体的なタスクに分解します。
+Transforms specifications and implementation plans into concrete, dependency-ordered tasks. Creates phased breakdowns that guide systematic implementation.
 
-## 概要
+## When To Use
 
-このスキルは、以下の成果物を作成・管理します：
-- **docs/tasks.md**: 追跡可能な個別タスクへの作業分解
+- Converting specifications to implementation tasks
+- Planning feature implementation order
+- Identifying parallel execution opportunities
+- Breaking down complex features into phases
 
-## このスキルを使用する場面
+## When NOT To Use
 
-### 新規作成時
-- 設計書からタスクを分解したい場合
-- AIエージェント向けの実装指示を作成したい場合
-- TDD（テスト駆動開発）の手順を定義したい場合
-- 実装の優先順位・依存関係を整理したい場合
+- Writing specifications - use spec-writing
 
-### 既存ドキュメントの修正時
-- docs/tasks.mdにタスクを追加・修正する場合
-- タスクのステータスを更新する場合
-- 依存関係や見積もりを修正する場合
+## Task Phases
 
-## 前提条件
+Tasks follow a 5-phase structure from setup through polish:
 
-### 前段スキルとの連携
+- **Phase 0: Setup** - Project initialization, dependencies, configuration
+- **Phase 1: Foundation** - Data models, interfaces, test infrastructure
+- **Phase 2: Core Implementation** - Business logic, APIs, services
+- **Phase 3: Integration** - External services, middleware, logging
+- **Phase 4: Polish** - Optimization, documentation, final testing
 
-**requirements.md、design.mdが存在する場合**:
-1. 両方のドキュメントを読み込む
-2. タスクが設計・要件と整合しているか確認
-3. 逆順レビュー（タスク → 設計 → 要件）を実施
+For detailed phase definitions, selection guidelines, and anti-patterns, see `modules/phase-structure.md`.
 
-## AIエージェント向けタスク設計
+## Task Format
 
-### タスク粒度の目安
+Each task includes:
+- **ID**: Unique identifier (TASK-001)
+- **Description**: Clear action statement
+- **Phase**: Which phase it belongs to
+- **Dependencies**: Tasks that must complete first
+- **Parallel Marker**: [P] if can run concurrently
+- **Files**: Affected file paths
+- **Criteria**: How to verify completion
 
-| 分類 | 作業時間 | 内容例 |
-|------|----------|--------|
-| シンプル | 10-20分 | 単一ファイル作成、基本関数実装、設定追加 |
-| 標準 | 20-40分 | 複数ファイル、APIエンドポイント、基本テスト |
-| 複雑 | 40-90分 | 複数コンポーネント統合、包括的テスト |
-| 要分解 | 90分以上 | さらに小さいタスクに分解 |
+## Dependency Rules
 
-### タスク定義の必須要素
+Dependencies define execution order and identify parallelization opportunities:
 
-```markdown
-#### タスク1.1: [タスクタイトル]
+- **Sequential Tasks**: Execute in strict order when dependencies exist
+- **Parallel Tasks [P]**: Can run concurrently when ALL nonconflicting conditions are met
+- **File Coordination**: Tasks affecting same files MUST run sequentially
 
-**説明**:
-- 対象ファイルパス: `src/components/Button.tsx`
-- 実装する機能の詳細
-- 使用する技術・ライブラリ
+**Nonconflicting Criteria for Parallel Execution**:
+- ✅ Files: No file overlap between tasks
+- ✅ State: No shared configuration or global state
+- ✅ Dependencies: All prerequisites satisfied
+- ✅ Code paths: No merge conflicts possible
+- ✅ Outputs: Tasks don't need each other's results
 
-**技術的文脈**:
-- フレームワーク: Next.js 14 (App Router)
-- スタイリング: Tailwind CSS
-- 参照すべき既存コード: `src/components/Card.tsx`
+**Mark tasks with [P] ONLY if they pass ALL criteria above.**
 
-**情報の明確性**:
+For fan-out/fan-in patterns, task ID conventions, and validation rules, see `modules/dependency-patterns.md`.
 
-| 分類 | 内容 |
-|------|------|
-| 明示された情報 | [ユーザーから明確に指定された仕様] |
-| 不明/要確認の情報 | [推測が必要な項目] |
-
-**実装手順（TDD）**:
-1. テスト作成: `src/components/Button.test.tsx`
-2. テスト実行: 失敗を確認
-3. テストコミット
-4. 実装: テストを通過させる
-5. 実装コミット
-
-**受入基準**:
-- [ ] `src/components/Button.tsx`が存在する
-- [ ] TypeScriptの型定義が含まれている
-- [ ] テストが3つ以上ある
-- [ ] `npm test`で全テスト通過
-- [ ] ESLintエラーがゼロ
-
-**依存関係**: なし
-**推定工数**: 30分（AIエージェント作業時間）
-**ステータス**: `TODO`
-```
-
-## ドキュメント構造
+## Example Task Entry
 
 ```markdown
-# タスク
+## Phase 2: Core Implementation
 
-## 情報の明確性チェック（全体）
-### ユーザーから明示された情報
-- 実装対象のディレクトリ構造
-- テストフレームワーク
-- コーディング規約
-
-### 不明/要確認の情報
-| 項目 | 現状の理解 | 確認状況 |
-
-## 実装計画
-
-### フェーズ1: 基盤構築
-*推定期間: X分（AIエージェント作業時間）*
-
-#### タスク1.1: [タイトル]
-...
-
-### フェーズ2: コア機能
-...
-
-## タスクステータスの凡例
-- `TODO` - 未着手
-- `IN_PROGRESS` - 作業中
-- `BLOCKED` - ブロック中
-- `REVIEW` - レビュー待ち
-- `DONE` - 完了
-
-## リスクと軽減策
+### TASK-007 - Implement user authentication service [P]
+**Dependencies**: TASK-003, TASK-004
+**Files**: src/services/auth.ts, src/types/user.ts
+**Criteria**: All auth tests pass, tokens are valid JWT
 ```
+**Verification:** Run `pytest -v` to verify tests pass.
 
-## TDD（テスト駆動開発）の原則
+## Quality Checklist
 
-### 基本サイクル
+- [ ] All requirements mapped to tasks
+- [ ] Dependencies are explicit
+- [ ] Parallel opportunities identified
+- [ ] Tasks are right-sized (not too large/small)
+- [ ] Each task has clear completion criteria
 
-```
-1. テストを書く
-   ↓
-2. テスト実行（失敗確認）
-   ↓
-3. テストをコミット
-   ↓
-4. 最小限の実装
-   ↓
-5. テスト通過を確認
-   ↓
-6. 実装をコミット
-   ↓
-7. リファクタリング（必要に応じて）
-```
+## Related Skills
 
-### TDD適用のタスク記述例
-
-```markdown
-**実装手順（TDD）**:
-1. テスト作成: `src/auth/authenticate.test.ts`にテストケースを作成
-   - 正常な認証のテスト
-   - 無効な認証情報のテスト
-   - 空の入力のテスト
-2. テスト実行: すべてのテストが失敗することを確認
-3. テストコミット: テストのみをコミット
-4. 実装: `authenticate.ts`を実装してテストを通過させる
-5. 実装コミット: すべてのテストが通過したらコミット
-```
-
-## ワークフロー
-
-1. **ドキュメント確認**: requirements.md、design.mdを読み込む
-2. **情報分類**: 明示された情報と不明な情報を分類
-3. **不明点確認**: 必要な情報をユーザーに確認
-4. **フェーズ分け**: 作業を論理的なフェーズに分割
-5. **タスク分解**: 各フェーズをAIエージェント向けタスクに分解
-6. **依存関係整理**: タスク間の依存関係を明確化
-7. **逆順レビュー**: タスク → 設計 → 要件の整合性確認
-8. **ユーザー確認**: 承認を得て完了
-
-## 逆順レビュープロセス
-
-### レビューの流れ
-
-```
-tasks.md → design.md → requirements.md
-（実装計画）  （技術設計）   （要件定義）
-```
-
-### ステップ1: タスク → 設計の整合性チェック
-
-| チェック項目 | 確認内容 |
-|-------------|---------|
-| コンポーネント対応 | タスクが参照するコンポーネントはdesign.mdに定義されているか |
-| API対応 | タスクで実装するAPIはdesign.mdのAPI設計と一致しているか |
-| データモデル対応 | タスクで使用するデータ構造はdesign.mdのスキーマと一致しているか |
-| 技術スタック | タスクで使用する技術はdesign.mdの技術的決定事項と一致しているか |
-
-### ステップ2: 設計 → 要件の整合性チェック
-
-| チェック項目 | 確認内容 |
-|-------------|---------|
-| 機能カバレッジ | すべての要件（REQ-XXX）に対応する設計要素があるか |
-| 非機能要件対応 | NFR-XXXの要件が設計に反映されているか |
-| 過剰設計チェック | requirements.mdにない機能が設計に含まれていないか |
-
-### 不整合発見時の報告
-
-```
-ドキュメントの整合性チェックで以下の不整合を発見しました：
-
-【タスク → 設計の不整合】
-1. タスク2.1で「PaymentService」を実装するとありますが、
-   design.mdにPaymentServiceの定義がありません。
-
-【設計 → 要件の不整合】
-2. design.mdに「通知機能」がありますが、
-   requirements.mdに対応する要件がありません。
-
-【過不足】
-3. REQ-005（レポート出力機能）に対応するタスクがありません。
-
-これらについて確認させてください：
-1. PaymentServiceの設計を追加しますか？
-2. 通知機能は必要ですか？
-3. REQ-005のタスクを追加しますか？
-```
-
-## 検証チェックリスト
-
-- [ ] タスクが適切な粒度に分解されている（20-40分程度）
-- [ ] 各タスクに受入基準がある
-- [ ] 依存関係が明確である
-- [ ] 推定工数が記載されている
-- [ ] ステータスが有効な値である
-- [ ] 各タスクの「情報の明確性」セクションが記載されている
-- [ ] 推測に基づく実装指示が含まれていない
-- [ ] TDD手順が含まれている
-- [ ] すべてのタスクがdesign.mdのコンポーネント/APIに対応している
-- [ ] すべての設計要素がrequirements.mdに対応している
-
-## ユーザーとの対話ガイドライン
-
-### 確認が必要な場面
-
-- タスクの粒度
-- 優先順位
-- 見積もり時間
-- 実装の順序
-- テストカバレッジの目標
-- 使用するライブラリのバージョン
-
-### サブエージェント向け情報の完全性
-
-各タスクに以下が含まれているか確認：
-
-**技術仕様**:
-- [ ] 対象ファイルの絶対パス
-- [ ] 使用するライブラリ/フレームワークのバージョン
-- [ ] 関数/クラスのシグネチャ
-- [ ] 型定義（TypeScriptの場合）
-
-**実装詳細**:
-- [ ] 入力の形式と型
-- [ ] 出力の形式と型
-- [ ] エラーケースとその処理方法
-
-**テスト仕様**:
-- [ ] テストファイルのパス
-- [ ] テストケースの具体的な内容
-- [ ] 期待される入出力の具体例
-
-## フェーズ分けの考え方
-
-1. **基盤構築**: 環境設定、基本構造
-2. **コア機能**: 主要な機能の実装
-3. **拡張機能**: 追加機能、改善
-4. **統合・テスト**: 結合、品質保証
-5. **リリース準備**: デプロイ、文書化
-
-## リソース
-
-- テンプレート: `assets/templates/tasks_template_ja.md`
-- タスクガイドライン: `references/task_guidelines_ja.md`
+- `spec-writing`: Creating source specifications
+- `speckit-orchestrator`: Workflow coordination

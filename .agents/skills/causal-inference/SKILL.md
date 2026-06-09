@@ -1,301 +1,126 @@
 ---
-name: Causal Inference
-description: Determine cause-and-effect relationships using propensity scoring, instrumental variables, and causal graphs for policy evaluation and treatment effects
+name: causal-inference
+description: >
+  Production-grade Bayesian causal inference with PyMC, CausalPy, and DoWhy. Enforces DAG-first
+  thinking, mandatory user checkpoints for assumptions, design-specific refutation, and defensible
+  reporting with causal language guardrails. Trigger on: causal inference, causal effect estimation,
+  treatment effects, counterfactuals, difference-in-differences (DiD), synthetic control, regression
+  discontinuity (RDD), interrupted time series (ITS), instrumental variables (IV), propensity scores,
+  DAGs, causal graphs, confounders, backdoor criterion, do-calculus, interventional distributions,
+  pm.do(), pm.observe(), CausalPy, DoWhy, mediation analysis, refutation, sensitivity analysis,
+  parallel trends, placebo tests, or any question of the form "does X cause Y" or "what is the
+  effect of X on Y."
+license: MIT
+metadata:
+  author: "[Alexandre Andorra](https://alexandorra.github.io/)"
+  version: "1.0"
 ---
 
 # Causal Inference
 
-## Overview
+## Dependencies
 
-Causal inference determines cause-and-effect relationships and estimates treatment effects, going beyond correlation to understand what causes what.
+This skill requires the **bayesian-workflow** skill for all PyMC modeling steps (priors, sampling,
+diagnostics, calibration, reporting).
 
-## When to Use
+Detect it:
 
-- Evaluating the impact of policy interventions or business decisions
-- Estimating treatment effects when randomized experiments aren't feasible
-- Controlling for confounding variables in observational data
-- Determining if a marketing campaign or product change caused an outcome
-- Analyzing heterogeneous treatment effects across different user segments
-- Making causal claims from non-experimental data using propensity scores or instrumental variables
-
-## Key Concepts
-
-- **Treatment**: Intervention or exposure
-- **Outcome**: Result or consequence
-- **Confounding**: Variables affecting both treatment and outcome
-- **Causal Graph**: Visual representation of relationships
-- **Treatment Effect**: Impact of intervention
-- **Selection Bias**: Non-random treatment assignment
-
-## Causal Methods
-
-- **Randomized Controlled Trials (RCT)**: Gold standard
-- **Propensity Score Matching**: Balance treatment/control
-- **Difference-in-Differences**: Before/after comparison
-- **Instrumental Variables**: Handle endogeneity
-- **Causal Forests**: Heterogeneous treatment effects
-
-## Implementation with Python
-
-```python
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.linear_model import LinearRegression, LogisticRegression
-from sklearn.preprocessing import StandardScaler
-from scipy import stats
-
-# Generate observational data with confounding
-np.random.seed(42)
-
-n = 1000
-
-# Confounder: Age (affects both treatment and outcome)
-age = np.random.uniform(25, 75, n)
-
-# Treatment: Training program (more likely for younger people)
-treatment_prob = 0.3 + 0.3 * (75 - age) / 50  # Inverse relationship with age
-treatment = (np.random.uniform(0, 1, n) < treatment_prob).astype(int)
-
-# Outcome: Salary (affected by both treatment and age)
-# True causal effect of treatment: +$5000
-salary = 40000 + 500 * age + 5000 * treatment + np.random.normal(0, 10000, n)
-
-df = pd.DataFrame({
-    'age': age,
-    'treatment': treatment,
-    'salary': salary,
-})
-
-print("Observational Data Summary:")
-print(df.describe())
-print(f"\nTreatment Rate: {df['treatment'].mean():.1%}")
-print(f"Average Salary (Control): ${df[df['treatment']==0]['salary'].mean():.0f}")
-print(f"Average Salary (Treatment): ${df[df['treatment']==1]['salary'].mean():.0f}")
-
-# 1. Naive Comparison (BIASED - ignores confounding)
-naive_effect = df[df['treatment']==1]['salary'].mean() - df[df['treatment']==0]['salary'].mean()
-print(f"\n1. Naive Comparison: ${naive_effect:.0f} (BIASED)")
-
-# 2. Regression Adjustment (Covariate Adjustment)
-X = df[['treatment', 'age']]
-y = df['salary']
-model = LinearRegression()
-model.fit(X, y)
-regression_effect = model.coef_[0]
-
-print(f"\n2. Regression Adjustment: ${regression_effect:.0f}")
-
-# 3. Propensity Score Matching
-# Estimate probability of treatment given covariates
-ps_model = LogisticRegression()
-ps_model.fit(df[['age']], df['treatment'])
-df['propensity_score'] = ps_model.predict_proba(df[['age']])[:, 1]
-
-print(f"\n3. Propensity Score Matching:")
-print(f"PS range: [{df['propensity_score'].min():.3f}, {df['propensity_score'].max():.3f}]")
-
-# Matching: find control for each treated unit
-matched_pairs = []
-treated_units = df[df['treatment'] == 1].index
-for treated_idx in treated_units:
-    treated_ps = df.loc[treated_idx, 'propensity_score']
-    treated_age = df.loc[treated_idx, 'age']
-
-    # Find closest control unit
-    control_units = df[(df['treatment'] == 0) &
-                      (df['propensity_score'] >= treated_ps - 0.1) &
-                      (df['propensity_score'] <= treated_ps + 0.1)].index
-
-    if len(control_units) > 0:
-        closest_control = min(control_units,
-                             key=lambda x: abs(df.loc[x, 'propensity_score'] - treated_ps))
-        matched_pairs.append({
-            'treated_idx': treated_idx,
-            'control_idx': closest_control,
-            'treated_salary': df.loc[treated_idx, 'salary'],
-            'control_salary': df.loc[closest_control, 'salary'],
-        })
-
-matched_df = pd.DataFrame(matched_pairs)
-psm_effect = (matched_df['treated_salary'] - matched_df['control_salary']).mean()
-print(f"PSM Effect: ${psm_effect:.0f}")
-print(f"Matched pairs: {len(matched_df)}")
-
-# 4. Stratification by Propensity Score
-df['ps_stratum'] = pd.qcut(df['propensity_score'], q=5, labels=False, duplicates='drop')
-
-stratified_effects = []
-for stratum in df['ps_stratum'].unique():
-    stratum_data = df[df['ps_stratum'] == stratum]
-    if (stratum_data['treatment'] == 0).sum() > 0 and (stratum_data['treatment'] == 1).sum() > 0:
-        treated_mean = stratum_data[stratum_data['treatment'] == 1]['salary'].mean()
-        control_mean = stratum_data[stratum_data['treatment'] == 0]['salary'].mean()
-        effect = treated_mean - control_mean
-        stratified_effects.append(effect)
-
-stratified_effect = np.mean(stratified_effects)
-print(f"\n4. Stratification by PS: ${stratified_effect:.0f}")
-
-# 5. Visualization
-fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-
-# Treatment distribution by age
-ax = axes[0, 0]
-treated = df[df['treatment'] == 1]
-control = df[df['treatment'] == 0]
-ax.hist(control['age'], bins=20, alpha=0.6, label='Control', color='blue')
-ax.hist(treated['age'], bins=20, alpha=0.6, label='Treated', color='red')
-ax.set_xlabel('Age')
-ax.set_ylabel('Frequency')
-ax.set_title('Age Distribution by Treatment')
-ax.legend()
-ax.grid(True, alpha=0.3, axis='y')
-
-# Salary vs Age (colored by treatment)
-ax = axes[0, 1]
-ax.scatter(control['age'], control['salary'], alpha=0.5, label='Control', s=30)
-ax.scatter(treated['age'], treated['salary'], alpha=0.5, label='Treated', s=30, color='red')
-ax.set_xlabel('Age')
-ax.set_ylabel('Salary')
-ax.set_title('Salary vs Age by Treatment')
-ax.legend()
-ax.grid(True, alpha=0.3)
-
-# Propensity Score Distribution
-ax = axes[1, 0]
-ax.hist(df[df['treatment'] == 0]['propensity_score'], bins=20, alpha=0.6, label='Control', color='blue')
-ax.hist(df[df['treatment'] == 1]['propensity_score'], bins=20, alpha=0.6, label='Treated', color='red')
-ax.set_xlabel('Propensity Score')
-ax.set_ylabel('Frequency')
-ax.set_title('Propensity Score Distribution')
-ax.legend()
-ax.grid(True, alpha=0.3, axis='y')
-
-# Treatment Effect Comparison
-ax = axes[1, 1]
-methods = ['Naive', 'Regression', 'PSM', 'Stratified']
-effects = [naive_effect, regression_effect, psm_effect, stratified_effect]
-true_effect = 5000
-
-ax.bar(methods, effects, color=['red', 'orange', 'yellow', 'lightgreen'], alpha=0.7, edgecolor='black')
-ax.axhline(y=true_effect, color='green', linestyle='--', linewidth=2, label=f'True Effect (${true_effect:.0f})')
-ax.set_ylabel('Treatment Effect ($)')
-ax.set_title('Treatment Effect Estimates by Method')
-ax.legend()
-ax.grid(True, alpha=0.3, axis='y')
-
-for i, effect in enumerate(effects):
-    ax.text(i, effect + 200, f'${effect:.0f}', ha='center', va='bottom')
-
-plt.tight_layout()
-plt.show()
-
-# 6. Doubly Robust Estimation
-from sklearn.ensemble import RandomForestRegressor
-
-# Propensity score model
-ps_model_dr = LogisticRegression().fit(df[['age']], df['treatment'])
-ps_scores = ps_model_dr.predict_proba(df[['age']])[:, 1]
-
-# Outcome model
-outcome_model = RandomForestRegressor(n_estimators=50, random_state=42)
-outcome_model.fit(df[['treatment', 'age']], df['salary'])
-
-# Doubly robust estimator
-treated_mask = df['treatment'] == 1
-control_mask = df['treatment'] == 0
-
-# Adjust for propensity score
-treated_adjusted = (treated_mask.astype(int) * df['salary']) / (ps_scores + 0.01)
-control_adjusted = (control_mask.astype(int) * df['salary']) / (1 - ps_scores + 0.01)
-
-# Outcome predictions
-pred_treated = outcome_model.predict(df[['treatment', 'age']].replace({'treatment': 0, 1: 1}))
-pred_control = outcome_model.predict(df[['treatment', 'age']].replace({'treatment': 1, 0: 0}))
-
-dr_effect = treated_adjusted.sum() / treated_mask.sum() - control_adjusted.sum() / control_mask.sum()
-print(f"\n6. Doubly Robust Estimation: ${dr_effect:.0f}")
-
-# 7. Heterogeneous Treatment Effects
-print(f"\n7. Heterogeneous Treatment Effects (by Age Quartile):")
-
-for age_q in pd.qcut(df['age'], q=4, duplicates='drop').unique():
-    mask = (df['age'] >= age_q.left) & (df['age'] < age_q.right)
-    stratum_data = df[mask]
-
-    if (stratum_data['treatment'] == 0).sum() > 0 and (stratum_data['treatment'] == 1).sum() > 0:
-        treated_mean = stratum_data[stratum_data['treatment'] == 1]['salary'].mean()
-        control_mean = stratum_data[stratum_data['treatment'] == 0]['salary'].mean()
-        effect = treated_mean - control_mean
-
-        print(f"  Age {age_q.left:.0f}-{age_q.right:.0f}: ${effect:.0f}")
-
-# 8. Sensitivity Analysis
-print(f"\n8. Sensitivity Analysis (Hidden Confounder Impact):")
-
-# Vary hidden confounder correlation with outcome
-for hidden_effect in [1000, 2000, 5000, 10000]:
-    adjusted_effect = regression_effect - hidden_effect * 0.1
-    print(f"  If hidden confounder worth ${hidden_effect}: Effect = ${adjusted_effect:.0f}")
-
-# 9. Summary Table
-print(f"\n" + "="*60)
-print("CAUSAL INFERENCE SUMMARY")
-print("="*60)
-print(f"True Treatment Effect: ${true_effect:,.0f}")
-print(f"\nEstimates:")
-print(f"  Naive (BIASED): ${naive_effect:,.0f}")
-print(f"  Regression Adjustment: ${regression_effect:,.0f}")
-print(f"  Propensity Score Matching: ${psm_effect:,.0f}")
-print(f"  Stratification: ${stratified_effect:,.0f}")
-print(f"  Doubly Robust: ${dr_effect:,.0f}")
-print("="*60)
-
-# 10. Causal Graph (Text representation)
-print(f"\n10. Causal Graph (DAG):")
-print(f"""
-Age → Treatment ← (Selection Bias)
-  ↓        ↓
-  └─→ Salary
-
-Interpretation:
-- Age is a confounder
-- Treatment causally affects Salary
-- Age directly affects Salary
-- Age affects probability of Treatment
-""")
+```bash
+ls ~/.claude/skills/bayesian-workflow/SKILL.md 2>/dev/null || ls .claude/skills/bayesian-workflow/SKILL.md 2>/dev/null
 ```
 
-## Causal Assumptions
+If not found, install it:
 
-- **Unconfoundedness**: No unmeasured confounders
-- **Overlap**: Common support on propensity scores
-- **SUTVA**: No interference between units
-- **Consistency**: Single version of treatment
+```bash
+git clone https://github.com/Learning-Bayesian-Statistics/baygent-skills.git /tmp/baygent-skills
+cp -r /tmp/baygent-skills/bayesian-workflow ~/.claude/skills/
+```
 
-## Treatment Effect Types
+For all PyMC modeling steps (priors, sampling, diagnostics, calibration, reporting), follow the
+bayesian-workflow skill.
 
-- **ATE**: Average Treatment Effect (overall)
-- **ATT**: Average Treatment on Treated
-- **CATE**: Conditional Average Treatment Effect
-- **HTE**: Heterogeneous Treatment Effects
+## Workflow overview
 
-## Method Strengths
+Every causal analysis follows this sequence. Steps 1-4 are the thinking phase (no code). Steps 5-8
+are the doing phase. Think before you do.
 
-- **RCT**: Gold standard, controls all confounders
-- **Matching**: Balances groups, preserves overlap
-- **Regression**: Adjusts for covariates
-- **Instrumental Variables**: Handles endogeneity
-- **Causal Forests**: Learns heterogeneous effects
+1. **Formulate the causal question** — Propose precise estimand (ATE, ATT, LATE, etc.). ⚠️ ASK USER TO CONFIRM.
+2. **Draw the DAG** — Propose causal graph with nodes, edges, and explicit non-edges. ⚠️ ASK USER TO CONFIRM. See [references/dags-and-identification.md](references/dags-and-identification.md)
+3. **Identify** — Determine identification strategy (backdoor, front-door, IV, RDD, DiD). ⚠️ ASK USER TO CONFIRM untestable assumptions. See [references/dags-and-identification.md](references/dags-and-identification.md)
+4. **Choose design** — Match problem to method using table below. ⚠️ ASK USER TO CONFIRM. See [references/quasi-experiments.md](references/quasi-experiments.md) or [references/structural-models.md](references/structural-models.md)
+5. **Estimate** — Build and fit the model. Delegate all PyMC mechanics to bayesian-workflow skill.
+6. **Refute** — MANDATORY. Run design-specific robustness checks. See [references/refutation.md](references/refutation.md)
+7. **Interpret** — Effect size + decision-relevant HDIs + probability of direction.
+8. **Report** — Generate causal analysis report. See [references/reporting.md](references/reporting.md)
 
-## Deliverables
+## Design selection guide
 
-- Causal graph visualization
-- Treatment effect estimates
-- Sensitivity analysis
-- Heterogeneous treatment effects
-- Covariate balance assessment
-- Propensity score diagnostics
-- Final causal inference report
+| Design | Use when | Key assumption | Tool |
+|---|---|---|---|
+| DiD | Treatment at known time, control group available | Parallel trends | CausalPy |
+| Staggered DiD | Treatment rolls out at different times | Parallel trends per cohort | CausalPy |
+| Synthetic Control | Single treated unit, donor pool available | Weighted donors approximate counterfactual | CausalPy |
+| ITS | Time series, intervention at known time, no control | No confounding event at treatment time | CausalPy |
+| RDD | Treatment by threshold on running variable | No manipulation at threshold | CausalPy |
+| IV | Endogenous treatment, valid instrument | Exclusion restriction, relevance | CausalPy |
+| IPSW | Observational data, treatment modeled | No unmeasured confounders, positivity | CausalPy |
+| Structural (do/observe) | Full causal theory, model mechanisms | Correct DAG specification | PyMC |
+| Counterfactual | "What would Y have been if X differed?" | Correct structural model | PyMC |
+
+## Critical rules
+
+- **No estimation without a confirmed DAG.** A causal graph is not optional decoration — it makes
+  assumptions explicit and determines the adjustment set. If the user resists, explain why the DAG
+  is non-negotiable before proceeding.
+- **No causal claims without refutation.** Every design has failure modes. Run at minimum one
+  design-specific robustness check (placebo test, sensitivity analysis, falsification test) before
+  reporting results. See [references/refutation.md](references/refutation.md).
+- **State assumptions before results.** Lead with what must be true for the estimate to be causal.
+  Bury the estimate after the assumptions, not before. This is not optional politeness — it prevents
+  misuse of results.
+- **Adapt HDIs to the decision context.** The bayesian-workflow skill's 94% HDI is a sensible
+  default; adapt it with explicit explanation when the decision stakes warrant it (e.g., 89% for
+  exploratory, 97% for high-stakes policy). Report multiple intervals when the decision threshold
+  matters.
+- **Downgrade causal language when warranted.** If identification assumptions are unverifiable or
+  refutation raises flags, soften claims: "consistent with a causal effect" not "causes", "estimated
+  effect" not "true effect". Flag uncertainty loudly in the report.
+- **Ask the user when domain knowledge is needed.** You cannot know whether an instrument is valid,
+  whether parallel trends holds, or whether a confounder exists without domain expertise. Ask
+  before assuming.
+- **Delegate PyMC mechanics to bayesian-workflow.** This skill handles causal structure and design.
+  The bayesian-workflow skill handles priors, sampling, diagnostics, calibration, and reporting
+  format. Don't duplicate those rules here.
+
+## Common gotchas
+
+These are battle-tested lessons that save hours of debugging:
+
+- **CausalPy formula syntax uses `C()` for categoricals.** Passing a string column directly without
+  `C()` will silently produce wrong dummy coding. Always wrap categorical treatment and group
+  variables: `"y ~ C(treatment) + C(group)"`.
+- **DoWhy requires explicit `U` nodes for unobserved confounders.** Omitting them from the graph
+  will make DoWhy treat your model as fully identified when it isn't. Add latent nodes explicitly
+  and mark them as unobserved.
+- **CausalPy's PyMC models don't auto-store log-likelihood.** Same issue as bayesian-workflow:
+  nutpie silently drops it. Call `pm.compute_log_likelihood(idata, model=model)` after sampling if
+  you need it for model comparison.
+- **Parallel trends is untestable in the post-treatment period.** Pre-treatment trend tests are
+  necessary but not sufficient — passing them doesn't prove the assumption holds after treatment.
+  State this explicitly in every DiD report.
+- **Synthetic control requires the treated unit to lie within the convex hull of donors.** If the
+  treated unit is an outlier (highest GDP, largest city), no weighted combination of donors can
+  approximate its counterfactual. Check this before running — if violated, the design is invalid.
+- **DiD group variable must be dummy-coded (0/1).** CausalPy rejects string labels like "treatment"/"control". Use integers: 1 = treatment, 0 = control. Data also requires a `unit` column.
+- **SyntheticControl expects wide-format data.** Index = time, columns = unit names, values = outcome. If your data is long format, pivot first: `df.pivot(index="date", columns="unit", values="outcome")`.
+
+## When things go wrong
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| Refutation fails | Assumption violated | Diagnose which assumption, try alternative design or sensitivity bounds |
+| DiD effect at placebo time | Parallel trends violated | Try synthetic control or add group-specific time trends |
+| RDD: bunching at threshold | Manipulation of running variable | Design is invalid for this threshold — report and stop |
+| SC: poor pre-treatment fit | Donors don't span treated unit | Add donors, expand donor pool, or reconsider design |
+| DoWhy says "not identifiable" | Insufficient adjustment set | Revise DAG, add measured variables, or change design |
+| CausalPy formula error | Wrong formula syntax | Use `C()` for categoricals, check variable names match dataframe columns |

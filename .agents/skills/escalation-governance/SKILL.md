@@ -1,27 +1,37 @@
 ---
 name: escalation-governance
-description: |
-  Guide to deciding whether to escalate from a lower model (haiku/sonnet) to
-  a higher model (sonnet/opus).
-
-  Triggers: model escalation, haiku to sonnet, sonnet to opus, reasoning depth,
-  task complexity, model selection, capability trade-off
-
-  Use when: evaluating whether to escalate models, facing genuine complexity
-  requiring deeper reasoning, novel patterns with no existing solutions,
-  high-stakes decisions requiring capability investment
-
-  DO NOT use when: thrashing without investigation - investigate root cause first.
-  DO NOT use when: time pressure alone - urgency doesn't change task complexity.
-  DO NOT use when: "just to be safe" - assess actual complexity instead.
-
-  NEVER escalate without investigation first. This is the Iron Law.
-version: 1.0.0
+description: 'Assess whether to escalate models. Use when evaluating reasoning depth.'
+alwaysApply: false
 category: agent-workflow
-tags: [escalation, model-selection, governance, agents, orchestration]
+tags:
+- escalation
+- model-selection
+- governance
+- agents
+- orchestration
 dependencies: []
 estimated_tokens: 800
+model_hint: standard
 ---
+## Table of Contents
+
+- [Overview](#overview)
+- [The Iron Law](#the-iron-law)
+- [When to Escalate](#when-to-escalate)
+- [When NOT to Escalate](#when-not-to-escalate)
+- [Decision Framework](#decision-framework)
+- [1. Have I understood the problem?](#1-have-i-understood-the-problem)
+- [2. Have I investigated systematically?](#2-have-i-investigated-systematically)
+- [3. Is escalation the right solution?](#3-is-escalation-the-right-solution)
+- [4. Can I justify the trade-off?](#4-can-i-justify-the-trade-off)
+- [Escalation Protocol](#escalation-protocol)
+- [Common Rationalizations](#common-rationalizations)
+- [Agent Schema](#agent-schema)
+- [Orchestrator Authority](#orchestrator-authority)
+- [Red Flags - STOP and Investigate](#red-flags-stop-and-investigate)
+- [Integration with Agent Workflow](#integration-with-agent-workflow)
+- [Quick Reference](#quick-reference)
+
 
 # Escalation Governance
 
@@ -36,6 +46,7 @@ Model escalation (haiku→sonnet→opus) trades speed/cost for reasoning capabil
 ```
 NO ESCALATION WITHOUT INVESTIGATION FIRST
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
 Escalation is never a shortcut. If you haven't understood why the current model is insufficient, escalation is premature.
 
@@ -133,6 +144,7 @@ escalation:
     - novel_pattern          # No existing patterns apply
     - high_stakes            # Error would be costly
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
 **Key points:**
 - Hints are advisory, not mandatory
@@ -165,6 +177,7 @@ If you catch yourself thinking:
 ## Integration with Agent Workflow
 
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 Agent starts task at assigned model
 ├── Task succeeds → Complete
 └── Task struggles →
@@ -174,6 +187,7 @@ Agent starts task at assigned model
     └── Don't investigate → WRONG PATH
         └── "Maybe escalate?" → NO. Investigate first.
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
 ## Quick Reference
 
@@ -186,3 +200,74 @@ Agent starts task at assigned model
 | "Maybe smarter model knows" | Never escalate on this basis |
 | Hint fires, task is actually simple | Override, stay at current model |
 | No hint fires, task is actually complex | Override, escalate |
+
+## Model Capability Notes
+
+**MCP Tool Search (Claude Code 2.1.7+)**: Haiku models do not support MCP tool search. If a workflow uses many MCP tools (descriptions exceeding 10% of context), those tools load upfront on haiku instead of being deferred. This can consume significant context. Consider escalating to sonnet for MCP-heavy workflows or ensure haiku agents use only native tools (Read, Write, Bash, etc.).
+
+**Claude.ai MCP Connectors (Claude Code 2.1.46+)**: Users with claude.ai connectors configured may have additional MCP tools auto-loaded, increasing the total tool description footprint. This makes it more likely that haiku agents will exceed the 10% tool search threshold. When escalation decisions involve MCP-heavy workflows, factor in claude.ai connector tool count via `/mcp`.
+
+**Effort Controls as Escalation Alternative (Opus 4.6 / Claude Code 2.1.32+)**: Opus 4.6 introduces adaptive thinking with effort levels (`low`, `medium`, `high`). The `max` level was removed in 2.1.72 for Opus 4.6, and `high` became the ceiling on that model. Claude Code 2.1.111 reintroduced `max` and added `xhigh` (between `high` and `max`) for Opus 4.7 only; on other models `xhigh` falls back to `high`. Symbols: ○ (low) ◐ (medium) ● (high) ◉ (xhigh) ★ (max). Use `/effort` (interactive slider since 2.1.111) or `/effort auto` to reset. Before escalating between models, consider whether adjusting effort on the current model would suffice:
+
+| Instead of... | Consider... | When |
+|--------------|-------------|------|
+| Haiku → Sonnet | Stay on Haiku | Task is still deterministic, just needs more context |
+| Sonnet → Opus | Opus@medium | Moderate reasoning, not deep architectural analysis |
+| Opus@medium → "maybe try again" | Opus@high or "ultrathink" | Genuine complexity needing deeper reasoning |
+| Opus 4.7@high → escalate | Opus 4.7@xhigh or @max | Deep architectural analysis on Opus 4.7 specifically |
+
+**Default effort change (2.1.68+)**: Opus 4.6 now
+defaults to **medium effort** for Max and Team
+subscribers. Use `/model` to change effort level, or
+type "ultrathink" in your prompt to enable high effort
+for the next turn.
+
+**Opus 4/4.1 removed (2.1.68+)**: Opus 4 and 4.1 are
+no longer available on the first-party API. Users with
+these models pinned are automatically migrated to
+Opus 4.6. No action needed for agents using `model`
+frontmatter, as the migration is transparent.
+
+**Sonnet 4.5 → 4.6 migration (2.1.69+)**: Sonnet 4.5
+users on Pro/Max/Team Premium are automatically migrated
+to Sonnet 4.6. Agent model frontmatter referencing
+Sonnet resolves transparently. The `--model` flags for
+`claude-opus-4-0` and `claude-opus-4-1` now correctly
+resolve to Opus 4.6 instead of deprecated versions.
+
+**Effort parameter fix (2.1.70+)**: Fixed API 400 error
+`This model does not support the effort parameter` when
+using custom Bedrock inference profiles or non-standard
+Claude model identifiers. Effort controls now work
+reliably across all deployment configurations.
+
+**Default Opus 4.6 on providers (2.1.73+)**: Bedrock,
+Vertex, and Microsoft Foundry now default to Opus 4.6
+(was Opus 4.1). Subagent `model: opus`/`sonnet`/`haiku`
+aliases now resolve to the current version on all
+providers; previously they were silently downgraded to
+older versions (e.g., Opus 4.1 instead of 4.6). This
+fix means agent dispatch workflows on third-party
+providers now match first-party API behavior.
+
+**`modelOverrides` setting (2.1.73+)**: Maps model
+picker entries to provider-specific IDs (Bedrock
+inference profile ARNs, Vertex version names, Foundry
+deployment names). Use when routing model selections to
+specific inference profiles. See the model optimization
+guide for configuration details.
+
+**`/output-style` deprecated (2.1.73+)**: Use `/config`
+instead. Output style is now fixed at session start for
+better prompt caching.
+
+**Full model IDs in agent frontmatter (2.1.74+)**: Agent
+`model:` fields now accept full model IDs (e.g.,
+`claude-opus-4-6`) in addition to aliases (`opus`,
+`sonnet`, `haiku`). Previously, full IDs were silently
+ignored. Agents now accept the same values as `--model`.
+
+Effort controls do NOT replace the escalation governance
+framework: they provide an additional axis. The Iron Law
+still applies: investigate before changing either model
+or effort level.

@@ -1,710 +1,428 @@
 ---
 name: golang-testing
-description: Go testing patterns including table-driven tests, subtests, benchmarks, fuzzing, and test coverage. Follows TDD methodology with idiomatic Go practices.
+description: "Production-ready Golang tests — table-driven tests, testify suites and mocks, parallel tests, fuzzing, fixtures, goroutine leak detection with goleak, snapshot testing, code coverage, integration tests, idiomatic test naming. Use when writing or reviewing Go tests, choosing a testing approach, setting up Go test CI, or debugging flaky/slow tests. For testify-specific APIs see `samber/cc-skills-golang@golang-stretchr-testify`; for measurement methodology see `samber/cc-skills-golang@golang-benchmark`."
+user-invocable: true
+license: MIT
+compatibility: Designed for Claude Code or similar AI coding agents, and for projects using Golang.
+metadata:
+  author: samber
+  version: "1.2.2"
+  openclaw:
+    emoji: "🧪"
+    homepage: https://github.com/samber/cc-skills-golang
+    requires:
+      bins:
+        - go
+        - gotests
+    install:
+      - kind: go
+        package: github.com/cweill/gotests/gotests@latest
+        bins: [gotests]
+allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(git:*) Agent Bash(gotests:*) AskUserQuestion
 ---
 
-# Go 測試模式
+**Persona:** You are a Go engineer who treats tests as executable specifications. You write tests to constrain behavior, not to hit coverage targets.
 
-用於撰寫可靠、可維護測試的完整 Go 測試模式，遵循 TDD 方法論。
+**Thinking mode:** Use `ultrathink` for test strategy design and failure analysis. Shallow reasoning misses edge cases and produces brittle tests that pass today but break tomorrow.
 
-## 何時啟用
+**Modes:**
 
-- 撰寫新的 Go 函式或方法
-- 為現有程式碼增加測試覆蓋率
-- 為效能關鍵程式碼建立基準測試
-- 實作輸入驗證的模糊測試
-- 在 Go 專案中遵循 TDD 工作流程
+- **Write mode** — generating new tests for existing or new code. Work sequentially through the code under test; use `gotests` to scaffold table-driven tests, then enrich with edge cases and error paths.
+- **Review mode** — reviewing a PR's test changes. Focus on the diff: check coverage of new behaviour, assertion quality, table-driven structure, and absence of flakiness patterns. Sequential.
+- **Audit mode** — auditing an existing test suite for gaps, flakiness, or bad patterns (order-dependent tests, missing `t.Parallel()`, implementation-detail coupling). Launch up to 3 parallel sub-agents split by concern: (1) unit test quality and coverage gaps, (2) integration test isolation and build tags, (3) goroutine leaks and race conditions.
+- **Debug mode** — a test is failing or flaky. Work sequentially: reproduce reliably, isolate the failing assertion, trace the root cause in production code or test setup.
 
-## Go 的 TDD 工作流程
+> **Community default.** A company skill that explicitly supersedes `samber/cc-skills-golang@golang-testing` skill takes precedence.
 
-### RED-GREEN-REFACTOR 循環
+**Dependencies:**
 
-```
-RED     → 先寫失敗的測試
-GREEN   → 撰寫最少程式碼使測試通過
-REFACTOR → 在保持測試綠色的同時改善程式碼
-REPEAT  → 繼續下一個需求
-```
+- gotests: `go install github.com/cweill/gotests/gotests@latest`
 
-### Go 中的逐步 TDD
+# Go Testing Best Practices
 
-```go
-// 步驟 1：定義介面/簽章
-// calculator.go
-package calculator
+This skill guides the creation of production-ready tests for Go applications. Follow these principles to write maintainable, fast, and reliable tests.
 
-func Add(a, b int) int {
-    panic("not implemented") // 佔位符
-}
+## Best Practices Summary
 
-// 步驟 2：撰寫失敗測試（RED）
-// calculator_test.go
-package calculator
+1. Table-driven tests MUST use named subtests -- every test case needs a `name` field passed to `t.Run`
+2. Integration tests MUST use build tags (`//go:build integration`) to separate from unit tests
+3. Tests MUST NOT depend on execution order -- each test MUST be independently runnable
+4. Independent tests SHOULD use `t.Parallel()` when possible
+5. NEVER test implementation details -- test observable behavior and public API contracts
+6. Packages with goroutines SHOULD use `goleak.VerifyTestMain` in `TestMain` to detect goroutine leaks
+7. Use testify as helpers, not a replacement for standard library
+8. Mock interfaces, not concrete types
+9. Keep unit tests fast (< 1ms), use build tags for integration tests
+10. Run tests with race detection in CI
+11. Include examples as executable documentation
 
-import "testing"
+## Test Structure and Organization
 
-func TestAdd(t *testing.T) {
-    got := Add(2, 3)
-    want := 5
-    if got != want {
-        t.Errorf("Add(2, 3) = %d; want %d", got, want)
-    }
-}
-
-// 步驟 3：執行測試 - 驗證失敗
-// $ go test
-// --- FAIL: TestAdd (0.00s)
-// panic: not implemented
-
-// 步驟 4：實作最少程式碼（GREEN）
-func Add(a, b int) int {
-    return a + b
-}
-
-// 步驟 5：執行測試 - 驗證通過
-// $ go test
-// PASS
-
-// 步驟 6：如需要則重構，驗證測試仍然通過
-```
-
-## 表格驅動測試
-
-Go 測試的標準模式。以最少程式碼達到完整覆蓋。
+### File Conventions
 
 ```go
-func TestAdd(t *testing.T) {
+// package_test.go - tests in same package (white-box, access unexported)
+package mypackage
+
+// mypackage_test.go - tests in test package (black-box, public API only)
+package mypackage_test
+```
+
+### Naming Conventions
+
+```go
+func TestAdd(t *testing.T) { ... }               // function test
+func TestMyStruct_MyMethod(t *testing.T) { ... } // method test
+func BenchmarkAdd(b *testing.B) { ... }          // benchmark
+func ExampleAdd() { ... }                        // example
+func FuzzAdd(f *testing.F) { ... }               // fuzz test
+```
+
+## Table-Driven Tests
+
+Table-driven tests are the idiomatic Go way to test multiple scenarios. Always name each test case.
+
+```go
+func TestCalculatePrice(t *testing.T) {
     tests := []struct {
         name     string
-        a, b     int
-        expected int
+        quantity int
+        unitPrice float64
+        expected  float64
     }{
-        {"positive numbers", 2, 3, 5},
-        {"negative numbers", -1, -2, -3},
-        {"zero values", 0, 0, 0},
-        {"mixed signs", -1, 1, 0},
-        {"large numbers", 1000000, 2000000, 3000000},
+        {
+            name:      "single item",
+            quantity:  1,
+            unitPrice: 10.0,
+            expected:  10.0,
+        },
+        {
+            name:      "bulk discount - 100 items",
+            quantity:  100,
+            unitPrice: 10.0,
+            expected:  900.0, // 10% discount
+        },
+        {
+            name:      "zero quantity",
+            quantity:  0,
+            unitPrice: 10.0,
+            expected:  0.0,
+        },
     }
 
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
-            got := Add(tt.a, tt.b)
+            got := CalculatePrice(tt.quantity, tt.unitPrice)
             if got != tt.expected {
-                t.Errorf("Add(%d, %d) = %d; want %d",
-                    tt.a, tt.b, got, tt.expected)
+                t.Errorf("CalculatePrice(%d, %.2f) = %.2f, want %.2f",
+                    tt.quantity, tt.unitPrice, got, tt.expected)
             }
         })
     }
 }
 ```
 
-### 帶錯誤案例的表格驅動測試
+## Unit Tests
+
+Unit tests should be fast (< 1ms), isolated (no external dependencies), and deterministic.
+
+## Testing HTTP Handlers
+
+Use `httptest` for handler tests with table-driven patterns. See [HTTP Testing](./references/http-testing.md) for examples with request/response bodies, query parameters, headers, and status code assertions.
+
+## Goroutine Leak Detection with goleak
+
+Use `go.uber.org/goleak` to detect leaking goroutines, especially for concurrent code:
 
 ```go
-func TestParseConfig(t *testing.T) {
-    tests := []struct {
-        name    string
-        input   string
-        want    *Config
-        wantErr bool
-    }{
-        {
-            name:  "valid config",
-            input: `{"host": "localhost", "port": 8080}`,
-            want:  &Config{Host: "localhost", Port: 8080},
-        },
-        {
-            name:    "invalid JSON",
-            input:   `{invalid}`,
-            wantErr: true,
-        },
-        {
-            name:    "empty input",
-            input:   "",
-            wantErr: true,
-        },
-        {
-            name:  "minimal config",
-            input: `{}`,
-            want:  &Config{}, // 零值 config
-        },
-    }
+import (
+    "testing"
+    "go.uber.org/goleak"
+)
 
-    for _, tt := range tests {
-        t.Run(tt.name, func(t *testing.T) {
-            got, err := ParseConfig(tt.input)
-
-            if tt.wantErr {
-                if err == nil {
-                    t.Error("expected error, got nil")
-                }
-                return
-            }
-
-            if err != nil {
-                t.Fatalf("unexpected error: %v", err)
-            }
-
-            if !reflect.DeepEqual(got, tt.want) {
-                t.Errorf("got %+v; want %+v", got, tt.want)
-            }
-        })
-    }
+func TestMain(m *testing.M) {
+    goleak.VerifyTestMain(m)
 }
 ```
 
-## 子測試
-
-### 組織相關測試
+To exclude specific goroutine stacks (for known leaks or library goroutines):
 
 ```go
-func TestUser(t *testing.T) {
-    // 所有子測試共享的設置
-    db := setupTestDB(t)
+func TestMain(m *testing.M) {
+    goleak.VerifyTestMain(m,
+        goleak.IgnoreCurrent(),
+    )
+}
+```
 
-    t.Run("Create", func(t *testing.T) {
-        user := &User{Name: "Alice"}
-        err := db.CreateUser(user)
-        if err != nil {
-            t.Fatalf("CreateUser failed: %v", err)
-        }
-        if user.ID == "" {
-            t.Error("expected user ID to be set")
-        }
-    })
+Or per-test:
 
-    t.Run("Get", func(t *testing.T) {
-        user, err := db.GetUser("alice-id")
-        if err != nil {
-            t.Fatalf("GetUser failed: %v", err)
-        }
-        if user.Name != "Alice" {
-            t.Errorf("got name %q; want %q", user.Name, "Alice")
-        }
-    })
+```go
+func TestWorkerPool(t *testing.T) {
+    defer goleak.VerifyNone(t)
+    // ... test code ...
+}
+```
 
-    t.Run("Update", func(t *testing.T) {
-        // ...
-    })
+## testing/synctest for Deterministic Goroutine Testing
 
-    t.Run("Delete", func(t *testing.T) {
-        // ...
+`testing/synctest` (Go 1.25+) provides deterministic tests for goroutines, timers, deadlines, and context cancellation. Time advances only when all goroutines are blocked, making ordering predictable.
+
+When to use `synctest` instead of real time:
+
+- Testing concurrent code with time-based operations (time.Sleep, time.After, time.Ticker)
+- When race conditions need to be reproducible
+- When tests are flaky due to timing issues
+
+```go
+import (
+    "context"
+    "testing"
+    "testing/synctest"
+    "time"
+)
+
+func TestContextTimeout(t *testing.T) {
+    synctest.Test(t, func(t *testing.T) {
+        const timeout = 5 * time.Second
+
+        ctx, cancel := context.WithTimeout(t.Context(), timeout)
+        defer cancel()
+
+        time.Sleep(timeout - time.Nanosecond)
+        synctest.Wait()
+        if err := ctx.Err(); err != nil {
+            t.Fatalf("before timeout: %v", err)
+        }
+
+        time.Sleep(time.Nanosecond)
+        synctest.Wait()
+        if err := ctx.Err(); err != context.DeadlineExceeded {
+            t.Fatalf("after timeout: got %v, want DeadlineExceeded", err)
+        }
     })
 }
 ```
 
-### 並行子測試
+Use `synctest.Test` in Go 1.25+ and Go 1.26+. Do not use the old Go 1.24 experimental `synctest.Run` API in Go 1.25+ or Go 1.26+ code. If a module explicitly targets Go 1.24 and opts into `GOEXPERIMENT=synctest`, use the old API only as a compatibility fallback.
+
+Key differences in `synctest`:
+
+- `time.Sleep` advances synthetic time instantly when the goroutine blocks
+- `time.After` fires when synthetic time reaches the duration
+- All goroutines run to blocking points before time advances
+- Test execution is deterministic and repeatable
+
+## Test Timeouts
+
+For tests that may hang, use a timeout helper that panics with caller location. See [Helpers](./references/helpers.md).
+
+## Benchmarks
+
+→ See `samber/cc-skills-golang@golang-benchmark` skill for advanced benchmarking: `b.Loop()` (Go 1.24+), `benchstat`, profiling from benchmarks, and CI regression detection.
+
+Write benchmarks to measure performance and detect regressions:
 
 ```go
-func TestParallel(t *testing.T) {
-    tests := []struct {
-        name  string
-        input string
-    }{
-        {"case1", "input1"},
-        {"case2", "input2"},
-        {"case3", "input3"},
-    }
-
-    for _, tt := range tests {
-        tt := tt // 捕獲範圍變數
-        t.Run(tt.name, func(t *testing.T) {
-            t.Parallel() // 並行執行子測試
-            result := Process(tt.input)
-            // 斷言...
+func BenchmarkStringConcatenation(b *testing.B) {
+    b.Run("plus-operator", func(b *testing.B) {
+        for b.Loop() {
+            result := "a" + "b" + "c"
             _ = result
+        }
+    })
+
+    b.Run("strings.Builder", func(b *testing.B) {
+        for b.Loop() {
+            var builder strings.Builder
+            builder.WriteString("a")
+            builder.WriteString("b")
+            builder.WriteString("c")
+            _ = builder.String()
+        }
+    })
+}
+```
+
+Benchmarks with different input sizes:
+
+```go
+func BenchmarkFibonacci(b *testing.B) {
+    sizes := []int{10, 20, 30}
+    for _, size := range sizes {
+        b.Run(fmt.Sprintf("n=%d", size), func(b *testing.B) {
+            b.ReportAllocs()
+            for b.Loop() {
+                Fibonacci(size)
+            }
         })
     }
 }
 ```
 
-## 測試輔助函式
+For Go 1.24+, new benchmarks should use `b.Loop()`. Use legacy `b.N` loops only when the module targets Go <1.24 or when preserving old benchmark code intentionally.
 
-### 輔助函式
+### Go 1.26+: test artifacts
+
+When a test, benchmark, or fuzz target needs to persist files for inspection, use `ArtifactDir()` instead of ad-hoc paths or repo-local output.
 
 ```go
-func setupTestDB(t *testing.T) *sql.DB {
-    t.Helper() // 標記為輔助函式
+func TestRenderGoldenArtifact(t *testing.T) {
+    dir := t.ArtifactDir()
 
-    db, err := sql.Open("sqlite3", ":memory:")
-    if err != nil {
-        t.Fatalf("failed to open database: %v", err)
+    out := filepath.Join(dir, "rendered.json")
+    if err := os.WriteFile(out, renderedBytes, 0o644); err != nil {
+        t.Fatal(err)
     }
 
-    // 測試結束時清理
-    t.Cleanup(func() {
-        db.Close()
-    })
-
-    // 執行 migrations
-    if _, err := db.Exec(schema); err != nil {
-        t.Fatalf("failed to create schema: %v", err)
-    }
-
-    return db
-}
-
-func assertNoError(t *testing.T, err error) {
-    t.Helper()
-    if err != nil {
-        t.Fatalf("unexpected error: %v", err)
-    }
-}
-
-func assertEqual[T comparable](t *testing.T, got, want T) {
-    t.Helper()
-    if got != want {
-        t.Errorf("got %v; want %v", got, want)
-    }
+    t.Logf("artifact written: %s", out)
 }
 ```
 
-### 臨時檔案和目錄
+Available on `*testing.T`, `*testing.B`, and `*testing.F` in Go 1.26+.
+
+## Parallel Tests
+
+Use `t.Parallel()` to run tests concurrently:
 
 ```go
-func TestFileProcessing(t *testing.T) {
-    // 建立臨時目錄 - 自動清理
-    tmpDir := t.TempDir()
-
-    // 建立測試檔案
-    testFile := filepath.Join(tmpDir, "test.txt")
-    err := os.WriteFile(testFile, []byte("test content"), 0644)
-    if err != nil {
-        t.Fatalf("failed to create test file: %v", err)
-    }
-
-    // 執行測試
-    result, err := ProcessFile(testFile)
-    if err != nil {
-        t.Fatalf("ProcessFile failed: %v", err)
-    }
-
-    // 斷言...
-    _ = result
-}
-```
-
-## Golden 檔案
-
-使用儲存在 `testdata/` 中的預期輸出檔案進行測試。
-
-```go
-var update = flag.Bool("update", false, "update golden files")
-
-func TestRender(t *testing.T) {
+func TestParallelOperations(t *testing.T) {
     tests := []struct {
-        name  string
-        input Template
+        name string
+        data []byte
     }{
-        {"simple", Template{Name: "test"}},
-        {"complex", Template{Name: "test", Items: []string{"a", "b"}}},
+        {"small data", make([]byte, 1024)},
+        {"medium data", make([]byte, 1024*1024)},
     }
 
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
-            got := Render(tt.input)
+            t.Parallel()
+            is := assert.New(t)
 
-            golden := filepath.Join("testdata", tt.name+".golden")
-
-            if *update {
-                // 更新 golden 檔案：go test -update
-                err := os.WriteFile(golden, got, 0644)
-                if err != nil {
-                    t.Fatalf("failed to update golden file: %v", err)
-                }
-            }
-
-            want, err := os.ReadFile(golden)
-            if err != nil {
-                t.Fatalf("failed to read golden file: %v", err)
-            }
-
-            if !bytes.Equal(got, want) {
-                t.Errorf("output mismatch:\ngot:\n%s\nwant:\n%s", got, want)
-            }
+            result := Process(tt.data)
+            is.NotNil(result)
         })
     }
 }
 ```
 
-## 使用介面 Mock
+## Fuzzing
 
-### 基於介面的 Mock
-
-```go
-// 定義依賴的介面
-type UserRepository interface {
-    GetUser(id string) (*User, error)
-    SaveUser(user *User) error
-}
-
-// 生產實作
-type PostgresUserRepository struct {
-    db *sql.DB
-}
-
-func (r *PostgresUserRepository) GetUser(id string) (*User, error) {
-    // 實際資料庫查詢
-}
-
-// 測試用 Mock 實作
-type MockUserRepository struct {
-    GetUserFunc  func(id string) (*User, error)
-    SaveUserFunc func(user *User) error
-}
-
-func (m *MockUserRepository) GetUser(id string) (*User, error) {
-    return m.GetUserFunc(id)
-}
-
-func (m *MockUserRepository) SaveUser(user *User) error {
-    return m.SaveUserFunc(user)
-}
-
-// 使用 mock 的測試
-func TestUserService(t *testing.T) {
-    mock := &MockUserRepository{
-        GetUserFunc: func(id string) (*User, error) {
-            if id == "123" {
-                return &User{ID: "123", Name: "Alice"}, nil
-            }
-            return nil, ErrNotFound
-        },
-    }
-
-    service := NewUserService(mock)
-
-    user, err := service.GetUserProfile("123")
-    if err != nil {
-        t.Fatalf("unexpected error: %v", err)
-    }
-    if user.Name != "Alice" {
-        t.Errorf("got name %q; want %q", user.Name, "Alice")
-    }
-}
-```
-
-## 基準測試
-
-### 基本基準測試
+Use fuzzing to find edge cases and bugs:
 
 ```go
-func BenchmarkProcess(b *testing.B) {
-    data := generateTestData(1000)
-    b.ResetTimer() // 不計算設置時間
-
-    for i := 0; i < b.N; i++ {
-        Process(data)
-    }
-}
-
-// 執行：go test -bench=BenchmarkProcess -benchmem
-// 輸出：BenchmarkProcess-8   10000   105234 ns/op   4096 B/op   10 allocs/op
-```
-
-### 不同大小的基準測試
-
-```go
-func BenchmarkSort(b *testing.B) {
-    sizes := []int{100, 1000, 10000, 100000}
-
-    for _, size := range sizes {
-        b.Run(fmt.Sprintf("size=%d", size), func(b *testing.B) {
-            data := generateRandomSlice(size)
-            b.ResetTimer()
-
-            for i := 0; i < b.N; i++ {
-                // 複製以避免排序已排序的資料
-                tmp := make([]int, len(data))
-                copy(tmp, data)
-                sort.Ints(tmp)
-            }
-        })
-    }
-}
-```
-
-### 記憶體分配基準測試
-
-```go
-func BenchmarkStringConcat(b *testing.B) {
-    parts := []string{"hello", "world", "foo", "bar", "baz"}
-
-    b.Run("plus", func(b *testing.B) {
-        for i := 0; i < b.N; i++ {
-            var s string
-            for _, p := range parts {
-                s += p
-            }
-            _ = s
-        }
-    })
-
-    b.Run("builder", func(b *testing.B) {
-        for i := 0; i < b.N; i++ {
-            var sb strings.Builder
-            for _, p := range parts {
-                sb.WriteString(p)
-            }
-            _ = sb.String()
-        }
-    })
-
-    b.Run("join", func(b *testing.B) {
-        for i := 0; i < b.N; i++ {
-            _ = strings.Join(parts, "")
-        }
-    })
-}
-```
-
-## 模糊測試（Go 1.18+）
-
-### 基本模糊測試
-
-```go
-func FuzzParseJSON(f *testing.F) {
-    // 新增種子語料庫
-    f.Add(`{"name": "test"}`)
-    f.Add(`{"count": 123}`)
-    f.Add(`[]`)
-    f.Add(`""`)
+func FuzzReverse(f *testing.F) {
+    f.Add("hello")
+    f.Add("")
+    f.Add("a")
 
     f.Fuzz(func(t *testing.T, input string) {
-        var result map[string]interface{}
-        err := json.Unmarshal([]byte(input), &result)
-
-        if err != nil {
-            // 隨機輸入預期會有無效 JSON
-            return
-        }
-
-        // 如果解析成功，重新編碼應該可行
-        _, err = json.Marshal(result)
-        if err != nil {
-            t.Errorf("Marshal failed after successful Unmarshal: %v", err)
+        reversed := Reverse(input)
+        doubleReversed := Reverse(reversed)
+        if input != doubleReversed {
+            t.Errorf("Reverse(Reverse(%q)) = %q, want %q", input, doubleReversed, input)
         }
     })
 }
-
-// 執行：go test -fuzz=FuzzParseJSON -fuzztime=30s
 ```
 
-### 多輸入模糊測試
+## Examples as Documentation
+
+Examples are executable documentation verified by `go test`:
 
 ```go
-func FuzzCompare(f *testing.F) {
-    f.Add("hello", "world")
-    f.Add("", "")
-    f.Add("abc", "abc")
+func ExampleCalculatePrice() {
+    price := CalculatePrice(100, 10.0)
+    fmt.Printf("Price: %.2f\n", price)
+    // Output: Price: 900.00
+}
 
-    f.Fuzz(func(t *testing.T, a, b string) {
-        result := Compare(a, b)
-
-        // 屬性：Compare(a, a) 應該總是等於 0
-        if a == b && result != 0 {
-            t.Errorf("Compare(%q, %q) = %d; want 0", a, b, result)
-        }
-
-        // 屬性：Compare(a, b) 和 Compare(b, a) 應該有相反符號
-        reverse := Compare(b, a)
-        if (result > 0 && reverse >= 0) || (result < 0 && reverse <= 0) {
-            if result != 0 || reverse != 0 {
-                t.Errorf("Compare(%q, %q) = %d, Compare(%q, %q) = %d; inconsistent",
-                    a, b, result, b, a, reverse)
-            }
-        }
-    })
+func ExampleCalculatePrice_singleItem() {
+    price := CalculatePrice(1, 25.50)
+    fmt.Printf("Price: %.2f\n", price)
+    // Output: Price: 25.50
 }
 ```
 
-## 測試覆蓋率
-
-### 執行覆蓋率
+## Code Coverage
 
 ```bash
-# 基本覆蓋率
-go test -cover ./...
-
-# 產生覆蓋率 profile
+# Generate coverage file
 go test -coverprofile=coverage.out ./...
 
-# 在瀏覽器查看覆蓋率
+# View coverage in HTML
 go tool cover -html=coverage.out
 
-# 按函式查看覆蓋率
+# Coverage by function
 go tool cover -func=coverage.out
 
-# 含競態偵測的覆蓋率
-go test -race -coverprofile=coverage.out ./...
+# Total coverage percentage
+go tool cover -func=coverage.out | grep total
 ```
 
-### 覆蓋率目標
+## Integration Tests
 
-| 程式碼類型 | 目標 |
-|-----------|------|
-| 關鍵業務邏輯 | 100% |
-| 公開 API | 90%+ |
-| 一般程式碼 | 80%+ |
-| 產生的程式碼 | 排除 |
-
-## HTTP Handler 測試
+Use build tags to separate integration tests from unit tests:
 
 ```go
-func TestHealthHandler(t *testing.T) {
-    // 建立請求
-    req := httptest.NewRequest(http.MethodGet, "/health", nil)
-    w := httptest.NewRecorder()
+//go:build integration
 
-    // 呼叫 handler
-    HealthHandler(w, req)
+package mypackage
 
-    // 檢查回應
-    resp := w.Result()
-    defer resp.Body.Close()
-
-    if resp.StatusCode != http.StatusOK {
-        t.Errorf("got status %d; want %d", resp.StatusCode, http.StatusOK)
+func TestDatabaseIntegration(t *testing.T) {
+    db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
+    if err != nil {
+        t.Fatal(err)
     }
+    defer db.Close()
 
-    body, _ := io.ReadAll(resp.Body)
-    if string(body) != "OK" {
-        t.Errorf("got body %q; want %q", body, "OK")
-    }
-}
-
-func TestAPIHandler(t *testing.T) {
-    tests := []struct {
-        name       string
-        method     string
-        path       string
-        body       string
-        wantStatus int
-        wantBody   string
-    }{
-        {
-            name:       "get user",
-            method:     http.MethodGet,
-            path:       "/users/123",
-            wantStatus: http.StatusOK,
-            wantBody:   `{"id":"123","name":"Alice"}`,
-        },
-        {
-            name:       "not found",
-            method:     http.MethodGet,
-            path:       "/users/999",
-            wantStatus: http.StatusNotFound,
-        },
-        {
-            name:       "create user",
-            method:     http.MethodPost,
-            path:       "/users",
-            body:       `{"name":"Bob"}`,
-            wantStatus: http.StatusCreated,
-        },
-    }
-
-    handler := NewAPIHandler()
-
-    for _, tt := range tests {
-        t.Run(tt.name, func(t *testing.T) {
-            var body io.Reader
-            if tt.body != "" {
-                body = strings.NewReader(tt.body)
-            }
-
-            req := httptest.NewRequest(tt.method, tt.path, body)
-            req.Header.Set("Content-Type", "application/json")
-            w := httptest.NewRecorder()
-
-            handler.ServeHTTP(w, req)
-
-            if w.Code != tt.wantStatus {
-                t.Errorf("got status %d; want %d", w.Code, tt.wantStatus)
-            }
-
-            if tt.wantBody != "" && w.Body.String() != tt.wantBody {
-                t.Errorf("got body %q; want %q", w.Body.String(), tt.wantBody)
-            }
-        })
-    }
+    // Test real database operations
 }
 ```
 
-## 測試指令
+Run integration tests separately:
 
 ```bash
-# 執行所有測試
-go test ./...
-
-# 執行詳細輸出的測試
-go test -v ./...
-
-# 執行特定測試
-go test -run TestAdd ./...
-
-# 執行匹配模式的測試
-go test -run "TestUser/Create" ./...
-
-# 執行帶競態偵測器的測試
-go test -race ./...
-
-# 執行帶覆蓋率的測試
-go test -cover -coverprofile=coverage.out ./...
-
-# 只執行短測試
-go test -short ./...
-
-# 執行帶逾時的測試
-go test -timeout 30s ./...
-
-# 執行基準測試
-go test -bench=. -benchmem ./...
-
-# 執行模糊測試
-go test -fuzz=FuzzParse -fuzztime=30s ./...
-
-# 計算測試執行次數（用於偵測不穩定測試）
-go test -count=10 ./...
+go test -tags=integration ./...
 ```
 
-## 最佳實務
+For Docker Compose fixtures, SQL schemas, and integration test suites, see [Integration Testing](./references/integration-testing.md).
 
-**應該做的：**
-- 先寫測試（TDD）
-- 使用表格驅動測試以獲得完整覆蓋
-- 測試行為，而非實作
-- 在輔助函式中使用 `t.Helper()`
-- 對獨立測試使用 `t.Parallel()`
-- 用 `t.Cleanup()` 清理資源
-- 使用描述情境的有意義測試名稱
+## Mocking
 
-**不應該做的：**
-- 不要直接測試私有函式（透過公開 API 測試）
-- 不要在測試中使用 `time.Sleep()`（使用 channels 或條件）
-- 不要忽略不穩定測試（修復或移除它們）
-- 不要 mock 所有東西（可能時偏好整合測試）
-- 不要跳過錯誤路徑測試
+Mock interfaces, not concrete types. Define interfaces where consumed, then create mock implementations.
 
-## CI/CD 整合
+For mock patterns, test fixtures, and time mocking, see [Mocking](./references/mocking.md).
 
-```yaml
-# GitHub Actions 範例
-test:
-  runs-on: ubuntu-latest
-  steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-go@v5
-      with:
-        go-version: '1.22'
+## Enforce with Linters
 
-    - name: Run tests
-      run: go test -race -coverprofile=coverage.out ./...
+Many test best practices are enforced automatically by linters: `thelper`, `paralleltest`, `testifylint`. See the `samber/cc-skills-golang@golang-lint` skill for configuration and usage.
 
-    - name: Check coverage
-      run: |
-        go tool cover -func=coverage.out | grep total | awk '{print $3}' | \
-        awk -F'%' '{if ($1 < 80) exit 1}'
+## Cross-References
+
+- -> See `samber/cc-skills-golang@golang-stretchr-testify` skill for detailed testify API (assert, require, mock, suite)
+- -> See `samber/cc-skills-golang@golang-database` skill (testing.md) for database integration test patterns
+- -> See `samber/cc-skills-golang@golang-concurrency` skill for goroutine leak detection with goleak
+- -> See `samber/cc-skills-golang@golang-continuous-integration` skill for CI test configuration and GitHub Actions workflows
+- -> See `samber/cc-skills-golang@golang-lint` skill for testifylint and paralleltest configuration
+- -> See `samber/cc-skills-golang@golang-continuous-integration` skill for automated AI-driven code review in CI using these guidelines
+
+## Quick Reference
+
+```bash
+go test ./...                          # all tests
+go test -run TestName ./...            # specific test by exact name
+go test -run TestName/subtest ./...    # subtests within a test
+go test -run 'Test(Add|Sub)' ./...     # multiple tests (regexp OR)
+go test -run 'Test[A-Z]' ./...         # tests starting with capital letter
+go test -run 'TestUser.*' ./...        # tests matching prefix
+go test -run '.*Validation.*' ./...    # tests containing substring
+go test -run TestName/. ./...          # all subtests of TestName
+go test -run '/(unit|integration)' ./... # filter by subtest name
+go test -race ./...                    # race detection
+go test -cover ./...                   # coverage summary
+go test -bench=. -benchmem ./...       # benchmarks
+go test -fuzz=FuzzName ./...           # fuzzing
+go test -tags=integration ./...        # integration tests
 ```
-
-**記住**：測試是文件。它們展示你的程式碼應該如何使用。清楚地撰寫並保持更新。

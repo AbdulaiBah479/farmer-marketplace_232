@@ -31,9 +31,9 @@ usage_patterns:
 
 ## When NOT To Use
 
-- Writing custom rules from scratch — use `hookify:writing-rules` instead
+- Writing custom rules from scratch: use `hookify:writing-rules` instead
 - Debugging or modifying existing installed rules
-- Converting Python SDK hooks — use `hookify:from-hook` instead
+- Converting Python SDK hooks: use `hookify:from-hook` instead
 
 ## Table of Contents
 

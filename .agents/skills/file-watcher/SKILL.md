@@ -1,42 +1,92 @@
 ---
 name: file-watcher
-description: 监视文件和目录变化，支持事件回调和过滤。
-metadata:
-  short-description: 监视文件变化
-source:
-  repository: https://github.com/gorakhargosh/watchdog
-  license: Apache-2.0
+description: Configure file watching hooks to auto-react to config changes, env file updates, and dependency modifications. Use to set up reactive workflows.
 ---
 
-# File Watcher Tool
+# File Watcher
 
-## Description
-Watch files and directories for changes with event callbacks, pattern filtering, and action triggers.
+Use Claude Code's `FileChanged` and `CwdChanged` hooks to create reactive workflows that respond to file system changes.
 
 ## Trigger
-- `/watch` command
-- User needs to monitor files
-- User wants change notifications
 
-## Usage
+Use when:
+- Setting up auto-reload for config changes
+- Watching for dependency updates
+- Monitoring build output
+- Creating reactive development workflows
 
-```bash
-# Watch directory
-python scripts/file_watcher.py ./src/
+## How File Watching Works
 
-# Watch with pattern filter
-python scripts/file_watcher.py ./src/ --pattern "*.py"
+Claude Code's `SessionStart` and `CwdChanged` hooks support returning `watchPaths` to register file watchers. The current `cwd-changed.js` script focuses on env injection; to add watch registration, your hook script must output this JSON structure:
 
-# Watch and run command on change
-python scripts/file_watcher.py ./src/ --exec "npm run build"
-
-# Watch specific file
-python scripts/file_watcher.py config.json
+```json
+{
+  "hookSpecificOutput": {
+    "hookEventName": "SessionStart",
+    "watchPaths": [
+      "/absolute/path/to/.env",
+      "/absolute/path/to/package.json"
+    ]
+  }
+}
 ```
 
-## Tags
-`watch`, `files`, `monitor`, `events`, `automation`
+When watched files change, the `FileChanged` hook fires with:
+```json
+{
+  "hook_event_name": "FileChanged",
+  "file_path": "/path/to/changed/file",
+  "event": "change"
+}
+```
 
-## Compatibility
-- Codex: ✅
-- Claude Code: ✅
+## Environment Injection
+
+`CwdChanged` and `FileChanged` hooks can write to `CLAUDE_ENV_FILE` to inject environment variables into subsequent Bash commands:
+
+```bash
+echo "export PROJECT_TYPE=node" >> "$CLAUDE_ENV_FILE"
+echo "export TEST_CMD='npm test'" >> "$CLAUDE_ENV_FILE"
+```
+
+## Common Watch Patterns
+
+### Watch .env for Changes
+```javascript
+const envFile = path.join(projectRoot, '.env');
+if (fs.existsSync(envFile)) {
+  output.hookSpecificOutput = {
+    hookEventName: 'SessionStart',
+    watchPaths: [envFile]
+  };
+}
+```
+
+### Watch package.json for Dependency Changes
+Detect when dependencies change and remind to run `npm install`.
+
+### Watch tsconfig.json for Config Changes
+Remind to restart TypeScript checks when config changes.
+
+## Setup
+
+Add to hooks.json:
+```json
+{
+  "FileChanged": [{
+    "matcher": ".env|package.json|tsconfig.json",
+    "hooks": [{
+      "type": "command",
+      "command": "node scripts/file-changed.js"
+    }]
+  }]
+}
+```
+
+## Rules
+
+- Use absolute paths for watchPaths (required by Claude Code)
+- Matcher uses pipe-separated filenames
+- Watcher uses 500ms stability threshold and 200ms poll interval
+- Keep file-changed handlers fast (<5s) to avoid blocking
+- Use `CLAUDE_ENV_FILE` for injecting env vars, not direct export

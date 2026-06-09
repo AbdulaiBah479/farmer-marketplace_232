@@ -1,328 +1,274 @@
 ---
 name: architecture-review
-description: Analyze Java project architecture at macro level - package structure, module boundaries, dependency direction, and layering. Use when user asks "review architecture", "check structure", "package organization", or when evaluating if a codebase follows clean architecture principles.
+description: Assesses architecture decisions, ADR compliance, and coupling. Use when evaluating design changes or validating structural decisions before merging.
+alwaysApply: false
+category: architecture
+tags:
+- architecture
+- design
+- adr
+- coupling
+- patterns
+- principles
+tools: []
+usage_patterns:
+- architecture-assessment
+- adr-audit
+- refactor-review
+- design-validation
+complexity: advanced
+model_hint: deep
+estimated_tokens: 300
+progressive_loading: true
+dependencies:
+- pensive:shared
+- imbue:proof-of-work
+- imbue:diff-analysis/modules/risk-assessment-framework
+- imbue:review-core
+- imbue:structured-output
+modules:
+- modules/adr-audit.md
+- modules/coupling-analysis.md
+- modules/principle-checks.md
+- modules/fpf-methodology.md
 ---
+## Table of Contents
 
-# Architecture Review Skill
+- [Quick Start](#quick-start)
+- [When to Use](#when-to-use)
+- [Progressive Loading](#progressive-loading)
+- [Required TodoWrite Items](#required-todowrite-items)
+- [Workflow](#workflow)
+- [Step 1: Establish Context (`arch-review:context-established`)](#step-1:-establish-context-(arch-review:context-established))
+- [Step 2: ADR Audit (`arch-review:adr-audit`)](#step-2:-adr-audit-(arch-review:adr-audit))
+- [Step 3: Interaction Mapping (`arch-review:interaction-mapping`)](#step-3:-interaction-mapping-(arch-review:interaction-mapping))
+- [Step 4: Principle Checks (`arch-review:principle-checks`)](#step-4:-principle-checks-(arch-review:principle-checks))
+- [Step 5: Risks and Actions (`arch-review:risks-actions`)](#step-5:-risks-and-actions-(arch-review:risks-actions))
+- [Testing](#testing)
 
-Analyze project structure at the macro level - packages, modules, layers, and boundaries.
+## Testing
 
-## When to Use
-- User asks "review the architecture" / "check project structure"
-- Evaluating package organization
-- Checking dependency direction between layers
-- Identifying architectural violations
-- Assessing clean/hexagonal architecture compliance
+Run `pytest plugins/pensive/tests/skills/test_architecture_review.py` to verify review logic.
+- [Architecture Principles Checklist](#architecture-principles-checklist)
+- [Coupling](#coupling)
+- [Cohesion](#cohesion)
+- [Layering](#layering)
+- [Evolution](#evolution)
 
----
 
-## Quick Reference: Architecture Smells
+# Architecture Review Workflow
 
-| Smell | Symptom | Impact |
-|-------|---------|--------|
-| Package-by-layer bloat | `service/` with 50+ classes | Hard to find related code |
-| Domain → Infra dependency | Entity imports `@Repository` | Core logic tied to framework |
-| Circular dependencies | A → B → C → A | Untestable, fragile |
-| God package | `util/` or `common/` growing | Dump for misplaced code |
-| Leaky abstractions | Controller knows SQL | Layer boundaries violated |
+Architecture assessment against ADRs and design principles.
 
----
-
-## Package Organization Strategies
-
-### Package-by-Layer (Traditional)
-
-```
-com.example.app/
-├── controller/
-│   ├── UserController.java
-│   ├── OrderController.java
-│   └── ProductController.java
-├── service/
-│   ├── UserService.java
-│   ├── OrderService.java
-│   └── ProductService.java
-├── repository/
-│   ├── UserRepository.java
-│   ├── OrderRepository.java
-│   └── ProductRepository.java
-└── model/
-    ├── User.java
-    ├── Order.java
-    └── Product.java
-```
-
-**Pros**: Familiar, simple for small projects
-**Cons**: Scatters related code, doesn't scale, hard to extract modules
-
-### Package-by-Feature (Recommended)
-
-```
-com.example.app/
-├── user/
-│   ├── UserController.java
-│   ├── UserService.java
-│   ├── UserRepository.java
-│   └── User.java
-├── order/
-│   ├── OrderController.java
-│   ├── OrderService.java
-│   ├── OrderRepository.java
-│   └── Order.java
-└── product/
-    ├── ProductController.java
-    ├── ProductService.java
-    ├── ProductRepository.java
-    └── Product.java
-```
-
-**Pros**: Related code together, easy to extract, clear boundaries
-**Cons**: May need shared kernel for cross-cutting concerns
-
-### Hexagonal/Clean Architecture
-
-```
-com.example.app/
-├── domain/                    # Pure business logic (no framework imports)
-│   ├── model/
-│   │   └── User.java
-│   ├── port/
-│   │   ├── in/               # Use cases (driven)
-│   │   │   └── CreateUserUseCase.java
-│   │   └── out/              # Repositories (driving)
-│   │       └── UserRepository.java
-│   └── service/
-│       └── UserDomainService.java
-├── application/               # Use case implementations
-│   └── CreateUserService.java
-├── adapter/
-│   ├── in/
-│   │   └── web/
-│   │       └── UserController.java
-│   └── out/
-│       └── persistence/
-│           ├── UserJpaRepository.java
-│           └── UserEntity.java
-└── config/
-    └── BeanConfiguration.java
-```
-
-**Key rule**: Dependencies point inward (adapters → application → domain)
-
----
-
-## Dependency Direction Rules
-
-### The Golden Rule
-
-```
-┌─────────────────────────────────────────┐
-│              Frameworks                 │  ← Outer (volatile)
-├─────────────────────────────────────────┤
-│           Adapters (Web, DB)            │
-├─────────────────────────────────────────┤
-│         Application Services            │
-├─────────────────────────────────────────┤
-│          Domain (Core Logic)            │  ← Inner (stable)
-└─────────────────────────────────────────┘
-
-Dependencies MUST point inward only.
-Inner layers MUST NOT know about outer layers.
-```
-
-### Violations to Flag
-
-```java
-// ❌ Domain depends on infrastructure
-package com.example.domain.model;
-
-import org.springframework.data.jpa.repository.JpaRepository;  // Framework leak!
-import javax.persistence.Entity;  // JPA in domain!
-
-@Entity
-public class User {
-    // Domain polluted with persistence concerns
-}
-
-// ❌ Domain depends on adapter
-package com.example.domain.service;
-
-import com.example.adapter.out.persistence.UserJpaRepository;  // Wrong direction!
-
-// ✅ Domain defines port, adapter implements
-package com.example.domain.port.out;
-
-public interface UserRepository {  // Pure interface, no JPA
-    User findById(UserId id);
-    void save(User user);
-}
-```
-
----
-
-## Architecture Review Checklist
-
-### 1. Package Structure
-- [ ] Clear organization strategy (by-layer, by-feature, or hexagonal)
-- [ ] Consistent naming across modules
-- [ ] No `util/` or `common/` packages growing unbounded
-- [ ] Feature packages are cohesive (related code together)
-
-### 2. Dependency Direction
-- [ ] Domain has ZERO framework imports (Spring, JPA, Jackson)
-- [ ] Adapters depend on domain, not vice versa
-- [ ] No circular dependencies between packages
-- [ ] Clear dependency hierarchy
-
-### 3. Layer Boundaries
-- [ ] Controllers don't contain business logic
-- [ ] Services don't know about HTTP (no HttpServletRequest)
-- [ ] Repositories don't leak into controllers
-- [ ] DTOs at boundaries, domain objects inside
-
-### 4. Module Boundaries
-- [ ] Each module has clear public API
-- [ ] Internal classes are package-private
-- [ ] Cross-module communication through interfaces
-- [ ] No "reaching across" modules for internals
-
-### 5. Scalability Indicators
-- [ ] Could extract a feature to separate service? (microservice-ready)
-- [ ] Are boundaries enforced or just conventional?
-- [ ] Does adding a feature require touching many packages?
-
----
-
-## Common Anti-Patterns
-
-### 1. The Big Ball of Mud
-
-```
-src/main/java/com/example/
-└── app/
-    ├── User.java
-    ├── UserController.java
-    ├── UserService.java
-    ├── UserRepository.java
-    ├── Order.java
-    ├── OrderController.java
-    ├── ... (100+ files in one package)
-```
-
-**Fix**: Introduce package structure (start with by-feature)
-
-### 2. The Util Dumping Ground
-
-```
-util/
-├── StringUtils.java
-├── DateUtils.java
-├── ValidationUtils.java
-├── SecurityUtils.java
-├── EmailUtils.java      # Should be in notification module
-├── OrderCalculator.java # Should be in order domain
-└── UserHelper.java      # Should be in user domain
-```
-
-**Fix**: Move domain logic to appropriate modules, keep only truly generic utils
-
-### 3. Anemic Domain Model
-
-```java
-// Domain object is just data
-public class Order {
-    private Long id;
-    private List<OrderLine> lines;
-    private BigDecimal total;
-    // Only getters/setters, no behavior
-}
-
-// All logic in "service"
-public class OrderService {
-    public void addLine(Order order, Product product, int qty) { ... }
-    public void calculateTotal(Order order) { ... }
-    public void applyDiscount(Order order, Discount discount) { ... }
-}
-```
-
-**Fix**: Move behavior to domain objects (rich domain model)
-
-### 4. Framework Coupling in Domain
-
-```java
-package com.example.domain;
-
-@Entity  // JPA
-@Data    // Lombok
-@JsonIgnoreProperties(ignoreUnknown = true)  // Jackson
-public class User {
-    @Id @GeneratedValue
-    private Long id;
-
-    @NotBlank  // Validation
-    private String email;
-}
-```
-
-**Fix**: Separate domain model from persistence/API models
-
----
-
-## Analysis Commands
-
-When reviewing architecture, examine:
+## Quick Start
 
 ```bash
-# Package structure overview
-find src/main/java -type d | head -30
-
-# Largest packages (potential god packages)
-find src/main/java -name "*.java" | xargs dirname | sort | uniq -c | sort -rn | head -10
-
-# Check for framework imports in domain
-grep -r "import org.springframework" src/main/java/*/domain/ 2>/dev/null
-grep -r "import javax.persistence" src/main/java/*/domain/ 2>/dev/null
-
-# Find circular dependencies (look for bidirectional imports)
-# Check if package A imports from B and B imports from A
+/architecture-review
 ```
 
----
+## When To Use
 
-## Recommendations Format
+- Approving reimplementations.
+- Large-scale refactoring reviews.
+- System design changes.
+- New module/service introduction.
+- Dependency restructuring.
 
-When reporting findings:
+## When NOT To Use
+
+- Selecting architecture paradigms - use archetypes
+  skills
+- API surface review - use api-review
+- Selecting architecture paradigms - use archetypes
+  skills
+- API surface review - use api-review
+
+## Progressive Loading
+
+Load modules based on review scope:
+
+- **`modules/adr-audit.md`** (~400 tokens): ADR verification and documentation.
+- **`modules/coupling-analysis.md`** (~450 tokens): Dependency analysis and boundary violations.
+- **`modules/principle-checks.md`** (~500 tokens): Code quality, security, and performance.
+- **`modules/fpf-methodology.md`** (~800 tokens): FPF (Functional, Practical, Foundation) multi-perspective review methodology.
+
+Load all modules for full reviews. For focused reviews, load only relevant modules.
+
+## Required TodoWrite Items
+
+1. `arch-review:context-established`: Repository, branch, motivation.
+2. `arch-review:adr-audit`: ADR verification and new ADR needs.
+3. `arch-review:interaction-mapping`: Module coupling analysis.
+4. `arch-review:invariant-check`: Invariant conflict detection and 3-option analysis.
+5. `arch-review:principle-checks`: LoD, security, performance.
+6. `arch-review:risks-actions`: Recommendation and follow-ups.
+7. `arch-review:findings-verified`
+
+## Workflow
+
+### Step 1: Establish Context (`arch-review:context-established`)
+
+Confirm repository and branch:
+```bash
+pwd
+git status -sb
+```
+
+Document:
+- Feature/bug/epic motivating review.
+- Affected subsystems.
+- Architectural intent from README/docs.
+- Design trade-off assumptions.
+
+### Step 2: ADR Audit (`arch-review:adr-audit`)
+
+**Load: `modules/adr-audit.md`**
+
+- Locate ADRs in project.
+- Verify required sections.
+- Check status flow.
+- Confirm immutability compliance.
+- Flag need for new ADRs.
+
+### Step 3: Interaction Mapping (`arch-review:interaction-mapping`)
+
+**Load: `modules/coupling-analysis.md`**
+
+- Diagram before/after module interactions.
+- Verify composition boundaries.
+- Check data ownership clarity.
+- Validate dependency flow direction.
+- Identify coupling violations.
+
+### Step 3.5: Invariant Conflict Detection (`arch-review:invariant-check`)
+
+Before checking principles, identify whether the changes
+conflict with existing design invariants. This is the
+highest-judgment step in architecture review: models
+get this wrong more often than any other call.
+
+**Identify existing invariants:**
+
+1. Scan ADRs for recorded decisions still in "accepted"
+   status
+2. Check module boundaries (are imports crossing layers
+   that previously didn't?)
+3. Check data flow direction (does data now flow in a
+   new direction?)
+4. Check API contracts (are public interfaces changing
+   shape?)
+5. Check structural patterns (is a new pattern being
+   introduced alongside an existing one?)
+
+```bash
+# Detect boundary crossings in changed files
+git diff --name-only | while read f; do
+  head -20 "$f" 2>/dev/null | rg "^(import|from|use |require)" || true
+done
+```
+
+**When a conflict is detected:**
+
+Do NOT recommend a resolution. Present the three options
+and escalate to human judgment:
+
+| Option | When Right | When Wrong |
+|--------|------------|------------|
+| **Preserve invariant** (reject feature) | Invariant simplifies many things; feature is marginal | Feature is genuinely needed and invariant is stale |
+| **Layer on top** (add inelegantly) | Feature is needed; invariant still valuable; imperfection is OK | Layering creates a maintenance trap that will compound |
+| **Revise invariant** (change the design) | Genuine new learning invalidates the original reasoning | You're "cleaning up" a decision you don't fully understand |
+
+**Output format:**
 
 ```markdown
-## Architecture Review: [Project Name]
+### Invariant Conflicts
 
-### Structure Assessment
-- **Organization**: Package-by-layer / Package-by-feature / Hexagonal
-- **Clarity**: Clear / Mixed / Unclear
-
-### Findings
-
-| Severity | Issue | Location | Recommendation |
-|----------|-------|----------|----------------|
-| High | Domain imports Spring | `domain/model/User.java` | Extract pure domain model |
-| Medium | God package | `util/` (23 classes) | Distribute to feature modules |
-| Low | Inconsistent naming | `service/` vs `services/` | Standardize to `service/` |
-
-### Dependency Analysis
-[Describe dependency flow, violations found]
-
-### Recommendations
-1. [Highest priority fix]
-2. [Second priority]
-3. [Nice to have]
+[I1] **[Invariant name]** — [what decision it represents]
+- **Location**: file.py:42
+- **Anchor**: `verbatim source text at line 42`
+- **Conflict**: [what change clashes]
+- **Options**: Preserve / Layer / Revise
+- **Recommendation**: ESCALATE TO HUMAN
+- **Risk if wrong**: [what compounds]
 ```
 
----
+**Why this matters:** Bad invariant decisions compound.
+After a few wrong calls the codebase becomes
+unsalvageable. This is a judgment problem rather than a
+context problem: the agent should surface it, not solve it.
 
-## Token Optimization
+### Step 4: Principle Checks (`arch-review:principle-checks`)
 
-For large codebases:
-1. Start with `find` to understand structure
-2. Check only domain package for framework imports
-3. Sample 2-3 features for pattern analysis
-4. Don't read every file - look for patterns
+**Load: `modules/principle-checks.md`**
+
+- Law of Demeter.
+- Anti-slop patterns.
+- Security (input validation, least privilege).
+- Performance (N+1 queries, caching).
+
+### Step 5: Risks and Actions (`arch-review:risks-actions`)
+
+Summarize using `imbue:diff-analysis/modules/risk-assessment-framework`:
+- Current vs proposed architecture.
+- Business impact.
+- Technical debt implications.
+
+List follow-ups with owners and dates.
+
+Provide recommendation:
+- **Approve**: Architecture sound.
+- **Approve with actions**: Minor issues to address.
+- **Block**: Fundamental problems requiring redesign.
+
+## Architecture Principles Checklist
+
+### Coupling
+- [ ] Dependencies follow defined boundaries.
+- [ ] No circular dependencies.
+- [ ] Extension points used properly.
+- [ ] Abstractions don't leak.
+
+### Cohesion
+- [ ] Related functionality grouped.
+- [ ] Single responsibility per module.
+- [ ] Clear module purposes.
+
+### Layering
+- [ ] Layers have clear responsibilities.
+- [ ] Dependencies flow downward.
+- [ ] No layer bypassing.
+
+### Invariants
+- [ ] Existing design invariants identified.
+- [ ] Conflicts between changes and invariants surfaced.
+- [ ] Three-option analysis (preserve/layer/revise) presented.
+- [ ] Invariant changes escalated to human judgment.
+- [ ] No silent invariant revisions in the diff.
+
+### Evolution
+- [ ] Changes are reversible.
+- [ ] Migration paths are clear.
+- [ ] ADRs document decisions.
+
+### Verify Findings Are Grounded (`arch-review:findings-verified`)
+
+Every finding must cite a real location and a verbatim anchor. Write
+findings to `.review/findings.json` and confirm each citation resolves:
+
+```bash
+python plugins/imbue/scripts/citation_verifier.py \
+  --findings .review/findings.json --repo-root .
+```
+
+Drop or label `UNVERIFIED` any finding the verifier fails (exit `1`); only
+verified findings enter the report. See `Skill(imbue:review-core)` Step 5
+and `Skill(imbue:structured-output)` for the schema.
+
+## Exit Criteria
+
+- Context established, ADR audit complete, interaction mapping done,
+  invariant conflicts surfaced, principle checks run, risks and actions
+  documented.
+- Every reported finding carries a `Location` + verbatim `Anchor`
+  confirmed by `citation_verifier.py` (exit `0`), or unverified findings
+  were dropped or labeled `UNVERIFIED`.

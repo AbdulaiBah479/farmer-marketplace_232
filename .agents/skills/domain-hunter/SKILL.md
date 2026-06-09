@@ -39,9 +39,9 @@ open "https://www.spaceship.com/domains/?search={domain}.{tld}"
 - https://www.namecheap.com/domains/registration/results/?domain={domain}
 - https://www.dynadot.com/domain/search?domain={domain}
 
-**IMPORTANT:**
+**IMPORTANT:** 
 - Only present domains that are confirmed AVAILABLE
-- Mark any uncertain domains with "(unverified)"
+- Mark any uncertain domains with "(unverified)" 
 - Present suggestions to user and **wait for confirmation** before proceeding
 - Ask user to pick their preferred options or provide feedback
 - Only move to Step 2 after user approves domain name(s)
@@ -62,22 +62,24 @@ WebSearch: ".{tld} domain price comparison tldes.com"
 
 ### Step 3: Find Promo Codes
 
-Search for promo codes using **WebSearch**:
+Use **Twitter skill** to search registrar accounts:
 
-```
-WebSearch: "{registrar} promo code coupon 2026"
-WebSearch: "{registrar} discount code domain registration"
-WebSearch: "site:reddit.com {registrar} promo code"
-WebSearch: "site:twitter.com {registrar} promo code"
+```bash
+cd <twitter_skill_directory>
+python3 scripts/search_tweets.py "from:{registrar} promo code" --type Latest --limit 15
+python3 scripts/search_tweets.py "{registrar} promo code coupon" --type Latest --limit 15
 ```
 
-**Major registrar social handles to search:**
+Use **Reddit skill** to search domain communities:
+
+```bash
+cd <reddit_skill_directory>
+python3 scripts/search_posts.py "{registrar} promo code" --limit 15
+python3 scripts/search_posts.py "{registrar} coupon discount" --subreddit Domains --limit 10
+```
+
+**Major registrar Twitter handles:**
 - @spaceship, @Dynadot, @Namecheap, @Porkbun, @namesilo, @Cloudflare
-
-**Reddit communities for domain deals:**
-- r/Domains - General domain discussion
-- r/webhosting - Hosting + domains
-- r/Entrepreneur - Sometimes domain deals shared
 
 ### Step 4: Recommend
 
@@ -110,5 +112,5 @@ Present final recommendation in this format:
 
 ## References
 
-- [references/registrars.md](./references/registrars.md) - Detailed registrar comparison and price tiers
+- [references/registrars.md](./references/registrars.md) - Detailed registrar comparison
 - [references/spaceship-api.md](./references/spaceship-api.md) - Spaceship API for automated domain operations

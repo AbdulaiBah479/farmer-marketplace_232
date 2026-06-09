@@ -1,35 +1,58 @@
 ---
 name: storage-templates
-description: |
-  Generic template patterns and lifecycle stages for knowledge storage,
-  configuration management, and structured documentation.
-
-  Triggers: storage templates, lifecycle stages, maturity progression, naming
-  conventions, knowledge storage, configuration templates, documentation patterns
-
-  Use when: organizing knowledge storage, managing configuration lifecycle,
-  creating structured documentation, establishing naming conventions
-
-  DO NOT use when: simple storage without lifecycle or structure needs.
-
-  Consult this skill when designing storage and documentation systems.
+description: Provides templates and lifecycle patterns for storage and documentation systems. Use when organizing knowledge storage, config lifecycle, or naming conventions.
+alwaysApply: false
 category: infrastructure
-tags: [templates, storage, lifecycle, maturity, organization, patterns]
+tags:
+- templates
+- storage
+- lifecycle
+- maturity
+- organization
+- patterns
 dependencies: []
 provides:
-  infrastructure: [templates, lifecycle-management, naming-conventions]
-  patterns: [maturity-stages, template-structures, file-organization]
+  infrastructure:
+  - templates
+  - lifecycle-management
+  - naming-conventions
+  patterns:
+  - maturity-stages
+  - template-structures
+  - file-organization
 usage_patterns:
-  - knowledge-management
-  - documentation-systems
-  - configuration-management
+- knowledge-management
+- documentation-systems
+- configuration-management
 complexity: beginner
+model_hint: fast
 estimated_tokens: 600
 progressive_loading: true
 modules:
-  - modules/template-patterns.md
-  - modules/lifecycle-stages.md
+- modules/template-patterns.md
+- modules/lifecycle-stages.md
+- modules/storage-patterns.md
 ---
+## Table of Contents
+
+- [Overview](#overview)
+- [When to Use](#when-to-use)
+- [Core Concepts](#core-concepts)
+- [Template Types](#template-types)
+- [Maturity Lifecycle](#maturity-lifecycle)
+- [Quick Start](#quick-start)
+- [Basic Template Structure](#basic-template-structure)
+- [Core Content](#core-content)
+- [Metadata](#metadata)
+- [File Naming Conventions](#file-naming-conventions)
+- [Domain Applications](#domain-applications)
+- [Common Patterns](#common-patterns)
+- [Promotion Workflow](#promotion-workflow)
+- [Template Selection Guide](#template-selection-guide)
+- [Integration Pattern](#integration-pattern)
+- [Detailed Resources](#detailed-resources)
+- [Exit Criteria](#exit-criteria)
+
 
 # Storage Templates
 
@@ -37,13 +60,17 @@ modules:
 
 Generic template patterns and lifecycle management for structured content storage. Provides reusable templates, maturity progression models, and file naming conventions that work across different storage domains.
 
-## When to Use
+## When To Use
 
 - Building knowledge management systems
 - Organizing documentation with maturity stages
 - Need consistent file naming patterns
 - Want template-driven content creation
 - Implementing lifecycle-based workflows
+
+## When NOT To Use
+
+- Simple storage without lifecycle or structure needs
 
 ## Core Concepts
 
@@ -63,6 +90,7 @@ seedling → growing → evergreen → archive
     ↓         ↓          ↓           ↓
  1-2 weeks  1-3 months  permanent  deprecated
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
 ## Quick Start
 
@@ -84,6 +112,7 @@ tags: [relevant, tags]
 ## Metadata
 [Context and attribution]
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
 ### File Naming Conventions
 
@@ -137,6 +166,7 @@ See `modules/template-patterns.md` for detailed examples.
 # In your skill's frontmatter
 dependencies: [leyline:storage-templates]
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
 ## Detailed Resources
 

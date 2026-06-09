@@ -1,15 +1,20 @@
 ---
 name: makefile-generation
-description: Generate language-specific Makefile with common development targets
-
-Triggers: language-specific, makefile, development, targets, generation
+description: Generates Makefiles with testing, linting, formatting, and automation targets. Use when starting a project or standardizing build automation.
+globs: "**/Makefile"
+alwaysApply: false
+# Custom metadata (not used by Claude for matching):
 model: claude-sonnet-4
 tools: [Read, Write, Bash]
-version: 1.3.7
+category: infrastructure
+tags: [makefile, automation, build-tools, development-workflow]
+complexity: low
+model_hint: fast
+estimated_tokens: 1200
 ---
 ## Table of Contents
 
-- [Use When](#use-when)
+- [When To Use](#when-to-use)
 - [Standard Targets](#standard-targets)
 - [Python Makefile](#python-makefile)
 - [Rust Makefile](#rust-makefile)
@@ -28,11 +33,20 @@ version: 1.3.7
 
 Generate a Makefile with standard development targets for Python, Rust, or TypeScript projects.
 
-## Use When
+## When To Use
 
 - Need a Makefile for a project without one
 - Want to update Makefile with new targets
 - Standardizing build automation across projects
+- Setting up development workflow commands
+- Creating language-specific build targets
+
+## When NOT To Use
+
+- Makefile already exists and is current
+- Project uses alternative build system exclusively (e.g., npm scripts only)
+- Complex custom build process that doesn't fit standard patterns
+- Use `/attune:upgrade-project` instead for updating existing Makefiles
 
 ## Standard Targets
 
@@ -144,16 +158,4 @@ deploy: build ## Deploy to production
 ## Related Skills
 
 - `Skill(attune:project-init)` - Full project initialization
-- `Skill(abstract:makefile-dogfooder)` - Makefile testing and validation
-## Troubleshooting
-
-### Common Issues
-
-**Command not found**
-Ensure all dependencies are installed and in PATH
-
-**Permission errors**
-Check file permissions and run with appropriate privileges
-
-**Unexpected behavior**
-Enable verbose logging with `--verbose` flag
+- `/abstract:make-dogfood` command - Makefile testing and validation

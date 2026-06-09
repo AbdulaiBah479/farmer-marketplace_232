@@ -1,295 +1,227 @@
 ---
 name: gcloud
-description: Google Cloud CLI 操作
-version: 1.0.0
-author: terminal-skills
-tags: [cloud, gcp, gcloud, gke, compute]
+user-invocable: false
+skill_api_version: 1
+hexagonal_role: supporting
+metadata:
+  tier: execution
+description: >-
+  Google Cloud Platform CLI - manage GCP resources. Use when working with Compute
+  Engine, Cloud Run, GKE, Cloud Functions, Storage, BigQuery, or other GCP services.
+practices:
+- pragmatic-programmer
 ---
+<!-- TOC: Quick Start | THE EXACT PROMPT | Services | Output Formatting | AGENTS.md Blurb | When to Use | References -->
 
-# Google Cloud CLI 操作
+# GCloud CLI
 
-## 概述
-GCP 资源管理、GKE、Cloud Functions 等技能。
+> **Core Capability:** Manage Google Cloud Platform resources and services from the command line.
 
-## 配置与认证
+## Quick Start
 
 ```bash
-# 初始化配置
-gcloud init
+# Install
+curl https://sdk.cloud.google.com | bash
+exec -l $SHELL
 
-# 登录
+# Verify
+gcloud version
+
+# Check auth
+gcloud auth list
+
+# Set project
+gcloud config set project PROJECT_ID
+
+# Show current config
+gcloud config list
+```
+
+---
+
+## THE EXACT PROMPT — Auth & Config
+
+```
+# Login interactively
 gcloud auth login
-gcloud auth application-default login    # 应用默认凭证
 
-# 服务账号认证
+# Service account auth
 gcloud auth activate-service-account --key-file=key.json
 
-# 查看配置
-gcloud config list
-gcloud config configurations list
+# Application default credentials
+gcloud auth application-default login
 
-# 设置项目
-gcloud config set project my-project
+# Set project
+gcloud config set project PROJECT_ID
 
-# 设置区域
+# Set region/zone
 gcloud config set compute/region us-central1
 gcloud config set compute/zone us-central1-a
 
-# 创建配置
+# Named configurations
 gcloud config configurations create my-config
 gcloud config configurations activate my-config
 ```
 
-## Compute Engine
+---
 
-### 实例管理
-```bash
-# 列出实例
+## THE EXACT PROMPT — Compute Engine
+
+```
+# List VMs
 gcloud compute instances list
 
-# 创建实例
-gcloud compute instances create my-instance \
-    --zone=us-central1-a \
-    --machine-type=e2-medium \
-    --image-family=ubuntu-2204-lts \
-    --image-project=ubuntu-os-cloud \
-    --boot-disk-size=50GB
+# Create VM
+gcloud compute instances create my-vm \
+  --zone=us-central1-a \
+  --machine-type=e2-medium \
+  --image-family=debian-12 \
+  --image-project=debian-cloud
 
-# 启动/停止实例
-gcloud compute instances start my-instance --zone=us-central1-a
-gcloud compute instances stop my-instance --zone=us-central1-a
+# SSH to VM
+gcloud compute ssh my-vm --zone=us-central1-a
 
-# 删除实例
-gcloud compute instances delete my-instance --zone=us-central1-a
-
-# SSH 连接
-gcloud compute ssh my-instance --zone=us-central1-a
-
-# 执行命令
-gcloud compute ssh my-instance --zone=us-central1-a --command="uptime"
+# Stop/start
+gcloud compute instances stop my-vm --zone=us-central1-a
+gcloud compute instances start my-vm --zone=us-central1-a
 ```
 
-### 磁盘管理
-```bash
-# 列出磁盘
-gcloud compute disks list
+---
 
-# 创建磁盘
-gcloud compute disks create my-disk \
-    --zone=us-central1-a \
-    --size=100GB \
-    --type=pd-ssd
+## THE EXACT PROMPT — Cloud Run
 
-# 附加磁盘
-gcloud compute instances attach-disk my-instance \
-    --disk=my-disk \
-    --zone=us-central1-a
-
-# 创建快照
-gcloud compute disks snapshot my-disk \
-    --zone=us-central1-a \
-    --snapshot-names=my-snapshot
 ```
-
-### 防火墙
-```bash
-# 列出防火墙规则
-gcloud compute firewall-rules list
-
-# 创建规则
-gcloud compute firewall-rules create allow-http \
-    --allow=tcp:80 \
-    --source-ranges=0.0.0.0/0 \
-    --target-tags=http-server
-
-# 删除规则
-gcloud compute firewall-rules delete allow-http
-```
-
-## Cloud Storage
-
-```bash
-# 列出桶
-gsutil ls
-
-# 创建桶
-gsutil mb gs://my-bucket
-gsutil mb -l us-central1 gs://my-bucket
-
-# 上传文件
-gsutil cp file.txt gs://my-bucket/
-gsutil cp -r ./dir gs://my-bucket/
-
-# 下载文件
-gsutil cp gs://my-bucket/file.txt ./
-gsutil cp -r gs://my-bucket/dir ./
-
-# 同步目录
-gsutil rsync -r ./local-dir gs://my-bucket/prefix/
-gsutil rsync -d -r ./local-dir gs://my-bucket/prefix/    # 删除多余文件
-
-# 删除
-gsutil rm gs://my-bucket/file.txt
-gsutil rm -r gs://my-bucket/dir/
-
-# 删除桶
-gsutil rb gs://my-bucket
-
-# 设置公开访问
-gsutil acl ch -u AllUsers:R gs://my-bucket/file.txt
-
-# 生成签名 URL
-gsutil signurl -d 1h key.json gs://my-bucket/file.txt
-```
-
-## GKE 集群
-
-```bash
-# 列出集群
-gcloud container clusters list
-
-# 创建集群
-gcloud container clusters create my-cluster \
-    --zone=us-central1-a \
-    --num-nodes=3 \
-    --machine-type=e2-medium
-
-# 获取凭证
-gcloud container clusters get-credentials my-cluster --zone=us-central1-a
-
-# 调整节点数
-gcloud container clusters resize my-cluster \
-    --zone=us-central1-a \
-    --num-nodes=5
-
-# 升级集群
-gcloud container clusters upgrade my-cluster \
-    --zone=us-central1-a \
-    --master
-
-# 删除集群
-gcloud container clusters delete my-cluster --zone=us-central1-a
-```
-
-## Cloud Functions
-
-```bash
-# 列出函数
-gcloud functions list
-
-# 部署函数
-gcloud functions deploy my-function \
-    --runtime=nodejs18 \
-    --trigger-http \
-    --allow-unauthenticated \
-    --entry-point=handler \
-    --source=./
-
-# 调用函数
-gcloud functions call my-function --data='{"name":"World"}'
-
-# 查看日志
-gcloud functions logs read my-function
-
-# 删除函数
-gcloud functions delete my-function
-```
-
-## Cloud Run
-
-```bash
-# 部署服务
-gcloud run deploy my-service \
-    --image=gcr.io/my-project/my-image \
-    --platform=managed \
-    --region=us-central1 \
-    --allow-unauthenticated
-
-# 列出服务
+# List services
 gcloud run services list
 
-# 查看服务
-gcloud run services describe my-service --region=us-central1
+# Deploy from source
+gcloud run deploy my-service --source . --region=us-central1
 
-# 更新服务
-gcloud run services update my-service \
-    --region=us-central1 \
-    --memory=512Mi \
-    --concurrency=80
+# Deploy container
+gcloud run deploy my-service \
+  --image=gcr.io/PROJECT/IMAGE \
+  --region=us-central1 \
+  --allow-unauthenticated
 
-# 删除服务
-gcloud run services delete my-service --region=us-central1
+# View logs
+gcloud run services logs read my-service --region=us-central1
 ```
 
-## IAM 管理
+---
+
+## THE EXACT PROMPT — Cloud Storage
+
+```
+# List buckets
+gcloud storage buckets list
+
+# Create bucket
+gcloud storage buckets create gs://my-bucket --location=us-central1
+
+# Upload/download
+gcloud storage cp local-file.txt gs://my-bucket/
+gcloud storage cp gs://my-bucket/file.txt ./
+
+# Sync directory
+gcloud storage rsync -r ./local-dir gs://my-bucket/remote-dir
+```
+
+---
+
+## Essential Commands
+
+| Service | List | Create | Delete |
+|---------|------|--------|--------|
+| Compute | `gcloud compute instances list` | `gcloud compute instances create` | `gcloud compute instances delete` |
+| Cloud Run | `gcloud run services list` | `gcloud run deploy` | `gcloud run services delete` |
+| Functions | `gcloud functions list` | `gcloud functions deploy` | `gcloud functions delete` |
+| GKE | `gcloud container clusters list` | `gcloud container clusters create` | `gcloud container clusters delete` |
+| Storage | `gcloud storage buckets list` | `gcloud storage buckets create` | `gcloud storage rm` |
+
+---
+
+## Output Formatting
 
 ```bash
-# 列出服务账号
-gcloud iam service-accounts list
+# JSON output
+gcloud compute instances list --format=json
 
-# 创建服务账号
-gcloud iam service-accounts create my-sa \
-    --display-name="My Service Account"
+# Table with specific columns
+gcloud compute instances list --format="table(name,zone,status)"
 
-# 创建密钥
-gcloud iam service-accounts keys create key.json \
-    --iam-account=my-sa@my-project.iam.gserviceaccount.com
+# Filter results
+gcloud compute instances list --filter="status=RUNNING"
 
-# 添加角色
-gcloud projects add-iam-policy-binding my-project \
-    --member="serviceAccount:my-sa@my-project.iam.gserviceaccount.com" \
-    --role="roles/storage.admin"
-
-# 查看 IAM 策略
-gcloud projects get-iam-policy my-project
+# Quiet mode (no prompts)
+gcloud compute instances delete my-vm --quiet
 ```
 
-## 常见场景
+---
 
-### 场景 1：批量操作实例
-```bash
-# 停止所有实例
-gcloud compute instances list --format="value(name,zone)" | \
-while read name zone; do
-    gcloud compute instances stop "$name" --zone="$zone" --async
-done
-```
-
-### 场景 2：日志查询
-```bash
-# 查看日志
-gcloud logging read "resource.type=gce_instance" --limit=100
-
-# 按时间范围
-gcloud logging read "timestamp>=\"2024-01-01T00:00:00Z\"" --limit=100
-
-# 按严重级别
-gcloud logging read "severity>=ERROR" --limit=100
-```
-
-### 场景 3：导出计费数据
-```bash
-# 设置计费导出
-gcloud beta billing accounts describe BILLING_ACCOUNT_ID
-
-# 查看预算
-gcloud billing budgets list --billing-account=BILLING_ACCOUNT_ID
-```
-
-## 故障排查
-
-| 问题 | 排查方法 |
-|------|----------|
-| 认证失败 | `gcloud auth list` |
-| 权限不足 | 检查 IAM 角色 |
-| 配额超限 | `gcloud compute project-info describe` |
-| API 未启用 | `gcloud services enable compute.googleapis.com` |
+## Quick Reference
 
 ```bash
-# 调试模式
-gcloud compute instances list --verbosity=debug
-
-# 查看帮助
-gcloud help
-gcloud compute instances create --help
+gcloud cheat-sheet      # Built-in cheat sheet
+gcloud interactive      # Interactive shell
+gcloud --help           # General help
+gcloud compute --help   # Service-specific help
 ```
+
+---
+
+## AGENTS.md Blurb
+
+Copy this to your project's AGENTS.md:
+
+```markdown
+### Google Cloud CLI (gcloud)
+
+`gcloud` is installed and authenticated.
+
+Auth:
+
+\`\`\`bash
+gcloud auth login
+gcloud auth application-default login  # For API libraries
+\`\`\`
+
+Project:
+
+\`\`\`bash
+gcloud config set project <PROJECT_ID>
+\`\`\`
+
+Enable APIs:
+
+\`\`\`bash
+gcloud services enable aiplatform.googleapis.com
+gcloud services enable analyticsdata.googleapis.com
+\`\`\`
+
+Useful commands:
+
+\`\`\`bash
+gcloud projects list
+gcloud services list --enabled
+gcloud beta billing accounts list
+\`\`\`
+```
+
+---
+
+## When to Use
+
+- Enabling APIs for Gemini, Vertex AI, or other Google services
+- Managing billing and cost alerts
+- Creating service accounts for CI/CD
+- Deploying containers to Cloud Run
+- Managing GKE clusters
+
+---
+
+## References
+
+| Topic | Reference |
+|-------|-----------|
+| All services | [SERVICES.md](references/SERVICES.md) |
+| IAM & Security | [IAM.md](references/IAM.md) |

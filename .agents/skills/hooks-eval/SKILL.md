@@ -1,33 +1,52 @@
 ---
 name: hooks-eval
-description: |
-  detailed hook evaluation framework for Claude Code and Agent SDK hooks.
-
-  Triggers: hook audit, hook security, hook performance, hook compliance,
-  SDK hooks, hook evaluation, hook benchmarking, hook vulnerability
-
-  Use when: auditing existing hooks for security vulnerabilities, benchmarking
-  hook performance, implementing hooks using Python SDK, understanding hook
-  callback signatures, validating hooks against compliance standards
-
-  DO NOT use when: deciding hook placement - use hook-scope-guide instead.
-  DO NOT use when: writing hook rules from scratch - use hookify instead.
-  DO NOT use when: validating plugin structure - use validate-plugin instead.
-
-  Use this skill BEFORE deploying hooks to production.
-version: 1.0.0
+description: 'Evaluate hook security, performance, and SDK compliance. Use for audits.'
+alwaysApply: false
 category: hook-management
-tags: [hooks, evaluation, security, performance, claude-sdk, agent-sdk]
-dependencies: [hook-scope-guide]
+tags:
+- hooks
+- evaluation
+- security
+- performance
+- claude-sdk
+- agent-sdk
+dependencies:
+- hook-scope-guide
 provides:
-  infrastructure: ["hook-evaluation", "security-scanning", "performance-analysis"]
-  patterns: ["hook-auditing", "sdk-integration", "compliance-checking"]
+  infrastructure:
+  - hook-evaluation
+  - security-scanning
+  - performance-analysis
+  patterns:
+  - hook-auditing
+  - sdk-integration
+  - compliance-checking
   sdk_features:
-    - "python-sdk-hooks"
-    - "hook-callbacks"
-    - "hook-matchers"
+  - python-sdk-hooks
+  - hook-callbacks
+  - hook-matchers
 estimated_tokens: 1200
+modules:
+- modules/evaluation-criteria.md
+- modules/sdk-hook-types.md
+model_hint: standard
+role: entrypoint
 ---
+## Table of Contents
+
+- [Overview](#overview)
+- [Key Capabilities](#key-capabilities)
+- [Core Components](#core-components)
+- [Quick Reference](#quick-reference)
+- [Hook Event Types](#hook-event-types)
+- [Hook Callback Signature](#hook-callback-signature)
+- [Return Values](#return-values)
+- [Quality Scoring (100 points)](#quality-scoring-(100-points))
+- [Detailed Resources](#detailed-resources)
+- [Basic Evaluation Workflow](#basic-evaluation-workflow)
+- [Integration with Other Tools](#integration-with-other-tools)
+- [Related Skills](#related-skills)
+
 
 # Hooks Evaluation Framework
 
@@ -62,11 +81,21 @@ HookEvent = Literal[
     "UserPromptSubmit", # When user submits prompt
     "Stop",             # When stopping execution
     "SubagentStop",     # When a subagent stops
+    "TeammateIdle",     # When teammate agent becomes idle (2.1.33+)
+    "TaskCompleted",    # When a task finishes execution (2.1.33+)
     "PreCompact"        # Before message compaction
 ]
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
-**Note**: Python SDK does not support `SessionStart`, `SessionEnd`, or `Notification` hooks due to setup limitations.
+**Note**: Python SDK does not support `SessionStart`, `SessionEnd`, or `Notification` hooks due to setup limitations. However, plugins can define `SessionStart` hooks via `hooks.json` using shell commands (e.g., leyline's `detect-git-platform.sh`).
+
+### Plugin-Level hooks.json
+
+Plugins can declare hooks via `"hooks": "./hooks/hooks.json"` in plugin.json. The evaluator validates:
+- Referenced hooks.json exists and is valid JSON
+- Shell commands referenced in hooks exist and are executable
+- Hook matchers use valid event types
 
 ### Hook Callback Signature
 
@@ -78,16 +107,21 @@ async def my_hook(
 ) -> dict[str, Any]:               # Return decision/messages
     ...
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
 ### Return Values
 
 ```python
 return {
-    "decision": "block",           # Optional: block the action
-    "systemMessage": "...",        # Optional: add to transcript
-    "hookSpecificOutput": {...}    # Optional: hook-specific data
+    "hookSpecificOutput": {
+        "hookEventName": "PreToolUse",       # Match hook type
+        "permissionDecision": "deny",        # Optional: block action
+        "permissionDecisionReason": "...",   # Reason for denial
+        "additionalContext": "...",          # Optional: context added
+    }
 }
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
 ### Quality Scoring (100 points)
 
@@ -103,8 +137,8 @@ return {
 
 - **SDK Hook Types**: See `modules/sdk-hook-types.md` for complete Python SDK type definitions, patterns, and examples
 - **Evaluation Criteria**: See `modules/evaluation-criteria.md` for detailed scoring rubric and quality gates
-- **Security Patterns**: See `modules/security-patterns.md` for vulnerability detection and mitigation
-- **Performance Guide**: See `modules/performance-guide.md` for benchmarking and optimization
+- **Security Patterns**: See `modules/sdk-hook-types.md` for vulnerability detection and mitigation
+- **Performance Guide**: See `modules/evaluation-criteria.md` for benchmarking and optimization
 
 ## Basic Evaluation Workflow
 
@@ -121,6 +155,7 @@ return {
 # 4. Check compliance
 /hooks-eval --compliance-report
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
 ## Integration with Other Tools
 
@@ -130,9 +165,22 @@ return {
 /analyze-hook hooks/specific.py      # Deep-dive on one hook
 /validate-plugin .                   # Validate overall structure
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
 ## Related Skills
 
-- `hook-scope-guide` - Decide where to place hooks (plugin/project/global)
-- `hookify:writing-rules` - Write hook rules and patterns
-- `validate-plugin` - Validate complete plugin structure
+- `abstract:hook-scope-guide` - Decide where to place hooks (plugin/project/global)
+- `abstract:hook-authoring` - Write hook rules and patterns
+- `abstract:validate-plugin` - Validate complete plugin structure
+## Troubleshooting
+
+### Common Issues
+
+**Hook not firing**
+Verify hook pattern matches the event. Check hook logs for errors
+
+**Syntax errors**
+Validate JSON/Python syntax before deployment
+
+**Permission denied**
+Check hook file permissions and ownership

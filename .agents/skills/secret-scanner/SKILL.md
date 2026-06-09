@@ -1,91 +1,73 @@
 ---
-name: secret-scanner
-description: Scans git repositories for hardcoded secrets, credentials, and API keys using Gitleaks. Returns findings with severity, location, and remediation steps. Use when user asks to "scan for secrets", "detect credentials", "find API keys", "check for leaks", "シークレット検出", "認証情報スキャン".
+name: "secret-scanner"
+description: |
+  Scan secret scanner operations. Auto-activating skill for Security Fundamentals.
+  Triggers on: secret scanner, secret scanner
+  Part of the Security Fundamentals skill category. Use when working with secret scanner functionality. Trigger with phrases like "secret scanner", "secret scanner", "secret".
+allowed-tools: "Read, Write, Grep, Bash(npm:*)"
+version: 1.0.0
+license: MIT
+author: "Jeremy Longshore <jeremy@intentsolutions.io>"
+compatible-with: claude-code
 ---
 
 # Secret Scanner
 
-Wrapper for Gitleaks to detect hardcoded secrets in git repositories.
+## Overview
+
+This skill provides automated assistance for secret scanner tasks within the Security Fundamentals domain.
+
+## When to Use
+
+This skill activates automatically when you:
+- Mention "secret scanner" in your request
+- Ask about secret scanner patterns or best practices
+- Need help with essential security skills covering authentication, input validation, secure coding practices, and basic vulnerability detection.
+
+## Instructions
+
+1. Provides step-by-step guidance for secret scanner
+2. Follows industry best practices and patterns
+3. Generates production-ready code and configurations
+4. Validates outputs against common standards
+
+## Examples
+
+**Example: Basic Usage**
+Request: "Help me with secret scanner"
+Result: Provides step-by-step guidance and generates appropriate configurations
+
 
 ## Prerequisites
 
-Gitleaks must be installed:
-```bash
-# macOS
-brew install gitleaks
+- Relevant development environment configured
+- Access to necessary tools and services
+- Basic understanding of security fundamentals concepts
 
-# Go
-go install github.com/gitleaks/gitleaks/v8@latest
 
-# Docker
-docker pull zricethezav/gitleaks
-```
+## Output
 
-## Usage
+- Generated configurations and code
+- Best practice recommendations
+- Validation results
 
-```bash
-# Scan current directory
-npx secret-scanner .
 
-# Scan with JSON output
-npx secret-scanner . --json
+## Error Handling
 
-# Scan specific path
-npx secret-scanner /path/to/repo
+| Error | Cause | Solution |
+|-------|-------|----------|
+| Configuration invalid | Missing required fields | Check documentation for required parameters |
+| Tool not found | Dependency not installed | Install required tools per prerequisites |
+| Permission denied | Insufficient access | Verify credentials and permissions |
 
-# Check if gitleaks is installed
-npx secret-scanner --check
-```
 
-## Output Format
+## Resources
 
-```json
-{
-  "tool": "gitleaks",
-  "scanPath": ".",
-  "findings": [
-    {
-      "id": "aws-access-key-id",
-      "severity": "critical",
-      "description": "AWS Access Key ID detected",
-      "file": "config.js",
-      "line": 15,
-      "secret": "AKIA***REDACTED***",
-      "commit": "abc1234",
-      "author": "developer@example.com",
-      "date": "2024-01-15T10:30:00Z"
-    }
-  ],
-  "summary": {
-    "total": 1,
-    "critical": 1,
-    "high": 0,
-    "medium": 0,
-    "low": 0
-  }
-}
-```
+- Official documentation for related tools
+- Best practices guides
+- Community examples and tutorials
 
-## Exit Codes
+## Related Skills
 
-- `0`: No secrets found
-- `1`: Secrets detected
-- `2`: Tool not installed or error
-
-## Severity Mapping
-
-| Gitleaks Rule | Severity |
-|---------------|----------|
-| aws-access-key-id | critical |
-| private-key | critical |
-| password | high |
-| api-key | high |
-| token | medium |
-| generic-credential | low |
-
-## CWE Coverage
-
-- CWE-798: Use of Hard-coded Credentials
-- CWE-259: Use of Hard-coded Password
-- CWE-321: Use of Hard-coded Cryptographic Key
-- CWE-312: Cleartext Storage of Sensitive Information
+Part of the **Security Fundamentals** skill category.
+Tags: security, authentication, validation, owasp, secure-coding

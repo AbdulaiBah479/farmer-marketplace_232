@@ -1,30 +1,42 @@
 ---
 name: vhs-recording
-description: |
-  Generate terminal recordings using VHS (Charmbracelet) tape files.
-  Executes tape files to produce GIF outputs of terminal sessions.
-
-  Triggers: terminal recording, vhs tape, terminal demo, cli demo
-
-  Use when: creating terminal recordings for tutorials and documentation
+description: Generates terminal recordings using VHS tape scripts and produces GIF outputs. Use when creating demo GIFs or documenting CLI workflows for tutorials.
+alwaysApply: false
 category: media-generation
-tags: [vhs, terminal, recording, gif, demo, tutorial]
-tools: [Read, Write, Bash]
+tags:
+- vhs
+- terminal
+- recording
+- gif
+- demo
+- tutorial
+tools: []
 complexity: medium
+model_hint: standard
 estimated_tokens: 600
 progressive_loading: true
 modules:
-  - tape-syntax
-  - execution
+- modules/tape-syntax.md
+- modules/execution.md
 ---
-
 # VHS Recording Skill
 
 Generate professional terminal recordings from VHS tape files.
 
+
+## When To Use
+
+- Recording terminal sessions with VHS tape scripts
+- Creating terminal demo recordings for documentation
+
+## When NOT To Use
+
+- Browser-based workflows - use scry:browser-recording instead
+- Non-terminal demos or GUI applications
+
 ## Overview
 
-VHS (Video Hosting Service) by Charmbracelet converts declarative tape files into animated GIFs of terminal sessions. Tape files define commands, timing, and terminal appearance.
+VHS converts declarative tape files into animated GIFs of terminal sessions. Tape files define commands, timing, and terminal appearance.
 
 ## Required TodoWrite Items
 
@@ -34,6 +46,11 @@ VHS (Video Hosting Service) by Charmbracelet converts declarative tape files int
 - Execute VHS recording
 - Verify output GIF creation
 ```
+
+## Module Reference
+
+- See `modules/tape-syntax.md` for VHS tape file directives
+- See `modules/execution.md` for recording workflow details
 
 ## Workflow
 
@@ -86,3 +103,8 @@ VHS will:
 - GIF file created at specified Output path
 - File size indicates successful recording (typically >50KB)
 - No error messages from VHS execution
+## Troubleshooting
+
+### Common Issues
+
+If `vhs` is not found, verify that your Go bin directory is in your `PATH` (typically `~/go/bin`). If the recording fails to start, ensure `ttyd` and `ffmpeg` are installed, as VHS depends on them for terminal emulation and video encoding. For "permission denied" errors when writing the GIF, check that the output directory exists and is writable.

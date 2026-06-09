@@ -1,115 +1,86 @@
 ---
 name: glassmorphism
-description: Creates frosted glass UI elements with blur, transparency, and subtle borders. Use when building overlays, floating controls, tooltips, or any element that should appear elevated with a translucent background.
+description: Frosted glass effect with translucent layers, subtle blur, and luminous borders for depth and modern elegance.
+license: MIT
+metadata:
+  author: typeui.sh
 ---
 
-# Glassmorphism Pattern
+<!-- TYPEUI_SH_MANAGED_START -->
+# Glassmorphism Design System Skill (Universal)
 
-Create frosted glass effects for overlays and floating UI elements.
+## Mission
+You are an expert design-system guideline author for Glassmorphism.
+Create practical, implementation-ready guidance that can be directly used by engineers and designers.
 
-## Core Classes
+## Brand
+provide fast, reliable communication for individuals, teams, and communities while maintaining a clean interface and high performance across desktop environments.
 
-```tsx
-// Standard glassmorphic container
-<div className="bg-black/20 backdrop-blur-md border border-white/10">
-  ...
-</div>
-```
+## Style Foundations
+- Visual style: clean, high-contrast, bold, enterprise, liquidglass effect, glassmorphism
+- Typography scale: mobile-first compact scale | Fonts: primary=Plus Jakarta Sans, display=Plus Jakarta Sans, mono=JetBrains Mono | weights=100, 200, 300, 400, 500, 600, 700, 800, 900
+- Color palette: primary, neutral, success, warning, danger, info, surface/subtle layers | Tokens: primary=#1856FF, secondary=#3A344E, success=#07CA6B, warning=#E89558, danger=#EA2143, surface=#FFFFFF, text=#141414
+- Spacing scale: comfortable density mode
 
-## Variations
+- bento cards
 
-### Dark Overlay (on images/media)
-Best for controls overlaid on images or video.
+## Accessibility
+WCAG 2.2 AA, keyboard-first interactions, visible focus states
 
-```tsx
-<div className="bg-black/20 backdrop-blur-md border border-white/10 rounded-full px-3 py-2">
-  {/* Content */}
-</div>
-```
+## Writing Tone
+concise, confident, helpful, clear, friendly, professional
 
-### Light Overlay (on dark backgrounds)
-```tsx
-<div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-4 py-3">
-  {/* Content */}
-</div>
-```
+## Rules: Do
+- prefer semantic tokens over raw values
+- preserve visual hierarchy
+- keep interaction states explicit
 
-### Subtle Glass (minimal effect)
-```tsx
-<div className="bg-black/10 backdrop-blur-sm border border-white/5 rounded-lg px-3 py-2">
-  {/* Content */}
-</div>
-```
+## Rules: Don't
+- avoid low contrast text
+- avoid inconsistent spacing rhythm
+- avoid decorative motion without purpose
+- avoid ambiguous labels
+- avoid mixing multiple visual metaphors
 
-### Strong Glass (prominent effect)
-```tsx
-<div className="bg-black/40 backdrop-blur-lg border border-white/20 rounded-2xl px-5 py-4">
-  {/* Content */}
-</div>
-```
+## Expected Behavior
+- Follow the foundations first, then component consistency.
+- When uncertain, prioritize accessibility and clarity over novelty.
+- Provide concrete defaults and explain trade-offs when alternatives are possible.
+- Keep guidance opinionated, concise, and implementation-focused.
 
-## Token Reference
+## Guideline Authoring Workflow
+1. Restate the design intent in one sentence before proposing rules.
+2. Define tokens and foundational constraints before component-level guidance.
+3. Specify component anatomy, states, variants, and interaction behavior.
+4. Include accessibility acceptance criteria and content-writing expectations.
+5. Add anti-patterns and migration notes for existing inconsistent UI.
+6. End with a QA checklist that can be executed in code review.
 
-| Property | Light Glass | Standard | Strong |
-|----------|-------------|----------|--------|
-| Background | `bg-black/10` | `bg-black/20` | `bg-black/40` |
-| Blur | `backdrop-blur-sm` | `backdrop-blur-md` | `backdrop-blur-lg` |
-| Border | `border-white/5` | `border-white/10` | `border-white/20` |
+## Required Output Structure
+When generating design-system guidance, use this structure:
+- Context and goals
+- Design tokens and foundations
+- Component-level rules (anatomy, variants, states, responsive behavior)
+- Accessibility requirements and testable acceptance criteria
+- Content and tone standards with examples
+- Anti-patterns and prohibited implementations
+- QA checklist
 
-## Common Use Cases
+## Component Rule Expectations
+- Define required states: default, hover, focus-visible, active, disabled, loading, error (as relevant).
+- Describe interaction behavior for keyboard, pointer, and touch.
+- State spacing, typography, and color-token usage explicitly.
+- Include responsive behavior and edge cases (long labels, empty states, overflow).
 
-### Carousel Indicators
-```tsx
-<div className="absolute bottom-3 left-1/2 -translate-x-1/2">
-  <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-black/20 backdrop-blur-md border border-white/10">
-    {/* Indicator dots */}
-  </div>
-</div>
-```
+## Quality Gates
+- No rule should depend on ambiguous adjectives alone; anchor each rule to a token, threshold, or example.
+- Every accessibility statement must be testable in implementation.
+- Prefer system consistency over one-off local optimizations.
+- Flag conflicts between aesthetics and accessibility, then prioritize accessibility.
 
-### Floating Action Button
-```tsx
-<button className="fixed bottom-6 right-6 p-4 rounded-full bg-black/20 backdrop-blur-md border border-white/10 hover:bg-black/30 transition-colors">
-  <Icon className="w-6 h-6 text-white" />
-</button>
-```
+## Example Constraint Language
+- Use "must" for non-negotiable rules and "should" for recommendations.
+- Pair every do-rule with at least one concrete don't-example.
+- If introducing a new pattern, include migration guidance for existing components.
 
-### Tooltip/Popover
-```tsx
-<div className="absolute top-full mt-2 px-3 py-2 rounded-lg bg-black/30 backdrop-blur-md border border-white/10">
-  <span className="text-white text-sm">Tooltip content</span>
-</div>
-```
-
-### Navigation Bar (over hero)
-```tsx
-<nav className="fixed top-0 left-0 right-0 z-50 bg-black/10 backdrop-blur-md border-b border-white/10">
-  {/* Nav content */}
-</nav>
-```
-
-## Text Contrast
-
-When using glassmorphism, ensure text has sufficient contrast:
-
-| Background Opacity | Text Color |
-|-------------------|------------|
-| `bg-black/10` - `bg-black/20` | `text-white` or `text-white/90` |
-| `bg-black/30` - `bg-black/40` | `text-white` |
-| `bg-white/10` - `bg-white/20` | `text-white` or `text-zinc-100` |
-
-## Performance Note
-
-`backdrop-blur` can impact performance on lower-end devices. Consider:
-- Using smaller blur values (`backdrop-blur-sm`) for frequently updated elements
-- Avoiding large glassmorphic areas that cover significant viewport
-- Testing on mobile devices
-
-## Checklist
-
-- [ ] Background has transparency (e.g., `bg-black/20`)
-- [ ] `backdrop-blur-*` applied for frosted effect
-- [ ] Subtle border with transparency (`border-white/10`)
-- [ ] Text has sufficient contrast
-- [ ] Border radius matches design language
-- [ ] Tested on lower-end devices for performance
+<!-- TYPEUI_SH_MANAGED_END -->

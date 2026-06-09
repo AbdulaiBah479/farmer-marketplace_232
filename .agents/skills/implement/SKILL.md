@@ -1,134 +1,172 @@
 ---
 name: implement
-description: 指定されたGitHub Issueをworktree環境で実装する完全ワークフロー。Subtask検出からPRマージまでを統括。
+description: Implement one tracked issue.
+practices:
+- tdd
+- refactoring
+- code-complete
+hexagonal_role: driving-adapter
+consumes:
+- domain
+produces:
+- git-changes
+context_rel:
+- kind: customer-of
+  with: domain
+skill_api_version: 1
+metadata:
+  tier: execution
+  dependencies:
+  - beads
+  - standards
+context:
+  window: isolated
+  intent:
+    mode: task
+  sections:
+    exclude:
+    - HISTORY
+  intel_scope: topic
+output_contract: code changes, test results, bead status update, behavioral spec (optional)
 ---
+# Implement Skill
 
-# Issue実装ワークフロー (/implement)
+> **Quick Ref:** Execute single issue end-to-end. Output: code changes + commit + closed issue.
 
-> **役割**: Sisyphus (Main Agent) が実行する実装のメインループ
-> **環境**: Host環境 + Git Worktree
+**YOU MUST EXECUTE THIS WORKFLOW. Do not just describe it.**
 
----
+## Loop position
 
-## 🔄 全体フロー
+Move **4 (TDD per slice)** of the [operating loop](../../docs/architecture/operating-loop.md). Consumes one vertical slice from the [slice validation plan](../../docs/templates/slice-validation.md); produces failing test → passing implementation → refactor-under-green. Discipline: (1) first failing test must fail for the right reason (missing behavior, not syntax); (2) smallest change to flip green; (3) refactor as its own commit. Slices that mix refactor + feature are two slices, not one. Code without a failing test has no contract; the slice is not done.
 
-1. **Issue分析 & 準備**
-   - 粒度チェック (200行以下?)
-   - Subtask検出 (親Issueの場合 → 再帰的に実行)
-   - 既存実装の確認
+Execute a single issue from start to finish.
 
-2. **環境構築 (Phase 1)**
-   - `/create-worktree` で独立環境を作成
-   - 作業ディレクトリへ移動 (`cd .worktrees/issue-XXX`)
+**CLI dependencies:** bd (issue tracking), ao (ratchet gates). Both optional — see `skills/shared/SKILL.md` for fallback table. If bd is unavailable, use the issue description directly and track progress via TaskList instead of beads.
 
-3. **実装サイクル (Phase 2-3)**
-   - **TDDサイクル**: Red → Green → Refactor
-   - **品質保証**: Lint, Test, 品質レビュー (9点以上)
-   - **客観的基準**: `quality-review-flow` 準拠
+## When to use
 
-4. **PR作成 (Phase 4)**
-   - ユーザー承認
-   - `/pr-and-cleanup` でPR作成と環境削除
+- Use `/implement <issue-id>` to implement a specific tracked issue.
+- Use `/implement` (no argument) to pick up next ready work via `bd ready`.
+- Use `/implement <description>` to implement an ad-hoc task without a tracked issue.
 
-5. **CI監視 & 自動マージ (Phase 5)** ← **承認不要・自動実行**
-   - `pr-merge-full.sh` で一括実行
-   - CI完了待機 → 成功で即マージ
-   - CI失敗時は自動修正（最大3回）
-   - 3回失敗でエスカレーション
+## Examples
 
----
+### Implement Specific Issue
 
-## 📋 Sisyphus 実行ガイド
+**User says:** `/implement ag-5k2`
 
-### 1. 準備フェーズ
+**What happens:**
+1. Agent reads issue from beads: "Add JWT token validation middleware"
+2. Explore agent finds relevant auth code and middleware patterns
+3. Agent edits `middleware/auth.go` to add token validation
+4. Runs `go test ./middleware/...` — all tests pass
+5. Commits with message "Add JWT token validation middleware\n\nImplements: ag-5k2"
+6. Closes issue via `bd close ag-5k2 --reason "commit:<sha> files:[middleware/auth.go]"`
 
-まず、Issueのサイズと依存関係を確認します。
+**Result:** Issue implemented, verified, committed, and closed. Ratchet recorded.
 
-- **粒度チェック**: 200行を超える場合は `/decompose-issue` を提案
-- **Subtask検出**: 親Issueの場合は `/decompose-issue` を実行し、各Subtaskに対してこのワークフローを適用
-- **作業開始**:
-  ```bash
-  /create-worktree <issue_id> <branch_name>
-  ```
+### Pick Up Next Available Work
 
-### 2. 実装フェーズ
+**User says:** `/implement`
 
-**重要**: すべてのファイル操作・コマンド実行は **Worktreeディレクトリ内** で行います。
+**What happens:**
+1. Agent runs `bd ready` — finds `ag-3b7` (first unblocked issue)
+2. Claims issue via `bd update ag-3b7 --status in_progress`
+3. Implements and verifies
+4. Closes issue
 
-```bash
-# 必ず移動してから作業
-cd .worktrees/issue-<id>-<name>
+**Result:** Autonomous work pickup and completion from ready queue.
+
+### GREEN Mode (Test-First)
+
+**User says:** `/implement ag-8h3` (invoked by `/crank --test-first`)
+
+**What happens:**
+1. Agent receives failing tests (immutable) and contract
+2. Reads tests to understand expected behavior
+3. Implements ONLY enough to make tests pass
+4. Does NOT modify test files
+5. Verification: all tests pass with fresh output
+
+**Result:** Minimal implementation driven by tests, no over-engineering.
+
+## Lifecycle Integration Flags
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--no-lifecycle` | off | Skip ALL lifecycle skill auto-invocations (test gen, review, refactor) |
+| `--lifecycle=<tier>` | matches complexity | Controls which lifecycle skills fire: `minimal` (test only), `standard` (+review), `full` (+refactor dry-run) |
+
+Lifecycle tier defaults to matching the current complexity level. Explicit `--lifecycle=<tier>` overrides.
+
+## Execution
+
+Read [references/workflow.md](references/workflow.md) when you need the full step-by-step procedure (Steps 0 through 8, including pre-flight gates, TDD discipline, build/security verification, the binary-deployment gate, the verification iron law, commit, close, and ratchet record).
+
+GREEN mode rules live in [references/green-mode.md](references/green-mode.md). The pre-commit autonomous quality loop lives in [references/quality-loop.md](references/quality-loop.md). The behavioral spec format lives in [references/behavioral-spec.md](references/behavioral-spec.md).
+
+## Key Rules
+
+- **TDD by default** - write failing tests before implementing (skip with `--no-tdd`)
+- **Lifecycle skills fire automatically** - /test, /review, /refactor run at appropriate steps (disable with `--no-lifecycle`)
+- **Explore first** - understand before changing
+- **Edit, don't rewrite** - prefer Edit tool over Write tool
+- **Follow patterns** - match existing code style
+- **Verify changes** - run tests or sanity checks
+- **Commit with context** - reference the issue ID
+- **Close the issue** - update status when done
+
+## Without Beads
+
+If bd CLI not available:
+1. Skip the claim/close status updates
+2. Use the description as the task
+3. Still commit with descriptive message
+4. Report completion to user
+
+## Output Specification
+
+Per the `output_contract` in frontmatter: code changes, test results, bead status update, and behavioral spec (optional).
+
+## Completion Markers
+
+```
+<promise>DONE</promise>
 ```
 
-#### TDDの実践
-1. **Red**: テストケースを作成（`write` tool）
-2. **Green**: テストを通す最小限の実装（`write`/`edit` tool）
-3. **Refactor**: コードを整理
-
-### 3. 品質レビューフェーズ
-
-PR作成前に必ず品質チェックを行います。
-
-1. **自己チェック**:
-   ```bash
-   # プロジェクトに応じたコマンド
-   npm run lint && npm test
-   # または
-   cargo clippy && cargo test
-   ```
-2. **専門レビュアーによるレビュー**:
-   - `quality-review-flow` skill を参照
-   - 9点未満の場合は修正して再レビュー
-
-### 4. PR作成フェーズ
-
-1. **承認ゲート**: ユーザーにPR作成の許可を得る
-2. **PR作成と環境削除**:
-   ```bash
-   /pr-and-cleanup <issue_id>
-   ```
-
-### 5. CI監視&自動マージフェーズ
-
-PR作成後、**承認なしで自動的に**CI監視→マージまで実行します。
-
-#### 一括実行コマンド（推奨）
-
-```bash
-bash .pi/skills/pr-merge-workflow/scripts/pr-merge-full.sh <pr-number>
+If blocked or incomplete:
+```
+<promise>BLOCKED</promise>
+Reason: <why blocked>
 ```
 
-このスクリプトが以下を自動実行します：
-1. CI完了待機（最大10分）
-2. CI成功 → 自動マージ（`--merge --delete-branch`）
-3. Issueラベル更新（`env:merged`）
-
-#### CI失敗時の自動対応
-
-CI失敗時は `ci-workflow` に従い自動修正を試みます：
-
-| 失敗種別 | 自動対応 |
-|---------|---------|
-| Lint/Format | `--fix` で自動修正 → push → 再待機 |
-| Test/Build | コード修正 → push → 再待機 |
-| 3回失敗 | PRをDraft化してユーザーにエスカレーション |
-
-```bash
-# CI失敗時の手動対応が必要な場合
-gh run view --log-failed  # ログ確認
-# 修正後
-git add . && git commit -m "fix: CI修正" && git push
-# 再度マージ試行
-bash .pi/skills/pr-merge-workflow/scripts/pr-merge-full.sh <pr-number>
+```
+<promise>PARTIAL</promise>
+Remaining: <what's left>
 ```
 
-> **詳細**: `ci-workflow` skill および `pr-merge-workflow` skill を参照
+## Troubleshooting
 
----
+| Problem | Cause | Solution |
+|---------|-------|----------|
+| Issue not found | Issue ID doesn't exist or local state looks stale | Run `bd show <id>` to verify; use `bd vc status` only if you need Dolt state |
+| GREEN mode violation | Edited a file not related to the issue scope | Revert unrelated changes. GREEN mode restricts edits to files relevant to the issue |
+| Verification gate fails | Tests fail or build breaks after implementation | Read the verification output, fix the specific failures, re-run verification |
+| "BLOCKED" status | Contract contradicts tests or is incomplete in GREEN mode | Write BLOCKED with specific reason, do NOT modify tests |
+| Fresh verification missing | Agent claims success without running verification command | MUST run verification command fresh with full output before claiming completion |
+| Ratchet record failed | ao CLI unavailable or chain.jsonl corrupted | Implementation still closes via bd, but ratchet chain needs manual repair |
 
-## ⛔ 禁止事項
+## Reference Documents
 
-1. **メインブランチでの直接作業**: 必ずWorktreeを作成すること
-2. **テストなしの実装**: TDDを原則とする
-3. **レビューなしのPR作成**: 必ず品質レビューを通すこと
-4. **Worktree外のファイル操作**: 誤ってルートディレクトリのファイルを書き換えないこと
+- [references/behavioral-spec.md](references/behavioral-spec.md) — Behavioral spec format for Stage 4 validation
+- [references/binary-deployment-gate.md](references/binary-deployment-gate.md) — CLI/hook binary-deployment gate spec
+- [references/gate-checks.md](references/gate-checks.md) — Ratchet and pre-mortem gate checks
+- [references/green-mode.md](references/green-mode.md) — GREEN mode test-first implementation rules
+- [references/implement.feature](references/implement.feature) — Executable spec: the /implement done-state (first-failing-test → green → refactor → verified close) (soc-qk4b.2)
+- [references/quality-loop.md](references/quality-loop.md) — Pre-commit autonomous quality loop
+- [references/resume-protocol.md](references/resume-protocol.md) — Resume protocol for interrupted sessions
+- [references/workflow.md](references/workflow.md) — Full execution workflow (Steps 0 through 8)
+
+## See also
+
+- [test](../test/SKILL.md) — Test generation, coverage analysis, and TDD workflow

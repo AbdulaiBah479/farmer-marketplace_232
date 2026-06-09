@@ -1,276 +1,360 @@
 ---
 name: handoff
-description: >
-  End-of-session ritual. Captures decisions, lessons, gotchas, and open
-  threads. Writes a narrative session log to ~/.origin/sessions/ and stores
-  granular memories via Origin MCP. Previews any unconfirmed captures from
-  the current session before closing. Invoked as `/handoff`.
-allowed-tools: ["Bash", "mcp__plugin_origin_origin__capture", "mcp__plugin_origin_origin__list_pending"]
+description: Write compact session handoffs.
+practices:
+- adr
+- wiki-knowledge-surface
+- code-complete
+hexagonal_role: supporting
+consumes: []
+produces:
+- .agents/research/*.md
+context_rel: []
+skill_api_version: 1
+context:
+  window: inherit
+  intent:
+    mode: none
+  intel_scope: none
+metadata:
+  tier: session
+  dependencies: []
+output_contract: .agents/handoffs/YYYY-MM-DD-*.md
+---
+# Handoff Skill
+
+> **Quick Ref:** Create structured handoff for session continuation. Output: `.agents/handoff/YYYY-MM-DD-<topic>.md` + continuation prompt.
+
+**YOU MUST EXECUTE THIS WORKFLOW. Do not just describe it.**
+
+Create a handoff document that enables seamless session continuation.
+
+## Execution Steps
+
+Given `/handoff [topic]`:
+
+### Step 1: Create Output Directory
+
+```bash
+mkdir -p .agents/handoff
+```
+
+### Step 2: Identify Session Context
+
+**If topic provided:** Use it as the handoff identifier.
+
+**If no topic:** Derive from recent activity:
+```bash
+# Recent commits
+git log --oneline -5 --format="%s" | head -1
+
+# Check current issue
+bd current 2>/dev/null | head -1
+
+# Check ratchet state
+ao ratchet status 2>/dev/null | head -3
+```
+
+Use the most descriptive source as the topic slug.
+
+**Topic slug format:** 2-4 words, lowercase, hyphen-separated (e.g., `auth-refactor`, `api-validation`).
+**Fallback:** If no good topic found, use `session-$(date +%H%M)` (e.g., `session-1430`).
+
+### Step 3: Gather Session Accomplishments
+
+**Review what was done this session:**
+
+```bash
+# Recent commits this session (last 2 hours)
+git log --oneline --since="2 hours ago" 2>/dev/null
+
+# Recent file changes
+git diff --stat HEAD~5 2>/dev/null | head -20
+
+# Research produced
+ls -lt .agents/research/*.md 2>/dev/null | head -3
+
+# Plans created
+ls -lt .agents/plans/*.md 2>/dev/null | head -3
+
+# Issues closed
+bd list --status closed --since "2 hours ago" 2>/dev/null | head -5
+```
+
+### Step 4: Identify Pause Point
+
+Determine where we stopped:
+
+1. **What was the last thing done?**
+2. **What was about to happen next?**
+3. **Were we mid-task or between tasks?**
+4. **Any blockers or decisions pending?**
+
+Check for in-progress work:
+```bash
+bd list --status in_progress 2>/dev/null | head -5
+```
+
+### Step 5: Identify Key Files to Read
+
+List files the next session should read first:
+- Recently modified files (core changes)
+- Research/plan artifacts (context)
+- Any files mentioned in pending issues
+
+```bash
+# Recently modified
+git diff --name-only HEAD~5 2>/dev/null | head -10
+
+# Key artifacts
+ls .agents/research/*.md .agents/plans/*.md 2>/dev/null | tail -5
+```
+
+### Step 6: Write Handoff Document
+
+**Write to:** `.agents/handoff/YYYY-MM-DD-<topic-slug>.md` (use `date +%Y-%m-%d`)
+
+```markdown
+# Handoff: <Topic>
+
+**Date:** YYYY-MM-DDTHH:MM:SSZ
+**Session:** <brief session description>
+**Status:** <Paused mid-task | Between tasks | Blocked on X>
+
 ---
 
-# /handoff
+## What We Accomplished This Session
 
-End-of-session debrief. Three artifacts each pass:
+### 1. <Accomplishment 1>
 
-1. **Granular MCP captures** — one per decision/lesson/gotcha (DB authoritative).
-2. **Session log md** — narrative thread at `~/.origin/sessions/<YYYY-MM-DD-HHmm>-<slug>.md`.
-3. **Project status md + json** — current goals + last-handoff timestamp at `~/.origin/sessions/_status/`.
+<Brief description with file:line citations>
 
-These are orthogonal: captures are queryable atoms, session log is the
-narrative thread, status file lets the next session see where we left off.
+**Files changed:**
+- `path/to/file.py` - Description
 
-## Steps
+### 2. <Accomplishment 2>
 
-### 1. Detect project + last handoff time
+...
 
-```
-Bash: cd_repo=$(git -C "$PWD" rev-parse --show-toplevel 2>/dev/null); echo "${cd_repo:-no-git}"
-```
+---
 
-- If output is a path → use the basename as `<project>` (e.g. `origin`).
-- If `no-git` → use the cwd basename. Skip git steps below; rely entirely
-  on conversation context.
+## Where We Paused
 
-Read `~/.origin/sessions/_status/handoff-<project>.json` for `lastHandoff`
-timestamp (ISO-8601). If file missing, default to "12 hours ago".
+<Clear description of pause point>
 
-### 1.5 Pending-captures preview
+**Last action:** <what was just done>
+**Next action:** <what should happen next>
+**Blockers (if any):** <anything blocking progress>
 
-After establishing `<lastHandoff>`, call:
+---
 
-```
-list_pending(limit=50)
-```
+## Context to Gather for Next Session
 
-The MCP returns memory rows with `source_id`, `content`, `created_at`, and
-other metadata. Convert `lastHandoff` (ISO-8601 string, e.g.
-`2026-05-13T22:50:00Z`) to a Unix epoch seconds integer before filtering:
+1. <Context item 1> - <why needed>
+2. <Context item 2> - <why needed>
 
-```
-Bash: date -j -f %Y-%m-%dT%H:%M:%SZ "$lastHandoff" +%s
-```
+---
 
-Or in your scripting language of choice (Python's `datetime.fromisoformat`,
-JavaScript's `Date.parse`, etc.). Save the result as `lastHandoffEpoch`.
+## Questions to Answer
 
-Then filter the response rows: keep where `row.created_at >= lastHandoffEpoch`.
-These are captures this session produced that the quality gate left unconfirmed
-(untrusted-source captures).
+1. <Open question needing decision>
+2. <Clarification needed>
 
-If the filtered list is empty, say nothing. Proceed to Step 2.
+---
 
-If non-empty, render a preview block once, before the existing capture flow:
+## Files to Read
 
 ```
-Pending captures this session (<N> total, top 3 shown):
+# Priority files (read first)
+path/to/critical-file.py
+.agents/research/YYYY-MM-DD-topic.md
 
-1. mem_xyz789  "..."  (untrusted source: <agent>)
-2. ...
-
-Default: proceed (captures stay pending). Opt in by running
-`/review captures` before re-invoking /handoff if you want to walk them.
+# Secondary files (for context)
+path/to/related-file.py
 ```
 
-Do NOT prompt for per-item action inline. The user proceeds with /handoff
-regardless; the preview is informational only.
+### Step 7: Write Continuation Prompt
 
-### 2. Gather session context (parallel, only if git repo)
-
-```
-Bash: git -C <repo> log --oneline --since=<lastHandoff>
-Bash: git -C <repo> status --short
-Bash: git -C <repo> diff --stat HEAD~5..HEAD 2>/dev/null
-Bash: git -C <repo> worktree list
-```
-
-Capture output. Use it alongside conversation history to infer what
-happened. If not a git repo, skip — conversation context is the source.
-
-### 3. Infer, do not ask
-
-Synthesize silently from git output + conversation. Categorize each item
-into user-facing groups. Each maps to a daemon `memory_type` for the
-capture call:
-
-| Display label | daemon memory_type | What belongs here |
-|---|---|---|
-| Decisions | `decision` | architectural choice, tool/pattern selection (with WHY) |
-| Lessons | `lesson` | root cause discovered, workaround found, technical insight |
-| Insights | `gotcha` | unexpected behavior, debugging discovery, sharp edge |
-| Corrections | `preference` | user pushed back, corrected approach or assumption |
-| Facts | `fact` | durable project/people/tool fact worth persisting |
-
-Non-memory items (not stored, session-log only):
-- **Open threads** — started but not finished, blockers.
-
-Skip purely mechanical facts already in git (file paths, function names,
-config values). The commit log preserves those.
-
-### 4. MCP captures (one per item)
-
-For each non-trivial item, call with the mapped `memory_type`:
-
-```
-capture(content="<one self-contained sentence with WHY>", memory_type="<decision|lesson|gotcha|preference|fact>")
-```
-
-Atomic: one decision per call. Don't merge multiple items into one
-memory. The daemon dedups against existing knowledge, so re-storing
-known facts is a no-op.
-
-Only surface items to the user BEFORE storing if they meet one of these
-bars:
-
-- Contradicts an existing memory (recall returned a conflicting fact).
-- Marks a critical incident, irreversible action, or production change.
-- You are uncertain whether the item is durable vs transient.
-
-Otherwise just store and report counts at the end.
-
-### 5. Write session log
-
-Bash heredoc to `~/.origin/sessions/<YYYY-MM-DD-HHmm>-<slug>.md`:
+**Write to:** `.agents/handoff/YYYY-MM-DD-<topic-slug>-prompt.md` (use `date +%Y-%m-%d`)
 
 ```markdown
-# Session <YYYY-MM-DD HH:MM> — <slug>
+# Continuation Prompt for New Session
 
-**Project:** <project>
-**Range:** <lastHandoff> → <now>
+Copy/paste this to start the next session:
 
-## Accomplished
-- <item>
+---
 
-## Decisions
-- <decision and rationale>
+## Context
 
-## Lessons & Gotchas
-- <root cause / workaround>
+<2-3 sentences describing the work and where we paused>
 
-## Open Threads
-- <what's unfinished>
+## Read First
 
-## Captures stored
-- <source_id_or_brief_summary>
+1. The handoff doc: `.agents/handoff/YYYY-MM-DD-<topic-slug>.md`
+2. <Other critical files>
 
-## Git summary
-<git log --oneline output>
-```
+## What I Need Help With
 
-`<slug>` = kebab-case 2-4 word summary (`session-handoff-md-writer`).
+<Clear statement of what the next session should accomplish>
 
-### 6. Update project status
-
-Overwrite `~/.origin/sessions/_status/<project>.md`:
-
-```markdown
-# <Project> — Current Status
-
-## Last session (<date>)
-- <accomplished bullet>
-
-## Active
-<!-- Items touched/spawned in the last 1-2 sessions. Real next-move candidates. -->
-- <item> (added <YYYY-MM-DD>)
-- <blocked item> (added <YYYY-MM-DD>) (gated: <trigger>)
-
-## Backlog
-<!-- Older accretion. Not gated, not picked. Promote back to Active when re-engaged. -->
-- <item> (added <YYYY-MM-DD>)
-```
-
-Single file per project. New session overwrites — this is the *current*
-state, not a log.
-
-**Two sections, not one flat list:** `## Active` and `## Backlog` separate
-the two types of tasks that get mixed otherwise. Active = fresh signal
-worth picking next. Backlog = older parked items, kept for reference but
-not in the "what next?" frame.
-
-**Date stamp every bullet** with `(added <YYYY-MM-DD>)`. Use today's date
-when adding a new item; preserve the original date when carrying an item
-forward. Dates make age visible at a glance and avoid relative-time drift.
-
-**Gated items stay inline-tagged** with `(gated: <trigger>)` — no separate
-section. The tag tells the reader why it can't move yet; the bullet stays
-in whichever section reflects its recency.
-
-**Promotion / demotion rules:**
-- New item this session → `## Active` with today's date
-- Item in `## Active` that wasn't touched this session AND wasn't touched
-  the prior session → demote to `## Backlog` (keep original date)
-- Item in `## Backlog` that work resumed on → promote back to `## Active`
-  (keep original date — staleness is a property of the work, not the
-  bullet text)
-
-### 7. Write timestamp
-
-Overwrite `~/.origin/sessions/_status/handoff-<project>.json`:
-
-```json
-{
-  "lastHandoff": "<ISO-8601 now>",
-  "project": "<project>",
-  "summary": "<one-line>"
-}
-```
-
-Per-project file prevents parallel sessions from clobbering each other.
-
-### 8. Auto-commit ~/.origin/
-
-After writing the files above, snapshot the change so the user can `git
-log` their memory's life timeline. Defensive — silent skip if `git` is
-missing or `~/.origin/` is not a repo yet.
+## Key Files
 
 ```
-Bash: git -C ~/.origin add -A && \
-      git -C ~/.origin -c user.name=Origin -c user.email=daemon@origin.local \
-          commit --quiet -m "session: <slug>" 2>/dev/null || \
-      (sleep 1 && git -C ~/.origin add -A && \
-       git -C ~/.origin -c user.name=Origin -c user.email=daemon@origin.local \
-           commit --quiet -m "session: <slug>" 2>/dev/null) || true
+<list of paths to read>
 ```
 
-The retry handles index.lock races — the daemon may be writing to
-`~/.origin/` at the same moment (auto-commit from captures). One-second
-wait is enough for the daemon to release the lock.
+## Open Questions
 
-### 9. Confirm
+1. <Question 1>
+2. <Question 2>
 
-Print one summary block with captures grouped by display label:
+---
 
-```
-Handoff stored.
-  Decisions:   <N> (brief list)
-  Lessons:     <N> (brief list)
-  Insights:    <N> (brief list)
-  Corrections: <N> (brief list)
-  Facts:       <N> (brief list)
-  Session:     ~/.origin/sessions/<filename>
-  Status:      ~/.origin/sessions/_status/<project>.md
-  Git:         <commit hash> session: <slug>
+<Suggested skill to invoke, e.g., "Use /implement to continue">
 ```
 
-Show each label only if non-empty. List items as short phrases, not
-full sentences — the session log has the details.
+### Step 8: Extract Learnings (Optional)
 
-## When to use
+If significant learnings occurred this session, also run post-mortem:
 
-- "Wrapping up", "let's call it", "we're done".
-- Session about to close and useful state would otherwise be lost.
+```bash
+# Check if post-mortem skill should be invoked
+# (if >3 commits or major decisions made)
+git log --oneline --since="2 hours ago" 2>/dev/null | wc -l
+```
 
-## When NOT to use
+**If ≥3 commits:** Suggest running `/post-mortem --quick` to extract learnings.
+**If <3 commits:** Handoff alone is sufficient; learnings are likely minimal.
 
-- Mid-flow capture during work → use `/capture` (single memory).
-- Search / lookup → use `/recall`.
-- One-off chat with no decisions or lessons — captures alone are enough.
+### Step 9: Report to User
 
-## Notes on the three artifact classes
+Tell the user:
+1. Handoff document location
+2. Continuation prompt location
+3. Summary of what was captured
+4. Suggestion: Copy the continuation prompt for next session
+5. If learnings detected, suggest `/post-mortem --quick`
 
-- **Memories** (MCP captures) live in the daemon DB only. Confirmation flips
-  a `stability` flag — they never get exported to md.
-- **Pages** are wiki-style syntheses written to `~/.origin/pages/` by the
-  daemon when `/distill` runs. Citations link back to source memory ids.
-- **Sessions** (this skill) live only at `~/.origin/sessions/`. They are
-  the narrative axis: chronological, not topical. Browse them as a
-  changelog of your work.
+**Output completion marker:**
+```
+<promise>DONE</promise>
+```
+
+If no context to capture (no commits, no changes):
+```
+<promise>EMPTY</promise>
+Reason: No session activity found to hand off
+```
+
+## Example Output
+
+```
+Handoff created:
+  .agents/handoff/20260131T143000Z-auth-refactor.md
+  .agents/handoff/20260131T143000Z-auth-refactor-prompt.md
+
+Session captured:
+- 5 commits, 12 files changed
+- Paused: mid-implementation of OAuth flow
+- Next: Complete token refresh logic
+
+To continue: Copy the prompt from auth-refactor-prompt.md
+
+<promise>DONE</promise>
+```
+
+## Key Rules
+
+- **Capture state, not just summary** - next session needs to pick up exactly where we left off
+- **Identify blockers clearly** - don't leave the next session guessing
+- **List files explicitly** - paths, not descriptions
+- **Write the continuation prompt** - make resumption effortless
+- **Cite everything** - file:line for all references
+
+## Integration with /post-mortem
+
+Handoff captures *state* for continuation.
+Post-mortem captures *learnings* for the flywheel (full knowledge lifecycle).
+
+For a clean session end:
+```bash
+/handoff              # Capture state for continuation
+/post-mortem --quick  # Extract learnings for future
+```
+
+Both should be run when ending a productive session.
+
+## Without ao CLI
+
+If ao CLI not available:
+1. Skip the `ao ratchet status` check in Step 2
+2. Step 8 retro suggestion still works (uses git commit count)
+3. All handoff documents are still written to `.agents/handoff/`
+4. Knowledge is captured for future sessions via handoff, just not indexed
+
+---
+
+## Examples
+
+### Paused Mid-Implementation
+
+**User says:** `/handoff` (after working on OAuth flow for 2 hours, need to stop)
+
+**What happens:**
+1. Agent detects recent commits (5 commits in last 2 hours, auth-related)
+2. Agent checks in-progress work with `bd list` (issue #42 still open)
+3. Agent identifies pause point: "Completed token generation, about to start refresh logic"
+4. Agent lists key files: auth.go, token.go, research doc, plan doc
+5. Agent writes handoff document with accomplishments and pause state
+6. Agent writes continuation prompt with clear next action
+7. Agent checks commits (5) and suggests running `/post-mortem --quick` to extract learnings
+
+**Result:** Handoff captures state, continuation prompt ready, post-mortem suggested.
+
+### Between Tasks, Clean State
+
+**User says:** `/handoff` (just closed issue #40, about to start #41 next session)
+
+**What happens:**
+1. Agent detects 1 commit (closed issue #40), no pending changes
+2. Agent identifies pause point: "Between tasks. Last: closed #40 (fixed rate limiting). Next: start #41 (add JWT refresh)"
+3. Agent lists files from #40 (middleware.go, config.go)
+4. Agent writes handoff with accomplishment summary and next-task preview
+5. Agent writes continuation prompt with `/implement #41` suggestion
+6. Agent skips post-mortem suggestion (<3 commits)
+
+**Result:** Handoff captures clean boundary, continuation is simple.
+
+### Auto-Derived Topic
+
+**User says:** `/handoff` (no topic provided, agent derives from commits)
+
+**What happens:**
+1. Agent reads recent commits: "feat: add rate limiting", "fix: token expiry"
+2. Agent derives topic slug: "rate-limiting" (from most recent commit)
+3. Agent creates handoff files with derived topic in filename
+4. Agent reports: "Handoff created: .agents/handoff/20260213T143000Z-rate-limiting.md"
+
+**Result:** Topic auto-derived from git history, no user input needed.
+
+---
+
+## Troubleshooting
+
+| Problem | Cause | Solution |
+|---------|-------|----------|
+| "No session activity found to hand off" | No commits, no file changes detected | Expected for idle sessions. Nothing to hand off. Start new work or skip handoff. |
+| Handoff files not written | `.agents/handoff/` directory does not exist or not writable | Run `mkdir -p .agents/handoff` or check directory permissions |
+| Topic slug is generic "session-1430" | No descriptive commits or issues to derive topic from | Provide explicit topic: `/handoff auth-refactor` for better naming |
+| Continuation prompt missing key context | Recent files or artifacts not listed in handoff | Manually add missing files to handoff document or re-run with explicit topic |
+| Post-mortem suggested but no learnings | Agent sees ≥3 commits and auto-suggests `/post-mortem --quick` | Run `/post-mortem --quick` or skip if commits are trivial (agent can't judge learning quality, only commit count) |
+
+---
+
+## Reference Documents
+
+- [references/handoff.feature](references/handoff.feature) — Executable spec: topic derivation, evidence-based accomplishments, pause-point + in-progress capture, next-files list, structured doc + continuation prompt (soc-qk4b)
+
+## See Also
+
+- `skills/post-mortem/SKILL.md` — Full validation + knowledge lifecycle (council + extraction + activation + retirement); `--quick` quick-captures a single learning (folded the retired `/retro`)

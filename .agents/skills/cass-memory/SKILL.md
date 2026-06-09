@@ -1,213 +1,234 @@
 ---
 name: cass-memory
-description: Contextual learning system that remembers patterns and rules from past sessions. Use to get relevant context before tasks, record outcomes, and build a personal playbook of coding patterns.
+user-invocable: false
+skill_api_version: 1
+hexagonal_role: supporting
+metadata:
+  tier: execution
+description: "Use when starting non-trivial work, mining lessons, or preventing repeated mistakes with cm procedural memory."
+practices:
+- pragmatic-programmer
+---
+<!-- TOC: Quick Start | THE EXACT PROMPT | Architecture | Commands | References -->
+
+# cass-memory — CASS Memory System (cm)
+
+> **Core Capability:** Transforms scattered agent sessions into persistent, cross-agent procedural memory. A pattern discovered in Cursor **automatically** helps Claude Code on the next session.
+
+## Quick Start
+
+```bash
+# Initialize with a starter playbook
+cm init --starter typescript
+
+# THE ONE COMMAND: run before any non-trivial task
+cm context "implement user authentication" --json
+
+# Check system health
+cm doctor --json
+```
+
 ---
 
-# CASS Memory - Contextual Learning System
+## THE EXACT PROMPT — Session Start
 
-Build and use a personal playbook of coding patterns learned from your sessions.
+```
+Before starting this task, run:
 
-## Prerequisites
+cm context "<task description>" --json
 
-The `cm` CLI should be available (part of cass-memory system).
+Read the output carefully:
+- relevantBullets: Rules from playbook scored by relevance
+- antiPatterns: Things that have caused problems before
+- historySnippets: Past sessions (yours and other agents')
+- suggestedCassQueries: Deeper investigation if needed
 
-Initialize:
-```bash
-cm init
-# Or with a starter playbook
-cm init --starter typescript
-cm init --starter react
-cm init --starter python
-cm init --starter go
+Reference rule IDs when following them (e.g., "Following b-8f3a2c...")
 ```
 
-## CLI Reference
+---
 
-### Get Context for a Task
-```bash
-# THE main command - get relevant rules before starting work
-cm context "Description of your task" --json
+## THE EXACT PROMPT — Rule Feedback
+
+```
+# When a rule helped
+cm mark b-8f3a2c --helpful
+
+# When a rule caused problems
+cm mark b-xyz789 --harmful --reason "Caused regression"
+
+# Or leave inline comments (parsed during reflection)
+// [cass: helpful b-8f3a2c] - this saved me from a rabbit hole
+// [cass: harmful b-x7k9p1] - wrong for our use case
 ```
 
-This returns:
-- Relevant rules from your playbook
-- Anti-patterns to avoid
-- History snippets from similar past work
+---
 
-### Reflection (Extract Patterns)
-```bash
-# Run reflection on recent sessions
-cm reflect --json
+## THE EXACT PROMPT — Trauma Guard Setup
 
-# Specify lookback period
-cm reflect --days 7 --json
-cm reflect --days 30 --json
+```
+# Install safety hooks to prevent dangerous commands
+cm guard --install       # Claude Code hook
+cm guard --git          # Git pre-commit hook
+cm guard --status       # Check installation
+
+# Add custom trauma patterns
+cm trauma add "DROP TABLE" --description "Mass deletion" --severity critical
+
+# Scan past sessions for trauma patterns
+cm trauma scan --days 30
 ```
 
-### Playbook Management
-```bash
-# List all rules
-cm playbook list --json
+---
 
-# Get specific rule details
-cm playbook get b-8f3a2c --json
+## Three-Layer Architecture
 
-# Add a new rule
-cm playbook add "Always use optional chaining for nested object access" --json
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    EPISODIC MEMORY (cass)                           │
+│   Raw session logs from all agents — the "ground truth"             │
+└───────────────────────────┬─────────────────────────────────────────┘
+                            │ cass search
+                            ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                    WORKING MEMORY (Diary)                           │
+│   Structured session summaries: accomplishments, decisions, etc.    │
+└───────────────────────────┬─────────────────────────────────────────┘
+                            │ reflect + curate (automated)
+                            ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                    PROCEDURAL MEMORY (Playbook)                     │
+│   Distilled rules with confidence tracking and decay                │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
-### Feedback on Rules
-```bash
-# Mark rule as helpful
-cm mark b-8f3a2c --helpful --json
-cm mark b-8f3a2c --helpful --reason "Prevented null error" --json
+---
 
-# Mark rule as harmful
-cm mark b-8f3a2c --harmful --json
-cm mark b-8f3a2c --harmful --reason "Caused false positive" --json
+## Essential Commands
+
+| Command | Purpose |
+|---------|---------|
+| `cm context "<task>" --json` | Get rules + history for task |
+| `cm mark <id> --helpful/--harmful` | Record feedback |
+| `cm playbook list` | View all rules |
+| `cm top 10` | Top effective rules |
+| `cm doctor --json` | System health |
+| `cm guard --install` | Install safety hooks |
+
+---
+
+## Agent Protocol
+
+```
+1. START:    cm context "<task>" --json
+2. WORK:     Reference rule IDs when following them
+3. FEEDBACK: Leave inline comments when rules help/hurt
+4. END:      Just finish. Learning happens automatically.
 ```
 
-### Record Session Outcomes
-```bash
-# Record success
-cm outcome --status success --json
-cm outcome --status success --rules "b-8f3a2c,b-4d2e1f" --json
+**You do NOT need to:**
+- Run `cm reflect` (automation handles this)
+- Run `cm mark` manually (use inline comments)
+- Manually add rules to the playbook
 
-# Record failure
-cm outcome --status failure --text "Build failed due to type error" --json
+---
 
-# Mixed results
-cm outcome --status mixed --text "Partial completion" --json
+## Confidence Decay
+
+Rules aren't immortal. Confidence decays without revalidation:
+
+| Mechanism | Effect |
+|-----------|--------|
+| **90-day half-life** | Confidence halves every 90 days without feedback |
+| **4x harmful multiplier** | One mistake counts 4x as much as one success |
+| **Maturity progression** | `candidate` → `established` → `proven` |
+
+---
+
+## Anti-Pattern Learning
+
+Bad rules don't just get deleted. They become warnings:
+
+```
+"Cache auth tokens for performance"
+    ↓ (3 harmful marks)
+"PITFALL: Don't cache auth tokens without expiry validation"
 ```
 
-### Statistics
+---
+
+## Starter Playbooks
+
 ```bash
-# Get playbook stats
-cm stats --json
+cm starters                    # List available
+cm init --starter typescript   # Initialize with starter
+cm playbook bootstrap react    # Apply to existing playbook
 ```
 
-### Top Rules
+| Starter | Focus |
+|---------|-------|
+| **general** | Universal best practices |
+| **typescript** | TypeScript/Node.js |
+| **react** | React/Next.js |
+| **python** | Python/FastAPI/Django |
+| **rust** | Rust service patterns |
+
+---
+
+## Token Budget Management
+
+| Flag | Effect |
+|------|--------|
+| `--limit N` | Cap number of rules |
+| `--min-score N` | Only rules above threshold |
+| `--no-history` | Skip historical snippets |
+| `--json` | Structured output |
+
+---
+
+## Graceful Degradation
+
+| Condition | Behavior |
+|-----------|----------|
+| No cass | Playbook-only scoring, no history |
+| No playbook | Empty playbook, commands still work |
+| No LLM | Deterministic reflection |
+| Offline | Cached playbook + local diary |
+
+---
+
+## Installation
+
 ```bash
-# Show most effective rules
-cm top --json
-cm top 5 --json
-cm top 20 --json
+# One-liner
+curl -fsSL https://raw.githubusercontent.com/Dicklesworthstone/cass_memory_system/main/install.sh \
+  | bash -s -- --easy-mode --verify
+
+# From source
+git clone https://github.com/Dicklesworthstone/cass_memory_system.git
+cd cass_memory_system
+bun install && bun run build
+sudo mv ./dist/cass-memory /usr/local/bin/cm
 ```
 
-### Health Check
-```bash
-# Check system health
-cm doctor --json
+---
 
-# Auto-fix issues
-cm doctor --fix --json
-```
+## Troubleshooting
 
-### Find Stale Rules
-```bash
-# Rules without recent feedback
-cm stale --json
-cm stale --days 30 --json
-cm stale --days 60 --json
-```
+| Error | Solution |
+|-------|----------|
+| `cass not found` | Install cass first |
+| `API key missing` | Set `ANTHROPIC_API_KEY` |
+| `Playbook corrupt` | Run `cm doctor --fix` |
 
-### Validate Rules
-```bash
-# Validate a proposed rule against history
-cm validate "Proposed rule text" --json
-```
+---
 
-### Explain Rule Origin
-```bash
-# Show evidence and reasoning for a rule
-cm why b-8f3a2c --json
-```
+## References
 
-### Usage Statistics
-```bash
-cm usage --json
-```
-
-### Starter Playbooks
-```bash
-# List available starters
-cm starters --json
-```
-
-## Workflow Patterns
-
-### Session Start
-```bash
-# Get context before starting a task
-cm context "Implement user authentication with JWT" --json
-```
-
-### During Work
-When a rule helps:
-```bash
-cm mark b-8f3a2c --helpful --json
-```
-
-When a rule leads astray:
-```bash
-cm mark b-8f3a2c --harmful --reason "Not applicable to this framework" --json
-```
-
-### Session End
-```bash
-# Record outcome
-cm outcome --status success --rules "b-8f3a2c,b-4d2e1f" --json
-```
-
-### Periodic Maintenance
-```bash
-# Weekly: Run reflection to extract new patterns
-cm reflect --days 7 --json
-
-# Monthly: Review stale rules
-cm stale --days 30 --json
-
-# Check system health
-cm doctor --json
-```
-
-### Building Your Playbook
-```bash
-# Manually add a pattern you've learned
-cm playbook add "Use React.memo() for components receiving complex objects as props" --json
-
-# After adding, use it in context queries
-cm context "Create a list component with filtering" --json
-```
-
-## Rule Lifecycle
-
-1. **Creation** - Rules emerge from reflection or manual addition
-2. **Usage** - Rules surface in context queries
-3. **Feedback** - Mark as helpful/harmful based on experience
-4. **Evolution** - High-feedback rules rise, low-feedback rules become stale
-5. **Retirement** - Stale rules get reviewed and pruned
-
-## Best Practices
-
-1. **Always get context first** - Run `cm context "task"` before starting work
-2. **Provide feedback** - Mark rules as helpful/harmful
-3. **Record outcomes** - Track session success/failure
-4. **Run reflection regularly** - Weekly reflection extracts new patterns
-5. **Review stale rules** - Don't let old rules accumulate
-6. **Add rules manually** - When you learn something important
-
-## Integration Tips
-
-### Pre-Task Context
-Before any significant coding task:
-```bash
-CONTEXT=$(cm context "Your task description" --json)
-# Use context to inform your approach
-```
-
-### Post-Session Recording
-At end of coding session:
-```bash
-cm outcome --status success --text "Completed feature X" --json
-```
+| Topic | Reference |
+|-------|-----------|
+| Full command reference | [COMMANDS.md](references/COMMANDS.md) |
+| Cognitive architecture | [ARCHITECTURE.md](references/ARCHITECTURE.md) |
+| Trauma guard system | [TRAUMA-GUARD.md](references/TRAUMA-GUARD.md) |
+| MCP server integration | [MCP-SERVER.md](references/MCP-SERVER.md) |
+| Onboarding workflow | [ONBOARDING.md](references/ONBOARDING.md) |

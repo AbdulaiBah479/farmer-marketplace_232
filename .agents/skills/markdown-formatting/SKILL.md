@@ -1,183 +1,170 @@
 ---
 name: markdown-formatting
-description: Format and lint markdown and MDX files using markdownlint with comprehensive rule knowledge for automated and manual fixes. Use when working with .md or .mdx files, formatting documentation, linting markdown/MDX, or when user mentions markdown issues, formatting problems, or documentation standards.
-allowed-tools:
-  - Read
-  - Edit
-  - Bash
-  - Grep
-  - Glob
+description: Enforces markdown line-wrap and structure rules for clean git diffs. Use when writing or editing any committed markdown documentation or skill file.
+globs: "**/*.md"
+alwaysApply: false
+category: cross-plugin-patterns
+tags:
+  - markdown
+  - formatting
+  - documentation
+  - line-wrapping
+  - style
+tools: []
+complexity: low
+model_hint: fast
+estimated_tokens: 800
+progressive_loading: true
+modules:
+  - modules/wrapping-rules.md
+dependencies: []
 ---
+# Markdown Formatting Conventions
 
-# Markdown & MDX Formatting & Linting
+## When To Use
 
-Format and lint markdown and MDX files using markdownlint CLI tools with comprehensive understanding of all markdown rules.
+- Writing or editing any markdown documentation
+- Reviewing prose for line-wrapping compliance
+- Generating markdown from plugins (scribe, sanctum, etc.)
 
-## Quick Start
+## When NOT To Use
 
-```bash
-# Check if markdownlint is available
-which markdownlint || which markdownlint
+- Editing code blocks, tables, or frontmatter (these have
+  their own formatting rules)
+- Quick scratch notes that will not be committed
 
-# Install if needed
-pnpm add -D markdownlint
-# or
-npm install -g markdownlint
+These conventions apply to all markdown documentation generated
+or modified by any plugin. The goal: produce prose that creates
+clean, reviewable git diffs and reads well on mobile devices.
 
-# Auto-fix files (markdown and MDX)
-markdownlint --fix "**/*.{md,mdx}"
+## Quick Reference
 
-# Check specific files
-markdownlint README.md docs/**/*.md content/**/*.mdx
-```
+When writing or editing markdown prose:
 
-## Configuration Detection
+1. **Wrap prose at 80 chars** using hybrid wrapping (prefer
+   sentence/clause boundaries over arbitrary word breaks)
+2. **Blank line before and after every heading**
+3. **ATX headings only** (`# Heading`, never setext underlines)
+4. **Blank line before every list**
+5. **Reference-style links** when inline links push lines
+   beyond 80 chars
 
-Check for config files in this order:
+## What to Wrap
 
-1. `.markdownlint.json`
-2. `.markdownlint.jsonc`
-3. `.markdownlint.yaml`
-4. `.markdownlintrc`
-5. `markdownlint` key in `package.json`
+Wrap these content types at 80 characters:
 
-## Common Workflow
+- Paragraphs (flowing prose text)
+- Blockquote text (the content after `>`)
+- List item descriptions (text after `- ` or `1. `)
+- Descriptions in definition lists
 
-1. **Detect environment**: Check for markdownlint CLI
-2. **Find config**: Look for config files
-3. **Run linter**: Identify issues
-4. **Apply fixes**: Auto-fix or manual
-5. **Verify**: Re-run to confirm
+## What NOT to Wrap
 
-## Most Common Issues & Quick Fixes
+Never wrap or reflow these content types:
 
-### Headings
+- **Tables**: pipe-delimited rows stay on one line
+- **Code blocks**: fenced (` ``` `) or indented content
+- **Headings**: lines starting with `#`
+- **Frontmatter**: YAML/TOML between `---` or `+++`
+- **HTML blocks**: raw HTML elements
+- **Link definitions**: `[id]: url` reference lines
+- **Image references**: `![alt](url)` on their own line
+- **Single-line list items**: short bullets that fit on one line
 
-- **MD001**: Heading levels increment (# → ## → ### not # → ###)
-- **MD018/MD019**: Single space after hash (`# Heading` not `#Heading`)
-- **MD022**: Blank lines around headings
-- **MD025**: Single H1 per document
-- **MD041**: First line should be H1
+## Wrapping Algorithm (Summary)
 
-```markdown
-<!-- Good heading structure -->
-# Main Title
+For each prose paragraph:
 
-## Section
+1. If a sentence fits within 80 chars, keep it on one line
+2. If a sentence exceeds 80 chars, break at the nearest
+   **sentence boundary** (`. ` `! ` `? `) before column 80
+3. If no sentence boundary, break at the nearest **clause
+   boundary** (`, ` `; ` `: `) before column 80
+4. If no clause boundary, break before a **conjunction**
+   (`and ` `but ` `or `) before column 80
+5. If none of the above, break at the last **word boundary**
+   before column 80
+6. Never break inside backtick spans, link text, or URLs
 
-### Subsection
+See `modules/wrapping-rules.md` for the full algorithm with
+examples.
 
-Content here...
-```
+## Structural Rules
 
-### Lists
-
-- **MD004**: Consistent list markers (all `-` or all `*`)
-- **MD007**: Nested lists indent 2 spaces
-- **MD030**: Single space after list marker
-- **MD032**: Blank lines around lists
-
-```markdown
-<!-- Good list structure -->
-- Item 1
-  - Nested item
-  - Another nested
-- Item 2
-```
-
-### Whitespace
-
-- **MD009**: No trailing spaces
-- **MD010**: Use spaces not tabs
-- **MD012**: Single blank lines (not multiple)
-- **MD047**: File ends with newline
-
-### Links & Images
-
-- **MD034**: Wrap bare URLs in `<>`: `<http://example.com>`
-- **MD042**: Links need text: `[Link Text](url)` not `[](url)`
-- **MD045**: Images need alt text: `![Description](image.png)`
-
-### Code Blocks
-
-- **MD031**: Blank lines around code blocks
-- **MD040**: Specify language for code blocks
-
-````markdown
-<!-- Good code block -->
-Text before
-
-```javascript
-const code = 'here';
-```
-
-Text after
-````
-
-## CLI Commands
-
-```bash
-# Fix all markdown and MDX files
-markdownlint --fix "**/*.{md,mdx}"
-
-# Fix specific files
-markdownlint --fix README.md CHANGELOG.md content/blog.mdx
-
-# Check without fixing
-markdownlint "**/*.{md,mdx}"
-
-# Use specific config
-markdownlint --config .markdownlint.json "**/*.{md,mdx}"
-
-# Ignore specific rules
-markdownlint --disable MD013 MD033 "**/*.{md,mdx}"
-
-# Output JSON for parsing
-markdownlint --json "**/*.{md,mdx}"
-```
-
-## Common Patterns
-
-### Fix Multiple Issues at Once
+### Blank Lines Around Headings
 
 ```markdown
-<!-- Before -->
-#Title
-Some text with trailing spaces
- Tab indented line
+WRONG:
+Some text.
+## Heading
+More text.
 
-- Item 1
-* Item 2
-Visit http://example.com
+RIGHT:
+Some text.
 
-<!-- After -->
-# Title
+## Heading
 
-Some text with trailing spaces
-    Space indented line
-
-- Item 1
-- Item 2
-
-Visit <http://example.com>
+More text.
 ```
 
-### Add to package.json
+Exception: the first line of a file may be a heading without
+a preceding blank line.
 
-```json
-{
-  "scripts": {
-    "lint:md": "markdownlint \"**/*.{md,mdx}\" --ignore node_modules",
-    "lint:md:fix": "markdownlint \"**/*.{md,mdx}\" --ignore node_modules --fix"
-  }
-}
+### ATX Headings Only
+
+```markdown
+WRONG:
+Heading
+=======
+
+WRONG:
+Subheading
+----------
+
+RIGHT:
+# Heading
+
+RIGHT:
+## Subheading
 ```
 
-## Detailed Rules Reference
+### Blank Line Before Lists
 
-For comprehensive documentation of all markdown rules with examples and fixes, see [rules-reference.md](./rules-reference.md).
+```markdown
+WRONG:
+Some introductory text:
+- Item one
+- Item two
 
-## Resources
+RIGHT:
+Some introductory text:
 
-- [markdownlint GitHub](https://github.com/DavidAnson/markdownlint)
-- [markdownlint Rules](https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md)
+- Item one
+- Item two
+```
+
+### Reference-Style Links for Long URLs
+
+When an inline link pushes a line beyond 80 characters, use
+reference-style syntax:
+
+```markdown
+WRONG (line too long):
+See the [formatting guide](https://google.github.io/styleguide/docguide/style.html) for details.
+
+RIGHT:
+See the [formatting guide][fmt-guide] for details.
+
+[fmt-guide]: https://google.github.io/styleguide/docguide/style.html
+```
+
+Place link definitions at the end of the current section or
+at the end of the document. When the same URL appears multiple
+times, use a single shared reference definition.
+
+Short inline links that keep the line under 80 chars are fine:
+
+```markdown
+OK:
+See [the guide](https://example.com) for details.
+```

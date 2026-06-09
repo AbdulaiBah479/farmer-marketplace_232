@@ -1,38 +1,61 @@
 ---
 name: doc-consolidation
-description: |
-  Consolidates ephemeral LLM-generated markdown files into permanent documentation.
-
-  Triggers: consolidate docs, untracked reports, ephemeral files, git cleanup,
-  report consolidation, knowledge extraction, REPORT.md files, ANALYSIS.md files
-
-  Use when: you have untracked *_REPORT.md or *_ANALYSIS.md files, git status
-  shows markdown artifacts that shouldn't be committed, preparing PR and need
-  to clean up working artifacts, preserving insights from code reviews
-
-  DO NOT use when: files are already in docs/ or skills/ locations.
-  DO NOT use when: files are intentionally temporary scratch notes.
-  DO NOT use when: source files have no extractable value.
-
-  Merges valuable content into permanent documentation, then deletes source files.
-version: 1.0.0
+description: Merges ephemeral report and analysis artifacts into permanent documentation. Use when LLM-generated markdown files have accumulated and need consolidation.
+globs: "**/*.md"
+alwaysApply: false
 category: documentation
-tags: [docs, consolidation, cleanup, git-hygiene, knowledge-management]
+tags:
+- docs
+- consolidation
+- cleanup
+- git-hygiene
+- knowledge-management
 status: stable
 created: 2025-12-06
 updated: 2025-12-06
 modules:
-  - modules/candidate-detection.md
-  - modules/content-analysis.md
-  - modules/destination-routing.md
-  - modules/merge-execution.md
+- modules/candidate-detection.md
+- modules/content-analysis.md
+- modules/destination-routing.md
+- modules/merge-execution.md
+model_hint: standard
 ---
+## Table of Contents
+
+- [When to Use](#when-to-use)
+- [Quick Start](#quick-start)
+- [Two-Phase Workflow](#two-phase-workflow)
+- [Phase 1: Triage (Fast Model)](#phase-1:-triage-(fast-model))
+- [Phase 2: Execute (Main Model)](#phase-2:-execute-(main-model))
+- [Workflow Details](#workflow-details)
+- [Step 1: Candidate Detection](#step-1:-candidate-detection)
+- [Step 2: Content Analysis](#step-2:-content-analysis)
+- [Step 3: Destination Routing](#step-3:-destination-routing)
+- [Step 4: Generate Plan](#step-4:-generate-plan)
+- [Source: API_REVIEW_REPORT.md](#source:-api_review_reportmd)
+- [Post-Consolidation](#post-consolidation)
+- [Step 5: Execute Merges](#step-5:-execute-merges)
+- [Fast Model Delegation](#fast-model-delegation)
+- [Content Categories](#content-categories)
+- [Merge Strategies](#merge-strategies)
+- [Intelligent Weave](#intelligent-weave)
+- [Replace Section](#replace-section)
+- [Append with Context](#append-with-context)
+- [Create New File](#create-new-file)
+- [Integration](#integration)
+- [Example Session](#example-session)
+- [Troubleshooting](#troubleshooting)
+- [No candidates found](#no-candidates-found)
+- [Low-quality extractions](#low-quality-extractions)
+- [Merge conflicts](#merge-conflicts)
+- [Related Skills](#related-skills)
+
 
 # Doc Consolidation
 
 Extracts valuable knowledge from ephemeral LLM outputs and merges it into permanent documentation.
 
-## When to Use
+## When To Use
 
 Use this skill when:
 - You have untracked `*_REPORT.md` or `*_ANALYSIS.md` files from Claude sessions
@@ -41,10 +64,19 @@ Use this skill when:
 - Preparing a PR and need to clean up working artifacts
 
 Do NOT use when:
-- Files are already in proper documentation locations (`docs/`, `skills/`)
+- Files are already in proper documentation locations
+  (`docs/`, `skills/`)
 - Files are intentionally temporary scratch notes
 - User explicitly wants to preserve the original report format
 - Source files have no extractable value (pure log output)
+
+## Formatting
+
+When merging content into permanent documentation, follow
+`Skill(leyline:markdown-formatting)` conventions: wrap prose
+at 80 chars (prefer sentence/clause boundaries), blank lines
+around headings, ATX headings only, blank line before lists,
+and reference-style links for long URLs.
 
 ## Quick Start
 
@@ -53,6 +85,7 @@ Do NOT use when:
 ```
 
 Or invoke directly:
+
 ```
 I have some report files that need consolidating into permanent docs.
 ```
@@ -105,7 +138,7 @@ Load: `@modules/destination-routing.md`
 
 For each valuable chunk:
 - Semantic match against existing documentation
-- Apply fallback mappings if no good match
+- Apply default mappings if no good match
 - Determine merge strategy (weave, replace, append, create)
 
 ### Step 4: Generate Plan
@@ -144,7 +177,7 @@ After user approval:
 Phase 1 tasks are delegated to haiku-class models for efficiency:
 
 ```python
-# scripts/consolidation_planner.py handles:
+# plugins/sanctum/scripts/consolidation_planner.py handles:
 - scan_for_candidates()
 - extract_content_chunks()
 - categorize_chunks()
@@ -170,22 +203,22 @@ Phase 2 stays on the main model for careful merge execution.
 ### Intelligent Weave
 Insert content into matching existing sections, preserving style.
 
-Use when: Destination has relevant section, content is additive.
+  Use when: Destination has relevant section, content is additive.
 
 ### Replace Section
 Replace existing section with more detailed new content.
 
-Use when: New content 2x+ more detailed or has later date.
+  Use when: New content 2x+ more detailed or has later date.
 
 ### Append with Context
 Add new section with date and source reference.
 
-Use when: No matching section, content doesn't fit existing structure.
+  Use when: No matching section, content doesn't fit existing structure.
 
 ### Create New File
 Generate complete new document.
 
-Use when: No suitable destination exists, content warrants standalone doc.
+  Use when: No suitable destination exists, content warrants standalone doc.
 
 ## Integration
 

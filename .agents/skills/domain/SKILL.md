@@ -1,6 +1,32 @@
 ---
 name: domain
-description: 'Shared agent-work vocabulary.'
+description: Canonical vocabulary for human-AI software work. Use when naming concepts, resolving terminology disputes, or establishing shared domain language across agents and docs.
+practices:
+- ddd-bounded-context
+- wiki-knowledge-surface
+- pragmatic-programmer
+hexagonal_role: domain
+consumes: []
+produces:
+- stdout
+context_rel: []
+skill_api_version: 1
+context:
+  window: isolated
+  intent:
+    mode: none
+  sections:
+    exclude:
+    - HISTORY
+    - INTEL
+    - TASK
+  intel_scope: none
+metadata:
+  tier: knowledge
+  dependencies: []
+  internal: false
+  stability: experimental
+output_contract: 'stdout: domain-language reference (loaded JIT)'
 ---
 # Domain Skill — Ubiquitous Language for Human-AI Software Building
 
@@ -16,10 +42,11 @@ eval surface," the meaning is fixed here, not improvised.
 
 ## Status
 
-**Tracer bullet shape, not yet canonical.** This skill currently holds:
+**Tracer bullet shape with one canonical operating concept.** This skill currently holds:
 
 - 6 structural primitives (Entry, Index, Citation, Primitive, Slice, Anti-Pattern)
 - 1 test entry (Tracer Bullet) written using only citations to the 6 primitives
+- 1 canonical operating concept (Context Density Rule)
 
 If the test entry can describe its own concept using only the primitives, the
 shape works and we grow the corpus by adding more entries — never new
@@ -41,6 +68,7 @@ structural primitives without operator consent.
 
 Structural primitives (the architecture):
 
+- [references/domain.feature](references/domain.feature) — Executable spec: load-on-demand corpus, draft→canonical ratchet, vocabulary root (soc-qk4b)
 - [`references/entry.md`](references/entry.md) — Entry: the atomic concept doc
 - [`references/index-primitive.md`](references/index-primitive.md) — Index: the discovery surface (concept)
 - [`references/citation.md`](references/citation.md) — Citation: how Entries reference each other and how agents claim use
@@ -55,9 +83,50 @@ Test entry:
 
 - [`references/tracer-bullet.md`](references/tracer-bullet.md) — Tracer Bullet: described using only citations to the six primitives above
 
+Operating discipline:
+
+- [`references/context-density-rule.md`](references/context-density-rule.md) — Context Density Rule: every context token carries intent, boundary, evidence, decision, constraint, or next action
+- [`references/behavior-shaping.md`](references/behavior-shaping.md) — Behavior Shaping: the ABC register (antecedent/behavior/consequence/reinforcement/extinction/shaping); building agent capability is operant conditioning, not specification
+- [`references/primitive-selection.md`](references/primitive-selection.md) — Primitive Selection: when to use a Skill vs CLI subcommand vs Hook vs CI gate (CLI is the deterministic core; hook + CI-gate are trigger surfaces that call it)
+- [`references/reach.md`](references/reach.md) — Reach: the blast-radius tier of a knowledge entry (`bead`/`pull`/`always`), orthogonal to maturity; `always` is computed from verification-earned canon, never authored
+
+Loop family (the operating loop — "one loop body, two drivers, one inner tick, one config"; doctrine in `docs/architecture/canonical-loop-model.md`):
+
+- [`references/loop.md`](references/loop.md) — Loop: the umbrella; the same five-beat tick at every scale
+- [`references/evolve.md`](references/evolve.md) — Evolve: the in-session driver (AgentOps-shipped, zero-dependency)
+- [`references/factory.md`](references/factory.md) — Factory: the out-of-session driver (substrate-owned; AgentOps deleted its daemon)
+- [`references/rpi.md`](references/rpi.md) — RPI: the inner tick, one research-plan-implement-validate cycle over one bead
+- [`references/autodev.md`](references/autodev.md) — Autodev: the config/intent layer the loop reads each tick (NOT a loop)
+- [`references/context-compiler.md`](references/context-compiler.md) — Context-Compiler: turns the corpus into the working set and absorbs the tick's exhaust
+
+Verification membrane:
+
+- [`references/silent-contract-violation.md`](references/silent-contract-violation.md) — Silent Contract Violation: tool-use code that runs clean, raises no exception, and is still wrong (wrong routing / output shape / argument provenance); the four contract-check categories that name where it lands (RubricRefine)
+
 Catalog:
 
 - [`references/INDEX.md`](references/INDEX.md) — full corpus index
+
+## Domain as a scoped RPI loop (runtime)
+
+The `Slice` primitive above has a runtime counterpart: a **domain slice** can
+be run as a scoped Research-Plan-Implement loop. A *domain* is a named vertical
+slice with an explicit boundary contract — a manifest at
+`docs/domains/<name>/manifest.yaml` listing the Primitives the slice may touch,
+its goal, and its decision gate.
+
+```bash
+ao rpi phased --domain <name> "<goal>"        # run RPI scoped to a domain slice
+ao rpi phased --scaffold-domain <name>         # write a manifest template, then exit
+ao rpi phased --scaffold-domain <name> --force # overwrite an existing manifest
+```
+
+`--domain` loads `docs/domains/<name>/manifest.yaml` and carries its boundaries
+into every phase prompt, so the loop stays inside the slice. `--scaffold-domain`
+writes the manifest template and exits without running RPI — use it to bootstrap
+a new slice, then fill in the boundary before running. The manifest schema and
+resolution rules are in `docs/adr/ADR-0004`; the `/scaffold` skill documents the
+bootstrap step.
 
 ## What's NOT here
 

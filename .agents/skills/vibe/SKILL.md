@@ -1,564 +1,458 @@
 ---
 name: vibe
-description: 'Talos-class comprehensive code validation. Use for "validate code", "run vibe", "check quality", "security review", "architecture review", "accessibility audit", "complexity check", or any validation need. One skill to validate them all.'
+description: 'Validate code readiness. Use when: doing a quick readiness or sanity check that code is ready to commit or ship, short of a full review.'
+practices:
+- ai-assisted-dev
+- llm-eval-harness
+- code-complete
+- pragmatic-programmer
+hexagonal_role: domain
+consumes:
+- standards
+produces:
+- result.json
+- verdict.json
+context_rel:
+- kind: shared-kernel
+  with: standards
+skill_api_version: 1
+metadata:
+  tier: judgment
+  dependencies:
+  - council
+  - complexity
+  - bug-hunt
+  - standards
+context:
+  window: fork
+  intent:
+    mode: task
+  sections:
+    exclude:
+    - HISTORY
+  intel_scope: full
+output_contract: skills/council/schemas/verdict.json
 ---
-
 # Vibe Skill
 
-**YOU MUST EXECUTE THIS WORKFLOW. Do not just describe it.**
+> **Purpose:** Is this code ready to ship?
 
-Comprehensive code validation across 8 quality aspects.
+## Loop position
+
+Per-slice quality gate within move **6 (close the bead by proving acceptance)** of the [operating loop](../../docs/architecture/operating-loop.md). Consumes a slice's changes; produces PASS/WARN/FAIL on complexity, architecture, security, intent fit. Vibe answers "is this slice ready to be counted against the [slice-validation roll-up](../../docs/templates/slice-validation.md)?" — it is not a substitute for the slice's first failing test (the test proves behavior; vibe judges the code that gets there).
+
+Three steps:
+1. **Complexity analysis** — Find hotspots (radon, gocyclo)
+2. **Bug hunt audit** — Systematic sweep for concrete bugs
+3. **Council validation** — Multi-model judgment
 
 ---
 
-## ⚠️ Claude Validation Limitation Warning
+## Quick Start
 
-**Claude is weak at systematic verification.** This was proven when Claude scored docs 9/10 "Ready for Implementation" while Codex found critical bugs at 6/10 on the same prompt.
-
-**For SPEC/DOCUMENT validation:**
-- Claude skims instead of traces
-- Claude pattern-matches instead of reasons
-- Claude is biased toward "looks good"
-
-**Mitigation required:** See "Spec/Document Validation Mode" section below.
+```bash
+/vibe                                    # validates recent changes
+/vibe recent                             # same as above
+/vibe src/auth/                          # validates specific path
+/vibe --quick recent                     # fast inline check, no agent spawning
+/vibe --structured recent                # 6-phase verification report (build→types→lint→tests→security→diff)
+/vibe --deep recent                      # 3 judges instead of 2
+/vibe --sweep recent                     # deep audit: per-file explorers + council
+/vibe --mixed recent                     # cross-vendor (Claude + Codex)
+/vibe --preset=security-audit src/auth/  # security-focused review
+/vibe --explorers=2 recent               # judges with explorer sub-agents
+/vibe --debate recent                    # two-round adversarial review
+/vibe --tier=quality recent              # use quality tier for council calls
+```
 
 ---
 
 ## Execution Steps
 
-Given `/vibe [target]`:
+### Step 0: Load Prior Review Context
 
-### Step 1: Load Vibe-Coding Science
-
-**Read the vibe-coding reference:**
-```
-Tool: Read
-Parameters:
-  file_path: skills/vibe/references/vibe-coding.md
-```
-
-This gives you:
-- Vibe Levels (L0-L5 trust calibration)
-- 5 Core Metrics and thresholds
-- 12 Failure Patterns to detect
-- Grade mapping
-
-### Step 1a: Pre-flight Checks
-
-**Before proceeding, verify we have work to validate:**
+Before reviewing, pull relevant learnings from prior code reviews and known patterns:
 
 ```bash
-# Check if in git repo
-git rev-parse --git-dir 2>/dev/null || echo "NOT_GIT"
-```
-
-If NOT_GIT and no explicit path provided, STOP with error:
-> "Not in a git repository. Provide explicit file path: `/vibe path/to/files`"
-
-### Step 1a.1: Load Prior Validation Knowledge (ao integration)
-
-**Search for relevant learnings before validation:**
-
-```bash
-# Check if ao CLI is available
-if command -v ao &> /dev/null; then
-  # Search for prior validation failures on similar code
-  ao search "validation failures" --limit 5 2>/dev/null || true
-
-  # Check for known anti-patterns from learnings
-  ao anti-patterns 2>/dev/null | head -20 || true
-else
-  # ao not available - skip knowledge injection
-  echo "Note: ao CLI not available, skipping knowledge injection"
+if command -v ao &>/dev/null; then
+    ao lookup --query "<target-scope> code review patterns" --limit 3 2>/dev/null || true
 fi
 ```
 
-**Use the results to:**
-- Inform validation focus areas based on past failures
-- Flag code patterns that previously caused issues
-- Apply extra scrutiny to areas with known anti-patterns
+**Apply retrieved knowledge (mandatory when results returned):**
 
-If ao not available, skip this step and continue with validation.
+If learnings or patterns are returned, do NOT just load them as passive context. For each returned item:
+1. Check: does this learning apply to the code under review? (answer yes/no)
+2. If yes: include it as a `known_risk` in your review — state the pattern, what to look for, and whether the code exhibits it
+3. Cite the learning by filename in your review output when it influences a finding
 
-### Step 1b: Run Toolchain Validation (MANDATORY)
+After applying, record the citation:
+```bash
+ao metrics cite "<learning-path>" --type applied 2>/dev/null || true
+```
 
-**Before ANY agent dispatch, run the toolchain:**
+Skip silently if ao is unavailable or returns no results.
+
+**Project reviewer config:** If `.agents/reviewer-config.md` exists, its full config (`reviewers`, `plan_reviewers`, `skip_reviewers`) is passed to council for judge selection. See `skills/council/SKILL.md` Step 1b.
+
+### Crank Checkpoint Detection
+
+Before scanning for changed files via git diff, check if a crank checkpoint exists:
 
 ```bash
-./scripts/toolchain-validate.sh --gate 2>&1 | tee .agents/tooling/vibe-run.log
-TOOL_EXIT=$?
+if [ -f .agents/vibe-context/latest-crank-wave.json ]; then
+    echo "Crank checkpoint found — using files_changed from checkpoint"
+    FILES_CHANGED=$(jq -r '.files_changed[]' .agents/vibe-context/latest-crank-wave.json 2>/dev/null)
+    WAVE_COUNT=$(jq -r '.wave' .agents/vibe-context/latest-crank-wave.json 2>/dev/null)
+    echo "Wave $WAVE_COUNT checkpoint: $(echo "$FILES_CHANGED" | wc -l | tr -d ' ') files changed"
+fi
 ```
 
-**Interpret results:**
+When a crank checkpoint is available, use its `files_changed` list instead of re-detecting via `git diff`. This ensures vibe validates exactly the files that crank modified.
 
-| Exit Code | Meaning | Action |
-|-----------|---------|--------|
-| 0 | All tools pass | Proceed to agent dispatch |
-| 2 | CRITICAL findings | **STOP. Report tool findings. Do not dispatch agents.** |
-| 3 | HIGH findings only | Proceed, but note in report |
-
-**If TOOL_EXIT == 2:**
-
-```
-Report to user:
-
-  Grade: F (tools failed)
-
-  Toolchain found CRITICAL issues that must be fixed:
-  - See .agents/tooling/<tool>.txt for details
-
-  Fix these issues before re-running /vibe.
-  Do NOT generate a false "Grade: B" when tools are failing.
-```
-
-**DO NOT dispatch agents if tools found CRITICAL issues.** This prevents theater where agents ignore definitive tool failures and produce optimistic reports.
-
-### Step 2: Determine Target and Vibe Level
+### Step 1: Determine Target
 
 **If target provided:** Use it directly.
 
-**Classify the vibe level based on task type:**
-| Task Type | Vibe Level | Depth |
-|-----------|:----------:|-------|
-| Format, lint | L5 | Skip |
-| Boilerplate | L4 | Quick |
-| CRUD, tests | L3 | Quick |
-| Features | L2 | Deep |
-| Architecture, security | L1 | Deep |
-
-**If no target:** Auto-detect from git state:
+**If no target or "recent":** Auto-detect from git:
 ```bash
-# Check staged changes
-git diff --cached --name-only 2>/dev/null | head -10
-
-# Check unstaged changes
-git diff --name-only 2>/dev/null | head -10
-
 # Check recent commits
-git log --oneline -5 --since="24 hours ago" 2>/dev/null
+git diff --name-only HEAD~3 2>/dev/null | head -20
 ```
 
-Use the first non-empty result. If nothing found, ask user.
+If nothing found, ask user.
 
-### Step 2a: Pre-flight Check - Files Exist
+**Pre-flight: If no files found:**
+Return immediately with: "PASS (no changes to review) — no modified files detected."
+Do NOT spawn agents for empty file lists.
 
-**If auto-detected 0 files to review:**
-```
-STOP and return:
-  Grade: PASS
-  Reason: "No changes detected to review"
-  Action: None required
-```
+### Step 1.5a: Structured Verification Path (--structured mode)
 
-Do NOT proceed with empty file list - this wastes context.
+**If `--structured` flag is set**, run a 6-phase mechanical verification pipeline instead of the council flow. This produces a machine-readable verification report suitable for PR gates and CI integration.
 
-### Step 3: Get Changed Files
+Phases: Build → Types → Lint → Tests → Security → Diff Review.
+
+Read `references/verification-report.md` for the full report template and per-phase commands. Each phase is fail-fast — if Build fails, skip remaining phases and report NOT READY.
+
+After all phases complete, write the structured report to `.agents/council/YYYY-MM-DD-verification-<target>.md` and output the summary table to the user.
+
+**When to use:** Pre-PR gate, CI integration, when you need a mechanical pass/fail rather than judgment-based review.
+
+### Step 1.5: Fast Path (--quick mode)
+
+**If `--quick` flag is set**, skip Steps 2a through 2e as heavy pre-processing, plus 2.5 and 2f, and jump to Step 4 with inline council after Steps 2.3, 2.4, 2g, and Step 3. Domain checklists, compiled-prevention loading, test-pyramid inventory, and inline product context are cheap and high-value, so they still run in quick mode. Complexity analysis (Step 2) still runs — it's cheap and informative.
+
+**Why:** Steps 2.5 and 2a–2f add 30–90 seconds of pre-processing that mainly feed multi-judge council packets. In --quick mode (single inline agent), those inputs are not worth the cost, but test-pyramid and product-context checks still shape the inline review meaningfully.
+
+### Step 2: Run Complexity Analysis
+
+Read [references/complexity-analysis.md](references/complexity-analysis.md) when you need the language-detection preflight, per-language analyzer commands (radon/gocyclo), and the score interpretation table. Filter by language present in the diff before running any analyzer.
+
+### Step 2.3: Load Domain-Specific Checklists
+
+Detect code patterns in the target files and load matching domain-specific checklists from `standards/references/`:
+
+| Trigger | Checklist | Detection |
+|---------|-----------|-----------|
+| SQL/ORM code | `sql-safety-checklist.md` | Files contain SQL queries, ORM imports (`database/sql`, `sqlalchemy`, `prisma`, `activerecord`, `gorm`, `knex`), or migration files in changeset |
+| LLM/AI code | `llm-trust-boundary-checklist.md` | Files import `anthropic`, `openai`, `google.generativeai`, or match `*llm*`, `*prompt*`, `*completion*` patterns |
+| Concurrent code | `race-condition-checklist.md` | Files use goroutines, `threading`, `asyncio`, `multiprocessing`, `sync.Mutex`, `concurrent.futures`, or shared file I/O patterns |
+| Codex skills | `codex-skill.md` | Files under `skills-codex/`, or files matching `*codex*SKILL.md`, `convert.sh`, `skills-codex-overrides/`, or converter scripts |
+
+For each matched checklist, load it via the Read tool and include relevant items in the council packet as `context.domain_checklists`. Multiple checklists can be loaded simultaneously.
+
+Skip silently if no patterns match. This step runs in both `--quick` and full modes (domain checklists are cheap to load and high-value).
+
+**Steps 2.4-2f, 2h, 3-3.6 (Deep Checks & Pre-Council Prep):** Read `references/deep-checks.md` for compiled prevention, prior findings, pre-council deep analysis checks, product context, spec loading, suppressions, pre-mortem correlation, and model cost tiers. Loaded automatically unless `--quick` mode is set. In `--quick` mode, skip directly to Step 2g.
+
+**Compiled prevention inputs:** Load `.agents/pre-mortem-checks/` and `.agents/planning-rules/` when available. These compiled artifacts contain known_risks from prior findings that inform the review — carry matched finding IDs into council context so judges can assess whether the flywheel prevented rediscovery.
+
+### Step 2a: Prior Findings Check
+
+**Skip if `--quick`.** Load prior findings from `.agents/findings/registry.jsonl`.
+
+### Step 2b: Constraint Tests
+
+**Skip if `--quick`.** Run compiled constraint tests from `.agents/constraints/`.
+
+### Step 2c: Metadata Checks
+
+**Skip if `--quick`.** Verify file metadata consistency.
+
+### Step 2.5: OL Validation
+
+**Skip if `--quick`.** Run organizational-lint checks.
+
+### Step 2d: Knowledge Search
+
+**Skip if `--quick`.** Search for relevant prior learnings via `ao lookup`.
+
+### Step 2e: Bug Hunt or Deep Audit Sweep
+
+**Skip if `--quick`.**
+
+**Path A — Deep Audit Sweep (`--deep` or `--sweep`):**
+
+Read `references/deep-audit-protocol.md` for the full protocol. In summary:
+
+1. Chunk target files into batches of 3-5 by line count
+2. Dispatch up to 8 Explore agents in parallel, each with a mandatory 8-category checklist per file
+3. Merge all explorer findings into a sweep manifest at `.agents/council/sweep-manifest.md`
+4. Include sweep manifest in the council packet so judges shift to adjudication mode
+
+**Why:** Generalist judges exhibit satisfaction bias — they stop after a small number of findings regardless of actual issue count. Per-file explorers with category checklists reduce that bias and surface concrete line-level issues before council adjudication.
+
+**Path B — Lightweight Bug Hunt (default, no `--deep`/`--sweep`):**
+
+Run proactive bug-hunt audit on target files.
+
+### Step 2f: Codex Review
+
+**Skip if `--quick`.** When `--mixed` is passed and Codex CLI is available, send the first 2000 chars of the diff to Codex for a parallel review. Cap input at 2000 chars to stay within Codex context budgets.
+
+### Step 3: Product Context
+
+**Skip if `--quick` as a separate judge-fanout step.** When `PRODUCT.md` exists and the user did not pass an explicit `--preset` override, quick mode still loads DX expectations inline in the single-agent review. In non-quick modes, add a DX (developer experience) judge: 2 independent + 1 DX judge (3 judges total). The DX judge evaluates whether the code aligns with the product's stated personas and value propositions.
+
+### Step 2g: Test Pyramid Inventory (MANDATORY)
+
+Read [references/test-pyramid-inventory.md](references/test-pyramid-inventory.md) when you need the full inventory procedure: per-module L0–L3 coverage checks, BF1–BF5 boundary checks, the `weighted_score` formula, satisfaction-score exposure, the council-packet `test_pyramid` JSON shape, and verdict rules. Runs in both `--quick` and full modes — file existence checks are cheap. Weight L0–L1 at 1x, L2 at 3x, L3+ at 5x; `weighted_score < 0.3` with L0–L1 only is a WARN.
+
+### Step 2g.1: Scenario→Test Coverage (MANDATORY when the slice has scenarios)
+
+Test-pyramid inventory (2g) checks that tests *exist* and are well-shaped — it does NOT check that each of the slice's acceptance scenarios maps to a test. The leaf gate for that is `scripts/check-bead-scenario-coverage.sh` (C2, ag-9jle.4). It parses the bead's `## Scenarios` block (or a `.feature` file) and FAILS if any scenario lacks a `@covered-by:<test-path>` link — i.e. it works *forward from behavior*, not backward from coverage %.
 
 ```bash
-# For "recent" target
-git diff --name-only HEAD~3 2>/dev/null | head -20
+# When validating a tracked bead with a ## Scenarios block:
+bash scripts/check-bead-scenario-coverage.sh --bead <bead-id> --json
 
-# For specific path
-ls -la <path>
+# When validating a .feature directly:
+bash scripts/check-bead-scenario-coverage.sh skills/<skill>/references/<name>.feature --json
 ```
 
-### Step 4: Read the Files
+A FAIL here is a vibe blocker, not a WARN: "tests exist" or a coverage percentage is NOT sufficient — every scenario must declare a covering test. Add `@covered-by:<test-path>` (optionally `::<TestName>`) directly above each uncovered `Scenario:`. Skip only when the slice has no scenarios (free-text acceptance must be promoted to scenarios first — see the workflow contract). When the covering tests are runnable in this checkout, prefer `--run` to require they actually PASS, not merely exist.
 
-Use the Read tool to read each changed file. Understand what the code does.
+### Step 4: Run Council Validation
 
-### Step 5: Validate 8 Aspects
+**With spec found — use code-review preset:**
+```
+/council --preset=code-review validate <target>
+```
+- `error-paths`: Trace every error handling path. What's uncaught? What fails silently?
+- `api-surface`: Review every public interface. Is the contract clear? Breaking changes?
+- `spec-compliance`: Compare implementation against the spec. What's missing? What diverges?
 
-For each file, check:
+The spec content is injected into the council packet context so the `spec-compliance` judge can compare implementation against it.
+
+**Without spec — 2 independent judges (no perspectives):**
+```
+/council validate <target>
+```
+2 independent judges (no perspective labels). Use `--deep` for 3 judges on high-stakes reviews. Override with `--quick` (inline single-agent check) or `--mixed` (cross-vendor with Codex).
+
+**Council receives:**
+- Files to review
+- Complexity hotspots (from Step 2)
+- Git diff context
+- Spec content (when found, in `context.spec`)
+- Sweep manifest (when `--deep` or `--sweep`, in `context.sweep_manifest` — judges shift to adjudication mode, see `references/deep-audit-protocol.md`)
+
+All council flags pass through: `--quick` (inline), `--mixed` (cross-vendor), `--preset=<name>` (override perspectives), `--explorers=N`, `--debate` (adversarial 2-round), `--tier=<name>` (model cost tier: quality/balanced/budget). See Quick Start examples and `/council` docs.
+
+### Step 4.5: No-self-grading invariant (author ≠ validator)
+
+The acceptance verdict must NOT be graded by the artifact's own author. A verdict produced by the authoring context is autocorrelated — the same blind spots that shipped the bug pass it. This is the no-self-grading invariant (`ag-lmdx.4`): the independent-trust-domain check that guards the `evidenced->validated` transition.
+
+**Rule:** the judge context MUST be distinct from the author context. Validation MAY run inside the authoring session, but the judge MUST be a **blind sub-agent** — a fresh, context-isolated agent acting as if it has no authoring context. Record `judge_id` (the isolated sub-agent context) distinct from `author_id` (the authoring context). The council judges spawned in Step 4 satisfy this when they are context-isolated sub-agents; an inline self-review by the authoring agent does NOT.
+
+**Blind sub-agent judge spawn (the mechanism, MANDATORY when validating in the authoring session):**
+
+When the verdict is being produced inside the session that authored the code, you MUST spawn the acceptance judge as a fresh-context sub-agent — do NOT grade inline. Concretely:
+
+1. Spawn the judge via the `Agent`/`Task` tool (the same context-isolated sub-agents Step 4's council uses). The sub-agent is the judge; the orchestrating authoring agent is NOT.
+2. Hand the blind judge **ONLY** the acceptance inputs — never the authoring conversation, plan, or reasoning:
+   - the **diff/artifact** under review (changed files + `git diff`),
+   - the **acceptance scenarios** (the bead's `## Scenarios` block or the `.feature` file) and any spec, complexity hotspots, and domain checklists,
+   - the verdict contract (`skills/council/schemas/verdict.json`).
+   Do NOT pass the authoring transcript, intermediate design notes, or "here's why I think it's correct" framing. The judge acts as if it has no authoring context.
+3. Use the sub-agent's PASS/WARN/FAIL as the acceptance verdict. Record `judge_id` = the isolated sub-agent context, `author_id` = the authoring context, into the turn-input consumed by `ao turn verify` (Enforcement below).
+
+This is what makes same-session validation trustworthy: the verdict is produced by a context that did not author the artifact, so the author's blind spots do not pass it.
+
+**Refuse** to emit a PASS verdict when the judge context equals the author context (`judge_id == author_id`) — i.e. when no blind sub-agent was spawned and the authoring agent graded itself. Re-run the verdict through a blind sub-agent judge instead.
+
+**Escape:** `--allow-self` (default OFF) waives the invariant for the inline fallback only (e.g. no sub-agent runtime available). Using it stamps the verdict as self-graded; downstream `ao turn verify` reports it as waived, not independently validated.
+
+**Enforcement:** `ao turn verify <bead>` evaluates the `author_neq_validator` predicate from the turn-input file's `author_id`/`judge_id` and fails the Evidenced-Turn DoD on a self-graded verdict unless `--allow-self` is passed. The `evidenced->validated` guard rejects a self-graded verdict.
+
+### Step 5: Council Checks
+
+Each judge reviews for:
 
 | Aspect | What to Look For |
 |--------|------------------|
-| **Semantic** | Does code match docstrings? Misleading names? |
-| **Security** | SQL injection, XSS, hardcoded secrets, auth issues |
-| **Quality** | Dead code, copy-paste, magic numbers, code smells |
-| **Architecture** | Layer violations, circular deps, god classes |
-| **Complexity** | Deep nesting, long functions, too many params |
-| **Performance** | N+1 queries, unbounded loops, resource leaks |
-| **Slop** | AI hallucinations, cargo cult code, over-engineering |
-| **Accessibility** | Missing ARIA, keyboard nav issues, contrast |
+| **Correctness** | Does code do what it claims? |
+| **Security** | Injection, auth issues, secrets |
+| **Edge Cases** | Null handling, boundaries, errors |
+| **Quality** | Dead code, duplication, clarity |
+| **Complexity** | High cyclomatic scores, deep nesting |
+| **Architecture** | Coupling, abstractions, patterns |
 
-### Step 6: Dispatch Triage Agents (with Tool Output)
+### Step 6: Interpret Verdict
 
-**Agents TRIAGE tool findings. They do not "review for issues."**
+## Council Verdict:
 
-**Before dispatching, read tool outputs:**
-```bash
-cat .agents/tooling/semgrep.txt
-cat .agents/tooling/gitleaks.txt
-cat .agents/tooling/gosec.txt
-cat .agents/tooling/ruff.txt
-cat .agents/tooling/golangci-lint.txt
-cat .agents/tooling/shellcheck.txt
-cat .agents/tooling/radon.txt
-cat .agents/tooling/hadolint.txt
-```
+| Council Verdict | Vibe Result | Action |
+|-----------------|-------------|--------|
+| PASS | Ready to ship | Merge/deploy |
+| WARN | Review concerns | Address or accept risk |
+| FAIL | Not ready | Fix issues |
 
-Launch 3 agents in parallel with SPECIFIC tool output:
+### Step 7: Write Vibe Report
 
-```
-Tool: Task (ALL 3 IN PARALLEL)
-Parameters:
-  subagent_type: "agentops:security-reviewer"
-  model: "haiku"
-  description: "Triage security tool findings"
-  prompt: |
-    TOOL FINDINGS TO TRIAGE:
+**Write to:** `.agents/council/YYYY-MM-DD-vibe-<target>.md` (use `date +%Y-%m-%d`)
 
-    ## Gitleaks Output:
-    <paste .agents/tooling/gitleaks.txt>
+Read `references/report-format.md` for the full vibe report markdown template. The report includes: complexity analysis, council verdict table, shared/critical/informational findings, all findings (when `--deep`/`--sweep`), recommendation, and decision checkboxes.
 
-    ## Semgrep Output:
-    <paste .agents/tooling/semgrep.txt>
-
-    ## Gosec Output:
-    <paste .agents/tooling/gosec.txt>
-
-    For EACH finding, determine verdict:
-
-    TRUE_POSITIVE if:
-    - File path exists (not in comments/examples)
-    - Not in test fixtures (*/test/*, */mock/*, *_test.go)
-    - Not already suppressed (.gitleaksignore, //nolint, # nosec)
-    - Pattern matches real credential (not placeholder like "xxx")
-
-    FALSE_POSITIVE if:
-    - In test fixtures or examples
-    - Already in ignore file
-    - Placeholder value (contains "example", "test", "xxx")
-    - Dead code path (function never called)
-
-    OUTPUT FORMAT:
-    | File:Line | Tool | Finding | Verdict | Reason | Fix (if TRUE_POS) |
-    |-----------|------|---------|---------|--------|-------------------|
-
-Tool: Task
-Parameters:
-  subagent_type: "agentops:code-reviewer"
-  model: "haiku"
-  description: "Triage linter findings"
-  prompt: |
-    LINTER FINDINGS TO TRIAGE:
-
-    ## Ruff/Golangci-lint Output:
-    <paste .agents/tooling/ruff.txt or golangci-lint.txt>
-
-    ## Shellcheck Output:
-    <paste .agents/tooling/shellcheck.txt>
-
-    For EACH finding, apply severity rules:
-
-    FIX_NOW if:
-    - Blocks functionality (import error, syntax error)
-    - Security implication (bare except, eval usage)
-    - Cyclomatic complexity >15 in changed code
-
-    TECH_DEBT if:
-    - Style only (line length 81-100)
-    - Complexity 10-15
-    - Has TODO with issue reference
-
-    NOISE if:
-    - Already passing CI
-    - No functional impact
-    - In generated code
-
-    OUTPUT FORMAT:
-    | File:Line | Finding | Priority | Reason |
-    |-----------|---------|----------|--------|
-
-Tool: Task
-Parameters:
-  subagent_type: "agentops:architecture-expert"
-  model: "haiku"
-  description: "Triage complexity findings"
-  prompt: |
-    COMPLEXITY FINDINGS TO TRIAGE:
-
-    ## Radon Output:
-    <paste .agents/tooling/radon.txt>
-
-    ## Hadolint Output:
-    <paste .agents/tooling/hadolint.txt>
-
-    For EACH high-complexity function:
-    - Is it in changed files? (only review what's new)
-    - Can it be split? (identify extraction points)
-    - Is complexity justified? (state machines, parsers OK)
-
-    OUTPUT FORMAT:
-    | File:Function | Complexity | In Changed? | Recommendation |
-    |---------------|------------|-------------|----------------|
-```
-
-**Key change:** Agents now receive ACTUAL tool output and have EXPLICIT criteria for verdicts.
-
-**Timeout handling:** Per-agent timeout of 3 minutes (180000ms). If agent times out, continue with remaining results if quorum (80%) met. See `.agents/specs/conflict-resolution-algorithm.md` for synthesis rules.
-
-### Step 6a: Apply Conflict Resolution (for swarm results)
-
-**If multiple agents dispatched:**
-1. Check quorum (80% minimum must return)
-2. Apply severity escalation (if ANY agent reports CRITICAL → final is CRITICAL)
-3. Deduplicate findings by file:line (±5 lines tolerance)
-4. Track agreement per finding (e.g., "3/6 agents found this")
-5. Compute weighted grade
-
-**If quorum not met:** Report as INCOMPLETE, do not publish grade.
-
-See: `.agents/specs/conflict-resolution-algorithm.md`
-
-### Step 7: Check for Failure Patterns
-
-**Detect the 12 failure patterns from vibe-coding science:**
-
-| Pattern | Detection Method |
-|---------|------------------|
-| #1 Tests Lie | Compare test output to actual behavior |
-| #4 Debug Spiral | Count consecutive fix commits |
-| #5 Eldritch Horror | Functions >500 lines |
-| #6 Collision | Multiple recent editors on same file |
-
-### Step 8: Categorize Findings
-
-Group findings by severity:
-
-| Severity | Definition | Gate |
-|----------|------------|------|
-| **CRITICAL** | Security vulnerability, data loss risk | BLOCKS |
-| **HIGH** | Significant bug, performance issue | Should fix |
-| **MEDIUM** | Code smell, maintainability issue | Worth noting |
-| **LOW** | Style, minor improvement | Optional |
-
-### Step 9: Compute Grade
-
-Based on findings:
-- **A**: 0 critical, 0-2 high
-- **B**: 0 critical, 3-5 high
-- **C**: 0 critical, 6+ high OR 1 critical (fixed)
-- **D**: 1+ critical unfixed
-- **F**: Multiple critical, systemic issues
-
-### Step 10: Write Vibe Report
-
-**Write to:** `.agents/vibe/YYYY-MM-DD-<target>.md`
-
-```markdown
-# Vibe Report: <Target>
-
-**Date:** YYYY-MM-DD
-**Files Reviewed:** <count>
-**Grade:** <A-F>
-
-## Summary
-<Overall assessment in 2-3 sentences>
-
-## Gate Decision
-[ ] PASS - 0 critical findings
-[ ] BLOCK - <count> critical findings must be fixed
-
-## Findings
-
-### CRITICAL
-1. **<File:Line>** - <Issue>
-   - **Risk:** <what could happen>
-   - **Fix:** <how to fix>
-
-### HIGH
-1. **<File:Line>** - <Issue>
-   - **Fix:** <how to fix>
-
-### MEDIUM
-- <File:Line>: <brief issue>
-
-## Aspects Summary
-| Aspect | Status |
-|--------|--------|
-| Semantic | <OK/Issues> |
-| Security | <OK/Issues> |
-| Quality | <OK/Issues> |
-| Architecture | <OK/Issues> |
-| Complexity | <OK/Issues> |
-| Performance | <OK/Issues> |
-| Slop | <OK/Issues> |
-| Accessibility | <OK/N/A> |
-```
-
-### Step 11: Report to User
+### Step 8: Report to User
 
 Tell the user:
-1. Overall grade
-2. Gate decision (PASS/BLOCK)
-3. Critical and high findings (if any)
-4. Location of full report
+1. Complexity hotspots (if any)
+2. Council verdict (PASS/WARN/FAIL)
+3. Key concerns
+4. Location of vibe report
 
-### Step 12: Record Validation Results (ao integration)
+### Step 9: Record Ratchet Progress & Step 9.5: Feed Findings to Flywheel
 
-**Store validation learnings for future sessions:**
+Read [references/post-verdict-actions.md](references/post-verdict-actions.md) when you need the PASS/WARN/FAIL ratchet recording rules, the failure-retry finding extraction format, and the `.agents/findings/registry.jsonl` write contract (dedup_key, applicable_when vocabulary, atomic-rename rule) plus the `hooks/finding-compiler.sh` follow-up.
 
-```bash
-# Check if ao CLI is available
-if command -v ao &> /dev/null; then
-  # If CRITICAL findings were discovered, record them as learnings
-  if [ "<grade>" = "D" ] || [ "<grade>" = "F" ]; then
-    ao memory_store \
-      --content "Validation found CRITICAL issues in <target>: <summary of critical findings>" \
-      --memory_type "episode" \
-      --tags '["validation", "critical", "<area>"]' \
-      --source "vibe skill" 2>/dev/null || true
-  fi
+### Step 10: Test Bead Cleanup
 
-  # Record any new anti-patterns discovered
-  # (Only if a pattern was found that wasn't already known)
-  # ao forge transcript <session-log> 2>/dev/null || true
-else
-  # ao not available - skip result recording
-  echo "Note: ao CLI not available, skipping result recording"
-fi
-```
-
-**What gets recorded:**
-- CRITICAL findings become episodes for future reference
-- Novel anti-patterns get extracted via forge
-- Validation outcomes help calibrate future assessments
-
-If ao not available, skip this step and continue.
-
-## Key Rules
-
-- **0 CRITICAL = PASS** - the gate rule
-- **Evidence for every finding** - cite file:line
-- **Actionable fixes** - tell them HOW to fix, not just what's wrong
-- **Grade reflects reality** - don't inflate or deflate
-- **Write the report** - always produce `.agents/vibe/` artifact
-- **For specs: Build tables, don't trust impressions** - mechanical cross-referencing required
-- **Never claim "Ready for Implementation" on validation** - recommend external verification
-
-## Quick vs Deep
-
-- **Quick** (`/vibe`): Read files, check obvious issues
-- **Deep** (`/vibe --deep`): Dispatch expert agents for thorough review
-
-## Prescan Script
-
-The vibe skill includes an automated prescan script at `scripts/prescan.sh`:
-
-```bash
-# Run prescan for secret detection
-./scripts/prescan.sh <target-path>
-```
-
-**What it checks:**
-- Hardcoded secrets (API keys, passwords, tokens)
-- AWS/GCP/Azure credentials
-- Private keys
-- Connection strings
-
-**Exit codes:**
-- `0`: No secrets found
-- `1`: Secrets detected (blocks gate)
-
-**Integration:** Run prescan before full vibe validation to catch secrets early.
+After validation completes, clean up stale test beads (`bd list --status=open | grep -iE "test bead|test quest"`) via `bd close` to prevent bead pollution. Skip if `bd` unavailable.
 
 ---
 
-## Spec/Document Validation Mode
-
-**When target is documentation or specs** (*.md files in docs/, specs/, or similar):
-
-### Why This Is Different
-
-Code validation: Look for bugs, security issues, complexity.
-Spec validation: Cross-reference consistency across multiple documents.
-
-**Claude fails at spec validation** because it:
-- Skims instead of mechanically tracing
-- Assumes similar terms are equivalent
-- Rationalizes differences instead of flagging conflicts
-
-### Mandatory Protocol for Spec Validation
-
-**Step S1: Generate Explicit Checklist BEFORE Reading**
+## Integration with Workflow
 
 ```
-Before reading any documents, generate a checklist:
-- List every entity that should be consistent (agents, states, message types, timeouts)
-- List every cross-reference to verify (A mentions B → B exists and matches)
-- List every enum/constant that appears in multiple places
+/implement issue-123
+    │
+    ▼
+(coding, quick lint/test as you go)
+    │
+    ▼
+/vibe                      ← You are here
+    │
+    ├── Complexity analysis (find hotspots)
+    ├── Bug hunt audit (find concrete bugs)
+    └── Council validation (multi-model judgment)
+    │
+    ├── PASS → ship it
+    ├── WARN → review, then ship or fix
+    └── FAIL → fix, re-run /vibe
 ```
 
-**Step S2: Build Mechanical Cross-Reference Tables**
+---
 
-For each entity type, build a table with tool calls:
+## Examples
 
-```markdown
-| Entity | Doc A (line) | Doc B (line) | Match? |
-|--------|--------------|--------------|--------|
-| HARVEST_REQUEST sender | auth matrix:152 "Moirai" | comm matrix:1123 "Athena" | ❌ CONFLICT |
+**User says:** "Run a quick validation on the latest changes."
+
+**Do:**
+```bash
+/vibe recent
 ```
 
-**Step S3: Trace Relationships, Don't Pattern Match**
+### Validate Recent Changes
 
-For every relationship claim:
-1. Read the EXACT line in source doc
-2. Read the EXACT line in target doc
-3. Compare literally, not conceptually
-4. Flag ANY difference, even if it "seems equivalent"
-
-**Step S4: Bias Toward Finding Problems**
-
-- Assume bugs exist
-- Try to break the spec
-- Ask: "What would Codex catch that I'm missing?"
-
-**Step S5: Never Say "Ready for Implementation"**
-
-Final output must be:
-```
-## Findings
-[List what was found]
-
-## Verification Status
-⚠️ Claude-based validation has known limitations.
-Recommend external verification with Codex or mechanical diff tools.
-
-## Cross-Reference Tables
-[Show the tables built in Step S2]
+```bash
+/vibe recent
 ```
 
-### Dispatch Spec Validation Agents
+Runs complexity on recent changes, then council reviews.
 
-For spec validation, dispatch these agents **in parallel**:
+### Validate Specific Directory
 
-```
-Tool: Task (ALL IN PARALLEL)
-Parameters:
-  subagent_type: "agentops:plan-compliance-expert"
-  description: "Check spec compliance"
-  prompt: "Verify these specs are internally consistent: <file-list>"
-
-Tool: Task
-Parameters:
-  subagent_type: "agentops:gap-identifier"
-  description: "Find spec gaps"
-  prompt: "Find missing definitions or broken references in: <file-list>"
-
-Tool: Task
-Parameters:
-  subagent_type: "agentops:assumption-challenger"
-  description: "Challenge assumptions"
-  prompt: "Challenge assumptions and find conflicts in: <file-list>"
+```bash
+/vibe src/auth/
 ```
 
-### Example: What Claude Missed
+Complexity + council on auth directory.
 
-| Issue Type | What Claude Did | What Claude Should Do |
-|------------|-----------------|----------------------|
-| Authorization Matrix wrong sender | Saw "HARVEST_REQUEST" in both tables, moved on | Build table: sender in Auth Matrix vs sender in Comm Matrix |
-| Bead status enum mismatch | Saw "pending/assigned" vs "open", assumed equivalent | Flag: "pending" ≠ "open" - which is canonical? |
-| Retry logic contradiction | Saw "retry" and "3" in multiple docs, assumed consistent | Trace: On rejection → does Demigod retry or Apollo escalate? |
+### Deep Review
 
-**The lesson:** Mechanical verification beats gestalt impression.
+```bash
+/vibe --deep recent
+```
+
+Complexity + 3 judges for thorough review.
+
+### Cross-Vendor Consensus
+
+```bash
+/vibe --mixed recent
+```
+
+Complexity + Claude + Codex judges.
+
+See `references/examples.md` for additional examples: security audit with spec compliance, developer-experience code review with PRODUCT.md, and fast inline checks.
+
+---
+
+## Troubleshooting
+
+| Problem | Cause | Solution |
+|---------|-------|----------|
+| "COMPLEXITY SKIPPED: radon not installed" | Python complexity analyzer missing | Install with `pip install radon` or skip complexity (council still runs). |
+| "COMPLEXITY SKIPPED: gocyclo not installed" | Go complexity analyzer missing | Install with `go install github.com/fzipp/gocyclo/cmd/gocyclo@latest` or skip. |
+| Vibe returns PASS but constraint tests fail | Council LLMs miss mechanical violations | Check `.agents/council/<timestamp>-vibe-*.md` for constraint test results. Failed constraints override council PASS. Fix violations and re-run. |
+| Codex review skipped | `--mixed` not passed, Codex CLI not on PATH, or no uncommitted changes | Codex review is opt-in — pass `--mixed` to enable. Also requires Codex CLI on PATH and uncommitted changes. |
+| "No modified files detected" | Clean working tree, no recent commits | Make changes or specify target path explicitly: `/vibe src/auth/`. |
+| Spec-compliance judge not spawned | No spec found in beads/plans | Reference bead ID in commit message or create plan doc in `.agents/plans/`. Without spec, vibe uses 2 independent judges (3 with `--deep`). |
+
+---
+
+## Write-Time Quality Hook
+
+The `hooks/write-time-quality.sh` PostToolUse hook runs automatically after every Write/Edit tool call, catching common anti-patterns at edit time rather than review time. It checks:
+
+- **Go:** unchecked errors, `fmt.Print` in library code
+- **Python:** bare `except:`, `eval`/`exec`, missing type hints on public functions
+- **Shell:** missing `set -euo pipefail`, unquoted variables
+
+The hook is non-blocking (always exits 0) and outputs warnings via JSON. See [references/write-time-quality.md](references/write-time-quality.md) for the full design.
+
+## See Also
+
+- `skills/council/SKILL.md` — Multi-model validation council
+- `skills/complexity/SKILL.md` — Standalone complexity analysis
+- `skills/bug-hunt/SKILL.md` — Proactive code audit and bug investigation
+- `.agents/specs/conflict-resolution-algorithm.md` — Conflict resolution between agent findings
+- [test](../test/SKILL.md) — Test generation and coverage analysis
+- [perf](../perf/SKILL.md) — Performance profiling and benchmarking
+
+## Reference Documents
+
+- [references/vibe.feature](references/vibe.feature) — Executable spec: council verdict (complexity/architecture/security/intent-fit), block-on-CRITICAL, verdict.json (soc-qk4b)
+- [references/complexity-analysis.md](references/complexity-analysis.md)
+- [references/deep-checks.md](references/deep-checks.md)
+- [references/post-verdict-actions.md](references/post-verdict-actions.md)
+- [references/test-pyramid-inventory.md](references/test-pyramid-inventory.md)
+- [references/verification-report.md](references/verification-report.md)
+- [references/write-time-quality.md](references/write-time-quality.md)
+- [references/deep-audit-protocol.md](references/deep-audit-protocol.md)
+- [references/examples.md](references/examples.md)
+- [references/go-patterns.md](references/go-patterns.md)
+- [references/go-standards.md](references/go-standards.md)
+- [references/json-standards.md](references/json-standards.md)
+- [references/markdown-standards.md](references/markdown-standards.md)
+- [references/patterns.md](references/patterns.md)
+- [references/python-standards.md](references/python-standards.md)
+- [references/report-format.md](references/report-format.md)
+- [references/rust-standards.md](references/rust-standards.md)
+- [references/shell-standards.md](references/shell-standards.md)
+- [references/typescript-standards.md](references/typescript-standards.md)
+- [references/vibe-coding.md](references/vibe-coding.md)
+- [references/vibe-suppressions.md](references/vibe-suppressions.md)
+- [references/test-pyramid-weighting.md](references/test-pyramid-weighting.md)
+- [references/yaml-standards.md](references/yaml-standards.md)

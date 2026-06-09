@@ -1,45 +1,73 @@
 ---
-name: csv-processor
-description: 读取、写入、转换和分析CSV文件，支持过滤、排序、聚合和格式转换。
-metadata:
-  short-description: 处理CSV文件
-source:
-  repository: https://github.com/pandas-dev/pandas
-  license: BSD-3-Clause
+name: "csv-processor"
+description: |
+  Process csv processor operations. Auto-activating skill for Business Automation.
+  Triggers on: csv processor, csv processor
+  Part of the Business Automation skill category. Use when working with csv processor functionality. Trigger with phrases like "csv processor", "csv processor", "csv".
+allowed-tools: "Read, Write, Edit, Bash(cmd:*)"
+version: 1.0.0
+license: MIT
+author: "Jeremy Longshore <jeremy@intentsolutions.io>"
+compatible-with: claude-code
 ---
 
-# CSV Processor Tool
+# Csv Processor
 
-## Description
-Process CSV files with powerful data manipulation capabilities including filtering, sorting, aggregation, and format conversion.
+## Overview
 
-## Trigger
-- `/csv` command
-- User needs to process CSV data
-- User wants to transform or analyze tabular data
+This skill provides automated assistance for csv processor tasks within the Business Automation domain.
 
-## Usage
+## When to Use
 
-```bash
-# Read and display CSV
-python scripts/csv_processor.py read data.csv
+This skill activates automatically when you:
+- Mention "csv processor" in your request
+- Ask about csv processor patterns or best practices
+- Need help with business automation skills covering workflow automation, email processing, spreadsheet operations, and business process optimization.
 
-# Filter rows
-python scripts/csv_processor.py filter data.csv --column "status" --value "active"
+## Instructions
 
-# Sort by column
-python scripts/csv_processor.py sort data.csv --by "date" --desc
+1. Provides step-by-step guidance for csv processor
+2. Follows industry best practices and patterns
+3. Generates production-ready code and configurations
+4. Validates outputs against common standards
 
-# Convert to JSON
-python scripts/csv_processor.py convert data.csv --format json --output data.json
+## Examples
 
-# Aggregate data
-python scripts/csv_processor.py aggregate data.csv --group "category" --sum "amount"
-```
+**Example: Basic Usage**
+Request: "Help me with csv processor"
+Result: Provides step-by-step guidance and generates appropriate configurations
 
-## Tags
-`csv`, `data`, `transform`, `analysis`, `pandas`
 
-## Compatibility
-- Codex: ✅
-- Claude Code: ✅
+## Prerequisites
+
+- Relevant development environment configured
+- Access to necessary tools and services
+- Basic understanding of business automation concepts
+
+
+## Output
+
+- Generated configurations and code
+- Best practice recommendations
+- Validation results
+
+
+## Error Handling
+
+| Error | Cause | Solution |
+|-------|-------|----------|
+| Configuration invalid | Missing required fields | Check documentation for required parameters |
+| Tool not found | Dependency not installed | Install required tools per prerequisites |
+| Permission denied | Insufficient access | Verify credentials and permissions |
+
+
+## Resources
+
+- Official documentation for related tools
+- Best practices guides
+- Community examples and tutorials
+
+## Related Skills
+
+Part of the **Business Automation** skill category.
+Tags: automation, workflow, spreadsheets, email, business

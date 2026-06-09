@@ -1,23 +1,55 @@
 ---
 name: gif-generation
-description: |
-  Post-process video files and generate optimized GIFs.
-  Converts webm/mp4 to GIF with configurable quality settings.
-
-  Triggers: gif conversion, video to gif, optimize gif, webm to gif
-
-  Use when: converting browser recordings to GIF format, optimizing GIF file size
+description: Converts webm/mp4 video files to optimized GIFs via ffmpeg with configurable quality settings. Use when post-processing recordings into shareable GIFs.
+alwaysApply: false
 category: media-generation
-tags: [gif, ffmpeg, video, conversion, optimization]
-tools: [Bash]
+tags:
+- gif
+- ffmpeg
+- video
+- conversion
+- optimization
+tools: []
 complexity: low
+model_hint: fast
 estimated_tokens: 400
 progressive_loading: false
 ---
+## Table of Contents
+
+- [Overview](#overview)
+- [Required TodoWrite Items](#required-todowrite-items)
+- [Process](#process)
+- [Step 1: Validate Input File](#step-1:-validate-input-file)
+- [Step 2: Check ffmpeg Installation](#step-2:-check-ffmpeg-installation)
+- [Step 3: Execute Conversion](#step-3:-execute-conversion)
+- [Basic Conversion (Fast, Larger File)](#basic-conversion-(fast,-larger-file))
+- [High Quality with Palette Generation (Recommended)](#high-quality-with-palette-generation-(recommended))
+- [Maximum Quality with Dithering](#maximum-quality-with-dithering)
+- [Optimization Options](#optimization-options)
+- [Common Presets](#common-presets)
+- [Step 4: Verify Output](#step-4:-verify-output)
+- [Exit Criteria](#exit-criteria)
+- [Troubleshooting](#troubleshooting)
+- [Large Output File](#large-output-file)
+- [Color Banding](#color-banding)
+- [Slow Conversion](#slow-conversion)
+
 
 # GIF Generation Skill
 
 Post-process video files (webm/mp4) and generate optimized GIF output with configurable quality settings.
+
+
+## When To Use
+
+- Converting recordings to animated GIF format
+- Creating lightweight demo animations
+
+## When NOT To Use
+
+- High-quality video output - use full recording tools
+- Static image generation without animation needs
 
 ## Overview
 
@@ -31,6 +63,7 @@ This skill handles the conversion of video recordings (typically from browser au
 - Execute GIF conversion
 - Verify output and report results
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
 ## Process
 
@@ -48,6 +81,7 @@ else
     exit 1
 fi
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
 Supported input formats: `.webm`, `.mp4`, `.mov`, `.avi`
 
@@ -63,6 +97,7 @@ if ! command -v ffmpeg &> /dev/null; then
 fi
 ffmpeg -version | head -1
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
 ### Step 3: Execute Conversion
 
@@ -73,18 +108,21 @@ Choose the appropriate conversion command based on quality requirements:
 ```bash
 ffmpeg -i input.webm -vf "fps=10,scale=800:-1" output.gif
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
 #### High Quality with Palette Generation (Recommended)
 
 ```bash
 ffmpeg -i input.webm -vf "fps=10,scale=800:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" output.gif
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
 #### Maximum Quality with Dithering
 
 ```bash
 ffmpeg -i input.webm -vf "fps=15,scale=1024:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=256:stats_mode=single[p];[s1][p]paletteuse=dither=bayer:bayer_scale=5" output.gif
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
 ### Optimization Options
 
@@ -108,6 +146,7 @@ ffmpeg -i input.webm -vf "fps=10,scale=800:-1:flags=lanczos,split[s0][s1];[s0]pa
 # High-fidelity demo
 ffmpeg -i input.webm -vf "fps=15,scale=1024:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=256[p];[s1][p]paletteuse" demo.gif
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
 ### Step 4: Verify Output
 
@@ -128,6 +167,7 @@ else
     exit 1
 fi
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
 ## Exit Criteria
 
@@ -146,6 +186,7 @@ Reduce quality settings:
 # Lower fps and resolution
 ffmpeg -i input.webm -vf "fps=8,scale=640:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" smaller.gif
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
 ### Color Banding
 
@@ -153,6 +194,7 @@ Use dithering:
 ```bash
 ffmpeg -i input.webm -vf "fps=10,scale=800:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse=dither=floyd_steinberg" smooth.gif
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
 ### Slow Conversion
 
@@ -160,3 +202,4 @@ Use basic conversion without palette generation for speed:
 ```bash
 ffmpeg -i input.webm -vf "fps=10,scale=800:-1" quick.gif
 ```
+**Verification:** Run the command with `--help` flag to verify availability.

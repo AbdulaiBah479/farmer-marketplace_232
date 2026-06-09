@@ -1,300 +1,114 @@
 ---
 name: context-optimizer
-description: Automatically optimizes context window usage when filling up (>70%). Uses hierarchical summarization, selective file loading, and intelligent compaction to maintain conversation quality while reducing token count by 60-80%. Proactively activates to prevent context overflow.
+description: Optimize token usage and context management. Use when sessions feel slow, context is degraded, or you're running out of budget.
 ---
 
-# Context Optimizer Skill
+# Context Optimizer
 
-You are the Context Optimizer. Your mission is to keep conversations running smoothly by intelligently managing the context window.
+Manage your context window and token budget effectively.
 
-## When to Activate
+## Quick Diagnosis
 
-Auto-activate when:
-- **Context window >70% full** (proactive optimization)
-- **Context window >90% full** (emergency optimization)
-- **Explicit request** (`/optimize-context` command)
-- **Before long operations** (anticipated context growth)
+1. Run `/context` to check current usage
+2. If > 70% → compact now before it degrades
+3. If > 90% → you're in the "dumb zone", compact immediately
 
-## Optimization Strategy
+## Optimization Strategies
 
-### Tier 1: Keep Verbatim (Always preserve)
+### Immediate
 
-1. **Last 10 conversation turns**
-   - Full user messages
-   - Full assistant responses
-   - All tool calls and results
+| Action | Saves | When |
+|--------|-------|------|
+| `/compact` | 30-50% context | At task boundaries |
+| Disable unused MCPs | ~5% per MCP | When switching domains |
+| Use subagents for exploration | Keeps main context clean | Heavy search/read tasks |
+| Fresh session via `/resume` | 100% reset | When starting unrelated work |
 
-2. **Current task description**
-   - Active work items
-   - Current goals
-   - Acceptance criteria
+### Configuration
 
-3. **All CLAUDE.md files**
-   - Root CLAUDE.md
-   - Directory-specific standards
-   - Generated framework standards (.factory/standards/*.md)
-
-4. **Currently open/referenced files**
-   - Files explicitly mentioned in last 5 turns
-   - Files with recent edits
-   - Files with failing tests
-
-### Tier 2: Summarize (Compress while preserving meaning)
-
-1. **Older conversation (11-50 turns ago)**
-   - Brief summary per topic/phase
-   - Key decisions made
-   - Important code changes
-   - Test results
-
-**Summarization Format:**
-```
-Phase: Authentication Implementation (Turns 15-25)
-- Implemented JWT token generation with 15m expiration
-- Added refresh token endpoint
-- Discussed and chose bcrypt over argon2 for password hashing
-- Fixed rate limiting bug (5 requests/15min)
-- All auth tests passing
-```
-
-2. **Medium-age files (accessed 10-50 turns ago)**
-   - Keep imports and exports
-   - Keep type definitions
-   - Compress implementation details
-   - Note: "Full implementation available via Read tool"
-
-### Tier 3: Compress Heavily (Minimize tokens)
-
-1. **Ancient conversation (50+ turns ago)**
-   - One-line summary per major phase
-   - Only critical decisions that might affect current work
-
-**Ultra-Compact Format:**
-```
-Early phases: Set up React + TypeScript + Vite, configured ESLint/Prettier, created base component structure
-```
-
-2. **Tool call results**
-   - Keep only final output
-   - Remove intermediate steps
-   - Compress error messages (type + fix, not full stack)
-
-3. **Old file contents**
-   - Remove entirely (can be re-read if needed)
-   - Keep reference: "Previously reviewed: src/utils/api.ts"
-
-### Tier 4: Archive to Memory (Move out of context)
-
-1. **Architectural decisions**
-   - Save to `.factory/memory/org/decisions.json`
-   - Remove from context
-   - Can be recalled with `/load-memory org`
-
-2. **User preferences**
-   - Save to `.factory/memory/user/preferences.json`
-   - Examples: "Prefers functional components", "Uses React Query for server state"
-
-3. **Discovered patterns**
-   - Save to `.factory/memory/org/patterns.json`
-   - Examples: "Uses Repository pattern for data access", "All API calls use custom useApi hook"
-
-## Context Analysis
-
-Before optimizing, analyze current usage:
-
-```typescript
-interface ContextAnalysis {
-  total: {
-    current: number;      // Current token count
-    maximum: number;      // Max context window (e.g., 200k)
-    percentage: number;   // Current / maximum * 100
-  };
-  breakdown: {
-    systemPrompt: number;     // CLAUDE.md + standards
-    conversationHistory: number; // Messages + tool calls
-    codeContext: number;      // File contents
-    toolResults: number;      // Command outputs
-  };
-  recommendations: string[];  // Specific optimization suggestions
-}
-```
-
-### Analysis Report Format
-
-```
-📊 Context Window Analysis
-
-Current Usage: 142,847 / 200,000 tokens (71.4%) ⚠️
-
-Breakdown:
-├─ System Prompt (CLAUDE.md + standards): 8,234 tokens (5.8%)
-├─ Conversation History (52 turns): 89,456 tokens (62.6%)
-├─ Code Context (12 files): 38,291 tokens (26.8%)
-└─ Tool Results (43 calls): 6,866 tokens (4.8%)
-
-⚠️ Recommendations:
-1. Compact conversation history (turns 1-40) → Est. save 45k tokens
-2. Remove old file contents (6 files not accessed in 20+ turns) → Est. save 18k tokens
-3. Compress tool results (remove intermediate bash outputs) → Est. save 4k tokens
-
-Total Estimated Savings: ~67k tokens (47% reduction)
-New Estimated Usage: ~75k tokens (37.5%)
-
-Apply optimizations? (y/n)
-```
-
-## Optimization Process
-
-### Step 1: Backup Current State
-
-Before any optimization, create a checkpoint:
-
+Set proactive auto-compaction:
 ```json
 {
-  "timestamp": "2025-11-11T21:00:00Z",
-  "preOptimization": {
-    "tokenCount": 142847,
-    "conversationLength": 52,
-    "filesLoaded": 12
-  },
-  "checkpoint": {
-    "messages": [...],  // Full conversation history
-    "files": [...],     // All loaded files
-    "tools": [...]      // All tool results
+  "env": {
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "50"
   }
 }
 ```
 
-**Save to:** `.factory/.checkpoints/optimization-<timestamp>.json`
+### MCP Audit
 
-### Step 2: Hierarchical Summarization
+Keep <10 MCPs enabled, <80 tools total. Each MCP adds overhead to every request.
 
-```typescript
-// Group messages by phase
-const phases = groupByPhase(conversation);
-
-// Summarize each phase based on age
-const summaries = phases.map(phase => {
-  const age = currentTurn - phase.endTurn;
-  
-  if (age < 10) {
-    // Recent: keep verbatim
-    return phase.messages;
-  } else if (age < 50) {
-    // Medium: brief summary
-    return summarizePhase(phase, 'medium');
-  } else {
-    // Ancient: one-liner
-    return summarizePhase(phase, 'compact');
-  }
-});
+```bash
+/mcp          # List active servers
+# Disable what you're not using
 ```
 
-### Step 3: Selective File Retention
+### Prompt Engineering for Token Efficiency
 
-```typescript
-// Rank files by relevance
-const rankedFiles = files.map(file => ({
-  file,
-  relevanceScore: calculateRelevance(file, currentTask)
-})).sort((a, b) => b.relevanceScore - a.relevanceScore);
+- Scope your prompts: "In src/auth/, fix the login bug"
+- Provide constraints: "Don't modify the middleware"
+- Give acceptance criteria: "Should return 429 after 5 attempts"
+- Avoid vague prompts: "Fix the code" (forces Claude to read everything)
 
-// Keep top 5 most relevant
-const keep = rankedFiles.slice(0, 5).map(x => x.file);
+### Subagent Delegation
 
-// Compress next 5
-const compress = rankedFiles.slice(5, 10).map(x => ({
-  path: x.file.path,
-  signature: extractSignature(x.file), // types, exports
-  note: "Full content available via Read tool"
-}));
+Heavy operations that generate lots of output should go to subagents:
 
-// Remove rest (can be re-read if needed)
-const removed = rankedFiles.slice(10).map(x => x.file.path);
-```
+- Test suite output → subagent
+- Large file exploration → subagent
+- Documentation generation → subagent
+- Log analysis → subagent
 
-### Step 4: Tool Result Compaction
+The main session stays clean while subagents handle the volume.
 
-```typescript
-// Keep only final results
-const compacted = toolCalls.map(call => {
-  if (call.turnsAgo < 5) {
-    // Recent: keep full
-    return call;
-  } else {
-    // Old: compress
-    return {
-      tool: call.tool,
-      summary: extractSummary(call.result),
-      note: "Full output truncated (old result)"
-    };
-  }
-});
-```
+## Context Budget Planning
 
-### Step 5: Apply Optimizations
+| Phase | Target Usage | Action If Over |
+|-------|-------------|----------------|
+| Planning | < 20% | Keep plans concise |
+| Implementation | < 60% | Compact between files |
+| Testing | < 80% | Delegate to subagent |
+| Review | < 90% | Start fresh session |
 
-1. Replace conversation history with summaries
-2. Update file context (keep/compress/remove)
-3. Update tool results (keep/compress)
-4. Preserve all standards (CLAUDE.md files)
+## Token Efficiency
 
-### Step 6: Verify & Report
+### Output Reduction (40-60% savings)
+- No sycophantic openers ("Sure!", "Great question!")
+- No closing fluff ("Let me know if you need anything!")
+- No prompt restatement before answering
+- Code first, explanation only if non-obvious
+- Structured output (tables, bullets) over prose
+- ASCII only: -- not em dashes, straight quotes not smart quotes
 
-```
-✅ Context Optimization Complete
+### Behavioral Efficiency
+- One-pass coding: complete solution, test once, stop if green
+- Read before write: never modify unread files
+- No re-reads: don't re-read unchanged files
+- Tool-call budgets: 20 (quick fix) to 80 (large feature)
+- Never iterate more than twice on the same failure
 
-Before: 142,847 tokens (71.4%)
-After: 73,214 tokens (36.6%)
-Saved: 69,633 tokens (48.7% reduction)
+### Task Profiles
+Switch response style based on context:
+- **Coding**: code first, minimal explanation, simplest solution
+- **Agent/Pipeline**: structured output only, no prose, parseable
+- **Analysis**: finding first, tables over paragraphs, sourced numbers
 
-Changes:
-- Conversation: 52 turns → 10 recent + summaries
-- Files: 12 loaded → 5 full + 5 signatures
-- Tool results: 43 calls → compressed to summaries
-- Standards: Preserved (8,234 tokens)
+## CLAUDE.md Optimization
 
-Quality Check:
-✅ Recent context intact (last 10 turns)
-✅ Current task details preserved
-✅ All standards files preserved
-✅ Critical decisions retained
+- Root CLAUDE.md: < 60 lines ideal, < 150 max
+- Move package-specific info to package-level CLAUDE.md
+- Move personal preferences to CLAUDE.local.md
+- Remove obvious or rapidly-changing information
 
-You can continue working without any loss of context quality!
-```
+## When Context Is Degraded
 
-## Recovery from Optimization
+Signs:
+- Claude repeats itself or forgets earlier context
+- Responses become generic or lose project-specific knowledge
+- Tool calls start failing for reasons that worked earlier
 
-If user asks about something from compressed context:
-
-```
-User: "Why did we choose JWT over sessions?"
-
-Response:
-"Let me check the earlier discussion..."
-
-[Load from checkpoint or re-expand summary]
-
-"From turn 23: We chose JWT because:
-1. Stateless (no server-side session storage)
-2. Works better for microservices
-3. Mobile app can store tokens securely
-4. Refresh token rotation prevents token theft
-
-Would you like me to load the full conversation from that phase?"
-```
-
-## Tools Available
-
-- **Read** - Re-load files if needed
-- **LS** - Check directory structure
-- **Create** - Save checkpoints
-- **Edit** - Update memory files
-
-## Never
-
-- ❌ Never discard CLAUDE.md standards files
-- ❌ Never remove current task context
-- ❌ Never summarize last 10 turns (keep verbatim)
-- ❌ Never lose critical decisions (archive to memory instead)
-- ❌ Never optimize without showing analysis first
+Fix:
+1. Manual `/compact`
+2. If still bad: new session with `/resume`
+3. For recurring issues: reduce CLAUDE.md size, disable MCPs

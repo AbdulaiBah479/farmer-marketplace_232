@@ -1,81 +1,20 @@
 ---
 name: design-tokens
-description: Pulse Radar design system - semantic colors, spacing grid, component patterns.
+description: Generate, extend, or audit design tokens in DTCG format with the 3-tier architecture (primitive → semantic → component). Use when the user wants a color palette, type scale, spacing/shadow/radius/motion tokens, multi-brand theming, or wants to validate token files. Covers colors, typography, spacing, shadows, borders, breakpoints, motion, gradients, opacity, blur, sizing, states, theming.
 ---
 
-# Design Tokens Skill
+# Skill: Design Tokens
 
-## Token Import
-```typescript
-import { semantic, status, atom, badges, cards, gap } from '@/shared/tokens';
-```
+Produce and maintain DTCG (`$type`/`$value`) tokens following the project's 3-tier system.
 
-## Color Categories
+## Steps
+1. Read `CLAUDE.md` → "Token System" + "Color/Typography/Spacing Guidelines" for the rules (4px base, Major Third scale, OKLCH palette generation, dark-mode-at-semantic-layer).
+2. Read the relevant existing files in `tokens/` to match structure: `colors.json`, `typography.json`, `spacing.json`, `shadows.json`, `borders.json`, `breakpoints.json`, `motion.json`, `gradients.json`, `opacity.json`, `blur.json`, `sizing.json`, `states.json`, `theming.json`.
+3. Generate/extend tokens:
+   - Primitives = raw values (never used directly). Semantic = purpose aliases. Component = component-scoped.
+   - New palettes: generate 11 OKLCH shades; verify 500 ≥ 4.5:1 on white (text), 600 ≥ 3:1 (UI) using the `a11y-audit` skill / `scripts/contrast.py`.
+   - Multi-brand/density → `theming.json`.
+4. **Validate**: run `python3 scripts/validate_tokens.py` (JSON validity + alias resolution).
 
-### Semantic (general purpose)
-```typescript
-semantic.success.bg   // "bg-semantic-success"
-semantic.warning.text // "text-semantic-warning"
-semantic.error.border // "border-semantic-error"
-semantic.info.ring    // "ring-semantic-info"
-```
-
-### Status (connection states)
-```typescript
-status.connected   // Green - active, success
-status.validating  // Blue - processing
-status.pending     // Yellow - waiting
-status.error       // Red - failed
-```
-
-### Atom Types
-```typescript
-atom.problem      // Red
-atom.solution     // Green
-atom.decision     // Blue
-atom.question     // Yellow
-atom.insight      // Purple
-atom.pattern      // Cyan
-atom.requirement  // Violet
-```
-
-## Spacing (4px Grid)
-
-```typescript
-// ONLY multiples of 4!
-gap.xs   // 4px  (gap-1)
-gap.sm   // 8px  (gap-2)
-gap.md   // 16px (gap-4)
-gap.lg   // 24px (gap-6)
-gap.xl   // 32px (gap-8)
-```
-
-**Forbidden:** gap-3, gap-5, gap-7, p-3, p-5, m-7
-
-## Patterns
-
-### Badge with Status
-```typescript
-<Badge className={badges.status.connected}>
-  <CheckCircle className="h-3.5 w-3.5" />
-  Connected
-</Badge>
-```
-
-### Interactive Card
-```typescript
-<Card className={cards.interactive}>
-  <CardContent className={gap.md}>
-    Content
-  </CardContent>
-</Card>
-```
-
-## ESLint Enforcement
-- `no-raw-tailwind-colors` — blocks bg-red-*, text-green-*
-- `no-odd-spacing` — blocks gap-3, p-5, m-7
-- `no-heroicons` — only lucide-react allowed
-
-## References
-- @references/css-variables.md — Full CSS custom properties list
-- @references/patterns.md — All UI patterns (badges, cards, forms, lists)
+## Output
+DTCG JSON. Preserve `$description` on every token. Reference, never hardcode.

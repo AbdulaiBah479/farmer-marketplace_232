@@ -1,156 +1,73 @@
 ---
-name: graphql-schema-generator
-description: Generate GraphQL schemas, resolvers, and type definitions. Use when designing GraphQL APIs or documenting GraphQL schemas.
+name: "graphql-schema-generator"
+description: |
+  Generate graphql schema generator operations. Auto-activating skill for API Development.
+  Triggers on: graphql schema generator, graphql schema generator
+  Part of the API Development skill category. Use when working with graphql schema generator functionality. Trigger with phrases like "graphql schema generator", "graphql generator", "graphql".
+allowed-tools: "Read, Write, Edit, Bash(curl:*), Grep"
+version: 1.0.0
+license: MIT
+author: "Jeremy Longshore <jeremy@intentsolutions.io>"
+compatible-with: claude-code
 ---
 
-# GraphQL Schema Generator Skill
+# Graphql Schema Generator
 
-GraphQLスキーマを生成するスキルです。
+## Overview
 
-## 概要
+This skill provides automated assistance for graphql schema generator tasks within the API Development domain.
 
-データモデルからGraphQLスキーマ、リゾルバーを自動生成します。
+## When to Use
 
-## 主な機能
+This skill activates automatically when you:
+- Mention "graphql schema generator" in your request
+- Ask about graphql schema generator patterns or best practices
+- Need help with api development skills covering rest, graphql, openapi, authentication, and api design patterns.
 
-- **スキーマ定義**: Type、Query、Mutation
-- **リゾルバー生成**: 実装テンプレート
-- **ベストプラクティス**: ページネーション、エラーハンドリング
-- **ドキュメント**: 自動生成
+## Instructions
 
-## 生成例
+1. Provides step-by-step guidance for graphql schema generator
+2. Follows industry best practices and patterns
+3. Generates production-ready code and configurations
+4. Validates outputs against common standards
 
-### Schema
+## Examples
 
-```graphql
-# Types
-type User {
-  id: ID!
-  name: String!
-  email: String!
-  posts: [Post!]!
-  createdAt: DateTime!
-}
+**Example: Basic Usage**
+Request: "Help me with graphql schema generator"
+Result: Provides step-by-step guidance and generates appropriate configurations
 
-type Post {
-  id: ID!
-  title: String!
-  content: String!
-  author: User!
-  published: Boolean!
-  createdAt: DateTime!
-  updatedAt: DateTime!
-}
 
-type Query {
-  user(id: ID!): User
-  users(first: Int = 10, after: String): UserConnection!
-  post(id: ID!): Post
-  posts(published: Boolean): [Post!]!
-}
+## Prerequisites
 
-type Mutation {
-  createUser(input: CreateUserInput!): User!
-  updateUser(id: ID!, input: UpdateUserInput!): User!
-  deleteUser(id: ID!): Boolean!
-  createPost(input: CreatePostInput!): Post!
-  publishPost(id: ID!): Post!
-}
+- Relevant development environment configured
+- Access to necessary tools and services
+- Basic understanding of api development concepts
 
-# Inputs
-input CreateUserInput {
-  name: String!
-  email: String!
-  password: String!
-}
 
-input UpdateUserInput {
-  name: String
-  email: String
-}
+## Output
 
-input CreatePostInput {
-  title: String!
-  content: String!
-  authorId: ID!
-}
+- Generated configurations and code
+- Best practice recommendations
+- Validation results
 
-# Pagination
-type UserConnection {
-  edges: [UserEdge!]!
-  pageInfo: PageInfo!
-  totalCount: Int!
-}
 
-type UserEdge {
-  node: User!
-  cursor: String!
-}
+## Error Handling
 
-type PageInfo {
-  hasNextPage: Boolean!
-  hasPreviousPage: Boolean!
-  startCursor: String
-  endCursor: String
-}
+| Error | Cause | Solution |
+|-------|-------|----------|
+| Configuration invalid | Missing required fields | Check documentation for required parameters |
+| Tool not found | Dependency not installed | Install required tools per prerequisites |
+| Permission denied | Insufficient access | Verify credentials and permissions |
 
-# Custom Scalars
-scalar DateTime
-```
 
-### Resolvers (JavaScript)
+## Resources
 
-```javascript
-const resolvers = {
-  Query: {
-    user: async (parent, { id }, { dataSources }) => {
-      return dataSources.userAPI.getUserById(id);
-    },
-    users: async (parent, { first, after }, { dataSources }) => {
-      return dataSources.userAPI.getUsers({ first, after });
-    },
-    post: async (parent, { id }, { dataSources }) => {
-      return dataSources.postAPI.getPostById(id);
-    },
-    posts: async (parent, { published }, { dataSources }) => {
-      return dataSources.postAPI.getPosts({ published });
-    }
-  },
+- Official documentation for related tools
+- Best practices guides
+- Community examples and tutorials
 
-  Mutation: {
-    createUser: async (parent, { input }, { dataSources }) => {
-      return dataSources.userAPI.createUser(input);
-    },
-    updateUser: async (parent, { id, input }, { dataSources }) => {
-      return dataSources.userAPI.updateUser(id, input);
-    },
-    deleteUser: async (parent, { id }, { dataSources }) => {
-      return dataSources.userAPI.deleteUser(id);
-    },
-    createPost: async (parent, { input }, { dataSources, user }) => {
-      if (!user) throw new Error('Unauthorized');
-      return dataSources.postAPI.createPost(input);
-    },
-    publishPost: async (parent, { id }, { dataSources, user }) => {
-      if (!user) throw new Error('Unauthorized');
-      return dataSources.postAPI.publishPost(id);
-    }
-  },
+## Related Skills
 
-  User: {
-    posts: async (parent, args, { dataSources }) => {
-      return dataSources.postAPI.getPostsByAuthor(parent.id);
-    }
-  },
-
-  Post: {
-    author: async (parent, args, { dataSources }) => {
-      return dataSources.userAPI.getUserById(parent.authorId);
-    }
-  }
-};
-```
-
-## バージョン情報
-
-- スキルバージョン: 1.0.0
+Part of the **API Development** skill category.
+Tags: api, rest, graphql, openapi, swagger

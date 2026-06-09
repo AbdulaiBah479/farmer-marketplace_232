@@ -1,11 +1,14 @@
 ---
 name: parallel-execution
-description: Executes parallel subagents using Task tool for concurrent operations. Use when facing multiple independent tasks, debugging separate failures, or parallelizing features. Triggers include "parallel tasks", "concurrent", "spawn subagent", "multiple failures", or "dispatch agents".
-allowed-tools: Task, TaskOutput, TodoWrite, Bash
-user-invocable: true
+description: Patterns for parallel subagent execution using Task tool with run_in_background. Use when coordinating multiple independent tasks, spawning dynamic subagents, or implementing features that can be parallelized.
 ---
 
 # Parallel Execution Patterns
+
+### When to Load
+
+- **Trigger**: Multi-agent tasks, concurrent operations, spawning subagents, parallelizing independent work
+- **Skip**: Single-step tasks or sequential workflows with no parallelization opportunity
 
 ## Core Concept
 
@@ -13,76 +16,37 @@ Parallel execution spawns multiple subagents simultaneously using the Task tool 
 
 **Critical Rule**: ALL Task calls MUST be in a SINGLE assistant message for true parallelism. If Task calls are in separate messages, they run sequentially.
 
-## When to Use Parallel Execution
-
-### Good Candidates
-
-- Multiple independent failures (different test files, different subsystems)
-- Multi-file processing where files are independent
-- Multiple analyses (security, performance, testing)
-- Feature implementation with independent components
-- Exploratory tasks with different perspectives
-
-### Don't Parallelize When
-
-- Tasks have dependencies (Task B needs Task A's output)
-- Failures are related (fix one might fix others)
-- Tasks modify the same files (conflict risk)
-- Need to understand full system state first
-- Order matters for correctness
-
-### Decision Flow
-
-```
-Multiple tasks?
-  ├─ No → Single agent handles all
-  └─ Yes → Are they independent?
-              ├─ No (related) → Single agent investigates together
-              └─ Yes → Can work in parallel?
-                         ├─ No (shared state) → Sequential agents
-                         └─ Yes → PARALLEL DISPATCH
-```
-
 ## Execution Protocol
 
-### Step 1: Identify Independent Domains
+### Step 1: Identify Parallelizable Tasks
 
-Group tasks by what's broken or what needs doing:
+Before spawning, verify tasks are independent:
+
+- No task depends on another's output
+- Tasks target different files or concerns
+- Can run simultaneously without conflicts
+
+### Step 2: Prepare Dynamic Subagent Prompts
+
+Each subagent receives a custom prompt defining its role:
 
 ```
-Example - Test Failures:
-- File A tests: Tool approval flow
-- File B tests: Batch completion behavior
-- File C tests: Abort functionality
+You are a [ROLE] specialist for this specific task.
 
-Each domain is independent - fixing one doesn't affect others.
-```
+Task: [CLEAR DESCRIPTION]
 
-### Step 2: Create Focused Agent Prompts
+Context:
+[RELEVANT CONTEXT ABOUT THE CODEBASE/PROJECT]
 
-Each subagent gets:
+Files to work with:
+[SPECIFIC FILES OR PATTERNS]
 
-- **Specific scope:** One test file or subsystem
-- **Clear goal:** Make these tests pass / implement this feature
-- **Constraints:** Don't change other code
-- **Expected output:** Summary of findings and changes
+Output format:
+[EXPECTED OUTPUT STRUCTURE]
 
-```markdown
-Fix the 3 failing tests in src/agents/agent-tool-abort.test.ts:
-
-1. "should abort tool with partial output capture" - expects 'interrupted at'
-2. "should handle mixed completed and aborted tools" - fast tool aborted
-3. "should properly track pendingToolCount" - expects 3 results but gets 0
-
-These are timing/race condition issues. Your task:
-
-1. Read the test file and understand what each test verifies
-2. Identify root cause - timing issues or actual bugs?
-3. Fix by replacing arbitrary timeouts with event-based waiting
-
-Do NOT just increase timeouts - find the real issue.
-
-Return: Summary of what you found and what you fixed.
+Focus areas:
+- [PRIORITY 1]
+- [PRIORITY 2]
 ```
 
 ### Step 3: Launch All Tasks in ONE Message
@@ -90,46 +54,48 @@ Return: Summary of what you found and what you fixed.
 **CRITICAL**: Make ALL Task calls in the SAME assistant message:
 
 ```
-I'm launching 3 parallel subagents:
+I'm launching N parallel subagents:
 
 [Task 1]
-description: "Fix agent-tool-abort.test.ts"
-prompt: "[detailed instructions]"
+description: "Subagent A - [brief purpose]"
+prompt: "[detailed instructions for subagent A]"
 run_in_background: true
 
 [Task 2]
-description: "Fix batch-completion.test.ts"
-prompt: "[detailed instructions]"
+description: "Subagent B - [brief purpose]"
+prompt: "[detailed instructions for subagent B]"
 run_in_background: true
 
 [Task 3]
-description: "Fix tool-approval.test.ts"
-prompt: "[detailed instructions]"
+description: "Subagent C - [brief purpose]"
+prompt: "[detailed instructions for subagent C]"
 run_in_background: true
 ```
 
-### Step 4: Retrieve Results
+### Step 4: Retrieve Results with TaskOutput
 
 After launching, retrieve each result:
 
 ```
+[Wait for completion, then retrieve]
+
 TaskOutput: task_1_id
 TaskOutput: task_2_id
 TaskOutput: task_3_id
 ```
 
-### Step 5: Review and Integrate
+### Step 5: Synthesize Results
 
-When agents return:
+Combine all subagent outputs into unified result:
 
-1. **Review each summary** - Understand what changed
-2. **Check for conflicts** - Did agents edit same code?
-3. **Run full suite** - Verify all fixes work together
-4. **Integrate all changes** - Merge if no conflicts
+- Merge related findings
+- Resolve conflicts between recommendations
+- Prioritize by severity/importance
+- Create actionable summary
 
-## Parallelization Patterns
+## Dynamic Subagent Patterns
 
-### Pattern 1: Task-Based
+### Pattern 1: Task-Based Parallelization
 
 When you have N tasks to implement, spawn N subagents:
 
@@ -139,11 +105,17 @@ Plan:
 2. Create API endpoints
 3. Add database schema
 4. Write unit tests
+5. Update documentation
 
-Spawn 4 subagents (one per task)
+Spawn 5 subagents (one per task):
+- Subagent 1: Implements auth module
+- Subagent 2: Creates API endpoints
+- Subagent 3: Adds database schema
+- Subagent 4: Writes unit tests
+- Subagent 5: Updates documentation
 ```
 
-### Pattern 2: Directory-Based
+### Pattern 2: Directory-Based Parallelization
 
 Analyze multiple directories simultaneously:
 
@@ -156,11 +128,13 @@ Spawn 3 subagents:
 - Subagent 3: Analyzes src/db
 ```
 
-### Pattern 3: Perspective-Based
+### Pattern 3: Perspective-Based Parallelization
 
-Review from multiple angles:
+Review from multiple angles simultaneously:
 
 ```
+Perspectives: Security, Performance, Testing, Architecture
+
 Spawn 4 subagents:
 - Subagent 1: Security review
 - Subagent 2: Performance analysis
@@ -168,34 +142,9 @@ Spawn 4 subagents:
 - Subagent 4: Architecture assessment
 ```
 
-### Pattern 4: Failure-Based
-
-Debug multiple independent failures:
-
-```
-6 failures across 3 files:
-
-Spawn 3 subagents:
-- Agent 1 → Fix agent-tool-abort.test.ts (3 failures)
-- Agent 2 → Fix batch-completion.test.ts (2 failures)
-- Agent 3 → Fix tool-approval.test.ts (1 failure)
-```
-
-## Prompt Best Practices
-
-**❌ Too broad:** "Fix all the tests" - agent gets lost
-**✅ Specific:** "Fix agent-tool-abort.test.ts" - focused scope
-
-**❌ No context:** "Fix the race condition" - agent doesn't know where
-**✅ Context:** Paste the error messages and test names
-
-**❌ No constraints:** Agent might refactor everything
-**✅ Constraints:** "Do NOT change production code" or "Fix tests only"
-
-**❌ Vague output:** "Fix it" - you don't know what changed
-**✅ Specific:** "Return summary of root cause and changes"
-
 ## TodoWrite Integration
+
+When using parallel execution, TodoWrite behavior differs:
 
 **Sequential execution**: Only ONE task `in_progress` at a time
 **Parallel execution**: MULTIPLE tasks can be `in_progress` simultaneously
@@ -209,7 +158,7 @@ todos = [
   { content: "Synthesize results", status: "pending" }
 ]
 
-# After completion
+# After each TaskOutput retrieval, mark as completed
 todos = [
   { content: "Task A", status: "completed" },
   { content: "Task B", status: "completed" },
@@ -218,6 +167,23 @@ todos = [
 ]
 ```
 
+## When to Use Parallel Execution
+
+**Good candidates:**
+
+- Multiple independent analyses (code review, security, tests)
+- Multi-file processing where files are independent
+- Exploratory tasks with different perspectives
+- Verification tasks with different checks
+- Feature implementation with independent components
+
+**Avoid parallelization when:**
+
+- Tasks have dependencies (Task B needs Task A's output)
+- Sequential workflows are required (commit -> push -> PR)
+- Tasks modify the same files (risk of conflicts)
+- Order matters for correctness
+
 ## Performance Benefits
 
 | Approach   | 5 Tasks @ 30s each          | Total Time |
@@ -225,38 +191,51 @@ todos = [
 | Sequential | 30s + 30s + 30s + 30s + 30s | ~150s      |
 | Parallel   | All 5 run simultaneously    | ~30s       |
 
-Parallel execution is approximately **Nx faster** where N is the number of independent tasks.
+Parallel execution is approximately Nx faster where N is the number of independent tasks.
+
+## Example: Feature Implementation
+
+**User request**: "Implement user authentication with login, registration, and password reset"
+
+**Orchestrator creates plan**:
+
+1. Implement login endpoint
+2. Implement registration endpoint
+3. Implement password reset endpoint
+4. Add authentication middleware
+5. Write integration tests
+
+**Parallel execution**:
+
+```
+Launching 5 subagents in parallel:
+
+[Task 1] Login endpoint implementation
+[Task 2] Registration endpoint implementation
+[Task 3] Password reset endpoint implementation
+[Task 4] Auth middleware implementation
+[Task 5] Integration test writing
+
+All tasks run simultaneously...
+
+[Collect results via TaskOutput]
+
+[Synthesize into cohesive implementation]
+```
 
 ## Troubleshooting
 
 **Tasks running sequentially?**
+
 - Verify ALL Task calls are in SINGLE message
 - Check `run_in_background: true` is set for each
 
 **Results not available?**
+
 - Use TaskOutput with correct task IDs
 - Wait for tasks to complete before retrieving
 
 **Conflicts in output?**
+
 - Ensure tasks don't modify same files
 - Add conflict resolution in synthesis step
-
-## Real Example
-
-**Scenario:** 6 test failures across 3 files after refactoring
-
-**Dispatch:**
-```
-Agent 1 → Fix agent-tool-abort.test.ts
-Agent 2 → Fix batch-completion-behavior.test.ts
-Agent 3 → Fix tool-approval-race-conditions.test.ts
-```
-
-**Results:**
-- Agent 1: Replaced timeouts with event-based waiting
-- Agent 2: Fixed event structure bug (threadId in wrong place)
-- Agent 3: Added wait for async tool execution to complete
-
-**Integration:** All fixes independent, no conflicts, full suite green
-
-**Time saved:** 3 problems solved in ~30s vs ~90s sequential

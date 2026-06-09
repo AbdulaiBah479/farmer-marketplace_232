@@ -1,25 +1,37 @@
 ---
 name: architecture-paradigm-event-driven
-description: |
-  Asynchronous event-based communication to decouple producers/consumers for scalability and resilience.
-
-  Triggers: event-driven, message queue, pub/sub, asynchronous processing
-  Use when: real-time workloads or multiple subsystems react to same events
-  DO NOT use when: simple request-response patterns suffice.
-version: 1.0.0
+description: Applies event-driven async messaging to decouple producers and consumers. Use when designing real-time or multi-subscriber systems needing loose coupling.
+alwaysApply: false
 category: architectural-pattern
-tags: [architecture, event-driven, asynchronous, decoupling, scalability, resilience]
+tags:
+- architecture
+- event-driven
+- asynchronous
+- decoupling
+- scalability
+- resilience
 dependencies: []
-tools: [message-broker, event-stream-processor, distributed-tracing]
+tools: []
 usage_patterns:
-  - paradigm-implementation
-  - real-time-processing
-  - system-extensibility
+- paradigm-implementation
+- real-time-processing
+- system-extensibility
 complexity: high
+model_hint: deep
 estimated_tokens: 800
 ---
-
 # The Event-Driven Architecture Paradigm
+
+
+## When To Use
+
+- Building async, loosely-coupled systems
+- Systems with complex event processing pipelines
+
+## When NOT To Use
+
+- Simple request-response applications without async needs
+- Systems requiring strong transactional consistency
 
 ## When to Employ This Paradigm
 - For real-time or bursty workloads (e.g., IoT, financial trading, logistics) where loose coupling and asynchronous processing are beneficial.
@@ -45,3 +57,16 @@ estimated_tokens: 800
   - **Mitigation**: Without strong observability, diagnosing failed or "stuck" consumers is extremely difficult. Enforce the use of distributed tracing and standardized alerting across all event-driven components.
 - **"Event Storming" Analysis Paralysis**:
   - **Mitigation**: While event storming workshops are valuable, they can become unproductive if not properly managed. Keep modeling sessions time-boxed and focused on high-value business contexts first.
+
+## Concrete Components
+
+These vocabulary items name the concrete tools and abstractions
+that show up when the paradigm is implemented. They are not
+required dependencies and they are not part of the skill's
+``tools:`` frontmatter (which is reserved for Claude Code tool
+restrictions). Use this list to disambiguate during architecture
+discussions.
+
+- ``message-broker``: Kafka, NATS, RabbitMQ; the durable channel between producers and consumers
+- ``event-stream-processor``: Flink, Faust, or similar; consumes streams and emits derived events
+- ``distributed-tracing``: OpenTelemetry-style correlation IDs across asynchronous hops

@@ -1,42 +1,71 @@
 ---
 name: quota-management
-description: |
-  Quota tracking, threshold monitoring, and graceful degradation for rate-limited API services.
-
-  Triggers: quota, rate limiting, usage limits, thresholds
-  Use when: integrating rate-limited services or tracking API usage
+description: Tracks quotas, monitors thresholds, and degrades gracefully for rate-limited APIs. Use when integrating external services that impose rate or cost limits.
+alwaysApply: false
 category: infrastructure
-tags: [quota, rate-limiting, resource-management, cost-tracking, thresholds]
+tags:
+- quota
+- rate-limiting
+- resource-management
+- cost-tracking
+- thresholds
 dependencies: []
-tools: [quota-tracker]
+tools: []
 provides:
-  infrastructure: [quota-tracking, threshold-monitoring, usage-estimation]
-  patterns: [graceful-degradation, quota-enforcement, cost-optimization]
+  infrastructure:
+  - quota-tracking
+  - threshold-monitoring
+  - usage-estimation
+  patterns:
+  - graceful-degradation
+  - quota-enforcement
+  - cost-optimization
 usage_patterns:
-  - service-integration
-  - rate-limit-management
-  - cost-tracking
-  - resource-monitoring
+- service-integration
+- rate-limit-management
+- cost-tracking
+- resource-monitoring
 complexity: intermediate
+model_hint: standard
 estimated_tokens: 500
 progressive_loading: true
 modules:
-  - modules/threshold-strategies.md
-  - modules/estimation-patterns.md
+- modules/threshold-strategies.md
+- modules/estimation-patterns.md
 ---
+## Table of Contents
+
+- [Overview](#overview)
+- [When to Use](#when-to-use)
+- [Core Concepts](#core-concepts)
+- [Quota Thresholds](#quota-thresholds)
+- [Quota Types](#quota-types)
+- [Quick Start](#quick-start)
+- [Check Quota Status](#check-quota-status)
+- [Record Usage](#record-usage)
+- [Estimate Before Execution](#estimate-before-execution)
+- [Integration Pattern](#integration-pattern)
+- [Detailed Resources](#detailed-resources)
+- [Exit Criteria](#exit-criteria)
+
 
 # Quota Management
 
 ## Overview
 
-Universal patterns for tracking and enforcing resource quotas across any rate-limited service. This skill provides the foundational infrastructure that other plugins can use for consistent quota handling.
+Patterns for tracking and enforcing resource quotas across rate-limited services. This skill provides the infrastructure that other plugins use for consistent quota handling.
 
-## When to Use
+## When To Use
 
 - Building integrations with rate-limited APIs
 - Need to track usage across sessions
 - Want graceful degradation when limits approached
 - Require cost estimation before operations
+
+## When NOT To Use
+
+- Project doesn't use the leyline infrastructure patterns
+- Simple scripts without service architecture needs
 
 ## Core Concepts
 
@@ -48,7 +77,7 @@ Three-tier threshold system for proactive management:
 |-------|-------|--------|
 | **Healthy** | <80% | Proceed normally |
 | **Warning** | 80-95% | Alert, consider batching |
-| **Critical** | >95% | Defer non-urgent, use fallbacks |
+| **Critical** | >95% | Defer non-urgent, use secondary services |
 
 ### Quota Types
 
@@ -71,7 +100,7 @@ tracker = QuotaTracker(service="my-service")
 status, warnings = tracker.get_quota_status()
 
 if status == "CRITICAL":
-    # Defer or use fallback
+    # Defer or use secondary service
     pass
 ```
 

@@ -1,48 +1,52 @@
 ---
 name: style-learner
-description: |
-
-  Triggers: writing style, voice, tone, style guide, exemplar, style learning
-  Learn and extract writing style patterns from exemplar text for consistent application.
-
-  Triggers: learn style, extract style, style profile, writing voice, tone analysis,
-  style guide generation, exemplar analysis
-
-  Use when: creating a style guide from existing content, ensuring consistency
-  across documents, learning a specific author's voice, customizing AI output style
-
-  DO NOT use when: detecting AI slop - use slop-detector instead.
-  DO NOT use when: just need to clean up existing content - use doc-generator with --remediate.
-
-  Use this skill to build style profiles from exemplar text.
+description: Extracts writing style patterns from exemplar text into a reusable profile. Use when creating a style guide or learning a specific author's voice.
+globs: "**/*.md"
+alwaysApply: false
 category: writing-quality
-tags: [style, voice, tone, exemplar, learning, consistency]
-tools: [Read, Write, TodoWrite]
+tags:
+- style
+- voice
+- tone
+- exemplar
+- learning
+- consistency
+tools: []
 complexity: medium
+model_hint: standard
 estimated_tokens: 1800
 progressive_loading: true
 modules:
-  - feature-extraction
-  - exemplar-reference
-  - style-application
+- modules/feature-extraction.md
+- modules/exemplar-reference.md
+- modules/style-application.md
 dependencies:
-  - scribe:shared
-  - scribe:slop-detector
-version: 1.3.7
+- scribe:shared
+- scribe:slop-detector
 ---
-
 # Style Learning Skill
 
-Extract and codify writing style from exemplar text for consistent application.
+**A style profile is metrics plus exemplars. Either alone
+is too weak to reproduce a voice.**
 
-## Approach: Feature Extraction + Exemplar Reference
+Extract style from exemplar text and codify it as a profile
+that downstream skills (`scribe:doc-generator`,
+`scribe:voice-generate`) can apply consistently.
 
-This skill combines two complementary methods:
+## Approach: Feature Extraction and Exemplar Reference
 
-1. **Feature Extraction**: Quantifiable style metrics (sentence length, vocabulary complexity, structural patterns)
-2. **Exemplar Reference**: Specific passages that demonstrate desired style
+The skill combines two methods because each fails alone:
 
-Together, these create a comprehensive style profile that can guide content generation and editing.
+1. **Feature Extraction**: quantifiable metrics (sentence
+   length distribution, vocabulary complexity, structural
+   patterns). Reproducible but soulless.
+2. **Exemplar Reference**: specific passages that
+   demonstrate the target style. Vivid but hard to apply
+   at scale.
+
+Together they form a profile precise enough to score new
+text and rich enough to guide rewrites. Metrics catch what
+exemplars miss; exemplars carry what metrics flatten.
 
 ## Required TodoWrite Items
 

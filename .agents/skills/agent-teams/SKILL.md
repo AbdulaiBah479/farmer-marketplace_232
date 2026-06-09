@@ -1,10 +1,7 @@
 ---
 name: agent-teams
-description: 'Coordinate Claude Code Agent Teams through filesystem-based protocol. Use.'
+description: Coordinates Claude agent teams via filesystem protocol. Use when orchestrating parallel agents with task dependencies. Do not use for single-agent tasks.
 alwaysApply: false
-  when orchestrating multiple Claude agents on parallel tasks, need task dependency
-  management, multi-agent code review or implementation. Do not use when single-agent
-  work suffices, task is not parallelizable.
 category: delegation-framework
 tags:
 - agent-teams
@@ -119,7 +116,7 @@ export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
 The team config contains:
 - `name`, `description`, `created_at` (ms timestamp)
 - `lead_agent_id`, `lead_session_id`
-- `members[]` — array of LeadMember and TeammateMember objects
+- `members[]`: array of LeadMember and TeammateMember objects
 
 ### 2. Spawn Teammates
 
@@ -170,15 +167,19 @@ See `modules/messaging-protocol.md` for message types and inbox operations.
 
 ## Coordination Workflow
 
-1. **`agent-teams:team-created`** — Initialize team config and directories
-2. **`agent-teams:teammates-spawned`** — Launch agents in tmux panes
-3. **`agent-teams:tasks-assigned`** — Create tasks with dependencies, assign owners
-4. **`agent-teams:coordination-active`** — Agents claim tasks, exchange messages, mark completion
-5. **`agent-teams:team-shutdown`** — Graceful shutdown with approval protocol
+1. **`agent-teams:team-created`**: Initialize team config and directories
+2. **`agent-teams:teammates-spawned`**: Launch agents in tmux panes
+3. **`agent-teams:tasks-assigned`**: Create tasks with dependencies, assign owners
+4. **`agent-teams:coordination-active`**: Agents claim tasks, exchange messages, mark completion
+5. **`agent-teams:team-shutdown`**: Graceful shutdown with approval protocol
 
 ## Crew Roles
 
-Each team member has a `role` that determines their capabilities and task compatibility. Five roles are defined: `implementer` (default), `researcher`, `tester`, `reviewer`, and `architect`. Roles constrain which risk tiers an agent can handle — see `modules/crew-roles.md` for the full capability matrix and role-risk compatibility table.
+Each team member has a `role` that determines their capabilities and task
+compatibility. Five roles are defined: `implementer` (default), `researcher`,
+`tester`, `reviewer`, and `architect`. Roles constrain which risk tiers an
+agent can handle. See `modules/crew-roles.md` for the full capability matrix
+and role-risk compatibility table.
 
 ## Team Formation
 
@@ -197,7 +198,7 @@ guidance and example team formations.
 
 ## Health Monitoring
 
-Team members can be monitored for health via heartbeat messages and claim expiry. The lead polls team health every 60s with a 2-stage stall detection protocol (health_check probe + 30s wait). Stalled agents have their tasks released and are restarted or replaced following the "replace don't wait" doctrine. See `modules/health-monitoring.md` for the full protocol and state machine.
+Team members can be monitored for health via heartbeat messages and claim expiry. The lead polls team health every 60s with a 2-stage stall detection protocol (health_check probe and 30s wait). Stalled agents have their tasks released and are restarted or replaced following the "replace don't wait" doctrine. See `modules/health-monitoring.md` for the full protocol and state machine.
 
 ## Module Reference
 
@@ -240,7 +241,7 @@ Install via package manager: `brew install tmux` / `apt install tmux`
 If an agent crashes mid-operation, lock files may persist. Remove `.lock` files manually from `~/.claude/teams/<team>/inboxes/` or `~/.claude/tasks/<team>/`
 
 **Orphaned tasks**
-Tasks claimed by a crashed agent stay `in_progress` indefinitely. Use `modules/health-monitoring.md` for heartbeat-based stall detection and automatic task release. The health monitoring protocol detects unresponsive agents within 60s + 30s probe window and releases their tasks for reassignment.
+Tasks claimed by a crashed agent stay `in_progress` indefinitely. Use `modules/health-monitoring.md` for heartbeat-based stall detection and automatic task release. The health monitoring protocol detects unresponsive agents within 60s and 30s probe window and releases their tasks for reassignment.
 
 **Message ordering**
 Filesystem timestamp resolution varies (HFS+ = 1s granularity). Use numbered filenames or UUID-sorted names to avoid collision on rapid message bursts.
@@ -249,7 +250,9 @@ Filesystem timestamp resolution varies (HFS+ = 1s granularity). Use numbered fil
 Teammate agents could use incorrect model identifiers on enterprise providers, causing 400 errors. Upgrade to Claude Code 2.1.39+ for correct model ID qualification across all providers.
 
 **Nested session guard (2.1.39+)**
-If `claude` refuses to launch within an existing session, ensure you're using tmux pane splitting (not subshell invocation). The guard is intentional — see `modules/spawning-patterns.md` for details.
+If `claude` refuses to launch within an existing session, ensure you're using
+tmux pane splitting (not subshell invocation). The guard is intentional. See
+`modules/spawning-patterns.md` for details.
 
 ## Exit Criteria
 

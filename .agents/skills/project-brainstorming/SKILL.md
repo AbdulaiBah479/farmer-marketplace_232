@@ -1,61 +1,36 @@
 ---
 name: project-brainstorming
-description: Socratic questioning and ideation methodology for project conception using structured brainstorming frameworks
-
-Triggers: frameworks, conception, brainstorming, socratic, using
+description: Guides project ideation via Socratic questioning to produce a validated brief. Use before specification when requirements are unclear.
+alwaysApply: false
+# Custom metadata (not used by Claude for matching):
 model_preference: claude-sonnet-4
-version: 1.3.7
+category: workflow
+tags: [brainstorming, ideation, planning, requirements, socratic-method]
+complexity: intermediate
+model_hint: standard
+estimated_tokens: 2800
+progressive_loading: true
+dependencies:
+  modules:
+    - modules/spec-review-loop.md
+    - modules/deferred-capture.md
+role: library
 ---
-## Table of Contents
-
-- [When to Use](#when-to-use)
-- [Integration](#integration)
-- [Brainstorming Framework](#brainstorming-framework)
-- [Phase 1: Problem Definition](#phase-1:-problem-definition)
-- [Problem Statement](#problem-statement)
-- [Phase 2: Constraint Discovery](#phase-2:-constraint-discovery)
-- [Constraints](#constraints)
-- [Technical](#technical)
-- [Resources](#resources)
-- [Integration](#integration)
-- [Compliance](#compliance)
-- [Success Criteria](#success-criteria)
-- [Phase 3: Approach Generation](#phase-3:-approach-generation)
-- [Approach [N]: [Name]](#approach-[n]:-[name])
-- [Phase 3.5: War Room Deliberation (REQUIRED)](#phase-3.5:-war-room-deliberation-(required))
-- [Phase 4: Approach Comparison](#phase-4:-approach-comparison)
-- [Phase 5: Decision & Rationale](#phase-5:-decision-&-rationale)
-- [Selected Approach: [Approach Name] ⭐](#selected-approach:-[approach-name]-⭐)
-- [Rationale](#rationale)
-- [Trade-offs Accepted](#trade-offs-accepted)
-- [Rejected Approaches](#rejected-approaches)
-- [Output: Project Brief](#output:-project-brief)
-- [Problem Statement](#problem-statement)
-- [Goals](#goals)
-- [Constraints](#constraints)
-- [Approach Comparison](#approach-comparison)
-- [Selected Approach](#selected-approach)
-- [Next Steps](#next-steps)
-- [Questioning Patterns](#questioning-patterns)
-- [Socratic Method](#socratic-method)
-- [Constraint-Based Thinking](#constraint-based-thinking)
-- [Red Flags to Surface](#red-flags-to-surface)
-- [Session State Management](#session-state-management)
-- [Related Skills](#related-skills)
-- [Related Commands](#related-commands)
-- [Examples](#examples)
-
-
-# Project Brainstorming Skill
-
-Guide project ideation through Socratic questioning, constraint analysis, and structured exploration.
-
-## When to Use
+## When To Use
 
 - Starting a new project without clear requirements
 - Exploring problem space before specification
 - Need to compare multiple approaches systematically
 - Validating project feasibility and scope
+- Documenting decision rationale for stakeholders
+- Need to clarify the core problem being solved
+
+## When NOT To Use
+
+- Requirements and specification already exist (use `Skill(attune:project-planning)` instead)
+- Refining existing specs (use `Skill(attune:project-specification)` instead)
+- Project scope is well-defined (jump to `/attune:project-init`)
+- Mid-project pivots (use `Skill(attune:war-room)` for strategic decisions)
 
 ## Integration
 
@@ -182,6 +157,31 @@ Guide project ideation through Socratic questioning, constraint analysis, and st
 ```
 **Verification:** Run the command with `--help` flag to verify availability.
 
+
+**Design for Isolation**:
+
+When generating approaches, evaluate each against two
+isolation tests:
+
+1. **Comprehension test**: Can someone understand what
+   each unit does without reading its internals? If a
+   unit requires reading implementation details to
+   understand its purpose, the boundary is wrong.
+2. **Change test**: Can you change a unit's internals
+   without breaking its consumers? If changing
+   implementation details forces changes elsewhere,
+   the interface is leaking.
+
+**File size as design signal**: Files exceeding 500 lines
+(Python/Go) or 300 lines (JavaScript/TypeScript) often
+indicate a unit is doing too much. This is a design
+smell, not just a style issue. When flagging large files,
+suggest extracting specific concerns (e.g., "Extract
+validation logic into a separate module to improve
+testability").
+
+**Verification:** Run the command with `--help` flag to verify availability.
+
 ### Phase 3.5: War Room Deliberation (REQUIRED)
 
 **Automatic Trigger**: After generating approaches, MUST invoke `Skill(attune:war-room)` for expert deliberation
@@ -259,6 +259,25 @@ Key decision factors:
 ```
 **Verification:** Run the command with `--help` flag to verify availability.
 
+### Phase 5.5: Record the Tradeoff (decision journal)
+
+Persist the Phase 5 selection to `docs/tradeoffs.md` now, while the reasoning
+is live. This is the entry that survives past the session: the decision, the
+alternatives weighed, and what was given up. Draft and confirm:
+
+- If leyline is installed, invoke `Skill(leyline:decision-journal)` and follow
+  it to append a tradeoff entry. The Phase 5 fields map directly: Selected
+  Approach to `decision`, the rationale to a Y-statement, Trade-offs Accepted
+  to `consequences_negative`, and Rejected Approaches to `options`. Set
+  `phase` to `brainstorm`. Show the drafted entry; append on user confirmation
+  (status starts `proposed`).
+- Fallback (leyline absent): append an entry to `docs/tradeoffs.md` by hand
+  using the in-file ENTRY TEMPLATE; assign the next `TR-NNN` id and add an
+  active-index row.
+
+Skip only when there was genuinely one obvious approach with no meaningful
+trade-off (the same condition that bypasses War Room).
+
 ## Output: Project Brief
 
 Final output saved to `docs/project-brief.md`:
@@ -292,7 +311,7 @@ Final output saved to `docs/project-brief.md`:
 
 ## Next Steps
 1. `/attune:specify` - Create detailed specification
-2. `/attune:plan` - Plan architecture and tasks
+2. `/attune:blueprint` - Plan architecture and tasks
 3. `/attune:project-init` - Initialize project structure
 ```
 **Verification:** Run the command with `--help` flag to verify availability.
@@ -385,12 +404,66 @@ Save session to `.attune/brainstorm-session.json`:
 ```
 **Verification:** Run the command with `--help` flag to verify availability.
 
+### Phase 6: Workflow Continuation (REQUIRED)
+
+**Automatic Trigger**: After Phase 5 (Decision & Rationale) completes and `docs/project-brief.md` is saved, MUST auto-invoke the next phase.
+
+**When continuation is invoked**:
+1. Verify `docs/project-brief.md` exists and is non-empty
+2. Display checkpoint message to user:
+   ```
+   Brainstorming complete. Project brief saved to docs/project-brief.md.
+   Proceeding to specification phase...
+   ```
+3. Invoke next phase:
+   ```
+   Skill(attune:project-specification)
+   ```
+
+**Bypass Conditions** (ONLY skip continuation if ANY true):
+- `--standalone` flag was provided by the user
+- `docs/project-brief.md` does not exist or is empty (phase failed)
+- User explicitly requests to stop after brainstorming
+
+**Do NOT prompt the user for confirmation**: this is a lightweight checkpoint, not an interactive gate. The user can always interrupt if needed.
+
+
+### Phase 6.5: Spec Review Gate
+
+**Automatic Trigger**: After Phase 6 saves the project
+brief, and before invoking the next phase, run the spec
+review loop.
+
+**Procedure**:
+1. Load `modules/spec-review-loop.md` for the review
+   prompt template
+2. Dispatch haiku-model subagent with the spec content
+3. If ISSUES FOUND: fix issues, re-dispatch (max 3
+   iterations)
+4. If APPROVED or 3 iterations exhausted: proceed to
+   Phase 6 continuation
+
+**Bypass Conditions**:
+- `--standalone` flag was provided
+- `--skip-review` flag was provided
+- Spec document is under 200 words (too small to review)
+
+## Exit Criteria
+
+- [ ] 3-5 distinct approaches were generated and compared.
+- [ ] One approach is selected with explicit rationale, accepted trade-offs,
+  and rejected alternatives.
+- [ ] The selection is recorded to `docs/tradeoffs.md` as a `proposed` entry
+  (or the single-obvious-approach bypass condition is documented).
+- [ ] A project brief capturing the decision is produced.
+
 ## Related Skills
 
 - `Skill(superpowers:brainstorming)` - Socratic method (if available)
 - `Skill(attune:war-room)` - **REQUIRED AUTOMATIC INTEGRATION** - Invoked after Phase 3 for multi-LLM deliberation
 - `Skill(imbue:scope-guard)` - Scope creep prevention
-- `Skill(attune:project-specification)` - Next phase after brainstorming
+- `Skill(attune:project-specification)` - **AUTO-INVOKED** next phase after brainstorming
+- `Skill(attune:mission-orchestrator)` - Full lifecycle orchestration
 
 ## Related Commands
 
@@ -401,15 +474,3 @@ Save session to `.attune/brainstorm-session.json`:
 ## Examples
 
 See `/attune:brainstorm` command documentation for complete examples.
-## Troubleshooting
-
-### Common Issues
-
-**Command not found**
-Ensure all dependencies are installed and in PATH
-
-**Permission errors**
-Check file permissions and run with appropriate privileges
-
-**Unexpected behavior**
-Enable verbose logging with `--verbose` flag

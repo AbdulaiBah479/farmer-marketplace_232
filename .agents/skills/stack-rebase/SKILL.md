@@ -1,6 +1,6 @@
 ---
 name: stack-rebase
-description: 'Cascading rebase for a PR stack using git --update-refs.'
+description: Cascades a rebase through an entire PR stack after a base PR merges or upstream changes. Use when a stack needs to incorporate new base branch commits.
 alwaysApply: false
 category: workflow-automation
 tags:
@@ -67,7 +67,7 @@ The merged branch itself is no longer a valid stack base.
 
 Determine what changed:
 
-**Case A — Base PR merged into master:**
+**Case A, Base PR merged into master:**
 The slice that was the old "root" is now in `master`.
 All remaining slices need to rebase onto `master`.
 
@@ -76,13 +76,13 @@ All remaining slices need to rebase onto `master`.
 git branch -r --merged origin/master | grep "${MERGED_BRANCH}"
 ```
 
-**Case B — Master moved forward:**
+**Case B, Master moved forward:**
 Slices are behind `master` but the stack topology is
 unchanged.
 Rebase the root slice onto `master`; `--update-refs`
 carries all descendants.
 
-**Case C — Mid-stack revision:**
+**Case C, Mid-stack revision:**
 A slice was amended.
 All descendant slices need to rebase onto it.
 

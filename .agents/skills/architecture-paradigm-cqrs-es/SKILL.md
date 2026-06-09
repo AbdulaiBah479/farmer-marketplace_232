@@ -1,26 +1,38 @@
 ---
 name: architecture-paradigm-cqrs-es
-description: |
-  CQRS and Event Sourcing for auditability, read/write separation, and temporal queries.
-
-  Triggers: CQRS, event sourcing, audit trail, temporal queries
-  Use when: read/write scaling differs or audit trail required
-  DO NOT use when: simple CRUD - use architecture-paradigms first.
-version: 1.0.0
+description: Applies CQRS and Event Sourcing for read/write separation and audit trails. Use when designing systems with complex domain logic or full state-change history.
+alwaysApply: false
 category: architectural-pattern
-tags: [architecture, CQRS, Event-Sourcing, distributed-systems, audit-trail, scalability]
+tags:
+- architecture
+- CQRS
+- Event-Sourcing
+- distributed-systems
+- audit-trail
+- scalability
 dependencies: []
-tools: [event-store, message-broker, projection-builder]
+tools: []
 usage_patterns:
-  - paradigm-implementation
-  - distributed-system-design
-  - auditability
-  - scalability-optimization
+- paradigm-implementation
+- distributed-system-design
+- auditability
+- scalability-optimization
 complexity: high
+model_hint: deep
 estimated_tokens: 800
 ---
-
 # The CQRS and Event Sourcing Paradigm
+
+
+## When To Use
+
+- Designing event-sourced systems with complex domain logic
+- Systems requiring full audit trails of state changes
+
+## When NOT To Use
+
+- Simple CRUD applications without complex domain logic
+- Small projects where event sourcing adds unnecessary complexity
 
 ## When to Employ This Paradigm
 - When read and write workloads have vastly different performance characteristics or scaling requirements.
@@ -46,3 +58,16 @@ estimated_tokens: 800
   - **Mitigation**: Users may be confused by delays between performing an action and seeing the result. Clearly document the SLAs for read model updates and manage user-facing expectations accordingly, for example, by providing immediate feedback on the command side.
 - **Schema Drift**:
   - **Mitigation**: An unplanned change to an event schema can break consumers. Enforce the use of a formal schema registry and implement version gates in the CI/CD pipeline to prevent the emission of unvalidated event versions.
+
+## Concrete Components
+
+These vocabulary items name the concrete tools and abstractions
+that show up when the paradigm is implemented. They are not
+required dependencies and they are not part of the skill's
+``tools:`` frontmatter (which is reserved for Claude Code tool
+restrictions). Use this list to disambiguate during architecture
+discussions.
+
+- ``event-store``: append-only log of domain events; the system of record from which projections are built
+- ``message-broker``: carries commands and integration events between bounded contexts
+- ``projection-builder``: rebuilds read-side views by replaying the event store

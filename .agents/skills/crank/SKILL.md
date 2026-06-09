@@ -1,292 +1,120 @@
 ---
 name: crank
-description: 'Fully autonomous epic execution. Runs until ALL children are CLOSED. Loops through beads issues, runs /implement on each, validates with /vibe. NO human prompts, NO stopping.'
+description: Execute epics through waves.
+practices:
+- continuous-delivery
+- xp
+- agile-manifesto
+hexagonal_role: domain
+consumes:
+- beads
+- implement
+- post-mortem
+- swarm
+- vibe
+produces:
+- .agents/swarm/results/*.json
+- git-changes
+context_rel:
+- kind: shared-kernel
+  with: standards
+skill_api_version: 1
+user-invocable: true
+context:
+  window: fork
+  intent:
+    mode: task
+  sections:
+    exclude:
+    - HISTORY
+  intel_scope: full
+metadata:
+  tier: execution
+  dependencies:
+  - swarm
+  - vibe
+  - implement
+  - beads
+  - post-mortem
+output_contract: code changes across wave execution, .agents/swarm/results/*.json
 ---
-
 # Crank Skill
 
-> **Quick Ref:** Autonomous epic execution. Loops `/implement` on all issues until DONE. Output: closed issues + final vibe.
+> **Quick Ref:** Autonomous epic execution. `/swarm` for each wave with runtime-native spawning. Output: closed issues + phase-2 handoff for `/validate`.
 
 **YOU MUST EXECUTE THIS WORKFLOW. Do not just describe it.**
 
+## Loop position
+
+Move **5 (wave execution)** of the [operating loop](../../docs/architecture/operating-loop.md). Consumes the [slice validation plan](../../docs/templates/slice-validation.md); produces wave-by-wave slice completion via `/swarm` + `/implement`. Hard gate at wave start: every row of the wave-validity check must pass (distinct write scopes, no shared migration/contract/CLI surface, declared integration order, owner per slice, discard path per slice). Any failed row → run those slices sequential, not parallel. **Coupled-chain rule:** two slices that both regenerate a shared *derived* surface (`cli-command-surface` / `registry.json` / `context-map` / codex manifest) collide even with disjoint source files — run them as a sequential chain, each link branched off the freshly-MERGED prior link. Parallelism is explicit ownership, not swarm chaos.
+
 Autonomous execution: implement all issues until the epic is DONE.
 
-**Requires:** bd CLI (beads) for issue tracking, OR in-session TaskList for task-based tracking.
+**CLI dependencies:** bd (issue tracking), ao (knowledge flywheel). Both optional — see `skills/shared/SKILL.md` for fallback table. If bd is unavailable, use TaskList for issue tracking and skip beads sync. If ao is unavailable, skip knowledge injection/extraction.
+
+For Claude runtime feature coverage (agents/hooks/worktree/settings), the shared source of truth is `skills/shared/references/claude-code-latest-features.md`, mirrored locally at `references/claude-code-latest-features.md`.
+
+## Architecture: Crank + Swarm
+
+Crank owns orchestration, epic/task lifecycle, and knowledge-flywheel steps. Swarm owns runtime-native worker spawning, fresh-context isolation, per-wave execution, and cleanup. In beads mode Crank gets each wave from `bd ready`, bridges issues into worker tasks, verifies results, and syncs status back to beads. In TaskList mode the same loop runs over pending unblocked tasks instead of beads issues.
+
+Read `references/team-coordination.md` for the full per-wave execution model, `references/ralph-loop-contract.md` for the fresh-context worker contract, and `references/worker-specs.md` for per-worker model/tool/prompt specs.
+
+## Flags
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--test-first` | off | Enable spec-first TDD: SPEC WAVE generates contracts, TEST WAVE generates failing tests, IMPL WAVES make tests pass |
+| `--per-task-commits` | off | Opt-in per-task commit strategy. Falls back to wave-batch when file boundaries overlap. See `references/commit-strategies.md`. |
+| `--tier=<name>` | (auto) | Force a specific cost tier (quality/balanced/budget) for all council calls. Overrides effort-to-tier auto-mapping. |
+| `--no-lifecycle` | off | Skip ALL lifecycle skill auto-invocations (test delegation in TEST WAVE, pre-vibe deps/test checks) |
+| `--lifecycle=<tier>` | matches complexity | Controls which lifecycle skills fire: `minimal` (test only), `standard` (+deps vuln), `full` (all) |
+| `--no-scope-check` | off | Skip scope-completion check before DONE marker (Step 8.7) |
+| `--skip-audit` | off | Skip bd-audit pre-flight gate (Step 3a.2) |
 
 ## Global Limits
 
-**MAX_EPIC_ITERATIONS = 50** (hard limit across entire epic)
+**MAX_EPIC_WAVES = 50** (hard limit across entire epic)
 
-This prevents infinite loops on circular dependencies or cascading failures.
-
-**Why 50?**
-- Typical epic: 5-10 issues
-- With retries: ~5 iterations per issue max
-- 50 = safe upper bound (10 issues × 5 retries)
-
-**MAX_PARALLEL_AGENTS = 3** (hard limit per wave)
-
-When multiple issues are ready, execute them in parallel using subagents. Capped at 3 to prevent context explosion.
-
-**Why 3?**
-- Each subagent returns results that accumulate in context
-- 3 parallel agents = manageable context growth
-- Higher parallelism risks context overflow on complex issues
+This prevents infinite loops on circular dependencies or cascading failures. Typical epics use 5–10 waves max.
 
 ## Completion Enforcement (The Sisyphus Rule)
 
-**THE SISYPHUS RULE:** Not done until explicitly DONE.
+Not done until you emit an explicit completion marker after each wave:
+- `<promise>DONE</promise>` when the epic is truly complete
+- `<promise>BLOCKED</promise>` when progress cannot continue
+- `<promise>PARTIAL</promise>` when work remains
 
-After each task, output completion marker:
-- `<promise>DONE</promise>` - Epic truly complete, all issues closed
-- `<promise>BLOCKED</promise>` - Cannot proceed (with reason)
-- `<promise>PARTIAL</promise>` - Incomplete (with remaining items)
+Never claim completion without one of these markers.
 
-**Never claim completion without the marker.**
+## Node Repair Operator
+
+When a task fails during wave execution, classify as **RETRY** (transient — re-add with adjustment, max 2), **DECOMPOSE** (too complex — split into sub-issues, terminal), or **PRUNE** (blocked — escalate immediately). Budget: 2 per task. Read `references/failure-recovery.md` for classification signals and recovery commands.
+
+**Mutation logging on failure classification:**
+- **DECOMPOSE:** Log `task_removed` for the original task, then `task_added` for each new sub-task.
+- **PRUNE:** Log `task_removed` with the block reason.
+- **RETRY:** No mutation (task identity unchanged).
 
 ## Execution Steps
 
-Given `/crank [epic-id]`:
+Given `/crank [epic-id | .agents/rpi/execution-packet.json | plan-file.md | "description"]`:
 
-### Step 0: Load Knowledge Context (ao Integration)
+### Preflight (Recovery hooks → Step 3a.3)
 
-**Search for relevant learnings before starting the epic:**
+Read [references/execution-preflight.md](references/execution-preflight.md) when you need recovery-hook setup, effort/tier mapping, knowledge-context loading (Step 0), tracking-mode detection (0.5), gc-pool detection (0.6), epic identification (Step 1), branch isolation (1.5), wave-counter / mutation-trail / shared-task-notes initialization (1a–1a.2), test-first classification (1b), epic details (Step 2), ready-issue listing (Step 3), and the four pre-flight checks (3a, 3a.1 pre-mortem, 3a.2 bd-audit, 3a.3 changed-string grep).
 
-```bash
-# If ao CLI available, inject prior knowledge about epic execution
-if command -v ao &>/dev/null; then
-    # Search for relevant learnings
-    ao search "epic execution implementation patterns" 2>/dev/null | head -20
+The Branch Isolation Gate (Step 1.5) has its own dedicated contract — see [references/branch-isolation.md](references/branch-isolation.md) for when crank must create or refuse an isolation branch.
 
-    # Check flywheel status
-    ao flywheel status 2>/dev/null
+### Wave dispatch (Step 3b → Step 4)
 
-    # Get current ratchet state
-    ao ratchet status 2>/dev/null
-fi
-```
+Read [references/wave-dispatch.md](references/wave-dispatch.md) when you need SPEC WAVE / TEST WAVE / RED Gate flow (Steps 3b–3c), context-briefing assembly (3b.1), shared-notes injection (3b.2), parallel-wave isolation (3b.3), or Step 4 wave execution detail — GREEN mode, issue-typing + file manifests, grep-for-existing-functions, validation metadata policy, acceptance-criteria injection, language-standards injection, file-ownership table, wave-counter / 50-cap gate, spec-consistency gate, cross-cutting constraint injection, gc-pool dispatch, and cross-cutting validation.
 
-If ao not available, skip this step and proceed. The knowledge flywheel enhances but is not required.
+### Wave completion (Step 5 → Step 8.7)
 
-### Step 1: Identify the Epic
+Read [references/wave-completion.md](references/wave-completion.md) when you need verify-and-sync (Step 5, external-gate protocol), wave acceptance check + CI-policy parity gate (5.5), wave checkpoint + per-criterion verdicts + back-compat fallback (5.7), vibe-context checkpoint (5.7b), shared-task-notes harvest (5.7c), plan-mutation logging (5.7d), wave status report (5.8), worktree base-SHA refresh (5.9), check-for-more-work loop (Step 6), de-sloppify pass (6.5), pre-vibe lifecycle checks (6.9), final batched validation (Step 7), phase-2 summary (Step 8), learnings extraction (8.5), shared-notes archive (8.6), and the scope-completion pre-close gate (8.7).
 
-**If epic ID provided:** Use it directly. Do NOT ask for confirmation.
-
-**If no epic ID:** Discover it:
-```bash
-bd list --type epic --status open 2>/dev/null | head -5
-```
-
-If bd not available, look for a plan:
-```bash
-ls -lt .agents/plans/ 2>/dev/null | head -3
-```
-
-If multiple epics found, ask user which one.
-
-### Step 1a: Initialize Iteration Counter
-
-```bash
-# Initialize crank tracking in epic notes
-bd update <epic-id> --append-notes "CRANK_START: iteration=0 at $(date -Iseconds)" 2>/dev/null
-```
-
-Track in memory: `iteration=0`
-
-### Step 2: Get Epic Details
-
-```bash
-bd show <epic-id> 2>/dev/null
-```
-
-Or read the plan document if using file-based tracking.
-
-### Step 3: List Ready Issues (Current Wave)
-
-Find issues that can be worked on (no blockers):
-```bash
-bd ready 2>/dev/null
-```
-
-**`bd ready` returns the current wave** - all unblocked issues. These can be executed in parallel because they have no dependencies on each other.
-
-Or parse the plan document for Wave 1 issues.
-
-Or use TaskList tool if using in-session task tracking.
-
-### Step 3a: Pre-flight Check - Issues Exist
-
-**Verify there are issues to work on:**
-
-**If 0 ready issues found:**
-```
-STOP and return error:
-  "No ready issues found for this epic. Either:
-   - All issues are blocked (check dependencies)
-   - Epic has no child issues (run /plan first)
-   - All issues already completed"
-```
-
-Do NOT proceed with empty issue list - this produces false "epic complete" status.
-
-### Step 4: Execute Wave (Parallel Subagents)
-
-Ready issues are executed in parallel waves. Each wave dispatches up to MAX_PARALLEL_AGENTS (3) subagents.
-
-**BEFORE each wave:**
-```bash
-# Increment iteration counter (count waves, not individual issues)
-iteration=$((iteration + 1))
-bd update <epic-id> --append-notes "CRANK_WAVE: $iteration at $(date -Iseconds)" 2>/dev/null
-
-# CHECK GLOBAL LIMIT
-if [[ $iteration -ge 50 ]]; then
-    echo "<promise>BLOCKED</promise>"
-    echo "Global iteration limit (50) reached. Remaining issues:"
-    bd children <epic-id> --status open 2>/dev/null
-    # STOP - do not continue
-fi
-```
-
-**Wave Execution Logic:**
-
-1. **Get ready issues from Step 3**
-2. **Batch into wave** (max 3 issues per wave)
-3. **Dispatch subagents in parallel using Task tool**
-
-**FOR EACH WAVE, USE THE TASK TOOL IN PARALLEL:**
-
-When you have N ready issues (where N ≤ 3), dispatch them in a SINGLE message with multiple Task tool calls:
-
-```
-# Example: 3 ready issues → 3 parallel Task calls in ONE message
-
-Tool: Task (call 1)
-Parameters:
-  subagent_type: "general-purpose"
-  description: "Implement <issue-id-1>"
-  prompt: |
-    Execute /implement <issue-id-1>
-
-    Use the Skill tool to invoke the implement skill:
-    - skill: "agentops:implement"
-    - args: "<issue-id-1>"
-
-    Return the completion marker when done.
-
-Tool: Task (call 2)
-Parameters:
-  subagent_type: "general-purpose"
-  description: "Implement <issue-id-2>"
-  prompt: |
-    Execute /implement <issue-id-2>
-
-    Use the Skill tool to invoke the implement skill:
-    - skill: "agentops:implement"
-    - args: "<issue-id-2>"
-
-    Return the completion marker when done.
-
-Tool: Task (call 3)
-Parameters:
-  subagent_type: "general-purpose"
-  description: "Implement <issue-id-3>"
-  prompt: |
-    Execute /implement <issue-id-3>
-
-    Use the Skill tool to invoke the implement skill:
-    - skill: "agentops:implement"
-    - args: "<issue-id-3>"
-
-    Return the completion marker when done.
-```
-
-**CRITICAL: All Task calls for a wave MUST be in a single message to enable parallel execution.**
-
-**If more than 3 ready issues:** Process in batches of 3. Complete one wave before starting the next.
-
-**Check results from each subagent:**
-- If `<promise>BLOCKED</promise>` returned → record blocker, continue with others
-- If `<promise>PARTIAL</promise>` returned → record remaining, continue with others
-- If `<promise>DONE</promise>` returned → issue complete
-
-**Wait for all subagents in the wave to complete before proceeding to Step 5.**
-
-### Step 5: Track Progress (No Per-Issue Vibe)
-
-After implement completes:
-
-1. Update issue status:
-```bash
-bd update <issue-id> --status closed 2>/dev/null
-```
-Or use TaskUpdate to mark task completed.
-
-2. Track changed files in memory or use TaskCreate to note them.
-
-3. **Record ratchet progress (ao integration):**
-```bash
-# If ao CLI available, record implementation progress
-if command -v ao &>/dev/null; then
-    ao ratchet record implement 2>/dev/null
-    echo "Ratchet: recorded implementation of <issue-id>"
-fi
-```
-
-If ao not available, skip ratchet recording.
-
-**Note:** Skip per-issue vibe - validation is batched at the end to save context.
-
-### Step 6: Check for More Work
-
-After completing an issue:
-1. Check if new issues are now unblocked (use `bd ready` or TaskList)
-2. If yes, return to Step 4
-3. If no more issues after 3 retry attempts, proceed to Step 7
-4. **Max retries:** If issues remain blocked after 3 checks, escalate: "Epic blocked - cannot unblock remaining issues"
-
-### Step 7: Final Batched Validation
-
-When all issues complete, run ONE comprehensive vibe on recent changes:
-
-```bash
-# Get list of changed files from recent commits
-git diff --name-only HEAD~10 2>/dev/null | sort -u
-```
-
-**Run vibe on recent changes:**
-```
-Tool: Skill
-Parameters:
-  skill: "agentops:vibe"
-  args: "recent"
-```
-
-**If CRITICAL issues found:**
-1. Fix them
-2. Re-run vibe on affected files
-3. Only proceed to completion when clean
-
-### Step 8: Extract Learnings (ao Integration)
-
-**Before reporting completion, extract learnings from the session:**
-
-```bash
-# If ao CLI available, forge learnings from this epic execution
-if command -v ao &>/dev/null; then
-    # Extract learnings from recent session transcripts
-    ao forge transcript ~/.claude/projects/*/conversations/*.jsonl 2>/dev/null
-
-    # Show flywheel status post-execution
-    echo "=== Flywheel Status ==="
-    ao flywheel status 2>/dev/null
-
-    # Show pending learnings for review
-    ao pool list --tier=pending 2>/dev/null | head -10
-fi
-```
-
-If ao not available, skip learning extraction. Recommend user runs `/post-mortem` manually.
+Step 5.5 includes the **CI-Policy Parity Gate**: if a wave diff touches `.github/workflows/*.yml`, run `bash scripts/validate-ci-policy-parity.sh`; any non-zero exit fails wave acceptance and surfaces the generated drift report. See [references/wave-patterns.md](references/wave-patterns.md) "CI-Policy Parity Gate" for the worked example and trigger pattern.
 
 ### Step 9: Report Completion
 
@@ -296,7 +124,7 @@ Tell the user:
 3. Total iterations used (of 50 max)
 4. Final vibe results
 5. Flywheel status (if ao available)
-6. Suggest running `/post-mortem` to review and promote learnings
+6. Suggest running `/validate` to complete closeout and promote learnings
 
 **Output completion marker:**
 ```
@@ -304,7 +132,7 @@ Tell the user:
 Epic: <epic-id>
 Issues completed: N
 Iterations: M/50
-Flywheel: <status from ao flywheel status>
+Flywheel: <status from ao metrics flywheel status>
 ```
 
 If stopped early:
@@ -315,51 +143,88 @@ Issues remaining: N
 Iterations: M/50
 ```
 
+## Orchestrator-Merge + Reconcile Loop
+
+When crank drives PRs to `main` itself (orchestrator-merge model), reconcile each PR mechanically:
+
+1. **Poll** `gh pr checks <pr>` until all checks are terminal.
+2. **Block only on substantive fails.** A failing `claude-review` on a usage-limit message is non-blocking; only substantive non-`claude-review` failures block the merge.
+3. **Fix-forward stale/transient reds — never revert green work.** `correctness (ubuntu-latest)` tar-cache-restore exit-2 → `gh run rerun` **once**, then believe. `registry.json` / derived-surface or `contracts-sync` drift from another PR → `make regen-all` (scoped via `--skills` when only some skills changed), commit, push.
+4. **Merge when green:** `gh pr merge --squash --admin`.
+5. **Close on confirmed-MERGED only.** `bd close` a child bead ONLY after `gh pr view <pr> --json state -q .state` returns `MERGED` — never on a log line or batch `bd --json` query (those flake to null/0).
+6. **Epic-close gate.** **NEVER close a parent epic before EVERY child PR is independently confirmed `MERGED`** — re-query `gh pr view --json state` per child first. One non-merged child aborts the close. (Post-mortem governance checkpoint: this is a hard gate, not advisory.)
+
+> Enforce steps 5–6 with the committed scripts, not by hand: `scripts/reconcile-pr.sh <pr> <bead> [--epic <epic>]` (polls checks, reruns the lone correctness-ubuntu flake once, merges `--squash --admin`, closes the bead only on confirmed `MERGED`) and `scripts/check-epic-children-closed.sh <epic>` (the no-epic-close-with-open-child gate). Both are hermetic-tested under `tests/scripts/`.
+
 ## The FIRE Loop
 
-Crank follows FIRE for each wave:
-
-| Phase | Action |
-|-------|--------|
-| **FIND** | `bd ready` - get unblocked issues |
-| **IGNITE** | Dispatch up to 3 subagents in parallel (one per issue) |
-| **REAP** | Collect results from all subagents |
-| **ESCALATE** | Fix blockers, retry failures |
-
-**Parallel Wave Model:**
-```
-Wave 1: [issue-1, issue-2, issue-3] → 3 subagents in parallel
-         ↓         ↓         ↓
-      DONE      DONE      BLOCKED
-                            ↓
-                      (retry in next wave)
-
-Wave 2: [issue-4, issue-3-retry] → 2 subagents in parallel
-         ↓         ↓
-      DONE      DONE
-
-Final vibe on all changes → Epic DONE
-```
-
-Loop until all issues are CLOSED.
+Crank repeats FIRE (Find → Ignite → Reap → Vibe → Escalate) for each wave until all issues are CLOSED (beads) or all tasks are completed (TaskList). Read `references/wave-patterns.md` for the loop model, parallel wave rules, and acceptance check details.
 
 ## Key Rules
 
-- **If epic ID given, USE IT** - don't ask for confirmation
-- **Parallel waves** - execute up to 3 issues per wave using subagents
-- **One subagent per issue** - each issue gets its own isolated agent
-- **Max 3 subagents per wave** - prevents context explosion
-- **Batch validation at end** - ONE vibe at the end saves context
-- **Fix CRITICAL before completion** - address findings before reporting done
-- **Loop until done** - don't stop until all issues closed
-- **Autonomous execution** - minimize human prompts
-- **Respect iteration limit** - STOP at 50 iterations (hard limit)
-- **Output completion markers** - DONE, BLOCKED, or PARTIAL (required)
-- **Knowledge flywheel** - load learnings at start, forge at end (ao optional)
+- Auto-detect tracking (`bd` first, TaskList fallback) and use the provided epic or plan input directly.
+- Use `/swarm` for every wave, preserve fresh per-issue context, and refuse to continue past unresolved conflicts or the 50-wave cap.
+- Validate once per wave, fix CRITICAL findings before completion, and keep looping until every issue/task is done.
+- Load learnings at the start, extract learnings at the end, and always emit `DONE`, `BLOCKED`, or `PARTIAL`.
 
-## Without Beads
+### Verb Disambiguation for Worker Prompts
 
-If bd CLI not available:
-1. Use the plan document as the source of truth
-2. Track completed issues by checking git commits
-3. Mark issues done by noting in the plan document
+Read `references/worker-verb-disambiguation.md` for the verb clarification table. Ambiguous verbs (extract, remove, update, consolidate) cause workers to implement wrong operations — always use explicit instructions with `wc -l` assertions.
+
+## Examples
+
+**User says:** `/crank ag-m0r` — Beads epic: loads learnings, swarm per wave, loops until all closed, final vibe.
+**User says:** `/crank .agents/plans/auth-refactor.md` — Plan file: decomposes into tasks, swarm per wave, final vibe.
+**User says:** `/crank --test-first ag-xj9` — SPEC → TEST → RED Gate → GREEN IMPL. See `references/test-first-mode.md`.
+
+---
+
+## Troubleshooting
+
+Common failure modes: no ready issues, repeated wave gate failures, missing files from workers, bad RED-gate output, or TaskList/beads mismatches. See `references/troubleshooting.md` for fixes and command-level recovery steps.
+
+---
+
+## Inline Work Policy
+
+Most `/crank` steps delegate worker execution via `/swarm` or `Skill()`. A small number of steps are **orchestrator-owned** by design — these are inline gates, scans, and bookkeeping that must stay in the orchestrator's context to make a downstream decision. Orchestrator-owned steps are marked with a `*(orchestrator-owned: …)*` admonition in the body (see STEP 3a.3, STEP 6.5 slop-scan, STEP 8.7).
+
+**Do NOT convert orchestrator-owned steps into `Skill()` or `/swarm` delegations** — they are intentionally inline. Every other step (SPEC wave, TEST wave, IMPL wave, vibe, lifecycle checks) should delegate via the documented `Skill(...)` call or `/swarm` invocation.
+
+If unsure whether a step is orchestrator-owned or delegatable, the default is **delegate**. Only steps marked with the admonition above are exempt.
+
+Crank runs as an isolated phase-2 execution context — discovery and validation are sealed off from this skill. See [references/isolation-contract.md](references/isolation-contract.md) for the four-lever enforcement model and the compression patterns `scripts/check-skill-isolation.sh` flags. See [references/best-practices.md](references/best-practices.md) for the lifecycle principle + anti-pattern citation table (cite by number; do not duplicate body content).
+
+## Related skills
+
+- [`/using-atm`](../using-atm/SKILL.md) — out-of-session ATM substrate for long-running `/crank` waves over a bead queue.
+
+## Reference Documents
+
+- [references/crank.feature](references/crank.feature) — Executable spec: wave-validity hard gate, FIRE loop, mandatory completion marker, 50-wave cap (soc-qk4b.2)
+- [references/de-sloppify.md](references/de-sloppify.md)
+- [references/execution-preflight.md](references/execution-preflight.md)
+- [references/parallel-wave-isolation.md](references/parallel-wave-isolation.md)
+- [references/plan-mutations.md](references/plan-mutations.md)
+- [references/shared-task-notes.md](references/shared-task-notes.md)
+- [references/claude-code-latest-features.md](references/claude-code-latest-features.md)
+- [references/commit-strategies.md](references/commit-strategies.md)
+- [references/worktree-per-worker.md](references/worktree-per-worker.md)
+- [references/contract-template.md](references/contract-template.md)
+- [references/failure-recovery.md](references/failure-recovery.md)
+- [references/failure-taxonomy.md](references/failure-taxonomy.md)
+- [references/fire.md](references/fire.md)
+- [references/gc-pool-dispatch.md](references/gc-pool-dispatch.md)
+- [references/ralph-loop-contract.md](references/ralph-loop-contract.md)
+- [references/taskcreate-examples.md](references/taskcreate-examples.md)
+- [references/team-coordination.md](references/team-coordination.md)
+- [references/test-first-mode.md](references/test-first-mode.md)
+- [references/troubleshooting.md](references/troubleshooting.md)
+- [references/phase-data-contracts.md](references/phase-data-contracts.md) — phase artifact data contracts (cited from references/isolation-contract.md)
+- [references/uat-integration-wave.md](references/uat-integration-wave.md)
+- [references/wave-completion.md](references/wave-completion.md)
+- [references/wave-dispatch.md](references/wave-dispatch.md)
+- [references/wave1-spec-consistency-checklist.md](references/wave1-spec-consistency-checklist.md)
+- [references/wave-patterns.md](references/wave-patterns.md)
+- [references/worker-verb-disambiguation.md](references/worker-verb-disambiguation.md)
+- [references/external-gate-protocol.md](references/external-gate-protocol.md)

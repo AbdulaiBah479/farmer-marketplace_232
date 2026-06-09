@@ -1,118 +1,178 @@
 ---
 name: discovery
-description: Structured pre-design questioning to surface hidden constraints before any architecture decision is locked in. Forces the architect/auditor/reviewer to enumerate what they DON'T know before proposing.
-when_to_use: |
-  Apply BEFORE producing architecture docs, audit findings, security plans:
-  - architect, before writing ARCH-*.md
-  - project-auditor, at the start of /audit
-  - security-officer, before threat-modeling
-  - l3-support, when triaging a new incident
-  - regulated-reviewer, when classifying compliance scope
-  - any reviewer who needs domain context the user hasn't given
-effort: medium
-allowed-tools: Read, Grep, Glob, Bash(git:*), Bash(bd:*)
-paths:
-  - "docs/**"
-  - ".great_cto/**"
-  - "README*"
+description: Create dense execution packets.
+practices:
+- adr
+- lean-startup
+- mythical-man-month
+hexagonal_role: domain
+consumes:
+- brainstorm
+- design
+- plan
+- pre-mortem
+- research
+- shared
+produces:
+- .agents/plans/*.md
+- bd-issue
+- execution-packet.json
+context_rel:
+- kind: shared-kernel
+  with: standards
+skill_api_version: 1
+user-invocable: true
+context:
+  window: fork
+  intent:
+    mode: task
+  sections:
+    exclude:
+    - HISTORY
+  intel_scope: full
+metadata:
+  tier: meta
+  dependencies:
+  - brainstorm
+  - design
+  - research
+  - plan
+  - pre-mortem
+  - shared
+output_contract: .agents/plans/YYYY-MM-DD-*.md, beads, epic-id
 ---
+# /discovery - Dense Discovery Phase Adapter
 
-# Discovery — surface hidden constraints first
+**YOU MUST EXECUTE THIS WORKFLOW. Do not just describe it.**
 
-The biggest cause of bad agent output is missing context. Before locking
-in a decision, enumerate what you don't know and surface it.
+> **Loop position:** move 1 (shape intent as BDD) plus the seed for move 3
+> (slice candidates) of the [operating loop](../../docs/architecture/operating-loop.md).
+> Discovery turns a goal plus delegated child artifacts into one dense execution
+> packet for `/crank` and `/validate`.
 
-## The 7 discovery dimensions
+## Strict Delegation Contract (default)
 
-For any non-trivial request, walk through these and record findings in
-the report's "Context" section:
+Discovery delegates to `/brainstorm` (conditional), `/design` (conditional),
+`/research`, `/plan`, and `/pre-mortem` via declared skill invocations.
+Strict delegation is the **default**.
 
-### 1. Who depends on this?
+**Anti-pattern to reject:** inlining `/research` work (grep + read + synthesize), collapsing `/plan` into an inline decomposition, skipping `/pre-mortem`. See [`../shared/references/strict-delegation-contract.md`](../shared/references/strict-delegation-contract.md) for the full contract and supported compression escapes (`--quick`, `--skip-brainstorm`, `--interactive`/`--auto`, `--no-scaffold`).
 
-- What other services / teams consume the thing you're changing?
-- Are there public consumers (open API, OSS users)?
-- Is there a deprecation path if you break compatibility?
+See [`docs/learnings/orchestrator-compression-anti-pattern.md`](../../docs/learnings/orchestrator-compression-anti-pattern.md) for the live compression signature.
+See [`references/isolation-contract.md`](references/isolation-contract.md) for the mechanical four-lever model and the compression patterns flagged by `scripts/check-skill-isolation.sh`. See [`references/best-practices.md`](references/best-practices.md) for the lifecycle principle + anti-pattern citation table.
 
-Grep for: `grep -rE "import.*<your-module>|require.*<your-module>"` in
-the repo and any sibling repos you have access to.
+## Narrow Waist
 
-### 2. What's the scale today, what's it in 6 months?
+Discovery does not carry raw child-skill output forward. It records artifact
+paths, verdicts, the `hexagon:` boundary block from
+[`docs/architecture/intent-to-loop-hexagon.md`](../../docs/architecture/intent-to-loop-hexagon.md),
+and the six Context Density Rule fields:
 
-- Current traffic: requests/sec, queries/sec, MB/day, daily-active-users
-- Storage: rows in main tables, size on disk
-- Cost: monthly LLM spend, infra spend
-- 6-month projection: linear? exponential? unknown?
+| Field | Meaning |
+|-------|---------|
+| `intent` | Behavior or capability to produce |
+| `boundary` | Bounded context, non-goals, write scope |
+| `evidence` | Acceptance examples, tests, gates, verdicts |
+| `decision` | Why this plan shape was chosen |
+| `constraint` | Safety, runtime, token, and process limits |
+| `next_action` | Exact `/crank` or follow-up command |
 
-If unknown, write: "scale unknown — request from user before proceeding."
+Everything else stays in child artifacts and is linked by path.
 
-### 3. What MUST not change?
+## Discovery To Plan Port
 
-- Existing API contracts (backward compatibility window)
-- Database schema columns referenced by reporting / BI
-- File formats consumed by other tools
-- Regulatory commitments (audit log retention, SLA RPO/RTO)
+Use the [Skill Ports and Adapters](../../docs/contracts/skill-ports-and-adapters.md)
+vocabulary and the [Intent-to-Loop Hexagon](../../docs/architecture/intent-to-loop-hexagon.md)
+for the boundary between Discovery and Plan:
 
-### 4. What's the budget?
+| Boundary piece | Discovery contract |
+|---|---|
+| Inbound port | `shape_intent` from operator goal or BDD intent |
+| Outbound port | `plan_slices` into `/plan` |
+| Driving adapter | `/discovery` skill invocation |
+| Driven adapter | `/plan` skill invocation plus bd/file persistence |
+| Context packet | density block, artifact links, acceptance examples, non-goals, constraints |
+| Guard adapter | `/pre-mortem` verdict before packet handoff |
 
-- Monthly cost ceiling (LLM + infra)
-- Headcount: 1-person task vs cross-team effort
-- Calendar: "must ship by X" vs "best by Y"
+Executable acceptance: [references/discovery.feature](references/discovery.feature) — Discovery hands dense intent across the `plan_slices` port (promoted from inline; soc-qk4b.2).
 
-If unstated, default to "small project_size, 1-engineer-week, <$200/mo
-budget." Surface this default in the report so the user can correct.
+## Open-Ended Path (generate-winnow → operationalize → refine)
 
-### 5. What's the failure mode that matters?
+> **Additive to the default flow — it does not replace the strict-delegation contract or the artifact-first DAG.** This path activates for open-ended "improve the project"-style goals (`"improve the project"`, `"what should we build next"`, `"make X more robust"`) OR when `--ideate` is passed. For a specific goal, the default flow (brainstorm-clarify → research → plan → pre-mortem) is unchanged.
 
-Ask: "If this feature breaks at 3am, what gets paged?"
-- Data loss → CRITICAL
-- Wrong answer to user → HIGH
-- Slow response → MEDIUM
-- Bad UX (cosmetic) → LOW
+On the open-ended path, Discovery prepends the generate-winnow methodology before research/plan and adds two steps after planning. Full detail lives in [`../brainstorm/references/bead-operationalization.md`](../brainstorm/references/bead-operationalization.md) and [`../brainstorm/references/ideation-mode.md`](../brainstorm/references/ideation-mode.md).
 
-The failure mode dictates investment level (e.g., do you need a canary?
-A circuit breaker? Just a feature flag?).
+1. **Ideate (delegate to `/brainstorm --ideate`).** Invoke `/brainstorm` in **ideation mode** (a real skill invocation — strict delegation still applies; do NOT inline the 30-idea generation). It returns a ranked portfolio of **15** ideas (top 5 + next 10) with how/perceive/implement notes, rubric scores, and red-team findings.
+2. **Research + Plan + Pre-mortem.** Run the normal artifact-first DAG over the selected portfolio, scoped to the winnowed ideas rather than a single goal.
+3. **Operationalize.** Turn the ranked portfolio into a comprehensive, granular set of **self-documenting `bd` beads** — tasks, subtasks, dependency structure (`bd dep add`), and **explicit test tasks** (unit + e2e with detailed logging). Each bead carries what/why/how/risks/success so the original plan markdown never needs to be consulted again. Overlap-check against existing beads (`bd list --json`) before creating — merge, don't duplicate.
+4. **Refine in plan space (4-5 passes).** Before handing the packet to `/crank`, run **4-5 refinement passes** over the bead set. Each pass: **re-read AGENTS.md** (especially after compaction), check every bead for sense and optimality, and **DO NOT OVERSIMPLIFY / DO NOT LOSE FEATURES OR FUNCTIONALITY**. Validate between passes (no dependency cycles; every leaf actionable via `bd ready`).
 
-### 6. What's already been tried?
+> Tracking is **`bd`**, never `br`/`bv` — this is AgentOps. The operationalize and refine steps consume `/brainstorm`'s ideation output; see [`../brainstorm/references/bead-operationalization.md`](../brainstorm/references/bead-operationalization.md).
 
-- Search Beads: `bd search "<keyword>"` — has this been attempted before?
-- Search docs/decisions: any superseded ADR on this topic?
-- Search lessons.md: any past learning about this pattern?
+Executable acceptance for this path: [references/discovery.feature](references/discovery.feature) (ideation/operationalize/refine scenarios, ag-yw0).
 
-If past work exists, build on it. Don't redo it.
+## Execution
 
-### 7. Who decides?
+Run the artifact-first DAG in [references/dag.md](references/dag.md). That
+file owns the executable workflow, state shape, gate detail, per-step detail,
+and the acceptance-criteria YAML contract.
 
-- Is there a CTO sign-off needed (gate:plan, gate:ship)?
-- Is there a compliance reviewer required (PCI for fintech, HIPAA for healthcare)?
-- Does this need an RFC (multi-team decision)?
+## Flags
 
-## Output
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--auto` | on | Fully autonomous (no human gates). Inverse of `--interactive`. Passed through to `/research` and `/plan`. |
+| `--interactive` | off | Human gates in research and plan (STEP 3, STEP 4). Does NOT affect pre-mortem gate. |
+| `--skip-brainstorm` | auto | Skip STEP 1 brainstorm when goal is already specific |
+| `--ideate` | auto | Force the open-ended generate-winnow path: delegate to `/brainstorm --ideate` (30→5→15), then operationalize into self-documenting `bd` beads and refine 4-5x in plan space. Auto-on for open-ended goals. See [Open-Ended Path](#open-ended-path-generate-winnow--operationalize--refine). |
+| `--complexity=<level>` | auto | Force complexity level (`fast` / `standard` / `full`) |
+| `--no-budget` | off | Disable phase time budgets |
+| `--no-scaffold` | off | Skip scaffold auto-invocation in STEP 4.5 |
 
-A discovery section at the top of your report:
+## Quick Start
 
-```markdown
-## Context
-
-- **Consumers:** <list, or "unknown — TBD with user">
-- **Scale:** <today, 6mo projection>
-- **Frozen contracts:** <list, or "none identified">
-- **Budget:** <cost + time + people>
-- **Failure-mode tier:** Critical | High | Medium | Low
-- **Prior work:** <links to ADRs/lessons, or "none found">
-- **Decision-makers:** <gate or RFC required>
+```bash
+/discovery "add user authentication"              # full discovery
+/discovery --interactive "refactor payment module" # human gates in research + plan
+/discovery --skip-brainstorm "fix login bug"       # skip brainstorm for specific goals
+/discovery --complexity=full "migrate to v2 API"   # force full council ceremony
 ```
 
-## When to skip
+## Output Specification
 
-- **nano project_size** — discovery is overhead. Skip and document that
-  you skipped: "nano — discovery skipped per skill rules."
-- **Pure utility extraction** with no behaviour change — skip.
-- **Verbal bug-fix from user** with clear repro — skip.
+**Format:** compact markdown phase summary to stdout plus JSON execution packet
+on disk.
 
-## Common gotchas
+**Files written:**
 
-- **Don't assume.** If you write "I assume the user wants X", that
-  assumption belongs in Context as a question, not as a fact.
-- **Don't outsource to user.** Discovery is YOUR job. Bring back as many
-  answers as Glob/Grep/git can produce. Only ask the user for what code
-  cannot tell you.
+- `.agents/research/<topic-slug>.md` - research artifact path only
+- `.agents/plans/YYYY-MM-DD-<goal-slug>.md` - plan document path only
+- `.agents/council/YYYY-MM-DD-pre-mortem-<topic>.md` - pre-mortem verdict path only
+- `.agents/rpi/execution-packet.json` - latest dense packet
+- `.agents/rpi/runs/<run-id>/execution-packet.json` - per-run archive when `run_id` is set
+- `.agents/rpi/phase-1-summary-YYYY-MM-DD-<goal-slug>.md` - compact discovery summary
+
+**Exit signal:** completion marker (`<promise>DONE</promise>` or `<promise>BLOCKED</promise>`) — see Completion Markers below.
+
+## Completion Markers
+
+```
+<promise>DONE</promise>      # Discovery complete, epic-id + execution-packet ready
+<promise>BLOCKED</promise>   # Pre-mortem failed 3x, manual intervention needed
+```
+
+## Troubleshooting
+
+Read `references/troubleshooting.md` for common problems and solutions.
+
+## Reference Documents
+
+- [references/dag.md](references/dag.md) — executable workflow, state shape, gate detail, per-step detail, acceptance-criteria YAML contract
+- [references/complexity-auto-detect.md](references/complexity-auto-detect.md) — precedence contract for keyword vs issue-count classification
+- [references/idempotency-and-resume.md](references/idempotency-and-resume.md) — re-run safety and resume behavior
+- [references/phase-budgets.md](references/phase-budgets.md) — time budgets per complexity level
+- [references/troubleshooting.md](references/troubleshooting.md) — common problems and solutions
+- [references/output-templates.md](references/output-templates.md) — execution packet and phase summary formats
+- [references/phase-data-contracts.md](references/phase-data-contracts.md) — phase artifact data contracts (cited from references/isolation-contract.md)
+
+**See also:** [brainstorm](../brainstorm/SKILL.md), [design](../design/SKILL.md), [research](../research/SKILL.md), [plan](../plan/SKILL.md), [pre-mortem](../pre-mortem/SKILL.md), [crank](../crank/SKILL.md), [rpi](../rpi/SKILL.md), [scaffold](../scaffold/SKILL.md)

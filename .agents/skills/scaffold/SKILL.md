@@ -1,400 +1,446 @@
 ---
 name: scaffold
-description: Generate complete feature structures based on your project patterns with full continuity
-disable-model-invocation: true
+description: Create project, component, or boilerplate scaffolds. Use when starting a new project, module, or component, generating boilerplate, or stamping a repeatable file structure.
+practices:
+- pragmatic-programmer
+- design-patterns
+- hexagonal-architecture
+hexagonal_role: supporting
+consumes: []
+produces:
+- converted-skill
+context_rel: []
+skill_api_version: 1
+context:
+  window: fork
+  intent:
+    mode: task
+  sections:
+    exclude:
+    - HISTORY
+  intel_scope: topic
+metadata:
+  tier: execution
+  dependencies:
+  - standards
+output_contract: project files and directory structure
 ---
+# Scaffold Skill
 
-# Intelligent Scaffolding
+> **Quick Ref:** Project scaffolding, component generation, CI/CD setup. `/scaffold <language> <name>` for new projects, `/scaffold component <type> <name>` for components, `/scaffold ci <platform>` for CI pipelines.
 
-I'll create complete feature structures based on your project patterns, with full continuity across sessions.
+**YOU MUST EXECUTE THIS WORKFLOW. Do not just describe it.**
 
-Arguments: `$ARGUMENTS` - feature name or component to scaffold
+Generate real files, run real commands, verify real output. Every invocation produces a working, tested, committed scaffold.
 
----
+## Modes
 
-## Token Optimization Strategy
+| Mode | Invocation | Output |
+|------|-----------|--------|
+| **Project** | `/scaffold <language> <name>` | Full project directory with build, test, lint |
+| **Component** | `/scaffold component <type> <name>` | New module/package added to existing project |
+| **CI** | `/scaffold ci <platform>` | CI/CD pipeline configuration |
+| **Domain-Slice** | `/scaffold domain <name>` | Domain-slice manifest for a scoped `ao rpi phased --domain` run |
 
-**Target:** 65% reduction (3,500-5,000 → 1,200-2,000 tokens)
-**Status:** ✅ Optimized (Phase 2 Batch 3D-F, 2026-01-26)
+## Step 0: Determine Mode
 
-### Optimization Techniques Applied
+Parse the invocation to identify which mode to run:
 
-**1. Template-Based Scaffolding**
-- **Pattern:** Reuse existing feature structures as templates
-- **Implementation:** Glob → identify similar features → copy patterns
-- **Savings:** 70% (avoid reading documentation, reduce analysis)
-- **Example:**
-  ```markdown
-  # Instead of analyzing 20 files for patterns:
-  Glob "src/features/*/index.ts" → Find 5 existing features
-  Read ONLY one representative feature → Extract pattern
-  Reuse pattern for new scaffolding → Generate with heredocs
+- If args contain `component` as first positional: **Component mode**
+- If args contain `ci` as first positional: **CI mode**
+- Otherwise: **Project mode**
 
-  Before: 15,000 tokens (read all features)
-  After: 1,500 tokens (read one, reuse pattern)
-  Savings: 90%
-  ```
+If ambiguous, ask ONE clarifying question, then proceed.
 
-**2. Framework Detection Caching**
-- **Pattern:** Cache framework type and conventions from `/understand`
-- **Implementation:** Check `.claude/cache/understand/project-analysis.json`
-- **Savings:** 80% (skip framework detection)
-- **Cache Keys:**
-  - `framework`: React/Vue/Angular/Svelte
-  - `structure`: File organization pattern
-  - `conventions`: Naming and export patterns
-  - `testFramework`: Jest/Vitest/Mocha
+## Step 1: Gather Requirements
 
-**3. Project Conventions Caching**
-- **Pattern:** Learn and cache project-specific patterns
-- **Location:** `.claude/cache/scaffold/conventions.json`
-- **Cached Data:**
-  ```json
-  {
-    "naming": "kebab-case|PascalCase|camelCase",
-    "fileStructure": "feature-folders|type-folders|flat",
-    "imports": "absolute|relative",
-    "exports": "named|default",
-    "testLocation": "adjacent|__tests__|separate"
-  }
-  ```
-- **Savings:** 60% (skip pattern analysis on resume)
+Collect these inputs (use defaults when not specified):
 
-**4. Bash-Based File Generation**
-- **Pattern:** Use heredocs for creating multiple files efficiently
-- **Implementation:**
-  ```bash
-  cat > src/features/user/index.ts <<'EOF'
-  export * from './UserProfile'
-  export * from './types'
-  EOF
+| Input | Default | Notes |
+|-------|---------|-------|
+| Language/framework | (required) | go, python, node, rust, react |
+| Project type | CLI (Go), package (Python), app (Node) | CLI, library, web-service, API, package |
+| Testing framework | Language default | go test, pytest, vitest, cargo test |
+| CI platform | GitHub Actions | github, gitlab |
+| Project name | (required) | kebab-case, validated |
 
-  cat > src/features/user/UserProfile.tsx <<'EOF'
-  import React from 'react'
-  // Component code generated from template
-  EOF
-  ```
-- **Savings:** 50% (single Bash call vs multiple Write calls)
-- **Benefits:** Atomic operations, better error handling
+Validate the project name is kebab-case. Reject names with spaces, uppercase, or special characters.
 
-**5. Incremental Scaffolding**
-- **Pattern:** Generate one component at a time with validation
-- **State Tracking:** `scaffold/state.json` tracks completed files
-- **Resume Support:**
-  ```json
-  {
-    "feature": "UserProfile",
-    "created": ["index.ts", "types.ts", "UserProfile.tsx"],
-    "pending": ["UserProfile.test.tsx", "UserProfile.stories.tsx"],
-    "lastFile": "UserProfile.tsx"
-  }
-  ```
-- **Savings:** 80% on resume (skip created files)
+## Step 2: Generate Project Structure
 
-**6. Git Diff Before Scaffolding**
-- **Pattern:** Check for existing files to avoid overwrites
-- **Implementation:**
-  ```bash
-  git ls-files src/features/user/ # Check if feature exists
-  ```
-- **Savings:** 95% (immediate exit if feature exists)
-- **Safety:** Prevents accidental overwrites
+Create the directory tree and all files. Every generated file must have real, functional content -- not placeholder comments.
 
-### Token Cost Breakdown
+### Go CLI
 
-**Phase 1: Pattern Discovery (500-800 tokens)**
-- Check session: 50 tokens (Bash ls scaffold/)
-- Framework detection: 100 tokens (cache hit) or 500 tokens (cache miss)
-- Glob existing features: 150 tokens
-- Read ONE template feature: 300-500 tokens
-- **Total:** 600-1,200 tokens (vs 8,000 unoptimized)
-
-**Phase 2: Planning (200-400 tokens)**
-- Generate file list: 100 tokens (from template)
-- Create plan.md: 50 tokens (Write)
-- Initialize state.json: 50 tokens (Write)
-- **Total:** 200 tokens (vs 2,000 unoptimized)
-
-**Phase 3: File Generation (500-800 tokens)**
-- Bash heredoc generation: 400-600 tokens (all files in one call)
-- Update state.json: 50 tokens
-- Git status check: 100 tokens
-- **Total:** 550-750 tokens (vs 5,000 unoptimized)
-
-**Resume Session (300-600 tokens)**
-- Read state.json: 100 tokens
-- Check pending files: 50 tokens
-- Generate remaining files: 200-400 tokens
-- **Total:** 350-550 tokens (vs 3,000 unoptimized)
-
-### Optimization Results
-
-**Token Savings:**
-- **New scaffolding:** 3,500-5,000 → 1,200-2,000 tokens (65% reduction)
-- **Resume session:** 3,000-4,000 → 300-600 tokens (85% reduction)
-- **Small scaffold:** 2,000-3,000 → 500-1,000 tokens (67% reduction)
-- **Average:** 65% token reduction
-
-**Cost Comparison:**
 ```
-Before Optimization:
-- New feature: 4,000 tokens × $0.003 = $0.012
-- Resume: 3,500 tokens × $0.003 = $0.0105
-- Annual (50 scaffolds): $0.60
-
-After Optimization:
-- New feature: 1,500 tokens × $0.003 = $0.0045
-- Resume: 500 tokens × $0.003 = $0.0015
-- Annual (50 scaffolds): $0.21
-
-Savings: $0.39/year per developer (65% reduction)
+<name>/
+  cmd/<name>/main.go        # cobra or bare main with version flag
+  internal/config/config.go  # configuration loading
+  internal/config/config_test.go
+  go.mod
+  go.sum
+  Makefile                   # build, test, lint, clean targets
+  .goreleaser.yml            # cross-compile config
+  .gitignore
+  .editorconfig
+  CLAUDE.md
 ```
 
-### Caching Strategy
+### Go Library
 
-**Cache Locations:**
-- **Session state:** `scaffold/` in project root
-  - `plan.md`: Scaffolding plan and file list
-  - `state.json`: Progress tracking and created files
-- **Framework cache:** `.claude/cache/understand/`
-  - Shared with `/understand`, `/implement`, `/boilerplate`
-- **Convention cache:** `.claude/cache/scaffold/`
-  - `conventions.json`: Project-specific patterns
-  - `templates/`: Cached feature templates
-
-**Cache Invalidation:**
-- Session cache: Cleared on completion or explicit `new` command
-- Framework cache: Valid until project structure changes
-- Convention cache: Valid for 7 days or until pattern mismatch
-
-**Shared Caches:**
-- `/understand`: Framework and structure analysis
-- `/implement`: Project patterns and dependencies
-- `/boilerplate`: Framework-specific templates
-- `/types-generate`: Type generation patterns
-
-### Usage Examples
-
-**Optimized Flow (1,200-2,000 tokens):**
-```bash
-# First scaffolding in project
-claude "scaffold UserProfile"
-
-Step 1: Check session (50 tokens)
-Step 2: Load framework cache (100 tokens, cache hit)
-Step 3: Find template features (150 tokens, Glob)
-Step 4: Read one template (500 tokens)
-Step 5: Generate plan (200 tokens)
-Step 6: Create files with heredocs (600 tokens)
-Total: 1,600 tokens
+```
+<name>/
+  pkg/<name>.go              # primary exported API
+  pkg/<name>_test.go
+  examples/basic/main.go     # runnable example
+  go.mod
+  go.sum
+  Makefile
+  .gitignore
+  .editorconfig
+  CLAUDE.md
 ```
 
-**Resume Flow (300-600 tokens):**
-```bash
-# Continue scaffolding
-claude "scaffold resume"
+### Python Package
 
-Step 1: Read state.json (100 tokens)
-Step 2: Load cached conventions (50 tokens)
-Step 3: Generate remaining files (400 tokens)
-Total: 550 tokens (85% savings)
+```
+<name>/
+  src/<name>/__init__.py     # version and public API
+  src/<name>/core.py         # primary module
+  tests/__init__.py
+  tests/test_core.py         # real behavioral test
+  pyproject.toml             # black, ruff, mypy config included
+  .github/workflows/ci.yml
+  .gitignore
+  .editorconfig
+  CLAUDE.md
 ```
 
-**Specific Type Flow (800-1,500 tokens):**
-```bash
-# Scaffold specific component type
-claude "scaffold --api-route users"
+### Node/TypeScript
 
-Step 1: Check session (50 tokens)
-Step 2: Load route template (200 tokens)
-Step 3: Generate route files (500 tokens)
-Total: 750 tokens (75% savings)
+```
+<name>/
+  src/index.ts               # entry point with exports
+  src/core.ts                # primary module
+  test/core.test.ts          # vitest test
+  package.json               # scripts: build, test, lint, format
+  tsconfig.json
+  .gitignore
+  .editorconfig
+  CLAUDE.md
 ```
 
-### Implementation Notes
+### Rust
 
-**Critical Optimizations:**
-1. **Always check for session first** - Saves 80% on resume
-2. **Use framework cache** - Shared with `/understand` skill
-3. **Template-based generation** - Avoid analysis overhead
-4. **Bash heredocs** - Efficient multi-file creation
-5. **Incremental state tracking** - Perfect resume support
-
-**Anti-Patterns to Avoid:**
-- ❌ Reading all existing features for pattern analysis
-- ❌ Analyzing framework from scratch (use cache)
-- ❌ Creating files one Write call at a time
-- ❌ Regenerating already-created files on resume
-- ❌ Full project scan without focusing on feature area
-
-**Quality Assurance:**
-- All files follow project conventions (from cache)
-- Tests generated using project test patterns
-- Imports use project import style (absolute vs relative)
-- File names match project naming convention
-- No duplicate scaffolding (git diff check)
-
----
-
-## Session Intelligence
-
-I'll maintain scaffolding progress across sessions:
-
-**Session Files (in current project directory):**
-- `scaffold/plan.md` - Scaffolding plan and component list
-- `scaffold/state.json` - Created files and progress
-
-**IMPORTANT:** Session files are stored in a `scaffold` folder in your current project root
-
-**Auto-Detection:**
-- If session exists: Resume incomplete scaffolding
-- If no session: Create new scaffolding plan
-- Commands: `resume`, `status`, `new`
-
-## Phase 1: Pattern Discovery
-
-**MANDATORY FIRST STEPS:**
-1. Check if `scaffold` directory exists in current working directory
-2. If directory exists, check for session files:
-   - Look for `scaffold/state.json`
-   - Look for `scaffold/plan.md`
-   - If found, resume from existing session
-3. If no directory or session exists:
-   - Analyze project patterns
-   - Create scaffolding plan
-   - Initialize progress tracking
-4. Show scaffolding preview before creating
-
-**Note:** Always look for session files in the current project's `scaffold/` folder, not `../../../scaffold/` or absolute paths
-
-I'll discover your project patterns:
-
-**Pattern Analysis:**
-- File organization structure
-- Naming conventions
-- Testing patterns
-- Import/export styles
-- Documentation standards
-
-**Smart Detection:**
-- Find similar features already implemented
-- Identify architectural patterns
-- Detect testing frameworks
-- Understand build configuration
-
-## Phase 2: Scaffolding Planning
-
-Based on patterns, I'll create a scaffolding plan:
-
-**Component Structure:**
-- Main feature files
-- Test files
-- Documentation
-- Configuration updates
-- Integration points
-
-I'll write this plan to `scaffold/plan.md` with:
-- Each file to create
-- Template patterns to follow
-- Integration requirements
-- Creation order
-
-## Phase 3: Intelligent Generation
-
-I'll generate files matching your patterns:
-
-**Pattern Matching:**
-- Use your file naming style
-- Follow your directory structure
-- Match your code conventions
-- Apply your testing patterns
-
-**Content Generation:**
-- Boilerplate from existing code
-- Imports matching your style
-- Test structure from your patterns
-- Documentation in your format
-
-## Phase 4: Incremental Creation
-
-I'll create files systematically:
-
-**Execution Process:**
-1. Create directory structure
-2. Generate each component file
-3. Add appropriate tests
-4. Update integration points
-5. Track each creation in state
-
-**Progress Tracking:**
-- Mark each file created in plan
-- Update state with file paths
-- Create meaningful commits
-
-## Phase 5: Integration
-
-After scaffolding:
-- Update route configurations
-- Add to module exports
-- Update build configuration
-- Verify everything connects
-
-## Context Continuity
-
-**Session Resume:**
-When you return and run `/scaffold` or `/scaffold resume`:
-- Load existing plan and progress
-- Show what was already created
-- Continue from last component
-- Maintain pattern consistency
-
-**Progress Example:**
 ```
-RESUMING SCAFFOLDING
-├── Feature: UserDashboard
-├── Created: 5 of 8 files
-├── Last: components/UserStats.tsx
-└── Next: tests/UserStats.test.tsx
-
-Continuing scaffolding...
+<name>/
+  src/lib.rs                 # library root (or main.rs for CLI)
+  src/core.rs                # primary module
+  benches/benchmark.rs       # criterion bench stub
+  Cargo.toml                 # with clippy, rustfmt config
+  .gitignore
+  .editorconfig
+  CLAUDE.md
 ```
 
-## Practical Examples
+## Step 3: Apply Best Practices
 
-**Start Scaffolding:**
+After generating the structure, layer on cross-cutting concerns:
+
+For installer scripts, agent-facing tool servers, MCP surfaces, or Rust CLI storage scaffolds, apply [references/agent-facing-tool-scaffolds.md](references/agent-facing-tool-scaffolds.md) before writing files.
+
+### .gitignore
+
+Use the language-appropriate template. Include IDE files (`.vscode/`, `.idea/`), OS files (`.DS_Store`, `Thumbs.db`), and build artifacts.
+
+### .editorconfig
+
+```ini
+root = true
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+charset = utf-8
+
+[*.{go,rs}]
+indent_style = tab
+indent_size = 4
+
+[*.{py,ts,js,json,yml,yaml,toml}]
+indent_style = space
+indent_size = 4
+
+[Makefile]
+indent_style = tab
 ```
-/scaffold UserProfile          # Create user profile feature
-/scaffold "auth module"        # Create authentication module
-/scaffold PaymentService       # Create payment service
+
+### Pre-commit Hooks
+
+Generate a `.pre-commit-config.yaml` with language-appropriate hooks:
+
+- **Go:** gofmt, go vet, golangci-lint
+- **Python:** black, ruff, mypy
+- **Node/TS:** eslint, prettier
+- **Rust:** rustfmt, clippy
+
+### Testing Setup
+
+Every scaffold includes at least one real test that:
+- Tests actual behavior (not just `!= nil`)
+- Uses the language's idiomatic test patterns
+- Passes on first run
+
+### CI Pipeline
+
+Generate CI config unless the user explicitly opts out. Default: GitHub Actions.
+
+### CLAUDE.md
+
+Generate a project-specific `CLAUDE.md` containing:
+- Build commands
+- Test commands
+- Lint commands
+- Project structure overview
+- Key conventions for the language (loaded from `/standards`)
+
+## Step 4: Verify Scaffold Works
+
+Run these checks in order. Stop and fix if any fail.
+
+```
+1. Build passes        →  language-specific build command
+2. Tests pass          →  language-specific test command
+3. Lint passes         →  language-specific lint command (warn-only if tools not installed)
 ```
 
-**Session Control:**
+### Verification Commands by Language
+
+| Language | Build | Test | Lint |
+|----------|-------|------|------|
+| Go | `go build ./...` | `go test ./...` | `go vet ./...` |
+| Python | `python -m py_compile src/**/*.py` | `python -m pytest` | `ruff check .` |
+| Node/TS | `npx tsc --noEmit` | `npx vitest run` | `npx eslint .` |
+| Rust | `cargo build` | `cargo test` | `cargo clippy` |
+
+If a tool is not installed (e.g., `ruff`, `golangci-lint`), note it as a warning but do not fail the scaffold.
+
+## Step 5: Initial Commit
+
+After verification passes, create the initial commit:
+
 ```
-/scaffold resume    # Continue existing scaffolding
-/scaffold status    # Check what's been created
-/scaffold new       # Start fresh scaffolding
+bootstrap(<name>): scaffold <language> <type> project
 ```
 
-## Safety Guarantees
+Example: `bootstrap(my-cli): scaffold go cli project`
 
-**Protection Measures:**
-- Preview before creation
-- Incremental file generation
-- Pattern validation
-- Integration verification
+Do NOT push. The user decides when to push.
 
-**Important:** I will NEVER:
-- Overwrite existing files
-- Break existing imports
-- Add AI attribution
-- Create without following patterns
+## Component Mode
 
-## What I'll Actually Do
+When invoked as `/scaffold component <type> <name>`:
 
-1. **Analyze deeply** - Understand your patterns
-2. **Plan completely** - Map all components
-3. **Generate intelligently** - Match your style
-4. **Track precisely** - Perfect continuity
-5. **Integrate seamlessly** - Connect everything
+### Go Component
 
-I'll maintain complete continuity between sessions, always resuming exactly where we left off with consistent pattern application.
+```
+internal/<name>/<name>.go       # package with exported API
+internal/<name>/<name>_test.go  # behavioral tests
+```
+
+Register the new package in relevant imports. Run `go build ./...` and `go test ./...` to verify.
+
+### Python Component
+
+```
+src/<project>/modules/<name>/__init__.py
+src/<project>/modules/<name>/core.py
+tests/test_<name>.py
+```
+
+### Node/TS Component
+
+```
+src/<name>/index.ts
+src/<name>/types.ts
+test/<name>.test.ts
+```
+
+### React Component
+
+```
+src/components/<Name>/<Name>.tsx
+src/components/<Name>/<Name>.test.tsx
+src/components/<Name>/<Name>.stories.tsx  # Storybook story
+src/components/<Name>/index.ts            # barrel export
+```
+
+After generating, run the project's test suite to verify the new component integrates cleanly.
+
+## CI Mode
+
+When invoked as `/scaffold ci <platform>`:
+
+### GitHub Actions
+
+Generate `.github/workflows/ci.yml`:
+
+**This is a skeleton — expand steps using the detected language's actual commands.**
+
+```yaml
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup # use actions/setup-go, setup-node, setup-python as detected
+        uses: actions/setup-go@v5  # example for Go
+        with:
+          go-version-file: go.mod
+      - name: Lint
+        run: golangci-lint run  # replace with detected linter
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Test
+        run: go test ./...  # replace with detected test command
+
+  build:
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Build
+        run: go build ./...  # replace with detected build command
+```
+
+Include language-appropriate caching (`actions/cache` for Go modules, pip, node_modules, cargo registry). Replace Go-specific steps with the detected language's toolchain.
+
+### GitLab CI
+
+Generate `.gitlab-ci.yml`:
+
+```yaml
+stages:
+  - lint
+  - test
+  - build
+
+variables:
+  # language-specific cache paths
+
+lint:
+  stage: lint
+  script: [lint command]
+
+test:
+  stage: test
+  script: [test command]
+  parallel:
+    matrix:
+      - IMAGE: [language versions]
+
+build:
+  stage: build
+  script: [build command]
+  needs: [lint, test]
+```
+
+Include caching directives and artifact definitions.
+
+## Domain-Slice Mode
+
+When invoked as `/scaffold domain <name>`, scaffold a **domain-slice manifest** — the bounded-context declaration that `ao rpi phased --domain` consumes to scope an RPI run.
+
+> There is **no `scaffold` subcommand on the `ao` CLI**. Domain-slice scaffolding is the `--scaffold-domain` flag on `ao rpi phased`; `/scaffold` is this skill, which drives that flag.
+
+### Workflow
+
+1. **Generate the manifest.** Run the write-and-exit flag — it creates the template and returns without starting an RPI run:
+
+   ```
+   ao rpi phased --scaffold-domain <name>
+   ```
+
+   This writes `docs/domains/<name>/manifest.yaml` from a template that already validates against `schemas/domain-slice-manifest.v1.schema.json`. An existing manifest is **not** overwritten unless `--force` is passed.
+
+2. **Fill in the placeholders.** Edit the generated manifest:
+   - `bounded_context` — one sentence: what this slice owns and explicitly does NOT own.
+   - `directive_ids` — stable GOALS.md directive IDs (pattern `d-<slug>`) this slice owns.
+   - `scenario_ids` — promoted spec scenario IDs from `spec/scenarios/` (may stay `[]` initially).
+   - `context_roots` — repo-relative implementation surface (at least one entry).
+   - `allowed_read_globs` / `denied_read_globs` — the read fence (gitignore syntax; deny wins).
+   - `validation_commands` — ordered build/test/lint steps.
+
+3. **Verify it loads.** The scaffolded manifest already passes the F3.1 schema/loader. After editing, confirm it still validates:
+
+   ```
+   ao rpi phased --domain <name> --dry-run "<goal>"
+   ```
+
+   A dry run loads the manifest, prints the scoped phase prompts, and exits — proving the slice attaches.
+
+4. **Run scoped RPI.** Once the manifest is real:
+
+   ```
+   ao rpi phased --domain <name> "<goal>"
+   ```
+
+   Phase prompts carry the slice's boundaries; each run also writes a domain-scope audit artifact reporting any out-of-domain references visible in evidence.
+
+### Next commands the scaffold names
+
+`ao rpi phased --scaffold-domain` prints the follow-up commands after writing the manifest: attach via `--domain`, preview with `--dry-run`, and lint executable-spec links with `ao goals scenarios --lint`. Run them in that order.
+
+## Error Recovery
+
+| Problem | Action |
+|---------|--------|
+| Directory already exists | Ask user: overwrite, merge, or abort |
+| Build tool not installed | Note missing tool, generate files anyway, warn user |
+| Test fails on generated code | Fix the generated code (this is a scaffold bug) |
+| Git init fails | Verify not inside existing repo, handle accordingly |
+
+## Output Summary
+
+After completion, print a summary:
+
+```
+Scaffold complete: <name> (<language> <type>)
+  Files created: <count>
+  Build: PASS
+  Tests: PASS (<count> tests)
+  Lint:  PASS | WARN (tool not installed)
+  Commit: bootstrap(<name>): scaffold <language> <type> project
+
+Next steps:
+  cd <name>
+  <language-specific "run" command>
+```
+
+## References
+
+- [references/agent-facing-tool-scaffolds.md](references/agent-facing-tool-scaffolds.md)
+- [references/recommended-reading.md](references/recommended-reading.md) — forward-looking index of external skills (e.g., `mcp-server-design`) worth absorbing into scaffold when their trigger conditions arrive. Consult before designing a new scaffold mode that targets agent-facing tool surfaces.
+- [references/scaffold.feature](references/scaffold.feature) — Executable spec: project/component/CI scaffolding entry points + domain-slice routing through `ao rpi phased --scaffold-domain` (soc-qk4b)

@@ -1,305 +1,220 @@
 ---
-name: Git Workflow
-description: DO NOT COMMIT unless user explicitly tells you to. Use this skill EVERY SINGLE TIME before creating a git commit. Provides mandatory commit message format, staging rules, and post-commit summary requirements for the MIRA project
+name: git-workflow
+version: 1.0.0
+description: "Deterministic git operations with state verification for skill-creator managed repos. Use when managing repos, branches, worktrees, or contribution workflows."
+user-invocable: true
+allowed-tools: Read Grep Glob Bash
+metadata:
+  extensions:
+    gsd-skill-creator:
+      version: 2
+      createdAt: "2026-02-26"
+      triggers:
+        intents:
+          - "git"
+          - "branch"
+          - "merge"
+          - "commit"
+          - "push"
+          - "pull"
+          - "rebase"
+          - "worktree"
+          - "upstream"
+          - "fork"
+          - "pr"
+          - "contribution"
+        contexts:
+          - "repository management"
+          - "version control"
+          - "code contribution"
+applies_to:
+  - src/git/**
+  - skills/git-workflow/**
 ---
 
-# Git Workflow - MIRA Standards
+# Git Workflow Skill
 
-Expert guidance for git operations in the MIRA project, emphasizing clear commit messages and proper staging practices.
+Deterministic git operations with state verification for skill-creator managed repos.
 
-## 🎯 Purpose
+## 1. Identity and Role
 
-This skill provides git workflow standards for the MIRA project:
-- Streamlined commit message format (CONTEXT → INSIGHT → APPROACH → CHANGES)
-- Safe staging practices to prevent accidental commits
-- Post-commit summary requirements
+You are the **git workflow agent**. Your role is to execute git operations deterministically, with state verification before and after every command. You never guess at git state. You never run commands without checking preconditions. You never trust success without verifying the result.
 
-## 🔀 OSS Sync Workflow
+You operate on repositories installed via `sc install`, which configures upstream tracking, push safety (`push.default=nothing`), a dev branch, and HITL gates.
 
-### MANDATORY: Ask Before Every Commit
-MIRA maintains two repositories (`origin` = private, `oss` = public OSS).
+## 2. Core Principle
 
-**Before EVERY commit, you MUST ask:**
+Every git operation follows a four-step protocol:
 
-> "Sync to **OSS** after this commit?"
+```
+Verify State -> Execute Command -> Verify Result -> Log
+```
 
-The repos have divergent codebases, so syncing requires running makeoss.sh:
-- **Yes** → After commit: `./makeoss.sh` (auto-commits to OSS with same message)
-- **No** → Just push to origin as normal
+Never skip verification. A "successful" command in the wrong state is worse than a failed command in the right state. If state verification fails, stop and report -- do not attempt recovery without human guidance.
 
-## ⚙️ Git Staging Rules
+## 3. When to Use
 
-### Critical Staging Protocol
-- **DO NOT attempt to commit unless the user explicitly tells you to**
-- **NEVER use `git add -A` or `git add .` without explicit permission**
-- Always review changes before staging
-- Stage specific files intentionally
-- Verify what you're committing with `git status` and `git diff`
+Activate this skill when:
+- Managing repositories installed via `sc install`
+- Creating, switching, listing, or removing branches
+- Setting up or tearing down worktrees
+- Syncing a dev branch with upstream (fetch, rebase, merge)
+- Preparing contributions through the two-gate workflow (dev -> main -> upstream PR)
+- Checking repository state before any git-adjacent operation
 
-### Safe Staging Pattern
+Do NOT activate for general file editing, testing, deployment, or database work.
+
+## 4. Git State Machine
+
+The repository is always in exactly one of six states. Detection priority (highest first):
+
+| State | Detection | Description |
+|---|---|---|
+| CONFLICT | `git status --porcelain=v2` lines starting with `u ` | Unresolved merge/rebase conflicts |
+| MERGING | `.git/MERGE_HEAD` exists | Merge in progress |
+| REBASING | `.git/rebase-merge` or `.git/rebase-apply` exists | Rebase in progress |
+| DETACHED | `git rev-parse --abbrev-ref HEAD` returns `HEAD` | Not on any branch |
+| DIRTY | `git status --porcelain=v2` has tracked/untracked entries | Uncommitted changes |
+| CLEAN | None of the above | Working tree matches HEAD |
+
+### Valid State Transitions
+
+| From | Allowed To |
+|---|---|
+| CLEAN | DIRTY, MERGING, REBASING, DETACHED |
+| DIRTY | CLEAN, DIRTY |
+| MERGING | CLEAN, CONFLICT |
+| REBASING | CLEAN, CONFLICT |
+| DETACHED | CLEAN, DIRTY |
+| CONFLICT | CLEAN, DIRTY |
+
+If an operation would produce a transition not in this table, it is invalid. Do not attempt it.
+
+## 5. Command Reference
+
+Always use plumbing commands over porcelain for detection. Use porcelain only for mutation. @references/plumbing.md for the complete plumbing table.
+
+| Operation | Command | Required State | Result State |
+|---|---|---|---|
+| Clone | `git clone <url> <path>` | N/A (new repo) | CLEAN |
+| Checkout branch | `git checkout <branch>` | CLEAN | CLEAN |
+| Create branch | `git checkout -b <name> <base>` | CLEAN | CLEAN |
+| Merge (no-ff) | `git merge --no-ff <branch>` | CLEAN | CLEAN or CONFLICT |
+| Rebase | `git rebase <upstream>` | CLEAN | CLEAN or CONFLICT |
+| Fetch | `git fetch <remote>` | any | unchanged |
+| Push | `git push <remote> <branch>` | CLEAN | CLEAN |
+| Stash | `git stash` | DIRTY | CLEAN |
+| Stash pop | `git stash pop` | CLEAN | DIRTY |
+| Commit | `git commit` | DIRTY (staged) | CLEAN or DIRTY |
+| Reset (soft) | `git reset --soft <ref>` | CLEAN | DIRTY |
+| Worktree add | `git worktree add <path> <branch>` | CLEAN | CLEAN (main), CLEAN (worktree) |
+| Worktree remove | `git worktree remove <path>` | CLEAN (worktree) | CLEAN |
+
+## 6. The Two-Gate Model
+
+Contributions flow through two human-in-the-loop gates. No gate can be auto-approved.
+
+```
+feature/  -->  dev  --[Gate 1]-->  main  --[Gate 2]-->  upstream (PR)
+   |                    |                     |
+   |  merge branch      |  HITL approval      |  HITL approval
+   |  into dev          |  + merge to main    |  + push + PR create
+   v                    v                     v
+ Work happens     Human reviews:        Human reviews:
+ on feature       - diff summary         - PR title (editable)
+ branch           - file groups          - PR description (editable)
+                  - commit history       - full diff
+                  - warnings/blockers    - warnings/blockers
+```
+
+**Gate 1** (dev -> main): Presents a diff summary with file groups, commit history, and any warnings. Human approves or rejects. Rejection leaves repo state unchanged.
+
+**Gate 2** (main -> upstream PR): Presents a generated PR title and description (both editable). Human approves or rejects. Rejection produces ZERO upstream contact -- no push, no API calls, no PR created.
+
+Pre-flight checks run before each gate: clean state assertion, diff summary generation, conflict detection, blocking/warning classification.
+
+## 7. Branch Conventions
+
+### Naming
+
+All branches use a type prefix:
+
+| Prefix | Purpose |
+|---|---|
+| `feature/` | New functionality |
+| `fix/` | Bug fixes |
+| `docs/` | Documentation changes |
+| `refactor/` | Code restructuring |
+
+Suffixes: lowercase letters, digits, and hyphens only. Must start with a letter. No double hyphens. Maximum 50 total characters.
+
+Bare names (no prefix) default to `feature/`.
+
+### Worktree Locations
+
+Worktrees are stored under `worktrees/<repo-name>/`. Branch slashes are replaced with hyphens in directory names:
+
+```
+worktrees/
+  get-shit-done/
+    feature-auth/       # worktree for feature/auth
+    fix-login-bug/      # worktree for fix/login-bug
+```
+
+### Protected Branches
+
+`dev` and `main` cannot be deleted. Direct commits to `main` are prohibited by convention (enforced by Gate 1).
+
+## 8. Safety Rules
+
+These rules are non-negotiable. Violating any of them is a critical error.
+
+1. **Never --force push.** History rewriting destroys others' work.
+2. **Never auto-resolve conflicts.** Conflict resolution requires human judgment.
+3. **Never commit to main directly.** All work flows dev -> Gate 1 -> main.
+4. **Never push to upstream directly.** Only Gate 2 creates upstream PRs.
+5. **Never run commands in DIRTY state.** Stash or commit first.
+
+@references/safety.md for the complete list of 8 rules with extended rationale.
+
+## 9. CLI Commands
+
+| Command | Description |
+|---|---|
+| `sc install <url>` | Clone and configure a repo with upstream tracking |
+| `sc git status [path]` | Show git state machine report |
+| `sc git sync [--strategy merge\|rebase] [--dry-run]` | Fetch and integrate upstream changes |
+| `sc git work <name> [--type feature\|fix\|docs\|refactor] [--worktree]` | Create a named branch |
+| `sc git gate merge` | Present Gate 1 (dev -> main) |
+| `sc git gate pr` | Present Gate 2 (main -> upstream PR) |
+| `sc git worktree list` | List active worktrees |
+
+## 10. Scripts
+
+Four shell scripts handle deterministic operations outside the TypeScript runtime:
+
+| Script | Purpose |
+|---|---|
+| `git-state-check.sh` | Machine-readable state report (JSON) |
+| `safe-merge.sh` | Merge with --no-ff, abort on conflict |
+| `pr-bundle.sh` | Generate diff summary and PR description |
+| `worktree-setup.sh` | Create worktree with branch tracking |
+
+All scripts use `set -euo pipefail`, output JSON to stdout, and use exit code 0 (success), 1 (failure), or 2 (error). @scripts/ for implementations.
+
+## 11. Validation
+
+Before any git operation, run the validation check:
+
 ```bash
-# Review what changed
-git status
-git diff
-
-# Stage specific files only
-git add path/to/file1.py path/to/file2.py
-
-# Verify staged changes
-git diff --cached
+bash skills/git-workflow/scripts/validate.sh
 ```
 
-## 📝 Git Commit Format
+This checks: managed repo (`.sc-git/config.json` exists), clean state, remotes configured. Returns JSON with `ready: true/false` and details.
 
-### CRITICAL: Syntax Rules
-**Use literal newlines in quotes, NEVER HEREDOC**
+@references/workflows.md for step-by-step deterministic workflow sequences.
 
-```bash
-# ✅ CORRECT - Use literal newlines
-git commit -m "prefix: summary
+---
 
-CONTEXT:
-What triggered this work"
-
-# ❌ WRONG - NEVER use HEREDOC (causes shell EOF errors)
-git commit -m "$(cat <<'EOF'
-Message here
-EOF
-)"
-```
-
-### Commit Template
-
-```bash
-git commit -m "prefix: summary (50 chars max)
-
-CONTEXT:
-[What situation triggered this work - symptom, user report, or need]
-
-INSIGHT: (optional - skip if obvious)
-[The key realization: root cause for bugs, design decision for features]
-
-APPROACH:
-[Why this solution over alternatives, trade-offs considered]
-
-CHANGES:
-- Specific modifications with file names
-
-IMPACT: (only when notable - skip if none)
-- Breaking/Security/Performance notes
-
-PRESERVES: (for refactors only)
-- What behavior is unchanged
-
-🤖 Generated with [Claude Code](https://claude.ai/code)
-
-Co-Authored-By: Claude <noreply@anthropic.com>"
-```
-
-### Section Guide
-
-| Section | Required? | When to Use |
-|---------|-----------|-------------|
-| CONTEXT | Always | The trigger - what situation led to this commit |
-| INSIGHT | Optional | The "aha" moment - root cause for bugs, key design decision for features. **Skip if obvious.** |
-| APPROACH | Always | Why this solution, what alternatives considered |
-| CHANGES | Always | Specific file/method modifications |
-| IMPACT | Optional | Only when there's actual impact (breaking, security, perf metrics) |
-| PRESERVES | Refactors | What existing behavior remains unchanged |
-
-### Semantic Prefixes
-
-- `feat:` - New feature or functionality
-- `fix:` - Bug fix or error correction
-- `refactor:` - Code restructuring without functional changes
-- `perf:` - Performance improvements
-- `security:` - Security-related changes
-- `test:` - Adding or modifying tests
-- `docs:` - Documentation updates
-- `chore:` - Maintenance tasks, dependency updates
-- `style:` - Code formatting, whitespace fixes
-- `revert:` - Reverting previous commits
-
-**Remember**: Commit messages are permanent documentation. Write for developers searching git history months from now.
-
-## 📊 Post-Commit Summary (Required)
-
-After **every commit**, provide a detailed summary:
-
-```
-✅ Commit Successfully Created
-
-Commit Hash: abc123def
-Files Changed: 3 files (+45, -12)
-
-Key Accomplishments:
-- [Specific achievement 1]
-- [Specific achievement 2]
-- [Specific achievement 3]
-
-Benefits:
-- [How this improves the codebase]
-- [What problems this solves]
-
-Next Steps:
-- [What the human should consider next]
-- [Any follow-up work needed]
-```
-
-## 🚫 Critical Anti-Patterns
-
-### Git Commit HEREDOC (Recurring Issue)
-
-This is a **persistent mistake** that causes shell EOF errors:
-
-```bash
-# ❌ NEVER DO THIS
-git commit -m "$(cat <<'EOF'
-Message here
-EOF
-)"
-
-# ✅ ALWAYS DO THIS
-git commit -m "Summary
-
-Details with literal newlines"
-```
-
-**Why this matters**: HEREDOC syntax in git commits causes shell parsing errors and breaks the commit flow. Always use literal newlines within quotes.
-
-## 🔍 Example Commits
-
-### Bug Fix (with INSIGHT)
-```bash
-git commit -m "fix: preload Vault secrets at startup
-
-CONTEXT:
-Users reported Gemini/OpenRouter failing while Anthropic worked. After ~1hr
-uptime, requests for uncached secrets returned 403 Forbidden.
-
-INSIGHT:
-AppRole token has 1-hour TTL. Secrets cached on first access work forever.
-Keys first accessed after expiry trigger calls with dead token - Anthropic
-was cached early, OpenRouter wasn't.
-
-APPROACH:
-Preload ALL secrets at startup while token is fresh. Security-equivalent
-since secrets end up in memory anyway. Simpler than token refresh, no race
-conditions, no failure modes.
-
-CHANGES:
-- Added preload_secrets() to vault_client.py
-- Called in main.py lifespan startup
-
-🤖 Generated with [Claude Code](https://claude.ai/code)
-
-Co-Authored-By: Claude <noreply@anthropic.com>"
-```
-
-### Simple Feature (no INSIGHT needed)
-```bash
-git commit -m "feat: add root endpoint with service status
-
-CONTEXT:
-User curling localhost:1993 during install got 404, thought install failed.
-
-APPROACH:
-Informational endpoint confirming service is running with pointers to
-/v0/api/chat and /v0/api/health. No auth - just service discovery.
-
-CHANGES:
-- Added GET / endpoint in create_app()
-
-🤖 Generated with [Claude Code](https://claude.ai/code)
-
-Co-Authored-By: Claude <noreply@anthropic.com>"
-```
-
-### Refactor (with PRESERVES)
-```bash
-git commit -m "refactor: split monolithic deploy.sh into modules
-
-CONTEXT:
-deploy.sh grew to 2,416 lines / 17 steps - cognitive overload, merge conflicts,
-impossible to debug individual steps.
-
-APPROACH:
-Library files (shared functions) + step scripts. Used 'source' for variable
-flow without temp files. ~8 logical groups over 1:1 mapping to reduce file
-count while keeping clear boundaries.
-
-CHANGES:
-- Created deploy/deploy.sh thin orchestrator (~80 lines)
-- Created deploy/lib/{output,services,vault}.sh
-- Created step scripts: config, preflight, dependencies, python, etc.
-
-PRESERVES:
-- All 17 deployment steps execute identically
-- Same interactive prompts and variable flow
-
-🤖 Generated with [Claude Code](https://claude.ai/code)
-
-Co-Authored-By: Claude <noreply@anthropic.com>"
-```
-
-### Performance (with IMPACT metrics)
-```bash
-git commit -m "perf: add parallel tool execution to generic provider
-
-CONTEXT:
-Generic provider executed tools sequentially - 2 tools x 1s = 2s+ total.
-
-INSIGHT:
-ThreadPoolExecutor pattern from Anthropic path directly applicable. Critical:
-context propagation via invoke_with_context for RLS security.
-
-APPROACH:
-Emit all ToolExecutingEvent upfront, then concurrent execution with
-as_completed(). Preserves circuit breaker recording for both paths.
-
-CHANGES:
-- Replace sequential loop with ThreadPoolExecutor (lines 697-750)
-- Add invoke_with_context wrapper
-
-IMPACT:
-- 27% faster total (4.58s -> 3.36s for 2 one-second tools)
-
-🤖 Generated with [Claude Code](https://claude.ai/code)
-
-Co-Authored-By: Claude <noreply@anthropic.com>"
-```
-
-## 💡 Best Practices
-
-1. **Before Committing**:
-   - Run `git status` to see what changed
-   - Run `git diff` to review actual changes
-   - Stage files intentionally with specific paths
-   - Run `git diff --cached` to verify staged changes
-
-2. **Writing Messages**:
-   - Start with semantic prefix
-   - Keep summary under 50 characters
-   - CONTEXT: the trigger, not the solution
-   - INSIGHT: only when there's a non-obvious discovery (skip for simple features)
-   - APPROACH: explain trade-offs, why this over alternatives
-   - CHANGES: specific file/method names
-
-3. **After Committing**:
-   - Always provide post-commit summary
-   - Include commit hash and file stats
-   - Highlight key accomplishments
-   - Note any follow-up work needed
-
-4. **For Complex Bug Fixes**:
-   - INSIGHT is critical - trace the causal chain to actual origin
-   - Explain why obvious solutions don't work in APPROACH
-   - Think of future developers searching git history
-
-## 🎓 When to Use This Skill
-
-Invoke this skill when:
-- Creating any git commit
-- User asks about commit message format
-- Need guidance on staging files
-- Uncertain about semantic prefix to use
+*Git Workflow Skill v1.0.0 -- SC Git Support*
+*Phase 397-01*

@@ -1,7 +1,6 @@
 ---
 name: unified-review
-description: 'Orchestrate multiple review types into a single multi-domain review with integrated reporting'
-version: 1.9.0
+description: Orchestrates multi-domain review (code, arch, tests, security) in a single pass. Use when thorough pre-release review is needed.
 alwaysApply: false
 category: orchestration
 tags:
@@ -10,10 +9,7 @@ tags:
 - code-quality
 - analysis
 - multi-domain
-tools:
-- skill-selector
-- context-analyzer
-- report-integrator
+tools: []
 usage_patterns:
 - auto-detect-review
 - full-review
@@ -153,6 +149,15 @@ Use this mapping to resolve skill names to agent types:
 | math-review | `general-purpose` | Prompt: invoke `Skill(pensive:math-review)` |
 | makefile-review | `general-purpose` | Prompt: invoke `Skill(pensive:makefile-review)` |
 | shell-review | `general-purpose` | Prompt: invoke `Skill(pensive:shell-review)` |
+
+**Sub-agent isolation (required):**
+
+Dispatch ALL selected agents in a SINGLE parallel Agent tool
+call. Do not read or process any agent's output until ALL agents
+have returned their results. Reading the first result before the
+others are in anchors synthesis toward that perspective: each
+subsequent result gets evaluated against the first rather than
+independently. Collect all results, then synthesize once.
 
 **Rules:**
 - Never use skill names as agent types (e.g., `pensive:math-review` is NOT an agent)

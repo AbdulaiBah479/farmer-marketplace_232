@@ -1,73 +1,19 @@
 ---
 name: design-component
-description: Design components for Empathy Ledger - storyteller cards, story cards, and culturally sensitive UI patterns.
+description: Design a UI component spec to the house quality bar — anatomy, variants, sizes, the 8 states, token mapping, and accessibility. Use when the user wants to design or document a component (button, input, tabs, toast, combobox, date picker, modal, etc.) at the spec level before or alongside code. For generating framework code, use design-code.
 ---
 
-# Design Component
+# Skill: Design Component
 
-UI component patterns for Empathy Ledger with cultural sensitivity.
+Produce a complete component specification matching the project format.
 
-## When to Use
-- Building storyteller/story cards
-- Implementing data displays
-- Adding AI content enrichment
-- Creating profile components
+## Steps
+1. Read `CLAUDE.md` → "Component Guidelines" (quality bar, the 8-state table) and "Atomic Design".
+2. Check if it already exists: `components/atoms.md`, `molecules.md`, `organisms.md`, `templates.md`, `navigation.md`, `feedback.md`, `forms-advanced.md`, `overlays.md`. Match the existing spec format.
+3. Pull the ARIA pattern from `accessibility/aria-patterns.md` and contrast/target rules from `accessibility/wcag-checklist.md`.
+4. Map every value to tokens (`tokens/*.json`) — sizes via `sizing.json`, states via `states.json`.
+5. Apply visual judgment from `taste/design-taste.md` (states, focus, no slop).
+6. Optional fast start: `python3 scripts/scaffold_component.py "<Name>"` to emit a stub, then fill it in.
 
-## Quick Reference
-
-### Card Data Hierarchy
-1. **Always show**: name, avatar, cultural_background, story_count
-2. **On card**: badges, top specialties, location
-3. **On hover**: bio, all specialties, themes
-4. **Profile only**: contact, full stories, connections
-
-### Badge Priority
-1. Elder (gold crown)
-2. Featured (star)
-3. Knowledge Keeper (book)
-4. Verified (check)
-
-### Cultural Colors
-| Color | Meaning | Usage |
-|-------|---------|-------|
-| Amber | Wisdom | Elder badges |
-| Emerald | Growth | Story counts |
-| Purple | Sacred | Knowledge keeper |
-| Terracotta | Connection | Cultural affiliation |
-
-## Reference Files
-| Topic | File |
-|-------|------|
-| Storyteller card data model | `refs/storyteller-card.md` |
-| AI enrichment patterns | `refs/ai-enrichment.md` |
-| Component patterns | `refs/component-patterns.md` |
-
-## Key Patterns
-```tsx
-// Avatar with fallback
-<Avatar>
-  <AvatarImage src={url} alt={name} />
-  <AvatarFallback>{initials}</AvatarFallback>
-</Avatar>
-
-// Badge
-<Badge variant="elder">Elder</Badge>
-
-// Card structure
-<Card>
-  <CardHeader>Avatar + Badges</CardHeader>
-  <CardContent>Info + Metrics</CardContent>
-  <CardFooter>Actions</CardFooter>
-</Card>
-```
-
-## Anti-Patterns
-❌ Auto-publish AI content
-❌ Suggest connections without consent
-❌ Skip cultural context display
-❌ Use disrespectful terminology
-
-## Related Skills
-- `design-system-guardian` - Design tokens
-- `cultural-review` - Cultural sensitivity
-- `empathy-ledger-codebase` - Architecture
+## Output
+Spec with: anatomy diagram, variants table, sizes table, all 8 applicable states, token mapping, accessibility (role/keyboard/SR), and a note to render via `frameworks/adapter-protocol.md`.

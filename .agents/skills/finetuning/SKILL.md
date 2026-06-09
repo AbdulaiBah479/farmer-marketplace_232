@@ -1,473 +1,233 @@
 ---
 name: finetuning
-description: |
-  Model fine-tuning with PyTorch and HuggingFace Trainer. Covers dataset
-  preparation, tokenization, training loops, TrainingArguments, SFTTrainer
-  for instruction tuning, evaluation, and checkpoint management. Includes Unsloth recommendations.
+description: This skill should be used when picking or diagnosing a training move (SFT, LoRA, DPO/KTO/ORPO, RFT, GRPO/PPO/RLOO, RLHF), or when the user mentions fine-tuning, post-training, training recipe, reward design, or weight updates. Decision tree by reward shape, smoke-run gate, three failure diagnostics, five false-progress patterns. Provider recipes and I/O contract in references/.
+evo_version: 0.5.0
 ---
 
-# Model Fine-Tuning
+# Finetuning
 
-## Overview
+Priors, not rules. Only firm guardrails: held-out eval you never train on, no leakage, trust evo's recorded numbers over the run's self-report. Override anything else against the gate.
 
-Fine-tuning adapts a pre-trained LLM to specific tasks by training on task-specific data. This skill covers both manual PyTorch training and HuggingFace's high-level Trainer API.
+## Pick the technique by reward shape
 
-**Recommended**: For 2x faster training with less memory, use **Unsloth** (see `bazzite-ai-jupyter:sft`).
+Decide on the reward first, technique second. Choosing the comfortable technique over the matching one is the most common failure.
 
-## Quick Reference
+| Reward shape | Technique |
+|---|---|
+| Verifiable (exact match, unit tests, parser-decidable) | **RL** (GRPO / RLOO / PPO) — reward includes format, so the model learns to emit verifier-acceptable shape |
+| Preference pairs (chosen vs rejected) | **DPO / KTO / ORPO** — cheaper than full RL, no rollouts |
+| Demonstrations only (curated traces, chat data) | **SFT** — install format/tone/capability the base lacks |
+| Have a scorer + want SFT stability | **RFT** — sample, filter by reward, SFT on survivors |
 
-| Approach | Use Case | Speed |
-|----------|----------|-------|
-| **Unsloth + SFTTrainer** | **Recommended default** | **2x faster** |
-| PyTorch Manual | Full control, custom training | Baseline |
-| HuggingFace Trainer | Standard training, less code | Fast |
-| SFTTrainer | Instruction/chat fine-tuning | Fast |
+"SFT-then-RL" is not a law. For a competent base model on a verifiable benchmark, RL-from-base often beats SFT-then-RL end-to-end.
 
-## Method Comparison
+## Research the literature before the first commit
 
-| Method | Learning Rate | Use Case |
-|--------|---------------|----------|
-| SFT | 2e-4 | Instruction tuning (first step) |
-| GRPO | 1e-5 | RL with rewards |
-| DPO | 5e-6 | Preference learning |
-| RLOO | 1e-5 | RL with lower variance |
-| Reward | 1e-5 | Reward model training |
+The decision tree above is the structural prior. The empirical answer for *this* model on *this* benchmark usually has a recent paper, blog, or HF Space recipe behind it -- and what beats baseline on a 4B base model in 2026 is not what the agent's pre-training data captures. Before picking the technique for `exp_0001` (the first experiment after baseline), invoke `evo:ideator` with a `literature` brief:
 
-## Unsloth Quickstart (Recommended)
-
-```python
-# CRITICAL: Import unsloth FIRST
-import unsloth
-from unsloth import FastLanguageModel, is_bf16_supported
-from trl import SFTTrainer, SFTConfig
-
-# Load model with Unsloth optimizations
-model, tokenizer = FastLanguageModel.from_pretrained(
-    "unsloth/Qwen3-4B-Thinking-2507-unsloth-bnb-4bit",
-    max_seq_length=1024,
-    load_in_4bit=True,
-)
-
-# Apply LoRA
-model = FastLanguageModel.get_peft_model(
-    model, r=16, lora_alpha=16,
-    target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
-                    "gate_proj", "up_proj", "down_proj"],
-    use_gradient_checkpointing="unsloth",
-)
-
-# Train
-trainer = SFTTrainer(
-    model=model, tokenizer=tokenizer, train_dataset=dataset,
-    args=SFTConfig(
-        output_dir="./output",
-        max_steps=100,
-        learning_rate=2e-4,
-        bf16=is_bf16_supported(),
-        optim="adamw_8bit",
-    ),
-)
-trainer.train()
 ```
-
-See `bazzite-ai-jupyter:sft` for complete Unsloth patterns.
-
-## Dataset Preparation
-
-### Load from HuggingFace Hub
-
-```python
-from datasets import load_dataset
-
-dataset = load_dataset("timdettmers/openassistant-guanaco")
-
-train_data = dataset["train"]
-val_data = dataset["test"]
-
-print(f"Training samples: {len(train_data)}")
-print(f"Validation samples: {len(val_data)}")
-```
-
-### Data Format
-
-```python
-# Example conversation format
-example = train_data[0]
-print(example["text"])
-
-# Output:
-# ### Human: What is Python?
-# ### Assistant: Python is a programming language...
-```
-
-### Create Prompt Template
-
-```python
-def build_prompt(instruction, response=None):
-    prompt = f"### Human: {instruction}\n### Assistant:"
-    if response:
-        prompt += f" {response}"
-    return prompt
-
-# For training
-train_prompt = build_prompt("What is AI?", "AI is artificial intelligence.")
-
-# For inference
-inference_prompt = build_prompt("What is AI?")
-```
-
-## Tokenization
-
-### Setup Tokenizer
-
-```python
-from transformers import AutoTokenizer
-
-model_name = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-
-# Ensure pad token exists
-if tokenizer.pad_token is None:
-    tokenizer.pad_token = tokenizer.eos_token
-    tokenizer.pad_token_id = tokenizer.eos_token_id
-```
-
-### Tokenize Dataset
-
-```python
-def tokenize_function(examples):
-    return tokenizer(
-        examples["text"],
-        padding="max_length",
-        truncation=True,
-        max_length=512,
-        return_tensors="pt"
-    )
-
-tokenized_train = train_data.map(
-    tokenize_function,
-    batched=True,
-    remove_columns=train_data.column_names
-)
-
-tokenized_train.set_format("torch")
-```
-
-## PyTorch Training (Manual)
-
-### Setup Model
-
-```python
-import torch
-from transformers import AutoModelForCausalLM
-
-model = AutoModelForCausalLM.from_pretrained(
-    model_name,
-    device_map="auto",
-    torch_dtype=torch.float16
+Task(
+    subagent_type="evo:ideator",
+    prompt="brief=literature\n"
+           "model_family=<e.g. Qwen3-4B-Base, Llama-3.1-8B-Base>\n"
+           "benchmark=<name + URL/paper if known>\n"
+           "objective=<one line: what beats baseline looks like>\n"
+           "constraints=<budget, data sources allowed, gated models forbidden, etc>"
 )
 ```
 
-### Training Configuration
+The ideator returns ranked proposals with references (arXiv, HF Hub, GitHub, blogs). Read them before picking from the reward-shape table. A paper showing GRPO-from-base works on `<model_family>` for a similar verifiable benchmark beats applying the table cold.
 
-```python
-from dataclasses import dataclass
+Run this **once before `exp_0001`**, and again whenever the optimize loop hits a plateau (the "stuck across distinct techniques" diagnostic below). Not every subsequent experiment needs a literature pass -- the table + diagnostics carry the rest.
 
-@dataclass
-class TrainConfig:
-    batch_size: int = 4
-    learning_rate: float = 2e-5
-    num_epochs: int = 3
-    max_length: int = 512
-    warmup_steps: int = 100
-    weight_decay: float = 0.01
-    output_dir: str = "./checkpoints"
+## Before committing the budget: smoke-run
 
-cfg = TrainConfig()
+Run the full pipeline on ~10 examples for ~1 minute. Must produce: a checkpoint the benchmark can load AND a non-zero eval on a held-out item. If not, the recipe is broken — fix it, don't scale it. dtype mismatch, tokenizer/template drift, OOM at this batch size, empty artifacts dir despite falling loss — all surface on 10 examples. Running longer doesn't surface them differently, just more expensively.
+
+## Long training: checkpoint, mid-eval, early-stop in-script
+
+Training for an hour and getting one number at the end is the wrong granularity for evo's tree search. By the time you know the recipe failed, you've spent the budget. Build the verification *into* the training script, not around it.
+
+Pattern for any training run expected to exceed ~30 min wall-clock:
+
+1. **Periodic checkpoint** every N steps (e.g. every 0.25 epoch, or every 200 steps — whichever is faster).
+2. **Mini-eval after each checkpoint** on a small held-out subset (5–10 items, not the full held-out — that's reserved for the final committed score). Same scorer as the real eval; the model just sees fewer items.
+3. **Early-stop on regression**: track best mid-eval score; stop if it hasn't improved in `patience` checkpoints (typically 2). Don't burn 60 more minutes once the trajectory has flattened or reverted.
+4. **Save the BEST checkpoint, not the last.** Early-stop means the current model is probably past its peak; the checkpoint you commit should be the one that scored highest mid-training, not whatever the trainer happened to leave behind.
+5. **Log every mid-eval score to your tracker** (see `## Stream training metrics live`). The user watching the live dashboard sees the trajectory build up step-by-step instead of staring at the loss curve hoping it transfers.
+
+HuggingFace TRL: implement as a `TrainerCallback` on `on_step_end` — save checkpoint, run the mini-eval via vLLM or HF transformers, compare to `best_score`, set `control.should_training_stop = True` on stall. Pattern is one ~30-line class.
+
+Keep vLLM warm across mid-evals when you can (one serve process, reload adapter between checkpoints) — cold-starting vLLM every 200 steps adds 5 min of overhead per checkpoint.
+
+Use a tighter mini-eval subset than the full held-out. The mini-eval is a *signal*, not the score that gets committed. If the mini-eval scores ≥ baseline on its subset, run the full held-out as the eval-gate scoring pass at the end. If it doesn't, early-stop.
+
+This is Pattern B from the design tradeoff with multi-node staging (Pattern A — break the training into multiple committed evo nodes, each a stage). Pattern B keeps the experiment as one evo node with the verification logic inside the script; it's simpler to write and avoids per-stage vLLM spin-up, at the cost of less tree-search introspection. Multi-stage as separate nodes is preferable when you want the orchestrator to be able to branch alternative continuations from any mid-training checkpoint.
+
+## Cap retries at training scale
+
+`evo run` allows up to `max_attempts=3` retries per experiment by default. That budget was designed for second-scale benchmarks where retrying after an edit-bug fix is free. At training scale (~hours per attempt), it's the wrong tradeoff — by attempt 2 you've spent more compute than just trying a fresh hypothesis would cost.
+
+For training-heavy workspaces, set the cap to 1 once at init:
+
+```bash
+evo config set max-attempts 1
 ```
 
-### DataLoader
+One attempt, one shot. Regression → `evo discard` → new branch from parent with a different hypothesis. This pairs with the in-script early-stop above: each attempt is single-shot, but its internal verification keeps it from burning the budget on a clearly-failing trajectory.
+
+The "fix-and-rerun" retry pattern still applies for sub-minute benchmarks; leave the default `max_attempts=3` there.
+
+## Four diagnostics
+
+**Stuck at 0 on a verifiable benchmark after 2+ SFT runs.** Technique class is wrong, not the recipe. Pivot to RL with the verifier as reward; SFT loss can be healthy while the model emits unparseable output.
+
+**Base scores below random before any training (knowledge-heavy benchmark).** Model lacks the knowledge, not the format. Post-training shapes existing knowledge; it does not install new knowledge. Right axis: continued pre-training on a domain corpus, distillation from a stronger model that has the knowledge, or retrieval-augmented inference.
+
+**`delta <= 0` across several committed train moves.** Method exhausted on this target. Try a different method, change the data, or improve the harness instead of the weights.
+
+**Stuck at the same non-zero score across 3+ experiments spanning distinct techniques.** When 3+ committed experiments — across structurally different techniques (e.g. SFT, GRPO, RFT) — all land at the same non-zero score, the bottleneck is not the training method. The most common cause is a train↔verifier objective mismatch: the model has learned to emit answers in one format, but the verifier expects a different one. Examples: training data uses `\boxed{X}` but the verifier prompt requests `ANSWER: X` (or vice versa); training uses one chat template, eval uses another; training optimizes step-by-step CoT but the verifier wants the answer alone.
+
+Diagnostic action: spot-check 3 training examples and 3 eval-prompt examples side by side. If a perfect-score training example would NOT pass the verifier (or vice versa), the objective is mismatched. Realign the training data format to the verifier's expected output, OR change the eval prompt (if rules allow). Do NOT try a fourth training-technique variant before doing this spot-check.
+
+## What never counts as progress
+
+Five patterns produce a number going up without the model improving. See `references/false-progress.md` for examples + detection.
+
+1. Training on the held-out set — direct or transitive (public instruction datasets sometimes contain eval-derived items).
+2. Embedding eval items in "synthetic" data, even renamed or paraphrased.
+3. Generating training data conditioned on per-eval-item failure logs.
+4. Submitting a checkpoint you didn't train (off-the-shelf instruct model; parent's checkpoint unchanged).
+5. Training a different objective than the verifier scores.
+
+The verifier should catch these. List is here so the train move doesn't produce them.
+
+## Surviving session compaction
+
+Write the dataset URL, method choice, user-imposed constraints, and hyperparameters you converged on to `methodlog.md` in the experiment worktree. One line each. Re-read after any context reset, before the next train move. Prevents silent dataset swaps between experiments and re-running ablations.
+
+## Numbers that matter (in order)
+
+1. A reward you trust — verifiable beats a learned reward (which gets hacked).
+2. A held-out eval you never train on.
+3. On-policy freshness for RL — train on current policy's samples, not stale ones.
+4. LoRA LR ~10x full-FT; rank 32 is a fine default. LoRA ~ full-FT for RL and small-data SFT; lags on large SFT.
+
+Method/provider-specific numbers (LR, KL, group size) live in the recipe under `references/`.
+
+## Stream training metrics live
+
+A long training run is observability-blind until the experiment commits — without a live tracker, nobody can tell if loss is converging, if the GPU is idle, or if the recipe is silently broken. They get one number at the end. Wire a tracker into the training script by default.
+
+Detection prior — apply when the corresponding env var is set, skip otherwise. Don't install a tracker the user didn't opt into:
+
+| Env var | Tracker | TRL one-liner |
+|---|---|---|
+| `WANDB_API_KEY` | wandb | `SFTConfig(report_to="wandb")` |
+| `TRACKIO_SPACE_ID` | trackio (wandb-compatible OSS, logs to a public HF Space) | `SFTConfig(report_to="trackio")` |
+| `MLFLOW_TRACKING_URI` | mlflow | `SFTConfig(report_to="mlflow")` |
+| (none set) | none | train without a tracker; don't invent one |
+
+For custom training loops, use `tracker.init(project=..., name=f"exp_{exp_id}") + tracker.log({"loss": ..., "step": ...})` — concrete patterns in `references/observability.md`.
+
+Use `EVO_EXPERIMENT_ID` as the run name so each experiment shows up as its own line in the tracker dashboard. The same env detection applies to HuggingFace datasets / Hub uploads: if `HF_TOKEN` is set, treat gated datasets and private Hub pushes as available.
+
+## Warm-start from a parent / prior checkpoint
+
+When the orchestrator branches an experiment from a committed or preserved checkpoint with `evo new --from-artifact <exp[:label]>`, evo exposes that artifact's path to your recipe as `EVO_SEED_ARTIFACT` (and, for back-compat, the same value as `EVO_PARENT_POLICY`). Warm-start from it rather than re-training from base — re-training from base every time burns the budget on duplicated work and stops the tree from accumulating capability across generations. To *make* a run reusable this way you must DECLARE your checkpoint as an artifact: write it to `EVO_CHECKPOINT_DIR` and name it in the benchmark result's `artifacts` field (full contract in `references/glue.md`). Only declared artifacts are preserved on discard and seedable via `--from-artifact`.
+
+Concrete pattern:
 
 ```python
-from torch.utils.data import DataLoader
-
-train_loader = DataLoader(
-    tokenized_train,
-    batch_size=cfg.batch_size,
-    shuffle=True
-)
+seed = os.environ.get("EVO_SEED_ARTIFACT") or os.environ.get("EVO_PARENT_POLICY")
+if seed and os.path.exists(seed):
+    print(f"warm-starting from {seed}")
+    model = AutoModelForCausalLM.from_pretrained(seed, ...)
+else:
+    print("no seed; loading base")
+    model = AutoModelForCausalLM.from_pretrained(BASE_MODEL, ...)
 ```
 
-### Optimizer and Scheduler
+Override only when the brief explicitly asks for a fresh-from-base ablation. The full I/O contract is in `references/glue.md`.
+
+**Configure for training, not inference.** Put the whole training computation on the accelerator you're training on, and don't enable *inference*-oriented conveniences for a training run. Auto device-mapping / model-sharding / CPU-offload exist to fit oversized models for *inference* by spreading or offloading layers; inside a training step they either break the backward pass or silently fall back to slower memory — so training still "runs" but crawls, with no error to surface the problem (the most dangerous case: it looks like it's working). Shard only when the model genuinely doesn't fit one device, and then use the framework's *training* parallelism path, not an inference placement shortcut. Same logic for other inference-mode defaults that leak into training (eval-mode quantization, kv-cache, dropout off). *(Concrete instance — HuggingFace: load with `device_map={"": 0}` / `.to("cuda")`, never `device_map="auto"`, which errors with a meta-device gradient mismatch or offloads to CPU at a large slowdown; for real multi-GPU use accelerate/FSDP/DDP.)*
+
+## Cache expensive intermediates
+
+LoRA adapters, filtered/curated datasets, tokenized datasets, computed embeddings, generated rollouts -- expensive to produce, large, and gitignored. They don't ride the experiment branch. They also don't have to be rebuilt per experiment.
+
+Write expensive artifacts to a stable, workspace-level path; check for them first, compute only on miss. Subsequent experiments (siblings, descendants, or re-runs of the same experiment after a worktree clean) read the same path.
+
+Convention: under `.evo/cache/`, sibling to `run_<NNNN>/`. Already gitignored (via `.evo/` in the workspace's git excludes). Survives across runs -- it's not nested inside any `run_<id>/`, so `evo new`/`evo run`/`evo reset` don't touch it.
+
+Pattern:
 
 ```python
-from transformers import get_linear_schedule_with_warmup
+import os
+from pathlib import Path
+# walk up from cwd to find the workspace root (the dir that has .evo/)
+def _workspace_root() -> Path:
+    p = Path.cwd().resolve()
+    for d in [p, *p.parents]:
+        if (d / ".evo").is_dir():
+            return d
+    raise RuntimeError("not inside an evo workspace")
 
-optimizer = torch.optim.AdamW(
-    model.parameters(),
-    lr=cfg.learning_rate,
-    weight_decay=cfg.weight_decay
-)
-
-total_steps = len(train_loader) * cfg.num_epochs
-
-scheduler = get_linear_schedule_with_warmup(
-    optimizer,
-    num_warmup_steps=cfg.warmup_steps,
-    num_training_steps=total_steps
-)
+cache = _workspace_root() / ".evo" / "cache" / "datasets"
+cache.mkdir(parents=True, exist_ok=True)
+# Cache key embeds every input that changes the artifact: dataset name,
+# filter recipe version, tokenizer, max length, etc. Different recipe ->
+# different key, so a sibling experiment with a different filter keeps
+# its own cache without trampling yours.
+key = cache / "numina-cot-r1-filter-v2-qwen3-tok-3072.arrow"
+if key.exists():
+    ds = datasets.Dataset.load_from_disk(str(key))
+else:
+    ds = build_and_filter_dataset()
+    ds.save_to_disk(str(key))
 ```
 
-### Training Loop
+High-value caches (not exhaustive): curated/tokenized training corpora (tokenization is the slow part on millions of rows); LoRA adapters produced by prior experiments that a sibling might warm-start from (the parent path is already handled by `EVO_PARENT_POLICY` above; this is for sibling-reachable named adapters); computed embeddings, retrieval indexes, precomputed eval-time generations.
 
-```python
-from tqdm.auto import tqdm
+Don't duplicate the HuggingFace Hub cache (`~/.cache/huggingface/`). That handles `from_pretrained` downloads automatically and is user-level, already shared across all experiments.
 
-model.train()
-device = next(model.parameters()).device
+Anti-pattern: writing the artifact inside the experiment's worktree (`<worktree>/some_cache/`). Worktrees are gitignored for these files, the artifact doesn't propagate to descendants via the git tree, and a worktree clean / gc removes it. Use the workspace-level `.evo/cache/` instead.
 
-for epoch in range(cfg.num_epochs):
-    total_loss = 0
-    progress = tqdm(train_loader, desc=f"Epoch {epoch+1}")
+A first-class named registry (`evo asset put/get/list/use`) for these is tracked in issue #55. The path convention above is the lightweight version anyone can adopt today.
 
-    for batch in progress:
-        input_ids = batch["input_ids"].to(device)
-        attention_mask = batch["attention_mask"].to(device)
-        labels = input_ids.clone()
+## References
 
-        optimizer.zero_grad()
+Pull via Read tool when the trigger applies. Tree organized by category --
+core contracts first, then provider-specific recipes under `rl/`, `sft/`, `serving/`.
 
-        outputs = model(
-            input_ids=input_ids,
-            attention_mask=attention_mask,
-            labels=labels
-        )
-
-        loss = outputs.loss
-        loss.backward()
-
-        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-
-        optimizer.step()
-        scheduler.step()
-
-        total_loss += loss.item()
-        progress.set_postfix({"loss": loss.item()})
-
-    avg_loss = total_loss / len(train_loader)
-    print(f"Epoch {epoch+1} - Average Loss: {avg_loss:.4f}")
-
-    # Save checkpoint
-    model.save_pretrained(f"{cfg.output_dir}/epoch_{epoch+1}")
+```
+finetuning/references/
+│
+├── glue.md             writing train.py -- I/O contract evo expects.
+│                       Read FIRST when starting any training code.
+├── trace-schema.md     TrainingTrace JSON shape (per-step train trace fields)
+├── diagnostics.md      held_out_score / delta / reward_saturation /
+│                       generalization_gap -- read when interpreting a result
+├── false-progress.md   the five patterns + how to detect them.
+│                       Read when a score improves implausibly fast or
+│                       breaks the smoke gate.
+├── observability.md    wandb / trackio / mlflow wiring -- env-driven detection,
+│                       TRL report_to options, custom-loop patterns.
+│                       Read when writing a training script.
+│
+├── rl/                 RL framework recipes (rollouts + reward + policy update)
+│   └── art.md          ART (Algorithm-Refined Training)
+│
+├── sft/                SFT framework recipes
+│   └── tinker.md       Tinker SFT runner
+│
+└── serving/            Eval-time inference framework references
+    └── vllm.md         vLLM serving config + LoRA-multi (load multiple
+                        adapters in one server -- saves cold-start per experiment)
 ```
 
-## HuggingFace Trainer
+Cross-skill references also worth pulling during finetuning work:
 
-### TrainingArguments
-
-```python
-from transformers import TrainingArguments, Trainer
-
-training_args = TrainingArguments(
-    output_dir="./checkpoints",
-    num_train_epochs=3,
-    per_device_train_batch_size=4,
-    per_device_eval_batch_size=4,
-    learning_rate=2e-5,
-    weight_decay=0.01,
-    warmup_steps=100,
-    logging_steps=10,
-    save_steps=500,
-    evaluation_strategy="steps",
-    eval_steps=500,
-    load_best_model_at_end=True,
-    fp16=True,  # Mixed precision
-)
-```
-
-### Create Trainer
-
-```python
-trainer = Trainer(
-    model=model,
-    args=training_args,
-    train_dataset=tokenized_train,
-    eval_dataset=tokenized_val,
-    tokenizer=tokenizer,
-)
-```
-
-### Train and Evaluate
-
-```python
-# Train
-train_result = trainer.train()
-
-# Save
-trainer.save_model("./final_model")
-tokenizer.save_pretrained("./final_model")
-
-# Evaluate
-metrics = trainer.evaluate()
-print(metrics)
-```
-
-## SFTTrainer (Instruction Tuning)
-
-### Setup
-
-```python
-from trl import SFTTrainer, SFTConfig
-
-sft_config = SFTConfig(
-    output_dir="./sft_checkpoints",
-    num_train_epochs=3,
-    per_device_train_batch_size=4,
-    learning_rate=2e-5,
-    logging_steps=10,
-    save_steps=500,
-    max_seq_length=512,
-    packing=False,  # Don't pack multiple samples
-)
-```
-
-### Train with SFTTrainer
-
-```python
-trainer = SFTTrainer(
-    model=model,
-    args=sft_config,
-    train_dataset=train_data,
-    tokenizer=tokenizer,
-    dataset_text_field="text",  # Column with training text
-)
-
-trainer.train()
-trainer.save_model("./sft_model")
-```
-
-## Evaluation
-
-### Evaluation Function
-
-```python
-def evaluate(model, dataloader):
-    model.eval()
-    total_loss = 0
-
-    with torch.no_grad():
-        for batch in dataloader:
-            input_ids = batch["input_ids"].to(device)
-            attention_mask = batch["attention_mask"].to(device)
-            labels = input_ids.clone()
-
-            outputs = model(
-                input_ids=input_ids,
-                attention_mask=attention_mask,
-                labels=labels
-            )
-
-            total_loss += outputs.loss.item()
-
-    return total_loss / len(dataloader)
-```
-
-### Perplexity
-
-```python
-import math
-
-eval_loss = evaluate(model, val_loader)
-perplexity = math.exp(eval_loss)
-print(f"Perplexity: {perplexity:.2f}")
-```
-
-## Inference with Fine-Tuned Model
-
-```python
-def generate_response(model, tokenizer, prompt, max_new_tokens=128):
-    model.eval()
-    device = next(model.parameters()).device
-
-    inputs = tokenizer(prompt, return_tensors="pt").to(device)
-
-    with torch.no_grad():
-        outputs = model.generate(
-            **inputs,
-            max_new_tokens=max_new_tokens,
-            do_sample=True,
-            temperature=0.7,
-            top_p=0.9,
-            pad_token_id=tokenizer.pad_token_id
-        )
-
-    return tokenizer.decode(outputs[0], skip_special_tokens=True)
-
-# Test
-prompt = build_prompt("What is machine learning?")
-response = generate_response(model, tokenizer, prompt)
-print(response)
-```
-
-## Checkpointing
-
-### Save Checkpoint
-
-```python
-# Save model and tokenizer
-model.save_pretrained("./checkpoint")
-tokenizer.save_pretrained("./checkpoint")
-```
-
-### Load Checkpoint
-
-```python
-from transformers import AutoModelForCausalLM, AutoTokenizer
-
-model = AutoModelForCausalLM.from_pretrained("./checkpoint")
-tokenizer = AutoTokenizer.from_pretrained("./checkpoint")
-```
-
-### Resume Training
-
-```python
-trainer = Trainer(
-    model=model,
-    args=training_args,
-    train_dataset=tokenized_train,
-)
-
-trainer.train(resume_from_checkpoint="./checkpoint")
-```
-
-## Hyperparameters Guide
-
-| Parameter | Typical Values | Notes |
-|-----------|----------------|-------|
-| `learning_rate` | 1e-5 to 5e-5 | Lower for larger models |
-| `batch_size` | 4, 8, 16 | Limited by GPU memory |
-| `epochs` | 1-5 | More for smaller datasets |
-| `warmup_steps` | 5-10% of total | Stabilizes early training |
-| `weight_decay` | 0.01-0.1 | Regularization |
-| `max_length` | 512, 1024, 2048 | Context window |
-
-## When to Use This Skill
-
-Use when:
-
-- Adapting LLM to specific domain/task
-- Improving model performance on your data
-- Creating instruction-following models
-- Need full control over training process
-
-## Cross-References
-
-- `bazzite-ai-jupyter:sft` - Unsloth-optimized SFT (recommended)
-- `bazzite-ai-jupyter:grpo` - RL with reward functions
-- `bazzite-ai-jupyter:dpo` - Preference learning
-- `bazzite-ai-jupyter:rloo` - RL with lower variance
-- `bazzite-ai-jupyter:quantization` - Memory-efficient training
-- `bazzite-ai-jupyter:peft` - Parameter-efficient fine-tuning
-- `bazzite-ai-jupyter:qlora` - Advanced QLoRA experiments
-- `bazzite-ai-jupyter:inference` - Fast inference patterns
-- `bazzite-ai-jupyter:transformers` - Architecture understanding
+- `discover/references/sdk_python.py` / `sdk_node.js` -- wiring per-task instrumentation in the benchmark
+- `discover/references/inline_instrumentation.py` -- inline fallback when SDK can't be used (copy as-is)
+- `references/evo-wait.md` -- waiting for training / eval without burning context

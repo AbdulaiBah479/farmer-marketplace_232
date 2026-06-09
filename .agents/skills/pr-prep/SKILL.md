@@ -1,83 +1,169 @@
 ---
 name: pr-prep
-description: |
-  Prepare a pull request by validating the workspace, running quality gates,
-  summarizing changes, and drafting the PR template.
-
-  Triggers: PR preparation, pull request, quality gates, PR template, PR summary,
-  branch preparation, merge request
-
-  Use when: preparing PRs for submission, running quality gates, drafting
-  PR descriptions and templates
-
-  DO NOT use when: reviewing existing PRs - use pr-review instead.
-  DO NOT use when: just generating commit messages - use commit-messages.
-
-  Use this skill for PR preparation.
+description: Prepares pull requests by running quality gates, drafting descriptions, and validating tests. Use when completing a feature and ready for review.
+alwaysApply: false
 category: artifact-generation
-tags: [git, pr, pull-request, quality-gates, testing]
-tools: [Bash, Write, TodoWrite]
+tags:
+- git
+- pr
+- pull-request
+- quality-gates
+- testing
+tools: []
 complexity: medium
+model_hint: standard
 estimated_tokens: 1000
 progressive_loading: true
 modules:
-  - quality-gates.md
-  - pr-template.md
+- quality-gates.md
+- pr-template.md
 dependencies:
-  - sanctum:shared
-  - sanctum:git-workspace-review
-  - imbue:evidence-logging
-  - imbue:structured-output
----
+- sanctum:shared
+- sanctum:git-workspace-review
+- imbue:proof-of-work
+- imbue:justify
+- imbue:structured-output
+- scribe:slop-detector
+- scribe:doc-generator
+hooks:
+  PreToolUse:
+  - matcher: Bash
+    command: "# Log quality gate execution\nif echo \"$CLAUDE_TOOL_INPUT\" | grep\
+      \ -qE \"(make|npm|cargo|pytest|ruff|eslint|clippy) (test|lint|fmt|build|check)\"\
+      ; then\n  cmd=$(echo \"$CLAUDE_TOOL_INPUT\" | jq -r '.command // empty' 2>/dev/null\
+      \ || echo 'N/A')\n  echo \"[skill:pr-prep] Quality gate: $cmd at $(date)\" >>\
+      \ ${CLAUDE_CODE_TMPDIR:-/tmp}/skill-audit.log\nfi\n"
+    once: false
+  PostToolUse:
+  - matcher: Write
+    command: "# Track PR template generation\nfile=$(echo \"$CLAUDE_TOOL_INPUT\" |\
+      \ jq -r '.file_path // empty' 2>/dev/null)\nif echo \"$file\" | grep -qE \"\
+      (pr[-_]description|PR[-_]TEMPLATE|pull[-_]request)\"; then\n  echo \"[skill:pr-prep]\
+      \ PR template written: $file at $(date)\" >> ${CLAUDE_CODE_TMPDIR:-/tmp}/skill-audit.log\n\
+      fi\n"
+  Stop:
+  - command: 'echo "[skill:pr-prep] === Workflow completed at $(date) ===" >> ${CLAUDE_CODE_TMPDIR:-/tmp}/skill-audit.log
 
+      '
+---
 # Pull Request Preparation Workflow
 
-## When to Use
-Use this skill to stage work and produce a PR summary/description.
-Run `Skill(sanctum:git-workspace-review)` first so the repository state and diffs are already captured.
+## Usage
 
-## Required TodoWrite Items
-Create `TodoWrite` items for each of these steps before you start:
+Use this skill to stage changes and generate a PR summary. Run `Skill(sanctum:git-workspace-review)` first to capture the repository state and diffs.
+
+## Required Progress Tracking
+
+Create `TodoWrite` items for these steps before starting:
 1. `pr-prep:workspace-reviewed`
 2. `pr-prep:quality-gates`
-3. `pr-prep:changes-summarized`
-4. `pr-prep:testing-documented`
-5. `pr-prep:pr-drafted`
+3. `pr-prep:self-reviewed`
+4. `pr-prep:changes-summarized`
+5. `pr-prep:testing-documented`
+6. `pr-prep:pr-drafted`
+7. `pr-prep:content-verified`
 
-Mark them as complete as each section is finished.
+Mark each item as complete as the section is finished.
 
 ## Step 1: Review Workspace (`workspace-reviewed`)
-- Confirm `Skill(sanctum:git-workspace-review)` has been completed.
-- If new changes were staged since running it, rerun that skill.
+
+Confirm that `Skill(sanctum:git-workspace-review)` is complete. If changes were staged after the initial review, re-execute the skill to refresh the context.
 
 ## Step 2: Run Quality Gates (`quality-gates`)
-- Execute formatting, linting, and tests using project commands (e.g., `make fmt`, `make lint`, `make test`).
-- If commands differ, note what was run.
-- Resolve failures before continuing.
-- If a task cannot run locally, state why and what alternative validation was done.
-- **See `modules/quality-gates.md`** for language-specific commands and failure handling.
+
+Execute formatting, linting, and tests using project-specific commands (e.g., `make fmt`, `make lint`, `make test`). Resolve all failures before proceeding. If a task cannot be executed locally, document the reason and the alternative validation performed. Language-specific commands and failure handling are detailed in `modules/quality-gates.md`.
+
+### Capabilities Reference Sync
+
+If any plugin files changed (plugin.json, skills, commands,
+agents, or hooks), run `make docs-sync-check` to verify
+`book/src/reference/capabilities-reference.md` is current.
+If it reports discrepancies, run `/sync-capabilities --fix`
+or update the reference manually before proceeding.
+
+## Step 2.5: Self-Review Pass (`self-reviewed`)
+
+Read the diff as if you are a reviewer seeing it for the
+first time. This catches scope creep, stale debug code,
+and unclear changes before anyone else spends time on
+them.
+
+**Automated checks:**
+
+```bash
+# Check for debug statements left in
+git diff --cached --name-only | xargs grep -nE \
+  '(console\.log|print\(|debugger|TODO|FIXME|HACK|XXX)' \
+  2>/dev/null || true
+
+# Check for commented-out code blocks (3+ consecutive lines)
+git diff --cached | grep -c '^+.*//.*[a-zA-Z]' || true
+
+# Check for formatting-only commits mixed with feature work
+git log --oneline $(git merge-base HEAD origin/master)..HEAD | \
+  grep -iE '(fmt|format|lint|style|whitespace)' || true
+```
+
+**Additive bias audit:**
+
+Run `Skill(imbue:justify)` to compute the additive bias
+score and check Iron Law compliance. If the score is
+YELLOW or above, justify each flagged signal before
+proceeding. If RED or STOP, rethink the approach.
+
+**Manual verification:**
+
+- [ ] Read the full diff: does every change serve the
+      stated goal?
+- [ ] No debug statements or `TODO` markers left in
+- [ ] No commented-out code blocks
+- [ ] No formatting changes mixed with logic changes
+- [ ] No fixup commits that should be squashed
+- [ ] Additive bias score is GREEN or justified YELLOW
+- [ ] Iron Law compliance: PASS (no test tampering)
+
+If issues are found, fix them before proceeding.
 
 ## Step 3: Summarize Changes (`changes-summarized`)
-- Use the notes from `Skill(sanctum:git-workspace-review)` and `git diff --stat origin/main...HEAD` to understand the scope.
-- Skim diffs for key points.
-- Group them into 2-4 bullets highlighting the "why" and "what".
-- Note breaking changes, migrations, or documentation updates.
+
+Use the notes from the workspace review and the output of `git diff --stat origin/main...HEAD` to understand the scope. Identify key points in the diffs and group them into 2-4 paragraphs highlighting the technical changes and their rationale. Note breaking changes, migrations, or documentation updates.
 
 ## Step 4: Document Testing (`testing-documented`)
-- List each test and command that was run and its result.
-- Include manual verification steps if relevant.
-- If tests were skipped, explain the mitigation plan.
+
+List each test command executed and its result. Include manual verification steps where relevant. If tests were skipped, document the reason and the mitigation plan.
 
 ## Step 5: Draft the PR (`pr-drafted`)
-- Fill out the standard template with Summary, Changes, Testing, and Checklist sections.
-- Add issue references, screenshots, or follow-up TODOs.
-- **See `modules/pr-template.md`** for template structure and examples.
+
+Populate the standard template with Summary, Changes, Testing, and Checklist sections. Include issue references, screenshots, or follow-up TODO items. Template structure and examples are available in `modules/pr-template.md`.
+
+## Step 6: Verify Content Quality (`content-verified`)
+
+Apply `Skill(scribe:slop-detector)` principles to the draft. Verify that the PR description avoids tier-1 slop words (delve, comprehensive, leverage, utilize, robust, seamless) and formulaic phrases like "I'd be happy to" or "It should be noted." Ensure there is no AI attribution in the text and that all claims are grounded with evidence such as commands, numbers, or filenames. Use active voice and maintain a balanced structure with prose for context.
+
+### Vocabulary Substitutions
+
+- Replace **leverage** or **utilize** with **use**.
+- Replace **comprehensive** with **thorough** or **complete**.
+- Replace **robust** with **solid** or **reliable**.
+- Replace **facilitate** with **help** or **enable**.
+- Replace **streamline** with **simplify**.
+
+### Remediation
+
+If the description contains slop, apply `Skill(scribe:doc-generator)` principles to ground claims with specifics, remove marketing language, and use direct statements.
 
 ## Output Instructions
-- Write the final PR description to the provided path.
-- After writing, print the file path and show its contents.
+
+Write the final PR description to the specified path, then display the file path and its contents for confirmation.
 
 ## Notes
-- Never include tool or AI attribution in the PR text.
-- If new changes are required mid-process, rerun quality gates.
-- This skill focuses on preparation; creating the PR (push and open) happens outside this workflow.
+
+Do not include tool or AI attribution in the PR text. If changes are required mid-process, re-run quality gates. This skill covers preparation; pushing changes and opening the PR occurs outside this workflow.
+
+## Supporting Modules
+
+- [TodoWrite patterns](modules/todowrite-patterns.md) - naming conventions for sanctum TodoWrite items
+
+## Troubleshooting
+
+If project-specific commands like `make` or `npm` are unavailable, verify the environment setup against the `README`. For permission errors, check write access to build directories. If a step fails without clear output, retry the command with verbose flags to inspect the logs.

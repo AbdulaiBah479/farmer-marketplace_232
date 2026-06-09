@@ -1,39 +1,35 @@
 ---
 name: github-initiative-pulse
-description: |
-  Generate program dashboards, GitHub-ready comment digests, and CSV summaries
-  sourced from Minister's tracker data.
-
-  Triggers: initiative pulse, status report, weekly update, stakeholder briefing,
-  github dashboard, blocker radar, initiative health, program metrics
-
-  Use when: creating status reports, weekly updates, stakeholder briefings,
-  generating GitHub comment digests, tracking initiative health
-
-  DO NOT use when: release gates/readiness - use release-health-gates.
-  DO NOT use when: project planning - use spec-kit:speckit-orchestrator.
-
-  Outputs markdown digests and CSV exports for GitHub issues and PRs.
-version: 1.0.0
+description: Generates markdown digests and CSV exports for GitHub initiative health. Use when reporting on issue/PR progress across a milestone or project.
+alwaysApply: false
 category: project-management
-tags: [github, projects, reporting, status, dashboards]
+tags:
+- github
+- projects
+- reporting
+- status
+- dashboards
 dependencies: []
-tools: [minister-tracker]
+tools: []
 provides:
-  reporting: [status-digest, github-comment]
-  governance: [blocker-radar, initiative-health]
+  reporting:
+  - status-digest
+  - github-comment
+  governance:
+  - blocker-radar
+  - initiative-health
 usage_patterns:
-  - weekly-status
-  - issue-digests
-  - release-briefings
+- weekly-status
+- issue-digests
+- release-briefings
 complexity: foundational
+model_hint: standard
 estimated_tokens: 650
 progressive_loading: true
 modules:
-  - modules/status-digest.md
-  - modules/github-comment-snippets.md
+- modules/status-digest.md
+- modules/github-comment-snippets.md
 ---
-
 # GitHub Initiative Pulse
 
 ## Overview
@@ -66,4 +62,9 @@ Turns tracker data and GitHub board metadata into initiative-level summaries. Pr
 
 - All initiatives represented with updated metrics.
 - Markdown digest pasted into relevant GitHub thread.
-- Risk follow-ups filed as issues with owners + due dates.
+- Risk follow-ups filed as issues with owners and due dates.
+## Troubleshooting
+
+### Common Issues
+
+If metrics appear outdated, ensure `tracker.py` has successfully synced with GitHub. If the Markdown digest renders incorrectly in GitHub, check for unescaped characters in task titles or missing newlines between table rows.

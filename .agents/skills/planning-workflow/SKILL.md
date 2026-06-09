@@ -1,203 +1,160 @@
 ---
 name: planning-workflow
-description: Guide OAK strategic implementation planning with structured phases, constitution
-  alignment, and the oak.plan-* command workflow. Use when creating plans, understanding
-  OAK planning conventions, or structuring development work.
+user-invocable: false
+skill_api_version: 1
+hexagonal_role: supporting
+metadata:
+  tier: execution
+description: >-
+  Comprehensive markdown planning methodology for software projects. Use when
+  starting a new project, creating implementation plans, or refining architecture
+  before coding.
+practices:
+- pragmatic-programmer
+---
+<!-- TOC: Philosophy | THE EXACT PROMPT | Process Overview | References -->
+
+# Planning Workflow — The Foundation of Agentic Development
+
+> **Core Philosophy:** "Planning tokens are a lot fewer and cheaper than implementation tokens."
+>
+> The models are far smarter when reasoning about a detailed plan that fits within their context window. This is the key insight behind spending 80%+ of time on planning.
+
 ---
 
-# OAK Strategic Planning Workflow
+## Outcome — When This Skill Has Delivered
 
-This skill provides domain expertise for OAK's planning system - creating implementation plans that align with project constitutions, follow OAK file conventions, and integrate with the oak.plan-* command workflow.
+You have a usable plan when **all** of the following hold:
 
-## OAK Planning System Overview
+- The plan is **self-contained**: a fresh agent who has never seen the project can read it and start implementing without asking the human for clarification.
+- It is **dependency-aware**: every non-trivial task names what blocks it and what it unblocks, so the work decomposes cleanly into a beads graph.
+- It is **justified**: every architectural choice and every non-obvious feature has at least one sentence on *why*, not just *what* — future agents need the rationale to make consistent local decisions.
+- It has survived **at least 4 review rounds** by a strong reasoning model (GPT Pro Extended Reasoning is the proven choice) and reached steady-state — i.e., the most recent round produces marginal rather than structural revisions.
+- It has been **converted to beads** with the dependency graph intact, so implementation agents can pick up ready work via `br ready --json` without re-reading the plan.
 
-### Command Workflow
+You have NOT delivered if any of these is true: the plan is < ~1,500 lines for a non-trivial project (under-specified); the plan is > ~10,000 lines with no decomposition (impossible to act on); the human is still being asked "what should this do?" mid-implementation (planning was abandoned, not completed); beads exist but have no dependency edges (the plan's structure was lost in conversion).
+
+## When NOT to Use This Skill
+
+Reach for something else if:
+
+- **The change is small and local** (one bug fix, one file, < ~200 LOC) → plan in chat or as a one-line TaskCreate; the planning overhead exceeds the implementation cost.
+- **You are doing pure research** (investigating an unknown codebase, prototyping an idea) → use `codebase-archaeology` or `idea-wizard` first; planning is for execution, not discovery.
+- **The architecture is dictated** (you are porting an existing system, following a spec, or implementing a well-defined RFC) → use `porting-to-rust` or `testing-conformance-harnesses`; the plan is the spec itself.
+- **You're under a hard deadline that doesn't permit 80%-on-planning** (live incident, hotfix, security patch) → ship the fix, then retrofit the plan if the area needs further work.
+
+## Grounding — Sources of Truth for Plan Decisions
+
+When a planning model proposes architecture, the proposal is a hypothesis. Ground every load-bearing claim in a verifiable source before letting it survive a review round:
+
+- **Library/framework choices:** read the actual current docs (latest stable version, not the model's training-time snapshot). If the model says "use X for Y," verify X still exists, is maintained, and supports Y in the version you'd install.
+- **Existing-codebase claims:** for any plan that touches an existing project, the model's understanding of the project structure is suspect. Grep, `git log`, or use `codebase-archaeology` to confirm structural claims before they shape the plan.
+- **Performance / scaling claims:** never accept a number ("handles 10k req/s," "loads in <100ms") without a citation or a planned benchmark. Bare numbers in plans are guesses dressed as facts.
+- **Cost claims:** verify against the provider's pricing page at planning time; pricing models change. Pin the plan to the specific tier you priced against.
+- **Cross-references to other skills/tools:** if the plan says "use `<tool>` for X," confirm the tool's current contract supports X. Linkrot in plans is a quiet failure mode.
+
+A plan that survived review without grounding is a plan that will surprise you in implementation. Cheap verification at planning time beats expensive rework after the code is half-written.
+
+## Validation Loop (between review rounds)
+
+After each review round, before sending the plan back for another pass, run all four:
+
+1. **Self-containment check** — pick the most obscure task in the plan, paste it alone into a fresh chat, and ask "is this implementable as written?" If no, expand.
+2. **Dependency-graph check** — can you draw the DAG of tasks? Are there cycles? Are there orphans (tasks with no consumers)? Either is a planning bug.
+3. **Justification check** — sample 5 random architectural decisions. Each must have a paragraph of *why*. If not, ask the planning model to add it.
+4. **Steady-state check** — diff this round's plan against the previous round's. If the diff is large structural changes, you need another round. If it's typo-level polish, you're done.
+
+If any of these fails, the plan is not ready for beads conversion — do another review round.
+
+---
+
+## Why Planning Matters
+
+- **Measure twice, cut once** — becomes "Check your plan N times, implement once"
+- A very big, complex markdown plan is still shorter than a few substantive code files
+- Front-loading human input in planning enables removing yourself from implementation
+- The code will be written ridiculously quickly when you start enough agents with a solid plan
+
+---
+
+## THE EXACT PROMPT — Plan Review (GPT Pro Extended Reasoning)
 
 ```
-/oak.plan-create  →  /oak.plan-research  →  /oak.plan-tasks  →  /oak.plan-implement
-        │                    │                     │                     │
-        ↓                    ↓                     ↓                     ↓
-   plan.md            research/*.md           tasks.md           Implementation
-                                                   │
-                                                   ↓
-                                          /oak.plan-export
-                                          (GitHub/ADO issues)
+Carefully review this entire plan for me and come up with your best revisions in terms of better architecture, new features, changed features, etc. to make it better, more robust/reliable, more performant, more compelling/useful, etc. For each proposed change, give me your detailed analysis and rationale/justification for why it would make the project better along with the git-diff style change versus the original plan shown below:
+
+<PASTE YOUR EXISTING COMPLETE PLAN HERE>
 ```
 
-### File Structure
+---
+
+## THE EXACT PROMPT — Integrate Revisions (Claude Code)
+
+After GPT Pro finishes (may take 20-30 minutes), paste output into Claude Code:
 
 ```
-oak/
-├── constitution.md          # Project standards (required first)
-└── plan/
-    └── <plan-name>/
-        ├── plan.md          # Main plan document
-        ├── .manifest.json   # Plan metadata and state
-        ├── tasks.md         # Generated task breakdown
-        ├── issue/           # Issue context (if issue-based)
-        │   ├── summary.md
-        │   └── related/
-        └── research/        # Research findings
-            ├── <topic>.md
-            └── research-manifest.yml
+OK, now integrate these revisions to the markdown plan in-place; use ultrathink and be meticulous. At the end, you can tell me which changes you wholeheartedly agree with, which you somewhat agree with, and which you disagree with:
+
+```[Pasted text from GPT Pro]```
 ```
 
-## When to Use This Skill
+---
 
-Use when you need to:
-- Create a new implementation plan (`/oak.plan-create`)
-- Understand OAK's planning conventions and file formats
-- Structure development work following OAK patterns
-- Ensure plan alignment with project constitution
-- Generate well-defined success criteria
+## Process Overview
 
-## Planning Framework (OAK-Specific)
+```
+1. INITIAL PLAN (GPT Pro / Opus 4.7 in web app)
+   └─► Explain goals, intent, workflows, tech stack
 
-### Phase 1: Context Gathering
+2. ITERATIVE REFINEMENT (GPT Pro Extended Reasoning)
+   └─► 4-5 rounds of revision until steady-state
 
-Before planning, OAK requires:
+3. MULTI-MODEL BLENDING (Optional but recommended)
+   └─► Gemini 3.1 Pro Deep Think, Grok4 Heavy, Opus 4.7
+   └─► GPT Pro as final arbiter
 
-**Source Material**
-- Issue tracking details (ADO #123, GitHub #42) - fetched automatically
-- Stakeholder requirements via clarifying questions
-- Related existing features in codebase
+4. CONVERT TO BEADS (Claude Code + Opus 4.7)
+   └─► Self-contained tasks with dependency structure
 
-**Constitution Requirements** (from `oak/constitution.md`)
-- Architecture patterns to follow
-- Testing requirements (TDD, coverage %)
-- Documentation standards
-- Code style guidelines
-
-**Technical Landscape**
-- Existing patterns in codebase (explored via `/oak.plan-create`)
-- Similar implementations to reference
-- Integration points
-
-### Phase 2: Scope Definition
-
-OAK plans require clear boundaries in these sections:
-
-**In Scope** (## Scope > ### In Scope)
-- Core functionality required
-- Must-have features
-- Required integrations
-
-**Out of Scope** (## Scope > ### Out of Scope)
-- Future enhancements
-- Nice-to-have features
-- Separate concerns
-
-**Assumptions** (document in ## Constraints)
-- Technical assumptions
-- Resource assumptions
-- Dependencies on external factors
-
-### Phase 3: Risk Assessment
-
-OAK plans include risks in a structured format:
-
-```markdown
-## Risks & Mitigations
-
-| Risk | Impact | Mitigation |
-|------|--------|-----------|
-| Integration complexity | High | Prototype early, create fallback |
-| Skill gaps | Medium | Pair programming, documentation |
-| Dependencies | Medium | Buffer time, parallel workstreams |
+5. POLISH BEADS (6+ rounds until steady-state)
+   └─► Cross-model review, never oversimplify
 ```
 
-### Phase 4: Research Topics
+---
 
-Identify unknowns for `/oak.plan-research`:
+## What Makes a Great Plan
 
-```markdown
-## Research Topics
+| Good Plan | Great Plan |
+|-----------|------------|
+| Describes what to build | Explains WHY you're building it |
+| Lists features | Details user workflows and interactions |
+| Mentions tech stack | Justifies tech choices with tradeoffs |
+| Has tasks | Has tasks with dependencies and rationale |
+| ~500 lines | ~3,500+ lines after refinement |
 
-- **[Topic Name]**: [What we need to learn]
-  - Questions: [Specific questions to answer]
-  - Priority: High/Medium/Low
-```
+### Essential Elements
 
-### Phase 5: Success Criteria
+1. **Self-contained** — Never need to refer back to external docs
+2. **Granular** — Break complex features into specific subtasks
+3. **Dependency-aware** — What blocks what?
+4. **Justified** — Include reasoning, not just instructions
+5. **User-focused** — How does each piece serve the end user?
 
-Define measurable outcomes:
+---
 
-```markdown
-## Success Criteria
+## Common Mistakes
 
-- [ ] [Functional criterion - feature works as specified]
-- [ ] [Quality criterion - test coverage, performance]
-- [ ] [Process criterion - documentation, review]
-- [ ] [Constitution compliance - all MUST rules followed]
-```
+1. **Starting implementation too early** — 3 hours of planning saves 30 hours of rework
+2. **Single-round review** — You continue to get improvements even at round 6+
+3. **Not using GPT Pro** — Extended Reasoning is uniquely good for this
+4. **Skeleton-first coding** — One big comprehensive plan beats incremental coding
+5. **Losing context** — Convert plans to beads so agents don't need the original
 
-## OAK Plan Document Structure
+---
 
-This is the expected format for `oak/plan/<name>/plan.md`:
+## References
 
-```markdown
-# Plan: [Title]
-
-## Overview
-[1-2 paragraph summary of what will be built]
-
-## Goals
-- [Goal 1]
-- [Goal 2]
-
-## Success Criteria
-- [ ] [Criterion 1]
-- [ ] [Criterion 2]
-
-## Scope
-
-### In Scope
-- [Item 1]
-
-### Out of Scope
-- [Item 1]
-
-## Constraints
-- [Constraint 1]
-
-## Research Topics
-- [Topic 1]: [Why needed]
-
-## Risks & Mitigations
-| Risk | Impact | Mitigation |
-|------|--------|-----------|
-| [Risk] | High/Med/Low | [Strategy] |
-
-## Constitution Compliance
-- Architecture: [How plan aligns]
-- Testing: [Test strategy per constitution]
-- Documentation: [Doc requirements]
-```
-
-## Best Practices for OAK Plans
-
-1. **Start with the constitution** - Read `oak/constitution.md` first; let project standards guide the plan
-2. **Use issue context** - If issue-driven, leverage fetched acceptance criteria and related issues
-3. **Identify research topics** - Unknowns become research topics for `/oak.plan-research`
-4. **Define done clearly** - Success criteria should be verifiable
-5. **Consider testing early** - Note constitution's test requirements (TDD vs test-after)
-6. **Plan for iteration** - OAK supports research → tasks → implement cycle
-
-## Integration with OAK Commands
-
-| Command | Purpose | When to Use |
-|---------|---------|-------------|
-| `/oak.plan-create` | Create initial plan | Starting new work |
-| `/oak.plan-research` | Research unknowns | Topics identified in plan |
-| `/oak.plan-tasks` | Generate task breakdown | After research complete |
-| `/oak.plan-validate` | Validate plan quality | Before implementation |
-| `/oak.plan-implement` | Execute tasks | Ready to code |
-| `/oak.plan-export` | Export to issue tracker | Tasks ready for tracking |
-
-## Quick Reference
-
-- **Plan location**: `oak/plan/<name>/plan.md`
-- **Constitution**: `oak/constitution.md` (always read first)
-- **Branch naming**: `plan/<name>` or `<issue-id>/<name>`
-- **Research output**: `oak/plan/<name>/research/<topic>.md`
-- **Tasks output**: `oak/plan/<name>/tasks.md`
+| Topic | Reference |
+|-------|-----------|
+| All exact prompts | [PROMPTS.md](references/PROMPTS.md) |
+| Real-world examples | [EXAMPLES.md](references/EXAMPLES.md) |
+| FAQ | [FAQ.md](references/FAQ.md) |

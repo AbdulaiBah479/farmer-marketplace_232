@@ -1,15 +1,20 @@
 ---
 name: workflow-setup
-description: Configure GitHub Actions workflows for CI/CD (test, lint, typecheck, publish)
-
-Triggers: github, actions, publish, configure, workflows
+description: Configures GitHub Actions CI/CD workflows for testing, linting, and deployment. Use when setting up automation for a Python, Rust, or TypeScript project.
+globs: "**/.github/workflows/*.yml"
+alwaysApply: false
+# Custom metadata (not used by Claude for matching):
 model: claude-sonnet-4
 tools: [Read, Write, Bash]
-version: 1.3.7
+category: infrastructure
+tags: [github-actions, ci-cd, workflows, automation, testing]
+complexity: intermediate
+model_hint: standard
+estimated_tokens: 1500
 ---
 ## Table of Contents
 
-- [Use When](#use-when)
+- [When To Use](#when-to-use)
 - [Standard Workflows](#standard-workflows)
 - [Python Workflows](#python-workflows)
 - [Rust Workflows](#rust-workflows)
@@ -31,11 +36,20 @@ version: 1.3.7
 
 Set up GitHub Actions workflows for continuous integration and deployment.
 
-## Use When
+## When To Use
 
 - Need CI/CD for a new project
 - Adding missing workflows to existing project
 - Updating workflow versions to latest
+- Automating testing and quality checks
+- Setting up deployment pipelines
+
+## When NOT To Use
+
+- GitHub Actions workflows already configured and current
+- Project uses different CI platform (GitLab CI, CircleCI, etc.)
+- Not hosted on GitHub
+- Use `/attune:upgrade-project` instead for updating existing workflows
 
 ## Standard Workflows
 
@@ -183,15 +197,3 @@ To update workflows to latest versions:
 
 - `Skill(attune:project-init)` - Full project initialization
 - `Skill(sanctum:pr-prep)` - PR preparation with CI checks
-## Troubleshooting
-
-### Common Issues
-
-**Command not found**
-Ensure all dependencies are installed and in PATH
-
-**Permission errors**
-Check file permissions and run with appropriate privileges
-
-**Unexpected behavior**
-Enable verbose logging with `--verbose` flag

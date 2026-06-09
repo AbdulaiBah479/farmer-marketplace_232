@@ -1,24 +1,25 @@
 ---
 name: safety-critical-patterns
-description: |
-  Triggers: safety, critical, NASA, power of 10, defensive coding, assertions, bounds checking
-
-  Guidelines from NASA's Power of 10 rules for writing robust, verifiable code.
-  Adapted for general software development with context-appropriate rigor.
-
-  Use when: Writing critical code paths, reviewing for robustness, improving code quality
-  DO NOT use: As rigid requirements for all code - match rigor to consequence
+description: Applies NASA Power of 10 rules for safety-critical verifiable code. Use when auditing financial, medical, or high-reliability system code.
+alwaysApply: false
 category: code-quality
-tags: [safety, defensive-coding, assertions, NASA, robustness, verification]
-tools: [Read, Grep, Glob]
+tags:
+- safety
+- defensive-coding
+- assertions
+- NASA
+- robustness
+- verification
+tools: []
 complexity: intermediate
+model_hint: standard
 estimated_tokens: 600
-version: 1.3.7
 dependencies:
-  - pensive:shared
-  - pensive:code-refinement
+- pensive:shared
+- pensive:code-refinement
+- imbue:review-core
+- imbue:structured-output
 ---
-
 # Safety-Critical Coding Patterns
 
 Guidelines adapted from NASA's Power of 10 rules for safety-critical software.
@@ -143,9 +144,56 @@ tsc --strict --noImplicitAny
 ## Integration
 
 Reference this skill from:
-- `pensive:code-refinement` - Clean code dimension
-- `pensive:shared/modules/code-quality-analysis` - Quality checks
+- `pensive:code-refinement` - Clean code and quality dimension
 - `sanctum:pr-review` - Code quality phase
+- `/harden` - composed in the hardening pipeline
+- `/full-review safety-critical` - focused entry point, and an
+  auto-detection row when assertion density is low, loops are
+  unbounded, or recursion lacks a termination proof
+
+## Violation Output Format
+
+For each rule violation, report:
+
+```
+Rule N: <rule name>
+Location: file.py:42
+Anchor: `<verbatim source text at line 42>`
+Issue: <what violates the rule>
+Fix: <concrete remediation>
+```
+
+### Verify Findings Are Grounded (`safety-critical:findings-verified`)
+
+Every finding must cite a real location and a verbatim anchor. Write
+findings to `.review/findings.json` and confirm each citation resolves:
+
+```bash
+python plugins/imbue/scripts/citation_verifier.py \
+  --findings .review/findings.json --repo-root .
+```
+
+Drop or label `UNVERIFIED` any finding the verifier fails (exit `1`); only
+verified findings enter the report. See `Skill(imbue:review-core)` Step 5
+and `Skill(imbue:structured-output)` for the schema.
+
+## Exit Criteria
+
+- [ ] Each of the 10 rules has an explicit verdict for the target
+  (applies / violated / not applicable), not a silent skip
+- [ ] Every reported violation cites a concrete `file:line` and the
+  rule number it breaks
+- [ ] Rules deemed not applicable name the reason (e.g. "no dynamic
+  allocation in this module") rather than being omitted
+- [ ] Loops flagged under Rule 2 are checked for a statically
+  provable upper bound; unbounded loops are reported
+- [ ] Recursion flagged under Rule 1 is reported when it lacks a
+  termination argument
+- [ ] A summary states whether the target is suitable for
+  safety-critical use, or which rules block that judgment
+- [ ] Every reported violation carries a `Location` + verbatim `Anchor`
+  confirmed by `citation_verifier.py` (exit `0`), or unverified
+  violations were dropped or labeled `UNVERIFIED`.
 
 ## Sources
 

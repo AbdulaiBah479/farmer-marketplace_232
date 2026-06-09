@@ -1,31 +1,47 @@
 ---
 name: speckit-orchestrator
-description: |
-  Workflow orchestrator for Spec Driven Development. Coordinates skills and tracks progress.
-
-  Triggers: speckit workflow, spec driven development, speckit commands
-  Use when: starting any /speckit-* command or coordinating multi-phase development
+role: entrypoint
+description: Orchestrates Spec Driven Development by coordinating spec, plan, and task skills. Use when running the full speckit workflow from spec to implementation.
+alwaysApply: false
 category: workflow-orchestration
-tags: [speckit, workflow, orchestration, planning, specification]
+tags:
+- speckit
+- workflow
+- orchestration
+- planning
+- specification
 dependencies:
-  - spec-kit:shared
-  - sanctum:git-workspace-review
-  - imbue:evidence-logging
-  - superpowers:brainstorming
-  - superpowers:writing-plans
-  - superpowers:executing-plans
+- sanctum:git-workspace-review
+- imbue:proof-of-work
+- superpowers:brainstorming
+- superpowers:writing-plans
+- superpowers:executing-plans
 tools: []
 modules:
-  - command-skill-matrix
-  - progress-tracking
+- modules/command-skill-matrix.md
+- modules/progress-tracking.md
+- modules/artifact-structure.md
 progressive_loading: true
 usage_patterns:
-  - workflow-coordination
-  - progress-tracking
-  - skill-loading
+- workflow-coordination
+- progress-tracking
+- skill-loading
 complexity: intermediate
+model_hint: standard
 estimated_tokens: 1500
 ---
+## Table of Contents
+
+- [Overview](#overview)
+- [Persistent Presence Lens](#persistent-presence-lens)
+- [When to Use](#when-to-use)
+- [Core Workflow](#core-workflow)
+- [Session Initialization](#session-initialization)
+- [Command-Skill Matrix](#command-skill-matrix)
+- [Progress Tracking Items](#progress-tracking-items)
+- [Exit Criteria](#exit-criteria)
+- [Related Skills](#related-skills)
+
 
 # Speckit Orchestrator
 
@@ -33,12 +49,26 @@ estimated_tokens: 1500
 
 Coordinates the Spec Driven Development workflow, skill loading, and progress tracking throughout the command lifecycle.
 
-## When to Use
+## Persistent Presence Lens
+
+Treat SDD as a minimal, testable "self-modeling" loop:
+
+- **World model**: repo + speckit artifacts (`spec.md`, `plan.md`, `tasks.md`)
+- **Agent model**: loaded skills/plugins + constraints (especially `.specify/memory/constitution.md`) + progress state
+
+This mirrors patterns from open-ended embodied agents (e.g., Voyager/MineDojo) that compound capability via a curriculum (`tasks.md`) and a skill library (reusable plugin skills and superpowers methodology skills).
+
+## When To Use
 
 - Starting any `/speckit-*` command.
 - Coordinating multi-phase development workflows.
 - Tracking progress across specification, planning, and implementation.
 - Ensuring skill dependencies are loaded.
+
+## When NOT To Use
+
+- Single-phase work (just specify, or just plan)
+- Non-spec-driven projects
 
 ## Core Workflow
 
@@ -49,11 +79,15 @@ Coordinates the Spec Driven Development workflow, skill loading, and progress tr
    - Check for `.specify/` directory structure.
    - Validate required scripts exist.
 
-2. **Load Command Dependencies**
+2. **Load Persistent State ("presence")**
+   - Read `.specify/memory/constitution.md` for constraints/principles.
+   - Load current `spec.md` / `plan.md` / `tasks.md` context if present.
+
+3. **Load Command Dependencies**
    - Match current command to required skills.
    - Load complementary superpowers skills.
 
-3. **Initialize Progress Tracking**
+4. **Initialize Progress Tracking**
    - Create TodoWrite items for workflow phases.
    - Track completion status.
 
@@ -72,6 +106,8 @@ Quick reference for command-to-skill mappings:
 | `/speckit-checklist` | - | verification-before-completion |
 
 **For detailed patterns**: See `modules/command-skill-matrix.md` for complete mappings and loading rules.
+
+See `modules/writing-plans-extensions.md` for plan authoring patterns.
 
 ### Progress Tracking Items
 

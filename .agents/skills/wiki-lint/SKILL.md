@@ -1,394 +1,532 @@
 ---
 name: wiki-lint
 description: >
-  Health check the Obsidian wiki vault. Finds orphan pages, dead wikilinks, stale claims,
-  missing cross-references, frontmatter gaps, and empty sections. Creates or updates
-  Dataview dashboards. Generates canvas maps. Triggers on: "lint", "health check",
-  "clean up wiki", "check the wiki", "wiki maintenance", "find orphans", "wiki audit".
+  Audit and maintain the health of the Obsidian wiki. Use this skill when the user wants to check their
+  wiki for issues, find orphaned pages, detect contradictions, identify stale content, fix broken wikilinks,
+  or perform general maintenance on their knowledge base. Also triggers on "clean up the wiki",
+  "what needs fixing", "audit my notes", or "wiki health check". Add --consolidate to switch from
+  report-only to act-and-report mode (the "dream cycle"): fixes broken links, adds missing cross-references
+  for orphans, corrects lifecycle states, demotes stale peripheral pages, normalizes tag aliases, and adds
+  contradiction callouts — all with a dry-run preview and explicit user confirmation before any writes.
 ---
 
-# wiki-lint: Wiki Health Check
+# Wiki Lint — Health Audit
 
-Run lint after every 10-15 ingests, or weekly. Ask before auto-fixing anything. Output a lint report to `wiki/meta/lint-report-YYYY-MM-DD.md`.
+You are performing a health check on an Obsidian wiki. Your goal is to find and fix structural issues that degrade the wiki's value over time.
 
----
+**Before scanning anything:** follow the Retrieval Primitives table in `llm-wiki/SKILL.md`. Prefer frontmatter-scoped greps and section-anchored reads over full-page reads. On a large vault, blindly reading every page to lint it is exactly what this framework is built to avoid.
 
-## Transport (v1.7+)
+## Before You Start
 
-Lint primarily reads, then writes a single report file. Both follow the standard transport policy. Read `.vault-meta/transport.json` (auto-created by `bash scripts/detect-transport.sh`):
-
-- **cli** — `obsidian-cli read "$VAULT" "$NOTE"` for individual reads; `obsidian-cli backlinks "$VAULT" "$NOTE"` natively handles backlink graph (avoids re-rolling it via Grep); see [`skills/wiki-cli/SKILL.md`](../wiki-cli/SKILL.md)
-- **mcp-obsidian** / **mcpvault** — `mcp__obsidian-vault__read_multiple_notes`, `list_all_tags`
-- **filesystem** — Claude's `Read`/`Glob`/`Grep` (final floor; current v1.6 behavior)
-
-Full decision tree: [`wiki/references/transport-fallback.md`](../../wiki/references/transport-fallback.md). DragonScale Mechanism 3 tiling lint is a separate code path (Python script) and bypasses transport selection.
-
----
+1. **Resolve config** — follow the Config Resolution Protocol in `llm-wiki/SKILL.md` (walk up CWD for `.env` → `~/.obsidian-wiki/config` → prompt setup). This gives `OBSIDIAN_VAULT_PATH`
+2. Read `index.md` for the full page inventory
+3. Read `log.md` for recent activity context
 
 ## Lint Checks
 
-Work through these in order:
+Run these checks in order. Report findings as you go.
 
-1. **Orphan pages**. Wiki pages with no inbound wikilinks. They exist but nothing points to them.
-2. **Dead links**. Wikilinks that reference a page that does not exist.
-3. **Stale claims**. Assertions on older pages that newer sources have contradicted or updated.
-4. **Missing pages**. Concepts or entities mentioned in multiple pages but lacking their own page.
-5. **Missing cross-references**. Entities mentioned in a page but not linked.
-6. **Frontmatter gaps**. Pages missing required fields (type, status, created, updated, tags).
-7. **Empty sections**. Headings with no content underneath.
-8. **Stale index entries**. Items in `wiki/index.md` pointing to renamed or deleted pages.
-9. **Address validity** (DragonScale Mechanism 2). For every page that has an `address:` frontmatter field, validate the format. See the **Address Validation** section below.
-10. **Semantic tiling** (DragonScale Mechanism 3, opt-in). Flag candidate duplicate pages (across all scanned types, not just concepts) via embedding cosine similarity. See the **Semantic Tiling** section below.
+### 1. Orphaned Pages
+
+Find pages with zero incoming wikilinks. These are knowledge islands that nothing connects to.
+
+**How to check:**
+- Glob all `.md` files in the vault
+- For each page, Grep the rest of the vault for `[[page-name]]` references
+- Pages with zero incoming links (except `index.md` and `log.md`) are orphans
+
+**How to fix:**
+- Identify which existing pages should link to the orphan
+- Add wikilinks in appropriate sections
+
+### 2. Broken Wikilinks
+
+Find `[[wikilinks]]` that point to pages that don't exist.
+
+**How to check:**
+- Grep for `\[\[.*?\]\]` across all pages
+- Extract the link targets
+- Check if a corresponding `.md` file exists
+
+**How to fix:**
+- If the target was renamed, update the link
+- If the target should exist, create it
+- If the link is wrong, remove or correct it
+
+### 3. Missing Frontmatter
+
+Every page should have: title, category, tags, sources, created, updated.
+
+**How to check:**
+- Grep frontmatter blocks (scope to `^---` at file heads) instead of reading every page in full
+- Flag pages missing required fields
+
+**How to fix:**
+- Add missing fields with reasonable defaults
+
+### 3a. Missing Summary (soft warning)
+
+Every page *should* have a `summary:` frontmatter field — 1–2 sentences, ≤200 chars. This is what cheap retrieval (e.g. `wiki-query`'s index-only mode) reads to avoid opening page bodies.
+
+**How to check:**
+- Grep frontmatter for `^summary:` across the vault
+- Flag pages without it, **but as a soft warning, not an error** — older pages predating this field are fine; the check exists to nudge ingest skills into filling it on new writes.
+- Also flag pages whose summary exceeds 200 chars.
+
+**How to fix:**
+- Re-ingest the page, or manually write a short summary (1–2 sentences of the page's content).
+
+### 4. Stale Content
+
+Pages whose `updated` timestamp is old relative to their sources.
+
+**How to check:**
+- Compare page `updated` timestamps to source file modification times
+- Flag pages where sources have been modified after the page was last updated
+
+### 5. Contradictions
+
+Claims that conflict across pages.
+
+**How to check:**
+- This requires reading related pages and comparing claims
+- Focus on pages that share tags or are heavily cross-referenced
+- Look for phrases like "however", "in contrast", "despite" that may signal existing acknowledged contradictions vs. unacknowledged ones
+
+**How to fix:**
+- Add an "Open Questions" section noting the contradiction
+- Reference both sources and their claims
+
+### 6. Index Consistency
+
+Verify `index.md` matches the actual page inventory.
+
+**How to check:**
+- Compare pages listed in `index.md` to actual files on disk
+- Check that summaries in `index.md` still match page content
+
+### 7. Provenance Drift
+
+Check whether pages are being honest about how much of their content is inferred vs extracted. See the Provenance Markers section in `llm-wiki` for the convention.
+
+**How to check:**
+- For each page with a `provenance:` block or any `^[inferred]`/`^[ambiguous]` markers, count sentences/bullets and how many end with each marker
+- Compute rough fractions (`extracted`, `inferred`, `ambiguous`)
+- Apply these thresholds:
+  - **AMBIGUOUS > 15%**: flag as "speculation-heavy" — even 1-in-7 claims being genuinely uncertain is a signal the page needs tighter sourcing or should be moved to `synthesis/`
+  - **INFERRED > 40% with no `sources:` in frontmatter**: flag as "unsourced synthesis" — the page is making connections but has nothing to cite
+  - **Hub pages** (top 10 by incoming wikilink count) with INFERRED > 20%: flag as "high-traffic page with questionable provenance" — errors on hub pages propagate to every page that links to them
+  - **Drift**: if the page has a `provenance:` frontmatter block, flag it when any field is more than 0.20 off from the recomputed value
+- **Skip** pages with no `provenance:` frontmatter and no markers — treated as fully extracted by convention
+
+**How to fix:**
+- For ambiguous-heavy: re-ingest from sources, resolve the uncertain claims, or split speculative content into a `synthesis/` page
+- For unsourced synthesis: add `sources:` to frontmatter or clearly label the page as synthesis
+- For hub pages with INFERRED > 20%: prioritize for re-ingestion — errors here have the widest blast radius
+- For drift: update the `provenance:` frontmatter to match the recomputed values
+
+### 8. Fragmented Tag Clusters
+
+Checks whether pages that share a tag are actually linked to each other. Tags imply a topic cluster; if those pages don't reference each other, the cluster is fragmented — knowledge islands that should be woven together.
+
+**How to check:**
+- For each tag that appears on ≥ 5 pages:
+  - `n` = count of pages with this tag
+  - `actual_links` = count of wikilinks between any two pages in this tag group (check both directions)
+  - `cohesion = actual_links / (n × (n−1) / 2)`
+- Flag any tag group where cohesion < 0.15 and n ≥ 5
+
+**How to fix:**
+- Run the `cross-linker` skill targeted at the fragmented tag — it will surface and insert the missing links
+- If a tag group is large (n > 15) and still fragmented, consider splitting it into more specific sub-tags
+
+### 9. Visibility Tag Consistency
+
+Checks that `visibility/` tags are applied correctly and aren't silently missing where they matter.
+
+**How to check:**
+
+- **Untagged PII patterns:** Grep page bodies for patterns that commonly indicate sensitive data — lines containing `password`, `api_key`, `secret`, `token`, `ssn`, `email:`, `phone:` followed by an actual value (not a field description). If a page matches and lacks `visibility/pii` or `visibility/internal`, flag it as a likely mis-classification.
+- **`visibility/pii` without `sources:`:** A page tagged `visibility/pii` should always have a `sources:` frontmatter field — if there's no provenance, there's no way to verify the classification. Flag any `visibility/pii` page missing `sources:`.
+- **Visibility tags in taxonomy:** `visibility/` tags are system tags and must **not** appear in `_meta/taxonomy.md`. If found there, flag as misconfigured — they'd be counted toward the 5-tag limit on pages that include them.
+
+**How to fix:**
+- For untagged PII patterns: add `visibility/pii` (or `visibility/internal` if it's team-context rather than personal data) to the page's frontmatter tags
+- For missing `sources:`: add provenance or escalate to the user — don't auto-fill
+- For taxonomy contamination: remove the `visibility/` entries from `_meta/taxonomy.md`
+
+### 10. Misc Promotion Candidates
+
+Find pages in `misc/` that have accumulated enough project affinity to be promoted.
+
+**How to check:**
+- Glob `$OBSIDIAN_VAULT_PATH/misc/*.md`
+- For each page, read the `affinity` frontmatter field
+- Flag pages where any single project's score ≥ 3
+
+**How to fix:**
+- Run the `cross-linker` skill first if affinity scores look stale (e.g., `affinity: {}` on a page with many wikilinks)
+- To promote: move the page to `projects/<project-name>/references/` (or another appropriate category), update its `category` frontmatter, remove `promotion_status`, and grep the vault for backlinks to update them
+
+### 12. Confidence and Lifecycle Schema
+
+Enforces the confidence + lifecycle frontmatter schema (see `llm-wiki/SKILL.md`, Confidence and Lifecycle section).
+
+Two modes:
+- **`--check`** (default, read-only) — reports errors and warnings
+- **`--fix`** — may rewrite `base_confidence` only when drift is detected (Rule 12e); never rewrites `lifecycle`
+
+#### Rule 12a — `lifecycle` enum validation
+
+**How to check:** Grep frontmatter for `^lifecycle:` across all pages. Flag any value not in `{draft, reviewed, verified, disputed, archived}`.
+
+**How to fix:** n/a (only a human should set lifecycle state)
+
+#### Rule 12b — `base_confidence` range
+
+**How to check:** Grep frontmatter for `^base_confidence:` across all pages. Flag any value outside `[0.0, 1.0]` or any page missing the field entirely.
+
+**How to fix:** n/a (wrong value means the skill computed it wrong — surface for manual correction)
+
+#### Rule 12c — Stale page report (computed overlay)
+
+Staleness is never stored — it is computed at read time: `is_stale = (today − updated) > 90 days`.
+
+**How to check:** For each page, read `updated:` from frontmatter and compute `is_stale`. If stale, also check `lifecycle:`. Report:
+- Stale pages with `lifecycle: verified` with a louder annotation (these are the most dangerous — high-trust pages that may be wrong)
+- All other stale pages as a standard warning
+
+**How to fix:** `--fix` does **not** rewrite `lifecycle`. Staleness clears automatically when a re-ingest bumps `updated`.
+
+#### Rule 12d — Supersession integrity
+
+**How to check:** For each page with `superseded_by: "[[target]]"`:
+- Verify the target page exists
+- Verify the target page is not itself `archived` (no circular or chained supersession)
+- Verify there are no cycles (A supersedes B which supersedes A)
+- Warn if `lifecycle != archived` while `superseded_by` is set (inconsistent state)
+
+**How to fix:** n/a — flag for human resolution
+
+#### Rule 12e — Confidence drift
+
+**How to check:** For pages that have both `base_confidence:` and `sources:` in frontmatter, recompute `base_confidence` using the formula in `llm-wiki/SKILL.md`. If the stored value differs from the recomputed value by more than 0.05, flag it as drift.
+
+**How to fix (`--fix` only):** Rewrite the `base_confidence` field to the recomputed value. This is the **only rule** that mutates frontmatter automatically.
+
+#### Migration timeline
+
+| Phase | When | Behavior on missing fields |
+|---|---|---|
+| Phase 1: Soft launch | Initial PR | Warning only — missing `base_confidence` or `lifecycle` on any page |
+| Phase 2: New pages enforced | +2 weeks | Error for newly created pages missing the fields; existing pages still warn even if `updated` is bumped during routine maintenance |
+| Phase 3: Full enforcement | +6 weeks, gated on a backfill script shipping in a separate PR | Error for all pages |
+
+#### Output additions
+
+Add to the Wiki Health Report:
+
+```markdown
+### Confidence/Lifecycle Issues (N found)
+- `concepts/foo.md` — missing `lifecycle` field (warning: Phase 1)
+- `entities/bar.md` — `lifecycle: stalestate` is not a valid enum value
+- `concepts/scaling.md` — `base_confidence: 1.4` is out of range [0.0, 1.0]
+- `synthesis/old-analysis.md` — STALE (last updated 2025-10-01, 182 days ago) lifecycle=verified ⚠️ HIGH PRIORITY
+- `concepts/outdated.md` — STALE (last updated 2025-11-15, 137 days ago) lifecycle=draft
+- `entities/tool-v1.md` — `superseded_by: [[entities/tool-v2]]` but lifecycle=draft (expected archived)
+- `concepts/drift-example.md` — base_confidence drift: stored=0.80, recomputed=0.59 (delta=0.21)
+```
+
+Append to the `LINT` log entry:
+```
+- [TIMESTAMP] LINT ... lifecycle_issues=N
+```
+
+### 13. Typed Relationships Validity
+
+Validate `relationships:` frontmatter blocks. Skip pages that have no `relationships:` block — the field is optional.
+
+**Allowed types:** `extends`, `implements`, `contradicts`, `derived_from`, `uses`, `replaces`, `related_to`
+
+**How to check:**
+- Grep frontmatter for `^relationships:` across all vault pages
+- For each page that has a `relationships:` block, read its frontmatter (not the full page body)
+- For each entry in the block:
+  1. **Type validation** — flag any `type:` value not in the allowed set above
+  2. **Broken target** — strip `[[` and `]]` from the `target:` string, normalize (lowercase, spaces→hyphens, strip `.md`), and check whether a `.md` file at that path exists in the vault. Flag unresolved targets.
+  3. **Self-reference** — flag any entry where the resolved target equals the page's own node id
+
+**How to fix:**
+- Invalid type: correct the value to the nearest allowed type, or use `related_to` when the type is ambiguous
+- Broken target: update or remove the entry; if the target page should exist, create it first
+- Self-reference: remove the entry
+
+**Output additions:**
+
+```markdown
+### Typed Relationship Issues (N found)
+- `concepts/foo.md` — relationships[1]: type "contradication" is not an allowed type (did you mean "contradicts"?)
+- `concepts/bar.md` — relationships[0]: target "[[skills/nonexistent-skill]]" resolves to no page in vault
+- `entities/baz.md` — relationships[2]: self-reference (target resolves to this page's own id)
+```
+
+Append to the `LINT` log entry:
+```
+... relationship_issues=N
+```
+
+### 11. Synthesis Gaps
+
+Identify high-value synthesis opportunities the wiki is missing — concept pairs that co-occur across many pages but have no `synthesis/` page connecting them.
+
+**How to check:**
+- List all pages in `synthesis/` — collect the concept pairs each one already covers (from its `[[wikilinks]]` or title)
+- Pick 10-15 frequently linked concepts from `concepts/` and `entities/`
+- For each pair, run a quick grep to count pages that link to both:
+  ```bash
+  grep -rl "\[\[ConceptA\]\]" "$OBSIDIAN_VAULT_PATH" --include="*.md" > /tmp/a.txt
+  grep -rl "\[\[ConceptB\]\]" "$OBSIDIAN_VAULT_PATH" --include="*.md" > /tmp/b.txt
+  comm -12 <(sort /tmp/a.txt) <(sort /tmp/b.txt) | wc -l
+  ```
+- Flag pairs with co-occurrence ≥ 3 that have no existing synthesis page
+
+**How to fix:**
+- Run `/wiki-synthesize` to automatically discover and fill the top gaps
+
+## Output Format
+
+Report findings as a structured list:
+
+```markdown
+## Wiki Health Report
+
+### Orphaned Pages (N found)
+- `concepts/foo.md` — no incoming links
+
+### Broken Wikilinks (N found)
+- `entities/bar.md:15` — links to [[nonexistent-page]]
+
+### Missing Frontmatter (N found)
+- `skills/baz.md` — missing: tags, sources
+
+### Stale Content (N found)
+- `references/paper-x.md` — source modified 2024-03-10, page last updated 2024-01-05
+
+### Contradictions (N found)
+- `concepts/scaling.md` claims "X" but `synthesis/efficiency.md` claims "not X"
+
+### Index Issues (N found)
+- `concepts/new-page.md` exists on disk but not in index.md
+
+### Missing Summary (N found — soft)
+- `concepts/foo.md` — no `summary:` field
+- `entities/bar.md` — summary exceeds 200 chars
+
+### Provenance Issues (N found)
+- `concepts/scaling.md` — AMBIGUOUS > 15%: 22% of claims are ambiguous (re-source or move to synthesis/)
+- `entities/some-tool.md` — drift: frontmatter says inferred=0.10, recomputed=0.45
+- `concepts/transformers.md` — hub page (31 incoming links) with INFERRED=28%: errors here propagate widely
+- `synthesis/speculation.md` — unsourced synthesis: no `sources:` field, 55% inferred
+
+### Fragmented Tag Clusters (N found)
+- **#systems** — 7 pages, cohesion=0.06 ⚠️ — run cross-linker on this tag
+- **#databases** — 5 pages, cohesion=0.10 ⚠️
+
+### Visibility Issues (N found)
+- `entities/user-records.md` — contains `email:` value pattern but no `visibility/pii` tag
+- `concepts/auth-flow.md` — tagged `visibility/pii` but missing `sources:` frontmatter
+- `_meta/taxonomy.md` — contains `visibility/internal` entry (system tag must not be in taxonomy)
+
+### Misc Promotion Candidates (N found)
+Pages in misc/ that have ≥ 3 connections to a single project and are ready to be promoted:
+
+| Page | Top Project | Affinity Score |
+|---|---|---|
+| `misc/web-martinfowler-articles-microservices.md` | `obsidian-wiki` | 4 |
+
+### Typed Relationship Issues (N found)
+- `concepts/foo.md` — relationships[1]: type "contradication" is not an allowed type
+- `concepts/bar.md` — relationships[0]: target "[[skills/nonexistent]]" resolves to no page
+
+### Synthesis Gaps (N found)
+Concept pairs that co-occur frequently but have no synthesis page:
+
+| Pair | Co-occurrence | Suggested Action |
+|---|---|---|
+| [[Caching]] × [[Consistency]] | 5 pages | Run `/wiki-synthesize` |
+| [[Testing]] × [[Observability]] | 3 pages | Run `/wiki-synthesize` |
+```
+
+## After Linting
+
+Append to `log.md`:
+```
+- [TIMESTAMP] LINT issues_found=N orphans=X broken_links=Y stale=Z contradictions=W prov_issues=P missing_summary=S fragmented_clusters=F visibility_issues=V promotion_candidates=C synthesis_gaps=G relationship_issues=R
+```
+
+Offer to fix issues automatically or let the user decide which to address.
 
 ---
 
-## Lint Report Format
+## Consolidate Mode (`--consolidate`)
 
-Create at `wiki/meta/lint-report-YYYY-MM-DD.md`:
+Triggered by `wiki-lint --consolidate`. Switches from report-only to **act-and-report** — the "dream cycle" that runs periodically so the wiki self-heals.
+
+### Safety protocol
+
+**Always run in dry-run first.** Before writing anything:
+
+1. Run all 12 lint checks (Step 1–12 above).
+2. Print the planned consolidation actions as a structured list (see Dry-Run Output below).
+3. Ask the user: `"Apply these N changes? [yes / no / select]"`.
+4. Only proceed with writes after explicit confirmation. If the user selects individual actions, apply only those.
+5. Never merge pages — use `wiki-dedup` for that. Only link, promote, demote, and flag.
+
+### Consolidation actions (in order, after confirmation)
+
+#### Action 1: Fix broken wikilinks
+
+For each broken `[[Target]]` found in Check 2:
+- Search the vault for a page whose title or filename is the closest fuzzy match (use `Grep` across `index.md` titles)
+- If a unique best match exists (edit distance ≤ 2 characters or same root word): rewrite the link. Note the rewrite: `[[Oringal]] → [[corrected-page]]`.
+- If no match or ambiguous: convert to plain text (`~~[[Target]]~~` → `Target`) and add a comment `<!-- broken link: no match found -->`.
+- Never create a new page just to satisfy a broken link.
+
+#### Action 2: Add missing cross-references for orphans
+
+For each orphan page found in Check 1 (zero incoming links):
+- Grep the vault body text for mentions of the page's title or aliases (case-insensitive).
+- For each mention found in another page, add a `[[wikilink]]` replacing the plain-text mention.
+- Limit to 3 insertions per orphan — don't flood pages with links.
+- This is scoped to orphans only (different from `cross-linker` which runs broadly).
+
+#### Action 3: Correct lifecycle states
+
+Apply these rules automatically (they don't require human judgment — they enforce the documented state machine):
+- **Promote `draft` → `reviewed`:** pages where `lifecycle: draft` AND `created` > 30 days ago AND `base_confidence > 0.7`. Set `lifecycle: reviewed`, `lifecycle_changed: <today>`, `lifecycle_reason: "auto-promoted by wiki-lint --consolidate: age>30d, confidence>0.7"`.
+- **Demote `verified` → `stale`:** NOT a state transition — `stale` is a computed overlay, not a lifecycle value. Instead: for verified pages where `is_stale = (today − updated) > 180 days`, add a callout at the top of the page body: `> ⚠️ **Stale**: This page was last updated <date>. Verify before relying on it.` Only add if the callout isn't already present.
+- **Do not change `reviewed` → `verified` or any other transition** — those are human-only.
+
+#### Action 4: Tier demotion
+
+For pages with `tier: supporting` (or unset) that have 0 incoming links AND haven't been updated in 90+ days:
+- Set `tier: peripheral`.
+- Emit a list of demotions for the user to review.
+- Do not demote `tier: core` pages automatically — those were manually set.
+
+#### Action 5: Tag normalization
+
+Read `_meta/taxonomy.md` for the alias mapping (e.g., `ml → machine-learning`). For each page, replace known alias tags with their canonical form in the `tags:` frontmatter field. This is a subset of `tag-taxonomy`'s work — only alias fixes, no full audit.
+
+#### Action 6: Contradiction callouts
+
+For each pair of pages marked as contradicting each other (via `relationships: contradicts` in frontmatter, or flagged in Check 5):
+- Check whether a `> ⚠️ Contradiction flagged with [[Other Page]]` callout already exists near the relevant claim.
+- If not, add it at the end of the "Key Ideas" section (or before "Open Questions" if no "Key Ideas" section). Keep it concise — one line.
+- Do not resolve the contradiction; only flag it visually.
+
+### Action 7: Write consolidation report
+
+After all actions, write a report to `synthesis/consolidation-<YYYY-MM-DD>.md`:
 
 ```markdown
 ---
-type: meta
-title: "Lint Report YYYY-MM-DD"
-created: YYYY-MM-DD
-updated: YYYY-MM-DD
-tags: [meta, lint]
-status: developing
+title: Consolidation Report <YYYY-MM-DD>
+category: synthesis
+tags: [maintenance, consolidation]
+sources: []
+summary: Auto-generated consolidation report from wiki-lint --consolidate run on <date>.
+lifecycle: draft
+lifecycle_changed: <date>
+tier: peripheral
+created: <ISO timestamp>
+updated: <ISO timestamp>
 ---
 
-# Lint Report: YYYY-MM-DD
+# Consolidation Report — <YYYY-MM-DD>
 
 ## Summary
-- Pages scanned: N
-- Issues found: N
-- Auto-fixed: N
-- Needs review: N
+- Broken links fixed: N
+- Cross-references added: M
+- Lifecycle states updated: K
+- Tier demotions: D
+- Tags normalized: T
+- Contradiction callouts added: C
 
-## Orphan Pages
-- [[Page Name]]: no inbound links. Suggest: link from [[Related Page]] or delete.
+## Broken Link Fixes
+- `concepts/foo.md:12` — [[OldTarget]] → [[correct-target]]
+- `entities/bar.md:8` — [[Missing]] → `Missing` (no match found)
 
-## Dead Links
-- [[Missing Page]]: referenced in [[Source Page]] but does not exist. Suggest: create stub or remove link.
+## Cross-References Added (orphan rescue)
+- `concepts/baz.md` — now linked from: [[concepts/alpha]], [[skills/beta]]
 
-## Missing Pages
-- "concept name": mentioned in [[Page A]], [[Page B]], [[Page C]]. Suggest: create a concept page.
+## Lifecycle Updates
+- `concepts/old-draft.md` — draft → reviewed (age 45d, confidence 0.74)
+- `synthesis/stale-verified.md` — stale callout added (last updated 2025-10-01)
 
-## Frontmatter Gaps
-- [[Page Name]]: missing fields: status, tags
+## Tier Demotions
+- `concepts/unused-concept.md` — supporting → peripheral (0 links, 120 days stale)
 
-## Stale Claims
-- [[Page Name]]: claim "X" may conflict with newer source [[Newer Source]].
+## Tag Normalizations
+- `entities/some-tool.md` — `ml` → `machine-learning`
 
-## Cross-Reference Gaps
-- [[Entity Name]] mentioned in [[Page A]] without a wikilink.
+## Contradiction Callouts
+- `concepts/scaling.md` — flagged contradiction with [[synthesis/efficiency]]
 ```
 
----
+### Dry-Run Output (shown before any writes)
 
-## Naming Conventions
+```
+wiki-lint --consolidate — Dry Run
 
-Enforce these during lint:
+Planned actions (N total):
+[1] Fix broken link: concepts/foo.md:12 [[OldTarget]] → [[correct-target]]
+[2] Add cross-ref: concepts/baz.md ← [[concepts/alpha]] (orphan rescue)
+[3] Lifecycle: concepts/old-draft.md → reviewed (age 45d, confidence 0.74)
+[4] Tier demotion: concepts/unused.md → peripheral (0 links, 112 days stale)
+[5] Tag alias: entities/some-tool.md: ml → machine-learning
+[6] Contradiction callout: concepts/scaling.md ↔ [[synthesis/efficiency]]
 
-| Element | Convention | Example |
-|---------|-----------|---------|
-| Filenames | Title Case with spaces | `Machine Learning.md` |
-| Folders | lowercase with dashes | `wiki/data-models/` |
-| Tags | lowercase, hierarchical | `#domain/architecture` |
-| Wikilinks | match filename exactly | `[[Machine Learning]]` |
-
-Filenames must be unique across the vault. Wikilinks work without paths only if filenames are unique.
-
----
-
-## Writing Style Check
-
-During lint, flag pages that violate the style guide:
-
-- Not declarative present tense ("X basically does Y" instead of "X does Y")
-- Missing source citations where claims are made
-- Uncertainty not flagged with `> [!gap]`
-- Contradictions not flagged with `> [!contradiction]`
-
----
-
-## Dataview Dashboard
-
-Create or update `wiki/meta/dashboard.md` with these queries:
-
-````markdown
----
-type: meta
-title: "Dashboard"
-updated: YYYY-MM-DD
----
-# Wiki Dashboard
-
-## Recent Activity
-```dataview
-TABLE type, status, updated FROM "wiki" SORT updated DESC LIMIT 15
+Apply these 6 changes? [yes / no / select by number]
 ```
 
-## Seed Pages (Need Development)
-```dataview
-LIST FROM "wiki" WHERE status = "seed" SORT updated ASC
+### Log entry for consolidate mode
+
+```
+- [TIMESTAMP] LINT_CONSOLIDATE links_fixed=N orphans_rescued=M lifecycle_updates=K tier_demotions=D tag_fixes=T contradiction_callouts=C report=synthesis/consolidation-YYYY-MM-DD.md
 ```
 
-## Entities Missing Sources
-```dataview
-LIST FROM "wiki/entities" WHERE !sources OR length(sources) = 0
-```
+## QMD Refresh After Vault Writes
 
-## Open Questions
-```dataview
-LIST FROM "wiki/questions" WHERE answer_quality = "draft" SORT created DESC
-```
-````
+QMD is a search index, not the source of truth. If `$QMD_WIKI_COLLECTION` is empty or unset, skip this step. Run it only after this skill has written or rewritten vault markdown. If QMD refresh fails, do not roll back the vault changes; report the QMD status separately.
 
----
-
-## Canvas Map
-
-Create or update `wiki/meta/overview.canvas` for a visual domain map:
-
-```json
-{
-  "nodes": [
-    {
-      "id": "1",
-      "type": "file",
-      "file": "wiki/overview.md",
-      "x": 0, "y": 0,
-      "width": 300, "height": 140,
-      "color": "1"
-    }
-  ],
-  "edges": []
-}
-```
-
-Add one node per domain page. Connect domains that have significant cross-references. Colors map to the CSS scheme: 1=blue, 2=purple, 3=yellow, 4=orange, 5=green, 6=red.
-
----
-
-## Address Validation (DragonScale Mechanism 2 MVP)
-
-**Opt-in feature.** Address Validation runs only if the vault is using DragonScale, detected by:
+Use `$QMD_CLI` if set; otherwise use `qmd`.
 
 ```bash
-if [ -x ./scripts/allocate-address.sh ] && [ -f ./.vault-meta/address-counter.txt ]; then
-  DRAGONSCALE_ADDRESSES=1
-else
-  DRAGONSCALE_ADDRESSES=0
-fi
+${QMD_CLI:-qmd} update
 ```
 
-When `DRAGONSCALE_ADDRESSES=0`, skip this entire section. Missing `address:` fields are not flagged, not even informationally. Pages that happen to have an `address:` field are passed through unvalidated (treat as user-managed metadata).
-
-When `DRAGONSCALE_ADDRESSES=1`, proceed with the rollout baseline and checks below.
-
-Rollout baseline: **2026-04-23** (Phase 2 ship date in vaults that adopted DragonScale on that day). Vaults that adopted DragonScale later should override this baseline by setting the earliest `created:` date of any addressed page as their personal rollout date. Record the chosen baseline at the top of `.vault-meta/legacy-pages.txt` as a commented line: `# rollout: YYYY-MM-DD`.
-
-### Classification rule (applied per page)
-
-Before validating anything, classify the page:
-
-| Classification | Criteria |
-|---|---|
-| **Meta / fold / excluded** | File is in `wiki/folds/` OR filename in `{_index.md, index.md, log.md, hot.md, overview.md, dashboard.md, dashboard.base, Wiki Map.md, getting-started.md}`. Address not required. |
-| **Post-rollout (must have address)** | `type` is not meta/fold AND frontmatter `created:` date is >= 2026-04-23 AND file path is NOT in the legacy baseline manifest. |
-| **Legacy (backfill-eligible)** | `type` is not meta/fold AND frontmatter `created:` date is < 2026-04-23 OR file path IS in the legacy baseline manifest. Address not required until backfill. |
-
-**Legacy baseline manifest**: optional file at `.vault-meta/legacy-pages.txt`, one relative path per line. Pages listed there are treated as legacy regardless of `created:` date. Use this to grandfather pages whose `created:` metadata is wrong or missing.
-
-### Validation checks (run in order)
-
-1. **Format check**: any page with `address:` set must match one of:
-   - `^c-[0-9]{6}$` — post-rollout creation address.
-   - `^l-[0-9]{6}$` — legacy-backfill address.
-   - Pages under `wiki/folds/` use `fold_id`, not `address`; do not apply the `c-`/`l-` regex there.
-
-2. **Uniqueness check**: no two pages share the same address value. Report both paths.
-
-3. **Counter consistency**: `./scripts/allocate-address.sh --peek` returns the next counter value. Every observed `c-NNNNNN` must satisfy `NNNNNN < peek_value`. Violation = counter drift.
-
-4. **Post-rollout enforcement**: every page classified as "post-rollout (must have address)" that LACKS the `address:` field is a lint **error**, not informational. This prevents the silent-regression path where a new page skips address assignment.
-
-5. **Legacy identification**: every page classified as "legacy" that LACKS an address is informational. The lint report lists them under "Pending backfill" with total count.
-
-6. **Address-map consistency** (`.raw/.manifest.json`): for every page path in `address_map`, the page must exist and its frontmatter `address` must match the mapping. Mismatches are errors (either a rename dropped the map update, or a manual edit diverged).
-
-### Lint posture summary
-
-- Pages that HAVE an address with bad format: **error**.
-- Pages that HAVE colliding addresses: **error**.
-- Pages classified **post-rollout** WITHOUT an address: **error**.
-- Pages classified **legacy** WITHOUT an address: **informational** (expected).
-- Meta and fold pages without `address`: **ignored** (not applicable).
-- Counter drift (observed counter >= peek): **error**.
-- Address-map mismatch: **error**.
-
-Lint only observes. Do NOT auto-assign missing addresses during lint. Assignment is `wiki-ingest`'s responsibility only.
-
-### Output section in the lint report
-
-```markdown
-## Address Validation
-
-- Counter state: `$(./scripts/allocate-address.sh --peek)`
-- Highest c- address observed: c-XXXXXX
-- Post-rollout pages checked: N (X passing, Y errors)
-- Legacy pages pending backfill: M
-
-### Errors
-- [[Page Name]]: invalid address format `{value}`. Expected `c-NNNNNN` or `l-NNNNNN`.
-- [[Page A]] and [[Page B]] share address `c-000042`.
-- [[Post-Rollout Page]]: missing address. Page created 2026-04-25 (post-rollout); address required. Run wiki-ingest or manually run `./scripts/allocate-address.sh` and add to frontmatter.
-- [[Page Name]] has address `c-000100` but counter peek is `50`. Counter drift; run `./scripts/allocate-address.sh --rebuild`.
-- `.raw/.manifest.json` maps `wiki/foo.md` -> `c-000010` but page frontmatter has `c-000012`. Resolve mismatch.
-
-### Pending backfill (informational)
-- M legacy pages without addresses. See `.vault-meta/legacy-pages.txt` for the canonical legacy set, or filter by `created:` < 2026-04-23.
-```
-
----
-
-## Semantic Tiling (DragonScale Mechanism 3 MVP, opt-in)
-
-**Opt-in feature.** Semantic tiling flags candidate duplicate *pages* (not just concept pages — see Scope below) using embedding cosine similarity. Local ollama only by default; remote endpoints require an explicit override flag.
-
-### Detection and delegation
+If the output says vectors are needed or embeddings may be stale, run:
 
 ```bash
-if [ -x ./scripts/tiling-check.py ] && command -v python3 >/dev/null 2>&1; then
-  ./scripts/tiling-check.py --peek > /tmp/tiling-peek.json 2>/dev/null
-  PEEK_EXIT=$?
-  case $PEEK_EXIT in
-    0)  TILING_READY=1 ;;                                  # ready
-    2)  TILING_READY=0 ; echo "tiling ERROR: usage error (exit 2); inspect /tmp/tiling-peek.json" ;;
-    3)  TILING_READY=0 ; echo "tiling ERROR: cache corrupt (exit 3); inspect .vault-meta/tiling-cache.json" ;;
-    4)  TILING_READY=0 ; echo "tiling ERROR: vault exceeds scale hard-fail (exit 4); batching required" ;;
-    10) TILING_READY=0 ; echo "tiling skipped: ollama not reachable (exit 10)" ;;
-    11) TILING_READY=0 ; echo "tiling skipped: run 'ollama pull nomic-embed-text' to enable (exit 11)" ;;
-    *)  TILING_READY=0 ; echo "tiling ERROR: unexpected exit code $PEEK_EXIT from tiling-check.py --peek" ;;
-  esac
-else
-  TILING_READY=0
-  echo "tiling skipped: scripts/tiling-check.py or python3 not available"
-fi
+${QMD_CLI:-qmd} embed
 ```
 
-Inspect `/tmp/tiling-peek.json` (structured diagnostics: script path, python interpreter, ollama URL, cache state, thresholds state) whenever the status is ambiguous. Never collapse unknown exits into "unknown status" silently.
-
-When `TILING_READY=1`:
+Verify the collection with either:
 
 ```bash
-./scripts/tiling-check.py --report wiki/meta/tiling-report-YYYY-MM-DD.md
-REPORT_EXIT=$?
-case $REPORT_EXIT in
-  0)  echo "tiling report written" ;;
-  2)  echo "tiling ERROR: usage error during --report" ;;
-  3)  echo "tiling ERROR: cache corrupt during --report" ;;
-  4)  echo "tiling ERROR: scale hard-fail during --report" ;;
-  10) echo "tiling ERROR: ollama became unreachable between --peek and --report" ;;
-  11) echo "tiling ERROR: model became unavailable between --peek and --report" ;;
-  *)  echo "tiling ERROR: unexpected exit code $REPORT_EXIT from tiling-check.py --report" ;;
-esac
+${QMD_CLI:-qmd} ls "$QMD_WIKI_COLLECTION"
 ```
 
-### Scope (what the helper scans)
+or, when a specific page path is known:
 
-- Includes: every `.md` under `wiki/` **except** the exclusion set below. The scope is "candidate tileable pages," not just `type: concept`.
-- Excludes (path): anything under `wiki/folds/` or `wiki/meta/`.
-- Excludes (filename): `_index.md`, `index.md`, `log.md`, `hot.md`, `overview.md`, `dashboard.md`, `Wiki Map.md`, `getting-started.md`.
-- Excludes (frontmatter): `type: meta` or `type: fold`.
-- Excludes (security): symlinks. Any page file that is a symlink, or whose resolved path escapes the vault root, is skipped.
-
-If you place a real concept under `wiki/meta/` it will be excluded by path regardless of content. Keep concepts in their canonical folders.
-
-### How the helper works
-
-- Computes one embedding per included page via the ollama `nomic-embed-text` model by default.
-- Caches embeddings at `.vault-meta/tiling-cache.json`, keyed on `sha256(model + body)` so model drift auto-invalidates. Frontmatter is not part of the hash or the embedding input — pure frontmatter edits (tag changes, status bumps) do not trigger recomputation.
-- Orphans are GC'd: when a cached page path no longer exists on disk, its entry is dropped on save.
-- Concurrent-safe: exclusive flock on `.vault-meta/.tiling.lock` around cache I/O; per-PID temp file for atomic writes.
-
-### Security posture
-
-- Defaults to `http://127.0.0.1:11434`. `OLLAMA_URL` env override is accepted **only** with `--allow-remote-ollama` because page bodies are POSTed as embedding input.
-- Symlinks and vault-root escapes are rejected.
-
-### Default bands (conservative seeds, NOT calibrated)
-
-| Band | Similarity | Report section |
-|---|---|---|
-| Error | `>= 0.90` | **Errors** — strong near-duplicate, likely the same concept |
-| Review | `0.80 - 0.90` | **Review** — possible tile overlap; human judgement needed |
-| Pass | `< 0.80` | not emitted |
-
-**These values are conservative seeds, not literature-backed interpolation.** Published reference points: Sentence Transformers `community_detection` defaults to 0.75; Quora-duplicate calibrations land around 0.7715-0.8352 depending on objective. The 0.80 review floor is already stricter than at least one cited Quora optimum, so expect **false negatives** against those baselines. Reduce the review floor during calibration if you want more sensitivity.
-
-### Calibration procedure (manual, one-time per vault)
-
-1. Run the helper with defaults. Capture the **Review** band pairs.
-2. Temporarily lower `bands.review` to `0.70` in `.vault-meta/tiling-thresholds.json` to surface a wider sample. Aim for >=50 pairs spanning 0.70-0.95.
-3. Label each pair: `duplicate`, `similar`, `distinct`.
-4. Pick bands such that: (a) the `error` band contains >= 95% true duplicates; (b) the `review` band captures `similar` pairs without swamping the report with `distinct` ones.
-5. Edit `.vault-meta/tiling-thresholds.json`: set new `bands.error` and `bands.review`, set `calibrated: true`, set `calibration_pairs_labeled` to the label count.
-6. Re-run lint. Report footer now says `calibrated: true`.
-
-### Scale
-
-- Cold-cache cost is O(N) POSTs to ollama. Warm-cache cost is O(N^2) cosines in pure Python.
-- Helper prints a warning at > 500 pages and hard-fails (exit 4) at > 5000. Revisit the implementation (batching, vectorized cosine, or external tooling) before exceeding either limit.
-
-### Lint report embed
-
-```markdown
-## Semantic Tiling
-See [[tiling-report-YYYY-MM-DD]] for the full pair listing.
-- Errors (>=0.90): N pairs
-- Review (0.80-0.90): M pairs
-- Calibrated: true|false
+```bash
+${QMD_CLI:-qmd} get "qmd://$QMD_WIKI_COLLECTION/<page>.md" -l 5
 ```
 
-### Invariants
-
-- Read-only. `tiling-check.py` never modifies wiki pages.
-- No auto-merge. Duplicates are listed, never resolved.
-- Cache is incremental and model-scoped. Unchanged pages are not re-embedded.
-- Exit codes: `0` ok, `2` usage error, `3` cache corrupt, `4` scale hard-fail, `10` ollama unreachable, `11` model missing. Surface all of them; do not collapse into a single "unknown" bucket.
-
----
-
-## Before Auto-Fixing
-
-Always show the lint report first. Ask: "Should I fix these automatically, or do you want to review each one?"
-
-Safe to auto-fix:
-- Adding missing frontmatter fields with placeholder values
-- Creating stub pages for missing entities
-- Adding wikilinks for unlinked mentions
-
-Needs review before fixing:
-- Deleting orphan pages (they might be intentionally isolated)
-- Resolving contradictions (requires human judgment)
-- Merging duplicate pages
-
----
-
-## How to think (10-principle mapping)
-
-When working on this skill, apply the 10-principle loop. See [`skills/think/SKILL.md`](../think/SKILL.md) for the canonical framework.
-
-| # | Principle | Application here |
-|---|-----------|-------------------|
-| 1 | OBSERVE (ext) | Scan every page, every wikilink, every frontmatter block. No skipping for size or apparent obviousness. |
-| 2 | OBSERVE (int) | Am I biased toward "looks fine"? Pretend you're a hostile reader looking for what's actually wrong. |
-| 3 | LISTEN | Did the user mention specific concerns this session? Prioritize those over generic checks. |
-| 4 | THINK | Which checks matter? Tier findings by severity (BLOCKER / HIGH / MEDIUM / LOW), not by ease of fix. |
-| 5 | CONNECT (lat) | Orphan + dead-link + frontmatter-gap patterns often co-occur. Cluster findings to expose root causes. |
-| 6 | CONNECT (sys) | Tiling-check + Dataview dashboards + canvas overview — multiple lint surfaces to integrate. |
-| 7 | FEEL | A lint report should empower, not shame. Actionable items beat exhaustive catalog. |
-| 8 | ACCEPT | Some lint findings are deliberate (orphan-by-design, intentional stub). Flag, don't force. |
-| 9 | CREATE | Lint report at `wiki/meta/lint-report-YYYY-MM-DD.md` with tiered findings. |
-| 10 | GROW | Recurring lint findings → process improvement targets, not just one-time fixes. |
+Record one of:
+- `QMD refreshed: update + embed + verified`
+- `QMD refreshed: update only + verified`
+- `QMD skipped: QMD_WIKI_COLLECTION unset`
+- `QMD skipped: qmd CLI unavailable`
+- `QMD failed: <short error summary>`

@@ -1,15 +1,26 @@
 ---
 name: agent-communication
-description: Use fmail for agent-to-agent messaging with team conventions.
-metadata:
-  short-description: Agent messaging via fmail
+description: AI DevKit · Exchange information with active Codex, Claude Code, and other AI agents using ai-devkit agent list, detail, and send. Use when an agent needs to find another active agent, read its recent context, send it information, or request information back.
 ---
 
-Use `fmail` for agent-to-agent communication (not MCP agent mail).
+# Agent Communication
 
-- Prefer a stable kebab-case agent name.
-- Register your agent name before sending messages.
-- Use direct messages or topic messages as needed.
-- Check logs and watch for replies when coordinating.
+Use `ai-devkit agent ...` to discover and communicate with active agents. If `ai-devkit` is not on PATH, use `npx ai-devkit@latest agent ...`.
 
-Reference: `references/fmail-quickref.md`.
+## Commands
+
+```bash
+ai-devkit agent list --json
+ai-devkit agent detail --id <agent-name> --json --tail 20
+ai-devkit agent send --id <agent-name> "<message>"
+ai-devkit agent send --id <agent-name> --wait --timeout 120000 --json "<message>"
+<command> 2>&1 | ai-devkit agent send --id <agent-name> --stdin
+```
+
+## Notes
+
+- `list --json` returns active agents with fields such as `name`, `type`, `status`, `summary`, `projectPath`, and `lastActive`.
+- Use the `name` from `list --json` as `--id`. Partial matches are supported, but exact names are safer.
+- Use `detail --json --tail <n>` to read recent context from an agent before deciding what to send.
+- `send --wait` waits for a reply; add `--json` when the response should be machine-readable.
+- `send --stdin` forwards piped command output or larger text.

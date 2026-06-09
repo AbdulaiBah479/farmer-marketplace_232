@@ -1,137 +1,73 @@
 ---
-name: github-issue-creator
-description: Convert raw notes, error logs, voice dictation, or screenshots into crisp GitHub-flavored markdown issue reports. Use when the user pastes bug info, error messages, or informal descriptions and wants a structured GitHub issue. Supports images/GIFs for visual evidence.
+name: "github-issue-creator"
+description: |
+  Create github issue creator operations. Auto-activating skill for Enterprise Workflows.
+  Triggers on: github issue creator, github issue creator
+  Part of the Enterprise Workflows skill category. Use when working with github issue creator functionality. Trigger with phrases like "github issue creator", "github creator", "github".
+allowed-tools: "Read, Write, Edit, Bash(cmd:*)"
+version: 1.0.0
+license: MIT
+author: "Jeremy Longshore <jeremy@intentsolutions.io>"
+compatible-with: claude-code
 ---
 
-# GitHub Issue Creator
+# Github Issue Creator
 
-Transform messy input (error logs, voice notes, screenshots) into clean, actionable GitHub issues.
+## Overview
 
-## Output Template
+This skill provides automated assistance for github issue creator tasks within the Enterprise Workflows domain.
 
-```markdown
-## Summary
-[One-line description of the issue]
+## When to Use
 
-## Environment
-- **Product/Service**: 
-- **Region/Version**: 
-- **Browser/OS**: (if relevant)
+This skill activates automatically when you:
+- Mention "github issue creator" in your request
+- Ask about github issue creator patterns or best practices
+- Need help with enterprise workflow skills covering project management, compliance, governance, and enterprise integration patterns.
 
-## Reproduction Steps
-1. [Step]
-2. [Step]
-3. [Step]
+## Instructions
 
-## Expected Behavior
-[What should happen]
-
-## Actual Behavior
-[What actually happens]
-
-## Error Details
-```
-[Error message/code if applicable]
-```
-
-## Visual Evidence
-[Reference to attached screenshots/GIFs]
-
-## Impact
-[Severity: Critical/High/Medium/Low + brief explanation]
-
-## Additional Context
-[Any other relevant details]
-```
-
-## Output Location
-
-**Create issues as markdown files** in `/issues/` directory at the repo root. Use naming convention: `YYYY-MM-DD-short-description.md`
-
-## Guidelines
-
-**Be crisp**: No fluff. Every word should add value.
-
-**Extract structure from chaos**: Voice dictation and raw notes often contain the facts buried in casual language. Pull them out.
-
-**Infer missing context**: If user mentions "same project" or "the dashboard", use context from conversation or memory to fill in specifics.
-
-**Placeholder sensitive data**: Use `[PROJECT_NAME]`, `[USER_ID]`, etc. for anything that might be sensitive.
-
-**Match severity to impact**:
-- Critical: Service down, data loss, security issue
-- High: Major feature broken, no workaround
-- Medium: Feature impaired, workaround exists
-- Low: Minor inconvenience, cosmetic
-
-**Image/GIF handling**: Reference attachments inline. Format: `![Description](attachment-name.png)`
+1. Provides step-by-step guidance for github issue creator
+2. Follows industry best practices and patterns
+3. Generates production-ready code and configurations
+4. Validates outputs against common standards
 
 ## Examples
 
-**Input (voice dictation)**:
-> so I was trying to deploy the agent and it just failed silently no error nothing the workflow ran but then poof gone from the list had to refresh and try again three times
+**Example: Basic Usage**
+Request: "Help me with github issue creator"
+Result: Provides step-by-step guidance and generates appropriate configurations
 
-**Output**:
-```markdown
-## Summary
-Agent deployment fails silently - no error displayed, agent disappears from list
 
-## Environment
-- **Product/Service**: Azure AI Foundry
-- **Region/Version**: westus2
+## Prerequisites
 
-## Reproduction Steps
-1. Navigate to agent deployment
-2. Configure and deploy agent
-3. Observe workflow completes
-4. Check agent list
+- Relevant development environment configured
+- Access to necessary tools and services
+- Basic understanding of enterprise workflows concepts
 
-## Expected Behavior
-Agent appears in list with deployment status, errors shown if deployment fails
 
-## Actual Behavior
-Agent disappears from list. No error message. Requires page refresh and retry.
+## Output
 
-## Impact
-**High** - Blocks agent deployment workflow, no feedback on failure cause
+- Generated configurations and code
+- Best practice recommendations
+- Validation results
 
-## Additional Context
-Required 3 retry attempts before successful deployment
-```
 
----
+## Error Handling
 
-**Input (error paste)**:
-> Error: PERMISSION_DENIED when publishing to Teams channel. Code: 403. Was working yesterday.
+| Error | Cause | Solution |
+|-------|-------|----------|
+| Configuration invalid | Missing required fields | Check documentation for required parameters |
+| Tool not found | Dependency not installed | Install required tools per prerequisites |
+| Permission denied | Insufficient access | Verify credentials and permissions |
 
-**Output**:
-```markdown
-## Summary
-403 PERMISSION_DENIED error when publishing to Teams channel
 
-## Environment
-- **Product/Service**: Copilot Studio → Teams integration
-- **Region/Version**: [REGION]
+## Resources
 
-## Reproduction Steps
-1. Configure agent for Teams channel
-2. Attempt to publish
+- Official documentation for related tools
+- Best practices guides
+- Community examples and tutorials
 
-## Expected Behavior
-Agent publishes successfully to Teams channel
+## Related Skills
 
-## Actual Behavior
-Returns `PERMISSION_DENIED` with code 403
-
-## Error Details
-```
-Error: PERMISSION_DENIED
-Code: 403
-```
-
-## Impact
-**High** - Blocks Teams integration, regression from previous working state
-
-## Additional Context
-Was working yesterday - possible permission/config change or service regression
-```
+Part of the **Enterprise Workflows** skill category.
+Tags: enterprise, governance, compliance, project-management, integration

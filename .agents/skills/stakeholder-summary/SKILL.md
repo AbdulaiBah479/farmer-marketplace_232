@@ -1,192 +1,148 @@
 ---
-name: stakeholder-summary
+name: "stakeholder-summary"
 description: >
-  Translates a contract review into a summary the business stakeholder will
-  actually read. Not a legal memo — a two-minute answer to "can I sign this
-  and what do I need to know." Use when user says "summarize for the business",
-  "write this up for [stakeholder]", "explain this to procurement", "non-legal
-  summary", or when a review is done and needs to go to someone outside legal.
+  Produces a plain-language stakeholder summary from an existing feature
+  specification, for sharing with non-technical stakeholders before
+  implementation kicks off. Use when the user wants to draft a stakeholder
+  summary, executive summary, or business summary of a feature spec or PRD.
+  Does not write the spec itself — use plan-a-feature. Does not sequence the
+  build into phases — use plan-a-phased-build. Does not produce an
+  implementation plan — use plan-implementation.
+argument-hint: "[path to feature-specification.md, optional: extra context for the summary]"
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash(find *)
 ---
+
+## Project Context
+
+- CLAUDE.md: !`find . -maxdepth 1 -name "CLAUDE.md" -type f`
+- project-discovery.md: !`find . -maxdepth 3 -name "project-discovery.md" -type f`
+
+## Operating Principles
+
+- **Plain language only.** The stakeholder summary never contains file paths, line numbers, function or class names, library mechanics, database tables, API shapes, or language primitives. Use product-level subsystem names ("the telematics provider", "the customer list"), user-facing UI vocabulary (badge, popup, list), and behavioral verbs (create, edit, update, claim, merge, sync). A non-technical stakeholder must be able to read the document end-to-end without translation.
+- **Center the customer, not the system.** Lead with the problem the customer experiences, then the capabilities introduced, then the experience, then the data flow, then what is out of scope, then the questions. The system is the means, not the subject.
+- **High level only.** A stakeholder summary is for getting feedback before kickoff. Skip anything that would only matter once implementation has started: schemas, sequencing, file boundaries, test plans, rollout strategy, telemetry. If a detail is only meaningful to engineers, it does not belong in this document.
+- **Diagrams carry weight.** Use Mermaid for both the user experience flow and the data flow before-and-after. Diagrams are not decoration — they replace paragraphs of prose, so they must be readable on their own.
+- **Open questions are stakeholder-shaped.** The closing questions are framed in customer or product language, not engineering language. They ask stakeholders to confirm framing, scope, and trade-offs — not to make technical decisions.
 
 # Stakeholder Summary
 
-## Matter context
+## Step 1: Resolve the Source and Output Paths
 
-**Matter context.** Check `## Matter workspaces` in the practice-level CLAUDE.md. If `Enabled` is `✗` (the default for in-house users), skip the rest of this paragraph — skills use practice-level context and the matter machinery is invisible. If enabled and there is no active matter, ask: "Which matter is this for? Run `/commercial-legal:matter-workspace switch <slug>` or say `practice-level`." Load the active matter's `matter.md` for matter-specific context and overrides. Write outputs to the matter folder at `~/.claude/plugins/config/claude-for-legal/commercial-legal/matters/<matter-slug>/`. Never read another matter's files unless `Cross-matter context` is `on`.
+Read the user's argument and conversation context. Identify:
 
----
+1. **The source specification** — the file the summary will be derived from. Usually a `feature-specification.md`, but may be a PRD, design doc, or similar. If the user did not name a file, ask in one short message which file to summarize.
+2. **The output path** — `stakeholder-summary.md` in the **same directory** as the source file. Do not place it anywhere else unless the user explicitly says so.
+3. **Shaping context** — anything the user added about the audience, tone, or emphasis ("this is going to leadership", "lean into the customer-trust angle"). Capture it for use in Steps 3 and 4.
 
-## Destination check
+If `stakeholder-summary.md` already exists in the target directory, ask the user whether to overwrite, append a timestamp suffix, or stop. Do not silently overwrite.
 
-Before producing output, check where it's going. If the user has named a destination (a channel, a distribution list, a counterparty, "everyone"), ask whether it's inside the privilege circle. Public channels, company-wide lists, counterparty/opposing counsel, vendors, and clients (for work product) waive the protection. When the destination looks outside the circle, flag it and offer (a) the privileged version for legal only, (b) a sanitized version for the broader channel, or (c) both — don't silently apply a privileged header and then help paste it somewhere the header won't protect it. See the canonical `## Shared guardrails → Destination check` in this plugin's CLAUDE.md.
+## Step 2: Read the Source and Project Context
 
-## Purpose
+Read the feature specification end-to-end. Then capture:
 
-The business owner who asked for this contract doesn't want a legal memo. They want to know: can I sign it, what's the catch, and what do I need to do. This skill takes a completed review and turns it into that.
+- The customer problem the feature addresses, in the customer's own words where possible.
+- The capabilities the feature introduces, expressed as user-visible actions (not API endpoints, not database changes). This is true even if the outcome is an API and not user visible yet. We want to provide what the spec will do for our end users.
+- The user experience: what the customer sees, what choices they make, what happens after each choice.
+- The current data flow (what happens today) and the new data flow (what will happen after this ships), at the level of "system A sends X to system B".
+- What the spec explicitly says is out of scope, deferred, or handled elsewhere.
+- Any open questions the spec already names.
 
-## Which side?
+Read the CLAUDE.md in the project named in the specification and `project-discovery.md` if present — they may surface vocabulary or naming conventions the stakeholder summary should follow.
 
-The underlying review memo was run against either the sales-side or the purchasing-side playbook. Carry that framing through. A purchasing-side summary tells the business owner "here's what we're getting and what we agreed to give up"; a sales-side summary tells them "here's what we're selling and what we're on the hook for." Check which side the review was run on (it should be noted at the top of the review memo) and match the voice. If it's not obvious from the memo, ask the lawyer before summarizing.
+## Step 3: Translate Technical Content into Plain Language
 
-## Audience calibration
+For every piece of content destined for the summary, apply a translation pass:
 
-Read `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` → `## House style` → who reads stakeholder summaries, how long should they be. If not specified, default to: procurement or a department head, two paragraphs max, no legal terms of art.
+- **System names generalize one level up.** "PostgreSQL" → "the database"; "the FleetCommand API" → "the telematics provider"; "the React component" → "the screen".
+- **API and data shapes become user-visible behaviors.** "POST /units/claim" → "Claim it"; "PATCH /customers/1/update endpoint with [field_name]" → "update the existing customer record".
+- **Engineering trade-offs become product trade-offs.** "Eventually consistent reads from the replica" → not mentioned; "we are not building bulk actions" → "Bulk actions. One record at a time for now."
+- **Acronyms and brand names** stay only if a stakeholder would already know them (e.g., the product's own brand, well-known integrations). Otherwise generalize.
 
-Different audiences need different summaries:
+If a piece of content cannot be translated without losing meaning, leave it out. The summary is for feedback on shape and direction, not technical correctness.
 
-| Audience | Cares about | Doesn't care about |
-|---|---|---|
-| **Procurement** | Price, renewal mechanics, approval routing | Liability cap structure |
-| **Department head (budget owner)** | Can their team use it, what happens if it breaks, cost | Indemnity scope |
-| **Finance** | Total cost of ownership, renewal price risk, off-balance-sheet commitments | Governing law |
-| **Security / IT** | Data handling, subprocessors, SOC 2, where data lives | Everything else |
-| **Executive sponsor** | Is this going to embarrass us, is legal a blocker | Details |
+## Step 4: Draft the Stakeholder Summary
 
-Ask who this is for if it's not obvious from context.
+Use the template at [`references/stakeholder-summary-template.md`](references/stakeholder-summary-template.md). Write the file at the resolved output path, filling in each section in order:
 
-## The summary
+1. **Title** — `# {{Feature Name}} — Stakeholder Summary`. Derive the feature name from the source spec's title or H1.
+2. **What problem are we solving?** One or two short paragraphs from the customer's point of view, followed by a short bulleted list of the capabilities the feature introduces (each as a bold name plus one sentence in the customer's voice).
+3. **What does this open up?** Four to six bullets naming the outcomes the feature enables — customer confidence, data trust, downstream features unblocked, etc. Each bullet leads with a bold phrase and adds one sentence of why it matters.
+4. **What will the user experience look like?** One short paragraph framing the experience, followed by a Mermaid `flowchart TD` showing the user-facing decision and its branches. Keep nodes short and customer-readable. It is acceptable to omit if the change truly has no user interface impact, but this will be rare.
+5. **How does the data flow today vs. after this change?** Mermaid `flowchart LR` diagrams. **The number of diagrams in each subsection — both "today" and "after this change" — matches the number of meaningfully distinct paths the spec actually describes. Never invent paths to hit a template count. Never collapse genuinely distinct paths into one diagram to fit a template count. One today diagram and three "after this change" diagrams is correct if that is what the spec needs; two today diagrams and one "after this change" diagram is also correct if that is what the spec needs.** Both subsections follow the same shape:
 
-### Length cap — enforced
+  - **Today.** One diagram per meaningfully distinct *current* path, each showing the pain point with `style` highlighting on the problem nodes. If there is only one current path worth showing (the common case), produce a single "Today" diagram with a one-sentence lead-in above it and no prose block below — the lead-in is enough. If there are two or more current paths, each diagram gets a one-sentence lead-in *and* a 3 to 5 sentence prose block immediately below that walks the reader through the flow, names the pain point, and names what makes this current path distinct from the other current paths.
+  - **After this change.** One diagram per meaningfully distinct *new* path, highlighting the resulting good state in green. Every "after this change" diagram is followed by a 3 to 5 sentence prose description placed immediately below the diagram, walking the reader through the flow the diagram shows. When there are two or more "after this change" paths, each prose block must additionally name the trigger or condition that sends the customer down this path rather than the others, and the outcome that differs between paths — a stakeholder reading the prose blocks back-to-back should be able to articulate when each path applies. When there is only one "after this change" path, the prose still walks the flow but does not manufacture a contrast against paths that do not exist.
+  - For all Mermaid charts, do not literally match the template unless the spec aligns. Use a chart that makes sense for the user experience and data flows being described by the feature specification itself. The template contains examples only.
+6. **What is intentionally not in this slice?** Bulleted list of items deliberately excluded. Each item leads with a bold phrase and a one-sentence reason or pointer to where it lives instead. Close the section with a single one-line catch-all confirmation prompt directed at stakeholders — something like *"If any of these cuts would block your team, flag it before we kick off."* That one line replaces the per-item "is this OK?" question that would otherwise duplicate into the next section.
+7. **What we are asking stakeholders.** Three to five open questions that present a real trade-off, framing call, or sequencing choice the stakeholder must weigh in on. **A question only earns a spot here if it asks the stakeholder to choose between two or more substantive alternatives, or to confirm framing the document presents as genuinely open.** A bare "is it acceptable that X is deferred?" — where X is already listed in "What is intentionally not in this slice?" — is the duplication this rule exists to prevent. Push those back into the prior section's closing prompt. Questions in this section must either:
+  - present a trade-off with two or more named alternatives (for example, *"Remove the broken button vs. show a placeholder message — which fits the brand better?"*), or
+  - confirm framing or scope that is not already settled by the body of the document (for example, *"Are we right to treat this as a v1 for desktop users only, or should mobile parity be part of v1?"*), or
+  - surface an open question the source spec itself names as unresolved.
+  Frame every question so a non-technical reader can answer it, and connect each one to a section above it so the reader can see what it follows from.
 
-The summary is:
-- **One paragraph** for the verdict and what this is (business terms, plain English)
-- **One paragraph** for the catch — the thing the stakeholder would be surprised by later if nobody told them now
-- **A 2-3 item checklist** for what the stakeholder actually needs to do (at most three items; if you want a fourth, the first three aren't tight enough)
-- **A one-line close** with approval timing
+**Write the file in one pass once the content is ready** — the document is short enough that incremental saves are unnecessary. After writing, read it back end-to-end and rewrite any sentence that still leaks implementation detail.
 
-**Under 200 words total.** If you're writing more, you're including detail the stakeholder doesn't need — they have the memo for that. This is the quick read before the stakeholder hits reply.
+## Step 5: Self-Check Before Presenting
 
-If the close needs a third paragraph, fold it into the checklist instead. Don't let the close grow into a fourth block.
+Run three passes before reporting the summary as done. Each pass has a single focus, and **each pass begins with a fresh Read of the output file from disk** — do not check against working memory or the draft you held while writing. The Read tool call is required, not optional. Working memory drifts from what actually landed on disk; only the file contents matter.
 
-### Scope of quote — discipline
+### Pass A: Internal-consistency / contradiction check
 
-When quoting a contract clause (in the summary, in the "catch" paragraph, or in the checklist), quote the **full conditional sentence**, not a truncated version. A clause that reads "Except as expressly provided in the Order Form, renewal of promotional or one-time priced subscriptions resets to list price" means something different from "renewal resets to list price" — the truncation drops the condition and misrepresents what the term does.
+**First, use the Read tool to load the output file from disk.** Then list every load-bearing claim the document makes — capability included, capability deferred, behavior described in a diagram, prose narrative below a diagram, item under "What is intentionally not in this slice", trade-off or framing call in "What we are asking stakeholders". For every pair of claims, ask: does claim X assert something that claim Y denies or implies the opposite of? Pay special attention to:
 
-If a full conditional quote doesn't fit the summary's length cap, paraphrase rather than truncate. "For promotional pricing, renewal resets to list" is a fair paraphrase; "renewal resets to list" is not — it promotes the exception to the rule.
+- **Diagram vs. exclusion.** A capability shown in any data-flow diagram (or its prose block below) that "What is intentionally not in this slice" says is deferred, and vice versa. This is the most common form of contradiction: a diagram walks the customer through a step that uses a capability the exclusion section says is not in the slice. The fix is almost always to disambiguate the wording on one side — clarifying that the diagram is showing a narrower capability than the exclusion appears to forbid, or vice versa.
+- **UX vs. data flow.** A behavior in the user-experience flowchart that contradicts a behavior in any data-flow diagram, or vice versa.
+- **Outcomes vs. exclusion.** A capability named in "What does this open up?" that "What is intentionally not in this slice" says is deferred.
+- **Diagram vs. diagram.** An assumption in the prose under one diagram that conflicts with an assumption in the prose under another diagram.
+- **Vocabulary collisions.** The same term used to mean two different things in different sections (for example, "share" used both for *sending a URL another user can open* and for *publishing a view to your whole organization*), or different terms used for the same thing in different sections.
 
-### Format
+For every contradiction found, take an evidence-based approach to resolving it:
 
-Prepend the work-product header from `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` `## Outputs` (it differs by user role — see `## Who's using this`).
+1. **Re-read the source specification** identified in Step 1. The spec is the authoritative source for what the feature does and does not do. Most contradictions in the summary are translation errors — the spec is internally consistent and the summary mistranslated one side.
+2. **If the spec resolves the contradiction:** edit the summary so both sides match the spec. If the apparent contradiction is actually a terminology collision (the same word covering two distinct concepts), disambiguate the wording — typically by renaming one usage to a more specific term that the source spec, its CLAUDE.md, or its project-discovery vocabulary already supports. Record in working memory which contradiction was resolved and how, so the same disambiguation can be applied uniformly across every section.
+3. **If the spec does not resolve the contradiction** — because the spec is silent on the point, the spec itself is internally inconsistent, or the resolution depends on a judgment call only the user can make — **stop and ask the user.** Do not guess. Use `AskUserQuestion` to surface a structured ask containing:
+  - **A plain-language description of the contradiction**, naming both sides explicitly ("Section X says A; Section Y says B; these conflict because…"). Quote the actual phrasing from each section.
+  - **Two to four resolution options.** Typical patterns: keep A and rewrite B; keep B and rewrite A; reconcile by disambiguating terminology and using the disambiguated terms in both sections; move the contradicting capability into "What is intentionally not in this slice" and remove it from elsewhere.
+  - **Your recommended option, marked clearly,** with a one-sentence reason grounded in the source spec, the project's conventions, or the stakeholder framing the user provided in Step 1. The recommendation must be a concrete option from the list above, not a fresh suggestion.
+  - **A direct request that the user pick which resolution to apply.**
 
-```markdown
-[WORK-PRODUCT HEADER — per plugin config ## Outputs]
-<!-- Remove the header above if forwarding outside the legal-privileged circle (e.g., to a business stakeholder, counterparty, or vendor). Confirm the correct marking for your jurisdiction and matter before forwarding. -->
+After applying any contradiction-driven edits, Read the file from disk again before continuing. Pass B and Pass C must run against the post-fix contents.
 
-**[Counterparty] [Agreement type]** — [READY TO SIGN | NEEDS CHANGES | BLOCKED]
+### Pass B: Plain-language audit
 
-[One paragraph: what this agreement does, in business terms. Not "Master Services
-Agreement for the provision of cloud-based analytics" — "this is the contract
-for the dashboard tool the marketing team wants."]
+**First, use the Read tool to load the output file from disk.** Then read the document as a non-technical stakeholder. For each sentence, ask: would a reader without engineering context understand this without translation? Fix anything that fails. Specifically verify:
 
-[One paragraph: what the stakeholder needs to know. The catch, if there is one.
-The thing that will surprise them later if nobody tells them now. E.g., "Heads
-up: this auto-renews every year and we have to cancel 60 days out. I've added
-it to the tracker but you should know." Or: "Clean agreement, no surprises,
-cleared to sign."]
+- **No engineering artifacts.** No file paths, function names, class names, database tables or columns, API endpoints, HTTP verbs, library or framework names, environment variables, queue or topic names, or language primitives.
+- **No engineering hedges.** No "eventually consistent", "idempotent", "race condition", "backfill", "migration", "schema", "payload", "request/response", "stateless", "async", "webhook", "polling vs. push", or similar. If a concept like this is load-bearing, restate it as a user-visible behavior or omit it.
+- **No leftover scaffolding.** Template placeholders, TODOs, "TBD", or example text from the template that was not replaced with real content.
+- **Closing questions are stakeholder-answerable.** A non-technical reader can give a real answer without asking an engineer what the question means.
 
-<!-- Do not claim "I've added it to the tracker" unless `renewal-tracker` has
-actually been run for this contract — see Verify tracker entries before
-asserting them below. -->
+If Pass B required any edits, apply them with Edit, then **Read the file again from disk** before starting Pass C. The Pass C read-through must run against the post-fix contents, not your memory of what you intended to fix.
 
-**Verify tracker entries before asserting them.** Before the summary says "I've added it to the tracker" (or any equivalent — "it's in the tracker," "tracked," "set a reminder"), verify that `renewal-tracker` has been run for this contract. Check the outputs folder or the matter folder for a `renewal-tracker` output that names this counterparty / agreement. If there isn't one:
+### Pass C: Reading-order and progressive-disclosure check
 
-- Either run `renewal-tracker` for this contract first, then write the summary.
-- Or write the summary without asserting the tracker entry, and include an action item: "Add to renewal tracker — not yet done."
+**First, use the Read tool to load the output file from disk again** — even if Pass B required no edits. This re-load is what makes Pass C an actual third pass rather than a continuation of Pass B's attention. Then read the document straight through, top to bottom, as someone arriving cold. Verify the document builds on itself rather than assuming context from a later section:
 
-Claiming a tracker entry exists when it does not is worse than omitting the reassurance. The stakeholder then trusts the reminder that will never fire. If the truthful statement is "tracked," the skill runs the tracker. If it's "you should add this to your calendar — I haven't logged it," say that.
+- **The opening establishes the customer problem before naming any capability.** A reader should know *who is hurting and why* before they see *what we are building*.
+- **Each section uses only vocabulary the reader has already encountered.** A noun that appears in the data-flow diagram should have been introduced in the problem or capabilities sections — not first defined inside the diagram. Acronyms and product-internal names appear only if a stakeholder would already know them; otherwise generalize one level up ("the telematics provider", "the customer list").
+- **Diagrams are readable on their own.** Node labels and edge labels tell the story without requiring the surrounding prose. A reader who only skims the diagrams should still get the shape of the change.
+- **Diagram counts match the spec, not the template.** Both "today" and "after this change" subsections have one diagram per meaningfully distinct path in the spec — no padding to two, no collapsing distinct paths into one. A spec with one current path and three new paths should produce 1 today diagram + 3 after-this-change diagrams. A spec with two current paths and one new path should produce 2 today diagrams + 1 after-this-change diagram.
+- **Every "after this change" diagram has a 3-5 sentence prose block immediately below it.** The block walks through the flow. When two or more "after this change" paths exist, each block also names what triggers this path and what outcome differs from the others, so a stakeholder reading the blocks back-to-back can articulate when each path applies. When only one "after this change" path exists, the block walks the flow without manufacturing a contrast against absent siblings.
+- **The "Today" subsection scales the same way.** A single today diagram needs only its one-sentence lead-in — no prose block below. Two or more today diagrams each get a 3-5 sentence prose block below that walks the flow, names the pain point, and names what makes this current path distinct from the other current paths.
+- **The "today vs. after this change" pairing is obvious.** The before-and-after diagrams sit close enough together that the contrast is visible without scrolling back and forth.
+- **The "intentionally not in this slice" list comes after the reader understands what *is* in the slice.** Out-of-scope only makes sense once in-scope is concrete.
+- **The closing questions follow from the body.** Each question should connect to a specific section above it — not introduce a new topic the document never mentioned.
+- **No question in "What we are asking" restates an item from "What is intentionally not in this slice".** For each closing question, find the exclusion item it would map to. If the question is essentially *"is this exclusion OK?"* with no new trade-off or alternative attached, remove it — the closing one-liner at the bottom of "What is intentionally not in this slice" already collects that confirmation. Every remaining question in "What we are asking" must present a named alternative, an unresolved framing call, or an open question the spec itself names.
 
-**What you need to do:**
-- [ ] [Action item, if any — "confirm the team is okay with data living in EU"
-  or "nothing — I'll route for signature"]
+If any check in any pass fails, fix it with Edit and Read the file again before re-running the affected pass. If a Pass A edit changes content that Pass B or Pass C already cleared, re-run those passes against the new content — contradiction fixes can re-introduce language or reading-order issues that the earlier passes caught. Do not present a summary that fails Pass A or Pass B — a stakeholder who reads a contradiction or has to ask "what does X mean?" has already lost trust in the document.
 
-**Approval:** [who's approving and expected timing]
-```
+## Step 6: Present the Summary
 
-### What to translate
+Summarize for the user in one short message:
 
-| Legal finding | Business translation |
-|---|---|
-| "Liability capped at 12 months fees" | "If they break something, the most we can recover is a year's worth of what we paid them." |
-| "No termination for convenience" | "Once we sign, we're locked in for the full term — we can't just cancel if we stop using it." |
-| "Auto-renewal with 60-day notice" | "This renews automatically every year. To cancel, we have to tell them two months before the renewal date." |
-| "No IP indemnity" | "If someone sues us claiming this tool infringes their patent, the vendor isn't on the hook to defend us." |
-| "Subprocessor list not disclosed" | "We don't know what other companies will have access to our data through them." |
-| "Data deletion within 30 days of termination" | "When we cancel, they delete our data within a month. Export anything you need before then." |
-| "SLA credits capped at 10% of monthly fee" | "If the service goes down, we get a small credit back. It won't cover the cost of the downtime to the business." |
+- The output file path.
+- The number of capabilities introduced, the number of "what this opens up" outcomes, and the number of open questions.
+- The next concrete action — typically "review the summary, especially the open questions section, and share it with stakeholders, or tell me what to tighten before you do".
 
-### What NOT to include
-
-- Section numbers
-- Defined terms in quotes
-- The word "indemnification" (say "they cover us if" / "we cover them if")
-- The word "notwithstanding"
-- Risk matrices with colored dots (unless this stakeholder has specifically asked for them before)
-- Caveats about how this isn't legal advice — the stakeholder knows who sent it
-
-## When the review found problems
-
-If the review has 🔴 or 🟠 issues, the summary still needs to be two paragraphs — but the second paragraph is "here's what we're pushing back on and why."
-
-```markdown
-[WORK-PRODUCT HEADER — per plugin config ## Outputs]
-<!-- Remove the header above if forwarding outside the legal-privileged circle. -->
-
-**[Counterparty] [Agreement type]** — NEEDS CHANGES
-
-[What it is, one paragraph.]
-
-We're going back to them on [N] things before this is ready. The main one:
-[the critical issue in plain English — "they want the right to use our data
-to improve their product, which means our competitors' instance gets smarter
-from our data"]. We've asked them to strike it. [Realistic assessment: "They'll
-probably agree" / "This might be a sticking point — will keep you posted."]
-
-**What you need to do:**
-- [ ] Nothing yet — I'll let you know when it's back from them.
-  OR
-- [ ] [Business decision they need to make: "If they won't budge on X, are you
-  okay with Y, or do we walk?"]
-```
-
-## Handoffs
-
-**From vendor-agreement-review / saas-msa-review:** Those skills produce the full memo. This skill reads the memo and compresses it. Don't re-review the contract — read the review.
-
-**To the stakeholder:** Via whatever channel `~/.claude/plugins/config/claude-for-legal/commercial-legal/CLAUDE.md` says. If Slack, keep it under 150 words. If email, the format above is fine as-is.
-
-## Escalation-fan-out reconciliation
-
-The upstream review is a one-to-many producer: it can name five escalation targets (Deputy GC, CISO, Privacy Officer, CFO, business owner) across different findings. `escalation-flagger` routes one finding at a time. Without a reconciliation step, the Deputy GC sees the memo and the other four approvers never do.
-
-Before producing the summary, read the upstream review memo and tally escalations:
-
-1. **Count the escalation targets the review named.** Look for the routing / escalation block at the end of the review, or for per-finding "escalate to [X]" tags. De-dupe by approver name — a reviewer named for two findings counts once.
-2. **Count the escalations actually routed.** Read the review folder (or matter folder) for `escalation-*.md` drafts produced by `escalation-flagger` since the review was written. Each draft names one approver.
-3. **Reconcile.** If N approvers were named and M drafts exist, (N − M) escalations have not been routed.
-
-Include a short reconciliation block in the summary — above the checklist, below the catch paragraph:
-
-```markdown
-**Escalation status:** [M] of [N] escalation targets routed. The following have not been routed and require action:
-- [Approver name] — [one line on the finding that named them]
-- [Approver name] — [one line]
-```
-
-If all N have been routed:
-```markdown
-**Escalation status:** [N] of [N] escalation targets routed.
-```
-
-If the upstream review surfaced no escalations, omit the block.
-
-**Do not omit a named approver from the reconciliation because the stakeholder wouldn't recognize the name.** Business stakeholders often do not know who the Privacy Officer or CISO is. The reconciliation is internal-facing — it tells the lawyer sending the summary whether all the routing is done, not the stakeholder. If the stakeholder-facing summary needs to stay narrow, the reconciliation can live in a "routing status" footer or attached note — but it has to exist. A summary that implies routing is complete when it is not is worse than no summary.
-
-**Word-count carve-out.** The escalation reconciliation block is exempt from the 200-word cap. Length-cap discipline on the summary body stays; the reconciliation is housekeeping, not narrative.
-
-**When no escalation-flagger drafts exist.** If the upstream review named approvers and no drafts are in the folder, treat the count as M = 0. The reconciliation block lists all N as unrouted. That is the finding.
-
-## A note on tone
-
-Stakeholders remember two things about legal: did it block me, and did it make sense. This skill is how legal makes sense. Write like you're explaining it to a smart colleague over coffee, not like you're writing a memo to file.
-
-If the honest summary is "this is fine, sign it," say that. Don't pad a clean review into three paragraphs to look thorough.
+Ask whether the user wants to refine wording, add or remove a question, or consider the summary ready to share.

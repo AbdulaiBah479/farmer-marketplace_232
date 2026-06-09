@@ -1,62 +1,157 @@
 ---
 name: document-conversion
-description: 将 DOC/DOCX/PDF/PPT/PPTX 文档转换为 Markdown 格式。自动检测 PDF 类型（电子版/扫描版），提取图片到独立目录。当管理员入库非 Markdown 文档时使用此 Skill。触发条件：入库 DOC/DOCX/PDF/PPT/PPTX 格式文件。
+description: Converts documents and URLs to markdown via tiered fallback (MCP markitdown, native tools, user notice). Use when a skill must ingest PDF, DOCX, or URL content.
+alwaysApply: false
+category: infrastructure
+tags:
+- conversion
+- markitdown
+- mcp
+- documents
+- pdf
+- docx
+dependencies:
+- content-sanitization
+- error-patterns
+provides:
+  infrastructure:
+  - document-conversion
+  - format-detection
+  patterns:
+  - tiered-fallback-conversion
+  - uri-based-conversion
+usage_patterns:
+- document-to-markdown
+- url-content-extraction
+- file-format-conversion
+complexity: basic
+model_hint: fast
+estimated_tokens: 500
+progressive_loading: true
+modules:
+- modules/format-matrix.md
+- modules/fallback-tiers.md
+- modules/uri-construction.md
 ---
+# Document Conversion
 
-# 文档格式转换
+Convert documents and URLs to markdown using a three-tier
+fallback strategy. This skill is infrastructure: consumer
+skills reference it via dependency rather than reimplementing
+conversion logic.
 
-将各种文档格式转换为 Markdown，用于知识库入库。
+## When To Use
 
-## 支持格式
+- Converting PDF, DOCX, PPTX, XLSX, HTML, or images to
+  markdown for downstream processing
+- Any skill that ingests external documents
+- File format is not plain text or markdown
 
-| 格式 | 处理方式 |
-|-----|---------|
-| DOCX | Pandoc 转换，保留格式和图片 |
-| DOC | LibreOffice → DOCX → Pandoc |
-| PDF 电子版 | PyMuPDF4LLM 快速转换 |
-| PDF 扫描版 | PaddleOCR-VL 在线 OCR |
-| PPTX | pptx2md 专业转换 |
-| PPT | LibreOffice → PPTX → pptx2md |
+## When NOT To Use
 
-## 调用方式
+- Content is already markdown or plain text
+- You only need to read a small text file (use Read directly)
 
-```bash
-python .claude/skills/document-conversion/scripts/smart_convert.py \
-    <temp_path> \
-    --original-name "<原始文件名>" \
-    --json-output
+## Format Detection
+
+Identify the document type from the URI before converting.
+
+| Extension | Format | Tier 1 | Tier 2 |
+|-----------|--------|--------|--------|
+| `.pdf` | PDF | Yes | Read tool (pages) |
+| `.docx`, `.doc` | Word | Yes | None |
+| `.pptx`, `.ppt` | PowerPoint | Yes | None |
+| `.xlsx`, `.xls` | Excel | Yes | None |
+| `.html`, `.htm` | HTML | Yes | WebFetch |
+| `.csv` | CSV | Yes | Read tool |
+| `.json` | JSON | Yes | Read tool |
+| `.xml` | XML | Yes | Read tool |
+| `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp` | Image | Yes | Read tool (visual) |
+| `.mp3`, `.wav`, `.m4a` | Audio | Yes | None |
+| `.zip` | Archive | Yes | None |
+| `.epub` | E-book | Yes | None |
+
+See `modules/format-matrix.md` for quality comparison
+across tiers.
+
+## Conversion Protocol
+
+To convert a document to markdown:
+
+```
+1. DETECT  -- Identify format from URI extension or context
+2. TRY     -- Tier 1: MCP markitdown (best quality)
+3. DEGRADE -- Tier 2: native Claude Code tools (if Tier 1 fails)
+4. INFORM  -- Tier 3: tell user what's needed (if no coverage)
+5. SANITIZE -- Apply content-sanitization (external content)
 ```
 
-**参数说明**：
-- `<temp_path>`: 临时文件路径（如 `/tmp/kb_upload_xxx.pptx`）
-- `--original-name`: **必须传入原始文件名**，用于生成正确的图片目录名
-- `--json-output`: 输出 JSON 格式结果
+### Tier 1: MCP markitdown
 
-## 输出格式
+Call the `convert_to_markdown` MCP tool with the document URI.
+See `modules/uri-construction.md` for URI formatting rules.
 
-```json
-{
-  "success": true,
-  "markdown_file": "/path/to/output.md",
-  "images_dir": "原始文件名_images",
-  "image_count": 5,
-  "input_file": "/path/to/input.pptx"
-}
+If the tool is available and succeeds, you have the best
+possible conversion. Proceed to the SANITIZE step.
+
+If the tool is not available (not found, connection error)
+or fails, proceed to Tier 2.
+
+### Tier 2: Native Claude Code Tools
+
+Use built-in tools as format-specific fallbacks.
+See `modules/fallback-tiers.md` for per-format instructions.
+
+**Supported in Tier 2**: PDF, HTML, images, CSV, JSON, XML.
+**Not supported in Tier 2**: DOCX, PPTX, XLSX, audio,
+archives, e-books. Proceed to Tier 3 for these.
+
+### Tier 3: User Notification
+
+When neither Tier 1 nor Tier 2 can handle the format:
+
+> I cannot convert this {format} file without the markitdown
+> MCP server. To enable conversion, add this to `.mcp.json`:
+>
+> ```json
+> {
+>   "mcpServers": {
+>     "markitdown": {
+>       "type": "stdio",
+>       "command": "uvx",
+>       "args": ["markitdown-mcp"]
+>     }
+>   }
+> }
+> ```
+>
+> Alternatively, convert the file to PDF or HTML first,
+> which I can read with built-in tools.
+
+### SANITIZE Step
+
+All converted content is external. Apply the
+`leyline:content-sanitization` checklist:
+
+- Size check (truncate sections over 2000 words)
+- Strip system/instruction tags
+- Wrap in external content boundary markers
+
+## Integration
+
+Consumer skills depend on this skill and reference the
+protocol by name:
+
+```yaml
+dependencies:
+- leyline:document-conversion
 ```
 
-## 处理流程
+Then in their workflow: "Convert the document using the
+`leyline:document-conversion` protocol."
 
-1. 执行转换命令（必须使用 `--original-name` 和 `--json-output`）
-2. 解析 JSON 输出，检查 `success` 字段
-3. 如果 `success: false`，报告错误并结束
-4. 如果 `success: true`，记录生成的文件路径和图片目录
+## Detailed References
 
-## 重要提示
-
-- 图片目录使用原始文件名命名（如 `培训资料_images/`）
-- 不传 `--original-name` 会导致图片引用路径错误
-- PDF 类型自动检测，扫描版处理较慢（几十秒到几分钟）
-
-## 格式详情
-
-各格式的详细处理说明，见 [FORMATS.md](FORMATS.md)
+- Format support details: `modules/format-matrix.md`
+- Per-format fallback instructions: `modules/fallback-tiers.md`
+- URI construction rules: `modules/uri-construction.md`

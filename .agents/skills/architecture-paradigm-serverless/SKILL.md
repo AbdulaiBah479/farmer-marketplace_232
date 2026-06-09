@@ -1,25 +1,36 @@
 ---
 name: architecture-paradigm-serverless
-description: |
-  Serverless FaaS for event-driven workloads with minimal infrastructure management.
-
-  Triggers: serverless, FaaS, Lambda, event-driven, pay-per-use
-  Use when: workloads are event-driven with bursty traffic
-  DO NOT use when: long-running processes or stateful operations required.
-version: 1.0.0
+description: Applies serverless FaaS patterns for event-driven workloads. Use when designing bursty workloads with minimal infrastructure and pay-per-execution cost model.
+alwaysApply: false
 category: architectural-pattern
-tags: [architecture, serverless, faas, event-driven, cost-optimization]
+tags:
+- architecture
+- serverless
+- faas
+- event-driven
+- cost-optimization
 dependencies: []
-tools: [cloud-sdk, serverless-framework, IaC-tools]
+tools: []
 usage_patterns:
-  - paradigm-implementation
-  - event-driven-architectures
-  - cost-optimization
+- paradigm-implementation
+- event-driven-architectures
+- cost-optimization
 complexity: medium
+model_hint: standard
 estimated_tokens: 700
 ---
-
 # The Serverless Architecture Paradigm
+
+
+## When To Use
+
+- Event-driven workloads with variable traffic
+- Minimizing operational overhead for cloud-native apps
+
+## When NOT To Use
+
+- Long-running processes exceeding function timeout limits
+- Applications requiring persistent connections or local state
 
 ## When to Employ This Paradigm
 - When workloads are event-driven and exhibit intermittent or "bursty" traffic patterns.
@@ -45,3 +56,16 @@ estimated_tokens: 700
   - **Mitigation**: Tracing execution across distributed functions can be complex. Standardize on specific instrumentation libraries and structured logging to simplify debugging.
 - **Resource Limits**:
   - **Mitigation**: Actively monitor provider-imposed limits, such as concurrency and memory quotas. Design workloads to be shardable or horizontally scalable to stay within these constraints.
+
+## Concrete Components
+
+These vocabulary items name the concrete tools and abstractions
+that show up when the paradigm is implemented. They are not
+required dependencies and they are not part of the skill's
+``tools:`` frontmatter (which is reserved for Claude Code tool
+restrictions). Use this list to disambiguate during architecture
+discussions.
+
+- ``cloud-sdk``: AWS SDK, Google Cloud SDK, or Azure SDK; first-class platform integration
+- ``serverless-framework``: Serverless Framework, SAM, or CDK; declarative function deployment
+- ``IaC-tools``: Terraform, Pulumi, or platform-native IaC for shared infrastructure around functions

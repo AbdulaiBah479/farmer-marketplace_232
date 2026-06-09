@@ -1,8 +1,30 @@
 ---
 name: reverse-engineer-rpi
-description: 'Reverse-engineer product specs.'
+description: Reverse-engineer product specs.
+practices:
+- legacy-code-seams
+- ddd-bounded-context
+- adr
+hexagonal_role: supporting
+consumes: []
+produces:
+- .agents/research/*.md
+context_rel: []
+skill_api_version: 1
+context:
+  window: fork
+  intent:
+    mode: task
+  sections:
+    exclude:
+    - HISTORY
+  intel_scope: topic
+metadata:
+  tier: execution
+  internal: false
+output_contract: feature catalog, code map, specs
 ---
-# $reverse-engineer-rpi
+# /reverse-engineer-rpi
 
 Reverse-engineer a product into a mechanically verifiable feature inventory + registry + spec set, with optional security-audit artifacts and validation gates.
 
@@ -253,7 +275,7 @@ This must show:
 
 ### Scenario: Reverse-Engineer an Open-Source CLI in Repo Mode
 
-**User says:** `$reverse-engineer-rpi cc-sdd --mode=repo --upstream-repo="https://github.com/gotalab/cc-sdd.git" --upstream-ref=v1.0.0`
+**User says:** `/reverse-engineer-rpi cc-sdd --mode=repo --upstream-repo="https://github.com/gotalab/cc-sdd.git" --upstream-ref=v1.0.0`
 
 **What happens:**
 1. The script shallow-clones the upstream repo at the pinned tag `v1.0.0` and records the resolved SHA in `clone-metadata.json`.
@@ -263,7 +285,7 @@ This must show:
 
 ### Scenario: Binary Analysis With Security Audit
 
-**User says:** `$reverse-engineer-rpi ao --authorized --mode=binary --binary-path="$(command -v ao)" --security-audit`
+**User says:** `/reverse-engineer-rpi ao --authorized --mode=binary --binary-path="$(command -v ao)" --security-audit`
 
 **What happens:**
 1. The script runs static analysis on the `ao` binary (file metadata, linked libraries, embedded archive signatures) and writes `binary-analysis.md` and `binary-embedded-archives.md`.
@@ -281,20 +303,6 @@ This must show:
 | `spec-cli-surface.md` not generated | No recognized CLI framework (Node/Python/Go) detected in the repo | Check that the target repo has a discoverable CLI entry point; otherwise the CLI surface is documented in `spec-code-map.md` instead. |
 | Network error during repo clone | Firewall, VPN, or GitHub rate limit blocking the shallow clone | Verify network connectivity, authenticate with `gh auth login` if the repo is private, or use `--local-clone-dir` to point at a pre-cloned directory. |
 
-## Local Resources
+## Reference Documents
 
-### scripts/
-
-- `scripts/extract_docs_features.sh`
-- `scripts/extract_sitemap_paths.sh`
-- `scripts/fetch_url.py`
-- `scripts/generate_feature_catalog_md.py`
-- `scripts/generate_feature_inventory_md.py`
-- `scripts/repo_fixture_test.sh`
-- `scripts/reverse_engineer_rpi.py`
-- `scripts/scaffold_feature_registry.py`
-- `scripts/self_test.sh`
-- `scripts/validate.sh`
-- `scripts/validate_feature_registry.py`
-
-
+- [references/reverse-engineer-rpi.feature](references/reverse-engineer-rpi.feature) — Executable spec: repo-mode feature catalog + code map, binary-mode security audit, durable spec artifacts (soc-qk4b)

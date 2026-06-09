@@ -1,20 +1,43 @@
 ---
 name: automation-shape-routing
-description: 'Front door for agent automation: route to the right builder.'
+description: 'Front door for agent automation — decide the SHAPE (Workflow vs ATM vs skill), then hand off. Triggers: "build automation", "convert skills to workflows", "which shape".'
+practices:
+- hexagonal-architecture
+- team-topologies
+- pragmatic-programmer
+hexagonal_role: supporting
+consumes: []
+produces: []
+context_rel:
+- kind: supplier-to
+  with: skill-builder
+- kind: supplier-to
+  with: workflow-builder
+skill_api_version: 1
+context:
+  window: inherit
+  intent:
+    mode: task
+  intel_scope: none
+metadata:
+  tier: meta
+  dependencies: []
+output_contract: 'a routing verdict — Workflow | ATM swarm | plain skill — with the deciding axis named'
 ---
-# $automation-shape-routing — Orchestration vs NTM vs Skill
+
+# Automation Shape Routing — Workflow vs ATM vs Skill
 
 > **The trap this kills:** "I built a lot of skills; they should become
-> orchestration scripts." Mostly false. Most orchestration-looking skills are
-> either long-lived/human-attachable (stay NTM) or hard-sequential (stay skills).
-> The win is the routing rule, not a migration project.
+> workflows." Mostly false. Most orchestration-looking skills are either
+> long-lived/human-attachable (stay ATM) or hard-sequential (stay skills). The
+> win is the routing rule, not a migration project.
 
 ## The three shapes
 
 | Shape | What it is | Mechanism |
 |---|---|---|
-| **Orchestration** | Deterministic, reproducible fan-out / pipeline / loop over sub-agents, each returning structured output | Codex orchestration — `codex exec` driving `spawn_agents` (parallel fan-out), staged pipelines, and loop-until-budget, with an `output_schema` per sub-agent. Headless, reproducible, bounded concurrency. |
-| **NTM swarm** | Long-lived, human-in-the-loop multi-agent run | `ntm` (the CLI) driven by $using-ntm — persistent tmux panes running whole $rpi/$evolve loops over a bead queue, with attach + nudge + kill/relaunch and mail/locks coordination. |
+| **Workflow** | Deterministic, reproducible orchestration of subagents | Claude `Workflow` tool — `agent({schema})`, `parallel()`, `pipeline()`, `phase()`, loop-until-budget. In-process, headless, ~16 concurrent. |
+| **ATM swarm** | Long-lived, human-in-the-loop multi-agent run | `atm` (the CLI) driven by [`/using-atm`](../using-atm/SKILL.md) — persistent tmux panes running whole `/rpi`/`/evolve` loops over a bead queue, with attach + nudge + kill/relaunch and mail/locks coordination. |
 | **Plain skill** | One model reasoning through a procedure or knowledge | A single `SKILL.md`. No fan-out, or a strictly sequential edit-loop. |
 
 ## The decision rule (three axes)
@@ -26,14 +49,14 @@ Ask in order:
 2. **Must a human attach and steer mid-run?** Or does it run for *hours*, do
    open-ended *file edits*, juggle a *fluid population* (rate limits, kill/
    relaunch, prompt-cache rounds), or relay between *cross-model* panes? — if
-   **yes** → **NTM swarm**.
-3. Otherwise — fixed DAG, sub-agents return **structured JSON** (not free-form
-   edits needing review), no attach needed, you want it **reproducible + headless**
-   → **Orchestration**.
+   **yes** → **ATM swarm**.
+3. Otherwise — fixed DAG, agents return **structured JSON** (not free-form edits
+   needing review), no attach needed, you want it **reproducible + headless** →
+   **Workflow**.
 
 **One-line litmus:**
-> deterministic DAG + structured JSON + no human-attach + headless-wanted → **Orchestration**
-> long-lived + attachable + open-ended file edits / fluid population → **NTM**
+> deterministic DAG + structured JSON + no human-attach + headless-wanted → **Workflow**
+> long-lived + attachable + open-ended file edits / fluid population → **ATM**
 > no fan-out, or hard-sequential edit loop → **plain skill**
 
 ## Spike-validated nuances (2026-05-29)
@@ -42,44 +65,43 @@ A live three-legged spike (`~/dev/agentops-3cat-spike/`) measured the same task 
 all three backends. Two findings refine the rule:
 
 1. **The primary axis is control-plane vs in-session, not "parallel vs serial."**
-   **NTM is a control-plane** that *runs Claude/Codex/Gemini as panes* — it is not a
-   peer of the native runtimes, it is the supervisor tier above them. Choose NTM when
+   **ATM is a control-plane** that *runs Claude/Codex/Gemini as panes* — it is not a
+   peer of the native runtimes, it is the supervisor tier above them. Choose ATM when
    you need the control plane (attach/steer, persistence, multi-vendor); choose
-   in-session native orchestration (`codex exec` + `spawn_agents`) when you don't.
+   in-session native (Workflow/Task) when you don't.
 2. **Parallel buys quality/independence, NOT wall-clock — at small N.** Measured: a
-   3-way parallel fan-out **tied** a single sequential agent on wall-clock (191s vs
+   3-way Workflow fan-out **tied** a single sequential agent on wall-clock (191s vs
    180s) and cost **~2.7× the tokens** — because the synthesis barrier eats the
    parallel gain. What it bought was depth + independent fresh-eyes (the sequential
-   leg self-reported "monoculture" bias). So: reach for a parallel fan-out when you
+   leg self-reported "monoculture" bias). So: reach for parallel `Workflow` when you
    want *independent verification / fresh eyes*, not for speed. For speed, you need
-   large N **and** no barrier — use a streaming pipeline (no barrier), not a
-   collect-all barrier.
+   large N **and** no barrier — use `pipeline()` (no barrier), not `parallel()`.
 
-Degradation (NTM → native → beads floor) is governed by the
+Degradation (ATM → Claude-native → beads floor) is governed by the
 `OrchestrationPort` selector; opt out entirely with `AGENTOPS_ORCHESTRATION=off` →
 beads floor, which always works.
 
 ## Two traps to avoid
 
-- **Don't orchestrate a sequential edit-loop.** If each pass must see the prior
+- **Don't workflow-ify a sequential edit-loop.** If each pass must see the prior
   pass's edits (progressive-deepening reapply, audit-fix-rescan), there's no
-  concurrency to win — an orchestration wrapper adds a process boundary for
-  nothing. *Exception:* it graduates to a loop-until-budget orchestration only once
-  each step returns **structured output** instead of free-form edits, and you want
-  it headless/reproducible.
-- **Don't NTM-ify a clean fan-out, and don't orchestrate an attach-and-steer run.**
-  Headless orchestration runs in-process and cannot be tmux-attached; NTM is built
-  for exactly the live-steering headless orchestration can't do. Picking wrong
-  fights the tool the whole way.
+  concurrency to win — a Workflow wrapper adds a process boundary for nothing.
+  *Exception:* it graduates to a `loop-until-budget` Workflow only once each step
+  returns **structured output** instead of free-form edits, and you want it
+  headless/reproducible.
+- **Don't ATM-ify a clean fan-out, and don't Workflow-ify an attach-and-steer
+  run.** The Workflow tool is in-process and cannot be tmux-attached; ATM is
+  built for exactly the live-steering Workflow can't do. Picking wrong fights the
+  tool the whole way.
 
 ## Worked examples
 
-**→ Orchestration** (deterministic fan-out / synthesize, structured returns):
+**→ Workflow** (deterministic fan-out / synthesize, structured returns):
 `council` (N judges → consensus — near-trivial port), the **planning half** of
 `rpi`, judge/refutation panels, any "fan out N analyses → triangulate" task.
 
-**→ Stay NTM** (long-lived, attachable, open-ended edits, fluid population):
-the `*-with-ntm` family (hypothesis research, cross-model review swarms, browser
+**→ Stay ATM** (long-lived, attachable, open-ended edits, fluid population):
+the `*-with-atm` family (hypothesis research, cross-model review swarms, browser
 testing), plus `swarm`/`crank` in full epic-execution mode — they touch the
 working tree and need wave-validity gating + human review.
 
@@ -87,18 +109,16 @@ working tree and need wave-validity gating + human review.
 deliberately one-at-a-time loops (progressive reapply, multi-pass bug hunting);
 all reference docs; all single-shot transforms (jargon scrub, README authoring).
 
-## Canonical orchestration shape
+## Canonical Workflow template
 
-The operating loop is the worked example — a deterministic orchestration that
-drives `codex exec` over `spawn_agents` with a per-sub-agent `output_schema`
-(structured JSON, not free-form edits), parallel fan-out barriers (framing-lenses
-/ judges / refutation / slices), explicit phase markers, budget-scaled fan-out
-width, and bounded re-plan/retry. **Start from this shape when authoring an
-orchestration.** It is also the proof that the AgentOps operating loop has *two*
+`.claude/workflows/operating-loop.js` is the worked example — a real Workflow-tool
+script using `agent(prompt,{schema})` with JSON schemas, `parallel([thunks])`
+barriers (framing-lenses / judges / refutation / slices), `phase()` markers,
+budget-scaled `FANOUT`, and bounded re-plan/retry. **Start from it when porting a
+Workflow.** It is also the proof that the AgentOps operating loop has *two*
 conformant runtimes (skill-driven via `rpi`/`crank`/`swarm`/`council`, and
-orchestration-driven via `codex exec` + `spawn_agents`) — the basis of the
-`agentops-core-sdk` portability thesis. Hand off to `$workflow-builder` for the
-authoring path.
+Workflow-driven via this script) — the basis of the `agentops-core-sdk`
+portability thesis. See `operating-loop-workflow` for the install+run path.
 
 ## Handoff — after the verdict, invoke the next skill
 
@@ -107,18 +127,18 @@ decided, hand off:
 
 | Verdict | Next | What it does |
 |---|---|---|
-| **plain skill** | `$skill-builder` | Scaffold a new `SKILL.md` against the unified template → then `$skill-auditor` → `$heal-skill`. |
-| **Orchestration** | `$workflow-builder` | Author a deterministic `codex exec` + `spawn_agents` orchestration with per-sub-agent `output_schema`. |
-| **NTM swarm** | `ntm` + $using-ntm | Stand up + tend an NTM swarm running AgentOps loops ($rpi/$evolve) over a bead queue. |
+| **plain skill** | `skill-builder` | Scaffold a new `SKILL.md` against the unified template → then `skill-auditor` → `heal-skill`. |
+| **Workflow** | `workflow-builder` | Scaffold a new `.claude/workflows/*.js` from the operating-loop.js template. |
+| **ATM swarm** | `atm` + [`/using-atm`](../using-atm/SKILL.md) | Stand up + tend an ATM swarm running AgentOps loops (`/rpi`/`/evolve`) over a bead queue. |
 
 State the verdict and the deciding axis in one line, then invoke the chosen
 builder. Do not scaffold here.
 
 ## Contract note (SDK)
 
-An orchestration is a **composite capability** (a composition of sub-capabilities
+A Workflow is a **composite capability** (an orchestration of sub-capabilities
 with typed control flow); a skill is a **leaf**. The portable contract for this —
 a `shape: skill|workflow` discriminator, a `StepGraph`, a `control_flow` enum, a
 `budget`, and an `OrchestrationPort` *interface* — is net-new SDK work. Port the
-**shape, not the engine**: keep concrete orchestrators (Codex sub-agents, swarm
+**shape, not the engine**: keep concrete orchestrators (Codex subagents, swarm
 dispatch, scheduler — BC4/BC5) behind adapters.

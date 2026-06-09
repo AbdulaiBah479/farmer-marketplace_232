@@ -1,125 +1,44 @@
 ---
 name: postgres
-description: "Execute read-only SQL queries against multiple PostgreSQL databases. Use when: (1) querying PostgreSQL databases, (2) exploring database schemas/tables, (3) running SELECT queries for data analysis, (4) checking database contents. Supports multiple database connections with descriptions for intelligent auto-selection. Blocks all write operations (INSERT, UPDATE, DELETE, DROP, etc.) for safety."
+description: |
+  Use this skill for any PostgreSQL database work — table design, indexing, data types, constraints, extensions (pgvector, PostGIS, TimescaleDB), search, and migrations.
+
+  **Trigger when user asks to:**
+  - Design or modify PostgreSQL tables, schemas, or data models
+  - Choose data types, constraints, indexes, or partitioning strategies
+  - Work with pgvector embeddings, semantic search, or RAG
+  - Set up full-text search, hybrid search, or BM25 ranking
+  - Use PostGIS for spatial/geographic data
+  - Set up TimescaleDB hypertables for time-series data
+  - Migrate tables to hypertables or evaluate migration candidates
+
+  **Keywords:** PostgreSQL, Postgres, SQL, schema, table design, indexes, constraints, pgvector, PostGIS, TimescaleDB, hypertable, semantic search, hybrid search, BM25, time-series
+license: Apache-2.0
+metadata:
+  author: tigerdata
 ---
 
-# PostgreSQL Read-Only Query Skill
+# PostgreSQL Expert Skills
 
-Execute safe, read-only queries against configured PostgreSQL databases.
+This skill provides comprehensive PostgreSQL expertise through specialized references. Load the appropriate reference based on the task.
 
-## Requirements
+## Available References
 
-- Python 3.8+
-- psycopg2-binary: `pip install -r requirements.txt`
+### Table Design
+- **[design-postgres-tables](references/design-postgres-tables.md)** — Data types, constraints, indexes, JSONB patterns, partitioning, and PostgreSQL best practices. **Use for any general table/schema design task.**
+- **[design-postgis-tables](references/design-postgis-tables.md)** — PostGIS spatial table design: geometry vs geography types, SRIDs, spatial indexing, and location-based query patterns. **Use when the task involves geographic or spatial data.**
 
-## Setup
+### Search
+- **[pgvector-semantic-search](references/pgvector-semantic-search.md)** — Vector similarity search with pgvector: HNSW/IVFFlat indexes, halfvec storage, quantization, filtered search, and tuning. **Use for embeddings, RAG, or semantic search.**
+- **[postgres-hybrid-text-search](references/postgres-hybrid-text-search.md)** — Hybrid search combining BM25 keyword search with pgvector semantic search using RRF. **Use when combining keyword and meaning-based search.**
 
-Create `connections.json` in the skill directory or `~/.config/claude/postgres-connections.json`.
+### TimescaleDB
+- **[setup-timescaledb-hypertables](references/setup-timescaledb-hypertables.md)** — Hypertable creation, compression, retention policies, continuous aggregates, and indexes. **Use when setting up TimescaleDB from scratch.**
+- **[find-hypertable-candidates](references/find-hypertable-candidates.md)** — SQL queries to analyze existing tables and score them for hypertable conversion. **Use when evaluating which tables to migrate.**
+- **[migrate-postgres-tables-to-hypertables](references/migrate-postgres-tables-to-hypertables.md)** — Step-by-step migration: partition column selection, in-place vs blue-green, validation. **Use when executing a migration.**
 
-**Security**: Set file permissions to `600` since it contains credentials:
-```bash
-chmod 600 connections.json
-```
+## How to Use
 
-```json
-{
-  "databases": [
-    {
-      "name": "production",
-      "description": "Main app database - users, orders, transactions",
-      "host": "db.example.com",
-      "port": 5432,
-      "database": "app_prod",
-      "user": "readonly_user",
-      "password": "your-password",
-      "sslmode": "require"
-    }
-  ]
-}
-```
-
-### Config Fields
-
-| Field | Required | Description |
-|-------|----------|-------------|
-| name | Yes | Identifier for the database (case-insensitive) |
-| description | Yes | What data this database contains (used for auto-selection) |
-| host | Yes | Database hostname |
-| port | No | Port number (default: 5432) |
-| database | Yes | Database name |
-| user | Yes | Username |
-| password | Yes | Password |
-| sslmode | No | SSL mode: disable, allow, prefer (default), require, verify-ca, verify-full |
-
-## Usage
-
-### List configured databases
-```bash
-python3 scripts/query.py --list
-```
-
-### Query a database
-```bash
-python3 scripts/query.py --db production --query "SELECT * FROM users LIMIT 10"
-```
-
-### List tables
-```bash
-python3 scripts/query.py --db production --tables
-```
-
-### Show schema
-```bash
-python3 scripts/query.py --db production --schema
-```
-
-### Limit results
-```bash
-python3 scripts/query.py --db production --query "SELECT * FROM orders" --limit 100
-```
-
-## Database Selection
-
-Match user intent to database `description`:
-
-| User asks about | Look for description containing |
-|-----------------|--------------------------------|
-| users, accounts | users, accounts, customers |
-| orders, sales | orders, transactions, sales |
-| analytics, metrics | analytics, metrics, reports |
-| logs, events | logs, events, audit |
-
-If unclear, run `--list` and ask user which database.
-
-## Safety Features
-
-- **Read-only session**: Connection uses PostgreSQL `readonly=True` mode (primary protection)
-- **Query validation**: Only SELECT, SHOW, EXPLAIN, WITH queries allowed
-- **Single statement**: Multiple statements per query rejected
-- **SSL support**: Configurable SSL mode for encrypted connections
-- **Query timeout**: 30-second statement timeout enforced
-- **Memory protection**: Max 10,000 rows per query to prevent OOM
-- **Column width cap**: 100 char max per column for readable output
-- **Credential sanitization**: Error messages don't leak passwords
-
-## Troubleshooting
-
-| Error | Solution |
-|-------|----------|
-| Config not found | Create `connections.json` in skill directory |
-| Authentication failed | Check username/password in config |
-| Connection timeout | Verify host/port, check firewall/VPN |
-| SSL error | Try `"sslmode": "disable"` for local databases |
-| Permission warning | Run `chmod 600 connections.json` |
-
-## Exit Codes
-
-- **0**: Success
-- **1**: Error (config missing, auth failed, invalid query, database error)
-
-## Workflow
-
-1. Run `--list` to show available databases
-2. Match user intent to database description
-3. Run `--tables` or `--schema` to explore structure
-4. Execute query with appropriate LIMIT
+1. Identify which reference matches the user's task from the descriptions above.
+2. Load the reference file to get detailed instructions and SQL patterns.
+3. For tasks spanning multiple areas (e.g., "design a table with vector search"), load multiple references as needed.

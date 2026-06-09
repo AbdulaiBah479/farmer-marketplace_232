@@ -1,204 +1,73 @@
 ---
-name: dockerfile-generator
-description: Generate optimized Dockerfiles with multi-stage builds and best practices. Use when containerizing applications or creating Docker configurations.
+name: "dockerfile-generator"
+description: |
+  Generate dockerfile generator operations. Auto-activating skill for DevOps Basics.
+  Triggers on: dockerfile generator, dockerfile generator
+  Part of the DevOps Basics skill category. Use when working with dockerfile generator functionality. Trigger with phrases like "dockerfile generator", "dockerfile generator", "dockerfile".
+allowed-tools: "Read, Write, Edit, Bash(cmd:*), Grep"
+version: 1.0.0
+license: MIT
+author: "Jeremy Longshore <jeremy@intentsolutions.io>"
+compatible-with: claude-code
 ---
 
-# Dockerfile Generator Skill
+# Dockerfile Generator
 
-最適化されたDockerfileを生成するスキルです。
+## Overview
 
-## 概要
+This skill provides automated assistance for dockerfile generator tasks within the DevOps Basics domain.
 
-プロジェクトの種類に応じた、セキュアで効率的なDockerfileを自動生成します。
+## When to Use
 
-## 主な機能
+This skill activates automatically when you:
+- Mention "dockerfile generator" in your request
+- Ask about dockerfile generator patterns or best practices
+- Need help with foundational devops skills covering version control, containerization, basic ci/cd, and infrastructure fundamentals.
 
-- **マルチステージビルド**: イメージサイズ削減
-- **セキュリティ**: 非rootユーザー、最小権限
-- **キャッシュ最適化**: ビルド時間短縮
-- **ベストプラクティス**: Docker推奨設定
-- **複数言語対応**: Node.js、Python、Go、Java等
+## Instructions
 
-## 生成例
+1. Provides step-by-step guidance for dockerfile generator
+2. Follows industry best practices and patterns
+3. Generates production-ready code and configurations
+4. Validates outputs against common standards
 
-### Node.js (Express)
+## Examples
 
-```dockerfile
-# マルチステージビルド
-FROM node:18-alpine AS builder
+**Example: Basic Usage**
+Request: "Help me with dockerfile generator"
+Result: Provides step-by-step guidance and generates appropriate configurations
 
-WORKDIR /app
 
-# 依存関係のみ先にコピー（キャッシュ最適化）
-COPY package*.json ./
-RUN npm ci --only=production
+## Prerequisites
 
-# ソースコードコピー
-COPY . .
+- Relevant development environment configured
+- Access to necessary tools and services
+- Basic understanding of devops basics concepts
 
-# 本番イメージ
-FROM node:18-alpine
 
-# 非rootユーザー作成
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
+## Output
 
-WORKDIR /app
+- Generated configurations and code
+- Best practice recommendations
+- Validation results
 
-# ビルド成果物をコピー
-COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
-COPY --chown=nodejs:nodejs . .
 
-USER nodejs
+## Error Handling
 
-EXPOSE 3000
+| Error | Cause | Solution |
+|-------|-------|----------|
+| Configuration invalid | Missing required fields | Check documentation for required parameters |
+| Tool not found | Dependency not installed | Install required tools per prerequisites |
+| Permission denied | Insufficient access | Verify credentials and permissions |
 
-CMD ["node", "server.js"]
-```
 
-### Python (FastAPI)
+## Resources
 
-```dockerfile
-FROM python:3.11-slim AS builder
+- Official documentation for related tools
+- Best practices guides
+- Community examples and tutorials
 
-WORKDIR /app
+## Related Skills
 
-# システム依存関係
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends gcc && \
-    rm -rf /var/lib/apt/lists/*
-
-# Python依存関係
-COPY requirements.txt .
-RUN pip install --user --no-cache-dir -r requirements.txt
-
-# 本番イメージ
-FROM python:3.11-slim
-
-RUN adduser --disabled-password --gecos '' appuser
-
-WORKDIR /app
-
-# ビルドしたパッケージをコピー
-COPY --from=builder /root/.local /home/appuser/.local
-COPY --chown=appuser:appuser . .
-
-USER appuser
-
-ENV PATH=/home/appuser/.local/bin:$PATH
-
-EXPOSE 8000
-
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
-```
-
-### Go
-
-```dockerfile
-# ビルドステージ
-FROM golang:1.21-alpine AS builder
-
-WORKDIR /app
-
-# 依存関係
-COPY go.mod go.sum ./
-RUN go mod download
-
-# ビルド
-COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
-
-# 最小イメージ
-FROM scratch
-
-COPY --from=builder /app/main /main
-
-EXPOSE 8080
-
-ENTRYPOINT ["/main"]
-```
-
-### React (静的サイト)
-
-```dockerfile
-# ビルドステージ
-FROM node:18-alpine AS builder
-
-WORKDIR /app
-
-COPY package*.json ./
-RUN npm ci
-
-COPY . .
-RUN npm run build
-
-# Nginxで配信
-FROM nginx:alpine
-
-COPY --from=builder /app/build /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
-```
-
-## .dockerignore
-
-```
-node_modules
-npm-debug.log
-.git
-.gitignore
-README.md
-.env
-.DS_Store
-*.log
-dist
-build
-coverage
-```
-
-## docker-compose.yml
-
-```yaml
-version: '3.8'
-
-services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-    volumes:
-      - ./data:/app/data
-    restart: unless-stopped
-
-  database:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_DB: myapp
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    restart: unless-stopped
-
-volumes:
-  postgres_data:
-```
-
-## ベストプラクティス
-
-1. **マルチステージビルド**: イメージサイズ削減
-2. **レイヤーキャッシュ**: 変更の少ないファイルから順に
-3. **非rootユーザー**: セキュリティ向上
-4. **.dockerignore**: 不要ファイル除外
-5. **ヘルスチェック**: コンテナ監視
-
-## バージョン情報
-
-- スキルバージョン: 1.0.0
+Part of the **DevOps Basics** skill category.
+Tags: devops, git, docker, ci-cd, infrastructure

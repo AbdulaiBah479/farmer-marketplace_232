@@ -1,32 +1,34 @@
 ---
 name: diff-analysis
-description: |
-  Methodology for categorizing changes, assessing risks, and creating summaries
-  from any changeset.
-
-  Triggers: diff analysis, changeset review, risk assessment, change categorization,
-  semantic analysis, release preparation, change summary, git diff
-
-  Use when: analyzing specific changesets, assessing risk of changes, preparing
-  release notes, categorizing changes by type and impact
-
-  DO NOT use when: quick context catchup - use catchup instead.
-  DO NOT use when: full PR review - use review-core with pensive skills.
-
-  Use this skill for systematic change analysis with risk scoring.
+description: Analyzes changesets with risk scoring, categorization by type and impact, and release note preparation. Use when extracting insights from raw change data.
+alwaysApply: false
 category: analysis-methods
-tags: [changes, semantic-analysis, risk-assessment, categorization, summaries]
-dependencies: [imbue:evidence-logging]
-tools: [git, diff-tools]
+tags:
+- changes
+- semantic-analysis
+- risk-assessment
+- categorization
+- summaries
+dependencies:
+- imbue:proof-of-work
+tools: []
 usage_patterns:
-  - change-analysis
-  - risk-assessment
-  - release-preparation
+- change-analysis
+- risk-assessment
+- release-preparation
 complexity: intermediate
+model_hint: standard
 progressive_loading: true
 module_strategy: workflow-based
 estimated_tokens: 800
 ---
+## Table of Contents
+
+- [Overview](#overview)
+- [When to Use](#when-to-use)
+- [Activation Patterns](#activation-patterns)
+- [4-Step Methodology](#4-step-methodology)
+- [Exit Criteria](#exit-criteria)
 
 # Diff Analysis Methodology
 
@@ -34,11 +36,16 @@ estimated_tokens: 800
 
 Structured method for analyzing changesets: categorize changes, assess risks, generate insights. Works for git diffs, configuration changes, API migrations, schema updates, or document revisions.
 
-## When to Use
+## When To Use
 - Extracting insights from raw change data
 - Categorizing and prioritizing changes before code reviews
 - Preparing release notes or changelogs
 - Assessing migration scope and risk
+
+## When NOT To Use
+
+- Quick context catchup - use catchup instead
+- Full PR review - use review-core with pensive skills
 
 ## Activation Patterns
 **Trigger Keywords**: diff, changes, release notes, changelog, migration, impact, risk assessment
@@ -58,7 +65,7 @@ Load modules based on workflow stage:
 
 ### Integration
 - Use `sanctum:git-workspace-review` for git data gathering
-- Use `imbue:evidence-logging` for capturing analysis evidence
+- Use `imbue:proof-of-work` for capturing analysis evidence
 - Use `imbue:structured-output` for formatting final deliverables
 
 ## Required TodoWrite Items

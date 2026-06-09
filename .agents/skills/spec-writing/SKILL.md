@@ -1,180 +1,96 @@
 ---
 name: spec-writing
-description: Skill for the Spec Writer agent to create and refine feature specifications. Provides templates for specs, clarification workflows, and quality checklists. Supports the SDD methodology by ensuring specs are complete, testable, and implementation-agnostic.
+description: Creates clear, testable specifications from feature descriptions with user stories. Use when starting a new feature and needing a spec before planning.
+alwaysApply: false
+category: specification
+tags:
+- speckit
+- specification
+- requirements
+- user-stories
+- acceptance-criteria
+dependencies:
+- superpowers:brainstorming
+tools: []
+usage_patterns:
+- feature-specification
+- requirements-documentation
+- user-story-creation
+complexity: intermediate
+model_hint: standard
+estimated_tokens: 1200
+progressive_loading: true
+modules:
+- modules/success-criteria-patterns.md
+- modules/specification-structure.md
+- modules/checklist-dimensions.md
 ---
-
-# Spec Writing Skill
-
-> Equips the Spec Writer agent with templates, references, and workflows for creating high-quality feature specifications.
+# Spec Writing
 
 ## Overview
 
-This skill provides everything needed to:
-- Create specifications from vague feature briefs
-- Write clear, testable user stories
-- Generate acceptance criteria
-- Run clarification sessions
-- Validate spec completeness
+Create clear, complete, and testable specifications from natural language feature descriptions. Specifications focus on user value and business needs, avoiding implementation details.
 
-## Contents
+## When To Use
 
-### References
+- Creating new feature specifications
+- Refining existing specifications
+- Writing user stories and acceptance criteria
+- Defining success criteria
 
-| File | Purpose |
-|------|---------|
-| `spec-taxonomy.md` | Categories for ambiguity scanning |
-| `requirement-patterns.md` | Common requirement patterns and anti-patterns |
-| `clarification-guide.md` | How to generate and prioritize questions |
-| `quality-criteria.md` | Checklist criteria for spec validation |
+## When NOT To Use
 
-### Assets (Templates)
+- Generating implementation tasks - use task-planning
 
-| File | Purpose |
-|------|---------|
-| `.specify/templates/spec-template.md` | **CANONICAL** Main feature specification template |
-| `user-story-template.md` | User story format with acceptance criteria |
-| `clarification-question-template.md` | Question format for clarification sessions |
-| `quality-checklist-template.md` | Spec quality validation checklist |
+## Core Principles
 
-**NOTE:** The main spec template lives at `.specify/templates/spec-template.md` (project-wide canonical template). Always use this instead of creating duplicates.
+Focus on user value and business needs rather than implementation details. Avoid specifying technology choices in requirement definitions unless strictly necessary. Ensure every requirement is testable and verifiable with measurable criteria. Limit clarification markers; make informed assumptions based on industry standards and document them explicitly.
 
-## Usage
+## Specification Structure
 
-### Creating a New Specification
+### Mandatory Sections
+1. **Overview/Context**: What problem does this solve?
+2. **User Scenarios**: Who uses it and how?
+3. **Functional Requirements**: What must it do?
+4. **Success Criteria**: How do we know it works?
 
-1. Parse the feature description for key concepts
-2. **Load canonical template:** `.specify/templates/spec-template.md`
-3. Fill in all mandatory sections
-4. Reference `references/requirement-patterns.md` for good requirement examples
-5. Validate against `references/quality-criteria.md`
+### Optional Sections
+- Success Criteria (when performance/security critical)
+- Edge Cases (when special handling needed)
+- Dependencies (when external systems involved)
+- Assumptions (when decisions made with incomplete info)
 
-### Writing User Stories
+**See**: `modules/specification-structure.md` for detailed templates and guidelines
 
-1. Load `assets/user-story-template.md`
-2. Identify actors, goals, and benefits
-3. Write acceptance criteria (Given/When/Then)
-4. Assign priority (P1, P2, P3)
-5. Ensure story is independently testable
+## Quality Checklist
 
-### Running Clarification
+- [ ] No implementation details present
+- [ ] Requirements are testable and unambiguous
+- [ ] Success criteria are measurable
+- [ ] User scenarios cover primary flows
+- [ ] Edge cases identified
+- [ ] Scope clearly bounded
 
-1. Load current spec
-2. Scan using `references/spec-taxonomy.md` categories
-3. Generate questions using `references/clarification-guide.md`
-4. Use `assets/clarification-question-template.md` for formatting
-5. Update spec after each answer
+## Success Criteria Quick Reference
 
-### Validating Specification
+### Good (User-focused, Measurable, Technology-agnostic)
+- "Users complete checkout in under 3 minutes"
+- "System supports 10,000 concurrent users"
+- "95% of searches return results in under 1 second"
 
-1. Load `assets/quality-checklist-template.md`
-2. Check each criterion against the spec
-3. Document pass/fail for each item
-4. Iterate until all critical items pass
+### Bad (Implementation-focused, Internal metrics)
+- "API response time under 200ms" -> Use: "Pages load in under 2 seconds"
+- "Redis cache hit rate above 80%" -> Use: "Frequently accessed data loads with no noticeable delay"
+- "React components render efficiently" -> Use: "UI updates appear with no visible frame drops"
 
-## Spec Taxonomy Categories
+**See**: `modules/success-criteria-patterns.md` for detailed examples and conversion process
 
-Use these categories to scan for ambiguity:
+## Related Skills
 
-### Functional Scope & Behavior
-- Core user goals & success criteria
-- Explicit out-of-scope declarations
-- User roles / personas differentiation
+- `speckit-orchestrator`: Workflow coordination
+- `task-planning`: Converting specs to tasks
+## Troubleshooting
 
-### Domain & Data Model
-- Entities, attributes, relationships
-- Identity & uniqueness rules
-- Lifecycle/state transitions
-- Data volume / scale assumptions
+### Common Issues
 
-### Interaction & UX Flow
-- Critical user journeys / sequences
-- Error/empty/loading states
-- Accessibility or localization notes
-
-### Non-Functional Quality Attributes
-- Performance (latency, throughput targets)
-- Scalability (horizontal/vertical, limits)
-- Reliability & availability (uptime, recovery)
-- Observability (logging, metrics, tracing)
-- Security & privacy (authN/Z, data protection)
-- Compliance / regulatory constraints
-
-### Integration & External Dependencies
-- External services/APIs and failure modes
-- Data import/export formats
-- Protocol/versioning assumptions
-
-### Edge Cases & Failure Handling
-- Negative scenarios
-- Rate limiting / throttling
-- Conflict resolution (e.g., concurrent edits)
-
-### Constraints & Tradeoffs
-- Technical constraints (language, storage, hosting)
-- Explicit tradeoffs or rejected alternatives
-
-### Terminology & Consistency
-- Canonical glossary terms
-- Avoided synonyms / deprecated terms
-
-### Completion Signals
-- Acceptance criteria testability
-- Measurable Definition of Done indicators
-
-## Key Rules
-
-### Maximum Clarifications
-- Max 3 [NEEDS CLARIFICATION] markers per spec
-- Max 5 questions per clarification session
-- Max 10 questions total across all sessions
-
-### Prioritization Order
-1. Scope (what's in/out)
-2. Security/Privacy (compliance, data protection)
-3. User Experience (flows, edge cases)
-4. Technical Details (only if blocking functional clarity)
-
-### Reasonable Defaults (Don't Ask)
-- Data retention: Industry-standard for domain
-- Performance: Standard web/mobile expectations
-- Error handling: User-friendly messages with fallbacks
-- Authentication: Session-based or OAuth2
-- Integration: RESTful APIs
-
-### Success Criteria Rules
-- Must be measurable (include metrics)
-- Must be technology-agnostic (no frameworks)
-- Must be user-focused (outcomes, not internals)
-- Must be verifiable (testable without implementation)
-
-## Integration
-
-This skill is automatically available to the Spec Writer agent via the `skills: spec-writing` frontmatter.
-
-To use templates:
-```
-Read: .claude/skills/spec-writing/assets/[template]
-```
-
-To check references:
-```
-Read: .claude/skills/spec-writing/references/[reference]
-```
-
-## Related Commands
-
-| Command | Description |
-|---------|-------------|
-| `/sp.specify` | Create specification from feature brief |
-| `/sp.clarify` | Run clarification Q&A session |
-
-## Quality Gate
-
-A specification is ready for `/sp.plan` when:
-- [ ] All mandatory sections completed
-- [ ] No [NEEDS CLARIFICATION] markers remain
-- [ ] All requirements are testable
-- [ ] Success criteria are measurable and technology-agnostic
-- [ ] User stories have acceptance scenarios
-- [ ] Edge cases are identified
-- [ ] Assumptions are documented
+If specifications are too vague, use the `success-criteria-patterns` module to enforce measurable outcomes. If implementation details leak into specs, review against the "Core Principles" and refactor to focus on user behavior.

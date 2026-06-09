@@ -1,12 +1,7 @@
 ---
 name: content-sanitization
-description: Sanitization guidelines for external content
-version: 1.9.0
+description: Provides sanitization guidelines for external content in skills and hooks. Use when loading GitHub Issues, PRs, WebFetch results, or any untrusted input.
 alwaysApply: false
-  consumed by skills and hooks. Use when loading external
-  content (GitHub Issues, PRs, Discussions), processing
-  WebFetch/WebSearch results, or any workflow consuming
-  untrusted input.
 category: infrastructure
 tags:
 - security

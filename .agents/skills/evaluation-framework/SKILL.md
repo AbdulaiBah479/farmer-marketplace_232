@@ -1,36 +1,58 @@
 ---
 name: evaluation-framework
-description: |
-  Generic weighted scoring and threshold-based decision framework for evaluating
-  artifacts against configurable criteria.
-
-  Triggers: evaluation, scoring, quality gates, decision framework, rubrics,
-  weighted criteria, threshold decisions, artifact evaluation
-
-  Use when: implementing evaluation systems, creating quality gates, designing
-  scoring rubrics, building decision frameworks
-
-  DO NOT use when: simple pass/fail without scoring needs.
-
-  Consult this skill when building evaluation or scoring systems.
+description: Provides weighted scoring, rubrics, and decision-threshold patterns. Use when designing quality gates, evaluation systems, or decision frameworks.
+alwaysApply: false
 category: infrastructure
-tags: [evaluation, scoring, decision-making, metrics, quality]
+tags:
+- evaluation
+- scoring
+- decision-making
+- metrics
+- quality
 dependencies: []
 provides:
-  infrastructure: [weighted-scoring, threshold-decisions, evaluation-patterns]
-  patterns: [criteria-definition, scoring-methodology, decision-logic]
+  infrastructure:
+  - weighted-scoring
+  - threshold-decisions
+  - evaluation-patterns
+  patterns:
+  - criteria-definition
+  - scoring-methodology
+  - decision-logic
 usage_patterns:
-  - quality-evaluation
-  - scoring-systems
-  - decision-frameworks
-  - rubric-design
+- quality-evaluation
+- scoring-systems
+- decision-frameworks
+- rubric-design
 complexity: beginner
+model_hint: fast
 estimated_tokens: 550
 progressive_loading: true
 modules:
-  - modules/scoring-patterns.md
-  - modules/decision-thresholds.md
+- modules/scoring-patterns.md
+- modules/decision-thresholds.md
+- modules/evaluation-rubric.md
+- modules/multi-metric-evaluation-methodology.md
+- modules/quality-metrics.md
 ---
+## Table of Contents
+
+- [Overview](#overview)
+- [When to Use](#when-to-use)
+- [Core Pattern](#core-pattern)
+- [1. Define Criteria](#1-define-criteria)
+- [2. Score Each Criterion](#2-score-each-criterion)
+- [3. Calculate Weighted Total](#3-calculate-weighted-total)
+- [4. Apply Decision Thresholds](#4-apply-decision-thresholds)
+- [Quick Start](#quick-start)
+- [Define Your Evaluation](#define-your-evaluation)
+- [Example: Code Review Evaluation](#example:-code-review-evaluation)
+- [Evaluation Workflow](#evaluation-workflow)
+- [Common Use Cases](#common-use-cases)
+- [Integration Pattern](#integration-pattern)
+- [Detailed Resources](#detailed-resources)
+- [Exit Criteria](#exit-criteria)
+
 
 # Evaluation Framework
 
@@ -40,13 +62,17 @@ A generic framework for weighted scoring and threshold-based decision making. Pr
 
 This framework abstracts the common pattern of: define criteria → assign weights → score against criteria → apply thresholds → make decisions.
 
-## When to Use
+## When To Use
 
 - Implementing quality gates or evaluation rubrics
 - Building scoring systems for artifacts, proposals, or submissions
 - Need consistent evaluation methodology across different domains
 - Want threshold-based automated decision making
 - Creating assessment tools with weighted criteria
+
+## When NOT To Use
+
+- Simple pass/fail without scoring needs
 
 ## Core Pattern
 
@@ -64,6 +90,7 @@ criteria:
       30-49: Weak
       0-29: Poor
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
 ### 2. Score Each Criterion
 
@@ -74,6 +101,7 @@ scores = {
     "criterion_3": 78,
 }
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
 ### 3. Calculate Weighted Total
 
@@ -81,6 +109,7 @@ scores = {
 total = sum(score * weights[criterion] for criterion, score in scores.items())
 # Example: (85 × 0.30) + (92 × 0.40) + (78 × 0.30) = 85.5
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
 ### 4. Apply Decision Thresholds
 
@@ -92,6 +121,7 @@ thresholds:
   20-39: Reject with feedback
   0-19: Reject
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
 ## Quick Start
 
@@ -117,16 +147,19 @@ thresholds:
   50-69: Request changes
   0-49: Reject, major issues
 ```
+**Verification:** Run `pytest -v` to verify tests pass.
 
 ### Evaluation Workflow
 
-```
+```text
+**Verification:** Run the command with `--help` flag to verify availability.
 1. Review artifact against each criterion
 2. Assign 0-100 score for each criterion
 3. Calculate: total = Σ(score × weight)
 4. Compare total to thresholds
 5. Take action based on threshold range
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
 ## Common Use Cases
 
@@ -140,6 +173,7 @@ thresholds:
 # In your skill's frontmatter
 dependencies: [leyline:evaluation-framework]
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
 Then customize the framework for your domain:
 - Define domain-specific criteria

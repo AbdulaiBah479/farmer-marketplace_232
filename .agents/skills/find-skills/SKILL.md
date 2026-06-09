@@ -31,6 +31,18 @@ The Skills CLI (`npx skills`) is the package manager for the open agent skills e
 
 **Browse skills at:** https://skills.sh/
 
+## For SkillLite Users (This Agent)
+
+**This agent runs on SkillLite.** Use the following commands:
+
+| Action | Command | Notes |
+|--------|---------|-------|
+| **Search** | `npx skills find [query]` | Requires Node.js. Use `run_command` to execute. |
+| **Search (fallback)** | Browse https://skills.sh/ | When Node.js is unavailable, suggest user visit skills.sh |
+| **Install** | `skilllite add owner/repo@skill` | Use this, NOT `npx skills add` — installs to SkillLite `.skills/` |
+
+Example install: `skilllite add vercel-labs/agent-skills@vercel-react-best-practices`
+
 ## How to Help Users Find Skills
 
 ### Step 1: Understand What They Need
@@ -41,17 +53,9 @@ When a user asks for help with something, identify:
 2. The specific task (e.g., writing tests, creating animations, reviewing PRs)
 3. Whether this is a common enough task that a skill likely exists
 
-### Step 2: Check the Leaderboard First
+### Step 2: Search for Skills
 
-Before running a CLI search, check the [skills.sh leaderboard](https://skills.sh/) to see if a well-known skill already exists for the domain. The leaderboard ranks skills by total installs, surfacing the most popular and battle-tested options.
-
-For example, top skills for web development include:
-- `vercel-labs/agent-skills` — React, Next.js, web design (100K+ installs each)
-- `anthropics/skills` — Frontend design, document processing (100K+ installs)
-
-### Step 3: Search for Skills
-
-If the leaderboard doesn't cover the user's need, run the find command:
+Run the find command with a relevant query:
 
 ```bash
 npx skills find [query]
@@ -63,45 +67,44 @@ For example:
 - User asks "can you help me with PR reviews?" → `npx skills find pr review`
 - User asks "I need to create a changelog" → `npx skills find changelog`
 
-### Step 4: Verify Quality Before Recommending
+The command will return results like:
 
-**Do not recommend a skill based solely on search results.** Always verify:
+```
+Install with skilllite add <owner/repo@skill>  (SkillLite) or npx skills add <owner/repo@skill> (other agents)
 
-1. **Install count** — Prefer skills with 1K+ installs. Be cautious with anything under 100.
-2. **Source reputation** — Official sources (`vercel-labs`, `anthropics`, `microsoft`) are more trustworthy than unknown authors.
-3. **GitHub stars** — Check the source repository. A skill from a repo with <100 stars should be treated with skepticism.
+vercel-labs/agent-skills@vercel-react-best-practices
+└ https://skills.sh/vercel-labs/agent-skills/vercel-react-best-practices
+```
 
-### Step 5: Present Options to the User
+### Step 3: Present Options to the User
 
 When you find relevant skills, present them to the user with:
 
 1. The skill name and what it does
-2. The install count and source
-3. The install command they can run
-4. A link to learn more at skills.sh
+2. The install command they can run
+3. A link to learn more at skills.sh
 
-Example response:
+Example response (SkillLite):
 
 ```
-I found a skill that might help! The "react-best-practices" skill provides
+I found a skill that might help! The "vercel-react-best-practices" skill provides
 React and Next.js performance optimization guidelines from Vercel Engineering.
-(185K installs)
 
-To install it:
-npx skills add vercel-labs/agent-skills@react-best-practices
+To install it (SkillLite):
+skilllite add vercel-labs/agent-skills@vercel-react-best-practices
 
-Learn more: https://skills.sh/vercel-labs/agent-skills/react-best-practices
+Learn more: https://skills.sh/vercel-labs/agent-skills/vercel-react-best-practices
 ```
 
-### Step 6: Offer to Install
+### Step 4: Offer to Install
 
-If the user wants to proceed, you can install the skill for them:
+If the user wants to proceed, install the skill for them. **SkillLite:** use `run_command` to execute:
 
 ```bash
-npx skills add <owner/repo@skill> -g -y
+skilllite add <owner/repo@skill>
 ```
 
-The `-g` flag installs globally (user-level) and `-y` skips confirmation prompts.
+(Other agents may use `npx skills add <owner/repo@skill> -g -y`.)
 
 ## Common Skill Categories
 
@@ -129,7 +132,7 @@ If no relevant skills exist:
 
 1. Acknowledge that no existing skill was found
 2. Offer to help with the task directly using your general capabilities
-3. Suggest the user could create their own skill with `npx skills init`
+3. Suggest the user could create their own skill (SkillLite: use skill-creator; others: `npx skills init`)
 
 Example:
 
@@ -137,6 +140,5 @@ Example:
 I searched for skills related to "xyz" but didn't find any matches.
 I can still help you with this task directly! Would you like me to proceed?
 
-If this is something you do often, you could create your own skill:
-npx skills init my-xyz-skill
+If this is something you do often, you could create your own skill with the skill-creator skill.
 ```

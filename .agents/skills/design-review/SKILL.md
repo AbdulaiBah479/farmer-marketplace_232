@@ -1,42 +1,21 @@
 ---
 name: design-review
-description: |
-  Designer Who Codes: visual audit then fixes with atomic commits and before/after screenshots. Useful for tightening shipped UI before launch.
-triggers:
-  - "design review"
-  - "visual audit"
-  - "before after"
-  - "pre launch design check"
-od:
-  mode: design-system
-  category: creative-direction
-  upstream: "https://github.com/garrytan/gstack"
+description: Review or audit a design/UI across 6 weighted dimensions with Nielsen's 10 heuristics and a prioritized findings table. Use when the user wants a design critique, quality score, heuristic evaluation, or audit of an existing screen, page, or product before/after build.
 ---
 
-# design-review
+# Skill: Design Review
 
-> Curated from Garry Tan (gstack).
+Run a structured, scored review.
 
-## What it does
+## Steps
+1. Read `workflows/design-review.md` (rubric, scoring guide, Nielsen heuristics, process).
+2. Gather context: the screen(s)/flow, target users, platform, constraints.
+3. Score the 6 dimensions (Visual Hierarchy 20%, Consistency 20%, Accessibility 20%, Usability 20%, Responsiveness 10%, Performance 10%); compute the weighted overall.
+4. Run the accessibility lens with `accessibility/wcag-checklist.md`; use `scripts/contrast.py` for any color-pair doubts.
+5. Check against the anti-slop tells in `taste/design-taste.md` (Banned Defaults checklist).
+6. Apply Nielsen's 10 heuristics; flag violations by number.
 
-Designer Who Codes: visual audit then fixes with atomic commits and before/after screenshots. Useful for tightening shipped UI before launch.
-
-## Source
-
-- Upstream: https://github.com/garrytan/gstack
-- Category: `creative-direction`
-
-## How to use
-
-This catalogue entry advertises the skill in Open Design so the agent
-discovers it during planning. To run the full upstream workflow with
-its original assets, scripts, and references, install the upstream
-bundle into your active agent's skills directory:
-
-```bash
-# Inspect the upstream README for exact paths
-open https://github.com/garrytan/gstack
-```
-
-Then ask the agent to invoke this skill by name (`design-review`) or with
-one of the trigger phrases listed in this skill's frontmatter.
+## Output
+- The 6-dimension scored table + overall score.
+- A prioritized findings table: # · Severity (Critical → Major → Minor → Enhancement) · Finding · Recommendation.
+- Concrete, token-referenced fixes.

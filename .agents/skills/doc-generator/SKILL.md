@@ -1,151 +1,244 @@
 ---
 name: doc-generator
-description: >-
-  ユーザーが「ドキュメントを生成」「GoDocを追加」「README更新」「コメントを書いて」「使い方を説明して」等と要求した時に発動。
-  コードから自動的にドキュメントを生成・更新する：
-  - 関数/型のGoDocコメント
-  - READMEのAPI仕様セクション
-  - 使用例（Example）
-  - CHANGELOG.md の更新
-allowed-tools: Read, Write, Edit, Grep, Glob, Bash
+description: Generates or remediates documentation with human-quality writing. Use when creating new docs, rewriting AI-generated content, or applying style profiles.
+globs: "**/*.md"
+alwaysApply: false
+category: artifact-generation
+tags:
+- documentation
+- writing
+- generation
+- remediation
+- polish
+tools: []
+complexity: medium
+model_hint: standard
+estimated_tokens: 1600
+progressive_loading: true
+modules:
+- modules/generation-guidelines.md
+- modules/remediation-workflow.md
+- modules/quality-gates.md
+dependencies:
+- scribe:shared
+- scribe:slop-detector
 ---
+# Documentation Generator
 
-### 手順
-1. **ドキュメント対象の特定**:
-   - ユーザー指定がある場合: その関数/パッケージ
-   - 指定がない場合: GoDocコメントが不足している公開関数を検出
-2. **既存ドキュメントの分析**:
-   - 既存のコメントスタイルを確認
-   - README.md の構造を把握
-   - CHANGELOG.md のフォーマットを確認
-3. **GoDocコメントの生成**:
-   - 公開関数（大文字始まり）に対してコメント追加
-   - GoDocの規約に従う（関数名で始める）
-   - パラメータ、戻り値、エラーの説明
-4. **使用例の生成**:
-   - `Example` テスト関数を作成（`go test` で検証可能）
-   - 典型的なユースケースを示す
-5. **README更新**:
-   - API仕様セクションを更新/追加
-   - インストール方法
-   - クイックスタート
-   - 使用例
-6. **検証**:
-   - `go doc` で生成結果を確認
-   - `go test` でExampleが動作することを確認
+**A document costs the sum of its readers' time. Earn that
+cost or cut.**
 
-### GoDocコメントのベストプラクティス
+Generate documents that are grounded in specific claims, lead
+with their thesis, and earn every sentence. Filler phrases like
+"In today's fast-paced world" and vague descriptors like
+"thorough" or "complete" without evidence are bloat. So is
+any sentence that does not carry, instance, bound, or repeat
+the document's one takeaway.
 
-#### 関数コメント
-```go
-// Sum calculates the sum of all integers in the provided slice.
-// It returns 0 for an empty or nil slice.
-//
-// Example:
-//   result := Sum([]int{1, 2, 3}) // returns 6
-func Sum(nums []int) int { ... }
-```
+This skill enforces both **sentence-level cleanliness** (no
+slop vocabulary, em dash overuse, or sycophantic openers) and
+**document-level economy** (thesis-first, every sentence
+earns weight, repetition reserved for the thesis). See
+`Skill(scribe:slop-detector)` module `document-economy.md`
+for the full rubric.
 
-#### パッケージコメント
-```go
-// Package calc provides basic mathematical calculation utilities.
-//
-// This package includes functions for arithmetic operations
-// such as sum, average, and statistical calculations.
-package calc
-```
+## Core Writing Principles
 
-#### 型コメント
-```go
-// Calculator performs arithmetic operations with state management.
-type Calculator struct {
-    // Total holds the running sum
-    Total int
-}
-```
+Use active voice and an authorial perspective. Explain the
+reasoning behind technical choices (why this database, not
+that one) rather than presenting neutral boilerplate. Use
+bullets sparingly for short, parallel summaries; convert
+multi-line bullet waterfalls into prose so the reasoning
+survives.
 
-### Example テストの生成
-```go
-func ExampleSum() {
-    result := Sum([]int{1, 2, 3, 4, 5})
-    fmt.Println(result)
-    // Output: 15
-}
+### Vocabulary and Style
 
-func ExampleSum_empty() {
-    result := Sum([]int{})
-    fmt.Println(result)
-    // Output: 0
-}
-```
+Avoid business jargon and linguistic tics like mirrored
+sentence structures or em dash overuse. Use the imperative
+mood for docstrings ("Validate input", not "Validates").
+Do not humanize non-living constructs ("the code wants",
+"the function speaks to").
 
-### README.md テンプレート
+| Instead of | Use |
+|------------|-----|
+| fallback | default, secondary |
+| leverage | use |
+| utilize | use |
+| facilitate | help, enable |
+| comprehensive | thorough, complete |
+
+### 9. Limit Humanizing Constructs
+
+"Lives under," "speaks to," and similar phrases only make sense
+for living things.
+
+### 10. Imperative Mood for Docstrings
+
+"Validate" not "Validates" (per PEP 257, pydocstyle, ruff).
+
+## Required TodoWrite Items
+
+1. `doc-generator:scope-defined` - Target files and type identified
+2. `doc-generator:style-loaded` - Style profile applied (if available)
+3. `doc-generator:content-drafted` - Initial content created
+4. `doc-generator:slop-scanned` - AI markers checked
+5. `doc-generator:quality-verified` - Principles checklist passed
+6. `doc-generator:user-approved` - Final approval received
+
+## Mode: Generation
+
+For new documentation:
+
+### Step 1: Define Scope
+
 ```markdown
-# Package Name
+## Generation Request
 
-Brief description of what this package does.
-
-## Installation
-
-\`\`\`bash
-go get github.com/user/repo/pkg/calc
-\`\`\`
-
-## Usage
-
-\`\`\`go
-package main
-
-import "github.com/user/repo/pkg/calc"
-
-func main() {
-    result := calc.Sum([]int{1, 2, 3})
-    fmt.Println(result) // 6
-}
-\`\`\`
-
-## API Reference
-
-### func Sum(nums []int) int
-
-Calculates the sum of all integers in the slice.
-
-**Parameters:**
-- `nums`: Slice of integers to sum
-
-**Returns:**
-- Sum of all elements (0 for empty/nil slice)
-
-## License
-
-MIT
+**Type**: [README/Guide/API docs/Tutorial]
+**Audience**: [developers/users/admins]
+**Audience size**: [1 / small team / org / public]
+**Read frequency**: [once / weekly / per-invocation]
+**Thesis**: [one sentence the reader must walk away with]
+**Length target**: [~X words or sections]
+**Style profile**: [profile name or "default"]
 ```
 
-### CHANGELOG.md 更新
+The **Thesis** field is required. If you cannot state the
+takeaway in one sentence, the scope is not ready. Audience
+size and read frequency feed the reader-time budget (see
+`scribe:slop-detector` module `document-economy.md`): a
+skill loaded daily by 50 users has a wildly different
+budget than a 1:1 design note.
+
+### Step 2: Load Style (if available)
+
+If a style profile exists:
+```bash
+cat .scribe/style-profile.yaml
+```
+
+Apply voice, vocabulary, and structural guidelines.
+
+### Step 3: Draft Content
+
+**Lead with the thesis.** The first paragraph must state the
+single takeaway. If a reader stops after the lead, they should
+still leave with the message. Echo the thesis once in the body
+and once at the close; cut every other repetition.
+
+Follow the 10 core principles above. For each section:
+
+1. Start with the essential information (state the thesis or
+   a clear instance of it)
+2. Add context only if it adds value (does it carry, instance,
+   or bound the thesis?)
+3. Use specific examples (one is proof; two is emphasis;
+   three is filler)
+4. Prefer prose over bullets
+5. End when information is complete (no summary padding,
+   no "in conclusion" restatements)
+
+### Step 4: Run Slop Detector
+
+```
+Skill(scribe:slop-detector)
+```
+
+Fix any findings before proceeding.
+
+### Step 5: Quality Gate
+
+Verify against checklist:
+
+Sentence-level:
+- [ ] No tier-1 slop words
+- [ ] Em dash count < 3 per 1000 words
+- [ ] Bullet ratio < 40%
+- [ ] All claims grounded with specifics
+- [ ] No formulaic openers or closers
+- [ ] Authorial perspective present
+- [ ] No emojis (unless explicitly requested)
+
+Document-level (document-economy module):
+- [ ] Thesis stated in the lead, single and clear (2/2)
+- [ ] >80% of sentences carry, instance, bound, or repeat
+      the thesis (2/2)
+- [ ] Thesis echoed at least 3 times; non-thesis repetition
+      cut (2/2)
+- [ ] Writing time roughly proportional to (audience size ×
+      read frequency × per-read time)
+
+## Mode: Remediation
+
+For cleaning up existing content:
+
+Load: `@modules/remediation-workflow.md`
+
+### Step 1: Analyze Current State
+
+```bash
+# Get slop score
+Skill(scribe:slop-detector) --target file.md
+```
+
+### Step 2: Section-by-Section Approach
+
+For large files (>200 lines), edit incrementally:
+
 ```markdown
-# Changelog
+## Section: [Name] (Lines X-Y)
 
-## [Unreleased]
-### Added
-- GoDoc comments for all public functions
-- Example tests for Sum function
-- API reference in README
+**Current slop score**: X.X
+**Issues found**: [list]
 
-### Changed
-- Improved documentation clarity
+**Proposed changes**:
+1. [Change 1]
+2. [Change 2]
+
+**Before**:
+> [current text]
+
+**After**:
+> [proposed text]
+
+Proceed? [Y/n/edit]
 ```
 
-### ドキュメント品質チェック
-- [ ] すべての公開関数にコメントがあるか
-- [ ] コメントが関数名で始まっているか
-- [ ] パラメータと戻り値が説明されているか
-- [ ] 特殊なケース（nil, empty）が説明されているか
-- [ ] `go doc` で正しく表示されるか
-- [ ] Exampleテストが実行可能か（`go test`）
+### Step 3: Preserve Intent
 
-### ベストプラクティス
-- 簡潔に（1-3文）
-- 専門用語は避けるか、説明を添える
-- コードを読まなくても使い方が分かるレベルで
-- 「何をするか」だけでなく「いつ使うべきか」も含める
-- Exampleは実際に動作するコードに
+Never change WHAT is said, only HOW. If meaning is unclear, ask.
+
+### Step 4: Re-verify
+
+After edits, re-run slop-detector to confirm improvement.
+
+## Docstring-Specific Rules
+
+When editing code comments:
+
+1. **ONLY modify docstring/comment text**
+2. **Never change surrounding code**
+3. **Use imperative mood** ("Validate input" not "Validates input")
+4. **Brief is better** - remove filler
+5. **Keep Args/Returns structure** if present
+
+## Module Reference
+
+- See `modules/generation-guidelines.md` for content creation patterns
+- See `modules/quality-gates.md` for validation criteria
+
+## Integration with Other Skills
+
+| Skill | When to Use |
+|-------|-------------|
+| slop-detector | After drafting, before approval |
+| style-learner | Before generation to load profile |
+| sanctum:doc-updates | For broader doc maintenance |
+
+## Exit Criteria
+
+- Content created or remediated
+- Slop score < 1.5 (clean rating)
+- Quality gate checklist passed
+- User approval received
+- No emojis present (unless specified)

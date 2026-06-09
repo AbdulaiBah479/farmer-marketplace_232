@@ -1,9 +1,8 @@
 ---
 name: python-async
-description: 'Consult this skill for async Python patterns and concurrency. Use when
-  building async APIs, concurrent systems, I/O-bound applications, implementing rate
-  limiting, async context managers. Do not use when CPU-bound optimization - use python-performance
-  instead. DO NOT use when: testing async code - use python-testing async module.'
+description: Async Python patterns via asyncio and aiohttp for I/O-bound concurrency. Use when adding async APIs, handling concurrent I/O, or debugging async code.
+globs: "**/*.py"
+alwaysApply: false
 category: async
 tags:
 - python
@@ -12,27 +11,25 @@ tags:
 - concurrency
 - await
 - coroutines
-tools:
-- async-analyzer
-- concurrency-checker
+tools: []
 usage_patterns:
 - async-api-development
 - concurrent-io
 - websocket-servers
 - background-tasks
 complexity: intermediate
+model_hint: standard
 estimated_tokens: 400
 progressive_loading: true
 modules:
-- basic-patterns
-- concurrency-control
-- error-handling-timeouts
-- advanced-patterns
-- testing-async
-- real-world-applications
-- pitfalls-best-practices
+- modules/basic-patterns.md
+- modules/concurrency-control.md
+- modules/error-handling-timeouts.md
+- modules/advanced-patterns.md
+- modules/testing-async.md
+- modules/real-world-applications.md
+- modules/pitfalls-best-practices.md
 ---
-
 # Async Python Patterns
 
 asyncio and async/await patterns for Python applications.
@@ -49,7 +46,6 @@ async def main():
 
 asyncio.run(main())
 ```
-**Verification:** Run the command with `--help` flag to verify availability.
 
 ## When To Use
 
@@ -62,11 +58,7 @@ asyncio.run(main())
 
 ## When NOT To Use
 
-- CPU-bound optimization - use python-performance
-  instead
-- Testing async code - use python-testing async module
-- CPU-bound optimization - use python-performance
-  instead
+- CPU-bound optimization - use python-performance instead
 - Testing async code - use python-testing async module
 
 ## Modules
@@ -94,11 +86,11 @@ Load specific modules based on your needs, or reference all for detailed guidanc
 
 ### Common Issues
 
-**Command not found**
-Ensure all dependencies are installed and in PATH
+**RuntimeError: no current event loop**
+Use `asyncio.run()` as the entry point. Avoid `get_event_loop()` in Python 3.10+.
 
-**Permission errors**
-Check file permissions and run with appropriate privileges
+**Blocking call in async context**
+Move sync I/O to `asyncio.to_thread()` or `loop.run_in_executor()`.
 
-**Unexpected behavior**
-Enable verbose logging with `--verbose` flag
+**Tests hang indefinitely**
+Ensure pytest-asyncio is installed and test functions are decorated with `@pytest.mark.asyncio`.

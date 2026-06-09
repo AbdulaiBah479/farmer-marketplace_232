@@ -1,6 +1,6 @@
 ---
 name: harden
-description: 'Active codebase hardening with NIST/CWE-cited checks for Python and Rust. Composes existing reviews; proposes concrete remediations.'
+description: Applies NIST/CWE security hardening to Python and Rust code. Use when auditing code for vulnerabilities or proposing concrete security remediations.
 globs: "**/*.{py,rs,toml,yaml,yml,sh}"
 alwaysApply: false
 category: security
@@ -39,6 +39,8 @@ dependencies:
 - leyline:content-sanitization
 - abstract:hook-authoring
 - imbue:proof-of-work
+- imbue:review-core
+- imbue:structured-output
 modules:
 - modules/nist-controls.md
 - modules/python-checks.md
@@ -50,7 +52,7 @@ modules:
 
 # Harden Codebase Skill
 
-Active security hardening — scan the existing repository for
+Active security hardening: scan the existing repository for
 vulnerabilities and forward-facing threats, then propose concrete
 remediations the user can approve, defer, or file.
 
@@ -78,24 +80,26 @@ checks rather than line-level review of in-flight code.
 
 ## Required TodoWrite Items
 
-1. `harden:discovery` — inventory languages, build files, hooks,
+1. `harden:discovery`: inventory languages, build files, hooks,
    CI workflows
-2. `harden:scan-python` — run python-checks.md detectors when
+2. `harden:scan-python`: run python-checks.md detectors when
    Python is present
-3. `harden:scan-rust` — run rust-checks.md detectors when Rust
+3. `harden:scan-rust`: run rust-checks.md detectors when Rust
    is present
-4. `harden:scan-cross-cutting` — run cross-cutting.md detectors
+4. `harden:scan-cross-cutting`: run cross-cutting.md detectors
    (deps, secrets, SBOM, CI)
-5. `harden:scan-frontier` — run frontier-checks.md (PQC, LLM
+5. `harden:scan-frontier`: run frontier-checks.md (PQC, LLM
    supply chain, sandboxing)
-6. `harden:nist-mapping` — map findings to NIST SSDF practices
-7. `harden:proposals` — for each finding above the threshold,
+6. `harden:nist-mapping`: map findings to NIST SSDF practices
+7. `harden:proposals`: for each finding above the threshold,
    draft a concrete remediation per `modules/proposal-shape.md`
-8. `harden:approval-gate` — present proposals to the user for
+8. `harden:approval-gate`: present proposals to the user for
    apply / file / defer / reject
-9. `harden:apply-and-validate` — apply approved proposals as
+9. `harden:apply-and-validate`: apply approved proposals as
    discrete commits, re-run gates, capture evidence
-10. `harden:report` — write `reviews/harden-<date>.md` and
+10. `harden:findings-verified`: citations confirmed by
+    `citation_verifier.py`
+11. `harden:report`: write `reviews/harden-<date>.md` and
     optionally post to Discussions
 
 ## Progressive Loading
@@ -116,7 +120,7 @@ The module hub keeps the SKILL.md itself under the
 
 ## Core Workflow
 
-### Phase 1 — Discovery
+### Phase 1: Discovery
 
 Inventory the repo without modifying anything:
 
@@ -139,7 +143,7 @@ find . -path ./node_modules -prune -o -type f \
 Dispatch `/discovery-prefilter` if the repo has > 5000 source files
 to bound the scan.
 
-### Phase 2 — Citation-backed scan
+### Phase 2: Citation-backed scan
 
 For each detected language, load the matching module and run its
 detector list. Each detector outputs findings with the schema
@@ -147,14 +151,14 @@ defined in `modules/proposal-shape.md`. The citation column is
 mandatory: a finding without a NIST/CWE reference is downgraded
 to "advisory" and not eligible for active proposal.
 
-### Phase 3 — NIST mapping
+### Phase 3: NIST mapping
 
 Group findings by SSDF practice (PW.4, PW.8, RV.1, etc.) and CWE
 ID. The mapping table lives in `modules/nist-controls.md`. The
 report's executive summary references SSDF practice coverage so
 the audit is comparable across runs.
 
-### Phase 4 — Proposal generation
+### Phase 4: Proposal generation
 
 For each finding above the configured severity threshold, draft a
 concrete remediation per `modules/proposal-shape.md`:
@@ -165,14 +169,14 @@ concrete remediation per `modules/proposal-shape.md`:
 - Reversal plan: how to revert if the change breaks behavior
 - Test that should pass after the change
 
-### Phase 5 — Approval gate
+### Phase 5: Approval gate
 
 Present proposals one at a time via `AskUserQuestion`. Default
 options: **apply**, **file as issue**, **defer to backlog**,
 **reject**. Auto-apply is opt-in via the `--auto-apply` flag and
 respects a per-finding severity threshold.
 
-### Phase 6 — Apply and validate
+### Phase 6: Apply and validate
 
 Apply each approved proposal as a discrete commit:
 
@@ -190,7 +194,7 @@ make test --quiet && make lint && make type-check
 If a gate fails, revert the commit (`git revert HEAD --no-edit`)
 and downgrade the finding to "needs human design."
 
-### Phase 7 — Report
+### Phase 7: Report
 
 Write `reviews/harden-<date>.md` with:
 
@@ -242,6 +246,7 @@ NIST SSDF PW.7 (Review and analyze human-readable code).
 
 **Detection signal:**
 - File: `src/x.py:45`
+- Anchor: `data = pickle.loads(user_supplied_input)`
 - Pattern: <module>.loads(user_supplied_input)
 - Reachability: untrusted, comes from request body
 
@@ -270,16 +275,30 @@ NIST SSDF PW.7 (Review and analyze human-readable code).
 
 The skill composes (rather than re-implements):
 
-- `pensive:rust-review` — full Rust audit when Rust is present
-- `pensive:bug-review` — bug-hunting backbone
-- `pensive:safety-critical-patterns` — NASA Power-of-10 adapted
-- `pensive:tiered-audit` — three-tier discipline (`--tier 1/2/3`)
-- `pensive:blast-radius` — change-impact assessment for proposals
-- `leyline:supply-chain-advisory` — dependency posture
-- `leyline:authentication-patterns` — auth/credential review
-- `leyline:content-sanitization` — input handling
-- `abstract:hook-authoring` — hook-event security
-- `imbue:proof-of-work` — evidence discipline for findings
+- `pensive:rust-review`: full Rust audit when Rust is present
+- `pensive:bug-review`: bug-hunting backbone
+- `pensive:safety-critical-patterns`: NASA Power-of-10 adapted
+- `pensive:tiered-audit`: three-tier discipline (`--tier 1/2/3`)
+- `pensive:blast-radius`: change-impact assessment for proposals
+- `leyline:supply-chain-advisory`: dependency posture
+- `leyline:authentication-patterns`: auth/credential review
+- `leyline:content-sanitization`: input handling
+- `abstract:hook-authoring`: hook-event security
+- `imbue:proof-of-work`: evidence discipline for findings
+
+### Verify Findings Are Grounded (`harden:findings-verified`)
+
+Every finding must cite a real location and a verbatim anchor. Write
+findings to `.review/findings.json` and confirm each citation resolves:
+
+```bash
+python plugins/imbue/scripts/citation_verifier.py \
+  --findings .review/findings.json --repo-root .
+```
+
+Drop or label `UNVERIFIED` any finding the verifier fails (exit `1`); only
+verified findings enter the report. See `Skill(imbue:review-core)` Step 5
+and `Skill(imbue:structured-output)` for the schema.
 
 ## Exit Criteria
 
@@ -299,3 +318,6 @@ The skill composes (rather than re-implements):
 - [ ] `reviews/harden-<date>.md` exists and lists every finding
       with a disposition (applied / filed / deferred / rejected /
       advisory).
+- [ ] Every reported finding carries a `Location` + verbatim `Anchor`
+      confirmed by `citation_verifier.py` (exit `0`), or unverified
+      findings were dropped or labeled `UNVERIFIED`.

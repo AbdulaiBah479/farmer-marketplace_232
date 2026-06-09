@@ -1,54 +1,182 @@
 ---
 name: update-readme
-description: Keep all README files aligned with the current codebase by rewriting setup steps, removing outdated content, and syncing documentation to the latest repository state whenever asked to update, refresh, or sync READMEs.
+description: Refreshes README structure favoring concision (an index, not a manual). Use when the README needs a structural update after significant project changes.
+alwaysApply: false
+category: artifact-generation
+tags:
+- readme
+- documentation
+- exemplars
+- research
+- structure
+tools: []
+complexity: high
+model_hint: deep
+estimated_tokens: 1200
+modules:
+- modules/language-audit.md
+- modules/exemplar-research.md
+progressive_loading: true
+dependencies:
+- sanctum:shared
+- sanctum:git-workspace-review
+- imbue:proof-of-work
+- scribe:slop-detector
+- scribe:doc-generator
 ---
+# README Update Workflow
 
-# Update README
+## When To Use
+Use this skill whenever the README requires a structural refresh.
+Run `Skill(sanctum:git-workspace-review)` first to capture repo context and diffs.
 
-## Goals
+## When NOT To Use
 
-- Keep every README in the repo accurate for the current codebase.
-- Ensure README explains the nix directory layout for common packages/settings and host-specific configuration placement.
-- Remove outdated or no-longer-true statements.
-- Write in concise English.
+- Updating inline docs: use doc-updates
+- Consolidating ephemeral reports: use doc-consolidation
 
-## Workflow
+## Required TodoWrite Items
+1. `update-readme:language-audit`
+2. `update-readme:exemplar-research`
+3. `update-readme:outline-aligned`
+4. `update-readme:edits-applied`
+5. `update-readme:slop-scanned` - AI marker detection via scribe
+6. `update-readme:verification-reporting`
 
-1) Discover README targets
+## Step 1 - Language Audit (`update-readme:language-audit`)
+- Confirm `pwd`, `git status -sb`, and the baseline branch for reference.
+- Detect dominant languages using repository heuristics (manifest files, file counts).
+- Note secondary languages that influence documentation (e.g., a TypeScript frontend and a Rust backend) so the README can surface both.
+- Record the method and findings.
 
-- List README files with `rg --files -g 'README*'` from the repo root.
-- Only the top-level `README.md` is permitted; subdirectory READMEs are not allowed.
-- If any subdirectory README files exist, remove them and consolidate their content into the top-level README.
+See `modules/language-audit.md` for detailed detection patterns and commands.
 
-2) Determine scope for the README
+## Step 2 - Exemplar Research (`update-readme:exemplar-research`)
+- For each primary and secondary language, use web search to locate high-quality READMEs (star count, recency, maintainer activity).
+- Capture 2-3 exemplar repositories per language and summarize why each is relevant (section order, visuals, quickstart clarity, governance messaging, math exposition, etc.).
+- Store citations for every exemplar so the final summary references them explicitly.
 
-- The top-level `README.md` must be the only README in the repo.
-- Use the filesystem to confirm what exists before writing.
+See `modules/exemplar-research.md` for search query patterns and evaluation criteria.
 
-3) Rewrite the README
+## Step 3 - Outline Alignment (`update-readme:outline-aligned`)
 
-- Keep content minimal; include `## Setup` and `## Nix layout`.
-- `## Setup`
-  - Describe the exact setup steps required now.
-  - Include copy-pasteable commands in Markdown code blocks so the setup can be executed directly.
-  - Remove deprecated steps or tooling references.
-- `## Nix layout`
-  - Explain where common packages/settings live and where host-specific configuration lives inside `nix/`.
-  - Use short sentences or bullets; avoid excessive detail.
+**The README is an index, not a manual.** Lead with what the
+project is, how to install it, and a scannable table of its
+units (plugins, commands, packages); link out for everything
+else. When this repo's root README was simplified in 2026, it
+dropped from 435 to 200 lines (65% fewer words) by deleting
+inlined depth and linking to `book/` instead. Aim for that
+shape, not a section-by-section coverage sweep.
 
-4) Remove obsolete content
+- Compare current README headings (`rg -n '^#' README.md`)
+  against the exemplars from Step 2. Lean marketplace and
+  CLI-tool READMEs (asdf-vm/asdf-plugins, ohmyzsh/ohmyzsh,
+  ryoppippi/ccusage) are index-shaped: prose intro under ~500
+  words, a unit table doing the work, depth behind links.
+- Keep only the sections that earn a place in an index: a
+  one-line value proposition, one install path, a compact
+  command or unit table, a short "what's inside" summary, a
+  single Documentation link section, and metadata
+  (requirements, contributing, license) last. For every other
+  candidate section ask: **does this belong in the README, or
+  behind a link?**
+- Default to linking out. Send deep architecture, FAQ,
+  roadmap, changelog, alternate install methods, and per-unit
+  detail to their own pages. Per-unit docs live with the unit
+  (hub-and-spoke), never duplicated in the root.
+- Order signals priority: title and tagline first, then
+  install, then the index table, then a short feature summary,
+  then Documentation links, with housekeeping (requirements,
+  contributing, license) last.
+- Map internal documents (docs/, book/, specs/, commands/) to
+  the section that links them, so the README anchors depth
+  without restating it.
 
-- Delete any badges, deprecated sections, or instructions that are no longer true.
-- If a section cannot be substantiated from current files, remove it.
+**Soft budget**: a marketplace or collection root README runs
+roughly 150-400 lines of prose plus any index table. A section
+that grows over time (roadmap, FAQ, changelog) belongs in a
+linked page, not the README.
 
-## Output expectations
+## Step 4 - Apply Edits (`update-readme:edits-applied`)
+- Implement the new structure directly in `README.md`
+  (or the specified file).
+- Follow `Skill(leyline:markdown-formatting)` conventions:
+  wrap prose at 80 chars (prefer sentence/clause boundaries),
+  blank lines around headings, ATX headings only, blank line
+  before lists, reference-style links for long URLs.
+- Maintain concise, evidence-based prose; avoid marketing fluff.
+- Prefer deletion and linking over inlining. If a section
+  duplicates a docs page, cut it and link the page; if it
+  grows over time, move it out of the README entirely.
+- Add comparison tables, feature lists, or diagrams only if
+  they originate from current repository assets (no speculative
+  content).
+- When referencing algorithms or performance claims, point to
+  benchmarks or tests within the repository or documented math
+  reviews.
 
-- English only.
-- No extra sections beyond the required two.
-- For the root README, never mention deprecated folders (like `init/`) or non-active folders unless instructed.
-- Only `README.md` at repo root may exist; delete any others.
+## Step 4.5 - AI Slop Detection (`update-readme:slop-scanned`)
 
-## Notes
+Run `Skill(scribe:slop-detector)` on the updated README to detect AI-generated content markers.
 
-- This repo treats `git/`, `nvim/`, `wezterm/`, and `zsh/` as the active configuration roots.
-- If a README claims to manage files or scripts that no longer exist, remove those claims.
+### Scribe Integration
+
+The scribe plugin provides AI slop detection:
+
+```
+Skill(scribe:slop-detector) --target README.md
+```
+
+This detects:
+- **Tier 1 words**: delve, tapestry, comprehensive, leveraging, etc.
+- **Phrase patterns**: "In today's fast-paced world", "cannot be overstated"
+- **Structural markers**: Excessive em dashes, bullet overuse, sentence uniformity
+- **Marketing language**: "enterprise-ready", "cutting-edge", "seamless"
+
+### Remediation
+
+If slop score exceeds 2.0 (moderate), apply `Skill(scribe:doc-generator)` principles:
+
+1. Ground every claim with specifics
+2. Remove formulaic openers/closers
+3. Use numbers, commands, filenames over adjectives
+4. Balance bullets with narrative prose
+5. Show authorial perspective (trade-offs, reasoning)
+
+For significant cleanup needs, use:
+
+```
+Agent(scribe:doc-editor) --target README.md
+```
+
+## Step 5 - Verification & Reporting (`update-readme:verification-reporting`)
+- Re-read the updated README for clarity, accessibility (section lengths, bullet balance), and accurate links.
+- Run `git diff README.md` (or the edited file) and capture snippets for the final report.
+- Summarize detected languages, exemplar sources (with citations), key structural decisions, and follow-up TODOs (e.g., add badges, upload diagrams).
+
+## Exit Criteria
+
+- [ ] All `TodoWrite` items are complete.
+- [ ] The README is index-shaped: prose intro within the soft
+  budget (roughly 150-400 lines plus any unit table), one
+  install path, and a scannable unit/command table.
+- [ ] No README section duplicates a `book/` or `docs/` page;
+  depth is linked, not inlined (`rg -n '^#' README.md` headings
+  each map to a section that earns a place in an index).
+- [ ] The README references internal docs and external
+  exemplars with citations.
+- [ ] Research notes and command references are captured so
+  future reviewers can reproduce the process.
+
+## Troubleshooting
+
+### Common Issues
+
+**Documentation out of sync**
+Run `make docs-update` to regenerate from code
+
+**Build failures**
+Check that all required dependencies are installed
+
+**Links broken**
+Verify relative paths in documentation files

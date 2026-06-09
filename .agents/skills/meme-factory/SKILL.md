@@ -1,53 +1,57 @@
 ---
-name: Meme Factory
-model: fast
-description: >
-  When the user wants to create memes, add humor to content, or generate visual
-  aids for social media. Triggers on: "make a meme", "create meme", "meme about",
-  "meme factory", or requests for humor/visual comedy. Supports 100+ templates
-  via the memegen.link API and 15+ textual meme formats in Markdown.
-version: 1.0.0
-tags: [memes, humor, social-media, tools, content]
+name: meme-factory
+description: Generate memes using the memegen.link API. Use when users request memes, want to add humor to content, or need visual aids for social media. Supports 100+ popular templates with custom text and styling.
 ---
 
 # Meme Factory
 
-Generate memes using the free memegen.link API and textual Markdown meme formats. No API key required.
+Create memes using the free memegen.link API and textual meme formats.
 
+---
 
-## Installation
+## Triggers
 
-### OpenClaw / Moltbot / Clawbot
+| Trigger | Description |
+|---------|-------------|
+| `/meme-factory` | Manual invocation |
+| `/meme-factory {template} {top} {bottom}` | Direct meme generation |
+| `meme-factory: create a meme about X` | Natural language request |
 
-```bash
-npx clawhub@latest install meme-factory
-```
+---
 
+## Quick Reference
 
-## NEVER Do
+| Action | Format |
+|--------|--------|
+| Basic meme | `https://api.memegen.link/images/{template}/{top}/{bottom}.png` |
+| With sizing | `?width=1200&height=630` |
+| Custom background | `?style=https://example.com/image.jpg` |
+| All templates | https://api.memegen.link/templates/ |
+| Interactive docs | https://api.memegen.link/docs/ |
 
-- Use spaces in meme URLs without encoding them as `_` or `-`
-- Assume a template exists without checking the templates list
-- Write more than 2-6 words per line (text becomes unreadable)
-- Use the wrong template for the context (e.g., "success" template for failures)
-- Omit the file extension in URLs (`.png`, `.jpg`, etc.)
-- Forget to encode special characters (`?` → `~q`, `/` → `~s`, `%` → `~p`, `#` → `~h`)
+**Additional Resources:**
+- [Markdown Memes Guide](references/markdown-memes-guide.md) - 15+ textual meme formats
+- [Examples](references/examples.md) - Practical usage examples
+- [meme_generator.py](scripts/meme_generator.py) - Python helper script
+
+---
 
 ## Quick Start
 
-### URL Structure
+### Basic Meme Structure
 
 ```
-https://api.memegen.link/images/{template}/{top_text}/{bottom_text}.{ext}
+https://api.memegen.link/images/{template}/{top_text}/{bottom_text}.{extension}
 ```
 
 **Example:**
-
 ```
-https://api.memegen.link/images/buzz/bugs/bugs_everywhere.png
+https://api.memegen.link/images/buzz/memes/memes_everywhere.png
 ```
 
-### Text Encoding
+Result: Buzz Lightyear meme with "memes" at top and "memes everywhere" at bottom.
+
+### Text Formatting
 
 | Character | Encoding |
 |-----------|----------|
@@ -60,163 +64,268 @@ https://api.memegen.link/images/buzz/bugs/bugs_everywhere.png
 | Single quote | `''` |
 | Double quote | `""` |
 
+---
+
 ## Popular Templates
 
-| Template | Use Case | When To Use |
-|----------|----------|-------------|
-| `drake` | Comparing options | Rejecting one thing, approving another |
-| `buzz` | Ubiquitous things | "X, X everywhere" |
-| `success` | Celebrating wins | Positive outcomes |
-| `fine` | Problems ignored | Ironic "everything is fine" |
-| `fry` | Uncertainty | "Not sure if X or Y" |
-| `changemind` | Hot takes | Stating an opinion confidently |
-| `distracted` | Priorities | Being distracted by something new |
-| `mordor` | Bad ideas | "One does not simply..." |
-| `interesting` | Rare occurrences | "I don't always X, but when I do..." |
-| `yodawg` | Meta/recursive | "Yo dawg, I heard you like X" |
+| Template | Use Case | Example |
+|----------|----------|---------|
+| `buzz` | X, X everywhere | bugs/bugs_everywhere |
+| `drake` | Comparisons | manual_testing/automated_testing |
+| `success` | Victories | deployed/no_errors |
+| `fine` | Things going wrong | server_on_fire/this_is_fine |
+| `fry` | Uncertainty | not_sure_if_bug/or_feature |
+| `changemind` | Hot takes | tabs_are_better_than_spaces |
+| `distracted` | Priorities | my_code/new_framework/current_project |
+| `mordor` | One does not simply | one_does_not_simply/deploy_on_friday |
 
-Full list: https://api.memegen.link/templates/
+---
 
-## Contextual Template Selection
+## Template Selection Guide
 
 | Context | Template | Why |
 |---------|----------|-----|
 | Comparing options | `drake` | Two-panel reject/approve format |
 | Celebrating wins | `success` | Positive outcome emphasis |
-| Problems ignored | `fine` | Ironic calm amid chaos |
+| Problems ignored | `fine` | Ironic "everything is fine" |
 | Uncertainty | `fry` | "Not sure if X or Y" format |
 | Controversial opinion | `changemind` | Statement + challenge |
 | Ubiquitous things | `buzz` | "X, X everywhere" |
 | Bad ideas | `mordor` | "One does not simply..." |
 
-## Image Options
+---
 
-### Formats
+## Validation
+
+After generating a meme:
+
+- [ ] URL returns valid image (test in browser)
+- [ ] Text is readable (not too long)
+- [ ] Template matches the message context
+- [ ] Special characters properly encoded
+- [ ] Dimensions appropriate for platform
+
+### Platform Dimensions
+
+| Platform | Dimensions |
+|----------|------------|
+| Social media (Open Graph) | 1200x630 |
+| Slack/Discord | 800x600 |
+| GitHub | Default |
+
+---
+
+## Anti-Patterns
+
+| Avoid | Why | Instead |
+|-------|-----|---------|
+| Spaces without encoding | URL breaks | Use `_` or `-` |
+| Too much text | Unreadable | 2-6 words per line |
+| Wrong template | Message mismatch | Match template to context |
+| Missing extension | Invalid URL | Always include `.png`, `.jpg`, etc. |
+| Unencoded special chars | URL breaks | Use `~q`, `~s`, `~p`, etc. |
+| Assuming template exists | 404 error | Check templates list first |
+
+---
+
+## Verification
+
+Meme generation is successful when:
+
+1. **URL is valid** - Returns HTTP 200
+2. **Image renders** - Displays correctly in markdown
+3. **Text is visible** - Properly formatted on image
+4. **Context matches** - Template fits the message
+
+**Test command:**
+```bash
+curl -I "https://api.memegen.link/images/buzz/test/test.png"
+# Should return: HTTP/2 200
+```
+
+---
+
+<details>
+<summary><strong>Deep Dive: Advanced Features</strong></summary>
+
+### Image Formats
 
 | Extension | Use Case |
 |-----------|----------|
-| `.png` | Best quality (default) |
+| `.png` | Best quality, default |
 | `.jpg` | Smaller file size |
 | `.webp` | Modern, good compression |
 | `.gif` | Animated templates |
 
-### Dimensions by Platform
+### Dimensions
 
-| Platform | Dimensions | Usage |
-|----------|------------|-------|
-| Social media / Open Graph | `?width=1200&height=630` | Twitter, LinkedIn, Facebook |
-| Slack / Discord | `?width=800&height=600` | Chat platforms |
-| GitHub | Default | PRs, issues, README |
+```
+?width=800
+?height=600
+?width=800&height=600  (padded to exact)
+```
 
 ### Layout Options
 
 ```
-?layout=top       # Text at top only
-?layout=bottom    # Text at bottom only
-?layout=default   # Standard top/bottom
+?layout=top     # Text at top only
+?layout=bottom  # Text at bottom only
+?layout=default # Standard top/bottom
 ```
 
-## Textual Meme Formats (Markdown)
+### Custom Fonts
 
-Beyond image memes, create text-based memes directly in Markdown:
+View available: https://api.memegen.link/fonts/
 
-- **Greentext** — Code fence with `>` prefixed lines for anon-culture narratives
-- **Copypasta** — Dramatic walls of text in code fences
-- **Shitpost poetry** — Hard line breaks for comedic timing
-- **ASCII art** — Monospaced art in code fences
-- **Tumblr chains** — Nested blockquotes for multi-speaker escalation
-- **Twitter/X style** — Short blockquote micro-memes
-- **Reddit AITA/TIFU** — Heading + paragraphs narrative memes
-- **Wojak dialogues** — Bold names + minimal dialogue
-- **Discord chat logs** — Code fence with timestamps
-- **Corporate satire** — Lists + bold labels for fake official notices
-- **Fake wiki/manual pages** — Technical jargon for mundane objects
+```
+?font=impact  (default)
+```
 
-Full guide with examples: [references/markdown-memes-guide.md](references/markdown-memes-guide.md)
+### Custom Images
 
-## Validation Checklist
+Use any image as background:
 
-After generating a meme:
+```
+https://api.memegen.link/images/custom/hello/world.png?style=https://example.com/image.jpg
+```
 
-- URL returns valid image (test with `curl -I`)
-- Text is readable (not too long)
-- Template matches the message context
-- Special characters properly encoded
-- Dimensions appropriate for target platform
+</details>
 
-## Embedding in Markdown
+<details>
+<summary><strong>Deep Dive: Contextual Memes</strong></summary>
+
+### Code Reviews
+
+```
+Template: fry
+https://api.memegen.link/images/fry/not_sure_if_feature/or_bug.png
+```
+
+### Deployments
+
+```
+Template: interesting
+https://api.memegen.link/images/interesting/i_dont_always_test/but_when_i_do_i_do_it_in_production.png
+```
+
+### Documentation
+
+```
+Template: yodawg
+https://api.memegen.link/images/yodawg/yo_dawg_i_heard_you_like_docs/so_i_documented_the_documentation.png
+```
+
+### Performance Issues
+
+```
+Template: fine
+https://api.memegen.link/images/fine/memory_usage_at_99~/this_is_fine.png
+```
+
+### Successful Deploy
+
+```
+Template: success
+https://api.memegen.link/images/success/deployed_to_production/zero_downtime.png
+```
+
+</details>
+
+<details>
+<summary><strong>Deep Dive: Workflow Integration</strong></summary>
+
+### Generating Memes in Response
 
 ```markdown
-![Description](https://api.memegen.link/images/drake/manual_testing/automated_testing.png)
+Here's a relevant meme:
+
+![Meme](https://api.memegen.link/images/buzz/bugs/bugs_everywhere.png)
 ```
 
-Always provide descriptive alt text for accessibility:
+### Dynamic Generation (Python)
 
-- Good: `![Drake rejecting manual testing, approving automated testing]`
-- Bad: `![funny meme]`
+```python
+def generate_status_meme(status: str, message: str):
+    template_map = {
+        "success": "success",
+        "failure": "fine",
+        "review": "fry",
+        "deploy": "interesting"
+    }
 
-## Custom Backgrounds
+    template = template_map.get(status, "buzz")
+    words = message.split()
+    top = "_".join(words[0:3])
+    bottom = "_".join(words[3:6])
 
-Use any image as a meme background with the `custom` template:
-
+    return f"https://api.memegen.link/images/{template}/{top}/{bottom}.png"
 ```
-https://api.memegen.link/images/custom/top_text/bottom_text.png?style=https://example.com/image.jpg
-```
 
-Pair screenshots of apps, dashboards, or charts as backgrounds for contextual humor.
-
-## Mixing Text + Image Memes
-
-For blog posts and documentation, alternate between formats for pacing:
-
-1. **Start with text** (greentext/chat log) to set up context
-2. **Follow with image** to amplify the punchline
-3. **Close with text** (corporate satire/poetry) for resolution
-
-**Good patterns:** Greentext → Image → Corporate satire, Chat log → Image → Shitpost poetry
-
-**Avoid:** 5 images in a row (visual fatigue), 3 long copypastas back-to-back (reader exhaustion)
-
-## API Reference
-
-| Endpoint | Purpose |
-|----------|---------|
-| `/templates/` | List all available templates |
-| `/templates/{id}` | Template details and example |
-| `/fonts/` | Available fonts |
-| `/images/{template}/{top}/{bottom}.{ext}` | Generate meme image |
-
-**API characteristics:** Free, open-source, no API key, no rate limiting, stateless, images generated on-demand.
-
-## Python Helper Script
+### Using the Helper Script
 
 ```python
 from meme_generator import MemeGenerator
 
 meme = MemeGenerator()
-
-# Generate a basic meme URL
 url = meme.generate("buzz", "features", "features everywhere")
-
-# With custom dimensions for social media
-url = meme.generate("drake", "old way", "new way", width=1200, height=630)
-
-# Get markdown for embedding
-md = meme.get_markdown_image(url, alt_text="Comparison Meme")
-
-# Suggest template based on context
-template = meme.suggest_template_for_context("deployment success")
+print(url)
 ```
+
+</details>
+
+<details>
+<summary><strong>Deep Dive: API Reference</strong></summary>
+
+### Endpoints
+
+| Endpoint | Purpose |
+|----------|---------|
+| `/templates/` | List all templates |
+| `/templates/{id}` | Template details |
+| `/fonts/` | Available fonts |
+| `/images/{template}/{top}/{bottom}.{ext}` | Generate meme |
+
+### API Characteristics
+
+- Free and open-source
+- No API key required
+- No rate limiting (normal use)
+- Stateless (all info in URL)
+- Images generated on-demand
+
+### Error Handling
+
+1. Check template at https://api.memegen.link/templates/
+2. Verify text formatting (underscores for spaces)
+3. Check special character encoding
+4. Ensure valid extension
+5. Test URL in browser
+
+</details>
+
+---
 
 ## References
 
-| File | Content |
-|------|---------|
-| [references/markdown-memes-guide.md](references/markdown-memes-guide.md) | 15+ textual meme formats with examples and production tips |
-| [references/examples.md](references/examples.md) | Practical usage examples, integrations (Slack, GitHub, Discord) |
+| Document | Content |
+|----------|---------|
+| [markdown-memes-guide.md](references/markdown-memes-guide.md) | 15+ textual meme formats (greentext, copypasta, ASCII, etc.) |
+| [examples.md](references/examples.md) | Practical usage examples |
 
 ### Scripts
 
 | Script | Purpose |
 |--------|---------|
-| [scripts/meme_generator.py](scripts/meme_generator.py) | Python helper for programmatic meme generation with 20+ templates |
+| [meme_generator.py](scripts/meme_generator.py) | Python helper for meme generation |
+
+---
+
+## Summary
+
+Generate contextual memes to:
+- Add humor to conversations
+- Create social media visuals
+- Make code reviews engaging
+- Celebrate successes
+
+**Golden rule:** Keep text concise, match template to context.

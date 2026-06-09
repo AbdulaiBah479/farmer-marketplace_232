@@ -1,180 +1,171 @@
 ---
 name: bayesian-workflow
-description: Use when performing Bayesian statistical analysis, building probabilistic models, or when the task involves prior specification, posterior inference, or predictive checks.
-invocation: user
+description: >
+  Opinionated Bayesian modeling workflow with PyMC and ArviZ. Contains critical guardrails
+  (nutpie sampler, prior/posterior predictive checks, LOO-PIT calibration, prior sensitivity
+  checks, 94% HDI, non-centered parameterizations, reproducible seeds) that agents won't
+  apply unprompted — always consult before writing Bayesian model code. Trigger on: building
+  probabilistic/Bayesian models, prior elicitation, MCMC inference, convergence diagnostics
+  (divergences, R-hat, ESS), model comparison (LOO-CV, ELPD, stacking weights),
+  hierarchical/multilevel models, count regressions, logistic regression with uncertainty,
+  prior sensitivity analysis, reporting Bayesian results, or mentions of PyMC, ArviZ,
+  InferenceData, credible intervals, posterior distributions, shrinkage, uncertainty
+  quantification. Also trigger for model comparison, diagnosing sampling problems, choosing
+  priors, or presenting stats to non-technical audiences.
+license: MIT
+metadata:
+  author: "[Alexandre Andorra](https://alexandorra.github.io/)"
+  version: "1.2"
 ---
 
 # Bayesian Workflow
 
-The final deliverable must be a Bayesian model: specify priors, perform posterior inference, and evaluate via posterior predictive checks. Non-Bayesian methods may be explored as baselines/context but must not be selected or reported as the solution.
+## Workflow overview
 
-Core principles:
-- Start from generative stories: think data-generating process, not just prediction
-- Specify priors explicitly and validate via prior predictive checks
-- Use full posterior inference (not MLE/MAP)
-- Validate models with posterior predictive checks and parameter recovery checks
-- Check diagnostics: R-hat, ESS, divergences, trace plots
-- Compare models via predictive performance (LOO, WAIC)
-- Consider hierarchical structures when data has grouping/repeated measures
-- Flag computational issues (identifiability, convergence, misspecification) when relevant
+Every Bayesian analysis follows this sequence. Do not skip steps -- especially model criticism.
 
-## Communication
+1. **Formulate** — Define the generative story. What underlying process, that we're precisely trying to model, created the data?
+2. **Specify priors** — See [references/priors.md](references/priors.md)
+3. **Implement in PyMC** — Write the model. Prefer PyMC 5+ syntax. Use the latest version possible.
+4. **Run prior predictive checks** — `pm.sample_prior_predictive()`. Verify priors produce plausible data ranges before fitting
+5. **Inference** — `pm.sample(nuts_sampler="nutpie")`. Always use nutpie for speed (the nutpie python package provides cutting-edge sampling). Don't hardcode the number of chains — let the sampler pick the best default for the platform.
+6. **Diagnose convergence** — Use `arviz_stats.diagnose(idata)` as the first check (requires arviz-stats >= 1.0.0). It covers R-hat, ESS, divergences, tree depth, and E-BFMI in one call. See [references/diagnostics.md](references/diagnostics.md)
+7. **Criticize the model** — See [references/model-criticism.md](references/model-criticism.md)
+8. **Check prior sensitivity** — Run `psense_summary(idata)` to verify conclusions are robust to prior choices. Visualize with `plot_psense_dist(idata)` from `arviz_plots`. Requires `log_likelihood` and `log_prior` in the InferenceData — compute them after sampling if needed. See [references/sensitivity.md](references/sensitivity.md)
+9. **Compare models** (if applicable) — See [references/model-comparison.md](references/model-comparison.md)
+10. **Report results** — See [references/reporting.md](references/reporting.md). When the user asks for a report or mentions a non-technical audience, generate a **standalone markdown report file** (not just code comments) using the template in reporting.md. Adapt the language to the audience — if they're new to Bayesian stats, include a glossary and plain-language explanations of key concepts.
 
-Your outputs serve two purposes:
+## Installation
 
-Terminal output:
-- Keep users and developers informed of progress in real-time
-- Report what you're doing and key decisions as they happen
-- Be concise but informative
+Prefer conda-forge / mamba-forge to install PyMC and its dependencies — pip can cause issues with
+compiled backends (nutpie, JAX). Example:
 
-Written artifacts (reports, logs):
-- These are the primary deliverables that users will read retrospectively
-- Invoke the `artifact-guidelines` skill to get the full guidelines
-
-## Task Management
-
-You have two complementary tools for tracking work:
-
-**TodoList (TodoWrite tool):**
-- Active task tracking during execution
-- What's currently in progress, pending, or just completed
-- Provides real-time visibility into execution state
-- Ephemeral - reflects current session's work
-- Use for: each phase, each model, each validation stage
-- Update frequently and mark completed immediately
-
-**log.md (file):**
-- Persistent record across the entire workflow
-- Key decisions and reasoning: why you chose certain paths, skipped models, or revised approaches
-- Issues encountered: failures, convergence problems, validation failures
-- Phase transitions and iteration loops
-- Use for: decision points, failures, alternative evaluations, phase completions
-
-Use TodoWrite tools VERY frequently to ensure you are tracking tasks and giving users visibility into progress. These tools are EXTREMELY helpful for planning and breaking down complex tasks into smaller steps. If you do not use this tool when planning, you may forget important tasks - and that is unacceptable.
-
-It is critical that you mark todos as completed as soon as you are done with a task. Do not batch up multiple tasks before marking them as completed.
-
-Users may configure 'hooks', shell commands that execute in response to events like tool calls, in settings. Treat feedback from hooks, including `<user-prompt-submit-hook>`, as coming from the user. If you get blocked by a hook, determine if you can adjust your actions in response to the blocked message. If not, ask the user to check their hooks configuration.
-
-## Tool Usage
-
-- Proactively use the Task tool with specialized agents when the task matches the agent's description
-- When calling multiple tools, invoke independent tools in parallel for efficiency
-- For tools with dependencies, call them sequentially - never use placeholders or guess missing parameters
-- To run multiple agents in parallel, send a single message with multiple Task tool uses
-- Use specialized file tools (Read, Edit, Write) instead of bash commands (cat, sed, echo)
-- Reserve bash exclusively for system commands (git, uv)
-
-### Parallel Subagents
-Use parallel subagents to explore multiple perspectives simultaneously, particularly for EDA and model design where uncertainty is high. Each instance needs isolated workspace and files to avoid conflicts. Launch all instances at once using multiple Task tool calls in a single message.
-
-Setup: Prepare separate data copies if needed and assign each instance its own output directory (e.g., `eda/analyst_1/`, `eda/analyst_2/`). Give each instance a different focus area.
-
-Execution: Typical count is 2-3 instances. If an instance fails, relaunch once; if it fails again, proceed with successful instances.
-
-After completion: Synthesize findings from all instances and document convergent patterns (all agree) and divergent insights (unique to one).
-
-## Technical Stack and Requirements
-
-### Core Stack
-- Bayesian inference: Stan via CmdStanPy, ArviZ for diagnostics
-- Package management: `uv` exclusively (never pip)
-- Scripts should be self-contained and run with `uv run`
-
-### Bayesian Model Requirements
-Every accepted Bayesian model must:
-- Use Stan via CmdStanPy for posterior inference with NUTS
-- Do not substitute MLE/MAP for full Bayesian inference
-- Do not use non-PPL implementations as final models
-- Do not label bootstrap-based checks as posterior predictive checks
-
-## File-Based Communication and Folder Structure
-
-### Core Principles
-Subagents are ephemeral - they finish their task and disappear forever. Files are the only persistent memory and communication channel between subagents and across phases. This means:
-
-- Each subagent reads inputs from files (data, previous reports, experiment plans)
-- Each subagent writes outputs to files (reports, models, diagnostics)
-- The main agent orchestrates by directing subagents to read/write specific locations
-- Users navigate results through a predictable folder structure
-
-### Canonical Structure
-Use this structure unless the task requires deviation:
-
-```
-data/                           # source data and copies
-eda/                            # Phase 1: Data Understanding
-  eda_report.md                 # final synthesis (if solo) or consolidated report
-  analyst_1/                    # if parallel: each instance gets own folder
-  analyst_2/
-experiments/                    # Phases 2-3: Model Design & Development
-  experiment_plan.md            # Phase 2 output: proposed models
-  experiment_1/                 # one folder per model attempt
-    prior_predictive/
-    simulation/
-    fit/
-    posterior_predictive/
-    critique/
-  experiment_2/
-  model_assessment/             # Phase 4: quality metrics and comparison
-    assessment_report.md
-final_report.md                 # Phase 6 output
-log.md                          # running log of decisions and issues
+```bash
+mamba install -c conda-forge pymc nutpie arviz arviz-stats preliz
 ```
 
-### Guidelines
-- Phase outputs should be in predictable locations so subsequent phases know where to read
-- Each experiment gets its own numbered folder for isolation
-- Parallel subagent outputs go in separate folders (analyst_1, analyst_2, designer_1, etc.)
-- Always specify exact paths when invoking subagents: where to read inputs and where to write outputs (e.g., "Read data from `data/data.json` and write outputs to `eda/analyst_1/`")
-- Keep log.md updated with key decisions, failures, and reasoning
+## PyMC model template
 
-### Subagent Communication
-Point subagents to files produced by previous subagents rather than summarizing content yourself. Ask subagents to report what files they created with brief descriptions so you can keep records and pass information along the chain.
+```python
+import pymc as pm
+import arviz as az
+import numpy as np
 
-Example: Tell model-designer to "Read the EDA report at `eda/eda_report.md`" rather than summarizing the EDA findings yourself.
+RANDOM_SEED = sum(map(ord, "churn-logistic-v1"))
+rng = np.random.default_rng(RANDOM_SEED)
 
-## Modeling Workflow
+# always use dimensions and coordinates in PyMC models
+with pm.Model(coords=coords) as model:
+    # use Data containers when working on a PyMC model
+    data = pm.Data("data", df["y"].to_numpy(), dims="obs")
 
-### Phase 1: Data Understanding → `eda/`
-Invoke `eda-analyst` to explore the data. For complex datasets, run 1-3 instances in parallel with different focus areas, then synthesize results into `eda/eda_report.md`.
+    # --- Priors ---
+    # Always document WHY each prior was chosen
+    mu = pm.Normal("mu", mu=0, sigma=10)  # Weakly informative: allows wide range
 
-### Phase 2: Model Design → `experiments/experiment_plan.md`
-Invoke `model-designer` to propose models. Run 2-3 instances in parallel. Assign each a distinct structural hypothesis (e.g., direct effects vs. hierarchical grouping vs. latent dynamics) rather than arbitrary model families. Synthesize their proposals into a unified experiment plan that covers competing mechanisms.
+    # --- Data model ---
+    pm.Normal("obs", mu=mu, sigma=1, observed=data, dims="obs")
 
-### Phase 3: Model Development and Selection → `experiments/`
-Build a population of validated models and iteratively improve until finding the best variant for each model class.
+    # --- Prior predictive check ---
+    prior_pred = pm.sample_prior_predictive(random_seed=rng)
 
-**For each model class from the experiment plan:**
+    # --- Inference ---
+    idata = pm.sample(nuts_sampler="nutpie", random_seed=rng)
+    idata.extend(prior_pred)
 
-1. **Initial variants**: Start with variants proposed by model-designer (baseline, scientific, extensions)
+    # --- Posterior predictive check ---
+    idata.extend(pm.sample_posterior_predictive(idata, random_seed=rng))
 
-2. **Validate each variant** by running stages sequentially:
-   - `prior-predictive-checker` - fail → skip variant
-   - `recovery-checker` - fail → skip variant
-   - `model-fitter` - fail → try fix once with model-refiner, then skip
-   - `posterior-predictive-checker` - always run
-   - `model-critique` - assess and suggest improvements
+    # --- Compute log-likelihood and log-prior for sensitivity checks & LOO ---
+    pm.compute_log_likelihood(idata, model=model)
+    pm.compute_log_prior(idata, model=model)
 
-   **Special case**: If baseline variant fails pre-fit validation (prior or recovery check), try fix once with model-refiner. If still fails, skip entire model class (this signals fundamental mismatch).
+    # --- Save immediately after sampling ---
+    # Late crashes can destroy valid results. Save to disk before any post-processing.
+    idata.to_netcdf("model_output.nc")
+```
 
-3. **Assess population**: If at least one variant validated successfully, invoke `model-selector`
-   - Tell it which experiments completed validation (have fit results and LOO)
-   - Model-selector compares via LOO/WAIC and determines strategy
-   - Keep log.md updated with which models passed/failed each stage
+## Critical rules
 
-4. **Follow model-selector strategy**:
-   - **CONTINUE_CLASS**: Invoke `model-refiner` with critique suggestions to generate new variants, return to step 2
-   - **SWITCH_CLASS**: Move to next model class
-   - **ADEQUATE**: Invoke `decision-auditor` to verify EDA coverage before accepting
-   - **EXHAUSTED**: Invoke `decision-auditor` to verify EDA coverage before accepting
+- **Always run prior predictive checks** before sampling. If prior predictions span implausible ranges, fix priors first. If you have issues or doubts for some parameters, use the [PreliZ](https://preliz.readthedocs.io/en/latest/) package to elicit priors from the user.
+- **Always check convergence** before interpreting results. R-hat > 1.01 or ESS < 100 * nbr_chains means the results are unreliable.
+- **Always run posterior predictive checks**. A model that fits well numerically but cannot reproduce the data is useless.
+- **Always run calibration checks** (PIT / coverage). Use ArviZ's `plot_ppc_pit` for this — it handles all data types (continuous, binary, count) correctly. See [references/model-criticism.md](references/model-criticism.md).
+- **Document every prior choice** with a brief justification in a code comment.
+- **Never report point estimates alone**. Always include credible intervals (default: 94% HDI).
+- **Use `arviz_stats.diagnose(idata)` as the first diagnostic on every model** (arviz-stats >= 1.0.0). It checks R-hat, ESS, divergences, tree depth saturation, and E-BFMI in one call. Follow up with `az.plot_trace(idata, kind="rank_vlines")` for visual inspection.
+- **Don't hardcode number of chains.** Let PyMC / nutpie choose the optimal default for the user's platform. Just call `pm.sample()` without specifying `chains`.
+- **Use reproducible, descriptive seeds.** Never use magic numbers like `42`. Instead, derive a seed from the analysis name: `RANDOM_SEED = sum(map(ord, "my-analysis-name"))`. Pass it to `pm.sample(random_seed=rng)`, `pm.sample_prior_predictive(random_seed=rng)`, and numpy via `rng = np.random.default_rng(RANDOM_SEED)`.
+- **Save InferenceData immediately after sampling** with `idata.to_netcdf("model_output.nc")`. Late crashes or kernel restarts can destroy valid MCMC results — save before any post-processing.
+- **Use ArviZ for all plots and calibration.** Don't write custom plotting code when ArviZ already handles it — including for binary data, count data, and calibration. ArviZ developers have thought through edge cases so you don't have to.
+- **Prefer xarray over numpy for InferenceData operations.** `InferenceData` and `DataTree` objects are backed by xarray — use xarray's labeled indexing (`.sel()`, `.mean(dim=...)`, etc.) instead of converting to numpy arrays. This preserves dimension labels, avoids shape bugs, and makes code more readable. Fall back to numpy only when xarray can't do what you need.
+- **Always generate analysis notes alongside code.** When producing a model script, also produce a companion markdown file (`analysis_notes.md` or similar) that interprets the results — what the diagnostics mean, what the posteriors tell us, what the calibration plots show. Code without interpretation is incomplete.
+- **Always use the posterior mean (not median) for predictive probabilities.** The proper Bayesian predictive distribution averages over the posterior: `P(Y=k|x) = (1/S) Σ P(Y=k|x,θₛ)`. This is the mean, not the median. The median does not correspond to the posterior predictive distribution, can violate probability coherence (probabilities may not sum to 1), and biases calibration due to Jensen's inequality. In code: use `np.mean(probs, axis=sample_axis)`, never `np.median(...)`.
+- **Use `pm.set_data()` + `pm.sample_posterior_predictive()` for out-of-sample predictions.** Don't manually extract posterior samples and recompute predictions — let PyMC propagate uncertainty properly. Define predictors as `pm.Data(...)` during model building, then swap in new data:
 
-5. **Audit terminal decisions**: When `model-selector` returns ADEQUATE or EXHAUSTED:
-   - Invoke `decision-auditor` with: the selector's decision, path to EDA report, path to experiment plan, and list of validated experiments
-   - If auditor returns CHALLENGE: review identified gaps, then either explore missing approaches or document why they are not worth pursuing
-   - If auditor returns ACCEPT: proceed to reporting
+```python
+# After fitting the model:
+with model:
+    pm.set_data({"X": X_new, "group_idx": group_idx_new})
+    oos_preds = pm.sample_posterior_predictive(idata, predictions=True, random_seed=rng)
+```
 
-Invoke model-selector after completing initial variants and after each refinement round.
+- **Check model identifiability before interpreting components.** If two model components always appear together in the likelihood (e.g., a league intercept and a home advantage term when every observation is from home perspective), their individual posteriors reflect prior assumptions, not data signal — only their sum is identified. Use `az.plot_pair()` to check for strong posterior correlations between components. If correlation is near ±1, the components are not separately identifiable — either merge them or restructure the data.
 
-### Phase 4: Reporting → `final_report.md`
-Invoke `report-writer` to generate the final report.
+## Common model families
+
+| Problem | Data model | Typical priors | Reference |
+|---|---|---|---|
+| Continuous outcome | Normal / StudentT | Normal, Gamma avoiding 0 for positive-constrained parameters | [references/priors.md](references/priors.md) |
+| Binary outcome | Bernoulli or Binomial if aggregated, with logit inverse-link | Normal(0, 1.5) on coeffs | [references/priors.md](references/priors.md) |
+| Count data | Poisson / NegBinomial | Gamma on rate, avoiding 0 | [references/priors.md](references/priors.md) |
+| Count data with excess zeros | ZeroInflatedPoisson / ZeroInflatedNegBinomial | Gamma on rate; Beta or Normal+logit on zero-inflation prob | [references/priors.md](references/priors.md) |
+| Positive count data (no zeros) | Hurdle Poisson / Hurdle NegBinomial | Separate zero-gate (Bernoulli) and count (Truncated) components | [references/priors.md](references/priors.md) |
+| Ordinal outcome | OrderedLogistic (cumulative link) | Normal on coeffs; Normal with ordered transform on cutpoints | [references/priors.md](references/priors.md) |
+| Censored data (survival, limits of detection) | `pm.Censored(dist, lower, upper)` | Same as uncensored, applied to underlying distribution | [references/priors.md](references/priors.md) |
+| Truncated data | `pm.Truncated(dist, lower, upper)` | Same as underlying distribution | [references/priors.md](references/priors.md) |
+| High-dimensional / sparse regression | Normal / StudentT with sparsity prior on coefficients | Regularized Horseshoe or R2-D2 on coeffs | [references/priors.md](references/priors.md) |
+| Hierarchical / multilevel | Varies | See partial pooling pattern | [references/hierarchical.md](references/hierarchical.md) |
+| Time series | state space models / Gaussian Processes | Problem-specific | [references/priors.md](references/priors.md) |
+
+## Utility scripts
+
+Run `diagnose_model.py` after sampling to get a structured convergence + diagnostics report:
+
+```bash
+python scripts/diagnose_model.py --idata path/to/inference_data.nc
+```
+
+Run `calibration_check.py` to generate calibration plots:
+
+```bash
+python scripts/calibration_check.py --idata path/to/inference_data.nc
+```
+
+See [scripts/](scripts/) for all available utilities.
+
+## Common gotchas
+
+These are battle-tested lessons that save hours of debugging:
+
+- **nutpie silently ignores `idata_kwargs`** for `log_likelihood` and `log_prior`. Always compute them explicitly after sampling: `pm.compute_log_likelihood(idata, model=model)` (needed for LOO-CV) and `pm.compute_log_prior(idata, model=model)` (needed for prior sensitivity checks). Don't assume they're stored automatically.
+- **`az.plot_khat()` requires the LOO object**, not InferenceData. Pass the output of `az.loo(idata, pointwise=True)` to it.
+- **Flat priors on scale parameters** (`HalfCauchy`, `HalfFlat`) cause funnels in hierarchical models. Use `Gamma(2, ...)` or `Exponential` — these avoid the near-zero region that creates sampling problems. If there's no group-level variation to detect, you don't need the hierarchy.
+- **Python conditionals in models** (`if x > 0`) don't work inside PyMC. Use `pm.math.switch` or `pytensor.tensor.where` instead.
+- **Forgetting to standardize predictors** makes shared priors inappropriate and slows sampling. Always standardize before fitting, then back-transform for interpretation.
+- **Horseshoe priors create a double-funnel geometry** that standard NUTS can struggle with. Always use the **regularized (Finnish) horseshoe** (Piironen & Vehtari, 2017), which adds a slab component that smooths the geometry. Set `target_accept=0.95` or higher. If you see divergences with a horseshoe model, this is almost certainly the cause.
+- **`np.median` on posterior predictive probabilities is a silent bug.** It does not produce the Bayesian predictive distribution and can yield probabilities that don't sum to 1 across categories. Always use `np.mean` over the posterior samples dimension.
+
+## When things go wrong
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| Divergences | Posterior geometry issue | Reparameterize (non-centered), increase `target_accept` to 0.95-0.99 |
+| Low ESS | High autocorrelation | More tuning steps, reparameterize, reduce correlations |
+| R-hat > 1.01 | Chains haven't mixed | More draws, better initialization, check for multimodality |
+| Prior pred. looks wrong | Bad priors | Tighten or shift priors, use domain knowledge |
+| Post. pred. misses data | Model misspecification | Add complexity (varying slopes, different data model, interaction terms) |
+| `log_likelihood` missing | nutpie doesn't auto-store it | Call `pm.compute_log_likelihood(idata, model=model)` after sampling |
+| Slow model | Large Deterministics or recompilation | Profile with `model.profile(model.logp())`, avoid large `Deterministic` arrays |
+| Slow to initialize / poor warmup | Bad starting point | Try `init="adapt_diag_grad"` in `pm.sample()`, or run `pmx.fit(method="pathfinder")` first (`import pymc_extras as pmx`) and pass its estimates as `initvals` |
+| Prior sensitivity flag | Prior-data conflict or strong prior | Check `psense_summary(idata)` — see [references/sensitivity.md](references/sensitivity.md). Justify or revise the flagged prior |

@@ -1,132 +1,69 @@
 ---
 name: project-discovery
-description: Activate when analyzing codebases to understand project structure, technology stack, dependencies, and development workflows
-license: MIT
+description: >
+  Discovers key attributes of the current code repository and its projects —
+  languages, frameworks, tooling, configuration, documentation structure — and
+  writes a static reference for other skills, agents, and hooks to consume. Use
+  when scanning, analyzing, or detecting the project's technology stack, build
+  tools, or repository structure. Does not create or update project
+  documentation — use project-documentation for writing feature or system docs.
+
+argument-hint: [output-file-path]
+allowed-tools: Read, Write, Edit, Glob, Grep, Agent, Bash(date *), Bash(mkdir *), Bash(git symbolic-ref *), Bash(find *)
 ---
+
+## Project Context
+
+- Default branch: !`git symbolic-ref --short refs/remotes/origin/HEAD`
+- CLAUDE.md: !`find . -maxdepth 1 -name "CLAUDE.md" -type f`
+- AGENTS.md: !`find . -maxdepth 1 -name "AGENTS.md" -type f`
+- README: !`find . -maxdepth 1 -name "README*" -type f`
 
 # Project Discovery
 
-Guide for systematically analyzing codebases to identify technology stack, development tools, dependencies, and recommend relevant integrations like MCPs.
+## Step 1: Discover Repository Structure
 
-## When to Use This Skill
+Launch a `han.core:project-scanner` agent to determine whether the repository contains one project or many, and what each project's boundaries are. Wait for the agent to complete.
 
-Activate when:
-- Analyzing a new codebase to understand its structure
-- Identifying technology stack and frameworks
-- Discovering development tools and configuration
-- Recommending MCPs or integrations based on project needs
-- Understanding project dependencies and their purposes
-- Planning project onboarding or documentation
+From the agent's results, build a project list. Each entry has a project name (directory name, or repository name for root-level projects), root path, and dependency manifest path.
 
-## Discovery Process
+## Step 2: Explore Project Attributes
 
-### Phase 1: Project Structure Analysis
-1. Examine root directory files (README, package.json, Cargo.toml, mix.exs, etc.)
-2. Identify primary language(s) and frameworks
-3. Map directory structure and conventions
-4. Detect configuration files and their purposes
+Launch 3 `han.core:project-scanner` agents in parallel, each with a different focus area. Include the project list from Step 1 in each agent's prompt so they know which roots to explore.
 
-### Phase 2: Dependency Analysis
-1. Parse package/dependency files
-2. Categorize dependencies (runtime, dev, testing, build)
-3. Identify version constraints and compatibility requirements
-4. Flag potential security or maintenance concerns
+**Agent 1 — Languages, Frameworks, Dependencies:** For each project, read the dependency manifest to identify languages and version constraints. Determine the package manager from the lock file type. From dependencies, identify structural/architectural frameworks (web, frontend, test, ORM/database) — focus on frameworks that define how the project is built, not utility packages. Note runtime version requirements.
 
-### Phase 3: Tool Detection
-1. Scan for configuration files of common tools
-2. Examine scripts in package.json, Makefile, etc.
-3. Identify CI/CD configurations
-4. Detect database schemas and migration files
+**Agent 2 — Build Tooling, Commands, Testing:** For each project, find the task runner or build definition and extract the actual commands for: installing dependencies, running tests, linting, building, dev server, formatting. Only record commands that actually exist. Find build/linter/formatter/type-checker config files. Find test configuration, test directories, and determine the test file naming pattern from existing test files. Find coverage tool configuration if any.
 
-### Phase 4: MCP Recommendations
-Based on discoveries, recommend MCPs such as:
-- **Database MCPs**: postgres, mysql, sqlite, mongodb
-- **Cloud MCPs**: aws, gcp, azure for deployment
-- **Development MCPs**: docker, kubernetes for containerization
-- **API MCPs**: github, gitlab for repository management
+**Agent 3 — Documentation and Infrastructure:** Discover documentation directories — do not assume names like "docs". Find ADR directories, coding standards directories, CI/CD configuration, container configuration, git hook configuration, and environment/configuration file patterns.
 
-## Tool Identification Categories
+After all 3 agents complete, merge their findings into a unified discovery summary. Deduplicate across agents, organize by project, and separate repository-level items (documentation, infrastructure) from project-level items (language, frameworks, tooling, commands, tests).
 
-### Package Managers
-- npm, yarn, pnpm (JavaScript/TypeScript)
-- pip, poetry, pipenv (Python)
-- cargo (Rust)
-- mix/hex (Elixir)
-- go mod (Go)
-- bundler (Ruby)
+## Step 3: Reconcile Against Existing Documentation
 
-### Build Systems
-- webpack, vite, esbuild (JavaScript)
-- gradle, maven (Java)
-- make, cmake (C/C++)
-- mix (Elixir)
+**Skip this step if none of README, CLAUDE.md, or AGENTS.md exist** (all empty in project context above). Proceed directly to Step 4.
 
-### Testing Frameworks
-- jest, mocha, vitest (JavaScript)
-- pytest, unittest (Python)
-- cargo test (Rust)
-- ExUnit (Elixir)
+If any exist, read them and compare against the discovery results from Step 2. For each contradiction (e.g., README says `make test` but no Makefile was discovered), use `AskUserQuestion` to present the contradiction and ask which is correct: the existing documentation or the filesystem discovery. Update the discovery results based on the user's answer.
 
-### Linting and Formatting
-- eslint, prettier (JavaScript)
-- black, ruff, flake8 (Python)
-- clippy, rustfmt (Rust)
-- credo, mix format (Elixir)
+## Step 4: Write Discovery Output
 
-## Elixir-Specific Discovery
+This skill writes two outputs:
 
-### AGENTS.md Processing
-When discovering Elixir projects:
-1. Search for `AGENTS.md` in project root (community standard)
-2. Check for `usage-rules.md` as alternative
-3. Scan `deps/*/` for library-specific AGENTS.md files
-4. Extract AI-specific guidance and conventions
+1. **Standalone file** — If the user provided an output file path as an argument, use that. Otherwise write to `docs/project-discovery.md` (create `docs/` with `mkdir -p` if needed).
+2. **CLAUDE.md summary** — If CLAUDE.md exists, add or update a `## Project Discovery` section. If CLAUDE.md does not exist, skip this output.
 
-### Framework Detection
-- **Phoenix**: config/, lib/, priv/ structure with Phoenix dependencies
-- **LiveView**: Phoenix.LiveView dependencies and live view modules
-- **OTP**: Application modules and supervision trees
-- **Ecto**: Database schemas, migrations, repository patterns
+Use `AskUserQuestion` to confirm the output locations before writing.
 
-## Analysis Report Structure
+### Standalone File
 
-```markdown
-# Project Discovery Report
+Use the template at [template.md](references/template.md) as the structural guide. Rules: only include sections where information was actually discovered — omit empty sections entirely. Use `- {item type}: {concise info}` bullet format throughout. Format static assets as backtick-quoted paths relative to the repo root (e.g., `- lint config: \`.eslintrc.json\``). Commands must be actual commands that work in the project, not guesses. For multi-project repos, repeat the per-project section for each project.
 
-## Project Overview
-- **Name**: [Project Name]
-- **Primary Language(s)**: [Languages]
-- **Framework(s)**: [Frameworks]
-- **Project Type**: [web app, CLI tool, library, etc.]
+### CLAUDE.md Summary
 
-## Technology Stack
-### Frontend
-- [Framework/Library and version]
-- [Build tools]
+Add a `## Project Discovery` section with only what other skills need most, using the template at [claudemd-summary-template.md](references/claudemd-summary-template.md).
 
-### Backend
-- [Runtime/Framework]
-- [Database(s)]
+## Step 5: Verification
 
-### Development Tools
-- **Package Manager**: [npm, yarn, pip, etc.]
-- **Build System**: [webpack, vite, etc.]
-- **Testing**: [jest, pytest, etc.]
-- **Linting**: [eslint, prettier, etc.]
+Read back the standalone output file and spot-check 2-3 discovered paths with Glob to confirm they exist. Verify no placeholder values remain (no `{...}` text), empty sections are omitted, and format follows the template's concise bullet style. If CLAUDE.md was updated, read it back and confirm the summary section is present and accurate.
 
-## Recommended MCPs
-Based on analysis, consider:
-1. **[MCP Name]**: For [specific use case]
-2. **[MCP Name]**: For [specific use case]
-
-## Setup Instructions
-[Quick start commands]
-```
-
-## Key Principles
-
-- **Systematic Exploration**: Start with root files, then explore directories
-- **Prioritize Important Discoveries**: Lead with most significant findings
-- **Actionable Recommendations**: Provide specific MCP recommendations with installation commands
-- **Flag Issues**: Identify potential problems or missing configurations
-- **Context-Aware**: Tailor recommendations to project type and stack
+Report to the user: number of projects discovered, languages and frameworks found, and output file location(s).

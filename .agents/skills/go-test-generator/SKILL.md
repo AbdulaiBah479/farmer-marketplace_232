@@ -1,172 +1,73 @@
 ---
-name: go-test-generator
-description: Goのテストコードを生成する際に使用。テーブル駆動テスト、testify/assert使用、命名規則TestStructName_MethodNameを適用。Goのユニットテスト、統合テストを書く場合に使用。
-allowed-tools: Read, Glob
+name: "go-test-generator"
+description: |
+  Generate go test generator operations. Auto-activating skill for Test Automation.
+  Triggers on: go test generator, go test generator
+  Part of the Test Automation skill category. Use when writing or running tests. Trigger with phrases like "go test generator", "go generator", "go".
+allowed-tools: "Read, Write, Edit, Bash(cmd:*), Grep"
+version: 1.0.0
+license: MIT
+author: "Jeremy Longshore <jeremy@intentsolutions.io>"
+compatible-with: claude-code
 ---
 
-# Go テスト生成パターン
+# Go Test Generator
 
-このプロジェクトのGoテスト実装パターンを定義します。
+## Overview
 
-## 命名規則
+This skill provides automated assistance for go test generator tasks within the Test Automation domain.
 
-- **ファイル名**: `*_test.go`
-- **関数名**: `TestStructName_MethodName` または `TestFunctionName`
-- **パッケージ名**: `{package}_test` (外部テスト) または `{package}` (内部テスト)
+## When to Use
 
-## 使用ライブラリ
+This skill activates automatically when you:
+- Mention "go test generator" in your request
+- Ask about go test generator patterns or best practices
+- Need help with test automation skills covering unit testing, integration testing, mocking, and test framework configuration.
 
-```go
-import (
-    "testing"
+## Instructions
 
-    "github.com/stretchr/testify/assert"
-    "github.com/stretchr/testify/require"
-)
-```
+1. Provides step-by-step guidance for go test generator
+2. Follows industry best practices and patterns
+3. Generates production-ready code and configurations
+4. Validates outputs against common standards
 
-- `assert`: テスト失敗しても続行
-- `require`: テスト失敗で即座に中断
+## Examples
 
-## 参照ファイル
+**Example: Basic Usage**
+Request: "Help me with go test generator"
+Result: Provides step-by-step guidance and generates appropriate configurations
 
-テスト実装の参照:
-- `server/internal/repository/user_repository_test.go` - Repository テスト
-- `server/internal/db/sharding_test.go` - シャーディングテスト
-- `server/test/integration/` - 統合テスト
 
-テストユーティリティ:
-- `server/test/testutil/` - テストヘルパー
+## Prerequisites
 
-## コードパターン
+- Relevant development environment configured
+- Access to necessary tools and services
+- Basic understanding of test automation concepts
 
-### 1. 基本的なテスト
 
-```go
-func TestStructName_MethodName(t *testing.T) {
-    // Arrange
-    expected := "expected value"
+## Output
 
-    // Act
-    actual := SomeFunction()
+- Generated configurations and code
+- Best practice recommendations
+- Validation results
 
-    // Assert
-    assert.Equal(t, expected, actual)
-}
-```
 
-### 2. シャーディング対応のテスト
+## Error Handling
 
-```go
-func TestUserRepository_Create(t *testing.T) {
-    // テスト用GroupManagerのセットアップ
-    groupManager := testutil.SetupTestGroupManager(t, 4, 8)
-    defer testutil.CleanupTestGroupManager(groupManager)
+| Error | Cause | Solution |
+|-------|-------|----------|
+| Configuration invalid | Missing required fields | Check documentation for required parameters |
+| Tool not found | Dependency not installed | Install required tools per prerequisites |
+| Permission denied | Insufficient access | Verify credentials and permissions |
 
-    repo := repository.NewUserRepository(groupManager)
-    ctx := context.Background()
 
-    req := &model.CreateUserRequest{
-        Name:  "Test User",
-        Email: "test@example.com",
-    }
+## Resources
 
-    user, err := repo.Create(ctx, req)
-    assert.NoError(t, err)
-    assert.NotNil(t, user)
-    assert.NotZero(t, user.ID)
-}
-```
+- Official documentation for related tools
+- Best practices guides
+- Community examples and tutorials
 
-### 3. テーブル駆動テスト
+## Related Skills
 
-```go
-func TestHashBasedSharding_GetShardID(t *testing.T) {
-    tests := []struct {
-        name       string
-        shardCount int
-        key        int64
-        wantMin    int
-        wantMax    int
-    }{
-        {
-            name:       "single shard",
-            shardCount: 1,
-            key:        12345,
-            wantMin:    1,
-            wantMax:    1,
-        },
-        {
-            name:       "multiple shards",
-            shardCount: 4,
-            key:        12345,
-            wantMin:    1,
-            wantMax:    4,
-        },
-    }
-
-    for _, tt := range tests {
-        t.Run(tt.name, func(t *testing.T) {
-            sharding := db.NewHashBasedSharding(tt.shardCount)
-            got := sharding.GetShardID(tt.key)
-
-            assert.GreaterOrEqual(t, got, tt.wantMin)
-            assert.LessOrEqual(t, got, tt.wantMax)
-        })
-    }
-}
-```
-
-### 4. エラーケースのテスト
-
-```go
-func TestUserRepository_GetByID_NotFound(t *testing.T) {
-    groupManager := testutil.SetupTestGroupManager(t, 4, 8)
-    defer testutil.CleanupTestGroupManager(groupManager)
-
-    repo := repository.NewUserRepository(groupManager)
-    ctx := context.Background()
-
-    // 存在しないIDでテスト
-    user, err := repo.GetByID(ctx, 999)
-    assert.Error(t, err)
-    assert.Nil(t, user)
-}
-```
-
-### 5. require vs assert の使い分け
-
-```go
-func TestUserRepository_Update(t *testing.T) {
-    groupManager := testutil.SetupTestGroupManager(t, 4, 8)
-    defer testutil.CleanupTestGroupManager(groupManager)
-
-    repo := repository.NewUserRepository(groupManager)
-    ctx := context.Background()
-
-    // 前提条件の確認には require を使用（失敗時は即座に中断）
-    created, err := repo.Create(ctx, createReq)
-    require.NoError(t, err)
-
-    // 本テストの検証には assert を使用
-    updated, err := repo.Update(ctx, created.ID, updateReq)
-    assert.NoError(t, err)
-    assert.Equal(t, "Updated Name", updated.Name)
-}
-```
-
-## テスト実行コマンド
-
-```bash
-# 全テスト実行
-cd server && APP_ENV=develop go test ./...
-
-# 特定パッケージのテスト
-cd server && APP_ENV=develop go test ./internal/repository/...
-
-# 詳細出力
-cd server && APP_ENV=develop go test -v ./...
-
-# カバレッジ
-cd server && APP_ENV=develop go test -cover ./...
-```
+Part of the **Test Automation** skill category.
+Tags: testing, jest, pytest, mocking, tdd

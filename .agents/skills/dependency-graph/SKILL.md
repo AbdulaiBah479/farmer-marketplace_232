@@ -1,268 +1,101 @@
 ---
 name: dependency-graph
-context: fork
-skill: dependency-graph
-model: opus
-description: Visualize system dependencies and relationships
-tags: [activity/architecture, domain/tooling, type/diagram]
+description: Generates a Mermaid dependency graph showing import relationships between modules. Use when analyzing coupling, finding circular deps, or planning refactors.
 ---
 
-# /dependency-graph Skill
+# Dependency Graph
 
-Visualize system dependencies and identify critical paths, bottlenecks, and single points of failure.
+Generate a Mermaid flowchart showing import and dependency
+relationships between modules, packages, or plugins.
 
-## When to Use This Skill
+## When To Use
 
-Use `/dependency-graph` when you need to:
-- Understand what systems depend on a critical system
-- Identify single points of failure
-- Plan outage impact for maintenance
-- Design disaster recovery strategies
-- Perform risk assessment on architecture
-- Plan system decommissioning (understand what breaks)
-- Optimize architecture to reduce critical dependencies
-
-## Usage
-
-```
-/dependency-graph [root-system] [options]
-```
-
-### Parameters
-
-| Parameter | Description | Required |
-|-----------|-------------|----------|
-| `root-system` | System to analyze (or "all" for enterprise graph) | Optional |
-| `--depth` | How many hops to follow (1=direct, 2=direct+indirect, all) | Optional |
-| `--direction` | Direction to follow (upstream=sources, downstream=consumers, both) | Optional |
-| `--visualization` | Graph format (text, ascii-art, mermaid, d3) | Optional |
+- Understanding what depends on what
+- Finding circular dependencies
+- Analyzing coupling between modules
+- Planning refactoring by seeing dependency impact
+- Answering "what breaks if I change this?"
 
 ## Workflow
 
-### Phase 1: Define Graph Scope
+### Step 1: Explore the Codebase
 
-User specifies:
-
-1. **Root system** (optional - default: all systems)
-   - Single system (system:ERP)
-   - All systems (enterprise)
-   - Critical systems only
-
-2. **Depth** (optional)
-   - `1` - Direct dependencies only (immediate consumers/producers)
-   - `2` - Direct + indirect (one level deeper)
-   - `all` - All paths to edges (complete dependency closure)
-
-3. **Direction** (optional)
-   - `upstream` - What feeds into this system (sources)
-   - `downstream` - What consumes from this system
-   - `both` - Both upstream and downstream (default)
-
-4. **Visualization** (optional)
-   - `text` - ASCII text representation
-   - `ascii-art` - Fancy ASCII visualization
-   - `mermaid` - Mermaid diagram (for markdown)
-   - `d3` - Interactive D3 visualization (HTML)
-
-### Phase 2: Analyze Dependencies
-
-The skill:
-
-1. **Builds dependency graph**
-   - Reads all Integration notes
-   - Maps directional relationships
-   - Calculates paths and cycles
-
-2. **Identifies critical paths**
-   - Paths that affect critical systems
-   - Paths with no redundancy (single points of failure)
-   - Paths with high latency impact
-
-3. **Scores risk**
-   - If root system fails, how many others affected?
-   - What is average recovery time?
-   - Are there failover paths?
-
-4. **Detects patterns**
-   - Hub systems (many connections)
-   - Isolated clusters
-   - Circular dependencies (if any)
-   - Chain reactions (cascading failures)
-
-### Phase 3: Generate Visualization
-
-Creates graph showing:
-- Nodes: Systems (colored by criticality)
-- Edges: Integrations (colored by type: real-time, batch, API)
-- Edge labels: Latency, criticality, frequency
-- Highlighted: Critical paths, single points of failure
-
-### Phase 4: Output
-
-Generates report with:
-- Visual dependency graph (multiple formats)
-- Text analysis of critical paths
-- Risk assessment
-- Recommendations for resilience improvements
-- Outage impact matrix (if X fails, what breaks?)
-
-## Visualisation Examples
-
-### Text Output (ERP Downstream)
-
-`/dependency-graph system:ERP --direction downstream --depth all` produces a structured text output showing:
-- **Direct consumers** (1 hop) with volume, latency, criticality per edge
-- **Indirect consumers** (2+ hops) with full path chains
-- **Risk analysis** — cascading impact if root system fails, impact score, recovery time
-- **Single points of failure** with mitigations
-
-### Mermaid Output (Enterprise Graph)
+Dispatch the codebase explorer agent:
 
 ```
-/dependency-graph all --direction both --visualization mermaid
+Agent(cartograph:codebase-explorer)
+Prompt: Explore [scope] and return a structural model.
+Focus on import statements and cross-module dependencies
+for a dependency graph. Track both internal and external
+imports.
 ```
 
-**Mermaid Output:**
+### Step 2: Generate Mermaid Syntax
+
+Transform the structural model into a Mermaid flowchart
+with directed edges representing dependencies.
+
+**Rules for dependency graphs**:
+
+- Use `flowchart LR` (left-right) for dependency direction
+- Each node is a module or package
+- Edges point from dependent to dependency (A --> B means
+  "A depends on B")
+- Color-code by dependency type:
+  - Default arrows for internal dependencies
+  - Dotted arrows (`-.->`) for external/optional deps
+  - Thick arrows (`==>`) for critical path dependencies
+- Group into subgraphs by package/plugin
+- If depth parameter given, limit transitive dependencies
+- Highlight circular dependencies with red styling
+
+**Example output**:
 
 ```mermaid
-graph TB
-    subgraph Sources["Source Systems"]
-        ERP["ERP System<br/>Enterprise Resource Planning<br/>Critical"]
-        THIRDPARTY["Third-party APIs<br/>EDI<br/>High"]
+flowchart LR
+    subgraph sanctum[Sanctum]
+        commit[commit]
+        pr_prep[pr_prep]
+        workspace[workspace]
     end
 
-    subgraph Integration["Integration Layer"]
-        KAFKA["Kafka<br/>Event Bus<br/>High"]
-        DATAPLATFORM["Data Platform<br/>Integration Hub<br/>Critical"]
-        APIGW["API Gateway<br/>API Management<br/>High"]
+    subgraph leyline[Leyline]
+        git[git_platform]
+        errors[error_patterns]
     end
 
-    subgraph Analytics["Analytics Layer"]
-        DW["Data Warehouse<br/>Analytics Store<br/>High"]
-        MDM["Master Data<br/>MDM<br/>Medium"]
+    subgraph external[External]
+        subprocess[subprocess]
+        json[json]
     end
 
-    subgraph Consumption["Consumption"]
-        TABLEAU["Tableau<br/>BI<br/>Medium"]
-        LOOKER["Looker<br/>BI<br/>High"]
-        USERS["End Users<br/>API Consumers"]
-    end
-
-    ERP -->|Real-time| KAFKA
-    ERP -->|Batch| DATAPLATFORM
-    ERP -->|APIs| APIGW
-    THIRDPARTY -->|Batch| DATAPLATFORM
-    THIRDPARTY -->|APIs| APIGW
-
-    KAFKA -->|Stream| DATAPLATFORM
-    DATAPLATFORM -->|Analytics| DW
-    DATAPLATFORM -->|APIs| APIGW
-
-    DW -->|Query| TABLEAU
-    DW -->|Query| LOOKER
-    MDM -->|Master Data| DW
-
-    APIGW -->|Access| USERS
-    TABLEAU -->|Dashboards| USERS
-    LOOKER -->|Dashboards| USERS
-
-    classDef critical fill:#ff4444,stroke:#cc0000,color:#fff
-    classDef high fill:#ffaa00,stroke:#ff8800,color:#fff
-    classDef medium fill:#4499ff,stroke:#2277dd,color:#fff
-
-    class ERP,DATAPLATFORM critical
-    class KAFKA,APIGW,DW,LOOKER high
-    class TABLEAU,MDM medium
+    commit --> git
+    commit --> json
+    pr_prep --> workspace
+    pr_prep --> git
+    workspace --> errors
+    workspace -.-> subprocess
 ```
 
-## Analysis Report Sections
+### Step 3: Render via MCP
 
-The generated report includes:
-
-1. **Executive Summary** — Architecture health score (connectivity, redundancy, resilience, scalability), critical findings (SPOFs), prioritised recommendations
-2. **System Criticality Ranking** — Tier 1 (business critical), Tier 2 (enterprise critical), Tier 3 (department critical) with upstream/downstream counts, recovery times, recommended SLAs
-3. **Failure Impact Matrix** — Per-system cascading failure analysis: immediate (0-5 min), short-term (5-30 min), long-term (30+ min) impacts with mitigations and affected system counts
-4. **Critical Path Analysis** — Highest business-impact paths with latency, criticality, dependencies, and SPOFs per hop
-5. **Resilience Recommendations** — Prioritised actions (P1 critical, P2 high, P3 medium) with current state, gap, recommendation, cost, implementation timeline
-6. **Dependency Graph Visualisation** — Multiple formats (ASCII, Mermaid, D3) with critical paths highlighted, SPOFs circled, failover paths dashed, criticality colour-coding
-
-## Advanced Options
-
-### Filter by Criticality
+Call the Mermaid Chart MCP to render:
 
 ```
-/dependency-graph --criticality critical
+mcp__claude_ai_Mermaid_Chart__validate_and_render_mermaid_diagram
+  prompt: "Dependency graph of [scope]"
+  mermaidCode: [generated syntax]
+  diagramType: "flowchart"
+  clientName: "claude-code"
 ```
 
-Show only critical systems and their dependencies.
+If rendering fails, fix syntax and retry (max 2 retries).
 
-### Show Cycles (Circular Dependencies)
+### Step 4: Present Results
 
-```
-/dependency-graph --show-cycles
-```
+Show the rendered diagram with analysis notes:
 
-Highlights any circular dependencies (rare in well-designed systems):
-```
-Warning: Circular dependency detected!
-  A → B → C → A
-  Recommendation: Break cycle
-```
-
-### Calculate Shortest Paths
-
-```
-/dependency-graph system:ERP system:Tableau --show-paths
-```
-
-Show all paths from ERP to Tableau:
-```
-Shortest Path (3 hops):
-  ERP → Data Platform → Data Warehouse → Tableau (latency: 4+ hours)
-
-Alternative Paths:
-  None (single path)
-```
-
-### Network Statistics
-
-```
-/dependency-graph --statistics
-```
-
-Calculates graph density, average path length, central nodes (hubs), and isolated clusters.
-
-## Integration with Other Skills
-
-The `/dependency-graph` skill works with:
-
-- **`/impact-analysis`** - Analyze impact of system failures
-- **`/architecture-report`** - Include dependency analysis section
-- **`/system-sync`** - Update graph when dependencies change
-- **`/cost-optimization`** - Identify redundant connections to eliminate
-
-## Output Formats
-
-| Format | Description |
-|--------|-------------|
-| **Text (ASCII)** | Tree-style dependency list (e.g., `ERP ├── Kafka │ └── Data Platform`) |
-| **Mermaid** | Embeddable in markdown and Obsidian Canvas |
-| **D3 Interactive** | HTML force-directed graph (clickable, draggable, zoomable) |
-| **GraphML** | Export for Gephi, Neo4j, or custom tools |
-
-## Next Steps
-
-After generating dependency graph:
-
-1. Review with architecture/security teams
-2. Prioritize resilience improvements
-3. Create projects for priority 1 recommendations
-4. Update disaster recovery runbooks based on findings
-5. Schedule quarterly dependency reviews
-6. Monitor actual outage impact vs. predicted
-
----
-
-**Invoke with:** `/dependency-graph [system]`
-
-**Example:** `/dependency-graph all` → Enterprise dependency graph showing all systems and critical paths
+- Total modules and dependency count
+- Most-depended-on modules (high fan-in)
+- Modules with most dependencies (high fan-out)
+- Circular dependencies if any detected

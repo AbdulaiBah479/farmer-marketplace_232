@@ -1,13 +1,16 @@
 ---
 name: code-quality-principles
-description: |
-  Triggers: KISS, YAGNI, SOLID, clean code, code quality, refactor, design principles
-  Provides guidance on fundamental software design principles to reduce complexity,
-  prevent over-engineering, and improve maintainability.
+description: Applies KISS, YAGNI, and SOLID principles for clean code with reduced complexity. Use when refactoring or reviewing code for over-engineering.
+alwaysApply: true
 category: development
-tags: [design, principles, clean-code, architecture]
+tags:
+- design
+- principles
+- clean-code
+- architecture
 tools: []
 complexity: low
+model_hint: fast
 estimated_tokens: 600
 ---
 
@@ -15,18 +18,29 @@ estimated_tokens: 600
 
 Guidance on KISS, YAGNI, and SOLID principles with language-specific examples.
 
+
+## When To Use
+
+- Improving code readability and maintainability
+- Applying SOLID, KISS, YAGNI principles during refactoring
+
+## When NOT To Use
+
+- Throwaway scripts or one-time data migrations
+- Performance-critical code where readability trades are justified
+
 ## KISS (Keep It Simple, Stupid)
 
 **Principle**: Avoid unnecessary complexity. Prefer obvious solutions over clever ones.
 
 ### Guidelines
 
-| Prefer              | Avoid                           |
-| ------------------- | ------------------------------- |
+| Prefer | Avoid |
+|--------|-------|
 | Simple conditionals | Complex regex for simple checks |
-| Explicit code       | Magic numbers/strings           |
-| Standard patterns   | Clever shortcuts                |
-| Direct solutions    | Over-abstracted layers          |
+| Explicit code | Magic numbers/strings |
+| Standard patterns | Clever shortcuts |
+| Direct solutions | Over-abstracted layers |
 
 ### Python Example
 
@@ -69,12 +83,12 @@ fn process(data: &[u8]) -> Result<Vec<u8>, &'static str> {
 
 ### Guidelines
 
-| Do                            | Don't                              |
-| ----------------------------- | ---------------------------------- |
-| Solve current problem         | Build for hypothetical futures     |
+| Do | Don't |
+|----|-------|
+| Solve current problem | Build for hypothetical futures |
 | Add when 3rd use case appears | Create abstractions for 1 use case |
-| Delete dead code              | Keep "just in case" code           |
-| Minimal viable solution       | Premature optimization             |
+| Delete dead code | Keep "just in case" code |
+| Minimal viable solution | Premature optimization |
 
 ### Python Example
 
@@ -239,28 +253,34 @@ class OrderService:
 
 ## Quick Reference
 
-| Principle | Question to Ask                    | Red Flag                             |
-| --------- | ---------------------------------- | ------------------------------------ |
-| KISS      | "Is there a simpler way?"          | Complex solution for simple problem  |
-| YAGNI     | "Do I need this right now?"        | Building for hypothetical use cases  |
-| SRP       | "What's the one reason to change?" | Class doing multiple jobs            |
-| OCP       | "Can I extend without modifying?"  | Switch statements for types          |
-| LSP       | "Can subtypes replace base types?" | Overridden methods with side effects |
-| ISP       | "Does client need all methods?"    | Empty method implementations         |
-| DIP       | "Am I depending on abstractions?"  | `new` keyword in business logic      |
+| Principle | Question to Ask | Red Flag |
+|-----------|-----------------|----------|
+| KISS | "Is there a simpler way?" | Complex solution for simple problem |
+| YAGNI | "Do I need this right now?" | Building for hypothetical use cases |
+| SRP | "What's the one reason to change?" | Class doing multiple jobs |
+| OCP | "Can I extend without modifying?" | Switch statements for types |
+| LSP | "Can subtypes replace base types?" | Overridden methods with side effects |
+| ISP | "Does client need all methods?" | Empty method implementations |
+| DIP | "Am I depending on abstractions?" | `new` keyword in business logic |
 
 ## When Principles Conflict
 
 1. **KISS vs SOLID**: For small projects, KISS wins. Add SOLID patterns as complexity grows.
-1. **YAGNI vs DIP**: Don't add abstractions until you have 2+ implementations.
-1. **Readability vs DRY**: Prefer slight duplication over wrong abstraction.
+2. **YAGNI vs DIP**: Don't add abstractions until you have 2+ implementations.
+3. **Readability vs DRY**: Prefer slight duplication over wrong abstraction.
 
 ## Integration with Code Review
 
 When reviewing code, check:
-
 - [ ] No unnecessary complexity (KISS)
 - [ ] No speculative features (YAGNI)
 - [ ] Each class has single responsibility (SRP)
 - [ ] No god classes (> 500 lines)
 - [ ] Dependencies are injected, not created (DIP)
+
+**Verification:** Run `wc -l <file>` to check line counts and `rg -c "class " <file>` (or `grep -c "class " <file>`) to count classes per file.
+
+## Related Skills
+
+- `imbue:karpathy-principles` - The "Simplicity First" principle wraps KISS, YAGNI, and SOLID into a four-principle synthesis derived from Karpathy's observations on LLM coding pitfalls
+- See `docs/quality-gates.md#skill-level-quality-gate-composition` for the full gate-skill federation graph

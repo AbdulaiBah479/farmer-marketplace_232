@@ -1,19 +1,18 @@
 ---
 name: asc-shots-pipeline
-description: Orchestrate iOS screenshot automation with xcodebuild/simctl for build-run, AXe for UI actions, JSON settings and plan files, Go-based framing (`asc screenshots frame`), and screenshot upload (`asc screenshots upload`). Use when users ask for automated screenshot capture, AXe-driven simulator flows, frame composition, or screenshot-to-upload pipelines.
-disable-model-invocation: true
+description: Orchestrate iOS screenshot automation with xcodebuild/simctl for build-run, AXe for UI actions, JSON settings and plan files, Koubou-based framing (`asc screenshots frame`), and screenshot upload (`asc screenshots upload`). Use when users ask for automated screenshot capture, AXe-driven simulator flows, frame composition, or screenshot-to-upload pipelines.
 ---
 
-# ASC screenshots pipeline (xcodebuild -> AXe -> frame -> asc)
+# asc screenshots pipeline (xcodebuild -> AXe -> frame -> asc)
 
 Use this skill for agent-driven screenshot workflows where the app is built and launched with Xcode CLI tools, UI is driven with AXe, and screenshots are uploaded with `asc`.
 
 ## Current scope
 - Implemented now: build/run, AXe plan capture, frame composition, and upload.
 - Device discovery is built-in via `asc screenshots list-frame-devices`.
-- Local screenshot automation commands are experimental in ASC.
-- Framing is pinned to Koubou `0.13.0` for deterministic output.
-- Feedback/issues: https://github.com/rudrankriyam/App-Store-Connect-CLI/issues/new/choose
+- Local screenshot automation commands are experimental in asc cli.
+- Framing is pinned to Koubou `0.18.1` for deterministic output.
+- Feedback/issues: https://github.com/rorkai/App-Store-Connect-CLI/issues/new/choose
 
 ## Defaults
 - Settings file: `.asc/shots.settings.json`
@@ -114,12 +113,14 @@ Minimal `.asc/screenshots.json` example:
 
 ## 4) Frame screenshots with `asc screenshots frame`
 
-ASC pins framing to Koubou `0.13.0`.
+The asc CLI pins framing to Koubou `0.18.1`.
 Install and verify before running framing steps:
 
 ```bash
-pip install koubou==0.13.0
-kou --version  # expect 0.13.0
+pip install koubou==0.18.1
+kou --version  # expect 0.18.1
+# If Koubou reports missing device frames, run once with network access:
+kou setup-frames
 ```
 
 List supported frame device values first:
@@ -144,6 +145,7 @@ Supported `--device` values:
 - `iphone-17-pro-max`
 - `iphone-16e`
 - `iphone-17`
+- `mac`
 
 ## 5) Upload screenshots with asc
 
@@ -153,6 +155,13 @@ Generate and review artifacts before upload:
 asc screenshots review-generate --framed-dir "./screenshots/framed" --output-dir "./screenshots/review"
 asc screenshots review-open --output-dir "./screenshots/review"
 asc screenshots review-approve --all-ready --output-dir "./screenshots/review"
+```
+
+For reviewed multi-locale sets, prefer the plan/apply flow so existing remote screenshot counts are included before upload:
+
+```bash
+asc screenshots plan --app "APP_ID" --version "1.2.3" --review-output-dir "./screenshots/review" --output json
+asc screenshots apply --app "APP_ID" --version "1.2.3" --review-output-dir "./screenshots/review" --confirm --output json
 ```
 
 Upload from the configured source directory (default `./screenshots/framed` when framing is enabled):
@@ -180,7 +189,9 @@ asc screenshots list --version-localization "LOC_ID" --output table
 - Ensure screenshot files exist before upload.
 - Use explicit long flags (`--app`, `--output`, `--version-localization`, etc.).
 - Treat screenshot-local automation as experimental and call it out in user-facing handoff notes.
-- If framing fails with a version error, re-install pinned Koubou: `pip install koubou==0.13.0`.
+- Use `asc screenshots plan` / `asc screenshots apply` for reviewed batches when you need append-limit guardrails across existing remote screenshots.
+- If framing fails with a version error, re-install pinned Koubou: `pip install koubou==0.18.1`.
+- If framing fails because device frames are missing, run `kou setup-frames` once with network access.
 
 ## 6) Multi-locale capture (optional)
 

@@ -1,32 +1,30 @@
 ---
 name: workflow-monitor
-description: |
-  Triggers: workflow error, inefficient execution, workflow failure, execution monitor
-  Monitor workflow executions for errors and inefficiencies. When issues are detected,
-  automatically create GitHub issues for workflow improvements via /fix-workflow.
-
-  Use when: workflows fail, timeout, or show inefficient patterns
-  DO NOT use when: normal workflow execution, simple command errors
+description: Detects workflow failures and inefficient patterns then files GitHub issues. Use when a workflow step repeatedly fails or produces inconsistent output.
+alwaysApply: false
 category: workflow-methodology
-tags: [workflow, monitoring, error-detection, efficiency, automation]
+tags:
+- workflow
+- monitoring
+- error-detection
+- efficiency
+- automation
 dependencies:
-  - imbue:evidence-logging
-  - sanctum:fix-workflow
-tools:
-  - Bash
-  - TodoWrite
-  - gh (GitHub CLI)
+- leyline:git-platform
+- imbue:proof-of-work
+- sanctum:fix-workflow
+tools: []
 usage_patterns:
-  - error-detection
-  - efficiency-analysis
-  - issue-creation
+- error-detection
+- efficiency-analysis
+- issue-creation
 complexity: intermediate
+model_hint: standard
 estimated_tokens: 2500
 modules:
-  - modules/detection-patterns.md
-  - modules/issue-templates.md
-  - modules/efficiency-metrics.md
-version: 1.3.7
+- modules/detection-patterns.md
+- modules/issue-templates.md
+- modules/efficiency-metrics.md
 ---
 ## Table of Contents
 
@@ -42,7 +40,7 @@ version: 1.3.7
 
 # Workflow Monitor
 
-Monitor workflow executions for errors and inefficiencies, automatically creating GitHub issues for improvements.
+Monitor workflow executions for errors and inefficiencies, automatically creating issues on the detected git platform (GitHub/GitLab) for improvements. Check session context for `git_platform:` and use `Skill(leyline:git-platform)` for CLI command mapping.
 
 ## Philosophy
 
@@ -190,7 +188,7 @@ efficiency:
 
 ## Integration Points
 
-- **`imbue:evidence-logging`**: Captures execution evidence
+- **`imbue:proof-of-work`**: Captures execution evidence
 - **`sanctum:fix-workflow`**: Implements suggested fixes
 - **Hooks**: Can be triggered by session hooks for automatic monitoring
 
@@ -227,7 +225,7 @@ efficiency:
 
 ## Related Skills
 
-- `imbue:evidence-logging`: Evidence capture methodology
+- `imbue:proof-of-work`: Evidence capture methodology
 - `sanctum:fix-workflow`: Workflow improvement command
 - `imbue:proof-of-work`: Validation methodology
 

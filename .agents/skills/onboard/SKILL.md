@@ -1,71 +1,34 @@
 ---
 name: onboard
-description: Analyze brownfield codebase and create initial continuity ledger
-user-invocable: true
+description: Guides a new developer through five staged challenge sets covering architecture, domain, patterns, and hardening. Use when onboarding contributors.
+model_hint: standard
 ---
 
-# Onboard - Project Discovery & Ledger Creation
+# Guided Onboarding
 
-Analyze a brownfield codebase and create an initial continuity ledger.
+Walk a new developer through the codebase in structured stages.
 
-## When to Use
+## Stages
 
-- First time working in an existing project
-- User says "onboard", "analyze this project", "get familiar with codebase"
+| Stage | Focus | Categories | Difficulty |
+|-------|-------|------------|------------|
+| 1 | Big picture | architecture, data_flow | 1-2 |
+| 2 | Core domain | business_logic | 2-3 |
+| 3 | Interfaces | api_contract, data_flow | 3 |
+| 4 | Patterns | pattern, dependency | 3-4 |
+| 5 | Hardening | error_handling, business_logic | 4-5 |
 
-## How to Use
+## Steps
 
-**Spawn the onboard agent:**
+1. Load onboarding progress
+2. Show current stage and progress summary
+3. Present 5 challenges from current stage
+4. Enable hints on first attempt
+5. Track mastery (correct twice = mastered)
+6. Check advancement (80% across 10+ challenges)
+7. Report progress
 
-Use the Task tool with `subagent_type: "onboard"` and this prompt:
+## Graduation
 
-```
-Onboard me to this project at $CLAUDE_PROJECT_DIR.
-
-1. Create required directories if they don't exist:
-   mkdir -p thoughts/shared/handoffs/<project-name> .claude
-
-2. Explore the codebase using available tools:
-   - Try: tldr tree . && tldr structure .
-   - Fallback: find . -type f -name "*.py" -o -name "*.ts" -o -name "*.js" | head -50
-
-3. Detect tech stack (look for package.json, requirements.txt, Cargo.toml, go.mod, etc.)
-
-4. Ask the user about their goals using AskUserQuestion
-
-5. Create a YAML handoff at thoughts/shared/handoffs/<project-name>/onboard-<date>.yaml:
-   ---
-   date: <ISO date>
-   type: onboard
-   status: active
-   ---
-   goal: <user's stated goal>
-   now: Start working on <first priority>
-   tech_stack: [list of detected technologies]
-   key_files:
-     - path: <important file>
-       purpose: <what it does>
-   architecture: <brief description>
-   next:
-     - <suggested first action>
-```
-
-## Why an Agent?
-
-The onboard process:
-- Requires multiple exploration steps
-- Should not pollute main context with codebase dumps
-- Returns a clean summary + creates the handoff
-
-## Output
-
-- Directories created: `thoughts/shared/handoffs/<project>/`, `.claude/`
-- YAML handoff created (loaded automatically on session start)
-- User has clear starting context
-- Ready to begin work with full project awareness
-
-## Notes
-
-- This skill is for BROWNFIELD projects (existing code)
-- For greenfield, use `/create_plan` instead
-- Handoff can be updated anytime with `/create_handoff`
+After stage 5, the developer enters the regular gauntlet.
+Answer history carries over.

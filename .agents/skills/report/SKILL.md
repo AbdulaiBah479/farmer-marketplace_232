@@ -1,109 +1,43 @@
 ---
 name: report
-description: Create structured reports for technical findings, test results, and analysis.
-argument-hint: "<topic>"
+description: Print the dashboard's dot chart (score over experiment order, status colors, best-path stair) inline in the terminal for every run in the workspace. Use when the user invokes /evo:report, asks for a quick score chart without opening the dashboard, or wants the scatter plot in chat output.
+evo_version: 0.5.0
 ---
 
-# Report Skill
+# Report
 
-Create technical reports with Discord-friendly summaries for sharing findings.
+Render the dashboard's scatter plot as a colored terminal block, one chart per run, sized to the current terminal.
 
-## Arguments
+## What it shows
 
-- `<topic>`: Brief description of what the report covers (e.g., "CREATE2 collision resolution")
+Mirrors the web dashboard's score scatter (left rail of `evo dashboard`):
 
-## Output
+- X = experiment creation order, Y = score
+- Dot color by status: green = committed, red = failed, purple = active, grey = pending / evaluated / discarded / pruned
+- ★ marks the current best committed experiment
+- Yellow ring on dots that sit on the best-path spine (root → best)
+- Yellow stair line traces cumulative-best across committed experiments
+- ○ at the baseline for experiments that have no score yet (active / pending)
 
-Reports are saved to `reports/YYMMDD_SLUG.md` where:
-- `YYMMDD` is the current date (e.g., 260130 for 2026-01-30)
-- `SLUG` is a brief descriptive name in SCREAMING_SNAKE_CASE
+Every run in the workspace is rendered, stacked top-to-bottom, with a header line showing `run_id · target · metric`.
 
-## Report Structure
+## How to invoke
 
-Every report has two parts:
+Run:
 
-### 1. Discord Summary (top of file)
-
-Wrapped in HTML comment markers for easy copy-paste. Must follow these rules:
-
-**Character Limit:** Maximum 1900 characters (buffer under Discord's 2000 limit)
-
-**Formatting Rules:**
-- NO TABLES - Discord doesn't render markdown tables
-- Use code blocks for tabular data instead
-- Use `**bold**` for emphasis
-- Use `### Headings` for sections
-- Wrap URLs in angle brackets: `<https://example.com>`
-
-**Required Sections:**
-1. Title with key metric
-2. Metadata line (client, suite, counts)
-3. Brief summary (1-2 sentences)
-4. Key findings in code block format
-5. Analysis (root cause in 2-3 sentences)
-6. Impact assessment
-7. Next steps (numbered list)
-8. Link to full report
-
-**Template:**
-
-```markdown
-<!-- DISCORD SUMMARY (paste everything between the markers) -->
-## [Title]: [Key Metric]
-
-**[Context]:** [value] | **[Metric]:** [numbers]
-
-[1-2 sentence summary]
-
-### [Section Name]
-
-```
-[Data in code block - NOT a table]
+```bash
+evo report
 ```
 
-### Analysis
+That is it. Print the output verbatim in your reply so the user sees the chart. Do not summarize the chart in prose — the visual is the point.
 
-**Root cause:** [Brief explanation]
+Flags:
 
-### Impact
+- `--color always|never|auto` — force or suppress ANSI color. Default `auto` (color when stdout is a TTY). Pass `--color always` if you are piping through a host that strips TTY but renders ANSI in chat.
+- `--watch [SECONDS]` — live-refresh mode (like `nvidia-smi -l`). Re-reads the workspace every N seconds (default 2) and redraws in place. Ctrl-C to exit. Use this when you want to babysit a running optimization without manually re-invoking the report.
 
-**[Severity] for [context]** - [Practical implications]
+## When not to use
 
-### Next Steps
-1. [Action item]
-2. [Action item]
-
-**Full report:** <[URL]>
-<!-- END DISCORD SUMMARY -->
-```
-
-### 2. Full Report (below the summary)
-
-After a horizontal rule (`---`), include the detailed report:
-
-**Required Sections:**
-1. Title and metadata (date, test suite, client version)
-2. Executive summary
-3. Context (why this report exists)
-4. Detailed findings (tables, logs, specifics)
-5. Root cause analysis
-6. Impact assessment
-7. Recommendations (short/medium/long-term)
-8. References (links to specs, repos)
-9. Appendix (log locations, raw data)
-
-**Formatting:**
-- Tables are fine in full report (GitHub renders them)
-- Include code blocks for log excerpts
-- Link to specific files with `file:line` notation
-- Reference external specs with full URLs
-
-## Workflow
-
-1. Gather all relevant data (logs, test results, metrics)
-2. Analyze root cause and impact
-3. Draft Discord summary first (ensures conciseness)
-4. Verify Discord summary is under 1900 characters
-5. Write full report with complete details
-6. Save to `reports/YYMMDD_SLUG.md`
-7. Output the Discord summary for easy copy-paste
+- For one-off score lookups, `evo status` or `evo show <id>` is faster.
+- For navigating the tree shape, `evo tree` is the right command.
+- For interactive exploration (click a dot, open a drawer), point the user at `evo dashboard` instead.

@@ -1,61 +1,103 @@
 ---
 name: doc-updates
-description: |
-  Update documentation with writing guideline enforcement, consolidation detection, and accuracy verification.
-
-  Triggers: documentation update, docs update, ADR, docstrings, writing guidelines, readme update, debloat docs
-
-  Use when: updating documentation after code changes, enforcing writing guidelines, maintaining ADRs
-
-  DO NOT use when: README-specific updates - use update-readme instead.
-  DO NOT use when: complex multi-file consolidation - use doc-consolidation.
-
-  Use this skill for general documentation updates with built-in quality gates.
+description: Updates documentation after code changes with quality gates, slop detection, and accuracy checks. Use when code changes require corresponding doc updates.
+alwaysApply: false
 category: artifact-generation
-tags: [documentation, readme, adr, docstrings, writing, consolidation, debloat]
-tools: [Read, Write, Edit, Bash, TodoWrite]
+tags:
+- documentation
+- readme
+- adr
+- docstrings
+- writing
+- consolidation
+- debloat
+tools: []
 complexity: medium
+model_hint: standard
 estimated_tokens: 1200
 progressive_loading: true
 modules:
-  - adr-patterns
-  - directory-style-rules
-  - accuracy-scanning
-  - consolidation-integration
+- modules/adr-patterns.md
+- modules/directory-style-rules.md
+- modules/accuracy-scanning.md
+- modules/consolidation-integration.md
+- modules/capabilities-sync.md
 dependencies:
-  - sanctum:shared
-  - sanctum:git-workspace-review
-  - imbue:evidence-logging
+- sanctum:shared
+- sanctum:git-workspace-review
+- imbue:proof-of-work
+- scribe:slop-detector
+- scribe:doc-generator
+optional_dependencies:
+- elements-of-style:writing-clearly-and-concisely
 ---
+## Table of Contents
+
+- [When to Use](#when-to-use)
+- [Required TodoWrite Items](#required-todowrite-items)
+- [Step 1: Collect Context](#step-1-collect-context-context-collected)
+- [Step 2: Identify Targets](#step-2-identify-targets-targets-identified)
+- [Step 2.5: Check for Consolidation](#step-25-check-for-consolidation-consolidation-checked)
+- [Step 3: Apply Edits](#step-3-apply-edits-edits-applied)
+- [Step 4: Enforce Guidelines](#step-4-enforce-guidelines-guidelines-verified)
+- [Step 4.25: AI Slop Detection](#step-425-ai-slop-detection-slop-scanned)
+- [Step 4.75: Sync Capabilities Documentation](#step-475-sync-capabilities-documentation-capabilities-synced)
+- [Step 5: Verify Accuracy](#step-5-verify-accuracy-accuracy-verified)
+- [Step 6: Preview Changes](#step-6-preview-changes-preview)
+- [Exit Criteria](#exit-criteria)
+- [Flags](#flags)
+
 
 # Documentation Update Workflow
 
-## When to Use
+## When To Use
 
-Use this skill when code changes require updates to the README, plans, wikis, or docstrings.
-Run `Skill(sanctum:git-workspace-review)` first to capture the change context.
+Use this skill when code changes require updates to the README, plans, wikis, or docstrings. Run `Skill(sanctum:git-workspace-review)` first to capture the change context.
 
-**New capabilities:**
-- Detects consolidation opportunities (like /merge-docs)
-- Enforces directory-specific style rules (docs/ strict, book/ lenient)
-- Validates accuracy of version numbers and counts
-- LSP integration (2.0.74+) for semantic documentation verification
+### System Capabilities
+
+The documentation update workflow includes several specialized functions. It identifies redundancy through consolidation detection and enforces directory-specific style rules, with strict limits for `docs/` and more lenient ones for the `book/` directory. The system also verifies the accuracy of version numbers and component counts and integrates with the LSP for semantic documentation verification in supported versions of Claude Code.
+
+## When NOT To Use
+
+- README-specific updates - use update-readme instead
+- Complex multi-file consolidation - use doc-consolidation
 
 ## Required TodoWrite Items
 
-1. `doc-updates:context-collected`
+1. `doc-updates:context-collected` - Git context + CHANGELOG review
 2. `doc-updates:targets-identified`
-3. `doc-updates:consolidation-checked` (NEW - skippable)
+3. `doc-updates:consolidation-checked` (skippable)
 4. `doc-updates:edits-applied`
 5. `doc-updates:guidelines-verified`
-6. `doc-updates:accuracy-verified` (NEW)
-7. `doc-updates:preview`
+6. `doc-updates:slop-scanned` - AI marker detection via scribe
+7. `doc-updates:plugins-synced` - plugin.json ↔ disk audit
+8. `doc-updates:capabilities-synced` - plugin.json ↔ documentation sync
+9. `doc-updates:accuracy-verified`
+10. `doc-updates:preview`
 
 ## Step 1: Collect Context (`context-collected`)
 
-- validate `Skill(sanctum:git-workspace-review)` has been run.
+- Validate `Skill(sanctum:git-workspace-review)` has been run.
 - Use its notes to understand the delta.
 - Identify the features or bug fixes that need documentation updates.
+
+**CHANGELOG Reference** (critical for version sync):
+```bash
+# Check recent CHANGELOG entries for undocumented features
+head -100 CHANGELOG.md
+
+# Compare documented version vs plugin versions
+grep -E "^\[.*\]" CHANGELOG.md | head -3
+for p in plugins/*/.claude-plugin/plugin.json; do
+    jq -r '"\(.name): \(.version)"' "$p"
+done | head -5
+```
+
+Cross-reference CHANGELOG entries against:
+- `book/src/reference/capabilities-reference.md` - All skills/commands/agents
+- Plugin documentation in `book/src/plugins/` - Per-plugin docs
+- Plugin READMEs - Quick reference docs
 
 ## Step 2: Identify Targets (`targets-identified`)
 
@@ -102,25 +144,135 @@ Load: `@modules/consolidation-integration.md`
 
 Load: `@modules/directory-style-rules.md`
 
-**Apply directory-specific rules:**
+### Style Enforcement
 
-| Location | Style | Max Lines | Max Paragraph |
-|----------|-------|-----------|---------------|
-| docs/ | Strict reference | 500 | 4 sentences |
-| book/ | Technical book | 1000 | 8 sentences |
-| Other | Default to strict | 500 | 4 sentences |
+Maintain consistent documentation by applying directory-specific rules. The system checks for and removes filler phrases such as "in order to" or "it should be noted" and ensures that no emojis are present in the body text of technical documents. Use grounded language with specific references rather than vague claims, and maintain an imperative mood for instructions. For lists of three or more items, prefer bullets over prose to improve scannability.
 
-**Common checks:**
-- No filler phrases ("in order to", "it should be noted")
-- No emojis in body text (callouts allowed in book/)
-- Grounded language (specific references, not vague claims)
-- Imperative mood for instructions
-- Bullets over prose for lists of 3+ items
+The audit will issue warnings for paragraphs that exceed length limits or files that surpass the established line count thresholds. We also flag marketing language and abstract adjectives like "capable" or "smooth" to maintain a technical and direct tone across all project documentation.
 
-**Warn on:**
-- Wall-of-text paragraphs exceeding limits
-- Files exceeding line count thresholds
-- Marketing language ("capable", "smooth")
+## Step 4.25: AI Slop Detection (`slop-scanned`)
+
+Run `Skill(scribe:slop-detector)` on edited documentation to detect AI-generated content markers.
+
+### Scribe Integration
+
+The scribe plugin provides thorough AI slop detection:
+
+```
+Skill(scribe:slop-detector) --target [edited-files]
+```
+
+This detects:
+- **Tier 1 words**: delve, tapestry, comprehensive, leveraging, etc.
+- **Phrase patterns**: "In today's fast-paced world", "cannot be overstated"
+- **Structural markers**: Excessive em dashes, bullet overuse, sentence uniformity
+- **Sycophantic phrases**: "I'd be happy to", "Great question!"
+
+### Writing Style Guidelines
+
+For enhanced writing quality, check for `elements-of-style:writing-clearly-and-concisely`:
+
+```
+# If superpowers/elements-of-style is installed:
+Skill(elements-of-style:writing-clearly-and-concisely)
+
+# Fallback if not installed - use scribe:doc-generator principles:
+Skill(scribe:doc-generator) --remediate
+```
+
+The fallback provides equivalent guidance:
+1. Ground every claim with specifics
+2. Trim rhetorical crutches (no formulaic openers/closers)
+3. Use numbers, commands, filenames over adjectives
+4. Balance bullets with narrative prose
+5. Show authorial perspective (trade-offs, reasoning)
+
+### Remediation
+
+If slop score exceeds 2.5 (moderate), run:
+
+```
+Agent(scribe:doc-editor) --target [file]
+```
+
+This provides interactive section-by-section cleanup with user approval.
+
+### Skip Options
+
+- Use `--skip-slop` flag to bypass slop detection
+- Slop warnings are non-blocking by default
+
+## Step 4.5: Sync Plugin Registrations (`plugins-synced`)
+
+**Audit plugin.json files against disk** (prevents registration drift):
+
+```bash
+# Quick discrepancy check for all plugins
+for plugin in plugins/*/; do
+  name=$(basename "$plugin")
+  pjson="$plugin/.claude-plugin/plugin.json"
+  [ -f "$pjson" ] || continue
+
+  # Count commands
+  json_cmds=$(jq -r '.commands | length' "$pjson" 2>/dev/null || echo 0)
+  disk_cmds=$(ls "$plugin/commands/"*.md 2>/dev/null | wc -l)
+
+  # Count skills (directories only)
+  json_skills=$(jq -r '.skills | length' "$pjson" 2>/dev/null || echo 0)
+  disk_skills=$(ls -d "$plugin/skills"/*/ 2>/dev/null | wc -l)
+
+  # Report mismatches
+  if [ "$json_cmds" != "$disk_cmds" ] || [ "$json_skills" != "$disk_skills" ]; then
+    echo "$name: commands=$json_cmds/$disk_cmds skills=$json_skills/$disk_skills"
+  fi
+done
+```
+
+**If mismatches found**: Run `/update-plugins --fix` or manually update plugin.json files.
+
+**Why this matters**: Unregistered commands/skills won't appear in Claude Code's slash command menu or be discoverable.
+
+## Step 4.75: Sync Capabilities Documentation (`capabilities-synced`)
+
+Load: `@modules/capabilities-sync.md`
+
+**Purpose**: Ensure plugin.json registrations are reflected in reference documentation.
+
+**Sync Targets**:
+| Source | Documentation Target |
+|--------|---------------------|
+| `plugin.json.skills[]` | `book/src/reference/capabilities-reference.md` |
+| `plugin.json.commands[]` | `book/src/reference/capabilities-reference.md` |
+| `plugin.json.agents[]` | `book/src/reference/capabilities-reference.md` |
+| `hooks/hooks.json` | `book/src/reference/capabilities-reference.md` |
+| Plugin existence | `book/src/plugins/{plugin}.md` |
+
+**Quick Check**:
+```bash
+# Compare registered vs documented skills
+for pjson in plugins/*/.claude-plugin/plugin.json; do
+  plugin=$(basename $(dirname $(dirname "$pjson")))
+  jq -r --arg p "$plugin" '.skills[]? | sub("^\\./skills/"; "") | "\($p):\(.)"' "$pjson" 2>/dev/null
+done | sort > /tmp/registered-skills.txt
+
+grep -E "^\| \`[a-z-]+\` \|" book/src/reference/capabilities-reference.md | \
+  head -120 | awk -F'|' '{print $2":"$3}' | sort > /tmp/documented-skills.txt
+
+# Show missing
+comm -23 /tmp/registered-skills.txt /tmp/documented-skills.txt
+```
+
+**If discrepancies found**:
+1. **Missing from docs**: Add entries to capabilities-reference.md tables
+2. **Missing plugin pages**: Create `book/src/plugins/{plugin}.md`
+3. **Missing from SUMMARY**: Add plugin to `book/src/SUMMARY.md`
+
+**Auto-generate entry format**:
+```markdown
+| `{skill-name}` | [{plugin}](../plugins/{plugin}.md) | {description} |
+```
+
+**Skip options**: Use `--skip-capabilities` to bypass this phase.
 
 ## Step 5: Verify Accuracy (`accuracy-verified`)
 
@@ -138,6 +290,7 @@ done
 echo "Plugins: $(ls -d plugins/*/.claude-plugin/plugin.json | wc -l)"
 echo "Skills: $(find plugins/*/skills -name 'SKILL.md' | wc -l)"
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
 **Flag mismatches:**
 - Version numbers that don't match plugin.json
@@ -146,7 +299,7 @@ echo "Skills: $(find plugins/*/skills -name 'SKILL.md' | wc -l)"
 
 **LSP-Enhanced Verification (2.0.74+)**:
 
-When `ENABLE_LSP_TOOLS=1` is set, enhance accuracy verification with semantic analysis:
+When `ENABLE_LSP_TOOL=1` is set, enhance accuracy verification with semantic analysis:
 
 1. **API Documentation Coverage**:
    - Query LSP for all public functions/classes
@@ -170,7 +323,7 @@ When `ENABLE_LSP_TOOLS=1` is set, enhance accuracy verification with semantic an
 
 **Efficiency**: LSP queries (50ms) vs. manual file tracing (minutes) - dramatically faster verification.
 
-**Default Strategy**: Documentation updates should **prefer LSP** for all verification tasks. Enable `ENABLE_LSP_TOOLS=1` permanently for best results.
+**Default Strategy**: Documentation updates should **prefer LSP** for all verification tasks. Enable `ENABLE_LSP_TOOL=1` permanently for best results.
 
 **Non-blocking**: Warnings are informational; user decides whether to fix.
 
@@ -198,5 +351,18 @@ When `ENABLE_LSP_TOOLS=1` is set, enhance accuracy verification with semantic an
 | Flag | Effect |
 |------|--------|
 | `--skip-consolidation` | Skip Phase 2.5 consolidation check |
+| `--skip-slop` | Skip Phase 4.25 AI slop detection |
 | `--strict` | Treat all warnings as errors |
 | `--book-style` | Apply book/ rules to all files |
+## Troubleshooting
+
+### Common Issues
+
+**Documentation out of sync**
+Run `make docs-update` to regenerate from code
+
+**Build failures**
+Check that all required dependencies are installed
+
+**Links broken**
+Verify relative paths in documentation files

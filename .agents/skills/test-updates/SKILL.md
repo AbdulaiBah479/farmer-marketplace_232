@@ -1,32 +1,65 @@
 ---
 name: test-updates
-description: |
-  Update and maintain tests following TDD/BDD principles with detailed
-  quality assurance.
-
-  Triggers: test updates, test maintenance, test generation, TDD workflow,
-  BDD patterns, test coverage, pytest, test enhancement, quality assurance
-
-  Use when: updating existing tests, generating new tests for features,
-  enhancing test quality, ensuring detailed coverage, pre-commit validation
-
-  DO NOT use when: auditing test suites - use pensive:test-review.
-  DO NOT use when: writing production code - focus on implementation first.
-
-  Run git-workspace-review first to understand which tests need updates.
-version: 1.0.0
+description: Updates, generates, and validates tests using git-workspace context and TDD/BDD methodology. Use when code changes require new or updated test coverage.
+alwaysApply: false
 category: testing-automation
-tags: [tdd, bdd, testing, quality-assurance, test-generation, pytest]
-dependencies: [test-driven-development, git-workspace-review, file-analysis]
-tools: [test_analyzer, test_generator, quality_checker]
+tags:
+- tdd
+- bdd
+- testing
+- quality-assurance
+- test-generation
+- pytest
+dependencies:
+- test-driven-development
+- git-workspace-review
+- file-analysis
+tools: []
 usage_patterns:
-  - test-maintenance
-  - test-generation
-  - test-enhancement
-  - quality-validation
+- test-maintenance
+- test-generation
+- test-enhancement
+- quality-validation
 complexity: intermediate
+model_hint: standard
 estimated_tokens: 1500
+modules:
+- modules/bdd-patterns.md
+- modules/content-test-discovery.md
+- modules/quality-validation.md
+- modules/tdd-workflow.md
+- modules/test-discovery.md
+- modules/test-enhancement.md
+- modules/test-generation.md
 ---
+## Table of Contents
+
+- [Overview](#overview)
+- [Core Philosophy](#core-philosophy)
+- [What It Is](#what-it-is)
+- [Quick Start](#quick-start)
+- [Quick Checklist for First Time Use](#quick-checklist-for-first-time-use)
+- [detailed Test Update](#detailed-test-update)
+- [Targeted Test Updates](#targeted-test-updates)
+- [TDD for New Features](#tdd-for-new-features)
+- [Using the Scripts Directly](#using-the-scripts-directly)
+- [When to Use It](#when-to-use-it)
+- [Workflow Integration](#workflow-integration)
+- [Phase 1: Discovery](#phase-1:-discovery)
+- [Phase 2: Strategy](#phase-2:-strategy)
+- [Phase 3: Implementation](#phase-3:-implementation)
+- [Phase 4: Validation](#phase-4:-validation)
+- [Quality Assurance](#quality-assurance)
+- [Examples](#examples)
+- [BDD-Style Test Generation](#bdd-style-test-generation)
+- [Test Enhancement](#test-enhancement)
+- [Integration with Existing Skills](#integration-with-existing-skills)
+- [Success Metrics](#success-metrics)
+- [Troubleshooting FAQ](#troubleshooting-faq)
+- [Common Issues](#common-issues)
+- [Performance Tips](#performance-tips)
+- [Getting Help](#getting-help)
+
 
 # Test Updates and Maintenance
 
@@ -38,6 +71,7 @@ detailed test management system that applies TDD/BDD principles to maintain, gen
 
 - **RED-GREEN-REFACTOR**: Strict adherence to TDD cycle
 - **Behavior-First**: BDD patterns that describe what code should do
+- **Invariant-Encoding**: Tests guard design decisions, not just behavior
 - **Meta Dogfooding**: The skill's own tests demonstrate the principles it teaches
 - **Quality Gates**: detailed validation before considering tests complete
 
@@ -47,7 +81,7 @@ A modular test management system that:
 - Discovers what needs testing or updating
 - Generates tests following TDD principles
 - Enhances existing tests with BDD patterns
-- Validates test quality through multiple lenses
+- Validate test quality through multiple lenses
 
 ## Quick Start
 
@@ -63,6 +97,7 @@ A modular test management system that:
 # Run full test update workflow
 Skill(test-updates)
 ```
+**Verification:** Run `pytest -v` to verify tests pass.
 
 ### Targeted Test Updates
 ```bash
@@ -70,33 +105,36 @@ Skill(test-updates)
 Skill(test-updates) --target src/sanctum/agents
 Skill(test-updates) --target tests/test_commit_messages.py
 ```
+**Verification:** Run `pytest -v` to verify tests pass.
 
 ### TDD for New Features
 ```bash
 # Apply TDD to new code
 Skill(test-updates) --tdd-only --target new_feature.py
 ```
+**Verification:** Run `pytest -v` to verify tests pass.
 
 ### Using the Scripts Directly
 
 **Human-Readable Output:**
 ```bash
 # Analyze test coverage gaps
-python plugins/sanctum/skills/test-updates/scripts/test_analyzer.py --scan src/
+python plugins/sanctum/scripts/test_analyzer.py --scan src/
 
 # Generate test scaffolding
-python plugins/sanctum/skills/test-updates/scripts/test_generator.py \
+python plugins/sanctum/scripts/test_generator.py \
     --source src/my_module.py --style pytest_bdd
 
 # Check test quality
-python plugins/sanctum/skills/test-updates/scripts/quality_checker.py \
+python plugins/sanctum/scripts/quality_checker.py \
     --validate tests/test_my_module.py
 ```
+**Verification:** Run `pytest -v` to verify tests pass.
 
 **Programmatic Output (for Claude Code):**
 ```bash
 # Get JSON output for programmatic parsing - test_analyzer
-python plugins/sanctum/skills/test-updates/scripts/test_analyzer.py \
+python plugins/sanctum/scripts/test_analyzer.py \
     --scan src/ --output-json
 
 # Returns:
@@ -111,7 +149,7 @@ python plugins/sanctum/skills/test-updates/scripts/test_analyzer.py \
 # }
 
 # Get JSON output - test_generator
-python plugins/sanctum/skills/test-updates/scripts/test_generator.py \
+python plugins/sanctum/scripts/test_generator.py \
     --source src/my_module.py --output-json
 
 # Returns:
@@ -128,7 +166,7 @@ python plugins/sanctum/skills/test-updates/scripts/test_generator.py \
 # }
 
 # Get JSON output - quality_checker
-python plugins/sanctum/skills/test-updates/scripts/quality_checker.py \
+python plugins/sanctum/scripts/quality_checker.py \
     --validate tests/test_my_module.py --output-json
 
 # Returns:
@@ -144,8 +182,9 @@ python plugins/sanctum/skills/test-updates/scripts/quality_checker.py \
 #   }
 # }
 ```
+**Verification:** Run `pytest -v` to verify tests pass.
 
-## When to Use It
+## When To Use It
 
 **Use this skill when you need to:**
 - Update tests after code changes
@@ -159,6 +198,17 @@ python plugins/sanctum/skills/test-updates/scripts/quality_checker.py \
 - Refactoring with test safety
 - Onboarding new developers
 
+## When NOT To Use
+
+- Auditing
+  test suites - use pensive:test-review
+- Writing production code
+  - focus on implementation first
+- Auditing
+  test suites - use pensive:test-review
+- Writing production code
+  - focus on implementation first
+
 ## Workflow Integration
 
 ### Phase 1: Discovery
@@ -166,20 +216,83 @@ python plugins/sanctum/skills/test-updates/scripts/quality_checker.py \
 2. Analyze recent changes
 3. Identify broken or outdated tests
 
+See `modules/test-discovery.md` for detection patterns.
+
 ### Phase 2: Strategy
-1. Choose appropriate BDD style
+1. Choose appropriate BDD style (see `modules/bdd-patterns.md`)
 2. Plan test structure
 3. Define quality criteria
+4. Identify design invariants to encode as tests
+
+### Phase 2.5: Invariant-Encoding Tests
+
+Before writing behavioral tests, identify the design
+invariants that the code relies on and write tests
+that would break if those invariants were violated.
+
+**What to encode:**
+
+- Module boundary constraints (A never imports from B)
+- Data flow direction (events flow publisher-to-subscriber,
+  never the reverse)
+- API contract shapes (public interfaces don't change
+  without versioning)
+- Data structure choices (if a map was chosen over a list,
+  test the properties that justify that choice)
+- Error handling strategies (fail-fast boundaries, recovery
+  zones)
+
+**Example:**
+
+```python
+def test_plugins_never_import_from_other_plugins():
+    """Encode the invariant: plugins are independent modules.
+
+    If this test breaks, someone is coupling plugins
+    directly. Present the 3 options to a human:
+    1. Preserve: revert the import, keep plugins independent
+    2. Layer: add a shared interface in leyline instead
+    3. Revise: merge the plugins (requires ADR)
+    """
+    for plugin_dir in plugin_dirs:
+        imports = extract_imports(plugin_dir)
+        for imp in imports:
+            assert not imp.startswith("plugins."), (
+                f"{plugin_dir} imports {imp} — "
+                f"violates plugin independence invariant"
+            )
+```
+
+**Why this matters:** Tests that encode invariants are
+load-bearing. When an agent later encounters a feature
+that clashes with the invariant, the test failure forces
+a conscious decision rather than a silent drift. Without
+these tests, bad invariant decisions compound until the
+codebase is unsalvageable.
+
+**When updating existing tests:**
+
+If an invariant-encoding test needs to change, do NOT
+silently update the assertion. Flag it for human review
+with the three options: preserve the invariant, layer
+on top, or revise the invariant. This is a judgment
+call that requires human wisdom: models default to
+the "average" of training data and get these wrong far
+too often.
 
 ### Phase 3: Implementation
-1. Write failing tests (RED)
+1. Write failing tests (RED) - see `modules/tdd-workflow.md`
 2. Implement minimal passing code (GREEN)
 3. Refactor for clarity (REFACTOR)
+
+See `modules/test-generation.md` for generation templates.
 
 ### Phase 4: Validation
 1. Static analysis and linting
 2. Dynamic test execution
 3. Coverage and quality metrics
+
+See `modules/quality-validation.md` for validation criteria.
 
 ## Quality Assurance
 
@@ -187,11 +300,14 @@ The skill applies multiple quality checks:
 - **Static**: Linting, type checking, pattern validation
 - **Dynamic**: Test execution in sandboxed environments
 - **Metrics**: Coverage, mutation score, complexity analysis
+- **Invariant**: Verify design-decision tests are not weakened
 - **Review**: Structured checklists for peer validation
 
 ## Examples
 
 ### BDD-Style Test Generation
+
+See `modules/bdd-patterns.md` for additional patterns.
 ```python
 class TestGitWorkflow:
     """BDD-style tests for Git workflow operations."""
@@ -206,11 +322,14 @@ class TestGitWorkflow:
         # Test implementation following TDD principles
         pass
 ```
+**Verification:** Run `pytest -v` to verify tests pass.
 
 ### Test Enhancement
 - Add edge cases and error scenarios
 - Include performance benchmarks
 - Add mutation testing for robustness
+
+See `modules/test-enhancement.md` for enhancement strategies.
 
 ## Integration with Existing Skills
 

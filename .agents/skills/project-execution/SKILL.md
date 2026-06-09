@@ -1,62 +1,35 @@
 ---
 name: project-execution
-description: Systematic task execution with checkpoint validation, progress tracking, and quality gates
-
-Triggers: progress, validation, quality, project, systematic
+description: Executes implementation plans with progress tracking, checkpoint validation, and quality gates. Use after planning is complete and tasks are ready to implement.
+alwaysApply: false
+# Custom metadata (not used by Claude for matching):
 model_preference: claude-sonnet-4
 tools_allowed: all
-version: 1.3.7
+category: workflow
+tags: [execution, implementation, progress-tracking, quality-gates, tdd]
+complexity: intermediate
+model_hint: standard
+estimated_tokens: 2100
+progressive_loading: true
+references:
+- references/mission-report.md
+role: library
 ---
-## Table of Contents
-
-- [When to Use](#when-to-use)
-- [Integration](#integration)
-- [Execution Framework](#execution-framework)
-- [Pre-Execution Phase](#pre-execution-phase)
-- [Task Execution Loop](#task-execution-loop)
-- [Post-Execution Phase](#post-execution-phase)
-- [Task Execution Pattern](#task-execution-pattern)
-- [TDD Workflow](#tdd-workflow)
-- [Checkpoint Validation](#checkpoint-validation)
-- [Progress Tracking](#progress-tracking)
-- [Execution State](#execution-state)
-- [Progress Reports](#progress-reports)
-- [Yesterday](#yesterday)
-- [Today](#today)
-- [Blockers](#blockers)
-- [Metrics](#metrics)
-- [Completed ([X] tasks)](#completed-([x]-tasks))
-- [In Progress ([Y] tasks)](#in-progress-([y]-tasks))
-- [Blocked ([Z] tasks)](#blocked-([z]-tasks))
-- [Burndown](#burndown)
-- [Risks](#risks)
-- [Blocker Management](#blocker-management)
-- [Blocker Detection](#blocker-detection)
-- [Systematic Debugging](#systematic-debugging)
-- [Escalation](#escalation)
-- [Blocker: [TASK-XXX] - [Issue]](#blocker:-[task-xxx]---[issue])
-- [Quality Assurance](#quality-assurance)
-- [Definition of Done](#definition-of-done)
-- [Testing Strategy](#testing-strategy)
-- [Velocity Tracking](#velocity-tracking)
-- [Burndown Metrics](#burndown-metrics)
-- [Velocity Adjustments](#velocity-adjustments)
-- [Related Skills](#related-skills)
-- [Related Agents](#related-agents)
-- [Related Commands](#related-commands)
-- [Examples](#examples)
-
-
-# Project Execution Skill
-
-Execute implementation plan systematically with checkpoints, validation, and progress tracking.
-
-## When to Use
+## When To Use
 
 - After planning phase completes
 - Ready to implement tasks
 - Need systematic execution with tracking
 - Want checkpoint-based validation
+- Executing task lists with dependencies
+- Monitoring progress and velocity
+
+## When NOT To Use
+
+- No implementation plan exists (use `Skill(attune:project-planning)` first)
+- Still planning or designing (complete planning phase before execution)
+- Single isolated task (execute directly without framework overhead)
+- Exploratory coding or prototyping (use focused development instead)
 
 ## Integration
 
@@ -65,6 +38,11 @@ Execute implementation plan systematically with checkpoints, validation, and pro
 - Uses `Skill(superpowers:systematic-debugging)` for issue resolution
 - Uses `Skill(superpowers:verification-before-completion)` for validation
 - Uses `Skill(superpowers:test-driven-development)` for TDD workflow
+
+**With imbue**:
+- Uses `Skill(imbue:graduated-implementation)` at the ramp gate so
+  each increment's ambition is earned by demonstrated understanding
+  of the prior one, not ramped on completion alone
 
 **Without superpowers**:
 - Standalone execution framework
@@ -111,14 +89,23 @@ Execute implementation plan systematically with checkpoints, validation, and pro
    - Code quality checks pass?
    - Documentation updated?
 
-4. CHECKPOINT
+4. RAMP GATE (before the next, more ambitious task)
+   - Invoke Skill(imbue:graduated-implementation)
+   - Demonstrate understanding of THIS increment, sized to stakes:
+     low-stakes on the evidence gate (green tests plus a recorded
+     tradeoff), high-stakes on the human explaining the diff unaided
+   - On a clean demonstration, record it in the ramp ledger and
+     mark the rung widened; below the band, hold and split the next
+     task smaller instead of ramping
+
+5. CHECKPOINT
    - Mark task complete IMMEDIATELY (do NOT batch)
    - Update execution state
    - Report progress
    - Identify blockers
 ```
 
-**Task Completion Discipline**: Always call `TaskUpdate(taskId: "X", status: "completed")` right after finishing each task—never defer completions to end of session.
+**Task Completion Discipline**: Always call `TaskUpdate(taskId: "X", status: "completed")` right after finishing each task. Never defer completions to end of session.
 
 **Verification:** Run `pytest -v` to verify tests pass.
 
@@ -130,6 +117,30 @@ Execute implementation plan systematically with checkpoints, validation, and pro
 3. Check code quality metrics
 4. Generate completion report
 5. Prepare for deployment/release
+6. Record lessons learned (see below)
+
+### Record Lessons Learned (decision journal)
+
+Implementation is where the honest lessons appear: the approach that had to be
+reworked, the blocker that cost a day, the assumption from planning that did
+not hold. Capture these in `docs/lessons-learned.md` now, blamelessly, instead
+of letting them vanish into "done." Draft and confirm one entry per
+substantive lesson:
+
+- If leyline is installed, invoke `Skill(leyline:decision-journal)` and follow
+  it to append a lesson entry: `what_happened`, `what_didnt_work`,
+  `root_cause`, and a concrete `action`. Set `phase` to `execute`. Show the
+  draft; append on confirmation (status starts `open`).
+- Fallback (leyline absent): append to `docs/lessons-learned.md` by hand using
+  the in-file ENTRY TEMPLATE; assign the next `LL-NNN` id.
+
+Trigger this whenever execution involved rework, a failed approach, or a
+blocker that exhausted the two-challenge / 3-attempt limit. A clean run with no
+surprises needs no entry.
+
+### Terminal Phase Notice
+
+This is the **final phase** of the attune workflow. No auto-continuation occurs after execution completes. The workflow terminates here. Unlike brainstorming, specification, and planning phases, execution does NOT auto-invoke any subsequent phase.
 
 ## Task Execution Pattern
 
@@ -403,12 +414,21 @@ On track? = Estimated completion <= Sprint end date
 - Increase focus (reduce distractions)
 - Request help or extend timeline
 
+## Exit Criteria
+
+- [ ] All planned tasks are marked complete and the full test suite passes.
+- [ ] A completion report is generated.
+- [ ] Any rework, failed approach, or exhausted-retry blocker is recorded to
+  `docs/lessons-learned.md` as an `open` entry (a clean run needs none).
+- [ ] No subsequent phase is auto-invoked (this is the terminal phase).
+
 ## Related Skills
 
 - `Skill(superpowers:executing-plans)` - Execution framework (if available)
 - `Skill(superpowers:systematic-debugging)` - Debugging (if available)
 - `Skill(superpowers:test-driven-development)` - TDD (if available)
 - `Skill(superpowers:verification-before-completion)` - Validation (if available)
+- `Skill(attune:mission-orchestrator)` - Full lifecycle orchestration
 
 ## Related Agents
 
@@ -420,18 +440,22 @@ On track? = Estimated completion <= Sprint end date
 - `/attune:execute --task [ID]` - Execute specific task
 - `/attune:execute --resume` - Resume from checkpoint
 
+## Mission Report
+
+At mission completion, produce a Mission Report using the
+template from `references/mission-report.md`. The report documents:
+
+- **Mission identification**: Links to brief, spec, plan
+- **Duration**: Start, end, total time
+- **Outcome**: success | partial | failed
+- **Delivered artifacts**: Files created/modified/deleted
+- **Decisions**: Key choices with rationale
+- **Validation evidence**: Tests, reviews, demos
+- **Follow-ups**: Recommended next steps
+
+See `references/mission-report.md` for the full template and
+example reports for successful, partial, and failed missions.
+
 ## Examples
 
 See `/attune:execute` command documentation for complete examples.
-## Troubleshooting
-
-### Common Issues
-
-**Command not found**
-Ensure all dependencies are installed and in PATH
-
-**Permission errors**
-Check file permissions and run with appropriate privileges
-
-**Unexpected behavior**
-Enable verbose logging with `--verbose` flag

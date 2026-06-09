@@ -1,18 +1,19 @@
 ---
-name: api-flow-diagram-creator
+name: "api-flow-diagram-creator"
 description: |
-  Api Flow Diagram Creator - Auto-activating skill for Visual Content.
+  Create api flow diagram creator operations. Auto-activating skill for Visual Content.
   Triggers on: api flow diagram creator, api flow diagram creator
-  Part of the Visual Content skill category.
-allowed-tools: Read, Write, Edit, Bash, Grep
+  Part of the Visual Content skill category. Use when working with APIs or building integrations. Trigger with phrases like "api flow diagram creator", "api creator", "api".
+allowed-tools: "Read, Write, Edit, Bash(cmd:*), Grep"
 version: 1.0.0
 license: MIT
-author: Jeremy Longshore <jeremy@intentsolutions.io>
+author: "Jeremy Longshore <jeremy@intentsolutions.io>"
+compatible-with: claude-code
 ---
 
 # Api Flow Diagram Creator
 
-## Purpose
+## Overview
 
 This skill provides automated assistance for api flow diagram creator tasks within the Visual Content domain.
 
@@ -23,18 +24,48 @@ This skill activates automatically when you:
 - Ask about api flow diagram creator patterns or best practices
 - Need help with visual content skills covering diagrams, charts, presentations, and visual documentation tools.
 
-## Capabilities
+## Instructions
 
-- Provides step-by-step guidance for api flow diagram creator
-- Follows industry best practices and patterns
-- Generates production-ready code and configurations
-- Validates outputs against common standards
+1. Provides step-by-step guidance for api flow diagram creator
+2. Follows industry best practices and patterns
+3. Generates production-ready code and configurations
+4. Validates outputs against common standards
 
-## Example Triggers
+## Examples
 
-- "Help me with api flow diagram creator"
-- "Set up api flow diagram creator"
-- "How do I implement api flow diagram creator?"
+**Example: Basic Usage**
+Request: "Help me with api flow diagram creator"
+Result: Provides step-by-step guidance and generates appropriate configurations
+
+
+## Prerequisites
+
+- Relevant development environment configured
+- Access to necessary tools and services
+- Basic understanding of visual content concepts
+
+
+## Output
+
+- Generated configurations and code
+- Best practice recommendations
+- Validation results
+
+
+## Error Handling
+
+| Error | Cause | Solution |
+|-------|-------|----------|
+| Configuration invalid | Missing required fields | Check documentation for required parameters |
+| Tool not found | Dependency not installed | Install required tools per prerequisites |
+| Permission denied | Insufficient access | Verify credentials and permissions |
+
+
+## Resources
+
+- Official documentation for related tools
+- Best practices guides
+- Community examples and tutorials
 
 ## Related Skills
 

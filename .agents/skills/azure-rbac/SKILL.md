@@ -1,97 +1,17 @@
 ---
 name: azure-rbac
-description: Query Azure RBAC role assignments and definitions (read-only)
+description: "Helps users find the right Azure RBAC role for an identity with least privilege access, then generate CLI commands and Bicep code to assign it. Also provides guidance on permissions required to grant roles. WHEN: bicep for role assignment, what role should I assign, least privilege role, RBAC role for, role to read blobs, role for managed identity, custom role definition, assign role to identity, what role do I need to grant access, permissions to assign roles."
+license: MIT
+metadata:
+  author: Microsoft
+  version: "1.1.1"
 ---
+Use the 'azure__documentation' tool to find the minimal role definition that matches the desired permissions the user wants to assign to an identity. If no built-in role matches the desired permissions, use the 'azure__extension_cli_generate' tool to create a custom role definition with the desired permissions. Then use the 'azure__extension_cli_generate' tool to generate the CLI commands needed to assign that role to the identity. Finally, use the 'azure__bicepschema' and 'azure__get_azure_bestpractices' tools to provide a Bicep code snippet for adding the role assignment. If user is asking about role necessary to set access, refer to Prerequisites for Granting Roles down below:
 
-# Azure RBAC Skill (Read-Only)
+## Prerequisites for Granting Roles
 
-Inspect role-based access control assignments and definitions.
+To assign RBAC roles to identities, you need a role that includes the `Microsoft.Authorization/roleAssignments/write` permission. The most common roles with this permission are:
 
-> **See also**: [Shared Conventions](../shared/CONVENTIONS.md) | [Safety Guidelines](../shared/SAFETY.md)
-
-## Purpose
-
-Query who has access to what in Azure without making changes.
-
-## Commands
-
-```bash
-az role assignment list -o json
-az role assignment list --assignee <principal> -o json
-az role assignment list --scope <scope> -o json
-az role assignment list --resource-group <rg> -o json
-az role definition list -o json
-az role definition show --name <role-name> -o json
-```
-
-## Output Format
-
-**Always use `-o json`** for consistent, parseable output.
-
-## Workflow Examples
-
-### List All Role Assignments
-
-```bash
-az role assignment list -o json
-```
-
-### Check User's Permissions
-
-```bash
-az role assignment list --assignee "user@example.com" -o json
-```
-
-### Check Service Principal Access
-
-```bash
-az role assignment list --assignee <app-id-or-object-id> -o json
-```
-
-### List Assignments at Scope
-
-```bash
-# Resource group scope
-az role assignment list --resource-group my-rg -o json
-
-# Subscription scope
-az role assignment list --scope "/subscriptions/<sub-id>" -o json
-
-# Resource scope
-az role assignment list --scope "/subscriptions/.../resourceGroups/.../providers/..." -o json
-```
-
-### Inspect Role Definition
-
-```bash
-# Built-in role
-az role definition show --name "Contributor" -o json
-
-# List all role definitions
-az role definition list -o json
-
-# Custom roles only
-az role definition list --custom-role-only true -o json
-```
-
-## Common Built-in Roles
-
-| Role | Description |
-|------|-------------|
-| Owner | Full access including RBAC |
-| Contributor | Full access except RBAC |
-| Reader | Read-only access |
-| User Access Administrator | Manage RBAC only |
-
-## Understanding Output
-
-Role assignment includes:
-- `principalId` - who has access
-- `roleDefinitionName` - what role
-- `scope` - where it applies
-
-## Policies
-
-- **Read-only only** - no role assignment create/delete
-- **Always use JSON output**
-- If asked to grant/revoke access: stop, explain read-only scope, show required command, require explicit confirmation
+- **User Access Administrator** (least privilege - recommended for role assignment only)
+- **Owner** (full access including role assignment)
+- **Custom Role** with `Microsoft.Authorization/roleAssignments/write`

@@ -1,96 +1,198 @@
 ---
 name: ship-loop
-description: 'Internal-PR fast-lane cycle.'
+description: 'Run the fast-lane internal ship cycle for one closable bead or small slice: claim, test, implement, push, merge, close.'
+practices:
+- continuous-delivery
+- xp
+- tdd
+- bdd
+- pragmatic-programmer
+hexagonal_role: driving-adapter
+consumes:
+- beads
+- rpi
+- post-mortem
+produces:
+- git-changes
+- merged-prs
+context_rel:
+- kind: customer-of
+  with: rpi
+- kind: customer-of
+  with: post-mortem
+skill_api_version: 1
+user-invocable: true
+context:
+  window: inherit
+  intent:
+    mode: task
+  sections:
+    exclude:
+    - HISTORY
+  intel_scope: topic
+metadata:
+  tier: execution
+  dependencies:
+  - beads
+  - rpi
+  stability: experimental
+  triggers:
+  - ship loop
+  - ship this
+  - fast lane PR
+  - land a small fix
+  - bot-paired PR
+  - close a harvested item
+output_contract: merged PR on origin/main + closed bead
 ---
 
-# $ship-loop — Bot-paired fast lane PR cycle
+# /ship-loop — Bot-paired fast lane PR cycle
 
-> **Codex orchestration default:** when the operator types `$ship-loop`, run the 9-step cycle below. For fork-based OSS contributions use `$pr-implement` and the `$pr-*` family instead (different tier).
+> **Lane choice:** use this skill for **coherent-arc internal PRs**.
+> Pick one closable bead, or one small-epic slice of one surface, with paired tests.
+> The PR is the *atomic-revert unit*: bundle scenarios that ship or revert together.
+> Split scenarios with independent rollback.
+> For fork-based OSS contributions, use the `/pr-*` family.
+> For large epics or multi-wave work, use `/crank`.
+> See `CLAUDE.md ## Workflow` for the canonical unit-of-PR rule.
 
-Capture of the discipline that lands single-scenario internal PRs at ~15-30 min median time-to-merge in repos with an auto-review bot workflow and `gh pr merge --auto` enabled.
+Capture of the discipline that landed 8/9 internal PRs in the 2026-05-18 session.
+Median time-to-merge was 19.5 minutes.
+Five named failure modes were found; four closed mechanically.
+The rationale lives in the 2026-05-18 workflow synthesis note under `docs/learnings`.
 
-## When to use
+## Overview / When to Use
 
-| Use ship-loop when... | Use something else when... |
-|---|---|
-| Single-scenario internal PR in your own repo | Fork-based OSS contribution → `$pr-implement` |
-| PR <100 lines with paired tests | Multi-wave epic → `$crank` |
-| Closing a harvested next-work item | Architecture / contract change → slow lane / human review |
-| Mechanical drift fix or regression closure | Work that can't fit one scenario → split or escalate |
+Run this skill at the START of each PR you intend to ship to your own `main` branch. The skill enforces the cycle as a sequence; each step has a clear done-state and gate.
+
+**Pair partner:** `claude-review` (GitHub App workflow at `.github/workflows/claude.yml`) auto-fires on `pull_request: opened/synchronize`. No `@claude` mention is required. Operator does the edits; bot does the review check.
 
 ## The 9-step cycle
 
-1. **Claim.** `bd ready` → pick highest-severity unblocked, OR read `.agents/rpi/next-work.jsonl` for harvested items. `bd update <id> --claim`.
-2. **Branch off fresh main.** `git checkout main && git pull --rebase`. Then `git checkout -b <type>/<slug>-<bead-id>`. Never stack off siblings.
-3. **First failing test.** BDD scenario or unit test. Must fail for the right reason (asserting expected behavior). Per the project's L2-first/L1-always rule.
-4. **Minimal implementation.** Smallest code change that makes the test green. Resist scope creep.
-5. **`scripts/pre-push-gate.sh --fast`** (or full gate — see below). Diff-scoped CI. **Escalate to the full gate (`scripts/pre-push-gate.sh`, no `--fast`) when the PR adds a new skill, new contract, new schema, or any inventory surface** — `--fast` skips ~15 inventory validators (registry-check, codex-override-coverage, skill-integrity, manifest entries, context-map drift). Catching them once locally is one pass; chasing them one-at-a-time through CI is 5-10 passes. If a pre-existing blocker appears in unchanged-from-base content, file an atomic side-quest fix PR first (don't bundle).
-6. **Commit with conventional-commit scope.** `feat(<scope>):`, `fix(<scope>):`. Body reproduces the failure mode the test catches.
-7. **Push + `gh pr create`.** Body cites the bead, validation, and a learning-anchor reference in the script body (not a `.agents/learnings/` file — that breaks CI).
-8. **`gh pr merge <num> --squash --auto`.** Immediately. The bot fires the review check automatically on PR open.
-9. **Close the bead.** `bd close <id> --reason "Merged via PR #<num>"`. For multi-PR chains: `scripts/gh-merge-chain.sh <pr1> <pr2> <pr3>`.
+1. **Claim.** `bd ready` → pick the highest-severity unblocked item, OR read `.agents/rpi/next-work.jsonl` for harvested follow-ups. **`bd update <id> --claim`** atomically.
+2. **Branch off fresh main.** `git checkout main && git pull --rebase`. Then `git checkout -b <type>/<slug>-<bead-id>`. NEVER stack off a sibling branch; auto-merge handles serialization via update-branch.
+3. **Write the FIRST FAILING TEST.** BDD scenario (Gherkin) for behavior; unit test for invariants. The test must fail for the *right reason* (asserting expected behavior, not just "doesn't crash"). See [references/test-shape.md](references/test-shape.md).
+4. **Minimal implementation.** Smallest code change that makes the test green. Resist scope creep. Refer to the project's standards (`.claude/rules/{go,python}.md`).
+5. **`scripts/ship.sh`** (recommended).
+   It detects inventory-touching changes and runs the regen sweep preemptively.
+   That is the mechanical fix for anti-pattern #1.
+   CI is the sole authoritative push gate.
+   The old local mirror was retired because drift cost dominated per-push wait.
+   For per-tool sanity before push, run only what your diff touches:
+   `cd cli && make test`, targeted Bats tests, or codex hash regeneration.
+   If unchanged-from-base content blocks CI, file an atomic side-quest PR first.
+   For gate, validator, or CI changes, capture the target output line in the PR body as `Evidence:`.
+   The evidence-claim CI job verifies that line against workflow logs.
+6. **Commit with conventional-commit scope.** `feat(<scope>):`, `fix(<scope>):`, `docs(<scope>):`. Body explains the failure mode the test reproduces and how the fix removes it.
+7. **Push + `gh pr create`.** Body cites the bead, the validation results, and links to the learning anchor in the script body (NOT a `.agents/learnings/` file existence — that breaks in CI's fresh clone).
+8. **`gh pr merge <num> --squash --auto`.** Immediately. The bot fires `claude-review` automatically on PR open. When all required checks pass, merge fires without operator action.
+9. **Close the bead.** `bd close <id> --reason "Merged via PR #<num>"`. The coherent-arc rule should keep concurrent PR count low (typically 1-2); when a large-epic split puts multiple PRs in flight against the same main, serialize them by waiting for each predecessor to merge, then call `gh api repos/<owner>/<repo>/pulls/<num>/update-branch -X PUT` on each BEHIND successor.
 
-## Gate sequence
+## Gate sequence (what each enforces)
 
 | Gate | Enforces |
 |---|---|
-| `scripts/pre-push-gate.sh --fast` | Diff-scoped CI; unconditional shellcheck on staged `.sh`; mkdocs strict on docs/; registry-drift |
-| Review-bot workflow (auto on PR open) | Bot half of the pair — no mention required |
-| `.github/workflows/validate.yml` | Full 60+ job suite |
+| Per-tool local checks (optional) | `cd cli && make test` for Go; `bats tests/scripts/<file>.bats` for shell; `scripts/regen-codex-hashes.sh` for codex parity. Run only what your diff touches. |
+| `claude-review` (auto on PR open) | Reviewer pair — the bot half |
+| `.github/workflows/validate.yml` | **Sole authoritative push gate** (soc-g2r9, PR #357). 60+ job suite on PR head: cli-docs-parity, embedded-sync, skill-frontmatter, registry-check, security-toolchain, validate-pr-evidence-claims (AP#7), plus the F-mode closures |
 | `gh pr merge --squash --auto` | Auto-merge when all required checks pass |
-| `scripts/gh-merge-chain.sh` (optional) | Chain N PRs through auto-merge with `update-branch` on each successor |
+| Manual update-branch fallback | Chain N PRs by enabling auto-merge, waiting for each predecessor, then calling `gh api repos/<owner>/<repo>/pulls/<num>/update-branch -X PUT` on BEHIND successors (closes F3) |
 
-## Failure-mode mapping (F1-F5 + meta)
+## Failure-mode mapping
 
-| ID | Failure | Mechanical guard |
-|---|---|---|
-| F1 | Script rewrite leaves dead variables | Unconditional shellcheck on staged `.sh` |
-| F2 | Pre-existing blocker compounds across branches | **Open.** Rule: fix as atomic side-quest PR first |
-| F3 | `--auto` doesn't auto-rebase BEHIND branches | `scripts/gh-merge-chain.sh` |
-| F4 | Bot trigger doc claimed mention-only | Doc corrected; observed auto-fire on PR open |
-| F5 | Stale `~/.config/evolve/KILL` silently blocks `$evolve` | `EVOLVE_KILL_TTL_DAYS=7` auto-expire |
-| meta | Tests asserting local-only file existence | `grep -q '<slug>' "$SCRIPT"` instead of `[ -f .agents/learnings/<x>.md ]` |
+- **F1:** Run ShellCheck after shell edits.
+- **F2:** Split unrelated blockers into their own PRs.
+- **F3:** Update BEHIND successor branches by API.
+- **F4:** Keep review-bot docs aligned with workflow reality.
+- **F5:** Expire stale evolve stop files.
+- **meta:** Assert durable text, not local files.
 
 ## Anti-patterns
 
+Read [references/anti-patterns.md](references/anti-patterns.md) for the full list with examples. Headline anti-patterns:
+
 1. **Running `--fast` pre-push on an inventory-touching PR** — new skill, contract, or schema → use FULL gate; `--fast` skips ~15 inventory validators
 2. **Bundling pre-existing fixes** — file each as its own atomic PR
-3. **Keeping copied variables after a rewrite** — first self-check after rewrite is "are all variable declarations used?"
+3. **Keeping copied variables after a rewrite** — after a script rewrite, the first self-check is "are all variable declarations used?"
 4. **Asserting local-only state in CI tests** — grep the reference, don't check the file
-5. **Branches off out-of-date main** — `git pull --rebase` at branch creation
+5. **Branches off out-of-date main** — `git checkout main && git pull --rebase` at branch creation
 6. **Skipping the failing-test-first step** — adding a test after the fix gives false confidence
 
-## Pair mechanics
+## Session scope (sister rule to coherent-arc)
 
-- The review-bot workflow fires automatically on `pull_request: opened/synchronize`. No mention required.
-- If `IN_PROGRESS`, wait. If silent, check workflow permissions (`workflows: write` for forward-port scenarios).
-- Self-revert loop (bot reverting its own forward-port): rebase the branch locally onto fresh main and force-push.
+Coherent-arc governs the *shape* of a single PR; session-scope governs the *count* of consecutive PRs in an autonomous session.
 
-## Anti-Patterns (DO NOT)
+- **Default: 2-4 PRs per autonomous session.** Both arcs ship cleanly and merge.
+- **≥5 PRs in flight or merged in one session triggers a mandatory post-mortem before continuing.** Diminishing returns and reactive-PR spirals (PR-fixes-fallout-from-prior-PR) are the dominant failure mode in the back-half of long sessions.
+- **Post-mortem shape (1-2 sentences each):** Which PRs were planned vs reactive? How many self-corrections? Was the marginal PR discovery or churn?
 
-| Anti-Pattern | Why It's Wrong | Correct Behavior |
-|---|---|---|
-| Stack feature branches on each other | Auto-merge serialization fails; conflicts compound | Always branch off fresh main |
-| Bundle a pre-existing fix into a feature PR | Other branches will hit + duplicate the same fix | File atomic side-quest PR first, rebase |
-| Assert `.agents/learnings/<x>.md` exists in CI | `.agents/` is gitignored; test fails in fresh clone | `grep -q '<slug>' "$SCRIPT"` (reference assertion) |
-| Add tests after the fix without seeing them fail | False confidence | Write the failing test FIRST, see it red |
-| Push without `--auto` enabled immediately | Operator becomes the merge bottleneck | `gh pr merge --squash --auto` on PR open |
+**Derivation:** the 2026-05-19 cron-loop session shipped 6 PRs with 3 self-corrections.
+PRs #5-#6 fixed fallout from PRs #1-#3.
+Visible reactivity began by PR #5.
+The cron loop kept nudging "keep going" without surfacing the post-mortem signal.
+Mechanical enforcement is the mandatory `/evolve` post-mortem checkpoint.
+That checkpoint reads the count from `scripts/session-pr-scope.sh`.
+The old pre-creation Bash hook was removed in the 3.0 hookless teardown.
+Re-author that check as an opt-in hook via the hooks-authoring skill.
+
+## Pair mechanics (claude-review)
+
+- `claude-review` fires automatically on `pull_request: opened` and `synchronize`. No `@claude` mention required.
+- If `claude-review` is `IN_PROGRESS`, wait — don't poke. The bot does NOT respond to its own comments (anti-loop protection).
+- If `claude-review` is silent after PR open, the workflow may need permission upgrades (see `docs/contracts/claude-bot-delegation.md` Gotchas 1-4) — surface to operator, do not retry.
+- If you hit the self-revert loop (PR #270 case — bot reverting its own forward-port of `claude.yml`), rebase the branch locally onto fresh main and force-push.
 
 ## Examples
 
-**User says:** `$ship-loop` after picking `soc-<bead-id>` from `bd ready`
-Run the 9-step cycle: branch, first failing test, minimal impl, pre-push --fast, commit, push, auto-merge, bd close.
+**Closing a harvested next-work item:**
 
-**User says:** "ship this fix from the post-mortem"
-Read the harvested item from `.agents/rpi/next-work.jsonl`, run the 9-step cycle.
+```
+1. /post-mortem ran; .agents/rpi/next-work.jsonl has an unclaimed "medium" item
+2. /ship-loop picks the item: branch fix/<slug>-<bead> off main
+3. Write the failing test that proves the failure mode exists
+4. Add the minimal fix
+5. Pre-push --fast → green
+6. Push → gh pr create → gh pr merge --squash --auto
+7. claude-review auto-runs; validate.yml runs; auto-merge fires
+8. bd close <id>
+```
 
-**User says:** "land the 4 PRs we have open"
-After all 4 PRs are open with auto-merge enabled: `scripts/gh-merge-chain.sh <pr1> <pr2> <pr3> <pr4>`.
+**Shipping a chain of PRs:**
+
+```
+1-9. Run the cycle for each PR (off main, not stacked)
+10. After all PRs are open with auto-merge enabled, wait for the predecessor PR to merge.
+11. If a successor becomes BEHIND, run `gh api repos/<owner>/<repo>/pulls/<num>/update-branch -X PUT`; repeat until the chain is merged.
+```
+
+See [references/examples.md](references/examples.md) for full walkthroughs.
+
+## Troubleshooting
+
+| Problem | Cause | Solution |
+|---------|-------|----------|
+| Auto-merge stalls | `claude-review` IN_PROGRESS or branch BEHIND | Wait for review; if BEHIND, `gh api repos/<o>/<r>/pulls/<n>/update-branch -X PUT` |
+| `claude-review` never fires | Workflow lacks trigger or perms | Check `.github/workflows/claude.yml` `on:` block and permissions; may require `workflows: write` upgrade |
+| Pre-push --fast blocks on unchanged content | Pre-existing F2-class blocker | File the fix as an atomic side-quest PR first; rebase your branch onto the side-quest's merge |
+| Self-revert loop on a stale branch | Bot reverting its own forward-port | Rebase locally onto fresh main; force-push with `--force-with-lease` |
+| Test asserts local file in CI | `.agents/` is gitignored | Change to `grep -q '<slug>' "$SCRIPT"` (reference assertion, not file existence) |
 
 ## See Also
 
-- `$pr-implement` — fork-based OSS contribution (different tier; different use case)
-- `$crank` — multi-wave epic execution
-- `$rpi` — full lifecycle orchestrator
-- `$post-mortem` — harvests next-work items that ship-loop consumes
-- `$beads` — task tracker that drives the claim step
+- [pr-implement](../pr-implement/SKILL.md) — fork-based OSS contribution (different tier; different use case)
+- [crank](../crank/SKILL.md) — multi-wave epic execution
+- [rpi](../rpi/SKILL.md) — full lifecycle orchestrator (ship-loop is the per-PR mechanics inside RPI's implementation phase)
+- [post-mortem](../post-mortem/SKILL.md) — harvests next-work items that ship-loop consumes
+- [beads](../beads/SKILL.md) — task tracker that drives the claim step
+
+## References
+
+- [references/anti-patterns.md](references/anti-patterns.md)
+- [references/examples.md](references/examples.md)
+- [references/gh-merge-chain.md](references/gh-merge-chain.md)
+- [references/test-shape.md](references/test-shape.md)
+- Durable rationale: the 2026-05-18 workflow synthesis note under `docs/learnings`.
+
+## Reference Documents
+
+- [references/ship-loop.feature](references/ship-loop.feature) — Executable spec: claim→test→impl→push→squash-merge→close, one coherent arc, gated merge + bead close (soc-qk4b)

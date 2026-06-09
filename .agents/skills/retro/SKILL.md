@@ -1,76 +1,83 @@
 ---
 name: retro
-description: "Facilitate a structured sprint retrospective — what went well, what didn't, and prioritized action items with owners and deadlines. Use when running a retrospective, reflecting on a sprint, creating action items from team feedback, or learning how to run effective retros."
+description: Throwback design with vintage-inspired typography, high-contrast retro palettes, and nostalgic visual elements.
+license: MIT
+metadata:
+  author: typeui.sh
 ---
 
-## Sprint Retrospective Facilitator
+<!-- TYPEUI_SH_MANAGED_START -->
+# Retro Design System Skill (Universal)
 
-Run a structured retrospective that surfaces insights and produces actionable improvements.
+## Mission
+You are an expert design-system guideline author for Retro.
+Create practical, implementation-ready guidance that can be directly used by engineers and designers.
 
-### Context
+## Brand
 
-You are facilitating a retrospective for **$ARGUMENTS**.
 
-If the user provides files (sprint data, velocity charts, team feedback, or previous retro notes), read them first.
+## Style Foundations
+- Visual style: high-contrast, retro
+- Typography scale: desktop-first expressive scale | Fonts: primary=Macondo, display=Macondo, mono=JetBrains Mono | weights=100, 200, 300, 400, 500, 600, 700, 800, 900
+- Color palette: primary, neutral, success, warning, danger | Tokens: primary=#3B82F6, secondary=#8B5CF6, success=#16A34A, warning=#D97706, danger=#DC2626, surface=#FFFFFF, text=#111827
+- Spacing scale: 4/8/12/16/24/32
 
-### Instructions
 
-1. **Choose a retro format** based on context (or let the user pick):
+## Accessibility
+WCAG 2.2 AA, keyboard-first interactions, visible focus states
 
-   **Format A — Start / Stop / Continue**:
-   - **Start**: What should we begin doing?
-   - **Stop**: What should we stop doing?
-   - **Continue**: What's working well that we should keep?
+## Writing Tone
+concise, confident, helpful
 
-   **Format B — 4Ls (Liked / Learned / Lacked / Longed For)**:
-   - **Liked**: What did the team enjoy?
-   - **Learned**: What new knowledge was gained?
-   - **Lacked**: What was missing?
-   - **Longed For**: What do we wish we had?
+## Rules: Do
+- prefer semantic tokens over raw values
+- preserve visual hierarchy
+- keep interaction states explicit
 
-   **Format C — Sailboat**:
-   - **Wind (propels us)**: What's driving us forward?
-   - **Anchor (holds us back)**: What's slowing us down?
-   - **Rocks (risks)**: What dangers lie ahead?
-   - **Island (goal)**: Where are we trying to get to?
+## Rules: Don't
+- avoid low contrast text
+- avoid inconsistent spacing rhythm
+- avoid ambiguous labels
 
-2. **If the user provides raw feedback** (e.g., sticky notes, survey responses, Slack messages):
-   - Group similar items into themes
-   - Identify the most frequently mentioned topics
-   - Note sentiment patterns (frustration, energy, confusion)
+## Expected Behavior
+- Follow the foundations first, then component consistency.
+- When uncertain, prioritize accessibility and clarity over novelty.
+- Provide concrete defaults and explain trade-offs when alternatives are possible.
+- Keep guidance opinionated, concise, and implementation-focused.
 
-3. **Analyze the sprint performance**:
-   - Sprint goal: achieved or not?
-   - Velocity vs. commitment (over-committed? under-committed?)
-   - Blockers encountered and how they were resolved
-   - Collaboration patterns (what worked, what didn't)
+## Guideline Authoring Workflow
+1. Restate the design intent in one sentence before proposing rules.
+2. Define tokens and foundational constraints before component-level guidance.
+3. Specify component anatomy, states, variants, and interaction behavior.
+4. Include accessibility acceptance criteria and content-writing expectations.
+5. Add anti-patterns and migration notes for existing inconsistent UI.
+6. End with a QA checklist that can be executed in code review.
 
-4. **Generate prioritized action items**:
+## Required Output Structure
+When generating design-system guidance, use this structure:
+- Context and goals
+- Design tokens and foundations
+- Component-level rules (anatomy, variants, states, responsive behavior)
+- Accessibility requirements and testable acceptance criteria
+- Content and tone standards with examples
+- Anti-patterns and prohibited implementations
+- QA checklist
 
-   | Priority | Action Item | Owner | Deadline | Success Metric |
-   |---|---|---|---|---|
-   | 1 | [Specific, actionable improvement] | [Name/Role] | [Date] | [How we'll know it worked] |
+## Component Rule Expectations
+- Define required states: default, hover, focus-visible, active, disabled, loading, error (as relevant).
+- Describe interaction behavior for keyboard, pointer, and touch.
+- State spacing, typography, and color-token usage explicitly.
+- Include responsive behavior and edge cases (long labels, empty states, overflow).
 
-   - Limit to 2-3 action items (more won't get done)
-   - Each must be specific, assignable, and measurable
-   - Reference previous retro actions if available — were they completed?
+## Quality Gates
+- No rule should depend on ambiguous adjectives alone; anchor each rule to a token, threshold, or example.
+- Every accessibility statement must be testable in implementation.
+- Prefer system consistency over one-off local optimizations.
+- Flag conflicts between aesthetics and accessibility, then prioritize accessibility.
 
-5. **Create the retro summary**:
-   ```
-   ## Sprint [X] Retrospective — [Date]
+## Example Constraint Language
+- Use "must" for non-negotiable rules and "should" for recommendations.
+- Pair every do-rule with at least one concrete don't-example.
+- If introducing a new pattern, include migration guidance for existing components.
 
-   ### Sprint Performance
-   - Goal: [Achieved / Partially / Missed]
-   - Committed: [X pts] | Completed: [Y pts]
-
-   ### Key Themes
-   1. [Theme] — [summary]
-
-   ### Action Items
-   1. [Action] — [Owner] — [By date]
-
-   ### Carry-over from Last Retro
-   - [Previous action] — [Status: Done / In Progress / Not Started]
-   ```
-
-Save as markdown. Keep the tone constructive — the goal is improvement, not blame.
+<!-- TYPEUI_SH_MANAGED_END -->

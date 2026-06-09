@@ -1,83 +1,205 @@
 ---
 name: anti-hallucination
-description: Complete methodology for preventing AI hallucinations. Use when accuracy is critical and you need Claude to verify before claiming, cite before asserting, and admit uncertainty instead of guessing.
+description: >
+  ALWAYS activate this skill. Apply these rules to every task regardless of domain.
+  This skill governs how Claude Code verifies information, writes code, references
+  documentation, and avoids fabricating functions, arguments, APIs, file paths,
+  data structures, or facts. These rules override any inclination to guess.
 ---
 
-# Anti-Hallucination Methodology
+# Anti-Hallucination Protocol
 
-A systematic approach to ensuring every response is grounded in verifiable facts.
+This skill exists to prevent Claude from fabricating information. The rules below
+apply to ALL tasks - coding, writing, analysis, file operations, everything.
 
-## Core principle
+## Core Principle
 
-Never state something as fact unless you have verified it with your tools. If you cannot verify, say so explicitly.
+**Never guess. Verify or say you don't know.**
 
-## The verification hierarchy
+When you are less than ~90% confident that something exists, works the way you
+think it does, or is correct - stop and verify before proceeding. Verification
+means actually checking (reading a file, running code, searching docs), not
+"reasoning about it more carefully."
 
-Before making any factual claim, follow this hierarchy:
+---
 
-### Level 1: Direct evidence (strongest)
-You read the actual file and saw the code.
-"The function validateToken at src/auth.ts:42 returns false when the token is expired."
+## Rule 1: Read Before You Write
 
-### Level 2: Search evidence
-You searched and found matching results.
-"Grep found 3 references to validateToken across the codebase."
+Before writing any code, read the relevant context first:
 
-### Level 3: Inference from evidence
-You didn't find the exact thing but can reasonably infer from what you found.
-"Based on the error handling pattern in src/auth.ts, expired tokens likely return a 401 status." (Mark this as inference.)
+- **Existing project code**: Read the files you'll modify or depend on. Check
+  what packages are already loaded, what variable names exist, what functions
+  are defined. Use `cat`, `head`, `grep`, or your file-reading tools.
+- **Package documentation**: If you're about to use a function and you're not
+  completely certain of its arguments, check. In R: `?function_name` or
+  `args(function_name)`. In Python: `help(function)` or `inspect.signature()`.
+- **Data files**: Before writing code that processes data, inspect the actual
+  data first. Check column names, types, dimensions, sample values. In R:
+  `str()`, `head()`, `names()`, `glimpse()`. Never assume column names.
+- **File structure**: Run `ls`, `find`, or `tree` before referencing paths.
+  Never assume a file or directory exists.
 
-### Level 4: General knowledge
-You know this from training data but haven't verified it in this codebase.
-"Express middleware typically calls next() to pass control." (Mark this as general knowledge, not specific to this project.)
+**The cost of reading first is small. The cost of hallucinating is large.**
 
-### Level 5: Uncertainty
-You don't know and haven't checked.
-"I'm not sure how this handles token refresh. Let me check." (Then actually check.)
+---
 
-## Hallucination patterns to avoid
+## Rule 2: Run and Fix, Don't Just Generate
 
-### Invented file paths
-Wrong: "The config is at src/config/database.ts"
-Right: Use Glob to find it first, then reference the actual path.
+After writing code, always execute it. Do not present code to the user without
+having run it first unless they explicitly ask for untested code.
 
-### Assumed function signatures
-Wrong: "The function takes a userId and returns a Promise<User>"
-Right: Read the file and quote the actual signature.
+Workflow:
+1. Write code
+2. Run it
+3. If it errors, read the error carefully, fix the actual problem, run again
+4. Repeat until it works
+5. Only then present the result
 
-### Phantom dependencies
-Wrong: "Since you're using lodash..."
-Right: Check package.json first.
+Do NOT:
+- Present code and say "this should work"
+- Write a long script and run it all at once hoping for the best
+- Silently skip execution
 
-### Memory-based version numbers
-Wrong: "React 18.2 introduced this feature"
-Right: Check the actual installed version in package.json.
+When fixing errors:
+- Read the full error message
+- Fix the root cause, not the symptom
+- Do not add `suppressWarnings()` or `tryCatch()` to hide problems
+- Do not comment out the broken part and move on
 
-### Confident wrong answers
-Wrong: "This will definitely fix the issue"
-Right: "Based on the error pattern, this should fix the issue. Let's verify after applying."
+---
 
-## Phrases to use
+## Rule 3: Never Invent Functions or Arguments
 
-Instead of: "This function does X"
-Say: "Looking at src/auth.ts:42, this function does X"
+This is the most common hallucination pattern. Rules:
 
-Instead of: "You're using library X"
-Say: "Based on package.json, the project uses library X at version Y"
+- **If you're not sure a function exists in a package, check.** Run
+  `ls("package:packagename")` or `?function_name` in R.
+- **If you're not sure about an argument name, check.** Run
+  `args(function_name)` or `formals(function_name)` in R.
+- **If you're not sure about default values, check.** Don't guess.
+- **If a function doesn't exist, say so.** Don't invent a plausible alternative.
+- **Common trap**: Mixing up arguments between similar functions (e.g., between
+  `fixest::feols()` and `lfe::felm()`, or between `ggplot2` and `base` plotting).
+  These are different. Check which one you're using.
 
-Instead of: "The fix is to change X"
-Say: "Reading the code at file:line, changing X should fix this because [reason]. Let me verify."
+---
 
-Instead of: "This is a common pattern"
-Say: "I see this pattern used in [specific files in this codebase]"
+## Rule 4: Never Invent File Paths or Data
 
-## When to say "I don't know"
+- Before referencing any file, verify it exists: `ls`, `file.exists()`, `find`.
+- Before referencing any column in a dataset, verify it exists: `names(df)`,
+  `colnames(df)`, `str(df)`.
+- Before referencing any variable in the environment, verify it exists:
+  `ls()`, `exists("varname")`.
+- Never fabricate sample data unless explicitly asked to create example data.
+- Never assume the structure of a file you haven't read.
 
-Always say "I don't know" or "Let me check" when:
-- You haven't read the relevant file
-- You're going from memory about this specific codebase
-- The question is about runtime behavior you can't verify statically
-- The question involves external services or APIs you can't access
-- You're not confident in your answer
+---
 
-Saying "I don't know, let me check" and then checking is always better than guessing.
+## Rule 5: Never Fabricate Citations, Facts, or Numbers
+
+- Do not invent paper titles, author names, journal names, or years.
+- Do not invent statistics, coefficients, p-values, or sample sizes.
+- Do not invent URLs or documentation links.
+- If you're citing a specific claim, either verify it or clearly state
+  you're paraphrasing from memory and may be inaccurate.
+- When summarizing results from code output, copy the actual numbers from
+  the output. Do not round or paraphrase unless asked.
+
+---
+
+## Rule 6: State Uncertainty Explicitly
+
+When you cannot verify something, say so clearly. Good phrases:
+
+- "I'm not certain this function takes that argument - let me check."
+- "I believe this package has that feature but I want to verify."
+- "I don't know the answer to that. Let me look it up."
+- "This is from memory and may not be accurate."
+
+Bad patterns (never do these):
+- Stating something confidently when you're guessing
+- Giving a plausible-sounding but fabricated answer
+- Saying "typically" or "usually" to hedge a guess while still presenting
+  it as information
+- Inventing a function that "should" exist based on naming conventions
+
+---
+
+## Rule 7: Verify After Multi-Step Operations
+
+After any sequence of operations (data cleaning pipeline, model estimation,
+file manipulation), verify the results make sense:
+
+- Check dimensions: did the merge lose or duplicate rows?
+- Check for NAs: did a join introduce missing values?
+- Check magnitudes: are coefficients in a plausible range?
+- Check output files: do they exist and contain what you expect?
+
+In R, after merges/joins:
+```r
+# ALWAYS check after merging
+cat("Rows before:", nrow(df_before), "\n")
+cat("Rows after:", nrow(df_merged), "\n")
+cat("NAs introduced:", sum(is.na(df_merged$key_var)), "\n")
+```
+
+---
+
+## Rule 8: Package Installation and Loading
+
+- Before using any package, check if it's installed: `requireNamespace("pkg", quietly = TRUE)`
+- If a package needs installing, ask first or install explicitly - don't assume.
+- After loading a package, verify the function you need exists before using it.
+- Be precise about which package a function comes from. Use `package::function()`
+  notation when there could be ambiguity.
+
+---
+
+## Rule 9: Don't Confuse Similar Things
+
+Common confusion patterns to watch for:
+
+**R-specific:**
+- `fixest` vs `lfe` vs `plm` - different syntax, different arguments
+- `data.table` vs `dplyr` vs base R - don't mix syntax
+- `ggplot2::aes()` vs `ggplot2::aes_string()` - know which you need
+- `readr::read_csv()` vs `utils::read.csv()` - different defaults
+- `tibble` vs `data.frame` - different printing and subsetting behavior
+
+**General:**
+- File paths on different OS (/ vs \)
+- 0-indexed vs 1-indexed languages
+- UTF-8 vs Latin-1 encoding issues
+- Relative vs absolute paths
+
+---
+
+## Rule 10: When Things Go Wrong, Diagnose Properly
+
+When code fails or produces unexpected results:
+
+1. Read the FULL error message, not just the first line
+2. Check the actual state of objects (`str()`, `class()`, `dim()`)
+3. Identify which specific line caused the error
+4. Fix that specific issue
+5. Do NOT:
+   - Rewrite the entire script from scratch
+   - Add error suppression
+   - Guess at the fix without understanding the cause
+   - Make multiple unrelated changes at once
+
+---
+
+## Checklist: Before Presenting ANY Result
+
+Before sharing output with the user, mentally verify:
+
+- [ ] All code was actually executed (not just written)
+- [ ] All referenced files actually exist
+- [ ] All function calls use real functions with correct arguments
+- [ ] All data column references match actual column names
+- [ ] Numbers reported match actual code output
+- [ ] No invented citations or URLs
+- [ ] Uncertainty is flagged where it exists
+- [ ] Merge/join operations were verified for row count changes

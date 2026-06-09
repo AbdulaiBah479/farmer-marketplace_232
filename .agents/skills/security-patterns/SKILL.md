@@ -1,566 +1,483 @@
 ---
 name: security-patterns
-description: Implement comprehensive security patterns to protect applications against OWASP Top 10 vulnerabilities including XSS, CSRF, SQL injection, authentication bypass, and data exposure. Use when handling user data, implementing authentication and authorization, validating input, encrypting sensitive data, preventing injection attacks, securing API endpoints, managing sessions and tokens, implementing rate limiting, configuring security headers, or building security-critical features that require defense-in-depth protection.
+description: Implements authentication, authorization, encryption, secrets management, and security hardening patterns. Use when designing auth flows, managing secrets, configuring CORS, implementing rate limiting, or when asked about JWT, OAuth, password hashing, API keys, RBAC, or security best practices.
 ---
 
-# Security Patterns - Building Secure Applications
+# Security Patterns
 
-## When to use this skill
+### When to Load
 
-- Implementing authentication and authorization systems
-- Handling sensitive user data and personal information
-- Validating and sanitizing all user inputs
-- Preventing SQL injection with parameterized queries
-- Protecting against XSS attacks with output escaping
-- Implementing CSRF protection with tokens
-- Encrypting data at rest and in transit
-- Securing API endpoints with authentication
-- Configuring security headers (CSP, HSTS, etc.)
-- Implementing rate limiting and DDoS protection
-- Managing sessions, JWTs, and authentication tokens
-- Conducting security audits and vulnerability assessments
+- **Trigger**: Auth flows, encryption, secrets management, CORS configuration, input validation, rate limiting
+- **Skip**: No security surface involved in the current task
 
-## When to use this skill
+## Security Implementation Workflow
 
-- Handling user data, authentication, authorization, or any security-sensitive operations.
-- When working on related tasks or features
-- During development that requires this expertise
+Copy this checklist and track progress:
 
-**Use when**: Handling user data, authentication, authorization, or any security-sensitive operations.
-
-## Core Principles
-
-1. **Defense in Depth** - Multiple layers of security
-2. **Principle of Least Privilege** - Minimum necessary permissions
-3. **Fail Securely** - Errors shouldn't expose sensitive data
-4. **Never Trust User Input** - Validate everything
-5. **Security by Design** - Not an afterthought
-
-## OWASP Top 10 Protection
-
-### 1. **Injection Prevention** (SQL, NoSQL, Command)
-
-```typescript
-// ❌ VULNERABLE - SQL Injection
-app.get('/user', (req, res) => {
-  const query = `SELECT * FROM users WHERE id = '${req.query.id}'`;
-  db.query(query); // Can inject: ?id=' OR '1'='1
-});
-
-// ✅ SAFE - Parameterized Query
-app.get('/user', (req, res) => {
-  const query = 'SELECT * FROM users WHERE id = ?';
-  db.query(query, [req.query.id]);
-});
-
-// ✅ SAFE - ORM with validation
-app.get('/user', async (req, res) => {
-  const userId = parseInt(req.query.id, 10);
-  if (!userId || isNaN(userId)) {
-    return res.status(400).json({ error: 'Invalid ID' });
-  }
-  const user = await db.users.findById(userId);
-  res.json(user);
-});
+```
+Security Implementation Progress:
+- [ ] Step 1: Choose authentication strategy
+- [ ] Step 2: Implement authorization model
+- [ ] Step 3: Set up password hashing
+- [ ] Step 4: Configure secrets management
+- [ ] Step 5: Enable encryption (transit + rest)
+- [ ] Step 6: Configure CORS
+- [ ] Step 7: Add rate limiting
+- [ ] Step 8: Validate against anti-patterns checklist
 ```
 
-### 2. **Authentication & Session Management**
+## Authentication Patterns
+
+### JWT (JSON Web Tokens)
 
 ```typescript
-// ✅ Password Hashing (NEVER store plaintext)
-import bcrypt from 'bcrypt';
+import jwt from "jsonwebtoken";
 
-async function createUser(email, password) {
-  const SALT_ROUNDS = 10;
-  const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-  
-  return await db.users.create({
-    email,
-    passwordHash // Never store password directly!
-  });
-}
-
-async function verifyPassword(email, password) {
-  const user = await db.users.findOne({ email });
-  if (!user) return false;
-  
-  return await bcrypt.compare(password, user.passwordHash);
-}
-
-// ✅ JWT Token Authentication
-import jwt from 'jsonwebtoken';
-
-function generateToken(userId) {
-  return jwt.sign(
-    { userId },
-    process.env.JWT_SECRET, // Store in environment variable!
-    { expiresIn: '1h' }
+function generateTokens(user: User) {
+  const accessToken = jwt.sign(
+    { sub: user.id, role: user.role },
+    process.env.JWT_SECRET!,
+    { expiresIn: "15m", algorithm: "HS256" },
   );
-}
-
-function verifyToken(token) {
-  try {
-    return jwt.verify(token, process.env.JWT_SECRET);
-  } catch (error) {
-    return null;
-  }
-}
-
-// ✅ Session Management
-import session from 'express-session';
-import RedisStore from 'connect-redis';
-
-app.use(session({
-  store: new RedisStore({ client: redisClient }),
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: true, // HTTPS only
-    httpOnly: true, // No JavaScript access
-    maxAge: 1000 * 60 * 60 * 24, // 24 hours
-    sameSite: 'strict' // CSRF protection
-  }
-}));
-```
-
-### 3. **XSS (Cross-Site Scripting) Prevention**
-
-```typescript
-// ❌ VULNERABLE - Direct HTML insertion
-app.get('/profile', (req, res) => {
-  const html = `<h1>Welcome ${req.query.name}</h1>`;
-  res.send(html); // Can inject: ?name=<script>alert('xss')</script>
-});
-
-// ✅ SAFE - Template escaping (React auto-escapes)
-function Profile({ name }) {
-  return <h1>Welcome {name}</h1>; // React escapes by default
-}
-
-// ✅ SAFE - Explicit sanitization for rich content
-import DOMPurify from 'isomorphic-dompurify';
-
-function RichContent({ html }) {
-  const sanitized = DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'p'],
-    ALLOWED_ATTR: []
-  });
-  
-  return <div dangerouslySetInnerHTML={{ __html: sanitized }} />;
-}
-
-// ✅ Content Security Policy Headers
-app.use((req, res, next) => {
-  res.setHeader(
-    'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+  const refreshToken = jwt.sign(
+    { sub: user.id, tokenVersion: user.tokenVersion },
+    process.env.JWT_REFRESH_SECRET!,
+    { expiresIn: "7d" },
   );
-  next();
-});
-```
+  return { accessToken, refreshToken };
+}
 
-### 4. **CSRF (Cross-Site Request Forgery) Protection**
-
-```typescript
-// ✅ CSRF Tokens
-import csrf from 'csurf';
-
-const csrfProtection = csrf({ cookie: true });
-
-app.get('/form', csrfProtection, (req, res) => {
-  res.render('form', { csrfToken: req.csrfToken() });
-});
-
-app.post('/submit', csrfProtection, (req, res) => {
-  // Token validated automatically
-  res.json({ success: true });
-});
-
-// ✅ SameSite Cookies
-res.cookie('session', sessionId, {
-  sameSite: 'strict', // Prevents CSRF
+// WRONG: localStorage (XSS vulnerable) | CORRECT: httpOnly cookie for refresh, memory for access
+res.cookie("refreshToken", refreshToken, {
+  httpOnly: true,
   secure: true,
-  httpOnly: true
-});
-
-// ✅ Check Origin/Referer Headers
-app.use((req, res, next) => {
-  const origin = req.get('origin') || req.get('referer');
-  if (origin && !origin.startsWith('https://yourdomain.com')) {
-    return res.status(403).json({ error: 'Invalid origin' });
-  }
-  next();
+  sameSite: "strict",
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+  path: "/api/auth/refresh",
 });
 ```
 
-### 5. **Access Control & Authorization**
+### JWT Verification Middleware
 
 ```typescript
-// ✅ Role-Based Access Control (RBAC)
-const ROLES = {
-  ADMIN: 'admin',
-  USER: 'user',
-  GUEST: 'guest'
-};
+function authenticate(req: Request, res: Response, next: NextFunction) {
+  const header = req.headers.authorization;
+  if (!header?.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Missing token" });
+  }
 
-function requireRole(role) {
-  return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({ error: 'Not authenticated' });
+  try {
+    const token = header.slice(7);
+    const payload = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
+    req.user = { id: payload.sub, role: payload.role };
+    next();
+  } catch (err) {
+    if (err instanceof jwt.TokenExpiredError) {
+      return res.status(401).json({ error: "Token expired" });
     }
-    
-    if (req.user.role !== role) {
-      return res.status(403).json({ error: 'Insufficient permissions' });
-    }
-    
+    return res.status(401).json({ error: "Invalid token" });
+  }
+}
+```
+
+### Session-Based Auth
+
+```typescript
+import session from "express-session";
+import RedisStore from "connect-redis";
+
+app.use(
+  session({
+    store: new RedisStore({ client: redisClient }),
+    secret: process.env.SESSION_SECRET!,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    },
+  }),
+);
+```
+
+### OAuth 2.0 / OIDC Flow Summary
+
+```
+Authorization Code Flow (web apps with backend):
+1. Redirect to provider: /authorize?response_type=code&client_id=...&redirect_uri=...&scope=openid email
+2. User authenticates, provider redirects back with ?code=AUTHORIZATION_CODE
+3. Backend exchanges code for tokens (POST /token with client_secret)
+4. Backend receives access_token + id_token, creates session/JWT
+
+PKCE Flow (SPAs, mobile): Same but with code_verifier/code_challenge instead of client_secret
+NEVER use Implicit Flow (deprecated, tokens exposed in URL)
+```
+
+### API Key Authentication
+
+```typescript
+async function authenticateApiKey(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  const apiKey = req.headers["x-api-key"] as string;
+  if (!apiKey) return res.status(401).json({ error: "API key required" });
+
+  // WRONG: Direct comparison (timing attack) | CORRECT: Hash-based lookup
+  const hashedKey = crypto.createHash("sha256").update(apiKey).digest("hex");
+  const keyRecord = await db.apiKey.findUnique({ where: { hash: hashedKey } });
+  if (!keyRecord || keyRecord.revokedAt)
+    return res.status(401).json({ error: "Invalid API key" });
+
+  req.apiClient = { id: keyRecord.clientId, scopes: keyRecord.scopes };
+  next();
+}
+```
+
+## Authorization Models
+
+### RBAC (Role-Based Access Control)
+
+```typescript
+const PERMISSIONS = {
+  admin: [
+    "users:read",
+    "users:write",
+    "users:delete",
+    "posts:read",
+    "posts:write",
+    "posts:delete",
+  ],
+  editor: ["posts:read", "posts:write", "posts:delete", "users:read"],
+  viewer: ["posts:read", "users:read"],
+} as const;
+
+type Role = keyof typeof PERMISSIONS;
+
+function authorize(...requiredPermissions: string[]) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const userPermissions = PERMISSIONS[req.user.role as Role] || [];
+    const hasPermission = requiredPermissions.every((p) =>
+      (userPermissions as readonly string[]).includes(p),
+    );
+    if (!hasPermission)
+      return res.status(403).json({ error: "Insufficient permissions" });
     next();
   };
 }
 
-app.delete('/users/:id', requireRole(ROLES.ADMIN), async (req, res) => {
-  await db.users.delete(req.params.id);
-  res.json({ success: true });
-});
-
-// ✅ Resource-Based Access Control
-async function canEditPost(userId, postId) {
-  const post = await db.posts.findById(postId);
-  if (!post) return false;
-  
-  // User can edit their own posts or if admin
-  const user = await db.users.findById(userId);
-  return post.authorId === userId || user.role === 'admin';
-}
-
-app.put('/posts/:id', async (req, res) => {
-  if (!await canEditPost(req.user.id, req.params.id)) {
-    return res.status(403).json({ error: 'Cannot edit this post' });
-  }
-  
-  const updated = await db.posts.update(req.params.id, req.body);
-  res.json(updated);
-});
+// Usage: app.delete("/api/users/:id", authenticate, authorize("users:delete"), deleteUser);
 ```
 
-### 6. **Rate Limiting & DDoS Protection**
+### Resource-Level Authorization
 
 ```typescript
-// ✅ Rate Limiting
-import rateLimit from 'express-rate-limit';
-
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per window
-  message: 'Too many requests, please try again later'
-});
-
-app.use('/api/', limiter);
-
-// ✅ Stricter limits for auth endpoints
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 5, // Only 5 login attempts per 15 minutes
-  skipSuccessfulRequests: true
-});
-
-app.post('/login', authLimiter, async (req, res) => {
-  // Login logic
-});
-
-// ✅ Redis-based rate limiting (distributed)
-import RedisStore from 'rate-limit-redis';
-
-const limiter = rateLimit({
-  store: new RedisStore({
-    client: redisClient
-  }),
-  windowMs: 15 * 60 * 1000,
-  max: 100
-});
-```
-
-### 7. **Sensitive Data Exposure Prevention**
-
-```typescript
-// ❌ VULNERABLE - Exposing sensitive data
-app.get('/user/:id', async (req, res) => {
-  const user = await db.users.findById(req.params.id);
-  res.json(user); // Includes password hash, internal IDs, etc!
-});
-
-// ✅ SAFE - Explicit field selection
-app.get('/user/:id', async (req, res) => {
-  const user = await db.users.findById(req.params.id);
-  
-  res.json({
-    id: user.id,
-    name: user.name,
-    email: user.email
-    // passwordHash NOT included
-  });
-});
-
-// ✅ SAFE - Using DTOs/Serializers
-class UserDTO {
-  static fromUser(user) {
-    return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      createdAt: user.createdAt
-    };
-  }
-}
-
-app.get('/user/:id', async (req, res) => {
-  const user = await db.users.findById(req.params.id);
-  res.json(UserDTO.fromUser(user));
-});
-
-// ✅ Encrypt sensitive data at rest
-import crypto from 'crypto';
-
-function encrypt(text) {
-  const key = Buffer.from(process.env.ENCRYPTION_KEY, 'hex');
-  const iv = crypto.randomBytes(16);
-  const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
-  
-  let encrypted = cipher.update(text, 'utf8', 'hex');
-  encrypted += cipher.final('hex');
-  
-  return iv.toString('hex') + ':' + encrypted;
-}
-
-function decrypt(encrypted) {
-  const key = Buffer.from(process.env.ENCRYPTION_KEY, 'hex');
-  const parts = encrypted.split(':');
-  const iv = Buffer.from(parts[0], 'hex');
-  const encryptedText = parts[1];
-  const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
-  
-  let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
-  decrypted += decipher.final('utf8');
-  
-  return decrypted;
-}
-```
-
-### 8. **Input Validation**
-
-```typescript
-// ✅ Schema Validation with Zod
-import { z } from 'zod';
-
-const CreateUserSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8).max(100),
-  age: z.number().int().min(0).max(150),
-  website: z.string().url().optional()
-});
-
-app.post('/users', async (req, res) => {
-  try {
-    const validated = CreateUserSchema.parse(req.body);
-    const user = await createUser(validated);
-    res.json(user);
-  } catch (error) {
-    res.status(400).json({ error: error.errors });
-  }
-});
-
-// ✅ Sanitize file uploads
-import multer from 'multer';
-import path from 'path';
-
-const upload = multer({
-  dest: 'uploads/',
-  limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB max
-  },
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-    
-    if (!allowedTypes.includes(file.mimetype)) {
-      return cb(new Error('Invalid file type'));
+// WRONG: Only checking role, not ownership -- any editor can edit ANY post
+// CORRECT: Check ownership or admin role
+app.put(
+  "/api/posts/:id",
+  authenticate,
+  authorize("posts:write"),
+  async (req, res) => {
+    const post = await db.post.findUnique({ where: { id: req.params.id } });
+    if (!post) return res.status(404).json({ error: "Not found" });
+    if (post.authorId !== req.user.id && req.user.role !== "admin") {
+      return res
+        .status(403)
+        .json({ error: "Not authorized to edit this post" });
     }
-    
-    cb(null, true);
-  }
-});
-
-app.post('/upload', upload.single('avatar'), (req, res) => {
-  res.json({ filename: req.file.filename });
-});
+    await db.post.update({ where: { id: req.params.id }, data: req.body });
+  },
+);
 ```
 
-### 9. **Logging & Monitoring**
+## Password Handling
 
 ```typescript
-// ✅ Security event logging
-import winston from 'winston';
+import bcrypt from "bcrypt";
+// WRONG: plaintext or MD5/SHA256 (too fast, brute-forceable)
+// CORRECT: bcrypt with appropriate cost factor
+const SALT_ROUNDS = 12; // ~250ms on modern hardware
 
-const securityLogger = winston.createLogger({
-  level: 'info',
-  format: winston.format.json(),
-  transports: [
-    new winston.transports.File({ filename: 'security.log' })
-  ]
+async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, SALT_ROUNDS);
+}
+async function verifyPassword(
+  password: string,
+  hash: string,
+): Promise<boolean> {
+  return bcrypt.compare(password, hash); // constant-time comparison built-in
+}
+
+// Registration
+await db.user.create({
+  data: { email, password: await hashPassword(req.body.password) },
 });
 
-// Log failed authentication attempts
-app.post('/login', async (req, res) => {
-  const user = await verifyCredentials(req.body.email, req.body.password);
-  
-  if (!user) {
-    securityLogger.warn('Failed login attempt', {
-      email: req.body.email,
-      ip: req.ip,
-      userAgent: req.get('user-agent'),
-      timestamp: new Date().toISOString()
-    });
-    
-    return res.status(401).json({ error: 'Invalid credentials' });
-  }
-  
-  res.json({ token: generateToken(user.id) });
-});
-
-// Log privilege escalation attempts
-app.put('/users/:id/role', requireAdmin, async (req, res) => {
-  securityLogger.info('Role change', {
-    adminId: req.user.id,
-    targetUserId: req.params.id,
-    newRole: req.body.role,
-    timestamp: new Date().toISOString()
-  });
-  
-  await db.users.updateRole(req.params.id, req.body.role);
-  res.json({ success: true });
-});
+// Login -- WRONG: "Invalid password" (reveals email exists) | CORRECT: generic message
+const user = await db.user.findUnique({ where: { email } });
+if (!user || !(await verifyPassword(req.body.password, user.password))) {
+  return res.status(401).json({ error: "Invalid email or password" });
+}
 ```
 
-### 10. **Security Headers**
+### Password Policies
 
 ```typescript
-// ✅ Essential security headers
-import helmet from 'helmet';
+function validatePassword(password: string): string[] {
+  const errors: string[] = [];
+  if (password.length < 12) errors.push("Minimum 12 characters");
+  if (password.length > 128) errors.push("Maximum 128 characters");
 
-app.use(helmet()); // Sets multiple headers automatically
+  // Check against breached password lists (haveibeenpwned API or local)
+  // Do NOT enforce arbitrary complexity rules (uppercase + number + symbol)
+  // NIST 800-63B recommends length over complexity
+  return errors;
+}
+```
 
-// Or manually:
+## Secrets Management
+
+```python
+# WRONG: Hardcoded values in source code
+# API_KEY = "some-value-here"
+
+# CORRECT: Environment variables loaded from .env
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+api_key = os.getenv("API_KEY")
+db_url = os.getenv("DATABASE_URL")
+
+# CORRECT: Secrets manager for production
+# AWS: Secrets Manager, Parameter Store
+# GCP: Secret Manager
+# HashiCorp Vault for self-hosted
+```
+
+### Secret Rotation
+
+```
+1. Generate new secret value
+2. Deploy code that accepts BOTH old and new values
+3. Update all consumers to use the new value
+4. Verify old value is no longer in use
+5. Revoke old value
+
+Never: Rotate in-place without a transition period
+```
+
+## Encryption Patterns
+
+### In Transit
+
+```typescript
+// Redirect HTTP to HTTPS in production
 app.use((req, res, next) => {
-  // Prevent clickjacking
-  res.setHeader('X-Frame-Options', 'DENY');
-  
-  // Prevent MIME sniffing
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  
-  // Enable XSS filter
-  res.setHeader('X-XSS-Protection', '1; mode=block');
-  
-  // Strict Transport Security (HTTPS only)
-  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-  
-  // Referrer Policy
-  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  
-  // Permissions Policy
-  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
-  
+  if (
+    req.headers["x-forwarded-proto"] !== "https" &&
+    process.env.NODE_ENV === "production"
+  ) {
+    return res.redirect(301, `https://${req.hostname}${req.url}`);
+  }
+  next();
+});
+// HSTS header
+app.use((req, res, next) => {
+  res.setHeader(
+    "Strict-Transport-Security",
+    "max-age=31536000; includeSubDomains",
+  );
   next();
 });
 ```
 
-## Environment & Secrets Management
+### At Rest
 
 ```typescript
-// ❌ NEVER do this
-const apiKey = 'sk_live_abc123'; // Hardcoded secret
-const dbPassword = 'password123';
+import crypto from "crypto";
+const ALGORITHM = "aes-256-gcm";
 
-// ✅ Use environment variables
-import dotenv from 'dotenv';
-dotenv.config();
+function encrypt(
+  plaintext: string,
+  key: Buffer,
+): { ciphertext: string; iv: string; tag: string } {
+  const iv = crypto.randomBytes(16);
+  const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
+  let ciphertext =
+    cipher.update(plaintext, "utf8", "hex") + cipher.final("hex");
+  return {
+    ciphertext,
+    iv: iv.toString("hex"),
+    tag: cipher.getAuthTag().toString("hex"),
+  };
+}
 
-const apiKey = process.env.API_KEY;
-const dbPassword = process.env.DB_PASSWORD;
+function decrypt(
+  ciphertext: string,
+  key: Buffer,
+  iv: string,
+  tag: string,
+): string {
+  const decipher = crypto.createDecipheriv(
+    ALGORITHM,
+    key,
+    Buffer.from(iv, "hex"),
+  );
+  decipher.setAuthTag(Buffer.from(tag, "hex"));
+  return decipher.update(ciphertext, "hex", "utf8") + decipher.final("utf8");
+}
+// Use for PII, sensitive data. Encryption key in secrets manager, NOT in code.
+```
 
-// ✅ Validate required secrets on startup
-const requiredEnvVars = [
-  'DATABASE_URL',
-  'JWT_SECRET',
-  'API_KEY'
+## CORS Configuration
+
+```typescript
+import cors from "cors";
+
+// WRONG: Allow everything
+app.use(cors()); // origin: *, credentials: false
+
+// WRONG: Wildcard with credentials
+app.use(cors({ origin: "*", credentials: true })); // browsers reject this
+
+// CORRECT: Explicit allowed origins
+const ALLOWED_ORIGINS = [
+  "https://myapp.com",
+  "https://admin.myapp.com",
+  ...(process.env.NODE_ENV !== "production" ? ["http://localhost:3000"] : []),
 ];
 
-for (const envVar of requiredEnvVars) {
-  if (!process.env[envVar]) {
-    console.error(`Missing required environment variable: ${envVar}`);
-    process.exit(1);
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    maxAge: 86400, // cache preflight for 24 hours
+  }),
+);
+```
+
+## Rate Limiting
+
+```typescript
+import rateLimit from "express-rate-limit";
+import RedisStore from "rate-limit-redis";
+
+// Global rate limit
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // 100 requests per window
+    standardHeaders: true, // RateLimit-* headers
+    legacyHeaders: false,
+    store: new RedisStore({
+      sendCommand: (...args) => redisClient.sendCommand(args),
+    }),
+  }),
+);
+
+// Strict limit on auth endpoints
+app.use(
+  "/api/auth/login",
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5, // 5 login attempts per 15 min
+    message: { error: "Too many login attempts. Try again later." },
+  }),
+);
+
+// Per-API-key rate limiting for developer APIs
+app.use(
+  "/api/v1/",
+  rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 60, // 60 requests per minute
+    keyGenerator: (req) => req.apiClient?.id || req.ip,
+  }),
+);
+```
+
+## Security Headers
+
+```typescript
+import helmet from "helmet";
+
+app.use(helmet()); // Sets many secure headers at once
+
+// Key headers helmet sets:
+// X-Content-Type-Options: nosniff
+// X-Frame-Options: DENY
+// Strict-Transport-Security: max-age=15552000; includeSubDomains
+// Content-Security-Policy: default-src 'self'
+
+// Customize CSP for your app
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https://cdn.example.com"],
+      connectSrc: ["'self'", "https://api.example.com"],
+    },
+  }),
+);
+```
+
+## Input Validation
+
+```typescript
+import { z } from "zod";
+
+// WRONG: Trusting user input directly (SQL injection risk)
+app.post("/api/users", (req, res) => {
+  db.query(`SELECT * FROM users WHERE email = '${req.body.email}'`);
+});
+
+// CORRECT: Validate with schema, use parameterized queries
+const CreateUserSchema = z.object({
+  email: z.string().email().max(255),
+  name: z.string().min(1).max(100).trim(),
+  age: z.number().int().min(13).max(150).optional(),
+});
+
+app.post("/api/users", async (req, res) => {
+  const result = CreateUserSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json({ errors: result.error.flatten() });
   }
-}
-
-// ✅ Use secret management services (production)
-import { SecretsManager } from '@aws-sdk/client-secrets-manager';
-
-async function getSecret(secretName) {
-  const client = new SecretsManager({ region: 'us-east-1' });
-  const response = await client.getSecretValue({ SecretId: secretName });
-  return JSON.parse(response.SecretString);
-}
+  // Use parameterized query (ORM or prepared statement)
+  await db.user.create({ data: result.data });
+});
 ```
 
-## Security Checklist
+## Common Anti-Patterns Summary
 
 ```
-Authentication & Sessions:
-□ Passwords hashed with bcrypt/argon2
-□ JWT secrets stored securely
-□ Token expiration implemented
-□ Session cookies: httpOnly, secure, sameSite
-□ MFA available for sensitive operations
-
-Input Validation:
-□ All inputs validated with schema
-□ SQL injection prevented (parameterized queries)
-□ XSS prevented (output escaping)
-□ File uploads restricted and validated
-□ URLs validated before redirects
-
-Authorization:
-□ Authentication required for protected routes
-□ Role-based access control implemented
-□ Resource ownership verified
-□ Principle of least privilege enforced
-
-Data Protection:
-□ HTTPS enforced everywhere
-□ Sensitive data encrypted at rest
-□ Secrets in environment variables (not code)
-□ No sensitive data in logs/errors
-□ PII handling compliant with regulations
-
-Infrastructure:
-□ Rate limiting on public endpoints
-□ Security headers configured
-□ CORS properly configured
-□ Dependency vulnerabilities scanned
-□ Security monitoring and alerting
-
-Audit & Compliance:
-□ Security events logged
-□ Access logs retained
-□ Regular security audits scheduled
-□ Incident response plan documented
+AVOID                              DO INSTEAD
+-------------------------------------------------------------------
+JWT in localStorage                httpOnly secure cookie (refresh), memory (access)
+MD5/SHA for passwords              bcrypt or argon2 with proper cost factor
+Hardcoded secrets in code          Environment variables + secrets manager
+cors({ origin: '*' })             Explicit allowed origins list
+"Invalid password" message         "Invalid email or password" (no enumeration)
+No rate limiting on auth           Strict rate limits on login/register
+Rolling your own crypto            Use established libraries (jose, bcrypt)
+Trusting user input                Validate with zod/joi, parameterized queries
+Same API key forever               Rotate keys regularly, support multiple active
+No HTTPS redirect                  Force HTTPS + HSTS header
+Symmetric JWT for multi-service    Use RS256/ES256 (asymmetric) for distributed
+No input length limits             Max length on all string inputs
 ```
-
-## Resources
-
-- [OWASP Top 10](https://owasp.org/www-project-top-ten/)
-- [OWASP Cheat Sheets](https://cheatsheetseries.owasp.org/)
-- [CWE Top 25](https://cwe.mitre.org/top25/)
-- [Security Headers](https://securityheaders.com/)
-
----
-
-**Remember**: Security is not optional. It must be built into every layer from day one.

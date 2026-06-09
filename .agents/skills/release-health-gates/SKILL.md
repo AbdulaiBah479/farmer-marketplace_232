@@ -1,44 +1,40 @@
 ---
 name: release-health-gates
-description: |
-  Declarative release readiness checklist that mirrors GitHub checks,
-  deployment issues, and documentation requirements.
-
-  Triggers: release gates, release readiness, deployment checklist, release review,
-  quality signals, rollout scorecard, QA handshake, deployment gates
-
-  Use when: preparing releases, validating deployment gates, conducting release
-  reviews, embedding release gate snippets in PRs
-
-  DO NOT use when: weekly status updates - use github-initiative-pulse.
-  DO NOT use when: code reviews - use pensive review skills.
-
-  Standardizes release approvals with GitHub-aware checklists.
-version: 1.0.0
+description: Standardizes release approvals with GitHub-aware checklists and deployment gates. Use before releasing to production to verify all gates pass.
+alwaysApply: false
 category: governance
-tags: [release, github, readiness, quality, governance]
+tags:
+- release
+- github
+- readiness
+- quality
+- governance
 dependencies: []
-tools: [minister-tracker]
+tools: []
 provides:
-  governance: [release-gates, rollout-scorecards]
-  reporting: [deployment-comment, qa-handshake]
+  governance:
+  - release-gates
+  - rollout-scorecards
+  reporting:
+  - deployment-comment
+  - qa-handshake
 usage_patterns:
-  - release-train
-  - hotfix-review
-  - stakeholder-briefing
+- release-train
+- hotfix-review
+- stakeholder-briefing
 complexity: intermediate
+model_hint: standard
 estimated_tokens: 700
 progressive_loading: true
 modules:
-  - modules/quality-signals.md
-  - modules/deployment-readiness.md
+- modules/quality-signals.md
+- modules/deployment-readiness.md
 ---
-
 # Release Health Gates
 
 ## Purpose
 
-Standardize release approvals by expressing gates as GitHub-aware checklists. validates code, docs, comms, and observability items are all green before flipping deploy toggles.
+Standardize release approvals by expressing gates as GitHub-aware checklists. Ensure code, docs, comms, and observability items are green before deployment.
 
 ## Gate Categories
 

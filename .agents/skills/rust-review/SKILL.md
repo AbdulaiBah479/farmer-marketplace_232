@@ -1,27 +1,72 @@
 ---
 name: rust-review
-description: Expert-level Rust audits covering ownership, concurrency, unsafe blocks, traits, and Cargo dependencies. Use for Rust-specific code review.
+description: Audits Rust code for unsafe blocks, ownership issues, and Cargo dependency risks. Use when reviewing Rust code or before merging Rust changes.
+globs: "**/*.rs"
+alwaysApply: false
 category: code-review
-tags: [rust, ownership, concurrency, unsafe, traits, cargo]
-tools: [borrow-checker-analyzer, unsafe-auditor, dependency-scanner]
+tags:
+- rust
+- ownership
+- concurrency
+- unsafe
+- traits
+- cargo
+tools: []
 usage_patterns:
-  - rust-audit
-  - unsafe-review
-  - dependency-audit
-  - concurrency-analysis
+- rust-audit
+- unsafe-review
+- dependency-audit
+- concurrency-analysis
 complexity: advanced
+model_hint: deep
 estimated_tokens: 400
 progressive_loading: true
 dependencies:
-  - pensive:shared
-  - imbue:evidence-logging
+- pensive:shared
+- imbue:proof-of-work
+- imbue:review-core
+- imbue:structured-output
 modules:
-  - ownership-analysis.md
-  - error-handling.md
-  - concurrency-patterns.md
-  - unsafe-audit.md
-  - cargo-dependencies.md
+- ownership-analysis.md
+- error-handling.md
+- concurrency-patterns.md
+- unsafe-audit.md
+- cargo-dependencies.md
+- silent-returns.md
+- collection-types.md
+- sql-injection.md
+- cfg-test-misuse.md
+- error-messages.md
+- duplicate-validators.md
+- builtin-preference.md
+- model-specific-tells.md
+- iterator-and-allocation-slop.md
+- test-slop.md
+- async-slop.md
 ---
+## Table of Contents
+
+- [Quick Start](#quick-start)
+- [When to Use](#when-to-use)
+- [Required TodoWrite Items](#required-todowrite-items)
+- [Progressive Loading](#progressive-loading)
+- [Core Workflow](#core-workflow)
+- [Rust Quality Checklist](#rust-quality-checklist)
+- [Safety](#safety)
+- [Correctness](#correctness)
+- [Performance](#performance)
+- [Idioms](#idioms)
+- [Output Format](#output-format)
+- [Summary](#summary)
+- [Ownership Analysis](#ownership-analysis)
+- [Error Handling](#error-handling)
+- [Concurrency](#concurrency)
+- [Unsafe Audit](#unsafe-audit)
+- [[U1] file:line](#[u1]-file:line)
+- [Dependencies](#dependencies)
+- [Recommendation](#recommendation)
+- [Exit Criteria](#exit-criteria)
+
 
 # Rust Review Workflow
 
@@ -32,14 +77,20 @@ Expert-level Rust code audits with focus on safety, correctness, and idiomatic p
 ```bash
 /rust-review
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
-## When to Use
+## When To Use
 
 - Reviewing Rust code changes
 - Auditing unsafe blocks
 - Analyzing concurrency patterns
 - Dependency security review
 - Performance optimization review
+
+## When NOT To Use
+
+- General code review without Rust - use unified-review
+- Performance profiling - use parseltongue:python-performance pattern
 
 ## Required TodoWrite Items
 
@@ -49,23 +100,27 @@ Expert-level Rust code audits with focus on safety, correctness, and idiomatic p
 4. `rust-review:unsafe-audit`
 5. `rust-review:cargo-deps`
 6. `rust-review:evidence-log`
+7. `rust-review:findings-verified`
 
 ## Progressive Loading
 
 Load modules as needed based on review scope:
 
-**Quick Review** (ownership + errors):
-- @include ownership-analysis.md
-- @include error-handling.md
+**Quick Review** (ownership and errors):
+- See `modules/ownership-analysis.md` for borrowing and lifetime analysis
+- See `modules/error-handling.md` for Result/Option patterns
 
 **Concurrency Focus**:
-- @include concurrency-patterns.md
+- See `modules/concurrency-patterns.md` for async and sync primitives
 
 **Safety Audit**:
-- @include unsafe-audit.md
+- See `modules/unsafe-audit.md` for unsafe block documentation
 
 **Dependency Review**:
-- @include cargo-dependencies.md
+- See `modules/cargo-dependencies.md` for vulnerability scanning
+
+**Idiomatic Patterns**:
+- See `modules/builtin-preference.md` for conversion traits and builtin preference
 
 ## Core Workflow
 
@@ -82,6 +137,8 @@ Load modules as needed based on review scope:
 - [ ] All unsafe blocks documented with SAFETY comments
 - [ ] FFI boundaries properly wrapped
 - [ ] Memory safety invariants maintained
+- [ ] `mlock`/`munlock` calls: RLIMIT verified, page-aligned,
+  ENOMEM handled
 
 ### Correctness
 - [ ] Error handling complete
@@ -95,6 +152,7 @@ Load modules as needed based on review scope:
 
 ### Idioms
 - [ ] Standard traits implemented
+- [ ] Conversion traits preferred over helper functions
 - [ ] Error types well-designed
 - [ ] Documentation complete
 
@@ -116,6 +174,7 @@ Rust audit findings
 ## Unsafe Audit
 ### [U1] file:line
 - Invariants: [documented]
+- Anchor: `verbatim source text at file:line`
 - Risk: [assessment]
 - Recommendation: [action]
 
@@ -125,6 +184,21 @@ Rust audit findings
 ## Recommendation
 Approve / Approve with actions / Block
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
+
+## Verify Findings Are Grounded (`rust-review:findings-verified`)
+
+Every finding must cite a real location and a verbatim anchor. Write
+findings to `.review/findings.json` and confirm each citation resolves:
+
+```bash
+python plugins/imbue/scripts/citation_verifier.py \
+  --findings .review/findings.json --repo-root .
+```
+
+Drop or label `UNVERIFIED` any finding the verifier fails (exit `1`); only
+verified findings enter the report. See `Skill(imbue:review-core)` Step 5
+and `Skill(imbue:structured-output)` for the schema.
 
 ## Exit Criteria
 
@@ -133,3 +207,4 @@ Approve / Approve with actions / Block
 - Dependencies scanned
 - Evidence logged
 - Action items assigned
+- Every reported finding carries a `Location` + verbatim `Anchor` confirmed by `citation_verifier.py` (exit `0`), or unverified findings were dropped or labeled `UNVERIFIED`

@@ -1,263 +1,124 @@
 ---
 name: project-planning
-description: >
-  Generate initial project planning documents (PVS, ADR, Tech Spec, Roadmap) from a project
-  concept description. Use when starting a new project, when docs/planning/ contains placeholder
-  files, or when user requests project planning document generation.
-version: 1.0.0
+description: Converts a specification into a phased, dependency-ordered implementation plan. Use after specification is complete and before execution begins.
+alwaysApply: false
+# Custom metadata (not used by Claude for matching):
+model_preference: claude-sonnet-4
+category: workflow
+tags: [planning, architecture, task-breakdown, dependencies, estimation]
+complexity: intermediate
+model_hint: standard
+estimated_tokens: 900
+role: library
 ---
+## Delegation
+
+For detailed task planning workflows, this skill delegates to `spec-kit:task-planning` as the canonical implementation. Use this skill for quick planning needs; use spec-kit for thorough project plans.
 
-# Project Planning Skill
+## When To Use
 
-Generate four essential planning documents to guide AI-assisted development. These documents
-maintain context coherence across coding sessions and prevent architectural drift.
+- After specification phase completes
+- Need to design system architecture
+- Need task breakdown for implementation
+- Planning sprints and resource allocation
+- Converting requirements into concrete tasks
+- Defining component interfaces and dependencies
 
-## When to Use This Skill
+## When NOT To Use
 
-- User describes a project concept and asks for planning documents
-- Files in `docs/planning/` show "Awaiting Generation" status
-- User invokes `/plan` command with project description
-- Starting development on a new feature requiring architectural decisions
+- No specification exists yet (use `Skill(attune:project-specification)` first)
+- Still exploring problem space (use `Skill(attune:project-brainstorming)` instead)
+- Ready to execute existing plan (use `Skill(attune:project-execution)` instead)
+- Need to adjust running project (update plan incrementally, don't restart)
 
-## Output Documents
+## Integration
 
-| Document | Location | Purpose |
-|----------|----------|---------|
-| Project Vision & Scope | `docs/planning/project-vision.md` | What & Why - problem, solution, scope |
-| Technical Spec | `docs/planning/tech-spec.md` | How - architecture, data model, APIs |
-| Development Roadmap | `docs/planning/roadmap.md` | When - phased implementation plan |
-| Architecture Decision Record | `docs/planning/adr/adr-001-*.md` | Key technical decisions with rationale |
+**With superpowers**:
+- Uses `Skill(superpowers:writing-plans)` for structured planning
+- Applies checkpoint-based execution patterns
+- Uses dependency analysis framework
 
-## Generation Process
+**Without superpowers**:
+- Standalone planning methodology
+- Task breakdown templates
+- Dependency tracking patterns
 
-### Step 1: Gather Project Context
+## Quality Checks
 
-Before generating, collect:
-1. **Project description** from user input
-2. **Technical constraints** from `pyproject.toml` and existing code
-3. **Cookiecutter choices** reflected in project structure
+Before completing plan:
 
-### Step 2: Generate Documents in Order
+- ✅ All architecture components documented
+- ✅ File Structure section present before tasks
+- ✅ All task files appear in File Structure table
+- ✅ All FRs mapped to tasks
+- ✅ All tasks have acceptance criteria
+- ✅ Dependencies are acyclic
+- ✅ Effort estimates provided
+- ✅ Critical path identified
+- ✅ Risks assessed with mitigations
+- ✅ Sprints balanced by capacity
 
-Generate documents sequentially, as later documents reference earlier ones:
+## Record the Tradeoff (decision journal)
 
-1. **Project Vision & Scope** - Establishes what we're building and why
-2. **Architecture Decision Record** - Key technical choices based on PVS
-3. **Technical Implementation Spec** - Detailed how-to based on ADRs
-4. **Development Roadmap** - Implementation plan based on all above
+Planning is where architecture and scope decisions get made: the pattern
+chosen, the dependency accepted, the work deferred. Record each decision that
+had real alternatives to `docs/tradeoffs.md` (draft and confirm):
 
-### Step 3: Expert Review via Consensus
+- If leyline is installed, invoke `Skill(leyline:decision-journal)` and append
+  a tradeoff entry (the decision, the options weighed, and what was
+  sacrificed; set `phase` to `plan`). Show the draft; append on confirmation.
+- Fallback (leyline absent): append to `docs/tradeoffs.md` using the in-file
+  ENTRY TEMPLATE; assign the next `TR-NNN` id.
 
-After generating each document, use the zen-mcp-server consensus tool to get expert review:
+## Post-Completion: Workflow Continuation (REQUIRED)
 
-```
-Use mcp__zen__consensus with gemini-3-pro-preview to review:
+**Automatic Trigger**: After Quality Checks pass and `docs/implementation-plan.md` is saved, MUST auto-invoke the next phase.
 
-"Review this [document type] for sufficiency to begin development.
+**When continuation is invoked**:
+1. Verify `docs/implementation-plan.md` exists and is non-empty
+2. Display checkpoint message to user:
+   ```
+   Implementation plan complete. Saved to docs/implementation-plan.md.
+   Proceeding to execution phase...
+   ```
+3. Invoke next phase:
+   ```
+   Skill(attune:project-execution)
+   ```
 
-Evaluate:
-1. SPECIFICITY: Are requirements concrete enough to implement?
-2. COMPLETENESS: Are all critical sections filled with project-specific content?
-3. FEASIBILITY: Are timelines and technical choices realistic?
-4. CLARITY: Can a developer understand what to build from this?
-5. GAPS: What critical information is missing?
+**Bypass Conditions** (ONLY skip continuation if ANY true):
+- `--standalone` flag was provided by the user
+- `docs/implementation-plan.md` does not exist or is empty (phase failed)
+- User explicitly requests to stop after planning
 
-Respond with:
-- READY: Document is sufficient to begin work
-- NEEDS REVISION: [List specific improvements required]
+**Do NOT prompt the user for confirmation**: this is a lightweight checkpoint, not an interactive gate. The user can always interrupt if needed.
 
-Document content:
-[paste document content]"
-```
+## Exit Criteria
 
-**Review each document in order**:
-1. PVS → Must be READY before generating ADR
-2. ADR → Must be READY before generating Tech Spec
-3. Tech Spec → Must be READY before generating Roadmap
-4. Roadmap → Must be READY before completing
+- [ ] `docs/implementation-plan.md` exists, is non-empty, and passes Quality
+  Checks (acyclic dependencies, FRs mapped, critical path identified).
+- [ ] Architecture and scope decisions with alternatives are recorded to
+  `docs/tradeoffs.md`.
+- [ ] The execution phase is auto-invoked unless a bypass condition holds.
 
-If any document NEEDS REVISION, incorporate feedback and re-review before proceeding.
+## Related Skills
 
-### Step 4: Validate and Cross-Reference
+- `Skill(superpowers:writing-plans)` - Planning methodology (if available)
+- `Skill(spec-kit:task-planning)` - Task breakdown (if available)
+- `Skill(attune:project-specification)` - Previous phase
+- `Skill(attune:project-execution)` - **AUTO-INVOKED** next phase after planning
+- `Skill(attune:mission-orchestrator)` - Full lifecycle orchestration
 
-After all documents pass review:
-- Ensure documents reference each other correctly
-- Verify technical choices are consistent across documents
-- Flag any assumptions needing user validation
-- Run validation script if available
+## Related Commands
 
-## Document Generation Guidelines
+- `/attune:blueprint` - Invoke this skill
+- `/attune:execute` - Next step in workflow
 
-### All Documents
+## Examples
 
-- **Be specific**: Use concrete technologies, versions, and measurable criteria
-- **No boilerplate**: Every section must contain project-specific information
-- **Under 1000 words**: Dense information, minimal prose
-- **Markdown format**: Use headers, bullets, tables for structure
-- **Include TL;DR**: 2-3 sentence summary at top of each document
+See `/attune:blueprint` command documentation for complete examples.
+## Troubleshooting
 
-### Project Vision & Scope (PVS)
+### Common Issues
 
-Use template: `templates/pvs-template.md`
-
-Focus on:
-- Problem being solved and user impact
-- Core capabilities (3-5 max for MVP)
-- Explicit scope boundaries (in vs out)
-- Measurable success metrics
-
-### Architecture Decision Record (ADR)
-
-Use template: `templates/adr-template.md`
-
-Create ADR for:
-- Database/storage choice
-- Authentication strategy
-- API design approach
-- Key framework decisions
-- Any choice expensive to reverse
-
-Format: `adr-001-{decision-slug}.md`
-
-### Technical Implementation Spec
-
-Use template: `templates/tech-spec-template.md`
-
-Include:
-- Complete tech stack with versions
-- Component architecture diagram (ASCII)
-- Data model with schemas
-- API endpoints specification
-- Security requirements
-- Error handling approach
-
-### Development Roadmap
-
-Use template: `templates/roadmap-template.md`
-
-Structure as:
-- Phase 0: Foundation (environment, CI/CD)
-- Phase 1: MVP Core (essential features)
-- Phase 2: Enhancement (additional features)
-- Phase 3: Polish (testing, documentation)
-
-Each phase needs:
-- Clear deliverables
-- Success criteria (testable)
-- Estimated duration
-- Dependencies
-
-## Pre-Filling from Project Context
-
-When generating, incorporate known information:
-
-```python
-# From pyproject.toml / cookiecutter context
-python_version = "3.12"
-project_name = "Claude Code Configuration"
-project_slug = "claude_config"
-
-{%- if cookiecutter.include_cli == "yes" %}
-cli_framework = "Click"
-{%- endif %}
-{%- if cookiecutter.include_docker == "yes" %}
-containerization = "Docker"
-{%- endif %}
-
-```
-
-## Quality Checklist
-
-Before completing generation:
-
-- [ ] All four documents created in `docs/planning/`
-- [ ] Each document has TL;DR section
-- [ ] No "[TODO]" or "[TBD]" placeholders remain
-- [ ] Documents cross-reference each other
-- [ ] Technical choices are consistent
-- [ ] Success criteria are measurable
-- [ ] Scope boundaries are explicit
-- [ ] At least one ADR created
-
-## Templates Reference
-
-Templates are in `templates/` directory:
-- `pvs-template.md` - Project Vision & Scope structure
-- `adr-template.md` - Architecture Decision Record structure
-- `tech-spec-template.md` - Technical Spec structure
-- `roadmap-template.md` - Development Roadmap structure
-
-## Detailed Guidance
-
-For comprehensive documentation on each document type, see `reference/` directory:
-- `reference/document-guide.md` - Full guidance for all document types
-- `reference/prompting-patterns.md` - How to use documents during development
-
-## After Generation
-
-Instruct user to:
-1. Review each document for accuracy
-2. Validate assumptions marked with `[ ]`
-3. Adjust timelines in roadmap if needed
-4. Commit documents to version control
-5. Reference documents in future development sessions
-
-## Example Usage
-
-When user says: "I want to build a CLI tool for managing personal finances..."
-
-### Generation Flow with Consensus Review
-
-1. **Generate PVS**
-   - Read `templates/pvs-template.md`
-   - Generate `docs/planning/project-vision.md` with finance CLI specifics
-   - **Review**: `mcp__zen__consensus` with gemini-3-pro-preview → READY or revise
-
-2. **Generate ADR**
-   - Read `templates/adr-template.md`
-   - Generate `docs/planning/adr/adr-001-database-choice.md` for SQLite decision
-   - **Review**: `mcp__zen__consensus` with gemini-3-pro-preview → READY or revise
-
-3. **Generate Tech Spec**
-   - Read `templates/tech-spec-template.md`
-   - Generate `docs/planning/tech-spec.md` with Python/Click/SQLite stack
-   - **Review**: `mcp__zen__consensus` with gemini-3-pro-preview → READY or revise
-
-4. **Generate Roadmap**
-   - Read `templates/roadmap-template.md`
-   - Generate `docs/planning/roadmap.md` with phased implementation
-   - **Review**: `mcp__zen__consensus` with gemini-3-pro-preview → READY or revise
-
-5. **Final Validation**
-   - Run `scripts/validate-planning-docs.py`
-   - Summarize what was created and review outcomes
-   - List next steps for beginning development
-
-### Consensus Review Prompt Template
-
-```
-mcp__zen__consensus with gemini-3-pro-preview:
-
-Review this Project Vision & Scope document for Claude Code Configuration.
-
-EVALUATION CRITERIA:
-1. SPECIFICITY - Can a developer implement from these requirements?
-2. COMPLETENESS - All sections filled with project-specific content?
-3. FEASIBILITY - Realistic scope for the described constraints?
-4. CLARITY - Unambiguous success criteria and scope boundaries?
-5. GAPS - Any critical missing information?
-
-RESPOND:
-- READY: Sufficient to proceed to next document
-- NEEDS REVISION: [Specific improvements with examples]
-
-DOCUMENT:
-[Full document content here]
-```
-
-### MCP Server Requirement
-
-This skill requires the zen-mcp-server for consensus review.
-If not available, skip Step 3 and proceed with manual review.
-
-Configuration: Ensure `mcp__zen__consensus` tool is accessible.
+If you find circular dependencies in your task graph, break one of the tasks into smaller sub-tasks. If sprint capacity is consistently exceeded, re-estimate tasks using the Fibonacci scale or reduce sprint scope.

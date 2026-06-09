@@ -1,127 +1,67 @@
 ---
 name: verify
-description: 검증 스킬. 빌드, 린트, 테스트 검증. 커밋/PR 전 필수 실행. AI가 스스로 코드를 검증하는 자체 검증 루프.
+description: AI DevKit · Enforce evidence-based completion claims — require fresh command output before reporting success. Use when completing any task, fixing a bug, finishing a phase, running tests, building, deploying, or making any "it works" claim.
 ---
 
-# Verify Skill
+# Verify
 
-자체 검증 루프. AI가 스스로 코드를 검증할 수 있는 수단.
+Prove it works before saying it works.
 
-> Boris: "품질을 2~3배 높이는 비결입니다. Claude가 코드를 짠 뒤 스스로 검증할 수 있는 루프(Loop)를 만들어 주세요."
+## Hard Rules
 
-## 검증 단계
+- Do not claim completion without fresh terminal evidence from this session.
+- Forbidden words in completion claims: "should", "probably", "seems to", "likely", "I believe", "I think it works". These signal unverified assertions.
+- Cached, remembered, or previous-session output is not evidence. Run it again.
 
-```
-/verify
-    │
-    ├─ Step 1: 빌드 검증
-    │   └─ pnpm build
-    │       ├─ 성공 → Step 2로
-    │       └─ 실패 → 에러 분석 → 코드 수정 → 재검증
-    │
-    ├─ Step 2: 린트 검증
-    │   └─ pnpm lint
-    │       ├─ 성공 → Step 3로
-    │       └─ 에러 → 자동 수정 또는 코드 수정 → 재검증
-    │
-    └─ Step 3: 테스트 검증
-        └─ pnpm test:run
-            ├─ 성공 → 검증 완료
-            └─ 실패 → 테스트 또는 코드 수정 → 재검증
-```
+## Gate Function
 
-## 호출 시점
+Every completion claim must pass all 5 steps in order:
 
-| 시점 | 필수 여부 | 이유 |
-|------|----------|------|
-| 커밋 전 | **필수** | 빌드 실패 커밋 방지 |
-| PR 생성 전 | **필수** | CI 실패 방지 |
-| 구현 완료 후 | 권장 | 조기 문제 발견 |
-| 리뷰 이슈 수정 후 | 권장 | 수정 검증 |
+1. **Identify** — What command proves this claim? If multiple commands are needed, run the gate once per command.
+2. **Run** — Execute the full command now. No partial runs, no skipping.
+3. **Read** — Read complete output. Check exit code. Count pass/fail.
+4. **Confirm** — Does the output prove the exact claim?
+5. **Report** — State the result, cite command, exit code, and key output.
 
-## 검증 결과 처리
+If any step fails, stop. Fix the issue and restart from step 1.
 
-| 결과 | 조치 |
-|------|------|
-| 빌드 실패 | 에러 메시지 분석 → 코드 수정 → `/verify` 재실행 |
-| 린트 에러 | `pnpm lint --fix` 시도 → 수동 수정 필요 시 코드 수정 |
-| 테스트 실패 | 실패 테스트 분석 → 테스트 또는 구현 수정 |
-| **모두 통과** | 커밋/PR 진행 가능 |
+If no verification command exists (e.g., no test suite), tell the user and ask them how to verify before claiming done.
 
-## 검증 루프 (Self-Healing)
+## Verification Patterns
 
-```
-코드 수정
-    ↓
-/verify 실행
-    ↓
-실패 발견? ─Yes→ 에러 분석 → 코드 수정 → (루프)
-    │
-    No
-    ↓
-커밋/PR 진행
-```
+| Claim | Required Evidence | Not Sufficient |
+|---|---|---|
+| Tests pass | Test output: 0 failures, exit 0 | Previous run, "should pass now" |
+| Build succeeds | Build output: exit 0 | Linter passing, partial build |
+| Bug is fixed | Reproduce symptom → now passes | "Changed code, should be fixed" |
+| Linter clean | Linter output: 0 errors | Single file check |
+| Phase complete | Each criterion verified individually | "Tests pass, so done" |
+| Feature works | E2E test or manual walkthrough | Unit tests alone |
 
-**핵심**: 검증 실패 시 사용자 개입 없이 Claude가 스스로 수정하고 재검증합니다.
+## Regression Verification
 
-## 명령어 레퍼런스
+For bug fixes, a single pass is not enough:
 
-```bash
-# 빌드 검증
-pnpm build
+1. Write a test covering the bug.
+2. Run → **must pass** (fix in place).
+3. Revert the fix.
+4. Run → **must fail** (proves test catches the bug).
+5. Restore the fix.
+6. Run → **must pass**.
 
-# 린트 검증
-pnpm lint
+If step 4 passes, the test is wrong. Rewrite it.
 
-# 린트 자동 수정
-pnpm lint --fix
+## Red Flags and Rationalizations
 
-# 테스트 검증
-pnpm test:run
+| Rationalization | Why It's Wrong | Do Instead |
+|---|---|---|
+| "This change is trivial" | Trivial changes break things constantly | Run the check |
+| "I ran it earlier" | Code changed since then | Run it again now |
+| "The test is flaky" | Flaky ≠ ignorable | Fix the flake first |
+| "It compiles, so it works" | Compilation ≠ correctness | Run the tests |
+| "The CI will catch it" | CI is a safety net, not a substitute | Verify locally first |
+| "The agent said it's done" | Agent claims need verification too | Check diff and run tests |
 
-# 특정 테스트만 실행
-pnpm test:run <패턴>
+## Memory Integration
 
-# 타입 체크
-pnpm typecheck
-```
-
-## 예시
-
-### 입력
-```
-/verify
-```
-
-### 실행 흐름
-
-```
-1. pnpm build
-   ✗ 에러: Cannot find module '@/shared/types'
-   → import 경로 수정
-   → pnpm build 재실행
-   ✓ 빌드 성공
-
-2. pnpm lint
-   ✗ 에러: 'useState' is defined but never used
-   → 불필요한 import 제거
-   → pnpm lint 재실행
-   ✓ 린트 통과
-
-3. pnpm test:run
-   ✓ 모든 테스트 통과
-
-4. 결과: "검증 완료. 커밋 가능합니다."
-```
-
-## 주의사항
-
-- **검증 생략 금지**: 커밋/PR 전에는 반드시 `/verify` 실행
-- **수동 개입 최소화**: 가능한 Claude가 스스로 문제 해결
-- **루프 제한**: 동일 에러로 3회 이상 실패 시 사용자에게 알림
-
-## Chrome Extension 특수 사항
-
-- Chrome API 모킹: 테스트에서 `chrome.storage` 등을 모킹 필요
-- Manifest 검증: `manifest.json` 구문 오류 확인
-- 빌드 출력: `dist/` 폴더에 정상 생성 확인
+After a failed verification, store the failure pattern: `npx ai-devkit@latest memory store --title "<failure pattern>" --content "<what failed and how to avoid>" --tags "verify,failure-pattern"`

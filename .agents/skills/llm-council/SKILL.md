@@ -1,63 +1,86 @@
 ---
-name: LLM Council
-description: Orchestrate multiple LLMs as a council, generating collective intelligence through peer review and chairman synthesis
-version: 1.0.0
-dependencies: python>=3.8, python-dotenv, loguru
+name: llm-council
+description: Provider-agnostic multi-LLM deliberation. Three phases — independent responses, cross-model anonymized ranking, chairman synthesis. Provider config from env (OPENAI/ANTHROPIC/FIREWORKS/OPENROUTER/custom OpenAI-compatible base URL). Persists transcript to a wiki page when --wiki <slug> is passed. Use when the user wants multiple AI perspectives, consensus-building, or the "LLM Council" approach for high-stakes reviews, plan critique, or contested learning rules.
+allowed-tools: Read, Write, Bash, AskUserQuestion
 ---
 
-## Overview
+# LLM Council
 
-LLM Council is a Skill that organizes multiple LLMs as "council members" and generates high-quality responses through a 3-stage process.
+Karpathy's LLM Council pattern, provider-agnostic. dair-academy's version hardcoded Fireworks; ours reads any OpenAI-compatible endpoint via env.
 
-### Use Cases
+## When to use
 
-- When you need multiple perspectives for important decisions
-- When you want multiple AIs to review code
-- When comparing and evaluating design proposals
-- When you need objective responses with reduced bias
+- High-stakes plan review (`/plan` crosses N-file threshold)
+- Conflicting learning-rules → re-resolve via vote
+- User invokes `/council "<query>"` or `/wiki council`
+- Architecture decisions where you want multiple viewpoints captured
+- Persisting deliberation as a wiki page for future reference
 
-## 3-Stage Process
+## Three phases
 
-1. **Stage 1: Opinion Collection** - Each member (LLM) responds independently
-2. **Stage 2: Peer Review** - Anonymized responses are mutually ranked
-3. **Stage 3: Synthesis** - Chairman integrates all opinions and reviews into final response
+1. **Independent**: each model answers in parallel
+2. **Ranking**: each model ranks anonymized peer responses
+3. **Synthesis**: chairman model reads all responses + rankings → final answer
 
-## Quick Start
+## Provider config
 
-```bash
-# Basic question
-python scripts/run.py council_skill.py "What's the optimal caching strategy?"
+Provider chosen via env. First-match wins:
 
-# With TUI dashboard
-python scripts/run.py cli.py --dashboard "What's the optimal caching strategy?"
+| Env var | Provider | Default base URL |
+|---------|----------|------------------|
+| `ANTHROPIC_API_KEY` | Anthropic | `https://api.anthropic.com` |
+| `OPENAI_API_KEY` | OpenAI | `https://api.openai.com/v1` |
+| `OPENROUTER_API_KEY` | OpenRouter | `https://openrouter.ai/api/v1` |
+| `FIREWORKS_API_KEY` | Fireworks | `https://api.fireworks.ai/inference/v1` |
+| `LLM_COUNCIL_BASE_URL` + `LLM_COUNCIL_API_KEY` | Custom OpenAI-compat | (user-supplied) |
 
-# Code fix (diff only)
-python scripts/run.py council_skill.py --dry-run "Fix the bug in buggy.py"
+Override per-run with `--provider openai|anthropic|openrouter|fireworks|custom`.
 
-# Auto-merge
-python scripts/run.py council_skill.py --auto-merge "Add error handling"
+Default model rosters per provider live in `scripts/council.js` and can be overridden via `--models` CSV and `--chairman <id>`.
+
+## Commands
+
+```
+node $SKILL_ROOT/scripts/council.js run "<query>" [--models id1,id2,id3] [--chairman id] [--provider <name>] [--wiki <slug>]
+node $SKILL_ROOT/scripts/council.js providers
+node $SKILL_ROOT/scripts/council.js show <session-id>
 ```
 
-## Command Options
+`--wiki <slug>` writes the full transcript to `<wiki>/derived/council/<session-id>.md` and registers it via `wiki-cli.js page` so it shows in FTS5 search.
 
-| Option | Description |
-|--------|-------------|
-| `--dashboard`, `-d` | TUI dashboard for real-time monitoring |
-| `--worktrees` | Git worktree mode - each member works independently |
-| `--dry-run` | Show diff without merging |
-| `--auto-merge` | Auto-merge the top-ranked proposal |
-| `--merge N` | Merge member N's proposal |
-| `--confirm` | Show confirmation prompt before merge |
-| `--no-commit` | Apply changes without staging |
-| `--list` | Show conversation history |
-| `--continue N` | Continue conversation N |
+## Output
 
-## Setup
+Each session writes:
 
-1. Create `scripts/.env` to configure models
-2. Install and configure OpenCode CLI
-3. Run `python scripts/run.py council_skill.py --setup` for details
+```
+~/.pro-workflow/council/<session-id>/
+├── config.json           # query, models, chairman, provider
+├── phase1_responses.json # raw API responses per model
+├── phase2_rankings.json  # anonymized ranking outputs
+├── phase3_synthesis.txt  # chairman's final answer
+└── final_output.md       # human-readable bundle
+```
 
-## Resources
+Console prints the markdown bundle. Pipe to `pbcopy` / `tee` as needed.
 
-See `README.md` for more details.
+## Hard rules
+
+1. Never skip the ranking phase. It's the core of the council pattern.
+2. Save raw responses to disk verbatim. No summarization in storage.
+3. Anonymize responses for ranking — models see `Response A/B/C/...`, not peer names.
+4. The chairman sees both real names AND rankings.
+5. Display all three phases to the user. No phase elision.
+
+## Cost awareness
+
+The script logs per-call latency + tokens on supported providers. Multiply by your provider rate to estimate. Council cost grows linearly with `len(models)^2` (each model ranks all others) plus the chairman.
+
+Default council size: 3-5 models. More models = exponentially more ranking calls.
+
+## Use with wiki
+
+```
+/wiki council agent-memory "should we adopt episodic memory in our agents?"
+```
+
+Loads `agent-memory` wiki context as system prompt prefix, runs council, persists transcript as `wiki/derived/council/<id>.md`. The transcript becomes searchable via `/wiki ask`.

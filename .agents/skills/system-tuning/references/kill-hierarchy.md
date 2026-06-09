@@ -83,5 +83,5 @@ If any of these is missing, stop and gather data.
 
 Stop walking the ladder as soon as the pressure baseline returns to healthy.
 Continuing past that point is no longer cleanup; it is mutation. Document any
-remaining hot processes for the operator to triage with `$perf` or
-`$bug-hunt`.
+remaining hot processes for the operator to triage with `/perf` or
+`/bug-hunt`.

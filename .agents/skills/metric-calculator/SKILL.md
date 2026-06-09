@@ -1,40 +1,73 @@
 ---
-name: metric-calculator
+name: "metric-calculator"
 description: |
-  Compute well-defined metrics from existing formulas, datasets, or test outputs.
-  Use as an explicit/manual helper when the metric definition is already known, not for choosing the overall analysis owner or dashboard strategy.
-allowed-tools: Read, Write, Edit, Bash, Grep
+  Configure and manage - Calculate metric calculator operations. Auto-activating skill for Data Analytics.
+  Triggers on: metric calculator, metric calculator
+  Part of the Data Analytics skill category. Use when working with metric calculator functionality. Trigger with phrases like "metric calculator", "metric calculator", "metric".
+allowed-tools: "Read, Write, Edit, Bash(cmd:*), Grep"
 version: 1.0.0
 license: MIT
-author: Jeremy Longshore <jeremy@intentsolutions.io>
+author: "Jeremy Longshore <jeremy@intentsolutions.io>"
+compatible-with: claude-code
 ---
 
 # Metric Calculator
 
-## Positioning
+## Overview
 
-Treat this skill as an explicit/manual helper for narrow metric-computation work.
+This skill provides automated assistance for metric calculator tasks within the Data Analytics domain.
 
 ## When to Use
 
-Use this skill when:
-- Calculating a named business, statistical, or QA metric from available data
-- Converting raw counts into rates, ratios, deltas, or scorecards
-- Verifying that a metric formula is implemented consistently across outputs
+This skill activates automatically when you:
+- Mention "metric calculator" in your request
+- Ask about metric calculator patterns or best practices
+- Need help with data analytics skills covering sql queries, data visualization, statistical analysis, and business intelligence.
 
-## Not For / Boundaries
+## Instructions
 
-- Model evaluation strategy selection: use `evaluating-machine-learning-models`
-- Full regression or causal analysis ownership: use `performing-regression-analysis`
-- Chart design or presentation decisions: use `creating-data-visualizations`
+1. Provides step-by-step guidance for metric calculator
+2. Follows industry best practices and patterns
+3. Generates production-ready code and configurations
+4. Validates outputs against common standards
 
-## Typical Outputs
+## Examples
 
-- Metric definitions and formulas
-- Reproducible calculation steps
-- Sanity checks for units, denominators, and aggregation scope
+**Example: Basic Usage**
+Request: "Help me with metric calculator"
+Result: Provides step-by-step guidance and generates appropriate configurations
+
+
+## Prerequisites
+
+- Relevant development environment configured
+- Access to necessary tools and services
+- Basic understanding of data analytics concepts
+
+
+## Output
+
+- Generated configurations and code
+- Best practice recommendations
+- Validation results
+
+
+## Error Handling
+
+| Error | Cause | Solution |
+|-------|-------|----------|
+| Configuration invalid | Missing required fields | Check documentation for required parameters |
+| Tool not found | Dependency not installed | Install required tools per prerequisites |
+| Permission denied | Insufficient access | Verify credentials and permissions |
+
+
+## Resources
+
+- Official documentation for related tools
+- Best practices guides
+- Community examples and tutorials
 
 ## Related Skills
 
-- `evaluating-machine-learning-models` for ML benchmark metrics
-- `creating-data-visualizations` after the numbers are finalized
+Part of the **Data Analytics** skill category.
+Tags: sql, analytics, visualization, statistics, bi

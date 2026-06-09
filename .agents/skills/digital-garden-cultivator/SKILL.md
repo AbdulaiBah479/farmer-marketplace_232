@@ -1,27 +1,41 @@
 ---
 name: digital-garden-cultivator
-description: |
-  Design, manage, and evolve digital gardens as living knowledge bases within
-  memory palaces.
-
-  Triggers: digital garden, knowledge base, linking, note curation, content lifecycle,
-  garden maintenance, bidirectional links, knowledge evolution
-
-  Use when: managing note collections, creating link structures, maintaining
-  knowledge bases, tending garden health and growth
-
-  DO NOT use when: creating memory palace structures - use memory-palace-architect.
-  DO NOT use when: evaluating new knowledge - use knowledge-intake.
-
-  Consult this skill when cultivating and maintaining digital gardens.
+description: Manages digital garden notes, link structures, and health metrics. Use when curating a knowledge base, pruning stale notes, or tracking content maturity.
+alwaysApply: false
 category: cultivation
-tags: [digital-garden, knowledge-base, linking, curation, documentation]
-dependencies: [leyline:storage-templates]
-scripts: [garden_metrics.py]
-usage_patterns: [garden-management, knowledge-curation, content-lifecycle]
+tags:
+- digital-garden
+- knowledge-base
+- linking
+- curation
+- documentation
+dependencies:
+- leyline:storage-templates
+scripts:
+- garden_metrics.py
+usage_patterns:
+- garden-management
+- knowledge-curation
+- content-lifecycle
 complexity: intermediate
+model_hint: standard
 estimated_tokens: 500
 ---
+## Table of Contents
+
+- [What It Is](#what-it-is)
+- [Quick Start](#quick-start)
+- [Calculate Garden Metrics](#calculate-garden-metrics)
+- [Output Formats](#output-formats)
+- [When to Use](#when-to-use)
+- [Content Maturity Levels](#content-maturity-levels)
+- [Core Workflow](#core-workflow)
+- [Garden Layout Template](#garden-layout-template)
+- [Maintenance Cadence](#maintenance-cadence)
+- [Success Metrics](#success-metrics)
+- [Detailed Resources](#detailed-resources)
+- [Integration](#integration)
+
 
 # Digital Garden Cultivator
 
@@ -42,19 +56,31 @@ A digital garden approach to knowledge management that:
 ```bash
 python scripts/garden_metrics.py path/to/garden.json --format brief
 ```
+**Verification:** Run `python --version` to verify Python environment.
 
 ### Output Formats
 - `json` - Full metrics as JSON
 - `brief` - One-line summary
 - `prometheus` - Prometheus exposition format
 
-## When to Use
+## When To Use
 
 - Building dynamic knowledge bases that evolve over time
 - Connecting notes, skills, and palaces through bidirectional links
 - Incubating ideas before formalizing as documentation
 - Creating discovery paths for navigating information
 - Managing content lifecycle (seedling → growing → evergreen)
+
+## When NOT To Use
+
+- Creating memory palace
+  structures - use memory-palace-architect
+- Evaluating new knowledge
+  - use knowledge-intake
+- Creating memory palace
+  structures - use memory-palace-architect
+- Evaluating new knowledge
+  - use knowledge-intake
 
 ## Content Maturity Levels
 
@@ -85,6 +111,7 @@ garden:
       outbound_links: []
       last_tended: "2025-11-24T10:00:00Z"
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
 ## Maintenance Cadence
 
@@ -105,10 +132,22 @@ garden:
 
 - **Linking Patterns**: See `modules/linking-patterns.md`
 - **Maintenance Guide**: See `modules/maintenance.md`
-- **Metrics Integration**: See `modules/metrics-integration.md`
+- **Metrics Integration**: See `modules/maintenance.md`
 
 ## Integration
 
 - `memory-palace-architect` - Host garden within palace structure
 - `knowledge-locator` - Search garden content
 - `session-palace-builder` - Seed garden from session insights
+## Troubleshooting
+
+### Common Issues
+
+**Pre-commit hooks failing**
+Run `SKIP=... git commit` to bypass temporarily, then fix issues
+
+**Merge conflicts**
+Use `git merge --abort` to reset, then resolve conflicts carefully
+
+**Commit rejected**
+Check hook output and fix reported issues before committing again

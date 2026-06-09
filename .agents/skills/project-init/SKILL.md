@@ -1,188 +1,177 @@
 ---
 name: project-init
-description: "Initialize .claude/ structure and surgically add PopKit section to CLAUDE.md without overwriting. Detects conflicts, creates config, prompts for Power Mode. Use for new projects only - use analyze-project for existing."
+description: Scaffolds new projects with git, CI/CD workflows, pre-commit hooks, and build config. Use when starting a new Python, Rust, or TypeScript project from scratch.
+alwaysApply: false
+model: claude-sonnet-4
+tools: []
+modules:
+- ./modules/language-detection.md
+- ./modules/metadata-collection.md
+- ./modules/template-rendering.md
+model_hint: standard
+role: entrypoint
 ---
+## Table of Contents
 
-# Project Initialization
+- [Use When](#use-when)
+- [Workflow](#workflow)
+- [1. Detect or Select Language](#1-detect-or-select-language)
+- [2. Collect Project Metadata](#2-collect-project-metadata)
+- [3. Review Existing Files](#3-review-existing-files)
+- [4. Render and Apply Templates](#4-render-and-apply-templates)
+- [5. Initialize Git (if needed)](#5-initialize-git-(if-needed))
+- [6. Verify Setup](#6-verify-setup)
+- [7. Next Steps](#7-next-steps)
+- [Error Handling](#error-handling)
+- [Success Criteria](#success-criteria)
+- [Examples](#examples)
+- [Example 1: New Python Project](#example-1:-new-python-project)
 
-Initialize project with Claude Code configuration. **Never destroys user content** - surgically adds PopKit section using HTML markers.
 
-**Trigger:** `/popkit:project init` or new project setup
+# Project Initialization Skill
 
-## Critical Rules
+Interactive workflow for initializing new software projects with complete development infrastructure.
 
-1. **NEVER overwrite CLAUDE.md** - Read first, then EDIT (not Write)
-2. **ALWAYS use `<!-- POPKIT:START/END -->` markers** - Required for updates
-3. **ALWAYS create `.claude/popkit/`** - Required for deploy, routines, state
-4. **Check plugin conflicts first**
-5. **MANDATORY: Use AskUserQuestion** for all decisions (enforced by hooks)
-6. **Preserve existing .claude/ content**
+## Use When
 
-## Required Decision Points
+- Starting a new Python, Rust, or TypeScript project
+- Updating existing project tooling to current standards
+- Need to set up git, GitHub workflows, pre-commit hooks, Makefile
+- Want consistent project structure across team
+- Converting unstructured project to best practices
+- Adding missing configurations to established codebases
 
-| Step | When                      | Decision ID        |
-| ---- | ------------------------- | ------------------ |
-| 0    | Plugin conflicts detected | `plugin_conflict`  |
-| 6    | After directory creation  | `power_mode_setup` |
-| 8    | After init complete       | `next_action`      |
+## Workflow
 
-**Skipping these violates PopKit UX standard.**
+### 1. Detect or Select Language
 
-## Process
+Load `modules/language-detection.md`
 
-### Step 0: Check Plugin Conflicts
+- Auto-detect from existing files (pyproject.toml, Cargo.toml, package.json)
+- If ambiguous or empty directory, ask user to select
+- Validate language is supported (python, rust, typescript)
 
-```python
-from plugin_detector import run_detection, format_conflict_report
-result, plugins = run_detection()
-if result["total"] > 0:
-    # Use AskUserQuestion: "View details" | "Continue anyway" | "Cancel"
+### 2. Collect Project Metadata
+
+Load `modules/metadata-collection.md`
+
+Gather:
+- Project name (default: directory name)
+- Author name and email
+- Project description
+- Language-specific settings:
+  - Python: version (default 3.10)
+  - Rust: edition (default 2021)
+  - TypeScript: framework (React, Vue, etc.)
+- License type (MIT, Apache, GPL, etc.)
+
+### 3. Review Existing Files
+
+Check for existing configurations:
+```bash
+ls -la
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
-### Step 1-2: Detect Type & Create Structure
+If files exist (Makefile, .gitignore, etc.):
+- Show what would be overwritten
+- Ask for confirmation or selective overwrite
+- Offer merge mode (preserve custom content)
+
+### 4. Render and Apply Templates
+
+Load `modules/template-rendering.md`
+
+Run initialization script:
+```bash
+python3 plugins/attune/scripts/attune_init.py \
+  --lang {{LANGUAGE}} \
+  --name {{PROJECT_NAME}} \
+  --author {{AUTHOR}} \
+  --email {{EMAIL}} \
+  --python-version {{PYTHON_VERSION}} \
+  --description {{DESCRIPTION}} \
+  --path .
+```
+**Verification:** Run the command with `--help` flag to verify availability.
+
+The script also scaffolds the project decision journal: `docs/tradeoffs.md`
+and `docs/lessons-learned.md`. These are append-only logs that later workflows
+(brainstorm, specify, plan, execute, review) write to as decisions and lessons
+arise. Existing journal files are never overwritten. The format follows the
+`leyline:decision-journal` contract; init uses leyline's template when present
+and a vendored copy otherwise, so it works with or without leyline installed.
+
+**Verification:** Confirm `docs/tradeoffs.md` and `docs/lessons-learned.md`
+exist and each contains an `## Active index` and an `## Archive` section.
+
+### 5. Initialize Git (if needed)
 
 ```bash
-# Detect: package.json→node, Cargo.toml→rust, pyproject.toml→python, go.mod→go
-mkdir -p .claude/{agents,commands,hooks,skills,scripts,logs,plans}
-mkdir -p .claude/popkit/routines/{morning,nightly}
+# Check if git is initialized
+if [ ! -d .git ]; then
+  git init
+  echo "Git repository initialized"
+fi
 ```
+**Verification:** Run `git status` to confirm working tree state.
 
-### Step 2b: Create PopKit Config
+### 6. Verify Setup
 
-```python
-# .claude/popkit/config.json
-{
-  "version": "1.0",
-  "project_name": "<name>",
-  "project_prefix": "<prefix>",  # First letters
-  "default_routines": {"morning": "pk", "nightly": "pk"},
-  "tier": "free",
-  "features": {"power_mode": "not_configured"}
-}
+Validate setup:
+```bash
+# Check Makefile targets
+make help
+
+# List created files
+git status
 ```
+**Verification:** Run `git status` to confirm working tree state.
 
-### Step 3: Surgically Update CLAUDE.md (CRITICAL)
+### 7. Next Steps
 
-**Decision Flow:**
+Advise user to:
+```bash
+# Install dependencies and hooks
+make dev-setup
 
+# Run tests to verify setup
+make test
+
+# See all available commands
+make help
 ```
-CLAUDE.md exists?
-├─ NO  → Create with: header + PopKit section
-└─ YES → Read content
-    ├─ Has markers? → Edit ONLY between markers
-    └─ No markers?  → Append at END
-```
+**Verification:** Run `pytest -v` to verify tests pass.
 
-**Markers (REQUIRED):**
+## Error Handling
 
-```markdown
-<!-- POPKIT:START -->
+- **Language detection fails**: Ask user to specify `--lang`
+- **Script not found**: Guide to plugin installation location
+- **Permission denied**: Suggest `chmod +x` on scripts
+- **Git conflicts**: Offer to stash or commit existing work
 
-## PopKit Integration
+## Success Criteria
 
-Quick Commands: /popkit:next, /popkit:routine morning, /popkit:git commit
-Config: .claude/popkit/, Power Mode: [status]
+- All template files created successfully
+- No overwrites without user confirmation
+- Git repository initialized
+- `make help` shows available targets
+- `make test` runs without errors (even if no tests yet)
 
-<!-- POPKIT:END -->
-```
+## Exit Criteria
 
-See `examples/claude-md-update.py` for full implementation.
-
-### Step 4-5: Create STATUS.json & settings.json
-
-Only if missing. See `examples/` for schemas.
-
-### Step 6: Power Mode Setup (MANDATORY)
-
-```
-Use AskUserQuestion:
-- question: "Set up Power Mode for multi-agent orchestration?"
-- options:
-  - "Native Async (Recommended)" - 5+ agents, zero setup (requires Claude Code 2.0.64+)
-  - "Upstash Redis (Optional)" - 10+ agents, cloud-based, env vars only (no Docker)
-  - "File Mode (Fallback)" - 2-3 agents, automatic fallback
-  - "Skip for now"
-```
-
-Update CLAUDE.md with selected mode.
-
-### Step 7: Update .gitignore
-
-```
-.claude/logs/
-.claude/STATUS.json
-.claude/power-mode-state.json
-.claude/popkit/state.json
-.worktrees/
-.generated/
-```
-
-### Step 8: Next Action (MANDATORY)
-
-```
-Use AskUserQuestion:
-- question: "What would you like to do next?"
-- options:
-  - "Analyze codebase" → /popkit:project analyze
-  - "Setup quality gates" → /popkit:project setup
-  - "View issues" → /popkit:issue list
-  - "Done for now"
-```
-
-## Output Format
-
-```
-PopKit Project Initialization
-═════════════════════════════
-[1/5] Checking conflicts... ✓ No conflicts
-[2/5] Detecting type... ✓ Node.js (Next.js 14)
-[3/5] Creating structure... ✓ .claude/popkit/config.json
-[4/5] Updating CLAUDE.md... ✓ Section appended with markers
-[5/5] Power Mode... ✓ [Based on selection]
-
-Summary:
-  Config: .claude/popkit/config.json
-  CLAUDE.md: <!-- POPKIT:START/END --> markers
-  Power Mode: [status]
-  Ready: /popkit:routine morning
-```
-
-## Verification
-
-| Path                         | Purpose         |
-| ---------------------------- | --------------- |
-| `.claude/popkit/config.json` | Project config  |
-| `.claude/popkit/routines/`   | Custom routines |
-| `.claude/STATUS.json`        | Session state   |
-| `CLAUDE.md`                  | Has markers     |
-
-## Integration
-
-**Triggers:** `/popkit:project init`, manual skill invocation
-
-**Followed by:** analyze, mcp, setup, power init, issue list
-
-## Visual Style
-
-From `output-styles/visual-components.md`:
-
-- Progress: `[1/5]`, `[2/5]`
-- Status: ✓ (success), ✗ (failure), ⚠️ (warning)
-- Headers: `═════════════════`
-
-## Related
-
-| Skill                 | Relationship          |
-| --------------------- | --------------------- |
-| `pop-analyze-project` | Run after init        |
-| `pop-doc-sync`        | Keeps section in sync |
-| `pop-plugin-test`     | Validates plugin      |
+- [ ] Template files for the selected language are created (or, in dry-run,
+  reported) with no unconfirmed overwrites.
+- [ ] `docs/tradeoffs.md` and `docs/lessons-learned.md` exist, each with an
+  `## Active index` and an `## Archive` section.
+- [ ] A pre-existing journal file is detected and left unmodified.
+- [ ] Git is initialized (unless `--no-git`) and `make help` lists targets.
+- [ ] Running with `--dry-run` writes no files, including the journal.
 
 ## Examples
 
-See `examples/` for:
+### Example 1: New Python Project
 
-- `claude-md-update.py` - Full surgical update logic
-- `config-schema.json` - PopKit config schema
-- `status-schema.json` - STATUS.json schema
-- `tier-comparison.md` - Free vs Premium vs Pro features
+```
+**Verification:** Run `pytest -v` to verify tests pass.
+User: /attune:project-init

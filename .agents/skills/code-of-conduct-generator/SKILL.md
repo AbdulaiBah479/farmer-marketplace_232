@@ -1,23 +1,73 @@
 ---
-name: code-of-conduct-generator
-description: Generate CODE_OF_CONDUCT.md files based on Contributor Covenant. Triggers on "create code of conduct", "generate code_of_conduct.md", "community guidelines", "contributor covenant".
+name: "code-of-conduct-generator"
+description: |
+  Generate code of conduct generator operations. Auto-activating skill for Technical Documentation.
+  Triggers on: code of conduct generator, code of conduct generator
+  Part of the Technical Documentation skill category. Use when working with code of conduct generator functionality. Trigger with phrases like "code of conduct generator", "code generator", "code".
+allowed-tools: "Read, Write, Edit, Bash(cmd:*), Grep"
+version: 1.0.0
+license: MIT
+author: "Jeremy Longshore <jeremy@intentsolutions.io>"
+compatible-with: claude-code
 ---
 
-# Code of Conduct Generator
+# Code Of Conduct Generator
 
-Generate CODE_OF_CONDUCT.md based on Contributor Covenant.
+## Overview
 
-## Output Requirements
+This skill provides automated assistance for code of conduct generator tasks within the Technical Documentation domain.
 
-**File Output:** `CODE_OF_CONDUCT.md`
-**Format:** Markdown
-**Standards:** Contributor Covenant 2.1
+## When to Use
 
-## When Invoked
+This skill activates automatically when you:
+- Mention "code of conduct generator" in your request
+- Ask about code of conduct generator patterns or best practices
+- Need help with technical documentation skills covering api docs, user guides, architecture docs, and documentation automation.
 
-Immediately generate a complete Code of Conduct file.
+## Instructions
 
-## Example Invocations
+1. Provides step-by-step guidance for code of conduct generator
+2. Follows industry best practices and patterns
+3. Generates production-ready code and configurations
+4. Validates outputs against common standards
 
-**Prompt:** "Create code of conduct for open source project"
-**Output:** Complete `CODE_OF_CONDUCT.md` with Contributor Covenant.
+## Examples
+
+**Example: Basic Usage**
+Request: "Help me with code of conduct generator"
+Result: Provides step-by-step guidance and generates appropriate configurations
+
+
+## Prerequisites
+
+- Relevant development environment configured
+- Access to necessary tools and services
+- Basic understanding of technical documentation concepts
+
+
+## Output
+
+- Generated configurations and code
+- Best practice recommendations
+- Validation results
+
+
+## Error Handling
+
+| Error | Cause | Solution |
+|-------|-------|----------|
+| Configuration invalid | Missing required fields | Check documentation for required parameters |
+| Tool not found | Dependency not installed | Install required tools per prerequisites |
+| Permission denied | Insufficient access | Verify credentials and permissions |
+
+
+## Resources
+
+- Official documentation for related tools
+- Best practices guides
+- Community examples and tutorials
+
+## Related Skills
+
+Part of the **Technical Documentation** skill category.
+Tags: documentation, markdown, api-docs, readme, technical-writing

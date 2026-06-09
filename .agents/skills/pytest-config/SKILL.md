@@ -1,26 +1,52 @@
 ---
 name: pytest-config
-description: |
-  Standardized pytest configuration for plugin development with shared test patterns.
-
-  Triggers: pytest configuration, conftest, fixtures, test setup
-  Use when: setting up pytest for plugin development or creating fixtures
+description: Provides standardized pytest config, reusable fixtures, and CI integration patterns. Use when setting up or auditing a Python plugin's test infrastructure.
+globs: ["**/conftest.py", "**/pytest.ini", "**/pyproject.toml"]
+alwaysApply: false
 category: infrastructure
-tags: [pytest, testing, configuration, fixtures]
-dependencies: [leyline:testing-quality-standards]
+tags:
+- pytest
+- testing
+- configuration
+- fixtures
+dependencies:
+- leyline:testing-quality-standards
 estimated_tokens: 200
 provides:
-  infrastructure: [pytest-config, conftest-patterns, coverage-config]
+  infrastructure:
+  - pytest-config
+  - conftest-patterns
+  - coverage-config
 modules:
-  - modules/conftest-patterns.md
-  - modules/git-testing-fixtures.md
-  - modules/mock-fixtures.md
-  - modules/ci-integration.md
+- modules/conftest-patterns.md
+- modules/git-testing-fixtures.md
+- modules/mock-fixtures.md
+- modules/ci-integration.md
+- modules/README.md
+model_hint: standard
 ---
+## Table of Contents
+
+- [Quick Start](#quick-start)
+- [Detailed Patterns](#detailed-patterns)
+- [Integration with Other Skills](#integration-with-other-skills)
+- [Exit Criteria](#exit-criteria)
+- [Troubleshooting](#troubleshooting)
 
 # Pytest Configuration Patterns
 
 Standardized pytest configuration and patterns for consistent testing infrastructure across Claude Night Market plugins.
+
+
+## When To Use
+
+- Setting up pytest configuration and fixtures
+- Configuring conftest.py patterns for test infrastructure
+
+## When NOT To Use
+
+- Non-Python projects or projects using other test frameworks
+- Simple scripts that do not need test infrastructure
 
 ## Quick Start
 
@@ -64,6 +90,7 @@ exclude_lines = [
 precision = 2
 show_missing = true
 ```
+**Verification:** Run `pytest --collect-only` to verify discovery, `pytest -v --co -q` for markers, and `pytest --cov` for coverage thresholds.
 
 ## Detailed Patterns
 
@@ -73,6 +100,7 @@ For detailed implementation patterns, see:
 - **[Git Testing Fixtures](modules/git-testing-fixtures.md)** - GitRepository helper class for testing git workflows
 - **[Mock Fixtures](modules/mock-fixtures.md)** - Mock tool fixtures for Bash, TodoWrite, and other Claude Code tools
 - **[CI Integration](modules/ci-integration.md)** - GitHub Actions workflows and test commands for automated testing
+- **Module Index**: See `modules/README.md` for module organization overview
 
 ## Integration with Other Skills
 
@@ -93,3 +121,15 @@ dependencies: [leyline:pytest-config, leyline:testing-quality-standards]
 - test markers defined and documented
 - coverage configuration enforces quality thresholds
 - CI/CD integration configured for automated testing
+## Troubleshooting
+
+### Common Issues
+
+**Tests not discovered**
+Ensure test files match pattern `test_*.py` or `*_test.py`. Run `pytest --collect-only` to verify.
+
+**Import errors**
+Check that the module being tested is in `PYTHONPATH` or install with `pip install -e .`
+
+**Async tests failing**
+Install pytest-asyncio and decorate test functions with `@pytest.mark.asyncio`

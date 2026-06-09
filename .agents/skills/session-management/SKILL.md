@@ -1,526 +1,221 @@
 ---
 name: session-management
-description: Context preservation, tiered summarization, resumability
+description: Manages Claude Code sessions with naming, checkpointing, and resume strategies. Use when organizing long-running work or resuming across sessions.
+alwaysApply: false
+category: workflow
+tags:
+- session
+- resume
+- checkpoint
+- debugging
+tools: []
+complexity: low
+model_hint: fast
+estimated_tokens: 400
 ---
+# Session Management
 
-# Session Management Skill
 
-*Load with: base.md*
+## When To Use
 
-For maintaining context across long development sessions and enabling seamless resume after breaks.
+- Managing session checkpoints and state preservation
+- Resuming work across Claude Code sessions
 
----
+## When NOT To Use
 
-## Core Principle
+- Short sessions that do not need checkpoints
+- Fresh starts where no prior session context exists
 
-**Checkpoint at natural breakpoints, resume instantly.**
+## Overview
 
-Long development sessions risk context loss. Proactively document state, decisions, and progress so any session can resume exactly where it left off - whether returning after a break or hitting context limits.
+Claude Code supports named sessions for better workflow organization. Use this skill to manage complex, long-running work across multiple sessions.
 
----
+## Available Commands
 
-## Tiered Summarization Rules
+| Command | Description |
+|---------|-------------|
+| `/rename` | Name the current session (auto-generates name if no argument given, 2.1.41+) |
+| `/resume` | Resume a previous session (REPL) |
+| `claude --resume <name>` | Resume from terminal |
 
-### Tier 1: Quick Update (current-state.md only)
-**Trigger**: After completing any small task or todo item
-**Action**: Update "Active Task", "Progress", and "Next Steps" sections
-**Time**: ~30 seconds
+## Workflow Patterns
 
-### Tier 2: Full Checkpoint (current-state.md + decisions.md)
-**Trigger**:
-- After completing a feature or significant change
-- After any architectural/library decision
-- After ~20 tool calls during active work
-- When switching to a different area of the codebase
+### 1. Debugging Sessions
 
-**Action**:
-1. Update full current-state.md
-2. Log any decisions to decisions.md
-3. Update files being modified table
-
-### Tier 3: Session Archive (archive/ + full checkpoint)
-**Trigger**:
-- End of work session
-- Completing a major feature/milestone
-- Before a significant context shift
-- When context feels heavy (~50+ tool calls)
-
-**Action**:
-1. Create archive entry: `archive/YYYY-MM-DD[-topic].md`
-2. Full checkpoint
-3. Clear verbose notes from current-state.md
-4. Update code-landmarks.md if new patterns introduced
-
-### Decision Heuristic
-```
-┌─────────────────────────────────────────────────────┐
-│ After completing work, ask:                         │
-├─────────────────────────────────────────────────────┤
-│ Was a decision made?        → Log to decisions.md   │
-│ Task took >10 tool calls?   → Full Checkpoint       │
-│ Major feature complete?     → Archive               │
-│ Ending session?             → Archive + Handoff     │
-│ Otherwise                   → Quick Update          │
-└─────────────────────────────────────────────────────┘
-```
-
----
-
-## Session State Structure
-
-Create `_project_specs/session/` directory:
+Name debug sessions for easy resumption:
 
 ```
-_project_specs/
-└── session/
-    ├── current-state.md      # Live session state (update frequently)
-    ├── decisions.md          # Key decisions log (append-only)
-    ├── code-landmarks.md     # Important code locations
-    └── archive/              # Past session summaries
-        └── 2025-01-15.md
+# Start debugging
+/rename debugging-auth-issue
+
+# ... work on the issue ...
+
+# If you need to pause, session is auto-saved
+# Resume later:
+claude --resume debugging-auth-issue
 ```
 
----
+### 2. Feature Development Checkpoints
 
-## Current State File
+Create checkpoints during long feature work:
 
-**`_project_specs/session/current-state.md`** - Update every 15-20 minutes or after significant progress.
+```
+# After completing milestone 1
+/rename feature-x-milestone-1
 
-```markdown
-# Current Session State
-
-*Last updated: 2025-01-15 14:32*
-
-## Active Task
-[One sentence: what are we working on right now]
-
-Example: Implementing user authentication flow with JWT tokens
-
-## Current Status
-- **Phase**: [exploring | planning | implementing | testing | debugging | refactoring]
-- **Progress**: [X of Y steps complete, or percentage]
-- **Blocking Issues**: [None, or describe blockers]
-
-## Context Summary
-[2-3 sentences summarizing the current state of work]
-
-Example: Created auth middleware and login endpoint. JWT signing works.
-Currently implementing token refresh logic. Need to add refresh token
-rotation for security.
-
-## Files Being Modified
-| File | Status | Notes |
-|------|--------|-------|
-| src/auth/middleware.ts | Done | JWT verification |
-| src/auth/refresh.ts | In Progress | Token rotation |
-| src/auth/types.ts | Done | Token interfaces |
-
-## Next Steps
-1. [ ] Complete refresh token rotation in refresh.ts
-2. [ ] Add token blacklist for logout
-3. [ ] Write integration tests for auth flow
-
-## Key Context to Preserve
-- Using RS256 algorithm (not HS256) per security requirements
-- Refresh tokens stored in HttpOnly cookies
-- Access tokens: 15 min, Refresh tokens: 7 days
-
-## Resume Instructions
-To continue this work:
-1. Read src/auth/refresh.ts - currently at line 45
-2. The rotateRefreshToken() function needs error handling
-3. Check decisions.md for why we chose RS256 over HS256
+# Continue in new session
+# Reference old session if needed
 ```
 
----
+### 3. PR Review Sessions
 
-## Decision Log
+For complex PR reviews that span multiple sittings:
 
-**`_project_specs/session/decisions.md`** - Append-only log of architectural and implementation decisions.
+```
+# Start review
+/rename pr-review-123
 
-```markdown
-# Decision Log
-
-Track key decisions for future reference. Never delete entries.
-
----
-
-## [2025-01-15] JWT Algorithm Choice
-
-**Decision**: Use RS256 instead of HS256 for JWT signing
-
-**Context**: Implementing authentication system
-
-**Options Considered**:
-1. HS256 (symmetric) - Simpler, single secret
-2. RS256 (asymmetric) - Public/private key pair
-
-**Choice**: RS256
-
-**Reasoning**:
-- Allows token verification without exposing signing key
-- Better for microservices (services only need public key)
-- Industry standard for production systems
-
-**Trade-offs**:
-- Slightly more complex key management
-- Larger token size
-
-**References**:
-- src/auth/keys/ - Key storage
-- docs/security.md - Security architecture
-
----
-
-## [2025-01-14] Database Schema Approach
-
-**Decision**: Use Drizzle ORM with PostgreSQL
-
-**Context**: Setting up data layer
-
-**Options Considered**:
-1. Prisma - Popular, good DX
-2. Drizzle - Type-safe, SQL-like
-3. Raw SQL - Maximum control
-
-**Choice**: Drizzle
-
-**Reasoning**:
-- Better TypeScript inference than Prisma
-- More transparent SQL generation
-- Lighter weight, faster cold starts
-
-**References**:
-- src/db/schema.ts - Schema definitions
-- src/db/migrations/ - Migration files
+# Take breaks without losing context
+# Resume:
+claude --resume pr-review-123
 ```
 
----
+### 4. PR-Linked Sessions (Claude Code 2.1.27+)
 
-## Code Landmarks
+Sessions are automatically linked to PRs when created via `gh pr create`. Resume PR-specific sessions later:
 
-**`_project_specs/session/code-landmarks.md`** - Important code locations for quick reference.
+```
+# Resume session for a specific PR
+claude --from-pr 156
+claude --from-pr https://github.com/org/repo/pull/156
 
-```markdown
-# Code Landmarks
-
-Quick reference to important parts of the codebase.
-
-## Entry Points
-| Location | Purpose |
-|----------|---------|
-| src/index.ts | Main application entry |
-| src/api/routes.ts | API route definitions |
-| src/workers/index.ts | Background job entry |
-
-## Core Business Logic
-| Location | Purpose |
-|----------|---------|
-| src/core/auth/ | Authentication system |
-| src/core/billing/ | Payment processing |
-| src/core/workflows/ | Main workflow engine |
-
-## Configuration
-| Location | Purpose |
-|----------|---------|
-| src/config/index.ts | Environment config |
-| src/config/features.ts | Feature flags |
-| drizzle.config.ts | Database config |
-
-## Key Patterns
-| Pattern | Example Location | Notes |
-|---------|------------------|-------|
-| Service Layer | src/services/user.ts | Business logic encapsulation |
-| Repository | src/repos/user.ts | Data access abstraction |
-| Middleware | src/middleware/auth.ts | Request processing |
-
-## Testing
-| Location | Purpose |
-|----------|---------|
-| tests/unit/ | Unit tests |
-| tests/integration/ | API tests |
-| tests/e2e/ | End-to-end tests |
-| tests/fixtures/ | Test data |
-
-## Gotchas & Non-Obvious Behavior
-| Location | Issue | Notes |
-|----------|-------|-------|
-| src/utils/date.ts | Timezone handling | Always use UTC internally |
-| src/api/middleware.ts:45 | Auth bypass | Skip auth for health checks |
-| src/db/pool.ts | Connection limit | Max 10 connections in dev |
+# Workflow: review → pause → resume with full context
+/rename pr-review-156
+# ... review work ...
+# Later:
+claude --from-pr 156
 ```
 
----
+### 5. Investigation Sessions
 
-## CLAUDE.md Session Rules
+When investigating issues that may require research:
 
-Add this section to CLAUDE.md:
+```
+# Start investigation
+/rename investigate-memory-leak
 
-```markdown
-## Session Management
-
-**IMPORTANT**: Follow session-management.md skill. Update session state at natural breakpoints.
-
-### After Every Task Completion
-Ask yourself:
-1. Was a decision made? → Log to `decisions.md`
-2. Did this take >10 tool calls? → Full checkpoint to `current-state.md`
-3. Is a major feature complete? → Create archive entry
-4. Otherwise → Quick update to `current-state.md`
-
-### Checkpoint Triggers
-**Quick Update** (current-state.md):
-- After any todo completion
-- After small changes
-
-**Full Checkpoint** (current-state.md + decisions.md):
-- After significant changes
-- After ~20 tool calls
-- After any decision
-- When switching focus areas
-
-**Archive** (archive/ + full checkpoint):
-- End of session
-- Major feature complete
-- Context feels heavy
-
-### Session Start Protocol
-When beginning work:
-1. Read `_project_specs/session/current-state.md`
-2. Check `_project_specs/todos/active.md`
-3. Review recent `decisions.md` entries if needed
-4. Continue from "Next Steps"
-
-### Session End Protocol
-Before ending or when context limit approaches:
-1. Create archive: `_project_specs/session/archive/YYYY-MM-DD.md`
-2. Update current-state.md with handoff format
-3. Ensure next steps are specific and actionable
+# Pause to gather more info externally
+# Resume with full context:
+claude --resume investigate-memory-leak
 ```
 
----
+## Resume Screen Features
 
-## Compression Strategies
+The `/resume` screen provides:
 
-### When to Compress (Tier 3 Archive)
+- **Grouped forked sessions**: See related sessions together
+- **Keyboard shortcuts** (defaults, customizable via `/keybindings`):
+  - Preview session content
+  - Rename a session
+- **Recent sessions**: Sorted by last activity
 
-| Trigger | Action |
-|---------|--------|
-| ~50+ tool calls | Summarize progress, archive verbose notes |
-| Major feature complete | Archive feature details, update landmarks |
-| Context shift | Summarize previous context, archive, start fresh |
-| End of session | Full session handoff with archive |
+### 6. Resume Hint on Exit (Claude Code 2.1.31+)
 
-### What to Keep vs Archive
+Claude Code now shows a resume hint when you exit, displaying the command to continue your conversation. This makes session resumption more discoverable: users no longer need to know about `--resume` beforehand.
 
-**Keep in active context:**
-- Current task and immediate next steps
-- Active file list with status
-- Blocking issues
-- Key decisions affecting current work
+## Best Practices
 
-**Archive/summarize:**
-- Exploration paths that didn't work out
-- Detailed debugging traces (keep conclusion only)
-- Verbose error messages (keep root cause only)
-- Research notes (keep recommendations only)
+### Naming Conventions
 
-### Compression Template
+Use descriptive, hyphenated names:
 
-When compressing, use this format:
+| Pattern | Example | Use Case |
+|---------|---------|----------|
+| `debugging-<issue>` | `debugging-auth-401` | Bug investigation |
+| `feature-<name>-<milestone>` | `feature-search-v2` | Feature development |
+| `pr-review-<number>` | `pr-review-156` | PR reviews |
+| `investigate-<topic>` | `investigate-perf` | Research |
+| `refactor-<area>` | `refactor-api-layer` | Refactoring work |
 
-```markdown
-## Compressed Context - [Topic]
+### When to Name Sessions
 
-**Summary**: [1-2 sentences]
+Name sessions when:
+- Work will span multiple days
+- You might need to pause unexpectedly
+- The session contains valuable context
+- You want to reference it later
 
-**Key Findings**:
-- [Bullet points of important discoveries]
+### Session Cleanup
 
-**Decisions Made**:
-- [Reference to decisions.md entries]
+Unnamed sessions are eventually garbage collected. Named sessions persist longer. Periodically clean up old named sessions you no longer need.
 
-**Relevant Code**:
-- [File:line references]
+## Integration with Sanctum
 
-**Archived Details**: [Link to archive file if created]
-```
+Combine session management with other Sanctum skills:
 
----
+1. **Before starting**: Run `Skill(sanctum:git-workspace-review)` to capture context
+2. **Name the session**: `/rename <descriptive-name>`
+3. **Work**: Use appropriate skills for the task
+4. **Resume if needed**: `claude --resume <name>`
 
-## Session Archive
+## Troubleshooting
 
-After significant work or at session end, create archive:
+### Session Not Found
 
-**`_project_specs/session/archive/YYYY-MM-DD[-topic].md`**
+If a named session isn't appearing in `/resume`:
+- Check for typos in the name
+- Sessions may expire after extended inactivity
+- Use `/resume` screen to browse available sessions
 
-```markdown
-# Session Archive: [Date] - [Topic]
+### Duplicate Sessions in VS Code
 
-## Summary
-[Paragraph summarizing what was accomplished]
+If you see duplicate session entries when resuming in VS Code:
+- **Claude Code 2.1.38+**: Fixed: resume now correctly reuses the existing session without creating duplicates
+- **Older versions**: Ignore the duplicate entries; they point to the same underlying session
 
-## Tasks Completed
-- [TODO-XXX] Description - Done
-- [TODO-YYY] Description - Done
+### Lost Context After Resume
 
-## Key Decisions
-- [Reference decisions.md entries made this session]
+If context seems incomplete or resume is slow:
+- **Claude Code 2.1.30+**: 68% memory reduction for `--resume` via stat-based session loading with progressive enrichment, especially impactful for users with many sessions. Also fixes hangs when resuming sessions with corrupted transcript files (parentUuid cycles).
+- **Claude Code 2.1.29+**: Fixed slow startup when resuming sessions with many `once: true` hooks: `saved_hook_context` loading is now optimized
+- **Claude Code 2.1.21+**: Fixed API errors when resuming sessions interrupted during tool execution: previously these sessions could fail to resume entirely
+- **Claude Code 2.1.20+**: Session compaction/resume is now fixed: resume correctly loads the compact summary instead of full history
+- Use `/catchup` to refresh git state
+- Use `/debug` (Claude Code 2.1.30+) for session troubleshooting diagnostics
+- Re-run `Skill(sanctum:git-workspace-review)` if needed
+- If on older versions: resumed sessions may reload uncompacted history, increasing context usage unexpectedly
 
-## Code Changes
-| File | Change Type | Description |
-|------|-------------|-------------|
-| src/auth/login.ts | Created | Login endpoint |
-| src/auth/types.ts | Modified | Added RefreshToken type |
+### macOS Orphaned Processes (Claude Code 2.1.46+)
 
-## Tests Added
-- tests/auth/login.test.ts - Login flow tests
-- tests/auth/refresh.test.ts - Token refresh tests
-
-## Open Items Carried Forward
-- [Anything not finished, now in active.md]
-
-## Session Stats
-- Duration: ~3 hours
-- Tool calls: ~120
-- Files modified: 8
-- Tests added: 12
-```
-
----
-
-## Integration with Todo System
-
-### Link Todos to Sessions
-
-In active todos, reference session context:
-
-```markdown
-## [TODO-042] Implement token refresh
-
-**Status:** in-progress
-**Session Context:** See current-state.md
-
-### Progress Notes
-- 2025-01-15: Started implementation, base structure done
-- 2025-01-15: Added rotation logic, need error handling
-```
-
-### Auto-Update on Todo Completion
-
-When completing a todo:
-1. Mark todo complete in active.md
-2. Update current-state.md progress
-3. Log any decisions made
-4. Update code-landmarks.md if new patterns introduced
-
----
-
-## Quick Commands
-
-Add to project scripts or aliases:
+Previously, disconnecting from a terminal on macOS could leave orphaned Claude Code processes running. This is now fixed in 2.1.46+. If you encounter stale CC processes on older versions, manually check and kill them:
 
 ```bash
-# Show current session state
-alias session-status="cat _project_specs/session/current-state.md"
-
-# Quick edit session state
-alias session-edit="$EDITOR _project_specs/session/current-state.md"
-
-# View recent decisions
-alias decisions="tail -100 _project_specs/session/decisions.md"
-
-# Create session archive
-session-archive() {
-  cp _project_specs/session/current-state.md \
-     "_project_specs/session/archive/$(date +%Y-%m-%d).md"
-  echo "Archived to _project_specs/session/archive/$(date +%Y-%m-%d).md"
-}
+# Find orphaned claude processes
+ps aux | grep -i claude | grep -v grep
 ```
 
----
+### 7. Automatic Memory (Claude Code 2.1.32+)
 
-## Enforcement Mechanisms
+Claude now automatically records and recalls memories as it works. Session summaries, key results, and work logs are captured implicitly and recalled in future sessions. This provides passive cross-session continuity without manual checkpoint management.
 
-### 1. CLAUDE.md as Entry Point
-CLAUDE.md must reference session-management.md in the Skills section. Claude reads CLAUDE.md first, which directs it to follow session rules.
+- **No action required**: Memory recording is automatic on first-party Anthropic API
+- **Complements named sessions**: Automatic memory handles implicit continuity; named sessions provide explicit organization
+- **Token overhead**: Recalled memories add to baseline context, factor this into MECW budgets
 
-### 2. Session File Headers with Reminders
-Include enforcement reminders in session file headers:
+### 8. Agent Persistence on Resume (Claude Code 2.1.32+)
 
-**current-state.md header:**
-```markdown
-<!--
-CHECKPOINT RULES (from session-management.md):
-- Quick update: After any todo completion
-- Full checkpoint: After ~20 tool calls or decisions
-- Archive: End of session or major feature complete
--->
+`--resume` now re-uses the `--agent` value from the previous conversation by default. Agent-specific workflows that are resumed will continue with the same agent configuration without needing to re-specify it.
+
+```
+# Start with a specific agent
+claude --agent my-agent
+
+# Resume later — my-agent is automatically used
+claude --resume
 ```
 
-### 3. Self-Check Questions
-After completing any task, Claude should ask:
-```
-□ Did I make a decision? → Log it
-□ Did this take >10 tool calls? → Full checkpoint
-□ Is a feature complete? → Archive
-□ Am I ending/switching context? → Archive + handoff
-```
+## See Also
 
-### 4. Session Start Verification
-When starting a session, Claude must:
-1. Check if `current-state.md` exists and read it
-2. Announce what it found: "Resuming from: [last state]"
-3. Confirm next steps before proceeding
-
-### 5. Periodic Self-Audit
-Every ~20 tool calls, Claude should check:
-- Is current-state.md up to date?
-- Are there unlogged decisions?
-- Is context getting heavy?
-
-### 6. User Prompts
-Users can enforce by asking:
-- "Update session state" → Triggers checkpoint
-- "What's the current state?" → Claude reads and reports
-- "End session" → Triggers archive + handoff
-- "Resume from last session" → Claude reads state files first
-
----
-
-## Anti-Patterns
-
-- **No state tracking** - Flying blind, can't resume
-- **Overly verbose state** - Keep it scannable, not a novel
-- **Stale state files** - Update regularly or they become useless
-- **Missing decisions** - Future you won't remember why
-- **No code landmarks** - Wastes time re-discovering the codebase
-- **Never archiving** - Session files become cluttered
-- **Ignoring compression signals** - Context overload degrades performance
-- **Skipping checkpoint after decisions** - Key context lost
-- **No handoff at session end** - Next session starts blind
-
----
-
-## Quick Reference
-
-### Checkpoint Decision Tree
-```
-Task completed?
-    │
-    ├── Decision made? ──────────────────→ Log to decisions.md
-    │
-    ├── >10 tool calls OR significant? ──→ Full Checkpoint
-    │
-    ├── Major feature done? ─────────────→ Archive
-    │
-    └── Otherwise ───────────────────────→ Quick Update
-```
-
-### Files at a Glance
-| File | Update Frequency | Purpose |
-|------|------------------|---------|
-| current-state.md | Every task | Live state, next steps |
-| decisions.md | When deciding | Architectural choices |
-| code-landmarks.md | When patterns change | Code navigation |
-| archive/*.md | End of session/feature | Historical record |
+- `/catchup` - Refresh context from git changes
+- `/clear` - Start fresh session
+- `Skill(sanctum:git-workspace-review)` - Capture repo context

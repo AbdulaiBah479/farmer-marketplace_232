@@ -1,28 +1,57 @@
 ---
 name: browser-recording
-description: |
-  Record browser sessions using Playwright for web UI tutorials.
-  Captures video of browser interactions that can be converted to GIF.
-
-  Triggers: browser recording, playwright, web demo, ui recording
-
-  Use when: creating browser-based tutorials showing web UI interactions
+description: Records browser sessions via Playwright and converts video to GIF. Use when creating web UI tutorials or demos showing browser interactions.
+alwaysApply: false
 category: media-generation
-tags: [playwright, browser, recording, video, web, tutorial]
-tools: [Read, Write, Bash]
+tags:
+- playwright
+- browser
+- recording
+- video
+- web
+- tutorial
+tools: []
 complexity: medium
+model_hint: standard
 estimated_tokens: 500
 progressive_loading: true
 modules:
-  - spec-execution
-  - video-capture
+- modules/spec-execution.md
+- modules/video-capture.md
 dependencies:
-  - scry:gif-generation
+- scry:gif-generation
 ---
+## Table of Contents
+
+- [Overview](#overview)
+- [Required TodoWrite Items](#required-todowrite-items)
+- [Process](#process)
+- [Step 1: Validate Playwright Installation](#step-1:-validate-playwright-installation)
+- [Step 2: Check Spec File](#step-2:-check-spec-file)
+- [Step 3: Execute Recording](#step-3:-execute-recording)
+- [Step 4: Convert to GIF](#step-4:-convert-to-gif)
+- [Example Playwright Spec](#example-playwright-spec)
+- [Playwright Configuration](#playwright-configuration)
+- [Exit Criteria](#exit-criteria)
+- [Error Handling](#error-handling)
+- [Output Locations](#output-locations)
+- [See Also](#see-also)
+
 
 # Browser Recording Skill
 
 Record browser sessions using Playwright to create video captures of web UI interactions for tutorials and documentation.
+
+
+## When To Use
+
+- Recording browser sessions with Playwright
+- Creating web application demo recordings
+
+## When NOT To Use
+
+- Terminal-only workflows - use scry:vhs-recording instead
+- Static screenshots - use standard screenshot tools
 
 ## Overview
 
@@ -46,6 +75,7 @@ When invoking this skill, create todos for:
 - [ ] Locate and verify video output
 - [ ] Convert video to GIF using gif-generation skill
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
 ## Process
 
@@ -56,12 +86,14 @@ Check that Playwright is available:
 ```bash
 npx playwright --version
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
 If not installed, the user should run:
 ```bash
 npm install -D @playwright/test
 npx playwright install chromium
 ```
+**Verification:** Run `pytest -v` to verify tests pass.
 
 ### Step 2: Check Spec File
 
@@ -77,6 +109,7 @@ Run the spec with video enabled:
 ```bash
 npx playwright test <spec-file> --config=playwright.config.ts
 ```
+**Verification:** Run `pytest -v` to verify tests pass.
 
 The config must enable video recording. See the spec-execution module for configuration details.
 
@@ -85,12 +118,14 @@ The config must enable video recording. See the spec-execution module for config
 After recording completes, use the gif-generation skill to convert the WebM video to an optimized GIF:
 
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 Invoke scry:gif-generation with:
 - input: <path-to-webm>
 - output: <desired-gif-path>
 - fps: 10 (recommended for tutorials)
 - width: 800 (adjust based on content)
 ```
+**Verification:** Run the command with `--help` flag to verify availability.
 
 ## Example Playwright Spec
 
@@ -118,6 +153,7 @@ test('demo workflow', async ({ page }) => {
   await page.waitForTimeout(1000);
 });
 ```
+**Verification:** Run `pytest -v` to verify tests pass.
 
 ## Playwright Configuration
 
@@ -140,6 +176,7 @@ export default defineConfig({
   outputDir: './test-results',
 });
 ```
+**Verification:** Run `pytest -v` to verify tests pass.
 
 ## Exit Criteria
 
@@ -164,8 +201,11 @@ Default output paths:
 - Videos: `./test-results/<test-name>/video.webm`
 - Screenshots: `./test-results/<test-name>/screenshot.png`
 
+## Module Reference
+
+- See `modules/spec-execution.md` for detailed Playwright execution options
+- See `modules/video-capture.md` for video format and quality settings
+
 ## See Also
 
-- spec-execution module: Detailed Playwright execution options
-- video-capture module: Video format and quality settings
 - scry:gif-generation: Convert video to optimized GIF

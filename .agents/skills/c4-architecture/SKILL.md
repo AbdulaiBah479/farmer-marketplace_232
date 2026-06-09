@@ -1,21 +1,18 @@
 ---
 name: c4-architecture
-description: "Generate architecture documentation using C4 model Mermaid diagrams. Use when asked to create architecture diagrams, document system architecture, visualize software structure, or generate context/container/component/deployment diagrams."
-domain: engineering
-supports: [claude-code, cursor, codex, generic]
-version: 0.1.0
+description: Generate architecture documentation using C4 model Mermaid diagrams. Use when asked to create architecture diagrams, document system architecture, visualize software structure, create C4 diagrams, or generate context/container/component/deployment diagrams. Triggers include "architecture diagram", "C4 diagram", "system context", "container diagram", "component diagram", "deployment diagram", "document architecture", "visualize architecture".
 ---
 
 # C4 Architecture Documentation
 
-Generate architecture documentation using C4 model Mermaid diagrams. Use when asked to create architecture diagrams, document system architecture, visualize software structure, create C4 diagrams, or generate context/container/component/deployment diagrams. Triggers include "architecture diagram", "C4 diagram", "system context", "container diagram", "component diagram", "deployment diagram", "document architecture", "visualize architecture".
+Generate software architecture documentation using C4 model diagrams in Mermaid syntax.
 
 ## Workflow
 
-1. **Understand scope** — Determine which C4 level(s) are needed based on audience
-2. **Analyze codebase** — Explore the system to identify components, containers, and relationships
-3. **Generate diagrams** — Create Mermaid C4 diagrams at appropriate abstraction levels
-4. **Document** — Write diagrams to markdown files with explanatory context
+1. **Understand scope** - Determine which C4 level(s) are needed based on audience
+2. **Analyze codebase** - Explore the system to identify components, containers, and relationships
+3. **Generate diagrams** - Create Mermaid C4 diagrams at appropriate abstraction levels
+4. **Document** - Write diagrams to markdown files with explanatory context
 
 ## C4 Diagram Levels
 
@@ -182,8 +179,8 @@ Node(alias, "Label", "Type", "Description") { ... }  # Shorthand
 ```
 UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
 ```
-- `$c4ShapeInRow` — Number of shapes per row (default: 4)
-- `$c4BoundaryInRow` — Number of boundaries per row (default: 2)
+- `$c4ShapeInRow` - Number of shapes per row (default: 4)
+- `$c4BoundaryInRow` - Number of boundaries per row (default: 2)
 
 ### Element Styling
 ```
@@ -201,18 +198,18 @@ Use `$offsetX` and `$offsetY` to fix overlapping relationship labels.
 ### Essential Rules
 
 1. **Every element must have**: Name, Type, Technology (where applicable), and Description
-2. **Use unidirectional arrows only** — Bidirectional arrows create ambiguity
-3. **Label arrows with action verbs** — "Sends email using", "Reads from", not just "uses"
-4. **Include technology labels** — "JSON/HTTPS", "JDBC", "gRPC"
-5. **Stay under 20 elements per diagram** — Split complex systems into multiple diagrams
+2. **Use unidirectional arrows only** - Bidirectional arrows create ambiguity
+3. **Label arrows with action verbs** - "Sends email using", "Reads from", not just "uses"
+4. **Include technology labels** - "JSON/HTTPS", "JDBC", "gRPC"
+5. **Stay under 20 elements per diagram** - Split complex systems into multiple diagrams
 
 ### Clarity Guidelines
 
-1. **Start at Level 1** — Context diagrams help frame the system scope
-2. **One diagram per file** — Keep diagrams focused on a single abstraction level
-3. **Meaningful aliases** — Use descriptive aliases (e.g., `orderService` not `s1`)
-4. **Concise descriptions** — Keep descriptions under 50 characters when possible
-5. **Always include a title** — "System Context diagram for [System Name]"
+1. **Start at Level 1** - Context diagrams help frame the system scope
+2. **One diagram per file** - Keep diagrams focused on a single abstraction level
+3. **Meaningful aliases** - Use descriptive aliases (e.g., `orderService` not `s1`)
+4. **Concise descriptions** - Keep descriptions under 50 characters when possible
+5. **Always include a title** - "System Context diagram for [System Name]"
 
 ### What to Avoid
 
@@ -275,11 +272,11 @@ C4Container
 ## Output Location
 
 Write architecture documentation to `docs/architecture/` with naming convention:
-- `c4-context.md` — System context diagram
-- `c4-containers.md` — Container diagram
-- `c4-components-{feature}.md` — Component diagrams per feature
-- `c4-deployment.md` — Deployment diagram
-- `c4-dynamic-{flow}.md` — Dynamic diagrams for specific flows
+- `c4-context.md` - System context diagram
+- `c4-containers.md` - Container diagram
+- `c4-components-{feature}.md` - Component diagrams per feature
+- `c4-deployment.md` - Deployment diagram
+- `c4-dynamic-{flow}.md` - Dynamic diagrams for specific flows
 
 ## Audience-Appropriate Detail
 
@@ -293,6 +290,6 @@ Write architecture documentation to `docs/architecture/` with naming convention:
 
 ## References
 
-- [references/c4-syntax.md](references/c4-syntax.md) — Complete Mermaid C4 syntax
-- [references/common-mistakes.md](references/common-mistakes.md) — Anti-patterns to avoid
-- [references/advanced-patterns.md](references/advanced-patterns.md) — Microservices, event-driven, deployment
+- [references/c4-syntax.md](references/c4-syntax.md) - Complete Mermaid C4 syntax
+- [references/common-mistakes.md](references/common-mistakes.md) - Anti-patterns to avoid
+- [references/advanced-patterns.md](references/advanced-patterns.md) - Microservices, event-driven, deployment

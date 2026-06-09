@@ -1,92 +1,145 @@
 ---
 name: api-review
-description: Zero-assumption API design review. Uses the API as a consumer first, then audits contracts, error shapes, auth model, pagination, versioning, idempotency, and rate limiting. Every endpoint is guilty until proven correct.
-user-invocable: true
-argument-hint: "[API routes, controller files, or OpenAPI spec]"
+role: library
+description: Evaluates API surface design, consistency, and exemplar alignment. Use when reviewing public API changes or before releasing a new API surface.
+alwaysApply: false
+category: code-review
+tags:
+- api
+- design
+- consistency
+- documentation
+- versioning
+tools: []
+usage_patterns:
+- api-design-review
+- consistency-audit
+- documentation-governance
+complexity: intermediate
+model_hint: standard
+estimated_tokens: 400
+progressive_loading: true
+dependencies:
+- pensive:shared
+- imbue:proof-of-work
+- imbue:review-core
+- imbue:structured-output
+modules:
+- modules/consistency-audit.md
+- modules/exemplar-research.md
+- modules/surface-inventory.md
 ---
+# API Review Workflow
 
-Read `../_house-style/house-style.md` before starting.
+## Table of Contents
 
-## Anchor phrases
+1. [Usage](#usage)
+2. [Required Progress Tracking](#required-progress-tracking)
+3. [Workflow](#workflow)
 
-- An API you need source code to understand is a broken API.
-- If the error message doesn't tell the consumer how to fix the problem, it's not an error message — it's a shrug.
-- Consistency isn't a nice-to-have. Every inconsistency is a trap for the next developer.
-- Returning 200 with an error body is not error handling — it's lying.
+## Usage
 
-## Domain-specific examples
+Use this skill to review public API changes, design new surfaces, audit consistency, and validate documentation completeness. Run it before any API release to confirm alignment with project guidelines.
 
-**Error handling — wrong way:**
+## Required Progress Tracking
 
-"The error responses could be more consistent. Consider standardizing the error format across endpoints."
+1. `api-review:surface-inventory`
+2. `api-review:exemplar-research`
+3. `api-review:consistency-audit`
+4. `api-review:docs-governance`
+5. `api-review:evidence-log`
+6. `api-review:findings-verified`
 
-**Error handling — right way:**
+## Workflow
 
-"`POST /api/orders` returns `200 {error: 'invalid'}` on validation failure. `POST /api/users` returns `422 {errors: [{field: 'email', message: 'required'}]}`. `DELETE /api/items/:id` returns `500 Internal Server Error` with a raw stack trace when the ID doesn't exist. Three endpoints, three different error contracts. A consumer has to handle each one as a special case. Standardize on: `4xx` status code + `{error: {code: string, message: string, details?: object}}`. The code is machine-readable, the message is human-readable, details carries field-level info for validation errors."
+### Step 1: Surface Inventory
 
-**Auth gap — wrong way:**
+Catalog all public APIs by language. Record stability levels, feature flags, and versioning metadata. Use tools like `rg` to find public symbols (e.g., `pub` in Rust or non-underscored `def` in Python). Confirm the working tree state with `git status` before starting.
 
-"Make sure all endpoints require authentication."
+### Step 2: Exemplar Research
 
-**Auth gap — right way:**
+Identify at least two high-quality API references for the relevant language, such as pandas, requests, or tokio. Document their patterns for namespacing, pagination, error handling, and structure to serve as a baseline for the audit.
 
-"`GET /api/users/:id` has no auth middleware. Any unauthenticated request with a valid user ID returns the full user object including `email`, `phone`, `address`, and `payment_method_last4`. The endpoint is also enumerable — sequential IDs from 1 to N. An attacker can scrape your entire user directory with a for loop. This is an IDOR vulnerability and a data exposure incident waiting for someone to find it. Fix: add auth middleware to the router group, verify the requesting user owns the resource or has admin role."
+### Step 3: Consistency Audit
 
-## The audit
+Compare the project's API against the identified exemplar patterns. Analyze naming conventions, parameter ordering, return types, and error semantics. Identify duplication, leaky abstractions, missing feature gates, and documentation gaps.
 
-### 1. Use it as a consumer first
-Read docs, look at types, trace a CRUD workflow. Document confusion and guessing.
+### Step 4: Documentation Governance
 
-### 2. Endpoint design
-Method matches operation? Consistent naming? Request/response shapes consistent? Correct status codes?
+Validate that documentation includes entry points, quickstarts, and a complete API reference. Verify that changelogs and migration notes are maintained. Check for SemVer compliance, stability promises, and clear deprecation timelines. Confirm that documentation is generated automatically using tools like rustdoc, Sphinx, or OpenAPI.
 
-### 3. Error handling
-Consistent format? Machine-readable codes? Consumer can fix from error alone? Validation per-field? 500s leak internals?
+### Step 5: Evidence Log
 
-### 4. Auth and authorization
-Every endpoint protected? Right layer? IDOR check? Token validation? Rate limiting?
+Record all executed commands and findings. Summarize the final recommendation as Approve, Approve with actions, or Block. Include specific action items with assigned owners and due dates.
 
-### 5. Data contracts
-Types exported? Nullability explicit? Pagination consistent? Filters validated?
+## API Quality Checklist
 
-### 6. Idempotency and concurrency
-Writes idempotent? Concurrent modification handling? Ordering dependencies?
+### Naming
+Confirm consistent conventions and descriptive names that follow language-specific idioms.
 
-### 7. Versioning
-Versioned? Breaking change policy? Deprecation path?
+### Parameters
+Verify consistent ordering and ensure optional parameters have explicit defaults. Check that type annotations are complete.
 
-### Adversarial testing
-For every endpoint: empty body, huge strings, nested garbage, wrong types, SQL injection, XSS, path traversal, negative IDs, duplicate requests within 100ms. Document what the API does with each.
+### Return Values
+Analyze return patterns for consistency. Confirm that error cases are documented and that pagination follows a uniform structure.
 
-## Output format
+### Documentation
+Verify that all public APIs include usage examples and that the changelog reflects current changes.
 
-### Consumer experience
-One paragraph from the outside.
+## Output Format
 
-### API score
+The final report must include a summary of the API surface, a numerical inventory
+of endpoints and public types, and an alignment analysis against researched
+exemplars. Document consistency issues and documentation gaps with precise file
+and line references. Conclude with a clear decision and a timed action plan.
 
-| Metric | Score (1-10) |
-|---|---|
-| Consistency | |
-| Error handling | |
-| Auth coverage | |
-| Documentation | |
-| Adversarial resilience | |
-| **Overall** | |
+Each issue must follow this structure:
 
-### Critical findings
-Security vulns, auth gaps, data exposure. Endpoint, trigger, fix.
+```text
+[A1] Title
+- Location: file.py:42
+- Anchor: `verbatim source text at line 42`
+- Issue: what is wrong | Fix: remediation | Evidence: [E1]
+```
 
-### Endpoint audit
-Per-endpoint: what it does, what's wrong, what's missing.
+The `Anchor` is the exact source text at `Location`; it is what
+`citation_verifier.py` re-reads to prove the finding is real.
 
-### Consistency issues
-Different patterns across endpoints.
+## Technical Integration
 
-### Missing from API
-What consumers need that doesn't exist.
+Use `imbue:proof-of-work` for reproducible command capture and `imbue:structured-output` for formatting findings. Reference `imbue:diff-analysis/modules/risk-assessment-framework` when assessing breaking changes.
 
-### Devil's advocate
-For harshest findings: internal-only API? Known consumers? Intentional tradeoffs?
+## Module Reference
 
-### What I didn't test / Recommended changes (priority order)
+- See `modules/surface-inventory.md` for API cataloging patterns
+- See `modules/exemplar-research.md` for researching API standards
+- See `modules/consistency-audit.md` for cross-API consistency checks
+
+### Verify Findings Are Grounded (`api-review:findings-verified`)
+
+Every finding must cite a real location and a verbatim anchor. Write
+findings to `.review/findings.json` and confirm each citation resolves:
+
+```bash
+python plugins/imbue/scripts/citation_verifier.py \
+  --findings .review/findings.json --repo-root .
+```
+
+Drop or label `UNVERIFIED` any finding the verifier fails (exit `1`); only
+verified findings enter the report. See `Skill(imbue:review-core)` Step 5
+and `Skill(imbue:structured-output)` for the schema.
+
+## Exit Criteria
+
+- Surface inventoried, exemplars researched, consistency audited,
+  documentation governance checked, and evidence logged.
+- Every reported finding carries a `Location` + verbatim `Anchor`
+  confirmed by `citation_verifier.py` (exit `0`), or unverified findings
+  were dropped or labeled `UNVERIFIED`.
+
+## Troubleshooting
+
+If the audit command is missing, verify that dependencies are installed and
+accessible in the system PATH. Check file permissions if access errors
+occur. Use the `--verbose` flag to inspect execution logs if the tool
+behaves unexpectedly.

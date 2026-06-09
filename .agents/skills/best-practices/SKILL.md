@@ -3,6 +3,7 @@ name: best-practices
 description: >-
   Transforms vague prompts into optimized Claude Code prompts. Adds verification,
   specific context, constraints, and proper phasing. Invoke with /best-practices.
+version: 4.1.0
 ---
 
 # Best Practices — Prompt Transformer

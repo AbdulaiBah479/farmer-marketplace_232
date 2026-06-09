@@ -1,287 +1,348 @@
 ---
 name: perf
-description: Performance profiling and optimization. Use for benchmarking code, analyzing performance, running Lighthouse audits, and finding hotspots.
+description: Profile and optimize hotspots.
+practices:
+- dora-metrics
+- sre
+- code-complete
+hexagonal_role: domain
+consumes:
+- repo-context
+produces:
+- result.json
+context_rel:
+- kind: shared-kernel
+  with: standards
+skill_api_version: 1
+context:
+  window: fork
+  intent:
+    mode: task
+  sections:
+    exclude:
+    - HISTORY
+  intel_scope: topic
+metadata:
+  tier: execution
+  dependencies:
+  - standards
+  - complexity
+output_contract: 'stdout: performance profile/benchmark report'
+---
+# Perf Skill
+
+> Quick Ref: `/perf profile <target>` | `/perf bench <target>` | `/perf compare <baseline> <candidate>` | `/perf optimize <target>`
+
+**YOU MUST EXECUTE THIS WORKFLOW. Do not just describe it.**
+
+Performance profiling, benchmarking, regression detection, and optimization recommendations for any language runtime. Produces actionable metrics, not vague advice.
+
+## Modes
+
+| Mode | Command | Purpose |
+|------|---------|---------|
+| **Profile** | `/perf profile <target>` | Profile execution, find hotspots |
+| **Benchmark** | `/perf bench <target>` | Create or run benchmarks |
+| **Compare** | `/perf compare <baseline> <candidate>` | Compare two runs for regression |
+| **Optimize** | `/perf optimize <target>` | Analyze and apply optimizations |
+
+If no mode is specified, default to **profile**.
+
 ---
 
-# Performance Profiler
+## Step 0: Detect Language and Tooling
 
-Profile, benchmark, and optimize code performance.
+Identify the language/runtime from file extensions, `go.mod`, `package.json`, `pyproject.toml`, `Cargo.toml`, or explicit user input. Select the profiling stack:
 
-## Prerequisites
+If the symptom may be host pressure rather than target-code performance, read [references/system-pressure-triage.md](references/system-pressure-triage.md) before benchmarking.
 
-```bash
-# Node.js for profiling
-node --version
+For the repeatable measurement loop, profiler selection, and report metrics, read [references/profiling-playbook.md](references/profiling-playbook.md).
 
-# Lighthouse for web perf
-npm install -g lighthouse
+| Language | Benchmarking | CPU Profile | Memory Profile | Comparison |
+|----------|-------------|-------------|----------------|------------|
+| **Go** | `go test -bench` | `go tool pprof` (cpu) | `go tool pprof` (alloc) | `benchstat` |
+| **Python** | `pytest-benchmark`, `timeit` | `cProfile`, `py-spy` | `memory_profiler`, `tracemalloc` | manual diff |
+| **Node** | `benchmark.js`, `vitest bench` | `--prof`, `clinic.js` | `--heap-prof`, `0x` | manual diff |
+| **Rust** | `criterion`, `cargo bench` | `cargo flamegraph` | `heaptrack`, `DHAT` | `critcmp` |
+| **Shell** | `hyperfine` | `time`, `strace` | N/A | `hyperfine` built-in |
 
-# Gemini for analysis
-pip install google-generativeai
-export GEMINI_API_KEY=your_api_key
-```
+Check which tools are actually installed. If a preferred tool is missing, fall back to standard-library alternatives before asking the user to install anything.
 
-## Benchmarking
+---
 
-### Quick Benchmark
+## Step 1: Establish Baseline
 
-```bash
-# Time a Node.js script
-time node script.js
+Run existing benchmarks first. If none exist, create them.
 
-# With memory
-/usr/bin/time -l node script.js  # macOS
-/usr/bin/time -v node script.js  # Linux
-```
-
-### Node.js Performance Hooks
-
-```javascript
-// benchmark.js
-const { performance, PerformanceObserver } = require('perf_hooks');
-
-const obs = new PerformanceObserver((list) => {
-  console.log(list.getEntries()[0].duration);
-});
-obs.observe({ entryTypes: ['measure'] });
-
-performance.mark('start');
-// Code to benchmark
-yourFunction();
-performance.mark('end');
-performance.measure('duration', 'start', 'end');
-```
-
-### Console Timing
-
-```javascript
-console.time('operation');
-// Code to time
-console.timeEnd('operation');  // Prints: operation: 123.456ms
-```
-
-## Node.js Profiling
-
-### V8 Profiler
+### 1a. Find Existing Benchmarks
 
 ```bash
-# Generate profile
-node --prof script.js
+# Go
+grep -r "func Benchmark" --include="*_test.go" -l .
 
-# Process the log
-node --prof-process isolate-*.log > profile.txt
+# Python
+find . -name "test_*" -exec grep -l "benchmark\|@pytest.mark.benchmark" {} +
+
+# Rust
+grep -r "#\[bench\]" --include="*.rs" -l .
+
+# Node
+find . -name "*.bench.*" -o -name "*.benchmark.*"
 ```
 
-### Inspect Mode
+### 1b. Run or Create Benchmarks
 
+If benchmarks exist for the target, run them and capture output. If none exist, write benchmarks covering the target function or module.
+
+**Benchmark requirements:**
+- Measure wall-clock time (ops/sec or ns/op)
+- Measure memory allocations (bytes/op, allocs/op)
+- Run enough iterations for statistical stability (Go: `-benchtime=3s -count=5`)
+- Record latency percentiles where applicable: p50, p95, p99
+
+Save raw baseline output to `.agents/perf/baseline-YYYY-MM-DD.txt`.
+
+### 1c. Go Benchmark Template
+
+```go
+func BenchmarkTargetFunction(b *testing.B) {
+    // Setup outside the loop
+    input := prepareInput()
+    b.ResetTimer()
+    b.ReportAllocs()
+    for i := 0; i < b.N; i++ {
+        TargetFunction(input)
+    }
+}
+```
+
+### 1d. Python Benchmark Template
+
+```python
+import pytest
+
+@pytest.mark.benchmark(group="target")
+def test_target_benchmark(benchmark):
+    input_data = prepare_input()
+    result = benchmark(target_function, input_data)
+    assert result is not None
+```
+
+---
+
+## Step 2: Profile and Identify Hotspots
+
+### CPU Profiling
+
+Find functions consuming the most CPU time.
+
+**Go:**
 ```bash
-# Start with inspector
-node --inspect script.js
+go test -bench=BenchmarkTarget -cpuprofile=cpu.prof ./...
+go tool pprof -top cpu.prof
+go tool pprof -text -cum cpu.prof   # cumulative view
+```
 
-# Break on start
-node --inspect-brk script.js
-
-# Open Chrome DevTools
-open chrome://inspect
+**Python:**
+```bash
+python -m cProfile -s cumulative target_script.py
+# Or for running processes:
+py-spy top --pid <PID>
+py-spy record -o profile.svg --pid <PID>
 ```
 
 ### Memory Profiling
 
-```bash
-# Heap snapshot
-node --heapsnapshot-signal=SIGUSR2 script.js
-# Then: kill -USR2 <pid>
+Find allocation hotspots and potential leaks.
 
-# Expose GC for testing
-node --expose-gc script.js
+**Go:**
+```bash
+go test -bench=BenchmarkTarget -memprofile=mem.prof ./...
+go tool pprof -top -alloc_space mem.prof
 ```
 
-## Lighthouse Audits
-
-### Basic Audit
-
+**Python:**
 ```bash
-# Full audit
-lighthouse https://example.com
-
-# Output to JSON
-lighthouse https://example.com --output=json --output-path=report.json
-
-# Output to HTML
-lighthouse https://example.com --output=html --output-path=report.html
-
-# Specific categories
-lighthouse https://example.com --only-categories=performance
-
-# Mobile vs Desktop
-lighthouse https://example.com --preset=desktop
-lighthouse https://example.com --preset=mobile  # default
+python -m memory_profiler target_script.py
+# Or with tracemalloc in code:
+# tracemalloc.start(); ...; snapshot = tracemalloc.take_snapshot()
 ```
 
-### Performance Only
+### I/O Profiling
 
-```bash
-lighthouse https://example.com \
-  --only-categories=performance \
-  --output=json \
-  --output-path=perf-report.json
+Identify blocking operations in hot paths.
+
+- Check for synchronous file I/O, network calls, or database queries inside loops.
+- Look for missing connection pooling, unbuffered writes, or serial HTTP calls that could be concurrent.
+
+### Hotspot Summary
+
+After profiling, produce a ranked list:
+
+```
+HOTSPOTS (by cumulative CPU time):
+1. pkg/engine.Process       42.3%  (1.2s)   — main processing loop
+2. pkg/engine.parseRecord   28.1%  (0.8s)   — record deserialization
+3. pkg/io.ReadBatch         15.7%  (0.45s)  — disk reads
 ```
 
-### Chrome Flags
+---
 
-```bash
-# Headless
-lighthouse https://example.com --chrome-flags="--headless"
+## Step 3: Analyze and Recommend
 
-# Custom viewport
-lighthouse https://example.com --chrome-flags="--window-size=1920,1080"
+Classify each finding by estimated impact:
+
+| Impact | Criteria | Action |
+|--------|----------|--------|
+| **High** | >20% of total time or >50% of allocations | Fix immediately |
+| **Medium** | 5-20% of total time or notable allocation waste | Fix in this session |
+| **Low** | <5% of total time, minor inefficiency | Log for later |
+
+### Common Anti-Patterns
+
+Check the profiled code against these known performance killers:
+
+1. **Unnecessary allocations** — allocating inside hot loops, string concatenation in loops (use `strings.Builder` / `[]byte` / `io.StringWriter`)
+2. **N+1 queries** — database call per item instead of batch query
+3. **Missing caching** — recomputing expensive results that rarely change
+4. **Blocking I/O in hot path** — synchronous network/disk calls where async or buffered I/O would work
+5. **Excessive copying** — passing large structs by value, copying slices instead of slicing
+6. **Suboptimal data structures** — linear search where a map lookup works, unbounded slice growth without pre-allocation
+7. **Lock contention** — mutex held across I/O or long computation
+8. **Regex compilation in loops** — compile once, reuse the compiled pattern
+9. **Reflection in hot paths** — replace with code generation or type switches
+10. **Unbuffered channels** — causing goroutine scheduling overhead in Go
+
+For each finding, state:
+- **What**: the specific code location and pattern
+- **Why**: how it hurts performance (with numbers from profiling)
+- **Fix**: concrete code change recommendation
+
+---
+
+## Step 4: Optimize (optimize mode only)
+
+**Critical rule: ONE optimization at a time.**
+
+For high-effort optimization work, load [references/optimization-proof-loop.md](references/optimization-proof-loop.md) before changing code. It defines the proof contract for isomorphic rewrites, benchmark deltas, and keep/revert decisions.
+
+For each optimization:
+
+1. **Describe** the change before making it
+2. **Apply** the single change
+3. **Re-run** the benchmark suite
+4. **Compare** results against baseline using `benchstat` (Go) or manual diff
+5. **Keep or revert** — only keep changes that measurably improve metrics
+6. **Commit** with message format: `perf(<scope>): <description> (+X% throughput)` or `perf(<scope>): <description> (-X% latency)`
+
+### Acceptance Criteria
+
+- Improvement must be statistically significant (p < 0.05 for `benchstat`, or >5% consistent change for manual comparison)
+- No correctness regressions — all existing tests must still pass
+- No readability destruction for marginal gains (<2% improvement does not justify obfuscated code)
+
+### Optimization Order
+
+Apply optimizations in this order (highest expected impact first):
+
+1. Algorithmic improvements (O(n^2) to O(n log n), etc.)
+2. Allocation reduction (pre-allocate, pool, reuse buffers)
+3. I/O batching and buffering
+4. Caching and memoization
+5. Concurrency improvements (parallelize independent work)
+6. Micro-optimizations (only if profiling confirms they matter)
+
+---
+
+## Step 5: Output Report
+
+Write the report to `.agents/perf/YYYY-MM-DD-perf-<target>.md`.
+
+### Report Template
+
+```markdown
+# Performance Report: <target>
+Date: YYYY-MM-DD
+Mode: <profile|bench|compare|optimize>
+Language: <detected>
+
+## Summary
+<1-2 sentence summary of findings>
+
+## Baseline Metrics
+| Metric | Value |
+|--------|-------|
+| ops/sec | ... |
+| ns/op | ... |
+| B/op | ... |
+| allocs/op | ... |
+| p50 latency | ... |
+| p95 latency | ... |
+| p99 latency | ... |
+
+## Hotspots
+<ranked list from Step 2>
+
+## Findings
+<classified findings from Step 3>
+
+## Optimizations Applied (if optimize mode)
+| Change | Before | After | Improvement |
+|--------|--------|-------|-------------|
+| ... | ... | ... | +X% |
+
+## After Metrics (if optimize mode)
+<same table as baseline, with new values>
+
+## Recommendations
+<remaining opportunities not addressed in this session>
 ```
 
-## AI Performance Analysis
+---
 
-### Analyze Code for Performance
+## Compare Mode Details
 
-```bash
-CODE=$(cat slow-function.ts)
+When running `/perf compare <baseline> <candidate>`:
 
-gemini -m pro -o text -e "" "Analyze this code for performance issues:
+1. Locate or re-run benchmarks for both versions
+2. Use language-native comparison tools:
+   - **Go**: `benchstat baseline.txt candidate.txt`
+   - **Rust**: `critcmp baseline candidate`
+   - **Other**: side-by-side table with percentage deltas
+3. Flag regressions (>5% slower or >10% more allocations) as **REGRESSION**
+4. Flag improvements (>5% faster or >10% fewer allocations) as **IMPROVEMENT**
+5. Flag statistically insignificant changes as **NOISE**
 
-$CODE
+Output a summary table:
 
-Identify:
-1. Time complexity issues
-2. Memory leaks or bloat
-3. Unnecessary operations
-4. Opportunities for optimization
-5. Caching opportunities
-
-Provide specific recommendations with code examples."
+```
+COMPARISON: baseline vs candidate
+| Benchmark | Baseline | Candidate | Delta | Verdict |
+|-----------|----------|-----------|-------|---------|
+| BenchmarkProcess | 1.2ms | 0.9ms | -25% | IMPROVEMENT |
+| BenchmarkParse | 450ns | 480ns | +6.7% | REGRESSION |
+| BenchmarkIO | 3.1ms | 3.0ms | -3.2% | NOISE |
 ```
 
-### Analyze Profile Output
+---
 
-```bash
-PROFILE=$(cat profile.txt)
+## Edge Cases
 
-gemini -m pro -o text -e "" "Analyze this Node.js profile:
+- **No benchmarks and no clear target**: Run `/complexity` first to identify hot paths, then benchmark those.
+- **Flaky benchmarks**: Increase iteration count, pin to a single core (`GOMAXPROCS=1`), close competing processes.
+- **Cannot install profiling tools**: Fall back to `time` for wall-clock and manual instrumentation for allocation counts.
+- **Target is a CLI command**: Use `hyperfine` for wall-clock benchmarking across any language.
 
-$PROFILE
+## See Also
 
-Identify:
-1. Hot functions (most time spent)
-2. Potential bottlenecks
-3. Optimization opportunities
-4. Priority of fixes"
-```
+- [complexity](../complexity/SKILL.md) — Find high-complexity code to target
+- [standards](../standards/SKILL.md) — Language-specific optimization patterns
+- [vibe](../vibe/SKILL.md) — Validate optimized code quality
 
-## Finding Hotspots
+## Reference Documents
 
-### CPU Hotspots
+- [references/perf.feature](references/perf.feature) — Executable spec: profile hotspots with metrics, bench, compare-regression, optimize (soc-qk4b)
 
-```bash
-# Record CPU profile
-node --cpu-prof script.js
-
-# Analyze generated .cpuprofile
-# Open in Chrome DevTools or use:
-npx speedscope *.cpuprofile
-```
-
-### Memory Hotspots
-
-```bash
-# Find large objects
-node --heapsnapshot-signal=SIGUSR2 app.js
-
-# Use clinic.js
-npx clinic doctor -- node script.js
-npx clinic flame -- node script.js
-npx clinic bubbleprof -- node script.js
-```
-
-### Bundle Analysis
-
-```bash
-# Webpack
-npx webpack-bundle-analyzer stats.json
-
-# Vite
-npx vite build --report
-
-# Generic
-du -sh dist/*
-ls -lhS dist/*.js
-```
-
-## Common Patterns
-
-### Anti-Patterns to Check
-
-```bash
-gemini -m pro -o text -e "" "Check this code for common performance anti-patterns:
-
-$(cat src/*.ts)
-
-Look for:
-- Synchronous I/O in hot paths
-- Repeated DOM queries
-- Unnecessary re-renders
-- N+1 query patterns
-- Memory leaks in closures
-- Blocking the event loop"
-```
-
-### Optimization Checklist
-
-```bash
-gemini -m pro -o text -e "" "Create a performance optimization checklist for:
-
-Application type: [web app / API / CLI]
-Stack: [your stack]
-Current issues: [symptoms]
-
-Include priority order and estimated impact."
-```
-
-## Comparison Benchmarks
-
-### Before/After
-
-```bash
-#!/bin/bash
-# benchmark-compare.sh
-
-echo "=== Before optimization ==="
-git checkout main
-npm install
-time npm run benchmark
-
-echo "=== After optimization ==="
-git checkout optimization-branch
-npm install
-time npm run benchmark
-```
-
-### A/B Script
-
-```bash
-#!/bin/bash
-# Run same benchmark multiple times
-for i in {1..10}; do
-  echo "Run $i:"
-  node benchmark.js
-done | tee results.txt
-
-# Calculate average
-grep "time:" results.txt | awk '{sum+=$2; n++} END {print "Average:", sum/n}'
-```
-
-## Best Practices
-
-1. **Measure first** - Don't optimize without data
-2. **Profile production** - Dev performance differs
-3. **Automate benchmarks** - Track over time
-4. **Focus on hot paths** - 80/20 rule
-5. **Test on target devices** - Especially mobile
-6. **Monitor after deploy** - Verify improvements
-7. **Document baselines** - Know what "good" looks like
+- [references/profiling-playbook.md](references/profiling-playbook.md)
+- [references/system-pressure-triage.md](references/system-pressure-triage.md)
+- [references/optimization-proof-loop.md](references/optimization-proof-loop.md)

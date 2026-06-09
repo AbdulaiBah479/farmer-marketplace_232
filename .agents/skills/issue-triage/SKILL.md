@@ -1,282 +1,112 @@
 ---
-name: Issue Triage
-description: This skill should be used when the user asks to "triage an issue", "evaluate a feature request", "should I accept this issue", "analyze GitHub issue", "review this pull request scope", "is this in scope", "how should I respond to this issue", "decline this request", "accept this contribution", "find similar bugs", "detect patterns", "root cause analysis", "fix this bug comprehensively", or discusses whether to accept, reject, adapt, defer, or redirect an external contribution to a project.
+name: issue-triage
+description: >
+  Triage a raw, vague issue or bug report into a structured document that names what is known,
+  what is missing, and what to do next. Use when an incoming issue, bug report, or problem
+  description is too vague or incomplete for investigation or planning, and recommend the right
+  next han skill. Does not investigate root causes or trace code paths — use investigate for
+  debugging, diagnosis, and root cause analysis. Does not plan features or build solutions — use
+  plan-a-feature or plan-implementation for that.
+argument-hint: "[issue text, bug report, or path to a report file; optional output path]"
+allowed-tools: Read, Write, Bash(find *), Bash(mkdir *)
 ---
 
-# Issue Triage Framework
+## Project Context
 
-A systematic approach for library maintainers to evaluate external issues against project philosophy and scope, with deep analysis that extracts maximum insight from every request.
+- CLAUDE.md: !`find . -maxdepth 1 -name "CLAUDE.md" -type f`
+- project-discovery.md: !`find . -maxdepth 3 -name "project-discovery.md" -type f`
 
-## Core Philosophy
+## Triage Approach
 
-**"Every issue is an opportunity"** - Even declined requests can improve documentation, reveal API gaps, or inspire better alternatives. The goal is not to accept or reject, but to find the best path forward for the project.
+- Work only from what the reporter wrote. Do not infer facts that are not stated. This is the single most important constraint in this skill.
+- Classify the issue type before doing anything else. The type drives what counts as missing information.
+- Severity and reproducibility are estimates based on what is known. For a Bug, Regression, Performance, or Security issue, mark them Unknown when not inferable. For a Feature Request, Question, or Other issue, omit them entirely when they are not inferable (see Step 4) rather than rendering Unknown.
+- The recommended next step is the single most appropriate han skill (or "clarify with reporter") to run after triage completes.
+- Project context (CLAUDE.md, project-discovery.md) is read only to identify Suspected Areas. Never use it to supply information the reporter omitted.
 
-**"Think 10 from 1"** - When given one request, think ten steps deeper. Every issue reveals something about the project's gaps, documentation quality, API design, or user mental models. Extract all possible learnings.
+# Issue Triage
 
-## Mindset: Deep Analysis Over Surface Judgment
+## Step 0: Resolve the Issue Text
 
-Before making any decision, adopt this mindset:
+Determine the issue text from the argument:
 
-1. **Root Cause Thinking**: Why did this request emerge? What gap in the project created this need?
-2. **Systems Thinking**: What does this request reveal about the project's architecture, documentation, or user experience?
-3. **Opportunity Discovery**: What improvements, even unrelated to the request, does this expose?
-4. **Pattern Recognition**: Is this a recurring theme? What fundamental solution would prevent similar requests?
-5. **Preventive Thinking**: How can the project evolve so this type of request becomes unnecessary?
+- If the argument is a path to an existing file, read that file; its contents are the issue text.
+- Otherwise the argument text itself is the issue text.
+- If no argument was given and no issue text is present in the conversation, ask the reporter to paste the issue or bug report, then stop until they provide it.
 
-## When to Apply This Framework
+## Step 1: Classify the Issue
 
-Apply this framework when:
-- Evaluating GitHub/GitLab issues or feature requests
-- Deciding whether a contribution fits project scope
-- Responding to external pull requests
-- Assessing bug reports vs. feature requests
-- Determining library vs. application responsibility
+Determine the issue type from the report text. Choose exactly one:
 
-## The Triage Process
+- **Bug** — something is broken or behaving unexpectedly
+- **Feature Request** — something new is being asked for
+- **Performance** — the system is too slow, uses too much memory, or degrades under load
+- **Security** — a vulnerability, exposure, or access control concern
+- **Regression** — the reporter explicitly says it used to work and no longer does; quote or paraphrase that statement
+- **Question** — the reporter is asking how something works, not reporting a problem
+- **Other** — none of the above apply
 
-### Step 1: Deep Understanding (Not Just Surface Analysis)
+## Step 2: Extract What Is Known
 
-Go beyond what is asked to understand why it was asked:
+From the report, identify:
 
-1. **Surface Request**: Identify what the requester is literally asking for
-2. **Underlying Need**: Determine what problem they are actually trying to solve
-3. **Root Cause**: Why does this need exist? What project gap created it?
-4. **Mental Model**: How does the requester think the project should work? Is that accurate?
-5. **Job to be Done**: What job is this feature being hired to do?
+- **Summary** — one sentence describing the problem in plain terms
+- **Reported Behavior** — what the reporter said happened, in their words or a close paraphrase
+- **Expected Behavior** — what the reporter said should happen; if not stated, mark Unknown
 
-**Critical Questions**:
-- "Why can't this be accomplished with current capabilities?"
-- "If they could, would they have asked differently?"
-- "What would have prevented this request from being necessary?"
-- "What does this request teach us about user expectations vs. reality?"
+## Step 3: Identify Missing Information
 
-### Step 2: Assess Philosophy Alignment
+List what a developer would need to reproduce or investigate this issue that is absent from the report. Common gaps by issue type:
 
-Evaluate against four dimensions (score 1-5 each):
+- **Bug / Regression** — reproduction steps, environment (OS, browser, version), error messages or stack traces, affected data or user accounts, frequency of occurrence
+- **Performance** — scale or load at which the problem occurs, baseline measurements, environment
+- **Security** — affected endpoints or data, attack surface description, access level required to trigger
+- **Feature Request** — use case or job to be done, success criteria, constraints
+- **Feature Request / Question (problem space not yet decided)** — which options or approaches are in play, prior art, a build-vs-buy choice, or which direction to take, when the reporter is asking to define or scope the problem rather than supplying a missing fact about a direction already chosen
 
-| Dimension | Question |
-|-----------|----------|
-| **Core Mission Fit** | Does this serve the project's primary purpose? |
-| **Scope Alignment** | Is this library responsibility or application concern? |
-| **Pattern Consistency** | Does it fit existing architecture and conventions? |
-| **User Base Impact** | Does it benefit the majority or a niche use case? |
+List only what is genuinely absent. Do not list information already present in the report. If nothing is missing, write exactly: `None - report has enough to proceed.`
 
-**Scoring Guide**:
-- 5: Perfect fit, core to mission
-- 4: Strong fit, natural extension
-- 3: Acceptable, requires careful scoping
-- 2: Marginal, stretches boundaries
-- 1: Poor fit, conflicts with goals
+## Step 4: Assess Severity and Reproducibility
 
-Calculate average for overall alignment (High: 4-5, Medium: 3-3.9, Low: 1-2.9).
+**Severity** (estimate from what is known):
 
-### Step 3: Assess Feasibility
+- **Critical** — data loss, system down, security breach, or blocks all users
+- **High** — major feature broken, significant user impact, no workaround known
+- **Medium** — feature degraded, workaround exists, or affects a subset of users
+- **Low** — cosmetic, edge case, or minor inconvenience
+- **Unknown** — not enough information to assess
 
-Evaluate practical implementation factors:
+**Reproducibility** (estimate from what is known):
 
-| Factor | Rating Options |
-|--------|----------------|
-| Technical Complexity | Low / Medium / High |
-| Breaking Changes | None / Minor / Major |
-| Maintenance Burden | Low / Medium / High |
-| Dependencies | None / Dev-only / Runtime |
+- **Always** — happens consistently under described conditions
+- **Intermittent** — happens sometimes; conditions unclear
+- **Rare** — reported once or infrequently; hard to reproduce
+- **Unknown** — not stated in the report
 
-Consider risks: What could go wrong? Impact on existing users?
+**Omit when inapplicable.** Severity and Reproducibility describe a problem that is occurring. When the issue type is Feature Request, Question, or Other **and** neither is inferable from the report, omit both sections entirely rather than rendering `Unknown` — the same omit-when-not-inferable pattern Step 5 applies to Suspected Areas. For a Bug, Regression, Performance, or Security issue, always render both (as `Unknown` if needed); they are core to triaging a problem.
 
-### Step 4: Apply Decision Matrix
+## Step 5: Identify Suspected Areas
 
-Use philosophy alignment and feasibility to determine verdict:
+If the report points to a specific system area, list it. Then, only to sharpen those areas, consult project context: if the `CLAUDE.md` label is non-empty, read it; if the `project-discovery.md` label is non-empty, read it (it is the richer system map when present). Use them to name relevant areas such as upload pipeline, authentication middleware, database migrations, or frontend state management.
 
-```
-                 | Philosophy HIGH | Philosophy LOW  |
------------------|-----------------|-----------------|
-Feasibility HIGH | ACCEPT          | REDIRECT        |
-Feasibility MED  | ADAPT           | DEFER/REDIRECT  |
-Feasibility LOW  | DEFER           | DECLINE         |
-```
+Do not infer areas the report does not point to, and never use project context to supply information the reporter omitted. If both `CLAUDE.md` and `project-discovery.md` are absent or empty, or nothing in the report points to a specific system area, omit the Suspected Areas section entirely and continue.
 
-**Decision Types**:
+## Step 6: Determine the Recommended Next Step
 
-- **ACCEPT**: Fully aligned, implement as requested
-- **ADAPT**: Good idea, implement differently than proposed
-- **DEFER**: Valuable but not now; add to roadmap with conditions
-- **REDIRECT**: Out of scope; provide alternative path (other library, extension point, workaround)
-- **DECLINE**: Fundamentally misaligned; explain why respectfully
+Decide the single recommendation using the issue type from Step 1 and the gaps from Step 3:
 
-### Step 5: Craft Response
+- **Bug, Regression, Performance, or Security** — if reproduction steps, environment details (OS, browser, version), or user-impact scope are missing, the recommendation is `Clarify with reporter before proceeding`. Otherwise it is `/investigate`.
+- **Feature Request** — if the Step 3 Missing Information names a problem-space gap (which options or approaches are in play, prior art, a build-vs-buy choice, or which direction to take) rather than a missing user-supplied fact, the recommendation is `/research` — the problem space must be researched before the feature can be specified. Otherwise, if the use case (job to be done) or success criteria are missing, the recommendation is `Clarify with reporter before proceeding`. Otherwise, if the feature is described but not yet specified, it is `/plan-a-feature`; if requirements are already specified, it is `/plan-implementation`.
+- **Question** — if the Step 3 Missing Information names a problem-space gap (options, approaches, prior art, a build-vs-buy choice, or which direction to take), the recommendation is `/research`. Otherwise, if the report plus project context is enough to answer it, the recommendation is `Answer the question directly; no han skill needed`; if not, it is `Clarify with reporter before proceeding`.
+- **Other** — the recommendation is `Clarify with reporter before proceeding`.
 
-Every response should include:
+## Step 7: Write the Triage Report
 
-1. **Acknowledge**: Thank them, show understanding of their need
-2. **Explain**: Share reasoning transparently (reference project philosophy)
-3. **Path Forward**: Always provide a constructive next step
-4. **Invite**: Keep the door open for continued engagement
+Resolve the output path:
 
-**Tone Guidelines**:
-- Professional but warm
-- Confident but not dismissive
-- Educational - help them understand
-- Grateful - they care about the project
+- If the user specified an output path, use it.
+- Otherwise use `$HOME/.claude/triages/{kebab-case-summary}.md`, where `{kebab-case-summary}` is the Step 2 Summary lowercased with non-alphanumeric runs replaced by single hyphens.
 
-## Quick Reference: Response Templates
+Run `mkdir -p` on the directory that will contain the file (for the default, `mkdir -p "$HOME/.claude/triages"`). Write the report using the template at [template.md](references/template.md), filling every section from Steps 1-6 and writing the Step 6 result verbatim into Recommended Next Step. Omit the Suspected Areas section if Step 5 determined nothing is inferable, and omit Severity and Reproducibility per the Step 4 omit rule.
 
-**For ACCEPT**:
-> Thank you! This aligns with [goal]. We'll implement it in [timeline]. PRs welcome!
-
-**For ADAPT**:
-> Great idea! We'd like to approach this differently: [explanation]. Would this work for you?
-
-**For DEFER**:
-> Valuable suggestion! We're prioritizing [focus] now. This is on our roadmap for [condition].
-
-**For REDIRECT**:
-> This falls outside our scope, but try: [alternative]. Here's why we maintain this boundary...
-
-**For DECLINE**:
-> After consideration, this doesn't align with [reason]. What we would welcome: [alternative].
-
-## Key Questions to Ask
-
-Before making a decision, consider:
-
-1. Does this expand scope in a sustainable direction?
-2. Would accepting create precedent for similar requests?
-3. Is this library infrastructure or application logic?
-4. What would the maintenance burden look like in 2 years?
-5. Can this be achieved through extension points instead?
-
-## Step 6: Strategic Insight Extraction
-
-**Beyond the immediate decision, extract deeper insights:**
-
-### Project Gap Analysis
-- **Documentation Gap**: Did this request arise because something wasn't clearly documented?
-- **API Gap**: Does the current API make this use case unnecessarily difficult?
-- **Example Gap**: Would a better example have answered this question?
-- **Architecture Gap**: Does the project structure make this harder than it should be?
-
-### Improvement Opportunities
-Even if declining the specific request, identify:
-- Related improvements that ARE aligned with project philosophy
-- Documentation that should be added or clarified
-- API refinements that would serve the underlying need differently
-- Extension points that would enable users to solve this themselves
-
-### Pattern Analysis
-- Is this part of a recurring request pattern?
-- What category of requests does this represent?
-- What fundamental change would address the entire category?
-- Should the project's scope or philosophy documentation be updated?
-
-### Preventive Actions
-- What would prevent similar requests in the future?
-- Should FAQ be updated?
-- Is there a blog post or guide opportunity?
-- Could error messages or warnings guide users better?
-
-## Knowledge Capture
-
-After each significant triage:
-
-1. Update CLAUDE.md if scope clarification needed
-2. Add FAQ entry if common question pattern
-3. Consider ADR (Architecture Decision Record) for major decisions
-4. Document discovered gaps and improvement opportunities
-5. Track patterns for future strategic planning
-
-## Deep Bug Resolution (When Issue is a Bug)
-
-When an issue is identified as a bug/error, apply **Deep Resolution Analysis** to fix not just the reported issue (N), but also discover and prevent similar latent defects (M).
-
-### Bug Detection Signals
-
-Automatically classify as bug when:
-- **Labels**: `bug`, `error`, `fix`, `defect`, `regression`, `crash`, `exception`
-- **Keywords**: "error", "broken", "fail", "crash", "not working", "exception"
-- **Patterns**: Stack traces, error messages, "expected vs actual"
-
-### Root Cause Analysis
-
-Go beyond symptoms:
-
-1. **Symptom vs. Cause**: What user reports ≠ what's broken
-2. **Hypothesis Tree**: Generate multiple possible causes, gather evidence for each
-3. **Cause Chain**: Trace `[Action] → [Component] → [ROOT CAUSE] → [Symptom]`
-
-**Critical Questions**:
-- Why did this fail NOW? What changed?
-- What assumption was violated?
-- Where else might this assumption be violated?
-
-### Similar Pattern Detection
-
-After identifying root cause, find ALL similar patterns:
-
-**Search Strategies**:
-1. **Syntactic**: Same function names, API patterns, error handling
-2. **Semantic**: Similar logic flow, data transformations, parallel code paths
-3. **Architectural**: Same layer violations, coupling patterns, anti-patterns
-
-**Risk Classification**:
-| Risk | Meaning |
-|------|---------|
-| 🔴 Critical | Same bug, different location |
-| 🟠 High | Very likely has same latent defect |
-| 🟡 Medium | Should be reviewed |
-| 🟢 Low | Monitor only |
-
-**Output**: Table of `[Risk] [Location] [Pattern] [Assessment]`
-
-### Solution Research (Complex Bugs)
-
-Auto-trigger research when:
-- Affects 5+ files or requires architectural changes
-- <3 similar patterns exist (unfamiliar territory)
-- Issue mentions "best practice", "latest", "modern approach"
-- Involves third-party library/API
-- Security or performance critical
-
-**Research Strategy**:
-- Query: "[technology] [problem] best practices [current year]"
-- Sources: Official docs → GitHub issues → Stack Overflow → Expert blogs
-- Tool: Try Tavily MCP first, fallback to WebSearch
-
-### Comprehensive Fix Approach
-
-Instead of fixing just N:
-1. Fix the reported issue (N)
-2. Fix all Critical (🔴) patterns immediately
-3. Include High (🟠) patterns in the same fix
-4. Schedule Medium (🟡) patterns for follow-up
-5. Document the pattern to prevent recurrence
-
-For detailed methodology, see:
-- **`references/pattern-detection-guide.md`** - Complete pattern detection methodology
-- **`references/research-methodology.md`** - Web research best practices
-
-## Additional Resources
-
-### Reference Files
-
-For detailed guidance, consult:
-- **`references/decision-examples.md`** - Real-world decision examples with detailed reasoning for each decision type
-- **`references/response-templates.md`** - Complete response templates for ACCEPT, ADAPT, DEFER, REDIRECT, and DECLINE decisions
-- **`references/philosophy-alignment-guide.md`** - Detailed scoring methodology for philosophy alignment assessment
-
-### Example Files
-
-Working examples demonstrating complete triage sessions:
-- **`examples/sample-triage-accept.md`** - Complete ACCEPT decision walkthrough
-- **`examples/sample-triage-decline.md`** - Complete DECLINE decision walkthrough
-- **`examples/sample-triage-adapt.md`** - Complete ADAPT decision walkthrough
-- **`examples/sample-triage-defer.md`** - Complete DEFER decision walkthrough
-- **`examples/sample-triage-redirect.md`** - Complete REDIRECT decision walkthrough
-
-### Full Workflow Command
-
-For a complete formatted triage report with all phases, use the `/iyu:issue` command:
-```bash
-/iyu:issue <url | file | "text">
-/iyu:issue <input> --quick    # Decision only, skip execution
-/iyu:issue <input> --save     # Save report to file
-```
+Present the completed triage report to the user. When the Recommended Next Step is a han skill (`/investigate`, `/research`, `/plan-a-feature`, or `/plan-implementation`), state plainly that this triage report is the handoff document — the operator passes the report itself to that skill rather than re-summarizing the issue. No separate brief is produced; the report already serves as the handoff.

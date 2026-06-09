@@ -1,10 +1,7 @@
 ---
 name: structured-output
-description: 'Consult this skill when formatting final review deliverables. Use when
-  formatting final review outputs, ensuring consistent deliverable structure, making
-  findings comparable across reviews. Do not use when capturing evidence during analysis
-  - use evidence-logging. DO NOT use when: reviewing changes - use diff-analysis or
-  review-core first.'
+description: Formats review deliverables with consistent structure for comparable findings. Use when finalizing any review or analysis that must be shared or compared.
+alwaysApply: false
 category: output-patterns
 tags:
 - formatting
@@ -13,13 +10,14 @@ tags:
 - reporting
 - structure
 dependencies:
-- imbue:evidence-logging
+- imbue:proof-of-work
 tools: []
 usage_patterns:
 - deliverable-formatting
 - report-structure
 - consistent-output
 complexity: beginner
+model_hint: fast
 estimated_tokens: 1000
 ---
 ## Table of Contents
@@ -39,12 +37,12 @@ estimated_tokens: 1000
 
 ## When To Use
 - When finalizing any review or analysis.
-- To format findings in a consistent and actionable way.
+- To format findings in a consistent way that names specific next steps.
 - Before presenting results to stakeholders or committing them to documentation.
 
 ## When NOT To Use
 
-- Capturing evidence during analysis - use evidence-logging
+- Capturing evidence during analysis - use proof-of-work
 - Reviewing changes - use diff-analysis or review-core first
 
 ## Activation Patterns
@@ -78,6 +76,7 @@ Mark each item complete as you finish the corresponding step.
   ```markdown
   ### [SEVERITY] Finding Title
   **Location**: file.rs:123
+  **Anchor**: `verbatim source text copied from line 123`
   **Category**: Security | Performance | Correctness | Style
   **Description**: Brief explanation of the issue.
   **Evidence**: [E1, E2] - Reference to evidence log.
@@ -86,9 +85,15 @@ Mark each item complete as you finish the corresponding step.
   **Verification:** Run the command with `--help` flag to verify availability.
 - Severity levels: CRITICAL, HIGH, MEDIUM, LOW, INFO.
 - Order findings by severity, then by file location.
+- **Anchor is mandatory and grounds the finding.** Copy the exact
+  source text at `Location` (not a paraphrase). It is what a second
+  pass re-reads to confirm the finding is real. A finding whose anchor
+  does not appear at its cited line is treated as a hallucination and
+  dropped. The check is mechanical: `imbue:review-core` Step 6 runs
+  `plugins/imbue/scripts/citation_verifier.py` over the findings.
 
 ## Step 3: Assign Actions (`structured-output:actions-assigned`)
-- Convert findings to actionable items:
+- Convert findings to action items with assignee and priority:
   ```markdown
   ## Action Items
   - [ ] [HIGH] Fix SQL injection in auth.py:45 (@security-team, P1)
@@ -105,7 +110,7 @@ Mark each item complete as you finish the corresponding step.
   ```markdown
   ## Appendix
   ### A. Commands Run
-  [Full evidence log from imbue:evidence-logging]
+  [Full evidence log from imbue:proof-of-work]
 
   ### B. External References
   [Citations and documentation links]
@@ -119,9 +124,11 @@ Mark each item complete as you finish the corresponding step.
 
 ## Output Quality Checklist
 Before finalizing:
+- [ ] Every finding carries a verbatim `Anchor` the citation verifier
+      resolved (no unverified findings ship).
 - [ ] All findings have evidence references.
 - [ ] Severity levels are justified.
-- [ ] Recommendations are specific and actionable.
+- [ ] Recommendations are specific and name the next step.
 - [ ] No orphaned sections or placeholder text.
 - [ ] Format renders correctly in target medium (GitHub, Confluence, etc.).
 
@@ -129,15 +136,3 @@ Before finalizing:
 - Todos completed with formatted deliverable.
 - Output follows selected template structure.
 - Stakeholders can act on findings without clarification.
-## Troubleshooting
-
-### Common Issues
-
-**Command not found**
-Ensure all dependencies are installed and in PATH
-
-**Permission errors**
-Check file permissions and run with appropriate privileges
-
-**Unexpected behavior**
-Enable verbose logging with `--verbose` flag

@@ -1,6 +1,6 @@
 ---
 name: architecture-paradigm-modular-monolith
-description: 'Single deployable with enforced module boundaries.'
+description: Applies modular monolith with enforced internal boundaries. Use when teams want service-level autonomy without distributed system overhead.
 alwaysApply: false
 category: architectural-pattern
 tags:
@@ -76,6 +76,6 @@ required dependencies and they are not part of the skill's
 restrictions). Use this list to disambiguate during architecture
 discussions.
 
-- ``dependency-analyzer`` -- module dependency graph builder for spotting forbidden edges
-- ``module-boundary-enforcer`` -- fails the build when a module imports across a boundary
-- ``refactoring-planner`` -- ranks modules by extraction-readiness for a future split
+- ``dependency-analyzer``: module dependency graph builder for spotting forbidden edges
+- ``module-boundary-enforcer``: fails the build when a module imports across a boundary
+- ``refactoring-planner``: ranks modules by extraction-readiness for a future split

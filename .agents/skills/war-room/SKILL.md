@@ -1,17 +1,13 @@
 ---
 name: war-room
-description: Multi-LLM deliberation framework for strategic decisions through pressure-based expert consultation
-triggers: war room, strategic decision, multi-expert, deliberation, council, convene experts, expert panel
-use_when: complex decisions requiring multiple perspectives, architectural trade-offs, high-stakes choices
-do_not_use_when: simple questions, routine tasks, single-path implementations
+description: Convenes a multi-LLM expert panel to pressure-test hard-to-reverse decisions. Use when reversibility score is low and adversarial review is warranted.
+alwaysApply: false
+# Custom metadata (not used by Claude for matching):
 model_preference: claude-opus-4
 category: strategic-planning
-tags: [deliberation, multi-llm, strategy, decision-making, council]
-dependencies:
-  - conjure:delegation-core
-  - memory-palace:strategeion
-tools: [Bash, Read, Write]
+tags: [deliberation, multi-llm, strategy, decision-making, council, reversibility]
 complexity: advanced
+model_hint: deep
 estimated_tokens: 2500
 progressive_loading: true
 modules:
@@ -19,26 +15,15 @@ modules:
   - modules/expert-roles.md
   - modules/deliberation-protocol.md
   - modules/merkle-dag.md
-version: 1.3.7
+  - modules/discussion-publishing.md
+  - modules/deferred-capture.md
+dependencies:
+  - conjure:delegation-core
+  - memory-palace:strategeion
+  - leyline:git-platform
+tools: []
+role: entrypoint
 ---
-## Table of Contents
-
-- [Overview](#overview)
-- [Reversibility-Based Routing](#reversibility-based-routing)
-- [When to Use](#when-to-use)
-- [When NOT to Use](#when-not-to-use)
-- [Expert Panel](#expert-panel)
-- [Deliberation Protocol](#deliberation-protocol)
-- [Integration](#integration)
-- [Usage](#usage)
-- [Output](#output)
-- [Configuration](#configuration)
-- [Related Skills](#related-skills)
-
-# War Room Skill
-
-Orchestrate multi-LLM deliberation for complex strategic decisions.
-
 ## Overview
 
 The War Room convenes multiple AI experts to analyze problems from diverse perspectives, challenge assumptions through adversarial review, and synthesize optimal approaches under the guidance of a Supreme Commander.
@@ -70,7 +55,7 @@ RS = (Reversal Cost + Time Lock-In + Blast Radius + Information Loss + Reputatio
 
 See `modules/reversibility-assessment.md` for full scoring guide.
 
-## When to Use
+## When To Use
 
 - Architectural decisions with major trade-offs
 - Multi-stakeholder problems requiring diverse perspectives
@@ -78,13 +63,13 @@ See `modules/reversibility-assessment.md` for full scoring guide.
 - Novel problems without clear precedent
 - When brainstorming produces multiple strong competing approaches
 
-## When NOT to Use
+## When NOT To Use
 
 - Simple questions with obvious answers
 - Routine implementation tasks
 - Well-documented patterns with clear solutions
 - Time-critical decisions requiring immediate action
-- **Type 2 decisions** (RS ≤ 0.40) — use Express mode or skip War Room entirely
+- **Type 2 decisions** (RS ≤ 0.40): use Express mode or skip War Room entirely
 
 ## Expert Panel
 
@@ -124,6 +109,7 @@ Round 2: Pressure Testing
   - Phase 5: Voting + Narrowing (top 2-3)
   - Phase 6: Premortem Analysis (selected COA)
   - Phase 7: Supreme Commander Synthesis
+  - Phase 8: Discussion Publishing
 ```
 
 ### Delphi Extension (High-Stakes)
@@ -299,6 +285,25 @@ Saved to Strategeion:
 - Premortem analysis
 - Final decision
 
+### Record the Tradeoff (decision journal)
+
+The Supreme Commander Decision is a tradeoff record by construction: a selected
+approach, the COAs weighed against it, and the dissenting views. Mirror it into
+`docs/tradeoffs.md` so the reasoning stays with the code, not only in
+Strategeion (draft and confirm):
+
+- If leyline is installed, invoke `Skill(leyline:decision-journal)` and append
+  a tradeoff entry. Map directly: Selected Approach to `decision`, the RS and
+  rationale to a Y-statement, the rejected COAs to `options`, and Dissenting
+  Views to `consequences_negative`. Set `phase` to the originating phase (for
+  example `plan`). Record the RS in the entry links. Append on confirmation.
+- Fallback (leyline absent): append to `docs/tradeoffs.md` using the in-file
+  ENTRY TEMPLATE; assign the next `TR-NNN` id.
+
+If the decision is architectural enough to warrant a numbered ADR in
+`docs/adr/`, write the ADR and reference its number from the tradeoff entry
+rather than duplicating it.
+
 ## Anonymization
 
 Expert contributions are anonymized during deliberation using Merkle-DAG:
@@ -319,7 +324,7 @@ Deliberation mode is automatically selected based on Reversibility Score:
 | ≤ 0.40 | Express (bypass full War Room) |
 | 0.41 - 0.60 | Lightweight panel |
 | 0.61 - 0.80 | Full Council |
-| > 0.80 | Full Council + Delphi |
+| > 0.80 | Full Council and Delphi |
 
 ### Manual Override
 
@@ -361,12 +366,111 @@ War Room can be auto-suggested via hook when:
 - Complexity score exceeds threshold (0.7)
 - User has opted in via settings
 
+## Agent Teams Execution Mode
+
+### Overview
+
+When `--agent-teams` is specified (or auto-selected for Full Council / Delphi modes), the War Room uses Claude Code Agent Teams instead of sequential conjure delegation. Each expert runs as a persistent teammate with bidirectional messaging, enabling real-time deliberation instead of batch request/response cycles.
+
+**Requires**: Claude Code 2.1.32+, `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`, tmux installed.
+
+### When Agent Teams Helps
+
+| Mode | Without Agent Teams | With Agent Teams | Benefit |
+|------|-------------------|-----------------|---------|
+| Express | Sonnet direct call | N/A (overkill) | None: skip |
+| Lightweight | 3 sequential delegations | N/A (overhead exceeds benefit) | None: skip |
+| Full Council | 7 sequential/parallel delegations | 7 teammates with live inbox messaging | Experts can **react** to each other's COAs in real-time |
+| Delphi | Multiple delegation rounds | Persistent team iterates until convergence | No re-invocation cost per round; state preserved across rounds |
+
+**Rule of thumb**: Use agent teams only for Full Council and Delphi modes. Lightweight and Express modes don't generate enough inter-expert traffic to justify the coordination overhead.
+
+### Team Configuration
+
+```bash
+# War Room agent team structure
+Team: war-room-{session-id}
+  Lead: supreme-commander (Opus) — orchestrates phases, final synthesis
+  Teammates:
+    chief-strategist (Sonnet) — approach generation
+    intel-officer (Sonnet) — deep context analysis
+    field-tactician (Sonnet) — implementation feasibility
+    scout (Haiku) — rapid reconnaissance
+    red-team (Sonnet) — adversarial challenge
+    logistics (Haiku) — resource estimation
+```
+
+Note: In agent teams mode, all teammates run as Claude Code instances (Opus/Sonnet/Haiku). External LLM experts (Gemini, Qwen, GLM) are not used because agent teams requires the Claude CLI. The trade-off is losing model diversity but gaining real-time inter-expert messaging.
+
+### Deliberation Flow with Agent Teams
+
+1. **Lead creates team** → spawns teammates in tmux panes
+2. **Phase 1 (Intel)**: Lead assigns intel tasks to scout and intel-officer via inbox
+3. **Phase 3 (COA)**: Lead broadcasts situation assessment; teammates develop COAs independently; messaging allows clarifying questions mid-development
+4. **Phase 4 (Red Team)**: Red-team teammate receives all COAs, posts challenges; other teammates can **respond to challenges in real-time**
+5. **Phase 5 (Voting)**: Lead broadcasts ballot; teammates rank via inbox messages
+6. **Phase 6 (Premortem)**: All teammates receive selected COA; can build on each other's failure scenarios
+7. **Phase 7 (Synthesis)**: Lead collects all artifacts, produces decision
+8. **Phase 8 (Discussion Publishing)**: After the
+   Supreme Commander Decision document is finalized,
+   you MUST execute `modules/discussion-publishing.md`
+   to publish the decision to GitHub Discussions.
+   Publishing is the default. The user can decline
+   with "n". See the "Discussion Publishing (REQUIRED)"
+   section below for the full step-by-step workflow.
+
+### Falling Back to Conjure Delegation
+
+If agent teams fails (tmux unavailable, team creation error), the War Room automatically falls back to standard conjure delegation. The deliberation protocol is identical: only the execution backend differs.
+
+### Cost Considerations
+
+Agent teams is significantly more token-intensive than conjure delegation (each teammate maintains its own context window). Use only when the coordination value justifies the cost, typically Delphi mode where multiple rounds of revision make persistent teammates worthwhile.
+
+### Discussion Publishing (REQUIRED)
+
+After Phase 7 synthesis completes (in any execution
+mode), you MUST execute the discussion publishing
+workflow. This is not optional unless the user
+explicitly declines.
+
+**Execute these steps in order:**
+
+1. Read `modules/discussion-publishing.md` for the
+   full GraphQL workflow
+2. Ask the user: "Publishing this decision to GitHub
+   Discussions. [Y/n]"
+3. If the user says "n", skip to Related Skills.
+   Otherwise proceed with steps 4-6.
+4. Run the `gh api graphql` commands from the module
+   to create a Discussion in the "Decisions" category
+5. Post phase summaries as threaded comments on the
+   Discussion
+6. Update the local strategeion file with the
+   Discussion URL
+
+If GitHub Discussions are unavailable (non-GitHub
+platform, Discussions disabled, `gh` not authenticated),
+warn the user and skip. Publishing failures never
+block the war room workflow.
+
+## Exit Criteria
+
+- [ ] A Reversibility Score and decision type are computed and recorded.
+- [ ] A Supreme Commander Decision document with a selected approach,
+  rationale, and dissenting views is produced.
+- [ ] The decision is mirrored to `docs/tradeoffs.md` (and to a numbered ADR
+  in `docs/adr/` if architectural).
+- [ ] Premortem watch points and, for Type 1 decisions, a reversal plan are
+  captured.
+
 ## Related Skills
 
 - `Skill(attune:project-brainstorming)` - Pre-War Room ideation
 - `Skill(imbue:scope-guard)` - Scope management
 - `Skill(imbue:rigorous-reasoning)` - Reasoning methodology
 - `Skill(conjure:delegation-core)` - Expert dispatch
+- `Skill(conjure:agent-teams)` - Agent teams coordination (Full Council / Delphi)
 
 ## Related Commands
 

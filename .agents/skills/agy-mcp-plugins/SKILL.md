@@ -2,7 +2,7 @@
 name: agy-mcp-plugins
 user-invocable: false
 description: |-
-  Wire MCP servers and AgentOps plugin bundles into the AGY image with least-privilege tool access and rollback evidence.
+  Wire MCP servers and AgentOps plugin bundles into the AGY image with least-privilege access, rollback evidence, and validation hooks.
 practices:
 - data-contracts
 - least-privilege

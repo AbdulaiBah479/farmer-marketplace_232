@@ -1,183 +1,253 @@
 ---
 name: brainstorm
-description: Collaborative brainstorming partner for multi-session ideation projects. Use when the user wants to brainstorm, ideate, explore ideas, or think through problems—whether for SaaS products, software tools, book ideas, newsletter content, business strategies, or any creative/analytical challenge. Handles session continuity across days/weeks via versioned markdown documents. Includes brainstorming methods catalog and supports both connected (cross-project awareness) and clean-slate modes.
+description: Separate goals from implementation.
+practices:
+- lean-startup
+- mythical-man-month
+hexagonal_role: domain
+consumes:
+- standards
+produces:
+- result.json
+- verdict.json
+context_rel:
+- kind: shared-kernel
+  with: standards
+skill_api_version: 1
+metadata:
+  tier: execution
+  dependencies: []
+context:
+  window: inherit
+  intent:
+    mode: none
+  sections:
+    exclude:
+    - INTEL
+    - HISTORY
+    - TASK
+  intel_scope: none
+output_contract: skills/research/schemas/findings.json
+---
+# /brainstorm — Clarify Goals Before Planning
+
+> **Purpose:** Separate WHAT from HOW. Explore the problem space before committing to a solution.
+
+## Loop position
+
+Upstream of move **1 (shape intent as BDD)** of the [operating loop](../../docs/architecture/operating-loop.md). Consumes a free-text goal; produces Given/When/Then-shaped acceptance examples that `/discovery` can fold into a [BDD intent issue](../../docs/templates/intent-issue.md). The Capture step (phase 4 below) is not complete until at least one happy path and one critical edge are written as testable Gherkin — "it should work" is not a captured example.
+
+## Two modes
+
+`/brainstorm` runs in one of two modes. They are complementary, not exclusive — a session may start in ideation mode, pick one idea, and hand it to goal-clarification for HOW-exploration.
+
+| Mode | Use when | Shape |
+|------|----------|-------|
+| **Goal-clarification** (default; the four phases below) | The goal names ONE specific capability (`"add JWT auth"`, `"fix the login bug"`) | Sharpen the WHAT, explore the HOW for that single goal. |
+| **Ideation** (open-ended; see [Ideation Mode](#ideation-mode-open-ended-generate-winnow)) | The goal is open-ended (`"improve the project"`, `"what should we build next"`) OR Phase 1 returns `exploring` with no single goal emerging OR `--ideate` is passed | Generate MANY candidate improvements, winnow ruthlessly, operationalize the survivors. |
+
+The full mode-selection table lives in [references/ideation-mode.md](references/ideation-mode.md).
+
+Four phases (goal-clarification mode):
+1. **Assess clarity** — Is the goal specific enough?
+2. **Understand idea** — What problem, who benefits, what exists?
+3. **Explore approaches** — Generate options, compare tradeoffs, adversarial critique
+4. **Capture design** — Write structured output for `/plan`
+
 ---
 
-# Brainstorm Skill
+## Quick Start
 
-A collaborative brainstorming system designed for multi-session ideation projects that span days or weeks.
-
-## Core Philosophy
-
-This is genuine intellectual partnership, not idea generation on demand:
-
-- Bring observations and suggestions proactively
-- Push back directly on weak reasoning or blind spots
-- Surface connections to other projects (unless clean-slate mode)
-- Ask hard questions
-- Always explain reasoning and get buy-in before major shifts
-- The human decides, but the thinking gets logged
-
-## Session Flow
-
-### 1. Session Start
-
-Always begin by asking these questions:
-
-1. **New or continuing?** — "Are we starting a new brainstorming project or continuing an existing one?"
-   - If continuing: Ask the user to upload/provide the latest version file
-   - If new: Proceed to project initialization
-
-2. **Session energy** — "Deep exploration today or quick progress?"
-
-3. **Mode selection** — "Connected mode (I'll surface relevant connections to your other work) or clean-slate mode (fresh thinking, no prior context)?"
-
-4. **Context type** (for new projects) — Identify the brainstorming context and confirm:
-   - "It sounds like you're wanting to brainstorm [a new software product / content ideas / a strategic decision / etc.]. Does that sound right?"
-   - Recommend appropriate methods from `references/methods-quick.md`
-   - Get explicit approval before proceeding
-
-### 2. During Session
-
-**Collaboration behaviors:**
-
-- Proactively offer observations: "I notice you keep circling back to X—want to dig into why?"
-- Challenge weak reasoning: "I'm not convinced by that reasoning. Here's why..."
-- Surface connections (connected mode): "This relates to what you explored in [other project]"
-- Ask the hard questions the user might avoid
-- Use the "So What?" test: "Why does this matter? Who specifically cares?"
-
-**Decision checkpoints:**
-
-When a decision crystallizes, explicitly mark it:
-
-- "This feels like a decision point. Should we log: [decision statement]?"
-- Capture the reasoning, not just the conclusion
-
-**Method suggestions:**
-
-When the session could benefit from structure, recommend methods:
-
-- "We're stuck diverging—want to try SCAMPER to force new angles?"
-- "Before we commit, should we run a pre-mortem?"
-- Reference `references/methods-detailed.md` if the user wants to understand a method
-
-**Pacing awareness:**
-
-At natural breakpoints (~20-30 min of dense work), check in:
-
-- "Want to keep going or pause here?"
-
-**Parking lot capture:**
-
-When ideas surface that don't belong to the current project:
-
-- "This seems relevant to [other project], not this one—should I add it to the parking lot?"
-
-### 3. Session End
-
-Always conclude with:
-
-1. **Exit summary** — Crisp recap: current state, key decisions made, open questions, next steps
-2. **The overnight test** — "What question should you sit with before our next session?"
-3. **Version creation** — Generate the next version of the project document
-
-## File Structure
-
-Each brainstorming project lives in its own folder:
-
-```
-brainstorms/
-├── _parking-lot.md              # Cross-project idea capture
-├── project-name/
-│   ├── _index.md                # Changelog and decision log
-│   ├── project-name-v1.md       # Version 1
-│   ├── project-name-v2.md       # Version 2
-│   └── ...
+```bash
+/brainstorm "add user authentication"     # full 4-phase process
+/brainstorm                                # prompts for goal
 ```
 
-### Project Document Structure
+---
 
-Use `assets/templates/project-template.md` for new projects. Key sections:
+## Execution Steps
 
-- **Quick Context** — 2-3 sentences: what is this, current state
-- **Session Log** — Date, duration, energy level, mode, methods used
-- **Open Questions** — Unresolved items needing thought
-- **Current Thinking** — The substance of where things stand
-- **Ideas Inventory** — Organized by maturity level (Raw → Developing → Refined → Ready → Parked → Eliminated)
-- **Decisions Made** — Logged with reasoning
-- **Next Steps** — Clear actionable items
+### Phase 1: Assess Clarity
 
-### Index File Structure
+If the user provided a goal string, evaluate it. Otherwise prompt for one.
 
-Use `assets/templates/index-template.md`. Tracks:
+Use `AskUserQuestion` with options to gauge clarity:
 
-- Version history with dates and summaries
-- Major decisions across all versions
-- Project status and trajectory
+- **clear** — Goal is specific and actionable (e.g., "add JWT auth to the API")
+- **vague** — Goal exists but needs narrowing (e.g., "improve security")
+- **exploring** — No firm goal yet, just a direction (e.g., "something with auth")
 
-## Idea Maturity Levels
+If **vague** or **exploring**, ask follow-up questions to sharpen the goal before proceeding. Do NOT move to Phase 2 until you have a concrete problem statement (one sentence, testable).
 
-Track where each idea sits:
+### Phase 2: Understand the Idea
 
-| Level      | Meaning                              |
-| ---------- | ------------------------------------ |
-| Raw        | Just captured, unexamined            |
-| Developing | Being explored, has potential        |
-| Refined    | Shaped, tested, ready for evaluation |
-| Ready      | Decision made, ready to execute      |
-| Parked     | Not now, but worth keeping           |
-| Eliminated | Killed, with documented reasoning    |
+Answer these questions (use codebase exploration as needed):
 
-## Quick Capture Mode
+1. **What problem does this solve?** — State the pain point in concrete terms.
+2. **Who benefits?** — End users, developers, operators, CI pipeline?
+3. **What exists today?** — Current state, prior art in the codebase, adjacent systems.
+4. **What constraints matter?** — Performance, compatibility, security, timeline.
 
-For rapid idea capture when time is short:
+Summarize findings before moving on. If anything is unclear, ask the user.
 
-1. User dumps raw idea
-2. Ask 2-3 clarifying questions only
-3. Create minimal v1 document
-4. Note: "Quick capture—expand in future session"
+### Phase 3: Explore Approaches
 
-## Disagreement Protocol
+Generate **2-3 distinct approaches**. For each:
 
-When pushing back and the user disagrees:
+- **Name** — Short label (e.g., "JWT middleware", "OAuth proxy", "Session cookies")
+- **How it works** — 2-3 sentences
+- **Pros** — What it gets right
+- **Cons** — What it gets wrong or defers
+- **Effort** — Rough scope (small / medium / large)
 
-1. Make your case clearly
-2. Listen to their reasoning
-3. User decides
-4. Log the disagreement and resolution with both perspectives
+#### Phase 3b: Adversarial Critique
 
-## Synthesis Prompts
+Before asking the user to choose, stress-test each approach:
 
-After 3+ sessions on a project, offer:
+For each approach, answer these **red team questions** (read `references/red-team-checklist.md`):
 
-- "We've had [N] sessions on this. Want me to create a synthesis document that distills our current best thinking?"
+1. **What breaks first?** — Under load, edge cases, or adversarial input
+2. **What's the hidden cost?** — Maintenance burden, technical debt, learning curve
+3. **What assumption is wrong?** — The unstated belief that makes this approach seem good
+4. **Who disagrees?** — What would a senior engineer with the opposite preference say?
 
-## Success Criteria
+Mark any approach that fails 2+ red team questions as **HIGH RISK** in the comparison.
 
-Early in any project, establish:
+If all approaches fail 2+ questions, generate a 4th "hybrid" approach addressing the weaknesses.
 
-- "What does 'done' look like for this brainstorm?"
-- "How will we know we've succeeded?"
+Present the comparison and use `AskUserQuestion` to let the user pick an approach or request a hybrid.
 
-## Method Selection Guide
+### Phase 4: Capture Design
 
-See `references/methods-quick.md` for quick selection.
-See `references/methods-detailed.md` for full explanations to share with user.
+Generate a date slug: `YYYY-MM-DD-<goal-slug>` (lowercase, hyphens, no spaces).
 
-**General guidance:**
+Write the output file to `.agents/brainstorm/YYYY-MM-DD-<slug>.md`:
 
-- **Stuck/need new angles** → Divergent methods (SCAMPER, Random Stimulus, Forced Analogies)
-- **Too many ideas/need focus** → Convergent methods (Affinity Grouping, Elimination Rounds)
-- **Unclear problem** → Problem-framing methods (First Principles, 5 Whys, Inversion)
-- **Echo chamber risk** → Perspective shifts (Six Thinking Hats, Steelman, Audience Reality Check)
-- **Before committing** → Pre-mortem, Assumption Surfacing
-- **Theological/philosophical depth** → Presuppositional Analysis
+```markdown
+---
+id: brainstorm-YYYY-MM-DD-<goal-slug>
+type: brainstorm
+date: YYYY-MM-DD
+---
+# Brainstorm: <Goal>
+## Problem Statement
+## Approaches Considered
+## Selected Approach
+## Open Questions
+## Next Step: /plan
+```
 
-## Key Reminders
+All five sections must be populated. The "Next Step" section should contain a concrete `/plan` invocation suggestion with the selected approach as context.
 
-- Always get explicit approval before changing direction or applying a method
-- The human's call always wins, but capture the reasoning
-- Version files, don't overwrite
-- Surface connections in connected mode; stay focused in clean-slate mode
-- End every session with a clear exit summary and next version document
+Create the `.agents/brainstorm/` directory if it does not exist.
+
+---
+
+## Ideation Mode (open-ended generate-winnow)
+
+> **Additive to the four-phase flow above — it does not replace it.** Ideation mode is for "improve the project"-style goals where the WHAT is unknown and you must generate a portfolio and select, rather than clarify ONE known goal. Full detail: [references/ideation-mode.md](references/ideation-mode.md).
+
+**Trigger:** the `exploring` clarity path (Phase 1) when no single goal emerges after follow-up, OR an explicit `--ideate` flag, OR an open-ended goal string (`"improve the project"`, `"what should we build next"`, `"make X more robust"`).
+
+The methodology is **generate → winnow → expand → operationalize → refine**. Steps 1-3 belong to `/brainstorm`; steps 4-5 are handed to `/discovery` on its open-ended path (see [references/bead-operationalization.md](references/bead-operationalization.md)).
+
+### Step 1 — Ground in reality
+
+Read project state so ideas align and don't duplicate work:
+
+```bash
+cat AGENTS.md                      # or CLAUDE.md — rules, constraints, non-goals
+bd list --json                     # open work — don't duplicate
+bd list --status closed --json     # closed work — don't re-propose cut ideas
+bd ready --json                    # what is actionable now
+```
+
+### Step 2 — Generate 30, winnow to 5 (ranked, with rationale)
+
+Generate **30** candidate improvements (criteria = the rubric dimensions: robust, reliable, performant, intuitive, user-friendly, ergonomic, useful, compelling, while staying obviously **accretive** and **pragmatic**). Think each one through: **how it works**, **how users perceive it**, **how we implement it**. Then **winnow ruthlessly to the VERY best 5**, presented **ranked best-to-worst** with full rationale and rubric scores. Apply the winnowing rounds and scoring from [references/idea-rubric.md](references/idea-rubric.md), and stress-test survivors with [references/red-team-checklist.md](references/red-team-checklist.md). Do NOT stop at the first 5 you think of — generate the full 30 first.
+
+### Step 3 — Expand with the next 10 (→ 15)
+
+Generate the **next best 10** (each with rationale) for a ranked portfolio of **15** — #6-15 are often complementary to the top 5.
+
+### Steps 4-5 — Operationalize + refine (handed to `/discovery`)
+
+Carry the ranked 15 (with how/perceive/implement notes + rubric scores + red-team findings) forward. `/discovery` operationalizes them into self-documenting `bd` beads (deps + explicit test tasks) and refines 4-5x in plan space. See [references/bead-operationalization.md](references/bead-operationalization.md).
+
+### Output
+
+Standalone (`/brainstorm --ideate`): write the ranked portfolio to `.agents/brainstorm/YYYY-MM-DD-<slug>-ideation.md` (template in [references/ideation-mode.md](references/ideation-mode.md)). Invoked by `/discovery`: return the ranked portfolio inline for the operationalize step.
+
+> **Tracking is `bd`, never `br`/`bv`** — this is AgentOps.
+
+---
+
+## Termination
+
+Phase 4 output written = done. No further phases, no loops.
+
+## Validation
+
+After writing the output file, verify:
+1. File exists at the expected path
+2. All 5 sections (`Problem Statement`, `Approaches Considered`, `Selected Approach`, `Open Questions`, `Next Step: /plan`) are present and non-empty
+
+Report the file path to the user.
+
+---
+
+## Examples
+
+**Example 1: Specific goal**
+```
+User: /brainstorm "add rate limiting to the API"
+
+Phase 1: Goal is clear — add rate limiting to the API.
+Phase 2: Problem is uncontrolled request volume causing timeouts.
+         Benefits operators and end users. No rate limiting exists today.
+Phase 3: Three approaches — token bucket middleware, API gateway,
+         per-route decorators. User picks token bucket.
+Phase 4: Writes .agents/brainstorm/2026-02-17-rate-limiting.md
+```
+
+**Example 2: Vague goal**
+```
+User: /brainstorm "improve performance"
+
+Phase 1: Goal is vague. Asks: "Which part? API response times,
+         build speed, database queries, or something else?"
+         User says: "API response times on the search endpoint."
+Phase 2: Investigates search endpoint, finds N+1 queries.
+Phase 3: Approaches — query optimization, caching layer, pagination.
+Phase 4: Writes .agents/brainstorm/2026-02-17-search-performance.md
+```
+
+---
+
+## Troubleshooting
+
+| Problem | Cause | Solution |
+|---------|-------|----------|
+| Brainstorm loops in Phase 1 without advancing | Goal remains too vague after follow-up questions | Provide a concrete, testable problem statement (e.g., "reduce API search latency below 200ms" instead of "improve performance"). |
+| Output file missing one or more required sections | Phase 4 was interrupted or the skill terminated early | Re-run `/brainstorm` with the same goal; verify all 5 sections (`Problem Statement`, `Approaches Considered`, `Selected Approach`, `Open Questions`, `Next Step: /plan`) are present in the output. |
+| `.agents/brainstorm/` directory not created | The skill could not create the directory (permissions or path issue) | Manually create it with `mkdir -p .agents/brainstorm` and re-run. |
+| `/plan` invocation in "Next Step" section is generic or incomplete | The selected approach was not specific enough to generate a concrete plan command | Edit the output file to refine the selected approach, then craft a `/plan` invocation that includes the approach name and key constraints. |
+| Brainstorm produces only one approach in Phase 3 | The problem space is narrow or the goal is overly constrained | Widen the goal slightly or explicitly ask for alternative approaches (e.g., "consider a caching approach and a query optimization approach"). |
+
+---
+
+## See Also
+
+- [skills/plan/SKILL.md](../plan/SKILL.md) — Decompose the selected approach into actionable issues
+
+## Reference Documents
+
+- [references/brainstorm.feature](references/brainstorm.feature) — Executable spec: WHAT-not-HOW 4-phase clarification, options+tradeoffs, capture Gherkin (happy + edge) for /plan (soc-qk4b)
+
+- [references/red-team-checklist.md](references/red-team-checklist.md) — Adversarial critique template for Phase 3b
+
+- [references/ideation-mode.md](references/ideation-mode.md) — Open-ended generate-winnow methodology: mode-selection table, generate-30 → winnow-5 → expand-15, output template (ag-yw0)
+
+- [references/idea-rubric.md](references/idea-rubric.md) — Ten-dimension evaluation rubric (robust/reliable/performant/intuitive/user-friendly/ergonomic/useful/compelling/accretive/pragmatic) + winnowing rounds (ag-yw0)
+
+- [references/bead-operationalization.md](references/bead-operationalization.md) — Operationalize the ranked portfolio into self-documenting `bd` beads (deps + test tasks) and refine 4-5x in plan space (ag-yw0)

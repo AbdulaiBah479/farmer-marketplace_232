@@ -1,33 +1,25 @@
 ---
 name: architecture-paradigm-pipeline
-description: |
-  Compose processing stages using a pipes-and-filters model for ETL, media
-  processing, or compiler-like workloads.
-
-  Triggers: pipeline architecture, pipes and filters, ETL, data transformation,
-  stream processing, CI/CD pipeline, media processing, batch processing
-
-  Use when: data flows through fixed sequence of transformations, stages can be
-  independently developed and tested, parallel processing of stages is beneficial
-
-  DO NOT use when: selecting from multiple paradigms - use architecture-paradigms first.
-  DO NOT use when: data flow isn't sequential or predictable.
-  DO NOT use when: complex branching/merging logic dominates.
-
-  Consult this skill when designing data pipelines or transformation workflows.
-version: 1.0.0
+description: Applies pipes-and-filters for sequential data transformations. Use when data flows through discrete stages like ETL, streaming analytics, or CI/CD pipelines.
+alwaysApply: false
 category: architectural-pattern
-tags: [architecture, pipeline, pipes-filters, ETL, streaming, data-processing]
+tags:
+- architecture
+- pipeline
+- pipes-filters
+- ETL
+- streaming
+- data-processing
 dependencies: []
-tools: [stream-processor, message-queue, data-validator]
+tools: []
 usage_patterns:
-  - paradigm-implementation
-  - data-transformation
-  - workflow-automation
+- paradigm-implementation
+- data-transformation
+- workflow-automation
 complexity: medium
+model_hint: standard
 estimated_tokens: 700
 ---
-
 # The Pipeline (Pipes and Filters) Paradigm
 
 ## When to Employ This Paradigm
@@ -54,3 +46,16 @@ estimated_tokens: 700
   - **Mitigation**: Centralize schema definitions in a shared repository and enforce compatibility tests as part of the CI/CD process to prevent breaking changes.
 - **Back-Pressure Failures**:
   - **Mitigation**: Conduct rigorous load testing to simulate high-volume scenarios. Validate that buffering, retry logic, and back-pressure mechanisms behave as expected under stress.
+
+## Concrete Components
+
+These vocabulary items name the concrete tools and abstractions
+that show up when the paradigm is implemented. They are not
+required dependencies and they are not part of the skill's
+``tools:`` frontmatter (which is reserved for Claude Code tool
+restrictions). Use this list to disambiguate during architecture
+discussions.
+
+- ``stream-processor``: the runtime that executes a filter (e.g. Flink, Apache Beam, Faust)
+- ``message-queue``: the durable pipe between filters (e.g. Kafka, RabbitMQ, in-memory channel)
+- ``data-validator``: schema-checks every record at filter input and output

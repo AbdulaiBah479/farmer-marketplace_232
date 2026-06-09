@@ -1,21 +1,48 @@
 ---
 name: red-team
-description: 'Probe docs and skills.'
+description: 'Probe docs and skills. Use when: adversarially probing a doc, skill, plan, or claim for weaknesses, gaps, or unstated assumptions before it ships.'
+practices:
+- ai-assisted-dev
+- design-by-contract
+- sre
+hexagonal_role: supporting
+consumes:
+- repo-context
+produces:
+- result.json
+context_rel:
+- kind: supplier-to
+  with: vibe
+skill_api_version: 1
+metadata:
+  tier: judgment
+  stability: experimental
+  dependencies:
+  - council
+context:
+  window: fork
+  intent:
+    mode: task
+  sections:
+    exclude:
+    - HISTORY
+  intel_scope: full
+output_contract: skills/council/schemas/verdict.json
 ---
-# $red-team — Persona-Based Adversarial Validation
+# /red-team — Persona-Based Adversarial Validation
 
-> **Quick Ref:** Adopt constrained personas. Attempt real tasks. Report what breaks. Unlike `$council` (expert judgment) or `$vibe` (code quality), red-team tests whether things actually WORK when someone TRIES to use them.
+> **Quick Ref:** Adopt constrained personas. Attempt real tasks. Report what breaks. Unlike `/council` (expert judgment) or `/vibe` (code quality), red-team tests whether things actually WORK when someone TRIES to use them.
 
 **YOU MUST EXECUTE THIS WORKFLOW. Do not just describe it.**
 
 ## Quick Start
 
 ```bash
-$red-team docs/                                    # probe docs with default personas
-$red-team skills/council/                          # probe a skill's SKILL.md
-$red-team --surface=docs README.md                 # explicit surface type
-$red-team --personas-file=.agents/red-team/p.yaml  # custom personas
-$red-team --deep skills/rpi/                       # council consolidation with --deep
+/red-team docs/                                    # probe docs with default personas
+/red-team skills/council/                          # probe a skill's SKILL.md
+/red-team --surface=docs README.md                 # explicit surface type
+/red-team --personas-file=.agents/red-team/p.yaml  # custom personas
+/red-team --deep skills/rpi/                       # council consolidation with --deep
 ```
 
 ---
@@ -193,7 +220,7 @@ When the same finding appears from multiple personas:
 Run council with red-team preset to review and consolidate all findings:
 
 ```
-$council --preset=red-team [--quick] validate .agents/red-team/
+Skill(skill="council", args="--preset=red-team [--quick] validate .agents/red-team/")
 ```
 
 Use `--quick` by default. Use full council (omit `--quick`) when `--deep` flag is set.
@@ -218,9 +245,9 @@ See [references/report-format.md](references/report-format.md) for the full temp
 **Do NOT emit raw findings directly to `.agents/findings/registry.jsonl`.** The registry is for reusable normalized patterns, not one-off target defects.
 
 Instead:
-- If verdict is WARN or FAIL, suggest running `$retro` to capture reusable lessons
-- If called from `$post-mortem`, findings flow through the standard normalization pipeline
-- Log: `"Red-team complete. Run '$retro' to capture reusable findings."`
+- If verdict is WARN or FAIL, suggest running `/post-mortem --quick` to capture reusable lessons
+- If called from `/post-mortem`, findings flow through the standard normalization pipeline
+- Log: `"Red-team complete. Run '/post-mortem --quick' to capture reusable findings."`
 
 ---
 
@@ -254,7 +281,7 @@ Instead:
 
 ### Probe Documentation
 
-**User says:** `$red-team docs/`
+**User says:** `/red-team docs/`
 
 **What happens:**
 1. Detects `docs` surface
@@ -262,14 +289,14 @@ Instead:
 3. Auto-generates 4-6 scenarios per persona (discoverability, completeness, copy-paste, jargon)
 4. Spawns 3 agents in parallel, each constrained to docs/ and README.md
 5. Collects findings, deduplicates cross-persona
-6. Runs `$council --preset=red-team --quick` for consolidation
+6. Runs `/council --preset=red-team --quick` for consolidation
 7. Writes report to `.agents/red-team/`
 
 **Result:** Structured usability findings from 3 constrained perspectives.
 
 ### Probe a Skill
 
-**User says:** `$red-team skills/evolve/`
+**User says:** `/red-team skills/evolve/`
 
 **What happens:**
 1. Detects `skills` surface (SKILL.md exists)
@@ -284,7 +311,7 @@ Instead:
 
 ### Custom Personas
 
-**User says:** `$red-team --personas-file=.agents/red-team/personas/platform-ops.yaml docs/`
+**User says:** `/red-team --personas-file=.agents/red-team/personas/platform-ops.yaml docs/`
 
 **What happens:** Uses project-specific personas instead of built-in defaults.
 
@@ -310,6 +337,8 @@ Instead:
 - [skills/bug-hunt/SKILL.md](../bug-hunt/SKILL.md) — Systematic audit (closest cousin)
 
 ## Reference Documents
+
+- [references/red-team.feature](references/red-team.feature) — Executable spec: persona attempts real tasks against a surface, reports what breaks, distinct from council/vibe, --surface selects target (soc-qk4b)
 
 - [references/persona-format.md](references/persona-format.md) — Persona YAML schema with context restriction fields
 - [references/scenario-format.md](references/scenario-format.md) — Scenario YAML schema with pass/fail criteria

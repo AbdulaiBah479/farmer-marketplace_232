@@ -1,26 +1,16 @@
 ---
 name: review-chamber
-description: Capture and retrieve PR review knowledge in project memory palaces
-
-Triggers: memory, project, capture, retrieve, review
-version: 1.0.0
-triggers:
-  - pr review completed
-  - knowledge capture requested
-  - review patterns query
-  - past decisions lookup
+description: Captures and retrieves PR-review findings in memory palaces. Use after PR review to store architectural decisions, patterns, and standards for future reference.
+alwaysApply: false
 usage_patterns:
-  - capture-review: After PR review completion, capture significant findings
-  - search-decisions: Find past architectural decisions
-  - pattern-lookup: Retrieve recurring issues and solutions
-  - standards-reference: Access quality standards from past reviews
+- capture-review: After PR review completion, capture significant findings
+- search-decisions: Find past architectural decisions
+- pattern-lookup: Retrieve recurring issues and solutions
+- standards-reference: Access quality standards from past reviews
 dependencies:
-  - memory-palace:knowledge-intake
-  - sanctum:pr-review
-modules:
-  - capture-workflow.md
-  - evaluation-criteria.md
-  - search-patterns.md
+- memory-palace:knowledge-intake
+- sanctum:pr-review
+model_hint: standard
 ---
 ## Table of Contents
 
@@ -56,6 +46,17 @@ modules:
 # PR Review Chamber Skill
 
 Capture, organize, and retrieve knowledge from PR reviews within project memory palaces.
+
+
+## When To Use
+
+- Capturing PR review knowledge for future reference
+- Building review pattern libraries from past reviews
+
+## When NOT To Use
+
+- Quick self-reviews of trivial changes
+- Automated CI checks that cover the review scope
 
 ## Overview
 
@@ -96,7 +97,7 @@ Route findings to appropriate subrooms:
 
 | Finding Type | Target Room | Criteria |
 |-------------|-------------|----------|
-| Architectural choice | `decisions/` | BLOCKING + architectural context |
+| Architectural choice | `decisions/` | BLOCKING and architectural context |
 | Recurring issue | `patterns/` | Seen before or likely to recur |
 | Quality example | `standards/` | Exemplifies coding standards |
 | Learning/insight | `lessons/` | Retrospective or post-mortem |
@@ -289,15 +290,9 @@ python scripts/palace_manager.py search "authentication" \
 3. **Use consistent tags** - Enable cross-project discovery
 4. **Review periodically** - Prune outdated entries
 5. **Surface proactively** - Show relevant knowledge when starting related work
-## Troubleshooting
 
-### Common Issues
+## Module Reference
 
-**Command not found**
-Ensure all dependencies are installed and in PATH
-
-**Permission errors**
-Check file permissions and run with appropriate privileges
-
-**Unexpected behavior**
-Enable verbose logging with `--verbose` flag
+- See `modules/capture-workflow.md` for detailed capture process
+- See `modules/evaluation-criteria.md` for knowledge worth assessment
+- See `modules/search-patterns.md` for query optimization

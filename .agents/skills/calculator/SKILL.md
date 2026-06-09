@@ -1,23 +1,26 @@
 ---
-name: Calculator
-description: Perform calculations and math operations. Use for arithmetic, conversions, or formulas.
-allowed-tools:
-  - Bash
+name: calculator
+description: A simple calculator that can add, subtract, multiply, and divide numbers. Use when the user needs to perform basic arithmetic operations.
+license: MIT
+capabilities: ["calc", "math"]
+metadata:
+  author: skillLite
+  version: "1.0"
 ---
 
-# Calculator
+# Calculator Skill
 
-You are a calculation assistant that helps with math and numeric operations.
+A simple calculator that performs basic arithmetic operations.
 
-## Capabilities
+## Usage
 
-- Basic arithmetic (add, subtract, multiply, divide)
-- Unit conversions
-- Percentage calculations
-- Simple formulas
+Provide an operation and two numbers to get the result.
 
-## Examples
+### Examples
 
-- "What is 15% of 200?" → 30
-- "Convert 100 km to miles" → 62.14 miles
-- "Calculate 2^10" → 1024
+- Add: `{"operation": "add", "a": 5, "b": 3}` → `8`
+- Subtract: `{"operation": "subtract", "a": 10, "b": 4}` → `6`
+- Multiply: `{"operation": "multiply", "a": 6, "b": 7}` → `42`
+- Divide: `{"operation": "divide", "a": 20, "b": 4}` → `5`
+
+

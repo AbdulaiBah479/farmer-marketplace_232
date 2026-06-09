@@ -1,66 +1,119 @@
 ---
 name: convex-backend
-description: Build real-time, reactive backend applications with Convex using TypeScript queries, mutations, and actions with automatic reactivity and optimistic updates. Use when building real-time collaborative applications, implementing reactive data synchronization, writing serverless backend functions, creating queries that auto-update, implementing mutations with transactional guarantees, handling file uploads with Convex storage, implementing authentication with Convex Auth, designing reactive database schemas, or building applications requiring instant data synchronization.
+description: Convex backend development guidelines. Use when writing Convex functions, schemas, queries, mutations, actions, or any backend code in a Convex project. Triggers on tasks involving Convex database operations, real-time subscriptions, file storage, or serverless functions.
 ---
 
-# Convex Backend - Realtime Database & Functions
+# Convex Backend Guidelines
 
-## When to use this skill
+### When to Load
 
-- Building real-time collaborative applications
-- Implementing reactive data that auto-updates
-- Writing Convex queries, mutations, and actions
-- Creating serverless backend functions with TypeScript
-- Implementing optimistic UI updates
-- Handling file uploads with Convex storage
-- Implementing authentication with Convex Auth
-- Designing Convex database schemas
-- Building chat applications or live dashboards
-- Creating applications with instant data sync
-- Implementing scheduled functions (crons)
-- Building backends without managing infrastructure
+- **Trigger**: Convex-specific development, writing Convex functions, schemas, queries, mutations, actions, or real-time subscriptions
+- **Skip**: Project does not use Convex as its backend
 
-## When to use this skill
+Comprehensive guide for building Convex backends with TypeScript. Covers function syntax, validators, schemas, queries, mutations, actions, scheduling, and file storage.
 
-- Building realtime apps with Convex, implementing reactive queries, or managing backend logic with type-safe functions.
-- When working on related tasks or features
-- During development that requires this expertise
+## When to Apply
 
-**Use when**: Building realtime apps with Convex, implementing reactive queries, or managing backend logic with type-safe functions.
+Reference these guidelines when:
 
-## Core Concepts
+- Writing new Convex functions (queries, mutations, actions)
+- Defining database schemas and validators
+- Implementing real-time data fetching
+- Setting up cron jobs or scheduled functions
+- Working with file storage
+- Designing API structure
 
-### Queries (Read Data)
-\`\`\`typescript
-import { query } from './_generated/server';
-import { v } from 'convex/values';
+## Rule Categories
 
-export const list = query({
-  args: {},
-  handler: async (ctx) => {
-    return await ctx.db.query('users').collect();
-  }
-});
+| Category          | Impact   | Description                                   |
+| ----------------- | -------- | --------------------------------------------- |
+| Function Syntax   | CRITICAL | New function syntax with args/returns/handler |
+| Validators        | CRITICAL | Type-safe argument and return validation      |
+| Schema Design     | HIGH     | Table definitions, indexes, system fields     |
+| Query Patterns    | HIGH     | Efficient data fetching with indexes          |
+| Mutation Patterns | MEDIUM   | Database writes, patch vs replace             |
+| Action Patterns   | MEDIUM   | External API calls, Node.js runtime           |
+| Scheduling        | MEDIUM   | Crons and delayed function execution          |
+| File Storage      | LOW      | Blob storage and metadata                     |
 
-export const get = query({
-  args: { id: v.id('users') },
+## Quick Reference
+
+### Function Registration
+
+```typescript
+// Public functions (exposed to clients)
+import { query, mutation, action } from "./_generated/server";
+
+// Internal functions (only callable from other Convex functions)
+import {
+  internalQuery,
+  internalMutation,
+  internalAction,
+} from "./_generated/server";
+```
+
+### Function Syntax (Always Use This)
+
+```typescript
+export const myFunction = query({
+  args: { name: v.string() },
+  returns: v.string(),
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.id);
-  }
+    return "Hello " + args.name;
+  },
 });
-\`\`\`
+```
 
-### Mutations (Write Data)
-\`\`\`typescript
-import { mutation } from './_generated/server';
+### Common Validators
 
-export const create = mutation({
-  args: { name: v.string(), email: v.string() },
-  handler: async (ctx, args) => {
-    return await ctx.db.insert('users', args);
-  }
-});
-\`\`\`
+| Type     | Validator                         | Example       |
+| -------- | --------------------------------- | ------------- |
+| String   | `v.string()`                      | `"hello"`     |
+| Number   | `v.number()`                      | `3.14`        |
+| Boolean  | `v.boolean()`                     | `true`        |
+| ID       | `v.id("tableName")`               | `doc._id`     |
+| Array    | `v.array(v.string())`             | `["a", "b"]`  |
+| Object   | `v.object({...})`                 | `{name: "x"}` |
+| Optional | `v.optional(v.string())`          | `undefined`   |
+| Union    | `v.union(v.string(), v.number())` | `"x"` or `1`  |
+| Literal  | `v.literal("status")`             | `"status"`    |
+| Null     | `v.null()`                        | `null`        |
 
-## Resources
-- [Convex Docs](https://docs.convex.dev/)
+### Function References
+
+```typescript
+// Public functions
+import { api } from "./_generated/api";
+api.example.myQuery; // convex/example.ts → myQuery
+
+// Internal functions
+import { internal } from "./_generated/api";
+internal.example.myInternalMutation;
+```
+
+### Query with Index
+
+```typescript
+// Schema
+messages: defineTable({...}).index("by_channel", ["channelId"])
+
+// Query
+await ctx.db
+  .query("messages")
+  .withIndex("by_channel", (q) => q.eq("channelId", channelId))
+  .order("desc")
+  .take(10);
+```
+
+### Key Rules
+
+1. **Always include `args` and `returns` validators** on all functions
+2. **Use `v.null()` for void returns** - never omit return validator
+3. **Use `withIndex()` not `filter()`** - define indexes in schema
+4. **Use `internalQuery/Mutation/Action`** for private functions
+5. **Actions cannot access `ctx.db`** - use runQuery/runMutation instead
+6. **Include type annotations** when calling functions in same file
+
+## Full Compiled Document
+
+For the complete guide with all rules and detailed code examples, see [AGENTS.md](AGENTS.md).

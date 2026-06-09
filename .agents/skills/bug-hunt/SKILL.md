@@ -1,6 +1,32 @@
 ---
 name: bug-hunt
-description: 'Investigate bugs and root causes.'
+description: Investigate bugs and root causes.
+practices:
+- refactoring
+- property-based-testing
+- code-complete
+hexagonal_role: domain
+consumes:
+- beads
+- standards
+produces: []
+context_rel:
+- kind: shared-kernel
+  with: standards
+skill_api_version: 1
+context:
+  window: fork
+  intent:
+    mode: task
+  sections:
+    exclude:
+    - HISTORY
+  intel_scope: topic
+metadata:
+  tier: execution
+  dependencies:
+  - beads
+output_contract: diagnosis report, optional fix commits
 ---
 # Bug Hunt Skill
 
@@ -11,15 +37,15 @@ description: 'Investigate bugs and root causes.'
 Systematic investigation to find root cause and design a complete fix — or proactive audit to find hidden bugs before they bite.
 
 **Requires:**
-- session-start.sh has executed (creates `.agents/` directories for output)
+- writable `.agents/` output directories; create them explicitly if absent
 - bd CLI (beads) for issue tracking if creating follow-up issues
 
 ## Modes
 
 | Mode | Invocation | When |
 |------|------------|------|
-| **Investigation** | `$bug-hunt <symptom>` | You have a known bug or failure |
-| **Audit** | `$bug-hunt --audit <scope>` | Proactive sweep for hidden bugs |
+| **Investigation** | `/bug-hunt <symptom>` | You have a known bug or failure |
+| **Audit** | `/bug-hunt --audit <scope>` | Proactive sweep for hidden bugs |
 
 Investigation mode uses the 4-phase structure below. Audit mode uses systematic read-and-classify — see [Audit Mode](#audit-mode).
 
@@ -34,9 +60,9 @@ Investigation mode uses the 4-phase structure below. Audit mode uses systematic 
 | **3. Hypothesis** | Form and test single hypothesis | Pass/fail for each |
 | **4. Implementation** | Fix at root, not symptoms | Verified fix |
 
-**For failure category taxonomy and the 3-failure rule, read `references/failure-categories.md`.**
+**For failure category taxonomy and the 3-failure rule, read `skills/bug-hunt/references/failure-categories.md`.**
 
-**For audits or pre-release sweeps that need more than one pass, route through `references/audit-fix-rescan-cycle.md` (multi-pass methodology) and use `references/convergence-criteria.md` to decide when to stop.**
+**For audits or pre-release sweeps that need more than one pass, route through `skills/bug-hunt/references/audit-fix-rescan-cycle.md` (multi-pass methodology) and use `skills/bug-hunt/references/convergence-criteria.md` to decide when to stop.**
 
 For proactive sweeps that need fresh-eyes rescans, also load [references/multi-pass-bug-hunting.md](references/multi-pass-bug-hunting.md).
 
@@ -46,7 +72,23 @@ When the target process is live, hung, or only reproducible under debugger obser
 
 ## Execution Steps
 
-Given `$bug-hunt <symptom>`:
+Given `/bug-hunt <symptom>`:
+
+---
+
+### Step 0: Load Prior Bug Context
+
+Before investigating, check for prior learnings about this area of the codebase:
+
+```bash
+if command -v ao &>/dev/null; then
+    ao lookup --query "<symptom-keywords> bug patterns" --limit 3 2>/dev/null || true
+fi
+```
+
+**Apply retrieved knowledge:** If learnings are returned, check each for applicability to the current bug. For applicable learnings (e.g., prior bugs in same area, known fragile patterns), include as investigation leads and cite by filename. Record: `ao metrics cite "<path>" --type applied 2>/dev/null || true`
+
+Prior bug reports, fix patterns, and known fragile areas reduce investigation time.
 
 ---
 
@@ -94,6 +136,7 @@ git log --oneline --grep="<keyword>" | head -10
 
 ### Step 1.4: Trace the Execution Path
 
+**USE THE TASK TOOL** (subagent_type: "Explore") to trace the execution path:
 - Find the entry point where the bug manifests
 - Trace backward to find where bad data/state originates
 - Identify all functions in the path and recent changes to them
@@ -146,7 +189,7 @@ Make the SMALLEST possible change to test the hypothesis:
 
 ### Step 3.3: Check Failure Counter
 
-Check failure count per `references/failure-categories.md`. After 3 countable failures, escalate to architecture review.
+Check failure count per `skills/bug-hunt/references/failure-categories.md`. After 3 countable failures, escalate to architecture review.
 
 ---
 
@@ -172,7 +215,7 @@ Fix at the ROOT CAUSE, not at symptoms.
 
 Run the failing test - it should now pass.
 
-If the bug is in a high-complexity function, consider `$refactor` after fix to prevent recurrence.
+If the bug is in a high-complexity function, consider `/refactor` after fix to prevent recurrence.
 
 ---
 
@@ -181,9 +224,9 @@ If the bug is in a high-complexity function, consider `$refactor` after fix to p
 When invoked with `--audit`, bug-hunt switches to a proactive sweep. No symptom needed — you're hunting for bugs that haven't been reported yet.
 
 ```bash
-$bug-hunt --audit cli/internal/goals/     # audit a package
-$bug-hunt --audit src/auth/               # audit a directory
-$bug-hunt --audit .                        # audit recent changes in repo
+/bug-hunt --audit cli/internal/goals/     # audit a package
+/bug-hunt --audit src/auth/               # audit a directory
+/bug-hunt --audit .                        # audit recent changes in repo
 ```
 
 ### Audit Step 1: Scope
@@ -217,6 +260,36 @@ Read **every file** in scope line by line. For each file, check:
 
 **Key discipline:** Read line by line. Do not skim. The proven methodology (5 bugs found, 0 hypothesis failures) came from careful reading, not heuristic scanning.
 
+**USE THE TASK TOOL** (subagent_type: "Explore") for large scopes — split files across parallel agents.
+
+### Audit Step 3: Classify Findings
+
+For each finding, assign severity:
+
+| Severity | Criteria | Examples |
+|----------|----------|---------|
+| **HIGH** | Data loss, security, resource leak, process orphaning | Zombie processes, SQL injection, file handle leak |
+| **MEDIUM** | Wrong output, incorrect defaults, silent data corruption | UTF-8 truncation, hardcoded paths, wrong error code |
+| **LOW** | Dead code, cosmetic, minor inconsistency | Unreachable branch, unused import, style violation |
+
+Performance bugs (slow queries, memory leaks, N+1) → escalate to `/perf` for deeper analysis.
+
+### Audit Step 4: Write Audit Report
+
+**For audit report format, read `skills/bug-hunt/references/audit-report-template.md`.**
+
+Write to `.agents/research/YYYY-MM-DD-bug-<scope-slug>.md`.
+
+Report to user with a summary table:
+
+```
+| # | Bug | Severity | File | Fix |
+|---|-----|----------|------|-----|
+| 1 | <description> | HIGH | <file:line> | <proposed fix> |
+```
+
+Include failure count (hypothesis tests that didn't confirm). Zero failures = clean audit.
+
 ### Bug-Finding Pyramid Modes (BF1–BF5)
 
 When running `--audit`, check for missing bug-finding test coverage:
@@ -242,37 +315,7 @@ If scripts lack functional tests → flag as finding (severity: moderate).
 For every data transformation (parse/render/serialize):
 - [ ] Property test with randomized inputs exists
 
-**Reference:** The standards skill contains full BF level definitions and per-language tooling.
-
----
-
-### Audit Step 3: Classify Findings
-
-For each finding, assign severity:
-
-| Severity | Criteria | Examples |
-|----------|----------|---------|
-| **HIGH** | Data loss, security, resource leak, process orphaning | Zombie processes, SQL injection, file handle leak |
-| **MEDIUM** | Wrong output, incorrect defaults, silent data corruption | UTF-8 truncation, hardcoded paths, wrong error code |
-| **LOW** | Dead code, cosmetic, minor inconsistency | Unreachable branch, unused import, style violation |
-
-Performance bugs (slow queries, memory leaks, N+1) → escalate to `$perf` for deeper analysis.
-
-### Audit Step 4: Write Audit Report
-
-**For audit report format, read `references/audit-report-template.md`.**
-
-Write to `.agents/research/YYYY-MM-DD-bug-<scope-slug>.md`.
-
-Report to user with a summary table:
-
-```
-| # | Bug | Severity | File | Fix |
-|---|-----|----------|------|-----|
-| 1 | <description> | HIGH | <file:line> | <proposed fix> |
-```
-
-Include failure count (hypothesis tests that didn't confirm). Zero failures = clean audit.
+**Reference:** the test pyramid standard in `/standards` for full BF level definitions and per-language tooling.
 
 ---
 
@@ -314,7 +357,7 @@ Common bug patterns to check:
 
 ### Investigating a Test Failure
 
-**User says:** `$bug-hunt "tests failing on CI but pass locally"`
+**User says:** `/bug-hunt "tests failing on CI but pass locally"`
 
 **What happens:**
 1. Agent confirms bug by checking CI logs vs local test output
@@ -329,7 +372,7 @@ Common bug patterns to check:
 
 ### Tracking Down a Regression
 
-**User says:** `$bug-hunt "feature X broke after yesterday's deployment"`
+**User says:** `/bug-hunt "feature X broke after yesterday's deployment"`
 
 **What happens:**
 1. Agent reproduces issue in current state
@@ -344,7 +387,7 @@ Common bug patterns to check:
 
 ### Proactive Code Audit
 
-**User says:** `$bug-hunt --audit cli/internal/goals/`
+**User says:** `/bug-hunt --audit cli/internal/goals/`
 
 **What happens:**
 1. Agent scopes to all `.go` files in the goals package
@@ -364,25 +407,9 @@ Common bug patterns to check:
 | Hit 3-failure limit during hypothesis testing | Multiple incorrect hypotheses or complex root cause | Escalate to architecture review. Read `failure-categories.md` to determine if failures are countable. Consider asking for domain expert input. |
 | Bug report missing key information | Incomplete investigation or skipped steps | Verify all 4 phases completed. Ensure root cause identified with file:line. Check git blame ran for responsible commit. |
 
-## See Also
-
-- [refactor](../refactor/SKILL.md) — Safe, verified refactoring for complexity targets
-- [perf](../perf/SKILL.md) — Performance profiling and benchmarking
-
 ## Reference Documents
 
-- [references/audit-report-template.md](references/audit-report-template.md)
-- [references/bug-report-template.md](references/bug-report-template.md)
-- [references/failure-categories.md](references/failure-categories.md)
-- [references/audit-fix-rescan-cycle.md](references/audit-fix-rescan-cycle.md)
-- [references/convergence-criteria.md](references/convergence-criteria.md)
-- [references/multi-pass-bug-hunting.md](references/multi-pass-bug-hunting.md)
-- [references/deadlock-and-hang-triage.md](references/deadlock-and-hang-triage.md)
-- [references/debugger-attach-triage.md](references/debugger-attach-triage.md)
-
-## Local Resources
-
-### references/
+- [references/bug-hunt.feature](references/bug-hunt.feature) — Executable spec: 4-phase root-cause investigation, fix-the-cause-not-symptom, --audit sweep, cited artifact (soc-qk4b)
 
 - [references/audit-report-template.md](references/audit-report-template.md)
 - [references/bug-report-template.md](references/bug-report-template.md)
@@ -393,6 +420,7 @@ Common bug patterns to check:
 - [references/deadlock-and-hang-triage.md](references/deadlock-and-hang-triage.md)
 - [references/debugger-attach-triage.md](references/debugger-attach-triage.md)
 
-### scripts/
+## See Also
 
-- `scripts/validate.sh`
+- [refactor](../refactor/SKILL.md) — Safe refactoring for complex bug-prone code
+- [perf](../perf/SKILL.md) — Performance profiling for performance-related bugs

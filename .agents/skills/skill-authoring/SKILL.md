@@ -1,139 +1,181 @@
 ---
 name: skill-authoring
-description: Design and development best practices for Claude Code skills, MCP tools, and AI agent capabilities. Use when creating skills, writing SKILL.md files, designing tool descriptions, or optimizing triggers. Triggers on "create a skill", "skill template", "write skill instructions", SKILL.md, metadata.json, progressive disclosure, trigger optimization, MCP tool design, or skill testing. Does NOT cover specific frameworks or languages (use dedicated skills).
+description: 'Guide creating Claude Code skills with TDD and persuasion principles. Use for new skill development.'
+alwaysApply: false
+category: skill-development
+tags:
+- authoring
+- tdd
+- skills
+- writing
+- best-practices
+- validation
+modules:
+- modules/tdd-methodology.md
+- modules/persuasion-principles.md
+- modules/description-writing.md
+- modules/progressive-disclosure.md
+- modules/anti-rationalization.md
+- modules/graphviz-conventions.md
+- modules/deployment-checklist.md
+- modules/advanced-patterns.md
+- modules/authentication.md
+- modules/error-handling.md
+- modules/examples.md
+- modules/testing-with-subagents.md
+- modules/troubleshooting.md
+- modules/validation.md
+dependencies:
+- modular-skills
+estimated_tokens: 1500
+model_hint: standard
 ---
+# Skill Authoring Guide
 
-# AI Agent Skills Best Practices
+## Overview
 
-Design and development guide for AI agent skills, including Claude Code skills and MCP tools. Contains 46 rules across 8 categories, prioritized by impact to guide skill creation, review, and optimization.
+Writing effective Claude Code skills requires Test-Driven Development (TDD) and persuasion principles from compliance research. We treat skill writing as process documentation that needs empirical validation rather than just theoretical instruction. Skills are behavioral interventions designed to change model behavior in measurable ways.
 
-## When to Apply
+By using TDD, we ensure skills address actual failure modes identified through testing. Optimized descriptions improve discovery, while a modular structure supports progressive disclosure to manage token usage. This framework also includes anti-rationalization patterns to prevent the assistant from bypassing requirements.
 
-- Creating new Claude Code skills or MCP tools
-- Writing or reviewing SKILL.md metadata and descriptions
-- Optimizing skill trigger reliability
-- Structuring content for progressive disclosure
-- Testing skill activation and behavior
-- Designing tool interfaces for agent workflows
+### The Iron Law
 
-## Core Principles
+**NO SKILL WITHOUT A FAILING TEST FIRST**
 
-**1. Descriptions drive activation.** Claude selects skills based on description matching against user intent. Include specific capabilities, trigger keywords, and negative cases. A skill with a vague description activates inconsistently or never.
+Every skill must begin with documented evidence of Claude failing without it. This validates that you are solving a real problem. No implementation should proceed without a failing test, and no completion claim should be accepted without evidence. Detailed enforcement patterns for adversarial verification and coverage gates are available in `imbue:proof-of-work`.
 
-**2. Front-load critical instructions.** Claude may truncate long content. Place non-negotiable rules in the first 100 lines. Bury important constraints at the end and they get ignored.
+## Skill Types
 
-**3. Progressive disclosure saves tokens.** Load detailed content only when needed. A 2000-line skill wastes context on every activation. Structure as: SKILL.md (overview) → references/ (details) → scripts/ (execution).
+We categorize skills into three types: **Technique** skills for specific methods, **Pattern** skills for recurring solutions, and **Reference** skills for quick lookups and checklists. This helps organize interventions into the most effective format for the task.
 
-**4. Test activation, not just execution.** A skill that works perfectly but never triggers provides zero value. Test with real user phrases, synonyms, and edge cases before deployment.
+## Quick Start
 
-**5. One skill per domain.** Overlapping skills create activation conflicts. Split by clear boundaries (language, framework, workflow stage) with distinct trigger keywords.
+### Skill Analysis
+\`\`\`bash
+# Analyze skill complexity
+python scripts/analyze.py
 
-## Rule Categories
+# Estimate tokens
+python scripts/tokens.py
+\`\`\`
 
-| Priority | Category | Impact | Prefix |
-|----------|----------|--------|--------|
-| 1 | Skill Metadata Design | CRITICAL | `meta-` |
-| 2 | Description Engineering | CRITICAL | `desc-` |
-| 3 | Content Structure | HIGH | `struct-` |
-| 4 | Trigger Optimization | HIGH | `trigger-` |
-| 5 | Progressive Disclosure | MEDIUM-HIGH | `prog-` |
-| 6 | MCP Tool Design | MEDIUM | `mcp-` |
-| 7 | Testing and Validation | MEDIUM | `test-` |
-| 8 | Maintenance and Distribution | LOW-MEDIUM | `maint-` |
+### Validation
+\`\`\`bash
+# Validate skill structure
+python scripts/abstract_validator.py --check
+\`\`\`
 
-## Quick Reference
+**Verification**: Run analysis and review token estimates before proceeding.
+## Description Optimization
 
-### 1. Skill Metadata Design (CRITICAL)
+Skill descriptions must be optimized for semantic search and explicit triggering. Follow the formula `[What it does] + [When to use it] + [Key triggers]`. Use a third-person voice (e.g., "Guides...", "Provides...") and include specific, concrete use cases. Avoid marketing language or vague phrases like "helps with coding."
 
-- `meta-name-format` - Use lowercase hyphenated skill names
-- `meta-name-hyphen-boundaries` - Never start or end names with hyphens
-- `meta-name-no-consecutive-hyphens` - Avoid consecutive hyphens in names
-- `meta-name-uniqueness` - Ensure skill names are globally unique
-- `meta-required-frontmatter` - Include all required frontmatter fields
-- `meta-allowed-frontmatter-fields` - Use only allowed frontmatter fields
-- `meta-frontmatter-yaml-syntax` - Use valid YAML frontmatter syntax
-- `meta-name-length` - Keep skill names under 64 characters
-- `meta-directory-match` - Match skill name to directory name
+### Skill Character Budget (Claude Code 2.1.32+)
 
-### 2. Description Engineering (CRITICAL)
+Skill description character budgets now **scale with context window** at 2% of available context. This means:
 
-- `desc-specific-capabilities` - Name specific capabilities in description
-- `desc-trigger-keywords` - Include user trigger keywords in description
-- `desc-third-person-voice` - Write descriptions in third person
-- `desc-length-optimization` - Optimize description length for discovery
-- `desc-avoid-vague-terms` - Avoid vague terms in descriptions
-- `desc-differentiate-similar-skills` - Differentiate similar skills with distinct triggers
-- `desc-include-negative-cases` - Include negative cases for precision
+| Context Window | Description Budget |
+|---------------|-------------------|
+| 200K (Sonnet/Haiku) | ~4,000 characters |
+| 1M (Opus 4.6 GA) | ~20,000 characters |
 
-### 3. Content Structure (HIGH)
+Previously constrained skills can use more descriptive text on larger windows. However, keep descriptions concise regardless: longer is not better. The scaling primarily prevents truncation for skills with legitimately complex trigger conditions, not as an invitation to add verbose content.
 
-- `struct-header-hierarchy` - Use consistent header hierarchy
-- `struct-instructions-first` - Put critical instructions early in content
-- `struct-imperative-instructions` - Write instructions in imperative mood
-- `struct-code-blocks-with-language` - Specify language in code blocks
-- `struct-line-limit` - Keep SKILL.md under 500 lines
-- `struct-single-responsibility` - One skill per domain
+### Plugin Name Auto-Display (Claude Code 2.1.33+)
 
-### 4. Trigger Optimization (HIGH)
+Plugin names are now automatically shown alongside skill descriptions in the `/skills` menu. Do not repeat the plugin name in skill descriptions: it is redundant and wastes character budget. Focus descriptions on what the skill does and when to use it.
 
-- `trigger-slash-command-aliases` - Include slash command aliases in description
-- `trigger-file-type-patterns` - Include file type patterns in description
-- `trigger-workflow-stages` - Reference workflow stages in description
-- `trigger-error-patterns` - Include error patterns in debugging skills
-- `trigger-synonym-coverage` - Cover synonyms and alternate phrasings
+## The TDD Cycle for Skills
 
-### 5. Progressive Disclosure (MEDIUM-HIGH)
+### RED Phase: Document Baseline Failures
+Establish empirical evidence that an intervention is needed. Create at least three pressure scenarios that combine time pressure and ambiguity. Run these in a fresh instance without the skill active and document the exact failures, such as skipped error handling or missing validation.
 
-- `prog-three-level-disclosure` - Implement three-level progressive disclosure
-- `prog-one-level-deep-links` - Limit reference links to one level deep
-- `prog-scripts-execute-not-read` - Execute scripts instead of reading code
-- `prog-lazy-load-examples` - Lazy load examples and reference material
-- `prog-mutual-exclusion` - Separate mutually exclusive contexts
+### GREEN Phase: Minimal Skill Implementation
+Create the smallest intervention that addresses the documented failures. Write the `SKILL.md` with required frontmatter and content that directly counters the baseline failures. Include one example of correct behavior and verify that the same pressure scenarios now show measurable improvement.
 
-### 6. MCP Tool Design (MEDIUM)
+### REFACTOR Phase: Anti-Rationalization
+Eliminate the ability for Claude to explain away requirements. Run pressure scenarios with the skill active to identify common rationalizations, such as claiming a task is "too simple" for the full process. Add explicit counters, such as exception tables and red flag lists, until rationalizations stop.
 
-- `mcp-tool-naming` - Use clear action-object tool names
-- `mcp-parameter-descriptions` - Document all tool parameters
-- `mcp-error-messages` - Return actionable error messages
-- `mcp-tool-scope` - Design single-purpose tools
-- `mcp-allowed-tools` - Use allowed-tools for safety constraints
-- `mcp-idempotent-operations` - Design idempotent tool operations
+## Anti-Rationalization
 
-### 7. Testing and Validation (MEDIUM)
+Skills must explicitly counter patterns where Claude attempts to bypass requirements. Common excuses include claiming a task is "too simple" or that a "spirit vs letter of the law" approach is sufficient. Skills should include red flag lists for self-checking, such as "Stop if you think: this is too simple for the full process." When exceptions are necessary, document them explicitly to prevent unauthorized shortcuts.
 
-- `test-trigger-phrases` - Test skill activation with real user phrases
-- `test-edge-cases` - Test skills with edge case inputs
-- `test-negative-scenarios` - Test that skills do NOT trigger on unrelated requests
-- `test-instruction-clarity` - Test instructions with fresh context
+## Module References
 
-### 8. Maintenance and Distribution (LOW-MEDIUM)
+For detailed implementation guidance:
 
-- `maint-semantic-versioning` - Use semantic versioning for skill releases
-- `maint-changelog` - Maintain a changelog for skill updates
-- `maint-plugin-packaging` - Package skills as plugins for distribution
-- `maint-audit-security` - Audit skills before installing from external sources
+**Core authoring cycle:**
+- **TDD Methodology**: See `modules/tdd-methodology.md` for RED-GREEN-REFACTOR cycle details
+- **Persuasion Principles**: See `modules/persuasion-principles.md` for compliance research and techniques
+- **Description Writing**: See `modules/description-writing.md` for discovery optimization
+- **Progressive Disclosure**: See `modules/progressive-disclosure.md` for file structure patterns
+- **Anti-Rationalization**: See `modules/anti-rationalization.md` for bulletproofing techniques
+- **Graphviz Conventions**: See `modules/graphviz-conventions.md` for process diagram standards
 
-## Creating Rules
+**Working with concrete skills (load when implementing or debugging):**
+- **Annotated Examples**: See `modules/examples.md` for walk-throughs of well-authored skills in this repo
+- **Advanced Patterns**: See `modules/advanced-patterns.md` for skill-to-skill coordination, conditional behavior, and scaling across activation contexts
+- **Authentication**: See `modules/authentication.md` for skills that invoke `gh`, `glab`, MCP servers, or other authenticated tools
+- **Error Handling**: See `modules/error-handling.md` for missing tools, timeouts, partial subagent results, and permission denials
+- **Troubleshooting**: See `modules/troubleshooting.md` for diagnosing skills that do not behave as the test corpus says they should
 
-Copy [assets/templates/_template.md](assets/templates/_template.md) and follow the frontmatter schema:
+**Validation and deployment (load when shipping):**
+- **Validation**: See `modules/validation.md` for frontmatter parsing, reference resolution, and structural checks before merge
+- **Testing with Subagents**: See `modules/testing-with-subagents.md` for running the Iron Law test in a fresh subagent (and `abstract:subagent-testing` for the broader pressure-testing methodology)
+- **Deployment Checklist**: See `modules/deployment-checklist.md` for final validation before promoting a skill
 
-```yaml
----
-title: Rule Title Here
-impact: CRITICAL|HIGH|MEDIUM-HIGH|MEDIUM|LOW-MEDIUM|LOW
-impactDescription: Quantified impact (e.g., "2-10x improvement")
-tags: prefix, technique, related-concepts
----
+## Deployment and Quality Gates
+
+Before deploying, verify that the RED, GREEN, and REFACTOR phases are complete and documented. Frontmatter must be valid, descriptions optimized, and line counts kept under 500 lines. Ensure all module references are valid and at least one concrete example is included.
+
+### Scribe Validation
+All markdown files must pass scribe validation. This includes a slop scan to ensure a score under 2.5 and doc verification to confirm all file paths and command examples work. Bullet-to-prose ratios must remain under 60% to maintain readability. Use `Skill(scribe:slop-detector)` and `Agent(scribe:doc-verifier)` for these checks.
+
+## Integration and Best Practices
+
+Individual skills are created using `skill-authoring`, while `modular-skills` handles the architecture of larger structures. `skills-eval` provides ongoing quality assessment. Avoid the common pitfall of writing skills based on theoretical behavior; always use documented failures to guide development. Use progressive disclosure to prevent monolithic files and ensure that each intervention remains focused and token-efficient.
+## Skill Directory Variable (2.1.69+)
+
+Skills can reference their own directory using
+`${CLAUDE_SKILL_DIR}` in SKILL.md content. This
+variable resolves to the absolute path of the
+directory containing the SKILL.md file. Use it for
+referencing sibling files, data assets, or module
+paths without hardcoding absolute paths:
+
+```markdown
+See `${CLAUDE_SKILL_DIR}/modules/advanced-patterns.md`
+for detailed patterns.
+
+Run: `python3 ${CLAUDE_SKILL_DIR}/scripts/check.py`
 ```
 
-Reference files use the pattern: `references/{prefix}-{slug}.md`
+This is especially useful for skills that ship
+alongside scripts or data files and need portable
+path references that work regardless of where the
+plugin is installed.
 
-## References
+### Description Colon Fix (2.1.69+)
 
-- [skills-ref specification](https://github.com/agentskills/agentskills/tree/main/skills-ref)
-- [Anthropic Engineering: Agent Skills](https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills)
-- [Claude Code Skills Documentation](https://code.claude.com/docs/en/skills)
-- [Anthropic Skills Repository](https://github.com/anthropics/skills)
-- [MCP Best Practices](https://modelcontextprotocol.info/docs/best-practices/)
-- [Prompt Engineering Guide: LLM Agents](https://www.promptingguide.ai/research/llm-agents)
-- [Claude Skills Deep Dive](https://leehanchung.github.io/blogs/2025/10/26/claude-skills-deep-dive/)
+Skill descriptions containing colons (e.g.,
+`description: "Triggers include: X, Y, Z"`) previously
+failed to load from SKILL.md frontmatter. This is
+fixed in 2.1.69. Skills without a `description:` field
+also now appear in the available skills list (previously
+they were silently excluded).
+
+## Troubleshooting
+
+### Common Issues
+
+**Skill not loading**
+Check YAML frontmatter syntax and required fields.
+As of 2.1.69, skills without a `description:` field
+still appear in the skills list, but descriptions
+with colons must be quoted in YAML frontmatter.
+
+**Token limits exceeded**
+Use progressive disclosure - move details to modules
+
+**Modules not found**
+Verify module paths in SKILL.md are correct

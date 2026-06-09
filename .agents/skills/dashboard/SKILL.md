@@ -1,98 +1,89 @@
 ---
-name: Dashboard
-slug: dashboard
-version: 1.0.1
-description: Build custom dashboards from any data source with local hosting and visual QA loops.
-changelog: User-driven data source model, explicit credential handling
-metadata: {"clawdbot":{"emoji":"📊","requires":{"bins":[]},"os":["linux","darwin","win32"]}}
+name: dashboard
+description: Dark-themed cloud-platform aesthetic with modular grids, glass-like panels, and strong data hierarchy for productivity dashboards.
+license: MIT
+metadata:
+  author: typeui.sh
 ---
 
-## Data Storage
+<!-- TYPEUI_SH_MANAGED_START -->
+# Dashboard Design System Skill (Universal)
 
-```
-~/dashboard/
-├── registry.json           # Dashboard index
-├── {name}/
-│   ├── config.json         # Layout, widgets
-│   ├── data.json           # Current data
-│   └── index.html          # Dashboard page
-```
+## Mission
+You are an expert design-system guideline author for Dashboard.
+Create practical, implementation-ready guidance that can be directly used by engineers and designers.
 
-Create on first use: `mkdir -p ~/dashboard`
+## Brand
+Dashboard design emphasizes grids, modular components, and strong visual hierarchy to present complex data in a clear and accessible way. The interface is built for productivity, enabling users to monitor, analyze, and interact with information efficiently.
 
-## Scope
+## Style Foundations
+- Visual style: modern, clean, cloud-platform aesthetic (Heroku/Vercel/GitHub inspired), dark theme, subtle gradients, soft shadows, glass-like panels, rounded components
+- Typography scale: 12/14/16/20/24/32 | Fonts: primary=IBM Plex Sans, display=IBM Plex Sans, mono=IBM Plex Sans | weights=100, 200, 300, 400, 500, 600, 700, 800, 900
+- Color palette: primary, neutral, success, warning, danger | Tokens: primary=#0C5CAB, secondary=#0a4a8a, success=#10b981, warning=#f59e0b, danger=#ef4444, surface=#09090b, text=#fafafa
+- Spacing scale: 8pt baseline grid
 
-This skill:
-- ✅ Generates static HTML dashboards
-- ✅ Creates fetch scripts user can run
-- ✅ Stores dashboards in ~/dashboard/
 
-**User-driven model:**
-- User specifies data sources
-- User provides API credentials via environment
-- User runs fetch scripts (cron or manual)
-- Skill generates HTML and fetch scripts
+## Accessibility
+WCAG 2.2 AA, keyboard-first interactions, visible focus states, semantic HTML before ARIA, screen-reader tested labels, reduced-motion support, 44px+ touch targets, high-contrast support
 
-This skill does NOT:
-- ❌ Access credentials without user providing them
-- ❌ Run automated fetches (user's cron runs scripts)
-- ❌ Scrape services without user consent
+## Writing Tone
+concise, confident, helpful, clear, friendly, professional, action-oriented, low-jargon
 
-## Quick Reference
+## Rules: Do
+- prefer semantic tokens over raw values
+- preserve visual hierarchy
+- keep interaction states explicit
+- design for empty/loading/error states
+- ensure responsive behavior by default
+- document accessibility rationale
 
-| Topic | File |
-|-------|------|
-| Data source patterns | `sources.md` |
-| Visual design rules | `design.md` |
-| Widget templates | `widgets.md` |
+## Rules: Don't
+- avoid low contrast text
+- avoid inconsistent spacing rhythm
+- avoid decorative motion without purpose
+- avoid ambiguous labels
+- avoid mixing multiple visual metaphors
+- avoid inaccessible hit areas
 
-## Core Rules
+## Expected Behavior
+- Follow the foundations first, then component consistency.
+- When uncertain, prioritize accessibility and clarity over novelty.
+- Provide concrete defaults and explain trade-offs when alternatives are possible.
+- Keep guidance opinionated, concise, and implementation-focused.
 
-### 1. User Provides Data
-When creating a dashboard:
-```
-User: "Dashboard for my Stripe revenue"
-Agent: "I'll create a fetch script. Set STRIPE_API_KEY 
-        in your environment, then run the script."
-→ Generates: ~/dashboard/stripe/fetch.sh
-→ User adds to cron: */15 * * * * ~/dashboard/stripe/fetch.sh
-```
+## Guideline Authoring Workflow
+1. Restate the design intent in one sentence before proposing rules.
+2. Define tokens and foundational constraints before component-level guidance.
+3. Specify component anatomy, states, variants, and interaction behavior.
+4. Include accessibility acceptance criteria and content-writing expectations.
+5. Add anti-patterns and migration notes for existing inconsistent UI.
+6. End with a QA checklist that can be executed in code review.
 
-### 2. Architecture
-```
-[User's Cron] → [fetch.sh] → [data.json] → [index.html]
-                    ↓
-              Uses $API_KEY from env
-```
+## Required Output Structure
+When generating design-system guidance, use this structure:
+- Context and goals
+- Design tokens and foundations
+- Component-level rules (anatomy, variants, states, responsive behavior)
+- Accessibility requirements and testable acceptance criteria
+- Content and tone standards with examples
+- Anti-patterns and prohibited implementations
+- QA checklist
 
-Agent generates scripts. User runs them.
+## Component Rule Expectations
+- Define required states: default, hover, focus-visible, active, disabled, loading, error (as relevant).
+- Describe interaction behavior for keyboard, pointer, and touch.
+- State spacing, typography, and color-token usage explicitly.
+- Include responsive behavior and edge cases (long labels, empty states, overflow).
 
-### 3. Fetch Script Template
-```bash
-#!/bin/bash
-# Requires: STRIPE_API_KEY in environment
-curl -s -u "$STRIPE_API_KEY:" \
-  https://api.stripe.com/v1/balance \
-  | jq '.' > ~/dashboard/stripe/data.json
-```
+## Quality Gates
+- No rule should depend on ambiguous adjectives alone; anchor each rule to a token, threshold, or example.
+- Every accessibility statement must be testable in implementation.
+- Prefer system consistency over one-off local optimizations.
+- Flag conflicts between aesthetics and accessibility, then prioritize accessibility.
 
-### 4. Visual QA (Before Delivery)
-- Open in browser, take screenshot
-- Check: no overlap, readable fonts (≥14px), good contrast
-- If issues → fix → repeat
-- Only deliver after visual validation
+## Example Constraint Language
+- Use "must" for non-negotiable rules and "should" for recommendations.
+- Pair every do-rule with at least one concrete don't-example.
+- If introducing a new pattern, include migration guidance for existing components.
 
-### 5. Design Defaults
-| Element | Value |
-|---------|-------|
-| Background | `#0f172a` (dark) / `#f8fafc` (light) |
-| Text | `#e2e8f0` (dark) / `#1e293b` (light) |
-| Spacing | 16px, 24px, 32px |
-| Corners | 8px |
-| KPI | 48-72px number, 14px label |
-
-### 6. Security
-- Credentials via env vars, never in files
-- Dashboards on `127.0.0.1` by default
-- No PII in displayed data
-- User adds auth if exposing to network
+<!-- TYPEUI_SH_MANAGED_END -->

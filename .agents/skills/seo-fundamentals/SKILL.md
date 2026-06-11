@@ -1,219 +1,178 @@
 ---
 name: seo-fundamentals
-description: Auto-invoke when reviewing HTML head, meta tags, or Next.js page components. Enforces semantic HTML and search optimization.
+description: Core principles of SEO including E-E-A-T, Core Web Vitals, technical foundations, content quality, and how modern search engines evaluate pages.
+risk: safe
+source: community
+date_added: '2026-02-27'
 ---
 
-# SEO Fundamentals Review
+# SEO Fundamentals
 
-> "Good SEO is good UX. If search engines can't understand your page, users might not find it."
-
-## When to Apply
-
-Activate this skill when:
-- Reviewing HTML `<head>` sections
-- Seeing meta tags in code
-- Next.js/Remix page components
-- HTML structure with headings
-- Any page that should be indexed
+> **Foundational principles for sustainable search visibility.**
+> This skill explains _how search engines evaluate quality_, not tactical shortcuts.
 
 ---
 
-## The SEO Checklist
+## 1. E-E-A-T (Quality Evaluation Framework)
 
-### Must Have (Every Page)
+E-E-A-T is **not a direct ranking factor**.
+It is a framework used by search engines to **evaluate content quality**, especially for sensitive or high-impact topics.
 
-- [ ] **Title tag** — 50-60 characters, unique per page
-- [ ] **Meta description** — 150-160 characters, compelling
-- [ ] **Single H1** — One per page, describes main content
-- [ ] **Logical heading hierarchy** — H1 → H2 → H3 (no skipping)
-- [ ] **Semantic HTML** — `<header>`, `<main>`, `<nav>`, `<article>`, `<footer>`
-- [ ] **Image alt text** — Descriptive, not "image1.jpg"
+| Dimension             | What It Represents                 | Common Signals                                      |
+| --------------------- | ---------------------------------- | --------------------------------------------------- |
+| **Experience**        | First-hand, real-world involvement | Original examples, lived experience, demonstrations |
+| **Expertise**         | Subject-matter competence          | Credentials, depth, accuracy                        |
+| **Authoritativeness** | Recognition by others              | Mentions, citations, links                          |
+| **Trustworthiness**   | Reliability and safety             | HTTPS, transparency, accuracy                       |
 
-### Should Have (Marketing Pages)
-
-- [ ] **Open Graph tags** — og:title, og:description, og:image
-- [ ] **Twitter Card** — twitter:card, twitter:title
-- [ ] **Canonical URL** — Prevent duplicate content issues
-- [ ] **Structured data** — JSON-LD for rich snippets
-
-### Performance (Affects SEO)
-
-- [ ] **Core Web Vitals awareness**
-  - LCP (Largest Contentful Paint) < 2.5s
-  - FID (First Input Delay) < 100ms
-  - CLS (Cumulative Layout Shift) < 0.1
+> Pages competing in the same space are often differentiated by **trust and experience**, not keywords.
 
 ---
 
-## Common Mistakes (Anti-Patterns)
+## 2. Core Web Vitals (Page Experience Signals)
 
-### 1. Multiple H1 Tags
+Core Web Vitals measure **how users experience a page**, not whether it deserves to rank.
 
-```html
-<!-- ❌ BAD: Multiple H1s confuse search engines -->
-<h1>Welcome</h1>
-<h1>Our Products</h1>
-<h1>Contact Us</h1>
+| Metric  | Target  | What It Reflects    |
+| ------- | ------- | ------------------- |
+| **LCP** | < 2.5s  | Loading performance |
+| **INP** | < 200ms | Interactivity       |
+| **CLS** | < 0.1   | Visual stability    |
 
-<!-- ✅ GOOD: One H1, logical hierarchy -->
-<h1>Welcome to Our Store</h1>
-<h2>Our Products</h2>
-<h2>Contact Us</h2>
-```
+**Important context:**
 
-### 2. Missing Alt Text
-
-```html
-<!-- ❌ BAD: Empty or useless alt -->
-<img src="hero.jpg" alt="">
-<img src="team.jpg" alt="image">
-
-<!-- ✅ GOOD: Descriptive alt text -->
-<img src="hero.jpg" alt="Software engineer working at laptop">
-<img src="team.jpg" alt="Our founding team of 5 engineers">
-```
-
-### 3. Div Soup (No Semantic HTML)
-
-```html
-<!-- ❌ BAD: No semantic meaning -->
-<div class="header">
-  <div class="nav">...</div>
-</div>
-<div class="content">...</div>
-<div class="footer">...</div>
-
-<!-- ✅ GOOD: Semantic HTML -->
-<header>
-  <nav>...</nav>
-</header>
-<main>...</main>
-<footer>...</footer>
-```
-
-### 4. Skipping Heading Levels
-
-```html
-<!-- ❌ BAD: Jumps from H1 to H4 -->
-<h1>Page Title</h1>
-<h4>Some Section</h4>
-
-<!-- ✅ GOOD: Sequential hierarchy -->
-<h1>Page Title</h1>
-<h2>Main Section</h2>
-<h3>Subsection</h3>
-```
-
-### 5. Generic Title Tags
-
-```html
-<!-- ❌ BAD: Not descriptive -->
-<title>Home</title>
-<title>Page</title>
-
-<!-- ✅ GOOD: Descriptive with keywords -->
-<title>Daniel Lamb - Full Stack Developer Portfolio</title>
-<title>Contact Us | Acme Software Solutions</title>
-```
+- CWV rarely override poor content
+- They matter most when content quality is comparable
+- Failing CWV can _hold back_ otherwise good pages
 
 ---
 
-## Socratic Questions
+## 3. Technical SEO Principles
 
-Ask these instead of giving answers:
+Technical SEO ensures pages are **accessible, understandable, and stable**.
 
-1. **Title**: "If someone sees this title in Google results, would they click it?"
-2. **H1**: "How many H1 tags does this page have? What happens if there are multiple?"
-3. **Alt Text**: "If the image doesn't load, what information is lost?"
-4. **Semantic HTML**: "Can a screen reader understand the structure of this page?"
-5. **Meta Description**: "Does this description make you want to click?"
+### Crawl & Index Control
 
----
+| Element           | Purpose                |
+| ----------------- | ---------------------- |
+| XML sitemaps      | Help discovery         |
+| robots.txt        | Control crawl access   |
+| Canonical tags    | Consolidate duplicates |
+| HTTP status codes | Communicate page state |
+| HTTPS             | Security and trust     |
 
-## Stack-Specific Guidance
+### Performance & Accessibility
 
-### Next.js (App Router)
-
-```tsx
-// Pattern: Metadata export
-export const metadata = {
-  title: 'Page Title',
-  description: 'Page description',
-  // Your implementation will differ
-};
-```
-
-### Next.js (Pages Router)
-
-```tsx
-// Pattern: Next Head
-import Head from 'next/head';
-
-<Head>
-  <title>Your title here</title>
-  <meta name="description" content="Your description" />
-</Head>
-```
-
-### Plain HTML/React
-
-```html
-<!-- In index.html or via react-helmet -->
-<head>
-  <title>Title here</title>
-  <meta name="description" content="Description here">
-</head>
-```
+| Factor                 | Why It Matters                |
+| ---------------------- | ----------------------------- |
+| Page speed             | User satisfaction             |
+| Mobile-friendly design | Mobile-first indexing         |
+| Clean URLs             | Crawl clarity                 |
+| Semantic HTML          | Accessibility & understanding |
 
 ---
 
-## Red Flags to Call Out
+## 4. Content SEO Principles
 
-| Flag | Question |
-|------|----------|
-| Missing title tag | "What will this page show in search results?" |
-| Multiple H1s | "Which heading is the main topic? Search engines are confused." |
-| No meta description | "How will Google summarize this page?" |
-| Empty alt text | "What if the image doesn't load? What info is lost?" |
-| All divs, no semantics | "Can a screen reader navigate this page?" |
-| Title over 60 chars | "This will be cut off in search results. Can you shorten it?" |
+### Page-Level Elements
 
----
+| Element          | Principle                    |
+| ---------------- | ---------------------------- |
+| Title tag        | Clear topic + intent         |
+| Meta description | Click relevance, not ranking |
+| H1               | Page’s primary subject       |
+| Headings         | Logical structure            |
+| Alt text         | Accessibility and context    |
 
-## Open Graph Template
+### Content Quality Signals
 
-```html
-<!-- Minimum viable Open Graph -->
-<meta property="og:title" content="Your Page Title">
-<meta property="og:description" content="Your page description">
-<meta property="og:image" content="https://yoursite.com/og-image.jpg">
-<meta property="og:url" content="https://yoursite.com/page">
-<meta property="og:type" content="website">
-```
+| Dimension   | What Search Engines Look For |
+| ----------- | ---------------------------- |
+| Depth       | Fully answers the query      |
+| Originality | Adds unique value            |
+| Accuracy    | Factually correct            |
+| Clarity     | Easy to understand           |
+| Usefulness  | Satisfies intent             |
 
 ---
 
-## Interview Connection
+## 5. Structured Data (Schema)
 
-> "I implemented SEO best practices including semantic HTML, proper heading hierarchy, and meta tags, improving our page's discoverability."
+Structured data helps search engines **understand meaning**, not boost rankings directly.
 
-When reviewing their code:
-- "What's your SEO strategy for this page?"
-- "How would Google understand what this page is about?"
-- "Show me your heading structure"
+| Type           | Purpose                |
+| -------------- | ---------------------- |
+| Article        | Content classification |
+| Organization   | Entity identity        |
+| Person         | Author information     |
+| FAQPage        | Q&A clarity            |
+| Product        | Commerce details       |
+| Review         | Ratings context        |
+| BreadcrumbList | Site structure         |
+
+> Schema enables eligibility for rich results but does not guarantee them.
 
 ---
 
-## MCP Usage
+## 6. AI-Assisted Content Principles
 
-### Context7 - Framework Docs
-```
-Fetch: Next.js metadata documentation
-Fetch: Semantic HTML best practices
-```
+Search engines evaluate **output quality**, not authorship method.
 
-### Octocode - Real Examples
-```
-Search: "metadata" + "title" + "description" in Next.js repos
-Search: Open Graph implementation patterns
-```
+### Effective Use
+
+- AI as a drafting or research assistant
+- Human review for accuracy and clarity
+- Original insights and synthesis
+- Clear accountability
+
+### Risky Use
+
+- Publishing unedited AI output
+- Factual errors or hallucinations
+- Thin or duplicated content
+- Keyword-driven text with no value
+
+---
+
+## 7. Relative Importance of SEO Factors
+
+There is **no fixed ranking factor order**.
+However, when competing pages are similar, importance tends to follow this pattern:
+
+| Relative Weight | Factor                      |
+| --------------- | --------------------------- |
+| Highest         | Content relevance & quality |
+| High            | Authority & trust signals   |
+| Medium          | Page experience (CWV, UX)   |
+| Medium          | Mobile optimization         |
+| Baseline        | Technical accessibility     |
+
+> Technical SEO enables ranking; content quality earns it.
+
+---
+
+## 8. Measurement & Evaluation
+
+SEO fundamentals should be validated using **multiple signals**, not single metrics.
+
+| Area        | What to Observe            |
+| ----------- | -------------------------- |
+| Visibility  | Indexed pages, impressions |
+| Engagement  | Click-through, dwell time  |
+| Performance | CWV field data             |
+| Coverage    | Indexing status            |
+| Authority   | Mentions and links         |
+
+---
+
+> **Key Principle:**
+> Sustainable SEO is built on _useful content_, _technical clarity_, and _trust over time_.
+> There are no permanent shortcuts.
+
+## When to Use
+This skill is applicable to execute the workflow or actions described in the overview.
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

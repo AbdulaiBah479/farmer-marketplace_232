@@ -1,98 +1,492 @@
 ---
 name: api-documentation-generator
-description: Generates OpenAPI/Swagger documentation from API route files. Use when working with REST APIs, Express routes, FastAPI endpoints, or when user requests API documentation.
-allowed-tools: Read, Grep, Glob, Write, Edit
+description: "Generate comprehensive, developer-friendly API documentation from code, including endpoints, parameters, examples, and best practices"
+risk: unknown
+source: community
+date_added: "2026-02-27"
 ---
 
 # API Documentation Generator
 
-This skill automatically generates OpenAPI 3.0 (Swagger) documentation from API route files in your codebase.
+## Overview
+
+Automatically generate clear, comprehensive API documentation from your codebase. This skill helps you create professional documentation that includes endpoint descriptions, request/response examples, authentication details, error handling, and usage guidelines.
+
+Perfect for REST APIs, GraphQL APIs, and WebSocket APIs.
 
 ## When to Use This Skill
 
-- User asks to generate API documentation
-- Working with REST API endpoints
-- Need to create or update OpenAPI/Swagger specs
-- Setting up API documentation for Express, FastAPI, Flask, NestJS, or similar frameworks
+- Use when you need to document a new API
+- Use when updating existing API documentation
+- Use when your API lacks clear documentation
+- Use when onboarding new developers to your API
+- Use when preparing API documentation for external users
+- Use when creating OpenAPI/Swagger specifications
 
-## Instructions
+## How It Works
 
-### 1. Discover API Routes
+### Step 1: Analyze the API Structure
 
-Search the codebase for API route definitions:
+First, I'll examine your API codebase to understand:
+- Available endpoints and routes
+- HTTP methods (GET, POST, PUT, DELETE, etc.)
+- Request parameters and body structure
+- Response formats and status codes
+- Authentication and authorization requirements
+- Error handling patterns
 
-- **Express/Node.js**: Look for `app.get()`, `app.post()`, `router.get()`, etc.
-- **FastAPI/Python**: Look for `@app.get()`, `@router.post()`, decorators
-- **Flask**: Look for `@app.route()` decorators
-- **NestJS**: Look for `@Get()`, `@Post()`, `@Controller()` decorators
-- **Rails**: Look for routes in `config/routes.rb`
+### Step 2: Generate Endpoint Documentation
 
-Use Glob to find route files (e.g., `**/*routes*.{js,ts,py}`, `**/controllers/**/*.{js,ts}`)
+For each endpoint, I'll create documentation including:
 
-### 2. Analyze Route Patterns
+**Endpoint Details:**
+- HTTP method and URL path
+- Brief description of what it does
+- Authentication requirements
+- Rate limiting information (if applicable)
 
-For each discovered route, extract:
+**Request Specification:**
+- Path parameters
+- Query parameters
+- Request headers
+- Request body schema (with types and validation rules)
 
-- **HTTP Method**: GET, POST, PUT, PATCH, DELETE
-- **Path**: The endpoint URL (e.g., `/api/users/:id`)
-- **Parameters**: Path params, query params, request body
-- **Response**: Expected response structure
-- **Authentication**: Whether auth is required
-- **Description**: Comments or docstrings near the route
+**Response Specification:**
+- Success response (status code + body structure)
+- Error responses (all possible error codes)
+- Response headers
 
-### 3. Generate OpenAPI Specification
+**Code Examples:**
+- cURL command
+- JavaScript/TypeScript (fetch/axios)
+- Python (requests)
+- Other languages as needed
 
-Create or update an OpenAPI 3.0 specification file (typically `openapi.yaml` or `swagger.json`):
+### Step 3: Add Usage Guidelines
 
-- Start with the template from `templates/openapi-3.0.yaml`
-- Map each route to an OpenAPI path object
-- Define request/response schemas using JSON Schema
-- Include parameter definitions (path, query, body)
-- Add authentication schemes if detected (Bearer, API Key, OAuth2)
-- Group endpoints by tags (e.g., "Users", "Products", "Auth")
+I'll include:
+- Getting started guide
+- Authentication setup
+- Common use cases
+- Best practices
+- Rate limiting details
+- Pagination patterns
+- Filtering and sorting options
 
-### 4. Validate Completeness
+### Step 4: Document Error Handling
 
-Check that the generated documentation includes:
+Clear error documentation including:
+- All possible error codes
+- Error message formats
+- Troubleshooting guide
+- Common error scenarios and solutions
 
-- All discovered endpoints
-- Accurate HTTP methods and paths
-- Request/response examples where possible
-- Error responses (400, 401, 404, 500, etc.)
-- Security requirements
+### Step 5: Create Interactive Examples
 
-### 5. Output Location
+Where possible, I'll provide:
+- Postman collection
+- OpenAPI/Swagger specification
+- Interactive code examples
+- Sample responses
 
-- Save as `openapi.yaml` in the project root, or
-- Place in `docs/` or `api/` directory if those exist
-- Ask user for preferred location if unclear
+## Examples
 
-## Framework-Specific Notes
+### Example 1: REST API Endpoint Documentation
 
-### Express/Node.js
-- Check for route middleware that might affect auth/validation
-- Look for request validators (Joi, express-validator, etc.)
-- Extract JSDoc comments for endpoint descriptions
+```markdown
+## Create User
 
-### FastAPI
-- FastAPI auto-generates OpenAPI docs, but this skill can enhance them
-- Extract Pydantic models for request/response schemas
-- Check for `response_model` and `status_code` parameters
+Creates a new user account.
 
-### NestJS
-- Look for DTOs (Data Transfer Objects) for schemas
-- Check for Swagger decorators (`@ApiOperation`, `@ApiResponse`)
-- Extract metadata from controller and method decorators
+**Endpoint:** `POST /api/v1/users`
+
+**Authentication:** Required (Bearer token)
+
+**Request Body:**
+\`\`\`json
+{
+  "email": "user@example.com",      // Required: Valid email address
+  "password": "SecurePass123!",     // Required: Min 8 chars, 1 uppercase, 1 number
+  "name": "John Doe",               // Required: 2-50 characters
+  "role": "user"                    // Optional: "user" or "admin" (default: "user")
+}
+\`\`\`
+
+**Success Response (201 Created):**
+\`\`\`json
+{
+  "id": "usr_1234567890",
+  "email": "user@example.com",
+  "name": "John Doe",
+  "role": "user",
+  "createdAt": "2026-01-20T10:30:00Z",
+  "emailVerified": false
+}
+\`\`\`
+
+**Error Responses:**
+
+- `400 Bad Request` - Invalid input data
+  \`\`\`json
+  {
+    "error": "VALIDATION_ERROR",
+    "message": "Invalid email format",
+    "field": "email"
+  }
+  \`\`\`
+
+- `409 Conflict` - Email already exists
+  \`\`\`json
+  {
+    "error": "EMAIL_EXISTS",
+    "message": "An account with this email already exists"
+  }
+  \`\`\`
+
+- `401 Unauthorized` - Missing or invalid authentication token
+
+**Example Request (cURL):**
+\`\`\`bash
+curl -X POST https://api.example.com/api/v1/users \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "password": "SecurePass123!",
+    "name": "John Doe"
+  }'
+\`\`\`
+
+**Example Request (JavaScript):**
+\`\`\`javascript
+const response = await fetch('https://api.example.com/api/v1/users', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    email: 'user@example.com',
+    password: 'SecurePass123!',
+    name: 'John Doe'
+  })
+});
+
+const user = await response.json();
+console.log(user);
+\`\`\`
+
+**Example Request (Python):**
+\`\`\`python
+import requests
+
+response = requests.post(
+    'https://api.example.com/api/v1/users',
+    headers={
+        'Authorization': f'Bearer {token}',
+        'Content-Type': 'application/json'
+    },
+    json={
+        'email': 'user@example.com',
+        'password': 'SecurePass123!',
+        'name': 'John Doe'
+    }
+)
+
+user = response.json()
+print(user)
+\`\`\`
+```
+
+### Example 2: GraphQL API Documentation
+
+```markdown
+## User Query
+
+Fetch user information by ID.
+
+**Query:**
+\`\`\`graphql
+query GetUser($id: ID!) {
+  user(id: $id) {
+    id
+    email
+    name
+    role
+    createdAt
+    posts {
+      id
+      title
+      publishedAt
+    }
+  }
+}
+\`\`\`
+
+**Variables:**
+\`\`\`json
+{
+  "id": "usr_1234567890"
+}
+\`\`\`
+
+**Response:**
+\`\`\`json
+{
+  "data": {
+    "user": {
+      "id": "usr_1234567890",
+      "email": "user@example.com",
+      "name": "John Doe",
+      "role": "user",
+      "createdAt": "2026-01-20T10:30:00Z",
+      "posts": [
+        {
+          "id": "post_123",
+          "title": "My First Post",
+          "publishedAt": "2026-01-21T14:00:00Z"
+        }
+      ]
+    }
+  }
+}
+\`\`\`
+
+**Errors:**
+\`\`\`json
+{
+  "errors": [
+    {
+      "message": "User not found",
+      "extensions": {
+        "code": "USER_NOT_FOUND",
+        "userId": "usr_1234567890"
+      }
+    }
+  ]
+}
+\`\`\`
+```
+
+### Example 3: Authentication Documentation
+
+```markdown
+## Authentication
+
+All API requests require authentication using Bearer tokens.
+
+### Getting a Token
+
+**Endpoint:** `POST /api/v1/auth/login`
+
+**Request:**
+\`\`\`json
+{
+  "email": "user@example.com",
+  "password": "your-password"
+}
+\`\`\`
+
+**Response:**
+\`\`\`json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "expiresIn": 3600,
+  "refreshToken": "refresh_token_here"
+}
+\`\`\`
+
+### Using the Token
+
+Include the token in the Authorization header:
+
+\`\`\`
+Authorization: Bearer YOUR_TOKEN
+\`\`\`
+
+### Token Expiration
+
+Tokens expire after 1 hour. Use the refresh token to get a new access token:
+
+**Endpoint:** `POST /api/v1/auth/refresh`
+
+**Request:**
+\`\`\`json
+{
+  "refreshToken": "refresh_token_here"
+}
+\`\`\`
+```
 
 ## Best Practices
 
-1. **Use existing schemas**: If the codebase has TypeScript interfaces, Pydantic models, or similar, use them for accurate schemas
-2. **Include examples**: Add request/response examples from tests if available
-3. **Group logically**: Organize endpoints by resource or feature area using tags
-4. **Version appropriately**: Use the API version from the codebase (e.g., "1.0.0")
-5. **Add descriptions**: Use code comments/docstrings for endpoint descriptions
+### ✅ Do This
 
-## Supporting Files
+- **Be Consistent** - Use the same format for all endpoints
+- **Include Examples** - Provide working code examples in multiple languages
+- **Document Errors** - List all possible error codes and their meanings
+- **Show Real Data** - Use realistic example data, not "foo" and "bar"
+- **Explain Parameters** - Describe what each parameter does and its constraints
+- **Version Your API** - Include version numbers in URLs (/api/v1/)
+- **Add Timestamps** - Show when documentation was last updated
+- **Link Related Endpoints** - Help users discover related functionality
+- **Include Rate Limits** - Document any rate limiting policies
+- **Provide Postman Collection** - Make it easy to test your API
 
-- `templates/openapi-3.0.yaml`: Base OpenAPI template
-- `examples.md`: Framework-specific examples
+### ❌ Don't Do This
+
+- **Don't Skip Error Cases** - Users need to know what can go wrong
+- **Don't Use Vague Descriptions** - "Gets data" is not helpful
+- **Don't Forget Authentication** - Always document auth requirements
+- **Don't Ignore Edge Cases** - Document pagination, filtering, sorting
+- **Don't Leave Examples Broken** - Test all code examples
+- **Don't Use Outdated Info** - Keep documentation in sync with code
+- **Don't Overcomplicate** - Keep it simple and scannable
+- **Don't Forget Response Headers** - Document important headers
+
+## Documentation Structure
+
+### Recommended Sections
+
+1. **Introduction**
+   - What the API does
+   - Base URL
+   - API version
+   - Support contact
+
+2. **Authentication**
+   - How to authenticate
+   - Token management
+   - Security best practices
+
+3. **Quick Start**
+   - Simple example to get started
+   - Common use case walkthrough
+
+4. **Endpoints**
+   - Organized by resource
+   - Full details for each endpoint
+
+5. **Data Models**
+   - Schema definitions
+   - Field descriptions
+   - Validation rules
+
+6. **Error Handling**
+   - Error code reference
+   - Error response format
+   - Troubleshooting guide
+
+7. **Rate Limiting**
+   - Limits and quotas
+   - Headers to check
+   - Handling rate limit errors
+
+8. **Changelog**
+   - API version history
+   - Breaking changes
+   - Deprecation notices
+
+9. **SDKs and Tools**
+   - Official client libraries
+   - Postman collection
+   - OpenAPI specification
+
+## Common Pitfalls
+
+### Problem: Documentation Gets Out of Sync
+**Symptoms:** Examples don't work, parameters are wrong, endpoints return different data
+**Solution:** 
+- Generate docs from code comments/annotations
+- Use tools like Swagger/OpenAPI
+- Add API tests that validate documentation
+- Review docs with every API change
+
+### Problem: Missing Error Documentation
+**Symptoms:** Users don't know how to handle errors, support tickets increase
+**Solution:**
+- Document every possible error code
+- Provide clear error messages
+- Include troubleshooting steps
+- Show example error responses
+
+### Problem: Examples Don't Work
+**Symptoms:** Users can't get started, frustration increases
+**Solution:**
+- Test every code example
+- Use real, working endpoints
+- Include complete examples (not fragments)
+- Provide a sandbox environment
+
+### Problem: Unclear Parameter Requirements
+**Symptoms:** Users send invalid requests, validation errors
+**Solution:**
+- Mark required vs optional clearly
+- Document data types and formats
+- Show validation rules
+- Provide example values
+
+## Tools and Formats
+
+### OpenAPI/Swagger
+Generate interactive documentation:
+```yaml
+openapi: 3.0.0
+info:
+  title: My API
+  version: 1.0.0
+paths:
+  /users:
+    post:
+      summary: Create a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+```
+
+### Postman Collection
+Export collection for easy testing:
+```json
+{
+  "info": {
+    "name": "My API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create User",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/v1/users"
+      }
+    }
+  ]
+}
+```
+
+## Related Skills
+
+- `@doc-coauthoring` - For collaborative documentation writing
+- `@copywriting` - For clear, user-friendly descriptions
+- `@test-driven-development` - For ensuring API behavior matches docs
+- `@systematic-debugging` - For troubleshooting API issues
+
+## Additional Resources
+
+- [OpenAPI Specification](https://swagger.io/specification/)
+- [REST API Best Practices](https://restfulapi.net/)
+- [GraphQL Documentation](https://graphql.org/learn/)
+- [API Design Patterns](https://www.apiguide.com/)
+- [Postman Documentation](https://learning.postman.com/docs/)
+
+---
+
+**Pro Tip:** Keep your API documentation as close to your code as possible. Use tools that generate docs from code comments to ensure they stay in sync!
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

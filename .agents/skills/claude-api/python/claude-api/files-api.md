@@ -37,7 +37,7 @@ print(f"Size: {uploaded.size_bytes} bytes")
 ```python
 response = client.beta.messages.create(
     model="claude-opus-4-6",
-    max_tokens=16000,
+    max_tokens=1024,
     messages=[{
         "role": "user",
         "content": [
@@ -52,9 +52,7 @@ response = client.beta.messages.create(
     }],
     betas=["files-api-2025-04-14"],
 )
-for block in response.content:
-    if block.type == "text":
-        print(block.text)
+print(response.content[0].text)
 ```
 
 ### Image
@@ -66,7 +64,7 @@ image_file = client.beta.files.upload(
 
 response = client.beta.messages.create(
     model="claude-opus-4-6",
-    max_tokens=16000,
+    max_tokens=1024,
     messages=[{
         "role": "user",
         "content": [
@@ -143,7 +141,7 @@ questions = [
 for question in questions:
     response = client.beta.messages.create(
         model="claude-opus-4-6",
-        max_tokens=16000,
+        max_tokens=1024,
         messages=[{
             "role": "user",
             "content": [
@@ -157,8 +155,7 @@ for question in questions:
         betas=["files-api-2025-04-14"],
     )
     print(f"\nQ: {question}")
-    text = next((b.text for b in response.content if b.type == "text"), "")
-    print(f"A: {text[:200]}")
+    print(f"A: {response.content[0].text[:200]}")
 
 # 3. Clean up when done
 client.beta.files.delete(uploaded.id)

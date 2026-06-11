@@ -1,178 +1,86 @@
 ---
 name: software-architecture
-description: Document software architecture using ARCHITECTURE.md and docs/*.md files with Mermaid diagrams. Use proactively when ARCHITECTURE.md exists in project root, or invoke to create initial architecture documentation. Covers system design, data flows, component relationships, and code organization with references to key entry points and abstractions.
+description: "Guide for quality focused software architecture. This skill should be used when users want to write code, design architecture, analyze code, in any case that relates to software development."
+risk: unknown
+source: community
+date_added: "2026-02-27"
 ---
 
-# Software Architecture Documentation
+# Software Architecture Development Skill
 
-Document system architecture using a root `ARCHITECTURE.md` with detailed component docs in `docs/*.md`.
+This skill provides guidance for quality focused software development and architecture. It is based on Clean Architecture and Domain Driven Design principles.
 
-## Structure
+## Code Style Rules
 
-```
-project/
-├── ARCHITECTURE.md      # High-level system overview
-└── docs/
-    ├── <component>.md   # Detailed component documentation
-    └── ...
-```
+### General Principles
 
-## Proactive Usage
+- **Early return pattern**: Always use early returns when possible, over nested conditions for better readability
+- Avoid code duplication through creation of reusable functions and modules
+- Decompose long (more than 80 lines of code) components and functions into multiple smaller components and functions. If they cannot be used anywhere else, keep it in the same file. But if file longer than 200 lines of code, it should be split into multiple files.
+- Use arrow functions instead of function declarations when possible
 
-When `ARCHITECTURE.md` exists in project root:
+### Best Practices
 
-1. **Before major changes**: Read `ARCHITECTURE.md` to understand system structure
-2. **After structural changes**: Update diagrams and entry points
-3. **When adding components**: Create new `docs/*.md` file and link from `ARCHITECTURE.md`
-4. **During refactoring**: Update affected diagrams and file references
+#### Library-First Approach
 
-## Creating Architecture Documentation
+- **ALWAYS search for existing solutions before writing custom code**
+  - Check npm for existing libraries that solve the problem
+  - Evaluate existing services/SaaS solutions
+  - Consider third-party APIs for common functionality
+- Use libraries instead of writing your own utils or helpers. For example, use `cockatiel` instead of writing your own retry logic.
+- **When custom code IS justified:**
+  - Specific business logic unique to the domain
+  - Performance-critical paths with special requirements
+  - When external dependencies would be overkill
+  - Security-sensitive code requiring full control
+  - When existing solutions don't meet requirements after thorough evaluation
 
-### Initial Setup Workflow
+#### Architecture and Design
 
-1. **Analyze codebase structure**
-   - Identify entry points (main, CLI, API handlers)
-   - Map major components and their responsibilities
-   - Trace key data flows
+- **Clean Architecture & DDD Principles:**
+  - Follow domain-driven design and ubiquitous language
+  - Separate domain entities from infrastructure concerns
+  - Keep business logic independent of frameworks
+  - Define use cases clearly and keep them isolated
+- **Naming Conventions:**
+  - **AVOID** generic names: `utils`, `helpers`, `common`, `shared`
+  - **USE** domain-specific names: `OrderCalculator`, `UserAuthenticator`, `InvoiceGenerator`
+  - Follow bounded context naming patterns
+  - Each module should have a single, clear purpose
+- **Separation of Concerns:**
+  - Do NOT mix business logic with UI components
+  - Keep database queries out of controllers
+  - Maintain clear boundaries between contexts
+  - Ensure proper separation of responsibilities
 
-2. **Create `ARCHITECTURE.md`**
-   - Write system overview (1-2 paragraphs)
-   - Add C4 Context diagram showing system boundaries
-   - Document entry points table
-   - List key abstractions
-   - Add testing overview
-   - Link to detail docs (create `docs/` section even if empty initially)
+#### Anti-Patterns to Avoid
 
-3. **Create detail docs for major components**
-   - One file per logical component in `docs/`
-   - Name files to match component names (flexible convention)
-   - Include component-level diagrams
+- **NIH (Not Invented Here) Syndrome:**
+  - Don't build custom auth when Auth0/Supabase exists
+  - Don't write custom state management instead of using Redux/Zustand
+  - Don't create custom form validation instead of using established libraries
+- **Poor Architectural Choices:**
+  - Mixing business logic with UI components
+  - Database queries directly in controllers
+  - Lack of clear separation of concerns
+- **Generic Naming Anti-Patterns:**
+  - `utils.js` with 50 unrelated functions
+  - `helpers/misc.js` as a dumping ground
+  - `common/shared.js` with unclear purpose
+- Remember: Every line of custom code is a liability that needs maintenance, testing, and documentation
 
-See [references/document-templates.md](references/document-templates.md) for complete templates.
+#### Code Quality
 
-## ARCHITECTURE.md Sections
+- Proper error handling with typed catch blocks
+- Break down complex logic into smaller, reusable functions
+- Avoid deep nesting (max 3 levels)
+- Keep functions focused and under 50 lines when possible
+- Keep files focused and under 200 lines of code when possible
 
-### Required Sections
+## When to Use
+This skill is applicable to execute the workflow or actions described in the overview.
 
-| Section | Content |
-|---------|---------|
-| Overview | 1-2 paragraphs on system purpose |
-| System Diagram | C4 Context or Container diagram |
-| Key Entry Points | Table of primary files with descriptions |
-| Key Abstractions | Table of important classes/interfaces/functions |
-| Testing | Overview of test strategy and key test locations |
-| Detail Docs | Links to `docs/*.md` files |
-
-### Optional Sections
-
-| Section | Include When |
-|---------|--------------|
-| Data Flow | Complex pipelines or transformations |
-| Code Organization | Non-obvious directory structure |
-| Configuration | Significant config or environment setup |
-
-## Detail Documents (`docs/*.md`)
-
-Create a detail doc when a component:
-- Has 3+ key files or abstractions
-- Contains complex internal logic
-- Interacts with multiple other components
-- Needs sequence diagrams to explain flows
-
-### Naming Convention
-
-Flexible. Match the component's identity:
-- `docs/auth.md` for authentication component
-- `docs/data-pipeline.md` for data pipeline
-- `docs/cli.md` for CLI handling
-
-### Required Content
-
-| Section | Content |
-|---------|---------|
-| Purpose | What this component does |
-| Key Files | Table of important files |
-| Key Abstractions | Classes, interfaces, functions |
-
-### Optional Content
-
-| Section | Include When |
-|---------|--------------|
-| Architecture Diagram | Multiple internal subcomponents |
-| Sequence Diagram | Multi-step interactions |
-| Dependencies | Non-obvious dependencies |
-| Testing | Component-specific test patterns |
-| Configuration | Component-specific config |
-
-## Diagram Selection
-
-| Diagram Type | Use For |
-|--------------|---------|
-| C4 Context | `ARCHITECTURE.md` - system boundaries and external actors |
-| C4 Container | `ARCHITECTURE.md` - deployable units (services, databases) |
-| C4 Component | `docs/*.md` - internal structure of a component |
-| Flowchart | Control flow, pipelines, decision logic |
-| Sequence | Request flows, API interactions, multi-step processes |
-| ER Diagram | Data models, entity relationships |
-| Class Diagram | Object hierarchies, interface implementations |
-
-Start minimal (3-5 nodes). Add detail only when it improves clarity.
-
-See [references/mermaid-patterns.md](references/mermaid-patterns.md) for diagram templates.
-
-## Entry Points and Abstractions
-
-### Entry Points Table
-
-Document files that serve as starting points for understanding the codebase:
-
-```markdown
-| File | Description |
-|------|-------------|
-| `src/main.py` | Application entry point |
-| `src/core/engine.py` | Core processing engine |
-| `tests/conftest.py` | Test fixtures and setup |
-```
-
-Include:
-- Application entry points (main, CLI, handlers)
-- Core domain logic locations
-- Configuration files
-- Test setup and fixtures
-
-### Key Abstractions Table
-
-Document important classes, interfaces, and functions:
-
-```markdown
-| Abstraction | Location | Purpose |
-|-------------|----------|---------|
-| `Engine` | `src/core/engine.py` | Orchestrates processing |
-| `Handler` | `src/api/base.py` | Request handling interface |
-```
-
-Focus on:
-- Base classes and interfaces
-- Core domain objects
-- Public API surfaces
-- Extension points
-
-## Maintaining Documentation
-
-### When to Update
-
-| Trigger | Action |
-|---------|--------|
-| New component added | Create `docs/<component>.md`, add link to `ARCHITECTURE.md` |
-| Entry point changed | Update entry points table |
-| Major refactoring | Update affected diagrams and file references |
-| New external dependency | Update C4 Context diagram |
-| Component removed | Remove or archive corresponding detail doc |
-
-### Update Checklist
-
-After structural changes:
-1. Verify entry points table is accurate
-2. Check diagram nodes match actual components
-3. Confirm file paths in tables are valid
-4. Update any affected detail docs
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

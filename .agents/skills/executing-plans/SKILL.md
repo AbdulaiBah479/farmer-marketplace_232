@@ -1,6 +1,9 @@
 ---
 name: executing-plans
-description: Disciplined plan execution for implementation tasks. Use when executing a saved implementation plan, following step-by-step instructions from a plan document.
+description: "Use when you have a written implementation plan to execute in a separate session with review checkpoints"
+risk: unknown
+source: community
+date_added: "2026-02-27"
 ---
 
 # Executing Plans
@@ -12,16 +15,6 @@ Load plan, review critically, execute tasks in batches, report for review betwee
 **Core principle:** Batch execution with checkpoints for architect review.
 
 **Announce at start:** "I'm using the executing-plans skill to implement this plan."
-
-## Quick Reference
-
-| Step | Action | Exit Condition |
-|------|--------|----------------|
-| 1 | Load + Review | Concerns raised OR TodoWrite created |
-| 2 | Execute Batch | 3 tasks complete + verified |
-| 3 | Report | Show results, say "Ready for feedback" |
-| 4 | Continue | Apply feedback, next batch |
-| 5 | Complete | Use `finishing-a-development-branch` |
 
 ## The Process
 
@@ -56,7 +49,7 @@ Based on feedback:
 
 After all tasks complete and verified:
 - Announce: "I'm using the finishing-a-development-branch skill to complete this work."
-- **REQUIRED SUB-SKILL:** `finishing-a-development-branch`
+- **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
 - Follow that skill to verify tests, present options, execute choice
 
 ## When to Stop and Ask for Help
@@ -77,32 +70,6 @@ After all tasks complete and verified:
 
 **Don't force through blockers** - stop and ask.
 
-## Common Mistakes
-
-**Executing without critical review**
-- Problem: Blindly following plan with gaps
-- Fix: Step 1 explicitly requires raising concerns first
-
-**Batch size drift**
-- Problem: Doing 5-10 tasks without checkpoint
-- Fix: Default is 3. Report after EVERY batch.
-
-**Guessing through blockers**
-- Problem: Making assumptions when stuck
-- Fix: STOP immediately, ask for clarification
-
-**Skipping verification commands**
-- Problem: Mark complete without running tests
-- Fix: Each task has verification - run it
-
-## Integration
-
-**Called by:**
-- **writing-plans** (Parallel Session choice)
-
-**Calls:**
-- **finishing-a-development-branch** (Step 5)
-
 ## Remember
 - Review plan critically first
 - Follow plan steps exactly
@@ -110,3 +77,11 @@ After all tasks complete and verified:
 - Reference skills when plan says to
 - Between batches: just report and wait
 - Stop when blocked, don't guess
+
+## When to Use
+This skill is applicable to execute the workflow or actions described in the overview.
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

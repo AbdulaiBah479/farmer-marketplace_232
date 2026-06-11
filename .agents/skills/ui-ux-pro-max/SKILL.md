@@ -1,201 +1,361 @@
 ---
 name: ui-ux-pro-max
-description: "UI/UX 设计情报库：50 种风格、21 套配色、50 组字体搭配、20 类图表、8 个技术栈（React、Next.js、Vue、Svelte、SwiftUI、React Native、Flutter、Tailwind）。动作：plan、build、create、design、implement、review、fix、improve、optimize、enhance、refactor、check UI/UX code。项目：website、landing page、dashboard、admin panel、e-commerce、SaaS、portfolio、blog、mobile app、.html、.tsx、.vue、.svelte。元素：button、modal、navbar、sidebar、card、table、form、chart。风格：glassmorphism、claymorphism、minimalism、brutalism、neumorphism、bento grid、dark mode、responsive、skeuomorphism、flat design。主题：color palette、accessibility、animation、layout、typography、font pairing、spacing、hover、shadow、gradient。"
+description: "Comprehensive design guide for web and mobile applications. Use when designing new UI components or pages, choosing color palettes and typography, or reviewing code for UX issues."
+risk: unknown
+source: community
+date_added: "2026-02-27"
 ---
 
-# UI/UX Pro Max - 设计情报库
+# UI/UX Pro Max - Design Intelligence
 
-可搜索的 UI 风格、配色方案、字体搭配、图表类型、产品推荐、UX 指南与技术栈最佳实践数据库。
+Comprehensive design guide for web and mobile applications. Contains 50+ styles, 97 color palettes, 57 font pairings, 99 UX guidelines, and 25 chart types across 9 technology stacks. Searchable database with priority-based recommendations.
 
-## 使用方法
+## When to Use
+Reference these guidelines when:
+- Designing new UI components or pages
+- Choosing color palettes and typography
+- Reviewing code for UX issues
+- Building landing pages or dashboards
+- Implementing accessibility requirements
 
-当用户提出 UI/UX 相关需求（design、build、create、implement、review、fix、improve）时，遵循以下流程：
+## Rule Categories by Priority
 
-### Step 1：分析用户需求
+| Priority | Category | Impact | Domain |
+|----------|----------|--------|--------|
+| 1 | Accessibility | CRITICAL | `ux` |
+| 2 | Touch & Interaction | CRITICAL | `ux` |
+| 3 | Performance | HIGH | `ux` |
+| 4 | Layout & Responsive | HIGH | `ux` |
+| 5 | Typography & Color | MEDIUM | `typography`, `color` |
+| 6 | Animation | MEDIUM | `ux` |
+| 7 | Style Selection | MEDIUM | `style`, `product` |
+| 8 | Charts & Data | LOW | `chart` |
 
-从用户请求中提取关键信息：
-- **产品类型**：SaaS、电商、作品集、仪表盘、落地页等。
-- **风格关键词**：极简、活泼、专业、优雅、暗黑模式等。
-- **行业领域**：医疗、金融科技、游戏、教育等。
-- **技术栈**：React、Vue、Next.js，默认 `html-tailwind`。
+## Quick Reference
 
-### Step 2：检索相关领域
+### 1. Accessibility (CRITICAL)
 
-多次使用 `search.py` 获取完整信息，直到具备足够上下文。
+- `color-contrast` - Minimum 4.5:1 ratio for normal text
+- `focus-states` - Visible focus rings on interactive elements
+- `alt-text` - Descriptive alt text for meaningful images
+- `aria-labels` - aria-label for icon-only buttons
+- `keyboard-nav` - Tab order matches visual order
+- `form-labels` - Use label with for attribute
+
+### 2. Touch & Interaction (CRITICAL)
+
+- `touch-target-size` - Minimum 44x44px touch targets
+- `hover-vs-tap` - Use click/tap for primary interactions
+- `loading-buttons` - Disable button during async operations
+- `error-feedback` - Clear error messages near problem
+- `cursor-pointer` - Add cursor-pointer to clickable elements
+
+### 3. Performance (HIGH)
+
+- `image-optimization` - Use WebP, srcset, lazy loading
+- `reduced-motion` - Check prefers-reduced-motion
+- `content-jumping` - Reserve space for async content
+
+### 4. Layout & Responsive (HIGH)
+
+- `viewport-meta` - width=device-width initial-scale=1
+- `readable-font-size` - Minimum 16px body text on mobile
+- `horizontal-scroll` - Ensure content fits viewport width
+- `z-index-management` - Define z-index scale (10, 20, 30, 50)
+
+### 5. Typography & Color (MEDIUM)
+
+- `line-height` - Use 1.5-1.75 for body text
+- `line-length` - Limit to 65-75 characters per line
+- `font-pairing` - Match heading/body font personalities
+
+### 6. Animation (MEDIUM)
+
+- `duration-timing` - Use 150-300ms for micro-interactions
+- `transform-performance` - Use transform/opacity, not width/height
+- `loading-states` - Skeleton screens or spinners
+
+### 7. Style Selection (MEDIUM)
+
+- `style-match` - Match style to product type
+- `consistency` - Use same style across all pages
+- `no-emoji-icons` - Use SVG icons, not emojis
+
+### 8. Charts & Data (LOW)
+
+- `chart-type` - Match chart type to data type
+- `color-guidance` - Use accessible color palettes
+- `data-table` - Provide table alternative for accessibility
+
+## How to Use
+
+Search specific domains using the CLI tool below.
+
+---
+
+## Prerequisites
+
+Check if Python is installed:
 
 ```bash
-python3 skills/ui-ux-pro-max/scripts/search.py "<keyword>" --domain <domain> [-n <max_results>]
+python3 --version || python --version
 ```
 
-**推荐检索顺序：**
+If Python is not installed, install it based on user's OS:
 
-1. **Product** - 获取产品类型的风格建议
-2. **Style** - 获取详细风格指南（颜色、效果、框架）
-3. **Typography** - 获取字体搭配与 Google Fonts 导入
-4. **Color** - 获取配色方案（主色、辅色、CTA、背景、正文、边框）
-5. **Landing** - 获取页面结构（如为落地页）
-6. **Chart** - 获取图表推荐（如为数据看板/分析）
-7. **UX** - 获取最佳实践与反模式
-8. **Stack** - 获取技术栈最佳实践（默认 html-tailwind）
+**macOS:**
+```bash
+brew install python3
+```
 
-### Step 3：技术栈指南（默认：html-tailwind）
+**Ubuntu/Debian:**
+```bash
+sudo apt update && sudo apt install python3
+```
 
-如果用户未指定技术栈，**默认使用 `html-tailwind`**。
+**Windows:**
+```powershell
+winget install Python.Python.3.12
+```
+
+---
+
+## How to Use This Skill
+
+When user requests UI/UX work (design, build, create, implement, review, fix, improve), follow this workflow:
+
+### Step 1: Analyze User Requirements
+
+Extract key information from user request:
+- **Product type**: SaaS, e-commerce, portfolio, dashboard, landing page, etc.
+- **Style keywords**: minimal, playful, professional, elegant, dark mode, etc.
+- **Industry**: healthcare, fintech, gaming, education, etc.
+- **Stack**: React, Vue, Next.js, or default to `html-tailwind`
+
+### Step 2: Generate Design System (REQUIRED)
+
+**Always start with `--design-system`** to get comprehensive recommendations with reasoning:
 
 ```bash
-python3 skills/ui-ux-pro-max/scripts/search.py "<keyword>" --stack html-tailwind
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<product_type> <industry> <keywords>" --design-system [-p "Project Name"]
 ```
 
-可用技术栈：`html-tailwind`、`react`、`nextjs`、`vue`、`svelte`、`swiftui`、`react-native`、`flutter`
+This command:
+1. Searches 5 domains in parallel (product, style, color, landing, typography)
+2. Applies reasoning rules from `ui-reasoning.csv` to select best matches
+3. Returns complete design system: pattern, style, colors, typography, effects
+4. Includes anti-patterns to avoid
 
----
+**Example:**
+```bash
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "beauty spa wellness service" --design-system -p "Serenity Spa"
+```
 
-## 检索参考
+### Step 3: Supplement with Detailed Searches (as needed)
 
-### 可用 Domain
-
-| Domain | 用途 | 示例关键词 |
-|--------|------|-----------|
-| `product` | 产品类型推荐 | SaaS、e-commerce、portfolio、healthcare、beauty、service |
-| `style` | UI 风格、颜色、效果 | glassmorphism、minimalism、dark mode、brutalism |
-| `typography` | 字体搭配、Google Fonts | elegant、playful、professional、modern |
-| `color` | 按产品类型的配色 | saas、ecommerce、healthcare、beauty、fintech、service |
-| `landing` | 页面结构、CTA 策略 | hero、hero-centric、testimonial、pricing、social-proof |
-| `chart` | 图表类型、库推荐 | trend、comparison、timeline、funnel、pie |
-| `ux` | 最佳实践、反模式 | animation、accessibility、z-index、loading |
-| `prompt` | AI 提示词、CSS 关键词 | (style name) |
-
-### 可用技术栈
-
-| Stack | 关注点 |
-|-------|--------|
-| `html-tailwind` | Tailwind 工具类、响应式、无障碍（默认） |
-| `react` | 状态、Hooks、性能、模式 |
-| `nextjs` | SSR、路由、图片、API routes |
-| `vue` | Composition API、Pinia、Vue Router |
-| `svelte` | Runes、stores、SvelteKit |
-| `swiftui` | Views、State、Navigation、Animation |
-| `react-native` | Components、Navigation、Lists |
-| `flutter` | Widgets、State、Layout、Theming |
-
----
-
-## 示例流程
-
-**用户请求：** "Làm landing page cho dịch vụ chăm sóc da chuyên nghiệp"
-
-**AI 应该：**
+After getting the design system, use domain searches to get additional details:
 
 ```bash
-# 1. 检索产品类型
-python3 skills/ui-ux-pro-max/scripts/search.py "beauty spa wellness service" --domain product
-
-# 2. 检索风格（基于行业：beauty、elegant）
-python3 skills/ui-ux-pro-max/scripts/search.py "elegant minimal soft" --domain style
-
-# 3. 检索字体搭配
-python3 skills/ui-ux-pro-max/scripts/search.py "elegant luxury" --domain typography
-
-# 4. 检索配色
-python3 skills/ui-ux-pro-max/scripts/search.py "beauty spa wellness" --domain color
-
-# 5. 检索落地页结构
-python3 skills/ui-ux-pro-max/scripts/search.py "hero-centric social-proof" --domain landing
-
-# 6. 检索 UX 指南
-python3 skills/ui-ux-pro-max/scripts/search.py "animation" --domain ux
-python3 skills/ui-ux-pro-max/scripts/search.py "accessibility" --domain ux
-
-# 7. 检索技术栈指南（默认：html-tailwind）
-python3 skills/ui-ux-pro-max/scripts/search.py "layout responsive" --stack html-tailwind
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<keyword>" --domain <domain> [-n <max_results>]
 ```
 
-**然后：** 综合所有检索结果并实现设计。
+**When to use detailed searches:**
+
+| Need | Domain | Example |
+|------|--------|---------|
+| More style options | `style` | `--domain style "glassmorphism dark"` |
+| Chart recommendations | `chart` | `--domain chart "real-time dashboard"` |
+| UX best practices | `ux` | `--domain ux "animation accessibility"` |
+| Alternative fonts | `typography` | `--domain typography "elegant luxury"` |
+| Landing structure | `landing` | `--domain landing "hero social-proof"` |
+
+### Step 4: Stack Guidelines (Default: html-tailwind)
+
+Get implementation-specific best practices. If user doesn't specify a stack, **default to `html-tailwind`**.
+
+```bash
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<keyword>" --stack html-tailwind
+```
+
+Available stacks: `html-tailwind`, `react`, `nextjs`, `vue`, `svelte`, `swiftui`, `react-native`, `flutter`, `shadcn`
 
 ---
 
-## 提升结果质量的提示
+## Search Reference
 
-1. **关键词尽量具体** - "healthcare SaaS dashboard" > "app"
-2. **多次检索** - 不同关键词会揭示不同信息
-3. **组合多个领域** - Style + Typography + Color = 完整设计系统
-4. **始终检查 UX** - 检索 "animation"、"z-index"、"accessibility" 规避常见问题
-5. **使用 stack 参数** - 获取实现层面的最佳实践
-6. **迭代搜索** - 首次结果不匹配就换关键词重试
+### Available Domains
 
----
+| Domain | Use For | Example Keywords |
+|--------|---------|------------------|
+| `product` | Product type recommendations | SaaS, e-commerce, portfolio, healthcare, beauty, service |
+| `style` | UI styles, colors, effects | glassmorphism, minimalism, dark mode, brutalism |
+| `typography` | Font pairings, Google Fonts | elegant, playful, professional, modern |
+| `color` | Color palettes by product type | saas, ecommerce, healthcare, beauty, fintech, service |
+| `landing` | Page structure, CTA strategies | hero, hero-centric, testimonial, pricing, social-proof |
+| `chart` | Chart types, library recommendations | trend, comparison, timeline, funnel, pie |
+| `ux` | Best practices, anti-patterns | animation, accessibility, z-index, loading |
+| `react` | React/Next.js performance | waterfall, bundle, suspense, memo, rerender, cache |
+| `web` | Web interface guidelines | aria, focus, keyboard, semantic, virtualize |
+| `prompt` | AI prompts, CSS keywords | (style name) |
 
-## 专业 UI 的常见规则
+### Available Stacks
 
-这些问题经常被忽视，会让 UI 看起来不专业：
-
-### 图标与视觉元素
-
-| 规则 | 建议 | 避免 |
-|------|------|------|
-| **不要用 emoji 图标** | 使用 SVG 图标（Heroicons、Lucide、Simple Icons） | 用 🎨 🚀 ⚙️ 等 emoji 充当 UI 图标 |
-| **悬停状态稳定** | 悬停使用颜色/透明度过渡 | 使用缩放导致布局抖动 |
-| **品牌 Logo 正确** | 从 Simple Icons 获取官方 SVG | 猜测或使用错误 Logo |
-| **图标尺寸一致** | 固定 viewBox（24x24）并使用 w-6 h-6 | 混用不同尺寸 |
-
-### 交互与指针
-
-| 规则 | 建议 | 避免 |
-|------|------|------|
-| **鼠标指针提示** | 所有可点击卡片加 `cursor-pointer` | 交互元素仍是默认指针 |
-| **悬停反馈** | 提供颜色/阴影/边框反馈 | 交互无可见提示 |
-| **过渡要顺滑** | `transition-colors duration-200` | 突变或过慢（>500ms） |
-
-### 明暗对比
-
-| 规则 | 建议 | 避免 |
-|------|------|------|
-| **浅色玻璃卡片** | 使用 `bg-white/80` 或更高不透明度 | `bg-white/10`（太透明） |
-| **浅色文字对比** | 正文用 `#0F172A`（slate-900） | 用 `#94A3B8`（slate-400） |
-| **浅色次级文字** | 最低 `#475569`（slate-600） | 用 gray-400 或更浅 |
-| **边框可见性** | 浅色用 `border-gray-200` | 用 `border-white/10`（看不见） |
-
-### 布局与间距
-
-| 规则 | 建议 | 避免 |
-|------|------|------|
-| **悬浮导航栏** | 增加 `top-4 left-4 right-4` 间距 | 直接贴 `top-0 left-0 right-0` |
-| **内容内边距** | 预留固定导航的高度 | 内容被固定元素遮挡 |
-| **一致的最大宽度** | 统一使用 `max-w-6xl` 或 `max-w-7xl` | 混用不同容器宽度 |
+| Stack | Focus |
+|-------|-------|
+| `html-tailwind` | Tailwind utilities, responsive, a11y (DEFAULT) |
+| `react` | State, hooks, performance, patterns |
+| `nextjs` | SSR, routing, images, API routes |
+| `vue` | Composition API, Pinia, Vue Router |
+| `svelte` | Runes, stores, SvelteKit |
+| `swiftui` | Views, State, Navigation, Animation |
+| `react-native` | Components, Navigation, Lists |
+| `flutter` | Widgets, State, Layout, Theming |
+| `shadcn` | shadcn/ui components, theming, forms, patterns |
 
 ---
 
-## 交付前检查清单
+## Example Workflow
 
-在交付 UI 代码前，确认以下事项：
+**User request:** "Làm landing page cho dịch vụ chăm sóc da chuyên nghiệp"
 
-### 视觉质量
-- [ ] 不使用 emoji 作为图标（改用 SVG）
-- [ ] 图标来自一致的图标集（Heroicons/Lucide）
-- [ ] 品牌 Logo 正确（从 Simple Icons 验证）
-- [ ] 悬停状态不引发布局抖动
-- [ ] 直接使用主题色（如 bg-primary），不包一层 var()
+### Step 1: Analyze Requirements
+- Product type: Beauty/Spa service
+- Style keywords: elegant, professional, soft
+- Industry: Beauty/Wellness
+- Stack: html-tailwind (default)
 
-### 交互
-- [ ] 所有可点击元素有 `cursor-pointer`
-- [ ] 悬停反馈清晰可见
-- [ ] 过渡动画顺滑（150-300ms）
-- [ ] 键盘导航有可见的 focus 状态
+### Step 2: Generate Design System (REQUIRED)
 
-### 明暗模式
-- [ ] 浅色模式文本对比度满足 4.5:1 最低要求
-- [ ] 浅色模式玻璃/透明元素可见
-- [ ] 明暗模式下边框都可见
-- [ ] 交付前测试明暗两套主题
+```bash
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "beauty spa wellness service elegant" --design-system -p "Serenity Spa"
+```
 
-### 布局
-- [ ] 悬浮元素与边缘有足够间距
-- [ ] 内容不会被固定导航遮挡
-- [ ] 在 320px、768px、1024px、1440px 下响应正常
-- [ ] 移动端不出现横向滚动
+**Output:** Complete design system with pattern, style, colors, typography, effects, and anti-patterns.
 
-### 无障碍
-- [ ] 所有图片有 alt 文本
-- [ ] 表单输入有 label
-- [ ] 颜色不是唯一信息传达方式
-- [ ] 尊重 `prefers-reduced-motion`
+### Step 3: Supplement with Detailed Searches (as needed)
+
+```bash
+# Get UX guidelines for animation and accessibility
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "animation accessibility" --domain ux
+
+# Get alternative typography options if needed
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "elegant luxury serif" --domain typography
+```
+
+### Step 4: Stack Guidelines
+
+```bash
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "layout responsive form" --stack html-tailwind
+```
+
+**Then:** Synthesize design system + detailed searches and implement the design.
+
+---
+
+## Output Formats
+
+The `--design-system` flag supports two output formats:
+
+```bash
+# ASCII box (default) - best for terminal display
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "fintech crypto" --design-system
+
+# Markdown - best for documentation
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "fintech crypto" --design-system -f markdown
+```
+
+---
+
+## Tips for Better Results
+
+1. **Be specific with keywords** - "healthcare SaaS dashboard" > "app"
+2. **Search multiple times** - Different keywords reveal different insights
+3. **Combine domains** - Style + Typography + Color = Complete design system
+4. **Always check UX** - Search "animation", "z-index", "accessibility" for common issues
+5. **Use stack flag** - Get implementation-specific best practices
+6. **Iterate** - If first search doesn't match, try different keywords
+
+---
+
+## Common Rules for Professional UI
+
+These are frequently overlooked issues that make UI look unprofessional:
+
+### Icons & Visual Elements
+
+| Rule | Do | Don't |
+|------|----|----- |
+| **No emoji icons** | Use SVG icons (Heroicons, Lucide, Simple Icons) | Use emojis like 🎨 🚀 ⚙️ as UI icons |
+| **Stable hover states** | Use color/opacity transitions on hover | Use scale transforms that shift layout |
+| **Correct brand logos** | Research official SVG from Simple Icons | Guess or use incorrect logo paths |
+| **Consistent icon sizing** | Use fixed viewBox (24x24) with w-6 h-6 | Mix different icon sizes randomly |
+
+### Interaction & Cursor
+
+| Rule | Do | Don't |
+|------|----|----- |
+| **Cursor pointer** | Add `cursor-pointer` to all clickable/hoverable cards | Leave default cursor on interactive elements |
+| **Hover feedback** | Provide visual feedback (color, shadow, border) | No indication element is interactive |
+| **Smooth transitions** | Use `transition-colors duration-200` | Instant state changes or too slow (>500ms) |
+
+### Light/Dark Mode Contrast
+
+| Rule | Do | Don't |
+|------|----|----- |
+| **Glass card light mode** | Use `bg-white/80` or higher opacity | Use `bg-white/10` (too transparent) |
+| **Text contrast light** | Use `#0F172A` (slate-900) for text | Use `#94A3B8` (slate-400) for body text |
+| **Muted text light** | Use `#475569` (slate-600) minimum | Use gray-400 or lighter |
+| **Border visibility** | Use `border-gray-200` in light mode | Use `border-white/10` (invisible) |
+
+### Layout & Spacing
+
+| Rule | Do | Don't |
+|------|----|----- |
+| **Floating navbar** | Add `top-4 left-4 right-4` spacing | Stick navbar to `top-0 left-0 right-0` |
+| **Content padding** | Account for fixed navbar height | Let content hide behind fixed elements |
+| **Consistent max-width** | Use same `max-w-6xl` or `max-w-7xl` | Mix different container widths |
+
+---
+
+## Pre-Delivery Checklist
+
+Before delivering UI code, verify these items:
+
+### Visual Quality
+- [ ] No emojis used as icons (use SVG instead)
+- [ ] All icons from consistent icon set (Heroicons/Lucide)
+- [ ] Brand logos are correct (verified from Simple Icons)
+- [ ] Hover states don't cause layout shift
+- [ ] Use theme colors directly (bg-primary) not var() wrapper
+
+### Interaction
+- [ ] All clickable elements have `cursor-pointer`
+- [ ] Hover states provide clear visual feedback
+- [ ] Transitions are smooth (150-300ms)
+- [ ] Focus states visible for keyboard navigation
+
+### Light/Dark Mode
+- [ ] Light mode text has sufficient contrast (4.5:1 minimum)
+- [ ] Glass/transparent elements visible in light mode
+- [ ] Borders visible in both modes
+- [ ] Test both modes before delivery
+
+### Layout
+- [ ] Floating elements have proper spacing from edges
+- [ ] No content hidden behind fixed navbars
+- [ ] Responsive at 375px, 768px, 1024px, 1440px
+- [ ] No horizontal scroll on mobile
+
+### Accessibility
+- [ ] All images have alt text
+- [ ] Form inputs have labels
+- [ ] Color is not the only indicator
+- [ ] `prefers-reduced-motion` respected
+
+### When to Use
+This skill is applicable to execute the workflow or actions described in the overview.
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

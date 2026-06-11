@@ -1,14 +1,17 @@
 ---
 name: vercel-cli-with-tokens
-description: Deploy and manage projects on Vercel using token-based authentication. Use when working with Vercel CLI using access tokens rather than interactive login — e.g. "deploy to vercel", "set up vercel", "add environment variables to vercel".
-metadata:
-  author: vercel
-  version: "1.0.0"
+description: "Deploy and manage projects on Vercel using token-based authentication. Use when working with Vercel CLI using access tokens rather than interactive login — e.g. \"deploy to vercel\", \"set up vercel\", \"add environment variables to vercel\"."
+risk: safe
+source: "https://github.com/vercel-labs/agent-skills"
+date_added: "2026-06-02"
 ---
 
 # Vercel CLI with Tokens
 
 Deploy and manage projects on Vercel using the CLI with token-based authentication, without relying on `vercel login`.
+
+## When to Use
+- Use this skill when the task matches this description: Deploy and manage projects on Vercel using token-based authentication. Use when working with Vercel CLI using access tokens rather than interactive login — e.g. "deploy to vercel", "set up vercel", "add environment variables to vercel".
 
 ## Step 1: Locate the Vercel Token
 
@@ -17,21 +20,22 @@ Before running any Vercel CLI commands, identify where the token is coming from.
 ### A) `VERCEL_TOKEN` is already set in the environment
 
 ```bash
-printenv VERCEL_TOKEN
+[ -n "${VERCEL_TOKEN:-}" ] && printf 'VERCEL_TOKEN is set\n'
 ```
 
-If this returns a value, you're ready. Skip to Step 2.
+If this reports a configured token, you're ready. Skip to Step 2.
 
 ### B) Token is in a `.env` file under `VERCEL_TOKEN`
 
 ```bash
-grep '^VERCEL_TOKEN=' .env 2>/dev/null
+grep -q '^VERCEL_TOKEN=' .env 2>/dev/null && printf 'VERCEL_TOKEN is present in .env\n'
 ```
 
 If found, export it:
 
 ```bash
-export VERCEL_TOKEN=$(grep '^VERCEL_TOKEN=' .env | cut -d= -f2-)
+VERCEL_TOKEN="$(sed -n 's/^VERCEL_TOKEN=//p' .env | tail -n 1)"
+export VERCEL_TOKEN
 ```
 
 ### C) Token is in a `.env` file under a different name
@@ -39,13 +43,15 @@ export VERCEL_TOKEN=$(grep '^VERCEL_TOKEN=' .env | cut -d= -f2-)
 Look for any variable that looks like a Vercel token (Vercel tokens typically start with `vca_`):
 
 ```bash
-grep -i 'vercel' .env 2>/dev/null
+grep -Eio '^[A-Z0-9_]*VERCEL[A-Z0-9_]*(?==)' .env 2>/dev/null
 ```
 
 Inspect the output to identify which variable holds the token, then export it as `VERCEL_TOKEN`:
 
 ```bash
-export VERCEL_TOKEN=$(grep '^<VARIABLE_NAME>=' .env | cut -d= -f2-)
+vercel_var="<VARIABLE_NAME>"
+VERCEL_TOKEN="$(sed -n "s/^${vercel_var}=//p" .env | tail -n 1)"
+export VERCEL_TOKEN
 ```
 
 ### D) No token found — ask the user
@@ -61,7 +67,7 @@ If none of the above yield a token, ask the user to provide one. They can create
 vercel deploy --token "vca_abc123"
 
 # Good — CLI reads VERCEL_TOKEN from the environment
-export VERCEL_TOKEN="vca_abc123"
+[ -n "${VERCEL_TOKEN:-}" ] || { echo "Set VERCEL_TOKEN first" >&2; exit 1; }
 vercel deploy
 ```
 
@@ -71,11 +77,11 @@ Similarly, check for the project ID and team scope. These let the CLI target the
 
 ```bash
 # Check environment
-printenv VERCEL_PROJECT_ID
-printenv VERCEL_ORG_ID
+[ -n "${VERCEL_PROJECT_ID:-}" ] && printf 'VERCEL_PROJECT_ID is set\n'
+[ -n "${VERCEL_ORG_ID:-}" ] && printf 'VERCEL_ORG_ID is set\n'
 
 # Or check .env
-grep -i 'vercel' .env 2>/dev/null
+grep -Eio '^[A-Z0-9_]*VERCEL[A-Z0-9_]*(?==)' .env 2>/dev/null
 ```
 
 **If you have a project URL** (e.g. `https://vercel.com/my-team/my-project`), extract the team slug:
@@ -96,7 +102,7 @@ Note: `VERCEL_ORG_ID` and `VERCEL_PROJECT_ID` must be set together — setting o
 
 ## CLI Setup
 
-Ensure the Vercel CLI is installed:
+Ensure the Vercel CLI is installed and up to date:
 
 ```bash
 npm install -g vercel
@@ -227,7 +233,7 @@ A linked project has either:
 
 Not needed when `VERCEL_ORG_ID` + `VERCEL_PROJECT_ID` are both set in the environment.
 
-**Do NOT** run `vercel ls`, `vercel project inspect`, or `vercel link` in an unlinked directory to detect state — they will interactively prompt or silently link as a side-effect. Only `vercel whoami` is safe to run anywhere.
+**Do NOT** run `vercel project inspect` or `vercel link` in an unlinked directory to detect state — they will interactively prompt or silently link as a side-effect. `vercel ls` is safe (in an unlinked directory it defaults to showing all deployments for the scope). `vercel whoami` is safe anywhere.
 
 ## Managing Environment Variables
 
@@ -241,7 +247,7 @@ echo "value" | vercel env add VAR_NAME production --scope <team-slug>
 # List environment variables
 vercel env ls --scope <team-slug>
 
-# Pull env vars to local .env file
+# Pull env vars to local .env.local file
 vercel env pull --scope <team-slug>
 
 # Remove a variable
@@ -257,7 +263,10 @@ vercel ls --format json --scope <team-slug>
 # Inspect a specific deployment
 vercel inspect <deployment-url>
 
-# View build logs
+# View build logs (requires Vercel CLI v35+)
+vercel inspect <deployment-url> --logs
+
+# View runtime request logs (follows live by default; add --no-follow for a one-shot snapshot)
 vercel logs <deployment-url>
 ```
 
@@ -267,9 +276,31 @@ vercel logs <deployment-url>
 # List domains
 vercel domains ls --scope <team-slug>
 
-# Add a domain to the project
+# Add a domain to the project — linked or env-linked directory (1 arg)
 vercel domains add <domain> --scope <team-slug>
+
+# Add a domain — unlinked directory (requires <project> positional)
+vercel domains add <domain> <project> --scope <team-slug>
 ```
+
+## Stripe Projects Plan Changes
+
+If this project is managed by Stripe Projects. **Ask the user before running any paid or destructive plan change** — upgrades bill a real card, downgrades remove seats.
+
+First run `stripe projects status --json` to confirm the Vercel resource's local name. The examples below assume the default (`vercel-plan`); substitute the actual name if it was renamed at `stripe projects add` time.
+
+- **Upgrade to Pro:** `stripe projects add vercel/pro` (or `stripe projects upgrade vercel-plan pro`)
+- **Downgrade to Hobby:** `stripe projects downgrade vercel-plan hobby`
+
+### What Pro gives you
+
+- $20/month platform fee, includes $20/month of usage credit.
+- Turbo build machines (30 vCPUs, 60 GB memory) by default for new projects — significantly faster builds than Hobby.
+- 1 deploying seat + unlimited free Viewer seats (read-only collaborators, preview comments).
+- Higher included allocations (1 TB Fast Data Transfer, 10M Edge Requests per month).
+- Paid add-ons available: SAML SSO, HIPAA BAA, Flags Explorer, Observability Plus, Speed Insights, Web Analytics Plus.
+
+Full details: https://vercel.com/docs/plans/pro-plan
 
 ## Working Agreement
 
@@ -277,7 +308,7 @@ vercel domains add <domain> --scope <team-slug>
 - **Check the environment for tokens before asking the user.** Look in the current env and `.env` files first.
 - **Default to preview deployments.** Only deploy to production when explicitly asked.
 - **Ask before pushing to git.** Never push commits without the user's approval.
-- **Do not read or modify `.vercel/` files directly.** The CLI manages this directory.
+- **Do not modify `.vercel/` files directly.** The CLI manages this directory. Reading them (e.g. to verify `orgId`) is fine.
 - **Do not curl/fetch deployed URLs to verify.** Just return the link to the user.
 - **Use `--format json`** when structured output will help with follow-up steps.
 - **Use `-y`** on commands that prompt for confirmation to avoid interactive blocking.
@@ -289,8 +320,8 @@ vercel domains add <domain> --scope <team-slug>
 Check the environment and any `.env` files present:
 
 ```bash
-printenv | grep -i vercel
-grep -i vercel .env 2>/dev/null
+env | grep -Eio '^[A-Z0-9_]*VERCEL[A-Z0-9_]*(?==)'
+grep -Eio '^[A-Z0-9_]*VERCEL[A-Z0-9_]*(?==)' .env 2>/dev/null
 ```
 
 ### Authentication error
@@ -313,7 +344,7 @@ vercel whoami --scope <team-slug>
 Check the build logs:
 
 ```bash
-vercel logs <deployment-url>
+vercel inspect <deployment-url> --logs
 ```
 
 Common causes:
@@ -326,3 +357,8 @@ Common causes:
 ```bash
 npm install -g vercel
 ```
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

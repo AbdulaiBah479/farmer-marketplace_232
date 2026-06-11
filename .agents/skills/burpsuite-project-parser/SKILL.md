@@ -1,7 +1,11 @@
 ---
 name: burpsuite-project-parser
 description: Searches and explores Burp Suite project files (.burp) from the command line. Use when searching response headers or bodies with regex patterns, extracting security audit findings, dumping proxy history or site map data, or analyzing HTTP traffic captured in a Burp project.
-allowed-tools: Bash Read
+allowed-tools:
+  - Bash
+  - Read
+risk: unknown
+source: community
 ---
 
 # Burp Project Parser
@@ -9,7 +13,6 @@ allowed-tools: Bash Read
 Search and extract data from Burp Suite project files using the burpsuite-project-file-parser extension.
 
 ## When to Use
-
 - Searching response headers or bodies with regex patterns
 - Extracting security audit findings from Burp projects
 - Dumping proxy history or site map data
@@ -354,3 +357,8 @@ If not using the wrapper script, invoke directly:
 "$BURP_JAVA" -jar -Djava.awt.headless=true "$BURP_JAR" \
   --project-file=/path/to/project.burp [FLAGS]
 ```
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

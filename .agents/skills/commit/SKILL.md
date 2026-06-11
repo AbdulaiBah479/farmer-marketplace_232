@@ -1,133 +1,172 @@
 ---
-argument-hint: '[--all] [--deep] [--push] [--close <issue_numbers>]'
-disable-model-invocation: false
-effort: medium
 name: commit
-user-invocable: true
-description: 'This skill should be used when the user asks to commit changes, craft a commit message, or run a commit workflow. Creates atomic git commits with conventional-commit formatting and optional deep analysis or push. Flags: --all, --deep, --close, --push.'
+description: ALWAYS use this skill when committing code changes — never commit directly without it. Creates commits following Sentry conventions with proper conventional commit format and issue references. Trigger on any commit, git commit, save changes, or commit message task.
+risk: critical
+source: community
 ---
 
-# Git Commit
+# Sentry Commit Messages
 
-Create atomic commits by staging the right files, analyzing the staged diff, composing a conventional commit message, and optionally pushing.
+Follow these conventions when creating commits for Sentry projects.
 
-## Workflow
+## When to Use
+- The user asks to commit code, prepare a commit message, or save changes in git.
+- You need Sentry-style commit formatting with conventional commit structure and issue references.
+- The task requires enforcing branch safety before committing, especially avoiding direct commits on `main` or `master`.
 
-### 1) Pre-flight + context (single call)
+## Prerequisites
 
-Run all checks and context collection in one bash call:
+Before committing, always check the current branch:
 
 ```bash
-git rev-parse --is-inside-work-tree \
-  && ! test -d "$(git rev-parse --git-dir)/rebase-merge" \
-  && ! test -f "$(git rev-parse --git-dir)/MERGE_HEAD" \
-  && ! test -f "$(git rev-parse --git-dir)/CHERRY_PICK_HEAD" \
-  && git symbolic-ref HEAD \
-  && git status --short --branch
+git branch --show-current
 ```
 
-If any check fails, stop with a clear error and suggested fix.
+**If you're on `main` or `master`, you MUST create a feature branch first** — unless the user explicitly asked to commit to main. Do not ask the user whether to create a branch; just proceed with branch creation. The `create-branch` skill will still propose a branch name for the user to confirm.
 
-Arguments: `$ARGUMENTS`
+Use the `create-branch` skill to create the branch. After `create-branch` completes, verify the current branch has changed before proceeding:
 
-### 2) Parse arguments
+```bash
+git branch --show-current
+```
 
-- Flags:
-  - `--all` commit all changes
-  - `--deep` deep analysis, breaking changes, concise body
-  - `--push` push after commit
-  - `--close <issue_numbers>` append `Closes #N` trailers for listed issues (comma/space-separated)
-- Value arguments:
-  - Type keyword (any conventional type) overrides inferred type
-  - Quoted text overrides inferred description
+If still on `main` or `master` (e.g., the user aborted branch creation), stop — do not commit.
 
-### 3) Stage + read diff
+## Format
 
-- If `--all`:
-  - If no changes at all: error "No changes to commit"
-  - If unstaged changes exist: `git add -A`
-  - If already staged: proceed
-- Otherwise (atomic commits):
-  - Session-modified files = files edited in this session
-  - Currently staged files: `git diff --cached --name-only`
-  - For staged files NOT in session-modified set: `git restore --staged <file>`
-  - For session-modified files with changes: `git add <file>`
-  - If none: error "No files modified in this session"
-- **Unrelated changes**: session-modified files may contain pre-existing uncommitted changes (hunks not from this session). Include the entire file—partial staging is impractical. Never revert, discard, or `git checkout` unrelated changes.
-- Read the staged diff once: `git diff --cached`
-- Log staged files with status (A/M/D)
+```
+<type>(<scope>): <subject>
 
-### 4) Analyze + compose message
+<body>
 
-Read the staged diff and produce the commit message in a single pass.
+<footer>
+```
 
-**Type inference** — infer the type from the dominant user-visible intent, not the largest file diff or the presence of
-dependency/config churn.
+The header is required. Scope is optional. All lines must stay under 100 characters.
 
-Choose the highest-signal behavior that explains why the commit exists:
+## Commit Types
 
-- If a dependency bump is only the enabler for a migration/refactor/fix, use the migration/refactor/fix type instead of
-  `chore(deps)`.
-- If changed tooling/scripts/config are required to keep existing behavior working after a code migration, include them in
-  the same type as the migration.
-- Use `chore` only for maintenance that does not fit a more specific behavioral category.
-- Use `chore(deps)` only for dependency-only updates or dependency updates whose main purpose is routine maintenance.
+| Type | Purpose |
+|------|---------|
+| `feat` | New feature |
+| `fix` | Bug fix |
+| `ref` | Refactoring (no behavior change) |
+| `perf` | Performance improvement |
+| `docs` | Documentation only |
+| `test` | Test additions or corrections |
+| `build` | Build system or dependencies |
+| `ci` | CI configuration |
+| `chore` | Maintenance tasks |
+| `style` | Code formatting (no logic change) |
+| `meta` | Repository metadata |
+| `license` | License changes |
 
-| Behavior                                            | Type          |
-| --------------------------------------------------- | ------------- |
-| New functionality                                   | `feat`        |
-| Bug fix / error handling                            | `fix`         |
-| Code migration or API adaptation without new UX/API | `refactor`    |
-| Code reorganization, no behavior change             | `refactor`    |
-| Documentation                                       | `docs`        |
-| Tests                                               | `test`        |
-| Build system (webpack, vite, esbuild)               | `build`       |
-| CI/CD pipelines                                     | `ci`          |
-| Dependency-only maintenance                         | `chore(deps)` |
-| Formatting / whitespace only                        | `style`       |
-| Performance                                         | `perf`        |
-| Reverting previous commit                           | `revert`      |
-| AI config (CLAUDE.md, .claude/, .gemini/, .codex/)  | `ai`          |
-| Other maintenance                                   | `chore`       |
+## Subject Line Rules
 
-Explicit type keyword in arguments takes precedence over inference.
+- Use imperative, present tense: "Add feature" not "Added feature"
+- Capitalize the first letter
+- No period at the end
+- Maximum 70 characters
 
-**Scope** — infer only when path makes it obvious (lowercase).
+## Body Guidelines
 
-**Unrelated hunks** — ignore pre-existing changes when determining type/scope/description. If unrelated changes are in the same file as session changes, they are included in the commit scope but should not influence the message.
+- Explain **what** and **why**, not how
+- Use imperative mood and present tense
+- Include motivation for the change
+- Contrast with previous behavior when relevant
 
-**Message format:**
+## Footer: Issue References
 
-- Subject line (\<= 50 chars): `type(scope): description` or `type: description`
-- Imperative mood ("add" not "added"), lowercase, no period
-- Describe what the change does, not which files changed
-- Body: hyphenated lines for distinct changes; skip for trivial changes
+Reference issues in the footer using these patterns:
 
-**Issue linking** — scan the chat transcript for GitHub issue references (e.g. `#123`, `owner/repo#123`, issue URLs) that the current changes resolve. For each match, append a `Closes #N` trailer. Skip issues merely mentioned in passing; include only ones the commit actually closes.
+```
+Fixes GH-1234
+Fixes #1234
+Fixes SENTRY-1234
+Refs LINEAR-ABC-123
+```
 
-**If `--deep`:**
+- `Fixes` closes the issue when merged
+- `Refs` links without closing
 
-- Deep semantic analysis; detect breaking changes
-- Infer scope from code structure even when path isn't clear
-- Body: 2-3 hyphenated lines max, focus on WHY
-- Breaking change: `BREAKING CHANGE:` + one-line migration note
+## AI-Generated Changes
 
-**If `--close`:**
+When changes were primarily generated by a coding agent (like Claude Code), include the Co-Authored-By attribution in the commit footer:
 
-- Append a `Closes #N` line for each issue number provided
-- Multiple issues: one `Closes #N` per line in the body/trailer
-- Merge with transcript-scanned issues; de-duplicate
+```
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
 
-### 5) Commit
+This is the only indicator of AI involvement that should appear in commits. Do not add phrases like "Generated by AI", "Written with Claude", or similar markers in the subject, body, or anywhere else in the commit message.
 
-- Use `git commit -m "subject"` (add `-m "body"` only if body is non-empty)
-- Output exactly: commit hash, subject, and `N files changed` summary. Nothing else.
-- Do not report branch ahead/behind counts, unpushed commits, push availability, unrelated tree state, staging steps, or pre-commit hook activity unless a command failed.
-- If failed: show error + suggest fix
-- **Pre-commit hook failure:** if the hook fails on unrelated/pre-existing changes (not this session's changes), retry automatically with `git commit --no-verify` — do not ask. Report the bypass in one line, noting the failure was unrelated to the staged changes. Never bypass hooks for failures caused by the session's own changes; fix those or surface the error instead.
+## Examples
 
-### 6) Push (if `--push`)
+### Simple fix
 
-- If upstream exists: `git push`
-- If no upstream: `git push -u origin HEAD`
-- If failed: show error + suggest fix (pull/rebase first, set upstream, check auth)
+```
+fix(api): Handle null response in user endpoint
+
+The user API could return null for deleted accounts, causing a crash
+in the dashboard. Add null check before accessing user properties.
+
+Fixes SENTRY-5678
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+### Feature with scope
+
+```
+feat(alerts): Add Slack thread replies for alert updates
+
+When an alert is updated or resolved, post a reply to the original
+Slack thread instead of creating a new message. This keeps related
+notifications grouped together.
+
+Refs GH-1234
+```
+
+### Refactor
+
+```
+ref: Extract common validation logic to shared module
+
+Move duplicate validation code from three endpoints into a shared
+validator class. No behavior change.
+```
+
+### Breaking change
+
+```
+feat(api)!: Remove deprecated v1 endpoints
+
+Remove all v1 API endpoints that were deprecated in version 23.1.
+Clients should migrate to v2 endpoints.
+
+BREAKING CHANGE: v1 endpoints no longer available
+Fixes SENTRY-9999
+```
+
+## Revert Format
+
+```
+revert: feat(api): Add new endpoint
+
+This reverts commit abc123def456.
+
+Reason: Caused performance regression in production.
+```
+
+## Principles
+
+- Each commit should be a single, stable change
+- Commits should be independently reviewable
+- The repository should be in a working state after each commit
+
+## References
+
+- [Sentry Commit Messages](https://develop.sentry.dev/engineering-practices/commit-messages/)
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

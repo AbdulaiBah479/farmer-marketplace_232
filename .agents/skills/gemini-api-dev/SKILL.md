@@ -1,6 +1,9 @@
 ---
 name: gemini-api-dev
-description: Use this skill when building applications with Gemini models, Gemini API, working with multimodal content (text, images, audio, video), implementing function calling, using structured outputs, or needing current model specifications. Covers SDK usage (google-genai for Python, @google/genai for JavaScript/TypeScript), model selection, and API capabilities.
+description: "The Gemini API provides access to Google's most advanced AI models. Key capabilities include:"
+risk: unknown
+source: community
+date_added: "2026-02-27"
 ---
 
 # Gemini API Development Skill
@@ -125,3 +128,11 @@ This index contains links to all documentation pages in `.md.txt` format. Use we
 - [Embeddings](https://ai.google.dev/gemini-api/docs/embeddings.md.txt)
 - [Interactions API](https://ai.google.dev/gemini-api/docs/interactions.md.txt)
 - [SDK migration guide](https://ai.google.dev/gemini-api/docs/migrate.md.txt)
+
+## When to Use
+This skill is applicable to execute the workflow or actions described in the overview.
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

@@ -1,6 +1,8 @@
 ---
 name: constant-time-analysis
-description: Detects timing side-channel vulnerabilities in cryptographic code. Use when implementing or reviewing crypto code, encountering division on secrets, secret-dependent branches, or constant-time programming questions in C, C++, Go, Rust, Swift, Java, Kotlin, C#, PHP, JavaScript, TypeScript, Python, or Ruby.
+description: "Analyze cryptographic code to detect operations that leak secret data through execution timing variations."
+risk: unknown
+source: community
 ---
 
 # Constant-Time Analysis
@@ -8,7 +10,6 @@ description: Detects timing side-channel vulnerabilities in cryptographic code. 
 Analyze cryptographic code to detect operations that leak secret data through execution timing variations.
 
 ## When to Use
-
 ```text
 User writing crypto code? ──yes──> Use this skill
          │
@@ -48,18 +49,18 @@ Based on the file extension or language context, refer to the appropriate guide:
 
 | Language   | File Extensions                   | Guide                                                    |
 | ---------- | --------------------------------- | -------------------------------------------------------- |
-| C, C++     | `.c`, `.h`, `.cpp`, `.cc`, `.hpp` | [references/compiled.md](references/compiled.md)         |
-| Go         | `.go`                             | [references/compiled.md](references/compiled.md)         |
-| Rust       | `.rs`                             | [references/compiled.md](references/compiled.md)         |
-| Swift      | `.swift`                          | [references/swift.md](references/swift.md)               |
-| Java       | `.java`                           | [references/vm-compiled.md](references/vm-compiled.md)   |
-| Kotlin     | `.kt`, `.kts`                     | [references/kotlin.md](references/kotlin.md)             |
-| C#         | `.cs`                             | [references/vm-compiled.md](references/vm-compiled.md)   |
-| PHP        | `.php`                            | [references/php.md](references/php.md)                   |
-| JavaScript | `.js`, `.mjs`, `.cjs`             | [references/javascript.md](references/javascript.md)     |
-| TypeScript | `.ts`, `.tsx`                     | [references/javascript.md](references/javascript.md)     |
-| Python     | `.py`                             | [references/python.md](references/python.md)             |
-| Ruby       | `.rb`                             | [references/ruby.md](references/ruby.md)                 |
+| C, C++     | `.c`, `.h`, `.cpp`, `.cc`, `.hpp` | references/compiled.md         |
+| Go         | `.go`                             | references/compiled.md         |
+| Rust       | `.rs`                             | references/compiled.md         |
+| Swift      | `.swift`                          | references/swift.md               |
+| Java       | `.java`                           | references/vm-compiled.md   |
+| Kotlin     | `.kt`, `.kts`                     | references/kotlin.md             |
+| C#         | `.cs`                             | references/vm-compiled.md   |
+| PHP        | `.php`                            | references/php.md                   |
+| JavaScript | `.js`, `.mjs`, `.cjs`             | references/javascript.md     |
+| TypeScript | `.ts`, `.tsx`                     | references/javascript.md     |
+| Python     | `.py`                             | references/python.md             |
+| Ruby       | `.rb`                             | references/ruby.md                 |
 
 ## Quick Start
 
@@ -143,7 +144,7 @@ export PATH="/opt/homebrew/opt/openjdk@21/bin:$PATH"
 export PATH="$HOME/.dotnet/tools:$PATH"
 ```
 
-See [references/vm-compiled.md](references/vm-compiled.md) for detailed setup instructions and troubleshooting.
+See references/vm-compiled.md for detailed setup instructions and troubleshooting.
 
 ## Quick Reference
 

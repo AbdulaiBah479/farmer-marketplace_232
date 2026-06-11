@@ -1,255 +1,99 @@
 ---
 name: clean-code
-description: Clean code principles for readable, maintainable software
+description: "This skill embodies the principles of \"Clean Code\" by Robert C. Martin (Uncle Bob). Use it to transform \"code that works\" into \"code that is clean.\""
+risk: safe
+source: "ClawForge (https://github.com/jackjin1997/ClawForge)"
+date_added: "2026-02-27"
 ---
 
-# Clean Code Principles
+# Clean Code Skill
 
-Write code that humans can understand. Code is read far more often than it's written.
+This skill embodies the principles of "Clean Code" by Robert C. Martin (Uncle Bob). Use it to transform "code that works" into "code that is clean."
 
-## Naming
+## 🧠 Core Philosophy
+> "Code is clean if it can be read, and enhanced by a developer other than its original author." — Grady Booch
 
-### Variables
-```typescript
-// BAD
-const d = 86400000; // what is this?
-const yyyymmdd = formatDate(date);
-const list = getUsers();
+## When to Use
+Use this skill when:
+- **Writing new code**: To ensure high quality from the start.
+- **Reviewing Pull Requests**: To provide constructive, principle-based feedback.
+- **Refactoring legacy code**: To identify and remove code smells.
+- **Improving team standards**: To align on industry-standard best practices.
 
-// GOOD
-const MILLISECONDS_PER_DAY = 86400000;
-const formattedDate = formatDate(date);
-const users = getUsers();
-```
+## 1. Meaningful Names
+- **Use Intention-Revealing Names**: `elapsedTimeInDays` instead of `d`.
+- **Avoid Disinformation**: Don't use `accountList` if it's actually a `Map`.
+- **Make Meaningful Distinctions**: Avoid `ProductData` vs `ProductInfo`.
+- **Use Pronounceable/Searchable Names**: Avoid `genymdhms`.
+- **Class Names**: Use nouns (`Customer`, `WikiPage`). Avoid `Manager`, `Data`.
+- **Method Names**: Use verbs (`postPayment`, `deletePage`).
 
-### Functions
-```typescript
-// BAD - unclear what it does
-function handle(data) { }
-function process(item) { }
-function doIt() { }
+## 2. Functions
+- **Small!**: Functions should be shorter than you think.
+- **Do One Thing**: A function should do only one thing, and do it well.
+- **One Level of Abstraction**: Don't mix high-level business logic with low-level details (like regex).
+- **Descriptive Names**: `isPasswordValid` is better than `check`.
+- **Arguments**: 0 is ideal, 1-2 is okay, 3+ requires a very strong justification.
+- **No Side Effects**: Functions shouldn't secretly change global state.
 
-// GOOD - verb + noun, describes action
-function validateUserInput(input) { }
-function calculateTotalPrice(items) { }
-function sendWelcomeEmail(user) { }
-```
+## 3. Comments
+- **Don't Comment Bad Code—Rewrite It**: Most comments are a sign of failure to express ourselves in code.
+- **Explain Yourself in Code**: 
+  ```python
+  # Check if employee is eligible for full benefits
+  if employee.flags & HOURLY and employee.age > 65:
+  ```
+  vs
+  ```python
+  if employee.isEligibleForFullBenefits():
+  ```
+- **Good Comments**: Legal, Informative (regex intent), Clarification (external libraries), TODOs.
+- **Bad Comments**: Mumbling, Redundant, Misleading, Mandated, Noise, Position Markers.
 
-### Booleans
-```typescript
-// BAD
-const open = true;
-const write = false;
-const fruit = true;
+## 4. Formatting
+- **The Newspaper Metaphor**: High-level concepts at the top, details at the bottom.
+- **Vertical Density**: Related lines should be close to each other.
+- **Distance**: Variables should be declared near their usage.
+- **Indentation**: Essential for structural readability.
 
-// GOOD - is/has/can/should prefix
-const isOpen = true;
-const canWrite = false;
-const hasFruit = true;
-```
+## 5. Objects and Data Structures
+- **Data Abstraction**: Hide the implementation behind interfaces.
+- **The Law of Demeter**: A module should not know about the innards of the objects it manipulates. Avoid `a.getB().getC().doSomething()`.
+- **Data Transfer Objects (DTO)**: Classes with public variables and no functions.
 
-## Functions
+## 6. Error Handling
+- **Use Exceptions instead of Return Codes**: Keeps logic clean.
+- **Write Try-Catch-Finally First**: Defines the scope of the operation.
+- **Don't Return Null**: It forces the caller to check for null every time.
+- **Don't Pass Null**: Leads to `NullPointerException`.
 
-### Single Responsibility
-```typescript
-// BAD - does too much
-function createUserAndSendEmailAndLogActivity(data) {
-  const user = db.insert(data);
-  mailer.send(user.email, 'Welcome!');
-  logger.log(`User ${user.id} created`);
-  return user;
-}
+## 7. Unit Tests
+- **The Three Laws of TDD**:
+  1. Don't write production code until you have a failing unit test.
+  2. Don't write more of a unit test than is sufficient to fail.
+  3. Don't write more production code than is sufficient to pass the failing test.
+- **F.I.R.S.T. Principles**: Fast, Independent, Repeatable, Self-Validating, Timely.
 
-// GOOD - one thing each
-function createUser(data) {
-  return db.insert(data);
-}
+## 8. Classes
+- **Small!**: Classes should have a single responsibility (SRP).
+- **The Stepdown Rule**: We want the code to read like a top-down narrative.
 
-function sendWelcomeEmail(user) {
-  mailer.send(user.email, 'Welcome!');
-}
+## 9. Smells and Heuristics
+- **Rigidity**: Hard to change.
+- **Fragility**: Breaks in many places.
+- **Immobility**: Hard to reuse.
+- **Viscosity**: Hard to do the right thing.
+- **Needless Complexity/Repetition**.
 
-function logUserCreation(user) {
-  logger.log(`User ${user.id} created`);
-}
-```
+## 🛠️ Implementation Checklist
+- [ ] Is this function smaller than 20 lines?
+- [ ] Does this function do exactly one thing?
+- [ ] Are all names searchable and intention-revealing?
+- [ ] Have I avoided comments by making the code clearer?
+- [ ] Am I passing too many arguments?
+- [ ] Is there a failing test for this change?
 
-### Few Parameters
-```typescript
-// BAD - too many parameters
-function createUser(name, email, age, country, role, department, manager) { }
-
-// GOOD - use object
-function createUser(options: CreateUserOptions) { }
-
-interface CreateUserOptions {
-  name: string;
-  email: string;
-  age?: number;
-  country?: string;
-  role: Role;
-  department?: string;
-  manager?: string;
-}
-```
-
-### Avoid Flag Arguments
-```typescript
-// BAD - boolean changes behavior
-function createFile(name: string, temp: boolean) {
-  if (temp) {
-    fs.create(`/tmp/${name}`);
-  } else {
-    fs.create(name);
-  }
-}
-
-// GOOD - separate functions
-function createFile(name: string) {
-  fs.create(name);
-}
-
-function createTempFile(name: string) {
-  fs.create(`/tmp/${name}`);
-}
-```
-
-### Return Early
-```typescript
-// BAD - nested conditionals
-function getPayAmount(employee) {
-  let result;
-  if (employee.isSeparated) {
-    result = 0;
-  } else {
-    if (employee.isRetired) {
-      result = employee.pension;
-    } else {
-      result = employee.salary;
-    }
-  }
-  return result;
-}
-
-// GOOD - early returns
-function getPayAmount(employee) {
-  if (employee.isSeparated) return 0;
-  if (employee.isRetired) return employee.pension;
-  return employee.salary;
-}
-```
-
-## Comments
-
-### Don't Comment Bad Code - Rewrite It
-```typescript
-// BAD
-// Check if employee is eligible for benefits
-if ((employee.flags & 0x0F) && (employee.age > 65)) { }
-
-// GOOD - code explains itself
-const isEligibleForBenefits = employee.hasHealthPlan && employee.isRetired;
-if (isEligibleForBenefits) { }
-```
-
-### Good Comments
-```typescript
-// Regex matches ISO 8601 date format
-const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-
-// TODO: Refactor when API v2 launches
-// WARNING: This must run before database migration
-// NOTE: Third-party API has 100ms minimum delay
-```
-
-## Error Handling
-
-### Don't Return Null
-```typescript
-// BAD
-function getUser(id: string): User | null {
-  return db.find(id) || null;
-}
-
-// GOOD - throw or return Result type
-function getUser(id: string): User {
-  const user = db.find(id);
-  if (!user) throw new UserNotFoundError(id);
-  return user;
-}
-
-// OR use Result type
-function getUser(id: string): Result<User, NotFoundError> { }
-```
-
-### Don't Pass Null
-```typescript
-// BAD
-function calculateArea(width: number | null, height: number | null) {
-  if (width === null || height === null) {
-    throw new Error('Invalid dimensions');
-  }
-  return width * height;
-}
-
-// GOOD - require valid inputs
-function calculateArea(width: number, height: number) {
-  return width * height;
-}
-```
-
-## Formatting
-
-### Consistent Style
-- Pick a style guide (Prettier, StandardJS, Black)
-- Automate with formatters
-- Never debate style in code review
-
-### Vertical Density
-```typescript
-// BAD - unrelated code together
-const user = getUser(id);
-const config = loadConfig();
-const result = processData(user, config);
-logger.log(result);
-sendNotification(user);
-
-// GOOD - group related code
-const user = getUser(id);
-sendNotification(user);
-
-const config = loadConfig();
-const result = processData(user, config);
-logger.log(result);
-```
-
-## Code Smells to Avoid
-
-| Smell | Problem | Solution |
-|-------|---------|----------|
-| Long Method | Hard to understand | Extract methods |
-| Long Parameter List | Complex interface | Parameter object |
-| Duplicate Code | Change in multiple places | Extract function |
-| Dead Code | Confusion, maintenance | Delete it |
-| Magic Numbers | Unclear meaning | Named constants |
-| Deep Nesting | Hard to follow | Early returns, extract |
-| Feature Envy | Wrong location | Move method |
-| Data Clumps | Always together | Create class |
-
-## The Boy Scout Rule
-
-> Leave the code cleaner than you found it.
-
-Every commit should improve code quality slightly. Small, incremental improvements compound over time.
-
-## Checklist
-
-Before committing, ask:
-
-- [ ] Can I understand this code in 6 months?
-- [ ] Would a new team member understand it?
-- [ ] Are names descriptive and searchable?
-- [ ] Does each function do one thing?
-- [ ] Are there any magic numbers/strings?
-- [ ] Is error handling appropriate?
-- [ ] Did I remove all dead code?
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

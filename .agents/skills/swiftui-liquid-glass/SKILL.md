@@ -1,12 +1,19 @@
 ---
 name: swiftui-liquid-glass
-description: Implement, review, or improve SwiftUI features using the iOS 26+ Liquid Glass API. Use when asked to adopt Liquid Glass in new SwiftUI UI, refactor an existing feature to Liquid Glass, or review Liquid Glass usage for correctness, performance, and design alignment.
+description: Implement or review SwiftUI Liquid Glass APIs with correct fallbacks and modifier order.
+risk: safe
+source: "Dimillian/Skills (MIT)"
+date_added: "2026-03-25"
 ---
 
 # SwiftUI Liquid Glass
 
 ## Overview
 Use this skill to build or review SwiftUI features that fully align with the iOS 26+ Liquid Glass API. Prioritize native APIs (`glassEffect`, `GlassEffectContainer`, glass button styles) and Apple design guidance. Keep usage consistent, interactive where needed, and performance aware.
+
+## When to Use
+- When the user wants to adopt or review Liquid Glass in SwiftUI UI.
+- When you need correct API usage, fallback handling, or modifier ordering for Liquid Glass.
 
 ## Workflow Decision Tree
 Choose the path that matches the request:
@@ -88,3 +95,8 @@ Button("Confirm") { }
 ## Resources
 - Reference guide: `references/liquid-glass.md`
 - Prefer Apple docs for up-to-date API details.
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

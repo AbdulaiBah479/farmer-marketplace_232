@@ -1,143 +1,220 @@
 ---
 name: autoskill
-description: Analyze coding sessions to detect corrections and preferences, then propose targeted improvements to Skills used in the session. Use this skill when the user asks to "learn from this session", "update skills", or "remember this pattern". Extracts durable preferences and codifies them into the appropriate skill files.
-license: Complete terms in LICENSE.txt
+description: Observe the user's screen via screenpipe, detect repeated research workflows, match them against existing scientific-agent-skills, and draft new skills (or composition recipes that chain existing ones) for the patterns not yet covered. Use when the user asks to analyze their recent work and propose skills based on what they actually do. Requires the screenpipe daemon (https://github.com/screenpipe/screenpipe) running locally on port 3030 — the skill has no other data source and will refuse to run if screenpipe is unreachable. All detection runs locally; only redacted cluster summaries reach the LLM.
+allowed-tools: Read Write Edit Bash
+license: MIT license
+metadata:
+  version: "1.0"
+  skill-author: K-Dense Inc.
+  requires: screenpipe
 ---
 
-This skill analyzes coding sessions to extract durable preferences from corrections and approvals, then proposes targeted updates to Skills that were active during the session. It acts as a learning mechanism across sessions, ensuring Claude improves based on feedback.
+# autoskill
 
-The user triggers autoskill after a session where Skills were used. The skill detects signals, filters for quality, maps them to the relevant Skill files, and proposes minimal, reversible edits for review.
+> **Requires a running [screenpipe](https://github.com/screenpipe/screenpipe) daemon.** This skill has no alternate data source — it reads exclusively from the local screenpipe HTTP API (default `http://localhost:3030`). If the daemon isn't running, `run()` raises `ScreenpipeUnreachable` with install instructions.
 
-## When to activate
+> **Network access & environment variables.** This skill makes authenticated HTTP requests to (a) the user's local screenpipe daemon on loopback, and (b) the user-configured LLM backend — one of `http://localhost:1234/v1` (LM Studio, default), `https://api.anthropic.com` (opt-in Claude), or a user-supplied BYOK Foundry gateway. The skill reads three environment variables — `SCREENPIPE_TOKEN`, `ANTHROPIC_API_KEY`, `FOUNDRY_API_KEY` — and uses each only to authenticate to the single endpoint its name implies. No other network destinations, no telemetry, no data egress to any third party.
 
-Trigger on explicit requests:
+## Overview
 
-- "autoskill", "learn from this session", "update skills from these corrections"
-- "remember this pattern", "make sure you do X next time"
+Turn the user's own workflow history — captured passively by the local [screenpipe](https://github.com/screenpipe/screenpipe) daemon — into new skills. This skill is on-demand: the user invokes it with a time window, it queries screenpipe's local HTTP API, clusters repeated workflow patterns, compares each pattern against the existing skills in this repo, and produces a staged folder of proposals the user can review, edit, and promote.
 
-Do NOT activate for one-off corrections or when the user declines skill modifications.
+## When to Use This Skill
 
-## Signal detection
+Invoke this skill when the user asks to:
+- "Analyze my last 4 hours / day / week and propose new skills."
+- "Look at what I've been doing and tell me what's not covered yet."
+- "Draft a skill from my recent workflow."
+- "Find composition recipes for workflows I repeat."
 
-Scan the session for:
+Do **not** invoke it for one-off questions about screenpipe itself, for real-time screen queries, or without an explicit user request — the skill analyzes sensitive local content and must stay explicitly user-triggered.
 
-**Corrections** (highest value)
+## Privacy Posture
 
-- "No, use X instead of Y"
-- "We always do it this way"
-- "Don't do X in this codebase"
+- **Screenpipe handles app/window filtering at capture time.** Install a starter deny-list by copying `references/screenpipe-config.yaml` into the user's screenpipe config. Sensitive apps (password managers, messaging, banking) are never OCR'd in the first place.
+- **Raw OCR never leaves the machine.** `scripts/fetch_window.py` pulls data over localhost HTTP. `scripts/cluster.py` reduces the timeline to app/duration/title summaries. `scripts/redact.py` strips emails, API keys, bearer tokens, and phone numbers as defense-in-depth before any cluster summary reaches the LLM.
+- **LLM backend defaults to `local`.** The recommended setup is [LM Studio](https://lmstudio.ai/) running `Gemma-4-31B-it` — strong reasoning at a size that fits on most workstation GPUs, and no data ever leaves your machine. Cloud backends (`claude`, `foundry`) are opt-in and documented in `config.yaml` for users who explicitly want them. Detection and embeddings always run locally regardless of backend choice.
+- **Dry-run mode** (`--plan`) prints the exact timeline that will be analyzed before any LLM call.
+- **TLS for localhost** (optional, for corporate policy): see `references/https-proxy.md` for the Caddy pattern.
 
-**Repeated patterns** (high value)
+## Prerequisites
 
-- Same feedback given 2+ times
-- Consistent naming/structure choices across multiple files
+### 1. Screenpipe daemon
 
-**Approvals** (supporting evidence)
+Either install the official release or build from source. Either way the daemon binds HTTP on `localhost:3030` by default.
 
-- "Yes, that's right"
-- "Perfect, keep doing it this way"
+**From source** (recommended if you want the CLI daemon without the desktop GUI):
 
-**Ignore:**
-
-- Context-specific one-offs ("use X here" without "always")
-- Ambiguous feedback
-- Contradictory signals (ask for clarification instead)
-
-## Signal quality filter
-
-Before proposing any change, ask:
-
-1. Was this correction repeated, or stated as a general rule?
-2. Would this apply to future sessions, or just this task?
-3. Is it specific enough to be actionable?
-4. Is this **new information** I wouldn't already know?
-
-Only propose changes that pass all four.
-
-### What counts as "new information"
-
-**Worth capturing:**
-
-- Project-specific conventions ("we use `cn()` not `clsx()` here")
-- Custom component/utility locations ("buttons are in `@/components/ui`")
-- Team preferences that differ from defaults ("we prefer explicit returns")
-- Domain-specific terminology or patterns
-- Non-obvious architectural decisions ("auth logic lives in middleware, not components")
-- Integrations and API quirks specific to this stack
-
-**NOT worth capturing (I already know this):**
-
-- General best practices (DRY, separation of concerns)
-- Language/framework conventions (React hooks rules, TypeScript basics)
-- Common library usage (standard Tailwind classes, typical Next.js patterns)
-- Universal security practices (input validation, SQL injection prevention)
-- Standard accessibility guidelines
-
-If I'd give the same advice to any project, it doesn't belong in a skill.
-
-## Mapping signals to Skills
-
-Match each signal to the Skill that was active and relevant during the session:
-
-- If the signal relates to a Skill that was used, update that Skill's `SKILL.md`
-- If 3+ related signals don't fit any active Skill, propose a new Skill
-- Ignore signals that don't map to any Skill used in the session
-
-## Proposing changes
-
-For each proposed edit, provide:
-
-```
-File: path/to/SKILL.md
-Section: [existing section or "new section: X"]
-Confidence: HIGH | MEDIUM
-
-Signal: "[exact user quote or paraphrase]"
-
-Current text (if modifying):
-> existing content
-
-Proposed text:
-> updated content
-
-Rationale: [one sentence]
+```bash
+git clone --depth 1 https://github.com/mediar-ai/screenpipe.git
+cd screenpipe
+cargo build -p screenpipe-engine --release
+# System deps (macOS): cmake + full Xcode.app (not just Command Line Tools).
+#   brew install cmake
+#   # if xcodebuild plug-ins error: sudo xcodebuild -runFirstLaunch
+./target/release/screenpipe doctor   # confirm permissions + ffmpeg
+./target/release/screenpipe record --disable-audio --use-pii-removal
 ```
 
-Group proposals by file. Present HIGH confidence changes first.
+First run will prompt for macOS Screen Recording permission. Grant it and relaunch.
 
-## Review flow
+### 2. Screenpipe API token
 
-Always present changes for review before applying. Format:
+The local API now requires bearer auth. Retrieve your token and export it:
 
-```
-## autoskill summary
-
-Detected [N] durable preferences from this session.
-
-### HIGH confidence (recommended to apply)
-- [change 1]
-- [change 2]
-
-### MEDIUM confidence (review carefully)
-- [change 3]
-
-Apply high confidence changes? [y/n/selective]
+```bash
+export SCREENPIPE_TOKEN=$(screenpipe auth token)
 ```
 
-Wait for explicit approval before editing any file.
+(Or set `screenpipe.token` directly in `config.yaml` — env var is preferred since it keeps secrets out of version control.)
 
-## Applying changes
+### 3. Python environment
 
-When approved:
+Via `pipenv` from the repo root:
 
-1. Edit the target file with minimal, focused changes
-2. If git is available, commit with message: `chore(autoskill): [brief description]`
-3. Report what was changed
+```bash
+pipenv install httpx pyyaml sentence-transformers
+```
 
-## Constraints
+The embedding model (`sentence-transformers/all-MiniLM-L6-v2`, ~80 MB) downloads on first run.
 
-- Never delete existing rules without explicit instruction
-- Prefer additive changes over rewrites
-- One concept per change (easy to revert)
-- Preserve existing file structure and tone
-- When uncertain, downgrade to MEDIUM confidence and ask
+### 4. Local LLM (default path) — LM Studio
+
+- Install [LM Studio](https://lmstudio.ai/).
+- Download `Gemma-4-31B-it` (or another strong reasoning model; adjust `local.model` in `config.yaml`).
+- Load it via the CLI for headless use (no GUI required):
+
+```bash
+lms load gemma-4-31b-it --context-length 131072 --gpu max -y
+lms status   # confirm server running on :1234
+```
+
+### 5. Cloud LLM backends (optional, opt-in)
+
+Only if you explicitly opt out of local:
+- `claude`: set `ANTHROPIC_API_KEY`, flip `backend: claude` in `config.yaml`.
+- `foundry`: set `FOUNDRY_API_KEY`, flip `backend: foundry`, set `foundry.endpoint` to your corporate gateway URL.
+
+## Architecture
+
+```
+screenpipe daemon (user-installed)
+        │  HTTP on localhost:3030
+        ▼
+scripts/fetch_window.py    → normalized timeline events
+scripts/redact.py          → regex scrub (defense-in-depth)
+scripts/cluster.py         → sessions + clusters (local only)
+scripts/match_skills.py    → top-k vs existing 135 skills (local embeddings)
+scripts/synthesize.py      → LLM judge: reuse / compose / novel
+        │
+        ▼
+~/.autoskill/proposed/<timestamp>/        (default; override with --out)
+  ├── report.md
+  ├── composition-recipes/<name>/SKILL.md
+  └── new-skills/<name>/SKILL.md
+
+scripts/promote.py         → user-approved proposal → skills/<name>/
+```
+
+## Workflow
+
+The skill ships a unified CLI at `scripts/autoskill.py` with three subcommands:
+
+```bash
+python scripts/autoskill.py doctor   --config config.yaml --skills-dir ../
+python scripts/autoskill.py run      --start ... --end ... --config config.yaml
+python scripts/autoskill.py promote  --proposed ~/.autoskill/proposed/<ts> --skills-dir ../ --name <skill>
+```
+
+### 0. Preflight with `doctor`
+
+Before a full run, verify every dependency in one shot:
+
+```bash
+python scripts/autoskill.py doctor \
+  --config skills/autoskill/config.yaml \
+  --skills-dir skills
+```
+
+The report covers `config` (backend choice valid), `skills_dir` (exists), `screenpipe` (reachable + authed), and `llm` (LM Studio serving or API key present). Non-zero exit on any failure, with the offending line marked `error`.
+
+### 1. Run the pipeline
+
+```bash
+export SCREENPIPE_TOKEN=$(screenpipe auth token)
+python scripts/autoskill.py run \
+  --start "2026-04-17T00:00:00Z" \
+  --end   "2026-04-17T23:59:59Z" \
+  --config skills/autoskill/config.yaml \
+  --skills-dir skills
+```
+
+Proposals land in `~/.autoskill/proposed/<timestamp>/` by default, keeping experimental output out of the skills repo. Pass `--out PATH` to override.
+
+Internally:
+1. **Fetch** — `fetch_window` paginates screenpipe's `/search` endpoint, normalizes events to `{ts, app, window_title, text, content_type}`.
+2. **Redact** — `redact` scrubs emails, API keys, bearer tokens, phones from OCR text and window titles as defense-in-depth over screenpipe's own PII removal.
+3. **Cluster** — `segment_sessions` splits on idle gaps (default 10 min) and drops short sessions; `cluster_sessions` groups sessions by app-signature and keeps clusters of size `min_cluster_size` (default 2).
+4. **Match** — `load_skill_descriptions` reads frontmatter from every `SKILL.md` in `skills/`; `top_k_matches` ranks each cluster against all skills using local `sentence-transformers` embeddings (cosine similarity).
+5. **Synthesize** — `synthesize` prompts the configured LLM backend to classify each cluster as `reuse`, `compose`, or `novel` and emit a SKILL.md body where appropriate.
+6. **Report** — writes `<out_dir>/<ts>/report.md`, plus `new-skills/<name>/SKILL.md` or `composition-recipes/<name>/SKILL.md` for each proposal.
+
+Add `--dry-run` to stop after clustering; this skips the LLM (and the sentence-transformers load), writing only `plan.md` for inspection.
+
+### 2. Review and promote
+
+Open `~/.autoskill/proposed/<ts>/report.md`, edit drafts in place, delete anything you don't want. Then:
+
+```bash
+python scripts/autoskill.py promote \
+  --proposed ~/.autoskill/proposed/2026-04-17T14-30-00 \
+  --skills-dir skills \
+  --name zotero-pubmed-helper
+```
+
+`promote` moves the directory into `skills/<name>/`, refusing to overwrite an existing skill. Exits non-zero with a friendly error if the proposal isn't found or the target already exists.
+
+## Configuration
+
+See `config.yaml` for the full shape. Default values (local-first):
+
+```yaml
+backend: local
+local:
+  endpoint: http://localhost:1234/v1   # LM Studio's Developer server
+  model: Gemma-4-31B-it
+
+screenpipe:
+  url: http://localhost:3030           # or https://screenpipe.local via Caddy
+
+cluster:
+  min_session_minutes: 5
+  idle_gap_minutes: 10
+  min_cluster_size: 2
+```
+
+To opt into a cloud backend:
+
+```yaml
+backend: claude                         # or foundry
+claude:
+  model: claude-opus-4-7
+```
+
+## Composition recipes vs new skills
+
+- **compose**: the LLM judged that chaining existing skills covers the workflow. The emitted SKILL.md is intentionally thin — frontmatter + a "Workflow" section that invokes existing skills in order. The same agent runtime that discovered the skill can then invoke it end-to-end.
+- **novel**: no combination of existing skills covers it. A fuller SKILL.md is drafted, still following repo conventions (frontmatter, Overview, When to Use, Workflow). The user should always review new-skill drafts before promoting.
+
+## Testing
+
+The skill is covered by a small pytest suite at `tests/`. Each script is unit-tested in isolation with dependency injection (mock HTTP transport, stub backend, stub embedder):
+
+```bash
+cd skills/autoskill
+python -m pytest tests/ -v
+```
+
+## Composition with other skills in this repo
+
+The autoskill's embedding index covers all 135 sibling skills. Workflows that look like scientific writing will match `scientific-writing` / `literature-review` / `citation-management`; figure work will match `scientific-schematics` / `generate-image` / `infographics`; slide prep matches `scientific-slides` / `pptx`; etc. When a cluster scores high against two or three sibling skills the emitted composition recipe names them explicitly, so the user's future agent invocations use the optimized paths already documented in this repo.

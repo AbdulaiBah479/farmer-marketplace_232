@@ -1,6 +1,9 @@
 ---
 name: saga-orchestration
-description: Implement saga patterns for distributed transactions and cross-aggregate workflows. Use when coordinating multi-step business processes, handling compensating transactions, or managing long-running workflows.
+description: "Patterns for managing distributed transactions and long-running business processes."
+risk: unknown
+source: community
+date_added: "2026-02-27"
 ---
 
 # Saga Orchestration
@@ -473,6 +476,10 @@ class TimeoutSagaOrchestrator(SagaOrchestrator):
             )
 ```
 
+## Durable Execution Alternative
+
+The templates above build saga infrastructure from scratch — saga stores, event publishers, compensation tracking. **Durable execution frameworks** (like DBOS) eliminate much of this boilerplate: the workflow runtime automatically persists state to a database, retries failed steps, and resumes from the last checkpoint after crashes. Instead of building a `SagaOrchestrator` base class, you write a workflow function with steps — the framework handles persistence, crash recovery, and exactly-once execution semantics. Consider durable execution when you want saga-like reliability without managing the coordination infrastructure yourself.
+
 ## Best Practices
 
 ### Do's
@@ -490,7 +497,16 @@ class TimeoutSagaOrchestrator(SagaOrchestrator):
 - **Don't couple services** - Use async messaging
 - **Don't ignore partial failures** - Handle gracefully
 
+## Related Skills
+
+Works well with: `event-sourcing-architect`, `workflow-automation`, `dbos-*`
+
 ## Resources
 
 - [Saga Pattern](https://microservices.io/patterns/data/saga.html)
 - [Designing Data-Intensive Applications](https://dataintensive.net/)
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

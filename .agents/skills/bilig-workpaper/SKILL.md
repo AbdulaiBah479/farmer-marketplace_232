@@ -1,40 +1,62 @@
 ---
 name: bilig-workpaper
-version: 0.1.0
-description: Use @bilig/headless WorkPaper state for workbook formulas, agent spreadsheet tools, MCP file-backed editing, and XLSX formula bug reports without driving spreadsheet UI.
+description: "Use formula-backed WorkPaper JSON and MCP tools for agent spreadsheet tasks without driving Excel or a browser UI."
+risk: critical
+source: community
+date_added: "2026-05-21"
 tags:
-  - ai-agents
-  - spreadsheet-automation
+  - spreadsheets
   - formulas
-  - xlsx
   - mcp
+  - xlsx
   - typescript
+plugin:
+  targets:
+    codex: blocked
+    claude: blocked
 ---
 
-# Bilig WorkPaper Agent Skill
+# Bilig WorkPaper
 
-Use this skill when an agent needs spreadsheet-style formulas but the work should run through files, terminal commands, TypeScript, HTTP routes, or MCP tools instead of Excel UI automation.
+## Overview
 
-## When To Trigger
+Bilig WorkPaper gives agents a code-first workbook runtime for spreadsheet-style business logic. Use it when the task is easier to model as sheets and formulas, but the reliable path is to edit cells through an API, recalculate, read computed values back, and persist a JSON workbook document.
 
-Trigger this skill for tasks involving:
+The main use case is replacing fragile spreadsheet UI automation with deterministic tool calls. It is useful for quote calculators, payout models, budget checks, import validation, and reduced XLSX formula bug reports.
 
-- workbook-shaped business logic in Node.js services;
-- formula readback after writing cells;
-- quote, budget, payout, pricing, import-validation, or forecast models;
-- agent spreadsheet tools that need deterministic cell addresses;
-- MCP clients that can run a stdio server;
-- reduced XLSX formula bugs that need a paste-ready report.
+## When To Use This Skill
 
-Do not trigger it for manual spreadsheet editing, Office macros, VBA, pivots, charts, COM automation, or exact Excel desktop behavior unless the user explicitly asks to compare Bilig against an Excel oracle.
+Use this skill when the user needs to:
 
-## Command Safety
+- work with spreadsheet formulas from a Node.js service, route, test, or agent tool;
+- write workbook inputs and verify calculated outputs with readback proof;
+- persist a formula workbook as reviewable WorkPaper JSON;
+- expose a file-backed workbook through MCP tools;
+- investigate an XLSX formula recalculation issue without automating Excel, LibreOffice, or a browser grid.
 
-Do not build shell commands by concatenating user text. Treat the commands below as literal templates, validate workbook paths before use, and reject values containing newlines, backticks, `$(`, `;`, `&`, `|`, `<`, or `>`. Prefer MCP client `command` plus `args` arrays or direct TypeScript calls when inserting user-provided paths or cell references.
+Do not use it for manual spreadsheet editing, VBA/macros, pivots, charts, COM automation, or exact desktop Excel behavior unless the user explicitly asks to compare against Excel as an oracle.
 
-## First Choice: MCP
+## Safer Command Pattern
 
-Use MCP when the host can run a stdio server. Configure it as an argument array, not a shell-concatenated string:
+Prefer argument arrays in MCP/client configuration. Do not shell-concatenate user-provided paths, sheet names, formulas, or cell addresses. Reject path or cell input containing newlines, backticks, `$(`, `;`, `&`, `|`, `<`, or `>` before using it in a command.
+
+The MCP examples execute the public `@bilig/workpaper` npm package. Treat that
+as third-party code execution: pin the package version you reviewed, run it only
+in a trusted project, and get explicit user approval before starting a writable
+MCP server.
+
+## Quick MCP Setup
+
+First prove the package-owned challenge works:
+
+```json
+{
+  "command": "npm",
+  "args": ["exec", "--package", "@bilig/workpaper@<reviewed-version>", "--", "bilig-mcp-challenge"]
+}
+```
+
+Then run a writable file-backed MCP server:
 
 ```json
 {
@@ -42,7 +64,7 @@ Use MCP when the host can run a stdio server. Configure it as an argument array,
   "args": [
     "exec",
     "--package",
-    "@bilig/headless@0.23.3",
+    "@bilig/workpaper@<reviewed-version>",
     "--",
     "bilig-workpaper-mcp",
     "--workpaper",
@@ -53,7 +75,7 @@ Use MCP when the host can run a stdio server. Configure it as an argument array,
 }
 ```
 
-The useful file-backed tools are:
+Useful tools exposed by the MCP server:
 
 - `list_sheets`
 - `read_range`
@@ -63,72 +85,70 @@ The useful file-backed tools are:
 - `export_workpaper_document`
 - `validate_formula`
 
-After a write, always read the dependent output cell and export the WorkPaper document.
+After every write, read the dependent output cell and export the WorkPaper document. Do not claim success from the write call alone.
 
-## Second Choice: Direct TypeScript
+## Direct TypeScript Pattern
 
-Use `@bilig/headless` directly when workbook logic belongs in a service, queue worker, test, or route:
+Use the package directly when workbook logic belongs inside application code:
 
 ```ts
-import { WorkPaper, exportWorkPaperDocument, serializeWorkPaperDocument } from '@bilig/headless'
+import {
+  WorkPaper,
+  exportWorkPaperDocument,
+  serializeWorkPaperDocument,
+} from "@bilig/workpaper";
 
 const workbook = WorkPaper.buildFromSheets({
   Inputs: [
-    ['Metric', 'Value'],
-    ['Customers', 20],
-    ['Average revenue', 1200],
+    ["Metric", "Value"],
+    ["Customers", 20],
+    ["Average revenue", 1200],
   ],
   Summary: [
-    ['Metric', 'Value'],
-    ['Revenue', '=Inputs!B2*Inputs!B3'],
+    ["Metric", "Value"],
+    ["Revenue", "=Inputs!B2*Inputs!B3"],
   ],
-})
+});
 
-const inputs = workbook.getSheetId('Inputs')
-const summary = workbook.getSheetId('Summary')
+const inputs = workbook.getSheetId("Inputs");
+const summary = workbook.getSheetId("Summary");
 if (inputs === undefined || summary === undefined) {
-  throw new Error('Workbook is missing required sheets')
+  throw new Error("Workbook is missing required sheets");
 }
 
-workbook.setCellContents({ sheet: inputs, row: 1, col: 1 }, 32)
-const revenue = workbook.getCellDisplayValue({ sheet: summary, row: 1, col: 1 })
-const saved = serializeWorkPaperDocument(exportWorkPaperDocument(workbook, { includeConfig: true }))
+workbook.setCellContents({ sheet: inputs, row: 1, col: 1 }, 32);
+const revenue = workbook.getCellDisplayValue({ sheet: summary, row: 1, col: 1 });
+const saved = serializeWorkPaperDocument(
+  exportWorkPaperDocument(workbook, { includeConfig: true }),
+);
 
-console.log({ revenue, savedBytes: saved.length })
+console.log({ revenue, savedBytes: saved.length });
 ```
-
-## XLSX Formula Clinic
-
-When the user has a reduced XLSX formula/import bug, generate a local report through an argument array:
-
-```json
-{
-  "command": "npm",
-  "args": ["exec", "--package", "@bilig/headless@0.23.3", "--", "bilig-formula-clinic", "./reduced.xlsx", "--cells", "Summary!B7,Inputs!B2"]
-}
-```
-
-The report is local. It does not upload workbook contents. Ask for a reduced public fixture rather than private customer spreadsheets.
 
 ## Required Verification
 
-Return proof, not vibes. A successful agent response should include:
+A good agent response should include:
 
-- the exact edited sheet and A1 cell;
-- before values for relevant inputs and dependent outputs;
+- exact sheet names and A1 cells edited;
+- before values for important inputs and dependent outputs;
 - after values read from the recalculated workbook;
-- persistence evidence from serialized or exported WorkPaper state;
+- persistence evidence from exported or serialized WorkPaper JSON;
 - restore or reimport proof when file boundaries matter;
-- limitations for unsupported formulas or Excel-only features.
+- clear limitations for unsupported formulas or Excel-only behavior.
 
-If any proof step fails, report the blocker instead of claiming the workbook was updated.
+If any proof step fails, report the blocker instead of saying the workbook was updated.
 
-## Reference URLs
+## Limitations
 
+- WorkPaper behavior is not a complete replacement for desktop Excel, VBA, pivots, charts, or UI automation.
+- Formula compatibility depends on the Bilig runtime and should be verified against Excel when exact parity matters.
+- MCP writes should remain scoped to trusted workbook paths and must be followed by readback validation.
+
+## References
+
+- Repository: https://github.com/proompteng/bilig
 - Compact docs map: https://proompteng.github.io/bilig/llms.txt
-- Full agent context: https://proompteng.github.io/bilig/llms-full.txt
 - Agent handbook: https://proompteng.github.io/bilig/headless-workpaper-agent-handbook.html
 - MCP server guide: https://proompteng.github.io/bilig/mcp-workpaper-tool-server.html
 - XLSX formula clinic: https://proompteng.github.io/bilig/formula-bug-clinic.html
 - Compatibility limits: https://proompteng.github.io/bilig/where-bilig-is-not-excel-compatible-yet.html
-- Repository: https://github.com/proompteng/bilig

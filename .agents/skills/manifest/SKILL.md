@@ -3,6 +3,7 @@ name: manifest
 description: "Install and configure the Manifest observability plugin for your agents. Use when setting up telemetry, configuring API keys, or troubleshooting the plugin."
 risk: unknown
 source: community
+date_added: "2026-02-27"
 ---
 
 # Manifest Setup
@@ -124,3 +125,8 @@ Use @manifest to connect my agent to my self-hosted Manifest instance at https:/
 - The default endpoint works for most users — only change it if self-hosting
 - API keys always start with `mnfst_` — any other format is invalid
 - Check gateway logs first when debugging any plugin issue
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

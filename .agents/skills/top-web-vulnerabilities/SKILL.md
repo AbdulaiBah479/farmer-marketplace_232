@@ -1,11 +1,10 @@
 ---
 name: top-web-vulnerabilities
-description: "This skill should be used when the user asks to \"identify web application vulnerabilities\", \"explain common security flaws\", \"understand vulnerability categories\", \"learn about inject..."
-metadata:
-  author: zebbern
-  version: "1.1"
+description: "Provide a comprehensive, structured reference for the 100 most critical web application vulnerabilities organized by category. This skill enables systematic vulnerability identification, impact assessment, and remediation guidance across the full spectrum of web security threats."
 risk: unknown
 source: community
+author: zebbern
+date_added: "2026-02-27"
 ---
 
 # Top 100 Web Vulnerabilities Reference

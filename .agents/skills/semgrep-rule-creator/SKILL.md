@@ -1,7 +1,16 @@
 ---
 name: semgrep-rule-creator
 description: Creates custom Semgrep rules for detecting security vulnerabilities, bug patterns, and code patterns. Use when writing Semgrep rules or building custom static analysis detections.
-allowed-tools: Bash Read Write Edit Glob Grep WebFetch
+allowed-tools:
+  - Bash
+  - Read
+  - Write
+  - Edit
+  - Glob
+  - Grep
+  - WebFetch
+risk: unknown
+source: community
 ---
 
 # Semgrep Rule Creator
@@ -9,7 +18,6 @@ allowed-tools: Bash Read Write Edit Glob Grep WebFetch
 Create production-quality Semgrep rules with proper testing and validation.
 
 ## When to Use
-
 **Ideal scenarios:**
 - Writing Semgrep rules for specific bug patterns
 - Writing rules to detect security vulnerabilities in your codebase
@@ -68,8 +76,6 @@ pattern: os.system("rm " + $VAR)
 
 # GOOD: Matches all os.system calls with taint tracking
 mode: taint
-pattern-sources:
-  - pattern: input(...)
 pattern-sinks:
   - pattern: os.system(...)
 ```
@@ -134,8 +140,8 @@ Run tests (from rule directory): `semgrep --test --config <rule-id>.yaml <rule-i
 
 ## Quick Reference
 
-- For commands, pattern operators, and taint mode syntax, see [quick-reference.md]({baseDir}/references/quick-reference.md).
-- For detailed workflow and examples, you MUST see [workflow.md]({baseDir}/references/workflow.md)
+- For commands, pattern operators, and taint mode syntax, see quick-reference.md.
+- For detailed workflow and examples, you MUST see workflow.md
 
 ## Workflow
 
@@ -154,12 +160,15 @@ Semgrep Rule Progress:
 
 ## Documentation
 
-**REQUIRED**: Before writing any rule, use WebFetch to read **all** of these 7 links with Semgrep documentation:
+**REQUIRED**: Before writing any rule, use WebFetch to read **all** of these 4 links with Semgrep documentation:
 
-1. [Rule Syntax](https://raw.githubusercontent.com/semgrep/semgrep-docs/refs/heads/main/docs/writing-rules/rule-syntax.md)
-2. [Pattern Syntax](https://raw.githubusercontent.com/semgrep/semgrep-docs/refs/heads/main/docs/writing-rules/pattern-syntax.mdx)
-3. [Testing Rules](https://raw.githubusercontent.com/semgrep/semgrep-docs/refs/heads/main/docs/writing-rules/testing-rules.md)
-4. [Taint analysis](https://raw.githubusercontent.com/semgrep/semgrep-docs/refs/heads/main/docs/writing-rules/data-flow/taint-mode/overview.md)
-5. [Advanced techniques for taint analysis](https://raw.githubusercontent.com/semgrep/semgrep-docs/refs/heads/main/docs/writing-rules/data-flow/taint-mode/advanced.md)
-6. [Constant propagation](https://raw.githubusercontent.com/semgrep/semgrep-docs/refs/heads/main/docs/writing-rules/data-flow/constant-propagation.md)
-7. [Trail of Bits Testing Handbook - Semgrep chapter](https://raw.githubusercontent.com/trailofbits/testing-handbook/refs/heads/main/content/docs/static-analysis/semgrep/10-advanced.md)
+1. [Rule Syntax](https://semgrep.dev/docs/writing-rules/rule-syntax)
+2. [Pattern Syntax](https://semgrep.dev/docs/writing-rules/pattern-syntax)
+3. [ToB Testing Handbook - Semgrep](https://appsec.guide/docs/static-analysis/semgrep/advanced/)
+4. [Constant propagation](https://semgrep.dev/docs/writing-rules/data-flow/constant-propagation)
+5. [Writing Rules Index](https://github.com/semgrep/semgrep-docs/tree/main/docs/writing-rules/)
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

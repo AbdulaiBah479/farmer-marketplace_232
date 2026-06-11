@@ -8,7 +8,8 @@ description: >
   creating BIDS derivatives.
 license: https://creativecommons.org/licenses/by/4.0/
 metadata:
-    skill-author: Yaroslav Halchenko
+  version: "1.0"
+  skill-author: Yaroslav Halchenko
 ---
 
 # Brain Imaging Data Structure (BIDS)

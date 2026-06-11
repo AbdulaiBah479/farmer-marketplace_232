@@ -1,6 +1,10 @@
 ---
 name: labarchive-integration
-description: "Electronic lab notebook API integration. Access notebooks, manage entries/attachments, backup notebooks, integrate with Protocols.io/Jupyter/REDCap, for programmatic ELN workflows."
+description: Electronic lab notebook API integration. Access notebooks, manage entries/attachments, backup notebooks, integrate with Protocols.io/Jupyter/REDCap, for programmatic ELN workflows.
+license: Unknown
+metadata:
+  version: "1.0"
+  skill-author: K-Dense Inc.
 ---
 
 # LabArchives Integration
@@ -260,3 +264,4 @@ This skill includes bundled resources to support LabArchives API integration:
 - `api_reference.md`: Comprehensive API endpoint documentation with parameters and examples
 - `authentication_guide.md`: Detailed authentication setup and configuration instructions
 - `integrations.md`: Third-party integration setup guides and use cases
+

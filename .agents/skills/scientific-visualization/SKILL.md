@@ -1,6 +1,10 @@
 ---
 name: scientific-visualization
-description: "Create publication figures with matplotlib/seaborn/plotly. Multi-panel layouts, error bars, significance markers, colorblind-safe, export PDF/EPS/TIFF, for journal-ready scientific plots."
+description: Meta-skill for publication-ready figures. Use when creating journal submission figures requiring multi-panel layouts, significance annotations, error bars, colorblind-safe palettes, and specific journal formatting (Nature, Science, Cell). Orchestrates matplotlib/seaborn/plotly with publication styles. For quick exploration use seaborn or plotly directly.
+license: MIT license
+metadata:
+  version: "1.0"
+  skill-author: K-Dense Inc.
 ---
 
 # Scientific Visualization
@@ -637,10 +641,10 @@ sns.set_context('paper', font_scale=1.2)  # Increase if needed
 #### Additional Resources
 
 For more detailed seaborn information, see:
-- `scientific-packages/seaborn/SKILL.md` - Comprehensive seaborn documentation
-- `scientific-packages/seaborn/references/examples.md` - Practical use cases
-- `scientific-packages/seaborn/references/function_reference.md` - Complete API reference
-- `scientific-packages/seaborn/references/objects_interface.md` - Modern declarative API
+- `skills/seaborn/SKILL.md` - Comprehensive seaborn documentation
+- `skills/seaborn/references/examples.md` - Practical use cases
+- `skills/seaborn/references/function_reference.md` - Complete API reference
+- `skills/seaborn/references/objects_interface.md` - Modern declarative API
 
 ### Plotly
 - Interactive figures for exploration
@@ -771,3 +775,4 @@ Before submitting figures, verify:
 - [ ] Legend is clear and complete
 
 Use this skill to ensure scientific figures meet the highest publication standards while remaining accessible to all readers.
+

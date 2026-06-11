@@ -1,223 +1,346 @@
 ---
 name: customer-journey-map
-description: "Build a customer journey map for a product, service, or experience. Use when asked to map a customer journey, create a user journey, document touchpoints and pain points, or design an experience map. Produces a complete journey map with stages, touchpoints, emotions, pain points, and prioritised opportunities."
+description: Create a customer journey map across stages, touchpoints, actions, emotions, and metrics. Use when diagnosing a broken experience or aligning a team on the full customer flow.
+intent: >-
+  Create a comprehensive customer journey map that visualizes how customers interact with your brand across all stages—from awareness to loyalty—documenting their actions, touchpoints, emotions, KPIs, business goals, and teams involved at each stage. Use this to identify pain points, align cross-functional teams, and systematically improve the customer experience to achieve business objectives.
+type: component
+theme: workshops-facilitation
+best_for:
+  - "Mapping the full customer experience across all touchpoints"
+  - "Aligning cross-functional teams on the end-to-end customer journey"
+  - "Identifying pain points and opportunities by stage with measurable KPIs"
+scenarios:
+  - "I need to map the customer journey for our B2B SaaS onboarding experience from signup to first value"
+  - "Create a journey map for a PM leader evaluating our skills repo — from discovery through loyalty"
+estimated_time: "20-30 min"
 ---
 
-# Customer Journey Map Skill
 
-This skill produces a complete customer journey map covering every stage from awareness through advocacy. Each stage includes touchpoints, customer actions, emotions, pain points, and specific improvement opportunities. Output is ready for use in product discovery, UX design, or cross-functional alignment workshops.
+## Purpose
+Create a comprehensive customer journey map that visualizes how customers interact with your brand across all stages—from awareness to loyalty—documenting their actions, touchpoints, emotions, KPIs, business goals, and teams involved at each stage. Use this to identify pain points, align cross-functional teams, and systematically improve the customer experience to achieve business objectives.
 
-## Required Inputs
+This is not a user flow diagram—it's a strategic artifact that combines customer empathy with business metrics to drive actionable improvements.
 
-Ask the user for these if not provided:
-- **Product or service** being mapped
-- **Customer persona** — which customer segment is this map for? (be specific — one persona per map)
-- **Journey scope** — full end-to-end (awareness → advocacy), or a specific phase (e.g. onboarding only)?
-- **Current state or future state?** — mapping how it works today, or designing how it should work?
-- **Data sources** — any research, user interviews, support tickets, NPS comments, analytics available?
-- **Goal of the map** — what decision will this inform? (redesign, prioritisation, stakeholder alignment, new feature)
+## Key Concepts
 
-## Output Structure
+### The Customer Journey Mapping Framework
+Adapted from NNGroup's framework and Carnegie Mellon's PM curriculum, a customer journey map documents:
 
----
+**Horizontal structure (stages):**
+- **Awareness:** Customer first learns about your brand
+- **Consideration:** Customer evaluates your offering
+- **Decision:** Customer makes a purchase
+- **Service:** Customer uses the product/service post-purchase
+- **Loyalty:** Customer becomes a repeat buyer and advocate
 
-# Customer Journey Map: [Product / Service]
+**Vertical structure (for each stage):**
+- **Customer Actions:** What customers do
+- **Touchpoints:** Where/how they interact with your brand
+- **Customer Experience:** Emotions and thoughts
+- **KPIs:** Metrics to measure success
+- **Business Goals:** What you're trying to achieve
+- **Teams Involved:** Who owns this stage
 
-**Persona:** [Name — e.g. "Sarah, the overwhelmed HR manager"]
-**Journey scope:** [Full end-to-end / Onboarding / Purchase / Renewal]
-**Current or future state:** [Current state / Desired future state]
-**Prepared by:** [Name / Team]
-**Date:** [Date]
-**Based on:** [Research sources — interviews, analytics, support data, assumed/hypothetical]
+### Why This Works
+- **Empathy-driven:** Centers on customer emotions, not just actions
+- **Cross-functional alignment:** Shows which teams affect which stages
+- **Metric-focused:** Ties customer experience to measurable outcomes
+- **Gap identification:** Makes pain points and opportunities visible
+- **Actionable:** Clear KPIs and goals enable prioritization
 
----
+### Anti-Patterns (What This Is NOT)
+- **Not a user story map:** Journey maps are broader (all touchpoints, not just product use)
+- **Not a service blueprint:** Less detailed on internal processes, more focused on customer experience
+- **Not static:** Journey maps evolve as customer behavior changes
 
-## Persona Summary
+### When to Use This
+- Understanding customer experience across all touchpoints (not just product)
+- Aligning cross-functional teams (marketing, sales, product, support)
+- Identifying pain points and prioritizing improvements
+- Onboarding new team members to customer perspective
+- Auditing the end-to-end customer experience
 
-| | |
-|---|---|
-| **Name** | [Sarah] |
-| **Role** | [HR Manager at a 200-person professional services firm] |
-| **Goal** | [Reduce time spent on manual employee data management] |
-| **Frustrations** | [Too many tools that don't talk to each other; always chasing approvals] |
-| **Tech comfort** | [Moderate — comfortable with SaaS tools but not a power user] |
-| **Decision power** | [Recommends tools; budget approved by CHRO] |
-
----
-
-## Journey Overview
-
-```
-AWARENESS → CONSIDERATION → DECISION → ONBOARDING → ADOPTION → ADVOCACY
-   [Stage 1]      [Stage 2]      [Stage 3]    [Stage 4]     [Stage 5]   [Stage 6]
-```
-
-**Overall experience rating (current state):** [😤 Frustrating / 😐 Neutral / 😊 Positive]
-
----
-
-## Stage 1: Awareness
-
-*How does the customer first discover the product exists?*
-
-**Customer goal at this stage:** [e.g. Realise they have a problem worth solving — or find a solution to a specific pain]
-
-| Element | Detail |
-|---|---|
-| **Trigger** | [What event makes them start looking? — e.g. Manual process breaks down / peer recommendation / saw ad] |
-| **Where they are** | [Google search / LinkedIn / conference / colleague conversation / email newsletter] |
-| **What they do** | [e.g. Searches "automate employee onboarding" / asks peers in HR community / clicks LinkedIn ad] |
-| **Emotion** | [😤 Frustrated — overwhelmed by manual processes and hoping for a better way] |
-| **Pain points** | [Overwhelming number of options / hard to know which tools are credible / can't tell what's B2B vs B2C from homepage] |
-| **Opportunities** | [SEO content targeting the trigger keyword / LinkedIn thought leadership / peer community presence] |
+### When NOT to Use This
+- For deep product-specific workflows (use story mapping instead)
+- Before defining personas (need to know who you're mapping)
+- As a one-time exercise (journey maps require ongoing updates)
 
 ---
 
-## Stage 2: Consideration
+## Application
 
-*The customer is actively evaluating options. What do they do to decide?*
+Use `template.md` for the full fill-in structure.
 
-| Element | Detail |
-|---|---|
-| **Customer goal** | [Narrow down from many options to a shortlist of 2–3] |
-| **What they do** | [Reads G2/Capterra reviews / watches demo video / downloads comparison guide / asks peers who use something similar] |
-| **Touchpoints** | [Website / review sites / social proof / demo request flow / sales email] |
-| **Emotion** | [😕 Anxious — worried about making the wrong choice; past tool purchases haven't delivered] |
-| **Pain points** | [Pricing not visible on website / demo requires a call before seeing the product / unclear if it works with their existing stack] |
-| **Opportunities** | [Self-serve demo or interactive product tour / transparent pricing page / ROI calculator / case studies from similar company size] |
+### Step 1: Prepare Prerequisites
 
----
+Before mapping, ensure you have:
+1. **Key stakeholders:** Marketing, sales, product, customer service representatives
+2. **Buyer personas:** Detailed personas with demographics, psychographics, goals, challenges (reference `skills/proto-persona/SKILL.md`)
+3. **Defined stages:** Main stages of your buying process (typically: Awareness, Consideration, Decision, Service, Loyalty)
+4. **Touchpoint inventory:** All places customers interact with your brand (website, social, email, store, support, etc.)
 
-## Stage 3: Decision
-
-*The customer is ready to buy — or not. What makes them commit?*
-
-| Element | Detail |
-|---|---|
-| **Customer goal** | [Get sign-off from CHRO and justify the decision with a business case] |
-| **What they do** | [Books sales call / requests security questionnaire / builds internal business case / negotiates contract] |
-| **Touchpoints** | [AE / sales call / security review / contract / procurement process] |
-| **Emotion** | [😬 Cautious — doesn't want to be wrong; presenting to leadership adds pressure] |
-| **Pain points** | [Sales process is slow / security questionnaire takes weeks / contract terms are non-standard and require legal] |
-| **Opportunities** | [Security FAQ self-serve / standard contract with predictable terms / champion toolkit (slides, business case template) to help them sell internally] |
+**If missing:** Run discovery interviews, persona definition work, or touchpoint audits first.
 
 ---
 
-## Stage 4: Onboarding
+### Step 2: Set Clear Objectives
 
-*The customer has bought. Now they need to get value fast.*
+Define what you want to achieve:
 
-| Element | Detail |
-|---|---|
-| **Customer goal** | [Get the product working and show their CHRO it was a good decision] |
-| **What they do** | [Receives welcome email / attends kickoff call / configures integrations / invites team] |
-| **Touchpoints** | [Onboarding email sequence / in-product onboarding checklist / CSM / help centre / integrations marketplace] |
-| **Emotion** | [😬 Anxious but hopeful — excited about potential but stressed about the setup work] |
-| **Pain points** | [Setup is more complex than expected / IT required for SSO but IT is slow to respond / generic onboarding doesn't match their use case] |
-| **Opportunities** | [Role-specific onboarding paths / IT connector with pre-filled request template / quick win email at day 3 (show them one thing that already works)] |
-
-**Key moment of truth:** [What single moment in this stage determines whether they'll become an active user or ghost? — e.g. "First time the product saves them 30 minutes on a task they used to do manually"]
-
----
-
-## Stage 5: Adoption
-
-*The customer is using the product. Are they getting consistent value?*
-
-| Element | Detail |
-|---|---|
-| **Customer goal** | [Make the product a regular part of their workflow; demonstrate ROI to leadership] |
-| **What they do** | [Uses core features daily / discovers new features / hits a limitation / contacts support / attends webinar] |
-| **Touchpoints** | [Product UI / in-app notifications / email / support / community / customer success manager] |
-| **Emotion** | [Variable — some days 😊 when the product works well; some days 😤 when hitting a gap or bug] |
-| **Pain points** | [Feature they expected isn't there / reporting doesn't show the metric leadership wants / power features are too complex / feels like they're underutilising what they're paying for] |
-| **Opportunities** | [Proactive CSM check-in at day 30 / in-product feature discovery / usage dashboard for the customer to see their own ROI / community for peer learning] |
-
-**Adoption health indicators:**
-- [DAU/MAU ratio — what does healthy look like?]
-- [Feature X used by Y% of seats within Z weeks]
-- [First NPS survey at 60 days — target score]
-
----
-
-## Stage 6: Advocacy
-
-*The customer loves the product. How do you turn them into a referral engine?*
-
-| Element | Detail |
-|---|---|
-| **Customer goal** | [Solve problems faster; feel like an expert; feel valued as a customer] |
-| **What they do** | [Refers a peer / writes a G2 review / participates in case study / speaks at event / becomes a power user / joins community] |
-| **Touchpoints** | [CSM / community / review request email / referral programme / case study outreach / conference sponsorship] |
-| **Emotion** | [😊 Proud — the tool is part of their professional identity; they feel smart for choosing it] |
-| **Pain points** | [Referral programme is clunky / no structured way to connect with peers / case study process is slow and effortful for them] |
-| **Opportunities** | [One-click G2 review request at high-satisfaction moment / peer community / referral programme with meaningful reward / case study process that does most of the work for them] |
-
----
-
-## Emotion Curve
-
-Plot the customer's emotional experience across the journey:
-
-```
-High  😊 │        *                              *          *
-          │                                   *
-Neutral 😐│  *         *
-          │                  *
-Low   😤 │                        *    *
-          └────────────────────────────────────────────────────
-            Aware   Consider  Decide  Onboard  Adopt   Advocate
+```markdown
+## Objectives
+- [Goal 1: e.g., "Identify top 3 pain points causing drop-off between Awareness and Consideration"]
+- [Goal 2: e.g., "Align marketing and sales on customer motivations at each stage"]
+- [Goal 3: e.g., "Understand emotional journey to inform messaging strategy"]
 ```
 
-**Lowest point:** [Which stage has the worst experience — and why?]
-**Highest point:** [When is the customer most delighted — what drove it?]
-**Biggest drop:** [Where does sentiment fall most sharply — this is usually the biggest opportunity]
+**Quality checks:**
+- **Specific:** Not "understand customers" but "identify drop-off causes in Consideration stage"
+- **Actionable:** Results should inform decisions, not just document observations
 
 ---
 
-## Prioritised Opportunities
+### Step 3: Choose a Buyer Persona
 
-| Opportunity | Stage | Impact on customer | Effort to fix | Priority |
-|---|---|---|---|---|
-| [Self-serve product tour before sales call] | Consideration | [High — removes top buying barrier] | [Medium] | P1 |
-| [Quick win email at day 3] | Onboarding | [High — builds early habit] | [Low] | P1 |
-| [IT SSO setup template] | Onboarding | [Medium — removes specific blocker] | [Low] | P2 |
-| [30-day proactive CSM check-in] | Adoption | [Medium — catches churn signals early] | [Medium] | P2 |
-| [Peer referral programme] | Advocacy | [High for growth — reduces CAC] | [High] | P3 |
+Select one persona to focus on (create separate maps for each persona):
 
----
+```markdown
+## Persona
+- [Persona name and brief description]
+- [Example: "Manager Mike: 35-42, Director of Product at mid-sized B2B SaaS, struggles with data-driven prioritization, values time savings over feature depth"]
+```
 
-## What We Don't Know (Research Gaps)
-
-| Gap | How to close it | Priority |
-|---|---|---|
-| [What actually triggers the decision to start looking?] | [5 JTBD interviews with recent buyers] | [High] |
-| [What causes customers to stall in onboarding?] | [Drop-off analysis in onboarding funnel + 3 interviews with churned customers] | [High] |
-| [What % of customers have reached the advocacy stage?] | [Product analytics — identify power users; NPS by cohort] | [Medium] |
+**Why one persona per map:** Different personas have different journeys. Mixing them creates confusion.
 
 ---
 
-## Quality Checks
+### Step 4: Map Each Stage
 
-- [ ] Map covers one specific persona — not "all customers"
-- [ ] Each stage includes the customer's emotional state — not just actions
-- [ ] Pain points are the customer's pain — not the company's pain
-- [ ] Opportunities are specific enough to become backlog items or design prompts
-- [ ] Emotion curve shows the real experience — not an aspirationally positive version
-- [ ] Research gaps are documented — the map reflects what is known, not assumed
+For each stage (Awareness, Consideration, Decision, Service, Loyalty), document:
 
-## Anti-Patterns
+#### Customer Actions
+What customers do at this stage:
 
-- [ ] Do not build the map from assumptions alone — ground at least the pain points in real customer data or research
-- [ ] Do not treat all journey stages as equally weighted — identify the highest-friction moments explicitly
-- [ ] Do not omit the emotional layer — a journey map without emotions is a process flow, not a customer map
-- [ ] Do not create generic touchpoints that apply to any product — each touchpoint must be specific to this product and customer
-- [ ] Do not leave opportunities unranked — prioritise by impact and feasibility
+```markdown
+### Stage: [Stage Name, e.g., Awareness]
 
-## Example Trigger Phrases
+**Customer Actions:**
+- [Action 1: e.g., "See LinkedIn ad about product management tools"]
+- [Action 2: e.g., "Hear about tool from PM peer at conference"]
+- [Action 3: e.g., "Google 'best product roadmap software'"]
+```
 
-- "Map the customer journey for [product]"
-- "Build a user journey from awareness to advocacy"
-- "Create a journey map for our onboarding experience"
-- "Map out the touchpoints and pain points for [customer type]"
-- "Design an experience map for [process or product]"
+**Quality checks:**
+- **Observable:** You can see or measure this action
+- **Specific:** Not "research products" but "Google 'best roadmap software' and read comparison articles"
+
+---
+
+#### Touchpoints
+Where/how customers interact with your brand:
+
+```markdown
+**Touchpoints:**
+- [Touchpoint 1: e.g., "LinkedIn Ads"]
+- [Touchpoint 2: e.g., "Word-of-mouth at PM conferences"]
+- [Touchpoint 3: e.g., "Google organic search results"]
+- [Touchpoint 4: e.g., "Review sites (G2, Capterra)"]
+```
+
+**Quality checks:**
+- **Comprehensive:** Include both digital and physical touchpoints
+- **Specific:** Not "social media" but "LinkedIn Ads," "Twitter mentions," etc.
+
+---
+
+#### Customer Experience
+Emotions and thoughts customers have:
+
+```markdown
+**Customer Experience:**
+- [Emotion 1: e.g., "Curious but skeptical—'Is this actually better than spreadsheets?'"]
+- [Emotion 2: e.g., "Overwhelmed by options—'Too many tools, how do I choose?'"]
+- [Emotion 3: e.g., "Hopeful but cautious—'Could this save me time?'"]
+```
+
+**Quality checks:**
+- **Authentic:** Use customer quotes from research when possible
+- **Emotional:** Capture feelings, not just thoughts
+- **Specific:** Not "interested" but "curious but skeptical—worried about setup time"
+
+---
+
+#### KPIs
+Key performance indicators for this stage:
+
+```markdown
+**KPIs:**
+- [KPI 1: e.g., "Brand awareness (measured via surveys)"]
+- [KPI 2: e.g., "LinkedIn ad impressions: 100k/month"]
+- [KPI 3: e.g., "Organic search traffic: 5k visitors/month"]
+- [KPI 4: e.g., "G2 review views: 2k/month"]
+```
+
+**Quality checks:**
+- **Measurable:** Can you track this?
+- **Stage-appropriate:** Awareness KPIs differ from Decision KPIs
+
+---
+
+#### Business Goals
+What you're trying to achieve at this stage:
+
+```markdown
+**Business Goals:**
+- [Goal 1: e.g., "Increase brand awareness among PMs at B2B SaaS companies"]
+- [Goal 2: e.g., "Generate 500 qualified leads/month"]
+- [Goal 3: e.g., "Position as top 3 roadmap tool in G2 rankings"]
+```
+
+**Quality checks:**
+- **Outcome-focused:** Not "run ads" but "increase brand awareness"
+- **Aligned with stage:** Don't expect conversions at Awareness stage
+
+---
+
+#### Teams Involved
+Who owns this stage:
+
+```markdown
+**Teams Involved:**
+- [Team 1: e.g., "Marketing (ad campaigns, SEO)"]
+- [Team 2: e.g., "Content (blog posts, comparison guides)"]
+- [Team 3: e.g., "Customer Success (case studies, testimonials)"]
+```
+
+**Quality checks:**
+- **Cross-functional:** Multiple teams usually touch each stage
+- **Specific roles:** Not just "marketing" but "marketing (ad campaigns, SEO)"
+
+---
+
+### Step 5: Visualize the Map
+
+Create a table or visual diagram:
+
+| **Stage** | **Awareness** | **Consideration** | **Decision** | **Service** | **Loyalty** |
+|-----------|---------------|-------------------|--------------|-------------|-------------|
+| **Customer Actions** | See ad, hear from peers, Google search | Compare features, read reviews, request demo | Free trial signup, test with real data, evaluate ROI | Onboard team, build first roadmap, integrate with Jira | Use daily, recommend to peers, share wins on LinkedIn |
+| **Touchpoints** | LinkedIn Ads, conferences, Google, review sites | Website, demo calls, sales emails | Product (free trial), onboarding emails | Product, support chat, knowledge base | Product, community forums, customer success check-ins |
+| **Customer Experience** | Curious but skeptical | Excited but overwhelmed by options | Anxious about setup time, hopeful about time savings | Relieved if easy, frustrated if complex | Satisfied and confident, proud of wins |
+| **KPIs** | Impressions: 100k/month, traffic: 5k/month | Demo requests: 100/month, trial signups: 50/month | Conversion rate: 20%, time-to-value: <2 hours | Activation rate: 70%, support ticket volume | Retention rate: 85%, NPS: 50, referral rate: 15% |
+| **Business Goals** | Increase brand awareness, generate 500 leads/month | Improve lead quality, reduce sales cycle to 30 days | Increase trial-to-paid conversion, optimize onboarding | Reduce churn, improve activation, minimize support costs | Increase LTV, generate referrals, upsell premium features |
+| **Teams Involved** | Marketing, Content | Marketing, Sales, Product | Sales, Product, Onboarding | Product, Support, Customer Success | Product, Customer Success, Marketing |
+
+---
+
+### Step 6: Analyze and Prioritize
+
+Review the map and ask:
+1. **Where are the biggest pain points?** (Look for negative emotions + high drop-off rates)
+2. **Which stages have the weakest KPIs?** (Prioritize low-performing stages)
+3. **Are teams aligned?** (Do teams understand their role in each stage?)
+4. **What opportunities exist?** (Where can small improvements create big impact?)
+
+**Prioritization criteria:**
+- **Impact:** How much would fixing this improve the customer experience?
+- **Feasibility:** How easy is this to fix?
+- **Alignment:** Does this support business goals?
+
+---
+
+### Step 7: Test and Refine
+
+- **Update regularly:** Customer behavior changes—revisit the map quarterly
+- **Validate with data:** Use analytics, surveys, and customer interviews to confirm assumptions
+- **Track improvements:** After making changes, measure impact on KPIs
+
+---
+
+## Examples
+
+See `examples/sample.md` for a full customer journey map example.
+See `examples/meta-product-manager-skills.md` for a meta dogfooding example mapping this repository's own customer journey.
+
+Mini example excerpt:
+
+```markdown
+| **Stage** | **Awareness** | **Consideration** | **Decision** |
+| **Customer Actions** | Sees LinkedIn ad | Compares on G2 | Starts free trial |
+| **Customer Experience** | Curious but skeptical | Overwhelmed | Anxious about setup |
+```
+
+---
+
+## Common Pitfalls
+
+### Pitfall 1: Generic Emotions
+**Symptom:** "Customer feels happy" or "Customer is satisfied"
+
+**Consequence:** No insight into *why* they feel that way or what to improve.
+
+**Fix:** Be specific: "Relieved that setup took 30 minutes, not 3 hours as feared."
+
+---
+
+### Pitfall 2: Missing Touchpoints
+**Symptom:** Only documenting digital touchpoints (website, app)
+
+**Consequence:** Miss offline interactions (conferences, word-of-mouth, support calls).
+
+**Fix:** Include all touchpoints: physical, digital, human, and automated.
+
+---
+
+### Pitfall 3: Internal Perspective
+**Symptom:** Mapping what *you* want customers to do, not what they *actually* do
+
+**Consequence:** Journey map reflects wishful thinking, not reality.
+
+**Fix:** Validate with customer research, analytics, and support tickets.
+
+---
+
+### Pitfall 4: No KPIs or Goals
+**Symptom:** Journey map has actions and emotions but no metrics or business objectives
+
+**Consequence:** No way to measure success or prioritize improvements.
+
+**Fix:** Add KPIs and business goals for each stage. Make them measurable.
+
+---
+
+### Pitfall 5: One-and-Done Exercise
+**Symptom:** Journey map created once, never updated
+
+**Consequence:** Map becomes outdated as customer behavior evolves.
+
+**Fix:** Review quarterly. Update based on new data, product changes, or market shifts.
+
+---
+
+## References
+
+### Related Skills
+- `skills/proto-persona/SKILL.md` — Defines the persona for the journey map
+- `skills/jobs-to-be-done/SKILL.md` — Informs customer actions and goals
+- `skills/problem-statement/SKILL.md` — Identifies pain points at each stage
+- `skills/user-story-mapping/SKILL.md` — Complementary (story mapping focuses on product usage, journey mapping covers all touchpoints)
+
+### External Frameworks
+- NNGroup, *Customer Journey Mapping* (2016) — Foundational framework
+- Carnegie Mellon University, *Product Management Curriculum* — Academic approach
+- Chris Risdon & Patrick Quattlebaum, *Orchestrating Experiences* (2018) — Journey mapping for service design
+
+### Dean's Work
+- Customer Journey Mapping Prompt Template (adapted from NNGroup and CMU frameworks)
+
+### Provenance
+- Adapted from `prompts/customer-journey-mapping-prompt-template.md` in the `https://github.com/deanpeters/product-manager-prompts` repo.
+
+---
+
+**Skill type:** Component
+**Suggested filename:** `customer-journey-map.md`
+**Suggested placement:** `/skills/components/`
+**Dependencies:** References `skills/proto-persona/SKILL.md`, `skills/jobs-to-be-done/SKILL.md`, `skills/problem-statement/SKILL.md`

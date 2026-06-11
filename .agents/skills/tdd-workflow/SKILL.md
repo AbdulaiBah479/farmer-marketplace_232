@@ -1,224 +1,159 @@
 ---
 name: tdd-workflow
-description: Test-Driven Development methodology for Node.js/TypeScript projects.
+description: "Test-Driven Development workflow principles. RED-GREEN-REFACTOR cycle."
+risk: unknown
+source: community
+date_added: "2026-02-27"
 ---
 
-# TDD Workflow Skill
+# TDD Workflow
 
-## Overview
-Test-Driven Development methodology for Node.js/TypeScript projects.
+> Write tests first, code second.
 
-## The RED-GREEN-REFACTOR Cycle
+---
 
-### RED Phase: Design Failing Tests
-
-Write tests BEFORE implementation:
-
-1. **Identify Behavior**: What should the code do?
-2. **Design Test Cases**: Cover all scenarios
-3. **Write Tests**: Use AAA pattern
-4. **Run Tests**: Confirm they FAIL
-5. **Verify Failure**: Tests fail for the RIGHT reason
-
-### GREEN Phase: Minimal Implementation
-
-Make tests pass with minimal code:
-
-1. **Focus**: One failing test at a time
-2. **Implement**: Just enough to pass
-3. **Verify**: Run tests, confirm GREEN
-4. **Iterate**: Next failing test
-5. **Complete**: All tests passing
-
-### REFACTOR Phase: Improve Design
-
-Improve code while keeping tests green:
-
-1. **Review**: Identify code smells
-2. **Plan**: Choose refactoring
-3. **Apply**: Make the change
-4. **Verify**: Tests still GREEN
-5. **Repeat**: Until quality gates met
-
-## AAA Pattern
-
-```typescript
-describe('Calculator', () => {
-  it('should add two numbers correctly', () => {
-    // Arrange - Set up test conditions
-    const calculator = createCalculator();
-
-    // Act - Execute the behavior
-    const result = calculator.add(2, 3);
-
-    // Assert - Verify the outcome
-    expect(result).toBe(5);
-  });
-});
-```
-
-## Test Naming Convention
-
-Format: `should {expectedBehavior} when {scenario}`
-
-Examples:
-```typescript
-it('should return empty array when input is empty', ...);
-it('should throw ValidationError when email is invalid', ...);
-it('should emit event when state changes', ...);
-```
-
-## Test Categories
-
-### Unit Tests
-- Test pure functions and logic
-- No I/O, no side effects
-- Fast execution
-- High isolation
-
-```typescript
-describe('validateEmail', () => {
-  it('should return true for valid email', () => {
-    expect(validateEmail('user@example.com')).toBe(true);
-  });
-});
-```
-
-### Integration Tests
-- Test module boundaries
-- Include I/O operations
-- Test with real (or fake) dependencies
-
-```typescript
-describe('UserService', () => {
-  it('should persist user to database', async () => {
-    const db = createTestDatabase();
-    const service = createUserService({ db });
-
-    await service.createUser({ email: 'test@example.com' });
-
-    const user = await db.users.findFirst();
-    expect(user.email).toBe('test@example.com');
-  });
-});
-```
-
-### Contract Tests
-- Verify API contracts
-- Type safety at boundaries
-- Response shape validation
-
-```typescript
-describe('API Contract', () => {
-  it('should return user with expected shape', async () => {
-    const response = await api.getUser('1');
-
-    expect(response).toMatchObject({
-      id: expect.any(String),
-      email: expect.any(String),
-      createdAt: expect.any(Date),
-    });
-  });
-});
-```
-
-## Test Doubles
-
-### Stub
-Returns canned data:
-```typescript
-const stubApi = {
-  getUser: () => Promise.resolve({ id: '1', name: 'Test' }),
-};
-```
-
-### Mock
-Verifies interactions:
-```typescript
-const mockLogger = {
-  info: jest.fn(),
-  error: jest.fn(),
-};
-// Later: expect(mockLogger.info).toHaveBeenCalledWith('message');
-```
-
-### Fake
-Working implementation:
-```typescript
-const createFakeDatabase = () => {
-  const store = new Map();
-  return {
-    save: (entity) => store.set(entity.id, entity),
-    findById: (id) => store.get(id),
-  };
-};
-```
-
-### Spy
-Records calls:
-```typescript
-const spy = jest.spyOn(service, 'notify');
-await service.process();
-expect(spy).toHaveBeenCalledTimes(1);
-```
-
-## Test Organization
+## 1. The TDD Cycle
 
 ```
-src/
-  services/
-    user-service.ts
-    user-service.test.ts      # Co-located unit tests
-  api/
-    handlers.ts
-    handlers.test.ts
-tests/
-  integration/                 # Integration tests
-    user-flow.test.ts
-  fixtures/                    # Shared test data
-    users.ts
-  helpers/                     # Test utilities
-    test-context.ts
+🔴 RED → Write failing test
+    ↓
+🟢 GREEN → Write minimal code to pass
+    ↓
+🔵 REFACTOR → Improve code quality
+    ↓
+   Repeat...
 ```
 
-## Anti-Patterns
+---
 
-### Testing Implementation Details
-```typescript
-// Bad - testing internal state
-expect(service._cache.size).toBe(1);
+## 2. The Three Laws of TDD
 
-// Good - testing behavior
-expect(service.getCachedValue('key')).toBe('value');
-```
+1. Write production code only to make a failing test pass
+2. Write only enough test to demonstrate failure
+3. Write only enough code to make the test pass
 
-### Overly Specific Assertions
-```typescript
-// Bad - brittle
-expect(result).toEqual({
-  id: '123',
-  name: 'Test',
-  createdAt: new Date('2024-01-01'),
-  updatedAt: new Date('2024-01-01'),
-});
+---
 
-// Good - flexible
-expect(result).toMatchObject({
-  id: expect.any(String),
-  name: 'Test',
-});
-```
+## 3. RED Phase Principles
 
-### Test Interdependence
-```typescript
-// Bad - tests depend on order
-let user;
-it('should create user', () => { user = createUser(); });
-it('should update user', () => { updateUser(user); }); // Depends on previous
+### What to Write
 
-// Good - independent tests
-it('should update user', () => {
-  const user = createUser();
-  updateUser(user);
-});
-```
+| Focus | Example |
+|-------|---------|
+| Behavior | "should add two numbers" |
+| Edge cases | "should handle empty input" |
+| Error states | "should throw for invalid data" |
+
+### RED Phase Rules
+
+- Test must fail first
+- Test name describes expected behavior
+- One assertion per test (ideally)
+
+---
+
+## 4. GREEN Phase Principles
+
+### Minimum Code
+
+| Principle | Meaning |
+|-----------|---------|
+| **YAGNI** | You Aren't Gonna Need It |
+| **Simplest thing** | Write the minimum to pass |
+| **No optimization** | Just make it work |
+
+### GREEN Phase Rules
+
+- Don't write unneeded code
+- Don't optimize yet
+- Pass the test, nothing more
+
+---
+
+## 5. REFACTOR Phase Principles
+
+### What to Improve
+
+| Area | Action |
+|------|--------|
+| Duplication | Extract common code |
+| Naming | Make intent clear |
+| Structure | Improve organization |
+| Complexity | Simplify logic |
+
+### REFACTOR Rules
+
+- All tests must stay green
+- Small incremental changes
+- Commit after each refactor
+
+---
+
+## 6. AAA Pattern
+
+Every test follows:
+
+| Step | Purpose |
+|------|---------|
+| **Arrange** | Set up test data |
+| **Act** | Execute code under test |
+| **Assert** | Verify expected outcome |
+
+---
+
+## 7. When to Use TDD
+
+| Scenario | TDD Value |
+|----------|-----------|
+| New feature | High |
+| Bug fix | High (write test first) |
+| Complex logic | High |
+| Exploratory | Low (spike, then TDD) |
+| UI layout | Low |
+
+---
+
+## 8. Test Prioritization
+
+| Priority | Test Type |
+|----------|-----------|
+| 1 | Happy path |
+| 2 | Error cases |
+| 3 | Edge cases |
+| 4 | Performance |
+
+---
+
+## 9. Anti-Patterns
+
+| ❌ Don't | ✅ Do |
+|----------|-------|
+| Skip the RED phase | Watch test fail first |
+| Write tests after | Write tests before |
+| Over-engineer initial | Keep it simple |
+| Multiple asserts | One behavior per test |
+| Test implementation | Test behavior |
+
+---
+
+## 10. AI-Augmented TDD
+
+### Multi-Agent Pattern
+
+| Agent | Role |
+|-------|------|
+| Agent A | Write failing tests (RED) |
+| Agent B | Implement to pass (GREEN) |
+| Agent C | Optimize (REFACTOR) |
+
+---
+
+> **Remember:** The test is the specification. If you can't write a test, you don't understand the requirement.
+
+## When to Use
+This skill is applicable to execute the workflow or actions described in the overview.
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

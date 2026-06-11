@@ -1,6 +1,9 @@
 ---
 name: receiving-code-review
-description: Assesses and responds to incoming code review feedback on PRs (reviewer comments, requested changes), especially when suggestions are unclear, technically questionable, or scope-expanding. Use before implementing review suggestions to align on intent and keep changes minimal.
+description: "Code review requires technical evaluation, not emotional performance."
+risk: unknown
+source: community
+date_added: "2026-02-27"
 ---
 
 # Code Review Reception
@@ -11,16 +14,9 @@ Code review requires technical evaluation, not emotional performance.
 
 **Core principle:** Verify before implementing. Ask before assuming. Technical correctness over social comfort.
 
-## When NOT to Use
-
-- Simple, unambiguous feedback you fully understand
-- Direct requests from your human partner with clear intent
-- When explicitly asked to "just implement this"
-- Trivial corrections (typos, formatting) that need no verification
-
 ## The Response Pattern
 
-```text
+```
 WHEN receiving code review feedback:
 
 1. READ: Complete feedback without reacting
@@ -34,7 +30,7 @@ WHEN receiving code review feedback:
 ## Forbidden Responses
 
 **NEVER:**
-- "You're absolutely right!" (performative; violates anti-sycophancy norms)
+- "You're absolutely right!" (explicit CLAUDE.md violation)
 - "Great point!" / "Excellent feedback!" (performative)
 - "Let me implement that now" (before verification)
 
@@ -46,7 +42,7 @@ WHEN receiving code review feedback:
 
 ## Handling Unclear Feedback
 
-```text
+```
 IF any item is unclear:
   STOP - do not implement anything yet
   ASK for clarification on unclear items
@@ -55,7 +51,7 @@ WHY: Items may be related. Partial understanding = wrong implementation.
 ```
 
 **Example:**
-```text
+```
 your human partner: "Fix 1-6"
 You understand 1,2,3,6. Unclear on 4,5.
 
@@ -72,8 +68,7 @@ You understand 1,2,3,6. Unclear on 4,5.
 - **Skip to action** or technical acknowledgment
 
 ### From External Reviewers
-
-```text
+```
 BEFORE implementing:
   1. Check: Technically correct for THIS codebase?
   2. Check: Breaks existing functionality?
@@ -91,11 +86,11 @@ IF conflicts with your human partner's prior decisions:
   Stop and discuss with your human partner first
 ```
 
-**Principle:** External feedback warrants skepticism but thorough checking.
+**your human partner's rule:** "External feedback - be skeptical, but check carefully"
 
 ## YAGNI Check for "Professional" Features
 
-```text
+```
 IF reviewer suggests "implementing properly":
   grep codebase for actual usage
 
@@ -103,11 +98,11 @@ IF reviewer suggests "implementing properly":
   IF used: Then implement properly
 ```
 
-**Principle:** If a feature isn't needed, don't add it—regardless of who suggests it.
+**your human partner's rule:** "You and reviewer both report to me. If we don't need this feature, don't add it."
 
 ## Implementation Order
 
-```text
+```
 FOR multi-item feedback:
   1. Clarify anything unclear FIRST
   2. Then implement in this order:
@@ -134,23 +129,31 @@ Push back when:
 - Reference working tests/code
 - Involve your human partner if architectural
 
+**Signal if uncomfortable pushing back out loud:** "Strange things are afoot at the Circle K"
+
 ## Acknowledging Correct Feedback
 
 When feedback IS correct:
-```text
+```
 ✅ "Fixed. [Brief description of what changed]"
 ✅ "Good catch - [specific issue]. Fixed in [location]."
 ✅ [Just fix it and show in the code]
+
+❌ "You're absolutely right!"
+❌ "Great point!"
+❌ "Thanks for catching that!"
+❌ "Thanks for [anything]"
+❌ ANY gratitude expression
 ```
 
-(See Forbidden Responses above for what NOT to say)
+**Why no thanks:** Actions speak. Just fix it. The code itself shows you heard the feedback.
 
-**Why no thanks:** Actions speak. The code itself shows you heard the feedback.
+**If you catch yourself about to write "Thanks":** DELETE IT. State the fix instead.
 
 ## Gracefully Correcting Your Pushback
 
 If you pushed back and were wrong:
-```text
+```
 ✅ "You were right - I checked [X] and it does [Y]. Implementing now."
 ✅ "Verified this and you're correct. My initial understanding was wrong because [reason]. Fixing."
 
@@ -176,29 +179,33 @@ State the correction factually and move on.
 ## Real Examples
 
 **Performative Agreement (Bad):**
-```text
+```
 Reviewer: "Remove legacy code"
 ❌ "You're absolutely right! Let me remove that..."
 ```
 
 **Technical Verification (Good):**
-```text
+```
 Reviewer: "Remove legacy code"
 ✅ "Checking... build target is 10.15+, this API needs 13+. Need legacy for backward compat. Current impl has wrong bundle ID - fix it or drop pre-13 support?"
 ```
 
 **YAGNI (Good):**
-```text
+```
 Reviewer: "Implement proper metrics tracking with database, date filters, CSV export"
 ✅ "Grepped codebase - nothing calls this endpoint. Remove it (YAGNI)? Or is there usage I'm missing?"
 ```
 
 **Unclear Item (Good):**
-```text
+```
 your human partner: "Fix items 1-6"
 You understand 1,2,3,6. Unclear on 4,5.
 ✅ "Understand 1,2,3,6. Need clarification on 4 and 5 before implementing."
 ```
+
+## GitHub Thread Replies
+
+When replying to inline review comments on GitHub, reply in the comment thread (`gh api repos/{owner}/{repo}/pulls/{pr}/comments/{id}/replies`), not as a top-level PR comment.
 
 ## The Bottom Line
 
@@ -207,3 +214,11 @@ You understand 1,2,3,6. Unclear on 4,5.
 Verify. Question. Then implement.
 
 No performative agreement. Technical rigor always.
+
+## When to Use
+This skill is applicable to execute the workflow or actions described in the overview.
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

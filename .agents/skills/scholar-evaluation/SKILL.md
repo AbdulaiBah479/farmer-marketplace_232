@@ -1,6 +1,10 @@
 ---
 name: scholar-evaluation
-description: Apply the ScholarEval framework to systematically evaluate scholarly and research work. This skill provides structured evaluation methodology based on peer-reviewed research assessment criteria, en...
+description: Systematically evaluate scholarly work using the ScholarEval framework, providing structured assessment across research quality dimensions including problem formulation, methodology, analysis, and writing with quantitative scoring and actionable feedback.
+license: MIT license
+metadata:
+  version: "1.0"
+  skill-author: K-Dense Inc.
 ---
 
 # Scholar Evaluation
@@ -292,3 +296,4 @@ This skill is based on the ScholarEval framework introduced in:
 **Moussa, H. N., Da Silva, P. Q., Adu-Ampratwum, D., East, A., Lu, Z., Puccetti, N., Xue, M., Sun, H., Majumder, B. P., & Kumar, S. (2025).** _ScholarEval: Research Idea Evaluation Grounded in Literature_. arXiv preprint arXiv:2510.16234. [https://arxiv.org/abs/2510.16234](https://arxiv.org/abs/2510.16234)
 
 **Abstract:** ScholarEval is a retrieval augmented evaluation framework that assesses research ideas based on two fundamental criteria: soundness (the empirical validity of proposed methods based on existing literature) and contribution (the degree of advancement made by the idea across different dimensions relative to prior research). The framework achieves significantly higher coverage of expert-annotated evaluation points and is consistently preferred over baseline systems in terms of evaluation actionability, depth, and evidence support.
+

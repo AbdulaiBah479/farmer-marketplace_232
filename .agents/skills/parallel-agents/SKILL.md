@@ -1,178 +1,182 @@
 ---
 name: parallel-agents
-description: Dispatch multiple agents to work on independent problems concurrently. Use when facing 3+ independent failures or tasks.
+description: "Multi-agent orchestration patterns. Use when multiple independent tasks can run with different domain expertise or when comprehensive analysis requires multiple perspectives."
+risk: unknown
+source: community
+date_added: "2026-02-27"
 ---
 
-# Dispatching Parallel Agents
+# Native Parallel Agents
 
-Assign separate agents to independent problem domains simultaneously for faster resolution.
+> Orchestration through Claude Code's built-in Agent Tool
 
-## When to Use
+## Overview
 
-- 3+ test failures across different files/subsystems
-- Multiple independent tasks that don't share state
-- Investigations that won't interfere with each other
-- Failures from unrelated root causes
+This skill enables coordinating multiple specialized agents through Claude Code's native agent system. Unlike external scripts, this approach keeps all orchestration within Claude's control.
 
-## When NOT to Use
+## When to Use Orchestration
 
-- Failures are interconnected
-- Tasks share state or create conflicts
-- Agents would modify the same files
-- You lack context to properly scope tasks
+✅ **Good for:**
+- Complex tasks requiring multiple expertise domains
+- Code analysis from security, performance, and quality perspectives
+- Comprehensive reviews (architecture + security + testing)
+- Feature implementation needing backend + frontend + database work
 
-## Implementation Steps
+❌ **Not for:**
+- Simple, single-domain tasks
+- Quick fixes or small changes
+- Tasks where one agent suffices
 
-### 1. Group by Domain
+---
 
-Organize failures/tasks into independent categories:
+## Native Agent Invocation
+
+### Single Agent
+```
+Use the security-auditor agent to review authentication
+```
+
+### Sequential Chain
+```
+First, use the explorer-agent to discover project structure.
+Then, use the backend-specialist to review API endpoints.
+Finally, use the test-engineer to identify test gaps.
+```
+
+### With Context Passing
+```
+Use the frontend-specialist to analyze React components.
+Based on those findings, have the test-engineer generate component tests.
+```
+
+### Resume Previous Work
+```
+Resume agent [agentId] and continue with additional requirements.
+```
+
+---
+
+## Orchestration Patterns
+
+### Pattern 1: Comprehensive Analysis
+```
+Agents: explorer-agent → [domain-agents] → synthesis
+
+1. explorer-agent: Map codebase structure
+2. security-auditor: Security posture
+3. backend-specialist: API quality
+4. frontend-specialist: UI/UX patterns
+5. test-engineer: Test coverage
+6. Synthesize all findings
+```
+
+### Pattern 2: Feature Review
+```
+Agents: affected-domain-agents → test-engineer
+
+1. Identify affected domains (backend? frontend? both?)
+2. Invoke relevant domain agents
+3. test-engineer verifies changes
+4. Synthesize recommendations
+```
+
+### Pattern 3: Security Audit
+```
+Agents: security-auditor → penetration-tester → synthesis
+
+1. security-auditor: Configuration and code review
+2. penetration-tester: Active vulnerability testing
+3. Synthesize with prioritized remediation
+```
+
+---
+
+## Available Agents
+
+| Agent | Expertise | Trigger Phrases |
+|-------|-----------|-----------------|
+| `orchestrator` | Coordination | "comprehensive", "multi-perspective" |
+| `security-auditor` | Security | "security", "auth", "vulnerabilities" |
+| `penetration-tester` | Security Testing | "pentest", "red team", "exploit" |
+| `backend-specialist` | Backend | "API", "server", "Node.js", "Express" |
+| `frontend-specialist` | Frontend | "React", "UI", "components", "Next.js" |
+| `test-engineer` | Testing | "tests", "coverage", "TDD" |
+| `devops-engineer` | DevOps | "deploy", "CI/CD", "infrastructure" |
+| `database-architect` | Database | "schema", "Prisma", "migrations" |
+| `mobile-developer` | Mobile | "React Native", "Flutter", "mobile" |
+| `api-designer` | API Design | "REST", "GraphQL", "OpenAPI" |
+| `debugger` | Debugging | "bug", "error", "not working" |
+| `explorer-agent` | Discovery | "explore", "map", "structure" |
+| `documentation-writer` | Documentation | "write docs", "create README", "generate API docs" |
+| `performance-optimizer` | Performance | "slow", "optimize", "profiling" |
+| `project-planner` | Planning | "plan", "roadmap", "milestones" |
+| `seo-specialist` | SEO | "SEO", "meta tags", "search ranking" |
+| `game-developer` | Game Development | "game", "Unity", "Godot", "Phaser" |
+
+---
+
+## Claude Code Built-in Agents
+
+These work alongside custom agents:
+
+| Agent | Model | Purpose |
+|-------|-------|---------|
+| **Explore** | Haiku | Fast read-only codebase search |
+| **Plan** | Sonnet | Research during plan mode |
+| **General-purpose** | Sonnet | Complex multi-step modifications |
+
+Use **Explore** for quick searches, **custom agents** for domain expertise.
+
+---
+
+## Synthesis Protocol
+
+After all agents complete, synthesize:
 
 ```markdown
-Group A: Authentication tests (3 failures)
-Group B: API endpoint tests (2 failures)
-Group C: UI component tests (4 failures)
+## Orchestration Synthesis
+
+### Task Summary
+[What was accomplished]
+
+### Agent Contributions
+| Agent | Finding |
+|-------|---------|
+| security-auditor | Found X |
+| backend-specialist | Identified Y |
+
+### Consolidated Recommendations
+1. **Critical**: [Issue from Agent A]
+2. **Important**: [Issue from Agent B]
+3. **Nice-to-have**: [Enhancement from Agent C]
+
+### Action Items
+- [ ] Fix critical security issue
+- [ ] Refactor API endpoint
+- [ ] Add missing tests
 ```
 
-### 2. Define Focused Tasks
+---
 
-Each agent receives:
+## Best Practices
 
-| Field       | Description                      |
-| ----------- | -------------------------------- |
-| Scope       | Specific files/tests to focus on |
-| Goal        | Clear success criteria           |
-| Constraints | What NOT to change               |
-| Output      | Expected deliverable             |
+1. **Available agents** - 17 specialized agents can be orchestrated
+2. **Logical order** - Discovery → Analysis → Implementation → Testing
+3. **Share context** - Pass relevant findings to subsequent agents
+4. **Single synthesis** - One unified report, not separate outputs
+5. **Verify changes** - Always include test-engineer for code modifications
 
-### 3. Dispatch Concurrently
+---
 
-**IMPORTANT**: Launch all tasks in a **single message** (no `run_in_background`). Multiple Task calls in the same message automatically run in parallel, and Claude waits for all to complete.
+## Key Benefits
 
-```
-# All three tasks run in parallel automatically when in the same message
-Task(test-engineer, prompt="Fix auth test failures in src/auth/*.test.ts")
-Task(test-engineer, prompt="Fix API test failures in src/api/*.test.ts")
-Task(frontend-developer, prompt="Fix UI test failures in src/components/*.test.tsx")
-# Claude waits for all to complete, then continues
-```
+- ✅ **Single session** - All agents share context
+- ✅ **AI-controlled** - Claude orchestrates autonomously
+- ✅ **Native integration** - Works with built-in Explore, Plan agents
+- ✅ **Resume support** - Can continue previous agent work
+- ✅ **Context passing** - Findings flow between agents
 
-**Avoid `run_in_background: true`** unless you need to do other work while waiting. Task IDs must be captured and used within the same response.
-
-### 4. Integrate Results
-
-1. Review all agent outputs (available after parallel completion)
-2. Verify no conflicts between changes
-3. Run full test suite
-4. Merge changes
-
-## Effective Agent Prompts
-
-**Good prompt:**
-
-```
-Fix the 3 failing tests in src/auth/login.test.ts:
-- "should reject invalid email format"
-- "should require password min length"
-- "should handle network errors"
-
-Error messages attached. Identify root causes - don't just increase timeouts.
-Constraints: Don't modify src/api/* files.
-Output: Summary of fixes with test results.
-```
-
-**Bad prompt:**
-
-```
-Fix all the tests
-```
-
-## Prompt Template
-
-```markdown
-## Task: [Specific description]
-
-**Scope:** [Files/tests to focus on]
-
-**Failures:**
-
-- [Test name]: [Error message]
-- [Test name]: [Error message]
-
-**Goal:** [What success looks like]
-
-**Constraints:**
-
-- Don't modify [files]
-- Preserve [behavior]
-
-**Output:**
-
-- Summary of root causes found
-- Changes made
-- Verification results
-```
-
-## Common Pitfalls
-
-| Mistake         | Problem                   | Solution               |
-| --------------- | ------------------------- | ---------------------- |
-| Vague scope     | Agent changes wrong files | Specify exact paths    |
-| Missing context | Agent can't diagnose      | Include error messages |
-| No constraints  | Conflicting changes       | Define boundaries      |
-| Unclear output  | Can't verify success      | Specify deliverables   |
-
-## Benefits
-
-- Reduces investigation time through parallelization
-- Each agent maintains narrow focus
-- Minimizes cross-agent interference
-- Solves multiple problems concurrently
-
-## Background Execution
-
-For long-running tasks where you need to continue working, use `run_in_background: true`.
-
-### Pattern: Background + Foreground
-
-```
-# Long-running audit in background
-audit_task = Task(security-auditor,
-  prompt="Full security audit",
-  run_in_background: true)
-
-# Continue with implementation work
-Task(frontend-developer, prompt="Build login form")
-
-# Later, get audit results
-TaskOutput(audit_task.id, block: true)
-```
-
-### Pattern: Multiple Background Tasks
-
-```
-# Launch multiple background tasks
-task1 = Task(test-engineer, prompt="...", run_in_background: true)
-task2 = Task(code-reviewer, prompt="...", run_in_background: true)
-
-# Do other work...
-
-# Collect all results
-result1 = TaskOutput(task1.id, block: true)
-result2 = TaskOutput(task2.id, block: true)
-```
-
-### When to Use Background vs Foreground
-
-| Scenario                   | Mode                      | Why                          |
-| -------------------------- | ------------------------- | ---------------------------- |
-| Quick tasks (< 1 min)      | Foreground                | Simpler, immediate results   |
-| Long audit/analysis        | Background                | Continue working             |
-| Multiple independent tasks | Foreground (parallel)     | Auto-waits for all           |
-| Security + Implementation  | Background + Foreground   | Overlap work                 |
-
-### Important Notes
-
-- Task IDs are only valid within the same response
-- Always use `block: true` when retrieving results with TaskOutput
-- Prefer foreground parallel (single message, multiple Tasks) when possible
-- Background tasks should be collected before the response ends
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

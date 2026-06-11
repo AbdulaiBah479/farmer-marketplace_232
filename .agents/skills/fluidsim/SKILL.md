@@ -1,6 +1,10 @@
 ---
 name: fluidsim
 description: Framework for computational fluid dynamics simulations using Python. Use when running fluid dynamics simulations including Navier-Stokes equations (2D/3D), shallow water equations, stratified flows, or when analyzing turbulence, vortex dynamics, or geophysical flows. Provides pseudospectral methods with FFT, HPC support, and comprehensive output analysis.
+license: CeCILL FREE SOFTWARE LICENSE AGREEMENT
+metadata:
+  version: "1.0"
+  skill-author: K-Dense Inc.
 ---
 
 # FluidSim
@@ -23,13 +27,13 @@ Install fluidsim using uv with appropriate feature flags:
 
 ```bash
 # Basic installation
-uv uv pip install fluidsim
+uv pip install fluidsim
 
 # With FFT support (required for most solvers)
-uv uv pip install "fluidsim[fft]"
+uv pip install "fluidsim[fft]"
 
 # With MPI for parallel computing
-uv uv pip install "fluidsim[fft,mpi]"
+uv pip install "fluidsim[fft,mpi]"
 ```
 
 Set environment variables for output directories (optional):
@@ -341,3 +345,4 @@ df = sim.output.spatial_means.load()
 - `references/parameters.md`: Comprehensive parameter documentation
 - `references/output_analysis.md`: Output types and analysis methods
 - `references/advanced_features.md`: Forcing, MPI, parametric studies, custom solvers
+

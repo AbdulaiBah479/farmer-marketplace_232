@@ -1,156 +1,237 @@
 ---
 name: brainstorming
-description: Use when creating or developing anything, before writing code or implementation plans - refines rough ideas into fully-formed designs through structured Socratic questioning, alternative exploration, and incremental validation
+description: "Use before creative or constructive work (features, architecture, behavior). Transforms vague ideas into validated designs through disciplined reasoning and collaboration."
+risk: unknown
+source: community
+date_added: "2026-02-27"
 ---
 
 # Brainstorming Ideas Into Designs
 
-## Overview
+## Purpose
 
-Transform rough ideas into fully-formed designs through structured questioning and alternative exploration.
+Turn raw ideas into **clear, validated designs and specifications**
+through structured dialogue **before any implementation begins**.
 
-**Core principle:** Ask questions to understand, explore alternatives, present design incrementally for validation.
+This skill exists to prevent:
+- premature implementation
+- hidden assumptions
+- misaligned solutions
+- fragile systems
 
-**Announce skill usage at start of session.**
+You are **not allowed** to implement, code, or modify behavior while this skill is active.
 
-## When to Use This Skill
+---
 
-Activate this skill when:
-- Request contains "I have an idea for..." or "I want to build..."
-- User asks "help me design..." or "what's the best approach for..."
-- Requirements are vague or high-level
-- Multiple approaches might work
-- Before writing any code or implementation plans
+## Operating Mode
 
-## The Three-Phase Process
+You are operating as a **design facilitator and senior reviewer**, not a builder.
 
-| Phase | Key Activities | Tool Usage | Output |
-|-------|----------------|------------|--------|
-| **1. Understanding** | Ask questions (one at a time) | AskUserQuestion for choices | Purpose, constraints, criteria |
-| **2. Exploration** | Propose 2-3 approaches | AskUserQuestion for approach selection | Architecture options with trade-offs |
-| **3. Design Presentation** | Present in 200-300 word sections | Open-ended questions | Complete design with validation |
+- No creative implementation  
+- No speculative features  
+- No silent assumptions  
+- No skipping ahead  
 
-### Phase 1: Understanding
+Your job is to **slow the process down just enough to get it right**.
 
-**Goal:** Gather purpose, constraints, and success criteria.
+---
 
-**Process:**
-- Check current project state in working directory
-- Ask ONE question at a time to refine the idea
-- Use AskUserQuestion tool when presenting multiple choice options
-- Gather: Purpose, constraints, success criteria
+## The Process
 
-**Tool Usage:**
-Use AskUserQuestion for clarifying questions with 2-4 clear options.
+### 1️⃣ Understand the Current Context (Mandatory First Step)
 
-Example: "Where should the authentication data be stored?" with options for Session storage, Local storage, Cookies, each with trade-off descriptions.
+Before asking any questions:
 
-See `references/example-session-auth.md` for complete Phase 1 example.
+- Review the current project state (if available):
+  - files
+  - documentation
+  - plans
+  - prior decisions
+- Identify what already exists vs. what is proposed
+- Note constraints that appear implicit but unconfirmed
 
-### Phase 2: Exploration
+**Do not design yet.**
 
-**Goal:** Propose 2-3 different architectural approaches with explicit trade-offs.
+---
 
-**Process:**
-- Propose 2-3 different approaches
-- For each: Core architecture, trade-offs, complexity assessment
-- Use AskUserQuestion tool to present approaches as structured choices
-- Include trade-off comparison table when helpful
+### 2️⃣ Understanding the Idea (One Question at a Time)
 
-**Trade-off Format:**
+Your goal here is **shared clarity**, not speed.
 
-| Approach | Pros | Cons | Complexity |
-|----------|------|------|------------|
-| Option 1 | Benefits | Drawbacks | Low/Med/High |
-| Option 2 | Benefits | Drawbacks | Low/Med/High |
-| Option 3 | Benefits | Drawbacks | Low/Med/High |
+**Rules:**
 
-See `references/example-session-dashboard.md` for complete Phase 2 example with SSE vs WebSockets vs Polling comparison.
+- Ask **one question per message**
+- Prefer **multiple-choice questions** when possible
+- Use open-ended questions only when necessary
+- If a topic needs depth, split it into multiple questions
 
-### Phase 3: Design Presentation
+Focus on understanding:
 
-**Goal:** Present complete design incrementally, validating each section.
+- purpose  
+- target users  
+- constraints  
+- success criteria  
+- explicit non-goals  
 
-**Process:**
-- Present in 200-300 word sections
-- Cover: Architecture, components, data flow, error handling, testing
-- Ask after each section: "Does this look right so far?"
-- Use open-ended questions to allow freeform feedback
+---
 
-**Typical Sections:**
-1. Architecture overview
-2. Component details
-3. Data flow
-4. Error handling
-5. Security considerations
-6. Implementation priorities
+### 3️⃣ Non-Functional Requirements (Mandatory)
 
-**Validation Pattern:**
-After each section, pause for feedback before proceeding to next section.
+You MUST explicitly clarify or propose assumptions for:
 
-## Tool Usage Guidelines
+- Performance expectations  
+- Scale (users, data, traffic)  
+- Security or privacy constraints  
+- Reliability / availability needs  
+- Maintenance and ownership expectations  
 
-### Use AskUserQuestion Tool For:
-- Phase 1: Clarifying questions with 2-4 clear options
-- Phase 2: Architectural approach selection (2-3 alternatives)
-- Any decision with distinct, mutually exclusive choices
-- When options have clear trade-offs to explain
+If the user is unsure:
 
-**Benefits:**
-- Structured presentation of options with descriptions
-- Clear trade-off visibility
-- Forces explicit choice (prevents vague "maybe both" responses)
+- Propose reasonable defaults  
+- Clearly mark them as **assumptions**
 
-### Use Open-Ended Questions For:
-- Phase 3: Design validation
-- When detailed feedback or explanation is needed
-- When the user should describe their own requirements
-- When structured options would limit creative input
+---
 
-## Non-Linear Progression
+### 4️⃣ Understanding Lock (Hard Gate)
 
-**Flexibility is key.** Go backward when needed - don't force linear progression.
+Before proposing **any design**, you MUST pause and do the following:
 
-**Return to Phase 1 when:**
-- User reveals new constraint during Phase 2 or 3
-- Validation shows fundamental gap in requirements
-- Something doesn't make sense
+#### Understanding Summary
+Provide a concise summary (5–7 bullets) covering:
+- What is being built  
+- Why it exists  
+- Who it is for  
+- Key constraints  
+- Explicit non-goals  
 
-**Return to Phase 2 when:**
-- User questions the chosen approach during Phase 3
-- New information suggests a different approach would be better
+#### Assumptions
+List all assumptions explicitly.
 
-**Continue forward when:**
-- All requirements are clear
-- Chosen approach is validated
-- No new constraints emerge
+#### Open Questions
+List unresolved questions, if any.
 
-## Key Principles
+Then ask:
 
-| Principle | Application |
-|-----------|-------------|
-| **One question at a time** | Phase 1: Single question per message, use AskUserQuestion for choices |
-| **Structured choices** | Use AskUserQuestion tool for 2-4 options with trade-offs |
-| **YAGNI ruthlessly** | Remove unnecessary features from all designs |
-| **Explore alternatives** | Always propose 2-3 approaches before settling |
-| **Incremental validation** | Present design in sections, validate each |
-| **Flexible progression** | Go backward when needed - flexibility > rigidity |
+> “Does this accurately reflect your intent?  
+> Please confirm or correct anything before we move to design.”
 
-## After Brainstorming Completes
+**Do NOT proceed until explicit confirmation is given.**
 
-Consider these optional next steps:
-- Document the design in project's design documentation
-- Break down the design into actionable implementation tasks
-- Create a git branch or workspace for isolated development
+---
 
-Use templates in `assets/design-doc-template.md` and `assets/decision-matrix-template.md` for structured documentation.
+### 5️⃣ Explore Design Approaches
 
-## Examples
+Once understanding is confirmed:
 
-**Complete brainstorming sessions:**
-- `references/example-session-auth.md` - Authentication storage design (JWT vs Session vs Cookies)
-- `references/example-session-dashboard.md` - Real-time dashboard design (SSE vs WebSockets vs Polling)
+- Propose **2–3 viable approaches**
+- Lead with your **recommended option**
+- Explain trade-offs clearly:
+  - complexity
+  - extensibility
+  - risk
+  - maintenance
+- Avoid premature optimization (**YAGNI ruthlessly**)
 
-**Output templates:**
-- `assets/design-doc-template.md` - Structured design document format
-- `assets/decision-matrix-template.md` - Weighted decision comparison format
+This is still **not** final design.
+
+---
+
+### 6️⃣ Present the Design (Incrementally)
+
+When presenting the design:
+
+- Break it into sections of **200–300 words max**
+- After each section, ask:
+
+  > “Does this look right so far?”
+
+Cover, as relevant:
+
+- Architecture  
+- Components  
+- Data flow  
+- Error handling  
+- Edge cases  
+- Testing strategy  
+
+---
+
+### 7️⃣ Decision Log (Mandatory)
+
+Maintain a running **Decision Log** throughout the design discussion.
+
+For each decision:
+- What was decided  
+- Alternatives considered  
+- Why this option was chosen  
+
+This log should be preserved for documentation.
+
+---
+
+## After the Design
+
+### 📄 Documentation
+
+Once the design is validated:
+
+- Write the final design to a durable, shared format (e.g. Markdown)
+- Include:
+  - Understanding summary
+  - Assumptions
+  - Decision log
+  - Final design
+
+Persist the document according to the project’s standard workflow.
+
+---
+
+### 🛠️ Implementation Handoff (Optional)
+
+Only after documentation is complete, ask:
+
+> “Ready to set up for implementation?”
+
+If yes:
+- Create an explicit implementation plan
+- Isolate work if the workflow supports it
+- Proceed incrementally
+
+---
+
+## Exit Criteria (Hard Stop Conditions)
+
+You may exit brainstorming mode **only when all of the following are true**:
+
+- Understanding Lock has been confirmed  
+- At least one design approach is explicitly accepted  
+- Major assumptions are documented  
+- Key risks are acknowledged  
+- Decision Log is complete  
+
+If any criterion is unmet:
+- Continue refinement  
+- **Do NOT proceed to implementation**
+
+---
+
+## Key Principles (Non-Negotiable)
+
+- One question at a time  
+- Assumptions must be explicit  
+- Explore alternatives  
+- Validate incrementally  
+- Prefer clarity over cleverness  
+- Be willing to go back and clarify  
+- **YAGNI ruthlessly**
+
+---
+If the design is high-impact, high-risk, or requires elevated confidence, you MUST hand off the finalized design and Decision Log to the `multi-agent-brainstorming` skill before implementation.
+
+## When to Use
+This skill is applicable to execute the workflow or actions described in the overview.
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

@@ -1,6 +1,12 @@
 ---
 name: zarr-python
-description: "Chunked N-D arrays for cloud storage. Compressed arrays, parallel I/O, S3/GCS integration, NumPy/Dask/Xarray compatible, for large-scale scientific computing pipelines."
+description: Chunked N-D arrays for cloud storage (Zarr-Python 3). Compressed arrays, parallel I/O, S3/GCS via fsspec, NumPy/Dask/Xarray compatible, for large-scale scientific computing pipelines.
+allowed-tools: Read Write Edit Bash
+license: MIT license
+compatibility: Requires Python 3.12+ and zarr 3.x. Cloud I/O needs zarr[remote] plus pinned s3fs or gcsfs. Legacy Zarr v2 workflows need exact 2.x pins on older Python.
+metadata:
+  version: "1.1"
+  skill-author: K-Dense Inc.
 ---
 
 # Zarr Python
@@ -9,19 +15,23 @@ description: "Chunked N-D arrays for cloud storage. Compressed arrays, parallel 
 
 Zarr is a Python library for storing large N-dimensional arrays with chunking and compression. Apply this skill for efficient parallel I/O, cloud-native workflows, and seamless integration with NumPy, Dask, and Xarray.
 
+**Current upstream:** zarr **3.2.1** (released 2026-05-05). Docs: [zarr.readthedocs.io](https://zarr.readthedocs.io/en/stable/). New arrays default to **Zarr format 3**; set `zarr_format=2` for legacy interop. Zarr 3.2 adds rectilinear chunks and continues to refine the v3 codec pipeline. This skill is a **community guide** maintained by K-Dense Inc., not an official zarr-developers package.
+
 ## Quick Start
 
 ### Installation
 
 ```bash
-uv pip install zarr
+uv pip install "zarr==3.2.1"
 ```
 
-Requires Python 3.11+. For cloud storage support, install additional packages:
-```python
-uv pip install s3fs  # For S3
-uv pip install gcsfs  # For Google Cloud Storage
+Requires **Python 3.12+** and NumPy 2.0+ for current stable Zarr-Python. For remote stores (S3, GCS, HTTP), pin the optional extras/backends in your project lockfile:
+
+```bash
+uv pip install "zarr[remote]==3.2.1" "s3fs==2026.4.0" "gcsfs==2026.5.0"
 ```
+
+Use a version range such as `zarr>=3,<4` only when your project has a committed lockfile and compatibility tests. For Zarr-Python 2 / Python 3.10–3.11 workflows, choose an exact `zarr==2.x.y` patch version from the support-v2 release notes and commit the resulting lockfile.
 
 ### Basic Array Creation
 
@@ -105,8 +115,8 @@ z.blocks[0, 0]                     # Block/chunk indexing
 ### Resizing and Appending
 
 ```python
-# Resize array
-z.resize(15000, 15000)  # Expands or shrinks dimensions
+# Resize array (v3: pass shape as a tuple)
+z.resize((15000, 15000))
 
 # Append data along an axis
 z.append(np.random.random((1000, 10000)), axis=0)  # Adds rows
@@ -151,14 +161,22 @@ z = zarr.zeros((10000, 10000), chunks=(1000, 1000))  # Square chunks
 - Using chunks (1, 200, 200): ~107ms
 - Using chunks (200, 200, 1): ~1.65ms (65× faster!)
 
-### Sharding for Large-Scale Storage
+### Rectilinear Chunks and Sharding
 
-When arrays have millions of small chunks, use sharding to group chunks into larger storage objects:
+Zarr 3.2 supports **rectilinear chunks** for uneven grids. Pass nested chunk lengths when a dimension has variable tile sizes:
 
 ```python
-from zarr.codecs import ShardingCodec, BytesCodec
-from zarr.codecs.blosc import BloscCodec
+z = zarr.create_array(
+    store="rectilinear.zarr",
+    shape=(60, 100),
+    chunks=([10, 20, 30], [50, 50]),
+    dtype="f4",
+)
+```
 
+When arrays have millions of small chunks, use **sharding** to group chunks into larger storage objects:
+
+```python
 # Create array with sharding
 z = zarr.create_array(
     store='data.zarr',
@@ -183,19 +201,18 @@ Zarr applies compression per chunk to reduce storage while maintaining fast acce
 ### Configuring Compression
 
 ```python
-from zarr.codecs.blosc import BloscCodec
-from zarr.codecs import GzipCodec, ZstdCodec
+from zarr.codecs import BloscCodec, BloscShuffle, GzipCodec
 
 # Default: Blosc with Zstandard
 z = zarr.zeros((1000, 1000), chunks=(100, 100))  # Uses default compression
 
-# Configure Blosc codec
+# Configure Blosc compression
 z = zarr.create_array(
     store='data.zarr',
     shape=(1000, 1000),
     chunks=(100, 100),
     dtype='f4',
-    codecs=[BloscCodec(cname='zstd', clevel=5, shuffle='shuffle')]
+    compressors=BloscCodec(cname='zstd', clevel=5, shuffle=BloscShuffle.bitshuffle)
 )
 
 # Available Blosc compressors: 'blosclz', 'lz4', 'lz4hc', 'snappy', 'zlib', 'zstd'
@@ -206,7 +223,7 @@ z = zarr.create_array(
     shape=(1000, 1000),
     chunks=(100, 100),
     dtype='f4',
-    codecs=[GzipCodec(level=6)]
+    compressors=GzipCodec(level=6)
 )
 
 # Disable compression
@@ -215,7 +232,7 @@ z = zarr.create_array(
     shape=(1000, 1000),
     chunks=(100, 100),
     dtype='f4',
-    codecs=[BytesCodec()]  # No compression
+    compressors=None
 )
 ```
 
@@ -229,13 +246,13 @@ z = zarr.create_array(
 
 ```python
 # Optimal for numeric scientific data
-codecs=[BloscCodec(cname='zstd', clevel=5, shuffle='shuffle')]
+compressors=BloscCodec(cname='zstd', clevel=5, shuffle=BloscShuffle.bitshuffle)
 
 # Optimal for speed
-codecs=[BloscCodec(cname='lz4', clevel=1)]
+compressors=BloscCodec(cname='lz4', clevel=1)
 
 # Optimal for compression ratio
-codecs=[GzipCodec(level=9)]
+compressors=GzipCodec(level=9)
 ```
 
 ## Storage Backends
@@ -288,22 +305,36 @@ store.close()
 
 ### Cloud Storage (S3, GCS)
 
+Zarr 3 uses **fsspec** backends via URI strings or `FsspecStore` (preferred over legacy `S3Map`/`GCSMap`).
+
 ```python
-import s3fs
 import zarr
 
-# S3 storage
-s3 = s3fs.S3FileSystem(anon=False)  # Use credentials
-store = s3fs.S3Map(root='my-bucket/path/to/array.zarr', s3=s3)
-z = zarr.open_array(store=store, mode='w', shape=(1000, 1000), chunks=(100, 100))
+# S3 — prefer IAM roles/profiles; fsspec handles provider credential discovery.
+# Never print, log, or copy credential values into prompts or notebooks.
+z = zarr.create_array(
+    store="s3://my-bucket/path/to/array.zarr",
+    shape=(1000, 1000),
+    chunks=(100, 100),
+    dtype="f4",
+    storage_options={"anon": False},
+)
 z[:] = data
 
-# Google Cloud Storage
-import gcsfs
-gcs = gcsfs.GCSFileSystem(project='my-project')
-store = gcsfs.GCSMap(root='my-bucket/path/to/array.zarr', gcs=gcs)
-z = zarr.open_array(store=store, mode='w', shape=(1000, 1000), chunks=(100, 100))
+# GCS — prefer workload identity or gcloud application-default credentials.
+z = zarr.open_array(
+    "gs://my-bucket/path/to/array.zarr",
+    mode="r",
+    storage_options={"project": "my-project"},
+)
+
+# Explicit store (any fsspec filesystem)
+from zarr.storage import FsspecStore
+store = FsspecStore.from_url("s3://my-bucket/data.zarr", storage_options={"anon": False})
+root = zarr.open_group(store=store, mode="r+")
 ```
+
+Cloud backends read credentials through the provider SDK/fsspec backend. Do not inspect broad `.env` files; if a user explicitly needs help debugging auth, ask for redacted configuration and read only the named provider variables they approve. Treat all `import zarr`, `import dask`, `import h5py`, and `import xarray` examples as third-party package imports, not bundled script files.
 
 **Cloud Storage Best Practices**:
 - Use consolidated metadata to reduce latency: `zarr.consolidate_metadata(store)`
@@ -353,19 +384,16 @@ print(root.tree())
 #      └── prcp (365, 720, 1440) f4
 ```
 
-### H5py-Compatible API
+### Group API (v3)
 
-Zarr provides an h5py-compatible interface for familiar HDF5 users:
+Use `create_array` / `require_array` (h5py-style `create_dataset` / `require_dataset` were removed in v3):
 
 ```python
-# Create group with h5py-style methods
 root = zarr.group('data.zarr')
-dataset = root.create_dataset('my_data', shape=(1000, 1000), chunks=(100, 100),
-                              dtype='f4')
+arr = root.create_array('my_data', shape=(1000, 1000), chunks=(100, 100), dtype='f4')
 
-# Access like h5py
 grp = root.require_group('subgroup')
-arr = grp.require_dataset('array', shape=(500, 500), chunks=(50, 50), dtype='i4')
+arr2 = grp.require_array('array', shape=(500, 500), chunks=(50, 50), dtype='i4')
 ```
 
 ## Attributes and Metadata
@@ -487,41 +515,28 @@ ds.to_zarr('climate_data.zarr')
 - Integration with pandas for time series
 - NetCDF-like interface familiar to climate/geospatial scientists
 
-## Parallel Computing and Synchronization
+## Parallel Computing and Thread Safety
 
-### Thread-Safe Operations
-
-```python
-from zarr import ThreadSynchronizer
-import zarr
-
-# For multi-threaded writes
-synchronizer = ThreadSynchronizer()
-z = zarr.open_array('data.zarr', mode='r+', shape=(10000, 10000),
-                    chunks=(1000, 1000), synchronizer=synchronizer)
-
-# Safe for concurrent writes from multiple threads
-# (when writes don't span chunk boundaries)
-```
-
-### Process-Safe Operations
+Zarr uses async I/O internally. Tune concurrency for remote storage or Dask-heavy workloads:
 
 ```python
-from zarr import ProcessSynchronizer
 import zarr
 
-# For multi-process writes
-synchronizer = ProcessSynchronizer('sync_data.sync')
-z = zarr.open_array('data.zarr', mode='r+', shape=(10000, 10000),
-                    chunks=(1000, 1000), synchronizer=synchronizer)
-
-# Safe for concurrent writes from multiple processes
+# Higher values can improve remote throughput; lower values reduce pressure
+# when Dask already supplies many worker threads.
+zarr.config.set({
+    "async.concurrency": 8,
+    "threading.max_workers": 8,
+})
 ```
 
-**Note**:
-- Concurrent reads require no synchronization
-- Synchronization only needed for writes that may span chunk boundaries
-- Each process/thread writing to separate chunks needs no synchronization
+The old `synchronizer` argument (`ThreadSynchronizer`, `ProcessSynchronizer`) is **not available in Zarr-Python 3**. Use these patterns instead:
+
+- **Reads:** always safe across threads/processes.
+- **Writes:** safe when each worker writes to **non-overlapping chunks**; most stores support atomic chunk writes.
+- **Overlapping writes:** coordinate externally (file locks, workflow design) until synchronizers return.
+
+For Dask-heavy workloads, estimate total concurrent I/O as roughly `dask_threads × async.concurrency` and lower Zarr's concurrency settings if the store or memory becomes saturated.
 
 ## Consolidated Metadata
 
@@ -578,7 +593,7 @@ root = zarr.open_consolidated('data.zarr')
 4. **Storage Backend**: Match to environment
    ```python
    # Local: LocalStore (default)
-   # Cloud: S3Map/GCSMap with consolidated metadata
+   # Cloud: fsspec URIs or FsspecStore + consolidated metadata
    # Temporary: MemoryStore
    ```
 
@@ -603,7 +618,7 @@ print(z.info)
 
 # Output includes:
 # - Type, shape, chunks, dtype
-# - Compression codec and level
+# - Serializer and compressors
 # - Storage size (compressed vs uncompressed)
 # - Storage location
 
@@ -649,26 +664,20 @@ result = (dask_z @ dask_z.T).compute()  # Parallel matrix multiply
 ### Pattern: Cloud-Native Workflow
 
 ```python
-import s3fs
 import zarr
 
-# Write to S3
-s3 = s3fs.S3FileSystem()
-store = s3fs.S3Map(root='s3://my-bucket/data.zarr', s3=s3)
-
-# Create array with appropriate chunking for cloud
-z = zarr.open_array(store=store, mode='w',
-                    shape=(10000, 10000),
-                    chunks=(500, 500),  # ~1MB chunks
-                    dtype='f4')
+path = "s3://my-bucket/data.zarr"
+z = zarr.create_array(
+    store=path,
+    shape=(10000, 10000),
+    chunks=(500, 500),
+    dtype="f4",
+    storage_options={"anon": False},
+)
 z[:] = data
 
-# Consolidate metadata for faster reads
-zarr.consolidate_metadata(store)
-
-# Read from S3 (anywhere, anytime)
-store_read = s3fs.S3Map(root='s3://my-bucket/data.zarr', s3=s3)
-z_read = zarr.open_consolidated(store_read)
+zarr.consolidate_metadata(path)
+z_read = zarr.open_consolidated(path, storage_options={"anon": False})
 subset = z_read[0:100, 0:100]
 ```
 
@@ -748,26 +757,25 @@ shards = (10000, 10000)  # Groups many chunks
 
 ### Issue: Concurrent Write Conflicts
 
-**Solution**: Use synchronizers or ensure non-overlapping writes
-```python
-from zarr import ProcessSynchronizer
-
-sync = ProcessSynchronizer('sync.sync')
-z = zarr.open_array('data.zarr', mode='r+', synchronizer=sync)
-
-# Or design workflow so each process writes to separate chunks
-```
+**Solution**: Design workflows so each process/thread writes to separate chunks. Zarr-Python 3 does not yet support `ThreadSynchronizer` / `ProcessSynchronizer`; see `references/v3_migration.md`.
 
 ## Additional Resources
 
-For detailed API documentation, advanced usage, and the latest updates:
+### Bundled references
 
-- **Official Documentation**: https://zarr.readthedocs.io/
-- **Zarr Specifications**: https://zarr-specs.readthedocs.io/
-- **GitHub Repository**: https://github.com/zarr-developers/zarr-python
-- **Community Chat**: https://gitter.im/zarr-developers/community
+| File | Contents |
+|------|----------|
+| `references/api_reference.md` | Function signatures, stores, codecs, indexing |
+| `references/v3_migration.md` | Zarr-Python 2→3 breaking changes and WIP features |
 
-**Related Libraries**:
-- **Xarray**: https://docs.xarray.dev/ (labeled arrays)
-- **Dask**: https://docs.dask.org/ (parallel computing)
-- **NumCodecs**: https://numcodecs.readthedocs.io/ (compression codecs)
+### Official upstream
+
+- **Documentation**: https://zarr.readthedocs.io/en/stable/
+- **3.0 migration guide**: https://zarr.readthedocs.io/en/stable/user-guide/v3_migration/
+- **Storage backends**: https://zarr.readthedocs.io/en/stable/user-guide/storage/
+- **Zarr specifications**: https://zarr-specs.readthedocs.io/
+- **GitHub**: https://github.com/zarr-developers/zarr-python
+- **Developer chat**: https://ossci.zulipchat.com/#narrow/channel/423692-Zarr-Python
+
+**Related libraries:** [Xarray](https://docs.xarray.dev/), [Dask](https://docs.dask.org/), [NumCodecs](https://numcodecs.readthedocs.io/)
+

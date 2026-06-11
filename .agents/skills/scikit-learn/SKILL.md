@@ -1,6 +1,12 @@
 ---
 name: scikit-learn
 description: Machine learning in Python with scikit-learn. Use when working with supervised learning (classification, regression), unsupervised learning (clustering, dimensionality reduction), model evaluation, hyperparameter tuning, preprocessing, or building ML pipelines. Provides comprehensive reference documentation for algorithms, preprocessing techniques, pipelines, and best practices.
+license: BSD-3-Clause license
+allowed-tools: Read Write Edit Bash
+compatibility: Requires Python 3.11+ and scikit-learn 1.7+. NumPy and SciPy are required dependencies. Optional matplotlib/seaborn for bundled example scripts that save plots.
+metadata:
+  version: "1.1"
+  skill-author: K-Dense Inc.
 ---
 
 # Scikit-learn
@@ -11,15 +17,26 @@ This skill provides comprehensive guidance for machine learning tasks using scik
 
 ## Installation
 
+Tested against **scikit-learn 1.8.0** (stable; December 2025). Requires **Python 3.11–3.14** (free-threaded CPython 3.14 wheels available in 1.8+).
+
+Install the PyPI package **`scikit-learn`** (not the deprecated `sklearn` package on PyPI). Import in code as `sklearn`.
+
 ```bash
 # Install scikit-learn using uv
-uv uv pip install scikit-learn
+uv pip install "scikit-learn>=1.7"
 
-# Optional: Install visualization dependencies
-uv uv pip install matplotlib seaborn
+# Optional: plotting utilities and bundled script dependencies
+uv pip install "scikit-learn[plots]" matplotlib seaborn
 
 # Commonly used with
-uv uv pip install pandas numpy
+uv pip install pandas numpy
+```
+
+Check your version:
+
+```python
+import sklearn
+print(sklearn.__version__)
 ```
 
 ## When to Use This Skill
@@ -139,7 +156,8 @@ Discover patterns in unlabeled data through clustering and dimensionality reduct
 
 **Dimensionality reduction:**
 - **Linear**: PCA, TruncatedSVD, NMF
-- **Manifold learning**: t-SNE, UMAP, Isomap, LLE
+- **Manifold learning**: t-SNE, Isomap, LLE, MDS, ClassicalMDS (1.8+)
+- **External (install separately)**: UMAP (`umap-learn`)
 - **Feature extraction**: FastICA, LatentDirichletAllocation
 
 **When to use:**
@@ -240,7 +258,7 @@ Build reproducible, production-ready ML workflows.
 Run a complete classification workflow with preprocessing, model comparison, hyperparameter tuning, and evaluation:
 
 ```bash
-python scripts/classification_pipeline.py
+uv run python scripts/classification_pipeline.py
 ```
 
 This script demonstrates:
@@ -255,7 +273,7 @@ This script demonstrates:
 Perform clustering analysis with algorithm comparison and visualization:
 
 ```bash
-python scripts/clustering_analysis.py
+uv run python scripts/clustering_analysis.py
 ```
 
 This script demonstrates:
@@ -513,3 +531,4 @@ model = MiniBatchKMeans(n_clusters=8, batch_size=100)
 - User Guide: https://scikit-learn.org/stable/user_guide.html
 - API Reference: https://scikit-learn.org/stable/api/index.html
 - Examples Gallery: https://scikit-learn.org/stable/auto_examples/index.html
+

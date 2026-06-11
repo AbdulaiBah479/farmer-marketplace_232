@@ -1,11 +1,10 @@
 ---
 name: postgresql-optimization
 description: "PostgreSQL database optimization workflow for query tuning, indexing strategies, performance analysis, and production database management."
-source: personal
-risk: safe
-domain: database
 category: granular-workflow-bundle
-version: 1.0.0
+risk: safe
+source: personal
+date_added: "2026-02-27"
 ---
 
 # PostgreSQL Optimization Workflow
@@ -173,3 +172,8 @@ Use @grafana-dashboards to create PostgreSQL monitoring
 - `database` - Database operations
 - `cloud-devops` - Infrastructure
 - `performance-optimization` - Performance
+
+## Limitations
+- Use this skill only when the task clearly matches the scope described above.
+- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
+- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.

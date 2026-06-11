@@ -1,46 +1,42 @@
 ---
 name: web-design-guidelines
-description: "Review files for compliance with Web Interface Guidelines."
-risk: safe
-source: community
-date_added: "2026-02-27"
+description: |
+  Web design guidelines and standards by the Vercel engineering team. Covers layout, typography, color, motion, and accessibility for product UI.
+triggers:
+  - "web design guidelines"
+  - "vercel design"
+  - "product ui standards"
+  - "design checklist"
+od:
+  mode: design-system
+  category: design-systems
+  upstream: "https://github.com/vercel-labs/skills"
 ---
 
-# Web Interface Guidelines
+# web-design-guidelines
 
-Review files for compliance with Web Interface Guidelines.
+> Curated from the Vercel engineering team.
 
-## How It Works
+## What it does
 
-1. Fetch the latest guidelines from the source URL below
-2. Read the specified files (or prompt user for files/pattern)
-3. Check against all rules in the fetched guidelines
-4. Output findings in the terse `file:line` format
+Web design guidelines and standards by the Vercel engineering team. Covers layout, typography, color, motion, and accessibility for product UI.
 
-## Guidelines Source
+## Source
 
-Fetch fresh guidelines before each review:
+- Upstream: https://github.com/vercel-labs/skills
+- Category: `design-systems`
 
+## How to use
+
+This catalogue entry advertises the skill in Open Design so the agent
+discovers it during planning. To run the full upstream workflow with
+its original assets, scripts, and references, install the upstream
+bundle into your active agent's skills directory:
+
+```bash
+# Inspect the upstream README for exact paths
+open https://github.com/vercel-labs/skills
 ```
-https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/main/command.md
-```
 
-Use WebFetch to retrieve the latest rules. The fetched content contains all the rules and output format instructions.
-
-## Usage
-
-When a user provides a file or pattern argument:
-1. Fetch guidelines from the source URL above
-2. Read the specified files
-3. Apply all rules from the fetched guidelines
-4. Output findings using the format specified in the guidelines
-
-If no files specified, ask the user which files to review.
-
-## When to Use
-This skill is applicable to execute the workflow or actions described in the overview.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
+Then ask the agent to invoke this skill by name (`web-design-guidelines`) or with
+one of the trigger phrases listed in this skill's frontmatter.

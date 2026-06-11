@@ -1,0 +1,11 @@
+{
+  "name": "claim-scorecard",
+  "version": "0.1.0",
+  "description": "Track public advisors' checkable predictions to their outcomes — falsifiable-claim ledger with auto-expiry, web-search adjudication, and per-advisor hit-rate scorecards",
+  "author": {
+    "name": "Avyansh Katiyar",
+    "email": "avyanshkatiyar@gmail.com"
+  },
+  "license": "MIT",
+  "keywords": ["predictions", "accountability", "finfluencers", "forecasting", "scorecard", "claims-ledger", "hit-rate"]
+}

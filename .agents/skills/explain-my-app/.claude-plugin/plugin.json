@@ -1,0 +1,11 @@
+{
+  "name": "explain-my-app",
+  "version": "0.1.0",
+  "description": "Explain your vibe-coded app back to you as a linked doc-set in your repo, re-explain what changed, and quiz you on it",
+  "author": {
+    "name": "Avyansh Katiyar",
+    "email": "avyanshkatiyar@gmail.com"
+  },
+  "license": "MIT",
+  "keywords": ["codebase", "documentation", "onboarding", "quiz", "vibe-coding"]
+}

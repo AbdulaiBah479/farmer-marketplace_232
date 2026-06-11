@@ -1,154 +1,104 @@
 ---
 name: review-paper
-description: Comprehensive manuscript review covering argument structure, econometric specification, citation completeness, and potential referee objections
-argument-hint: "[paper filename in master_supporting_docs/ or path to .tex/.pdf]"
-allowed-tools: ["Read", "Grep", "Glob", "Write", "Task"]
+description: >
+  Scaffold and draft medical/AI literature reviews (narrative, scoping PRISMA-ScR, or systematic). Asks for
+  the spine axis, builds a 7-part skeleton with a required Intro scope/non-overlap block, a summary-table stub,
+  an evaluation-metrics critique subsection, and reporting-guideline wiring. Reuses the self-review RV1-RV8
+  narrative-review probes for QC. Does not invent citations.
+triggers: review article, scoping review, narrative review, literature review, PRISMA-ScR, write a review
+tools: Read, Write, Edit, Bash, Grep, Glob
+model: inherit
 ---
 
-# Manuscript Review
+# Review-Paper Skill
 
-Produce a thorough, constructive review of an academic manuscript — the kind of report a top-journal referee would write.
+Scaffold and draft a **literature review** — narrative, scoping (PRISMA-ScR), or systematic
+(PRISMA 2020) — for medical / medical-AI research. This skill builds the structure, the
+required scope/non-overlap framing, the summary-table stubs, and the reporting-guideline
+wiring, then hands off to the existing QC skills. It is the review-article counterpart to
+`write-paper` (which targets original research); for *reviewing* someone else's review
+article, use `/peer-review` or `/self-review` (the RV1-RV8 probes). The structure follows
+established review-writing conventions; it is not derived from, and does not reproduce, any
+specific published review.
 
-**Input:** `$ARGUMENTS` — path to a paper (.tex, .pdf, or .qmd), or a filename in `master_supporting_docs/`.
+## Anti-Hallucination
 
----
+- **Never invent citations.** Every citekey must resolve to the project's verified
+  `_src/refs.bib` (produced by `/search-lit` → `/lit-sync` → `/verify-refs`). If a claim
+  needs a reference that is not yet in the library, leave a `[NEEDS-REF: claim]` marker and
+  route it to `/search-lit`; do not fabricate a DOI, author, year, or citekey.
+- **Never invent data.** Summary-table cells (study, year, metric, finding) are filled only
+  from sources the user supplies or that are verified; an unknown cell stays a placeholder.
+- **No recommendation-grade language without standing.** For a scoping review especially,
+  the output maps the evidence — it does not issue clinical recommendations.
+- **Quality gate before hand-off:** the draft is not "done" until `/self-review` reports 0
+  fatal findings and `/verify-refs` reports 0 FABRICATED / MISMATCH and no placeholder
+  citations remain.
 
-## Steps
+## Step 0 — Format + spine axis (the structure-determining choice)
 
-1. **Locate and read the manuscript.** Check:
-   - Direct path from `$ARGUMENTS`
-   - `master_supporting_docs/supporting_papers/$ARGUMENTS`
-   - Glob for partial matches
+1. Confirm **format** with the user: narrative (SANRA) | scoping (PRISMA-ScR + JBI) |
+   systematic (PRISMA 2020). This decides the reporting guideline and the registration path.
+2. Choose the **spine axis** — the single most consequential decision: organize the body by
+   **modality** (e.g. 2D → 3D), by **task** (generation / QA / deployment), or by
+   **lifecycle stage**. Every body section then follows this one axis; mixing axes is the
+   most common structural failure.
+3. Require a **scope statement + non-overlap boundary** against prior/adjacent reviews — this
+   pre-empts the reviewer's first question, "why another review on this?" (user-approval
+   checkpoint: confirm the boundary with the user before scaffolding).
 
-2. **Read the full paper** end-to-end. For long PDFs, read in chunks (5 pages at a time).
+## Step 1 — Scaffold the 7-part macro skeleton
 
-3. **Evaluate across 6 dimensions** (see below).
+Load `${CLAUDE_SKILL_DIR}/references/macro_skeleton.md` and instantiate:
 
-4. **Generate 3-5 "referee objections"** — the tough questions a top referee would ask.
+1. **Abstract** — structured for scoping/systematic; a 4-5 move version for narrative.
+2. **Introduction** — clinical motivation → technology → **scope + non-overlap block
+   (required field)** → "this review…".
+3. **Background / technical principles** — tight; cite once, do not re-survey the field.
+4. **Thematic body by spine axis** — each section ends with a **summary table** (stub
+   generated to match the type, Step 2).
+5. **Frontiers / what is advancing.**
+6. **Challenges / discussion** — include an **evaluation-metrics critique subsection** (a
+   required quality signal: how the field measures itself, and where those metrics mislead).
+7. **Conclusion** — measured; no recommendation-grade language for a scoping review.
 
-5. **Produce the review report.**
+## Step 2 — Summary-table stub (matched to type)
 
-6. **Save to** `quality_reports/paper_review_[sanitized_name].md`
+- Narrative / scoping: `study | year | [spine-axis value] | method | key finding`.
+- Systematic: PRISMA flow + a study-characteristics table + an extraction table.
 
----
+The stub ships with column headers and one placeholder row; rows are filled only from
+verified sources (see Anti-Hallucination).
 
-## Review Dimensions
+## Step 3 — Reporting + registration wiring
 
-### 1. Argument Structure
-- Is the research question clearly stated?
-- Does the introduction motivate the question effectively?
-- Is the logical flow sound (question → method → results → conclusion)?
-- Are the conclusions supported by the evidence?
-- Are limitations acknowledged?
+- **Scoping** → PRISMA-ScR (+ JBI charting) + OSF registration.
+- **Narrative** → SANRA (a 6-item appraisal aid, not a reporting checklist — do not
+  over-enforce it).
+- **Systematic** → PRISMA 2020 (+ PROSPERO registration).
+- If `/check-reporting` does not yet carry the chosen checklist (e.g. PRISMA-ScR), track a
+  manual gap table and flag it for the user rather than silently skipping the item.
 
-### 2. Identification Strategy
-- Is the causal claim credible?
-- What are the key identifying assumptions? Are they stated explicitly?
-- Are there threats to identification (omitted variables, reverse causality, measurement error)?
-- Are robustness checks adequate?
-- Is the estimator appropriate for the research design?
+## Step 4 — QC hand-off
 
-### 3. Econometric Specification
-- Correct standard errors (clustered? robust? bootstrap?)?
-- Appropriate functional form?
-- Sample selection issues?
-- Multiple testing concerns?
-- Are point estimates economically meaningful (not just statistically significant)?
+Run the standard manuscript QC chain, which this skill is designed to feed:
 
-### 4. Literature Positioning
-- Are the key papers cited?
-- Is prior work characterized accurately?
-- Is the contribution clearly differentiated from existing work?
-- Any missing citations that a referee would flag?
+1. `/self-review` — the RV1-RV8 narrative-review probes auto-activate for a review article.
+2. `/check-reporting` — the chosen guideline (SANRA / PRISMA-ScR / PRISMA 2020).
+3. `/verify-refs` — every citation resolves; 0 FABRICATED / MISMATCH.
+4. `/humanize` — AI-pattern density below threshold.
+5. `/academic-aio` — discoverability pass (optional).
 
-### 5. Writing Quality
-- Clarity and concision
-- Academic tone
-- Consistent notation throughout
-- Abstract effectively summarizes the paper
-- Tables and figures are self-contained (clear labels, notes, sources)
+**Convergence gate:** self-review fatal = 0; verify-refs FABRICATED/MISMATCH = 0; no
+`[NEEDS-REF]` / `[@NEW:]`-style placeholder citations remain; humanize density < 2.0.
 
-### 6. Presentation
-- Are tables and figures well-designed?
-- Is notation consistent throughout?
-- Are there any typos, grammatical errors, or formatting issues?
-- Is the paper the right length for the contribution?
+## Guards
 
----
+- Citations resolve to `_src/refs.bib` only; never invent citekeys (see Anti-Hallucination).
+- Proportionate self-citation; declare an intellectual conflict of interest when an author
+  has contributed to the area being reviewed (per `intellectual-coi`).
+- Write only inside the manuscript directory.
 
-## Output Format
+## references/
 
-```markdown
-# Manuscript Review: [Paper Title]
-
-**Date:** [YYYY-MM-DD]
-**Reviewer:** review-paper skill
-**File:** [path to manuscript]
-
-## Summary Assessment
-
-**Overall recommendation:** [Strong Accept / Accept / Revise & Resubmit / Reject]
-
-[2-3 paragraph summary: main contribution, strengths, and key concerns]
-
-## Strengths
-
-1. [Strength 1]
-2. [Strength 2]
-3. [Strength 3]
-
-## Major Concerns
-
-### MC1: [Title]
-- **Dimension:** [Identification / Econometrics / Argument / Literature / Writing / Presentation]
-- **Issue:** [Specific description]
-- **Suggestion:** [How to address it]
-- **Location:** [Section/page/table if applicable]
-
-[Repeat for each major concern]
-
-## Minor Concerns
-
-### mc1: [Title]
-- **Issue:** [Description]
-- **Suggestion:** [Fix]
-
-[Repeat]
-
-## Referee Objections
-
-These are the tough questions a top referee would likely raise:
-
-### RO1: [Question]
-**Why it matters:** [Why this could be fatal]
-**How to address it:** [Suggested response or additional analysis]
-
-[Repeat for 3-5 objections]
-
-## Specific Comments
-
-[Line-by-line or section-by-section comments, if any]
-
-## Summary Statistics
-
-| Dimension | Rating (1-5) |
-|-----------|-------------|
-| Argument Structure | [N] |
-| Identification | [N] |
-| Econometrics | [N] |
-| Literature | [N] |
-| Writing | [N] |
-| Presentation | [N] |
-| **Overall** | **[N]** |
-```
-
----
-
-## Principles
-
-- **Be constructive.** Every criticism should come with a suggestion.
-- **Be specific.** Reference exact sections, equations, tables.
-- **Think like a referee at a top-5 journal.** What would make them reject?
-- **Distinguish fatal flaws from minor issues.** Not everything is equally important.
-- **Acknowledge what's done well.** Good research deserves recognition.
-- **Do NOT fabricate details.** If you can't read a section clearly, say so.
+- `macro_skeleton.md` — the 7-part template and the table/figure plan per review type.

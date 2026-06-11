@@ -1,0 +1,11 @@
+{
+  "name": "interview-dossier",
+  "version": "0.1.0",
+  "description": "Build an adversarially-verified interview dossier on a company and interviewer — verified facts, power structure, question engineering, and an honest decision frame — in one night-before document",
+  "author": {
+    "name": "Avyansh Katiyar",
+    "email": "avyanshkatiyar@gmail.com"
+  },
+  "license": "MIT",
+  "keywords": ["interview", "research", "company-research", "negotiation", "career", "due-diligence", "fact-checking"]
+}

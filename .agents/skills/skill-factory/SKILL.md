@@ -1,242 +1,100 @@
 ---
 name: skill-factory
-description: Create new skills with proper structure and YAML frontmatter. Use when building new slash command skills, ensuring consistent formatting, directory structure, and validation. Guides through the complete skill creation workflow.
-model_tier: sonnet
-parallel_hints:
-  can_parallel_with: [agent-factory]
-  must_serialize_with: []
-  preferred_batch_size: 1
-context_hints:
-  max_file_context: 40
-  compression_level: 1
-  requires_git_context: true
-  requires_db_context: false
-escalation_triggers:
-  - pattern: "security|auth|credential"
-    reason: "Security-affecting skills require human approval"
-  - pattern: "duplicate|conflict"
-    reason: "Functionality conflicts need human resolution"
-  - keyword: ["critical system", "agent permissions"]
-    reason: "System-level changes require review"
+description: Create, refactor, split, compress, validate, or package agent skills. Use for SKILL.md trigger design, agents/openai.yaml metadata, skill resources, progressive disclosure, token-efficient instructions, quick validation, and plugin-contained skills.
 ---
 
 # Skill Factory
 
-> **Purpose:** Guide users through creating new Claude Code skills with proper structure
-> **Created:** 2025-12-27
-> **Trigger:** `/skill-factory` command
+Bundled commands use `$PLUGIN_ROOT` for the plugin root. Set it once: use the host's plugin-root variable when defined (Claude Code: `PLUGIN_ROOT="$CLAUDE_PLUGIN_ROOT"`), otherwise the absolute path of this skill folder's `../..`. Works under any host agent, including Codex, Claude, and Cursor.
 
----
+Create skills that any host agent can actually use: clear trigger metadata, compact hot-path instructions, conditional resources, and executable validation.
 
-## When to Use
+For material `name` or `description` work, use `skill-trigger-metadata` first. For portfolio-level split, merge, delete, router, reference-extract, or script-extract decisions across multiple skills, use `capability-portfolio-architect` first. This skill owns concrete skill structure, resources, scripts, packaging, and validation after the boundary decision is made.
 
-- Creating a new slash command skill
-- Need to ensure proper YAML frontmatter format
-- Want consistent skill structure across the project
-- Building skills for agents or workflows
-- Validating existing skill files
+## Create A Skill
 
----
+Use the bundled initializer unless you are editing an existing skill. Choose the destination from the selected delivery surface: plugin-contained skills go under the plugin source tree; repo-local skills go under the current or named repository; installed personal skills go in the active agent's global skills dir. Example for an installed Codex skill:
 
-## Required Actions
-
-When this skill is invoked, Claude MUST:
-
-1. **Gather skill requirements** from the user:
-   - Skill name (kebab-case, e.g., `my-new-skill`)
-   - One-line description (for slash command discovery)
-   - Purpose and use cases
-   - Whether it needs Reference/ or Workflows/ subdirectories
-
-2. **Validate the skill name**:
-   - Must be kebab-case
-   - Must not conflict with existing skills
-   - Must be descriptive and discoverable
-
-3. **Create the directory structure**:
-   ```
-   .claude/skills/<skill-name>/
-   ├── SKILL.md           # Required: Main skill file
-   ├── Reference/         # Optional: Reference documentation
-   └── Workflows/         # Optional: Workflow definitions
-   ```
-
-4. **Generate SKILL.md** using the template below
-
-5. **Validate the created skill**:
-   - YAML frontmatter is valid
-   - Required sections are present
-   - Examples are included
-
----
-
-## Skill Template
-
-Use this template for all new skills:
-
-```markdown
----
-name: <skill-name>
-description: <one-line description for slash command discovery>
----
-
-# <Skill Title>
-
-> **Purpose:** <what this skill does>
-> **Created:** <date>
-> **Trigger:** `/<skill-name>` command
-
----
-
-## When to Use
-
-<bullet list of scenarios when this skill should be used>
-
----
-
-## Required Actions
-
-When this skill is invoked, Claude MUST:
-
-1. <action 1>
-2. <action 2>
-3. <action 3>
-
----
-
-## Examples
-
-<usage examples showing how the skill works>
-
----
-
-## Escalation Rules
-
-**Escalate to human when:**
-
-<list of situations requiring human intervention>
-
-**Can handle automatically:**
-
-<list of situations the skill can handle independently>
-
----
-
-## Related
-
-- <related skills>
-- <related documentation>
+```bash
+python3 "$PLUGIN_ROOT/scripts/skill/init_skill.py" <skill-name> --path "${CODEX_HOME:-$HOME/.codex}/skills" --resources scripts,references
 ```
 
+Choose the destination deliberately:
+
+- installed personal skill: agent's global skills dir — Codex: `${CODEX_HOME:-$HOME/.codex}/skills/<skill-name>`, Claude: `${CLAUDE_HOME:-$HOME/.claude}/skills/<skill-name>`, Cursor: `${CURSOR_HOME:-$HOME/.cursor}/skills/<skill-name>`; detect the active agent with `$PLUGIN_ROOT/scripts/agent_target.py`
+- plugin-contained skill: `<plugin-root>/skills/<skill-name>` when the user requested a plugin/plugin pack or the current repository is a plugin source tree
+- repo-local skill: when the user, repo instructions, or workspace profile selects the current/named repository as the source surface; record the evidence in `install-scope.json`
+- synthesis snapshot: `<output-dir>/synthesized-skill` only for reference-only drafts, failed/partial synthesis, or an explicit no-install request
+
+Keep names lowercase, hyphenated, and under 64 characters.
+Do not infer repo-local output from dirty git state or a merely local candidate path. Repo instructions and recognizable plugin/skill source trees are valid evidence only when they apply to the current capability task and do not conflict with the latest user message.
+
+## Write SKILL.md
+
+Frontmatter must include only:
+
+```yaml
 ---
-
-## Validation Checklist
-
-Before completing skill creation, verify:
-
-- [ ] **YAML Frontmatter Valid**
-  - `name:` matches directory name (kebab-case)
-  - `description:` is one line, under 200 characters
-  - No trailing spaces or invalid YAML syntax
-
-- [ ] **Required Sections Present**
-  - Title with Purpose/Created/Trigger metadata
-  - "When to Use" section with bullet points
-  - "Required Actions" section with numbered steps
-  - "Examples" section with concrete usage
-
-- [ ] **Quality Standards**
-  - Description is discoverable (keywords users would search)
-  - Actions are specific and actionable
-  - Examples demonstrate real use cases
-  - Escalation rules define boundaries
-
-- [ ] **No Conflicts**
-  - Skill name doesn't duplicate existing skill
-  - Functionality doesn't overlap significantly with existing skills
-
-- [ ] **Directory Structure Correct**
-  - `.claude/skills/<skill-name>/SKILL.md` exists
-  - Optional subdirectories created if needed
-
+name: skill-name
+description: What the skill does and concrete trigger situations.
 ---
+```
 
-## Examples
+Body guidelines:
 
-### Example 1: Create a Simple Skill
+- Put routing and required workflow in `SKILL.md`.
+- Make frontmatter descriptions agent-triggerable from task context, artifacts, source evidence, file types, failures, or decisions. Avoid descriptions that only say "when the user asks for X" unless explicit user consent is the safety boundary.
+- Keep workflow steps out of `description` when they could let the agent act from metadata and skip `SKILL.md`; use `skill-trigger-metadata` for focused name/description audits.
+- For adjacent skills, require a compact selection card: use-when, inputs/signals, do-not-use, failure symptoms, and adjacent skills. Preserve this in frontmatter without turning the description into a procedure.
+- Move detailed variants, long examples, specs, and edge-case playbooks into directly linked `references/`.
+- Add scripts only when deterministic reuse or validation is materially better than rewriting code.
+- Do not add README, installation guides, changelogs, or task diaries inside a skill unless the ecosystem explicitly requires them.
+- Preserve safety boundaries, exact commands, output contracts, and validation proof.
 
-**User:** Create a skill for generating changelogs
+## Context-Density Pass
 
-**Claude:**
-1. Gathers requirements: name=`changelog-generator`, purpose=generate changelogs from git history
-2. Creates directory: `.claude/skills/changelog-generator/`
-3. Generates SKILL.md with proper frontmatter
-4. Validates all checklist items pass
+For material skill work, measure and audit:
 
-### Example 2: Create a Skill with Reference Docs
+```bash
+python3 "$PLUGIN_ROOT/scripts/context/token_count.py" <skill-dir>/SKILL.md --json
+python3 "$PLUGIN_ROOT/scripts/context/context_density_audit.py" <skill-dir> --json --top 20
+```
 
-**User:** Create a skill for ACGME compliance with reference documentation
+Use the audit to remove duplicate hot-path prose, stale history, brittle request-phrase trigger design, and brittle parsing of generated model text. Do not shrink away trigger precision, safety rules, or required commands.
 
-**Claude:**
-1. Gathers requirements including reference materials needed
-2. Creates structure:
-   ```
-   .claude/skills/acgme-compliance/
-   ├── SKILL.md
-   └── Reference/
-       ├── hour-limits.md
-       └── supervision-ratios.md
-   ```
-3. Populates reference files as needed
+## Validate
 
-### Example 3: Check Existing Skill
+Run:
 
-**User:** Validate the test-writer skill
+```bash
+python3 "$PLUGIN_ROOT/scripts/skill/quick_validate.py" <skill-dir>
+```
 
-**Claude:**
-1. Reads `.claude/skills/test-writer/SKILL.md`
-2. Validates YAML frontmatter
-3. Checks all required sections present
-4. Reports any issues found
+When `agents/openai.yaml` is present or desired, regenerate it after final SKILL.md edits:
 
----
+```bash
+python3 "$PLUGIN_ROOT/scripts/skill/generate_openai_yaml.py" <skill-dir> \
+  --interface display_name="<Display Name>" \
+  --interface short_description="<25-64 chars>" \
+  --interface default_prompt="<representative task prompt>"
+```
 
-## Escalation Rules
+Test any added scripts with representative inputs. For complex skills, forward-test with a realistic task if a fresh subagent or isolated session is available.
 
-**Escalate to human when:**
+For complete installed skills, validate the install-scope contract:
 
-1. Skill affects security (auth, credentials, secrets)
-2. Skill duplicates existing functionality significantly
-3. Skill requires new agent permissions
-4. Unclear whether skill or agent is appropriate
-5. Skill would modify critical system files
+```bash
+python3 "$PLUGIN_ROOT/scripts/synthesis/install_scope_gate.py" <output-dir>/install-scope.json --final
+```
 
-**Can handle automatically:**
+For lightweight edits confined to one existing skill's text or metadata — no new scripts, no installation, no new capability claims — `quick_validate.py` plus a one-line scope note in the report replaces the ledgers.
 
-1. Creating standard skill structure
-2. Generating SKILL.md from template
-3. Validating existing skills
-4. Creating Reference/ and Workflows/ subdirectories
-5. Checking for naming conflicts
+## Report
 
----
+State:
 
-## Integration with TOOLSMITH Agent
-
-This skill implements part of the TOOLSMITH agent's "Create New Skill" workflow:
-
-1. TOOLSMITH receives skill creation request
-2. Invokes `/skill-factory` to generate structure
-3. Validates output meets quality standards
-4. Reports completion to ORCHESTRATOR
-
-For agent creation, use the `/agent-factory` skill instead.
-
----
-
-## Related
-
-- `.claude/Agents/TOOLSMITH.md` - Agent specification for tool creation
-- `.claude/skills/` - Directory containing all project skills
-- `docs/development/AGENT_SKILLS.md` - Agent skills reference
-- `CLAUDE.md` - Project guidelines and standards
+- skill path and intended delivery/install surface;
+- trigger behavior preserved or added;
+- resources included and why;
+- validation commands and results;
+- residual risks or deferred variants.

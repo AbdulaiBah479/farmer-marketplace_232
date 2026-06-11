@@ -1,0 +1,11 @@
+{
+  "name": "workflow-distiller",
+  "version": "0.1.0",
+  "description": "Mine your own Claude Code transcripts for repeated friction→fix patterns, rank skill candidates, and draft the SKILL.md files you should already have",
+  "author": {
+    "name": "Avyansh Katiyar",
+    "email": "avyanshkatiyar@gmail.com"
+  },
+  "license": "MIT",
+  "keywords": ["skills", "meta", "transcripts", "workflow-mining", "self-improvement", "automation"]
+}

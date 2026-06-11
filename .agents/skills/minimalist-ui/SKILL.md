@@ -1,30 +1,34 @@
 ---
 name: minimalist-ui
-description: "Use when creating clean editorial interfaces with warm monochrome palettes, crisp borders, restrained motion, and flat bento layouts."
-category: frontend
-risk: safe
-source: community
-source_repo: Leonxlnx/taste-skill
-source_type: community
-date_added: "2026-04-17"
-author: Leonxlnx
-tags: [frontend, design, minimalism, ui]
-tools: [claude, cursor, codex, antigravity]
+description: |
+  Clean editorial-style interfaces. Warm monochrome palette, typographic contrast, flat bento grids, muted pastels. No gradients, no heavy shadows.
+triggers:
+  - "minimalist ui"
+  - "editorial product UI"
+  - "linear style"
+  - "warm monochrome"
+od:
+  mode: prototype
+  surface: web
+  platform: desktop
+  scenario: design
+  category: creative-direction
+  upstream: "https://github.com/Leonxlnx/taste-skill"
+  preview:
+    type: html
+  design_system:
+    requires: true
+  craft:
+    requires:
+      - typography
+      - color
+      - anti-ai-slop
+  example_prompt: |
+    Design a minimalist editorial product interface with warm monochrome color, crisp typography, flat structure, and no decorative excess.
 ---
+
+
 # Protocol: Premium Utilitarian Minimalism UI Architect
-
-## When to Use
-
-- Use when the user wants a refined minimalist UI inspired by tools like Notion, Linear, or editorial workspace products.
-- Use when designing warm monochrome interfaces with crisp borders, generous whitespace, muted pastel accents, and quiet motion.
-- Use when the task should avoid gradients, heavy shadows, saturated colors, pill-heavy components, and generic SaaS visuals.
-
-## Limitations
-
-- Minimalism can hide hierarchy when content is dense; validate scannability, contrast, and navigation clarity with real content.
-- This skill assumes the product can support restrained palettes and typography-led layouts; do not override an established brand system without cause.
-- Subtle motion and flat surfaces still need responsive, keyboard, and screen-reader verification in the target project.
-
 
 ## 1. Protocol Overview
 Name: Premium Utilitarian Minimalism & Editorial UI

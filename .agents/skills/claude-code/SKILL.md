@@ -1,175 +1,62 @@
 ---
 name: claude-code
-description: >
-  Prime Claude Code sessions with proper use of installed plugins and tools:
-  Claude-mem (persistent memory), git-ai-search (conversation context from git),
-  Cozempic (context weight management), and PAL MCP (multi-model collaboration).
-  Use at session start to establish good habits.
+description: Route Claude Code CLI work across local CLI inspection, interactive and print-mode automation, plugin and MCP lifecycle, diagnostics, hooks/settings, background agents, worktrees, sessions, remote control, and ultrareview.
 ---
 
-# Claude Code Session Priming
+# Claude Code Router
 
-You have several powerful plugins and tools installed. Follow these protocols
-throughout the session to make full use of them.
+Bundled commands use `$PLUGIN_ROOT` for the plugin root. Set it once: use the host's plugin-root variable when defined (Claude Code: `PLUGIN_ROOT="$CLAUDE_PLUGIN_ROOT"`), otherwise the absolute path of this plugin's root directory. Works under any host agent, including Codex, Claude, and Cursor.
 
-## 1. Claude-mem (Persistent Memory)
+Use this skill when the user asks to operate, diagnose, automate, wrap, or
+explain Claude Code CLI, including `claude`, `claude --print`, `claude plugin`,
+`claude mcp`, `claude agents`, `claude doctor`, `claude auto-mode`, worktrees,
+hooks, settings, permissions, custom agents, or ultrareview.
 
-Claude-mem provides semantic memory across sessions via MCP tools. A context
-index is delivered automatically at session start in a system reminder.
+For the full command/safety matrix, read
+`$PLUGIN_ROOT/references/cli-operation-contracts.md`.
 
-### Protocol: Search Before Re-Investigating
+## First Move
 
-Before reading files or exploring code to understand something, **check memory
-first**. Past sessions likely already recorded the answer.
-
-```
-1. search(query) -> scan the index for relevant observation IDs
-2. timeline(anchor=ID) -> get surrounding context
-3. get_observations([IDs]) -> fetch full details only for filtered IDs
-```
-
-Never fetch full details without filtering first. The 3-layer workflow provides
-10x token savings.
-
-### Protocol: Save After Significant Work
-
-After completing any of the following, call `save_memory` to record it:
-
-- **Discoveries**: codebase structure, how a system works, where key code lives
-- **Decisions**: architectural choices, approach trade-offs, why option A over B
-- **Completed work**: what was built/changed, the final state, key details
-- **Bug findings**: root cause, fix applied, symptoms vs actual problem
-- **Learnings**: gotchas, undocumented behavior, things that surprised you
-
-Write memory entries as self-contained observations. Future sessions will see
-the title and token cost in the context index, then decide whether to fetch
-the full record. A good title and enough detail to be useful standalone are
-key.
-
-### Protocol: Use the Context Index
-
-The session-start context index shows past observations with:
-- ID, timestamp, type (bugfix/feature/decision/discovery/etc.)
-- Title, token cost to read, tokens of work that produced it
-- File associations
-
-Trust this index for past decisions and learnings. Only fetch full observations
-when you need implementation details, rationale, or debugging context. Critical
-types (bugfix, decision) often merit detailed fetching.
-
-### Skills: /claude-mem:make-plan and /claude-mem:do
-
-These skills create implementation plans with documentation discovery and
-execute plans using subagents. Use them for structured multi-step work.
-
-## 2. git-ai-search (Conversation Context from Git)
-
-git-ai tracks AI-generated code and the conversations that produced it.
-
-### When to Use
-
-- **Resuming work on a git repo**: Search for AI context on recent commits to
-  understand what was done and why
-- **Investigating unfamiliar code**: Check if AI sessions contributed to specific
-  files or line ranges
-- **Picking up a teammate's work**: Restore their conversation context
-- **PR reviews**: Understand AI involvement in changes
-
-### Key Commands
+Prefer live local facts over memory. Inspect the installed CLI before building
+commands or debugging version-sensitive behavior:
 
 ```bash
-git-ai search --commit <sha>              # AI context for a commit
-git-ai search --file <path> --lines 50-75 # AI context for specific lines
-git-ai search --pattern "keyword"         # Search prompt content
-git-ai continue --commit <sha>            # Restore session context
+python3 "$PLUGIN_ROOT/scripts/claude_code_inspector.py" --json
 ```
 
-Use `/git-ai-search` to invoke the full skill when deeper investigation is
-needed.
+If the user supplies a Claude executable path, use it for the current run:
 
-## 3. Cozempic (Context Weight Management)
+```bash
+python3 "$PLUGIN_ROOT/scripts/claude_code_inspector.py" --claude "$CLAUDE_CLI_PATH" --json
+```
 
-Cozempic prevents context bloat, which causes degraded performance and lost
-state (especially agent teams).
+Do not commit personal absolute paths into source files, manifests, docs, or
+examples. Use `CLAUDE_CLI`, `PATH`, `ANTHROPIC_API_KEY`, or user-provided runtime
+arguments instead.
 
-### Automatic Protection
+## Routing
 
-The Cozempic guard daemon starts automatically at session init. It monitors
-session size and can auto-prune before compaction kills agent teams.
+- Non-interactive `--print`, JSON/stream-json, JSON schema, input streaming, prompt files/stdin, budget caps, fallback model, and no-persistence runs: use `claude-print-automation`.
+- Plugin marketplaces, plugin install/update/remove/details/validate/tag/prune, session-only `--plugin-dir` or `--plugin-url`, and MCP server lifecycle: use `claude-plugin-mcp-manager`.
+- Broken config, safe mode, bare mode, debug logs, doctor, update/install, auth/token setup, auto-mode classifier, IDE/Chrome startup issues: use `claude-doctor-debugger`.
+- Background agents, `claude agents --json`, worktrees, tmux, resume/continue/from-pr, fork-session, session names, remote control, and ultrareview: use `claude-agent-worktrees`.
+- Settings JSON, hooks, CLAUDE.md, tool allow/deny rules, custom agents, plugin customizations, and setting-source boundaries: use `claude-hooks-settings`.
 
-### When to Use Proactively
+If several apply, inspect the CLI first, diagnose the safety/config surface
+second, then run or recommend the narrow workflow.
 
-- **Long sessions**: When you've been working for a while and context feels
-  heavy, run `/cozempic diagnose` to check
-- **Before agent teams**: Ensure guard mode is active before spawning teams
-  with TeamCreate. Agent team state is lost when auto-compaction triggers.
-- **After large file reads**: If you've read many large files, context may be
-  bloated with stale content
+## Safety Rules
 
-### Quick Reference
+- Treat `--dangerously-skip-permissions`, `--allow-dangerously-skip-permissions`, and `--permission-mode bypassPermissions` as high-risk. Use them only with an explicit external sandbox boundary.
+- Prefer default permission flow or `--permission-mode plan` for exploratory work.
+- Use `--safe-mode` for broken customizations and `--bare` for minimal explicit-context troubleshooting.
+- Do not run `doctor`, `project purge`, `setup-token`, `auth`, `install/update`, cloud `ultrareview`, plugin marketplace updates/removals, MCP removals/resets, or long-lived background sessions without clear user intent.
+- Keep secrets out of command examples, settings snippets, MCP headers, debug files, hook logs, and final answers.
 
-| Situation | Action |
-|-----------|--------|
-| Check session size | `cozempic current` |
-| Diagnose bloat | `/cozempic diagnose` |
-| Prune and reload | `/cozempic treat` |
-| Protect agent teams | Guard daemon (auto-started) |
+## Completion Standard
 
-### Prescriptions
-
-- **gentle** (under 5MB): progress collapse, file dedup, metadata strip
-- **standard** (5-20MB): + thinking blocks, tool trim, stale reads
-- **aggressive** (over 20MB): + error collapse, document dedup, mega-block trim
-
-## 4. PAL MCP (Multi-Model Collaboration)
-
-PAL provides access to external models for second opinions, deep analysis, and
-consensus building.
-
-### When to Use
-
-- **Complex debugging**: `mcp__pal__debug` for systematic root cause analysis
-- **Architecture decisions**: `mcp__pal__consensus` to consult multiple models
-- **Code review**: `mcp__pal__codereview` for structured review with expert
-  validation
-- **Before commits**: `mcp__pal__precommit` to validate changes
-- **Deep analysis**: `mcp__pal__thinkdeep` for multi-step investigation
-
-### Protocol: Choose the Right Tool
-
-| Need | PAL Tool |
-|------|----------|
-| Second opinion on approach | `chat` |
-| Systematic debugging | `debug` |
-| Architecture/code analysis | `analyze` |
-| Multi-model decision making | `consensus` |
-| Code review | `codereview` |
-| Pre-commit validation | `precommit` |
-| Security audit | `secaudit` |
-| Refactoring opportunities | `refactor` |
-| Test generation | `testgen` |
-
-## 5. Session Workflow Summary
-
-### At Session Start
-
-1. Read the Claude-mem context index (delivered automatically)
-2. If resuming work in a git repo, consider `git-ai search` on recent commits
-3. Search Claude-mem for relevant past work before starting new investigation
-
-### During Work
-
-1. Search memory before re-reading files or re-exploring code
-2. Save significant findings, decisions, and completions to memory
-3. Use PAL tools for complex analysis, debugging, and decisions
-4. Monitor context health; use Cozempic if sessions run long
-
-### Before Agent Teams
-
-1. Verify Cozempic guard is running (check session-start logs)
-2. If not running: `cozempic guard --threshold 50 -rx standard --interval 30`
-
-### At Session End
-
-1. Save any unsaved important findings to Claude-mem
-2. For git repos, work will be captured by git-ai automatically on commit
+A Claude Code CLI task is done when the answer includes the exact command or
+source change, the permission/tool/settings mode chosen, the cwd assumptions,
+and proof appropriate to the request: inspector output, subcommand help,
+`plugin validate`, plugin/MCP list/details output, safe-mode/bare comparison,
+settings JSON validation, or a clearly reported blocker.

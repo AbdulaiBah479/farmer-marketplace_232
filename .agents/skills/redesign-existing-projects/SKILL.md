@@ -1,30 +1,35 @@
 ---
 name: redesign-existing-projects
-description: "Use when upgrading existing websites or apps by auditing generic UI patterns and applying premium design fixes without rewrites."
-category: frontend
-risk: safe
-source: community
-source_repo: Leonxlnx/taste-skill
-source_type: community
-date_added: "2026-04-17"
-author: Leonxlnx
-tags: [frontend, redesign, design-audit, ui]
-tools: [claude, cursor, codex, antigravity]
+description: |
+  Upgrades existing websites and apps to premium quality. Audits current design, identifies generic AI patterns, and applies high-end design standards without breaking functionality. Works with any CSS framework or vanilla CSS.
+triggers:
+  - "redesign existing project"
+  - "improve current UI"
+  - "premium redesign"
+  - "audit UI"
+od:
+  mode: prototype
+  surface: web
+  platform: desktop
+  scenario: design
+  category: creative-direction
+  upstream: "https://github.com/Leonxlnx/taste-skill"
+  preview:
+    type: html
+  design_system:
+    requires: true
+  craft:
+    requires:
+      - typography
+      - color
+      - anti-ai-slop
+      - state-coverage
+  example_prompt: |
+    Audit the existing UI first, then redesign it to premium quality without breaking functionality, preserving useful product structure.
 ---
+
+
 # Redesign Skill
-
-## When to Use
-
-- Use when the user asks to redesign, restyle, modernize, polish, or improve an existing website or app UI.
-- Use when the task is to audit current frontend code and make targeted visual improvements without changing the product architecture.
-- Use when the design feels generic, AI-generated, poorly spaced, visually flat, or missing responsive, interactive, loading, empty, or error states.
-
-## Limitations
-
-- This skill upgrades existing UI but does not authorize framework migrations, information-architecture rewrites, or product-scope expansion by default.
-- Preserve working behavior, routing, data flows, accessibility semantics, and tests while making visual changes.
-- Validate redesigned screens in the actual app across supported browsers and viewport sizes before considering the work complete.
-
 
 ## How This Works
 

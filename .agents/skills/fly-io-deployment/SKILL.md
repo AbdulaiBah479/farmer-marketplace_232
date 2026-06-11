@@ -1,19 +1,2 @@
----
-name: fly-io-deployment
-description: "Deploying globally distributed apps on Fly.io: Machines, Volumes, and multi-region networking."
-category: cloud
----
-
-# Fly.io App Deployment
-
-Deploying globally distributed apps on Fly.io: Machines, Volumes, and multi-region networking.
-
-## When to Use
-Use this skill when working on tasks related to fly.io app deployment.
-
-## Key Capabilities
-- Expert guidance on fly.io app deployment workflows and best practices
-- Step-by-step assistance for common fly.io app deployment tasks
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
+# Fly.io Application Deployment
+Deploy globally distributed apps with Fly.io. Covers fly.toml configuration, `fly launch` for any app, Fly Machines for scalable compute, persistent volumes, Fly Postgres, secrets management, multi-region deployment, and auto-scaling.

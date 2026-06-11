@@ -1,12 +1,2 @@
----
-name: tailwindcss-design
-description: "Utility-first CSS with Tailwind: configuration, plugins, dark mode, and component patterns."
-category: js
----
-
-# Tailwind CSS Design
-
-Utility-first CSS with Tailwind: configuration, plugins, dark mode, and component patterns.
-
-## When to Use
-Use this skill for tailwind css design tasks.
+# Tailwind CSS Design System
+Build UIs efficiently with Tailwind CSS. Covers utility-first design, @apply for component classes, custom theme configuration, responsive prefixes, dark mode with class strategy, arbitrary values, JIT mode, and integrating with component libraries.

@@ -1,282 +1,85 @@
 ---
 name: frontend-design
-description: "You are a frontend designer-engineer, not a layout generator."
-risk: unknown
-source: community
-date_added: "2026-02-27"
+description: |
+  Create distinctive, production-grade frontend interfaces with strong visual direction, polished typography, considered layout, and working HTML/CSS/JS or framework code. Use for websites, landing pages, dashboards, React components, application screens, and UI beautification.
+triggers:
+  - "frontend design"
+  - "ui design"
+  - "ux design"
+  - "web design"
+  - "production ui"
+  - "landing page"
+  - "dashboard design"
+  - "react component design"
+license: Complete terms in LICENSE.txt
+od:
+  mode: prototype
+  category: web-artifacts
+  craft:
+    requires: [typography, color, anti-ai-slop]
+  design_system:
+    requires: true
+    sections: [color, typography, layout, components]
+  example_prompt: "Design and build a production-quality SaaS analytics dashboard for a finance team, with real interaction states, refined typography, and a distinctive visual direction."
+  upstream: "https://github.com/anthropics/skills/tree/main/skills/frontend-design"
 ---
 
-# Frontend Design (Distinctive, Production-Grade)
+# frontend-design
 
-You are a **frontend designer-engineer**, not a layout generator.
+> Adapted from Anthropic's official `frontend-design` skill for Open Design.
 
-Your goal is to create **memorable, high-craft interfaces** that:
+Use this skill when the user asks to build or improve a frontend interface: a website, landing page, dashboard, application screen, HTML/CSS artifact, React/Vue/Svelte component, or a visual redesign of an existing UI.
 
-* Avoid generic “AI UI” patterns
-* Express a clear aesthetic point of view
-* Are fully functional and production-ready
-* Translate design intent directly into code
+The goal is not just "make it nicer." The goal is to ship working frontend code with a clear design point of view, strong craft, and enough product detail that the result feels designed for the user's actual context.
 
-This skill prioritizes **intentional design systems**, not default frameworks.
+## Workflow
 
----
+1. Understand the brief before choosing the look.
+   - Identify the audience, primary job, domain, and emotional tone.
+   - Note any technical constraints: framework, existing styles, accessibility, performance, export target, or responsive requirements.
+   - If the repo already has design tokens, components, screenshots, or a `DESIGN.md`, use those as the source of truth.
 
-## 1. Core Design Mandate
+2. Commit to one specific aesthetic direction.
+   - Pick a direction that fits the product: brutally minimal, editorial, luxury, playful, industrial, retro-futuristic, dense operational, calm enterprise, artful consumer, or another precise direction.
+   - Make the direction concrete through typography, spacing, color, hierarchy, motion, and component shape.
+   - Avoid generic AI defaults: purple-blue gradients, vague glass cards, interchangeable SaaS layouts, over-rounded cards, stock icon rows, and decorative blobs that do not serve the interface.
 
-Every output must satisfy **all four**:
+3. Design the real interface, not a placeholder poster.
+   - Include the controls, empty/loading/error states, tables, filters, navigation, and responsive behavior a real user would expect.
+   - Use honest content. If data is unknown, label it as sample, pending, or unavailable instead of inventing claims.
+   - Keep workflows efficient for the target user. Dashboards and tools should be scannable and dense enough for repeated use; marketing pages can be more expressive.
 
-1. **Intentional Aesthetic Direction**
-   A named, explicit design stance (e.g. *editorial brutalism*, *luxury minimal*, *retro-futurist*, *industrial utilitarian*).
+4. Build production-grade frontend code.
+   - Prefer the repository's existing framework, component conventions, icons, tokens, and styling approach.
+   - For standalone artifacts, create self-contained HTML/CSS/JS unless the user asked for a framework.
+   - Use semantic markup, keyboard-accessible controls, visible focus states, sensible contrast, and responsive layout constraints.
+   - Use CSS variables for repeated colors, spacing, shadows, and type scale.
 
-2. **Technical Correctness**
-   Real, working HTML/CSS/JS or framework code — not mockups.
+5. Refine visual craft.
+   - Typography: choose expressive but readable type pairings. Avoid using default system stacks as the main visual idea unless the direction is intentionally utilitarian.
+   - Color: create a balanced palette with role clarity. Use accent color sparingly and deliberately.
+   - Layout: use alignment, rhythm, density, and negative space intentionally. Do not let cards, panels, or labels drift.
+   - Motion: add purposeful transitions for state changes, reveals, and feedback. Prefer transforms and opacity for performance.
+   - Details: use texture, borders, shadows, dividers, media, and iconography only when they support the concept.
 
-3. **Visual Memorability**
-   At least one element the user will remember 24 hours later.
+6. Self-review before final delivery.
+   - The interface works at mobile and desktop widths.
+   - Text fits its containers and does not overlap adjacent UI.
+   - Interactive elements have hover/focus/active/disabled states.
+   - The design avoids obvious AI-generated visual tropes.
+   - The result has one memorable quality a user could describe after closing the page.
 
-4. **Cohesive Restraint**
-   No random decoration. Every flourish must serve the aesthetic thesis.
+## Open Design Integration
 
-❌ No default layouts
-❌ No design-by-components
-❌ No “safe” palettes or fonts
-✅ Strong opinions, well executed
+When Open Design provides an active design system, treat it as the product's brand contract. Use the injected color, typography, layout, and component guidance first, then apply this skill's frontend craft rules where the design system is silent.
 
----
+When Open Design injects craft references such as `typography`, `color`, and `anti-ai-slop`, apply those checks before finishing. If the user's brand guidance conflicts with a generic craft rule, the user's brand guidance wins.
 
-## 2. Design Feasibility & Impact Index (DFII)
+## Source
 
-Before building, evaluate the design direction using DFII.
+- Upstream: https://github.com/anthropics/skills/tree/main/skills/frontend-design
+- Category: `web-artifacts`
 
-### DFII Dimensions (1–5)
+## License
 
-| Dimension                      | Question                                                     |
-| ------------------------------ | ------------------------------------------------------------ |
-| **Aesthetic Impact**           | How visually distinctive and memorable is this direction?    |
-| **Context Fit**                | Does this aesthetic suit the product, audience, and purpose? |
-| **Implementation Feasibility** | Can this be built cleanly with available tech?               |
-| **Performance Safety**         | Will it remain fast and accessible?                          |
-| **Consistency Risk**           | Can this be maintained across screens/components?            |
-
-### Scoring Formula
-
-```
-DFII = (Impact + Fit + Feasibility + Performance) − Consistency Risk
-```
-
-**Range:** `-5 → +15`
-
-### Interpretation
-
-| DFII      | Meaning   | Action                      |
-| --------- | --------- | --------------------------- |
-| **12–15** | Excellent | Execute fully               |
-| **8–11**  | Strong    | Proceed with discipline     |
-| **4–7**   | Risky     | Reduce scope or effects     |
-| **≤ 3**   | Weak      | Rethink aesthetic direction |
-
----
-
-## 3. Mandatory Design Thinking Phase
-
-Before writing code, explicitly define:
-
-### 1. Purpose
-
-* What action should this interface enable?
-* Is it persuasive, functional, exploratory, or expressive?
-
-### 2. Tone (Choose One Dominant Direction)
-
-Examples (non-exhaustive):
-
-* Brutalist / Raw
-* Editorial / Magazine
-* Luxury / Refined
-* Retro-futuristic
-* Industrial / Utilitarian
-* Organic / Natural
-* Playful / Toy-like
-* Maximalist / Chaotic
-* Minimalist / Severe
-
-⚠️ Do not blend more than **two**.
-
-### 3. Differentiation Anchor
-
-Answer:
-
-> “If this were screenshotted with the logo removed, how would someone recognize it?”
-
-This anchor must be visible in the final UI.
-
----
-
-## 4. Aesthetic Execution Rules (Non-Negotiable)
-
-### Typography
-
-* Avoid system fonts and AI-defaults (Inter, Roboto, Arial, etc.)
-* Choose:
-
-  * 1 expressive display font
-  * 1 restrained body font
-* Use typography structurally (scale, rhythm, contrast)
-
-### Color & Theme
-
-* Commit to a **dominant color story**
-* Use CSS variables exclusively
-* Prefer:
-
-  * One dominant tone
-  * One accent
-  * One neutral system
-* Avoid evenly-balanced palettes
-
-### Spatial Composition
-
-* Break the grid intentionally
-* Use:
-
-  * Asymmetry
-  * Overlap
-  * Negative space OR controlled density
-* White space is a design element, not absence
-
-### Motion
-
-* Motion must be:
-
-  * Purposeful
-  * Sparse
-  * High-impact
-* Prefer:
-
-  * One strong entrance sequence
-  * A few meaningful hover states
-* Avoid decorative micro-motion spam
-
-### Texture & Depth
-
-Use when appropriate:
-
-* Noise / grain overlays
-* Gradient meshes
-* Layered translucency
-* Custom borders or dividers
-* Shadows with narrative intent (not defaults)
-
----
-
-## 5. Implementation Standards
-
-### Code Requirements
-
-* Clean, readable, and modular
-* No dead styles
-* No unused animations
-* Semantic HTML
-* Accessible by default (contrast, focus, keyboard)
-
-### Framework Guidance
-
-* **HTML/CSS**: Prefer native features, modern CSS
-* **React**: Functional components, composable styles
-* **Animation**:
-
-  * CSS-first
-  * Framer Motion only when justified
-
-### Complexity Matching
-
-* Maximalist design → complex code (animations, layers)
-* Minimalist design → extremely precise spacing & type
-
-Mismatch = failure.
-
----
-
-## 6. Required Output Structure
-
-When generating frontend work:
-
-### 1. Design Direction Summary
-
-* Aesthetic name
-* DFII score
-* Key inspiration (conceptual, not visual plagiarism)
-
-### 2. Design System Snapshot
-
-* Fonts (with rationale)
-* Color variables
-* Spacing rhythm
-* Motion philosophy
-
-### 3. Implementation
-
-* Full working code
-* Comments only where intent isn’t obvious
-
-### 4. Differentiation Callout
-
-Explicitly state:
-
-> “This avoids generic UI by doing X instead of Y.”
-
----
-
-## 7. Anti-Patterns (Immediate Failure)
-
-❌ Inter/Roboto/system fonts
-❌ Purple-on-white SaaS gradients
-❌ Default Tailwind/ShadCN layouts
-❌ Symmetrical, predictable sections
-❌ Overused AI design tropes
-❌ Decoration without intent
-
-If the design could be mistaken for a template → restart.
-
----
-
-## 8. Integration With Other Skills
-
-* **page-cro** → Layout hierarchy & conversion flow
-* **copywriting** → Typography & message rhythm
-* **marketing-psychology** → Visual persuasion & bias alignment
-* **branding** → Visual identity consistency
-* **ab-test-setup** → Variant-safe design systems
-
----
-
-## 9. Operator Checklist
-
-Before finalizing output:
-
-* [ ] Clear aesthetic direction stated
-* [ ] DFII ≥ 8
-* [ ] One memorable design anchor
-* [ ] No generic fonts/colors/layouts
-* [ ] Code matches design ambition
-* [ ] Accessible and performant
-
----
-
-## 10. Questions to Ask (If Needed)
-
-1. Who is this for, emotionally?
-2. Should this feel trustworthy, exciting, calm, or provocative?
-3. Is memorability or clarity more important?
-4. Will this scale to other pages/components?
-5. What should users *feel* in the first 3 seconds?
-
----
-
-## When to Use
-This skill is applicable to execute the workflow or actions described in the overview.
-
-## Limitations
-- Use this skill only when the task clearly matches the scope described above.
-- Do not treat the output as a substitute for environment-specific validation, testing, or expert review.
-- Stop and ask for clarification if required inputs, permissions, safety boundaries, or success criteria are missing.
+This skill is adapted from Anthropic's official skills repository. See `LICENSE.txt` in this folder for the upstream Apache-2.0 license terms.

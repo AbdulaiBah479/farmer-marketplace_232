@@ -1,53 +1,67 @@
 'use client'
 import { useState } from 'react'
-import { Megaphone, Plus, Sparkles, TrendingUp, DollarSign, Eye, MousePointer, MoreHorizontal, ArrowUpRight, ChevronRight } from 'lucide-react'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
-
-type CampaignStatus = 'Active' | 'Paused' | 'Completed' | 'Draft'
+import { Megaphone, TrendingUp, DollarSign, MousePointer, Users, Sparkles, Brain, MoreHorizontal, Search, BarChart3, Globe, Mail, Share2, Target } from 'lucide-react'
 
 const campaigns = [
-  { id: 1, name: 'AI COO Launch — LinkedIn Blitz', channel: 'LinkedIn', status: 'Active' as CampaignStatus, budget: 5000, spent: 3200, leads: 284, roi: 340, ctr: 4.2 },
-  { id: 2, name: 'Q2 Email Nurture Sequence', channel: 'Email', status: 'Active' as CampaignStatus, budget: 800, spent: 420, leads: 192, roi: 890, ctr: 28.4 },
-  { id: 3, name: 'Google Search — Business AI', channel: 'Google Ads', status: 'Active' as CampaignStatus, budget: 8000, spent: 6100, leads: 347, roi: 220, ctr: 3.8 },
-  { id: 4, name: 'Retargeting — Website Visitors', channel: 'Meta Ads', status: 'Paused' as CampaignStatus, budget: 3000, spent: 1200, leads: 89, roi: 180, ctr: 2.1 },
-  { id: 5, name: 'Content SEO Push — AI Operations', channel: 'SEO', status: 'Completed' as CampaignStatus, budget: 2500, spent: 2500, leads: 520, roi: 640, ctr: 0 },
-  { id: 6, name: 'Twitter/X Brand Awareness', channel: 'Twitter', status: 'Draft' as CampaignStatus, budget: 2000, spent: 0, leads: 0, roi: 0, ctr: 0 },
+  { id: 1, name: 'Q4 Enterprise Outreach', channel: 'Email', status: 'ACTIVE', budget: 2500, spent: 1840, leads: 127, conversions: 14, cpl: 14.5, roi: 340, startDate: 'Oct 1' },
+  { id: 2, name: 'LinkedIn AI Awareness', channel: 'Social', status: 'ACTIVE', budget: 4000, spent: 3200, leads: 284, conversions: 31, cpl: 11.3, roi: 520, startDate: 'Sep 20' },
+  { id: 3, name: 'Google Search — AI COO', channel: 'Paid', status: 'ACTIVE', budget: 6000, spent: 4800, leads: 410, conversions: 48, cpl: 11.7, roi: 610, startDate: 'Sep 1' },
+  { id: 4, name: 'Organic SEO — AI Tools', channel: 'SEO', status: 'ONGOING', budget: 3000, spent: 3000, leads: 892, conversions: 104, cpl: 3.4, roi: 1240, startDate: 'Jul 1' },
+  { id: 5, name: 'Product Hunt Launch', channel: 'Social', status: 'COMPLETED', budget: 1000, spent: 980, leads: 340, conversions: 28, cpl: 2.9, roi: 820, startDate: 'Sep 15' },
+  { id: 6, name: 'Re-engagement Email Series', channel: 'Email', status: 'DRAFT', budget: 1500, spent: 0, leads: 0, conversions: 0, cpl: 0, roi: 0, startDate: '—' },
 ]
 
-const channelPerformance = [
-  { channel: 'Email', leads: 192, color: '#7c3aed' },
-  { channel: 'SEO', leads: 520, color: '#4f46e5' },
-  { channel: 'LinkedIn', leads: 284, color: '#3b82f6' },
-  { channel: 'Google', leads: 347, color: '#10b981' },
-  { channel: 'Meta', leads: 89, color: '#f59e0b' },
-  { channel: 'Twitter', leads: 0, color: '#6b7280' },
+const channelBreakdown = [
+  { name: 'Email', Icon: Mail, color: 'text-violet-400', bg: 'bg-violet-500/10', leads: 892, conversions: 94, spend: 8200, roi: 420 },
+  { name: 'Social Media', Icon: Share2, color: 'text-blue-400', bg: 'bg-blue-500/10', leads: 1240, conversions: 87, spend: 12400, roi: 380 },
+  { name: 'SEO / Organic', Icon: Globe, color: 'text-emerald-400', bg: 'bg-emerald-500/10', leads: 2840, conversions: 213, spend: 9000, roi: 890 },
+  { name: 'Paid Ads', Icon: Target, color: 'text-orange-400', bg: 'bg-orange-500/10', leads: 1680, conversions: 142, spend: 18600, roi: 610 },
 ]
-
-const statusConfig: Record<CampaignStatus, string> = {
-  Active: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  Paused: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  Completed: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  Draft: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
-}
 
 const aiRecommendations = [
-  { title: 'Scale LinkedIn Campaign', body: 'Your LinkedIn CTR of 4.2% is 2.4x industry average. Increasing budget by $3K could yield ~180 additional leads this month based on current CPL.', action: 'Increase Budget', color: 'emerald' },
-  { title: 'Reactivate Meta Retargeting', body: 'Website traffic is up 34% this month. Your retargeting pool has grown significantly — now is the right time to re-enable this campaign.', action: 'Enable Campaign', color: 'violet' },
-  { title: 'Optimize Email Subject Lines', body: 'Your email open rate is 22% vs 28% top quartile benchmark. AI suggests testing urgency-based subject lines to close the gap.', action: 'Run A/B Test', color: 'blue' },
+  { type: 'budget', text: 'Shift 20% of Paid Ads budget to SEO — your organic cost-per-lead is 5x lower ($3.40 vs $11.70) with higher purchase intent.' },
+  { type: 'content', text: 'Your LinkedIn posts featuring case studies get 3.2x more engagement. Create 2-3 case study posts per week.' },
+  { type: 'timing', text: 'Email campaigns sent on Tuesday 9 AM have 47% higher open rates. Reschedule your Q4 campaign launch.' },
+  { type: 'audience', text: 'Leads from "Head of Operations" roles convert at 2.8x the average rate. Consider targeting this segment more aggressively.' },
+]
+
+const recColors: Record<string, string> = {
+  budget: 'bg-violet-500/10 border border-violet-500/20 text-violet-400',
+  content: 'bg-blue-500/10 border border-blue-500/20 text-blue-400',
+  timing: 'bg-amber-500/10 border border-amber-500/20 text-amber-400',
+  audience: 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400',
+}
+
+const statusConfig: Record<string, string> = {
+  ACTIVE: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  ONGOING: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+  COMPLETED: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
+  DRAFT: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
+  PAUSED: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+}
+
+const channelIconMap: Record<string, React.ReactNode> = {
+  Email: <Mail className="w-3 h-3" />,
+  Social: <Share2 className="w-3 h-3" />,
+  Paid: <Target className="w-3 h-3" />,
+  SEO: <Globe className="w-3 h-3" />,
+}
+
+const stats = [
+  { label: 'Total Leads', value: '6,652', change: '+23%', icon: Users, color: 'text-violet-400' },
+  { label: 'Ad Spend', value: '$48.2K', change: '+$8K', icon: DollarSign, color: 'text-blue-400' },
+  { label: 'Avg. CTR', value: '3.8%', change: '+0.6%', icon: MousePointer, color: 'text-emerald-400' },
+  { label: 'Blended ROI', value: '575%', change: '+87%', icon: TrendingUp, color: 'text-orange-400' },
 ]
 
 export default function MarketingPage() {
-  const [filter, setFilter] = useState('All')
+  const [search, setSearch] = useState('')
+  const [activeTab, setActiveTab] = useState<'campaigns' | 'channels' | 'recommendations'>('campaigns')
 
-  const filters = ['All', 'Active', 'Paused', 'Completed', 'Draft']
-  const filtered = campaigns.filter(c => filter === 'All' || c.status === filter)
-
-  const totalLeads = campaigns.reduce((sum, c) => sum + c.leads, 0)
-  const totalSpend = campaigns.reduce((sum, c) => sum + c.spent, 0)
-  const avgRoi = Math.round(campaigns.filter(c => c.roi > 0).reduce((sum, c) => sum + c.roi, 0) / campaigns.filter(c => c.roi > 0).length)
+  const filtered = campaigns.filter(c => c.name.toLowerCase().includes(search.toLowerCase()))
 
   return (
-    <div className="min-h-screen bg-[#030712] p-6 max-w-7xl mx-auto space-y-6">
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -55,127 +69,181 @@ export default function MarketingPage() {
             <Megaphone className="w-6 h-6 text-violet-400" />
             Marketing Assistant
           </h1>
-          <p className="text-gray-400 text-sm mt-1">Manage campaigns, track performance, and get AI recommendations</p>
+          <p className="text-gray-400 text-sm mt-1">AI-powered campaign management and performance optimization</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm font-medium hover:opacity-90 shadow-lg shadow-violet-500/20">
-          <Plus className="w-4 h-4" />
-          New Campaign
-        </button>
+        <div className="flex items-center gap-3">
+          <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm font-medium hover:opacity-90 transition-opacity shadow-lg shadow-violet-500/20">
+            <Sparkles className="w-4 h-4" />
+            Create Campaign with AI
+          </button>
+          <button className="flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10 text-gray-300 hover:bg-white/5 text-sm transition-all">
+            <Brain className="w-4 h-4" />
+            AI Analysis
+          </button>
+        </div>
       </div>
 
-      {/* KPIs */}
+      {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: 'Total Leads (MTD)', value: totalLeads.toLocaleString(), change: '+23%', icon: TrendingUp, color: 'text-violet-400' },
-          { label: 'Ad Spend (MTD)', value: `$${(totalSpend / 1000).toFixed(1)}K`, change: '-8% vs budget', icon: DollarSign, color: 'text-indigo-400' },
-          { label: 'Avg Campaign ROI', value: `${avgRoi}%`, change: '+42%', icon: ArrowUpRight, color: 'text-emerald-400' },
-          { label: 'Avg CTR', value: '3.8%', change: '+0.6%', icon: MousePointer, color: 'text-amber-400' },
-        ].map(kpi => (
-          <div key={kpi.label} className="bg-gray-900/50 border border-white/5 rounded-2xl p-5">
+        {stats.map(s => (
+          <div key={s.label} className="bg-gray-900/50 border border-white/5 rounded-2xl p-5">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs text-gray-500 uppercase tracking-wider">{kpi.label}</span>
-              <kpi.icon className={`w-4 h-4 ${kpi.color}`} />
+              <span className="text-xs text-gray-500 uppercase tracking-wider">{s.label}</span>
+              <s.icon className={`w-4 h-4 ${s.color}`} />
             </div>
-            <p className="text-2xl font-bold text-white">{kpi.value}</p>
-            <p className="text-xs text-emerald-400 mt-1">{kpi.change} this month</p>
+            <p className="text-2xl font-bold text-white">{s.value}</p>
+            <p className="text-xs text-emerald-400 mt-1">{s.change} this month</p>
           </div>
         ))}
       </div>
 
-      {/* Campaign Table */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-white font-semibold">Campaigns</h2>
-          <div className="flex items-center gap-1 bg-gray-900/50 border border-white/5 rounded-xl p-1">
-            {filters.map(f => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${filter === f ? 'bg-violet-600 text-white' : 'text-gray-400 hover:text-white'}`}
-              >
-                {f}
-              </button>
-            ))}
-          </div>
-        </div>
+      {/* Tabs */}
+      <div className="flex items-center gap-1 bg-gray-900/50 border border-white/5 rounded-xl p-1 w-fit">
+        {(['campaigns', 'channels', 'recommendations'] as const).map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-all ${activeTab === tab ? 'bg-violet-600 text-white' : 'text-gray-400 hover:text-white'}`}
+          >
+            {tab === 'recommendations' ? 'AI Recommendations' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {/* Campaigns Table */}
+      {activeTab === 'campaigns' && (
         <div className="bg-gray-900/50 border border-white/5 rounded-2xl overflow-hidden">
-          <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_auto] gap-4 px-5 py-3 border-b border-white/5">
-            {['Campaign', 'Channel', 'Status', 'Budget', 'Leads', 'ROI', ''].map(h => (
-              <span key={h} className="text-xs font-medium text-gray-500 uppercase tracking-wider">{h}</span>
-            ))}
+          <div className="p-4 border-b border-white/5">
+            <div className="relative max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search campaigns..." className="w-full pl-9 pr-4 py-2 text-sm bg-white/5 border border-white/10 rounded-xl text-gray-300 placeholder-gray-600 focus:outline-none focus:border-violet-500 transition-colors" />
+            </div>
           </div>
-          <div className="divide-y divide-white/5">
-            {filtered.map(c => (
-              <div key={c.id} className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_auto] gap-4 px-5 py-4 items-center hover:bg-white/2 transition-all group">
-                <div>
-                  <p className="text-sm text-white font-medium truncate">{c.name}</p>
-                  {c.spent > 0 && (
-                    <div className="mt-1">
-                      <div className="h-1 bg-white/5 rounded-full overflow-hidden w-32">
-                        <div className="h-full bg-violet-500 rounded-full" style={{ width: `${Math.min(100, (c.spent / c.budget) * 100)}%` }} />
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-white/5">
+                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Campaign</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Budget</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Leads</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Cost/Lead</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">ROI</th>
+                  <th className="px-4 py-3"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {filtered.map(c => (
+                  <tr key={c.id} className="hover:bg-white/[0.02] transition-colors group">
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400">
+                          {channelIconMap[c.channel] || <BarChart3 className="w-3 h-3" />}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-white">{c.name}</p>
+                          <p className="text-xs text-gray-500">{c.channel} · Started {c.startDate}</p>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-                <span className="text-sm text-gray-300">{c.channel}</span>
-                <span className={`inline-flex items-center px-2 py-0.5 rounded-lg border text-xs font-medium w-fit ${statusConfig[c.status]}`}>{c.status}</span>
-                <div>
-                  <p className="text-sm text-white">${c.budget.toLocaleString()}</p>
-                  <p className="text-xs text-gray-600">${c.spent.toLocaleString()} spent</p>
-                </div>
-                <span className="text-sm text-white font-medium">{c.leads > 0 ? c.leads : '—'}</span>
-                <span className={`text-sm font-medium ${c.roi > 200 ? 'text-emerald-400' : c.roi > 0 ? 'text-amber-400' : 'text-gray-600'}`}>
-                  {c.roi > 0 ? `${c.roi}%` : '—'}
-                </span>
-                <button className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-white/5 text-gray-500">
-                  <MoreHorizontal className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Channel Chart */}
-        <div className="bg-gray-900/50 border border-white/5 rounded-2xl p-6">
-          <h2 className="text-white font-semibold mb-1">Channel Performance</h2>
-          <p className="text-xs text-gray-500 mb-5">Leads generated by channel (all time)</p>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={channelPerformance} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" />
-              <XAxis dataKey="channel" tick={{ fill: '#9ca3af', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{ background: '#111827', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, fontSize: 12 }} formatter={(v: any) => [`${v} leads`, 'Leads']} />
-              <Bar dataKey="leads" radius={[4, 4, 0, 0]}>
-                {channelPerformance.map((entry, i) => (
-                  <Cell key={i} fill={entry.color} />
+                    </td>
+                    <td className="px-4 py-4">
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-lg border text-xs font-medium ${statusConfig[c.status]}`}>{c.status}</span>
+                    </td>
+                    <td className="px-4 py-4">
+                      <div>
+                        <p className="text-sm text-white">${c.spent.toLocaleString()} / ${c.budget.toLocaleString()}</p>
+                        {c.budget > 0 && (
+                          <div className="w-20 bg-gray-800 rounded-full h-1 mt-1">
+                            <div className="h-1 rounded-full bg-violet-500" style={{ width: `${Math.min((c.spent / c.budget) * 100, 100)}%` }} />
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4">
+                      <p className="text-sm text-white">{c.leads.toLocaleString()}</p>
+                      <p className="text-xs text-gray-500">{c.conversions} conversions</p>
+                    </td>
+                    <td className="px-4 py-4">
+                      <span className="text-sm text-white">{c.cpl > 0 ? `$${c.cpl.toFixed(1)}` : '—'}</span>
+                    </td>
+                    <td className="px-4 py-4">
+                      <span className={`text-sm font-semibold ${c.roi > 500 ? 'text-emerald-400' : c.roi > 300 ? 'text-blue-400' : c.roi > 0 ? 'text-amber-400' : 'text-gray-500'}`}>
+                        {c.roi > 0 ? `${c.roi}%` : '—'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4">
+                      <button className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-white transition-all opacity-0 group-hover:opacity-100">
+                        <MoreHorizontal className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
                 ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* AI Recommendations */}
-        <div className="bg-gray-900/50 border border-white/5 rounded-2xl p-6">
-          <div className="flex items-center gap-2 mb-5">
-            <Sparkles className="w-4 h-4 text-violet-400" />
-            <h2 className="text-white font-semibold">AI Recommendations</h2>
+              </tbody>
+            </table>
           </div>
-          <div className="space-y-3">
-            {aiRecommendations.map((r, i) => (
-              <div key={i} className="bg-black/20 border border-white/5 rounded-xl p-4">
-                <h3 className="text-sm font-semibold text-white mb-1">{r.title}</h3>
-                <p className="text-xs text-gray-400 leading-relaxed mb-2">{r.body}</p>
-                <button className="flex items-center gap-1.5 text-xs text-violet-400 hover:text-violet-300 font-medium">
-                  {r.action} <ChevronRight className="w-3.5 h-3.5" />
+        </div>
+      )}
+
+      {/* Channel Breakdown */}
+      {activeTab === 'channels' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {channelBreakdown.map(ch => (
+            <div key={ch.name} className="bg-gray-900/50 border border-white/5 rounded-2xl p-6 hover:border-white/10 transition-colors">
+              <div className="flex items-center gap-3 mb-5">
+                <div className={`w-10 h-10 rounded-xl ${ch.bg} border border-white/5 flex items-center justify-center`}>
+                  <ch.Icon className={`w-5 h-5 ${ch.color}`} />
+                </div>
+                <h3 className="text-white font-semibold">{ch.name}</h3>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { label: 'Total Leads', value: ch.leads.toLocaleString() },
+                  { label: 'Conversions', value: ch.conversions.toString() },
+                  { label: 'Total Spend', value: `$${(ch.spend / 1000).toFixed(1)}K` },
+                  { label: 'ROI', value: `${ch.roi}%` },
+                ].map(m => (
+                  <div key={m.label}>
+                    <p className="text-xs text-gray-500 mb-0.5">{m.label}</p>
+                    <p className="text-lg font-bold text-white">{m.value}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 pt-4 border-t border-white/5">
+                <p className="text-xs text-gray-500 mb-1">Cost per Lead</p>
+                <p className="text-xl font-bold text-white">${(ch.spend / ch.leads).toFixed(2)}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* AI Recommendations */}
+      {activeTab === 'recommendations' && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 bg-gradient-to-r from-violet-600/10 to-indigo-600/10 border border-violet-500/20 rounded-2xl p-5">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center flex-shrink-0">
+              <Brain className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <h3 className="text-white font-semibold">AI Marketing Strategist</h3>
+              <p className="text-gray-400 text-sm">Based on your campaign performance, here are this week&apos;s top recommendations</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {aiRecommendations.map((rec, i) => (
+              <div key={i} className={`rounded-2xl p-5 ${recColors[rec.type]}`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs font-semibold uppercase tracking-wider opacity-70">{rec.type.charAt(0).toUpperCase() + rec.type.slice(1)} Optimization</span>
+                </div>
+                <p className="text-sm text-gray-300 leading-relaxed">{rec.text}</p>
+                <button className="mt-3 text-xs font-medium opacity-80 hover:opacity-100 transition-opacity">
+                  Apply Recommendation &rarr;
                 </button>
               </div>
             ))}
           </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

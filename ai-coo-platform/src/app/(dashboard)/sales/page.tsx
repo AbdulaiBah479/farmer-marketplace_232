@@ -1,81 +1,66 @@
 'use client'
 import { useState } from 'react'
-import { TrendingUp, DollarSign, Target, Phone, Mail, Calendar, Sparkles, ChevronRight, MoreHorizontal, CheckCircle2, Clock, ArrowUpRight, Star } from 'lucide-react'
+import { TrendingUp, DollarSign, Target, Users, Sparkles, Brain, MoreHorizontal, Phone, Mail, Clock, Award, ChevronRight, CheckCircle2, Circle } from 'lucide-react'
 
-type DealStage = 'Prospecting' | 'Discovery' | 'Proposal' | 'Negotiation' | 'Closed Won'
-
-const stageProgress: Record<DealStage, number> = {
-  Prospecting: 10,
-  Discovery: 30,
-  Proposal: 55,
-  Negotiation: 80,
-  'Closed Won': 100,
-}
-
-const stageColors: Record<DealStage, string> = {
-  Prospecting: 'bg-gray-500',
-  Discovery: 'bg-blue-500',
-  Proposal: 'bg-violet-500',
-  Negotiation: 'bg-amber-500',
-  'Closed Won': 'bg-emerald-500',
-}
-
-const stageBadge: Record<DealStage, string> = {
-  Prospecting: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
-  Discovery: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  Proposal: 'bg-violet-500/10 text-violet-400 border-violet-500/20',
-  Negotiation: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  'Closed Won': 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-}
-
-const deals = [
-  { id: 1, company: 'Meridian Tech Group', contact: 'David Okafor', value: 84000, stage: 'Negotiation' as DealStage, probability: 80, closeDate: 'Jun 20, 2026', daysInStage: 4 },
-  { id: 2, company: 'Apex Ventures', contact: 'Jennifer Walsh', value: 120000, stage: 'Proposal' as DealStage, probability: 55, closeDate: 'Jul 5, 2026', daysInStage: 7 },
-  { id: 3, company: 'Bright Solutions Inc', contact: 'Marcus Thompson', value: 36000, stage: 'Closed Won' as DealStage, probability: 100, closeDate: 'Jun 10, 2026', daysInStage: 0 },
-  { id: 4, company: 'NexaFlow Systems', contact: 'Amara Singh', value: 55000, stage: 'Discovery' as DealStage, probability: 30, closeDate: 'Aug 1, 2026', daysInStage: 12 },
-  { id: 5, company: 'Pioneer Digital', contact: 'Carlos Rivera', value: 28000, stage: 'Prospecting' as DealStage, probability: 10, closeDate: 'Aug 30, 2026', daysInStage: 3 },
-  { id: 6, company: 'Summit Analytics', contact: 'Sophie Chen', value: 67500, stage: 'Negotiation' as DealStage, probability: 85, closeDate: 'Jun 25, 2026', daysInStage: 6 },
+const topDeals = [
+  { id: 1, company: 'CloudScale Corp', contact: 'Marcus Chen', value: 150000, probability: 85, stage: 'Negotiation', daysOpen: 14, score: 92, avatar: 'MC' },
+  { id: 2, company: 'AutoScaling Co', contact: 'Ryan Lee', value: 88000, probability: 90, stage: 'Negotiation', daysOpen: 8, score: 89, avatar: 'RL' },
+  { id: 3, company: 'Consultify Pro', contact: 'Aisha Rahman', value: 92000, probability: 75, stage: 'Proposal', daysOpen: 11, score: 84, avatar: 'AR' },
+  { id: 4, company: 'TechVentures Inc', contact: 'Sarah Miller', value: 45000, probability: 80, stage: 'Proposal', daysOpen: 5, score: 87, avatar: 'SM' },
+  { id: 5, company: 'EcomBrand Ltd', contact: 'Priya Sharma', value: 38000, probability: 65, stage: 'Qualified', daysOpen: 18, score: 71, avatar: 'PS' },
 ]
 
 const activities = [
-  { id: 1, type: 'call', label: 'Call with David Okafor', time: '10:00 AM', done: true },
-  { id: 2, type: 'email', label: 'Follow up with Apex Ventures', time: '11:30 AM', done: true },
-  { id: 3, type: 'meeting', label: 'Demo for NexaFlow Systems', time: '2:00 PM', done: false },
-  { id: 4, type: 'email', label: 'Send proposal to Summit Analytics', time: '4:00 PM', done: false },
-  { id: 5, type: 'call', label: 'Check-in with Pioneer Digital', time: '5:30 PM', done: false },
+  { id: 1, type: 'call', description: 'Call with Marcus Chen — discussed pricing', company: 'CloudScale Corp', time: '30 min ago', outcome: 'Positive', user: 'James W.' },
+  { id: 2, type: 'email', description: 'Sent follow-up to Aisha Rahman', company: 'Consultify Pro', time: '1 hour ago', outcome: 'Sent', user: 'AI Agent' },
+  { id: 3, type: 'deal', description: 'RevOps Solutions deal marked as won', company: 'RevOps Solutions', time: '2 hours ago', outcome: 'Won', user: 'Tom B.' },
+  { id: 4, type: 'note', description: 'Added meeting notes from TechVentures demo', company: 'TechVentures Inc', time: '3 hours ago', outcome: 'Noted', user: 'Sarah M.' },
+  { id: 5, type: 'call', description: 'Demo call with EcomBrand Ltd team', company: 'EcomBrand Ltd', time: '4 hours ago', outcome: 'Follow-up', user: 'James W.' },
+  { id: 6, type: 'email', description: 'Proposal email opened 3x by Ryan Lee', company: 'AutoScaling Co', time: '5 hours ago', outcome: 'Engaged', user: 'AI Agent' },
 ]
 
-const activityIcons: Record<string, any> = {
-  call: Phone,
-  email: Mail,
-  meeting: Calendar,
-}
-
-const aiCoachingTips = [
-  { title: 'Follow Up Apex Ventures', tip: 'Jennifer Walsh hasn\'t responded in 7 days. Send a value-add email with a case study — AI suggests a 68% chance of reengagement.', urgency: 'High' },
-  { title: 'Accelerate Meridian Close', tip: 'David has opened your proposal 4 times. Strike now — propose a 48-hour deadline and offer 10% first-year discount to close this week.', urgency: 'Medium' },
-  { title: 'Add NexaFlow Decision Maker', tip: 'Marcus Thompson is an influencer but not the final buyer. Ask for an intro to the CTO to prevent late-stage deal loss.', urgency: 'Medium' },
+const coachingTips = [
+  { category: 'Priority Action', text: 'CloudScale Corp is your highest-value deal at risk. Schedule a call with Marcus this week — deals stagnant for 14+ days close 60% less often.', priority: 'high' },
+  { category: 'Opportunity', text: 'AutoScaling Co has a 90% win probability. Push for contract signing this week to close before month-end.', priority: 'medium' },
+  { category: 'Coaching', text: 'Your average deal cycle is 21 days vs. team average of 28 days. Your follow-up speed (avg. 4 hours) is a key differentiator.', priority: 'info' },
+  { category: 'Risk', text: 'EcomBrand Ltd is 18 days in the Qualified stage. Consider adjusting value proposition or offering a discount to move forward.', priority: 'warning' },
 ]
 
-const urgencyColors: Record<string, string> = {
-  High: 'bg-red-500/10 text-red-400 border-red-500/20',
-  Medium: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  Low: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
+const tipColors: Record<string, string> = {
+  high: 'border-l-4 border-red-500 bg-red-500/5',
+  medium: 'border-l-4 border-emerald-500 bg-emerald-500/5',
+  info: 'border-l-4 border-blue-500 bg-blue-500/5',
+  warning: 'border-l-4 border-amber-500 bg-amber-500/5',
 }
+
+const activityIconMap: Record<string, React.ReactNode> = {
+  call: <Phone className="w-3.5 h-3.5" />,
+  email: <Mail className="w-3.5 h-3.5" />,
+  deal: <CheckCircle2 className="w-3.5 h-3.5" />,
+  note: <Circle className="w-3.5 h-3.5" />,
+}
+
+const activityColor: Record<string, string> = {
+  call: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+  email: 'bg-violet-500/10 text-violet-400 border-violet-500/20',
+  deal: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  note: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
+}
+
+const avatarColors = ['bg-violet-500/30 text-violet-300', 'bg-blue-500/30 text-blue-300', 'bg-emerald-500/30 text-emerald-300', 'bg-orange-500/30 text-orange-300', 'bg-pink-500/30 text-pink-300']
+
+const stats = [
+  { label: 'Pipeline Value', value: '$2.4M', change: '+19%', icon: DollarSign, color: 'text-violet-400' },
+  { label: 'Deals Closing', value: '8', change: 'This month', icon: Target, color: 'text-blue-400' },
+  { label: 'Win Rate', value: '34%', change: '+5%', icon: Award, color: 'text-emerald-400' },
+  { label: 'Avg Deal Size', value: '$52K', change: '+$8K', icon: TrendingUp, color: 'text-orange-400' },
+]
 
 export default function SalesPage() {
-  const [activities_, setActivities] = useState(activities)
-
-  const toggleActivity = (id: number) => {
-    setActivities(prev => prev.map(a => a.id === id ? { ...a, done: !a.done } : a))
-  }
-
-  const totalPipeline = deals.reduce((sum, d) => sum + d.value, 0)
-  const closedWon = deals.filter(d => d.stage === 'Closed Won').reduce((sum, d) => sum + d.value, 0)
-  const weightedPipeline = deals.reduce((sum, d) => sum + d.value * d.probability / 100, 0)
+  const [activeTab, setActiveTab] = useState<'deals' | 'activity' | 'coaching'>('deals')
 
   return (
-    <div className="min-h-screen bg-[#030712] p-6 max-w-7xl mx-auto space-y-6">
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -83,134 +68,194 @@ export default function SalesPage() {
             <TrendingUp className="w-6 h-6 text-violet-400" />
             Sales Assistant
           </h1>
-          <p className="text-gray-400 text-sm mt-1">AI-powered coaching, deal tracking, and pipeline management</p>
+          <p className="text-gray-400 text-sm mt-1">AI-powered sales intelligence, coaching, and pipeline management</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm font-medium hover:opacity-90 shadow-lg shadow-violet-500/20">
-          <Sparkles className="w-4 h-4" />
-          AI Sales Brief
-        </button>
+        <div className="flex items-center gap-3">
+          <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm font-medium hover:opacity-90 transition-opacity shadow-lg shadow-violet-500/20">
+            <Brain className="w-4 h-4" />
+            AI Sales Briefing
+          </button>
+          <button className="flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10 text-gray-300 hover:bg-white/5 text-sm transition-all">
+            <Sparkles className="w-4 h-4" />
+            Generate Pitch
+          </button>
+        </div>
       </div>
 
-      {/* KPIs */}
+      {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: 'Total Pipeline', value: `$${(totalPipeline / 1000).toFixed(0)}K`, change: '+18%', icon: DollarSign, color: 'text-violet-400' },
-          { label: 'Weighted Pipeline', value: `$${(weightedPipeline / 1000).toFixed(0)}K`, change: '+12%', icon: Target, color: 'text-indigo-400' },
-          { label: 'Closed Won (MTD)', value: `$${(closedWon / 1000).toFixed(0)}K`, change: '+36K', icon: CheckCircle2, color: 'text-emerald-400' },
-          { label: 'Win Rate', value: '42%', change: '+5%', icon: Star, color: 'text-amber-400' },
-        ].map(kpi => (
-          <div key={kpi.label} className="bg-gray-900/50 border border-white/5 rounded-2xl p-5">
+        {stats.map(s => (
+          <div key={s.label} className="bg-gray-900/50 border border-white/5 rounded-2xl p-5">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs text-gray-500 uppercase tracking-wider">{kpi.label}</span>
-              <kpi.icon className={`w-4 h-4 ${kpi.color}`} />
+              <span className="text-xs text-gray-500 uppercase tracking-wider">{s.label}</span>
+              <s.icon className={`w-4 h-4 ${s.color}`} />
             </div>
-            <p className="text-2xl font-bold text-white">{kpi.value}</p>
-            <p className="text-xs text-emerald-400 mt-1 flex items-center gap-0.5">
-              <ArrowUpRight className="w-3 h-3" />{kpi.change} this month
-            </p>
+            <p className="text-2xl font-bold text-white">{s.value}</p>
+            <p className="text-xs text-emerald-400 mt-1">{s.change} this month</p>
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Deals */}
-        <div className="lg:col-span-2">
-          <h2 className="text-white font-semibold mb-3">Top Deals</h2>
-          <div className="space-y-3">
-            {deals.map(deal => (
-              <div key={deal.id} className="bg-gray-900/50 border border-white/5 rounded-2xl p-4 hover:border-white/10 transition-all group">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h3 className="text-sm font-semibold text-white">{deal.company}</h3>
-                    <p className="text-xs text-gray-500 mt-0.5">{deal.contact}</p>
+      {/* Tabs */}
+      <div className="flex items-center gap-1 bg-gray-900/50 border border-white/5 rounded-xl p-1 w-fit">
+        {(['deals', 'activity', 'coaching'] as const).map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-all ${activeTab === tab ? 'bg-violet-600 text-white' : 'text-gray-400 hover:text-white'}`}
+          >
+            {tab === 'coaching' ? 'AI Coaching' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {/* Top Deals */}
+      {activeTab === 'deals' && (
+        <div className="bg-gray-900/50 border border-white/5 rounded-2xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-white">Top Deals by Value</h3>
+            <span className="text-xs text-gray-500">{topDeals.length} priority deals</span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-white/5">
+                  <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Stage</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Win Prob.</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">AI Score</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Days Open</th>
+                  <th className="px-5 py-3"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {topDeals.map((deal, i) => (
+                  <tr key={deal.id} className="hover:bg-white/[0.02] transition-colors group">
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-lg ${avatarColors[i % avatarColors.length]} flex items-center justify-center text-xs font-bold flex-shrink-0`}>
+                          {deal.avatar}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-white">{deal.company}</p>
+                          <p className="text-xs text-gray-500">{deal.contact}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className="text-sm font-bold text-white">${deal.value.toLocaleString()}</span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-violet-500/10 text-violet-400 border border-violet-500/20 text-xs font-medium">{deal.stage}</span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 bg-gray-800 rounded-full h-1.5">
+                          <div className="h-1.5 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500" style={{ width: `${deal.probability}%` }} />
+                        </div>
+                        <span className="text-xs text-gray-400">{deal.probability}%</span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className={`text-sm font-bold ${deal.score >= 85 ? 'text-emerald-400' : deal.score >= 70 ? 'text-amber-400' : 'text-red-400'}`}>{deal.score}</span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className={`text-sm ${deal.daysOpen > 14 ? 'text-red-400' : deal.daysOpen > 7 ? 'text-amber-400' : 'text-gray-400'}`}>{deal.daysOpen}d</span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-violet-400 transition-all">
+                          <Phone className="w-3.5 h-3.5" />
+                        </button>
+                        <button className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-blue-400 transition-all">
+                          <Mail className="w-3.5 h-3.5" />
+                        </button>
+                        <button className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-white transition-all">
+                          <MoreHorizontal className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Activity Timeline */}
+      {activeTab === 'activity' && (
+        <div className="bg-gray-900/50 border border-white/5 rounded-2xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-white/5">
+            <h3 className="text-sm font-semibold text-white">Activity Timeline</h3>
+          </div>
+          <div className="divide-y divide-white/5">
+            {activities.map(activity => (
+              <div key={activity.id} className="px-5 py-4 hover:bg-white/[0.02] transition-colors">
+                <div className="flex items-start gap-3">
+                  <div className={`w-8 h-8 rounded-lg border flex items-center justify-center flex-shrink-0 ${activityColor[activity.type]}`}>
+                    {activityIconMap[activity.type]}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-white">${(deal.value / 1000).toFixed(0)}K</span>
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-lg border text-[10px] font-medium ${stageBadge[deal.stage]}`}>{deal.stage}</span>
-                    <button className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-white/10 text-gray-500">
-                      <MoreHorizontal className="w-3.5 h-3.5" />
-                    </button>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-gray-300">{activity.description}</p>
+                    <div className="flex items-center gap-3 mt-1">
+                      <span className="text-xs text-gray-500">{activity.company}</span>
+                      <span className="text-xs text-gray-600">{activity.user}</span>
+                    </div>
                   </div>
-                </div>
-                <div className="mb-2">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10px] text-gray-600">Stage Progress</span>
-                    <span className="text-[10px] text-gray-500">{deal.probability}% probability</span>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className="text-xs text-gray-600">{activity.time}</span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-md ${activityColor[activity.type]}`}>{activity.outcome}</span>
                   </div>
-                  <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all ${stageColors[deal.stage]}`}
-                      style={{ width: `${stageProgress[deal.stage]}%` }}
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1 text-xs text-gray-600">
-                    <Calendar className="w-3 h-3" />
-                    <span>Close: {deal.closeDate}</span>
-                  </div>
-                  {deal.daysInStage > 0 && (
-                    <span className="text-xs text-gray-600">{deal.daysInStage}d in stage</span>
-                  )}
                 </div>
               </div>
             ))}
           </div>
         </div>
+      )}
 
-        {/* Right column */}
-        <div className="space-y-6">
-          {/* AI Coaching */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <Sparkles className="w-4 h-4 text-violet-400" />
-              <h2 className="text-white font-semibold">AI Coaching Tips</h2>
+      {/* AI Coaching */}
+      {activeTab === 'coaching' && (
+        <div className="space-y-4">
+          <div className="bg-gradient-to-r from-violet-600/10 to-indigo-600/10 border border-violet-500/20 rounded-2xl p-5">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center">
+                <Brain className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h3 className="text-white font-semibold">Your AI Sales Coach</h3>
+                <p className="text-xs text-gray-500">Personalized insights based on your pipeline data</p>
+              </div>
             </div>
-            <div className="space-y-3">
-              {aiCoachingTips.map((tip, i) => (
-                <div key={i} className="bg-gray-900/50 border border-white/5 rounded-xl p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold text-white">{tip.title}</span>
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded-md border ${urgencyColors[tip.urgency]}`}>{tip.urgency}</span>
-                  </div>
-                  <p className="text-xs text-gray-400 leading-relaxed">{tip.tip}</p>
-                  <button className="flex items-center gap-1 text-xs text-violet-400 mt-2 hover:text-violet-300">
-                    Take action <ChevronRight className="w-3 h-3" />
-                  </button>
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              {[
+                { label: 'Sales Velocity', value: '4.2x', desc: 'vs last month' },
+                { label: 'Follow-up Speed', value: '4h avg', desc: 'Industry: 18h' },
+                { label: 'Close Rate', value: '34%', desc: '+5% vs goal' },
+              ].map(m => (
+                <div key={m.label} className="bg-white/5 rounded-xl p-3 text-center">
+                  <p className="text-xl font-bold text-violet-300">{m.value}</p>
+                  <p className="text-xs text-white font-medium mt-0.5">{m.label}</p>
+                  <p className="text-[10px] text-gray-500">{m.desc}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Daily Activity */}
-          <div>
-            <h2 className="text-white font-semibold mb-3">Today's Activities</h2>
-            <div className="bg-gray-900/50 border border-white/5 rounded-2xl p-4 space-y-3">
-              {activities_.map(a => {
-                const Icon = activityIcons[a.type]
-                return (
-                  <div
-                    key={a.id}
-                    className={`flex items-center gap-3 p-2.5 rounded-xl transition-all cursor-pointer ${a.done ? 'opacity-40' : 'hover:bg-white/5'}`}
-                    onClick={() => toggleActivity(a.id)}
-                  >
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${a.done ? 'bg-emerald-500/10' : 'bg-white/5'}`}>
-                      {a.done ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <Icon className="w-4 h-4 text-gray-400" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-xs font-medium ${a.done ? 'line-through text-gray-600' : 'text-white'}`}>{a.label}</p>
-                      <div className="flex items-center gap-1 mt-0.5">
-                        <Clock className="w-3 h-3 text-gray-600" />
-                        <span className="text-[10px] text-gray-600">{a.time}</span>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
+          <div className="space-y-3">
+            {coachingTips.map((tip, i) => (
+              <div key={i} className={`rounded-r-2xl p-4 ${tipColors[tip.priority]}`}>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{tip.category}</span>
+                  <ChevronRight className="w-3 h-3 text-gray-600" />
+                </div>
+                <p className="text-sm text-gray-300 leading-relaxed">{tip.text}</p>
+              </div>
+            ))}
           </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

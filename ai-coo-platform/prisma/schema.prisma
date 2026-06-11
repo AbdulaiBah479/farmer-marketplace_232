@@ -1,0 +1,1229 @@
+// This is your Prisma schema file
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============ ENUMS ============
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  MEMBER
+  VIEWER
+  GUEST
+}
+
+enum SubscriptionPlan {
+  FREE
+  STARTER
+  PROFESSIONAL
+  AGENCY
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  TRIALING
+  PAST_DUE
+  CANCELED
+  PAUSED
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  PROPOSAL_SENT
+  NEGOTIATING
+  CLOSED_WON
+  CLOSED_LOST
+  NURTURING
+}
+
+enum LeadSource {
+  WEBSITE
+  REFERRAL
+  SOCIAL_MEDIA
+  EMAIL_CAMPAIGN
+  COLD_OUTREACH
+  PAID_ADS
+  ORGANIC_SEARCH
+  EVENT
+  OTHER
+}
+
+enum DealStage {
+  PROSPECTING
+  QUALIFICATION
+  PROPOSAL
+  NEGOTIATION
+  CLOSED_WON
+  CLOSED_LOST
+  ON_HOLD
+}
+
+enum ContactType {
+  LEAD
+  CUSTOMER
+  PARTNER
+  VENDOR
+  OTHER
+}
+
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  CANCELED
+  ARCHIVED
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  COMPLETED
+  BLOCKED
+  CANCELED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+  CRITICAL
+}
+
+enum ContentStatus {
+  DRAFT
+  REVIEW
+  APPROVED
+  SCHEDULED
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ContentType {
+  BLOG_POST
+  SOCIAL_POST
+  EMAIL
+  AD_COPY
+  VIDEO_SCRIPT
+  PODCAST_SCRIPT
+  NEWSLETTER
+  PRESS_RELEASE
+  CASE_STUDY
+  WHITEPAPER
+  LANDING_PAGE
+  PRODUCT_DESCRIPTION
+}
+
+enum SocialPlatform {
+  TWITTER
+  LINKEDIN
+  INSTAGRAM
+  FACEBOOK
+  TIKTOK
+  YOUTUBE
+  THREADS
+  PINTEREST
+}
+
+enum EmailStatus {
+  DRAFT
+  SCHEDULED
+  SENT
+  DELIVERED
+  OPENED
+  CLICKED
+  BOUNCED
+  FAILED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  CANCELED
+  REFUNDED
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+  TRANSFER
+  REFUND
+}
+
+enum AutomationStatus {
+  ACTIVE
+  INACTIVE
+  PAUSED
+  ERROR
+}
+
+enum TriggerType {
+  SCHEDULE
+  WEBHOOK
+  EVENT
+  MANUAL
+  CONDITION
+}
+
+enum SupportTicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_CUSTOMER
+  RESOLVED
+  CLOSED
+}
+
+enum SupportTicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+  MENTION
+  TASK_ASSIGNED
+  DEAL_UPDATED
+  INVOICE_PAID
+  LEAD_GENERATED
+  AI_INSIGHT
+}
+
+// ============ CORE MODELS ============
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String?
+  image         String?
+  password      String?
+  emailVerified DateTime?
+  timezone      String   @default("UTC")
+  locale        String   @default("en")
+  phone         String?
+  bio           String?
+  jobTitle      String?
+  isActive      Boolean  @default(true)
+  lastLoginAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  memberships   OrganizationMember[]
+  notifications Notification[]
+  aiUsageLogs   AIUsageLog[]
+  assignedTasks Task[] @relation("TaskAssignee")
+  createdTasks  Task[] @relation("TaskCreator")
+  comments      Comment[]
+  activities    ActivityLog[]
+  messages      Message[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ============ ORGANIZATION ============
+
+model Organization {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  logo         String?
+  website      String?
+  industry     String?
+  size         String?
+  country      String?
+  currency     String   @default("USD")
+  timezone     String   @default("UTC")
+  description  String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  members      OrganizationMember[]
+  subscription Subscription?
+  leads        Lead[]
+  contacts     Contact[]
+  deals        Deal[]
+  projects     Project[]
+  tasks        Task[]
+  emails       Email[]
+  campaigns    EmailCampaign[]
+  proposals    Proposal[]
+  contracts    Contract[]
+  contentItems ContentItem[]
+  socialPosts  SocialPost[]
+  tickets      SupportTicket[]
+  invoices     Invoice[]
+  transactions Transaction[]
+  automations  Automation[]
+  workflows    Workflow[]
+  aiInsights   AIInsight[]
+  aiUsageLogs  AIUsageLog[]
+  notifications Notification[]
+  integrations Integration[]
+  apiKeys      APIKey[]
+  webhooks     Webhook[]
+  teams        Team[]
+  channels     Channel[]
+  files        File[]
+  tags         Tag[]
+  customFields CustomField[]
+  activityLogs ActivityLog[]
+
+  @@map("organizations")
+}
+
+model OrganizationMember {
+  id             String     @id @default(cuid())
+  organizationId String
+  userId         String
+  role           UserRole   @default(MEMBER)
+  invitedAt      DateTime   @default(now())
+  joinedAt       DateTime?
+  isActive       Boolean    @default(true)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@map("organization_members")
+}
+
+// ============ SUBSCRIPTION & BILLING ============
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  organizationId       String             @unique
+  stripeCustomerId     String?            @unique
+  stripeSubscriptionId String?            @unique
+  stripePriceId        String?
+  plan                 SubscriptionPlan   @default(FREE)
+  status               SubscriptionStatus @default(TRIALING)
+  trialEndsAt          DateTime?
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  seats                Int                @default(1)
+  aiCreditsUsed        Int                @default(0)
+  aiCreditsLimit       Int                @default(1000)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+// ============ AI LEAD GENERATOR ============
+
+model Lead {
+  id             String     @id @default(cuid())
+  organizationId String
+  firstName      String
+  lastName       String?
+  email          String?
+  phone          String?
+  company        String?
+  jobTitle       String?
+  website        String?
+  linkedIn       String?
+  industry       String?
+  companySize    String?
+  location       String?
+  country        String?
+  status         LeadStatus @default(NEW)
+  source         LeadSource @default(OTHER)
+  score          Int        @default(0)
+  notes          String?
+  tags           Tag[]
+  customFields   Json?
+  assignedTo     String?
+  lastContactedAt DateTime?
+  convertedAt    DateTime?
+  convertedToId  String?
+  aiSummary      String?
+  aiScore        Float?
+  aiInsights     String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  organization  Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  activities    ActivityLog[]
+  emails        Email[]
+
+  @@map("leads")
+}
+
+// ============ AI CRM ============
+
+model Contact {
+  id             String      @id @default(cuid())
+  organizationId String
+  type           ContactType @default(CUSTOMER)
+  firstName      String
+  lastName       String?
+  email          String?
+  phone          String?
+  mobile         String?
+  company        String?
+  jobTitle       String?
+  department     String?
+  website        String?
+  linkedIn       String?
+  twitter        String?
+  address        String?
+  city           String?
+  state          String?
+  country        String?
+  postalCode     String?
+  birthday       DateTime?
+  notes          String?
+  tags           Tag[]
+  customFields   Json?
+  assignedTo     String?
+  totalRevenue   Float       @default(0)
+  totalDeals     Int         @default(0)
+  lastActivityAt DateTime?
+  aiSummary      String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  deals        Deal[]
+  emails       Email[]
+  activities   ActivityLog[]
+  tickets      SupportTicket[]
+  invoices     Invoice[]
+
+  @@map("contacts")
+}
+
+model Deal {
+  id             String    @id @default(cuid())
+  organizationId String
+  contactId      String?
+  title          String
+  value          Float     @default(0)
+  currency       String    @default("USD")
+  stage          DealStage @default(PROSPECTING)
+  probability    Int       @default(0)
+  expectedClose  DateTime?
+  closedAt       DateTime?
+  notes          String?
+  description    String?
+  assignedTo     String?
+  tags           Tag[]
+  customFields   Json?
+  aiProbability  Float?
+  aiInsights     String?
+  nextAction     String?
+  lostReason     String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  contact      Contact?      @relation(fields: [contactId], references: [id])
+  activities   ActivityLog[]
+  emails       Email[]
+  proposals    Proposal[]
+
+  @@map("deals")
+}
+
+// ============ AI EMAIL ASSISTANT ============
+
+model Email {
+  id             String      @id @default(cuid())
+  organizationId String
+  subject        String
+  body           String      @db.Text
+  htmlBody       String?     @db.Text
+  fromEmail      String
+  fromName       String?
+  toEmail        String
+  toName         String?
+  ccEmails       String[]
+  bccEmails      String[]
+  status         EmailStatus @default(DRAFT)
+  scheduledAt    DateTime?
+  sentAt         DateTime?
+  openedAt       DateTime?
+  clickedAt      DateTime?
+  campaignId     String?
+  leadId         String?
+  contactId      String?
+  dealId         String?
+  threadId       String?
+  replyToId      String?
+  aiGenerated    Boolean     @default(false)
+  aiPrompt       String?
+  tags           String[]
+  attachments    File[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  campaign     EmailCampaign? @relation(fields: [campaignId], references: [id])
+  lead         Lead?          @relation(fields: [leadId], references: [id])
+  contact      Contact?       @relation(fields: [contactId], references: [id])
+  deal         Deal?          @relation(fields: [dealId], references: [id])
+
+  @@map("emails")
+}
+
+model EmailCampaign {
+  id             String      @id @default(cuid())
+  organizationId String
+  name           String
+  subject        String
+  previewText    String?
+  htmlContent    String      @db.Text
+  textContent    String?     @db.Text
+  fromEmail      String
+  fromName       String?
+  status         ContentStatus @default(DRAFT)
+  scheduledAt    DateTime?
+  sentAt         DateTime?
+  recipientCount Int         @default(0)
+  openRate       Float       @default(0)
+  clickRate      Float       @default(0)
+  bounceRate     Float       @default(0)
+  unsubscribeRate Float      @default(0)
+  aiGenerated    Boolean     @default(false)
+  segmentConfig  Json?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  emails       Email[]
+
+  @@map("email_campaigns")
+}
+
+model EmailTemplate {
+  id             String    @id @default(cuid())
+  organizationId String?
+  name           String
+  description    String?
+  subject        String
+  htmlContent    String    @db.Text
+  textContent    String?   @db.Text
+  category       String?
+  isPublic       Boolean   @default(false)
+  useCount       Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@map("email_templates")
+}
+
+// ============ AI PROPOSALS & CONTRACTS ============
+
+model Proposal {
+  id             String        @id @default(cuid())
+  organizationId String
+  dealId         String?
+  contactId      String?
+  title          String
+  description    String?
+  content        String        @db.Text
+  htmlContent    String?       @db.Text
+  status         ContentStatus @default(DRAFT)
+  value          Float?
+  currency       String        @default("USD")
+  validUntil     DateTime?
+  sentAt         DateTime?
+  viewedAt       DateTime?
+  acceptedAt     DateTime?
+  rejectedAt     DateTime?
+  signatureUrl   String?
+  aiGenerated    Boolean       @default(false)
+  templateId     String?
+  customFields   Json?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  deal         Deal?        @relation(fields: [dealId], references: [id])
+  files        File[]
+
+  @@map("proposals")
+}
+
+model Contract {
+  id             String        @id @default(cuid())
+  organizationId String
+  contactId      String?
+  proposalId     String?
+  title          String
+  description    String?
+  content        String        @db.Text
+  htmlContent    String?       @db.Text
+  status         ContentStatus @default(DRAFT)
+  value          Float?
+  currency       String        @default("USD")
+  startDate      DateTime?
+  endDate        DateTime?
+  signedAt       DateTime?
+  signatureUrl   String?
+  counterpartySignedAt DateTime?
+  aiGenerated    Boolean       @default(false)
+  templateId     String?
+  customFields   Json?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  files        File[]
+
+  @@map("contracts")
+}
+
+// ============ AI CONTENT STUDIO ============
+
+model ContentItem {
+  id             String        @id @default(cuid())
+  organizationId String
+  title          String
+  type           ContentType
+  status         ContentStatus @default(DRAFT)
+  content        String        @db.Text
+  htmlContent    String?       @db.Text
+  excerpt        String?
+  slug           String?
+  featuredImage  String?
+  tags           Tag[]
+  category       String?
+  keywords       String[]
+  seoTitle       String?
+  seoDescription String?
+  wordCount      Int           @default(0)
+  readingTime    Int           @default(0)
+  publishedAt    DateTime?
+  scheduledAt    DateTime?
+  aiGenerated    Boolean       @default(false)
+  aiPrompt       String?
+  platform       String?
+  author         String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  files        File[]
+  socialPosts  SocialPost[]
+
+  @@map("content_items")
+}
+
+// ============ AI SOCIAL MEDIA MANAGER ============
+
+model SocialAccount {
+  id             String         @id @default(cuid())
+  organizationId String
+  platform       SocialPlatform
+  accountId      String
+  accountName    String
+  accountUrl     String?
+  accessToken    String?
+  refreshToken   String?
+  tokenExpiresAt DateTime?
+  followers      Int            @default(0)
+  isActive       Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  posts SocialPost[]
+
+  @@map("social_accounts")
+}
+
+model SocialPost {
+  id              String         @id @default(cuid())
+  organizationId  String
+  contentItemId   String?
+  socialAccountId String?
+  platform        SocialPlatform
+  content         String         @db.Text
+  mediaUrls       String[]
+  status          ContentStatus  @default(DRAFT)
+  scheduledAt     DateTime?
+  publishedAt     DateTime?
+  platformPostId  String?
+  platformUrl     String?
+  likes           Int            @default(0)
+  comments        Int            @default(0)
+  shares          Int            @default(0)
+  impressions     Int            @default(0)
+  reach           Int            @default(0)
+  clicks          Int            @default(0)
+  aiGenerated     Boolean        @default(false)
+  aiPrompt        String?
+  hashtags        String[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  contentItem   ContentItem?   @relation(fields: [contentItemId], references: [id])
+  socialAccount SocialAccount? @relation(fields: [socialAccountId], references: [id])
+
+  @@map("social_posts")
+}
+
+// ============ AI CUSTOMER SUPPORT ============
+
+model SupportTicket {
+  id             String               @id @default(cuid())
+  organizationId String
+  contactId      String?
+  ticketNumber   String
+  subject        String
+  description    String               @db.Text
+  status         SupportTicketStatus  @default(OPEN)
+  priority       SupportTicketPriority @default(MEDIUM)
+  assignedTo     String?
+  resolvedAt     DateTime?
+  closedAt       DateTime?
+  firstResponseAt DateTime?
+  satisfactionScore Int?
+  tags           Tag[]
+  category       String?
+  source         String?
+  aiSummary      String?
+  aiSuggestion   String?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  contact      Contact?     @relation(fields: [contactId], references: [id])
+  messages     TicketMessage[]
+  files        File[]
+
+  @@map("support_tickets")
+}
+
+model TicketMessage {
+  id        String   @id @default(cuid())
+  ticketId  String
+  sender    String
+  isAgent   Boolean  @default(false)
+  content   String   @db.Text
+  aiGenerated Boolean @default(false)
+  createdAt DateTime @default(now())
+
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  files  File[]
+
+  @@map("ticket_messages")
+}
+
+// ============ AI PROJECT MANAGER ============
+
+model Project {
+  id             String        @id @default(cuid())
+  organizationId String
+  teamId         String?
+  name           String
+  description    String?
+  status         ProjectStatus @default(PLANNING)
+  priority       TaskPriority  @default(MEDIUM)
+  startDate      DateTime?
+  dueDate        DateTime?
+  completedAt    DateTime?
+  budget         Float?
+  currency       String        @default("USD")
+  progress       Int           @default(0)
+  color          String        @default("#6366f1")
+  icon           String?
+  tags           Tag[]
+  customFields   Json?
+  aiInsights     String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  team         Team?        @relation(fields: [teamId], references: [id])
+  tasks        Task[]
+  milestones   Milestone[]
+  files        File[]
+  activities   ActivityLog[]
+
+  @@map("projects")
+}
+
+model Task {
+  id             String       @id @default(cuid())
+  organizationId String
+  projectId      String?
+  parentTaskId   String?
+  title          String
+  description    String?      @db.Text
+  status         TaskStatus   @default(TODO)
+  priority       TaskPriority @default(MEDIUM)
+  assigneeId     String?
+  creatorId      String
+  dueDate        DateTime?
+  completedAt    DateTime?
+  estimatedHours Float?
+  actualHours    Float?
+  progress       Int          @default(0)
+  tags           Tag[]
+  customFields   Json?
+  aiSuggestion   String?
+  position       Int          @default(0)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  project      Project?     @relation(fields: [projectId], references: [id])
+  parentTask   Task?        @relation("TaskHierarchy", fields: [parentTaskId], references: [id])
+  subtasks     Task[]       @relation("TaskHierarchy")
+  assignee     User?        @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  creator      User         @relation("TaskCreator", fields: [creatorId], references: [id])
+  comments     Comment[]
+  files        File[]
+  activities   ActivityLog[]
+
+  @@map("tasks")
+}
+
+model Milestone {
+  id          String    @id @default(cuid())
+  projectId   String
+  title       String
+  description String?
+  dueDate     DateTime?
+  completedAt DateTime?
+  status      TaskStatus @default(TODO)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("milestones")
+}
+
+// ============ AI TEAM COLLABORATION ============
+
+model Team {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  description    String?
+  color          String   @default("#6366f1")
+  icon           String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projects     Project[]
+  channels     Channel[]
+
+  @@map("teams")
+}
+
+model Channel {
+  id             String   @id @default(cuid())
+  organizationId String
+  teamId         String?
+  name           String
+  description    String?
+  isPrivate      Boolean  @default(false)
+  isArchived     Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  team         Team?        @relation(fields: [teamId], references: [id])
+  messages     Message[]
+
+  @@map("channels")
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  channelId String
+  userId    String
+  content   String   @db.Text
+  isEdited  Boolean  @default(false)
+  isPinned  Boolean  @default(false)
+  replyToId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  channel  Channel   @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  user     User      @relation(fields: [userId], references: [id])
+  replyTo  Message?  @relation("MessageReplies", fields: [replyToId], references: [id])
+  replies  Message[] @relation("MessageReplies")
+  files    File[]
+
+  @@map("messages")
+}
+
+// ============ AI FINANCE ASSISTANT ============
+
+model Invoice {
+  id             String        @id @default(cuid())
+  organizationId String
+  contactId      String?
+  invoiceNumber  String
+  status         InvoiceStatus @default(DRAFT)
+  issueDate      DateTime      @default(now())
+  dueDate        DateTime?
+  paidAt         DateTime?
+  subtotal       Float         @default(0)
+  taxRate        Float         @default(0)
+  taxAmount      Float         @default(0)
+  discountAmount Float         @default(0)
+  total          Float         @default(0)
+  currency       String        @default("USD")
+  notes          String?
+  terms          String?
+  items          Json
+  stripeInvoiceId String?
+  paidAmount     Float         @default(0)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  contact      Contact?     @relation(fields: [contactId], references: [id])
+
+  @@map("invoices")
+}
+
+model Transaction {
+  id             String          @id @default(cuid())
+  organizationId String
+  type           TransactionType
+  amount         Float
+  currency       String          @default("USD")
+  description    String?
+  category       String?
+  date           DateTime        @default(now())
+  reference      String?
+  invoiceId      String?
+  attachments    String[]
+  aiCategorized  Boolean         @default(false)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("transactions")
+}
+
+// ============ AI WORKFLOW AUTOMATION ============
+
+model Automation {
+  id             String           @id @default(cuid())
+  organizationId String
+  name           String
+  description    String?
+  triggerType    TriggerType      @default(MANUAL)
+  triggerConfig  Json?
+  actions        Json
+  conditions     Json?
+  status         AutomationStatus @default(INACTIVE)
+  runCount       Int              @default(0)
+  lastRunAt      DateTime?
+  errorMessage   String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  runs         AutomationRun[]
+
+  @@map("automations")
+}
+
+model AutomationRun {
+  id           String   @id @default(cuid())
+  automationId String
+  status       String
+  startedAt    DateTime @default(now())
+  completedAt  DateTime?
+  error        String?
+  logs         Json?
+
+  automation Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+
+  @@map("automation_runs")
+}
+
+model Workflow {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  description    String?
+  nodes          Json
+  edges          Json
+  isActive       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("workflows")
+}
+
+// ============ AI ANALYTICS ============
+
+model AIInsight {
+  id             String   @id @default(cuid())
+  organizationId String
+  type           String
+  title          String
+  description    String   @db.Text
+  data           Json?
+  priority       String   @default("MEDIUM")
+  isRead         Boolean  @default(false)
+  isDismissed    Boolean  @default(false)
+  module         String?
+  createdAt      DateTime @default(now())
+  expiresAt      DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("ai_insights")
+}
+
+model AIUsageLog {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String?
+  model          String
+  module         String
+  action         String
+  inputTokens    Int      @default(0)
+  outputTokens   Int      @default(0)
+  totalTokens    Int      @default(0)
+  cost           Float    @default(0)
+  latencyMs      Int?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User?        @relation(fields: [userId], references: [id])
+
+  @@map("ai_usage_logs")
+}
+
+// ============ SHARED MODELS ============
+
+model Tag {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  color          String   @default("#6366f1")
+  createdAt      DateTime @default(now())
+
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  leads         Lead[]
+  contacts      Contact[]
+  deals         Deal[]
+  tasks         Task[]
+  projects      Project[]
+  contentItems  ContentItem[]
+  tickets       SupportTicket[]
+
+  @@unique([organizationId, name])
+  @@map("tags")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  taskId    String?
+  userId    String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  task Task? @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User  @relation(fields: [userId], references: [id])
+
+  @@map("comments")
+}
+
+model File {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  url            String
+  type           String
+  size           Int
+  uploadedBy     String?
+  createdAt      DateTime @default(now())
+
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  proposals      Proposal[]
+  contracts      Contract[]
+  contentItems   ContentItem[]
+  tickets        SupportTicket[]
+  ticketMessages TicketMessage[]
+  tasks          Task[]
+  messages       Message[]
+  projects       Project[]
+  emails         Email[]
+
+  @@map("files")
+}
+
+model Notification {
+  id             String           @id @default(cuid())
+  organizationId String
+  userId         String
+  type           NotificationType @default(INFO)
+  title          String
+  message        String
+  link           String?
+  isRead         Boolean          @default(false)
+  createdAt      DateTime         @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id])
+
+  @@map("notifications")
+}
+
+model ActivityLog {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String?
+  entity         String
+  entityId       String
+  action         String
+  changes        Json?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User?        @relation(fields: [userId], references: [id])
+  lead         Lead?        @relation(fields: [entityId], references: [id], map: "activity_lead_fk")
+  contact      Contact?     @relation(fields: [entityId], references: [id], map: "activity_contact_fk")
+  deal         Deal?        @relation(fields: [entityId], references: [id], map: "activity_deal_fk")
+  task         Task?        @relation(fields: [entityId], references: [id], map: "activity_task_fk")
+  project      Project?     @relation(fields: [entityId], references: [id], map: "activity_project_fk")
+
+  @@map("activity_logs")
+}
+
+model Integration {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  type           String
+  config         Json?
+  isActive       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("integrations")
+}
+
+model APIKey {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  key            String   @unique
+  lastUsedAt     DateTime?
+  expiresAt      DateTime?
+  isActive       Boolean  @default(true)
+  permissions    String[]
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("api_keys")
+}
+
+model Webhook {
+  id             String   @id @default(cuid())
+  organizationId String
+  url            String
+  events         String[]
+  secret         String?
+  isActive       Boolean  @default(true)
+  lastTriggeredAt DateTime?
+  failureCount   Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("webhooks")
+}
+
+model CustomField {
+  id             String   @id @default(cuid())
+  organizationId String
+  entity         String
+  name           String
+  type           String
+  options        Json?
+  isRequired     Boolean  @default(false)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("custom_fields")
+}

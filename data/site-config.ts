@@ -1,0 +1,53 @@
+export const siteConfig = {
+  name: "Bah AI Labs",
+  tagline: "Abdulai Bah — AI Engineer & Builder",
+  description:
+    "Building AI systems, SaaS products, and digital solutions for forward-thinking businesses. Helping companies automate operations, improve productivity, and scale through intelligent software.",
+  url: process.env.NEXT_PUBLIC_SITE_URL || "https://bahailabs.com",
+  founder: {
+    name: "Abdulai Bah",
+    title: "AI Engineer & Software Builder",
+    bio: "Founder of Bah AI Labs. Building intelligent systems that help businesses operate smarter and scale faster.",
+    email: "abdulai@bahailabs.com",
+    phone: "+1 (555) 000-0000",
+    location: "Global · Remote",
+    whatsapp: "+15550000000",
+    calendly: "https://calendly.com/bahailabs/consultation",
+  },
+  social: {
+    twitter: "https://twitter.com/abdulai_bah",
+    linkedin: "https://linkedin.com/in/abdulai-bah",
+    github: "https://github.com/abdulai-bah",
+    youtube: "",
+    instagram: "",
+  },
+  stats: [
+    { label: "Projects Delivered", value: "50+", description: "Across 12 countries" },
+    { label: "Clients Served", value: "30+", description: "Businesses & startups" },
+    { label: "Years Building", value: "5+", description: "AI & software systems" },
+    { label: "Satisfaction Rate", value: "98%", description: "Client satisfaction" },
+  ],
+  navigation: [
+    { label: "Home", href: "/" },
+    { label: "About", href: "/about" },
+    { label: "Services", href: "/services" },
+    { label: "Work", href: "/portfolio" },
+    { label: "Products", href: "/saas" },
+    { label: "Blog", href: "/blog" },
+    { label: "Contact", href: "/contact" },
+  ],
+  seo: {
+    keywords: [
+      "AI Engineer",
+      "AI Development",
+      "SaaS Products",
+      "Business Automation",
+      "AI Chatbots",
+      "Software Development",
+      "AI Consulting",
+      "Machine Learning",
+      "Web Applications",
+      "Digital Transformation",
+    ],
+  },
+};

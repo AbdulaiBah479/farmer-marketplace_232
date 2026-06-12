@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-text-primary: #1D1D1F;
+    --color-text-secondary: #6E6E73;
+    --color-text-tertiary: #86868B;
+    --color-bg-primary: #FFFFFF;
+    --color-bg-secondary: #F5F5F7;
+    --color-border: #D2D2D7;
+    --color-border-subtle: #E8E8ED;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply font-sans text-[#1D1D1F] bg-white;
+    font-feature-settings: "kern" 1, "liga" 1;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  ::selection {
+    background-color: #1D1D1F;
+    color: #FFFFFF;
+  }
+}
+
+@layer components {
+  .container-page {
+    @apply max-w-7xl mx-auto px-6 lg:px-8;
+  }
+
+  .section-label {
+    @apply text-xs font-semibold text-[#86868B] uppercase tracking-widest;
+  }
+
+  .section-title {
+    @apply text-4xl md:text-5xl font-semibold tracking-tight text-[#1D1D1F] leading-tight;
+  }
+
+  .section-subtitle {
+    @apply text-lg text-[#6E6E73] leading-relaxed;
+  }
+
+  .prose-apple {
+    @apply text-[#1D1D1F] leading-relaxed;
+  }
+
+  .prose-apple h2 {
+    @apply text-2xl font-semibold mt-10 mb-4;
+  }
+
+  .prose-apple h3 {
+    @apply text-xl font-semibold mt-8 mb-3;
+  }
+
+  .prose-apple p {
+    @apply mb-5 text-[#6E6E73];
+  }
+
+  .prose-apple ul {
+    @apply list-disc pl-5 mb-5 space-y-1.5 text-[#6E6E73];
+  }
+
+  .prose-apple strong {
+    @apply text-[#1D1D1F] font-semibold;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}

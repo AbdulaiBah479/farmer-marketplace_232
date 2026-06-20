@@ -1997,6 +1997,268 @@
     "sleep": {
       "command": "npx",
       "args": ["-y", "sleep-mcp"]
+    },
+    "adobe": {
+      "command": "npx",
+      "args": ["-y", "adobe-mcp"],
+      "env": { "ADOBE_CLIENT_ID": "...", "ADOBE_CLIENT_SECRET": "..." }
+    },
+    "adobe-xd": {
+      "command": "npx",
+      "args": ["-y", "adobe-xd-mcp"],
+      "env": { "ADOBE_CLIENT_ID": "..." }
+    },
+    "abstract": {
+      "command": "npx",
+      "args": ["-y", "abstract-mcp"],
+      "env": { "ABSTRACT_API_TOKEN": "..." }
+    },
+    "iconify": {
+      "command": "npx",
+      "args": ["-y", "iconify-mcp"]
+    },
+    "sprinklr": {
+      "command": "npx",
+      "args": ["-y", "sprinklr-mcp"],
+      "env": { "SPRINKLR_API_KEY": "..." }
+    },
+    "mattermost": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-mattermost"],
+      "env": { "MATTERMOST_URL": "https://your-team.mattermost.com", "MATTERMOST_TOKEN": "..." }
+    },
+    "lark": {
+      "command": "npx",
+      "args": ["-y", "lark-mcp"],
+      "env": { "LARK_APP_ID": "...", "LARK_APP_SECRET": "..." }
+    },
+    "feishu": {
+      "command": "npx",
+      "args": ["-y", "feishu-mcp"],
+      "env": { "FEISHU_APP_ID": "...", "FEISHU_APP_SECRET": "..." }
+    },
+    "dingtalk": {
+      "command": "npx",
+      "args": ["-y", "dingtalk-mcp"],
+      "env": { "DINGTALK_ACCESS_TOKEN": "...", "DINGTALK_APP_KEY": "...", "DINGTALK_APP_SECRET": "..." }
+    },
+    "wecom": {
+      "command": "npx",
+      "args": ["-y", "wecom-mcp"],
+      "env": { "WECOM_CORP_ID": "...", "WECOM_AGENT_ID": "...", "WECOM_SECRET": "..." }
+    },
+    "line": {
+      "command": "npx",
+      "args": ["-y", "line-mcp"],
+      "env": { "LINE_CHANNEL_ACCESS_TOKEN": "...", "LINE_CHANNEL_SECRET": "..." }
+    },
+    "imessage": {
+      "command": "npx",
+      "args": ["-y", "imessage-mcp"]
+    },
+    "grok": {
+      "command": "npx",
+      "args": ["-y", "grok-mcp"],
+      "env": { "XAI_API_KEY": "..." }
+    },
+    "deepseek": {
+      "command": "npx",
+      "args": ["-y", "deepseek-mcp"],
+      "env": { "DEEPSEEK_API_KEY": "..." }
+    },
+    "kite": {
+      "command": "npx",
+      "args": ["-y", "kite-mcp"]
+    },
+    "majestic": {
+      "command": "npx",
+      "args": ["-y", "majestic-mcp"],
+      "env": { "MAJESTIC_API_KEY": "..." }
+    },
+    "serper": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-serper"],
+      "env": { "SERPER_API_KEY": "..." }
+    },
+    "google-trends": {
+      "command": "npx",
+      "args": ["-y", "google-trends-mcp"]
+    },
+    "nightwatch": {
+      "command": "npx",
+      "args": ["-y", "nightwatch-mcp"],
+      "env": { "NIGHTWATCH_API_KEY": "..." }
+    },
+    "coda": {
+      "command": "npx",
+      "args": ["-y", "coda-mcp"],
+      "env": { "CODA_API_TOKEN": "..." }
+    },
+    "shortcut": {
+      "command": "npx",
+      "args": ["-y", "shortcut-mcp"],
+      "env": { "SHORTCUT_API_TOKEN": "..." }
+    },
+    "rally": {
+      "command": "npx",
+      "args": ["-y", "rally-mcp"],
+      "env": { "RALLY_API_KEY": "...", "RALLY_WORKSPACE": "..." }
+    },
+    "openproject": {
+      "command": "npx",
+      "args": ["-y", "openproject-mcp"],
+      "env": { "OPENPROJECT_URL": "https://your-instance.openproject.com", "OPENPROJECT_API_KEY": "..." }
+    },
+    "taiga": {
+      "command": "npx",
+      "args": ["-y", "taiga-mcp"],
+      "env": { "TAIGA_URL": "https://api.taiga.io", "TAIGA_USERNAME": "...", "TAIGA_PASSWORD": "..." }
+    },
+    "gitea": {
+      "command": "npx",
+      "args": ["-y", "gitea-mcp"],
+      "env": { "GITEA_URL": "https://gitea.example.com", "GITEA_TOKEN": "..." }
+    },
+    "forgejo": {
+      "command": "npx",
+      "args": ["-y", "forgejo-mcp"],
+      "env": { "FORGEJO_URL": "https://codeberg.org", "FORGEJO_TOKEN": "..." }
+    },
+    "redmine": {
+      "command": "npx",
+      "args": ["-y", "redmine-mcp"],
+      "env": { "REDMINE_URL": "https://your-redmine.com", "REDMINE_API_KEY": "..." }
+    },
+    "youtrack": {
+      "command": "npx",
+      "args": ["-y", "youtrack-mcp"],
+      "env": { "YOUTRACK_URL": "https://your-org.youtrack.cloud", "YOUTRACK_TOKEN": "..." }
+    },
+    "postman": {
+      "command": "npx",
+      "args": ["-y", "postman-mcp"],
+      "env": { "POSTMAN_API_KEY": "..." }
+    },
+    "insomnia": {
+      "command": "npx",
+      "args": ["-y", "insomnia-mcp"]
+    },
+    "swagger": {
+      "command": "npx",
+      "args": ["-y", "swagger-mcp"]
+    },
+    "mintlify": {
+      "command": "npx",
+      "args": ["-y", "mintlify-mcp"],
+      "env": { "MINTLIFY_API_KEY": "..." }
+    },
+    "scalar": {
+      "command": "npx",
+      "args": ["-y", "scalar-mcp"]
+    },
+    "gamma": {
+      "command": "npx",
+      "args": ["-y", "gamma-mcp"],
+      "env": { "GAMMA_API_KEY": "..." }
+    },
+    "pitch": {
+      "command": "npx",
+      "args": ["-y", "pitch-mcp"],
+      "env": { "PITCH_API_TOKEN": "..." }
+    },
+    "echarts": {
+      "command": "npx",
+      "args": ["-y", "echarts-mcp"]
+    },
+    "kaggle": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-kaggle"],
+      "env": { "KAGGLE_USERNAME": "...", "KAGGLE_KEY": "..." }
+    },
+    "comet": {
+      "command": "npx",
+      "args": ["-y", "comet-mcp"],
+      "env": { "COMET_API_KEY": "..." }
+    },
+    "trackingtime": {
+      "command": "npx",
+      "args": ["-y", "trackingtime-mcp"],
+      "env": { "TRACKINGTIME_API_KEY": "..." }
+    },
+    "revenuecat": {
+      "command": "npx",
+      "args": ["-y", "revenuecat-mcp"],
+      "env": { "REVENUECAT_API_KEY": "..." }
+    },
+    "userflow": {
+      "command": "npx",
+      "args": ["-y", "userflow-mcp"],
+      "env": { "USERFLOW_API_KEY": "..." }
+    },
+    "productboard": {
+      "command": "npx",
+      "args": ["-y", "productboard-mcp"],
+      "env": { "PRODUCTBOARD_API_KEY": "..." }
+    },
+    "aha": {
+      "command": "npx",
+      "args": ["-y", "aha-mcp"],
+      "env": { "AHA_SUBDOMAIN": "...", "AHA_API_KEY": "..." }
+    },
+    "airfocus": {
+      "command": "npx",
+      "args": ["-y", "airfocus-mcp"],
+      "env": { "AIRFOCUS_API_KEY": "..." }
+    },
+    "argocd": {
+      "command": "npx",
+      "args": ["-y", "argocd-mcp"],
+      "env": { "ARGOCD_SERVER": "https://argocd.example.com", "ARGOCD_TOKEN": "..." }
+    },
+    "spinnaker": {
+      "command": "npx",
+      "args": ["-y", "spinnaker-mcp"],
+      "env": { "SPINNAKER_URL": "http://localhost:8084" }
+    },
+    "harness": {
+      "command": "npx",
+      "args": ["-y", "harness-mcp"],
+      "env": { "HARNESS_API_KEY": "...", "HARNESS_ACCOUNT_ID": "..." }
+    },
+    "drone": {
+      "command": "npx",
+      "args": ["-y", "drone-mcp"],
+      "env": { "DRONE_SERVER": "https://drone.example.com", "DRONE_TOKEN": "..." }
+    },
+    "woodpecker-ci": {
+      "command": "npx",
+      "args": ["-y", "woodpecker-ci-mcp"],
+      "env": { "WOODPECKER_SERVER": "https://woodpecker.example.com", "WOODPECKER_TOKEN": "..." }
+    },
+    "atlantis": {
+      "command": "npx",
+      "args": ["-y", "atlantis-mcp"],
+      "env": { "ATLANTIS_URL": "https://atlantis.example.com", "ATLANTIS_TOKEN": "..." }
+    },
+    "boundary": {
+      "command": "npx",
+      "args": ["-y", "boundary-mcp"],
+      "env": { "BOUNDARY_ADDR": "https://boundary.example.com", "BOUNDARY_TOKEN": "..." }
+    },
+    "retool": {
+      "command": "npx",
+      "args": ["-y", "retool-mcp"],
+      "env": { "RETOOL_API_KEY": "...", "RETOOL_DOMAIN": "your-org.retool.com" }
+    },
+    "nocodb": {
+      "command": "npx",
+      "args": ["-y", "nocodb-mcp"],
+      "env": { "NOCODB_URL": "http://localhost:8080", "NOCODB_API_TOKEN": "..." }
+    },
+    "teable": {
+      "command": "npx",
+      "args": ["-y", "teable-mcp"],
+      "env": { "TEABLE_API_KEY": "...", "TEABLE_URL": "https://app.teable.io" }
     }
   }
 }

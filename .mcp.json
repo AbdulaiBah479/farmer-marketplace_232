@@ -2259,6 +2259,87 @@
       "command": "npx",
       "args": ["-y", "teable-mcp"],
       "env": { "TEABLE_API_KEY": "...", "TEABLE_URL": "https://app.teable.io" }
+    },
+    "recurpost": {
+      "command": "npx",
+      "args": ["-y", "recurpost-mcp"],
+      "env": { "RECURPOST_API_KEY": "..." }
+    },
+    "mural": {
+      "command": "npx",
+      "args": ["-y", "mural-mcp"],
+      "env": { "MURAL_CLIENT_ID": "...", "MURAL_CLIENT_SECRET": "..." }
+    },
+    "excalidraw": {
+      "command": "npx",
+      "args": ["-y", "excalidraw-mcp"]
+    },
+    "mermaid": {
+      "command": "npx",
+      "args": ["-y", "mermaid-mcp"]
+    },
+    "drawio": {
+      "command": "npx",
+      "args": ["-y", "drawio-mcp"]
+    },
+    "drift": {
+      "command": "npx",
+      "args": ["-y", "drift-mcp"],
+      "env": { "DRIFT_ACCESS_TOKEN": "..." }
+    },
+    "gorgias": {
+      "command": "npx",
+      "args": ["-y", "gorgias-mcp"],
+      "env": { "GORGIAS_DOMAIN": "your-store.gorgias.com", "GORGIAS_API_KEY": "..." }
+    },
+    "bun": {
+      "command": "npx",
+      "args": ["-y", "bun-mcp"]
+    },
+    "flutter": {
+      "command": "npx",
+      "args": ["-y", "flutter-mcp"]
+    },
+    "react-native": {
+      "command": "npx",
+      "args": ["-y", "react-native-mcp"]
+    },
+    "expo": {
+      "command": "npx",
+      "args": ["-y", "expo-mcp"]
+    },
+    "electron": {
+      "command": "npx",
+      "args": ["-y", "electron-mcp"]
+    },
+    "serverless": {
+      "command": "npx",
+      "args": ["-y", "serverless-mcp"]
+    },
+    "tilt": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-tilt"],
+      "env": { "TILT_HOST": "localhost", "TILT_PORT": "10350" }
+    },
+    "civo": {
+      "command": "npx",
+      "args": ["-y", "civo-mcp"],
+      "env": { "CIVO_API_KEY": "..." }
+    },
+    "hetzner": {
+      "command": "npx",
+      "args": ["-y", "hetzner-mcp"],
+      "env": { "HETZNER_API_TOKEN": "..." }
+    },
+    "ovh": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-ovh"],
+      "env": { "OVH_APPLICATION_KEY": "...", "OVH_APPLICATION_SECRET": "...", "OVH_CONSUMER_KEY": "..." }
+    },
+    "kinsta": {
+      "command": "npx",
+      "args": ["-y", "kinsta-mcp"],
+      "env": { "KINSTA_API_KEY": "..." }
     }
   }
 }

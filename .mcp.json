@@ -308,6 +308,270 @@
         "REDDIT_CLIENT_ID": "YOUR_REDDIT_CLIENT_ID_HERE",
         "REDDIT_CLIENT_SECRET": "YOUR_REDDIT_CLIENT_SECRET_HERE"
       }
+    },
+    "gdrive": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-gdrive"],
+      "env": {
+        "GOOGLE_CLIENT_ID": "YOUR_GOOGLE_CLIENT_ID_HERE",
+        "GOOGLE_CLIENT_SECRET": "YOUR_GOOGLE_CLIENT_SECRET_HERE"
+      }
+    },
+    "youtube": {
+      "command": "npx",
+      "args": ["-y", "youtube-mcp-server"],
+      "env": {
+        "YOUTUBE_API_KEY": "YOUR_YOUTUBE_API_KEY_HERE"
+      }
+    },
+    "spotify": {
+      "command": "npx",
+      "args": ["-y", "spotify-mcp"],
+      "env": {
+        "SPOTIFY_CLIENT_ID": "YOUR_SPOTIFY_CLIENT_ID_HERE",
+        "SPOTIFY_CLIENT_SECRET": "YOUR_SPOTIFY_CLIENT_SECRET_HERE"
+      }
+    },
+    "gmail": {
+      "command": "npx",
+      "args": ["-y", "gmail-mcp-server"],
+      "env": {
+        "GMAIL_CLIENT_ID": "YOUR_GMAIL_CLIENT_ID_HERE",
+        "GMAIL_CLIENT_SECRET": "YOUR_GMAIL_CLIENT_SECRET_HERE"
+      }
+    },
+    "google-calendar": {
+      "command": "npx",
+      "args": ["-y", "google-calendar-mcp"],
+      "env": {
+        "GOOGLE_CLIENT_ID": "YOUR_GOOGLE_CLIENT_ID_HERE",
+        "GOOGLE_CLIENT_SECRET": "YOUR_GOOGLE_CLIENT_SECRET_HERE"
+      }
+    },
+    "figma": {
+      "command": "npx",
+      "args": ["-y", "figma-mcp"],
+      "env": {
+        "FIGMA_ACCESS_TOKEN": "YOUR_FIGMA_ACCESS_TOKEN_HERE"
+      }
+    },
+    "salesforce": {
+      "command": "npx",
+      "args": ["-y", "salesforce-mcp"],
+      "env": {
+        "SALESFORCE_USERNAME": "your@email.com",
+        "SALESFORCE_PASSWORD": "YOUR_SALESFORCE_PASSWORD_HERE",
+        "SALESFORCE_SECURITY_TOKEN": "YOUR_SALESFORCE_SECURITY_TOKEN_HERE"
+      }
+    },
+    "wordpress": {
+      "command": "npx",
+      "args": ["-y", "wordpress-mcp"],
+      "env": {
+        "WORDPRESS_SITE_URL": "https://your-site.com",
+        "WORDPRESS_USERNAME": "your-username",
+        "WORDPRESS_PASSWORD": "YOUR_WORDPRESS_APP_PASSWORD_HERE"
+      }
+    },
+    "webflow": {
+      "command": "npx",
+      "args": ["-y", "webflow-mcp-server"],
+      "env": {
+        "WEBFLOW_API_TOKEN": "YOUR_WEBFLOW_API_TOKEN_HERE"
+      }
+    },
+    "amplitude": {
+      "command": "npx",
+      "args": ["-y", "amplitude-mcp"],
+      "env": {
+        "AMPLITUDE_API_KEY": "YOUR_AMPLITUDE_API_KEY_HERE",
+        "AMPLITUDE_SECRET_KEY": "YOUR_AMPLITUDE_SECRET_KEY_HERE"
+      }
+    },
+    "google-analytics": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-ga4"],
+      "env": {
+        "GA4_PROPERTY_ID": "YOUR_GA4_PROPERTY_ID_HERE",
+        "GOOGLE_APPLICATION_CREDENTIALS": "/path/to/credentials.json"
+      }
+    },
+    "openweather": {
+      "command": "npx",
+      "args": ["-y", "openweather-mcp"],
+      "env": {
+        "OPENWEATHER_API_KEY": "YOUR_OPENWEATHER_API_KEY_HERE"
+      }
+    },
+    "news": {
+      "command": "npx",
+      "args": ["-y", "newsapi-mcp"],
+      "env": {
+        "NEWS_API_KEY": "YOUR_NEWS_API_KEY_HERE"
+      }
+    },
+    "wikipedia": {
+      "command": "npx",
+      "args": ["-y", "wikipedia-mcp"]
+    },
+    "arxiv": {
+      "command": "npx",
+      "args": ["-y", "arxiv-mcp-server"]
+    },
+    "crypto": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-crypto"]
+    },
+    "asana": {
+      "command": "npx",
+      "args": ["-y", "asana-mcp"],
+      "env": {
+        "ASANA_ACCESS_TOKEN": "YOUR_ASANA_ACCESS_TOKEN_HERE"
+      }
+    },
+    "trello": {
+      "command": "npx",
+      "args": ["-y", "trello-mcp"],
+      "env": {
+        "TRELLO_API_KEY": "YOUR_TRELLO_API_KEY_HERE",
+        "TRELLO_TOKEN": "YOUR_TRELLO_TOKEN_HERE"
+      }
+    },
+    "clickup": {
+      "command": "npx",
+      "args": ["-y", "clickup-mcp"],
+      "env": {
+        "CLICKUP_API_TOKEN": "YOUR_CLICKUP_API_TOKEN_HERE"
+      }
+    },
+    "todoist": {
+      "command": "npx",
+      "args": ["-y", "todoist-mcp"],
+      "env": {
+        "TODOIST_API_TOKEN": "YOUR_TODOIST_API_TOKEN_HERE"
+      }
+    },
+    "loom": {
+      "command": "npx",
+      "args": ["-y", "loom-mcp"],
+      "env": {
+        "LOOM_API_KEY": "YOUR_LOOM_API_KEY_HERE"
+      }
+    },
+    "sentry": {
+      "command": "npx",
+      "args": ["-y", "@sentry/mcp-server"],
+      "env": {
+        "SENTRY_AUTH_TOKEN": "YOUR_SENTRY_AUTH_TOKEN_HERE",
+        "SENTRY_ORG": "your-org-slug"
+      }
+    },
+    "datadog": {
+      "command": "npx",
+      "args": ["-y", "datadog-mcp"],
+      "env": {
+        "DATADOG_API_KEY": "YOUR_DATADOG_API_KEY_HERE",
+        "DATADOG_APP_KEY": "YOUR_DATADOG_APP_KEY_HERE"
+      }
+    },
+    "langfuse": {
+      "command": "npx",
+      "args": ["-y", "langfuse-mcp"],
+      "env": {
+        "LANGFUSE_PUBLIC_KEY": "YOUR_LANGFUSE_PUBLIC_KEY_HERE",
+        "LANGFUSE_SECRET_KEY": "YOUR_LANGFUSE_SECRET_KEY_HERE",
+        "LANGFUSE_BASEURL": "https://cloud.langfuse.com"
+      }
+    },
+    "scraper": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-scraper"]
+    },
+    "aws-kb": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-aws-kb-retrieval"],
+      "env": {
+        "AWS_ACCESS_KEY_ID": "YOUR_AWS_ACCESS_KEY_ID_HERE",
+        "AWS_SECRET_ACCESS_KEY": "YOUR_AWS_SECRET_ACCESS_KEY_HERE",
+        "AWS_REGION": "us-east-1",
+        "BEDROCK_KB_ID": "YOUR_KNOWLEDGE_BASE_ID_HERE"
+      }
+    },
+    "aws-bedrock": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-bedrock"],
+      "env": {
+        "AWS_ACCESS_KEY_ID": "YOUR_AWS_ACCESS_KEY_ID_HERE",
+        "AWS_SECRET_ACCESS_KEY": "YOUR_AWS_SECRET_ACCESS_KEY_HERE",
+        "AWS_REGION": "us-east-1"
+      }
+    },
+    "groq": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-groq"],
+      "env": {
+        "GROQ_API_KEY": "YOUR_GROQ_API_KEY_HERE"
+      }
+    },
+    "mistral": {
+      "command": "npx",
+      "args": ["-y", "mistral-mcp"],
+      "env": {
+        "MISTRAL_API_KEY": "YOUR_MISTRAL_API_KEY_HERE"
+      }
+    },
+    "cohere": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-cohere"],
+      "env": {
+        "COHERE_API_KEY": "YOUR_COHERE_API_KEY_HERE"
+      }
+    },
+    "stability-ai": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-stability"],
+      "env": {
+        "STABILITY_API_KEY": "YOUR_STABILITY_AI_API_KEY_HERE"
+      }
+    },
+    "runway": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-runway"],
+      "env": {
+        "RUNWAY_API_KEY": "YOUR_RUNWAY_API_KEY_HERE"
+      }
+    },
+    "elevenlabs": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-elevenlabs"],
+      "env": {
+        "ELEVENLABS_API_KEY": "YOUR_ELEVENLABS_API_KEY_HERE"
+      }
+    },
+    "deepgram": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-deepgram"],
+      "env": {
+        "DEEPGRAM_API_KEY": "YOUR_DEEPGRAM_API_KEY_HERE"
+      }
+    },
+    "replicate": {
+      "command": "npx",
+      "args": ["-y", "replicate-mcp"],
+      "env": {
+        "REPLICATE_API_TOKEN": "YOUR_REPLICATE_API_TOKEN_HERE"
+      }
+    },
+    "anthropic": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-anthropic"],
+      "env": {
+        "ANTHROPIC_API_KEY": "YOUR_ANTHROPIC_API_KEY_HERE"
+      }
+    },
+    "everything": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-everything"]
     }
   }
 }

@@ -882,6 +882,732 @@
         "GITHUB_OWNER": "...",
         "GITHUB_REPO": "..."
       }
+    },
+    "joplin": {
+      "command": "npx",
+      "args": ["-y", "joplin-mcp"],
+      "env": {
+        "JOPLIN_TOKEN": "...",
+        "JOPLIN_PORT": "41184"
+      }
+    },
+    "roam": {
+      "command": "npx",
+      "args": ["-y", "roam-mcp"],
+      "env": {
+        "ROAM_API_KEY": "...",
+        "ROAM_GRAPH_NAME": "..."
+      }
+    },
+    "logseq": {
+      "command": "npx",
+      "args": ["-y", "logseq-mcp"],
+      "env": {
+        "LOGSEQ_TOKEN": "...",
+        "LOGSEQ_GRAPH_PATH": "/path/to/graph"
+      }
+    },
+    "bear": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-bear"]
+    },
+    "onenote": {
+      "command": "npx",
+      "args": ["-y", "onenote-mcp"],
+      "env": {
+        "MICROSOFT_CLIENT_ID": "...",
+        "MICROSOFT_CLIENT_SECRET": "...",
+        "MICROSOFT_TENANT_ID": "..."
+      }
+    },
+    "gitbook": {
+      "command": "npx",
+      "args": ["-y", "gitbook-mcp"],
+      "env": {
+        "GITBOOK_API_TOKEN": "..."
+      }
+    },
+    "ghost": {
+      "command": "npx",
+      "args": ["-y", "ghost-mcp"],
+      "env": {
+        "GHOST_URL": "https://your-blog.ghost.io",
+        "GHOST_ADMIN_API_KEY": "..."
+      }
+    },
+    "substack": {
+      "command": "npx",
+      "args": ["-y", "substack-mcp"],
+      "env": {
+        "SUBSTACK_PUBLICATION": "your-publication"
+      }
+    },
+    "hashnode": {
+      "command": "npx",
+      "args": ["-y", "hashnode-mcp"],
+      "env": {
+        "HASHNODE_TOKEN": "...",
+        "HASHNODE_PUBLICATION_ID": "..."
+      }
+    },
+    "devto": {
+      "command": "npx",
+      "args": ["-y", "devto-mcp"],
+      "env": {
+        "DEVTO_API_KEY": "..."
+      }
+    },
+    "hackernews": {
+      "command": "npx",
+      "args": ["-y", "hackernews-mcp"]
+    },
+    "newrelic": {
+      "command": "npx",
+      "args": ["-y", "newrelic-mcp"],
+      "env": {
+        "NEW_RELIC_API_KEY": "...",
+        "NEW_RELIC_ACCOUNT_ID": "..."
+      }
+    },
+    "splunk": {
+      "command": "npx",
+      "args": ["-y", "splunk-mcp"],
+      "env": {
+        "SPLUNK_URL": "https://your-splunk.com:8089",
+        "SPLUNK_TOKEN": "..."
+      }
+    },
+    "vault": {
+      "command": "npx",
+      "args": ["-y", "vault-mcp"],
+      "env": {
+        "VAULT_ADDR": "http://127.0.0.1:8200",
+        "VAULT_TOKEN": "..."
+      }
+    },
+    "freshdesk": {
+      "command": "npx",
+      "args": ["-y", "freshdesk-mcp"],
+      "env": {
+        "FRESHDESK_DOMAIN": "your-company.freshdesk.com",
+        "FRESHDESK_API_KEY": "..."
+      }
+    },
+    "pipedrive": {
+      "command": "npx",
+      "args": ["-y", "pipedrive-mcp"],
+      "env": {
+        "PIPEDRIVE_API_TOKEN": "..."
+      }
+    },
+    "monday": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-monday"],
+      "env": {
+        "MONDAY_API_KEY": "..."
+      }
+    },
+    "basecamp": {
+      "command": "npx",
+      "args": ["-y", "basecamp-mcp"],
+      "env": {
+        "BASECAMP_ACCESS_TOKEN": "...",
+        "BASECAMP_ACCOUNT_ID": "..."
+      }
+    },
+    "toggl": {
+      "command": "npx",
+      "args": ["-y", "toggl-mcp"],
+      "env": {
+        "TOGGL_API_TOKEN": "..."
+      }
+    },
+    "quickbooks": {
+      "command": "npx",
+      "args": ["-y", "quickbooks-mcp"],
+      "env": {
+        "QUICKBOOKS_CLIENT_ID": "...",
+        "QUICKBOOKS_CLIENT_SECRET": "...",
+        "QUICKBOOKS_COMPANY_ID": "..."
+      }
+    },
+    "xero": {
+      "command": "npx",
+      "args": ["-y", "xero-mcp"],
+      "env": {
+        "XERO_CLIENT_ID": "...",
+        "XERO_CLIENT_SECRET": "..."
+      }
+    },
+    "wave": {
+      "command": "npx",
+      "args": ["-y", "wave-mcp"],
+      "env": {
+        "WAVE_API_TOKEN": "..."
+      }
+    },
+    "recurly": {
+      "command": "npx",
+      "args": ["-y", "recurly-mcp"],
+      "env": {
+        "RECURLY_API_KEY": "..."
+      }
+    },
+    "google-sheets": {
+      "command": "npx",
+      "args": ["-y", "google-sheets-mcp"],
+      "env": {
+        "GOOGLE_CLIENT_ID": "...",
+        "GOOGLE_CLIENT_SECRET": "...",
+        "GOOGLE_REFRESH_TOKEN": "..."
+      }
+    },
+    "google-docs": {
+      "command": "npx",
+      "args": ["-y", "google-docs-mcp"],
+      "env": {
+        "GOOGLE_CLIENT_ID": "...",
+        "GOOGLE_CLIENT_SECRET": "...",
+        "GOOGLE_REFRESH_TOKEN": "..."
+      }
+    },
+    "google-slides": {
+      "command": "npx",
+      "args": ["-y", "google-slides-mcp"],
+      "env": {
+        "GOOGLE_CLIENT_ID": "...",
+        "GOOGLE_CLIENT_SECRET": "...",
+        "GOOGLE_REFRESH_TOKEN": "..."
+      }
+    },
+    "excel": {
+      "command": "npx",
+      "args": ["-y", "excel-mcp"],
+      "env": {
+        "MICROSOFT_CLIENT_ID": "...",
+        "MICROSOFT_CLIENT_SECRET": "..."
+      }
+    },
+    "pdf": {
+      "command": "npx",
+      "args": ["-y", "pdf-mcp"]
+    },
+    "sharepoint": {
+      "command": "npx",
+      "args": ["-y", "sharepoint-mcp"],
+      "env": {
+        "SHAREPOINT_SITE_URL": "...",
+        "SHAREPOINT_CLIENT_ID": "...",
+        "SHAREPOINT_CLIENT_SECRET": "..."
+      }
+    },
+    "icloud": {
+      "command": "npx",
+      "args": ["-y", "icloud-mcp"],
+      "env": {
+        "ICLOUD_USERNAME": "...",
+        "ICLOUD_PASSWORD": "..."
+      }
+    },
+    "backblaze": {
+      "command": "npx",
+      "args": ["-y", "backblaze-mcp"],
+      "env": {
+        "B2_APPLICATION_KEY_ID": "...",
+        "B2_APPLICATION_KEY": "...",
+        "B2_BUCKET_NAME": "..."
+      }
+    },
+    "currency": {
+      "command": "npx",
+      "args": ["-y", "currency-mcp"],
+      "env": {
+        "EXCHANGE_RATE_API_KEY": "..."
+      }
+    },
+    "yahoo-finance": {
+      "command": "npx",
+      "args": ["-y", "yahoo-finance-mcp"]
+    },
+    "finnhub": {
+      "command": "npx",
+      "args": ["-y", "finnhub-mcp"],
+      "env": {
+        "FINNHUB_API_KEY": "..."
+      }
+    },
+    "openai-assistants": {
+      "command": "npx",
+      "args": ["-y", "openai-assistants-mcp"],
+      "env": {
+        "OPENAI_API_KEY": "..."
+      }
+    },
+    "langchain": {
+      "command": "npx",
+      "args": ["-y", "langchain-mcp"],
+      "env": {
+        "OPENAI_API_KEY": "..."
+      }
+    },
+    "chroma": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-chroma"],
+      "env": {
+        "CHROMA_HOST": "localhost",
+        "CHROMA_PORT": "8000"
+      }
+    },
+    "weaviate": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-weaviate"],
+      "env": {
+        "WEAVIATE_URL": "http://localhost:8080",
+        "WEAVIATE_API_KEY": "..."
+      }
+    },
+    "milvus": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-milvus"],
+      "env": {
+        "MILVUS_ADDRESS": "localhost:19530"
+      }
+    },
+    "typesense": {
+      "command": "npx",
+      "args": ["-y", "typesense-mcp"],
+      "env": {
+        "TYPESENSE_HOST": "localhost",
+        "TYPESENSE_PORT": "8108",
+        "TYPESENSE_API_KEY": "..."
+      }
+    },
+    "opensearch": {
+      "command": "npx",
+      "args": ["-y", "opensearch-mcp"],
+      "env": {
+        "OPENSEARCH_URL": "http://localhost:9200"
+      }
+    },
+    "couchdb": {
+      "command": "npx",
+      "args": ["-y", "couchdb-mcp"],
+      "env": {
+        "COUCHDB_URL": "http://localhost:5984",
+        "COUCHDB_USERNAME": "admin",
+        "COUCHDB_PASSWORD": "..."
+      }
+    },
+    "clickhouse": {
+      "command": "npx",
+      "args": ["-y", "clickhouse-mcp"],
+      "env": {
+        "CLICKHOUSE_HOST": "localhost",
+        "CLICKHOUSE_PORT": "8123",
+        "CLICKHOUSE_DATABASE": "default",
+        "CLICKHOUSE_USERNAME": "default",
+        "CLICKHOUSE_PASSWORD": "..."
+      }
+    },
+    "midjourney": {
+      "command": "npx",
+      "args": ["-y", "midjourney-mcp"],
+      "env": {
+        "MIDJOURNEY_API_KEY": "..."
+      }
+    },
+    "unsplash": {
+      "command": "npx",
+      "args": ["-y", "unsplash-mcp"],
+      "env": {
+        "UNSPLASH_ACCESS_KEY": "..."
+      }
+    },
+    "pexels": {
+      "command": "npx",
+      "args": ["-y", "pexels-mcp"],
+      "env": {
+        "PEXELS_API_KEY": "..."
+      }
+    },
+    "pixabay": {
+      "command": "npx",
+      "args": ["-y", "pixabay-mcp"],
+      "env": {
+        "PIXABAY_API_KEY": "..."
+      }
+    },
+    "giphy": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-giphy"],
+      "env": {
+        "GIPHY_API_KEY": "..."
+      }
+    },
+    "sharp": {
+      "command": "npx",
+      "args": ["-y", "sharp-mcp"]
+    },
+    "ffmpeg": {
+      "command": "npx",
+      "args": ["-y", "ffmpeg-mcp"]
+    },
+    "audio": {
+      "command": "npx",
+      "args": ["-y", "audio-mcp"]
+    },
+    "gemini": {
+      "command": "npx",
+      "args": ["-y", "gemini-mcp"],
+      "env": {
+        "GEMINI_API_KEY": "..."
+      }
+    },
+    "whisper": {
+      "command": "npx",
+      "args": ["-y", "whisper-mcp"],
+      "env": {
+        "OPENAI_API_KEY": "..."
+      }
+    },
+    "tts": {
+      "command": "npx",
+      "args": ["-y", "tts-mcp"],
+      "env": {
+        "OPENAI_API_KEY": "..."
+      }
+    },
+    "dify": {
+      "command": "npx",
+      "args": ["-y", "dify-mcp"],
+      "env": {
+        "DIFY_API_KEY": "...",
+        "DIFY_BASE_URL": "https://api.dify.ai/v1"
+      }
+    },
+    "n8n": {
+      "command": "npx",
+      "args": ["-y", "n8n-mcp"],
+      "env": {
+        "N8N_BASE_URL": "http://localhost:5678",
+        "N8N_API_KEY": "..."
+      }
+    },
+    "code-sandbox": {
+      "command": "npx",
+      "args": ["-y", "code-sandbox-mcp"],
+      "env": {
+        "E2B_API_KEY": "..."
+      }
+    },
+    "glitch": {
+      "command": "npx",
+      "args": ["-y", "glitch-mcp"],
+      "env": {
+        "GLITCH_TOKEN": "..."
+      }
+    },
+    "npm-registry": {
+      "command": "npx",
+      "args": ["-y", "npm-mcp"]
+    },
+    "maven": {
+      "command": "npx",
+      "args": ["-y", "maven-mcp"]
+    },
+    "stripe-billing": {
+      "command": "npx",
+      "args": ["-y", "stripe-billing-mcp"],
+      "env": {
+        "STRIPE_SECRET_KEY": "..."
+      }
+    },
+    "zuora": {
+      "command": "npx",
+      "args": ["-y", "zuora-mcp"],
+      "env": {
+        "ZUORA_CLIENT_ID": "...",
+        "ZUORA_CLIENT_SECRET": "...",
+        "ZUORA_BASE_URL": "https://rest.zuora.com"
+      }
+    },
+    "gumroad": {
+      "command": "npx",
+      "args": ["-y", "gumroad-mcp"],
+      "env": {
+        "GUMROAD_ACCESS_TOKEN": "..."
+      }
+    },
+    "strapi": {
+      "command": "npx",
+      "args": ["-y", "strapi-mcp"],
+      "env": {
+        "STRAPI_URL": "http://localhost:1337",
+        "STRAPI_API_TOKEN": "..."
+      }
+    },
+    "apple-music": {
+      "command": "npx",
+      "args": ["-y", "apple-music-mcp"],
+      "env": {
+        "APPLE_MUSIC_TOKEN": "..."
+      }
+    },
+    "tidal": {
+      "command": "npx",
+      "args": ["-y", "tidal-mcp"],
+      "env": {
+        "TIDAL_CLIENT_ID": "...",
+        "TIDAL_CLIENT_SECRET": "..."
+      }
+    },
+    "rumble": {
+      "command": "npx",
+      "args": ["-y", "rumble-mcp"],
+      "env": {
+        "RUMBLE_API_KEY": "..."
+      }
+    },
+    "steam": {
+      "command": "npx",
+      "args": ["-y", "steam-mcp"],
+      "env": {
+        "STEAM_API_KEY": "..."
+      }
+    },
+    "chess": {
+      "command": "npx",
+      "args": ["-y", "chess-mcp"]
+    },
+    "lichess": {
+      "command": "npx",
+      "args": ["-y", "lichess-mcp"],
+      "env": {
+        "LICHESS_API_TOKEN": "..."
+      }
+    },
+    "tmdb": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-tmdb"],
+      "env": {
+        "TMDB_API_KEY": "..."
+      }
+    },
+    "pubmed": {
+      "command": "npx",
+      "args": ["-y", "pubmed-mcp"]
+    },
+    "openalex": {
+      "command": "npx",
+      "args": ["-y", "openalex-mcp"]
+    },
+    "worldbank": {
+      "command": "npx",
+      "args": ["-y", "worldbank-mcp"]
+    },
+    "oecd": {
+      "command": "npx",
+      "args": ["-y", "oecd-mcp"]
+    },
+    "keycloak": {
+      "command": "npx",
+      "args": ["-y", "keycloak-mcp"],
+      "env": {
+        "KEYCLOAK_URL": "http://localhost:8080",
+        "KEYCLOAK_REALM": "master",
+        "KEYCLOAK_CLIENT_ID": "...",
+        "KEYCLOAK_CLIENT_SECRET": "..."
+      }
+    },
+    "firebase": {
+      "command": "npx",
+      "args": ["-y", "firebase-mcp"],
+      "env": {
+        "FIREBASE_PROJECT_ID": "...",
+        "GOOGLE_APPLICATION_CREDENTIALS": "/path/to/service-account.json"
+      }
+    },
+    "pocketbase": {
+      "command": "npx",
+      "args": ["-y", "pocketbase-mcp"],
+      "env": {
+        "POCKETBASE_URL": "http://127.0.0.1:8090",
+        "POCKETBASE_ADMIN_EMAIL": "...",
+        "POCKETBASE_ADMIN_PASSWORD": "..."
+      }
+    },
+    "fauna": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-fauna"],
+      "env": {
+        "FAUNA_SECRET": "..."
+      }
+    },
+    "turso": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-turso"],
+      "env": {
+        "TURSO_DATABASE_URL": "libsql://...",
+        "TURSO_AUTH_TOKEN": "..."
+      }
+    },
+    "regex": {
+      "command": "npx",
+      "args": ["-y", "regex-mcp"]
+    },
+    "clipboard": {
+      "command": "npx",
+      "args": ["-y", "clipboard-mcp"]
+    },
+    "serial": {
+      "command": "npx",
+      "args": ["-y", "serial-mcp"],
+      "env": {
+        "SERIAL_PORT": "/dev/ttyUSB0",
+        "SERIAL_BAUD_RATE": "9600"
+      }
+    },
+    "alexa": {
+      "command": "npx",
+      "args": ["-y", "alexa-mcp"],
+      "env": {
+        "ALEXA_CLIENT_ID": "...",
+        "ALEXA_CLIENT_SECRET": "...",
+        "ALEXA_REFRESH_TOKEN": "..."
+      }
+    },
+    "powerbi": {
+      "command": "npx",
+      "args": ["-y", "powerbi-mcp"],
+      "env": {
+        "POWERBI_CLIENT_ID": "...",
+        "POWERBI_CLIENT_SECRET": "...",
+        "POWERBI_TENANT_ID": "..."
+      }
+    },
+    "metabase": {
+      "command": "npx",
+      "args": ["-y", "metabase-mcp"],
+      "env": {
+        "METABASE_URL": "http://localhost:3000",
+        "METABASE_USERNAME": "...",
+        "METABASE_PASSWORD": "..."
+      }
+    },
+    "superset": {
+      "command": "npx",
+      "args": ["-y", "superset-mcp"],
+      "env": {
+        "SUPERSET_URL": "http://localhost:8088",
+        "SUPERSET_USERNAME": "admin",
+        "SUPERSET_PASSWORD": "..."
+      }
+    },
+    "redash": {
+      "command": "npx",
+      "args": ["-y", "redash-mcp"],
+      "env": {
+        "REDASH_URL": "http://localhost:5000",
+        "REDASH_API_KEY": "..."
+      }
+    },
+    "dbt": {
+      "command": "npx",
+      "args": ["-y", "dbt-mcp"],
+      "env": {
+        "DBT_PROJECT_DIR": "/path/to/dbt/project"
+      }
+    },
+    "stitch": {
+      "command": "npx",
+      "args": ["-y", "stitch-mcp"],
+      "env": {
+        "STITCH_CLIENT_ID": "...",
+        "STITCH_ACCESS_TOKEN": "..."
+      }
+    },
+    "qrcode": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-qrcode"]
+    },
+    "url-shortener": {
+      "command": "npx",
+      "args": ["-y", "url-shortener-mcp"]
+    },
+    "cve": {
+      "command": "npx",
+      "args": ["-y", "cve-mcp"]
+    },
+    "osint": {
+      "command": "npx",
+      "args": ["-y", "osint-mcp"]
+    },
+    "google-search-console": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-google-search-console"],
+      "env": {
+        "GOOGLE_CLIENT_ID": "...",
+        "GOOGLE_CLIENT_SECRET": "...",
+        "GOOGLE_REFRESH_TOKEN": "..."
+      }
+    },
+    "semrush": {
+      "command": "npx",
+      "args": ["-y", "semrush-mcp"],
+      "env": {
+        "SEMRUSH_API_KEY": "..."
+      }
+    },
+    "apollo": {
+      "command": "npx",
+      "args": ["-y", "apollo-mcp"],
+      "env": {
+        "APOLLO_API_KEY": "..."
+      }
+    },
+    "lemlist": {
+      "command": "npx",
+      "args": ["-y", "lemlist-mcp"],
+      "env": {
+        "LEMLIST_API_KEY": "..."
+      }
+    },
+    "instantly": {
+      "command": "npx",
+      "args": ["-y", "instantly-mcp"],
+      "env": {
+        "INSTANTLY_API_KEY": "..."
+      }
+    },
+    "smartlead": {
+      "command": "npx",
+      "args": ["-y", "smartlead-mcp"],
+      "env": {
+        "SMARTLEAD_API_KEY": "..."
+      }
+    },
+    "gong": {
+      "command": "npx",
+      "args": ["-y", "gong-mcp"],
+      "env": {
+        "GONG_ACCESS_KEY": "...",
+        "GONG_ACCESS_SECRET": "..."
+      }
+    },
+    "mistral-ocr": {
+      "command": "npx",
+      "args": ["-y", "mistral-ocr-mcp"],
+      "env": {
+        "MISTRAL_API_KEY": "..."
+      }
+    },
+    "tesseract": {
+      "command": "npx",
+      "args": ["-y", "tesseract-mcp"]
+    },
+    "marker": {
+      "command": "npx",
+      "args": ["-y", "marker-mcp"]
     }
   }
 }

@@ -1608,6 +1608,395 @@
     "marker": {
       "command": "npx",
       "args": ["-y", "marker-mcp"]
+    },
+    "healthcare": {
+      "command": "npx",
+      "args": ["-y", "healthcare-mcp"]
+    },
+    "ncbi": {
+      "command": "npx",
+      "args": ["-y", "ncbi-mcp"]
+    },
+    "legal": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-legal"]
+    },
+    "edgar": {
+      "command": "npx",
+      "args": ["-y", "edgar-mcp"]
+    },
+    "zillow": {
+      "command": "npx",
+      "args": ["-y", "zillow-mcp"],
+      "env": { "ZILLOW_API_KEY": "..." }
+    },
+    "redfin": {
+      "command": "npx",
+      "args": ["-y", "redfin-mcp"]
+    },
+    "realestate": {
+      "command": "npx",
+      "args": ["-y", "realestate-mcp"]
+    },
+    "greenhouse": {
+      "command": "npx",
+      "args": ["-y", "greenhouse-mcp"],
+      "env": { "GREENHOUSE_API_KEY": "..." }
+    },
+    "workday": {
+      "command": "npx",
+      "args": ["-y", "workday-mcp"],
+      "env": { "WORKDAY_API_KEY": "...", "WORKDAY_TENANT": "..." }
+    },
+    "lattice": {
+      "command": "npx",
+      "args": ["-y", "lattice-mcp"],
+      "env": { "LATTICE_API_KEY": "..." }
+    },
+    "shopify-admin": {
+      "command": "npx",
+      "args": ["-y", "shopify-admin-mcp"],
+      "env": { "SHOPIFY_ACCESS_TOKEN": "...", "SHOPIFY_SHOP_URL": "your-store.myshopify.com" }
+    },
+    "odoo": {
+      "command": "npx",
+      "args": ["-y", "odoo-mcp"],
+      "env": { "ODOO_URL": "https://your-company.odoo.com", "ODOO_DB": "...", "ODOO_USERNAME": "...", "ODOO_PASSWORD": "..." }
+    },
+    "ups": {
+      "command": "npx",
+      "args": ["-y", "ups-mcp"],
+      "env": { "UPS_CLIENT_ID": "...", "UPS_CLIENT_SECRET": "..." }
+    },
+    "easypost": {
+      "command": "npx",
+      "args": ["-y", "easypost-mcp"],
+      "env": { "EASYPOST_API_KEY": "..." }
+    },
+    "aftership": {
+      "command": "npx",
+      "args": ["-y", "aftership-mcp"],
+      "env": { "AFTERSHIP_API_KEY": "..." }
+    },
+    "coursera": {
+      "command": "npx",
+      "args": ["-y", "coursera-mcp"]
+    },
+    "anki": {
+      "command": "npx",
+      "args": ["-y", "anki-mcp"]
+    },
+    "canvas-lms": {
+      "command": "npx",
+      "args": ["-y", "canvas-lms-mcp"],
+      "env": { "CANVAS_API_URL": "https://your-school.instructure.com", "CANVAS_API_KEY": "..." }
+    },
+    "moodle": {
+      "command": "npx",
+      "args": ["-y", "moodle-mcp"],
+      "env": { "MOODLE_URL": "https://your-moodle.com", "MOODLE_TOKEN": "..." }
+    },
+    "masterclass": {
+      "command": "npx",
+      "args": ["-y", "masterclass-mcp"]
+    },
+    "unity": {
+      "command": "npx",
+      "args": ["-y", "unity-mcp"],
+      "env": { "UNITY_API_KEY": "..." }
+    },
+    "godot": {
+      "command": "npx",
+      "args": ["-y", "godot-mcp"]
+    },
+    "blender": {
+      "command": "npx",
+      "args": ["-y", "blender-mcp"]
+    },
+    "sketchfab": {
+      "command": "npx",
+      "args": ["-y", "sketchfab-mcp"],
+      "env": { "SKETCHFAB_API_TOKEN": "..." }
+    },
+    "onshape": {
+      "command": "npx",
+      "args": ["-y", "onshape-mcp"],
+      "env": { "ONSHAPE_ACCESS_KEY": "...", "ONSHAPE_SECRET_KEY": "..." }
+    },
+    "solidworks": {
+      "command": "npx",
+      "args": ["-y", "solidworks-mcp"]
+    },
+    "ethereum": {
+      "command": "npx",
+      "args": ["-y", "ethereum-mcp"],
+      "env": { "ETHEREUM_RPC_URL": "https://mainnet.infura.io/v3/..." }
+    },
+    "sui": {
+      "command": "npx",
+      "args": ["-y", "sui-mcp"],
+      "env": { "SUI_NETWORK": "mainnet" }
+    },
+    "infura": {
+      "command": "npx",
+      "args": ["-y", "infura-mcp"],
+      "env": { "INFURA_API_KEY": "..." }
+    },
+    "ipfs": {
+      "command": "npx",
+      "args": ["-y", "ipfs-mcp"],
+      "env": { "IPFS_API_URL": "https://ipfs.infura.io:5001" }
+    },
+    "react": {
+      "command": "npx",
+      "args": ["-y", "react-mcp"]
+    },
+    "nextjs": {
+      "command": "npx",
+      "args": ["-y", "nextjs-mcp"]
+    },
+    "nuxt": {
+      "command": "npx",
+      "args": ["-y", "nuxt-mcp"]
+    },
+    "angular": {
+      "command": "npx",
+      "args": ["-y", "angular-mcp"]
+    },
+    "svelte": {
+      "command": "npx",
+      "args": ["-y", "svelte-mcp"]
+    },
+    "astro": {
+      "command": "npx",
+      "args": ["-y", "astro-mcp"]
+    },
+    "remix": {
+      "command": "npx",
+      "args": ["-y", "remix-mcp"]
+    },
+    "shadcn": {
+      "command": "npx",
+      "args": ["-y", "shadcn-mcp"]
+    },
+    "mantine": {
+      "command": "npx",
+      "args": ["-y", "mantine-mcp"]
+    },
+    "antd": {
+      "command": "npx",
+      "args": ["-y", "antd-mcp"]
+    },
+    "swift": {
+      "command": "npx",
+      "args": ["-y", "swift-mcp"]
+    },
+    "matlab": {
+      "command": "npx",
+      "args": ["-y", "matlab-mcp"],
+      "env": { "MATLAB_API_KEY": "..." }
+    },
+    "wasm": {
+      "command": "npx",
+      "args": ["-y", "wasm-mcp"]
+    },
+    "express": {
+      "command": "npx",
+      "args": ["-y", "express-mcp"]
+    },
+    "fastify": {
+      "command": "npx",
+      "args": ["-y", "fastify-mcp"]
+    },
+    "nestjs": {
+      "command": "npx",
+      "args": ["-y", "nestjs-mcp"]
+    },
+    "hono": {
+      "command": "npx",
+      "args": ["-y", "hono-mcp"]
+    },
+    "trpc": {
+      "command": "npx",
+      "args": ["-y", "trpc-mcp"]
+    },
+    "musicbrainz": {
+      "command": "npx",
+      "args": ["-y", "musicbrainz-mcp"]
+    },
+    "transistor": {
+      "command": "npx",
+      "args": ["-y", "transistor-mcp"],
+      "env": { "TRANSISTOR_API_KEY": "..." }
+    },
+    "buzzsprout": {
+      "command": "npx",
+      "args": ["-y", "buzzsprout-mcp"],
+      "env": { "BUZZSPROUT_PODCAST_ID": "...", "BUZZSPROUT_API_KEY": "..." }
+    },
+    "anchor": {
+      "command": "npx",
+      "args": ["-y", "anchor-mcp"],
+      "env": { "ANCHOR_EMAIL": "...", "ANCHOR_PASSWORD": "..." }
+    },
+    "vim": {
+      "command": "npx",
+      "args": ["-y", "vim-mcp"]
+    },
+    "cursor": {
+      "command": "npx",
+      "args": ["-y", "cursor-mcp"]
+    },
+    "windsurf": {
+      "command": "npx",
+      "args": ["-y", "windsurf-mcp"]
+    },
+    "clippy": {
+      "command": "npx",
+      "args": ["-y", "clippy-mcp"]
+    },
+    "google-ads": {
+      "command": "npx",
+      "args": ["-y", "google-ads-mcp"],
+      "env": { "GOOGLE_ADS_CLIENT_ID": "...", "GOOGLE_ADS_CLIENT_SECRET": "...", "GOOGLE_ADS_DEVELOPER_TOKEN": "...", "GOOGLE_ADS_CUSTOMER_ID": "..." }
+    },
+    "meta-ads": {
+      "command": "npx",
+      "args": ["-y", "meta-ads-mcp"],
+      "env": { "META_ACCESS_TOKEN": "...", "META_AD_ACCOUNT_ID": "..." }
+    },
+    "tiktok-ads": {
+      "command": "npx",
+      "args": ["-y", "tiktok-ads-mcp"],
+      "env": { "TIKTOK_ACCESS_TOKEN": "...", "TIKTOK_ADVERTISER_ID": "..." }
+    },
+    "pinterest-ads": {
+      "command": "npx",
+      "args": ["-y", "pinterest-ads-mcp"],
+      "env": { "PINTEREST_ACCESS_TOKEN": "..." }
+    },
+    "snapchat-ads": {
+      "command": "npx",
+      "args": ["-y", "snapchat-ads-mcp"],
+      "env": { "SNAPCHAT_ACCESS_TOKEN": "...", "SNAPCHAT_AD_ACCOUNT_ID": "..." }
+    },
+    "twitter-ads": {
+      "command": "npx",
+      "args": ["-y", "twitter-ads-mcp"],
+      "env": { "TWITTER_ADS_API_KEY": "...", "TWITTER_ADS_API_SECRET": "...", "TWITTER_ADS_ACCESS_TOKEN": "...", "TWITTER_ADS_ACCESS_SECRET": "..." }
+    },
+    "linkedin-ads": {
+      "command": "npx",
+      "args": ["-y", "linkedin-ads-mcp"],
+      "env": { "LINKEDIN_ACCESS_TOKEN": "...", "LINKEDIN_AD_ACCOUNT_ID": "..." }
+    },
+    "klaviyo": {
+      "command": "npx",
+      "args": ["-y", "klaviyo-mcp"],
+      "env": { "KLAVIYO_API_KEY": "..." }
+    },
+    "beehiiv": {
+      "command": "npx",
+      "args": ["-y", "beehiiv-mcp"],
+      "env": { "BEEHIIV_API_KEY": "...", "BEEHIIV_PUBLICATION_ID": "..." }
+    },
+    "courier": {
+      "command": "npx",
+      "args": ["-y", "courier-mcp"],
+      "env": { "COURIER_AUTH_TOKEN": "..." }
+    },
+    "google-meet": {
+      "command": "npx",
+      "args": ["-y", "google-meet-mcp"],
+      "env": { "GOOGLE_CLIENT_ID": "...", "GOOGLE_CLIENT_SECRET": "..." }
+    },
+    "weatherapi": {
+      "command": "npx",
+      "args": ["-y", "weatherapi-mcp"],
+      "env": { "WEATHERAPI_KEY": "..." }
+    },
+    "aviation": {
+      "command": "npx",
+      "args": ["-y", "aviation-mcp"],
+      "env": { "AVIATIONSTACK_API_KEY": "..." }
+    },
+    "flightaware": {
+      "command": "npx",
+      "args": ["-y", "flightaware-mcp"],
+      "env": { "FLIGHTAWARE_API_KEY": "..." }
+    },
+    "carbon": {
+      "command": "npx",
+      "args": ["-y", "carbon-mcp"],
+      "env": { "CARBON_INTERFACE_API_KEY": "..." }
+    },
+    "home-assistant": {
+      "command": "npx",
+      "args": ["-y", "home-assistant-mcp"],
+      "env": { "HA_URL": "http://homeassistant.local:8123", "HA_TOKEN": "..." }
+    },
+    "opc-ua": {
+      "command": "npx",
+      "args": ["-y", "opc-ua-mcp"],
+      "env": { "OPC_UA_ENDPOINT": "opc.tcp://localhost:4840" }
+    },
+    "bitwarden": {
+      "command": "npx",
+      "args": ["-y", "bitwarden-mcp"],
+      "env": { "BITWARDEN_CLIENT_ID": "...", "BITWARDEN_CLIENT_SECRET": "..." }
+    },
+    "tailscale": {
+      "command": "npx",
+      "args": ["-y", "tailscale-mcp"],
+      "env": { "TAILSCALE_API_KEY": "...", "TAILSCALE_TAILNET": "..." }
+    },
+    "zerotier": {
+      "command": "npx",
+      "args": ["-y", "zerotier-mcp"],
+      "env": { "ZEROTIER_API_TOKEN": "..." }
+    },
+    "strava": {
+      "command": "npx",
+      "args": ["-y", "strava-mcp"],
+      "env": { "STRAVA_CLIENT_ID": "...", "STRAVA_CLIENT_SECRET": "...", "STRAVA_REFRESH_TOKEN": "..." }
+    },
+    "fitbit": {
+      "command": "npx",
+      "args": ["-y", "fitbit-mcp"],
+      "env": { "FITBIT_CLIENT_ID": "...", "FITBIT_CLIENT_SECRET": "..." }
+    },
+    "whoop": {
+      "command": "npx",
+      "args": ["-y", "whoop-mcp"],
+      "env": { "WHOOP_CLIENT_ID": "...", "WHOOP_CLIENT_SECRET": "..." }
+    },
+    "oura": {
+      "command": "npx",
+      "args": ["-y", "oura-mcp"],
+      "env": { "OURA_ACCESS_TOKEN": "..." }
+    },
+    "myfitnesspal": {
+      "command": "npx",
+      "args": ["-y", "myfitnesspal-mcp"],
+      "env": { "MFP_USERNAME": "...", "MFP_PASSWORD": "..." }
+    },
+    "spoonacular": {
+      "command": "npx",
+      "args": ["-y", "spoonacular-mcp"],
+      "env": { "SPOONACULAR_API_KEY": "..." }
+    },
+    "recipe": {
+      "command": "npx",
+      "args": ["-y", "recipe-mcp"]
+    },
+    "usda": {
+      "command": "npx",
+      "args": ["-y", "usda-mcp"],
+      "env": { "USDA_API_KEY": "..." }
+    },
+    "sleep": {
+      "command": "npx",
+      "args": ["-y", "sleep-mcp"]
     }
   }
 }

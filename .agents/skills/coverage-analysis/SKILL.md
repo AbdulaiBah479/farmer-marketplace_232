@@ -1,532 +1,607 @@
 ---
 name: coverage-analysis
+type: technique
 description: >
-  Project-wide code coverage and CRAP (Change Risk Anti-Patterns) score
-  analysis for .NET projects. Calculates CRAP scores per method and surfaces
-  risk hotspots — complex code with low coverage that is dangerous to modify.
-  Use to diagnose why coverage is stuck or plateaued, identify what methods
-  block improvement, or get project-wide coverage analysis with risk ranking.
-  USE FOR: coverage stuck, coverage plateau, can't increase coverage, what's
-  blocking coverage, coverage gap, CRAP scores, risk hotspots, where to add
-  tests, coverage analysis, coverage report.
-  DO NOT USE FOR: targeted single-method CRAP analysis (use crap-score),
-  writing tests, running tests without coverage, or troubleshooting test
-  execution (use run-tests).
-license: MIT
+  Coverage analysis measures code exercised during fuzzing.
+  Use when assessing harness effectiveness or identifying fuzzing blockers.
 ---
 
 # Coverage Analysis
 
-## Purpose
+Coverage analysis is essential for understanding which parts of your code are exercised during fuzzing. It helps identify fuzzing blockers like magic value checks and tracks the effectiveness of harness improvements over time.
 
-Raw coverage percentages answer "what code was executed?" — they don't answer what you actually need to know:
+## Overview
 
-- **What tests should I write next?** — ranked by risk and impact
-- **Which uncovered code is risky vs. trivial?** — CRAP scores separate the two
-- **Why has coverage plateaued?** — identify the files blocking further gains
-- **Is this code safe to refactor?** — complex + uncovered = dangerous to change
+Code coverage during fuzzing serves two critical purposes:
 
-This skill bridges that gap: from a bare .NET solution to a prioritized risk hotspot list, with no manual tool configuration required.
+1. **Assessing harness effectiveness**: Understand which parts of your application are actually executed by your fuzzing harnesses
+2. **Tracking fuzzing progress**: Monitor how coverage changes when updating harnesses, fuzzers, or the system under test (SUT)
 
-## When to Use
+Coverage is a proxy for fuzzer capability and performance. While coverage [is not ideal for measuring fuzzer performance](https://arxiv.org/abs/1808.09700) in absolute terms, it reliably indicates whether your harness works effectively in a given setup.
 
-Use this skill when the user mentions test coverage, coverage gaps, code risk, CRAP scores, where to add tests, why coverage plateaued, or wants to know which code is safest to refactor — even if they don't explicitly say "coverage analysis".
+### Key Concepts
 
-## When Not to Use
+| Concept | Description |
+|---------|-------------|
+| **Coverage instrumentation** | Compiler flags that track which code paths are executed |
+| **Corpus coverage** | Coverage achieved by running all test cases in a fuzzing corpus |
+| **Magic value checks** | Hard-to-discover conditional checks that block fuzzer progress |
+| **Coverage-guided fuzzing** | Fuzzing strategy that prioritizes inputs that discover new code paths |
+| **Coverage report** | Visual or textual representation of executed vs. unexecuted code |
 
-- **Targeted single-method CRAP analysis** — use the `crap-score` skill instead
-- **Writing or generating tests** — this skill identifies where tests are needed, not write them
-- **General test execution** unrelated to coverage or CRAP analysis
-- **Coverage reporting without CRAP context** — use `dotnet test` with coverage collection directly
+## When to Apply
 
-## Inputs
+**Apply this technique when:**
+- Starting a new fuzzing campaign to establish a baseline
+- Fuzzer appears to plateau without finding new paths
+- After harness modifications to verify improvements
+- When migrating between different fuzzers
+- Identifying areas requiring dictionary entries or seed inputs
+- Debugging why certain code paths aren't reached
 
-| Input | Required | Default | Description |
-|-------|----------|---------|-------------|
-| Project/solution path | No | Current directory | Path to the .NET solution or project |
-| Line coverage threshold | No | 80% | Minimum acceptable line coverage |
-| Branch coverage threshold | No | 70% | Minimum acceptable branch coverage |
-| CRAP threshold | No | 30 | Maximum acceptable CRAP score before flagging |
-| Top N hotspots | No | 10 | Number of risk hotspots to surface |
+**Skip this technique when:**
+- Fuzzing campaign is actively finding crashes
+- Coverage infrastructure isn't set up yet
+- Working with extremely large codebases where full coverage reports are impractical
+- Fuzzer's internal coverage metrics are sufficient for your needs
 
-### Prerequisites
+## Quick Reference
 
-- .NET SDK installed (`dotnet` on PATH)
-- At least one test project referencing the production code (xUnit, NUnit, or MSTest) — only required for the from-scratch path; not needed when the user supplies an existing Cobertura XML
-- **Optional, only for the from-scratch path:** internet/NuGet access for `dotnet add package coverlet.collector` (or `Microsoft.Testing.Extensions.CodeCoverage`) when a test project has no coverage provider yet. Skip when the user supplies an existing Cobertura XML.
-- **Optional, only for Phase 5:** internet access for `dotnet tool install` (ReportGenerator). Core CRAP/coverage analysis works from Cobertura XML alone — ReportGenerator only adds HTML/CSV reports as an optional post-summary extra.
+| Task | Command/Pattern |
+|------|-----------------|
+| LLVM coverage instrumentation (C/C++) | `-fprofile-instr-generate -fcoverage-mapping` |
+| GCC coverage instrumentation | `-ftest-coverage -fprofile-arcs` |
+| cargo-fuzz coverage (Rust) | `cargo +nightly fuzz coverage <target>` |
+| Generate LLVM profile data | `llvm-profdata merge -sparse file.profraw -o file.profdata` |
+| LLVM coverage report | `llvm-cov report ./binary -instr-profile=file.profdata` |
+| LLVM HTML report | `llvm-cov show ./binary -instr-profile=file.profdata -format=html -output-dir html/` |
+| gcovr HTML report | `gcovr --html-details -o coverage.html` |
 
-The skill auto-detects coverage provider state per test project and selects the least-invasive execution strategy:
+## Ideal Coverage Workflow
 
-- unified Microsoft CodeCoverage when all projects use it,
-- unified Coverlet when no project uses Microsoft CodeCoverage,
-- per-project provider execution when the solution is truly mixed.
+The following workflow represents best practices for integrating coverage analysis into your fuzzing campaigns:
 
-No pre-existing runsettings files or manually installed tools required.
+```
+[Fuzzing Campaign]
+       |
+       v
+[Generate Corpus]
+       |
+       v
+[Coverage Analysis]
+       |
+       +---> Coverage Increased? --> Continue fuzzing with larger corpus
+       |
+       +---> Coverage Decreased? --> Fix harness or investigate SUT changes
+       |
+       +---> Coverage Plateaued? --> Add dictionary entries or seed inputs
+```
 
-## Workflow
+**Key principle**: Use the corpus generated *after* each fuzzing campaign to calculate coverage, rather than real-time fuzzer statistics. This approach provides reproducible, comparable measurements across different fuzzing tools.
 
-> **MANDATORY: deliver the final assistant response with the CRAP/risk-hotspot summary BEFORE any optional work.** As soon as `Compute-CrapScores.ps1` and `Extract-MethodCoverage.ps1` return data, your **next** assistant response must contain the user-facing analysis (CRAP table, blocking methods, recommendations). Do not run ReportGenerator (Phase 5), do not install global tools, and do not start any heavy parallel work before that response is delivered. The user is judged on the final assistant message, not on side-effect files.
->
-> If a phase fails, times out, or budget is running low, skip remaining optional work and immediately return a partial summary containing: (1) what was found in the Cobertura XML, (2) any CRAP/risk-hotspot data already extracted, (3) which methods are blocking coverage, and (4) failures encountered.
+## Step-by-Step
 
-If the user provides a path to existing Cobertura XML (or coverage data is already present in `TestResults/`), **skip Phase 2 entirely** (no test execution) **and skip Phase 5 by default** (no ReportGenerator install or HTML report) — go directly from Phase 3 (analysis scripts) to Phase 4 (user-facing summary). Only run Phase 5 if the user explicitly asks for HTML/CSV reports. The Risk Hotspots table and CRAP scores are mandatory in every output — they are the skill's core value-add over raw coverage numbers.
+### Step 1: Build with Coverage Instrumentation
 
-The workflow runs in five phases. Phases 1–4 are required; Phase 5 (ReportGenerator HTML/CSV reports) is strictly optional and runs **after** the user-facing summary has been delivered. Do not parallelize Phase 5 with earlier phases — the heavy `dotnet tool install` for ReportGenerator can crash the session before Phase 4 completes.
+Choose your instrumentation method based on toolchain:
 
-### Phase 1 — Setup (sequential)
+**LLVM/Clang (C/C++):**
+```bash
+clang++ -fprofile-instr-generate -fcoverage-mapping \
+  -O2 -DNO_MAIN \
+  main.cc harness.cc execute-rt.cc -o fuzz_exec
+```
 
-#### Step 1: Locate the solution or project
+**GCC (C/C++):**
+```bash
+g++ -ftest-coverage -fprofile-arcs \
+  -O2 -DNO_MAIN \
+  main.cc harness.cc execute-rt.cc -o fuzz_exec_gcov
+```
 
-Given the user's path (default: current directory), find the entry point:
+**Rust:**
+```bash
+rustup toolchain install nightly --component llvm-tools-preview
+cargo +nightly fuzz coverage fuzz_target_1
+```
 
-```powershell
-$root = "<user-provided-path-or-current-directory>"
+### Step 2: Create Execution Runtime (C/C++ only)
 
-# Prefer solution file; fall back to project file
-$sln = Get-ChildItem -Path $root -Filter "*.sln" -Recurse -Depth 2 -ErrorAction SilentlyContinue |
-    Select-Object -First 1
-if ($sln) {
-    Write-Host "ENTRY_TYPE:Solution"; Write-Host "ENTRY:$($sln.FullName)"
-} else {
-    $project = Get-ChildItem -Path $root -Filter "*.csproj" -Recurse -Depth 2 -ErrorAction SilentlyContinue |
-        Select-Object -First 1
-    if ($project) {
-        Write-Host "ENTRY_TYPE:Project"; Write-Host "ENTRY:$($project.FullName)"
-    } else {
-        Write-Host "ENTRY_TYPE:NotFound"
+For C/C++ projects, create a runtime that executes your corpus:
+
+```cpp
+// execute-rt.cc
+#include <stdio.h>
+#include <stdlib.h>
+#include <dirent.h>
+#include <stdint.h>
+
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size);
+
+void load_file_and_test(const char *filename) {
+    FILE *file = fopen(filename, "rb");
+    if (file == NULL) {
+        printf("Failed to open file: %s\n", filename);
+        return;
     }
+
+    fseek(file, 0, SEEK_END);
+    long filesize = ftell(file);
+    rewind(file);
+
+    uint8_t *buffer = (uint8_t*) malloc(filesize);
+    if (buffer == NULL) {
+        printf("Failed to allocate memory for file: %s\n", filename);
+        fclose(file);
+        return;
+    }
+
+    long read_size = (long) fread(buffer, 1, filesize, file);
+    if (read_size != filesize) {
+        printf("Failed to read file: %s\n", filename);
+        free(buffer);
+        fclose(file);
+        return;
+    }
+
+    LLVMFuzzerTestOneInput(buffer, filesize);
+
+    free(buffer);
+    fclose(file);
 }
 
-# Test projects: search path first, then git root, then parent
-$searchRoots = @($root)
-$gitRoot = (git -C $root rev-parse --show-toplevel 2>$null)
-if ($gitRoot) { $gitRoot = [System.IO.Path]::GetFullPath($gitRoot) }
-if ($gitRoot -and $gitRoot -ne $root) { $searchRoots += $gitRoot }
-$parentPath = Split-Path $root -Parent
-if ($parentPath -and $parentPath -ne $root -and $parentPath -ne $gitRoot) { $searchRoots += $parentPath }
-
-$testProjects = @()
-foreach ($sr in $searchRoots) {
-    # Primary: match by .csproj content (test framework references)
-    $testProjects = @(Get-ChildItem -Path $sr -Filter "*.csproj" -Recurse -Depth 5 -ErrorAction SilentlyContinue |
-        Where-Object { $_.FullName -notmatch '([/\\]obj[/\\]|[/\\]bin[/\\])' } |
-        Where-Object { (Select-String -Path $_.FullName -Pattern 'Microsoft\.NET\.Test\.Sdk|xunit|nunit|MSTest\.TestAdapter|"MSTest"|MSTest\.TestFramework|TUnit' -Quiet) })
-    if ($testProjects.Count -gt 0) {
-        if ($sr -ne $root) { Write-Host "SEARCHED:$sr" }
-        break
+int main(int argc, char **argv) {
+    if (argc != 2) {
+        printf("Usage: %s <directory>\n", argv[0]);
+        return 1;
     }
-}
 
-# Fallback: match by file name convention
-if ($testProjects.Count -eq 0) {
-    foreach ($sr in $searchRoots) {
-        $testProjects = @(Get-ChildItem -Path $sr -Filter "*.csproj" -Recurse -Depth 5 -ErrorAction SilentlyContinue |
-            Where-Object { $_.Name -match '(?i)(test|spec)' })
-        if ($testProjects.Count -gt 0) {
-            if ($sr -ne $root) { Write-Host "SEARCHED:$sr" }
-            break
+    DIR *dir = opendir(argv[1]);
+    if (dir == NULL) {
+        printf("Failed to open directory: %s\n", argv[1]);
+        return 1;
+    }
+
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL) {
+        if (entry->d_type == DT_REG) {
+            char filepath[1024];
+            snprintf(filepath, sizeof(filepath), "%s/%s", argv[1], entry->d_name);
+            load_file_and_test(filepath);
         }
     }
-}
-Write-Host "TEST_PROJECTS:$($testProjects.Count)"
-$testProjects | ForEach-Object { Write-Host "TEST_PROJECT:$($_.FullName)" }
 
-# Resolve the test output root (where coverage-analysis artifacts will be written)
-if ($testProjects.Count -eq 0) {
-    if ($gitRoot) {
-        $testOutputRoot = $gitRoot
-    } else {
-        $testOutputRoot = $root
-    }
-} elseif ($testProjects.Count -eq 1) {
-    $testOutputRoot = $testProjects[0].DirectoryName
-} else {
-    # Multiple test projects — find their deepest common parent directory
-    $dirs = $testProjects | ForEach-Object { $_.DirectoryName }
-    $common = $dirs[0]
-    foreach ($d in $dirs[1..($dirs.Count-1)]) {
-        $sep = [System.IO.Path]::DirectorySeparatorChar
-        while (-not $d.StartsWith("$common$sep", [System.StringComparison]::OrdinalIgnoreCase) -and $d -ne $common) {
-            $prevCommon = $common
-            $common = Split-Path $common -Parent
-            # Terminate if we can no longer move up (at filesystem root or no parent)
-            if ([string]::IsNullOrEmpty($common) -or $common -eq $prevCommon) {
-                $common = $null
-                break
+    closedir(dir);
+    return 0;
+}
+```
+
+### Step 3: Execute on Corpus
+
+**LLVM (C/C++):**
+```bash
+LLVM_PROFILE_FILE=fuzz.profraw ./fuzz_exec corpus/
+```
+
+**GCC (C/C++):**
+```bash
+./fuzz_exec_gcov corpus/
+```
+
+**Rust:**
+Coverage data is automatically generated when running `cargo fuzz coverage`.
+
+### Step 4: Process Coverage Data
+
+**LLVM:**
+```bash
+# Merge raw profile data
+llvm-profdata merge -sparse fuzz.profraw -o fuzz.profdata
+
+# Generate text report
+llvm-cov report ./fuzz_exec \
+  -instr-profile=fuzz.profdata \
+  -ignore-filename-regex='harness.cc|execute-rt.cc'
+
+# Generate HTML report
+llvm-cov show ./fuzz_exec \
+  -instr-profile=fuzz.profdata \
+  -ignore-filename-regex='harness.cc|execute-rt.cc' \
+  -format=html -output-dir fuzz_html/
+```
+
+**GCC with gcovr:**
+```bash
+# Install gcovr (via pip for latest version)
+python3 -m venv venv
+source venv/bin/activate
+pip3 install gcovr
+
+# Generate report
+gcovr --gcov-executable "llvm-cov gcov" \
+  --exclude harness.cc --exclude execute-rt.cc \
+  --root . --html-details -o coverage.html
+```
+
+**Rust:**
+```bash
+# Install required tools
+cargo install cargo-binutils rustfilt
+
+# Create HTML generation script
+cat <<'EOF' > ./generate_html
+#!/bin/sh
+if [ $# -lt 1 ]; then
+    echo "Error: Name of fuzz target is required."
+    echo "Usage: $0 fuzz_target [sources...]"
+    exit 1
+fi
+FUZZ_TARGET="$1"
+shift
+SRC_FILTER="$@"
+TARGET=$(rustc -vV | sed -n 's|host: ||p')
+cargo +nightly cov -- show -Xdemangler=rustfilt \
+  "target/$TARGET/coverage/$TARGET/release/$FUZZ_TARGET" \
+  -instr-profile="fuzz/coverage/$FUZZ_TARGET/coverage.profdata" \
+  -show-line-counts-or-regions -show-instantiations \
+  -format=html -o fuzz_html/ $SRC_FILTER
+EOF
+chmod +x ./generate_html
+
+# Generate HTML report
+./generate_html fuzz_target_1 src/lib.rs
+```
+
+### Step 5: Analyze Results
+
+Review the coverage report to identify:
+
+- **Uncovered code blocks**: Areas that may need better seed inputs or dictionary entries
+- **Magic value checks**: Conditional statements with hardcoded values that block progress
+- **Dead code**: Functions that may not be reachable through your harness
+- **Coverage changes**: Compare against baseline to track improvements or regressions
+
+## Common Patterns
+
+### Pattern: Identifying Magic Values
+
+**Problem**: Fuzzer cannot discover paths guarded by magic value checks.
+
+**Coverage reveals:**
+```cpp
+// Coverage shows this block is never executed
+if (buf == 0x7F454C46) {  // ELF magic number
+    // start parsing buf
+}
+```
+
+**Solution**: Add magic values to dictionary file:
+```
+# magic.dict
+"\x7F\x45\x4C\x46"
+```
+
+### Pattern: Handling Crashing Inputs
+
+**Problem**: Coverage generation fails when corpus contains crashing inputs.
+
+**Before:**
+```bash
+./fuzz_exec corpus/  # Crashes on bad input, no coverage generated
+```
+
+**After:**
+```cpp
+// Fork before executing to isolate crashes
+int main(int argc, char **argv) {
+    // ... directory opening code ...
+
+    while ((entry = readdir(dir)) != NULL) {
+        if (entry->d_type == DT_REG) {
+            pid_t pid = fork();
+            if (pid == 0) {
+                // Child process - crash won't affect parent
+                char filepath[1024];
+                snprintf(filepath, sizeof(filepath), "%s/%s", argv[1], entry->d_name);
+                load_file_and_test(filepath);
+                exit(0);
+            } else {
+                // Parent waits for child
+                waitpid(pid, NULL, 0);
             }
         }
     }
-    if ([string]::IsNullOrEmpty($common)) {
-        # Fallback when no common parent directory exists (e.g., projects on different drives)
-        if ($gitRoot) {
-            $testOutputRoot = $gitRoot
-        } else {
-            $testOutputRoot = $root
-        }
-    } else {
-        $testOutputRoot = $common
-    }
-}
-Write-Host "TEST_OUTPUT_ROOT:$testOutputRoot"
-```
-
-- If `ENTRY_TYPE:NotFound` and test projects were found → use the test projects directly as entry points (run `dotnet test` on each test `.csproj`).
-- If `ENTRY_TYPE:NotFound` and no test projects found → stop: `No .sln or test projects found under <path>. Provide the path to your .NET solution or project.`
-- If `TEST_PROJECTS:0` and `EXISTING_COBERTURA_COUNT` > 0 (Step 2b) → continue with existing Cobertura XML analysis (no `dotnet test` run).
-- If `TEST_PROJECTS:0` and `EXISTING_COBERTURA_COUNT` == 0 → stop: `No test projects found (expected projects with 'Test' or 'Spec' in the name), and no existing Cobertura XML was provided. Add a test project or provide a Cobertura file path.`
-
-#### Step 2: Create the output directory
-
-```powershell
-$coverageDir = Join-Path $testOutputRoot "TestResults" "coverage-analysis"
-if (Test-Path $coverageDir) { Remove-Item $coverageDir -Recurse -Force }
-New-Item -ItemType Directory -Path $coverageDir -Force | Out-Null
-Write-Host "COVERAGE_DIR:$coverageDir"
-```
-
-This step only manages the `TestResults/coverage-analysis/` subdirectory (skill-owned outputs). It must never delete user-supplied Cobertura files — those live one level up at `TestResults/coverage.cobertura.xml` (or wherever the user pointed). If the user provided a path that *is* `TestResults/coverage-analysis/...`, copy the file aside before this step recreates the directory.
-
-#### Step 2b: Discover or accept existing Cobertura XML (required for the existing-data path)
-
-If the user supplied a Cobertura XML path explicitly, use it. Otherwise probe well-known locations and any path the user mentioned:
-
-```powershell
-# 1. Honor a user-supplied path first (highest priority)
-$coberturaFiles = @()
-if ($userSuppliedCoberturaPath -and (Test-Path $userSuppliedCoberturaPath)) {
-    $coberturaFiles = @(Get-Item $userSuppliedCoberturaPath)
-}
-
-# 2. Otherwise scan TestResults/ at the repo/test root for any *.cobertura.xml
-if ($coberturaFiles.Count -eq 0) {
-    $searchPaths = @(
-        (Join-Path $testOutputRoot "TestResults"),
-        (Join-Path $root "TestResults")
-    ) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -Unique
-    foreach ($sp in $searchPaths) {
-        $found = @(Get-ChildItem -Path $sp -Filter "*.cobertura.xml" -Recurse -ErrorAction SilentlyContinue |
-            Where-Object { $_.FullName -notmatch '[/\\]coverage-analysis[/\\]raw[/\\]' })
-        if ($found.Count -gt 0) { $coberturaFiles = $found; break }
-    }
-}
-
-Write-Host "EXISTING_COBERTURA_COUNT:$($coberturaFiles.Count)"
-$coberturaFiles | ForEach-Object { Write-Host "EXISTING_COBERTURA:$($_.FullName)" }
-```
-
-- If `EXISTING_COBERTURA_COUNT` > 0 → **skip Phase 2 entirely** and pass these paths to the Phase 3 scripts.
-- If `EXISTING_COBERTURA_COUNT` == 0 → run Phase 2 to generate fresh coverage; the file paths to feed Phase 3 will be discovered from `<COVERAGE_DIR>/raw/` after `dotnet test`.
-
-#### Step 2c: Recommend ignoring `TestResults/`
-
-```powershell
-$pattern = "**/TestResults/"
-$gitRoot = (git -C $testOutputRoot rev-parse --show-toplevel 2>$null)
-if ($gitRoot) { $gitRoot = [System.IO.Path]::GetFullPath($gitRoot) }
-if ($gitRoot) {
-    $gitignorePath = Join-Path $gitRoot ".gitignore"
-    $alreadyIgnored = $false
-    if (Test-Path $gitignorePath) {
-        $alreadyIgnored = (Select-String -Path $gitignorePath -Pattern '^\s*(\*\*/)?TestResults/?\s*$' -Quiet)
-    }
-    if ($alreadyIgnored) {
-        Write-Host "GITIGNORE_RECOMMENDATION:already-present"
-    } else {
-        Write-Host "GITIGNORE_RECOMMENDATION:$pattern"
-    }
-} else {
-    Write-Host "GITIGNORE_RECOMMENDATION:$pattern"
 }
 ```
 
-### Phase 2 — Test execution (skip when Cobertura XML already exists)
+### Pattern: CMake Integration
 
-Run only when no Cobertura XML is present. If the user already has coverage data, skip directly to Phase 3.
+**Use Case**: Adding coverage builds to CMake projects.
 
-#### Step 3: Detect coverage provider and run `dotnet test` with coverage collection
+```cmake
+project(FuzzingProject)
+cmake_minimum_required(VERSION 3.0)
 
-Before running tests, detect which coverage provider the test projects use. Projects may reference
-`Microsoft.Testing.Extensions.CodeCoverage` (Microsoft's built-in provider, common on .NET 9+) or
-`coverlet.collector` (open-source, the default in xUnit templates). The provider determines which
-`dotnet test` arguments to use — both produce Cobertura XML.
+# Main binary
+add_executable(program main.cc)
 
-```powershell
-# Detect coverage provider per test project
-$coverageProvider = "unknown"  # will be set to "ms-codecoverage" or "coverlet"
-$msCodeCovProjects = @()
-$coverletProjects = @()
-$neitherProjects = @()
+# Fuzzing binary
+add_executable(fuzz main.cc harness.cc)
+target_compile_definitions(fuzz PRIVATE NO_MAIN=1)
+target_compile_options(fuzz PRIVATE -g -O2 -fsanitize=fuzzer)
+target_link_libraries(fuzz -fsanitize=fuzzer)
 
-foreach ($tp in $testProjects) {
-    $hasMsCodeCov = Select-String -Path $tp.FullName -Pattern 'Microsoft\.Testing\.Extensions\.CodeCoverage' -Quiet
-    $hasCoverlet = Select-String -Path $tp.FullName -Pattern 'coverlet\.collector' -Quiet
-    if ($hasMsCodeCov) { $msCodeCovProjects += $tp }
-    elseif ($hasCoverlet) { $coverletProjects += $tp }
-    else { $neitherProjects += $tp }
-}
-
-# Determine the provider strategy
-if ($msCodeCovProjects.Count -gt 0 -and $coverletProjects.Count -eq 0) {
-    $coverageProvider = "ms-codecoverage"
-    Write-Host "COVERAGE_PROVIDER:ms-codecoverage (ms:$($msCodeCovProjects.Count), none:$($neitherProjects.Count))"
-} elseif ($coverletProjects.Count -gt 0 -and $msCodeCovProjects.Count -eq 0) {
-    $coverageProvider = "coverlet"
-    Write-Host "COVERAGE_PROVIDER:coverlet (coverlet:$($coverletProjects.Count), none:$($neitherProjects.Count))"
-} elseif ($msCodeCovProjects.Count -gt 0 -and $coverletProjects.Count -gt 0) {
-    $coverageProvider = "mixed-project"
-    Write-Host "COVERAGE_PROVIDER:mixed-project (ms:$($msCodeCovProjects.Count), coverlet:$($coverletProjects.Count), none:$($neitherProjects.Count))"
-} else {
-    $coverageProvider = "coverlet"
-    Write-Host "COVERAGE_PROVIDER:none-detected — defaulting to coverlet"
-}
+# Coverage execution binary
+add_executable(fuzz_exec main.cc harness.cc execute-rt.cc)
+target_compile_definitions(fuzz_exec PRIVATE NO_MAIN)
+target_compile_options(fuzz_exec PRIVATE -O2 -fprofile-instr-generate -fcoverage-mapping)
+target_link_libraries(fuzz_exec -fprofile-instr-generate)
 ```
 
-If any discovered test projects have no provider, add one based on the selected strategy:
-
-```powershell
-if ($coverageProvider -eq "ms-codecoverage" -and $neitherProjects.Count -gt 0) {
-    Write-Host "ADDING_MS_CODECOVERAGE:$($neitherProjects.Count) project(s)"
-    foreach ($tp in $neitherProjects) {
-        dotnet add $tp.FullName package Microsoft.Testing.Extensions.CodeCoverage --no-restore
-        Write-Host "  ADDED_MS_CODECOVERAGE:$($tp.FullName)"
-    }
-    foreach ($tp in $neitherProjects) {
-        dotnet restore $tp.FullName --quiet
-    }
-}
-
-if (($coverageProvider -eq "coverlet" -or $coverageProvider -eq "mixed-project") -and $neitherProjects.Count -gt 0) {
-    Write-Host "ADDING_COVERLET:$($neitherProjects.Count) project(s)"
-    foreach ($tp in $neitherProjects) {
-        dotnet add $tp.FullName package coverlet.collector --no-restore
-        Write-Host "  ADDED:$($tp.FullName)"
-    }
-    foreach ($tp in $neitherProjects) {
-        dotnet restore $tp.FullName --quiet
-    }
-}
+Build:
+```bash
+cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ .
+cmake --build . --target fuzz_exec
 ```
 
-Log each addition to the console so the developer sees what changed. Document the additions in the final report (see Output Format).
+## Advanced Usage
 
-Run one `dotnet test` per entry point for the selected strategy:
+### Tips and Tricks
 
-- In `ms-codecoverage` or `coverlet` mode: run a single command for the solution entry (or one per test project if no `.sln` was found).
-- In `mixed-project` mode: run one command per test project, using that project's existing provider to avoid dual-provider conflicts.
+| Tip | Why It Helps |
+|-----|--------------|
+| Use LLVM 18+ with `-show-directory-coverage` | Organizes large reports by directory structure instead of flat file list |
+| Export to lcov format for better HTML | `llvm-cov export -format=lcov` + `genhtml` provides cleaner per-file reports |
+| Compare coverage across campaigns | Store `.profdata` files with timestamps to track progress over time |
+| Filter harness code from reports | Use `-ignore-filename-regex` to focus on SUT coverage only |
+| Automate coverage in CI/CD | Generate coverage reports automatically after scheduled fuzzing runs |
+| Use gcovr 5.1+ for Clang 14+ | Older gcovr versions have compatibility issues with recent LLVM |
 
-**Coverlet** (`coverlet.collector`):
+### Incremental Coverage Updates
 
-```powershell
-$rawDir = Join-Path "<COVERAGE_DIR>" "raw"
-dotnet test "<ENTRY>" `
-    --collect:"XPlat Code Coverage" `
-    --results-directory $rawDir `
-    -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura `
-    -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include="[*]*" `
-    -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Exclude="[*.Tests]*,[*.Test]*,[*Tests]*,[*Test]*,[*.Specs]*,[*.Testing]*" `
-    -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.SkipAutoProps=true
+GCC's gcov instrumentation incrementally updates `.gcda` files across multiple runs. This is useful for tracking coverage as you add test cases:
+
+```bash
+# First run
+./fuzz_exec_gcov corpus_batch_1/
+gcovr --html coverage_v1.html
+
+# Second run (adds to existing coverage)
+./fuzz_exec_gcov corpus_batch_2/
+gcovr --html coverage_v2.html
+
+# Start fresh
+gcovr --delete  # Remove .gcda files
+./fuzz_exec_gcov corpus/
 ```
 
-**Microsoft CodeCoverage** (`Microsoft.Testing.Extensions.CodeCoverage`):
+### Handling Large Codebases
 
-The command syntax depends on the .NET SDK version. In .NET 9, Microsoft.Testing.Platform arguments
-must be passed after the `--` separator. In .NET 10+, `--coverage` is a top-level `dotnet test` flag.
+For projects with hundreds of source files:
 
-```powershell
-$rawDir = Join-Path "<COVERAGE_DIR>" "raw"
+1. **Filter by prefix**: Only generate reports for relevant directories
+   ```bash
+   llvm-cov show ./fuzz_exec -instr-profile=fuzz.profdata /path/to/src/
+   ```
 
-# Detect SDK version for correct argument placement
-$sdkVersion = (dotnet --version 2>$null)
-$major = if ($sdkVersion -match '^(\d+)\.') { [int]$Matches[1] } else { 9 }
+2. **Use directory coverage**: Group by directory to reduce clutter (LLVM 18+)
+   ```bash
+   llvm-cov show -show-directory-coverage -format=html -output-dir html/
+   ```
 
-if ($major -ge 10) {
-    # .NET 10+: --coverage is a first-class dotnet test flag
-    dotnet test "<ENTRY>" `
-        --results-directory $rawDir `
-        --coverage `
-        --coverage-output-format cobertura `
-        --coverage-output $rawDir
-} else {
-    # .NET 9: pass Microsoft.Testing.Platform arguments after the -- separator
-    dotnet test "<ENTRY>" `
-        --results-directory $rawDir `
-        -- --coverage --coverage-output-format cobertura --coverage-output $rawDir
-}
+3. **Generate JSON for programmatic analysis**:
+   ```bash
+   llvm-cov export -format=lcov > coverage.json
+   ```
+
+### Differential Coverage
+
+Compare coverage between two fuzzing campaigns:
+
+```bash
+# Campaign 1
+LLVM_PROFILE_FILE=campaign1.profraw ./fuzz_exec corpus1/
+llvm-profdata merge -sparse campaign1.profraw -o campaign1.profdata
+
+# Campaign 2
+LLVM_PROFILE_FILE=campaign2.profraw ./fuzz_exec corpus2/
+llvm-profdata merge -sparse campaign2.profraw -o campaign2.profdata
+
+# Compare
+llvm-cov show ./fuzz_exec \
+  -instr-profile=campaign2.profdata \
+  -instr-profile=campaign1.profdata \
+  -show-line-counts-or-regions
 ```
 
-**Mixed-project mode** (`Microsoft.Testing.Extensions.CodeCoverage` + `coverlet.collector` in the same solution):
+## Anti-Patterns
 
-```powershell
-$rawDir = Join-Path "<COVERAGE_DIR>" "raw"
-$sdkVersion = (dotnet --version 2>$null)
-$major = if ($sdkVersion -match '^(\d+)\.') { [int]$Matches[1] } else { 9 }
+| Anti-Pattern | Problem | Correct Approach |
+|--------------|---------|------------------|
+| Using fuzzer-reported coverage for comparisons | Different fuzzers calculate coverage differently, making cross-tool comparison meaningless | Use dedicated coverage tools (llvm-cov, gcovr) for reproducible measurements |
+| Generating coverage with optimizations | `-O3` optimizations can eliminate code, making coverage misleading | Use `-O2` or `-O0` for coverage builds |
+| Not filtering harness code | Harness coverage inflates numbers and obscures SUT coverage | Use `-ignore-filename-regex` or `--exclude` to filter harness files |
+| Mixing LLVM and GCC instrumentation | Incompatible formats cause parsing failures | Stick to one toolchain for coverage builds |
+| Ignoring crashing inputs | Crashes prevent coverage generation, hiding real coverage data | Fix crashes first, or use process forking to isolate them |
+| Not tracking coverage over time | One-time coverage checks miss regressions and improvements | Store coverage data with timestamps and track trends |
 
-foreach ($tp in $testProjects) {
-    $hasMsCodeCov = Select-String -Path $tp.FullName -Pattern 'Microsoft\.Testing\.Extensions\.CodeCoverage' -Quiet
-    if ($hasMsCodeCov) {
-        if ($major -ge 10) {
-            dotnet test $tp.FullName --results-directory $rawDir --coverage --coverage-output-format cobertura --coverage-output $rawDir
-        } else {
-            dotnet test $tp.FullName --results-directory $rawDir -- --coverage --coverage-output-format cobertura --coverage-output $rawDir
-        }
-    } else {
-        dotnet test $tp.FullName `
-            --collect:"XPlat Code Coverage" `
-            --results-directory $rawDir `
-            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura `
-            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include="[*]*" `
-            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Exclude="[*.Tests]*,[*.Test]*,[*Tests]*,[*Test]*,[*.Specs]*,[*.Testing]*" `
-            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.SkipAutoProps=true
-    }
-}
+## Tool-Specific Guidance
+
+### libFuzzer
+
+libFuzzer uses LLVM's SanitizerCoverage by default for guiding fuzzing, but you need separate instrumentation for generating reports.
+
+**Build for coverage:**
+```bash
+clang++ -fprofile-instr-generate -fcoverage-mapping \
+  -O2 -DNO_MAIN \
+  main.cc harness.cc execute-rt.cc -o fuzz_exec
 ```
 
-Exit code handling:
-
-- **0** — all tests passed, coverage collected
-- **1** — some tests failed (coverage still collected — proceed with a warning)
-- **Other** — build failure; stop and report the error
-
-After the run, locate coverage files:
-
-```powershell
-$coberturaFiles = Get-ChildItem -Path (Join-Path "<COVERAGE_DIR>" "raw") -Filter "coverage.cobertura.xml" -Recurse
-Write-Host "COBERTURA_COUNT:$($coberturaFiles.Count)"
-$coberturaFiles | ForEach-Object { Write-Host "COBERTURA:$($_.FullName)" }
-$vsCovFiles = Get-ChildItem -Path (Join-Path "<COVERAGE_DIR>" "raw") -Filter "*.coverage" -Recurse -ErrorAction SilentlyContinue
-if ($vsCovFiles) { Write-Host "VS_BINARY_COVERAGE:$($vsCovFiles.Count)" }
+**Execute corpus and generate report:**
+```bash
+LLVM_PROFILE_FILE=fuzz.profraw ./fuzz_exec corpus/
+llvm-profdata merge -sparse fuzz.profraw -o fuzz.profdata
+llvm-cov show ./fuzz_exec -instr-profile=fuzz.profdata -format=html -output-dir html/
 ```
 
-If `COBERTURA_COUNT` is 0:
+**Integration tips:**
+- Don't use `-fsanitize=fuzzer` for coverage builds (it conflicts with profile instrumentation)
+- Reuse the same harness function (`LLVMFuzzerTestOneInput`) with a different main function
+- Use the `-ignore-filename-regex` flag to exclude harness code from coverage reports
+- Consider using llvm-cov's `-show-instantiation` flag for template-heavy C++ code
 
-- If `VS_BINARY_COVERAGE` > 0: warn the user — *"Found .coverage files (VS binary format) but no Cobertura XML. These were likely produced by Visual Studio's built-in collector, which outputs a binary format by default. This skill needs Cobertura XML. Re-running with the detected provider configured for Cobertura output."* Then re-run the appropriate `dotnet test` command above (Coverlet or Microsoft CodeCoverage) with Cobertura format.
-- If no `.coverage` files either: stop and report — *"Coverage files not generated. Ensure `dotnet test` completed successfully and check the build output for errors."*
+### AFL++
 
-### Phase 3 — Analysis (sequential)
+AFL++ provides its own coverage feedback mechanism, but for detailed reports use standard LLVM/GCC tools.
 
-Run the two bundled PowerShell scripts. Both are cheap and complete in seconds. **Do not** install or invoke ReportGenerator here — that belongs in optional Phase 5, after the user-facing summary has been delivered.
-
-#### Step 4: Calculate CRAP scores using the bundled script
-
-Run `scripts/Compute-CrapScores.ps1` (co-located with this SKILL.md). It reads all Cobertura XML files, applies `CRAP(m) = comp² × (1 − cov)³ + comp` per method, and returns the top-N hotspots as JSON.
-
-To locate the script: find the directory containing this skill's `SKILL.md` file (the skill loader provides this context), then resolve `scripts/Compute-CrapScores.ps1` relative to it. If the script path cannot be determined, calculate CRAP scores inline using the formula below.
-
-```powershell
-& "<skill-directory>/scripts/Compute-CrapScores.ps1" `
-    -CoberturaPath @(<all COBERTURA file paths as array>) `
-    -CrapThreshold <crap_threshold> `
-    -TopN <top_n>
+**Build for coverage with LLVM:**
+```bash
+clang++ -fprofile-instr-generate -fcoverage-mapping \
+  -O2 main.cc harness.cc execute-rt.cc -o fuzz_exec
 ```
 
-Script outputs: `OVERALL_LINE_COVERAGE:<n>`, `OVERALL_BRANCH_COVERAGE:<n>` (aggregated project-wide rates across all provided Cobertura files), `TOTAL_METHODS:<n>`, `FLAGGED_METHODS:<n>`, `HOTSPOTS:<json>` (top-N sorted by CrapScore descending). The OVERALL_* values are exactly what the Phase 4 summary needs for the "Line Coverage" / "Branch Coverage" rows — no separate XML parsing tool call is required.
-
-#### Step 5: Extract per-method coverage gaps
-
-Run `scripts/Extract-MethodCoverage.ps1` to get per-method coverage data for the Coverage Gaps table:
-
-```powershell
-& "<skill-directory>/scripts/Extract-MethodCoverage.ps1" `
-    -CoberturaPath @(<all COBERTURA file paths as array>) `
-    -CoverageThreshold <line_threshold> `
-    -BranchThreshold <branch_threshold> `
-    -Filter below-threshold
+**Build for coverage with GCC:**
+```bash
+AFL_USE_ASAN=0 afl-gcc -ftest-coverage -fprofile-arcs \
+  main.cc harness.cc execute-rt.cc -o fuzz_exec_gcov
 ```
 
-Script outputs: JSON array of methods below the coverage threshold, sorted by coverage ascending. Use this data to populate the Coverage Gaps by File table in the report.
+**Execute and generate report:**
+```bash
+# LLVM approach
+LLVM_PROFILE_FILE=fuzz.profraw ./fuzz_exec afl_output/queue/
+llvm-profdata merge -sparse fuzz.profraw -o fuzz.profdata
+llvm-cov report ./fuzz_exec -instr-profile=fuzz.profdata
 
-### Phase 4 — User-facing summary (MANDATORY — your next assistant response)
-
-As soon as Phase 3 completes, **your immediately next assistant response must contain the user-facing analysis** — do not interleave any other tool calls before it. This is the response the user (and any judge) sees. Skipping or deferring this in favor of Phase 5 (ReportGenerator) is a hard failure.
-
-The response must include, at minimum:
-
-1. Overall line and branch coverage — read directly from the `OVERALL_LINE_COVERAGE:` / `OVERALL_BRANCH_COVERAGE:` lines emitted by `Compute-CrapScores.ps1` (no extra Cobertura parsing required)
-2. The Risk Hotspots table built from `Compute-CrapScores.ps1` `HOTSPOTS:` output (CRAP scores, complexity, coverage)
-3. Identification of the highest-risk method(s) and what is blocking coverage
-4. 1–3 prioritized, specific recommendations (which method to test, expected CRAP/coverage impact)
-
-Use `references/output-format.md` verbatim for fixed headings, table structures, symbols, and emoji. Use `references/guidelines.md` for prioritization rules and style.
-
-If Phase 5 has not yet run when you compose this summary, mark the `## 📁 Reports` section's HTML/Text/CSV/GitHub-markdown rows as `Not generated (optional — request HTML reports to enable)`. Only the `coverage-analysis.md` and raw Cobertura paths are guaranteed to exist.
-
-Attempt to save the same content to `TestResults/coverage-analysis/coverage-analysis.md` before delivering the response (use the editor's create/edit tool — do not shell out). If the file write fails, still deliver the summary and note the file-write failure explicitly.
-
-### Phase 5 — Optional: ReportGenerator HTML/CSV reports (post-summary)
-
-Phase 5 is **strictly optional** and runs **only after** Phase 4 has been delivered. Skip Phase 5 entirely when:
-
-- The user supplied existing Cobertura XML and only asked for analysis (the default for the existing-data path).
-- The user is diagnosing a coverage plateau or asking "what's blocking me?" — they want the answer, not a static-site report.
-- ReportGenerator is not already installed and you have no clear signal the user wants HTML reports.
-
-Run Phase 5 only when the user explicitly asks for HTML/CSV reports, or when the project flow requires them (e.g., a CI artifact upload step).
-
-#### Step 6: Verify or install ReportGenerator (only if running Phase 5)
-
-```powershell
-$rgAvailable = $false
-$rgCommand = Get-Command reportgenerator -ErrorAction SilentlyContinue
-if ($rgCommand) {
-    $rgAvailable = $true
-    Write-Host "RG_INSTALLED:already-present"
-} else {
-    $rgToolPath = Join-Path "<COVERAGE_DIR>" ".tools"
-    dotnet tool install dotnet-reportgenerator-globaltool --tool-path $rgToolPath
-    if ($LASTEXITCODE -eq 0) {
-        $env:PATH = "$rgToolPath$([System.IO.Path]::PathSeparator)$env:PATH"
-        $rgCommand = Get-Command reportgenerator -ErrorAction SilentlyContinue
-        if ($rgCommand) {
-            $rgAvailable = $true
-            Write-Host "RG_INSTALLED:true (tool-path: $rgToolPath)"
-        } else {
-            Write-Host "RG_INSTALLED:false"
-            Write-Host "RG_INSTALL_ERROR:reportgenerator-not-available"
-        }
-    } else {
-        Write-Host "RG_INSTALLED:false"
-        Write-Host "RG_INSTALL_ERROR:reportgenerator-not-available"
-    }
-}
-Write-Host "RG_AVAILABLE:$rgAvailable"
+# GCC approach
+./fuzz_exec_gcov afl_output/queue/
+gcovr --html-details -o coverage.html
 ```
 
-If installation fails (no internet), keep `RG_AVAILABLE:false`, leave the existing user-facing summary as the final output, and note that HTML reports were skipped.
+**Integration tips:**
+- Don't use AFL++'s instrumentation (`afl-clang-fast`) for coverage builds
+- Use standard compilers with coverage flags instead
+- AFL++'s `queue/` directory contains your corpus
+- AFL++'s built-in coverage statistics are useful for real-time monitoring but not for detailed analysis
 
-#### Step 7: Generate HTML/CSV reports
+### cargo-fuzz (Rust)
 
-```powershell
-$reportsDir = Join-Path "<COVERAGE_DIR>" "reports"
-if ($rgAvailable) {
-    reportgenerator `
-        -reports:"<semicolon-separated COBERTURA paths>" `
-        -targetdir:$reportsDir `
-        -reporttypes:"Html;TextSummary;MarkdownSummaryGithub;CsvSummary" `
-        -title:"Coverage Report" `
-        -tag:"coverage-analysis-skill"
+cargo-fuzz provides built-in coverage generation using LLVM tools.
 
-    Get-Content (Join-Path $reportsDir "Summary.txt") -ErrorAction SilentlyContinue
-} else {
-    Write-Host "REPORTGENERATOR_SKIPPED:true"
-}
+**Install prerequisites:**
+```bash
+rustup toolchain install nightly --component llvm-tools-preview
+cargo install cargo-binutils rustfilt
 ```
 
-After Phase 5 completes successfully, you may follow up with a short message pointing the user to the generated HTML report (one paragraph, no need to repeat the summary).
+**Generate coverage data:**
+```bash
+cargo +nightly fuzz coverage fuzz_target_1
+```
 
-## Validation
+**Create HTML report script:**
+```bash
+cat <<'EOF' > ./generate_html
+#!/bin/sh
+FUZZ_TARGET="$1"
+shift
+SRC_FILTER="$@"
+TARGET=$(rustc -vV | sed -n 's|host: ||p')
+cargo +nightly cov -- show -Xdemangler=rustfilt \
+  "target/$TARGET/coverage/$TARGET/release/$FUZZ_TARGET" \
+  -instr-profile="fuzz/coverage/$FUZZ_TARGET/coverage.profdata" \
+  -show-line-counts-or-regions -show-instantiations \
+  -format=html -o fuzz_html/ $SRC_FILTER
+EOF
+chmod +x ./generate_html
+```
 
-- Verify that at least one `coverage.cobertura.xml` file was generated after `dotnet test` (or already exists when the user supplied one)
-- Confirm the assistant response contained the CRAP/risk-hotspot table — saving the markdown file is secondary
-- Confirm `TestResults/coverage-analysis/coverage-analysis.md` was written and contains data
-- Spot-check one method's CRAP score: `comp² × (1 − cov)³ + comp` — a method with 100% coverage should have CRAP = complexity
-- If Phase 5 ran, verify `TestResults/coverage-analysis/reports/index.html` exists; otherwise the report file should mark HTML/Text/CSV rows as `Not generated`
+**Generate report:**
+```bash
+./generate_html fuzz_target_1 src/lib.rs
+```
 
-## Common Pitfalls
+**Integration tips:**
+- Always use the nightly toolchain for coverage
+- The `-Xdemangler=rustfilt` flag makes function names readable
+- Filter by source files (e.g., `src/lib.rs`) to focus on crate code
+- Use `-show-line-counts-or-regions` and `-show-instantiations` for better Rust-specific output
+- Corpus is located in `fuzz/corpus/<target>/`
 
-- **No Cobertura XML generated** — the test project may lack a coverage provider. The skill auto-adds one, but if `dotnet add package` fails (offline/proxy), coverage collection silently produces nothing. Check for `.coverage` binary files as a fallback indicator.
-- **Test failures (exit code 1)** — coverage is still collected from passing tests. Do not abort; proceed with partial data and note the failures in the summary.
-- **Premature end before user-facing summary** — never start Phase 5 (ReportGenerator install/run) before the Phase 4 assistant response is delivered. The heavy `dotnet tool install` can crash the session or exhaust budget, leaving the user with no analysis even though the CRAP scores were already computed.
-- **ReportGenerator install failure** — if `dotnet tool install` fails (no internet) during Phase 5, leave the existing Phase 4 summary as the final output and note that HTML reports were skipped. Do not retry or block on the install.
-- **Method name mismatches in Cobertura** — async methods, lambdas, and local functions may have compiler-generated names. The scripts use the Cobertura method name/signature directly; verify against source if results look unexpected.
-- **Mixed coverage providers** — when a solution contains both Coverlet and Microsoft CodeCoverage projects, the skill runs per-project to avoid dual-provider conflicts. This is slower but correct.
+### honggfuzz
+
+honggfuzz works with standard LLVM/GCC coverage instrumentation.
+
+**Build for coverage:**
+```bash
+# Use standard compiler, not honggfuzz compiler
+clang -fprofile-instr-generate -fcoverage-mapping \
+  -O2 harness.c execute-rt.c -o fuzz_exec
+```
+
+**Execute corpus:**
+```bash
+LLVM_PROFILE_FILE=fuzz.profraw ./fuzz_exec honggfuzz_workspace/
+```
+
+**Integration tips:**
+- Don't use `hfuzz-clang` for coverage builds
+- honggfuzz corpus is typically in a workspace directory
+- Use the same LLVM workflow as libFuzzer
+
+## Troubleshooting
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| `error: no profile data available` | Profile wasn't generated or wrong path | Verify `LLVM_PROFILE_FILE` was set and `.profraw` file exists |
+| `Failed to load coverage` | Mismatch between binary and profile data | Rebuild binary with same flags used during execution |
+| Coverage reports show 0% | Wrong binary used for report generation | Use the instrumented binary, not the fuzzing binary |
+| `no_working_dir_found` error (gcovr) | `.gcda` files in unexpected location | Add `--gcov-ignore-errors=no_working_dir_found` flag |
+| Crashes prevent coverage generation | Corpus contains crashing inputs | Filter crashes or use forking approach to isolate failures |
+| Coverage decreases after harness change | Harness now skips certain code paths | Review harness logic; may need to support more input formats |
+| HTML report is flat file list | Using older LLVM version | Upgrade to LLVM 18+ and use `-show-directory-coverage` |
+| `incompatible instrumentation` | Mixing LLVM and GCC coverage | Rebuild everything with same toolchain |
+
+## Related Skills
+
+### Tools That Use This Technique
+
+| Skill | How It Applies |
+|-------|----------------|
+| **libfuzzer** | Uses SanitizerCoverage for feedback; coverage analysis evaluates harness effectiveness |
+| **aflpp** | Uses edge coverage for feedback; detailed analysis requires separate instrumentation |
+| **cargo-fuzz** | Built-in `cargo fuzz coverage` command for Rust projects |
+| **honggfuzz** | Uses edge coverage; analyze with standard LLVM/GCC tools |
+
+### Related Techniques
+
+| Skill | Relationship |
+|-------|--------------|
+| **fuzz-harness-writing** | Coverage reveals which code paths harness reaches; guides harness improvements |
+| **fuzzing-dictionaries** | Coverage identifies magic value checks that need dictionary entries |
+| **corpus-management** | Coverage analysis helps curate corpora by identifying redundant test cases |
+| **sanitizers** | Coverage helps verify sanitizer-instrumented code is actually executed |
+
+## Resources
+
+### Key External Resources
+
+**[LLVM Source-Based Code Coverage](https://clang.llvm.org/docs/SourceBasedCodeCoverage.html)**
+Comprehensive guide to LLVM's profile instrumentation, including advanced features like branch coverage, region coverage, and integration with existing build systems. Covers compiler flags, runtime behavior, and profile data formats.
+
+**[llvm-cov Command Guide](https://llvm.org/docs/CommandGuide/llvm-cov.html)**
+Detailed CLI reference for llvm-cov commands including `show`, `report`, and `export`. Documents all filtering options, output formats, and integration with llvm-profdata.
+
+**[gcovr Documentation](https://gcovr.com/)**
+Complete guide to gcovr tool for generating coverage reports from gcov data. Covers HTML themes, filtering options, multi-directory projects, and CI/CD integration patterns.
+
+**[SanitizerCoverage Documentation](https://clang.llvm.org/docs/SanitizerCoverage.html)**
+Low-level documentation for LLVM's SanitizerCoverage instrumentation. Explains inline 8-bit counters, PC tables, and how fuzzers use coverage feedback for guidance.
+
+**[On the Evaluation of Fuzzer Performance](https://arxiv.org/abs/1808.09700)**
+Research paper examining limitations of coverage as a fuzzing performance metric. Argues for more nuanced evaluation methods beyond simple code coverage percentages.
+
+### Video Resources
+
+Not applicable - coverage analysis is primarily a tooling and workflow topic best learned through documentation and hands-on practice.

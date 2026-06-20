@@ -572,6 +572,316 @@
     "everything": {
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-everything"]
+    },
+    "fetch": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-fetch"]
+    },
+    "chart": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-chart"]
+    },
+    "obsidian": {
+      "command": "npx",
+      "args": ["-y", "mcp-obsidian"],
+      "env": {
+        "OBSIDIAN_VAULT_PATH": "/path/to/your/vault"
+      }
+    },
+    "image": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-image"]
+    },
+    "git": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-git"]
+    },
+    "weather": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-weather"]
+    },
+    "markdown": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-markdown"]
+    },
+    "browser": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-browser"]
+    },
+    "ssh": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-ssh"],
+      "env": {
+        "SSH_HOST": "your-server.com",
+        "SSH_USERNAME": "user",
+        "SSH_PRIVATE_KEY_PATH": "~/.ssh/id_rsa"
+      }
+    },
+    "mysql": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-mysql"],
+      "env": {
+        "MYSQL_HOST": "localhost",
+        "MYSQL_PORT": "3306",
+        "MYSQL_USER": "root",
+        "MYSQL_PASSWORD": "...",
+        "MYSQL_DATABASE": "mydb"
+      }
+    },
+    "mssql": {
+      "command": "npx",
+      "args": ["-y", "mssql-mcp"],
+      "env": {
+        "MSSQL_HOST": "localhost",
+        "MSSQL_PORT": "1433",
+        "MSSQL_USER": "sa",
+        "MSSQL_PASSWORD": "...",
+        "MSSQL_DATABASE": "mydb"
+      }
+    },
+    "elasticsearch": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-elasticsearch"],
+      "env": {
+        "ELASTICSEARCH_URL": "http://localhost:9200",
+        "ELASTICSEARCH_API_KEY": "..."
+      }
+    },
+    "dynamodb": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-dynamodb"],
+      "env": {
+        "AWS_ACCESS_KEY_ID": "...",
+        "AWS_SECRET_ACCESS_KEY": "...",
+        "AWS_REGION": "us-east-1"
+      }
+    },
+    "gitlab": {
+      "command": "npx",
+      "args": ["-y", "gitlab-mcp"],
+      "env": {
+        "GITLAB_TOKEN": "...",
+        "GITLAB_URL": "https://gitlab.com"
+      }
+    },
+    "bitbucket": {
+      "command": "npx",
+      "args": ["-y", "bitbucket-mcp"],
+      "env": {
+        "BITBUCKET_USERNAME": "...",
+        "BITBUCKET_APP_PASSWORD": "...",
+        "BITBUCKET_WORKSPACE": "..."
+      }
+    },
+    "jenkins": {
+      "command": "npx",
+      "args": ["-y", "jenkins-mcp"],
+      "env": {
+        "JENKINS_URL": "http://localhost:8080",
+        "JENKINS_USERNAME": "admin",
+        "JENKINS_API_TOKEN": "..."
+      }
+    },
+    "prometheus": {
+      "command": "npx",
+      "args": ["-y", "prometheus-mcp"],
+      "env": {
+        "PROMETHEUS_URL": "http://localhost:9090"
+      }
+    },
+    "openapi": {
+      "command": "npx",
+      "args": ["-y", "openapi-mcp"],
+      "env": {
+        "OPENAPI_SPEC_URL": "https://api.example.com/openapi.json"
+      }
+    },
+    "graphql": {
+      "command": "npx",
+      "args": ["-y", "graphql-mcp"],
+      "env": {
+        "GRAPHQL_ENDPOINT": "https://api.example.com/graphql"
+      }
+    },
+    "rss": {
+      "command": "npx",
+      "args": ["-y", "rss-mcp"]
+    },
+    "dns": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-dns"]
+    },
+    "telegram": {
+      "command": "npx",
+      "args": ["-y", "telegram-mcp"],
+      "env": {
+        "TELEGRAM_BOT_TOKEN": "...",
+        "TELEGRAM_CHAT_ID": "..."
+      }
+    },
+    "instagram": {
+      "command": "npx",
+      "args": ["-y", "instagram-mcp"],
+      "env": {
+        "INSTAGRAM_ACCESS_TOKEN": "..."
+      }
+    },
+    "linkedin": {
+      "command": "npx",
+      "args": ["-y", "linkedin-mcp"],
+      "env": {
+        "LINKEDIN_ACCESS_TOKEN": "..."
+      }
+    },
+    "whatsapp": {
+      "command": "npx",
+      "args": ["-y", "whatsapp-mcp"],
+      "env": {
+        "WHATSAPP_PHONE_NUMBER_ID": "...",
+        "WHATSAPP_ACCESS_TOKEN": "..."
+      }
+    },
+    "tiktok": {
+      "command": "npx",
+      "args": ["-y", "tiktok-mcp"],
+      "env": {
+        "TIKTOK_CLIENT_KEY": "...",
+        "TIKTOK_CLIENT_SECRET": "..."
+      }
+    },
+    "azure": {
+      "command": "npx",
+      "args": ["-y", "azure-mcp"],
+      "env": {
+        "AZURE_SUBSCRIPTION_ID": "...",
+        "AZURE_CLIENT_ID": "...",
+        "AZURE_CLIENT_SECRET": "...",
+        "AZURE_TENANT_ID": "..."
+      }
+    },
+    "gcp": {
+      "command": "npx",
+      "args": ["-y", "gcp-mcp"],
+      "env": {
+        "GOOGLE_APPLICATION_CREDENTIALS": "/path/to/credentials.json",
+        "GCP_PROJECT_ID": "..."
+      }
+    },
+    "railway": {
+      "command": "npx",
+      "args": ["-y", "railway-mcp"],
+      "env": {
+        "RAILWAY_API_TOKEN": "..."
+      }
+    },
+    "netlify": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-netlify"],
+      "env": {
+        "NETLIFY_AUTH_TOKEN": "..."
+      }
+    },
+    "render": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-render"],
+      "env": {
+        "RENDER_API_KEY": "..."
+      }
+    },
+    "cypress": {
+      "command": "npx",
+      "args": ["-y", "cypress-mcp"]
+    },
+    "storybook": {
+      "command": "npx",
+      "args": ["-y", "storybook-mcp"],
+      "env": {
+        "STORYBOOK_URL": "http://localhost:6006"
+      }
+    },
+    "vite": {
+      "command": "npx",
+      "args": ["-y", "vite-mcp"]
+    },
+    "typescript": {
+      "command": "npx",
+      "args": ["-y", "typescript-mcp"]
+    },
+    "openrouter": {
+      "command": "npx",
+      "args": ["-y", "openrouter-mcp"],
+      "env": {
+        "OPENROUTER_API_KEY": "..."
+      }
+    },
+    "ollama": {
+      "command": "npx",
+      "args": ["-y", "ollama-mcp"],
+      "env": {
+        "OLLAMA_BASE_URL": "http://localhost:11434"
+      }
+    },
+    "wolfram": {
+      "command": "npx",
+      "args": ["-y", "wolfram-mcp"],
+      "env": {
+        "WOLFRAM_APP_ID": "..."
+      }
+    },
+    "alpha-vantage": {
+      "command": "npx",
+      "args": ["-y", "alpha-vantage-mcp"],
+      "env": {
+        "ALPHA_VANTAGE_API_KEY": "..."
+      }
+    },
+    "polygon": {
+      "command": "npx",
+      "args": ["-y", "polygon-mcp"],
+      "env": {
+        "POLYGON_API_KEY": "..."
+      }
+    },
+    "paypal": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-paypal"],
+      "env": {
+        "PAYPAL_CLIENT_ID": "...",
+        "PAYPAL_CLIENT_SECRET": "...",
+        "PAYPAL_ENVIRONMENT": "sandbox"
+      }
+    },
+    "plaid": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-plaid"],
+      "env": {
+        "PLAID_CLIENT_ID": "...",
+        "PLAID_SECRET": "...",
+        "PLAID_ENV": "sandbox"
+      }
+    },
+    "etherscan": {
+      "command": "npx",
+      "args": ["-y", "etherscan-mcp"],
+      "env": {
+        "ETHERSCAN_API_KEY": "..."
+      }
+    },
+    "solana": {
+      "command": "npx",
+      "args": ["-y", "solana-mcp"],
+      "env": {
+        "SOLANA_RPC_URL": "https://api.mainnet-beta.solana.com"
+      }
+    },
+    "github-actions": {
+      "command": "npx",
+      "args": ["-y", "mcp-server-github-actions"],
+      "env": {
+        "GITHUB_TOKEN": "...",
+        "GITHUB_OWNER": "...",
+        "GITHUB_REPO": "..."
+      }
     }
   }
 }

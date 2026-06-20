@@ -1,3 +1,5 @@
 logs/
 prisma/dev.db
 prisma/*.db
+combined.log
+error.log

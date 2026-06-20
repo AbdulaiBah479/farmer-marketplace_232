@@ -1,192 +1,121 @@
 ---
 name: functions
-description: Advanced function patterns including declaration styles, closures, scope chains, hoisting, and this binding. Master function composition and advanced techniques.
-sasmp_version: "1.3.0"
-bonded_agent: 02-functions-scope
-bond_type: PRIMARY_BOND
-
-# Production-Grade Configuration
-skill_type: reference
-response_format: code_first
-max_tokens: 1500
-
-parameter_validation:
-  required: [topic]
-  optional: [pattern_type]
-
-retry_logic:
-  on_ambiguity: ask_clarification
-  fallback: show_common_patterns
-
-observability:
-  entry_log: "Functions skill activated"
-  exit_log: "Function reference provided"
+description: "Deploy serverless browser automation as cloud functions using Browserbase. Use when the user wants to deploy browser automation to run on a schedule or cron, create a webhook endpoint for browser tasks, run automation in the cloud instead of locally, or asks about Browserbase Functions."
+compatibility: "Requires the browse CLI (`npm install -g browse`), Node.js 18+ with pnpm or npm, and BROWSERBASE_API_KEY."
+license: MIT
+allowed-tools: Bash Read Write Edit
 ---
 
-# Functions & Scope Skill
+# Browserbase Functions
 
-## Quick Reference Card
+Deploy serverless browser automation using the official `browse` CLI.
 
-### Function Styles
-```javascript
-// Declaration (hoisted)
-function greet(name) { return `Hello, ${name}!`; }
+## Prerequisites
 
-// Expression (not hoisted)
-const greet = function(name) { return `Hello, ${name}!`; };
+Get an API key from: https://browserbase.com/settings
 
-// Arrow (lexical this)
-const greet = (name) => `Hello, ${name}!`;
-const greet = name => `Hello, ${name}!`;  // Single param
-const getUser = async (id) => await fetch(`/api/${id}`);
+```bash
+export BROWSERBASE_API_KEY="your_api_key"
 ```
 
-### Scope Rules
-```
-Global Scope
-  └── Function Scope
-        └── Block Scope (let/const)
-```
+## Creating a Function Project
 
-```javascript
-const global = 'accessible everywhere';
+### 1. Initialize
 
-function outer() {
-  const outerVar = 'accessible in outer + inner';
-
-  function inner() {
-    const innerVar = 'only accessible here';
-    console.log(global, outerVar, innerVar); // All work
-  }
-}
+```bash
+browse functions init my-function
+cd my-function
 ```
 
-### Closure Pattern
-```javascript
-function createCounter() {
-  let count = 0;  // Private state
-
-  return {
-    increment: () => ++count,
-    decrement: () => --count,
-    get: () => count
-  };
-}
-
-const counter = createCounter();
-counter.increment(); // 1
-counter.increment(); // 2
+This creates:
+```
+my-function/
+├── package.json
+├── index.ts        # Your function code
+└── .env            # Add credentials here
 ```
 
-### This Binding Rules
-| Context | `this` Value |
-|---------|--------------|
-| Global | `window`/`global` |
-| Object method | The object |
-| Arrow function | Lexical (outer) |
-| `call/apply/bind` | Explicit value |
-| Constructor (`new`) | New instance |
+### 2. Add Credentials to .env
 
-```javascript
-// Explicit binding
-fn.call(thisArg, arg1, arg2);
-fn.apply(thisArg, [args]);
-const bound = fn.bind(thisArg);
+```bash
+echo "BROWSERBASE_API_KEY=$BROWSERBASE_API_KEY" >> .env
 ```
 
-### Advanced Patterns
-```javascript
-// IIFE (Immediately Invoked)
-const module = (function() {
-  const private = 'hidden';
-  return { getPrivate: () => private };
-})();
+### 3. Install Dependencies
 
-// Currying
-const multiply = a => b => a * b;
-const double = multiply(2);
-double(5); // 10
-
-// Memoization
-function memoize(fn) {
-  const cache = new Map();
-  return (...args) => {
-    const key = JSON.stringify(args);
-    if (!cache.has(key)) cache.set(key, fn(...args));
-    return cache.get(key);
-  };
-}
+```bash
+pnpm install
 ```
 
-## Troubleshooting
+## Function Structure
 
-### Common Issues
+```typescript
+import { defineFn } from "@browserbasehq/sdk-functions";
+import { chromium } from "playwright-core";
 
-| Problem | Symptom | Fix |
-|---------|---------|-----|
-| Lost `this` | `undefined` or wrong value | Use arrow fn or `.bind()` |
-| Closure loop bug | All callbacks same value | Use `let` not `var` |
-| Hoisting confusion | Undefined before declaration | Declare at top |
-| TDZ error | ReferenceError | Move `let`/`const` before use |
+defineFn("my-function", async (context) => {
+  const { session, params } = context;
 
-### The Classic Loop Bug
-```javascript
-// BUG: var is function-scoped
-for (var i = 0; i < 3; i++) {
-  setTimeout(() => console.log(i), 100);
-}
-// Output: 3, 3, 3
+  // Connect to browser
+  const browser = await chromium.connectOverCDP(session.connectUrl);
+  const page = browser.contexts()[0]!.pages()[0]!;
 
-// FIX: Use let (block-scoped)
-for (let i = 0; i < 3; i++) {
-  setTimeout(() => console.log(i), 100);
-}
-// Output: 0, 1, 2
+  // Your automation
+  await page.goto(params.url || "https://example.com");
+  const title = await page.title();
+
+  // Return JSON-serializable result
+  return { success: true, title };
+});
 ```
 
-### Debug Checklist
-```javascript
-// 1. Check this context
-console.log('this is:', this);
+**Key objects:**
+- `context.session.connectUrl` - CDP endpoint to connect Playwright
+- `context.params` - Input parameters from invocation
 
-// 2. Verify closure captures
-function test() {
-  let x = 1;
-  return () => { console.log('x:', x); };
-}
+## Development Workflow
 
-// 3. Check hoisting
-console.log(typeof myFunc); // 'function' or 'undefined'?
+### 1. Start Dev Server
+
+```bash
+browse functions dev index.ts
 ```
 
-## Production Patterns
+Server runs at `http://127.0.0.1:14113`
 
-### Factory Pattern
-```javascript
-function createLogger(prefix) {
-  return {
-    log: (msg) => console.log(`[${prefix}] ${msg}`),
-    error: (msg) => console.error(`[${prefix}] ${msg}`)
-  };
-}
+### 2. Test Locally
 
-const apiLogger = createLogger('API');
-apiLogger.log('Request received');
+```bash
+curl -X POST http://127.0.0.1:14113/v1/functions/my-function/invoke \
+  -H "Content-Type: application/json" \
+  -d '{"params": {"url": "https://news.ycombinator.com"}}'
 ```
 
-### Debounce/Throttle
-```javascript
-function debounce(fn, delay) {
-  let timeoutId;
-  return (...args) => {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => fn(...args), delay);
-  };
-}
+### 3. Iterate
+
+The dev server auto-reloads on file changes. Use `console.log()` for debugging - output appears in the terminal.
+
+## Deploying
+
+```bash
+browse functions publish index.ts
 ```
 
-## Related
+Output:
+```
+Function published successfully
+Build ID: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+Function ID: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+```
 
-- **Agent 02**: Functions & Scope (detailed learning)
-- **Skill: fundamentals**: Variables and basics
-- **Skill: asynchronous**: Async functions
+**Save the Function ID** - you need it to invoke.
+
+## Quick Reference
+
+| Command | Description |
+|---------|-------------|
+| `browse functions init <name>` | Create new project |
+| `browse functions dev <file>` | Start local dev server |
+| `browse functions publish <file>` | Deploy to Browserbase |
+
+For invocation examples, common patterns, and troubleshooting, see [REFERENCE.md](REFERENCE.md).

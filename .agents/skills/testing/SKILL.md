@@ -1,25 +1,28 @@
 ---
 name: testing
-description: Guide for testing practices and frameworks
+description: Guidelines for testing the application with Vitest, including unit tests, integration tests (emulator), AI tests, and eval suites for LLM features
 ---
+# Testing
 
-# Testing Skill
+All testing guidance lives in this directory. Read the relevant file for your task:
 
-This skill provides a guide for testing practices and frameworks.
+| Type | File | When to use |
+|------|------|-------------|
+| Unit tests | [unit.md](unit.md) | Framework setup, mocks, colocated tests |
+| Writing tests | [write-tests.md](write-tests.md) | What to test, what to skip, workflow |
+| LLM tests | [llm.md](llm.md) | Tests that call real LLMs (`pnpm test-ai`) |
+| Eval suite | [eval.md](eval.md) | Cross-model comparison, LLM-as-judge |
+| Integration | [integration.md](integration.md) | Emulator-backed tests (`pnpm test-integration`) |
+| E2E tests | [e2e.md](e2e.md) | Real email workflow tests from inbox-zero-e2e repo |
 
-## Testing frameworks
+Prefer behavior-focused assertions; avoid freezing prompt copy or internal call shapes unless those exact values are the contract under test.
 
-- Use Deno's built-in testing framework for writing and running tests
+## Quick Commands
 
-## Writing Tests
-
-- Write tests in separate files with the `.test.ts` extension in the same
-  directory as the code being tested
-- All public functions and methods must have corresponding tests
-- Use descriptive names for test cases to clearly indicate their purpose
-- Should cover edge cases and error handling in tests
-
-## Running Tests
-
-- Use the command `mise run test` to run all tests in the project
-- Run tests before committing code changes to ensure no tests are failing
+```bash
+pnpm test path/to/file.test.ts       # Single unit test
+pnpm test                            # All unit tests
+pnpm test-integration                # Integration tests (emulator)
+pnpm test-ai ai-regression/your-feature  # Live AI regression test
+EVAL_MODELS=all pnpm test-ai eval/your-feature  # Eval across models
+```

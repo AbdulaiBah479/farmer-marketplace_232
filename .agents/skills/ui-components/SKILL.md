@@ -1,48 +1,69 @@
 ---
 name: ui-components
-description: Enforces project UI component conventions when creating or modifying React components, forms, dialogs, and other UI elements. This skill ensures consistent patterns for Radix UI integration, form handling with TanStack Form, test IDs, accessibility, and component composition.
+description: UI component and styling guidelines using Shadcn UI, Radix UI, and Tailwind
 ---
+# UI Components and Styling
 
-# UI Components Skill
+## UI Framework
+- Use Shadcn UI and Tailwind for components and styling
+- Implement responsive design with Tailwind CSS using a mobile-first approach
+- Use `next/image` package for images
 
-## Purpose
+## Install new Shadcn components
 
-This skill enforces the project UI component conventions automatically during UI development. It ensures consistent patterns for Radix UI integration, form handling with TanStack Form, test ID generation, accessibility, and component composition.
+```sh
+pnpm dlx shadcn@latest add COMPONENT
+```
 
-## Activation
+Example:
 
-This skill activates when:
+```sh
+pnpm dlx shadcn@latest add progress
+```
 
-- Creating new components in `src/components/`
-- Working with Radix UI primitives
-- Implementing forms with TanStack Form
-- Building dialogs, dropdowns, or other interactive UI
-- Working with UI component variants using CVA
+## Data Fetching with SWR
+For API get requests to server use the `swr` package:
 
-## Workflow
+```typescript
+const searchParams = useSearchParams();
+const page = searchParams.get("page") || "1";
+const { data, isLoading, error } = useSWR<PlanHistoryResponse>(
+  `/api/user/planned/history?page=${page}`
+);
+```
 
-1. Detect UI component work (file path contains `components/` or imports from Radix/form libraries)
-2. Load `references/UI-Components-Conventions.md`
-3. Also apply `react-coding-conventions` skill
-4. Generate/modify code following all conventions
-5. Scan for violations of UI patterns
-6. Auto-fix all violations (no permission needed)
-7. Report fixes applied
+## Loading Components
+Use the `LoadingContent` component to handle loading states:
 
-## Key Patterns
+```tsx
+<Card>
+  <LoadingContent loading={isLoading} error={error}>
+    {data && <MyComponent data={data} />}
+  </LoadingContent>
+</Card>
+```
 
-- Use arrow function components with named exports (`export const Button = () => {}`)
-- Use `ComponentProps<'element'>` with `ComponentTestIdProps` for type definitions
-- Include `data-slot` attribute on every component element
-- Include `data-testid` using `generateTestId()` from `@/lib/test-ids`
-- Use `is` prefix for boolean props (`isLoading`, `isDisabled`, `isCondition`)
-- Use Radix UI primitives for accessible components
-- Use TanStack Form hooks (`useFieldContext`, `useFormContext`) for form handling
-- Use CVA for component variants
-- Use `$path` from next-typesafe-url for links
-- Use `cn` from `@/utils/tailwind-utils` for class merging
-- Use `Conditional` component with `isCondition` prop for conditional rendering
+## Form Components
+### Text Inputs
+```tsx
+<Input
+  type="email"
+  name="email"
+  label="Email"
+  registerProps={register("email", { required: true })}
+  error={errors.email}
+/>
+```
 
-## References
-
-- `references/UI-Components-Conventions.md` - Complete UI component conventions
+### Text Area
+```tsx
+<Input
+  type="text"
+  autosizeTextarea
+  rows={3}
+  name="message"
+  placeholder="Paste in email content"
+  registerProps={register("message", { required: true })}
+  error={errors.message}
+/>
+```

@@ -1,226 +1,244 @@
 ---
 name: review
-description: "Reviews code for quality, security, performance, and accessibility issues. Use when user mentions レビュー, review, コードレビュー, セキュリティ, パフォーマンス, 品質チェック, セルフレビュー, PR, diff, 変更確認. Do NOT load for: 実装作業, 新機能開発, バグ修正, セットアップ."
-allowed-tools: ["Read", "Grep", "Glob", "Bash", "Task"]
-context: fork
-metadata:
-  skillport:
-    category: review
-    tags: [review, quality, security, performance, accessibility]
-    alwaysApply: false
+description: Review code changes, auto-fix safe issues, and report bugs
+disable-model-invocation: true
 ---
 
-# Review Skills
+# review
 
-コードレビューと品質チェックを担当するスキル群です。
+Code review with craftsman's eye. Auto-fix obvious issues, surface real bugs.
 
-## 含まれる小スキル
+Reference @AGENTS.md for project conventions. Apply those patterns as review criteria.
 
-| スキル | 用途 |
-|--------|------|
-| review-changes | 変更内容のレビュー |
-| review-quality | コード品質チェック |
-| review-security | セキュリティレビュー |
-| review-performance | パフォーマンスレビュー |
-| review-accessibility | アクセシビリティチェック |
+## Critical Rules
 
-## ルーティング
+1. **AUTO-FIX safe obvious issues** - Don't ask permission for no-brainers
+2. **HUNT FOR BUGS** - Logic errors, edge cases, race conditions first
+3. **WAIT for confirmation** - On BUG/FIX, don't execute until user says "go"
+4. **BE CONCISE** - One-line items, choices at END
+5. **USE clickable links** - `path/to/file.ts:123` format only
 
-ユーザーの意図に応じて適切な小スキルを選択:
+## Categories
 
-- 一般的なレビュー: review-changes/doc.md
-- 品質重視: review-quality/doc.md
-- セキュリティ重視: review-security/doc.md
-- パフォーマンス重視: review-performance/doc.md
-- アクセシビリティ重視: review-accessibility/doc.md
+| Category | What | Action |
+|----------|------|--------|
+| **[BUG]** | Logic errors, security, data loss, race conditions | Report → wait |
+| **[FIX]** | Type gaps, missing error handling, test gaps, slop | Report → wait |
+| **[AUTO]** | Unused imports, dead code, console.log, typos | Fix immediately |
+| **[CONSIDER]** | Refactors, style opinions, nice-to-have | Mention only |
 
-## 実行手順
+### AUTO Criteria (all must be true)
 
-1. **品質判定ゲート**（Step 0）
-2. ユーザーのリクエストを分類
-3. **（Claude-mem 有効時）過去のレビュー指摘を検索**
-4. 並列実行の判定（下記参照）
-5. 適切な小スキルの doc.md を読む、または並列サブエージェント起動
-6. 結果を統合してレビュー完了
+- Zero risk of breaking behavior
+- <5 seconds to fix
+- No judgment call needed
 
-### Step 0: 品質判定ゲート（レビュー重点領域の特定）
+**AUTO examples:**
+- Unused imports/variables
+- Trailing whitespace
+- Console.log (unless intentional)
+- Dead/unreachable code
+- Obvious typos in comments/strings
 
-レビュー開始前に変更内容を分析し、重点領域を特定:
+**NOT AUTO (needs confirmation):**
+- Removing "unused" function (might be used elsewhere)
+- Type changes (might change behavior)
+- Any logic change
+- AI slop removal (might be intentional)
 
-```
-変更ファイル分析
-    ↓
-┌─────────────────────────────────────────┐
-│           品質判定ゲート                 │
-├─────────────────────────────────────────┤
-│  判定項目:                              │
-│  ├── カバレッジ不足？（テストなし）     │
-│  ├── セキュリティ注意？（auth/api/）    │
-│  ├── a11y 注意？（UI コンポーネント）   │
-│  └── パフォーマンス注意？（DB/ループ）  │
-└─────────────────────────────────────────┘
-          ↓
-    重点レビュー領域を決定
-```
+## Project-Specific Checks
 
-#### カバレッジ判定
+**Always ask these questions during review:**
 
-| 状況 | 指摘内容 |
-|------|---------|
-| 新規ファイルにテストなし | 「テストが不足しています」 |
-| 変更ファイルのテストが古い | 「テストの更新を検討してください」 |
-| カバレッジ < 60% | 「カバレッジ向上を推奨」 |
+### Can this be simpler?
+- Is there unnecessary abstraction? Could this be done with less code?
+- Are there helpers/utils being created for one-time operations?
+- Over-engineered error handling, feature flags, or backwards-compat shims?
+- Unnecessary wrapper components or HOCs?
 
-#### セキュリティ重点レビュー
+### Can we remove any code?
+- Dead code, unused exports, commented-out blocks?
+- Re-exports or barrel files (we don't use barrel files)?
+- Backwards-compatibility hacks like renamed `_vars` or `// removed` comments?
+- Types/interfaces exported but only used in the same file?
 
-| パス | 追加チェック項目 |
-|------|-----------------|
-| auth/, api/ | OWASP Top 10 チェックリスト |
-| 入力処理 | サニタイズ、バリデーション |
-| DB クエリ | パラメータ化確認 |
+### Is it DRY without premature abstraction?
+- Obvious copy-paste of entire functions or large blocks → refactor
+- But 2-3 similar lines are fine — don't abstract too early
+- The wrong abstraction is worse than duplication
 
-#### a11y 重点レビュー
+### Is it structured correctly?
+- **Colocate page-specific components** next to their page (not in a nested `components/` subfolder — we don't do that in route directories)
+- **General/reusable components** go in `apps/web/components/`
+- **API routes**: One resource per route, not combined data endpoints
+- **Server actions** for mutations, not POST routes
+- **Validation schemas** in separate `.validation.ts` files
+- **Helper functions** at the bottom of files, not the top
+- **All imports** at the top — no mid-file dynamic imports
+- **No barrel files** (index.ts re-exporting everything from a folder)
 
-| パス | チェック項目 |
-|------|------------|
-| src/components/ | alt, aria, キーボード操作 |
-| src/pages/ | 見出し構造, フォーカス管理 |
+### Does it follow project patterns? (see @AGENTS.md)
+- GET routes wrapped with `withAuth` or `withEmailAccount`?
+- Response types exported as `Awaited<ReturnType<typeof fn>>`?
+- SWR for client-side data fetching?
+- `LoadingContent` for loading/error states?
+- `useAction` from `next-safe-action/hooks` for form submissions?
+- Zod schemas with `z.infer<typeof schema>` instead of duplicate interfaces?
+- Self-documenting code? Comments explain "why" not "what"?
+- `logger.trace()` for PII fields?
+- Test changes follow `.claude/skills/testing/SKILL.md`?
+- Tests avoid mocking `@/utils/logger`?
+- If draft-generation prompt, retrieval, routing, or post-processing changed, was `apps/web/utils/ai/reply/draft-attribution.ts` `DRAFT_PIPELINE_VERSION` bumped for analytics?
 
-#### パフォーマンス重点レビュー
+### Learnings check
+- Did this change teach us something that should be captured in `AGENTS.md` or this review file?
+- Are there patterns that keep coming up that we should document?
 
-| パターン | 警告内容 |
-|---------|---------|
-| ループ内 DB クエリ | N+1 クエリの可能性 |
-| 大規模データ処理 | ページネーション検討 |
-| useEffect 乱用 | レンダリング最適化 |
+## Mindset
 
-#### 重点レビュー統合出力
+**Inheritance Test:** Would I curse the previous author? Understand at 2am?
 
-```markdown
-📊 品質判定結果 → 重点レビュー領域
+**Pride Test:** Would I put my name on this?
 
-| 判定 | 該当 | 対象ファイル |
-|------|------|-------------|
-| セキュリティ | ⚠️ | src/api/auth.ts |
-| カバレッジ | ⚠️ | src/utils/helpers.ts (テストなし) |
-| a11y | ✅ | - |
-| パフォーマンス | ✅ | - |
+## Workflow
 
-→ セキュリティ・カバレッジを重点的にレビュー
-```
+### Step 0: Determine Scope & Group Files
 
-### Step 2: 過去のレビュー指摘検索（Memory-Enhanced）
+Auto-detect: conversation changes → staged → current diff
 
-Claude-mem が有効な場合、レビュー開始前に過去の類似指摘を検索:
-
-```
-# mem-search で過去のレビュー指摘を検索
-mem-search: type:review "{変更ファイルのパターン}"
-mem-search: concepts:security "{セキュリティ関連のキーワード}"
-mem-search: concepts:gotcha "{変更箇所に関連するキーワード}"
+```bash
+git diff --cached --name-only  # or HEAD
 ```
 
-**表示例**:
-
-```markdown
-📚 過去のレビュー指摘（関連あり）
-
-| 日付 | 指摘内容 | ファイル |
-|------|---------|---------|
-| 2024-01-15 | XSS脆弱性: innerHTML 使用禁止 | src/components/*.tsx |
-| 2024-01-20 | N+1クエリ: prefetch 必須 | src/api/*.ts |
-
-💡 今回のレビューで上記パターンを重点チェック
+**Group files by area/dependency:**
+```
+Batch 1: apps/web/app/api/agent/* (3 files)
+Batch 2: apps/web/app/(app)/[emailAccountId]/agent/* (related components)
+Batch 3: apps/web/utils/actions/* (2 files)
 ```
 
-> **注**: Claude-mem が未設定の場合、このステップはスキップされます。
+**Output:** `Found X files in Y batches`
 
-## 並列サブエージェント起動（推奨）
+──────────
 
-以下の条件を**両方**満たす場合、Task tool で code-reviewer を並列起動:
+### Step 1: Create Review Plan (TODO)
 
-- レビュー観点 >= 2（例: セキュリティ + パフォーマンス）
-- 変更ファイル >= 5
-
-**起動パターン（1つのレスポンス内で複数の Task tool を同時呼び出し）:**
+**BEFORE reading any file content**, create todo list:
 
 ```
-Task tool 並列呼び出し:
-  #1: subagent_type="code-reviewer"
-      prompt="セキュリティ観点でレビュー: {files}"
-  #2: subagent_type="code-reviewer"
-      prompt="パフォーマンス観点でレビュー: {files}"
-  #3: subagent_type="code-reviewer"
-      prompt="コード品質観点でレビュー: {files}"
+- [ ] Batch 1: API routes (skills, allowed-actions)
+- [ ] Batch 2: agent page components (agent-page, chat, tools)
+- [ ] Batch 3: server actions (agent.ts, agent.validation.ts)
 ```
 
-**小規模な場合（条件を満たさない）:**
-- 子スキル（doc.md）を順次読み込んで直列実行
+Use `todo_write` to track batches.
 
----
+──────────
 
-## 🔧 LSP 機能の活用
+### Step 2: Process Each Batch
 
-レビューでは LSP（Language Server Protocol）を活用して精度を向上します。
+**For each batch:**
 
-### LSP をレビューに統合
+1. Read diff for batch files only (`git diff --cached -- path/to/files`)
+2. Review & categorize issues
+3. Auto-fix [AUTO] items immediately
+4. Note [BUG]/[FIX]/[CONSIDER] items
+5. Mark batch complete in todos
 
-| レビュー観点 | LSP 活用方法 |
-|-------------|-------------|
-| **品質** | Diagnostics で型エラー・未使用変数を自動検出 |
-| **セキュリティ** | Find-references で機密データの流れを追跡 |
-| **パフォーマンス** | Go-to-definition で重い処理の実装を確認 |
-
-### LSP Diagnostics の出力例
-
+**Issue format:**
 ```
-📊 LSP 診断結果
-
-| ファイル | エラー | 警告 |
-|---------|--------|------|
-| src/components/Form.tsx | 0 | 2 |
-| src/utils/api.ts | 1 | 0 |
-
-⚠️ 1件のエラーを検出
-→ レビューで指摘事項に追加
+1. **[BUG]** Race condition in concurrent saves — `src/db.ts:45`
+2. **[FIX]** Missing error boundary — `src/App.tsx:12`
+3. **[CONSIDER]** Extract to custom hook — `src/Form.tsx:34`
 ```
 
-### Find-references による影響分析
-
+**After each batch:**
 ```
-🔍 変更影響分析
-
-変更: validateInput()
-
-参照箇所:
-├── src/pages/signup.tsx:34
-├── src/pages/settings.tsx:56
-└── tests/validate.test.ts:12
-
-→ テストでカバー済み ✅
+Batch 1 done: AUTO: 2 fixed | BUG: 1 | FIX: 2
 ```
 
-詳細: [docs/LSP_INTEGRATION.md](../../docs/LSP_INTEGRATION.md)
+──────────
 
----
+### Step 3: Summary & Options (After All Batches)
 
-## VibeCoder 向け
-
-```markdown
-📝 コードチェックを依頼するときの言い方
-
-1. **「チェックして」**
-   - 全体的に問題がないか見てもらう
-
-2. **「セキュリティ大丈夫？」**
-   - 悪意ある攻撃に耐えられるかチェック
-
-3. **「遅くない？」**
-   - 速度に問題がないかチェック
-
-4. **「誰でも使える？」**
-   - 障害のある方でも使えるかチェック
-
-💡 ヒント: 「全部チェックして」と言えば、
-4つの観点すべてを自動で確認します
 ```
+Total: BUG: X | FIX: X | CONSIDER: X (auto-fixed: Y)
+
+Issues:
+1. [BUG] ... — `path:line`
+2. [FIX] ... — `path:line`
+
+What to fix?
+- a) BUG + FIX [recommended]
+- b) BUG only
+- c) All including CONSIDER
+- d) Custom (e.g., "1,3")
+
+I'll assume a) if you don't specify.
+
+Learnings:
+- Any patterns worth adding to AGENTS.md?
+- Any new review checks to add to this file?
+```
+
+**STOP. Wait for selection.**
+
+──────────
+
+### Step 4: Execute Fixes
+
+Process fixes batch-by-batch (same grouping):
+
+1. Update todo list with selected fixes
+2. For each batch:
+   - Read relevant file(s)
+   - Apply fixes
+   - Mark complete
+3. Run linter if applicable
+
+## Severity Guide
+
+**BUG (Logic/Security):**
+- Business logic errors, wrong conditions
+- Race conditions, data loss
+- Security: injection, XSS, exposed secrets
+- API routes missing auth middleware
+- Null/undefined not handled
+- Edge cases that break
+
+**FIX (Quality):**
+- Type safety gaps, unsafe casts
+- Missing error handling
+- Test coverage gaps
+- AI slop (WHAT comments, unnecessary try/catch, `as any`)
+- Missing validation
+- Combined API routes that should be separate
+- POST routes used for mutations instead of server actions
+- Barrel files / re-export patterns
+
+**CONSIDER (Opinions):**
+- Refactoring opportunities
+- "I would do it differently"
+- Performance micro-optimizations
+- Style preferences
+
+## Git Commands
+
+```bash
+# Staged
+git diff --cached
+git diff --cached --name-only
+
+# All uncommitted
+git diff HEAD
+git diff HEAD --name-only
+```
+
+## Error Handling
+
+| Error | Response |
+|-------|----------|
+| No changes | "Check git status or specify files" |
+| File not found | List available, ask to specify |
+| Binary files | Skip, mention in summary |
+| Large file (>10k) | "Review specific sections?" |

@@ -4,10 +4,10 @@ Skill for agent-driven web workflows using Steel cloud browsers and API tools.
 
 ## Install
 
-From GitHub repo (auto-discovery):
+From the public Steel skills catalog:
 
 ```bash
-npx skills add steel-dev/cli
+npx skills add steel-dev/skills --skill steel-browser
 ```
 
 From local checkout:
@@ -16,10 +16,10 @@ From local checkout:
 npx skills add ./skills/steel-browser
 ```
 
-From GitHub subdirectory:
+With the Steel CLI helper:
 
 ```bash
-npx skills add github:steel-dev/cli/skills/steel-browser
+steel skills install steel-browser
 ```
 
 ## When to use this skill
@@ -82,9 +82,12 @@ Quick fixes:
 - Local/self-hosted failures: verify `--local` / `--api-url`, then start local
   runtime (`steel dev install`, `steel dev start`)
 
-Use the full troubleshooting guide for deeper recovery playbooks.
+Use the full troubleshooting guide for deeper recovery playbooks. Use
+`steel-session-debugging` for failed session diagnosis and `steel-reliability`
+for bot-detection, proxy, CAPTCHA, identity, or login reliability issues.
 
 ## Contents
 
 - `SKILL.md`: trigger and workflow instructions.
 - `references/`: lifecycle, commands, migration, and troubleshooting guides.
+- `evals/evals.json`: routing and command-behavior assertions.

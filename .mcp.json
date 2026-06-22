@@ -3885,6 +3885,378 @@
         "screenshot-mcp"
       ],
       "env": {}
+    },
+    "zapier": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@zapier/mcp-server"
+      ],
+      "env": {
+        "ZAPIER_MCP_URL": "YOUR_ZAPIER_MCP_URL_HERE"
+      }
+    },
+    "make": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "make-mcp-server"
+      ],
+      "env": {
+        "MAKE_API_KEY": "YOUR_MAKE_API_KEY_HERE",
+        "MAKE_TEAM_ID": "YOUR_MAKE_TEAM_ID_HERE"
+      }
+    },
+    "voiceflow": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "voiceflow-mcp"
+      ],
+      "env": {
+        "VOICEFLOW_API_KEY": "YOUR_VOICEFLOW_API_KEY_HERE"
+      }
+    },
+    "botpress": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "botpress-mcp"
+      ],
+      "env": {
+        "BOTPRESS_TOKEN": "YOUR_BOTPRESS_TOKEN_HERE",
+        "BOTPRESS_WORKSPACE_ID": "YOUR_BOTPRESS_WORKSPACE_ID_HERE"
+      }
+    },
+    "flowise": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "flowise-mcp"
+      ],
+      "env": {
+        "FLOWISE_BASE_URL": "http://localhost:3000",
+        "FLOWISE_API_KEY": "YOUR_FLOWISE_API_KEY_HERE"
+      }
+    },
+    "typeform": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "typeform-mcp"
+      ],
+      "env": {
+        "TYPEFORM_API_TOKEN": "YOUR_TYPEFORM_API_TOKEN_HERE"
+      }
+    },
+    "tally": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "tally-mcp"
+      ],
+      "env": {
+        "TALLY_API_KEY": "YOUR_TALLY_API_KEY_HERE"
+      }
+    },
+    "activecampaign": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "activecampaign-mcp"
+      ],
+      "env": {
+        "ACTIVECAMPAIGN_API_URL": "YOUR_ACTIVECAMPAIGN_API_URL_HERE",
+        "ACTIVECAMPAIGN_API_KEY": "YOUR_ACTIVECAMPAIGN_API_KEY_HERE"
+      }
+    },
+    "convertkit": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "convertkit-mcp"
+      ],
+      "env": {
+        "CONVERTKIT_API_KEY": "YOUR_CONVERTKIT_API_KEY_HERE",
+        "CONVERTKIT_API_SECRET": "YOUR_CONVERTKIT_API_SECRET_HERE"
+      }
+    },
+    "gohighlevel": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "gohighlevel-mcp"
+      ],
+      "env": {
+        "GHL_API_KEY": "YOUR_GOHIGHLEVEL_API_KEY_HERE",
+        "GHL_LOCATION_ID": "YOUR_GHL_LOCATION_ID_HERE"
+      }
+    },
+    "lemonsqueezy": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "lemonsqueezy-mcp"
+      ],
+      "env": {
+        "LEMONSQUEEZY_API_KEY": "YOUR_LEMONSQUEEZY_API_KEY_HERE"
+      }
+    },
+    "paddle": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "paddle-mcp"
+      ],
+      "env": {
+        "PADDLE_API_KEY": "YOUR_PADDLE_API_KEY_HERE",
+        "PADDLE_SANDBOX": "true"
+      }
+    },
+    "bubble": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "bubble-mcp"
+      ],
+      "env": {
+        "BUBBLE_APP_NAME": "YOUR_BUBBLE_APP_NAME_HERE",
+        "BUBBLE_API_TOKEN": "YOUR_BUBBLE_API_TOKEN_HERE"
+      }
+    },
+    "framer": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "framer-mcp"
+      ],
+      "env": {
+        "FRAMER_API_TOKEN": "YOUR_FRAMER_API_TOKEN_HERE"
+      }
+    },
+    "teachable": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "teachable-mcp"
+      ],
+      "env": {
+        "TEACHABLE_API_KEY": "YOUR_TEACHABLE_API_KEY_HERE"
+      }
+    },
+    "thinkific": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "thinkific-mcp"
+      ],
+      "env": {
+        "THINKIFIC_API_KEY": "YOUR_THINKIFIC_API_KEY_HERE",
+        "THINKIFIC_SUBDOMAIN": "YOUR_THINKIFIC_SUBDOMAIN_HERE"
+      }
+    },
+    "kajabi": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "kajabi-mcp"
+      ],
+      "env": {
+        "KAJABI_API_KEY": "YOUR_KAJABI_API_KEY_HERE"
+      }
+    },
+    "crisp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "crisp-mcp"
+      ],
+      "env": {
+        "CRISP_IDENTIFIER": "YOUR_CRISP_IDENTIFIER_HERE",
+        "CRISP_KEY": "YOUR_CRISP_KEY_HERE"
+      }
+    },
+    "chatwoot": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "chatwoot-mcp"
+      ],
+      "env": {
+        "CHATWOOT_BASE_URL": "https://app.chatwoot.com",
+        "CHATWOOT_API_ACCESS_TOKEN": "YOUR_CHATWOOT_TOKEN_HERE",
+        "CHATWOOT_ACCOUNT_ID": "YOUR_ACCOUNT_ID_HERE"
+      }
+    },
+    "circle": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "circle-so-mcp"
+      ],
+      "env": {
+        "CIRCLE_API_TOKEN": "YOUR_CIRCLE_API_TOKEN_HERE",
+        "CIRCLE_COMMUNITY_ID": "YOUR_CIRCLE_COMMUNITY_ID_HERE"
+      }
+    },
+    "rewardful": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "rewardful-mcp"
+      ],
+      "env": {
+        "REWARDFUL_API_KEY": "YOUR_REWARDFUL_API_KEY_HERE"
+      }
+    },
+    "affiliatewp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "affiliatewp-mcp"
+      ],
+      "env": {
+        "AFFILIATEWP_SITE_URL": "YOUR_WORDPRESS_SITE_URL_HERE",
+        "AFFILIATEWP_PUBLIC_KEY": "YOUR_PUBLIC_KEY_HERE",
+        "AFFILIATEWP_PRIVATE_KEY": "YOUR_PRIVATE_KEY_HERE"
+      }
+    },
+    "lovable": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "lovable-mcp"
+      ],
+      "env": {
+        "LOVABLE_API_KEY": "YOUR_LOVABLE_API_KEY_HERE"
+      }
+    },
+    "webflow-cms": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "webflow-mcp"
+      ],
+      "env": {
+        "WEBFLOW_API_TOKEN": "YOUR_WEBFLOW_API_TOKEN_HERE",
+        "WEBFLOW_SITE_ID": "YOUR_WEBFLOW_SITE_ID_HERE"
+      }
+    },
+    "latenode": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "latenode-mcp"
+      ],
+      "env": {
+        "LATENODE_API_KEY": "YOUR_LATENODE_API_KEY_HERE"
+      }
+    },
+    "activepieces": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "activepieces-mcp"
+      ],
+      "env": {
+        "ACTIVEPIECES_API_KEY": "YOUR_ACTIVEPIECES_API_KEY_HERE",
+        "ACTIVEPIECES_BASE_URL": "https://cloud.activepieces.com"
+      }
+    },
+    "pabbly": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "pabbly-mcp"
+      ],
+      "env": {
+        "PABBLY_AUTH_TOKEN": "YOUR_PABBLY_AUTH_TOKEN_HERE"
+      }
+    },
+    "integrately": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "integrately-mcp"
+      ],
+      "env": {
+        "INTEGRATELY_API_KEY": "YOUR_INTEGRATELY_API_KEY_HERE"
+      }
+    },
+    "albato": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "albato-mcp"
+      ],
+      "env": {
+        "ALBATO_TOKEN": "YOUR_ALBATO_TOKEN_HERE"
+      }
+    },
+    "dify-cloud": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "dify-cloud-mcp"
+      ],
+      "env": {
+        "DIFY_API_KEY": "YOUR_DIFY_CLOUD_API_KEY_HERE",
+        "DIFY_BASE_URL": "https://api.dify.ai/v1"
+      }
+    },
+    "langflow": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "langflow-mcp"
+      ],
+      "env": {
+        "LANGFLOW_BASE_URL": "http://localhost:7860",
+        "LANGFLOW_API_KEY": "YOUR_LANGFLOW_API_KEY_HERE"
+      }
+    },
+    "weavehooks": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "webhook-mcp"
+      ],
+      "env": {
+        "WEBHOOK_SECRET": "YOUR_WEBHOOK_SECRET_HERE"
+      }
+    },
+    "outseta": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "outseta-mcp"
+      ],
+      "env": {
+        "OUTSETA_SUBDOMAIN": "YOUR_OUTSETA_SUBDOMAIN_HERE",
+        "OUTSETA_API_KEY": "YOUR_OUTSETA_API_KEY_HERE",
+        "OUTSETA_API_SECRET": "YOUR_OUTSETA_API_SECRET_HERE"
+      }
+    },
+    "memberstack": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "memberstack-mcp"
+      ],
+      "env": {
+        "MEMBERSTACK_API_KEY": "YOUR_MEMBERSTACK_API_KEY_HERE"
+      }
+    },
+    "memberful": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "memberful-mcp"
+      ],
+      "env": {
+        "MEMBERFUL_API_KEY": "YOUR_MEMBERFUL_API_KEY_HERE",
+        "MEMBERFUL_SUBDOMAIN": "YOUR_MEMBERFUL_SUBDOMAIN_HERE"
+      }
     }
   }
 }

@@ -4257,6 +4257,1059 @@
         "MEMBERFUL_API_KEY": "YOUR_MEMBERFUL_API_KEY_HERE",
         "MEMBERFUL_SUBDOMAIN": "YOUR_MEMBERFUL_SUBDOMAIN_HERE"
       }
+    },
+    "calendly": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-calendly"
+      ],
+      "env": {
+        "CALENDLY_API_KEY": "YOUR_CALENDLY_API_KEY_HERE"
+      }
+    },
+    "zoom": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@zoomus/mcp-server"
+      ],
+      "env": {
+        "ZOOM_CLIENT_ID": "YOUR_ZOOM_CLIENT_ID_HERE",
+        "ZOOM_CLIENT_SECRET": "YOUR_ZOOM_CLIENT_SECRET_HERE"
+      }
+    },
+    "microsoft-teams": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@microsoft/teams-mcp-server"
+      ],
+      "env": {
+        "TEAMS_CLIENT_ID": "YOUR_TEAMS_CLIENT_ID_HERE"
+      }
+    },
+    "intercom": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@intercom/mcp-server"
+      ],
+      "env": {
+        "INTERCOM_ACCESS_TOKEN": "YOUR_INTERCOM_ACCESS_TOKEN_HERE"
+      }
+    },
+    "helpscout": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-helpscout"
+      ],
+      "env": {
+        "HELPSCOUT_API_KEY": "YOUR_HELPSCOUT_API_KEY_HERE"
+      }
+    },
+    "front": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-front"
+      ],
+      "env": {
+        "FRONT_API_KEY": "YOUR_FRONT_API_KEY_HERE"
+      }
+    },
+    "docusign": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@docusign/mcp-server"
+      ],
+      "env": {
+        "DOCUSIGN_ACCESS_TOKEN": "YOUR_DOCUSIGN_ACCESS_TOKEN_HERE"
+      }
+    },
+    "pandadoc": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-pandadoc"
+      ],
+      "env": {
+        "PANDADOC_API_KEY": "YOUR_PANDADOC_API_KEY_HERE"
+      }
+    },
+    "hellosign": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-hellosign"
+      ],
+      "env": {
+        "HELLOSIGN_API_KEY": "YOUR_HELLOSIGN_API_KEY_HERE"
+      }
+    },
+    "dropbox": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-dropbox"
+      ],
+      "env": {
+        "DROPBOX_ACCESS_TOKEN": "YOUR_DROPBOX_ACCESS_TOKEN_HERE"
+      }
+    },
+    "box": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-box"
+      ],
+      "env": {
+        "BOX_ACCESS_TOKEN": "YOUR_BOX_ACCESS_TOKEN_HERE"
+      }
+    },
+    "onedrive": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-onedrive"
+      ],
+      "env": {
+        "ONEDRIVE_ACCESS_TOKEN": "YOUR_ONEDRIVE_ACCESS_TOKEN_HERE"
+      }
+    },
+    "mixpanel": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-mixpanel"
+      ],
+      "env": {
+        "MIXPANEL_PROJECT_TOKEN": "YOUR_MIXPANEL_TOKEN_HERE"
+      }
+    },
+    "posthog": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-posthog"
+      ],
+      "env": {
+        "POSTHOG_API_KEY": "YOUR_POSTHOG_API_KEY_HERE"
+      }
+    },
+    "segment": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-segment"
+      ],
+      "env": {
+        "SEGMENT_WRITE_KEY": "YOUR_SEGMENT_WRITE_KEY_HERE"
+      }
+    },
+    "hotjar": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-hotjar"
+      ],
+      "env": {
+        "HOTJAR_SITE_ID": "YOUR_HOTJAR_SITE_ID_HERE"
+      }
+    },
+    "heap": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-heap"
+      ],
+      "env": {
+        "HEAP_APP_ID": "YOUR_HEAP_APP_ID_HERE"
+      }
+    },
+    "fullstory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-fullstory"
+      ],
+      "env": {
+        "FULLSTORY_API_KEY": "YOUR_FULLSTORY_API_KEY_HERE"
+      }
+    },
+    "logrocket": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-logrocket"
+      ],
+      "env": {
+        "LOGROCKET_APP_ID": "YOUR_LOGROCKET_APP_ID_HERE"
+      }
+    },
+    "chartmogul": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-chartmogul"
+      ],
+      "env": {
+        "CHARTMOGUL_API_KEY": "YOUR_CHARTMOGUL_API_KEY_HERE"
+      }
+    },
+    "baremetrics": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-baremetrics"
+      ],
+      "env": {
+        "BAREMETRICS_API_KEY": "YOUR_BAREMETRICS_API_KEY_HERE"
+      }
+    },
+    "profitwell": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-profitwell"
+      ],
+      "env": {
+        "PROFITWELL_API_TOKEN": "YOUR_PROFITWELL_API_TOKEN_HERE"
+      }
+    },
+    "bamboohr": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-bamboohr"
+      ],
+      "env": {
+        "BAMBOOHR_API_KEY": "YOUR_BAMBOOHR_API_KEY_HERE",
+        "BAMBOOHR_SUBDOMAIN": "YOUR_SUBDOMAIN_HERE"
+      }
+    },
+    "lever": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-lever"
+      ],
+      "env": {
+        "LEVER_API_KEY": "YOUR_LEVER_API_KEY_HERE"
+      }
+    },
+    "rippling": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-rippling"
+      ],
+      "env": {
+        "RIPPLING_API_KEY": "YOUR_RIPPLING_API_KEY_HERE"
+      }
+    },
+    "mercury": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-mercury"
+      ],
+      "env": {
+        "MERCURY_API_KEY": "YOUR_MERCURY_API_KEY_HERE"
+      }
+    },
+    "brex": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-brex"
+      ],
+      "env": {
+        "BREX_ACCESS_TOKEN": "YOUR_BREX_ACCESS_TOKEN_HERE"
+      }
+    },
+    "ramp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-ramp"
+      ],
+      "env": {
+        "RAMP_CLIENT_ID": "YOUR_RAMP_CLIENT_ID_HERE"
+      }
+    },
+    "expensify": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-expensify"
+      ],
+      "env": {
+        "EXPENSIFY_PARTNER_USER_ID": "YOUR_EXPENSIFY_USER_ID_HERE"
+      }
+    },
+    "pagerduty": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-pagerduty"
+      ],
+      "env": {
+        "PAGERDUTY_API_KEY": "YOUR_PAGERDUTY_API_KEY_HERE"
+      }
+    },
+    "grafana": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-grafana"
+      ],
+      "env": {
+        "GRAFANA_URL": "YOUR_GRAFANA_URL_HERE",
+        "GRAFANA_API_KEY": "YOUR_GRAFANA_API_KEY_HERE"
+      }
+    },
+    "opsgenie": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-opsgenie"
+      ],
+      "env": {
+        "OPSGENIE_API_KEY": "YOUR_OPSGENIE_API_KEY_HERE"
+      }
+    },
+    "statuspage": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-statuspage"
+      ],
+      "env": {
+        "STATUSPAGE_API_KEY": "YOUR_STATUSPAGE_API_KEY_HERE"
+      }
+    },
+    "contentful": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-contentful"
+      ],
+      "env": {
+        "CONTENTFUL_ACCESS_TOKEN": "YOUR_CONTENTFUL_ACCESS_TOKEN_HERE"
+      }
+    },
+    "sanity": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@sanity/mcp-server"
+      ],
+      "env": {
+        "SANITY_PROJECT_ID": "YOUR_SANITY_PROJECT_ID_HERE",
+        "SANITY_API_TOKEN": "YOUR_SANITY_API_TOKEN_HERE"
+      }
+    },
+    "directus": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-directus"
+      ],
+      "env": {
+        "DIRECTUS_URL": "YOUR_DIRECTUS_URL_HERE",
+        "DIRECTUS_TOKEN": "YOUR_DIRECTUS_TOKEN_HERE"
+      }
+    },
+    "payload-cms": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-payload"
+      ],
+      "env": {
+        "PAYLOAD_API_URL": "YOUR_PAYLOAD_URL_HERE",
+        "PAYLOAD_SECRET": "YOUR_PAYLOAD_SECRET_HERE"
+      }
+    },
+    "keystatic": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-keystatic"
+      ],
+      "env": {
+        "KEYSTATIC_GITHUB_TOKEN": "YOUR_KEYSTATIC_GITHUB_TOKEN_HERE"
+      }
+    },
+    "bigcommerce": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-bigcommerce"
+      ],
+      "env": {
+        "BIGCOMMERCE_ACCESS_TOKEN": "YOUR_BC_ACCESS_TOKEN_HERE",
+        "BIGCOMMERCE_STORE_HASH": "YOUR_BC_STORE_HASH_HERE"
+      }
+    },
+    "woocommerce": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-woocommerce"
+      ],
+      "env": {
+        "WOOCOMMERCE_URL": "YOUR_SITE_URL_HERE",
+        "WOOCOMMERCE_KEY": "YOUR_WC_KEY_HERE",
+        "WOOCOMMERCE_SECRET": "YOUR_WC_SECRET_HERE"
+      }
+    },
+    "etsy": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-etsy"
+      ],
+      "env": {
+        "ETSY_API_KEY": "YOUR_ETSY_API_KEY_HERE"
+      }
+    },
+    "amazon-seller": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-amazon-seller"
+      ],
+      "env": {
+        "AMAZON_ACCESS_KEY": "YOUR_AMAZON_ACCESS_KEY_HERE",
+        "AMAZON_SECRET_KEY": "YOUR_AMAZON_SECRET_KEY_HERE"
+      }
+    },
+    "alchemy": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-alchemy"
+      ],
+      "env": {
+        "ALCHEMY_API_KEY": "YOUR_ALCHEMY_API_KEY_HERE"
+      }
+    },
+    "moralis": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-moralis"
+      ],
+      "env": {
+        "MORALIS_API_KEY": "YOUR_MORALIS_API_KEY_HERE"
+      }
+    },
+    "opensea": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-opensea"
+      ],
+      "env": {
+        "OPENSEA_API_KEY": "YOUR_OPENSEA_API_KEY_HERE"
+      }
+    },
+    "chainlink": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-chainlink"
+      ],
+      "env": {
+        "CHAINLINK_NODE_URL": "YOUR_CHAINLINK_NODE_URL_HERE"
+      }
+    },
+    "thegraph": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-thegraph"
+      ],
+      "env": {
+        "THEGRAPH_API_KEY": "YOUR_THEGRAPH_API_KEY_HERE"
+      }
+    },
+    "huggingface": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-huggingface"
+      ],
+      "env": {
+        "HF_TOKEN": "YOUR_HUGGINGFACE_TOKEN_HERE"
+      }
+    },
+    "langsmith": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-langsmith"
+      ],
+      "env": {
+        "LANGCHAIN_API_KEY": "YOUR_LANGCHAIN_API_KEY_HERE"
+      }
+    },
+    "weights-biases": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-wandb"
+      ],
+      "env": {
+        "WANDB_API_KEY": "YOUR_WANDB_API_KEY_HERE"
+      }
+    },
+    "mlflow": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-mlflow"
+      ],
+      "env": {
+        "MLFLOW_TRACKING_URI": "YOUR_MLFLOW_TRACKING_URI_HERE"
+      }
+    },
+    "vonage": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-vonage"
+      ],
+      "env": {
+        "VONAGE_API_KEY": "YOUR_VONAGE_API_KEY_HERE",
+        "VONAGE_API_SECRET": "YOUR_VONAGE_API_SECRET_HERE"
+      }
+    },
+    "messagebird": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-messagebird"
+      ],
+      "env": {
+        "MESSAGEBIRD_API_KEY": "YOUR_MESSAGEBIRD_API_KEY_HERE"
+      }
+    },
+    "plivo": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-plivo"
+      ],
+      "env": {
+        "PLIVO_AUTH_ID": "YOUR_PLIVO_AUTH_ID_HERE",
+        "PLIVO_AUTH_TOKEN": "YOUR_PLIVO_AUTH_TOKEN_HERE"
+      }
+    },
+    "vidyard": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-vidyard"
+      ],
+      "env": {
+        "VIDYARD_API_KEY": "YOUR_VIDYARD_API_KEY_HERE"
+      }
+    },
+    "wistia": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-wistia"
+      ],
+      "env": {
+        "WISTIA_API_PASSWORD": "YOUR_WISTIA_API_PASSWORD_HERE"
+      }
+    },
+    "vimeo": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-vimeo"
+      ],
+      "env": {
+        "VIMEO_ACCESS_TOKEN": "YOUR_VIMEO_ACCESS_TOKEN_HERE"
+      }
+    },
+    "surveymonkey": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-surveymonkey"
+      ],
+      "env": {
+        "SURVEYMONKEY_ACCESS_TOKEN": "YOUR_SURVEYMONKEY_TOKEN_HERE"
+      }
+    },
+    "delighted": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-delighted"
+      ],
+      "env": {
+        "DELIGHTED_API_KEY": "YOUR_DELIGHTED_API_KEY_HERE"
+      }
+    },
+    "canny": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-canny"
+      ],
+      "env": {
+        "CANNY_API_KEY": "YOUR_CANNY_API_KEY_HERE"
+      }
+    },
+    "uservoice": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-uservoice"
+      ],
+      "env": {
+        "USERVOICE_API_KEY": "YOUR_USERVOICE_API_KEY_HERE"
+      }
+    },
+    "mastodon": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-mastodon"
+      ],
+      "env": {
+        "MASTODON_ACCESS_TOKEN": "YOUR_MASTODON_ACCESS_TOKEN_HERE",
+        "MASTODON_INSTANCE": "YOUR_MASTODON_INSTANCE_HERE"
+      }
+    },
+    "farcaster": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-farcaster"
+      ],
+      "env": {
+        "FARCASTER_MNEMONIC": "YOUR_FARCASTER_MNEMONIC_HERE"
+      }
+    },
+    "africas-talking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-africas-talking"
+      ],
+      "env": {
+        "AT_API_KEY": "YOUR_AFRICAS_TALKING_API_KEY_HERE",
+        "AT_USERNAME": "YOUR_AT_USERNAME_HERE"
+      }
+    },
+    "paystack": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-paystack"
+      ],
+      "env": {
+        "PAYSTACK_SECRET_KEY": "YOUR_PAYSTACK_SECRET_KEY_HERE"
+      }
+    },
+    "chipper-cash": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-chipper-cash"
+      ],
+      "env": {
+        "CHIPPER_API_KEY": "YOUR_CHIPPER_API_KEY_HERE"
+      }
+    },
+    "flutterwave-advanced": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@flutterwave/mcp-server"
+      ],
+      "env": {
+        "FLW_SECRET_KEY": "YOUR_FLUTTERWAVE_SECRET_KEY_HERE",
+        "FLW_PUBLIC_KEY": "YOUR_FLUTTERWAVE_PUBLIC_KEY_HERE"
+      }
+    },
+    "yellowcard": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-yellowcard"
+      ],
+      "env": {
+        "YELLOWCARD_API_KEY": "YOUR_YELLOWCARD_API_KEY_HERE"
+      }
+    },
+    "airbyte": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-airbyte"
+      ],
+      "env": {
+        "AIRBYTE_API_KEY": "YOUR_AIRBYTE_API_KEY_HERE"
+      }
+    },
+    "fivetran": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-fivetran"
+      ],
+      "env": {
+        "FIVETRAN_API_KEY": "YOUR_FIVETRAN_API_KEY_HERE",
+        "FIVETRAN_API_SECRET": "YOUR_FIVETRAN_API_SECRET_HERE"
+      }
+    },
+    "dbt-cloud": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-dbt-cloud"
+      ],
+      "env": {
+        "DBT_CLOUD_API_KEY": "YOUR_DBT_CLOUD_API_KEY_HERE"
+      }
+    },
+    "stitch-data": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-stitch"
+      ],
+      "env": {
+        "STITCH_API_KEY": "YOUR_STITCH_API_KEY_HERE"
+      }
+    },
+    "bigquery": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-bigquery"
+      ],
+      "env": {
+        "BIGQUERY_PROJECT_ID": "YOUR_BIGQUERY_PROJECT_ID_HERE"
+      }
+    },
+    "snowflake": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-snowflake"
+      ],
+      "env": {
+        "SNOWFLAKE_ACCOUNT": "YOUR_SNOWFLAKE_ACCOUNT_HERE",
+        "SNOWFLAKE_PASSWORD": "YOUR_SNOWFLAKE_PASSWORD_HERE"
+      }
+    },
+    "databricks": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-databricks"
+      ],
+      "env": {
+        "DATABRICKS_HOST": "YOUR_DATABRICKS_HOST_HERE",
+        "DATABRICKS_TOKEN": "YOUR_DATABRICKS_TOKEN_HERE"
+      }
+    },
+    "gainsight": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-gainsight"
+      ],
+      "env": {
+        "GAINSIGHT_API_KEY": "YOUR_GAINSIGHT_API_KEY_HERE"
+      }
+    },
+    "totango": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-totango"
+      ],
+      "env": {
+        "TOTANGO_API_TOKEN": "YOUR_TOTANGO_API_TOKEN_HERE"
+      }
+    },
+    "vitally": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-vitally"
+      ],
+      "env": {
+        "VITALLY_API_KEY": "YOUR_VITALLY_API_KEY_HERE"
+      }
+    },
+    "height": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-height"
+      ],
+      "env": {
+        "HEIGHT_API_KEY": "YOUR_HEIGHT_API_KEY_HERE"
+      }
+    },
+    "plane": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-plane"
+      ],
+      "env": {
+        "PLANE_API_KEY": "YOUR_PLANE_API_KEY_HERE"
+      }
+    },
+    "1password": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@1password/mcp-server"
+      ],
+      "env": {
+        "OP_SERVICE_ACCOUNT_TOKEN": "YOUR_1PASSWORD_SERVICE_ACCOUNT_TOKEN_HERE"
+      }
+    },
+    "snyk": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-snyk"
+      ],
+      "env": {
+        "SNYK_TOKEN": "YOUR_SNYK_TOKEN_HERE"
+      }
+    },
+    "crowdstrike": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-crowdstrike"
+      ],
+      "env": {
+        "CROWDSTRIKE_CLIENT_ID": "YOUR_CROWDSTRIKE_CLIENT_ID_HERE"
+      }
+    },
+    "okta": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-okta"
+      ],
+      "env": {
+        "OKTA_DOMAIN": "YOUR_OKTA_DOMAIN_HERE",
+        "OKTA_API_TOKEN": "YOUR_OKTA_API_TOKEN_HERE"
+      }
+    },
+    "auth0": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-auth0"
+      ],
+      "env": {
+        "AUTH0_DOMAIN": "YOUR_AUTH0_DOMAIN_HERE",
+        "AUTH0_CLIENT_ID": "YOUR_AUTH0_CLIENT_ID_HERE"
+      }
+    },
+    "google-ads-advanced": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@google/ads-mcp-server"
+      ],
+      "env": {
+        "GOOGLE_ADS_DEVELOPER_TOKEN": "YOUR_GOOGLE_ADS_DEVELOPER_TOKEN_HERE"
+      }
+    },
+    "taboola": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-taboola"
+      ],
+      "env": {
+        "TABOOLA_CLIENT_ID": "YOUR_TABOOLA_CLIENT_ID_HERE"
+      }
+    },
+    "outbrain": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-outbrain"
+      ],
+      "env": {
+        "OUTBRAIN_ACCESS_TOKEN": "YOUR_OUTBRAIN_ACCESS_TOKEN_HERE"
+      }
+    },
+    "lokalise": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-lokalise"
+      ],
+      "env": {
+        "LOKALISE_API_TOKEN": "YOUR_LOKALISE_API_TOKEN_HERE"
+      }
+    },
+    "crowdin": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-crowdin"
+      ],
+      "env": {
+        "CROWDIN_TOKEN": "YOUR_CROWDIN_TOKEN_HERE"
+      }
+    },
+    "phrase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-phrase"
+      ],
+      "env": {
+        "PHRASE_ACCESS_TOKEN": "YOUR_PHRASE_ACCESS_TOKEN_HERE"
+      }
+    },
+    "deepl": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-deepl"
+      ],
+      "env": {
+        "DEEPL_API_KEY": "YOUR_DEEPL_API_KEY_HERE"
+      }
+    },
+    "algolia": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@algolia/mcp-server"
+      ],
+      "env": {
+        "ALGOLIA_APP_ID": "YOUR_ALGOLIA_APP_ID_HERE",
+        "ALGOLIA_API_KEY": "YOUR_ALGOLIA_API_KEY_HERE"
+      }
+    },
+    "fitbit-advanced": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-fitbit"
+      ],
+      "env": {
+        "FITBIT_ACCESS_TOKEN": "YOUR_FITBIT_ACCESS_TOKEN_HERE"
+      }
+    },
+    "oura-ring": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-oura"
+      ],
+      "env": {
+        "OURA_ACCESS_TOKEN": "YOUR_OURA_ACCESS_TOKEN_HERE"
+      }
+    },
+    "terraform": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-terraform"
+      ],
+      "env": {
+        "TF_TOKEN": "YOUR_TERRAFORM_CLOUD_TOKEN_HERE"
+      }
+    },
+    "ansible": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-ansible"
+      ],
+      "env": {
+        "ANSIBLE_HOST_KEY_CHECKING": "False"
+      }
+    },
+    "pulumi": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-pulumi"
+      ],
+      "env": {
+        "PULUMI_ACCESS_TOKEN": "YOUR_PULUMI_ACCESS_TOKEN_HERE"
+      }
+    },
+    "fly-io": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-fly"
+      ],
+      "env": {
+        "FLY_API_TOKEN": "YOUR_FLY_API_TOKEN_HERE"
+      }
+    },
+    "sendbird": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-sendbird"
+      ],
+      "env": {
+        "SENDBIRD_APP_ID": "YOUR_SENDBIRD_APP_ID_HERE",
+        "SENDBIRD_API_TOKEN": "YOUR_SENDBIRD_API_TOKEN_HERE"
+      }
+    },
+    "stream": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-stream-chat"
+      ],
+      "env": {
+        "STREAM_API_KEY": "YOUR_STREAM_API_KEY_HERE",
+        "STREAM_API_SECRET": "YOUR_STREAM_API_SECRET_HERE"
+      }
+    },
+    "novu": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-novu"
+      ],
+      "env": {
+        "NOVU_API_KEY": "YOUR_NOVU_API_KEY_HERE"
+      }
+    },
+    "knock": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-server-knock"
+      ],
+      "env": {
+        "KNOCK_API_KEY": "YOUR_KNOCK_API_KEY_HERE"
+      }
     }
   }
 }

@@ -1866,6 +1866,181 @@
       "sourceType": "github",
       "skillPath": "plugins/zeroize-audit/skills/zeroize-audit/SKILL.md",
       "computedHash": "21b386e86a308bc7573605f4fddb25837f376daa1d3f1913128147b637c18be4"
+    },
+    "data-science-workflow": {
+      "source": "anthropics/anthropic-cookbook",
+      "sourceType": "github",
+      "skillPath": "skills/data-science-workflow"
+    },
+    "sql-analyst": {
+      "source": "anthropics/anthropic-cookbook",
+      "sourceType": "github",
+      "skillPath": "skills/sql-analyst"
+    },
+    "python-developer": {
+      "source": "anthropics/anthropic-cookbook",
+      "sourceType": "github",
+      "skillPath": "skills/python-developer"
+    },
+    "typescript-developer": {
+      "source": "anthropics/anthropic-cookbook",
+      "sourceType": "github",
+      "skillPath": "skills/typescript-developer"
+    },
+    "react-developer": {
+      "source": "anthropics/anthropic-cookbook",
+      "sourceType": "github",
+      "skillPath": "skills/react-developer"
+    },
+    "ai-researcher": {
+      "source": "anthropics/anthropic-cookbook",
+      "sourceType": "github",
+      "skillPath": "skills/ai-researcher"
+    },
+    "prompt-optimizer": {
+      "source": "anthropics/anthropic-cookbook",
+      "sourceType": "github",
+      "skillPath": "skills/prompt-optimizer"
+    },
+    "business-analyst": {
+      "source": "anthropics/anthropic-cookbook",
+      "sourceType": "github",
+      "skillPath": "skills/business-analyst"
+    },
+    "product-manager": {
+      "source": "anthropics/anthropic-cookbook",
+      "sourceType": "github",
+      "skillPath": "skills/product-manager"
+    },
+    "devops-engineer": {
+      "source": "anthropics/anthropic-cookbook",
+      "sourceType": "github",
+      "skillPath": "skills/devops-engineer"
+    },
+    "infrastructure-architect": {
+      "source": "anthropics/anthropic-cookbook",
+      "sourceType": "github",
+      "skillPath": "skills/infrastructure-architect"
+    },
+    "technical-writer-advanced": {
+      "source": "anthropics/anthropic-cookbook",
+      "sourceType": "github",
+      "skillPath": "skills/technical-writer"
+    },
+    "content-strategist": {
+      "source": "anthropics/anthropic-cookbook",
+      "sourceType": "github",
+      "skillPath": "skills/content-strategist"
+    },
+    "security-reviewer": {
+      "source": "anthropics/anthropic-cookbook",
+      "sourceType": "github",
+      "skillPath": "skills/security-reviewer"
+    },
+    "code-auditor": {
+      "source": "anthropics/anthropic-cookbook",
+      "sourceType": "github",
+      "skillPath": "skills/code-auditor"
+    },
+    "ecommerce-optimizer": {
+      "source": "anthropics/anthropic-cookbook",
+      "sourceType": "github",
+      "skillPath": "skills/ecommerce-optimizer"
+    },
+    "financial-analyst": {
+      "source": "anthropics/anthropic-cookbook",
+      "sourceType": "github",
+      "skillPath": "skills/financial-analyst"
+    },
+    "crypto-researcher": {
+      "source": "anthropics/anthropic-cookbook",
+      "sourceType": "github",
+      "skillPath": "skills/crypto-researcher"
+    },
+    "growth-marketer": {
+      "source": "anthropics/anthropic-cookbook",
+      "sourceType": "github",
+      "skillPath": "skills/growth-marketer"
+    },
+    "email-campaign-writer": {
+      "source": "anthropics/anthropic-cookbook",
+      "sourceType": "github",
+      "skillPath": "skills/email-campaign-writer"
+    },
+    "api-documentation-writer": {
+      "source": "anthropics/anthropic-cookbook",
+      "sourceType": "github",
+      "skillPath": "skills/api-documentation-writer"
+    },
+    "code-reviewer": {
+      "source": "anthropics/anthropic-cookbook",
+      "sourceType": "github",
+      "skillPath": "skills/code-reviewer"
+    },
+    "test-engineer": {
+      "source": "anthropics/anthropic-cookbook",
+      "sourceType": "github",
+      "skillPath": "skills/test-engineer"
+    },
+    "database-architect": {
+      "source": "anthropics/anthropic-cookbook",
+      "sourceType": "github",
+      "skillPath": "skills/database-architect"
+    },
+    "ux-researcher": {
+      "source": "anthropics/anthropic-cookbook",
+      "sourceType": "github",
+      "skillPath": "skills/ux-researcher"
+    },
+    "supabase-developer": {
+      "source": "supabase/supabase",
+      "sourceType": "github",
+      "skillPath": "skills/supabase-developer"
+    },
+    "supabase-agent-skills": {
+      "source": "supabase/agent-skills",
+      "sourceType": "github",
+      "skillPath": "."
+    },
+    "nextjs-developer": {
+      "source": "vercel/next.js",
+      "sourceType": "github",
+      "skillPath": "skills/nextjs-developer"
+    },
+    "graphql-developer": {
+      "source": "graphql/graphql-js",
+      "sourceType": "github",
+      "skillPath": "skills/graphql-developer"
+    },
+    "docker-expert": {
+      "source": "docker/docker-ce",
+      "sourceType": "github",
+      "skillPath": "skills/docker-expert"
+    },
+    "git-expert": {
+      "source": "anthropics/claude-code-examples",
+      "sourceType": "github",
+      "skillPath": "skills/git-expert"
+    },
+    "refactoring-expert": {
+      "source": "anthropics/claude-code-examples",
+      "sourceType": "github",
+      "skillPath": "skills/refactoring-expert"
+    },
+    "debugging-expert": {
+      "source": "anthropics/claude-code-examples",
+      "sourceType": "github",
+      "skillPath": "skills/debugging-expert"
+    },
+    "performance-optimizer": {
+      "source": "anthropics/claude-code-examples",
+      "sourceType": "github",
+      "skillPath": "skills/performance-optimizer"
+    },
+    "architecture-designer": {
+      "source": "anthropics/claude-code-examples",
+      "sourceType": "github",
+      "skillPath": "skills/architecture-designer"
     }
   }
 }

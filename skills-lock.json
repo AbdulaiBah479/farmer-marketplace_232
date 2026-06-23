@@ -403,6 +403,24 @@
       "skillPath": ".agents/skills/e2e/SKILL.md",
       "computedHash": "76792da4e7fa1127509cb2e29581f8d6de2d9387ee9085d1c5313f9e56a480f3"
     },
+    "emil-design-eng": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/emil-design-eng/SKILL.md",
+      "computedHash": "433b5a239cda18e0576e4e558532e7e53512e21fafe5b85db4894c28ec399b72"
+    },
+    "emilkowal-animations": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/emilkowal-animations/SKILL.md",
+      "computedHash": "52f80219ebfd09c38c933a632bbda5e44b60877fdd65aa75311a37b9549b9bcf"
+    },
+    "emilkowalski-motion": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/emilkowalski-motion/SKILL.md",
+      "computedHash": "1478b70162dfe62a2088c2a98d7bf8fd071439c6decf044b9b69a02a3b14753f"
+    },
     "entry-point-analyzer": {
       "source": "trailofbits/skills",
       "sourceType": "github",

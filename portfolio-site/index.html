@@ -486,14 +486,8 @@
   .service-grid {
     margin-top: 22px;
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 12px;
-  }
-  @media (max-width: 980px) {
-    .service-grid { grid-template-columns: repeat(2, 1fr); }
-  }
-  @media (max-width: 560px) {
-    .service-grid { grid-template-columns: 1fr; }
   }
   .scard {
     background: var(--surface);
@@ -555,10 +549,9 @@
   .mini-grid {
     margin-top: 22px;
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 16px;
   }
-  @media (max-width: 700px) { .mini-grid { grid-template-columns: 1fr; } }
   .mini-card {
     background: var(--surface);
     border: 1px solid var(--line);
@@ -688,6 +681,92 @@
   .mpost .mcap span { display: block; height: 5px; background: var(--line); border-radius: 3px; margin-bottom: 4px; width: 90%; }
   .mpost .mcap span:last-child { width: 60%; margin-bottom: 0; }
   .mpost-text { font-size: 11.5px; color: var(--ink); font-style: italic; line-height: 1.5; }
+
+  /* ---- phone/voice mini-demo ---- */
+  .call-mock {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px;
+    background: var(--surface-2);
+  }
+  .call-head { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; }
+  .call-head .ring { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 1.4s infinite; }
+  .call-transcript { margin-top: 8px; display: none; flex-direction: column; gap: 5px; }
+  .call-transcript.show { display: flex; }
+  .call-line { padding: 6px 8px; border-radius: 6px; font-size: 10.5px; line-height: 1.4; }
+  .call-line.caller { background: var(--surface); border: 1px solid var(--line); }
+  .call-line.agent { background: color-mix(in srgb, var(--accent-2) 22%, var(--surface)); }
+  .call-done {
+    margin-top: 6px; font-size: 10px; color: var(--accent-2); font-weight: 700;
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .call-done.show { opacity: 1; }
+
+  /* ---- differentiators ---- */
+  .diff-grid {
+    margin-top: 22px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 14px;
+  }
+  .diff-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: var(--shadow);
+  }
+  .diff-card h3 {
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .diff-card p {
+    margin: 0;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+  .diff-card.guarantee {
+    border-color: var(--accent-2);
+    box-shadow: var(--shadow), 0 0 0 1px var(--accent-2);
+  }
+
+  /* ---- faq ---- */
+  .faq-list {
+    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .faq-item {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 13px 15px;
+  }
+  .faq-item summary {
+    cursor: pointer;
+    font-size: 13.5px;
+    font-weight: 600;
+    list-style: none;
+  }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-item summary::before {
+    content: "+";
+    display: inline-block;
+    width: 16px;
+    color: var(--accent-2);
+    font-weight: 700;
+  }
+  .faq-item[open] summary::before { content: "–"; }
+  .faq-item p {
+    margin: 8px 0 0 20px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
 
   /* ---- content-creation proof ---- */
   .content-proof {
@@ -841,7 +920,7 @@
   <header class="page">
     <p class="eyebrow">Service portfolio · no-code builds</p>
     <h1>The digital backbone your business is missing</h1>
-    <p>Websites, chatbots, automation, and systems — set up with no-code tools so it's fast to launch and cheap to run. Below: the five services on offer, then one of them running live.</p>
+    <p>Websites, chatbots, phone agents, automation, and systems — set up with no-code and AI tools so it's fast to launch and cheap to run. Below: all six services, then one of them running live.</p>
   </header>
 
   <section class="services">
@@ -877,6 +956,12 @@
         <h3>Content</h3>
         <p>Short posts and clips documenting each build, so the work markets itself while it's running.</p>
         <span class="proof">See a sample below</span>
+      </div>
+      <div class="scard">
+        <span class="cat">Answer</span>
+        <h3>Phone &amp; voice agents</h3>
+        <p>An AI that picks up when you can't — answers common questions, takes a message, or books a slot, in a natural voice call.</p>
+        <span class="proof">Never another missed call</span>
       </div>
     </div>
   </section>
@@ -959,6 +1044,25 @@
         <li>No separate content calendar to run</li>
         <li>Real proof, not stock photos</li>
         <li>Free marketing from work you already did</li>
+      </ul>
+    </div>
+
+    <div class="mini-card">
+      <span class="mini-label">Phone &amp; voice agents</span>
+      <p class="mini-why">For a lot of small businesses the phone still gets more traffic than the website — and a missed call is a customer who just tried your competitor next.</p>
+      <div class="call-mock">
+        <div class="call-head"><span class="ring"></span> Incoming call — Rooted Farm Stand</div>
+        <button class="mini-run-btn" id="answerCallBtn" type="button" style="margin-top:8px;">📞 Answer the call</button>
+        <div class="call-transcript" id="callTranscript">
+          <div class="call-line caller">Caller: "Are you open Sunday?"</div>
+          <div class="call-line agent">Agent: "Yes, 9am–2pm — want me to text you our full hours?"</div>
+        </div>
+        <div class="call-done" id="callDone">✓ Call handled, no one interrupted</div>
+      </div>
+      <ul class="mini-benefits">
+        <li>Picks up every time, even after hours</li>
+        <li>Sounds natural, not robotic</li>
+        <li>Logs the call to the same dashboard as everything else</li>
       </ul>
     </div>
   </div>
@@ -1065,6 +1169,61 @@
     </div>
   </div>
 
+  <div class="section-lead">
+    <h2>Why this, not just any freelancer</h2>
+    <p>No-code and AI tools are everywhere now — here's what actually makes a build worth paying for.</p>
+  </div>
+
+  <div class="diff-grid">
+    <div class="diff-card">
+      <h3>You see it before you pay</h3>
+      <p>Every pitch comes with a live, clickable demo, not a mockup or a promise — you're using one right now.</p>
+    </div>
+    <div class="diff-card">
+      <h3>You own everything, always</h3>
+      <p>Every build runs on your own Airtable, your own Zapier, your own domain. Nothing is locked to my platform — if we ever stop working together, you keep it all.</p>
+    </div>
+    <div class="diff-card">
+      <h3>Built once, priced fairly</h3>
+      <p>Reusable systems mean faster delivery, which means lower prices than an agency billing you for hours instead of results.</p>
+    </div>
+    <div class="diff-card">
+      <h3>One system, not five freelancers</h3>
+      <p>Your site, chatbot, phone agent, automation, and dashboard all talk to each other because one person built all of them together.</p>
+    </div>
+    <div class="diff-card guarantee">
+      <h3>A real guarantee</h3>
+      <p>If the first build isn't working the way we agreed, I fix it free — you don't pay the remaining balance until it does.</p>
+    </div>
+  </div>
+
+  <div class="section-lead">
+    <h2>Before you ask</h2>
+  </div>
+
+  <div class="faq-list">
+    <details class="faq-item">
+      <summary>Do I need to know how to code?</summary>
+      <p>No. None of this requires anything technical from you — I handle the build, you just use the result.</p>
+    </details>
+    <details class="faq-item">
+      <summary>How long does a build actually take?</summary>
+      <p>A single piece (a chatbot, an automation) is usually ready in 2–5 days. A full connected system takes 1–2 weeks.</p>
+    </details>
+    <details class="faq-item">
+      <summary>What if I already have a website or some of this?</summary>
+      <p>Nothing here requires starting over — I plug into what you already have wherever possible.</p>
+    </details>
+    <details class="faq-item">
+      <summary>What happens after you deliver it?</summary>
+      <p>You own it outright. Ongoing tweaks are available as a small monthly add-on, but nothing is required after handover.</p>
+    </details>
+    <details class="faq-item">
+      <summary>What if it doesn't work for my business?</summary>
+      <p>Then I fix it — see the guarantee above. This only works if it actually works for you.</p>
+    </details>
+  </div>
+
   <div class="cta">
     <div>
       <h2>Want one of these for your business?</h2>
@@ -1078,7 +1237,7 @@
 
   <footer>
     <span>Portfolio demo — the chatbot above is fully working; Rooted Farm Stand is a fictional example client.</span>
-    <span>Five services on offer: websites, chatbots/agents, automation, systems, content.</span>
+    <span>Six services on offer: websites, chatbots/agents, phone &amp; voice agents, automation, systems, content.</span>
   </footer>
 </div>
 
@@ -1232,6 +1391,22 @@
     capBtn.addEventListener('click', () => {
       captionIndex = (captionIndex + 1) % sampleCaptions.length;
       capText.textContent = sampleCaptions[captionIndex];
+    });
+  }
+
+  // ---- Phone/voice mini-demo: answer the call ----
+  const answerCallBtn = document.getElementById('answerCallBtn');
+  const callTranscript = document.getElementById('callTranscript');
+  const callDone = document.getElementById('callDone');
+  if (answerCallBtn) {
+    answerCallBtn.addEventListener('click', async () => {
+      answerCallBtn.disabled = true;
+      answerCallBtn.textContent = 'Answering…';
+      await wait(500);
+      callTranscript.classList.add('show');
+      await wait(1400);
+      callDone.classList.add('show');
+      answerCallBtn.textContent = '📞 Call answered';
     });
   }
 </script>

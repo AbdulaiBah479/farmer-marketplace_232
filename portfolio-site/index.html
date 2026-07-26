@@ -555,20 +555,19 @@
   .mini-grid {
     margin-top: 22px;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 14px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
   }
-  @media (max-width: 860px) { .mini-grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 480px) { .mini-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 700px) { .mini-grid { grid-template-columns: 1fr; } }
   .mini-card {
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: 12px;
-    padding: 14px;
+    padding: 18px;
     box-shadow: var(--shadow);
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 11px;
   }
   .mini-card .mini-label {
     font-size: 11px;
@@ -577,11 +576,66 @@
     text-transform: uppercase;
     letter-spacing: 0.06em;
   }
+  .mini-why {
+    margin: 0;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
   .mini-card .mini-cap {
     margin: 0;
     font-size: 12px;
     color: var(--ink-soft);
     line-height: 1.5;
+  }
+  .mini-benefits {
+    margin: 2px 0 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .mini-benefits li {
+    font-size: 12px;
+    color: var(--ink-soft);
+    padding-left: 16px;
+    position: relative;
+    line-height: 1.4;
+  }
+  .mini-benefits li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: var(--accent-2);
+    font-size: 10.5px;
+    font-weight: 700;
+  }
+  .mini-run-btn {
+    align-self: flex-start;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 6px 13px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .mini-run-btn:hover { border-color: var(--accent-2); color: var(--accent-2); }
+  .mini-run-btn:disabled { opacity: 0.6; cursor: default; }
+  .mini-result {
+    font-size: 11.5px;
+    color: var(--accent-2);
+    font-weight: 600;
+    min-height: 15px;
+  }
+  .mini-hint {
+    margin: -4px 0 0;
+    font-size: 10.5px;
+    color: var(--ink-faint);
+    font-style: italic;
   }
   .ba-row { display: flex; gap: 8px; }
   .ba-box { flex: 1; border-radius: 8px; padding: 10px; min-height: 74px; }
@@ -590,8 +644,17 @@
   .ba-lines span { display: block; height: 5px; background: var(--line); border-radius: 3px; margin-bottom: 5px; }
   .ba-lines span:nth-child(2) { width: 70%; }
   .ba-lines span:nth-child(3) { width: 40%; }
-  .ba-btn { margin-top: 8px; display: inline-block; background: var(--accent); color: var(--accent-ink); font-size: 10px; font-weight: 700; padding: 5px 10px; border-radius: 999px; }
+  .ba-btn {
+    margin-top: 8px; display: inline-block; background: var(--accent); color: var(--accent-ink);
+    font-size: 10px; font-weight: 700; padding: 5px 10px; border-radius: 999px;
+    border: none; cursor: pointer; font-family: inherit;
+  }
   .ba-tag { margin-top: 8px; font-size: 10px; color: var(--ink-faint); }
+  .ba-confirm {
+    margin-top: 6px; font-size: 10px; color: var(--accent-2); font-weight: 700;
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .ba-confirm.show { opacity: 1; }
   .mflow { display: flex; align-items: flex-start; justify-content: space-between; }
   .mflow .node { flex: 1; text-align: center; font-size: 9.5px; color: var(--ink-soft); }
   .mflow .node .dot {
@@ -599,6 +662,12 @@
     border-radius: 8px; background: var(--surface-2); border: 1px solid var(--line);
     display: flex; align-items: center; justify-content: center; font-size: 13px;
     animation: nodepulse 3.2s ease-in-out infinite;
+    transition: box-shadow 0.2s, border-color 0.2s;
+  }
+  .mflow .node .dot.active {
+    border-color: var(--accent-2);
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent-2) 30%, transparent);
+    animation: none;
   }
   @keyframes nodepulse {
     0%, 100% { box-shadow: none; border-color: var(--line); }
@@ -606,10 +675,10 @@
     30% { box-shadow: none; border-color: var(--line); }
   }
   .mflow .arrow { flex: 0 0 auto; color: var(--ink-faint); font-size: 12px; padding-top: 6px; }
-  .mtable { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; font-size: 10.5px; }
+  .mtable { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; font-size: 11px; }
   .mrow { display: flex; justify-content: space-between; align-items: center; padding: 7px 9px; border-bottom: 1px solid var(--line); }
   .mrow:last-child { border-bottom: none; }
-  .mpill { padding: 2px 7px; border-radius: 999px; font-size: 9px; font-weight: 700; white-space: nowrap; }
+  .mpill { padding: 3px 8px; border-radius: 999px; font-size: 9.5px; font-weight: 700; white-space: nowrap; cursor: pointer; border: none; font-family: inherit; }
   .mpill.new { background: var(--surface-2); color: var(--ink-soft); }
   .mpill.messaged { background: color-mix(in srgb, var(--accent) 30%, transparent); color: var(--accent-ink); }
   .mpill.booked { background: color-mix(in srgb, var(--accent-2) 30%, transparent); color: var(--accent-2); }
@@ -618,6 +687,7 @@
   .mpost .mcap { flex: 1; }
   .mpost .mcap span { display: block; height: 5px; background: var(--line); border-radius: 3px; margin-bottom: 4px; width: 90%; }
   .mpost .mcap span:last-child { width: 60%; margin-bottom: 0; }
+  .mpost-text { font-size: 11.5px; color: var(--ink); font-style: italic; line-height: 1.5; }
 
   /* ---- content-creation proof ---- */
   .content-proof {
@@ -819,6 +889,7 @@
   <div class="mini-grid">
     <div class="mini-card">
       <span class="mini-label">Websites</span>
+      <p class="mini-why">A slow, cluttered, or missing site reads as "not a real business" before anyone even talks to you.</p>
       <div class="ba-row">
         <div class="ba-box before">
           <div class="ba-lines"><span></span><span></span><span></span></div>
@@ -826,16 +897,22 @@
         </div>
         <div class="ba-box after">
           <div class="ba-lines"><span></span><span></span></div>
-          <span class="ba-btn">Book now →</span>
-          <div class="ba-tag">✅ One clear next step</div>
+          <button class="ba-btn" id="baBookBtn" type="button">Book now →</button>
+          <div class="ba-confirm" id="baConfirm">✓ Booked — confirmation sent</div>
         </div>
       </div>
-      <p class="mini-cap">Before: a page with no direction. After: one button, one job.</p>
+      <p class="mini-hint">↑ Click "Book now" — that's the whole customer experience.</p>
+      <ul class="mini-benefits">
+        <li>Loads fast on any phone</li>
+        <li>One clear action, not ten distractions</li>
+        <li>Looks credible enough to trust with money</li>
+      </ul>
     </div>
 
     <div class="mini-card">
       <span class="mini-label">Automation</span>
-      <div class="mflow">
+      <p class="mini-why">Every manual step between a customer's message and your reply is a chance for them to give up and message a competitor instead.</p>
+      <div class="mflow" id="mflowDemo">
         <div class="node"><div class="dot" style="animation-delay:0s">📝</div>Form</div>
         <div class="arrow">→</div>
         <div class="node"><div class="dot" style="animation-delay:.5s">🔁</div>Zapier</div>
@@ -844,26 +921,45 @@
         <div class="arrow">→</div>
         <div class="node"><div class="dot" style="animation-delay:1.5s">📲</div>Notify</div>
       </div>
-      <p class="mini-cap">One submission, four steps done automatically — nobody copies anything by hand.</p>
+      <button class="mini-run-btn" id="runFlowBtn" type="button">▶ Run it yourself</button>
+      <div class="mini-result" id="flowResult"></div>
+      <ul class="mini-benefits">
+        <li>Nothing falls through the cracks</li>
+        <li>No copy-pasting between apps</li>
+        <li>Works 24/7, even while you sleep</li>
+      </ul>
     </div>
 
     <div class="mini-card">
       <span class="mini-label">Systems &amp; dashboards</span>
-      <div class="mtable">
-        <div class="mrow"><span>Dara O.</span><span class="mpill booked">Booked</span></div>
-        <div class="mrow"><span>Kwame B.</span><span class="mpill messaged">Messaged</span></div>
-        <div class="mrow"><span>Aisha T.</span><span class="mpill new">New</span></div>
+      <p class="mini-why">Leads living in your head, a notebook, and three chat apps means someone always gets forgotten — and forgotten leads don't pay.</p>
+      <div class="mtable" id="miniTable">
+        <div class="mrow"><span>Dara O.</span><button class="mpill booked" type="button">Booked</button></div>
+        <div class="mrow"><span>Kwame B.</span><button class="mpill messaged" type="button">Messaged</button></div>
+        <div class="mrow"><span>Aisha T.</span><button class="mpill new" type="button">New</button></div>
       </div>
-      <p class="mini-cap">Every lead and order in one table — instead of three notebooks and a memory.</p>
+      <p class="mini-hint">↑ Click a status to update it — that's the whole tool.</p>
+      <ul class="mini-benefits">
+        <li>One source of truth, not three</li>
+        <li>See who needs a follow-up at a glance</li>
+        <li>Nothing lost when you're busy</li>
+      </ul>
     </div>
 
     <div class="mini-card">
       <span class="mini-label">Content</span>
+      <p class="mini-why">The best work in the world doesn't win the next client if nobody ever sees it.</p>
       <div class="mpost">
         <div class="mavatar"></div>
         <div class="mcap"><span></span><span></span></div>
       </div>
-      <p class="mini-cap">Every finished build becomes a before/after post — full example further down.</p>
+      <div class="mpost-text" id="miniCaptionText">"We just wired our site to text the owner the second a lead comes in."</div>
+      <button class="mini-run-btn" id="capBtn" type="button">🔄 New caption</button>
+      <ul class="mini-benefits">
+        <li>No separate content calendar to run</li>
+        <li>Real proof, not stock photos</li>
+        <li>Free marketing from work you already did</li>
+      </ul>
     </div>
   </div>
 
@@ -1078,6 +1174,66 @@
 
   // Auto-open shortly after load so the demo tells itself.
   setTimeout(openChat, reduceMotion ? 0 : 700);
+
+  // ---- Websites mini-demo: click "Book now" like a real visitor would ----
+  const baBookBtn = document.getElementById('baBookBtn');
+  const baConfirm = document.getElementById('baConfirm');
+  if (baBookBtn) {
+    baBookBtn.addEventListener('click', () => {
+      baConfirm.classList.add('show');
+      baBookBtn.textContent = '✓ Booked';
+      setTimeout(() => {
+        baConfirm.classList.remove('show');
+        baBookBtn.textContent = 'Book now →';
+      }, 2200);
+    });
+  }
+
+  // ---- Automation mini-demo: run the flow on demand ----
+  const runFlowBtn = document.getElementById('runFlowBtn');
+  const flowResult = document.getElementById('flowResult');
+  const flowDots = document.querySelectorAll('#mflowDemo .dot');
+  if (runFlowBtn) {
+    runFlowBtn.addEventListener('click', async () => {
+      flowResult.textContent = '';
+      runFlowBtn.disabled = true;
+      for (const dot of flowDots) {
+        dot.classList.add('active');
+        await wait(400);
+        dot.classList.remove('active');
+      }
+      flowResult.textContent = '✓ Done — lead saved + owner notified, no one touched it';
+      runFlowBtn.disabled = false;
+    });
+  }
+
+  // ---- Systems/dashboard mini-demo: click a status to update the record ----
+  const statusCycle = { new: 'messaged', messaged: 'booked', booked: 'new' };
+  document.querySelectorAll('#miniTable .mpill').forEach((pill) => {
+    pill.addEventListener('click', () => {
+      const current = ['new', 'messaged', 'booked'].find((c) => pill.classList.contains(c));
+      const next = statusCycle[current];
+      pill.classList.remove(current);
+      pill.classList.add(next);
+      pill.textContent = next.charAt(0).toUpperCase() + next.slice(1);
+    });
+  });
+
+  // ---- Content mini-demo: cycle sample captions ----
+  const sampleCaptions = [
+    '"We just wired our site to text the owner the second a lead comes in."',
+    '"Before: 3 missed messages a day. After: zero."',
+    '"One dashboard now shows every lead, order, and follow-up."',
+  ];
+  let captionIndex = 0;
+  const capBtn = document.getElementById('capBtn');
+  const capText = document.getElementById('miniCaptionText');
+  if (capBtn) {
+    capBtn.addEventListener('click', () => {
+      captionIndex = (captionIndex + 1) % sampleCaptions.length;
+      capText.textContent = sampleCaptions[captionIndex];
+    });
+  }
 </script>
 </body>
 </html>

@@ -551,6 +551,74 @@
     line-height: 1.55;
   }
 
+  /* ---- mini per-service demos ---- */
+  .mini-grid {
+    margin-top: 22px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+  @media (max-width: 860px) { .mini-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 480px) { .mini-grid { grid-template-columns: 1fr; } }
+  .mini-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .mini-card .mini-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent-2);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .mini-card .mini-cap {
+    margin: 0;
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .ba-row { display: flex; gap: 8px; }
+  .ba-box { flex: 1; border-radius: 8px; padding: 10px; min-height: 74px; }
+  .ba-box.before { background: var(--surface-2); border: 1px dashed var(--line); }
+  .ba-box.after { background: var(--bg); border: 1px solid var(--accent-2); }
+  .ba-lines span { display: block; height: 5px; background: var(--line); border-radius: 3px; margin-bottom: 5px; }
+  .ba-lines span:nth-child(2) { width: 70%; }
+  .ba-lines span:nth-child(3) { width: 40%; }
+  .ba-btn { margin-top: 8px; display: inline-block; background: var(--accent); color: var(--accent-ink); font-size: 10px; font-weight: 700; padding: 5px 10px; border-radius: 999px; }
+  .ba-tag { margin-top: 8px; font-size: 10px; color: var(--ink-faint); }
+  .mflow { display: flex; align-items: flex-start; justify-content: space-between; }
+  .mflow .node { flex: 1; text-align: center; font-size: 9.5px; color: var(--ink-soft); }
+  .mflow .node .dot {
+    width: 28px; height: 28px; margin: 0 auto 5px;
+    border-radius: 8px; background: var(--surface-2); border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center; font-size: 13px;
+    animation: nodepulse 3.2s ease-in-out infinite;
+  }
+  @keyframes nodepulse {
+    0%, 100% { box-shadow: none; border-color: var(--line); }
+    15% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-2) 25%, transparent); border-color: var(--accent-2); }
+    30% { box-shadow: none; border-color: var(--line); }
+  }
+  .mflow .arrow { flex: 0 0 auto; color: var(--ink-faint); font-size: 12px; padding-top: 6px; }
+  .mtable { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; font-size: 10.5px; }
+  .mrow { display: flex; justify-content: space-between; align-items: center; padding: 7px 9px; border-bottom: 1px solid var(--line); }
+  .mrow:last-child { border-bottom: none; }
+  .mpill { padding: 2px 7px; border-radius: 999px; font-size: 9px; font-weight: 700; white-space: nowrap; }
+  .mpill.new { background: var(--surface-2); color: var(--ink-soft); }
+  .mpill.messaged { background: color-mix(in srgb, var(--accent) 30%, transparent); color: var(--accent-ink); }
+  .mpill.booked { background: color-mix(in srgb, var(--accent-2) 30%, transparent); color: var(--accent-2); }
+  .mpost { display: flex; gap: 8px; align-items: center; }
+  .mpost .mavatar { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-2)); flex-shrink: 0; }
+  .mpost .mcap { flex: 1; }
+  .mpost .mcap span { display: block; height: 5px; background: var(--line); border-radius: 3px; margin-bottom: 4px; width: 90%; }
+  .mpost .mcap span:last-child { width: 60%; margin-bottom: 0; }
+
   /* ---- content-creation proof ---- */
   .content-proof {
     display: grid;
@@ -742,6 +810,62 @@
       </div>
     </div>
   </section>
+
+  <div class="section-lead">
+    <h2>How each one actually works, in seconds</h2>
+    <p>No jargon — just what changes. The chatbot gets the full live walkthrough right after this.</p>
+  </div>
+
+  <div class="mini-grid">
+    <div class="mini-card">
+      <span class="mini-label">Websites</span>
+      <div class="ba-row">
+        <div class="ba-box before">
+          <div class="ba-lines"><span></span><span></span><span></span></div>
+          <div class="ba-tag">😕 No clear action</div>
+        </div>
+        <div class="ba-box after">
+          <div class="ba-lines"><span></span><span></span></div>
+          <span class="ba-btn">Book now →</span>
+          <div class="ba-tag">✅ One clear next step</div>
+        </div>
+      </div>
+      <p class="mini-cap">Before: a page with no direction. After: one button, one job.</p>
+    </div>
+
+    <div class="mini-card">
+      <span class="mini-label">Automation</span>
+      <div class="mflow">
+        <div class="node"><div class="dot" style="animation-delay:0s">📝</div>Form</div>
+        <div class="arrow">→</div>
+        <div class="node"><div class="dot" style="animation-delay:.5s">🔁</div>Zapier</div>
+        <div class="arrow">→</div>
+        <div class="node"><div class="dot" style="animation-delay:1s">🗂️</div>Airtable</div>
+        <div class="arrow">→</div>
+        <div class="node"><div class="dot" style="animation-delay:1.5s">📲</div>Notify</div>
+      </div>
+      <p class="mini-cap">One submission, four steps done automatically — nobody copies anything by hand.</p>
+    </div>
+
+    <div class="mini-card">
+      <span class="mini-label">Systems &amp; dashboards</span>
+      <div class="mtable">
+        <div class="mrow"><span>Dara O.</span><span class="mpill booked">Booked</span></div>
+        <div class="mrow"><span>Kwame B.</span><span class="mpill messaged">Messaged</span></div>
+        <div class="mrow"><span>Aisha T.</span><span class="mpill new">New</span></div>
+      </div>
+      <p class="mini-cap">Every lead and order in one table — instead of three notebooks and a memory.</p>
+    </div>
+
+    <div class="mini-card">
+      <span class="mini-label">Content</span>
+      <div class="mpost">
+        <div class="mavatar"></div>
+        <div class="mcap"><span></span><span></span></div>
+      </div>
+      <p class="mini-cap">Every finished build becomes a before/after post — full example further down.</p>
+    </div>
+  </div>
 
   <div class="section-lead">
     <h2>See it in action</h2>

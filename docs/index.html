@@ -1,0 +1,1414 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>No-Code Builds — Service Portfolio</title>
+<style>
+  :root {
+    --bg: #f1f4ea;
+    --surface: #ffffff;
+    --surface-2: #e9edde;
+    --ink: #20301f;
+    --ink-soft: #55634d;
+    --ink-faint: #8a9480;
+    --accent: #b8860f;
+    --accent-ink: #3c2e05;
+    --accent-2: #4c6b3e;
+    --line: #d8decb;
+    --shadow: 0 1px 2px rgba(32,48,31,0.06), 0 8px 24px -12px rgba(32,48,31,0.18);
+    --radius: 14px;
+    color-scheme: light;
+  }
+  :root[data-theme="dark"] {
+    --bg: #121810;
+    --surface: #1a2216;
+    --surface-2: #212b1c;
+    --ink: #edefe2;
+    --ink-soft: #b1baa2;
+    --ink-faint: #6f7a63;
+    --accent: #e8b23d;
+    --accent-ink: #241c04;
+    --accent-2: #8fb47a;
+    --line: #2b3524;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 12px 32px -14px rgba(0,0,0,0.55);
+    color-scheme: dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121810;
+      --surface: #1a2216;
+      --surface-2: #212b1c;
+      --ink: #edefe2;
+      --ink-soft: #b1baa2;
+      --ink-faint: #6f7a63;
+      --accent: #e8b23d;
+      --accent-ink: #241c04;
+      --accent-2: #8fb47a;
+      --line: #2b3524;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 12px 32px -14px rgba(0,0,0,0.55);
+      color-scheme: dark;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    padding: 40px 20px 80px;
+  }
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+  }
+
+  h1, h2, h3 { font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; text-wrap: balance; margin: 0; }
+
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--accent-2);
+    font-weight: 600;
+    margin: 0 0 10px;
+  }
+
+  header.page {
+    max-width: 640px;
+    margin: 0 0 40px;
+  }
+  header.page h1 {
+    font-size: clamp(28px, 4vw, 38px);
+    font-weight: 600;
+    line-height: 1.15;
+  }
+  header.page p {
+    color: var(--ink-soft);
+    font-size: 15.5px;
+    line-height: 1.55;
+    margin: 14px 0 0;
+    max-width: 60ch;
+  }
+
+  .stage {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    gap: 28px;
+    align-items: start;
+  }
+  @media (max-width: 860px) {
+    .stage { grid-template-columns: 1fr; }
+  }
+
+  /* ---- browser mock / chat panel ---- */
+  .browser {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .browser-chrome {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--line);
+  }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--line); }
+  .browser-url {
+    margin-left: 8px;
+    font-size: 12px;
+    color: var(--ink-faint);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 3px 10px;
+    flex: 1;
+    max-width: 220px;
+  }
+
+  .site {
+    position: relative;
+    min-height: 480px;
+    background:
+      radial-gradient(120% 90% at 15% 0%, color-mix(in srgb, var(--accent-2) 16%, transparent), transparent 60%),
+      var(--bg);
+    padding: 30px 26px 26px;
+  }
+  .site-brand {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    font-size: 20px;
+    font-weight: 600;
+  }
+  .site-tag {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-top: 4px;
+  }
+  .site-hero {
+    margin-top: 34px;
+    font-size: 13px;
+    color: var(--ink-faint);
+    max-width: 34ch;
+    line-height: 1.6;
+  }
+
+  .chat-bubble-btn {
+    position: absolute;
+    right: 22px;
+    bottom: 22px;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--accent-ink);
+    border: none;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    transition: transform 0.15s ease;
+  }
+  .chat-bubble-btn:hover { transform: scale(1.06); }
+  .chat-bubble-btn:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 3px; }
+
+  .chat-window {
+    position: absolute;
+    right: 20px;
+    bottom: 86px;
+    width: min(320px, calc(100% - 40px));
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(10px);
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  .chat-window.open {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  .chat-head {
+    background: var(--accent-2);
+    color: #fff;
+    padding: 12px 14px;
+    font-size: 13.5px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .chat-head .pulse {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #9be08a;
+    box-shadow: 0 0 0 0 rgba(155,224,138,0.7);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(155,224,138,0.55); }
+    70% { box-shadow: 0 0 0 6px rgba(155,224,138,0); }
+    100% { box-shadow: 0 0 0 0 rgba(155,224,138,0); }
+  }
+  .chat-body {
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 260px;
+    max-height: 340px;
+    overflow-y: auto;
+    font-size: 13.5px;
+  }
+  .msg {
+    max-width: 82%;
+    padding: 8px 11px;
+    border-radius: 10px;
+    line-height: 1.45;
+    opacity: 0;
+    transform: translateY(6px);
+    animation: rise 0.25s ease forwards;
+  }
+  @keyframes rise { to { opacity: 1; transform: translateY(0); } }
+  .msg.bot {
+    background: var(--surface-2);
+    color: var(--ink);
+    align-self: flex-start;
+    border-bottom-left-radius: 3px;
+  }
+  .msg.user {
+    background: var(--accent-2);
+    color: #fff;
+    align-self: flex-end;
+    border-bottom-right-radius: 3px;
+  }
+  .msg.quick {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    background: none;
+    padding: 0;
+    max-width: 100%;
+  }
+  .chip {
+    border: 1px solid var(--accent-2);
+    color: var(--accent-2);
+    background: transparent;
+    border-radius: 999px;
+    padding: 5px 11px;
+    font-size: 12.5px;
+    cursor: default;
+  }
+  .typing {
+    align-self: flex-start;
+    display: flex;
+    gap: 3px;
+    padding: 10px 12px;
+    background: var(--surface-2);
+    border-radius: 10px;
+  }
+  .typing span {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--ink-faint);
+    animation: bounce 1s infinite;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.15s; }
+  .typing span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes bounce { 0%,60%,100%{ transform: translateY(0);} 30%{ transform: translateY(-4px);} }
+
+  .chat-input {
+    border-top: 1px solid var(--line);
+    padding: 9px 12px;
+    font-size: 12.5px;
+    color: var(--ink-faint);
+  }
+
+  .replay {
+    margin-top: 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    border-radius: 999px;
+    padding: 7px 14px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .replay:hover { border-color: var(--accent-2); color: var(--accent-2); }
+
+  /* ---- inbox / crm panel ---- */
+  .inbox {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 480px;
+  }
+  .inbox-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 12px;
+  }
+  .inbox-head h3 { font-size: 16px; font-weight: 600; }
+  .inbox-head span { font-size: 12px; color: var(--ink-faint); }
+
+  .lead-card {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 13px;
+    background: var(--surface-2);
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+    animation: rise 0.35s ease forwards;
+  }
+  .lead-card.empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-faint);
+    font-size: 13px;
+    border-style: dashed;
+    min-height: 120px;
+    text-align: center;
+    padding: 20px;
+    animation: none;
+    opacity: 1;
+  }
+  .lead-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  .lead-name { font-weight: 600; font-size: 14px; }
+  .lead-tag {
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: var(--accent);
+    color: var(--accent-ink);
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .lead-meta {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    margin-top: 5px;
+    line-height: 1.5;
+  }
+  .lead-actions {
+    margin-top: 9px;
+    display: flex;
+    gap: 6px;
+    font-size: 11.5px;
+    color: var(--ink-faint);
+  }
+  .lead-actions span {
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 2px 7px;
+  }
+
+  .toast {
+    font-size: 12px;
+    color: var(--accent-2);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .toast.show { opacity: 1; }
+  .toast::before {
+    content: "";
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent-2);
+  }
+
+  /* ---- flow strip ---- */
+  .flow {
+    margin-top: 46px;
+  }
+  .flow h2 {
+    font-size: 20px;
+    font-weight: 600;
+  }
+  .flow-steps {
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+  @media (max-width: 760px) {
+    .flow-steps { grid-template-columns: 1fr; }
+    .flow-step:not(:last-child) { border-bottom: 1px solid var(--line); border-right: none !important; }
+  }
+  .flow-step {
+    padding: 18px 18px 20px;
+    border-right: 1px solid var(--line);
+  }
+  .flow-step:last-child { border-right: none; }
+  .flow-step .k {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 600;
+  }
+  .flow-step .t {
+    margin-top: 8px;
+    font-size: 14.5px;
+    font-weight: 600;
+  }
+  .flow-step .d {
+    margin-top: 6px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+
+  .note {
+    margin-top: 28px;
+    padding: 16px 18px;
+    border-radius: 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+  .note b { color: var(--ink); }
+
+  /* ---- services grid ---- */
+  .services {
+    margin: 0 0 48px;
+  }
+  .services h2 {
+    font-size: 22px;
+    font-weight: 600;
+  }
+  .services > p {
+    margin: 10px 0 0;
+    color: var(--ink-soft);
+    font-size: 14.5px;
+    max-width: 60ch;
+    line-height: 1.55;
+  }
+  .service-grid {
+    margin-top: 22px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+  }
+  .scard {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px 15px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .scard .cat {
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--accent-2);
+  }
+  .scard h3 {
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+  .scard p {
+    margin: 0;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+  .scard .proof {
+    margin-top: auto;
+    padding-top: 8px;
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    border-top: 1px solid var(--line);
+  }
+  .scard.is-demoed {
+    border-color: var(--accent-2);
+    box-shadow: var(--shadow), 0 0 0 1px var(--accent-2);
+  }
+
+  .section-lead {
+    margin: 46px 0 0;
+  }
+  .section-lead h2 {
+    font-size: 20px;
+    font-weight: 600;
+  }
+  .section-lead p {
+    margin: 8px 0 20px;
+    color: var(--ink-soft);
+    font-size: 14px;
+    max-width: 62ch;
+    line-height: 1.55;
+  }
+
+  /* ---- mini per-service demos ---- */
+  .mini-grid {
+    margin-top: 22px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .mini-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 18px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+  }
+  .mini-card .mini-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent-2);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .mini-why {
+    margin: 0;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .mini-card .mini-cap {
+    margin: 0;
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .mini-benefits {
+    margin: 2px 0 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .mini-benefits li {
+    font-size: 12px;
+    color: var(--ink-soft);
+    padding-left: 16px;
+    position: relative;
+    line-height: 1.4;
+  }
+  .mini-benefits li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: var(--accent-2);
+    font-size: 10.5px;
+    font-weight: 700;
+  }
+  .mini-run-btn {
+    align-self: flex-start;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 6px 13px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .mini-run-btn:hover { border-color: var(--accent-2); color: var(--accent-2); }
+  .mini-run-btn:disabled { opacity: 0.6; cursor: default; }
+  .mini-result {
+    font-size: 11.5px;
+    color: var(--accent-2);
+    font-weight: 600;
+    min-height: 15px;
+  }
+  .mini-hint {
+    margin: -4px 0 0;
+    font-size: 10.5px;
+    color: var(--ink-faint);
+    font-style: italic;
+  }
+  .ba-row { display: flex; gap: 8px; }
+  .ba-box { flex: 1; border-radius: 8px; padding: 10px; min-height: 74px; }
+  .ba-box.before { background: var(--surface-2); border: 1px dashed var(--line); }
+  .ba-box.after { background: var(--bg); border: 1px solid var(--accent-2); }
+  .ba-lines span { display: block; height: 5px; background: var(--line); border-radius: 3px; margin-bottom: 5px; }
+  .ba-lines span:nth-child(2) { width: 70%; }
+  .ba-lines span:nth-child(3) { width: 40%; }
+  .ba-btn {
+    margin-top: 8px; display: inline-block; background: var(--accent); color: var(--accent-ink);
+    font-size: 10px; font-weight: 700; padding: 5px 10px; border-radius: 999px;
+    border: none; cursor: pointer; font-family: inherit;
+  }
+  .ba-tag { margin-top: 8px; font-size: 10px; color: var(--ink-faint); }
+  .ba-confirm {
+    margin-top: 6px; font-size: 10px; color: var(--accent-2); font-weight: 700;
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .ba-confirm.show { opacity: 1; }
+  .mflow { display: flex; align-items: flex-start; justify-content: space-between; }
+  .mflow .node { flex: 1; text-align: center; font-size: 9.5px; color: var(--ink-soft); }
+  .mflow .node .dot {
+    width: 28px; height: 28px; margin: 0 auto 5px;
+    border-radius: 8px; background: var(--surface-2); border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center; font-size: 13px;
+    animation: nodepulse 3.2s ease-in-out infinite;
+    transition: box-shadow 0.2s, border-color 0.2s;
+  }
+  .mflow .node .dot.active {
+    border-color: var(--accent-2);
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent-2) 30%, transparent);
+    animation: none;
+  }
+  @keyframes nodepulse {
+    0%, 100% { box-shadow: none; border-color: var(--line); }
+    15% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-2) 25%, transparent); border-color: var(--accent-2); }
+    30% { box-shadow: none; border-color: var(--line); }
+  }
+  .mflow .arrow { flex: 0 0 auto; color: var(--ink-faint); font-size: 12px; padding-top: 6px; }
+  .mtable { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; font-size: 11px; }
+  .mrow { display: flex; justify-content: space-between; align-items: center; padding: 7px 9px; border-bottom: 1px solid var(--line); }
+  .mrow:last-child { border-bottom: none; }
+  .mpill { padding: 3px 8px; border-radius: 999px; font-size: 9.5px; font-weight: 700; white-space: nowrap; cursor: pointer; border: none; font-family: inherit; }
+  .mpill.new { background: var(--surface-2); color: var(--ink-soft); }
+  .mpill.messaged { background: color-mix(in srgb, var(--accent) 30%, transparent); color: var(--accent-ink); }
+  .mpill.booked { background: color-mix(in srgb, var(--accent-2) 30%, transparent); color: var(--accent-2); }
+  .mpost { display: flex; gap: 8px; align-items: center; }
+  .mpost .mavatar { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-2)); flex-shrink: 0; }
+  .mpost .mcap { flex: 1; }
+  .mpost .mcap span { display: block; height: 5px; background: var(--line); border-radius: 3px; margin-bottom: 4px; width: 90%; }
+  .mpost .mcap span:last-child { width: 60%; margin-bottom: 0; }
+  .mpost-text { font-size: 11.5px; color: var(--ink); font-style: italic; line-height: 1.5; }
+
+  /* ---- phone/voice mini-demo ---- */
+  .call-mock {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px;
+    background: var(--surface-2);
+  }
+  .call-head { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; }
+  .call-head .ring { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 1.4s infinite; }
+  .call-transcript { margin-top: 8px; display: none; flex-direction: column; gap: 5px; }
+  .call-transcript.show { display: flex; }
+  .call-line { padding: 6px 8px; border-radius: 6px; font-size: 10.5px; line-height: 1.4; }
+  .call-line.caller { background: var(--surface); border: 1px solid var(--line); }
+  .call-line.agent { background: color-mix(in srgb, var(--accent-2) 22%, var(--surface)); }
+  .call-done {
+    margin-top: 6px; font-size: 10px; color: var(--accent-2); font-weight: 700;
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .call-done.show { opacity: 1; }
+
+  /* ---- differentiators ---- */
+  .diff-grid {
+    margin-top: 22px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 14px;
+  }
+  .diff-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: var(--shadow);
+  }
+  .diff-card h3 {
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .diff-card p {
+    margin: 0;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+  .diff-card.guarantee {
+    border-color: var(--accent-2);
+    box-shadow: var(--shadow), 0 0 0 1px var(--accent-2);
+  }
+
+  /* ---- faq ---- */
+  .faq-list {
+    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .faq-item {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 13px 15px;
+  }
+  .faq-item summary {
+    cursor: pointer;
+    font-size: 13.5px;
+    font-weight: 600;
+    list-style: none;
+  }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-item summary::before {
+    content: "+";
+    display: inline-block;
+    width: 16px;
+    color: var(--accent-2);
+    font-weight: 700;
+  }
+  .faq-item[open] summary::before { content: "–"; }
+  .faq-item p {
+    margin: 8px 0 0 20px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+
+  /* ---- content-creation proof ---- */
+  .content-proof {
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    gap: 20px;
+  }
+  @media (max-width: 760px) {
+    .content-proof { grid-template-columns: 1fr; }
+  }
+  .post-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    max-width: 340px;
+  }
+  .post-head {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 12px 14px;
+  }
+  .post-avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    flex-shrink: 0;
+  }
+  .post-head b { font-size: 13px; }
+  .post-head span { display: block; font-size: 11px; color: var(--ink-faint); }
+  .post-media {
+    height: 170px;
+    background:
+      linear-gradient(160deg, color-mix(in srgb, var(--accent-2) 55%, var(--surface-2)) 0%, color-mix(in srgb, var(--accent) 35%, var(--surface-2)) 100%);
+    position: relative;
+  }
+  .post-media::after {
+    content: "Before → After: response time";
+    position: absolute;
+    left: 12px; bottom: 12px;
+    font-size: 11px;
+    color: #fff;
+    background: rgba(0,0,0,0.28);
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+  .post-caption {
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .post-stats {
+    display: flex;
+    gap: 14px;
+    padding: 0 14px 14px;
+    font-size: 12px;
+    color: var(--ink-faint);
+  }
+
+  .stat-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px 17px;
+    box-shadow: var(--shadow);
+  }
+  .stat-card .big {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    font-size: 26px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-card .lbl {
+    margin-top: 4px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+
+  /* ---- cta ---- */
+  .cta {
+    margin-top: 48px;
+    padding: 28px 26px;
+    border-radius: var(--radius);
+    background: var(--accent-2);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .cta h2 {
+    font-size: 21px;
+    font-weight: 600;
+    color: #fff;
+  }
+  .cta p {
+    margin: 6px 0 0;
+    font-size: 13.5px;
+    color: color-mix(in srgb, #fff 82%, transparent);
+    max-width: 46ch;
+    line-height: 1.5;
+  }
+  .cta-btn {
+    background: #fff;
+    color: var(--accent-ink);
+    border: none;
+    border-radius: 999px;
+    padding: 11px 22px;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .cta-btn.ghost {
+    background: transparent;
+    color: #fff;
+    border: 1px solid color-mix(in srgb, #fff 55%, transparent);
+  }
+  .cta-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .cta-note {
+    margin-top: 8px;
+    font-size: 11px;
+    color: color-mix(in srgb, #fff 65%, transparent);
+  }
+
+  footer {
+    margin-top: 40px;
+    font-size: 12px;
+    color: var(--ink-faint);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="page">
+    <p class="eyebrow">Service portfolio · no-code builds</p>
+    <h1>The digital backbone your business is missing</h1>
+    <p>Websites, chatbots, phone agents, automation, and systems — set up with no-code and AI tools so it's fast to launch and cheap to run. Below: all six services, then one of them running live.</p>
+  </header>
+
+  <section class="services">
+    <h2>What I build</h2>
+    <p>Pick one to start, or stack them — most clients end up needing at least three of these working together.</p>
+    <div class="service-grid">
+      <div class="scard">
+        <span class="cat">Build</span>
+        <h3>Websites &amp; landing pages</h3>
+        <p>A site in Framer, Webflow, or Carrd — live in days, built to convert visitors, not just look nice.</p>
+        <span class="proof">No CMS wrangling required</span>
+      </div>
+      <div class="scard is-demoed">
+        <span class="cat">Converse</span>
+        <h3>Chatbots &amp; AI agents</h3>
+        <p>An assistant that answers the questions you get asked daily, qualifies leads, and hands off when it should.</p>
+        <span class="proof">↓ Running live below</span>
+      </div>
+      <div class="scard">
+        <span class="cat">Connect</span>
+        <h3>Automation</h3>
+        <p>Zapier / Make scenarios that move info between your tools — forms to inbox to calendar to CRM, automatically.</p>
+        <span class="proof">No manual copy-pasting</span>
+      </div>
+      <div class="scard">
+        <span class="cat">Operate</span>
+        <h3>Systems &amp; dashboards</h3>
+        <p>An Airtable or Notion system replacing spreadsheets and sticky notes — one place to see leads, orders, stock.</p>
+        <span class="proof">Built around how you already work</span>
+      </div>
+      <div class="scard">
+        <span class="cat">Tell</span>
+        <h3>Content</h3>
+        <p>Short posts and clips documenting each build, so the work markets itself while it's running.</p>
+        <span class="proof">See a sample below</span>
+      </div>
+      <div class="scard">
+        <span class="cat">Answer</span>
+        <h3>Phone &amp; voice agents</h3>
+        <p>An AI that picks up when you can't — answers common questions, takes a message, or books a slot, in a natural voice call.</p>
+        <span class="proof">Never another missed call</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-lead">
+    <h2>How each one actually works, in seconds</h2>
+    <p>No jargon — just what changes. The chatbot gets the full live walkthrough right after this.</p>
+  </div>
+
+  <div class="mini-grid">
+    <div class="mini-card">
+      <span class="mini-label">Websites</span>
+      <p class="mini-why">A slow, cluttered, or missing site reads as "not a real business" before anyone even talks to you.</p>
+      <div class="ba-row">
+        <div class="ba-box before">
+          <div class="ba-lines"><span></span><span></span><span></span></div>
+          <div class="ba-tag">😕 No clear action</div>
+        </div>
+        <div class="ba-box after">
+          <div class="ba-lines"><span></span><span></span></div>
+          <button class="ba-btn" id="baBookBtn" type="button">Book now →</button>
+          <div class="ba-confirm" id="baConfirm">✓ Booked — confirmation sent</div>
+        </div>
+      </div>
+      <p class="mini-hint">↑ Click "Book now" — that's the whole customer experience.</p>
+      <ul class="mini-benefits">
+        <li>Loads fast on any phone</li>
+        <li>One clear action, not ten distractions</li>
+        <li>Looks credible enough to trust with money</li>
+      </ul>
+    </div>
+
+    <div class="mini-card">
+      <span class="mini-label">Automation</span>
+      <p class="mini-why">Every manual step between a customer's message and your reply is a chance for them to give up and message a competitor instead.</p>
+      <div class="mflow" id="mflowDemo">
+        <div class="node"><div class="dot" style="animation-delay:0s">📝</div>Form</div>
+        <div class="arrow">→</div>
+        <div class="node"><div class="dot" style="animation-delay:.5s">🔁</div>Zapier</div>
+        <div class="arrow">→</div>
+        <div class="node"><div class="dot" style="animation-delay:1s">🗂️</div>Airtable</div>
+        <div class="arrow">→</div>
+        <div class="node"><div class="dot" style="animation-delay:1.5s">📲</div>Notify</div>
+      </div>
+      <button class="mini-run-btn" id="runFlowBtn" type="button">▶ Run it yourself</button>
+      <div class="mini-result" id="flowResult"></div>
+      <ul class="mini-benefits">
+        <li>Nothing falls through the cracks</li>
+        <li>No copy-pasting between apps</li>
+        <li>Works 24/7, even while you sleep</li>
+      </ul>
+    </div>
+
+    <div class="mini-card">
+      <span class="mini-label">Systems &amp; dashboards</span>
+      <p class="mini-why">Leads living in your head, a notebook, and three chat apps means someone always gets forgotten — and forgotten leads don't pay.</p>
+      <div class="mtable" id="miniTable">
+        <div class="mrow"><span>Dara O.</span><button class="mpill booked" type="button">Booked</button></div>
+        <div class="mrow"><span>Kwame B.</span><button class="mpill messaged" type="button">Messaged</button></div>
+        <div class="mrow"><span>Aisha T.</span><button class="mpill new" type="button">New</button></div>
+      </div>
+      <p class="mini-hint">↑ Click a status to update it — that's the whole tool.</p>
+      <ul class="mini-benefits">
+        <li>One source of truth, not three</li>
+        <li>See who needs a follow-up at a glance</li>
+        <li>Nothing lost when you're busy</li>
+      </ul>
+    </div>
+
+    <div class="mini-card">
+      <span class="mini-label">Content</span>
+      <p class="mini-why">The best work in the world doesn't win the next client if nobody ever sees it.</p>
+      <div class="mpost">
+        <div class="mavatar"></div>
+        <div class="mcap"><span></span><span></span></div>
+      </div>
+      <div class="mpost-text" id="miniCaptionText">"We just wired our site to text the owner the second a lead comes in."</div>
+      <button class="mini-run-btn" id="capBtn" type="button">🔄 New caption</button>
+      <ul class="mini-benefits">
+        <li>No separate content calendar to run</li>
+        <li>Real proof, not stock photos</li>
+        <li>Free marketing from work you already did</li>
+      </ul>
+    </div>
+
+    <div class="mini-card">
+      <span class="mini-label">Phone &amp; voice agents</span>
+      <p class="mini-why">For a lot of small businesses the phone still gets more traffic than the website — and a missed call is a customer who just tried your competitor next.</p>
+      <div class="call-mock">
+        <div class="call-head"><span class="ring"></span> Incoming call — Rooted Farm Stand</div>
+        <button class="mini-run-btn" id="answerCallBtn" type="button" style="margin-top:8px;">📞 Answer the call</button>
+        <div class="call-transcript" id="callTranscript">
+          <div class="call-line caller">Caller: "Are you open Sunday?"</div>
+          <div class="call-line agent">Agent: "Yes, 9am–2pm — want me to text you our full hours?"</div>
+        </div>
+        <div class="call-done" id="callDone">✓ Call handled, no one interrupted</div>
+      </div>
+      <ul class="mini-benefits">
+        <li>Picks up every time, even after hours</li>
+        <li>Sounds natural, not robotic</li>
+        <li>Logs the call to the same dashboard as everything else</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-lead">
+    <h2>See it in action</h2>
+    <p>One build, running for real: a chatbot on a farm stand's site, wired to automatically log and notify. Click the chat bubble to watch it happen.</p>
+  </div>
+
+  <div class="stage">
+    <div class="browser">
+      <div class="browser-chrome">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        <div class="browser-url">rootedfarmstand.com</div>
+      </div>
+      <div class="site">
+        <div class="site-brand">Rooted Farm Stand</div>
+        <div class="site-tag">Fresh weekly boxes · pick-up Thursdays</div>
+        <div class="site-hero">Local produce, honest prices. Ask about this week's box or book a bulk order for your restaurant.</div>
+
+        <button class="chat-bubble-btn" id="bubbleBtn" aria-label="Open chat" aria-expanded="false">💬</button>
+
+        <div class="chat-window" id="chatWindow" role="dialog" aria-label="Rooted Farm Stand chat">
+          <div class="chat-head"><span class="pulse"></span> Rooted Farm Stand · usually replies instantly</div>
+          <div class="chat-body" id="chatBody"></div>
+          <div class="chat-input">Type a message…</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="inbox">
+      <div class="inbox-head">
+        <h3>Leads</h3>
+        <span id="leadCount">0 today</span>
+      </div>
+      <div id="leadList" style="display:flex; flex-direction:column; gap:10px;">
+        <div class="lead-card empty" id="emptyState">No leads yet — start the chat on the left to see one land here.</div>
+      </div>
+      <div class="toast" id="toast">Synced to Airtable + texted the owner</div>
+    </div>
+  </div>
+
+  <div class="flow">
+    <h2>How this build runs behind the scenes</h2>
+    <div class="flow-steps">
+      <div class="flow-step">
+        <div class="k">01 · Capture</div>
+        <div class="t">Chat widget</div>
+        <div class="d">Sits on the client's existing site. No rebuild — a script tag, or a page-builder embed block.</div>
+      </div>
+      <div class="flow-step">
+        <div class="k">02 · Route</div>
+        <div class="t">Make / Zapier</div>
+        <div class="d">A scenario watches for new chat submissions and fans them out — no code, just connected steps.</div>
+      </div>
+      <div class="flow-step">
+        <div class="k">03 · Store</div>
+        <div class="t">Airtable</div>
+        <div class="d">Every lead becomes a row: name, ask, contact, timestamp. This is the "leads" panel you just watched fill in.</div>
+      </div>
+      <div class="flow-step">
+        <div class="k">04 · Notify</div>
+        <div class="t">SMS / email to owner</div>
+        <div class="d">The business owner gets pinged the moment a real lead comes in, so nothing sits unanswered overnight.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>What this demo is:</b> a self-contained script — nothing here calls a real CRM. <b>What you'd actually build for a client:</b> the same widget wired to their Airtable base and a Make/Zapier scenario, using their own accounts. That swap is usually a half-day of work once you've built this shell once.
+  </div>
+
+  <div class="section-lead">
+    <h2>The content side</h2>
+    <p>Every build doubles as proof. A short before/after post like this is what goes out after each project — for the client's audience, and for yours.</p>
+  </div>
+
+  <div class="content-proof">
+    <div class="post-card">
+      <div class="post-head">
+        <div class="post-avatar"></div>
+        <div>
+          <b>Rooted Farm Stand</b>
+          <span>Sponsored build · this week</span>
+        </div>
+      </div>
+      <div class="post-media"></div>
+      <div class="post-caption">We just wired our site to text the owner the second someone asks about a bulk order. No more missed calls. 🌾</div>
+      <div class="post-stats"><span>♡ 48</span><span>💬 6</span><span>↗ 3 shares</span></div>
+    </div>
+    <div class="stat-stack">
+      <div class="stat-card">
+        <div class="big">Hours → Instant</div>
+        <div class="lbl">Average time to first reply on a bulk-order inquiry, before and after the chatbot went live.</div>
+      </div>
+      <div class="stat-card">
+        <div class="big">1 build, 3 posts</div>
+        <div class="lbl">Each project is scoped to produce its own case-study content — no separate content calendar to maintain.</div>
+      </div>
+      <div class="stat-card">
+        <div class="big">0 spreadsheets</div>
+        <div class="lbl">Leads, orders, and follow-ups all live in one Airtable system instead of scattered notes.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-lead">
+    <h2>Why this, not just any freelancer</h2>
+    <p>No-code and AI tools are everywhere now — here's what actually makes a build worth paying for.</p>
+  </div>
+
+  <div class="diff-grid">
+    <div class="diff-card">
+      <h3>You see it before you pay</h3>
+      <p>Every pitch comes with a live, clickable demo, not a mockup or a promise — you're using one right now.</p>
+    </div>
+    <div class="diff-card">
+      <h3>You own everything, always</h3>
+      <p>Every build runs on your own Airtable, your own Zapier, your own domain. Nothing is locked to my platform — if we ever stop working together, you keep it all.</p>
+    </div>
+    <div class="diff-card">
+      <h3>Built once, priced fairly</h3>
+      <p>Reusable systems mean faster delivery, which means lower prices than an agency billing you for hours instead of results.</p>
+    </div>
+    <div class="diff-card">
+      <h3>One system, not five freelancers</h3>
+      <p>Your site, chatbot, phone agent, automation, and dashboard all talk to each other because one person built all of them together.</p>
+    </div>
+    <div class="diff-card guarantee">
+      <h3>A real guarantee</h3>
+      <p>If the first build isn't working the way we agreed, I fix it free — you don't pay the remaining balance until it does.</p>
+    </div>
+  </div>
+
+  <div class="section-lead">
+    <h2>Before you ask</h2>
+  </div>
+
+  <div class="faq-list">
+    <details class="faq-item">
+      <summary>Do I need to know how to code?</summary>
+      <p>No. None of this requires anything technical from you — I handle the build, you just use the result.</p>
+    </details>
+    <details class="faq-item">
+      <summary>How long does a build actually take?</summary>
+      <p>A single piece (a chatbot, an automation) is usually ready in 2–5 days. A full connected system takes 1–2 weeks.</p>
+    </details>
+    <details class="faq-item">
+      <summary>What if I already have a website or some of this?</summary>
+      <p>Nothing here requires starting over — I plug into what you already have wherever possible.</p>
+    </details>
+    <details class="faq-item">
+      <summary>What happens after you deliver it?</summary>
+      <p>You own it outright. Ongoing tweaks are available as a small monthly add-on, but nothing is required after handover.</p>
+    </details>
+    <details class="faq-item">
+      <summary>What if it doesn't work for my business?</summary>
+      <p>Then I fix it — see the guarantee above. This only works if it actually works for you.</p>
+    </details>
+  </div>
+
+  <div class="cta">
+    <div>
+      <h2>Want one of these for your business?</h2>
+      <p>Start with the piece that's costing you the most right now — a slow site, missed messages, or a spreadsheet nobody trusts.</p>
+    </div>
+    <div class="cta-actions">
+      <a class="cta-btn" href="mailto:babdulai225.2@gmail.com">Email me</a>
+      <a class="cta-btn ghost" href="https://wa.me/23274423626" target="_blank" rel="noopener">WhatsApp me</a>
+    </div>
+  </div>
+
+  <footer>
+    <span>Portfolio demo — the chatbot above is fully working; Rooted Farm Stand is a fictional example client.</span>
+    <span>Six services on offer: websites, chatbots/agents, phone &amp; voice agents, automation, systems, content.</span>
+  </footer>
+</div>
+
+<script>
+  const bubbleBtn = document.getElementById('bubbleBtn');
+  const chatWindow = document.getElementById('chatWindow');
+  const chatBody = document.getElementById('chatBody');
+  const leadList = document.getElementById('leadList');
+  const emptyState = document.getElementById('emptyState');
+  const leadCount = document.getElementById('leadCount');
+  const toast = document.getElementById('toast');
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let played = false;
+  let leadsToday = 0;
+
+  function wait(ms) { return new Promise(r => setTimeout(r, reduceMotion ? 0 : ms)); }
+
+  function addMsg(kind, html) {
+    const el = document.createElement('div');
+    el.className = 'msg ' + kind;
+    el.innerHTML = html;
+    chatBody.appendChild(el);
+    chatBody.scrollTop = chatBody.scrollHeight;
+    return el;
+  }
+
+  async function showTyping() {
+    const el = document.createElement('div');
+    el.className = 'typing';
+    el.innerHTML = '<span></span><span></span><span></span>';
+    chatBody.appendChild(el);
+    chatBody.scrollTop = chatBody.scrollHeight;
+    await wait(600);
+    el.remove();
+  }
+
+  function addLead({ name, ask, contact }) {
+    emptyState.remove();
+    const card = document.createElement('div');
+    card.className = 'lead-card';
+    card.innerHTML = `
+      <div class="lead-top">
+        <span class="lead-name">${name}</span>
+        <span class="lead-tag">New</span>
+      </div>
+      <div class="lead-meta">${ask}<br>${contact}</div>
+      <div class="lead-actions"><span>Airtable ✓</span><span>SMS sent ✓</span></div>
+    `;
+    leadList.prepend(card);
+    leadsToday += 1;
+    leadCount.textContent = leadsToday + ' today';
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2200);
+  }
+
+  async function runScript() {
+    await showTyping();
+    addMsg('bot', "Hi! 👋 I'm the Rooted Farm Stand assistant. What can I help with?");
+    await wait(500);
+    const quick = addMsg('quick',
+      '<span class="chip">This week\'s box</span><span class="chip">Bulk / restaurant order</span><span class="chip">Pick-up hours</span>');
+    await wait(900);
+    quick.remove();
+    addMsg('user', 'Bulk / restaurant order');
+    await showTyping();
+    addMsg('bot', "Great — I can get that quoted for you. What's your name and best phone number?");
+    await wait(1000);
+    addMsg('user', "Dara Osei, 555-0148");
+    await showTyping();
+    addMsg('bot', "Thanks Dara! I've passed this to the team — expect a call within the hour. 🌱");
+    await wait(400);
+    addLead({ name: 'Dara Osei', ask: 'Bulk / restaurant order inquiry', contact: '555-0148 · via site chat' });
+  }
+
+  function openChat() {
+    chatWindow.classList.add('open');
+    bubbleBtn.setAttribute('aria-expanded', 'true');
+    if (!played) {
+      played = true;
+      runScript();
+    }
+  }
+
+  bubbleBtn.addEventListener('click', () => {
+    const isOpen = chatWindow.classList.toggle('open');
+    bubbleBtn.setAttribute('aria-expanded', String(isOpen));
+    if (isOpen && !played) {
+      played = true;
+      runScript();
+    }
+  });
+
+  // Auto-open shortly after load so the demo tells itself.
+  setTimeout(openChat, reduceMotion ? 0 : 700);
+
+  // ---- Websites mini-demo: click "Book now" like a real visitor would ----
+  const baBookBtn = document.getElementById('baBookBtn');
+  const baConfirm = document.getElementById('baConfirm');
+  if (baBookBtn) {
+    baBookBtn.addEventListener('click', () => {
+      baConfirm.classList.add('show');
+      baBookBtn.textContent = '✓ Booked';
+      setTimeout(() => {
+        baConfirm.classList.remove('show');
+        baBookBtn.textContent = 'Book now →';
+      }, 2200);
+    });
+  }
+
+  // ---- Automation mini-demo: run the flow on demand ----
+  const runFlowBtn = document.getElementById('runFlowBtn');
+  const flowResult = document.getElementById('flowResult');
+  const flowDots = document.querySelectorAll('#mflowDemo .dot');
+  if (runFlowBtn) {
+    runFlowBtn.addEventListener('click', async () => {
+      flowResult.textContent = '';
+      runFlowBtn.disabled = true;
+      for (const dot of flowDots) {
+        dot.classList.add('active');
+        await wait(400);
+        dot.classList.remove('active');
+      }
+      flowResult.textContent = '✓ Done — lead saved + owner notified, no one touched it';
+      runFlowBtn.disabled = false;
+    });
+  }
+
+  // ---- Systems/dashboard mini-demo: click a status to update the record ----
+  const statusCycle = { new: 'messaged', messaged: 'booked', booked: 'new' };
+  document.querySelectorAll('#miniTable .mpill').forEach((pill) => {
+    pill.addEventListener('click', () => {
+      const current = ['new', 'messaged', 'booked'].find((c) => pill.classList.contains(c));
+      const next = statusCycle[current];
+      pill.classList.remove(current);
+      pill.classList.add(next);
+      pill.textContent = next.charAt(0).toUpperCase() + next.slice(1);
+    });
+  });
+
+  // ---- Content mini-demo: cycle sample captions ----
+  const sampleCaptions = [
+    '"We just wired our site to text the owner the second a lead comes in."',
+    '"Before: 3 missed messages a day. After: zero."',
+    '"One dashboard now shows every lead, order, and follow-up."',
+  ];
+  let captionIndex = 0;
+  const capBtn = document.getElementById('capBtn');
+  const capText = document.getElementById('miniCaptionText');
+  if (capBtn) {
+    capBtn.addEventListener('click', () => {
+      captionIndex = (captionIndex + 1) % sampleCaptions.length;
+      capText.textContent = sampleCaptions[captionIndex];
+    });
+  }
+
+  // ---- Phone/voice mini-demo: answer the call ----
+  const answerCallBtn = document.getElementById('answerCallBtn');
+  const callTranscript = document.getElementById('callTranscript');
+  const callDone = document.getElementById('callDone');
+  if (answerCallBtn) {
+    answerCallBtn.addEventListener('click', async () => {
+      answerCallBtn.disabled = true;
+      answerCallBtn.textContent = 'Answering…';
+      await wait(500);
+      callTranscript.classList.add('show');
+      await wait(1400);
+      callDone.classList.add('show');
+      answerCallBtn.textContent = '📞 Call answered';
+    });
+  }
+</script>
+</body>
+</html>

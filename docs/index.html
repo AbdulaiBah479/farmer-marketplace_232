@@ -3,7 +3,15 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>No-Code Builds — Service Portfolio</title>
+<title>No-Code Builds — Websites, Chatbots, Automation &amp; Systems</title>
+<meta name="description" content="Websites, AI chatbots, phone agents, automation, and dashboards built with no-code tools — live in days, fully owned by you, working anywhere in the world. See it running before you pay for it." />
+<meta name="theme-color" content="#1f5f3f" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="No-Code Builds — Websites, Chatbots, Automation &amp; Systems" />
+<meta property="og:description" content="See a live chatbot, automation, and dashboard running right now — then get the same thing built for your business, no code required." />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="No-Code Builds — Websites, Chatbots, Automation &amp; Systems" />
+<meta name="twitter:description" content="See a live chatbot, automation, and dashboard running right now — then get the same thing built for your business, no code required." />
 <style>
   :root {
     --bg: #f5eedd;
@@ -973,6 +981,95 @@
     flex-wrap: wrap;
     gap: 8px;
   }
+  .footer-trust {
+    margin-top: 44px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    line-height: 1.6;
+  }
+
+  /* ---- pain points ---- */
+  .pain-grid {
+    margin-top: 22px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+  }
+  .pain-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: var(--shadow);
+  }
+  .pain-card .pain-cost {
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .pain-card h3 {
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 14.5px;
+    font-weight: 700;
+    margin-top: 6px;
+  }
+  .pain-card p {
+    margin: 6px 0 0;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+  .pain-card .pain-fix {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--line);
+    font-size: 12px;
+    color: var(--accent-2);
+    font-weight: 600;
+  }
+
+  /* ---- mobile quick-contact bar ---- */
+  .quickbar {
+    display: none;
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 40;
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    box-shadow: 0 -8px 22px -12px rgba(0,0,0,0.25);
+    gap: 10px;
+  }
+  .quickbar a {
+    flex: 1;
+    text-align: center;
+    padding: 11px 10px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .quickbar a.qb-primary { background: var(--accent-2); color: #fff; }
+  .quickbar a.qb-secondary { background: var(--surface-2); color: var(--ink); border: 1px solid var(--line); }
+  @media (max-width: 640px) {
+    .quickbar { display: flex; }
+    body { padding-bottom: 96px; }
+  }
+
+  /* ---- small-screen refinements ---- */
+  @media (max-width: 480px) {
+    .hero-band { padding: 34px 18px 42px; }
+    header.page h1 { font-size: 26px; }
+    header.page p { font-size: 14.5px; }
+    .cta { flex-direction: column; align-items: flex-start; padding: 24px 20px; }
+    .cta-actions { width: 100%; }
+    .cta-actions .cta-btn { flex: 1; text-align: center; }
+    footer { flex-direction: column; }
+  }
 </style>
 </head>
 <body>
@@ -988,6 +1085,37 @@
 </div>
 
 <div class="wrap">
+  <section class="section-lead" style="margin-top:0;">
+    <h2>What's actually costing you money right now</h2>
+    <p>These are the everyday problems that quietly lose a small business customers — each one below is fixed by one of the six services underneath it.</p>
+    <div class="pain-grid">
+      <div class="pain-card">
+        <span class="pain-cost">Lost revenue</span>
+        <h3>A message sits unanswered for hours</h3>
+        <p>By the time you reply, the customer already booked with whoever answered first.</p>
+        <div class="pain-fix">→ Fixed by a chatbot or phone agent</div>
+      </div>
+      <div class="pain-card">
+        <span class="pain-cost">Lost trust</span>
+        <h3>Your online presence looks unfinished</h3>
+        <p>No site, or one that's slow and confusing, makes people question if you're a real, reliable business.</p>
+        <div class="pain-fix">→ Fixed by a proper website</div>
+      </div>
+      <div class="pain-card">
+        <span class="pain-cost">Lost time</span>
+        <h3>You're the one copying info between apps</h3>
+        <p>Every hour spent moving a lead from a form into a spreadsheet is an hour not spent serving customers.</p>
+        <div class="pain-fix">→ Fixed by automation</div>
+      </div>
+      <div class="pain-card">
+        <span class="pain-cost">Lost leads</span>
+        <h3>Nobody remembers who to follow up with</h3>
+        <p>Leads scattered across notebooks, DMs, and memory always mean some of them just get forgotten.</p>
+        <div class="pain-fix">→ Fixed by a dashboard system</div>
+      </div>
+    </div>
+  </section>
+
   <section class="services">
     <h2>What I build</h2>
     <p>Pick one to start, or stack them — most clients end up needing at least three of these working together.</p>
@@ -1256,6 +1384,14 @@
       <h3>One system, not five freelancers</h3>
       <p>Your site, chatbot, phone agent, automation, and dashboard all talk to each other because one person built all of them together.</p>
     </div>
+    <div class="diff-card">
+      <h3>Built for anywhere, not just one city</h3>
+      <p>Everything here works async and across time zones — clients on three different continents are already using this exact setup.</p>
+    </div>
+    <div class="diff-card">
+      <h3>You always know where things stand</h3>
+      <p>Clear scope, a real timeline, and a single point of contact — no handing you off between account managers.</p>
+    </div>
     <div class="diff-card guarantee">
       <h3>A real guarantee</h3>
       <p>If the first build isn't working the way we agreed, I fix it free — you don't pay the remaining balance until it does.</p>
@@ -1304,6 +1440,14 @@
     <span>Portfolio demo — the chatbot above is fully working; Rooted Farm Stand is a fictional example client.</span>
     <span>Six services on offer: websites, chatbots/agents, phone &amp; voice agents, automation, systems, content.</span>
   </footer>
+  <div class="footer-trust">
+    Working with small businesses anywhere — replies within one business day, regardless of time zone. Every build runs on your own accounts, so you're never locked in.
+  </div>
+</div>
+
+<div class="quickbar">
+  <a class="qb-primary" href="https://wa.me/23274423626" target="_blank" rel="noopener">WhatsApp</a>
+  <a class="qb-secondary" href="mailto:babdulai225.2@gmail.com">Email</a>
 </div>
 
 <script>

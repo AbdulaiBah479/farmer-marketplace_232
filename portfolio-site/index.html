@@ -6,47 +6,53 @@
 <title>No-Code Builds — Service Portfolio</title>
 <style>
   :root {
-    --bg: #f1f4ea;
+    --bg: #f5eedd;
     --surface: #ffffff;
-    --surface-2: #e9edde;
-    --ink: #20301f;
-    --ink-soft: #55634d;
-    --ink-faint: #8a9480;
-    --accent: #b8860f;
-    --accent-ink: #3c2e05;
-    --accent-2: #4c6b3e;
-    --line: #d8decb;
-    --shadow: 0 1px 2px rgba(32,48,31,0.06), 0 8px 24px -12px rgba(32,48,31,0.18);
+    --surface-2: #efe3c3;
+    --ink: #262016;
+    --ink-soft: #5b5340;
+    --ink-faint: #8c8267;
+    --accent: #c1502e;
+    --accent-ink: #fff6ea;
+    --accent-2: #1f5f3f;
+    --gold: #dd9a1f;
+    --line: #e0d3b0;
+    --grain: rgba(38,32,22,0.035);
+    --shadow: 0 1px 2px rgba(38,32,22,0.08), 0 10px 26px -14px rgba(38,32,22,0.24);
     --radius: 14px;
     color-scheme: light;
   }
   :root[data-theme="dark"] {
-    --bg: #121810;
-    --surface: #1a2216;
-    --surface-2: #212b1c;
-    --ink: #edefe2;
-    --ink-soft: #b1baa2;
-    --ink-faint: #6f7a63;
-    --accent: #e8b23d;
-    --accent-ink: #241c04;
-    --accent-2: #8fb47a;
-    --line: #2b3524;
-    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 12px 32px -14px rgba(0,0,0,0.55);
+    --bg: #16130c;
+    --surface: #221c12;
+    --surface-2: #2c2417;
+    --ink: #f3ecd9;
+    --ink-soft: #c9bea0;
+    --ink-faint: #8f8468;
+    --accent: #e37a4f;
+    --accent-ink: #2b1206;
+    --accent-2: #4e9a6c;
+    --gold: #f0be55;
+    --line: #3a2f1c;
+    --grain: rgba(255,255,255,0.045);
+    --shadow: 0 1px 2px rgba(0,0,0,0.35), 0 14px 34px -16px rgba(0,0,0,0.6);
     color-scheme: dark;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg: #121810;
-      --surface: #1a2216;
-      --surface-2: #212b1c;
-      --ink: #edefe2;
-      --ink-soft: #b1baa2;
-      --ink-faint: #6f7a63;
-      --accent: #e8b23d;
-      --accent-ink: #241c04;
-      --accent-2: #8fb47a;
-      --line: #2b3524;
-      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 12px 32px -14px rgba(0,0,0,0.55);
+      --bg: #16130c;
+      --surface: #221c12;
+      --surface-2: #2c2417;
+      --ink: #f3ecd9;
+      --ink-soft: #c9bea0;
+      --ink-faint: #8f8468;
+      --accent: #e37a4f;
+      --accent-ink: #2b1206;
+      --accent-2: #4e9a6c;
+      --gold: #f0be55;
+      --line: #3a2f1c;
+      --grain: rgba(255,255,255,0.045);
+      --shadow: 0 1px 2px rgba(0,0,0,0.35), 0 14px 34px -16px rgba(0,0,0,0.6);
       color-scheme: dark;
     }
   }
@@ -58,13 +64,60 @@
     color: var(--ink);
     font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
   }
   body {
-    padding: 40px 20px 80px;
+    padding: 0 20px 80px;
+    background-image: radial-gradient(circle at 1px 1px, var(--grain) 1.4px, transparent 0);
+    background-size: 24px 24px;
   }
   .wrap {
     max-width: 1080px;
     margin: 0 auto;
+  }
+
+  /* ---- hero band ---- */
+  .hero-band {
+    background: linear-gradient(155deg, var(--accent-2) 0%, color-mix(in srgb, var(--accent-2) 78%, #0a1f13) 100%);
+    background-image:
+      radial-gradient(circle at 8% 18%, color-mix(in srgb, var(--gold) 30%, transparent) 0%, transparent 40%),
+      repeating-linear-gradient(135deg, rgba(255,255,255,0.045) 0 2px, transparent 2px 26px),
+      linear-gradient(155deg, var(--accent-2) 0%, color-mix(in srgb, var(--accent-2) 78%, #0a1f13) 100%);
+    margin: 0 -20px;
+    padding: 46px 20px 58px;
+    border-bottom: 4px solid var(--gold);
+  }
+  .hero-band .wrap header.page {
+    margin: 0;
+    max-width: 680px;
+  }
+  .hero-band .eyebrow {
+    color: var(--gold);
+  }
+  .hero-band h1 {
+    color: #fff8ea;
+  }
+  .hero-band header.page p {
+    color: rgba(255,248,234,0.86);
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 16px;
+    padding: 5px 12px 5px 8px;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.18);
+    border: 1px solid rgba(255,255,255,0.18);
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #fff8ea;
+  }
+  .hero-badge .hb-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--gold);
+    box-shadow: 0 0 0 0 rgba(221,154,31,0.6);
+    animation: pulse 2s infinite;
   }
 
   h1, h2, h3 { font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; text-wrap: balance; margin: 0; }
@@ -653,7 +706,9 @@
   .mflow .node .dot {
     width: 28px; height: 28px; margin: 0 auto 5px;
     border-radius: 8px; background: var(--surface-2); border: 1px solid var(--line);
-    display: flex; align-items: center; justify-content: center; font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800; color: var(--accent-2);
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     animation: nodepulse 3.2s ease-in-out infinite;
     transition: box-shadow 0.2s, border-color 0.2s;
   }
@@ -673,7 +728,7 @@
   .mrow:last-child { border-bottom: none; }
   .mpill { padding: 3px 8px; border-radius: 999px; font-size: 9.5px; font-weight: 700; white-space: nowrap; cursor: pointer; border: none; font-family: inherit; }
   .mpill.new { background: var(--surface-2); color: var(--ink-soft); }
-  .mpill.messaged { background: color-mix(in srgb, var(--accent) 30%, transparent); color: var(--accent-ink); }
+  .mpill.messaged { background: color-mix(in srgb, var(--accent) 25%, transparent); color: var(--accent); }
   .mpill.booked { background: color-mix(in srgb, var(--accent-2) 30%, transparent); color: var(--accent-2); }
   .mpost { display: flex; gap: 8px; align-items: center; }
   .mpost .mavatar { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-2)); flex-shrink: 0; }
@@ -729,8 +784,13 @@
     line-height: 1.55;
   }
   .diff-card.guarantee {
-    border-color: var(--accent-2);
-    box-shadow: var(--shadow), 0 0 0 1px var(--accent-2);
+    border-color: var(--gold);
+    box-shadow: var(--shadow), 0 0 0 1px var(--gold);
+    background: linear-gradient(160deg, color-mix(in srgb, var(--gold) 14%, var(--surface)) 0%, var(--surface) 60%);
+  }
+  .diff-card.guarantee h3::before {
+    content: "★ ";
+    color: var(--gold);
   }
 
   /* ---- faq ---- */
@@ -857,7 +917,7 @@
     margin-top: 48px;
     padding: 28px 26px;
     border-radius: var(--radius);
-    background: var(--accent-2);
+    background: linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 72%, #1a0500) 100%);
     color: #fff;
     display: flex;
     align-items: center;
@@ -879,7 +939,7 @@
   }
   .cta-btn {
     background: #fff;
-    color: var(--accent-ink);
+    color: var(--accent);
     border: none;
     border-radius: 999px;
     padding: 11px 22px;
@@ -916,13 +976,18 @@
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header class="page">
-    <p class="eyebrow">Service portfolio · no-code builds</p>
-    <h1>The digital backbone your business is missing</h1>
-    <p>Websites, chatbots, phone agents, automation, and systems — set up with no-code and AI tools so it's fast to launch and cheap to run. Below: all six services, then one of them running live.</p>
-  </header>
+<div class="hero-band">
+  <div class="wrap">
+    <header class="page">
+      <span class="hero-badge"><span class="hb-dot"></span> Open for new builds</span>
+      <p class="eyebrow">Service portfolio · no-code builds</p>
+      <h1>The digital backbone your business is missing</h1>
+      <p>Websites, chatbots, phone agents, automation, and systems — set up with no-code and AI tools so it's fast to launch and cheap to run. Below: all six services, then one of them running live.</p>
+    </header>
+  </div>
+</div>
 
+<div class="wrap">
   <section class="services">
     <h2>What I build</h2>
     <p>Pick one to start, or stack them — most clients end up needing at least three of these working together.</p>
@@ -998,13 +1063,13 @@
       <span class="mini-label">Automation</span>
       <p class="mini-why">Every manual step between a customer's message and your reply is a chance for them to give up and message a competitor instead.</p>
       <div class="mflow" id="mflowDemo">
-        <div class="node"><div class="dot" style="animation-delay:0s">📝</div>Form</div>
+        <div class="node"><div class="dot" style="animation-delay:0s">F</div>Form</div>
         <div class="arrow">→</div>
-        <div class="node"><div class="dot" style="animation-delay:.5s">🔁</div>Zapier</div>
+        <div class="node"><div class="dot" style="animation-delay:.5s">Z</div>Zapier</div>
         <div class="arrow">→</div>
-        <div class="node"><div class="dot" style="animation-delay:1s">🗂️</div>Airtable</div>
+        <div class="node"><div class="dot" style="animation-delay:1s">A</div>Airtable</div>
         <div class="arrow">→</div>
-        <div class="node"><div class="dot" style="animation-delay:1.5s">📲</div>Notify</div>
+        <div class="node"><div class="dot" style="animation-delay:1.5s">N</div>Notify</div>
       </div>
       <button class="mini-run-btn" id="runFlowBtn" type="button">▶ Run it yourself</button>
       <div class="mini-result" id="flowResult"></div>

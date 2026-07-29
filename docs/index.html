@@ -639,31 +639,116 @@
     line-height: 1.55;
   }
 
-  /* ---- mini per-service demos ---- */
-  .mini-grid {
-    margin-top: 22px;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 16px;
+  /* ---- demo hub (tabbed full demo per service) ---- */
+  .demo-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+  .demo-tab {
+    border: 1.5px solid var(--cat);
+    color: var(--cat);
+    background: var(--surface);
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s, color 0.15s;
   }
-  .mini-card {
+  .demo-tab:hover { background: color-mix(in srgb, var(--cat) 12%, var(--surface)); }
+  .demo-tab.active { background: var(--cat); color: #fff; }
+
+  .demo-panel { display: none; margin-top: 24px; }
+  .demo-panel.active { display: block; }
+  .demo-blurb { margin: 0 0 18px; font-size: 13.5px; color: var(--ink-soft); line-height: 1.6; max-width: 64ch; }
+
+  .demo-side {
     background: var(--surface);
     border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 18px;
+    border-radius: var(--radius);
     box-shadow: var(--shadow);
+    padding: 18px;
     display: flex;
     flex-direction: column;
-    gap: 11px;
+    gap: 12px;
+    min-height: 480px;
   }
-  .mini-card .mini-label {
-    font-size: 11px;
-    font-weight: 800;
-    color: var(--cat);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
+  .demo-side h3 { font-size: 15px; font-weight: 700; font-family: ui-serif, Georgia, serif; }
+  .demo-side .side-sub { font-size: 11.5px; color: var(--ink-faint); margin-top: -6px; }
+  .demo-log { display: flex; flex-direction: column; gap: 7px; }
+  .demo-log-line {
+    font-size: 12px;
+    padding: 7px 10px;
+    border-radius: 8px;
+    background: var(--surface-2);
+    color: var(--ink-soft);
+    opacity: 0;
+    transform: translateY(4px);
+    animation: rise 0.3s ease forwards;
   }
-  .mini-why { margin: 0; font-size: 12.5px; color: var(--ink-soft); line-height: 1.5; }
+  .demo-log-line b { color: var(--ink); }
+  .stat-row { display: flex; gap: 10px; }
+  .stat-row .stat-card { flex: 1; padding: 12px 10px; }
+  .stat-row .stat-card .big { font-size: 21px; }
+  .stat-row .stat-card .lbl { font-size: 10.5px; }
+
+  /* website tabs (Build demo) */
+  .site-tabs { display: flex; gap: 6px; margin-top: 14px; }
+  .site-tab {
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink-soft);
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .site-tab.active { background: var(--cat); border-color: var(--cat); color: #fff; }
+  .site-panel { display: none; }
+  .site-panel.active { display: block; }
+
+  /* kanban (Operate demo) */
+  .kanban { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  @media (max-width: 700px) { .kanban { grid-template-columns: 1fr; } }
+  .kcol { background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px; min-height: 150px; }
+  .kcol h4 { margin: 0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-faint); font-weight: 700; display: flex; justify-content: space-between; }
+  .kcol h4 .kcount { color: var(--cat); }
+  .kcol-body { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
+  .kcard { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 9px; font-size: 12px; }
+  .kcard .kname { font-weight: 700; }
+  .kcard .kmeta { color: var(--ink-faint); font-size: 10.5px; margin-top: 2px; }
+  .kcard .move-btn { margin-top: 7px; }
+  .kcard.kdone .move-btn { display: none; }
+
+  /* content calendar (Tell demo) */
+  .week-days { display: flex; gap: 6px; margin-top: 14px; }
+  .day-btn {
+    flex: 1; border: 1px solid var(--line); background: var(--surface); border-radius: 8px;
+    padding: 8px 4px; font-size: 10.5px; color: var(--ink-faint); cursor: pointer; font-family: inherit; position: relative;
+  }
+  .day-btn.has-post::after { content: ""; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); width: 5px; height: 5px; border-radius: 50%; background: var(--cat); }
+  .day-btn.active { border-color: var(--cat); color: var(--ink); font-weight: 700; }
+  .day-btn:disabled { opacity: 0.4; cursor: default; }
+
+  /* phone frame (Answer demo) */
+  .phone-frame { width: 230px; margin: 0 auto; background: #18110c; border-radius: 30px; padding: 10px; box-shadow: var(--shadow); }
+  .phone-screen { background: var(--surface); border-radius: 20px; overflow: hidden; min-height: 380px; display: flex; flex-direction: column; }
+  .phone-status { padding: 8px 14px 0; font-size: 10px; color: var(--ink-faint); display: flex; justify-content: space-between; }
+  .call-incoming { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 20px; text-align: center; }
+  .call-incoming.hide { display: none; }
+  .call-incoming .avatar { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, var(--cat), var(--c-tell)); }
+  .call-incoming .cname { font-weight: 700; font-size: 15px; margin-top: 6px; }
+  .call-incoming .cstatus { font-size: 11.5px; color: var(--ink-faint); }
+  .call-buttons { display: flex; gap: 30px; margin-top: 18px; }
+  .call-btn { width: 44px; height: 44px; border-radius: 50%; border: none; font-size: 18px; cursor: pointer; color: #fff; }
+  .call-btn.accept { background: var(--c-operate); }
+  .call-btn.decline { background: var(--c-converse); }
+  .in-call { display: none; flex: 1; flex-direction: column; padding: 14px; gap: 8px; }
+  .in-call.show { display: flex; }
+  .in-call .call-timer { text-align: center; font-size: 11px; color: var(--ink-faint); margin-bottom: 4px; }
+  .in-call .end-btn { margin-top: auto; align-self: center; }
+  .recent-calls-list { display: flex; flex-direction: column; gap: 8px; }
+
   .mini-benefits {
     margin: 2px 0 0;
     padding: 0;
@@ -698,29 +783,12 @@
     padding: 6px 13px;
     border-radius: 999px;
     cursor: pointer;
+    font-family: inherit;
   }
   .mini-run-btn:hover { border-color: var(--cat); color: var(--cat); }
   .mini-run-btn:disabled { opacity: 0.6; cursor: default; }
   .mini-result { font-size: 11.5px; color: var(--cat); font-weight: 700; min-height: 15px; }
   .mini-hint { margin: -4px 0 0; font-size: 10.5px; color: var(--ink-faint); font-style: italic; }
-  .ba-row { display: flex; gap: 8px; }
-  .ba-box { flex: 1; border-radius: 8px; padding: 10px; min-height: 74px; }
-  .ba-box.before { background: var(--surface-2); border: 1px dashed var(--line); }
-  .ba-box.after { background: var(--canvas); border: 1px solid var(--cat); }
-  .ba-lines span { display: block; height: 5px; background: var(--line); border-radius: 3px; margin-bottom: 5px; }
-  .ba-lines span:nth-child(2) { width: 70%; }
-  .ba-lines span:nth-child(3) { width: 40%; }
-  .ba-btn {
-    margin-top: 8px; display: inline-block; background: var(--cat); color: #fff;
-    font-size: 10px; font-weight: 700; padding: 5px 10px; border-radius: 999px;
-    border: none; cursor: pointer; font-family: inherit;
-  }
-  .ba-tag { margin-top: 8px; font-size: 10px; color: var(--ink-faint); }
-  .ba-confirm {
-    margin-top: 6px; font-size: 10px; color: var(--cat); font-weight: 700;
-    opacity: 0; transition: opacity 0.2s;
-  }
-  .ba-confirm.show { opacity: 1; }
   .mflow { display: flex; align-items: flex-start; justify-content: space-between; }
   .mflow .node { flex: 1; text-align: center; font-size: 9.5px; color: var(--ink-soft); }
   .mflow .node .dot {
@@ -743,34 +811,11 @@
     30% { box-shadow: none; border-color: var(--line); }
   }
   .mflow .arrow { flex: 0 0 auto; color: var(--ink-faint); font-size: 12px; padding-top: 6px; }
-  .mtable { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; font-size: 11px; }
-  .mrow { display: flex; justify-content: space-between; align-items: center; padding: 7px 9px; border-bottom: 1px solid var(--line); }
-  .mrow:last-child { border-bottom: none; }
-  .mpill { padding: 3px 8px; border-radius: 999px; font-size: 9.5px; font-weight: 700; white-space: nowrap; cursor: pointer; border: none; font-family: inherit; }
-  .mpill.new { background: var(--surface-2); color: var(--ink-soft); }
-  .mpill.messaged { background: color-mix(in srgb, var(--c-connect) 28%, transparent); color: var(--c-connect); }
-  .mpill.booked { background: color-mix(in srgb, var(--cat) 28%, transparent); color: var(--cat); }
-  .mpost { display: flex; gap: 8px; align-items: center; }
-  .mpost .mavatar { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, var(--c-tell), var(--c-converse)); flex-shrink: 0; }
-  .mpost .mcap { flex: 1; }
-  .mpost .mcap span { display: block; height: 5px; background: var(--line); border-radius: 3px; margin-bottom: 4px; width: 90%; }
-  .mpost .mcap span:last-child { width: 60%; margin-bottom: 0; }
-  .mpost-text { font-size: 11.5px; color: var(--ink); font-style: italic; line-height: 1.5; }
 
-  /* ---- phone/voice mini-demo ---- */
-  .call-mock { border: 1px solid var(--line); border-radius: 8px; padding: 10px; background: var(--surface-2); }
-  .call-head { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; }
-  .call-head .ring { width: 6px; height: 6px; border-radius: 50%; background: var(--cat); animation: pulse 1.4s infinite; }
-  .call-transcript { margin-top: 8px; display: none; flex-direction: column; gap: 5px; }
-  .call-transcript.show { display: flex; }
-  .call-line { padding: 6px 8px; border-radius: 6px; font-size: 10.5px; line-height: 1.4; }
+  .call-transcript { display: flex; flex-direction: column; gap: 6px; }
+  .call-line { padding: 6px 8px; border-radius: 6px; font-size: 10.5px; line-height: 1.4; opacity: 0; transform: translateY(4px); animation: rise 0.3s ease forwards; }
   .call-line.caller { background: var(--surface); border: 1px solid var(--line); }
   .call-line.agent { background: color-mix(in srgb, var(--cat) 22%, var(--surface)); }
-  .call-done {
-    margin-top: 6px; font-size: 10px; color: var(--cat); font-weight: 700;
-    opacity: 0; transition: opacity 0.2s;
-  }
-  .call-done.show { opacity: 1; }
 
   /* ---- differentiators ---- */
   .diff-grid {
@@ -846,9 +891,7 @@
   .faq-item[open] summary::before { content: "–"; }
   .faq-item p { margin: 8px 0 0 20px; font-size: 12.5px; color: var(--ink-soft); line-height: 1.55; }
 
-  /* ---- content-creation proof ---- */
-  .content-proof { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); gap: 20px; }
-  @media (max-width: 760px) { .content-proof { grid-template-columns: 1fr; } }
+  /* ---- content post mockup (reused in Tell demo) ---- */
   .post-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; max-width: 340px; }
   .post-head { display: flex; align-items: center; gap: 9px; padding: 12px 14px; }
   .post-avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, var(--c-tell), var(--c-converse)); flex-shrink: 0; }
@@ -867,7 +910,6 @@
   .post-caption { padding: 12px 14px; font-size: 13px; line-height: 1.5; }
   .post-stats { display: flex; gap: 14px; padding: 0 14px 14px; font-size: 12px; color: var(--ink-faint); }
 
-  .stat-stack { display: flex; flex-direction: column; gap: 12px; }
   .stat-card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 17px; box-shadow: var(--shadow); }
   .stat-card .big {
     font-family: ui-serif, Georgia, serif;
@@ -956,7 +998,7 @@
       <span class="hero-badge"><span class="hb-dot"></span> Open for new builds</span>
       <p class="eyebrow">Service portfolio · no-code builds</p>
       <h1>The digital backbone your business is missing</h1>
-      <p>Websites, chatbots, phone agents, automation, and systems — set up with no-code and AI tools so it's fast to launch and cheap to run. Below: all six services, then one of them running live.</p>
+      <p>Websites, chatbots, phone agents, automation, and systems — set up with no-code and AI tools so it's fast to launch and cheap to run. Below: all six services, then a full, clickable demo of every single one.</p>
     </header>
   </div>
 </div>
@@ -997,181 +1039,297 @@
     <h2>What I build</h2>
     <p>Pick one to start, or stack them — most clients end up needing at least three of these working together.</p>
     <div class="service-grid">
-      <div class="scard" style="--cat: var(--c-build);">
+      <div class="scard is-demoed" style="--cat: var(--c-build);">
         <div class="cat-row"><span class="badge">B</span><span class="cat">Build</span></div>
         <h3>Websites &amp; landing pages</h3>
         <p>A site in Framer, Webflow, or Carrd — live in days, built to convert visitors, not just look nice.</p>
-        <span class="proof">No CMS wrangling required</span>
+        <span class="proof">↓ Try it below</span>
       </div>
       <div class="scard is-demoed" style="--cat: var(--c-converse);">
         <div class="cat-row"><span class="badge">C</span><span class="cat">Converse</span></div>
         <h3>Chatbots &amp; AI agents</h3>
         <p>An assistant that answers the questions you get asked daily, qualifies leads, and hands off when it should.</p>
-        <span class="proof">↓ Running live below</span>
+        <span class="proof">↓ Try it below</span>
       </div>
-      <div class="scard" style="--cat: var(--c-connect);">
+      <div class="scard is-demoed" style="--cat: var(--c-connect);">
         <div class="cat-row"><span class="badge">Z</span><span class="cat">Connect</span></div>
         <h3>Automation</h3>
         <p>Zapier / Make scenarios that move info between your tools — forms to inbox to calendar to CRM, automatically.</p>
-        <span class="proof">No manual copy-pasting</span>
+        <span class="proof">↓ Try it below</span>
       </div>
-      <div class="scard" style="--cat: var(--c-operate);">
+      <div class="scard is-demoed" style="--cat: var(--c-operate);">
         <div class="cat-row"><span class="badge">O</span><span class="cat">Operate</span></div>
         <h3>Systems &amp; dashboards</h3>
         <p>An Airtable or Notion system replacing spreadsheets and sticky notes — one place to see leads, orders, stock.</p>
-        <span class="proof">Built around how you already work</span>
+        <span class="proof">↓ Try it below</span>
       </div>
-      <div class="scard" style="--cat: var(--c-tell);">
+      <div class="scard is-demoed" style="--cat: var(--c-tell);">
         <div class="cat-row"><span class="badge">T</span><span class="cat">Tell</span></div>
         <h3>Content</h3>
         <p>Short posts and clips documenting each build, so the work markets itself while it's running.</p>
-        <span class="proof">See a sample below</span>
+        <span class="proof">↓ Try it below</span>
       </div>
-      <div class="scard" style="--cat: var(--c-answer);">
+      <div class="scard is-demoed" style="--cat: var(--c-answer);">
         <div class="cat-row"><span class="badge">A</span><span class="cat">Answer</span></div>
         <h3>Phone &amp; voice agents</h3>
         <p>An AI that picks up when you can't — answers common questions, takes a message, or books a slot, in a natural voice call.</p>
-        <span class="proof">Never another missed call</span>
+        <span class="proof">↓ Try it below</span>
       </div>
     </div>
   </section>
 
   <div class="section-lead">
-    <h2>How each one actually works, in seconds</h2>
-    <p>No jargon — just what changes. The chatbot gets the full live walkthrough right after this.</p>
+    <h2>See each service running, live</h2>
+    <p>Six real demos, not screenshots — click a tab, then click through it like a customer or like you'd use the tool yourself.</p>
   </div>
 
-  <div class="mini-grid">
-    <div class="mini-card" style="--cat: var(--c-build);">
-      <span class="mini-label">Websites</span>
-      <p class="mini-why">A slow, cluttered, or missing site reads as "not a real business" before anyone even talks to you.</p>
-      <div class="ba-row">
-        <div class="ba-box before">
-          <div class="ba-lines"><span></span><span></span><span></span></div>
-          <div class="ba-tag">😕 No clear action</div>
+  <div class="demo-tabs" role="tablist">
+    <button class="demo-tab active" type="button" data-target="demo-build" style="--cat: var(--c-build);">Websites</button>
+    <button class="demo-tab" type="button" data-target="demo-converse" style="--cat: var(--c-converse);">Chatbots</button>
+    <button class="demo-tab" type="button" data-target="demo-connect" style="--cat: var(--c-connect);">Automation</button>
+    <button class="demo-tab" type="button" data-target="demo-operate" style="--cat: var(--c-operate);">Systems</button>
+    <button class="demo-tab" type="button" data-target="demo-tell" style="--cat: var(--c-tell);">Content</button>
+    <button class="demo-tab" type="button" data-target="demo-answer" style="--cat: var(--c-answer);">Phone agents</button>
+  </div>
+
+  <div class="demo-panel active" id="demo-build" style="--cat: var(--c-build);">
+    <p class="demo-blurb">A real landing page for a bakery client — click through the tabs like a visitor would, then place a test order.</p>
+    <div class="stage">
+      <div class="browser">
+        <div class="browser-chrome">
+          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+          <div class="browser-url">peescakebakery.com</div>
         </div>
-        <div class="ba-box after">
-          <div class="ba-lines"><span></span><span></span></div>
-          <button class="ba-btn" id="baBookBtn" type="button">Book now →</button>
-          <div class="ba-confirm" id="baConfirm">✓ Booked — confirmation sent</div>
+        <div class="site" style="min-height: 420px; padding: 26px 24px;">
+          <div class="site-brand">Pee's Cake Bakery &amp; Academy</div>
+          <div class="site-tag">Custom cakes · Freetown</div>
+          <div class="site-tabs">
+            <button class="site-tab active" type="button" data-site="home">Home</button>
+            <button class="site-tab" type="button" data-site="menu">Menu</button>
+            <button class="site-tab" type="button" data-site="order">Order</button>
+          </div>
+          <div class="site-panel active" id="sitePanel-home">
+            <p style="font-size:13px; color:var(--ink-faint); max-width:32ch; line-height:1.6; margin-top:16px;">Handmade cakes for birthdays, weddings, and every day in between. Same-week orders welcome.</p>
+          </div>
+          <div class="site-panel" id="sitePanel-menu">
+            <ul style="margin:16px 0 0; padding:0; list-style:none; font-size:12.5px; color:var(--ink-soft); display:flex; flex-direction:column; gap:7px;">
+              <li>🍰 Classic vanilla — Le 350</li>
+              <li>🍫 Chocolate fudge — Le 400</li>
+              <li>🎂 Custom wedding tier — from Le 1,200</li>
+            </ul>
+          </div>
+          <div class="site-panel" id="sitePanel-order">
+            <p style="font-size:13px; color:var(--ink-soft); margin-top:16px;">Ready to order? Click below and we'll confirm within the hour.</p>
+            <button class="mini-run-btn" id="siteOrderBtn" type="button">Place test order →</button>
+            <div class="mini-result" id="siteResult"></div>
+          </div>
         </div>
       </div>
-      <p class="mini-hint">↑ Click "Book now" — that's the whole customer experience.</p>
-      <ul class="mini-benefits">
-        <li>Loads fast on any phone</li>
-        <li>One clear action, not ten distractions</li>
-        <li>Looks credible enough to trust with money</li>
-      </ul>
-    </div>
-
-    <div class="mini-card" style="--cat: var(--c-connect);">
-      <span class="mini-label">Automation</span>
-      <p class="mini-why">Every manual step between a customer's message and your reply is a chance for them to give up and message a competitor instead.</p>
-      <div class="mflow" id="mflowDemo">
-        <div class="node"><div class="dot" style="animation-delay:0s">F</div>Form</div>
-        <div class="arrow">→</div>
-        <div class="node"><div class="dot" style="animation-delay:.5s">Z</div>Zapier</div>
-        <div class="arrow">→</div>
-        <div class="node"><div class="dot" style="animation-delay:1s">A</div>Airtable</div>
-        <div class="arrow">→</div>
-        <div class="node"><div class="dot" style="animation-delay:1.5s">N</div>Notify</div>
-      </div>
-      <button class="mini-run-btn" id="runFlowBtn" type="button">▶ Run it yourself</button>
-      <div class="mini-result" id="flowResult"></div>
-      <ul class="mini-benefits">
-        <li>Nothing falls through the cracks</li>
-        <li>No copy-pasting between apps</li>
-        <li>Works 24/7, even while you sleep</li>
-      </ul>
-    </div>
-
-    <div class="mini-card" style="--cat: var(--c-operate);">
-      <span class="mini-label">Systems &amp; dashboards</span>
-      <p class="mini-why">Leads living in your head, a notebook, and three chat apps means someone always gets forgotten — and forgotten leads don't pay.</p>
-      <div class="mtable" id="miniTable">
-        <div class="mrow"><span>Dara O.</span><button class="mpill booked" type="button">Booked</button></div>
-        <div class="mrow"><span>Kwame B.</span><button class="mpill messaged" type="button">Messaged</button></div>
-        <div class="mrow"><span>Aisha T.</span><button class="mpill new" type="button">New</button></div>
-      </div>
-      <p class="mini-hint">↑ Click a status to update it — that's the whole tool.</p>
-      <ul class="mini-benefits">
-        <li>One source of truth, not three</li>
-        <li>See who needs a follow-up at a glance</li>
-        <li>Nothing lost when you're busy</li>
-      </ul>
-    </div>
-
-    <div class="mini-card" style="--cat: var(--c-tell);">
-      <span class="mini-label">Content</span>
-      <p class="mini-why">The best work in the world doesn't win the next client if nobody ever sees it.</p>
-      <div class="mpost">
-        <div class="mavatar"></div>
-        <div class="mcap"><span></span><span></span></div>
-      </div>
-      <div class="mpost-text" id="miniCaptionText">"We just wired our site to text the owner the second a lead comes in."</div>
-      <button class="mini-run-btn" id="capBtn" type="button">🔄 New caption</button>
-      <ul class="mini-benefits">
-        <li>No separate content calendar to run</li>
-        <li>Real proof, not stock photos</li>
-        <li>Free marketing from work you already did</li>
-      </ul>
-    </div>
-
-    <div class="mini-card" style="--cat: var(--c-answer);">
-      <span class="mini-label">Phone &amp; voice agents</span>
-      <p class="mini-why">For a lot of small businesses the phone still gets more traffic than the website — and a missed call is a customer who just tried your competitor next.</p>
-      <div class="call-mock">
-        <div class="call-head"><span class="ring"></span> Incoming call — Rooted Farm Stand</div>
-        <button class="mini-run-btn" id="answerCallBtn" type="button" style="margin-top:8px;">📞 Answer the call</button>
-        <div class="call-transcript" id="callTranscript">
-          <div class="call-line caller">Caller: "Are you open Sunday?"</div>
-          <div class="call-line agent">Agent: "Yes, 9am–2pm — want me to text you our full hours?"</div>
+      <div class="demo-side">
+        <h3>What just happened</h3>
+        <span class="side-sub">The same activity a real visitor generates</span>
+        <div class="demo-log" id="buildLog">
+          <p class="mini-hint" id="buildLogEmpty" style="margin:0;">Click around the site to see it here.</p>
         </div>
-        <div class="call-done" id="callDone">✓ Call handled, no one interrupted</div>
+        <ul class="mini-benefits">
+          <li>Loads fast on any phone</li>
+          <li>One clear action, not ten distractions</li>
+          <li>Looks credible enough to trust with money</li>
+        </ul>
       </div>
-      <ul class="mini-benefits">
-        <li>Picks up every time, even after hours</li>
-        <li>Sounds natural, not robotic</li>
-        <li>Logs the call to the same dashboard as everything else</li>
-      </ul>
     </div>
   </div>
 
-  <div class="section-lead">
-    <h2>See it in action</h2>
-    <p>One build, running for real: a chatbot on a farm stand's site, wired to automatically log and notify. Click the chat bubble to watch it happen.</p>
-  </div>
+  <div class="demo-panel" id="demo-converse" style="--cat: var(--c-converse);">
+    <p class="demo-blurb">One build, running for real: a chatbot on a farm stand's site, wired to automatically log and notify. Click the chat bubble to start.</p>
+    <div class="stage">
+      <div class="browser">
+        <div class="browser-chrome">
+          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+          <div class="browser-url">rootedfarmstand.com</div>
+        </div>
+        <div class="site">
+          <div class="site-brand">Rooted Farm Stand</div>
+          <div class="site-tag">Fresh weekly boxes · pick-up Thursdays</div>
+          <div class="site-hero">Local produce, honest prices. Ask about this week's box or book a bulk order for your restaurant.</div>
 
-  <div class="stage">
-    <div class="browser">
-      <div class="browser-chrome">
-        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-        <div class="browser-url">rootedfarmstand.com</div>
-      </div>
-      <div class="site">
-        <div class="site-brand">Rooted Farm Stand</div>
-        <div class="site-tag">Fresh weekly boxes · pick-up Thursdays</div>
-        <div class="site-hero">Local produce, honest prices. Ask about this week's box or book a bulk order for your restaurant.</div>
+          <button class="chat-bubble-btn" id="bubbleBtn" aria-label="Open chat" aria-expanded="false">💬</button>
 
-        <button class="chat-bubble-btn" id="bubbleBtn" aria-label="Open chat" aria-expanded="false">💬</button>
-
-        <div class="chat-window" id="chatWindow" role="dialog" aria-label="Rooted Farm Stand chat">
-          <div class="chat-head"><span class="pulse"></span> Rooted Farm Stand · usually replies instantly</div>
-          <div class="chat-body" id="chatBody"></div>
-          <div class="chat-input">Type a message…</div>
+          <div class="chat-window" id="chatWindow" role="dialog" aria-label="Rooted Farm Stand chat">
+            <div class="chat-head"><span class="pulse"></span> Rooted Farm Stand · usually replies instantly</div>
+            <div class="chat-body" id="chatBody"></div>
+            <div class="chat-input">Type a message…</div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="inbox">
-      <div class="inbox-head">
-        <h3>Leads</h3>
-        <span id="leadCount">0 today</span>
+      <div class="inbox">
+        <div class="inbox-head">
+          <h3>Leads</h3>
+          <span id="leadCount">0 today</span>
+        </div>
+        <div id="leadList" style="display:flex; flex-direction:column; gap:10px;">
+          <div class="lead-card empty" id="emptyState">No leads yet — click the chat bubble to see one land here.</div>
+        </div>
+        <div class="toast" id="toast">Synced to Airtable + texted the owner</div>
       </div>
-      <div id="leadList" style="display:flex; flex-direction:column; gap:10px;">
-        <div class="lead-card empty" id="emptyState">No leads yet — start the chat on the left to see one land here.</div>
+    </div>
+  </div>
+
+  <div class="demo-panel" id="demo-connect" style="--cat: var(--c-connect);">
+    <p class="demo-blurb">The same automation shown in the flow chart below — press run and watch each step fire in real time.</p>
+    <div class="stage">
+      <div class="browser">
+        <div class="browser-chrome">
+          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+          <div class="browser-url">Scenario · New lead → CRM</div>
+        </div>
+        <div class="site" style="min-height: 420px; padding: 30px 26px;">
+          <div class="mflow" id="connectFlow" style="margin-top:6px;">
+            <div class="node"><div class="dot" style="animation-delay:0s">F</div>Form</div>
+            <div class="arrow">→</div>
+            <div class="node"><div class="dot" style="animation-delay:.5s">Z</div>Zapier</div>
+            <div class="arrow">→</div>
+            <div class="node"><div class="dot" style="animation-delay:1s">A</div>Airtable</div>
+            <div class="arrow">→</div>
+            <div class="node"><div class="dot" style="animation-delay:1.5s">N</div>Notify</div>
+          </div>
+          <button class="mini-run-btn" id="connectRunBtn" type="button" style="margin-top:26px;">▶ Run scenario</button>
+        </div>
       </div>
-      <div class="toast" id="toast">Synced to Airtable + texted the owner</div>
+      <div class="demo-side">
+        <h3>Zap history</h3>
+        <span class="side-sub">What Zapier / Make actually logs</span>
+        <div class="demo-log" id="connectLog">
+          <p class="mini-hint" id="connectLogEmpty" style="margin:0;">Press run to see the live log.</p>
+        </div>
+        <ul class="mini-benefits">
+          <li>Nothing falls through the cracks</li>
+          <li>No copy-pasting between apps</li>
+          <li>Works 24/7, even while you sleep</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-panel" id="demo-operate" style="--cat: var(--c-operate);">
+    <p class="demo-blurb">A lightweight Airtable-style board — move a lead across the board and watch the numbers update on the right.</p>
+    <div class="stage">
+      <div class="inbox" style="min-height:auto;">
+        <div class="inbox-head"><h3>Lead board</h3><span>Click "Move" to advance a card</span></div>
+        <div class="kanban">
+          <div class="kcol">
+            <h4>New <span class="kcount">1</span></h4>
+            <div class="kcol-body">
+              <div class="kcard"><div class="kname">Aisha T.</div><div class="kmeta">Asked about pricing</div><button class="mini-run-btn move-btn" type="button">Move → Contacted</button></div>
+            </div>
+          </div>
+          <div class="kcol">
+            <h4>Contacted <span class="kcount">1</span></h4>
+            <div class="kcol-body">
+              <div class="kcard"><div class="kname">Kwame B.</div><div class="kmeta">Sent a quote</div><button class="mini-run-btn move-btn" type="button">Move → Booked</button></div>
+            </div>
+          </div>
+          <div class="kcol">
+            <h4>Booked <span class="kcount">1</span></h4>
+            <div class="kcol-body">
+              <div class="kcard kdone"><div class="kname">Dara O.</div><div class="kmeta">Confirmed for Thu</div><button class="mini-run-btn move-btn" type="button">Move →</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="demo-side">
+        <h3>This week</h3>
+        <span class="side-sub">Recalculates as cards move</span>
+        <div class="stat-row">
+          <div class="stat-card"><div class="big" id="statTotal">3</div><div class="lbl">Total leads</div></div>
+          <div class="stat-card"><div class="big" id="statProgress">2</div><div class="lbl">In progress</div></div>
+          <div class="stat-card"><div class="big" id="statBooked">1</div><div class="lbl">Booked</div></div>
+        </div>
+        <ul class="mini-benefits">
+          <li>One source of truth, not three</li>
+          <li>See who needs a follow-up at a glance</li>
+          <li>Nothing lost when you're busy</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-panel" id="demo-tell" style="--cat: var(--c-tell);">
+    <p class="demo-blurb">A week's worth of proof-of-work content, scheduled and ready — open a highlighted day and publish it.</p>
+    <div class="stage">
+      <div class="browser">
+        <div class="browser-chrome"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="browser-url">Content calendar</div></div>
+        <div class="site" style="min-height: 420px; padding: 24px;">
+          <div class="week-days" id="weekDays">
+            <button class="day-btn" data-day="0" disabled>Mon</button>
+            <button class="day-btn has-post" data-day="1" type="button">Tue</button>
+            <button class="day-btn" data-day="2" disabled>Wed</button>
+            <button class="day-btn has-post" data-day="3" type="button">Thu</button>
+            <button class="day-btn" data-day="4" disabled>Fri</button>
+            <button class="day-btn" data-day="5" disabled>Sat</button>
+            <button class="day-btn" data-day="6" disabled>Sun</button>
+          </div>
+          <p class="mini-hint" id="calEmpty" style="margin-top:16px;">Click a highlighted day to preview its post.</p>
+          <div class="post-card" id="postPreview" style="display:none; margin-top:14px; max-width:none;">
+            <div class="post-head"><div class="post-avatar"></div><div><b>Rooted Farm Stand</b><span>Scheduled post</span></div></div>
+            <div class="post-media"></div>
+            <div class="post-caption" id="postCaption"></div>
+            <div class="post-stats"><span id="postLikes">♡ 0</span><span>💬 0</span></div>
+            <div style="padding: 0 14px 14px;"><button class="mini-run-btn" id="publishBtn" type="button">Publish now</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="demo-side">
+        <h3>This week's calendar</h3>
+        <span class="side-sub">Updates as you publish</span>
+        <div class="stat-row">
+          <div class="stat-card"><div class="big" id="statScheduled">2</div><div class="lbl">Scheduled</div></div>
+          <div class="stat-card"><div class="big" id="statPublished">0</div><div class="lbl">Published</div></div>
+        </div>
+        <ul class="mini-benefits">
+          <li>No separate content calendar to run</li>
+          <li>Real proof, not stock photos</li>
+          <li>Free marketing from work you already did</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-panel" id="demo-answer" style="--cat: var(--c-answer);">
+    <p class="demo-blurb">A missed call is a lost customer — answer this one to see how the agent handles it, start to finish.</p>
+    <div class="stage">
+      <div class="phone-frame">
+        <div class="phone-screen">
+          <div class="phone-status"><span>9:41</span><span>●●●●●</span></div>
+          <div class="call-incoming" id="callIncoming">
+            <div class="avatar"></div>
+            <div class="cname">Unknown caller</div>
+            <div class="cstatus">Incoming call…</div>
+            <div class="call-buttons">
+              <button class="call-btn decline" type="button" aria-label="Decline">✕</button>
+              <button class="call-btn accept" id="phoneAnswerBtn" type="button" aria-label="Answer">📞</button>
+            </div>
+          </div>
+          <div class="in-call" id="inCall">
+            <div class="call-timer" id="callTimer">Connected · 0:00</div>
+            <div class="call-transcript" id="phoneTranscript"></div>
+            <button class="call-btn decline end-btn" id="endCallBtn" type="button" aria-label="End call">✕</button>
+          </div>
+        </div>
+      </div>
+      <div class="demo-side">
+        <h3>Recent calls</h3>
+        <span class="side-sub">Logged automatically, same as the leads board</span>
+        <div class="recent-calls-list" id="recentCalls">
+          <div class="lead-card empty" id="callEmptyState">No calls yet today.</div>
+        </div>
+        <ul class="mini-benefits">
+          <li>Picks up every time, even after hours</li>
+          <li>Sounds natural, not robotic</li>
+          <li>Logs the call to the same dashboard as everything else</li>
+        </ul>
+      </div>
     </div>
   </div>
 
@@ -1202,41 +1360,7 @@
   </div>
 
   <div class="note">
-    <b>What this demo is:</b> a self-contained script — nothing here calls a real CRM. <b>What you'd actually build for a client:</b> the same widget wired to their Airtable base and a Make/Zapier scenario, using their own accounts. That swap is usually a half-day of work once you've built this shell once.
-  </div>
-
-  <div class="section-lead">
-    <h2>The content side</h2>
-    <p>Every build doubles as proof. A short before/after post like this is what goes out after each project — for the client's audience, and for yours.</p>
-  </div>
-
-  <div class="content-proof">
-    <div class="post-card">
-      <div class="post-head">
-        <div class="post-avatar"></div>
-        <div>
-          <b>Rooted Farm Stand</b>
-          <span>Sponsored build · this week</span>
-        </div>
-      </div>
-      <div class="post-media"></div>
-      <div class="post-caption">We just wired our site to text the owner the second someone asks about a bulk order. No more missed calls. 🌾</div>
-      <div class="post-stats"><span>♡ 48</span><span>💬 6</span><span>↗ 3 shares</span></div>
-    </div>
-    <div class="stat-stack">
-      <div class="stat-card">
-        <div class="big">Hours → Instant</div>
-        <div class="lbl">Average time to first reply on a bulk-order inquiry, before and after the chatbot went live.</div>
-      </div>
-      <div class="stat-card">
-        <div class="big">1 build, 3 posts</div>
-        <div class="lbl">Each project is scoped to produce its own case-study content — no separate content calendar to maintain.</div>
-      </div>
-      <div class="stat-card">
-        <div class="big">0 spreadsheets</div>
-        <div class="lbl">Leads, orders, and follow-ups all live in one Airtable system instead of scattered notes.</div>
-      </div>
-    </div>
+    <b>What these demos are:</b> self-contained scripts — nothing here calls a real CRM. <b>What you'd actually get as a client:</b> the same building blocks wired to your own Airtable, Zapier, and phone number. That swap is usually a half-day of work once a shell like this is built.
   </div>
 
   <div class="section-lead">
@@ -1417,82 +1541,236 @@
     }
   });
 
-  // Auto-open shortly after load so the demo tells itself.
-  setTimeout(openChat, reduceMotion ? 0 : 700);
-
-  // ---- Websites mini-demo: click "Book now" like a real visitor would ----
-  const baBookBtn = document.getElementById('baBookBtn');
-  const baConfirm = document.getElementById('baConfirm');
-  if (baBookBtn) {
-    baBookBtn.addEventListener('click', () => {
-      baConfirm.classList.add('show');
-      baBookBtn.textContent = '✓ Booked';
-      setTimeout(() => {
-        baConfirm.classList.remove('show');
-        baBookBtn.textContent = 'Book now →';
-      }, 2200);
-    });
-  }
-
-  // ---- Automation mini-demo: run the flow on demand ----
-  const runFlowBtn = document.getElementById('runFlowBtn');
-  const flowResult = document.getElementById('flowResult');
-  const flowDots = document.querySelectorAll('#mflowDemo .dot');
-  if (runFlowBtn) {
-    runFlowBtn.addEventListener('click', async () => {
-      flowResult.textContent = '';
-      runFlowBtn.disabled = true;
-      for (const dot of flowDots) {
-        dot.classList.add('active');
-        await wait(400);
-        dot.classList.remove('active');
-      }
-      flowResult.textContent = '✓ Done — lead saved + owner notified, no one touched it';
-      runFlowBtn.disabled = false;
-    });
-  }
-
-  // ---- Systems/dashboard mini-demo: click a status to update the record ----
-  const statusCycle = { new: 'messaged', messaged: 'booked', booked: 'new' };
-  document.querySelectorAll('#miniTable .mpill').forEach((pill) => {
-    pill.addEventListener('click', () => {
-      const current = ['new', 'messaged', 'booked'].find((c) => pill.classList.contains(c));
-      const next = statusCycle[current];
-      pill.classList.remove(current);
-      pill.classList.add(next);
-      pill.textContent = next.charAt(0).toUpperCase() + next.slice(1);
+  // ---- Demo hub: tab switching between the six full service demos ----
+  document.querySelectorAll('.demo-tab').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.demo-tab').forEach((t) => t.classList.remove('active'));
+      document.querySelectorAll('.demo-panel').forEach((p) => p.classList.remove('active'));
+      tab.classList.add('active');
+      const panel = document.getElementById(tab.dataset.target);
+      if (panel) panel.classList.add('active');
     });
   });
 
-  // ---- Content mini-demo: cycle sample captions ----
-  const sampleCaptions = [
-    '"We just wired our site to text the owner the second a lead comes in."',
-    '"Before: 3 missed messages a day. After: zero."',
-    '"One dashboard now shows every lead, order, and follow-up."',
-  ];
-  let captionIndex = 0;
-  const capBtn = document.getElementById('capBtn');
-  const capText = document.getElementById('miniCaptionText');
-  if (capBtn) {
-    capBtn.addEventListener('click', () => {
-      captionIndex = (captionIndex + 1) % sampleCaptions.length;
-      capText.textContent = sampleCaptions[captionIndex];
+  // ---- Websites demo: click through a real site, then place a test order ----
+  const buildLog = document.getElementById('buildLog');
+  const buildLogEmpty = document.getElementById('buildLogEmpty');
+  function logBuild(html) {
+    if (buildLogEmpty) buildLogEmpty.remove();
+    const line = document.createElement('div');
+    line.className = 'demo-log-line';
+    line.innerHTML = html;
+    buildLog.appendChild(line);
+    while (buildLog.children.length > 5) buildLog.removeChild(buildLog.firstChild);
+  }
+  document.querySelectorAll('#demo-build .site-tab').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('#demo-build .site-tab').forEach((t) => t.classList.remove('active'));
+      document.querySelectorAll('#demo-build .site-panel').forEach((p) => p.classList.remove('active'));
+      tab.classList.add('active');
+      const panel = document.getElementById('sitePanel-' + tab.dataset.site);
+      if (panel) panel.classList.add('active');
+      logBuild('Visitor viewed <b>' + tab.textContent + '</b>');
+    });
+  });
+  const siteOrderBtn = document.getElementById('siteOrderBtn');
+  const siteResult = document.getElementById('siteResult');
+  if (siteOrderBtn) {
+    siteOrderBtn.addEventListener('click', () => {
+      siteOrderBtn.disabled = true;
+      siteResult.textContent = '✓ Order received — owner notified by SMS';
+      logBuild('<b>Order placed</b> — synced to Airtable');
+      setTimeout(() => {
+        siteOrderBtn.disabled = false;
+        siteResult.textContent = '';
+      }, 2600);
     });
   }
 
-  // ---- Phone/voice mini-demo: answer the call ----
-  const answerCallBtn = document.getElementById('answerCallBtn');
-  const callTranscript = document.getElementById('callTranscript');
-  const callDone = document.getElementById('callDone');
-  if (answerCallBtn) {
-    answerCallBtn.addEventListener('click', async () => {
-      answerCallBtn.disabled = true;
-      answerCallBtn.textContent = 'Answering…';
-      await wait(500);
-      callTranscript.classList.add('show');
-      await wait(1400);
-      callDone.classList.add('show');
-      answerCallBtn.textContent = '📞 Call answered';
+  // ---- Automation demo: run the scenario and watch the log fill in ----
+  const connectLog = document.getElementById('connectLog');
+  const connectLogEmpty = document.getElementById('connectLogEmpty');
+  function logConnect(html) {
+    if (connectLogEmpty) connectLogEmpty.remove();
+    const line = document.createElement('div');
+    line.className = 'demo-log-line';
+    line.innerHTML = html;
+    connectLog.appendChild(line);
+  }
+  const connectRunBtn = document.getElementById('connectRunBtn');
+  const connectDots = document.querySelectorAll('#connectFlow .dot');
+  const connectSteps = [
+    'Form submitted — new inquiry received',
+    'Zapier triggered — routing data',
+    'Row created in Airtable',
+    'SMS sent to owner',
+  ];
+  if (connectRunBtn) {
+    connectRunBtn.addEventListener('click', async () => {
+      connectRunBtn.disabled = true;
+      connectLog.innerHTML = '';
+      let i = 0;
+      for (const dot of connectDots) {
+        dot.classList.add('active');
+        logConnect(connectSteps[i]);
+        await wait(450);
+        dot.classList.remove('active');
+        i += 1;
+      }
+      logConnect('<b>✓ Scenario completed</b> — lead saved, owner notified');
+      connectRunBtn.disabled = false;
+    });
+  }
+
+  // ---- Systems demo: move a lead card across the board ----
+  function updateKanbanStats() {
+    const cols = document.querySelectorAll('#demo-operate .kcol');
+    let total = 0;
+    let inProgress = 0;
+    let booked = 0;
+    cols.forEach((col, i) => {
+      const n = col.querySelectorAll('.kcard').length;
+      const countEl = col.querySelector('.kcount');
+      if (countEl) countEl.textContent = n;
+      total += n;
+      if (i === cols.length - 1) booked += n;
+      else inProgress += n;
+    });
+    const st = document.getElementById('statTotal');
+    const sp = document.getElementById('statProgress');
+    const sb = document.getElementById('statBooked');
+    if (st) st.textContent = total;
+    if (sp) sp.textContent = inProgress;
+    if (sb) sb.textContent = booked;
+  }
+  document.querySelectorAll('#demo-operate .move-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const card = btn.closest('.kcard');
+      const col = card.closest('.kcol');
+      const nextCol = col.nextElementSibling;
+      if (!nextCol) return;
+      const nextBody = nextCol.querySelector('.kcol-body');
+      nextBody.appendChild(card);
+      if (!nextCol.nextElementSibling) card.classList.add('kdone');
+      updateKanbanStats();
+    });
+  });
+
+  // ---- Content demo: pick a scheduled day, then publish it ----
+  const calPosts = {
+    1: 'We just wired our site to text the owner the second a lead comes in.',
+    3: 'Before: 3 missed messages a day. After: zero.',
+  };
+  const publishedDays = new Set();
+  const dayBtns = document.querySelectorAll('#weekDays .day-btn.has-post');
+  const calEmpty = document.getElementById('calEmpty');
+  const postPreview = document.getElementById('postPreview');
+  const postCaption = document.getElementById('postCaption');
+  const postLikes = document.getElementById('postLikes');
+  const publishBtn = document.getElementById('publishBtn');
+  let currentDay = null;
+  dayBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      dayBtns.forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentDay = btn.dataset.day;
+      if (calEmpty) calEmpty.style.display = 'none';
+      postPreview.style.display = 'block';
+      postCaption.textContent = calPosts[currentDay];
+      if (publishedDays.has(currentDay)) {
+        postLikes.textContent = '♡ 24';
+        publishBtn.textContent = '✓ Published';
+        publishBtn.disabled = true;
+      } else {
+        postLikes.textContent = '♡ 0';
+        publishBtn.textContent = 'Publish now';
+        publishBtn.disabled = false;
+      }
+    });
+  });
+  if (publishBtn) {
+    publishBtn.addEventListener('click', async () => {
+      if (!currentDay || publishedDays.has(currentDay)) return;
+      publishBtn.disabled = true;
+      let likes = 0;
+      while (likes < 24) {
+        likes = Math.min(likes + 3, 24);
+        postLikes.textContent = '♡ ' + likes;
+        await wait(90);
+      }
+      publishBtn.textContent = '✓ Published';
+      publishedDays.add(currentDay);
+      const sSched = document.getElementById('statScheduled');
+      const sPub = document.getElementById('statPublished');
+      if (sSched) sSched.textContent = Math.max(0, parseInt(sSched.textContent, 10) - 1);
+      if (sPub) sPub.textContent = parseInt(sPub.textContent, 10) + 1;
+    });
+  }
+
+  // ---- Phone/voice demo: answer an incoming call, live transcript, call log ----
+  const phoneAnswerBtn = document.getElementById('phoneAnswerBtn');
+  const callIncoming = document.getElementById('callIncoming');
+  const inCall = document.getElementById('inCall');
+  const callTimerEl = document.getElementById('callTimer');
+  const phoneTranscript = document.getElementById('phoneTranscript');
+  const endCallBtn = document.getElementById('endCallBtn');
+  const recentCalls = document.getElementById('recentCalls');
+  let callSeconds = 0;
+  let callTimerHandle = null;
+
+  function formatCallTime(total) {
+    const m = Math.floor(total / 60);
+    const s = String(total % 60).padStart(2, '0');
+    return m + ':' + s;
+  }
+  function logCall(outcome) {
+    const emptyEl = document.getElementById('callEmptyState');
+    if (emptyEl) emptyEl.remove();
+    const item = document.createElement('div');
+    item.className = 'lead-card';
+    item.innerHTML =
+      '<div class="lead-top"><span class="lead-name">Unknown caller</span>' +
+      '<span class="lead-tag" style="background:var(--cat);">' + formatCallTime(callSeconds) + '</span></div>' +
+      '<div class="lead-meta">' + outcome + '</div>';
+    recentCalls.prepend(item);
+  }
+  function endPhoneCall(outcome) {
+    if (callTimerHandle) clearInterval(callTimerHandle);
+    logCall(outcome);
+    inCall.classList.remove('show');
+    callIncoming.classList.remove('hide');
+  }
+  if (phoneAnswerBtn) {
+    phoneAnswerBtn.addEventListener('click', async () => {
+      callIncoming.classList.add('hide');
+      inCall.classList.add('show');
+      callSeconds = 0;
+      callTimerEl.textContent = 'Connected · 0:00';
+      callTimerHandle = setInterval(() => {
+        callSeconds += 1;
+        callTimerEl.textContent = 'Connected · ' + formatCallTime(callSeconds);
+      }, 1000);
+      phoneTranscript.innerHTML = '';
+      const lines = [
+        ['caller', 'Caller: "Are you open Sunday?"'],
+        ['agent', 'Agent: "Yes, 9am–2pm — want me to text you our full hours?"'],
+        ['caller', 'Caller: "Sure, thanks!"'],
+        ['agent', 'Agent: "Sent! Anything else I can help with?"'],
+      ];
+      for (const [cls, text] of lines) {
+        await wait(900);
+        const line = document.createElement('div');
+        line.className = 'call-line ' + cls;
+        line.textContent = text;
+        phoneTranscript.appendChild(line);
+      }
+      await wait(700);
+      endPhoneCall('Answered hours question, texted details');
+    });
+  }
+  if (endCallBtn) {
+    endCallBtn.addEventListener('click', () => {
+      endPhoneCall('Ended early by caller');
     });
   }
 </script>
